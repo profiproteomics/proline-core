@@ -2,33 +2,32 @@ package fr.proline.core.om.msi
 
 package PeptideClasses {
   
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.HashMap
-import org.apache.commons.lang3.StringUtils
-import fr.proline.core.om.msi.MsQueryClasses.Ms2Query
-import fr.proline.core.om.msi.MsQueryClasses.MsQuery
-import fr.proline.core.om.msi.PtmClasses.LocatedPtm
-import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-import fr.proline.core.om.msi.ResultSetClasses.ResultSummary
-import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
+  import scala.collection.mutable.ArrayBuffer
+  import scala.collection.mutable.ListBuffer
+  import scala.collection.mutable.HashMap
+  import org.apache.commons.lang3.StringUtils
+  import fr.proline.core.om.msi.MsQueryClasses.Ms2Query
+  import fr.proline.core.om.msi.MsQueryClasses.MsQuery
+  import fr.proline.core.om.msi.PtmClasses.LocatedPtm
+  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
+  import fr.proline.core.om.msi.ResultSetClasses.ResultSummary
+  import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
   
   class Peptide ( // Required fields
-                  var id: Int, 
-                  val sequence: String, 
-                  val ptmString: String, 
-                  val ptms: Array[LocatedPtm], 
+                  var id: Int,
+                  val sequence: String,
+                  val ptmString: String,
+                  val ptms: Array[LocatedPtm],
                   val calculatedMass: Double,
                   
                   // Mutable optional fields
-                  var missedCleavage: Int = 0, 
                   var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                   ) {
     
     // Requirements
     require( StringUtils.isNotEmpty( sequence ) && calculatedMass > 0 )
     
-    // Lazy values
+    /** Returns a string representing the peptide PTMs */
     lazy val readablePtmString : String = {
       
       var tmpReadablePtmString : String = null
@@ -58,6 +57,7 @@ import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
       
     }
     
+    /** Returns a string that can be used as a unique key for this peptide */
     lazy val uniqueKey : String = sequence + "%" + ptmString
     
   }
@@ -67,171 +67,205 @@ import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
                        val rank: Int,
                        val score: Float,
                        val scoreType: String,
-                       val deltaMz: Float,
+                       val deltaMz: Double,
                        val isDecoy: Boolean,
                        val peptide: Peptide,
                        
-                       private var msQueryId: Int =0,
-                       val msQuery: MsQuery = null,
-                       
                        // Immutable optional fields
-                       private val childrenIds: Array[Int] = null,
-                       val children: Array[PeptideMatch] = null,
+                       val missedCleavage: Int = 0,
+                       val fragmentMatchesCount: Int = 0,
                        
-                       private val bestChildId: Int = 0,
-                       val bestChild : PeptideMatch = null, 
-                       
-                       val fragmentMatchCount: Int = 0,
+                       val msQuery: MsQuery = null, // TODO: require ?
                        
                        // Mutable optional fields
                        var isValidated: Boolean = false, // only defined in the model
                        
+                       private var childrenIds: Array[Int] = null,
+                       var children: Option[Array[PeptideMatch]] = null,
+                       
+                       private var bestChildId: Int = 0,
+                       var bestChild : Option[PeptideMatch] = null,
+                       
                        private var resultSetId: Int = 0,
-                       var resultSet: ResultSet = null,
+                       var resultSet: Option[ResultSet] = null,
                        
                        var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                        ) {
     
     // Requirements
-    require( rank > 0 && (msQueryId != 0 || msQuery !=null)  )
+    require( rank > 0 )
+    //require( scoreType == "mascot" )
+    require( peptide != null )
     
+    // Related objects ID getters    
+    def getMsQueryId : Int = { if(msQuery != null) msQuery.id else 0 }
+    
+    def getChildrenIds : Array[Int] = { if(children != null && children != None) children.get.map(_.id) else childrenIds  }
+    
+    def getBestChildId : Int = { if(bestChild != null && bestChild != None ) bestChild.get.id else bestChildId }
+    
+    def getResultSetId : Int = { if(resultSet != null && resultSet != None ) resultSet.get.id else resultSetId }
+    
+    /** Returns a MS2 query object. */
     def getMs2Query: Ms2Query = { if(msQuery != null) msQuery.asInstanceOf[Ms2Query] else null }
-    
-    def getMsQueryId : Int = { if(msQuery != null) msQuery.id  else  msQueryId }
-    
-    def getChildrenIds : Array[Int] = { if(children != null) children.map(_.id)  else childrenIds  }
-    
-    def getBestChildId : Int = {if(bestChild != null) bestChild.id else bestChildId }
-    
-    def getResultSetId : Int = {if(resultSet != null) resultSet.id else resultSetId }
     
   }
  
   class PeptideInstance ( // Required fields
                           var id: Int,
-                          private val peptideId: Int = 0, //One of these 2 values should be specified
-                          val peptide: Peptide = null,
-                          
-                          private var peptideMatchIds: Array[Int] = null, //One of these 2 values should be specified
-                          var peptideMatches: Array[PeptideMatch] = null,
-                          
+                          val peptide: Peptide,
+
                           // Immutable optional fields
-                          val children: Array[PeptideInstance] = null,                          
+                          private val peptideMatchIds: Array[Int] = null, //One of these 2 values should be specified
+                          val peptideMatches: Array[PeptideMatch] = null,
+                          
+                          val children: Array[PeptideInstance] = null,
                           val proteinSetIds: Array[Int] = null,
+                          
                           private val unmodifiedPeptideId: Int = 0,
-                          val unmodifiedPeptide: Peptide = null,
-                          private val unmodifiedPeptideInstanceId: Int = 0,                          
-                          val unmodifiedPeptideInstance: PeptideInstance = null,      
+                          val unmodifiedPeptide: Option[Peptide] = null,
+                          
+                          private val unmodifiedPepInstanceId: Int = 0,
+                          val unmodifiedPepInstance: Option[PeptideInstance] = null,
                           
                           // Mutable optional fields
-                          var proteinMatchCount: Int = 0,
-                          var proteinSetCount: Int = 0,
-                          var selectionLevel: Int = -1,                          
+                          var proteinMatchesCount: Int = 0,
+                          var proteinSetsCount: Int = 0,
+                          var selectionLevel: Int = -1,
+                          
                           private var resultSummaryId: Int = 0,
-                          var resultSummary: ResultSummary = null,
+                          var resultSummary: Option[ResultSummary] = null,
+                          
                           var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                           
                           ) {
     
     // Requirements
-    require( (peptideMatchIds != null || peptideMatches !=null) && (peptideId != 0 || Peptide !=null)) 
+    require( peptide != null )
+    require( (peptideMatchIds != null || peptideMatches !=null) ) 
     
+    // Related objects ID getters
     def getPeptideMatchIds : Array[Int] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds  }
     
-    def getUnmodifiedPeptideId : Int = {if(unmodifiedPeptide != null) unmodifiedPeptide.id else unmodifiedPeptideId }
+    def getUnmodifiedPeptideId : Int = { if(unmodifiedPeptide != null && unmodifiedPeptide != None) unmodifiedPeptide.get.id else unmodifiedPeptideId }
     
-    def getUnmodifiedPeptideInstanceId : Int = {if(unmodifiedPeptideInstance != null) unmodifiedPeptideInstance.id else unmodifiedPeptideInstanceId }
+    def getUnmodifiedPeptideInstanceId : Int = { if(unmodifiedPepInstance != null && unmodifiedPepInstance != None) unmodifiedPepInstance.get.id else unmodifiedPepInstanceId }
     
-    def getResultSummaryId : Int = {if(resultSummary != null) resultSummary.id else resultSummaryId }
+    def getResultSummaryId : Int = { if(resultSummary != null && resultSummary != None) resultSummary.get.id else resultSummaryId }
     
-    def isProteinSetSpecific: Boolean = { proteinSetCount == 1 }
+    /** Returns a true if the sequence is specific to a protein set. */
+    def isProteinSetSpecific: Boolean = { proteinSetsCount == 1 }
     
-    def isProteinMatchSpecific: Boolean = { proteinMatchCount == 1 }
+    /** Returns a true if the sequence is specific to a protein match. */
+    def isProteinMatchSpecific: Boolean = { proteinMatchesCount == 1 }
     
+    /** Returns a true if the sequence is specific to a protein match. */
     def getPeptideMatchesCount: Int = {  peptideMatchIds.length }
   
   }
   
-  class PeptideSetItem ( // Required fields
+  class PeptideSetItem (
+                     // Required fields
                      var id: Int,
-                     private val peptideSetId: Int =0, //One of these 2 values should be set
-                     val peptideSet: PeptideSet = null,
-                     
-                     private var peptideInstanceId: Int =0, //One of these 2 values should be set
-                     var peptideInstance: PeptideInstance = null,
-                     
                      var isBestPeptideSet: Boolean,
                      var selectionLevel: Int,
                      
+                     // Immutable optional fields
+                     private val peptideSetId: Int =0, //One of these 2 values should be specified
+                     val peptideSet: Option[PeptideSet] = null,
+                     
+                     private val peptideInstanceId: Int = 0, //One of these 2 values should be specified
+                     val peptideInstance: Option[PeptideInstance] = null,
+                     
                      // Mutable optional fields
                      private var resultSummaryId: Int = 0,
-                     var resultSummary: ResultSummary = null,
+                     var resultSummary: Option[ResultSummary] = null,
+                     
                      var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                      ) {
   
-      require( (peptideSetId != 0 || peptideSet !=null ) &&  (peptideInstanceId != 0 || peptideInstance !=null ) )
+      require( peptideSetId != 0 || peptideSet !=null )
+      require( peptideInstanceId != 0 || peptideInstance !=null )
   
-	  def getPeptideSetId : Int = {if(peptideSet != null) peptideSet.id else peptideSetId }
-	  
-	  def getPeptideInstanceId : Int = {if(peptideInstance != null) peptideInstance.id else peptideInstanceId }
-
-	  def getResultSummaryId : Int = {if(resultSummary != null) resultSummary.id else resultSummaryId }
+      // Related objects ID getters
+  	  def getPeptideSetId : Int = {if(peptideSet != null && peptideSet != None) peptideSet.get.id else peptideSetId }
+  	  
+  	  def getPeptideInstanceId : Int = {if(peptideInstance != null && peptideInstance != None ) peptideInstance.get.id else peptideInstanceId }
+  
+  	  def getResultSummaryId : Int = {if(resultSummary != null && resultSummary != None ) resultSummary.get.id else resultSummaryId }
   }
   
   class PeptideSet ( // Required fields
                      var id: Int,
                      val peptideInstances: Array[PeptideInstance],
                      val items: Array[PeptideSetItem],
-                     val peptideMatchCount: Int,
+                     val peptideMatchesCount: Int,
                      val isSubset: Boolean,
                      
                      // Immutable optional fields
                      private val proteinMatchIds: Array[Int] = null,
-                     val proteinMatches: Array[ProteinMatch] = null,
+                     val proteinMatches: Option[Array[ProteinMatch]] = null,
+                     
                      private val resultSummaryId: Int = 0,
-                     val resultSummary: ResultSummary= null,
+                     val resultSummary: Option[ResultSummary] = null,
                      
                      // Mutable optional fields
-                     var proteinSetId: Int = 0, 
-                     private var strictSubsetsIds: Array[Int] = null,
-                     var strictSubsets: Array[PeptideSet] = null,
-                     private var subsumableSubsetsIds: Array[Int] = null,
-                     var subsumableSubsets: Array[PeptideSet] = null,
+                     var proteinSetId: Int = 0,
+                     // TODO: add protein set object ?
+                     
+                     private var strictSubsetIds: Array[Int] = null,
+                     var strictSubsets: Option[Array[PeptideSet]] = null,
+                     
+                     private var subsumableSubsetIds: Array[Int] = null,
+                     var subsumableSubsets: Option[Array[PeptideSet]] = null,
+                     
                      var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                      ) {
     
     // Requirements
-    require( peptideInstances != null && peptideMatchCount >= peptideInstances.length )
+    require( peptideInstances != null )
+    require( peptideMatchesCount >= peptideInstances.length )
     
-    def getProteinMatchIds : Array[Int] = { if(proteinMatches != null) proteinMatches.map(_.id)  else proteinMatchIds  }
+    // Related objects ID getters
     
-    def getResultSummaryId : Int = {if(resultSummary != null) resultSummary.id else resultSummaryId }
+    def getProteinMatchIds : Array[Int] = { if(proteinMatches != null && proteinMatches != None) proteinMatches.get.map(_.id)  else proteinMatchIds  }
     
-    def getStrictSubsetsIds : Array[Int] = { if(strictSubsets != null) strictSubsets.map(_.id)  else strictSubsetsIds  }
+    def getResultSummaryId : Int = { if(resultSummary != null && resultSummary != None) resultSummary.get.id else resultSummaryId }
+    
+    def getStrictSubsetIds : Array[Int] = { if(strictSubsets != null && strictSubsets != None) strictSubsets.get.map(_.id)  else strictSubsetIds  }
       
-    def getSubsumableSubsetsIds : Array[Int] = { if(subsumableSubsets != null) subsumableSubsets.map(_.id)  else subsumableSubsetsIds  }
+    def getSubsumableSubsetIds : Array[Int] = { if(subsumableSubsets != null && subsumableSubsets != None) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
     
-    lazy val peptideMatchIds: Array[Int] = {
+    def getPeptideMatchIds: Array[Int] = {
         
       val peptideMatchIds = new ArrayBuffer[Int]()  
-      for (pepInst <- peptideInstances) for( pmId <- pepInst.getPeptideMatchIds ) peptideMatchIds += pmId
+      for (pepInst <- peptideInstances) peptideMatchIds ++= pepInst.getPeptideMatchIds
       
       peptideMatchIds.toArray
   
     }
     
-    lazy val itemByPepInstanceId: Map[Int, PeptideSetItem] = {
+    def getItemByPepInstanceId: Map[Int, PeptideSetItem] = {
       
       val tmpItemByPepInstanceId = Map() ++ items.map { item => ( item.getPeptideInstanceId -> item ) }
       
-      // Alternatives :
+      // Alternatives syntax :
+      // Two traversals
       // val itemByPepInstanceId1 = items.map( item => (item.peptideInstanceId, item) ).toMap
-      //var itemByPepInstanceId2 = new collection.mutable.HashMap[Int, PeptideSetItem]
-      //items foreach { item => itemByPepInstanceId2 put( item.peptideInstanceId, item ) }
-
-      //val itemByPepInstanceId3 = Map( items.map( {item => (item.peptideInstanceId, item)} ) : _* )
       
-      if( tmpItemByPepInstanceId.size != items.length ) error( "duplicated peptide instance id in the list of peptide set items" )
+      // Two traversals
+      //val itemByPepInstanceId2 = Map( items.map( {item => (item.peptideInstanceId, item)} ) : _* )
+      
+      // One traversal but mutable Map
+      //var itemByPepInstanceId3 = new collection.mutable.HashMap[Int, PeptideSetItem]
+      //items foreach { item => itemByPepInstanceId2 put( item.peptideInstanceId, item ) }
+      
+      // One traversal but more verbose
+      //val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,PeptideSetItem]
+      //for( item <- items ) { mapBuilder += ( item.peptideInstanceId -> item ) }
+      //itemByPepInstanceId4 = mapBuilder.result()
+      
+      if( tmpItemByPepInstanceId.size != items.length ) throw new Exception( "duplicated peptide instance id in the list of peptide set items" )
 
       tmpItemByPepInstanceId
   

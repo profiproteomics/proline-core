@@ -29,7 +29,6 @@ package MsQueryClasses {
                                   
                  // Mutable optional fields
                  var spectrumId: Int = 0,
-                 var intensity: Double = 0,
                  properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                  ) 
     extends MsQuery(id,initialId, mz, charge, properties ) {

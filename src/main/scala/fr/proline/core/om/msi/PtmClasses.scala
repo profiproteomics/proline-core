@@ -28,16 +28,14 @@ package PtmClasses {
   }
   
   class PtmEvidence( // Required fields
-                     val name: String, 
+                     val ionType: String, 
+                     val composition: String, 
                      val monoMass: Double,
                      val averageMass: Double,
                      
                      // Immutable optional fields
                      val isRequired: Boolean = false
                      ) {
-    
-    // Requirements
-    require( monoMass > 0 && averageMass > 0  )  
     
   }
   
@@ -73,7 +71,7 @@ package PtmClasses {
     
     // Lazy values
     lazy val precursorDelta : PtmEvidence = {    
-      ptmEvidences.find( { _.name == "Precursor" } ).get;
+      ptmEvidences.find( { _.ionType == "Precursor" } ).get;
     }
     
   }

@@ -80,7 +80,7 @@ package ProteinClasses {
                      var score: Float = 0,
                      var scoreType: String = null,
                      var coverage: Float = 0,
-                     var peptideMatchCount: Int = 0,
+                     var peptideMatchesCount: Int = 0,
                      var sequenceMatches: Array[SequenceMatch] = null,
                      
                      var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
