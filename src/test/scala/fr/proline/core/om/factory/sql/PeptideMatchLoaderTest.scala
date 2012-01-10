@@ -1,4 +1,4 @@
-package fr.proline.core.om.factory
+package fr.proline.core.om.factory.sql
 
 import org.junit._
 import Assert._
