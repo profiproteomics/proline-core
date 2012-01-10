@@ -44,7 +44,7 @@ method get_decoy_rs_id( Int $target_result_set_id! ) {
   return defined $decoy_result_set ? $decoy_result_set->id : undef;
   }*/
 
-  def getResultSetsMsiSearchIds( rsIds: Seq[Int] ): Seq[Int] = {
+  def getResultSetsMsiSearchIds( rsIds: Seq[Int] ): Array[Int] = {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
     val msiSearchIds = msiDb.transaction { tx =>       
@@ -54,8 +54,13 @@ method get_decoy_rs_id( Int $target_result_set_id! ) {
                    rsIds.mkString(",") +")" ) { r => r.nextInt.get }          
       }
     
-    msiSearchIds.distinct
+    msiSearchIds.distinct.toArray
   }
+  
+  /*def getMsiSearchIdsByResultSetId( rsIds: Seq[Int] ): Seq[Int] = {
+    
+
+  }*/
 
 /*##############################################################################
 # Method: get_msi_search_peaklist_map()
