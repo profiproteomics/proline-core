@@ -81,6 +81,8 @@ has 'ms2_error_tol_unit' => (is => 'rw', isa => 'Str', required => 1 );
 package MsiSearchClasses {
 import fr.proline.core.om.msi.PtmClasses.PtmDefinition
 import fr.proline.core.om.msi.InstrumentClasses.Instrument
+import fr.proline.core.om.msi.MsAnalysisClasses.Peaklist
+import java.util.Date
    
   class SeqDatabase(
                    // Required fields
@@ -121,4 +123,22 @@ import fr.proline.core.om.msi.InstrumentClasses.Instrument
       
   }
   
+  class MSISearch (
+		  //Required fields
+		  val resultFileName : String,
+		  val submittedQueriesCount : Int,
+		  val searchSettings : SearchSettings,
+		  val peakList : Peaklist,
+		  
+		  // Immutable optional fields
+		  val title : String,
+		  val date : Date,
+		  val resultFilePath : String,	  
+		  
+		  // Mutable optional fields		  
+		  var queriesCount : Int
+      ){
+    
+  }
+	
 }

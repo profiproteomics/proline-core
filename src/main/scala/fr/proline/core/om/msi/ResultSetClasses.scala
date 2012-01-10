@@ -9,6 +9,7 @@ import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
 import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
 import fr.proline.core.om.msi.PeptideClasses.Peptide
 import fr.proline.core.om.msi.ProteinClasses.ProteinSet
+import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
   
   class ResultSet ( 
                      // Required fields                     
@@ -23,9 +24,8 @@ import fr.proline.core.om.msi.ProteinClasses.ProteinSet
                      // Mutable optional fields
                      var id: Int = 0,
                      private var decoyResultSetId: Int = 0,
-                     var decoyResultSet: ResultSet = null,
-                     var msiSearchIds: Array[Int] = null,
-                     // var msiSearches: Array[MsiSearch] = null, //TODO
+                     var decoyResultSet: ResultSet = null,                     
+                     var msiSearches: Array[MSISearch] = null, //TODO
                      var name: String = null,
                      var description: String = null,
                      var isQuantified: Boolean = false,
@@ -74,7 +74,6 @@ import fr.proline.core.om.msi.ProteinClasses.ProteinSet
   class ResultSummary (
                      // Required fields
                      val peptideInstances: Array[PeptideInstance],
-                     val peptideSets: Array[PeptideSet],
                      val proteinSets: Array[ProteinSet],
                      val isDecoy: Boolean,
                      val isNative: Boolean,
@@ -94,7 +93,7 @@ import fr.proline.core.om.msi.ProteinClasses.ProteinSet
                      ) {
     
     // Requirements
-    require( peptideInstances != null && peptideSets != null & proteinSets != null )
+    require( peptideInstances != null && proteinSets != null )
     
     def getResultSetId : Int = {if(resultSet != null) resultSet.id else resultSetId }
     

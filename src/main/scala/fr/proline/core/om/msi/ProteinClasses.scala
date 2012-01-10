@@ -3,11 +3,12 @@ package fr.proline.core.om.msi
 package ProteinClasses {
 
   import scala.collection.mutable.HashMap
-  import fr.proline.core.om.msi.PeptideClasses.PeptideSet
-  import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
-  import fr.proline.core.om.msi.PeptideClasses.Peptide
-  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-  import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
+import fr.proline.core.om.msi.PeptideClasses.PeptideSet
+import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
+import fr.proline.core.om.msi.PeptideClasses.Peptide
+import fr.proline.core.om.msi.ResultSetClasses.ResultSet
+import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
+import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
   
   class Protein ( // Required fields                     
                      val sequence: String,
@@ -36,14 +37,13 @@ package ProteinClasses {
                      
                      // Immutable optional fields
                      val isDecoy: Boolean = false,
+                     val resultSetId : Int = 0,
                      
                      // Mutable optional fields
                      private var peptideId: Int = 0,
                      var peptide: Peptide = null,
                      private var bestPeptideMatchId: Int = 0,
                      var bestPeptideMatch: PeptideMatch = null,
-                     private var resultSetId: Int = 0,
-                     var resultSet: ResultSet= null,
                      
                      var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                      
@@ -54,9 +54,7 @@ package ProteinClasses {
     
     def getPeptideId : Int = {if(peptide != null) peptide.id else peptideId }
   
-    def getBestPeptideMatchId : Int = {if(bestPeptideMatch != null) bestPeptideMatch.id else bestPeptideMatchId }
-    
-    def getResultSetId : Int = {if(resultSet != null) resultSet.id else resultSetId }
+    def getBestPeptideMatchId : Int = {if(bestPeptideMatch != null) bestPeptideMatch.id else bestPeptideMatchId }        
     
   }
   
@@ -72,8 +70,7 @@ package ProteinClasses {
                      private var proteinId: Int = 0,
                      var protein: Protein = null,
                      var taxonId: Int = 0,                     
-                     private var resultSetId: Int = 0,
-                     var resultSet: ResultSet= null,                     
+                     private var resultSetId: Int = 0,                     
                      private var seqDatabaseIds: Array[Int] = null,
                      var seqDatabases: Array[SeqDatabase] = null,
                      
@@ -91,8 +88,6 @@ package ProteinClasses {
     require( accession != null && description != null )
   
     def getProteinId : Int = {if(protein != null) protein.id else proteinId }
-    
-    def getResultSetId : Int = {if(resultSet != null) resultSet.id else resultSetId }
    
     def getSeqDatabasesIds : Array[Int] = { if(seqDatabases != null) seqDatabases.map(_.id)  else seqDatabaseIds  }
     
@@ -105,21 +100,20 @@ package ProteinClasses {
                      val proteinMatches: Array[ProteinMatch] = null ,
                      
                      // Immutable optional fields
-                     val peptideSet: Array[PeptideSet] = null,
-                     
+                     val peptideInstances: Array[PeptideInstance] = null,
+                     val peptideInstanceIds: Array[Int] = null,
+                     val resultSummaryId: Int = 0,
+                      
                      // Mutable optional fields
                      var id: Int = 0,
                      private var typicalProteinMatchId: Int = 0,
-                     var typicalProteinMatch: ProteinMatch = null,
-                     private var resultSetId: Int = 0,
-                     var resultSet: ResultSet= null,
+                     var typicalProteinMatch: ProteinMatch = null,                    
                      
                      var score: Float = 0,
                      var scoreType: String = null,
                      var isValidated: Boolean = true,
                      var selectionLevel: Int = 2,
-                     var hasPeptideSubset: Boolean = false,
-                     
+
                      var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                      
                      ) {
@@ -131,6 +125,5 @@ package ProteinClasses {
   
     def getTypicalProteinMatchId : Int = {if(typicalProteinMatch != null) typicalProteinMatch.id else typicalProteinMatchId }
     
-    def getResultSetId : Int = {if(resultSet != null) resultSet.id else resultSetId }
   }   
 }
