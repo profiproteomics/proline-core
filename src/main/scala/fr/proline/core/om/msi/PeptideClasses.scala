@@ -3,16 +3,16 @@ package fr.proline.core.om.msi
 package PeptideClasses {
   
   import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.HashMap
-import org.apache.commons.lang3.StringUtils
-import fr.proline.core.om.msi.MsQueryClasses.Ms2Query
-import fr.proline.core.om.msi.MsQueryClasses.MsQuery
-import fr.proline.core.om.msi.PtmClasses.LocatedPtm
-import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-import fr.proline.core.om.msi.ResultSetClasses.ResultSummary
-import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
-import fr.proline.core.om.msi.ProteinClasses.ProteinSet
+  import scala.collection.mutable.ListBuffer
+  import scala.collection.mutable.HashMap
+  import org.apache.commons.lang3.StringUtils
+  import fr.proline.core.om.msi.MsQueryClasses.Ms2Query
+  import fr.proline.core.om.msi.MsQueryClasses.MsQuery
+  import fr.proline.core.om.msi.PtmClasses.LocatedPtm
+  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
+  import fr.proline.core.om.msi.ResultSetClasses.ResultSummary
+  import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
+  import fr.proline.core.om.msi.ProteinClasses.ProteinSet
   
   class Peptide ( // Required fields
                   var id: Int,
@@ -80,14 +80,13 @@ import fr.proline.core.om.msi.ProteinClasses.ProteinSet
                        
                        // Mutable optional fields
                        var isValidated: Boolean = false, // only defined in the model
+                       var resultSetId: Int = 0,    
                        
                        private var childrenIds: Array[Int] = null,
                        var children: Option[Array[PeptideMatch]] = null,
                        
                        private var bestChildId: Int = 0,
-                       var bestChild : Option[PeptideMatch] = null,
-                       
-                       private var resultSetId: Int = 0,                      
+                       var bestChild : Option[PeptideMatch] = null,                                         
                        
                        var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                        ) {

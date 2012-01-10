@@ -79,10 +79,11 @@ has 'ms2_error_tol_unit' => (is => 'rw', isa => 'Str', required => 1 );
 
  */
 package MsiSearchClasses {
-import fr.proline.core.om.msi.PtmClasses.PtmDefinition
-import fr.proline.core.om.msi.InstrumentClasses.Instrument
-import fr.proline.core.om.msi.MsAnalysisClasses.Peaklist
-import java.util.Date
+  
+  import fr.proline.core.om.msi.PtmClasses.PtmDefinition
+  import fr.proline.core.om.msi.InstrumentClasses.Instrument
+  import fr.proline.core.om.msi.MsAnalysisClasses.Peaklist
+  import java.util.Date
    
   class SeqDatabase(
                    // Required fields

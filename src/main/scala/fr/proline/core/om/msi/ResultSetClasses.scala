@@ -2,14 +2,14 @@ package fr.proline.core.om.msi
 
 package ResultSetClasses {
 
-import scala.collection.mutable.HashMap
-import fr.proline.core.om.msi.PeptideClasses.PeptideSet
-import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
-import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
-import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
-import fr.proline.core.om.msi.PeptideClasses.Peptide
-import fr.proline.core.om.msi.ProteinClasses.ProteinSet
-import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
+  import scala.collection.mutable.HashMap
+  import fr.proline.core.om.msi.PeptideClasses.PeptideSet
+  import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+  import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
+  import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
+  import fr.proline.core.om.msi.PeptideClasses.Peptide
+  import fr.proline.core.om.msi.ProteinClasses.ProteinSet
+  import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
   
   class ResultSet ( 
                      // Required fields                     
@@ -23,12 +23,15 @@ import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
                      
                      // Mutable optional fields
                      var id: Int = 0,
-                     private var decoyResultSetId: Int = 0,
-                     var decoyResultSet: ResultSet = null,                     
-                     var msiSearches: Array[MSISearch] = null, //TODO
                      var name: String = null,
                      var description: String = null,
-                     var isQuantified: Boolean = false,
+                     var isQuantified: Boolean = false,                    
+                     
+                     private var msiSearchIds: Array[Int] = null,
+                     var msiSearches: Array[MSISearch] = null, //TODO
+                     
+                     private var decoyResultSetId: Int = 0,
+                     var decoyResultSet: Option[ResultSet] = null,
                      
                      var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                      
@@ -37,13 +40,13 @@ import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
     // Requirements
     require( peptides != null && peptideMatches != null & proteinMatches != null )
     
-    def getDecoyResultSetId : Int = {if(decoyResultSet != null) decoyResultSet.id else decoyResultSetId }
+    def getDecoyResultSetId : Int = {if(decoyResultSet != null && decoyResultSet != None) decoyResultSet.get.id else decoyResultSetId }
     
     lazy val peptideById: Map[Int, Peptide] = {
       
       val tmpPeptideById = Map() ++ peptides.map { pep => ( pep.id -> pep ) }      
       if( tmpPeptideById.size != peptides.length ) 
-        error( "duplicated peptide id" )
+        throw new Exception( "duplicated peptide id" )
 
       tmpPeptideById
   
@@ -53,7 +56,7 @@ import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
       
       val tmpPeptideMatchById = Map() ++ peptideMatches.map { pepMatch => ( pepMatch.id -> pepMatch ) }      
       if( tmpPeptideMatchById.size != peptideMatches.length ) 
-        error( "duplicated peptide match id" )
+        throw new Exception( "duplicated peptide match id" )
 
       tmpPeptideMatchById
   
@@ -63,7 +66,7 @@ import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
       
       val tmpProtMatchById = Map() ++ proteinMatches.map { protMatch => ( protMatch.id -> protMatch ) }      
       if( tmpProtMatchById.size != proteinMatches.length ) 
-        error( "duplicated protein match id" )
+        throw new Exception( "duplicated protein match id" )
 
       tmpProtMatchById
   
@@ -103,7 +106,7 @@ import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
       
       val tmpPepInstById = Map() ++ peptideInstances.map { pepInst => ( pepInst.id -> pepInst ) }      
       if( tmpPepInstById.size != peptideInstances.length ) 
-        error( "duplicated peptide instance id" )
+        throw new Exception( "duplicated peptide instance id" )
 
       tmpPepInstById
   
@@ -113,7 +116,7 @@ import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
       
       val tmpProtSetById = Map() ++ proteinSets.map { protSet => ( protSet.id -> protSet ) }      
       if( tmpProtSetById.size != proteinSets.length ) 
-        error( "duplicated protein match id" )
+        throw new Exception( "duplicated protein match id" )
 
       tmpProtSetById
   
