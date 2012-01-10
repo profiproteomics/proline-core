@@ -1,15 +1,13 @@
-package fr.proline.core.om.factory
+package fr.proline.core.om.factory.sql
 
 import net.noerd.prequel.DatabaseConfig
 
-       
 class MsQueryLoader( val msiDb: DatabaseConfig ) {
   
   import _root_.fr.proline.core.om.msi.MsQueryClasses._
   import scala.collection.mutable.ArrayBuffer
 
-  def getMsQueries( msiSearchIds: Seq[Int] ): Seq[MsQuery] = {		  	 
-   
+  def getMsQueries( msiSearchIds: Seq[Int] ): Array[MsQuery] = {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
     val parentPeaklistIds = msiDb.transaction { tx =>       
@@ -76,7 +74,7 @@ class MsQueryLoader( val msiDb: DatabaseConfig ) {
       }
     }
     
-    msQueries
+    msQueries.toArray
   }
   
 }

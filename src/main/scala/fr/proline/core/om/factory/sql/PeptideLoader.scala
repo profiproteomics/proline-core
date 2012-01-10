@@ -1,10 +1,9 @@
-package fr.proline.core.om.factory
+package fr.proline.core.om.factory.sql
 
 import net.noerd.prequel.DatabaseConfig
 
 class PeptideLoader( val psDb: DatabaseConfig ) {
   
-  import fr.proline.core.om.factory.PtmDefinitionBuilder
   import _root_.fr.proline.core.om.msi.PeptideClasses._
   import _root_.fr.proline.core.om.msi.PtmClasses._
   import scala.collection.mutable.ArrayBuffer
@@ -184,7 +183,7 @@ class PeptideLoader( val psDb: DatabaseConfig ) {
     
   }
   
-  def getPeptides( peptideIds: Seq[Int] ): Seq[Peptide] = {
+  def getPeptides( peptideIds: Seq[Int] ): Array[Peptide] = {
 
     // TODO: Check if database driver is SQLite
     //my $max_items_by_iter = $msi_rdb->driver eq 'sqlite' ? 998 : 50000;

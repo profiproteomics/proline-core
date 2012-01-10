@@ -1,4 +1,4 @@
-package fr.proline.core.om.factory
+package fr.proline.core.om.factory.sql
 
 import fr.proline.core.om.msi.PtmClasses.PtmDefinition
 import fr.proline.core.om.msi.PtmClasses.PtmEvidence
