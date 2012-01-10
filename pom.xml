@@ -67,12 +67,28 @@
     	<version>3.0.1</version>
     </dependency>
     <dependency>
+    	<groupId>org.xerial</groupId>
+    	<artifactId>sqlite-jdbc</artifactId>
+    	<version>3.7.2</version>
+    	<scope>test</scope>
+    </dependency>
+    <dependency>
     	<groupId>prequel</groupId>
     	<artifactId>prequel</artifactId>
     	<version>2.9.1</version>
-    </dependency>
+    </dependency>    
   </dependencies>
-
+ <repositories>
+    <repository>
+         <releases>           
+         </releases>
+         <snapshots>
+         </snapshots>
+         <id>proline-repo</id>
+         <name>Proline Repository</name>
+         <url>https://bioproj.extra.cea.fr/redmine/projects/proline-repo/repository/raw/maven2</url>
+    </repository>
+</repositories>    
   <build>
     <plugins>
       <plugin>
