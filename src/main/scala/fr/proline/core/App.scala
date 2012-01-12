@@ -1,7 +1,4 @@
 package fr.proline.core
-import fr.proline.core.om.factory.PeptideLoader
-
-
 
 /**
  * @author ${user.name}
