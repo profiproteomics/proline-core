@@ -3,6 +3,7 @@ package fr.proline.core.om.factory.sql
 import org.junit._
 import Assert._
 import fr.proline.core.om.msi.PeptideClasses._
+import fr.proline.core.om.provider.sql.PeptideMatchLoader
 import net.noerd.prequel.DatabaseConfig
 import net.noerd.prequel.IsolationLevels
     
@@ -13,19 +14,19 @@ class PeptideMatchLoaderTest {
     
     @Before
     def initialize() = {
-    	database = DatabaseConfig(
-        driver = "org.sqlite.JDBC",
-        jdbcURL = "jdbc:sqlite:msi-db.sqlite",
-        isolationLevel = IsolationLevels.Serializable
-      )
+//    	database = DatabaseConfig(
+//        driver = "org.sqlite.JDBC",
+//        jdbcURL = "jdbc:sqlite:msi-db.sqlite",
+//        isolationLevel = IsolationLevels.Serializable
+//      )
     }
    
 	@Test
     def testLoadPeptideMatches() = {
 //	   
-    val pepMatchLoader = new PeptideMatchLoader(msiDb = database, psDb = database)
-    val pepMatches = pepMatchLoader.getPeptideMatches(rsIds = Array(1,2,3,4))
-    println(pepMatches.length)
+//    val pepMatchLoader = new PeptideMatchLoader(msiDb = database, psDb = database)
+//    val pepMatches = pepMatchLoader.getPeptideMatches(rsIds = Array(1,2,3,4))
+//    println(pepMatches.length)
 //    assertEquals(12, pepMatches.length )
 	  	 assertTrue(true)
 	}
