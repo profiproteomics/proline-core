@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.sql
 
 import net.noerd.prequel.DatabaseConfig
 
-class ResultSetLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = null ) {
+class ResultSetLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = null )  {
   
   import fr.proline.core.om.msi.ResultSetClasses._
   import fr.proline.core.om.helper.MsiDbHelper
@@ -54,7 +54,7 @@ class ResultSetLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = nul
               proteinMatches = rsProtMatches,
               isDecoy = isDecoy,
               isNative = isNative,
-// VDS TEMPO             msiSearchIds = msiSearchIds,
+           //TODO   msiSearchIds = msiSearchIds,
               decoyResultSetId = decoyResultSetId
             )
                               
