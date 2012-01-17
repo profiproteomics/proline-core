@@ -3,14 +3,14 @@ package fr.proline.core.om.msi
 package ProteinClasses {
 
   import scala.collection.mutable.HashMap
-  import fr.proline.core.om.msi.PeptideClasses.PeptideSet
-  import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
-  import fr.proline.core.om.msi.PeptideClasses.Peptide
-  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-  import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
-  import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+import fr.proline.core.om.msi.PeptideClasses.PeptideSet
+import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
+import fr.proline.core.om.msi.PeptideClasses.Peptide
+import fr.proline.core.om.msi.ResultSetClasses.ResultSet
+import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
+import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
   
-  class BioSequence ( // Required fields
+  class Protein ( // Required fields                     
                      val sequence: String,
                      
                      // Immutable optional fields
@@ -62,7 +62,7 @@ package ProteinClasses {
   }
   
   class ProteinMatch ( 
-                     // Required fields
+                     // Required fields                    
                      val accession: String,
                      val description: String,
                      
@@ -71,12 +71,12 @@ package ProteinClasses {
                      
                      // Mutable optional fields                     
                      var id: Int = 0,
-                     var taxonId: Int = 0,
+                     var taxonId: Int = 0,                     
                      var resultSetId: Int = 0,
-                     
-                     private var bioSequenceId: Int = 0,
-                     var bioSequence: Option[BioSequence] = null,
-                     
+
+                     private var proteinId: Int = 0,
+                     var protein: Option[Protein] = null,
+
                      private var seqDatabaseIds: Array[Int] = null,
                      var seqDatabases: Option[Array[SeqDatabase]] = null,
                      
@@ -93,7 +93,7 @@ package ProteinClasses {
     // Requirements
     require( accession != null && description != null )
   
-    def getProteinId : Int = { if(bioSequence != null && bioSequence != None) bioSequence.get.id else bioSequenceId }
+    def getProteinId : Int = {if(protein != null && protein != None) protein.get.id else proteinId }
    
     def getSeqDatabasesIds : Array[Int] = { if(seqDatabases != null && seqDatabases != None) seqDatabases.get.map(_.id)  else seqDatabaseIds  }
     
@@ -105,7 +105,7 @@ package ProteinClasses {
                      val peptideSet: PeptideSet,
       
                      // Immutable optional fields
-                     
+                      
                      // Mutable optional fields
                      var id: Int = 0,
                      var resultSummaryId: Int = 0,

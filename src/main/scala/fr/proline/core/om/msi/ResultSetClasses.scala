@@ -2,14 +2,14 @@ package fr.proline.core.om.msi
 
 package ResultSetClasses {
 
-  import scala.collection.mutable.HashMap
-  import fr.proline.core.om.msi.PeptideClasses.PeptideSet
-  import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
-  import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
-  import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
-  import fr.proline.core.om.msi.PeptideClasses.Peptide
-  import fr.proline.core.om.msi.ProteinClasses.ProteinSet
-  import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
+import scala.collection.mutable.HashMap
+import fr.proline.core.om.msi.PeptideClasses.PeptideSet
+import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
+import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
+import fr.proline.core.om.msi.PeptideClasses.Peptide
+import fr.proline.core.om.msi.ProteinClasses.ProteinSet
+import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
   
   class ResultSet ( 
                      // Required fields                     
@@ -27,9 +27,8 @@ package ResultSetClasses {
                      var description: String = null,
                      var isQuantified: Boolean = false,                    
                      
-                     private var msiSearchIds: Array[Int] = null,
-                     var msiSearches: Array[MSISearch] = null, //TODO
-                     
+                     var msiSearches: Array[MSISearch] = null, 
+                    
                      private var decoyResultSetId: Int = 0,
                      var decoyResultSet: Option[ResultSet] = null,
                      
