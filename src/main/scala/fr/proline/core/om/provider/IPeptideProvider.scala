@@ -2,7 +2,7 @@ package fr.proline.core.om.provider
 
 import fr.proline.core.om.msi.PeptideClasses.Peptide
 
-trait PeptideProvider {
+trait IPeptideProvider {
   
   def getPeptides( peptideIds: Seq[Int] ): Array[Peptide]
   

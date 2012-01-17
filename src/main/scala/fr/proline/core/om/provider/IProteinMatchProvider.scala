@@ -2,7 +2,7 @@ package fr.proline.core.om.provider
 
 import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
 
-trait ProteinMatchProvider {
+trait IProteinMatchProvider {
 
   def getProteinMatches( protMatchIds: Seq[Int] ): Array[ProteinMatch]
   

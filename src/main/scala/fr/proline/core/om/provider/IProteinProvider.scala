@@ -2,7 +2,7 @@ package fr.proline.core.om.provider
 
 import fr.proline.core.om.msi.ProteinClasses.Protein
 
-trait ProteinProvider {
+trait IProteinProvider {
   
   def getProteins( protIds: Seq[Int] ): Array[Protein]
   
