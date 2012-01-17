@@ -68,7 +68,7 @@ package PeptideClasses {
                        val rank: Int,
                        val score: Float,
                        val scoreType: String,
-                       val deltaMz: Double,
+                       val deltaMoz: Double,
                        val isDecoy: Boolean,
                        val peptide: Peptide,
                        
@@ -115,8 +115,7 @@ package PeptideClasses {
                           private val peptideMatchIds: Array[Int] = null, //One of these 2 values should be specified
                           val peptideMatches: Array[PeptideMatch] = null,
                           
-                          val children: Array[PeptideInstance] = null,
-                         //VDS ?  val proteinSetIds: Array[Int] = null,
+                          val children: Array[PeptideInstance] = null,                         
                           
                           private val unmodifiedPeptideId: Int = 0,
                           val unmodifiedPeptide: Option[Peptide] = null,
@@ -187,8 +186,7 @@ package PeptideClasses {
                      private val resultSummaryId: Int = 0,
                      
                      // Mutable optional fields
-                     val proteinSet: Option[ProteinSet] = null,
-                     val proteinSetId: Int,
+                     val proteinSet: ProteinSet = null,
                      
                      private var strictSubsetIds: Array[Int] = null,
                      var strictSubsets: Option[Array[PeptideSet]] = null,
@@ -203,10 +201,7 @@ package PeptideClasses {
     require( items != null )
     require( peptideMatchesCount >= items.length )
     
-    // Related objects ID getters
-    
-    def getProteinSetId : Int = { if(proteinSet != null && proteinSet != None) proteinSet.get.id  else proteinSetId  }
-    
+    // Related objects ID getters    
     def getStrictSubsetIds : Array[Int] = { if(strictSubsets != null && strictSubsets != None) strictSubsets.get.map(_.id)  else strictSubsetIds  }
       
     def getSubsumableSubsetIds : Array[Int] = { if(subsumableSubsets != null && subsumableSubsets != None) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
