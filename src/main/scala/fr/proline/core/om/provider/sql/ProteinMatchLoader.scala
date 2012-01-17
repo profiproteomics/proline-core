@@ -112,9 +112,9 @@ class ProteinMatchLoader( val msiDb: DatabaseConfig ) {
                               accession = protMatchRecord("accession").asInstanceOf[String],
                               description = protMatchRecord("description").asInstanceOf[String],
                               sequenceMatches = seqMatches,
-//VDS TEMPO                              isDecoy = isDecoy,
+                              isDecoy = isDecoy,
                               seqDatabaseIds = seqDatabaseIds,
-//           VDS TEMPO                   bioSequenceId = bioSequenceId,
+                              proteinId = bioSequenceId,
                               resultSetId = protMatchRecord("result_set_id").asInstanceOf[Int]
                             )
         
