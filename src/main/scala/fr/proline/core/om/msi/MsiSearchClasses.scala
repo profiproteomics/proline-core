@@ -86,59 +86,62 @@ package MsiSearchClasses {
   import java.util.Date
    
   class SeqDatabase(
-                   // Required fields
-                   val id: Int,
-                   val name: String,
-                   val file_path: String,
-                   val sequences_count: Int,
-                   
-                   // Immutable optional fields
-                   val version: String = null,
-                   val release_date: String = null
-                   
-                   ) {
+      
+          // Required fields
+          val id: Int,
+          val name: String,
+          val filePath: String,
+          val sequencesCount: Int,
+           
+          // Immutable optional fields
+          val version: String = null,
+          val releaseDate: String = null
+           
+          ) {
       
   }
  
   
   class SearchSettings(
-                   // Required fields
-                   val software_name: String,
-                   val software_version: String,
-                   val taxonomy: String,
-                   val max_missed_cleavages: Int,
-                   val ms1_charge_states: String,
-                   val ms1_error_tol: Double,
-                   val ms1_error_tol_unit: String,
-                   val is_decoy: Boolean,
-                   val used_enzymes: Array[String], // TODO: create an enzyme class
-                   val variable_ptm_defs: Array[PtmDefinition],
-                   val fixed_ptm_defs: Array[PtmDefinition],
-                   val seq_databases: Array[SeqDatabase],
-                   val instrument: Instrument,
-                   
-                   // Mutable optional fields
-                   var quantitation: String = null
-                   
-                   ) {
+      
+          // Required fields
+          val softwareName: String,
+          val softwareVersion: String,
+          val taxonomy: String,
+          val maxMissedCleavages: Int,
+          val ms1ChargeStates: String,
+          val ms1ErrorTol: Double,
+          val ms1ErrorTolUnit: String,
+          val isDecoy: Boolean,
+          val usedEnzymes: Array[String], // TODO: create an enzyme class
+          val variablePtmDefs: Array[PtmDefinition],
+          val fixedPtmDefs: Array[PtmDefinition],
+          val seqDatabases: Array[SeqDatabase],
+          val instrument: Instrument,
+           
+          // Mutable optional fields
+          var quantitation: String = null
+           
+) {
       
   }
   
   class MSISearch (
-		  //Required fields
-		  val resultFileName : String,
-		  val submittedQueriesCount : Int,
-		  val searchSettings : SearchSettings,
-		  val peakList : Peaklist,
-		  
-		  // Immutable optional fields
-		  val title : String,
-		  val date : Date,
-		  val resultFilePath : String,	  
-		  
-		  // Mutable optional fields		  
-		  var queriesCount : Int
-      ){
+      
+    		  //Required fields
+    		  val resultFileName: String,
+    		  val submittedQueriesCount: Int,
+    		  val searchSettings: SearchSettings,
+    		  val peakList: Peaklist,
+    		  
+    		  // Immutable optional fields
+    		  val title: String,
+    		  val date: Date,
+    		  val resultFilePath: String,	  
+    		  
+    		  // Mutable optional fields		  
+    		  var queriesCount: Int
+          ){
     
   }
 	
