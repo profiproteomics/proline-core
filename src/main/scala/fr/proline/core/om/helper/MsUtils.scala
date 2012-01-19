@@ -21,4 +21,19 @@ object MsUtils {
 
   }
   
+  /** Compute slope and intercept of a line using two data points coordinates */
+  def calcLineParams( x1: Double, y1: Double, x2: Double, y2: Double ): Tuple2[Double,Double] =  {
+    require( x1 != null && y1 != null && x2 != null && y2 != null)
+    
+    val deltaX = x2 - x1
+    if( deltaX == 0 )  {
+      throw new IllegalArgumentException("can't solve line parameters with two identical x values (" + x1 + ")" )
+    }
+    
+    val slope = (y2 - y1) / deltaX
+    val intercept = y1 - (slope * x1)
+    
+    ( slope, intercept )
+  }
+  
 }
