@@ -1,4 +1,4 @@
-package fr.proline.core.om.msi
+package fr.proline.core.om.lcms
 
 package FeatureClasses {
   
@@ -23,10 +23,10 @@ package FeatureClasses {
           val moz: Double,
           val intensity: Double,
           val charge: Int,
-          val fitScore: Double,
+          val fitScore: Option[Double],
           val peaks: Array[Peak],
           val scanInitialId: Int,
-          val overlappingIPs: Array[IsotopicPattern],
+          val overlappingIPs: Option[Array[IsotopicPattern]],
           
           // Mutable optional fields
           var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
@@ -52,12 +52,11 @@ package FeatureClasses {
           val firstScanInitialId: Int,
           val lastScanInitialId: Int,
           val apexScanInitialId: Int,
-          
-          // Immutable optional fields
-          val isotopicPatterns: Array[IsotopicPattern] = null,
-          val overlapping_features: Array[Feature] = null,
-          val sub_features: Array[Feature] = null,
-          val children: Array[Feature] = null,
+          val ms2EventIds: Option[Array[Int]],
+          val subFeatures: Option[Array[Feature]],
+          val children: Option[Array[Feature]],
+          val isotopicPatterns: Option[Array[IsotopicPattern]],
+          val overlappingFeatures: Option[Array[Feature]],
           
           // Mutable optional fields
           var calibratedMoz: Double = Double.NaN,
@@ -69,7 +68,6 @@ package FeatureClasses {
           var firstScanId: Int = 0,
           var lastScanId: Int = 0,
           var apexScanId: Int = 0,
-          var ms2EventIds: Array[Int] = null,
           var bestChildId: Int = 0,
           var theoreticalFeatureId: Int = 0,
           var compoundId: Int = 0,
