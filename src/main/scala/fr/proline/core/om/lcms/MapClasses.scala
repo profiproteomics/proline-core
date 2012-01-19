@@ -151,7 +151,7 @@ package MapClasses {
               
               // Mutable optional fields
               var isLocked: Boolean = false,
-              var normalizationFactor: Float = Float.NaN,
+              var normalizationFactor: Float = 1,
               var mozCalibrations: Option[Array[MapMozCalibration]] = None, // m/z calibration matrix for the entire run
               
               var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
@@ -177,8 +177,6 @@ package MapClasses {
     
   }
   
-  case class Landmark( time: Float, deltaTime: Float )
-  
   case class MapAlignment(
       
               // Required fields
@@ -192,13 +190,15 @@ package MapClasses {
               var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
               
               ) {
-      
+    
     // Requirements
     require( massRange != null && timeList != null && deltaTimeList != null )
     
+    case class Landmark( time: Float, deltaTime: Float )
+    
     def getLandmarks(): Array[Landmark] = {
       
-      var landmarks = new ArrayBuffer[Landmark]
+      var landmarks = new ArrayBuffer[Landmark](timeList.length)
       (timeList, deltaTimeList).zipped foreach { (time, deltaTime) =>
         landmarks += Landmark( time , deltaTime )
       }
@@ -213,8 +213,6 @@ package MapClasses {
       
       val highTimePos = timeList.indexWhere( _ >= elutionTime )
       if( highTimePos == -1 ) throw new Exception("undefined time index for elution time " + elutionTime)
-  
-      val numOfLandmarks = timeList.length
       
       var deltaTime: Float = 0
       
