@@ -7,6 +7,12 @@ package MapClasses {
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.lcms.FeatureClasses.Feature
   
+  // TODO: move somewhere else
+  trait InMemoryIdGen {
+    private var inMemoryIdCount = 0
+    def generateNewId(): Int = { inMemoryIdCount -= 1; inMemoryIdCount }
+  }
+  
   case class FeatureScoring(
       
               // Required fields
@@ -64,7 +70,7 @@ package MapClasses {
   sealed abstract class LcmsMap(
               
               // Required fields
-              val id: Int,
+              //val id: Int,
               val name: String,
               val isProcessed: Boolean,
               val creationTimestamp: Date,
@@ -72,17 +78,19 @@ package MapClasses {
               
               // Immutable optional fields
               val description: String = null,
-              val featureScoring: Option[FeatureScoring] = None
+              val featureScoring: FeatureScoring = null
               
               ) {
     // Requirements
-    require( isProcessed != null && creationTimestamp != null && features != null )
+    require( creationTimestamp != null && features != null )
   }
+  
+  object RunMap extends InMemoryIdGen
   
   case class RunMap(
               
               // Required fields
-              override val id: Int,
+              var id: Int,
               override val name: String,
               override val isProcessed: Boolean,
               override val creationTimestamp: Date,
@@ -93,22 +101,23 @@ package MapClasses {
               
               // Immutable optional fields
               override val description: String = null,
-              override val featureScoring: Option[FeatureScoring] = None,
+              override val featureScoring: FeatureScoring = null,
               
               val peakelFittingModel: PeakelFittingModel = null,
               
               // Mutable optional fields
               var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
               
-              ) extends LcmsMap( id, name, isProcessed, creationTimestamp, features, description, featureScoring ) {
+              ) extends LcmsMap( name, isProcessed, creationTimestamp, features, description, featureScoring ) {
     
     // Requirements
     require( peakPickingSoftware != null )
     
-    def toProcessedMap( id: Int, number: Int, mapSetId: Int ) = {
+    def toProcessedMap( id: Int, number: Int, mapSetId: Int, features: Array[Feature] = this.features ) = {
       
       val curTime = new Date()
       
+      // TODO: use this.copy
       ProcessedMap( id = id,
                     number = number,
                     name = name,
@@ -128,10 +137,12 @@ package MapClasses {
     
   }
   
-  case class ProcessedMap( 
+  object ProcessedMap extends InMemoryIdGen
+  
+  case class ProcessedMap(
               
               // Required fields
-              override val id: Int,
+              var id: Int,
               override val name: String,
               override val isProcessed: Boolean,
               override val creationTimestamp: Date,
@@ -143,11 +154,11 @@ package MapClasses {
               var isAlnReference: Boolean,
               
               val mapSetId: Int,
-              val runMapIds: Array[Int], // Many values only for a master map
+              var runMapIds: Array[Int], // Many values only for a master map
               
               // Immutable optional fields
               override val description: String = null,
-              override val featureScoring: Option[FeatureScoring] = None,              
+              override val featureScoring: FeatureScoring = null,              
               
               // Mutable optional fields
               var isLocked: Boolean = false,
@@ -156,10 +167,10 @@ package MapClasses {
               
               var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
               
-              ) extends LcmsMap( id, name, isProcessed, creationTimestamp, features, description, featureScoring ) {
+              ) extends LcmsMap( name, isProcessed, creationTimestamp, features, description, featureScoring ) {
     
     // Requirements
-    require( modificationTimestamp != null && isMaster != null && isAlnReference != null && runMapIds != null )
+    require( modificationTimestamp != null )
     if( !isMaster ) require( runMapIds.length == 1 )
     
     def copyWithoutClusters(): ProcessedMap = {
@@ -168,11 +179,11 @@ package MapClasses {
       
       for( val ft <- features ) {
         if( !ft.isCluster ) { featuresWithoutClusters += ft }
-        else { featuresWithoutClusters ++= ft.subFeatures.get }
+        else { featuresWithoutClusters ++= ft.subFeatures }
       }
       
       this.copy( features = featuresWithoutClusters.toArray )
-    
+      
     }
     
   }

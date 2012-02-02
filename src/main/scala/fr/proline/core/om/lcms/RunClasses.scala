@@ -33,28 +33,29 @@ package RunClasses {
           
               )
   
-  object Run {
+  object LcmsRun {
     var timeIndexWidth = 10
     def calcTimeIndex( time: Double ): Int = (time/timeIndexWidth).toInt
   }
   
-  case class Run(
+  case class LcmsRun(
           
               // Required fields
               val id: Int,
-              val rawFileName: Double,
-              val instrumentName: String,
+              val rawFileName: String,
+              //val instrumentName: String,
               val minIntensity: Double,
               val maxIntensity: Double,
               val ms1ScanCount: Int,
               val ms2ScanCount: Int,
               val rawFile: RawFile,
-              val scans: Array[Scan],
+              val scans: Array[LcmsScan],
               
               // Mutable optional fields
               var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
               
               ) {
+    require( scans != null )
     
     lazy val scanById = Map() ++ scans.map { scan => ( scan.id -> scan ) }
     
@@ -64,14 +65,14 @@ package RunClasses {
     
     lazy val scanIdsByTimeIndex: Map[Int,Array[Int]] = {
 
-      val timeIndexWidth = Run.timeIndexWidth;
+      val timeIndexWidth = LcmsRun.timeIndexWidth;
       
       import scala.collection.JavaConversions._
       val scanIdsByTimeIndexHashMap = new java.util.HashMap[Int,ArrayBuffer[Int]]()
       
       for( scan <- scans ) {
         
-        val timeIndex = Run.calcTimeIndex(scan.time)
+        val timeIndex = LcmsRun.calcTimeIndex(scan.time)
         
         if( !scanIdsByTimeIndex.containsKey(timeIndex) ) {
           scanIdsByTimeIndexHashMap.put(timeIndex, new ArrayBuffer[Int](1) )
@@ -89,13 +90,13 @@ package RunClasses {
       scanIdsIndexBuilder.result()
     }
   
-    def getScanAtTime( time: Float, msLevel: Int = 1 ): Scan = {
+    def getScanAtTime( time: Float, msLevel: Int = 1 ): LcmsScan = {
       if( time < 0 ) { throw new IllegalArgumentException("time must be a positive number" ); }
       
       val runEndTime = endTime
       val safeTime = if( time > runEndTime ) runEndTime else time
       
-      val timeIndex = Run.calcTimeIndex(time)      
+      val timeIndex = LcmsRun.calcTimeIndex(time)      
       val scanIdsIndex = scanIdsByTimeIndex      
       var matchingScanIds = new ArrayBuffer[Int]
       
@@ -118,7 +119,7 @@ package RunClasses {
     
   }
   
-  case class Scan(
+  case class LcmsScan(
       
               // Required fields
               val id: Int,

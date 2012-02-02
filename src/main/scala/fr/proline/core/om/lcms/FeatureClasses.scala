@@ -4,6 +4,12 @@ package FeatureClasses {
   
   import scala.collection.mutable.HashMap
   
+  // TODO: move somewhere else
+  trait InMemoryIdGen {
+    private var inMemoryIdCount = 0
+    def generateNewId(): Int = { inMemoryIdCount -= 1; inMemoryIdCount }
+  }
+  
   class Peak (
       
           // Required fields
@@ -23,10 +29,10 @@ package FeatureClasses {
           val moz: Double,
           val intensity: Double,
           val charge: Int,
-          val fitScore: Option[Double],
+          val fitScore: Double,
           val peaks: Array[Peak],
           val scanInitialId: Int,
-          val overlappingIPs: Option[Array[IsotopicPattern]],
+          val overlappingIPs: Array[IsotopicPattern],
           
           // Mutable optional fields
           var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
@@ -35,6 +41,8 @@ package FeatureClasses {
     
     
   }
+  
+  object Feature extends InMemoryIdGen
   
   class Feature (
           
@@ -47,18 +55,17 @@ package FeatureClasses {
           val qualityScore: Double,
           val ms1Count: Int,
           val ms2Count: Int,
-          val isCluster: Boolean,
           val isOverlapping: Boolean,
           val firstScanInitialId: Int,
           val lastScanInitialId: Int,
           val apexScanInitialId: Int,
-          val ms2EventIds: Option[Array[Int]],
-          val subFeatures: Option[Array[Feature]],
-          val children: Option[Array[Feature]],
+          val ms2EventIds: Array[Int],
           val isotopicPatterns: Option[Array[IsotopicPattern]],
-          val overlappingFeatures: Option[Array[Feature]],
+          val overlappingFeatures: Array[Feature],
           
           // Mutable optional fields
+          var children: Array[Feature] = null,
+          var subFeatures: Array[Feature] = null,
           var calibratedMoz: Double = Double.NaN,
           var normalizedIntensity: Double = Double.NaN,
           var correctedElutionTime: Float = Float.NaN,
@@ -77,10 +84,13 @@ package FeatureClasses {
           var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
           
           ) {
+    
+    // Requirements
 
     import fr.proline.core.om.helper.MsUtils
     
     lazy val mass = MsUtils.mozToMass( moz, charge )
+    lazy val isCluster = if( subFeatures == null ) false else subFeatures.length > 0
   
   }
   
