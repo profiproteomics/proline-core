@@ -10,20 +10,19 @@ object MsUtils {
     
     import scala.util.matching.Regex
     
-    val DaType = "(?i)Da".r
-    val PPMType = "(?i)PPM".r
+    val DaType = """(?i)Da""".r
+    val PPMType = """(?i)PPM""".r
     
     currentTolUnit match {
-      case DaType => mozTol
-      case PPMType => mozTol * moz / 1000000
-      case _ => throw new IllegalArgumentException("currentTolUnit must Da or PPM")
+      case DaType() => mozTol
+      case PPMType() => mozTol * moz / 1000000
+      case _ => throw new IllegalArgumentException("currentTolUnit must be Da or PPM and not '" + currentTolUnit + "'")
     }
 
   }
   
   /** Compute slope and intercept of a line using two data points coordinates */
   def calcLineParams( x1: Double, y1: Double, x2: Double, y2: Double ): Tuple2[Double,Double] =  {
-    require( x1 != null && y1 != null && x2 != null && y2 != null)
     
     val deltaX = x2 - x1
     if( deltaX == 0 )  {
