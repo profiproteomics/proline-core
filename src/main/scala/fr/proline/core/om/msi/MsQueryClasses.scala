@@ -8,7 +8,7 @@ package MsQueryClasses {
   class MsQuery( // Required fields
                  val id: Int,
                  val initialId: Int,
-                 val mz: Double,
+                 val moz: Double,
                  val charge: Int,
                  
                  // Mutable optional fields
@@ -16,14 +16,14 @@ package MsQueryClasses {
                  ) {
     
     // Requirements
-    require( mz > 0 )
+    require( moz > 0 )
     
   }
   
   class Ms2Query( // Required fields
                  override val id: Int,
                  override val initialId: Int,
-                 override val mz: Double,
+                 override val moz: Double,
                  override val charge: Int,
                  val spectrumTitle: String,
                                   
@@ -31,7 +31,7 @@ package MsQueryClasses {
                  var spectrumId: Int = 0,
                  properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                  ) 
-    extends MsQuery(id,initialId, mz, charge, properties ) {
+    extends MsQuery(id,initialId, moz, charge, properties ) {
     
     // Requirements
     require( StringUtils.isNotEmpty( spectrumTitle )  )
