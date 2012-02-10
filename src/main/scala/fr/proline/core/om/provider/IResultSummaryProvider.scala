@@ -3,13 +3,13 @@ import fr.proline.core.om.msi.ResultSetClasses.ResultSummary
 
 trait IResultSummaryProvider {
   
-  def getResultSummaries( resultSummaryIds: Seq[Int] ): Array[ResultSummary]
+  def getResultSummaries( resultSummaryIds: Seq[Int] ): Array[Option[ResultSummary]]
   
-  def getResultSummary( resultSummaryId:Int ): ResultSummary = { getResultSummaries( Array(0) )(0) }
+  def getResultSummary( resultSummaryId:Int ): Option[ResultSummary] = { getResultSummaries( Array(0) )(0) }
   
-  def getResultSetsResultSummaries( resultSetIds: Seq[Int] ): Array[ResultSummary]
+  def getResultSetsResultSummaries( resultSetIds: Seq[Int] ): Array[Option[ResultSummary]]
   
-  def getResultSetResultSummaries( resultSetId: Int ): Array[ResultSummary] = {
+  def getResultSetResultSummaries( resultSetId: Int ): Array[Option[ResultSummary]] = {
     getResultSetsResultSummaries( Array(resultSetId) )
   }
 }

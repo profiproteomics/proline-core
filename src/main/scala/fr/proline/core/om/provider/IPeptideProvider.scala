@@ -5,9 +5,9 @@ import fr.proline.core.om.msi.PtmClasses.LocatedPtm
 
 trait IPeptideProvider {
   
-  def getPeptides( peptideIds: Seq[Int] ): Array[Peptide]
+  def getPeptides( peptideIds: Seq[Int] ): Array[Option[Peptide]]
   
-  def getPeptide( peptideId:Int ): Peptide = { getPeptides( Array(0) )(0) }
+  def getPeptide( peptideId:Int ): Option[Peptide] = { getPeptides( Array(0) )(0) }
  
-  def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm]) : Peptide 
+  def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm]) : Option[Peptide] 
 }

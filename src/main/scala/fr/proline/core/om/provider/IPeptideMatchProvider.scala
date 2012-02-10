@@ -4,15 +4,15 @@ import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
 
 trait IPeptideMatchProvider {
  
-  def getPeptideMatches( pepMatchIds: Seq[Int] ): Array[PeptideMatch]
+  def getPeptideMatches( pepMatchIds: Seq[Int] ): Array[Option[PeptideMatch]]
   
-  def getPeptideMatch( pepMatchId:Int ): PeptideMatch = {
+  def getPeptideMatch( pepMatchId:Int ): Option[PeptideMatch] = {
     getPeptideMatches( Array(pepMatchId) )(0)
   }
   
-  def getResultSetsPeptideMatches( resultSetIds: Seq[Int] ): Array[PeptideMatch]
+  def getResultSetsPeptideMatches( resultSetIds: Seq[Int] ): Array[Option[PeptideMatch]]
   
-  def getResultSetPeptideMatches( resultSetId: Int ): Array[PeptideMatch] = {
+  def getResultSetPeptideMatches( resultSetId: Int ): Array[Option[PeptideMatch]] = {
     getResultSetsPeptideMatches( Array(resultSetId) )
   }
   
