@@ -7,6 +7,9 @@ import fr.proline.core.om.provider.sql.PeptideMatchLoader
 import net.noerd.prequel.DatabaseConfig
 import net.noerd.prequel.IsolationLevels
     
+/**
+ * TODO : Get a MSIsdb in sqlite for testing !! 
+ */
 @Test
 class PeptideMatchLoaderTest {
       
