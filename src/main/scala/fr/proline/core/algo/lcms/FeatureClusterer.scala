@@ -11,6 +11,7 @@ class FeatureClusterer {
   import fr.proline.core.om.lcms.MapClasses._
   import fr.proline.core.om.lcms.RunClasses._
   import fr.proline.core.om.helper.MsUtils
+  import fr.proline.core.om.helper.MiscUtils.getMedianObject
   
   private val ftMozSortingFunc = new Function2[Feature, Feature, Boolean] {
     def apply(a: Feature, b: Feature): Boolean = if (a.moz < b.moz) true else false
@@ -140,7 +141,7 @@ class FeatureClusterer {
     for( totalFtGroup <- totalFtGroups ) {
       
       val totalFtGroupAsList = totalFtGroup.toList
-      val medianFt = medianObject( totalFtGroupAsList, this.ftMozSortingFunc )
+      val medianFt = getMedianObject( totalFtGroupAsList, this.ftMozSortingFunc )
       val moz = medianFt.moz
       
       val intensity = this.computeClusterIntensity(totalFtGroupAsList, intensityComputationMethod);
@@ -228,24 +229,6 @@ class FeatureClusterer {
     
   }
   
-  // TODO: put in a helper package
-  def medianObject[T]( objects: List[T], sortingFunc: Function2[T,T,Boolean] ): T = {
-    
-    val sortedObjects = objects.sort { (a,b) => sortingFunc(a,b) } 
-    val nbObjects = sortedObjects.length
-    
-    // Compute median index
-    var medianIndex = 0
-    
-    // If even number of objects
-    if( nbObjects % 2 == 0 ) medianIndex = nbObjects / 2
-    // Else => odd number of objects
-    else medianIndex = (nbObjects-1) / 2
-    
-    sortedObjects(medianIndex)
-    
-  }
-  
   private def splitFtGroupByTime( ftGroup: Seq[Feature],
                                   timeTol: Float,
                                   scanById: Map[Int,LcmsScan] ): ArrayBuffer[ArrayBuffer[Feature]] = {
@@ -326,7 +309,7 @@ class FeatureClusterer {
     } else {
       
       // Retrieve the median object which is taken as a reference
-      val refFt = medianObject( sortedFts, this.ftMozSortingFunc )
+      val refFt = getMedianObject( sortedFts, this.ftMozSortingFunc )
       val refFtId = refFt.id
       val refFtMoz = refFt.moz
       
@@ -374,7 +357,7 @@ class FeatureClusterer {
   
     var ftClusterTime = Float.NaN
     
-    if( methodName == "median" ) ftClusterTime = medianObject( features, ftTimeSortingFunc ).elutionTime
+    if( methodName == "median" ) ftClusterTime = getMedianObject( features, ftTimeSortingFunc ).elutionTime
     else if ( methodName == "most_intense" ) ftClusterTime = this.findMostIntenseFeature(features).elutionTime
     else throw new Exception("the cluster time computation method '"+methodName+"' is not implemented")
     

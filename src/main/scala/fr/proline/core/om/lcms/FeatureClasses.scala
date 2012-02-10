@@ -91,6 +91,8 @@ package FeatureClasses {
     
     lazy val mass = MsUtils.mozToMass( moz, charge )
     lazy val isCluster = if( subFeatures == null ) false else subFeatures.length > 0
+    
+    def getCorrectedElutionTime = if( correctedElutionTime.isNaN ) elutionTime else correctedElutionTime
   
   }
   

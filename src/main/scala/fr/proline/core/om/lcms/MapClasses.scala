@@ -188,6 +188,8 @@ package MapClasses {
     
   }
   
+  case class Landmark( time: Float, deltaTime: Float )
+  
   case class MapAlignment(
       
               // Required fields
@@ -204,8 +206,6 @@ package MapClasses {
     
     // Requirements
     require( massRange != null && timeList != null && deltaTimeList != null )
-    
-    case class Landmark( time: Float, deltaTime: Float )
     
     def getLandmarks(): Array[Landmark] = {
       
