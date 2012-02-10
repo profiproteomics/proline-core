@@ -36,9 +36,13 @@ package PtmClasses {
                      // Immutable optional fields
                      val isRequired: Boolean = false
                      ) {
+    // Requirements
+    require( ionType != null &&  composition != null )
     
+    def ionType_ ( newIonType:String )= { if(newIonType == null || ( !newIonType.equals("Precursor") && !newIonType.equals("Artefact") && !newIonType.equals("NeutralLoss") && !newIonType.equals("PepNeutralLoss"))  ) 
+    				  throw new Exception("Invalid IonType specified, must be one of Precursor, Artefact, NeutralLoss, PepNeutralLoss.")}
   }
-  
+
   class PtmSpecificity( // Required fields
                         val location: String, 
       
@@ -67,7 +71,7 @@ package PtmClasses {
     extends PtmSpecificity( location, residue, classification, id, ptmId ) {
     
     // Requirements
-    require( id > 0 && names != null && ptmEvidences != null )
+    require(  names != null && ptmEvidences != null )
     
     // Lazy values
     lazy val precursorDelta : PtmEvidence = {    
