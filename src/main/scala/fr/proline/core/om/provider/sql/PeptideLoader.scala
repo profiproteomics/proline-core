@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.sql
 
 import net.noerd.prequel.DatabaseConfig
+import fr.proline.core.om.builder.PtmDefinitionBuilder
 
 class PeptideLoader( val psDb: DatabaseConfig ) {
   
@@ -249,7 +250,7 @@ class PeptideLoader( val psDb: DatabaseConfig ) {
         val ptmDef = ptmDefMap( ptmSpecifId )
                 
         // Build located PTM
-        val locatedPtm = PtmDefinitionBuilder.buildLocatedPtm( sequence, ptmDef, pepPtmRecord("seq_position").asInstanceOf[Int] )
+        val locatedPtm = PtmDefinitionBuilder.buildLocatedPtm( ptmDef, pepPtmRecord("seq_position").asInstanceOf[Int] )
         locatedPtms += locatedPtm
         
       }

@@ -56,7 +56,7 @@ class MsQueryLoader( val msiDb: DatabaseConfig ) {
           val spectrumTitle = spectrumTitleById( spectrumId )
           msQuery = new Ms2Query( id = rs.getInt("id"), 
                                   initialId = rs.getInt("initial_id"),
-                                  mz = rs.getDouble("moz"),
+                                  moz = rs.getDouble("moz"),
                                   charge = rs.getInt("charge"),
                                   spectrumTitle = spectrumTitle,
                                   spectrumId = spectrumId                                    
@@ -65,7 +65,7 @@ class MsQueryLoader( val msiDb: DatabaseConfig ) {
         } else { 
            msQuery = new MsQuery( id = rs.getInt("id"), 
                                   initialId = rs.getInt("initial_id"),
-                                  mz = rs.getDouble("moz"),
+                                  moz = rs.getDouble("moz"),
                                   charge = rs.getInt("charge")
                                  )
         }
