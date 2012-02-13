@@ -71,6 +71,7 @@ package FeatureClasses {
           var lastScanId: Int = 0,
           var apexScanId: Int = 0,
           var bestChildId: Int = 0,
+          var bestChildMapId: Int = 0,
           var theoreticalFeatureId: Int = 0,
           var compoundId: Int = 0,
           var mapLayerId: Int = 0,
@@ -87,24 +88,32 @@ package FeatureClasses {
     lazy val mass = MsUtils.mozToMass( moz, charge )
     lazy val isCluster = if( subFeatures == null ) false else subFeatures.length > 0
     
+    def getCalibratedMoz = if( calibratedMoz.isNaN ) moz else calibratedMoz
+    def getNormalizedIntensity = if( normalizedIntensity.isNaN ) intensity else normalizedIntensity
     def getCorrectedElutionTime = if( correctedElutionTime.isNaN ) elutionTime else correctedElutionTime
-  
+    
     def toMasterFeature(): Feature = {
       new Feature ( id = Feature.generateNewId(),
                     moz = this.moz,
                     intensity = this.intensity,
                     charge = this.charge,
                     elutionTime = this.correctedElutionTime,
+                    calibratedMoz = this.calibratedMoz,
+                    normalizedIntensity = this.normalizedIntensity,
+                    correctedElutionTime = this.correctedElutionTime,
                     qualityScore = this.qualityScore,
                     ms1Count = this.ms1Count,
                     ms2Count = this.ms2Count,
                     isOverlapping = false,
-                    firstScanId = this.firstScanId,
-                    lastScanId = this.lastScanId,
-                    apexScanId = this.apexScanId,
+                    selectionLevel = this.selectionLevel,
                     firstScanInitialId = this.firstScanInitialId,
                     lastScanInitialId = this.lastScanInitialId,
                     apexScanInitialId = this.apexScanInitialId,
+                    firstScanId = this.firstScanId,
+                    lastScanId = this.lastScanId,
+                    apexScanId = this.apexScanId,
+                    bestChildId = this.bestChildId,
+                    bestChildMapId = this.mapId,
                     ms2EventIds = null,
                     isotopicPatterns = null,
                     overlappingFeatures = null,
