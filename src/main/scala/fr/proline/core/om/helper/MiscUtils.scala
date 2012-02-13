@@ -2,6 +2,25 @@ package fr.proline.core.om.helper
 
 package MiscUtils {
 
+  trait InMemoryIdGen {
+    private var inMemoryIdCount = 0
+    def generateNewId(): Int = { inMemoryIdCount -= 1; inMemoryIdCount }
+  }
+  
+  /** Computes the median value of a sequence of Doubles */
+  /*def median(s: Seq[Double]) = {
+    val (lower, upper) = s.sortWith(_<_).splitAt(s.size / 2)
+    if (s.size % 2 == 0) (lower.last + upper.head) / 2.0 else upper.head
+  }*/
+  
+  object median {
+    def apply[T](s: Seq[T])(implicit n: Fractional[T]) = {
+      import n._
+      val (lower, upper) = s.sortWith(_<_).splitAt(s.size / 2)
+      if (s.size % 2 == 0) (lower.last + upper.head) / fromInt(2) else upper.head
+    }
+  }
+  
   object getMedianObject{
     def apply[T]( objects: List[T], sortingFunc: Function2[T,T,Boolean] ): T = {
     

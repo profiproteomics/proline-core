@@ -71,7 +71,7 @@ import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
                      
                      // Mutable optional fields                     
                      var id: Int = 0,
-                     var taxonId: Int = 0,                     
+                     var taxonId: Int = 0,    
                      var resultSetId: Int = 0,
 
                      private var proteinId: Int = 0,
@@ -119,7 +119,7 @@ import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
                      var score: Float = 0,
                      var scoreType: String = null,
                      var isValidated: Boolean = true,
-                     var selectionLevel: Int = 2,
+                     var selectionLevel: Byte = 2,
                      var hasPeptideSubset: Boolean = false,
 
                      var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]

@@ -65,7 +65,7 @@ package PeptideClasses {
   
   class PeptideMatch ( // Required fields
                        var id: Int, 
-                       val rank: Int,
+                       val rank: Byte,
                        val score: Float,
                        val scoreType: String,
                        val deltaMoz: Double,
@@ -73,8 +73,8 @@ package PeptideClasses {
                        val peptide: Peptide,
                        
                        // Immutable optional fields
-                       val missedCleavage: Int = 0,
-                       val fragmentMatchesCount: Int = 0,
+                       val missedCleavage: Byte = 0,
+                       val fragmentMatchesCount: Short = 0,
                        
                        val msQuery: MsQuery = null, // TODO: require ?
                        
@@ -126,7 +126,7 @@ package PeptideClasses {
                           // Mutable optional fields
                           var proteinMatchesCount: Int = 0,
                           var proteinSetsCount: Int = 0,
-                          var selectionLevel: Int = -1,
+                          var selectionLevel: Byte = -1,
                           
                           var peptideSets: Array[PeptideSet] = null,
                           private var resultSummaryId: Int = 0,                          
@@ -162,7 +162,7 @@ package PeptideClasses {
                      // Required fields
                      var id: Int,
                      var isBestPeptideSet: Boolean,
-                     var selectionLevel: Int,
+                     var selectionLevel: Byte,
                      var peptideSet: PeptideSet,                                         
                      var peptideInstance: PeptideInstance,
                      

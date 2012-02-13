@@ -86,14 +86,14 @@ class PeptideMatchLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = 
       // TODO: load serialized properties
       
       val pepMatch = new PeptideMatch( id = pepMatchRecord("id").asInstanceOf[Int],
-                                       rank = pepMatchRecord("rank").asInstanceOf[Int],
+                                       rank = pepMatchRecord("rank").asInstanceOf[Byte],
                                        score = pepMatchRecord("score").asInstanceOf[Double].toFloat,
                                        scoreType = scoreType,
                                        deltaMoz = pepMatchRecord("delta_moz").asInstanceOf[Double],
                                        isDecoy = isDecoy,
                                        peptide = peptide,
-                                       missedCleavage = pepMatchRecord("missed_cleavage").asInstanceOf[Int],
-                                       fragmentMatchesCount = pepMatchRecord("fragment_match_count").asInstanceOf[Int],
+                                       missedCleavage = pepMatchRecord("missed_cleavage").asInstanceOf[Byte],
+                                       fragmentMatchesCount = pepMatchRecord("fragment_match_count").asInstanceOf[Short],
                                        msQuery = msQuery,                                       
                                        resultSetId = pepMatchRecord("result_set_id").asInstanceOf[Int]
                                       )

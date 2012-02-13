@@ -7,7 +7,7 @@ package MsAnalysisClasses {
                    val id: Int,
                    val file_type: String,
                    val path: String,
-                   val ms_level: Int
+                   val msLevel: Byte
                    ) {
       
   }
