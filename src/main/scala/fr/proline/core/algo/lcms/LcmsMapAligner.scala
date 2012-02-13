@@ -4,9 +4,9 @@ object LcmsMapAligner {
 
   import alignment._
     
-  def apply( methodName: String ): IAlnSmoother = { methodName match {
-    case "comprehensive" => new TimeWindowSmoother()
-    case "iterative" => new LandmarkRangeSmoother()
+  def apply( methodName: String ): ILcmsMapAligner = { methodName match {
+    case "comprehensive" => new ComprehensiveMapAligner()
+    case "iterative" => new IterativeMapAligner()
     case _ => throw new Exception("can't find an appropriate lcms map aligner")
     }
   }

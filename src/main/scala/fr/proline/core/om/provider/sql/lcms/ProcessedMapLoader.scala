@@ -97,7 +97,7 @@ class ProcessedMapLoader( val lcmsDb: LcmsDb,
                        isProcessed = true,
                        creationTimestamp = new Date(), // TODO: parse date
                        features = features,
-                       number = mapRecord("number").asInstanceOf[Int],
+                       number = mapRecord("number").asInstanceOf[Short],
                        modificationTimestamp = new Date(), // TODO: parse date
                        isMaster = SQLStrToBool( mapRecord("is_master").toString() ),
                        isAlnReference = SQLStrToBool( mapRecord("is_aln_reference").toString() ),
@@ -276,7 +276,7 @@ class ProcessedMapLoader( val lcmsDb: LcmsDb,
                   processedMapFeatureRecord.getOrElse("normalized_intensity",Double.NaN).asInstanceOf[Double],
                   processedMapFeatureRecord.getOrElse("corrected_elution_time",Float.NaN).asInstanceOf[Double].toFloat,
                   SQLStrToBool(processedMapFeatureRecord("is_clusterized").toString()),
-                  processedMapFeatureRecord.getOrElse("selection_level",2).asInstanceOf[Int]
+                  processedMapFeatureRecord.getOrElse("selection_level",2).asInstanceOf[Byte]
                   )
     
   }

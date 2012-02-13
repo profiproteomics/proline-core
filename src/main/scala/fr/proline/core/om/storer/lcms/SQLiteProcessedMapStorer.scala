@@ -1,15 +1,15 @@
 package fr.proline.core.om.storer.lcms
 
 import fr.proline.core.LcmsDb
-import net.noerd.prequel.IntFormattable
-import net.noerd.prequel.ReusableStatement
-import fr.proline.core.om.helper.SqlUtils.BoolToSQLStr
 
 class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
   
   import scala.collection.mutable.ArrayBuffer
+  import net.noerd.prequel.IntFormattable
+  import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.SQLFormatterImplicits._
+  import fr.proline.core.om.helper.SqlUtils.BoolToSQLStr
   import fr.proline.core.om.lcms.MapClasses.ProcessedMap
   import fr.proline.core.om.lcms.FeatureClasses.Feature
   

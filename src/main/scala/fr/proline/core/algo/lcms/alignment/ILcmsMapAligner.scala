@@ -68,7 +68,7 @@ trait ILcmsMapAligner {
       val timeList = landmarksSortedByTime.map { _.time }
       val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }
       
-      val mapAlignment = new MapAlignment (
+      val mapAlignment = new MapAlignment(
                               fromMapId = map1.id,
                               toMapId = map2.id,
                               massRange = (massRangeIndex*massInterval,(massRangeIndex+1)*massInterval),

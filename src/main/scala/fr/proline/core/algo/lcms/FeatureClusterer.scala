@@ -21,7 +21,7 @@ class FeatureClusterer {
     def apply(a: Feature, b: Feature): Boolean = if (a.elutionTime < b.elutionTime) true else false
   }
   
-  def clusterizeFeatures( lcmsMap: LcmsMap, scans: Array[LcmsScan], params: ClusteringParams ): ProcessedMap = {
+  def clusterizeFeatures( lcmsMap: LcmsMap, scans: Seq[LcmsScan], params: ClusteringParams ): ProcessedMap = {
     
     val lcmsMapId = if( lcmsMap.isProcessed ) lcmsMap.asInstanceOf[ProcessedMap].id
                     else lcmsMap.asInstanceOf[RunMap].id
@@ -176,8 +176,8 @@ class FeatureClusterer {
                                     charge = charge,
                                     intensity = intensity,
                                     elutionTime = elutionTime,
-                                    ms1Count = ms1Count,
-                                    ms2Count = ms2Count,
+                                    ms1Count = ms1Count.toByte,
+                                    ms2Count = ms2Count.toByte,
                                     firstScanId = firstScanId,
                                     lastScanId = lastScanId,
                                     apexScanId = apexScanId,

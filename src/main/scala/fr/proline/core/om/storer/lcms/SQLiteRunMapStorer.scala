@@ -10,7 +10,7 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb, storePeaks: Boolean = false ) extends 
   import scala.collection.mutable.ArrayBuffer
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.SQLFormatterImplicits._
-  import net.noerd.prequel.Nullable
+  //import net.noerd.prequel.Nullable
 
   import fr.proline.core.om.lcms.MapClasses._
   import fr.proline.core.om.lcms.FeatureClasses.Feature

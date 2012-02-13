@@ -5,13 +5,8 @@ package MapClasses {
   import java.util.Date
   import scala.collection.mutable.HashMap
   import scala.collection.mutable.ArrayBuffer
+  import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
   import fr.proline.core.om.lcms.FeatureClasses.Feature
-  
-  // TODO: move somewhere else
-  trait InMemoryIdGen {
-    private var inMemoryIdCount = 0
-    def generateNewId(): Int = { inMemoryIdCount -= 1; inMemoryIdCount }
-  }
   
   case class FeatureScoring(
       
@@ -113,11 +108,10 @@ package MapClasses {
     // Requirements
     require( peakPickingSoftware != null )
     
-    def toProcessedMap( id: Int, number: Int, mapSetId: Int, features: Array[Feature] = this.features ) = {
+    def toProcessedMap( id: Int, number: Short, mapSetId: Int, features: Array[Feature] = this.features ) = {
       
       val curTime = new Date()
       
-      // TODO: use this.copy
       ProcessedMap( id = id,
                     number = number,
                     name = name,
@@ -148,7 +142,7 @@ package MapClasses {
               override val creationTimestamp: Date,
               override val features: Array[Feature],
               
-              val number: Int,
+              val number: Short,
               var modificationTimestamp: Date,
               val isMaster: Boolean,
               var isAlnReference: Boolean,
@@ -183,6 +177,13 @@ package MapClasses {
       }
       
       this.copy( features = featuresWithoutClusters.toArray )
+      
+    }
+    
+    def copyWithSelectedFeatures(): ProcessedMap = {
+       
+      val selectedFeatures = features filter { _.selectionLevel >= 2 }
+      this.copy( features = selectedFeatures )
       
     }
     
@@ -280,7 +281,7 @@ package MapClasses {
     // Requirements
     require( mapAlignments != null )
     
-    def calcReferenceElutionTime( elutionTime: Float, mass: Float ): Float = {
+    def calcReferenceElutionTime( elutionTime: Float, mass: Double ): Float = {
   
       // Select right map alignment
       var mapAln = mapAlignments find { x => mass >= x.massRange._1 && mass < x.massRange._2 }

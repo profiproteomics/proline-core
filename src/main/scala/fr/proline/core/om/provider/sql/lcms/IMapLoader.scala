@@ -104,7 +104,7 @@ trait IMapLoader {
                     normalizedIntensity: Double = Double.NaN,
                     correctedElutionTime: Float = Float.NaN,
                     isClusterized: Boolean = false,
-                    selectionLevel: Int = 2
+                    selectionLevel: Byte = 2
                     ): Feature = {
     
     val ftId = featureRecord("id").asInstanceOf[Int]
@@ -118,11 +118,11 @@ trait IMapLoader {
     new Feature( id = ftId,
                  moz = featureRecord("moz").asInstanceOf[Double],
                  intensity = featureRecord("intensity").asInstanceOf[Double],
-                 charge = featureRecord("charge").asInstanceOf[Int],
+                 charge = featureRecord("charge").asInstanceOf[Byte],
                  elutionTime = featureRecord("elution_time").asInstanceOf[Double].toFloat,
                  qualityScore = featureRecord.getOrElse("quality_score",Double.NaN).asInstanceOf[Double],
-                 ms1Count = featureRecord("ms1_count").asInstanceOf[Int],
-                 ms2Count = featureRecord("ms2_count").asInstanceOf[Int],
+                 ms1Count = featureRecord("ms1_count").asInstanceOf[Short],
+                 ms2Count = featureRecord("ms2_count").asInstanceOf[Short],
                  isOverlapping = SQLStrToBool( featureRecord("is_overlapping").toString() ),
                  firstScanInitialId = scanInitialIdById(firstScanId),
                  lastScanInitialId = scanInitialIdById(lastScanId),
