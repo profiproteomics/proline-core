@@ -4,9 +4,23 @@ trait IMapSetNormalizer {
 
   import fr.proline.core.om.lcms.MapClasses._
   
-  def computeNormalizationFactors( mapSet: MapSet ): Map[Int,Float]
-
-  def determineReferenceMapId( mapIds: List[Int], intensityByMapId: Map[Int,Double] ): Int = {
+  def normalizeFeaturesIntensity( mapSet: MapSet ): Unit = {
+    
+    val nfByMapId = this.computeNormalizationFactorByMapId( mapSet )
+    
+    for( childMap <- mapSet.childMaps ) {
+      val nf = nfByMapId(childMap.id)
+      childMap.normalizationFactor = nf
+      
+      for( ft <- childMap.features ) ft.normalizedIntensity = ft.intensity * nf
+    }
+    
+  }
+  
+  /** Required method for classes consuming the trait */
+  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float]
+  
+  protected def determineReferenceMapId( mapIds: List[Int], intensityByMapId: Map[Int,Double] ): Int = {
     
     // Compute ref map as the map with the median of intensity sum or intensity median
     val mapIdsSortedByIntensity = mapIds.sort { (a,b) => intensityByMapId(a) < intensityByMapId(b) } 
@@ -17,7 +31,7 @@ trait IMapSetNormalizer {
   
   }
   
-  protected def calcNormalizationFactors( mapIds: List[Int], intensityByMapId: Map[Int,Double] ): Map[Int,Float] = {
+  protected def calcNormalizationFactorByMapId( mapIds: List[Int], intensityByMapId: Map[Int,Double] ): Map[Int,Float] = {
     
     val refMapId = this.determineReferenceMapId( mapIds, intensityByMapId )
     val refMapIntensity = intensityByMapId(refMapId)

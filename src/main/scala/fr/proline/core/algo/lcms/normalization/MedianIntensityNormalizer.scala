@@ -6,7 +6,7 @@ class MedianIntensityMapNormalizer extends IMapSetNormalizer {
   import fr.proline.core.om.lcms.MapClasses._
   import fr.proline.core.om.helper.MiscUtils.median
   
-  def computeNormalizationFactors( mapSet: MapSet ): Map[Int,Float] = {
+  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float] = {
     
     val medianIntensityByMapIdBuilder = scala.collection.immutable.Map.newBuilder[Int,Double]
     
@@ -18,7 +18,7 @@ class MedianIntensityMapNormalizer extends IMapSetNormalizer {
       medianIntensityByMapIdBuilder += (lcmsMap.id -> mapMedianIntensity)
     }
     
-    this.calcNormalizationFactors( mapSet.getChildMapIds.toList, medianIntensityByMapIdBuilder.result() )
+    this.calcNormalizationFactorByMapId( mapSet.getChildMapIds.toList, medianIntensityByMapIdBuilder.result() )
     
   }
 

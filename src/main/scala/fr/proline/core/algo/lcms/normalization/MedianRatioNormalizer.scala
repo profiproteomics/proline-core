@@ -6,7 +6,7 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
   import fr.proline.core.om.lcms.MapClasses._
   import fr.proline.core.om.helper.MiscUtils.median
   
-  def computeNormalizationFactors( mapSet: MapSet ): Map[Int,Float] = {
+  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float] = {
     
     val masterMap = mapSet.masterMap
     if( masterMap == null ) { throw new Exception( "The map_set #"+ mapSet.id +" must have a master map\n") }
