@@ -24,3 +24,13 @@ object ProcessedMapStorer {
     }
   }
 }
+
+/** A factory object for implementations of the IMasterMapStorer trait */
+object MasterMapStorer {
+  def apply( lcmsDb: LcmsDb ): IMasterMapStorer = { lcmsDb.config.driver match {
+    case "org.postgresql.JDBC" => new GenericMasterMapStorer(lcmsDb)
+    case "org.sqlite.JDBC" => new SQLiteMasterMapStorer(lcmsDb)
+    case _ => new GenericMasterMapStorer(lcmsDb)
+    }
+  }
+}
