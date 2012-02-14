@@ -7,7 +7,7 @@ class GenericProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
   import fr.proline.core.om.lcms.MapClasses.ProcessedMap
   import fr.proline.core.om.lcms.FeatureClasses.Feature
   
-  def storeProcessedMap( processedMap: ProcessedMap ): Unit = {
+  def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean ): Unit = {
     throw new Exception("not yet implemented")
     
     if( ! processedMap.isProcessed ) throw new Exception( "can't store a run map" )

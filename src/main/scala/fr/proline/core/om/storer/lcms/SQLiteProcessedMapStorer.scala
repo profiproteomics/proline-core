@@ -5,7 +5,6 @@ import fr.proline.core.LcmsDb
 class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
   
   import scala.collection.mutable.ArrayBuffer
-  import net.noerd.prequel.IntFormattable
   import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.SQLFormatterImplicits._
@@ -13,36 +12,41 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
   import fr.proline.core.om.lcms.MapClasses.ProcessedMap
   import fr.proline.core.om.lcms.FeatureClasses.Feature
   
-  def storeProcessedMap( processedMap: ProcessedMap ): Unit = {
+  def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = true ): Unit = {
     
     // Retrieve or create transaction
-    val lcmsDbConn = lcmsDb.getOrCreateConnection()
+    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
+    
+    // Insert processed map
+    val newProcessedMapId = this.insertProcessedMap( processedMap )
+    
+    // Update processed map id
+    processedMap.id = newProcessedMapId
+    
+    // Link the processed map to the corresponding run maps
+    this.linkProcessedMapToRunMaps( processedMap )
+    
+    // Insert processed map feature items
+    this.insertProcessedMapFeatureItems( processedMap )
+
+    // Store clusters
+    this.storeFeatureClusters( processedMap.features )
+    
+    ()
+  
+  }
+  
+  def insertProcessedMap( processedMap: ProcessedMap ): Int = {
+    
+    // Retrieve or create transaction
     val lcmsDbTx = lcmsDb.getOrCreateTransaction()
     
     // Create new map
-    val runMapStorer = new SQLiteRunMapStorer( lcmsDb )
-    val newMapId = runMapStorer.storeMap( processedMap, processedMap.modificationTimestamp )
-     
-    // Update processed map id
-    processedMap.id = newMapId
+    val newMapId = new SQLiteRunMapStorer( lcmsDb ).insertMap( processedMap, processedMap.modificationTimestamp )
     
     // Store the related a processed map
     val processedMapColumns = Seq( "id","number","normalization_factor","is_master","is_aln_reference","is_locked","map_set_id")
     val processedMapColNamesAsStr = processedMapColumns.mkString(",")
-    /*stmt = lcmsDbConn.prepareStatement("INSERT INTO map("+processedMapColNamesAsStr+") VALUES(?, ?, ?, ?, ?, ?, ?)")
-    val processedMapStmtBuilder = new ReusableStatement( stmt, lcmsDb.config.sqlFormatter )
-      mapStmtBuilder << 
-        newMapId <<
-        processedMap.number <<
-        processedMap.normalizationFactor <<
-        BoolToSQLStr(processedMap.isMaster,lcmsDb.boolStrAsInt) <<
-        BoolToSQLStr(processedMap.isAlnReference,lcmsDb.boolStrAsInt) <<
-        BoolToSQLStr(processedMap.isLocked,lcmsDb.boolStrAsInt) <<
-        processedMap.mapSetId
-        
-     // Execute statement
-     stmt.execute()
-     stmt.close()*/
      
     lcmsDbTx.execute("INSERT INTO processed_map("+processedMapColNamesAsStr+") VALUES(?,?,?,?,?,?,?)",
                         newMapId,
@@ -54,12 +58,28 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
                         processedMap.mapSetId
                       )
     
-    // Link the processed map to the corresponding run maps
+    newMapId
+  }
+  
+  def linkProcessedMapToRunMaps( processedMap: ProcessedMap ): Unit = {
+    
+    // Retrieve or create transaction
+    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
+    
     lcmsDbTx.executeBatch("INSERT INTO processed_map_run_map VALUES(?,?,?,?,?,?,?)") { statement => 
       processedMap.runMapIds.foreach { runMapId =>
-        statement.executeWith( newMapId, runMapId )
+        statement.executeWith( processedMap.id, runMapId )
       }
     }
+    
+  }
+  
+  def insertProcessedMapFeatureItems( processedMap: ProcessedMap ): Unit = {
+    
+    // Retrieve or create transaction
+    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
+    
+    val processedMapId = processedMap.id
     
     /*val processedFtColumns = Seq( "processed_map_id","feature_id","calibrated_moz",
                                   "normalized_intensity","corrected_elution_time",
@@ -73,25 +93,20 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
         if( feature.isCluster ) {
           
           // Update feature cluster map id
-          feature.mapId = newMapId
+          feature.mapId = processedMapId
           
-          // Store processed sub-features
+          // Store cluster sub-features
           for( subFt <- feature.subFeatures ) {
-            insertProcessedFtUsingReusableStatement( subFt, statement )
+            insertProcessedMapFtItemUsingReusableStatement( subFt, statement )
           }
         }
         else {
           // Store the processed feature
-          insertProcessedFtUsingReusableStatement( feature, statement )
+          insertProcessedMapFtItemUsingReusableStatement( feature, statement )
         }
       }
     }
-
-    // Store clusters
-    this.storeFeatureClusters( processedMap.features )
     
-    ()
-  
   }
   
   def storeFeatureClusters( features: Seq[Feature] ): Unit = {
@@ -123,7 +138,7 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
     lcmsDbTx.executeBatch("INSERT INTO processed_map_feature_item VALUES("+ ("?" * 8).mkString(",") +")") { statement => 
       features.withFilter( _.isCluster ).foreach { ft =>
         nbSubFts += ft.subFeatures.length
-        insertProcessedFtUsingReusableStatement( ft, statement )
+        insertProcessedMapFtItemUsingReusableStatement( ft, statement )
       }
     }
     
@@ -148,7 +163,7 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
     ()
   }
   
-  private def insertProcessedFtUsingReusableStatement(ft: Feature, statement: ReusableStatement ): Unit = {
+  private def insertProcessedMapFtItemUsingReusableStatement(ft: Feature, statement: ReusableStatement ): Unit = {
     
     val calibratedMoz = if( ft.calibratedMoz.isNaN ) None else Some(ft.calibratedMoz)
     val normalizedIntensity = if( ft.normalizedIntensity.isNaN ) None else Some(ft.normalizedIntensity)

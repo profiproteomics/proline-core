@@ -5,7 +5,7 @@ trait IProcessedMapStorer {
   import fr.proline.core.om.lcms.MapClasses.ProcessedMap
   import fr.proline.core.om.lcms.FeatureClasses.Feature
   
-  def storeProcessedMap( processedMap: ProcessedMap ): Unit
+  def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = false ): Unit
   def storeFeatureClusters( features: Seq[Feature] ): Unit
   
  }

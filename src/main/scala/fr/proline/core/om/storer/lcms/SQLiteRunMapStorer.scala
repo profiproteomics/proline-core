@@ -1,70 +1,30 @@
 package fr.proline.core.om.storer.lcms
 
 import fr.proline.core.LcmsDb
-import net.noerd.prequel.IntFormattable
-import net.noerd.prequel.ReusableStatement
-import fr.proline.core.om.helper.SqlUtils.BoolToSQLStr
 
-class SQLiteRunMapStorer( lcmsDb: LcmsDb, storePeaks: Boolean = false ) extends IRunMapStorer {
+class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
   
   import scala.collection.mutable.ArrayBuffer
+  import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.SQLFormatterImplicits._
-  //import net.noerd.prequel.Nullable
-
+  import fr.proline.core.om.helper.SqlUtils.BoolToSQLStr
   import fr.proline.core.om.lcms.MapClasses._
   import fr.proline.core.om.lcms.FeatureClasses.Feature
-  
-  def storeMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int = {
-    
-    val lcmsDbConn = lcmsDb.getOrCreateConnection()
-    
-    //val curDate = new java.util.Date
-    val ftScoringId = if( lcmsMap.featureScoring != null ) Some(lcmsMap.featureScoring.id) else None
-    val lcmsMapType = if( lcmsMap.isProcessed ) 1 else 0
-    
-    // TODO: store properties
-    
-    // Create a new map
-    val mapColumns = Seq( "name","description","type","creation_timestamp","modification_timestamp","feature_scoring_id")
-    val mapColNamesAsStr = mapColumns.mkString(",")
-    
-    // Prepare statement
-    var stmt = lcmsDbConn.prepareStatement("INSERT INTO map("+mapColNamesAsStr+") VALUES(?, ?, ?, ?, ?, ?)")
-    val mapRecordBuilder = new ReusableStatement( stmt, lcmsDb.config.sqlFormatter )
-    mapRecordBuilder <<
-      lcmsMap.name <<
-      lcmsMap.description <<
-      lcmsMapType <<
-      lcmsMap.creationTimestamp <<
-      modificationTimestamp <<
-      ftScoringId
-     
-    // Execute statement
-    stmt.execute()
-    val newMapId = stmt.getGeneratedKeys().getInt("last_insert_rowid()") // SQLite specific query
-    stmt.close()
-    
-    newMapId
-    
-  }
-  
-  def storeRunMap( runMap: RunMap ): Unit = {
+
+  def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit = {
     
     // Retrieve or create transaction
     val lcmsDbConn = lcmsDb.getOrCreateConnection()
     val lcmsDbTx = lcmsDb.getOrCreateTransaction()
     
     // Create new map
-    val newRunMapId = this.storeMap( runMap, null )
+    val newRunMapId = this.insertMap( runMap, null )
     
     // Update run map id
     runMap.id = newRunMapId
     
-    // Store the related run map
-    //val runMapColumns = Seq( "id","run_id","peak_picking_software_id","peakel_fitting_model_id")
-    //val runMapColNamesAsStr = runMapColumns.mkString(",")
-    
+    // Store the related run map   
     val peakPickingSoftwareId = if( runMap.featureScoring != null ) Some(runMap.peakPickingSoftware.id) else None
     val peakelFittingModelId = if( runMap.featureScoring != null ) Some(runMap.peakelFittingModel.id) else None
      
@@ -81,20 +41,22 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb, storePeaks: Boolean = false ) extends 
     // Loop over features to import them
     val flattenedFeatures = new ArrayBuffer[Feature](runMap.features.length)
     for( ft <- runMap.features ) {
-      flattenedFeatures += ft
+      ft.mapId = newRunMapId
       
       val newFtId = this.insertFeatureUsingPreparedStatement( ft, featureInsertStmt )
       ft.id = newFtId
-      ft.mapId = newRunMapId
+      
+      flattenedFeatures += ft
       
       // Import overlapping features
       if( ft.overlappingFeatures != null ) {
         for( olpFt <- ft.overlappingFeatures ) {
-          flattenedFeatures += olpFt
+          ft.mapId = newRunMapId
           
           val newFtId = this.insertFeatureUsingPreparedStatement( olpFt, featureInsertStmt )
           ft.id = newFtId
-          ft.mapId = newRunMapId
+          
+          flattenedFeatures += olpFt
         }
       }
     }
@@ -155,6 +117,52 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb, storePeaks: Boolean = false ) extends 
 
     ()
   
+  }
+  
+  def insertMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int = {
+    
+    // Retrieve or create transaction
+    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
+    
+    //val curDate = new java.util.Date
+    val ftScoringId = if( lcmsMap.featureScoring != null ) Some(lcmsMap.featureScoring.id) else None
+    val lcmsMapType = if( lcmsMap.isProcessed ) 1 else 0
+    
+    // TODO: store properties
+    
+    // Create a new map
+    val mapColumns = Seq( "name","description","type","creation_timestamp","modification_timestamp","feature_scoring_id")
+    val mapColNamesAsStr = mapColumns.mkString(",")
+    
+    //var stmt = lcmsDbConn.prepareStatement("INSERT INTO map("+mapColNamesAsStr+") VALUES(?, ?, ?, ?, ?, ?)")
+    /*val mapRecordBuilder = new ReusableStatement( stmt, lcmsDb.config.sqlFormatter )
+    mapRecordBuilder <<
+      lcmsMap.name <<
+      lcmsMap.description <<
+      lcmsMapType <<
+      lcmsMap.creationTimestamp <<
+      modificationTimestamp <<
+      ftScoringId
+     
+    // Execute statement
+    stmt.execute()
+    val newMapId = stmt.getGeneratedKeys().getInt("last_insert_rowid()") // SQLite specific query
+    stmt.close()*/    
+    
+    var newMapId = 0
+    lcmsDbTx.executeBatch("INSERT INTO map("+mapColNamesAsStr+") VALUES(?,?,?,?,?,?)") { statement => 
+      statement.executeWith( lcmsMap.name, 
+                             lcmsMap.description,
+                             lcmsMapType,
+                             lcmsMap.creationTimestamp,
+                             modificationTimestamp,
+                             ftScoringId
+                            )
+       newMapId = statement.wrapped.getGeneratedKeys().getInt("last_insert_rowid()") // SQLite specific query
+    }
+    
+    newMapId
+    
   }
   
   def prepareStatementForFeatureInsert( lcmsDbConn: java.sql.Connection ): java.sql.PreparedStatement = {
