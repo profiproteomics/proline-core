@@ -220,24 +220,24 @@ case class MapAlignment(
     
     import fr.proline.core.om.helper.MsUtils.calcLineParams
     
-    val highTimePos = timeList.indexWhere( _ >= elutionTime )
-    if( highTimePos == -1 ) throw new Exception("undefined time index for elution time " + elutionTime)
+    val timeIndex = timeList.indexWhere( _ >= elutionTime )
+    //if( timeIndex == -1 ) throw new Exception("undefined time index for elution time " + elutionTime)
     
     var deltaTime: Float = 0
     
     // If we are looking left-side of the alignment boundaries
     // We take the delta time of the first landmark
-    if( highTimePos == 0  ) {
+    if( timeIndex == 0  ) {
       deltaTime = deltaTimeList(0)
     // Else if we are looking right-side of the alignment boundaries
     // We take the delta time of the last landmark
-    } else if( highTimePos-1 > deltaTime ) {
+    } else if( timeIndex == -1 ) { // || highTimeIndex + 1 > timeList.length
       deltaTime = deltaTimeList.last
     // Else we are inside the  alignment boundaries
     // We compute the linear interpolation
     } else {
-      val( x1, y1 ) = ( timeList(highTimePos-1), deltaTimeList(highTimePos-1) );
-      val( x2, y2) = ( timeList(highTimePos) , deltaTimeList(highTimePos) );        
+      val( x1, y1 ) = ( timeList(timeIndex-1), deltaTimeList(timeIndex-1) );
+      val( x2, y2) = ( timeList(timeIndex) , deltaTimeList(timeIndex) );        
       
       val ( a, b ) = calcLineParams( x1, y1, x2, y2 )
       deltaTime = (a * elutionTime + b).toFloat;
