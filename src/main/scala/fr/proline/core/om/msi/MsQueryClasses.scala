@@ -9,7 +9,7 @@ package MsQueryClasses {
                  val id: Int,
                  val initialId: Int,
                  val moz: Double,
-                 val charge: Byte,
+                 val charge: Int,
                  
                  // Mutable optional fields
                  var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
@@ -24,7 +24,7 @@ package MsQueryClasses {
                  override val id: Int,
                  override val initialId: Int,
                  override val moz: Double,
-                 override val charge: Byte,
+                 override val charge: Int,
                  val spectrumTitle: String,
                                   
                  // Mutable optional fields

@@ -17,9 +17,9 @@ package InstrumentClasses {
                    val id: Int,
                    val name: String,
                    val instrument: Instrument,
-                   val ms1_analyzer: String,
-                   val msn_analyzer: String,
-                   val activation_type: String
+                   val ms1Analyzer: String,
+                   val msnAnalyzer: String,
+                   val activationType: String
                    ) {
       
   }

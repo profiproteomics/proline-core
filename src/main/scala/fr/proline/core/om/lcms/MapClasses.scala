@@ -108,7 +108,7 @@ package MapClasses {
     // Requirements
     require( peakPickingSoftware != null )
     
-    def toProcessedMap( id: Int, number: Short, mapSetId: Int, features: Array[Feature] = this.features ) = {
+    def toProcessedMap( id: Int, number: Int, mapSetId: Int, features: Array[Feature] = this.features ) = {
       
       val curTime = new Date()
       
@@ -142,7 +142,7 @@ package MapClasses {
               override val creationTimestamp: Date,
               override val features: Array[Feature],
               
-              val number: Short,
+              val number: Int,
               var modificationTimestamp: Date,
               val isMaster: Boolean,
               var isAlnReference: Boolean,

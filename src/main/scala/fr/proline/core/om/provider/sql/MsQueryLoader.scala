@@ -57,7 +57,7 @@ class MsQueryLoader( val msiDb: DatabaseConfig ) {
           msQuery = new Ms2Query( id = rs.getInt("id"), 
                                   initialId = rs.getInt("initial_id"),
                                   moz = rs.getDouble("moz"),
-                                  charge = rs.getByte("charge"),
+                                  charge = rs.getInt("charge"),
                                   spectrumTitle = spectrumTitle,
                                   spectrumId = spectrumId                                    
                                 )
@@ -66,7 +66,7 @@ class MsQueryLoader( val msiDb: DatabaseConfig ) {
            msQuery = new MsQuery( id = rs.getInt("id"), 
                                   initialId = rs.getInt("initial_id"),
                                   moz = rs.getDouble("moz"),
-                                  charge = rs.getByte("charge")
+                                  charge = rs.getInt("charge")
                                  )
         }
     

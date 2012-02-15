@@ -5,9 +5,9 @@ package MsAnalysisClasses {
   class Peaklist(
                    // Required fields
                    val id: Int,
-                   val file_type: String,
+                   val fileType: String,
                    val path: String,
-                   val msLevel: Byte
+                   val msLevel: Int
                    ) {
       
   }

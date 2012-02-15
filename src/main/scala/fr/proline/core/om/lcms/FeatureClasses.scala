@@ -9,7 +9,7 @@ package FeatureClasses {
       
           // Required fields
           val moz: Double,
-          val intensity: Double,
+          val intensity: Float,
           val leftHwhm: Double,
           val rightHwhm: Double
           
@@ -22,9 +22,9 @@ package FeatureClasses {
           // Required fields
           var id: Int,
           val moz: Double,
-          val intensity: Double,
+          val intensity: Float,
           val charge: Byte,
-          val fitScore: Double,
+          val fitScore: Float,
           val peaks: Array[Peak],
           val scanInitialId: Int,
           val overlappingIPs: Array[IsotopicPattern],
@@ -45,11 +45,11 @@ package FeatureClasses {
           var id: Int,
           val moz: Double,
           var intensity: Double,
-          val charge: Byte,
+          val charge: Int,
           val elutionTime: Float,
           val qualityScore: Double,
-          var ms1Count: Short,
-          var ms2Count: Short,
+          var ms1Count: Int,
+          var ms2Count: Int,
           val isOverlapping: Boolean,
           val firstScanInitialId: Int,
           val lastScanInitialId: Int,
@@ -65,7 +65,7 @@ package FeatureClasses {
           var normalizedIntensity: Double = Double.NaN,
           var correctedElutionTime: Float = Float.NaN,
           var isClusterized: Boolean = false,
-          var selectionLevel: Byte = 2,
+          var selectionLevel: Int = 2,
           
           var firstScanId: Int = 0,
           var lastScanId: Int = 0,
@@ -127,7 +127,7 @@ package FeatureClasses {
           // Required fields
           var id: Int,
           val moz: Double,
-          val charge: Byte,
+          val charge: Int,
           val elutionTime: Float,
           val origin: String,
           

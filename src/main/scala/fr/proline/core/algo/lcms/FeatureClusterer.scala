@@ -140,6 +140,10 @@ class FeatureClusterer {
     val ftClusters = new ArrayBuffer[Feature]
     for( totalFtGroup <- totalFtGroups ) {
       
+      // Set all features of the group to a clusterized status
+      totalFtGroup.foreach { _.isClusterized = true }
+      
+      // Compute some vars for the feature cluster
       val totalFtGroupAsList = totalFtGroup.toList
       val medianFt = getMedianObject( totalFtGroupAsList, this.ftMozSortingFunc )
       val moz = medianFt.moz
@@ -176,8 +180,8 @@ class FeatureClusterer {
                                     charge = charge,
                                     intensity = intensity,
                                     elutionTime = elutionTime,
-                                    ms1Count = ms1Count.toByte,
-                                    ms2Count = ms2Count.toByte,
+                                    ms1Count = ms1Count,
+                                    ms2Count = ms2Count,
                                     firstScanId = firstScanId,
                                     lastScanId = lastScanId,
                                     apexScanId = apexScanId,
@@ -200,8 +204,6 @@ class FeatureClusterer {
     
     // Add feature clusters to clusterized_features
     val clusterizedFeatures = (singleFeatures ++ ftClusters).toArray
-    
-   // lcmsMap.c
     
     var newLcmsMap: ProcessedMap = null
     if( lcmsMap.isProcessed) {
