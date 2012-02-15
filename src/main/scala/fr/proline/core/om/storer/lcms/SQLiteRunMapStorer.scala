@@ -189,8 +189,8 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
       qualityScore <<
       ft.ms1Count <<
       ft.ms2Count <<
-      BoolToSQLStr(ft.isCluster) <<
-      BoolToSQLStr(ft.isOverlapping) <<
+      BoolToSQLStr(ft.isCluster,lcmsDb.boolStrAsInt) <<
+      BoolToSQLStr(ft.isOverlapping,lcmsDb.boolStrAsInt) <<
       Some(null) <<
       ft.firstScanId <<
       ft.lastScanId <<
