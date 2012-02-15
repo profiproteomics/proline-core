@@ -9,8 +9,7 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.SQLFormatterImplicits._
   import fr.proline.core.om.helper.SqlUtils.BoolToSQLStr
-  import fr.proline.core.om.lcms.MapClasses._
-  import fr.proline.core.om.lcms.FeatureClasses.Feature
+  import fr.proline.core.om.lcms._
 
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit = {
     
@@ -151,8 +150,10 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
     
     var newMapId = 0
     lcmsDbTx.executeBatch("INSERT INTO map("+mapColNamesAsStr+") VALUES(?,?,?,?,?,?)") { statement => 
-      statement.executeWith( lcmsMap.name, 
-                             lcmsMap.description,
+      val mapDesc = if( lcmsMap.description == null ) None else Some(lcmsMap.description)
+      
+      statement.executeWith( lcmsMap.name,
+                             mapDesc,
                              lcmsMapType,
                              lcmsMap.creationTimestamp,
                              modificationTimestamp,

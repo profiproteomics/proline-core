@@ -3,7 +3,7 @@ package fr.proline.core.algo.lcms.normalization
 class IntensitySumMapNormalizer extends IMapSetNormalizer {
   
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
 
   protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float] = {
 

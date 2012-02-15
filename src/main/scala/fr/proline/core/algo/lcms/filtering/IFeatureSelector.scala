@@ -1,6 +1,6 @@
 package fr.proline.core.algo.lcms.filtering
 
-case class Filter( val name: String, val value: Double, val operator: String ) {
+case class Filter( val name: String, val operator: String, val value: Double ) {
   require( name != null )
 }
 
@@ -13,7 +13,7 @@ case class FilterNode( val filter: Filter = null,
 
 trait IFeatureSelector {
   
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
   
   def selectFeatures( processedMap: ProcessedMap, filterTree: FilterNode ): Unit
 

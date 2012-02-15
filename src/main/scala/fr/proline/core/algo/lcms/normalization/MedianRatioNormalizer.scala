@@ -3,7 +3,7 @@ package fr.proline.core.algo.lcms.normalization
 class MedianRatioNormalizer extends IMapSetNormalizer {
 
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
   import fr.proline.core.om.helper.MiscUtils.median
   
   protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float] = {

@@ -7,8 +7,7 @@ class MapSetLoader( val lcmsDb: LcmsDb, val loadPeaks: Boolean = false )  {
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.helper.SqlUtils._
-  import fr.proline.core.om.lcms.FeatureClasses._
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
   
   val mapAlnSetLoader = new MapAlignmentSetLoader( lcmsDb )
   val processedMapLoader = new ProcessedMapLoader( lcmsDb, loadPeaks )
@@ -25,36 +24,43 @@ class MapSetLoader( val lcmsDb: LcmsDb, val loadPeaks: Boolean = false )  {
         ()
       }
     if( mapSetRecord == null ) throw new Exception("can't find a map set with id="+mapSetId)
-    
-    // Load processedMapIds
-    val masterMapId: Int = lcmsDbTx.selectInt( "SELECT master_map_id FROM map_set WHERE id = " + mapSetId  )
-    
+       
     // Load processedMapIds
     val processedMapIds = lcmsDbTx.select( "SELECT id FROM processed_map WHERE map_set_id = " + mapSetId  ) { _.nextInt.get }
     
     // Load some objects related to the map set
-    val mapAlnSets = mapAlnSetLoader.getMapAlignmentSets( mapSetId )
     val lcmsMaps = processedMapLoader.getMaps( processedMapIds )
     val childMaps = lcmsMaps.filter( ! _.isMaster )
+    var mapAlnSets = mapAlnSetLoader.getMapAlignmentSets( mapSetId )
+    if( mapAlnSets.length == 0 ) mapAlnSets = null
     
-    // Load master feature items as records
-    var mtItemcolNames: Seq[String] = null
-    val mftItemRecords = lcmsDbTx.select( "SELECT * FROM master_feature_item WHERE master_map_id = " + masterMapId  ) { r => 
-      if( mtItemcolNames == null ) { mtItemcolNames = r.columnNames }
-      mtItemcolNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+    // Try to load master map id
+    var masterMapId = 0
+    lcmsDbTx.selectAndProcess( "SELECT master_map_id FROM map_set WHERE id = " + mapSetId ) { r =>
+      masterMapId = r.nextInt.getOrElse(0)
     }
-
-    // Load the master map
-    val masterMap = this.rebuildMasterMap( masterMapId, lcmsMaps, mftItemRecords )
+    
+    var masterMap: ProcessedMap = null
+    if( masterMapId != 0) {
+      // Load master feature items as records
+      var mtItemcolNames: Seq[String] = null
+      val mftItemRecords = lcmsDbTx.select( "SELECT * FROM master_feature_item WHERE master_map_id = " + masterMapId  ) { r => 
+        if( mtItemcolNames == null ) { mtItemcolNames = r.columnNames }
+        mtItemcolNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      }
+  
+      // Load the master map
+      masterMap = this.rebuildMasterMap( masterMapId, lcmsMaps, mftItemRecords )
+    }
     
     // Build and return the map set
-    buildMapSet( mapSetRecord, masterMap, childMaps, mapAlnSets )
+    buildMapSet( mapSetRecord, childMaps, masterMap, mapAlnSets )
     
   }
   
   def buildMapSet( mapSetRecord: Map[String,Any],
-                   masterMap: ProcessedMap,
                    childMaps: Array[ProcessedMap],
+                   masterMap: ProcessedMap,                   
                    mapAlnSets: Array[MapAlignmentSet] ): MapSet = {
     
     import java.util.Date

@@ -7,8 +7,7 @@ class MapAlignmentSetLoader( val lcmsDb: LcmsDb ) {
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.helper.SqlUtils._
-  import fr.proline.core.om.lcms.FeatureClasses._
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
   
   def getMapAlignmentSet( fromMapId: Int,toMapId: Int): Unit = {
     // TODO: implement this loader
@@ -69,7 +68,7 @@ class MapAlignmentSetLoader( val lcmsDb: LcmsDb ) {
     val deltaTimeList = mapAlnRecord("delta_time_list").asInstanceOf[String].split(" ") map { _.toFloat }
     
     new MapAlignment( fromMapId = mapAlnRecord("from_map_id").asInstanceOf[Int],
-                      toMapId = mapAlnRecord("from_map_id").asInstanceOf[Int],
+                      toMapId = mapAlnRecord("to_map_id").asInstanceOf[Int],
                       massRange = (massStart,massEnd),
                       timeList = timeList,
                       deltaTimeList = deltaTimeList

@@ -2,7 +2,7 @@ package fr.proline.core.algo.lcms.alignment
 
 class LandmarkRangeSmoother extends IAlnSmoother {
 
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
   import scala.collection.mutable.ArrayBuffer
   
   def smoothMapAlignment( mapAln: MapAlignment, smoothingParams: AlnSmoothingParams ): MapAlignment = {

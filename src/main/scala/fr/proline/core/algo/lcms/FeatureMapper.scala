@@ -5,8 +5,7 @@ case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Fl
 class FeatureMapper {
   
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.lcms.FeatureClasses._
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
   import fr.proline.core.om.helper.MsUtils
   
   def computePairwiseFtMapping ( map1Features: Array[Feature],

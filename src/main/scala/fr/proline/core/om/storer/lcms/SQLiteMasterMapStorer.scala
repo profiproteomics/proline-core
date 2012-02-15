@@ -8,8 +8,8 @@ class SQLiteMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.SQLFormatterImplicits._
   import fr.proline.core.om.helper.SqlUtils.BoolToSQLStr
-  import fr.proline.core.om.lcms.MapClasses.ProcessedMap
-  import fr.proline.core.om.lcms.FeatureClasses.Feature
+  import fr.proline.core.om.lcms.ProcessedMap
+  import fr.proline.core.om.lcms.Feature
   
   def storeMasterMap( masterMap: ProcessedMap ): Unit = {
     

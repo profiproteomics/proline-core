@@ -4,8 +4,8 @@ import fr.proline.core.LcmsDb
 
 class GenericMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
   
-  import fr.proline.core.om.lcms.MapClasses.ProcessedMap
-  import fr.proline.core.om.lcms.FeatureClasses.Feature
+  import fr.proline.core.om.lcms.ProcessedMap
+  import fr.proline.core.om.lcms.Feature
   
   def storeMasterMap( masterMap: ProcessedMap ): Unit = {
     throw new Exception("not yet implemented")

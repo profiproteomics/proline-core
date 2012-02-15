@@ -2,7 +2,7 @@ package fr.proline.core.algo.lcms.filtering
 
 class IntensityBasedSelector extends IFeatureSelector {
 
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
   
   def selectFeatures( processedMap: ProcessedMap, filterTree: FilterNode ): Unit = {
     

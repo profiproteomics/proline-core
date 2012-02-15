@@ -2,7 +2,7 @@ package fr.proline.core.algo.lcms.alignment
 
 class IterativeMapAligner extends ILcmsMapAligner {
 
-  import fr.proline.core.om.lcms.MapClasses._
+  import fr.proline.core.om.lcms._
   import fr.proline.core.om.helper.MiscUtils.getMedianObject
   
   def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult = {
@@ -29,7 +29,7 @@ class IterativeMapAligner extends ILcmsMapAligner {
     val mapAlnSets = this.computeMapAlnSets( lcmsMaps, alnRefMap, alnParams )
     
     // Determine the best alignment reference map using the previously computed alignements
-    //print "determining best alignment reference map (//iteration=iterationNum)...\n"
+    println( "determining best alignment reference map (#iteration="+iterationNum+")..." )
     val newAlnRefMap = this.determineAlnReferenceMap( lcmsMaps, mapAlnSets, alnRefMap )
     
     // Return if the new reference map is identical to the previous one

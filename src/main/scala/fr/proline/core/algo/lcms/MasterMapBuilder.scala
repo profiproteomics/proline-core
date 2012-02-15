@@ -1,8 +1,7 @@
 package fr.proline.core.algo.lcms
 
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.lcms.MapClasses._
-import fr.proline.core.om.lcms.FeatureClasses._
+import fr.proline.core.om.lcms._
 import filtering._
 
 class MasterMapBuilder {
@@ -31,6 +30,8 @@ class MasterMapBuilder {
     
     // Check if we have multiple maps
     if( childMaps.length > 1 ) {
+      
+      //println( alnRefMapId )
   
       // Retrieve alignments of the reference map (TODO: put in a helper)      
       val revRefMapAlnSets = mapAlnSets filter { _.toMapId == alnRefMapId } 
