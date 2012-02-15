@@ -146,7 +146,7 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
     // Execute statement
     stmt.execute()
     val newMapId = stmt.getGeneratedKeys().getInt("last_insert_rowid()") // SQLite specific query
-    stmt.close()*/    
+    stmt.close()*/
     
     var newMapId = 0
     lcmsDbTx.executeBatch("INSERT INTO map("+mapColNamesAsStr+") VALUES(?,?,?,?,?,?)") { statement => 
@@ -155,8 +155,8 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
       statement.executeWith( lcmsMap.name,
                              mapDesc,
                              lcmsMapType,
-                             lcmsMap.creationTimestamp,
-                             modificationTimestamp,
+                             lcmsDb.stringifyDate(lcmsMap.creationTimestamp),
+                             lcmsDb.stringifyDate(modificationTimestamp),
                              ftScoringId
                             )
        newMapId = statement.wrapped.getGeneratedKeys().getInt("last_insert_rowid()") // SQLite specific query

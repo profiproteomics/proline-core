@@ -1,8 +1,6 @@
 package fr.proline.core
 
-import net.noerd.prequel.DatabaseConfig
-import net.noerd.prequel.IsolationLevels
-import net.noerd.prequel.Transaction
+import net.noerd.prequel._
 
 object LcmsDb {
   
@@ -17,7 +15,8 @@ object LcmsDb {
   def getDefaultConfig = DatabaseConfig(
     driver = "org.sqlite.JDBC",
     jdbcURL = "jdbc:sqlite:D:/prosper/data/lcms-db.sqlite",
-    isolationLevel = IsolationLevels.Serializable
+    isolationLevel = IsolationLevels.Serializable,
+    sqlFormatter = SQLFormatter.HSQLDBSQLFormatter
     )
 }
 
@@ -88,6 +87,14 @@ class LcmsDb( val config: DatabaseConfig,
   }
   
   def isInTransaction(): Boolean = transaction != null
+  
+  /** A workaround for date to string conversion (will be removed obsolete when prequel is fixed) */
+  def stringifyDate( date: java.util.Date ): String = {
+    
+    val dt = new org.joda.time.DateTime( date )
+    this.config.sqlFormatter.timeStampFormatter.print( dt )
+    
+  }
   
 }
 
