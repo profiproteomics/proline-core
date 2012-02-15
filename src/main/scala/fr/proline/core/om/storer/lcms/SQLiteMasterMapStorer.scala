@@ -29,7 +29,7 @@ class SQLiteMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
     masterMap.id = newMasterMapId
     
     // Update master map id of the map set in the database
-    lcmsDbTx.execute( "UPDATE map_set SET master_map_id = " + newMasterMapId + " WHERE map_set_id = " + mapSetId )
+    lcmsDbTx.execute( "UPDATE map_set SET master_map_id = " + newMasterMapId + " WHERE id = " + mapSetId )
     
     // Link the master map to the corresponding run maps
     processedMapStorer.linkProcessedMapToRunMaps( masterMap )

@@ -1,17 +1,25 @@
 package fr.proline.core.service.lcms
 
-/*import java.sql.Connection
-*/
-
 import fr.proline.core.om.helper.SqlUtils._
 import fr.proline.core.LcmsDb
 import fr.proline.core.service.IService
-import fr.proline.core.om.lcms.MapClasses._
-import fr.proline.core.om.lcms.FeatureClasses._
-import fr.proline.core.om.provider.sql.lcms.RunLoader
-import fr.proline.core.om.storer.ProcessedMapStorer
 import fr.proline.core.algo.lcms.FeatureClusterer
 import fr.proline.core.algo.lcms.ClusteringParams
+import fr.proline.core.om.lcms._
+import fr.proline.core.om.provider.sql.lcms.RunLoader
+import fr.proline.core.om.storer.ProcessedMapStorer
+
+object ClusterizeMapFeatures {
+
+  def apply( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: ClusteringParams ): Array[Feature] = {
+    
+    val mapCleaner = new ClusterizeMapFeatures( lcmsDb, lcmsMap, params )
+    mapCleaner.runService()
+    mapCleaner.getFeaturesWithClusters
+    
+  }
+  
+}
 
 class ClusterizeMapFeatures( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: ClusteringParams ) extends IService {
   
@@ -22,6 +30,9 @@ class ClusterizeMapFeatures( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: Clus
   def getFeaturesWithClusters = featuresWithClusters
   
   def runService(): Boolean = {
+    
+    // Check if a transaction is already initiated
+    val wasInTransaction = lcmsDb.isInTransaction()
     
     // Retrieve database transaction
     val lcmsDbTx = lcmsDb.getOrCreateTransaction()
@@ -36,6 +47,8 @@ class ClusterizeMapFeatures( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: Clus
     
     // Retrieve run id corresponding to run map id
     val runId = lcmsDbTx.selectInt( "SELECT run_id FROM run_map WHERE id = " + runMapId )
+    
+    println("clusterizing features...")
     
     // Retrieve corresponding scans
     val runLoader = new RunLoader( lcmsDb )
@@ -57,7 +70,7 @@ class ClusterizeMapFeatures( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: Clus
       
       // Delete existing clusters from this processed map
       println( "delete existing feature clusters..." )
-      existingFtClusterIds.grouped(maxNbIters).foreach( tmpFtIds => {    
+      existingFtClusterIds.grouped(maxNbIters).foreach( tmpFtIds => {
         lcmsDbTx.execute("DELETE FROM feature WHERE id IN (" + tmpFtIds.mkString(",") +")")
         lcmsDbTx.execute("DELETE FROM processed_map_feature_item WHERE feature_id IN (" + tmpFtIds.mkString(",") +")")
       })
@@ -83,6 +96,9 @@ class ClusterizeMapFeatures( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: Clus
       where = ( id = processedMapId ),
       db = lcmsRdb
       )*/
+    
+    // Commit transaction if it was initiated locally
+    if( !wasInTransaction ) lcmsDb.commitTransaction()
     
     // Update service results
     featuresWithClusters = lcmsMapWithClusters.features

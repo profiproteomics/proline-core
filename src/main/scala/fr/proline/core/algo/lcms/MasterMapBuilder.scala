@@ -263,7 +263,7 @@ class MasterMapBuilder {
     for( masterFt <- masterFeatures ) {
       
       // Determine the number of matched maps
-      val matchedMapIdSet = masterFt.children.map { _.mapId } toSet
+      val matchedMapIdSet = masterFt.children.map( _.mapId ).toSet.toArray
       val nbMatchedMaps = matchedMapIdSet.size
       
       // If master feature contains a single feature

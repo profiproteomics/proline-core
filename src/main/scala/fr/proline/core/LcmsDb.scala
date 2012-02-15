@@ -1,11 +1,29 @@
 package fr.proline.core
 
 import net.noerd.prequel.DatabaseConfig
+import net.noerd.prequel.IsolationLevels
 import net.noerd.prequel.Transaction
+
+object LcmsDb {
+  
+  def apply( projectId: Int ): LcmsDb = {
+    
+    // TODO: change the configuration according to the project id
+    
+    val lcmsDbConfig = this.getDefaultConfig
+    new LcmsDb( lcmsDbConfig )
+  }
+  
+  def getDefaultConfig = DatabaseConfig(
+    driver = "org.sqlite.JDBC",
+    jdbcURL = "jdbc:sqlite:D:/prosper/data/lcms-db.sqlite",
+    isolationLevel = IsolationLevels.Serializable
+    )
+}
 
 class LcmsDb( val config: DatabaseConfig,
               private var transaction: Transaction = null,
-              val boolStrAsInt: Boolean = true, // TODO: set to true when DB model is updated
+              val boolStrAsInt: Boolean = true, // TODO: set to false when DB model is updated
               val maxVariableNumber: Int = 999
               ) {
   
@@ -50,6 +68,8 @@ class LcmsDb( val config: DatabaseConfig,
     
     // Create new transaction
     transaction = Transaction( connection, config.sqlFormatter )
+    
+    ()
   }
   
   def getOrCreateTransaction(): Transaction = {
@@ -62,7 +82,7 @@ class LcmsDb( val config: DatabaseConfig,
     transaction = null
   }
   
-  def commitTransaction(): Unit = { 
+  def commitTransaction(): Unit = {
     transaction.commit()
     transaction = null
   }
@@ -74,6 +94,7 @@ class LcmsDb( val config: DatabaseConfig,
 import net.noerd.prequel.Nullable
 import net.noerd.prequel.IntFormattable
 import net.noerd.prequel.DoubleFormattable
+import net.noerd.prequel.StringFormattable
 import net.noerd.prequel.SQLFormatter
 
  /*
@@ -93,12 +114,16 @@ object NullFormattable{
 
 object SQLFormatterImplicits {
   implicit def someNull2Formattable( wrapped: Option[Null] ) = NullFormattable( wrapped )
-  implicit def someInt2Formattable( wrapped: Option[Int] )= wrapped match {
+  implicit def someInt2Formattable( wrapped: Option[Int] ) = wrapped match {
                                                               case None => NullFormattable(Some(null))
                                                               case Some(value) => IntFormattable(value)
                                                             }
-  implicit def someDouble2Formattable( wrapped: Option[Double] )= wrapped match {
+  implicit def someDouble2Formattable( wrapped: Option[Double] ) = wrapped match {
                                                               case None => NullFormattable(Some(null))
                                                               case Some(value) => DoubleFormattable(value)
+                                                            }
+  implicit def someString2Formattable( wrapped: Option[String] ) = wrapped match {
+                                                              case None => NullFormattable(Some(null))
+                                                              case Some(value) => StringFormattable(value)
                                                             }
 }
