@@ -218,7 +218,7 @@ case class MapAlignment(
   
   def calcReferenceElutionTime( elutionTime: Float ) = {
     
-    import fr.proline.core.om.helper.MsUtils.calcLineParams
+    import fr.proline.core.om.helper.MiscUtils.calcLineParams
     
     val timeIndex = timeList.indexWhere( _ >= elutionTime )
     //if( timeIndex == -1 ) throw new Exception("undefined time index for elution time " + elutionTime)
