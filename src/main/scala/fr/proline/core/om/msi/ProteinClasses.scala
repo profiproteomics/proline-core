@@ -3,13 +3,36 @@ package fr.proline.core.om.msi
 package ProteinClasses {
 
   import scala.collection.mutable.HashMap
-import fr.proline.core.om.msi.PeptideClasses.PeptideSet
-import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
-import fr.proline.core.om.msi.PeptideClasses.Peptide
-import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
-import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+  import fr.proline.core.om.msi.PeptideClasses.PeptideSet
+  import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
+  import fr.proline.core.om.msi.PeptideClasses.Peptide
+  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
+  import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
+  import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+
+  object Protein {
+    
+    /** A percentage (between 0 and 100) expressing the sequence coverage of the protein */
+    def calcSequenceCoverage( protSeqLength: Int, seqPositions: Array[Tuple2[Int,Int]] ): Float = {
+      
+      // Map sequence positions
+      val seqIndexSet = new java.util.HashSet[Int]()
+      for( seqPosition <- seqPositions ) {
+        for( val seqIdx <- seqPosition._1 to seqPosition._2 ) {
+          seqIndexSet.add(seqIdx)
+        }
+      }
+      
+      val coveredSeqLength = seqIndexSet.size() 
+      val coverage = 100 * coveredSeqLength /protSeqLength
+      
+      coverage
+    }
+  }
   
+  //def calcMolecularWeight
+  //def calcIsoelectricPoint
+    
   class Protein ( // Required fields                     
                      val sequence: String,
                      
@@ -27,6 +50,10 @@ import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
     require( sequence != null )
     
     lazy val length = sequence.length()
+    
+    def getSequenceCoverage( seqPositions: Array[Tuple2[Int,Int]] ): Float = {
+      Protein.calcSequenceCoverage( this.length, seqPositions )
+    }
   
   }
 
@@ -93,7 +120,7 @@ import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
     // Requirements
     require( accession != null && description != null )
   
-    def getProteinId : Int = {if(protein != null && protein != None) protein.get.id else proteinId }
+    def getProteinId : Int = { if(protein != null && protein != None) protein.get.id else proteinId }
    
     def getSeqDatabasesIds : Array[Int] = { if(seqDatabases != null && seqDatabases != None) seqDatabases.get.map(_.id)  else seqDatabaseIds  }
     
