@@ -15,7 +15,7 @@ package FragmentationClasses {
       for( val ionTypeAsStr <- ionTypesAsStr ) {
         
         var( fragmentIonSeries, neutralLoss ) = ("", None.asInstanceOf[Option[String]] )
-        if( ionTypeAsStr matches "-"  ) {
+        if( ionTypeAsStr matches ".*-.*"  ) {
           val ionTypeAttrs = ionTypeAsStr.split("-")
           fragmentIonSeries = ionTypeAttrs(0)
           neutralLoss = Some(ionTypeAttrs(1))

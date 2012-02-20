@@ -47,7 +47,7 @@ package PtmClasses {
                         val location: String, 
       
                         // Immutable optional fields
-                        val residue: Char = 0, 
+                        val residue: Char = '\0',
                         val classification: String = null,
                         val id: Int = 0,
                         val ptmId : Int = 0 ) {
@@ -64,7 +64,7 @@ package PtmClasses {
                        val ptmEvidences: Array[PtmEvidence],
                        
                        // Immutable optional fields
-                       override val residue: Char = 0,
+                       override val residue: Char = '\0',
                        override val classification: String = null,
                        override val ptmId: Int = 0
                        )

@@ -6,13 +6,92 @@ package PeptideClasses {
   import scala.collection.mutable.ListBuffer
   import scala.collection.mutable.HashMap
   import org.apache.commons.lang3.StringUtils
+  import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
   import fr.proline.core.om.msi.MsQueryClasses.Ms2Query
   import fr.proline.core.om.msi.MsQueryClasses.MsQuery
-  import fr.proline.core.om.msi.PtmClasses.LocatedPtm
+  import fr.proline.core.om.msi.PtmClasses._
   import fr.proline.core.om.msi.ResultSetClasses.ResultSet
   import fr.proline.core.om.msi.ResultSetClasses.ResultSummary
   import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
   import fr.proline.core.om.msi.ProteinClasses.ProteinSet
+  
+  object Peptide extends InMemoryIdGen {
+    
+    /** Returns a list of LocatedPTM objects for the provided sequence, PTM definition and optional position constraints.
+     *  The results contains a list of putative PTMs that may be present or not on the peptide sequence.
+     *  To get a list of truly located PTMs one has to provide a list of position constraints.
+     */
+    def getPutativeLocatedPtms ( sequence: String, ptmDefinition: PtmDefinition,
+                                 positionConstraints: Option[Array[Boolean]] ): Unit = {
+           
+      // Define some vars
+      val residues = sequence.split("") map { _.charAt(0) }
+      val nbResidues = residues.length
+      val searchedResidue = ptmDefinition.residue
+      val precursorDelta = ptmDefinition.precursorDelta
+      val tmpLocatedPtms = new ArrayBuffer[LocatedPtm]()
+      
+      // N-term locations are: Any N-term or Protein N-term
+      if( ptmDefinition.location matches ".+N-term" ) {
+        if( searchedResidue == '\0' || searchedResidue == residues(0) ) {
+          tmpLocatedPtms += buildLocatedPtm( ptmDefinition, 0, precursorDelta, isNTerm = true )
+        }
+      }
+      // C-term locations are: Any C-term, Protein C-term
+      else if( ptmDefinition.location matches ".+C-term" ) {
+        if( searchedResidue == '\0' || searchedResidue == residues.last ) {
+          tmpLocatedPtms += buildLocatedPtm( ptmDefinition, -1, precursorDelta, isCTerm = true )
+        }
+      }
+      // No location constraint (location=Anywhere)
+      else {
+        var seqPos = 1
+        for( val residue <- residues ) {
+          if( searchedResidue == residue || residue == 'X' )  {
+            tmpLocatedPtms += buildLocatedPtm( ptmDefinition, seqPos, precursorDelta )
+          }
+          seqPos += 1
+        }
+      }
+      
+      var locatedPtms: Array[LocatedPtm] = null
+      
+      // Check if position constraints are provided
+      if( positionConstraints != None ) {
+        val filteredLocatedPtms = new ArrayBuffer[LocatedPtm]
+        
+        for( val tmpLocatedPtm <- tmpLocatedPtms ) {
+          
+          val seqPos = tmpLocatedPtm.seqPosition
+          val posConstraint = seqPos match {
+            case -1 => positionConstraints.get.last
+            case _ => positionConstraints.get(seqPos)
+          }
+          
+          if( posConstraint == true ) filteredLocatedPtms += tmpLocatedPtm
+        }
+            
+        locatedPtms = filteredLocatedPtms.toArray
+      }
+      else { locatedPtms = tmpLocatedPtms.toArray }
+      
+      locatedPtms
+      
+    }
+    
+    private def buildLocatedPtm( ptmDefinition: PtmDefinition, seqPosition: Int, precursorDelta: PtmEvidence,
+                                 isNTerm: Boolean = false, isCTerm: Boolean = false ): LocatedPtm = {
+      new LocatedPtm( definition = ptmDefinition,
+                      seqPosition = seqPosition,
+                      monoMass = precursorDelta.monoMass,
+                      averageMass = precursorDelta.averageMass,
+                      composition = precursorDelta.composition,
+                      isNTerm = isNTerm,
+                      isCTerm = isCTerm
+                    )
+    }
+
+  }
   
   class Peptide ( // Required fields
                   var id: Int,
