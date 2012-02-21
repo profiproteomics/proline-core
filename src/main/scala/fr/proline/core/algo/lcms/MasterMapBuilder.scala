@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.lcms._
 import filtering._
 
-class MasterMapBuilder {
+object MasterMapBuilder {
   
   def buildMasterMap( mapSet: MapSet, masterFtFilter: Filter, ftMappingParams: FeatureMappingParams ): ProcessedMap = {
     
@@ -177,11 +177,11 @@ class MasterMapBuilder {
     //print "compute pairwise ft mapping\n" if ! addNonMatchingFeatures
     
     // Align child map features with master map features
-    val ftMapping = new FeatureMapper().computePairwiseFtMapping(
-                                          masterMapFeatures.toArray,
-                                          childMapFeatures,
-                                          ftMappingParams
-                                        )
+    val ftMapping = FeatureMapper.computePairwiseFtMapping(
+                                    masterMapFeatures.toArray,
+                                    childMapFeatures,
+                                    ftMappingParams
+                                  )
    
     val masterMapFtById = masterMapFeatures.map { ft => ft.id -> ft } toMap
     
@@ -284,9 +284,7 @@ class MasterMapBuilder {
     
     //print "compute pairwise ft mapping with charge tolerance\n"
     
-    // Align child map features with master map features
-    val ftMapper = new FeatureMapper()
-    
+    // Align child map features with master map features    
     // Iterate over single features of each map
     val toDeleteSingleFtIdSet = new scala.collection.mutable.HashSet[Int]()
     
@@ -299,7 +297,7 @@ class MasterMapBuilder {
       val putativeMatchingMfts = notFullMftsByMapId.get(mapId)
       if ( putativeMatchingMfts.length > 0 ) {
       
-        val ftMapping = ftMapper.computePairwiseFtMapping(
+        val ftMapping = FeatureMapper.computePairwiseFtMapping(
                                           singleFeatures.toArray,
                                           putativeMatchingMfts.toArray,
                                           ftMappingParams,

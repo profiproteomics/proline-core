@@ -28,7 +28,7 @@ trait ILcmsMapAligner {
     //val timeInterval = alnParams.timeInterval
     
     val( map1Features, map2Features ) = ( map1.features, map2.features )
-    val ftMapping = new FeatureMapper().computePairwiseFtMapping( map1Features, map2Features, alnParams.ftMappingParams )
+    val ftMapping = FeatureMapper.computePairwiseFtMapping( map1Features, map2Features, alnParams.ftMappingParams )
     
     val map1FtById = map1Features.map { ft => (ft.id -> ft) } toMap
     

@@ -58,8 +58,7 @@ class ClusterizeMapFeatures( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: Clus
     val lcmsMapWithoutClusters = lcmsMap.copyWithoutClusters()
     
     // Perform the feature clustering
-    val ftClusterer = new FeatureClusterer()
-    val lcmsMapWithClusters = ftClusterer.clusterizeFeatures( lcmsMapWithoutClusters, scans, params )
+    val lcmsMapWithClusters = FeatureClusterer.clusterizeFeatures( lcmsMapWithoutClusters, scans, params )
     
     // Retrieve feature cluster ids if they exist
     val existingFtClusterIds = lcmsDbTx.select("SELECT cluster_feature_id FROM feature_cluster_item " +
@@ -109,4 +108,70 @@ class ClusterizeMapFeatures( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: Clus
   }
 
   
+}
+
+
+import org.gearman.GearmanFunction
+  
+private[service] class NSClusterizeMapFeatures extends GearmanFunction {
+  
+  import org.gearman.GearmanJob
+  import org.gearman.GearmanJobResult
+  import net.liftweb.json._
+  implicit val formats = DefaultFormats // Brings in default date formats etc.
+  
+  import fr.proline.core.om.provider.sql.lcms.ProcessedMapLoader
+  
+  // Define parameters required to run the job
+  case class JobParams( project_id: Int,
+                        processed_map_id: Int,
+                        clustering_params: ClusteringParamsFromJSON
+                       )
+  case class ClusteringParamsFromJSON( moz_tol: Double,
+                                       moz_tol_unit: String, time_tol: Float,
+                                       intensity_computation: String,
+                                       time_computation: String
+                                     )
+  
+  override def work(job: GearmanJob): GearmanJobResult = {
+    
+    var jobResult: GearmanJobResult = null
+    try {
+      
+      // Parse job parameters
+      val jobParams = parse( new String(job.getJobData) ).extract[JobParams]
+      
+      // Open database connection
+      val lcmsDb = LcmsDb( projectId = jobParams.project_id )
+      
+      // Load the processed map
+      val mapLoader = new ProcessedMapLoader( lcmsDb )
+      val procMap = mapLoader.getMaps( Array(jobParams.processed_map_id) )(0)
+      
+      // Convert JSON parameters into Java parameters
+      val jsonNode = jobParams.clustering_params
+      val clustParams = ClusteringParams( mozTol = jsonNode.moz_tol,
+                                          mozTolUnit = jsonNode.moz_tol_unit,
+                                          timeTol = jsonNode.time_tol,
+                                          timeComputation = jsonNode.time_computation,
+                                          intensityComputation = jsonNode.intensity_computation
+                                         )
+ 
+      // Run the job
+      val ftsWithClusters = ClusterizeMapFeatures( lcmsDb, procMap, clustParams )
+      val nbClusters = ftsWithClusters.count( _.isCluster )
+      
+      // Set data to send back to client
+      jobResult = GearmanJobResult.workSuccessful( nbClusters.toString().getBytes() )
+      
+    } catch {
+      case e: Exception => {
+        System.err.println( "clustering job failed: " + e.getStackTraceString )
+        jobResult = GearmanJobResult.workFailed()
+      }
+    }
+    
+    jobResult
+  }
+
 }
