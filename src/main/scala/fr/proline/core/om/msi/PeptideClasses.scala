@@ -17,6 +17,8 @@ package PeptideClasses {
   
   object Peptide extends InMemoryIdGen {
     
+    import scala.collection._
+    
     /** Returns a list of LocatedPTM objects for the provided sequence, PTM definition and optional position constraints.
      *  The results contains a list of putative PTMs that may be present or not on the peptide sequence.
      *  To get a list of truly located PTMs one has to provide a list of position constraints.
@@ -32,13 +34,13 @@ package PeptideClasses {
       val tmpLocatedPtms = new ArrayBuffer[LocatedPtm]()
       
       // N-term locations are: Any N-term or Protein N-term
-      if( ptmDefinition.location matches ".+N-term" ) {
+      if( ptmDefinition.location matches """.+N-term""" ) {
         if( searchedResidue == '\0' || searchedResidue == residues(0) ) {
           tmpLocatedPtms += buildLocatedPtm( ptmDefinition, 0, precursorDelta, isNTerm = true )
         }
       }
       // C-term locations are: Any C-term, Protein C-term
-      else if( ptmDefinition.location matches ".+C-term" ) {
+      else if( ptmDefinition.location matches """.+C-term""" ) {
         if( searchedResidue == '\0' || searchedResidue == residues.last ) {
           tmpLocatedPtms += buildLocatedPtm( ptmDefinition, -1, precursorDelta, isCTerm = true )
         }
@@ -79,6 +81,7 @@ package PeptideClasses {
       
     }
     
+    
     private def buildLocatedPtm( ptmDefinition: PtmDefinition, seqPosition: Int, precursorDelta: PtmEvidence,
                                  isNTerm: Boolean = false, isCTerm: Boolean = false ): LocatedPtm = {
       new LocatedPtm( definition = ptmDefinition,
@@ -89,6 +92,142 @@ package PeptideClasses {
                       isNTerm = isNTerm,
                       isCTerm = isCTerm
                     )
+    }
+    
+    /** Returns the given list of located PTMs as a string.
+     *  Example of PTM string for peptide MENHIR with oxidation (M) and SILAC label (R): 1[O]7[C(-9) 13C(9)] 
+     */
+    def makePtmString( locatedPtms: List[LocatedPtm] ): String = {
+      
+      // Return null if no located PTM
+      if( locatedPtms.length == 0 ) {
+        throw new IllegalArgumentException("can't compute a PTM string using an empty list of located PTMs")
+      }
+      
+      // Sort located PTMs
+      val sortedLocatedPtms = locatedPtms.sort { (a,b) => a.seqPosition <= b.seqPosition }
+      
+      // Define data structure which will contain located PTM strings mapped by sequence position
+      val locatedPtmStringBySeqPos = new mutable.HashMap[Int,ArrayBuffer[String]]()
+      
+      // Iterate over located PTMs
+      var lastSeqPos = 1 // will be used to compute a sequence position range
+      for( locatedPtm <- sortedLocatedPtms ) {
+        
+        var seqPos = -2
+        if( locatedPtm.isNTerm ) { seqPos = 0 }
+        else if( locatedPtm.isCTerm  ) { seqPos = -1 }
+        else {
+          seqPos = locatedPtm.seqPosition
+          lastSeqPos = seqPos
+        }
+        
+        // Define some vars
+        val ptmComp = locatedPtm.composition
+        val atomModBySymbol = this.computePtmStructure( ptmComp ).atomModBySymbol        
+        val atomModStrings = new ArrayBuffer[String]
+        
+        // Sort atom symbols by ascendant order
+        val sortedAtomSymbols = atomModBySymbol.keys.toList.sort { (a,b) => a < b }
+        
+        // Iterate over atom symbols
+        for( val atomSymbol <- sortedAtomSymbols ) {
+          
+          val atomMod = atomModBySymbol(atomSymbol)
+          
+          // Sort atom symbols by ascendant order
+          val sortedAtomIsotopes = atomMod.keys.toList.sort { (a,b) => a < b }
+          
+          // Iterate over atom isotopes
+          for( val atomIsotope <- sortedAtomIsotopes ) {
+            
+            val isotopePrefix = if( atomIsotope == 0 ) "" else atomIsotope.toString
+            val atomModIsotopeComposition = atomMod(atomIsotope)
+            val nbAtoms = atomModIsotopeComposition.quantity
+            var atomModString = isotopePrefix + atomSymbol
+            
+            // Stringify substracted atoms
+            if( atomModIsotopeComposition.sign == "-" ) {
+              
+              atomModString += "(-"+nbAtoms+")"      
+              
+            // Stringify added atoms
+            } else if( atomModIsotopeComposition.sign == "+" ) {
+              
+              if( nbAtoms > 1 ) atomModString += "("+nbAtoms+")"
+              
+            } else { throw new Exception("invalid sign of isotope composition") }
+            
+            atomModStrings += atomModString
+          }
+        }
+        
+        if( atomModStrings.length == 0 ) {
+          throw new Exception( "a problem has occured during the ptm string construction" )
+        }
+        
+        if( !locatedPtmStringBySeqPos.contains(seqPos) ) {
+          locatedPtmStringBySeqPos += seqPos -> new ArrayBuffer[String]()
+        }
+        
+        locatedPtmStringBySeqPos(seqPos) += atomModStrings.mkString(" ")
+      }
+      
+      // Create a list of all possible PTM sequence positions
+      val putativeSeqPositions = List(0) ++ (1 to lastSeqPos) ++ List(-1)
+      
+      // Sort PTMs and merge them into a unique string
+      var ptmString = ""
+      for( val seqPos <- putativeSeqPositions ) {
+        val locatedPtmStrings = locatedPtmStringBySeqPos.get(seqPos)
+        if( locatedPtmStrings != None ) {
+          ptmString += locatedPtmStrings.get.toList
+                                        .sort { (a,b) => a < b }
+                                        .map { ptmStr => seqPos + "[" + ptmStr + "]" }
+                                        .mkString("")
+        }
+      }
+      
+      ptmString
+    }
+    
+    private case class PtmIsotopeComposition( sign: String, quantity: Int )
+    private case class PtmStructure( atomModBySymbol: mutable.HashMap[String,mutable.HashMap[Int,PtmIsotopeComposition]] )
+    
+    private def computePtmStructure( composition: String ): PtmStructure = {
+      
+      import java.util.regex.Pattern
+      import org.apache.commons.lang3.StringUtils.isNotEmpty
+      
+      // EX : SILAC label (R) => "C(-9) 13C(9)"
+      val atomMods = composition.split(" ")
+      val atomCompositionBySymbol = new mutable.HashMap[String,mutable.HashMap[Int,PtmIsotopeComposition]]()
+      
+      for( val atomMod <- atomMods ) {
+        var( atomSymbol, nbAtoms, atomIsotope, sign ) = ("",0,0,"")
+        
+        val m = Pattern.compile("""^(\d*)(\w+)(\((-){0,1}(.+)\)){0,1}""").matcher(atomMod)
+        if( m.matches ) {
+          
+          // 0 means most frequent isotope
+          atomIsotope = if( isNotEmpty(m.group(1)) ) m.group(1).toInt else 0          
+          atomSymbol = m.group(2)
+          sign = if( isNotEmpty(m.group(4)) ) m.group(4) else "+"            
+          nbAtoms = if( isNotEmpty(m.group(5)) ) m.group(5).toInt else 1
+        }
+        else { throw new Exception( "can't parse atom composition '"+atomMod+"'" ) }
+        
+        if( ! atomCompositionBySymbol.contains(atomSymbol) ) {
+          atomCompositionBySymbol += atomSymbol -> new mutable.HashMap[Int,PtmIsotopeComposition]()
+        }
+        
+        atomCompositionBySymbol(atomSymbol) += ( atomIsotope -> PtmIsotopeComposition( sign, nbAtoms ) )
+        
+        //ptmStructure(atomSymbol)(atomIsotope)(modifMode) = { nb_atoms = nbAtoms }
+      }
+      
+      PtmStructure( atomCompositionBySymbol )
+      
     }
 
   }

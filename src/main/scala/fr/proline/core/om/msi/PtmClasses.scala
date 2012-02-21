@@ -94,7 +94,8 @@ package PtmClasses {
     
     // Requirements
     require( definition != null && seqPosition >= -1 && monoMass > 0 && averageMass > 0 && StringUtils.isNotEmpty( composition ) )
-    
+    require( isNTerm == (seqPosition == 0) && isCTerm == (seqPosition == -1) )
+
   }
 
 }
