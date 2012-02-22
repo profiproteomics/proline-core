@@ -110,7 +110,7 @@ class ClusterizeMapFeatures( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, params: Clus
   
 }
 
-
+/*
 import org.gearman.GearmanFunction
   
 private[service] class NSClusterizeMapFeatures extends GearmanFunction {
@@ -174,4 +174,4 @@ private[service] class NSClusterizeMapFeatures extends GearmanFunction {
     jobResult
   }
 
-}
+}*/
