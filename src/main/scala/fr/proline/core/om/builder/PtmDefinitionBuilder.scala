@@ -8,12 +8,13 @@ import fr.proline.core.om.msi.PtmClasses.LocatedPtm
 object PtmDefinitionBuilder {  
 
   /**
+   * 
    * Create a PtmDefinition using corresponding information
-   *  - ptmRecord : contains value for ptm properties "id" for ptm_id, "short_name", "full_name" for Ptm Names
-   *  - ptmSpecifRecord : contains value for ptmDefinition properties "residue", "id", "location"
+   *  - ptmRecord : contains value for ptm properties "id" for ptm_id, "short_name", "full_name" for Ptm Names : If id == 0, ptm is to be created TODO !!
+   *  - ptmSpecifRecord : contains value for ptmDefinition properties "residue", "id", "location" : if id is not specified, a new id will be generated
    *  - ptmEvidenceRecords :List of map:  contains value for properties "type", "composition", "mono_mass", "average_mass","is_required" for each ptmEvidence 
    *  - ptmClassification : name of classification,
-   *  
+   *    
    */
   def buildPtmDefinition( ptmRecord: Map[String,Any],
                           ptmSpecifRecord: Map[String,Any],                          
@@ -39,9 +40,15 @@ object PtmDefinitionBuilder {
     
     val residueStr = ptmSpecifRecord("residue").asInstanceOf[String];
     val resChar = if( residueStr != null ) residueStr.charAt(0) else '\0'
-        
+      
+    var ptmDefId: Int =0 
+    if(ptmSpecifRecord.contains("id"))
+      ptmDefId = ptmSpecifRecord("id").asInstanceOf[Int]
+    else
+      ptmDefId =PtmDefinition.generateNewId
+      
     return new PtmDefinition(
-                          id = ptmSpecifRecord("id").asInstanceOf[Int],
+                          id = ptmDefId,
                           ptmId = ptmRecord("id").asInstanceOf[Int],
                           location = ptmSpecifRecord("location").asInstanceOf[String],
                           residue = resChar,
