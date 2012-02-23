@@ -3,6 +3,11 @@ package fr.proline.core.om.msi
 package PtmClasses {
 
   import org.apache.commons.lang3.StringUtils
+  import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+
+  object PtmNames extends InMemoryIdGen {
+    
+  }
   
   class PtmNames( val shortName: String, val fullName: String ) {
     
@@ -57,6 +62,9 @@ package PtmClasses {
     
   }
   
+  object PtmDefinition extends InMemoryIdGen {
+    
+  }
   class PtmDefinition( // Required fields
                        override val id: Int,
                        override val location: String,

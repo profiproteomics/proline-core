@@ -281,6 +281,9 @@ package PeptideClasses {
     
   }
   
+  object PeptideMatch extends InMemoryIdGen {
+    
+  }
   class PeptideMatch ( // Required fields
                        var id: Int, 
                        val rank: Int,
