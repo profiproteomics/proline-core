@@ -8,6 +8,8 @@ trait IPTMProvider {
   
   def getPtmDefinition(ptmDefID: Int) : Option[PtmDefinition] = { getPtmDefinitions( Array(0) )(0) }
     
-  def getPtmDefinition(ptmName : String, ptmResidu : Char) : Option[PtmDefinition] 
+  def getPtmDefinition(ptmName : String, ptmResidu : Char, ptmLocation : String) : Option[PtmDefinition] 
+  
+  def getPtmId(fullName : String, shortName : String) : Option[Int]
   
 }
