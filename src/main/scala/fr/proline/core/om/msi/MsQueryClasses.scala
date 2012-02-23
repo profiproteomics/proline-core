@@ -2,8 +2,9 @@ package fr.proline.core.om.msi
 
 package MsQueryClasses {
 
-  import org.apache.commons.lang3.StringUtils  
-  import scala.collection.mutable.HashMap  
+import org.apache.commons.lang3.StringUtils
+import scala.collection.mutable.HashMap  
+import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
   
   class MsQuery( // Required fields
                  val id: Int,
@@ -17,6 +18,10 @@ package MsQueryClasses {
     
     // Requirements
     require( moz > 0 )
+    
+  }
+  
+  object Ms2Query extends InMemoryIdGen {
     
   }
   
