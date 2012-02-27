@@ -10,9 +10,10 @@ object PtmDefinitionBuilder {
   /**
    * 
    * Create a PtmDefinition using corresponding information
-   *  - ptmRecord : contains value for ptm properties "id" for ptm_id, "short_name", "full_name" for Ptm Names : If id == 0, ptm is to be created TODO !!
-   *  - ptmSpecifRecord : contains value for ptmDefinition properties "residue", "id", "location" : if id is not specified, a new id will be generated
-   *  - ptmEvidenceRecords :List of map:  contains value for properties "type", "composition", "mono_mass", "average_mass","is_required" for each ptmEvidence 
+   *  - ptmRecord : contains value for ptm properties "id"(Int) for ptm_id, "short_name" (String), "full_name" (String) for Ptm Names  
+   *      !! FIXME : To Confirm If id == 0, ptm is to be created FIXME!!
+   *  - ptmSpecifRecord : contains value for ptmDefinition properties "residue" (String), "id" (Int), "location" (String): if id is not specified, a new id will be generated
+   *  - ptmEvidenceRecords :List of map:  contains value for properties "type"(String), "composition"(String), "mono_mass"(Double), "average_mass"(Double),"is_required" (Boolean) for each ptmEvidence 
    *  - ptmClassification : name of classification,
    *    
    */
@@ -59,6 +60,11 @@ object PtmDefinitionBuilder {
                           )
   }
 
+  /**
+   * Create a LocatedPtm using specified PtmDefinition and location on peptide sequence.
+   * seqPos == 0 for Nterm and  seqPos == -1 for CTerm
+   * 
+   */
   def buildLocatedPtm( ptmDef: PtmDefinition, seqPos: Int ): LocatedPtm = {
     
     var( isNTerm, isCTerm ) = ( false, false )
