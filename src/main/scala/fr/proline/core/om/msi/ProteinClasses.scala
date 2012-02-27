@@ -3,14 +3,15 @@ package fr.proline.core.om.msi
 package ProteinClasses {
 
   import scala.collection.mutable.HashMap
-  import fr.proline.core.om.msi.PeptideClasses.PeptideSet
-  import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
-  import fr.proline.core.om.msi.PeptideClasses.Peptide
-  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-  import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
-  import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+import fr.proline.core.om.msi.PeptideClasses.PeptideSet
+import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
+import fr.proline.core.om.msi.PeptideClasses.Peptide
+import fr.proline.core.om.msi.ResultSetClasses.ResultSet
+import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
+import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
 
-  object Protein {
+  object Protein extends InMemoryIdGen{
     
     /** A percentage (between 0 and 100) expressing the sequence coverage of the protein */
     def calcSequenceCoverage( protSeqLength: Int, seqPositions: Array[Tuple2[Int,Int]] ): Float = {
@@ -87,7 +88,11 @@ package ProteinClasses {
     def getBestPeptideMatchId : Int = { if(bestPeptideMatch != null && bestPeptideMatch != None) bestPeptideMatch.get.id else bestPeptideMatchId }
     
   }
-  
+
+  object ProteinMatch extends InMemoryIdGen {
+    
+  }  
+    
   class ProteinMatch ( 
                      // Required fields                    
                      val accession: String,
