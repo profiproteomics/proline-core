@@ -9,6 +9,7 @@ object ProvidersFactory {
   private var pepMatchProviders:HashMap[String, IPeptideMatchProvider]= new HashMap[String , IPeptideMatchProvider]()
   private var pepProviders:HashMap[String, IPeptideProvider]= new HashMap[String , IPeptideProvider]()
   private var ptmProviders:HashMap[String, IPTMProvider]= new HashMap[String , IPTMProvider]()
+  private var protProviders:HashMap[String, IProteinProvider]= new HashMap[String , IProteinProvider]()
  
   //IPeptideMatchProvider methods
   def registerPeptideMatchProvider(keyProvider:String, matchProvider:IPeptideMatchProvider) =  {
@@ -59,5 +60,23 @@ object ProvidersFactory {
   
   def getAvailablePTMProvider() : Set[String]  = {
     return ptmProviders.keySet
+  } 
+  
+    
+    //IProteinProvider methods
+  def registerProteinProvider(keyProvider:String, protProvider:IProteinProvider) =  {
+    protProviders += keyProvider -> protProvider
+  }
+  
+  def unregisterProteinProvider(keyProvider:String) =  {
+    protProviders.remove(keyProvider)
+  }
+  
+  def getProteinProvider(keyProvider:String) : Option[IProteinProvider] = {
+    protProviders.get(keyProvider) 
+  }
+  
+  def getAvailableProteinProvider() : Set[String]  = {
+    return protProviders.keySet
   } 
 }
