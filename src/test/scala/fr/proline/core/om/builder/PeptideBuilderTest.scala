@@ -8,6 +8,16 @@ import fr.proline.core.om.msi.PtmClasses.LocatedPtm
 @Test
 class PeptideBuilderTest {
   
+  	  	 
+  	@Test
+    def testBuildMultiplePeptideIDs() = {	  
+	  
+	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms=new Array[LocatedPtm](0) , calcMass = 100  )
+	  val pep2 = PeptideBuilder.buildPeptide(seq = "LEANK", locatedPtms=null , calcMass = 563.15  )
+	  //NOTE: may not be OK if peptides have been created elsewhere in tests before this test is called!!!! 
+	  assertEquals( -1, pep1 id);
+	  assertEquals(-2, pep2 id);
+	}
 
   	@Test
     def testBuildEmptyPtmPeptide() = {	  
@@ -29,7 +39,7 @@ class PeptideBuilderTest {
       	ptmRecord += ("full_name" -> "phospho")
       	  
       	var ptmSpecifRecord = scala.collection.immutable.Map.newBuilder[String,Any]
-      	ptmSpecifRecord += ("residue" -> "A")
+      	ptmSpecifRecord += ("residue" -> "A") 
       	ptmSpecifRecord += ("location" -> "Anywhere")
       	        	
       	var ptmEvidencePrecursor = scala.collection.immutable.Map.newBuilder[String,Any]
@@ -47,15 +57,6 @@ class PeptideBuilderTest {
       	val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms=locatedPtm , calcMass = 100  )
       	assertNotNull(pep1)
       	assertEquals("1(A)", pep1.ptmString)
-  	}
-  	  	 
-  	@Test
-    def testBuildMultiplePeptideIDs() = {	  
-	  
-	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms=new Array[LocatedPtm](0) , calcMass = 100  )
-	  val pep2 = PeptideBuilder.buildPeptide(seq = "LEANK", locatedPtms=null , calcMass = 563.15  )	  
-	  assertEquals(pep1 id , -1);
-	  assertEquals(pep2 id , -2);
-	}
+  	}  	
 
 }
