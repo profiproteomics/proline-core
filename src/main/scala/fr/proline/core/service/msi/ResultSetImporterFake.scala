@@ -20,12 +20,12 @@ trait ResultSetStorerFake {
 }
 
 
-class ResultSetImporterFake( projectId: Int,
-                             filePath: String,
-                             fileType: String,
-                             instrumentConfigId: Int,
-                             specTitleRuleId: Int,
-                             peaklistId: Int = 0
+class ResultFileImporterFake( projectId: Int,
+                              filePath: String,
+                              fileType: String,
+                              instrumentConfigId: Int,
+                              specTitleRuleId: Int,
+                              peaklistId: Int = 0
                              ) extends IService {
   
   val instrumentConfigProvider = new Object with ProviderFake
