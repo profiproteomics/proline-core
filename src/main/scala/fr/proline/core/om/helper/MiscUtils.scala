@@ -1,7 +1,7 @@
 package fr.proline.core.om.helper
 
 /** Miscellaneous helpers */
-package MiscUtils {
+package object MiscUtils {
 
   trait InMemoryIdGen {
     private var inMemoryIdCount = 0
@@ -14,32 +14,28 @@ package MiscUtils {
     if (s.size % 2 == 0) (lower.last + upper.head) / 2.0 else upper.head
   }*/
   
-  object median {
-    def apply[T](s: Seq[T])(implicit n: Fractional[T]) = {
-      import n._
-      val (lower, upper) = s.sortWith(_<_).splitAt(s.size / 2)
-      if (s.size % 2 == 0) (lower.last + upper.head) / fromInt(2) else upper.head
-    }
+  def median[T](s: Seq[T])(implicit n: Fractional[T]) = {
+    import n._
+    val (lower, upper) = s.sortWith(_<_).splitAt(s.size / 2)
+    if (s.size % 2 == 0) (lower.last + upper.head) / fromInt(2) else upper.head
   }
   
-  object getMedianObject{
-    def apply[T]( objects: List[T], sortingFunc: Function2[T,T,Boolean] ): T = {
+  def getMedianObject[T]( objects: List[T], sortingFunc: Function2[T,T,Boolean] ): T = {
+  
+    val sortedObjects = objects.sort { (a,b) => sortingFunc(a,b) } 
+    val nbObjects = sortedObjects.length
     
-      val sortedObjects = objects.sort { (a,b) => sortingFunc(a,b) } 
-      val nbObjects = sortedObjects.length
-      
-      // Compute median index
-      var medianIndex = 0
-      
-      // If even number of objects
-      if( nbObjects % 2 == 0 ) medianIndex = nbObjects / 2
-      // Else => odd number of objects
-      else medianIndex = (nbObjects-1) / 2
-      
-      sortedObjects(medianIndex)
-      
-    }
-  }
+    // Compute median index
+    var medianIndex = 0
+    
+    // If even number of objects
+    if( nbObjects % 2 == 0 ) medianIndex = nbObjects / 2
+    // Else => odd number of objects
+    else medianIndex = (nbObjects-1) / 2
+    
+    sortedObjects(medianIndex)
+    
+  }  
   
   /*object factorizeSeq {
     def apply (seq : Seq[_]) : Array[Pair[_, _]] = {
@@ -68,21 +64,18 @@ package MiscUtils {
   }
   
   /** Compute slope and intercept of a line using two data points coordinates */
-  object calcLineParams {
+  def calcLineParams( x1: Double, y1: Double, x2: Double, y2: Double ): Tuple2[Double,Double] =  {
     
-    def apply( x1: Double, y1: Double, x2: Double, y2: Double ): Tuple2[Double,Double] =  {
-      
-      val deltaX = x2 - x1
-      if( deltaX == 0 )  {
-        throw new IllegalArgumentException("can't solve line parameters with two identical x values (" + x1 + ")" )
-      }
-      
-      val slope = (y2 - y1) / deltaX
-      val intercept = y1 - (slope * x1)
-      
-      ( slope, intercept )
+    val deltaX = x2 - x1
+    if( deltaX == 0 )  {
+      throw new IllegalArgumentException("can't solve line parameters with two identical x values (" + x1 + ")" )
     }
     
+    val slope = (y2 - y1) / deltaX
+    val intercept = y1 - (slope * x1)
+    
+    ( slope, intercept )
   }
+
   
 }

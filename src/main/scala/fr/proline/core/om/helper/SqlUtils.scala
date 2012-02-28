@@ -1,6 +1,6 @@
 package fr.proline.core.om.helper
 
-package SqlUtils {
+package object SqlUtils {
   
   class SQLBool( value: Boolean ) {
     
@@ -24,21 +24,17 @@ package SqlUtils {
     
   }
   
-  object BoolToSQLStr {
-    def apply(value: Boolean, asInt: Boolean = false ): String = {
-      val sqlBool = new SQLBool(value)
-      if( asInt ) sqlBool.toIntString else sqlBool.toString()
-    }
+  def BoolToSQLStr (value: Boolean, asInt: Boolean = false ): String = {
+    val sqlBool = new SQLBool(value)
+    if( asInt ) sqlBool.toIntString else sqlBool.toString()
   }
   
-  object SQLStrToBool {
-    def apply(sqlStr: String ): Boolean = {
-      sqlStr match {
-        case "true" => true
-        case "false" => false
-        case "1" => true
-        case "0" => false
-      }
+  def SQLStrToBool(sqlStr: String ): Boolean = {
+    sqlStr match {
+      case "true" => true
+      case "false" => false
+      case "1" => true
+      case "0" => false
     }
   }
 

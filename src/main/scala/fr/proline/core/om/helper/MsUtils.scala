@@ -1,6 +1,6 @@
 package fr.proline.core.om.helper
 
-object MsUtils {
+package object MsUtils {
   
   val protonMass = 1.00727646688
   //val electronMass = 0.00054857990943
