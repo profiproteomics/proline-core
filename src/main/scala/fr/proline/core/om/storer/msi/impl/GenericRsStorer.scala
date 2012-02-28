@@ -1,7 +1,9 @@
-package fr.proline.core.om.storer.rs
+package fr.proline.core.om.storer.msi.impl
 
-class SQLiteRsStorer extends IRsStorer {
+import fr.proline.core.om.storer.msi.IRsStorer
 
+class GenericRsStorer extends IRsStorer {
+  
   import fr.proline.core.om.msi.ResultSetClasses.ResultSet
   
   def fetchExistingPeptides( peptidIds: Seq[Int] ): Array[Any] = Array()

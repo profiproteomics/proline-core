@@ -1,4 +1,6 @@
-package fr.proline.core.om.storer.rs
+package fr.proline.core.om.storer.msi
+
+import fr.proline.core.om.storer.msi.impl._
 
 trait IRsStorer {
   
@@ -16,4 +18,14 @@ trait IRsStorer {
   def storeRsProteinMatches( rs: ResultSet ): Int
   def storeRsSequenceMatches( rs: ResultSet ): Int
   
- }
+}
+
+/** A factory object for implementations of the IRsStorer trait */
+object RsStorer {
+  def apply(driver: String ): IRsStorer = { driver match {
+    case "org.postgresql.JDBC" => new PgRsStorer()
+    case "org.sqlite.JDBC" => new SQLiteRsStorer()
+    case _ => new GenericRsStorer()
+    }
+  }
+}

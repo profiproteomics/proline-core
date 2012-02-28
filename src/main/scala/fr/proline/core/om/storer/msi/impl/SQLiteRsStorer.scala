@@ -1,6 +1,8 @@
-package fr.proline.core.om.storer.rs
+package fr.proline.core.om.storer.msi.impl
 
-class PgRsStorer extends IRsStorer {
+import fr.proline.core.om.storer.msi.IRsStorer
+
+class SQLiteRsStorer extends IRsStorer {
 
   import fr.proline.core.om.msi.ResultSetClasses.ResultSet
   
