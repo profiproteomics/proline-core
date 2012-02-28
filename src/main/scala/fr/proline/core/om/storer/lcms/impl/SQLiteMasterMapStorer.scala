@@ -1,6 +1,7 @@
-package fr.proline.core.om.storer.lcms
+package fr.proline.core.om.storer.lcms.impl
 
 import fr.proline.core.LcmsDb
+import fr.proline.core.om.storer.lcms.IMasterMapStorer
 
 class SQLiteMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
   

@@ -1,7 +1,15 @@
-package fr.proline.core.om.storer
+package fr.proline.core.om.storer.lcms
 
 import fr.proline.core.LcmsDb
-import fr.proline.core.om.storer.lcms._
+import fr.proline.core.om.storer.lcms.impl._
+
+trait IMapAlnSetStorer {
+  
+  import fr.proline.core.om.lcms.MapAlignmentSet
+  
+  def storeMapAlnSets( mapAlnSets: Seq[MapAlignmentSet], mapSetId: Int, alnRefMapId: Int ): Unit
+  
+}
 
 /** A factory object for implementations of the IMapAlnSetStorer trait */
 object MapAlnSetStorer {

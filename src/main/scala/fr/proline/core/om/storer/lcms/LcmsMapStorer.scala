@@ -1,7 +1,17 @@
-package fr.proline.core.om.storer
+package fr.proline.core.om.storer.lcms
 
 import fr.proline.core.LcmsDb
-import fr.proline.core.om.storer.lcms._
+import fr.proline.core.om.storer.lcms.impl._
+
+trait IRunMapStorer {
+  
+  import fr.proline.core.om.lcms.LcmsMap
+  import fr.proline.core.om.lcms.RunMap
+  
+  def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit
+  def insertMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int
+  
+ }
 
 /*
 /** A factory object for implementations of the IRunMapStorer trait */
@@ -15,6 +25,16 @@ object RunMapStorer {
 }
 */
 
+trait IProcessedMapStorer {
+  
+  import fr.proline.core.om.lcms.ProcessedMap
+  import fr.proline.core.om.lcms.Feature
+  
+  def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = false ): Unit
+  def storeFeatureClusters( features: Seq[Feature] ): Unit
+  
+}
+
 /** A factory object for implementations of the IProcessedMapStorer trait */
 object ProcessedMapStorer {
   def apply( lcmsDb: LcmsDb ): IProcessedMapStorer = { lcmsDb.config.driver match {
@@ -24,6 +44,14 @@ object ProcessedMapStorer {
     }
   }
 }
+
+trait IMasterMapStorer {
+  
+  import fr.proline.core.om.lcms.ProcessedMap
+  
+  def storeMasterMap( processedMap: ProcessedMap ): Unit
+  
+ }
 
 /** A factory object for implementations of the IMasterMapStorer trait */
 object MasterMapStorer {
