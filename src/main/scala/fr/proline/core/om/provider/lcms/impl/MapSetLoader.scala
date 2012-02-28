@@ -1,4 +1,4 @@
-package fr.proline.core.om.provider.sql.lcms
+package fr.proline.core.om.provider.lcms.impl
 
 import fr.proline.core.LcmsDb
   

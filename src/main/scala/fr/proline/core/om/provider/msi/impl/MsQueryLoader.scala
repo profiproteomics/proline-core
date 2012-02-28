@@ -1,4 +1,4 @@
-package fr.proline.core.om.provider.sql
+package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.DatabaseConfig
 

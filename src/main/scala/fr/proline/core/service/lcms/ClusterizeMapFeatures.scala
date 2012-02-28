@@ -6,8 +6,8 @@ import fr.proline.core.service.IService
 import fr.proline.core.algo.lcms.FeatureClusterer
 import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.om.lcms._
-import fr.proline.core.om.provider.sql.lcms.RunLoader
-import fr.proline.core.om.storer.ProcessedMapStorer
+import fr.proline.core.om.provider.lcms.impl.RunLoader
+import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 
 object ClusterizeMapFeatures {
 
