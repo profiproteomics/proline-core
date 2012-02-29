@@ -145,13 +145,66 @@ case class MasterQuantPeptide( var id: Int,
                                
                                val peptideId: Int, // without label in the context of isotopic labeling
                                val peptideInstanceId: Int, // without label in the context of isotopic labeling
-                               var masterQuantProteinSetIds: Array[Int],
+                               var masterQuantProteinSetIds: Array[Int] = null,
                                
                                var selectionLevel: Int,
                                var properties: Map[String,Any]
       
                              ) extends Item {
   
+  def isProteinSetSpecific: Option[Boolean] = {
+    if( this.masterQuantProteinSetIds == null || 
+        this.masterQuantProteinSetIds.length == 0 ) return None
+        
+    val isProteinSetSpecific = if( this.masterQuantProteinSetIds.length == 1 ) true else false
+    Some(isProteinSetSpecific)    
+  }
+  
+  def isProteinMatchSpecific: Option[Boolean] = {
+    if( this.proteinMatchesCount == 0 ) return None
+        
+    val isProteinMatchSpecific = if( this.proteinMatchesCount == 1 ) true else false
+    Some(isProteinMatchSpecific)
+  }
+  
+  def getBestQuantPeptide: QuantPeptide = {    
+    this.quantPeptideMap.values.reduce { (a,b) => if( a.abundance > b.abundance ) a else b }
+  }
+  
+  def getQuantPeptideAbundance( quantChannelId: Int ): Float = {
+    val quantPeptide = this.quantPeptideMap.get(quantChannelId)
+    if( quantPeptide == None ) Float.NaN else quantPeptide.get.abundance
+  }
+  
+  def getDefinedAbundancesForQuantChannels( quantChannelIds: Array[Int] ): Array[Float] = {    
+    quantChannelIds map { quantChannelId => getQuantPeptideAbundance(quantChannelId) } filter { ! _.isNaN }
+  }
+   
+  def calcMeanAbundanceForQuantChannels( quantChannelIds: Array[Int] ): Float = {
+    
+    val values = this.getDefinedAbundancesForQuantChannels( quantChannelIds )
+    val nbValues = values.length
+    
+    var mean = Float.NaN
+    if( nbValues > 0 ) {
+      mean = values.reduceLeft[Float](_+_) / nbValues
+    }
+    
+    mean
+  }
+
+  def calcRatio( numQuantChannelIds: Array[Int], denomQuantChannelIds: Array[Int] ): Float = {
+
+    val quantPepMap = this.quantPeptideMap
+    
+    val numerator = this.calcMeanAbundanceForQuantChannels( denomQuantChannelIds )
+    if( numerator.isNaN || numerator == 0 ) return Float.NaN
+    
+    val denominator = this.calcMeanAbundanceForQuantChannels( denomQuantChannelIds )
+    if( denominator.isNaN || denominator == 0  ) return Float.NaN
+    
+    numerator/denominator
+  }
 
 }
 
