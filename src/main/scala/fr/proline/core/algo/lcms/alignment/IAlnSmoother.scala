@@ -4,7 +4,7 @@ case class AlnSmoothingParams( windowSize: Int, windowOverlap: Int, minWindowLan
 
 trait IAlnSmoother {
   
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   
   def smoothMapAlignment( mapAln: MapAlignment, smoothingParams: AlnSmoothingParams ): MapAlignment
 

@@ -7,7 +7,7 @@ class ProcessedMapLoader( val lcmsDb: LcmsDb,
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.helper.SqlUtils._
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   
   /** Returns a list of features corresponding to a given list of processed map ids */
   def getMaps( processedMapIds: Seq[Int] ): Array[ProcessedMap] = {

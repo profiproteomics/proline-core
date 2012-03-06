@@ -2,7 +2,7 @@ package fr.proline.core.algo.lcms.filtering
 
 class RelativeIntensityBasedSelector extends IFeatureSelector {
 
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   import fr.proline.core.om.helper.MiscUtils.median
   
   /** Select features according to a threshold relative to the map median intensity */

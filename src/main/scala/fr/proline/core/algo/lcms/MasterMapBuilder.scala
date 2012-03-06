@@ -1,7 +1,7 @@
 package fr.proline.core.algo.lcms
 
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.lcms._
+import fr.proline.core.om.model.lcms._
 import filtering._
 
 object MasterMapBuilder {

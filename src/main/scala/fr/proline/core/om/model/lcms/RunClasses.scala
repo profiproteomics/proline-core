@@ -1,4 +1,4 @@
-package fr.proline.core.om.lcms
+package fr.proline.core.om.model.lcms
 
 import java.util.Date
 import scala.collection.mutable.HashMap

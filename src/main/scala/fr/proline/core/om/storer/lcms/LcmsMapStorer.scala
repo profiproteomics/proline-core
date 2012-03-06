@@ -5,8 +5,8 @@ import fr.proline.core.om.storer.lcms.impl._
 
 trait IRunMapStorer {
   
-  import fr.proline.core.om.lcms.LcmsMap
-  import fr.proline.core.om.lcms.RunMap
+  import fr.proline.core.om.model.lcms.LcmsMap
+  import fr.proline.core.om.model.lcms.RunMap
   
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit
   def insertMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int
@@ -27,8 +27,8 @@ object RunMapStorer {
 
 trait IProcessedMapStorer {
   
-  import fr.proline.core.om.lcms.ProcessedMap
-  import fr.proline.core.om.lcms.Feature
+  import fr.proline.core.om.model.lcms.ProcessedMap
+  import fr.proline.core.om.model.lcms.Feature
   
   def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = false ): Unit
   def storeFeatureClusters( features: Seq[Feature] ): Unit
@@ -47,7 +47,7 @@ object ProcessedMapStorer {
 
 trait IMasterMapStorer {
   
-  import fr.proline.core.om.lcms.ProcessedMap
+  import fr.proline.core.om.model.lcms.ProcessedMap
   
   def storeMasterMap( processedMap: ProcessedMap ): Unit
   

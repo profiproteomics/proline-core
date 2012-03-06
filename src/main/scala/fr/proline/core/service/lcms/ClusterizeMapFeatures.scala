@@ -1,11 +1,11 @@
 package fr.proline.core.service.lcms
 
-import fr.proline.core.om.helper.SqlUtils._
 import fr.proline.core.LcmsDb
 import fr.proline.core.service.IService
 import fr.proline.core.algo.lcms.FeatureClusterer
 import fr.proline.core.algo.lcms.ClusteringParams
-import fr.proline.core.om.lcms._
+import fr.proline.core.om.helper.SqlUtils._
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl.RunLoader
 import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 

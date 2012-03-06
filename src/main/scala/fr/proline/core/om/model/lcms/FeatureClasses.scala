@@ -1,4 +1,4 @@
-package fr.proline.core.om.lcms
+package fr.proline.core.om.model.lcms
 
 import scala.collection.mutable.HashMap
 import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen

@@ -6,7 +6,7 @@ trait IMapLoader {
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.LcmsDb
   import fr.proline.core.om.helper.SqlUtils._
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   import fr.proline.core.om.helper.LcmsDbHelper
   
   /** If true then boolean will be stringified as integer (1|0), else as corresponding strings ("true"|"false") */

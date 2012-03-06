@@ -4,7 +4,7 @@ import fr.proline.core.om.parser.lcms.impl._
 
 trait ILcmsMapFileParser {
   
-  import fr.proline.core.om.lcms.LcmsRun
+  import fr.proline.core.om.model.lcms.LcmsRun
   
   def getRunMap( filePath: String, lcmsRun: LcmsRun, extraParams: Map [String,Any] )
   

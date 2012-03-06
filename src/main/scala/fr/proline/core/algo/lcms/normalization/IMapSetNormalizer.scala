@@ -2,7 +2,7 @@ package fr.proline.core.algo.lcms.normalization
 
 trait IMapSetNormalizer {
 
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   
   def normalizeFeaturesIntensity( mapSet: MapSet ): Unit = {
     

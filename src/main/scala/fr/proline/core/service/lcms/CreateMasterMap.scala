@@ -5,8 +5,8 @@ import net.noerd.prequel.SQLFormatterImplicits._
 import fr.proline.core.SQLFormatterImplicits._
 import fr.proline.core.LcmsDb
 import fr.proline.core.algo.lcms._
-import fr.proline.core.om.lcms._
-import fr.proline.core.om.provider.sql.lcms._
+import fr.proline.core.om.model.lcms._
+import fr.proline.core.om.provider.lcms.impl._
 import fr.proline.core.om.storer.lcms.MasterMapStorer
 import fr.proline.core.service.IService
 import fr.proline.core.service.lcms._

@@ -7,7 +7,7 @@ class SQLiteMapAlnSetStorer( lcmsDb: LcmsDb ) extends IMapAlnSetStorer {
   
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.SQLFormatterImplicits._
-  import fr.proline.core.om.lcms.MapAlignmentSet
+  import fr.proline.core.om.model.lcms.MapAlignmentSet
   import fr.proline.core.om.helper.SqlUtils.BoolToSQLStr
   
   def storeMapAlnSets( mapAlnSets: Seq[MapAlignmentSet], mapSetId: Int, alnRefMapId: Int ): Unit = {

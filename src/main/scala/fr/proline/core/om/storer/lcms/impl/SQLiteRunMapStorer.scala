@@ -10,7 +10,7 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.SQLFormatterImplicits._
   import fr.proline.core.om.helper.SqlUtils.BoolToSQLStr
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
 
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit = {
     

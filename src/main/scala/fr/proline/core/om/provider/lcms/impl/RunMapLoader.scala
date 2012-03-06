@@ -7,7 +7,7 @@ class RunMapLoader( val lcmsDb: LcmsDb,
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.helper.SqlUtils._
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   
   val peakPickingSoftwareById = lcmsDbHelper.getPeakPickingSoftwareById()
   val peakelFittingModelById = lcmsDbHelper.getPeakelFittingModelById()

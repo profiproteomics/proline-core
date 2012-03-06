@@ -13,7 +13,7 @@ case class FilterNode( val filter: Filter = null,
 
 trait IFeatureSelector {
   
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   
   def selectFeatures( processedMap: ProcessedMap, filterTree: FilterNode ): Unit
 

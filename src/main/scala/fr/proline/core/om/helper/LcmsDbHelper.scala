@@ -5,7 +5,7 @@ import fr.proline.core.LcmsDb
 class LcmsDbHelper( lcmsDb: LcmsDb ) {
   
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
 
   // TODO: put in a LcmsDb helper
   def getFeatureScoringById(): Map[Int,FeatureScoring] = {

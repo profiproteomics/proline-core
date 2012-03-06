@@ -1,7 +1,7 @@
 package fr.proline.core.algo.lcms.alignment
 
 import fr.proline.core.algo.lcms.FeatureMappingParams
-import fr.proline.core.om.lcms._
+import fr.proline.core.om.model.lcms._
   
 case class AlignmentParams( massInterval: Int,
                             smoothingMethodName: String,
@@ -16,8 +16,7 @@ trait ILcmsMapAligner {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.algo.lcms.AlnSmoother
-  import fr.proline.core.algo.lcms.FeatureMapper  
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.algo.lcms.FeatureMapper
 
   def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult
   def determineAlnReferenceMap(lcmsMaps: Seq[ProcessedMap], mapAlnSets: Seq[MapAlignmentSet], currentRefMap: ProcessedMap): ProcessedMap

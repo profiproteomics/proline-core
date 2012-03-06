@@ -1,7 +1,7 @@
 package fr.proline.core.om.parser.lcms.impl
 
 import fr.proline.core.om.parser.lcms.ILcmsMapFileParser
-import fr.proline.core.om.lcms.LcmsRun
+import fr.proline.core.om.model.lcms.LcmsRun
 
 class MFPaQMapParser extends ILcmsMapFileParser {
   

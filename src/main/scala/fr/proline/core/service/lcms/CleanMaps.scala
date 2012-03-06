@@ -2,7 +2,7 @@ package fr.proline.core.service.lcms
 
 import fr.proline.core.LcmsDb
 import fr.proline.core.service.IService
-import fr.proline.core.om.lcms._
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.algo.lcms.FeatureClusterer
 

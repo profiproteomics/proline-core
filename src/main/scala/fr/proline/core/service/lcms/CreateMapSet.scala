@@ -5,7 +5,7 @@ import net.noerd.prequel.SQLFormatterImplicits._
 import fr.proline.core.SQLFormatterImplicits._
 import fr.proline.core.LcmsDb
 import fr.proline.core.algo.lcms.ClusteringParams
-import fr.proline.core.om.lcms._
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl.RunLoader
 import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.core.service.IService

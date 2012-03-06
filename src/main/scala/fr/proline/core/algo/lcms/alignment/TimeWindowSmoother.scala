@@ -2,7 +2,7 @@ package fr.proline.core.algo.lcms.alignment
 
 class TimeWindowSmoother extends IAlnSmoother {
 
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   import scala.collection.mutable.ArrayBuffer
   
   def smoothMapAlignment( mapAln: MapAlignment, smoothingParams: AlnSmoothingParams ): MapAlignment = {

@@ -7,7 +7,7 @@ case class ClusteringParams( mozTol: Double, mozTolUnit: String, timeTol: Float,
 object FeatureClusterer {
 
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.lcms._
+  import fr.proline.core.om.model.lcms._
   import fr.proline.core.om.helper.MsUtils
   import fr.proline.core.om.helper.MiscUtils.getMedianObject
   

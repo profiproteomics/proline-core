@@ -5,8 +5,8 @@ import fr.proline.core.om.storer.lcms.IRunMapStorer
 
 class GenericRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
   
-  import fr.proline.core.om.lcms.RunMap
-  import fr.proline.core.om.lcms.LcmsMap
+  import fr.proline.core.om.model.lcms.RunMap
+  import fr.proline.core.om.model.lcms.LcmsMap
   
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit = {
     throw new Exception("not yet implemented")
