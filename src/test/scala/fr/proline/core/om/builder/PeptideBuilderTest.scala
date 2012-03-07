@@ -12,22 +12,22 @@ class PeptideBuilderTest {
   	@Test
     def testBuildMultiplePeptideIDs() = {	  
 	  
-	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms=new Array[LocatedPtm](0) , calcMass = 100  )
-	  val pep2 = PeptideBuilder.buildPeptide(seq = "LEANK", locatedPtms=null , calcMass = 563.15  )
+	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms = None, calcMass = 100  )
+	  val pep2 = PeptideBuilder.buildPeptide(seq = "LEANK", locatedPtms = None, calcMass = 563.15  )
 	  //NOTE: may not be OK if peptides have been created elsewhere in tests before this test is called!!!! 
-	  assertEquals( -1, pep1 id);
-	  assertEquals(-2, pep2 id);
+	  assertEquals( -1, pep1.id)
+	  assertEquals(-2, pep2.id)
 	}
 
   	@Test
     def testBuildEmptyPtmPeptide() = {	  
-	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms=new Array[LocatedPtm](0) , calcMass = 100  )
+	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms = None , calcMass = 100  )
 	  assertNotNull(pep1)
   	}
   	
   	@Test
     def testBuildNullPtmPeptide() = {	  
-	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms=null , calcMass = 100  )
+	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms = None , calcMass = 100  )
 	  assertNotNull(pep1)
   	}
 
@@ -49,14 +49,14 @@ class PeptideBuilderTest {
       	ptmEvidencePrecursor += ("average_mass" -> 10.0)
       	ptmEvidencePrecursor += ("is_required" -> true)
       	
-      	        	
       	val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(ptmRecord = ptmRecord.result(),ptmSpecifRecord = ptmSpecifRecord.result(), ptmEvidenceRecords = Seq[Map[String,Any]](ptmEvidencePrecursor.result()),ptmClassification = "" )
       	val ptmLoc = PtmDefinitionBuilder.buildLocatedPtm(ptmDef= ptmDef , seqPos=1)  
       	val locatedPtm = new Array[LocatedPtm](1)
       	locatedPtm.update(0,ptmLoc)
-      	val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms=locatedPtm , calcMass = 100  )
+      	val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms=Some(locatedPtm), calcMass = 100 )
+      	
       	assertNotNull(pep1)
-      	assertEquals("1(A)", pep1.ptmString)
+      	assertEquals("1[HA]", pep1.ptmString)
   	}  	
 
 }

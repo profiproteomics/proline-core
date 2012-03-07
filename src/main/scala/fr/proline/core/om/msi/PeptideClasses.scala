@@ -6,7 +6,7 @@ package PeptideClasses {
   import scala.collection.mutable.ListBuffer
   import scala.collection.mutable.HashMap
   import org.apache.commons.lang3.StringUtils
-  import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+  import fr.proline.core.utils.misc.InMemoryIdGen
   import fr.proline.core.om.msi.MsQueryClasses.Ms2Query
   import fr.proline.core.om.msi.MsQueryClasses.MsQuery
   import fr.proline.core.om.msi.PtmClasses._

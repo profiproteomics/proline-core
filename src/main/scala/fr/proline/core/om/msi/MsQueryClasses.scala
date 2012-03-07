@@ -4,7 +4,7 @@ package MsQueryClasses {
 
 import org.apache.commons.lang3.StringUtils
 import scala.collection.mutable.HashMap  
-import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+import fr.proline.core.utils.misc.InMemoryIdGen
   
   class MsQuery( // Required fields
                  val id: Int,

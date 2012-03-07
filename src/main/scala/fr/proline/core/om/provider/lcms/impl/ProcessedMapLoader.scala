@@ -6,7 +6,7 @@ class ProcessedMapLoader( val lcmsDb: LcmsDb,
                           val loadPeaks: Boolean = false ) extends IMapLoader {
   
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.helper.SqlUtils._
+  import fr.proline.core.utils.sql._
   import fr.proline.core.om.model.lcms._
   
   /** Returns a list of features corresponding to a given list of processed map ids */

@@ -8,8 +8,8 @@ object FeatureClusterer {
 
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
-  import fr.proline.core.om.helper.MsUtils
-  import fr.proline.core.om.helper.MiscUtils.getMedianObject
+  import fr.proline.core.utils.ms._
+  import fr.proline.core.utils.misc.getMedianObject
   
   private val ftMozSortingFunc = new Function2[Feature, Feature, Boolean] {
     def apply(a: Feature, b: Feature): Boolean = if (a.moz < b.moz) true else false
@@ -65,7 +65,7 @@ object FeatureClusterer {
         val ftMoz = ft.moz
         
         // Compute m/z tolerance in Dalton
-        val mozTolInDalton = MsUtils.calcMozTolInDalton( ftMoz, mozTol, mozTolUnit )
+        val mozTolInDalton = calcMozTolInDalton( ftMoz, mozTol, mozTolUnit )
         if ( math.abs(ftMoz - prevFt.moz) > mozTolInDalton) {
           // Append new group of features because current m/z is to far from the previous one
           ftGroupIdx += 1
@@ -101,7 +101,7 @@ object FeatureClusterer {
       // Filtering same charge ft groups to remove m/z conflicts
       for( ftGroup <- sameChargeFtGroups ) {
         
-        val mozTolInDalton = MsUtils.calcMozTolInDalton( ftGroup(0).moz, mozTol, mozTolUnit )
+        val mozTolInDalton = calcMozTolInDalton( ftGroup(0).moz, mozTol, mozTolUnit )
         val mozSplitFtGroups = this.splitFtGroupByMoz( ftGroup, mozTolInDalton )
         
         for( mozSplitFtGroup <- mozSplitFtGroups ) {

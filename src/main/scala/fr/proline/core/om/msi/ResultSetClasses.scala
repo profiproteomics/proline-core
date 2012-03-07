@@ -6,7 +6,7 @@ package ResultSetClasses {
 import fr.proline.core.om.msi.PeptideClasses._
 import fr.proline.core.om.msi.ProteinClasses._
 import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
-import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+import fr.proline.core.utils.misc.InMemoryIdGen
 
   object ResultSet extends InMemoryIdGen{
     

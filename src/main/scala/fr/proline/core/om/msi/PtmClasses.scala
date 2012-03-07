@@ -3,7 +3,7 @@ package fr.proline.core.om.msi
 package PtmClasses {
 
   import org.apache.commons.lang3.StringUtils
-  import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+  import fr.proline.core.utils.misc.InMemoryIdGen
 
   object PtmNames extends InMemoryIdGen {
     

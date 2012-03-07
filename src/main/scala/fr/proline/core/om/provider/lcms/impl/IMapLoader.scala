@@ -5,7 +5,7 @@ trait IMapLoader {
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.LcmsDb
-  import fr.proline.core.om.helper.SqlUtils._
+  import fr.proline.core.utils.sql._
   import fr.proline.core.om.model.lcms._
   import fr.proline.core.om.helper.LcmsDbHelper
   

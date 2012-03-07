@@ -5,7 +5,7 @@ import fr.proline.core.om.msi.PeptideClasses.Peptide
 
 object PeptideBuilder {
 
-  def buildPeptide( seq: String, locatedPtms: Array[LocatedPtm], calcMass: Double) : Peptide = {
+  def buildPeptide( seq: String, locatedPtms: Option[Array[LocatedPtm]], calcMass: Double) : Peptide = {
     
     /*var sb:StringBuilder = new StringBuilder()
     
@@ -21,12 +21,15 @@ object PeptideBuilder {
     	sb.append(lp.seqPosition).append("(").append(lp.definition.residue).append(")")
     	}
     }*/
-    val ptmString = Peptide.makePtmString( locatedPtms.toList )
+    var ptmString = locatedPtms match {
+      case None => ""
+      case _ => Peptide.makePtmString( locatedPtms.get.toList )
+    }
     
     new Peptide( id = Peptide.generateNewId,
                  sequence = seq,
                  ptmString = ptmString,
-                 ptms = locatedPtms,
+                 ptms = locatedPtms.getOrElse(null),
                  calculatedMass = calcMass
                 )
     

@@ -9,7 +9,7 @@ import fr.proline.core.om.msi.PeptideClasses.Peptide
 import fr.proline.core.om.msi.ResultSetClasses.ResultSet
 import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
 import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
-import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+import fr.proline.core.utils.misc.InMemoryIdGen
 
   object Protein extends InMemoryIdGen{
     

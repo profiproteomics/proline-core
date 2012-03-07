@@ -6,7 +6,7 @@ import fr.proline.core.om.msi.PtmClasses.PtmDefinition
 import fr.proline.core.om.msi.InstrumentClasses.Instrument
 import fr.proline.core.om.msi.MsAnalysisClasses.Peaklist
 import java.util.Date
-import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+import fr.proline.core.utils.misc.InMemoryIdGen
   
   object SeqDatabase extends InMemoryIdGen {
     

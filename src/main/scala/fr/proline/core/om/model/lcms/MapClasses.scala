@@ -3,7 +3,7 @@ package fr.proline.core.om.model.lcms
 import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+import fr.proline.core.utils.misc.InMemoryIdGen
 
 case class FeatureScoring(
     
@@ -218,7 +218,7 @@ case class MapAlignment(
   
   def calcReferenceElutionTime( elutionTime: Float ) = {
     
-    import fr.proline.core.om.helper.MiscUtils.calcLineParams
+    import fr.proline.core.utils.misc.calcLineParams
     
     val timeIndex = timeList.indexWhere( _ >= elutionTime )
     //if( timeIndex == -1 ) throw new Exception("undefined time index for elution time " + elutionTime)

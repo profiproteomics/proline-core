@@ -1,7 +1,7 @@
 package fr.proline.core.om.msq
 
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.helper.MiscUtils.InMemoryIdGen
+import fr.proline.core.utils.misc.InMemoryIdGen
 
 trait Item {
   var selectionLevel: Int

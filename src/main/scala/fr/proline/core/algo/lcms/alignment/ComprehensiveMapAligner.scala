@@ -3,7 +3,7 @@ package fr.proline.core.algo.lcms.alignment
 class ComprehensiveMapAligner extends ILcmsMapAligner {
 
   import scala.collection.mutable.ArrayBuffer  
-  import fr.proline.core.om.helper.MiscUtils.combinations
+  import fr.proline.core.utils.misc.combinations
   import fr.proline.core.om.model.lcms._
   
   def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult = {

@@ -6,7 +6,7 @@ object FeatureMapper {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
-  import fr.proline.core.om.helper.MsUtils
+  import fr.proline.core.utils.ms.calcMozTolInDalton
   
   def computePairwiseFtMapping ( map1Features: Array[Feature],
                                  map2Features: Array[Feature],
@@ -75,7 +75,7 @@ object FeatureMapper {
           }
           
           // Compute m/z tolerance in daltons
-          val mozTolInDalton = MsUtils.calcMozTolInDalton( map1FtMoz, mozTol, mozTolUnit )
+          val mozTolInDalton = calcMozTolInDalton( map1FtMoz, mozTol, mozTolUnit )
           
           for( map2Ft <- sameMozRangeMap2Fts ) {
             
