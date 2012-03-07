@@ -3,7 +3,7 @@ package fr.proline.core.om.factory.sql
 import org.junit._
 import Assert._
 import fr.proline.core.om.msi.PeptideClasses._
-import fr.proline.core.om.provider.sql.PeptideMatchLoader
+import fr.proline.core.om.provider.msi.impl.PeptideMatchLoader
 import net.noerd.prequel.DatabaseConfig
 import net.noerd.prequel.IsolationLevels
     
