@@ -1,9 +1,10 @@
 package fr.proline.core.om.builder
+import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.PtmEvidence
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.PtmNames
 
-import fr.proline.core.om.msi.PtmClasses.PtmDefinition
-import fr.proline.core.om.msi.PtmClasses.PtmEvidence
-import fr.proline.core.om.msi.PtmClasses.PtmNames
-import fr.proline.core.om.msi.PtmClasses.LocatedPtm
+
 
 object PtmDefinitionBuilder {  
 

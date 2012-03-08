@@ -1,7 +1,9 @@
 package fr.proline.core.om.builder
 
-import fr.proline.core.om.msi.PtmClasses.LocatedPtm
-import fr.proline.core.om.msi.PeptideClasses.Peptide
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.Peptide
+
+
 
 object PeptideBuilder {
 
