@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider
+import fr.proline.core.om.model.msi.PtmDefinition
 
-import fr.proline.core.om.msi.PtmClasses.PtmDefinition
+
 
 trait IPTMProvider {
 

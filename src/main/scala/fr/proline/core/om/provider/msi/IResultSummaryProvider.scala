@@ -1,5 +1,5 @@
 package fr.proline.core.om.provider
-import fr.proline.core.om.msi.ResultSetClasses.ResultSummary
+import fr.proline.core.om.model.msi.ResultSummary
 
 trait IResultSummaryProvider {
   

@@ -1,6 +1,6 @@
 package fr.proline.core.om.provider
+import fr.proline.core.om.model.msi.ResultSet
 
-import fr.proline.core.om.msi.ResultSetClasses.ResultSet
 
 trait IResultSetProvider {
 

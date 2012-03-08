@@ -1,7 +1,8 @@
 package fr.proline.core.om.provider
+import fr.proline.core.om.model.msi.Protein
+import fr.proline.core.om.model.msi.SeqDatabase
 
-import fr.proline.core.om.msi.ProteinClasses.Protein
-import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
+
 
 trait IProteinProvider {
   

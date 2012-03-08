@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider
+import fr.proline.core.om.model.msi.ProteinSet
 
-import fr.proline.core.om.msi.ProteinClasses.ProteinSet
+
 
 trait IProteinSetProvider {
   def getProteinSets( protSetIds: Seq[Int] ): Array[Option[ProteinSet]]

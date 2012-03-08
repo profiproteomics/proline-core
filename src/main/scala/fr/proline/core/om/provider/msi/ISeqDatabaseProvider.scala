@@ -1,6 +1,5 @@
 package fr.proline.core.om.provider
-import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
-
+import fr.proline.core.om.model.msi.SeqDatabase
 
 
 trait ISeqDatabaProvider {

@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.Peptide
 
-import fr.proline.core.om.msi.PeptideClasses.Peptide
-import fr.proline.core.om.msi.PtmClasses.LocatedPtm
 
 trait IPeptideProvider {
   

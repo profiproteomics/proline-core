@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider
 
-import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+import fr.proline.core.om.model.msi.PeptideInstance
+
 
 trait IPeptideInstanceProvider {
   def getPeptideInstances( pepInstIds: Seq[Int] ): Array[Option[PeptideInstance]]

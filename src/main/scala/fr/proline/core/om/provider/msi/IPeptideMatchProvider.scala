@@ -1,6 +1,6 @@
 package fr.proline.core.om.provider
+import fr.proline.core.om.model.msi.PeptideMatch
 
-import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
 
 trait IPeptideMatchProvider {
  

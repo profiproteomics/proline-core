@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider
+import fr.proline.core.om.model.msi.ProteinMatch
 
-import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
+
 
 trait IProteinMatchProvider {
 
