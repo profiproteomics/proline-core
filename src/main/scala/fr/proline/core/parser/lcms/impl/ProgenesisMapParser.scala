@@ -1,7 +1,8 @@
-package fr.proline.core.om.parser.lcms.impl
+package fr.proline.core.parser.lcms.impl
 
-import fr.proline.core.om.parser.lcms.ILcmsMapFileParser
+
 import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.parser.lcms.ILcmsMapFileParser
 
 class ProgenesisMapParser extends ILcmsMapFileParser {
   
