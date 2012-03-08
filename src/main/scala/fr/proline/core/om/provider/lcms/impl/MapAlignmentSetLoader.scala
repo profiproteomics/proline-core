@@ -6,7 +6,7 @@ class MapAlignmentSetLoader( val lcmsDb: LcmsDb ) {
   
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.helper.SqlUtils._
+  
   import fr.proline.core.om.model.lcms._
   
   def getMapAlignmentSet( fromMapId: Int,toMapId: Int): Unit = {
