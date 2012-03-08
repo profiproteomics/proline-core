@@ -5,7 +5,7 @@ import fr.proline.core.LcmsDb
 class RunLoader( val lcmsDb: LcmsDb )  {
   
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.helper.SqlUtils._
+  import fr.proline.core.utils.sql._
   import fr.proline.core.om.model.lcms._
   
   def getRuns( runIds: Seq[Int] ): Array[LcmsRun] = {
