@@ -1,8 +1,9 @@
 package fr.proline.core.om.builder
 
-import org.junit._
-import Assert._
-import _root_.fr.proline.core.om.model.msi.PeptideClasses._
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
+
 import fr.proline.core.om.model.msi.LocatedPtm
 
 @Test

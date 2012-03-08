@@ -2,7 +2,10 @@ package fr.proline.core.om.msi
 
 import org.junit._
 import Assert._
-import _root_.fr.proline.core.om.msi.PeptideClasses._
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.PeptideInstance
+import fr.proline.core.om.model.msi.Peptide
+
 
 @Test
 class PeptidesTest {
