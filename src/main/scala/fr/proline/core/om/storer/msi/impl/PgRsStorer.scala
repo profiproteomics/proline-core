@@ -1,11 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
 import fr.proline.core.om.storer.msi.IRsStorer
+import fr.proline.core.om.model.msi.ResultSet
 
 class PgRsStorer extends IRsStorer {
 
-  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-  
+   
   def fetchExistingPeptides( peptidIds: Seq[Int] ): Array[Any] = Array()
   
   def storeNewPeptides( peptides: Seq[Any] ): Unit = ()
