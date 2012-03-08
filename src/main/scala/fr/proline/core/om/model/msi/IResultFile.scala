@@ -1,7 +1,5 @@
-package fr.proline.core.om.msi
+package fr.proline.core.om.model.msi
 
-import fr.proline.core.om.msi.MsQueryClasses._
-import fr.proline.core.om.msi.ResultSetClasses._
   
 class Spectrum() // TO define somewhere else
 

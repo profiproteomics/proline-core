@@ -1,11 +1,6 @@
-package fr.proline.core.om.msi
+package fr.proline.core.om.model.msi
 
-package ResultSetClasses {
-
-  import scala.collection.mutable.HashMap
-import fr.proline.core.om.msi.PeptideClasses._
-import fr.proline.core.om.msi.ProteinClasses._
-import fr.proline.core.om.msi.MsiSearchClasses.MSISearch
+import scala.collection.mutable.HashMap
 import fr.proline.core.utils.misc.InMemoryIdGen
 
   object ResultSet extends InMemoryIdGen{
@@ -124,4 +119,3 @@ import fr.proline.core.utils.misc.InMemoryIdGen
   
   }
   
-}

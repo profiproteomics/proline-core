@@ -1,19 +1,11 @@
-package fr.proline.core.om.msi
+package fr.proline.core.om.model.msi
 
-package PeptideClasses {
-  
+ 
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.ListBuffer
   import scala.collection.mutable.HashMap
   import org.apache.commons.lang3.StringUtils
   import fr.proline.core.utils.misc.InMemoryIdGen
-  import fr.proline.core.om.msi.MsQueryClasses.Ms2Query
-  import fr.proline.core.om.msi.MsQueryClasses.MsQuery
-  import fr.proline.core.om.msi.PtmClasses._
-  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-  import fr.proline.core.om.msi.ResultSetClasses.ResultSummary
-  import fr.proline.core.om.msi.ProteinClasses.ProteinMatch
-  import fr.proline.core.om.msi.ProteinClasses.ProteinSet
   
   object Peptide extends InMemoryIdGen {
     
@@ -470,4 +462,3 @@ package PeptideClasses {
   
   }
 
-}

@@ -1,6 +1,4 @@
-package fr.proline.core.om.msi
-
-package InstrumentClasses {
+package fr.proline.core.om.model.msi
 
   class Instrument(
                    // Required fields
@@ -24,4 +22,3 @@ package InstrumentClasses {
       
   }
   
-}

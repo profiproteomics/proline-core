@@ -1,7 +1,6 @@
-package fr.proline.core.om.msi
+package fr.proline.core.om.model.msi
 
-package FragmentationClasses {
-  
+ 
   object FragmentIonType {
     
     import scala.collection.mutable.ArrayBuffer
@@ -99,9 +98,6 @@ package FragmentationClasses {
                  val ionType: FragmentIonType = null
                  )
     extends RequiredSerie( description, requiredSerie, requiredSerieQualityLevel ) {
-    
-
-
+      
+	  
   }
-  
-}

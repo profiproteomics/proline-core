@@ -1,6 +1,5 @@
-package fr.proline.core.om.msi
+package fr.proline.core.om.model.msi
 
-package PtmClasses {
 
   import org.apache.commons.lang3.StringUtils
   import fr.proline.core.utils.misc.InMemoryIdGen
@@ -106,4 +105,3 @@ package PtmClasses {
 
   }
 
-}

@@ -1,10 +1,6 @@
-package fr.proline.core.om.msi
+package fr.proline.core.om.model.msi
 
-package MsiSearchClasses {
   
-import fr.proline.core.om.msi.PtmClasses.PtmDefinition
-import fr.proline.core.om.msi.InstrumentClasses.Instrument
-import fr.proline.core.om.msi.MsAnalysisClasses.Peaklist
 import java.util.Date
 import fr.proline.core.utils.misc.InMemoryIdGen
   
@@ -72,4 +68,3 @@ import fr.proline.core.utils.misc.InMemoryIdGen
     
   }
 	
-}

@@ -1,14 +1,7 @@
-package fr.proline.core.om.msi
+package fr.proline.core.om.model.msi
 
-package ProteinClasses {
 
-  import scala.collection.mutable.HashMap
-import fr.proline.core.om.msi.PeptideClasses.PeptideSet
-import fr.proline.core.om.msi.PeptideClasses.PeptideMatch
-import fr.proline.core.om.msi.PeptideClasses.Peptide
-import fr.proline.core.om.msi.ResultSetClasses.ResultSet
-import fr.proline.core.om.msi.MsiSearchClasses.SeqDatabase
-import fr.proline.core.om.msi.PeptideClasses.PeptideInstance
+import scala.collection.mutable.HashMap
 import fr.proline.core.utils.misc.InMemoryIdGen
 
   object Protein extends InMemoryIdGen{
@@ -166,4 +159,3 @@ import fr.proline.core.utils.misc.InMemoryIdGen
     def getTypicalProteinMatchId : Int = { if(typicalProteinMatch != null && typicalProteinMatch != None) typicalProteinMatch.get.id else typicalProteinMatchId }
     
   }   
-}

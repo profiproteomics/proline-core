@@ -1,6 +1,4 @@
-package fr.proline.core.om.msi
-
-package MsAnalysisClasses {
+package fr.proline.core.om.model.msi
   
 import fr.proline.core.utils.misc.InMemoryIdGen
 
@@ -17,4 +15,3 @@ import fr.proline.core.utils.misc.InMemoryIdGen
       
   }
   
-}

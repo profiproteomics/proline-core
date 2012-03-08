@@ -1,6 +1,4 @@
-package fr.proline.core.om.msi
-
-package MsQueryClasses {
+package fr.proline.core.om.model.msi
 
 import org.apache.commons.lang3.StringUtils
 import scala.collection.mutable.HashMap  
@@ -44,6 +42,5 @@ import fr.proline.core.utils.misc.InMemoryIdGen
   }
   
 
-}
 
 
