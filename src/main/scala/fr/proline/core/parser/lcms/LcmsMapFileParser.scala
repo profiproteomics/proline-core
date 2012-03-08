@@ -1,13 +1,6 @@
 package fr.proline.core.parser.lcms
 
-import fr.proline.core.parser.lcms.impl.OpenMSMapParser
-import fr.proline.core.parser.lcms.impl.MaxQuantMapParser
-import fr.proline.core.parser.lcms.impl.ProgenesisMapParser
-import fr.proline.core.parser.lcms.impl.Decon2LSMapParser
-import fr.proline.core.parser.lcms.impl.MFPaQMapParser
-import fr.proline.core.parser.lcms.impl.MsInspectMapParser
-import fr.proline.core.parser.lcms.impl.mzTSVParser
-
+import fr.proline.core.parser.lcms.impl._
 
 trait ILcmsMapFileParser {
   
