@@ -2,8 +2,8 @@ package fr.proline.core.om.builder
 
 import org.junit._
 import Assert._
-import _root_.fr.proline.core.om.msi.PeptideClasses._
-import fr.proline.core.om.msi.PtmClasses.LocatedPtm
+import _root_.fr.proline.core.om.model.msi.PeptideClasses._
+import fr.proline.core.om.model.msi.LocatedPtm
 
 @Test
 class PeptideBuilderTest {
@@ -25,12 +25,6 @@ class PeptideBuilderTest {
 	  assertNotNull(pep1)
   	}
   	
-  	@Test
-    def testBuildNullPtmPeptide() = {	  
-	  val pep1 = PeptideBuilder.buildPeptide(seq = "STLLIR", locatedPtms = None , calcMass = 100  )
-	  assertNotNull(pep1)
-  	}
-
   	@Test
     def testPtmStringGenerated() = {	  
   		var ptmRecord = scala.collection.immutable.Map.newBuilder[String,Any]

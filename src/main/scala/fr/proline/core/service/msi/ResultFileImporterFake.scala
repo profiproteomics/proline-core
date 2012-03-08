@@ -1,7 +1,6 @@
 package fr.proline.core.service.msi
 
 import fr.proline.core.service.IService
-import fr.proline.core.om.msi.MsiSearchClasses._
 
 // Fake InstrumentConfigProvider which should be a JPA object
 trait ProviderFake {
