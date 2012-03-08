@@ -2,10 +2,12 @@ package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.helper.MsiDbHelper
+import fr.proline.core.om.model.msi.ProteinMatch
+import fr.proline.core.om.model.msi.SequenceMatch
 
 class ProteinMatchLoader( val msiDb: DatabaseConfig ) {
   
-  import _root_.fr.proline.core.om.msi.ProteinClasses._
+  
   
   import scala.collection.mutable.ArrayBuffer
 

@@ -1,11 +1,11 @@
 package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.DatabaseConfig
+import fr.proline.core.om.model.msi.ResultSet
 
 class ResultSetLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = null )  {
   
-  import fr.proline.core.om.msi.ResultSetClasses._
-  import fr.proline.core.om.helper.MsiDbHelper
+    import fr.proline.core.om.helper.MsiDbHelper
   
   def getResultSet( rsId: Int ): ResultSet = { getResultSets( Array( rsId) )(0) }
   

@@ -2,11 +2,13 @@ package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.builder.PtmDefinitionBuilder
+import fr.proline.core.om.model.msi.PtmSpecificity
+import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.Peptide
 
 class PeptideLoader( val psDb: DatabaseConfig ) {
   
-  import _root_.fr.proline.core.om.msi.PeptideClasses._
-  import _root_.fr.proline.core.om.msi.PtmClasses._
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
   

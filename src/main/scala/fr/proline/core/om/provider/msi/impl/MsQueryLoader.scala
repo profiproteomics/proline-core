@@ -1,10 +1,12 @@
 package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.DatabaseConfig
+import fr.proline.core.om.model.msi.Ms2Query
+import fr.proline.core.om.model.msi.MsQuery
 
 class MsQueryLoader( val msiDb: DatabaseConfig ) {
   
-  import _root_.fr.proline.core.om.msi.MsQueryClasses._
+  
   import scala.collection.mutable.ArrayBuffer
 
   def getMsQueries( msiSearchIds: Seq[Int] ): Array[MsQuery] = {

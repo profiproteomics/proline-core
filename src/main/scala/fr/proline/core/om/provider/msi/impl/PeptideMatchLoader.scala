@@ -1,10 +1,12 @@
 package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.DatabaseConfig
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.Peptide
 
 class PeptideMatchLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = null ) {
   
-  import fr.proline.core.om.msi.PeptideClasses._
+  
   import fr.proline.core.om.helper.MsiDbHelper
   
   def getPeptideMatches( rsIds: Seq[Int], psDb: DatabaseConfig = psDb ): Array[PeptideMatch] = {
