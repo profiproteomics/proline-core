@@ -1,10 +1,13 @@
 package fr.proline.core.om.storer.msi
 
-import fr.proline.core.om.storer.msi.impl._
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.storer.msi.impl.GenericRsStorer
+import fr.proline.core.om.storer.msi.impl.PgRsStorer
+import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer
 
 trait IRsStorer {
   
-  import fr.proline.core.om.msi.ResultSetClasses.ResultSet
+  
 
   def fetchExistingPeptides( peptideIds: Seq[Int] ): Array[Any]
   def storeNewPeptides( peptides: Seq[Any] ): Unit
