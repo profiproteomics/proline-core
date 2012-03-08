@@ -1,10 +1,11 @@
 package fr.proline.core.algo.lcms
 
+import fr.proline.core.om.model.msi.PeptideMatch
+
 object TargetDecoyComputer {
   
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.msi.PeptideClasses._
-  import fr.proline.core.om.msi.ResultSetClasses._
+
   
   def buildPeptideMatchJointTable( peptideMatches: Seq[PeptideMatch],
                                    targetResultSetId: Int,
