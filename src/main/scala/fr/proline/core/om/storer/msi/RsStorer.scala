@@ -7,7 +7,12 @@ import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer
 
 trait IRsStorer {
   
-  
+  /**
+   * Store specified new ResultSet and all associated data into dbs. 
+   * Protein and peptides referenced by the resultset will be created as well
+   * if necessary. 
+   */
+  def storeResultSet(rs: ResultSet ): Int
 
   def fetchExistingPeptides( peptideIds: Seq[Int] ): Array[Any]
   def storeNewPeptides( peptides: Seq[Any] ): Unit

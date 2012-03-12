@@ -5,7 +5,8 @@ import fr.proline.core.om.model.msi.ResultSet
 
 class GenericRsStorer extends IRsStorer {
   
-  
+  def storeResultSet(rs: ResultSet ): Int= 0
+   
   def fetchExistingPeptides( peptidIds: Seq[Int] ): Array[Any] = Array()
   
   def storeNewPeptides( peptides: Seq[Any] ): Unit = ()
