@@ -1,4 +1,4 @@
-package fr.proline.core.om.provider
+package fr.proline.core.om.provider.msi
 
 import scala.collection.Set
 import scala.collection.mutable.HashMap
@@ -6,6 +6,8 @@ import scala.collection.mutable.Map
 
 object ProvidersFactory {
 
+  final val DEFAULT_KEY_PROVIDERS: String = "DEFAULT"
+    
   private var pepMatchProviders:HashMap[String, IPeptideMatchProvider]= new HashMap[String , IPeptideMatchProvider]()
   private var pepProviders:HashMap[String, IPeptideProvider]= new HashMap[String , IPeptideProvider]()
   private var ptmProviders:HashMap[String, IPTMProvider]= new HashMap[String , IPTMProvider]()
@@ -20,7 +22,7 @@ object ProvidersFactory {
     pepMatchProviders.remove(keyProvider)
   }
   
-  def getPeptideMatchProvider(keyProvider:String) : Option[IPeptideMatchProvider] = {
+  def getPeptideMatchProvider(keyProvider:String, retDefault:Boolean) : Option[IPeptideMatchProvider] = {
     pepMatchProviders.get(keyProvider) 
   }
   

@@ -1,4 +1,5 @@
-package fr.proline.core.om.provider
+package fr.proline.core.om.provider.msi
+
 import fr.proline.core.om.model.msi.PeptideMatch
 
 
