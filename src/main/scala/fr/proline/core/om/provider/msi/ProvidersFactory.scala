@@ -23,7 +23,10 @@ object ProvidersFactory {
   }
   
   def getPeptideMatchProvider(keyProvider:String, retDefault:Boolean) : Option[IPeptideMatchProvider] = {
-    pepMatchProviders.get(keyProvider) 
+    if(pepMatchProviders.get(keyProvider) == None && retDefault)
+      pepMatchProviders.get(DEFAULT_KEY_PROVIDERS)
+    else 
+      pepMatchProviders.get(keyProvider) 
   }
   
   def getAvailablePeptideMatchProvider() : Set[String]  = {
@@ -39,8 +42,11 @@ object ProvidersFactory {
     pepProviders.remove(keyProvider)
   }
   
-  def getPeptideProvider(keyProvider:String) : Option[IPeptideProvider] = {
-    pepProviders.get(keyProvider) 
+  def getPeptideProvider(keyProvider:String, retDefault:Boolean) : Option[IPeptideProvider] = {
+     if(pepProviders.get(keyProvider) == None && retDefault)
+      pepProviders.get(DEFAULT_KEY_PROVIDERS)
+    else 
+      pepProviders.get(keyProvider) 
   }
   
   def getAvailablePeptideProvider() : Set[String]  = {
@@ -56,8 +62,11 @@ object ProvidersFactory {
     ptmProviders.remove(keyProvider)
   }
   
-  def getPTMProvider(keyProvider:String) : Option[IPTMProvider] = {
-    ptmProviders.get(keyProvider) 
+  def getPTMProvider(keyProvider:String, retDefault:Boolean) : Option[IPTMProvider] = {
+    if(ptmProviders.get(keyProvider) == None && retDefault)
+      ptmProviders.get(DEFAULT_KEY_PROVIDERS)
+    else 
+      ptmProviders.get(keyProvider) 
   }
   
   def getAvailablePTMProvider() : Set[String]  = {
@@ -74,8 +83,11 @@ object ProvidersFactory {
     protProviders.remove(keyProvider)
   }
   
-  def getProteinProvider(keyProvider:String) : Option[IProteinProvider] = {
-    protProviders.get(keyProvider) 
+  def getProteinProvider(keyProvider:String, retDefault:Boolean) : Option[IProteinProvider] = {
+    if(protProviders.get(keyProvider) == None && retDefault)
+      protProviders.get(DEFAULT_KEY_PROVIDERS)
+    else 
+      protProviders.get(keyProvider) 
   }
   
   def getAvailableProteinProvider() : Set[String]  = {
