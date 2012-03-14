@@ -1,7 +1,6 @@
 package fr.proline.core.om.model.msi
+
 import java.io.File
-  
-class Spectrum() // TO define somewhere else
 
 trait IResultFile {
   
