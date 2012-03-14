@@ -1,7 +1,10 @@
 package fr.proline.core.om.factory.sql
 
 import org.junit._
-import Assert._
+import org.junit.Assert.assertTrue
+import org.junit.runner.RunWith
+import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
+
 import fr.proline.core.om.provider.msi.impl.PeptideMatchLoader
 import net.noerd.prequel.DatabaseConfig
 import net.noerd.prequel.IsolationLevels
@@ -9,8 +12,10 @@ import net.noerd.prequel.IsolationLevels
 /**
  * TODO : Get a MSIsdb in sqlite for testing !! 
  */
+
+@RunWith(classOf[JUnitRunner])
 @Test
-class PeptideMatchLoaderTest {
+class PeptideMatchLoaderTest extends JUnitSuite {
       
     var database : DatabaseConfig = null
     

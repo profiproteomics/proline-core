@@ -2,9 +2,12 @@ package fr.proline.core.utils
 
 import org.junit._
 import org.junit.Assert._
+import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitSuite
+import org.scalatest.junit.JUnitRunner
 import fr.proline.core.utils.ms._
 
+@RunWith(classOf[JUnitRunner])
 @Test
 class MsUtilsTest extends JUnitSuite {
   
