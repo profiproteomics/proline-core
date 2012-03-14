@@ -1,6 +1,6 @@
 package fr.proline.core.om.model.msi
 
-  class Instrument(
+case class Instrument(
                    // Required fields
                    val name: String,
                    
@@ -8,9 +8,9 @@ package fr.proline.core.om.model.msi
                    val source: String = null
                    ) {
       
-  }
+}
   
-  class InstrumentConfig(   
+case class InstrumentConfig(   
                    // Required fields
                    val id: Int,
                    val name: String,
@@ -20,5 +20,5 @@ package fr.proline.core.om.model.msi
                    val activationType: String
                    ) {
       
-  }
+}
   

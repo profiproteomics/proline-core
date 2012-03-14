@@ -1,11 +1,11 @@
 package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.DatabaseConfig
-import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.MsQuery
+import fr.proline.core.om.model.msi.Ms1Query
+import fr.proline.core.om.model.msi.Ms2Query
 
 class MsQueryLoader( val msiDb: DatabaseConfig ) {
-  
   
   import scala.collection.mutable.ArrayBuffer
 
@@ -65,10 +65,10 @@ class MsQueryLoader( val msiDb: DatabaseConfig ) {
                                 )
 
         } else { 
-           msQuery = new MsQuery( id = rs.getInt("id"), 
-                                  initialId = rs.getInt("initial_id"),
-                                  moz = rs.getDouble("moz"),
-                                  charge = rs.getInt("charge")
+           msQuery = new Ms1Query( id = rs.getInt("id"), 
+                                   initialId = rs.getInt("initial_id"),
+                                   moz = rs.getDouble("moz"),
+                                   charge = rs.getInt("charge")
                                  )
         }
     

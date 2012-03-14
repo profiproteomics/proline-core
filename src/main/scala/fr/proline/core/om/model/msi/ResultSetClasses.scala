@@ -23,7 +23,7 @@ import fr.proline.core.utils.misc.InMemoryIdGen
                      var description: String = null,
                      var isQuantified: Boolean = false,                    
                      
-                     var msiSearches: Array[MSISearch] = null, 
+                     var msiSearch: MSISearch = null,
                     
                      private var decoyResultSetId: Int = 0,
                      var decoyResultSet: Option[ResultSet] = null,
@@ -69,6 +69,7 @@ import fr.proline.core.utils.misc.InMemoryIdGen
   
   }
   
+  object ResultSummary extends InMemoryIdGen
   class ResultSummary (
                      // Required fields
                      val peptideInstances: Array[PeptideInstance],
