@@ -363,13 +363,12 @@ case class PeptideInstance ( // Required fields
     else { None }
   }
   
-  /** Returns a true if the sequence is specific to a protein set. */
+  /** Returns true if the sequence is specific to a protein set. */
   def isProteinSetSpecific: Boolean = { proteinSetsCount == 1 }
   
-  /** Returns a true if the sequence is specific to a protein match. */
+  /** Returns true if the sequence is specific to a protein match. */
   def isProteinMatchSpecific: Boolean = { proteinMatchesCount == 1 }
   
-  /** Returns a true if the sequence is specific to a protein match. */
   def getPeptideMatchesCount: Int = {  peptideMatchIds.length }
 
 }
@@ -400,15 +399,17 @@ object PeptideSet extends InMemoryIdGen
 class PeptideSet ( // Required fields
                    var id: Int,
                    val items: Array[PeptideSetItem],
-                   val peptideMatchesCount: Int,
                    val isSubset: Boolean,
+                   val peptideMatchesCount: Int,
+                   val proteinMatchIds: Array[Int],
                    
-                   // Immutable optional fields                                                              
+                   // Immutable optional fields
+                   private val proteinSetId: Int = 0,
+                   val proteinSet: Option[ProteinSet] = null,
+                   
                    private val resultSummaryId: Int = 0,
                    
                    // Mutable optional fields
-                   val proteinSet: ProteinSet = null,
-                   
                    private var strictSubsetIds: Array[Int] = null,
                    var strictSubsets: Option[Array[PeptideSet]] = null,
                    
@@ -422,10 +423,14 @@ class PeptideSet ( // Required fields
   require( items != null )
   require( peptideMatchesCount >= items.length )
   
-  // Related objects ID getters    
+  // Related objects ID getters
+  def getProteinSetId : Int = { if(proteinSet != null && proteinSet != None) proteinSet.get.id else proteinSetId }
+  
   def getStrictSubsetIds : Array[Int] = { if(strictSubsets != null && strictSubsets != None) strictSubsets.get.map(_.id)  else strictSubsetIds  }
     
   def getSubsumableSubsetIds : Array[Int] = { if(subsumableSubsets != null && subsumableSubsets != None) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
+  
+  def getPeptideInstances: Array[PeptideInstance] = { items.map( _.peptideInstance ) }
   
   def getPeptideMatchIds: Array[Int] = {
       
@@ -440,6 +445,18 @@ class PeptideSet ( // Required fields
     peptideMatchIds.toArray
 
   }
+  
+  def hasStrictSubset : Boolean = { 
+    if( (strictSubsetIds != null ) || 
+        (strictSubsets != null && strictSubsets != None) ) true else false
+  }
+  
+  def hasSubsummableSubset : Boolean = { 
+    if( (subsumableSubsetIds != null ) || 
+        (subsumableSubsets != null && subsumableSubsets != None) ) true else false
+  }
+  
+  def hasSubset : Boolean = { if( hasStrictSubset || hasSubsummableSubset ) true else false }
   
 //    def getItemByPepInstanceId: Map[Int, PeptideSetItem] = {
 //      

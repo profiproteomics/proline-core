@@ -125,8 +125,9 @@ case class ProteinMatch (
  
 object ProteinSet extends InMemoryIdGen
 case class ProteinSet ( 
-                   // Required fields
+                 // Required fields
                  val peptideSet: PeptideSet,
+                 var hasPeptideSubset: Boolean,
   
                  // Immutable optional fields
                   
@@ -144,7 +145,6 @@ case class ProteinSet (
                  var scoreType: String = null,
                  var isValidated: Boolean = true,
                  var selectionLevel: Int = 2,
-                 var hasPeptideSubset: Boolean = false,
 
                  var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                  
