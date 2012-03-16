@@ -1,15 +1,12 @@
-package fr.proline.core.algo.lcms
+package fr.proline.core.algo.msi
 
 import fr.proline.core.om.model.msi.PeptideMatch
 
 object TargetDecoyComputer {
   
   import scala.collection.mutable.ArrayBuffer
-
   
-  def buildPeptideMatchJointTable( peptideMatches: Seq[PeptideMatch],
-                                   targetResultSetId: Int,
-                                   decoyResultSetId: Int ): Array[Pair[PeptideMatch,PeptideMatch]] = {
+  def buildPeptideMatchJointTable( peptideMatches: Seq[PeptideMatch] ): Array[Pair[PeptideMatch,PeptideMatch]] = {
     
     // Filter peptide matches to have only first rank ones
     val firstRankPSMs = peptideMatches.filter { _.rank == 1 }
@@ -17,14 +14,14 @@ object TargetDecoyComputer {
     // Group PSMs by MS query initial id
     val pepMatchesByMsQueryInitialId = firstRankPSMs.groupBy( _.msQuery.initialId )
     
-    // Build peptide match joint table     
-    val jointTable = new ArrayBuffer[Pair[PeptideMatch,PeptideMatch]]    
+    // Build peptide match joint table
+    val jointTable = new ArrayBuffer[Pair[PeptideMatch,PeptideMatch]]
     for( (msQueryInitialId, pepMatches) <- pepMatchesByMsQueryInitialId ) {
       
       // Group peptide matches by result set id
-      val pepMatchesByRsId = pepMatches.groupBy(_.resultSetId)
-      val targetPepMatches = pepMatchesByRsId.get(targetResultSetId)
-      val decoyPepMatches = pepMatchesByRsId.get(decoyResultSetId)
+      val pepMatchesByIsDecoy = pepMatches.groupBy(_.isDecoy)
+      val targetPepMatches = pepMatchesByIsDecoy.get(false)
+      val decoyPepMatches = pepMatchesByIsDecoy.get(true)
       
       // Remove peptide match duplicates (same score and same rank but different peptides = see Mascot pretty rank )
       var targetPepMatch: PeptideMatch = null
@@ -75,26 +72,26 @@ object TargetDecoyComputer {
   }
   
 
-  /** Classic method for fdr computation. */
-  def computeFdr ( tp: Int, dp: Int ): Double = { 
-    require( tp > 0 && dp >= 0 )
+  /** Classic method for FDR computation. */
+  def computeFdr( tp: Int, fp: Int ): Float = { 
+    require( tp > 0 && fp >= 0 )
     
-    100 * dp  / (tp + dp )
-  }  
+    100 * fp / (tp + fp )
+  }
 
   /** Computes FDR for separate target/decoy databases (Matrix Science).
   * tp = target positive  dp = decoy positive
   */
-  def computeSdFdr( tp: Int, dp: Int ): Unit = {
+  def computeSdFdr( tp: Int, dp: Int ): Float = {
     require( tp > 0 && dp >= 0 )
     
-    100 * dp / tp    
+    100 * dp / tp
   }
   
   /** Computes FDR for concatenated target/decoy databases (Elias and Gygi, Nature Methods, 2007)
   * tp = target positive  dp = decoy positive
   */
-  def computeCdFdr( tp: Int, dp: Int ): Unit = {
+  def computeCdFdr( tp: Int, dp: Int ): Float = {
     require( tp > 0 && dp >= 0 )
     
     100 * 2 * dp  / (tp + dp )
@@ -103,7 +100,7 @@ object TargetDecoyComputer {
   /** Computes FDR using the refined method described by Navarro et al. (JPR, 2009)
   * tB = target better ; tO = target only ; dB = decoy better ; dO = decoy only
   */
-  def computeTdFdr( tB: Int, tO: Int, dB: Int, dO: Int ): Unit = { 
+  def computeTdFdr( tB: Int, tO: Int, dB: Int, dO: Int ): Float = { 
     require( tB + tO + dB > 0 )
     
     100 * (2 * dB + dO) / (tB + tO + dB)
