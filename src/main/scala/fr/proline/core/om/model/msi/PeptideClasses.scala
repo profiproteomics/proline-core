@@ -298,7 +298,11 @@ case class PeptideMatch ( // Required fields
                      private var bestChildId: Int = 0,
                      var bestChild : Option[PeptideMatch] = null,                                         
                      
-                     var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                     var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any],
+                     
+                     @transient
+                     var validationProperties : Option[HashMap[String, Any]] = None
+                     
                      ) {
   
   // Requirements
@@ -451,12 +455,12 @@ class PeptideSet ( // Required fields
         (strictSubsets != null && strictSubsets != None) ) true else false
   }
   
-  def hasSubsummableSubset : Boolean = { 
+  def hasSubsumableSubset : Boolean = { 
     if( (subsumableSubsetIds != null ) || 
         (subsumableSubsets != null && subsumableSubsets != None) ) true else false
   }
   
-  def hasSubset : Boolean = { if( hasStrictSubset || hasSubsummableSubset ) true else false }
+  def hasSubset : Boolean = { if( hasStrictSubset || hasSubsumableSubset ) true else false }
   
 //    def getItemByPepInstanceId: Map[Int, PeptideSetItem] = {
 //      

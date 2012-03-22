@@ -1,6 +1,6 @@
 package fr.proline.core.om.model.msi
 
-import scala.collection.mutable.HashMap
+import collection.mutable.HashMap
 import fr.proline.core.utils.misc.InMemoryIdGen
 
 object ResultSet extends InMemoryIdGen
@@ -26,7 +26,7 @@ case class ResultSet (
                    private var decoyResultSetId: Int = 0,
                    var decoyResultSet: Option[ResultSet] = null,
                    
-                   var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                   var properties : HashMap[String, Any] = new HashMap[String, Any]
                    
                    ) {
   
@@ -88,7 +88,7 @@ case class ResultSummary (
                    var description: String = null,
                    var isQuantified: Boolean = false,
                    
-                   var validationProperties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                   var validationProperties: HashMap[String, Any] = new HashMap[String, Any]
                    ) {
   
   // Requirements
@@ -117,6 +117,51 @@ case class ResultSummary (
     tmpProtSetById
 
   }
+  
+  def getBestPepMatchesByProtSetId(): Map[Int,Array[PeptideMatch]] = {
+    
+    if( this.resultSet == None ) {
+      throw new Exception("a result set should linked to the result summary first")
+    }
+    
+    val resultSet = this.resultSet.get
+    
+    // Retrieve object maps
+    val peptideMatchMap = resultSet.peptideMatchById
+    val proteinMatchMap = resultSet.proteinMatchById 
+    
+    val bestPepMatchesByProtSetIdBuilder = collection.immutable.HashMap.newBuilder[Int,Array[PeptideMatch]]
+    for( proteinSet <- this.proteinSets ) {
+      
+      // Create a hash which will remove possible redundancy (same peptide located at different positions on the protein sequence) 
+      val bestPepMatchByMsQueryId = new HashMap[Int,PeptideMatch]
+      
+      // Iterate over sequence matches of the protein set to find the best peptide matches
+      for( val proteinMatchId <- proteinSet.getProteinMatchIds ) {
+        
+        val proteinMatch = proteinMatchMap(proteinMatchId)
+        val seqMatches = proteinMatch.sequenceMatches
+        
+        for( val seqMatch <- seqMatches ) {
+          val bestPeptideMatch = peptideMatchMap.get( seqMatch.getBestPeptideMatchId )
+          
+          // if the peptide is not in the map (its score may be too low)
+          if( bestPeptideMatch != None ) {
+            bestPepMatchByMsQueryId += ( bestPeptideMatch.get.msQuery.id -> bestPeptideMatch.get )
+          }
+        }
+      }
+      
+      // Retrieve a non-redundant list of best peptide matches for this protein set
+      val protSetBestPeptideMatches = bestPepMatchByMsQueryId.values
+      bestPepMatchesByProtSetIdBuilder += ( proteinSet.id -> protSetBestPeptideMatches.toArray )
+      
+    }
+    
+    bestPepMatchesByProtSetIdBuilder.result
+    
+  }
+
 
 }
 
