@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+	<persistence-unit name="udsdb_production" transaction-type="RESOURCE_LOCAL">
+	<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<class>fr.proline.core.orm.uds.Document</class>
+		<class>fr.proline.core.orm.uds.ExternalDb</class>
+		<class>fr.proline.core.orm.uds.Project</class>
+		<class>fr.proline.core.orm.uds.UserAccount</class>
+		<class>fr.proline.core.orm.uds.VirtualFolder</class>
+		<class>fr.proline.core.orm.uds.Enzyme</class>
+		<class>fr.proline.core.orm.uds.EnzymeCleavage</class>
+		<class>fr.proline.core.orm.uds.Identification</class>
+		<class>fr.proline.core.orm.uds.IdentificationFraction</class>
+		<class>fr.proline.core.orm.uds.IdentificationFractionSummary</class>
+		<class>fr.proline.core.orm.uds.IdentificationSummary</class>
+		<class>fr.proline.core.orm.uds.Activation</class>
+		<class>fr.proline.core.orm.uds.AdminInformation</class>
+		<class>fr.proline.core.orm.uds.FragmentationRule</class>
+		<class>fr.proline.core.orm.uds.Instrument</class>
+		<class>fr.proline.core.orm.uds.InstrumentConfiguration</class>
+		<class>fr.proline.core.orm.uds.ProteinMatchDecoyRule</class>
+		<class>fr.proline.core.orm.uds.TheoreticalFragment</class>
+		<class>fr.proline.core.orm.uds.BiologicalGroup</class>
+		<class>fr.proline.core.orm.uds.BiologicalSample</class>
+		<class>fr.proline.core.orm.uds.GroupSetup</class>
+		<class>fr.proline.core.orm.uds.QuantitationChannel</class>
+		<class>fr.proline.core.orm.uds.QuantitationLabel</class>
+		<class>fr.proline.core.orm.uds.QuantitationMethod</class>
+		<class>fr.proline.core.orm.uds.Quantitation</class>
+		<class>fr.proline.core.orm.uds.QuantitationFraction</class>
+		<class>fr.proline.core.orm.uds.RatioDefinition</class>
+		<class>fr.proline.core.orm.uds.SampleAnalysisReplicate</class>
+		<class>fr.proline.core.orm.uds.PeaklistSoftware</class>
+		<class>fr.proline.core.orm.uds.RawFile</class>
+		<class>fr.proline.core.orm.uds.Run</class>
+		<class>fr.proline.core.orm.uds.SpectrumTitleParsingRule</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql:UDS"/>
+			<property name="javax.persistence.jdbc.user" value="bruley"/>
+			<property name="javax.persistence.jdbc.password" value="lPNeuo2"/>
+			<property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+		</properties>
+	</persistence-unit>
+	<persistence-unit name="psdb_production" transaction-type="RESOURCE_LOCAL">
+	<provider>org.hibernate.ejb.HibernatePersistence</provider>
+	<class>fr.proline.core.orm.ps.AtomLabel</class>
+	<class>fr.proline.core.orm.ps.Peptide</class>
+	<class>fr.proline.core.orm.ps.PeptidePtm</class>
+	<class>fr.proline.core.orm.ps.PeptidePtmInsertStatus</class>
+	<class>fr.proline.core.orm.ps.Ptm</class>
+	<class>fr.proline.core.orm.ps.PtmClassification</class>
+	<class>fr.proline.core.orm.ps.PtmEvidence</class>
+	<class>fr.proline.core.orm.ps.PtmSpecificity</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql:PS"/>
+			<property name="javax.persistence.jdbc.user" value="bruley"/>
+			<property name="javax.persistence.jdbc.password" value="lPNeuo2"/>
+			<property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+		</properties>
+	</persistence-unit>
+	<persistence-unit name="msidb_production" transaction-type="RESOURCE_LOCAL">
+	<provider>org.hibernate.ejb.HibernatePersistence</provider>
+	<class>fr.proline.core.orm.msi.AdminInfo</class>
+	<class>fr.proline.core.orm.msi.Enzyme</class>
+	<class>fr.proline.core.orm.msi.InstrumentConfig</class>
+	<class>fr.proline.core.orm.msi.IonSearch</class>
+	<class>fr.proline.core.orm.msi.MsiSearch</class>
+	<class>fr.proline.core.orm.msi.MsmsSearch</class>
+	<class>fr.proline.core.orm.msi.Peaklist</class>
+	<class>fr.proline.core.orm.msi.PeaklistSoftware</class>
+	<class>fr.proline.core.orm.msi.PtmSpecificity</class>
+	<class>fr.proline.core.orm.msi.ResultSet</class>
+	<class>fr.proline.core.orm.msi.SearchSetting</class>
+	<class>fr.proline.core.orm.msi.SearchSettingsSeqDatabaseMap</class>
+	<class>fr.proline.core.orm.msi.SearchSettingsSeqDatabaseMapPK</class>
+	<class>fr.proline.core.orm.msi.SeqDatabase</class>
+	<class>fr.proline.core.orm.msi.UsedPtm</class>
+	<class>fr.proline.core.orm.msi.UsedPtmPK</class>
+	<class>fr.proline.core.orm.msi.MsQuery</class>
+	<class>fr.proline.core.orm.msi.PeptideMatch</class>
+	<class>fr.proline.core.orm.msi.Spectrum</class>
+	<class>fr.proline.core.orm.msi.Scoring</class>
+	<class>fr.proline.core.orm.msi.ResultSummary</class>
+	<class>fr.proline.core.orm.msi.PeptideInstance</class>
+	<class>fr.proline.core.orm.msi.PeptideMatchRelation</class>
+	<class>fr.proline.core.orm.msi.PeptideMatchRelationPK</class>
+	<class>fr.proline.core.orm.msi.PeptideSet</class>
+	<class>fr.proline.core.orm.msi.PeptideSetPeptideInstanceItem</class>
+	<class>fr.proline.core.orm.msi.PeptideSetPeptideInstanceItemPK</class>
+	<class>fr.proline.core.orm.msi.ProteinMatch</class>
+	<class>fr.proline.core.orm.msi.ProteinSet</class>
+	<class>fr.proline.core.orm.msi.ProteinSetProteinMatchItem</class>
+	<class>fr.proline.core.orm.msi.ProteinSetProteinMatchItemPK</class>
+	<class>fr.proline.core.orm.msi.Peptide</class>
+	<class>fr.proline.core.orm.msi.BioSequence</class>
+	<class>fr.proline.core.orm.msi.SequenceMatch</class>
+	<class>fr.proline.core.orm.msi.SequenceMatchPK</class>
+	<class>fr.proline.core.orm.msi.ConsensusSpectrum</class>
+	<class>fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap</class>
+	<class>fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK</class>
+	<class>fr.proline.core.orm.msi.PeptideSetRelation</class>
+	<class>fr.proline.core.orm.msi.PeptideSetRelationPK</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql:MSI"/>
+			<property name="javax.persistence.jdbc.user" value="bruley"/>
+			<property name="javax.persistence.jdbc.password" value="lPNeuo2"/>
+			<property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+		</properties>
+	</persistence-unit>
+</persistence>
