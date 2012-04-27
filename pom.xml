@@ -3,14 +3,16 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fr.proline</groupId>
   <artifactId>Proline-Core</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Proline-Core</name>
+  
   <properties>
   	<maven.compiler.source>1.6</maven.compiler.source>
   	<maven.compiler.target>1.6</maven.compiler.target>
   	<encoding>UTF-8</encoding>
   </properties>  
+  
   <modules>
   	<module>Proline-Databases</module>
   	<module>Proline-OM</module>
@@ -37,6 +39,17 @@
     </dependency>  	  
   </dependencies>
   
+  <repositories>
+    <repository>
+         <releases>           
+         </releases>
+         <snapshots>
+         </snapshots>
+         <id>proline-repo</id>
+         <name>Proline Repository</name>
+         <url>https://bioproj.extra.cea.fr/redmine/projects/proline-repo/repository/raw/maven2</url>
+    </repository>
+  </repositories>
   
   <build>
       <pluginManagement>
@@ -46,8 +59,14 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>2.3.2</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.6</version>
+        </plugin>
         </plugins>      
       </pluginManagement>
   </build>
   
+  <description>Multi Modules Projects containing all modules for Object Model, and data bases managment, and data access</description>
 </project>
