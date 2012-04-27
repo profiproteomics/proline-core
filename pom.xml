@@ -15,12 +15,39 @@
   	<module>Proline-Databases</module>
   	<module>Proline-OM</module>
   	<module>Proline-ORM</module>
+  	<module>Proline-DAL</module>
   </modules>
+  
   <dependencies>
   	<dependency>
   		<groupId>junit</groupId>
   		<artifactId>junit</artifactId>
   		<version>4.10</version>		
-  	</dependency>  
+  		<scope>test</scope>
+  	</dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.6.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.6.4</version>
+    </dependency>  	  
   </dependencies>
+  
+  
+  <build>
+      <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.3.2</version>
+        </plugin>
+        </plugins>      
+      </pluginManagement>
+  </build>
+  
 </project>
