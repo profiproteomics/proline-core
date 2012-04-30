@@ -56,6 +56,13 @@
       <artifactId>scalatest_2.9.1</artifactId>
       <version>1.7.1</version>
     </dependency>
+    
+    <dependency>
+      <groupId>com.weiglewilczek.slf4s</groupId>
+      <artifactId>slf4s_2.9.1</artifactId>
+      <version>1.0.7</version>
+    </dependency>
+    
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>Proline-OM</artifactId>
@@ -66,6 +73,7 @@
     	<artifactId>Proline-DAL</artifactId>
     	<version>0.0.2-SNAPSHOT</version>
     </dependency>
+    
   </dependencies>
 
   <build>

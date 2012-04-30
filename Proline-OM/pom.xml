@@ -59,10 +59,11 @@
     	<artifactId>commons-lang3</artifactId>
     	<version>3.0.1</version>
     </dependency>
+    
     <dependency>
-    	<groupId>net.noerd</groupId>
-    	<artifactId>prequel_2.9.1</artifactId>
-    	<version>0.3.7</version>
+      <groupId>com.weiglewilczek.slf4s</groupId>
+      <artifactId>slf4s_2.9.1</artifactId>
+      <version>1.0.7</version>
     </dependency>
 
     <dependency>
@@ -72,9 +73,9 @@
     </dependency>
 
     <dependency>
-    	<groupId>com.weiglewilczek.slf4s</groupId>
-    	<artifactId>slf4s_2.9.1</artifactId>
-    	<version>1.0.7</version>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+      <version>1.6.3</version>
     </dependency>
 
   </dependencies>
