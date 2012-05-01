@@ -159,8 +159,8 @@ COMMENT ON COLUMN peptide_ptm.serialized_properties IS 'A JSON string which stor
 
 CREATE TABLE admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
-                db_creation_date DATE,
-                model_update_date DATE,
+                db_creation_date TIMESTAMP,
+                model_update_date TIMESTAMP,
                 CONSTRAINT admin_infos_pk PRIMARY KEY (model_version)
 );
 COMMENT ON TABLE admin_infos IS 'Give information about the current database model.';

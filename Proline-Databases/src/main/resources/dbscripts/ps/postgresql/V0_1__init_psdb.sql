@@ -56,7 +56,7 @@ CREATE TABLE public.peptide (
                 ptm_string TEXT,
                 calculated_mass DOUBLE PRECISION NOT NULL,
                 serialized_properties TEXT,
-                atom_label_id INTEGER NOT NULL,
+                atom_label_id INTEGER,
                 CONSTRAINT peptide_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.peptide IS 'A peptide is an amino acid (AA) sequence with given PTMs. A peptide has a unique pair of sequence/PTM string.';
@@ -170,10 +170,10 @@ CREATE TABLE public.peptide_ptm (
                 seq_position INTEGER NOT NULL,
                 mono_mass DOUBLE PRECISION,
                 average_mass DOUBLE PRECISION,
-                serialized_properties TEXT NOT NULL,
+                serialized_properties TEXT,
                 peptide_id INTEGER NOT NULL,
                 ptm_specificity_id INTEGER NOT NULL,
-                atom_label_id INTEGER NOT NULL,
+                atom_label_id INTEGER,
                 CONSTRAINT peptide_ptm_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.peptide_ptm IS 'Describes the PTM''s associated to a given peptide';
@@ -191,8 +191,8 @@ ALTER SEQUENCE public.peptide_ptm_id_seq OWNED BY public.peptide_ptm.id;
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
-                db_creation_date DATE,
-                model_update_date DATE,
+                db_creation_date TIMESTAMP,
+                model_update_date TIMESTAMP,
                 CONSTRAINT admin_infos_pk PRIMARY KEY (model_version)
 );
 COMMENT ON TABLE public.admin_infos IS 'Give information about the current database model.';
