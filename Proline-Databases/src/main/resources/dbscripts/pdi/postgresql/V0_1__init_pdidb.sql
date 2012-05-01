@@ -1,8 +1,8 @@
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
-                db_creation_date DATE,
-                model_update_date DATE,
+                db_creation_date TIMESTAMP,
+                model_update_date TIMESTAMP,
                 chr_location_update_timestamp TIMESTAMP,
                 serialized_properties TEXT,
                 CONSTRAINT admin_infos_pk PRIMARY KEY (model_version)
@@ -144,12 +144,12 @@ CREATE TABLE public.chromosome_location (
                 location VARCHAR(250),
                 serialized_properties TEXT,
                 gene_id INTEGER NOT NULL,
-                id INTEGER NOT NULL,
+                taxon_id INTEGER NOT NULL,
                 CONSTRAINT chromosome_location_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.chromosome_location IS 'paralogues, isoformes This table is deleted for active genes before each update. It contains the last known information about gene chromosome location.';
 COMMENT ON COLUMN public.chromosome_location.serialized_properties IS 'TODO: put in schema exon, intron, strand';
-COMMENT ON COLUMN public.chromosome_location.id IS 'The NCBI taxon id';
+COMMENT ON COLUMN public.chromosome_location.taxon_id IS 'The NCBI taxon id';
 
 
 ALTER SEQUENCE public.chromosome_location_id_seq OWNED BY public.chromosome_location.id;
@@ -159,7 +159,7 @@ CREATE SEQUENCE public.taxon_extra_name_id_seq;
 CREATE TABLE public.taxon_extra_name (
                 id INTEGER NOT NULL DEFAULT nextval('public.taxon_extra_name_id_seq'),
                 class VARCHAR(256) NOT NULL,
-                value  VARCHAR(512) NOT NULL,
+                value VARCHAR(512) NOT NULL,
                 serialized_properties TEXT,
                 taxon_id INTEGER NOT NULL,
                 CONSTRAINT taxon_extra_name_pk PRIMARY KEY (id)
@@ -344,8 +344,8 @@ NOT DEFERRABLE;
 ALTER TABLE public.bio_sequence_annotation ADD CONSTRAINT object_tree_bio_sequence_instance_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES public.object_tree (id)
-ON DELETE RESTRICT
-ON UPDATE SET NULL
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.seq_db_entry_object_tree_map ADD CONSTRAINT object_tree_seq_db_entry_object_tree_map_fk
@@ -359,7 +359,7 @@ ALTER TABLE public.seq_db_config ADD CONSTRAINT fasta_parsing_rule_seq_database_
 FOREIGN KEY (fasta_parsing_rule_id)
 REFERENCES public.fasta_parsing_rule (id)
 ON DELETE NO ACTION
-ON UPDATE SET NULL
+ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.protein_identifier ADD CONSTRAINT seq_database_protein_identifier_fk
@@ -428,7 +428,7 @@ NOT DEFERRABLE;
 ALTER TABLE public.taxon ADD CONSTRAINT taxon_taxon_fk
 FOREIGN KEY (parent_taxon_id)
 REFERENCES public.taxon (id)
-ON DELETE SET NULL
+ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -454,7 +454,7 @@ ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.chromosome_location ADD CONSTRAINT taxon_chromosome_location_fk
-FOREIGN KEY (id)
+FOREIGN KEY (taxon_id)
 REFERENCES public.taxon (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION

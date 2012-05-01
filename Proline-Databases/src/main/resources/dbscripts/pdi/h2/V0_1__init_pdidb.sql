@@ -1,8 +1,8 @@
 
 CREATE TABLE admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
-                db_creation_date DATE,
-                model_update_date DATE,
+                db_creation_date TIMESTAMP,
+                model_update_date TIMESTAMP,
                 chr_location_update_timestamp TIMESTAMP,
                 serialized_properties LONGVARCHAR,
                 CONSTRAINT admin_infos_pk PRIMARY KEY (model_version)
@@ -123,7 +123,7 @@ CREATE TABLE chromosome_location (
 );
 COMMENT ON TABLE chromosome_location IS 'paralogues, isoformes This table is deleted for active genes before each update. It contains the last known information about gene chromosome location.';
 COMMENT ON COLUMN chromosome_location.serialized_properties IS 'TODO: put in schema exon, intron, strand';
-COMMENT ON COLUMN chromosome_location.id IS 'The NCBI taxon id';
+COMMENT ON COLUMN chromosome_location.taxon_id IS 'The NCBI taxon id';
 
 
 CREATE TABLE taxon_extra_name (
@@ -292,13 +292,11 @@ FOREIGN KEY (schema_name)
 REFERENCES object_tree_schema (name)
 ON UPDATE NO ACTION;
 
-/*
-Warning: H2 Database does not support this relationship's delete action (RESTRICT).
-*/
 ALTER TABLE bio_sequence_annotation ADD CONSTRAINT object_tree_bio_sequence_instance_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES object_tree (id)
-ON UPDATE SET NULL;
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
 
 ALTER TABLE seq_db_entry_object_tree_map ADD CONSTRAINT object_tree_seq_db_entry_object_tree_map_fk
 FOREIGN KEY (object_tree_id)
@@ -310,7 +308,7 @@ ALTER TABLE seq_db_config ADD CONSTRAINT fasta_parsing_rule_seq_database_fk
 FOREIGN KEY (fasta_parsing_rule_id)
 REFERENCES fasta_parsing_rule (id)
 ON DELETE NO ACTION
-ON UPDATE SET NULL;
+ON UPDATE NO ACTION;
 
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
@@ -379,7 +377,7 @@ ON UPDATE NO ACTION;
 ALTER TABLE taxon ADD CONSTRAINT taxon_taxon_fk
 FOREIGN KEY (parent_taxon_id)
 REFERENCES taxon (id)
-ON DELETE SET NULL
+ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
 /*
@@ -408,7 +406,7 @@ ON UPDATE NO ACTION;
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
 ALTER TABLE chromosome_location ADD CONSTRAINT taxon_chromosome_location_fk
-FOREIGN KEY (id)
+FOREIGN KEY (taxon_id)
 REFERENCES taxon (id)
 ON UPDATE NO ACTION;
 
