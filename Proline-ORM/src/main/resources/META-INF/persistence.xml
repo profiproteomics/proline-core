@@ -43,6 +43,7 @@
 	</persistence-unit>
 	<persistence-unit name="psdb_production" transaction-type="RESOURCE_LOCAL">
 	<provider>org.hibernate.ejb.HibernatePersistence</provider>
+	<class>fr.proline.core.orm.ps.AdminInformation</class>
 	<class>fr.proline.core.orm.ps.AtomLabel</class>
 	<class>fr.proline.core.orm.ps.Peptide</class>
 	<class>fr.proline.core.orm.ps.PeptidePtm</class>
@@ -60,7 +61,7 @@
 	</persistence-unit>
 	<persistence-unit name="msidb_production" transaction-type="RESOURCE_LOCAL">
 	<provider>org.hibernate.ejb.HibernatePersistence</provider>
-	<class>fr.proline.core.orm.msi.AdminInfo</class>
+	<class>fr.proline.core.orm.msi.AdminInformation</class>
 	<class>fr.proline.core.orm.msi.Enzyme</class>
 	<class>fr.proline.core.orm.msi.InstrumentConfig</class>
 	<class>fr.proline.core.orm.msi.IonSearch</class>
@@ -102,6 +103,32 @@
 	<class>fr.proline.core.orm.msi.PeptideSetRelationPK</class>
 		<properties>
 			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql:MSI"/>
+			<property name="javax.persistence.jdbc.user" value="bruley"/>
+			<property name="javax.persistence.jdbc.password" value="lPNeuo2"/>
+			<property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+		</properties>
+	</persistence-unit>
+	<persistence-unit name="pdidb_production" transaction-type="RESOURCE_LOCAL">
+	<provider>org.hibernate.ejb.HibernatePersistence</provider>
+	<class>fr.proline.core.orm.pdi.BioSequence</class>
+	<class>fr.proline.core.orm.pdi.BioSequenceAnnotation</class>
+	<class>fr.proline.core.orm.pdi.BioSequenceGeneMap</class>
+	<class>fr.proline.core.orm.pdi.BioSequenceGeneMapPK</class>
+	<class>fr.proline.core.orm.pdi.BioSequenceRelation</class>
+	<class>fr.proline.core.orm.pdi.BioSequenceRelationPK</class>
+	<class>fr.proline.core.orm.pdi.ChromosomeLocation</class>
+	<class>fr.proline.core.orm.pdi.FastaFileEntryIndex</class>
+	<class>fr.proline.core.orm.pdi.FastaParsingRule</class>
+	<class>fr.proline.core.orm.pdi.Gene</class>
+	<class>fr.proline.core.orm.pdi.ProteinIdentifier</class>
+	<class>fr.proline.core.orm.pdi.SequenceDbConfig</class>
+	<class>fr.proline.core.orm.pdi.SequenceDbEntry</class>
+	<class>fr.proline.core.orm.pdi.SequenceDbInstance</class>
+	<class>fr.proline.core.orm.pdi.SequenceDbRelease</class>
+	<class>fr.proline.core.orm.pdi.Taxon</class>
+	<class>fr.proline.core.orm.pdi.TaxonExtraName</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql:PDI"/>
 			<property name="javax.persistence.jdbc.user" value="bruley"/>
 			<property name="javax.persistence.jdbc.password" value="lPNeuo2"/>
 			<property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
