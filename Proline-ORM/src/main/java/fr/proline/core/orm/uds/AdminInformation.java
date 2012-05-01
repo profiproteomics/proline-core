@@ -1,7 +1,14 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import javax.persistence.*;
+import java.sql.Timestamp;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 
 /**
@@ -21,10 +28,10 @@ public class AdminInformation implements Serializable {
 	private String configuration;
 
 	@Column(name="db_creation_date")
-	private Integer dbCreationDate;
+	private Timestamp dbCreationDate;
 
 	@Column(name="model_update_date")
-	private Integer modelUpdateDate;
+	private Timestamp modelUpdateDate;
 
     public AdminInformation() {
     }
@@ -45,19 +52,19 @@ public class AdminInformation implements Serializable {
 		this.configuration = configuration;
 	}
 
-	public Integer getDbCreationDate() {
+	public Timestamp getDbCreationDate() {
 		return this.dbCreationDate;
 	}
 
-	public void setDbCreationDate(Integer dbCreationDate) {
+	public void setDbCreationDate(Timestamp dbCreationDate) {
 		this.dbCreationDate = dbCreationDate;
 	}
 
-	public Integer getModelUpdateDate() {
+	public Timestamp getModelUpdateDate() {
 		return this.modelUpdateDate;
 	}
 
-	public void setModelUpdateDate(Integer modelUpdateDate) {
+	public void setModelUpdateDate(Timestamp modelUpdateDate) {
 		this.modelUpdateDate = modelUpdateDate;
 	}
 
