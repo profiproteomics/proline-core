@@ -77,14 +77,14 @@ COMMENT ON COLUMN theoretical_fragment.serialized_properties IS 'A JSON string w
 CREATE TABLE fragmentation_rule (
                 id INTEGER NOT NULL,
                 description VARCHAR(1000),
-                precursor_min_charge INTEGER NOT NULL,
+                precursor_min_charge INTEGER,
                 fragment_charge INTEGER,
                 fragment_max_moz REAL,
                 fragment_residue_constraint VARCHAR(20),
                 required_serie_quality_level VARCHAR(15),
                 serialized_properties LONGVARCHAR,
-                theoretical_fragment_id INTEGER NOT NULL,
-                required_serie_id INTEGER NOT NULL,
+                theoretical_fragment_id INTEGER,
+                required_serie_id INTEGER,
                 CONSTRAINT fragmentation_rule_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE fragmentation_rule IS 'Each instrument can have one or more of  fragment ion / rules. This rules describes ion fragment series that can be observed on an instrument and that are used by serach engine to generate theoritical spectrum and for scoring spectrum_peptide match';
@@ -120,8 +120,8 @@ COMMENT ON COLUMN fragmentation_rule.fragment_charge IS 'The fragment charge sta
 COMMENT ON COLUMN fragmentation_rule.fragment_residue_constraint IS 'The fragment must contain one of the residues described here. exemple : y-NH3 series can be observed only if fragment includes RKNQ or y-H2O only if fragment includes STED. Optional';
 COMMENT ON COLUMN fragmentation_rule.required_serie_quality_level IS ':?: significant or highest_scoring';
 COMMENT ON COLUMN fragmentation_rule.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
-COMMENT ON COLUMN fragmentation_rule.theoretical_fragment_id IS 'The associated ion series description.';
-COMMENT ON COLUMN fragmentation_rule.required_serie_id IS 'FIXME difference avec theoretical_fragment_id ? si c''est pour dire que la serie est requise un booleén suffit ?';
+COMMENT ON COLUMN fragmentation_rule.theoretical_fragment_id IS 'The corresponding and specific ion series.';
+COMMENT ON COLUMN fragmentation_rule.required_serie_id IS 'The ion series familly (a, b, c, x, y, z) required to be observed for this fragmentation rule.';
 
 
 CREATE TABLE activation (
@@ -557,8 +557,8 @@ COMMENT ON COLUMN quant_channel.serialized_properties IS 'A JSON string which st
 
 CREATE TABLE admin_infos (
                 model_version VARCHAR(50) NOT NULL,
-                db_creation_date INTEGER,
-                model_update_date INTEGER,
+                db_creation_date TIMESTAMP,
+                model_update_date TIMESTAMP,
                 configuration LONGVARCHAR NOT NULL,
                 CONSTRAINT admin_infos_pkey PRIMARY KEY (model_version)
 );
