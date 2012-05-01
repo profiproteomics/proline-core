@@ -365,10 +365,10 @@ COMMENT ON TABLE public.compound IS 'Describes molecules that are or may be (the
 ALTER SEQUENCE public.compound_id_seq OWNED BY public.compound.id;
 
 CREATE TABLE public.feature_overlap_mapping (
-                feature_id INTEGER NOT NULL,
-                feature_id INTEGER NOT NULL,
+                overlapped_feature_id INTEGER NOT NULL,
+                overlapping_feature_id INTEGER NOT NULL,
                 map_id INTEGER NOT NULL,
-                CONSTRAINT feature_overlap_mapping_pk PRIMARY KEY (feature_id, feature_id)
+                CONSTRAINT feature_overlap_mapping_pk PRIMARY KEY (overlapped_feature_id, overlapping_feature_id)
 );
 
 
@@ -799,15 +799,15 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT feature_feature_overlap_map_fk
-FOREIGN KEY (feature_id)
+ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT feature_feature_overlap_map_1_fk
+FOREIGN KEY (overlapping_feature_id)
 REFERENCES public.feature (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT feature_feature_overlap_map_fk
-FOREIGN KEY (feature_id)
+ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT feature_feature_overlap_map_2_fk
+FOREIGN KEY (overlapped_feature_id)
 REFERENCES public.feature (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
