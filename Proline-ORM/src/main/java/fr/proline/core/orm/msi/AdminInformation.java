@@ -1,17 +1,24 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+import java.sql.Timestamp;
 import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 
 /**
  * The persistent class for the admin_infos database table.
  * 
  */
-@Entity
+@Entity(name="fr.proline.core.orm.msi.AdminInformation")
 @Table(name="admin_infos")
-public class AdminInfo implements Serializable {
+public class AdminInformation implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -19,15 +26,13 @@ public class AdminInfo implements Serializable {
 	@Column(name="model_version")
 	private String modelVersion;
 
-    @Temporal( TemporalType.DATE)
 	@Column(name="db_creation_date")
-	private Date dbCreationDate;
+	private Timestamp dbCreationDate;
 
-    @Temporal( TemporalType.DATE)
 	@Column(name="model_update_date")
-	private Date modelUpdateDate;
+	private Timestamp modelUpdateDate;
 
-    public AdminInfo() {
+    public AdminInformation() {
     }
 
 	public String getModelVersion() {
@@ -38,19 +43,19 @@ public class AdminInfo implements Serializable {
 		this.modelVersion = modelVersion;
 	}
 
-	public Date getDbCreationDate() {
+	public Timestamp getDbCreationDate() {
 		return this.dbCreationDate;
 	}
 
-	public void setDbCreationDate(Date dbCreationDate) {
+	public void setDbCreationDate(Timestamp dbCreationDate) {
 		this.dbCreationDate = dbCreationDate;
 	}
 
-	public Date getModelUpdateDate() {
+	public Timestamp getModelUpdateDate() {
 		return this.modelUpdateDate;
 	}
 
-	public void setModelUpdateDate(Date modelUpdateDate) {
+	public void setModelUpdateDate(Timestamp modelUpdateDate) {
 		this.modelUpdateDate = modelUpdateDate;
 	}
 
