@@ -1,9 +1,16 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
-import java.util.Date;
-import java.util.Set;
+import java.sql.Timestamp;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 
 /**
@@ -19,21 +26,23 @@ public class MsiSearch implements Serializable {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
 
-    @Temporal( TemporalType.DATE)
-	private Date date;
+	private Timestamp date;
 
 	@Column(name="queries_count")
 	private Integer queriesCount;
 
-	@Column(name="result_file_number")
-	private Integer resultFileNumber;
+	@Column(name="result_file_name")
+	private String resultFileName;
 
-	@Column(name="result_file_path")
-	private String resultFilePath;
+	@Column(name="result_file_directory")
+	private String resultFileDirectory;
 
 	@Column(name="searched_sequences_count")
 	private Integer searchedSequencesCount;
 
+	@Column(name="job_number")
+	private Integer jobNumber;
+	
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
@@ -68,11 +77,11 @@ public class MsiSearch implements Serializable {
 		this.id = id;
 	}
 
-	public Date getDate() {
+	public Timestamp getDate() {
 		return this.date;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(Timestamp date) {
 		this.date = date;
 	}
 
@@ -84,20 +93,28 @@ public class MsiSearch implements Serializable {
 		this.queriesCount = queriesCount;
 	}
 
-	public Integer getResultFileNumber() {
-		return this.resultFileNumber;
+	public String getResultFileName() {
+		return resultFileName;
 	}
 
-	public void setResultFileNumber(Integer resultFileNumber) {
-		this.resultFileNumber = resultFileNumber;
+	public void setResultFileName(String resultFileName) {
+		this.resultFileName = resultFileName;
 	}
 
-	public String getResultFilePath() {
-		return this.resultFilePath;
+	public String getResultFileDirectory() {
+		return resultFileDirectory;
 	}
 
-	public void setResultFilePath(String resultFilePath) {
-		this.resultFilePath = resultFilePath;
+	public void setResultFileDirectory(String resultFileDirectory) {
+		this.resultFileDirectory = resultFileDirectory;
+	}
+
+	public Integer getJobNumber() {
+		return jobNumber;
+	}
+
+	public void setJobNumber(Integer jobNumber) {
+		this.jobNumber = jobNumber;
 	}
 
 	public Integer getSearchedSequencesCount() {

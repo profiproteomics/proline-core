@@ -40,12 +40,6 @@ public class PeptideMatch implements Serializable {
 	@Column(name="delta_moz")
 	private Double deltaMoz;
 
-	@Column(name="elution_unit")
-	private String elutionUnit;
-
-	@Column(name="elution_value")
-	private Double elutionValue;
-
 	@Column(name="experimental_moz")
 	private Double experimentalMoz;
 
@@ -123,22 +117,6 @@ public class PeptideMatch implements Serializable {
 
 	public void setDeltaMoz(double deltaMoz) {
 		this.deltaMoz = deltaMoz;
-	}
-
-	public String getElutionUnit() {
-		return this.elutionUnit;
-	}
-
-	public void setElutionUnit(String elutionUnit) {
-		this.elutionUnit = elutionUnit;
-	}
-
-	public double getElutionValue() {
-		return this.elutionValue;
-	}
-
-	public void setElutionValue(double elutionValue) {
-		this.elutionValue = elutionValue;
 	}
 
 	public double getExperimentalMoz() {

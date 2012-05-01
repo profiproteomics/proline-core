@@ -37,6 +37,9 @@ public class PeptideInstance implements Serializable {
 	@Column(name="protein_set_count")
 	private Integer proteinSetCount;
 
+	@Column(name="elution_time")
+	private Double elutionTime;
+	
 	@ManyToOne
 	@JoinColumn(name = "result_summary_id")
 	private ResultSummary resultSummary;
@@ -139,6 +142,14 @@ public class PeptideInstance implements Serializable {
 
 	public void setSelectionLevel(Integer selectionLevel) {
 		this.selectionLevel = selectionLevel;
+	}
+
+	public Double getElutionTime() {
+		return elutionTime;
+	}
+
+	public void setElutionTime(Double elutionTime) {
+		this.elutionTime = elutionTime;
 	}
 
 	public String getSerializedProperties() {
