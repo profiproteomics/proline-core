@@ -159,7 +159,7 @@ CREATE SEQUENCE public.taxon_extra_name_id_seq;
 CREATE TABLE public.taxon_extra_name (
                 id INTEGER NOT NULL DEFAULT nextval('public.taxon_extra_name_id_seq'),
                 class VARCHAR(256) NOT NULL,
-                value INTEGER NOT NULL,
+                value  VARCHAR(512) NOT NULL,
                 serialized_properties TEXT,
                 taxon_id INTEGER NOT NULL,
                 CONSTRAINT taxon_extra_name_pk PRIMARY KEY (id)

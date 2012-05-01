@@ -129,7 +129,7 @@ COMMENT ON COLUMN chromosome_location.id IS 'The NCBI taxon id';
 CREATE TABLE taxon_extra_name (
                 id IDENTITY NOT NULL,
                 class VARCHAR(256) NOT NULL,
-                value INTEGER NOT NULL,
+                value VARCHAR(512) NOT NULL,
                 serialized_properties LONGVARCHAR,
                 taxon_id INTEGER NOT NULL,
                 CONSTRAINT taxon_extra_name_pk PRIMARY KEY (id)
