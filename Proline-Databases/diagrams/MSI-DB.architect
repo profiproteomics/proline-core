@@ -107,7 +107,7 @@
     <column id="COL28" populated="true" UUID="ba8c26b5-0409-4fac-83f3-6260cfb331b3" autoIncrement="false" defaultValue="" name="date" nullable="1" physicalName="date" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="93" userDefinedTypeUUID="6497d8de-0e00-40d6-a42e-e2adca83be64" >
      <remarks>the date of the search.</remarks>
     </column>
-    <column id="COL29" populated="true" UUID="6f7b8fc2-1fa4-43de-a45b-962df24be72f" autoIncrement="false" autoIncrementSequenceName="msi_search_result_file_name_seq" defaultValue="" name="result_file_name" nullable="0" physicalName="result_file_name" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL29" populated="true" UUID="6f7b8fc2-1fa4-43de-a45b-962df24be72f" autoIncrement="false" autoIncrementSequenceName="msi_search_result_file_name_seq" defaultValue="" name="result_file_name" nullable="0" physicalName="result_file_name" precision="256" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
     <column id="COL30" populated="true" UUID="6d2be6c9-7d5c-4149-b968-ed9e4fa5c09f" autoIncrement="false" autoIncrementSequenceName="msi_search_result_file_directory_seq" defaultValue="" name="result_file_directory" nullable="1" physicalName="result_file_directory" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -2024,7 +2024,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8465468252641619" viewportX="461" viewportY="391" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8465468252641619" viewportX="1013" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB448" x="30" y="877" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB1" x="181" y="27" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB7" x="1768" y="893" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>

@@ -328,9 +328,10 @@ CREATE SEQUENCE public.msi_search_id_seq;
 CREATE TABLE public.msi_search (
                 id INTEGER NOT NULL DEFAULT nextval('public.msi_search_id_seq'),
                 title VARCHAR(1000),
-                date DATE,
-                result_file_number INTEGER NOT NULL,
-                result_file_path VARCHAR(1000),
+                date TIMESTAMP,
+                result_file_name VARCHAR(256) NOT NULL,
+                result_file_directory VARCHAR(1000),
+                job_number INTEGER,
                 user_name VARCHAR(100),
                 user_email VARCHAR(100),
                 queries_count INTEGER,
@@ -343,7 +344,6 @@ CREATE TABLE public.msi_search (
 );
 COMMENT ON TABLE public.msi_search IS 'An identification search performed with a search engine such as Mascot. Contains  the description of the identification search.';
 COMMENT ON COLUMN public.msi_search.date IS 'the date of the search.';
-COMMENT ON COLUMN public.msi_search.result_file_number IS 'rename to result_file_name and add job_number ???';
 COMMENT ON COLUMN public.msi_search.user_name IS 'The name of the user who submit the search to the search engine.';
 COMMENT ON COLUMN public.msi_search.user_email IS 'The email of the user.';
 COMMENT ON COLUMN public.msi_search.queries_count IS 'The number of queries actually associated to this msi search in the database.';
@@ -371,7 +371,7 @@ CREATE TABLE public.ms_query (
                 charge INTEGER NOT NULL,
                 moz DOUBLE PRECISION NOT NULL,
                 serialized_properties TEXT,
-                spectrum_id INTEGER NOT NULL,
+                spectrum_id INTEGER,
                 msi_search_id INTEGER NOT NULL,
                 CONSTRAINT ms_query_pk PRIMARY KEY (id)
 );
@@ -632,8 +632,6 @@ CREATE TABLE public.peptide_match (
                 id INTEGER NOT NULL DEFAULT nextval('public.peptide_match_id_seq'),
                 charge INTEGER NOT NULL,
                 experimental_moz DOUBLE PRECISION NOT NULL,
-                elution_value DOUBLE PRECISION,
-                elution_unit VARCHAR(10),
                 score REAL,
                 rank INTEGER,
                 delta_moz DOUBLE PRECISION,
@@ -651,8 +649,6 @@ CREATE TABLE public.peptide_match (
 COMMENT ON TABLE public.peptide_match IS 'A peptide match is an amino acid (AA) sequence identified from a MS query. A peptide match can be an AA sequence that potentially match a fragmentation spectrum (called observed peptide match, cause they are experimentally "observed" through their fragmentation spectrum) or a group of observed peptide matches sharing the same caracteristics. In this later case, the observed peptide matches are called child peptide matches. Note: this constraint should be added => UNIQUE(peptide_id, ms_query_id, result_set_id)';
 COMMENT ON COLUMN public.peptide_match.charge IS 'The charge state.';
 COMMENT ON COLUMN public.peptide_match.experimental_moz IS 'The observed m/z. Note: this value is intentionally redundant with the one stored in the ms_query table.';
-COMMENT ON COLUMN public.peptide_match.elution_value IS 'A value representing an elution property of the peptide match (see elution_unit for more details).';
-COMMENT ON COLUMN public.peptide_match.elution_unit IS 'The elution_value can be expressed using the following units: time, scan or cycle.';
 COMMENT ON COLUMN public.peptide_match.score IS 'The identification score of the peptide match provided by the search engine.';
 COMMENT ON COLUMN public.peptide_match.rank IS 'It is computed by comparison of the peptide match scores obtained for a given ms_query. The score are sorted in a descending order and peptide and ranked from 1 to n. The highest the score the lowest the rank. Note: Mascot keeps only peptide matches ranking from 1 to 10.';
 COMMENT ON COLUMN public.peptide_match.delta_moz IS 'It is the m/z difference between the observed m/z and a calculated m/z derived from the peptide calculated mass. Note: delta_moz = exp_moz - calc_moz';
@@ -672,6 +668,7 @@ CREATE TABLE public.peptide_instance (
                 protein_match_count INTEGER NOT NULL,
                 protein_set_count INTEGER NOT NULL,
                 selection_level INTEGER NOT NULL,
+                elution_time DOUBLE PRECISION,
                 serialized_properties TEXT,
                 best_peptide_match_id INTEGER NOT NULL,
                 peptide_id INTEGER NOT NULL,
@@ -685,6 +682,7 @@ COMMENT ON COLUMN public.peptide_instance.peptide_match_count IS 'The number of 
 COMMENT ON COLUMN public.peptide_instance.protein_match_count IS 'The number of protein matches containaning an AA sequence corresponding to this peptide instance. Note: a peptide could be considered as proteotypic if this number equals 1.';
 COMMENT ON COLUMN public.peptide_instance.protein_set_count IS 'The number of protein sets related to this peptide instance.';
 COMMENT ON COLUMN public.peptide_instance.selection_level IS 'An integer coding for the selection of this peptide instance : 0 = manual deselection 1 = automatic deselection 2 = automatic selection 4 = manual selection';
+COMMENT ON COLUMN public.peptide_instance.elution_time IS 'A value representing an elution time property of the peptide instance. Elution time is expressed is seconds.';
 COMMENT ON COLUMN public.peptide_instance.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details). TODO: store is_proteotypic';
 COMMENT ON COLUMN public.peptide_instance.result_summary_id IS 'Used for indexation by result summary';
 
@@ -802,8 +800,8 @@ COMMENT ON COLUMN public.sequence_match.is_decoy IS 'Specify if the sequence mat
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
-                db_creation_date DATE,
-                model_update_date DATE,
+                db_creation_date TIMESTAMP,
+                model_update_date TIMESTAMP,
                 CONSTRAINT admin_infos_pk PRIMARY KEY (model_version)
 );
 COMMENT ON TABLE public.admin_infos IS 'Give information about the current database model';
