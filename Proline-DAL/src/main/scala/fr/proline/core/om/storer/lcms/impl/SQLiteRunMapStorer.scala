@@ -41,7 +41,7 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
     // Loop over features to import them
     val flattenedFeatures = new ArrayBuffer[Feature](runMap.features.length)
     for( ft <- runMap.features ) {
-      ft.mapId = newRunMapId
+      ft.relations.mapId = newRunMapId
       
       val newFtId = this.insertFeatureUsingPreparedStatement( ft, featureInsertStmt )
       ft.id = newFtId
@@ -51,7 +51,7 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
       // Import overlapping features
       if( ft.overlappingFeatures != null ) {
         for( olpFt <- ft.overlappingFeatures ) {
-          ft.mapId = newRunMapId
+          //ft.relations.mapId = newRunMapId
           
           val newFtId = this.insertFeatureUsingPreparedStatement( olpFt, featureInsertStmt )
           ft.id = newFtId
@@ -78,8 +78,8 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
     // Link the features to MS2 scans
     lcmsDbTx.executeBatch("INSERT INTO feature_ms2_event VALUES (?,?,?)") { statement => 
       flattenedFeatures.foreach { ft =>
-        if( ft.ms2EventIds != null ) {
-          for( ms2EventId <- ft.ms2EventIds) statement.executeWith( ft.id, ms2EventId, newRunMapId )
+        if( ft.relations.ms2EventIds != null ) {
+          for( ms2EventId <- ft.relations.ms2EventIds) statement.executeWith( ft.id, ms2EventId, newRunMapId )
         }
       }
     }
@@ -173,16 +173,17 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
   
   def insertFeatureUsingPreparedStatement( ft: Feature, stmt: java.sql.PreparedStatement ): Int = {
     
+    val ftRelations = ft.relations
     val qualityScore = if( ft.qualityScore.isNaN ) None else Some(ft.qualityScore)
-    val theoFtId = if( ft.theoreticalFeatureId == 0 ) None else Some(ft.theoreticalFeatureId)
-    val compoundId = if( ft.compoundId == 0 ) None else Some(ft.compoundId)
-    val mapLayerId = if( ft.mapLayerId == 0 ) None else Some(ft.mapLayerId)
+    val theoFtId = if( ftRelations.theoreticalFeatureId == 0 ) None else Some(ftRelations.theoreticalFeatureId)
+    val compoundId = if( ftRelations.compoundId == 0 ) None else Some(ftRelations.compoundId)
+    val mapLayerId = if( ftRelations.mapLayerId == 0 ) None else Some(ftRelations.mapLayerId)
     
     // TODO: store properties    
     
     val ftRecordBuilder = new ReusableStatement( stmt, lcmsDb.config.sqlFormatter )
     ftRecordBuilder <<
-      None.asInstanceOf[Option[Int]] <<
+      Option.empty[Int] <<
       ft.moz <<
       ft.intensity <<
       ft.charge <<
@@ -192,14 +193,14 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
       ft.ms2Count <<
       BoolToSQLStr(ft.isCluster,lcmsDb.boolStrAsInt) <<
       BoolToSQLStr(ft.isOverlapping,lcmsDb.boolStrAsInt) <<
-      Some(null) <<
-      ft.firstScanId <<
-      ft.lastScanId <<
-      ft.apexScanId <<
+      Option(null) <<
+      ftRelations.firstScanId <<
+      ftRelations.lastScanId <<
+      ftRelations.apexScanId <<
       theoFtId <<
       compoundId <<
       mapLayerId <<
-      ft.mapId
+      ftRelations.mapId
      
     // Execute statement
     stmt.execute()

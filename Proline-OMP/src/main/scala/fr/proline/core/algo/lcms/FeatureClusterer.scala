@@ -152,8 +152,9 @@ object FeatureClusterer {
       // Set some vars
       val ms2EventIdSetBuilder = scala.collection.immutable.Set.newBuilder[Int] 
       for( ft <- totalFtGroup ) {
-        if( ft.ms2EventIds != null ) {
-          for( ms2EventId <- ft.ms2EventIds) ms2EventIdSetBuilder += ms2EventId
+        val ms2EventIds = ft.relations.ms2EventIds
+        if( ms2EventIds != null ) {
+          for( ms2EventId <- ms2EventIds) ms2EventIdSetBuilder += ms2EventId
         }
       }
       val ms2EventIds = ms2EventIdSetBuilder.result().toArray[Int]
@@ -162,15 +163,15 @@ object FeatureClusterer {
       val charge = mostIntenseFt.charge
       val qualityScore = mostIntenseFt.qualityScore
       //val apexIp = mostIntenseFt.apex
-      val apexScanId = mostIntenseFt.apexScanId
-      val apexScanInitialId = mostIntenseFt.apexScanInitialId
+      val apexScanId = mostIntenseFt.relations.apexScanId
+      val apexScanInitialId = mostIntenseFt.relations.apexScanInitialId
       val nbSubFts = totalFtGroup.length
       
       // Determine first ft scan and last ft scan
       val subftsSortedByAscTime = totalFtGroupAsList.sort { (a,b) => a.elutionTime < b.elutionTime }
       val( firstSubft, lastSubft ) = ( subftsSortedByAscTime(0), subftsSortedByAscTime(nbSubFts-1) )
-      val( firstScanId, firstScanInitialId ) = ( firstSubft.firstScanId, firstSubft.firstScanInitialId )
-      val( lastScanId, lastScanInitialId ) = ( lastSubft.lastScanId, lastSubft.lastScanInitialId )
+      val( firstScanId, firstScanInitialId ) = ( firstSubft.relations.firstScanId, firstSubft.relations.firstScanInitialId )
+      val( lastScanId, lastScanInitialId ) = ( lastSubft.relations.lastScanId, lastSubft.relations.lastScanInitialId )
       val ms1Count = 1 + scanById(lastScanId).cycle - scanById(firstScanId).cycle
       
       val ftCluster = new Feature(  id = Feature.generateNewId,
@@ -180,19 +181,22 @@ object FeatureClusterer {
                                     elutionTime = elutionTime,
                                     ms1Count = ms1Count,
                                     ms2Count = ms2Count,
-                                    firstScanId = firstScanId,
-                                    lastScanId = lastScanId,
-                                    apexScanId = apexScanId,
-                                    firstScanInitialId = firstScanInitialId,
-                                    lastScanInitialId = lastScanInitialId,
-                                    apexScanInitialId = apexScanInitialId,
-                                    ms2EventIds = ms2EventIds,
                                     subFeatures = subftsSortedByAscTime.toArray,
                                     isotopicPatterns = None,
                                     isOverlapping = false,
                                     overlappingFeatures = null,                                  
                                     qualityScore = qualityScore,
-                                    mapId = lcmsMapId
+                                    relations = new FeatureRelations(
+                                      firstScanId = firstScanId,
+                                      lastScanId = lastScanId,
+                                      apexScanId = apexScanId,
+                                      firstScanInitialId = firstScanInitialId,
+                                      lastScanInitialId = lastScanInitialId,
+                                      apexScanInitialId = apexScanInitialId,
+                                      ms2EventIds = ms2EventIds,
+                                      mapId = lcmsMapId
+                                    )
+                                    
                                   )
       //ftCluster.apex(apexIp) if defined apexIp
       
@@ -236,8 +240,8 @@ object FeatureClusterer {
     // Sort features by first scan time
     val nbFts = ftGroup.length
     val ftsSortedByTime = ftGroup.toList.sort { (a,b) => 
-                                                scanById(a.firstScanId).time <
-                                                scanById(b.firstScanId).time }
+                                                scanById(a.relations.firstScanId).time <
+                                                scanById(b.relations.firstScanId).time }
     // Set some vars
     var curFtIdx = 0
     val ftsGroupedByTime = new ArrayBuffer[ArrayBuffer[Feature]](1)
@@ -253,8 +257,8 @@ object FeatureClusterer {
         ftsGroupedByTime += ArrayBuffer( putativeFirstCft )
         ftGroupIdxByAssignedFtId.put(putativeFirstCft.id, ftGroupIdx)
         
-        val clusterFirstTime = scanById(putativeFirstCft.firstScanId).time
-        val clusterLastTime = scanById(putativeFirstCft.lastScanId).time
+        val clusterFirstTime = scanById(putativeFirstCft.relations.firstScanId).time
+        val clusterLastTime = scanById(putativeFirstCft.relations.lastScanId).time
         var( minTime, maxTime ) = ( clusterFirstTime - timeTol, clusterLastTime + timeTol )
         
         // Search for other cluster features
@@ -266,10 +270,10 @@ object FeatureClusterer {
             // Skip feature if it has been already assigned to a group
             if( ! ftGroupIdxByAssignedFtId.containsKey(tmpFt.id) ) {
               
-              val tmpFtFirstTime = scanById(tmpFt.firstScanId).time
+              val tmpFtFirstTime = scanById(tmpFt.relations.firstScanId).time
               if( tmpFtFirstTime <= maxTime ) {
                 ftsGroupedByTime(ftGroupIdx) += tmpFt
-                maxTime = scanById(tmpFt.lastScanId).time + timeTol
+                maxTime = scanById(tmpFt.relations.lastScanId).time + timeTol
                 ftGroupIdxByAssignedFtId.put( tmpFt.id, ftGroupIdx )
               } else {
                 reachedFarthestFeature = true

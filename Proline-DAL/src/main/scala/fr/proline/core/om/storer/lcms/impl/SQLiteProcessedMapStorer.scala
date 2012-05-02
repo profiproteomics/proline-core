@@ -99,14 +99,14 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
       processedMap.features.foreach { feature =>
         
         // Update feature map id
-        feature.mapId = processedMapId
+        feature.relations.mapId = processedMapId
         
         if( feature.isCluster ) {
 
           // Store cluster sub-features
           for( subFt <- feature.subFeatures ) {
             // Update sub-feature map id
-            subFt.mapId = processedMapId
+            subFt.relations.mapId = processedMapId
             // Store the processed feature
             insertProcessedMapFtItemUsingReusableStatement( subFt, statement )
           }
@@ -159,7 +159,7 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
       features.withFilter( _.isCluster ).foreach { clusterFt =>
         for( subFt <- clusterFt.subFeatures ) {
           //subFtIds += subFt.id
-          statement.executeWith( clusterFt.id, subFt.id, clusterFt.mapId )
+          statement.executeWith( clusterFt.id, subFt.id, clusterFt.relations.mapId )
         }
       }
     }
@@ -179,7 +179,7 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
     val calibratedMoz = if( ft.calibratedMoz.isNaN ) None else Some(ft.calibratedMoz)
     val normalizedIntensity = if( ft.normalizedIntensity.isNaN ) None else Some(ft.normalizedIntensity)
     
-    statement.executeWith( ft.mapId, ft.id, calibratedMoz, normalizedIntensity, ft.correctedElutionTime,                    
+    statement.executeWith( ft.relations.mapId, ft.id, calibratedMoz, normalizedIntensity, ft.correctedElutionTime,                    
                            BoolToSQLStr(ft.isClusterized,lcmsDb.boolStrAsInt), ft.selectionLevel, Some(null) )
                            
   }

@@ -169,7 +169,7 @@ object MasterMapBuilder {
       val correctedTime = mapAlnSet.calcReferenceElutionTime( childFt.elutionTime, childFt.mass )
       childFt.correctedElutionTime = correctedTime
       
-      if( childFt.mapId == 0 ) {
+      if( childFt.relations.mapId == 0 ) {
         throw new Exception( "map id must be defined for each child feature (m/z=" + childFt.moz +")")
       }       
       
@@ -263,7 +263,7 @@ object MasterMapBuilder {
     for( masterFt <- masterFeatures ) {
       
       // Determine the number of matched maps
-      val matchedMapIdSet = masterFt.children.map( _.mapId ).toSet.toArray
+      val matchedMapIdSet = masterFt.children.map( _.relations.mapId ).toSet.toArray
       val nbMatchedMaps = matchedMapIdSet.size
       
       // If master feature contains a single feature

@@ -15,7 +15,7 @@ class ProcessedMapLoader( val lcmsDb: LcmsDb,
     val runMapIdsByProcessedMapId = getRunMapIdsByProcessedMapId( processedMapIds )
     val features = this.getFeatures( processedMapIds )
     // Group features by map id
-    val featuresByMapId = features.groupBy(_.mapId)
+    val featuresByMapId = features.groupBy(_.relations.mapId)
     
     /*for( mapId <- processedMapIds ) {
       if( !(runMapIdsByProcessedMapId contains mapId) ) println( mapId)

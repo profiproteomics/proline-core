@@ -41,7 +41,7 @@ class SQLiteMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
     
     // Update master feature map id and insert master features in the feature table
     for( mft <- masterMap.features ) {
-      mft.mapId = newMasterMapId      
+      mft.relations.mapId = newMasterMapId      
       mft.id = runMapStorer.insertFeatureUsingPreparedStatement( mft, featureInsertStmt )
     }
     
@@ -52,7 +52,7 @@ class SQLiteMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
       masterMap.features.foreach { mft =>
         
         // Retrieve best child id
-        val bestChildId = mft.bestChildId
+        val bestChildId = mft.relations.bestChildId
         
         mft.children.foreach { childFt =>
           val isBestChild = if( childFt.id == bestChildId ) true else false

@@ -176,13 +176,17 @@ object MascotValidationHelper {
   }
   
   def getTargetMsQueryProperties( msQuery: MsQuery ): Map[String,Any] = {
-    val msQueryProperties = msQuery.properties
-    msQueryProperties("target_db_search").asInstanceOf[Map[String,Any]]    
+    val msQueryProperties = msQuery.properties    
+    // TODO: use real props
+    //msQueryProperties("target_db_search").asInstanceOf[Map[String,Any]] 
+    null
   }
   
   def getDecoyMsQueryProperties( msQuery: MsQuery ): Map[String,Any] = {
     val msQueryProperties = msQuery.properties
-    msQueryProperties("decoy_db_search").asInstanceOf[Map[String,Any]]    
+    // TODO: use real props
+    //msQueryProperties("decoy_db_search").asInstanceOf[Map[String,Any]]    
+    null
   }
     
   def buildJointTable( pepMatchJointTable: Array[Pair[PeptideMatch,PeptideMatch]],

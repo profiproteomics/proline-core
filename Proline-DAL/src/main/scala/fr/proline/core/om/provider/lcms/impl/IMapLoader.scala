@@ -123,10 +123,6 @@ trait IMapLoader {
                  ms1Count = featureRecord("ms1_count").asInstanceOf[Int],
                  ms2Count = featureRecord("ms2_count").asInstanceOf[Int],
                  isOverlapping = SQLStrToBool( featureRecord("is_overlapping").toString() ),
-                 firstScanInitialId = scanInitialIdById(firstScanId),
-                 lastScanInitialId = scanInitialIdById(lastScanId),
-                 apexScanInitialId = scanInitialIdById(apexScanId),
-                 ms2EventIds = ms2EventIds,
                  isotopicPatterns = isotopicPatterns,
                  overlappingFeatures = overlappingFeatures,
                  children = children,
@@ -136,13 +132,19 @@ trait IMapLoader {
                  correctedElutionTime = correctedElutionTime,
                  isClusterized = isClusterized,
                  selectionLevel = selectionLevel,
-                 firstScanId = firstScanId,
-                 lastScanId = lastScanId,
-                 apexScanId = apexScanId,
-                 theoreticalFeatureId = featureRecord.getOrElse("theoretical_feature_id",0).asInstanceOf[Int],
-                 compoundId = featureRecord.getOrElse("compound_id",0).asInstanceOf[Int],
-                 mapLayerId = featureRecord.getOrElse("map_layer_id",0).asInstanceOf[Int],
-                 mapId = mapId
+                 relations = new FeatureRelations(
+                   firstScanInitialId = scanInitialIdById(firstScanId),
+                   lastScanInitialId = scanInitialIdById(lastScanId),
+                   apexScanInitialId = scanInitialIdById(apexScanId),
+                   ms2EventIds = ms2EventIds,
+                   firstScanId = firstScanId,
+                   lastScanId = lastScanId,
+                   apexScanId = apexScanId,
+                   theoreticalFeatureId = featureRecord.getOrElse("theoretical_feature_id",0).asInstanceOf[Int],
+                   compoundId = featureRecord.getOrElse("compound_id",0).asInstanceOf[Int],
+                   mapLayerId = featureRecord.getOrElse("map_layer_id",0).asInstanceOf[Int],
+                   mapId = mapId
+                 )
                )
     
   }

@@ -17,9 +17,9 @@ class RunMapLoader( val lcmsDb: LcmsDb,
     
     val features = this.getFeatures( runMapIds )
     // Group features by map id
-    val featuresByMapId = features.groupBy(_.mapId)
+    val featuresByMapId = features.groupBy(_.relations.mapId)
     
-    val runMaps = new Array[RunMap](runMapIds.length)    
+    val runMaps = new Array[RunMap](runMapIds.length)
     var colNames: Seq[String] = null
     var lcmsMapIdx = 0
     

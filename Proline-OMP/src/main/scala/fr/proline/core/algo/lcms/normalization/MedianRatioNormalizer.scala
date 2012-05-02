@@ -26,7 +26,7 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
     for( mapId <- mapIdsAsList ) intensityRatiosByMapId.put( mapId, new ArrayBuffer[Float](0) )
     
     for( masterFt <- masterMapFeatures ) {
-      val childFtByMapId = masterFt.children.map { ft => ( ft.mapId -> ft ) } toMap
+      val childFtByMapId = masterFt.children.map { ft => ( ft.relations.mapId -> ft ) } toMap
       
       if( childFtByMapId contains refMapId ) {
         val refChildFt = childFtByMapId( refMapId )
