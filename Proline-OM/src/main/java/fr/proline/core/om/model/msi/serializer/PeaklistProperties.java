@@ -6,8 +6,8 @@
 package fr.proline.core.om.model.msi.serializer;  
 @SuppressWarnings("all")
 public class PeaklistProperties extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PeaklistProperties\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"spectrum_data_compression_level\",\"type\":[\"int\",\"null\"]}]}");
-  @Deprecated public java.lang.Integer spectrum_data_compression_level;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PeaklistProperties\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"spectrum_data_compression_level\",\"type\":\"int\"}]}");
+  @Deprecated public int spectrum_data_compression_level;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {
@@ -61,7 +61,7 @@ public class PeaklistProperties extends org.apache.avro.specific.SpecificRecordB
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<PeaklistProperties>
     implements org.apache.avro.data.RecordBuilder<PeaklistProperties> {
 
-    private java.lang.Integer spectrum_data_compression_level;
+    private int spectrum_data_compression_level;
 
     /** Creates a new Builder */
     private Builder() {
@@ -88,7 +88,7 @@ public class PeaklistProperties extends org.apache.avro.specific.SpecificRecordB
     }
     
     /** Sets the value of the 'spectrum_data_compression_level' field */
-    public fr.proline.core.om.model.msi.serializer.PeaklistProperties.Builder setSpectrumDataCompressionLevel(java.lang.Integer value) {
+    public fr.proline.core.om.model.msi.serializer.PeaklistProperties.Builder setSpectrumDataCompressionLevel(int value) {
       validate(fields()[0], value);
       this.spectrum_data_compression_level = value;
       fieldSetFlags()[0] = true;
@@ -102,7 +102,6 @@ public class PeaklistProperties extends org.apache.avro.specific.SpecificRecordB
     
     /** Clears the value of the 'spectrum_data_compression_level' field */
     public fr.proline.core.om.model.msi.serializer.PeaklistProperties.Builder clearSpectrumDataCompressionLevel() {
-      spectrum_data_compression_level = null;
       fieldSetFlags()[0] = false;
       return this;
     }

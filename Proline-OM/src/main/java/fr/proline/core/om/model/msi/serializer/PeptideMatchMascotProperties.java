@@ -6,7 +6,7 @@
 package fr.proline.core.om.model.msi.serializer;  
 @SuppressWarnings("all")
 public class PeptideMatchMascotProperties extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PeptideMatchMascotProperties\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"expectation_value\",\"type\":\"float\"},{\"name\":\"readable_var_mods\",\"type\":[\"string\",\"null\"]},{\"name\":\"var_mods_positions\",\"type\":[\"string\",\"null\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PeptideMatchMascotProperties\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"expectation_value\",\"type\":\"float\"},{\"name\":\"readable_var_mods\",\"type\":\"string\"},{\"name\":\"var_mods_positions\",\"type\":\"string\"}]}");
   @Deprecated public float expectation_value;
   @Deprecated public java.lang.CharSequence readable_var_mods;
   @Deprecated public java.lang.CharSequence var_mods_positions;

@@ -6,10 +6,10 @@
 package fr.proline.core.om.model.msi.serializer;  
 @SuppressWarnings("all")
 public class MsQueryDbSearchProperties extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"MsQueryDbSearchProperties\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"candidate_peptides_count\",\"type\":\"int\",\"default\":\"\"},{\"name\":\"mascot_identity_threshold\",\"type\":[\"float\",\"null\"]},{\"name\":\"mascot_homology_threshold\",\"type\":[\"float\",\"null\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"MsQueryDbSearchProperties\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"candidate_peptides_count\",\"type\":\"int\",\"default\":\"\"},{\"name\":\"mascot_identity_threshold\",\"type\":\"float\"},{\"name\":\"mascot_homology_threshold\",\"type\":\"float\"}]}");
   @Deprecated public int candidate_peptides_count;
-  @Deprecated public java.lang.Float mascot_identity_threshold;
-  @Deprecated public java.lang.Float mascot_homology_threshold;
+  @Deprecated public float mascot_identity_threshold;
+  @Deprecated public float mascot_homology_threshold;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {
@@ -98,8 +98,8 @@ public class MsQueryDbSearchProperties extends org.apache.avro.specific.Specific
     implements org.apache.avro.data.RecordBuilder<MsQueryDbSearchProperties> {
 
     private int candidate_peptides_count;
-    private java.lang.Float mascot_identity_threshold;
-    private java.lang.Float mascot_homology_threshold;
+    private float mascot_identity_threshold;
+    private float mascot_homology_threshold;
 
     /** Creates a new Builder */
     private Builder() {
@@ -158,7 +158,7 @@ public class MsQueryDbSearchProperties extends org.apache.avro.specific.Specific
     }
     
     /** Sets the value of the 'mascot_identity_threshold' field */
-    public fr.proline.core.om.model.msi.serializer.MsQueryDbSearchProperties.Builder setMascotIdentityThreshold(java.lang.Float value) {
+    public fr.proline.core.om.model.msi.serializer.MsQueryDbSearchProperties.Builder setMascotIdentityThreshold(float value) {
       validate(fields()[1], value);
       this.mascot_identity_threshold = value;
       fieldSetFlags()[1] = true;
@@ -172,7 +172,6 @@ public class MsQueryDbSearchProperties extends org.apache.avro.specific.Specific
     
     /** Clears the value of the 'mascot_identity_threshold' field */
     public fr.proline.core.om.model.msi.serializer.MsQueryDbSearchProperties.Builder clearMascotIdentityThreshold() {
-      mascot_identity_threshold = null;
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -183,7 +182,7 @@ public class MsQueryDbSearchProperties extends org.apache.avro.specific.Specific
     }
     
     /** Sets the value of the 'mascot_homology_threshold' field */
-    public fr.proline.core.om.model.msi.serializer.MsQueryDbSearchProperties.Builder setMascotHomologyThreshold(java.lang.Float value) {
+    public fr.proline.core.om.model.msi.serializer.MsQueryDbSearchProperties.Builder setMascotHomologyThreshold(float value) {
       validate(fields()[2], value);
       this.mascot_homology_threshold = value;
       fieldSetFlags()[2] = true;
@@ -197,7 +196,6 @@ public class MsQueryDbSearchProperties extends org.apache.avro.specific.Specific
     
     /** Clears the value of the 'mascot_homology_threshold' field */
     public fr.proline.core.om.model.msi.serializer.MsQueryDbSearchProperties.Builder clearMascotHomologyThreshold() {
-      mascot_homology_threshold = null;
       fieldSetFlags()[2] = false;
       return this;
     }

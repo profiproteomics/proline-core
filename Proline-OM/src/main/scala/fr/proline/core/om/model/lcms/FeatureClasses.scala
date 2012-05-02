@@ -21,7 +21,7 @@ class IsotopicPattern (
         var id: Int,
         val moz: Double,
         val intensity: Float,
-        val charge: Byte,
+        val charge: Int,
         val fitScore: Float,
         val peaks: Array[Peak],
         val scanInitialId: Int,
@@ -37,7 +37,23 @@ class IsotopicPattern (
 
 object Feature extends InMemoryIdGen
 
-class Feature (
+case class FeatureRelations(
+        val ms2EventIds: Array[Int],
+        val firstScanInitialId: Int,
+        val lastScanInitialId: Int,
+        val apexScanInitialId: Int,        
+        var firstScanId: Int = 0,
+        var lastScanId: Int = 0,
+        var apexScanId: Int = 0,
+        var bestChildId: Int = 0,
+        var bestChildMapId: Int = 0,
+        var theoreticalFeatureId: Int = 0,
+        var compoundId: Int = 0,
+        var mapLayerId: Int = 0,
+        var mapId: Int = 0
+    )
+    
+case class Feature (
         
         // Required fields
         var id: Int,
@@ -49,12 +65,11 @@ class Feature (
         var ms1Count: Int,
         var ms2Count: Int,
         val isOverlapping: Boolean,
-        val firstScanInitialId: Int,
-        val lastScanInitialId: Int,
-        val apexScanInitialId: Int,
-        val ms2EventIds: Array[Int],
+        
         val isotopicPatterns: Option[Array[IsotopicPattern]],
         val overlappingFeatures: Array[Feature],
+        
+        val relations: FeatureRelations,
         
         // Mutable optional fields
         var children: Array[Feature] = null,
@@ -64,16 +79,6 @@ class Feature (
         var correctedElutionTime: Float = Float.NaN,
         var isClusterized: Boolean = false,
         var selectionLevel: Int = 2,
-        
-        var firstScanId: Int = 0,
-        var lastScanId: Int = 0,
-        var apexScanId: Int = 0,
-        var bestChildId: Int = 0,
-        var bestChildMapId: Int = 0,
-        var theoreticalFeatureId: Int = 0,
-        var compoundId: Int = 0,
-        var mapLayerId: Int = 0,
-        var mapId: Int = 0,
         
         var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
         
@@ -91,6 +96,7 @@ class Feature (
   def getCorrectedElutionTime = if( correctedElutionTime.isNaN ) elutionTime else correctedElutionTime
   
   def toMasterFeature(): Feature = {
+    val ftRelations = this.relations
     new Feature ( id = Feature.generateNewId(),
                   moz = this.moz,
                   intensity = this.intensity,
@@ -104,15 +110,17 @@ class Feature (
                   ms2Count = this.ms2Count,
                   isOverlapping = false,
                   selectionLevel = this.selectionLevel,
-                  firstScanInitialId = this.firstScanInitialId,
-                  lastScanInitialId = this.lastScanInitialId,
-                  apexScanInitialId = this.apexScanInitialId,
-                  firstScanId = this.firstScanId,
-                  lastScanId = this.lastScanId,
-                  apexScanId = this.apexScanId,
-                  bestChildId = this.bestChildId,
-                  bestChildMapId = this.mapId,
-                  ms2EventIds = null,
+                  relations = new FeatureRelations(
+                    firstScanInitialId = ftRelations.firstScanInitialId,
+                    lastScanInitialId = ftRelations.lastScanInitialId,
+                    apexScanInitialId = ftRelations.apexScanInitialId,
+                    firstScanId = ftRelations.firstScanId,
+                    lastScanId = ftRelations.lastScanId,
+                    apexScanId = ftRelations.apexScanId,
+                    bestChildId = ftRelations.bestChildId,
+                    bestChildMapId = ftRelations.mapId,
+                    ms2EventIds = null
+                    ),
                   isotopicPatterns = null,
                   overlappingFeatures = null,
                   children = Array(this)

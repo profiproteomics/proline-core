@@ -6,11 +6,11 @@
 package fr.proline.core.om.model.msi.serializer;  
 @SuppressWarnings("all")
 public class TheoreticalFragmentIon extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TheoreticalFragmentIon\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"description\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"required_serie\",\"type\":{\"type\":\"record\",\"name\":\"FragmentIonType\",\"fields\":[{\"name\":\"ion_series\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"neutral_loss\",\"type\":[\"string\",\"null\"]}]}},{\"name\":\"required_serie_quality_level\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"fragment_max_moz\",\"type\":[\"double\",\"null\"]},{\"name\":\"residue_constraint\",\"type\":[\"string\",\"null\"]},{\"name\":\"ion_type\",\"type\":\"FragmentIonType\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TheoreticalFragmentIon\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"description\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"required_serie\",\"type\":{\"type\":\"record\",\"name\":\"FragmentIonType\",\"fields\":[{\"name\":\"ion_series\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"neutral_loss\",\"type\":\"string\"}]}},{\"name\":\"required_serie_quality_level\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"fragment_max_moz\",\"type\":\"double\"},{\"name\":\"residue_constraint\",\"type\":\"string\"},{\"name\":\"ion_type\",\"type\":\"FragmentIonType\"}]}");
   @Deprecated public java.lang.CharSequence description;
   @Deprecated public fr.proline.core.om.model.msi.serializer.FragmentIonType required_serie;
   @Deprecated public java.lang.CharSequence required_serie_quality_level;
-  @Deprecated public java.lang.Double fragment_max_moz;
+  @Deprecated public double fragment_max_moz;
   @Deprecated public java.lang.CharSequence residue_constraint;
   @Deprecated public fr.proline.core.om.model.msi.serializer.FragmentIonType ion_type;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -154,7 +154,7 @@ public class TheoreticalFragmentIon extends org.apache.avro.specific.SpecificRec
     private java.lang.CharSequence description;
     private fr.proline.core.om.model.msi.serializer.FragmentIonType required_serie;
     private java.lang.CharSequence required_serie_quality_level;
-    private java.lang.Double fragment_max_moz;
+    private double fragment_max_moz;
     private java.lang.CharSequence residue_constraint;
     private fr.proline.core.om.model.msi.serializer.FragmentIonType ion_type;
 
@@ -278,7 +278,7 @@ public class TheoreticalFragmentIon extends org.apache.avro.specific.SpecificRec
     }
     
     /** Sets the value of the 'fragment_max_moz' field */
-    public fr.proline.core.om.model.msi.serializer.TheoreticalFragmentIon.Builder setFragmentMaxMoz(java.lang.Double value) {
+    public fr.proline.core.om.model.msi.serializer.TheoreticalFragmentIon.Builder setFragmentMaxMoz(double value) {
       validate(fields()[3], value);
       this.fragment_max_moz = value;
       fieldSetFlags()[3] = true;
@@ -292,7 +292,6 @@ public class TheoreticalFragmentIon extends org.apache.avro.specific.SpecificRec
     
     /** Clears the value of the 'fragment_max_moz' field */
     public fr.proline.core.om.model.msi.serializer.TheoreticalFragmentIon.Builder clearFragmentMaxMoz() {
-      fragment_max_moz = null;
       fieldSetFlags()[3] = false;
       return this;
     }

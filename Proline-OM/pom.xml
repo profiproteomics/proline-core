@@ -18,15 +18,18 @@
     </license>
   </licenses>
 
-<!-- 
   <repositories>
     <repository>
       <id>scala-tools.org</id>
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
+      <repository>
+		    <id>repo.codahale.com</id>
+		    <url>http://repo.codahale.com</url>
+		  </repository>
   </repositories>
--->
+  
   <pluginRepositories>
     <pluginRepository>
       <id>scala-tools.org</id>
@@ -77,15 +80,21 @@
       <artifactId>avro</artifactId>
       <version>1.6.3</version>
     </dependency>
+    
+    <!--  Gson: Java to Json conversion -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.1</version>
+    </dependency>	    
+	  <dependency>
+	    <groupId>com.codahale</groupId>
+	    <artifactId>jerkson_2.9.1</artifactId>
+	    <version>0.5.0</version>
+	  </dependency>
 
   </dependencies>
- <repositories>
-   <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-</repositories>    
+ 
   <build>
       <pluginManagement>
       <plugins>

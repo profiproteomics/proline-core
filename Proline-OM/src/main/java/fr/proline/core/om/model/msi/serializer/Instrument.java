@@ -6,7 +6,7 @@
 package fr.proline.core.om.model.msi.serializer;  
 @SuppressWarnings("all")
 public class Instrument extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Instrument\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"id\",\"type\":\"int\",\"default\":\"\"},{\"name\":\"name\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"source\",\"type\":[\"string\",\"null\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Instrument\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"id\",\"type\":\"int\",\"default\":\"\"},{\"name\":\"name\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"source\",\"type\":\"string\"}]}");
   @Deprecated public int id;
   @Deprecated public java.lang.CharSequence name;
   @Deprecated public java.lang.CharSequence source;

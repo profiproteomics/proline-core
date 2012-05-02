@@ -6,7 +6,7 @@
 package fr.proline.core.om.model.msi.serializer;  
 @SuppressWarnings("all")
 public class FragmentIonType extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FragmentIonType\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"ion_series\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"neutral_loss\",\"type\":[\"string\",\"null\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FragmentIonType\",\"namespace\":\"fr.proline.core.om.model.msi.serializer\",\"fields\":[{\"name\":\"ion_series\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"neutral_loss\",\"type\":\"string\"}]}");
   @Deprecated public java.lang.CharSequence ion_series;
   @Deprecated public java.lang.CharSequence neutral_loss;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
