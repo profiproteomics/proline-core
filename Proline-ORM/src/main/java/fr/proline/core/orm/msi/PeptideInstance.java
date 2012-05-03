@@ -11,6 +11,14 @@ import java.util.Set;
  * 
  */
 @Entity
+@NamedQueries ({
+@NamedQuery(name="findPepInstByPepMatch",
+query="select pi from PeptideInstance pi, IN (pi.peptidesMatches) pm where pm.id = :pmID "),
+
+@NamedQuery(name="findPepInstForPeptideId",
+query="select pi from PeptideInstance pi where pi.peptideId = :pepID ")
+
+})
 @Table(name="peptide_instance")
 public class PeptideInstance implements Serializable {
 	private static final long serialVersionUID = 1L;
