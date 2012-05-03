@@ -81,7 +81,26 @@
    	<artifactId>Proline-OM</artifactId>
    	<version>0.0.2-SNAPSHOT</version>
    </dependency>
-
+   <dependency>
+   	<groupId>fr.proline</groupId>
+   	<artifactId>Proline-ORM</artifactId>
+   	<version>0.0.2-SNAPSHOT</version>
+   </dependency>
+   <dependency>
+   	<groupId>fr.proline</groupId>
+   	<artifactId>Proline-Databases</artifactId>
+   	<version>0.0.2-SNAPSHOT</version>
+   </dependency>
+   <dependency>
+   	<groupId>org.dbunit</groupId>
+   	<artifactId>dbunit</artifactId>
+   	<version>2.4.8</version>
+   </dependency>
+   <dependency>
+   	<groupId>com.googlecode.flyway</groupId>
+   	<artifactId>flyway-core</artifactId>
+   	<version>1.5</version>
+   </dependency>
   </dependencies>
   
  <repositories>
