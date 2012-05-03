@@ -10,7 +10,7 @@ import fr.proline.core.om.model.msi.Peptide
 class PeptideLoader( val psDb: DatabaseConfig ) {
   
   import scala.collection.mutable.ArrayBuffer
-  import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashMap
   
   /** Returns a map */
   lazy val ptmSpecificityMap : Map[Int,PtmSpecificity] = {
