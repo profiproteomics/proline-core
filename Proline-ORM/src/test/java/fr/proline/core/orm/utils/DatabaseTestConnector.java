@@ -2,6 +2,8 @@ package fr.proline.core.orm.utils;
 
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.dbunit.IDatabaseTester;
 import org.dbunit.JdbcDatabaseTester;
 
@@ -51,5 +53,6 @@ public class DatabaseTestConnector extends DatabaseConnector {
 			e.printStackTrace();
 		}
 	}
+
 
 }
