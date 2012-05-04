@@ -3,13 +3,10 @@ package fr.proline.core.om.model.msi
 import org.apache.commons.lang3.StringUtils
 import scala.collection.mutable.HashMap
 import fr.proline.core.utils.misc.InMemoryIdGen
-import fr.proline.core.om.model.msi.serializer.{MsQueryProperties,MsQueryDbSearchProperties}
-import fr.proline.core.utils.serialization._
+//import fr.proline.core.om.model.msi.serializer.{MsQueryProperties,MsQueryDbSearchProperties}
+//import fr.proline.core.utils.serialization._
 
-import com.codahale.jerkson.Json._
-import com.codahale.jerkson.JsonSnakeCase
-
-trait MsQuery extends SerializerProducer[serializer.MsQuery] {
+trait MsQuery {
   
   // Required fields
   var id: Int
@@ -20,11 +17,11 @@ trait MsQuery extends SerializerProducer[serializer.MsQuery] {
   
   var properties: Option[MsQueryProperties]
   def newProperties: Option[MsQueryProperties] = {
-    this.properties = Some(new MsQueryProperties)
+    this.properties = Some(new MsQueryProperties() )
     this.properties
   }
   
-  def toSerializer(): serializer.MsQuery = {
+  /*def toSerializer(): serializer.MsQuery = {
     
     val msqSerializer = new serializer.MsQuery();
     msqSerializer.setId( this.id )
@@ -37,17 +34,10 @@ trait MsQuery extends SerializerProducer[serializer.MsQuery] {
     }
     
     msqSerializer    
-  }
+  }*/
 
 }
 
-case class ScalaMsQueryDbSearchProperties( var candidate_peptides_count: Int,
-                                           var mascot_identity_threshold: Option[Float],
-                                           var mascot_homology_threshold: Option[Float]
-                                           )
-case class ScalaMsQueryProperties( target_db_search: ScalaMsQueryDbSearchProperties,
-                                   decoy_db_search: Option[ScalaMsQueryDbSearchProperties] = None
-                                 )
 
 case class Ms1Query ( // Required fields
                      var id: Int,
@@ -67,8 +57,9 @@ case class Ms1Query ( // Required fields
     
 }
   
-object Ms2Query extends InMemoryIdGen with SerializerConsumer[serializer.MsQuery, Ms2Query] {
-  def fromSerializer( msqSerializer: serializer.MsQuery ): Ms2Query = {
+object Ms2Query extends InMemoryIdGen {
+  // with SerializerConsumer[serializer.MsQuery, Ms2Query]
+  /*def fromSerializer( msqSerializer: serializer.MsQuery ): Ms2Query = {
     
     new Ms2Query( id = msqSerializer.getId(),
                   initialId = msqSerializer.getInitialId(),
@@ -78,11 +69,10 @@ object Ms2Query extends InMemoryIdGen with SerializerConsumer[serializer.MsQuery
                   spectrumId = msqSerializer.getSpectrumId(),
                   properties = Option( msqSerializer.getProperties )
                 )
-  }
+  }*/
   
 }
 
-@JsonSnakeCase
 case class Ms2Query(  // Required fields
                  var id: Int,
                  val initialId: Int,
@@ -92,8 +82,7 @@ case class Ms2Query(  // Required fields
                                   
                  // Mutable optional fields
                  var spectrumId: Int = 0,                 
-                 var properties: Option[MsQueryProperties] = None,
-                 var scalaProps: Option[ScalaMsQueryProperties] = None
+                 var properties: Option[MsQueryProperties] = None
                  
                  ) extends MsQuery {
   
@@ -102,7 +91,7 @@ case class Ms2Query(  // Required fields
   
   val msLevel = 2
   
-  override def toSerializer(): serializer.MsQuery = {
+  /*override def toSerializer(): serializer.MsQuery = {
     
     val msqSerializer = super.toSerializer()
     msqSerializer.setSpectrumTitle( this.spectrumTitle )
@@ -110,7 +99,7 @@ case class Ms2Query(  // Required fields
     
     msqSerializer
     
-  }
+  }*/
     
 }
   

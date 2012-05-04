@@ -6,7 +6,6 @@
         <groupId>fr.proline</groupId>
         <version>0.0.2-SNAPSHOT</version>
     </parent>
-  <groupId>fr.proline</groupId>
   <artifactId>Proline-OMP</artifactId>
   <name>${project.artifactId}</name>
   <description>My wonderfull scala app</description>
@@ -148,7 +147,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <useFile>false</useFile>
-          <skipTests>false</skipTests>
           <disableXmlReport>true</disableXmlReport>
           <!-- If you have classpath issue like NoDefClassError,... -->
           <!-- useManifestOnlyJar>false</useManifestOnlyJar -->

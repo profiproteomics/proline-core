@@ -165,7 +165,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <useFile>false</useFile>
-          <skipTests>false</skipTests>
           <disableXmlReport>true</disableXmlReport>
           <!-- If you have classpath issue like NoDefClassError,... -->
           <!-- useManifestOnlyJar>false</useManifestOnlyJar -->

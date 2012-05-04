@@ -18,7 +18,7 @@ object Peptide extends InMemoryIdGen {
                                positionConstraints: Option[Array[Boolean]] ): Unit = {
          
     // Define some vars
-    val residues = sequence.split("") map { _.charAt(0) }
+    val residues = sequence.toCharArray() //sequence.split("") map { _.charAt(0) }
     val nbResidues = residues.length
     val searchedResidue = ptmDefinition.residue
     val precursorDelta = ptmDefinition.precursorDelta
