@@ -5,12 +5,12 @@ import fr.proline.core.om.model.msi.PtmDefinition
 
 trait IPTMProvider {
 
-  def getPtmDefinitions(ptmDefIds: Seq[Int]) : Array[Option[PtmDefinition]]
+  def getPtmDefinitions( ptmDefIds: Seq[Int] ) : Array[Option[PtmDefinition]]
   
-  def getPtmDefinition(ptmDefID: Int) : Option[PtmDefinition] = { getPtmDefinitions( Array(ptmDefID) )(0) }
+  def getPtmDefinition( ptmDefID: Int ) : Option[PtmDefinition] = { getPtmDefinitions( Array(ptmDefID) )(0) }
     
-  def getPtmDefinition(ptmName : String, ptmResidu : Char, ptmLocation : String) : Option[PtmDefinition] 
+  def getPtmDefinition( ptmName: String, ptmResidue: Char, ptmLocation: String ) : Option[PtmDefinition] 
   
-  def getPtmId(fullName : String, shortName : String) : Option[Int]
+  def getPtmId( shortName : String ) : Option[Int]
   
 }
