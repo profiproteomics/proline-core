@@ -39,5 +39,12 @@ package object sql {
       case "0" => false
     }
   }
+  
+  import java.text.{DecimalFormat,DecimalFormatSymbols}
+  private val decimalSymbols = new DecimalFormatSymbols()
+  decimalSymbols.setDecimalSeparator('.')
+  decimalSymbols.setGroupingSeparator('\0')
+  
+  def newDecimalFormat( template: String ): DecimalFormat = new DecimalFormat(template: String , decimalSymbols)  
 
 }

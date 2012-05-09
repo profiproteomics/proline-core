@@ -18,7 +18,7 @@ trait IRsStorer extends Logging {
   lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, false, 10000 ) // Secondary MSI db connection
   
   private val psDb = new PsDb( PsDb.getDefaultConfig, false, 10000 )
-  val scoringIdByType = new fr.proline.core.dal.helper.MsiDbHelper( msiDb1.config ).getScoringIdByType
+  val scoringIdByType = new fr.proline.core.dal.helper.MsiDbHelper( msiDb1 ).getScoringIdByType
   
   // TODO: implement as InMemoryProvider
   val peptideByUniqueKey = new HashMap[String,Peptide]()

@@ -153,6 +153,10 @@ object SQLFormatterImplicits {
                                                               case None => NullFormattable(Some(null))
                                                               case Some(value) => IntFormattable(value)
                                                             }
+  implicit def someFloat2Formattable( wrapped: Option[Float] ) = wrapped match {
+                                                              case None => NullFormattable(Some(null))
+                                                              case Some(value) => FloatFormattable(value)
+                                                            }
   implicit def someDouble2Formattable( wrapped: Option[Double] ) = wrapped match {
                                                               case None => NullFormattable(Some(null))
                                                               case Some(value) => DoubleFormattable(value)

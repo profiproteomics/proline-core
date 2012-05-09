@@ -3,7 +3,24 @@ package fr.proline.core.om.model.msi
 import fr.proline.core.utils.misc.InMemoryIdGen
 
 object Spectrum extends InMemoryIdGen
-case class Spectrum( id: Int )
+case class Spectrum ( var id: Int,
+                      val title: String,
+                      val precursorMoz: Double,
+                      val precursorIntensity: Float = Float.NaN,
+                      val precursorCharge: Int,
+                      val isSummed: Boolean = false,
+                      val firstCycle: Int = 0,
+                      val lastCycle: Int = 0,
+                      val firstScan: Int = 0,
+                      val lastScan: Int = 0,
+                      val firstTime: Float = 0,
+                      val lastTime: Float = 0,
+                      var mozList: Option[Array[Double]],
+                      var intensityList: Option[Array[Float]],
+                      val peaksCount: Int,
+                      val instrumentConfigId: Int,
+                      val peaklistId: Int
+                      )
 
 object PeaklistSoftware extends InMemoryIdGen
 case class PeaklistSoftware( var id: Int,

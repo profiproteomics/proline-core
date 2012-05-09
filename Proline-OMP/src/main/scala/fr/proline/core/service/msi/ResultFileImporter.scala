@@ -2,16 +2,9 @@ package fr.proline.core.service.msi
 
 import java.io.File
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.MsiDb
-import fr.proline.core.dal.UdsDb
-import fr.proline.core.om.model.msi.Instrument
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.IResultFile
-import fr.proline.core.om.model.msi.IResultFileProvider
-import fr.proline.core.om.model.msi.ResultFileProviderRegistry
-import fr.proline.core.om.storer.msi.MsiSearchStorer
-import fr.proline.core.om.storer.msi.PeaklistStorer
-import fr.proline.core.om.storer.msi.RsStorer
+import fr.proline.core.dal.{MsiDb,UdsDb}
+import fr.proline.core.om.model.msi.{Instrument,InstrumentConfig,IResultFile,IResultFileProvider,ResultFileProviderRegistry}
+import fr.proline.core.om.storer.msi.{MsiSearchStorer,PeaklistStorer,RsStorer}
 import fr.proline.core.service.IService
 
 class ResultFileImporter( projectId: Int,

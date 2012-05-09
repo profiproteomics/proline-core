@@ -3,20 +3,21 @@ package fr.proline.core.om.provider.msi.impl
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.dal.MsiDb
 
-class PeptideMatchLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = null ) {
+class PeptideMatchLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: DatabaseConfig = null ) {
   
   
   import fr.proline.core.dal.helper.MsiDbHelper
   
-  def getPeptideMatches( rsIds: Seq[Int], psDb: DatabaseConfig = psDb ): Array[PeptideMatch] = {
-    if( psDb == null ) throw new IllegalArgumentException("a psDb has to be provided to the method or to the constructor")
+  def getPeptideMatches( rsIds: Seq[Int], psDbConfig: DatabaseConfig = psDbConfig ): Array[PeptideMatch] = {
+    if( psDbConfig == null ) throw new IllegalArgumentException("a psDb has to be provided to the method or to the constructor")
 
     val pmRecords = _getPepMatchRecords( rsIds )
     
     // Load peptides
     val uniqPepIds = pmRecords map { _("peptide_id").asInstanceOf[Int] } distinct
-    val peptides = new PeptideLoader(psDb).getPeptides(uniqPepIds)
+    val peptides = new PeptideLoader(psDbConfig).getPeptides(uniqPepIds)
     
     _getPeptideMatches( rsIds, pmRecords, peptides )
     
@@ -33,7 +34,7 @@ class PeptideMatchLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = 
     var pepMatchColNames: Seq[String] = null
     
     // Execute SQL query to load peptide match records
-    val pmRecords = msiDb.transaction { tx =>       
+    val pmRecords = msiDbConfig.transaction { tx =>       
       tx.select( "SELECT * FROM peptide_match WHERE result_set_id IN (" +
                  rsIds.mkString(",") +")" ) { r => 
         
@@ -52,7 +53,7 @@ class PeptideMatchLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = 
   private def _getPeptideMatches( rsIds: Seq[Int], pmRecords: Seq[Map[String,Any]], peptides: Seq[Peptide] ): Array[PeptideMatch] = {
     
     // Instantiate a MSIdb helper
-    val msiDbHelper = new MsiDbHelper( msiDb )
+    val msiDbHelper = new MsiDbHelper( new MsiDb( this.msiDbConfig ) )
     
     // Retrieve score type map
     val scoreTypeById = msiDbHelper.getScoringTypeById
@@ -62,7 +63,7 @@ class PeptideMatchLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = 
     
     // Load MS queries
     val msiSearchIds = msiDbHelper.getResultSetsMsiSearchIds( rsIds )
-    val msQueries = new MsQueryLoader( msiDb ).getMsQueries( msiSearchIds )
+    val msQueries = new MsQueryLoader( msiDbConfig ).getMsQueries( msiSearchIds )
     val msQueryById = Map() ++ msQueries.map { msq => ( msq.id -> msq ) }
     
     // Load peptide matches

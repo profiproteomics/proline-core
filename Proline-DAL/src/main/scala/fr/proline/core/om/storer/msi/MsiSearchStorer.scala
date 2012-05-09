@@ -45,25 +45,32 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     val msiSearchId = msiSearch.id    
     //val msQueryIdByTmpId = new HashMap[Int,Int]()
     
-    for( msQuery <- msQueries ) {
-      
-      //val tmpMsQueryId = msQuery.id
-      
-      msQuery.msLevel match {
-        case 1 => this._insertMs1Query( msQuery.asInstanceOf[Ms1Query], msiSearchId )
-        case 2 => {
-          val ms2Query = msQuery.asInstanceOf[Ms2Query]
-          // FIXME: it should not be null
-          if( spectrumIdByTitle != null ) {
-            ms2Query.spectrumId = spectrumIdByTitle(ms2Query.spectrumTitle)
+    val msiDbTx = this.msiDb.getOrCreateTransaction()
+    msiDbTx.executeBatch( "INSERT INTO ms_query VALUES ("+ "?,"*6 +"?)", true ) { stmt =>
+      for( msQuery <- msQueries ) {
+        
+        //val tmpMsQueryId = msQuery.id
+        
+        msQuery.msLevel match {
+          case 1 => this._insertMsQuery( stmt, msQuery.asInstanceOf[Ms1Query], msiSearchId, Option.empty[Int] )
+          case 2 => {
+            val ms2Query = msQuery.asInstanceOf[Ms2Query]
+            // FIXME: it should not be null
+            var spectrumId = Option.empty[Int]
+            if( spectrumIdByTitle != null ) {
+              ms2Query.spectrumId = spectrumIdByTitle(ms2Query.spectrumTitle)
+              spectrumId = Some(ms2Query.spectrumId)
+            }
+            this._insertMsQuery( stmt, msQuery, msiSearchId, spectrumId )
           }
-          this._insertMs2Query( ms2Query, msiSearchId )
         }
+        
+        //msQueryIdByTmpId += ( tmpMsQueryId -> msQuery.id )
+        
       }
-      
-      //msQueryIdByTmpId += ( tmpMsQueryId -> msQuery.id )
-      
     }
+    
+
     
     Map() ++ seqDbIdByTmpId
   }
@@ -82,7 +89,7 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
                           instrumentConfig.name,
                           instrumentConfig.ms1Analyzer,
                           instrumentConfig.msnAnalyzer,
-                          Some(null)
+                          Option(null)
                          )
       }
     }
@@ -97,21 +104,21 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     // If the sequence database doesn't exist in the MSIdb
     if( seqDbIds.length == 0 ) {
       
-      val msiDbConn = this.msiDb.getOrCreateConnection()
-      val stmt = msiDbConn.prepareStatement( "INSERT INTO seq_database VALUES ("+ "?,"*6 +"?)",
-                                             java.sql.Statement.RETURN_GENERATED_KEYS ) 
+      val msiDbTx = this.msiDb.getOrCreateTransaction()
+      msiDbTx.executeBatch( "INSERT INTO seq_database VALUES ("+ "?,"*6 +"?)", true ) { stmt =>
       
-      new ReusableStatement( stmt, msiDb.config.sqlFormatter ) <<
-        Some(null) <<
-        seqDatabase.name <<
-        seqDatabase.filePath <<
-        seqDatabase.version <<
-        seqDatabase.releaseDate <<
-        seqDatabase.sequencesCount <<
-        Some(null)
-  
-      stmt.execute()
-      seqDatabase.id = this.msiDb.extractGeneratedInt( stmt )
+        stmt.executeWith(
+              Option(null),
+              seqDatabase.name,
+              seqDatabase.filePath,
+              seqDatabase.version,
+              seqDatabase.releaseDate,
+              seqDatabase.sequencesCount,
+              Option(null)
+            )
+          
+        seqDatabase.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+      }
       
     } else {
       seqDatabase.id = seqDbIds(0)
@@ -126,33 +133,32 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     if( instrumentConfigId <= 0 )
       throw new Exception("instrument configuration must first be persisted")
     
-    val msiDbConn = this.msiDb.getOrCreateConnection()
-    val stmt = msiDbConn.prepareStatement( "INSERT INTO search_settings VALUES ("+ "?,"*11 +"?)",
-                                           java.sql.Statement.RETURN_GENERATED_KEYS ) 
-    
-    new ReusableStatement( stmt, msiDb.config.sqlFormatter ) <<
-      Some(null) <<
-      searchSettings.softwareName <<
-      searchSettings.softwareVersion <<
-      searchSettings.taxonomy <<
-      searchSettings.maxMissedCleavages <<
-      searchSettings.ms1ChargeStates <<
-      searchSettings.ms1ErrorTol <<
-      searchSettings.ms1ErrorTolUnit <<
-      searchSettings.quantitation <<
-      BoolToSQLStr( searchSettings.isDecoy ) <<
-      Some(null) <<
-      searchSettings.instrumentConfig.id
-
-    stmt.execute()
-    searchSettings.id = this.msiDb.extractGeneratedInt( stmt )
+    val msiDbTx = this.msiDb.getOrCreateTransaction()
+    msiDbTx.executeBatch( "INSERT INTO search_settings VALUES ("+ "?,"*11 +"?)", true ) { stmt =>
+      stmt.executeWith(
+            Option(null),
+            searchSettings.softwareName,
+            searchSettings.softwareVersion,
+            searchSettings.taxonomy,
+            searchSettings.maxMissedCleavages,
+            searchSettings.ms1ChargeStates,
+            searchSettings.ms1ErrorTol,
+            searchSettings.ms1ErrorTolUnit,
+            searchSettings.quantitation,
+            BoolToSQLStr( searchSettings.isDecoy ),
+            Option(null),
+            searchSettings.instrumentConfig.id
+            )
+            
+      searchSettings.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+    }
     
     // Link search settings to sequence databases
     msiDb.getOrCreateTransaction.executeBatch( "INSERT INTO search_settings_seq_database_map VALUES (?,?,?,?)" ) { stmt =>
       searchSettings.seqDatabases.foreach { seqDb =>
         if( seqDb.id <= 0 ) throw new Exception("sequence database must first be persisted")
         
-        stmt.executeWith( searchSettings.id, seqDb.id, seqDb.sequencesCount, Some(null) )
+        stmt.executeWith( searchSettings.id, seqDb.id, seqDb.sequencesCount, Option(null) )
       }
     }
     
@@ -170,32 +176,31 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     if( peaklistId <= 0 )
       throw new Exception("peaklist must first be persisted")
     
-    val msiDbConn = this.msiDb.getOrCreateConnection()
-    val stmt = msiDbConn.prepareStatement( "INSERT INTO msi_search VALUES ("+ "?,"*13 +"?)",
-                                           java.sql.Statement.RETURN_GENERATED_KEYS ) 
-    
-    new ReusableStatement( stmt, msiDb.config.sqlFormatter ) <<
-      Some(null) <<
-      msiSearch.title <<
-      msiDb.stringifyDate( msiSearch.date ) <<
-      msiSearch.resultFileName <<
-      msiSearch.resultFileDirectory <<
-      msiSearch.jobNumber <<
-      msiSearch.userName <<
-      msiSearch.userEmail <<
-      msiSearch.queriesCount <<
-      msiSearch.submittedQueriesCount <<
-      msiSearch.searchedSequencesCount <<
-      Some(null) <<
-      searchSettingsId <<
-      peaklistId
-
-    stmt.execute()
-    msiSearch.id = this.msiDb.extractGeneratedInt( stmt )
+    val msiDbTx = this.msiDb.getOrCreateTransaction()
+    msiDbTx.executeBatch( "INSERT INTO msi_search VALUES ("+ "?,"*13 +"?)", true ) { stmt =>
+      stmt.executeWith(
+            Option(null),
+            msiSearch.title,
+            msiDb.stringifyDate( msiSearch.date ),
+            msiSearch.resultFileName,
+            msiSearch.resultFileDirectory,
+            msiSearch.jobNumber,
+            msiSearch.userName,
+            msiSearch.userEmail,
+            msiSearch.queriesCount,
+            msiSearch.submittedQueriesCount,
+            msiSearch.searchedSequencesCount,
+            Option(null),
+            searchSettingsId,
+            peaklistId
+          )
+          
+      msiSearch.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+    }
     
   }
   
-  private def _insertMs1Query( ms1Query: Ms1Query, msiSearchId: Int ): Unit = {
+  /*private def _insertMs1Query( ms1Query: Ms1Query, msiSearchId: Int ): Unit = {
     
     val msiDbConn = this.msiDb.getOrCreateConnection()
     val stmt = msiDbConn.prepareStatement( "INSERT INTO ms_query VALUES ("+ "?,"*6 +"?)",
@@ -213,32 +218,29 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     stmt.execute()
     ms1Query.id = this.msiDb.extractGeneratedInt( stmt )
     
-  }
+  }*/
   
-  private def _insertMs2Query( ms2Query: Ms2Query, msiSearchId: Int ): Unit = {
+  private def _insertMsQuery( stmt: ReusableStatement, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int] ): Unit = {
     
+    import com.codahale.jerkson.Json.generate
     // Retrieve some vars
-    val spectrumId = ms2Query.spectrumId
+    //val spectrumId = ms2Query.spectrumId
     //if( spectrumId <= 0 )
       //throw new Exception("spectrum must first be persisted")
     
-    val msiDbConn = this.msiDb.getOrCreateConnection()
-    val stmt = msiDbConn.prepareStatement( "INSERT INTO ms_query VALUES ("+ "?,"*6 +"?)",
-                                           java.sql.Statement.RETURN_GENERATED_KEYS ) 
+    val msqPropsAsJSON = if( msQuery.properties != None ) Some(generate(msQuery.properties.get)) else None
     
-    new ReusableStatement( stmt, msiDb.config.sqlFormatter ) <<
-      Some(null) <<
-      ms2Query.initialId <<
-      ms2Query.charge <<
-      ms2Query.moz <<
-      Some(null) <<
-      Some(null) <<
-      msiSearchId
+    stmt.executeWith(
+          Option(null),
+          msQuery.initialId,
+          msQuery.charge,
+          msQuery.moz,
+          msqPropsAsJSON,
+          spectrumId,
+          msiSearchId
+          )
 
-    stmt.execute()
-    ms2Query.id = this.msiDb.extractGeneratedInt( stmt )
+    msQuery.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
   }
-  
-  
   
 }

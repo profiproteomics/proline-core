@@ -4,20 +4,21 @@ import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.SequenceMatch
+import fr.proline.core.dal.MsiDb
 
-class ProteinMatchLoader( val msiDb: DatabaseConfig ) {
+class ProteinMatchLoader( val msiDbConfig: DatabaseConfig ) {
   
   import scala.collection.mutable.ArrayBuffer
 
   def getProteinMatches( rsIds: Seq[Int] ): Array[ProteinMatch] = {
     
     // Retrieve score type map
-    val scoreTypeById = new MsiDbHelper( msiDb ).getScoringTypeById
+    val scoreTypeById = new MsiDbHelper( new MsiDb( msiDbConfig ) ).getScoringTypeById
     
     // Execute SQL query to load protein match records
     //val seqMatchMapBuilder = scala.collection.immutable.Map.newBuilder[Int,SequenceMatch]
     var seqMatchColNames: Seq[String] = null
-    val seqMatcheRecords = msiDb.transaction { tx =>       
+    val seqMatcheRecords = msiDbConfig.transaction { tx =>       
       tx.select( "SELECT * FROM sequence_match WHERE result_set_id IN (" +
                  rsIds.mkString(",") +")" ) { r => 
         if( seqMatchColNames == null ) { seqMatchColNames = r.columnNames }
@@ -32,7 +33,7 @@ class ProteinMatchLoader( val msiDb: DatabaseConfig ) {
     // Load and map sequence database ids of each protein match
     val seqDbIdsByProtMatchId = new java.util.HashMap[Int,ArrayBuffer[Int]]
     
-    msiDb.transaction { tx =>
+    msiDbConfig.transaction { tx =>
       tx.select( "SELECT protein_match_id, seq_database_id FROM protein_match_seq_database_map" ) { r =>
         val( proteinMatchId, seqDatabaseId ) = (r.nextInt.get, r.nextInt.get)
         if( !seqDbIdsByProtMatchId.containsKey(proteinMatchId) ) {
@@ -46,7 +47,7 @@ class ProteinMatchLoader( val msiDb: DatabaseConfig ) {
     
     // Execute SQL query to load protein match records
     var protMatchColNames: Seq[String] = null
-    val protMatches = msiDb.transaction { tx =>       
+    val protMatches = msiDbConfig.transaction { tx =>       
       tx.select( "SELECT * FROM protein_match WHERE result_set_id IN (" +
                  rsIds.mkString(",") +")" ) { r =>
               

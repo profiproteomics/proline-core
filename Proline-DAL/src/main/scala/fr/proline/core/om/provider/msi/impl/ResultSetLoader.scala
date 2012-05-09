@@ -2,8 +2,9 @@ package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.dal.MsiDb
 
-class ResultSetLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = null )  {
+class ResultSetLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: DatabaseConfig = null )  {
   
     import fr.proline.core.dal.helper.MsiDbHelper
   
@@ -12,21 +13,21 @@ class ResultSetLoader( val msiDb: DatabaseConfig, val psDb: DatabaseConfig = nul
   def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
     
     // Load protein matches
-    val protMatchLoader = new ProteinMatchLoader( msiDb )
+    val protMatchLoader = new ProteinMatchLoader( msiDbConfig )
     val protMatches = protMatchLoader.getProteinMatches( rsIds )
     val protMatchesByRsId = protMatches.groupBy( _.resultSetId )
     
     // Load peptide matches
-    val pepMatchLoader = new PeptideMatchLoader( msiDb, psDb )
+    val pepMatchLoader = new PeptideMatchLoader( msiDbConfig, psDbConfig )
     val pepMatches = pepMatchLoader.getPeptideMatches( rsIds )
     val pepMatchesByRsId = pepMatches.groupBy( _.resultSetId )
     
     // Instantiate a MSIdb helper
-    val msiDbHelper = new MsiDbHelper( msiDb )
+    val msiDbHelper = new MsiDbHelper( new MsiDb( msiDbConfig ) )
     
     // Execute SQL query to load result sets
     var rsColNames: Seq[String] = null
-    val resultSets = msiDb.transaction { tx =>       
+    val resultSets = msiDbConfig.transaction { tx =>       
       tx.select( "SELECT * FROM result_set WHERE id IN (" +
                  rsIds.mkString(",") +")" ) { r =>
               
