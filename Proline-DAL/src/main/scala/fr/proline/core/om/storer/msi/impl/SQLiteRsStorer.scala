@@ -3,6 +3,7 @@ package fr.proline.core.om.storer.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
+import com.codahale.jerkson.Json.generate
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.utils.sql.BoolToSQLStr
 import fr.proline.core.dal.MsiDb
@@ -141,7 +142,6 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
     val peptideMatches = rs.peptideMatches
     val scoringIdByType = this.scoringIdByType
     
-    // TODO: store peptide match properties
     msiDb1.getOrCreateTransaction().executeBatch(PeptideMatchTable.getInsertQuery(), true ) { stmt =>
       
       // Iterate over peptide matche to store them
@@ -154,6 +154,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
         if( scoringId == None ) {
           throw new Exception( "can't find a scoring id for the score type '"+scoreType+"'" )
         }
+        val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) Some(generate(peptideMatch.properties.get)) else None
         
         stmt.executeWith( 
                 Some(null),
@@ -167,7 +168,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
                 peptideMatch.missedCleavage,
                 peptideMatch.fragmentMatchesCount,
                 BoolToSQLStr( peptideMatch.isDecoy ),
-                Some(null),
+                pepMatchPropsAsJSON,
                 peptideMatch.peptide.id,
                 peptideMatch.msQuery.id,
                 peptideMatch.getBestChildId,

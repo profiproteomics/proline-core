@@ -4,9 +4,7 @@ import math.{pow,log10}
 import collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import fr.proline.core.algo.msi.validation._
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.MsQuery
+import fr.proline.core.om.model.msi.{MsQuery,PeptideMatch}
 
 case class MascotIonScoreThresholds( identityThreshold: Float, homologyThreshold: Float )
 
@@ -14,24 +12,24 @@ object MascotValidationHelper {
   
   implicit def doubleToFloat(d: Double): Float = d.toFloat
   
-  def inferEvalue( ionScore: Float, identityThreshold: Float, probability: Double = 0.05 ): Double = {
-    probability * pow(10, (identityThreshold-ionScore)/10 )
+  def inferEvalue( ionsScore: Float, identityThreshold: Float, probability: Double = 0.05 ): Double = {
+    probability * pow(10, (identityThreshold-ionsScore)/10 )
   }
   
   def calcNbCandidatePeptides( identityThreshold: Float, probability: Double = 0.05 ): Float = {
-    (probability/0.05) * pow(10,  identityThreshold/10 )
+    (probability/0.05) * pow(10, identityThreshold/10 )
   }
   
-  def inferNbPeptideCandidates( ionScore: Float, eValue: Double ): Unit = {
-    this.calcNbCandidatePeptides( ionScore, eValue )
+  def inferNbPeptideCandidates( ionsScore: Float, eValue: Double ): Unit = {
+    this.calcNbCandidatePeptides( ionsScore, eValue )
   }
   
   def calcIdentityThreshold( nbPeptideCandidates: Double, probability: Double ): Float = {
     - 10 * log10( (probability/0.05) / nbPeptideCandidates )
   }
   
-  def inferIdentityThreshold( ionScore: Float, eValue: Double, probability: Double = 0.05 ): Float = {
-    ionScore -10 * log10(probability/eValue)
+  def inferIdentityThreshold( ionsScore: Float, eValue: Double, probability: Double = 0.05 ): Float = {
+    ionsScore -10 * log10(probability/eValue)
   }
   
   def calcScoreThresholdOffset( newProb: Double, oldProb: Double ): Float = {
@@ -137,17 +135,17 @@ object MascotValidationHelper {
   
   def getPeptideMatchThresholds( peptideMatch: PeptideMatch ): MascotIonScoreThresholds = {
     
-    val targetMsQueryProperties = getTargetMsQueryProperties( peptideMatch.msQuery )
-    val decoyMsQueryProperties = getDecoyMsQueryProperties( peptideMatch.msQuery )
+    val targetMsqProps = peptideMatch.msQuery.properties.get.getTargetDbSearch.get
+    val decoyMsqProps = peptideMatch.msQuery.properties.get.getDecoyDbSearch.get
     
     // Determine homology threshold
-    val targetHt = targetMsQueryProperties.getOrElse("mascot:homology threshold",0).asInstanceOf[Float]
-    val decoyHt = decoyMsQueryProperties.getOrElse("mascot:homology threshold",0).asInstanceOf[Float]
+    val targetHt = targetMsqProps.getMascotHomologyThreshold.getOrElse(0f)
+    val decoyHt = decoyMsqProps.getMascotHomologyThreshold.getOrElse(0f)
     val homologyThreshold = if( decoyHt > 0 ) decoyHt else targetHt
     
     // Determine identity threshold
-    val targetIt = targetMsQueryProperties.getOrElse("mascot:identity threshold",0).asInstanceOf[Float]
-    val decoyIt = decoyMsQueryProperties.getOrElse("mascot:identity threshold",0).asInstanceOf[Float]
+    val targetIt = targetMsqProps.getMascotHomologyThreshold.getOrElse(0f)
+    val decoyIt = decoyMsqProps.getMascotIdentityThreshold.getOrElse(0f)
     
     var identityThreshold = 0.0f
     if( decoyIt > 0 && targetIt > 0) { identityThreshold = (decoyIt + targetIt)/2 }
@@ -176,15 +174,13 @@ object MascotValidationHelper {
   }
   
   def getTargetMsQueryProperties( msQuery: MsQuery ): Map[String,Any] = {
-    val msQueryProperties = msQuery.properties    
-    // TODO: use real props
-    //msQueryProperties("target_db_search").asInstanceOf[Map[String,Any]] 
+    val msQueryProperties = msQuery.properties
+    //msQueryProperties("target_db_search").asInstanceOf[Map[String,Any]]    
     null
   }
   
   def getDecoyMsQueryProperties( msQuery: MsQuery ): Map[String,Any] = {
     val msQueryProperties = msQuery.properties
-    // TODO: use real props
     //msQueryProperties("decoy_db_search").asInstanceOf[Map[String,Any]]    
     null
   }

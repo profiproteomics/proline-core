@@ -334,7 +334,7 @@ case class PeptideMatch ( // Required fields
                      private var bestChildId: Int = 0,
                      var bestChild : Option[PeptideMatch] = null,                                         
                      
-                     var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any],
+                     var properties: Option[PeptideMatchProperties] = None,
                      
                      @transient
                      var validationProperties : Option[HashMap[String, Any]] = None
@@ -383,7 +383,7 @@ case class PeptideInstance ( // Required fields
                         private var resultSummaryId: Int = 0,                          
                         
                         var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any],
-                        var peptideMatchPropertiesById: Map[Int, HashMap[String, Any] ] = null
+                        var peptideMatchPropertiesById: Map[Int, PeptideMatchProperties ] = null
                         
                         ) {
   
@@ -398,7 +398,7 @@ case class PeptideInstance ( // Required fields
   
   def getUnmodifiedPeptideInstanceId : Int = { if(unmodifiedPepInstance != null && unmodifiedPepInstance != None) unmodifiedPepInstance.get.id else unmodifiedPepInstanceId }
   
-  def getPeptideMatchProperties( peptideMatchId: Int ): Option[HashMap[String, Any]] = {
+  def getPeptideMatchProperties( peptideMatchId: Int ): Option[PeptideMatchProperties] = {
     if( peptideMatchPropertiesById != null ) { peptideMatchPropertiesById.get(peptideMatchId) }
     else { None }
   }

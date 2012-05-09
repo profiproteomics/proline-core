@@ -28,7 +28,8 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
     for( (peptideId, pepMatchGroup) <- (peptideMatchesByPepId) ) {
       
       val pepMatchIds = pepMatchGroup.map( _.id )
-      val peptideMatchPropertiesById = pepMatchGroup.map( pepMatch => pepMatch.id -> pepMatch.properties ).toMap
+      val peptideMatchPropertiesById = pepMatchGroup.filter { _.properties != None }
+                                                    .map { pepMatch => pepMatch.id -> pepMatch.properties.get } toMap
       
       // Build peptide instance
       var bestPepMatch: PeptideMatch = null
