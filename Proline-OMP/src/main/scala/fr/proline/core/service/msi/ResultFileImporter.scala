@@ -60,25 +60,26 @@ class ResultFileImporter( projectId: Int,
     
     ////logger.info("Parsing file " + fileLocation.getAbsoluteFile() + " using " + resultFile.getClass().getName() + " failed !")
     
+    // Instantiate a Result Set storer
+    val rsStorer = RsStorer( msiDb )
+    
+    // Load target result set
     val targetRs = resultFile.getResultSet(false)
-    targetRs.name = msiSearch.title
+    targetRs.name = msiSearch.title    
     
-    val rsStorer = RsStorer( msiDb )
-    rsStorer.storeResultSet(targetRs, seqDbIdByTmpId )
-    
-    /*val targetRs = resultFile.getResultSet(false)  
-    val decoyRs = resultFile.getResultSet(true)  
-    
-    val rsStorer = RsStorer( msiDb )
-    
-    if(decoyRs == null)
-    	targetRs.decoyResultSet = None
-  	else {
-  		targetRs.decoyResultSet = Some(decoyRs)
-  		
-      rsStorer.storeResultSet(targetRs)
-      readResultSetId = targetRs.id
-  	}*/
+    // Load and store decoy result set if it exists
+    if( resultFile.hasDecoyResultSet ) {
+  	  val decoyRs = resultFile.getResultSet(true)
+  	  decoyRs.name = msiSearch.title
+  	  
+  	  rsStorer.storeResultSet(decoyRs,seqDbIdByTmpId)
+      targetRs.decoyResultSet = Some(decoyRs)
+  	}
+    else targetRs.decoyResultSet = None
+
+    // Store target result set
+    rsStorer.storeResultSet(targetRs,seqDbIdByTmpId)
+    this.targetResultSetId = targetRs.id
 
     this.msiDb.commitTransaction()
     
