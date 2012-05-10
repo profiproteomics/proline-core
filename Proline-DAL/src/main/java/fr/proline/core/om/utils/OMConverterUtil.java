@@ -117,7 +117,7 @@ public class OMConverterUtil {
 		fr.proline.core.om.model.msi.PeptideInstance convertedPepInst  = new fr.proline.core.om.model.msi.PeptideInstance(pepInstORM.getId(), 
 									convertPeptidePsORM2OM(assocPep), pepMatchesIds, pepMatchesOM, pepInstanceChilsArray, pepInstORM.getUnmodifiedPeptideId(), unmodifiedOMPep, 
 									unmodifiedPepInst.getId(), unmodifiedOMPepInst, pepInstORM.getProteinMatchCount(),
-									pepInstORM.getProteinSetCount(),pepInstORM.getSelectionLevel(), peptideSets, pepInstORM.getResultSummary().getId(), null, null);
+									pepInstORM.getProteinSetCount(),pepInstORM.getSelectionLevel(), pepInstORM.getElutionTime().floatValue(), peptideSets, pepInstORM.getResultSummary().getId(), null, null);
 	
 		return convertedPepInst;
 	}

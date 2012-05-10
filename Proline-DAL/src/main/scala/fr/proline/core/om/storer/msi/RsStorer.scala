@@ -486,8 +486,6 @@ object PeptideMatchTable extends TableDefinition {
     val id = Value("id")
     val charge = Value("charge")
     val experimentalMoz = Value("experimental_moz")
-    val elutionValue = Value("elution_value")
-    val elutionUnit = Value("elution_unit")
     val score = Value("score")
     val rank = Value("rank")
     val deltaMoz = Value("delta_moz")

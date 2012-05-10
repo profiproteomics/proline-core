@@ -156,12 +156,10 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
         }
         val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) Some(generate(peptideMatch.properties.get)) else None
         
-        stmt.executeWith( 
+        stmt.executeWith(
                 Some(null),
                 peptideMatch.msQuery.charge,
                 peptideMatch.msQuery.moz,
-                Some(null),
-                Some(null),
                 peptideMatch.score,
                 peptideMatch.rank,
                 peptideMatch.deltaMoz,

@@ -378,6 +378,7 @@ case class PeptideInstance ( // Required fields
                         var proteinMatchesCount: Int = 0,
                         var proteinSetsCount: Int = 0,
                         var selectionLevel: Int = -1,
+                        var elutionTime: Float = 0,
                         
                         var peptideSets: Array[PeptideSet] = null,
                         private var resultSummaryId: Int = 0,                          
