@@ -27,7 +27,7 @@ class ResultFileImporter( projectId: Int,
       throw new IllegalArgumentException("ResultFileImporter service: No file specified.")
     
     // Retrieve the instrument configuration
-    val instrumentConfig = this.getInstrumentConfig( instrumentConfigId )
+    val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
 
     logger.info(" Run service " + fileType + " ResultFileImporter on " + fileLocation.getAbsoluteFile())
     
@@ -38,9 +38,17 @@ class ResultFileImporter( projectId: Int,
 
     // Open the result file
     val resultFile = rfProvider.get.getResultFile( fileLocation, providerKey )
+    
+    // Instantiate some storers
+    val msiSearchStorer = new MsiSearchStorer( msiDb )
+    val peaklistStorer = new PeaklistStorer( msiDb )
+    val rsStorer = RsStorer( msiDb )
         
     // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
+    
+    // Insert instrument config in the MSIdb
+    msiSearchStorer.insertInstrumentConfig( instrumentConfig )
     
     // Retrieve MSISearch and related MS queries
     val msiSearch = resultFile.msiSearch
@@ -50,18 +58,13 @@ class ResultFileImporter( projectId: Int,
       msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
     }
     
-    // Store the peaklist
-    val peaklistStorer = new PeaklistStorer( msiDb )
+    // Store the peaklist    
     val spectrumIdByTitle = peaklistStorer.storePeaklist( msiSearch.peakList, resultFile )
     
-    // Store the MSI search with related search settings and MS queries
-    val msiSearchStorer = new MsiSearchStorer( msiDb )
+    // Store the MSI search with related search settings and MS queries    
     val seqDbIdByTmpId = msiSearchStorer.storeMsiSearch( msiSearch, msQueries, spectrumIdByTitle )
     
     ////logger.info("Parsing file " + fileLocation.getAbsoluteFile() + " using " + resultFile.getClass().getName() + " failed !")
-    
-    // Instantiate a Result Set storer
-    val rsStorer = RsStorer( msiDb )
     
     // Load target result set
     val targetRs = resultFile.getResultSet(false)
@@ -86,9 +89,7 @@ class ResultFileImporter( projectId: Int,
     return true
   }
   
-  private def getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
-        
-    val sqlQuery = "SELECT * FROM instrument_config WHERE id=" + instrumentConfigId
+  private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
     
     var udsInstConfigColNames: Seq[String] = null
     var udsInstConfigRecord: Map[String,Any] = null
@@ -111,11 +112,11 @@ class ResultFileImporter( projectId: Int,
                                   )
     }
     
-    buildInstrumentConfig( udsInstConfigRecord, instrument )
+    this._buildInstrumentConfig( udsInstConfigRecord, instrument )
 
   }
   
-  private def buildInstrumentConfig( instConfigRecord: Map[String,Any], instrument: Instrument ): InstrumentConfig = {
+  private def _buildInstrumentConfig( instConfigRecord: Map[String,Any], instrument: Instrument ): InstrumentConfig = {
     
     new InstrumentConfig(
          id = instConfigRecord("id").asInstanceOf[Int],
@@ -127,5 +128,25 @@ class ResultFileImporter( projectId: Int,
          )
 
   }
+  
+  /*private def _insertInstrumentConfig( instrumentConfig: InstrumentConfig ): Unit = {
+    
+    import net.noerd.prequel.SQLFormatterImplicits._
+    import fr.proline.core.dal.SQLFormatterImplicits._
+
+    this.msiDb.getOrCreateTransaction().executeBatch("INSERT INTO instrument_config VALUES ("+"?," *4 +"?)") { stmt =>
+          
+      // Store new protein
+      stmt.executeWith(
+              instrumentConfig.id,
+              instrumentConfig.name,
+              instrumentConfig.ms1Analyzer,
+              instrumentConfig.msnAnalyzer,
+              Option(null)
+            )
+
+    }
+    
+  }*/
    
 }

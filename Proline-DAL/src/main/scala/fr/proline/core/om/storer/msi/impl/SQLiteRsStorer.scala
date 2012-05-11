@@ -1,12 +1,14 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
+import com.codahale.jerkson.Json.generate
 import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
-import com.codahale.jerkson.Json.generate
+
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.utils.sql.BoolToSQLStr
 import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
@@ -58,7 +60,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
                             peptide.sequence,
                             Option(peptide.ptmString), 
                             peptide.calculatedMass,
-                            Some(null)
+                            Option(null)
                            )
                            
           newPeptides += peptide
@@ -112,14 +114,14 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
           // Store new protein
           stmt.executeWith(
                   protein.id,
-                  Some(null),
+                  Option(null),
                   protein.alphabet,
                   protein.sequence,
                   protein.length,
                   protein.mass,
                   protein.pi,
                   protein.crc64,
-                  Some(null)
+                  Option(null)
                 )
           
           newProteins += protein
@@ -142,7 +144,10 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
     val peptideMatches = rs.peptideMatches
     val scoringIdByType = this.scoringIdByType
     
-    msiDb1.getOrCreateTransaction().executeBatch(PeptideMatchTable.getInsertQuery(), true ) { stmt =>
+    val pepMatchColsList = MsiDbPeptideMatchTable.getColumnsAsStrList().filter { _ != "id" }
+    val pepMatchInsertQuery = MsiDbPeptideMatchTable.buildInsertQuery( pepMatchColsList )
+    
+    msiDb1.getOrCreateTransaction().executeBatch(pepMatchInsertQuery, true ) { stmt =>
       
       // Iterate over peptide matche to store them
       for( peptideMatch <- peptideMatches ) {
@@ -155,9 +160,9 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
           throw new Exception( "can't find a scoring id for the score type '"+scoreType+"'" )
         }
         val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) Some(generate(peptideMatch.properties.get)) else None
+        val bestChildId = if( peptideMatch.getBestChildId == 0 ) Option.empty[Int] else Some(peptideMatch.getBestChildId)
         
         stmt.executeWith(
-                Some(null),
                 peptideMatch.msQuery.charge,
                 peptideMatch.msQuery.moz,
                 peptideMatch.score,
@@ -169,7 +174,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
                 pepMatchPropsAsJSON,
                 peptideMatch.peptide.id,
                 peptideMatch.msQuery.id,
-                peptideMatch.getBestChildId,
+                bestChildId,
                 scoringId,
                 rsId
                 )
@@ -201,8 +206,12 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
     val proteinMatches = rs.proteinMatches
     val scoringIdByScoreType = this.scoringIdByType
     
-    msiDb1.getOrCreateTransaction().executeBatch(ProteinMatchTable.getInsertQuery(), true ) { stmt =>
+    val protMatchColsList = MsiDbProteinMatchTable.getColumnsAsStrList().filter { _ != "id" }
+    val protMatchInsertQuery = MsiDbProteinMatchTable.buildInsertQuery( protMatchColsList )
     
+    logger.info( "protein matches are going to be inserted..." )
+    msiDb1.getOrCreateTransaction().executeBatch( protMatchInsertQuery, true ) { stmt =>
+      
       // Iterate over protein matches to store them
       for( proteinMatch <- proteinMatches ) {
         
@@ -214,7 +223,6 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
         
         // TODO: store protein_match properties
         stmt.executeWith(
-          Some(null),
           proteinMatch.accession,
           proteinMatch.description,
           Option(proteinMatch.geneName),
@@ -222,18 +230,20 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
           proteinMatch.coverage,
           proteinMatch.sequenceMatches.length,
           proteinMatch.peptideMatchesCount,
-          BoolToSQLStr( proteinMatch.isDecoy ),
+          proteinMatch.isDecoy, // BoolToSQLStr( proteinMatch.isDecoy )
           Option(null),
           proteinMatch.taxonId,
-          proteinMatch.getProteinId,
+          Option(null), // proteinMatch.getProteinId
           scoringId.get,
           rsId
         )
         
         // Update protein match id
         proteinMatch.id = this.msiDb1.extractGeneratedInt( stmt.wrapped )
-      } 
+      }
     }
+    
+    logger.info( "protein matches are going to be linked to seq databases..." )
     
     // Link protein matches to sequence databases
     msiDb1.getOrCreateTransaction.executeBatch( "INSERT INTO protein_match_seq_database_map VALUES (?,?,?)" ) { stmt =>      
@@ -256,7 +266,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
     
     var count = 0
     
-    msiDbTx.executeBatch( SequenceMatchTable.getInsertQuery ) { stmt =>
+    msiDbTx.executeBatch( MsiDbSequenceMatchTable.getInsertQuery ) { stmt =>
       
       // Iterate over protein matches
       for( proteinMatch <- proteinMatches ) {
@@ -273,11 +283,12 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
                                       seqMatch.residueBefore,
                                       seqMatch.residueAfter,
                                       BoolToSQLStr( seqMatch.isDecoy ),
-                                      Some(null),
+                                      Option(null),
                                       seqMatch.getBestPeptideMatchId,
                                       proteinId,
                                       rsId
                                       )
+          
         }
       }
       

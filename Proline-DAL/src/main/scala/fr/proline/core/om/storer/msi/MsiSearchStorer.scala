@@ -1,13 +1,17 @@
 package fr.proline.core.om.storer.msi
 
-import fr.proline.core._
-import fr.proline.core.dal._
 import com.weiglewilczek.slf4s.Logging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import net.noerd.prequel.ReusableStatement  
+import net.noerd.prequel.SQLFormatterImplicits._
 
-import fr.proline.core.om.model.msi.Ms1Query
-import fr.proline.core.om.model.msi.Ms2Query
+import fr.proline.core.dal.SQLFormatterImplicits._
+import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.{MsiDbMsiSearchTable,MsiDbMsQueryTable,MsiDbSearchSettingsTable,MsiDbSeqDatabaseTable}
+import fr.proline.core.utils.sql._
+import fr.proline.core.om.model.msi._
+import fr.proline.core._
 
 /** A factory object for implementations of the IRsStorer trait */
 object MsiSearchStorer {
@@ -16,17 +20,9 @@ object MsiSearchStorer {
 
 class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
   
-  import net.noerd.prequel.ReusableStatement
-  import net.noerd.prequel.SQLFormatterImplicits._
-  import fr.proline.core.dal.SQLFormatterImplicits._
-  import fr.proline.core.utils.sql.BoolToSQLStr
-  import fr.proline.core.om.model.msi._
-  
   def storeMsiSearch( msiSearch: MSISearch,
                       msQueries: Seq[MsQuery],
                       spectrumIdByTitle: Map[String,Int] ): Map[Int,Int] = {
-    
-    this._insertInstrumentConfig( msiSearch.searchSettings.instrumentConfig )
     
     // Insert sequence databases
     val seqDbIdByTmpId = new HashMap[Int,Int]()
@@ -45,8 +41,12 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     val msiSearchId = msiSearch.id    
     //val msQueryIdByTmpId = new HashMap[Int,Int]()
     
+    val msQueryColsList = MsiDbMsQueryTable.getColumnsAsStrList().filter { _ != "id" }
+    val msQueryInsertQuery = MsiDbMsQueryTable.buildInsertQuery( msQueryColsList )
+    
     val msiDbTx = this.msiDb.getOrCreateTransaction()
-    msiDbTx.executeBatch( "INSERT INTO ms_query VALUES ("+ "?,"*6 +"?)", true ) { stmt =>
+    msiDbTx.executeBatch( msQueryInsertQuery, true ) { stmt =>
+      
       for( msQuery <- msQueries ) {
         
         //val tmpMsQueryId = msQuery.id
@@ -68,6 +68,7 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
         //msQueryIdByTmpId += ( tmpMsQueryId -> msQuery.id )
         
       }
+      
     }
     
 
@@ -75,7 +76,7 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     Map() ++ seqDbIdByTmpId
   }
   
-  private def _insertInstrumentConfig( instrumentConfig: InstrumentConfig ): Unit = {
+  def insertInstrumentConfig( instrumentConfig: InstrumentConfig ): Unit = {
     
     if( instrumentConfig.id <= 0 ) throw new Exception("instrument configuration must have a strictly positive identifier")
     
@@ -104,15 +105,17 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     // If the sequence database doesn't exist in the MSIdb
     if( seqDbIds.length == 0 ) {
       
+      val seqDbColsList = MsiDbSeqDatabaseTable.getColumnsAsStrList().filter { _ != "id" }
+      val seqDbInsertQuery = MsiDbSeqDatabaseTable.buildInsertQuery( seqDbColsList )
+      
       val msiDbTx = this.msiDb.getOrCreateTransaction()
-      msiDbTx.executeBatch( "INSERT INTO seq_database VALUES ("+ "?,"*6 +"?)", true ) { stmt =>
+      msiDbTx.executeBatch( seqDbInsertQuery, true ) { stmt =>
       
         stmt.executeWith(
-              Option(null),
               seqDatabase.name,
               seqDatabase.filePath,
               seqDatabase.version,
-              seqDatabase.releaseDate,
+              new java.util.Date,// TODO: upgrade to date seqDatabase.releaseDate,
               seqDatabase.sequencesCount,
               Option(null)
             )
@@ -133,10 +136,12 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     if( instrumentConfigId <= 0 )
       throw new Exception("instrument configuration must first be persisted")
     
+    val searchSettingsColsList = MsiDbSearchSettingsTable.getColumnsAsStrList().filter { _ != "id" }
+    val searchSettingsInsertQuery = MsiDbSearchSettingsTable.buildInsertQuery( searchSettingsColsList )
+    
     val msiDbTx = this.msiDb.getOrCreateTransaction()
-    msiDbTx.executeBatch( "INSERT INTO search_settings VALUES ("+ "?,"*11 +"?)", true ) { stmt =>
+    msiDbTx.executeBatch( searchSettingsInsertQuery, true ) { stmt =>
       stmt.executeWith(
-            Option(null),
             searchSettings.softwareName,
             searchSettings.softwareVersion,
             searchSettings.taxonomy,
@@ -145,7 +150,7 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
             searchSettings.ms1ErrorTol,
             searchSettings.ms1ErrorTolUnit,
             searchSettings.quantitation,
-            BoolToSQLStr( searchSettings.isDecoy ),
+            searchSettings.isDecoy,
             Option(null),
             searchSettings.instrumentConfig.id
             )
@@ -176,12 +181,14 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     if( peaklistId <= 0 )
       throw new Exception("peaklist must first be persisted")
     
+    val msiSearchColsList = MsiDbMsiSearchTable.getColumnsAsStrList().filter { _ != "id" }
+    val msiSearchInsertQuery = MsiDbMsiSearchTable.buildInsertQuery( msiSearchColsList )
+    
     val msiDbTx = this.msiDb.getOrCreateTransaction()
-    msiDbTx.executeBatch( "INSERT INTO msi_search VALUES ("+ "?,"*13 +"?)", true ) { stmt =>
+    msiDbTx.executeBatch( msiSearchInsertQuery, true ) { stmt =>
       stmt.executeWith(
-            Option(null),
             msiSearch.title,
-            msiDb.stringifyDate( msiSearch.date ),
+            msiSearch.date, // msiDb.stringifyDate( msiSearch.date ),
             msiSearch.resultFileName,
             msiSearch.resultFileDirectory,
             msiSearch.jobNumber,
@@ -231,7 +238,6 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
     val msqPropsAsJSON = if( msQuery.properties != None ) Some(generate(msQuery.properties.get)) else None
     
     stmt.executeWith(
-          Option(null),
           msQuery.initialId,
           msQuery.charge,
           msQuery.moz,
@@ -244,3 +250,5 @@ class MsiSearchStorer( msiDb: MsiDb ) extends Logging {
   }
   
 }
+
+

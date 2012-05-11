@@ -4,11 +4,14 @@ import scala.Array.canBuildFrom
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.core.dal.SQLFormatterImplicits.{someFloat2Formattable,someInt2Formattable,someNull2Formattable}
+import net.noerd.prequel.ReusableStatement
+import net.noerd.prequel.SQLFormatterImplicits._
+
+import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.{MsiDbPeaklistTable,MsiDbSpectrumTable}
 import fr.proline.core.om.model.msi.{IPeaklistContainer,Peaklist,Spectrum}
-import fr.proline.core.utils.sql.{BoolToSQLStr,newDecimalFormat}
-import net.noerd.prequel.SQLFormatterImplicits.{double2Formattable,float2Formattable,int2Formattable,string2Formattable}
+import fr.proline.core.utils.sql._
 import fr.proline.core.utils.lzma.EasyLzma
 
 /** A factory object for implementations of the IRsStorer trait */
@@ -17,12 +20,6 @@ object PeaklistStorer {
 }
 
 class PeaklistStorer( msiDb: MsiDb ) extends Logging {
-  
-  import net.noerd.prequel.ReusableStatement
-  import net.noerd.prequel.SQLFormatterImplicits._
-  import fr.proline.core.dal.SQLFormatterImplicits._
-  import fr.proline.core.utils.sql.{BoolToSQLStr,newDecimalFormat}
-  import fr.proline.core.om.model.msi._
   
   object TrailingZerosStripper {
     
@@ -39,13 +36,18 @@ class PeaklistStorer( msiDb: MsiDb ) extends Logging {
   
   def storePeaklist( peaklist: Peaklist, peaklistContainer: IPeaklistContainer ): Map[String,Int] = {
     
+    logger.info( "storing peaklist and spectra..." )
+    
     // Insert the peaklist in the MSIdb
     this._insertPeaklist( peaklist )
     
     val msiDbTx = this.msiDb.getOrCreateTransaction()
     
-    // Insert corresponding spectra    
-    msiDbTx.executeBatch( "INSERT INTO spectrum VALUES ("+ "?,"*17 +"?)" ) { stmt =>      
+    val spectrumColsList = MsiDbSpectrumTable.getColumnsAsStrList().filter { _ != "id" }
+    val spectrumInsertQuery = MsiDbSpectrumTable.buildInsertQuery( spectrumColsList )
+    
+    // Insert corresponding spectra
+    msiDbTx.executeBatch( spectrumInsertQuery ) { stmt =>      
       peaklistContainer.eachSpectrum { spectrum => this._insertSpectrum( stmt, spectrum, peaklist.id ) } 
     }
     
@@ -54,15 +56,17 @@ class PeaklistStorer( msiDb: MsiDb ) extends Logging {
   
   private def _insertPeaklist( peaklist: Peaklist ): Unit = {
     
+    val peaklistColsList = MsiDbPeaklistTable.getColumnsAsStrList().filter { _ != "id" } 
+    val peaklistInsertQuery = MsiDbPeaklistTable.buildInsertQuery( peaklistColsList )
+    
     val msiDbTx = this.msiDb.getOrCreateTransaction()
-    msiDbTx.executeBatch( "INSERT INTO peaklist VALUES ("+ "?,"*7 +"?)", true ) { stmt =>
+    msiDbTx.executeBatch( peaklistInsertQuery, true ) { stmt =>
       stmt.executeWith(
-            Option(null),
             peaklist.fileType,
             peaklist.path,
             peaklist.rawFileName,
             peaklist.msLevel,
-            "lzma", // none | lzma TODO: create an enumeration near to the Peaklist class
+            "xz", // none | lzma | xz TODO: create an enumeration near to the Peaklist class
             Option(null),
             1 // peaklist.peaklistSoftware.id
           )
@@ -75,6 +79,7 @@ class PeaklistStorer( msiDb: MsiDb ) extends Logging {
   private def _insertSpectrum( stmt: ReusableStatement, spectrum: Spectrum, peaklistId: Int ): Unit = {
     
     // Define some vars
+    val precursorIntensity = if( !spectrum.precursorIntensity.isNaN ) Some(spectrum.precursorIntensity) else Option.empty[Float]
     val firstCycle = if( spectrum.firstCycle > 0 ) Some(spectrum.firstCycle) else Option.empty[Int]
     val lastCycle = if( spectrum.lastCycle > 0 ) Some(spectrum.lastCycle) else Option.empty[Int]
     val firstScan = if( spectrum.firstScan > 0 ) Some(spectrum.firstScan) else Option.empty[Int]
@@ -92,12 +97,11 @@ class PeaklistStorer( msiDb: MsiDb ) extends Logging {
     val compressedIntList = EasyLzma.compress( intList.getBytes )
     
     stmt <<
-      Option(null) <<
       spectrum.title <<
       spectrum.precursorMoz <<
-      spectrum.precursorIntensity <<
+      precursorIntensity <<
       spectrum.precursorCharge <<
-      BoolToSQLStr( spectrum.isSummed ) <<         
+      spectrum.isSummed <<
       firstCycle <<
       lastCycle <<
       firstScan <<
@@ -112,8 +116,8 @@ class PeaklistStorer( msiDb: MsiDb ) extends Logging {
       spectrum.instrumentConfigId
     
     // Override BLOB values using JDBC
-    stmt.wrapped.setBytes(13,compressedMozList)
-    stmt.wrapped.setBytes(14,compressedIntList)
+    stmt.wrapped.setBytes(12,compressedMozList)
+    stmt.wrapped.setBytes(13,compressedIntList)
     
     // Execute statement
     stmt.execute()
@@ -124,3 +128,67 @@ class PeaklistStorer( msiDb: MsiDb ) extends Logging {
   }
   
 }
+
+/*
+object PeaklistTable extends TableDefinition {
+  
+  val tableName = "peaklist"
+  
+  object columns extends Enumeration {
+    //type column = Value
+    val id = Value("id")
+    val `type` = Value("type")
+    val path = Value("path")
+    val rawFileName = Value("raw_file_name")    
+    val msLevel = Value("ms_level")
+    val spectrumDataCompression = Value("spectrum_data_compression")
+    val serializedProperties = Value("serialized_properties")
+    val peaklistSoftwareId = Value("peaklist_software_id")
+  }
+  
+  def getColumnsAsStrList( f: PeaklistTable.columns.type => List[Enumeration#Value] ): List[String] = {
+    this._getColumnsAsStrList[PeaklistTable.columns.type]( f )
+  }
+  
+  def getInsertQuery( f: PeaklistTable.columns.type => List[Enumeration#Value] ): String = {
+    this._getInsertQuery[PeaklistTable.columns.type]( f )
+  }
+
+}
+
+
+object SpectrumTable extends TableDefinition {
+  
+  val tableName = "spectrum"
+    
+  object columns extends Enumeration {
+    //type column = Value
+    val id = Value("id")
+    val title = Value("title")
+    val precursorMoz = Value("precursor_moz")
+    val precursorIntensity = Value("precursor_intensity")
+    val precursorCharge = Value("precursor_charge")
+    val isSummed = Value("is_summed")
+    val firstCycle = Value("first_cycle")
+    val lastCycle = Value("last_cycle")
+    val firstScan = Value("first_scan")
+    val lastScan = Value("last_scan")
+    val firstTime = Value("first_time")
+    val lastTime = Value("last_time")
+    var mozList = Value("moz_list")
+    var intensityList = Value("intensity_list")
+    val peakCount = Value("peak_count")
+    val serializedProperties = Value("serialized_properties")
+    val peaklistId = Value("peaklist_id")
+    val instrumentConfigId = Value("instrument_config_id")    
+  }
+  
+  def getColumnsAsStrList( f: SpectrumTable.columns.type => List[Enumeration#Value] ): List[String] = {
+    this._getColumnsAsStrList[SpectrumTable.columns.type]( f )
+  }
+  
+  def getInsertQuery( f: SpectrumTable.columns.type => List[Enumeration#Value] ): String = {
+    this._getInsertQuery[SpectrumTable.columns.type]( f )
+  }
+
+}*/

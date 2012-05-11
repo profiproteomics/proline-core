@@ -250,7 +250,7 @@ object Peptide extends InMemoryIdGen {
 }
 
 case class Peptide ( // Required fields
-                val id: Int,
+                var id: Int,
                 val sequence: String,
                 val ptmString: String,
                 val ptms: Array[LocatedPtm],

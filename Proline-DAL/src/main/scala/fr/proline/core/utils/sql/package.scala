@@ -46,5 +46,36 @@ package object sql {
   decimalSymbols.setGroupingSeparator('\0')
   
   def newDecimalFormat( template: String ): DecimalFormat = new DecimalFormat(template: String , decimalSymbols)  
-
+  
+  // TODO: put these definitions in an other package (msi.table_definitions)
+  trait TableDefinition {
+    
+    val tableName: String
+    val columns: Enumeration
+    
+    def getColumnsAsStrList(): List[String] = {
+      List() ++ this.columns.values map { _.toString }
+    }
+    
+    // TODO: implicit conversion
+    def _getColumnsAsStrList[A <: Enumeration]( f: A => List[Enumeration#Value] ): List[String] = {
+      List() ++ f(this.columns.asInstanceOf[A]) map { _.toString }
+    }
+    
+    def getInsertQuery(): String = {
+      this.buildInsertQuery( this.getColumnsAsStrList )
+    }
+    
+    // TODO: implicit conversion
+    def _getInsertQuery[A <: Enumeration]( f: A => List[Enumeration#Value] ): String = {
+      this.buildInsertQuery( this._getColumnsAsStrList[A]( f ) )    
+    }
+    
+    def buildInsertQuery( colsAsStrList: List[String] ): String = {
+      val valuesStr = List.fill(colsAsStrList.length)("?").mkString(",")
+  
+      "INSERT INTO "+ this.tableName+" ("+ colsAsStrList.mkString(",") +") VALUES ("+valuesStr+")"
+    }
+    
+  }
 }

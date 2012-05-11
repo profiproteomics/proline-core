@@ -1,18 +1,18 @@
 package fr.proline.core.om.storer.msi
 
-import fr.proline.core._
-import fr.proline.core.dal._
 import com.weiglewilczek.slf4s.Logging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import net.noerd.prequel.ReusableStatement
+import net.noerd.prequel.SQLFormatterImplicits._
+
+import fr.proline.core.dal.SQLFormatterImplicits._
+import fr.proline.core.dal.{MsiDb,PsDb}
+import fr.proline.core.dal.MsiDbResultSetTable
+import fr.proline.core.utils.sql.BoolToSQLStr
+import fr.proline.core.om.model.msi._
 
 trait IRsStorer extends Logging {
-  
-  import net.noerd.prequel.ReusableStatement
-  import net.noerd.prequel.SQLFormatterImplicits._
-  import fr.proline.core.dal.SQLFormatterImplicits._
-  import fr.proline.core.utils.sql.BoolToSQLStr
-  import fr.proline.core.om.model.msi._
   
   val msiDb1: MsiDb // Main MSI db connection
   lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, false, 10000 ) // Secondary MSI db connection
@@ -117,19 +117,16 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
     // Store RDB result set
     // TODO: use JPA instead
     
-    val rsInsertQuery = ResultSetTable.getInsertQuery { t =>
+    val rsInsertQuery = MsiDbResultSetTable.getInsertQuery { t =>
       List( t.name, t.description, t.`type`, t.modificationTimestamp, t.decoyResultSetId, t.msiSearchId )
     }
-    
-    //val rsColumns = Seq( "name","description","type","modification_timestamp","decoy_result_set_id","msi_search_id")
-    //val rsColNamesAsStr = rsColumns.mkString(",")
     
     val stmt = msiDbConn.prepareStatement( rsInsertQuery, java.sql.Statement.RETURN_GENERATED_KEYS )     
     new ReusableStatement( stmt, msiDb1.config.sqlFormatter ) <<
       rsName <<
       rsDesc <<
       rsType <<
-      msiDb1.stringifyDate( new java.util.Date ) <<
+      new java.util.Date << // msiDb1.stringifyDate( new java.util.Date )
       decoyRsId <<
       resultSet.msiSearch.id
 
@@ -152,9 +149,10 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
     val existingPeptidesIdByKey = this._storer.fetchExistingPeptidesIdByUniqueKey( resultSet.getUniquePeptideSequences )
     logger.info( existingPeptidesIdByKey.size + " existing peptides have been loaded from the database !" )
     
+    // Retrieve existing peptides and map them by unique key
     val( existingPeptides, newPeptides ) = resultSet.peptides.partition( pep => existingPeptidesIdByKey.contains(pep.uniqueKey) )
     for( peptide <- existingPeptides ) {
-      this.peptideByUniqueKey += ( peptide.uniqueKey -> peptide )
+      this.peptideByUniqueKey += ( peptide.uniqueKey -> peptide.copy( id = existingPeptidesIdByKey( peptide.uniqueKey ) ) )
     }
     
     // Build a map of existing peptides
@@ -172,7 +170,10 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
       }
     }
     
-    // TODO: Update result set peptides
+    // Update id of result set peptides
+    for( peptide <- resultSet.peptides ) {
+      peptide.id = this.peptideByUniqueKey( peptide.uniqueKey ).id
+    }
     
     // Retrieve peptide matches
     val peptideMatches = resultSet.peptideMatches
@@ -417,39 +418,8 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
   
 }
 
-
-
-// TODO: put these definitions in an other package (msi.table_definitions)
-trait TableDefinition {
-  
-  val tableName: String
-  val columns: Enumeration
-  
-  def getColumnsAsStrList(): List[String] = {
-    List() ++ this.columns.values map { _.toString }
-  }
-  
-  // TODO: implicit conversion
-  def _getColumnsAsStrList[A <: Enumeration]( f: A => List[Enumeration#Value] ): List[String] = {
-    List() ++ f(this.columns.asInstanceOf[A]) map { _.toString }
-  }
-  
-  def getInsertQuery(): String = {
-    this.buildInsertQuery( this.getColumnsAsStrList )
-  }
-  
-  // TODO: implicit conversion
-  def _getInsertQuery[A <: Enumeration]( f: A => List[Enumeration#Value] ): String = {
-    this.buildInsertQuery( this._getColumnsAsStrList[A]( f ) )    
-  }
-  
-  private def buildInsertQuery( colsAsStrList: List[String] ): String = {
-    val valuesStr = List.fill(colsAsStrList.length)("?").mkString(",")
-
-    "INSERT INTO "+ this.tableName+" ("+ colsAsStrList.mkString(",") +") VALUES ("+valuesStr+")"
-  }
-  
-}
+/*
+import fr.proline.core.utils.sql.TableDefinition
 
 object ResultSetTable extends TableDefinition {
   
@@ -569,5 +539,5 @@ object SequenceMatchTable extends TableDefinition {
     this._getInsertQuery[SequenceMatchTable.columns.type]( f )
   }
   
-}
+}*/
 
