@@ -209,7 +209,7 @@ CREATE SEQUENCE public.peaklist_id_seq;
 
 CREATE TABLE public.peaklist (
                 id INTEGER NOT NULL DEFAULT nextval('public.peaklist_id_seq'),
-                type VARCHAR(10),
+                type VARCHAR(100),
                 path VARCHAR(1000),
                 raw_file_name VARCHAR(250),
                 ms_level INTEGER NOT NULL,

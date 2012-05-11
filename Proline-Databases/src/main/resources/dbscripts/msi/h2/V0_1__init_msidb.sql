@@ -191,7 +191,7 @@ COMMENT ON TABLE ion_search IS 'rename to pmf_search_settings ?';
 
 CREATE TABLE peaklist (
                 id IDENTITY NOT NULL,
-                type VARCHAR(10),
+                type VARCHAR(100),
                 path VARCHAR(1000),
                 raw_file_name VARCHAR(250),
                 ms_level INTEGER NOT NULL,
