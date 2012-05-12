@@ -3,6 +3,8 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import javax.persistence.*;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Set;
@@ -108,4 +110,8 @@ public class SeqDatabase implements Serializable {
 		this.searchSettingsSeqDatabaseMaps = searchSettingsSeqDatabaseMaps;
 	}
 	
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this).append("name", name).append("version", version).append("release date", releaseDate).toString();
+	}
 }
