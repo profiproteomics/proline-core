@@ -4,10 +4,11 @@ import org.scalatest.Spec
 import org.scalatest.Assertions
 import org.scalatest.GivenWhenThen
 import org.junit.runner.RunWith
-import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.junit.JUnitSuite
 
 @RunWith(classOf[JUnitRunner])
-class SetClustererTest extends Spec with GivenWhenThen with JUnitSuite {
+class SetClustererTest extends Spec with GivenWhenThen {
 
   describe("a map containing two same sets of integers ") {
     
@@ -77,6 +78,44 @@ class SetClustererTest extends Spec with GivenWhenThen with JUnitSuite {
       given("these 2 oversets")
       val oversets = clusters.filter( _.isSubset == false )
       assert( oversets.length === 2 )
+      
+      then("each overset doesn't have strict subset ids")
+      for( overset <- oversets ) {
+        assert( overset.strictSubsetsIds == None )
+      }
+      
+      and("have a subsumable subset ids")
+      for( overset <- oversets ) {
+        assert( overset.subsumableSubsetsIds != None )
+      }
+      
+    }
+    
+    it("should yield to a subsumable subset") {
+      val subsumableSubsets = clusters.filter( _.isSubset == true )
+      assert( subsumableSubsets.length === 1 )
+    }
+
+  }
+
+  describe("a map containing 3 different sets of integers and a forth one being a subsumable subset" ) {
+    
+    val setsById = Map( 1 -> Set(5,6,7),
+                        2 -> Set(1,2,3),
+                        3 -> Set(3,4,5), 
+                        4 -> Set(1,3,6))
+                        
+    val clusters = SetClusterer.clusterizeMappedSets[Int,Int]( setsById )
+    it("should be retrieved 4 separated clusters") {
+      assert( clusters.length === 4 )
+    }
+    
+    
+    it("should yield to 3 non strict oversets") {
+         
+      given("these 3 oversets")
+      val oversets = clusters.filter( _.isSubset == false )
+      assert( oversets.length === 3 )
       
       then("each overset doesn't have strict subset ids")
       for( overset <- oversets ) {
