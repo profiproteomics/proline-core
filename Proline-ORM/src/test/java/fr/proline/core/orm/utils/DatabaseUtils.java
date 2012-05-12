@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import org.dbunit.IDatabaseTester;
 import org.dbunit.JdbcDatabaseTester;
 import org.dbunit.database.DatabaseSequenceFilter;
+import org.dbunit.dataset.CompositeDataSet;
 import org.dbunit.dataset.FilteredDataSet;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.filter.ITableFilter;
@@ -42,6 +43,18 @@ public class DatabaseUtils {
 		IDataSet dataSet = dataLoader.load(datasetName);
 		databaseTester.setDataSet(dataSet);
 	}
+	
+	public static void loadCompositeDataSet(DatabaseTestConnector connector, String[] datasetNames) throws Exception {
+		IDatabaseTester databaseTester = connector.getDatabaseTester();
+		DataFileLoader dataLoader = new FlatXmlDataFileLoader();
+		IDataSet[] datasets = new IDataSet[datasetNames.length];
+		int count = 0;
+		for (String datasetName : datasetNames) {
+				datasets[count++] = dataLoader.load(datasetName);
+		}
+		IDataSet compositeDataSet = new CompositeDataSet(datasets);
+		databaseTester.setDataSet(compositeDataSet);
+	}
 
 	/**
 	 * Creates a new DTD dataset file that can be referenced by XML test datasets. Generating a new DTD
@@ -53,8 +66,8 @@ public class DatabaseUtils {
 		try {
 			DatabaseTestConnector connector = new DatabaseTestConnector("/database.properties");
 			connector.getConnection();
-			initDatabase(connector, "/dbscripts/msi/h2");
-			writeDataSetDTD(connector, "msi-dataset.dtd");
+			initDatabase(connector, "/dbscripts/uds/h2");
+			writeDataSetDTD(connector, "uds-dataset.dtd");
 			connector.closeAll();
 		} catch (Exception exc) {
 			exc.printStackTrace();

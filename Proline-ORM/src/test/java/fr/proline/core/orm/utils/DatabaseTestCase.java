@@ -51,6 +51,11 @@ public abstract class DatabaseTestCase {
 		connector.getDatabaseTester().onSetup();
 	}
 
+	protected void loadCompositeDataSet(String[] datasets) throws Exception {
+		DatabaseUtils.loadCompositeDataSet(getConnector(), datasets);
+		connector.getDatabaseTester().onSetup();
+	}
+
 	protected DatabaseTestConnector getConnector() {
 		if (connector == null) {
 			connector = new DatabaseTestConnector(getPropertiesFilename());
