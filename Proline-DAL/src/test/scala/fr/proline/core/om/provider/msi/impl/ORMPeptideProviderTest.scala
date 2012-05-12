@@ -8,7 +8,7 @@ import org.junit.After
 import org.junit.Assert._
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.core.om.utils.DatabaseTestCase
+import fr.proline.core.orm.utils.DatabaseTestCase
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.LocatedPtm
 import scala.collection.mutable.ArrayBuilder
