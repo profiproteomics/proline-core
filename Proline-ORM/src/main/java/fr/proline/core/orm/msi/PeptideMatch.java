@@ -10,7 +10,6 @@ import java.util.Set;
  * 
  */
 @Entity
-
 @NamedQueries({
 @NamedQuery( 
 	name="findPeptideMatchesByResultSet",
@@ -23,10 +22,8 @@ import java.util.Set;
 @NamedQuery( 
 	name="findPeptideMatchesByPeptideAndResultSet",
 	query="Select pm from PeptideMatch pm where pm.resultSet.id=:resultset_id and pm.peptideId=:peptide_id"
-),
-
+)
 })
-
 @Table(name="peptide_match")
 public class PeptideMatch implements Serializable {
 	private static final long serialVersionUID = 1L;
