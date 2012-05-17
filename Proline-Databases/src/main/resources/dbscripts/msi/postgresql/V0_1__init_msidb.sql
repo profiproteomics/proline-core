@@ -31,6 +31,10 @@ COMMENT ON COLUMN public.cache.format IS 'examples: perl.storable java.serializa
 COMMENT ON COLUMN public.cache.compression IS 'none, zlib, lzma, snappy';
 
 
+CREATE INDEX cache_scope_idx
+ ON public.cache
+ ( scope );
+
 CREATE TABLE public.peaklist_software (
                 id INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
@@ -105,6 +109,14 @@ COMMENT ON COLUMN public.peptide.calculated_mass IS 'The theoretical mass of the
 COMMENT ON COLUMN public.peptide.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
+CREATE INDEX peptide_seq_idx
+ ON public.peptide
+ ( sequence );
+
+CREATE INDEX peptide_mass_idx
+ ON public.peptide
+ ( calculated_mass );
+
 CREATE SEQUENCE public.search_settings_id_seq;
 
 CREATE TABLE public.search_settings (
@@ -157,6 +169,10 @@ COMMENT ON COLUMN public.bio_sequence.pi IS 'The isoelectric point of the protei
 COMMENT ON COLUMN public.bio_sequence.crc64 IS 'A numerical signature of the protein sequence built by a CRC64 algorithm.';
 COMMENT ON COLUMN public.bio_sequence.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+CREATE INDEX bio_sequence_crc_idx
+ ON public.bio_sequence
+ ( crc64 );
 
 CREATE TABLE public.object_tree_schema (
                 name VARCHAR(1000) NOT NULL,
@@ -270,6 +286,12 @@ COMMENT ON COLUMN public.spectrum.serialized_properties IS 'A JSON string which 
 
 ALTER SEQUENCE public.spectrum_id_seq OWNED BY public.spectrum.id;
 
+CREATE INDEX spectrum_pkl_idx
+ ON public.spectrum
+ ( peaklist_id ASC );
+
+CLUSTER spectrum_pkl_idx ON spectrum;
+
 CREATE SEQUENCE public.consensus_spectrum_id_seq;
 
 CREATE TABLE public.consensus_spectrum (
@@ -382,6 +404,12 @@ COMMENT ON COLUMN public.ms_query.serialized_properties IS 'A JSON string which 
 
 ALTER SEQUENCE public.ms_query_id_seq OWNED BY public.ms_query.id;
 
+CREATE INDEX ms_query_search_idx
+ ON public.ms_query
+ ( msi_search_id ASC );
+
+CLUSTER ms_query_search_idx ON ms_query;
+
 CREATE SEQUENCE public.result_set_id_seq;
 
 CREATE TABLE public.result_set (
@@ -444,9 +472,9 @@ CREATE TABLE public.master_quant_component (
                 id INTEGER NOT NULL DEFAULT nextval('public.master_quant_component_id_seq'),
                 selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
-                result_summary_id INTEGER NOT NULL,
                 object_tree_id INTEGER NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
+                result_summary_id INTEGER NOT NULL,
                 CONSTRAINT master_quant_component_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.master_quant_component IS 'A master group of quantitation components. Can be related to many items (ms_query, peptide_ion, protein_set) which could be quantified.';
@@ -456,6 +484,12 @@ COMMENT ON COLUMN public.master_quant_component.result_summary_id IS 'Used for i
 
 
 ALTER SEQUENCE public.master_quant_component_id_seq OWNED BY public.master_quant_component.id;
+
+CREATE INDEX master_quant_component_rsm_idx
+ ON public.master_quant_component
+ ( result_summary_id ASC );
+
+CLUSTER master_quant_component_rsm_idx ON master_quant_component;
 
 CREATE TABLE public.result_set_relation (
                 parent_result_set_id INTEGER NOT NULL,
@@ -507,6 +541,20 @@ COMMENT ON COLUMN public.protein_match.bio_sequence_id IS 'The id of the corresp
 
 ALTER SEQUENCE public.protein_match_id_seq OWNED BY public.protein_match.id;
 
+CREATE INDEX protein_match_ac_idx
+ ON public.protein_match
+ ( accession );
+
+CREATE INDEX protein_match_seq_idx
+ ON public.protein_match
+ ( bio_sequence_id );
+
+CREATE INDEX protein_match_rs_idx
+ ON public.protein_match
+ ( result_set_id ASC );
+
+CLUSTER protein_match_rs_idx ON protein_match;
+
 CREATE TABLE public.protein_match_seq_database_map (
                 protein_match_id INTEGER NOT NULL,
                 seq_database_id INTEGER NOT NULL,
@@ -514,6 +562,12 @@ CREATE TABLE public.protein_match_seq_database_map (
                 CONSTRAINT protein_match_seq_database_map_pk PRIMARY KEY (protein_match_id, seq_database_id)
 );
 
+
+CREATE INDEX prot_match_seq_db_map_rs_idx
+ ON public.protein_match_seq_database_map
+ ( result_set_id ASC );
+
+CLUSTER prot_match_seq_db_map_rs_idx ON protein_match_seq_database_map;
 
 CREATE SEQUENCE public.protein_set_id_seq;
 
@@ -538,6 +592,12 @@ COMMENT ON COLUMN public.protein_set.result_summary_id IS 'Used for indexation b
 
 
 ALTER SEQUENCE public.protein_set_id_seq OWNED BY public.protein_set.id;
+
+CREATE INDEX protein_set_rsm_idx
+ ON public.protein_set
+ ( result_summary_id ASC );
+
+CLUSTER protein_set_rsm_idx ON protein_set;
 
 CREATE SEQUENCE public.protein_set_cluster_id_seq;
 
@@ -582,6 +642,12 @@ COMMENT ON COLUMN public.protein_set_protein_match_item.serialized_properties IS
 COMMENT ON COLUMN public.protein_set_protein_match_item.result_summary_id IS 'Used for indexation by result summary';
 
 
+CREATE INDEX prot_set_prot_match_item_rsm_idx
+ ON public.protein_set_protein_match_item
+ ( result_summary_id ASC );
+
+CLUSTER prot_set_prot_match_item_rsm_idx ON protein_set_protein_match_item;
+
 CREATE SEQUENCE public.peptide_set_id_seq;
 
 CREATE TABLE public.peptide_set (
@@ -604,6 +670,12 @@ COMMENT ON COLUMN public.peptide_set.result_summary_id IS 'Used for indexation b
 
 ALTER SEQUENCE public.peptide_set_id_seq OWNED BY public.peptide_set.id;
 
+CREATE INDEX peptide_set_rsm_idx
+ ON public.peptide_set
+ ( result_summary_id ASC );
+
+CLUSTER peptide_set_rsm_idx ON peptide_set;
+
 CREATE TABLE public.peptide_set_protein_match_map (
                 peptide_set_id INTEGER NOT NULL,
                 protein_match_id INTEGER NOT NULL,
@@ -613,6 +685,12 @@ CREATE TABLE public.peptide_set_protein_match_map (
 COMMENT ON TABLE public.peptide_set_protein_match_map IS 'Explicits the relations between protein sequence matches and peptide sets.';
 COMMENT ON COLUMN public.peptide_set_protein_match_map.result_summary_id IS 'Used for indexation by result summary.';
 
+
+CREATE INDEX pep_set_prot_match_map_rsm_idx
+ ON public.peptide_set_protein_match_map
+ ( result_summary_id ASC );
+
+CLUSTER pep_set_prot_match_map_rsm_idx ON peptide_set_protein_match_map;
 
 CREATE TABLE public.peptide_set_relation (
                 peptide_overset_id INTEGER NOT NULL,
@@ -625,6 +703,12 @@ COMMENT ON TABLE public.peptide_set_relation IS 'Defines the relation between a 
 COMMENT ON COLUMN public.peptide_set_relation.is_strict_subset IS 'A strict subset doesn''t contain any specific peptide regarding its related overset. In the contrary a non-strict subset has one or more specific peptides with the particularity that these peptides belongs to another overset. This kind of subset is called "subsummable subset".';
 COMMENT ON COLUMN public.peptide_set_relation.result_summary_id IS 'Used for indexation by result summary';
 
+
+CREATE INDEX peptide_set_relation_rsm_idx
+ ON public.peptide_set_relation
+ ( result_summary_id ASC );
+
+CLUSTER peptide_set_relation_rsm_idx ON peptide_set_relation;
 
 CREATE SEQUENCE public.peptide_match_id_seq;
 
@@ -660,6 +744,20 @@ COMMENT ON COLUMN public.peptide_match.serialized_properties IS 'A JSON string w
 
 ALTER SEQUENCE public.peptide_match_id_seq OWNED BY public.peptide_match.id;
 
+CREATE INDEX peptide_match_ms_query_idx
+ ON public.peptide_match
+ ( ms_query_id );
+
+CREATE INDEX peptide_match_peptide_idx
+ ON public.peptide_match
+ ( peptide_id );
+
+CREATE INDEX peptide_match_rs_idx
+ ON public.peptide_match
+ ( result_set_id ASC );
+
+CLUSTER peptide_match_rs_idx ON peptide_match;
+
 CREATE SEQUENCE public.peptide_instance_id_seq;
 
 CREATE TABLE public.peptide_instance (
@@ -689,6 +787,12 @@ COMMENT ON COLUMN public.peptide_instance.result_summary_id IS 'Used for indexat
 
 ALTER SEQUENCE public.peptide_instance_id_seq OWNED BY public.peptide_instance.id;
 
+CREATE INDEX peptide_instance_rsm_idx
+ ON public.peptide_instance
+ ( result_summary_id ASC );
+
+CLUSTER peptide_instance_rsm_idx ON peptide_instance;
+
 CREATE TABLE public.peptide_set_peptide_instance_item (
                 peptide_set_id INTEGER NOT NULL,
                 peptide_instance_id INTEGER NOT NULL,
@@ -702,6 +806,12 @@ COMMENT ON TABLE public.peptide_set_peptide_instance_item IS 'Defines the list o
 COMMENT ON COLUMN public.peptide_set_peptide_instance_item.selection_level IS 'TODO: NOT NULL ?';
 COMMENT ON COLUMN public.peptide_set_peptide_instance_item.result_summary_id IS 'Used for indexation by result summary';
 
+
+CREATE INDEX pep_set_pep_inst_item_rsm_idx
+ ON public.peptide_set_peptide_instance_item
+ ( result_summary_id ASC );
+
+CLUSTER pep_set_pep_inst_item_rsm_idx ON peptide_set_peptide_instance_item;
 
 CREATE SEQUENCE public.master_quant_peptide_ion_id_seq;
 
@@ -731,6 +841,16 @@ COMMENT ON COLUMN public.master_quant_peptide_ion.result_summary_id IS 'Used for
 
 ALTER SEQUENCE public.master_quant_peptide_ion_id_seq OWNED BY public.master_quant_peptide_ion.id;
 
+CREATE INDEX master_quant_peptide_ion_peptide_idx
+ ON public.master_quant_peptide_ion
+ ( peptide_id );
+
+CREATE INDEX master_quant_peptide_ion_rsm_idx
+ ON public.master_quant_peptide_ion
+ ( result_summary_id ASC );
+
+CLUSTER master_quant_peptide_ion_rsm_idx ON master_quant_peptide_ion;
+
 CREATE SEQUENCE public.master_quant_reporter_ion_id_seq;
 
 CREATE TABLE public.master_quant_reporter_ion (
@@ -746,6 +866,12 @@ COMMENT ON COLUMN public.master_quant_reporter_ion.serialized_properties IS 'A J
 
 
 ALTER SEQUENCE public.master_quant_reporter_ion_id_seq OWNED BY public.master_quant_reporter_ion.id;
+
+CREATE INDEX master_quant_reporter_ion_rsm_idx
+ ON public.master_quant_reporter_ion
+ ( result_summary_id ASC );
+
+CLUSTER master_quant_reporter_ion_rsm_idx ON master_quant_reporter_ion;
 
 CREATE TABLE public.peptide_match_object_tree_map (
                 peptide_match_id INTEGER NOT NULL,
@@ -767,6 +893,12 @@ COMMENT ON COLUMN public.peptide_instance_peptide_match_map.serialized_propertie
 COMMENT ON COLUMN public.peptide_instance_peptide_match_map.result_summary_id IS 'Used for indexation by result summary';
 
 
+CREATE INDEX pep_inst_pep_match_map_rsm_idx
+ ON public.peptide_instance_peptide_match_map
+ ( result_summary_id ASC );
+
+CLUSTER pep_inst_pep_match_map_rsm_idx ON peptide_instance_peptide_match_map;
+
 CREATE TABLE public.peptide_match_relation (
                 parent_peptide_match_id INTEGER NOT NULL,
                 child_peptide_match_id INTEGER NOT NULL,
@@ -775,6 +907,12 @@ CREATE TABLE public.peptide_match_relation (
 );
 COMMENT ON TABLE public.peptide_match_relation IS 'Parent-child relationship between peptide matches. See peptide match description.';
 
+
+CREATE INDEX peptide_match_relation_rs_idx
+ ON public.peptide_match_relation
+ ( parent_result_set_id ASC );
+
+CLUSTER peptide_match_relation_rs_idx ON peptide_match_relation;
 
 CREATE TABLE public.sequence_match (
                 protein_match_id INTEGER NOT NULL,
@@ -797,6 +935,20 @@ COMMENT ON COLUMN public.sequence_match.residue_before IS 'The residue which is 
 COMMENT ON COLUMN public.sequence_match.residue_after IS 'The residue which is located after the peptide in the protein sequence.';
 COMMENT ON COLUMN public.sequence_match.is_decoy IS 'Specify if the sequence match is related  to a decoy database search.';
 
+
+CREATE INDEX sequence_match_pep_idx
+ ON public.sequence_match
+ ( peptide_id );
+
+CREATE INDEX sequence_match_prot_match_idx
+ ON public.sequence_match
+ ( protein_match_id );
+
+CREATE INDEX sequence_match_rs_idx
+ ON public.sequence_match
+ ( result_set_id ASC );
+
+CLUSTER sequence_match_rs_idx ON sequence_match;
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
