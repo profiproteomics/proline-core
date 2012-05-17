@@ -17,7 +17,7 @@ trait IRsStorer extends Logging {
   val msiDb1: MsiDb // Main MSI db connection
   lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, false, 10000 ) // Secondary MSI db connection
   
-  private val psDb = new PsDb( PsDb.getDefaultConfig, false, 10000 )
+  lazy val psDb = new PsDb( PsDb.getDefaultConfig, false, 10000 )
   val scoringIdByType = new fr.proline.core.dal.helper.MsiDbHelper( msiDb1 ).getScoringIdByType
   
   // TODO: implement as InMemoryProvider
@@ -50,6 +50,7 @@ object RsStorer {
   import fr.proline.core.om.storer.msi.impl.PgRsStorer
   import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer
 
+  // TODO: require a PsDb too
   def apply(msiDb: MsiDb ): RsStorer = { msiDb.config.driver match {
     case "org.postgresql.Driver" => new RsStorer( new PgRsStorer( msiDb ) )
     case "org.sqlite.JDBC" => new RsStorer( new SQLiteRsStorer( msiDb ) )
@@ -68,6 +69,7 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
   import fr.proline.core.om.model.msi._
   
   val msiDb1 = _storer.msiDb1
+  lazy val psDb = _storer.psDb
   val peptideByUniqueKey = _storer.peptideByUniqueKey
   val proteinBySequence = _storer.proteinBySequence
   
@@ -146,34 +148,73 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
       throw new Exception("result set proteins must first be persisted")*/
     
     // Retrieve the list of existing peptides in the current MSIdb
-    val existingPeptidesIdByKey = this._storer.fetchExistingPeptidesIdByUniqueKey( resultSet.getUniquePeptideSequences )
-    logger.info( existingPeptidesIdByKey.size + " existing peptides have been loaded from the database !" )
+    // TODO: do this using the PSdb
+    val existingMsiPeptidesIdByKey = this._storer.fetchExistingPeptidesIdByUniqueKey( resultSet.getUniquePeptideSequences )
+    logger.info( existingMsiPeptidesIdByKey.size + " existing peptides have been loaded from the database !" )
     
     // Retrieve existing peptides and map them by unique key
-    val( existingPeptides, newPeptides ) = resultSet.peptides.partition( pep => existingPeptidesIdByKey.contains(pep.uniqueKey) )
-    for( peptide <- existingPeptides ) {
-      this.peptideByUniqueKey += ( peptide.uniqueKey -> peptide.copy( id = existingPeptidesIdByKey( peptide.uniqueKey ) ) )
+    val( peptidesInMsiDb, newMsiPeptides ) = resultSet.peptides.partition( pep => existingMsiPeptidesIdByKey.contains(pep.uniqueKey) )
+    for( peptide <- peptidesInMsiDb ) {
+      peptide.id = existingMsiPeptidesIdByKey( peptide.uniqueKey )
+      this.peptideByUniqueKey += ( peptide.uniqueKey -> peptide )
     }
     
-    // Build a map of existing peptides
-    //val peptideByUniqueKey = existingPeptides.map { pep => ( pep.uniqueKey -> pep ) } toMap
-    //val newPeptides = resultSet.peptides filter { pep => ! existingPeptidesIdByKey.contains( pep.uniqueKey ) }
-    
-    val nbNewPeptides = newPeptides.length
-    if( nbNewPeptides > 0 ) {
-      logger.info( "storing "+ nbNewPeptides +" new peptides in the MSIdb...")
-      val insertedPeptides = this._storer.storeNewPeptides( newPeptides )
+    val nbNewMsiPeptides = newMsiPeptides.length
+    if( nbNewMsiPeptides > 0 ) {
+      
+      import fr.proline.core.om.provider.ps.impl.SQLPeptideProvider
+      import fr.proline.core.om.storer.ps.PeptideStorer
+      
+      val psPeptideProvider = new SQLPeptideProvider( this.psDb )
+      val psPeptideStorer = new PeptideStorer( this.psDb )
+      
+      // Define some vars
+      val newMsiPepSeqs = newMsiPeptides.map { _.sequence }
+      val newMsiPepKeySet = newMsiPeptides.map { _.uniqueKey } toSet
+      
+      // Retrieve peptide sequences already existing in the PsDb
+      val peptidesForSeqsInPsDb = psPeptideProvider.getPeptidesForSequences( newMsiPepSeqs )      
+      // Build a map of existing peptides in PsDb
+      val psPeptideByUniqueKey = peptidesForSeqsInPsDb.map { pep => ( pep.uniqueKey -> pep ) } toMap
+      
+      // Retrieve peptides which don't exist in the PsDb
+      //val( peptidesInPsDb, newPsPeptides ) = newMsiPeptides.partition( pep => psPeptidesByUniqueKey.contains(pep.uniqueKey) )
+      val newPsPeptides = newMsiPeptides filter { pep => ! psPeptideByUniqueKey.contains( pep.uniqueKey ) } 
+      // Retrieve peptides which exist in the PsDb but not in the MsiDb
+      val peptidesInPsDb = peptidesForSeqsInPsDb filter { pep => newMsiPepKeySet.contains( pep.uniqueKey ) }           
+      
+      // Store missing PsDb peptides
+      psPeptideStorer.storePeptides( newPsPeptides )
+      this.psDb.commitTransaction()
+      
+      // Map id of existing peptides and newly inserted peptides by their unique key
+      val newMsiPepIdByUniqueKey = new collection.mutable.HashMap[String,Int]      
+      for( peptide <- peptidesInPsDb ++ newPsPeptides ) {
+        newMsiPepIdByUniqueKey += ( peptide.uniqueKey -> peptide.id )
+        //this.peptideByUniqueKey += ( peptide.uniqueKey -> peptide )
+      }
+      
+      // Update id of new MsiDb peptides
+      for( peptide <- newMsiPeptides ) {
+        peptide.id = newMsiPepIdByUniqueKey( peptide.uniqueKey )
+        //peptide.id = this.peptideByUniqueKey( peptide.uniqueKey ).id
+      }
+      
+      logger.info( "storing "+ nbNewMsiPeptides +" new peptides in the MSIdb...")
+      val insertedPeptides = this._storer.storeNewPeptides( newMsiPeptides )
       logger.info( insertedPeptides.length + " new peptides have been effectively stored !")
       
-      for( insertedPeptide <- insertedPeptides ) {
+      /*for( insertedPeptide <- insertedPeptides ) {
         this.peptideByUniqueKey += ( insertedPeptide.uniqueKey -> insertedPeptide )
-      }
+      }*/
+      
     }
     
     // Update id of result set peptides
-    for( peptide <- resultSet.peptides ) {
-      peptide.id = this.peptideByUniqueKey( peptide.uniqueKey ).id
-    }
+    /*for( peptide <- resultSet.peptides ) {
+      if( peptide.id < 0 ) print(".")
+      //peptide.id = this.peptideByUniqueKey( peptide.uniqueKey ).id
+    }*/
     
     // Retrieve peptide matches
     val peptideMatches = resultSet.peptideMatches
