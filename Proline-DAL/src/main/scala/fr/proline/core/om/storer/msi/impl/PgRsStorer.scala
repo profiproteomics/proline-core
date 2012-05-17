@@ -1,14 +1,14 @@
 package fr.proline.core.om.storer.msi.impl
 
-import org.apache.commons.lang3.StringUtils.isEmpty
+import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.generate
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-
 import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.{MsiDbPeptideTable,MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
-import fr.proline.core.utils.sql.BoolToSQLStr
+import fr.proline.core.utils.sql.{BoolToSQLStr,encodeRecordForPgCopy}
 
 private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection                        
                              ) extends SQLiteRsStorer( msiDb1 ) {
@@ -18,7 +18,56 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
   //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
   // TODO: insert peptides into a TMP table
   
-  //def storeNewPeptides( peptides: Seq[Peptide] ): Array[Peptide] = null
+  override def storeNewPeptides( peptides: Seq[Peptide] ): Array[Peptide] = {
+    
+    // Instantiate a copy manager using secondary MsiDb connection
+    val bulkCopyManager2 = new CopyManager( this.msiDb2.getOrCreateConnection().asInstanceOf[BaseConnection] )
+    
+    // Create TMP table
+    val tmpPeptideTableName = "tmp_peptide_" + ( scala.math.random * 1000000 ).toInt
+    logger.info( "creating temporary table '" + tmpPeptideTableName +"'..." )
+    
+    val stmt = this.msiDb2.connection.createStatement();
+    stmt.executeUpdate("CREATE TEMP TABLE "+tmpPeptideTableName+" (LIKE peptide)")
+    
+    // Bulk insert of peptides
+    logger.info( "BULK insert of peptides" )
+
+    val peptideTableCols = MsiDbPeptideTable.getColumnsAsStrList().mkString(",")
+    val pgBulkLoader = bulkCopyManager2.copyIn("COPY "+ tmpPeptideTableName +" ( "+ peptideTableCols + " ) FROM STDIN" )
+
+    //val newPeptides = new ArrayBuffer[Peptide](0)
+    
+    // Iterate over peptides
+    for ( peptide <- peptides ) {
+      
+      val ptmString = if( peptide.ptmString != null ) peptide.ptmString else ""              
+      var peptideValues = List(  peptide.id,
+                                 peptide.sequence,
+                                 ptmString, 
+                                 peptide.calculatedMass,
+                                 ""
+                               )
+      
+      // Store peptide
+      val peptideBytes = encodeRecordForPgCopy( peptideValues )
+      pgBulkLoader.writeToCopy( peptideBytes, 0, peptideBytes.length )        
+      
+    }
+    
+    // End of BULK copy
+    val nbInsertedRecords = pgBulkLoader.endCopy()
+    
+    // Move TMP table content to MAIN table
+    logger.info( "move TMP table "+ tmpPeptideTableName +" into MAIN peptide table" )
+    stmt.executeUpdate("INSERT into peptide ("+peptideTableCols+") "+
+                       "SELECT "+peptideTableCols+" FROM "+tmpPeptideTableName )
+    
+    // Commit transaction
+    this.msiDb2.connection.commit()
+                       
+    peptides.toArray
+  }
   
   //def fetchProteinIdentifiers( accessions: Seq[String] ): Array[Any] = null
   
@@ -30,7 +79,6 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
     
     /// Retrieve some vars
     val rsId = rs.id
-    val isDecoy = rs.isDecoy
     val peptideMatches = rs.peptideMatches
     val scoringIdByScoreType = this.scoringIdByType
     
@@ -83,7 +131,7 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
                               )
       
       // Store peptide match
-      val pepMatchBytes = this.encodeRecord( pepMatchValues )
+      val pepMatchBytes = encodeRecordForPgCopy( pepMatchValues )
       pgBulkLoader.writeToCopy( pepMatchBytes, 0, pepMatchBytes.length )  
       
     }
@@ -127,7 +175,7 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
                                            )
           
           // Store peptide match
-          val pepMatchRelationBytes = this.encodeRecord( pepMatchRelationValues )
+          val pepMatchRelationBytes = encodeRecordForPgCopy( pepMatchRelationValues )
           pgBulkLoader.writeToCopy( pepMatchRelationBytes, 0, pepMatchRelationBytes.length )
         }
       }
@@ -138,7 +186,80 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
     
   }
   
-  //def storeRsProteinMatches( rs: ResultSet ): Int = 0
+  override def storeRsProteinMatches( rs: ResultSet ): Int = {
+    
+    // Retrieve some vars
+    val rsId = rs.id
+    val proteinMatches = rs.proteinMatches
+    val scoringIdByScoreType = this.scoringIdByType
+    
+    // Retrieve primary db connection    
+    val conn = this.msiDb1.connection
+    
+    // Create TMP table
+    val tmpProtMatchTableName = "tmp_protein_match_" + ( scala.math.random * 1000000 ).toInt
+    logger.info( "creating temporary table '" + tmpProtMatchTableName +"'..." )
+    
+    val stmt = conn.createStatement()
+    stmt.executeUpdate("CREATE TEMP TABLE "+tmpProtMatchTableName+" (LIKE protein_match)")    
+    
+    // Bulk insert of protein matches
+    logger.info( "BULK insert of protein matches" )
+    
+    val protMatchTableCols = MsiDbProteinMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
+    
+    val pgBulkLoader = bulkCopyManager.copyIn("COPY "+ tmpProtMatchTableName +" ( id, "+ protMatchTableCols + " ) FROM STDIN" )
+    
+    // Iterate over protein matches to store them
+    for( proteinMatch <- proteinMatches ) {
+      
+      val scoreType = proteinMatch.scoreType
+      val scoringId = scoringIdByScoreType.get(scoreType)
+      if( scoringId == None ) throw new Exception("can't find a scoring id for the score type '"+scoreType+"'")
+      //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
+      
+      // Build a row containing protein match values
+      val protMatchValues = List( proteinMatch.id,
+                                  proteinMatch.accession,
+                                  proteinMatch.description,
+                                  if(proteinMatch.geneName == null) "" else proteinMatch.geneName,
+                                  proteinMatch.score,
+                                  proteinMatch.coverage,
+                                  proteinMatch.sequenceMatches.length,
+                                  proteinMatch.peptideMatchesCount,
+                                  BoolToSQLStr( proteinMatch.isDecoy ),
+                                  "",
+                                  proteinMatch.taxonId,
+                                  "",// proteinMatch.getProteinId
+                                  scoringId.get,
+                                  rsId
+                              )
+      
+      // Store protein match
+      val protMatchBytes = encodeRecordForPgCopy( protMatchValues )
+      pgBulkLoader.writeToCopy( protMatchBytes, 0, protMatchBytes.length )  
+      
+    }
+    
+    // End of BULK copy
+    val nbInsertedProtMatches = pgBulkLoader.endCopy()
+    
+    // Move TMP table content to MAIN table
+    logger.info( "move TMP table "+ tmpProtMatchTableName +" into MAIN protein_match table" )
+    stmt.executeUpdate("INSERT into protein_match ("+protMatchTableCols+") "+
+                       "SELECT "+protMatchTableCols+" FROM "+tmpProtMatchTableName )
+    
+    // Retrieve generated protein match ids
+    val protMatchIdByAc = msiDb1.getOrCreateTransaction.select(
+                           "SELECT accession, id FROM protein_match WHERE result_set_id = " + rsId ) { r => 
+                             (r.nextString.get -> r.nextInt.get)
+                           } toMap
+    
+    // Iterate over protein matches to update them
+    proteinMatches.foreach { protMatch => protMatch.id = protMatchIdByAc( protMatch.accession ) }
+    
+    nbInsertedProtMatches.toInt
+  }
   
   override def storeRsSequenceMatches( rs: ResultSet ): Int = {
     
@@ -187,7 +308,7 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
                                  )
         
         // Store sequence match
-        val seqMatchBytes = this.encodeRecord( seqMatchValues )
+        val seqMatchBytes = encodeRecordForPgCopy( seqMatchValues )
         pgBulkLoader.writeToCopy( seqMatchBytes, 0, seqMatchBytes.length )        
       }
     }
@@ -203,13 +324,6 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
     nbInsertedRecords.toInt
   }
   
-  /**
-   * Replace empty strings by the '\N' character and convert the record to a byte array.
-   * Note: by default '\N' means NULL value for the postgres COPY function
-   */
-  private def encodeRecord( record: List[Any] ): Array[Byte] = {
-    val recordStrings = record map { _.toString() } map { str => if( isEmpty(str) ) "\\N" else str } 
-    (recordStrings.mkString("\t") + "\n").getBytes("UTF-8")
-  }
+
   
 }

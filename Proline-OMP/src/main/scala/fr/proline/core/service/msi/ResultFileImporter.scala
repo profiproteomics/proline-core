@@ -41,7 +41,7 @@ class ResultFileImporter( projectId: Int,
     
     // Instantiate some storers
     val msiSearchStorer = new MsiSearchStorer( msiDb )
-    val peaklistStorer = new PeaklistStorer( msiDb )
+    val peaklistStorer = PeaklistStorer( msiDb )
     val rsStorer = RsStorer( msiDb )
         
     // Configure result file before parsing

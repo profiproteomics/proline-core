@@ -40,6 +40,16 @@ package object sql {
     }
   }
   
+  /**
+   * Replace empty strings by the '\N' character and convert the record to a byte array.
+   * Note: by default '\N' means NULL value for the postgres COPY function
+   */
+  import org.apache.commons.lang3.StringUtils.isEmpty
+  def encodeRecordForPgCopy( record: List[Any] ): Array[Byte] = {
+    val recordStrings = record map { _.toString() } map { str => if( isEmpty(str) ) "\\N" else str } 
+    (recordStrings.mkString("\t") + "\n").getBytes("UTF-8")
+  }
+  
   import java.text.{DecimalFormat,DecimalFormatSymbols}
   private val decimalSymbols = new DecimalFormatSymbols()
   decimalSymbols.setDecimalSeparator('.')

@@ -42,10 +42,8 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
   
   def storeNewPeptides( peptides: Seq[Peptide] ): Array[Peptide] = {
     
-    // Retrieve some vars
-    val msiDbConn = msiDb1.connection
-    val msiDbTx = msiDb1.getOrCreateTransaction()
-    //val stmt = msiDbConn.prepareStatement(  )
+    // Create a transaction using secondary MsiDb connection
+    val msiDbTx = this.msiDb2.getOrCreateTransaction()
     
     val newPeptides = new ArrayBuffer[Peptide](0)
     msiDbTx.executeBatch( "INSERT INTO peptide VALUES (?,?,?,?,?)" ) { stmt =>
@@ -65,31 +63,13 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
                            
           newPeptides += peptide
           
-          /*
-          ////// TODO: store and retrieve atom label id
-          
-          ////// Store peptide ptms
-          val locatedPtms = peptide.ptms
-          for( locatedPtm <- locatedPtms ) {
-            val ptmDefinitionId = locatedPtm.definition.id
-            croak "store_peptides_using_rdb: undefined ptm definition id" if !defined ptmDefinitionId
-            
-            val rdbPeptidePtm = new Pairs::Msi::RDBO::PeptidePtm(
-                                        seq_position = locatedPtm.seqPosition,
-                                        mono_mass = locatedPtm.monoMass,
-                                        average_mass = locatedPtm.averageMass,
-                                        peptide_id = rdbPeptide.id,
-                                        ptm_specificity_id = ptmDefinitionId,
-                                        db = rdb,
-                                        )
-            rdbPeptidePtm.save()
-            }
-          
-          push( storedRdbPeptides, rdbPeptide )*/
         }
       }
     
     }
+    
+    // Commit transaction
+    this.msiDb2.commitTransaction()
     
     newPeptides.toArray
 
@@ -233,7 +213,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
           proteinMatch.isDecoy, // BoolToSQLStr( proteinMatch.isDecoy )
           Option(null),
           proteinMatch.taxonId,
-          Option(null), // proteinMatch.getProteinId
+          1, // proteinMatch.getProteinId
           scoringId.get,
           rsId
         )
