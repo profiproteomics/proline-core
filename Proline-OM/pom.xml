@@ -75,12 +75,6 @@
         <version>1.7</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-      <version>1.6.3</version>
-    </dependency>
-    
     <!--  Gson: Java to Json conversion -->
     <dependency>
       <groupId>com.google.code.gson</groupId>

@@ -1,5 +1,5 @@
 package fr.proline.core.utils
-
+/*
 package object serialization {
 
   import org.apache.avro.specific.SpecificRecordBase
@@ -32,4 +32,4 @@ package object serialization {
     
   }
 
-}
+}*/
