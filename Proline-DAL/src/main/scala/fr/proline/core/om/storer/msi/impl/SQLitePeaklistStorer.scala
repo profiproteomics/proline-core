@@ -20,9 +20,9 @@ private[msi] class SQLitePeaklistStorer( msiDb: MsiDb ) extends IPeaklistStorer 
     // Insert the peaklist in the MSIdb
     this._insertPeaklist( peaklist )
     
+    // Store spectra
     this.storeSpectra( peaklist, peaklistContainer )
     
-    null
   }
   
   private def _insertPeaklist( peaklist: Peaklist ): Unit = {
@@ -55,16 +55,18 @@ private[msi] class SQLitePeaklistStorer( msiDb: MsiDb ) extends IPeaklistStorer 
     val spectrumInsertQuery = MsiDbSpectrumTable.buildInsertQuery( spectrumColsList )
     
     // Insert corresponding spectra
+    val spectrumIdByTitle = collection.immutable.Map.newBuilder[String,Int]
     this.msiDb.getOrCreateTransaction.executeBatch( spectrumInsertQuery ) { stmt =>      
-      peaklistContainer.eachSpectrum { spectrum => this._insertSpectrum( stmt, spectrum, peaklist.id ) } 
-    }
+      peaklistContainer.eachSpectrum { spectrum => 
+        this._insertSpectrum( stmt, spectrum, peaklist.id )
+        spectrumIdByTitle += ( spectrum.title -> spectrum.id )
+      }
+    }    
     
-    null
+    spectrumIdByTitle.result()
   }
   
   private def _insertSpectrum( stmt: ReusableStatement, spectrum: Spectrum, peaklistId: Int ): Unit = {
-    
-    val bytes = "1 2 3".getBytes()
     
     // Define some vars
     val precursorIntensity = if( !spectrum.precursorIntensity.isNaN ) Some(spectrum.precursorIntensity) else Option.empty[Float]

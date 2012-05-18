@@ -40,7 +40,7 @@ class ResultFileImporter( projectId: Int,
     val resultFile = rfProvider.get.getResultFile( fileLocation, providerKey )
     
     // Instantiate some storers
-    val msiSearchStorer = new MsiSearchStorer( msiDb )
+    val msiSearchStorer = MsiSearchStorer( msiDb )
     val peaklistStorer = PeaklistStorer( msiDb )
     val rsStorer = RsStorer( msiDb )
         

@@ -20,12 +20,16 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
   
   override def storeNewPeptides( peptides: Seq[Peptide] ): Array[Peptide] = {
     
+    // Create a new transaction using secondary MsiDb connection
+    this.msiDb2.newTransaction()
+    
     // Instantiate a copy manager using secondary MsiDb connection
-    val bulkCopyManager2 = new CopyManager( this.msiDb2.getOrCreateConnection().asInstanceOf[BaseConnection] )
+    val bulkCopyManager2 = new CopyManager( this.msiDb2.connection.asInstanceOf[BaseConnection] )
     
     // Create TMP table
     val tmpPeptideTableName = "tmp_peptide_" + ( scala.math.random * 1000000 ).toInt
     logger.info( "creating temporary table '" + tmpPeptideTableName +"'..." )
+    
     
     val stmt = this.msiDb2.connection.createStatement();
     stmt.executeUpdate("CREATE TEMP TABLE "+tmpPeptideTableName+" (LIKE peptide)")
