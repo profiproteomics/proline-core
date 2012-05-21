@@ -16,6 +16,8 @@ import fr.proline.core.orm.ps.PeptidePtm;
 import fr.proline.core.orm.utils.JPAUtil;
 
 public class OMConverterUtilTest extends DatabaseTestCase {
+	
+	private OMConverterUtil converter; 
 
 	@After public void tearDown() throws Exception {
 		super.tearDown();
@@ -24,13 +26,14 @@ public class OMConverterUtilTest extends DatabaseTestCase {
 	@Before public void setUp() throws Exception {
         initDatabase();
         initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
-        loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");       
+        loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");
+        converter = new OMConverterUtil();
 	}
 	
 	@Test
 	public void test() {
 		fr.proline.core.orm.ps.Peptide ormPep = em.find(fr.proline.core.orm.ps.Peptide.class, 4);
-		fr.proline.core.om.model.msi.Peptide omPep = OMConverterUtil.convertPeptidePsORM2OM(ormPep);
+		fr.proline.core.om.model.msi.Peptide omPep = converter.convertPeptidePsORM2OM(ormPep);
 		assertNotNull(omPep);
 		assertEquals(omPep.calculatedMass(), ormPep.getCalculatedMass(),0.01d);
 		assertEquals(omPep.sequence(), ormPep.getSequence());
