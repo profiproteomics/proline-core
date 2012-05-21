@@ -147,8 +147,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
           proteinSetCountByPepInstanceId(id) += 1
         }
         
-        val pepSetItem = new PeptideSetItem(
-                                id = PeptideSetItem.generateNewId,
+        val pepSetItem = new PeptideSetItem(                                
                                 peptideInstance = tmpPepInstance,
                                 peptideSetId = peptideSetId,
                                 selectionLevel = 2,
