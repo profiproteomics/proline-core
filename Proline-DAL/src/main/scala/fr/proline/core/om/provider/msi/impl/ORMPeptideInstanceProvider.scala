@@ -14,11 +14,13 @@ class ORMPeptideInstanceProvider (val em:EntityManager ) extends IPeptideInstanc
 	var protSetRepo : ProteinSetRepositorty = new ProteinSetRepositorty(em) //Created by constructor
  
 	def getPeptideInstances(pepInstIds: Seq[Int] ): Array[Option[PeptideInstance]] = { 
+	    val converter : OMConverterUtil= new OMConverterUtil()
+	    
 		var foundPepInstBuilder =Array.newBuilder[Option[PeptideInstance]]
 		pepInstIds foreach (id => {		
 			val pepInstance : fr.proline.core.orm.msi.PeptideInstance = em.find(classOf[fr.proline.core.orm.msi.PeptideInstance], id)
 			if(pepInstance != null){
-				foundPepInstBuilder += Some(OMConverterUtil.convertPeptideInstanceORM2OM(pepInstance, true, protSetRepo.getEntityManager()))
+				foundPepInstBuilder += Some(converter.convertPeptideInstanceORM2OM(pepInstance, true, protSetRepo.getEntityManager()))
 			} else
 				foundPepInstBuilder += None				
 		})
