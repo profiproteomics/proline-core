@@ -414,10 +414,8 @@ case class PeptideInstance ( // Required fields
 
 }
 
-object PeptideSetItem extends InMemoryIdGen
 case class PeptideSetItem (
-                   // Required fields
-                   var id: Int,                     
+                   // Required fields                                  
                    var selectionLevel: Int,
                    val peptideInstance: PeptideInstance,
                    
@@ -439,7 +437,7 @@ case class PeptideSetItem (
 object PeptideSet extends InMemoryIdGen
 class PeptideSet ( // Required fields
                    var id: Int,
-                   val items: Array[PeptideSetItem],
+                   var items: Array[PeptideSetItem],
                    val isSubset: Boolean,
                    val peptideMatchesCount: Int,
                    val proteinMatchIds: Array[Int],
