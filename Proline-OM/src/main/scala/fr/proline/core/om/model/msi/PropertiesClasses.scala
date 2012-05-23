@@ -24,7 +24,8 @@ case class PeptideMatchProperties (
 case class PeptideMatchMascotProperties (
   @BeanProperty var expectationValue: Double,
   @BeanProperty var readableVarMods: Option[String] = None,
-  @BeanProperty var varModsPositions: Option[String] = None
+  @BeanProperty var varModsPositions: Option[String] = None,
+  @BeanProperty var ambiguityString: Option[String] = None
 )
 
 @JsonSnakeCase
