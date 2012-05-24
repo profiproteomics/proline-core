@@ -25,15 +25,15 @@ public class UsedPtm implements Serializable {
 	private String type;
 
 	//bi-directional many-to-one association to PtmSpecificity
-    @ManyToOne
+   @ManyToOne
 	@JoinColumn(name="ptm_specificity_id")
-    @MapsId("ptmSpecificityId")
+   @MapsId("ptmSpecificityId")
 	private PtmSpecificity ptmSpecificity;
 
 	//bi-directional many-to-one association to SearchSetting
-    @ManyToOne
-	@JoinColumn(name="search_settings_id", updatable=false, insertable=false)
-    @MapsId("searchSettingsId")
+   @ManyToOne
+	@JoinColumn(name="search_settings_id")
+   @MapsId("searchSettingsId")
 	private SearchSetting searchSetting;
 
     public UsedPtm() {
