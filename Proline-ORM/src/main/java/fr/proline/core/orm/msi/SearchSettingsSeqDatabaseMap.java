@@ -25,14 +25,12 @@ public class SearchSettingsSeqDatabaseMap implements Serializable {
 	private String serializedProperties;
 
 	//bi-directional many-to-one association to SearchSetting
-	//@JoinColumn(name="search_settings_id", updatable=false, insertable=false)
    @ManyToOne
    @JoinColumn(name="search_settings_id")
    @MapsId("searchSettingsId")
 	private SearchSetting searchSetting;
 
 	//bi-directional many-to-one association to SeqDatabase
-   //@JoinColumn(name="seq_database_id", updatable=false, insertable=false)
     @ManyToOne
     @JoinColumn(name="seq_database_id")
     @MapsId("seqDatabaseId")

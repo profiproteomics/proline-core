@@ -21,12 +21,14 @@ public class BioSequenceGeneMap implements Serializable {
 
 	//uni-directional many-to-one association to BioSequence
     @ManyToOne
-	@JoinColumn(name="bio_sequence_id", updatable=false, insertable=false)
+	@JoinColumn(name="bio_sequence_id")
+   @MapsId("bioSequenceId")
 	private BioSequence bioSequence;
 
 	//uni-directional many-to-one association to Gene
     @ManyToOne
-    @JoinColumn(name="gene_id", updatable=false, insertable=false)
+    @JoinColumn(name="gene_id")
+    @MapsId("geneId")
 	private Gene gene;
 
 	//uni-directional many-to-one association to Taxon

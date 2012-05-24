@@ -21,11 +21,13 @@ public class PeptideMatchRelation implements Serializable {
 	private ResultSet parentResultSet;
 
 	@ManyToOne
-	@JoinColumn(name="parent_peptide_match_id", updatable=false, insertable=false)
+	@JoinColumn(name="parent_peptide_match_id")
+	@MapsId("parentPeptideMatchId")
 	private PeptideMatch parentPeptideMatch;
 
 	@ManyToOne
-	@JoinColumn(name="child_peptide_match_id", updatable=false, insertable=false)
+	@JoinColumn(name="child_peptide_match_id")
+	@MapsId("childPeptideMatchId")
 	private PeptideMatch childPeptideMatch;
 
 	

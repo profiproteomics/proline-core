@@ -24,11 +24,13 @@ public class PeptideSetRelation implements Serializable {
 	private ResultSummary resultSummary;
 	
 	@ManyToOne
-	@JoinColumn(name="peptide_overset_id", insertable=false, updatable=false)
+	@JoinColumn(name="peptide_overset_id")
+	@MapsId("peptideOversetId")
 	private PeptideSet overset;
 
 	@ManyToOne
-	@JoinColumn(name="peptide_subset_id", insertable=false, updatable=false)
+	@JoinColumn(name="peptide_subset_id")
+	@MapsId("peptideSubsetId")
 	private PeptideSet subset;
 
 	

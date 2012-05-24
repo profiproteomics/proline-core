@@ -21,12 +21,14 @@ public class BioSequenceRelation implements Serializable {
 
 	//uni-directional many-to-one association to BioSequence
     @ManyToOne
-	@JoinColumn(name="na_sequence_id", updatable=false, insertable=false)
+	@JoinColumn(name="na_sequence_id")
+    @MapsId("naSequenceId")
 	private BioSequence nucleotidsSequence;
 
 	//uni-directional many-to-one association to BioSequence
     @ManyToOne
-	@JoinColumn(name="aa_sequence_id", updatable=false, insertable=false)
+	@JoinColumn(name="aa_sequence_id")
+    @MapsId("aaSequenceId")
 	private BioSequence aminoAcidsSequence;
 
     public BioSequenceRelation() {

@@ -24,13 +24,15 @@ public class ProteinSetProteinMatchItem implements Serializable {
 	private String serializedProperties;
 
 	//bi-directional many-to-one association to ProteinMatch
-    @ManyToOne
-	@JoinColumn(name="protein_match_id", updatable=false, insertable=false)
+   @ManyToOne
+	@JoinColumn(name="protein_match_id")
+   @MapsId("proteinMatchId")
 	private ProteinMatch proteinMatch;
 
 	//bi-directional many-to-one association to ProteinSet
-    @ManyToOne
-	@JoinColumn(name="protein_set_id", updatable=false, insertable=false)
+   @ManyToOne
+	@JoinColumn(name="protein_set_id")
+   @MapsId("proteinSetId")
 	private ProteinSet proteinSet;
 
     public ProteinSetProteinMatchItem() {

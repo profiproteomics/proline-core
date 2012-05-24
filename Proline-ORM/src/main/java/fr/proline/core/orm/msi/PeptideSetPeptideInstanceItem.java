@@ -31,12 +31,14 @@ public class PeptideSetPeptideInstanceItem implements Serializable {
 
 	//bi-directional many-to-one association to PeptideInstance
     @ManyToOne
-	@JoinColumn(name="peptide_instance_id", updatable=false, insertable=false)
+	@JoinColumn(name="peptide_instance_id")
+ 	@MapsId("peptideInstanceId")
 	private PeptideInstance peptideInstance;
 
 	//bi-directional many-to-one association to PeptideSet
     @ManyToOne
-	@JoinColumn(name="peptide_set_id", updatable=false, insertable=false)
+	@JoinColumn(name="peptide_set_id")
+ 	@MapsId("peptideSetId")
 	private PeptideSet peptideSet;
 
     public PeptideSetPeptideInstanceItem() {
