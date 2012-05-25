@@ -27,6 +27,6 @@ class ORMPeptideInstanceProvider (val em:EntityManager ) extends IPeptideInstanc
 		return foundPepInstBuilder.result()
   }
 
-  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int]):  Array[Option[PeptideInstance]] = { null }
+  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int]):  Array[Option[PeptideInstance]] = { throw new Exception("NYI") }
 
 }
