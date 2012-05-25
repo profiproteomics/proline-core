@@ -10,6 +10,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import static javax.persistence.CascadeType.PERSIST;
@@ -20,6 +22,15 @@ import static javax.persistence.CascadeType.PERSIST;
  * 
  */
 @Entity(name="fr.proline.core.orm.ps.PtmSpecificity")
+@NamedQueries({
+@NamedQuery(name="findPtmSpecificityByNameLocResidue",
+query="select ps from fr.proline.core.orm.ps.PtmSpecificity ps where ps.residue=:residu and ps.location=:location and ps.ptm.shortName=:ptmName"),
+
+@NamedQuery(name="findPtmSpecificityNoResiduByNameLoc",
+query="select ps from fr.proline.core.orm.ps.PtmSpecificity ps where ps.residue is null and ps.location = :location and ps.ptm.shortName = :ptmName")
+
+})
+
 @Table(name="ptm_specificity")
 public class PtmSpecificity implements Serializable {
 	private static final long serialVersionUID = 1L;

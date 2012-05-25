@@ -6,6 +6,7 @@ import javax.persistence.TypedQuery;
 import fr.proline.core.orm.ps.Ptm;
 import fr.proline.core.orm.ps.PtmEvidence;
 import fr.proline.core.orm.ps.PtmEvidence.Type;
+import fr.proline.core.orm.ps.PtmSpecificity;
 import fr.proline.core.orm.utils.JPARepository;
 
 public class PtmRepository extends JPARepository {
@@ -27,4 +28,18 @@ public class PtmRepository extends JPARepository {
 		return query.getSingleResult();
 	}
 	
+	public PtmSpecificity findPtmSpecificityByNameLocResidu(String ptmShortName, String location, char residu) {
+		TypedQuery<PtmSpecificity> query = getEntityManager().createNamedQuery("findPtmSpecificityByNameLocResidue", PtmSpecificity.class);
+		query.setParameter("residu", String.valueOf(residu));
+		query.setParameter("location", location);
+		query.setParameter("ptmName", ptmShortName);
+		return query.getSingleResult();
+	}
+	
+	public PtmSpecificity findPtmSpecificityWithNoResiduByNameLoc( String ptmShortName, String location) {
+		TypedQuery<PtmSpecificity> query = getEntityManager().createNamedQuery("findPtmSpecificityNoResiduByNameLoc", PtmSpecificity.class);		
+		query.setParameter("location", location);
+		query.setParameter("ptmName", ptmShortName);
+		return query.getSingleResult();
+	}
 }
