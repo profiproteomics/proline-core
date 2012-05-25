@@ -9,7 +9,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fr.proline.core.orm.uds.repository.IdentificationRepository;
-import fr.proline.core.orm.utils.DatabaseTestCase;
+import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class IdentificationTest extends DatabaseTestCase {
 
@@ -17,7 +19,7 @@ public class IdentificationTest extends DatabaseTestCase {
 
 	@Before public void setUp() throws Exception {
         initDatabase();
-        initEntityManager("udsdb_production");
+        initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName());
         loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
         identificationRepo = new IdentificationRepository(em);
 	}
@@ -42,6 +44,11 @@ public class IdentificationTest extends DatabaseTestCase {
 		List<String> identifications = identificationRepo.findIdentificationNamesByProject(project.getId());
 		assertThat(identifications.size(), is(1));
 		assertThat(identifications.get(0), equalTo("CB_342"));
+	}
+
+	@Override
+	public String getSQLScriptLocation() {
+		return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
 	}
 
 }

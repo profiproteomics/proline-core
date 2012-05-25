@@ -9,14 +9,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import fr.proline.core.orm.utils.DatabaseTestCase;
+import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class QuantitationTest extends DatabaseTestCase {
 
 
 	@Before public void setUp() throws Exception {
         initDatabase();
-        initEntityManager("udsdb_production");
+        initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName());
         loadDataSet("/fr/proline/core/orm/uds/Quanti_15N_Dataset.xml");
 	}
 
@@ -31,6 +33,11 @@ public class QuantitationTest extends DatabaseTestCase {
 		assertThat(quanti.getSampleReplicates().size(), is(8));
 		assertThat(quanti.getBiologicalSamples().size(), is(4));
 		assertThat(quanti.getMethod().getName(), equalTo("15N"));
+	}
+
+	@Override
+	public String getSQLScriptLocation() {
+		return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
 	}
 
 }

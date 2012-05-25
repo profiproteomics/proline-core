@@ -14,7 +14,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fr.proline.core.orm.ps.repository.PtmRepository;
-import fr.proline.core.orm.utils.DatabaseTestCase;
+import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class PtmTest extends DatabaseTestCase {
 
@@ -22,7 +24,7 @@ public class PtmTest extends DatabaseTestCase {
 	
 	@Before public void setUp() throws Exception {
         initDatabase();
-        initEntityManager("psdb_production");
+        initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
         loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
         ptmRepo = new PtmRepository(em);
 	}
@@ -60,7 +62,7 @@ public class PtmTest extends DatabaseTestCase {
 	
 	@Override
 	public String getSQLScriptLocation() {
-		return "/dbscripts/ps/h2";
+		return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
 	}
 	
 }

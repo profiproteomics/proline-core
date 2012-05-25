@@ -15,7 +15,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fr.proline.core.orm.uds.repository.ProjectRepository;
-import fr.proline.core.orm.utils.DatabaseTestCase;
+import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class ProjectTest extends DatabaseTestCase {
 
@@ -23,7 +25,7 @@ public class ProjectTest extends DatabaseTestCase {
 
 	@Before public void setUp() throws Exception {
         initDatabase();
-        initEntityManager("udsdb_production");
+        initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName());
         loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
         projectRepo = new ProjectRepository(em);
 	}
@@ -79,6 +81,11 @@ public class ProjectTest extends DatabaseTestCase {
 		Project rProject = em.find(Project.class, 2);
 		assertThat(rProject, equalTo(project));
 		assertTrue(rProject.getMembers().contains(owner));
+	}
+
+	@Override
+	public String getSQLScriptLocation() {
+		return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
 	}
 	
 

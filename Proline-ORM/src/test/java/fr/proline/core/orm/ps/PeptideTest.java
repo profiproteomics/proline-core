@@ -9,7 +9,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fr.proline.core.orm.ps.repository.PeptideRepository;
-import fr.proline.core.orm.utils.DatabaseTestCase;
+import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class PeptideTest extends DatabaseTestCase {
 	 PeptideRepository pepRepo;
@@ -17,7 +19,7 @@ public class PeptideTest extends DatabaseTestCase {
 	 private final String SEQ_TO_FOUND = "LTGMAFR";
 	@Before public void setUp() throws Exception {
         initDatabase();
-        initEntityManager("psdb_production");
+        initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
         loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
         pepRepo = new PeptideRepository(em);
 	}
@@ -46,7 +48,7 @@ public class PeptideTest extends DatabaseTestCase {
 	
 	@Override
 	public String getSQLScriptLocation() {
-		return "/dbscripts/ps/h2";
+		return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
 	}
 	
 }

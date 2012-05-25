@@ -16,7 +16,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
-import fr.proline.core.orm.utils.DatabaseTestCase;
+import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class ResultsetTest extends DatabaseTestCase {
 
@@ -24,7 +26,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
 	@Before public void setUp() throws Exception {
         initDatabase();
-        initEntityManager("msidb_production");
+        initEntityManager(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName());
         loadDataSet("/fr/proline/core/orm/msi/Resultset_Dataset.xml");
         pmRepo = new PeptideMatchRepository(em);
 	}
@@ -113,7 +115,7 @@ public class ResultsetTest extends DatabaseTestCase {
 	
 	@Override
 	public String getSQLScriptLocation() {
-		return "/dbscripts/msi/h2";
+		return DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION;
 	}
 
 }

@@ -1,20 +1,22 @@
 package fr.proline.core.orm.pdi;
 
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import fr.proline.core.orm.utils.DatabaseTestCase;
+import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class ProteinTest extends DatabaseTestCase {
 
 	@Before public void setUp() throws Exception {
       initDatabase();
-      initEntityManager("pdidb_production");
+      initEntityManager(JPAUtil.PersistenceUnitNames.PDI_Key.getPersistenceUnitName());
       loadDataSet("/fr/proline/core/orm/pdi/Proteins_Dataset.xml");
 	}
 
@@ -39,6 +41,6 @@ public class ProteinTest extends DatabaseTestCase {
 
 	
 	public String getSQLScriptLocation() {
-		return "/dbscripts/pdi/h2";
+		return DatabaseUtils.H2_DATABASE_PDI_SCRIPT_LOCATION;
 	}
 }
