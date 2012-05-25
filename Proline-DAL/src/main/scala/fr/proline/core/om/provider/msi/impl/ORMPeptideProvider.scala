@@ -11,9 +11,11 @@ import fr.proline.core.om.utils.OMComparatorUtil
 import fr.proline.core.om.utils.OMConverterUtil
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions
+import javax.persistence.PersistenceException
+import com.weiglewilczek.slf4s.Logging
 
 
-class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider {
+class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider with Logging {
   
   var pepRepo : PeptideRepository = new PeptideRepository(em) //Created by constructor
   val converter : OMConverterUtil= new OMConverterUtil()
@@ -34,14 +36,20 @@ class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider {
     var ptms : HashSet[LocatedPtm] = new HashSet[LocatedPtm]
     if(pepPtms != null)
 		ptms ++= pepPtms
-	
-	val foundORMPeps: scala.collection.mutable.Buffer[fr.proline.core.orm.ps.Peptide]= JavaConversions.asScalaBuffer(pepRepo.findPeptidesBySequence(peptideSeq))
-	foundORMPeps foreach (nextORMPep => {
-    	if(OMComparatorUtil.comparePeptidePtmSet(JavaConversions.mutableSetAsJavaSet(ptms), nextORMPep.getPtms())){
-			return Some(converter.convertPeptidePsORM2OM(nextORMPep))
-    	}
-    })
-    
+	try {
+		val foundORMPeps: scala.collection.mutable.Buffer[fr.proline.core.orm.ps.Peptide]= JavaConversions.asScalaBuffer(pepRepo.findPeptidesBySequence(peptideSeq))
+		foundORMPeps foreach (nextORMPep => {
+			if(OMComparatorUtil.comparePeptidePtmSet(JavaConversions.mutableSetAsJavaSet(ptms), nextORMPep.getPtms())){
+				return Some(converter.convertPeptidePsORM2OM(nextORMPep))
+			}
+		})
+	} catch {
+	  case e:PersistenceException => {
+	    logger.warn(" Error while requiering Peptide "+e.getMessage)
+	    return None
+	  }
+	} 
+	    
 	return None        
   }
 
