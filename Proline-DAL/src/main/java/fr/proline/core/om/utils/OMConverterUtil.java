@@ -341,9 +341,14 @@ public class OMConverterUtil {
 		
 				
 		// Create OM PtmDefinition from ORM PtmSpecificity
-		char residue = (ptmSpecificityORM.getResidue()!=null ? ptmSpecificityORM.getResidue().charAt(0) : null);
-		fr.proline.core.om.model.msi.PtmDefinition ptmDefMsiOM = new fr.proline.core.om.model.msi.PtmDefinition(ptmSpecificityORM.getId(), ptmSpecificityORM.getLocation(), 
-						ptmName, ptmEvidencesOM, residue, ptmSpecificityORM.getClassification().getName(), ptmSpecificityORM.getPtm().getId());
+		char residue = (ptmSpecificityORM.getResidue()!=null ? ptmSpecificityORM.getResidue().charAt(0) : '\0');
+		fr.proline.core.om.model.msi.PtmDefinition ptmDefMsiOM = new fr.proline.core.om.model.msi.PtmDefinition(ptmSpecificityORM.getId(),
+																	ptmSpecificityORM.getLocation(), 
+																	ptmName, 
+																	ptmEvidencesOM, 
+																	residue, 
+																	ptmSpecificityORM.getClassification().getName(), 
+																	ptmSpecificityORM.getPtm().getId());
 		if(useCachedObject)
 			ptmDefinitionsCache.put(ptmSpecificityORM.getId(), ptmDefMsiOM);
 		
