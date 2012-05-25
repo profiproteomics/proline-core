@@ -1,0 +1,122 @@
+package fr.proline.core.om.provider.msi.impl
+
+import scala.collection.mutable.ArrayBuffer
+import org.hamcrest.CoreMatchers
+import org.junit.Assert._
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.PtmEvidence
+import fr.proline.core.om.model.msi.PtmNames
+import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.utils.DatabaseUtils
+import fr.proline.repository.utils.DatabaseTestCase
+import fr.proline.core.om.model.msi.PtmLocation
+
+@Test
+class ORMPtmProviderTest extends DatabaseTestCase {
+
+  var ormPtmProvider: ORMPTMProvider = null
+     
+  
+  override def getSQLScriptLocation() : String  ={
+	  return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
+  }
+  
+  @Before 
+  @throws(classOf[Exception])
+  def setUp()  = {
+	  initDatabase()
+	  initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
+	  loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
+	  ormPtmProvider = new ORMPTMProvider(em)
+  }
+  
+  @After 
+  @throws(classOf[Exception]) 
+  override def tearDown() ={
+		super.tearDown();
+  }
+  
+  @Test
+  def getPtmSpecificities()= {
+     val ids = new ArrayBuffer[Int]
+  	 ids += 7 //
+  	 ids += 12
+  	 ids += 1284
+  	 val ptmDefs : Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitions(ids);
+     assertThat(ptmDefs, CoreMatchers.notNullValue());
+     assertNotSame(ptmDefs(0), None);		
+     assertThat(ptmDefs(0).get.location, CoreMatchers.equalTo("PROTEIN_NTERM"));
+     assertThat(ptmDefs(0).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
+     assertThat(ptmDefs(0).get.classification, CoreMatchers.equalTo("Post-translational"));
+     
+     assertThat(ptmDefs(1).get.location, CoreMatchers.equalTo("ANY_NTERM"));
+     assertThat(ptmDefs(1).get.residue, CoreMatchers.equalTo('\0'));
+     assertThat(ptmDefs(1).get.names.shortName, CoreMatchers.equalTo("Biotin"));     
+     
+     assertThat(ptmDefs(2).get.location, CoreMatchers.equalTo("ANYWHERE"));
+     assertThat(ptmDefs(2).get.residue, CoreMatchers.equalTo('H'));     
+     
+  }
+  
+    @Test
+  def getPtmSpecificitiesWithNonExistant()= {
+	 val ids = new ArrayBuffer[Int]
+  	 ids += 7 
+  	 ids += 9879
+  	 
+  	 val ptmDefs : Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitions(ids);
+     assertThat(ptmDefs, CoreMatchers.notNullValue());
+     assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
+     assertNotSame(ptmDefs(0), None);         
+     assertThat(ptmDefs(0).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
+     assertSame(ptmDefs(1), None);
+  }
+  
+  @Test
+  def getSinglePtmSpecificities()= {
+
+  	 val ptmDef : Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(12);
+     assertThat(ptmDef, CoreMatchers.notNullValue());
+     assertNotSame(ptmDef, None);		
+     
+     assertThat(ptmDef.get.location, CoreMatchers.equalTo("ANY_NTERM"));
+     assertThat(ptmDef.get.residue, CoreMatchers.equalTo('\0'));
+     assertThat(ptmDef.get.names.shortName, CoreMatchers.equalTo("Biotin"));     
+  }
+    
+  @Test
+  def getNonExistantPtmSpecificity()= {
+
+  	 val ptmDef : Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(9879);
+     assertThat(ptmDef, CoreMatchers.notNullValue());
+     assertSame(ptmDef, None);		
+  }
+
+  @Test
+  def getPtmSpecificityByNameResiduAndLoc()= {
+	 //Param for PtmSpecificity ID 877 in Unimod_Dataset
+	  val ptmDef : Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plex",'S',PtmLocation.ANYWHERE);
+//	  val ptmDefById = ormPtmProvider.getPtmDefinition(877)
+//	  assertThat(ptmDefById.get.names.shortName, CoreMatchers.equalTo("iTRAQ8plex"))
+//	  assertThat(ptmDefById.get.residue, CoreMatchers.equalTo('\0'))
+//	  assertThat(ptmDefById.get.location, CoreMatchers.equalTo("ANYWHERE"))
+	  assertThat(ptmDef, CoreMatchers.notNullValue())
+	  assertNotSame(ptmDef, None);   
+	  assertThat(ptmDef.get.id,CoreMatchers.equalTo(877))
+  }
+  
+  
+  @Test
+  def getInvalidPtmSpecificity()= {
+	 //Param corresponding to No PtmSpecificity in Unimod_Dataset
+	  val ptmDef : Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plexA",'\0',PtmLocation.ANYWHERE);
+     assertThat(ptmDef, CoreMatchers.notNullValue());
+     assertSame(ptmDef, None);     
+  }
+}
