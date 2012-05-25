@@ -48,9 +48,20 @@ case class PtmEvidence( // Required fields
   require( ionType != null &&  composition != null )
   
   def ionType_ ( newIonType: IonTypes.IonType ) = { newIonType }
-    //if(newIonType == null || ( !newIonType.equals("Precursor") && !newIonType.equals("Artefact") && !newIonType.equals("NeutralLoss") && !newIonType.equals("PepNeutralLoss"))  ) 
-  	//			  throw new Exception("Invalid IonType specified, must be one of Precursor, Artefact, NeutralLoss, PepNeutralLoss.")}
+    
 }
+
+ 
+object PtmLocation extends Enumeration {
+	  type Location = Value
+	  val PROT_N_TERM = Value("Protein N-term")
+	  val PROT_C_TERM  = Value("Protein C-term")
+	  val N_TERM   = Value("N-term")
+	  val C_TERM   = Value("C-term")
+	  val ANY_N_TERM   = Value("Any N-term")
+	  val ANY_C_TERM   = Value("Any C-term")
+	  val ANYWHERE= Value("Anywhere")       
+} 
 
 case class PtmSpecificity( // Required fields
                       val location: String, 
