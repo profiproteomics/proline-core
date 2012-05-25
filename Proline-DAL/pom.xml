@@ -31,6 +31,7 @@
 			<url>http://scala-tools.org/repo-releases</url>
 		</pluginRepository>
 	</pluginRepositories>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.scala-lang</groupId>
@@ -39,17 +40,33 @@
 		</dependency>
 
 		<!-- Test -->
-
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>0.0.2-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
 		<dependency>
 			<groupId>org.scala-tools.testing</groupId>
 			<artifactId>specs_2.9.1</artifactId>
 			<version>1.6.9</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.scalatest</groupId>
 			<artifactId>scalatest_2.9.1</artifactId>
 			<version>1.7.1</version>
+			<scope>test</scope>
 		</dependency>
+		<dependency>
+      <groupId>org.dbunit</groupId>
+      <artifactId>dbunit</artifactId>
+      <version>2.4.8</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <!-- runtime -->
 		<dependency>
 			<groupId>com.weiglewilczek.slf4s</groupId>
 			<artifactId>slf4s_2.9.1</artifactId>
@@ -85,16 +102,13 @@
 			<artifactId>Proline-ORM</artifactId>
 			<version>0.0.2-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>fr.proline</groupId>
-			<artifactId>Proline-Databases</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.dbunit</groupId>
-			<artifactId>dbunit</artifactId>
-			<version>2.4.8</version>
-		</dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>0.0.2-SNAPSHOT</version>
+      <type>jar</type>
+    </dependency>		
+
 		<dependency>
 			<groupId>com.googlecode.flyway</groupId>
 			<artifactId>flyway-core</artifactId>

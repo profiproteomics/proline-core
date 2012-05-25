@@ -14,6 +14,8 @@ import org.junit.Test;
 import fr.proline.core.om.model.msi.LocatedPtm;
 import fr.proline.core.orm.ps.PeptidePtm;
 import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class OMConverterUtilTest extends DatabaseTestCase {
 	
@@ -61,6 +63,6 @@ public class OMConverterUtilTest extends DatabaseTestCase {
 	}
 
 	public String getSQLScriptLocation() {
-		return "/dbscripts/ps/h2";
+		return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
 	}
 }

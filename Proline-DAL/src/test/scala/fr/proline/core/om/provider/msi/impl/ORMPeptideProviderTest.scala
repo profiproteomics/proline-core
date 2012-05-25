@@ -1,22 +1,22 @@
 package fr.proline.core.om.provider.msi.impl
 
-import org.hamcrest.CoreMatchers
-import org.scalatest.junit.JUnitSuite
-import org.junit.Test
-import org.junit.Before
-import org.junit.After
-import org.junit.Assert._
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.core.om.utils.DatabaseTestCase
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.msi.LocatedPtm
-import scala.collection.mutable.ArrayBuilder
-import fr.proline.core.om.model.msi.PtmEvidence
+import org.hamcrest.CoreMatchers
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertThat
+import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
-//import fr.proline.core.om.provider.msi.impl.ORMPeptideProvider
+import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.utils.DatabaseUtils
+import fr.proline.repository.utils.DatabaseTestCase
 
 @Test
 class ORMPeptideProviderTest extends DatabaseTestCase {
@@ -26,7 +26,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
     
   
   override def getSQLScriptLocation() : String  ={
-	  return "/dbscripts/ps/h2";
+	  return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
   }
   
   @Before 
@@ -35,7 +35,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 	  initDatabase()
 	  initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
 	  loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-	  ormPepProvider = new ORMPeptideProvider(em);
+	  ormPepProvider = new ORMPeptideProvider(em)
   }
   
   @After 

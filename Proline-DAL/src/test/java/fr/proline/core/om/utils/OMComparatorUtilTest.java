@@ -14,6 +14,8 @@ import fr.proline.core.om.model.msi.PtmEvidence;
 import fr.proline.core.om.model.msi.PtmNames;
 import fr.proline.core.orm.ps.PeptidePtm;
 import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class OMComparatorUtilTest extends DatabaseTestCase {
 	
@@ -28,7 +30,7 @@ public class OMComparatorUtilTest extends DatabaseTestCase {
 	}
 	
 	public String getSQLScriptLocation() {
-		return "/dbscripts/ps/h2";
+		return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
 	}
 
 	@Test
