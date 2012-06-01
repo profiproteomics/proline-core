@@ -12,8 +12,7 @@ import org.slf4j.LoggerFactory;
 public abstract class DatabaseTestCase {
 
 
-	@SuppressWarnings("unused")
-	private static final Logger logger = LoggerFactory.getLogger(DatabaseTestCase.class);
+	public final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	protected EntityManager em;
 	protected EntityManagerFactory emf;
@@ -27,13 +26,13 @@ public abstract class DatabaseTestCase {
 		getConnector().closeAll();
 	}
 	
-	protected void initEntityManager(String persistenceUnitName) {
+	public void initEntityManager(String persistenceUnitName) {
 		final Map<String, Object> entityManagerSettings = getConnector().getEntityManagerSettings();
 		emf = Persistence.createEntityManagerFactory(persistenceUnitName, entityManagerSettings);
 		em = emf.createEntityManager();
 	}
 
-	protected void initEntityManager(String persistenceUnitName, Map<String, Object> configuration) {
+	public void initEntityManager(String persistenceUnitName, Map<String, Object> configuration) {
 		final Map<String, Object> entityManagerSettings = getConnector().getEntityManagerSettings();
 		for (Map.Entry<String, Object> e : configuration.entrySet()) {
 			entityManagerSettings.put(e.getKey(), e.getValue());
@@ -42,21 +41,31 @@ public abstract class DatabaseTestCase {
 		em = emf.createEntityManager();
 	}
 
-	protected void initDatabase() throws ClassNotFoundException {
+	/** 
+	 * Get the EntityManager for this Database TestCase. To obtain a valid 
+	 * EntityManager, an initEntityManager should have been executed before.
+	 * 
+	 * @return
+	 */
+	public EntityManager getEntityManager(){
+		return em;
+	}
+	
+	public void initDatabase() throws ClassNotFoundException {
 		DatabaseUtils.initDatabase(getConnector(), getSQLScriptLocation());
 	}
 
-	protected void loadDataSet(String datasetName) throws Exception {
+	public void loadDataSet(String datasetName) throws Exception {
 		DatabaseUtils.loadDataSet(getConnector(), datasetName);
 		connector.getDatabaseTester().onSetup();
 	}
 
-	protected void loadCompositeDataSet(String[] datasets) throws Exception {
+	public void loadCompositeDataSet(String[] datasets) throws Exception {
 		DatabaseUtils.loadCompositeDataSet(getConnector(), datasets);
 		connector.getDatabaseTester().onSetup();
 	}
 
-	protected DatabaseTestConnector getConnector() {
+	public DatabaseTestConnector getConnector() {
 		if (connector == null) {
 			connector = new DatabaseTestConnector(getPropertiesFilename());
 			try {
@@ -69,6 +78,7 @@ public abstract class DatabaseTestCase {
 		}
 		return connector;
 	}
+	
 	
 	/**
 	 * Path to SQL scripts from where DB will be initialized
