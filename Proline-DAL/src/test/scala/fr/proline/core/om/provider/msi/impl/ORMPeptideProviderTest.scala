@@ -19,7 +19,7 @@ import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.utils.DatabaseTestCase
 
 @Test
-class ORMPeptideProviderTest extends DatabaseTestCase {
+class ORMPeptideProviderTest extends DatabaseTestCase  {
 
   var ormPepProvider: ORMPeptideProvider = null
   private val SEQ_TO_FOUND : String = "LTGMAFR"
@@ -64,6 +64,20 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 	 assertThat(peps.length, CoreMatchers.equalTo(3))
 	 assertThat(peps.apply(2).get.id, CoreMatchers.equalTo(4))
 	 assertThat(peps(2).get.calculatedMass, CoreMatchers.equalTo(810.405807))
+  }
+
+  @Test
+  def getPeptideWithNTermPTM() = {
+ 	 
+	 val pep : Option[Peptide] = ormPepProvider.getPeptide(6)
+	 assertThat(pep, CoreMatchers.notNullValue())
+	 assertNotSame(pep, None);		
+
+	 assertThat(pep.get.id, CoreMatchers.equalTo(6))
+	 assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
+	 assertThat(pep.get.ptms(0).definition.names.shortName, CoreMatchers.equalTo("Acetyl")) 
+	 assertTrue(pep.get.ptms(0).isNTerm)
+	 
   }
   
   @Test

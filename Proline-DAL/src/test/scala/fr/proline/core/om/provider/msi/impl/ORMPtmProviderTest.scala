@@ -51,15 +51,15 @@ class ORMPtmProviderTest extends DatabaseTestCase {
   	 val ptmDefs : Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitions(ids);
      assertThat(ptmDefs, CoreMatchers.notNullValue());
      assertNotSame(ptmDefs(0), None);		
-     assertThat(ptmDefs(0).get.location, CoreMatchers.equalTo("PROTEIN_NTERM"));
+     assertThat(ptmDefs(0).get.location, CoreMatchers.equalTo(PtmLocation.PROT_N_TERM.toString));
      assertThat(ptmDefs(0).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
      assertThat(ptmDefs(0).get.classification, CoreMatchers.equalTo("Post-translational"));
      
-     assertThat(ptmDefs(1).get.location, CoreMatchers.equalTo("ANY_NTERM"));
+     assertThat(ptmDefs(1).get.location, CoreMatchers.equalTo(PtmLocation.ANY_N_TERM.toString));
      assertThat(ptmDefs(1).get.residue, CoreMatchers.equalTo('\0'));
      assertThat(ptmDefs(1).get.names.shortName, CoreMatchers.equalTo("Biotin"));     
      
-     assertThat(ptmDefs(2).get.location, CoreMatchers.equalTo("ANYWHERE"));
+     assertThat(ptmDefs(2).get.location, CoreMatchers.equalTo(PtmLocation.ANYWHERE.toString));
      assertThat(ptmDefs(2).get.residue, CoreMatchers.equalTo('H'));     
      
   }
@@ -85,7 +85,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
      assertThat(ptmDef, CoreMatchers.notNullValue());
      assertNotSame(ptmDef, None);		
      
-     assertThat(ptmDef.get.location, CoreMatchers.equalTo("ANY_NTERM"));
+     assertThat(ptmDef.get.location, CoreMatchers.equalTo(PtmLocation.ANY_N_TERM.toString));
      assertThat(ptmDef.get.residue, CoreMatchers.equalTo('\0'));
      assertThat(ptmDef.get.names.shortName, CoreMatchers.equalTo("Biotin"));     
   }
@@ -102,10 +102,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
   def getPtmSpecificityByNameResiduAndLoc()= {
 	 //Param for PtmSpecificity ID 877 in Unimod_Dataset
 	  val ptmDef : Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plex",'S',PtmLocation.ANYWHERE);
-//	  val ptmDefById = ormPtmProvider.getPtmDefinition(877)
-//	  assertThat(ptmDefById.get.names.shortName, CoreMatchers.equalTo("iTRAQ8plex"))
-//	  assertThat(ptmDefById.get.residue, CoreMatchers.equalTo('\0'))
-//	  assertThat(ptmDefById.get.location, CoreMatchers.equalTo("ANYWHERE"))
+
 	  assertThat(ptmDef, CoreMatchers.notNullValue())
 	  assertNotSame(ptmDef, None);   
 	  assertThat(ptmDef.get.id,CoreMatchers.equalTo(877))

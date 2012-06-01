@@ -35,22 +35,22 @@ class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging 
   def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition] = {
     val converter = new OMConverterUtil()
     try {
-    	//VDS TEMP  TODO : Use same values as PtmLocation.Location in DB ! 
-    	val locationStr = ptmLocation match {
-    		case PtmLocation.ANYWHERE => "ANYWHERE"
-    		case PtmLocation.ANY_C_TERM => "ANY_CTERM"
-    		case PtmLocation.ANY_N_TERM => "ANY_NTERM"
-    		case PtmLocation.C_TERM => "CTERM"
-    		case PtmLocation.N_TERM => "NTERM"
-    		case PtmLocation.PROT_C_TERM => "PROTEIN_CTERM"
-    		case PtmLocation.PROT_N_TERM=> "PROTEIN_NTERM"
-    	}
+//    	//VDS TEMP  TODO : Use same values as PtmLocation.Location in DB ! 
+//    	val locationStr = ptmLocation match {
+//    		case PtmLocation.ANYWHERE => "ANYWHERE"
+//    		case PtmLocation.ANY_C_TERM => "ANY_CTERM"
+//    		case PtmLocation.ANY_N_TERM => "ANY_NTERM"
+//    		case PtmLocation.C_TERM => "CTERM"
+//    		case PtmLocation.N_TERM => "NTERM"
+//    		case PtmLocation.PROT_C_TERM => "PROTEIN_CTERM"
+//    		case PtmLocation.PROT_N_TERM=> "PROTEIN_NTERM"
+//    	}
       
     	var ptmSpecificity : PtmSpecificity = null 
 		if( ptmResidu.equals('\0'))
-			ptmSpecificity =ptmRepo.findPtmSpecificityWithNoResiduByNameLoc(ptmName, locationStr)
+			ptmSpecificity =ptmRepo.findPtmSpecificityWithNoResiduByNameLoc(ptmName, ptmLocation.toString)
 		else 
-			ptmSpecificity =ptmRepo.findPtmSpecificityByNameLocResidu(ptmName,locationStr,ptmResidu)
+			ptmSpecificity =ptmRepo.findPtmSpecificityByNameLocResidu(ptmName,ptmLocation.toString,ptmResidu)
         
 		if(ptmSpecificity == null)
 			return None
