@@ -12,6 +12,7 @@ object ProvidersFactory {
   private var pepProviders:HashMap[String, IPeptideProvider]= new HashMap[String , IPeptideProvider]()
   private var ptmProviders:HashMap[String, IPTMProvider]= new HashMap[String , IPTMProvider]()
   private var protProviders:HashMap[String, IProteinProvider]= new HashMap[String , IProteinProvider]()
+  private var seqDbProviders:HashMap[String, ISeqDatabaseProvider]= new HashMap[String , ISeqDatabaseProvider]()  
  
   //IPeptideMatchProvider methods
   def registerPeptideMatchProvider(keyProvider:String, matchProvider:IPeptideMatchProvider) =  {
@@ -93,4 +94,21 @@ object ProvidersFactory {
   def getAvailableProteinProvider() : Set[String]  = {
     return protProviders.keySet
   } 
+  
+  
+    //ISeqDatabaseProviders methods
+  def registerSeqDatabaseProvider(keyProvider:String, seqDbProvider:ISeqDatabaseProvider) =  {
+    seqDbProviders += keyProvider -> seqDbProvider
+  }
+  
+  def unregisterSeqDatabaseProvider(keyProvider:String) =  {
+    seqDbProviders.remove(keyProvider)
+  }
+  
+  def getSeqDatabaseProvider(keyProvider:String, retDefault:Boolean) : Option[ISeqDatabaseProvider] = {
+    if(seqDbProviders.get(keyProvider) == None && retDefault)
+      seqDbProviders.get(DEFAULT_KEY_PROVIDERS)
+    else 
+      seqDbProviders.get(keyProvider) 
+  }
 }
