@@ -1,5 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
+import com.weiglewilczek.slf4s.Logging
+
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -8,9 +10,9 @@ import fr.proline.core.orm.ps.repository.PtmRepository
 import fr.proline.core.orm.ps.PtmSpecificity
 import javax.persistence.EntityManager
 import javax.persistence.PersistenceException
-import com.weiglewilczek.slf4s.Logging
 
-
+import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters.asJavaCollectionConverter
 
 class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging {
 
@@ -20,14 +22,28 @@ class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging 
     
 	val converter = new OMConverterUtil()
 	var foundPtmDefBuilder = Array.newBuilder[Option[PtmDefinition]]
-	  
-    ptmDefIds foreach (id => {
-    	val ptmSpecificityORM : fr.proline.core.orm.ps.PtmSpecificity = em.find(classOf[fr.proline.core.orm.ps.PtmSpecificity], id)
-		if(ptmSpecificityORM != null){
-			foundPtmDefBuilder += Some(converter.convertPtmSpecificityORM2OM(ptmSpecificityORM))
-		} else
-			foundPtmDefBuilder += None		
+	  	
+	val ptmSpecificityORMs = em.createQuery("FROM fr.proline.core.orm.ps.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
+	                                          classOf[fr.proline.core.orm.ps.PtmSpecificity] )
+                                          .setParameter("ids", ptmDefIds.asJavaCollection ).getResultList().toList
+   
+    var resultIndex =0 
+	ptmDefIds.foreach( ptmDefId =>{
+		// Current PtmDef not found. Store None and go to next ptmDef Id
+		if(resultIndex >=ptmSpecificityORMs.length || ptmSpecificityORMs.apply(resultIndex).getId != ptmDefId){
+		  foundPtmDefBuilder += None
+		} else{	       
+		  //Current PtmDef found in Repository. Just save and go to next ptmDef Id and found ptmSpecificity
+		  foundPtmDefBuilder += Some(converter.convertPtmSpecificityORM2OM(ptmSpecificityORMs.apply(resultIndex)))
+	      resultIndex+=1
+		}	       
     })
+	     
+    if(resultIndex <= ptmSpecificityORMs.length-1){
+      val msg = "Return PtmSpecificity from Repository was not stored in final result ! Some errors occured ! "
+      logger.warn(msg)
+      throw new Exception(msg)
+    }
     
     foundPtmDefBuilder.result
   }
@@ -35,16 +51,6 @@ class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging 
   def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition] = {
     val converter = new OMConverterUtil()
     try {
-//    	//VDS TEMP  TODO : Use same values as PtmLocation.Location in DB ! 
-//    	val locationStr = ptmLocation match {
-//    		case PtmLocation.ANYWHERE => "ANYWHERE"
-//    		case PtmLocation.ANY_C_TERM => "ANY_CTERM"
-//    		case PtmLocation.ANY_N_TERM => "ANY_NTERM"
-//    		case PtmLocation.C_TERM => "CTERM"
-//    		case PtmLocation.N_TERM => "NTERM"
-//    		case PtmLocation.PROT_C_TERM => "PROTEIN_CTERM"
-//    		case PtmLocation.PROT_N_TERM=> "PROTEIN_NTERM"
-//    	}
       
     	var ptmSpecificity : PtmSpecificity = null 
 		if( ptmResidu.equals('\0'))
