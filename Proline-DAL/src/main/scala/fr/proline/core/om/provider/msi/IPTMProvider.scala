@@ -7,8 +7,23 @@ import fr.proline.core.om.model.msi.PtmLocation
 
 trait IPTMProvider {
 
+  /**
+   *  Get PtmDefinitions (wrapped in Option) with specified Ids.
+   *  If no PtmDefinitions is defined for a specified id, Option.None will be returned.
+   *  Returned Array will contains Option[PtmDefinition] in the same order as their specified ids.
+   *  
+   *  @param ptmDefIds: Sequence of ids of PtmDefinitions to search for
+   *  @return Array of Option[PtmDefinition] corresponding to found PtmDefinitions
+   */
   def getPtmDefinitions( ptmDefIds: Seq[Int] ) : Array[Option[PtmDefinition]]
   
+  /**
+   *  Get PtmDefinition (wrapped in Option) with specified Id.
+   *  If no PtmDefinition is defined for specified id, Option.None will be returned.
+   *  
+   *  @param ptmDefID: id of PtmDefinition to search for
+   *  @return Option[PtmDefinition] corresponding to found PtmDefinition
+   */
   def getPtmDefinition( ptmDefID: Int ) : Option[PtmDefinition] = { getPtmDefinitions( Array(ptmDefID) )(0) }
     
   /**
