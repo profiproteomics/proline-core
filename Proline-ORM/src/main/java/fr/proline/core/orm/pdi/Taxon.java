@@ -1,7 +1,14 @@
 package fr.proline.core.orm.pdi;
 
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.CascadeType.REMOVE;
+
 import java.io.Serializable;
 import javax.persistence.*;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import java.util.HashSet;
 import java.util.Set;
 
 
@@ -14,7 +21,6 @@ public class Taxon implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
 
 	private String rank;
@@ -35,10 +41,15 @@ public class Taxon implements Serializable {
 	private Set<Taxon> children;
 
 	//bi-directional many-to-one association to TaxonExtraName
-	@OneToMany(mappedBy="taxon")
+	@OneToMany(mappedBy="taxon", cascade = { PERSIST, REMOVE })
 	private Set<TaxonExtraName> taxonExtraNames;
 
-    public Taxon() {
+	protected Taxon() {
+		
+	}
+	
+    public Taxon(Integer id) {
+   	 this.id = id;
     }
 
 	public Integer getId() {
@@ -85,16 +96,24 @@ public class Taxon implements Serializable {
 		return this.children;
 	}
 
-	public void setChildren(Set<Taxon> children) {
-		this.children = children;
+	public boolean addChildTaxon(Taxon taxon) {
+		if (children == null)
+			this.children = new HashSet<Taxon>();
+		return this.children.add(taxon);
 	}
 	
 	public Set<TaxonExtraName> getTaxonExtraNames() {
 		return this.taxonExtraNames;
 	}
 
-	public void setTaxonExtraNames(Set<TaxonExtraName> taxonExtraNames) {
-		this.taxonExtraNames = taxonExtraNames;
+	public boolean addTaxonExtraName(TaxonExtraName extraName) {
+		if (this.taxonExtraNames == null)
+			this.taxonExtraNames = new HashSet<TaxonExtraName>();
+		return this.taxonExtraNames.add(extraName);
 	}
 	
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this).append("id", id).append("scientific name", scientificName).append("rank", rank).append("parent_id", parentTaxon.id).toString();
+	}
 }
