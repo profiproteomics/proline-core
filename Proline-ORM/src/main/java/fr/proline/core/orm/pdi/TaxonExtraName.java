@@ -3,6 +3,8 @@ package fr.proline.core.orm.pdi;
 import java.io.Serializable;
 import javax.persistence.*;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 
 /**
  * The persistent class for the taxon_extra_name database table.
@@ -23,7 +25,7 @@ public class TaxonExtraName implements Serializable {
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	private Integer value;
+	private String value;
 
 	//bi-directional many-to-one association to Taxon
     @ManyToOne
@@ -56,11 +58,11 @@ public class TaxonExtraName implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public Integer getValue() {
+	public String getValue() {
 		return this.value;
 	}
 
-	public void setValue(Integer value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 
@@ -72,4 +74,8 @@ public class TaxonExtraName implements Serializable {
 		this.taxon = taxon;
 	}
 	
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this).append("extra name", value).append("class", class_).toString();
+	}
 }
