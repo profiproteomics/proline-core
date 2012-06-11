@@ -1,6 +1,9 @@
 package fr.proline.core.orm.ps;
 
+import static javax.persistence.CascadeType.PERSIST;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -14,7 +17,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import static javax.persistence.CascadeType.PERSIST;
 
 
 /**
@@ -100,14 +102,15 @@ public class PtmSpecificity implements Serializable {
 		this.classification = classification;
 	}
 
+	public boolean addEvidence(PtmEvidence evidence) {
+		if (this.evidences == null)
+			this.evidences = new ArrayList<PtmEvidence>();
+		return this.evidences.add(evidence);
+	}
+	
 	public List<PtmEvidence> getEvidences() {
 		return evidences;
 	}
 
-	public void setEvidence(List<PtmEvidence> evidences) {
-		this.evidences = evidences;
-	}
-	
-	
-	
+
 }
