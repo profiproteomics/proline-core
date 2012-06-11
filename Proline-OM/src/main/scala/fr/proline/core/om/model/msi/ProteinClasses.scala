@@ -64,7 +64,7 @@ case class Protein ( // Required fields
   
   // Requirements
   require( isNotEmpty(sequence) )
-  require( alphabet.matches("aa|rna|dna") )
+  require( alphabet.matches("aa|rna|dna") ) // TODO: create an enumeration
   
   // Define secondary constructors
   def this( sequence: String, id: Int = Protein.generateNewId(), alphabet: String = "aa" ) = {
@@ -99,13 +99,13 @@ case class SequenceMatch ( // Required fields
                    private var bestPeptideMatchId: Int = 0,
                    var bestPeptideMatch: Option[PeptideMatch] = null,
                    
-                   var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                   var properties: Option[SequenceMatchProperties] = None
                    
                    ) {
   
   // Requirements
-  require( start > 0 && end > start )
-  require( peptideId > 0 || peptide != null )
+  require( start > 0 , "peptide sequence position must be striclty positive" )
+  require( end > start , "peptide end position must be greater than start position" )
   
   def getPeptideId : Int = { if(peptide != null && peptide != None) peptide.get.id else peptideId }
 
@@ -142,7 +142,7 @@ case class ProteinMatch (
                    var peptideMatchesCount: Int = 0,
                    var sequenceMatches: Array[SequenceMatch] = null,
                    
-                   var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                   var properties: Option[ProteinMatchProperties] = None
                    
                    ) {
   

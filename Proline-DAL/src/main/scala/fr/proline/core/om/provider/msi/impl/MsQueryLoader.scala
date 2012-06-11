@@ -5,6 +5,7 @@ import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.Ms1Query
 import fr.proline.core.om.model.msi.Ms2Query
 
+@deprecated
 class MsQueryLoader( val msiDb: DatabaseConfig ) {
   
   import scala.collection.mutable.ArrayBuffer

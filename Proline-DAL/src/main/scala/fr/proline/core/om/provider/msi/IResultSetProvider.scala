@@ -1,11 +1,13 @@
 package fr.proline.core.om.provider.msi
-import fr.proline.core.om.model.msi.ResultSet
 
+import fr.proline.core.om.model.msi.ResultSet
 
 trait IResultSetProvider {
 
-  def getResultSets( resultSetIds: Seq[Int] ): Array[Option[ResultSet]]
+  def getResultSetsAsOptions( resultSetIds: Seq[Int] ): Array[Option[ResultSet]]
   
-  def getResultSet( resultSetId:Int ): Option[ResultSet] = { getResultSets( Array(resultSetId) )(0) }
+  def getResultSets( resultSetIds: Seq[Int] ): Array[ResultSet]
+  
+  def getResultSet( resultSetId:Int ): Option[ResultSet] = { getResultSetsAsOptions( Array(resultSetId) )(0) }
  
 }

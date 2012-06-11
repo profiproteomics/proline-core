@@ -5,8 +5,8 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.dal.MsiDb
 
+@deprecated
 class PeptideMatchLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: DatabaseConfig = null ) {
-  
   
   import fr.proline.core.dal.helper.MsiDbHelper
   

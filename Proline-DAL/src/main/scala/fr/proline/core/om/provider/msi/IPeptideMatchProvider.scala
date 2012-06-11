@@ -2,18 +2,20 @@ package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.PeptideMatch
 
-
 trait IPeptideMatchProvider {
  
-  def getPeptideMatches( pepMatchIds: Seq[Int] ): Array[Option[PeptideMatch]]
+  def getPeptideMatchesAsOptions( pepMatchIds: Seq[Int] ): Array[Option[PeptideMatch]]
+  
+  def getPeptideMatches( pepMatchIds: Seq[Int] ): Array[PeptideMatch]
+  
+  def getResultSetsPeptideMatches( resultSetIds: Seq[Int] ): Array[PeptideMatch]
+  
   
   def getPeptideMatch( pepMatchId:Int ): Option[PeptideMatch] = {
-    getPeptideMatches( Array(pepMatchId) )(0)
+    getPeptideMatchesAsOptions( Array(pepMatchId) )(0)
   }
   
-  def getResultSetsPeptideMatches( resultSetIds: Seq[Int] ): Array[Option[PeptideMatch]]
-  
-  def getResultSetPeptideMatches( resultSetId: Int ): Array[Option[PeptideMatch]] = {
+  def getResultSetPeptideMatches( resultSetId: Int ): Array[PeptideMatch] = {
     getResultSetsPeptideMatches( Array(resultSetId) )
   }
   

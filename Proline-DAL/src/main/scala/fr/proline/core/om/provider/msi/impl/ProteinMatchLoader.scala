@@ -6,6 +6,7 @@ import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.SequenceMatch
 import fr.proline.core.dal.MsiDb
 
+@deprecated
 class ProteinMatchLoader( val msiDbConfig: DatabaseConfig ) {
   
   import scala.collection.mutable.ArrayBuffer

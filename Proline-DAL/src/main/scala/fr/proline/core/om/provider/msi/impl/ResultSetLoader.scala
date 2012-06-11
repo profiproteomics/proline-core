@@ -4,9 +4,10 @@ import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.dal.MsiDb
 
+@deprecated
 class ResultSetLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: DatabaseConfig = null )  {
   
-    import fr.proline.core.dal.helper.MsiDbHelper
+  import fr.proline.core.dal.helper.MsiDbHelper
   
   def getResultSet( rsId: Int ): ResultSet = { getResultSets( Array( rsId) )(0) }
   

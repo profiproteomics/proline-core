@@ -7,6 +7,7 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 
+@deprecated
 class PeptideLoader( val psDb: DatabaseConfig ) {
   
   import scala.collection.mutable.ArrayBuffer

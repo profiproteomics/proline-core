@@ -119,7 +119,7 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
     // Store RDB result set
     // TODO: use JPA instead
     
-    val rsInsertQuery = MsiDbResultSetTable.getInsertQuery { t =>
+    val rsInsertQuery = MsiDbResultSetTable.makeInsertQuery { t =>
       List( t.name, t.description, t.`type`, t.modificationTimestamp, t.decoyResultSetId, t.msiSearchId )
     }
     
@@ -314,7 +314,7 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
     
     // Store peptide matches
     val peptideMatchCount = this._storer.storeRsPeptideMatches( resultSet )    
-    logger.info( "peptideMatchCount peptide matches have been stored !" )
+    logger.info( peptideMatchCount + " peptide matches have been stored !" )
     
     // Store protein matches
     this._storer.storeRsProteinMatches( resultSet )    

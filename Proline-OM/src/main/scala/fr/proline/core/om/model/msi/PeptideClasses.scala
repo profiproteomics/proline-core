@@ -369,10 +369,7 @@ case class PeptideInstance ( // Required fields
                         val children: Array[PeptideInstance] = null,                         
                         
                         private val unmodifiedPeptideId: Int = 0,
-                        val unmodifiedPeptide: Option[Peptide] = null,
-                        
-                        private val unmodifiedPepInstanceId: Int = 0,
-                        val unmodifiedPepInstance: Option[PeptideInstance] = null,
+                        val unmodifiedPeptide: Option[Peptide] = null,                        
                         
                         // Mutable optional fields
                         var proteinMatchesCount: Int = 0,
@@ -381,7 +378,8 @@ case class PeptideInstance ( // Required fields
                         var elutionTime: Float = 0,
                         
                         var peptideSets: Array[PeptideSet] = null,
-                        private var resultSummaryId: Int = 0,                          
+                        var bestPeptideMatchId: Int = 0,
+                        var resultSummaryId: Int = 0,
                         
                         var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any],
                         var peptideMatchPropertiesById: Map[Int, PeptideMatchProperties ] = null
@@ -390,14 +388,14 @@ case class PeptideInstance ( // Required fields
   
   // Requirements
   require( peptide != null )
-  require( (peptideMatchIds != null || peptideMatches !=null) ) 
+  require( (peptideMatchIds != null || peptideMatches !=null) )
+  
+  lazy val peptideMatchesCount: Int = { getPeptideMatchIds.length }
   
   // Related objects ID getters
   def getPeptideMatchIds : Array[Int] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds }
   
   def getUnmodifiedPeptideId : Int = { if(unmodifiedPeptide != null && unmodifiedPeptide != None) unmodifiedPeptide.get.id else unmodifiedPeptideId }
-  
-  def getUnmodifiedPeptideInstanceId : Int = { if(unmodifiedPepInstance != null && unmodifiedPepInstance != None) unmodifiedPepInstance.get.id else unmodifiedPepInstanceId }
   
   def getPeptideMatchProperties( peptideMatchId: Int ): Option[PeptideMatchProperties] = {
     if( peptideMatchPropertiesById != null ) { peptideMatchPropertiesById.get(peptideMatchId) }
@@ -409,8 +407,6 @@ case class PeptideInstance ( // Required fields
   
   /** Returns true if the sequence is specific to a protein match. */
   def isProteinMatchSpecific: Boolean = { proteinMatchesCount == 1 }
-  
-  def getPeptideMatchesCount: Int = {  peptideMatchIds.length }
 
 }
 
@@ -425,7 +421,7 @@ case class PeptideSetItem (
                    
                    // Mutable optional fields
                    var isBestPeptideSet: Option[Boolean] = None,
-                   private var resultSummaryId: Int = 0,
+                   var resultSummaryId: Int = 0,
                    
                    var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                    ) {
@@ -444,15 +440,15 @@ class PeptideSet ( // Required fields
                    
                    // Immutable optional fields
                    private val proteinSetId: Int = 0,
-                   val proteinSet: Option[ProteinSet] = null,
+                   var proteinSet: Option[ProteinSet] = null,
                    
-                   private val resultSummaryId: Int = 0,
+                   var resultSummaryId: Int = 0,
                    
                    // Mutable optional fields
-                   private var strictSubsetIds: Array[Int] = null,
+                   var strictSubsetIds: Array[Int] = null,
                    var strictSubsets: Option[Array[PeptideSet]] = null,
                    
-                   private var subsumableSubsetIds: Array[Int] = null,
+                   var subsumableSubsetIds: Array[Int] = null,
                    var subsumableSubsets: Option[Array[PeptideSet]] = null,
                    
                    var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]

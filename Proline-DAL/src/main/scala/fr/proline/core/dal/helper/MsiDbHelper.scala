@@ -48,10 +48,8 @@ method get_decoy_rs_id( Int $target_result_set_id! ) {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
     val msiSearchIds = this.msiDb.getOrCreateTransaction.select(
-                         "SELECT msi_search.id FROM msi_search, result_set_msi_search_map " +
-                         "WHERE result_set_msi_search_map.msi_search_id = msi_search.id " +
-                         "AND result_set_msi_search_map.result_set_id IN ("+ 
-                         rsIds.mkString(",") +")" ) { r => r.nextInt.get }
+                         "SELECT msi_search_id FROM result_set " +
+                         "WHERE id IN ("+  rsIds.mkString(",") +")" ) { r => r.nextInt.get }
     
     msiSearchIds.distinct.toArray
   }

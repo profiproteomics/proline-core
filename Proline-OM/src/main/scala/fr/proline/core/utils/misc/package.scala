@@ -81,13 +81,17 @@ package object misc {
     
     import util.matching.Regex
 
+    /** Use a Regex object to match a given string */
     class RichRegex(self: Regex) {
       def ~=(s: String) = self.pattern.matcher(s).matches
     }
     implicit def regexToRichRegex(r: Regex) = new RichRegex(r)
     
+    /** Match a string object to a given regular expression */
     class RichString(self: String) {
+      /** The regular expression is provided as a scala Regex object */
       def =~(r: util.matching.Regex) = r.pattern.matcher(self).matches
+      /** The regular expression is provided as a String  */
       def =~(s: String) = self.matches(s)
     }
     implicit def strToRichStr(str: String) = new RichString(str)

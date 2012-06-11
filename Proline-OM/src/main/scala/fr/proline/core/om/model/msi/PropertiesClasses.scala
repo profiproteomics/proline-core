@@ -36,5 +36,15 @@ case class PeptideInstancePeptideMatchMapProperties (
 
 @JsonSnakeCase
 case class PeaklistProperties (
-  @BeanProperty var spectrumDataCompressionLevel: Option[Int] = None
+  @BeanProperty var spectrumDataCompressionLevel: Option[Int] = None,
+  @BeanProperty var putativePrecursorCharges: Option[Seq[Int]] = None,
+  @BeanProperty var polarity: Option[Char] = None // +/-
+)
+
+@JsonSnakeCase            
+case class SequenceMatchProperties (
+)
+
+@JsonSnakeCase            
+case class ProteinMatchProperties (
 )
