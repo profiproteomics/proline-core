@@ -17,8 +17,8 @@ object PsDbAdminInfosTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbAdminInfosTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbAdminInfosTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbAdminInfosTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbAdminInfosTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbAdminInfosTable.columns.type]( f )
   }
 
 }
@@ -41,8 +41,8 @@ object PsDbAtomLabelTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbAtomLabelTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbAtomLabelTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbAtomLabelTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbAtomLabelTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbAtomLabelTable.columns.type]( f )
   }
 
 }
@@ -65,8 +65,8 @@ object PsDbPeptideTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbPeptideTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbPeptideTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbPeptideTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbPeptideTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbPeptideTable.columns.type]( f )
   }
 
 }
@@ -91,8 +91,8 @@ object PsDbPeptidePtmTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbPeptidePtmTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbPeptidePtmTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbPeptidePtmTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbPeptidePtmTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbPeptidePtmTable.columns.type]( f )
   }
 
 }
@@ -112,8 +112,8 @@ object PsDbPeptidePtmInsertStatusTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbPeptidePtmInsertStatusTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbPeptidePtmInsertStatusTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbPeptidePtmInsertStatusTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbPeptidePtmInsertStatusTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbPeptidePtmInsertStatusTable.columns.type]( f )
   }
 
 }
@@ -135,8 +135,8 @@ object PsDbPtmTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbPtmTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbPtmTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbPtmTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbPtmTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbPtmTable.columns.type]( f )
   }
 
 }
@@ -155,8 +155,8 @@ object PsDbPtmClassificationTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbPtmClassificationTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbPtmClassificationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbPtmClassificationTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbPtmClassificationTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbPtmClassificationTable.columns.type]( f )
   }
 
 }
@@ -182,8 +182,8 @@ object PsDbPtmEvidenceTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbPtmEvidenceTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbPtmEvidenceTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbPtmEvidenceTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbPtmEvidenceTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbPtmEvidenceTable.columns.type]( f )
   }
 
 }
@@ -206,8 +206,8 @@ object PsDbPtmSpecificityTable extends TableDefinition {
     this._getColumnsAsStrList[PsDbPtmSpecificityTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: PsDbPtmSpecificityTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[PsDbPtmSpecificityTable.columns.type]( f )
+  def makeInsertQuery( f: PsDbPtmSpecificityTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[PsDbPtmSpecificityTable.columns.type]( f )
   }
 
 }

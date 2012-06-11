@@ -17,8 +17,8 @@ object MsiDbAdminInfosTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbAdminInfosTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbAdminInfosTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbAdminInfosTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbAdminInfosTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbAdminInfosTable.columns.type]( f )
   }
 
 }
@@ -43,8 +43,8 @@ object MsiDbBioSequenceTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbBioSequenceTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbBioSequenceTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbBioSequenceTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbBioSequenceTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbBioSequenceTable.columns.type]( f )
   }
 
 }
@@ -69,8 +69,8 @@ object MsiDbCacheTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbCacheTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbCacheTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbCacheTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbCacheTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbCacheTable.columns.type]( f )
   }
 
 }
@@ -96,8 +96,8 @@ object MsiDbConsensusSpectrumTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbConsensusSpectrumTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbConsensusSpectrumTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbConsensusSpectrumTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbConsensusSpectrumTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbConsensusSpectrumTable.columns.type]( f )
   }
 
 }
@@ -119,8 +119,8 @@ object MsiDbEnzymeTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbEnzymeTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbEnzymeTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbEnzymeTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbEnzymeTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbEnzymeTable.columns.type]( f )
   }
 
 }
@@ -142,8 +142,8 @@ object MsiDbInstrumentConfigTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbInstrumentConfigTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbInstrumentConfigTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbInstrumentConfigTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbInstrumentConfigTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbInstrumentConfigTable.columns.type]( f )
   }
 
 }
@@ -164,8 +164,8 @@ object MsiDbIonSearchTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbIonSearchTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbIonSearchTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbIonSearchTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbIonSearchTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbIonSearchTable.columns.type]( f )
   }
 
 }
@@ -188,8 +188,8 @@ object MsiDbMasterQuantComponentTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbMasterQuantComponentTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbMasterQuantComponentTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbMasterQuantComponentTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbMasterQuantComponentTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbMasterQuantComponentTable.columns.type]( f )
   }
 
 }
@@ -219,8 +219,8 @@ object MsiDbMasterQuantPeptideIonTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbMasterQuantPeptideIonTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbMasterQuantPeptideIonTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbMasterQuantPeptideIonTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbMasterQuantPeptideIonTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbMasterQuantPeptideIonTable.columns.type]( f )
   }
 
 }
@@ -243,8 +243,8 @@ object MsiDbMasterQuantReporterIonTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbMasterQuantReporterIonTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbMasterQuantReporterIonTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbMasterQuantReporterIonTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbMasterQuantReporterIonTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbMasterQuantReporterIonTable.columns.type]( f )
   }
 
 }
@@ -262,14 +262,15 @@ object MsiDbMsQueryTable extends TableDefinition {
     val serializedProperties = Value("serialized_properties")
     val spectrumId = Value("spectrum_id")
     val msiSearchId = Value("msi_search_id")
+    
   }
 
   def getColumnsAsStrList( f: MsiDbMsQueryTable.columns.type => List[Enumeration#Value] ): List[String] = {
     this._getColumnsAsStrList[MsiDbMsQueryTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbMsQueryTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbMsQueryTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbMsQueryTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbMsQueryTable.columns.type]( f )
   }
 
 }
@@ -300,8 +301,8 @@ object MsiDbMsiSearchTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbMsiSearchTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbMsiSearchTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbMsiSearchTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbMsiSearchTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbMsiSearchTable.columns.type]( f )
   }
 
 }
@@ -321,8 +322,8 @@ object MsiDbMsiSearchObjectTreeMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbMsiSearchObjectTreeMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbMsiSearchObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbMsiSearchObjectTreeMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbMsiSearchObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbMsiSearchObjectTreeMapTable.columns.type]( f )
   }
 
 }
@@ -343,8 +344,8 @@ object MsiDbMsmsSearchTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbMsmsSearchTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbMsmsSearchTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbMsmsSearchTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbMsmsSearchTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbMsmsSearchTable.columns.type]( f )
   }
 
 }
@@ -365,8 +366,8 @@ object MsiDbObjectTreeTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbObjectTreeTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbObjectTreeTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbObjectTreeTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbObjectTreeTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbObjectTreeTable.columns.type]( f )
   }
 
 }
@@ -389,8 +390,8 @@ object MsiDbObjectTreeSchemaTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbObjectTreeSchemaTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbObjectTreeSchemaTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbObjectTreeSchemaTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbObjectTreeSchemaTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbObjectTreeSchemaTable.columns.type]( f )
   }
 
 }
@@ -415,8 +416,8 @@ object MsiDbPeaklistTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeaklistTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeaklistTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeaklistTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeaklistTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeaklistTable.columns.type]( f )
   }
 
 }
@@ -435,8 +436,8 @@ object MsiDbPeaklistRelationTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeaklistRelationTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeaklistRelationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeaklistRelationTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeaklistRelationTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeaklistRelationTable.columns.type]( f )
   }
 
 }
@@ -457,8 +458,8 @@ object MsiDbPeaklistSoftwareTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeaklistSoftwareTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeaklistSoftwareTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeaklistSoftwareTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeaklistSoftwareTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeaklistSoftwareTable.columns.type]( f )
   }
 
 }
@@ -480,8 +481,8 @@ object MsiDbPeptideTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideTable.columns.type]( f )
   }
 
 }
@@ -510,8 +511,8 @@ object MsiDbPeptideInstanceTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideInstanceTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideInstanceTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideInstanceTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideInstanceTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideInstanceTable.columns.type]( f )
   }
 
 }
@@ -532,8 +533,8 @@ object MsiDbPeptideInstancePeptideMatchMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideInstancePeptideMatchMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideInstancePeptideMatchMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideInstancePeptideMatchMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideInstancePeptideMatchMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideInstancePeptideMatchMapTable.columns.type]( f )
   }
 
 }
@@ -565,8 +566,8 @@ object MsiDbPeptideMatchTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideMatchTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideMatchTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideMatchTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideMatchTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideMatchTable.columns.type]( f )
   }
 
 }
@@ -586,8 +587,8 @@ object MsiDbPeptideMatchObjectTreeMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideMatchObjectTreeMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideMatchObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideMatchObjectTreeMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideMatchObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideMatchObjectTreeMapTable.columns.type]( f )
   }
 
 }
@@ -607,8 +608,8 @@ object MsiDbPeptideMatchRelationTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideMatchRelationTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideMatchRelationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideMatchRelationTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideMatchRelationTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideMatchRelationTable.columns.type]( f )
   }
 
 }
@@ -632,8 +633,8 @@ object MsiDbPeptideSetTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideSetTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideSetTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideSetTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideSetTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideSetTable.columns.type]( f )
   }
 
 }
@@ -656,8 +657,8 @@ object MsiDbPeptideSetPeptideInstanceItemTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideSetPeptideInstanceItemTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideSetPeptideInstanceItemTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideSetPeptideInstanceItemTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideSetPeptideInstanceItemTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideSetPeptideInstanceItemTable.columns.type]( f )
   }
 
 }
@@ -677,8 +678,8 @@ object MsiDbPeptideSetProteinMatchMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideSetProteinMatchMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideSetProteinMatchMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideSetProteinMatchMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideSetProteinMatchMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideSetProteinMatchMapTable.columns.type]( f )
   }
 
 }
@@ -699,8 +700,8 @@ object MsiDbPeptideSetRelationTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPeptideSetRelationTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPeptideSetRelationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPeptideSetRelationTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPeptideSetRelationTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPeptideSetRelationTable.columns.type]( f )
   }
 
 }
@@ -731,8 +732,8 @@ object MsiDbProteinMatchTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbProteinMatchTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbProteinMatchTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbProteinMatchTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbProteinMatchTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbProteinMatchTable.columns.type]( f )
   }
 
 }
@@ -752,8 +753,8 @@ object MsiDbProteinMatchSeqDatabaseMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbProteinMatchSeqDatabaseMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbProteinMatchSeqDatabaseMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbProteinMatchSeqDatabaseMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbProteinMatchSeqDatabaseMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbProteinMatchSeqDatabaseMapTable.columns.type]( f )
   }
 
 }
@@ -779,8 +780,8 @@ object MsiDbProteinSetTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbProteinSetTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbProteinSetTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbProteinSetTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbProteinSetTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbProteinSetTable.columns.type]( f )
   }
 
 }
@@ -801,8 +802,8 @@ object MsiDbProteinSetClusterTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbProteinSetClusterTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbProteinSetClusterTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbProteinSetClusterTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbProteinSetClusterTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbProteinSetClusterTable.columns.type]( f )
   }
 
 }
@@ -822,8 +823,8 @@ object MsiDbProteinSetClusterItemTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbProteinSetClusterItemTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbProteinSetClusterItemTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbProteinSetClusterItemTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbProteinSetClusterItemTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbProteinSetClusterItemTable.columns.type]( f )
   }
 
 }
@@ -843,8 +844,8 @@ object MsiDbProteinSetObjectTreeMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbProteinSetObjectTreeMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbProteinSetObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbProteinSetObjectTreeMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbProteinSetObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbProteinSetObjectTreeMapTable.columns.type]( f )
   }
 
 }
@@ -865,8 +866,8 @@ object MsiDbProteinSetProteinMatchItemTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbProteinSetProteinMatchItemTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbProteinSetProteinMatchItemTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbProteinSetProteinMatchItemTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbProteinSetProteinMatchItemTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbProteinSetProteinMatchItemTable.columns.type]( f )
   }
 
 }
@@ -887,8 +888,8 @@ object MsiDbPtmSpecificityTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbPtmSpecificityTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbPtmSpecificityTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbPtmSpecificityTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbPtmSpecificityTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbPtmSpecificityTable.columns.type]( f )
   }
 
 }
@@ -913,8 +914,8 @@ object MsiDbResultSetTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbResultSetTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbResultSetTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbResultSetTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbResultSetTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbResultSetTable.columns.type]( f )
   }
 
 }
@@ -934,8 +935,8 @@ object MsiDbResultSetObjectTreeMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbResultSetObjectTreeMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbResultSetObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbResultSetObjectTreeMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbResultSetObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbResultSetObjectTreeMapTable.columns.type]( f )
   }
 
 }
@@ -954,8 +955,8 @@ object MsiDbResultSetRelationTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbResultSetRelationTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbResultSetRelationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbResultSetRelationTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbResultSetRelationTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbResultSetRelationTable.columns.type]( f )
   }
 
 }
@@ -979,8 +980,8 @@ object MsiDbResultSummaryTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbResultSummaryTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbResultSummaryTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbResultSummaryTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbResultSummaryTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbResultSummaryTable.columns.type]( f )
   }
 
 }
@@ -1000,8 +1001,8 @@ object MsiDbResultSummaryObjectTreeMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbResultSummaryObjectTreeMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbResultSummaryObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbResultSummaryObjectTreeMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbResultSummaryObjectTreeMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbResultSummaryObjectTreeMapTable.columns.type]( f )
   }
 
 }
@@ -1020,8 +1021,8 @@ object MsiDbResultSummaryRelationTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbResultSummaryRelationTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbResultSummaryRelationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbResultSummaryRelationTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbResultSummaryRelationTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbResultSummaryRelationTable.columns.type]( f )
   }
 
 }
@@ -1043,8 +1044,8 @@ object MsiDbScoringTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbScoringTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbScoringTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbScoringTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbScoringTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbScoringTable.columns.type]( f )
   }
 
 }
@@ -1073,8 +1074,8 @@ object MsiDbSearchSettingsTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbSearchSettingsTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbSearchSettingsTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbSearchSettingsTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbSearchSettingsTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbSearchSettingsTable.columns.type]( f )
   }
 
 }
@@ -1095,8 +1096,8 @@ object MsiDbSearchSettingsSeqDatabaseMapTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbSearchSettingsSeqDatabaseMapTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbSearchSettingsSeqDatabaseMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbSearchSettingsSeqDatabaseMapTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbSearchSettingsSeqDatabaseMapTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbSearchSettingsSeqDatabaseMapTable.columns.type]( f )
   }
 
 }
@@ -1120,8 +1121,8 @@ object MsiDbSeqDatabaseTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbSeqDatabaseTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbSeqDatabaseTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbSeqDatabaseTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbSeqDatabaseTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbSeqDatabaseTable.columns.type]( f )
   }
 
 }
@@ -1149,8 +1150,8 @@ object MsiDbSequenceMatchTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbSequenceMatchTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbSequenceMatchTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbSequenceMatchTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbSequenceMatchTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbSequenceMatchTable.columns.type]( f )
   }
 
 }
@@ -1185,8 +1186,8 @@ object MsiDbSpectrumTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbSpectrumTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbSpectrumTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbSpectrumTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbSpectrumTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbSpectrumTable.columns.type]( f )
   }
 
 }
@@ -1205,8 +1206,8 @@ object MsiDbUsedEnzymeTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbUsedEnzymeTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbUsedEnzymeTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbUsedEnzymeTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbUsedEnzymeTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbUsedEnzymeTable.columns.type]( f )
   }
 
 }
@@ -1228,8 +1229,8 @@ object MsiDbUsedPtmTable extends TableDefinition {
     this._getColumnsAsStrList[MsiDbUsedPtmTable.columns.type]( f )
   }
   
-  def getInsertQuery( f: MsiDbUsedPtmTable.columns.type => List[Enumeration#Value] ): String = {
-    this._getInsertQuery[MsiDbUsedPtmTable.columns.type]( f )
+  def makeInsertQuery( f: MsiDbUsedPtmTable.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[MsiDbUsedPtmTable.columns.type]( f )
   }
 
 }

@@ -72,20 +72,22 @@ package object sql {
       List() ++ f(this.columns.asInstanceOf[A]) map { _.toString }
     }
     
-    def getInsertQuery(): String = {
-      this.buildInsertQuery( this.getColumnsAsStrList )
+    def makeInsertQuery(): String = {
+      this.makeInsertQuery( this.getColumnsAsStrList )
     }
     
     // TODO: implicit conversion
-    def _getInsertQuery[A <: Enumeration]( f: A => List[Enumeration#Value] ): String = {
-      this.buildInsertQuery( this._getColumnsAsStrList[A]( f ) )    
+    def _makeInsertQuery[A <: Enumeration]( f: A => List[Enumeration#Value] ): String = {
+      this.makeInsertQuery( this._getColumnsAsStrList[A]( f ) )    
     }
     
-    def buildInsertQuery( colsAsStrList: List[String] ): String = {
+    def makeInsertQuery( colsAsStrList: List[String] ): String = {
       val valuesStr = List.fill(colsAsStrList.length)("?").mkString(",")
   
       "INSERT INTO "+ this.tableName+" ("+ colsAsStrList.mkString(",") +") VALUES ("+valuesStr+")"
     }
+    
+    implicit def enumValueToString(v: Enumeration#Value): String = v.toString
     
   }
 }
