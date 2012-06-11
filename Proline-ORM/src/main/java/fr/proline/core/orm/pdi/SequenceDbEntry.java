@@ -35,26 +35,30 @@ public class SequenceDbEntry implements Serializable {
 
 	private String version;
 
-	//uni-directional many-to-one association to BioSequence
-    @ManyToOne
-	@JoinColumn(name="bio_sequence_id")
+	// uni-directional many-to-one association to BioSequence
+	@ManyToOne
+	@JoinColumn(name = "bio_sequence_id")
 	private BioSequence bioSequence;
 
-	//uni-directional many-to-one association to SequenceDbConfig
-    @ManyToOne
-	@JoinColumn(name="database_type")
+	// uni-directional many-to-one association to SequenceDbConfig
+	@ManyToOne
+	@JoinColumn(name = "database_type")
 	private SequenceDbConfig sequenceDbConfig;
 
-	//uni-directional many-to-one association to SequenceDbInstance
-    @ManyToOne
-	@JoinColumn(name="seq_db_instance_id")
+	// uni-directional many-to-one association to SequenceDbInstance
+	@ManyToOne
+	@JoinColumn(name = "seq_db_instance_id")
 	private SequenceDbInstance sequenceDbInstance;
 
-	//uni-directional many-to-one association to Taxon
-    @ManyToOne
+	// uni-directional many-to-one association to Taxon
+	@ManyToOne
+	@JoinColumn(name = "taxon_id",  insertable = false, updatable = false)
 	private Taxon taxon;
 
-    public SequenceDbEntry() {
+	@Column(name = "taxon_id")
+	private Integer taxonId;
+
+	public SequenceDbEntry() {
     }
 
 	public Integer getId() {
@@ -151,6 +155,14 @@ public class SequenceDbEntry implements Serializable {
 
 	public void setTaxon(Taxon taxon) {
 		this.taxon = taxon;
+	}
+	
+	public Integer getTaxonId() {
+		return taxonId;
+	}
+
+	public void setTaxonId(Integer taxonId) {
+		this.taxonId = taxonId;
 	}
 	
 }
