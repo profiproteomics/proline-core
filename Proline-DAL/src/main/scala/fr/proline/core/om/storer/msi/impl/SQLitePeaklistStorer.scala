@@ -28,7 +28,7 @@ private[msi] class SQLitePeaklistStorer( msiDb: MsiDb ) extends IPeaklistStorer 
   private def _insertPeaklist( peaklist: Peaklist ): Unit = {
     
     val peaklistColsList = MsiDbPeaklistTable.getColumnsAsStrList().filter { _ != "id" } 
-    val peaklistInsertQuery = MsiDbPeaklistTable.buildInsertQuery( peaklistColsList )
+    val peaklistInsertQuery = MsiDbPeaklistTable.makeInsertQuery( peaklistColsList )
     
     val msiDbTx = this.msiDb.getOrCreateTransaction()
     msiDbTx.executeBatch( peaklistInsertQuery, true ) { stmt =>
@@ -52,11 +52,11 @@ private[msi] class SQLitePeaklistStorer( msiDb: MsiDb ) extends IPeaklistStorer 
     logger.info( "storing spectra..." )
  
     val spectrumColsList = MsiDbSpectrumTable.getColumnsAsStrList().filter { _ != "id" }
-    val spectrumInsertQuery = MsiDbSpectrumTable.buildInsertQuery( spectrumColsList )
+    val spectrumInsertQuery = MsiDbSpectrumTable.makeInsertQuery( spectrumColsList )
     
     // Insert corresponding spectra
     val spectrumIdByTitle = collection.immutable.Map.newBuilder[String,Int]
-    this.msiDb.getOrCreateTransaction.executeBatch( spectrumInsertQuery ) { stmt =>      
+    this.msiDb.getOrCreateTransaction.executeBatch( spectrumInsertQuery ) { stmt =>
       peaklistContainer.eachSpectrum { spectrum => 
         this._insertSpectrum( stmt, spectrum, peaklist.id )
         spectrumIdByTitle += ( spectrum.title -> spectrum.id )

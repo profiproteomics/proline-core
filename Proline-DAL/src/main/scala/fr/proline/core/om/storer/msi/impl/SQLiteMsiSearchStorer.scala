@@ -47,7 +47,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     //val msQueryIdByTmpId = new HashMap[Int,Int]()
         
     val msQueryColsList = MsiDbMsQueryTable.getColumnsAsStrList().filter { _ != "id" }
-    val msQueryInsertQuery = MsiDbMsQueryTable.buildInsertQuery( msQueryColsList )
+    val msQueryInsertQuery = MsiDbMsQueryTable.makeInsertQuery( msQueryColsList )
     
     val msiDbTx = this.msiDb.getOrCreateTransaction()
     msiDbTx.executeBatch( msQueryInsertQuery, true ) { stmt =>
@@ -108,7 +108,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     if( seqDbIds.length == 0 ) {
       
       val seqDbColsList = MsiDbSeqDatabaseTable.getColumnsAsStrList().filter { _ != "id" }
-      val seqDbInsertQuery = MsiDbSeqDatabaseTable.buildInsertQuery( seqDbColsList )
+      val seqDbInsertQuery = MsiDbSeqDatabaseTable.makeInsertQuery( seqDbColsList )
       
       val msiDbTx = this.msiDb.getOrCreateTransaction()
       msiDbTx.executeBatch( seqDbInsertQuery, true ) { stmt =>
@@ -139,7 +139,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
       throw new Exception("instrument configuration must first be persisted")
     
     val searchSettingsColsList = MsiDbSearchSettingsTable.getColumnsAsStrList().filter { _ != "id" }
-    val searchSettingsInsertQuery = MsiDbSearchSettingsTable.buildInsertQuery( searchSettingsColsList )
+    val searchSettingsInsertQuery = MsiDbSearchSettingsTable.makeInsertQuery( searchSettingsColsList )
     
     val msiDbTx = this.msiDb.getOrCreateTransaction()
     msiDbTx.executeBatch( searchSettingsInsertQuery, true ) { stmt =>
@@ -184,7 +184,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
       throw new Exception("peaklist must first be persisted")
     
     val msiSearchColsList = MsiDbMsiSearchTable.getColumnsAsStrList().filter { _ != "id" }
-    val msiSearchInsertQuery = MsiDbMsiSearchTable.buildInsertQuery( msiSearchColsList )
+    val msiSearchInsertQuery = MsiDbMsiSearchTable.makeInsertQuery( msiSearchColsList )
     
     val msiDbTx = this.msiDb.getOrCreateTransaction()
     msiDbTx.executeBatch( msiSearchInsertQuery, true ) { stmt =>

@@ -43,7 +43,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
   def storeNewPeptides( peptides: Seq[Peptide] ): Array[Peptide] = {
     
     // Create a transaction using secondary MsiDb connection
-    val msiDbTx = this.msiDb2.getOrCreateTransaction()
+    val msiDbTx = this.msiDb1.getOrCreateTransaction()
     
     val newPeptides = new ArrayBuffer[Peptide](0)
     msiDbTx.executeBatch( "INSERT INTO peptide VALUES (?,?,?,?,?)" ) { stmt =>
@@ -67,9 +67,6 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
       }
     
     }
-    
-    // Commit transaction
-    this.msiDb2.commitTransaction()
     
     newPeptides.toArray
 
@@ -125,7 +122,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
     val scoringIdByType = this.scoringIdByType
     
     val pepMatchColsList = MsiDbPeptideMatchTable.getColumnsAsStrList().filter { _ != "id" }
-    val pepMatchInsertQuery = MsiDbPeptideMatchTable.buildInsertQuery( pepMatchColsList )
+    val pepMatchInsertQuery = MsiDbPeptideMatchTable.makeInsertQuery( pepMatchColsList )
     
     msiDb1.getOrCreateTransaction().executeBatch(pepMatchInsertQuery, true ) { stmt =>
       
@@ -187,7 +184,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
     val scoringIdByScoreType = this.scoringIdByType
     
     val protMatchColsList = MsiDbProteinMatchTable.getColumnsAsStrList().filter { _ != "id" }
-    val protMatchInsertQuery = MsiDbProteinMatchTable.buildInsertQuery( protMatchColsList )
+    val protMatchInsertQuery = MsiDbProteinMatchTable.makeInsertQuery( protMatchColsList )
     
     logger.info( "protein matches are going to be inserted..." )
     msiDb1.getOrCreateTransaction().executeBatch( protMatchInsertQuery, true ) { stmt =>
@@ -246,7 +243,7 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
     
     var count = 0
     
-    msiDbTx.executeBatch( MsiDbSequenceMatchTable.getInsertQuery ) { stmt =>
+    msiDbTx.executeBatch( MsiDbSequenceMatchTable.makeInsertQuery ) { stmt =>
       
       // Iterate over protein matches
       for( proteinMatch <- proteinMatches ) {
