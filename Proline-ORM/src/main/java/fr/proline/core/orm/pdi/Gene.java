@@ -2,6 +2,7 @@ package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
 import java.util.Set;
 
 
@@ -9,7 +10,12 @@ import java.util.Set;
  * The persistent class for the gene database table.
  * 
  */
+
 @Entity
+
+@NamedQuery(name="findGeneByNameAndTaxon",
+query="select g from Gene g where g.name = :name and g.taxonId = :taxid")
+
 public class Gene implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -34,12 +40,16 @@ public class Gene implements Serializable {
 	@OneToMany(mappedBy="gene")
 	private Set<ChromosomeLocation> chromosomeLocations;
 
-	//uni-directional many-to-one association to Taxon
-    @ManyToOne
+	// uni-directional many-to-one association to Taxon
+	@ManyToOne
+	@JoinColumn(name = "taxon_id", insertable = false, updatable = false)
 	private Taxon taxon;
 
-    public Gene() {
-    }
+	@Column(name = "taxon_id")
+	private Integer taxonId;
+
+	public Gene() {
+	}
 
 	public Integer getId() {
 		return this.id;
@@ -103,6 +113,14 @@ public class Gene implements Serializable {
 
 	public void setTaxon(Taxon taxon) {
 		this.taxon = taxon;
+	}
+
+	public Integer getTaxonId() {
+		return taxonId;
+	}
+
+	public void setTaxonId(Integer taxonId) {
+		this.taxonId = taxonId;
 	}
 	
 }
