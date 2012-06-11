@@ -9,6 +9,8 @@ import javax.persistence.*;
  * 
  */
 @Entity
+@NamedQuery(name="findProteinByValueAndTaxon",
+query="select p from ProteinIdentifier p where p.value = :value and p.taxonId = :taxid")
 @Table(name="protein_identifier")
 public class ProteinIdentifier implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -28,19 +30,23 @@ public class ProteinIdentifier implements Serializable {
 
 	private String value;
 
-	//bi-directional many-to-one association to BioSequence
-    @ManyToOne
-	@JoinColumn(name="bio_sequence_id")
+	// bi-directional many-to-one association to BioSequence
+	@ManyToOne
+	@JoinColumn(name = "bio_sequence_id")
 	private BioSequence bioSequence;
 
-	//uni-directional many-to-one association to SequenceDbConfig
-    @ManyToOne
-	@JoinColumn(name="database_type")
+	// uni-directional many-to-one association to SequenceDbConfig
+	@ManyToOne
+	@JoinColumn(name = "database_type")
 	private SequenceDbConfig sequenceDbConfig;
 
-	//uni-directional many-to-one association to Taxon
-    @ManyToOne
+	// uni-directional many-to-one association to Taxon
+	@ManyToOne
+	@JoinColumn(name = "taxon_id", insertable = false, updatable = false)
 	private Taxon taxon;
+
+	@Column(name = "taxon_id")
+	private Integer taxonId;
 
     public ProteinIdentifier() {
     }
@@ -107,6 +113,14 @@ public class ProteinIdentifier implements Serializable {
 
 	public void setTaxon(Taxon taxon) {
 		this.taxon = taxon;
+	}
+	
+	public Integer getTaxonId() {
+		return taxonId;
+	}
+
+	public void setTaxonId(Integer taxonId) {
+		this.taxonId = taxonId;
 	}
 	
 }
