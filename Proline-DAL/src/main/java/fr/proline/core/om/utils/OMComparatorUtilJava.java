@@ -7,7 +7,7 @@ import java.util.Set;
 import fr.proline.core.om.model.msi.LocatedPtm;
 import fr.proline.core.orm.ps.PeptidePtm;
 
-public class OMComparatorUtil {
+public class OMComparatorUtilJava {
 
 	/**
 	 * Compare the OM <code>LocatedPtm</code> with the ORM <code>PeptidePtm</code>. Comparison is done on Ptm full Name and Location. 

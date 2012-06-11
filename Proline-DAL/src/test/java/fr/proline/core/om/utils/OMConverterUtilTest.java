@@ -29,7 +29,7 @@ public class OMConverterUtilTest extends DatabaseTestCase {
         initDatabase();
         initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
         loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");
-        converter = new OMConverterUtil();
+        converter = new OMConverterUtil( true );
 	}
 	
 	@Test

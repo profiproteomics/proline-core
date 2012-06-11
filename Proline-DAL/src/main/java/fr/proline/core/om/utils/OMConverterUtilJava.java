@@ -8,8 +8,8 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 
-import scala.Option;
-import scala.Some;
+//import scala.Option;
+//import scala.Some;
 import scala.actors.threadpool.Arrays;
 import fr.proline.core.om.model.msi.IonTypes;
 import fr.proline.core.om.model.msi.IonTypes$;
@@ -29,7 +29,7 @@ import fr.proline.repository.ProlineRepository.Databases;
  * @author VD225637
  *
  */ 
-public class OMConverterUtil {
+public class OMConverterUtilJava {
 	
 	private boolean useCachedObject;
 	
@@ -41,7 +41,7 @@ public class OMConverterUtil {
 	Map<Integer, fr.proline.core.om.model.msi.PtmDefinition> ptmDefinitionsCache;
 	Map<Integer, fr.proline.core.om.model.msi.PeptideSet> peptideSetsCache;	
 
-	
+	/*
 	public OMConverterUtil(){
 		this(true);
 	}
@@ -55,7 +55,7 @@ public class OMConverterUtil {
 		ptmNamesCache = new HashMap<String, fr.proline.core.om.model.msi.PtmNames>();
 		ptmDefinitionsCache= new HashMap<Integer, fr.proline.core.om.model.msi.PtmDefinition>();
 		peptideSetsCache = new HashMap<Integer, fr.proline.core.om.model.msi.PeptideSet>();
-	}
+	}*/
 	
 	
 	public fr.proline.core.om.model.msi.PeptideMatch convertPeptideMatchORM2OM(fr.proline.core.orm.msi.PeptideMatch pepMatchORM){
@@ -77,7 +77,7 @@ public class OMConverterUtil {
 	 * @return an OM PeptideInstance corresponding to specified ORM PeptideInstance. 
 	 */
 	public fr.proline.core.om.model.msi.PeptideInstance convertPeptideInstanceORM2OM(fr.proline.core.orm.msi.PeptideInstance pepInstORM, boolean getPepMatches, EntityManager msiEM){
-
+/*
 		//Verify if object is in cache 
 		if(useCachedObject &&peptideInstancesCache.containsKey(pepInstORM.getId()) ){
 			return peptideInstancesCache.get(pepInstORM.getId());
@@ -149,7 +149,7 @@ public class OMConverterUtil {
 		//Create OM PeptideInstance 
 		fr.proline.core.om.model.msi.PeptideInstance convertedPepInst  = new fr.proline.core.om.model.msi.PeptideInstance(pepInstORM.getId(), 
 									convertPeptidePsORM2OM(assocPep), pepMatchesIds, pepMatchesOM, pepInstanceChilsArray, pepInstORM.getUnmodifiedPeptideId(), unmodifiedOMPep, 
-									unmodifiedORMPepInst.getId(), unmodifiedOMPepInst, pepInstORM.getProteinMatchCount(),
+									pepInstORM.getProteinMatchCount(),
 									pepInstORM.getProteinSetCount(),pepInstORM.getSelectionLevel(), pepInstORM.getElutionTime().floatValue(), null, pepInstORM.getResultSummary().getId(), null, null);
 		if(useCachedObject)
 			peptideInstancesCache.put(pepInstORM.getId(), convertedPepInst);
@@ -170,7 +170,8 @@ public class OMConverterUtil {
 		peptideSets = pepSetsById.values().toArray(peptideSets);
 		convertedPepInst.peptideSets_$eq(peptideSets);
 	
-		return convertedPepInst;
+		return convertedPepInst;*/
+	  return null;
 	}
 	
 	
@@ -183,6 +184,7 @@ public class OMConverterUtil {
 	 */
 	public fr.proline.core.om.model.msi.PeptideSet convertPepSetORM2OM(fr.proline.core.orm.msi.PeptideSet pepSetORM, boolean getPepMatchForNewPepInst, EntityManager msiEM){
 		
+	  /*
 		//Verify if exist in cache
 		if(useCachedObject && peptideSetsCache.containsKey(pepSetORM.getId()))
 			return peptideSetsCache.get(pepSetORM.getId());
@@ -243,6 +245,9 @@ public class OMConverterUtil {
 		if(useCachedObject)
 			peptidesCache.put(pepMsiOm.id(), pepMsiOm);
 		return pepMsiOm;
+		*/
+	  
+	  return null;
 	}
 	
 	/**
@@ -256,7 +261,7 @@ public class OMConverterUtil {
 	 * @return created LocatedPtm (with associated objects)
 	 */
 	public fr.proline.core.om.model.msi.LocatedPtm convertPeptidePtmPsORM2OM(fr.proline.core.orm.ps.PeptidePtm ptmPsORM){		
-		
+		/*
 		//Verify if object is in cache 
 		if(useCachedObject && locatedPTMSCache.containsKey(ptmPsORM.getId()) ){
 			return locatedPTMSCache.get(ptmPsORM.getId());
@@ -284,7 +289,9 @@ public class OMConverterUtil {
 		fr.proline.core.om.model.msi.LocatedPtm ptmMsiOM = new LocatedPtm(ptmDefMsiOM, ptmPsORM.getSeqPosition(), ptmPsORM.getMonoMass(), ptmPsORM.getAverageMass(), precursorEvidence.composition(), isNterm, isCterm);
 		if(useCachedObject)
 			locatedPTMSCache.put(ptmPsORM.getId(), ptmMsiOM);
-		return ptmMsiOM;
+		return ptmMsiOM;*/
+	  
+	  return null;
 	}
 	
 	/**
@@ -295,7 +302,8 @@ public class OMConverterUtil {
 	 * @return created PtmDefinition (with associated objects)
 	 */
 	public fr.proline.core.om.model.msi.PtmDefinition convertPtmSpecificityORM2OM(fr.proline.core.orm.ps.PtmSpecificity ptmSpecificityORM){
-
+  
+	  /*
 		//Verify PtmDefinition exist in cache
 		if(useCachedObject && ptmDefinitionsCache.containsKey(ptmSpecificityORM.getId()))
 			return ptmDefinitionsCache.get(ptmSpecificityORM.getId());
@@ -310,7 +318,7 @@ public class OMConverterUtil {
 				ptmNamesCache.put(ptmSpecificityORM.getPtm().getFullName(), ptmName);
 		}
 		
-		//*************** PtmEvidences ***************// 		
+		//*************** PtmEvidences ***************	
 		
 		//Get PtmEvidences referencing PtmSpecificity of specified PeptidePtm. Creates corresponding OM objects
 		fr.proline.core.om.model.msi.PtmEvidence[] ptmEvidencesOM = new fr.proline.core.om.model.msi.PtmEvidence[ptmSpecificityORM.getEvidences().size()];
@@ -352,7 +360,10 @@ public class OMConverterUtil {
 		if(useCachedObject)
 			ptmDefinitionsCache.put(ptmSpecificityORM.getId(), ptmDefMsiOM);
 		
-		return ptmDefMsiOM;
+		return ptmDefMsiOM;*/
+	  
+	  return null;
+		
 	}
 	
 	

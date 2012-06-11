@@ -59,7 +59,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase  {
   	 ids += 1
   	 ids += 4
   	 
-	 val peps : Array[Option[Peptide]] = ormPepProvider.getPeptides(ids)
+	 val peps : Array[Option[Peptide]] = ormPepProvider.getPeptidesAsOptions(ids)
 	 assertThat(peps, CoreMatchers.notNullValue())
 	 assertThat(peps.length, CoreMatchers.equalTo(3))
 	 assertThat(peps.apply(2).get.id, CoreMatchers.equalTo(4))
@@ -98,6 +98,10 @@ class ORMPeptideProviderTest extends DatabaseTestCase  {
 	  
 	  val ptmDef = new PtmDefinition(0, "ANYWHERE", new PtmNames("Oxidation", "Oxidation or Hydroxylation"), ptmEvidences, 'M', null, 0);
 	  ptmsBuilder += new LocatedPtm(ptmDef, 3, Double.MaxValue, Double.MaxValue, "O", false, false)
+	  
+	  /*val provTest = new fr.proline.core.om.provider.msi.impl.ORMPTMProvider( this.em )
+	  val ptmDefs = provTest.getPtmDefinitions(List(1,2,30))
+	  ptmDefs.foreach { ptm => println(ptm.get.names.shortName ) }*/
 		
 	  val pep : Option[Peptide] = ormPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result());
 	  assertThat(pep, CoreMatchers.notNullValue());
