@@ -1,8 +1,12 @@
 package fr.proline.core.orm.pdi;
 
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.CascadeType.REMOVE;
+
 import java.io.Serializable;
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.Date;
 
 
 /**
@@ -19,7 +23,7 @@ public class SequenceDbInstance implements Serializable {
 	private Integer id;
 
 	@Column(name="creation_timestamp")
-	private Timestamp creationTimestamp;
+	private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
 
 	@Column(name="fasta_file_path")
 	private String fastaFilePath;
@@ -48,7 +52,7 @@ public class SequenceDbInstance implements Serializable {
 	private String serializedProperties;
 
 	//uni-directional many-to-one association to SequenceDbRelease
-    @ManyToOne
+   @ManyToOne(cascade = { PERSIST, REMOVE })
 	@JoinColumn(name="seq_db_release_id")
 	private SequenceDbRelease sequenceDbRelease;
 
