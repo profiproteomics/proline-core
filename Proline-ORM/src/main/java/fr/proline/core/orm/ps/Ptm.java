@@ -98,20 +98,20 @@ public class Ptm implements Serializable {
 		return this.evidences;
 	}
 
-	public void addEvidence(PtmEvidence evidence) {
+	public boolean addEvidence(PtmEvidence evidence) {
 		if (this.evidences == null)
 			this.evidences = new HashSet<PtmEvidence>();
-		this.evidences.add(evidence);
+		return this.evidences.add(evidence);
 	}
 	
 	public Set<PtmSpecificity> getSpecificities() {
 		return this.specificities;
 	}
 
-	public void addSpecificity(PtmSpecificity specificity) {
+	public boolean addSpecificity(PtmSpecificity specificity) {
 		if (specificities == null)
 			specificities = new HashSet<PtmSpecificity>();
-		specificities.add(specificity);
+		return specificities.add(specificity);
 	}
 	
 }
