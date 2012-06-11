@@ -10,6 +10,8 @@ import java.util.Set;
  * 
  */
 @Entity(name="fr.proline.core.orm.pdi.BioSequence")
+@NamedQuery(name="findBioSequence",
+query="select seq from fr.proline.core.orm.pdi.BioSequence seq where seq.mass = :mass and seq.crc64 = :crc and seq.alphabet = :alphabet")
 @Table(name="bio_sequence")
 public class BioSequence implements Serializable {
 	private static final long serialVersionUID = 1L;
