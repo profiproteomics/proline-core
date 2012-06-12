@@ -15,7 +15,7 @@ case class MsQueryProperties( @BeanProperty var targetDbSearch: Option[MsQueryDb
                               @BeanProperty var decoyDbSearch: Option[MsQueryDbSearchProperties] = None
                             )
 
-@JsonSnakeCase            
+@JsonSnakeCase
 case class PeptideMatchProperties (
   @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None
 )
@@ -41,10 +41,63 @@ case class PeaklistProperties (
   @BeanProperty var polarity: Option[Char] = None // +/-
 )
 
-@JsonSnakeCase            
+@JsonSnakeCase
 case class SequenceMatchProperties (
 )
 
-@JsonSnakeCase            
+@JsonSnakeCase
 case class ProteinMatchProperties (
+)
+
+///////////////////////////////////////////////////////////////
+////////////////// RESULT SUMMARY PROPERTIES //////////////////
+///////////////////////////////////////////////////////////////
+
+@JsonSnakeCase
+case class RsmPepMatchValidationParamsProperties (
+  @BeanProperty var expectedFdr: Option[Float] = None,
+  @BeanProperty var scoreThreshold: Option[Float] = None
+)
+
+@JsonSnakeCase
+case class RsmProtSetValidationParamsProperties (
+  @BeanProperty var methodName: String,
+  @BeanProperty var expectedFdr: Option[Float] = None  
+)
+
+@JsonSnakeCase
+case class RsmValidationParamsProperties (
+  @BeanProperty var peptideParams: Option[RsmPepMatchValidationParamsProperties] = None,
+  @BeanProperty var proteinParams: Option[RsmProtSetValidationParamsProperties] = None
+)
+
+@JsonSnakeCase
+case class RsmPepMatchValidationResultsProperties (
+  @BeanProperty var pValueThreshold: Double,
+  @BeanProperty var targetMatchesCount: Int,
+  @BeanProperty var decoyMatchesCount: Option[Int] = None,
+  @BeanProperty var fdr: Option[Float] = None
+)
+
+@JsonSnakeCase
+case class RsmProtSetValidationResultsProperties (
+  //@BeanProperty var results: Option[RsmValidationProperties] = None
+  // TODO: expectedRocPoint and RocPoints model
+)
+
+@JsonSnakeCase
+case class RsmValidationResultsProperties (
+  @BeanProperty var peptideResults: Option[RsmPepMatchValidationResultsProperties] = None,
+  @BeanProperty var proteinResults: Option[RsmProtSetValidationResultsProperties] = None
+)
+
+@JsonSnakeCase
+case class RsmValidationProperties (
+  @BeanProperty var params: RsmValidationParamsProperties,
+  @BeanProperty var results: RsmValidationResultsProperties
+)
+
+@JsonSnakeCase
+case class ResultSummaryProperties (
+  @BeanProperty var validationProperties: Option[RsmValidationProperties] = None
 )
