@@ -1,7 +1,11 @@
 package fr.proline.repository;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import fr.proline.repository.ProlineRepository.DriverType;
 
@@ -19,6 +23,33 @@ public class ConnectionPrototype {
 	public ConnectionPrototype() {
 		connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, "");
 		connectionProperties.put(DatabaseConnector.PROPERTY_USERNAME, "sa");
+	}
+	
+	/**
+	 * Look for following entries in properties file
+	 * "database.userName"
+	 * "database.password"
+	 * "database.protocol" (Allowed values : FILE, MEMORY, HOST )
+	 * "database.drivertype" (Allowed values : H2, POSTGRESQL, SQLITE )
+	 * "database.protocolValue" if necessary  (Host or File path to DB)
+	 * 
+	 * @param filename
+	 * @throws IOException
+	 */
+	public ConnectionPrototype(String filename) throws IOException {
+		Properties fileProperties = new Properties();
+		InputStream is = ConnectionPrototype.class.getResourceAsStream(filename);
+		if(is==null)
+			throw new IOException("Invaid file specified "+filename);
+		fileProperties.load(is);
+		
+		connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, fileProperties.getProperty(DatabaseConnector.PROPERTY_PASSWORD, ""));
+		connectionProperties.put(DatabaseConnector.PROPERTY_USERNAME, fileProperties.getProperty(DatabaseConnector.PROPERTY_USERNAME, "sa"));
+		this.protocol = DatabaseProtocol.valueOf(fileProperties.getProperty("database.protocol"));
+		if(fileProperties.getProperty("database.drivertype")!=null)
+			driver(DriverType.valueOf(fileProperties.getProperty("database.drivertype")));
+		protocoleValue(fileProperties.getProperty("database.protocolValue"));
+		
 	}
 	
 	public ConnectionPrototype protocol(DatabaseProtocol protocol) {
@@ -61,7 +92,10 @@ public class ConnectionPrototype {
 			URLbuilder.append("mem:");
 			break;
 		case FILE:
-			URLbuilder.append("file:").append(protocolValue);
+			if(driver!=DriverType.SQLITE)
+				URLbuilder.append("file:").append(protocolValue);
+			else
+				URLbuilder.append(protocolValue);
 			break;
 		case HOST:
 			URLbuilder.append("//").append(protocolValue).append('/');
@@ -78,5 +112,5 @@ public class ConnectionPrototype {
 		
 		return new DatabaseConnector(connectionProperties);
 	}
-	
+
 }
