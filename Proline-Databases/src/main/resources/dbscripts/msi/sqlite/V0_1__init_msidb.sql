@@ -73,12 +73,12 @@ CREATE TABLE master_quant_component (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
-                result_summary_id INTEGER NOT NULL,
                 object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                FOREIGN KEY (result_summary_id) REFERENCES result_summary (id),
+                result_summary_id INTEGER NOT NULL,
                 FOREIGN KEY (object_tree_id) REFERENCES object_tree (id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name),
+                FOREIGN KEY (result_summary_id) REFERENCES result_summary (id)
 );
 
 CREATE TABLE master_quant_peptide_ion (
@@ -122,7 +122,7 @@ CREATE TABLE ms_query (
                 charge INTEGER NOT NULL,
                 moz REAL NOT NULL,
                 serialized_properties TEXT,
-                spectrum_id INTEGER NOT NULL,
+                spectrum_id INTEGER,
                 msi_search_id INTEGER NOT NULL,
                 FOREIGN KEY (spectrum_id) REFERENCES spectrum (id),
                 FOREIGN KEY (msi_search_id) REFERENCES msi_search (id)
@@ -132,7 +132,7 @@ CREATE TABLE msi_search (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT(1000),
                 date TEXT,
-                result_file_name INTEGER NOT NULL,
+                result_file_name TEXT(256) NOT NULL,
                 result_file_directory TEXT(1000),
                 job_number INTEGER,
                 user_name TEXT(100),
@@ -183,7 +183,7 @@ CREATE TABLE object_tree_schema (
 
 CREATE TABLE peaklist (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                type TEXT(10),
+                type TEXT(100),
                 path TEXT(1000),
                 raw_file_name TEXT(250),
                 ms_level INTEGER NOT NULL,
@@ -222,6 +222,7 @@ CREATE TABLE peptide_instance (
                 protein_match_count INTEGER NOT NULL,
                 protein_set_count INTEGER NOT NULL,
                 selection_level INTEGER NOT NULL,
+                elution_time REAL,
                 serialized_properties TEXT,
                 best_peptide_match_id INTEGER NOT NULL,
                 peptide_id INTEGER NOT NULL,
@@ -248,8 +249,6 @@ CREATE TABLE peptide_match (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 charge INTEGER NOT NULL,
                 experimental_moz REAL NOT NULL,
-                elution_value REAL,
-                elution_unit TEXT(10),
                 score REAL,
                 rank INTEGER,
                 delta_moz REAL,
