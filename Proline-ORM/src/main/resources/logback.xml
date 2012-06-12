@@ -13,10 +13,7 @@
       <append>true</append>
       <encoder>
         <pattern>%-5level: [%thread] %date{dd MMM yyyy - HH:mm:ss.SSS} %logger{35} - %msg%n</pattern>
-      </encoder>
-        <layout class="org.apache.log4j.PatternLayout">
-      <param name="ConversionPattern" value="%d [%t] %p %C{1} - %m%n"/>
-    </layout>
+      </encoder>       
   </appender>
 
   <logger name="fr.proline.core.orm" level="INFO">
