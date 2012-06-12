@@ -3,13 +3,14 @@ package fr.proline.core.algo.msi.validation.protein_set
 import math.{sqrt,abs}
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.PeptideMatch
 
-class MascotProteinSetScoreValidator extends IProteinSetValidator {
+class MascotProteinSetScoreValidator extends IProteinSetValidator with Logging {
 
   def validateWithComputerParams( validationParams: ComputerValidationParams,
                                   targetRsm: ResultSummary,
@@ -21,38 +22,41 @@ class MascotProteinSetScoreValidator extends IProteinSetValidator {
     val decoyBestPepMatchesByProtSetId = decoyRsm.getBestPepMatchesByProtSetId
     
     // Retrieve some vars
-    val wantedFdr = validationParams.wantedFdr
-    val valResultProps = targetRsm.validationProperties("results").asInstanceOf[Map[String,Any]]
-    val pepMatchValidationProps = valResultProps("peptide_matches").asInstanceOf[Map[String,Any]]
-    var pValueThreshold = pepMatchValidationProps("p_value_threshold").asInstanceOf[Float]
+    val expectedFdr = validationParams.expectedFdr
+    val valResultProps = targetRsm.properties.get.getValidationProperties().get
+    //("results").asInstanceOf[Map[String,Any]]
+   // val pepMatchValidationProps = valResultProps("peptide_matches").asInstanceOf[Map[String,Any]]
+    //var pValueThreshold = pepMatchValidationProps("p_value_threshold").asInstanceOf[Float]
+    val pepMatchValidationProps = valResultProps.getResults().getPeptideResults().get
+    var pValueThreshold = pepMatchValidationProps.getPValueThreshold()
     
     // Compute initial p-value threshold: we just need something slightly greater than the peptide validation one
     pValueThreshold = sqrt(pValueThreshold).toFloat
     
     val minPepSeqLength = validationParams.minPepSeqLength
     var currentFdr = 100.0f
-    val maxFdr = wantedFdr * 1.2 // 20% of FDR
+    val maxFdr = expectedFdr * 1.2 // 20% of FDR
     var rocCurves = new ArrayBuffer[ArrayBuffer[ValidationResult]]
-    val wantedFdrRocPoints = new ArrayBuffer[ValidationResult](0)
+    val expectedFdrRocPoints = new ArrayBuffer[ValidationResult](0)
     var rocCurveId = 0
     
     // TODO: another algo could start by normalizing peptide match scores :
     // 1) translates score = norm_score = score - threshold
     // 2) min norm_score =0 = norm_score -= min(norm_scores)
     // 3) prot score score = sum(norm_scores)
-    // 4) compute the score threshold to obtain the wanted FDR
+    // 4) compute the score threshold to obtain the expected FDR
     // End of TO DO
     
     var lowestProtSetScoreThreshold = 0.0f
-    var reachedWantedFdr = false
-    while( currentFdr > 0 && ! reachedWantedFdr ) {
+    var reachedExpectedFdr = false
+    while( currentFdr > 0 && ! reachedExpectedFdr ) {
       rocCurveId += 1
       
-      println( "p-value threshold: " + pValueThreshold )
+      this.logger.debug( "p-value threshold: " + pValueThreshold )
       
       // Compute score threshold offset with a reference p-value of 0.05 (default p-value used to compute Mascot thresholds)
       val pepScoreThresholdOffset = MascotValidationHelper.calcScoreThresholdOffset( pValueThreshold, 0.05 )
-      println( "peptide match score threshold delta:" + pepScoreThresholdOffset )
+      this.logger.debug( "peptide match score threshold delta:" + pepScoreThresholdOffset )
       
       this.updateScoreOfProteinSets( targetProtSets, targetBestPepMatchesByProtSetId,
                                      pepScoreThresholdOffset, minPepSeqLength )
@@ -60,24 +64,24 @@ class MascotProteinSetScoreValidator extends IProteinSetValidator {
                                      pepScoreThresholdOffset, minPepSeqLength )
       
       var rocPoints = new ArrayBuffer[ValidationResult]
-      var wantedFdrRocPoint: ValidationResult = null
+      var expectedFdrRocPoint: ValidationResult = null
       var( protSetScoreThreshold, rocPointId ) = (0.0f,0)
       
-      while( wantedFdrRocPoint == null ) {
+      while( expectedFdrRocPoint == null ) {
         rocPointId += 1
         
-        println( "protein set score threshold: " + protSetScoreThreshold )
+        this.logger.debug( "protein set score threshold: " + protSetScoreThreshold )
         
         val validTargetProtSets = this.validateProteinSets( targetProtSets, protSetScoreThreshold )
         val targetValidProteinSetCount = validTargetProtSets.length
-        println( targetValidProteinSetCount + " target" )
+        this.logger.debug( targetValidProteinSetCount + " target" )
         
         val validDecoyProtSets = this.validateProteinSets( decoyProtSets, protSetScoreThreshold )
         val decoyValidProteinSetCount = validDecoyProtSets.length
-        println( decoyValidProteinSetCount + " decoy" )
+        this.logger.debug( decoyValidProteinSetCount + " decoy" )
         
         currentFdr = 100 * decoyValidProteinSetCount / targetValidProteinSetCount
-        println( "current fdr: " + currentFdr )
+        this.logger.debug( "current fdr: " + currentFdr )
         
         val rocPoint = ValidationResult(  //id = rocPointId,
                                           nbTargetMatches = targetValidProteinSetCount,
@@ -94,21 +98,21 @@ class MascotProteinSetScoreValidator extends IProteinSetValidator {
         
         if( currentFdr <= maxFdr ) {
           // Add ROC point to the list
-          wantedFdrRocPoint = rocPoint
-          wantedFdrRocPoints += rocPoint
+          expectedFdrRocPoint = rocPoint
+          expectedFdrRocPoints += rocPoint
         }
         
-        //protSetScoreThreshold += sprintf("%.1f",abs(currentFdr-wantedFdr)/5)
-        protSetScoreThreshold += (sqrt( 1 + abs(currentFdr-wantedFdr) ) - 1).toFloat
+        //protSetScoreThreshold += sprintf("%.1f",abs(currentFdr-expectedFdr)/5)
+        protSetScoreThreshold += (sqrt( 1 + abs(currentFdr-expectedFdr) ) - 1).toFloat
         
       }
       
       rocCurves += rocPoints
       
-      // Check if we have reached the wanted FDR
-      //if( !defined wantedRocPoint and currentFdr <= maxFdr ) {
+      // Check if we have reached the expected FDR
+      //if( !defined expectedRocPoint and currentFdr <= maxFdr ) {
       if( protSetScoreThreshold > lowestProtSetScoreThreshold ) {
-        reachedWantedFdr = true
+        reachedExpectedFdr = true
       }
       else {
         lowestProtSetScoreThreshold = protSetScoreThreshold
@@ -118,36 +122,36 @@ class MascotProteinSetScoreValidator extends IProteinSetValidator {
       }
     }
     
-    val wantedRocPoint = wantedFdrRocPoints.reduce { (a,b) => if( a.nbTargetMatches >= b.nbTargetMatches ) a else b } 
-    println(wantedRocPoint)
+    val expectedRocPoint = expectedFdrRocPoints.reduce { (a,b) => if( a.nbTargetMatches >= b.nbTargetMatches ) a else b } 
+    this.logger.debug(expectedRocPoint.toString)
     
     // Retrieve the best ROC curve and delete the ROC curve identifier from the data points
-    val wantedRocPointProps = wantedRocPoint.properties.get
-    val wantedRocPointCurveId = wantedRocPointProps("roc_curve_id").asInstanceOf[Int]
-    val bestRocCurve = rocCurves( wantedRocPointCurveId - 1 )
-    wantedRocPointProps -= "roc_curve_id"
+    val expectedRocPointProps = expectedRocPoint.properties.get
+    val expectedRocPointCurveId = expectedRocPointProps("roc_curve_id").asInstanceOf[Int]
+    val bestRocCurve = rocCurves( expectedRocPointCurveId - 1 )
+    expectedRocPointProps -= "roc_curve_id"
     
-    // Set validation rules probability thresholds using the previously obtained wanted ROC point
-    val pepScoreThresholdOffset = wantedRocPointProps("pep_score_threshold_offset").asInstanceOf[Float]
-    val protSetScoreThreshold = wantedRocPointProps("prot_set_score_threshold").asInstanceOf[Float]
+    // Set validation rules probability thresholds using the previously obtained expected ROC point
+    val pepScoreThresholdOffset = expectedRocPointProps("pep_score_threshold_offset").asInstanceOf[Float]
+    val protSetScoreThreshold = expectedRocPointProps("prot_set_score_threshold").asInstanceOf[Float]
     
     // Validate results with the p-value thresholds which provide the best results
     this.updateScoreOfProteinSets( targetProtSets, targetBestPepMatchesByProtSetId,
                                    pepScoreThresholdOffset, minPepSeqLength )
     val validTargetProtSets = this.validateProteinSets( targetProtSets, protSetScoreThreshold )
     val targetValidProteinSetCount = validTargetProtSets.length
-    println( targetValidProteinSetCount + " final target count" )
+    this.logger.info( targetValidProteinSetCount + " final target count" )
     
     this.updateScoreOfProteinSets( decoyProtSets, decoyBestPepMatchesByProtSetId,
                                    pepScoreThresholdOffset, minPepSeqLength )
     val validDecoyProtSets = this.validateProteinSets( decoyProtSets, protSetScoreThreshold )
     val decoyValidProteinSetCount = validDecoyProtSets.length
-    println( decoyValidProteinSetCount + " final decoy count" )
+    this.logger.info( decoyValidProteinSetCount + " final decoy count" )
     
-    val finalFdr = wantedRocPoint.fdr.get
-    print( "final fdr: " + finalFdr )
+    val finalFdr = expectedRocPoint.fdr.get
+    this.logger.info( "final fdr: " + finalFdr )
     
-    ValidationResults( wantedRocPoint, Some(bestRocCurve) )
+    ValidationResults( expectedRocPoint, Some(bestRocCurve) )
   }
 
 

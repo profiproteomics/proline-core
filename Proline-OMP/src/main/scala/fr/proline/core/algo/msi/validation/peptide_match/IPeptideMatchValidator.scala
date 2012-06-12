@@ -13,6 +13,7 @@ trait IPeptideMatchValidator {
   def validateWithUserParams( validationParams: UserValidationParams,
                               targetPeptideMatches: Seq[PeptideMatch],
                               decoyPeptideMatches: Option[Seq[PeptideMatch]],
-                              targetDecoyMode: Option[String] ): ValidationResult
+                              targetDecoyMode: Option[TargetDecoyModes.Mode]
+                              ): ValidationResult
   
 }

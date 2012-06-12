@@ -104,7 +104,8 @@ case class ResultSummary (
                    var description: String = null,
                    var isQuantified: Boolean = false,
                    
-                   var validationProperties: HashMap[String, Any] = new HashMap[String, Any]
+                   var properties: Option[ResultSummaryProperties] = None
+                   
                    ) {
   
   // Requirements

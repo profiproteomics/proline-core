@@ -22,10 +22,13 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
     val decoyBestPepMatchesByProtSetId = decoyRsm.getBestPepMatchesByProtSetId
     
     // Retrieve some vars
-    val wantedFdr = validationParams.wantedFdr
-    val valResultProps = targetRsm.validationProperties("results").asInstanceOf[Map[String,Any]]
-    val pepMatchValidationProps = valResultProps("peptide_matches").asInstanceOf[Map[String,Any]]
-    val pValueThreshold = pepMatchValidationProps("p_value_threshold").asInstanceOf[Float]
+    val expectedFdr = validationParams.expectedFdr
+    //val valResultProps = targetRsm.validationProperties("results").asInstanceOf[Map[String,Any]]
+    //val pepMatchValidationProps = valResultProps("peptide_matches").asInstanceOf[Map[String,Any]]
+    //val pValueThreshold = pepMatchValidationProps("p_value_threshold").asInstanceOf[Float]
+    val valResultProps = targetRsm.properties.get.getValidationProperties().get
+    val pepMatchValidationProps = valResultProps.getResults().getPeptideResults().get
+    var pValueThreshold = pepMatchValidationProps.getPValueThreshold().toFloat
     
     // TODO retrieve min seq length from params
     val validationRules = Array( ValidationRule( 1, pValueThreshold, validationParams.minPepSeqLength ),
@@ -33,11 +36,11 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
                                )
     
     var currentFdr = 100.0f
-    val maxFdr = wantedFdr * 1.2 // 20% of FDR
+    val maxFdr = expectedFdr * 1.2 // 20% of FDR
     var rocPoints = new ArrayBuffer[ValidationResult]
-    var wantedRocPoint: ValidationResult = null     
+    var expectedRocPoint: ValidationResult = null     
     
-    while( currentFdr > 0 && wantedRocPoint == null ) {
+    while( currentFdr > 0 && expectedRocPoint == null ) {
       
       println( "LOOP 1 (single peptide rule)" )
       println( "single pep rule p-value threshold: " + validationRules(0).pValueThreshold )
@@ -53,7 +56,7 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
       currentFdr = 100 * decoyValidProteinSetCount / targetValidProteinSetCount
       println( "current fdr: " + currentFdr )
       
-      if( currentFdr <= wantedFdr ) {
+      if( currentFdr <= expectedFdr ) {
         
         // Reset the p-value threshold of the two peptides rule
         validationRules(1).pValueThreshold = pValueThreshold
@@ -90,30 +93,30 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
 
           rocPoints += rocPoint
           
-          // Check if we have reached the wanted FDR
-          if( wantedRocPoint == null && currentFdr <= maxFdr ) { wantedRocPoint = rocPoint }
+          // Check if we have reached the expected FDR
+          if( expectedRocPoint == null && currentFdr <= maxFdr ) { expectedRocPoint = rocPoint }
 
           // Check if current FDR equals zero
           if( currentFdr >= 0 ) {          
             /// Update probablity threshold of the two peptides rule
-            if( wantedRocPoint != null ) { validationRules(1).pValueThreshold *= 0.5f } // arbitrary value
+            if( expectedRocPoint != null ) { validationRules(1).pValueThreshold *= 0.5f } // arbitrary value
             else { validationRules(1).pValueThreshold *= 0.80f } // arbitrary value
           }
         }
       }
       
       /// Update probablity threshold of the single peptide rule
-      // Lower p-value decrease when near from wanted FDR
+      // Lower p-value decrease when near from expected FDR
       if( currentFdr < maxFdr ) { validationRules(0).pValueThreshold *= 0.95f } // arbitrary value
       else { validationRules(0).pValueThreshold *= 0.80f } // arbitrary value
       
     }
     
-    // Set validation rules probability thresholds using the previously obtained wanted ROC point
-    validationRules(0).pValueThreshold= wantedRocPoint.properties.get("p_value_rule_1").asInstanceOf[Float]
-    validationRules(1).pValueThreshold = wantedRocPoint.properties.get("p_value_rule_2").asInstanceOf[Float]
+    // Set validation rules probability thresholds using the previously obtained expected ROC point
+    validationRules(0).pValueThreshold= expectedRocPoint.properties.get("p_value_rule_1").asInstanceOf[Float]
+    validationRules(1).pValueThreshold = expectedRocPoint.properties.get("p_value_rule_2").asInstanceOf[Float]
     
-    println(wantedRocPoint)
+    println(expectedRocPoint)
     
     // Validate results with the p-value thresholds which provide the best results
     validTargetProtSets = this.validateProteinSets( targetRsm.proteinSets, targetBestPepMatchesByProtSetId, validationRules )
@@ -125,10 +128,10 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
     println( decoyValidProteinSetCount +" final decoy count\n" )
     
     // val finalFdr = targetDecoyHelper.computeFdr( targetValidProteinSetCount, decoyValidProteinSetCount )
-    val finalFdr = wantedRocPoint.fdr.get
+    val finalFdr = expectedRocPoint.fdr.get
     println( "final fdr: " + finalFdr )
     
-    ValidationResults( wantedRocPoint, Some(rocPoints) )
+    ValidationResults( expectedRocPoint, Some(rocPoints) )
   }
   
   private def validateProteinSets( proteinSets: Seq[ProteinSet],
@@ -187,9 +190,9 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
     val validationRules = this.userValidationParamsToValidationRules( validationParams )    
     val validProtSets = this.validateProteinSets( rsm.proteinSets, rsm.getBestPepMatchesByProtSetId, validationRules )
     
-    val wantedRocPoint = ValidationResult( validProtSets.length )
+    val expectedRocPoint = ValidationResult( validProtSets.length )
     
-    ValidationResults( wantedRocPoint, None )
+    ValidationResults( expectedRocPoint, None )
     
   }
   
@@ -205,8 +208,8 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
     val( nbTargetMatches, nbDecoyMatches ) = ( validTargetProtSets.length, validDecoyProtSets.length )    
     val fdr = 100 * nbDecoyMatches / nbTargetMatches
     
-    val wantedResult = ValidationResult( nbTargetMatches, Some(nbTargetMatches), Some(fdr) )    
-    ValidationResults( wantedResult, None )
+    val expectedResult = ValidationResult( nbTargetMatches, Some(nbTargetMatches), Some(fdr) )    
+    ValidationResults( expectedResult, None )
 
   }
 }

@@ -12,7 +12,7 @@ class MascotPeptideMatchValidator extends IPeptideMatchValidator {
                                   decoyPeptideMatches: Seq[PeptideMatch]
                                   ): ValidationResults = {
     
-    val wantedFdr = validationParams.wantedFdr
+    val expectedFdr = validationParams.expectedFdr
     val tdComputer = fr.proline.core.algo.msi.TargetDecoyComputer
     
     // Compute the joint table
@@ -23,16 +23,16 @@ class MascotPeptideMatchValidator extends IPeptideMatchValidator {
     val rocPoints = MascotValidationHelper.rocAnalysis( pepMatchJointTable )
     //println( "roc analysis done !" )
     
-    // Retrieve the nearest ROC point of the wanted FDR
-    val wantedRocPoint = rocPoints.reduce { (a,b) => if( abs(a.fdr.get - wantedFdr) < abs(b.fdr.get - wantedFdr) ) a else b } 
-    val pValue = wantedRocPoint.properties.get("p_value").asInstanceOf[Float]
+    // Retrieve the nearest ROC point of the expected FDR
+    val expectedRocPoint = rocPoints.reduce { (a,b) => if( abs(a.fdr.get - expectedFdr) < abs(b.fdr.get - expectedFdr) ) a else b } 
+    val pValue = expectedRocPoint.properties.get("p_value").asInstanceOf[Double]
     
     // TODO retrieve min seq length from params
-    val userValParams = UserValidationParams( pValue, validationParams.minPepSeqLength )
+    val userValParams = UserValidationParams( pValue.toFloat, validationParams.minPepSeqLength )
 
     this.validateWithUserParams( userValParams, allPepMatches, None, None )
     
-    new ValidationResults( wantedRocPoint, Some(rocPoints) )
+    new ValidationResults( expectedRocPoint, Some(rocPoints) )
     
   }
   
@@ -40,7 +40,7 @@ class MascotPeptideMatchValidator extends IPeptideMatchValidator {
   def validateWithUserParams( validationParams: UserValidationParams,
                               targetPeptideMatches: Seq[PeptideMatch],
                               decoyPeptideMatches: Option[Seq[PeptideMatch]],
-                              targetDecoyMode: Option[String] ): ValidationResult = {
+                              targetDecoyMode: Option[TargetDecoyModes.Mode] ): ValidationResult = {
     
     val nbTargetMatches = this.validateWithUserParams( validationParams, targetPeptideMatches )
     
@@ -52,8 +52,8 @@ class MascotPeptideMatchValidator extends IPeptideMatchValidator {
       val tdComputer = fr.proline.core.algo.msi.TargetDecoyComputer
        
       fdr = targetDecoyMode.get match {
-        case "concatenated" => Some( tdComputer.computeCdFdr( nbTargetMatches, nbDecoyMatches.get ) )
-        case "separated" => Some( tdComputer.computeSdFdr( nbTargetMatches, nbDecoyMatches.get ) )
+        case TargetDecoyModes.concatenated => Some( tdComputer.computeCdFdr( nbTargetMatches, nbDecoyMatches.get ) )
+        case TargetDecoyModes.separated => Some( tdComputer.computeSdFdr( nbTargetMatches, nbDecoyMatches.get ) )
         case _ => throw new Exception("unknown target decoy mode: " + targetDecoyMode )
       }
     }
@@ -81,7 +81,7 @@ class MascotPeptideMatchValidator extends IPeptideMatchValidator {
       valProps.getOrElseUpdate("mascot:adjusted expectation value",0)
       valProps.getOrElseUpdate("mascot:score offset",0)
       
-      // TODO: check if this is really the wanted value (adjusted ?)
+      // TODO: check if this is really the expected value (adjusted ?)
       val adjustedEvalue = MascotValidationHelper.calcPepMatchEvalue( peptideMatch )
       valProps("mascot:adjusted expectation value") = adjustedEvalue
       valProps("mascot:score offset") = MascotValidationHelper.calcScoreThresholdOffset( adjustedEvalue, pValue )

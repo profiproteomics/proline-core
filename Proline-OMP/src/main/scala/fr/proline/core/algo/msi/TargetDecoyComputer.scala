@@ -32,7 +32,7 @@ object TargetDecoyComputer {
       // Remove peptide match duplicates (same score and same rank but different peptides = see Mascot pretty rank )
       var decoyPepMatch: PeptideMatch = null
       if( decoyPepMatches != None ) {
-        targetPepMatch = targetPepMatches.get.toList.sort( (a,b) => a.score > b.score ).head
+        decoyPepMatch = decoyPepMatches.get.toList.sort( (a,b) => a.score > b.score ).head
       }
       
       jointTable += Pair(targetPepMatch,decoyPepMatch)
