@@ -6,7 +6,7 @@ import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.{MsiDb,MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable,MsiDbPeptideSetPeptideInstanceItemTable}
-import fr.proline.core.dal.{MsiDbPeptideSetTable,MsiDbPeptideSetProteinMatchMapTable,MsiDbPeptideMatchRelationTable}
+import fr.proline.core.dal.{MsiDbPeptideSetTable,MsiDbPeptideSetProteinMatchMapTable,MsiDbPeptideSetRelationTable}
 import fr.proline.core.dal.{MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideSet
@@ -19,6 +19,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
   
   def storeRsmPeptideInstances( rsm: ResultSummary ): Int = {
     
+    val rsmId = rsm.id
     //val( pepInstanceIdByPepId, pepInstanceIdMap ) = ( new HashMap[Int,Int], new HashMap[Int,Int] )
     
     val insertPepInstance = ( stmt: ReusableStatement, pepInstance: PeptideInstance ) => {
@@ -37,11 +38,12 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
             pepId,
             pepInstance.getUnmodifiedPeptideId,
             Option.empty[Int],
-            pepInstance.resultSummaryId
+            rsmId
           )
       
       // Update peptide instance id
       pepInstance.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+      pepInstance.resultSummaryId = rsmId
       
     }
     
@@ -81,7 +83,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
             pepInst.id,
             pepMatchId,
             pepMatchPropsAsJSON,
-            pepInst.resultSummaryId
+            rsmId
           )
         }
       }
@@ -92,6 +94,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
   
   def storeRsmProteinSets( rsm: ResultSummary ): Int = {
     
+    val rsmId = rsm.id
     val proteinMatchById = rsm.resultSet.get.proteinMatchById
     
     // Retrieve protein_set column list then remove id and master_quant_component_id columns
@@ -134,11 +137,12 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
           Option.empty[String],
           typicalProtMatchId,
           proteinSetScoringId,
-          proteinSet.resultSummaryId
+          rsmId
         )
         
-        // Update protein set id
+        // Update protein set
         proteinSet.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+        proteinSet.resultSummaryId = rsmId
         peptideSet.proteinSet = Some(proteinSet)
         
       }
@@ -147,7 +151,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
     // Link protein sets to protein matches
     msiDbTx.executeBatch( MsiDbProteinSetProteinMatchItemTable.makeInsertQuery ) { stmt =>
       
-      rsm.proteinSets.foreach { protSet =>       
+      rsm.proteinSets.foreach { protSet =>
         protSet.getProteinMatchIds.foreach { protMatchId =>
         
           // Insert protein match mapping
@@ -155,7 +159,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
             protSet.id,
             protMatchId,
             Option.empty[String],
-            protSet.resultSummaryId
+            rsmId
           )
         }
       }
@@ -166,6 +170,8 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
   }
   
   def storeRsmPeptideSets( rsm: ResultSummary ): Int = {
+    
+    val rsmId = rsm.id
     
     // Iterate over peptide sets to initialize the creation of RDB protein/peptide sets
     //val rdbPeptideSetsByTmpId // map RDB peptide set with temporary ids
@@ -178,7 +184,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
     // Insert peptide sets
     msiDbTx.executeBatch( pepSetInsertQuery, true ) { stmt =>      
       for( peptideSet <- rsm.peptideSets ) {
-        
+        //print(peptideSet.id+".")
         // Insert peptide set
         stmt.executeWith(
           peptideSet.isSubset,
@@ -186,14 +192,15 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
           peptideSet.peptideMatchesCount,
           Option.empty[String],
           peptideSet.getProteinSetId,
-          peptideSet.resultSummaryId
+          rsmId
         )
         
         val peptideSetId = this.msiDb.extractGeneratedInt( stmt.wrapped )
-        peptideSetIdByTmpId(peptideSetId) = peptideSet.id
+        peptideSetIdByTmpId(peptideSet.id) = peptideSetId
         
         // Update protein set id
-        peptideSet.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+        peptideSet.id = peptideSetId
+        peptideSet.resultSummaryId = rsmId
         
         // Update some vars
         //rdbPeptideSetsByTmpId( peptideSet.id ) = rdbPeptideSet  
@@ -217,8 +224,11 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
             peptideSetItem.isBestPeptideSet,
             peptideSetItem.selectionLevel,
             Option.empty[String],
-            peptideSetItem.resultSummaryId
+            rsmId
           )
+          
+          // Update peptide set item
+          peptideSetItem.resultSummaryId = rsmId
           
         }
         
@@ -232,7 +242,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
           stmt.executeWith(
             pepSet.id,
             proteinMatchId,
-            pepSet.resultSummaryId
+            rsmId
           )
         }
       }
@@ -243,16 +253,17 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
         peptideOverset.id,
         subsetId,
         isStrictSubset,
-        peptideOverset.resultSummaryId
+        rsmId
       )
     }
       
     // Store hierarchical relations between peptide sets
-    msiDbTx.executeBatch( MsiDbPeptideMatchRelationTable.makeInsertQuery ) { stmt =>
-      for( peptideSet <- rsm.peptideSets ) {
+    msiDbTx.executeBatch( MsiDbPeptideSetRelationTable.makeInsertQuery ) { stmt =>
+      for( peptideSet <- rsm.peptideSets ) {        
         
         // Update and store peptide set relation of type strict subsets
         if( peptideSet.hasStrictSubset ) {
+          //peptideSet.getStrictSubsetIds.foreach( i => print(i+";") )
           peptideSet.strictSubsetIds = peptideSet.getStrictSubsetIds.map { peptideSetIdByTmpId(_) } // key not found
           peptideSet.strictSubsetIds.foreach { storePeptideSetRelation( stmt, peptideSet, _, true ) }
         }
