@@ -1,10 +1,12 @@
 package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
+import com.codahale.jerkson.Json.generate
 import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
 
 import fr.proline.core.dal.SQLFormatterImplicits._
+import fr.proline.core.utils.sql.BoolToSQLStr
 import fr.proline.core.dal.{MsiDb,MsiDbResultSummaryTable}
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLiteRsmStorer
@@ -23,6 +25,10 @@ trait IRsmStorer extends Logging {
 /** A factory object for implementations of the IRsmStorer trait */
 object RsmStorer {
   
+  val rsmInsertQuery = MsiDbResultSummaryTable.makeInsertQuery(
+                         MsiDbResultSummaryTable.getColumnsAsStrList().filter( _ != "id" )
+                       )
+  
   /*import fr.proline.core.om.storer.msi.impl.GenericRsStorer
   import fr.proline.core.om.storer.msi.impl.PgRsStorer
   import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer*/
@@ -38,6 +44,7 @@ object RsmStorer {
 class RsmStorer( private val _storer: IRsmStorer ) extends Logging {
   
   val msiDb = _storer.msiDb
+  val rsmInsertQuery = RsmStorer.rsmInsertQuery
   
   def storeResultSummary( rsm: ResultSummary ): Unit = {
     
@@ -68,17 +75,17 @@ class RsmStorer( private val _storer: IRsmStorer ) extends Logging {
     val modificationTimestamp = new java.util.Date() // msiDb.stringifyDate( new java.util.Date )        
     var decoyRsmId = if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else None
     val rsId = rsm.getResultSetId
+    val rsmPropsAsJSON = if( rsm.properties != None ) Some(generate( rsm.properties )) else None
     
     // Store RDB result summary
-    // TODO: use JPA instead    
-    val rsmInsertQuery = MsiDbResultSummaryTable.makeInsertQuery { t =>
-      List( t.description, t.modificationTimestamp, t.decoyResultSummaryId, t.resultSetId )
-    }
+    // TODO: use JPA instead
     
-    val stmt = msiDbConn.prepareStatement( rsmInsertQuery, java.sql.Statement.RETURN_GENERATED_KEYS )     
+    val stmt = msiDbConn.prepareStatement( this.rsmInsertQuery, java.sql.Statement.RETURN_GENERATED_KEYS )     
     new ReusableStatement( stmt, msiDb.config.sqlFormatter ) <<
       rsmDesc <<
       modificationTimestamp <<
+      BoolToSQLStr(false) <<
+      rsmPropsAsJSON <<
       decoyRsmId <<
       rsId
 
