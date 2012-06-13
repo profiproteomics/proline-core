@@ -1,11 +1,13 @@
 package fr.proline.core.om.model.msi
 
-import collection.mutable.HashMap
-import fr.proline.core.utils.misc.InMemoryIdGen
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import com.codahale.jerkson.JsonSnakeCase
+import fr.proline.core.utils.misc.InMemoryIdGen
 
 object ResultSet extends InMemoryIdGen
 
+@JsonSnakeCase
 case class ResultSet ( 
                    // Required fields
                    val peptides: Array[Peptide],
@@ -84,6 +86,8 @@ case class ResultSet (
 }
 
 object ResultSummary extends InMemoryIdGen
+
+@JsonSnakeCase
 case class ResultSummary (
                    // Required fields
                    val peptideInstances: Array[PeptideInstance],

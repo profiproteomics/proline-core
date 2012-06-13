@@ -1,10 +1,12 @@
 package fr.proline.core.om.model.msi
  
 import java.util.Date
-
+import com.codahale.jerkson.JsonSnakeCase
 import fr.proline.core.utils.misc.InMemoryIdGen
   
 object SeqDatabase extends InMemoryIdGen
+
+@JsonSnakeCase
 case class SeqDatabase(
     
         // Required fields
@@ -22,6 +24,8 @@ case class SeqDatabase(
   }
  
 object SearchSettings extends InMemoryIdGen
+
+@JsonSnakeCase
 case class SearchSettings(
     
       // Required fields
@@ -47,6 +51,8 @@ case class SearchSettings(
 }
 
 object MSISearch extends InMemoryIdGen
+
+@JsonSnakeCase
 case class MSISearch (
         
   		  //Required fields

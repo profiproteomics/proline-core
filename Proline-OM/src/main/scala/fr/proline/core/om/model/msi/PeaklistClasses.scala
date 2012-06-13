@@ -1,8 +1,11 @@
 package fr.proline.core.om.model.msi
 
+import com.codahale.jerkson.JsonSnakeCase
 import fr.proline.core.utils.misc.InMemoryIdGen
 
 object Spectrum extends InMemoryIdGen
+
+@JsonSnakeCase
 case class Spectrum ( var id: Int,
                       val title: String,
                       val precursorMoz: Double,
@@ -23,12 +26,16 @@ case class Spectrum ( var id: Int,
                       )
 
 object PeaklistSoftware extends InMemoryIdGen
+
+@JsonSnakeCase
 case class PeaklistSoftware( var id: Int,
                              val name: String,
                              val version: String
                            )
 
 object Peaklist extends InMemoryIdGen
+
+@JsonSnakeCase
 case class Peaklist( var id: Int,
                      val fileType: String,
                      val path: String,

@@ -1,9 +1,9 @@
 package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
+import com.codahale.jerkson.JsonSnakeCase
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.proline.core.utils.misc.InMemoryIdGen
-import org.biojava.bio.BioException
 
 object Protein extends InMemoryIdGen{
   
@@ -24,7 +24,7 @@ object Protein extends InMemoryIdGen{
     coverage
   }
   
-  //import org.biojava.bio.BioException;
+  import org.biojava.bio.BioException
   import org.biojava.bio.proteomics._
   import org.biojava.bio.seq._
   import org.biojava.bio.symbol._
@@ -33,7 +33,7 @@ object Protein extends InMemoryIdGen{
     try {
     	new MassCalc(SymbolPropertyTable.AVG_MASS, false).getMass( ProteinTools.createProtein(sequence) )
     } catch {
-    	case e: BioException => Double.NaN;
+    	case e: BioException => Double.NaN
     }
   }
   
@@ -41,8 +41,8 @@ object Protein extends InMemoryIdGen{
     try {
     	(new IsoelectricPointCalc().getPI( ProteinTools.createProtein(sequence), true, true) ).toFloat
     } catch {
-		  case e:IllegalAlphabetException => Float.NaN;
-		  case be:BioException =>  Float.NaN;
+		  case e:IllegalAlphabetException => Float.NaN
+		  case be:BioException =>  Float.NaN
 	}    	
   }
   
@@ -52,7 +52,8 @@ object Protein extends InMemoryIdGen{
   }
 
 }
-  
+
+@JsonSnakeCase
 case class Protein ( // Required fields
                    val id: Int,
                    val sequence: String,
@@ -82,6 +83,7 @@ case class Protein ( // Required fields
 
 }
 
+@JsonSnakeCase
 case class SequenceMatch ( // Required fields                     
                    val start: Int,
                    val end: Int,
@@ -116,7 +118,8 @@ case class SequenceMatch ( // Required fields
 object ProteinMatch extends InMemoryIdGen {
   
 }  
-  
+
+@JsonSnakeCase
 case class ProteinMatch ( 
                    // Required fields                    
                    val accession: String,
@@ -154,6 +157,8 @@ case class ProteinMatch (
 }
  
 object ProteinSet extends InMemoryIdGen
+
+@JsonSnakeCase
 case class ProteinSet ( 
                  // Required fields
                  val peptideSet: PeptideSet,

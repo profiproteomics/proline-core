@@ -3,10 +3,12 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
+import com.codahale.jerkson.JsonSnakeCase
+import com.weiglewilczek.slf4s.Logging
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.proline.core.utils.misc.InMemoryIdGen
 
-object Peptide extends InMemoryIdGen {
+object Peptide extends InMemoryIdGen with Logging {
   
   import scala.collection._
   
@@ -228,6 +230,7 @@ object Peptide extends InMemoryIdGen {
     
   }
   
+  import org.biojava.bio.BioException
   import org.biojava.bio.proteomics._
   import org.biojava.bio.seq._
   import org.biojava.bio.symbol._
@@ -240,7 +243,11 @@ object Peptide extends InMemoryIdGen {
     
     if( sequence =~ "(?i).*X.*".r ) mass = 0.0
     else {
-      mass = new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
+      mass = try {
+        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
+      } catch {
+        case e: Exception => this.logger.error("can't compute mass for sequence="+sequence); Double.NaN
+      }
     }
     
     mass
@@ -249,6 +256,7 @@ object Peptide extends InMemoryIdGen {
 
 }
 
+@JsonSnakeCase
 case class Peptide ( // Required fields
                 var id: Int,
                 val sequence: String,
@@ -309,6 +317,7 @@ case class Peptide ( // Required fields
 
 object PeptideMatch extends InMemoryIdGen
 
+@JsonSnakeCase
 case class PeptideMatch ( // Required fields
                      var id: Int, 
                      val rank: Int,
@@ -358,6 +367,8 @@ case class PeptideMatch ( // Required fields
   }
  
 object PeptideInstance extends InMemoryIdGen
+
+@JsonSnakeCase
 case class PeptideInstance ( // Required fields
                         var id: Int,
                         val peptide: Peptide,
@@ -410,6 +421,7 @@ case class PeptideInstance ( // Required fields
 
 }
 
+@JsonSnakeCase
 case class PeptideSetItem (
                    // Required fields                                  
                    var selectionLevel: Int,
@@ -431,6 +443,8 @@ case class PeptideSetItem (
 }
 
 object PeptideSet extends InMemoryIdGen
+
+@JsonSnakeCase
 class PeptideSet ( // Required fields
                    var id: Int,
                    var items: Array[PeptideSetItem],
