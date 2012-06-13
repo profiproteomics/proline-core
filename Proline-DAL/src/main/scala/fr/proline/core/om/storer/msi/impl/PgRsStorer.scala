@@ -15,6 +15,15 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
   
   val bulkCopyManager = new CopyManager( msiDb1.connection.asInstanceOf[BaseConnection] )
   
+  private val peptideTableCols = MsiDbPeptideTable.getColumnsAsStrList().mkString(",")
+  private val pepMatchTableCols = "charge, experimental_moz, score, rank, delta_moz, " +
+                                  " missed_cleavage, fragment_match_count, is_decoy, serialized_properties, " +
+                                  " peptide_id, ms_query_id, best_child_id, scoring_id, result_set_id"
+  private val pepMatchRelTableCols = "parent_peptide_match_id, child_peptide_match_id, parent_result_set_id"
+  private val protMatchTableCols = MsiDbProteinMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
+  private val seqMatchTableCols = "protein_match_id, peptide_id, start, stop, residue_before, residue_after, is_decoy, " +
+                                  "serialized_properties, best_peptide_match_id, bio_sequence_id, result_set_id"
+  
   //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
   // TODO: insert peptides into a TMP table
   
@@ -30,14 +39,12 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
     val tmpPeptideTableName = "tmp_peptide_" + ( scala.math.random * 1000000 ).toInt
     logger.info( "creating temporary table '" + tmpPeptideTableName +"'..." )
     
-    
     val stmt = this.msiDb2.connection.createStatement();
     stmt.executeUpdate("CREATE TEMP TABLE "+tmpPeptideTableName+" (LIKE peptide)")
     
     // Bulk insert of peptides
     logger.info( "BULK insert of peptides" )
-
-    val peptideTableCols = MsiDbPeptideTable.getColumnsAsStrList().mkString(",")
+    
     val pgBulkLoader = bulkCopyManager2.copyIn("COPY "+ tmpPeptideTableName +" ( "+ peptideTableCols + " ) FROM STDIN" )
 
     //val newPeptides = new ArrayBuffer[Peptide](0)
@@ -99,10 +106,6 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
     // Bulk insert of peptide matches
     logger.info( "BULK insert of peptide matches" )
     
-    val pepMatchTableCols = "charge, experimental_moz, score, rank, delta_moz, " +
-                            " missed_cleavage, fragment_match_count, is_decoy, serialized_properties, " +
-                            " peptide_id, ms_query_id, best_child_id, scoring_id, result_set_id"
-    
     val pgBulkLoader = bulkCopyManager.copyIn("COPY "+ tmpPepMatchTableName +" ( id, "+ pepMatchTableCols + " ) FROM STDIN" )
     
     // Iterate over peptide matches to store them
@@ -162,9 +165,8 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
     nbInsertedPepMatches.toInt
   }
   
-  private def _linkPeptideMatchesToChildren( peptideMatches: Seq[PeptideMatch] ): Unit = {
+  private def _linkPeptideMatchesToChildren( peptideMatches: Seq[PeptideMatch] ): Unit = {    
     
-    val pepMatchRelTableCols = "parent_peptide_match_id, child_peptide_match_id, parent_result_set_id"    
     val pgBulkLoader = bulkCopyManager.copyIn("COPY peptide_match_relation ( "+ pepMatchRelTableCols + " ) FROM STDIN" )
     
     // Iterate over peptide matches to store them
@@ -209,8 +211,6 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
     
     // Bulk insert of protein matches
     logger.info( "BULK insert of protein matches" )
-    
-    val protMatchTableCols = MsiDbProteinMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
     
     val pgBulkLoader = bulkCopyManager.copyIn("COPY "+ tmpProtMatchTableName +" ( id, "+ protMatchTableCols + " ) FROM STDIN" )
     
@@ -284,9 +284,6 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
     
     // Bulk insert of sequence matches
     logger.info( "BULK insert of sequence matches" )
-
-    val seqMatchTableCols = "protein_match_id, peptide_id, start, stop, residue_before, residue_after, is_decoy, " +
-                            "serialized_properties, best_peptide_match_id, bio_sequence_id, result_set_id"
     
     val pgBulkLoader = bulkCopyManager.copyIn("COPY "+ tmpSeqMatchTableName +" ( "+ seqMatchTableCols + " ) FROM STDIN" )
 
