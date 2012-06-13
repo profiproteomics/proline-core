@@ -109,10 +109,18 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
     val peptideSets = new ArrayBuffer[PeptideSet]
     val proteinSetCountByPepInstanceId = new HashMap[Int,Int]
     val peptideSetIdByClusterId = new HashMap[Int,Int]
+    
+    // Generate id for each cluster and map it by the provided cluster id
+    for( cluster <- clusters ) {
+      // Generate new peptide set id
+      val peptideSetId = PeptideSet.generateNewId()
+      peptideSetIdByClusterId += ( cluster.id -> peptideSetId )
+    }
       
     // Iterate over protein match clusters to build peptide sets
     for( cluster <- clusters ) {
-      val clusterId = cluster.id
+      
+      val peptideSetId = peptideSetIdByClusterId(cluster.id)
       val isSubset = cluster.isSubset
       
       // Retrieve the protein match ids matching the same set of peptides
@@ -127,11 +135,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
         samesetPeptideInstanceIds ++= tmpPepInstanceIds
       }
       val samesetPeptideInstances = samesetPeptideInstanceIds.map { peptideInstanceById(_) } 
-      
-      // Generate new peptide set id
-      val peptideSetId = PeptideSet.generateNewId()
-      peptideSetIdByClusterId += ( clusterId -> peptideSetId )
-                                
+                   
       // Build peptide set items
       var peptideMatchesCount = 0
       val pepSetItems = new ArrayBuffer[PeptideSetItem]
@@ -164,10 +168,10 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
           var strictSubsetIds: Array[Int] = null
           var subsumableSubsetIds: Array[Int] = null
           if( cluster.strictSubsetsIds != None ) {
-            strictSubsetIds = cluster.strictSubsetsIds.get.toArray
+            strictSubsetIds = cluster.strictSubsetsIds.get.map { peptideSetIdByClusterId(_) } toArray
           }
           if( cluster.subsumableSubsetsIds != None ) {
-            subsumableSubsetIds = cluster.subsumableSubsetsIds.get.toArray
+            subsumableSubsetIds = cluster.subsumableSubsetsIds.get.map { peptideSetIdByClusterId(_) } toArray
           }
           
           val peptideSet = new PeptideSet(
