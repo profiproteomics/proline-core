@@ -73,7 +73,7 @@ case class RsmValidationParamsProperties (
 
 @JsonSnakeCase
 case class RsmPepMatchValidationResultsProperties (
-  @BeanProperty var pValueThreshold: Double,
+  @BeanProperty var pValueThreshold: Float,
   @BeanProperty var targetMatchesCount: Int,
   @BeanProperty var decoyMatchesCount: Option[Int] = None,
   @BeanProperty var fdr: Option[Float] = None

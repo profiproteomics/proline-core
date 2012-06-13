@@ -86,7 +86,7 @@ class ResultFileImporter( projectId: Int,
 
     this.msiDb.commitTransaction()
     
-    return true
+    true
   }
   
   private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
