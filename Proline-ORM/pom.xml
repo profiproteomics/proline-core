@@ -52,7 +52,7 @@
       <artifactId>Proline-Databases</artifactId>
       <version>0.0.2-SNAPSHOT</version>
       <type>jar</type>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
   	<dependency>
   		<groupId>org.apache.commons</groupId>
