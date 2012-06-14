@@ -325,7 +325,7 @@ class OMConverterUtil( useCachedObject: Boolean = true ) {
    */
   def convertPtmSpecificityORM2OM( psPtmSpecificity: PsPtmSpecificity ): PtmDefinition = {
     
-    import collection.JavaConversions.asIterable       
+    import collection.JavaConversions.collectionAsScalaIterable       
 
     //Verify PtmDefinition exist in cache
     if( useCachedObject && ptmDefinitionsCache.contains(psPtmSpecificity.getId ) )
@@ -335,7 +335,8 @@ class OMConverterUtil( useCachedObject: Boolean = true ) {
     val psPtm = psPtmSpecificity.getPtm()
     val psPtmShortName = psPtm.getShortName()
     var ptmNames: PtmNames = null 
-    if( useCachedObject ) ptmNames = ptmNamesCache( psPtmShortName )
+    if( useCachedObject && ptmNamesCache.contains(psPtmShortName) )
+    	ptmNames = ptmNamesCache( psPtmShortName )
     if( ptmNames == null) {
       ptmNames = new PtmNames( psPtmShortName, psPtm.getFullName() )
       if(useCachedObject)
@@ -348,21 +349,19 @@ class OMConverterUtil( useCachedObject: Boolean = true ) {
     val psPtmEvidences = psPtmSpecificity.getEvidences()
     var ptmEvidences = new ArrayBuffer[PtmEvidence]( psPtmEvidences.size() )
     var precursorFound = false
-    var i = 0
     
-    for( psPtmEvid <- asIterable(psPtmEvidences) ){
+    for( psPtmEvid <- collectionAsScalaIterable(psPtmEvidences) ){
       
       if( psPtmEvid.getType().equals(psPrecursorType) )
         precursorFound = true
       
-      ptmEvidences(i) = new PtmEvidence(
+      ptmEvidences += new PtmEvidence(
                                 ionType = IonTypes.withName( psPtmEvid.getType().name() ),
                                 composition = psPtmEvid.getComposition(),
                                 monoMass = psPtmEvid.getMonoMass(),
                                 averageMass = psPtmEvid.getAverageMass(),
                                 isRequired = psPtmEvid.getIsRequired()
-                                )
-      i += 1
+                                )      
     }
     if( !precursorFound ) {
       
