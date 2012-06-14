@@ -111,7 +111,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
         var proteinSetScoringId = Option.empty[Int]
         
         // Set scoring id if the protein set has a defined score
-        if( proteinSet.score > 0 ) {
+        if( proteinSet.scoreType != null ) {
           val scoreType = proteinSet.scoreType
           proteinSetScore = Some( proteinSet.score )
           proteinSetScoringId = this.scoringIdByType.get( scoreType )
