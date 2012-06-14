@@ -241,13 +241,17 @@ object Peptide extends InMemoryIdGen with Logging {
     // FIXME: find another way to deal with X residues
     import fr.proline.core.utils.misc.RegexUtils._
     
-    if( sequence =~ "(?i).*X.*".r ) mass = 0.0
+    if( sequence =~ "(?i).*[BX].*".r ) mass = 0.0
     else {
       mass = try {
         new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
       } catch {
-        case e: Exception => this.logger.error("can't compute mass for sequence="+sequence); Double.NaN
+        case e: Exception => Double.NaN
       }
+    }
+    
+    if( mass.isNaN() ) {
+      throw new Exception("can't compute peptide mass for sequence="+sequence)
     }
     
     mass
