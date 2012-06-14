@@ -25,7 +25,7 @@ object OMComparatorUtil {
   
   /**
    * Compare both set of OM <code>LocatedPtm</code> and ORM <code>PeptidePtm</code>. Comparison is done using above compare method (comparePeptidePtm=
-   * which will test if each Set contains comparable LocatedPtm ant PeptodePtm (comparison done on Ptm full Name and Location) 
+   * which will test if each Set contains comparable LocatedPtm ant PeptidePtm (comparison done on Ptm full Name and Location) 
    *  
    * @param omPepPtmSet: First Set of peptide ptm to compare (Set of LocatedPtm from OM)  
    * @param ormPepPtmSet : Second Set of peptide to compare (Set of PeptidePtm from PS/ORM)  
@@ -45,7 +45,9 @@ object OMComparatorUtil {
     if( ormPepPtmSet.size != omPepPtmSet.size )
       return false;
     
-    val remainingORMPepPtmSet = asScalaSet( ormPepPtmSet )
+    val remainingORMPepPtmSetBuilder = scala.collection.mutable.Set.newBuilder[fr.proline.core.orm.ps.PeptidePtm] 
+    remainingORMPepPtmSetBuilder ++=(ormPepPtmSet)
+    val remainingORMPepPtmSet = remainingORMPepPtmSetBuilder.result
     val omPepPtmIt = omPepPtmSet.toIterator
     var omPtmFound = true
     
