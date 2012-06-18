@@ -63,7 +63,10 @@ public class ConnectionPrototype {
 	}
 	
 	public ConnectionPrototype password(String passwd) {
-		connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, passwd);
+		if(passwd == null)
+			connectionProperties.remove(DatabaseConnector.PROPERTY_PASSWORD);
+		else
+			connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, passwd);
 		return this;
 	}
 
@@ -73,6 +76,8 @@ public class ConnectionPrototype {
 	}
 
 	public ConnectionPrototype username(String username) {
+		if(username==null)
+			throw new NullPointerException("User Name should not be null");
 		connectionProperties.put(DatabaseConnector.PROPERTY_USERNAME, username);		
 		return this;
 	}
