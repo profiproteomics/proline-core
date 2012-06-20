@@ -3,11 +3,14 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.core.utils.misc.InMemoryIdGen
 
 object ResultSet extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class ResultSet ( 
                    // Required fields
                    val peptides: Array[Peptide],
@@ -26,8 +29,8 @@ case class ResultSet (
                    
                    var msiSearch: MSISearch = null,
                   
-                   private var decoyResultSetId: Int = 0,
-                   var decoyResultSet: Option[ResultSet] = null,
+                   protected var decoyResultSetId: Int = 0,
+                   @transient var decoyResultSet: Option[ResultSet] = null,
                    
                    var properties : HashMap[String, Any] = new HashMap[String, Any]
                    
@@ -88,6 +91,7 @@ case class ResultSet (
 object ResultSummary extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class ResultSummary (
                    // Required fields
                    val peptideInstances: Array[PeptideInstance],
@@ -100,10 +104,10 @@ case class ResultSummary (
                    
                    // Mutable optional fields
                    var id: Int = 0,
-                   private var resultSetId: Int = 0,
+                   protected var resultSetId: Int = 0,
                    var resultSet: Option[ResultSet] = null,
                    var decoyResultSummaryId: Int = 0,
-                   var decoyResultSummary: Option[ResultSummary] = null,
+                   @transient var decoyResultSummary: Option[ResultSummary] = null,
                    var name: String = null,
                    var description: String = null,
                    var isQuantified: Boolean = false,

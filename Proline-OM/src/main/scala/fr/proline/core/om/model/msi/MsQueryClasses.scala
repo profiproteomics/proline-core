@@ -3,6 +3,8 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.HashMap
 import org.apache.commons.lang3.StringUtils
 import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.core.utils.misc.InMemoryIdGen
 //import fr.proline.core.om.model.msi.serializer.{MsQueryProperties,MsQueryDbSearchProperties}
 //import fr.proline.core.utils.serialization._
@@ -40,6 +42,7 @@ trait MsQuery {
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class Ms1Query ( // Required fields
                      var id: Int,
                      val initialId: Int,
@@ -75,6 +78,7 @@ object Ms2Query extends InMemoryIdGen {
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class Ms2Query(  // Required fields
                  var id: Int,
                  val initialId: Int,

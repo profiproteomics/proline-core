@@ -4,6 +4,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
 import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.weiglewilczek.slf4s.Logging
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.proline.core.utils.misc.InMemoryIdGen
@@ -261,6 +263,7 @@ object Peptide extends InMemoryIdGen with Logging {
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class Peptide ( // Required fields
                 var id: Int,
                 val sequence: String,
@@ -315,13 +318,14 @@ case class Peptide ( // Required fields
   }
   
   /** Returns a string that can be used as a unique key for this peptide */
-  lazy val uniqueKey : String = sequence + "%" + ptmString
+  @transient lazy val uniqueKey : String = sequence + "%" + ptmString
   
 }
 
 object PeptideMatch extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PeptideMatch ( // Required fields
                      var id: Int, 
                      val rank: Int,
@@ -335,22 +339,21 @@ case class PeptideMatch ( // Required fields
                      val missedCleavage: Int = 0,
                      val fragmentMatchesCount: Int = 0,
                      
-                     val msQuery: MsQuery = null, // TODO: require ?
+                     @transient val msQuery: MsQuery = null, // TODO: require ?
                      
                      // Mutable optional fields
                      var isValidated: Boolean = false, // only defined in the model
                      var resultSetId: Int = 0,    
                      
-                     private var childrenIds: Array[Int] = null,
-                     var children: Option[Array[PeptideMatch]] = null,
+                     protected var childrenIds: Array[Int] = null,
+                     @transient var children: Option[Array[PeptideMatch]] = null,
                      
-                     private var bestChildId: Int = 0,
-                     var bestChild : Option[PeptideMatch] = null,                                         
+                     protected var bestChildId: Int = 0,
+                     @transient var bestChild : Option[PeptideMatch] = null,
                      
                      var properties: Option[PeptideMatchProperties] = None,
                      
-                     @transient
-                     var validationProperties : Option[HashMap[String, Any]] = None
+                     @transient var validationProperties : Option[HashMap[String, Any]] = None
                      
                      ) {
   
@@ -373,18 +376,20 @@ case class PeptideMatch ( // Required fields
 object PeptideInstance extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PeptideInstance ( // Required fields
                         var id: Int,
                         val peptide: Peptide,
 
                         // Immutable optional fields
-                        private val peptideMatchIds: Array[Int] = null, //One of these 2 values should be specified
-                        val peptideMatches: Array[PeptideMatch] = null,
+                        protected val peptideMatchIds: Array[Int] = null, //One of these 2 values should be specified                        
+                        @transient val peptideMatches: Array[PeptideMatch] = null,
                         
-                        val children: Array[PeptideInstance] = null,                         
+                        val children: Array[PeptideInstance] = null,
                         
-                        private val unmodifiedPeptideId: Int = 0,
-                        val unmodifiedPeptide: Option[Peptide] = null,                        
+                        protected val unmodifiedPeptideId: Int = 0,
+   
+                        @transient val unmodifiedPeptide: Option[Peptide] = null,
                         
                         // Mutable optional fields
                         var proteinMatchesCount: Int = 0,
@@ -392,7 +397,7 @@ case class PeptideInstance ( // Required fields
                         var selectionLevel: Int = -1,
                         var elutionTime: Float = 0,
                         
-                        var peptideSets: Array[PeptideSet] = null,
+                        @transient var peptideSets: Array[PeptideSet] = null,
                         var bestPeptideMatchId: Int = 0,
                         var resultSummaryId: Int = 0,
                         
@@ -426,14 +431,15 @@ case class PeptideInstance ( // Required fields
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PeptideSetItem (
                    // Required fields                                  
                    var selectionLevel: Int,
                    val peptideInstance: PeptideInstance,
                    
                    // Immutable optional fields
-                   private val peptideSetId: Int = 0,
-                   val peptideSet: Option[PeptideSet] = null,
+                   protected val peptideSetId: Int = 0,
+                   @transient val peptideSet: Option[PeptideSet] = null,
                    
                    // Mutable optional fields
                    var isBestPeptideSet: Option[Boolean] = None,
@@ -449,6 +455,7 @@ case class PeptideSetItem (
 object PeptideSet extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 class PeptideSet ( // Required fields
                    var id: Int,
                    var items: Array[PeptideSetItem],
@@ -457,8 +464,8 @@ class PeptideSet ( // Required fields
                    val proteinMatchIds: Array[Int],
                    
                    // Immutable optional fields
-                   private val proteinSetId: Int = 0,
-                   var proteinSet: Option[ProteinSet] = null,
+                   protected val proteinSetId: Int = 0,
+                   @transient var proteinSet: Option[ProteinSet] = null,
                    
                    var resultSummaryId: Int = 0,
                    

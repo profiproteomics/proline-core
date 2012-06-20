@@ -2,11 +2,14 @@ package fr.proline.core.om.model.msi
 
 import org.apache.commons.lang3.StringUtils
 import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.core.utils.misc.InMemoryIdGen
 
 object PtmNames extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PtmNames( val shortName: String, val fullName: String ) {
   
   // Requirements
@@ -15,6 +18,7 @@ case class PtmNames( val shortName: String, val fullName: String ) {
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class UnimodEntry( // Required fields
                    override val shortName: String, 
                    override val fullName: String, 
@@ -40,6 +44,7 @@ object IonTypes extends Enumeration {
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PtmEvidence( // Required fields
                    val ionType: IonTypes.IonType,
                    val composition: String,
@@ -69,6 +74,7 @@ object PtmLocation extends Enumeration {
 } 
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PtmSpecificity( // Required fields
                       val location: String, 
     
@@ -86,6 +92,7 @@ case class PtmSpecificity( // Required fields
 object PtmDefinition extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PtmDefinition( // Required fields
                      override val id: Int,
                      override val location: String,
@@ -110,6 +117,7 @@ case class PtmDefinition( // Required fields
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class LocatedPtm( // Required fields
                   val definition: PtmDefinition, 
                   val seqPosition: Int, 

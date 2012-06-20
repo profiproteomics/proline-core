@@ -2,6 +2,8 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
 import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.proline.core.utils.misc.InMemoryIdGen
 
@@ -54,6 +56,7 @@ object Protein extends InMemoryIdGen{
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class Protein ( // Required fields
                    val id: Int,
                    val sequence: String,
@@ -84,6 +87,7 @@ case class Protein ( // Required fields
 }
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class SequenceMatch ( // Required fields                     
                    val start: Int,
                    val end: Int,
@@ -95,11 +99,11 @@ case class SequenceMatch ( // Required fields
                    var resultSetId : Int = 0,
                    
                    // Mutable optional fields
-                   private var peptideId: Int = 0,
-                   var peptide: Option[Peptide] = null,
+                   protected var peptideId: Int = 0,
+                   @transient var peptide: Option[Peptide] = null,
                    
-                   private var bestPeptideMatchId: Int = 0,
-                   var bestPeptideMatch: Option[PeptideMatch] = null,
+                   protected var bestPeptideMatchId: Int = 0,
+                   @transient var bestPeptideMatch: Option[PeptideMatch] = null,
                    
                    var properties: Option[SequenceMatchProperties] = None
                    
@@ -120,6 +124,7 @@ object ProteinMatch extends InMemoryIdGen {
 }  
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class ProteinMatch ( 
                    // Required fields                    
                    val accession: String,
@@ -133,8 +138,8 @@ case class ProteinMatch (
                    var taxonId: Int = 0,
                    var resultSetId: Int = 0,
 
-                   private var proteinId: Int = 0,
-                   var protein: Option[Protein] = null,
+                   protected var proteinId: Int = 0,
+                   @transient var protein: Option[Protein] = null,
 
                    var seqDatabaseIds: Array[Int] = null,
                    
@@ -159,6 +164,7 @@ case class ProteinMatch (
 object ProteinSet extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class ProteinSet ( 
                  // Required fields
                  val peptideSet: PeptideSet,
@@ -170,11 +176,11 @@ case class ProteinSet (
                  var id: Int = 0,
                  var resultSummaryId: Int = 0,
                  
-                 private var proteinMatchIds: Array[Int] = null, //One of these 2 values should be specified
-                 var proteinMatches: Option[Array[ProteinMatch]] = null,
+                 protected var proteinMatchIds: Array[Int] = null, //One of these 2 values should be specified
+                 @transient var proteinMatches: Option[Array[ProteinMatch]] = null,
                  
-                 private var typicalProteinMatchId: Int = 0,
-                 var typicalProteinMatch: Option[ProteinMatch] = null,
+                 protected var typicalProteinMatchId: Int = 0,
+                 @transient var typicalProteinMatch: Option[ProteinMatch] = null,
                  
                  var score: Float = 0,
                  var scoreType: String = null,

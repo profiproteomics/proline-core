@@ -1,11 +1,14 @@
 package fr.proline.core.om.model.msi
 
 import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.core.utils.misc.InMemoryIdGen
 
 object Spectrum extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class Spectrum ( var id: Int,
                       val title: String,
                       val precursorMoz: Double,
@@ -28,6 +31,7 @@ case class Spectrum ( var id: Int,
 object PeaklistSoftware extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PeaklistSoftware( var id: Int,
                              val name: String,
                              val version: String
@@ -36,6 +40,7 @@ case class PeaklistSoftware( var id: Int,
 object Peaklist extends InMemoryIdGen
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class Peaklist( var id: Int,
                      val fileType: String,
                      val path: String,
