@@ -602,7 +602,7 @@ UNIQUE( accession, result_set_id )</remarks>
     <column id="COL182" populated="true" UUID="c4d260b0-dbee-47f9-b8d2-cc26336acd34" autoIncrement="false" defaultValue="" name="initial_bio_sequence_id" nullable="1" physicalName="initial_bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>The id of the protein sequence which was initially identified by the search engine.</remarks>
     </column>
-    <column id="COL183" populated="true" UUID="3aaabae5-d84a-4fa7-a655-a393fb0e6a90" autoIncrement="false" defaultValue="" name="last_bio_sequence_id" nullable="0" physicalName="last_bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL183" populated="true" UUID="3aaabae5-d84a-4fa7-a655-a393fb0e6a90" autoIncrement="false" defaultValue="" name="last_bio_sequence_id" nullable="1" physicalName="last_bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>The id of the last sequence version of the identified protein.</remarks>
     </column>
     <column id="COL184" populated="true" UUID="ecd258fa-7a72-4f66-8025-6dbe836131af" autoIncrement="false" autoIncrementSequenceName="protein_match_scoring_id_seq" defaultValue="" name="scoring_id" nullable="0" physicalName="scoring_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -1867,11 +1867,11 @@ UNIQUE( accession, result_set_id )</remarks>
    <relationship id="REL607" populated="true" UUID="f52ae646-9cab-4d3a-9bb0-014203336b54" deferrability="7" deleteRule="1" fk-table-ref="TAB400" fkCardinality="7" identifying="false" name="object_tree_schema_master_quant_component_fk" physicalName="object_tree_schema_master_quant_component_fk" pk-table-ref="TAB134" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP608" populated="true" UUID="8cf01787-d1f0-4d72-8fc8-69c429ffb117" fk-column-ref="COL405" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL135" />
    </relationship>
-   <relationship id="REL609" populated="true" UUID="d617bb7c-0c02-4af0-bc44-bde0fd5d8a65" deferrability="7" deleteRule="1" fk-table-ref="TAB170" fkCardinality="7" identifying="false" name="protein_protein_match_fk" physicalName="protein_protein_match_fk" pk-table-ref="TAB143" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP610" populated="true" UUID="c03628a3-b996-462a-8bad-ae4ca2395748" fk-column-ref="COL182" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL144" />
+   <relationship id="REL609" populated="true" UUID="d617bb7c-0c02-4af0-bc44-bde0fd5d8a65" deferrability="7" deleteRule="1" fk-table-ref="TAB170" fkCardinality="7" identifying="false" name="initial_bio_sequence_protein_match_fk" physicalName="initial_bio_sequence_protein_match_fk" pk-table-ref="TAB143" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP610" populated="true" UUID="15536c72-6f7e-4d03-9e43-c1310b68b8bf" fk-column-ref="COL182" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL144" />
    </relationship>
-   <relationship id="REL611" populated="true" UUID="aead48b2-fcc2-4f26-8619-4818610bacd1" deferrability="7" deleteRule="3" fk-table-ref="TAB170" fkCardinality="7" identifying="false" name="bio_sequence_protein_match_fk" physicalName="bio_sequence_protein_match_fk" pk-table-ref="TAB143" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP612" populated="true" UUID="f354f821-e822-4817-a7db-063218fbb855" fk-column-ref="COL183" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL144" />
+   <relationship id="REL611" populated="true" UUID="aead48b2-fcc2-4f26-8619-4818610bacd1" deferrability="7" deleteRule="3" fk-table-ref="TAB170" fkCardinality="7" identifying="false" name="last_bio_sequence_protein_match_fk" physicalName="last_bio_sequence_protein_match_fk" pk-table-ref="TAB143" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP612" populated="true" UUID="1f9dfe4a-e5e8-4efd-a1c1-9a22d555512b" fk-column-ref="COL183" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL144" />
    </relationship>
    <relationship id="REL613" populated="true" UUID="017556ae-310a-4317-b902-b0b78237fbe5" deferrability="7" deleteRule="3" fk-table-ref="TAB122" fkCardinality="7" identifying="false" name="protein_set_peptide_set_fk" physicalName="protein_set_peptide_set_fk" pk-table-ref="TAB156" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP614" populated="true" UUID="215f0255-4774-4b33-bbb6-5b4dcab9609f" fk-column-ref="COL128" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL157" />
@@ -2103,7 +2103,7 @@ UNIQUE( accession, result_set_id )</remarks>
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  outputFormatAsString="ENGLISH"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="D:\bruley\Dev\workspace-3.7\Proline-Databases\diagrams\CBy\MSI-DB (1).architect"  />
@@ -2111,7 +2111,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8465468252641619" viewportX="0" viewportY="528" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8465468252641619" viewportX="0" viewportY="519" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB502" x="20" y="878" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB1" x="198" y="27" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB7" x="1785" y="893" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>

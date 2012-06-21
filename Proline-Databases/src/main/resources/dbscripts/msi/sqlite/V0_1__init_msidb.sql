@@ -336,10 +336,12 @@ CREATE TABLE protein_match (
                 is_decoy TEXT NOT NULL,
                 serialized_properties TEXT,
                 taxon_id INTEGER,
-                bio_sequence_id INTEGER,
+                initial_bio_sequence_id INTEGER,
+                last_bio_sequence_id INTEGER,
                 scoring_id INTEGER NOT NULL,
                 result_set_id INTEGER NOT NULL,
-                FOREIGN KEY (bio_sequence_id) REFERENCES bio_sequence (id),
+                FOREIGN KEY (initial_bio_sequence_id) REFERENCES bio_sequence (id),
+                FOREIGN KEY (last_bio_sequence_id) REFERENCES bio_sequence (id),
                 FOREIGN KEY (scoring_id) REFERENCES scoring (id),
                 FOREIGN KEY (result_set_id) REFERENCES result_set (id)
 );
@@ -515,11 +517,9 @@ CREATE TABLE sequence_match (
                 is_decoy TEXT NOT NULL,
                 serialized_properties TEXT,
                 best_peptide_match_id INTEGER NOT NULL,
-                bio_sequence_id INTEGER,
                 result_set_id INTEGER NOT NULL,
                 PRIMARY KEY (protein_match_id, peptide_id, start, stop),
                 FOREIGN KEY (best_peptide_match_id) REFERENCES peptide_match (id),
-                FOREIGN KEY (bio_sequence_id) REFERENCES bio_sequence (id),
                 FOREIGN KEY (result_set_id) REFERENCES result_set (id)
 );
 

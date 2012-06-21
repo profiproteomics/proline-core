@@ -521,7 +521,8 @@ CREATE TABLE public.protein_match (
                 is_decoy BOOLEAN NOT NULL,
                 serialized_properties TEXT,
                 taxon_id INTEGER,
-                bio_sequence_id INTEGER NOT NULL,
+                initial_bio_sequence_id INTEGER,
+                last_bio_sequence_id INTEGER,
                 scoring_id INTEGER NOT NULL,
                 result_set_id INTEGER NOT NULL,
                 CONSTRAINT protein_match_pk PRIMARY KEY (id)
@@ -536,7 +537,8 @@ COMMENT ON COLUMN public.protein_match.peptide_match_count IS 'The number of pep
 COMMENT ON COLUMN public.protein_match.is_decoy IS 'Specify if the protein match is related  to a decoy database search.';
 COMMENT ON COLUMN public.protein_match.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details). TODO: store the frame_number here';
 COMMENT ON COLUMN public.protein_match.taxon_id IS 'The NCBI taxon id corresponding to this protein match.';
-COMMENT ON COLUMN public.protein_match.bio_sequence_id IS 'The id of the corresponding protein sequence';
+COMMENT ON COLUMN public.protein_match.initial_bio_sequence_id IS 'The id of the protein sequence which was initially identified by the search engine.';
+COMMENT ON COLUMN public.protein_match.last_bio_sequence_id IS 'The id of the last sequence version of the identified protein.';
 
 
 ALTER SEQUENCE public.protein_match_id_seq OWNED BY public.protein_match.id;
@@ -547,7 +549,7 @@ CREATE INDEX protein_match_ac_idx
 
 CREATE INDEX protein_match_seq_idx
  ON public.protein_match
- ( bio_sequence_id );
+ ( initial_bio_sequence_id );
 
 CREATE INDEX protein_match_rs_idx
  ON public.protein_match
@@ -924,7 +926,6 @@ CREATE TABLE public.sequence_match (
                 is_decoy BOOLEAN NOT NULL,
                 serialized_properties TEXT,
                 best_peptide_match_id INTEGER NOT NULL,
-                bio_sequence_id INTEGER NOT NULL,
                 result_set_id INTEGER NOT NULL,
                 CONSTRAINT sequence_match_pk PRIMARY KEY (protein_match_id, peptide_id, start, stop)
 );
@@ -1106,17 +1107,17 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.sequence_match ADD CONSTRAINT protein_sequence_match_fk
-FOREIGN KEY (bio_sequence_id)
+ALTER TABLE public.protein_match ADD CONSTRAINT initial_bio_sequence_protein_match_fk
+FOREIGN KEY (initial_bio_sequence_id)
 REFERENCES public.bio_sequence (id)
-ON DELETE NO ACTION
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.protein_match ADD CONSTRAINT protein_protein_match_fk
-FOREIGN KEY (bio_sequence_id)
+ALTER TABLE public.protein_match ADD CONSTRAINT last_bio_sequence_protein_match_fk
+FOREIGN KEY (last_bio_sequence_id)
 REFERENCES public.bio_sequence (id)
-ON DELETE RESTRICT
+ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
