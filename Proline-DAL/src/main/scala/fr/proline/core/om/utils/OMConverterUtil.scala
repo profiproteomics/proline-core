@@ -6,13 +6,26 @@ import javax.persistence.EntityManager
 import javax.persistence.Persistence
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import fr.proline.core.om.model.msi._
 import fr.proline.core.orm.msi.PeptideSetPeptideInstanceItem
 import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
 import fr.proline.core.orm.ps.PeptidePtm
 import fr.proline.core.orm.utils.JPAUtil
 import fr.proline.repository.ProlineRepository
 import fr.proline.repository.ProlineRepository.Databases
+import fr.proline.core.orm.pdi.SequenceDbInstance
+import fr.proline.core.om.model.msi.SeqDatabase
+import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.PtmNames
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.PeptideSetItem
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.PeptideInstance
+import fr.proline.core.om.model.msi.PeptideSet
+import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.om.model.msi.PtmEvidence
+import fr.proline.core.om.model.msi.SeqDatabase
+import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.model.msi.SeqDatabase$
 
 /**
  * Provides method to convert object from ORM to OM. If specified in constructor, created object are stored in map( referenced by their ID) to be retrieve if necessary.
@@ -22,20 +35,23 @@ import fr.proline.repository.ProlineRepository.Databases
  */ 
 class OMConverterUtil( useCachedObject: Boolean = true ) {
   
-  val peptideInstancesCache = new HashMap[Int, PeptideInstance]
-  val peptideMatchesCache = new HashMap[Int, PeptideMatch]
-  val peptidesCache = new HashMap[Int, Peptide]
+  val peptideInstancesCache = new HashMap[Int,  fr.proline.core.om.model.msi.PeptideInstance]
+  val peptideMatchesCache = new HashMap[Int,  fr.proline.core.om.model.msi.PeptideMatch]
+  val peptidesCache = new HashMap[Int,  fr.proline.core.om.model.msi.Peptide]
   val locatedPTMsCache = new HashMap[Int, LocatedPtm]
   val ptmNamesCache = new HashMap[String, PtmNames]
   val ptmDefinitionsCache = new HashMap[Int, PtmDefinition]
-  val peptideSetsCache = new HashMap[Int, PeptideSet]
+  val peptideSetsCache = new HashMap[Int, fr.proline.core.om.model.msi.PeptideSet]
+  val seqDatabaseCache = new HashMap[Int, fr.proline.core.om.model.msi.SeqDatabase]
   
   type MsiPeptideMatch = fr.proline.core.orm.msi.PeptideMatch
   type MsiPeptideInstance = fr.proline.core.orm.msi.PeptideInstance
   type MsiPeptideSet = fr.proline.core.orm.msi.PeptideSet
+  type MsiSeqDatabase = fr.proline.core.orm.msi.SeqDatabase
   type PsPeptide = fr.proline.core.orm.ps.Peptide
   type PsPeptidePtm = fr.proline.core.orm.ps.PeptidePtm
   type PsPtmSpecificity = fr.proline.core.orm.ps.PtmSpecificity
+  
   
   val psPrecursorType = fr.proline.core.orm.ps.PtmEvidence.Type.Precursor
   
@@ -401,6 +417,29 @@ class OMConverterUtil( useCachedObject: Boolean = true ) {
       ptmDefinitionsCache.put(psPtmSpecificity.getId(), ptmDef);
     
     ptmDef
+  }
+  
+  /**
+   *  Convert from fr.proline.core.orm.pdi.SequenceDbInstance(ORM) to fr.proline.core.om.model.msi.SeqDatabase (OM).
+   *  
+   * 
+   * @param pdiSedDBInstance : fr.proline.core.orm.pdi.SequenceDbInstance to convert
+   * @return created SeqDatabase (with associated objects)
+   */
+  def convertSeqDbInstanceORM2OM( pdiSedDBInstance: SequenceDbInstance): SeqDatabase= {
+	  if(useCachedObject && seqDatabaseCache.contains( pdiSedDBInstance.getId ) )
+		  return seqDatabaseCache(pdiSedDBInstance.getId)
+      
+	  val seqDB = new SeqDatabase(id = pdiSedDBInstance.getId,
+						name = pdiSedDBInstance.getName,
+						filePath = pdiSedDBInstance.getFastaFilePath,
+						sequencesCount = pdiSedDBInstance.getSequenceCount,
+						version = pdiSedDBInstance.getSequenceDbRelease.getVersion,
+						releaseDate =pdiSedDBInstance.getSequenceDbRelease.getDate )
+	  if(useCachedObject)
+		  seqDatabaseCache.put(pdiSedDBInstance.getId(),seqDB)
+      
+      seqDB 
   }
   
   
