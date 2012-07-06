@@ -5,6 +5,7 @@ import static javax.persistence.CascadeType.REMOVE;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
 import java.sql.Timestamp;
 import java.util.Date;
 
@@ -14,6 +15,9 @@ import java.util.Date;
  * 
  */
 @Entity
+@NamedQuery(name="findSeqDBByNameAndFile",
+query="select seq from fr.proline.core.orm.pdi.SequenceDbInstance seq where seq.name = :name and seq.fastaFilePath = :filePath ")
+
 @Table(name="seq_db_instance")
 public class SequenceDbInstance implements Serializable {
 	private static final long serialVersionUID = 1L;
