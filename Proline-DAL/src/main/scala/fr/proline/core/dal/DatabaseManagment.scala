@@ -25,13 +25,13 @@ class DatabaseManagment (udsDBConnector : DatabaseConnector ){
 	lazy val pdiDBConnector : DatabaseConnector = {
 		val udsEM = udsEMF.createEntityManager()
 		val query : TypedQuery[ExternalDb] = udsEM.createQuery("Select exDB from ExternalDb exDB where exDB.type = :type", classOf[ExternalDb])
-		query.setParameter("type", "PDI")
+		query.setParameter("type", "pdi")
 		val pdiDB = query.getSingleResult
 		
 		var propBuilder = Map.newBuilder[String, String]
 		propBuilder += DatabaseConnector.PROPERTY_USERNAME ->pdiDB.getDbUser
 		propBuilder += DatabaseConnector.PROPERTY_PASSWORD->pdiDB.getDbPassword
-		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->pdiDB.getDbPassword
+		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->udsDBConnector.getDriverType.getDriverClassName()
 		propBuilder += DatabaseConnector.PROPERTY_URL ->createURL(pdiDB)
 		
 		 
@@ -42,13 +42,13 @@ class DatabaseManagment (udsDBConnector : DatabaseConnector ){
 	lazy val psDBConnector : DatabaseConnector = {
 		val udsEM = udsEMF.createEntityManager()
 		val query : TypedQuery[ExternalDb] = udsEM.createQuery("Select exDB from ExternalDb exDB where exDB.type = :type", classOf[ExternalDb])
-		query.setParameter("type", "PDI")
+		query.setParameter("type", "ps")
 		val pdiDB = query.getSingleResult
 		
 		var propBuilder = Map.newBuilder[String, String]
 		propBuilder += DatabaseConnector.PROPERTY_USERNAME ->pdiDB.getDbUser
 		propBuilder += DatabaseConnector.PROPERTY_PASSWORD->pdiDB.getDbPassword
-		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->pdiDB.getDbPassword
+		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->udsDBConnector.getDriverType.getDriverClassName()
 		propBuilder += DatabaseConnector.PROPERTY_URL ->createURL(pdiDB)
 		
 		 
@@ -74,7 +74,7 @@ class DatabaseManagment (udsDBConnector : DatabaseConnector ){
 		var propBuilder = Map.newBuilder[String, String]
 		propBuilder += DatabaseConnector.PROPERTY_USERNAME ->msiDB.getDbUser
 		propBuilder += DatabaseConnector.PROPERTY_PASSWORD->msiDB.getDbPassword
-		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->msiDB.getDbPassword
+		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->udsDBConnector.getDriverType.getDriverClassName()
 		propBuilder += DatabaseConnector.PROPERTY_URL ->createURL(msiDB)
 		
 		 
@@ -85,7 +85,7 @@ class DatabaseManagment (udsDBConnector : DatabaseConnector ){
 	private def createURL(externalDB: ExternalDb) : String = {
 		val URLbuilder : StringBuilder = new StringBuilder()
 		val protocol  = udsDBConnector.getDriverType()
-		URLbuilder.append("jdbc:").append(udsDBConnector.getDriverType.name().toLowerCase()).append(':').append(externalDB.getHost)
+		URLbuilder.append("jdbc:").append(udsDBConnector.getDriverType().name().toLowerCase()).append(':').append(externalDB.getHost)
 		if(externalDB.getPort != null)
 			URLbuilder.append(":").append(externalDB.getPort)
 		if(!URLbuilder.endsWith(":"))
