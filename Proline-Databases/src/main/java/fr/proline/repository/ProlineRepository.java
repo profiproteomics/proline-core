@@ -29,6 +29,16 @@ public class ProlineRepository {
 			this.driver = driver;
 			this.JPADialect = dialect;
 		}
+		
+		public String getJPADriver(){
+			return JPADialect;
+		}
+		
+		public String getDriverClassName(){
+			return driver;
+		}
+		
+		
 	};
 
 	private static ProlineRepository instance;
