@@ -555,25 +555,30 @@ CREATE SEQUENCE public.external_db_id_seq;
 
 CREATE TABLE public.external_db (
                 id INTEGER NOT NULL DEFAULT nextval('public.external_db_id_seq'),
-                db_name VARCHAR(500) NOT NULL,
+                name VARCHAR(500) NOT NULL,
+                connection_mode VARCHAR(50) NOT NULL,
+                username VARCHAR(50),
+                password VARCHAR(50),
                 host VARCHAR(100),
                 port INTEGER,
-                db_user VARCHAR(50),
-                db_password VARCHAR(50),
                 type VARCHAR(100) NOT NULL,
-                db_version VARCHAR(50) NOT NULL,
+                version VARCHAR(50) NOT NULL,
                 is_busy BOOLEAN NOT NULL,
-                serialized_properties TEXT NOT NULL,
+                serialized_properties TEXT,
                 CONSTRAINT external_db_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.external_db IS 'Contains connexion properties for databases associated to projects. Databases allowing multiple instances are necessarily associated to projects.';
-COMMENT ON COLUMN public.external_db.db_name IS 'The name of the database on the DBMS server.';
+COMMENT ON TABLE public.external_db IS 'Contains connexion properties for databases associated to projects. 
+Databases allowing multiple instances are necessarily associated to projects.
+Singleton databases (PDIdb, PSdb, ePims, ...) are also define through this table without any specific association to any projects';
+COMMENT ON COLUMN public.external_db.name IS 'The name of the database on the DBMS server.
+Could be the path/name of the database in case of embedded file DB engine (H2 / sqlite...)';
+COMMENT ON COLUMN public.external_db.connection_mode IS 'Specify type of connection used for this DB. Possible values: HOST, MEMORY or FILE';
+COMMENT ON COLUMN public.external_db.username IS 'The user name to use for database connection.';
+COMMENT ON COLUMN public.external_db.password IS 'The password to use for database connection.';
 COMMENT ON COLUMN public.external_db.host IS 'The hostname of the DBMS server.';
 COMMENT ON COLUMN public.external_db.port IS 'The hostname of the DBMS server.';
-COMMENT ON COLUMN public.external_db.db_user IS 'The user name to use for database connection.';
-COMMENT ON COLUMN public.external_db.db_password IS 'The password to use for database connection.';
-COMMENT ON COLUMN public.external_db.type IS 'Type of database schema. Allowed values : msi, lcms';
-COMMENT ON COLUMN public.external_db.db_version IS 'Indicates the schema version of the referenced db. For instance, it could correspond to admin_infos.model_version of an MSIdb';
+COMMENT ON COLUMN public.external_db.type IS 'Type of database schema. Allowed values : msi, lcms, ps, pdi...';
+COMMENT ON COLUMN public.external_db.version IS 'Indicates the schema version of the referenced db. For instance, it could correspond to admin_infos.model_version of an MSIdb';
 COMMENT ON COLUMN public.external_db.is_busy IS 'Informs about the busy status of the corresponding external DB. If set to true then it tells that the external DB is busy and should not be used at the moment. Could be usefull if the external DB is implemented using an embedded technology like SQLite.';
 COMMENT ON COLUMN public.external_db.serialized_properties IS 'Could store the driver name and other connection properties needed by the driver.';
 
@@ -673,7 +678,6 @@ CREATE TABLE public.admin_infos (
 COMMENT ON TABLE public.admin_infos IS 'This table gives information about the current database model.';
 COMMENT ON COLUMN public.admin_infos.model_version IS 'The version number of the database schema.';
 COMMENT ON COLUMN public.admin_infos.configuration IS 'The configuration properties. configuration contains :
-  * connexion information for singleton databases (PDIdb, PSdb, ePims, ...)
   * absolute root path for shared documents, organized by projects';
 
 
