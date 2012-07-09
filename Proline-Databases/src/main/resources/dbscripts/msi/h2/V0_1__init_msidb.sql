@@ -676,7 +676,7 @@ CREATE TABLE peptide_instance (
                 protein_match_count INTEGER NOT NULL,
                 protein_set_count INTEGER NOT NULL,
                 selection_level INTEGER NOT NULL,
-                elution_time DOUBLE,
+                elution_time REAL,
                 serialized_properties LONGVARCHAR,
                 best_peptide_match_id INTEGER NOT NULL,
                 peptide_id INTEGER NOT NULL,
