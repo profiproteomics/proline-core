@@ -1258,7 +1258,7 @@ UNIQUE( accession, result_set_id )</remarks>
     <column id="COL388" populated="true" UUID="8e5ecf5b-706f-4173-8177-5da15e7cef69" autoIncrement="false" autoIncrementSequenceName="peptide_instance_selection_level_seq" defaultValue="" name="selection_level" nullable="0" physicalName="selection_level" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>An integer coding for the selection of this peptide instance : 0 = manual deselection 1 = automatic deselection 2 = automatic selection 4 = manual selection</remarks>
     </column>
-    <column id="COL389" populated="true" UUID="723c1e1c-b8f6-44df-b5ef-ba435aabb6a6" autoIncrement="false" autoIncrementSequenceName="peptide_match_elution_time_seq" defaultValue="" name="elution_time" nullable="1" physicalName="elution_time" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
+    <column id="COL389" populated="true" UUID="723c1e1c-b8f6-44df-b5ef-ba435aabb6a6" autoIncrement="false" autoIncrementSequenceName="peptide_match_elution_time_seq" defaultValue="" name="elution_time" nullable="0" physicalName="elution_time" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="6" userDefinedTypeUUID="7e55bcd0-7606-4153-b749-9c397f12c4d8" >
      <remarks>A value representing an elution time property of the peptide instance. Elution time is expressed is seconds.</remarks>
     </column>
     <column id="COL390" populated="true" UUID="36b0f8b5-9130-43d7-acb2-eb1e8f304631" autoIncrement="false" autoIncrementSequenceName="peptide_instance_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
@@ -2103,7 +2103,7 @@ UNIQUE( accession, result_set_id )</remarks>
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  outputFormatAsString="ENGLISH"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="D:\bruley\Dev\workspace-3.7\Proline-Databases\diagrams\CBy\MSI-DB (1).architect"  />
