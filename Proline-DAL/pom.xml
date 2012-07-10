@@ -1,45 +1,119 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<artifactId>Proline-Core</artifactId>
-		<groupId>fr.proline</groupId>
-		<version>0.0.2-SNAPSHOT</version>
-	</parent>
-	<artifactId>Proline-DAL</artifactId>
-	<name>${project.artifactId}</name>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<description>My wonderfull scala app</description>
-	<inceptionYear>2010</inceptionYear>
-	<licenses>
-		<license>
-			<name>My License</name>
-			<url>http://....</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+  <parent>
+    <artifactId>Proline-Core</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.0.2-SNAPSHOT</version>
+  </parent>
+  <artifactId>Proline-DAL</artifactId>
 
+  <name>${project.artifactId}</name>
+  <description>My wonderfull scala app</description>
+  <inceptionYear>2010</inceptionYear>
+  <licenses>
+    <license>
+      <name>My License</name>
+      <url>http://....</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
-	<!-- <repositories> <repository> <id>scala-tools.org</id> <name>Scala-Tools 
-		Maven2 Repository</name> <url>http://scala-tools.org/repo-releases</url> 
-		</repository> </repositories> -->
-	<pluginRepositories>
-		<pluginRepository>
-			<id>scala-tools.org</id>
-			<name>Scala-Tools Maven2 Repository</name>
-			<url>http://scala-tools.org/repo-releases</url>
-		</pluginRepository>
-	</pluginRepositories>
-	
-	<dependencies>
-		<dependency>
-			<groupId>org.scala-lang</groupId>
-			<artifactId>scala-library</artifactId>
-			<version>2.9.1</version>
-		</dependency>
+  <build>
+    <plugins>
 
-		<!-- Test -->
+      <!-- Build Scala sources -->
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+	<artifactId>maven-scala-plugin</artifactId>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <dependencies>
+
+    <!-- "Proline" modules -->
+    <!-- Unused dependency : fr.proline:Proline-OM:jar:0.0.2-SNAPSHOT:compile -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+    </dependency>
+    <!-- Add : org.apache.commons:commons-lang3:jar:3.0.1:compile
+               com.codahale:jerkson_2.9.1:jar:0.6.0-SNAPSHOT:compile -->
+
+    <!-- Unused dependency : fr.proline:Proline-ORM:jar:0.0.2-SNAPSHOT:compile -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-ORM</artifactId>
+    </dependency>
+
+    <!-- Unused dependency : fr.proline:Proline-ORM:jar:0.0.2-SNAPSHOT:compile -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>0.0.2-SNAPSHOT</version>
+      <type>jar</type>
+    </dependency>
+    <!-- Add : org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final:compile -->
+
+    <!-- Direct dependencies -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.weiglewilczek.slf4s</groupId>
+      <artifactId>slf4s_2.9.1</artifactId>
+    </dependency>
+
+    <!-- Unused dependency : com.googlecode.flyway:flyway-core:jar:1.5:compile -->
+    <dependency>
+      <groupId>com.googlecode.flyway</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+
+    <!-- Databases -->
+    <dependency>
+      <groupId>postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.noerd</groupId>
+      <artifactId>prequel_2.9.1</artifactId>
+    </dependency>
+    <!-- Add : joda-time:joda-time:jar:1.6.2:compile -->
+
+    <dependency>
+      <groupId>org.tukaani</groupId>
+      <artifactId>xz</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>specs_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Unused dependency : fr.proline:Proline-Databases:test-jar:tests:0.0.2-SNAPSHOT:test -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
@@ -47,156 +121,14 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-		<dependency>
-			<groupId>org.scala-tools.testing</groupId>
-			<artifactId>specs_2.9.1</artifactId>
-			<version>1.6.9</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.scalatest</groupId>
-			<artifactId>scalatest_2.9.1</artifactId>
-			<version>1.7.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
+
+    <!-- Unused dependency : org.dbunit:dbunit:jar:2.4.8:test -->
+    <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
-      <version>2.4.8</version>
       <scope>test</scope>
     </dependency>
-    
-    <!-- runtime -->
-		<dependency>
-			<groupId>com.weiglewilczek.slf4s</groupId>
-			<artifactId>slf4s_2.9.1</artifactId>
-			<version>1.0.7</version>
-		</dependency>
-		<dependency>
-			<groupId>postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>9.1-901-1.jdbc4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.xerial</groupId>
-			<artifactId>sqlite-jdbc</artifactId>
-			<version>3.7.2</version>
-		</dependency>
-		<dependency>
-			<groupId>net.noerd</groupId>
-			<artifactId>prequel_2.9.1</artifactId>
-			<version>0.3.7</version>
-		</dependency>
-		<dependency>
-         <groupId>org.tukaani</groupId>
-         <artifactId>xz</artifactId>
-         <version>1.0</version>
-        </dependency>
-		<dependency>
-			<groupId>fr.proline</groupId>
-			<artifactId>Proline-OM</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>fr.proline</groupId>
-			<artifactId>Proline-ORM</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
-		</dependency>
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
-      <type>jar</type>
-    </dependency>		
 
-		<dependency>
-			<groupId>com.googlecode.flyway</groupId>
-			<artifactId>flyway-core</artifactId>
-			<version>1.5</version>
-		</dependency>
-	</dependencies>
+  </dependencies>
 
-	<repositories>
-		<repository>
-			<id>scala-tools.org</id>
-			<name>Scala-Tools Maven2 Repository</name>
-			<url>http://scala-tools.org/repo-releases</url>
-		</repository>
-	</repositories>
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.scala-tools</groupId>
-					<artifactId>maven-scala-plugin</artifactId>
-					<version>2.15.2</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-		<plugins>
-			<plugin>
-				<groupId>org.scala-tools</groupId>
-				<artifactId>maven-scala-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>compile</id>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-						<phase>compile</phase>
-					</execution>
-					<execution>
-						<id>test-compile</id>
-						<goals>
-							<goal>testCompile</goal>
-						</goals>
-						<phase>test-compile</phase>
-					</execution>
-					<execution>
-						<id>scala-compile-first</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>add-source</goal>
-							<goal>compile</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>scala-test-compile</id>
-						<phase>process-test-resources</phase>
-						<goals>
-							<goal>testCompile</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<scalaVersion>2.9.1</scalaVersion>
-					<launchers>
-						<launcher>
-							<id>myLauncher</id>
-							<mainClass>samples.AppJava</mainClass>
-						</launcher>
-					</launchers>
-					<args>
-						<arg>-make:transitivenocp</arg>
-						<arg>-dependencyfile</arg>
-						<arg>${project.build.directory}/.scala_dependencies</arg>
-					</args>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<useFile>false</useFile>
-					<disableXmlReport>true</disableXmlReport>
-					<!-- If you have classpath issue like NoDefClassError,... -->
-					<!-- useManifestOnlyJar>false</useManifestOnlyJar -->
-					<includes>
-						<include>**/*Test.*</include>
-						<include>**/*Suite.*</include>
-					</includes>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>
