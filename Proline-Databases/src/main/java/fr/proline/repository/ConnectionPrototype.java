@@ -91,10 +91,13 @@ public class ConnectionPrototype {
 	
 	public DatabaseConnector toConnector(ProlineRepository.Databases db) {
 		StringBuilder URLbuilder = new StringBuilder();
-		URLbuilder.append("jdbc:").append(driver.name().toLowerCase()).append(':');
+		URLbuilder.append("jdbc:").append(driver.name().toLowerCase()).append(':');		
 		switch (protocol) {
 		case MEMORY:
-			URLbuilder.append("mem:");
+			if(driver!=DriverType.SQLITE)
+				URLbuilder.append("mem:");
+			else 
+				URLbuilder.append("memory:");
 			break;
 		case FILE:
 			if(driver!=DriverType.SQLITE)
