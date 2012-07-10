@@ -57,6 +57,7 @@ public class DatabaseConnector {
 		for(DriverType type : DriverType.values()) {
 			if (type.driver.equals(driverClassName)) {
 				driverType = type;
+				properties.setProperty(PROPERTY_DIALECT, driverType.getJPADriver());
 				break;
 			}
 		}
