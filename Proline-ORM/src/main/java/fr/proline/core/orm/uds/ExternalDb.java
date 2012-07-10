@@ -18,16 +18,16 @@ public class ExternalDb implements Serializable {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
 
-	@Column(name="db_name")
+	@Column(name="name")
 	private String dbName;
 
-	@Column(name="db_password")
+	@Column(name="password")
 	private String dbPassword;
 
-	@Column(name="db_user")
+	@Column(name="username")
 	private String dbUser;
 
-	@Column(name="db_version")
+	@Column(name="version")
 	private String dbVersion;
 
 	private String host;
@@ -42,6 +42,9 @@ public class ExternalDb implements Serializable {
 
 	private String type;
 
+	@Column(name="connection_mode")
+	private String connectionMode;
+	
 	//bi-directional many-to-many association to Project
 	@ManyToMany(mappedBy="externalDatabases")
 	private Set<Project> projects;
@@ -135,6 +138,14 @@ public class ExternalDb implements Serializable {
 
 	public void setProjects(Set<Project> projects) {
 		this.projects = projects;
+	}
+
+	public String getConnectionMode() {
+		return connectionMode;
+	}
+
+	public void setConnectionMode(String connectionMode) {
+		this.connectionMode = connectionMode;
 	}
 	
 }
