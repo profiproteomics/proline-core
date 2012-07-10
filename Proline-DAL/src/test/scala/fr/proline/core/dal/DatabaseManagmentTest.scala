@@ -54,22 +54,28 @@ class DatabaseManagmentTest extends JUnitSuite  with Logging {
 	  em.close();
 	  emf.close();
 	  udsConnector.closeAll();
+	  dbMgnt.closeAll
   }
   
   @Test
-  def testGetConnection() = {
+  def testGetConnection() = {    
     val myConn : DatabaseConnector = dbMgnt.psDBConnector
-    logger.debug("--- PS DB CONN "+myConn.getConnection.getMetaData.getURL)
+	Assert.assertThat(myConn.getConnection,CoreMatchers.notNullValue())
+	Assert.assertThat(myConn.getConnection.getMetaData.getURL,CoreMatchers.equalTo("jdbc:h2:file:target/test-classes/test_ps"))
+	myConn.closeAll
   }
 
   @Test
   def testGetPSInformationConnection() = {
     val myConn : DatabaseConnector = dbMgnt.psDBConnector
-	emf  = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.PS), myConn.getEntityManagerSettings);
-    em = emf.createEntityManager();
+	val psEmf  = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.PS), myConn.getEntityManagerSettings);
+    val psEm = psEmf.createEntityManager();    
     //READ  <PTM ID="93" UNIMOD_ID="122" FULL_NAME="Formylation" SHORT_NAME="Formyl"/>
-    val myPtm :Ptm = em.find(classOf[Ptm], 93);
+    val myPtm :Ptm = psEm.find(classOf[Ptm], 93);
     Assert.assertThat(myPtm.getShortName,CoreMatchers.equalTo("Formyl"))
-    logger.debug("--- PS DB CONN "+myConn.getConnection.getMetaData.getURL)
+    psEm.close();
+	psEmf.close();
+    myConn.closeAll
   }
+  
 }
