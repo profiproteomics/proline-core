@@ -33,6 +33,15 @@
 
   <repositories>
     <repository>
+
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+
       <id>repo.codahale.com</id>
       <url>http://repo.codahale.com</url>
     </repository>
