@@ -28,7 +28,7 @@ public class SequenceDbEntry implements Serializable {
 	private Integer refFileBlockLength;
 
 	@Column(name="ref_file_block_start")
-	private Integer refFileBlockStart;
+	private Long refFileBlockStart;
 
 	@Column(name="serialized_properties")
 	private String serializedProperties;
@@ -101,11 +101,11 @@ public class SequenceDbEntry implements Serializable {
 		this.refFileBlockLength = refFileBlockLength;
 	}
 
-	public Integer getRefFileBlockStart() {
+	public Long getRefFileBlockStart() {
 		return this.refFileBlockStart;
 	}
 
-	public void setRefFileBlockStart(Integer refFileBlockStart) {
+	public void setRefFileBlockStart(Long refFileBlockStart) {
 		this.refFileBlockStart = refFileBlockStart;
 	}
 

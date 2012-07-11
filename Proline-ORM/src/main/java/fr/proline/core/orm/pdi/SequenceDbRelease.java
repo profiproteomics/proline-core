@@ -3,34 +3,33 @@ package fr.proline.core.orm.pdi;
 import java.io.Serializable;
 import javax.persistence.*;
 
-
 /**
  * The persistent class for the seq_db_release database table.
  * 
  */
 @Entity
-@Table(name="seq_db_release")
+@Table(name = "seq_db_release")
 public class SequenceDbRelease implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
 
 	private String date;
 
-	@Column(name="serialized_properties")
+	@Column(name = "serialized_properties")
 	private String serializedProperties;
 
 	private String version;
 
-	//uni-directional many-to-one association to SequenceDbConfig
-    @ManyToOne
-	@JoinColumn(name="type")
+	// uni-directional many-to-one association to SequenceDbConfig
+	@ManyToOne
+	@JoinColumn(name = "seq_db_config_id")
 	private SequenceDbConfig sequenceDbConfig;
 
-    public SequenceDbRelease() {
-    }
+	public SequenceDbRelease() {
+	}
 
 	public Integer getId() {
 		return this.id;
@@ -71,5 +70,5 @@ public class SequenceDbRelease implements Serializable {
 	public void setSequenceDbConfig(SequenceDbConfig sequenceDbConfig) {
 		this.sequenceDbConfig = sequenceDbConfig;
 	}
-	
+
 }

@@ -16,7 +16,7 @@ import java.util.Date;
  */
 @Entity
 @NamedQuery(name="findSeqDBByNameAndFile",
-query="select seq from fr.proline.core.orm.pdi.SequenceDbInstance seq where seq.name = :name and seq.fastaFilePath = :filePath ")
+query="select seq from fr.proline.core.orm.pdi.SequenceDbInstance seq where seq.sequenceDbRelease.sequenceDbConfig.name = :name and seq.fastaFilePath = :filePath ")
 
 @Table(name="seq_db_instance")
 public class SequenceDbInstance implements Serializable {
@@ -40,8 +40,6 @@ public class SequenceDbInstance implements Serializable {
 
 	@Column(name="is_native")
 	private Boolean isNative;
-
-	private String name;
 
 	@Column(name="ref_file_path")
 	private String refFilePath;
@@ -109,14 +107,6 @@ public class SequenceDbInstance implements Serializable {
 
 	public void setIsNative(Boolean isNative) {
 		this.isNative = isNative;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getRefFilePath() {

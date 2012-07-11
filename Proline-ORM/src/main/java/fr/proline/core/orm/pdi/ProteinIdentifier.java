@@ -38,7 +38,7 @@ public class ProteinIdentifier implements Serializable {
 	// uni-directional many-to-one association to SequenceDbConfig
 	@ManyToOne
 	@JoinColumn(name = "database_type")
-	private SequenceDbConfig sequenceDbConfig;
+	private DatabaseType databaseType;
 
 	// uni-directional many-to-one association to Taxon
 	@ManyToOne
@@ -99,12 +99,12 @@ public class ProteinIdentifier implements Serializable {
 		this.bioSequence = bioSequence;
 	}
 	
-	public SequenceDbConfig getSequenceDbConfig() {
-		return this.sequenceDbConfig;
+	public DatabaseType getDatabaseType() {
+		return this.databaseType;
 	}
 
-	public void setSequenceDbConfig(SequenceDbConfig sequenceDbConfig) {
-		this.sequenceDbConfig = sequenceDbConfig;
+	public void setDatabaseType(DatabaseType databaseType) {
+		this.databaseType = databaseType;
 	}
 	
 	public Taxon getTaxon() {

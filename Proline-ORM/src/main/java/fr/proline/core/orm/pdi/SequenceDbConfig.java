@@ -1,10 +1,19 @@
 package fr.proline.core.orm.pdi;
 
 import static javax.persistence.CascadeType.PERSIST;
-import static javax.persistence.CascadeType.REMOVE;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the seq_db_config database table.
@@ -20,12 +29,12 @@ public class SequenceDbConfig implements Serializable {
 	
 	public enum Format { SWISS, GENEBANK, GFF };
 
-	public enum Type { IPI, SPROT, TREMBL, NCBI }
-	
 	@Id
-	@Enumerated(EnumType.STRING)
-	private Type type;
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Integer id;
 
+	private String name;
+	
 	@Enumerated(EnumType.STRING)
 	private Alphabet alphabet;
 
@@ -41,22 +50,23 @@ public class SequenceDbConfig implements Serializable {
 	@JoinColumn(name = "fasta_parsing_rule_id")
 	private FastaParsingRule fastaParsingRule;
 
+	// uni-directional many-to-one association to DatabaseType
+	@ManyToOne
+	@JoinColumn(name = "type")
+	private DatabaseType type;
+
 	protected SequenceDbConfig() {
 
 	}
 	
-	public SequenceDbConfig(Type type) {
-		setType(type);
+	public Integer getId() {
+		return this.id;
 	}
 
-	public Type getType() {
-		return this.type;
+	public void setId(Integer id) {
+		this.id = id;
 	}
-
-	public void setType(Type type) {
-		this.type = type;
-	}
-
+	
 	public Alphabet getAlphabet() {
 		return this.alphabet;
 	}
@@ -87,6 +97,22 @@ public class SequenceDbConfig implements Serializable {
 
 	public void setFastaParsingRule(FastaParsingRule fastaParsingRule) {
 		this.fastaParsingRule = fastaParsingRule;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public DatabaseType getType() {
+		return type;
+	}
+
+	public void setType(DatabaseType type) {
+		this.type = type;
 	}
 
 }

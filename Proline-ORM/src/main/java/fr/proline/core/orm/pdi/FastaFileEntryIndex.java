@@ -21,7 +21,7 @@ public class FastaFileEntryIndex implements Serializable {
 	private Integer blockLength;
 
 	@Column(name="block_start")
-	private Integer blockStart;
+	private Long blockStart;
 
 	@Column(name="serialized_properties")
 	private String serializedProperties;
@@ -60,11 +60,11 @@ public class FastaFileEntryIndex implements Serializable {
 		this.blockLength = blockLength;
 	}
 
-	public Integer getBlockStart() {
+	public Long getBlockStart() {
 		return this.blockStart;
 	}
 
-	public void setBlockStart(Integer blockStart) {
+	public void setBlockStart(Long blockStart) {
 		this.blockStart = blockStart;
 	}
 
