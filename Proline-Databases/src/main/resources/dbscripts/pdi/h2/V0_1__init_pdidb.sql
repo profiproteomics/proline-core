@@ -1,4 +1,10 @@
 
+CREATE TABLE database_type (
+                type VARCHAR(50) NOT NULL,
+                CONSTRAINT database_type_pk PRIMARY KEY (type)
+);
+
+
 CREATE TABLE admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
                 db_creation_date TIMESTAMP,
@@ -43,31 +49,30 @@ CREATE TABLE fasta_parsing_rule (
 
 
 CREATE TABLE seq_db_config (
-                type VARCHAR(50) NOT NULL,
+                id INTEGER NOT NULL,
+                name VARCHAR(100) NOT NULL,
                 alphabet CHAR(3) NOT NULL,
                 ref_entry_format VARCHAR(10) NOT NULL,
                 serialized_properties LONGVARCHAR,
                 fasta_parsing_rule_id INTEGER NOT NULL,
-                CONSTRAINT seq_db_config_pk PRIMARY KEY (type)
+                type VARCHAR(50) NOT NULL,
+                CONSTRAINT seq_db_config_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN seq_db_config.type IS 'ipi, sprot, trembl, ncbi';
 COMMENT ON COLUMN seq_db_config.ref_entry_format IS 'swiss/genebank/gff TODO: add support for gff format';
 
 
 CREATE TABLE seq_db_release (
-                id IDENTITY NOT NULL,
+                id INTEGER NOT NULL,
                 date VARCHAR(50) NOT NULL,
                 version VARCHAR(10),
                 serialized_properties LONGVARCHAR,
-                type VARCHAR(50) NOT NULL,
+                seq_db_config_id INTEGER NOT NULL,
                 CONSTRAINT seq_db_release_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN seq_db_release.type IS 'ipi, uniprot.sprot, uniprot.trembl, ncbi';
 
 
 CREATE TABLE seq_db_instance (
                 id IDENTITY NOT NULL,
-                name VARCHAR(100) NOT NULL,
                 fasta_file_path VARCHAR(500) NOT NULL,
                 ref_file_path VARCHAR(500),
                 is_native BOOLEAN NOT NULL,
@@ -190,7 +195,7 @@ COMMENT ON COLUMN bio_sequence_relation.frame_number IS 'The frame used to trans
 
 
 CREATE TABLE protein_identifier (
-                id IDENTITY NOT NULL,
+                id INTEGER NOT NULL,
                 value VARCHAR(30) NOT NULL,
                 is_ac_number BOOLEAN NOT NULL,
                 is_active BOOLEAN NOT NULL,
@@ -204,22 +209,21 @@ COMMENT ON TABLE protein_identifier IS 'An entry in a protein database identifie
 COMMENT ON COLUMN protein_identifier.value IS 'MUST be unique';
 COMMENT ON COLUMN protein_identifier.is_ac_number IS 'true for accession numbers if the value corresponds to entry ID (ALB_HUMAN for instance) then this BOOLEAN will be false';
 COMMENT ON COLUMN protein_identifier.taxon_id IS 'The NCBI taxon id';
-COMMENT ON COLUMN protein_identifier.database_type IS 'ipi, uniprot.sprot, uniprot.trembl, ncbi';
 
 
 CREATE TABLE seq_db_entry (
-                id IDENTITY NOT NULL,
+                id INTEGER NOT NULL,
                 identifier VARCHAR(50) NOT NULL,
                 name VARCHAR(1000) NOT NULL,
                 version VARCHAR(100),
-                ref_file_block_start INTEGER,
+                ref_file_block_start BIGINT,
                 ref_file_block_length INTEGER,
                 is_active BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
                 bio_sequence_id INTEGER NOT NULL,
                 taxon_id INTEGER NOT NULL,
                 seq_db_instance_id INTEGER NOT NULL,
-                database_type VARCHAR(50) NOT NULL,
+                seq_db_config_id INTEGER NOT NULL,
                 CONSTRAINT seq_db_entry_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE seq_db_entry IS 'Note: only inactive entries should kept is the previous instance when updated a sequence database to a newset release.';
@@ -227,12 +231,11 @@ COMMENT ON COLUMN seq_db_entry.identifier IS 'The ID of the sequence entry in th
 COMMENT ON COLUMN seq_db_entry.ref_file_block_start IS 'May be NULL if no available ref file.';
 COMMENT ON COLUMN seq_db_entry.ref_file_block_length IS 'May be NULL if no available ref file.';
 COMMENT ON COLUMN seq_db_entry.taxon_id IS 'The NCBI taxon id';
-COMMENT ON COLUMN seq_db_entry.database_type IS 'ipi, sprot, trembl, ncbi';
 
 
 CREATE TABLE fasta_file_entry_index (
                 id IDENTITY NOT NULL,
-                block_start INTEGER NOT NULL,
+                block_start BIGINT,
                 block_length INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
                 bio_sequence_id INTEGER NOT NULL,
@@ -267,6 +270,18 @@ CREATE TABLE seq_db_entry_protein_identifier_map (
 );
 COMMENT ON TABLE seq_db_entry_protein_identifier_map IS 'Note: the same protein identifier shouldn''t be find in multiple instancesof the same seq database.';
 
+
+ALTER TABLE seq_db_config ADD CONSTRAINT database_type_seq_db_config_fk
+FOREIGN KEY (type)
+REFERENCES database_type (type)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
+ALTER TABLE protein_identifier ADD CONSTRAINT database_type_protein_identifier_fk
+FOREIGN KEY (database_type)
+REFERENCES database_type (type)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
 
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
@@ -310,28 +325,16 @@ REFERENCES fasta_parsing_rule (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-/*
-Warning: H2 Database does not support this relationship's delete action (RESTRICT).
-*/
-ALTER TABLE protein_identifier ADD CONSTRAINT seq_database_protein_identifier_fk
-FOREIGN KEY (database_type)
-REFERENCES seq_db_config (type)
+ALTER TABLE seq_db_entry ADD CONSTRAINT seq_db_config_seq_db_entry_fk1
+FOREIGN KEY (seq_db_config_id)
+REFERENCES seq_db_config (id)
+ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-/*
-Warning: H2 Database does not support this relationship's delete action (RESTRICT).
-*/
-ALTER TABLE seq_db_entry ADD CONSTRAINT seq_database_seq_db_entry_fk
-FOREIGN KEY (database_type)
-REFERENCES seq_db_config (type)
-ON UPDATE NO ACTION;
-
-/*
-Warning: H2 Database does not support this relationship's delete action (RESTRICT).
-*/
-ALTER TABLE seq_db_release ADD CONSTRAINT seq_database_seq_db_release_fk
-FOREIGN KEY (type)
-REFERENCES seq_db_config (type)
+ALTER TABLE seq_db_release ADD CONSTRAINT seq_db_config_seq_db_release_fk
+FOREIGN KEY (seq_db_config_id)
+REFERENCES seq_db_config (id)
+ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
 /*

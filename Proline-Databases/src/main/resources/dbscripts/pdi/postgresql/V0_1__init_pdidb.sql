@@ -1,4 +1,10 @@
 
+CREATE TABLE public.database_type (
+                type VARCHAR(50) NOT NULL,
+                CONSTRAINT database_type_pk PRIMARY KEY (type)
+);
+
+
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
                 db_creation_date TIMESTAMP,
@@ -51,37 +57,32 @@ CREATE TABLE public.fasta_parsing_rule (
 ALTER SEQUENCE public.fasta_parsing_rule_id_seq OWNED BY public.fasta_parsing_rule.id;
 
 CREATE TABLE public.seq_db_config (
-                type VARCHAR(50) NOT NULL,
+                id INTEGER NOT NULL,
+                name VARCHAR(100) NOT NULL,
                 alphabet CHAR(3) NOT NULL,
                 ref_entry_format VARCHAR(10) NOT NULL,
                 serialized_properties TEXT,
                 fasta_parsing_rule_id INTEGER NOT NULL,
-                CONSTRAINT seq_db_config_pk PRIMARY KEY (type)
+                type VARCHAR(50) NOT NULL,
+                CONSTRAINT seq_db_config_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.seq_db_config.type IS 'ipi, sprot, trembl, ncbi';
 COMMENT ON COLUMN public.seq_db_config.ref_entry_format IS 'swiss/genebank/gff TODO: add support for gff format';
 
 
-CREATE SEQUENCE public.seq_db_release_id_seq;
-
 CREATE TABLE public.seq_db_release (
-                id INTEGER NOT NULL DEFAULT nextval('public.seq_db_release_id_seq'),
+                id INTEGER NOT NULL,
                 date VARCHAR(50) NOT NULL,
                 version VARCHAR(10),
                 serialized_properties TEXT,
-                type VARCHAR(50) NOT NULL,
+                seq_db_config_id INTEGER NOT NULL,
                 CONSTRAINT seq_db_release_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.seq_db_release.type IS 'ipi, uniprot.sprot, uniprot.trembl, ncbi';
 
-
-ALTER SEQUENCE public.seq_db_release_id_seq OWNED BY public.seq_db_release.id;
 
 CREATE SEQUENCE public.seq_db_instance_id_seq;
 
 CREATE TABLE public.seq_db_instance (
                 id INTEGER NOT NULL DEFAULT nextval('public.seq_db_instance_id_seq'),
-                name VARCHAR(100) NOT NULL,
                 fasta_file_path VARCHAR(500) NOT NULL,
                 ref_file_path VARCHAR(500),
                 is_native BOOLEAN NOT NULL,
@@ -229,10 +230,8 @@ CREATE TABLE public.bio_sequence_relation (
 COMMENT ON COLUMN public.bio_sequence_relation.frame_number IS 'The frame used to translate the nucleic acid strand 1,2,3 or -1,-2,-3 Must only be defined for nucleic acid sequences (alphabet equals dna/rna).';
 
 
-CREATE SEQUENCE public.protein_identifier_id_seq;
-
 CREATE TABLE public.protein_identifier (
-                id INTEGER NOT NULL DEFAULT nextval('public.protein_identifier_id_seq'),
+                id INTEGER NOT NULL,
                 value VARCHAR(30) NOT NULL,
                 is_ac_number BOOLEAN NOT NULL,
                 is_active BOOLEAN NOT NULL,
@@ -246,26 +245,21 @@ COMMENT ON TABLE public.protein_identifier IS 'An entry in a protein database id
 COMMENT ON COLUMN public.protein_identifier.value IS 'MUST be unique';
 COMMENT ON COLUMN public.protein_identifier.is_ac_number IS 'true for accession numbers if the value corresponds to entry ID (ALB_HUMAN for instance) then this BOOLEAN will be false';
 COMMENT ON COLUMN public.protein_identifier.taxon_id IS 'The NCBI taxon id';
-COMMENT ON COLUMN public.protein_identifier.database_type IS 'ipi, uniprot.sprot, uniprot.trembl, ncbi';
 
-
-ALTER SEQUENCE public.protein_identifier_id_seq OWNED BY public.protein_identifier.id;
-
-CREATE SEQUENCE public.seq_db_entry_id_seq;
 
 CREATE TABLE public.seq_db_entry (
-                id INTEGER NOT NULL DEFAULT nextval('public.seq_db_entry_id_seq'),
+                id INTEGER NOT NULL,
                 identifier VARCHAR(50) NOT NULL,
                 name VARCHAR(1000) NOT NULL,
                 version VARCHAR(100),
-                ref_file_block_start INTEGER,
+                ref_file_block_start BIGINT,
                 ref_file_block_length INTEGER,
                 is_active BOOLEAN NOT NULL,
                 serialized_properties TEXT,
                 bio_sequence_id INTEGER NOT NULL,
                 taxon_id INTEGER NOT NULL,
                 seq_db_instance_id INTEGER NOT NULL,
-                database_type VARCHAR(50) NOT NULL,
+                seq_db_config_id INTEGER NOT NULL,
                 CONSTRAINT seq_db_entry_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.seq_db_entry IS 'Note: only inactive entries should kept is the previous instance when updated a sequence database to a newset release.';
@@ -273,16 +267,13 @@ COMMENT ON COLUMN public.seq_db_entry.identifier IS 'The ID of the sequence entr
 COMMENT ON COLUMN public.seq_db_entry.ref_file_block_start IS 'May be NULL if no available ref file.';
 COMMENT ON COLUMN public.seq_db_entry.ref_file_block_length IS 'May be NULL if no available ref file.';
 COMMENT ON COLUMN public.seq_db_entry.taxon_id IS 'The NCBI taxon id';
-COMMENT ON COLUMN public.seq_db_entry.database_type IS 'ipi, sprot, trembl, ncbi';
 
-
-ALTER SEQUENCE public.seq_db_entry_id_seq OWNED BY public.seq_db_entry.id;
 
 CREATE SEQUENCE public.fasta_file_entry_index_id_seq;
 
 CREATE TABLE public.fasta_file_entry_index (
                 id INTEGER NOT NULL DEFAULT nextval('public.fasta_file_entry_index_id_seq'),
-                block_start INTEGER NOT NULL,
+                block_start BIGINT,
                 block_length INTEGER NOT NULL,
                 serialized_properties TEXT,
                 bio_sequence_id INTEGER NOT NULL,
@@ -319,6 +310,20 @@ CREATE TABLE public.seq_db_entry_protein_identifier_map (
 );
 COMMENT ON TABLE public.seq_db_entry_protein_identifier_map IS 'Note: the same protein identifier shouldn''t be find in multiple instancesof the same seq database.';
 
+
+ALTER TABLE public.seq_db_config ADD CONSTRAINT database_type_seq_db_config_fk
+FOREIGN KEY (type)
+REFERENCES public.database_type (type)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.protein_identifier ADD CONSTRAINT database_type_protein_identifier_fk
+FOREIGN KEY (database_type)
+REFERENCES public.database_type (type)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
 
 ALTER TABLE public.bio_sequence_annotation ADD CONSTRAINT object_tree_schema_bio_sequence_annotation_fk
 FOREIGN KEY (schema_name)
@@ -362,24 +367,17 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.protein_identifier ADD CONSTRAINT seq_database_protein_identifier_fk
-FOREIGN KEY (database_type)
-REFERENCES public.seq_db_config (type)
-ON DELETE RESTRICT
+ALTER TABLE public.seq_db_entry ADD CONSTRAINT seq_db_config_seq_db_entry_fk1
+FOREIGN KEY (seq_db_config_id)
+REFERENCES public.seq_db_config (id)
+ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.seq_db_entry ADD CONSTRAINT seq_database_seq_db_entry_fk
-FOREIGN KEY (database_type)
-REFERENCES public.seq_db_config (type)
-ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.seq_db_release ADD CONSTRAINT seq_database_seq_db_release_fk
-FOREIGN KEY (type)
-REFERENCES public.seq_db_config (type)
-ON DELETE RESTRICT
+ALTER TABLE public.seq_db_release ADD CONSTRAINT seq_db_config_seq_db_release_fk
+FOREIGN KEY (seq_db_config_id)
+REFERENCES public.seq_db_config (id)
+ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
