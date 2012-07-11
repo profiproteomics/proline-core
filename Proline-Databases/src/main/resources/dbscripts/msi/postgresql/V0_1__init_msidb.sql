@@ -519,10 +519,10 @@ CREATE TABLE public.protein_match (
                 peptide_count INTEGER NOT NULL,
                 peptide_match_count INTEGER,
                 is_decoy BOOLEAN NOT NULL,
+                is_last_bio_sequence BOOLEAN NOT NULL,
                 serialized_properties TEXT,
                 taxon_id INTEGER,
-                initial_bio_sequence_id INTEGER,
-                last_bio_sequence_id INTEGER,
+                bio_sequence_id INTEGER,
                 scoring_id INTEGER NOT NULL,
                 result_set_id INTEGER NOT NULL,
                 CONSTRAINT protein_match_pk PRIMARY KEY (id)
@@ -535,10 +535,10 @@ COMMENT ON COLUMN public.protein_match.score IS 'The identification score of the
 COMMENT ON COLUMN public.protein_match.coverage IS 'The percentage of the protein sequence residues covered by the sequence matches.';
 COMMENT ON COLUMN public.protein_match.peptide_match_count IS 'The number of peptide matches which are related to this protein match.';
 COMMENT ON COLUMN public.protein_match.is_decoy IS 'Specify if the protein match is related  to a decoy database search.';
+COMMENT ON COLUMN public.protein_match.is_last_bio_sequence IS 'true if bio_sequence_id is referencing the last known bio_sequence for this accession';
 COMMENT ON COLUMN public.protein_match.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details). TODO: store the frame_number here';
 COMMENT ON COLUMN public.protein_match.taxon_id IS 'The NCBI taxon id corresponding to this protein match.';
-COMMENT ON COLUMN public.protein_match.initial_bio_sequence_id IS 'The id of the protein sequence which was initially identified by the search engine.';
-COMMENT ON COLUMN public.protein_match.last_bio_sequence_id IS 'The id of the last sequence version of the identified protein.';
+COMMENT ON COLUMN public.protein_match.bio_sequence_id IS 'The id of the protein sequence which was identified by the search engine.';
 
 
 ALTER SEQUENCE public.protein_match_id_seq OWNED BY public.protein_match.id;
@@ -549,7 +549,7 @@ CREATE INDEX protein_match_ac_idx
 
 CREATE INDEX protein_match_seq_idx
  ON public.protein_match
- ( initial_bio_sequence_id );
+ ( bio_sequence_id );
 
 CREATE INDEX protein_match_rs_idx
  ON public.protein_match
@@ -768,7 +768,7 @@ CREATE TABLE public.peptide_instance (
                 protein_match_count INTEGER NOT NULL,
                 protein_set_count INTEGER NOT NULL,
                 selection_level INTEGER NOT NULL,
-                elution_time REAL,
+                elution_time REAL NOT NULL,
                 serialized_properties TEXT,
                 best_peptide_match_id INTEGER NOT NULL,
                 peptide_id INTEGER NOT NULL,
@@ -1108,16 +1108,9 @@ ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.protein_match ADD CONSTRAINT initial_bio_sequence_protein_match_fk
-FOREIGN KEY (initial_bio_sequence_id)
+FOREIGN KEY (bio_sequence_id)
 REFERENCES public.bio_sequence (id)
 ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.protein_match ADD CONSTRAINT last_bio_sequence_protein_match_fk
-FOREIGN KEY (last_bio_sequence_id)
-REFERENCES public.bio_sequence (id)
-ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
