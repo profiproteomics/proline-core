@@ -23,6 +23,9 @@ public class ProteinMatch implements Serializable {
 	@Column(name="bio_sequence_id")
 	private Integer bioSequenceId;
 
+	@Column(name="is_last_bio_sequence")
+	private Boolean isLastBioSequence;
+
 	private float coverage;
 
 	private String description;
@@ -179,6 +182,14 @@ public class ProteinMatch implements Serializable {
 
 	public void setProteinSetProteinMatchItems(Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems) {
 		this.proteinSetProteinMatchItems = proteinSetProteinMatchItems;
+	}
+
+	public Boolean getIsLastBioSequence() {
+		return isLastBioSequence;
+	}
+
+	public void setIsLastBioSequence(Boolean isLastBioSequence) {
+		this.isLastBioSequence = isLastBioSequence;
 	}
 	
 }

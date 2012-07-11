@@ -34,11 +34,6 @@ public class SequenceMatch implements Serializable {
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	//uni-directional many-to-one association to BioSequence
-    @ManyToOne
-	@JoinColumn(name="bio_sequence_id")
-	private BioSequence bioSequence;
-
     public SequenceMatch() {
     }
 
@@ -98,12 +93,5 @@ public class SequenceMatch implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public BioSequence getBioSequence() {
-		return this.bioSequence;
-	}
-
-	public void setBioSequence(BioSequence bioSequence) {
-		this.bioSequence = bioSequence;
-	}
 	
 }
