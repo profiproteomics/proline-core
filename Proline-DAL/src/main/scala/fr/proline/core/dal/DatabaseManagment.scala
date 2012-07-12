@@ -15,7 +15,7 @@ import fr.proline.core.orm.uds.Project
 import javax.persistence.NoResultException
 import fr.proline.repository.ProlineRepository.DriverType
 
-class DatabaseManagment (udsDBConnector : DatabaseConnector ){
+class DatabaseManagment (val udsDBConnector : DatabaseConnector ){
 
 	private lazy val udsEMF : EntityManagerFactory  = {
 		//Create Link to UDSDb
