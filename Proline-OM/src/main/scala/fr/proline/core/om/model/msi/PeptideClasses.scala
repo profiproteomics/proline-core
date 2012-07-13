@@ -402,7 +402,7 @@ case class PeptideInstance ( // Required fields
                         var resultSummaryId: Int = 0,
                         
                         var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any],
-                        var peptideMatchPropertiesById: Map[Int, PeptideMatchProperties ] = null
+                        var peptideMatchPropertiesById: Map[Int, PeptideInstancePeptideMatchMapProperties ] = null
                         
                         ) {
   
@@ -417,7 +417,7 @@ case class PeptideInstance ( // Required fields
   
   def getUnmodifiedPeptideId : Int = { if(unmodifiedPeptide != null && unmodifiedPeptide != None) unmodifiedPeptide.get.id else unmodifiedPeptideId }
   
-  def getPeptideMatchProperties( peptideMatchId: Int ): Option[PeptideMatchProperties] = {
+  def getPeptideMatchProperties( peptideMatchId: Int ): Option[PeptideInstancePeptideMatchMapProperties] = {
     if( peptideMatchPropertiesById != null ) { peptideMatchPropertiesById.get(peptideMatchId) }
     else { None }
   }
@@ -484,11 +484,11 @@ class PeptideSet ( // Required fields
   require( peptideMatchesCount >= items.length )
   
   // Related objects ID getters
-  def getProteinSetId : Int = { if(proteinSet != null && proteinSet != None) proteinSet.get.id else proteinSetId }
+  def getProteinSetId: Int = { if(proteinSet != null && proteinSet != None) proteinSet.get.id else proteinSetId }
   
-  def getStrictSubsetIds : Array[Int] = { if(strictSubsets != null && strictSubsets != None) strictSubsets.get.map(_.id)  else strictSubsetIds  }
+  def getStrictSubsetIds: Array[Int] = { if(strictSubsets != null && strictSubsets != None) strictSubsets.get.map(_.id)  else strictSubsetIds  }
     
-  def getSubsumableSubsetIds : Array[Int] = { if(subsumableSubsets != null && subsumableSubsets != None) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
+  def getSubsumableSubsetIds: Array[Int] = { if(subsumableSubsets != null && subsumableSubsets != None) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
   
   def getPeptideInstances: Array[PeptideInstance] = { items.map( _.peptideInstance ) }
   
@@ -506,13 +506,13 @@ class PeptideSet ( // Required fields
 
   }
   
-  def hasStrictSubset : Boolean = { 
-    if( (strictSubsetIds != null ) || 
+  def hasStrictSubset: Boolean = { 
+    if( (strictSubsetIds != null && strictSubsetIds.length > 0 ) || 
         (strictSubsets != null && strictSubsets != None) ) true else false
   }
   
-  def hasSubsumableSubset : Boolean = { 
-    if( (subsumableSubsetIds != null ) || 
+  def hasSubsumableSubset: Boolean = { 
+    if( (subsumableSubsetIds != null && subsumableSubsetIds.length > 0 ) || 
         (subsumableSubsets != null && subsumableSubsets != None) ) true else false
   }
   

@@ -28,8 +28,8 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
     for( (peptideId, pepMatchGroup) <- (peptideMatchesByPepId) ) {
       
       val pepMatchIds = pepMatchGroup.map( _.id )
-      val peptideMatchPropertiesById = pepMatchGroup.filter { _.properties != None }
-                                                    .map { pepMatch => pepMatch.id -> pepMatch.properties.get } toMap
+      /*val peptideMatchPropertiesById = pepMatchGroup.filter { _.properties != None }
+                                                    .map { pepMatch => pepMatch.id -> pepMatch.properties.get } toMap*/
       
       // Build peptide instance
       var bestPepMatch: PeptideMatch = null
@@ -44,7 +44,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
                                   peptide = bestPepMatch.peptide,
                                   peptideMatchIds = pepMatchIds,
                                   properties = pepInstProps,
-                                  peptideMatchPropertiesById = peptideMatchPropertiesById,
+                                  //peptideMatchPropertiesById = peptideMatchPropertiesById,
                                   resultSummaryId = resultSummaryId
                                 )
       
@@ -233,9 +233,9 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
                                 peptideInstances = peptideInstances.toArray,
                                 peptideSets = peptideSets.toArray,
                                 proteinSets = proteinSets.toArray,
-                                resultSet = Some(resultSet),
-                                isDecoy = resultSet.isDecoy,
-                                isNative = resultSet.isNative
+                                resultSet = Some(resultSet)
+                                //isDecoy = resultSet.isDecoy,
+                                //isNative = resultSet.isNative
                               )
     
     return resultSummary
