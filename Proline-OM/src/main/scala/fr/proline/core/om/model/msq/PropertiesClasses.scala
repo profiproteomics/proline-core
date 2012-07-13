@@ -2,8 +2,11 @@ package fr.proline.core.om.model.msq
 
 import scala.reflect.BeanProperty
 import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class RatioDataMapProperty (
   @BeanProperty var ratio: Float,
   @BeanProperty var numerator: Double,
@@ -11,6 +14,7 @@ case class RatioDataMapProperty (
 )
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class MasterQuantReporterIonProperties (
   //@BeanProperty var quantReporterIons: Array[QuantReporterIonProperties]
 )
@@ -38,12 +42,14 @@ case class QuantPeptideIonProperties (
 ) extends QuantComponent*/
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideIonProperties (
   //@BeanProperty var quantPeptideIons: Array[QuantPeptideIonProperties],
   @BeanProperty var bestQuantChannelId: Option[Int] = None
 )
 
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideProperties (
   //@BeanProperty var quantPeptides: Array[QuantPeptideProperties],
   @BeanProperty var quantClusterId: Option[Int] = None,
@@ -51,6 +57,7 @@ case class MasterQuantPeptideProperties (
 )
  
 @JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSetProperties (
   //@BeanProperty var quantProteinSets: Array[QuantProteinSetProperties],
   @BeanProperty var ratioDataMap: Option[Map[Int,RatioDataMapProperty]] = None

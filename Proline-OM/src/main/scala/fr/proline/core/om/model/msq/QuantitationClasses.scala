@@ -2,6 +2,8 @@ package fr.proline.core.om.model.msq
 
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.core.utils.misc.InMemoryIdGen
 
 trait Item {
@@ -36,6 +38,8 @@ trait MasterLcmsQuantComponent extends MasterQuantComponent {
 
 //object QuantReporterIon extends InMemoryIdGen
 
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class QuantReporterIon( val quantChannelId: Int,
                              val moz: Double,
                              val rawAbundance: Float,
@@ -46,7 +50,8 @@ case class QuantReporterIon( val quantChannelId: Int,
 
 object MasterQuantReporterIon extends InMemoryIdGen
 
-
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class MasterQuantReporterIon( var id: Int,
                                    var msQueryId: Int,
                                    var spectrumId: Int,
@@ -70,7 +75,8 @@ case class MasterQuantReporterIon( var id: Int,
 
 //object QuantPeptideIon extends InMemoryIdGen
 
-
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class QuantPeptideIon(  val rawAbundance: Float,
                              var abundance: Float,
                              val elutionTime: Float,
@@ -96,7 +102,8 @@ case class QuantPeptideIon(  val rawAbundance: Float,
 
 object MasterQuantPeptideIon extends InMemoryIdGen
 
-
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideIon(  var id: Int,
                                    
                                    val calculatedMoz: Double,
@@ -132,7 +139,8 @@ case class MasterQuantPeptideIon(  var id: Int,
 
 //object QuantPeptide extends InMemoryIdGen
 
-
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class QuantPeptide( val rawAbundance: Float,
                          var abundance: Float,
                          val elutionTime: Float,
@@ -149,7 +157,7 @@ case class QuantPeptide( val rawAbundance: Float,
 
 object MasterQuantPeptide extends InMemoryIdGen
 
-
+@JsonSnakeCase
 case class MasterQuantPeptide( var id: Int,
     
                                val peptideMatchesCount: Float,
@@ -227,7 +235,8 @@ case class MasterQuantPeptide( var id: Int,
 
 }
 
-
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class QuantProteinSet (
   val rawAbundance: Float,
   var abundance: Float,
@@ -238,7 +247,8 @@ case class QuantProteinSet (
 
 object MasterQuantProteinSet extends InMemoryIdGen
 
-
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSet(  var id: Int,
     
                                    val peptideMatchesCount: Float,
@@ -261,7 +271,8 @@ case class MasterQuantProteinSet(  var id: Int,
 
 object QuantResultSummary extends InMemoryIdGen
 
-
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class QuantResultSummary( var id: Int,
                                var description: String,
                                

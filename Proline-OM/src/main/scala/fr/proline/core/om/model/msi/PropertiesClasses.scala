@@ -1,7 +1,6 @@
 package fr.proline.core.om.model.msi
 
 import scala.reflect.BeanProperty
-import com.codahale.jerkson.Json._
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
