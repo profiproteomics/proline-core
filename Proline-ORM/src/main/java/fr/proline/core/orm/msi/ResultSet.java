@@ -16,7 +16,7 @@ import java.util.Set;
 public class ResultSet implements Serializable {
 
 	public enum Type {
-		SEARCH, DECOY_SEARCH, USER
+		SEARCH, DECOY_SEARCH, USER, QUANTITATION
 	}
 	
 	private static final long serialVersionUID = 1L;
