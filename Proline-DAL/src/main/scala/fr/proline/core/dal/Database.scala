@@ -128,6 +128,22 @@ trait Database {
     
   }
   
+  def selectRecordsAsMaps( queryString: String ): Array[Map[String,Any]] = {
+    
+    var colNames: Seq[String] = null
+    
+    // Execute SQL query to load records
+    this.getOrCreateTransaction.select( queryString ) { r => 
+      
+      if( colNames == null ) { colNames = r.columnNames }
+      
+      // Build the record
+      colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      
+    } toArray
+    
+  }
+  
 }
 
 

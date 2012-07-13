@@ -159,30 +159,27 @@ method get_scoring_id_by_score_type( ) {
     
   }
 
-/*##############################################################################
-# Method: get_seq_length_by_prot_id()
-#
-method get_seq_length_by_prot_id( ArrayRef $protein_ids! ) {
-  
-    ### Retrieve protein sequence lengthes
-    my $sdbi = $self->msi_rdb->sdbi;
+  def getSeqLengthByBioSeqId( bioSeqIds: Iterable[Int] ): Map[Int,Int] = {
     
-    ### Clusterize ids (999 items by cluster) to optimize SQL query
-    my $protein_id_iter = natatime 999, @$protein_ids;
+    val maxNbIters = this.msiDb.maxVariableNumber
+    val msiDbTx = this.msiDb.getOrCreateTransaction()
     
-    my %seq_length_by_prot_id;
+    val seqLengthByProtIdBuilder = Map.newBuilder[Int,Int]
     
-    ### Retrieve protein identifiers    
-    while( my @protein_id_cluster = $protein_id_iter->() ) {
-      my @seq_lengthes = $sdbi->select('protein',[qw/length/], { id => { -in => \@protein_id_cluster } } )->flat;
-      for my $protein_id (@protein_id_cluster) {
-        $seq_length_by_prot_id{$protein_id} = shift(@seq_lengthes);
+    // Iterate over groups of peptide ids
+    bioSeqIds.grouped(maxNbIters).foreach {
+      tmpBioSeqIds => {      
+        // Retrieve peptide PTMs for the current group of peptide ids
+        msiDbTx.selectAndProcess("SELECT id, length FROM bio_sequence WHERE id IN ("+tmpBioSeqIds.mkString(",")+")" ) { r =>
+          seqLengthByProtIdBuilder += ( r.nextInt.get -> r.nextInt.get )
+        }
       }
     }
     
-    return \%seq_length_by_prot_id;
+    seqLengthByProtIdBuilder.result()
     
-  }*/
+  }
+
 
   /*
   ##############################################################################
