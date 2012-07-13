@@ -13,7 +13,7 @@ class ORMPeptideInstanceProvider (val em:EntityManager ) extends IPeptideInstanc
   
 	var protSetRepo : ProteinSetRepositorty = new ProteinSetRepositorty(em) //Created by constructor
  
-	def getPeptideInstances(pepInstIds: Seq[Int] ): Array[Option[PeptideInstance]] = { 
+	def getPeptideInstancesAsOptions(pepInstIds: Seq[Int] ): Array[Option[PeptideInstance]] = { 
 	    val converter : OMConverterUtil= new OMConverterUtil()
 	    
 		var foundPepInstBuilder =Array.newBuilder[Option[PeptideInstance]]
@@ -26,7 +26,11 @@ class ORMPeptideInstanceProvider (val em:EntityManager ) extends IPeptideInstanc
 		})
 		return foundPepInstBuilder.result()
   }
+	
+	def getPeptideInstances(pepInstIds: Seq[Int] ): Array[PeptideInstance] = {
+	  this.getPeptideInstancesAsOptions( pepInstIds ).filter( _ != None ).map( _.get )
+	}
 
-  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int]):  Array[Option[PeptideInstance]] = { throw new Exception("NYI") }
+  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int]):  Array[PeptideInstance] = { throw new Exception("NYI") }
 
 }
