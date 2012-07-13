@@ -1,10 +1,4 @@
 
-CREATE TABLE public.database_type (
-                type VARCHAR(50) NOT NULL,
-                CONSTRAINT database_type_pk PRIMARY KEY (type)
-);
-
-
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
                 db_creation_date TIMESTAMP,
@@ -39,6 +33,19 @@ CREATE TABLE public.object_tree (
 
 ALTER SEQUENCE public.object_tree_id_seq OWNED BY public.object_tree.id;
 
+CREATE SEQUENCE public.seq_db_release_id_seq;
+
+CREATE TABLE public.seq_db_release (
+                id INTEGER NOT NULL DEFAULT nextval('public.seq_db_release_id_seq'),
+                date VARCHAR(50) NOT NULL,
+                version VARCHAR(10),
+                serialized_properties TEXT,
+                CONSTRAINT seq_db_release_pk PRIMARY KEY (id)
+);
+
+
+ALTER SEQUENCE public.seq_db_release_id_seq OWNED BY public.seq_db_release.id;
+
 CREATE SEQUENCE public.fasta_parsing_rule_id_seq;
 
 CREATE TABLE public.fasta_parsing_rule (
@@ -56,28 +63,24 @@ CREATE TABLE public.fasta_parsing_rule (
 
 ALTER SEQUENCE public.fasta_parsing_rule_id_seq OWNED BY public.fasta_parsing_rule.id;
 
+CREATE SEQUENCE public.seq_db_config_id_seq;
+
 CREATE TABLE public.seq_db_config (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.seq_db_config_id_seq'),
                 name VARCHAR(100) NOT NULL,
                 alphabet CHAR(3) NOT NULL,
                 ref_entry_format VARCHAR(10) NOT NULL,
                 serialized_properties TEXT,
                 fasta_parsing_rule_id INTEGER NOT NULL,
-                type VARCHAR(50) NOT NULL,
+                is_native BOOLEAN NOT NULL,
                 CONSTRAINT seq_db_config_pk PRIMARY KEY (id)
 );
+COMMENT ON COLUMN public.seq_db_config.name IS 'Some native databases must be named using the following convention : ipi, sprot, trembl, ncbi';
 COMMENT ON COLUMN public.seq_db_config.ref_entry_format IS 'swiss/genebank/gff TODO: add support for gff format';
+COMMENT ON COLUMN public.seq_db_config.is_native IS 'A native DB is a public DB which is neither a subset of database neither a database with additionnal or modified sequences (i.e. decoy sequences).';
 
 
-CREATE TABLE public.seq_db_release (
-                id INTEGER NOT NULL,
-                date VARCHAR(50) NOT NULL,
-                version VARCHAR(10),
-                serialized_properties TEXT,
-                seq_db_config_id INTEGER NOT NULL,
-                CONSTRAINT seq_db_release_pk PRIMARY KEY (id)
-);
-
+ALTER SEQUENCE public.seq_db_config_id_seq OWNED BY public.seq_db_config.id;
 
 CREATE SEQUENCE public.seq_db_instance_id_seq;
 
@@ -85,25 +88,25 @@ CREATE TABLE public.seq_db_instance (
                 id INTEGER NOT NULL DEFAULT nextval('public.seq_db_instance_id_seq'),
                 fasta_file_path VARCHAR(500) NOT NULL,
                 ref_file_path VARCHAR(500),
-                is_native BOOLEAN NOT NULL,
                 is_indexed BOOLEAN NOT NULL,
                 is_deleted BOOLEAN NOT NULL,
+                revision INTEGER NOT NULL,
                 creation_timestamp TIMESTAMP NOT NULL,
                 sequence_count INTEGER NOT NULL,
                 residue_count INTEGER,
                 serialized_properties TEXT,
-                seq_db_release_id INTEGER NOT NULL,
+                seq_db_release_id INTEGER,
+                seq_db_config_id INTEGER NOT NULL,
                 CONSTRAINT seq_db_instance_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.seq_db_instance.is_native IS 'A native DB is a public DB which is neither a subset of database neither a database with additionnal or modified sequences (i.e. decoy sequences).';
+COMMENT ON COLUMN public.seq_db_instance.revision IS 'The revision number is incremented each time a new instance of a specified seq_db_config is created.';
+COMMENT ON COLUMN public.seq_db_instance.seq_db_release_id IS 'database release information are created whenever possible, but some dabase don''t have any structured release naming convention.';
 
 
 ALTER SEQUENCE public.seq_db_instance_id_seq OWNED BY public.seq_db_instance.id;
 
-CREATE SEQUENCE public.taxon_id_seq;
-
 CREATE TABLE public.taxon (
-                id INTEGER NOT NULL DEFAULT nextval('public.taxon_id_seq'),
+                id INTEGER NOT NULL,
                 scientific_name VARCHAR(512) NOT NULL,
                 rank VARCHAR(30) NOT NULL,
                 serialized_properties TEXT,
@@ -114,8 +117,6 @@ COMMENT ON TABLE public.taxon IS 'Describes the NCBI taxononmy. TODO: add a is_a
 COMMENT ON COLUMN public.taxon.id IS 'The NCBI taxon id';
 COMMENT ON COLUMN public.taxon.scientific_name IS 'From NCBI: Every node in the database is required to have exactly one "scientific name".';
 
-
-ALTER SEQUENCE public.taxon_id_seq OWNED BY public.taxon.id;
 
 CREATE SEQUENCE public.gene_id_seq;
 
@@ -230,25 +231,30 @@ CREATE TABLE public.bio_sequence_relation (
 COMMENT ON COLUMN public.bio_sequence_relation.frame_number IS 'The frame used to translate the nucleic acid strand 1,2,3 or -1,-2,-3 Must only be defined for nucleic acid sequences (alphabet equals dna/rna).';
 
 
+CREATE SEQUENCE public.protein_identifier_id_seq;
+
 CREATE TABLE public.protein_identifier (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.protein_identifier_id_seq'),
                 value VARCHAR(30) NOT NULL,
                 is_ac_number BOOLEAN NOT NULL,
                 is_active BOOLEAN NOT NULL,
                 serialized_properties TEXT,
                 bio_sequence_id INTEGER NOT NULL,
                 taxon_id INTEGER NOT NULL,
-                database_type VARCHAR(50) NOT NULL,
+                seq_db_config_id INTEGER NOT NULL,
                 CONSTRAINT protein_identifier_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.protein_identifier IS 'An entry in a protein database identified by an accession number. UNIQUE( value, taxon_id )';
-COMMENT ON COLUMN public.protein_identifier.value IS 'MUST be unique';
 COMMENT ON COLUMN public.protein_identifier.is_ac_number IS 'true for accession numbers if the value corresponds to entry ID (ALB_HUMAN for instance) then this BOOLEAN will be false';
 COMMENT ON COLUMN public.protein_identifier.taxon_id IS 'The NCBI taxon id';
 
 
+ALTER SEQUENCE public.protein_identifier_id_seq OWNED BY public.protein_identifier.id;
+
+CREATE SEQUENCE public.seq_db_entry_id_seq;
+
 CREATE TABLE public.seq_db_entry (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.seq_db_entry_id_seq'),
                 identifier VARCHAR(50) NOT NULL,
                 name VARCHAR(1000) NOT NULL,
                 version VARCHAR(100),
@@ -269,11 +275,13 @@ COMMENT ON COLUMN public.seq_db_entry.ref_file_block_length IS 'May be NULL if n
 COMMENT ON COLUMN public.seq_db_entry.taxon_id IS 'The NCBI taxon id';
 
 
+ALTER SEQUENCE public.seq_db_entry_id_seq OWNED BY public.seq_db_entry.id;
+
 CREATE SEQUENCE public.fasta_file_entry_index_id_seq;
 
 CREATE TABLE public.fasta_file_entry_index (
                 id INTEGER NOT NULL DEFAULT nextval('public.fasta_file_entry_index_id_seq'),
-                block_start BIGINT,
+                block_start BIGINT NOT NULL,
                 block_length INTEGER NOT NULL,
                 serialized_properties TEXT,
                 bio_sequence_id INTEGER NOT NULL,
@@ -311,20 +319,6 @@ CREATE TABLE public.seq_db_entry_protein_identifier_map (
 COMMENT ON TABLE public.seq_db_entry_protein_identifier_map IS 'Note: the same protein identifier shouldn''t be find in multiple instancesof the same seq database.';
 
 
-ALTER TABLE public.seq_db_config ADD CONSTRAINT database_type_seq_db_config_fk
-FOREIGN KEY (type)
-REFERENCES public.database_type (type)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.protein_identifier ADD CONSTRAINT database_type_protein_identifier_fk
-FOREIGN KEY (database_type)
-REFERENCES public.database_type (type)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
 ALTER TABLE public.bio_sequence_annotation ADD CONSTRAINT object_tree_schema_bio_sequence_annotation_fk
 FOREIGN KEY (schema_name)
 REFERENCES public.object_tree_schema (name)
@@ -360,6 +354,13 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
+ALTER TABLE public.seq_db_instance ADD CONSTRAINT seq_db_release_seq_db_instance_fk
+FOREIGN KEY (seq_db_release_id)
+REFERENCES public.seq_db_release (id)
+ON DELETE RESTRICT
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
 ALTER TABLE public.seq_db_config ADD CONSTRAINT fasta_parsing_rule_seq_database_fk
 FOREIGN KEY (fasta_parsing_rule_id)
 REFERENCES public.fasta_parsing_rule (id)
@@ -374,17 +375,17 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.seq_db_release ADD CONSTRAINT seq_db_config_seq_db_release_fk
+ALTER TABLE public.seq_db_instance ADD CONSTRAINT seq_db_config_seq_db_instance_fk
 FOREIGN KEY (seq_db_config_id)
 REFERENCES public.seq_db_config (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.seq_db_instance ADD CONSTRAINT seq_db_release_seq_db_instance_fk
-FOREIGN KEY (seq_db_release_id)
-REFERENCES public.seq_db_release (id)
-ON DELETE RESTRICT
+ALTER TABLE public.protein_identifier ADD CONSTRAINT seq_db_config_protein_identifier_fk
+FOREIGN KEY (seq_db_config_id)
+REFERENCES public.seq_db_config (id)
+ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
