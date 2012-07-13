@@ -80,6 +80,7 @@ package object misc {
   object RegexUtils {
     
     import util.matching.Regex
+    import java.util.regex.Pattern
 
     /** Use a Regex object to match a given string */
     class RichRegex(self: Regex) {
@@ -92,7 +93,9 @@ package object misc {
       /** The regular expression is provided as a scala Regex object */
       def =~(r: util.matching.Regex) = r.pattern.matcher(self).matches
       /** The regular expression is provided as a String  */
-      def =~(s: String) = self.matches(s)
+      def =~(s: String) = self.matches(s)      
+      /** The regular expression is provided as a scala String */
+      def ~~(s: String) = Pattern.compile(s).matcher(self).find
     }
     implicit def strToRichStr(str: String) = new RichString(str)
   }
