@@ -5,14 +5,22 @@ import fr.proline.core.om.model.msi.SeqDatabase
 trait ISeqDatabaseProvider {
   
   /**
-   * Get SeqDatabase (wrapped in Option) with specified Ids.
+   * Get SeqDatabases (wrapped in Option) with specified Ids.
    *  If no SeqDatabases is defined for a specified id, Option.None will be returned.
    *  Returned Array will contains Option[SeqDatabase] in the same order as their specified ids.
    *  
    *  @param seqDBIds: Sequence of ids of SeqDatabase to search for
-   *  @return Array of Option[SeqDatabase] corresponding to found SeqDatabase
+   *  @return Array of Option[SeqDatabase] corresponding to found SeqDatabases
    */
-  def getSeqDatabaseAsOptions( seqDBIds: Seq[Int] ): Array[Option[SeqDatabase]]
+  def getSeqDatabasesAsOptions( seqDBIds: Seq[Int] ): Array[Option[SeqDatabase]]
+  
+  /**
+   * Get SeqDatabases with specified Ids.
+   *  
+   *  @param seqDBIds: Sequence of ids of SeqDatabase to search for
+   *  @return Array of SeqDatabase corresponding to found SeqDatabases
+   */
+  def getSeqDatabases( seqDBIds: Seq[Int] ): Array[SeqDatabase]
   
   /**
    * Get SeqDatabase (wrapped in Option) with specified Id.
@@ -21,7 +29,7 @@ trait ISeqDatabaseProvider {
    *  @param seqDBId: id of SeqDatabase to search for
    *  @return Option[SeqDatabase] corresponding to found SeqDatabase
    */
-  def getSeqDatabase( seqDBId:Int ): Option[SeqDatabase] = { getSeqDatabaseAsOptions( Array(seqDBId) )(0) }
+  def getSeqDatabase( seqDBId:Int ): Option[SeqDatabase] = { getSeqDatabasesAsOptions( Array(seqDBId) )(0) }
  
   /**
    * Get SeqDatabase (wrapped in Option) with specified name and fasta file path.

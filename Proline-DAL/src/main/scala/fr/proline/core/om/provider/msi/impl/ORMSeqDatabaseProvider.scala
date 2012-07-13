@@ -10,12 +10,11 @@ import fr.proline.core.om.utils.OMConverterUtil
 import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import fr.proline.core.orm.pdi.repository.SeqDatabaseRepository
-import fr.proline.core.om.utils.OMConverterUtil
 
 class ORMSeqDatabaseProvider (val em:EntityManager ) extends ISeqDatabaseProvider  with Logging {
   var seqDBRepo = new SeqDatabaseRepository(em) 
   
-  def getSeqDatabaseAsOptions(seqDBIds: Seq[Int]): Array[Option[SeqDatabase]] = { 
+  def getSeqDatabasesAsOptions(seqDBIds: Seq[Int]): Array[Option[SeqDatabase]] = { 
 	  val converter = new OMConverterUtil()
 	  var foundSeqDBBuilder = Array.newBuilder[Option[SeqDatabase]]
 	  	
@@ -42,6 +41,10 @@ class ORMSeqDatabaseProvider (val em:EntityManager ) extends ISeqDatabaseProvide
     }
     
     foundSeqDBBuilder.result
+  }
+  
+  def getSeqDatabases(seqDBIds: Seq[Int]): Array[SeqDatabase] = { 
+    throw new Exception("NYI")
   }
 
   def getSeqDatabase( seqDBName: String,fastaPath : String ): Option[SeqDatabase] = {
