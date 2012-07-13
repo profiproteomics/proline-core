@@ -426,18 +426,18 @@ class OMConverterUtil( useCachedObject: Boolean = true ) {
    * @param pdiSedDBInstance : fr.proline.core.orm.pdi.SequenceDbInstance to convert
    * @return created SeqDatabase (with associated objects)
    */
-  def convertSeqDbInstanceORM2OM( pdiSedDBInstance: SequenceDbInstance): SeqDatabase= {
-	  if(useCachedObject && seqDatabaseCache.contains( pdiSedDBInstance.getId ) )
-		  return seqDatabaseCache(pdiSedDBInstance.getId)
+  def convertSeqDbInstanceORM2OM( pdiSeqDBInstance: SequenceDbInstance): SeqDatabase= {
+	  if(useCachedObject && seqDatabaseCache.contains( pdiSeqDBInstance.getId ) )
+		  return seqDatabaseCache(pdiSeqDBInstance.getId)
       
-	  val seqDB = new SeqDatabase(id = pdiSedDBInstance.getId,
-						name = pdiSedDBInstance.getName,
-						filePath = pdiSedDBInstance.getFastaFilePath,
-						sequencesCount = pdiSedDBInstance.getSequenceCount,
-						version = pdiSedDBInstance.getSequenceDbRelease.getVersion,
-						releaseDate =pdiSedDBInstance.getSequenceDbRelease.getDate )
+	  val seqDB = new SeqDatabase(id = pdiSeqDBInstance.getId,
+						name = pdiSeqDBInstance.getSequenceDbRelease.getSequenceDbConfig.getName,
+						filePath = pdiSeqDBInstance.getFastaFilePath,
+						sequencesCount = pdiSeqDBInstance.getSequenceCount,
+						version = pdiSeqDBInstance.getSequenceDbRelease.getVersion,
+						releaseDate =pdiSeqDBInstance.getSequenceDbRelease.getDate )
 	  if(useCachedObject)
-		  seqDatabaseCache.put(pdiSedDBInstance.getId(),seqDB)
+		  seqDatabaseCache.put(pdiSeqDBInstance.getId(),seqDB)
       
       seqDB 
   }
