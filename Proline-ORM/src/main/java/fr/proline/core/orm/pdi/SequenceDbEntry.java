@@ -42,7 +42,7 @@ public class SequenceDbEntry implements Serializable {
 
 	// uni-directional many-to-one association to SequenceDbConfig
 	@ManyToOne
-	@JoinColumn(name = "database_type")
+	@JoinColumn(name = "seq_db_config_id")
 	private SequenceDbConfig sequenceDbConfig;
 
 	// uni-directional many-to-one association to SequenceDbInstance

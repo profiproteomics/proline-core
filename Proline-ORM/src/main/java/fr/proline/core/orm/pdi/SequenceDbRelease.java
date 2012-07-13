@@ -23,11 +23,6 @@ public class SequenceDbRelease implements Serializable {
 
 	private String version;
 
-	// uni-directional many-to-one association to SequenceDbConfig
-	@ManyToOne
-	@JoinColumn(name = "seq_db_config_id")
-	private SequenceDbConfig sequenceDbConfig;
-
 	public SequenceDbRelease() {
 	}
 
@@ -61,14 +56,6 @@ public class SequenceDbRelease implements Serializable {
 
 	public void setVersion(String version) {
 		this.version = version;
-	}
-
-	public SequenceDbConfig getSequenceDbConfig() {
-		return this.sequenceDbConfig;
-	}
-
-	public void setSequenceDbConfig(SequenceDbConfig sequenceDbConfig) {
-		this.sequenceDbConfig = sequenceDbConfig;
 	}
 
 }

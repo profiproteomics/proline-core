@@ -29,7 +29,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	
 	@Test public void findSeqDbPerNameAndFile() {
 		SeqDatabaseRepository repo = new SeqDatabaseRepository(em);
-		SequenceDbInstance seqDB  = repo.findSeqDbInstanceWithNameAndFile("Sprot", "H:/Sequences/uniprot/knowledgebase2011_06/uniprot_sprot.fasta");		
+		SequenceDbInstance seqDB  = repo.findSeqDbInstanceWithNameAndFile("sprot", "H:/Sequences/uniprot/knowledgebase2011_06/uniprot_sprot.fasta");		
 		assertThat(seqDB, notNullValue());
 		assertThat(seqDB.getSequenceCount(), is(4));
 	}

@@ -3,6 +3,7 @@ package fr.proline.core.orm.pdi;
 import static javax.persistence.CascadeType.PERSIST;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -13,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
@@ -35,6 +37,9 @@ public class SequenceDbConfig implements Serializable {
 
 	private String name;
 	
+	@Column(name="is_native")
+	private Boolean isNative;
+
 	@Enumerated(EnumType.STRING)
 	private Alphabet alphabet;
 
@@ -50,11 +55,10 @@ public class SequenceDbConfig implements Serializable {
 	@JoinColumn(name = "fasta_parsing_rule_id")
 	private FastaParsingRule fastaParsingRule;
 
-	// uni-directional many-to-one association to DatabaseType
-	@ManyToOne
-	@JoinColumn(name = "type")
-	private DatabaseType type;
-
+	//bi-directional many-to-one association to SequenceDbInstance
+	@OneToMany(mappedBy="sequenceDbConfig")
+	private Set<SequenceDbInstance> sequenceDbInstances;
+		
 	protected SequenceDbConfig() {
 
 	}
@@ -107,12 +111,21 @@ public class SequenceDbConfig implements Serializable {
 		this.name = name;
 	}
 
-	public DatabaseType getType() {
-		return type;
+	public Boolean getIsNative() {
+		return this.isNative;
 	}
 
-	public void setType(DatabaseType type) {
-		this.type = type;
+	public void setIsNative(Boolean isNative) {
+		this.isNative = isNative;
 	}
+
+	public Set<SequenceDbInstance> getSequenceDbConfigs() {
+		return sequenceDbInstances;
+	}
+
+	public void setSequenceDbConfigs(Set<SequenceDbConfig> sequenceDbConfigs) {
+		this.sequenceDbInstances = sequenceDbInstances;
+	}
+
 
 }

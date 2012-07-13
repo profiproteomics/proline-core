@@ -16,7 +16,7 @@ import java.util.Date;
  */
 @Entity
 @NamedQuery(name="findSeqDBByNameAndFile",
-query="select seq from fr.proline.core.orm.pdi.SequenceDbInstance seq where seq.sequenceDbRelease.sequenceDbConfig.name = :name and seq.fastaFilePath = :filePath ")
+query="select seq from fr.proline.core.orm.pdi.SequenceDbInstance seq where seq.sequenceDbConfig.name = :name and seq.fastaFilePath = :filePath ")
 
 @Table(name="seq_db_instance")
 public class SequenceDbInstance implements Serializable {
@@ -38,9 +38,9 @@ public class SequenceDbInstance implements Serializable {
 	@Column(name="is_indexed")
 	private Boolean isIndexed;
 
-	@Column(name="is_native")
-	private Boolean isNative;
-
+	@Column(name="revision")
+	private Integer revision;
+	
 	@Column(name="ref_file_path")
 	private String refFilePath;
 
@@ -53,10 +53,15 @@ public class SequenceDbInstance implements Serializable {
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	//uni-directional many-to-one association to SequenceDbRelease
-   @ManyToOne(cascade = { PERSIST, REMOVE })
+	//uni-directional one-to-one association to SequenceDbRelease
+   @OneToOne(cascade = { PERSIST, REMOVE })
 	@JoinColumn(name="seq_db_release_id")
 	private SequenceDbRelease sequenceDbRelease;
+
+	//bi-directional many-to-one association to SequenceDbConfig
+   @ManyToOne
+	@JoinColumn(name="seq_db_config_id")
+	private SequenceDbConfig sequenceDbConfig;
 
     public SequenceDbInstance() {
     }
@@ -101,14 +106,6 @@ public class SequenceDbInstance implements Serializable {
 		this.isIndexed = isIndexed;
 	}
 
-	public Boolean getIsNative() {
-		return this.isNative;
-	}
-
-	public void setIsNative(Boolean isNative) {
-		this.isNative = isNative;
-	}
-
 	public String getRefFilePath() {
 		return this.refFilePath;
 	}
@@ -147,6 +144,22 @@ public class SequenceDbInstance implements Serializable {
 
 	public void setSequenceDbRelease(SequenceDbRelease sequenceDbRelease) {
 		this.sequenceDbRelease = sequenceDbRelease;
+	}
+
+	public SequenceDbConfig getSequenceDbConfig() {
+		return sequenceDbConfig;
+	}
+
+	public void setSequenceDbConfig(SequenceDbConfig sequenceDbConfig) {
+		this.sequenceDbConfig = sequenceDbConfig;
+	}
+
+	public Integer getRevision() {
+		return revision;
+	}
+
+	public void setRevision(Integer revision) {
+		this.revision = revision;
 	}
 	
 }
