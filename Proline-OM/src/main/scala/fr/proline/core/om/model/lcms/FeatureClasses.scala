@@ -58,7 +58,7 @@ case class Feature (
         // Required fields
         var id: Int,
         val moz: Double,
-        var intensity: Double,
+        var intensity: Float,
         val charge: Int,
         val elutionTime: Float,
         val qualityScore: Double,

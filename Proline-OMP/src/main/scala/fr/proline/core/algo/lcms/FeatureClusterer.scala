@@ -369,9 +369,9 @@ object FeatureClusterer {
   
   }
   
-  private def computeClusterIntensity ( features: List[Feature], methodName: String ): Double = {
+  private def computeClusterIntensity ( features: List[Feature], methodName: String ): Float = {
     
-    var ftClusterIntensity = 0.0
+    var ftClusterIntensity = 0.0f
     if ( methodName == "sum" ) for( ft <- features ) ftClusterIntensity += ft.intensity
     else if ( methodName == "most_intense" ) ftClusterIntensity = this.findMostIntenseFeature(features).intensity
     else throw new Exception( "the cluster intensity computation method '"+methodName+"' is not implemented" )

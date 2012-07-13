@@ -116,7 +116,7 @@ trait IMapLoader {
 
     new Feature( id = ftId,
                  moz = featureRecord("moz").asInstanceOf[Double],
-                 intensity = featureRecord("intensity").asInstanceOf[Double],
+                 intensity = featureRecord("intensity").asInstanceOf[Double].toFloat,
                  charge = featureRecord("charge").asInstanceOf[Int],
                  elutionTime = featureRecord("elution_time").asInstanceOf[Double].toFloat,
                  qualityScore = featureRecord.getOrElse("quality_score",Double.NaN).asInstanceOf[Double],
