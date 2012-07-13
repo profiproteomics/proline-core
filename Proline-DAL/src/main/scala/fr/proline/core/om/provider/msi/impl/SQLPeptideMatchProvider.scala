@@ -18,6 +18,12 @@ class SQLPeptideMatchProvider( val msiDb: MsiDb,
   import fr.proline.core.dal.helper.MsiDbHelper
   val PepMatchCols = MsiDbPeptideMatchTable.columns
   
+  // Instantiate a MSIdb helper
+  val msiDbHelper = new MsiDbHelper( this.msiDb )
+  
+  // Retrieve score type map
+  val scoreTypeById = msiDbHelper.getScoringTypeById
+  
   private def _getPeptideProvider(): IPeptideProvider = {
     if( this.peptideProvider != None ) this.peptideProvider.get
     else new SQLPeptideProvider(this.psDb)
@@ -34,12 +40,7 @@ class SQLPeptideMatchProvider( val msiDb: MsiDb,
     val pepMatches = this.getPeptideMatches( pepMatchIds )
     val pepMatchById = pepMatches.map { pepMatch => pepMatch.id -> pepMatch } toMap
     
-    val optPepMatchesBuffer = new ArrayBuffer[Option[PeptideMatch]]
-    pepMatchIds.foreach { pepMatchId =>
-      optPepMatchesBuffer += pepMatchById.get( pepMatchId )
-    }
-    
-    optPepMatchesBuffer.toArray
+    pepMatchIds.map { pepMatchById.get( _ ) } toArray
   }
   
   def getResultSetsPeptideMatches( rsIds: Seq[Int] ): Array[PeptideMatch] = {
@@ -56,56 +57,20 @@ class SQLPeptideMatchProvider( val msiDb: MsiDb,
   }*/
   
   private def _getResultSetsPepMatchRecords( rsIds: Seq[Int] ): Array[Map[String,Any]] = {
-       
-    var pepMatchColNames: Seq[String] = null
-    
-    // Execute SQL query to load peptide match records
-    val msiDbTx = this.msiDb.getOrCreateTransaction
-    val pmRecords = msiDbTx.select( "SELECT * FROM peptide_match WHERE result_set_id IN (" + rsIds.mkString(",") +")" ) { r => 
-        
-      if( pepMatchColNames == null ) { pepMatchColNames = r.columnNames }
-      
-      // Build the peptide match record
-      pepMatchColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
-      
-    }
-    
-    pmRecords.toArray
-    
+    this.msiDb.selectRecordsAsMaps("SELECT * FROM peptide_match WHERE result_set_id IN (" + rsIds.mkString(",") +")")
   }
   
-  private def _getPepMatchRecords( pepMatchIds: Seq[Int] ): Array[Map[String,Any]] = {
-    
+  private def _getPepMatchRecords( pepMatchIds: Seq[Int] ): Array[Map[String,Any]] = {    
     // TODO: use max nb iterations
-    var pepMatchColNames: Seq[String] = null
-    
-    // Execute SQL query to load peptide match records
-    val msiDbTx = this.msiDb.getOrCreateTransaction
-    val pmRecords = msiDbTx.select( "SELECT * FROM peptide_match WHERE id IN (" + pepMatchIds.mkString(",") +")" ) { r => 
-        
-      if( pepMatchColNames == null ) { pepMatchColNames = r.columnNames }
-      
-      // Build the peptide match record
-      pepMatchColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
-      
-    }
-    
-    pmRecords.toArray
-    
-  }  
+    this.msiDb.selectRecordsAsMaps("SELECT * FROM peptide_match WHERE id IN (" + pepMatchIds.mkString(",") +")")    
+  }
   
   private def _buildPeptideMatches( rsIds: Seq[Int], pmRecords: Seq[Map[String,Any]] ): Array[PeptideMatch] = {
     
     // Load peptides
     val uniqPepIds = pmRecords map { _(PepMatchCols.peptideId).asInstanceOf[Int] } distinct
     val peptides = this._getPeptideProvider().getPeptides(uniqPepIds)
-    
-    // Instantiate a MSIdb helper
-    val msiDbHelper = new MsiDbHelper( this.msiDb )
-    
-    // Retrieve score type map
-    val scoreTypeById = msiDbHelper.getScoringTypeById
-    
+        
     // Map peptides by their id
     val peptideById = Map() ++ peptides.map { pep => ( pep.id -> pep ) }
     
