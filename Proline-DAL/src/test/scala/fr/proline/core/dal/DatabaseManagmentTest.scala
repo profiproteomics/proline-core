@@ -65,17 +65,5 @@ class DatabaseManagmentTest extends JUnitSuite  with Logging {
 	myConn.closeAll
   }
 
-  @Test
-  def testGetPSInformationConnection() = {
-    val myConn : DatabaseConnector = dbMgnt.psDBConnector
-	val psEmf  = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.PS), myConn.getEntityManagerSettings);
-    val psEm = psEmf.createEntityManager();    
-    //READ  <PTM ID="93" UNIMOD_ID="122" FULL_NAME="Formylation" SHORT_NAME="Formyl"/>
-    val myPtm :Ptm = psEm.find(classOf[Ptm], 93);
-    Assert.assertThat(myPtm.getShortName,CoreMatchers.equalTo("Formyl"))
-    psEm.close();
-	psEmf.close();
-    myConn.closeAll
-  }
   
 }
