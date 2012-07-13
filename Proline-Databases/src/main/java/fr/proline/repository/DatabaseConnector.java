@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.AbstractDataSource;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
@@ -35,7 +37,7 @@ public class DatabaseConnector {
 	private SimpleDriverDataSource dataSource;
 	private Connection connection;
 	private DriverType driverType;
-	
+	private static final Logger logger = LoggerFactory.getLogger(DatabaseConnector.class);
 	
 	public DatabaseConnector(Map<String, String> properties) {
 		this.properties = new Properties();
@@ -43,8 +45,14 @@ public class DatabaseConnector {
 		updateDriverType();
 	}
 
+	/**
+	 * Create a DatabaseConnector using a file from the class path 
+	 *  
+	 * @param filename : file to read from classpath
+	 */
 	public DatabaseConnector(String filename) {
 		try {
+			logger.debug("Create DatabaseConnector using {} ",filename);
 			properties = readProperties(filename);
 			updateDriverType();
 		} catch (IOException ioe) {
