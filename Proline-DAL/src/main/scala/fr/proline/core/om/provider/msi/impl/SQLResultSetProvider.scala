@@ -77,12 +77,8 @@ class SQLResultSetProvider( val msiDb: MsiDb,
     val resultSets = this.getResultSets( resultSetIds )
     val resultSetById = resultSets.map { rs => rs.id -> rs } toMap
     
-    val optRsBuffer = new ArrayBuffer[Option[ResultSet]]
-    resultSetIds.foreach { rsId =>
-      optRsBuffer += resultSetById.get( rsId )
-    }
+    resultSetIds.map { resultSetById.get( _ ) } toArray
     
-    optRsBuffer.toArray
   }
   
 }
