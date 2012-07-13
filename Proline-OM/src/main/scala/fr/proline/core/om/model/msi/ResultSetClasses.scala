@@ -27,6 +27,7 @@ case class ResultSet (
                    var description: String = null,
                    var isQuantified: Boolean = false,                    
                    
+                   protected var msiSearchId: Int = 0,
                    var msiSearch: MSISearch = null,
                   
                    protected var decoyResultSetId: Int = 0,
@@ -38,6 +39,8 @@ case class ResultSet (
   
   // Requirements
   require( peptides != null && peptideMatches != null & proteinMatches != null )
+  
+  def getMSISearchId : Int = { if(msiSearch != null) msiSearch.id else msiSearchId }
   
   def getDecoyResultSetId : Int = { if(decoyResultSet != null && decoyResultSet != None) decoyResultSet.get.id else decoyResultSetId }
   
@@ -96,21 +99,22 @@ case class ResultSummary (
                    // Required fields
                    val peptideInstances: Array[PeptideInstance],
                    val peptideSets: Array[PeptideSet],
-                   val proteinSets: Array[ProteinSet],                   
-                   val isDecoy: Boolean,
-                   val isNative: Boolean,
+                   val proteinSets: Array[ProteinSet],
+                   //val isDecoy: Boolean,                   
                    
                    // Immutable optional fields
                    
                    // Mutable optional fields
                    var id: Int = 0,
-                   protected var resultSetId: Int = 0,
-                   var resultSet: Option[ResultSet] = null,
-                   var decoyResultSummaryId: Int = 0,
-                   @transient var decoyResultSummary: Option[ResultSummary] = null,
-                   var name: String = null,
                    var description: String = null,
                    var isQuantified: Boolean = false,
+                   val modificationTimestamp: java.util.Date = new java.util.Date,
+                   
+                   protected var resultSetId: Int = 0,
+                   @transient var resultSet: Option[ResultSet] = None,
+                   
+                   var decoyResultSummaryId: Int = 0,
+                   @transient var decoyResultSummary: Option[ResultSummary] = null,
                    
                    var properties: Option[ResultSummaryProperties] = None
                    
@@ -119,7 +123,7 @@ case class ResultSummary (
   // Requirements
   require( peptideInstances != null && proteinSets != null )
   
-  def getResultSetId : Int = { if(resultSet != null && resultSet != None) resultSet.get.id else resultSetId }
+  def getResultSetId : Int = { if(resultSet != None) resultSet.get.id else resultSetId }
   
   def getDecoyResultSummaryId : Int = { if(decoyResultSummary != null && decoyResultSummary != None) decoyResultSummary.get.id else decoyResultSummaryId }
    
@@ -137,7 +141,7 @@ case class ResultSummary (
     
     val tmpProtSetById = Map() ++ proteinSets.map { protSet => ( protSet.id -> protSet ) }      
     if( tmpProtSetById.size != proteinSets.length ) 
-      throw new Exception( "duplicated protein match id" )
+      throw new Exception( "duplicated protein set id" )
 
     tmpProtSetById
 

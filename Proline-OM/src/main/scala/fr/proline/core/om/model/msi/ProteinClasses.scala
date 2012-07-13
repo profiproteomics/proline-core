@@ -10,7 +10,7 @@ import fr.proline.core.utils.misc.InMemoryIdGen
 object Protein extends InMemoryIdGen{
   
   /** A percentage (between 0 and 100) expressing the sequence coverage of the protein */
-  def calcSequenceCoverage( protSeqLength: Int, seqPositions: Array[Tuple2[Int,Int]] ): Float = {
+  def calcSequenceCoverage( protSeqLength: Int, seqPositions: Iterable[Tuple2[Int,Int]] ): Float = {
     
     // Map sequence positions
     val seqIndexSet = new java.util.HashSet[Int]()
