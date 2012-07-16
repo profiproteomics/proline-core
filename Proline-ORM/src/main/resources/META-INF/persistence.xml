@@ -62,11 +62,17 @@
 	<persistence-unit name="msidb_production" transaction-type="RESOURCE_LOCAL">
 	<provider>org.hibernate.ejb.HibernatePersistence</provider>
 	<class>fr.proline.core.orm.msi.AdminInformation</class>
+	<class>fr.proline.core.orm.msi.BioSequence</class>
+	<class>fr.proline.core.orm.msi.ConsensusSpectrum</class>
 	<class>fr.proline.core.orm.msi.Enzyme</class>
 	<class>fr.proline.core.orm.msi.InstrumentConfig</class>
 	<class>fr.proline.core.orm.msi.IonSearch</class>
+	<class>fr.proline.core.orm.msi.MasterQuantComponent</class>
+	<class>fr.proline.core.orm.msi.MasterQuantPeptideIon</class>
+	<class>fr.proline.core.orm.msi.MasterQuantReporterIon</class>
 	<class>fr.proline.core.orm.msi.MsiSearch</class>
 	<class>fr.proline.core.orm.msi.MsmsSearch</class>
+	<class>fr.proline.core.orm.msi.MsQuery</class>
 	<class>fr.proline.core.orm.msi.Peaklist</class>
 	<class>fr.proline.core.orm.msi.PeaklistSoftware</class>
 	<class>fr.proline.core.orm.msi.PtmSpecificity</class>
@@ -77,7 +83,6 @@
 	<class>fr.proline.core.orm.msi.SeqDatabase</class>
 	<class>fr.proline.core.orm.msi.UsedPtm</class>
 	<class>fr.proline.core.orm.msi.UsedPtmPK</class>
-	<class>fr.proline.core.orm.msi.MsQuery</class>
 	<class>fr.proline.core.orm.msi.PeptideMatch</class>
 	<class>fr.proline.core.orm.msi.Spectrum</class>
 	<class>fr.proline.core.orm.msi.Scoring</class>
@@ -93,10 +98,8 @@
 	<class>fr.proline.core.orm.msi.ProteinSetProteinMatchItem</class>
 	<class>fr.proline.core.orm.msi.ProteinSetProteinMatchItemPK</class>
 	<class>fr.proline.core.orm.msi.Peptide</class>
-	<class>fr.proline.core.orm.msi.BioSequence</class>
 	<class>fr.proline.core.orm.msi.SequenceMatch</class>
 	<class>fr.proline.core.orm.msi.SequenceMatchPK</class>
-	<class>fr.proline.core.orm.msi.ConsensusSpectrum</class>
 	<class>fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap</class>
 	<class>fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK</class>
 	<class>fr.proline.core.orm.msi.PeptideSetRelation</class>
