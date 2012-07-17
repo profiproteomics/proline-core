@@ -431,7 +431,7 @@ class OMConverterUtil( useCachedObject: Boolean = true ) {
 		  return seqDatabaseCache(pdiSeqDBInstance.getId)
       
 	  val seqDB = new SeqDatabase(id = pdiSeqDBInstance.getId,
-						name = pdiSeqDBInstance.getSequenceDbRelease.getSequenceDbConfig.getName,
+						name = pdiSeqDBInstance.getSequenceDbConfig.getName,
 						filePath = pdiSeqDBInstance.getFastaFilePath,
 						sequencesCount = pdiSeqDBInstance.getSequenceCount,
 						version = pdiSeqDBInstance.getSequenceDbRelease.getVersion,
