@@ -142,6 +142,14 @@ public class MasterQuantPeptideIon implements Serializable {
 	public void setBestPeptideMatchId(Integer bestPeptideMatchId) {
 		this.bestPeptideMatchId = bestPeptideMatchId;
 	}
+	
+  public Integer getUnmodifiedPeptideIonId() {
+    return unmodifiedPeptideIonId;
+  }
+
+  public void setUnmodifiedPeptideIonId(Integer unmodifiedPeptideIonId) {
+    this.unmodifiedPeptideIonId = unmodifiedPeptideIonId;
+  }
 
 	public MasterQuantComponent getMasterQuantComponent() {
 		return masterQuantComponent;
