@@ -45,6 +45,9 @@ public class MasterQuantPeptideIon implements Serializable {
 	@Column(name = "best_peptide_match_id")
 	private Integer bestPeptideMatchId;
 
+	@Column(name = "unmodified_peptide_ion_id")
+	private Integer unmodifiedPeptideIonId;
+
 	@ManyToOne
 	@JoinColumn(name = "master_quant_component_id")
 	private MasterQuantComponent masterQuantComponent;
