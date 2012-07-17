@@ -1343,7 +1343,7 @@ UNIQUE( accession, result_set_id )</remarks>
     <column id="COL415" populated="true" UUID="d7f6cac5-b9ba-40b7-b675-947e848d67ee" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_elution_time_seq" defaultValue="" name="elution_time" nullable="0" physicalName="elution_time" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="7" userDefinedTypeUUID="8fe516a5-9833-4170-9572-50e78bbf221f" >
      <remarks></remarks>
     </column>
-    <column id="COL416" populated="true" UUID="75086792-35bf-41c5-bde1-8bfe7fefd925" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_scan_number_seq" defaultValue="" name="scan_number" nullable="0" physicalName="scan_number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL416" populated="true" UUID="75086792-35bf-41c5-bde1-8bfe7fefd925" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_scan_number_seq" defaultValue="" name="scan_number" nullable="1" physicalName="scan_number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
     <column id="COL417" populated="true" UUID="2a85eede-cc10-442b-bedc-10c15204b7fb" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
@@ -1352,19 +1352,19 @@ UNIQUE( accession, result_set_id )</remarks>
     <column id="COL418" populated="true" UUID="5b55ec6a-2ef3-4dc1-b06a-021034574288" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_lcms_feature_id_seq" defaultValue="" name="lcms_feature_id" nullable="1" physicalName="lcms_feature_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>A link to a lcms feature in an lcms database</remarks>
     </column>
-    <column id="COL419" populated="true" UUID="af3b6c38-9ad6-4227-b4fa-e3c3e7a2abd6" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_peptide_id_seq" defaultValue="" name="peptide_id" nullable="0" physicalName="peptide_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL419" populated="true" UUID="af3b6c38-9ad6-4227-b4fa-e3c3e7a2abd6" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_peptide_id_seq" defaultValue="" name="peptide_id" nullable="1" physicalName="peptide_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL420" populated="true" UUID="c967aa7d-7ca5-40f9-9dd1-ce82677dbe9c" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_peptide_instance_id_seq" defaultValue="" name="peptide_instance_id" nullable="0" physicalName="peptide_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL420" populated="true" UUID="c967aa7d-7ca5-40f9-9dd1-ce82677dbe9c" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_peptide_instance_id_seq" defaultValue="" name="peptide_instance_id" nullable="1" physicalName="peptide_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>Raccourci pour savoir si le peptide à été identifié (=si non null)</remarks>
     </column>
     <column id="COL421" populated="true" UUID="7882fc6d-1261-4b82-a809-fa5c636e92ab" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_master_quant_component_id_seq" defaultValue="" name="master_quant_component_id" nullable="0" physicalName="master_quant_component_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL422" populated="true" UUID="d16d9bd3-36a3-47ac-88cf-27af74a5b979" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_best_peptide_match_id_seq" defaultValue="" name="best_peptide_match_id" nullable="0" physicalName="best_peptide_match_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL422" populated="true" UUID="d16d9bd3-36a3-47ac-88cf-27af74a5b979" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_best_peptide_match_id_seq" defaultValue="" name="best_peptide_match_id" nullable="1" physicalName="best_peptide_match_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL423" populated="true" UUID="332cf97a-8fcd-42b0-acb4-c7a9f696d132" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_unmodified_peptide_ion_id_seq" defaultValue="" name="unmodified_peptide_ion_id" nullable="0" physicalName="unmodified_peptide_ion_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL423" populated="true" UUID="332cf97a-8fcd-42b0-acb4-c7a9f696d132" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_unmodified_peptide_ion_id_seq" defaultValue="" name="unmodified_peptide_ion_id" nullable="1" physicalName="unmodified_peptide_ion_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
     <column id="COL424" populated="true" UUID="85fa0c27-b8c2-421f-9788-4baf4c2455c9" autoIncrement="false" autoIncrementSequenceName="master_quant_peptide_ion_result_summary_id_seq" defaultValue="" name="result_summary_id" nullable="0" physicalName="result_summary_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -2108,7 +2108,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8465468252641619" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8465468252641619" viewportX="494" viewportY="528" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB502" x="20" y="878" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB1" x="198" y="27" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB7" x="1785" y="893" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
