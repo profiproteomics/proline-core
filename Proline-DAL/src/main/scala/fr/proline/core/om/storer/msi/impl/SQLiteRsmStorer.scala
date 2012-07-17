@@ -76,7 +76,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
         val pepMatchRsmPropsById = pepInst.peptideMatchPropertiesById       
        
         pepInst.getPeptideMatchIds.foreach { pepMatchId =>
-          val pepMatchPropsAsJSON = generate( pepMatchRsmPropsById(pepMatchId) )
+          val pepMatchPropsAsJSON = if( pepMatchRsmPropsById != null ) Some(generate( pepMatchRsmPropsById(pepMatchId) )) else None
          
           // Insert peptide match mapping
           stmt.executeWith(

@@ -132,6 +132,7 @@ case class ProteinMatch (
                    
                    // Immutable optional fields
                    val isDecoy: Boolean = false,
+                   val isLastBioSequence: Boolean = false,
                    
                    // Mutable optional fields                     
                    var id: Int = 0,                   

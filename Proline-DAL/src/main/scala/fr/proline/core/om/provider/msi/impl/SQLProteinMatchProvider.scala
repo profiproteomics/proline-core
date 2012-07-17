@@ -112,6 +112,7 @@ class SQLProteinMatchProvider( val msiDb: MsiDb ) { //extends IProteinMatchProvi
         
         // Build protein match object
         val isDecoy = SQLStrToBool( protMatchRecord(ProtMatchCols.isDecoy).asInstanceOf[String] )
+        val isLastBioSeq = SQLStrToBool( protMatchRecord(ProtMatchCols.isLastBioSequence).asInstanceOf[String] )
         var bioSequenceId = if( protMatchRecord(ProtMatchCols.bioSequenceId) == null ) { 0 }       
                             else { protMatchRecord(ProtMatchCols.bioSequenceId).asInstanceOf[Int] }
         
@@ -129,6 +130,7 @@ class SQLProteinMatchProvider( val msiDb: MsiDb ) { //extends IProteinMatchProvi
                               geneName = protMatchRecord(ProtMatchCols.geneName).asInstanceOf[String],
                               sequenceMatches = seqMatches,
                               isDecoy = isDecoy,
+                              isLastBioSequence = isLastBioSeq,
                               seqDatabaseIds = seqDatabaseIds,
                               proteinId = bioSequenceId,
                               resultSetId = protMatchRecord(ProtMatchCols.resultSetId).asInstanceOf[Int],

@@ -70,8 +70,8 @@ class RsmStorer( private val _storer: IRsmStorer ) extends Logging {
     
     val msiDbConn = this.msiDb.getOrCreateConnection()
     
-    /// Define some vars
-    val rsmDesc = Some( rsm.description )
+    // Define some vars
+    val rsmDesc = Option( rsm.description )
     val modificationTimestamp = new java.util.Date() // msiDb.stringifyDate( new java.util.Date )        
     var decoyRsmId = if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else None
     val rsId = rsm.getResultSetId
