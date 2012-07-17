@@ -179,9 +179,9 @@ object MsiDbMasterQuantComponentTable extends TableDefinition {
     val id = Value("id")
     val selectionLevel = Value("selection_level")
     val serializedProperties = Value("serialized_properties")
-    val resultSummaryId = Value("result_summary_id")
     val objectTreeId = Value("object_tree_id")
     val schemaName = Value("schema_name")
+    val resultSummaryId = Value("result_summary_id")
   }
 
   def getColumnsAsStrList( f: MsiDbMasterQuantComponentTable.columns.type => List[Enumeration#Value] ): List[String] = {
@@ -262,7 +262,6 @@ object MsiDbMsQueryTable extends TableDefinition {
     val serializedProperties = Value("serialized_properties")
     val spectrumId = Value("spectrum_id")
     val msiSearchId = Value("msi_search_id")
-    
   }
 
   def getColumnsAsStrList( f: MsiDbMsQueryTable.columns.type => List[Enumeration#Value] ): List[String] = {
@@ -721,6 +720,7 @@ object MsiDbProteinMatchTable extends TableDefinition {
     val peptideCount = Value("peptide_count")
     val peptideMatchCount = Value("peptide_match_count")
     val isDecoy = Value("is_decoy")
+    val isLastBioSequence = Value("is_last_bio_sequence")
     val serializedProperties = Value("serialized_properties")
     val taxonId = Value("taxon_id")
     val bioSequenceId = Value("bio_sequence_id")
@@ -1142,7 +1142,6 @@ object MsiDbSequenceMatchTable extends TableDefinition {
     val isDecoy = Value("is_decoy")
     val serializedProperties = Value("serialized_properties")
     val bestPeptideMatchId = Value("best_peptide_match_id")
-    val bioSequenceId = Value("bio_sequence_id")
     val resultSetId = Value("result_set_id")
   }
 
@@ -1234,4 +1233,5 @@ object MsiDbUsedPtmTable extends TableDefinition {
   }
 
 }
+
 
