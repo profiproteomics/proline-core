@@ -232,6 +232,7 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
                                   proteinMatch.sequenceMatches.length,
                                   proteinMatch.peptideMatchesCount,
                                   BoolToSQLStr( proteinMatch.isDecoy ),
+                                  BoolToSQLStr( false ),
                                   "",
                                   proteinMatch.taxonId,
                                   "",// proteinMatch.getProteinId
@@ -304,7 +305,6 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
                                     BoolToSQLStr( isDecoy ),
                                     "" , //seqMatch.hasProperties ? encode_json( seqMatch.properties ) : undef,
                                     seqMatch.getBestPeptideMatchId,
-                                    "", //proteinId
                                     seqMatch.resultSetId
                                  )
         
