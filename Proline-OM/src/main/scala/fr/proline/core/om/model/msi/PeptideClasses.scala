@@ -237,13 +237,24 @@ object Peptide extends InMemoryIdGen with Logging {
   import org.biojava.bio.seq._
   import org.biojava.bio.symbol._
   
+  def calcMass( sequence: String, peptidePtms: Array[LocatedPtm] ): Double = {
+    
+    // Compute peptide sequence mass
+    var mass = this.calcMass( sequence )
+    
+    // Add peptide PTMs masses
+    peptidePtms.foreach { mass += _.monoMass } 
+    
+    mass
+  }
+  
   def calcMass( sequence: String ): Double = {
     var mass : Double = 0
     
-    // FIXME: find another way to deal with X residues
+    // FIXME: find another way to deal with ambiguous residues
     import fr.proline.core.utils.misc.RegexUtils._
     
-    if( sequence =~ "(?i).*[BX].*".r ) mass = 0.0
+    if( sequence ~~ "(?i)[BXZ]" ) mass = 0.0
     else {
       mass = try {
         new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
@@ -281,7 +292,7 @@ case class Peptide ( // Required fields
   }
   
   def this( sequence: String, ptms: Array[LocatedPtm], id: Int = Peptide.generateNewId() ) = {
-      this( id, sequence, ptms, Peptide.calcMass( sequence ) )
+      this( id, sequence, ptms, Peptide.calcMass( sequence, ptms ) )
   }
   
   // Requirements
@@ -494,17 +505,16 @@ class PeptideSet ( // Required fields
   
   def getPeptideMatchIds: Array[Int] = {
       
-    val peptideMatchIds = new ArrayBuffer[Int]()  
+    val peptideMatchIdSet = new collection.mutable.HashSet[Int]()  
     for (pepSetItem <- items) {
-      for (pepMatchId <- pepSetItem.peptideInstance.getPeptideMatchIds ) {
-      	if(!peptideMatchIds.contains(pepMatchId))
-      		peptideMatchIds += pepMatchId
-      }
+      peptideMatchIdSet ++= pepSetItem.peptideInstance.getPeptideMatchIds
     }
     
-    peptideMatchIds.toArray
+    peptideMatchIdSet.toArray
 
   }
+  
+  def getPeptideIds: Array[Int] = this.items.map { _.peptideInstance.peptide.id }
   
   def hasStrictSubset: Boolean = { 
     if( (strictSubsetIds != null && strictSubsetIds.length > 0 ) || 
