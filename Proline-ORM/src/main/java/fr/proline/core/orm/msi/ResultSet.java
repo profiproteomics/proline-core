@@ -1,10 +1,28 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+
+import javax.persistence.Basic;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 
 /**
@@ -52,6 +70,12 @@ public class ResultSet implements Serializable {
 	@JoinTable(name = "result_set_relation", joinColumns = @JoinColumn(name = "parent_result_set_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "child_result_set_id", referencedColumnName = "id"))
 	private Set<ResultSet> children;
 
+	@ElementCollection
+   @MapKeyColumn(name="schema_name")
+   @Column(name="object_tree_id")
+   @CollectionTable(name="result_set_object_tree_map",joinColumns = @JoinColumn(name = "result_set_id", referencedColumnName = "id"))
+   Map<String, Integer> objectsMap;  
+	
 	public ResultSet() {
 	}
 
@@ -125,6 +149,16 @@ public class ResultSet implements Serializable {
 
 	public void setChildren(Set<ResultSet> children) {
 		this.children = children;
+	}
+
+	public Map<String, Integer> getObjectsMap() {
+		return objectsMap;
+	}
+
+	public void putObject(String schemaName, Integer objectId) {
+		if (this.objectsMap == null)
+			this.objectsMap = new HashMap<String, Integer>();
+		this.objectsMap.put(schemaName, objectId);
 	}
 
 }

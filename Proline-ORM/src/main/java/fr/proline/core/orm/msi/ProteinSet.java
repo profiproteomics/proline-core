@@ -2,6 +2,9 @@ package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -50,6 +53,13 @@ public class ProteinSet implements Serializable {
 	@OneToMany(mappedBy="proteinSet")
 	private Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems;
 
+
+	@ElementCollection
+   @MapKeyColumn(name="schema_name")
+   @Column(name="object_tree_id")
+   @CollectionTable(name="protein_set_object_tree_map",joinColumns = @JoinColumn(name = "protein_set_id", referencedColumnName = "id"))
+   Map<String, Integer> objectsMap;  
+	
     public ProteinSet() {
     }
 
@@ -141,4 +151,13 @@ public class ProteinSet implements Serializable {
 		this.proteinSetProteinMatchItems = proteinSetProteinMatchItems;
 	}
 	
+	public Map<String, Integer> getObjectsMap() {
+		return objectsMap;
+	}
+
+	public void putObject(String schemaName, Integer objectId) {
+		if (this.objectsMap == null)
+			this.objectsMap = new HashMap<String, Integer>();
+		this.objectsMap.put(schemaName, objectId);
+	}
 }

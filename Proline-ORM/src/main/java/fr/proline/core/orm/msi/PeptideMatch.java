@@ -2,6 +2,9 @@ package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -89,6 +92,14 @@ public class PeptideMatch implements Serializable {
 		)
 	private Set<PeptideMatch> children;
 
+
+ 	@ElementCollection
+    @MapKeyColumn(name="schema_name")
+    @Column(name="object_tree_id")
+    @CollectionTable(name="peptide_match_object_tree_map",joinColumns = @JoinColumn(name = "peptide_match_id", referencedColumnName = "id"))
+    Map<String, Integer> objectsMap;  
+ 	
+ 	
     public PeptideMatch() {
     }
 
@@ -220,4 +231,14 @@ public class PeptideMatch implements Serializable {
 		this.children = children;
 	}
 	
+
+	public Map<String, Integer> getObjectsMap() {
+		return objectsMap;
+	}
+
+	public void putObject(String schemaName, Integer objectId) {
+		if (this.objectsMap == null)
+			this.objectsMap = new HashMap<String, Integer>();
+		this.objectsMap.put(schemaName, objectId);
+	}
 }

@@ -2,14 +2,19 @@ package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -68,6 +73,13 @@ public class MsiSearch implements Serializable {
 	@JoinColumn(name="search_settings_id")
 	private SearchSetting searchSetting;
 
+
+ 	@ElementCollection
+    @MapKeyColumn(name="schema_name")
+    @Column(name="object_tree_id")
+    @CollectionTable(name="msi_search_object_tree_map",joinColumns = @JoinColumn(name = "msi_search_id", referencedColumnName = "id"))
+    Map<String, Integer> objectsMap;  
+ 	
     public MsiSearch() {
     }
 
@@ -183,6 +195,16 @@ public class MsiSearch implements Serializable {
 		this.searchSetting = searchSetting;
 	}
 
+	public Map<String, Integer> getObjectsMap() {
+		return objectsMap;
+	}
+
+	public void putObject(String schemaName, Integer objectId) {
+		if (this.objectsMap == null)
+			this.objectsMap = new HashMap<String, Integer>();
+		this.objectsMap.put(schemaName, objectId);
+	}
+	
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this).append("id", id).append("title", title).append("job", jobNumber).append("result filename", resultFileName).toString();

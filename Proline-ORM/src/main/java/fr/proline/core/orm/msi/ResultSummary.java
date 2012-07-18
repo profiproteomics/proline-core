@@ -4,6 +4,8 @@ import java.io.Serializable;
 import javax.persistence.*;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -53,6 +55,13 @@ public class ResultSummary implements Serializable {
 			}
 		)
 	private Set<ResultSummary> children;
+
+
+	@ElementCollection
+   @MapKeyColumn(name="schema_name")
+   @Column(name="object_tree_id")
+   @CollectionTable(name="result_summary_object_tree_map",joinColumns = @JoinColumn(name = "result_summary_id", referencedColumnName = "id"))
+   Map<String, Integer> objectsMap;  
 
     public ResultSummary() {
     }
@@ -119,6 +128,16 @@ public class ResultSummary implements Serializable {
 
 	public void setChildren(Set<ResultSummary> children) {
 		this.children = children;
+	}
+	
+	public Map<String, Integer> getObjectsMap() {
+		return objectsMap;
+	}
+
+	public void putObject(String schemaName, Integer objectId) {
+		if (this.objectsMap == null)
+			this.objectsMap = new HashMap<String, Integer>();
+		this.objectsMap.put(schemaName, objectId);
 	}
 	
 }
