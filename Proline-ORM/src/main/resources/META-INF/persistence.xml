@@ -73,6 +73,8 @@
 	<class>fr.proline.core.orm.msi.MsiSearch</class>
 	<class>fr.proline.core.orm.msi.MsmsSearch</class>
 	<class>fr.proline.core.orm.msi.MsQuery</class>
+	<class>fr.proline.core.orm.msi.ObjectTree</class>
+	<class>fr.proline.core.orm.msi.ObjectTreeSchema</class>
 	<class>fr.proline.core.orm.msi.Peaklist</class>
 	<class>fr.proline.core.orm.msi.PeaklistSoftware</class>
 	<class>fr.proline.core.orm.msi.PtmSpecificity</class>
