@@ -125,6 +125,8 @@
 	<class>fr.proline.core.orm.pdi.FastaFileEntryIndex</class>
 	<class>fr.proline.core.orm.pdi.FastaParsingRule</class>
 	<class>fr.proline.core.orm.pdi.Gene</class>
+	<class>fr.proline.core.orm.msi.ObjectTree</class>
+	<class>fr.proline.core.orm.msi.ObjectTreeSchema</class>
 	<class>fr.proline.core.orm.pdi.ProteinIdentifier</class>
 	<class>fr.proline.core.orm.pdi.SequenceDbConfig</class>
 	<class>fr.proline.core.orm.pdi.SequenceDbEntry</class>

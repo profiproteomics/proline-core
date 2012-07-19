@@ -1,6 +1,9 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.persistence.*;
 
 
@@ -57,6 +60,12 @@ public class SequenceDbEntry implements Serializable {
 
 	@Column(name = "taxon_id")
 	private Integer taxonId;
+
+	@ElementCollection
+   @MapKeyColumn(name="schema_name")
+   @Column(name="object_tree_id")
+   @CollectionTable(name="seq_db_entry_object_tree_map",joinColumns = @JoinColumn(name = "seq_db_entry_id", referencedColumnName = "id"))
+   Map<String, Integer> objectTreeIdByName;  
 
 	public SequenceDbEntry() {
     }
@@ -163,6 +172,16 @@ public class SequenceDbEntry implements Serializable {
 
 	public void setTaxonId(Integer taxonId) {
 		this.taxonId = taxonId;
+	}
+	
+	public Map<String, Integer> getObjectsMap() {
+		return objectTreeIdByName;
+	}
+
+	public void putObject(String schemaName, Integer objectId) {
+		if (this.objectTreeIdByName == null)
+			this.objectTreeIdByName = new HashMap<String, Integer>();
+		this.objectTreeIdByName.put(schemaName, objectId);
 	}
 	
 }
