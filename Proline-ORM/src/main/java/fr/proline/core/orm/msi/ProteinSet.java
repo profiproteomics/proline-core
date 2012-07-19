@@ -58,7 +58,7 @@ public class ProteinSet implements Serializable {
    @MapKeyColumn(name="schema_name")
    @Column(name="object_tree_id")
    @CollectionTable(name="protein_set_object_tree_map",joinColumns = @JoinColumn(name = "protein_set_id", referencedColumnName = "id"))
-   Map<String, Integer> objectsMap;  
+   Map<String, Integer> objectTreeIdByName;  
 	
     public ProteinSet() {
     }
@@ -152,12 +152,12 @@ public class ProteinSet implements Serializable {
 	}
 	
 	public Map<String, Integer> getObjectsMap() {
-		return objectsMap;
+		return objectTreeIdByName;
 	}
 
 	public void putObject(String schemaName, Integer objectId) {
-		if (this.objectsMap == null)
-			this.objectsMap = new HashMap<String, Integer>();
-		this.objectsMap.put(schemaName, objectId);
+		if (this.objectTreeIdByName == null)
+			this.objectTreeIdByName = new HashMap<String, Integer>();
+		this.objectTreeIdByName.put(schemaName, objectId);
 	}
 }
