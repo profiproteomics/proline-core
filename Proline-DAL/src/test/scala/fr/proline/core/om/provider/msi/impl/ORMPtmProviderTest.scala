@@ -48,7 +48,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
   	 ids += 7 //
   	 ids += 12
   	 ids += 1284
-  	 val ptmDefs : Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitions(ids);
+  	 val ptmDefs : Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
      assertThat(ptmDefs, CoreMatchers.notNullValue());
      assertNotSame(ptmDefs(0), None);		
      assertThat(ptmDefs(0).get.location, CoreMatchers.equalTo(PtmLocation.PROT_N_TERM.toString));
@@ -70,7 +70,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
   	 ids += 7 
   	 ids += 9879
   	 
-  	 val ptmDefs : Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitions(ids);
+  	 val ptmDefs : Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
      assertThat(ptmDefs, CoreMatchers.notNullValue());
      assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
      assertNotSame(ptmDefs(0), None);         

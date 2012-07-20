@@ -18,7 +18,7 @@ class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging 
 
   var ptmRepo = new PtmRepository(em) //Created by constructor
 
-  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
     
 	val converter = new OMConverterUtil()
 	var foundPtmDefBuilder = Array.newBuilder[Option[PtmDefinition]]
@@ -46,6 +46,10 @@ class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging 
     }
     
     foundPtmDefBuilder.result
+  }
+  
+  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[PtmDefinition] = {
+    this.getPtmDefinitionsAsOptions(ptmDefIds).filter( _ != None ).map( _.get )
   }
 
   def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition] = {
