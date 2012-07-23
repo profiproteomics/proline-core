@@ -43,6 +43,7 @@ class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
   /** Returns a map */
   lazy val ptmDefinitionById: Map[Int,PtmDefinition] = {
     
+    val wasInTx = psDb.isInTransaction()
     var ptmColNames: Seq[String] = null
     val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Int,Map[String,Any]]
     val psDbTx = psDb.getOrCreateTransaction
@@ -111,6 +112,9 @@ class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
       ptmDefMapBuilder += ( ptmDef.id -> ptmDef )
       
     }
+    
+    // TODO: remove when prequel is fixed
+    if( !wasInTx ) psDb.commitTransaction
     
     ptmDefMapBuilder.result()
     

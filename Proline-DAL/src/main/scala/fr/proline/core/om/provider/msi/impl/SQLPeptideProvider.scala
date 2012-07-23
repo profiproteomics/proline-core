@@ -17,6 +17,7 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   /** Returns a map of peptide PTMs grouped by the peptide id */
   def getPeptidePtmRecordsByPepId( peptideIds: Seq[Int] ): Map[Int,Array[Map[String,Any]]] = {
     
+    val wasInTx = psDb.isInTransaction()
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Map[String,Any]]
     
     // TODO: Check if database driver is SQLite
@@ -46,6 +47,8 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
       
     )
     
+    // TODO: remove when prequel is fixed
+    if( !wasInTx ) psDb.commitTransaction
     //mapBuilder.result()
     
     pepPtmRecords.toArray.groupBy( _.get("peptide_id").get.asInstanceOf[Int] )
@@ -88,6 +91,7 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   
   def getPeptides( peptideIds: Seq[Int] ): Array[Peptide] = {
     
+    val wasInTx = psDb.isInTransaction()
     val maxNbIters = psDb.maxVariableNumber
     
     // Declare some vars
@@ -116,6 +120,9 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
       }
     })
     
+    // TODO: remove when prequel is fixed
+    if( !wasInTx ) psDb.commitTransaction
+    
     // Load peptide PTM map corresponding to the modified peptides
     val locatedPtmsByPepId = this.getLocatedPtmsByPepId( modifiedPepIdSet.toArray[Int] )
     
@@ -138,6 +145,7 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   
   def getPeptidesForSequences( peptideSeqs: Seq[String] ): Array[Peptide] = {
     
+    val wasInTx = psDb.isInTransaction()
     val maxNbIters = psDb.maxVariableNumber
     
     // Declare some vars
@@ -167,6 +175,9 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
         
       }
     })
+    
+    // TODO: remove when prequel is fixed
+    if( !wasInTx ) psDb.commitTransaction
     
     // Load peptide PTM map corresponding to the modified peptides
     val locatedPtmsByPepId = this.getLocatedPtmsByPepId( modifiedPepIdSet.toArray[Int] )
@@ -225,12 +236,15 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
  
   def getPeptide( peptideSeq: String, pepPtms: Array[LocatedPtm] ): Option[Peptide] = {
     
+    val wasInTx = psDb.isInTransaction()
     val tmpPep = new Peptide( sequence = peptideSeq, ptms = pepPtms )
     
     val psDbTx = psDb.getOrCreateTransaction()
     val pepId = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
                                 tmpPep.sequence, tmpPep.ptmString ) { _.nextInt } (0)
     
+    if( !wasInTx ) psDb.commitTransaction
+                                
     if( pepId == None ) None
     else {
       tmpPep.id = pepId.get

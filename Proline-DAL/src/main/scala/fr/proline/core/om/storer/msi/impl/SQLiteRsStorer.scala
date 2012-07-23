@@ -53,7 +53,6 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
         
         // Store only peptides which don't exist in the MSI-DB  
         if( ! peptideByUniqueKey.contains( peptide.uniqueKey ) ) {
-          if( peptide.ptmString != null ) println(peptide.ptmString)
           
           stmt.executeWith( peptide.id,
                             peptide.sequence,
