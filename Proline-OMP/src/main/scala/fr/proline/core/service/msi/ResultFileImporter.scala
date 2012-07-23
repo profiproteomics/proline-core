@@ -85,6 +85,8 @@ class ResultFileImporter( projectId: Int,
     this.targetResultSetId = targetRs.id
 
     this.msiDb.commitTransaction()
+    this.msiDb.closeConnection()
+    this.udsDb.closeConnection()
     
     true
   }
