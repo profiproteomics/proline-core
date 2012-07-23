@@ -241,9 +241,10 @@ object Peptide extends InMemoryIdGen with Logging {
     
     // Compute peptide sequence mass
     var mass = this.calcMass( sequence )
+    if( mass == 0.0 ) return 0.0
     
     // Add peptide PTMs masses
-    peptidePtms.foreach { mass += _.monoMass } 
+    peptidePtms.foreach { mass += _.monoMass }
     
     mass
   }
