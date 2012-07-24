@@ -27,14 +27,14 @@ class PeptideStorer( psDb: PsDb ) extends Logging {
     val peptideColsList = PsDbPeptideTable.getColumnsAsStrList().filter { _ != "id" }
     val peptideInsertQuery = PsDbPeptideTable.makeInsertQuery( peptideColsList )
     
-    psDbTx.executeBatch( peptideInsertQuery ) { stmt => 
+    psDbTx.executeBatch( peptideInsertQuery, true ) { stmt => 
       peptides.foreach { this._insertPeptide( stmt, _ ) }
     }
     
     val peptidePtmColsList = PsDbPeptidePtmTable.getColumnsAsStrList().filter { _ != "id" }
     val peptidePtmInsertQuery = PsDbPeptidePtmTable.makeInsertQuery( peptidePtmColsList )
     
-    psDbTx.executeBatch( peptidePtmInsertQuery ) { stmt => 
+    psDbTx.executeBatch( peptidePtmInsertQuery, true ) { stmt => 
       for( peptide <- peptides ) {
         if( peptide.ptms != null ) {
           peptide.ptms.foreach { this._insertPeptidePtm( stmt, _, peptide.id ) }
