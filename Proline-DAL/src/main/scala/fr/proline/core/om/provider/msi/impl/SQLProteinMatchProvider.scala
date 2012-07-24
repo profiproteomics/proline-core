@@ -16,6 +16,8 @@ class SQLProteinMatchProvider( val msiDb: MsiDb ) { //extends IProteinMatchProvi
   
   def getResultSetsProteinMatches( rsIds: Seq[Int] ): Array[ProteinMatch] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     val msiDbTx = msiDb.getOrCreateTransaction()
     
     // Retrieve score type map
@@ -54,7 +56,7 @@ class SQLProteinMatchProvider( val msiDb: MsiDb ) { //extends IProteinMatchProvi
         if( protMatchColNames == null ) { protMatchColNames = r.columnNames }
         val protMatchRecord = protMatchColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
         
-        val protMatchId = protMatchRecord("id").asInstanceOf[Int]
+        val protMatchId: Int = protMatchRecord(ProtMatchCols.id).asInstanceOf[AnyVal]
         
         var seqMatches: Array[SequenceMatch] = null
         
@@ -124,7 +126,7 @@ class SQLProteinMatchProvider( val msiDb: MsiDb ) { //extends IProteinMatchProvi
         }
         
         val protMatch = new ProteinMatch(
-                              id = protMatchRecord(ProtMatchCols.id).asInstanceOf[Int],
+                              id = protMatchId,
                               accession = protMatchRecord(ProtMatchCols.accession).asInstanceOf[String],
                               description = protMatchRecord(ProtMatchCols.description).asInstanceOf[String],
                               geneName = protMatchRecord(ProtMatchCols.geneName).asInstanceOf[String],

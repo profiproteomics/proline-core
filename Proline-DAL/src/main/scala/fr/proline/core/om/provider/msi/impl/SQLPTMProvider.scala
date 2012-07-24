@@ -43,6 +43,8 @@ class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
   /** Returns a map */
   lazy val ptmDefinitionById: Map[Int,PtmDefinition] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     val wasInTx = psDb.isInTransaction()
     var ptmColNames: Seq[String] = null
     val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Int,Map[String,Any]]
@@ -55,7 +57,8 @@ class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
       
       // Build the PTM record
       val ptmRecord = ptmColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
-      ptmMapBuilder += ( ptmRecord("id").asInstanceOf[Int] -> ptmRecord )
+      val ptmId: Int = ptmRecord("id").asInstanceOf[AnyVal]
+      ptmMapBuilder += ( ptmId -> ptmRecord )
       
     }
     

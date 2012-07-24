@@ -93,6 +93,8 @@ class ResultFileImporter( projectId: Int,
   
   private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     var udsInstConfigColNames: Seq[String] = null
     var udsInstConfigRecord: Map[String,Any] = null
     
@@ -102,7 +104,7 @@ class ResultFileImporter( projectId: Int,
       udsInstConfigRecord = udsInstConfigColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap      
     }
     
-    val instrumentId = udsInstConfigRecord("instrument_id").asInstanceOf[Int]    
+    val instrumentId: Int = udsInstConfigRecord("instrument_id").asInstanceOf[AnyVal]    
     var instrument: Instrument = null
     
     // Load the corresponding instrument
@@ -120,8 +122,10 @@ class ResultFileImporter( projectId: Int,
   
   private def _buildInstrumentConfig( instConfigRecord: Map[String,Any], instrument: Instrument ): InstrumentConfig = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     new InstrumentConfig(
-         id = instConfigRecord("id").asInstanceOf[Int],
+         id = instConfigRecord("id").asInstanceOf[AnyVal],
          name = instConfigRecord("name").asInstanceOf[String],
          instrument = instrument,
          ms1Analyzer = instConfigRecord("ms1_analyzer").asInstanceOf[String],

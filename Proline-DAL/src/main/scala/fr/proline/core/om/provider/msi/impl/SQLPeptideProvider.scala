@@ -91,6 +91,8 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   
   def getPeptides( peptideIds: Seq[Int] ): Array[Peptide] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     val wasInTx = psDb.isInTransaction()
     val maxNbIters = psDb.maxVariableNumber
     
@@ -114,7 +116,7 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
         
         // Map the record by its id    
         if( peptideRecord("ptm_string").asInstanceOf[String] != null ) {
-          modifiedPepIdSet += peptideRecord("id").asInstanceOf[Int]
+          modifiedPepIdSet += peptideRecord("id").asInstanceOf[AnyVal]
         }
         
       }
@@ -145,6 +147,8 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   
   def getPeptidesForSequences( peptideSeqs: Seq[String] ): Array[Peptide] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     val wasInTx = psDb.isInTransaction()
     val maxNbIters = psDb.maxVariableNumber
     
@@ -170,7 +174,7 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
         
         // Map the record by its id    
         if( peptideRecord("ptm_string").asInstanceOf[String] != null ) {
-          modifiedPepIdSet += peptideRecord("id").asInstanceOf[Int]
+          modifiedPepIdSet += peptideRecord("id").asInstanceOf[AnyVal]
         }
         
       }
@@ -210,12 +214,14 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   private def _buildPeptides( pepRecords: Seq[Map[String,Any]],
                               locatedPtmsByPepId: Map[Int,Array[LocatedPtm]] ): Array[Peptide] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     // Iterate over peptide records to convert them into peptide objects
     var peptides = new ArrayBuffer[Peptide](pepRecords.length)
     
     for( pepRecord <- pepRecords ) {
 
-      val pepId = pepRecord("id").asInstanceOf[Int]
+      val pepId: Int = pepRecord("id").asInstanceOf[AnyVal]
       val sequence = pepRecord("sequence").asInstanceOf[String]
       val locatedPtms = locatedPtmsByPepId.getOrElse(pepId, Array.empty[LocatedPtm] )
       

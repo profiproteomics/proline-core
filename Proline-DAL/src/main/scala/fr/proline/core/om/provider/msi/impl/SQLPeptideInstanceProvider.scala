@@ -64,6 +64,8 @@ class SQLPeptideInstanceProvider( val msiDb: MsiDb,
   private def _buildPeptideInstances( pepInstRecords: Seq[Map[String,Any]],
                                       pepInstPepMatchMapRecords: Seq[Map[String,Any]] ): Array[PeptideInstance] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     // Load peptides
     val uniqPepIds = pepInstRecords map { _(PepInstCols.peptideId).asInstanceOf[Int] } distinct
     val peptides = this._getPeptideProvider().getPeptides(uniqPepIds)
@@ -85,12 +87,12 @@ class SQLPeptideInstanceProvider( val msiDb: MsiDb,
       val pepInstRecord = pepInstRecords(pepInstIdx)
       
       // Retrieve the corresponding peptide
-      val pepId = pepInstRecord(PepInstCols.peptideId).asInstanceOf[Int]      
+      val pepId: Int = pepInstRecord(PepInstCols.peptideId).asInstanceOf[AnyVal]      
       if( ! peptideById.contains(pepId) ) throw new Exception("undefined peptide with id ='"+pepId+"'")
       val peptide = peptideById(pepId)
       
       // Retrieve peptide match ids and properties
-      val pepInstId = pepInstRecord(PepInstCols.id).asInstanceOf[Int]
+      val pepInstId: Int = pepInstRecord(PepInstCols.id).asInstanceOf[AnyVal]
       val pepMatchIds = new ArrayBuffer[Int]()
       val pepMatchPropertyMapBuilder = Map.newBuilder[Int, PeptideInstancePeptideMatchMapProperties]
       

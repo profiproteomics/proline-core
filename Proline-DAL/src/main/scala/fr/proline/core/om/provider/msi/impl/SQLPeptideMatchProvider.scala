@@ -67,6 +67,8 @@ class SQLPeptideMatchProvider( val msiDb: MsiDb,
   
   private def _buildPeptideMatches( rsIds: Seq[Int], pmRecords: Seq[Map[String,Any]] ): Array[PeptideMatch] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     // Load peptides
     val uniqPepIds = pmRecords map { _(PepMatchCols.peptideId).asInstanceOf[Int] } distinct
     val peptides = this._getPeptideProvider().getPeptides(uniqPepIds)
@@ -106,7 +108,7 @@ class SQLPeptideMatchProvider( val msiDb: MsiDb,
         properties = Some( parse[PeptideMatchProperties](propertiesAsJSON) )
       }
       
-      val pepMatch = new PeptideMatch( id = pepMatchRecord(PepMatchCols.id).asInstanceOf[Int],
+      val pepMatch = new PeptideMatch( id = pepMatchRecord(PepMatchCols.id).asInstanceOf[AnyVal],
                                        rank = pepMatchRecord(PepMatchCols.rank).asInstanceOf[Int],
                                        score = pepMatchRecord(PepMatchCols.score).asInstanceOf[Double].toFloat,
                                        scoreType = scoreType,

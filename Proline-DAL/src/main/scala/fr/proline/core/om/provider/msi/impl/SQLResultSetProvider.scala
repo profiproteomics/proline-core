@@ -17,6 +17,8 @@ class SQLResultSetProvider( val msiDb: MsiDb,
   
   def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     // Load protein matches
     val protMatchProvider = new SQLProteinMatchProvider( msiDb )
     val protMatches = protMatchProvider.getResultSetsProteinMatches( rsIds )
@@ -39,7 +41,7 @@ class SQLResultSetProvider( val msiDb: MsiDb,
       val resultSetRecord = rsColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
       
       // Retrieve some vars
-      val rsId = resultSetRecord(RSCols.id).asInstanceOf[Int]
+      val rsId: Int = resultSetRecord(RSCols.id).asInstanceOf[AnyVal]
       val rsProtMatches = protMatchesByRsId(rsId)
       val rsPepMatches = pepMatchesByRsId(rsId)
       val rsPeptides = rsPepMatches map { _.peptide } distinct
@@ -47,9 +49,9 @@ class SQLResultSetProvider( val msiDb: MsiDb,
       val isDecoy = rsType matches "DECOY_SEARCH"
       val isNative = rsType matches "SEARCH"
       //val msiSearchIds = msiDbHelper.getResultSetsMsiSearchIds( Array(rsId) )
-      var decoyResultSetId: Int = 0
+      var decoyRsId: Int = 0
       if( resultSetRecord(RSCols.decoyResultSetId) != null )
-        decoyResultSetId = resultSetRecord(RSCols.decoyResultSetId).asInstanceOf[Int]
+        decoyRsId = resultSetRecord(RSCols.decoyResultSetId).asInstanceOf[Int]
       
       // TODO: load MSI search
       // TODO: parse properties
@@ -63,7 +65,7 @@ class SQLResultSetProvider( val msiDb: MsiDb,
             isDecoy = isDecoy,
             isNative = isNative,
          //TODO   msiSearchIds = msiSearchIds,
-            decoyResultSetId = decoyResultSetId
+            decoyResultSetId = decoyRsId
           )
                             
     }

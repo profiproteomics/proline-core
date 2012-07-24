@@ -73,6 +73,8 @@ class SQLProteinSetProvider( val msiDb: MsiDb,
                                  protSetItemRecords: Seq[Map[String,Any]],
                                  peptideSets: Seq[PeptideSet] ): Array[ProteinSet] = {
     
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     // Map peptide set by protein set id
     val pepSetByProtSetId = Map() ++ peptideSets.map { pepSet => pepSet.getProteinSetId -> pepSet }
     
@@ -88,7 +90,7 @@ class SQLProteinSetProvider( val msiDb: MsiDb,
       
       // Retrieve peptide instance record
       val protSetRecord = protSetRecords(protSetIds)
-      val protSetId = protSetRecord(ProtSetCols.id).asInstanceOf[Int]
+      val protSetId: Int = protSetRecord(ProtSetCols.id).asInstanceOf[AnyVal]
       
       // Retrieve corresponding peptide set
       val pepSet = pepSetByProtSetId(protSetId)

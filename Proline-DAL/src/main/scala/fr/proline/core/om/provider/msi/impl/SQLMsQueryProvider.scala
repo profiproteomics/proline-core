@@ -7,6 +7,7 @@ import fr.proline.core.om.provider.msi.IMsQueryProvider
 
 class SQLMsQueryProvider( val msiDb: MsiDb ) extends IMsQueryProvider {
   
+  import fr.proline.core.utils.primitives.LongOrIntAsInt._
   import scala.collection.mutable.ArrayBuffer
   val MsQueryCols = MsiDbMsQueryTable.columns
 
@@ -53,11 +54,13 @@ class SQLMsQueryProvider( val msiDb: MsiDb ) extends IMsQueryProvider {
         properties = Some( parse[MsQueryProperties](propertiesAsJSON) )
       }
       
+      val msQueryId: Int = rs.getObject(MsQueryCols.id).asInstanceOf[AnyVal]
+      
       // Build the MS query object
       var msQuery: MsQuery = null
       if( spectrumId != 0 ) { // we can assume it is a MS2 query
         val spectrumTitle = spectrumTitleById( spectrumId )
-        msQuery = new Ms2Query( id = rs.getInt(MsQueryCols.id),
+        msQuery = new Ms2Query( id = msQueryId,
                                 initialId = rs.getInt(MsQueryCols.initialId),
                                 moz = rs.getDouble(MsQueryCols.moz),
                                 charge = rs.getInt(MsQueryCols.charge),
@@ -67,7 +70,7 @@ class SQLMsQueryProvider( val msiDb: MsiDb ) extends IMsQueryProvider {
                               )
 
       } else { 
-         msQuery = new Ms1Query( id = rs.getInt(MsQueryCols.id), 
+         msQuery = new Ms1Query( id = msQueryId, 
                                  initialId = rs.getInt(MsQueryCols.initialId),
                                  moz = rs.getDouble(MsQueryCols.moz),
                                  charge = rs.getInt(MsQueryCols.charge),
