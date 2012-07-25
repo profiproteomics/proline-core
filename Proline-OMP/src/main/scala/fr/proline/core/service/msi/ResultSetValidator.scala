@@ -164,7 +164,7 @@ class ResultSetValidator( projectId: Int,
       }
     }
     
-    val took = startTime - curTimeInSecs()
+    val took = curTimeInSecs() - startTime
     this.logger.info( "validation took "+ took +" seconds")
       
     if( storeResultSummary ) {

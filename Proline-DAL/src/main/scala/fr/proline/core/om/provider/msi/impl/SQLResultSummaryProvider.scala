@@ -19,6 +19,8 @@ class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends IResu
   
   def getResultSummaries( rsmIds: Seq[Int], loadResultSet: Boolean ): Array[ResultSummary] = {
   
+    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    
     // Load peptide sets
     val pepSetProvider = new SQLPeptideSetProvider( msiDb, psDb )
     val pepSets = pepSetProvider.getResultSummariesPeptideSets( rsmIds )    
@@ -38,7 +40,7 @@ class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends IResu
       val rsmRecord = rsmColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
       
       // Retrieve some vars
-      val rsmId = rsmRecord(RSMCols.id).asInstanceOf[Int]
+      val rsmId: Int = rsmRecord(RSMCols.id).asInstanceOf[AnyVal]
       val rsmPepSets = inMemPepSetProvider.getResultSummaryPeptideSets(rsmId)
       val rsmPepInsts = rsmPepSets.flatMap { _.getPeptideInstances }      
       val rsmProtSets = protSetsByRsmId.getOrElse(rsmId, Array.empty[ProteinSet] )
@@ -56,11 +58,30 @@ class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends IResu
         properties = Some( parse[ResultSummaryProperties](propertiesAsJSON) )
       }
       
-      val rsId = rsmRecord(RSMCols.description).asInstanceOf[Int]
-      var resultSet = Option.empty[ResultSet]
+      val rsId = rsmRecord(RSMCols.resultSetId).asInstanceOf[Int]
+      var rsAsOpt = Option.empty[ResultSet]
       if( loadResultSet ) {
         val rsProvider = new SQLResultSetProvider( msiDb, psDb )
-        resultSet = rsProvider.getResultSet(rsId)
+        val rs = rsProvider.getResultSet(rsId).get
+        // TODO: add a method get ResultSummaryResultSet( rsmId ) with optimized loading
+        
+        val pepIdSet = new collection.mutable.HashSet[Int]
+        val pepMatchIdSet = new collection.mutable.HashSet[Int]
+        val protMatchIdSet = new collection.mutable.HashSet[Int]        
+        
+        // Remove objects which are not linked to result summary
+        rsmPepSets.foreach { pepSet =>
+          pepIdSet ++= pepSet.getPeptideIds
+          pepMatchIdSet ++= pepSet.getPeptideMatchIds
+          protMatchIdSet ++= pepSet.proteinMatchIds
+        }
+        
+        val rsmPeptides = rs.peptides.filter { p => pepIdSet.contains(p.id) }
+        val rsmPepMatches = rs.peptideMatches.filter { p => pepMatchIdSet.contains(p.id) }
+        val rsmProtMatches = rs.proteinMatches.filter { p => protMatchIdSet.contains(p.id) }
+        
+        rsAsOpt = Some(rs.copy( peptides = rsmPeptides, peptideMatches = rsmPepMatches, proteinMatches = rsmProtMatches) )
+        
       }
       
       new ResultSummary(
@@ -72,7 +93,7 @@ class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends IResu
             peptideSets = rsmPepSets,
             proteinSets = rsmProtSets,
             resultSetId = rsId,
-            resultSet = resultSet,
+            resultSet = rsAsOpt,
             decoyResultSummaryId = decoyRsmId,
             properties = properties
           )

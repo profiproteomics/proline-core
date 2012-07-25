@@ -45,7 +45,7 @@ object PtmDefinitionBuilder {
       
     var ptmDefId: Int =0 
     if(ptmSpecifRecord.contains("id"))
-      ptmDefId = ptmSpecifRecord("id").asInstanceOf[Int]
+      ptmDefId = ptmSpecifRecord("id").asInstanceOf[AnyVal]
     else
       ptmDefId =PtmDefinition.generateNewId
       
