@@ -37,7 +37,7 @@ public class PeptideRepository extends JPARepository {
 		}
 	}
 	
-	public Peptide findPeptidesBySeqWoPtm(String seq) {
+	public Peptide findPeptidesBySeqNoPtm(String seq) {
 		try {			
 			TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findPepsBySeqWoPtm", Peptide.class);
 			query.setParameter("seq", seq.toUpperCase());
