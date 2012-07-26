@@ -11,8 +11,18 @@ import java.util.Set;
  * 
  */
 @Entity
+@NamedQueries({
 @NamedQuery(name="findPepsBySeq",
-query="select p from Peptide p where UPPER(p.sequence) = :seq ")
+query="select p from Peptide p where UPPER(p.sequence) = :seq "),
+
+@NamedQuery(name="findPepsBySeqPtmStr",
+query="select p from Peptide p where UPPER(p.sequence) = :seq  and p.ptmString = :ptmStr"),
+
+@NamedQuery(name="findPepsBySeqWoPtm",
+query="select p from Peptide p where UPPER(p.sequence) = :seq  and p.ptmString is null")
+
+})
+
 public class Peptide implements Serializable {
 	private static final long serialVersionUID = 1L;
 

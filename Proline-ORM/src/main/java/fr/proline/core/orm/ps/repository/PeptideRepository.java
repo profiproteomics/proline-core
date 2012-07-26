@@ -20,4 +20,15 @@ public class PeptideRepository extends JPARepository {
 		return query.getResultList();
 	}
 	
+	public Peptide findPeptidesBySequenceAndPtmStr(String seq, String ptmStr) {
+		TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findPepsBySeqPtmStr", Peptide.class);
+		query.setParameter("seq", seq.toUpperCase()).setParameter("ptmStr", ptmStr);
+		return query.getSingleResult();
+	}
+	
+	public Peptide findPeptidesBySeqWoPtm(String seq) {
+		TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findPepsBySeqWoPtm", Peptide.class);
+		query.setParameter("seq", seq.toUpperCase());
+		return query.getSingleResult();
+	}
 }
