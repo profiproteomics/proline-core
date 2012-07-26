@@ -1,17 +1,20 @@
 package fr.proline.core.dal
 
 import net.noerd.prequel._
+import fr.proline.repository.DatabaseConnector
 
 object PsDb {
-  
-  def apply( projectId: Int ): PsDb = {
-    
-    // TODO: change the configuration according to the project id instead of using a default config
-    
-    val psDbConfig = this.getDefaultConfig
-    new PsDb( psDbConfig )
+
+  def getConfigFromDatabaseConnector(dbConnector: DatabaseConnector) : DatabaseConfig =   { 
+	 DatabaseConfig (    
+			 driver = dbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME),
+			 jdbcURL = dbConnector.getProperty(DatabaseConnector.PROPERTY_URL),
+			 username =  dbConnector.getProperty(DatabaseConnector.PROPERTY_USERNAME), 
+			 password =  dbConnector.getProperty(DatabaseConnector.PROPERTY_PASSWORD), 				
+			 sqlFormatter = SQLFormatter.HSQLDBSQLFormatter   )
   }
-  
+    
+    
   def getDefaultConfig = DatabaseConfig(
     driver = "org.postgresql.Driver",
     jdbcURL = "jdbc:postgresql://10.1.31.10:5432/ps_db",
