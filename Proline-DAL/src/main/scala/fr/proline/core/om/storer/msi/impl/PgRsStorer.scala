@@ -22,7 +22,7 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
   private val pepMatchRelTableCols = "parent_peptide_match_id, child_peptide_match_id, parent_result_set_id"
   private val protMatchTableCols = MsiDbProteinMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
   private val seqMatchTableCols = "protein_match_id, peptide_id, start, stop, residue_before, residue_after, is_decoy, " +
-                                  "serialized_properties, best_peptide_match_id, bio_sequence_id, result_set_id"
+                                  "serialized_properties, best_peptide_match_id, result_set_id"
   
   //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
   // TODO: insert peptides into a TMP table
@@ -232,7 +232,7 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
                                   proteinMatch.sequenceMatches.length,
                                   proteinMatch.peptideMatchesCount,
                                   BoolToSQLStr( proteinMatch.isDecoy ),
-                                  BoolToSQLStr( false ),
+                                  BoolToSQLStr(proteinMatch.isLastBioSequence), 
                                   "",
                                   proteinMatch.taxonId,
                                   "",// proteinMatch.getProteinId
