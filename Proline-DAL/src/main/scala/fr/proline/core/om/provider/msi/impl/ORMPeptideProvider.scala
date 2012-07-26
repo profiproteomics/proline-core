@@ -12,13 +12,18 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.utils.OMComparatorUtil
-import fr.proline.core.om.utils.OMConverterUtil
+import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import fr.proline.core.orm.ps.repository.PeptideRepository
 
+/**
+ * ORMPeptideProvider provides access to Peptide stored in PS database.
+ * 
+ * Specified EntityManager should be a PSdb EntityManager
+ */
 class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider with Logging {
   
   var pepRepo : PeptideRepository = new PeptideRepository(em) //Created by constructor
-  val converter : OMConverterUtil= new OMConverterUtil()
+  val converter : PeptidesOMConverterUtil= new PeptidesOMConverterUtil()
 
   def getPeptidesAsOptions( peptideIds: Seq[Int] ): Array[Option[Peptide]] = {
   	var foundOMPepBuilder = Array.newBuilder[Option[Peptide]]
@@ -37,26 +42,32 @@ class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider with L
   }
 
   def getPeptide( peptideSeq: String, pepPtms: Array[LocatedPtm] ): Option[Peptide]  = {
-    
-    var pepPtmSet = new HashSet[LocatedPtm]
-    if(pepPtms != null)
-		  pepPtmSet ++= pepPtms
-		
-  	try {
-  		val foundORMPeps = JavaConversions.asScalaBuffer(pepRepo.findPeptidesBySequence(peptideSeq))
-  		foundORMPeps foreach (nextORMPep => {
-  			if( OMComparatorUtil.comparePeptidePtmSet(pepPtmSet.toSet, nextORMPep.getPtms() )){
-  				return Some(converter.convertPeptidePsORM2OM(nextORMPep))
-  			}
-  		})
-  	} catch {
-  	  case e:PersistenceException => {
-  	    logger.warn(" Error while requiering Peptide "+e.getMessage)
-  	    return None
-  	  }
-  	} 
-  	    
-  	return None        
+    if(pepPtms == null || pepPtms.isEmpty ){      
+    	try {
+    		val foundORMPep = pepRepo.findPeptidesBySeqWoPtm(peptideSeq)
+			return Some(converter.convertPeptidePsORM2OM(foundORMPep))
+			
+    	} catch {
+  	  		case e:PersistenceException => {
+  	  			logger.warn(" Error while requiering Peptide "+e.getMessage)
+  	  			return None
+  	  		}
+    	}
+    	return None
+    }else  {      
+      val ptmStr = Peptide.makePtmString(pepPtms)
+      
+	  try {
+  		val foundORMPep = pepRepo.findPeptidesBySequenceAndPtmStr(peptideSeq,ptmStr)
+  		return Some(converter.convertPeptidePsORM2OM(foundORMPep))
+	  } catch {
+  	  	case e:PersistenceException => {
+  	  		logger.warn(" Error while requiering Peptide "+e.getMessage)
+  	  		return None
+  	  	}
+	  }  	    
+  	return None
+    }
   }
 
 }
