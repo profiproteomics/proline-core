@@ -5,7 +5,8 @@ import com.codahale.jerkson.Json.generate
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
 import fr.proline.core.dal.MsiDb
-import fr.proline.core.dal.{MsiDbPeptideTable,MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
+import fr.proline.core.dal.{MsiDbPeptideTable,MsiDbPeptideMatchTable,MsiDbPeptideMatchRelationTable,
+                            MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.core.utils.sql.{BoolToSQLStr,encodeRecordForPgCopy}
@@ -16,13 +17,10 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
   val bulkCopyManager = new CopyManager( msiDb1.connection.asInstanceOf[BaseConnection] )
   
   private val peptideTableCols = MsiDbPeptideTable.getColumnsAsStrList().mkString(",")
-  private val pepMatchTableCols = "charge, experimental_moz, score, rank, delta_moz, " +
-                                  " missed_cleavage, fragment_match_count, is_decoy, serialized_properties, " +
-                                  " peptide_id, ms_query_id, best_child_id, scoring_id, result_set_id"
-  private val pepMatchRelTableCols = "parent_peptide_match_id, child_peptide_match_id, parent_result_set_id"
+  private val pepMatchTableCols = MsiDbPeptideMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
+  private val pepMatchRelTableCols = MsiDbPeptideMatchRelationTable.getColumnsAsStrList().mkString(",")
   private val protMatchTableCols = MsiDbProteinMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
-  private val seqMatchTableCols = "protein_match_id, peptide_id, start, stop, residue_before, residue_after, is_decoy, " +
-                                  "serialized_properties, best_peptide_match_id, result_set_id"
+  private val seqMatchTableCols = MsiDbSequenceMatchTable.getColumnsAsStrList().mkString(",")
   
   //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
   // TODO: insert peptides into a TMP table
