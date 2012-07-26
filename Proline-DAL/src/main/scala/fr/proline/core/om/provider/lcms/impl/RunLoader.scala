@@ -27,7 +27,7 @@ class RunLoader( val lcmsDb: LcmsDb )  {
         if( colNames == null ) { colNames = r.columnNames }
         
         // Build the run record
-        val runRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+        val runRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
         val runId = runRecord("id").asInstanceOf[Int]
         val runScans = scansByRunId(runId)
         
@@ -70,7 +70,7 @@ class RunLoader( val lcmsDb: LcmsDb )  {
         if( colNames == null ) { colNames = r.columnNames }
         
         // Build the scan record
-        val scanRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+        val scanRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
         
         // Build the scan
         scans(lcmsScanIdx) = buildLcmsScan( scanRecord )

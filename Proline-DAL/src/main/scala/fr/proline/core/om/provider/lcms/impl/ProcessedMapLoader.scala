@@ -39,7 +39,7 @@ class ProcessedMapLoader( val lcmsDb: LcmsDb,
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the map record
-      val mapRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val mapRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       
       val mapId = mapRecord("id").asInstanceOf[Int]
       val mapFeatures = featuresByMapId( mapId )
@@ -221,7 +221,7 @@ class ProcessedMapLoader( val lcmsDb: LcmsDb,
       if( processedFtColNames == null ) { processedFtColNames = r.columnNames }
       
       // Build the feature record
-      val processedFtRecord = processedFtColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val processedFtRecord = processedFtColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       onEachFt( processedFtRecord )
       
       ()

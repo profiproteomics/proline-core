@@ -58,7 +58,7 @@ trait IMapLoader {
       if( featureColNames == null ) { featureColNames = r.columnNames }
       
       // Build the feature record
-      val ftRecord = featureColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val ftRecord = featureColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       val mapId = ftRecord("map_id").asInstanceOf[Int]
       
       val feature = buildFeature( ftRecord, scanInitialIdById, ms2EventIdsByFtId, null, null, mapId )
@@ -79,7 +79,7 @@ trait IMapLoader {
       if( featureColNames == null ) { featureColNames = r.columnNames }
       
       // Build the feature record
-      val ftRecord = featureColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val ftRecord = featureColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       onEachFt( ftRecord )
       
       ()

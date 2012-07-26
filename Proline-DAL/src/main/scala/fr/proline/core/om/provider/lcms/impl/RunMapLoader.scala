@@ -32,7 +32,7 @@ class RunMapLoader( val lcmsDb: LcmsDb,
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the map record
-      val mapRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val mapRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       
       val mapId = mapRecord("id").asInstanceOf[Int]
       val featureScoringId = mapRecord("feature_scoring_id").asInstanceOf[Int]

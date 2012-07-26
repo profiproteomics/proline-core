@@ -20,7 +20,7 @@ class MapSetLoader( val lcmsDb: LcmsDb, val loadPeaks: Boolean = false )  {
     var mapSetRecord: Map[String,Any] = null
     lcmsDbTx.selectAndProcess( "SELECT * FROM map_set WHERE id = " + mapSetId  ) { r => 
         if( mapSetcolNames == null ) { mapSetcolNames = r.columnNames }
-        mapSetRecord = mapSetcolNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+        mapSetRecord = mapSetcolNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
         ()
       }
     if( mapSetRecord == null ) throw new Exception("can't find a map set with id="+mapSetId)
