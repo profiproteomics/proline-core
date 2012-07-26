@@ -18,12 +18,13 @@ import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.service.IService
 //import scala.collection.mutable.Map
 
-class ResultFileImporter( projectId: Int,
+class ResultFileImporter( dbMgnt: DatabaseManagement,
+                          projectId: Int,
                           resultIdentFile: File,
                           fileType: String,
                           providerKey: String,
                           instrumentConfigId: Int,
-                          storeResultSet: Boolean = true, dbMgnt:DatabaseManagement ) extends IService with Logging {
+                          storeResultSet: Boolean = true ) extends IService with Logging {
   
   private var targetResultSetId: Int = 0
   
@@ -115,10 +116,7 @@ class ResultFileImporter( projectId: Int,
     // Load the instrument configuration record
     udsDb.getOrCreateTransaction.selectAndProcess( "SELECT * FROM instrument_config WHERE id=" + instrumentConfigId ) { r => 
       if( udsInstConfigColNames == null ) { udsInstConfigColNames = r.columnNames }      
-      udsInstConfigRecord = udsInstConfigColNames.map( colName => ( colName -> 
-    		  	{  val value : Option[Any]= r.nextObject
-    		  	  if(value == None) null else value.get    		  	  
-    		  	}) ).toMap      
+      udsInstConfigRecord = udsInstConfigColNames.map { colName => ( colName -> r.nextObject.getOrElse(null) ) } toMap      
     }
     
     val instrumentId: Int = udsInstConfigRecord("instrument_id").asInstanceOf[AnyVal]    
