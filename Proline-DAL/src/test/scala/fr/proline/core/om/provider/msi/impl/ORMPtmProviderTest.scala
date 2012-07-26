@@ -77,7 +77,21 @@ class ORMPtmProviderTest extends DatabaseTestCase {
      assertThat(ptmDefs(0).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
      assertSame(ptmDefs(1), None);
   }
-  
+    
+      @Test
+  def getPtmSpecificitiesWithNonExistant2()= {
+	 val ids = new ArrayBuffer[Int]
+  	 ids +=9879 
+  	 ids += 7
+  	 
+  	 val ptmDefs : Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
+     assertThat(ptmDefs, CoreMatchers.notNullValue());
+     assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
+     assertNotSame(ptmDefs(1), None);         
+     assertThat(ptmDefs(1).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
+     assertSame(ptmDefs(0), None);
+  }
+      
   @Test
   def getSinglePtmSpecificities()= {
 
