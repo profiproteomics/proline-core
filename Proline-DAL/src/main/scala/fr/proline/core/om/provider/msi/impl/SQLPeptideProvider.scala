@@ -8,11 +8,13 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
+import com.weiglewilczek.slf4s.Logging
 
-class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPeptideProvider {
+class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPeptideProvider with Logging {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
+   
   
   /** Returns a map of peptide PTMs grouped by the peptide id */
   def getPeptidePtmRecordsByPepId( peptideIds: Seq[Int] ): Map[Int,Array[Map[String,Any]]] = {
@@ -36,7 +38,11 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
         if( colNames == null ) { colNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptidePtmRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+        val peptidePtmRecord = colNames.map( colName => {
+          val colValue = r.nextObject
+          ( colName -> (if(colValue==None) null else colValue.get) )
+          
+        }).toMap
         pepPtmRecords += peptidePtmRecord
         
         // Map the record by its id
@@ -111,7 +117,11 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
         if( pepColNames == null ) { pepColNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+        val peptideRecord = pepColNames.map( colName =>  {
+          val colValue = r.nextObject
+          ( colName -> (if(colValue==None) null else colValue.get) )
+          
+        }).toMap
         pepRecords += peptideRecord
         
         // Map the record by its id    
@@ -169,7 +179,11 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
         if( pepColNames == null ) { pepColNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+                   
+        val peptideRecord = pepColNames.map( colName => {
+        	val colValue = r.nextObject
+			( colName -> (if(colValue==None) null else colValue.get) ) 
+        }).toMap
         pepRecords += peptideRecord
         
         // Map the record by its id    
