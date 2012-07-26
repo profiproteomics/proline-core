@@ -4,7 +4,7 @@ import java.io.File
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.core.dal.DatabaseManagment
+import fr.proline.core.dal.DatabaseManagement
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.dal.UdsDb
 import fr.proline.core.om.model.msi.IResultFile
@@ -23,7 +23,7 @@ class ResultFileImporter( projectId: Int,
                           fileType: String,
                           providerKey: String,
                           instrumentConfigId: Int,
-                          storeResultSet: Boolean = true, dbMgnt:DatabaseManagment ) extends IService with Logging {
+                          storeResultSet: Boolean = true, dbMgnt:DatabaseManagement ) extends IService with Logging {
   
   private var targetResultSetId: Int = 0
   

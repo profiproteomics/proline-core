@@ -19,7 +19,7 @@ import org.hamcrest.CoreMatchers
 
 class DatabaseManagmentTest extends JUnitSuite  with Logging {
      
-  var dbMgnt:DatabaseManagment = null
+  var dbMgnt:DatabaseManagement = null
   protected var em:EntityManager = null
   protected var emf:EntityManagerFactory = null
   
@@ -42,7 +42,7 @@ class DatabaseManagmentTest extends JUnitSuite  with Logging {
     em = emf.createEntityManager();
     DatabaseUtils.loadDataSet(udsConnector, "/fr/proline/core/om/uds/UDS_Simple_Dataset.xml");
     udsConnector.getDatabaseTester().onSetup();
-    dbMgnt = new DatabaseManagment(udsConnector)
+    dbMgnt = new DatabaseManagement(udsConnector)
   }
   
 

@@ -10,7 +10,7 @@ import fr.proline.core.dal.{MsiDb,PsDb}
 import fr.proline.core.dal.MsiDbResultSetTable
 import fr.proline.core.utils.sql.BoolToSQLStr
 import fr.proline.core.om.model.msi._
-import fr.proline.core.dal.DatabaseManagment
+import fr.proline.core.dal.DatabaseManagement
 import fr.proline.repository.DatabaseConnector
 
 trait IRsStorer extends Logging {
@@ -50,7 +50,7 @@ object RsStorer {
   import fr.proline.core.om.storer.msi.impl.PgRsStorer
   import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer
 
-  def apply(dbMgmt: DatabaseManagment, msiDb: MsiDb): RsStorer = {
+  def apply(dbMgmt: DatabaseManagement, msiDb: MsiDb): RsStorer = {
     msiDb.config.driver match {
     case "org.postgresql.Driver" => new RsStorer( dbMgmt, new PgRsStorer( msiDb ) )
     case "org.sqlite.JDBC" => new RsStorer( dbMgmt, new SQLiteRsStorer(msiDb ))
@@ -58,7 +58,7 @@ object RsStorer {
     }
   }
   
-  def apply(dbMgmt: DatabaseManagment, projectID: Int): RsStorer = {
+  def apply(dbMgmt: DatabaseManagement, projectID: Int): RsStorer = {
     val msiDbConnector = dbMgmt.getMSIDatabaseConnector(projectID,false)
     msiDbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME) match {
     case "org.postgresql.Driver" => new RsStorer( dbMgmt, new PgRsStorer( new MsiDb(MsiDb.getConfigFromDatabaseConnector(msiDbConnector))) )
@@ -71,7 +71,7 @@ object RsStorer {
 
 
 
-class RsStorer( dbMgmt: DatabaseManagment, private val _storer: IRsStorer ) extends Logging {
+class RsStorer( dbMgmt: DatabaseManagement, private val _storer: IRsStorer ) extends Logging {
   
   import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._

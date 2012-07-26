@@ -15,7 +15,7 @@ import fr.proline.repository.ProlineRepository.DriverType
 import com.weiglewilczek.slf4s.Logging
 import scala.collection.mutable.HashMap
 
-class DatabaseManagment (val udsDBConnector : DatabaseConnector ) extends Logging {
+class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Logging {
    
 	private var externalDbIdToDBConnector : Map[Int, DatabaseConnector] = new HashMap[Int, DatabaseConnector] 
   
