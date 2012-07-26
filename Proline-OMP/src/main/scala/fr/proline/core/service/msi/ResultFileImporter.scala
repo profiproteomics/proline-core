@@ -1,35 +1,49 @@
 package fr.proline.core.service.msi
 
 import java.io.File
+
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.{MsiDb,UdsDb}
-import fr.proline.core.om.model.msi.{Instrument,InstrumentConfig,IResultFile,IResultFileProvider,ResultFileProviderRegistry}
-import fr.proline.core.om.storer.msi.{MsiSearchStorer,PeaklistStorer,RsStorer}
+
+import fr.proline.core.dal.DatabaseManagment
+import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.UdsDb
+import fr.proline.core.om.model.msi.IResultFile
+import fr.proline.core.om.model.msi.IResultFileProvider
+import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.core.om.model.msi.ResultFileProviderRegistry
+import fr.proline.core.om.storer.msi.MsiSearchStorer
+import fr.proline.core.om.storer.msi.PeaklistStorer
+import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.service.IService
+//import scala.collection.mutable.Map
 
 class ResultFileImporter( projectId: Int,
-                          fileLocation: File,
+                          resultIdentFile: File,
                           fileType: String,
                           providerKey: String,
                           instrumentConfigId: Int,
-                          storeResultSet: Boolean = true ) extends IService with Logging {
+                          storeResultSet: Boolean = true, dbMgnt:DatabaseManagment ) extends IService with Logging {
   
   private var targetResultSetId: Int = 0
-  private val msiDb = new MsiDb( MsiDb.getDefaultConfig ) // TODO: retrieve from UDS-DB
-  private val udsDb = new UdsDb( UdsDb.getDefaultConfig ) // TODO: retrieve from UDS-DB
+  
+  private val misDbConnector =dbMgnt.getMSIDatabaseConnector(projectId, false)
+  private val msiDb = new MsiDb( MsiDb.getConfigFromDatabaseConnector(misDbConnector) ) 
+  private val udsDb = new UdsDb( UdsDb.getConfigFromDatabaseManagement(dbMgnt))
+
   
   def getTargetResultSetId = targetResultSetId
   
   def runService(): Boolean = {
     
     // Check that a file is provided
-    if (fileLocation == null)
+    if (resultIdentFile == null)
       throw new IllegalArgumentException("ResultFileImporter service: No file specified.")
     
     // Retrieve the instrument configuration
     val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
 
-    logger.info(" Run service " + fileType + " ResultFileImporter on " + fileLocation.getAbsoluteFile())
+    logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
     
     // Get Right ResultFile provider
     val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get( fileType )
@@ -37,12 +51,12 @@ class ResultFileImporter( projectId: Int,
       throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
 
     // Open the result file
-    val resultFile = rfProvider.get.getResultFile( fileLocation, providerKey )
+    val resultFile = rfProvider.get.getResultFile( resultIdentFile, providerKey )
     
     // Instantiate some storers
     val msiSearchStorer = MsiSearchStorer( msiDb )
     val peaklistStorer = PeaklistStorer( msiDb )
-    val rsStorer = RsStorer( msiDb )
+    val rsStorer = RsStorer(dbMgnt, msiDb )
         
     // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
@@ -101,7 +115,10 @@ class ResultFileImporter( projectId: Int,
     // Load the instrument configuration record
     udsDb.getOrCreateTransaction.selectAndProcess( "SELECT * FROM instrument_config WHERE id=" + instrumentConfigId ) { r => 
       if( udsInstConfigColNames == null ) { udsInstConfigColNames = r.columnNames }      
-      udsInstConfigRecord = udsInstConfigColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap      
+      udsInstConfigRecord = udsInstConfigColNames.map( colName => ( colName -> 
+    		  	{  val value : Option[Any]= r.nextObject
+    		  	  if(value == None) null else value.get    		  	  
+    		  	}) ).toMap      
     }
     
     val instrumentId: Int = udsInstConfigRecord("instrument_id").asInstanceOf[AnyVal]    
