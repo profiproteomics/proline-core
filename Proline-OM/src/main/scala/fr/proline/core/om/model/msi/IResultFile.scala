@@ -31,10 +31,22 @@ trait IResultFileProvider {
 }
 
 object ResultFileProviderRegistry {
-
-  import scala.collection.mutable.HashMap
   
-  private val resultFileProviderByFormat: HashMap[String, IResultFileProvider]= new HashMap[String , IResultFileProvider]()
+  import scala.collection.mutable.HashMap
+  import java.util.ServiceLoader
+  
+  private val resultFileProviderByFormat: HashMap[String, IResultFileProvider]= {
+     val resFileServiceLoader  : ServiceLoader[IResultFileProvider] = ServiceLoader.load(classOf[IResultFileProvider])    
+     var loadedRFProviders = new HashMap[String, IResultFileProvider]()
+	  // Discover and register the available commands
+	 resFileServiceLoader.reload();
+	 val resultFileIterator: java.util.Iterator[IResultFileProvider] = resFileServiceLoader.iterator()
+     while (resultFileIterator.hasNext())	{
+		val nextResFile : IResultFileProvider = resultFileIterator.next()
+		loadedRFProviders.put(nextResFile.fileType, nextResFile)
+	}
+	 loadedRFProviders
+  } 
   
   /**
   * Register specified ResultFile for specified format. 
