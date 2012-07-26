@@ -5,19 +5,19 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
-
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.{MsiDb,PsDb}
 import fr.proline.core.dal.MsiDbResultSetTable
 import fr.proline.core.utils.sql.BoolToSQLStr
 import fr.proline.core.om.model.msi._
+import fr.proline.core.dal.DatabaseManagment
+import fr.proline.repository.DatabaseConnector
 
 trait IRsStorer extends Logging {
   
   val msiDb1: MsiDb // Main MSI db connection
   lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, false, 10000 ) // Secondary MSI db connection
   
-  lazy val psDb = new PsDb( PsDb.getDefaultConfig, false, 10000 )
   val scoringIdByType = new fr.proline.core.dal.helper.MsiDbHelper( msiDb1 ).getScoringIdByType
   
   // TODO: implement as InMemoryProvider
@@ -50,17 +50,28 @@ object RsStorer {
   import fr.proline.core.om.storer.msi.impl.PgRsStorer
   import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer
 
-  // TODO: require a PsDb too
-  def apply(msiDb: MsiDb ): RsStorer = { msiDb.config.driver match {
-    case "org.postgresql.Driver" => new RsStorer( new PgRsStorer( msiDb ) )
-    case "org.sqlite.JDBC" => new RsStorer( new SQLiteRsStorer( msiDb ) )
-    case _ => new RsStorer( new GenericRsStorer( msiDb ) )
+  def apply(dbMgmt: DatabaseManagment, msiDb: MsiDb): RsStorer = {
+    msiDb.config.driver match {
+    case "org.postgresql.Driver" => new RsStorer( dbMgmt, new PgRsStorer( msiDb ) )
+    case "org.sqlite.JDBC" => new RsStorer( dbMgmt, new SQLiteRsStorer(msiDb ))
+    case _ => new RsStorer( dbMgmt, new GenericRsStorer(msiDb ))
     }
   }
+  
+  def apply(dbMgmt: DatabaseManagment, projectID: Int): RsStorer = {
+    val msiDbConnector = dbMgmt.getMSIDatabaseConnector(projectID,false)
+    msiDbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME) match {
+    case "org.postgresql.Driver" => new RsStorer( dbMgmt, new PgRsStorer( new MsiDb(MsiDb.getConfigFromDatabaseConnector(msiDbConnector))) )
+    case "org.sqlite.JDBC" => new RsStorer( dbMgmt, new SQLiteRsStorer( new MsiDb(MsiDb.getConfigFromDatabaseConnector(msiDbConnector) ) ))
+    case _ => new RsStorer( dbMgmt, new GenericRsStorer( new MsiDb(MsiDb.getConfigFromDatabaseConnector(msiDbConnector) ) ))
+    }
+  }
+
 }
 
 
-class RsStorer( private val _storer: IRsStorer ) extends Logging {
+
+class RsStorer( dbMgmt: DatabaseManagment, private val _storer: IRsStorer ) extends Logging {
   
   import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._
@@ -69,7 +80,8 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
   import fr.proline.core.om.model.msi._
   
   val msiDb1 = _storer.msiDb1
-  lazy val psDb = _storer.psDb
+  lazy val psDb = new PsDb(PsDb.getConfigFromDatabaseConnector(dbMgmt.psDBConnector) ) 
+    
   val peptideByUniqueKey = _storer.peptideByUniqueKey
   val proteinBySequence = _storer.proteinBySequence
   
@@ -134,7 +146,7 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
 
     stmt.execute()
     resultSet.id = this.msiDb1.extractGeneratedInt( stmt )
-    
+    logger.debug("Created Result Set with ID "+ resultSet.id)
   }
   
   private def _storeNativeResultSetObjects( resultSet: ResultSet, seqDbIdByTmpId: Map[Int,Int] ): Unit = {
@@ -162,7 +174,7 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
     val nbNewMsiPeptides = newMsiPeptides.length
     if( nbNewMsiPeptides > 0 ) {
       
-      import fr.proline.core.om.provider.ps.impl.SQLPeptideProvider
+      import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
       import fr.proline.core.om.storer.ps.PeptideStorer
       
       val psPeptideProvider = new SQLPeptideProvider( this.psDb )
@@ -225,7 +237,7 @@ class RsStorer( private val _storer: IRsStorer ) extends Logging {
     
     // Store peptide matches
     val peptideMatchCount = this._storer.storeRsPeptideMatches( resultSet )
-    logger.info( "peptideMatchCount peptide matches have been stored !" )
+    logger.info( peptideMatchCount+" peptide matches have been stored !" )
     
     // Retrieve protein matches and their accession numbers
     val proteinMatches = resultSet.proteinMatches
