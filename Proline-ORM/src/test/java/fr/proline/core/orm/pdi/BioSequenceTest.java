@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +21,7 @@ public class BioSequenceTest extends DatabaseTestCase {
       initDatabase();
       initEntityManager("pdidb_production");
       loadDataSet("/fr/proline/core/orm/pdi/Proteins_Dataset.xml");
-      seqRepo = new BioSequenceRepository(em);
+      seqRepo = new BioSequenceRepository(getEntityManager());
 	}
 
 	@After public void tearDown() throws Exception {
@@ -44,6 +45,13 @@ public class BioSequenceTest extends DatabaseTestCase {
 		BioSequence seq = seqRepo.findBioSequence("FFFFFFF", "AA", 9999.0);
 		assertThat(seq, nullValue());
 	}
+	
+	@Test public void findBioSequencePerAccessionAndSeqDB() {
+		BioSequence seq = seqRepo.findBioSequencePerAccessionAndSeqDB("Q6WN28",33 );
+		assertThat(seq, notNullValue());
+		assertThat(seq.getLength(), CoreMatchers.equalTo(146));
+	}
+	
 	public String getSQLScriptLocation() {
 		return "/dbscripts/pdi/h2";
 	}
