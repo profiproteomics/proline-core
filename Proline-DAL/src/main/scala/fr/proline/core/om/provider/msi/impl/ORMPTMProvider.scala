@@ -5,7 +5,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.utils.OMConverterUtil
+import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import fr.proline.core.orm.ps.repository.PtmRepository
 import fr.proline.core.orm.ps.PtmSpecificity
 import javax.persistence.EntityManager
@@ -17,10 +17,10 @@ import scala.collection.JavaConverters.asJavaCollectionConverter
 class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging {
 
   var ptmRepo = new PtmRepository(em) //Created by constructor
-
+  val converter = new PeptidesOMConverterUtil(true)
+  
   def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
     
-	val converter = new OMConverterUtil()
 	var foundPtmDefBuilder = Array.newBuilder[Option[PtmDefinition]]
 	  	
 	val ptmSpecificityORMs = em.createQuery("FROM fr.proline.core.orm.ps.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
@@ -53,7 +53,6 @@ class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging 
   }
 
   def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition] = {
-    val converter = new OMConverterUtil()
     try {
       
     	var ptmSpecificity : PtmSpecificity = null 

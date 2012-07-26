@@ -6,15 +6,15 @@ import javax.persistence.EntityManager
 import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
 import fr.proline.core.om.model.msi.PeptideInstance
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.utils.OMConverterUtil
+import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import scala.collection.mutable.ArrayBuilder
 
 class ORMPeptideInstanceProvider (val em:EntityManager ) extends IPeptideInstanceProvider {
   
 	var protSetRepo : ProteinSetRepositorty = new ProteinSetRepositorty(em) //Created by constructor
- 
+	val converter : PeptidesOMConverterUtil= new PeptidesOMConverterUtil()
+	
 	def getPeptideInstancesAsOptions(pepInstIds: Seq[Int] ): Array[Option[PeptideInstance]] = { 
-	    val converter : OMConverterUtil= new OMConverterUtil()
 	    
 		var foundPepInstBuilder =Array.newBuilder[Option[PeptideInstance]]
 		pepInstIds foreach (id => {		
