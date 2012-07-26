@@ -138,7 +138,7 @@ trait Database {
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the record
-      colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       
     } toArray
     

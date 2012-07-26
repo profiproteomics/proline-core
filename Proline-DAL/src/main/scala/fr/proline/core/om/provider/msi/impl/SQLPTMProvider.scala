@@ -56,7 +56,7 @@ class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
       if( ptmColNames == null ) { ptmColNames = r.columnNames }
       
       // Build the PTM record
-      val ptmRecord = ptmColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val ptmRecord = ptmColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       val ptmId: Int = ptmRecord("id").asInstanceOf[AnyVal]
       ptmMapBuilder += ( ptmId -> ptmRecord )
       
@@ -74,7 +74,7 @@ class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
       
       // Build the PTM record
       var ptmEvidRecord = new collection.mutable.HashMap[String, Any]
-      ptmEvidColNames foreach { colName => ptmEvidRecord.put( colName, r.nextObject.get ) }
+      ptmEvidColNames foreach { colName => ptmEvidRecord.put( colName, r.nextObject.getOrElse(null) ) }
      // var ptmEvidRecord = ptmEvidColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
       
       // Fix is_required boolean field
@@ -97,7 +97,7 @@ class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
       if( ptmSpecifColNames == null ) { ptmSpecifColNames = r.columnNames }
       
       // Build the PTM specificity record
-      val ptmSpecifRecord = ptmSpecifColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val ptmSpecifRecord = ptmSpecifColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       
       // Retrieve corresponding PTM
       val ptmId = ptmSpecifRecord("ptm_id").asInstanceOf[Int]

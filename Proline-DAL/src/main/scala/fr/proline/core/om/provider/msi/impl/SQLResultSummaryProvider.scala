@@ -37,7 +37,7 @@ class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends IResu
     val rsms = msiDbTx.select( "SELECT * FROM result_summary WHERE id IN ("+ rsmIds.mkString(",") +")" ) { r =>
               
       if( rsmColNames == null ) { rsmColNames = r.columnNames }
-      val rsmRecord = rsmColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val rsmRecord = rsmColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       
       // Retrieve some vars
       val rsmId: Int = rsmRecord(RSMCols.id).asInstanceOf[AnyVal]

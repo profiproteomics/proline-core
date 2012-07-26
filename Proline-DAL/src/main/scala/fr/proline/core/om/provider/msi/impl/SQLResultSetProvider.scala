@@ -38,7 +38,7 @@ class SQLResultSetProvider( val msiDb: MsiDb,
     val resultSets = msiDbTx.select( "SELECT * FROM result_set WHERE id IN ("+ rsIds.mkString(",") +")" ) { r =>
               
       if( rsColNames == null ) { rsColNames = r.columnNames }
-      val resultSetRecord = rsColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val resultSetRecord = rsColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       
       // Retrieve some vars
       val rsId: Int = resultSetRecord(RSCols.id).asInstanceOf[AnyVal]

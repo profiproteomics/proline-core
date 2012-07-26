@@ -29,7 +29,7 @@ class SQLProteinMatchProvider( val msiDb: MsiDb ) { //extends IProteinMatchProvi
     val seqMatcheRecords = msiDbTx.select( "SELECT * FROM sequence_match WHERE result_set_id IN (" +
                                            rsIds.mkString(",") +")" ) { r => 
       if( seqMatchColNames == null ) { seqMatchColNames = r.columnNames }
-      seqMatchColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      seqMatchColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
       
     }
     
@@ -54,7 +54,7 @@ class SQLProteinMatchProvider( val msiDb: MsiDb ) { //extends IProteinMatchProvi
                  rsIds.mkString(",") +")" ) { r =>
               
         if( protMatchColNames == null ) { protMatchColNames = r.columnNames }
-        val protMatchRecord = protMatchColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+        val protMatchRecord = protMatchColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
         
         val protMatchId: Int = protMatchRecord(ProtMatchCols.id).asInstanceOf[AnyVal]
         
