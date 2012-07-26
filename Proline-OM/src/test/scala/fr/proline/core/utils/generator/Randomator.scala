@@ -4,9 +4,9 @@ import scala.util.Random
 
 object Randomator {
 
-    val accessionChars = ('A' to 'Z') ++ ('0' to '9')
-	val commonAA = "ANDCEQGHILMFPSTWYV" //Common amino acid residues (peptide sequence)
-	val trypsicAA = "RK" //trypsic amino acid
+    val accessionChars:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	val commonAA:String = "ANDCEQGHILMFPSTWYV" //Common amino acid residues (peptide sequence)
+	val trypsicAA:String = "RK" //trypsic amino acid
 	  
 	//Sequence size  
 	val minSeqSize:Int = 8
@@ -17,7 +17,7 @@ object Randomator {
 	val maxPepMatchScore:Float = 120.0f
 	
 	
-    def aaSequence():String = { aaSequence(minSeqSize, maxSeqSize) } 
+    def aaSequence():String = { aaSequence(minSeqSize, maxSeqSize) }   
 	def aaSequence(lengthMin:Int, lengthMax:Int):String = {
 	  randomString(commonAA, lengthMin, lengthMax-1)+randomString(trypsicAA, 1, 1)	  	  
 	} 
@@ -25,7 +25,7 @@ object Randomator {
 	  randomDouble(minPepMatchScore, maxPepMatchScore).asInstanceOf[Float]
 	}
 	def protAccession():String = {	 
-	  randomString(chars=accessionChars.toString, lengthMin=8, lengthMax=12)
+	  randomString(chars=accessionChars, lengthMin=8, lengthMax=12)
 	}
 	def pepCharge():Int = {
 	  randomInt(1, 3)
@@ -34,7 +34,7 @@ object Randomator {
 	/**
 	 * Generic methods
 	 */  	
-	private def randomString(chars:String, lengthMin:Int, lengthMax:Int) : String = {	  	
+	def randomString(chars:String, lengthMin:Int, lengthMax:Int) : String = {	  	
 	    val length = randomInt(lengthMin,lengthMax)
   		val newKey = (1 to length).map(
   			x => {
@@ -45,7 +45,7 @@ object Randomator {
   		newKey
 	}
 	
-	private def randomInt(minInclu:Int, maxInclu:Int) : Int = {	  	  
+	def randomInt(minInclu:Int, maxInclu:Int) : Int = {	  	  
 	  require(minInclu<=maxInclu)
 	  if (minInclu == maxInclu)
 	    minInclu
@@ -53,7 +53,7 @@ object Randomator {
 	      Random.nextInt(maxInclu+1-minInclu)+minInclu
 	}
 	
-	private def randomDouble(minInclu:Double, maxExclu:Double) : Double = {
+	def randomDouble(minInclu:Double, maxExclu:Double) : Double = {
 	  require(minInclu<=maxExclu)
 	  if (minInclu == maxExclu)
 	    minInclu

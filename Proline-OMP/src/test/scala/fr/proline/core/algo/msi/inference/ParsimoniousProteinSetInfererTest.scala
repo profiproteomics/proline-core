@@ -10,17 +10,17 @@ import fr.proline.core.utils.generator.ResultSetFakeBuilder
 @Test
 class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
 	
-  val nbProt:Int = 2
-  val nbPep:Int = 10
+  val proNb:Int = 2
+  val pepNb:Int = 10
   	
 	@Test
 	def simpleCheckWithGenData() = {
-	  var rs:ResultSet = new ResultSetFakeBuilder(nbPep=nbPep, nbProt=nbProt).rs
+	  var rs:ResultSet = new ResultSetFakeBuilder(pepNb=pepNb, proNb=proNb).rs
 	  var ppsi = new ParsimoniousProteinSetInferer()
 	  var rsu = ppsi.computeResultSummary(resultSet=rs) 
 	  assert(rsu != null)
 	  assert(rsu.peptideSets.length==2)
-	  assert(rsu.proteinSets.length==nbProt)	  
+	  assert(rsu.proteinSets.length==proNb)	  
 	}
 
 }
