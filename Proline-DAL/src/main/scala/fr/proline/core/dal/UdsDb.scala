@@ -26,7 +26,7 @@ object UdsDb {
     sqlFormatter = SQLFormatter.HSQLDBSQLFormatter
     )
     
-  def getConfigFromDatabaseManagement(dbMgnt: DatabaseManagment) : DatabaseConfig =   { 
+  def getConfigFromDatabaseManagement(dbMgnt: DatabaseManagement) : DatabaseConfig =   { 
 	 DatabaseConfig (    
 			 driver = dbMgnt.udsDBConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME),
 			 jdbcURL = dbMgnt.udsDBConnector.getProperty(DatabaseConnector.PROPERTY_URL),

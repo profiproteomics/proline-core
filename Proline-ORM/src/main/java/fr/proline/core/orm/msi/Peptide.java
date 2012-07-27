@@ -1,73 +1,104 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 
 /**
  * The persistent class for the peptide database table.
  * 
  */
-@Entity(name="fr.proline.core.orm.msi.Peptide")
+@Entity(name = "fr.proline.core.orm.msi.Peptide")
+@NamedQueries({
+	@NamedQuery(name = "findMsiPepsBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p where lower(p.sequence) = :seq "),
+
+	@NamedQuery(name = "findMsiPeptBySeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr))"),
+
+	@NamedQuery(name = "findMsiPeptBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p where (lower(p.sequence) = :seq) and (p.ptmString is null)") })
 public class Peptide implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    @Id
+    // MSI Peptide Id are not genereted (taken from Ps Peptide entity)
+    private Integer id;
 
-	@Column(name="calculated_mass")
-	private double calculatedMass;
+    @Column(name = "calculated_mass")
+    private double calculatedMass;
 
-	@Column(name="ptm_string")
-	private String ptmString;
+    @Column(name = "ptm_string")
+    private String ptmString;
 
-	private String sequence;
+    private String sequence;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
     public Peptide() {
     }
 
-	public Integer getId() {
-		return this.id;
+    /**
+     * Create a Msi Peptide entity from a Ps Peptide entity. Created Msi Peptide entity shares the same Id
+     * with given Ps Peptide.
+     * 
+     * @param psPeptide
+     *            Peptide entity from psDb used to initialize Msi Peptide fields (must nor be
+     *            <code>null</code>)
+     */
+    public Peptide(final fr.proline.core.orm.ps.Peptide psPeptide) {
+
+	if (psPeptide == null) {
+	    throw new IllegalArgumentException("PsPeptide is null");
 	}
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+	setId(psPeptide.getId());
+	setSequence(psPeptide.getSequence());
+	setPtmString(psPeptide.getPtmString());
+	setCalculatedMass(psPeptide.getCalculatedMass());
+	setSerializedProperties(psPeptide.getSerializedProperties());
+    }
 
-	public double getCalculatedMass() {
-		return this.calculatedMass;
-	}
+    public Integer getId() {
+	return this.id;
+    }
 
-	public void setCalculatedMass(double calculatedMass) {
-		this.calculatedMass = calculatedMass;
-	}
+    public void setId(Integer id) {
+	this.id = id;
+    }
 
-	public String getPtmString() {
-		return this.ptmString;
-	}
+    public double getCalculatedMass() {
+	return this.calculatedMass;
+    }
 
-	public void setPtmString(String ptmString) {
-		this.ptmString = ptmString;
-	}
+    public void setCalculatedMass(double calculatedMass) {
+	this.calculatedMass = calculatedMass;
+    }
 
-	public String getSequence() {
-		return this.sequence;
-	}
+    public String getPtmString() {
+	return this.ptmString;
+    }
 
-	public void setSequence(String sequence) {
-		this.sequence = sequence;
-	}
+    public void setPtmString(String ptmString) {
+	this.ptmString = ptmString;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSequence() {
+	return this.sequence;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSequence(String sequence) {
+	this.sequence = sequence;
+    }
+
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
+
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
 }
