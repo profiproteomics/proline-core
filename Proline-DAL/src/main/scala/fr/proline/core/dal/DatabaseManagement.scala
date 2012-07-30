@@ -17,7 +17,8 @@ import scala.collection.mutable.HashMap
 
 class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Logging {
    
-	private var externalDbIdToDBConnector : Map[Int, DatabaseConnector] = new HashMap[Int, DatabaseConnector] 
+  private val driverClassName = udsDBConnector.getDriverType.getDriverClassName()
+	private val externalDbIdToDBConnector : Map[Int, DatabaseConnector] = new HashMap[Int, DatabaseConnector] 
   
 	private lazy val udsEMF : EntityManagerFactory  = {
 		//Create Link to UDSDb
@@ -25,21 +26,27 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 		emf
 	}
 	
+	private def externalDbToDbConnector( extDb: ExternalDb ): DatabaseConnector = {
+	  
+	  // TODO: retrieve driver class name from serialized properties
+	  
+    val properties = new HashMap[String, String]
+    properties += DatabaseConnector.PROPERTY_USERNAME -> Option(extDb.getDbUser).getOrElse("")
+    properties += DatabaseConnector.PROPERTY_PASSWORD-> Option(extDb.getDbPassword).getOrElse("")
+    properties += DatabaseConnector.PROPERTY_DRIVERCLASSNAME -> this.driverClassName
+    properties += DatabaseConnector.PROPERTY_URL -> createURL(extDb)
+	  
+    new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(properties))
+	}
+	
 	lazy val pdiDBConnector : DatabaseConnector = {
 		val udsEM = udsEMF.createEntityManager()
 		val query : TypedQuery[ExternalDb] = udsEM.createQuery("Select exDB from ExternalDb exDB where exDB.type = :type", classOf[ExternalDb])
 		query.setParameter("type", "pdi")
 		val pdiDB = query.getSingleResult
-		udsEM.close		
-		var propBuilder = Map.newBuilder[String, String]
-		propBuilder += DatabaseConnector.PROPERTY_USERNAME ->pdiDB.getDbUser
-		propBuilder += DatabaseConnector.PROPERTY_PASSWORD->pdiDB.getDbPassword
-		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->udsDBConnector.getDriverType.getDriverClassName()
-		propBuilder += DatabaseConnector.PROPERTY_URL ->createURL(pdiDB)
+		udsEM.close
 		
-		 
-		val pdiConn = new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(propBuilder.result))
-		pdiConn
+		externalDbToDbConnector(pdiDB)
 		
 	}
   
@@ -47,16 +54,10 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 		val udsEM = udsEMF.createEntityManager()
 		val query : TypedQuery[ExternalDb] = udsEM.createQuery("Select exDB from ExternalDb exDB where exDB.type = :type", classOf[ExternalDb])
 		query.setParameter("type", "ps")
-		val pdiDB = query.getSingleResult
+		val psDB = query.getSingleResult
 		udsEM.close
 		
-		var propBuilder = Map.newBuilder[String, String]
-		propBuilder += DatabaseConnector.PROPERTY_USERNAME -> pdiDB.getDbUser
-		propBuilder += DatabaseConnector.PROPERTY_PASSWORD -> pdiDB.getDbPassword
-		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME -> udsDBConnector.getDriverType.getDriverClassName()
-		propBuilder += DatabaseConnector.PROPERTY_URL -> createURL(pdiDB)
-		 
-		new DatabaseConnector( JavaConversions.mutableMapAsJavaMap(propBuilder.result) )
+		externalDbToDbConnector(psDB)
 	}
 	
 	def getMSIDatabaseConnector(projectID : Int, createNew : Boolean = false) : DatabaseConnector = {	  
@@ -87,15 +88,8 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 	  if(createNew)
 	    externalDbIdToDBConnector -= msiDB.getId
 	    
-	  if(!externalDbIdToDBConnector.contains(msiDB.getId)) {
-	  
-		var properties = new HashMap[String, String]
-		properties += DatabaseConnector.PROPERTY_USERNAME -> Option(msiDB.getDbUser).getOrElse("")
-		properties += DatabaseConnector.PROPERTY_PASSWORD-> Option(msiDB.getDbPassword).getOrElse("")
-		properties += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->udsDBConnector.getDriverType.getDriverClassName()
-		properties += DatabaseConnector.PROPERTY_URL -> createURL(msiDB)
-		
-		externalDbIdToDBConnector.put(msiDB.getId,new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(properties)))
+	  if( !externalDbIdToDBConnector.contains(msiDB.getId) ) {	  
+  		externalDbIdToDBConnector.put(msiDB.getId,externalDbToDbConnector(msiDB) )
 	  }
 	  
 	  externalDbIdToDBConnector(msiDB.getId)
