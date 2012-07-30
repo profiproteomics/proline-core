@@ -28,10 +28,9 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
   
   private var targetResultSetId: Int = 0
   
-  private val misDbConnector =dbMgnt.getMSIDatabaseConnector(projectId, false)
-  private val msiDb = new MsiDb( MsiDb.getConfigFromDatabaseConnector(misDbConnector) ) 
-  private val udsDb = new UdsDb( UdsDb.getConfigFromDatabaseManagement(dbMgnt))
-
+  private val msiDbConnector = dbMgnt.getMSIDatabaseConnector(projectId, false)
+  private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) 
+  private val udsDb = new UdsDb( UdsDb.buildConfigFromDatabaseManagement(dbMgnt) )
   
   def getTargetResultSetId = targetResultSetId
   

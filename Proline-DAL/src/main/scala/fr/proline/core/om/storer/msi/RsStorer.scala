@@ -61,9 +61,9 @@ object RsStorer {
   def apply(dbMgmt: DatabaseManagement, projectID: Int): RsStorer = {
     val msiDbConnector = dbMgmt.getMSIDatabaseConnector(projectID,false)
     msiDbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME) match {
-    case "org.postgresql.Driver" => new RsStorer( dbMgmt, new PgRsStorer( new MsiDb(MsiDb.getConfigFromDatabaseConnector(msiDbConnector))) )
-    case "org.sqlite.JDBC" => new RsStorer( dbMgmt, new SQLiteRsStorer( new MsiDb(MsiDb.getConfigFromDatabaseConnector(msiDbConnector) ) ))
-    case _ => new RsStorer( dbMgmt, new GenericRsStorer( new MsiDb(MsiDb.getConfigFromDatabaseConnector(msiDbConnector) ) ))
+    case "org.postgresql.Driver" => new RsStorer( dbMgmt, new PgRsStorer( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector))) )
+    case "org.sqlite.JDBC" => new RsStorer( dbMgmt, new SQLiteRsStorer( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) ))
+    case _ => new RsStorer( dbMgmt, new GenericRsStorer( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) ))
     }
   }
 
@@ -80,7 +80,7 @@ class RsStorer( dbMgmt: DatabaseManagement, private val _storer: IRsStorer ) ext
   import fr.proline.core.om.model.msi._
   
   val msiDb1 = _storer.msiDb1
-  lazy val psDb = new PsDb(PsDb.getConfigFromDatabaseConnector(dbMgmt.psDBConnector) ) 
+  lazy val psDb = new PsDb(PsDb.buildConfigFromDatabaseConnector(dbMgmt.psDBConnector) ) 
     
   val peptideByUniqueKey = _storer.peptideByUniqueKey
   val proteinBySequence = _storer.proteinBySequence

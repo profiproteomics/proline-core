@@ -2,7 +2,7 @@ package fr.proline.core.dal
 
 import net.noerd.prequel._
 
-object PdiDb {
+object PdiDb extends DatabaseConfigBuilder {
   
   def apply( projectId: Int ): PdiDb = {    
     val psDbConfig = this.getDefaultConfig

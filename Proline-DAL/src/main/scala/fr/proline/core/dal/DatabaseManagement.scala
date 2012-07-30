@@ -51,28 +51,32 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 		udsEM.close
 		
 		var propBuilder = Map.newBuilder[String, String]
-		propBuilder += DatabaseConnector.PROPERTY_USERNAME ->pdiDB.getDbUser
-		propBuilder += DatabaseConnector.PROPERTY_PASSWORD->pdiDB.getDbPassword
-		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->udsDBConnector.getDriverType.getDriverClassName()
-		propBuilder += DatabaseConnector.PROPERTY_URL ->createURL(pdiDB)
-		
+		propBuilder += DatabaseConnector.PROPERTY_USERNAME -> pdiDB.getDbUser
+		propBuilder += DatabaseConnector.PROPERTY_PASSWORD -> pdiDB.getDbPassword
+		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME -> udsDBConnector.getDriverType.getDriverClassName()
+		propBuilder += DatabaseConnector.PROPERTY_URL -> createURL(pdiDB)
 		 
-		val pdiConn = new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(propBuilder.result))
-		pdiConn
+		new DatabaseConnector( JavaConversions.mutableMapAsJavaMap(propBuilder.result) )
 	}
 	
 	def getMSIDatabaseConnector(projectID : Int, createNew : Boolean = false) : DatabaseConnector = {	  
 	  var msiDB: ExternalDb = null
 	  try {
-		val udsEM = udsEMF.createEntityManager()
-		val query : TypedQuery[Project] = udsEM.createQuery("Select prj from Project prj where prj.id =  :id", classOf[Project])
-		query.setParameter("id", projectID)		
-		val project = query.getSingleResult
-		val assocMSI = JavaConversions.asScalaSet(project.getExternalDatabases).filter(p => {p.getType.equals("msi")})
-		udsEM.close
-		if(assocMSI.size>1)
-		  throw new javax.persistence.NonUniqueResultException("Multiple MSI databases associated to this project")
-		msiDB = assocMSI.iterator.next
+  		val udsEM = udsEMF.createEntityManager()
+  		val query : TypedQuery[Project] = udsEM.createQuery("Select prj from Project prj where prj.id =  :id", classOf[Project])
+  		query.setParameter("id", projectID)		
+  		val project = query.getSingleResult
+  		val assocMSIdbs = JavaConversions.asScalaSet(project.getExternalDatabases).filter(p => {p.getType == "msi"}).toList
+  		udsEM.close
+  		
+  		if(assocMSIdbs.size>1) {
+  		  throw new javax.persistence.NonUniqueResultException("Multiple MSI databases associated to this project")
+  		} else if( assocMSIdbs.size == 0 ) {
+        throw new Exception("no MSIdb is linked to this project")
+  		}
+  		
+		  msiDB = assocMSIdbs(0)
+		
 	  } catch {
 	    case nre:NoResultException  =>  {
 	      logger.warn("NoResultException  "+ nre.getMessage)
@@ -85,13 +89,13 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 	    
 	  if(!externalDbIdToDBConnector.contains(msiDB.getId)) {
 	  
-		var propBuilder = Map.newBuilder[String, String]
-		propBuilder += DatabaseConnector.PROPERTY_USERNAME ->msiDB.getDbUser
-		propBuilder += DatabaseConnector.PROPERTY_PASSWORD->msiDB.getDbPassword
-		propBuilder += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->udsDBConnector.getDriverType.getDriverClassName()
-		propBuilder += DatabaseConnector.PROPERTY_URL ->createURL(msiDB)
-				 
-		externalDbIdToDBConnector.put(msiDB.getId,new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(propBuilder.result)))
+		var properties = new HashMap[String, String]
+		properties += DatabaseConnector.PROPERTY_USERNAME -> Option(msiDB.getDbUser).getOrElse("")
+		properties += DatabaseConnector.PROPERTY_PASSWORD-> Option(msiDB.getDbPassword).getOrElse("")
+		properties += DatabaseConnector.PROPERTY_DRIVERCLASSNAME ->udsDBConnector.getDriverType.getDriverClassName()
+		properties += DatabaseConnector.PROPERTY_URL -> createURL(msiDB)
+		
+		externalDbIdToDBConnector.put(msiDB.getId,new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(properties)))
 	  }
 	  
 	  externalDbIdToDBConnector(msiDB.getId)
@@ -112,7 +116,7 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 		  
 		  case "MEMORY" => {
 		    udsDBConnector.getDriverType match {
-		      case DriverType.SQLITE => URLbuilder.append("memory:")
+		      case DriverType.SQLITE => URLbuilder.append(":memory:")
 		      case _ =>  URLbuilder.append("mem:").append(externalDB.getDbName)		        		      			      
 		    }
 		  }

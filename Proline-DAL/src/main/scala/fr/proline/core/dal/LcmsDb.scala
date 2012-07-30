@@ -2,7 +2,7 @@ package fr.proline.core.dal
 
 import net.noerd.prequel._
 
-object LcmsDb {
+object LcmsDb extends DatabaseConfigBuilder {
   
   def apply( projectId: Int ): LcmsDb = {
     

@@ -1,13 +1,16 @@
 package fr.proline.core.dal
 
 import net.noerd.prequel._
-import fr.proline.repository.DatabaseConnector
 
-object UdsDb {
+object UdsDb extends DatabaseConfigBuilder {
   
   def apply( projectId: Int ): UdsDb = {
     val psDbConfig = this.getDefaultConfig
     new UdsDb( psDbConfig )
+  }
+  
+  def buildConfigFromDatabaseManagement(dbMgnt: DatabaseManagement): DatabaseConfig = {
+    this.buildConfigFromDatabaseConnector( dbMgnt.udsDBConnector )
   }
   
   /*def getDefaultConfig = DatabaseConfig(
@@ -21,19 +24,11 @@ object UdsDb {
     
   def getDefaultConfig = DatabaseConfig(
     driver = "org.sqlite.JDBC",
-    jdbcURL = "jdbc:sqlite:E:/eclipse/workspace/proline-core/src/main/resources/uds-db.sqlite",
+    jdbcURL = "jdbc:sqlite:D:/proline/data/uds-db.sqlite",
     isolationLevel = IsolationLevels.Serializable,
     sqlFormatter = SQLFormatter.HSQLDBSQLFormatter
     )
-    
-  def getConfigFromDatabaseManagement(dbMgnt: DatabaseManagement) : DatabaseConfig =   { 
-	 DatabaseConfig (    
-			 driver = dbMgnt.udsDBConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME),
-			 jdbcURL = dbMgnt.udsDBConnector.getProperty(DatabaseConnector.PROPERTY_URL),
-			 username =  dbMgnt.udsDBConnector.getProperty(DatabaseConnector.PROPERTY_USERNAME), 
-			 password =  dbMgnt.udsDBConnector.getProperty(DatabaseConnector.PROPERTY_PASSWORD), 				
-			 sqlFormatter = SQLFormatter.HSQLDBSQLFormatter   )
-  }
+  
 }
 
 class UdsDb( val config: DatabaseConfig,

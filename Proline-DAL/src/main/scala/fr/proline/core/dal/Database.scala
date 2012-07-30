@@ -7,6 +7,31 @@ import net.noerd.prequel.DoubleFormattable
 import net.noerd.prequel.StringFormattable
 import net.noerd.prequel.SQLFormatter
 import org.apache.commons.lang3.StringUtils.isEmpty
+import fr.proline.repository.DatabaseConnector
+
+trait DatabaseConfigBuilder {
+  
+  def buildConfigFromDatabaseConnector(dbConnector: DatabaseConnector): DatabaseConfig = {
+    
+    val driverType = dbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME)
+    DatabaseConfig (    
+       driver = driverType,
+       jdbcURL = dbConnector.getProperty(DatabaseConnector.PROPERTY_URL),
+       username =  dbConnector.getProperty(DatabaseConnector.PROPERTY_USERNAME), 
+       password =  dbConnector.getProperty(DatabaseConnector.PROPERTY_PASSWORD),
+       isolationLevel = this.getTxIsolationLevel( driverType ),
+       sqlFormatter = SQLFormatter.HSQLDBSQLFormatter
+       )
+  }
+  
+  protected def getTxIsolationLevel( driverName: String ): TransactionIsolation = {   
+    driverName match {
+      case "org.sqlite.JDBC" => IsolationLevels.Serializable
+      case _ => IsolationLevels.ReadCommitted
+    }
+  }
+  
+}
 
 trait Database {
   
