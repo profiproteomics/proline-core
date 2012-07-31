@@ -7,6 +7,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Enzyme;
 import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.utils.StringUtils;
 
 public class MsiEnzymeRepository extends JPARepository {
 
@@ -16,8 +17,8 @@ public class MsiEnzymeRepository extends JPARepository {
 
     public Enzyme findEnzymeByName(final String enzymeName) {
 
-	if (enzymeName == null) {
-	    throw new IllegalArgumentException("EnzymeName is null");
+	if (StringUtils.isEmpty(enzymeName)) {
+	    throw new IllegalArgumentException("Invalid enzymeName");
 	}
 
 	Enzyme result = null;
@@ -32,7 +33,7 @@ public class MsiEnzymeRepository extends JPARepository {
 	    if (enzimes.size() == 1) {
 		result = enzimes.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one Peptide for given name");
+		throw new RuntimeException("There are more than one Enzyme for given name");
 	    }
 
 	}

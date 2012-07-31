@@ -14,11 +14,15 @@ import javax.persistence.NamedQuery;
  */
 @Entity(name = "fr.proline.core.orm.msi.Peptide")
 @NamedQueries({
-	@NamedQuery(name = "findMsiPepsBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p where lower(p.sequence) = :seq "),
+	@NamedQuery(name = "findMsiPepsBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
+		+ " where lower(p.sequence) = :seq "),
 
-	@NamedQuery(name = "findMsiPeptBySeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr))"),
+	@NamedQuery(name = "findMsiPeptBySeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p"
+		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr))"),
 
-	@NamedQuery(name = "findMsiPeptBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p where (lower(p.sequence) = :seq) and (p.ptmString is null)") })
+	@NamedQuery(name = "findMsiPeptBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
+		+ " where (lower(p.sequence) = :seq) and (p.ptmString is null)")
+})
 public class Peptide implements Serializable {
     private static final long serialVersionUID = 1L;
 

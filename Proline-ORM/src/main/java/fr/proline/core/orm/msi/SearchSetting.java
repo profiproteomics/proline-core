@@ -235,24 +235,24 @@ public class SearchSetting implements Serializable {
     public void addEnzyme(final Enzyme enzyme) {
 
 	if (enzyme != null) {
-	    Set<Enzyme> enzymes = getEnzymes();
+	    Set<Enzyme> enzs = getEnzymes();
 
-	    if (enzymes == null) {
-		enzymes = new HashSet<Enzyme>();
+	    if (enzs == null) {
+		enzs = new HashSet<Enzyme>();
 
-		setEnzymes(enzymes);
+		setEnzymes(enzs);
 	    }
 
-	    enzymes.add(enzyme);
+	    enzs.add(enzyme);
 	}
 
     }
 
     public void removeEnzyme(final Enzyme enzyme) {
-	final Set<Enzyme> enzymes = getEnzymes();
+	final Set<Enzyme> enzs = getEnzymes();
 
-	if (enzymes != null) {
-	    enzymes.remove(enzyme);
+	if (enzs != null) {
+	    enzs.remove(enzyme);
 	}
 
     }
@@ -268,24 +268,24 @@ public class SearchSetting implements Serializable {
     public void addUsedPtms(final UsedPtm usedPtm) {
 
 	if (usedPtm != null) {
-	    Set<UsedPtm> usedPtms = getUsedPtms();
+	    Set<UsedPtm> ptms = getUsedPtms();
 
-	    if (usedPtms == null) {
-		usedPtms = new HashSet<UsedPtm>();
+	    if (ptms == null) {
+		ptms = new HashSet<UsedPtm>();
 
-		setUsedPtms(usedPtms);
+		setUsedPtms(ptms);
 	    }
 
-	    usedPtms.add(usedPtm);
+	    ptms.add(usedPtm);
 	}
 
     }
 
     public void removeUsedPtms(final UsedPtm usedPtm) {
-	final Set<UsedPtm> usedPtms = getUsedPtms();
+	final Set<UsedPtm> ptms = getUsedPtms();
 
-	if (usedPtms != null) {
-	    usedPtms.remove(usedPtm);
+	if (ptms != null) {
+	    ptms.remove(usedPtm);
 	}
 
     }

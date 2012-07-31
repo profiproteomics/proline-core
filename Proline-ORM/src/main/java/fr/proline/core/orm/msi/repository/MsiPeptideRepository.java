@@ -7,6 +7,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.utils.StringUtils;
 
 public class MsiPeptideRepository extends JPARepository {
 
@@ -16,8 +17,8 @@ public class MsiPeptideRepository extends JPARepository {
 
     public List<Peptide> findPeptidesBySequence(final String seq) {
 
-	if (seq == null) {
-	    throw new IllegalArgumentException("Seq is null");
+	if (StringUtils.isEmpty(seq)) {
+	    throw new IllegalArgumentException("Invalid seq");
 	}
 
 	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findMsiPepsBySeq",
@@ -29,15 +30,15 @@ public class MsiPeptideRepository extends JPARepository {
 
     public Peptide findPeptideBySequenceAndPtmStr(final String seq, final String ptmStr) {
 
-	if (seq == null) {
-	    throw new IllegalArgumentException("Seq is null");
+	if (StringUtils.isEmpty(seq)) {
+	    throw new IllegalArgumentException("Invalid seq");
 	}
 
 	Peptide result = null;
 
 	TypedQuery<Peptide> query = null;
 
-	if ((ptmStr == null) || ptmStr.isEmpty()) {
+	if (StringUtils.isEmpty(ptmStr)) {
 	    query = getEntityManager().createNamedQuery("findMsiPeptBySeq", Peptide.class);
 	} else {
 	    query = getEntityManager().createNamedQuery("findMsiPeptBySeqAndPtmStr", Peptide.class);
