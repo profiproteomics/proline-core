@@ -55,7 +55,7 @@ private[msi] class PgPeaklistStorer( val msiDb: MsiDb ) extends SQLitePeaklistSt
       
       // Build a row containing spectrum values
       val spectrumValues = List(  spectrum.id,
-                                  spectrum.title,
+                                  escapeStringForPgCopy(spectrum.title),
                                   spectrum.precursorMoz,
                                   precursorIntensity,
                                   spectrum.precursorCharge,
@@ -75,7 +75,7 @@ private[msi] class PgPeaklistStorer( val msiDb: MsiDb ) extends SQLitePeaklistSt
                                 )
       
       // Store spectrum
-      val spectrumBytes = encodeRecordForPgCopy( spectrumValues )
+      val spectrumBytes = encodeRecordForPgCopy( spectrumValues, false )
       pgBulkLoader.writeToCopy( spectrumBytes, 0, spectrumBytes.length )  
       
     }

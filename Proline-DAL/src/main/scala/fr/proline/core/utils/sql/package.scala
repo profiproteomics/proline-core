@@ -40,13 +40,26 @@ package object sql {
     }
   }
   
+  def escapeStringForPgCopy( s: String ): String = {
+    s.replaceAllLiterally("\\","""\\""")
+     .replaceAllLiterally("\r","""""")
+     .replaceAllLiterally("\n","""\\\n""")
+     .replaceAllLiterally("\t","""\\\t""")
+  }
+  
   /**
    * Replace empty strings by the '\N' character and convert the record to a byte array.
    * Note: by default '\N' means NULL value for the postgres COPY function
    */
-  import org.apache.commons.lang3.StringUtils.isEmpty
-  def encodeRecordForPgCopy( record: List[Any] ): Array[Byte] = {
-    val recordStrings = record map { _.toString() } map { str => if( isEmpty(str) ) "\\N" else str } 
+  def encodeRecordForPgCopy( record: List[Any], escape: Boolean = true ): Array[Byte] = {
+    
+    import org.apache.commons.lang3.StringUtils.isEmpty
+    
+    val recordStrings = record.map { case s:String => if( escape ) escapeStringForPgCopy(s) else s
+                                     case a:Any => a.toString()
+                                   }
+                              .map { str => if( isEmpty(str) ) "\\N" else str }
+    
     (recordStrings.mkString("\t") + "\n").getBytes("UTF-8")
   }
   
