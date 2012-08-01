@@ -37,7 +37,7 @@ public class PsPeptideRepository extends JPARepository {
 
 	TypedQuery<Peptide> query = null;
 
-	if (StringUtils.isEmpty(ptmStr)) {
+	if (ptmStr == null) { // Assume NULL <> "" (empty)
 	    query = getEntityManager().createNamedQuery("findPepsBySeqWoPtm", Peptide.class);
 	} else {
 	    query = getEntityManager().createNamedQuery("findPepsBySeqPtmStr", Peptide.class);

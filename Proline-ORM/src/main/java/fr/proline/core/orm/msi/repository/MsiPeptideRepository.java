@@ -38,7 +38,7 @@ public class MsiPeptideRepository extends JPARepository {
 
 	TypedQuery<Peptide> query = null;
 
-	if (StringUtils.isEmpty(ptmStr)) {
+	if (ptmStr == null) { // Assume NULL <> "" (empty)
 	    query = getEntityManager().createNamedQuery("findMsiPeptBySeq", Peptide.class);
 	} else {
 	    query = getEntityManager().createNamedQuery("findMsiPeptBySeqAndPtmStr", Peptide.class);

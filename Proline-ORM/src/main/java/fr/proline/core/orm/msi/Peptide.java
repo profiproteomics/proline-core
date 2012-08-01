@@ -21,7 +21,8 @@ import javax.persistence.NamedQuery;
 		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr))"),
 
 	@NamedQuery(name = "findMsiPeptBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
-		+ " where (lower(p.sequence) = :seq) and (p.ptmString is null)")
+		+ " where (lower(p.sequence) = :seq) and (p.ptmString is null)"),
+
 })
 public class Peptide implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -49,7 +50,7 @@ public class Peptide implements Serializable {
      * with given Ps Peptide.
      * 
      * @param psPeptide
-     *            Peptide entity from psDb used to initialize Msi Peptide fields (must nor be
+     *            Peptide entity from psDb used to initialize Msi Peptide fields (must not be
      *            <code>null</code>)
      */
     public Peptide(final fr.proline.core.orm.ps.Peptide psPeptide) {
