@@ -325,7 +325,7 @@ Could be the path/name of the database in case of embedded file DB engine (H2 / 
     <column id="COL86" populated="true" UUID="bcb1daa9-e2cb-4bb1-87c9-70d7fdca1c43" autoIncrement="false" autoIncrementSequenceName="quantitation_description_seq" defaultValue="" name="description" nullable="1" physicalName="description" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
-    <column id="COL87" populated="true" UUID="1e6470a7-69dd-415c-aac0-50bf1613123a" autoIncrement="false" autoIncrementSequenceName="quantitation_keywords_seq" defaultValue="" name="keywords" nullable="0" physicalName="keywords" precision="250" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL87" populated="true" UUID="1e6470a7-69dd-415c-aac0-50bf1613123a" autoIncrement="false" autoIncrementSequenceName="quantitation_keywords_seq" defaultValue="" name="keywords" nullable="1" physicalName="keywords" precision="250" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
     <column id="COL88" populated="true" UUID="d51e815f-9f70-41bd-a839-0d2b2f9d71fd" autoIncrement="false" autoIncrementSequenceName="quantitation_creation_timestamp_seq" defaultValue="" name="creation_timestamp" nullable="0" physicalName="creation_timestamp" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="93" userDefinedTypeUUID="6497d8de-0e00-40d6-a42e-e2adca83be64" >
