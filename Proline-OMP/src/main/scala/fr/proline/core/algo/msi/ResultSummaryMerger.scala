@@ -135,12 +135,13 @@ class ResultSummaryMerger extends Logging {
     for( protMatchGroup <- proteinMatchesByKey.values) {
       
       var firstDescribedProtMatch: ProteinMatch = null
-      val protMatchIdx = 0
+      var protMatchIdx = 0
       while( firstDescribedProtMatch == null && protMatchIdx < protMatchGroup.length ) {
         val proteinMatch = protMatchGroup(protMatchIdx)
         if( isStrNotEmpty(proteinMatch.description) ) {
           firstDescribedProtMatch = proteinMatch
         }
+        protMatchIdx = protMatchIdx + 1
       }
       if( firstDescribedProtMatch == null ) firstDescribedProtMatch = protMatchGroup(0)
       
@@ -163,7 +164,9 @@ class ResultSummaryMerger extends Logging {
         if( validPepMatchesByPepId.contains(pepId) ) {
           val peptideValidMatches = validPepMatchesByPepId(pepId)
         
-          var( bestPepMatchScore, bestPepMatch: PeptideMatch, bestSeqMatch: SequenceMatch ) = (0f, null, null)
+          var bestPepMatchScore = 0f
+          var bestPepMatch: PeptideMatch = null
+          var bestSeqMatch: SequenceMatch = null
           
           for( validPepMatch <- peptideValidMatches ) {
             if( validPepMatch.score > bestPepMatchScore ) {              
@@ -192,17 +195,16 @@ class ResultSummaryMerger extends Logging {
       
       // Compute protein match sequence coverage  
       var coverage = 0f
-      if( proteinId > 0) {
-        
-        if( !seqLengthByProtId.contains(proteinId) ) {
+      if( proteinId > 0 && seqLengthByProtId.contains(proteinId) ) {
+        /*if( !seqLengthByProtId.contains(proteinId) ) {
           throw new Exception( "can't find a sequence for the protein with id='"+proteinId+"'" )
-        }
+        }*/
         val seqLength = seqLengthByProtId(proteinId)
         val seqPositions = bestSeqMatches.map { s => ( s.start, s.end ) } 
         
         coverage = Protein.calcSequenceCoverage( seqLength, seqPositions )
       }
-      ProteinMatch
+      
       nrProteinMatches += new ProteinMatch(
                                   id = protMatchNum,
                                   accession = firstDescribedProtMatch.accession,
