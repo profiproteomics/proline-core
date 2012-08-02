@@ -20,9 +20,12 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 	private val udsDriverClassName = udsDBConnector.getDriverType.getDriverClassName()
 	private val externalDbIdToDBConnector : Map[Int, DatabaseConnector] = new HashMap[Int, DatabaseConnector] 
   
-	private lazy val udsEMF : EntityManagerFactory  = {
+	lazy val udsEMF : EntityManagerFactory  = {
 		//Create Link to UDSDb
-		val emf : EntityManagerFactory = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.UDS), udsDBConnector.getEntityManagerSettings)
+		val emf : EntityManagerFactory = Persistence.createEntityManagerFactory(
+		                                   JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.UDS),
+		                                   udsDBConnector.getEntityManagerSettings
+		                                 )
 		emf
 	}
 	
