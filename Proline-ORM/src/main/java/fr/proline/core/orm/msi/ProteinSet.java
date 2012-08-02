@@ -46,7 +46,7 @@ public class ProteinSet implements Serializable {
 	@OneToMany(mappedBy="proteinSet")
 	private Set<PeptideSet> peptideSets;
 
-	@JoinColumn(name="typical_protein_match_id")
+	@Column(name="typical_protein_match_id")
 	private Integer typicalProteinMatchId;
 
 	//bi-directional many-to-one association to ProteinSetProteinMatchItem
