@@ -1,17 +1,17 @@
-package fr.proline.core.orm.msi.repository;
+package fr.proline.core.orm.uds.repository;
 
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
-import fr.proline.core.orm.msi.PeaklistSoftware;
+import fr.proline.core.orm.uds.PeaklistSoftware;
 import fr.proline.core.orm.utils.JPARepository;
 import fr.proline.core.orm.utils.StringUtils;
 
-public class MsiPeaklistSoftwareRepository extends JPARepository {
+public class UdsPeaklistSoftwareRepository extends JPARepository {
 
-    public MsiPeaklistSoftwareRepository(final EntityManager msiEm) {
+    public UdsPeaklistSoftwareRepository(final EntityManager msiEm) {
 	super(msiEm);
     }
 
@@ -26,9 +26,9 @@ public class MsiPeaklistSoftwareRepository extends JPARepository {
 	TypedQuery<PeaklistSoftware> query = null;
 
 	if (version == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findMsiPeaklistSoftByName", PeaklistSoftware.class);
+	    query = getEntityManager().createNamedQuery("findUdsPeaklistSoftByName", PeaklistSoftware.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findMsiPeaklistSoftByNameAndVersion",
+	    query = getEntityManager().createNamedQuery("findUDSPeaklistSoftByNameAndVersion",
 		    PeaklistSoftware.class);
 	    query.setParameter("version", version.toLowerCase());
 	}

@@ -1,17 +1,17 @@
-package fr.proline.core.orm.msi.repository;
+package fr.proline.core.orm.uds.repository;
 
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
-import fr.proline.core.orm.msi.Enzyme;
+import fr.proline.core.orm.uds.Enzyme;
 import fr.proline.core.orm.utils.JPARepository;
 import fr.proline.core.orm.utils.StringUtils;
 
-public class MsiEnzymeRepository extends JPARepository {
+public class UdsEnzymeRepository extends JPARepository {
 
-    public MsiEnzymeRepository(final EntityManager msiEm) {
+    public UdsEnzymeRepository(final EntityManager msiEm) {
 	super(msiEm);
     }
 
@@ -23,7 +23,7 @@ public class MsiEnzymeRepository extends JPARepository {
 
 	Enzyme result = null;
 
-	TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findMsiEnzymeByName", Enzyme.class);
+	TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findUdsEnzymeByName", Enzyme.class);
 	query.setParameter("name", name.toLowerCase());
 
 	final List<Enzyme> enzymes = query.getResultList();

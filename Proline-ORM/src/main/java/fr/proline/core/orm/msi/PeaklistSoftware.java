@@ -4,11 +4,7 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 /**
@@ -16,20 +12,12 @@ import javax.persistence.Table;
  * 
  */
 @Entity(name = "fr.proline.core.orm.msi.PeaklistSoftware")
-@NamedQueries({
-	@NamedQuery(name = "findMsiPeaklistSoftByName", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
-		+ " where (lower(pls.name) = :name) and (pls.version is null)"),
-
-	@NamedQuery(name = "findMsiPeaklistSoftByNameAndVersion", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
-		+ " where (lower(pls.name) = :name) and (lower(pls.version) = :version)")
-
-})
 @Table(name = "peaklist_software")
 public class PeaklistSoftware implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // MSI PeaklistSoftware Id are not generated (taken from Uds PeaklistSoftware entity)
     private Integer id;
 
     private String name;
@@ -40,6 +28,26 @@ public class PeaklistSoftware implements Serializable {
     private String version;
 
     public PeaklistSoftware() {
+    }
+
+    /**
+     * Create a Msi PeaklistSoftware entity from an Uds PeaklistSoftware entity. Created Msi PeaklistSoftware
+     * entity shares the same Id with given Uds PeaklistSoftware.
+     * 
+     * @param udsPeakListSoftware
+     *            PeaklistSoftware entity from udsDb used to initialize Msi PeaklistSoftware fields (must not
+     *            be <code>null</code>)
+     */
+    public PeaklistSoftware(final fr.proline.core.orm.uds.PeaklistSoftware udsPeakListSoftware) {
+
+	if (udsPeakListSoftware == null) {
+	    throw new IllegalArgumentException("UdsPeakListSoftware is null");
+	}
+
+	setId(udsPeakListSoftware.getId());
+	setName(udsPeakListSoftware.getName());
+	setSerializedProperties(udsPeakListSoftware.getSerializedProperties());
+	setVersion(udsPeakListSoftware.getVersion());
     }
 
     public Integer getId() {

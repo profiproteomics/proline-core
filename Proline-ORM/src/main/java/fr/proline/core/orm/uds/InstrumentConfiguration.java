@@ -1,120 +1,131 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.util.Set;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the instrument_config database table.
  * 
  */
 @Entity
-@Table(name="instrument_config")
+@NamedQueries({
+	@NamedQuery(name = "findUdsInstrumConfByNameAndMs1AndMsn", query = "select ic from fr.proline.core.orm.uds.InstrumentConfiguration ic"
+		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (lower(ic.msnAnalyzer) = :msnAnalyzer)"),
+
+	@NamedQuery(name = "findUdsInstrumConfByNameAndMs1", query = "select ic from fr.proline.core.orm.uds.InstrumentConfiguration ic"
+		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
+
+})
+@Table(name = "instrument_config")
 public class InstrumentConfiguration implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Integer id;
 
-	@Column(name="ms1_analyzer")
-	private String ms1Analyzer;
+    @Column(name = "ms1_analyzer")
+    private String ms1Analyzer;
 
-	@Column(name="msn_analyzer")
-	private String msnAnalyzer;
+    @Column(name = "msn_analyzer")
+    private String msnAnalyzer;
 
-	private String name;
+    private String name;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//uni-directional many-to-one association to Activation
+    // uni-directional many-to-one association to Activation
     @ManyToOne
-	private Activation activation;
+    private Activation activation;
 
-	//bi-directional many-to-one association to Instrument
+    // bi-directional many-to-one association to Instrument
     @ManyToOne
-	private Instrument instrument;
+    private Instrument instrument;
 
-	//uni-directional many-to-many association to FragmentationRule
+    // uni-directional many-to-many association to FragmentationRule
     @ManyToMany
-	@JoinTable(
-		name="instrument_config_fragmentation_rule_map"
-		, joinColumns={
-			@JoinColumn(name="instrument_config_id")
-			}
-		, inverseJoinColumns={
-			@JoinColumn(name="fragmentation_rule_id")
-			}
-		)
-	private Set<FragmentationRule> fragmentationRules;
+    @JoinTable(name = "instrument_config_fragmentation_rule_map", joinColumns = { @JoinColumn(name = "instrument_config_id") }, inverseJoinColumns = { @JoinColumn(name = "fragmentation_rule_id") })
+    private Set<FragmentationRule> fragmentationRules;
 
     public InstrumentConfiguration() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public Integer getId() {
+	return this.id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(Integer id) {
+	this.id = id;
+    }
 
-	public String getMs1Analyzer() {
-		return this.ms1Analyzer;
-	}
+    public String getMs1Analyzer() {
+	return this.ms1Analyzer;
+    }
 
-	public void setMs1Analyzer(String ms1Analyzer) {
-		this.ms1Analyzer = ms1Analyzer;
-	}
+    public void setMs1Analyzer(String ms1Analyzer) {
+	this.ms1Analyzer = ms1Analyzer;
+    }
 
-	public String getMsnAnalyzer() {
-		return this.msnAnalyzer;
-	}
+    public String getMsnAnalyzer() {
+	return this.msnAnalyzer;
+    }
 
-	public void setMsnAnalyzer(String msnAnalyzer) {
-		this.msnAnalyzer = msnAnalyzer;
-	}
+    public void setMsnAnalyzer(String msnAnalyzer) {
+	this.msnAnalyzer = msnAnalyzer;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getName() {
+	return this.name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public Activation getActivation() {
-		return this.activation;
-	}
+    public Activation getActivation() {
+	return this.activation;
+    }
 
-	public void setActivation(Activation activation) {
-		this.activation = activation;
-	}
-	
-	public Instrument getInstrument() {
-		return this.instrument;
-	}
+    public void setActivation(Activation activation) {
+	this.activation = activation;
+    }
 
-	public void setInstrument(Instrument instrument) {
-		this.instrument = instrument;
-	}
-	
-	public Set<FragmentationRule> getFragmentationRules() {
-		return this.fragmentationRules;
-	}
+    public Instrument getInstrument() {
+	return this.instrument;
+    }
 
-	public void setFragmentationRules(Set<FragmentationRule> fragmentationRules) {
-		this.fragmentationRules = fragmentationRules;
-	}
-	
+    public void setInstrument(Instrument instrument) {
+	this.instrument = instrument;
+    }
+
+    public Set<FragmentationRule> getFragmentationRules() {
+	return this.fragmentationRules;
+    }
+
+    public void setFragmentationRules(Set<FragmentationRule> fragmentationRules) {
+	this.fragmentationRules = fragmentationRules;
+    }
+
 }

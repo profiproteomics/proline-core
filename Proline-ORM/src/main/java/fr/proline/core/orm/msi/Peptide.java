@@ -28,7 +28,7 @@ public class Peptide implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    // MSI Peptide Id are not genereted (taken from Ps Peptide entity)
+    // MSI Peptide Id are not generated (taken from Ps Peptide entity)
     private Integer id;
 
     @Column(name = "calculated_mass")
@@ -60,9 +60,9 @@ public class Peptide implements Serializable {
 	}
 
 	setId(psPeptide.getId());
-	setSequence(psPeptide.getSequence());
-	setPtmString(psPeptide.getPtmString());
 	setCalculatedMass(psPeptide.getCalculatedMass());
+	setPtmString(psPeptide.getPtmString());
+	setSequence(psPeptide.getSequence());
 	setSerializedProperties(psPeptide.getSerializedProperties());
     }
 

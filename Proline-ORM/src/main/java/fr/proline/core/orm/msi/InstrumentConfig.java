@@ -4,32 +4,22 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+
+import fr.proline.core.orm.uds.InstrumentConfiguration;
 
 /**
  * The persistent class for the instrument_config database table.
  * 
  */
 @Entity
-@NamedQueries({
-	@NamedQuery(name = "findMsiInstrumConfByNameAndMs1AndMsn", query = "select ic from fr.proline.core.orm.msi.InstrumentConfig ic"
-		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (lower(ic.msnAnalyzer) = :msnAnalyzer)"),
-
-	@NamedQuery(name = "findMsiInstrumConfByNameAndMs1", query = "select ic from fr.proline.core.orm.msi.InstrumentConfig ic"
-		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
-
-})
 @Table(name = "instrument_config")
 public class InstrumentConfig implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // MSI InstrumentConfig Id are not generated (taken from Uds InstrumentConfig entity)
     private Integer id;
 
     @Column(name = "ms1_analyzer")
@@ -44,6 +34,27 @@ public class InstrumentConfig implements Serializable {
     private String serializedProperties;
 
     public InstrumentConfig() {
+    }
+
+    /**
+     * Create a Msi InstrumentConfig entity from an Uds InstrumentConfiguration entity. Created Msi
+     * InstrumentConfig entity shares the same Id with given Uds InstrumentConfiguration.
+     * 
+     * @param udsInstrumentConfig
+     *            InstrumentConfiguration entity from udsDb used to initialize Msi InstrumentConfig fields
+     *            (must not be <code>null</code> )
+     */
+    public InstrumentConfig(final InstrumentConfiguration udsInstrumentConfig) {
+
+	if (udsInstrumentConfig == null) {
+	    throw new IllegalArgumentException("UdsInstrumentConfig is null");
+	}
+
+	setId(udsInstrumentConfig.getId());
+	setMs1Analyzer(udsInstrumentConfig.getMs1Analyzer());
+	setMsnAnalyzer(udsInstrumentConfig.getMsnAnalyzer());
+	setName(udsInstrumentConfig.getName());
+	setSerializedProperties(udsInstrumentConfig.getSerializedProperties());
     }
 
     public Integer getId() {

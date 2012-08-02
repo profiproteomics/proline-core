@@ -4,8 +4,6 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQuery;
 
@@ -15,12 +13,12 @@ import javax.persistence.NamedQuery;
  */
 @Entity(name = "fr.proline.core.orm.msi.Enzyme")
 @NamedQuery(name = "findMsiEnzymeByName", query = "select e from fr.proline.core.orm.msi.Enzyme e"
-	+ " where lower(e.name) = :enzymeName")
+	+ " where lower(e.name) = :name")
 public class Enzyme implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // MSI Enzyme Id are not generated (taken from Uds Enzyme entity)
     private Integer id;
 
     @Column(name = "cleavage_regexp")
@@ -35,6 +33,27 @@ public class Enzyme implements Serializable {
     private String name;
 
     public Enzyme() {
+    }
+
+    /**
+     * Create a Msi Enzyme entity from an Uds Enzyme entity. Created Msi Enzyme entity shares the same Id with
+     * given Uds Enzyme.
+     * 
+     * @param udsEnzyme
+     *            Enzyme entity from udsDb used to initialize Msi Enzyme fields (must not be <code>null</code>
+     *            )
+     */
+    public Enzyme(final fr.proline.core.orm.uds.Enzyme udsEnzyme) {
+
+	if (udsEnzyme == null) {
+	    throw new IllegalArgumentException("UdsEnzyme is null");
+	}
+
+	setId(udsEnzyme.getId());
+	setCleavageRegexp(udsEnzyme.getCleavageRegexp());
+	setIsIndependant(udsEnzyme.getIsIndependant());
+	setIsSemiSpecific(udsEnzyme.getIsSemiSpecific());
+	setName(udsEnzyme.getName());
     }
 
     public Integer getId() {
