@@ -2,8 +2,7 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import javax.persistence.*;
-import java.util.Set;
-
+import java.util.List;
 
 /**
  * The persistent class for the quantitation_fraction database table.
@@ -33,7 +32,8 @@ public class QuantitationFraction implements Serializable {
 
 	//bi-directional many-to-one association to QuantChannel
 	@OneToMany(mappedBy="quantitationFraction")
-	private Set<QuantitationChannel> quantitationChannels;
+	@OrderBy("id ASC") // TODO: add a number column to the quant_channel table
+	private List<QuantitationChannel> quantitationChannels;
 
 	//bi-directional many-to-one association to Quantitation
     @ManyToOne
@@ -90,11 +90,11 @@ public class QuantitationFraction implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public Set<QuantitationChannel> getQuantitationChannels() {
+	public List<QuantitationChannel> getQuantitationChannels() {
 		return this.quantitationChannels;
 	}
 
-	public void setQuantitationChannels(Set<QuantitationChannel> quantitationChannels) {
+	public void setQuantitationChannels(List<QuantitationChannel> quantitationChannels) {
 		this.quantitationChannels = quantitationChannels;
 	}
 	
