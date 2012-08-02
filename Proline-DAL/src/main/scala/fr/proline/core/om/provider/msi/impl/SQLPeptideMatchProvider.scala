@@ -50,6 +50,14 @@ class SQLPeptideMatchProvider( val msiDb: MsiDb,
     
   }
   
+  def getResultSummariesPeptideMatches( rsmIds: Seq[Int] ): Array[PeptideMatch] = {
+    
+    val pmRecords = _getResultSummariesPepMatchRecords( rsmIds )
+    val rsIds = pmRecords.map( _("result_set_id").asInstanceOf[Int] ).distinct
+    this._buildPeptideMatches( rsIds, pmRecords )
+    
+  }
+  
   /*def getPeptideMatches( rsIds: Seq[Int], peptides: Array[Peptide] ): Array[PeptideMatch] = {
     
     val pmRecords = _getResultSetsPepMatchRecords( rsIds )
@@ -58,6 +66,12 @@ class SQLPeptideMatchProvider( val msiDb: MsiDb,
   
   private def _getResultSetsPepMatchRecords( rsIds: Seq[Int] ): Array[Map[String,Any]] = {
     this.msiDb.selectRecordsAsMaps("SELECT * FROM peptide_match WHERE result_set_id IN (" + rsIds.mkString(",") +")")
+  }
+  
+  private def _getResultSummariesPepMatchRecords( rsmIds: Seq[Int] ): Array[Map[String,Any]] = {
+    this.msiDb.selectRecordsAsMaps("SELECT peptide_match.* FROM peptide_match, peptide_instance_peptide_match_map "+
+                                   "WHERE peptide_match.id = peptide_instance_peptide_match_map.peptide_match_id "+
+                                   "AND result_summary_id IN (" + rsmIds.mkString(",") +")")
   }
   
   private def _getPepMatchRecords( pepMatchIds: Seq[Int] ): Array[Map[String,Any]] = {    
