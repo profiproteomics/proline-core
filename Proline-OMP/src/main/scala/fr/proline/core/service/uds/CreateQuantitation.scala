@@ -17,9 +17,6 @@ import fr.proline.core.orm.uds.{ BiologicalGroup => UdsBiologicalGroup,
                                  QuantitationFraction => UdsQuantitationFraction,
                                  RatioDefinition => UdsRatioDefinition,
                                  SampleAnalysisReplicate => UdsSampleAnalysisReplicate }
-import javax.persistence.Persistence
-import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.repository.ProlineRepository
 
 class CreateQuantitation(
         dbManager: DatabaseManagement,
@@ -35,8 +32,7 @@ class CreateQuantitation(
   def runService() = {
     
     // Open UDSdb connection
-    val udsEMF = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.UDS),dbManager.udsDBConnector.getEntityManagerSettings())
-    val udsEM = udsEMF.createEntityManager()    
+    val udsEM = dbManager.udsEMF.createEntityManager()    
     
     // Retrieve some vars
     val biologicalSamples = experimentalDesign.biologicalSamples
