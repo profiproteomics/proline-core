@@ -21,7 +21,7 @@ import javax.persistence.NamedQuery;
 		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr))"),
 
 	@NamedQuery(name = "findMsiPeptBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
-		+ " where (lower(p.sequence) = :seq) and (p.ptmString is null)"),
+		+ " where (lower(p.sequence) = :seq) and (p.ptmString is null)")
 
 })
 public class Peptide implements Serializable {

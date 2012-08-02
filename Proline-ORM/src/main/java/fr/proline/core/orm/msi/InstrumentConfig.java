@@ -21,7 +21,7 @@ import javax.persistence.Table;
 		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (lower(ic.msnAnalyzer) = :msnAnalyzer)"),
 
 	@NamedQuery(name = "findMsiInstrumConfByNameAndMs1", query = "select ic from fr.proline.core.orm.msi.InstrumentConfig ic"
-		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)"),
+		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
 
 })
 @Table(name = "instrument_config")

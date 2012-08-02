@@ -21,7 +21,7 @@ import javax.persistence.Table;
 		+ " where (lower(pls.name) = :name) and (pls.version is null)"),
 
 	@NamedQuery(name = "findMsiPeaklistSoftByNameAndVersion", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
-		+ " where (lower(pls.name) = :name) and (lower(pls.version) = :version)"),
+		+ " where (lower(pls.name) = :name) and (lower(pls.version) = :version)")
 
 })
 @Table(name = "peaklist_software")
