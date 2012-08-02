@@ -2,32 +2,34 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.dal.{MsiDb,PsDb,MsiDbResultSetTable}
-import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.{ProteinMatch,PeptideMatch,ResultSet}
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.om.provider.msi.IResultSetProvider
 
-class SQLResultSetProvider( val msiDb: MsiDb,
-                            val psDb: PsDb = null ) extends IResultSetProvider {
+trait SQLResultSetLoader {
   
-  import fr.proline.core.dal.helper.MsiDbHelper
+  import fr.proline.core.dal.helper.MsiDbHelper  
   
+  val msiDb: MsiDb  
   val RSCols = MsiDbResultSetTable.columns
   
-  //def getResultSet( rsId: Int ): ResultSet = { getResultSets( Array( rsId) )(0) }
+  protected def getResultSet( rsId: Int,
+                              pepMatches: Array[PeptideMatch],
+                              protMatches: Array[ProteinMatch]
+                             ): ResultSet = {
+    this.getResultSets( Array(rsId), pepMatches, protMatches )(0)
+  }
   
-  def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
+  protected def getResultSets( rsIds: Seq[Int],
+                               pepMatches: Array[PeptideMatch],
+                               protMatches: Array[ProteinMatch]
+                             ): Array[ResultSet] = {
     
     import fr.proline.core.utils.primitives.LongOrIntAsInt._
     
-    // Load protein matches
-    val protMatchProvider = new SQLProteinMatchProvider( msiDb )
-    val protMatches = protMatchProvider.getResultSetsProteinMatches( rsIds )
-    val protMatchesByRsId = protMatches.groupBy( _.resultSetId )
-    
-    // Load peptide matches
-    val pepMatchProvider = new SQLPeptideMatchProvider( msiDb, psDb )
-    val pepMatches = pepMatchProvider.getResultSetsPeptideMatches( rsIds )
+    // Build some maps
     val pepMatchesByRsId = pepMatches.groupBy( _.resultSetId )
+    val protMatchesByRsId = protMatches.groupBy( _.resultSetId )    
     
     // Instantiate a MSIdb helper
     val msiDbHelper = new MsiDbHelper( msiDb )
@@ -73,6 +75,25 @@ class SQLResultSetProvider( val msiDb: MsiDb,
     resultSets.toArray
 
   }
+
+}
+
+class SQLResultSetProvider( val msiDb: MsiDb,
+                            val psDb: PsDb = null ) extends SQLResultSetLoader with IResultSetProvider {
+  
+  def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
+    
+    // Load peptide matches
+    val pepMatchProvider = new SQLPeptideMatchProvider( msiDb, psDb )
+    val pepMatches = pepMatchProvider.getResultSetsPeptideMatches( rsIds )    
+    
+    // Load protein matches
+    val protMatchProvider = new SQLProteinMatchProvider( msiDb )
+    val protMatches = protMatchProvider.getResultSetsProteinMatches( rsIds )    
+
+    this.getResultSets( rsIds, pepMatches, protMatches )
+
+  }
   
   def getResultSetsAsOptions( resultSetIds: Seq[Int] ): Array[Option[ResultSet]] = {
     
@@ -82,5 +103,9 @@ class SQLResultSetProvider( val msiDb: MsiDb,
     resultSetIds.map { resultSetById.get( _ ) } toArray
     
   }
+  
+  
+  
+
   
 }

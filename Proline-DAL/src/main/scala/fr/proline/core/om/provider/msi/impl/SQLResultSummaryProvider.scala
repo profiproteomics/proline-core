@@ -10,7 +10,7 @@ import fr.proline.core.om.model.msi.ResultSummaryProperties
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.utils.sql.SQLStrToBool
 
-class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends IResultSummaryProvider {
+class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends SQLResultSetLoader with IResultSummaryProvider {
   
   // Instantiate a MSIdb helper
   val msiDbHelper = new MsiDbHelper( msiDb )
@@ -61,26 +61,19 @@ class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends IResu
       val rsId = rsmRecord(RSMCols.resultSetId).asInstanceOf[Int]
       var rsAsOpt = Option.empty[ResultSet]
       if( loadResultSet ) {
-        val rsProvider = new SQLResultSetProvider( msiDb, psDb )
-        val rs = rsProvider.getResultSet(rsId).get
-        // TODO: add a method get ResultSummaryResultSet( rsmId ) with optimized loading
         
-        val pepIdSet = new collection.mutable.HashSet[Int]
-        val pepMatchIdSet = new collection.mutable.HashSet[Int]
-        val protMatchIdSet = new collection.mutable.HashSet[Int]        
+        val pepMatchProvider = new SQLPeptideMatchProvider( msiDb, psDb )
+        val protMatchProvider = new SQLProteinMatchProvider( msiDb )
+        
+        val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches( rsmId )
+        val protMatches = protMatchProvider.getResultSummariesProteinMatches( Array(rsmId) )
         
         // Remove objects which are not linked to result summary
-        rsmPepSets.foreach { pepSet =>
-          pepIdSet ++= pepSet.getPeptideIds
-          pepMatchIdSet ++= pepSet.getPeptideMatchIds
-          protMatchIdSet ++= pepSet.proteinMatchIds
-        }
+        // TODO: remove when the provider is fully implemented
+        val protMatchIdSet = rsmPepSets.flatMap( _.proteinMatchIds ) toSet
+        val rsmProtMatches = protMatches.filter { p => protMatchIdSet.contains(p.id) }
         
-        val rsmPeptides = rs.peptides.filter { p => pepIdSet.contains(p.id) }
-        val rsmPepMatches = rs.peptideMatches.filter { p => pepMatchIdSet.contains(p.id) }
-        val rsmProtMatches = rs.proteinMatches.filter { p => protMatchIdSet.contains(p.id) }
-        
-        rsAsOpt = Some(rs.copy( peptides = rsmPeptides, peptideMatches = rsmPepMatches, proteinMatches = rsmProtMatches) )
+        rsAsOpt = Some( this.getResultSet( rsId, pepMatches, rsmProtMatches ) )
         
       }
       

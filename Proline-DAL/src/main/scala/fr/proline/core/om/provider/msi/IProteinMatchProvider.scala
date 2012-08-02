@@ -10,6 +10,8 @@ trait IProteinMatchProvider {
   
   def getResultSetsProteinMatches( resultSetIds: Seq[Int] ): Array[ProteinMatch]
   
+  def getResultSummariesProteinMatches( rsmIds: Seq[Int] ): Array[ProteinMatch]
+  
   
   def getProteinMatch( protMatchId:Int ): Option[ProteinMatch] = {
     getProteinMatchesAsOptions( Array(protMatchId) )(0)
@@ -18,4 +20,9 @@ trait IProteinMatchProvider {
   def getResultSetProteinMatches( resultSetId: Int ): Array[ProteinMatch] = {
     getResultSetsProteinMatches( Array(resultSetId) )
   }
+  
+  def getResultSummaryProteinMatches( rsmId: Int ): Array[ProteinMatch] = {
+    getResultSummariesProteinMatches( Array(rsmId) )
+  }
+  
 }
