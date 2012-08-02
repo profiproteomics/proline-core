@@ -210,8 +210,8 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
           proteinMatch.isDecoy, // BoolToSQLStr( proteinMatch.isDecoy )
           false,
           Option(null),
-          proteinMatch.taxonId,
-          1, // proteinMatch.getProteinId
+          if( proteinMatch.taxonId > 0 ) Some(proteinMatch.taxonId) else Option(null),
+          if( proteinMatch.getProteinId > 0 ) Some(proteinMatch.getProteinId) else Option(null),
           scoringId.get,
           rsId
         )
