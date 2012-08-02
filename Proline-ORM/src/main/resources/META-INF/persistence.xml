@@ -90,6 +90,8 @@
 	<class>fr.proline.core.orm.msi.Scoring</class>
 	<class>fr.proline.core.orm.msi.ResultSummary</class>
 	<class>fr.proline.core.orm.msi.PeptideInstance</class>
+	<class>fr.proline.core.orm.msi.PeptideInstancePeptideMatchMap</class>
+	<class>fr.proline.core.orm.msi.PeptideInstancePeptideMatchMapPK</class>
 	<class>fr.proline.core.orm.msi.PeptideMatchRelation</class>
 	<class>fr.proline.core.orm.msi.PeptideMatchRelationPK</class>
 	<class>fr.proline.core.orm.msi.PeptideSet</class>

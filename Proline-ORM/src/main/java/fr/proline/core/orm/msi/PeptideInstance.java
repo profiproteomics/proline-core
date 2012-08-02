@@ -13,7 +13,7 @@ import java.util.Set;
 @Entity
 @NamedQueries ({
 @NamedQuery(name="findPepInstByPepMatch",
-query="select pi from PeptideInstance pi, IN (pi.peptidesMatches) pm where pm.id = :pmID "),
+query="select pi from PeptideInstance pi, IN (pi.peptideInstancePeptideMatchMaps) pm where pm.id.peptideMatchId = :pmID "),
 
 @NamedQuery(name="findPepInstForPeptideId",
 query="select pi from PeptideInstance pi where pi.peptideId = :pepID ")
@@ -65,7 +65,11 @@ public class PeptideInstance implements Serializable {
 	@OneToMany(mappedBy="peptideInstance")
 	private Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems;
 
-	@OneToMany
+	//uni-directional many-to-one association to PeptideInstancePeptideMatchMap
+  @OneToMany(mappedBy="peptideInstance")
+  private Set<PeptideInstancePeptideMatchMap> peptideInstancePeptideMatchMaps;
+  
+	/*@OneToMany
 	@JoinTable(
 			name="peptide_instance_peptide_match_map"
 			, joinColumns={
@@ -78,7 +82,7 @@ public class PeptideInstance implements Serializable {
 	private Set<PeptideMatch> peptidesMatches; 
 	
     public PeptideInstance() {
-    }
+    }*/
 
 	public Integer getId() {
 		return this.id;
@@ -183,13 +187,21 @@ public class PeptideInstance implements Serializable {
 	public void setPeptideSetPeptideInstanceItems(Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems) {
 		this.peptideSetPeptideInstanceItems = peptideSetPeptideInstanceItems;
 	}
+	
+  public Set<PeptideInstancePeptideMatchMap> getPeptideInstancePeptideMatchMaps() {
+    return this.peptideInstancePeptideMatchMaps;
+  }
 
-	public Set<PeptideMatch> getPeptidesMatches() {
+  public void setPeptideInstancePeptideMatchMaps(Set<PeptideInstancePeptideMatchMap> peptideInstancePeptideMatchMaps) {
+    this.peptideInstancePeptideMatchMaps = peptideInstancePeptideMatchMaps;
+  }
+
+	/*public Set<PeptideMatch> getPeptidesMatches() {
 		return peptidesMatches;
 	}
 
 	public void setPeptidesMatches(Set<PeptideMatch> peptidesMatches) {
 		this.peptidesMatches = peptidesMatches;
-	}
+	}*/
 	
 }
