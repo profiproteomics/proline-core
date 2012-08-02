@@ -16,7 +16,7 @@ import fr.proline.repository.DatabaseConnector
 trait IRsStorer extends Logging {
   
   val msiDb1: MsiDb // Main MSI db connection
-  lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, false, 10000 ) // Secondary MSI db connection
+  lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, maxVariableNumber = 10000 ) // Secondary MSI db connection
   
   val scoringIdByType = new fr.proline.core.dal.helper.MsiDbHelper( msiDb1 ).getScoringIdByType
   
