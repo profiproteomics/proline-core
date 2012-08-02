@@ -17,7 +17,7 @@ import scala.collection.mutable.HashMap
 
 class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Logging {
    
-  private val driverClassName = udsDBConnector.getDriverType.getDriverClassName()
+	private val udsDriverClassName = udsDBConnector.getDriverType.getDriverClassName()
 	private val externalDbIdToDBConnector : Map[Int, DatabaseConnector] = new HashMap[Int, DatabaseConnector] 
   
 	private lazy val udsEMF : EntityManagerFactory  = {
@@ -33,7 +33,7 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
     val properties = new HashMap[String, String]
     properties += DatabaseConnector.PROPERTY_USERNAME -> Option(extDb.getDbUser).getOrElse("")
     properties += DatabaseConnector.PROPERTY_PASSWORD-> Option(extDb.getDbPassword).getOrElse("")
-    properties += DatabaseConnector.PROPERTY_DRIVERCLASSNAME -> this.driverClassName
+    properties += DatabaseConnector.PROPERTY_DRIVERCLASSNAME -> this.udsDriverClassName
     properties += DatabaseConnector.PROPERTY_URL -> createURL(extDb)
 	  
     new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(properties))
