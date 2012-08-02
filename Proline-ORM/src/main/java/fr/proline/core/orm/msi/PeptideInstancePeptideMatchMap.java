@@ -28,6 +28,12 @@ public class PeptideInstancePeptideMatchMap implements Serializable {
   @JoinColumn(name="peptide_instance_id")
   @MapsId("peptideInstanceId")
   private PeptideInstance peptideInstance;
+    
+    //uni-directional many-to-one association to PeptideMatch
+    @ManyToOne
+  @JoinColumn(name="peptide_match_id")
+  @MapsId("peptideMatchId")
+  private PeptideMatch peptideMatch;
 
     public PeptideInstancePeptideMatchMap() {
     }
@@ -64,4 +70,12 @@ public class PeptideInstancePeptideMatchMap implements Serializable {
 		this.peptideInstance = peptideInstance;
 	}
 	
+  public PeptideMatch getPeptideMatch() {
+    return this.peptideMatch;
+  }
+
+  public void setPeptideMatch(PeptideMatch peptideMatch) {
+    this.peptideMatch = peptideMatch;
+  }
+  
 }

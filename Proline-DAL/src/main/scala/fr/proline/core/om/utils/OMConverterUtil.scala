@@ -6,6 +6,7 @@ import javax.persistence.EntityManager
 import javax.persistence.Persistence
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.JavaConversions.asScalaSet
 import fr.proline.core.orm.msi.PeptideSetPeptideInstanceItem
 import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
 import fr.proline.core.orm.ps.PeptidePtm
@@ -46,6 +47,7 @@ class OMConverterUtil( useCachedObject: Boolean = true ) {
   
   type MsiPeptideMatch = fr.proline.core.orm.msi.PeptideMatch
   type MsiPeptideInstance = fr.proline.core.orm.msi.PeptideInstance
+  type MsiPepInstPepMatchMap = fr.proline.core.orm.msi.PeptideInstancePeptideMatchMap
   type MsiPeptideSet = fr.proline.core.orm.msi.PeptideSet
   type MsiSeqDatabase = fr.proline.core.orm.msi.SeqDatabase
   type PsPeptide = fr.proline.core.orm.ps.Peptide
@@ -92,20 +94,16 @@ class OMConverterUtil( useCachedObject: Boolean = true ) {
     val pepInstChildById = new HashMap[Integer, PeptideInstance]()
     
     //---- Peptide Matches Arrays 
-    val msiPepMatches = msiPepInst.getPeptidesMatches() //ORM PeptideMatches
+    val msiPepMatches = msiPepInst.getPeptideInstancePeptideMatchMaps().map { _.getPeptideMatch() } //ORM PeptideMatches
      
     var pepMatches: Array[PeptideMatch] = null //OM PeptideMatches. Get only if asked for 
     if( loadPepMatches) pepMatches = new Array[PeptideMatch](msiPepMatches.size)
     
     val pepMatchIds = new Array[Int](msiPepMatches.size) //OM PeptideMatches ids
     
-    //**** Create PeptideMatches array and PeptideInstance Children
-    val msiPepMatchIT = msiPepMatches.iterator()
-    
+    //**** Create PeptideMatches array and PeptideInstance Children    
     var index = 0
-    while ( msiPepMatchIT.hasNext() ) {
-      
-      val nextMsiPM = msiPepMatchIT.next()
+    for( nextMsiPM <- msiPepMatches) {
       
       //Go through PeptideMatch children and get associated PeptideInstance 
       val msiPepMatchChildIT = nextMsiPM.getChildren().iterator()      
