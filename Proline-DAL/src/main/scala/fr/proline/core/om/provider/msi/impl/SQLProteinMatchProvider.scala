@@ -163,5 +163,14 @@ class SQLProteinMatchProvider( val msiDb: MsiDb ) { //extends IProteinMatchProvi
     
   }
   
+  // TODO: retrieve only validated protein matches
+  def getResultSummariesProteinMatches( rsmIds: Seq[Int] ): Array[ProteinMatch] = {
+    
+    val msiDbTx = msiDb.getOrCreateTransaction()
+    val rsIds = msiDbTx.select( "SELECT result_set_id FROM result_summary WHERE id IN (" +
+                                rsmIds.mkString(",") +")" ) { _.nextInt.get }
+    this.getResultSetsProteinMatches( rsIds )
+  }
+  
 }
 
