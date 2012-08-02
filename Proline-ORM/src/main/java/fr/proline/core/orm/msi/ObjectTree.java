@@ -9,6 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
 import javax.persistence.Table;
 
 
@@ -33,7 +34,8 @@ public class ObjectTree implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name="schema_name")
-	private ObjectTreeSchema schemaName;
+	//@MapsId("schemaName")
+	private ObjectTreeSchema schema;
 	
 	public ObjectTree() {
     }
@@ -62,12 +64,12 @@ public class ObjectTree implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public ObjectTreeSchema getSchemaName() {
-		return schemaName;
+	public ObjectTreeSchema getSchema() {
+		return schema;
 	}
 
-	public void setSchemaName(ObjectTreeSchema schemaName) {
-		this.schemaName = schemaName;
+	public void setSchema(ObjectTreeSchema schema) {
+		this.schema = schema;
 	}
 
 }
