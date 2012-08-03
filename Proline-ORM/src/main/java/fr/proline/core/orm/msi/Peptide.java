@@ -14,13 +14,13 @@ import javax.persistence.NamedQuery;
  */
 @Entity(name = "fr.proline.core.orm.msi.Peptide")
 @NamedQueries({
-	@NamedQuery(name = "findMsiPepsBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
+	@NamedQuery(name = "findMsiPepsForSeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
 		+ " where lower(p.sequence) = :seq "),
 
-	@NamedQuery(name = "findMsiPeptBySeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p"
+	@NamedQuery(name = "findMsiPeptForSeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p"
 		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr))"),
 
-	@NamedQuery(name = "findMsiPeptBySeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
+	@NamedQuery(name = "findMsiPeptForSeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
 		+ " where (lower(p.sequence) = :seq) and (p.ptmString is null)")
 
 })

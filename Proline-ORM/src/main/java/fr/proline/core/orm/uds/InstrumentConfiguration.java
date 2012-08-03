@@ -22,10 +22,10 @@ import javax.persistence.Table;
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "findUdsInstrumConfByNameAndMs1AndMsn", query = "select ic from fr.proline.core.orm.uds.InstrumentConfiguration ic"
+	@NamedQuery(name = "findUdsInstrumConfForNameAndMs1AndMsn", query = "select ic from fr.proline.core.orm.uds.InstrumentConfiguration ic"
 		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (lower(ic.msnAnalyzer) = :msnAnalyzer)"),
 
-	@NamedQuery(name = "findUdsInstrumConfByNameAndMs1", query = "select ic from fr.proline.core.orm.uds.InstrumentConfiguration ic"
+	@NamedQuery(name = "findUdsInstrumConfForNameAndMs1", query = "select ic from fr.proline.core.orm.uds.InstrumentConfiguration ic"
 		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
 
 })

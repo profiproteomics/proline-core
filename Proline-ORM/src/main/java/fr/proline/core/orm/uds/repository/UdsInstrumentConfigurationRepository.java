@@ -9,13 +9,13 @@ import fr.proline.core.orm.uds.InstrumentConfiguration;
 import fr.proline.core.orm.utils.JPARepository;
 import fr.proline.core.orm.utils.StringUtils;
 
-public class UdsInstrumentConfigRepository extends JPARepository {
+public class UdsInstrumentConfigurationRepository extends JPARepository {
 
-    public UdsInstrumentConfigRepository(final EntityManager msiEm) {
-	super(msiEm);
+    public UdsInstrumentConfigurationRepository(final EntityManager udsEm) {
+	super(udsEm);
     }
 
-    public InstrumentConfiguration findInstrumConfByNameAndMs1AndMsn(final String name,
+    public InstrumentConfiguration findInstrumConfForNameAndMs1AndMsn(final String name,
 	    final String ms1Analyzer, final String msnAnalyzer) {
 
 	if (StringUtils.isEmpty(name)) {
@@ -31,10 +31,10 @@ public class UdsInstrumentConfigRepository extends JPARepository {
 	TypedQuery<InstrumentConfiguration> query = null;
 
 	if (msnAnalyzer == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findUdsInstrumConfByNameAndMs1",
+	    query = getEntityManager().createNamedQuery("findUdsInstrumConfForNameAndMs1",
 		    InstrumentConfiguration.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findUdsInstrumConfByNameAndMs1AndMsn",
+	    query = getEntityManager().createNamedQuery("findUdsInstrumConfForNameAndMs1AndMsn",
 		    InstrumentConfiguration.class);
 	    query.setParameter("msnAnalyzer", msnAnalyzer.toLowerCase());
 	}

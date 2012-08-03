@@ -19,10 +19,10 @@ import javax.persistence.Table;
  */
 @Entity(name = "fr.proline.core.orm.uds.PeaklistSoftware")
 @NamedQueries({
-	@NamedQuery(name = "findUdsPeaklistSoftByName", query = "select pls from fr.proline.core.orm.uds.PeaklistSoftware pls"
+	@NamedQuery(name = "findUdsPeaklistSoftForName", query = "select pls from fr.proline.core.orm.uds.PeaklistSoftware pls"
 		+ " where (lower(pls.name) = :name) and (pls.version is null)"),
 
-	@NamedQuery(name = "findUdsPeaklistSoftByNameAndVersion", query = "select pls from fr.proline.core.orm.uds.PeaklistSoftware pls"
+	@NamedQuery(name = "findUdsPeaklistSoftForNameAndVersion", query = "select pls from fr.proline.core.orm.uds.PeaklistSoftware pls"
 		+ " where (lower(pls.name) = :name) and (lower(pls.version) = :version)")
 
 })

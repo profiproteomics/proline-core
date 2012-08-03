@@ -12,7 +12,7 @@ import javax.persistence.NamedQuery;
  * 
  */
 @Entity(name = "fr.proline.core.orm.msi.Enzyme")
-@NamedQuery(name = "findMsiEnzymeByName", query = "select e from fr.proline.core.orm.msi.Enzyme e"
+@NamedQuery(name = "findMsiEnzymeForName", query = "select e from fr.proline.core.orm.msi.Enzyme e"
 	+ " where lower(e.name) = :name")
 public class Enzyme implements Serializable {
     private static final long serialVersionUID = 1L;

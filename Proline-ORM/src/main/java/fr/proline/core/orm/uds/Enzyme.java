@@ -16,7 +16,7 @@ import javax.persistence.OneToMany;
  * 
  */
 @Entity(name = "fr.proline.core.orm.uds.Enzyme")
-@NamedQuery(name = "findUdsEnzymeByName", query = "select e from fr.proline.core.orm.uds.Enzyme e"
+@NamedQuery(name = "findUdsEnzymeForName", query = "select e from fr.proline.core.orm.uds.Enzyme e"
 	+ " where lower(e.name) = :name")
 public class Enzyme implements Serializable {
     private static final long serialVersionUID = 1L;

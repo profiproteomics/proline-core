@@ -15,20 +15,20 @@ public class MsiPeptideRepository extends JPARepository {
 	super(msiEm);
     }
 
-    public List<Peptide> findPeptidesBySequence(final String seq) {
+    public List<Peptide> findPeptidesForSequence(final String seq) {
 
 	if (StringUtils.isEmpty(seq)) {
 	    throw new IllegalArgumentException("Invalid seq");
 	}
 
-	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findMsiPepsBySeq",
+	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findMsiPepsForSeq",
 		Peptide.class);
 	query.setParameter("seq", seq.toLowerCase());
 
 	return query.getResultList();
     }
 
-    public Peptide findPeptideBySequenceAndPtmStr(final String seq, final String ptmStr) {
+    public Peptide findPeptideForSequenceAndPtmStr(final String seq, final String ptmStr) {
 
 	if (StringUtils.isEmpty(seq)) {
 	    throw new IllegalArgumentException("Invalid seq");
@@ -39,9 +39,9 @@ public class MsiPeptideRepository extends JPARepository {
 	TypedQuery<Peptide> query = null;
 
 	if (ptmStr == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findMsiPeptBySeq", Peptide.class);
+	    query = getEntityManager().createNamedQuery("findMsiPeptForSeq", Peptide.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findMsiPeptBySeqAndPtmStr", Peptide.class);
+	    query = getEntityManager().createNamedQuery("findMsiPeptForSeqAndPtmStr", Peptide.class);
 	    query.setParameter("ptmStr", ptmStr.toLowerCase());
 	}
 

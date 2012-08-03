@@ -11,11 +11,11 @@ import fr.proline.core.orm.utils.StringUtils;
 
 public class UdsEnzymeRepository extends JPARepository {
 
-    public UdsEnzymeRepository(final EntityManager msiEm) {
-	super(msiEm);
+    public UdsEnzymeRepository(final EntityManager udsEm) {
+	super(udsEm);
     }
 
-    public Enzyme findEnzymeByName(final String name) {
+    public Enzyme findEnzymeForName(final String name) {
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -23,7 +23,7 @@ public class UdsEnzymeRepository extends JPARepository {
 
 	Enzyme result = null;
 
-	TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findUdsEnzymeByName", Enzyme.class);
+	TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findUdsEnzymeForName", Enzyme.class);
 	query.setParameter("name", name.toLowerCase());
 
 	final List<Enzyme> enzymes = query.getResultList();

@@ -23,7 +23,7 @@ public class ScoringRepository extends JPARepository {
      *            be a non empty <code>String</code>).
      * @return Scoring entity or <code>null</code> if not found
      */
-    public Scoring findScoringByType(final String scoreType) {
+    public Scoring findScoringForType(final String scoreType) {
 
 	if (StringUtils.isEmpty(scoreType)) {
 	    throw new IllegalArgumentException("Invalid scoreType");
@@ -31,7 +31,7 @@ public class ScoringRepository extends JPARepository {
 
 	Scoring result = null;
 
-	TypedQuery<Scoring> query = getEntityManager().createNamedQuery("findScoringByScoreType",
+	TypedQuery<Scoring> query = getEntityManager().createNamedQuery("findScoringForScoreType",
 		Scoring.class);
 	query.setParameter("scoreType", scoreType);
 

@@ -11,23 +11,24 @@ import fr.proline.core.orm.utils.StringUtils;
 
 public class PsPeptideRepository extends JPARepository {
 
-    public PsPeptideRepository(final EntityManager em) {
-	super(em);
+    public PsPeptideRepository(final EntityManager psEm) {
+	super(psEm);
     }
 
-    public List<Peptide> findPeptidesBySequence(final String seq) {
+    public List<Peptide> findPeptidesForSequence(final String seq) {
 
 	if (StringUtils.isEmpty(seq)) {
 	    throw new IllegalArgumentException("Invalid seq");
 	}
 
-	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findPepsBySeq", Peptide.class);
+	final TypedQuery<Peptide> query = getEntityManager()
+		.createNamedQuery("findPepsForSeq", Peptide.class);
 	query.setParameter("seq", seq.toUpperCase());
 
 	return query.getResultList();
     }
 
-    public Peptide findPeptideBySequenceAndPtmStr(final String seq, final String ptmStr) {
+    public Peptide findPeptideForSequenceAndPtmStr(final String seq, final String ptmStr) {
 
 	if (StringUtils.isEmpty(seq)) {
 	    throw new IllegalArgumentException("Invalid seq");
@@ -38,9 +39,9 @@ public class PsPeptideRepository extends JPARepository {
 	TypedQuery<Peptide> query = null;
 
 	if (ptmStr == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findPepsBySeqWoPtm", Peptide.class);
+	    query = getEntityManager().createNamedQuery("findPepsForSeqWoPtm", Peptide.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findPepsBySeqPtmStr", Peptide.class);
+	    query = getEntityManager().createNamedQuery("findPepsForSeqPtmStr", Peptide.class);
 	    query.setParameter("ptmStr", ptmStr);
 	}
 

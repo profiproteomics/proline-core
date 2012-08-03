@@ -15,7 +15,7 @@ public class MsiEnzymeRepository extends JPARepository {
 	super(msiEm);
     }
 
-    public Enzyme findEnzymeByName(final String name) {
+    public Enzyme findEnzymeForName(final String name) {
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -23,7 +23,7 @@ public class MsiEnzymeRepository extends JPARepository {
 
 	Enzyme result = null;
 
-	TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findMsiEnzymeByName", Enzyme.class);
+	TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findMsiEnzymeForName", Enzyme.class);
 	query.setParameter("name", name.toLowerCase());
 
 	final List<Enzyme> enzymes = query.getResultList();

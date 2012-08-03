@@ -11,11 +11,11 @@ import fr.proline.core.orm.utils.StringUtils;
 
 public class UdsPeaklistSoftwareRepository extends JPARepository {
 
-    public UdsPeaklistSoftwareRepository(final EntityManager msiEm) {
-	super(msiEm);
+    public UdsPeaklistSoftwareRepository(final EntityManager udsEm) {
+	super(udsEm);
     }
 
-    public PeaklistSoftware findPeaklistSoftByNameAndVersion(final String name, final String version) {
+    public PeaklistSoftware findPeaklistSoftForNameAndVersion(final String name, final String version) {
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -26,9 +26,9 @@ public class UdsPeaklistSoftwareRepository extends JPARepository {
 	TypedQuery<PeaklistSoftware> query = null;
 
 	if (version == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findUdsPeaklistSoftByName", PeaklistSoftware.class);
+	    query = getEntityManager().createNamedQuery("findUdsPeaklistSoftForName", PeaklistSoftware.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findUDSPeaklistSoftByNameAndVersion",
+	    query = getEntityManager().createNamedQuery("findUdsPeaklistSoftForNameAndVersion",
 		    PeaklistSoftware.class);
 	    query.setParameter("version", version.toLowerCase());
 	}

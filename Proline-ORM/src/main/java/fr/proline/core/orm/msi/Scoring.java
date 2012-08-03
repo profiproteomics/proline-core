@@ -14,7 +14,7 @@ import javax.persistence.NamedQuery;
  * 
  */
 @Entity
-@NamedQuery(name = "findScoringByScoreType", query = "select s from fr.proline.core.orm.msi.Scoring s"
+@NamedQuery(name = "findScoringForScoreType", query = "select s from fr.proline.core.orm.msi.Scoring s"
 	+ " where concat(concat(s.searchEngine, \':\'), s.name) = :scoreType")
 public class Scoring implements Serializable {
     private static final long serialVersionUID = 1L;

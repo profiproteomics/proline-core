@@ -29,7 +29,7 @@ public class PeptideTest extends DatabaseTestCase {
 	}
 	
 	@Test public void readPeptidesBySeq() {
-		List<Peptide> peps = pepRepo.findPeptidesBySequence(SEQ_TO_FOUND);
+		List<Peptide> peps = pepRepo.findPeptidesForSequence(SEQ_TO_FOUND);
 		assertNotNull(peps);
 		assertEquals(2, peps.size());
 		boolean foundPepWOPtm = false;

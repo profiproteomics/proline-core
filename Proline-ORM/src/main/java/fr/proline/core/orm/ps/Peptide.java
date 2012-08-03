@@ -1,10 +1,18 @@
 package fr.proline.core.orm.ps;
 
 import java.io.Serializable;
-import javax.persistence.*;
-
 import java.util.Set;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 
 /**
  * The persistent class for the peptide database table.
@@ -12,102 +20,98 @@ import java.util.Set;
  */
 @Entity
 @NamedQueries({
-@NamedQuery(name="findPepsBySeq",
-query="select p from Peptide p where UPPER(p.sequence) = :seq "),
+	@NamedQuery(name = "findPepsForSeq", query = "select p from Peptide p where UPPER(p.sequence) = :seq "),
 
-@NamedQuery(name="findPepsBySeqPtmStr",
-query="select p from Peptide p where UPPER(p.sequence) = :seq  and p.ptmString = :ptmStr"),
+	@NamedQuery(name = "findPepsForSeqPtmStr", query = "select p from Peptide p where UPPER(p.sequence) = :seq  and p.ptmString = :ptmStr"),
 
-@NamedQuery(name="findPepsBySeqWoPtm",
-query="select p from Peptide p where UPPER(p.sequence) = :seq  and p.ptmString is null")
+	@NamedQuery(name = "findPepsForSeqWoPtm", query = "select p from Peptide p where UPPER(p.sequence) = :seq  and p.ptmString is null")
 
 })
-
 public class Peptide implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="id")
-	private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    private Integer id;
 
-	@Column(name="calculated_mass")
-	private double calculatedMass;
+    @Column(name = "calculated_mass")
+    private double calculatedMass;
 
-	@Column(name="ptm_string")
-	private String ptmString;
+    @Column(name = "ptm_string")
+    private String ptmString;
 
-	private String sequence;
+    private String sequence;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//uni-directional many-to-one association to AtomLabel
+    // uni-directional many-to-one association to AtomLabel
     @ManyToOne
-	@JoinColumn(name="atom_label_id")
-	private AtomLabel atomLabel;
+    @JoinColumn(name = "atom_label_id")
+    private AtomLabel atomLabel;
 
-	//bi-directional many-to-one association to PeptidePtm
-	@OneToMany(mappedBy="peptide")
-	private Set<PeptidePtm> ptms;
+    // bi-directional many-to-one association to PeptidePtm
+    @OneToMany(mappedBy = "peptide")
+    private Set<PeptidePtm> ptms;
 
     public Peptide() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public Integer getId() {
+	return this.id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(Integer id) {
+	this.id = id;
+    }
 
-	public double getCalculatedMass() {
-		return this.calculatedMass;
-	}
+    public double getCalculatedMass() {
+	return this.calculatedMass;
+    }
 
-	public void setCalculatedMass(double calculatedMass) {
-		this.calculatedMass = calculatedMass;
-	}
+    public void setCalculatedMass(double calculatedMass) {
+	this.calculatedMass = calculatedMass;
+    }
 
-	public String getPtmString() {
-		return this.ptmString;
-	}
+    public String getPtmString() {
+	return this.ptmString;
+    }
 
-	public void setPtmString(String ptmString) {
-		this.ptmString = ptmString;
-	}
+    public void setPtmString(String ptmString) {
+	this.ptmString = ptmString;
+    }
 
-	public String getSequence() {
-		return this.sequence;
-	}
+    public String getSequence() {
+	return this.sequence;
+    }
 
-	public void setSequence(String sequence) {
-		this.sequence = sequence;
-	}
+    public void setSequence(String sequence) {
+	this.sequence = sequence;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public AtomLabel getAtomLabel() {
-		return this.atomLabel;
-	}
+    public AtomLabel getAtomLabel() {
+	return this.atomLabel;
+    }
 
-	public void setAtomLabel(AtomLabel atomLabel) {
-		this.atomLabel = atomLabel;
-	}
-	
-	public Set<PeptidePtm> getPtms() {
-		return this.ptms;
-	}
+    public void setAtomLabel(AtomLabel atomLabel) {
+	this.atomLabel = atomLabel;
+    }
 
-	public void setPtms(Set<PeptidePtm> ptms) {
-		this.ptms = ptms;
-	}
-	
+    public Set<PeptidePtm> getPtms() {
+	return this.ptms;
+    }
+
+    public void setPtms(Set<PeptidePtm> ptms) {
+	this.ptms = ptms;
+    }
+
 }
