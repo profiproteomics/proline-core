@@ -44,7 +44,7 @@ class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider with L
   def getPeptide( peptideSeq: String, pepPtms: Array[LocatedPtm] ): Option[Peptide]  = {
     if(pepPtms == null || pepPtms.isEmpty ){      
     	try {
-    		val foundORMPep = pepRepo.findPeptideBySequenceAndPtmStr(peptideSeq, null)
+    		val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(peptideSeq, null)
 			return if(foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
 			
     	} catch {
@@ -58,7 +58,7 @@ class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider with L
       val ptmStr = Peptide.makePtmString(pepPtms)
       
 	  try {
-  		val foundORMPep = pepRepo.findPeptideBySequenceAndPtmStr(peptideSeq, ptmStr)
+  		val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(peptideSeq, ptmStr)
   		return if(foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
 	  } catch {
   	  	case e:PersistenceException => {
