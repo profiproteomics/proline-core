@@ -60,6 +60,7 @@ case class MasterQuantPeptideProperties (
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSetProperties (
   //@BeanProperty var quantProteinSets: Array[QuantProteinSetProperties],
-  @BeanProperty var ratioDataMap: Option[Map[Int,RatioDataMapProperty]] = None
+  @BeanProperty var ratioDataMap: Option[Map[Int,RatioDataMapProperty]] = None,
+  @BeanProperty var selectedPeptideIonIds: Option[Array[Int]] = None
 )
  
