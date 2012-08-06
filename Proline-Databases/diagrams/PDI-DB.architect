@@ -295,7 +295,7 @@
      <remarks></remarks>
     </column>
     <column id="COL84" populated="true" UUID="2851d297-ea36-44f4-85ce-825165657cfe" autoIncrement="false" autoIncrementSequenceName="seq_db_release_date_seq" defaultValue="" name="date" nullable="0" physicalName="date" precision="50" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
-     <remarks></remarks>
+     <remarks>Expected date format: yyyymmdd</remarks>
     </column>
     <column id="COL85" populated="true" UUID="b1f0ac00-8f4b-46f7-a602-8c539e0b752d" autoIncrement="false" autoIncrementSequenceName="seq_db_release_version_seq" defaultValue="" name="version" nullable="1" physicalName="version" precision="10" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
@@ -807,7 +807,7 @@
  <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8408964152537147" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8408964152537147" viewportX="208" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="751" y="502" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB12" x="244" y="381" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB23" x="509" y="237" bgColor="0xb9bbf6" fgColor="0x000000" rounded="true" dashed="false"/>

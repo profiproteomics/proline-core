@@ -2,6 +2,7 @@ package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,6 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import fr.proline.core.orm.pdi.SequenceDbConfig;
 import fr.proline.core.orm.pdi.SequenceDbInstance;
 import fr.proline.core.orm.pdi.SequenceDbRelease;
+import fr.proline.core.orm.utils.DateUtils;
 
 /**
  * The persistent class for the seq_database database table.
@@ -86,7 +88,12 @@ public class SeqDatabase implements Serializable {
 	if (seqDbRelease == null) {
 	    setVersion(pdiSequenceDbInstance.getRevision().toString());
 	} else {
-	    // TODO Convert (parse) date String to Timestamp object, check date format
+
+	    final Date date = DateUtils.parseReleaseDate(seqDbRelease.getDate());
+	    if (date != null) {
+		setReleaseDate(new Timestamp(date.getTime()));
+	    }
+
 	    setVersion(seqDbRelease.getVersion());
 	}
 
@@ -189,4 +196,5 @@ public class SeqDatabase implements Serializable {
 	return new ToStringBuilder(this).append("name", name).append("version", version)
 		.append("release date", releaseDate).toString();
     }
+
 }
