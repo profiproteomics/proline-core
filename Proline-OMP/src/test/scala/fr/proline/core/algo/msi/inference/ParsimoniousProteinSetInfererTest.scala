@@ -15,7 +15,7 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
   	
 	@Test
 	def simpleCheckWithGenData() = {
-	  var rs:ResultSet = new ResultSetFakeBuilder(pepNb=pepNb, proNb=proNb).rs
+	  var rs:ResultSet = new ResultSetFakeBuilder(pepNb=pepNb, proNb=proNb).toResultSet()
 	  var ppsi = new ParsimoniousProteinSetInferer()
 	  var rsu = ppsi.computeResultSummary(resultSet=rs) 
 	  assert(rsu != null)
