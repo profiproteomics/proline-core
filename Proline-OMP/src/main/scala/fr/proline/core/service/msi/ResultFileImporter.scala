@@ -1,9 +1,7 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.dal.DatabaseManagement
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.dal.UdsDb
@@ -16,6 +14,11 @@ import fr.proline.core.om.storer.msi.MsiSearchStorer
 import fr.proline.core.om.storer.msi.PeaklistStorer
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.service.IService
+import fr.proline.core.dal.MsiDb
+import fr.proline.core.om.storer.msi.PeaklistStorer
+import fr.proline.core.dal.UdsDb
+import fr.proline.core.om.storer.msi.RsStorer
+import fr.proline.core.om.storer.msi.MsiSearchStorer
 //import scala.collection.mutable.Map
 
 class ResultFileImporter( dbMgnt: DatabaseManagement,
@@ -24,7 +27,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
                           fileType: String,
                           providerKey: String,
                           instrumentConfigId: Int,
-                          storeResultSet: Boolean = true ) extends IService with Logging {
+                          importerProperties: Map[String, Any]) extends IService with Logging {
   
   private var targetResultSetId: Int = 0
   
@@ -51,7 +54,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
       throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
 
     // Open the result file
-    val resultFile = rfProvider.get.getResultFile( resultIdentFile, providerKey )
+    val resultFile = rfProvider.get.getResultFile( resultIdentFile, providerKey, importerProperties )
     
     // Instantiate some storers
     val msiSearchStorer = MsiSearchStorer( msiDb )
@@ -147,26 +150,6 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
          activationType = instConfigRecord("activation_type").asInstanceOf[String]
          )
 
-  }
-  
-  /*private def _insertInstrumentConfig( instrumentConfig: InstrumentConfig ): Unit = {
-    
-    import net.noerd.prequel.SQLFormatterImplicits._
-    import fr.proline.core.dal.SQLFormatterImplicits._
-
-    this.msiDb.getOrCreateTransaction().executeBatch("INSERT INTO instrument_config VALUES ("+"?," *4 +"?)") { stmt =>
-          
-      // Store new protein
-      stmt.executeWith(
-              instrumentConfig.id,
-              instrumentConfig.name,
-              instrumentConfig.ms1Analyzer,
-              instrumentConfig.msnAnalyzer,
-              Option(null)
-            )
-
-    }
-    
-  }*/
+  }  
    
 }
