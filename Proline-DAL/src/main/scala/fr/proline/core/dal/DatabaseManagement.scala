@@ -20,13 +20,11 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 	private val udsDriverClassName = udsDBConnector.getDriverType.getDriverClassName()
 	private val externalDbIdToDBConnector : Map[Int, DatabaseConnector] = new HashMap[Int, DatabaseConnector] 
   
-	lazy val udsEMF : EntityManagerFactory  = {
-		//Create Link to UDSDb
-		val emf : EntityManagerFactory = Persistence.createEntityManagerFactory(
-		                                   JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.UDS),
-		                                   udsDBConnector.getEntityManagerSettings
+	lazy val udsEMF : EntityManagerFactory  = {	
+			Persistence.createEntityManagerFactory(
+											JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.UDS),
+											udsDBConnector.getEntityManagerSettings
 		                                 )
-		emf
 	}
 	
 	private def externalDbToDbConnector( extDb: ExternalDb ): DatabaseConnector = {
@@ -43,7 +41,7 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 	}
 	
 	lazy val pdiDBConnector : DatabaseConnector = {
-		val udsEM = udsEMF.createEntityManager()
+		val udsEM = udsEMF.createEntityManager()	
 		val query : TypedQuery[ExternalDb] = udsEM.createQuery("Select exDB from ExternalDb exDB where exDB.type = :type", classOf[ExternalDb])
 		query.setParameter("type", "pdi")
 		val pdiDB = query.getSingleResult
@@ -51,6 +49,13 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 		
 		externalDbToDbConnector(pdiDB)
 		
+	}
+	
+    lazy val pdiEMF : EntityManagerFactory  = {
+			Persistence.createEntityManagerFactory(
+											JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.PDI),
+											pdiDBConnector.getEntityManagerSettings
+										)								
 	}
   
 	lazy val psDBConnector : DatabaseConnector = {
@@ -61,6 +66,13 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 		udsEM.close
 		
 		externalDbToDbConnector(psDB)
+	}
+
+	lazy val psEMF : EntityManagerFactory  = {
+			Persistence.createEntityManagerFactory(
+											JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.PS),
+											psDBConnector.getEntityManagerSettings
+										)								
 	}
 	
 	def getMSIDatabaseConnector(projectID : Int, createNew : Boolean = false) : DatabaseConnector = {	  
