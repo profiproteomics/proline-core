@@ -10,6 +10,7 @@ trait IResultFile extends IPeaklistContainer {
   
   val fileLocation: File
   val providerKey : String
+  val importProperties : Map[String, Any] 
   
   val msLevel: Int
   val msiSearch: MSISearch
@@ -26,7 +27,8 @@ trait IResultFile extends IPeaklistContainer {
 trait IResultFileProvider {
   
   val fileType: String
-  def getResultFile( fileLocation: File, providerKey: String ): IResultFile
+  def getResultFile( fileLocation: File, providerKey: String, importProperties : Map[String, Any]  ): IResultFile
+  val resultFileProperties : Map[String, Class[_]] 
 
 }
 
@@ -35,6 +37,7 @@ object ResultFileProviderRegistry {
   import scala.collection.mutable.HashMap
   import java.util.ServiceLoader
   
+  // Initialize ResultFileProviderMap by getting SPI 
   private val resultFileProviderByFormat: HashMap[String, IResultFileProvider]= {
      val resFileServiceLoader  : ServiceLoader[IResultFileProvider] = ServiceLoader.load(classOf[IResultFileProvider])    
      var loadedRFProviders = new HashMap[String, IResultFileProvider]()
@@ -46,7 +49,7 @@ object ResultFileProviderRegistry {
 		loadedRFProviders.put(nextResFile.fileType, nextResFile)
 	}
 	 loadedRFProviders
-  } 
+  }
   
   /**
   * Register specified ResultFile for specified format. 
@@ -62,6 +65,13 @@ object ResultFileProviderRegistry {
   */
   def get( fileType: String ): Option[IResultFileProvider]= {    
     resultFileProviderByFormat.get( fileType )
+  }
+  
+  /**
+   * Return an iterator over all available IResultFileProvider
+   */
+  def getAllResultFileProviders() : Iterator[IResultFileProvider] = {
+    resultFileProviderByFormat.valuesIterator
   }
    
 }
