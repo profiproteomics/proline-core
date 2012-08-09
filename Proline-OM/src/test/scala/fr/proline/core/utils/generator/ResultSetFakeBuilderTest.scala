@@ -83,10 +83,15 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
   	  val proNb:Int = 5
 	  val pepNb:Int = 22		
 	  val deltaPepNb:Int = 3
+	  val duplic1Nb:Int = 5
+	  val duplic2Nb:Int = 10
 	  
   	  val rsb = new ResultSetFakeBuilder(pepNb=pepNb, proNb=proNb, deltaPepNb=deltaPepNb)
-  	   		.addDuplicatedPeptides(5)
+  	   		.addDuplicatedPeptides(duplic1Nb)
+  	   		.addDuplicatedPeptides(duplic2Nb)
+  	   		
   	  val rs:ResultSet = rsb.toResultSet
+  	  assert(rs.peptideMatches.size == pepNb+duplic1Nb+duplic2Nb)
   	  
   	  rsb.printForDebug
   	  
