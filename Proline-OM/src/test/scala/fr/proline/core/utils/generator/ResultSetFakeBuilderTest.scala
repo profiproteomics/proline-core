@@ -20,7 +20,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
 		val rs:ResultSet = rsb.toResultSet()
 		
 		assert(rs != null)
-		assert(rsb.allPeptides.size == pepNb)
+		assert(rsb.allPeps.size == pepNb)
 		assert(rsb.allProts.size == proNb)
 	}
   	
@@ -33,7 +33,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
 		val rs:ResultSet = rsb.toResultSet()
 		
 		assert(rs != null)
-		assert(rsb.allPeptides.size == pepNb)
+		assert(rsb.allPeps.size == pepNb)
 		assert(rsb.allProts.size == proNb)
 	}
 	
@@ -51,7 +51,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
 		val rs:ResultSet = rsb.toResultSet()	
 		
 		assert(rs != null)
-		assert(rsb.allPeptides.size == pepNb+pepWMissCleavagesNb)
+		assert(rsb.allPeps.size == pepNb+pepWMissCleavagesNb)
 		assert(rsb.allProts.size == proNb)
 	}
   	
@@ -71,9 +71,25 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
 			.addNewPeptidesWithMissCleavage(pepNb=pepWMissCleavages3Nb, missCleavageNb=missCleavage3)
 		val rs:ResultSet = rsb.toResultSet()	
 		
+		//rsb.print
+		
 		assert(rs != null)
-		assert(rsb.allPeptides.size == pepNb+pepWMissCleavages2Nb+pepWMissCleavages3Nb)
+		assert(rsb.allPeps.size == pepNb+pepWMissCleavages2Nb+pepWMissCleavages3Nb)
 		assert(rsb.allProts.size == proNb)
 	}
+  	
+  	@Test
+  	def withDuplicatedPeptides() = {
+  	  val proNb:Int = 5
+	  val pepNb:Int = 22		
+	  val deltaPepNb:Int = 3
+	  
+  	  val rsb = new ResultSetFakeBuilder(pepNb=pepNb, proNb=proNb, deltaPepNb=deltaPepNb)
+  	   		.addDuplicatedPeptides(5)
+  	  val rs:ResultSet = rsb.toResultSet
+  	  
+  	  rsb.printForDebug
+  	  
+  	}
 }
 
