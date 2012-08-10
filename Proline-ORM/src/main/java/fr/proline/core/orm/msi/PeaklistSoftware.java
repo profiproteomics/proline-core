@@ -5,6 +5,8 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 /**
@@ -12,6 +14,14 @@ import javax.persistence.Table;
  * 
  */
 @Entity(name = "fr.proline.core.orm.msi.PeaklistSoftware")
+@NamedQueries({
+	@NamedQuery(name = "findMsiPeaklistSoftForName", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
+		+ " where (lower(pls.name) = :name) and (pls.version is null)"),
+
+	@NamedQuery(name = "findMsiPeaklistSoftForNameAndVersion", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
+		+ " where (lower(pls.name) = :name) and (lower(pls.version) = :version)")
+
+})
 @Table(name = "peaklist_software")
 public class PeaklistSoftware implements Serializable {
     private static final long serialVersionUID = 1L;

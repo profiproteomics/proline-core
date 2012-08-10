@@ -11,7 +11,7 @@ import fr.proline.core.orm.utils.StringUtils;
 
 public class MsiSeqDatabaseRepository extends JPARepository {
 
-    public MsiSeqDatabaseRepository(EntityManager msiEm) {
+    public MsiSeqDatabaseRepository(final EntityManager msiEm) {
 	super(msiEm);
     }
 
@@ -27,7 +27,7 @@ public class MsiSeqDatabaseRepository extends JPARepository {
 
 	SeqDatabase result = null;
 
-	TypedQuery<SeqDatabase> query = getEntityManager().createNamedQuery(
+	final TypedQuery<SeqDatabase> query = getEntityManager().createNamedQuery(
 		"findMsiSeqDatabaseForNameAndFasta", SeqDatabase.class);
 	query.setParameter("name", name);
 	query.setParameter("fastaFilePath", fastaFilePath);

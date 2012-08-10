@@ -23,7 +23,8 @@ public class MsiEnzymeRepository extends JPARepository {
 
 	Enzyme result = null;
 
-	TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findMsiEnzymeForName", Enzyme.class);
+	final TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findMsiEnzymeForName",
+		Enzyme.class);
 	query.setParameter("name", name.toLowerCase());
 
 	final List<Enzyme> enzymes = query.getResultList();

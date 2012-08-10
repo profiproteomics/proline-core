@@ -1,6 +1,8 @@
 package fr.proline.core.orm.msi.repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -11,12 +13,14 @@ import fr.proline.core.orm.utils.StringUtils;
 
 public class ScoringRepository extends JPARepository {
 
+    private static final Map<String, Integer> SCORING_IDS_CACHE = new HashMap<String, Integer>();
+
     public ScoringRepository(final EntityManager msiEm) {
 	super(msiEm);
     }
 
     /**
-     * Retrieve Scoring entity by <code>scoreType</code> string.
+     * Retrieves Scoring entity by <code>scoreType</code> string.
      * 
      * @param scoreType
      *            Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (must
@@ -31,7 +35,7 @@ public class ScoringRepository extends JPARepository {
 
 	Scoring result = null;
 
-	TypedQuery<Scoring> query = getEntityManager().createNamedQuery("findScoringForScoreType",
+	final TypedQuery<Scoring> query = getEntityManager().createNamedQuery("findScoringForScoreType",
 		Scoring.class);
 	query.setParameter("scoreType", scoreType);
 
@@ -46,6 +50,41 @@ public class ScoringRepository extends JPARepository {
 	    }
 
 	}
+
+	return result;
+    }
+
+    /**
+     * Retrives a cached Scoring.Id by given <code>scoreType</code>.
+     * 
+     * @param scoreType
+     *            Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (must
+     *            be a non empty <code>String</code>).
+     * @return Scoring.Id or <code>null</code> if not found
+     */
+    public Integer getScoringIdForType(final String scoreType) {
+
+	if (StringUtils.isEmpty(scoreType)) {
+	    throw new IllegalArgumentException("Invalid scoreType");
+	}
+
+	Integer result = null;
+
+	synchronized (SCORING_IDS_CACHE) {
+	    result = SCORING_IDS_CACHE.get(scoreType);
+
+	    if (result == null) {
+
+		final Scoring foundScoring = findScoringForType(scoreType);
+		if (foundScoring != null) {
+		    result = Integer.valueOf(foundScoring.getId());
+
+		    SCORING_IDS_CACHE.put(scoreType, result);
+		}
+
+	    }
+
+	} // End of synchronized block on SCORING_IDS_CACHE
 
 	return result;
     }

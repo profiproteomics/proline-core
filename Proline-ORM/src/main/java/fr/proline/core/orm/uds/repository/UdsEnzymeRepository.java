@@ -23,7 +23,8 @@ public class UdsEnzymeRepository extends JPARepository {
 
 	Enzyme result = null;
 
-	TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findUdsEnzymeForName", Enzyme.class);
+	final TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findUdsEnzymeForName",
+		Enzyme.class);
 	query.setParameter("name", name.toLowerCase());
 
 	final List<Enzyme> enzymes = query.getResultList();
