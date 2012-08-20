@@ -60,7 +60,9 @@ class ResultSetFakeBuilder (
       
   //PeptideMatch 
   var allPepMatches:ListBuffer[PeptideMatch] = ListBuffer[PeptideMatch]()
-  private var tmpPepMatchById:collection.mutable.Map[Int,PeptideMatch] = collection.mutable.Map[Int,PeptideMatch]()      
+  private var tmpPepMatchById:collection.mutable.Map[Int,PeptideMatch] = collection.mutable.Map[Int,PeptideMatch]()
+  private var peptideIdByPeptideMatchId:Map[Int,Int] = Map[Int,Int]() // ++ allPepMatches.map { pepMatchInst => pepMatchInst.id -> pepMatchInst.peptide.id}    
+  private var peptideMatchIdByPeptideId:Map[Int,Iterable[Int]] = Map[Int,Iterable[Int]]() //peptideIdByPeptideMatchId groupBy {_._2} map {case (key,value) => (key, value.unzip._1)}
   
   //ProteinMatch 
   var allProtMatches:ListBuffer[ProteinMatch] = ListBuffer[ProteinMatch]()    
@@ -80,7 +82,7 @@ class ResultSetFakeBuilder (
   private val avgNbPepPerGroup:Int = pepNb/proNb  
   logger.debug("Start building a ResultSet having "+pepNb+" peptides and "+proNb+" proteins.")
   if (deltaPepNb == 0) logger.debug(avgNbPepPerGroup+" peptides match on each protein.")
-    else logger.debug(avgNbPepPerGroup+" peptides +/-"+deltaPepNb+" match on each protein.")
+    else logger.debug(avgNbPepPerGroup+" (+/- "+deltaPepNb+") peptides match on each protein.")
   
   
   
@@ -147,6 +149,8 @@ class ResultSetFakeBuilder (
   } while(allPeps.size < pepNb)  //end while 
            
     
+  updatePeptideMaps()
+  
   //Build Protein, SequenceMatch, ProteinMatch
   var currPepCount:Int = 0 //Current Peptide # in a protein group
   var currProtCount:Int = 0 //Current Protein #
@@ -168,11 +172,19 @@ class ResultSetFakeBuilder (
       
       val startPos = startIdx+1
       val endPos = endIdx+1
-      
+                 
+      //Retrieve best PeptideMatch Id    
+      //Get the list of PeptideMatch IDs for the current Peptide ID
+      //ascending sort PeptideMatch by score and take last one (the PeptideMatch w max score)
+      //peptideMatchIdByPeptideId(currPep.id).map{pmId=>println("PM ID "+pmId+", score: "+tmpPepMatchById(pmId).score)}               
+      val maxScorePMId = peptideMatchIdByPeptideId(currPep.id).toList.sortBy(tmpPepMatchById(_).score).last
+                  
       allSeqMatches += new SequenceMatch(
           start=startPos,end=endPos, 
           residueBefore=resBefore, residueAfter=resAfter,
-          peptide=Option[Peptide](currPep), resultSetId=RESULT_SET_ID)
+          peptide=Option[Peptide](currPep),
+          bestPeptideMatch=Option[PeptideMatch](tmpPepMatchById(maxScorePMId)),
+          resultSetId=RESULT_SET_ID)
             
     } //end while pepGroup        
    
@@ -218,10 +230,15 @@ class ResultSetFakeBuilder (
       if(pepIdList.head == sm.peptide.get.id) firstSM = sm        
        else if (pepIdList.last == sm.peptide.get.id) lastSM = sm      
     )
-          
+    
+    //There is one PeptideMatch. The just newly created. 
+    val bestPM:PeptideMatch = allPepMatches(allPepMatches.length-1)            
+    
 	var nSM = new SequenceMatch(start=firstSM.start, end=lastSM.end, 
 	    residueBefore=firstSM.residueBefore, residueAfter=lastSM.residueAfter,
-		peptide=Option[Peptide](builtPep), resultSetId=RSId)	             	      	  
+		peptide=Option[Peptide](builtPep), 
+		bestPeptideMatch=Option[PeptideMatch](bestPM),
+		resultSetId=RSId)	             	      	  
     proMatch.sequenceMatches = (proMatch.sequenceMatches.toBuffer + nSM).toArray
      
     proMatch.peptideMatchesCount += 1 
@@ -240,14 +257,14 @@ class ResultSetFakeBuilder (
     allPeps += builtPep
     tmpPepById = collection.mutable.Map() ++ allPeps.map { pep => ( pep.id -> pep ) }    
     
-    createPepMatch(pep=builtPep, missCleavage=missCleavage,RSId=RSId)          
+    val builtPM:PeptideMatch = createPepMatch(pep=builtPep, missCleavage=missCleavage,RSId=RSId)          
     builtPep
   }
     
   private def createPepMatch(pep:Peptide, missCleavage:Int, RSId:Int):PeptideMatch = {
     val charge:Int = Randomator.pepCharge      	  
 	val queryID:Int = Ms2Query.generateNewId
-	  
+	
 	val msq:Ms2Query = new Ms2Query(id=queryID, initialId=queryID, 
 	    	moz=getIonMzFromNeutralMass(neutralMass=pep.calculatedMass, charge=charge),
 	        charge=charge, spectrumTitle="generated spectrum "+queryID)      
@@ -261,6 +278,14 @@ class ResultSetFakeBuilder (
     builtPM
   }
 
+  /**
+   * Used only for printing
+   */
+  private def updatePeptideMaps():Unit = {
+    peptideIdByPeptideMatchId = Map() ++ allPepMatches.map { pepMatchInst => pepMatchInst.id -> pepMatchInst.peptide.id}    
+    peptideMatchIdByPeptideId = peptideIdByPeptideMatchId groupBy {_._2} map {case (key,value) => (key, value.unzip._1)}
+  }
+  
   /**
    * Add a given number of duplicated peptides
    * Randomly select a PeptideMatch
@@ -282,8 +307,16 @@ class ResultSetFakeBuilder (
 	      	})(0) //Take first one
 	   protMatch.peptideMatchesCount += 1  
 	   	   	   
+	   //Modify the SequenceMatch if best PeptideMatch ID has changed
+	   var sm = protMatch.sequenceMatches.filter(sm=>sm.getPeptideId == pmOrg.peptide.id)(0)
+	   if (builtPM.score > sm.bestPeptideMatch.get.score) {	     
+		   sm.bestPeptideMatch = Option[PeptideMatch](builtPM)
+	   } 	   
+	   
     } //endwhile
-           
+        
+    updatePeptideMaps()
+    
     logger.info(duplicatedPepNb+" duplicated PeptideMatch added")
     this
   }
@@ -353,7 +386,7 @@ class ResultSetFakeBuilder (
       val pepIdList = eligiblePeptidesForProteinMatchId(currRandomProMatchKey).take(missCleavageNb+1)     
       var builtProMatch:ProteinMatch = createPepAndCoForProtMatchId(pepIdList=pepIdList, proMatchId=currRandomProMatchKey, 
            missCleavage=missCleavageNb, RSId=RESULT_SET_ID)
-                   
+                      
 //      logger.debug("Created 1 new peptide for ProteinMatch ID: "+builtProMatch.id)    
 //      builtProMatch.sequenceMatches.map(sm=>
 //        logger.debug("...PeptideID"+sm.peptide.get.id.toString+", SeqMatch ["+sm.start+"/"+sm.end+", PepID"+sm.getPeptideId+"]")        )
@@ -371,7 +404,8 @@ class ResultSetFakeBuilder (
         
     } //end while  
         
-   
+    updatePeptideMaps()
+    
     this
   }
      
@@ -434,18 +468,18 @@ class ResultSetFakeBuilder (
 	    allPepsForProtSeq.map{
 	      e=> println("[allPeptidesByProtSeq] Prot Sequence: "+e._1+", seq: "+e._2.map(p=>p.id))
 	    }
-	    val peptideIdByPeptideMatchId:Map[Int,Int] = Map() ++ allPepMatches.map { pepMatchInst => pepMatchInst.id -> pepMatchInst.peptide.id}    
-	    val peptideMatchIdByPeptideId = peptideIdByPeptideMatchId groupBy {_._2} map {case (key,value) => (key, value.unzip._1)}  
+//	    val peptideIdByPeptideMatchId:Map[Int,Int] = Map() ++ allPepMatches.map { pepMatchInst => pepMatchInst.id -> pepMatchInst.peptide.id}    
+//	    val peptideMatchIdByPeptideId = peptideIdByPeptideMatchId groupBy {_._2} map {case (key,value) => (key, value.unzip._1)}  
 	            
 	    for (pm <- allProtMatches) {
 	      logger.info("")
 	      logger.info(">>>> ProteinMatch ID: "+pm.id+", #SeqMatch: "+pm.sequenceMatches.size+", ACC: "+pm.accession+", peptideMatchCount: "+pm.peptideMatchesCount)                       
 	      for (sm <- pm.sequenceMatches) {
-	        logger.info("      SequenceMatch START-STOP: "+sm.start+"-"+sm.end)
+	        logger.info("      SequenceMatch START-STOP: "+sm.start+"-"+sm.end+", best PM ID: "+sm.getBestPeptideMatchId)
 	        logger.info("      		Peptide ID: "+sm.getPeptideId+", "+sm.peptide.get.sequence)
 	        for (pmIt <- peptideMatchIdByPeptideId.get(sm.getPeptideId)) {    
 	        	pmIt.foreach(        	    
-	        	    pmId => logger.info("      		*PeptideMatch id "+pmId+", miss cleavage: "+tmpPepMatchById(pmId).missedCleavage))      
+	        	    pmId => logger.info("      		*PeptideMatch id "+pmId+", score: "+tmpPepMatchById(pmId).score+", miss cleavage: "+tmpPepMatchById(pmId).missedCleavage))      
 	        }        
 	      }      
 	    }   
