@@ -10,6 +10,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 import fr.proline.core.orm.uds.InstrumentConfiguration;
+import fr.proline.core.orm.utils.StringUtils;
 
 /**
  * The persistent class for the instrument_config database table.
@@ -22,6 +23,7 @@ import fr.proline.core.orm.uds.InstrumentConfiguration;
 
 	@NamedQuery(name = "findMsiInstrumConfForNameAndMs1", query = "select ic from fr.proline.core.orm.msi.InstrumentConfig ic"
 		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
+
 })
 @Table(name = "instrument_config")
 public class InstrumentConfig implements Serializable {
@@ -61,7 +63,15 @@ public class InstrumentConfig implements Serializable {
 
 	setId(udsInstrumentConfig.getId());
 	setMs1Analyzer(udsInstrumentConfig.getMs1Analyzer());
-	setMsnAnalyzer(udsInstrumentConfig.getMsnAnalyzer());
+
+	final String msnAnalyzer = udsInstrumentConfig.getMsnAnalyzer();
+
+	if (StringUtils.isEmpty(msnAnalyzer)) {
+	    setMsnAnalyzer(null);
+	} else {
+	    setMsnAnalyzer(msnAnalyzer);
+	}
+
 	setName(udsInstrumentConfig.getName());
 	setSerializedProperties(udsInstrumentConfig.getSerializedProperties());
     }

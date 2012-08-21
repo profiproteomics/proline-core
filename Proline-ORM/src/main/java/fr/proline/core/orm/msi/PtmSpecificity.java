@@ -6,26 +6,23 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import fr.proline.core.orm.utils.StringUtils;
 
 /**
  * The persistent class for the ptm_specificity database table.
  * 
  */
 @Entity(name = "fr.proline.core.orm.msi.PtmSpecificity")
-@NamedQuery(name = "findPtmSpecByLocAndResid", query = "select ps from fr.proline.core.orm.msi.PtmSpecificity ps"
-	+ " where (lower(ps.location) = :loc) and (lower(ps.residue) = :resid)")
 @Table(name = "ptm_specificity")
 public class PtmSpecificity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // Msi PtmSpecificity Id are not generated (taken from Ps PtmSpecificity entity)
     private Integer id;
 
     private String location;
@@ -38,6 +35,33 @@ public class PtmSpecificity implements Serializable {
     // bi-directional many-to-one association to UsedPtm
     @OneToMany(mappedBy = "ptmSpecificity")
     private Set<UsedPtm> usedPtms;
+
+    /**
+     * Create a Msi PtmSpecificity entity from a Ps PtmSpecificity entity. Created Msi PtmSpecificity entity
+     * shares the same Id with given Ps PtmSpecificity.
+     * 
+     * @param psPtmSpecificity
+     *            PtmSpecificity entity from psDb used to initialize Msi PtmSpecificity fields (must not be
+     *            <code>null</code>)
+     */
+    public PtmSpecificity(final fr.proline.core.orm.ps.PtmSpecificity psPtmSpecificity) {
+
+	if (psPtmSpecificity == null) {
+	    throw new IllegalArgumentException("PsPtmSpecificity is null");
+	}
+
+	setId(psPtmSpecificity.getId());
+	setLocation(psPtmSpecificity.getLocation());
+
+	final String residue = psPtmSpecificity.getResidue();
+
+	if (StringUtils.isEmpty(residue)) {
+	    setResidue(null);
+	} else {
+	    setResidue(residue);
+	}
+
+    }
 
     public PtmSpecificity() {
     }

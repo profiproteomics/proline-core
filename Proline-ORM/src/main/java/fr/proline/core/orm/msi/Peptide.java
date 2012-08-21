@@ -8,6 +8,8 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
+import fr.proline.core.orm.utils.StringUtils;
+
 /**
  * The persistent class for the peptide database table.
  * 
@@ -61,7 +63,15 @@ public class Peptide implements Serializable {
 
 	setId(psPeptide.getId());
 	setCalculatedMass(psPeptide.getCalculatedMass());
-	setPtmString(psPeptide.getPtmString());
+
+	final String ptmString = psPeptide.getPtmString();
+
+	if (StringUtils.isEmpty(ptmString)) {
+	    setPtmString(null);
+	} else {
+	    setPtmString(ptmString);
+	}
+
 	setSequence(psPeptide.getSequence());
 	setSerializedProperties(psPeptide.getSerializedProperties());
     }

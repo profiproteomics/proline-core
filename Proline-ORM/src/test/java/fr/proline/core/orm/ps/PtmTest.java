@@ -13,20 +13,20 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import fr.proline.core.orm.ps.repository.PtmRepository;
+import fr.proline.core.orm.ps.repository.PsPtmRepository;
 import fr.proline.core.orm.utils.JPAUtil;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.repository.utils.DatabaseUtils;
 
 public class PtmTest extends DatabaseTestCase {
 
-	PtmRepository ptmRepo;
+	PsPtmRepository ptmRepo;
 	
 	@Before public void setUp() throws Exception {
         initDatabase();
         initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
         loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
-        ptmRepo = new PtmRepository(em);
+        ptmRepo = new PsPtmRepository(em);
 	}
 
 	@After public void tearDown() throws Exception {
@@ -48,14 +48,14 @@ public class PtmTest extends DatabaseTestCase {
 	}
 	
 	@Test public void findPtmByName() {
-		Ptm phosPtm = ptmRepo.findPtmByName("Phospho");
+		Ptm phosPtm = ptmRepo.findPtmForName("Phospho");
 		assertThat(phosPtm, notNullValue());
 		assertThat(phosPtm.getShortName(), equalTo("Phospho"));
 		assertThat(phosPtm.getFullName(), equalTo("Phosphorylation"));
-		Ptm phosPtm2 = ptmRepo.findPtmByName("PHosPHo");
+		Ptm phosPtm2 = ptmRepo.findPtmForName("PHosPHo");
 		assertThat(phosPtm2, notNullValue());
 		assertThat(phosPtm2, sameInstance(phosPtm));
-		Ptm phosPtm3 = ptmRepo.findPtmByName("PHosPHorylation");
+		Ptm phosPtm3 = ptmRepo.findPtmForName("PHosPHorylation");
 		assertThat(phosPtm3, notNullValue());
 		assertThat(phosPtm3, sameInstance(phosPtm));
 	}

@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQuery;
 
+import fr.proline.core.orm.utils.StringUtils;
+
 /**
  * The persistent class for the enzyme database table.
  * 
@@ -50,7 +52,15 @@ public class Enzyme implements Serializable {
 	}
 
 	setId(udsEnzyme.getId());
-	setCleavageRegexp(udsEnzyme.getCleavageRegexp());
+
+	final String cleavageRegexp = udsEnzyme.getCleavageRegexp();
+
+	if (StringUtils.isEmpty(cleavageRegexp)) {
+	    setCleavageRegexp(null);
+	} else {
+	    setCleavageRegexp(cleavageRegexp);
+	}
+
 	setIsIndependant(udsEnzyme.getIsIndependant());
 	setIsSemiSpecific(udsEnzyme.getIsSemiSpecific());
 	setName(udsEnzyme.getName());

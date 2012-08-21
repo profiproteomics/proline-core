@@ -20,11 +20,14 @@ import javax.persistence.OneToMany;
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "findPepsForSeq", query = "select p from Peptide p where UPPER(p.sequence) = :seq "),
+	@NamedQuery(name = "findPsPepsForSeq", query = "select p from fr.proline.core.orm.ps.Peptide p"
+		+ " where lower(p.sequence) = :seq"),
 
-	@NamedQuery(name = "findPepsForSeqPtmStr", query = "select p from Peptide p where UPPER(p.sequence) = :seq  and p.ptmString = :ptmStr"),
+	@NamedQuery(name = "findPsPeptForSeqPtmStr", query = "select p from fr.proline.core.orm.ps.Peptide p"
+		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr)"),
 
-	@NamedQuery(name = "findPepsForSeqWoPtm", query = "select p from Peptide p where UPPER(p.sequence) = :seq  and p.ptmString is null")
+	@NamedQuery(name = "findPsPeptForSeqWoPtm", query = "select p from fr.proline.core.orm.ps.Peptide p"
+		+ " where (lower(p.sequence) = :seq)  and (p.ptmString is null)")
 
 })
 public class Peptide implements Serializable {

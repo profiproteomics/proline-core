@@ -85,6 +85,7 @@ public class SeqDatabase implements Serializable {
 
 	final SequenceDbRelease seqDbRelease = pdiSequenceDbInstance.getSequenceDbRelease();
 
+	/* TODO : In MsiDb, ReleaseDate field must not be null */
 	if (seqDbRelease == null) {
 	    setVersion(pdiSequenceDbInstance.getRevision().toString());
 	} else {

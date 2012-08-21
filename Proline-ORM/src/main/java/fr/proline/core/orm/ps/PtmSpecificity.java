@@ -18,99 +18,96 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-
 /**
  * The persistent class for the ptm_specificity database table.
  * 
  */
-@Entity(name="fr.proline.core.orm.ps.PtmSpecificity")
+@Entity(name = "fr.proline.core.orm.ps.PtmSpecificity")
 @NamedQueries({
-@NamedQuery(name="findPtmSpecificityByNameLocResidue",
-query="select ps from fr.proline.core.orm.ps.PtmSpecificity ps where ps.residue=:residu and ps.location=:location and ps.ptm.shortName=:ptmName"),
+	@NamedQuery(name = "findPsPtmSpecForNameLocResidue", query = "select ps from fr.proline.core.orm.ps.PtmSpecificity ps"
+		+ " where (lower(ps.location) = :location) and (ps.residue = :residue) and (lower(ps.ptm.shortName) = :ptmShortName)"),
 
-@NamedQuery(name="findPtmSpecificityNoResiduByNameLoc",
-query="select ps from fr.proline.core.orm.ps.PtmSpecificity ps where ps.residue is null and ps.location = :location and ps.ptm.shortName = :ptmName")
+	@NamedQuery(name = "findPsPtmSpecForNameAndLoc", query = "select ps from fr.proline.core.orm.ps.PtmSpecificity ps"
+		+ " where (lower(ps.location) = :location) and (ps.residue is null) and (lower(ps.ptm.shortName) = :ptmShortName)")
 
 })
-
-@Table(name="ptm_specificity")
+@Table(name = "ptm_specificity")
 public class PtmSpecificity implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="id")
-	private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    private Integer id;
 
-	private String location;
+    private String location;
 
-	private String residue;
+    private String residue;
 
-	//bi-directional many-to-one association to Ptm
-   @ManyToOne
-	@JoinColumn(name="ptm_id")
-	private Ptm ptm;
+    // bi-directional many-to-one association to Ptm
+    @ManyToOne
+    @JoinColumn(name = "ptm_id")
+    private Ptm ptm;
 
-	//uni-directional many-to-one association to PtmClassification
-   @ManyToOne(cascade = PERSIST)
-	@JoinColumn(name="classification_id")
-	private PtmClassification classification;
+    // uni-directional many-to-one association to PtmClassification
+    @ManyToOne(cascade = PERSIST)
+    @JoinColumn(name = "classification_id")
+    private PtmClassification classification;
 
-    @OneToMany(mappedBy="specificity", cascade = PERSIST)
+    @OneToMany(mappedBy = "specificity", cascade = PERSIST)
     private List<PtmEvidence> evidences;
-    
+
     public PtmSpecificity() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public Integer getId() {
+	return this.id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(Integer id) {
+	this.id = id;
+    }
 
-	public String getLocation() {
-		return this.location;
-	}
+    public String getLocation() {
+	return this.location;
+    }
 
-	public void setLocation(String location) {
-		this.location = location;
-	}
+    public void setLocation(String location) {
+	this.location = location;
+    }
 
-	public String getResidue() {
-		return this.residue;
-	}
+    public String getResidue() {
+	return this.residue;
+    }
 
-	public void setResidue(String residue) {
-		this.residue = residue;
-	}
+    public void setResidue(String residue) {
+	this.residue = residue;
+    }
 
-	public Ptm getPtm() {
-		return this.ptm;
-	}
+    public Ptm getPtm() {
+	return this.ptm;
+    }
 
-	public void setPtm(Ptm ptm) {
-		this.ptm = ptm;
-	}
-	
-	public PtmClassification getClassification() {
-		return this.classification;
-	}
+    public void setPtm(Ptm ptm) {
+	this.ptm = ptm;
+    }
 
-	public void setClassification(PtmClassification classification) {
-		this.classification = classification;
-	}
+    public PtmClassification getClassification() {
+	return this.classification;
+    }
 
-	public boolean addEvidence(PtmEvidence evidence) {
-		if (this.evidences == null)
-			this.evidences = new ArrayList<PtmEvidence>();
-		return this.evidences.add(evidence);
-	}
-	
-	public List<PtmEvidence> getEvidences() {
-		return evidences;
-	}
+    public void setClassification(PtmClassification classification) {
+	this.classification = classification;
+    }
 
+    public boolean addEvidence(PtmEvidence evidence) {
+	if (this.evidences == null)
+	    this.evidences = new ArrayList<PtmEvidence>();
+	return this.evidences.add(evidence);
+    }
+
+    public List<PtmEvidence> getEvidences() {
+	return evidences;
+    }
 
 }

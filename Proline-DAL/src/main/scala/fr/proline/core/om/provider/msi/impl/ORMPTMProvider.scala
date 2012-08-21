@@ -6,7 +6,7 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.utils.PeptidesOMConverterUtil
-import fr.proline.core.orm.ps.repository.PtmRepository
+import fr.proline.core.orm.ps.repository.PsPtmRepository
 import fr.proline.core.orm.ps.PtmSpecificity
 import javax.persistence.EntityManager
 import javax.persistence.PersistenceException
@@ -16,7 +16,7 @@ import scala.collection.JavaConverters.asJavaCollectionConverter
 
 class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging {
 
-  var ptmRepo = new PtmRepository(em) //Created by constructor
+  var psPtmRepo = new PsPtmRepository(em) //Created by constructor
   val converter = new PeptidesOMConverterUtil(true)
   
   def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
@@ -57,9 +57,9 @@ class ORMPTMProvider (val em:EntityManager )  extends IPTMProvider with Logging 
       
     	var ptmSpecificity : PtmSpecificity = null 
 		if( ptmResidu.equals('\0'))
-			ptmSpecificity =ptmRepo.findPtmSpecificityWithNoResiduByNameLoc(ptmName, ptmLocation.toString)
+			ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(ptmName, ptmLocation.toString, null)
 		else 
-			ptmSpecificity =ptmRepo.findPtmSpecificityByNameLocResidu(ptmName,ptmLocation.toString,ptmResidu)
+			ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(ptmName, ptmLocation.toString, "" + ptmResidu)
         
 		if(ptmSpecificity == null)
 			return None
