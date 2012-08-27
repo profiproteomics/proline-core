@@ -93,6 +93,11 @@
       <artifactId>prequel_2.9.1</artifactId>
     </dependency>
     <!-- Add : joda-time:joda-time:jar:1.6.2:compile -->
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>1.6.2</version>
+    </dependency>
 
     <dependency>
       <groupId>org.tukaani</groupId>
