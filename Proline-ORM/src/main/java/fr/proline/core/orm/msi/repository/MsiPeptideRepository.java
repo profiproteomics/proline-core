@@ -1,5 +1,6 @@
 package fr.proline.core.orm.msi.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -24,6 +25,26 @@ public class MsiPeptideRepository extends JPARepository {
 	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findMsiPepsForSeq",
 		Peptide.class);
 	query.setParameter("seq", seq.toLowerCase());
+
+	return query.getResultList();
+    }
+
+    /**
+     * Retrieve Msi Peptides by a Collection (List, Set...) of Ids.
+     * 
+     * @param ids
+     *            <code>Collection</code> of Peptide Ids to retrieve (must not be <code>null</code>).
+     * @return List of found Peptides (can be empty if none found).
+     */
+    public List<Peptide> findPeptidesForIds(final Collection<Integer> ids) {
+
+	if (ids == null) {
+	    throw new IllegalArgumentException("Ids collection is null");
+	}
+
+	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findMsiPepsForIds",
+		Peptide.class);
+	query.setParameter("ids", ids);
 
 	return query.getResultList();
     }

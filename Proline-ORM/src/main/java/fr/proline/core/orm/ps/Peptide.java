@@ -23,6 +23,9 @@ import javax.persistence.OneToMany;
 	@NamedQuery(name = "findPsPepsForSeq", query = "select p from fr.proline.core.orm.ps.Peptide p"
 		+ " where lower(p.sequence) = :seq"),
 
+	@NamedQuery(name = "findPsPepsForIds", query = "select p from fr.proline.core.orm.ps.Peptide p"
+		+ " where p.id in :ids"),
+
 	@NamedQuery(name = "findPsPeptForSeqPtmStr", query = "select p from fr.proline.core.orm.ps.Peptide p"
 		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr)"),
 

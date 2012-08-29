@@ -17,7 +17,10 @@ import fr.proline.core.orm.utils.StringUtils;
 @Entity(name = "fr.proline.core.orm.msi.Peptide")
 @NamedQueries({
 	@NamedQuery(name = "findMsiPepsForSeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
-		+ " where lower(p.sequence) = :seq "),
+		+ " where lower(p.sequence) = :seq"),
+
+	@NamedQuery(name = "findMsiPepsForIds", query = "select p from fr.proline.core.orm.msi.Peptide p"
+		+ " where p.id in :ids"),
 
 	@NamedQuery(name = "findMsiPeptForSeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p"
 		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr))"),

@@ -1,5 +1,6 @@
 package fr.proline.core.orm.ps.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -24,6 +25,26 @@ public class PsPeptideRepository extends JPARepository {
 	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findPsPepsForSeq",
 		Peptide.class);
 	query.setParameter("seq", seq.toLowerCase());
+
+	return query.getResultList();
+    }
+
+    /**
+     * Retrieve Ps Peptides by a Collection (List, Set...) of Ids.
+     * 
+     * @param ids
+     *            <code>Collection</code> of Peptide Ids to retrieve (must not be <code>null</code>).
+     * @return List of found Peptides (can be empty if none found).
+     */
+    public List<Peptide> findPeptidesForIds(final Collection<Integer> ids) {
+
+	if (ids == null) {
+	    throw new IllegalArgumentException("Ids collection is null");
+	}
+
+	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findPsPepsForIds",
+		Peptide.class);
+	query.setParameter("ids", ids);
 
 	return query.getResultList();
     }
