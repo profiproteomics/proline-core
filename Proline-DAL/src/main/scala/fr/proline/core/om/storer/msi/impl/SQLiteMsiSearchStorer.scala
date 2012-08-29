@@ -3,12 +3,12 @@ package fr.proline.core.om.storer.msi.impl
 import com.weiglewilczek.slf4s.Logging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import net.noerd.prequel.ReusableStatement  
+import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
-
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.dal.{MsiDbMsiSearchTable,MsiDbMsQueryTable,MsiDbSearchSettingsTable,MsiDbSeqDatabaseTable}
+import fr.proline.core.dal.{MsiDbPtmSpecificityTable,MsiDbUsedPtmTable}
 import fr.proline.core.utils.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchStorer
@@ -19,16 +19,23 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
                       msQueries: Seq[MsQuery],
                       spectrumIdByTitle: Map[String,Int] ): Map[Int,Int] = {
     
+    val ss = msiSearch.searchSettings
+    
     // Insert sequence databases
     val seqDbIdByTmpId = new HashMap[Int,Int]()
-    msiSearch.searchSettings.seqDatabases.foreach { seqDb =>
+    ss.seqDatabases.foreach { seqDb =>
       val tmpSeqDbId = seqDb.id
       this._insertSeqDatabase( seqDb )
       seqDbIdByTmpId += ( tmpSeqDbId -> seqDb.id )
     }
     
-    // Insert search settings
-    this._insertSearchSettings( msiSearch.searchSettings )
+    // Insert search settings    
+    this._insertSearchSettings( ss )
+    
+    // Insert used PTMs
+    val ssId = ss.id
+    for( ptmDef <- ss.fixedPtmDefs ) this._insertUsedPTM( ssId, ptmDef, true )
+    for( ptmDef <- ss.variablePtmDefs ) this._insertUsedPTM( ssId, ptmDef, false )
     
     // Insert MSI search
     this._insertMsiSearch( msiSearch )
@@ -171,6 +178,42 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     
   }
 
+  private def _insertUsedPTM( ssId: Int, ptmDef: PtmDefinition, isFixed: Boolean ): Unit = {
+    
+    // Check if the PTM specificity exists in the MSIdb
+    val msiDbTx = this.msiDb.getOrCreateTransaction()
+    val count = msiDbTx.selectInt( "SELECT count(*) FROM ptm_specificity WHERE id =" + ptmDef.id )
+    
+    // Insert PTM specificity if it doesn't exist in the MSIdb
+    if( count == 0 ) {
+      val ptmSpecifColsList = MsiDbPtmSpecificityTable.getColumnsAsStrList()
+      val ptmSpecifInsertQuery = MsiDbPtmSpecificityTable.makeInsertQuery( ptmSpecifColsList )      
+      
+      msiDbTx.executeBatch( ptmSpecifInsertQuery, false ) { stmt =>
+        stmt.executeWith(
+              ptmDef.id,
+              ptmDef.location,
+              ptmDef.residue,
+              Option(null)
+              )
+      }
+    }
+    
+    // Link used PTMs to search settings
+    val usedPtmColsList = MsiDbUsedPtmTable.getColumnsAsStrList()
+    val usedPtmInsertQuery = MsiDbUsedPtmTable.makeInsertQuery( usedPtmColsList )
+    msiDbTx.executeBatch( usedPtmInsertQuery, false ) { stmt =>
+      stmt.executeWith(
+            ssId,
+            ptmDef.id,
+            ptmDef.names.shortName,
+            isFixed,
+            Option(null)
+            )
+            
+    }
+    
+  }
   
   private def _insertMsiSearch( msiSearch: MSISearch ): Unit = {
     

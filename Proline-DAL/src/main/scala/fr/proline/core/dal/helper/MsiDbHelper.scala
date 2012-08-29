@@ -54,6 +54,18 @@ method get_decoy_rs_id( Int $target_result_set_id! ) {
     msiSearchIds.distinct.toArray
   }
   
+  def getMsiSearchesPtmSpecificityIds( msiSearchIds: Seq[Int] ): Array[Int] = {
+    
+    // Retrieve parent peaklist ids corresponding to the provided MSI search ids
+    val ptmSpecifIds = this.msiDb.getOrCreateTransaction.select(
+                         "SELECT ptm_specificity_id FROM used_ptm, search_settings, msi_search " +
+                         "WHERE used_ptm.search_settings_id = search_settings.id " +
+                         "AND search_settings.id = msi_search.search_settings_id " +
+                         "AND msi_search.id IN ("+  msiSearchIds.mkString(",") +")" ) { r => r.nextInt.get }
+    
+    ptmSpecifIds.distinct.toArray
+  }
+  
   /*def getMsiSearchIdsByResultSetId( rsIds: Seq[Int] ): Seq[Int] = {
     
 
