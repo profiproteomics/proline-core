@@ -39,7 +39,7 @@ public class DatabaseConnector {
 	private DriverType driverType;
 	private static final Logger logger = LoggerFactory.getLogger(DatabaseConnector.class);
 	
-	public DatabaseConnector(Map<String, String> properties) {
+	public DatabaseConnector(Map<String, String> properties) throws Exception {
 		this.properties = new Properties();
 		this.properties.putAll(properties);
 		updateDriverType();
@@ -50,17 +50,25 @@ public class DatabaseConnector {
 	 *  
 	 * @param filename : file to read from classpath
 	 */
-	public DatabaseConnector(String filename) {
-		try {
-			logger.debug("Create DatabaseConnector using {} ",filename);
-			properties = readProperties(filename);
-			updateDriverType();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-		}
+	public DatabaseConnector(String filename) throws Exception {
+	  this.initDatabaseConnector( DatabaseConnector.class.getResource(filename) );
 	}
+	
+  public DatabaseConnector(URL fileURL) throws Exception {
+    this.initDatabaseConnector(fileURL);
+  }
+  
+  private void initDatabaseConnector(URL fileURL) throws Exception {
+    try {
+      logger.debug("Create DatabaseConnector using {} ",fileURL);
+      this.properties = readProperties(fileURL);
+      this.updateDriverType();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+  }
 
-	private void updateDriverType() {
+	private void updateDriverType() throws Exception {
 		String driverClassName = getProperty(PROPERTY_DRIVERCLASSNAME);
 		for(DriverType type : DriverType.values()) {
 			if (type.driver.equals(driverClassName)) {
@@ -68,6 +76,10 @@ public class DatabaseConnector {
 				properties.setProperty(PROPERTY_DIALECT, driverType.getJPADriver());
 				break;
 			}
+		}
+		
+		if( this.driverType == null ) {
+		  throw new Exception("unsupported database driver: " + driverClassName );
 		}
 	}
 
@@ -103,14 +115,13 @@ public class DatabaseConnector {
 		}
 		return dataSource;
 	}
-
-	private Properties readProperties(String filename) throws IOException {
-		URL propertiesURL = DatabaseConnector.class.getResource(filename);
-		InputStream is = propertiesURL.openStream();
-		Properties props = new Properties();
-		props.load(is);
-		return props;
-	}
+	
+  private Properties readProperties(URL fileURL) throws IOException {
+    InputStream is = fileURL.openStream();
+    Properties props = new Properties();
+    props.load(is);
+    return props;
+  }
 
 	public void closeAll() throws Exception {
 			if (dataSource != null) {

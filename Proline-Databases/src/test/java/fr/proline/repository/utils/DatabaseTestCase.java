@@ -26,13 +26,13 @@ public abstract class DatabaseTestCase {
 		getConnector().closeAll();
 	}
 	
-	public void initEntityManager(String persistenceUnitName) {
+	public void initEntityManager(String persistenceUnitName) throws Exception {
 		final Map<String, Object> entityManagerSettings = getConnector().getEntityManagerSettings();
 		emf = Persistence.createEntityManagerFactory(persistenceUnitName, entityManagerSettings);
 		em = emf.createEntityManager();
 	}
 
-	public void initEntityManager(String persistenceUnitName, Map<String, Object> configuration) {
+	public void initEntityManager(String persistenceUnitName, Map<String, Object> configuration) throws Exception {
 		final Map<String, Object> entityManagerSettings = getConnector().getEntityManagerSettings();
 		for (Map.Entry<String, Object> e : configuration.entrySet()) {
 			entityManagerSettings.put(e.getKey(), e.getValue());
@@ -51,7 +51,7 @@ public abstract class DatabaseTestCase {
 		return em;
 	}
 	
-	public void initDatabase() throws ClassNotFoundException {
+	public void initDatabase() throws Exception, ClassNotFoundException {
 		DatabaseUtils.initDatabase(getConnector(), getSQLScriptLocation());
 	}
 
@@ -65,7 +65,7 @@ public abstract class DatabaseTestCase {
 		connector.getDatabaseTester().onSetup();
 	}
 
-	public DatabaseTestConnector getConnector() {
+	public DatabaseTestConnector getConnector() throws Exception {
 		if (connector == null) {
 			connector = new DatabaseTestConnector(getPropertiesFilename());
 			try {

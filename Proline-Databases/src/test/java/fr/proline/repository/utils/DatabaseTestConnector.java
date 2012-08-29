@@ -18,11 +18,11 @@ public class DatabaseTestConnector extends DatabaseConnector {
 
 	private IDatabaseTester databaseTester;
 	
-	public DatabaseTestConnector(Map<String, String> properties) {
+	public DatabaseTestConnector(Map<String, String> properties) throws Exception {
 		super(properties);
 	}
 	
-	public DatabaseTestConnector(String filename) {
+	public DatabaseTestConnector(String filename) throws Exception {
 		super(filename);
 	}
 

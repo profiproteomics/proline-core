@@ -43,7 +43,7 @@ public class ProlineRepository {
 
 	private static ProlineRepository instance;
 
-	public static ProlineRepository getRepositoryManager(ConnectionPrototype prototype) {
+	public static ProlineRepository getRepositoryManager(ConnectionPrototype prototype) throws Exception {
 		if (instance == null) {
 			instance = (prototype == null) ? new ProlineRepository() : new ProlineRepository(prototype);
 		} else if (prototype != null) {
@@ -69,7 +69,7 @@ public class ProlineRepository {
 	 * 
 	 * @param prototype
 	 */
-	private ProlineRepository(ConnectionPrototype prototype) {
+	private ProlineRepository(ConnectionPrototype prototype) throws Exception {
 		repository.put(Databases.UDS, prototype.toConnector(Databases.UDS));
 		repository.put(Databases.PDI, prototype.toConnector(Databases.PDI));
 		repository.put(Databases.PS, prototype.toConnector(Databases.PS));

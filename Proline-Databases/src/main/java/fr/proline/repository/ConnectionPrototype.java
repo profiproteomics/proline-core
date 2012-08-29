@@ -89,7 +89,7 @@ public class ConnectionPrototype {
 		return this;
 	}
 	
-	public DatabaseConnector toConnector(ProlineRepository.Databases db) {
+	public DatabaseConnector toConnector(ProlineRepository.Databases db) throws Exception {
 		StringBuilder URLbuilder = new StringBuilder();
 		URLbuilder.append("jdbc:").append(driver.name().toLowerCase()).append(':');		
 		switch (protocol) {
