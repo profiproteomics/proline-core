@@ -35,6 +35,13 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
   private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) 
   private val udsDb = new UdsDb( UdsDb.buildConfigFromDatabaseManagement(dbMgnt) )
   
+  this.beforeInterruption = () => {
+    // Release database connections
+    this.logger.info("releasing database connections before service interruption...")
+    this.msiDb.closeConnection()
+    this.udsDb.closeConnection()
+  }
+  
   def getTargetResultSetId = targetResultSetId
   
   def runService(): Boolean = {
@@ -47,6 +54,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
 
     logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
+    >>>
     
     // Get Right ResultFile provider
     val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get( fileType )
@@ -55,6 +63,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
 
     // Open the result file
     val resultFile = rfProvider.get.getResultFile( resultIdentFile, providerKey, importerProperties )
+    >>>
     
     // Instantiate some storers
     val msiSearchStorer = MsiSearchStorer( msiDb )
@@ -74,18 +83,20 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     if( msQueryByInitialId != null ) {
       msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
     }
-    
+      
     // Store the peaklist    
     val spectrumIdByTitle = peaklistStorer.storePeaklist( msiSearch.peakList, resultFile )
+    >>>
     
     // Store the MSI search with related search settings and MS queries    
     val seqDbIdByTmpId = msiSearchStorer.storeMsiSearch( msiSearch, msQueries, spectrumIdByTitle )
+    >>>
     
     ////logger.info("Parsing file " + fileLocation.getAbsoluteFile() + " using " + resultFile.getClass().getName() + " failed !")
     
     // Load target result set
     val targetRs = resultFile.getResultSet(false)
-    targetRs.name = msiSearch.title    
+    targetRs.name = msiSearch.title
     
     // Load and store decoy result set if it exists
     if( resultFile.hasDecoyResultSet ) {
@@ -94,13 +105,15 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
   	  
   	  rsStorer.storeResultSet(decoyRs,seqDbIdByTmpId)
       targetRs.decoyResultSet = Some(decoyRs)
+      >>>
   	}
     else targetRs.decoyResultSet = None
 
     // Store target result set
     rsStorer.storeResultSet(targetRs,seqDbIdByTmpId)
     this.targetResultSetId = targetRs.id
-
+    >>>
+    
     this.msiDb.commitTransaction()
     this.msiDb.closeConnection()
     this.udsDb.closeConnection()
