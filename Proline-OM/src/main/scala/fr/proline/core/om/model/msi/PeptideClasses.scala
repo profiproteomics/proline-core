@@ -280,7 +280,7 @@ case class Peptide ( // Required fields
                 var id: Int,
                 val sequence: String,
                 val ptmString: String,
-                val ptms: Array[LocatedPtm],
+                @transient val ptms: Array[LocatedPtm],
                 val calculatedMass: Double,
                 
                 // Mutable optional fields
@@ -345,7 +345,7 @@ case class PeptideMatch ( // Required fields
                      val scoreType: String,
                      val deltaMoz: Double,
                      val isDecoy: Boolean,
-                     val peptide: Peptide,
+                     @transient val peptide: Peptide,
                      
                      // Immutable optional fields
                      val missedCleavage: Int = 0,
@@ -355,7 +355,7 @@ case class PeptideMatch ( // Required fields
                      
                      // Mutable optional fields
                      var isValidated: Boolean = false, // only defined in the model
-                     var resultSetId: Int = 0,    
+                     var resultSetId: Int = 0,
                      
                      protected var childrenIds: Array[Int] = null,
                      @transient var children: Option[Array[PeptideMatch]] = null,
@@ -374,16 +374,19 @@ case class PeptideMatch ( // Required fields
   //require( scoreType == "mascot" )
   require( peptide != null )
   
-  // Related objects ID getters    
- 
+  // Define lazy fields (mainly used for serialization purpose)
+  lazy val msQueryId = this.msQuery.id
+  lazy val peptideId = this.peptide.id
+  
+  // Related objects ID getters 
   def getChildrenIds : Array[Int] = { if(children != null && children != None) children.get.map(_.id) else childrenIds  }
   
   def getBestChildId : Int = { if(bestChild != null && bestChild != None ) bestChild.get.id else bestChildId }     
   
   /** Returns a MS2 query object. */
-    def getMs2Query: Ms2Query = { if(msQuery != null) msQuery.asInstanceOf[Ms2Query] else null }
-    
-  }
+  def getMs2Query: Ms2Query = { if(msQuery != null) msQuery.asInstanceOf[Ms2Query] else null }
+  
+}
  
 object PeptideInstance extends InMemoryIdGen
 
