@@ -1,12 +1,17 @@
 package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.HashMap
+import com.codahale.jerkson.JsonSnakeCase
 
 trait ValidationParams {
   val minPepSeqLength: Int
   val properties: Option[Map[String,Any]]
 }
+
+@JsonSnakeCase
 case class ComputerValidationParams( expectedFdr: Float, minPepSeqLength: Int = 0, properties: Option[Map[String,Any]] = None ) extends ValidationParams
+
+@JsonSnakeCase
 case class UserValidationParams( pValue: Float, minPepSeqLength: Int = 0, properties: Option[Map[String,Any]] = None ) extends ValidationParams
 
 object TargetDecoyModes extends Enumeration {

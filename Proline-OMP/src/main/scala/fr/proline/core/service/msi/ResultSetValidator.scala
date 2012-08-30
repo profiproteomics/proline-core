@@ -27,6 +27,14 @@ class ResultSetValidator( projectId: Int,
   private val psDb = new PsDb( PsDb.getDefaultConfig ) // TODO: retrieve from UDS-DB
   private val udsDb = new UdsDb( UdsDb.getDefaultConfig ) // TODO: retrieve from config
   
+  override def beforeInterruption = {
+    // Release database connections
+    this.logger.info("releasing database connections before service interruption...")
+    this.msiDb.closeConnection()
+    this.psDb.closeConnection()
+    this.udsDb.closeConnection()
+  }
+  
   var validatedTargetRsm: ResultSummary = null
   
   def runService(): Boolean = {
@@ -56,6 +64,7 @@ class ResultSetValidator( projectId: Int,
       params = RsmValidationParamsProperties(),
       results = RsmValidationResultsProperties()    
     )
+    >>>
     
     // Run peptide match validation
     pepMatchValParams match {
@@ -105,6 +114,7 @@ class ResultSetValidator( projectId: Int,
       }
       case _ => ()
     }
+    >>>
     
     // Update selection levels 
     
@@ -114,7 +124,7 @@ class ResultSetValidator( projectId: Int,
     val resultSets = List( Some(targetRs), decoyRsOpt )
     val resultSummaries = List.newBuilder[Option[ResultSummary]]
     
-    //Build result summary for each individual result set
+    // Build result summary for each individual result set
     for( rs <- resultSets ) {
       if( rs != None ) {
         // Create new result set with validated peptide matches and compute result summary
@@ -123,6 +133,7 @@ class ResultSetValidator( projectId: Int,
         resultSummaries += Some(rsm)
       }
     }
+    >>>
     
     // Build the list of validated RSMs
     val rsmList = resultSummaries.result()
@@ -152,6 +163,7 @@ class ResultSetValidator( projectId: Int,
       case none: Option[ValidationParams] => ()*/
       case _ => ()
     }
+    >>>
     
     // Select only validated proteins
     for( rsm <- rsmList ) {
@@ -180,6 +192,7 @@ class ResultSetValidator( projectId: Int,
       
       // Store target result summary
       rsmStorer.storeResultSummary( targetRsm )
+      >>>
       
       // Commit transaction
       this.msiDb.commitTransaction()
@@ -189,6 +202,8 @@ class ResultSetValidator( projectId: Int,
     
     // Update the service results
     this.validatedTargetRsm = targetRsm
+    
+    this.beforeInterruption()
     
     true
   }

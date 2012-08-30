@@ -4,7 +4,7 @@ import com.weiglewilczek.slf4s.Logging
 
 trait IService extends Runnable with HasProgress {
   
-  protected var beforeInterruption: Function0[Unit] = null
+  protected def beforeInterruption() = {}
   
   def runService() : Boolean
   
@@ -17,7 +17,7 @@ trait IService extends Runnable with HasProgress {
       this.runService()
     } catch {
       case ie: InterruptedException => {
-        if( this.beforeInterruption != null ) this.beforeInterruption()
+        this.beforeInterruption()
         Thread.currentThread.interrupt() // very important to interrupt again
       }
       case e: Exception => throw e

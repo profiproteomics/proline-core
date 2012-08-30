@@ -35,7 +35,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
   private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) 
   private val udsDb = new UdsDb( UdsDb.buildConfigFromDatabaseManagement(dbMgnt) )
   
-  this.beforeInterruption = () => {
+  override def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
     this.msiDb.closeConnection()
@@ -115,8 +115,8 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     >>>
     
     this.msiDb.commitTransaction()
-    this.msiDb.closeConnection()
-    this.udsDb.closeConnection()
+    
+    this.beforeInterruption()
     
     true
   }
