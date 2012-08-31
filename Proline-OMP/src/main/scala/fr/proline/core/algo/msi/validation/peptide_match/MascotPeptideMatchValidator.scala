@@ -2,8 +2,8 @@ package fr.proline.core.algo.msi.validation.peptide_match
 
 import math.abs
 import fr.proline.core.algo.msi.validation._
-
 import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.PeptideMatchValidationProperties
 
 class MascotPeptideMatchValidator extends IPeptideMatchValidator {
 
@@ -77,14 +77,18 @@ class MascotPeptideMatchValidator extends IPeptideMatchValidator {
       if( isValidated ) nbValidMatches += 1 
       
       // Compute RSM properties
-      var valProps = peptideMatch.validationProperties.orElse( Some( new collection.mutable.HashMap[String,Any]() ) ).get 
-      valProps.getOrElseUpdate("mascot:adjusted expectation value",0)
-      valProps.getOrElseUpdate("mascot:score offset",0)
+      var valProps = peptideMatch.validationProperties.orElse( Some( new PeptideMatchValidationProperties() ) ).get 
+      //valProps.setMascotAdjustedExpectationValue(Some(0))
+      //valProps.setMascotScoreOffset(Some(0))
+      //valProps.getOrElseUpdate("mascot:adjusted expectation value",0)
+      //valProps.getOrElseUpdate("mascot:score offset",0)
       
       // TODO: check if this is really the expected value (adjusted ?)
       val adjustedEvalue = MascotValidationHelper.calcPepMatchEvalue( peptideMatch )
-      valProps("mascot:adjusted expectation value") = adjustedEvalue
-      valProps("mascot:score offset") = MascotValidationHelper.calcScoreThresholdOffset( adjustedEvalue, pValue )
+      valProps.setMascotAdjustedExpectationValue( Some(adjustedEvalue) )
+      valProps.setMascotScoreOffset( Some( MascotValidationHelper.calcScoreThresholdOffset( adjustedEvalue, pValue ) ) )
+      //valProps("mascot:adjusted expectation value") = adjustedEvalue
+      //valProps("mascot:score offset") = MascotValidationHelper.calcScoreThresholdOffset( adjustedEvalue, pValue )
       
       peptideMatch.validationProperties = Some( valProps )
     }

@@ -127,7 +127,7 @@ class RsStorer( dbMgmt: DatabaseManagement, private val _storer: IRsStorer ) ext
     rsType = if( isDecoy ) "DECOY_" + rsType else rsType
     
     val decoyRsId = if( resultSet.getDecoyResultSetId > 0 ) Some(resultSet.getDecoyResultSetId) else None
-        
+    val msiSearchId = if( resultSet.msiSearch != null ) Some(resultSet.msiSearch.id) else None
     // Store RDB result set
     // TODO: use JPA instead
     
@@ -142,7 +142,7 @@ class RsStorer( dbMgmt: DatabaseManagement, private val _storer: IRsStorer ) ext
       rsType <<
       new java.util.Date << // msiDb1.stringifyDate( new java.util.Date )
       decoyRsId <<
-      resultSet.msiSearch.id
+      msiSearchId
 
     stmt.execute()
     resultSet.id = this.msiDb1.extractGeneratedInt( stmt )
@@ -445,7 +445,7 @@ class RsStorer( dbMgmt: DatabaseManagement, private val _storer: IRsStorer ) ext
       for( seqMatch <- proteinMatch.sequenceMatches ) {
         
         // Retrieve corresponding peptide match
-        val peptideMatch = seqMatch.bestPeptideMatch.getOrElse( peptideMatchByTmpId( seqMatch.getBestPeptideMatchId ) )
+        val peptideMatch = Option(seqMatch.bestPeptideMatch).getOrElse( None ).getOrElse(peptideMatchByTmpId( seqMatch.getBestPeptideMatchId ) )
         
         // Update peptide match id and result set id
         seqMatch.peptide = Some( peptideMatch.peptide )

@@ -35,7 +35,7 @@ case class PeptideMatchMascotProperties (
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class PeptideInstancePeptideMatchMapProperties (
+case class PeptideMatchValidationProperties (
   @BeanProperty var mascotScoreOffset: Option[Float] = None,
   @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
 )

@@ -177,7 +177,7 @@ case class ProteinSet (
                  var id: Int = 0,
                  var resultSummaryId: Int = 0,
                  
-                 protected var proteinMatchIds: Array[Int] = null, //One of these 2 values should be specified
+                 var proteinMatchIds: Array[Int] = null, //One of these 2 values should be specified
                  @transient var proteinMatches: Option[Array[ProteinMatch]] = null,
                  
                  protected var typicalProteinMatchId: Int = 0,

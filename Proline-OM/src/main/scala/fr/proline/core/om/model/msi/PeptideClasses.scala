@@ -365,7 +365,7 @@ case class PeptideMatch ( // Required fields
                      
                      var properties: Option[PeptideMatchProperties] = None,
                      
-                     @transient var validationProperties : Option[HashMap[String, Any]] = None
+                     @transient var validationProperties : Option[PeptideMatchValidationProperties] = None
                      
                      ) {
   
@@ -397,7 +397,7 @@ case class PeptideInstance ( // Required fields
                         val peptide: Peptide,
 
                         // Immutable optional fields
-                        protected val peptideMatchIds: Array[Int] = null, //One of these 2 values should be specified                        
+                        var peptideMatchIds: Array[Int] = null, //One of these 2 values should be specified                        
                         @transient val peptideMatches: Array[PeptideMatch] = null,
                         
                         val children: Array[PeptideInstance] = null,
@@ -417,7 +417,7 @@ case class PeptideInstance ( // Required fields
                         var resultSummaryId: Int = 0,
                         
                         var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any],
-                        var peptideMatchPropertiesById: Map[Int, PeptideInstancePeptideMatchMapProperties ] = null
+                        var peptideMatchPropertiesById: Map[Int, PeptideMatchValidationProperties ] = null
                         
                         ) {
   
@@ -432,7 +432,7 @@ case class PeptideInstance ( // Required fields
   
   def getUnmodifiedPeptideId : Int = { if(unmodifiedPeptide != null && unmodifiedPeptide != None) unmodifiedPeptide.get.id else unmodifiedPeptideId }
   
-  def getPeptideMatchProperties( peptideMatchId: Int ): Option[PeptideInstancePeptideMatchMapProperties] = {
+  def getPeptideMatchProperties( peptideMatchId: Int ): Option[PeptideMatchValidationProperties] = {
     if( peptideMatchPropertiesById != null ) { peptideMatchPropertiesById.get(peptideMatchId) }
     else { None }
   }
@@ -476,7 +476,7 @@ class PeptideSet ( // Required fields
                    var items: Array[PeptideSetItem],
                    val isSubset: Boolean,
                    val peptideMatchesCount: Int,
-                   val proteinMatchIds: Array[Int],
+                   var proteinMatchIds: Array[Int],
                    
                    // Immutable optional fields
                    protected val proteinSetId: Int = 0,

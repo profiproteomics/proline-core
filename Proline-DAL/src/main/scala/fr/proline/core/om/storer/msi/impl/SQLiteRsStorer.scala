@@ -115,7 +115,6 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
   def storeRsPeptideMatches( rs: ResultSet ): Int = {
     
     // Retrieve some vars
-    val msiDbConn = msiDb1.connection
     val rsId = rs.id
     val isDecoy = rs.isDecoy
     val peptideMatches = rs.peptideMatches
@@ -177,7 +176,6 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
   def storeRsProteinMatches( rs: ResultSet ): Int = {
     
     // Retrieve some vars
-    val msiDbConn = msiDb1.connection
     val rsId = rs.id
     val isDecoy = rs.isDecoy
     val proteinMatches = rs.proteinMatches

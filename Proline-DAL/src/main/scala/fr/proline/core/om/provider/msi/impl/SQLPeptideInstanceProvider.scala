@@ -5,7 +5,7 @@ import com.codahale.jerkson.Json.parse
 import fr.proline.core.dal.{MsiDb,PsDb,MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable}
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PeptideInstancePeptideMatchMapProperties
+import fr.proline.core.om.model.msi.PeptideMatchValidationProperties
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
@@ -94,7 +94,7 @@ class SQLPeptideInstanceProvider( val msiDb: MsiDb,
       // Retrieve peptide match ids and properties
       val pepInstId: Int = pepInstRecord(PepInstCols.id).asInstanceOf[AnyVal]
       val pepMatchIds = new ArrayBuffer[Int]()
-      val pepMatchPropertyMapBuilder = Map.newBuilder[Int, PeptideInstancePeptideMatchMapProperties]
+      val pepMatchPropertyMapBuilder = Map.newBuilder[Int, PeptideMatchValidationProperties]
       
       pepMatchesMappingsByPepInstId(pepInstId).foreach { pepMatchMapping =>
         val pepMatchId = pepMatchMapping(PepMatchMappingCols.peptideMatchId).asInstanceOf[Int]
@@ -102,7 +102,7 @@ class SQLPeptideInstanceProvider( val msiDb: MsiDb,
         
         val propertiesAsJSON = pepMatchMapping(PepMatchMappingCols.serializedProperties).asInstanceOf[String]        
         if( propertiesAsJSON != null ) {
-          pepMatchPropertyMapBuilder += pepMatchId -> parse[PeptideInstancePeptideMatchMapProperties](propertiesAsJSON)
+          pepMatchPropertyMapBuilder += pepMatchId -> parse[PeptideMatchValidationProperties](propertiesAsJSON)
         }
       }
       
