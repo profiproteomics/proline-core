@@ -524,10 +524,10 @@ Could be the path/name of the database in case of embedded file DB engine (H2 / 
     <column id="COL144" populated="true" UUID="aedf0f28-ec7f-4a67-8e94-39348914989f" autoIncrement="false" autoIncrementSequenceName="identification_fraction_identification_id_seq" defaultValue="" name="identification_id" nullable="0" physicalName="identification_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL145" populated="true" UUID="dd7ff3c1-6274-4f5c-b666-9604d4de1b85" autoIncrement="false" autoIncrementSequenceName="run_raw_run_id_seq" defaultValue="" name="run_id" nullable="0" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL145" populated="true" UUID="dd7ff3c1-6274-4f5c-b666-9604d4de1b85" autoIncrement="false" autoIncrementSequenceName="run_raw_run_id_seq" defaultValue="" name="run_id" nullable="1" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL146" populated="true" UUID="8295bbad-1076-4515-b15e-4808d50c1ceb" autoIncrement="false" autoIncrementSequenceName="identification_fraction_raw_file_raw_file_name_seq" defaultValue="" name="raw_file_name" nullable="0" physicalName="raw_file_name" precision="250" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL146" populated="true" UUID="8295bbad-1076-4515-b15e-4808d50c1ceb" autoIncrement="false" autoIncrementSequenceName="identification_fraction_raw_file_raw_file_name_seq" defaultValue="" name="raw_file_name" nullable="1" physicalName="raw_file_name" precision="250" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
     </folder>
