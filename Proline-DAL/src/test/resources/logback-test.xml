@@ -8,11 +8,28 @@
     </encoder>
   </appender>
 
-  <logger name="fr.proline.core" level="DEBUG">    
-  </logger>
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>dal-test_log.txt</file>
+    <append>true</append>
 
-  <root level="OFF">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
+
+    <encoder>
+       <pattern>%-5level: [%thread] +%-4relative ms  %date{dd MMM yyyy - HH:mm:ss.SSS} %logger{35} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+
+  <logger name="fr.proline.core" level="DEBUG" />
+
+ <!--  <logger name="org.hibernate.type" level="TRACE">
+  </logger>
+-->
+  <root level="WARN">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </root>
-  
+
 </configuration>

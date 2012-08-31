@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE dataset SYSTEM "../../../../../uds-dataset.dtd"> 
+<!DOCTYPE dataset SYSTEM "../../../../../uds-dataset.dtd">
 <dataset>
 	<USER_ACCOUNT ID="1" LOGIN="joe" CREATION_MODE="auto"/>
 	<USER_ACCOUNT ID="2" LOGIN="jack" CREATION_MODE="auto"/>
@@ -28,4 +28,15 @@
 	<EXTERNAL_DB IS_BUSY="false"  VERSION="A.0.1" ID="2" TYPE="ps"  USERNAME="sa" PASSWORD="myPass" NAME="target/test-classes/test_ps" CONNECTION_MODE="FILE" />
 	<EXTERNAL_DB IS_BUSY="false"  VERSION="A.0.1" ID="3" TYPE="msi"  USERNAME="sa" PASSWORD="myPass" NAME="test-classes/test_msi" CONNECTION_MODE="FILE" />
 	<PROJECT_DB_MAP EXTERNAL_DB_ID="3" PROJECT_ID="1" />
+
+	<!-- Needed for ResultSet Storer / ResultSetFakeBuilder test -->
+	<SPEC_TITLE_PARSING_RULE ID="1" NAME="ZZZ Distiller TEST" />
+	<PEAKLIST_SOFTWARE ID="1" SERIALIZED_PROPERTIES="" VERSION="4.3.2" NAME="Distiller" SPEC_TITLE_PARSING_RULE_ID="1" />
+
+
+	<ACTIVATION TYPE="1"/>
+	<INSTRUMENT_CONFIG ID="1" MS1_ANALYZER="Analyzer" NAME="VENUS_CFG" ACTIVATION_TYPE="1" INSTRUMENT_ID="1" />
+
+	<ENZYME ID="1" IS_SEMI_SPECIFIC="false" IS_INDEPENDANT="true" NAME="TRYPSIC" />
+
 </dataset>
