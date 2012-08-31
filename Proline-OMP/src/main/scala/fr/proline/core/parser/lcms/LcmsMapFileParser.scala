@@ -1,19 +1,43 @@
 package fr.proline.core.parser.lcms
 
 import fr.proline.core.parser.lcms.impl._
+import fr.proline.core.om.model.lcms.RunMap
+import scala.collection.mutable.ArrayBuffer
 
 trait ILcmsMapFileParser {
   
   import fr.proline.core.om.model.lcms.LcmsRun
   
-  def getRunMap( filePath: String, lcmsRun: LcmsRun, extraParams: Map [String,Any] )
+  
+  def getRunMap( filePath: String, lcmsRun: LcmsRun, extraParams: Map [String, Any] ) : Option[RunMap]
+  
+  def getMs2Events(lcmsRun: LcmsRun, idx:Int) : Array[Int] = {
+    /**
+     * from the id of the ms2 scan taken at the apex, find all consecutive ms2
+     * assume scans ordering same when the were acquired 
+     */
+    var ms2IdEvents = new ArrayBuffer[Int]
+    var idxTmp = idx - 1
+      while (lcmsRun.scans(idxTmp).msLevel == 2) {
+        ms2IdEvents += lcmsRun.scans(idxTmp).initialId
+        idxTmp -= 1
+      }
+      //go the right
+      idxTmp = idx + 1
+      while (lcmsRun.scans(idxTmp).msLevel == 2) {
+        ms2IdEvents += lcmsRun.scans(idxTmp).initialId
+        idxTmp += 1
+      }
+      ms2IdEvents.sortBy(i => i)
+      ms2IdEvents toArray
+  } 
   
 }
 
 object LcmsMapFileParser {
   
   def apply( fileType: String  ): ILcmsMapFileParser = { fileType match {
-    case "Decon2LS" => new Decon2LSMapParser()
+    //case "Decon2LS" => new Decon2LSMapParser()
     case "MaxQuant" => new MaxQuantMapParser()
     case "MFPaQ" => new MFPaQMapParser()
     case "MsInspect" => new MsInspectMapParser()
