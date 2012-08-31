@@ -23,26 +23,13 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
 
   return \@result_sets;
   }*/
+  
+  def getDecoyRsId( targetResultSetId: Int ): Option[Int] = {
+    this.msiDb.getOrCreateTransaction.select(
+      "SELECT decoy_result_set_id FROM result_set WHERE id = " + targetResultSetId
+    ) { _.nextInt } (0)
+  }
 
-/*##############################################################################
-# Method: get_decoy_rs_id()
-#
-method get_decoy_rs_id( Int $target_result_set_id! ) {
-  
-  #### Retrieve target result set
-  #require Pairs::Msi::RDBO::ResultSet;
-  #my $target_result_set = new Pairs::Msi::RDBO::ResultSet( id => $target_result_set_id );
-  #$target_result_set->load();
-  #
-  #### Retrieve decoy result set
-  #my $decoy_result_set = $target_result_set->decoy_result_set;
-  #croak "undefined decoy result set" if !defined $decoy_result_set;
-  #my $decoy_result_set_id = $decoy_result_set->id;
-  
-  my $decoy_result_set = $self->get_target_decoy_result_sets($target_result_set_id)->[1];
-  
-  return defined $decoy_result_set ? $decoy_result_set->id : undef;
-  }*/
 
   def getResultSetsMsiSearchIds( rsIds: Seq[Int] ): Array[Int] = {
     
@@ -52,6 +39,14 @@ method get_decoy_rs_id( Int $target_result_set_id! ) {
                          "WHERE id IN ("+  rsIds.mkString(",") +")" ) { r => r.nextInt.get }
     
     msiSearchIds.distinct.toArray
+  }
+  
+  def getResultSetIdByResultSummaryId( rsmIds: Seq[Int] ): Map[Int,Int] = {
+    
+    // Retrieve parent peaklist ids corresponding to the provided MSI search ids
+    this.msiDb.getOrCreateTransaction.select(
+     "SELECT id, result_set_id FROM result_summary " +
+     "WHERE id IN ("+  rsmIds.mkString(",") +")" ) { r => (r.nextInt.get,r.nextInt.get) } toMap
   }
   
   def getMsiSearchesPtmSpecificityIds( msiSearchIds: Seq[Int] ): Array[Int] = {
@@ -134,31 +129,13 @@ method get_search_engine( Int $target_result_set_id! ) {
   }*/
 
   /** Build score types (search_engine:score_name) and map them by id */
-  def getScoringTypeById(): Map[Int,String] = {
-  
+  def getScoringTypeById(): Map[Int,String] = {  
     Map() ++ _getScorings.map { scoring => ( scoring.id -> (scoring.search_engine + ":" + scoring.name) ) }
-    
   }
   
-  def getScoringIdByType(): Map[String,Int] = {
-  
+  def getScoringIdByType(): Map[String,Int] = {  
     Map() ++ _getScorings.map { scoring => ( (scoring.search_engine + ":" + scoring.name) -> scoring.id ) }
-    
   }
-
-/*##############################################################################
-# Method: get_scoring_id_by_score_type()
-# Returns a hash mapping scoring id by score type
-#
-method get_scoring_id_by_score_type( ) {
-  
-  ### Build score types (search_engine:score_name) and map them by id
-  my %score_type_map = map { join(':', @$_{qw/search_engine name/}) => $_->{id} } @{$self->_get_scoring_hashes};
-    
-  return \%score_type_map;  
-  }
-*/
-  
   
   private case class ScoringRecord( id: Int, search_engine: String, name: String )
   
