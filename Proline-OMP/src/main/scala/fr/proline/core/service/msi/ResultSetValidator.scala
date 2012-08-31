@@ -3,55 +3,61 @@ package fr.proline.core.service.msi
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.{MsiDb,PsDb,UdsDb}
+import fr.proline.core.dal.{DatabaseManagement,MsiDb}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{MsiSearchStorer,PeaklistStorer,RsStorer}
 import fr.proline.core.service.IService
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.storer.msi.RsmStorer
+import fr.proline.core.om.provider.msi.IResultSetProvider
 
-/*
-case class ComputerValidationParams( wantedFdr: Double, minPepSeqLength: Int = 0, properties: Option[Map[String,Any]] = None )
-case class UserValidationParams( pValue: Float, minPepSeqLength: Int = 0, properties: Option[Map[String,Any]] = None )
-*/
-class ResultSetValidator( projectId: Int,
-                          targetRsId: Int,
-                          decoyRsId: Option[Int] = None,
+/*object ResultSetValidator {
+  
+  protected def loadTargetResultSet( rsProvider: IResultSetProvider, targetRsId: Int ): ResultSet = {    
+    // Load target result set
+    val targetRsOpt = rsProvider.getResultSet( targetRsId )
+    if( targetRsOpt == None )
+      throw new Exception("can't load result set with id = " + targetRsId )
+    
+    targetRsOpt.get
+  }
+  
+  protected def loadDecoyResultSet( rsProvider: IResultSetProvider, decoyRsId: Option[Int] ): Option[ResultSet] = {
+    val decoyRsOpt = if( decoyRsId != None ) rsProvider.getResultSet( decoyRsId.get ) else None
+  }
+}*/
+
+class ResultSetValidator( dbManager: DatabaseManagement,
+                          projectId: Int,
+                          targetRs: ResultSet,
+                          decoyRsOpt: Option[ResultSet] = None,
                           pepMatchValParams: Option[ValidationParams] = None,
                           protSetValParams: Option[ValidationParams] = None,
                           targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
                           storeResultSummary: Boolean = true ) extends IService with Logging {
+
+  private val msiDbConnector = dbManager.getMSIDatabaseConnector(projectId, false)
+  private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) 
+  //private val psDb = new PsDb( PsDb.getDefaultConfig ) // TODO: retrieve from UDS-DB
+  //private val udsDb = new UdsDb( UdsDb.getDefaultConfig ) // TODO: retrieve from config
   
-  private val msiDb = new MsiDb( MsiDb.getDefaultConfig ) // TODO: retrieve from UDS-DB
-  private val psDb = new PsDb( PsDb.getDefaultConfig ) // TODO: retrieve from UDS-DB
-  private val udsDb = new UdsDb( UdsDb.getDefaultConfig ) // TODO: retrieve from config
-  
-  override def beforeInterruption = {
+  override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
     this.msiDb.closeConnection()
-    this.psDb.closeConnection()
-    this.udsDb.closeConnection()
+    //this.psDb.closeConnection()
+    //this.udsDb.closeConnection()
   }
   
   var validatedTargetRsm: ResultSummary = null
+  var validatedDecoyRsm: Option[ResultSummary] = null
   
   def runService(): Boolean = {
     
     import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
     
     val startTime = curTimeInSecs()
-    
-    // Load target result set
-    val rsProvider = new SQLResultSetProvider( msiDb, psDb )
-    val targetRsOpt = rsProvider.getResultSet( targetRsId )
-    if( targetRsOpt == None )
-      throw new Exception("can't load result set with id = " + targetRsId )
-    
-    // Load decoy result set if it exists
-    val targetRs = targetRsOpt.get
-    val decoyRsOpt = if( decoyRsId != None ) rsProvider.getResultSet( decoyRsId.get ) else None
 
     // Retrieve search engine name    
     val searchEngine = this._getSearchEngineName( targetRs )
@@ -201,7 +207,8 @@ class ResultSetValidator( projectId: Int,
     }
     
     // Update the service results
-    this.validatedTargetRsm = targetRsm
+    this.validatedTargetRsm = targetRsm    
+    this.validatedDecoyRsm = decoyRsmOpt
     
     this.beforeInterruption()
     
