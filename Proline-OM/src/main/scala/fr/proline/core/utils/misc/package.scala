@@ -1,13 +1,17 @@
 package fr.proline.core.utils
 
+import java.util.concurrent.atomic.AtomicInteger
+
 /** Miscellaneous helpers */
 package object misc {
 
   trait InMemoryIdGen {
-    private var inMemoryIdCount = 0
-    def generateNewId(): Int = { inMemoryIdCount -= 1; inMemoryIdCount }
+    private val inMemoryIdSequence = new AtomicInteger(0)
+
+    def generateNewId(): Int = { inMemoryIdSequence.decrementAndGet() }
+
   }
-  
+
   /** Computes the median value of a sequence of Doubles */
   /*def median(s: Seq[Double]) = {
     val (lower, upper) = s.sortWith(_<_).splitAt(s.size / 2)
