@@ -83,6 +83,8 @@ public class SQLiteDialect extends org.hibernate.dialect.Dialect {
         protected SQLFunction resolveTrailingTrimFunction() {
           return new SQLFunctionTemplate(StandardBasicTypes.STRING, "rtrim(?1, ?2)");
         }
+        
+        // FIXME : This method is not callable (not an Override / Implement)
         protected SQLFunction render(java.util.List l, SessionFactoryImplementor sfi ) { // NYI
           return null;
         }

@@ -77,9 +77,12 @@ public class ScoringRepository extends JPARepository {
 
 		final Scoring foundScoring = findScoringForType(scoreType);
 		if (foundScoring != null) {
-		    result = Integer.valueOf(foundScoring.getId());
+		    result = foundScoring.getId();
 
-		    SCORING_IDS_CACHE.put(scoreType, result);
+		    if (result != null) {
+			SCORING_IDS_CACHE.put(scoreType, result);
+		    }
+
 		}
 
 	    }

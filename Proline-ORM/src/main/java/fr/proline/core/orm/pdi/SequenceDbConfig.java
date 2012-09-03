@@ -25,107 +25,110 @@ import javax.persistence.Table;
 @Table(name = "seq_db_config")
 public class SequenceDbConfig implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public enum Alphabet { AA, DNA };
-	
-	public enum Format { SWISS, GENEBANK, GFF };
+    public enum Alphabet {
+	AA, DNA
+    };
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    public enum Format {
+	SWISS, GENEBANK, GFF
+    };
 
-	private String name;
-	
-	@Column(name="is_native")
-	private Boolean isNative;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Integer id;
 
-	@Enumerated(EnumType.STRING)
-	private Alphabet alphabet;
+    private String name;
 
-	@Column(name = "ref_entry_format")
-	@Enumerated(EnumType.STRING)
-	private Format refEntryFormat;
+    @Column(name = "is_native")
+    private Boolean isNative;
 
-	@Column(name = "serialized_properties")
-	private String serializedProperties;
+    @Enumerated(EnumType.STRING)
+    private Alphabet alphabet;
 
-	// bi-directional many-to-one association to FastaParsingRule
-	@ManyToOne(cascade = { PERSIST })
-	@JoinColumn(name = "fasta_parsing_rule_id")
-	private FastaParsingRule fastaParsingRule;
+    @Column(name = "ref_entry_format")
+    @Enumerated(EnumType.STRING)
+    private Format refEntryFormat;
 
-	//bi-directional many-to-one association to SequenceDbInstance
-	@OneToMany(mappedBy="sequenceDbConfig")
-	private Set<SequenceDbInstance> sequenceDbInstances;
-		
-	protected SequenceDbConfig() {
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	}
-	
-	public Integer getId() {
-		return this.id;
-	}
+    // bi-directional many-to-one association to FastaParsingRule
+    @ManyToOne(cascade = { PERSIST })
+    @JoinColumn(name = "fasta_parsing_rule_id")
+    private FastaParsingRule fastaParsingRule;
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
-	
-	public Alphabet getAlphabet() {
-		return this.alphabet;
-	}
+    // bi-directional many-to-one association to SequenceDbInstance
+    @OneToMany(mappedBy = "sequenceDbConfig")
+    private Set<SequenceDbInstance> sequenceDbInstances;
 
-	public void setAlphabet(Alphabet alphabet) {
-		this.alphabet = alphabet;
-	}
+    protected SequenceDbConfig() {
 
-	public Format getRefEntryFormat() {
-		return this.refEntryFormat;
-	}
+    }
 
-	public void setRefEntryFormat(Format refEntryFormat) {
-		this.refEntryFormat = refEntryFormat;
-	}
+    public Integer getId() {
+	return this.id;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public void setId(Integer id) {
+	this.id = id;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public Alphabet getAlphabet() {
+	return this.alphabet;
+    }
 
-	public FastaParsingRule getFastaParsingRule() {
-		return this.fastaParsingRule;
-	}
+    public void setAlphabet(Alphabet alphabet) {
+	this.alphabet = alphabet;
+    }
 
-	public void setFastaParsingRule(FastaParsingRule fastaParsingRule) {
-		this.fastaParsingRule = fastaParsingRule;
-	}
+    public Format getRefEntryFormat() {
+	return this.refEntryFormat;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setRefEntryFormat(Format refEntryFormat) {
+	this.refEntryFormat = refEntryFormat;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public Boolean getIsNative() {
-		return this.isNative;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public void setIsNative(Boolean isNative) {
-		this.isNative = isNative;
-	}
+    public FastaParsingRule getFastaParsingRule() {
+	return this.fastaParsingRule;
+    }
 
-	public Set<SequenceDbInstance> getSequenceDbConfigs() {
-		return sequenceDbInstances;
-	}
+    public void setFastaParsingRule(FastaParsingRule fastaParsingRule) {
+	this.fastaParsingRule = fastaParsingRule;
+    }
 
-	public void setSequenceDbConfigs(Set<SequenceDbConfig> sequenceDbConfigs) {
-		this.sequenceDbInstances = sequenceDbInstances;
-	}
+    public String getName() {
+	return name;
+    }
 
+    public void setName(String name) {
+	this.name = name;
+    }
+
+    public Boolean getIsNative() {
+	return this.isNative;
+    }
+
+    public void setIsNative(Boolean isNative) {
+	this.isNative = isNative;
+    }
+
+    public Set<SequenceDbInstance> getSequenceDbConfigs() {
+	return sequenceDbInstances;
+    }
+
+    public void setSequenceDbConfigs(final Set<SequenceDbInstance> sequenceDbConfigs) {
+	this.sequenceDbInstances = sequenceDbConfigs;
+    }
 
 }
