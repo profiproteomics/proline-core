@@ -11,7 +11,7 @@ class ResultSummaryMerger extends Logging {
   def mergeResultSummaries( resultSummaries: Seq[ResultSummary], seqLengthByProtId: Map[Int,Int] ): ResultSummary = {
     
     // Define some vars
-    val msiSearchIds = new ArrayBuffer[Int]()
+    //val msiSearchIds = new ArrayBuffer[Int]()
     val allValidPeptideMatches = new ArrayBuffer[PeptideMatch]()
     val proteinMatchesByKey = new HashMap[String,ArrayBuffer[ProteinMatch]]()
     val peptideById = new HashMap[Int,Peptide]()
@@ -30,7 +30,7 @@ class ResultSummaryMerger extends Logging {
       val peptideMatches = resultSet.peptideMatches
       val peptides = resultSet.peptides
       val proteinSets = resultSummary.proteinSets
-      if( resultSet.isNative ) msiSearchIds += resultSet.getMSISearchId
+      //if( resultSet.isNative ) msiSearchIds += resultSet.getMSISearchId
       
       // Retrieve the ID of valid peptide matches (having a corresponding peptide instance)
       val validPepMatchIdSetBuilder = Set.newBuilder[Int]
@@ -83,49 +83,12 @@ class ResultSummaryMerger extends Logging {
     for( peptideMatch <- allValidPeptideMatches ) {      
       val peptideId = peptideMatch.peptide.id
       val peptide = peptideById(peptideId)
-      //TODO: find an other way to reduc the redundancy (use a cache in the provider ?)
+      //TODO: find an other way to reduce the redundancy (use a cache in the provider ?)
       //peptideMatch.peptide = peptide
       
       validPeptideById(peptideId) = peptide
       validPepMatchesByPepId.getOrElseUpdate(peptideId, new ArrayBuffer[PeptideMatch] ) += peptideMatch
     }
-    val nrValidPeptides = validPeptideById.values.toArray
-    
-    //////// Group valid peptide matches by peptide id
-    //val validPepMatchByPepId
-    //push( @{validPepMatchByPepId(_.peptide.id)}, _ ) for allValidPeptideMatches
-    //
-    //////// Merge peptide matches 
-    //val( mergedPeptideMatches, mergedPepMatchIdByBestChildId )
-    //val parentPepMatchNum = 0
-    //while( val(peptideId, peptideMatchGroup) = each(validPepMatchByPepId) ) {
-    //  parentPepMatchNum += 1
-    //  
-    //  val bestChild = reduce { a.score > b.score ? a : b } peptideMatchGroup
-    //  
-    //  ////// Map merged peptide match by the best child id
-    //  mergedPepMatchIdByBestChildId(bestChild.id) = parentPepMatchNum   
-    //  
-    //  ////// Create a quantitative peptide match which correspond to the best peptide match of this peptide instance
-    //  val parentPepMatch = new Pairs::Msi::Model::PeptideMatch(
-    //                                    id = parentPepMatchNum,
-    //                                    score = bestChild.score,
-    //                                    rank = bestChild.rank,
-    //                                    delta_moz = bestChild.deltaMoz,
-    //                                    fragment_match_count = bestChild.fragmentMatchCount,
-    //                                    is_validated = bestChild.isValidated,
-    //                                    peptide = bestChild.peptide,
-    //                                    children = peptideMatchGroup,
-    //                                    best_child = bestChild,
-    //                                    ms_query = bestChild.msQuery,
-    //                                    ms_query_id = bestChild.msQueryId,
-    //                                  )   
-    //  push( mergedPeptideMatches, parentPepMatch )
-    // 
-    //}
-    
-    // Instantiate a protein helper
-    //val proteinHelper = Pairs::Msi::Helper::Protein.instance
     
     // Define some vars
     val nrProteinMatches = new ArrayBuffer[ProteinMatch]    
@@ -177,15 +140,10 @@ class ResultSummaryMerger extends Logging {
           }
           
           // Build new sequence match corresponding to the merged peptide match
-          bestSeqMatches += new SequenceMatch(
-                                    peptideId = pepId,
-                                    start = bestSeqMatch.start,
-                                    end = bestSeqMatch.end,
-                                    residueBefore = bestSeqMatch.residueBefore,
-                                    residueAfter = bestSeqMatch.residueAfter,
-                                    isDecoy = seqMatch.isDecoy,
-                                    bestPeptideMatchId = bestPepMatch.id
-                                  )
+          bestSeqMatches += bestSeqMatch.copy(
+                              peptide = Some(bestPepMatch.peptide),
+                              bestPeptideMatchId = bestPepMatch.id
+                              )
           
         }
       }
@@ -216,33 +174,50 @@ class ResultSummaryMerger extends Logging {
                                   sequenceMatches = bestSeqMatches.toArray,
                                   seqDatabaseIds = seqDbIdSetBuilder.result().toArray,
                                   proteinId = proteinId,
-                                  taxonId = firstDescribedProtMatch.taxonId
+                                  taxonId = firstDescribedProtMatch.taxonId,
+                                  scoreType = firstDescribedProtMatch.scoreType
                                  )
       
       protMatchNum += 1
     }
     
     // Create a non redundant list of MSI search ids
-    val nrMsiSearchIds = msiSearchIds.distinct
+    //val nrMsiSearchIds = msiSearchIds.distinct
+    
+    // Merge peptide matches and related protein matches
+    val mergedPeptideMatches = ResultSetMerger.mergePeptideMatches( allValidPeptideMatches, nrProteinMatches )
     
     // Create a merged result set
     val mergedResultSet = new ResultSet(
                                 id = ResultSet.generateNewId(),
                                 proteinMatches = nrProteinMatches.toArray,
-                                peptideMatches = allValidPeptideMatches.toArray,
-                                peptides = nrValidPeptides,
+                                peptideMatches = mergedPeptideMatches.toArray,
+                                peptides =  validPeptideById.values.toArray,
                                 isDecoy = resultSummaries(0).resultSet.get.isDecoy,
                                 isNative = false
                                 //msiSearchId = nrMsiSearchIds
                                 )
-    this.logger.debug( "nb protein matches: " + nrProteinMatches.length )
-    this.logger.debug( "nb valid peptide matches: " + allValidPeptideMatches.length )
-    this.logger.debug( "nb valid peptides: " + nrValidPeptides.length )
+    
+    this.logger.info( "result summaries have been merged:")
+    this.logger.debug( "- nb merged protein matches = " + mergedResultSet.proteinMatches.length )
+    this.logger.debug( "- nb merged peptide matches = " + mergedResultSet.peptideMatches.length )
+    this.logger.debug( "- nb merged peptides = " + mergedResultSet.peptides.length )
     
     // Instantiate a protein inference algo and build the merged result summary
     val protInferenceAlgo = ProteinSetInferer( InferenceMethods.parsimonious )
-    protInferenceAlgo.computeResultSummary( mergedResultSet )
+    val mergedRsm = protInferenceAlgo.computeResultSummary( mergedResultSet )
     
+    // FIXME: retrieve the right score type
+    for( proteinSet <- mergedRsm.proteinSets ) {
+      proteinSet.scoreType = "mascot:mudpit score"
+    }
+    
+    // TODO: Make some updates of result set and result summary objects
+    //mergedResultSet.updateScoresOfProteinMatches( search_engine = 'mascot' )
+    //mergedResultSummary.updateScoresOfProteinSets( search_engine = 'mascot' )
+    //mergedResultSummary.updatePeptideRelations()
+    
+    mergedRsm
   }
 
 }

@@ -235,6 +235,10 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       
     }
     
+    // Retrieve all identified peptide matches and map them by spectrum id
+    val allIdentPepMatches = identPepMatchById.values
+    val identPepMatchBySpectrumId = allIdentPepMatches.map { p => p.getMs2Query.spectrumId -> p } toMap
+    
     // Retrieve sequence length mapped by the corresponding protein id
     val seqLengthByProtId = this.msiDbHelper.getSeqLengthByBioSeqId( identProteinIdSet.toList )
     
@@ -244,9 +248,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     val mergedResultSummary = resultSummaryMerger.mergeResultSummaries( identResultSummaries, seqLengthByProtId )
     
     // Retrieve peptide matches of the merged result summary
-    val identPeptideMatches = mergedResultSummary.resultSet.get.peptideMatches
-    val identPepMatchBySpectrumId = identPeptideMatches.map { p => p.getMs2Query.spectrumId -> p } toMap
-    //val childPepMatchById = map { _.id = _ } childPeptideMatches
+    //val identParentPeptideMatches = mergedResultSummary.resultSet.get.peptideMatches
     
     // Retrieve some vars 
     val refMapAlnSetByMapId = lcmsMapSet.getRefMapAlnSetByMapId.get
@@ -441,15 +443,18 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     // Define some vars
     val masterPepInstByPepId = new HashMap[Int,PeptideInstance]
     val msiMasterPepInstById = new HashMap[Int,MsiPeptideInstance]
-    val masterPepMatchIdByBestChildId = new HashMap[Int,Int]
+    val masterQuantPepMatchIdByTmpPepMatchId = new HashMap[Int,Int]
     
     for( masterPepInstance <- masterPepInstances ) {
       
       val peptideId = masterPepInstance.peptide.id
-      val identPepMatchIds = masterPepInstance.getPeptideMatchIds
+      val masterPepInstPepMatchIds = masterPepInstance.getPeptideMatchIds
+      if( masterPepInstPepMatchIds.length > 1 ) {
+        throw new Exception("peptide matches have not been correctly merged")
+      }
       
       val msiMasterPepInstance = new MsiPeptideInstance()
-      msiMasterPepInstance.setPeptideMatchCount(identPepMatchIds.length)
+      msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
       msiMasterPepInstance.setProteinMatchCount(masterPepInstance.proteinMatchesCount)
       msiMasterPepInstance.setProteinSetCount(masterPepInstance.proteinSetsCount)
       msiMasterPepInstance.setSelectionLevel(2)
@@ -465,24 +470,25 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       
       // Map the peptide instance by the peptide id
       masterPepInstByPepId( peptideId ) = masterPepInstance
-      // TODO: remove if this mapping when ORM is updated
+      // TODO: remove this mapping when ORM is updated
       msiMasterPepInstById( masterPepInstanceId ) = msiMasterPepInstance 
       
       // Retrieve the best peptide match
-      val identPepMatches = identPepMatchIds.map { masterPepMatchById(_) }
-      val bestPepMatch = identPepMatches.reduce { (a,b) => if( a.score > b.score ) a else b } 
+      //val identParentPepMatches = masterPepInstPepMatchIds.map { masterPepMatchById(_) }
+      //val bestParentPepMatch = identParentPepMatches.reduce { (a,b) => if( a.score > b.score ) a else b } 
+      val bestParentPepMatch = masterPepMatchById(masterPepInstPepMatchIds(0))
       
       // Create a quant peptide match which correspond to the best peptide match of this peptide instance
       val msiMasterPepMatch = new MsiPeptideMatch()
-      msiMasterPepMatch.setCharge(bestPepMatch.msQuery.charge)
-      msiMasterPepMatch.setExperimentalMoz(bestPepMatch.msQuery.moz)
-      msiMasterPepMatch.setScore(bestPepMatch.score)
-      msiMasterPepMatch.setRank(bestPepMatch.rank)
-      msiMasterPepMatch.setDeltaMoz(bestPepMatch.deltaMoz)
-      msiMasterPepMatch.setMissedCleavage(bestPepMatch.missedCleavage)
-      msiMasterPepMatch.setFragmentMatchCount(bestPepMatch.fragmentMatchesCount)
+      msiMasterPepMatch.setCharge(bestParentPepMatch.msQuery.charge)
+      msiMasterPepMatch.setExperimentalMoz(bestParentPepMatch.msQuery.moz)
+      msiMasterPepMatch.setScore(bestParentPepMatch.score)
+      msiMasterPepMatch.setRank(bestParentPepMatch.rank)
+      msiMasterPepMatch.setDeltaMoz(bestParentPepMatch.deltaMoz)
+      msiMasterPepMatch.setMissedCleavage(bestParentPepMatch.missedCleavage)
+      msiMasterPepMatch.setFragmentMatchCount(bestParentPepMatch.fragmentMatchesCount)
       msiMasterPepMatch.setIsDecoy(false)
-      msiMasterPepMatch.setPeptideId(bestPepMatch.peptide.id)
+      msiMasterPepMatch.setPeptideId(bestParentPepMatch.peptide.id)
       
       // FIXME: retrieve the right scoring_id
       msiMasterPepMatch.setScoringId(1)
@@ -493,11 +499,11 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       
       // FIXME: remove this mapping when the ORM is updated
       val msiMSQFake = new fr.proline.core.orm.msi.MsQuery
-      msiMSQFake.setId( bestPepMatch.msQuery.id )
+      msiMSQFake.setId( bestParentPepMatch.msQuery.id )
       msiMasterPepMatch.setMsQuery( msiMSQFake )
       
       msiMasterPepMatch.setResultSet(msiQuantResultSet)
-      if( bestPepMatch.properties != None ) msiMasterPepMatch.setSerializedProperties(generate(bestPepMatch.properties))
+      if( bestParentPepMatch.properties != None ) msiMasterPepMatch.setSerializedProperties(generate(bestParentPepMatch.properties))
       
       // Save master peptide match
       msiEm.persist(msiMasterPepMatch)
@@ -517,15 +523,16 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       //msiMasterPepInstance.setPeptidesMatches(Set(msiMasterPepMatch))
       msiEm.persist( msiMasterPepInstance )
       
-      // Map quant peptide match id by best identified peptide match id
-      masterPepMatchIdByBestChildId( bestPepMatch.id ) = quantPepMatchId
+      // Map quant peptide match id by in memory merged peptide match id
+      masterQuantPepMatchIdByTmpPepMatchId( bestParentPepMatch.id ) = quantPepMatchId
       
-      // Map this quant peptide match to identified peptide matches
-      for( identPepMatchId <- identPepMatchIds ) {
+      // Map this quant peptide match to identified child peptide matches
+      for( childPepMatchId <- bestParentPepMatch.getChildrenIds ) {
+        
         val msiPepMatchRelation = new MsiPeptideMatchRelation()
         msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
         // FIXME: allows to set the child peptide match id
-        msiPepMatchRelation.setChildPeptideMatch(msiMasterPepMatch)
+        msiPepMatchRelation.setChildPeptideMatch(msiMasterPepMatch) // childPepMatchId
         // FIXME: rename to setParentResultSet
         msiPepMatchRelation.setParentResultSetId(msiQuantResultSet)
       }
@@ -795,8 +802,8 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
           
           for( seqMatch <- seqMatches ) {
             val bestPepMatchId = seqMatch.getBestPeptideMatchId
-            if( masterPepMatchIdByBestChildId.contains(bestPepMatchId) ) {
-              val masterPepMatchId = masterPepMatchIdByBestChildId(bestPepMatchId)
+            if( masterQuantPepMatchIdByTmpPepMatchId.contains(bestPepMatchId) ) {
+              val masterPepMatchId = masterQuantPepMatchIdByTmpPepMatchId(bestPepMatchId)
   
               if( mappedMasterPepMatchesIdSet.contains(masterPepMatchId) == false ) {
                 mappedMasterPepMatchesIdSet(masterPepMatchId) = true
