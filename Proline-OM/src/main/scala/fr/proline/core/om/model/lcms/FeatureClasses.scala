@@ -33,6 +33,7 @@ class IsotopicPattern (
         ) {
   
   
+  
 }
 
 object Feature extends InMemoryIdGen
@@ -67,7 +68,7 @@ case class Feature (
         val isOverlapping: Boolean,
         
         val isotopicPatterns: Option[Array[IsotopicPattern]],
-        val overlappingFeatures: Array[Feature],
+        var overlappingFeatures: Array[Feature],
         
         val relations: FeatureRelations,
         
@@ -80,7 +81,7 @@ case class Feature (
         var isClusterized: Boolean = false,
         var selectionLevel: Int = 2,
         
-        var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+        var properties: Option[FeatureProperties] = None
         
         ) {
   
@@ -126,6 +127,46 @@ case class Feature (
                   children = Array(this)
                 )
   }
+  
+  def isOverlapping(f: Feature, ppm : Double, lcmsRun:LcmsRun): Boolean = {
+    /**
+     * function to test if one feature is overlapping
+     * 
+     */
+    //doing nothing if matching occurs
+    this match {
+      case f => return false
+    }
+    
+    val mozTolerance =  math.max(moz, f.moz) * ppm / 1e6
+    
+    if (math.abs(moz - f.moz) > mozTolerance) {
+      return false
+    }
+    
+    var minTime = lcmsRun.scanById(this.relations.firstScanId).time 
+    var maxTime = lcmsRun.scanById(relations.lastScanId).time
+    var fminTime = lcmsRun.scanById(f.relations.firstScanId).time
+    var fmaxTime = lcmsRun.scanById(f.relations.lastScanId).time
+    
+    if (maxTime > fminTime && minTime < fmaxTime)  {
+      // intersection add stuff in overlapping feature isotopicPattern or new feature ?
+      if (f.moz > moz) {
+    	 if (!overlappingFeatures.contains(f)) {
+    	  overlappingFeatures :+ f
+    	  f.isClusterized = true
+    	 }
+      }else  {
+        if (! f.overlappingFeatures.contains(this)) {
+        	f.overlappingFeatures :+ this
+        	this.isClusterized = true
+        }
+      }
+      return true
+    }
+    false
+  }
+  
 }
 
 class TheoreticalFeature (
