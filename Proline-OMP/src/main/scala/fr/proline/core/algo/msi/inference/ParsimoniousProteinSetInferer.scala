@@ -94,7 +94,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
       if( pepInstanceIdSet.size > 0 ) {
 
         // Map provided peptide instance ids by protein match id
-        if( protMatch.id == 0 ) { throw new Exception( "protein match id must be defined" ); }
+        assert( protMatch.id != 0, "protein match id must be defined" )
         nrPepKeysByProtMatchIdBuilder += ( protMatch.id -> nrPepKeySet.toSet )
       }
       

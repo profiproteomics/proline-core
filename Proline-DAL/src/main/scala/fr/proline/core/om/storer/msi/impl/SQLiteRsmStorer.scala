@@ -116,9 +116,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
           proteinSetScore = Some( proteinSet.score )
           proteinSetScoringId = this.scoringIdByType.get( scoreType )
           
-          if( proteinSetScoringId == None ) {
-            throw new Exception( "can't find a scoring id for the score type '"+scoreType+"'" )
-          }
+          assert( proteinSetScoringId != None, "can't find a scoring id for the score type '"+scoreType+"'" )
         }
         
         // Determine the typical protein match id using the sequence coverage

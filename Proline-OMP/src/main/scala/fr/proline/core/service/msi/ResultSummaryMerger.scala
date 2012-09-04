@@ -33,10 +33,8 @@ class ResultSummaryMerger( dbManager: DatabaseManagement,
     for( rsm <- resultSummaries ) {
       
       val resultSetAsOpt = rsm.resultSet
-      if( resultSetAsOpt == None ) {
-        throw new Exception("the result summary must contain a result set" )
-      }
-            
+      require( resultSetAsOpt != None, "the result summary must contain a result set" )
+      
       for( proteinMatch <- resultSetAsOpt.get.proteinMatches ) {
         val proteinId = proteinMatch.getProteinId
         if( proteinId != 0 ) proteinIdSet += proteinId

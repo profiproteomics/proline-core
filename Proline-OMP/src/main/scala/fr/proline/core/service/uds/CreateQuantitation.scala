@@ -40,14 +40,10 @@ class CreateQuantitation(
     val fractions = experimentalDesign.fractions 
     
     val udsProject = udsEM.find(classOf[UdsProject], projectId)    
-    if( udsProject == null ) {
-      throw new Exception("undefined project with id=" + udsProject )
-    }
+    require( udsProject != null, "undefined project with id=" + udsProject )
     
     val udsQuantMethod = udsEM.find(classOf[UdsQuantMethod], methodId)    
-    if( udsQuantMethod == null ) {
-      throw new Exception("undefined method with id=" + udsQuantMethod )
-    }
+    require( udsQuantMethod != null, "undefined method with id=" + udsQuantMethod )
     
     // Retrieve existing quantitations for this project
     // TODO: add JPA method getQuantitations to the project entity
@@ -234,7 +230,6 @@ class CreateQuantitation(
   }
 
 }
-
 
 /** 
 * @param biologicalSamples

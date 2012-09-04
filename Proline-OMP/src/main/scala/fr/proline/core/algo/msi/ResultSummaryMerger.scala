@@ -20,9 +20,8 @@ class ResultSummaryMerger extends Logging {
     for( resultSummary <- resultSummaries ) {
       
       val resultSetAsOpt = resultSummary.resultSet
-      if( resultSetAsOpt == None ) {
-        throw new Exception("the result summary must contain a result set" )
-      }
+      assert( resultSetAsOpt != None, "the result summary must contain a result set" )
+      
       val resultSet = resultSetAsOpt.get
       
       // Retrieve some vars

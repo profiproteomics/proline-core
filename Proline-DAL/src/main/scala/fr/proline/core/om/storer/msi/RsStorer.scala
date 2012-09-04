@@ -88,8 +88,7 @@ class RsStorer( dbMgmt: DatabaseManagement, private val _storer: IRsStorer ) ext
   // Only for native result sets
   def storeResultSet( resultSet: ResultSet, seqDbIdByTmpId: Map[Int,Int] ): Unit = {
     
-    if( ! resultSet.isNative )
-      throw new Exception("too many arguments for a non native result set")
+    require( resultSet.isNative, "too many arguments for a non native result set" )
     
     this._insertResultSet( resultSet )
     this._storeNativeResultSetObjects( resultSet, seqDbIdByTmpId )
@@ -102,8 +101,7 @@ class RsStorer( dbMgmt: DatabaseManagement, private val _storer: IRsStorer ) ext
   // Only for non native result sets
   def storeResultSet( resultSet: ResultSet ): Unit = {
     
-    if( resultSet.isNative )
-      throw new Exception("not enough arguments for a native result set")
+    require( resultSet.isNative == false, "not enough arguments for a native result set" )
     
     this._insertResultSet( resultSet )
     this._storeNonNativeResultSetObjects( resultSet )

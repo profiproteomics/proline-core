@@ -87,7 +87,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
   
   def insertInstrumentConfig( instrumentConfig: InstrumentConfig ): Unit = {
     
-    if( instrumentConfig.id <= 0 ) throw new Exception("instrument configuration must have a strictly positive identifier")
+    require( instrumentConfig.id > 0, "instrument configuration must have a strictly positive identifier" )
     
     // Check if the instrument config exists in the MSIdb
     val count = msiDb.getOrCreateTransaction.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id )
@@ -142,8 +142,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     
     // Retrieve some vars
     val instrumentConfigId = searchSettings.instrumentConfig.id
-    if( instrumentConfigId <= 0 )
-      throw new Exception("instrument configuration must first be persisted")
+    require( instrumentConfigId > 0, "instrument configuration must first be persisted" )
     
     val searchSettingsColsList = MsiDbSearchSettingsTable.getColumnsAsStrList().filter { _ != "id" }
     val searchSettingsInsertQuery = MsiDbSearchSettingsTable.makeInsertQuery( searchSettingsColsList )
@@ -170,7 +169,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     // Link search settings to sequence databases
     msiDb.getOrCreateTransaction.executeBatch( "INSERT INTO search_settings_seq_database_map VALUES (?,?,?,?)" ) { stmt =>
       searchSettings.seqDatabases.foreach { seqDb =>
-        if( seqDb.id <= 0 ) throw new Exception("sequence database must first be persisted")
+        assert( seqDb.id > 0, "sequence database must first be persisted" )
         
         stmt.executeWith( searchSettings.id, seqDb.id, seqDb.sequencesCount, Option(null) )
       }
@@ -219,12 +218,10 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     
     // Retrieve some vars
     val searchSettingsId = msiSearch.searchSettings.id
-    if( searchSettingsId <= 0 )
-      throw new Exception("search settings must first be persisted")
+    require( searchSettingsId > 0, "search settings must first be persisted" )
     
     val peaklistId = msiSearch.peakList.id
-    if( peaklistId <= 0 )
-      throw new Exception("peaklist must first be persisted")
+    require( peaklistId > 0, "peaklist must first be persisted" )
     
     val msiSearchColsList = MsiDbMsiSearchTable.getColumnsAsStrList().filter { _ != "id" }
     val msiSearchInsertQuery = MsiDbMsiSearchTable.makeInsertQuery( msiSearchColsList )

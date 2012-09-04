@@ -132,9 +132,8 @@ private[msi] class SQLiteRsStorer( val msiDb1: MsiDb // Main DB connection
         val msQuery = peptideMatch.msQuery
         val scoreType = peptideMatch.scoreType
         val scoringId = scoringIdByType.get(scoreType)
-        if( scoringId == None ) {
-          throw new Exception( "can't find a scoring id for the score type '"+scoreType+"'" )
-        }
+        assert( scoringId != None, "can't find a scoring id for the score type '"+scoreType+"'" )
+        
         val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) Some(generate(peptideMatch.properties.get)) else None
         val bestChildId = if( peptideMatch.getBestChildId == 0 ) Option.empty[Int] else Some(peptideMatch.getBestChildId)
         

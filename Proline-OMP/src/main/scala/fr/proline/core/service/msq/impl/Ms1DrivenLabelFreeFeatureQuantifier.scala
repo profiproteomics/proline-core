@@ -1,7 +1,7 @@
 package fr.proline.core.service.msq.impl
 
-import collection.JavaConversions._
-import collection.JavaConverters.asJavaCollectionConverter
+import collection.JavaConversions.{collectionAsScalaIterable,setAsJavaSet}
+import collection.JavaConverters.{asJavaCollectionConverter}
 import collection.mutable.{HashMap,HashSet}
 import collection.mutable.ArrayBuffer
 import javax.persistence.EntityManager
@@ -93,7 +93,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     
     val mapSetId = udsQuantFraction.getLcmsMapSetId()    
 
-    if( mapSetId < 1 ) throw new Exception( "a LCMS map set must be created first" )
+    assert( mapSetId > 0, "a LCMS map set must be created first" )
       //require Pairs::Lcms::Module::Loader::MapSet
       //val mapSetLoader = new Pairs::Lcms::Module::Loader::MapSet()
       //mapSet = mapSetLoader.getMapSet( mapSetId )
@@ -143,9 +143,8 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     
     for( spectrumHeader <- this.ms2SpectrumHeaders ) {
       
-      if( spectrumHeader(firstScanColName) == null ) {
-        throw new Exception("a scan id must be defined for each MS2 spectrum")
-      }      
+      assert( spectrumHeader(firstScanColName) != null,
+              "a scan id must be defined for each MS2 spectrum" )   
       
       val identRsId = identRsIdByPeaklistId( spectrumHeader(peaklistIdColName).asInstanceOf[Int] )
       val scanNumber = spectrumHeader(firstScanColName).asInstanceOf[Int]
@@ -209,9 +208,9 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       
       // Retrieve the result summary
       val identRsmId = quantChannel.getIdentResultSummaryId
-      if( identRsmId == 0 ) {
-        throw new Exception("the quant_channel with id='"+qcId+"' is not assocciated with an identification result summary")
-      }
+      assert( identRsmId != 0,
+              "the quant_channel with id='"+qcId+"' is not assocciated with an identification result summary"
+            )
       
       this.logger.info( "loading result summary..." )
       val identResultSummary = rsmProvider.getResultSummary( identRsmId, true ).get
@@ -449,9 +448,8 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       
       val peptideId = masterPepInstance.peptide.id
       val masterPepInstPepMatchIds = masterPepInstance.getPeptideMatchIds
-      if( masterPepInstPepMatchIds.length > 1 ) {
-        throw new Exception("peptide matches have not been correctly merged")
-      }
+      assert( masterPepInstPepMatchIds.length == 1,
+              "peptide matches have not been correctly merged" )
       
       val msiMasterPepInstance = new MsiPeptideInstance()
       msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
@@ -619,9 +617,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
               
               val childPeptideIons = quantPepIonsByFtId(ftChild.id)
               val matchingPepChildPepIons = childPeptideIons.filter { p => p.peptideId != None && p.peptideId.get == tmpPeptideId }
-              if( matchingPepChildPepIons.length > 1 ) {
-                throw new Exception("peptide ion identification conflict")
-              }
+              assert( matchingPepChildPepIons.length == 1, "peptide ion identification conflict")
               
               // Try to retrieve peptide ion corresponding to current peptide instance
               val qcId = quantChannelIdByLcmsMapId(mapId)
@@ -686,8 +682,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
         val masterProteinSet = masterProtSetById.get( masterPeptideSet.getProteinSetId )
         val samesetPepInstances = masterPeptideSet.getPeptideInstances
         
-        if( masterProteinSet == None )
-          throw new Exception( "missing protein set with id=" + masterPeptideSet.getProteinSetId )
+        assert( masterProteinSet != None, "missing protein set with id=" + masterPeptideSet.getProteinSetId )
         
         //////// Check if the protein set has at least a peptide instance with a relevant quantitation
         //val isProteinSetQuantitationRelevant = 0

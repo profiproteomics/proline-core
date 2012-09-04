@@ -53,10 +53,8 @@ class MsiDb( val config: DatabaseConfig,
   }
   
   lazy val entityManagerFactory = {
-    if( dbConnector == null ) {
-      throw new Exception("a DB connector must be first provided")
-    }
-  
+    require( dbConnector != null, "a DB connector must be first provided" )
+    
     Persistence.createEntityManagerFactory(
       JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.MSI),
       this.dbConnector.getEntityManagerSettings

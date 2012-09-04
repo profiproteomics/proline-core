@@ -13,9 +13,8 @@ class QuantifyFraction( dbManager: DatabaseManagement, quantFractionId: Int ) ex
     
     // Retrieve the quantitation fraction
     val udsQuantFraction = udsEM.find(classOf[UdsQuantFraction], quantFractionId)    
-    if( udsQuantFraction == null ) {
-      throw new Exception("undefined quantitation fraction with id=" + udsQuantFraction )
-    }
+    require( udsQuantFraction != null,
+             "undefined quantitation fraction with id=" + udsQuantFraction )
     
     FractionQuantifier( dbManager, udsEM, udsQuantFraction ).quantify()
     
@@ -55,9 +54,7 @@ object FractionQuantifier {
                                )
     }
     
-    if( fractionQuantifier == null ) {
-      throw new Exception("The needed quantifier is not yet implemented")
-    }
+    assert( fractionQuantifier != null, "The needed quantifier is not yet implemented" )
     
     fractionQuantifier
 

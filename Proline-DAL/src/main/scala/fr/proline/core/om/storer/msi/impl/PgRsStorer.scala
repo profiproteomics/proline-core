@@ -113,7 +113,7 @@ private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection
       val msQuery = peptideMatch.msQuery
       val scoreType = peptideMatch.scoreType
       val scoringId = scoringIdByScoreType.get(scoreType)
-      if( scoringId == None ) throw new Exception("can't find a scoring id for the score type '"+scoreType+"'")
+      assert( scoringId != None, "can't find a scoring id for the score type '"+scoreType+"'" )
       val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
       val bestChildId = peptideMatch.getBestChildId
       
