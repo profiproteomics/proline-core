@@ -4,12 +4,15 @@ import fr.proline.core.parser.lcms.impl._
 import fr.proline.core.om.model.lcms.RunMap
 import scala.collection.mutable.ArrayBuffer
 
+trait ExtraParameters {}
+
+
 trait ILcmsMapFileParser {
   
   import fr.proline.core.om.model.lcms.LcmsRun
   
   
-  def getRunMap( filePath: String, lcmsRun: LcmsRun, extraParams: Map [String, Any] ) : Option[RunMap]
+  def getRunMap( filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters ) : Option[RunMap]
   
   def getMs2Events(lcmsRun: LcmsRun, idx:Int) : Array[Int] = {
     /**

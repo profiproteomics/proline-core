@@ -1,18 +1,23 @@
 package fr.proline.core.parser.lcms.impl
 
-import fr.proline.core.om.model.lcms.LcmsRun
-import fr.proline.core.parser.lcms.ILcmsMapFileParser
-import fr.proline.core.om.model.lcms.RunMap
+import java.util.Date
+
 import scala.xml.XML
 import scala.xml.Elem
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.lcms.Feature
 import scala.collection.immutable.HashMap
+
+
 import fr.proline.core.om.model.lcms.Peak
 import fr.proline.core.om.model.lcms.IsotopicPattern
 import fr.proline.core.om.model.lcms.FeatureRelations
 import fr.proline.core.om.model.lcms.PeakPickingSoftware
-import java.util.Date
+import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.parser.lcms.ILcmsMapFileParser
+import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.model.lcms.Feature
+import fr.proline.core.parser.lcms.ExtraParameters
+
 
 object OpenMSMapParser {
   val targetLabel = "feature"
@@ -25,7 +30,7 @@ object OpenMSMapParser {
 
 class OpenMSMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: Map[String, Any]): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
     val node = XML.load(io.Source.fromFile(filePath).getLines.toString)
 
     val nodeSequence = node \ OpenMSMapParser.targetLabel
@@ -58,44 +63,46 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       var estimatedBeginTime = scanMs1.time - (math.abs(lastTime - scanMs1.time))
       //Or use rt in file begin last dataPoints
 
-      var ip = new IsotopicPattern(id,
-        moz,
-        intensity,
-        charge,
-        Float.NaN,
-        dataPoints,
-        scanMs1.initialId,
-        Array[IsotopicPattern]())
+      var ip = new IsotopicPattern(id = id,
+        moz = moz,
+        intensity = intensity,
+        charge = charge,
+        fitScore = Float.NaN,
+        peaks = dataPoints,
+        scanInitialId = scanMs1.initialId,
+        overlappingIPs = Array[IsotopicPattern]())
+      
+      var ms2EventIds = getMs2Events(lcmsRun, lcmsRun.scans.indexOf(scanMs2))
+      
+      var ftRelation = new FeatureRelations(ms2EventIds = ms2EventIds,
+        firstScanInitialId = lcmsRun.getScanAtTime(estimatedBeginTime, 1).initialId,
+        lastScanInitialId = lcmsRun.getScanAtTime(lastTime, 1).initialId,
+        apexScanInitialId = scanMs1.initialId)
 
-      var ftRelation = new FeatureRelations(getMs2Events(lcmsRun, lcmsRun.scans.indexOf(scanMs2)),
-        lcmsRun.getScanAtTime(estimatedBeginTime, 1).initialId,
-        lcmsRun.getScanAtTime(lastTime, 1).initialId,
-        scanMs1.initialId)
-
-      var feature = new Feature(Feature.generateNewId(),
-        moz,
-        intensity,
-        charge,
-        elutionTime,
-        Double.NaN,
-        scanMs1.cycle,
-        scanMs1.id - scanMs1.cycle,
-        false,
-        None,
-        Array[Feature](),
-        ftRelation)
+      var feature = Feature(id = Feature.generateNewId(),
+        moz = moz,
+        intensity = intensity,
+        charge = charge,
+        elutionTime = elutionTime,
+        qualityScore = Double.NaN,
+        ms1Count = math.abs(lcmsRun.getScanAtTime(lastTime, 1).cycle - lcmsRun.getScanAtTime(estimatedBeginTime, 1).cycle),
+        ms2Count = ms2EventIds.length,
+        isOverlapping = false,
+        isotopicPatterns = Some(Array[IsotopicPattern](ip)),
+        overlappingFeatures = Array[Feature](),
+        relations = ftRelation)
 
       features += feature
       id += 1
     }
 
-    var runMap = new RunMap(lcmsRun.id,
-      lcmsRun.rawFileName,
-      false,
-      new Date(),
-      features toArray,
-      lcmsRun.id,
-      new PeakPickingSoftware(1,
+    var runMap = new RunMap(id = lcmsRun.id,
+      name = lcmsRun.rawFileName,
+      isProcessed = false,
+      creationTimestamp = new Date(),
+      features = features toArray,
+      runId = lcmsRun.id,
+      peakPickingSoftware = new PeakPickingSoftware(1,
         "OpenMS",
         "unknown",
         "unknown"))

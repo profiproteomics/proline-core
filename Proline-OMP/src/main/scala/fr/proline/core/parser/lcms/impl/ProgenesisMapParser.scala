@@ -3,9 +3,7 @@ package fr.proline.core.parser.lcms.impl
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.util.control.Breaks._
-
 import java.util.Date
-
 import fr.proline.core.om.model.lcms.LcmsRun
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.IsotopicPattern
@@ -13,14 +11,20 @@ import fr.proline.core.om.model.lcms.Peak
 import fr.proline.core.om.model.lcms.FeatureRelations
 import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.lcms.PeakPickingSoftware
-
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
+import fr.proline.core.parser.lcms.ExtraParameters
+import fr.proline.core.parser.lcms.ExtraParameters
+import fr.proline.core.parser.lcms.ExtraParameters
 
-/*
-case class ProgenesisExtraParams(
-  val mapNb: Int,
-  val mapName: Option[String] = None)
- */
+
+case class ProgenesisExtraParams extends ExtraParameters {
+  /**
+   * actually empty because no parameters needed
+   */
+  //val mapNb: Option[Int] = None
+  //val mapName: Option[String] = None
+}
+
 
 
 object ProgenesisMapParser {
@@ -29,7 +33,7 @@ object ProgenesisMapParser {
 
 class ProgenesisMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: Map[String, Any]): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
     val lines = io.Source.fromFile(filePath).getLines();
 
     //skip the first 2 lines
@@ -51,7 +55,9 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
 
     while (lines.hasNext) {
       var l = lines.next.split(";")
-      var rowValueMap = (for (i <- 0 until l.length) yield columnNames(i) -> l(i)) toMap
+      //var rowValueMap = (for (i <- 0 until l.length) yield columnNames(i) -> l(i)) toMap
+      //or the more elegant way
+      var rowValueMap = columnNames.zip(l) toMap
 
       var time = rowValueMap("Retention time (min)").toFloat * 60f
       var timeSpan = rowValueMap("Retention time window (min)").toFloat * 60f
@@ -66,43 +72,45 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       var ms2IdEvents = getMs2Events(lcmsRun, idx)
 
       //dont know what to do for ID...
-      var biggestIp = new IsotopicPattern(id,
-        rowValueMap("m/z").toDouble,
-        rowValueMap(mapName).toFloat,
-        rowValueMap("Charge").toInt,
-        Float.NaN,
-        Array[Peak](),
-        scanms1.initialId,
-        Array[IsotopicPattern]())
+      var biggestIp = new IsotopicPattern(id = id,
+        moz = rowValueMap("m/z").toDouble,
+        intensity = rowValueMap(mapName).toFloat,
+        charge = rowValueMap("Charge").toInt,
+        fitScore = Float.NaN,
+        peaks = Array[Peak](),
+        scanInitialId = scanms1.initialId,
+        overlappingIPs = Array[IsotopicPattern]())
+      
       id += 1
 
-      var featureRelation = new FeatureRelations(ms2IdEvents toArray,
-        firstScanInitialId,
-        lastScanInitialId,
-        scanms1.initialId)
+      var featureRelation = FeatureRelations(ms2EventIds = ms2IdEvents toArray,
+        firstScanInitialId = firstScanInitialId,
+        lastScanInitialId = lastScanInitialId,
+        apexScanInitialId = scanms1.initialId)
 
-      var feature = new Feature(Feature.generateNewId(),//rowValueMap("#").toInt,
-        rowValueMap("m/z").toDouble,
-        rowValueMap(mapName).toFloat,
-        rowValueMap("Charge").toInt,
-        time,
-        Double.NaN,
-        scanms1.cycle, //number of ms1
-        scanms2.id - scanms2.cycle, //give the number of ms2
-        false,
-        Some(Array[IsotopicPattern](biggestIp)),
-        Array[Feature](),
-        featureRelation)
+      var feature = Feature(id = Feature.generateNewId(),
+        moz = rowValueMap("m/z").toDouble,
+        intensity = rowValueMap(mapName).toFloat,
+        charge = rowValueMap("Charge").toInt,
+        elutionTime = time,
+        qualityScore = Double.NaN,
+        ms1Count = lcmsRun.scanById(lastScanInitialId).cycle - scanms1.cycle, //number of ms1
+        ms2Count = ms2IdEvents.length, //give the number of ms2
+        isOverlapping = false,
+        isotopicPatterns = Some(Array[IsotopicPattern](biggestIp)),
+        overlappingFeatures = Array[Feature](),
+        relations = featureRelation)
+      
       features += feature
     }
 
-    var runMap = new RunMap(lcmsRun.id,
-      lcmsRun.rawFileName,
-      false,
-      new Date(),
-      features toArray,
-      lcmsRun.id,
-      new PeakPickingSoftware(1,
+    var runMap = new RunMap(id = lcmsRun.id,
+      name = lcmsRun.rawFileName,
+      isProcessed = false,
+      creationTimestamp = new Date(),
+      features = features toArray,
+      runId = lcmsRun.id,
+      peakPickingSoftware = new PeakPickingSoftware(1,
         "Progenesis",
         "unknown",
         "unknown"))
@@ -138,7 +146,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     }
     
     var runmaps = new ArrayBuffer[Option[RunMap]]
-    nameFileRunMap.par.foreach(key => (runmaps += getRunMap(key._1, key._2, Map[String, Any]())))
+    nameFileRunMap.par.foreach(key => (runmaps += getRunMap(key._1, key._2, ProgenesisExtraParams())))
     
   }
   
