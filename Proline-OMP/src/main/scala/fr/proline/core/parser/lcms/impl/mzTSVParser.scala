@@ -165,14 +165,14 @@ class mzTSVParser extends ILcmsMapFileParser {
 
     lineIterator.map(s => treatOneLine(columnNames.zip((s.split(mzTSVParser.sepChar))) toMap))
 
-    var runMap = new RunMap(lcmsRun.id,
-      lcmsRun.rawFileName,
-      false,
-      new Date(),
-      features toArray,
-      lcmsRun.id,
-      new PeakPickingSoftware(1,
-        "MzDbAcces",
+    var runMap = new RunMap(id = lcmsRun.id,
+      name = lcmsRun.rawFileName,
+      isProcessed = false,
+      creationTimestamp = new Date(),
+      features = features toArray,
+      runId = lcmsRun.id,
+      peakPickingSoftware = new PeakPickingSoftware(1,
+        "MzDbAccess",
         "0.1",
         "unknown"))
 
