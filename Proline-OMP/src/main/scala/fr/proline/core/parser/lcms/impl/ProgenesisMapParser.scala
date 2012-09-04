@@ -13,8 +13,7 @@ import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.lcms.PeakPickingSoftware
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.parser.lcms.ExtraParameters
-import fr.proline.core.parser.lcms.ExtraParameters
-import fr.proline.core.parser.lcms.ExtraParameters
+
 
 
 case class ProgenesisExtraParams extends ExtraParameters {
