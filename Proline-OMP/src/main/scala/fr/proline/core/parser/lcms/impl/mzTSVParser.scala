@@ -21,11 +21,11 @@ import fr.proline.core.om.model.lcms.{ Feature, IsotopicPattern, RunMap, LcmsRun
 //define some case class to read json encoded properties and not pollute model
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
-case class mzPeak {
-  @BeanProperty var moz: Double 
-  @BeanProperty var intensity: Float 
-  @BeanProperty var leftHwhm: Float 
-  @BeanProperty var rightHwhm: Float
+case class mzPeak (
+  @BeanProperty var moz: Double,
+  @BeanProperty var intensity: Float, 
+  @BeanProperty var leftHwhm: Float, 
+  @BeanProperty var rightHwhm: Float) {
   
   def toPeak(): Peak = {
     return new Peak(moz = moz,
@@ -37,13 +37,13 @@ case class mzPeak {
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
-case class mzIsotopicPattern {
+case class mzIsotopicPattern (
 
-  @BeanProperty var scanId: Int = 0
-  @BeanProperty var mz: Double = Double.NaN
-  @BeanProperty var intensity: Float = Float.NaN
-  @BeanProperty var charge: Int = 0
-  @BeanProperty var peaks: Option[Array[mzPeak]] = None
+  @BeanProperty var scanId: Int = 0,
+  @BeanProperty var mz: Double = Double.NaN,
+  @BeanProperty var intensity: Float = Float.NaN,
+  @BeanProperty var charge: Int = 0,
+  @BeanProperty var peaks: Option[Array[mzPeak]] = None) {
 
   def toIsotopicPattern(): IsotopicPattern = {
     return new IsotopicPattern(id = 0,
@@ -59,25 +59,25 @@ case class mzIsotopicPattern {
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
-case class mzFeature {
+case class mzFeature (
 
-  @BeanProperty var apexIp: mzIsotopicPattern = null
-  @BeanProperty var apexScan: Int = 0
-  @BeanProperty var firstScan: Int = 0
-  @BeanProperty var lastScan: Int = 0
-  @BeanProperty var elutionTime: Float = Float.NaN
-  @BeanProperty var charge: Int = 0
-  @BeanProperty var moz: Double = Double.NaN
-  @BeanProperty var area: Float = Float.NaN
-  @BeanProperty var qualityScore: Float = Float.NaN
-  @BeanProperty var peakelRatios: Float = Float.NaN
-  @BeanProperty var peakelCount: Int = 0
-  @BeanProperty var ms1Count: Int = 0
-  @BeanProperty var ms2Count: Int = 0
-  @BeanProperty var overlapFactor: Float = Float.NaN
-  @BeanProperty var overlapCorreltation: Float = Float.NaN
-  @BeanProperty var overlappingFeature: Option[mzFeature] = None
-  @BeanProperty var isotopicPatterns: Option[Array[mzIsotopicPattern]] = None
+  @BeanProperty var apexIp: mzIsotopicPattern = null,
+  @BeanProperty var apexScan: Int = 0,
+  @BeanProperty var firstScan: Int = 0,
+  @BeanProperty var lastScan: Int = 0,
+  @BeanProperty var elutionTime: Float = Float.NaN,
+  @BeanProperty var charge: Int = 0,
+  @BeanProperty var moz: Double = Double.NaN,
+  @BeanProperty var area: Float = Float.NaN,
+  @BeanProperty var qualityScore: Float = Float.NaN,
+  @BeanProperty var peakelRatios: Float = Float.NaN,
+  @BeanProperty var peakelCount: Int = 0,
+  @BeanProperty var ms1Count: Int = 0,
+  @BeanProperty var ms2Count: Int = 0,
+  @BeanProperty var overlapFactor: Float = Float.NaN,
+  @BeanProperty var overlapCorreltation: Float = Float.NaN,
+  @BeanProperty var overlappingFeature: Option[mzFeature] = None,
+  @BeanProperty var isotopicPatterns: Option[Array[mzIsotopicPattern]] = None) {
 
   def toFeature(lcmsRun: LcmsRun, id: Int, ms2Events: Array[Int]): Feature = {
 
