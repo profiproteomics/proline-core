@@ -12,7 +12,7 @@ import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.lcms.{Feature, IsotopicPattern, FeatureRelations, Peak, PeakPickingSoftware}
 import fr.proline.core.parser.lcms.ExtraParameters
 
-object MSInspectMapParser {
+object MsInspectMapParser {
   var sepChar = "\t"
 }
 
@@ -33,14 +33,14 @@ class MsInspectMapParser extends ILcmsMapFileParser {
       line = linesIterator.next
     }
     
-    val columnNames = line.split(MSInspectMapParser.sepChar)
+    val columnNames = line.split(MsInspectMapParser.sepChar)
     
     var features = ArrayBuffer[Feature]()
     
     var id = 0
     
     while (linesIterator.hasNext) {
-      var data = columnNames.zip(linesIterator.next.split(MSInspectMapParser.sepChar)) toMap
+      var data = columnNames.zip(linesIterator.next.split(MsInspectMapParser.sepChar)) toMap
       var scanId = data("scan") toInt
       var elutionTime = data("time") toFloat
       var moz = data("mz") toDouble
