@@ -63,7 +63,7 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       var estimatedBeginTime = scanMs1.time - (math.abs(lastTime - scanMs1.time))
       //Or use rt in file begin last dataPoints
 
-      var ip = new IsotopicPattern(id = id,
+      var ip = new IsotopicPattern(//id = id,
         moz = moz,
         intensity = intensity,
         charge = charge,
@@ -85,7 +85,7 @@ class OpenMSMapParser extends ILcmsMapFileParser {
         charge = charge,
         elutionTime = elutionTime,
         qualityScore = Double.NaN,
-        ms1Count = math.abs(lcmsRun.getScanAtTime(lastTime, 1).cycle - lcmsRun.getScanAtTime(estimatedBeginTime, 1).cycle),
+        ms1Count = math.abs(lcmsRun.getScanAtTime(lastTime, 1).cycle - lcmsRun.getScanAtTime(estimatedBeginTime, 1).cycle) + 1,
         ms2Count = ms2EventIds.length,
         isOverlapping = false,
         isotopicPatterns = Some(Array[IsotopicPattern](ip)),

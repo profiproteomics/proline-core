@@ -39,10 +39,10 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     for (i <- 0 until 2)
       lines.next()
 
-    val columnNames = lines.next().split(";")
+    val columnNames = lines.next().stripLineEnd.split(";")
 
     //the seven first columns are reserved  
-    val sampleNames = for (k <- 7 until columnNames.length) yield columnNames(k)
+    val sampleNames = columnNames.slice(7, columnNames.length)//for (k <- 7 until columnNames.length) yield columnNames(k)
 
     var (found, mapName) = format(sampleNames, lcmsRun.rawFileName)
     if (!found)
@@ -53,7 +53,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     var features = new ArrayBuffer[Feature]
 
     while (lines.hasNext) {
-      var l = lines.next.split(";")
+      var l = lines.next.stripLineEnd.split(";")
       //var rowValueMap = (for (i <- 0 until l.length) yield columnNames(i) -> l(i)) toMap
       //or the more elegant way
       var rowValueMap = columnNames.zip(l) toMap
@@ -71,7 +71,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       var ms2IdEvents = getMs2Events(lcmsRun, idx)
 
       //dont know what to do for ID...
-      var biggestIp = new IsotopicPattern(id = id,
+      var biggestIp = new IsotopicPattern(//id = id,
         moz = rowValueMap("m/z").toDouble,
         intensity = rowValueMap(mapName).toFloat,
         charge = rowValueMap("Charge").toInt,
@@ -93,7 +93,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
         charge = rowValueMap("Charge").toInt,
         elutionTime = time,
         qualityScore = Double.NaN,
-        ms1Count = lcmsRun.scanById(lastScanInitialId).cycle - scanms1.cycle, //number of ms1
+        ms1Count = lcmsRun.scanById(lastScanInitialId).cycle - scanms1.cycle + 1, //number of ms1
         ms2Count = ms2IdEvents.length, //give the number of ms2
         isOverlapping = false,
         isotopicPatterns = Some(Array[IsotopicPattern](biggestIp)),

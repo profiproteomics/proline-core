@@ -53,7 +53,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
       var ms2EventIds = getMs2Events(lcmsRun, scanId)
       
       
-      var ip = new IsotopicPattern(id = id,
+      var ip = new IsotopicPattern(//id = id,
     		  					   moz = moz,
     		  					   intensity = intensity,
     		  					   charge = charge,
@@ -69,7 +69,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
     		  				elutionTime = elutionTime,
     		  				charge = charge,
     		  				qualityScore = Double.NaN,
-    		  				ms1Count = math.abs(lcmsRun.scanById(firstScanId).cycle - lcmsRun.scanById(lastScanId).cycle),
+    		  				ms1Count = math.abs(lcmsRun.scanById(firstScanId).cycle - lcmsRun.scanById(lastScanId).cycle) + 1,
     		  				ms2Count = ms2EventIds.length,
     		  				isOverlapping = false,
     		  				isotopicPatterns = Some(Array[IsotopicPattern](ip)),

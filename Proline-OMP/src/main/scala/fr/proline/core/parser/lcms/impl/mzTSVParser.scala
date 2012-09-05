@@ -46,7 +46,7 @@ case class mzIsotopicPattern (
   @BeanProperty var peaks: Option[Array[mzPeak]] = None) {
 
   def toIsotopicPattern(): IsotopicPattern = {
-    return new IsotopicPattern(id = 0,
+    return new IsotopicPattern(//id = 0,
       moz = mz,
       intensity = intensity,
       charge = charge,
@@ -109,7 +109,7 @@ class mzTSVParser extends ILcmsMapFileParser {
   def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
 
     val lineIterator = io.Source.fromFile(filePath).getLines()
-    val columnNames = lineIterator.next.split(mzTSVParser.sepChar)
+    val columnNames = lineIterator.next.stripLineEnd.split(mzTSVParser.sepChar)
     var features = new ArrayBuffer[Feature]
 
     def treatOneLine(data: Map[String, String]): Unit = {
