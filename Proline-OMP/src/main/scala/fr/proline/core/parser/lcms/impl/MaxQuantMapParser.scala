@@ -51,20 +51,35 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
         var retentionLength = data("Retention Length") * 60 toFloat
         var ms2Count = data("MS/MS Count") toInt
         
+        var intensities = data("Intensities").split(";").map(_.toFloat).sortBy(f => f)
+        
         var apexScan = lcmsRun.getScanAtTime(elutionTime, 1)
         var firstScan = lcmsRun.getScanAtTime(elutionTime - retentionLength/2f, 1)
         var lastScan = lcmsRun.getScanAtTime(elutionTime + retentionLength/2f, 1)
         
         var ms2EventIds = getMs2Events(lcmsRun, apexScan.initialId)
         
-        var ip = new IsotopicPattern(moz = moz,
+        var ips = ArrayBuffer[IsotopicPattern]()
+        if (intensities.length == 0) {
+        	var ip = new IsotopicPattern(moz = moz,
         							 intensity = intensity,
         							 charge = charge,
         							 fitScore = Float.NaN,
         							 peaks = null,
         							 scanInitialId = apexScan.initialId,
         							 overlappingIPs = null)
-        
+        	ips += ip
+        }
+        else {
+          ips ++ intensities.map(i=> new IsotopicPattern(moz = moz,
+        		  								  intensity = i,
+        		  								  charge = charge,
+        		  								  fitScore = Float.NaN,
+        		  								  peaks = null,
+        		  								  scanInitialId = apexScan.initialId,
+        		  								  overlappingIPs = null))
+          
+        }
         
         var feature = Feature(id = Feature.generateNewId(),
         					  moz = moz,
@@ -75,7 +90,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
         					  ms1Count = lastScan.cycle - firstScan.cycle + 1,
         					  ms2Count = ms2Count,
         					  isOverlapping = false,
-        					  isotopicPatterns = Some(Array[IsotopicPattern](ip)),
+        					  isotopicPatterns = Some(ips.toArray),
         					  overlappingFeatures = null,
         					  relations = FeatureRelations(ms2EventIds,
         							  					   firstScanInitialId = firstScan.initialId,
