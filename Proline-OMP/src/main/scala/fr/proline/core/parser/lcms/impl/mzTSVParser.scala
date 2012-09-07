@@ -110,33 +110,33 @@ class mzTSVParser extends ILcmsMapFileParser {
 
     val lineIterator = io.Source.fromFile(filePath).getLines()
     val columnNames = lineIterator.next.stripLineEnd.split(mzTSVParser.sepChar)
-    var features = new ArrayBuffer[Feature]
+    val features = new ArrayBuffer[Feature]
 
     def treatOneLine(data: Map[String, String]): Unit = {
 
-      var id = data("id").toInt
-      var mz = data("mz").toDouble
-      var area = data("area").toFloat
-      var intensity = data("intensity_sum").toFloat
-      var qualityScore = data("quality_score").toFloat
-      var elutionTime = data("elution_time").toFloat
-      var charge = data("charge").toInt
-      var firstScanId = data("first_scan").toInt
-      var lastScanId = data("last_scan").toInt
-      var apexScanId = data("apex_scan").toInt
-      var ms1Count = data("ms1_count").toInt
-      var ms2Count = data("ms2_count").toInt
-      var isOverlapping = if (data("overlapping_feature") == "") true else false
-      var isotopicPatterns = data("isotopic_patterns")
-      var overlappingFeatures = data("overlapping_feature")
+      val id = data("id").toInt
+      val mz = data("mz").toDouble
+      val area = data("area").toFloat
+      val intensity = data("intensity_sum").toFloat
+      val qualityScore = data("quality_score").toFloat
+      val elutionTime = data("elution_time").toFloat
+      val charge = data("charge").toInt
+      val firstScanId = data("first_scan").toInt
+      val lastScanId = data("last_scan").toInt
+      val apexScanId = data("apex_scan").toInt
+      val ms1Count = data("ms1_count").toInt
+      val ms2Count = data("ms2_count").toInt
+      val isOverlapping = if (data("overlapping_feature") == "") true else false
+      val isotopicPatterns = data("isotopic_patterns")
+      val overlappingFeatures = data("overlapping_feature")
 
       //properties
-      var peakelsCount = Some(data("peakels_count").toInt)
-      var peakelsRatios = if (data("peakels_ratios") != "") Some(parse[Array[Float]](data("peakels_ratio"))) else None
-      var overlapCorrelation = Some(data("overlap_correlation").toFloat)
-      var overlapFactor = Some(data("overlap_factor").toFloat)
+      val peakelsCount = Some(data("peakels_count").toInt)
+      val peakelsRatios = if (data("peakels_ratios") != "") Some(parse[Array[Float]](data("peakels_ratio"))) else None
+      val overlapCorrelation = Some(data("overlap_correlation").toFloat)
+      val overlapFactor = Some(data("overlap_factor").toFloat)
       
-      var ms2EventIds = getMs2Events(lcmsRun, lcmsRun.getScanAtTime(apexScanId, 2).initialId)
+      val ms2EventIds = getMs2Events(lcmsRun, lcmsRun.getScanAtTime(apexScanId, 2).initialId)
       val featureId = Feature.generateNewId()
 
       val feature = Feature(id = featureId,
@@ -165,7 +165,7 @@ class mzTSVParser extends ILcmsMapFileParser {
 
     lineIterator.map(s => treatOneLine(columnNames.zip((s.split(mzTSVParser.sepChar))) toMap))
 
-    var runMap = new RunMap(id = lcmsRun.id,
+    val runMap = new RunMap(id = lcmsRun.id,
       name = lcmsRun.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),

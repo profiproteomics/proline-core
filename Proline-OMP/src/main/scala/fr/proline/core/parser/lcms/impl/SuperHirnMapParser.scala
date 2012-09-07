@@ -22,22 +22,22 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
   def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
     val node = XML.load(io.Source.fromFile(filePath).getLines.toString)
     
-    var features = ArrayBuffer[Feature]()
+    val features = ArrayBuffer[Feature]()
     
     val nodeSequence = node \ OpenMSMapParser.targetLabel
     
     for (n <- nodeSequence) {
-      var coord = n \ "coordinate"
-      var mz = (coord \ "@mz").toString.toDouble
-      var elutionTime = (coord \ "@rt").toString.toFloat
-      var intensity = (coord \ "@intensity").toString.toFloat
-      var charge = (coord \ "@charge").toString.toInt
+      val coord = n \ "coordinate"
+      val mz = (coord \ "@mz").toString.toDouble
+      val elutionTime = (coord \ "@rt").toString.toFloat
+      val intensity = (coord \ "@intensity").toString.toFloat
+      val charge = (coord \ "@charge").toString.toInt
       
-      var firstScan = lcmsRun.scanById((coord \ "scan_range" \ "@min").toString().toInt)
-      var lastScan = lcmsRun.scanById((coord \ "scan_range" \ "@max").toString.toInt)
-      var apexScan = lcmsRun.getScanAtTime(elutionTime, 1)
+      val firstScan = lcmsRun.scanById((coord \ "scan_range" \ "@min").toString().toInt)
+      val lastScan = lcmsRun.scanById((coord \ "scan_range" \ "@max").toString.toInt)
+      val apexScan = lcmsRun.getScanAtTime(elutionTime, 1)
       
-      var ip = new IsotopicPattern(moz = mz,
+      val ip = new IsotopicPattern(moz = mz,
     		  					   intensity = intensity,
     		  					   charge = charge,
     		  					   fitScore = Float.NaN,
@@ -45,9 +45,9 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
     		  					   scanInitialId = apexScan.initialId,
     		  					   overlappingIPs = null) //take the first scan for id ? or apex ?
       
-      var ms2EventIds = getMs2Events(lcmsRun, lcmsRun.getScanAtTime(elutionTime, 2).initialId)
+      val ms2EventIds = getMs2Events(lcmsRun, lcmsRun.getScanAtTime(elutionTime, 2).initialId)
       
-      var feature = Feature(id = Feature.generateNewId(),
+      val feature = Feature(id = Feature.generateNewId(),
     		  				moz = mz,
     		  				intensity = intensity,
     		  				elutionTime = elutionTime,
@@ -66,7 +66,7 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
        features += feature	  				
       
     }
-    var runMap = new RunMap(id = lcmsRun.id,
+    val runMap = new RunMap(id = lcmsRun.id,
       name = lcmsRun.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),

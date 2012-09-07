@@ -22,7 +22,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
   def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
     val linesIterator = io.Source.fromFile(filePath).getLines()
     
-    var line = if (linesIterator.hasNext) linesIterator.next else ""
+    var line = if (linesIterator.hasNext) linesIterator.next else return None
     var timeStamp : Date = null
     
     while (line.startsWith("#")) {
@@ -37,23 +37,22 @@ class MsInspectMapParser extends ILcmsMapFileParser {
     
     var features = ArrayBuffer[Feature]()
     
-    var id = 0
     
     while (linesIterator.hasNext) {
-      var data = columnNames.zip(linesIterator.next.split(MsInspectMapParser.sepChar)) toMap
-      var scanId = data("scan") toInt
-      var elutionTime = data("time") toFloat
-      var moz = data("mz") toDouble
-      var intensity = data("totalIntensity") toFloat
-      var charge = data("charge") toInt
+      val data = columnNames.zip(linesIterator.next.split(MsInspectMapParser.sepChar)) toMap
+      val scanId = data("scan") toInt
+      val elutionTime = data("time") toFloat
+      val moz = data("mz") toDouble
+      val intensity = data("totalIntensity") toFloat
+      val charge = data("charge") toInt
       //var nbPeaks = data("peaks") toInt
-      var firstScanId = data("scanFirst") toInt
-      var lastScanId = data("scanLast") toInt
+      val firstScanId = data("scanFirst") toInt
+      val lastScanId = data("scanLast") toInt
       
-      var ms2EventIds = getMs2Events(lcmsRun, scanId)
+      val ms2EventIds = getMs2Events(lcmsRun, scanId)
       
       
-      var ip = new IsotopicPattern(//id = id,
+      val ip = new IsotopicPattern(//id = id,
     		  					   moz = moz,
     		  					   intensity = intensity,
     		  					   charge = charge,
@@ -63,7 +62,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
     		  					   overlappingIPs = Array[IsotopicPattern]())
       
       
-      var feature = Feature(id = Feature.generateNewId(),
+      val feature = Feature(id = Feature.generateNewId(),
     		  				moz = moz,
     		  				intensity = intensity,
     		  				elutionTime = elutionTime,
@@ -79,10 +78,9 @@ class MsInspectMapParser extends ILcmsMapFileParser {
     		  											 lastScanInitialId = lcmsRun.scanById(lastScanId).initialId,
     		  											 apexScanInitialId = lcmsRun.scanById(scanId).initialId))
       
-      id += 1
       features += feature
     }
-     var runMap = new RunMap(id = lcmsRun.id,
+     val runMap = new RunMap(id = lcmsRun.id,
       name = lcmsRun.rawFileName,
       isProcessed = false,
       creationTimestamp = timeStamp,

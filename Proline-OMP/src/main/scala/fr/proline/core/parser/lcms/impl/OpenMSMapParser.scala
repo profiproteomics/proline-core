@@ -37,21 +37,20 @@ class OpenMSMapParser extends ILcmsMapFileParser {
 
     var features = new ArrayBuffer[Feature]
 
-    var id = 0
     for (n <- nodeSequence) {
 
-      var moz = ((n \ "position").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("moz")))(0).text.toDouble
-      var elutionTime = ((n \ "position").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("rt")))(0).text.toFloat
-      var intensity = (n \ "intensity").text.toFloat
-      var charge = (n \ "charge").text.toInt
+      val moz = ((n \ "position").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("moz")))(0).text.toDouble
+      val elutionTime = ((n \ "position").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("rt")))(0).text.toFloat
+      val intensity = (n \ "intensity").text.toFloat
+      val charge = (n \ "charge").text.toInt
 
       var dataPoints = (n \ "convexhull").elements.map(p => new Peak((p \ "hposition").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("moz"))(0).text.toDouble,
         (p \ "hposition").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("rt"))(0).text.toFloat,
         Float.NaN,
         Float.NaN)).toArray
 
-      var scanMs1 = lcmsRun.getScanAtTime(elutionTime, 1)
-      var scanMs2 = lcmsRun.getScanAtTime(elutionTime, 2)
+      val scanMs1 = lcmsRun.getScanAtTime(elutionTime, 1)
+      val scanMs2 = lcmsRun.getScanAtTime(elutionTime, 2)
 
       var idxTmp = scanMs2.id + 1
       while (lcmsRun.scans(idxTmp).msLevel == 2) {
@@ -63,7 +62,7 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       var estimatedBeginTime = scanMs1.time - (math.abs(lastTime - scanMs1.time))
       //Or use rt in file begin last dataPoints
 
-      var ip = new IsotopicPattern(//id = id,
+      val ip = new IsotopicPattern(//id = id,
         moz = moz,
         intensity = intensity,
         charge = charge,
@@ -72,14 +71,14 @@ class OpenMSMapParser extends ILcmsMapFileParser {
         scanInitialId = scanMs1.initialId,
         overlappingIPs = Array[IsotopicPattern]())
       
-      var ms2EventIds = getMs2Events(lcmsRun, lcmsRun.scans.indexOf(scanMs2))
+      val ms2EventIds = getMs2Events(lcmsRun, lcmsRun.scans.indexOf(scanMs2))
       
-      var ftRelation = new FeatureRelations(ms2EventIds = ms2EventIds,
+      val ftRelation = new FeatureRelations(ms2EventIds = ms2EventIds,
         firstScanInitialId = lcmsRun.getScanAtTime(estimatedBeginTime, 1).initialId,
         lastScanInitialId = lcmsRun.getScanAtTime(lastTime, 1).initialId,
         apexScanInitialId = scanMs1.initialId)
 
-      var feature = Feature(id = Feature.generateNewId(),
+      val feature = Feature(id = Feature.generateNewId(),
         moz = moz,
         intensity = intensity,
         charge = charge,
@@ -93,10 +92,9 @@ class OpenMSMapParser extends ILcmsMapFileParser {
         relations = ftRelation)
 
       features += feature
-      id += 1
     }
 
-    var runMap = new RunMap(id = lcmsRun.id,
+    val runMap = new RunMap(id = lcmsRun.id,
       name = lcmsRun.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),

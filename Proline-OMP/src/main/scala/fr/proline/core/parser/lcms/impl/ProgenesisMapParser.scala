@@ -44,34 +44,32 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     //the seven first columns are reserved  
     val sampleNames = columnNames.slice(7, columnNames.length)//for (k <- 7 until columnNames.length) yield columnNames(k)
 
-    var (found, mapName) = format(sampleNames, lcmsRun.rawFileName)
+    val (found, mapName) = format(sampleNames, lcmsRun.rawFileName)
     if (!found)
       throw new Exception("requested file not found")
 
-    var id = 1
 
     var features = new ArrayBuffer[Feature]
 
     while (lines.hasNext) {
-      var l = lines.next.stripLineEnd.split(";")
-      //var rowValueMap = (for (i <- 0 until l.length) yield columnNames(i) -> l(i)) toMap
-      //or the more elegant way
-      var rowValueMap = columnNames.zip(l) toMap
+      
+      val l = lines.next.stripLineEnd.split(";")
+      val rowValueMap = columnNames.zip(l) toMap
 
-      var time = rowValueMap("Retention time (min)").toFloat * 60f
-      var timeSpan = rowValueMap("Retention time window (min)").toFloat * 60f
-      var (t1, t2) = (time - timeSpan / 2f, time + timeSpan / 2f)
-      var firstScanInitialId = lcmsRun.getScanAtTime(t1, 1).initialId
-      var lastScanInitialId = lcmsRun.getScanAtTime(t2, 1).initialId
+      val time = rowValueMap("Retention time (min)").toFloat * 60f
+      val timeSpan = rowValueMap("Retention time window (min)").toFloat * 60f
+      val (t1, t2) = (time - timeSpan / 2f, time + timeSpan / 2f)
+      val firstScanInitialId = lcmsRun.getScanAtTime(t1, 1).initialId
+      val lastScanInitialId = lcmsRun.getScanAtTime(t2, 1).initialId
 
-      var scanms1 = lcmsRun.getScanAtTime(time, 1)
-      var scanms2 = lcmsRun.getScanAtTime(time, 2)
+      val scanms1 = lcmsRun.getScanAtTime(time, 1)
+      val scanms2 = lcmsRun.getScanAtTime(time, 2)
 
-      var idx = lcmsRun.scans.indexOf(scanms2)
-      var ms2IdEvents = getMs2Events(lcmsRun, idx)
+      val idx = lcmsRun.scans.indexOf(scanms2)
+      val ms2IdEvents = getMs2Events(lcmsRun, idx)
 
       //dont know what to do for ID...
-      var biggestIp = new IsotopicPattern(//id = id,
+      val biggestIp = new IsotopicPattern(//id = id,
         moz = rowValueMap("m/z").toDouble,
         intensity = rowValueMap(mapName).toFloat,
         charge = rowValueMap("Charge").toInt,
@@ -80,14 +78,12 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
         scanInitialId = scanms1.initialId,
         overlappingIPs = Array[IsotopicPattern]())
       
-      id += 1
-
-      var featureRelation = FeatureRelations(ms2EventIds = ms2IdEvents toArray,
+      val featureRelation = FeatureRelations(ms2EventIds = ms2IdEvents toArray,
         firstScanInitialId = firstScanInitialId,
         lastScanInitialId = lastScanInitialId,
         apexScanInitialId = scanms1.initialId)
 
-      var feature = Feature(id = Feature.generateNewId(),
+      val feature = Feature(id = Feature.generateNewId(),
         moz = rowValueMap("m/z").toDouble,
         intensity = rowValueMap(mapName).toFloat,
         charge = rowValueMap("Charge").toInt,
@@ -103,7 +99,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       features += feature
     }
 
-    var runMap = new RunMap(id = lcmsRun.id,
+    val runMap = new RunMap(id = lcmsRun.id,
       name = lcmsRun.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
@@ -159,7 +155,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       sepChar = "/"
     }
 
-    var f = filename.split(sepChar).last.split(".").first
+    val f = filename.split(sepChar).last.split(".").first
     for (s <- sampleNames)
       if (s.matches(f))
         return (true, f)

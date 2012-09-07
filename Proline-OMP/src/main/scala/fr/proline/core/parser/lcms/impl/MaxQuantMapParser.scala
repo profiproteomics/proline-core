@@ -32,36 +32,36 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
       s
     }
     
-    var shortFileName = toStandardName(lcmsRun.rawFileName).split("/").last.split(".").first
+    val shortFileName = toStandardName(lcmsRun.rawFileName).split("/").last.split(".").first
     
     val lines = io.Source.fromFile(filePath).getLines
     
     val columnNames = lines.next.stripLineEnd.split(MaxQuantMapParser.sepChar)
     
-    var features = ArrayBuffer[Feature]()
+    val features = ArrayBuffer[Feature]()
     
     def processLine(l: String):Unit = {
-      var data = columnNames.zip(l.stripLineEnd.split(MaxQuantMapParser.sepChar)) toMap
+      val data = columnNames.zip(l.stripLineEnd.split(MaxQuantMapParser.sepChar)) toMap
       
       if (data("Raw File").equals(shortFileName)) {
-        var moz = data("m/z") toDouble
-        var charge = data("charge") toInt
-        var intensity = data("Intensity") toFloat
-        var elutionTime = data("Retention Time") * 60 toFloat
-        var retentionLength = data("Retention Length") * 60 toFloat
-        var ms2Count = data("MS/MS Count") toInt
+        val moz = data("m/z") toDouble
+        val charge = data("charge") toInt
+        val intensity = data("Intensity") toFloat
+        val elutionTime = data("Retention Time") * 60 toFloat
+        val retentionLength = data("Retention Length") * 60 toFloat
+        val ms2Count = data("MS/MS Count") toInt
         
-        var intensities = data("Intensities").split(";").map(_.toFloat).sortBy(f => f)
+        val intensities = data("Intensities").split(";").map(_.toFloat).sortBy(f => f)
         
-        var apexScan = lcmsRun.getScanAtTime(elutionTime, 1)
-        var firstScan = lcmsRun.getScanAtTime(elutionTime - retentionLength/2f, 1)
-        var lastScan = lcmsRun.getScanAtTime(elutionTime + retentionLength/2f, 1)
+        val apexScan = lcmsRun.getScanAtTime(elutionTime, 1)
+        val firstScan = lcmsRun.getScanAtTime(elutionTime - retentionLength/2f, 1)
+        val lastScan = lcmsRun.getScanAtTime(elutionTime + retentionLength/2f, 1)
         
-        var ms2EventIds = getMs2Events(lcmsRun, apexScan.initialId)
+        val ms2EventIds = getMs2Events(lcmsRun, apexScan.initialId)
         
-        var ips = ArrayBuffer[IsotopicPattern]()
+        val ips = ArrayBuffer[IsotopicPattern]()
         if (intensities.length == 0) {
-        	var ip = new IsotopicPattern(moz = moz,
+        	val ip = new IsotopicPattern(moz = moz,
         							 intensity = intensity,
         							 charge = charge,
         							 fitScore = Float.NaN,
@@ -81,7 +81,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
           
         }
         
-        var feature = Feature(id = Feature.generateNewId(),
+        val feature = Feature(id = Feature.generateNewId(),
         					  moz = moz,
         					  intensity = intensity,
         					  elutionTime = elutionTime,
@@ -104,7 +104,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
     
     lines.map(s => processLine(s))
     
-     var runMap = new RunMap(id = lcmsRun.id,
+     val runMap = new RunMap(id = lcmsRun.id,
       name = lcmsRun.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),

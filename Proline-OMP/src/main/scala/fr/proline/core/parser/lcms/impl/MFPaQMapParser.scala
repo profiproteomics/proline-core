@@ -31,30 +31,30 @@ class MFPaQMapParser extends ILcmsMapFileParser {
     val lines = io.Source.fromFile(filePath).getLines
     val columnNames = lines.next.stripLineEnd.split(MFPaQMapParser.sepChar).slice(1, MFPaQMapParser.nbColumns + 1)
     
-    var mapNumber = extraParams.asInstanceOf[MFPaQMapParams].mapNumber
-    var startingPoint = (mapNumber - 1) * MFPaQMapParser.nbColumns + 1  //interesting columns
+    val mapNumber = extraParams.asInstanceOf[MFPaQMapParams].mapNumber
+    val startingPoint = (mapNumber - 1) * MFPaQMapParser.nbColumns + 1  //interesting columns
     
-    var features = ArrayBuffer[Feature]()
+    val features = ArrayBuffer[Feature]()
     
     while (lines.hasNext) {
       
-      var l = lines.next.stripLineEnd.split(MFPaQMapParser.sepChar)
+      val l = lines.next.stripLineEnd.split(MFPaQMapParser.sepChar)
       
-      var data = columnNames.zip(l.slice(startingPoint, startingPoint + MFPaQMapParser.nbColumns + 1)) toMap
+      val data = columnNames.zip(l.slice(startingPoint, startingPoint + MFPaQMapParser.nbColumns + 1)) toMap
       
       if (data("Score") != "") {
         
-        var charge = l(0).replace("+","") toInt
-        var moz = data("m/z") toDouble
-        var intensity =  data("Area") toFloat
-        var firstRt = data("First RT") toFloat
-        var firstScan = lcmsRun.getScanAtTime(firstRt, 1)
-        var lastRt = data("Last RT") toFloat
-        var lastScan  = lcmsRun.getScanAtTime(lastRt, 1)
-        var apexRt = data("Apex RT") toFloat
-        var apexScan = lcmsRun.getScanAtTime(apexRt, 1)
+        val charge = l(0).replace("+","") toInt
+        val moz = data("m/z") toDouble
+        val intensity =  data("Area") toFloat
+        val firstRt = data("First RT") toFloat
+        val firstScan = lcmsRun.getScanAtTime(firstRt, 1)
+        val lastRt = data("Last RT") toFloat
+        val lastScan  = lcmsRun.getScanAtTime(lastRt, 1)
+        val apexRt = data("Apex RT") toFloat
+        val apexScan = lcmsRun.getScanAtTime(apexRt, 1)
         
-        var ip = new IsotopicPattern(moz = moz,
+        val ip = new IsotopicPattern(moz = moz,
         							 intensity = intensity,
         							 charge = charge,
         							 fitScore = Float.NaN,
@@ -62,9 +62,9 @@ class MFPaQMapParser extends ILcmsMapFileParser {
         							 scanInitialId = apexScan.initialId,
         							 overlappingIPs = Array[IsotopicPattern]())
         
-        var ms2EventIds = getMs2Events(lcmsRun, apexScan.initialId)
+        val ms2EventIds = getMs2Events(lcmsRun, apexScan.initialId)
         
-        var feature = Feature(id = Feature.generateNewId(),
+        val feature = Feature(id = Feature.generateNewId(),
         					  moz = moz,
         					  intensity = intensity,
         					  elutionTime = apexRt,
@@ -86,7 +86,7 @@ class MFPaQMapParser extends ILcmsMapFileParser {
     }//end while
     
     
-    var runMap = new RunMap(id = lcmsRun.id,
+    val runMap = new RunMap(id = lcmsRun.id,
       name = lcmsRun.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
