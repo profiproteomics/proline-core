@@ -15,10 +15,12 @@ class Peak (
   
 }
 
+
+//object IsotopicPattern extends InMemoryIdGen
 class IsotopicPattern (
     
         // Required fields
-        var id: Int,
+        //var id: Int,
         val moz: Double,
         val intensity: Float,
         val charge: Int,
@@ -31,8 +33,6 @@ class IsotopicPattern (
         var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
         
         ) {
-  
-  
   
 }
 
