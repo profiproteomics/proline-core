@@ -13,17 +13,17 @@ class MsUtilsTest extends JUnitSuite {
   
   @Test
   def testMozToMass() = {    
-    assert( mozToMass( 482.2, 1 ) === 481.19272353312 )
-    assert( mozToMass( 482.2, 2 ) === 962.38544706624 )
-    assert( mozToMass( 482.2, 3 ) === 1443.57817059936 )
+    assert( mozToMass( 482.2, 1 ) === 481.192723533188 )
+    assert( mozToMass( 482.2, 2 ) === 962.385447066376 )
+    assert( mozToMass( 482.2, 3 ) === 1443.578170599564 )
   }
   
 
   @Test
   def testMassToMoz() = {
-    assert( massToMoz( 481.19272353312, 1 ) === 482.2 )
-    assert( massToMoz( 962.38544706624, 2 ) === 482.2 )
-    assert( massToMoz( 1443.57817059936, 3 ) === 482.2 )
+    assert( massToMoz( 481.192723533188, 1 ) === 482.2 )
+    assert( massToMoz( 962.385447066376, 2 ) === 482.2 )
+    assert( massToMoz( 1443.578170599564, 3 ) === 482.2 )
   }
   
   @Test
