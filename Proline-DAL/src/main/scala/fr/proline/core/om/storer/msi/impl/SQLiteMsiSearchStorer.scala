@@ -94,12 +94,13 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     
     // If the instrument config doesn't exist in the MSIdb
     if( count == 0 ) {
+      
       msiDb.getOrCreateTransaction.executeBatch("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
         stmt.executeWith( instrumentConfig.id,
                           instrumentConfig.name,
                           instrumentConfig.ms1Analyzer,
-                          instrumentConfig.msnAnalyzer,
-                          Option(null)
+                          Option(instrumentConfig.msnAnalyzer),
+                          Option.empty[String]
                          )
       }
     }
@@ -126,7 +127,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
               seqDatabase.version,
               new java.util.Date,// TODO: upgrade to date seqDatabase.releaseDate,
               seqDatabase.sequencesCount,
-              Option(null)
+              Option.empty[String]
             )
           
         seqDatabase.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
@@ -159,7 +160,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
             searchSettings.ms1ErrorTolUnit,
             searchSettings.quantitation,
             searchSettings.isDecoy,
-            Option(null),
+            Option.empty[String],
             searchSettings.instrumentConfig.id
             )
             
@@ -171,7 +172,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
       searchSettings.seqDatabases.foreach { seqDb =>
         assert( seqDb.id > 0, "sequence database must first be persisted" )
         
-        stmt.executeWith( searchSettings.id, seqDb.id, seqDb.sequencesCount, Option(null) )
+        stmt.executeWith( searchSettings.id, seqDb.id, seqDb.sequencesCount, Option.empty[String] )
       }
     }
     
@@ -193,7 +194,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
               ptmDef.id,
               ptmDef.location,
               ptmDef.residue,
-              Option(null)
+              Option.empty[String]
               )
       }
     }
@@ -207,7 +208,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
             ptmDef.id,
             ptmDef.names.shortName,
             isFixed,
-            Option(null)
+            Option.empty[String]
             )
             
     }
@@ -239,7 +240,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
             msiSearch.queriesCount,
             msiSearch.submittedQueriesCount,
             msiSearch.searchedSequencesCount,
-            Option(null),
+            Option.empty[String],
             searchSettingsId,
             peaklistId
           )

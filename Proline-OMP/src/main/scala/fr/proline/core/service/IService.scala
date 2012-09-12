@@ -20,7 +20,8 @@ trait IService extends Runnable with HasProgress {
         this.beforeInterruption()
         Thread.currentThread.interrupt() // very important to interrupt again
       }
-      case e: Exception => throw e
+      case e => throw e
+      case _ => throw new Exception("uncatched exception")
     }
     
   }  
