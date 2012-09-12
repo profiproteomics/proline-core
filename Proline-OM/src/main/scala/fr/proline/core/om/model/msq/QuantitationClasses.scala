@@ -5,7 +5,7 @@ import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.core.utils.misc.InMemoryIdGen
-import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet,ResultSummary}
 
 trait Item {
   var selectionLevel: Int
@@ -28,7 +28,7 @@ trait LcmsQuantComponent extends QuantComponent {
 }
 
 trait MasterQuantComponent extends Item {
-  var id: Int
+  def id: Int
   //var quantComponentMap: Map[Int,QuantComponent] // QuantComponent mapped by quantChannelId
 }
 
@@ -37,8 +37,6 @@ trait MasterLcmsQuantComponent extends MasterQuantComponent {
   val charge: Int
   val elutionTime: Float
 }
-
-//object QuantReporterIon extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
@@ -74,8 +72,6 @@ case class MasterQuantReporterIon( var id: Int,
   
 }
 
-
-//object QuantPeptideIon extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
@@ -144,13 +140,12 @@ case class MasterQuantPeptideIon(  var id: Int,
 }
 
 
-//object QuantPeptide extends InMemoryIdGen
-
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class QuantPeptide( val rawAbundance: Float,
                          var abundance: Float,
                          val elutionTime: Float,
+                         val peptideMatchesCount: Int,
                          
                          val quantChannelId: Int,
                          val peptideId: Int,
@@ -165,39 +160,41 @@ case class QuantPeptide( val rawAbundance: Float,
 object MasterQuantPeptide extends InMemoryIdGen
 
 @JsonSnakeCase
-case class MasterQuantPeptide( var id: Int,
-                               
-                               val peptideMatchesCount: Int,
-                               var proteinMatchesCount: Int,
-                               
+case class MasterQuantPeptide( val peptideInstance: Option[PeptideInstance], // without label in the context of isotopic labeling
                                var quantPeptideMap: Map[Int,QuantPeptide], // QuantPeptide by quant channel id
                                var masterQuantPeptideIons: Array[MasterQuantPeptideIon] = null,
-                               
-                               val peptideId: Int, // without label in the context of isotopic labeling
-                               val peptideInstanceId: Int, // without label in the context of isotopic labeling
-                               var masterQuantProteinSetIds: Array[Int] = null,
                                
                                var selectionLevel: Int,
                                var properties: Option[MasterQuantPeptideProperties] = None
                                
-                             ) extends Item {
+                             ) extends MasterQuantComponent {
   
-  /*lazy val quantPeptideMap: Map[Int,QuantPeptideProperties] = {
-    this.properties.getQuantPeptides.map { pepIon => pepIon.getQuantChannelId -> pepIon } toMap
-  }*/
+  private lazy val _id = MasterQuantPeptide.generateNewId
+  
+  def id(): Int = if( this.peptideInstance != None ) this.peptideInstance.get.id else this._id
+  def getPeptideId: Option[Int] = if( this.peptideInstance != None ) Some(this.peptideInstance.get.peptide.id) else None
+  
+  def getMasterQuantProteinSetIds(): Option[Array[Int]] = {
+    if( this.properties != None ) this.properties.get.getMasterQuantProteinSetIds()
+    else None
+  }
   
   def isProteinSetSpecific: Option[Boolean] = {
-    if( this.masterQuantProteinSetIds == null || 
-        this.masterQuantProteinSetIds.length == 0 ) return None
+    val masterQuantProteinSetIds = this.getMasterQuantProteinSetIds.get
+    if( masterQuantProteinSetIds == null || 
+        masterQuantProteinSetIds.length == 0 ) return None
         
-    val isProteinSetSpecific = if( this.masterQuantProteinSetIds.length == 1 ) true else false
+    val isProteinSetSpecific = if( masterQuantProteinSetIds.length == 1 ) true else false
     Some(isProteinSetSpecific)    
   }
   
   def isProteinMatchSpecific: Option[Boolean] = {
-    if( this.proteinMatchesCount == 0 ) return None
+    if( this.peptideInstance == None ) return None
+    
+    val proteinMatchesCount = this.peptideInstance.get.proteinMatchesCount
+    if( proteinMatchesCount == 0 ) return None
         
-    val isProteinMatchSpecific = if( this.proteinMatchesCount == 1 ) true else false
+    val isProteinMatchSpecific = if( proteinMatchesCount == 1 ) true else false
     Some(isProteinMatchSpecific)
   }
   
@@ -247,49 +244,36 @@ case class MasterQuantPeptide( var id: Int,
 case class QuantProteinSet (
   val rawAbundance: Float,
   var abundance: Float,
+  val peptideMatchesCount: Int,
   val quantChannelId: Int,
   var selectionLevel: Int
  ) extends QuantComponent
 
 
-object MasterQuantProteinSet extends InMemoryIdGen
-
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class MasterQuantProteinSet(  var id: Int,
-    
-                                   val peptideMatchesCount: Float,
-                                   
+case class MasterQuantProteinSet(  val proteinSet: ProteinSet,
                                    var quantProteinSetMap: Map[Int,QuantProteinSet], // QuantProteinSet by quant channel id
                                    var masterQuantPeptides: Array[MasterQuantPeptide] = null,
                                    
-                                   val selectedMasterQuantPeptideIds: Array[Int],
-                                   val peptideSetId: Int,
-                                   val proteinIds: Array[Int],
-                                   val proteinMatchIds: Array[Int],
-                                   val specificSampleId: Int = 0, // defined if the protein has been seen in a single sample
-                                   
                                    var selectionLevel: Int,
-                                   var properties: MasterQuantProteinSetProperties
+                                   var properties: Option[MasterQuantProteinSetProperties] = None
 
-                               ) extends Item {
+                               ) extends MasterQuantComponent {
   
+  def id() = this.proteinSet.id
 }
-
-object QuantResultSummary extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class QuantResultSummary( var id: Int,
-                               var description: String,
-                               
+case class QuantResultSummary( 
                                var masterQuantProteinSets: Array[MasterQuantProteinSet],
                                var masterQuantPeptides: Array[MasterQuantProteinSet],
                                var masterQuantPeptideIons: Array[MasterQuantProteinSet],
                                
-                               val quantResultSetId: Int,
-                               var identResultSummary: Option[ResultSummary] = None
+                               var resultSummary: ResultSummary
                                
                                )  {
   
+  def id() = resultSummary.id
 }

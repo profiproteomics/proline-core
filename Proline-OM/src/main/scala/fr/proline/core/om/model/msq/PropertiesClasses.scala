@@ -44,14 +44,13 @@ case class QuantPeptideIonProperties (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideIonProperties (
-  //@BeanProperty var quantPeptideIons: Array[QuantPeptideIonProperties],
   @BeanProperty var bestQuantChannelId: Option[Int] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideProperties (
-  //@BeanProperty var quantPeptides: Array[QuantPeptideProperties],
+  @BeanProperty var masterQuantProteinSetIds: Option[Array[Int]] = None,
   @BeanProperty var quantClusterId: Option[Int] = None,
   @BeanProperty var ratioDataMap: Option[Map[Int,RatioDataMapProperty]] = None
 )
@@ -59,8 +58,9 @@ case class MasterQuantPeptideProperties (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSetProperties (
-  //@BeanProperty var quantProteinSets: Array[QuantProteinSetProperties],
+  @BeanProperty var specificSampleId: Option[Int] = None, // defined if the protein has been seen in a single sample
   @BeanProperty var ratioDataMap: Option[Map[Int,RatioDataMapProperty]] = None,
-  @BeanProperty var selectedPeptideIonIds: Option[Array[Int]] = None
+  @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Int]] = None,
+  @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Int]] = None
 )
  

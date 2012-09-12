@@ -557,23 +557,19 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
           quantPeptideIonMap = quantPepIonMap
         )
         
-        var( pepMatchesCount, protMatchesCount, pepId, peptInstId) = (0,0,0,0)
+        /*var( pepMatchesCount, protMatchesCount, pepId, peptInstId) = (0,0,0,0)
         if( masterPepInstAsOpt != None ) {
           val masterPepInst = masterPepInstAsOpt.get
           pepMatchesCount = masterPepInst.peptideMatchesCount
           protMatchesCount = masterPepInst.proteinMatchesCount
           pepId = masterPepInst.peptide.id
           peptInstId = masterPepInst.id
-        }
+        }*/
        
         new MasterQuantPeptide(
-          id = MasterQuantPeptide.generateNewId(),
-          peptideMatchesCount = pepMatchesCount,
-          proteinMatchesCount = protMatchesCount,
+          peptideInstance = masterPepInstAsOpt,
           quantPeptideMap = null,
           masterQuantPeptideIons = Array(mqPepIon),
-          peptideId = pepId,
-          peptideInstanceId = peptInstId,
           selectionLevel = 2
          )
         
@@ -876,8 +872,10 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       msiMQPepIon.setMasterQuantComponent( msiMQC )
       msiMQPepIon.setResultSummary(msiRSM)
       
-      if( mqPep.peptideId > 0 ) msiMQPepIon.setPeptideId( mqPep.peptideId )
-      if( mqPep.peptideInstanceId > 0 ) msiMQPepIon.setPeptideInstanceId( mqPep.peptideInstanceId )    
+      if( mqPep.peptideInstance != None ) {
+        msiMQPepIon.setPeptideInstanceId( mqPep.id )
+        msiMQPepIon.setPeptideId( mqPep.getPeptideId.get )        
+      } 
       if( mqPepIon.lcmsFeatureId != None ) msiMQPepIon.setLcmsFeatureId( mqPepIon.lcmsFeatureId.get ) 
       if( mqPepIon.bestPeptideMatchId != None ) msiMQPepIon.setBestPeptideMatchId( mqPepIon.bestPeptideMatchId.get )
       if( mqPepIon.unmodifiedPeptideIonId != None ) msiMQPepIon.setUnmodifiedPeptideIonId( mqPepIon.unmodifiedPeptideIonId.get )
