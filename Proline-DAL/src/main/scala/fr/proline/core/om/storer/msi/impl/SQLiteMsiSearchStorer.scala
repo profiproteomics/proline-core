@@ -94,7 +94,6 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     
     // If the instrument config doesn't exist in the MSIdb
     if( count == 0 ) {
-      
       msiDb.getOrCreateTransaction.executeBatch("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
         stmt.executeWith( instrumentConfig.id,
                           instrumentConfig.name,
@@ -178,7 +177,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     
   }
 
-  private def _insertUsedPTM( ssId: Int, ptmDef: PtmDefinition, isFixed: Boolean ): Unit = {
+  protected def _insertUsedPTM( ssId: Int, ptmDef: PtmDefinition, isFixed: Boolean ): Unit = {
     
     // Check if the PTM specificity exists in the MSIdb
     val msiDbTx = this.msiDb.getOrCreateTransaction()
