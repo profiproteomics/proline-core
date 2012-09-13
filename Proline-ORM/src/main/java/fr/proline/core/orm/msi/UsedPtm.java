@@ -37,6 +37,7 @@ public class UsedPtm implements Serializable {
 	private SearchSetting searchSetting;
 
     public UsedPtm() {
+    	this.id = new UsedPtmPK();
     }
 
 	public UsedPtmPK getId() {
