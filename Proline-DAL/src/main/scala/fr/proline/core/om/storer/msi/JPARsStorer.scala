@@ -54,7 +54,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
   private val psDb: DatabaseConnector,
   private val udsDb: DatabaseConnector,
   private val pdiDb: DatabaseConnector) extends Logging {
-
+  
   type MsiResultSet = fr.proline.core.orm.msi.ResultSet
   type MsiPeakList = fr.proline.core.orm.msi.Peaklist
   type MsiPeaklistSoftware = fr.proline.core.orm.msi.PeaklistSoftware
@@ -79,6 +79,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
   type PdiBioSequence = fr.proline.core.orm.pdi.BioSequence
 
+  var knownSpectrumIdByTitle:Map[String, Int] = null
+  
+  def storeResultSet(resultSet: ResultSet, spectrumIdByTitle: Map[String,Int] ) {
+    knownSpectrumIdByTitle = spectrumIdByTitle
+    storeResultSet(resultSet)
+  }
+  
   /**
    * Stores an OM ResultSet into Msi Db using instance msiDb, psDb, udsDb and pdiDb DatabaseConnectors.
    *
@@ -714,11 +721,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         msiSearchSetting.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association
 
         val msiSeqDatabase = loadOrCreateSeqDatabase(knownSeqDatabases, msiEm, msiSeqDatabaseRepo, pdiSeqDatabaseRepo, seqDatabase)
-        msiSearchSettingsSeqDatabaseMap.setSeqDatabase(msiSeqDatabase) // msiSeqDatabase must be in persistence context
-        msiSeqDatabase.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association
+        if(msiSeqDatabase != null) {
+        	msiSearchSettingsSeqDatabaseMap.setSeqDatabase(msiSeqDatabase) // msiSeqDatabase must be in persistence context
+        	msiSeqDatabase.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association        
 
-        msiEm.persist(msiSearchSettingsSeqDatabaseMap)
-        logger.debug("Msi SettingsSeqDatabaseMap SearchSetting {" + omSearchSettingsId + "} SeqDatabase #" + msiSeqDatabase.getId + " persisted")
+        	msiEm.persist(msiSearchSettingsSeqDatabaseMap)
+        	logger.debug("Msi SettingsSeqDatabaseMap SearchSetting {" + omSearchSettingsId + "} SeqDatabase #" + msiSeqDatabase.getId + " persisted")
+        }
       }
 
       val psPtmRepo = new PsPtmRepository(psEm)
@@ -833,6 +842,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
   /**
    * Retrieves a known SeqDatabase or an already persisted SeqDatabase or persists a new SeqDatabase entity into Msi Db from an existing Pdi Db entity.
+   * If SeqDatabase doesn't exist in PDIdb, return null
    *
    * @param seqDatabase SeqDatabase object, must not be {{{null}}}.
    */
@@ -895,7 +905,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         val pdiSeqDatabaseInstance = pdiSeqDatabaseRepo.findSeqDbInstanceWithNameAndFile(seqDatabase.name, seqDatabase.filePath)
 
         if (pdiSeqDatabaseInstance == null) {
-          throw new IllegalArgumentException("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
+          logger.warn("SeqDatabase not defined in PDI db, protein matches will not be associated to bioSequence");
+           knownSeqDatabases += omSeqDatabaseId -> null
+//          throw new IllegalArgumentException("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
         } else {
           /* Create derived Msi entity */
           msiSeqDatabase = new MsiSeqDatabase(pdiSeqDatabaseInstance);
@@ -1208,7 +1220,6 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       for (peptideEntry <- peptides.toMap[PeptideIdent, Peptide]) {
         val peptIdent = peptideEntry._1
         val peptide = peptideEntry._2
-
         val newPsPeptide = new PsPeptide
         newPsPeptide.setSequence(peptIdent.sequence)
         newPsPeptide.setPtmString(peptIdent.ptmString)
@@ -1217,16 +1228,17 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         // TODO handle serializedProperties
         // TODO handle atomLabel
 
-        if ((peptide.ptms != null) && !peptide.ptms.isEmpty) {
-          // TODO handle Peptides.ptms
-          throw new UnsupportedOperationException("Peptides PTM are not supported yet !")
-        }
+//      TODO : ADD PTM REFERENCE FROM PEPTIDE
+//        if ((peptide.ptms != null) && !peptide.ptms.isEmpty) {
+//          // TODO handle Peptides.ptms
+//          throw new UnsupportedOperationException("Peptides PTM are not supported yet !")
+//        }
 
         psEm.persist(newPsPeptide)
 
         createdPsPeptides += peptIdent -> newPsPeptide
 
-        logger.debug("Ps Peptide {" + peptide.id + "} persisted")
+        logger.debug("Ps Peptide {" + peptide.id + ", "+newPsPeptide.getId+"} persisted")
       } // End loop for each Peptides
 
       psTransaction.commit()
@@ -1446,8 +1458,12 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
         if (msQuery.isInstanceOf[Ms2Query]) {
           val ms2Query = msQuery.asInstanceOf[Ms2Query]
-          val omSpectrumId = ms2Query.spectrumId
+          var omSpectrumId = ms2Query.spectrumId
 
+          val newSpectumID = knownSpectrumIdByTitle.get(ms2Query.spectrumTitle)
+          if(newSpectumID.isDefined)
+            omSpectrumId = newSpectumID.get
+            
           // TODO Spectrums should be persisted before RsStorer (with PeakList entity)
           if (omSpectrumId > 0) {
             val msiSpectrum = msiEm.find(classOf[MsiSpectrum], omSpectrumId)
