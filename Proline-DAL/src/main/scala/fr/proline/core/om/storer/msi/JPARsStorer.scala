@@ -1460,7 +1460,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
           val ms2Query = msQuery.asInstanceOf[Ms2Query]
           var omSpectrumId = ms2Query.spectrumId
 
-          val newSpectumID = knownSpectrumIdByTitle.get(ms2Query.spectrumTitle)
+          val newSpectumID = if(ms2Query.spectrumTitle == null || knownSpectrumIdByTitle == null) None else knownSpectrumIdByTitle.get(ms2Query.spectrumTitle)
           if(newSpectumID.isDefined)
             omSpectrumId = newSpectumID.get
             
