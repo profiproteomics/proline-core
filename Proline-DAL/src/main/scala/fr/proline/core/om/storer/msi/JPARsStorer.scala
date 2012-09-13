@@ -20,6 +20,7 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.SeqDatabase
 import fr.proline.core.om.model.msi.SequenceMatch
+import fr.proline.core.om.utils.PeptideIdent
 import fr.proline.core.orm.msi.ResultSet.Type
 import fr.proline.core.orm.msi.repository.MsiEnzymeRepository
 import fr.proline.core.orm.msi.repository.MsiInstrumentConfigRepository
@@ -54,7 +55,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
   private val psDb: DatabaseConnector,
   private val udsDb: DatabaseConnector,
   private val pdiDb: DatabaseConnector) extends Logging {
-  
+
   type MsiResultSet = fr.proline.core.orm.msi.ResultSet
   type MsiPeakList = fr.proline.core.orm.msi.Peaklist
   type MsiPeaklistSoftware = fr.proline.core.orm.msi.PeaklistSoftware
@@ -79,13 +80,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
   type PdiBioSequence = fr.proline.core.orm.pdi.BioSequence
 
-  var knownSpectrumIdByTitle:Map[String, Int] = null
-  
-  def storeResultSet(resultSet: ResultSet, spectrumIdByTitle: Map[String,Int] ) {
+  var knownSpectrumIdByTitle: Map[String, Int] = null
+
+  def storeResultSet(resultSet: ResultSet, spectrumIdByTitle: Map[String, Int]) {
     knownSpectrumIdByTitle = spectrumIdByTitle
     storeResultSet(resultSet)
   }
-  
+
   /**
    * Stores an OM ResultSet into Msi Db using instance msiDb, psDb, udsDb and pdiDb DatabaseConnectors.
    *
@@ -508,15 +509,15 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
         val msiSearch = new MsiSearch()
         msiSearch.setDate(new Timestamp(search.date.getTime))
-        msiSearch.setQueriesCount(search.queriesCount)
+        msiSearch.setQueriesCount(Integer.valueOf(search.queriesCount))
         msiSearch.setResultFileName(search.resultFileName)
         msiSearch.setResultFileDirectory(search.resultFileDirectory)
-        msiSearch.setSearchedSequencesCount(search.searchedSequencesCount)
-        msiSearch.setJobNumber(search.jobNumber)
+        msiSearch.setSearchedSequencesCount(Integer.valueOf(search.searchedSequencesCount))
+        msiSearch.setJobNumber(Integer.valueOf(search.jobNumber))
 
         // TODO handle serializedProperties
 
-        msiSearch.setSubmittedQueriesCount(search.submittedQueriesCount)
+        msiSearch.setSubmittedQueriesCount(Integer.valueOf(search.submittedQueriesCount))
         msiSearch.setTitle(search.title)
         msiSearch.setUserEmail(search.userEmail)
         msiSearch.setUserName(search.userName)
@@ -572,7 +573,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         foundMsiPeakList
       } else {
         val msiPeakList = new MsiPeakList()
-        msiPeakList.setMsLevel(peakList.msLevel)
+        msiPeakList.setMsLevel(Integer.valueOf(peakList.msLevel))
         msiPeakList.setPath(peakList.path)
         msiPeakList.setRawFileName(peakList.rawFileName)
 
@@ -682,7 +683,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     } else {
       val msiSearchSetting = new MsiSearchSetting()
       msiSearchSetting.setIsDecoy(searchSettings.isDecoy)
-      msiSearchSetting.setMaxMissedCleavages(searchSettings.maxMissedCleavages)
+      msiSearchSetting.setMaxMissedCleavages(Integer.valueOf(searchSettings.maxMissedCleavages))
       msiSearchSetting.setPeptideChargeStates(searchSettings.ms1ChargeStates)
       msiSearchSetting.setPeptideMassErrorTolerance(searchSettings.ms1ErrorTol)
       msiSearchSetting.setPeptideMassErrorToleranceUnit(searchSettings.ms1ErrorTolUnit)
@@ -713,7 +714,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
       for (seqDatabase <- searchSettings.seqDatabases) {
         val msiSearchSettingsSeqDatabaseMap = new MsiSearchSettingsSeqDatabaseMap()
-        msiSearchSettingsSeqDatabaseMap.setSearchedSequencesCount(search.searchedSequencesCount)
+        msiSearchSettingsSeqDatabaseMap.setSearchedSequencesCount(Integer.valueOf(search.searchedSequencesCount))
 
         // TODO handle serializedProperties
 
@@ -721,13 +722,14 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         msiSearchSetting.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association
 
         val msiSeqDatabase = loadOrCreateSeqDatabase(knownSeqDatabases, msiEm, msiSeqDatabaseRepo, pdiSeqDatabaseRepo, seqDatabase)
-        if(msiSeqDatabase != null) {
-        	msiSearchSettingsSeqDatabaseMap.setSeqDatabase(msiSeqDatabase) // msiSeqDatabase must be in persistence context
-        	msiSeqDatabase.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association        
+        if (msiSeqDatabase != null) {
+          msiSearchSettingsSeqDatabaseMap.setSeqDatabase(msiSeqDatabase) // msiSeqDatabase must be in persistence context
+          msiSeqDatabase.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association        
 
-        	msiEm.persist(msiSearchSettingsSeqDatabaseMap)
-        	logger.debug("Msi SettingsSeqDatabaseMap SearchSetting {" + omSearchSettingsId + "} SeqDatabase #" + msiSeqDatabase.getId + " persisted")
+          msiEm.persist(msiSearchSettingsSeqDatabaseMap)
+          logger.debug("Msi SettingsSeqDatabaseMap SearchSetting {" + omSearchSettingsId + "} SeqDatabase #" + msiSeqDatabase.getId + " persisted")
         }
+
       }
 
       val psPtmRepo = new PsPtmRepository(psEm)
@@ -842,9 +844,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
   /**
    * Retrieves a known SeqDatabase or an already persisted SeqDatabase or persists a new SeqDatabase entity into Msi Db from an existing Pdi Db entity.
-   * If SeqDatabase doesn't exist in PDIdb, return null
    *
    * @param seqDatabase SeqDatabase object, must not be {{{null}}}.
+   * @return Msi SeqDatabase entity or {{{null}}} if SeqDatabase does not exist in Pdi Db.
    */
   def loadOrCreateSeqDatabase(knownSeqDatabases: mutable.Map[Int, MsiSeqDatabase],
     msiEm: EntityManager,
@@ -905,9 +907,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         val pdiSeqDatabaseInstance = pdiSeqDatabaseRepo.findSeqDbInstanceWithNameAndFile(seqDatabase.name, seqDatabase.filePath)
 
         if (pdiSeqDatabaseInstance == null) {
-          logger.warn("SeqDatabase not defined in PDI db, protein matches will not be associated to bioSequence");
-           knownSeqDatabases += omSeqDatabaseId -> null
-//          throw new IllegalArgumentException("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
+          logger.warn("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
         } else {
           /* Create derived Msi entity */
           msiSeqDatabase = new MsiSeqDatabase(pdiSeqDatabaseInstance);
@@ -1228,17 +1228,16 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         // TODO handle serializedProperties
         // TODO handle atomLabel
 
-//      TODO : ADD PTM REFERENCE FROM PEPTIDE
-//        if ((peptide.ptms != null) && !peptide.ptms.isEmpty) {
-//          // TODO handle Peptides.ptms
-//          throw new UnsupportedOperationException("Peptides PTM are not supported yet !")
-//        }
+        //      TODO : ADD PTM REFERENCE FROM PEPTIDE
+        if ((peptide.ptms != null) && !peptide.ptms.isEmpty) {
+          logger.warn("Peptides PTM are not yet supported in JPARsStorer")
+        }
 
         psEm.persist(newPsPeptide)
 
         createdPsPeptides += peptIdent -> newPsPeptide
 
-        logger.debug("Ps Peptide {" + peptide.id + ", "+newPsPeptide.getId+"} persisted")
+        logger.debug("Ps Peptide {" + peptide.id + "} persisted")
       } // End loop for each Peptides
 
       psTransaction.commit()
@@ -1314,9 +1313,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       } else {
         val msiPeptideMatch = new MsiPeptideMatch()
         msiPeptideMatch.setDeltaMoz(peptideMatch.deltaMoz)
-        msiPeptideMatch.setFragmentMatchCount(peptideMatch.fragmentMatchesCount)
+        msiPeptideMatch.setFragmentMatchCount(Integer.valueOf(peptideMatch.fragmentMatchesCount))
         msiPeptideMatch.setIsDecoy(peptideMatch.isDecoy)
-        msiPeptideMatch.setMissedCleavage(peptideMatch.missedCleavage)
+        msiPeptideMatch.setMissedCleavage(Integer.valueOf(peptideMatch.missedCleavage))
 
         val msiPeptide = msiPeptides.get(new PeptideIdent(peptideMatch.peptide.sequence, peptideMatch.peptide.ptmString))
 
@@ -1330,10 +1329,10 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         if (msiPeptideId <= 0) {
           throw new IllegalArgumentException("Unknown Msi Peptide Id: " + msiPeptideId)
         } else {
-          msiPeptideMatch.setPeptideId(msiPeptideId)
+          msiPeptideMatch.setPeptideId(Integer.valueOf(msiPeptideId))
         }
 
-        msiPeptideMatch.setRank(peptideMatch.rank)
+        msiPeptideMatch.setRank(Integer.valueOf(peptideMatch.rank))
 
         msiPeptideMatch.setResultSet(msiResultSet) // msiResultSet must be in persistence context
 
@@ -1344,7 +1343,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         if (msiScoringId == null) {
           throw new IllegalArgumentException("Scoring [" + peptideMatch.scoreType + "] NOT found in Msi Db")
         } else {
-          msiPeptideMatch.setScoringId(msiScoringId.intValue)
+          msiPeptideMatch.setScoringId(msiScoringId)
         }
 
         // TODO handle serializedProperties
@@ -1358,7 +1357,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         msiPeptideMatch.setMsQuery(msiMsQuery) // msiMsQuery must be in persistence context
         msiMsQuery.addPeptideMatch(msiPeptideMatch) // Reverse association
 
-        msiPeptideMatch.setCharge(msiMsQuery.getCharge)
+        msiPeptideMatch.setCharge(Integer.valueOf(msiMsQuery.getCharge))
         msiPeptideMatch.setExperimentalMoz(msiMsQuery.getMoz)
 
         /* Check associated best PeptideMatch */
@@ -1449,8 +1448,8 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         foundMsiMsQuery
       } else {
         val msiMsQuery = new MsiMsQuery()
-        msiMsQuery.setCharge(msQuery.charge)
-        msiMsQuery.setInitialId(msQuery.initialId)
+        msiMsQuery.setCharge(Integer.valueOf(msQuery.charge))
+        msiMsQuery.setInitialId(Integer.valueOf(msQuery.initialId))
         msiMsQuery.setMoz(msQuery.moz)
         msiMsQuery.setMsiSearch(msiSearch) // msiSearch must be in persistence context
 
@@ -1458,12 +1457,19 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
         if (msQuery.isInstanceOf[Ms2Query]) {
           val ms2Query = msQuery.asInstanceOf[Ms2Query]
-          var omSpectrumId = ms2Query.spectrumId
 
-          val newSpectumID = if(ms2Query.spectrumTitle == null || knownSpectrumIdByTitle == null) None else knownSpectrumIdByTitle.get(ms2Query.spectrumTitle)
-          if(newSpectumID.isDefined)
-            omSpectrumId = newSpectumID.get
-            
+          var omSpectrumId: Int = ms2Query.spectrumId
+
+          /* Try to load Spectrum.id from knownSpectrumIdByTitle */
+          if ((knownSpectrumIdByTitle != null) && (ms2Query.spectrumTitle != null)) {
+            val knownSpectrumId = knownSpectrumIdByTitle.get(ms2Query.spectrumTitle)
+
+            if (knownSpectrumId.isDefined) {
+              omSpectrumId = knownSpectrumId.get
+            }
+
+          }
+
           // TODO Spectrums should be persisted before RsStorer (with PeakList entity)
           if (omSpectrumId > 0) {
             val msiSpectrum = msiEm.find(classOf[MsiSpectrum], omSpectrumId)
@@ -1540,8 +1546,8 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     val omProteinId = proteinMatch.getProteinId
 
     if (omProteinId > 0) {
-      val msiBioSequence = loadOrCreateBioSequence(msiEm, pdiEm, omProteinId)
 
+      val msiBioSequence = loadOrCreateBioSequence(msiEm, pdiEm, omProteinId)
       if (msiBioSequence != null) {
         msiProteinMatch.setBioSequenceId(msiBioSequence.getId)
       }
@@ -1563,9 +1569,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     msiProteinMatch.setGeneName(proteinMatch.geneName)
     msiProteinMatch.setIsDecoy(proteinMatch.isDecoy)
 
-    // TODO handle peptideCount
+    msiProteinMatch.setPeptideCount(Integer.valueOf(0)) // TODO handle peptideCount
 
-    msiProteinMatch.setPeptideCount(proteinMatch.peptideMatchesCount)
+    msiProteinMatch.setPeptideMatchCount(Integer.valueOf(proteinMatch.peptideMatchesCount))
     msiProteinMatch.setResultSet(msiResultSet) // msiResultSet must be in persistence context
     msiProteinMatch.setScore(proteinMatch.score)
 
@@ -1575,7 +1581,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       if (msiScoringId == null) {
         throw new IllegalArgumentException("Scoring [" + proteinMatch.scoreType + "] NOT found in Msi Db")
       } else {
-        msiProteinMatch.setScoringId(msiScoringId.intValue)
+        msiProteinMatch.setScoringId(msiScoringId)
       }
 
     }
@@ -1585,7 +1591,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     val omTaxonId = proteinMatch.taxonId
 
     if (omTaxonId != 0) {
-      msiProteinMatch.setTaxonId(omTaxonId)
+      msiProteinMatch.setTaxonId(Integer.valueOf(omTaxonId))
     }
 
     msiEm.persist(msiProteinMatch)
@@ -1724,13 +1730,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     val msiPeptideId = retrieveMsiPeptideId(sequenceMatch.getPeptideId, sequenceMatch.peptide)
 
     if (msiPeptideId > 0) {
-      msiSequenceMatchPK.setPeptideId(msiPeptideId)
+      msiSequenceMatchPK.setPeptideId(Integer.valueOf(msiPeptideId))
     } else {
       throw new IllegalArgumentException("Unknown Msi Peptide Id: " + msiPeptideId)
     }
 
-    msiSequenceMatchPK.setStart(sequenceMatch.start)
-    msiSequenceMatchPK.setStop(sequenceMatch.end)
+    msiSequenceMatchPK.setStart(Integer.valueOf(sequenceMatch.start))
+    msiSequenceMatchPK.setStop(Integer.valueOf(sequenceMatch.end))
 
     val msiSequenceMatch = new MsiSequenceMatch()
     msiSequenceMatch.setId(msiSequenceMatchPK)
@@ -1739,7 +1745,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     val msiPeptideMatchId = retrieveMsiPeptideMatchId(sequenceMatch.getBestPeptideMatchId)
 
     if (msiPeptideMatchId > 0) {
-      msiSequenceMatch.setBestPeptideMatchId(msiPeptideMatchId)
+      msiSequenceMatch.setBestPeptideMatchId(Integer.valueOf(msiPeptideMatchId))
     } else {
       throw new IllegalArgumentException("Unknown Msi best PeptideMatch Id: " + msiPeptideMatchId)
     }
@@ -1747,7 +1753,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     msiSequenceMatch.setIsDecoy(sequenceMatch.isDecoy)
     msiSequenceMatch.setResidueAfter("" + sequenceMatch.residueAfter)
     msiSequenceMatch.setResidueBefore("" + sequenceMatch.residueBefore)
-    msiSequenceMatch.setResultSetId(msiResultSetId)
+    msiSequenceMatch.setResultSetId(Integer.valueOf(msiResultSetId))
 
     // TODO handle serializedProperties
 
@@ -1846,7 +1852,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       logger.warn("Unknown Msi SeqDatabase Id: " + seqDatabaseId)
     } else {
       val proteinMatchSeqDatabaseMapPK = new ProteinMatchSeqDatabaseMapPK()
-      proteinMatchSeqDatabaseMapPK.setProteinMatchId(msiProteinMatchId)
+      proteinMatchSeqDatabaseMapPK.setProteinMatchId(Integer.valueOf(msiProteinMatchId))
       proteinMatchSeqDatabaseMapPK.setSeqDatabaseId(msiSeqDatabase.getId)
 
       val msiProteinMatchSeqDatabase = new MsiProteinMatchSeqDatabaseMap()

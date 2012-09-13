@@ -13,7 +13,17 @@ import fr.proline.core.orm.utils.StringUtils;
 
 public class ScoringRepository extends JPARepository {
 
+    /* Static caches are updated by getScoringIdForType() and getScoreTypeForId() methods */
+    /* ScoreType -> Scoring.id , @GuardedBy("CACHE_LOCK") */
     private static final Map<String, Integer> SCORING_IDS_CACHE = new HashMap<String, Integer>();
+
+    /* Scoring.id -> ScoreType , @GuardedBy("CACHE_LOCK") */
+    private static final Map<Integer, String> SCORE_TYPES_CACHE = new HashMap<Integer, String>();
+
+    /**
+     * Lock object for caches.
+     */
+    private static final Object CACHE_LOCK = new Object();
 
     public ScoringRepository(final EntityManager msiEm) {
 	super(msiEm);
@@ -70,7 +80,7 @@ public class ScoringRepository extends JPARepository {
 
 	Integer result = null;
 
-	synchronized (SCORING_IDS_CACHE) {
+	synchronized (CACHE_LOCK) {
 	    result = SCORING_IDS_CACHE.get(scoreType);
 
 	    if (result == null) {
@@ -80,14 +90,68 @@ public class ScoringRepository extends JPARepository {
 		    result = foundScoring.getId();
 
 		    if (result != null) {
+			/* Cache Scoring Id */
 			SCORING_IDS_CACHE.put(scoreType, result);
+
+			final String searchEngine = foundScoring.getSearchEngine();
+			final String name = foundScoring.getName();
+
+			/* Cache scoreType String */
+			if ((searchEngine != null) && (name != null)) {
+			    SCORE_TYPES_CACHE.put(result, searchEngine + ':' + name);
+			}
+
+		    } // End if (foundScoring.id is not null)
+
+		} // End if (foundScoring is not null)
+
+	    } // End if (scoreType is not in SCORING_IDS_CACHE)
+
+	} // End of synchronized block on CACHE_LOCK
+
+	return result;
+    }
+
+    /**
+     * Retrives a cached <code>scoreType</code> by given <code>Scoring.id</code>.
+     * 
+     * @param scoringId
+     *            Primary key of <code>Scoring</code> Msi Entity.
+     * @return Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (
+     *         <code>null</code>).
+     */
+    public String getScoreTypeForId(final Integer scoringId) {
+
+	if (scoringId == null) {
+	    throw new IllegalArgumentException("ScoringId is null");
+	}
+
+	String result = null;
+
+	synchronized (CACHE_LOCK) {
+	    result = SCORE_TYPES_CACHE.get(scoringId);
+
+	    if (result == null) {
+
+		final Scoring foundScoring = getEntityManager().find(Scoring.class, scoringId);
+		if (foundScoring != null) {
+		    final String searchEngine = foundScoring.getSearchEngine();
+		    final String name = foundScoring.getName();
+
+		    if ((searchEngine != null) && (name != null)) {
+			final String scoreType = searchEngine + ':' + name;
+			/* Cache Scoring Id */
+			SCORING_IDS_CACHE.put(scoreType, scoringId);
+
+			/* Cache scoreType String */
+			SCORE_TYPES_CACHE.put(scoringId, scoreType);
 		    }
 
-		}
+		} // End if (foundScoring is not null)
 
-	    }
+	    } // End if (scoringId is not in SCORE_TYPES_CACHE)
 
-	} // End of synchronized block on SCORING_IDS_CACHE
+	} // End of synchronized block on CACHE_LOCK
 
 	return result;
     }

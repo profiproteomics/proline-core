@@ -1,4 +1,4 @@
-package fr.proline.core.om.storer.msi
+package fr.proline.core.om.utils
 
 import org.junit.Assert._
 import org.junit.Test
