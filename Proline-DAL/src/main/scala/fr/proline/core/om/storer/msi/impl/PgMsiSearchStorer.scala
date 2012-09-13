@@ -3,10 +3,15 @@ package fr.proline.core.om.storer.msi.impl
 import com.weiglewilczek.slf4s.Logging
 import org.postgresql.copy.{CopyIn,CopyManager}
 import org.postgresql.core.BaseConnection
+import net.noerd.prequel.ReusableStatement
+import net.noerd.prequel.SQLFormatterImplicits._
+import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.MsiDb
-import fr.proline.core.dal.{MsiDbMsQueryTable}
+import fr.proline.core.dal.{MsiDbMsQueryTable,MsiDbPtmSpecificityTable}
 import fr.proline.core.utils.sql._
 import fr.proline.core.om.model.msi._
+import fr.proline.core.dal.MsiDbUsedPtmTable
+
 
 class PgMsiSearchStorer( val msiDb: MsiDb ) extends SQLiteMsiSearchStorer( msiDb ) with Logging {
   
@@ -95,6 +100,46 @@ class PgMsiSearchStorer( val msiDb: MsiDb ) extends SQLiteMsiSearchStorer( msiDb
     
   }
   
+  
+  override protected def _insertUsedPTM( ssId: Int, ptmDef: PtmDefinition, isFixed: Boolean ): Unit = {
+    
+    // Check if the PTM specificity exists in the MSIdb
+    val msiDbTx = this.msiDb.getOrCreateTransaction()
+    val count = msiDbTx.selectInt( "SELECT count(*) FROM ptm_specificity WHERE id =" + ptmDef.id )
+    
+    // Insert PTM specificity if it doesn't exist in the MSIdb
+    if( count == 0 ) {
+      val ptmSpecifColsList = MsiDbPtmSpecificityTable.getColumnsAsStrList()
+      val ptmSpecifInsertQuery = MsiDbPtmSpecificityTable.makeInsertQuery( ptmSpecifColsList )      
+      
+      msiDbTx.executeBatch( ptmSpecifInsertQuery, false ) { stmt =>{        
+        val residueAsStr = if(ptmDef.residue == '\0') "" else ptmDef.residue.toString
+        logger.debug(" Execute "+ptmSpecifInsertQuery+" with "+ ptmDef.id+" - "+ptmDef.location+" - "+residueAsStr)
+        stmt.executeWith(
+              ptmDef.id,
+              ptmDef.location,
+              residueAsStr,
+              Option(null)
+              )
+      }
+      }
+    }
+    
+    // Link used PTMs to search settings
+    val usedPtmColsList = MsiDbUsedPtmTable.getColumnsAsStrList()
+    val usedPtmInsertQuery = MsiDbUsedPtmTable.makeInsertQuery( usedPtmColsList )
+    msiDbTx.executeBatch( usedPtmInsertQuery, false ) { stmt =>
+      stmt.executeWith(
+            ssId,
+            ptmDef.id,
+            ptmDef.names.shortName,
+            isFixed,
+            Option(null)
+            )
+            
+    }
+    
+  }
 }
 
 
