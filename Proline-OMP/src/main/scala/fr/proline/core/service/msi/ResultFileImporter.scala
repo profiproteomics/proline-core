@@ -12,14 +12,13 @@ import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.msi.MsiSearchStorer
 import fr.proline.core.om.storer.msi.PeaklistStorer
-import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.service.IService
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.om.storer.msi.PeaklistStorer
 import fr.proline.core.dal.UdsDb
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.MsiSearchStorer
-//import scala.collection.mutable.Map
+import fr.proline.core.om.storer.msi.JPARsStorer
 
 class ResultFileImporter( dbMgnt: DatabaseManagement,
                           projectId: Int,
@@ -68,7 +67,8 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     // Instantiate some storers
     val msiSearchStorer = MsiSearchStorer( msiDb )
     val peaklistStorer = PeaklistStorer( msiDb )
-    val rsStorer = RsStorer(dbMgnt, msiDb )
+//    val rsStorer = RsStorer(dbMgnt, msiDb )//  VD Pour SQLStorer Only 
+     val rsStorer = new JPARsStorer(msiDbConnector, dbMgnt.psDBConnector, dbMgnt.udsDBConnector, dbMgnt.pdiDBConnector) //VD Pour ORMStorer Only
         
     // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
@@ -89,7 +89,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     >>>
     
     // Store the MSI search with related search settings and MS queries    
-    val seqDbIdByTmpId = msiSearchStorer.storeMsiSearch( msiSearch, msQueries, spectrumIdByTitle )
+//    val seqDbIdByTmpId = msiSearchStorer.storeMsiSearch( msiSearch, msQueries, spectrumIdByTitle ) // VD Pour SQLStorer Only
     >>>
     
     ////logger.info("Parsing file " + fileLocation.getAbsoluteFile() + " using " + resultFile.getClass().getName() + " failed !")
@@ -98,23 +98,29 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     val targetRs = resultFile.getResultSet(false)
     targetRs.name = msiSearch.title
     
+    
+    //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
+    this.msiDb.commitTransaction()// VD Pour ORMStorer Only
     // Load and store decoy result set if it exists
     if( resultFile.hasDecoyResultSet ) {
   	  val decoyRs = resultFile.getResultSet(true)
   	  decoyRs.name = msiSearch.title
   	  
-  	  rsStorer.storeResultSet(decoyRs,seqDbIdByTmpId)
+//  	  rsStorer.storeResultSet(decoyRs,seqDbIdByTmpId) // VD Pour SQLStorer Only
+
       targetRs.decoyResultSet = Some(decoyRs)
       >>>
   	}
     else targetRs.decoyResultSet = None
 
     // Store target result set
-    rsStorer.storeResultSet(targetRs,seqDbIdByTmpId)
+//    rsStorer.storeResultSet(targetRs,seqDbIdByTmpId)// VD Pour SQLStorer Only
+    rsStorer.storeResultSet(targetRs, spectrumIdByTitle)// VD Pour ORMStorer Only
+    
     this.targetResultSetId = targetRs.id
     >>>
     
-    this.msiDb.commitTransaction()
+//    this.msiDb.commitTransaction()// VD Pour SQLStorer Only
     
     this.beforeInterruption()
     
