@@ -74,7 +74,7 @@ class JPARsStorerTest extends Logging {
       //      }
 
       start = System.nanoTime
-      storer.storeResultSet(msiDBTestCase.getEntityManager(), psDBTestCase.getEntityManager(), udsDBTestCase.getEntityManager(), pdiDBTestCase.getEntityManager(), resultSet)
+      storer.storeResultSet(msiDBTestCase.getEntityManager(), psDBTestCase.getEntityManager(), udsDBTestCase.getEntityManager(), pdiDBTestCase.getEntityManager(), resultSet, null)
       stop = System.nanoTime
 
       logger.info("ResultSet persisted time: " + ((stop - start) / milliToNanos))

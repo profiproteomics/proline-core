@@ -2,6 +2,7 @@ package fr.proline.core.om.storer.msi
 
 import java.sql.Timestamp
 
+import scala.annotation.elidable
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
 
@@ -80,19 +81,12 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
   type PdiBioSequence = fr.proline.core.orm.pdi.BioSequence
 
-  var knownSpectrumIdByTitle: Map[String, Int] = null
-
-  def storeResultSet(resultSet: ResultSet, spectrumIdByTitle: Map[String, Int]) {
-    knownSpectrumIdByTitle = spectrumIdByTitle
-    storeResultSet(resultSet)
-  }
-
   /**
    * Stores an OM ResultSet into Msi Db using instance msiDb, psDb, udsDb and pdiDb DatabaseConnectors.
    *
    * @param resultSet ResultSet object, must not be {{{null}}} and must be a newly created instance ("In memory" Id < 0).
    */
-  def storeResultSet(resultSet: ResultSet) {
+  def storeResultSet(resultSet: ResultSet, spectrumIdByTitle: Map[String, Int]) {
 
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
@@ -119,7 +113,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       udsEm = udsEmf.createEntityManager
       pdiEm = pdiEmf.createEntityManager
 
-      storeResultSet(msiEm, psEm, udsEm, pdiEm, resultSet)
+      storeResultSet(msiEm, psEm, udsEm, pdiEm, resultSet, spectrumIdByTitle)
     } finally {
 
       /* Close all created EntityManagers */
@@ -165,36 +159,20 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    *
    * @param resultSet ResultSet object, must not be {{{null}}} and must be a newly created instance ("In memory" Id < 0).
    */
-  def storeResultSet(msiEm: EntityManager, psEm: EntityManager, udsEm: EntityManager, pdiEm: EntityManager, resultSet: ResultSet) {
-
-    checkEntityManager(msiEm)
+  def storeResultSet(msiEm: EntityManager, psEm: EntityManager, udsEm: EntityManager, pdiEm: EntityManager, resultSet: ResultSet, spectrumIdByTitle: Map[String, Int]) {
 
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
     }
 
-    /* Global caches (entities shared by ResultSets: Decoy, children...) :
-     * OM Id (can be "In memory") -> ORM loaded or persisted entity */
-    val knownResultSets = mutable.Map.empty[Int, MsiResultSet]
-    val knownMsiSearchs = mutable.Map.empty[Int, MsiSearch]
-    val knownPeakLists = mutable.Map.empty[Int, MsiPeakList]
-    val knownSeqDatabases = mutable.Map.empty[Int, MsiSeqDatabase] // Can contain null MsiSeqDatabase values if not found in Pdi Db
-    val knownPtmSpecificities = mutable.Map.empty[Int, MsiPtmSpecificity]
-    val msiPeptides = mutable.Map.empty[PeptideIdent, MsiPeptide] // Retrieved and created Msi Peptides
-    val knownPeptideMatches = mutable.Map.empty[Int, MsiPeptideMatch]
-    val knownMsQueries = mutable.Map.empty[Int, MsiMsQuery]
-
-    /* Postponed tasks : after having persisted other ResultSet entities and committed msiEm transaction
-     * Contains ResultSet specific entities */
-    val proteinMatchSeqDatabases = mutable.Map.empty[MsiResultSet, mutable.Map[MsiProteinMatch, Array[Int]]]
-    val sequenceMatches = mutable.Map.empty[MsiResultSet, mutable.Map[MsiProteinMatch, Array[SequenceMatch]]]
+    val storerContext = new StorerContext(msiEm, psEm, udsEm, pdiEm, spectrumIdByTitle)
 
     val msiTransaction = msiEm.getTransaction
     var msiTransacOk: Boolean = false
 
     var msiResultSet: MsiResultSet = null
 
-    logger.debug("Starting first Msi Db transaction")
+    logger.debug("Starting Msi Db transaction")
 
     try {
       msiTransaction.begin()
@@ -205,16 +183,8 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       } else {
         logger.info("Persisting a newly created ResultSet")
 
-        msiResultSet = loadOrCreateResultSet(knownResultSets,
-          knownMsiSearchs,
-          knownPeakLists,
-          knownSeqDatabases,
-          knownPtmSpecificities,
-          msiPeptides,
-          knownPeptideMatches,
-          knownMsQueries,
-          msiEm, psEm, udsEm, pdiEm,
-          resultSet, proteinMatchSeqDatabases, sequenceMatches)
+        msiResultSet = loadOrCreateResultSet(storerContext,
+          resultSet)
       }
 
       msiTransaction.commit()
@@ -234,52 +204,6 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
     if (msiTransacOk) {
       resultSet.id = msiResultSet.getId // Update OM entity with persisted Primary key
-
-      if (!proteinMatchSeqDatabases.isEmpty || !sequenceMatches.isEmpty) {
-        /* Postponed proteinMatchSeqDatabases and sequenceMatches handling in a new transaction */
-        logger.debug("Starting second Msi Db transaction")
-
-        try {
-          msiTransaction.begin()
-          msiTransacOk = false
-
-          for (pMSDEntry <- proteinMatchSeqDatabases) {
-            /* Re-attach MsiResultSet entity to current Msi transaction */
-            val currentMsiResultSet = msiEm.merge(pMSDEntry._1)
-
-            /* Handle ProteinMatchSeqDatabaseMap after having persisted MsiProteinMatches, SeqDatabases and the MsiResultSet */
-            for (currentPMSDEntry <- pMSDEntry._2; seqDatabaseId <- currentPMSDEntry._2) {
-              bindProteinMatchSeqDatabaseMap(msiEm, currentPMSDEntry._1.getId, seqDatabaseId, knownSeqDatabases, currentMsiResultSet)
-            }
-
-          }
-
-          for (smEntry <- sequenceMatches) {
-
-            /* Handle sequenceMatches after having persisted MsiProteinMatches, MsiPeptideMatches and the MsiResultSet */
-            for (currentSMEntry <- smEntry._2; sequenceMatch <- currentSMEntry._2) {
-              createSequenceMatch(msiEm, sequenceMatch, currentSMEntry._1.getId, msiPeptides, knownPeptideMatches, smEntry._1.getId)
-            }
-
-          }
-
-          msiTransaction.commit()
-          msiTransacOk = true
-        } finally {
-
-          /* Check msiTransaction integrity */
-          if ((msiTransaction != null) && !msiTransacOk) {
-            try {
-              msiTransaction.rollback()
-            } catch {
-              case ex => logger.error("Error rollbacking Msi Db transaction", ex)
-            }
-          }
-
-        } // End try - finally block on msiTransaction
-
-      } // End if (postponed Maps are not empty)
-
     } // End if (first msiTransac is Ok)
 
   }
@@ -290,18 +214,8 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * @param resultSet ResultSet object, must not be {{{null}}}.
    * @param msiEm Msi EntityManager must have a valid transaction started.
    */
-  def loadOrCreateResultSet(knownResultSets: mutable.Map[Int, MsiResultSet],
-    knownMsiSearchs: mutable.Map[Int, MsiSearch],
-    knownPeakLists: mutable.Map[Int, MsiPeakList],
-    knownSeqDatabases: mutable.Map[Int, MsiSeqDatabase],
-    knownPtmSpecificities: mutable.Map[Int, MsiPtmSpecificity],
-    msiPeptides: mutable.Map[PeptideIdent, MsiPeptide],
-    knownPeptideMatches: mutable.Map[Int, MsiPeptideMatch],
-    knownMsQueries: mutable.Map[Int, MsiMsQuery],
-    msiEm: EntityManager, psEm: EntityManager, udsEm: EntityManager, pdiEm: EntityManager,
-    resultSet: ResultSet,
-    proteinMatchSeqDatabases: mutable.Map[MsiResultSet, mutable.Map[MsiProteinMatch, Array[Int]]],
-    sequenceMatches: mutable.Map[MsiResultSet, mutable.Map[MsiProteinMatch, Array[SequenceMatch]]]): MsiResultSet = {
+  def loadOrCreateResultSet(storerContext: StorerContext,
+    resultSet: ResultSet): MsiResultSet = {
 
     // TODO Check this algo (QUANTITATION = resultSet.isQuantified ? )
     def parseType(resultSet: ResultSet): Type = {
@@ -321,27 +235,15 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
     }
 
-    if (knownResultSets == null) {
-      throw new IllegalArgumentException("KnownResultSets is null")
-    }
-
-    checkEntityManager(msiEm)
-
-    checkEntityManager(pdiEm)
-
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
     }
 
-    if (proteinMatchSeqDatabases == null) {
-      throw new IllegalArgumentException("ProteinMatchSeqDatabases map is null")
-    }
-
-    if (sequenceMatches == null) {
-      throw new IllegalArgumentException("SequenceMatches map is null")
-    }
+    val msiEm = storerContext.msiEm
 
     val omResultSetId = resultSet.id
+
+    val knownResultSets = storerContext.getEntityCache(classOf[MsiResultSet])
 
     val knownMsiResultSet = knownResultSets.get(omResultSetId)
 
@@ -362,7 +264,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         msiResultSet.setName(resultSet.name)
         msiResultSet.setType(parseType(resultSet))
 
-        val msiSearch = loadOrCreateMsiSearch(knownMsiSearchs, knownPeakLists, knownSeqDatabases, knownPtmSpecificities, msiEm, udsEm, pdiEm, psEm, resultSet.getMSISearchId, resultSet.msiSearch)
+        val msiSearch = loadOrCreateMsiSearch(storerContext, resultSet.getMSISearchId, resultSet.msiSearch)
         msiResultSet.setMsiSearch(msiSearch)
 
         /* Check associated decoy ResultSet */
@@ -382,22 +284,12 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
               foundMsiDecoyRs
             } else {
+              val decoyResultSet = resultSet.decoyResultSet
 
-              if ((resultSet.decoyResultSet != null) && resultSet.decoyResultSet.isDefined) {
+              if ((decoyResultSet != null) && decoyResultSet.isDefined) {
 
-                loadOrCreateResultSet(knownResultSets,
-                  knownMsiSearchs,
-                  knownPeakLists,
-                  knownSeqDatabases,
-                  knownPtmSpecificities,
-                  msiPeptides,
-                  knownPeptideMatches,
-                  knownMsQueries,
-                  msiEm, psEm, udsEm, pdiEm,
-                  resultSet.decoyResultSet.get,
-                  proteinMatchSeqDatabases,
-                  sequenceMatches)
-
+                loadOrCreateResultSet(storerContext,
+                  decoyResultSet.get)
               } else {
                 null
               }
@@ -415,54 +307,55 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         logger.debug("Msi ResultSet {" + omResultSetId + "} persisted")
 
         /* Peptides & PeptideMatches */
-        retrievePeptides(msiEm, psEm, resultSet.peptides, msiPeptides)
+        retrievePeptides(storerContext, resultSet.peptides)
 
         val scoringRepository = new ScoringRepository(msiEm)
 
         for (peptMatch <- resultSet.peptideMatches) {
-          createPeptideMatch(knownPeptideMatches, knownMsQueries, msiEm, scoringRepository,
-            peptMatch, msiPeptides, msiResultSet, msiSearch)
+          createPeptideMatch(storerContext, scoringRepository,
+            peptMatch, msiResultSet, msiSearch)
         }
 
-        val knownPMSD = proteinMatchSeqDatabases.get(msiResultSet)
+        /* proteinMatchSeqDatabases and proteinMatchSequenceMatches Maps for postponed tasks :
+         * after flushing of Msi EntityManager */
+        val proteinMatchSeqDatabases = mutable.Map.empty[MsiProteinMatch, Array[Int]]
 
-        val currentProteinMatchSeqDatabases = if (knownPMSD.isDefined) {
-          knownPMSD.get
-        } else {
-          mutable.Map.empty[MsiProteinMatch, Array[Int]]
-        }
-
-        val knownSM = sequenceMatches.get(msiResultSet)
-
-        val currentSequenceMatches = if (knownSM.isDefined) {
-          knownSM.get
-        } else {
-          mutable.Map.empty[MsiProteinMatch, Array[SequenceMatch]]
-        }
+        val proteinMatchSequenceMatches = mutable.Map.empty[MsiProteinMatch, Array[SequenceMatch]]
 
         /* Proteins (BioSequence) & ProteinMatches */
         for (protMatch <- resultSet.proteinMatches) {
-          val msiProteinMatch = createProteinMatch(msiEm, pdiEm, scoringRepository, protMatch, msiResultSet)
+          val msiProteinMatch = createProteinMatch(storerContext, scoringRepository, protMatch, msiResultSet)
 
-          if ((protMatch.seqDatabaseIds != null) && !protMatch.seqDatabaseIds.isEmpty) {
-            currentProteinMatchSeqDatabases += msiProteinMatch -> protMatch.seqDatabaseIds
+          val seqDatabaseIds = protMatch.seqDatabaseIds
+          if ((seqDatabaseIds != null) && !seqDatabaseIds.isEmpty) {
+            proteinMatchSeqDatabases += msiProteinMatch -> seqDatabaseIds
           }
 
-          if (protMatch.sequenceMatches != null) {
-            currentSequenceMatches += msiProteinMatch -> protMatch.sequenceMatches
+          val sequenceMatches = protMatch.sequenceMatches
+          if ((sequenceMatches != null) && !sequenceMatches.isEmpty) {
+            proteinMatchSequenceMatches += msiProteinMatch -> sequenceMatches
           }
 
         } // End loop for each ProteinMatch
 
-        if (!currentProteinMatchSeqDatabases.isEmpty) {
-          proteinMatchSeqDatabases += msiResultSet -> currentProteinMatchSeqDatabases
-        }
-
-        if (!currentSequenceMatches.isEmpty) {
-          sequenceMatches += msiResultSet -> currentSequenceMatches
-        }
-
         // TODO handle ResultSet.children    Uniquement pour le grouping ?
+
+        if (!proteinMatchSeqDatabases.isEmpty || !proteinMatchSequenceMatches.isEmpty) {
+          msiEm.flush()
+
+          logger.debug("Handling proteinMatchSeqDatabases and proteinMatchSequenceMatches after flushing of Msi EntityManager")
+
+          /* Handle ProteinMatchSeqDatabaseMap after having persisted MsiProteinMatches, SeqDatabases and current MsiResultSet */
+          for (pMSDEntry <- proteinMatchSeqDatabases; seqDatabaseId <- pMSDEntry._2) {
+            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId, seqDatabaseId, msiResultSet)
+          }
+
+          /* Handle proteinMatchSequenceMatches after having persisted MsiProteinMatches, MsiPeptideMatches and current MsiResultSet */
+          for (pMSMEntry <- proteinMatchSequenceMatches; sequenceMatch <- pMSMEntry._2) {
+            createSequenceMatch(storerContext, sequenceMatch, pMSMEntry._1.getId, msiResultSet.getId)
+          }
+
+        } // End if (postponed Maps are not empty)
 
         msiResultSet
       } // End if (omResultSetId <= 0)
@@ -477,18 +370,12 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * @param msiSearchId MsiSearch OM Id
    * @param search MSISearch object, must not be {{{null}}} if msiSearchId <= 0.
    */
-  def loadOrCreateMsiSearch(knownMsiSearchs: mutable.Map[Int, MsiSearch],
-    knownPeakLists: mutable.Map[Int, MsiPeakList],
-    knownSeqDatabases: mutable.Map[Int, MsiSeqDatabase],
-    knownPtmSpecificities: mutable.Map[Int, MsiPtmSpecificity],
-    msiEm: EntityManager, udsEm: EntityManager, pdiEm: EntityManager, psEm: EntityManager,
+  def loadOrCreateMsiSearch(storerContext: StorerContext,
     msiSearchId: Int, search: MSISearch): MsiSearch = {
 
-    if (knownMsiSearchs == null) {
-      throw new IllegalArgumentException("KnownMsiSearchs is null")
-    }
+    val msiEm = storerContext.msiEm
 
-    checkEntityManager(msiEm)
+    val knownMsiSearchs = storerContext.getEntityCache(classOf[MsiSearch])
 
     val knownMsiSearch = knownMsiSearchs.get(msiSearchId)
 
@@ -522,9 +409,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         msiSearch.setUserEmail(search.userEmail)
         msiSearch.setUserName(search.userName)
 
-        msiSearch.setPeaklist(loadOrCreatePeakList(knownPeakLists, msiEm, udsEm, search.peakList))
+        msiSearch.setPeaklist(loadOrCreatePeakList(storerContext, search.peakList))
 
-        msiSearch.setSearchSetting(loadOrCreateSearchSetting(knownSeqDatabases, knownPtmSpecificities, msiEm, udsEm, pdiEm, psEm, search))
+        msiSearch.setSearchSetting(loadOrCreateSearchSetting(storerContext, search))
 
         msiEm.persist(msiSearch)
         logger.debug("MsiSearch {" + omMsiSearchId + "} presisted")
@@ -543,21 +430,18 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    *
    * @param peakList Peaklist object, must not be {{{null}}}.
    */
-  def loadOrCreatePeakList(knownPeakLists: mutable.Map[Int, MsiPeakList],
-    msiEm: EntityManager, udsEm: EntityManager,
+  def loadOrCreatePeakList(storerContext: StorerContext,
     peakList: Peaklist): MsiPeakList = {
-
-    if (knownPeakLists == null) {
-      throw new IllegalArgumentException("KnownPeakLists is null")
-    }
-
-    checkEntityManager(msiEm)
 
     if (peakList == null) {
       throw new IllegalArgumentException("PeakList is null")
     }
 
+    val msiEm = storerContext.msiEm
+
     val omPeakListId = peakList.id
+
+    val knownPeakLists = storerContext.getEntityCache(classOf[MsiPeakList])
 
     val knownMsiPeakList = knownPeakLists.get(omPeakListId)
 
@@ -583,8 +467,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         msiPeakList.setSpectrumDataCompression("none")
         msiPeakList.setType(peakList.fileType)
 
-        if (peakList.peaklistSoftware != null) {
-          msiPeakList.setPeaklistSoftware(loadOrCreatePeaklistSoftware(msiEm, udsEm, peakList.peaklistSoftware))
+        val peaklistSoftware = peakList.peaklistSoftware
+        if (peaklistSoftware != null) {
+          msiPeakList.setPeaklistSoftware(loadOrCreatePeaklistSoftware(storerContext, peaklistSoftware))
         }
 
         // TODO handle PeakList.children    Uniquement pour le grouping ?
@@ -607,16 +492,14 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    *
    * @param peaklistSoftware PeaklistSoftware object, must not be {{{null}}}.
    */
-  def loadOrCreatePeaklistSoftware(msiEm: EntityManager, udsEm: EntityManager,
+  def loadOrCreatePeaklistSoftware(storerContext: StorerContext,
     peaklistSoftware: PeaklistSoftware): MsiPeaklistSoftware = {
-
-    checkEntityManager(msiEm)
-
-    checkEntityManager(udsEm)
 
     if (peaklistSoftware == null) {
       throw new IllegalArgumentException("PeaklistSoftware is null")
     }
+
+    val msiEm = storerContext.msiEm
 
     val omPeakListSoftwareId = peaklistSoftware.id
 
@@ -636,7 +519,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     }
 
     if (msiPeaklistSoftware == null) {
-      val udsPeaklistSoftware = (new UdsPeaklistSoftwareRepository(udsEm)).findPeaklistSoftForNameAndVersion(peaklistSoftware.name, peaklistSoftware.version)
+      val udsPeaklistSoftware = (new UdsPeaklistSoftwareRepository(storerContext.udsEm)).findPeaklistSoftForNameAndVersion(peaklistSoftware.name, peaklistSoftware.version)
 
       if (udsPeaklistSoftware == null) {
         throw new IllegalArgumentException("PeaklistSoftware [" + peaklistSoftware.name + "] [" + peaklistSoftware.version + "] NOT found in Uds Db")
@@ -660,20 +543,16 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    *
    * @param search Associated MSISearch object, must not be {{{null}}} and must be attached to {{{msiEm}}} persistence context before calling this method.
    */
-  def loadOrCreateSearchSetting(knownSeqDatabases: mutable.Map[Int, MsiSeqDatabase],
-    knownPtmSpecificities: mutable.Map[Int, MsiPtmSpecificity],
-    msiEm: EntityManager, udsEm: EntityManager, pdiEm: EntityManager, psEm: EntityManager,
+  def loadOrCreateSearchSetting(storerContext: StorerContext,
     search: MSISearch): MsiSearchSetting = {
-
-    checkEntityManager(msiEm)
-
-    checkEntityManager(udsEm)
-
-    checkEntityManager(pdiEm)
 
     if (search == null) {
       throw new IllegalArgumentException("Search is null")
     }
+
+    val msiEm = storerContext.msiEm
+
+    val udsEm = storerContext.udsEm
 
     val searchSettings = search.searchSettings
     val omSearchSettingsId = searchSettings.id
@@ -695,14 +574,14 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       msiSearchSetting.setSoftwareVersion(searchSettings.softwareVersion)
       msiSearchSetting.setTaxonomy(searchSettings.taxonomy)
 
-      msiSearchSetting.setInstrumentConfig(loadOrCreateInstrumentConfig(msiEm, new MsiInstrumentConfigRepository(msiEm),
+      msiSearchSetting.setInstrumentConfig(loadOrCreateInstrumentConfig(storerContext, new MsiInstrumentConfigRepository(msiEm),
         new UdsInstrumentConfigurationRepository(udsEm), searchSettings.instrumentConfig))
 
       val msiEnzymeRepo = new MsiEnzymeRepository(msiEm)
       val udsEnzymeRepo = new UdsEnzymeRepository(udsEm)
 
       for (enzyme <- searchSettings.usedEnzymes) {
-        msiSearchSetting.addEnzyme(loadOrCreateEnzyme(msiEm, msiEnzymeRepo, udsEnzymeRepo, enzyme))
+        msiSearchSetting.addEnzyme(loadOrCreateEnzyme(storerContext, msiEnzymeRepo, udsEnzymeRepo, enzyme))
       }
 
       msiEm.persist(msiSearchSetting)
@@ -710,7 +589,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
       /* Task done after persisting msiSearchSetting */
       val msiSeqDatabaseRepo = new MsiSeqDatabaseRepository(msiEm)
-      val pdiSeqDatabaseRepo = new SeqDatabaseRepository(pdiEm);
+      val pdiSeqDatabaseRepo = new SeqDatabaseRepository(storerContext.pdiEm);
 
       for (seqDatabase <- searchSettings.seqDatabases) {
         val msiSearchSettingsSeqDatabaseMap = new MsiSearchSettingsSeqDatabaseMap()
@@ -721,7 +600,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         msiSearchSettingsSeqDatabaseMap.setSearchSetting(msiSearchSetting) // msiSearchSetting must be in persistence context
         msiSearchSetting.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association
 
-        val msiSeqDatabase = loadOrCreateSeqDatabase(knownSeqDatabases, msiEm, msiSeqDatabaseRepo, pdiSeqDatabaseRepo, seqDatabase)
+        val msiSeqDatabase = loadOrCreateSeqDatabase(storerContext, msiSeqDatabaseRepo, pdiSeqDatabaseRepo, seqDatabase)
         if (msiSeqDatabase != null) {
           msiSearchSettingsSeqDatabaseMap.setSeqDatabase(msiSeqDatabase) // msiSeqDatabase must be in persistence context
           msiSeqDatabase.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association        
@@ -732,14 +611,14 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
       }
 
-      val psPtmRepo = new PsPtmRepository(psEm)
+      val psPtmRepo = new PsPtmRepository(storerContext.psEm)
 
       for (variablePtmDef <- searchSettings.variablePtmDefs) {
-        bindPtmSpecificity(knownPtmSpecificities, msiEm, psPtmRepo, variablePtmDef, false, msiSearchSetting)
+        bindPtmSpecificity(storerContext, psPtmRepo, variablePtmDef, false, msiSearchSetting)
       }
 
       for (fixedPtmDef <- searchSettings.fixedPtmDefs) {
-        bindPtmSpecificity(knownPtmSpecificities, msiEm, psPtmRepo, fixedPtmDef, false, msiSearchSetting)
+        bindPtmSpecificity(storerContext, psPtmRepo, fixedPtmDef, false, msiSearchSetting)
       }
 
       msiSearchSetting
@@ -752,11 +631,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    *
    * @param instrumentConfig InstrumentConfig object, must not be {{{null}}}.
    */
-  def loadOrCreateInstrumentConfig(msiEm: EntityManager,
+  def loadOrCreateInstrumentConfig(storerContext: StorerContext,
     msiInstrumentConfigRepo: MsiInstrumentConfigRepository, udsInstrumentConfigRepo: UdsInstrumentConfigurationRepository,
     instrumentConfig: InstrumentConfig): MsiInstrumentConfig = {
-
-    checkEntityManager(msiEm)
 
     if (msiInstrumentConfigRepo == null) {
       throw new IllegalArgumentException("MsiInstrumentConfigRepo is null")
@@ -769,6 +646,8 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     if (instrumentConfig == null) {
       throw new IllegalArgumentException("InstrumentConfig is null")
     }
+
+    val msiEm = storerContext.msiEm
 
     var msiInstrumentConfig: MsiInstrumentConfig = null
 
@@ -805,11 +684,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    *
    * @param enzymeName Name of the Enzyme (ignoring case), must not be empty.
    */
-  def loadOrCreateEnzyme(msiEm: EntityManager,
+  def loadOrCreateEnzyme(storerContext: StorerContext,
     msiEnzymeRepo: MsiEnzymeRepository, udsEnzymeRepo: UdsEnzymeRepository,
     enzymeName: String): MsiEnzyme = {
-
-    checkEntityManager(msiEm)
 
     if (msiEnzymeRepo == null) {
       throw new IllegalArgumentException("MsiEnzymeRepo is null")
@@ -833,7 +710,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       } else {
         msiEnzyme = new MsiEnzyme(udsEnzyme)
 
-        msiEm.persist(msiEnzyme)
+        storerContext.msiEm.persist(msiEnzyme)
         logger.debug("Msi Enzyme #" + udsEnzyme.getId + " persisted")
       }
 
@@ -848,16 +725,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * @param seqDatabase SeqDatabase object, must not be {{{null}}}.
    * @return Msi SeqDatabase entity or {{{null}}} if SeqDatabase does not exist in Pdi Db.
    */
-  def loadOrCreateSeqDatabase(knownSeqDatabases: mutable.Map[Int, MsiSeqDatabase],
-    msiEm: EntityManager,
+  def loadOrCreateSeqDatabase(storerContext: StorerContext,
     msiSeqDatabaseRepo: MsiSeqDatabaseRepository, pdiSeqDatabaseRepo: SeqDatabaseRepository,
     seqDatabase: SeqDatabase): MsiSeqDatabase = {
-
-    if (knownSeqDatabases == null) {
-      throw new IllegalArgumentException("KnownSeqDatabases is null")
-    }
-
-    checkEntityManager(msiEm)
 
     if (msiSeqDatabaseRepo == null) {
       throw new IllegalArgumentException("MsiSeqDatabaseRepo is null")
@@ -871,7 +741,11 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       throw new IllegalArgumentException("SeqDatabase is null")
     }
 
+    val msiEm = storerContext.msiEm
+
     val omSeqDatabaseId = seqDatabase.id
+
+    val knownSeqDatabases = storerContext.getEntityCache(classOf[MsiSeqDatabase])
 
     val knownMsiSeqDatabase = knownSeqDatabases.get(omSeqDatabaseId)
 
@@ -935,16 +809,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    *
    * @param ptmDefinition PtmDefinition object, must not be {{{null}}}.
    */
-  def loadOrCreatePtmSpecificity(knownPtmSpecificities: mutable.Map[Int, MsiPtmSpecificity],
-    msiEm: EntityManager,
+  def loadOrCreatePtmSpecificity(storerContext: StorerContext,
     psPtmRepo: PsPtmRepository,
     ptmDefinition: PtmDefinition): MsiPtmSpecificity = {
-
-    if (knownPtmSpecificities == null) {
-      throw new IllegalArgumentException("KnownPtmSpecificities is null")
-    }
-
-    checkEntityManager(msiEm)
 
     if (ptmDefinition == null) {
       throw new IllegalArgumentException("PtmDefinition is null")
@@ -953,6 +820,10 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     if (psPtmRepo == null) {
       throw new IllegalArgumentException("PsPtmRepo is null")
     }
+
+    val msiEm = storerContext.msiEm
+
+    val knownPtmSpecificities = storerContext.getEntityCache(classOf[MsiPtmSpecificity])
 
     val knownMsiPtmSpecificity = knownPtmSpecificities.get(ptmDefinition.id)
 
@@ -1012,9 +883,8 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * @param msiPeptides Mutable Map will contain fetched and created Msi Peptide entities accessed by PeptideIdent(sequence, ptmString). Map must not be {{{null}}}.
    * The map can contain already fetched Peptides in current Msi transaction.
    */
-  def retrievePeptides(msiEm: EntityManager, psEm: EntityManager,
-    peptides: Array[Peptide],
-    msiPeptides: mutable.Map[PeptideIdent, MsiPeptide]) {
+  def retrievePeptides(storerContext: StorerContext,
+    peptides: Array[Peptide]) {
 
     /**
      * Build a Java List<Integer> from a Scala Collection[Int].
@@ -1029,17 +899,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       javaIds
     }
 
-    checkEntityManager(msiEm)
-
-    checkEntityManager(psEm)
-
     if (peptides == null) {
       throw new IllegalArgumentException("Peptides array is null")
     }
 
-    if (msiPeptides == null) {
-      throw new IllegalArgumentException("MsiPeptides map is null")
-    }
+    val msiEm = storerContext.msiEm
+
+    val msiPeptides = storerContext.msiPeptides
 
     /* These are mutable Collections : found and created Peptides are removed by the algo */
     val remainingPeptides = mutable.Map.empty[PeptideIdent, Peptide]
@@ -1086,14 +952,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     }
 
     /* Retrieve all known Peptides from Ps Db by omIds > 0 */
-    val psPeptideRepo = new PsPeptideRepository(psEm)
+    val psPeptideRepo = new PsPeptideRepository(storerContext.psEm)
 
     if (!remainingOmPeptidesIds.isEmpty) {
       logger.debug("Trying to retrieve " + remainingOmPeptidesIds.size + " Peptides from Ps by Ids")
 
       val foundPsPeptides = psPeptideRepo.findPeptidesForIds(buildIdsList(remainingOmPeptidesIds))
-
-      if ((foundPsPeptides != null) && !foundPsPeptides.isEmpty()) {
+      if ((foundPsPeptides != null) && !foundPsPeptides.isEmpty) {
 
         for (psPeptide <- foundPsPeptides) {
           val peptideId = psPeptide.getId
@@ -1128,7 +993,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
     if (!remainingPeptides.isEmpty) {
       /* Create new Peptides into Ps Db */
-      val createdPsPeptides = persistPsPeptides(psEm, remainingPeptides.toMap[PeptideIdent, Peptide])
+      val createdPsPeptides = persistPsPeptides(storerContext, remainingPeptides.toMap[PeptideIdent, Peptide])
 
       for (peptideEntry <- createdPsPeptides) {
         val peptIdent = peptideEntry._1
@@ -1164,13 +1029,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * @param peptides Map of Peptide objects to create, accessed by PeptideIdent(sequence, ptmString). Must not be {{{null}}}.
    * @return Map of created Ps Peptide entities accessed by PeptideIdent.
    */
-  def persistPsPeptides(psEm: EntityManager, peptides: Map[PeptideIdent, Peptide]): Map[PeptideIdent, PsPeptide] = {
-
-    checkEntityManager(psEm)
+  def persistPsPeptides(storerContext: StorerContext, peptides: Map[PeptideIdent, Peptide]): Map[PeptideIdent, PsPeptide] = {
 
     if (peptides == null) {
       throw new IllegalArgumentException("Peptides map is null")
     }
+
+    val psEm = storerContext.psEm
 
     logger.debug("Creating " + peptides.size + " Peptides into Ps Db")
 
@@ -1239,20 +1104,11 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * @param msiResultSet Associated Msi ResultSet entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    * @param msiSearch Associated MsiSearch entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
-  def createPeptideMatch(knownPeptideMatches: mutable.Map[Int, MsiPeptideMatch],
-    knownMsQueries: mutable.Map[Int, MsiMsQuery],
-    msiEm: EntityManager,
+  def createPeptideMatch(storerContext: StorerContext,
     scoringRepository: ScoringRepository,
     peptideMatch: PeptideMatch,
-    msiPeptides: mutable.Map[PeptideIdent, MsiPeptide],
     msiResultSet: MsiResultSet,
     msiSearch: MsiSearch): MsiPeptideMatch = {
-
-    if (knownPeptideMatches == null) {
-      throw new IllegalArgumentException("KnownPeptideMatches is null")
-    }
-
-    checkEntityManager(msiEm)
 
     if (scoringRepository == null) {
       throw new IllegalArgumentException("ScoringRepository is null")
@@ -1262,15 +1118,15 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       throw new IllegalArgumentException("PeptideMatch is null")
     }
 
-    if (msiPeptides == null) {
-      throw new IllegalArgumentException("MsiPeptides map is null")
-    }
-
     if (msiResultSet == null) {
       throw new IllegalArgumentException("MsiResultSet is null")
     }
 
+    val msiEm = storerContext.msiEm
+
     val omPeptideMatchId = peptideMatch.id
+
+    val knownPeptideMatches = storerContext.getEntityCache(classOf[MsiPeptideMatch])
 
     val knownMsiPeptideMatch = knownPeptideMatches.get(omPeptideMatchId)
 
@@ -1287,7 +1143,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
         msiPeptideMatch.setIsDecoy(peptideMatch.isDecoy)
         msiPeptideMatch.setMissedCleavage(Integer.valueOf(peptideMatch.missedCleavage))
 
-        val msiPeptide = msiPeptides.get(new PeptideIdent(peptideMatch.peptide.sequence, peptideMatch.peptide.ptmString))
+        val msiPeptide = storerContext.msiPeptides.get(new PeptideIdent(peptideMatch.peptide.sequence, peptideMatch.peptide.ptmString))
 
         val msiPeptideId: Int =
           if (msiPeptide.isDefined) {
@@ -1322,7 +1178,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
           throw new IllegalArgumentException("MsQuery is mandatory in PeptideMatch")
         }
 
-        val msiMsQuery = loadOrCreateMsQuery(knownMsQueries, msiEm, peptideMatch.msQuery, msiSearch) // msiSearch must be in persistence context
+        val msiMsQuery = loadOrCreateMsQuery(storerContext, peptideMatch.msQuery, msiSearch) // msiSearch must be in persistence context
 
         msiPeptideMatch.setMsQuery(msiMsQuery) // msiMsQuery must be in persistence context
         msiMsQuery.addPeptideMatch(msiPeptideMatch) // Reverse association
@@ -1346,10 +1202,11 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
             foundBestChild
           } else {
+            val bestChild = peptideMatch.bestChild
 
-            if ((peptideMatch.bestChild != null) && peptideMatch.bestChild.isDefined) {
-              createPeptideMatch(knownPeptideMatches, knownMsQueries, msiEm, scoringRepository,
-                peptideMatch.bestChild.get, msiPeptides, msiResultSet, msiSearch)
+            if ((bestChild != null) && bestChild.isDefined) {
+              createPeptideMatch(storerContext, scoringRepository,
+                bestChild.get, msiResultSet, msiSearch)
             } else {
               null
             }
@@ -1381,16 +1238,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * @param msQuery MsQuery object, must not be {{{null}}}.
    * @param msiSearch Associated MsiSearch entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
-  def loadOrCreateMsQuery(knownMsQueries: mutable.Map[Int, MsiMsQuery],
-    msiEm: EntityManager,
+  def loadOrCreateMsQuery(storerContext: StorerContext,
     msQuery: MsQuery,
     msiSearch: MsiSearch): MsiMsQuery = {
-
-    if (knownMsQueries == null) {
-      throw new IllegalArgumentException("KnownMsQueries is null")
-    }
-
-    checkEntityManager(msiEm)
 
     if (msQuery == null) {
       throw new IllegalArgumentException("MsQuery is null")
@@ -1400,7 +1250,11 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       throw new IllegalArgumentException("MsiSearch is null")
     }
 
+    val msiEm = storerContext.msiEm
+
     val omMsQueryId = msQuery.id
+
+    val knownMsQueries = storerContext.getEntityCache(classOf[MsiMsQuery])
 
     val knownMsiMsQuery = knownMsQueries.get(omMsQueryId)
 
@@ -1431,8 +1285,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
           var omSpectrumId: Int = ms2Query.spectrumId
 
           /* Try to load Spectrum.id from knownSpectrumIdByTitle */
-          if ((knownSpectrumIdByTitle != null) && (ms2Query.spectrumTitle != null)) {
-            val knownSpectrumId = knownSpectrumIdByTitle.get(ms2Query.spectrumTitle)
+          val spectrumIdByTitle = storerContext.spectrumIdByTitle
+          if ((spectrumIdByTitle != null) && !StringUtils.isEmpty(ms2Query.spectrumTitle)) {
+            val knownSpectrumId = spectrumIdByTitle.get(ms2Query.spectrumTitle)
 
             if (knownSpectrumId.isDefined) {
               omSpectrumId = knownSpectrumId.get
@@ -1484,12 +1339,10 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * @param proteinMatch ProteinMatch object, must not be {{{null}}}.
    * @param msiResultSet Associated Msi ResultSet entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
-  def createProteinMatch(msiEm: EntityManager, pdiEm: EntityManager,
+  def createProteinMatch(storerContext: StorerContext,
     scoringRepository: ScoringRepository,
     proteinMatch: ProteinMatch,
     msiResultSet: MsiResultSet): MsiProteinMatch = {
-
-    checkEntityManager(msiEm)
 
     if (scoringRepository == null) {
       throw new IllegalArgumentException("ScoringRepository is null")
@@ -1517,7 +1370,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
     if (omProteinId > 0) {
 
-      val msiBioSequence = loadOrCreateBioSequence(msiEm, pdiEm, omProteinId)
+      val msiBioSequence = loadOrCreateBioSequence(storerContext, omProteinId)
       if (msiBioSequence != null) {
         msiProteinMatch.setBioSequenceId(msiBioSequence.getId)
       }
@@ -1545,11 +1398,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     msiProteinMatch.setResultSet(msiResultSet) // msiResultSet must be in persistence context
     msiProteinMatch.setScore(proteinMatch.score)
 
-    if (proteinMatch.scoreType != null) {
-      val msiScoringId = scoringRepository.getScoringIdForType(proteinMatch.scoreType)
+    val scoreType = proteinMatch.scoreType
+
+    if (scoreType != null) {
+      val msiScoringId = scoringRepository.getScoringIdForType(scoreType)
 
       if (msiScoringId == null) {
-        throw new IllegalArgumentException("Scoring [" + proteinMatch.scoreType + "] NOT found in Msi Db")
+        throw new IllegalArgumentException("Scoring [" + scoreType + "] NOT found in Msi Db")
       } else {
         msiProteinMatch.setScoringId(msiScoringId)
       }
@@ -1564,7 +1419,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       msiProteinMatch.setTaxonId(Integer.valueOf(omTaxonId))
     }
 
-    msiEm.persist(msiProteinMatch)
+    storerContext.msiEm.persist(msiProteinMatch)
     logger.debug("Msi ProteinMatch {" + omProteinMatchId + "} persisted")
 
     // TODO handle ProteinMatchProperties
@@ -1577,11 +1432,9 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    *
    * @param proteinId BioSequence (Protein) Primary key, must be > 0 and denote on existing BioSequence entity in Pdi Db.
    */
-  def loadOrCreateBioSequence(msiEm: EntityManager, pdiEm: EntityManager, proteinId: Int): MsiBioSequence = {
+  def loadOrCreateBioSequence(storerContext: StorerContext, proteinId: Int): MsiBioSequence = {
 
-    checkEntityManager(msiEm)
-
-    checkEntityManager(pdiEm)
+    val msiEm = storerContext.msiEm
 
     if (proteinId <= 0) {
       throw new IllegalArgumentException("Invalid proteinId")
@@ -1590,7 +1443,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     var msiBioSequence: MsiBioSequence = msiEm.find(classOf[MsiBioSequence], proteinId)
 
     if (msiBioSequence == null) {
-      val pdiBioSequence = pdiEm.find(classOf[PdiBioSequence], proteinId)
+      val pdiBioSequence = storerContext.pdiEm.find(classOf[PdiBioSequence], proteinId)
 
       if (pdiBioSequence == null) {
         throw new IllegalArgumentException("BioSequence #" + proteinId + " NOT found in Pdi Db")
@@ -1617,14 +1470,10 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    * PeptideMatch ids must be effective Msi Db Primary keys (Msi transaction committed).
    * @param msiResultSetId ResultSet Primary key, must be > 0 and denote an existing ResultSet entity in Msi Db (Msi transaction committed).
    */
-  def createSequenceMatch(msiEm: EntityManager,
+  def createSequenceMatch(storerContext: StorerContext,
     sequenceMatch: SequenceMatch,
     msiProteinMatchId: Int,
-    msiPeptides: mutable.Map[PeptideIdent, MsiPeptide],
-    knownPeptideMatches: mutable.Map[Int, MsiPeptideMatch],
     msiResultSetId: Int): MsiSequenceMatch = {
-
-    checkEntityManager(msiEm)
 
     if (sequenceMatch == null) {
       throw new IllegalArgumentException("SequenceMatch is null")
@@ -1632,14 +1481,6 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
     if (msiProteinMatchId <= 0) {
       throw new IllegalArgumentException("Invalid Msi ProteinMatch Id")
-    }
-
-    if (msiPeptides == null) {
-      throw new IllegalArgumentException("MsiPeptides map is null")
-    }
-
-    if (knownPeptideMatches == null) {
-      throw new IllegalArgumentException("KnownPeptideMatches is null")
     }
 
     if (msiResultSetId <= 0) {
@@ -1660,7 +1501,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
           val definedPeptide = peptide.get
           val peptideIdent = new PeptideIdent(definedPeptide.sequence, definedPeptide.ptmString)
 
-          val knownMsiPeptide = msiPeptides.get(peptideIdent)
+          val knownMsiPeptide = storerContext.msiPeptides.get(peptideIdent)
 
           if (knownMsiPeptide.isDefined) {
             msiPeptideId = knownMsiPeptide.get.getId
@@ -1672,6 +1513,8 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
       msiPeptideId
     }
+
+    val knownPeptideMatches = storerContext.getEntityCache(classOf[MsiPeptideMatch])
 
     /**
      * Retrieves Msi PeptideMatch entity Primary key from given OM Id.
@@ -1727,31 +1570,20 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
     // TODO handle serializedProperties
 
-    msiEm.persist(msiSequenceMatch)
+    storerContext.msiEm.persist(msiSequenceMatch)
     logger.debug("Msi SequenceMatch for ProteinMatch #" + msiProteinMatchId + " Peptide #" + msiPeptideId + " persisted")
 
     msiSequenceMatch
   }
 
   /* Private methods */
-  private def checkEntityManager(em: EntityManager) {
-
-    if ((em == null) || !em.isOpen) {
-      throw new IllegalArgumentException("Invalid EntityManager")
-    }
-
-  }
-
   /**
    *  @param msiSearchSetting Associated Msi SearchSetting entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
-  private def bindPtmSpecificity(knownPtmSpecificities: mutable.Map[Int, MsiPtmSpecificity],
-    msiEm: EntityManager,
+  private def bindPtmSpecificity(storerContext: StorerContext,
     psPtmRepo: PsPtmRepository,
     ptmDefinition: PtmDefinition, isFixed: Boolean,
     msiSearchSetting: MsiSearchSetting) {
-
-    checkEntityManager(msiEm)
 
     assert(ptmDefinition != null, "PtmDefinition is null")
 
@@ -1762,7 +1594,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     msiUsedPtm.setShortName(ptmDefinition.names.shortName)
     // TODO UsedPtm.type field should be removed from Msi Db schema
 
-    val msiPtmSpecificity = loadOrCreatePtmSpecificity(knownPtmSpecificities, msiEm, psPtmRepo, ptmDefinition)
+    val msiPtmSpecificity = loadOrCreatePtmSpecificity(storerContext, psPtmRepo, ptmDefinition)
 
     if (msiPtmSpecificity == null) {
       throw new IllegalArgumentException("Unknown PtmSpecificity [" + ptmDefinition.names.shortName + ']')
@@ -1774,23 +1606,22 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     msiUsedPtm.setSearchSetting(msiSearchSetting) // msiSearchSetting must be in persistence context
     msiSearchSetting.addUsedPtms(msiUsedPtm) // Reverse association
 
-    msiEm.persist(msiUsedPtm)
+    storerContext.msiEm.persist(msiUsedPtm)
     logger.debug("Msi UsedPtm name [" + ptmDefinition.names.shortName + "] PtmSpecificity #" + msiPtmSpecificity.getId + " persisted")
   }
 
-  private def bindProteinMatchSeqDatabaseMap(msiEm: EntityManager,
+  private def bindProteinMatchSeqDatabaseMap(storerContext: StorerContext,
     msiProteinMatchId: Int,
     seqDatabaseId: Int,
-    knownSeqDatabases: mutable.Map[Int, MsiSeqDatabase],
     msiResultSet: MsiResultSet) {
-
-    checkEntityManager(msiEm)
 
     assert(msiProteinMatchId > 0, "Invalid Msi ProteinMatch Id")
 
-    assert(knownSeqDatabases != null, "KnownSeqDatabases is null")
-
     assert(msiResultSet != null, "MsiResultSet is null")
+
+    val msiEm = storerContext.msiEm
+
+    val knownSeqDatabases = storerContext.getEntityCache(classOf[MsiSeqDatabase])
 
     def retrieveMsiSeqDatabase(seqDatabseId: Int): MsiSeqDatabase = {
       val knownMsiSeqDatabase = knownSeqDatabases.get(seqDatabseId)
