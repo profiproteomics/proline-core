@@ -178,7 +178,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     val knownResultSets = mutable.Map.empty[Int, MsiResultSet]
     val knownMsiSearchs = mutable.Map.empty[Int, MsiSearch]
     val knownPeakLists = mutable.Map.empty[Int, MsiPeakList]
-    val knownSeqDatabases = mutable.Map.empty[Int, MsiSeqDatabase]
+    val knownSeqDatabases = mutable.Map.empty[Int, MsiSeqDatabase] // Can contain null MsiSeqDatabase values if not found in Pdi Db
     val knownPtmSpecificities = mutable.Map.empty[Int, MsiPtmSpecificity]
     val msiPeptides = mutable.Map.empty[PeptideIdent, MsiPeptide] // Retrieved and created Msi Peptides
     val knownPeptideMatches = mutable.Map.empty[Int, MsiPeptideMatch]
@@ -876,7 +876,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     val knownMsiSeqDatabase = knownSeqDatabases.get(omSeqDatabaseId)
 
     if (knownMsiSeqDatabase.isDefined) {
-      knownMsiSeqDatabase.get
+      knownMsiSeqDatabase.get // Return null if omSeqDatabaseId exists and MsiSeqDatabase value is null
     } else {
       var msiSeqDatabase: MsiSeqDatabase = null
 
@@ -908,6 +908,8 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
         if (pdiSeqDatabaseInstance == null) {
           logger.warn("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
+
+          knownSeqDatabases += omSeqDatabaseId -> null // Cache non existent Pdi SeqDatabase
         } else {
           /* Create derived Msi entity */
           msiSeqDatabase = new MsiSeqDatabase(pdiSeqDatabaseInstance);
@@ -1067,7 +1069,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
 
       val foundMsiPeptides = msiPeptideRepo.findPeptidesForIds(buildIdsList(remainingOmPeptidesIds))
 
-      if ((foundMsiPeptides != null) && !foundMsiPeptides.isEmpty()) {
+      if ((foundMsiPeptides != null) && !foundMsiPeptides.isEmpty) {
 
         for (msiPeptide <- foundMsiPeptides) {
           val peptideId = msiPeptide.getId
@@ -1122,39 +1124,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
       throw new IllegalArgumentException("Peptides (" + remainingOmPeptidesIds.mkString(", ") + ") NOT found in Ps Db")
     }
 
-    if (!remainingPeptides.isEmpty) {
-      logger.debug("Trying to retrieve " + remainingPeptides.size + " Peptides from Ps by (sequence, ptmString)")
-
-      for (peptIdent <- remainingPeptides.keySet.toSet[PeptideIdent]) {
-        /* Try to load from Ps Db by sequence and ptmString */
-        val foundPsPeptide = psPeptideRepo.findPeptideForSequenceAndPtmStr(peptIdent.sequence, peptIdent.ptmString)
-
-        if (foundPsPeptide != null) {
-          val peptideId = foundPsPeptide.getId
-
-          var msiPeptide = msiEm.find(classOf[MsiPeptide], peptideId)
-
-          if (msiPeptide == null) {
-            /* Create derived Msi entity */
-            msiPeptide = new MsiPeptide(foundPsPeptide)
-
-            msiEm.persist(msiPeptide)
-
-            logger.debug("Msi Peptide #" + peptideId + " persisted")
-          }
-
-          msiPeptides += peptIdent -> msiPeptide
-
-          val omPeptide = remainingPeptides.remove(peptIdent)
-          if (omPeptide.isDefined) {
-            omPeptide.get.id = peptideId // Update OM entity with persisted Primary key
-          }
-
-        } // End if (foundPsPeptide is not null)
-
-      } // End loop for each remainingPeptide => search in Ps
-
-    } // End if (remainingPeptides is not empty)
+    /* Do not retrieve Peptides by (sequence, ptmString) from Ps Db : Already done by parser implementation */
 
     if (!remainingPeptides.isEmpty) {
       /* Create new Peptides into Ps Db */
@@ -1569,7 +1539,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     msiProteinMatch.setGeneName(proteinMatch.geneName)
     msiProteinMatch.setIsDecoy(proteinMatch.isDecoy)
 
-    msiProteinMatch.setPeptideCount(Integer.valueOf(0)) // TODO handle peptideCount
+    msiProteinMatch.setPeptideCount(Integer.valueOf(-1)) // TODO handle peptideCount
 
     msiProteinMatch.setPeptideMatchCount(Integer.valueOf(proteinMatch.peptideMatchesCount))
     msiProteinMatch.setResultSet(msiResultSet) // msiResultSet must be in persistence context
