@@ -187,12 +187,13 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     if( count == 0 ) {
       val ptmSpecifColsList = MsiDbPtmSpecificityTable.getColumnsAsStrList()
       val ptmSpecifInsertQuery = MsiDbPtmSpecificityTable.makeInsertQuery( ptmSpecifColsList )      
+      val residueAsStr = if(ptmDef.residue == '\0') "" else ptmDef.residue.toString
       
       msiDbTx.executeBatch( ptmSpecifInsertQuery, false ) { stmt =>
         stmt.executeWith(
               ptmDef.id,
               ptmDef.location,
-              ptmDef.residue,
+              residueAsStr,
               Option.empty[String]
               )
       }
