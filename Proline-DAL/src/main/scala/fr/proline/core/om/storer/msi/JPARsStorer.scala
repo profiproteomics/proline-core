@@ -964,14 +964,13 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
           val peptideId = psPeptide.getId
           val peptIdent = new PeptideIdent(psPeptide.getSequence, psPeptide.getPtmString)
 
-          var msiPeptide = msiEm.find(classOf[MsiPeptide], peptideId)
+          var msiPeptide: MsiPeptide = msiEm.find(classOf[MsiPeptide], peptideId)
 
           if (msiPeptide == null) {
             /* Create derived Msi entity */
             msiPeptide = new MsiPeptide(psPeptide)
 
             msiEm.persist(msiPeptide)
-
             logger.debug("Msi Peptide #" + peptideId + " persisted")
           }
 
@@ -1042,7 +1041,7 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
     val createdPsPeptides = Map.newBuilder[PeptideIdent, PsPeptide]
 
     val psTransaction = psEm.getTransaction
-    var psTransacOk = false
+    var psTransacOk: Boolean = false
 
     logger.debug("Starting Ps Db transaction")
 
@@ -1434,29 +1433,40 @@ class JPARsStorer(private val msiDb: DatabaseConnector,
    */
   def loadOrCreateBioSequence(storerContext: StorerContext, proteinId: Int): MsiBioSequence = {
 
-    val msiEm = storerContext.msiEm
-
     if (proteinId <= 0) {
       throw new IllegalArgumentException("Invalid proteinId")
     }
 
-    var msiBioSequence: MsiBioSequence = msiEm.find(classOf[MsiBioSequence], proteinId)
+    val msiEm = storerContext.msiEm
 
-    if (msiBioSequence == null) {
-      val pdiBioSequence = storerContext.pdiEm.find(classOf[PdiBioSequence], proteinId)
+    val knownBioSequences = storerContext.getEntityCache(classOf[MsiBioSequence])
 
-      if (pdiBioSequence == null) {
-        throw new IllegalArgumentException("BioSequence #" + proteinId + " NOT found in Pdi Db")
-      } else {
-        msiBioSequence = new MsiBioSequence(pdiBioSequence)
+    val knownMsiBioSequence = knownBioSequences.get(proteinId)
 
-        msiEm.persist(msiBioSequence)
-        logger.debug("Msi BioSequence #" + pdiBioSequence.getId + " persisted")
+    if (knownMsiBioSequence.isDefined) {
+      knownMsiBioSequence.get
+    } else {
+      var msiBioSequence: MsiBioSequence = msiEm.find(classOf[MsiBioSequence], proteinId)
+
+      if (msiBioSequence == null) {
+        val pdiBioSequence = storerContext.pdiEm.find(classOf[PdiBioSequence], proteinId)
+
+        if (pdiBioSequence == null) {
+          throw new IllegalArgumentException("BioSequence #" + proteinId + " NOT found in Pdi Db")
+        } else {
+          msiBioSequence = new MsiBioSequence(pdiBioSequence)
+
+          msiEm.persist(msiBioSequence)
+          logger.debug("Msi BioSequence #" + pdiBioSequence.getId + " persisted")
+        }
+
       }
 
+      knownBioSequences += proteinId -> msiBioSequence
+
+      msiBioSequence
     }
 
-    msiBioSequence
   }
 
   /**
