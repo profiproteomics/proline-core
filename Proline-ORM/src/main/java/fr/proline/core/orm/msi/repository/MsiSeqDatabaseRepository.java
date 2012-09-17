@@ -48,4 +48,14 @@ public class MsiSeqDatabaseRepository extends JPARepository {
 	return result;
     }
 
+    public List<Integer> findSeqDatabaseIdsForProteinMatch(final int proteinMatchId) {
+
+	final TypedQuery<Integer> query = getEntityManager().createQuery(
+		"select map.id.seqDatabaseId from fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap map"
+			+ " where map.id.proteinMatchId = :proteinMatchId", Integer.class);
+	query.setParameter("proteinMatchId", Integer.valueOf(proteinMatchId));
+
+	return query.getResultList();
+    }
+
 }

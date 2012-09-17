@@ -13,6 +13,8 @@ public final class DateUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(DateUtils.class);
 
+    private static final String RELEASE_DATE_FORMAT = "yyyyMMdd";
+
     /* Private constructor (Utility class) */
     private DateUtils() {
     }
@@ -29,7 +31,7 @@ public final class DateUtils {
 	Date result = null;
 
 	if (!StringUtils.isEmpty(rawDate)) {
-	    final DateFormat df = new SimpleDateFormat("yyyyMMdd");
+	    final DateFormat df = new SimpleDateFormat(RELEASE_DATE_FORMAT);
 
 	    try {
 		final Date d = df.parse(rawDate);
@@ -42,6 +44,26 @@ public final class DateUtils {
 
 	return result;
 
+    }
+
+    /**
+     * Formats a release <code>Date</code> object to a String.
+     * 
+     * @param date
+     *            Release <code>Date</code> object
+     * @return Release date as a String (format : yyyymmdd) or <code>null</code> if <code>date</code> is
+     *         invalid.
+     */
+    public static String formatReleaseDate(final Date date) {
+	String result = null;
+
+	if (date != null) {
+	    final DateFormat df = new SimpleDateFormat(RELEASE_DATE_FORMAT);
+
+	    result = df.format(date);
+	}
+
+	return result;
     }
 
     /**

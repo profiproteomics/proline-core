@@ -53,12 +53,12 @@ public class PtmSpecificity implements Serializable {
 	setId(psPtmSpecificity.getId());
 	setLocation(psPtmSpecificity.getLocation());
 
-	final String residue = psPtmSpecificity.getResidue();
+	final String resid = psPtmSpecificity.getResidue();
 
-	if (StringUtils.isEmpty(residue)) {
+	if (StringUtils.isEmpty(resid)) {
 	    setResidue(null);
 	} else {
-	    setResidue(residue);
+	    setResidue(resid);
 	}
 
     }
