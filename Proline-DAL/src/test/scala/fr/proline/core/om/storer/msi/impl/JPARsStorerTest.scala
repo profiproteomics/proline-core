@@ -1,13 +1,13 @@
-package fr.proline.core.om.storer.msi
+package fr.proline.core.om.storer.msi.impl
 
 import org.junit.Test
 
 import com.weiglewilczek.slf4s.Logging
 
+import fr.proline.core.dal.DatabaseManagementTestCase
 import fr.proline.core.orm.utils.JPAUtil
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
-import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.utils.DatabaseUtils
+import fr.proline.repository.utils.{DatabaseUtils, DatabaseTestCase}
 
 class JPARsStorerTest extends Logging {
 
@@ -46,8 +46,8 @@ class JPARsStorerTest extends Logging {
     pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
 
     logger.info("Dbs succesfully initialized")
-
-    val storer = new JPARsStorer(null, null, null, null)
+    val dbMgntTest= new DatabaseManagementTestCase(udsDBTestCase.getConnector,pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector)
+    val storer = new JPARsStorer(dbMgntTest,msiDBTestCase.getConnector)
 
     for (i <- 1 to 3) {
       logger.info("Creating a new fake Result Set")
@@ -74,7 +74,7 @@ class JPARsStorerTest extends Logging {
       //      }
 
       start = System.nanoTime
-      storer.storeResultSet(msiDBTestCase.getEntityManager(), psDBTestCase.getEntityManager(), udsDBTestCase.getEntityManager(), pdiDBTestCase.getEntityManager(), resultSet, null)
+      storer.storeResultSet( resultSet)
       stop = System.nanoTime
 
       logger.info("ResultSet persisted time: " + ((stop - start) / milliToNanos))
