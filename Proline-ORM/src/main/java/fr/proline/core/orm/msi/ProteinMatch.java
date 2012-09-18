@@ -25,7 +25,7 @@ import javax.persistence.Table;
 		+ " where pm.resultSet = :resultSet"),
 
 	@NamedQuery(name = "findProteinMatchesForResultSetId", query = "select pm from fr.proline.core.orm.msi.ProteinMatch pm"
-		+ " where pm.resultSet.id = :resultSetId"),
+		+ " where pm.resultSet.id = :resultSetId")
 
 })
 @Table(name = "protein_match")
