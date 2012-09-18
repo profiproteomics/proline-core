@@ -11,8 +11,8 @@ import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.core.utils.sql.{BoolToSQLStr,encodeRecordForPgCopy}
 
-private[msi] class PgRsStorer( override val msiDb1: MsiDb // Main DB connection                        
-                             ) extends SQLiteRsStorer( msiDb1 ) {
+private[msi] class PgRsWriter( override val msiDb1: MsiDb // Main DB connection                        
+                             ) extends SQLiteRsWriter( msiDb1 ) {
   
   val bulkCopyManager = new CopyManager( msiDb1.connection.asInstanceOf[BaseConnection] )
   

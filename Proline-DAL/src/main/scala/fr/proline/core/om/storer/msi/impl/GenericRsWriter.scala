@@ -1,11 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
 import fr.proline.core.dal.MsiDb
-import fr.proline.core.om.storer.msi.IRsStorer
+import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.model.msi._
 
-private[msi] class GenericRsStorer( val msiDb1: MsiDb // Main DB connection                        
-                                  ) extends IRsStorer {
+private[msi] class GenericRsWriter( val msiDb1: MsiDb // Main DB connection                        
+                                  ) extends IRsWriter {
   
   def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
   
