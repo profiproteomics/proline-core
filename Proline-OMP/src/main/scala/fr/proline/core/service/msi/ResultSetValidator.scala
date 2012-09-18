@@ -73,52 +73,54 @@ class ResultSetValidator( dbManager: DatabaseManagement,
     >>>
     
     // Run peptide match validation
-    pepMatchValParams match {
-      case computerPepMatchValParamsOpt: Some[ComputerValidationParams] => {
-        val computerPepMatchValParams = computerPepMatchValParamsOpt.get
-        
-        // Set computer params
-        val rsmPepValParams = new RsmPepMatchValidationParamsProperties(
-                                     expectedFdr = Some(computerPepMatchValParams.expectedFdr),
-                                     scoreThreshold = None
-                                  )
-        rsmValProperties.params.setPeptideParams( Some(rsmPepValParams) )
-        
-        // Validate thre Result Set
-        val valResults = pepMatchValidator.validateWithComputerParams(
-                           validationParams = computerPepMatchValParams,
-                           targetPeptideMatches = targetRs.peptideMatches,
-                           decoyPeptideMatches = decoyRsOpt.get.peptideMatches
-                           )
-        val expectedResult = valResults.expectedResult
-        
-        // Keep validation results at peptide level
-        val pepValResults = RsmPepMatchValidationResultsProperties(
-              pValueThreshold = valResults.expectedResult.properties.get("p_value").asInstanceOf[Double].toFloat,
-              targetMatchesCount = expectedResult.nbTargetMatches,
-              decoyMatchesCount = expectedResult.nbDecoyMatches,
-              fdr = expectedResult.fdr
-            )
-        rsmValProperties.results.setPeptideResults( Some(pepValResults) )
+    if( pepMatchValParams != None ) {
+      pepMatchValParams.get match {
+        case computerPepMatchValParams: ComputerValidationParams => {
+          //val computerPepMatchValParams = pepMatchValParams.get
+          
+          // Set computer params
+          val rsmPepValParams = new RsmPepMatchValidationParamsProperties(
+                                       expectedFdr = Some(computerPepMatchValParams.expectedFdr),
+                                       scoreThreshold = None
+                                    )
+          rsmValProperties.params.setPeptideParams( Some(rsmPepValParams) )
+          
+          // Validate thre Result Set
+          val valResults = pepMatchValidator.validateWithComputerParams(
+                             validationParams = computerPepMatchValParams,
+                             targetPeptideMatches = targetRs.peptideMatches,
+                             decoyPeptideMatches = decoyRsOpt.get.peptideMatches
+                             )
+          val expectedResult = valResults.expectedResult
+          
+          // Keep validation results at peptide level
+          val pepValResults = RsmPepMatchValidationResultsProperties(
+                pValueThreshold = valResults.expectedResult.properties.get("p_value").asInstanceOf[Double].toFloat,
+                targetMatchesCount = expectedResult.nbTargetMatches,
+                decoyMatchesCount = expectedResult.nbDecoyMatches,
+                fdr = expectedResult.fdr
+              )
+          rsmValProperties.results.setPeptideResults( Some(pepValResults) )
+        }
+        case userPepMatchValParams: UserValidationParams => {
+          //val userPepMatchValParams = pepMatchValParams.get
+          
+          // Set user params
+          val rsmPepValParams = new RsmPepMatchValidationParamsProperties(
+                                       //expectedFdr = userPepMatchValParams.get.,
+                                       //scoreThreshold = None
+                                    )
+          rsmValProperties.params.setPeptideParams( Some(rsmPepValParams) )
+          
+          val valResult = pepMatchValidator.validateWithUserParams(
+                            validationParams = userPepMatchValParams,
+                            targetPeptideMatches = targetRs.peptideMatches,
+                            decoyPeptideMatches = Some(decoyRsOpt.get.peptideMatches),
+                            targetDecoyMode = targetDecoyMode
+                            )
+        }
+        case _ => ()
       }
-      case userPepMatchValParamsOpt: Some[UserValidationParams] => {
-        val userPepMatchValParams = userPepMatchValParamsOpt.get
-        
-        // Set user params
-        val rsmPepValParams = new RsmPepMatchValidationParamsProperties(
-                                     //expectedFdr = userPepMatchValParams.get.,
-                                     //scoreThreshold = None
-                                  )
-        rsmValProperties.params.setPeptideParams( Some(rsmPepValParams) )
-        
-        val valResult = pepMatchValidator.validateWithUserParams(
-                          validationParams = userPepMatchValParams,
-                          targetPeptideMatches = targetRs.peptideMatches,
-                          decoyPeptideMatches = Some(decoyRsOpt.get.peptideMatches),
-                          targetDecoyMode = targetDecoyMode
-                          )
-      }
-      case _ => ()
     }
     >>>
     
@@ -155,19 +157,21 @@ class ResultSetValidator( dbManager: DatabaseManagement,
     val protSetValidator = ProteinSetValidator( searchEngine, ValidationMethods.proteinSetScore )
     
     // Run protein set validation
-    protSetValParams match {
-      case computerProtSetValParams: Some[ComputerValidationParams] => {
-         val valResults = protSetValidator.validateWithComputerParams(
-                            validationParams = computerProtSetValParams.get,
-                            targetRsm = targetRsm,
-                            decoyRsm = decoyRsmOpt.get
-                            )
+    if(protSetValParams != None){
+      protSetValParams.get match {
+        case computerProtSetValParams: ComputerValidationParams => {
+           val valResults = protSetValidator.validateWithComputerParams(
+                              validationParams = computerProtSetValParams,
+                              targetRsm = targetRsm,
+                              decoyRsm = decoyRsmOpt.get
+                              )
+        }
+        /*case userProtSetValParams: UserValidationParams => {
+          val valResult = protSetValidator.validateWithComputerParams()
+        }
+        case none: Option[ValidationParams] => ()*/
+        case _ => ()
       }
-      /*case userProtSetValParams: Option[UserValidationParams] => {
-        val valResult = protSetValidator.validateWithComputerParams()
-      }
-      case none: Option[ValidationParams] => ()*/
-      case _ => ()
     }
     >>>
     
