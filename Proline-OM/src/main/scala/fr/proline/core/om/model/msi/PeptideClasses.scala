@@ -394,7 +394,7 @@ object PeptideInstance extends InMemoryIdGen
 @JsonInclude( Include.NON_NULL )
 case class PeptideInstance ( // Required fields
                         var id: Int,
-                        val peptide: Peptide,
+                        @transient val peptide: Peptide,
 
                         // Immutable optional fields
                         var peptideMatchIds: Array[Int] = null, //One of these 2 values should be specified                        
@@ -425,7 +425,8 @@ case class PeptideInstance ( // Required fields
   require( peptide != null )
   require( (peptideMatchIds != null || peptideMatches !=null) )
   
-  lazy val peptideMatchesCount: Int = { getPeptideMatchIds.length }
+  lazy val peptideId = peptide.id
+  lazy val peptideMatchesCount = getPeptideMatchIds.length
   
   // Related objects ID getters
   def getPeptideMatchIds : Array[Int] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds }
@@ -450,7 +451,7 @@ case class PeptideInstance ( // Required fields
 case class PeptideSetItem (
                    // Required fields                                  
                    var selectionLevel: Int,
-                   val peptideInstance: PeptideInstance,
+                   @transient val peptideInstance: PeptideInstance,
                    
                    // Immutable optional fields
                    protected val peptideSetId: Int = 0,
@@ -463,6 +464,8 @@ case class PeptideSetItem (
                    var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                    ) {
   
+  lazy val peptideInstanceId = peptideInstance.id
+  
   def getPeptideSetId : Int = { if(peptideSet != null && peptideSet != None) peptideSet.get.id else peptideSetId }
    
 }
@@ -471,7 +474,7 @@ object PeptideSet extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-class PeptideSet ( // Required fields
+case class PeptideSet ( // Required fields
                    var id: Int,
                    var items: Array[PeptideSetItem],
                    val isSubset: Boolean,

@@ -168,7 +168,7 @@ object ProteinSet extends InMemoryIdGen
 @JsonInclude( Include.NON_NULL )
 case class ProteinSet ( 
                  // Required fields
-                 val peptideSet: PeptideSet,
+                 @transient val peptideSet: PeptideSet,
                  var hasPeptideSubset: Boolean,
   
                  // Immutable optional fields
@@ -191,7 +191,9 @@ case class ProteinSet (
                  var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
                  
                  ) {
-
+  
+  lazy val peptideSetId = peptideSet.id
+  
   // Requirements
   require( proteinMatchIds != null || proteinMatches != null )
   
