@@ -1,13 +1,16 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable
+
 import com.weiglewilczek.slf4s.Logging
+
 import fr.proline.core.dal.DatabaseManagement
+import fr.proline.core.dal.MsiDb
 import fr.proline.core.om.utils.PeptideIdent
 import fr.proline.core.orm.utils.JPAUtil
-import javax.persistence.{Persistence, EntityManagerFactory, EntityManager}
-import fr.proline.core.dal.MsiDb
 import fr.proline.repository.DatabaseConnector
+import javax.persistence.EntityManager
+import javax.persistence.Persistence
 
 /**
  * RsStorer context container. Contains current ResultSet (and DecoyRS) "persistence context".
@@ -16,74 +19,67 @@ import fr.proline.repository.DatabaseConnector
  * @param spectrumIdByTitle already persisted Msi Spectrum Ids retrievable by {{{Spectrum.title}}} string.
  * The map can be {{{null}}}
  */
-class StorerContext(val dbManagement : DatabaseManagement, msiConnector : DatabaseConnector = null) extends Logging {
-    
-    // Define secondary constructors
-  def this( dbManagement : DatabaseManagement,  projectId : Int= 0) = {
-	  this( dbManagement, dbManagement.getMSIDatabaseConnector(projectId,true))
+class StorerContext(val dbManagement: DatabaseManagement, msiConnector: DatabaseConnector = null) extends Logging {
+
+  type MsiPeptide = fr.proline.core.orm.msi.Peptide
+
+  // Define secondary constructors
+  def this(dbManagement: DatabaseManagement, projectId: Int = 0) = {
+    this(dbManagement, dbManagement.getMSIDatabaseConnector(projectId, true))
   }
-  
+
   lazy val msiEm: EntityManager = {
-    if(msiConnector !=null )
+    if (msiConnector != null)
       null
-	val emf = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName, msiConnector.getEntityManagerSettings)
-	msiEMOpened = true
+    val emf = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName, msiConnector.getEntityManagerSettings)
+    msiEMOpened = true
     emf.createEntityManager
   }
-  private var msiEMOpened: Boolean=false
-  
+  private var msiEMOpened: Boolean = false
+
   lazy val psEm: EntityManager = {
-	psEMOpened = true
-	dbManagement.psEMF.createEntityManager
+    psEMOpened = true
+    dbManagement.psEMF.createEntityManager
   }
-  private var psEMOpened: Boolean=false
-  
+  private var psEMOpened: Boolean = false
+
   lazy val udsEm: EntityManager = {
     udsEMOpened = true
     dbManagement.udsEMF.createEntityManager
   }
-  private var udsEMOpened: Boolean=false
-  
-  lazy val pdiEm: EntityManager =  {
+  private var udsEMOpened: Boolean = false
+
+  lazy val pdiEm: EntityManager = {
     pdiEMOpened = true
     dbManagement.pdiEMF.createEntityManager
   }
-  private var pdiEMOpened: Boolean=false
-  
-  lazy val msiDB : MsiDb = new MsiDb(msiConnector)
-  
-  type MsiPeptide = fr.proline.core.orm.msi.Peptide
-  
+  private var pdiEMOpened: Boolean = false
+
+  lazy val msiDB: MsiDb = new MsiDb(msiConnector)
+
   var spectrumIdByTitle: Map[String, Int] = null
-  
-  var seqDbIdByTmpId: Map[Int,Int] = null// TODO To be integrated to idCaches 
-  
-  
-  def closeOpenedEM() =  {
-    if(msiEMOpened )
+
+  var seqDbIdByTmpId: Map[Int, Int] = null // TODO To be integrated to idCaches 
+
+  def closeOpenedEM() = {
+    if (msiEMOpened)
       msiEm.close
-      
-    if(psEMOpened)
+
+    if (psEMOpened)
       psEm.close
-      
-    if(pdiEMOpened)
+
+    if (pdiEMOpened)
       pdiEm.close
-      
-    if(udsEMOpened)
+
+    if (udsEMOpened)
       udsEm.close
 
   }
-  
-  /* Check EntityManagers class parameters */
-//  checkEntityManager(msiEm)
-//  checkEntityManager(psEm)
-//  checkEntityManager(udsEm)
-//  checkEntityManager(pdiEm)
 
   private val entityCaches = mutable.Map.empty[Class[_], mutable.Map[Int, _]]
-  
-  private val idCaches = mutable.Map.empty[Class[_], mutable.Map[Int,Int]]
-  
+
+  private val idCaches = mutable.Map.empty[Class[_], mutable.Map[Int, Int]]
+
   /**
    * Retrieved and created Msi Peptide entities.
    */
@@ -117,15 +113,6 @@ class StorerContext(val dbManagement : DatabaseManagement, msiConnector : Databa
       entityCaches += classifier -> newCache
 
       newCache
-    }
-
-  }
-
-  /* Private methods */
-  private def checkEntityManager(em: EntityManager) {
-
-    if ((em == null) || !em.isOpen) {
-      throw new IllegalArgumentException("Invalid EntityManager")
     }
 
   }
