@@ -390,6 +390,10 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
       if (omMsiSearchId > 0) {
         val foundMsiSearch = msiEm.getReference(classOf[MsiSearch], omMsiSearchId)
 
+        if (foundMsiSearch == null) {
+          throw new IllegalArgumentException("MsiSearch #" + omMsiSearchId + " NOT found in Msi Db")
+        }
+
         knownMsiSearchs += omMsiSearchId -> foundMsiSearch
 
         storerContext
@@ -1335,9 +1339,9 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
           var omSpectrumId: Int = ms2Query.spectrumId
 
           /* Try to load Spectrum.id from knownSpectrumIdByTitle */
-          val _spectrumIdByTitle = storerContext.spectrumIdByTitle
-          if ((_spectrumIdByTitle != null) && !StringUtils.isEmpty(ms2Query.spectrumTitle)) {
-            val knownSpectrumId = _spectrumIdByTitle.get(ms2Query.spectrumTitle)
+          val spectrumIdByTitle = storerContext.spectrumIdByTitle
+          if ((spectrumIdByTitle != null) && !StringUtils.isEmpty(ms2Query.spectrumTitle)) {
+            val knownSpectrumId = spectrumIdByTitle.get(ms2Query.spectrumTitle)
 
             if (knownSpectrumId.isDefined) {
               omSpectrumId = knownSpectrumId.get

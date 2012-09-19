@@ -90,7 +90,7 @@ trait IRsStorer extends Logging {
    */
   def insertInstrumentConfig(instrumCfg : InstrumentConfig, context : StorerContext) 
   
-
+}
 
 /** A factory object for implementations of the IRsStorer trait */
 object RsStorer {
@@ -120,10 +120,5 @@ object RsStorer {
     
     }
   }
-  }
+  
 }
-
-
-
-
-
