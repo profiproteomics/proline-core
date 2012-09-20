@@ -51,7 +51,7 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter) 
     createdRsId
   }
   
-  def storeResultSet(resultSet : ResultSet, msQueries : Seq [MsQuery], peakListContainer : IPeaklistContainer, context : StorerContext) : StorerContext = {
+  def storeResultSet(resultSet : ResultSet, msQueries : Seq [MsQuery], peakListContainer : IPeaklistContainer, context : StorerContext) : Int = {
     throw new Exception("NYI")
   }
    
@@ -489,7 +489,7 @@ def storePeaklist( peaklist: Peaklist, context : StorerContext): Int = {
    context
   }
   
-  def storeMsiSearch(msiSearch : MSISearch, context : StorerContext) : StorerContext = {
+  def storeMsiSearch(msiSearch : MSISearch, context : StorerContext) : Int = {
     val ss = msiSearch.searchSettings
     
     // Insert sequence databases 
@@ -513,7 +513,7 @@ def storePeaklist( peaklist: Peaklist, context : StorerContext): Int = {
     this._insertMsiSearch( msiSearch )
     
     context.seqDbIdByTmpId =  _seqDbIdByTmpIdBuilder.result()
-    context
+    msiSearch.id
   }
   
   def storeMsQueries( msiSearchID : Int,
