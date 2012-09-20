@@ -116,5 +116,35 @@ class StorerContext(val dbManagement: DatabaseManagement, msiConnector: Database
     }
 
   }
+  
+  /**
+   * Retrieves the current cache for a given Msi entity.
+   * These are global caches (for entities shared by ResultSets: Decoy, children...)
+   * within the current persistence context (Msi {{{EntityManager}}} session and transaction).
+   * Caches associate OM Id (can be "In memory" < 0) -> ORM Id once persisted {{{EntityManager}}}.
+   *
+   * @param classifier Class of relevant OM Msi entity obtained with Scala {{{classOf[]}}} operator.
+   * @return current cache for given Msi entity.
+   */
+  def getIdCache[T](classifier: Class[T]): mutable.Map[Int, Int] = {
 
+    if (classifier == null) {
+      throw new IllegalArgumentException("Classifier is null")
+    }
+
+    val knownCache = idCaches.get(classifier)
+
+    if (knownCache.isDefined) {
+      knownCache.get.asInstanceOf[mutable.Map[Int, Int]]
+    } else {
+      logger.debug("Creating ID context cache for " + classifier)
+
+      val newCache = mutable.Map.empty[Int, Int]
+
+      idCaches += classifier -> newCache
+
+      newCache
+    }
+
+  }
 }
