@@ -13,12 +13,12 @@ import fr.proline.core.om.model.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.msi.MsiSearchStorer
 import fr.proline.core.om.storer.msi.PeaklistStorer
 import fr.proline.core.service.IService
-import fr.proline.core.dal.MsiDb
 import fr.proline.core.om.storer.msi.PeaklistStorer
-import fr.proline.core.dal.UdsDb
-import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.MsiSearchStorer
-import fr.proline.core.om.storer.msi.JPARsStorer
+import fr.proline.core.om.storer.msi.IRsStorer
+import fr.proline.core.om.storer.msi.impl.JPARsStorer
+import fr.proline.core.om.storer.msi.impl.StorerContext
+import org.apache.commons.lang3.StringUtils
 
 class ResultFileImporter( dbMgnt: DatabaseManagement,
                           projectId: Int,
@@ -31,19 +31,23 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
   private var targetResultSetId: Int = 0
   
   private val msiDbConnector = dbMgnt.getMSIDatabaseConnector(projectId, false)
-  private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) 
+//  private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) 
   private val udsDb = new UdsDb( UdsDb.buildConfigFromDatabaseManagement(dbMgnt) )
+  private var stContext : StorerContext=null
   
   override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    this.msiDb.closeConnection()
+//    this.msiDb.closeConnection()
     this.udsDb.closeConnection()
+    this.stContext.closeOpenedEM()
   }
   
   def getTargetResultSetId = targetResultSetId
   
   def runService(): Boolean = {
+    
+    var serviceResultOK: Boolean = true
     
     // Check that a file is provided
     if (resultIdentFile == null)
@@ -52,6 +56,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     // Retrieve the instrument configuration
     val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
 
+    this.stContext = new StorerContext(dbMgnt, msiDbConnector)
     logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
     >>>
     
@@ -64,67 +69,83 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     val resultFile = rfProvider.get.getResultFile( resultIdentFile, providerKey, importerProperties )
     >>>
     
-    // Instantiate some storers
-    val msiSearchStorer = MsiSearchStorer( msiDb )
-    val peaklistStorer = PeaklistStorer( msiDb )
-//    val rsStorer = RsStorer(dbMgnt, msiDb )//  VD Pour SQLStorer Only 
-     val rsStorer = new JPARsStorer(msiDbConnector, dbMgnt.psDBConnector, dbMgnt.udsDBConnector, dbMgnt.pdiDBConnector) //VD Pour ORMStorer Only
+    // Instantiate RsStorer
+//    val rsStorer = RsStorer(dbMgnt, msiDb )//  VD Pour SQLStorer Only  TODO A RERENDRE AVEC SQLRsStorer 
+    val rsStorer: IRsStorer = new JPARsStorer(dbMgnt, msiDbConnector) //VD Pour ORMStorer Only
         
-    // Configure result file before parsing
+	 // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
     
-    // Insert instrument config in the MSIdb
-    msiSearchStorer.insertInstrumentConfig( instrumentConfig )
+    val msiTransaction = stContext.msiEm.getTransaction
+    var msiTransacOk: Boolean = false
     
-    // Retrieve MSISearch and related MS queries
-    val msiSearch = resultFile.msiSearch
-    val msQueryByInitialId = resultFile.msQueryByInitialId
-    var msQueries: List[fr.proline.core.om.model.msi.MsQuery] = null
-    if( msQueryByInitialId != null ) {
-      msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
-    }
+    logger.debug("Starting Msi Db transaction")
+    
+    //Start MSI Transaction and ResultSets store
+    try {
+      msiTransaction.begin()
+      msiTransacOk = false
       
-    // Store the peaklist    
-    val spectrumIdByTitle = peaklistStorer.storePeaklist( msiSearch.peakList, resultFile )
-    >>>
+      // Insert instrument config in the MSIdb         
+      rsStorer.insertInstrumentConfig( instrumentConfig ,  this.stContext)
     
-    // Store the MSI search with related search settings and MS queries    
-//    val seqDbIdByTmpId = msiSearchStorer.storeMsiSearch( msiSearch, msQueries, spectrumIdByTitle ) // VD Pour SQLStorer Only
-    >>>
-    
-    ////logger.info("Parsing file " + fileLocation.getAbsoluteFile() + " using " + resultFile.getClass().getName() + " failed !")
-    
-    // Load target result set
-    val targetRs = resultFile.getResultSet(false)
-    targetRs.name = msiSearch.title
-    
-    
-    //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
-    this.msiDb.commitTransaction()// VD Pour ORMStorer Only
-    // Load and store decoy result set if it exists
-    if( resultFile.hasDecoyResultSet ) {
-  	  val decoyRs = resultFile.getResultSet(true)
-  	  decoyRs.name = msiSearch.title
-  	  
-//  	  rsStorer.storeResultSet(decoyRs,seqDbIdByTmpId) // VD Pour SQLStorer Only
+	  // Retrieve MSISearch and related MS queries
+	  val msiSearch = resultFile.msiSearch
+	  val msQueryByInitialId = resultFile.msQueryByInitialId
+	  var msQueries: List[fr.proline.core.om.model.msi.MsQuery] = null
+	  if( msQueryByInitialId != null ) {
+		msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
+	  }
+	      
+      //  // Store the peaklist    
+      //  val spectrumIdByTitle = peaklistStorer.storePeaklist( msiSearch.peakList, resultFile )//  VD Pour SQLStorer Only  TODO A RERENDRE AVEC SQLRsStorer 
+      //  >>>
+	    
+	  // Store the MSI search with related search settings and MS queries    
+      //  val seqDbIdByTmpId = msiSearchStorer.storeMsiSearch( msiSearch, msQueries, spectrumIdByTitle ) // VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 
+	  >>>
+	    	  
+	    
+	  // Load target result set
+	  val targetRs = resultFile.getResultSet(false)
+	  if(StringUtils.isEmpty(targetRs.name))
+	      targetRs.name = msiSearch.title 
+	    	    
+	  //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
+	
+	  // Load and store decoy result set if it exists
+	  if( resultFile.hasDecoyResultSet ) {
+	  	 val decoyRs = resultFile.getResultSet(true)
+	  	 if(StringUtils.isEmpty(decoyRs.name))
+	  		 decoyRs.name = msiSearch.title
+	  		 
+//  	  rsStorer.storeResultSet(decoyRs,seqDbIdByTmpId) // VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 	
+	     targetRs.decoyResultSet = Some(decoyRs)
+	     >>>
+  	  }
+       else targetRs.decoyResultSet = None
 
-      targetRs.decoyResultSet = Some(decoyRs)
+     //  Store target result set
+//    rsStorer.storeResultSet(targetRs,seqDbIdByTmpId)// VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 
+      this.targetResultSetId = rsStorer.storeResultSet(targetRs, msQueries, resultFile,  this.stContext)// VD Pour ORMStorer Only
       >>>
-  	}
-    else targetRs.decoyResultSet = None
-
-    // Store target result set
-//    rsStorer.storeResultSet(targetRs,seqDbIdByTmpId)// VD Pour SQLStorer Only
-    rsStorer.storeResultSet(targetRs, spectrumIdByTitle)// VD Pour ORMStorer Only
-    
-    this.targetResultSetId = targetRs.id
-    >>>
     
 //    this.msiDb.commitTransaction()// VD Pour SQLStorer Only
+      msiTransaction.commit()
+      msiTransacOk = true
+    } finally {
+      /* Check msiTransaction integrity */
+      if ((msiTransaction != null) && !msiTransacOk) {
+        try {
+          msiTransaction.rollback()
+        } catch {
+          case ex => logger.error("Error rollbacking Msi Db transaction", ex)
+        }
+      }
+    }
     
-    this.beforeInterruption()
-    
-    true
+    this.beforeInterruption()    
+    msiTransacOk
   }
   
   private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
