@@ -8,7 +8,6 @@ import scala.collection.mutable
 
 import com.weiglewilczek.slf4s.Logging
 
-import annotation.elidable.ASSERTION
 import fr.proline.core.dal.DatabaseManagement
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.LocatedPtm
@@ -135,7 +134,6 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
     // TODO Check this algo (QUANTITATION = resultSet.isQuantified ? )
     def parseType(resultSet: ResultSet): Type = {
-      assert(resultSet != null, "ResultSet is null")
 
       if (resultSet.isNative) {
 
@@ -591,8 +589,8 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
     val searchSettings = search.searchSettings
     val omSearchSettingsId = searchSettings.id
 
-    if (omSearchSettingsId > 0) { // searchSettings is mandatory
-      msiEm.getReference(classOf[MsiSearchSetting], omSearchSettingsId)
+    if (omSearchSettingsId > 0) {
+      msiEm.getReference(classOf[MsiSearchSetting], omSearchSettingsId) // Must exist in Msi Db if OM Id > 0
     } else {
       val msiSearchSetting = new MsiSearchSetting()
       msiSearchSetting.setIsDecoy(searchSettings.isDecoy)
@@ -798,23 +796,11 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
       if (omSeqDatabaseId > 0) {
         /* Try to load from Msi Db by Id */
         msiSeqDatabase = msiEm.find(classOf[MsiSeqDatabase], omSeqDatabaseId)
-
-        if (msiSeqDatabase != null) {
-          knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
-        }
-
       }
 
       if (msiSeqDatabase == null) {
         /* Try to load from Msi Db by name and Fasta file path */
         msiSeqDatabase = msiSeqDatabaseRepo.findSeqDatabaseForNameAndFastaAndVersion(seqDatabase.name, seqDatabase.filePath)
-
-        if (msiSeqDatabase != null) {
-          knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
-
-          seqDatabase.id = msiSeqDatabase.getId // Update OM entity with persisted Primary key
-        } // End if (msiSeqDatabase is not null)
-
       } // End if (msiSeqDatabase is null)
 
       if (msiSeqDatabase == null) {
@@ -824,7 +810,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
         if (pdiSeqDatabaseInstance == null) {
           logger.warn("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
 
-          knownSeqDatabases += omSeqDatabaseId -> null // Cache non existent Pdi SeqDatabase
+          // Cache non existent Pdi SeqDatabase
         } else {
           /* Create derived Msi entity */
           msiSeqDatabase = new MsiSeqDatabase(pdiSeqDatabaseInstance);
@@ -838,7 +824,11 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
           logger.debug("Msi SeqDatabase #" + pdiSeqDatabaseInstance.getId + " persisted")
         } // End if (pdiSeqDatabaseInstance is not null)
 
-      } // End if (msiSeqDatabase is null)
+      } else {
+        seqDatabase.id = msiSeqDatabase.getId // Update OM entity with persisted Primary key
+      } // End if (msiSeqDatabase is not null)
+
+      knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
 
       msiSeqDatabase
     } // End if (msiSeqDatabase not in knownSeqDatabases)
@@ -1243,7 +1233,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
         } else {
 
           if (bestOmPeptideMatchId > 0) {
-            val foundBestChild = msiEm.getReference(classOf[MsiPeptideMatch], bestOmPeptideMatchId)
+            val foundBestChild = msiEm.getReference(classOf[MsiPeptideMatch], bestOmPeptideMatchId) // Must exist in Msi Db if OM Id > 0
 
             knownPeptideMatches += bestOmPeptideMatchId -> foundBestChild
 
@@ -1312,7 +1302,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
     } else {
 
       if (omMsQueryId > 0) {
-        val foundMsiMsQuery = msiEm.getReference(classOf[MsiMsQuery], omMsQueryId)
+        val foundMsiMsQuery = msiEm.getReference(classOf[MsiMsQuery], omMsQueryId) // Must exist in Msi Db if OM Id > 0
 
         foundMsiMsQuery.setMsiSearch(msiSearch)
 
@@ -1346,7 +1336,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
           // TODO Spectrums should be persisted before RsStorer (with PeakList entity)
           if (omSpectrumId > 0) {
-            val msiSpectrum = msiEm.find(classOf[MsiSpectrum], omSpectrumId)
+            val msiSpectrum = msiEm.getReference(classOf[MsiSpectrum], omSpectrumId) // Must exist in Msi Db if OM Id > 0
 
             if (msiSpectrum == null) {
               throw new IllegalArgumentException("Spectrum #" + omSpectrumId + " NOT found in Msi Db")
@@ -1709,12 +1699,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
     var psPtmSpecificity: PsPtmSpecificity = null
 
     if (omSpecificityId > 0) {
-      psPtmSpecificity = psEm.find(classOf[PsPtmSpecificity], omSpecificityId)
-
-      if (psPtmSpecificity == null) {
-        throw new IllegalArgumentException("PtmSpecificity #" + omSpecificityId + " NOT found in Ps Db")
-      }
-
+      psPtmSpecificity = psEm.getReference(classOf[PsPtmSpecificity], omSpecificityId) // Must exist in Ps Db if OM Id > 0
     }
 
     if (psPtmSpecificity == null) {
