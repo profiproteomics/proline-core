@@ -38,52 +38,77 @@ abstract class AbstractRsStorer(val dbManagement : DatabaseManagement, val msiDb
     }
   }
   
-  def storeResultSet( resultSet: ResultSet, context: StorerContext ): Int = {
-    val RsTempId = resultSet.id
-    val retContext: StorerContext = storeResultSet( resultSet = resultSet,
+  def storeResultSet( resultSet: ResultSet, storerContext: StorerContext ): Int = {
+    if (resultSet == null) {
+      throw new IllegalArgumentException("ResultSet is null")
+    }
+        
+    val omResultSetId = resultSet.id
+    
+    var localContext: StorerContext = if (storerContext == null) {
+      new StorerContext(dbManagement, msiDbConnector)
+    } else {
+      storerContext
+    }
+    
+    storeResultSet( resultSet = resultSet,
       msQueries = null,
       peakListContainer = null,
-      context = context )
+      storerContext = storerContext )
 
-    val createdMsiResultSet = retContext.getEntityCache( classOf[MsiResultSet] ).get( RsTempId )
-    if ( createdMsiResultSet.isDefined )
-      createdMsiResultSet.get.getId
-    else
-      throw new Exception("ResultSet Storer : Created ResultSet not found !! ")
   }
-    
-  final def storeResultSet(resultSet : ResultSet, msQueries : Seq [MsQuery], peakListContainer : IPeaklistContainer, context : StorerContext) : StorerContext = {
+   
+  /**
+   * This method will first save spectra and queries related data specified by peakListContainer and msQueries. This will be done using
+   * IRsStorer storePeaklist, storeMsiSearch,  storeMsQueries and storeSpectra methods
+   * 
+   * Then the implementation of the abstract createResultSet method will be executed to save other data. 
+   * TODO : use other Storer : peptideStorer / ProteinMatch 
+   * 
+   * 
+   */
+  final def storeResultSet(resultSet : ResultSet, msQueries : Seq [MsQuery], peakListContainer : IPeaklistContainer, storerContext : StorerContext) : Int = {
     
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
+    }
+    
+    //Create a StorerContext if none was specified
+    var localContext: StorerContext = if (storerContext == null) {
+      new StorerContext(dbManagement, msiDbConnector)
+    } else {
+      storerContext
     }    
         
-    var retCtxt = if(context == null) new StorerContext(dbManagement, msiDbConnector) else  context
+    if (resultSet.id > 0) 
+       throw new UnsupportedOperationException("Updating a ResultSet is not supported yet !")
     
+    // Save Spectra and Queries information (MSISearch should  be defined)
 	if(resultSet.msiSearch != null) {
-	  //Save Peaklist information
-	  val plID = storePeaklist(resultSet.msiSearch.peakList, retCtxt)
+	  // Save Peaklist information
+	  val plID = storePeaklist(resultSet.msiSearch.peakList, localContext)
 	  resultSet.msiSearch.peakList.id = plID //update Peaklist ID in MSISearch
+	  
+	  // Save spectra retrieve by peakListContainer 
 	  if(peakListContainer != null)	  
-		  storeSpectra(plID, peakListContainer, context)//Save spectra retrieve by peakListContainer 
+		  storeSpectra(plID, peakListContainer, localContext) 
 	  
+	 /* Store MsiSearch and retrieve persisted ORM entity */
       val tmpMsiSearchID = resultSet.msiSearch.id
-	  retCtxt =  storeMsiSearch(resultSet.msiSearch, context)//Save MSISearch and related information
-
-      val createdMsiSearch = retCtxt.getEntityCache( classOf[MsiSearch] ).get( tmpMsiSearchID )
-      if(createdMsiSearch.isDefined)
-        resultSet.msiSearch.id = createdMsiSearch.get.getId
-      else
-        throw new Exception("ResultSet Storer : Created MsiSearch not found !! ")
+	  val newMsiSearchID =  storeMsiSearch(resultSet.msiSearch, localContext)
 	  
+	  // Save MSQueries 
       if(msQueries!=null && !msQueries.isEmpty)
-	    storeMsQueries(resultSet.msiSearch.id, msQueries, context)
-
+	    localContext = storeMsQueries(newMsiSearchID, msQueries, localContext)
 	}
   
-    
-    retCtxt
+    val rsid = createResultSet(resultSet, localContext)
+    resultSet.id = rsid
+    rsid
   }
+  
+  def createResultSet( resultSet : ResultSet, context : StorerContext) : Int
+    
   
   def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext = {
     logger.info( "storing spectra..." )
