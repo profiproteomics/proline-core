@@ -83,92 +83,12 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
     createdRsId
   }
 
-  override def storeResultSet(resultSet: ResultSet, storerContext: StorerContext): Int = {
-
-    if (resultSet == null) {
-      throw new IllegalArgumentException("ResultSet is null")
-    }
-
-    val omResultSetId = resultSet.id
-
-    var localContext: StorerContext = if (storerContext == null) {
-      new StorerContext(dbManagement, msiDbConnector)
-    } else {
-      storerContext
-    }
-
-    val msiTransaction = localContext.msiEm.getTransaction
-    var msiTransacOk: Boolean = false
-
-    var msiResultSet: MsiResultSet = null
-
-    logger.debug("Starting Msi Db transaction")
-
-    try {
-      msiTransaction.begin()
-      msiTransacOk = false
-
-      if (omResultSetId > 0) {
-        throw new UnsupportedOperationException("Updating a ResultSet is not supported yet !")
-      } else {
-        logger.info("Persisting a newly created ResultSet")
-
-        //    val retContext: StorerContext = storeResultSet( resultSet = resultSet,
-        //      msQueries = null,
-        //      peakListContainer = null,
-        //      context = context )
-
-        //VD Copy from full store AbstractRsStorer ...  
-        //Save MSISearch & PeakList information
-        if (resultSet.msiSearch != null) {
-          val peaklistId = storePeaklist(resultSet.msiSearch.peakList, localContext)
-          resultSet.msiSearch.peakList.id = peaklistId //update PeakList ID in MSISearch
-          //		   if(peakListContainer != null)	  
-          //		     storeSpectra(plID, peakListContainer, stCtxt)//Save spectra retrieve by peakListContainer 
-
-          /* Store MsiSearch and retrieve persisted ORM entity */
-          val tmpMsiSearchId = resultSet.msiSearch.id
-          localContext = storeMsiSearch(resultSet.msiSearch, localContext) //Save MSISearch and related information
-          val storedMsiSearch = retrieveStoredMsiSearch(localContext, tmpMsiSearchId)
-
-          /* Current Msi EntityManager / Transaction are flushed by storeXXX() methods, auto-generated Id are valids */
-          resultSet.msiSearch.id = storedMsiSearch.getId //update MsiSearch ID in resultSet
-        }
-
-        //    	if(msQueries!=null && !msQueries.isEmpty)
-        //    		storeMsQueries(resultSet.msiSearch.id, msQueries, context)
-
-        msiResultSet = loadOrCreateResultSet(localContext, resultSet)
-      }
-
-      msiTransaction.commit()
-      msiTransacOk = true
-    } finally {
-
-      /* Check msiTransaction integrity */
-      if ((msiTransaction != null) && !msiTransacOk) {
-        try {
-          msiTransaction.rollback()
-        } catch {
-          case ex => logger.error("Error rollbacking Msi Db transaction", ex)
-        }
-      }
-
-    } // End try - finally block on msiTransaction
-
-    if (msiTransacOk) {
-      resultSet.id = msiResultSet.getId // Update OM entity with persisted Primary key
-
-      msiResultSet.getId
-    } else {
-      throw new RuntimeException("Error persisting ResultSet {" + omResultSetId + "} into Msi Db")
-    }
-
-  }
 
   /**
    * Persists a sequence of MsQuery objects into Msi Db. (already persisted MsQueries
    * are cached into {{{storerContext}}} object).
+   * 
+   * Transaction on MSIdn should be opened
    *
    * StoreXXX() methods flush Msi EntityManager.
    *
@@ -202,8 +122,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
    * @param resultSet ResultSet object, must not be {{{null}}}.
    * @param msiEm Msi EntityManager must have a valid transaction started.
    */
-  def loadOrCreateResultSet(storerContext: StorerContext,
-    resultSet: ResultSet): MsiResultSet = {
+  def createResultSet(resultSet: ResultSet, storerContext: StorerContext): Int = {
 
     // TODO Check this algo (QUANTITATION = resultSet.isQuantified ? )
     def parseType(resultSet: ResultSet): Type = {
@@ -236,7 +155,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
     val knownMsiResultSet = knownResultSets.get(omResultSetId)
 
     if (knownMsiResultSet.isDefined) {
-      knownMsiResultSet.get
+      knownMsiResultSet.get.getId
     } else {
 
       if (omResultSetId > 0) {
@@ -244,7 +163,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
         knownResultSets += omResultSetId -> foundMsiResultSet
 
-        foundMsiResultSet
+        foundMsiResultSet.getId
       } else {
         val msiResultSet = new MsiResultSet()
         msiResultSet.setDescription(resultSet.description)
@@ -280,14 +199,17 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
               if ((decoyResultSet != null) && decoyResultSet.isDefined) {
 
-                loadOrCreateResultSet(storerContext,
-                  decoyResultSet.get)
+                val newDecoyRSID = createResultSet(decoyResultSet.get, storerContext)
+                val newDecoyRSOp= storerContext.getEntityCache(classOf[MsiResultSet]).get(newDecoyRSID)
+                if(newDecoyRSOp.isDefined)
+                  newDecoyRSOp.get
+                else 
+                  null
               } else {
                 null
               }
 
             }
-
           }
 
         msiResultSet.setDecoyResultSet(msiDecoyRs)
@@ -349,7 +271,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
         } // End if (postponed Maps are not empty)
 
-        msiResultSet
+        msiResultSet.getId
       } // End if (omResultSetId <= 0)
 
     } // End if (msiResultSet is not in knownResultSets)
@@ -365,7 +287,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
    * @param search MSISearch object, must not be {{{null}}}
    *
    */
-  def storeMsiSearch(search: MSISearch, storerContext: StorerContext): StorerContext = {
+  def storeMsiSearch(search: MSISearch, storerContext: StorerContext): Int = {
 
     if (search == null) {
       throw new IllegalArgumentException("MsiSearch is mandatory")
@@ -384,7 +306,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
     val knownMsiSearch = knownMsiSearchs.get(omMsiSearchId)
 
     if (knownMsiSearch.isDefined) {
-      storerContext
+      knownMsiSearch.get.getId
     } else {
 
       if (omMsiSearchId > 0) {
@@ -396,7 +318,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
         knownMsiSearchs += omMsiSearchId -> foundMsiSearch
 
-        storerContext
+        foundMsiSearch.getId
       } else {
         val msiSearch = new MsiSearch()
         msiSearch.setDate(new Timestamp(search.date.getTime))
@@ -430,7 +352,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
         logger.debug("MsiSearch {" + omMsiSearchId + "} presisted")
 
-        storerContext
+        msiSearch.getId
       }
 
     } // End if (msiSearch is not in knownMsiSearchs)	
