@@ -1,12 +1,9 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.util.Sorting
-
 import org.junit.Assert._
 import org.junit.Test
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.dal.DatabaseManagementTestCase
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -18,59 +15,86 @@ import fr.proline.core.orm.utils.StringUtils
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
 import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.repository.utils.DatabaseUtils
+import org.junit.Before
+import org.junit.After
 
 class JPARsStorerTest extends Logging {
 
   val milliToNanos = 1000000L
 
   val epsilon = 1e-6f // DeltaMoz are floats in DataBase, for double computations use 1e-14
+  val msiTransaction = null
+  val pdiDBTestCase = new PDIDatabaseTestCase()
+  val msiDBTestCase = new MSIDatabaseTestCase()
+  val psDBTestCase = new PSDatabaseTestCase()
+  val udsDBTestCase = new UDSDatabaseTestCase()
+  
+  var stContext: StorerContext = null
+  var dbMgntTest : DatabaseManagementTestCase= null
+  var storer : JPARsStorer = null
+  
+  @Before
+  def initTests()={
+    logger.info("Initializing Dbs")    
+    msiDBTestCase.initDatabase()
+    msiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName())
+    msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")
+    
+      /* Init Ps Db connection */    
+    psDBTestCase.initDatabase()
+    psDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
+    psDBTestCase.loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
 
+    /* Init Uds Db connection */    
+    udsDBTestCase.initDatabase()
+    udsDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName())
+    udsDBTestCase.loadDataSet("/fr/proline/core/om/uds/UDS_Simple_Dataset.xml")
+
+    /* Init Pdi Db connection */    
+    pdiDBTestCase.initDatabase()
+    pdiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PDI_Key.getPersistenceUnitName())
+    pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
+
+    logger.info("Dbs succesfully initialized")
+    dbMgntTest = new DatabaseManagementTestCase(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector)
+    storer = new JPARsStorer(dbMgntTest, msiDBTestCase.getConnector)
+    stContext = new StorerContext(dbMgntTest, dbMgntTest.getCurrentMsiConnector())
+  }
+  
+  @After
+  def tearDown() = {
+    this.stContext.closeOpenedEM()
+    pdiDBTestCase.tearDown()
+    udsDBTestCase.tearDown()
+    psDBTestCase.tearDown()
+    msiDBTestCase.tearDown()
+    
+    logger.info("Dbs succesfully closed")
+  }
   /**
    * Creates some ResultSets with {{{ResultSetFakeBuilder}}} from Proline-OM ''test'' project
    * and persists them into Msi Db using a {{{JPARsStorer}}} instance.
    */
   @Test
   def testRsStorer() {
-    logger.info("Initializing Dbs")
-    /* Init Msi Db connection */
-    val msiDBTestCase = new MSIDatabaseTestCase()
-    msiDBTestCase.initDatabase()
-    msiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName())
-    msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")
-
-    /* Init Ps Db connection */
-    val psDBTestCase = new PSDatabaseTestCase()
-
-    psDBTestCase.initDatabase()
-    psDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
-    psDBTestCase.loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-
-    /* Init Uds Db connection */
-    val udsDBTestCase = new UDSDatabaseTestCase()
-    udsDBTestCase.initDatabase()
-    udsDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName())
-    udsDBTestCase.loadDataSet("/fr/proline/core/om/uds/UDS_Simple_Dataset.xml")
-
-    /* Init Pdi Db connection */
-    val pdiDBTestCase = new PDIDatabaseTestCase()
-    pdiDBTestCase.initDatabase()
-    pdiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PDI_Key.getPersistenceUnitName())
-    pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
-
-    logger.info("Dbs succesfully initialized")
-    val dbMgntTest = new DatabaseManagementTestCase(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector)
-    val storer = new JPARsStorer(dbMgntTest, msiDBTestCase.getConnector)
-
+  
     for (i <- 1 to 3) {
-      logger.info("Creating a new fake Result Set")
+      val msiTransaction = stContext.msiEm.getTransaction
+      var msiTransacOk: Boolean = false
+      
+    	try {
+    		msiTransaction.begin()
+    		msiTransacOk = false
 
-      var start = System.nanoTime
-      val rsb = new ResultSetFakeBuilder(10, 2)
+      	logger.info("Creating a new fake Result Set")
 
-      val resultSet = rsb.toResultSet()
-      var stop = System.nanoTime
+      	var start = System.nanoTime
+      	val rsb = new ResultSetFakeBuilder(10, 2)
 
-      logger.info("ResultSet creation time: " + ((stop - start) / milliToNanos))
+      	val resultSet = rsb.toResultSet()
+      	var stop = System.nanoTime
+
+      	logger.info("ResultSet creation time: " + ((stop - start) / milliToNanos))
 
       /* Used to add some existing Peptides (#1 .. #6) */
       //      var peptideId = 1
@@ -85,34 +109,37 @@ class JPARsStorerTest extends Logging {
       //
       //      }
 
-      start = System.nanoTime
-      storer.storeResultSet(resultSet)
-      stop = System.nanoTime
+      	start = System.nanoTime
+      	storer.storeResultSet(resultSet, stContext)
+      	stop = System.nanoTime
 
-      logger.info("ResultSet persisted time: " + ((stop - start) / milliToNanos))
+      	msiTransaction.commit
+      	msiTransacOk = true
+      	
+      	logger.info("ResultSet persisted time: " + ((stop - start) / milliToNanos))
 
-      val resultSetId = resultSet.id
+      	val resultSetId = resultSet.id
 
-      logger.info("ResultSet #" + resultSetId + " persisted time: " + ((stop - start) / milliToNanos))
+      	logger.info("ResultSet #" + resultSetId + " persisted time: " + ((stop - start) / milliToNanos))
+      
+      	val provider = new ORMResultSetProvider(stContext.msiEm, stContext.psEm, stContext.pdiEm)
 
-      val msiEm = msiDBTestCase.getEntityManager
-      val psEm = psDBTestCase.getEntityManager
-      val pdiEm = pdiDBTestCase.getEntityManager
-      val provider = new ORMResultSetProvider(msiEm, psEm, pdiEm)
+      	val loadedResultSet = provider.getResultSet(resultSetId)
 
-      val loadedResultSet = provider.getResultSet(resultSetId)
-
-      assertTrue("Loaded ResultSet #" + resultSetId, loadedResultSet.isDefined)
+      	assertTrue("Loaded ResultSet #" + resultSetId, loadedResultSet.isDefined)
 
       compareRs(resultSet, loadedResultSet.get)
-    }
-
-    pdiDBTestCase.tearDown()
-    udsDBTestCase.tearDown()
-    psDBTestCase.tearDown()
-    msiDBTestCase.tearDown()
-
-    logger.info("Dbs succesfully closed")
+    	} finally{
+    	  /* Check msiTransaction integrity */
+    		if ((msiTransaction != null) && !msiTransacOk) {
+    			try {
+    				msiTransaction.rollback()
+    			} catch {
+          	case ex => logger.error("Error rollbacking Msi Db transaction", ex)
+    			}
+    		}
+    	} 
+    }// End fo throw 3 RS
   }
 
   private def compareRs(src: ResultSet, loaded: ResultSet) {
