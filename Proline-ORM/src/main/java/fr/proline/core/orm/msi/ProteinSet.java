@@ -60,6 +60,12 @@ public class ProteinSet implements Serializable {
    @CollectionTable(name="protein_set_object_tree_map",joinColumns = @JoinColumn(name = "protein_set_id", referencedColumnName = "id"))
    Map<String, Integer> objectTreeIdByName;  
 	
+	
+	// Transient Variables not saved in database
+	@Transient private ProteinMatch   typicalProteinMatch = null;
+	@Transient private ProteinMatch[] sameSet             = null;
+	@Transient private ProteinMatch[] subSet              = null;
+	
     public ProteinSet() {
     }
 
@@ -160,4 +166,41 @@ public class ProteinSet implements Serializable {
 			this.objectTreeIdByName = new HashMap<String, Integer>();
 		this.objectTreeIdByName.put(schemaName, objectId);
 	}
+	
+	/**
+	 * Get of Transient Protein Match, Must be set by the user first.
+	 * @return
+	 */
+	public ProteinMatch getTransientTypicalProteinMatch() {
+		return typicalProteinMatch;
+	}
+
+	public void setTransientTypicalProteinMatch(ProteinMatch p) {
+		typicalProteinMatch = p;
+	}	
+
+	/**
+	 * Get of Transient SameSet, Must be set by the user first.
+	 * @return
+	 */
+	public ProteinMatch[] getTransientSameSet() {
+		return sameSet;
+	}
+
+	public void setTransientSameSet(ProteinMatch[] sameSet) {
+		this.sameSet = sameSet;
+	}
+	
+	/**
+	 * Get of Transient SubSet, Must be set by the user first.
+	 * @return
+	 */
+	public ProteinMatch[] getTransientSubSet() {
+		return subSet;
+	}
+
+	public void setTransientSubSet(ProteinMatch[] subSet) {
+		this.subSet = subSet;
+	}
+	
 }

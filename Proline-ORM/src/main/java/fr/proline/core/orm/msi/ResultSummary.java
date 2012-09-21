@@ -63,6 +63,10 @@ public class ResultSummary implements Serializable {
    @CollectionTable(name="result_summary_object_tree_map",joinColumns = @JoinColumn(name = "result_summary_id", referencedColumnName = "id"))
    Map<String, Integer> objectTreeIdByName;  
 
+	// Transient Variables not saved in database
+	@Transient private ProteinSet[] proteinSets = null;
+	
+	
     public ResultSummary() {
     }
 
@@ -138,6 +142,18 @@ public class ResultSummary implements Serializable {
 		if (this.objectTreeIdByName == null)
 			this.objectTreeIdByName = new HashMap<String, Integer>();
 		this.objectTreeIdByName.put(schemaName, objectId);
+	}
+	
+	/**
+	 * Get of Transient proteinSets, Must be set by the user first.
+	 * @return
+	 */
+	public ProteinSet[] getTransientProteinSets() {
+		return proteinSets;
+	}
+
+	public void setTransientProteinSets(ProteinSet[] proteinSets) {
+		this.proteinSets = proteinSets;
 	}
 	
 }
