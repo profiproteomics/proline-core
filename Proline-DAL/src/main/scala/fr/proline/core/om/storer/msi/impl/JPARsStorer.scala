@@ -90,9 +90,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
    * Persists a sequence of MsQuery objects into Msi Db. (already persisted MsQueries
    * are cached into {{{storerContext}}} object).
    *
-   * Transaction on MSIdn should be opened
-   *
-   * StoreXXX() methods flush Msi EntityManager.
+   * Transaction on MSI {{{EntityManager}}} should be opened by client code.
    *
    * @param msiSearchId Id (from StoreContext cache or Msi Primary key) of associated MsiSearch entity,
    * must be attached to {{{msiEm}}} persistence context before calling this method.
@@ -111,15 +109,13 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
     msQueries.foreach(loadOrCreateMsQuery(storerContext, _, storedMsiSearch))
 
-    storerContext.msiEm.flush() // FLUSH to retrieve persisted Id
-
     storerContext
   }
 
   /**
    * Retrieves a known ResultSet or an already persisted ResultSet or persists a new ResultSet entity into Msi Db.
    *
-   * This create method flush Msi EntityManager.
+   * This create method '''flush''' Msi {{{EntityManager}}}.
    *
    * @param resultSet ResultSet object, must not be {{{null}}}.
    * @param msiEm Msi EntityManager must have a valid transaction started.
@@ -225,8 +221,8 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
             peptMatch, msiResultSet, storedMsiSearch)
         }
 
-        /* proteinMatchSeqDatabases and proteinMatchSequenceMatches Maps for postponed tasks :
-         * after flushing of Msi EntityManager */
+        /* Fill proteinMatchSeqDatabases and proteinMatchSequenceMatches Maps for postponed handling
+         * (after flushing of Msi EntityManager) */
         val proteinMatchSeqDatabases = mutable.Map.empty[MsiProteinMatch, Array[Int]]
 
         val proteinMatchSequenceMatches = mutable.Map.empty[MsiProteinMatch, Array[SequenceMatch]]
@@ -245,25 +241,30 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
             proteinMatchSequenceMatches += msiProteinMatch -> sequenceMatches
           }
 
-        } // End loop for each ProteinMatch
+        } // End loop for each proteinMatch
 
         // TODO handle ResultSet.children    Uniquement pour le grouping ?
 
-        msiEm.flush() // FLUSH to retrieve Msi ResultSet Id
+        msiEm.flush() // FLUSH to handle ProteinMatchSeqDatabaseMap and proteinMatchSequenceMatches and retrieve Msi ResultSet Id
 
-        if (!proteinMatchSeqDatabases.isEmpty || !proteinMatchSequenceMatches.isEmpty) {
-          logger.debug("Handling proteinMatchSeqDatabases and proteinMatchSequenceMatches after flushing of Msi EntityManager")
+        if (!proteinMatchSeqDatabases.isEmpty) {
+          logger.debug("Handling proteinMatchSeqDatabases after flushing of Msi EntityManager")
 
-          /* Handle ProteinMatchSeqDatabaseMap after having persisted MsiProteinMatches, SeqDatabases and current MsiResultSet */
+          /* Handle proteinMatchSeqDatabaseMap after having persisted MsiProteinMatches, SeqDatabases and current MsiResultSet */
           for (pMSDEntry <- proteinMatchSeqDatabases; seqDatabaseId <- pMSDEntry._2) {
             bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId, seqDatabaseId, msiResultSet)
           }
 
-          /* Handle proteinMatchSequenceMatches after having persisted MsiProteinMatches, MsiPeptideMatches and current MsiResultSet */
-          val updatePeptideCountQuery = storerContext.msiEm.createQuery("update fr.proline.core.orm.msi.ProteinMatch pm set pm.peptideCount =" +
-            " (select count (distinct sm.id.peptideId) from fr.proline.core.orm.msi.SequenceMatch sm where sm.id.proteinMatchId = :proteineMatchId)" +
-            " where pm.id = :proteineMatchId")
+        } // End if (proteinMatchSeqDatabases is not empty)
 
+        if (!proteinMatchSequenceMatches.isEmpty) {
+          logger.debug("Handling proteinMatchSequenceMatches and ProteinMatch.peptideCount after flushing of Msi EntityManager")
+
+          val updatePeptideCountQuery = storerContext.msiEm.createQuery("update fr.proline.core.orm.msi.ProteinMatch pm set pm.peptideCount =" +
+            " (select count (distinct sm.id.peptideId) from fr.proline.core.orm.msi.SequenceMatch sm where sm.id.proteinMatchId = :proteinMatchId)" +
+            " where pm.id = :proteinMatchId")
+
+          /* Handle proteinMatchSequenceMatches after having persisted MsiProteinMatches, MsiPeptideMatches and current MsiResultSet */
           for (pMSMEntry <- proteinMatchSequenceMatches) {
             val msiProteinMatchId = pMSMEntry._1.getId.intValue
 
@@ -271,15 +272,15 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
               createSequenceMatch(storerContext, sequenceMatch, msiProteinMatchId, msiResultSet.getId)
             } // End loop for each sequenceMatch
 
-            /* Update ProteineMatch.peptideCount */
-            updatePeptideCountQuery.setParameter("proteineMatchId", msiProteinMatchId)
+            /* Update ProteinMatch.peptideCount after having persisted sequenceMatches for current MsiProteinMatch  */
+            updatePeptideCountQuery.setParameter("proteinMatchId", msiProteinMatchId)
 
             val updateResult = updatePeptideCountQuery.executeUpdate()
 
             logger.debug("ProteinMatch #" + msiProteinMatchId + " peptideCount updated: " + updateResult)
-          } // End loop for each Msi ProteineMatch
+          } // End loop for each Msi ProteinMatch
 
-        } // End if (postponed Maps are not empty)
+        } // End if (proteinMatchSequenceMatches is not empty)
 
         msiResultSet.getId
       } // End if (omResultSetId <= 0)
@@ -317,7 +318,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
    * Persists a MSISearch object into Msi Db. (already persisted MSISearches are cached into {{{storerContext}}} object
    * and can be retrieved via retrieveStoredMsiSearch() method).
    *
-   * StoreXXX() methods flush Msi EntityManager.
+   * StoreXXX() methods '''flush''' Msi {{{EntityManager}}}.
    *
    * @param search MSISearch object, must not be {{{null}}}
    *
@@ -379,7 +380,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
         msiEm.persist(msiSearch)
 
-        msiEm.flush() // FLUSH to retrieve persisted Id
+        msiEm.flush() // FLUSH to retrieve Msi MsiSearch Id
 
         knownMsiSearchs += omMsiSearchId -> msiSearch
 
@@ -421,7 +422,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
    * Persists a Peaklist object into Msi Db. (already persisted Peaklist are cached into {{{storerContext}}} object
    * and can be retrieved via retrieveStoredPeaklist() method).
    *
-   * StoreXXX() methods flush Msi EntityManager.
+   * StoreXXX() methods '''flush''' Msi {{{EntityManager}}}.
    *
    * @param peakList Peaklist object, must not be {{{null}}}
    *
@@ -477,7 +478,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
         msiEm.persist(msiPeaklist)
 
-        msiEm.flush() // FLUSH to retrieve persisted Id
+        msiEm.flush() // FLUSH to retrieve Msi Peaklist Id
 
         knownPeaklists += omPeaklistId -> msiPeaklist
 
@@ -643,7 +644,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
       }
 
-      /* MsiSearchSetting must be in persistence context before calling bindUsedPtm */
+      /* MsiSearchSetting must be in persistence context before calling bindUsedPtm() methods */
       val psPtmRepo = new PsPtmRepository(storerContext.psEm)
 
       for (variablePtmDef <- searchSettings.variablePtmDefs) {
@@ -872,7 +873,8 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
       if (msiPtmSpecificity == null) {
         /* Try to load from Ps Db by name, location and residue */
-        val psPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(ptmDefinition.names.shortName, ptmDefinition.location, StringUtils.convertCharResidueToString(ptmDefinition.residue))
+        val psPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(ptmDefinition.names.shortName, ptmDefinition.location,
+          StringUtils.convertCharResidueToString(ptmDefinition.residue))
 
         if (psPtmSpecificity == null) {
           logger.warn("PtmSpecificity [" + ptmDefinition.names.shortName + "] NOT found in Ps Db")
@@ -938,7 +940,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
     /* These are mutable Collections : found and created Peptides are removed by the algo */
     val remainingPeptides = mutable.Map.empty[PeptideIdent, Peptide]
-    val remainingOmPeptidesIds = mutable.Set.empty[Int] // Keep OM Peptide Ids > 0
+    val remainingOmPeptidesIds = mutable.Set.empty[Int] // Keep OM Peptides whose Id > 0
 
     for (peptide <- peptides) {
       val peptIdent = new PeptideIdent(peptide.sequence, peptide.ptmString)
@@ -956,7 +958,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
     }
 
-    /* Retrieve all known Peptides from Msi Db by omIds > 0 */
+    /* Retrieve all known Peptides from Msi Db by OM Ids > 0 */
     if (!remainingOmPeptidesIds.isEmpty) {
       logger.debug("Trying to retrieve " + remainingOmPeptidesIds.size + " Peptides from Msi by Ids")
 
@@ -980,7 +982,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
     }
 
-    /* Retrieve all known Peptides from Ps Db by omIds > 0 */
+    /* Retrieve all known Peptides from Ps Db by OM Ids > 0 */
     val psPeptideRepo = new PsPeptideRepository(storerContext.psEm)
 
     if (!remainingOmPeptidesIds.isEmpty) {
@@ -1095,12 +1097,11 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
         psEm.persist(newPsPeptide)
 
-        /*  PsPeptide must be in persistence context before calling bindPeptidePtm() */
+        /*  PsPeptide must be in persistence context before calling bindPeptidePtm() method */
         if ((peptide.ptms != null) && !peptide.ptms.isEmpty) {
 
           for (locatedPtm <- peptide.ptms) {
             bindPeptidePtm(storerContext, psPtmRepo, newPsPeptide, locatedPtm)
-
           }
 
         }
@@ -1336,7 +1337,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
           // TODO Spectrums should be persisted before RsStorer (with PeakList entity)
           if (omSpectrumId > 0) {
-            val msiSpectrum = msiEm.getReference(classOf[MsiSpectrum], omSpectrumId) // Must exist in Msi Db if OM Id > 0
+            val msiSpectrum = msiEm.find(classOf[MsiSpectrum], omSpectrumId)
 
             if (msiSpectrum == null) {
               throw new IllegalArgumentException("Spectrum #" + omSpectrumId + " NOT found in Msi Db")
@@ -1704,7 +1705,8 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
     if (psPtmSpecificity == null) {
       /* Try to load from Ps Db by name, location and residue */
-      psPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(ptmDefinition.names.shortName, ptmDefinition.location, StringUtils.convertCharResidueToString(ptmDefinition.residue))
+      psPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(ptmDefinition.names.shortName, ptmDefinition.location,
+        StringUtils.convertCharResidueToString(ptmDefinition.residue))
     }
 
     if (psPtmSpecificity == null) {
@@ -1764,7 +1766,6 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
     }
 
-    /* No need to re-attach msiSeqDatabase object: only retrieve persisted Primary key */
     val msiSeqDatabase = retrieveMsiSeqDatabase(seqDatabaseId)
 
     if (msiSeqDatabase == null) {
@@ -1775,7 +1776,9 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
       proteinMatchSeqDatabaseMapPK.setSeqDatabaseId(msiSeqDatabase.getId)
 
       val msiProteinMatchSeqDatabase = new MsiProteinMatchSeqDatabaseMap()
+
       // TODO handle serializedProperties
+
       msiProteinMatchSeqDatabase.setId(proteinMatchSeqDatabaseMapPK)
       msiProteinMatchSeqDatabase.setResultSetId(msiResultSet)
 
