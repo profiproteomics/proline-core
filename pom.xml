@@ -312,7 +312,7 @@
   </dependencyManagement>
 
   <properties>
-    <encoding>UTF-8</encoding>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
 </project>
