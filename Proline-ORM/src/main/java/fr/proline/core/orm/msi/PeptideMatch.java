@@ -100,6 +100,9 @@ public class PeptideMatch implements Serializable {
     Map<String, Integer> objectTreeIdByName;  
  	
  	
+    // Transient Variable not saved in database
+    @Transient private Peptide peptide = null;
+ 	
     public PeptideMatch() {
     }
 
@@ -241,4 +244,18 @@ public class PeptideMatch implements Serializable {
 			this.objectTreeIdByName = new HashMap<String, Integer>();
 		this.objectTreeIdByName.put(schemaName, objectId);
 	}
+	
+	/**
+	 * Get of Transient peptide, Must be set by the user first.
+	 * @return
+	 */
+	public Peptide getTransientPeptide() {
+		return peptide;
+	}
+
+	public void setTransientPeptide(Peptide peptide) {
+		this.peptide = peptide;
+	}
+	
+	
 }

@@ -2,6 +2,7 @@ package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
 import java.util.Set;
 
 
@@ -55,6 +56,10 @@ public class PeptideSet implements Serializable {
 		)
 	private Set<ProteinMatch> proteinMatches;
 
+    // Transient Variables not saved in database
+ 	@Transient private PeptideInstance[] peptideInstances = null;
+    
+    
     public PeptideSet() {
     }
 
@@ -128,6 +133,18 @@ public class PeptideSet implements Serializable {
 
 	public void setProteinMatches(Set<ProteinMatch> proteinMatches) {
 		this.proteinMatches = proteinMatches;
+	}
+	
+	/**
+	 * Get of Transient peptideInstances, Must be set by the user first.
+	 * @return
+	 */
+	public PeptideInstance[] getTransientPeptideInstances() {
+		return peptideInstances;
+	}
+
+	public void setTransientProteinSets(PeptideInstance[] peptideInstances) {
+		this.peptideInstances = peptideInstances;
 	}
 	
 }

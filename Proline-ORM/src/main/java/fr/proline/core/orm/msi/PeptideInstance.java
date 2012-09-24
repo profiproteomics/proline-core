@@ -84,6 +84,9 @@ public class PeptideInstance implements Serializable {
     public PeptideInstance() {
     }*/
 
+    //Transient Variable not saved in database
+    @Transient private PeptideMatch bestPeptideMatch = null;
+	
 	public Integer getId() {
 		return this.id;
 	}
@@ -204,4 +207,17 @@ public class PeptideInstance implements Serializable {
 		this.peptidesMatches = peptidesMatches;
 	}*/
 	
+	/**
+	 * Get of Transient peptideSet, Must be set by the user first.
+	 * @return
+	 */
+	public PeptideMatch getTransientBestPeptideMatch() {
+		return bestPeptideMatch;
+	}
+
+	public void setTransientBestPeptideMatch(PeptideMatch bestPeptideMatch) {
+		this.bestPeptideMatch = bestPeptideMatch;
+	}
+  
+  
 }
