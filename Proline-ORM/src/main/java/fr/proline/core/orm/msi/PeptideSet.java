@@ -143,7 +143,7 @@ public class PeptideSet implements Serializable {
 		return peptideInstances;
 	}
 
-	public void setTransientProteinSets(PeptideInstance[] peptideInstances) {
+	public void setTransientPeptideInstances(PeptideInstance[] peptideInstances) {
 		this.peptideInstances = peptideInstances;
 	}
 	
