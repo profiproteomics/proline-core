@@ -105,4 +105,15 @@ package object sql {
     implicit def enumValueToString(v: Enumeration#Value): String = v.toString
     
   }
+  
+    
+  object TrailingZerosStripper {
+    
+    private val decimalParser = """(\d+\.\d*?)0*$""".r
+    
+    def apply( decimalAsStr: String ): String = {
+      val decimalParser(compactDecimal) = decimalAsStr
+      compactDecimal
+    }
+  }
 }
