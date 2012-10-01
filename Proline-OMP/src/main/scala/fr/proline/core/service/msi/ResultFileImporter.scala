@@ -11,14 +11,13 @@ import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.msi.MsiSearchStorer
-import fr.proline.core.om.storer.msi.PeaklistStorer
 import fr.proline.core.service.IService
-import fr.proline.core.om.storer.msi.PeaklistStorer
 import fr.proline.core.om.storer.msi.MsiSearchStorer
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.storer.msi.impl.JPARsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import org.apache.commons.lang3.StringUtils
+import fr.proline.core.om.model.msi.PeaklistSoftware
 
 class ResultFileImporter( dbMgnt: DatabaseManagement,
                           projectId: Int,
@@ -89,13 +88,13 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
       // Insert instrument config in the MSIdb         
       rsStorer.insertInstrumentConfig( instrumentConfig ,  this.stContext)
     
-	  // Retrieve MSISearch and related MS queries
-	  val msiSearch = resultFile.msiSearch
-	  val msQueryByInitialId = resultFile.msQueryByInitialId
-	  var msQueries: List[fr.proline.core.om.model.msi.MsQuery] = null
-	  if( msQueryByInitialId != null ) {
-		msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
-	  }
+		  // Retrieve MSISearch and related MS queries
+		  val msiSearch = resultFile.msiSearch
+		  val msQueryByInitialId = resultFile.msQueryByInitialId
+		  var msQueries: List[fr.proline.core.om.model.msi.MsQuery] = null
+		  if( msQueryByInitialId != null ) {
+			msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
+		  }
 	      
       //  // Store the peaklist    
       //  val spectrumIdByTitle = peaklistStorer.storePeaklist( msiSearch.peakList, resultFile )//  VD Pour SQLStorer Only  TODO A RERENDRE AVEC SQLRsStorer 
@@ -103,25 +102,29 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
 	    
 	  // Store the MSI search with related search settings and MS queries    
       //  val seqDbIdByTmpId = msiSearchStorer.storeMsiSearch( msiSearch, msQueries, spectrumIdByTitle ) // VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 
-	  >>>
+      >>>
 	    	  
 	    
-	  // Load target result set
-	  val targetRs = resultFile.getResultSet(false)
-	  if(StringUtils.isEmpty(targetRs.name))
-	      targetRs.name = msiSearch.title 
-	    	    
+		  // Load target result set
+		  val targetRs = resultFile.getResultSet(false)
+		  if(StringUtils.isEmpty(targetRs.name))
+		      targetRs.name = msiSearch.title 
+		  if(targetRs.msiSearch != null && targetRs.msiSearch.peakList.peaklistSoftware ==null){
+		          //TODO : Define how to get this information !
+		    	targetRs.msiSearch.peakList.peaklistSoftware = _getPeaklistSoftware("Default_PL","0.1" )		  	
+		  }
+		    	    
 	  //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
 	
 	  // Load and store decoy result set if it exists
-	  if( resultFile.hasDecoyResultSet ) {
-	  	 val decoyRs = resultFile.getResultSet(true)
-	  	 if(StringUtils.isEmpty(decoyRs.name))
-	  		 decoyRs.name = msiSearch.title
+		  if( resultFile.hasDecoyResultSet ) {
+		  	 val decoyRs = resultFile.getResultSet(true)
+		  	 if(StringUtils.isEmpty(decoyRs.name))
+		  		 decoyRs.name = msiSearch.title
 	  		 
 //  	  rsStorer.storeResultSet(decoyRs,seqDbIdByTmpId) // VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 	
-	     targetRs.decoyResultSet = Some(decoyRs)
-	     >>>
+		     targetRs.decoyResultSet = Some(decoyRs)
+		     >>>
   	  }
        else targetRs.decoyResultSet = None
 
@@ -134,18 +137,46 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
       msiTransaction.commit()
       msiTransacOk = true
     } finally {
+     
       /* Check msiTransaction integrity */
       if ((msiTransaction != null) && !msiTransacOk) {
         try {
+          if(stContext.msiDB.isInTransaction)
+          	 stContext.msiDB.rollbackTransaction
           msiTransaction.rollback()
         } catch {
           case ex => logger.error("Error rollbacking Msi Db transaction", ex)
         }
-      }
+      } else 
+         if(stContext.msiDB.isInTransaction)
+        	 stContext.msiDB.rollbackTransaction
     }
     
     this.beforeInterruption()    
     msiTransacOk
+  }
+
+  private def _getPeaklistSoftware( plName: String, plRevision: String ): PeaklistSoftware = {
+
+    var plSoftware: PeaklistSoftware = null
+    
+    val prepStmt = this.udsDb.getOrCreateConnection.prepareStatement("SELECT * FROM peaklist_software WHERE name= ? and version= ? ")
+    prepStmt.setString(1, plName)
+    prepStmt.setString(2, plRevision)
+    
+    val result = prepStmt.executeQuery ()  
+    if(result.next){
+      plSoftware = new PeaklistSoftware( id = result.getInt("id"),
+        name =result.getString("name"),
+        version =result.getString("version"))
+    }
+       
+    if ( plSoftware == null )
+      plSoftware = new PeaklistSoftware( id=  PeaklistSoftware.generateNewId,
+        name = "Default",
+        version = "0.1" )
+
+    plSoftware
   }
   
   private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
