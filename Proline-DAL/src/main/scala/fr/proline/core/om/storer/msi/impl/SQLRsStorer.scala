@@ -16,7 +16,8 @@ import fr.proline.core.dal.MsiDbPtmSpecificityTable
 import fr.proline.core.dal.MsiDbSeqDatabaseTable
 import fr.proline.core.dal.MsiDbMsQueryTable
 import fr.proline.core.utils.sql._
-class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter) extends IRsStorer with Logging {
+import fr.proline.core.om.storer.msi.IPeaklistWriter
+class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends IRsStorer with Logging {
 
   import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._
@@ -424,70 +425,17 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter) 
     }
   }
 
-  
-  
-  
-  // ****************** PeakList Specific storer methods
-    object TrailingZerosStripper {
     
-    private val decimalParser = """(\d+\.\d*?)0*$""".r
-    
-    def apply( decimalAsStr: String ): String = {
-      val decimalParser(compactDecimal) = decimalAsStr
-      compactDecimal
-    }
-  }
-    
-  import fr.proline.core.utils.sql.newDecimalFormat
-  
-  protected val doubleFormatter = newDecimalFormat("0.000000")
-  protected val floatFormatter = newDecimalFormat("0.00")
-  
-def storePeaklist( peaklist: Peaklist, context : StorerContext): Int = {
-    import fr.proline.core.dal.MsiDbPeaklistTable
-    
+  def storePeaklist( peaklist: Peaklist, context : StorerContext): Int = {   
     logger.info( "storing peaklist..." )
-          
-    val peaklistColsList = MsiDbPeaklistTable.getColumnsAsStrList().filter { _ != "id" } 
-    val peaklistInsertQuery = MsiDbPeaklistTable.makeInsertQuery( peaklistColsList )
-    
-    val msiDbTx = this.msiDb1.getOrCreateTransaction()
-    msiDbTx.executeBatch( peaklistInsertQuery, true ) { stmt =>
-      stmt.executeWith(
-            peaklist.fileType,
-            peaklist.path,
-            peaklist.rawFileName,
-            peaklist.msLevel,
-            "xz", // none | lzma | xz TODO: create an enumeration near to the Peaklist class
-            Option(null),
-            1 // peaklist.peaklistSoftware.id
-          )
-          
-      peaklist.id = this.msiDb1.extractGeneratedInt( stmt.wrapped )
-    }   
-    peaklist.id 
+    _plWriter.storePeaklist(peaklist, context)
+
   }
   
   def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext = {
-     import fr.proline.core.dal.MsiDbSpectrumTable
-     
-    logger.info( "storing spectra..." )
- 
-    val spectrumColsList = MsiDbSpectrumTable.getColumnsAsStrList().filter { _ != "id" }
-    val spectrumInsertQuery = MsiDbSpectrumTable.makeInsertQuery( spectrumColsList )
-    
-    // Insert corresponding spectra
-    val spectrumIdByTitle = collection.immutable.Map.newBuilder[String,Int]
-    this.msiDb1.getOrCreateTransaction.executeBatch( spectrumInsertQuery ) { stmt =>
-      peaklistContainer.eachSpectrum { spectrum => 
-        this._insertSpectrum( stmt, spectrum, peaklistId, context )
-        spectrumIdByTitle += ( spectrum.title -> spectrum.id )
-      }
-    }    
-    
-   context.spectrumIdByTitle = spectrumIdByTitle.result()
-   context
-  }
+      logger.info( "storing spectra..." )
+      _plWriter.storeSpectra(peaklistId, peaklistContainer, context)
+   }
   
   def storeMsiSearch(msiSearch : MSISearch, context : StorerContext) : Int = {
     val ss = msiSearch.searchSettings
@@ -596,56 +544,7 @@ def storePeaklist( peaklist: Peaklist, context : StorerContext): Int = {
     msQuery.id = context.msiDB.extractGeneratedInt( stmt.wrapped )
   }
     
-  private def _insertSpectrum( stmt: ReusableStatement, spectrum: Spectrum, peaklistId: Int, context : StorerContext ): Unit = {
-    
-    // Define some vars
-    val precursorIntensity = if( !spectrum.precursorIntensity.isNaN ) Some(spectrum.precursorIntensity) else Option.empty[Float]
-    val firstCycle = if( spectrum.firstCycle > 0 ) Some(spectrum.firstCycle) else Option.empty[Int]
-    val lastCycle = if( spectrum.lastCycle > 0 ) Some(spectrum.lastCycle) else Option.empty[Int]
-    val firstScan = if( spectrum.firstScan > 0 ) Some(spectrum.firstScan) else Option.empty[Int]
-    val lastScan = if( spectrum.lastScan > 0 ) Some(spectrum.lastScan) else Option.empty[Int]
-    val firstTime = if( spectrum.firstTime > 0 ) Some(spectrum.firstTime) else Option.empty[Float]
-    val lastTime = if( spectrum.lastTime > 0 ) Some(spectrum.lastTime) else Option.empty[Float]
-    
-    // moz and intensity lists are formatted as numbers separated by spaces
-    val tzs = TrailingZerosStripper
-    val mozList = spectrum.mozList.getOrElse(Array.empty[Double]).map { m => tzs(this.doubleFormatter.format( m )) } mkString(" ")
-    val intList = spectrum.intensityList.getOrElse(Array.empty[Float]).map { i => tzs(this.floatFormatter.format( i )) } mkString(" ")
-    
-    // Compress peaks
-    val compressedMozList = EasyLzma.compress( mozList.getBytes )
-    val compressedIntList = EasyLzma.compress( intList.getBytes )
-    
-    stmt <<
-      spectrum.title <<
-      spectrum.precursorMoz <<
-      precursorIntensity <<
-      spectrum.precursorCharge <<
-      spectrum.isSummed <<
-      firstCycle <<
-      lastCycle <<
-      firstScan <<
-      lastScan <<
-      firstTime <<
-      lastTime <<
-      Option(null) <<
-      Option(null) <<
-      spectrum.peaksCount <<
-      Option(null) <<
-      peaklistId <<
-      spectrum.instrumentConfigId
-    
-    // Override BLOB values using JDBC
-    stmt.wrapped.setBytes(12,compressedMozList)
-    stmt.wrapped.setBytes(13,compressedIntList)
-    
-    // Execute statement
-    stmt.execute()
-
-    spectrum.id = context.msiDB.extractGeneratedInt( stmt.wrapped )
-    
-    ()
-  }
+  
   private def _insertSeqDatabase( seqDatabase: SeqDatabase ): Unit = {
     
     val fasta_path = seqDatabase.filePath
