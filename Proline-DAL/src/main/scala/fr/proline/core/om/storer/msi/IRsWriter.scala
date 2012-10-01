@@ -1,11 +1,12 @@
 package fr.proline.core.om.storer.msi
 
-import fr.proline.core.om.model.msi.Protein
-import fr.proline.core.dal.MsiDb
-import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.ResultSet
 import scala.collection.mutable.HashMap
+
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.core.dal.{MsiDb, DatabaseManagement}
+import fr.proline.core.om.model.msi.{ResultSet, Protein, Peptide, IPeaklistContainer}
+import fr.proline.core.om.storer.msi.impl.SQLRsStorer
 
 trait IRsWriter extends Logging {
   
@@ -36,4 +37,5 @@ trait IRsWriter extends Logging {
   def storeRsSequenceMatches( rs: ResultSet ): Int
   
 }
+
 

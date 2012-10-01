@@ -115,22 +115,27 @@ object RsStorer {
   import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
 
   def apply(dbMgmt: DatabaseManagement, msiDb: MsiDb): IRsStorer = {
+    if(msiDb == null)
+      new JPARsStorer( dbMgmt, null, null) //Call JPARsStorer
+    
     msiDb.config.driver match {
-    case "org.postgresql.Driver" => new SQLRsStorer( dbMgmt, new PgRsWriter( msiDb ) )
-    case "org.sqlite.JDBC" => new SQLRsStorer( dbMgmt, new SQLiteRsWriter(msiDb ))
+    	case "org.postgresql.Driver" => new SQLRsStorer( dbMgmt, new PgRsWriter( msiDb ), IPeaklistWriter.apply(msiDb.config.driver.toString) )
+    	case "org.sqlite.JDBC" => new SQLRsStorer( dbMgmt, new SQLiteRsWriter(msiDb ), IPeaklistWriter.apply(msiDb.config.driver.toString))
 //    case _ => new RsStorer( dbMgmt, new GenericRsWriter(msiDb )) 
-      case _ => new JPARsStorer( dbMgmt, msiDb.dbConnector) //Call JPARsStorer
+      case _ => new JPARsStorer( dbMgmt, msiDb.dbConnector,IPeaklistWriter.apply(msiDb.config.driver.toString)) //Call JPARsStorer
     }
   }
   
   def apply(dbMgmt: DatabaseManagement, projectID: Int): IRsStorer = {
     val msiDbConnector = dbMgmt.getMSIDatabaseConnector(projectID,false)
-    msiDbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME) match {
-    case "org.postgresql.Driver" => new SQLRsStorer( dbMgmt, new PgRsWriter( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector))) )
-    case "org.sqlite.JDBC" => new SQLRsStorer( dbMgmt, new SQLiteRsWriter( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) ))
-//    case _ => new RsStorer( dbMgmt, new GenericRsWriter( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) ))
-     case _ => new JPARsStorer( dbMgmt, dbMgmt.getMSIDatabaseConnector(projectID, false)) //Call JPARsStorer
+    if(msiDbConnector == null)
+      new JPARsStorer( dbMgmt, msiDbConnector, null) //Call JPARsStorer
     
+    val driverName = msiDbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME) 
+    driverName match {
+    	case "org.postgresql.Driver" => new SQLRsStorer( dbMgmt, new PgRsWriter( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector))), IPeaklistWriter.apply(driverName) )
+    	case "org.sqlite.JDBC" => new SQLRsStorer( dbMgmt, new SQLiteRsWriter( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) ), IPeaklistWriter.apply(driverName))
+    	case _ => new JPARsStorer( dbMgmt, dbMgmt.getMSIDatabaseConnector(projectID, false), IPeaklistWriter.apply(driverName)) //Call JPARsStorer    
     }
   }
   
