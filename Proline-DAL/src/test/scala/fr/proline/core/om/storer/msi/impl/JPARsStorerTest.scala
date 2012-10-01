@@ -17,22 +17,27 @@ import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.repository.utils.DatabaseUtils
 import org.junit.Before
 import org.junit.After
+import fr.proline.core.orm.msi.MsiSearch
+import fr.proline.core.om.model.msi.MSISearch
+import fr.proline.core.om.model.msi.Peaklist
 
+
+@Test
 class JPARsStorerTest extends Logging {
 
   val milliToNanos = 1000000L
 
   val epsilon = 1e-6f // DeltaMoz are floats in DataBase, for double computations use 1e-14
   val msiTransaction = null
-  val pdiDBTestCase = new PDIDatabaseTestCase()
-  val msiDBTestCase = new MSIDatabaseTestCase()
-  val psDBTestCase = new PSDatabaseTestCase()
-  val udsDBTestCase = new UDSDatabaseTestCase()
+  var pdiDBTestCase = new PDIDatabaseTestCase()
+  var msiDBTestCase = new MSIDatabaseTestCase()
+  var psDBTestCase = new PSDatabaseTestCase()
+  var udsDBTestCase = new UDSDatabaseTestCase()
   
   var stContext: StorerContext = null
   var dbMgntTest : DatabaseManagementTestCase= null
   var storer : JPARsStorer = null
-  
+
   @Before
   def initTests()={
     logger.info("Initializing Dbs")    
@@ -63,7 +68,9 @@ class JPARsStorerTest extends Logging {
   
   @After
   def tearDown() = {
-    this.stContext.closeOpenedEM()
+    if(this.stContext != null)
+    	this.stContext.closeOpenedEM()
+    	
     pdiDBTestCase.tearDown()
     udsDBTestCase.tearDown()
     psDBTestCase.tearDown()
@@ -71,6 +78,61 @@ class JPARsStorerTest extends Logging {
     
     logger.info("Dbs succesfully closed")
   }
+  
+  /**
+   * Creates some ResultSets with {{{ResultSetFakeBuilder}}} from Proline-OM ''test'' project
+   * and persists them into Msi Db using a {{{JPARsStorer}}} instance.
+   */
+  //TODO : Creation d'un cas de figure qui leve une exception
+//  @Test
+//  def testRollBack() {
+//    import scala.collection.JavaConversions.collectionAsScalaIterable
+//     
+//    var start = System.nanoTime
+//    val rsb = new ResultSetFakeBuilder( 10, 2 )
+//
+//    val resultSet = rsb.toResultSet()
+//    var stop = System.nanoTime
+//    logger.info( "ResultSet creation time: " + ( ( stop - start ) / milliToNanos ) )
+//
+//    start = System.nanoTime
+//    storer.storeResultSet( resultSet, stContext )
+//    stop = System.nanoTime
+//
+//    logger.info( "ResultSet " + resultSet.id + " persisted time: " + ( ( stop - start ) / milliToNanos ) )
+//
+//    start = System.nanoTime
+//    val resultSet2 = new ResultSetFakeBuilder( 10, 2 ).toResultSet
+//    val errMsiSearchPL = new Peaklist(
+//         id= Peaklist.generateNewId,
+//         fileType= resultSet2.msiSearch.peakList.fileType,
+//         path= resultSet2.msiSearch.peakList.path,
+//         rawFileName= resultSet2.msiSearch.peakList.rawFileName,
+//         msLevel=  resultSet2.msiSearch.peakList.msLevel
+//     )
+//     
+//    val errMsiSearch = new MSISearch (
+//        id=resultSet.msiSearch.id,
+//        resultFileName=resultSet.msiSearch.resultFileName,
+//        submittedQueriesCount=resultSet.msiSearch.submittedQueriesCount,
+//        searchSettings=resultSet.msiSearch.searchSettings ,
+//        peakList = errMsiSearchPL,
+//        date = resultSet.msiSearch.date        
+//     )
+//
+//    resultSet2.msiSearch = errMsiSearch
+//    stop = System.nanoTime
+//    logger.info( "ResultSet 2 creation time: " + ( ( stop - start ) / milliToNanos ) )
+//    
+//    start = System.nanoTime
+//    storer.storeResultSet( resultSet2, stContext )
+//    stop = System.nanoTime
+//   
+//    val rsList : List[fr.proline.core.orm.msi.ResultSet] = stContext.msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet",classOf[fr.proline.core.orm.msi.ResultSet]).getResultList.toList
+//    assertEquals(1, rsList.size)
+//    assertEquals(resultSet.id, rsList(0).getId)
+//  }
+  
   /**
    * Creates some ResultSets with {{{ResultSetFakeBuilder}}} from Proline-OM ''test'' project
    * and persists them into Msi Db using a {{{JPARsStorer}}} instance.
@@ -79,12 +141,13 @@ class JPARsStorerTest extends Logging {
   def testRsStorer() {
   
     for (i <- 1 to 3) {
-      val msiTransaction = stContext.msiEm.getTransaction
-      var msiTransacOk: Boolean = false
+      //Fait par le Storer: Attentte partage transaction TODO
+//      val msiTransaction = stContext.msiEm.getTransaction
+//      var msiTransacOk: Boolean = false
       
-    	try {
-    		msiTransaction.begin()
-    		msiTransacOk = false
+//    	try {
+//    		msiTransaction.begin()
+//    		msiTransacOk = false
 
       	logger.info("Creating a new fake Result Set")
 
@@ -112,9 +175,9 @@ class JPARsStorerTest extends Logging {
       	start = System.nanoTime
       	storer.storeResultSet(resultSet, stContext)
       	stop = System.nanoTime
-
-      	msiTransaction.commit
-      	msiTransacOk = true
+////Fait par le Storer: Attentte partage transaction TODO
+//      	msiTransaction.commit
+//      	msiTransacOk = true
       	
       	logger.info("ResultSet persisted time: " + ((stop - start) / milliToNanos))
 
@@ -129,16 +192,17 @@ class JPARsStorerTest extends Logging {
       	assertTrue("Loaded ResultSet #" + resultSetId, loadedResultSet.isDefined)
 
       compareRs(resultSet, loadedResultSet.get)
-    	} finally{
-    	  /* Check msiTransaction integrity */
-    		if ((msiTransaction != null) && !msiTransacOk) {
-    			try {
-    				msiTransaction.rollback()
-    			} catch {
-          	case ex => logger.error("Error rollbacking Msi Db transaction", ex)
-    			}
-    		}
-    	} 
+      //Fait par le Storer: Attentte partage transaction TODO
+//    	} finally{
+//    	  /* Check msiTransaction integrity */
+//    		if ((msiTransaction != null) && !msiTransacOk) {
+//    			try {
+//    				msiTransaction.rollback()
+//    			} catch {
+//          	case ex => logger.error("Error rollbacking Msi Db transaction", ex)
+//    			}
+//    		}
+//    	} 
     }// End fo throw 3 RS
   }
 
