@@ -42,6 +42,7 @@ CREATE TABLE public.seq_db_release (
                 serialized_properties TEXT,
                 CONSTRAINT seq_db_release_pk PRIMARY KEY (id)
 );
+COMMENT ON COLUMN public.seq_db_release.date IS 'Expected date format: yyyymmdd';
 
 
 ALTER SEQUENCE public.seq_db_release_id_seq OWNED BY public.seq_db_release.id;

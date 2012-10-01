@@ -133,8 +133,8 @@ CREATE TABLE identification_fraction (
                 serialized_properties TEXT,
                 result_set_id INTEGER NOT NULL,
                 identification_id INTEGER NOT NULL,
-                run_id INTEGER NOT NULL,
-                raw_file_name TEXT(250) NOT NULL,
+                run_id INTEGER,
+                raw_file_name TEXT(250),
                 FOREIGN KEY (identification_id) REFERENCES identification (id),
                 FOREIGN KEY (run_id) REFERENCES run (id),
                 FOREIGN KEY (raw_file_name) REFERENCES raw_file (name)
@@ -205,8 +205,8 @@ CREATE TABLE object_tree_schema (
 CREATE TABLE peaklist_software (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT(100) NOT NULL,
-                version TEXT(100) NOT NULL,
-                serialized_properties TEXT NOT NULL,
+                version TEXT(100),
+                serialized_properties TEXT,
                 spec_title_parsing_rule_id INTEGER NOT NULL,
                 FOREIGN KEY (spec_title_parsing_rule_id) REFERENCES spec_title_parsing_rule (id)
 );
@@ -242,8 +242,9 @@ CREATE TABLE protein_match_decoy_rule (
 
 CREATE TABLE quant_channel (
                 id INTEGER NOT NULL,
-                context_key TEXT(100) NOT NULL,
+                number INTEGER NOT NULL,
                 name TEXT(100) NOT NULL,
+                context_key TEXT(100) NOT NULL,
                 serialized_properties TEXT,
                 lcms_map_id INTEGER,
                 ident_result_summary_id INTEGER NOT NULL,

@@ -28,8 +28,8 @@ COMMENT ON TABLE public.spec_title_parsing_rule IS 'Describe rules used to parse
 CREATE TABLE public.peaklist_software (
                 id IDENTITY NOT NULL,
                 name VARCHAR(100) NOT NULL,
-                version VARCHAR(100) NOT NULL,
-                serialized_properties LONGVARCHAR NOT NULL,
+                version VARCHAR(100),
+                serialized_properties LONGVARCHAR,
                 spec_title_parsing_rule_id INTEGER NOT NULL,
                 CONSTRAINT peaklist_software_pk PRIMARY KEY (id)
 );
@@ -303,8 +303,8 @@ CREATE TABLE public.identification_fraction (
                 serialized_properties LONGVARCHAR,
                 result_set_id INTEGER NOT NULL,
                 identification_id INTEGER NOT NULL,
-                run_id INTEGER NOT NULL,
-                raw_file_name VARCHAR(250) NOT NULL,
+                run_id INTEGER,
+                raw_file_name VARCHAR(250),
                 CONSTRAINT identification_fraction_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.identification_fraction IS 'The identification of a fraction. This table store the ''''result_set_id'''' representing the result_set of this fraction (identified peptides and proteins).';
@@ -359,7 +359,7 @@ CREATE TABLE public.quantitation (
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 description VARCHAR(1000),
-                keywords VARCHAR(250) NOT NULL,
+                keywords VARCHAR(250),
                 creation_timestamp TIMESTAMP NOT NULL,
                 modification_log LONGVARCHAR,
                 fraction_count INTEGER NOT NULL,
@@ -540,13 +540,14 @@ COMMENT ON COLUMN public.document.serialized_properties IS 'A JSON string which 
 
 CREATE TABLE public.quant_channel (
                 id INTEGER NOT NULL,
-                context_key VARCHAR(100) NOT NULL,
+                number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
+                context_key VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
                 lcms_map_id INTEGER,
                 ident_result_summary_id INTEGER NOT NULL,
                 quant_result_summary_id INTEGER,
-                quant_label_id INTEGER NOT NULL,
+                quant_label_id INTEGER,
                 sample_analysis_replicate_id INTEGER NOT NULL,
                 biological_sample_id INTEGER NOT NULL,
                 quantitation_fraction_id INTEGER NOT NULL,
@@ -554,9 +555,9 @@ CREATE TABLE public.quant_channel (
                 CONSTRAINT quant_channel_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.quant_channel IS 'A quanti channel represents all quantified peptides from a single replicate of a single fraction of a biological sample. UNIQUE(context_key, quantitation_fraction_id).';
+COMMENT ON COLUMN public.quant_channel.name IS 'TODO: allows NULL ?';
 COMMENT ON COLUMN public.quant_channel.context_key IS 'string representation of sample_number.replicate_number. This string is obtained by the concatenation of 
 biological_sample.number and sample_analysis_replicate.number';
-COMMENT ON COLUMN public.quant_channel.name IS 'TODO: allows NULL ?';
 COMMENT ON COLUMN public.quant_channel.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
