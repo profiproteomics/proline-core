@@ -26,6 +26,9 @@ public class QuantitationChannel implements Serializable {
 	@Column(name="lcms_map_id")
 	private Integer lcmsMapId;
 
+	@Column(name="number")
+	private Integer number;
+	
 	private String name;
 
 	@Column(name="quant_result_summary_id")
@@ -77,6 +80,14 @@ public class QuantitationChannel implements Serializable {
 		this.contextKey = contextKey;
 	}
 
+	public Integer getNumber() {
+		return this.number;
+	}
+
+	public void setNumber(Integer number) {
+		this.number = number;
+	}
+	
 	public Integer getIdentResultSummaryId() {
 		return this.identResultSummaryId;
 	}
