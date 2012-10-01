@@ -19,7 +19,7 @@ import javax.persistence.Persistence
  * @param spectrumIdByTitle already persisted Msi Spectrum Ids retrievable by {{{Spectrum.title}}} string.
  * The map can be {{{null}}}
  */
-class StorerContext(val dbManagement: DatabaseManagement, msiConnector: DatabaseConnector = null) extends Logging {
+class StorerContext(val dbManagement: DatabaseManagement, val msiConnector: DatabaseConnector = null) extends Logging {
 
   type MsiPeptide = fr.proline.core.orm.msi.Peptide
 
