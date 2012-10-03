@@ -4,6 +4,7 @@ import static javax.persistence.CascadeType.PERSIST;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -100,14 +101,47 @@ public class PtmSpecificity implements Serializable {
 	this.classification = classification;
     }
 
-    public boolean addEvidence(PtmEvidence evidence) {
-	if (this.evidences == null)
-	    this.evidences = new ArrayList<PtmEvidence>();
-	return this.evidences.add(evidence);
+    public void setEvidences(final List<PtmEvidence> evids) {
+	evidences = evids;
     }
 
     public List<PtmEvidence> getEvidences() {
 	return evidences;
+    }
+
+    public void addEvidence(final PtmEvidence evidence) {
+
+	if (evidence != null) {
+	    List<PtmEvidence> evids = getEvidences();
+
+	    if (evids == null) {
+		evids = new ArrayList<PtmEvidence>();
+
+		setEvidences(evids);
+	    }
+
+	    evids.add(evidence);
+	}
+
+    }
+
+    public void removeEvidence(final PtmEvidence evidence) {
+
+	final List<PtmEvidence> evids = getEvidences();
+	if (evids != null) {
+	    Iterator<PtmEvidence> iter = evids.iterator();
+
+	    while (iter.hasNext()) {
+		final PtmEvidence value = iter.next();
+
+		if ((value == null) || value.equals(evidence)) {
+		    iter.remove();
+		}
+
+	    }
+
+	}
+
     }
 
 }

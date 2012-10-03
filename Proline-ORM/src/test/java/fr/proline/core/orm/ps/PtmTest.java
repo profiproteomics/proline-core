@@ -1,9 +1,9 @@
 package fr.proline.core.orm.ps;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import java.util.Set;
 
@@ -58,6 +58,13 @@ public class PtmTest extends DatabaseTestCase {
 		Ptm phosPtm3 = ptmRepo.findPtmForName("PHosPHorylation");
 		assertThat(phosPtm3, notNullValue());
 		assertThat(phosPtm3, sameInstance(phosPtm));
+	}
+	
+	@Test
+	public void findPtmClassification() {
+	    final PtmClassification classification = ptmRepo.findPtmClassificationForName("Chemical derivative");
+
+	    assertNotNull("Chemical derivative PtmClassification", classification);
 	}
 	
 	@Override

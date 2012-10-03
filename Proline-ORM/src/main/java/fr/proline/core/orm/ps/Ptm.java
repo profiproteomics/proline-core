@@ -21,8 +21,9 @@ import javax.persistence.OneToMany;
  */
 @Entity
 @NamedQuery(name = "findPsPtmForName", query = "select p from fr.proline.core.orm.ps.Ptm p"
-	+ " where (UPPER(p.shortName) = :name) or (UPPER(p.fullName) = :name)")
+	+ " where (lower(p.shortName) = :name) or (lower(p.fullName) = :name)")
 public class Ptm implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -93,24 +94,70 @@ public class Ptm implements Serializable {
 	this.unimodId = unimodId;
     }
 
-    public Set<PtmEvidence> getEvidences() {
-	return this.evidences;
+    public void setEvidences(final Set<PtmEvidence> evids) {
+	evidences = evids;
     }
 
-    public boolean addEvidence(PtmEvidence evidence) {
-	if (this.evidences == null)
-	    this.evidences = new HashSet<PtmEvidence>();
-	return this.evidences.add(evidence);
+    public Set<PtmEvidence> getEvidences() {
+	return evidences;
+    }
+
+    public void addEvidence(final PtmEvidence evidence) {
+
+	if (evidence != null) {
+	    Set<PtmEvidence> evids = getEvidences();
+
+	    if (evids == null) {
+		evids = new HashSet<PtmEvidence>();
+
+		setEvidences(evids);
+	    }
+
+	    evids.add(evidence);
+	}
+
+    }
+
+    public void removeEvidence(final PtmEvidence evidence) {
+
+	final Set<PtmEvidence> evids = getEvidences();
+	if (evids != null) {
+	    evids.remove(evidence);
+	}
+
+    }
+
+    public void setSpecificities(final Set<PtmSpecificity> specs) {
+	specificities = specs;
     }
 
     public Set<PtmSpecificity> getSpecificities() {
-	return this.specificities;
+	return specificities;
     }
 
-    public boolean addSpecificity(PtmSpecificity specificity) {
-	if (specificities == null)
-	    specificities = new HashSet<PtmSpecificity>();
-	return specificities.add(specificity);
+    public void addSpecificity(final PtmSpecificity specificity) {
+
+	if (specificity != null) {
+	    Set<PtmSpecificity> specs = getSpecificities();
+
+	    if (specs == null) {
+		specs = new HashSet<PtmSpecificity>();
+
+		setSpecificities(specs);
+	    }
+
+	    specs.add(specificity);
+	}
+
+    }
+
+    public void removeSpecificity(final PtmSpecificity specificity) {
+
+	final Set<PtmSpecificity> specs = getSpecificities();
+	if (specs != null) {
+	    specs.remove(specificity);
+	}
+
     }
 
 }
