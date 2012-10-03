@@ -237,7 +237,8 @@ Allowed values are: Anywhere, Any N-term, Any C-term, Protein N-term, Protein C-
 Choose &quot;Anywhere&quot; if the modification applies to a residue independent of its position, (e.g. oxidation of methionine). Choose &quot;Any N-term&quot; or &quot;Any C-term&quot; if the modification applies to a residue only when it is at a peptide terminus, (e.g. conversion of methionine to homoserine). Choose &quot;Protein N-term&quot; or &quot;Protein C-term&quot; if the modification only applies to the original terminus of the intact protein, not new peptide termini created by digestion, (e.g. post-translational acetylation of the protein amino terminus).</remarks>
     </column>
     <column id="COL59" populated="true" UUID="a7e83ac7-2e68-4de2-b105-1b322f17adfd" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_residue_seq" defaultValue="" name="residue" nullable="1" physicalName="residue" precision="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="1" userDefinedTypeUUID="67ddc63f-5541-4dd1-9236-632d9d155e80" >
-     <remarks>The symbol of the specific residue for this PTM.</remarks>
+     <remarks>The symbol of the specific residue for this PTM (Unimod &quot;site&quot; xml attribute).
+Null if Unimod &quot;site&quot; xml attribute is &quot;C-term&quot; or &quot;N-term&quot;.</remarks>
     </column>
     <column id="COL60" populated="true" UUID="3c757957-7a02-49d5-8cfc-f020aa0de82d" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
