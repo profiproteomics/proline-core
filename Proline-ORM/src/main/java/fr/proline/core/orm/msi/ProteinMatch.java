@@ -80,8 +80,9 @@ public class ProteinMatch implements Serializable {
     @OneToMany(mappedBy = "proteinMatch")
     private Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems;
 
-	// Transient Variable not saved in database
+	// Transient Variables not saved in database
     @Transient private PeptideSet peptideSet = null;
+    @Transient private double     mass       = -1;
     
     public ProteinMatch() {
     }
@@ -214,16 +215,21 @@ public class ProteinMatch implements Serializable {
 	this.isLastBioSequence = isLastBioSequence;
     }
     
-	/**
-	 * Get of Transient peptideSet, Must be set by the user first.
-	 * @return
-	 */
 	public PeptideSet getTransientPeptideSet() {
 		return peptideSet;
 	}
 
 	public void setTransientPeptideSet(PeptideSet peptideSet) {
 		this.peptideSet = peptideSet;
+	}
+	
+
+	public double getTransientMass() {
+		return mass;
+	}
+
+	public void setTransientMass(double mass) {
+		this.mass = mass;
 	}
 
 }

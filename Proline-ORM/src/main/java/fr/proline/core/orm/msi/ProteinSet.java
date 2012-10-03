@@ -61,10 +61,8 @@ public class ProteinSet implements Serializable {
    Map<String, Integer> objectTreeIdByName;  
 	
 	
-	// Transient Variables not saved in database
-	@Transient private ProteinMatch   typicalProteinMatch = null;
-	@Transient private ProteinMatch[] sameSet             = null;
-	@Transient private ProteinMatch[] subSet              = null;
+	// Transient data not saved in database
+	@Transient private TransientProteinSetData transientProteinSetData = null;
 	
     public ProteinSet() {
     }
@@ -167,40 +165,84 @@ public class ProteinSet implements Serializable {
 		this.objectTreeIdByName.put(schemaName, objectId);
 	}
 	
-	/**
-	 * Get of Transient Protein Match, Must be set by the user first.
-	 * @return
-	 */
-	public ProteinMatch getTransientTypicalProteinMatch() {
-		return typicalProteinMatch;
+	
+	public TransientProteinSetData getTransientProteinSetData() {
+		return transientProteinSetData;
 	}
 
-	public void setTransientTypicalProteinMatch(ProteinMatch p) {
-		typicalProteinMatch = p;
-	}	
-
-	/**
-	 * Get of Transient SameSet, Must be set by the user first.
-	 * @return
-	 */
-	public ProteinMatch[] getTransientSameSet() {
-		return sameSet;
+	public void setTransientProteinSetData(TransientProteinSetData transientProteinSetData) {
+		this.transientProteinSetData = transientProteinSetData;
 	}
 
-	public void setTransientSameSet(ProteinMatch[] sameSet) {
-		this.sameSet = sameSet;
+	/**
+	 * Transient Data which will be not saved in database
+	 * Used by the Proline Studio IHM
+	 * @author JM235353
+	 */
+	public static class TransientProteinSetData implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+		private ProteinMatch   typicalProteinMatch   = null;
+		private ProteinMatch[] sameSet               = null; // loaded later than sameSetCount
+		private ProteinMatch[] subSet                = null; // loaded later than subSetCount
+		private int            spectralCount         = -1;
+		private int            specificSpectralCount = -1;
+		private int            sameSetCount          = -1;
+		private int            subSetCount           = -1;
+		
+		public TransientProteinSetData() {
+		}
+		
+		public ProteinMatch getTypicalProteinMatch() {
+			return typicalProteinMatch;
+		}
+		public void setTypicalProteinMatch(ProteinMatch p) {
+			typicalProteinMatch = p;
+		}	
+
+		public ProteinMatch[] getSameSet() {
+			return sameSet;
+		}
+		public void setSameSet(ProteinMatch[] sameSet) {
+			this.sameSet = sameSet;
+		}
+		
+		public ProteinMatch[] getSubSet() {
+			return subSet;
+		}
+		public void setSubSet(ProteinMatch[] subSet) {
+			this.subSet = subSet;
+		}
+		
+		public int getSpectralCount() {
+			return spectralCount;
+		}
+		public void setSpectralCount(int spectralCount) {
+			this.spectralCount = spectralCount;
+		}
+		
+		public int getSpecificSpectralCount() {
+			return specificSpectralCount;
+		}
+		public void setSpecificSpectralCount(int specificSpectralCount) {
+			this.specificSpectralCount = specificSpectralCount;
+		}
+		
+		public int getSameSetCount() {
+			return sameSetCount;
+		}
+		public void setSameSetCount(int sameSetCount) {
+			this.sameSetCount = sameSetCount;
+		}
+		
+		public int getSubSetCount() {
+			return subSetCount;
+		}
+		public void setSubSetCount(int subSetCount) {
+			this.subSetCount = subSetCount;
+		}
+		
 	}
 	
-	/**
-	 * Get of Transient SubSet, Must be set by the user first.
-	 * @return
-	 */
-	public ProteinMatch[] getTransientSubSet() {
-		return subSet;
-	}
-
-	public void setTransientSubSet(ProteinMatch[] subSet) {
-		this.subSet = subSet;
-	}
 	
 }
