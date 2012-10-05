@@ -75,19 +75,23 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
 	 // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
     
-    val msiTransaction = stContext.msiEm.getTransaction
-    var msiTransacOk: Boolean = false
+    
+          //Fait par le Storer: Attentte partage transaction TODO    
+//    val msiTransaction = stContext.msiEm.getTransaction
+//    var msiTransacOk: Boolean = false
     
     logger.debug("Starting Msi Db transaction")
     
     //Start MSI Transaction and ResultSets store
     try {
-      msiTransaction.begin()
-      msiTransacOk = false
+      //Fait par le Storer: Attentte partage transaction TODO  
+//      msiTransaction.begin()
+//      msiTransacOk = false
       
       // Insert instrument config in the MSIdb         
       rsStorer.insertInstrumentConfig( instrumentConfig ,  this.stContext)
-    
+      stContext.msiDB.commitTransaction
+      
 		  // Retrieve MSISearch and related MS queries
 		  val msiSearch = resultFile.msiSearch
 		  val msQueryByInitialId = resultFile.msQueryByInitialId
@@ -134,26 +138,27 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
       >>>
     
 //    this.msiDb.commitTransaction()// VD Pour SQLStorer Only
-      msiTransaction.commit()
-      msiTransacOk = true
+//      msiTransaction.commit()
+//      msiTransacOk = true
     } finally {
-     
-      /* Check msiTransaction integrity */
-      if ((msiTransaction != null) && !msiTransacOk) {
-        try {
-          if(stContext.msiDB.isInTransaction)
-          	 stContext.msiDB.rollbackTransaction
-          msiTransaction.rollback()
-        } catch {
-          case ex => logger.error("Error rollbacking Msi Db transaction", ex)
-        }
-      } else 
-         if(stContext.msiDB.isInTransaction)
-        	 stContext.msiDB.rollbackTransaction
+     //Fait par le Storer: Attentte partage transaction TODO  
+//      /* Check msiTransaction integrity */
+//      if ((msiTransaction != null) && !msiTransacOk) {
+//        try {
+//          if(stContext.msiDB.isInTransaction)
+//          	 stContext.msiDB.rollbackTransaction
+//          msiTransaction.rollback()
+//        } catch {
+//          case ex => logger.error("Error rollbacking Msi Db transaction", ex)
+//        }
+//      } else 
+//         if(stContext.msiDB.isInTransaction)
+//        	 stContext.msiDB.rollbackTransaction
     }
     
-    this.beforeInterruption()    
-    msiTransacOk
+    this.beforeInterruption()
+    true 
+//    msiTransacOk   
   }
 
   private def _getPeaklistSoftware( plName: String, plRevision: String ): PeaklistSoftware = {
