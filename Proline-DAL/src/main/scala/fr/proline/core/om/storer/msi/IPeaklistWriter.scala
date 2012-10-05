@@ -28,7 +28,7 @@ trait IPeaklistWriter extends Logging {
    */
   def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext
   
-  def rollBackInfo(peaklistId: Int, context : StorerContext)
+  def rollBackInfo(peaklistId: Int, context : StorerContext): Unit
    
 }
 
