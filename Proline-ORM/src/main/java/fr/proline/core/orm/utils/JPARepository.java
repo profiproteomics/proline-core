@@ -7,10 +7,7 @@ public class JPARepository {
     private final EntityManager em;
 
     protected JPARepository(final EntityManager em) {
-
-	if ((em == null) || !em.isOpen()) {
-	    throw new IllegalArgumentException("Invalid EntityManager");
-	}
+	JPAUtil.checkEntityManager(em);
 
 	this.em = em;
     }

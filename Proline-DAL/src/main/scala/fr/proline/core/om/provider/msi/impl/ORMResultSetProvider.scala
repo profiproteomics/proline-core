@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.asScalaSet
 import scala.collection.mutable
 
 import com.weiglewilczek.slf4s.Logging
@@ -31,6 +32,7 @@ import fr.proline.core.orm.msi.repository.ScoringRepository
 import fr.proline.core.orm.msi.repository.SequenceMatchRepository
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.utils.DateUtils
+import fr.proline.core.orm.utils.JPAUtil
 import fr.proline.core.orm.utils.StringUtils
 import javax.persistence.EntityManager
 
@@ -51,9 +53,9 @@ class ORMResultSetProvider(private val msiEm: EntityManager,
   type MsiPeaklist = fr.proline.core.orm.msi.Peaklist
   type MsiPeaklistSoftware = fr.proline.core.orm.msi.PeaklistSoftware
 
-  checkEntityManager(msiEm)
-  checkEntityManager(psEm)
-  checkEntityManager(pdiEm)
+  JPAUtil.checkEntityManager(msiEm)
+  JPAUtil.checkEntityManager(psEm)
+  JPAUtil.checkEntityManager(pdiEm)
 
   val scoringRepo = new ScoringRepository(msiEm)
 
@@ -105,14 +107,6 @@ class ORMResultSetProvider(private val msiEm: EntityManager,
   }
 
   /* Private methods */
-  private def checkEntityManager(em: EntityManager) {
-
-    if ((em == null) || !em.isOpen) {
-      throw new IllegalArgumentException("Invalid EntityManager")
-    }
-
-  }
-
   private def getEntityCache[T](classifier: Class[T]): mutable.Map[Int, T] = {
     assert(classifier != null, "JPAResultSetProvider.getEntityCache() classifier is null")
 
