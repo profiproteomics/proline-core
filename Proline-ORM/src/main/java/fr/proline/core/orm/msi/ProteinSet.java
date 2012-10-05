@@ -185,10 +185,10 @@ public class ProteinSet implements Serializable {
 		private ProteinMatch   typicalProteinMatch   = null;
 		private ProteinMatch[] sameSet               = null; // loaded later than sameSetCount
 		private ProteinMatch[] subSet                = null; // loaded later than subSetCount
-		private int            spectralCount         = -1;
-		private int            specificSpectralCount = -1;
-		private int            sameSetCount          = -1;
-		private int            subSetCount           = -1;
+		private Integer        spectralCount         = null;
+		private Integer        specificSpectralCount = null;
+		private Integer        sameSetCount          = null;
+		private Integer        subSetCount           = null;
 		
 		public TransientProteinSetData() {
 		}
@@ -214,31 +214,31 @@ public class ProteinSet implements Serializable {
 			this.subSet = subSet;
 		}
 		
-		public int getSpectralCount() {
+		public Integer getSpectralCount() {
 			return spectralCount;
 		}
-		public void setSpectralCount(int spectralCount) {
+		public void setSpectralCount(Integer spectralCount) {
 			this.spectralCount = spectralCount;
 		}
 		
-		public int getSpecificSpectralCount() {
+		public Integer getSpecificSpectralCount() {
 			return specificSpectralCount;
 		}
-		public void setSpecificSpectralCount(int specificSpectralCount) {
+		public void setSpecificSpectralCount(Integer specificSpectralCount) {
 			this.specificSpectralCount = specificSpectralCount;
 		}
 		
-		public int getSameSetCount() {
+		public Integer getSameSetCount() {
 			return sameSetCount;
 		}
-		public void setSameSetCount(int sameSetCount) {
+		public void setSameSetCount(Integer sameSetCount) {
 			this.sameSetCount = sameSetCount;
 		}
 		
-		public int getSubSetCount() {
+		public Integer getSubSetCount() {
 			return subSetCount;
 		}
-		public void setSubSetCount(int subSetCount) {
+		public void setSubSetCount(Integer subSetCount) {
 			this.subSetCount = subSetCount;
 		}
 		
