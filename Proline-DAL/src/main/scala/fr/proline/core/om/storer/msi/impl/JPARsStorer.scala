@@ -50,13 +50,13 @@ import fr.proline.core.om.storer.msi.IPeaklistWriter
  * @param dbManagement DatabaseManagement : From which connection to Ps Db,  Uds Db and Pdi Db is retrieve
  * @param projectID Id of the project to save information to
  */
-class JPARsStorer(override val dbManagement: DatabaseManagement, override val msiDbConnector: DatabaseConnector, override val plWriter : IPeaklistWriter  = null) extends AbstractRsStorer(dbManagement, msiDbConnector, plWriter) with Logging {
+class JPARsStorer(override val dbManagement: DatabaseManagement, override val msiDbConnector: DatabaseConnector, override val plWriter: IPeaklistWriter = null) extends AbstractRsStorer(dbManagement, msiDbConnector, plWriter) with Logging {
 
   def this(dbManagement: DatabaseManagement, msiDbConnector: DatabaseConnector) {
-    this(dbManagement, msiDbConnector,null)
+    this(dbManagement, msiDbConnector, null)
   }
 
-  def this(dbManagement: DatabaseManagement, projectID: Int, plWriter : IPeaklistWriter) {
+  def this(dbManagement: DatabaseManagement, projectID: Int, plWriter: IPeaklistWriter) {
     this(dbManagement, dbManagement.getMSIDatabaseConnector(projectID, true), plWriter)
   }
 
@@ -114,8 +114,6 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
     val storedMsiSearch = retrieveStoredMsiSearch(storerContext, msiSearchId)
 
     msQueries.foreach(loadOrCreateMsQuery(storerContext, _, storedMsiSearch))
-
-  //VD TO CONFIRM  storerContext.msiEm.flush() // FLUSH to retrieve persisted Id
 
     storerContext
   }
@@ -187,7 +185,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
         storeMsiSearch(resultSet.msiSearch, storerContext)
         val storedMsiSearch = retrieveStoredMsiSearch(storerContext, tmpMsiSearchId)
         resultSet.msiSearch.id = storedMsiSearch.getId
-        
+
         msiResultSet.setMsiSearch(storedMsiSearch)
 
         /* Check associated decoy ResultSet */
@@ -269,24 +267,21 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
         if (!proteinMatchSequenceMatches.isEmpty) {
           logger.debug("Handling proteinMatchSequenceMatches and ProteinMatch.peptideCount after flushing of Msi EntityManager")
 
-          val updatePeptideCountQuery = storerContext.msiEm.createQuery("update fr.proline.core.orm.msi.ProteinMatch pm set pm.peptideCount =" +
-            " (select count (distinct sm.id.peptideId) from fr.proline.core.orm.msi.SequenceMatch sm where sm.id.proteinMatchId = :proteinMatchId)" +
-            " where pm.id = :proteinMatchId")
-
           /* Handle proteinMatchSequenceMatches after having persisted MsiProteinMatches, MsiPeptideMatches and current MsiResultSet */
           for (pMSMEntry <- proteinMatchSequenceMatches) {
-            val msiProteinMatchId = pMSMEntry._1.getId.intValue
+            val msiProteinMatch = pMSMEntry._1
+            val msiProteinMatchId = msiProteinMatch.getId.intValue
+
+            val peptideIds = mutable.Set.empty[Int]
 
             for (sequenceMatch <- pMSMEntry._2) {
-              createSequenceMatch(storerContext, sequenceMatch, msiProteinMatchId, msiResultSet.getId)
+              val msiSequenceMatch = createSequenceMatch(storerContext, sequenceMatch, msiProteinMatchId, msiResultSet.getId)
+
+              peptideIds += msiSequenceMatch.getId.getPeptideId.intValue
             } // End loop for each sequenceMatch
 
             /* Update ProteinMatch.peptideCount after having persisted sequenceMatches for current MsiProteinMatch  */
-            updatePeptideCountQuery.setParameter("proteinMatchId", msiProteinMatchId)
-
-            val updateResult = updatePeptideCountQuery.executeUpdate()
-
-            logger.debug("ProteinMatch #" + msiProteinMatchId + " peptideCount updated: " + updateResult)
+            msiProteinMatch.setPeptideCount(Integer.valueOf(peptideIds.size))
           } // End loop for each Msi ProteinMatch
 
         } // End if (proteinMatchSequenceMatches is not empty)
@@ -379,12 +374,11 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
         msiSearch.setUserName(search.userName)
 
         /* Store Msi Peaklist and retrieve persisted ORM entity */
-        val tmpPeaklistId = search.peakList.id       
-        if(tmpPeaklistId <= 0)
-          storePeaklist(search.peakList, storerContext)        
-          
-      	val storedPeaklist = retrieveStoredPeaklist(storerContext, tmpPeaklistId)
-      	        
+        val tmpPeaklistId = search.peakList.id
+        if (tmpPeaklistId <= 0)
+          storePeaklist(search.peakList, storerContext)
+
+        val storedPeaklist = retrieveStoredPeaklist(storerContext, tmpPeaklistId)
 
         msiSearch.setPeaklist(storedPeaklist)
 
@@ -439,66 +433,66 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
    * @param peakList Peaklist object, must not be {{{null}}}
    *
    */
-//  def storePeaklist(peakList: Peaklist, storerContext: StorerContext): Int = {
-//
-//    if (peakList == null) {
-//      throw new IllegalArgumentException("PeakList is null")
-//    }
-//    checkStorerContext(storerContext)
-  
-//    val omPeakListId = peakList.id
-//
-//    val knownPeaklists = storerContext.getEntityCache(classOf[MsiPeaklist])
-//
-//    val knownMsiPeakList = knownPeaklists.get(omPeakListId)
-//
-//    if (knownMsiPeakList.isDefined) {
-//      knownMsiPeakList.get.getId
-//    } else {
-//
-//      if (omPeakListId > 0) {
-//        val foundMsiPeakList = storerContext.msiEm.find(classOf[MsiPeaklist], omPeakListId)
-//
-//      if (foundMsiPeaklist == null) {
-//        throw new IllegalArgumentException("Peaklist #" + omPeaklistId + " NOT found in Msi Db")
-//        }
-  
-//        knownPeaklists += omPeakListId -> foundMsiPeakList
-//
-//        foundMsiPeakList.getId
-//      } else {
-//        val msiPeakList = new MsiPeaklist()
-//        msiPeakList.setMsLevel(Integer.valueOf(peakList.msLevel))
-//        msiPeakList.setPath(peakList.path)
-//        msiPeakList.setRawFileName(peakList.rawFileName)
-//
-//        // TODO handle serializedProperties
-//
-//        // TODO Set meaningful value in PeakList.spectrumDataCompression field
-//        msiPeakList.setSpectrumDataCompression("none")
-//        msiPeakList.setType(peakList.fileType)
-//
-//        val peaklistSoftware = peakList.peaklistSoftware
-//        if (peaklistSoftware != null) {
-//          msiPeakList.setPeaklistSoftware(loadOrCreatePeaklistSoftware(storerContext, peaklistSoftware))
-//        } else{
-//         throw new IllegalArgumentException("peaklistSoftware can't be null !")
-//        }
-//          
-//        // TODO handle PeakList.children    Uniquement pour le grouping ?
-//        storerContext.msiEm.persist(msiPeakList)
-//        storerContext.msiEm.flush() // FLUSH to retrieve Msi Peaklist Id        
-//
-//        knownPeaklists += omPeakListId -> msiPeakList
-//
-//        logger.debug("Msi PeakList {" + omPeakListId + "} persisted")
-//
-//        msiPeakList.getId
-//      } // End if (omPeakListId <= 0)
-//
-//    } // End if (msiPeakList is not in knownPeakLists)
-//
-//  }
+  //  def storePeaklist(peakList: Peaklist, storerContext: StorerContext): Int = {
+  //
+  //    if (peakList == null) {
+  //      throw new IllegalArgumentException("PeakList is null")
+  //    }
+  //    checkStorerContext(storerContext)
+
+  //    val omPeakListId = peakList.id
+  //
+  //    val knownPeaklists = storerContext.getEntityCache(classOf[MsiPeaklist])
+  //
+  //    val knownMsiPeakList = knownPeaklists.get(omPeakListId)
+  //
+  //    if (knownMsiPeakList.isDefined) {
+  //      knownMsiPeakList.get.getId
+  //    } else {
+  //
+  //      if (omPeakListId > 0) {
+  //        val foundMsiPeakList = storerContext.msiEm.find(classOf[MsiPeaklist], omPeakListId)
+  //
+  //      if (foundMsiPeaklist == null) {
+  //        throw new IllegalArgumentException("Peaklist #" + omPeaklistId + " NOT found in Msi Db")
+  //        }
+
+  //        knownPeaklists += omPeakListId -> foundMsiPeakList
+  //
+  //        foundMsiPeakList.getId
+  //      } else {
+  //        val msiPeakList = new MsiPeaklist()
+  //        msiPeakList.setMsLevel(Integer.valueOf(peakList.msLevel))
+  //        msiPeakList.setPath(peakList.path)
+  //        msiPeakList.setRawFileName(peakList.rawFileName)
+  //
+  //        // TODO handle serializedProperties
+  //
+  //        // TODO Set meaningful value in PeakList.spectrumDataCompression field
+  //        msiPeakList.setSpectrumDataCompression("none")
+  //        msiPeakList.setType(peakList.fileType)
+  //
+  //        val peaklistSoftware = peakList.peaklistSoftware
+  //        if (peaklistSoftware != null) {
+  //          msiPeakList.setPeaklistSoftware(loadOrCreatePeaklistSoftware(storerContext, peaklistSoftware))
+  //        } else{
+  //         throw new IllegalArgumentException("peaklistSoftware can't be null !")
+  //        }
+  //          
+  //        // TODO handle PeakList.children    Uniquement pour le grouping ?
+  //        storerContext.msiEm.persist(msiPeakList)
+  //        storerContext.msiEm.flush() // FLUSH to retrieve Msi Peaklist Id        
+  //
+  //        knownPeaklists += omPeakListId -> msiPeakList
+  //
+  //        logger.debug("Msi PeakList {" + omPeakListId + "} persisted")
+  //
+  //        msiPeakList.getId
+  //      } // End if (omPeakListId <= 0)
+  //
+  //    } // End if (msiPeakList is not in knownPeakLists)
+  //
+  //  }
 
   /**
    * @param peaklistId Id of PeakList, can accept "In memory" OM Id or Msi PeakList Primary key.
