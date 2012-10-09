@@ -69,5 +69,13 @@ class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider with L
   	return None
     }
   }
+  
+   def getPeptidesSeqPtms(peptideSeqsAndPtms :Map[String, Array[LocatedPtm]]) : Array[Option[Peptide]] = {
+       var result = Array.newBuilder[Option[Peptide]]
+       peptideSeqsAndPtms.foreach( entry =>  {
+         result += this.getPeptide(entry._1,entry._2)
+       })
+       result.result
+   }
 
 }

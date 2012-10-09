@@ -9,6 +9,9 @@ import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import com.weiglewilczek.slf4s.Logging
+import scala.collection.mutable.ArrayBuilder
+import org.apache.commons.lang3.StringUtils
+import fr.proline.core.om.model.msi.LocatedPtm
 
 class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPeptideProvider with Logging {
   
@@ -248,8 +251,16 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
     val tmpPep = new Peptide( sequence = peptideSeq, ptms = pepPtms )
     
     val psDbTx = psDb.getOrCreateTransaction()
-    val pepId = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
-                                tmpPep.sequence, tmpPep.ptmString ) { _.nextInt } (0)
+    var resultPepIds:Seq[Option[Int]] = null
+    if( StringUtils.isEmpty(tmpPep.ptmString ))
+    	resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string is null ",
+                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
+    else
+    	resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
+                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
+    var pepId : Option[Int] = None
+    if(resultPepIds.size>0)
+      pepId = resultPepIds(0)
     
     if( !wasInTx ) psDb.commitTransaction
                                 
@@ -259,5 +270,69 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
       Some(tmpPep)
     }
   }
+  
+  def getPeptidesSeqPtms(peptideSeqsAndPtms :Map[String, Array[LocatedPtm]]) : Array[Option[Peptide]] = {
+    
+    val wasInTx = psDb.isInTransaction()    
+    val psDbTx = psDb.getOrCreateTransaction()
+    var result = Array.newBuilder[Option[Peptide]]
+    
+    val withPtmList = peptideSeqsAndPtms.filter( entry => (entry._2 != null && ! entry._2.isEmpty))
+    
+    //VD... Don't work with SQLite 
+//    var sb :StringBuilder = new StringBuilder("(")
+//    withPtmList.foreach(entry => {
+//      	val tmpPep = new Peptide( sequence = entry._1, ptms = entry._2 )
+//      	sb.append("(").append(tmpPep.sequence).append(",").append(tmpPep.ptmString).append("),")
+//    })
+//    sb.dropRight(1).append(")")
+//    val resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE (sequence, ptm_string) IN "+sb.result) {_.nextInt}
+
+    
+    withPtmList.foreach( entry =>  {
+      	val tmpPep = new Peptide( sequence = entry._1, ptms = entry._2 )
+	    	val resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
+                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
+    		
+    		var pepId : Option[Int] = None
+				if(resultPepIds.size>0)
+					pepId = resultPepIds(0)
+					
+				if( pepId == None )
+					result += None
+				else {
+				  tmpPep.id = pepId.get
+				  result += Some(tmpPep)
+				}
+    })
+    
+    val noPtmList = peptideSeqsAndPtms.filter( entry => (entry._2 == null ||  entry._2.isEmpty))    
+    noPtmList.foreach( entry =>  {
+    		val tmpPep = new Peptide( sequence = entry._1, ptms = entry._2 )
+    		var resultPepIds:Seq[Option[Int]] = null
+    		if( StringUtils.isEmpty(tmpPep.ptmString )) {
+    		 resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string is null ",
+                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
+    		} else {
+    		  resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
+                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
+    		}
+    		var pepId : Option[Int] = None
+				if(resultPepIds.size>0)
+					pepId = resultPepIds(0)
+				if( pepId == None )
+					result += None
+				else {
+				  tmpPep.id = pepId.get
+				  result += Some(tmpPep)
+				}
+    })
+					
+    if( !wasInTx ) psDb.commitTransaction
+    
+    result.result                          
+  }
+  
+
   
 }
