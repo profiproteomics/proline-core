@@ -33,5 +33,7 @@ trait IPeptideProvider {
    *  @param pepPtms: Array of LocatedPtm of Peptide to search for
    *  @return Option[Peptide] corresponding to found Peptide
    */
-  def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm]) : Option[Peptide] 
+  def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm]) : Option[Peptide]
+  
+	def getPeptidesSeqPtms(peptideSeqsAndPtms :Map[String, Array[LocatedPtm]]) : Array[Option[Peptide]]
 }
