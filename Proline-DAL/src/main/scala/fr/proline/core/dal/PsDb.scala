@@ -1,6 +1,7 @@
 package fr.proline.core.dal
 
 import net.noerd.prequel._
+import fr.proline.repository.DatabaseConnector
 
 object PsDb extends DatabaseConfigBuilder {
 
@@ -12,6 +13,13 @@ object PsDb extends DatabaseConfigBuilder {
     new PsDb( psDbConfig )
   }
   
+  def apply( dbManager: DatabaseManagement): PsDb = {    
+    new PsDb( PsDb.buildConfigFromDatabaseConnector( dbManager.psDBConnector ))
+  }
+  
+  def apply( dbConn: DatabaseConnector): PsDb = {    
+    new PsDb( PsDb.buildConfigFromDatabaseConnector( dbConn ))
+  }
   /*def getDefaultConfig = DatabaseConfig(
     driver = "org.postgresql.Driver",
     jdbcURL = "jdbc:postgresql://10.1.31.10:5432/ps_db",
