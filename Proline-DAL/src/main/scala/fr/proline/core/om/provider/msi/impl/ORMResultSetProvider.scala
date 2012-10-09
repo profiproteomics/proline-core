@@ -1,40 +1,17 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConversions.{asScalaSet, asScalaBuffer}
 import scala.collection.mutable
-
 import com.weiglewilczek.slf4s.Logging
-
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.MsQuery
-import fr.proline.core.om.model.msi.PeaklistSoftware
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.core.om.model.msi.MSISearch
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.Peaklist
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.Protein
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.PtmNames
-import fr.proline.core.om.model.msi.SearchSettings
-import fr.proline.core.om.model.msi.SequenceMatch
+import fr.proline.core.om.model.msi.{SequenceMatch, SeqDatabase, SearchSettings, ResultSet, PtmNames, PtmEvidence, PtmDefinition, ProteinMatch, Protein, PeptideMatch, Peptide, PeaklistSoftware, Peaklist, MsQuery, Ms2Query, MSISearch, InstrumentConfig}
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.orm.msi.ResultSet.Type
-import fr.proline.core.orm.msi.repository.MsiSeqDatabaseRepository
-import fr.proline.core.orm.msi.repository.PeptideMatchRepository
-import fr.proline.core.orm.msi.repository.ProteinMatchRepository
-import fr.proline.core.orm.msi.repository.ScoringRepository
-import fr.proline.core.orm.msi.repository.SequenceMatchRepository
+import fr.proline.core.orm.msi.repository.{SequenceMatchRepository, ScoringRepository, ProteinMatchRepository, PeptideMatchRepository, MsiSeqDatabaseRepository}
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.utils.DateUtils
-import fr.proline.core.orm.utils.JPAUtil
 import fr.proline.core.orm.utils.StringUtils
 import javax.persistence.EntityManager
+import fr.proline.core.orm.utils.JPAUtil
 
 class ORMResultSetProvider(private val msiEm: EntityManager,
   private val psEm: EntityManager,
