@@ -3,6 +3,7 @@ package fr.proline.core.orm.pdi;
 import static javax.persistence.CascadeType.PERSIST;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -14,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -22,6 +24,8 @@ import javax.persistence.Table;
  * 
  */
 @Entity
+@NamedQuery(name = "findSequenceDbConfigForName", query = "select sdc from fr.proline.core.orm.pdi.SequenceDbConfig sdc"
+	+ " where lower(sdc.name) = :name")
 @Table(name = "seq_db_config")
 public class SequenceDbConfig implements Serializable {
 
@@ -62,10 +66,6 @@ public class SequenceDbConfig implements Serializable {
     // bi-directional many-to-one association to SequenceDbInstance
     @OneToMany(mappedBy = "sequenceDbConfig")
     private Set<SequenceDbInstance> sequenceDbInstances;
-
-    protected SequenceDbConfig() {
-
-    }
 
     public Integer getId() {
 	return this.id;
@@ -123,12 +123,37 @@ public class SequenceDbConfig implements Serializable {
 	this.isNative = isNative;
     }
 
-    public Set<SequenceDbInstance> getSequenceDbConfigs() {
+    public void setSequenceDbInstances(final Set<SequenceDbInstance> seqDbInstances) {
+	sequenceDbInstances = seqDbInstances;
+    }
+
+    public Set<SequenceDbInstance> getSequenceDbInstances() {
 	return sequenceDbInstances;
     }
 
-    public void setSequenceDbConfigs(final Set<SequenceDbInstance> sequenceDbConfigs) {
-	this.sequenceDbInstances = sequenceDbConfigs;
+    public void addSequenceDbInstance(final SequenceDbInstance seqDbInstance) {
+
+	if (seqDbInstance != null) {
+	    Set<SequenceDbInstance> seqDbInstances = getSequenceDbInstances();
+
+	    if (seqDbInstances == null) {
+		seqDbInstances = new HashSet<SequenceDbInstance>();
+
+		setSequenceDbInstances(seqDbInstances);
+	    }
+
+	    seqDbInstances.add(seqDbInstance);
+	}
+
+    }
+
+    public void removeSequenceDbInstance(final SequenceDbInstance seqDbInstance) {
+
+	final Set<SequenceDbInstance> seqDbInstances = getSequenceDbInstances();
+	if (seqDbInstances != null) {
+	    seqDbInstances.remove(seqDbInstance);
+	}
+
     }
 
 }

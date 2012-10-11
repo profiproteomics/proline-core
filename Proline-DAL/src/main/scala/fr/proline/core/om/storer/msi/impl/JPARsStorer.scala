@@ -31,7 +31,7 @@ import fr.proline.core.orm.msi.repository.ScoringRepository
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK
 import fr.proline.core.orm.msi.SequenceMatchPK
-import fr.proline.core.orm.pdi.repository.SeqDatabaseRepository
+import fr.proline.core.orm.pdi.repository.PdiSeqDatabaseRepository
 import fr.proline.core.orm.ps.repository.PsPeptideRepository
 import fr.proline.core.orm.ps.repository.PsPtmRepository
 import fr.proline.core.orm.uds.repository.UdsEnzymeRepository
@@ -625,7 +625,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
 
       /* Task done after persisting msiSearchSetting */
       val msiSeqDatabaseRepo = new MsiSeqDatabaseRepository(msiEm)
-      val pdiSeqDatabaseRepo = new SeqDatabaseRepository(storerContext.pdiEm);
+      val pdiSeqDatabaseRepo = new PdiSeqDatabaseRepository(storerContext.pdiEm);
 
       for (seqDatabase <- searchSettings.seqDatabases) {
         val msiSearchSettingsSeqDatabaseMap = new MsiSearchSettingsSeqDatabaseMap()
@@ -767,7 +767,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
    * @return Msi SeqDatabase entity or {{{null}}} if SeqDatabase does not exist in Pdi Db.
    */
   def loadOrCreateSeqDatabase(storerContext: StorerContext,
-    msiSeqDatabaseRepo: MsiSeqDatabaseRepository, pdiSeqDatabaseRepo: SeqDatabaseRepository,
+    msiSeqDatabaseRepo: MsiSeqDatabaseRepository, pdiSeqDatabaseRepo: PdiSeqDatabaseRepository,
     seqDatabase: SeqDatabase): MsiSeqDatabase = {
 
     checkStorerContext(storerContext)

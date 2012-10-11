@@ -9,7 +9,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import fr.proline.core.orm.pdi.repository.SeqDatabaseRepository;
+import fr.proline.core.orm.pdi.repository.PdiSeqDatabaseRepository;
 import fr.proline.core.orm.utils.JPAUtil;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.repository.utils.DatabaseUtils;
@@ -28,7 +28,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	
 	
 	@Test public void findSeqDbPerNameAndFile() {
-		SeqDatabaseRepository repo = new SeqDatabaseRepository(em);
+		PdiSeqDatabaseRepository repo = new PdiSeqDatabaseRepository(em);
 		SequenceDbInstance seqDB  = repo.findSeqDbInstanceWithNameAndFile("sprot", "H:/Sequences/uniprot/knowledgebase2011_06/uniprot_sprot.fasta");		
 		assertThat(seqDB, notNullValue());
 		assertThat(seqDB.getSequenceCount(), is(4));
@@ -36,7 +36,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	
 	
 	@Test public void findUnknownSeqDbPerNameAndFile() {
-		SeqDatabaseRepository repo = new SeqDatabaseRepository(em);
+		PdiSeqDatabaseRepository repo = new PdiSeqDatabaseRepository(em);
 		SequenceDbInstance seqDB  = repo.findSeqDbInstanceWithNameAndFile("Sprot_2011_06", "/path/to/myDB.fasta");		
 		assertThat(seqDB, CoreMatchers.nullValue());
 	}

@@ -9,11 +9,11 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import fr.proline.core.orm.pdi.repository.SeqDatabaseRepository
+import fr.proline.core.orm.pdi.repository.PdiSeqDatabaseRepository
 import fr.proline.core.om.utils.ProteinsOMConverterUtil
 
 class ORMSeqDatabaseProvider (val em:EntityManager ) extends ISeqDatabaseProvider  with Logging {
-  var seqDBRepo = new SeqDatabaseRepository(em) 
+  val seqDBRepo = new PdiSeqDatabaseRepository(em) 
   val converter = new ProteinsOMConverterUtil()
   
   def getSeqDatabasesAsOptions(seqDBIds: Seq[Int]): Array[Option[SeqDatabase]] = { 
