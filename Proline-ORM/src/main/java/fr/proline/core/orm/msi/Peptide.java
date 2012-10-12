@@ -127,7 +127,7 @@ public class Peptide implements Serializable {
 		return sequenceMatch;
 	}
 
-	public void setTransientPeptide(SequenceMatch sequenceMatch) {
+	public void setTransientSequenceMatch(SequenceMatch sequenceMatch) {
 		this.sequenceMatch = sequenceMatch;
 	}
     
