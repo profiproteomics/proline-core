@@ -10,18 +10,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import fr.proline.core.orm.pdi.repository.BioSequenceRepository;
+import fr.proline.core.orm.pdi.repository.PdiBioSequenceRepository;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class BioSequenceTest extends DatabaseTestCase {
 
-	private BioSequenceRepository seqRepo;
+	private PdiBioSequenceRepository seqRepo;
 	
 	@Before public void setUp() throws Exception {
       initDatabase();
       initEntityManager("pdidb_production");
       loadDataSet("/fr/proline/core/orm/pdi/Proteins_Dataset.xml");
-      seqRepo = new BioSequenceRepository(getEntityManager());
+      seqRepo = new PdiBioSequenceRepository(getEntityManager());
 	}
 
 	@After public void tearDown() throws Exception {
@@ -37,12 +37,12 @@ public class BioSequenceTest extends DatabaseTestCase {
 	}
 
 	@Test public void findBioSequence() {
-		BioSequence seq = seqRepo.findBioSequence("01FC286177012FDF", "AA", 36672.0);
+		BioSequence seq = seqRepo.findBioSequenceForCrcAndMass("01FC286177012FDF", 36672.0);
 		assertThat(seq, notNullValue());
 	}
 	
 	@Test public void findMissingBioSequence() {
-		BioSequence seq = seqRepo.findBioSequence("FFFFFFF", "AA", 9999.0);
+		BioSequence seq = seqRepo.findBioSequenceForCrcAndMass("FFFFFFF", 9999.0);
 		assertThat(seq, nullValue());
 	}
 	

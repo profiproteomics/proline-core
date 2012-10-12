@@ -12,7 +12,7 @@ import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import com.weiglewilczek.slf4s.Logging
 import javax.persistence.NoResultException
 import javax.persistence.NonUniqueResultException
-import fr.proline.core.orm.pdi.repository.BioSequenceRepository
+import fr.proline.core.orm.pdi.repository.PdiBioSequenceRepository
 import fr.proline.core.om.utils.ProteinsOMConverterUtil
 
 /**
@@ -66,7 +66,7 @@ class ORMProteinProvider (val em:EntityManager ) extends IProteinProvider with L
   }
 
   def getProtein(accession: String, seqDb: SeqDatabase): Option[Protein] = { 
-    val bioSeqRepo = new BioSequenceRepository(em)
+    val bioSeqRepo = new PdiBioSequenceRepository(em)
     val bioSeq = bioSeqRepo.findBioSequencePerAccessionAndSeqDB(accession, seqDb.id)
     if(bioSeq == null )
       return None
