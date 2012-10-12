@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.Transient;
 
 import fr.proline.core.orm.utils.StringUtils;
 
@@ -47,6 +48,9 @@ public class Peptide implements Serializable {
     @Column(name = "serialized_properties")
     private String serializedProperties;
 
+    // Transient Variable not saved in database
+    @Transient private SequenceMatch sequenceMatch = null;
+    
     public Peptide() {
     }
 
@@ -119,4 +123,12 @@ public class Peptide implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
+	public SequenceMatch getTransientSequenceMatch() {
+		return sequenceMatch;
+	}
+
+	public void setTransientPeptide(SequenceMatch sequenceMatch) {
+		this.sequenceMatch = sequenceMatch;
+	}
+    
 }
