@@ -271,66 +271,55 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
     }
   }
   
-  def getPeptidesSeqPtms(peptideSeqsAndPtms :Map[String, Array[LocatedPtm]]) : Array[Option[Peptide]] = {
+  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]) : Array[Option[Peptide]] = {
     
-    val wasInTx = psDb.isInTransaction()    
+    val quotingChar = '\''
+    val maxNbIters = psDb.maxVariableNumber
+    val wasInTx = psDb.isInTransaction()
     val psDbTx = psDb.getOrCreateTransaction()
-    var result = Array.newBuilder[Option[Peptide]]
     
-    val withPtmList = peptideSeqsAndPtms.filter( entry => (entry._2 != null && ! entry._2.isEmpty))
+    // Retrieve peptide sequences and map peptides by their unique key
+    val quotedSeqs = new Array[String](peptideSeqsAndPtms.length)
+    val pepKeys = new Array[String](peptideSeqsAndPtms.length)
+    val peptideByUniqueKey = new HashMap[String,Peptide]()
     
-    //VD... Don't work with SQLite 
-//    var sb :StringBuilder = new StringBuilder("(")
-//    withPtmList.foreach(entry => {
-//      	val tmpPep = new Peptide( sequence = entry._1, ptms = entry._2 )
-//      	sb.append("(").append(tmpPep.sequence).append(",").append(tmpPep.ptmString).append("),")
-//    })
-//    sb.dropRight(1).append(")")
-//    val resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE (sequence, ptm_string) IN "+sb.result) {_.nextInt}
-
+    var pepIdx = 0
+    for( (pepSeq, locPtms) <- peptideSeqsAndPtms ) {
+      
+      val peptide = new Peptide( sequence = pepSeq, ptms = locPtms )
+      val pepKey = peptide.uniqueKey
+      peptideByUniqueKey += (pepKey -> peptide)
+      
+      quotedSeqs(pepIdx) = quotingChar + pepSeq + quotingChar
+      pepKeys(pepIdx) = pepKey
+      
+      pepIdx += 1
+    }
     
-    withPtmList.foreach( entry =>  {
-      	val tmpPep = new Peptide( sequence = entry._1, ptms = entry._2 )
-	    	val resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
-                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
-    		
-    		var pepId : Option[Int] = None
-				if(resultPepIds.size>0)
-					pepId = resultPepIds(0)
-					
-				if( pepId == None )
-					result += None
-				else {
-				  tmpPep.id = pepId.get
-				  result += Some(tmpPep)
-				}
-    })
+    // Query peptides based on a distinct list of peptide sequences
+    // Queries are performed using successive group of sequences (maximum length is driver dependant)
+    quotedSeqs.distinct.grouped(maxNbIters).foreach { tmpQuotedSeqs =>
+      this.logger.debug( "search for peptides in the database using %d sequences".format(tmpQuotedSeqs.length) )
+      
+      psDbTx.select( "SELECT id, sequence, ptm_string FROM peptide WHERE sequence IN ("+tmpQuotedSeqs.mkString(",") +")") { r =>
+        val( id, sequence, ptmString ) = (r.nextInt.get, r.nextString.get, r.nextString.getOrElse("") )        
+        val uniqueKey = sequence + "%" + ptmString
+        
+        if( peptideByUniqueKey.contains(uniqueKey) ) {
+          peptideByUniqueKey(uniqueKey).id = id
+        }
+      }
+    }
     
-    val noPtmList = peptideSeqsAndPtms.filter( entry => (entry._2 == null ||  entry._2.isEmpty))    
-    noPtmList.foreach( entry =>  {
-    		val tmpPep = new Peptide( sequence = entry._1, ptms = entry._2 )
-    		var resultPepIds:Seq[Option[Int]] = null
-    		if( StringUtils.isEmpty(tmpPep.ptmString )) {
-    		 resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string is null ",
-                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
-    		} else {
-    		  resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
-                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
-    		}
-    		var pepId : Option[Int] = None
-				if(resultPepIds.size>0)
-					pepId = resultPepIds(0)
-				if( pepId == None )
-					result += None
-				else {
-				  tmpPep.id = pepId.get
-				  result += Some(tmpPep)
-				}
-    })
-					
+    val peptidesAsOpt = pepKeys.map { pepKey =>
+      val peptide = peptideByUniqueKey(pepKey)
+      if( peptide.id > 0 ) Some(peptide)
+      else None
+    }
+	  
     if( !wasInTx ) psDb.commitTransaction
     
-    result.result                          
+    peptidesAsOpt                      
   }
   
 

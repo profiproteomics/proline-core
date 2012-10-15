@@ -35,5 +35,5 @@ trait IPeptideProvider {
    */
   def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm]) : Option[Peptide]
   
-	def getPeptidesSeqPtms(peptideSeqsAndPtms :Map[String, Array[LocatedPtm]]) : Array[Option[Peptide]]
+	def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]) : Array[Option[Peptide]]
 }
