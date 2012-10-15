@@ -297,9 +297,9 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
     }
     
     // Query peptides based on a distinct list of peptide sequences
-    // Queries are performed using successive group of sequences (maximum length is driver dependant)
+    // Queries are performed using successive groups of sequences (maximum length is driver dependant)
     quotedSeqs.distinct.grouped(maxNbIters).foreach { tmpQuotedSeqs =>
-      this.logger.debug( "search for peptides in the database using %d sequences".format(tmpQuotedSeqs.length) )
+      this.logger.trace( "search for peptides in the database using %d sequences".format(tmpQuotedSeqs.length) )
       
       psDbTx.select( "SELECT id, sequence, ptm_string FROM peptide WHERE sequence IN ("+tmpQuotedSeqs.mkString(",") +")") { r =>
         val( id, sequence, ptmString ) = (r.nextInt.get, r.nextString.get, r.nextString.getOrElse("") )        
