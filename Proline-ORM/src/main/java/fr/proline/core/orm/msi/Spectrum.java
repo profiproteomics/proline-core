@@ -181,11 +181,11 @@ public class Spectrum implements Serializable {
 		this.precursorCharge = precursorCharge;
 	}
 
-	public float getPrecursorIntensity() {
+	public Float getPrecursorIntensity() {
 		return this.precursorIntensity;
 	}
 
-	public void setPrecursorIntensity(float precursorIntensity) {
+	public void setPrecursorIntensity(Float precursorIntensity) {
 		this.precursorIntensity = precursorIntensity;
 	}
 
