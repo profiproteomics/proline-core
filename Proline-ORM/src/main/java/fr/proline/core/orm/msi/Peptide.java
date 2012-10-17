@@ -50,7 +50,6 @@ public class Peptide implements Serializable {
 
     // Transient Variable not saved in database
     @Transient private SequenceMatch sequenceMatch = null;
-    @Transient private ConsensusSpectrum consensusSpectrum = null;
     
     public Peptide() {
     }
@@ -132,13 +131,7 @@ public class Peptide implements Serializable {
 		this.sequenceMatch = sequenceMatch;
 	}
  
-	public ConsensusSpectrum getTransientConsensusSpectrum() {
-		return consensusSpectrum;
-	}
 
-	public void setTransientConsensusSpectrum(ConsensusSpectrum consensusSpectrum) {
-		this.consensusSpectrum = consensusSpectrum;
-	}
 	
 	
 }
