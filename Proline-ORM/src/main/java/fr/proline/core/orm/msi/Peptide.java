@@ -1,6 +1,7 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -48,8 +49,10 @@ public class Peptide implements Serializable {
     @Column(name = "serialized_properties")
     private String serializedProperties;
 
-    // Transient Variable not saved in database
+    // Transient Variables not saved in database
     @Transient private SequenceMatch sequenceMatch = null;
+    // Protein Groups where the peptide has been found
+    @Transient private ArrayList<ProteinSet> proteinSetArray = null;
     
     public Peptide() {
     }
@@ -131,7 +134,13 @@ public class Peptide implements Serializable {
 		this.sequenceMatch = sequenceMatch;
 	}
  
-
+	public ArrayList<ProteinSet> getTransientProteinSetArray() {
+		return proteinSetArray;
+	}
+	
+	public void setTransientProteinSetArray(ArrayList<ProteinSet> proteinSetArray) {
+		this.proteinSetArray = proteinSetArray;
+	}
 	
 	
 }
