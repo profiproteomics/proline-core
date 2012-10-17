@@ -1,61 +1,61 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.util.Sorting
+
 import org.junit.Assert._
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
+
 import com.weiglewilczek.slf4s.Logging
+
 import fr.proline.core.dal.DatabaseManagementTestCase
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.orm.utils.MathUtils.EPSILON_HIGH_PRECISION
+import fr.proline.core.orm.utils.MathUtils.EPSILON_LOW_PRECISION
 import fr.proline.core.orm.utils.JPAUtil
 import fr.proline.core.orm.utils.StringUtils
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
 import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.repository.utils.DatabaseUtils
-import org.junit.Before
-import org.junit.After
-import fr.proline.core.orm.msi.MsiSearch
-import fr.proline.core.om.model.msi.MSISearch
-import fr.proline.core.om.model.msi.Peaklist
-
 
 @Test
 class JPARsStorerTest extends Logging {
 
   val milliToNanos = 1000000L
 
-  val epsilon = 1e-6f // DeltaMoz are floats in DataBase, for double computations use 1e-14
   val msiTransaction = null
   var pdiDBTestCase = new PDIDatabaseTestCase()
   var msiDBTestCase = new MSIDatabaseTestCase()
   var psDBTestCase = new PSDatabaseTestCase()
   var udsDBTestCase = new UDSDatabaseTestCase()
-  
+
   var stContext: StorerContext = null
-  var dbMgntTest : DatabaseManagementTestCase= null
-  var storer : JPARsStorer = null
+  var dbMgntTest: DatabaseManagementTestCase = null
+  var storer: JPARsStorer = null
 
   @Before
-  def initTests()={
-    logger.info("Initializing Dbs")    
+  def initTests() = {
+    logger.info("Initializing Dbs")
     msiDBTestCase.initDatabase()
     msiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName())
     msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")
-    
-      /* Init Ps Db connection */    
+
+    /* Init Ps Db connection */
     psDBTestCase.initDatabase()
     psDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
     psDBTestCase.loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
 
-    /* Init Uds Db connection */    
+    /* Init Uds Db connection */
     udsDBTestCase.initDatabase()
     udsDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName())
     udsDBTestCase.loadDataSet("/fr/proline/core/om/uds/UDS_Simple_Dataset.xml")
 
-    /* Init Pdi Db connection */    
+    /* Init Pdi Db connection */
     pdiDBTestCase.initDatabase()
     pdiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PDI_Key.getPersistenceUnitName())
     pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
@@ -65,99 +65,99 @@ class JPARsStorerTest extends Logging {
     storer = new JPARsStorer(dbMgntTest, msiDBTestCase.getConnector)
     stContext = new StorerContext(dbMgntTest, dbMgntTest.getCurrentMsiConnector())
   }
-  
+
   @After
   def tearDown() = {
-    if(this.stContext != null)
-    	this.stContext.closeOpenedEM()
-    	
+    if (this.stContext != null)
+      this.stContext.closeOpenedEM()
+
     pdiDBTestCase.tearDown()
     udsDBTestCase.tearDown()
     psDBTestCase.tearDown()
     msiDBTestCase.tearDown()
-    
+
     logger.info("Dbs succesfully closed")
   }
-  
+
   /**
    * Creates some ResultSets with {{{ResultSetFakeBuilder}}} from Proline-OM ''test'' project
    * and persists them into Msi Db using a {{{JPARsStorer}}} instance.
    */
   //TODO : Creation d'un cas de figure qui leve une exception
-//  @Test
-//  def testRollBack() {
-//    import scala.collection.JavaConversions.collectionAsScalaIterable
-//     
-//    var start = System.nanoTime
-//    val rsb = new ResultSetFakeBuilder( 10, 2 )
-//
-//    val resultSet = rsb.toResultSet()
-//    var stop = System.nanoTime
-//    logger.info( "ResultSet creation time: " + ( ( stop - start ) / milliToNanos ) )
-//
-//    start = System.nanoTime
-//    storer.storeResultSet( resultSet, stContext )
-//    stop = System.nanoTime
-//
-//    logger.info( "ResultSet " + resultSet.id + " persisted time: " + ( ( stop - start ) / milliToNanos ) )
-//
-//    start = System.nanoTime
-//    val resultSet2 = new ResultSetFakeBuilder( 10, 2 ).toResultSet
-//    val errMsiSearchPL = new Peaklist(
-//         id= Peaklist.generateNewId,
-//         fileType= resultSet2.msiSearch.peakList.fileType,
-//         path= resultSet2.msiSearch.peakList.path,
-//         rawFileName= resultSet2.msiSearch.peakList.rawFileName,
-//         msLevel=  resultSet2.msiSearch.peakList.msLevel
-//     )
-//     
-//    val errMsiSearch = new MSISearch (
-//        id=resultSet.msiSearch.id,
-//        resultFileName=resultSet.msiSearch.resultFileName,
-//        submittedQueriesCount=resultSet.msiSearch.submittedQueriesCount,
-//        searchSettings=resultSet.msiSearch.searchSettings ,
-//        peakList = errMsiSearchPL,
-//        date = resultSet.msiSearch.date        
-//     )
-//
-//    resultSet2.msiSearch = errMsiSearch
-//    stop = System.nanoTime
-//    logger.info( "ResultSet 2 creation time: " + ( ( stop - start ) / milliToNanos ) )
-//    
-//    start = System.nanoTime
-//    storer.storeResultSet( resultSet2, stContext )
-//    stop = System.nanoTime
-//   
-//    val rsList : List[fr.proline.core.orm.msi.ResultSet] = stContext.msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet",classOf[fr.proline.core.orm.msi.ResultSet]).getResultList.toList
-//    assertEquals(1, rsList.size)
-//    assertEquals(resultSet.id, rsList(0).getId)
-//  }
-  
+  //  @Test
+  //  def testRollBack() {
+  //    import scala.collection.JavaConversions.collectionAsScalaIterable
+  //     
+  //    var start = System.nanoTime
+  //    val rsb = new ResultSetFakeBuilder( 10, 2 )
+  //
+  //    val resultSet = rsb.toResultSet()
+  //    var stop = System.nanoTime
+  //    logger.info( "ResultSet creation time: " + ( ( stop - start ) / milliToNanos ) )
+  //
+  //    start = System.nanoTime
+  //    storer.storeResultSet( resultSet, stContext )
+  //    stop = System.nanoTime
+  //
+  //    logger.info( "ResultSet " + resultSet.id + " persisted time: " + ( ( stop - start ) / milliToNanos ) )
+  //
+  //    start = System.nanoTime
+  //    val resultSet2 = new ResultSetFakeBuilder( 10, 2 ).toResultSet
+  //    val errMsiSearchPL = new Peaklist(
+  //         id= Peaklist.generateNewId,
+  //         fileType= resultSet2.msiSearch.peakList.fileType,
+  //         path= resultSet2.msiSearch.peakList.path,
+  //         rawFileName= resultSet2.msiSearch.peakList.rawFileName,
+  //         msLevel=  resultSet2.msiSearch.peakList.msLevel
+  //     )
+  //     
+  //    val errMsiSearch = new MSISearch (
+  //        id=resultSet.msiSearch.id,
+  //        resultFileName=resultSet.msiSearch.resultFileName,
+  //        submittedQueriesCount=resultSet.msiSearch.submittedQueriesCount,
+  //        searchSettings=resultSet.msiSearch.searchSettings ,
+  //        peakList = errMsiSearchPL,
+  //        date = resultSet.msiSearch.date        
+  //     )
+  //
+  //    resultSet2.msiSearch = errMsiSearch
+  //    stop = System.nanoTime
+  //    logger.info( "ResultSet 2 creation time: " + ( ( stop - start ) / milliToNanos ) )
+  //    
+  //    start = System.nanoTime
+  //    storer.storeResultSet( resultSet2, stContext )
+  //    stop = System.nanoTime
+  //   
+  //    val rsList : List[fr.proline.core.orm.msi.ResultSet] = stContext.msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet",classOf[fr.proline.core.orm.msi.ResultSet]).getResultList.toList
+  //    assertEquals(1, rsList.size)
+  //    assertEquals(resultSet.id, rsList(0).getId)
+  //  }
+
   /**
    * Creates some ResultSets with {{{ResultSetFakeBuilder}}} from Proline-OM ''test'' project
    * and persists them into Msi Db using a {{{JPARsStorer}}} instance.
    */
   @Test
   def testRsStorer() {
-  
+
     for (i <- 1 to 3) {
       //Fait par le Storer: Attentte partage transaction TODO
-//      val msiTransaction = stContext.msiEm.getTransaction
-//      var msiTransacOk: Boolean = false
-      
-//    	try {
-//    		msiTransaction.begin()
-//    		msiTransacOk = false
+      //      val msiTransaction = stContext.msiEm.getTransaction
+      //      var msiTransacOk: Boolean = false
 
-      	logger.info("Creating a new fake Result Set")
+      //    	try {
+      //    		msiTransaction.begin()
+      //    		msiTransacOk = false
 
-      	var start = System.nanoTime
-      	val rsb = new ResultSetFakeBuilder(10, 2)
+      logger.info("Creating a new fake Result Set")
 
-      	val resultSet = rsb.toResultSet()
-      	var stop = System.nanoTime
+      var start = System.nanoTime
+      val rsb = new ResultSetFakeBuilder(10, 2)
 
-      	logger.info("ResultSet creation time: " + ((stop - start) / milliToNanos))
+      val resultSet = rsb.toResultSet()
+      var stop = System.nanoTime
+
+      logger.info("ResultSet creation time: " + ((stop - start) / milliToNanos))
 
       /* Used to add some existing Peptides (#1 .. #6) */
       //      var peptideId = 1
@@ -172,38 +172,38 @@ class JPARsStorerTest extends Logging {
       //
       //      }
 
-      	start = System.nanoTime
-      	storer.storeResultSet(resultSet, stContext)
-      	stop = System.nanoTime
-////Fait par le Storer: Attentte partage transaction TODO
-//      	msiTransaction.commit
-//      	msiTransacOk = true
-      	
-      	logger.info("ResultSet persisted time: " + ((stop - start) / milliToNanos))
+      start = System.nanoTime
+      storer.storeResultSet(resultSet, stContext)
+      stop = System.nanoTime
+      ////Fait par le Storer: Attentte partage transaction TODO
+      //      	msiTransaction.commit
+      //      	msiTransacOk = true
 
-      	val resultSetId = resultSet.id
+      logger.info("ResultSet persisted time: " + ((stop - start) / milliToNanos))
 
-      	logger.info("ResultSet #" + resultSetId + " persisted time: " + ((stop - start) / milliToNanos))
-      
-      	val provider = new ORMResultSetProvider(stContext.msiEm, stContext.psEm, stContext.pdiEm)
+      val resultSetId = resultSet.id
 
-      	val loadedResultSet = provider.getResultSet(resultSetId)
+      logger.info("ResultSet #" + resultSetId + " persisted time: " + ((stop - start) / milliToNanos))
 
-      	assertTrue("Loaded ResultSet #" + resultSetId, loadedResultSet.isDefined)
+      val provider = new ORMResultSetProvider(stContext.msiEm, stContext.psEm, stContext.pdiEm)
+
+      val loadedResultSet = provider.getResultSet(resultSetId)
+
+      assertTrue("Loaded ResultSet #" + resultSetId, loadedResultSet.isDefined)
 
       compareRs(resultSet, loadedResultSet.get)
       //Fait par le Storer: Attentte partage transaction TODO
-//    	} finally{
-//    	  /* Check msiTransaction integrity */
-//    		if ((msiTransaction != null) && !msiTransacOk) {
-//    			try {
-//    				msiTransaction.rollback()
-//    			} catch {
-//          	case ex => logger.error("Error rollbacking Msi Db transaction", ex)
-//    			}
-//    		}
-//    	} 
-    }// End fo throw 3 RS
+      //    	} finally{
+      //    	  /* Check msiTransaction integrity */
+      //    		if ((msiTransaction != null) && !msiTransacOk) {
+      //    			try {
+      //    				msiTransaction.rollback()
+      //    			} catch {
+      //          	case ex => logger.error("Error rollbacking Msi Db transaction", ex)
+      //    			}
+      //    		}
+      //    	} 
+    } // End fo throw 3 RS
   }
 
   private def compareRs(src: ResultSet, loaded: ResultSet) {
@@ -291,9 +291,10 @@ class JPARsStorerTest extends Logging {
   private def comparePeptideMatch(src: PeptideMatch, loaded: PeptideMatch) {
     /* Check some fields */
     assertEquals("PeptideMatch.rank", src.rank, loaded.rank)
-    assertEquals("PeptideMatch.score", src.score, loaded.score, epsilon)
+    assertEquals("PeptideMatch.score", src.score, loaded.score, EPSILON_LOW_PRECISION)
     assertEquals("PeptideMatch.scoreType", src.scoreType, loaded.scoreType)
-    assertEquals("PeptideMatch.deltaMoz", src.deltaMoz, loaded.deltaMoz, epsilon)
+    /* DeltaMoz are floats in DataBase, for double computations use 1e-14 */
+    assertEquals("PeptideMatch.deltaMoz", src.deltaMoz, loaded.deltaMoz, EPSILON_LOW_PRECISION)
 
     comparePeptide(src.peptide, loaded.peptide)
   }
@@ -313,7 +314,7 @@ class JPARsStorerTest extends Logging {
     /* Check some fields */
     assertEquals("Peptide.sequence", src.sequence, loaded.sequence)
     assertEquals("Peptide.ptmString", normalizeString(src.ptmString), normalizeString(loaded.ptmString))
-    assertEquals("Peptide.calculatedMass", src.calculatedMass, loaded.calculatedMass, epsilon)
+    assertEquals("Peptide.calculatedMass", src.calculatedMass, loaded.calculatedMass, EPSILON_HIGH_PRECISION)
   }
 
   private def compareProteinMatch(src: ProteinMatch, loaded: ProteinMatch) {

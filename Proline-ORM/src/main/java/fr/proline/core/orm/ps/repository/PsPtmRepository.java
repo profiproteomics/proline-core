@@ -37,7 +37,7 @@ public class PsPtmRepository extends JPARepository {
 	Ptm result = null;
 
 	final TypedQuery<Ptm> query = getEntityManager().createNamedQuery("findPsPtmForName", Ptm.class);
-	query.setParameter("name", name.toLowerCase());
+	query.setParameter("name", name.toUpperCase());
 
 	final List<Ptm> ptms = query.getResultList();
 
@@ -99,8 +99,8 @@ public class PsPtmRepository extends JPARepository {
 	    query.setParameter("residue", String.valueOf(residue));
 	}
 
-	query.setParameter("location", location.toLowerCase());
-	query.setParameter("ptmShortName", ptmShortName.toLowerCase());
+	query.setParameter("location", location.toUpperCase());
+	query.setParameter("ptmShortName", ptmShortName.toUpperCase());
 
 	final List<PtmSpecificity> ptms = query.getResultList();
 
@@ -135,7 +135,7 @@ public class PsPtmRepository extends JPARepository {
 
 	final TypedQuery<PtmClassification> query = getEntityManager().createNamedQuery(
 		"findPtmClassificationForName", PtmClassification.class);
-	query.setParameter("name", name.toLowerCase());
+	query.setParameter("name", name.toUpperCase());
 
 	final List<PtmClassification> classifications = query.getResultList();
 

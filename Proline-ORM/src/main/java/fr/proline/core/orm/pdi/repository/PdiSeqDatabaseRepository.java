@@ -48,7 +48,7 @@ public class PdiSeqDatabaseRepository extends JPARepository {
 
 	final TypedQuery<SequenceDbConfig> query = getEntityManager().createNamedQuery(
 		"findSequenceDbConfigForName", SequenceDbConfig.class);
-	query.setParameter("name", name.toLowerCase());
+	query.setParameter("name", name.toUpperCase());
 
 	final List<SequenceDbConfig> seqDbConfigs = query.getResultList();
 

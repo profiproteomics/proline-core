@@ -23,14 +23,15 @@ import javax.persistence.Table;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "findUdsInstrumConfForNameAndMs1AndMsn", query = "select ic from fr.proline.core.orm.uds.InstrumentConfiguration ic"
-		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (lower(ic.msnAnalyzer) = :msnAnalyzer)"),
+		+ " where (upper(ic.name) = :name) and (upper(ic.ms1Analyzer) = :ms1Analyzer) and (upper(ic.msnAnalyzer) = :msnAnalyzer)"),
 
 	@NamedQuery(name = "findUdsInstrumConfForNameAndMs1", query = "select ic from fr.proline.core.orm.uds.InstrumentConfiguration ic"
-		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
+		+ " where (upper(ic.name) = :name) and (upper(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
 
 })
 @Table(name = "instrument_config")
 public class InstrumentConfiguration implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id

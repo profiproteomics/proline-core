@@ -26,14 +26,15 @@ import javax.persistence.Table;
 @Entity(name = "fr.proline.core.orm.ps.PtmSpecificity")
 @NamedQueries({
 	@NamedQuery(name = "findPsPtmSpecForNameLocResidue", query = "select ps from fr.proline.core.orm.ps.PtmSpecificity ps"
-		+ " where (lower(ps.location) = :location) and (ps.residue = :residue) and (lower(ps.ptm.shortName) = :ptmShortName)"),
+		+ " where (upper(ps.location) = :location) and (ps.residue = :residue) and (upper(ps.ptm.shortName) = :ptmShortName)"),
 
 	@NamedQuery(name = "findPsPtmSpecForNameAndLoc", query = "select ps from fr.proline.core.orm.ps.PtmSpecificity ps"
-		+ " where (lower(ps.location) = :location) and (ps.residue is null) and (lower(ps.ptm.shortName) = :ptmShortName)")
+		+ " where (upper(ps.location) = :location) and (ps.residue is null) and (upper(ps.ptm.shortName) = :ptmShortName)")
 
 })
 @Table(name = "ptm_specificity")
 public class PtmSpecificity implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id

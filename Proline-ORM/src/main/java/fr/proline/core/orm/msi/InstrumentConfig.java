@@ -19,14 +19,15 @@ import fr.proline.core.orm.utils.StringUtils;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "findMsiInstrumConfForNameAndMs1AndMsn", query = "select ic from fr.proline.core.orm.msi.InstrumentConfig ic"
-		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (lower(ic.msnAnalyzer) = :msnAnalyzer)"),
+		+ " where (upper(ic.name) = :name) and (upper(ic.ms1Analyzer) = :ms1Analyzer) and (upper(ic.msnAnalyzer) = :msnAnalyzer)"),
 
 	@NamedQuery(name = "findMsiInstrumConfForNameAndMs1", query = "select ic from fr.proline.core.orm.msi.InstrumentConfig ic"
-		+ " where (lower(ic.name) = :name) and (lower(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
+		+ " where (upper(ic.name) = :name) and (upper(ic.ms1Analyzer) = :ms1Analyzer) and (ic.msnAnalyzer is null)")
 
 })
 @Table(name = "instrument_config")
 public class InstrumentConfig implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id

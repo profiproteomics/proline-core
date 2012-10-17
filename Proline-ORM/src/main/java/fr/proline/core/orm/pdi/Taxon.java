@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,6 +22,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * 
  */
 @Entity
+@NamedQuery(name = "findTaxonsForIds", query = "select tax from fr.proline.core.orm.pdi.Taxon tax"
+	+ " where tax.id in :ids")
 public class Taxon implements Serializable {
 
     private static final long serialVersionUID = 1L;

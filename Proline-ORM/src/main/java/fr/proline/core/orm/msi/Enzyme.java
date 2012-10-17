@@ -15,8 +15,9 @@ import fr.proline.core.orm.utils.StringUtils;
  */
 @Entity(name = "fr.proline.core.orm.msi.Enzyme")
 @NamedQuery(name = "findMsiEnzymeForName", query = "select e from fr.proline.core.orm.msi.Enzyme e"
-	+ " where lower(e.name) = :name")
+	+ " where upper(e.name) = :name")
 public class Enzyme implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id

@@ -21,19 +21,20 @@ import javax.persistence.OneToMany;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "findPsPepsForSeq", query = "select p from fr.proline.core.orm.ps.Peptide p"
-		+ " where lower(p.sequence) = :seq"),
+		+ " where upper(p.sequence) = :seq"),
 
 	@NamedQuery(name = "findPsPepsForIds", query = "select p from fr.proline.core.orm.ps.Peptide p"
 		+ " where p.id in :ids"),
 
 	@NamedQuery(name = "findPsPeptForSeqPtmStr", query = "select p from fr.proline.core.orm.ps.Peptide p"
-		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr)"),
+		+ " where (upper(p.sequence) = :seq) and (upper(p.ptmString) = :ptmStr)"),
 
 	@NamedQuery(name = "findPsPeptForSeqWoPtm", query = "select p from fr.proline.core.orm.ps.Peptide p"
-		+ " where (lower(p.sequence) = :seq)  and (p.ptmString is null)")
+		+ " where (upper(p.sequence) = :seq)  and (p.ptmString is null)")
 
 })
 public class Peptide implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id

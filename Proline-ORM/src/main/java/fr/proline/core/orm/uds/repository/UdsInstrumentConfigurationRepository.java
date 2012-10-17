@@ -36,12 +36,12 @@ public class UdsInstrumentConfigurationRepository extends JPARepository {
 	} else {
 	    query = getEntityManager().createNamedQuery("findUdsInstrumConfForNameAndMs1AndMsn",
 		    InstrumentConfiguration.class);
-	    query.setParameter("msnAnalyzer", msnAnalyzer.toLowerCase());
+	    query.setParameter("msnAnalyzer", msnAnalyzer.toUpperCase());
 	}
 
 	/* In all cases give InstrumentConfiguration name and ms1Analyzer */
-	query.setParameter("name", name.toLowerCase());
-	query.setParameter("ms1Analyzer", ms1Analyzer.toLowerCase());
+	query.setParameter("name", name.toUpperCase());
+	query.setParameter("ms1Analyzer", ms1Analyzer.toUpperCase());
 
 	final List<InstrumentConfiguration> instrumConfs = query.getResultList();
 

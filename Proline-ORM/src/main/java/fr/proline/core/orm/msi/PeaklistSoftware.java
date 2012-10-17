@@ -18,14 +18,15 @@ import fr.proline.core.orm.utils.StringUtils;
 @Entity(name = "fr.proline.core.orm.msi.PeaklistSoftware")
 @NamedQueries({
 	@NamedQuery(name = "findMsiPeaklistSoftForName", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
-		+ " where (lower(pls.name) = :name) and (pls.version is null)"),
+		+ " where (upper(pls.name) = :name) and (pls.version is null)"),
 
 	@NamedQuery(name = "findMsiPeaklistSoftForNameAndVersion", query = "select pls from fr.proline.core.orm.msi.PeaklistSoftware pls"
-		+ " where (lower(pls.name) = :name) and (lower(pls.version) = :version)")
+		+ " where (upper(pls.name) = :name) and (upper(pls.version) = :version)")
 
 })
 @Table(name = "peaklist_software")
 public class PeaklistSoftware implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id

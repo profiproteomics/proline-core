@@ -1,6 +1,7 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -8,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -17,8 +19,14 @@ import javax.persistence.Table;
  * 
  */
 @Entity(name = "fr.proline.core.orm.pdi.BioSequence")
-@NamedQuery(name = "findPdiBioSequenceForCrc", query = "select bs from fr.proline.core.orm.pdi.BioSequence bs"
-	+ " where lower(bs.crc64) = :crc64")
+@NamedQueries({
+	@NamedQuery(name = "findPdiBioSequenceForCrc", query = "select bs from fr.proline.core.orm.pdi.BioSequence bs"
+		+ " where upper(bs.crc64) = :crc64"),
+
+	@NamedQuery(name = "findPdiBioSequencesForCrcs", query = "select bs from fr.proline.core.orm.pdi.BioSequence bs"
+		+ " where upper(bs.crc64) in :crcs")
+
+})
 @Table(name = "bio_sequence")
 public class BioSequence implements Serializable {
 
@@ -114,12 +122,37 @@ public class BioSequence implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
+    public void setProteinIdentifiers(final Set<ProteinIdentifier> protIdentifiers) {
+	proteinIdentifiers = protIdentifiers;
+    }
+
     public Set<ProteinIdentifier> getProteinIdentifiers() {
 	return this.proteinIdentifiers;
     }
 
-    public void setProteinIdentifiers(Set<ProteinIdentifier> proteinIdentifiers) {
-	this.proteinIdentifiers = proteinIdentifiers;
+    public void addProteinIdentifier(final ProteinIdentifier protIdentifier) {
+
+	if (protIdentifier != null) {
+	    Set<ProteinIdentifier> protIdentifiers = getProteinIdentifiers();
+
+	    if (protIdentifiers == null) {
+		protIdentifiers = new HashSet<ProteinIdentifier>();
+
+		setProteinIdentifiers(protIdentifiers);
+	    }
+
+	    protIdentifiers.add(protIdentifier);
+	}
+
+    }
+
+    public void removeProteinIdentifier(final ProteinIdentifier protIdentifier) {
+	final Set<ProteinIdentifier> protIdentifiers = getProteinIdentifiers();
+
+	if (protIdentifiers != null) {
+	    protIdentifiers.remove(protIdentifier);
+	}
+
     }
 
 }

@@ -24,7 +24,7 @@ public class MsiPeptideRepository extends JPARepository {
 
 	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findMsiPepsForSeq",
 		Peptide.class);
-	query.setParameter("seq", seq.toLowerCase());
+	query.setParameter("seq", seq.toUpperCase());
 
 	return query.getResultList();
     }
@@ -63,10 +63,10 @@ public class MsiPeptideRepository extends JPARepository {
 	    query = getEntityManager().createNamedQuery("findMsiPeptForSeq", Peptide.class);
 	} else {
 	    query = getEntityManager().createNamedQuery("findMsiPeptForSeqAndPtmStr", Peptide.class);
-	    query.setParameter("ptmStr", ptmStr.toLowerCase());
+	    query.setParameter("ptmStr", ptmStr.toUpperCase());
 	}
 
-	query.setParameter("seq", seq.toLowerCase()); // In all cases give a Peptide sequence
+	query.setParameter("seq", seq.toUpperCase()); // In all cases give a Peptide sequence
 
 	final List<Peptide> peptides = query.getResultList();
 

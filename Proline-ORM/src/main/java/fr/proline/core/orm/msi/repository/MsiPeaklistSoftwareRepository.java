@@ -30,10 +30,10 @@ public class MsiPeaklistSoftwareRepository extends JPARepository {
 	} else {
 	    query = getEntityManager().createNamedQuery("findMsiPeaklistSoftForNameAndVersion",
 		    PeaklistSoftware.class);
-	    query.setParameter("version", version.toLowerCase());
+	    query.setParameter("version", version.toUpperCase());
 	}
 
-	query.setParameter("name", name.toLowerCase()); // In all cases give a Software name
+	query.setParameter("name", name.toUpperCase()); // In all cases give a Software name
 
 	final List<PeaklistSoftware> softs = query.getResultList();
 

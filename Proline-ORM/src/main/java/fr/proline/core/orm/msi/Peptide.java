@@ -25,13 +25,14 @@ import fr.proline.core.orm.utils.StringUtils;
 		+ " where p.id in :ids"),
 
 	@NamedQuery(name = "findMsiPeptForSeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p"
-		+ " where (lower(p.sequence) = :seq) and (lower(p.ptmString) = :ptmStr))"),
+		+ " where (upper(p.sequence) = :seq) and (upper(p.ptmString) = :ptmStr))"),
 
 	@NamedQuery(name = "findMsiPeptForSeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
-		+ " where (lower(p.sequence) = :seq) and (p.ptmString is null)")
+		+ " where (upper(p.sequence) = :seq) and (p.ptmString is null)")
 
 })
 public class Peptide implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -50,10 +51,12 @@ public class Peptide implements Serializable {
     private String serializedProperties;
 
     // Transient Variables not saved in database
-    @Transient private SequenceMatch sequenceMatch = null;
+    @Transient
+    private SequenceMatch sequenceMatch = null;
     // Protein Groups where the peptide has been found
-    @Transient private ArrayList<ProteinSet> proteinSetArray = null;
-    
+    @Transient
+    private ArrayList<ProteinSet> proteinSetArray = null;
+
     public Peptide() {
     }
 
@@ -126,21 +129,20 @@ public class Peptide implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
-	public SequenceMatch getTransientSequenceMatch() {
-		return sequenceMatch;
-	}
+    public SequenceMatch getTransientSequenceMatch() {
+	return sequenceMatch;
+    }
 
-	public void setTransientSequenceMatch(SequenceMatch sequenceMatch) {
-		this.sequenceMatch = sequenceMatch;
-	}
- 
-	public ArrayList<ProteinSet> getTransientProteinSetArray() {
-		return proteinSetArray;
-	}
-	
-	public void setTransientProteinSetArray(ArrayList<ProteinSet> proteinSetArray) {
-		this.proteinSetArray = proteinSetArray;
-	}
-	
-	
+    public void setTransientSequenceMatch(SequenceMatch sequenceMatch) {
+	this.sequenceMatch = sequenceMatch;
+    }
+
+    public ArrayList<ProteinSet> getTransientProteinSetArray() {
+	return proteinSetArray;
+    }
+
+    public void setTransientProteinSetArray(ArrayList<ProteinSet> proteinSetArray) {
+	this.proteinSetArray = proteinSetArray;
+    }
+
 }

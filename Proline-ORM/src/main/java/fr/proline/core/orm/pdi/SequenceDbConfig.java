@@ -25,7 +25,7 @@ import javax.persistence.Table;
  */
 @Entity
 @NamedQuery(name = "findSequenceDbConfigForName", query = "select sdc from fr.proline.core.orm.pdi.SequenceDbConfig sdc"
-	+ " where lower(sdc.name) = :name")
+	+ " where upper(sdc.name) = :name")
 @Table(name = "seq_db_config")
 public class SequenceDbConfig implements Serializable {
 

@@ -1,5 +1,8 @@
 package fr.proline.core.orm.pdi.repository;
 
+import static fr.proline.core.orm.utils.MathUtils.EPSILON_LOW_PRECISION;
+
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -18,12 +21,19 @@ public class PdiBioSequenceRepository extends JPARepository {
 
     private static final Logger LOG = LoggerFactory.getLogger(PdiBioSequenceRepository.class);
 
-    private static final double EPSILON = 1e-6; // For double computations use 1e-14
-
     public PdiBioSequenceRepository(final EntityManager pdiEm) {
 	super(pdiEm);
     }
 
+    /**
+     * Retrieves a BioSequence entity (assumed unique) by crc64 and mass.
+     * 
+     * @param crc64
+     *            CRC 64 of BioSequence to retrieve (matched ignoring case), must not be empty.
+     * @param mass
+     *            Mass of BioSequence to retrieve (compared with <code>EPSILON_LOW_PRECISION</code>).
+     * @return BioSequence entity or <code>null</code> if not found.
+     */
     public BioSequence findBioSequenceForCrcAndMass(final String crc64, final double mass) {
 
 	if (StringUtils.isEmpty(crc64)) {
@@ -34,7 +44,7 @@ public class PdiBioSequenceRepository extends JPARepository {
 
 	final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery("findPdiBioSequenceForCrc",
 		BioSequence.class);
-	query.setParameter("crc64", crc64.toLowerCase());
+	query.setParameter("crc64", crc64.toUpperCase());
 
 	final List<BioSequence> bioSequences = query.getResultList();
 
@@ -42,7 +52,7 @@ public class PdiBioSequenceRepository extends JPARepository {
 
 	    for (final BioSequence bs : bioSequences) {
 
-		if (Math.abs(bs.getMass() - mass) < EPSILON) {
+		if (Math.abs(bs.getMass() - mass) < EPSILON_LOW_PRECISION) {
 
 		    if (result == null) {
 			result = bs;
@@ -58,6 +68,27 @@ public class PdiBioSequenceRepository extends JPARepository {
 	} // End if (bioSequences is not empty)
 
 	return result;
+    }
+
+    /**
+     * Retrieves Pdi BioSequences by a Collection (List, Set...) of crcs.
+     * 
+     * @param crcs
+     *            <code>Collection</code> of BioSequence's crc64s to retrieve (must not be <code>null</code>
+     *            and crc64s must be in <strong>upper case</strong>).
+     * @return List of found BioSequences (can be empty if none found).
+     */
+    public List<BioSequence> findBioSequencesForCrcs(final Collection<String> crcs) {
+
+	if (crcs == null) {
+	    throw new IllegalArgumentException("Crcs collection is null");
+	}
+
+	final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery(
+		"findPdiBioSequencesForCrcs", BioSequence.class);
+	query.setParameter("crcs", crcs);
+
+	return query.getResultList();
     }
 
     public BioSequence findBioSequencePerAccessionAndSeqDB(String accession, Integer seqDbInstanceId) {

@@ -21,7 +21,7 @@ import javax.persistence.OneToMany;
  */
 @Entity
 @NamedQuery(name = "findPsPtmForName", query = "select p from fr.proline.core.orm.ps.Ptm p"
-	+ " where (lower(p.shortName) = :name) or (lower(p.fullName) = :name)")
+	+ " where (upper(p.shortName) = :name) or (upper(p.fullName) = :name)")
 public class Ptm implements Serializable {
 
     private static final long serialVersionUID = 1L;

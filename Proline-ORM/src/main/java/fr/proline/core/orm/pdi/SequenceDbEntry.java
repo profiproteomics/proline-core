@@ -65,7 +65,7 @@ public class SequenceDbEntry implements Serializable {
 
     // uni-directional many-to-one association to Taxon
     @ManyToOne
-    @JoinColumn(name = "taxon_id", insertable = false, updatable = false)
+    @JoinColumn(name = "taxon_id", nullable = false)
     private Taxon taxon;
 
     @ElementCollection
@@ -169,7 +169,7 @@ public class SequenceDbEntry implements Serializable {
 	return this.taxon;
     }
 
-    public void setTaxon(Taxon taxon) {
+    public void setTaxon(final Taxon taxon) {
 	this.taxon = taxon;
     }
 

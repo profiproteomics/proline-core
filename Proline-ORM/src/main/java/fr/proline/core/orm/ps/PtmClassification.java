@@ -16,7 +16,7 @@ import javax.persistence.Table;
  */
 @Entity
 @NamedQuery(name = "findPtmClassificationForName", query = "select pc from fr.proline.core.orm.ps.PtmClassification pc"
-	+ " where lower(pc.name) = :name")
+	+ " where upper(pc.name) = :name")
 @Table(name = "ptm_classification")
 public class PtmClassification implements Serializable {
 
