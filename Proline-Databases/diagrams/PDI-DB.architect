@@ -224,8 +224,9 @@
     <column id="COL63" populated="true" UUID="a84ef9e3-19bc-4252-a508-5ca539196963" autoIncrement="false" autoIncrementSequenceName="seq_db_config_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>Some native databases must be named using the following convention : ipi, sprot, trembl, ncbi</remarks>
     </column>
-    <column id="COL64" populated="true" UUID="298a6a9d-84af-43cb-af60-f19a8b3e2f55" autoIncrement="false" autoIncrementSequenceName="seq_db_config_alphabet_seq" defaultValue="" name="alphabet" nullable="0" physicalName="alphabet" precision="3" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="1" userDefinedTypeUUID="67ddc63f-5541-4dd1-9236-632d9d155e80" >
-     <remarks></remarks>
+    <column id="COL64" populated="true" UUID="298a6a9d-84af-43cb-af60-f19a8b3e2f55" autoIncrement="false" autoIncrementSequenceName="seq_db_config_alphabet_seq" defaultValue="" name="alphabet" nullable="0" physicalName="alphabet" precision="3" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks>Java enum SequenceDbConfig.Alphabet {AA, DNA }
+</remarks>
     </column>
     <column id="COL65" populated="true" UUID="e5cc5a67-0a03-42cd-9a96-7ac2ac69db24" autoIncrement="false" autoIncrementSequenceName="seq_db_config_ref_entry_format_seq" defaultValue="" name="ref_entry_format" nullable="0" physicalName="ref_entry_format" precision="10" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>swiss/genebank/gff TODO: add support for gff format</remarks>
@@ -807,7 +808,7 @@
  <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8408964152537147" viewportX="208" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8408964152537147" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="751" y="502" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB12" x="244" y="381" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB23" x="509" y="237" bgColor="0xb9bbf6" fgColor="0x000000" rounded="true" dashed="false"/>
