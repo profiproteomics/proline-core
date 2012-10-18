@@ -2,6 +2,7 @@ package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,6 +11,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
+import fr.proline.core.orm.ps.PeptidePtm;
 import fr.proline.core.orm.utils.StringUtils;
 
 /**
@@ -51,11 +53,7 @@ public class Peptide implements Serializable {
     private String serializedProperties;
 
     // Transient Variables not saved in database
-    @Transient
-    private SequenceMatch sequenceMatch = null;
-    // Protein Groups where the peptide has been found
-    @Transient
-    private ArrayList<ProteinSet> proteinSetArray = null;
+    @Transient private TransientData transientData = null;
 
     public Peptide() {
     }
@@ -129,20 +127,52 @@ public class Peptide implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
-    public SequenceMatch getTransientSequenceMatch() {
-	return sequenceMatch;
-    }
+	public TransientData getTransientData() {
+		return transientData;
+	}
 
-    public void setTransientSequenceMatch(SequenceMatch sequenceMatch) {
-	this.sequenceMatch = sequenceMatch;
-    }
+	public void setTransientData(TransientData transientData) {
+		this.transientData = transientData;
+	}
+	
+	/**
+	 * Transient Data which will be not saved in database
+	 * Used by the Proline Studio IHM
+	 * @author JM235353
+	 */
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+	    private SequenceMatch sequenceMatch = null;
+	    private ArrayList<ProteinSet> proteinSetArray = null; // Protein Groups where the peptide has been found
+		private HashMap<Integer,PeptidePtm> peptidePtmMap = null;
+	    
+		public TransientData() {
+		}
+		
+		public SequenceMatch getSequenceMatch() {
+			return sequenceMatch;
+		}
 
-    public ArrayList<ProteinSet> getTransientProteinSetArray() {
-	return proteinSetArray;
-    }
-
-    public void setTransientProteinSetArray(ArrayList<ProteinSet> proteinSetArray) {
-	this.proteinSetArray = proteinSetArray;
-    }
-
+		public void setSequenceMatch(SequenceMatch sequenceMatch) {
+			this.sequenceMatch = sequenceMatch;
+		}
+	 
+		public ArrayList<ProteinSet> getProteinSetArray() {
+			return proteinSetArray;
+		}
+		
+		public void setProteinSetArray(ArrayList<ProteinSet> proteinSetArray) {
+			this.proteinSetArray = proteinSetArray;
+		}
+		
+		public HashMap<Integer,PeptidePtm> getPeptidePtmMap() {
+			return peptidePtmMap;
+		}
+		
+		public void setPeptidePtmMap(HashMap<Integer,PeptidePtm> peptidePtmMap) {
+			this.peptidePtmMap = peptidePtmMap;
+		}
+		
+	}
 }
