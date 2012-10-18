@@ -62,7 +62,7 @@ public class ProteinSet implements Serializable {
 	
 	
 	// Transient data not saved in database
-	@Transient private TransientProteinSetData transientProteinSetData = null;
+	@Transient private TransientData transientData = null;
 	
     public ProteinSet() {
     }
@@ -166,12 +166,12 @@ public class ProteinSet implements Serializable {
 	}
 	
 	
-	public TransientProteinSetData getTransientProteinSetData() {
-		return transientProteinSetData;
+	public TransientData getTransientData() {
+		return transientData;
 	}
 
-	public void setTransientProteinSetData(TransientProteinSetData transientProteinSetData) {
-		this.transientProteinSetData = transientProteinSetData;
+	public void setTransientData(TransientData transientData) {
+		this.transientData = transientData;
 	}
 
 	/**
@@ -179,7 +179,7 @@ public class ProteinSet implements Serializable {
 	 * Used by the Proline Studio IHM
 	 * @author JM235353
 	 */
-	public static class TransientProteinSetData implements Serializable {
+	public static class TransientData implements Serializable {
 		private static final long serialVersionUID = 1L;
 		
 		private ProteinMatch   typicalProteinMatch   = null;
@@ -190,7 +190,7 @@ public class ProteinSet implements Serializable {
 		private Integer        sameSetCount          = null;
 		private Integer        subSetCount           = null;
 		
-		public TransientProteinSetData() {
+		public TransientData() {
 		}
 		
 		public ProteinMatch getTypicalProteinMatch() {
