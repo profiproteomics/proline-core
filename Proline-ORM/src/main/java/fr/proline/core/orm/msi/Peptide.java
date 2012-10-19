@@ -33,7 +33,7 @@ import fr.proline.core.orm.utils.StringUtils;
 		+ " where (upper(p.sequence) = :seq) and (p.ptmString is null)")
 
 })
-public class Peptide implements Serializable {
+public class Peptide implements Serializable, Comparable<Peptide> {
 
     private static final long serialVersionUID = 1L;
 
@@ -174,5 +174,16 @@ public class Peptide implements Serializable {
 			this.peptidePtmMap = peptidePtmMap;
 		}
 		
+	}
+
+	/**
+	 * Method for Comparable interface.
+     * Compare Peptides according to their sequence
+	 * @param p
+	 * @return
+	 */
+	@Override
+	public int compareTo(Peptide p) {
+		return sequence.compareTo(p.sequence);
 	}
 }
