@@ -22,7 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * 
  */
 @Entity
-@NamedQuery(name = "findTaxonsForIds", query = "select tax from fr.proline.core.orm.pdi.Taxon tax"
+@NamedQuery(name = "findTaxonsForIds", query = "select distinct tax from fr.proline.core.orm.pdi.Taxon tax"
 	+ " where tax.id in :ids")
 public class Taxon implements Serializable {
 
@@ -53,7 +53,6 @@ public class Taxon implements Serializable {
     private Set<TaxonExtraName> taxonExtraNames;
 
     protected Taxon() {
-
     }
 
     public Taxon(Integer id) {

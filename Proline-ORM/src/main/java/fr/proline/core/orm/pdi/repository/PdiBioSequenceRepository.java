@@ -76,7 +76,8 @@ public class PdiBioSequenceRepository extends JPARepository {
      * @param crcs
      *            <code>Collection</code> of BioSequence's crc64s to retrieve (must not be <code>null</code>
      *            and crc64s must be in <strong>upper case</strong>).
-     * @return List of found BioSequences (can be empty if none found).
+     * @return List of found BioSequences (can be empty if none found), associated ProteinIdentifier and
+     *         SequenceDbConfig entities are fetched.
      */
     public List<BioSequence> findBioSequencesForCrcs(final Collection<String> crcs) {
 

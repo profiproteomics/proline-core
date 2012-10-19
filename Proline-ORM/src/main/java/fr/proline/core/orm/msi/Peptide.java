@@ -21,9 +21,9 @@ import fr.proline.core.orm.utils.StringUtils;
 @Entity(name = "fr.proline.core.orm.msi.Peptide")
 @NamedQueries({
 	@NamedQuery(name = "findMsiPepsForSeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
-		+ " where lower(p.sequence) = :seq"),
+		+ " where upper(p.sequence) = :seq"),
 
-	@NamedQuery(name = "findMsiPepsForIds", query = "select p from fr.proline.core.orm.msi.Peptide p"
+	@NamedQuery(name = "findMsiPepsForIds", query = "select distinct p from fr.proline.core.orm.msi.Peptide p"
 		+ " where p.id in :ids"),
 
 	@NamedQuery(name = "findMsiPeptForSeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p"
@@ -53,7 +53,8 @@ public class Peptide implements Serializable, Comparable<Peptide> {
     private String serializedProperties;
 
     // Transient Variables not saved in database
-    @Transient private TransientData transientData = null;
+    @Transient
+    private TransientData transientData = null;
 
     public Peptide() {
     }
@@ -127,63 +128,65 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	this.serializedProperties = serializedProperties;
     }
 
-	public TransientData getTransientData() {
-		return transientData;
+    public TransientData getTransientData() {
+	return transientData;
+    }
+
+    public void setTransientData(TransientData transientData) {
+	this.transientData = transientData;
+    }
+
+    /**
+     * Transient Data which will be not saved in database Used by the Proline Studio IHM
+     * 
+     * @author JM235353
+     */
+    public static class TransientData implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	private SequenceMatch sequenceMatch = null;
+	private ArrayList<ProteinSet> proteinSetArray = null; // Protein Groups where the peptide has been
+							      // found
+	private HashMap<Integer, PeptidePtm> peptidePtmMap = null;
+
+	public TransientData() {
 	}
 
-	public void setTransientData(TransientData transientData) {
-		this.transientData = transientData;
-	}
-	
-	/**
-	 * Transient Data which will be not saved in database
-	 * Used by the Proline Studio IHM
-	 * @author JM235353
-	 */
-	public static class TransientData implements Serializable {
-		private static final long serialVersionUID = 1L;
-		
-	    private SequenceMatch sequenceMatch = null;
-	    private ArrayList<ProteinSet> proteinSetArray = null; // Protein Groups where the peptide has been found
-		private HashMap<Integer,PeptidePtm> peptidePtmMap = null;
-	    
-		public TransientData() {
-		}
-		
-		public SequenceMatch getSequenceMatch() {
-			return sequenceMatch;
-		}
-
-		public void setSequenceMatch(SequenceMatch sequenceMatch) {
-			this.sequenceMatch = sequenceMatch;
-		}
-	 
-		public ArrayList<ProteinSet> getProteinSetArray() {
-			return proteinSetArray;
-		}
-		
-		public void setProteinSetArray(ArrayList<ProteinSet> proteinSetArray) {
-			this.proteinSetArray = proteinSetArray;
-		}
-		
-		public HashMap<Integer,PeptidePtm> getPeptidePtmMap() {
-			return peptidePtmMap;
-		}
-		
-		public void setPeptidePtmMap(HashMap<Integer,PeptidePtm> peptidePtmMap) {
-			this.peptidePtmMap = peptidePtmMap;
-		}
-		
+	public SequenceMatch getSequenceMatch() {
+	    return sequenceMatch;
 	}
 
-	/**
-	 * Method for Comparable interface.
-     * Compare Peptides according to their sequence
-	 * @param p
-	 * @return
-	 */
-	@Override
-	public int compareTo(Peptide p) {
-		return sequence.compareTo(p.sequence);
+	public void setSequenceMatch(SequenceMatch sequenceMatch) {
+	    this.sequenceMatch = sequenceMatch;
 	}
+
+	public ArrayList<ProteinSet> getProteinSetArray() {
+	    return proteinSetArray;
+	}
+
+	public void setProteinSetArray(ArrayList<ProteinSet> proteinSetArray) {
+	    this.proteinSetArray = proteinSetArray;
+	}
+
+	public HashMap<Integer, PeptidePtm> getPeptidePtmMap() {
+	    return peptidePtmMap;
+	}
+
+	public void setPeptidePtmMap(HashMap<Integer, PeptidePtm> peptidePtmMap) {
+	    this.peptidePtmMap = peptidePtmMap;
+	}
+
+    }
+
+    /**
+     * Method for Comparable interface. Compare Peptides according to their sequence
+     * 
+     * @param p
+     * @return
+     */
+    @Override
+    public int compareTo(Peptide p) {
+	return sequence.compareTo(p.sequence);
+    }
+    
 }

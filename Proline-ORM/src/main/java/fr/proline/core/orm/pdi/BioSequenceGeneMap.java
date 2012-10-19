@@ -1,81 +1,93 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the bio_sequence_gene_map database table.
  * 
  */
 @Entity
+@NamedQuery(name = "findBioSequenceGeneMapsForGeneNames", query = "select distinct bsgm from fr.proline.core.orm.pdi.BioSequenceGeneMap bsgm"
+	+ " left join fetch bsgm.bioSequence left join fetch bsgm.gene as ge left join fetch bsgm.taxon"
+	+ " where upper(ge.name) in :geneNames")
 @Table(name = "bio_sequence_gene_map")
 public class BioSequenceGeneMap implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@EmbeddedId
-	private BioSequenceGeneMapPK id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name = "serialized_properties")
-	private String serializedProperties;
+    @EmbeddedId
+    private BioSequenceGeneMapPK id;
 
-	// uni-directional many-to-one association to BioSequence
-	@ManyToOne
-	@JoinColumn(name = "bio_sequence_id")
-	@MapsId("bioSequenceId")
-	private BioSequence bioSequence;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	// uni-directional many-to-one association to Gene
-	@ManyToOne
-	@JoinColumn(name = "gene_id")
-	@MapsId("geneId")
-	private Gene gene;
+    // uni-directional many-to-one association to BioSequence
+    @ManyToOne
+    @JoinColumn(name = "bio_sequence_id")
+    @MapsId("bioSequenceId")
+    private BioSequence bioSequence;
 
-	// uni-directional many-to-one association to Taxon
-	@ManyToOne
-	private Taxon taxon;
+    // uni-directional many-to-one association to Gene
+    @ManyToOne
+    @JoinColumn(name = "gene_id")
+    @MapsId("geneId")
+    private Gene gene;
 
-	public BioSequenceGeneMap() {
-		this.id = new BioSequenceGeneMapPK();
-	}
+    // uni-directional many-to-one association to Taxon
+    @ManyToOne
+    private Taxon taxon;
 
-	public BioSequenceGeneMapPK getId() {
-		return this.id;
-	}
+    public BioSequenceGeneMap() {
+	this.id = new BioSequenceGeneMapPK();
+    }
 
-	public void setId(BioSequenceGeneMapPK id) {
-		this.id = id;
-	}
+    public BioSequenceGeneMapPK getId() {
+	return this.id;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public void setId(BioSequenceGeneMapPK id) {
+	this.id = id;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public BioSequence getBioSequence() {
-		return this.bioSequence;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public void setBioSequence(BioSequence bioSequence) {
-		this.bioSequence = bioSequence;
-	}
+    public BioSequence getBioSequence() {
+	return this.bioSequence;
+    }
 
-	public Gene getGene() {
-		return this.gene;
-	}
+    public void setBioSequence(BioSequence bioSequence) {
+	this.bioSequence = bioSequence;
+    }
 
-	public void setGene(Gene gene) {
-		this.gene = gene;
-	}
+    public Gene getGene() {
+	return this.gene;
+    }
 
-	public Taxon getTaxon() {
-		return this.taxon;
-	}
+    public void setGene(Gene gene) {
+	this.gene = gene;
+    }
 
-	public void setTaxon(Taxon taxon) {
-		this.taxon = taxon;
-	}
+    public Taxon getTaxon() {
+	return this.taxon;
+    }
+
+    public void setTaxon(Taxon taxon) {
+	this.taxon = taxon;
+    }
 
 }

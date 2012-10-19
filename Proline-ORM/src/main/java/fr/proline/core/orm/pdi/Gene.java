@@ -1,10 +1,18 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
-import javax.persistence.*;
-
 import java.util.Set;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 
 /**
  * The persistent class for the gene database table.
@@ -12,115 +20,109 @@ import java.util.Set;
  */
 
 @Entity
+@NamedQueries({
+	@NamedQuery(name = "findGeneForNameAndTaxon", query = "select g from fr.proline.core.orm.pdi.Gene g"
+		+ " where (upper(g.name) = :name) and (g.taxon.id = :taxonId)"),
 
-@NamedQuery(name="findGeneByNameAndTaxon",
-query="select g from Gene g where g.name = :name and g.taxonId = :taxid")
+	@NamedQuery(name = "findGenesForNames", query = "select distinct g from fr.proline.core.orm.pdi.Gene g"
+		+ " left join fetch g.taxon" + " where upper(g.name) in :names")
 
+})
 public class Gene implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="is_active")
-	private Boolean isActive;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Integer id;
 
-	private String name;
+    @Column(name = "is_active")
+    private Boolean isActive;
 
-	@Column(name="orf_names")
-	private String orfNames;
+    private String name;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "orf_names")
+    private String orfNames;
 
-	private String synonyms;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//bi-directional many-to-one association to ChromosomeLocation
-	@OneToMany(mappedBy="gene")
-	private Set<ChromosomeLocation> chromosomeLocations;
+    private String synonyms;
 
-	// uni-directional many-to-one association to Taxon
-	@ManyToOne
-	@JoinColumn(name = "taxon_id", insertable = false, updatable = false)
-	private Taxon taxon;
+    // bi-directional many-to-one association to ChromosomeLocation
+    @OneToMany(mappedBy = "gene")
+    private Set<ChromosomeLocation> chromosomeLocations;
 
-	@Column(name = "taxon_id")
-	private Integer taxonId;
+    // uni-directional many-to-one association to Taxon
+    @ManyToOne
+    @JoinColumn(name = "taxon_id", nullable = false)
+    private Taxon taxon;
 
-	public Gene() {
-	}
+    public Gene() {
+    }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public Integer getId() {
+	return this.id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(Integer id) {
+	this.id = id;
+    }
 
-	public Boolean getIsActive() {
-		return this.isActive;
-	}
+    public Boolean getIsActive() {
+	return this.isActive;
+    }
 
-	public void setIsActive(Boolean isActive) {
-		this.isActive = isActive;
-	}
+    public void setIsActive(Boolean isActive) {
+	this.isActive = isActive;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getName() {
+	return this.name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public String getOrfNames() {
-		return this.orfNames;
-	}
+    public String getOrfNames() {
+	return this.orfNames;
+    }
 
-	public void setOrfNames(String orfNames) {
-		this.orfNames = orfNames;
-	}
+    public void setOrfNames(String orfNames) {
+	this.orfNames = orfNames;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public String getSynonyms() {
-		return this.synonyms;
-	}
+    public String getSynonyms() {
+	return this.synonyms;
+    }
 
-	public void setSynonyms(String synonyms) {
-		this.synonyms = synonyms;
-	}
+    public void setSynonyms(String synonyms) {
+	this.synonyms = synonyms;
+    }
 
-	public Set<ChromosomeLocation> getChromosomeLocations() {
-		return this.chromosomeLocations;
-	}
+    public Set<ChromosomeLocation> getChromosomeLocations() {
+	return this.chromosomeLocations;
+    }
 
-	public void setChromosomeLocations(Set<ChromosomeLocation> chromosomeLocations) {
-		this.chromosomeLocations = chromosomeLocations;
-	}
-	
-	public Taxon getTaxon() {
-		return this.taxon;
-	}
+    public void setChromosomeLocations(Set<ChromosomeLocation> chromosomeLocations) {
+	this.chromosomeLocations = chromosomeLocations;
+    }
 
-	public void setTaxon(Taxon taxon) {
-		this.taxon = taxon;
-	}
+    public Taxon getTaxon() {
+	return this.taxon;
+    }
 
-	public Integer getTaxonId() {
-		return taxonId;
-	}
+    public void setTaxon(Taxon taxon) {
+	this.taxon = taxon;
+    }
 
-	public void setTaxonId(Integer taxonId) {
-		this.taxonId = taxonId;
-	}
-	
 }

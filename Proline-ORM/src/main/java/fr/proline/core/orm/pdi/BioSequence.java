@@ -23,7 +23,8 @@ import javax.persistence.Table;
 	@NamedQuery(name = "findPdiBioSequenceForCrc", query = "select bs from fr.proline.core.orm.pdi.BioSequence bs"
 		+ " where upper(bs.crc64) = :crc64"),
 
-	@NamedQuery(name = "findPdiBioSequencesForCrcs", query = "select bs from fr.proline.core.orm.pdi.BioSequence bs"
+	@NamedQuery(name = "findPdiBioSequencesForCrcs", query = "select distinct bs from fr.proline.core.orm.pdi.BioSequence bs"
+		+ " left join fetch bs.proteinIdentifiers as pi left join fetch pi.sequenceDbConfig"
 		+ " where upper(bs.crc64) in :crcs")
 
 })
