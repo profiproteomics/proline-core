@@ -4,8 +4,8 @@ package object lzma {
 
   object EasyLzma {
     
-    import java.io.{ByteArrayOutputStream}
-    import org.tukaani.xz.{LZMA2Options,XZOutputStream}
+    import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
+    import org.tukaani.xz.{LZMA2Options,XZOutputStream,XZInputStream}
     
     case class LzmaOptions( var dictSize: Int, var mode: Int, var niceLen: Int, var depth: Int,
                             var lc: Int, var lp: Int, var pb: Int, var mf: Int )
@@ -87,6 +87,24 @@ package object lzma {
       encoder.finish()
       
       baOS.toByteArray
+
+    }
+    
+    def uncompress( data: Array[Byte] ): Array[Byte] = {
+            
+      val baIS = new ByteArrayInputStream(data);
+      val decoder = new XZInputStream(baIS);
+      
+      val decodedOS = new ByteArrayOutputStream();
+      val buf = new Array[Byte](256);
+      
+      var n = baIS.read(buf);
+      while (n != -1) {
+    	  decodedOS.write(buf,0,n);
+    	  n = baIS.read(buf);
+      }
+
+      return decodedOS.toByteArray();
 
     }
     
