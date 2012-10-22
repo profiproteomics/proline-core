@@ -18,8 +18,8 @@ import scala.collection.mutable.ArrayBuilder
 
 class SQLPeaklistWriter extends IPeaklistWriter with Logging {
    
-  protected val doubleFormatter = newDecimalFormat("0.000000")
-  protected val floatFormatter = newDecimalFormat("0.00")
+  protected val doubleFormatter = newDecimalFormat("#.######")
+  protected val floatFormatter = newDecimalFormat("#.##")
   
   //TODO: GET/CREATE Peaklist SOFT
   def storePeaklist(peaklist: Peaklist, context : StorerContext):Int = {
@@ -77,9 +77,8 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
     val lastTime = if( spectrum.lastTime > 0 ) Some(spectrum.lastTime) else Option.empty[Float]
     
     // moz and intensity lists are formatted as numbers separated by spaces
-    val tzs = TrailingZerosStripper
-    val mozList = spectrum.mozList.getOrElse(Array.empty[Double]).map { m => tzs(this.doubleFormatter.format( m )) } mkString(" ")
-    val intList = spectrum.intensityList.getOrElse(Array.empty[Float]).map { i => tzs(this.floatFormatter.format( i )) } mkString(" ")
+    val mozList = spectrum.mozList.getOrElse(Array.empty[Double]).map { m => this.doubleFormatter.format( m ) } mkString(" ")
+    val intList = spectrum.intensityList.getOrElse(Array.empty[Float]).map { i => this.floatFormatter.format( i ) } mkString(" ")
     
     // Compress peaks
     val compressedMozList = EasyLzma.compress( mozList.getBytes )
@@ -140,9 +139,7 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
   override def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext ): StorerContext = {
 
     val bulkCopyManager = new CopyManager( context.msiDB.getOrCreateConnection().asInstanceOf[BaseConnection] )
-
-    val tzs = TrailingZerosStripper
-
+    
     // Create TMP table
     val tmpSpectrumTableName = "tmp_spectrum_" + ( scala.math.random * 1000000 ).toInt
     logger.info( "creating temporary table '" + tmpSpectrumTableName + "'..." )
@@ -159,7 +156,8 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
 
     // Iterate over spectra to store them
     peaklistContainer.eachSpectrum { spectrum =>
-       logger.debug( "get spectrum "+ spectrum.title)
+      logger.debug( "get spectrum "+ spectrum.title)
+      
       // Define some vars
       val precursorIntensity = if ( !spectrum.precursorIntensity.isNaN ) spectrum.precursorIntensity else ""
       val firstCycle = if ( spectrum.firstCycle > 0 ) spectrum.firstCycle else ""
@@ -171,8 +169,8 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
       //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
 
       // moz and intensity lists are formatted as numbers separated by spaces      
-      val mozList = spectrum.mozList.getOrElse( Array.empty[Double] ).map { m => tzs( this.doubleFormatter.format( m ) ) } mkString ( " " )
-      val intList = spectrum.intensityList.getOrElse( Array.empty[Float] ).map { i => tzs( this.floatFormatter.format( i ) ) } mkString ( " " )
+      val mozList = spectrum.mozList.getOrElse( Array.empty[Double] ).map { m => this.doubleFormatter.format( m ) } mkString ( " " )
+      val intList = spectrum.intensityList.getOrElse( Array.empty[Float] ).map { i => this.floatFormatter.format( i ) } mkString ( " " )
 
       // Compress peaks
       val compressedMozList = EasyLzma.compress( mozList.getBytes )
