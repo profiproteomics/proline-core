@@ -98,10 +98,10 @@ package object lzma {
       val decodedOS = new ByteArrayOutputStream();
       val buf = new Array[Byte](256);
       
-      var n = baIS.read(buf);
+      var n = decoder.read(buf);
       while (n != -1) {
     	  decodedOS.write(buf,0,n);
-    	  n = baIS.read(buf);
+    	  n = decoder.read(buf);
       }
 
       return decodedOS.toByteArray();
