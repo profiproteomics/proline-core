@@ -81,8 +81,8 @@ public class PdiBioSequenceRepository extends JPARepository {
      */
     public List<BioSequence> findBioSequencesForCrcs(final Collection<String> crcs) {
 
-	if (crcs == null) {
-	    throw new IllegalArgumentException("Crcs collection is null");
+	if ((crcs == null) || crcs.isEmpty()) {
+	    throw new IllegalArgumentException("Crcs collection is empty");
 	}
 
 	final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery(

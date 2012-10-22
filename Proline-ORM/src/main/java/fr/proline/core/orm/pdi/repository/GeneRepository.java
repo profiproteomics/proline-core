@@ -55,8 +55,8 @@ public class GeneRepository extends JPARepository {
      */
     public List<Gene> findGenesForNames(final Collection<String> names) {
 
-	if (names == null) {
-	    throw new IllegalArgumentException("Names collection is null");
+	if ((names == null) || names.isEmpty()) {
+	    throw new IllegalArgumentException("Names collection is empty");
 	}
 
 	final TypedQuery<Gene> query = getEntityManager().createNamedQuery("findGenesForNames", Gene.class);
@@ -76,8 +76,8 @@ public class GeneRepository extends JPARepository {
      */
     public List<BioSequenceGeneMap> findBioSequenceGeneMapsForGeneNames(final Collection<String> geneNames) {
 
-	if (geneNames == null) {
-	    throw new IllegalArgumentException("GeneNames collection is null");
+	if ((geneNames == null) || geneNames.isEmpty()) {
+	    throw new IllegalArgumentException("GeneNames collection is empty");
 	}
 
 	final TypedQuery<BioSequenceGeneMap> query = getEntityManager().createNamedQuery(

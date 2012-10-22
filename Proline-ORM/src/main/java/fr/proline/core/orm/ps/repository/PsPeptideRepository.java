@@ -38,8 +38,8 @@ public class PsPeptideRepository extends JPARepository {
      */
     public List<Peptide> findPeptidesForIds(final Collection<Integer> ids) {
 
-	if (ids == null) {
-	    throw new IllegalArgumentException("Ids collection is null");
+	if ((ids == null) || ids.isEmpty()) {
+	    throw new IllegalArgumentException("Ids collection is empty");
 	}
 
 	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findPsPepsForIds",

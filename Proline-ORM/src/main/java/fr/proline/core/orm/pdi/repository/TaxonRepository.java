@@ -24,8 +24,8 @@ public class TaxonRepository extends JPARepository {
      */
     public List<Taxon> findTaxonsForIds(final Collection<Integer> ids) {
 
-	if (ids == null) {
-	    throw new IllegalArgumentException("Ids collection is null");
+	if ((ids == null) || ids.isEmpty()) {
+	    throw new IllegalArgumentException("Ids collection is empty");
 	}
 
 	final TypedQuery<Taxon> query = getEntityManager().createNamedQuery("findTaxonsForIds", Taxon.class);
