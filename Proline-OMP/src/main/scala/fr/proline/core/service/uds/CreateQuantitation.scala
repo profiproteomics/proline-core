@@ -168,6 +168,7 @@ class CreateQuantitation(
       udsEM.persist( udsQf )
       
       val quantChannels = fraction.quantChannels
+      var quantChannelNum = 0
       
       // Iterate over each fraction quant channel
       val replicateNumBySampleNum = new HashMap[Int,Int]
@@ -198,8 +199,9 @@ class CreateQuantitation(
         }
         
         val udsQuantChannel = new UdsQuantChannel()
-        udsQuantChannel.setContextKey( contextKey )
+        udsQuantChannel.setNumber( quantChannelNum )
         udsQuantChannel.setName( "" )
+        udsQuantChannel.setContextKey( contextKey )
         udsQuantChannel.setIdentResultSummaryId( quantChannel.identResultSummaryId )
         udsQuantChannel.setSampleReplicate( udsSampleReplicateByKey(contextKey) )
         udsQuantChannel.setBiologicalSample( udsBioSample )
@@ -217,6 +219,7 @@ class CreateQuantitation(
         
         udsEM.persist( udsQuantChannel )
         
+        quantChannelNum += 1
       }
     }
     
