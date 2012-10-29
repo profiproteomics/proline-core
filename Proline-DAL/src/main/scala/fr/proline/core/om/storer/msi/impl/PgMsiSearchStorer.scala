@@ -17,11 +17,7 @@ class PgMsiSearchStorer( val msiDb: MsiDb ) extends SQLiteMsiSearchStorer( msiDb
   
   val bulkCopyManager = new CopyManager( msiDb.getOrCreateConnection().asInstanceOf[BaseConnection] )
   
-  override def storeMsQueries( msiSearch: MSISearch,
-                               msQueries: Seq[MsQuery],
-                               spectrumIdByTitle: Map[String,Int] ): Unit = {
-    
-    val msiSearchId = msiSearch.id    
+  override def storeMsQueries( msiSearchId: Int, msQueries: Seq[MsQuery], context: StorerContext ): StorerContext = {
     
     // Create TMP table
     val tmpMsQueryTableName = "tmp_ms_query_" + ( scala.math.random * 1000000 ).toInt
@@ -44,8 +40,8 @@ class PgMsiSearchStorer( val msiDb: MsiDb ) extends SQLiteMsiSearchStorer( msiDb
           val ms2Query = msQuery.asInstanceOf[Ms2Query]
           // FIXME: it should not be null
           var spectrumId = Option.empty[Int]
-          if( spectrumIdByTitle != null ) {
-            ms2Query.spectrumId = spectrumIdByTitle(ms2Query.spectrumTitle)
+          if( context.spectrumIdByTitle != null ) {
+            ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
             spectrumId = Some(ms2Query.spectrumId)
           }
           this._copyMsQuery( pgBulkLoader, msQuery, msiSearchId, spectrumId )
@@ -70,7 +66,8 @@ class PgMsiSearchStorer( val msiDb: MsiDb ) extends SQLiteMsiSearchStorer( msiDb
     
     // Iterate over MS queries to update them
     msQueries.foreach { msQuery => msQuery.id = msQueryIdByInitialId( msQuery.initialId ) }
-     
+                            
+    context
   }
   
   private def _copyMsQuery( pgBulkLoader: CopyIn, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int] ): Unit = {

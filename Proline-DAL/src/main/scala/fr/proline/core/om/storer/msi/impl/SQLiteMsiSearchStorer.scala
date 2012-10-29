@@ -15,21 +15,21 @@ import fr.proline.core.om.storer.msi.IMsiSearchStorer
 
 class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Logging {
   
-  def storeMsiSearch( msiSearch: MSISearch,
-                      msQueries: Seq[MsQuery],
-                      spectrumIdByTitle: Map[String,Int] ): Map[Int,Int] = {
+  def storeMsiSearch( msiSearch: MSISearch, context: StorerContext ): Int = {
     
     val ss = msiSearch.searchSettings
     
     // Insert sequence databases
-    val seqDbIdByTmpId = new HashMap[Int,Int]()
+    // TODO : If seqDb does not exist in PDI do not create it !!
+    val seqDbIdByTmpIdBuilder = collection.immutable.Map.newBuilder[Int,Int]
     ss.seqDatabases.foreach { seqDb =>
       val tmpSeqDbId = seqDb.id
       this._insertSeqDatabase( seqDb )
-      seqDbIdByTmpId += ( tmpSeqDbId -> seqDb.id )
-    }
+      seqDbIdByTmpIdBuilder += ( tmpSeqDbId -> seqDb.id )
+    }    
+    context.seqDbIdByTmpId = seqDbIdByTmpIdBuilder.result()
     
-    // Insert search settings    
+    // Insert search settings
     this._insertSearchSettings( ss )
     
     // Insert used PTMs
@@ -41,10 +41,69 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     this._insertMsiSearch( msiSearch )
     
     // Store MS queries
-    this.storeMsQueries( msiSearch, msQueries, spectrumIdByTitle )
+    //this.storeMsQueries( msiSearch, msQueries, context )
     
-    Map() ++ seqDbIdByTmpId
+    msiSearch.id
   }
+  
+  def storeMsQueries( msiSearchId: Int, msQueries: Seq[MsQuery], context : StorerContext ): StorerContext = {
+    
+    val msQueryColsList = MsiDbMsQueryTable.getColumnsAsStrList().filter { _ != "id" }
+    val msQueryInsertQuery = MsiDbMsQueryTable.makeInsertQuery( msQueryColsList )
+    
+    val msiDbTx = context.msiDB.getOrCreateTransaction()
+    msiDbTx.executeBatch( msQueryInsertQuery, true ) { stmt =>
+      
+      for( msQuery <- msQueries ) {
+        
+        //val tmpMsQueryId = msQuery.id
+        
+        msQuery.msLevel match {
+          case 1 => this._insertMsQuery( stmt, msQuery.asInstanceOf[Ms1Query], msiSearchId, Option.empty[Int], context )
+          case 2 => {
+            val ms2Query = msQuery.asInstanceOf[Ms2Query]
+            // FIXME: it should not be null
+            var spectrumId = Option.empty[Int]
+            if( context.spectrumIdByTitle != null ) {
+              ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
+              spectrumId = Some(ms2Query.spectrumId)
+            }
+            this._insertMsQuery( stmt, msQuery, msiSearchId, spectrumId, context )
+          }
+        }
+        
+        //msQueryIdByTmpId += ( tmpMsQueryId -> msQuery.id )
+        
+      }
+      
+    }
+    
+    context
+  }
+  
+  private def _insertMsQuery( stmt: ReusableStatement, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int], context : StorerContext ): Unit = {
+    
+    import com.codahale.jerkson.Json.generate
+    // Retrieve some vars
+    //val spectrumId = ms2Query.spectrumId
+    //if( spectrumId <= 0 )
+      //throw new Exception("spectrum must first be persisted")
+    
+    val msqPropsAsJSON = if( msQuery.properties != None ) Some(generate(msQuery.properties.get)) else None
+    
+    stmt.executeWith(
+          msQuery.initialId,
+          msQuery.charge,
+          msQuery.moz,
+          msqPropsAsJSON,
+          spectrumId,
+          msiSearchId
+          )
+
+    msQuery.id = context.msiDB.extractGeneratedInt( stmt.wrapped )
+  }
+  
+  /*
   
   def storeMsQueries( msiSearch: MSISearch,
                       msQueries: Seq[MsQuery],
@@ -84,17 +143,41 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     }
     
   }
+
+  private def _insertMsQuery( stmt: ReusableStatement, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int] ): Unit = {
+    
+    import com.codahale.jerkson.Json.generate
+    // Retrieve some vars
+    //val spectrumId = ms2Query.spectrumId
+    //if( spectrumId <= 0 )
+      //throw new Exception("spectrum must first be persisted")
+    
+    val msqPropsAsJSON = if( msQuery.properties != None ) Some(generate(msQuery.properties.get)) else None
+    
+    stmt.executeWith(
+          msQuery.initialId,
+          msQuery.charge,
+          msQuery.moz,
+          msqPropsAsJSON,
+          spectrumId,
+          msiSearchId
+          )
+
+    msQuery.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+  }
   
-  def insertInstrumentConfig( instrumentConfig: InstrumentConfig ): Unit = {
+  */
+  
+  def insertInstrumentConfig( instrumentConfig: InstrumentConfig, context: StorerContext ): Unit = {
     
     require( instrumentConfig.id > 0, "instrument configuration must have a strictly positive identifier" )
     
     // Check if the instrument config exists in the MSIdb
-    val count = msiDb.getOrCreateTransaction.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id )
+    val count = context.msiDB.getOrCreateTransaction.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id )
     
     // If the instrument config doesn't exist in the MSIdb
     if( count == 0 ) {
-      msiDb.getOrCreateTransaction.executeBatch("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
+      context.msiDB.getOrCreateTransaction.executeBatch("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
         stmt.executeWith( instrumentConfig.id,
                           instrumentConfig.name,
                           instrumentConfig.ms1Analyzer,
@@ -102,11 +185,10 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
                           Option.empty[String]
                          )
       }
-    }
-    
+    }   
   }
   
-  private def _insertSeqDatabase( seqDatabase: SeqDatabase ): Unit = {
+  private def _insertSeqDatabase( seqDatabase: SeqDatabase ): Unit = {    
     
     val fasta_path = seqDatabase.filePath
     val seqDbIds = msiDb.getOrCreateTransaction.select( "SELECT id FROM seq_database WHERE fasta_file_path='" + fasta_path+"'" ) { _.nextInt.get }
@@ -117,7 +199,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
       val seqDbColsList = MsiDbSeqDatabaseTable.getColumnsAsStrList().filter { _ != "id" }
       val seqDbInsertQuery = MsiDbSeqDatabaseTable.makeInsertQuery( seqDbColsList )
       
-      val msiDbTx = this.msiDb.getOrCreateTransaction()
+      val msiDbTx = msiDb.getOrCreateTransaction()
       msiDbTx.executeBatch( seqDbInsertQuery, true ) { stmt =>
       
         stmt.executeWith(
@@ -129,7 +211,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
               Option.empty[String]
             )
           
-        seqDatabase.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+        seqDatabase.id = msiDb.extractGeneratedInt( stmt.wrapped )
       }
       
     } else {
@@ -147,7 +229,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
     val searchSettingsColsList = MsiDbSearchSettingsTable.getColumnsAsStrList().filter { _ != "id" }
     val searchSettingsInsertQuery = MsiDbSearchSettingsTable.makeInsertQuery( searchSettingsColsList )
     
-    val msiDbTx = this.msiDb.getOrCreateTransaction()
+    val msiDbTx = msiDb.getOrCreateTransaction()
     msiDbTx.executeBatch( searchSettingsInsertQuery, true ) { stmt =>
       stmt.executeWith(
             searchSettings.softwareName,
@@ -163,7 +245,7 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
             searchSettings.instrumentConfig.id
             )
             
-      searchSettings.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+      searchSettings.id = msiDb.extractGeneratedInt( stmt.wrapped )
     }
     
     // Link search settings to sequence databases
@@ -248,48 +330,6 @@ class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Loggin
       msiSearch.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
     }
     
-  }
-  
-  /*private def _insertMs1Query( ms1Query: Ms1Query, msiSearchId: Int ): Unit = {
-    
-    val msiDbConn = this.msiDb.getOrCreateConnection()
-    val stmt = msiDbConn.prepareStatement( "INSERT INTO ms_query VALUES ("+ "?,"*6 +"?)",
-                                           java.sql.Statement.RETURN_GENERATED_KEYS ) 
-    
-    new ReusableStatement( stmt, msiDb.config.sqlFormatter ) <<
-      Some(null) <<
-      ms1Query.initialId <<
-      ms1Query.charge <<
-      ms1Query.moz <<
-      Some(null) <<
-      Some(null) <<
-      msiSearchId
-
-    stmt.execute()
-    ms1Query.id = this.msiDb.extractGeneratedInt( stmt )
-    
-  }*/
-  
-  private def _insertMsQuery( stmt: ReusableStatement, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int] ): Unit = {
-    
-    import com.codahale.jerkson.Json.generate
-    // Retrieve some vars
-    //val spectrumId = ms2Query.spectrumId
-    //if( spectrumId <= 0 )
-      //throw new Exception("spectrum must first be persisted")
-    
-    val msqPropsAsJSON = if( msQuery.properties != None ) Some(generate(msQuery.properties.get)) else None
-    
-    stmt.executeWith(
-          msQuery.initialId,
-          msQuery.charge,
-          msQuery.moz,
-          msqPropsAsJSON,
-          spectrumId,
-          msiSearchId
-          )
-
-    msQuery.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
   }
   
 }

@@ -114,9 +114,13 @@ object RsStorer {
   import fr.proline.core.om.storer.msi.impl.PgRsWriter
   import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
 
-  def apply(dbMgmt: DatabaseManagement, msiDb: MsiDb): IRsStorer = {
-    if(msiDb == null)
+  def apply(dbMgmt: DatabaseManagement, msiDb: MsiDb ): IRsStorer = {
+    
+    /*if(msiDb == null)
       new JPARsStorer( dbMgmt, null, null) //Call JPARsStorer
+    */
+    //val dbMgmt = stContext.dbManagement
+    //val msiDb = stContext.msiDB
     
     msiDb.config.driver match {
     	case "org.postgresql.Driver" => new SQLRsStorer( dbMgmt, new PgRsWriter( msiDb ), IPeaklistWriter.apply(msiDb.config.driver.toString) )

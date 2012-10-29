@@ -17,7 +17,10 @@ import fr.proline.core.dal.MsiDbSeqDatabaseTable
 import fr.proline.core.dal.MsiDbMsQueryTable
 import fr.proline.core.utils.sql._
 import fr.proline.core.om.storer.msi.IPeaklistWriter
-class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends IRsStorer with Logging {
+
+class SQLRsStorer( dbMgmt: DatabaseManagement,
+                   private val _rsWriter: IRsWriter,
+                   private val _pklWriter: IPeaklistWriter ) extends IRsStorer with Logging {
 
   import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._
@@ -25,40 +28,34 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, 
   import fr.proline.core.utils.sql.BoolToSQLStr
   import fr.proline.core.om.model.msi._
   
-  val msiDb1 = _storer.msiDb1
+  val msiDb1 = _rsWriter.msiDb1
   lazy val psDb = new PsDb(PsDb.buildConfigFromDatabaseConnector(dbMgmt.psDBConnector) )
     
-  val peptideByUniqueKey = _storer.peptideByUniqueKey
-  val proteinBySequence = _storer.proteinBySequence
+  val peptideByUniqueKey = _rsWriter.peptideByUniqueKey
+  val proteinBySequence = _rsWriter.proteinBySequence
   
-  def storeResultSet(resultSet : ResultSet, context : StorerContext) : Int  = {
-    if(resultSet == null )
-    	throw new IllegalArgumentException("ResultSet is null")
+  val msiSearchStorer = new SQLiteMsiSearchStorer( msiDb1 )
+  
+  def storeResultSet(resultSet: ResultSet, context: StorerContext): Int  = {
+    require(resultSet != null, "ResultSet is null" )
     
-    var rId = 0
-    
-    if(resultSet.isNative)
-    	rId =  _storeResultSet(resultSet, context.seqDbIdByTmpId)   
-    else 
-       rId =  _storeResultSet(resultSet )
-     rId
+    if(resultSet.isNative) this._storeResultSet(resultSet, context.seqDbIdByTmpId)   
+    else this._storeResultSet(resultSet )
   }
-  
    
-  def storeResultSet( resultSet: ResultSet ) : Int  = {
-    val context = new StorerContext(dbMgmt, _storer.msiDb1.dbConnector)
+  def storeResultSet( resultSet: ResultSet ): Int  = {
+    val context = new StorerContext(dbMgmt, _rsWriter.msiDb1.dbConnector)
     val createdRsId = storeResultSet(resultSet, context)
     context.closeOpenedEM()
     createdRsId
   }
   
-  def storeResultSet(resultSet : ResultSet, msQueries : Seq [MsQuery], peakListContainer : IPeaklistContainer, context : StorerContext) : Int = {
+  def storeResultSet(resultSet: ResultSet, msQueries: Seq [MsQuery], peakListContainer: IPeaklistContainer, context: StorerContext) : Int = {
     throw new Exception("NYI")
   }
-   
-    // Only for native result sets
-  def _storeResultSet( resultSet: ResultSet, seqDbIdByTmpId: Map[Int,Int] ): Int = {
-    
+  
+  // Only for native result sets
+  def _storeResultSet( resultSet: ResultSet, seqDbIdByTmpId: Map[Int,Int] ): Int = {    
     require( resultSet.isNative, "too many arguments for a non native result set" )
     
     this._insertResultSet( resultSet )
@@ -70,8 +67,7 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, 
   }
   
   // Only for non native result sets
-  def _storeResultSet( resultSet: ResultSet ): Int = {
-    
+  def _storeResultSet( resultSet: ResultSet ): Int = {    
     require( resultSet.isNative == false, "not enough arguments for a native result set" )
     
     this._insertResultSet( resultSet )
@@ -130,7 +126,7 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, 
     
     // Retrieve the list of existing peptides in the current MSIdb
     // TODO: do this using the PSdb
-    val existingMsiPeptidesIdByKey = this._storer.fetchExistingPeptidesIdByUniqueKey( resultSet.getUniquePeptideSequences )
+    val existingMsiPeptidesIdByKey = this._rsWriter.fetchExistingPeptidesIdByUniqueKey( resultSet.getUniquePeptideSequences )
     logger.info( existingMsiPeptidesIdByKey.size + " existing peptides have been loaded from the database !" )
     
     // Retrieve existing peptides and map them by unique key
@@ -182,7 +178,7 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, 
       }
       
       logger.info( "storing "+ nbNewMsiPeptides +" new peptides in the MSIdb...")
-      val insertedPeptides = this._storer.storeNewPeptides( newMsiPeptides )
+      val insertedPeptides = this._rsWriter.storeNewPeptides( newMsiPeptides )
       logger.info( insertedPeptides.length + " new peptides have been effectively stored !")
       
       /*for( insertedPeptide <- insertedPeptides ) {
@@ -205,7 +201,7 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, 
     this._updateRsPeptideMatches( resultSet )
     
     // Store peptide matches
-    val peptideMatchCount = this._storer.storeRsPeptideMatches( resultSet )
+    val peptideMatchCount = this._rsWriter.storeRsPeptideMatches( resultSet )
     logger.info( peptideMatchCount+" peptide matches have been stored !" )
     
     // Retrieve protein matches and their accession numbers
@@ -273,14 +269,14 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, 
     this._updateRsProteinMatches( resultSet, null, null, null, seqDbIdByTmpId )
     
     // Store protein matches
-    this._storer.storeRsProteinMatches( resultSet )
+    this._rsWriter.storeRsProteinMatches( resultSet )
     logger.info( "protein matches have been stored" )
     
     // Update sequence matches
     this._updateRsSequenceMatches( resultSet, peptideMatchByTmpId )
     
     // Store sequence matches
-    this._storer.storeRsSequenceMatches( resultSet )
+    this._rsWriter.storeRsSequenceMatches( resultSet )
     logger.info( "sequence matches have been stored" )
     
   }
@@ -294,18 +290,18 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, 
     val peptideMatchByTmpId = peptideMatches map { pepMatch => pepMatch.id -> pepMatch } toMap
     
     // Store peptide matches
-    val peptideMatchCount = this._storer.storeRsPeptideMatches( resultSet )    
+    val peptideMatchCount = this._rsWriter.storeRsPeptideMatches( resultSet )    
     logger.info( peptideMatchCount + " peptide matches have been stored !" )
     
     // Store protein matches
-    this._storer.storeRsProteinMatches( resultSet )    
+    this._rsWriter.storeRsProteinMatches( resultSet )    
     logger.info( "protein matches have been stored" )
     
     // Update sequence matches (replace peptide match tmp ids by database ids)
     this._updateRsSequenceMatches( resultSet, peptideMatchByTmpId )
     
     // Store sequence matches
-    this._storer.storeRsSequenceMatches( resultSet )
+    this._rsWriter.storeRsSequenceMatches( resultSet )
     logger.info( "sequence matches have been stored" )
     
   }
@@ -424,269 +420,27 @@ class SQLRsStorer ( dbMgmt: DatabaseManagement, private val _storer: IRsWriter, 
       }
     }
   }
-
     
   def storePeaklist( peaklist: Peaklist, context : StorerContext): Int = {   
     logger.info( "storing peaklist..." )
-    _plWriter.storePeaklist(peaklist, context)
-
+    _pklWriter.storePeaklist(peaklist, context)
   }
   
   def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext = {
-      logger.info( "storing spectra..." )
-      _plWriter.storeSpectra(peaklistId, peaklistContainer, context)
-   }
-  
-  def storeMsiSearch(msiSearch : MSISearch, context : StorerContext) : Int = {
-    val ss = msiSearch.searchSettings
-    
-    // Insert sequence databases 
-    // TODO : If seqDb does not exist in PDI do not create it !! 
-    val _seqDbIdByTmpIdBuilder = collection.immutable.Map.newBuilder[Int,Int]
-    ss.seqDatabases.foreach { seqDb =>
-      val tmpSeqDbId = seqDb.id
-      this._insertSeqDatabase( seqDb )
-      _seqDbIdByTmpIdBuilder += ( tmpSeqDbId -> seqDb.id )
-    }
-    
-    // Insert search settings    
-    this._insertSearchSettings( ss )
-    
-    // Insert used PTMs
-    val ssId = ss.id
-    for( ptmDef <- ss.fixedPtmDefs ) this._insertUsedPTM( ssId, ptmDef, true )
-    for( ptmDef <- ss.variablePtmDefs ) this._insertUsedPTM( ssId, ptmDef, false )
-    
-    // Insert MSI search
-    this._insertMsiSearch( msiSearch )
-    
-    context.seqDbIdByTmpId =  _seqDbIdByTmpIdBuilder.result()
-    msiSearch.id
+    logger.info( "storing spectra..." )
+    _pklWriter.storeSpectra(peaklistId, peaklistContainer, context)
   }
   
-  def storeMsQueries( msiSearchID : Int,
-                      msQueries: Seq[MsQuery],
-                      context : StorerContext ): StorerContext = {
-    
-        
-    val msQueryColsList = MsiDbMsQueryTable.getColumnsAsStrList().filter { _ != "id" }
-    val msQueryInsertQuery = MsiDbMsQueryTable.makeInsertQuery( msQueryColsList )
-    
-    val msiDbTx = context.msiDB.getOrCreateTransaction()
-    msiDbTx.executeBatch( msQueryInsertQuery, true ) { stmt =>
-      
-      for( msQuery <- msQueries ) {
-        
-        //val tmpMsQueryId = msQuery.id
-        
-        msQuery.msLevel match {
-          case 1 => this._insertMsQuery( stmt, msQuery.asInstanceOf[Ms1Query], msiSearchID, Option.empty[Int], context )
-          case 2 => {
-            val ms2Query = msQuery.asInstanceOf[Ms2Query]
-            // FIXME: it should not be null
-            var spectrumId = Option.empty[Int]
-            if( context.spectrumIdByTitle != null ) {
-              ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
-              spectrumId = Some(ms2Query.spectrumId)
-            }
-            this._insertMsQuery( stmt, msQuery, msiSearchID, spectrumId, context )
-          }
-        }
-        
-        //msQueryIdByTmpId += ( tmpMsQueryId -> msQuery.id )
-        
-      }
-      
-    }
-    context
-  }
-  
-  
-  // Duplicate AbstractRsStorer !
-   def insertInstrumentConfig( instrumentConfig: InstrumentConfig, context : StorerContext ): Unit = {
-    
-    require( instrumentConfig.id > 0, "instrument configuration must have a strictly positive identifier" )
-    
-    // Check if the instrument config exists in the MSIdb
-    val count = context.msiDB.getOrCreateTransaction.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id )
-    
-    // If the instrument config doesn't exist in the MSIdb
-    if( count == 0 ) {
-      context.msiDB.getOrCreateTransaction.executeBatch("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
-        stmt.executeWith( instrumentConfig.id,
-                          instrumentConfig.name,
-                          instrumentConfig.ms1Analyzer,
-                          Option(instrumentConfig.msnAnalyzer),
-                          Option.empty[String]
-                         )
-      }
-    }   
-  }
-    private def _insertMsQuery( stmt: ReusableStatement, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int], context : StorerContext ): Unit = {
-    
-    import com.codahale.jerkson.Json.generate
-    // Retrieve some vars
-    //val spectrumId = ms2Query.spectrumId
-    //if( spectrumId <= 0 )
-      //throw new Exception("spectrum must first be persisted")
-    
-    val msqPropsAsJSON = if( msQuery.properties != None ) Some(generate(msQuery.properties.get)) else None
-    
-    stmt.executeWith(
-          msQuery.initialId,
-          msQuery.charge,
-          msQuery.moz,
-          msqPropsAsJSON,
-          spectrumId,
-          msiSearchId
-          )
-
-    msQuery.id = context.msiDB.extractGeneratedInt( stmt.wrapped )
-  }
-    
-  
-  private def _insertSeqDatabase( seqDatabase: SeqDatabase ): Unit = {
-    
-    val fasta_path = seqDatabase.filePath
-    val seqDbIds = msiDb1.getOrCreateTransaction.select( "SELECT id FROM seq_database WHERE fasta_file_path='" + fasta_path+"'" ) { _.nextInt.get }
-    
-    // If the sequence database doesn't exist in the MSIdb
-    if( seqDbIds.length == 0 ) {
-      
-      val seqDbColsList = MsiDbSeqDatabaseTable.getColumnsAsStrList().filter { _ != "id" }
-      val seqDbInsertQuery = MsiDbSeqDatabaseTable.makeInsertQuery( seqDbColsList )
-      
-      val msiDbTx = msiDb1.getOrCreateTransaction()
-      msiDbTx.executeBatch( seqDbInsertQuery, true ) { stmt =>
-      
-        stmt.executeWith(
-              seqDatabase.name,
-              seqDatabase.filePath,
-              seqDatabase.version,
-              new java.util.Date,// TODO: upgrade to date seqDatabase.releaseDate,
-              seqDatabase.sequencesCount,
-              Option.empty[String]
-            )
-          
-        seqDatabase.id = msiDb1.extractGeneratedInt( stmt.wrapped )
-      }
-      
-    } else {
-      seqDatabase.id = seqDbIds(0)
-    }
-    
-  }
-  
-  private def _insertSearchSettings( searchSettings: SearchSettings ): Unit = {
-    
-    // Retrieve some vars
-    val instrumentConfigId = searchSettings.instrumentConfig.id
-    require( instrumentConfigId > 0, "instrument configuration must first be persisted" )
-    
-    val searchSettingsColsList = MsiDbSearchSettingsTable.getColumnsAsStrList().filter { _ != "id" }
-    val searchSettingsInsertQuery = MsiDbSearchSettingsTable.makeInsertQuery( searchSettingsColsList )
-    
-    val msiDbTx = msiDb1.getOrCreateTransaction()
-    msiDbTx.executeBatch( searchSettingsInsertQuery, true ) { stmt =>
-      stmt.executeWith(
-            searchSettings.softwareName,
-            searchSettings.softwareVersion,
-            searchSettings.taxonomy,
-            searchSettings.maxMissedCleavages,
-            searchSettings.ms1ChargeStates,
-            searchSettings.ms1ErrorTol,
-            searchSettings.ms1ErrorTolUnit,
-            searchSettings.quantitation,
-            searchSettings.isDecoy,
-            Option.empty[String],
-            searchSettings.instrumentConfig.id
-            )
-            
-      searchSettings.id = msiDb1.extractGeneratedInt( stmt.wrapped )
-    }
-    
-    // Link search settings to sequence databases
-    msiDb1.getOrCreateTransaction.executeBatch( "INSERT INTO search_settings_seq_database_map VALUES (?,?,?,?)" ) { stmt =>
-      searchSettings.seqDatabases.foreach { seqDb =>
-        assert( seqDb.id > 0, "sequence database must first be persisted" )
-        
-        stmt.executeWith( searchSettings.id, seqDb.id, seqDb.sequencesCount, Option.empty[String] )
-      }
-    }
-    
+  def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Int = {
+    this.msiSearchStorer.storeMsiSearch(msiSearch,context)
   }
 
- private def _insertUsedPTM( ssId: Int, ptmDef: PtmDefinition, isFixed: Boolean ): Unit = {
-    
-    // Check if the PTM specificity exists in the MSIdb
-    val msiDbTx = msiDb1.getOrCreateTransaction()
-    val count = msiDbTx.selectInt( "SELECT count(*) FROM ptm_specificity WHERE id =" + ptmDef.id )
-    
-    // Insert PTM specificity if it doesn't exist in the MSIdb
-    if( count == 0 ) {
-      val ptmSpecifColsList = MsiDbPtmSpecificityTable.getColumnsAsStrList()
-      val ptmSpecifInsertQuery = MsiDbPtmSpecificityTable.makeInsertQuery( ptmSpecifColsList )      
-      
-      msiDbTx.executeBatch( ptmSpecifInsertQuery, false ) { stmt => {
-        val residueAsStr = if(ptmDef.residue == '\0') "" else ptmDef.residue.toString
-        logger.debug(" Execute "+ptmSpecifInsertQuery+" with "+ ptmDef.id+" - "+ptmDef.location+" - "+residueAsStr)
-        stmt.executeWith(
-              ptmDef.id,
-              ptmDef.location,
-              residueAsStr,
-              Option.empty[String]
-              )
-        }
-      }
-    }
-    
-    // Link used PTMs to search settings
-    val usedPtmColsList = MsiDbUsedPtmTable.getColumnsAsStrList()
-    val usedPtmInsertQuery = MsiDbUsedPtmTable.makeInsertQuery( usedPtmColsList )
-    msiDbTx.executeBatch( usedPtmInsertQuery, false ) { stmt =>
-      stmt.executeWith(
-            ssId,
-            ptmDef.id,
-            ptmDef.names.shortName,
-            isFixed,
-            Option.empty[String]
-            )
-            
-    }
-    
+  def storeMsQueries(msiSearchID: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
+    this.msiSearchStorer.storeMsQueries(msiSearchID,msQueries,context)
   }
- private def _insertMsiSearch( msiSearch: MSISearch ): Unit = {
-    
-    // Retrieve some vars
-    val searchSettingsId = msiSearch.searchSettings.id
-    require( searchSettingsId > 0, "search settings must first be persisted" )
-    
-    val peaklistId = msiSearch.peakList.id
-    require( peaklistId > 0, "peaklist must first be persisted" )
-    
-    val msiSearchColsList = MsiDbMsiSearchTable.getColumnsAsStrList().filter { _ != "id" }
-    val msiSearchInsertQuery = MsiDbMsiSearchTable.makeInsertQuery( msiSearchColsList )
-    
-    val msiDbTx = msiDb1.getOrCreateTransaction()
-    msiDbTx.executeBatch( msiSearchInsertQuery, true ) { stmt =>
-      stmt.executeWith(
-            msiSearch.title,
-            msiSearch.date, // msiDb.stringifyDate( msiSearch.date ),
-            msiSearch.resultFileName,
-            msiSearch.resultFileDirectory,
-            msiSearch.jobNumber,
-            msiSearch.userName,
-            msiSearch.userEmail,
-            msiSearch.queriesCount,
-            msiSearch.submittedQueriesCount,
-            msiSearch.searchedSequencesCount,
-            Option.empty[String],
-            searchSettingsId,
-            peaklistId
-          )
-          
-      msiSearch.id = msiDb1.extractGeneratedInt( stmt.wrapped )
-    }
-    
+  
+  def insertInstrumentConfig(instrumentConfig: InstrumentConfig, context: StorerContext) = {
+    this.msiSearchStorer.insertInstrumentConfig(instrumentConfig,context)
   }
+  
 }
