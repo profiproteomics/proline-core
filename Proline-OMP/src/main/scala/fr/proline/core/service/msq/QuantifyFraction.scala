@@ -46,12 +46,21 @@ object FractionQuantifier {
                                   )*/
     
     } 
-    else if( quantMethodType == "label_free" && abundanceUnit == "feature" ) {
-      fractionQuantifier = new Ms1DrivenLabelFreeFeatureQuantifier(
-                                 dbManager = dbManager,
-                                 udsEm = udsEm,
-                                 udsQuantFraction = udsQuantFraction
-                               )
+    else if( quantMethodType == "label_free" ) {
+      if( abundanceUnit == "feature" ) {
+        fractionQuantifier = new Ms1DrivenLabelFreeFeatureQuantifier(
+                                   dbManager = dbManager,
+                                   udsEm = udsEm,
+                                   udsQuantFraction = udsQuantFraction
+                                 )
+      }
+      else if( abundanceUnit == "spectral_count" ) {
+        fractionQuantifier = new SpectralCountQuantifier(
+                                   dbManager = dbManager,
+                                   udsEm = udsEm,
+                                   udsQuantFraction = udsQuantFraction
+                                 )
+      }
     }
     
     assert( fractionQuantifier != null, "The needed quantifier is not yet implemented" )
