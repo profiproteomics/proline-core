@@ -102,8 +102,9 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
         
         // Store the peaklist    
         val spectrumIdByTitle = rsStorer.storePeaklist( msiSearch.peakList, this.stContext )//  VD Pour SQLStorer Only  TODO A RERENDRE AVEC SQLRsStorer 
+        rsStorer.storeSpectra( msiSearch.peakList.id, resultFile, this.stContext )
         >>>
-  	    
+        
     	  //Store the MSI search with related search settings and MS queries    
         rsStorer.storeMsiSearch( msiSearch, this.stContext ) // VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 
         rsStorer.storeMsQueries( msiSearch.id, msQueries, this.stContext )        
