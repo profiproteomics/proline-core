@@ -7,28 +7,30 @@ import fr.proline.core.om.model.msi._
 
 object ResultSetMerger {
   
-  def mergePeptideMatches( peptideMatches: Seq[PeptideMatch], proteinMatches: Seq[ProteinMatch] ): Seq[PeptideMatch] = {
+  def mergePeptideMatches( peptideMatches: Seq[PeptideMatch],
+                           proteinMatches: Seq[ProteinMatch] ):
+                           Tuple2[Seq[PeptideMatch],Seq[ProteinMatch]] = {
     
     // TODO: check if this code can be abstracted (shared with ResultSummaryMerger)
     // Group peptide matches by peptide id
     val pepMatchByPepId = peptideMatches.groupBy { _.peptide.id }
     
     // Merge peptide matches
-    val parentPepMatchIdByBestChildId = new HashMap[Int,Int]()
+    val parentPepMatchIdByPepId = new HashMap[Int,Int]()
     val scoreTypeSet = new HashSet[String]()
     val mergedPeptideMatches = new ArrayBuffer[PeptideMatch]( pepMatchByPepId.size )
     
     for( (peptideId, peptideMatchGroup) <- pepMatchByPepId ) {
+      
+      // Map merged peptide match by the peptide id
       val newPepMatchId = PeptideMatch.generateNewId()
+      parentPepMatchIdByPepId(peptideId) = newPepMatchId
       
       // Retrieve a non-redundant list of children ids
       val nrPepMatchChildIds = peptideMatchGroup.map { _.id } distinct
       
       // Retrieve the best child
-      val bestChild = peptideMatchGroup.reduce { (a,b) => if( a.score > b.score ) a else b } 
-      
-      // Map merged peptide match by the best child id
-      parentPepMatchIdByBestChildId(bestChild.id) = newPepMatchId
+      val bestChild = peptideMatchGroup.reduce { (a,b) => if( a.score > b.score ) a else b }
       
       // Update score type map
       scoreTypeSet += bestChild.scoreType
@@ -45,6 +47,7 @@ object ResultSetMerger {
       throw new Exception( "can't merge peptide matches from different search engines yet" )
     }
     
+    val mergedProteinMatches = new ArrayBuffer[ProteinMatch](proteinMatches.length)
     // Retrieve sequence matches corresponding to best child peptide matches
     for( proteinMatch <- proteinMatches ) {
       
@@ -54,10 +57,10 @@ object ResultSetMerger {
       val mergedSeqMatches = new ArrayBuffer[SequenceMatch]()
       for( seqMatch <- seqMatchByBestPepMatchId.values ) {
         
-        val pepMatchId = seqMatch.getBestPeptideMatchId
-        val parentPepMatchId = parentPepMatchIdByBestChildId.get(pepMatchId)
+        val pepId = seqMatch.getPeptideId
+        val parentPepMatchId = parentPepMatchIdByPepId.get(pepId)
         if( parentPepMatchId != None ) {
-        
+          
           // Build new sequence match corresponding to the merged peptide match
           val parentSeqMatch = seqMatch.copy( bestPeptideMatchId = parentPepMatchId.get )
           
@@ -65,10 +68,10 @@ object ResultSetMerger {
         }
       }
       
-      proteinMatch.sequenceMatches = mergedSeqMatches.toArray
+      mergedProteinMatches += proteinMatch.copy( sequenceMatches = mergedSeqMatches.toArray )
     }
     
-    mergedPeptideMatches
+    (mergedPeptideMatches,mergedProteinMatches)
   }
   
 }
@@ -128,8 +131,7 @@ class ResultSetMerger extends Logging {
     }
     
     // Iterate over grouped protein matches to build a list of non-redundant protein matches
-    val nrProteinMatches = new ArrayBuffer[ProteinMatch]    
-    var protMatchNum = 1
+    val nrProteinMatches = new ArrayBuffer[ProteinMatch]
     
     for( protMatchGroup <- proteinMatchesByKey.values ) {
       
@@ -217,16 +219,15 @@ class ResultSetMerger extends Logging {
                                  )
       
       nrProteinMatches += newProteinMatch
-      protMatchNum += 1
     }
     
     // Merge peptide matches and related protein matches
-    val mergedPeptideMatches = ResultSetMerger.mergePeptideMatches( allPeptideMatches, nrProteinMatches )
+    val( mergedPeptideMatches, mergedProteinMatches) = ResultSetMerger.mergePeptideMatches( allPeptideMatches, nrProteinMatches )
 
     // Create merged result set    
     val mergedResultSet = new ResultSet(
                                 id = ResultSet.generateNewId,
-                                proteinMatches = nrProteinMatches.toArray,
+                                proteinMatches = mergedProteinMatches.toArray,
                                 peptideMatches = mergedPeptideMatches.toArray,
                                 peptides = peptideById.values.toArray,
                                 isDecoy = resultSets(0).isDecoy,

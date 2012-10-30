@@ -90,8 +90,7 @@ class ResultSummaryMerger extends Logging {
     }
     
     // Define some vars
-    val nrProteinMatches = new ArrayBuffer[ProteinMatch]    
-    var protMatchNum = 1
+    val nrProteinMatches = new ArrayBuffer[ProteinMatch]
     
     // Iterate over grouped protein matches to build a list of non-redundant protein matches
     for( protMatchGroup <- proteinMatchesByKey.values) {
@@ -120,12 +119,12 @@ class ResultSummaryMerger extends Logging {
       }
       
       // Keep only sequence matches corresponding to best validated peptide matches
-      val bestSeqMatches = new ArrayBuffer[SequenceMatch]
-      for( ( pepId, seqMatch ) <- seqMatchByPepId ) {        
+      val bestSeqMatches = new ArrayBuffer[SequenceMatch](seqMatchByPepId.size)
+      for( ( pepId, seqMatch ) <- seqMatchByPepId ) {
         
         if( validPepMatchesByPepId.contains(pepId) ) {
           val peptideValidMatches = validPepMatchesByPepId(pepId)
-        
+          
           var bestPepMatchScore = 0f
           var bestPepMatch: PeptideMatch = null
           var bestSeqMatch: SequenceMatch = null
@@ -143,7 +142,6 @@ class ResultSummaryMerger extends Logging {
                               peptide = Some(bestPepMatch.peptide),
                               bestPeptideMatchId = bestPepMatch.id
                               )
-          
         }
       }
       
@@ -163,7 +161,7 @@ class ResultSummaryMerger extends Logging {
       }
       
       nrProteinMatches += new ProteinMatch(
-                                  id = protMatchNum,
+                                  id = ProteinMatch.generateNewId(),
                                   accession = firstDescribedProtMatch.accession,
                                   description = firstDescribedProtMatch.description,
                                   geneName = firstDescribedProtMatch.geneName,
@@ -177,19 +175,18 @@ class ResultSummaryMerger extends Logging {
                                   scoreType = firstDescribedProtMatch.scoreType
                                  )
       
-      protMatchNum += 1
     }
     
     // Create a non redundant list of MSI search ids
     //val nrMsiSearchIds = msiSearchIds.distinct
     
     // Merge peptide matches and related protein matches
-    val mergedPeptideMatches = ResultSetMerger.mergePeptideMatches( allValidPeptideMatches, nrProteinMatches )
+    val( mergedPeptideMatches, mergedProteinMatches) = ResultSetMerger.mergePeptideMatches( allValidPeptideMatches, nrProteinMatches )
     
     // Create a merged result set
     val mergedResultSet = new ResultSet(
                                 id = ResultSet.generateNewId(),
-                                proteinMatches = nrProteinMatches.toArray,
+                                proteinMatches = mergedProteinMatches.toArray,
                                 peptideMatches = mergedPeptideMatches.toArray,
                                 peptides =  validPeptideById.values.toArray,
                                 isDecoy = resultSummaries(0).resultSet.get.isDecoy,
