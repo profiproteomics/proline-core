@@ -17,7 +17,6 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 
 public class SQLiteDialect extends org.hibernate.dialect.Dialect {
@@ -83,11 +82,7 @@ public class SQLiteDialect extends org.hibernate.dialect.Dialect {
         protected SQLFunction resolveTrailingTrimFunction() {
           return new SQLFunctionTemplate(StandardBasicTypes.STRING, "rtrim(?1, ?2)");
         }
-        
-        // FIXME : This method is not callable (not an Override / Implement)
-        protected SQLFunction render(java.util.List l, SessionFactoryImplementor sfi ) { // NYI
-          return null;
-        }
+
     } );
     //registerFunction( "upper", new StandardSQLFunction("upper") );
   }

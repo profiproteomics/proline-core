@@ -23,20 +23,10 @@
     </dependency>
 
     <!-- Direct dependencies -->
-
-    <!-- Unused dependency : org.hibernate:hibernate-core:jar:3.6.8.Final:compile -->
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-core</artifactId>
-      <version>3.6.8.Final</version>
-    </dependency>
-    <!-- Add : org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final:compile -->
-
-    <!-- Unused dependency : org.hibernate:hibernate-entitymanager:jar:3.6.8.Final:compile -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
-      <version>3.6.8.Final</version>
+      <scope>compile</scope>
     </dependency>
 
     <!-- Unused dependency : com.googlecode.flyway:flyway-core:jar:1.5:compile -->

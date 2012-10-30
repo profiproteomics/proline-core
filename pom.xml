@@ -231,6 +231,13 @@
         <version>1.5</version>
       </dependency>
 
+      <!-- Latest Hibernate version (4.1.7.Final as of 30 oct. 2012) -->
+      <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-entitymanager</artifactId>
+        <version>4.1.7.Final</version>
+      </dependency>
+
       <!-- Databases -->
       <dependency>
         <groupId>postgresql</groupId>

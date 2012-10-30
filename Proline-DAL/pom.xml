@@ -57,7 +57,6 @@
       <version>0.0.2-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
-    <!-- Add : org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final:compile -->
 
     <!-- Direct dependencies -->
     <dependency>
