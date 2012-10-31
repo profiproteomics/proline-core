@@ -23,6 +23,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 
 /**
@@ -71,10 +72,13 @@ public class ResultSet implements Serializable {
 	private Set<ResultSet> children;
 
 	@ElementCollection
-   @MapKeyColumn(name="schema_name")
-   @Column(name="object_tree_id")
-   @CollectionTable(name="result_set_object_tree_map",joinColumns = @JoinColumn(name = "result_set_id", referencedColumnName = "id"))
-   Map<String, Integer> objectTreeIdByName;  
+    @MapKeyColumn(name="schema_name")
+    @Column(name="object_tree_id")
+    @CollectionTable(name="result_set_object_tree_map",joinColumns = @JoinColumn(name = "result_set_id", referencedColumnName = "id"))
+    Map<String, Integer> objectTreeIdByName;  
+	
+	// Transient Variables not saved in database
+	@Transient private PeptideMatch[] peptideMatches = null;
 	
 	public ResultSet() {
 	}
@@ -161,4 +165,16 @@ public class ResultSet implements Serializable {
 		this.objectTreeIdByName.put(schemaName, objectId);
 	}
 
+	/**
+	 * Get of Transient peptideMatches, Must be set beforehand.
+	 * @return
+	 */
+	public PeptideMatch[] getTransientPeptideMatches() {
+		return peptideMatches;
+	}
+
+	public void setTransientPeptideMatches(PeptideMatch[] peptideMatches) {
+		this.peptideMatches = peptideMatches;
+	}
+	
 }
