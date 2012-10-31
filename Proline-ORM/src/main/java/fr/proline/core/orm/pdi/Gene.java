@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -21,11 +22,11 @@ import javax.persistence.OneToMany;
 
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "findGeneForNameAndTaxon", query = "select g from fr.proline.core.orm.pdi.Gene g"
-		+ " where (upper(g.name) = :name) and (g.taxon.id = :taxonId)"),
+	@NamedQuery(name = "findGeneForNameAndTaxon", query = "select ge from fr.proline.core.orm.pdi.Gene ge"
+		+ " where (upper(ge.name) = :name) and (ge.taxon.id = :taxonId)"),
 
-	@NamedQuery(name = "findGenesForNames", query = "select distinct g from fr.proline.core.orm.pdi.Gene g"
-		+ " left join fetch g.taxon" + " where upper(g.name) in :names")
+	@NamedQuery(name = "findGenesForNames", query = "select distinct ge from fr.proline.core.orm.pdi.Gene ge"
+		+ " where upper(ge.name) in :names")
 
 })
 public class Gene implements Serializable {
@@ -54,7 +55,7 @@ public class Gene implements Serializable {
     private Set<ChromosomeLocation> chromosomeLocations;
 
     // uni-directional many-to-one association to Taxon
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "taxon_id", nullable = false)
     private Taxon taxon;
 

@@ -62,14 +62,31 @@ public class BioSequenceTest extends DatabaseTestCase {
     }
 
     @Test
-    public void finBioSequencesForCrcs() {
+    public void findBioSequencesForCrcs() {
 	final Set<String> crcs = new HashSet<String>();
-	crcs.add("01FC286177012FDF");
-	final List<BioSequence> bioSequences = seqRepo.findBioSequencesForCrcs(crcs);
-	assertTrue("At least one BioSequence find by crcs", bioSequences.size() >= 1);
+	crcs.add("01FC286177012FDF".toUpperCase());
+	crcs.add("FA6F75FEBEAB28BA".toUpperCase());
+	crcs.add("B3BBDF9B6D1A18BA".toUpperCase());
+
+	final List<BioSequence> bioSequences1 = seqRepo.findBioSequencesForCrcs(crcs);
+	final int size1 = bioSequences1.size();
+
+	assertTrue("Retrieve at least 1 BioSequence", size1 >= 1);
+
+	/* Check object equality of retieved BioSequences */
+	final List<BioSequence> bioSequences2 = seqRepo.findBioSequencesForCrcs(crcs);
+
+	final Set<BioSequence> distinctBioSequences = new HashSet<BioSequence>();
+	distinctBioSequences.addAll(bioSequences1);
+	distinctBioSequences.addAll(bioSequences2);
+
+	final int distinctSize = distinctBioSequences.size();
+
+	assertEquals("Same BioSequences after two successive queries", size1, distinctSize);
     }
 
     public String getSQLScriptLocation() {
 	return "/dbscripts/pdi/h2";
     }
+
 }

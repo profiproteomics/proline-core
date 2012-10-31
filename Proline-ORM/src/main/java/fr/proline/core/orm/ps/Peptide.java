@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -23,7 +24,7 @@ import javax.persistence.OneToMany;
 	@NamedQuery(name = "findPsPepsForSeq", query = "select p from fr.proline.core.orm.ps.Peptide p"
 		+ " where upper(p.sequence) = :seq"),
 
-	@NamedQuery(name = "findPsPepsForIds", query = "select distinct p from fr.proline.core.orm.ps.Peptide p"
+	@NamedQuery(name = "findPsPepsForIds", query = "select p from fr.proline.core.orm.ps.Peptide p"
 		+ " where p.id in :ids"),
 
 	@NamedQuery(name = "findPsPeptForSeqPtmStr", query = "select p from fr.proline.core.orm.ps.Peptide p"
@@ -54,7 +55,7 @@ public class Peptide implements Serializable {
     private String serializedProperties;
 
     // uni-directional many-to-one association to AtomLabel
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atom_label_id")
     private AtomLabel atomLabel;
 

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
@@ -16,9 +17,8 @@ import javax.persistence.Table;
  * 
  */
 @Entity
-@NamedQuery(name = "findBioSequenceGeneMapsForGeneNames", query = "select distinct bsgm from fr.proline.core.orm.pdi.BioSequenceGeneMap bsgm"
-	+ " left join fetch bsgm.bioSequence left join fetch bsgm.gene as ge left join fetch bsgm.taxon"
-	+ " where upper(ge.name) in :geneNames")
+@NamedQuery(name = "findBioSequenceGeneMapsForGenes", query = "select distinct bsgm from fr.proline.core.orm.pdi.BioSequenceGeneMap bsgm"
+	+ " where bsgm.gene in :genes")
 @Table(name = "bio_sequence_gene_map")
 public class BioSequenceGeneMap implements Serializable {
 
@@ -31,7 +31,7 @@ public class BioSequenceGeneMap implements Serializable {
     private String serializedProperties;
 
     // uni-directional many-to-one association to BioSequence
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bio_sequence_id")
     @MapsId("bioSequenceId")
     private BioSequence bioSequence;
@@ -43,7 +43,7 @@ public class BioSequenceGeneMap implements Serializable {
     private Gene gene;
 
     // uni-directional many-to-one association to Taxon
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Taxon taxon;
 
     public BioSequenceGeneMap() {

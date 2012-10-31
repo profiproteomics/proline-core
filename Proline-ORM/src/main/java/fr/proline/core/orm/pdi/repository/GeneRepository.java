@@ -49,9 +49,9 @@ public class GeneRepository extends JPARepository {
      * Retrieves Pdi Genes by a Collection (List, Set...) of names.
      * 
      * @param names
-     *            <code>Collection</code> of Gene's names to retrieve (must not be <code>null</code> and names
-     *            must be in <strong>upper case</strong>).
-     * @return List of found Gene (can be empty if none found), associated Taxon entities are fetched.
+     *            <code>Collection</code> of names of Genes to be retrieved (must not be empty and names must
+     *            be in <strong>upper case</strong>).
+     * @return List of found Gene (can be empty if none found).
      */
     public List<Gene> findGenesForNames(final Collection<String> names) {
 
@@ -68,21 +68,19 @@ public class GeneRepository extends JPARepository {
     /**
      * Retrieves Pdi BioSequenceGeneMap by a Collection (List, Set...) of Gene's names.
      * 
-     * @param geneNames
-     *            <code>Collection</code> of asoociated Gene's names to retrieve (must not be
-     *            <code>null</code> and Gene's names must be in <strong>upper case</strong>).
-     * @return List of found BioSequenceGeneMap (can be empty if none found), associated BioSequence, Gene and
-     *         Taxon entities are fetched.
+     * @param genes
+     *            <code>Collection</code> of associated Gene (must not be empty).
+     * @return List of found BioSequenceGeneMap (can be empty if none found).
      */
-    public List<BioSequenceGeneMap> findBioSequenceGeneMapsForGeneNames(final Collection<String> geneNames) {
+    public List<BioSequenceGeneMap> findBioSequenceGeneMapsForGenes(final Collection<Gene> genes) {
 
-	if ((geneNames == null) || geneNames.isEmpty()) {
-	    throw new IllegalArgumentException("GeneNames collection is empty");
+	if ((genes == null) || genes.isEmpty()) {
+	    throw new IllegalArgumentException("Genes collection is empty");
 	}
 
 	final TypedQuery<BioSequenceGeneMap> query = getEntityManager().createNamedQuery(
-		"findBioSequenceGeneMapsForGeneNames", BioSequenceGeneMap.class);
-	query.setParameter("geneNames", geneNames);
+		"findBioSequenceGeneMapsForGenes", BioSequenceGeneMap.class);
+	query.setParameter("genes", genes);
 
 	return query.getResultList();
     }

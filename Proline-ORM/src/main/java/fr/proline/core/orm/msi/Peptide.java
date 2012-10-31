@@ -23,7 +23,7 @@ import fr.proline.core.orm.utils.StringUtils;
 	@NamedQuery(name = "findMsiPepsForSeq", query = "select p from fr.proline.core.orm.msi.Peptide p"
 		+ " where upper(p.sequence) = :seq"),
 
-	@NamedQuery(name = "findMsiPepsForIds", query = "select distinct p from fr.proline.core.orm.msi.Peptide p"
+	@NamedQuery(name = "findMsiPepsForIds", query = "select p from fr.proline.core.orm.msi.Peptide p"
 		+ " where p.id in :ids"),
 
 	@NamedQuery(name = "findMsiPeptForSeqAndPtmStr", query = "select p from fr.proline.core.orm.msi.Peptide p"
@@ -188,5 +188,5 @@ public class Peptide implements Serializable, Comparable<Peptide> {
     public int compareTo(Peptide p) {
 	return sequence.compareTo(p.sequence);
     }
-    
+
 }

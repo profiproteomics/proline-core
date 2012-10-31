@@ -1,10 +1,10 @@
 package fr.proline.core.orm.utils;
 
-import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 
 /**
  * Creates a sequence per table instead of the default behavior of one global sequence named
- * ""hibernate_sequence".
+ * "hibernate_sequence".
  * <p>
  * To use this custom dialect, set "hibernate.dialect" property to
  * "fr.proline.core.orm.utils.TableNameSequencePostgresDialect".
@@ -22,7 +22,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
  * @author Burt
  * @author LMN
  */
-public class TableNameSequencePostgresDialect extends PostgreSQLDialect {
+public class TableNameSequencePostgresDialect extends PostgreSQL82Dialect {
 
     /**
      * Get the native identifier generator class.

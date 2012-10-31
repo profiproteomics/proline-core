@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -40,17 +41,17 @@ public class ProteinIdentifier implements Serializable {
     private String value;
 
     // bi-directional many-to-one association to BioSequence
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bio_sequence_id")
     private BioSequence bioSequence;
 
     // uni-directional many-to-one association to SequenceDbConfig
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seq_db_config_id")
     private SequenceDbConfig sequenceDbConfig;
 
     // uni-directional many-to-one association to Taxon
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "taxon_id", nullable = false)
     private Taxon taxon;
 
@@ -120,4 +121,5 @@ public class ProteinIdentifier implements Serializable {
     public void setSequenceDbConfig(SequenceDbConfig sequenceDbConfig) {
 	this.sequenceDbConfig = sequenceDbConfig;
     }
+
 }

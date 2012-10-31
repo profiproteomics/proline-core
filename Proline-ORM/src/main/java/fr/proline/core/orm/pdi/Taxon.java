@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -22,7 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * 
  */
 @Entity
-@NamedQuery(name = "findTaxonsForIds", query = "select distinct tax from fr.proline.core.orm.pdi.Taxon tax"
+@NamedQuery(name = "findTaxonsForIds", query = "select tax from fr.proline.core.orm.pdi.Taxon tax"
 	+ " where tax.id in :ids")
 public class Taxon implements Serializable {
 
@@ -40,7 +41,7 @@ public class Taxon implements Serializable {
     private String serializedProperties;
 
     // bi-directional many-to-one association to Taxon
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_taxon_id")
     private Taxon parentTaxon;
 
