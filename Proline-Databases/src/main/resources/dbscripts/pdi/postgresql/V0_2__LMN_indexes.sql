@@ -1,6 +1,6 @@
--- Mainly performance optimizations for Uniprot imports
+﻿-- Mainly performance optimizations for Uniprot imports
 
-﻿ALTER TABLE seq_db_config
+ALTER TABLE seq_db_config
   ALTER COLUMN alphabet TYPE VARCHAR(3);
 
 CREATE INDEX bio_sequence_crc_upper_idx
