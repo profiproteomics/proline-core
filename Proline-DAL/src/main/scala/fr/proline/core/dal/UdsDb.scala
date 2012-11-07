@@ -1,12 +1,16 @@
 package fr.proline.core.dal
 
 import net.noerd.prequel._
+import fr.proline.repository.DatabaseConnector
 
 object UdsDb extends DatabaseConfigBuilder {
   
-  def apply( projectId: Int ): UdsDb = {
-    val psDbConfig = this.getDefaultConfig
-    new UdsDb( psDbConfig )
+  def apply( dbConnector: DatabaseConnector ): UdsDb = {
+    new UdsDb( this.buildConfigFromDatabaseConnector( dbConnector ) )
+  }
+  
+  def apply( dbManager: DatabaseManagement ): UdsDb = {
+    new UdsDb( this.buildConfigFromDatabaseManagement( dbManager ) )
   }
   
   def buildConfigFromDatabaseManagement(dbMgnt: DatabaseManagement): DatabaseConfig = {
@@ -21,13 +25,6 @@ object UdsDb extends DatabaseConfigBuilder {
     //isolationLevel = IsolationLevels.Serializable,
     sqlFormatter = SQLFormatter.HSQLDBSQLFormatter    
     )*/
-    
-  def getDefaultConfig = DatabaseConfig(
-    driver = "org.sqlite.JDBC",
-    jdbcURL = "jdbc:sqlite:D:/proline/data/uds-db.sqlite",
-    isolationLevel = IsolationLevels.Serializable,
-    sqlFormatter = SQLFormatter.HSQLDBSQLFormatter
-    )
   
 }
 
