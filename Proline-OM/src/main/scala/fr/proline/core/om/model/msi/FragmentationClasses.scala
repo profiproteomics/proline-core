@@ -12,7 +12,7 @@ object FragmentIonType {
     val ionTypes = new ArrayBuffer[FragmentIonType](ionTypesAsStr.length)   
     for( val ionTypeAsStr <- ionTypesAsStr ) {
       
-      var( fragmentIonSeries, neutralLoss ) = ("", None.asInstanceOf[Option[String]] )
+      var( fragmentIonSeries, neutralLoss ) = ("", Option.empty[String] )
       if( ionTypeAsStr matches ".*-.*"  ) {
         val ionTypeAttrs = ionTypeAsStr.split("-")
         fragmentIonSeries = ionTypeAttrs(0)
@@ -49,34 +49,27 @@ case class FragmentIonType(
   }
 }
   
-case class FragmentationRule(   
-               // Required fields
-               val description: String
-               
-               ) {
-  
-
+trait FragmentationRule{
+  // Required fields
+  val description: String
 }
   
-case class ChargeConstraint(   
-               // Required fields
-               override val description: String,
-               val fragmentCharge: Int
-               
-               ) 
-  extends FragmentationRule( description ) {
+case class ChargeConstraint(
   
-
-}
+  // Required fields
+  val description: String,
+  val fragmentCharge: Int
+  
+) extends FragmentationRule
   
 case class RequiredSerie(
-               // Required fields
-               override val description: String,
-               val requiredSerie: FragmentIonType,
-               val requiredSerieQualityLevel: String
-               
-               ) 
-  extends FragmentationRule( description ) {
+  
+  // Required fields
+  val description: String,
+  val requiredSerie: FragmentIonType,
+  val requiredSerieQualityLevel: String
+  
+) extends FragmentationRule {
   
  // Requirements
   require( requiredSerieQualityLevel == "significant" || 
@@ -84,18 +77,17 @@ case class RequiredSerie(
 
 }
 
-case class TheoreticalFragmentIon(   
-               // Required fields
-               override val description: String,
-               override val requiredSerie: FragmentIonType,
-               override val requiredSerieQualityLevel: String,
-               
-               // Immutable optional fields
-               val fragmentMaxMoz: Double = 0.0,
-               val residueConstraint: String = null,
-               val ionType: FragmentIonType = null
-               )
-  extends RequiredSerie( description, requiredSerie, requiredSerieQualityLevel ) {
+case class TheoreticalFragmentIon(
     
+  // Required fields
+  override val description: String,
+  override val requiredSerie: FragmentIonType,
+  override val requiredSerieQualityLevel: String,
+ 
+  // Immutable optional fields
+  val fragmentMaxMoz: Double = 0.0,
+  val residueConstraint: String = null,
+  val ionType: FragmentIonType = null
   
-}
+) extends RequiredSerie( description, requiredSerie, requiredSerieQualityLevel )
+
