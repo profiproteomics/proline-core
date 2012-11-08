@@ -121,7 +121,7 @@ case class TheoreticalFragmentIon(
   val requiredSeriesQualityLevel: String = null,
  
   // Immutable optional fields
-  val fragmentMaxMoz: Float = 0f,
+  val fragmentMaxMoz: Option[Float] = None,
   val residueConstraint: Option[String] = None  
   
 ) extends FragmentationRule with FragmentationSeriesRequirement
