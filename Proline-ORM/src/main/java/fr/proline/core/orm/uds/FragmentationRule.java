@@ -23,7 +23,7 @@ public class FragmentationRule implements Serializable {
 	private Integer fragmentCharge;
 
 	@Column(name="fragment_max_moz")
-	private float fragmentMaxMoz;
+	private Float fragmentMaxMoz;
 
 	@Column(name="fragment_residue_constraint")
 	private String fragmentResidueConstraint;
@@ -41,7 +41,7 @@ public class FragmentationRule implements Serializable {
 	private String serializedProperties;
 
 	//uni-directional many-to-one association to TheoreticalFragment
-    @ManyToOne
+	@ManyToOne
 	@JoinColumn(name="theoretical_fragment_id")
 	private TheoreticalFragment theoreticalFragment;
 
@@ -72,11 +72,11 @@ public class FragmentationRule implements Serializable {
 		this.fragmentCharge = fragmentCharge;
 	}
 
-	public float getFragmentMaxMoz() {
+	public Float getFragmentMaxMoz() {
 		return this.fragmentMaxMoz;
 	}
 
-	public void setFragmentMaxMoz(float fragmentMaxMoz) {
+	public void setFragmentMaxMoz(Float fragmentMaxMoz) {
 		this.fragmentMaxMoz = fragmentMaxMoz;
 	}
 
