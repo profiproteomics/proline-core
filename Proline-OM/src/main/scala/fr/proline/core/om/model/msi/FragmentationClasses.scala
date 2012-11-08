@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
   
 object Fragmentation {
   
-  lazy val defaultIonTypes: Array[FragmentIonType] = {
+  val defaultIonTypes: Array[FragmentIonType] = {
     
     // Create a map of theoretical fragments
     val ionTypesAsStr = "a a-NH3 a-H2O b b-NH3 b-H2O c d v w x y y-NH3 y-H2O z z+1 z+2 ya yb immonium".split(" ")
@@ -52,6 +52,7 @@ object FragmentIonSeries extends Enumeration {
 
 object NeutralLoss extends Enumeration {
   val H2O = Value("H2O")
+  val H3PO4 = Value("H3PO4")
   val NH3 = Value("NH3")
 }
 
@@ -120,7 +121,7 @@ case class TheoreticalFragmentIon(
   val requiredSeriesQualityLevel: String = null,
  
   // Immutable optional fields
-  val fragmentMaxMoz: Double = 0.0,
+  val fragmentMaxMoz: Float = 0f,
   val residueConstraint: Option[String] = None  
   
 ) extends FragmentationRule with FragmentationSeriesRequirement
