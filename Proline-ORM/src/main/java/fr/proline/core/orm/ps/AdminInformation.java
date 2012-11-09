@@ -22,8 +22,6 @@ public class AdminInformation implements Serializable {
 	@Column(name="model_version")
 	private String modelVersion;
 
-	private String configuration;
-
 	@Column(name="db_creation_date")
 	private Timestamp dbCreationDate;
 
@@ -39,14 +37,6 @@ public class AdminInformation implements Serializable {
 
 	public void setModelVersion(String modelVersion) {
 		this.modelVersion = modelVersion;
-	}
-
-	public String getConfiguration() {
-		return this.configuration;
-	}
-
-	public void setConfiguration(String configuration) {
-		this.configuration = configuration;
 	}
 
 	public Timestamp getDbCreationDate() {
