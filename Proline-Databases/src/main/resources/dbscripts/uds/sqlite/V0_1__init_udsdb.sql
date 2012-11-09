@@ -87,7 +87,7 @@ CREATE TABLE external_db (
 );
 
 CREATE TABLE fragmentation_rule (
-                id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 description TEXT(1000),
                 precursor_min_charge INTEGER,
                 fragment_charge INTEGER,
@@ -241,7 +241,7 @@ CREATE TABLE protein_match_decoy_rule (
 );
 
 CREATE TABLE quant_channel (
-                id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
                 name TEXT(100) NOT NULL,
                 context_key TEXT(100) NOT NULL,
@@ -331,7 +331,7 @@ CREATE TABLE raw_file (
 );
 
 CREATE TABLE run (
-                id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
                 run_start REAL NOT NULL,
                 run_stop REAL NOT NULL,

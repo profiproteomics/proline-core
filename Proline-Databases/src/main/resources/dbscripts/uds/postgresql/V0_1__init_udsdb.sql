@@ -98,8 +98,10 @@ COMMENT ON COLUMN public.theoretical_fragment.serialized_properties IS 'A JSON s
 
 ALTER SEQUENCE public.theoretical_fragment_id_seq OWNED BY public.theoretical_fragment.id;
 
+CREATE SEQUENCE public.fragmentation_rule_id_seq;
+
 CREATE TABLE public.fragmentation_rule (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.fragmentation_rule_id_seq'),
                 description VARCHAR(1000),
                 precursor_min_charge INTEGER,
                 fragment_charge INTEGER,
@@ -147,6 +149,8 @@ COMMENT ON COLUMN public.fragmentation_rule.serialized_properties IS 'A JSON str
 COMMENT ON COLUMN public.fragmentation_rule.theoretical_fragment_id IS 'The corresponding and specific ion series.';
 COMMENT ON COLUMN public.fragmentation_rule.required_serie_id IS 'The ion series familly (a, b, c, x, y, z) required to be observed for this fragmentation rule.';
 
+
+ALTER SEQUENCE public.fragmentation_rule_id_seq OWNED BY public.fragmentation_rule.id;
 
 CREATE TABLE public.activation (
                 type VARCHAR(100) NOT NULL,
@@ -227,8 +231,10 @@ CREATE TABLE public.raw_file (
 );
 
 
+CREATE SEQUENCE public.run_id_seq;
+
 CREATE TABLE public.run (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.run_id_seq'),
                 number INTEGER NOT NULL,
                 run_start REAL NOT NULL,
                 run_stop REAL NOT NULL,
@@ -244,6 +250,8 @@ COMMENT ON COLUMN public.run.number IS 'The run number inside a given raw file.
 Default is one because in the main case a raw file contains a single run.';
 COMMENT ON COLUMN public.run.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+ALTER SEQUENCE public.run_id_seq OWNED BY public.run.id;
 
 CREATE SEQUENCE public.project_project_id_seq;
 
@@ -646,8 +654,10 @@ COMMENT ON COLUMN public.document.serialized_properties IS 'A JSON string which 
 
 ALTER SEQUENCE public.document_document_seq OWNED BY public.document.id;
 
+CREATE SEQUENCE public.quant_channel_id_seq;
+
 CREATE TABLE public.quant_channel (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.quant_channel_id_seq'),
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 context_key VARCHAR(100) NOT NULL,
@@ -668,6 +678,8 @@ COMMENT ON COLUMN public.quant_channel.context_key IS 'string representation of 
 biological_sample.number and sample_analysis_replicate.number';
 COMMENT ON COLUMN public.quant_channel.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+ALTER SEQUENCE public.quant_channel_id_seq OWNED BY public.quant_channel.id;
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(50) NOT NULL,

@@ -75,7 +75,7 @@ COMMENT ON COLUMN public.theoretical_fragment.serialized_properties IS 'A JSON s
 
 
 CREATE TABLE public.fragmentation_rule (
-                id INTEGER NOT NULL,
+                id IDENTITY NOT NULL,
                 description VARCHAR(1000),
                 precursor_min_charge INTEGER,
                 fragment_charge INTEGER,
@@ -192,7 +192,7 @@ CREATE TABLE public.raw_file (
 
 
 CREATE TABLE public.run (
-                id INTEGER NOT NULL,
+                id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
                 run_start REAL NOT NULL,
                 run_stop REAL NOT NULL,
@@ -539,7 +539,7 @@ COMMENT ON COLUMN public.document.serialized_properties IS 'A JSON string which 
 
 
 CREATE TABLE public.quant_channel (
-                id INTEGER NOT NULL,
+                id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 context_key VARCHAR(100) NOT NULL,
