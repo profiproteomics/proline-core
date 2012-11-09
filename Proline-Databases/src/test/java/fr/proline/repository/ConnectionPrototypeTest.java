@@ -23,7 +23,7 @@ public class ConnectionPrototypeTest {
 	@Test
 	public void testH2ToConnector() throws Exception {
 		ConnectionPrototype proto = new ConnectionPrototype();
-		proto.driver(DriverType.H2).protocol(DatabaseProtocol.MEMORY).username("sa").password("").namePattern("test");
+		proto.driver(DriverType.H2).protocol(DatabaseProtocol.MEMORY).username("sa").password("").namePrefix("test_");
 		DatabaseConnector connector = proto.toConnector(Databases.UDS);
 		DatabaseMetaData metaData = connector.getConnection().getMetaData();
 		assertEquals("jdbc:h2:mem:test_uds", metaData.getURL());
@@ -33,7 +33,7 @@ public class ConnectionPrototypeTest {
 	@Test
 	public void testH2NullPwdToConnector() throws Exception {
 		ConnectionPrototype proto = new ConnectionPrototype();
-		proto.driver(DriverType.H2).protocol(DatabaseProtocol.MEMORY).username("sa").namePattern("test");
+		proto.driver(DriverType.H2).protocol(DatabaseProtocol.MEMORY).username("sa").namePrefix("test_");
 		proto.password(null);
 		DatabaseConnector connector = proto.toConnector(Databases.UDS);
 		DatabaseMetaData metaData = connector.getConnection().getMetaData();
@@ -44,7 +44,7 @@ public class ConnectionPrototypeTest {
 	@Test
 	public void testPGToConnector() throws Exception {
 		ConnectionPrototype proto = new ConnectionPrototype();
-		proto.driver(DriverType.POSTGRESQL).protocol(DatabaseProtocol.HOST).username("bruley").password("toto").protocoleValue("localhost").namePattern("dbTest");
+		proto.driver(DriverType.POSTGRESQL).protocol(DatabaseProtocol.HOST).username("bruley").password("toto").protocoleValue("localhost").namePrefix("dbTest_");
 		DatabaseConnector connector = proto.toConnector(Databases.UDS);
 		assertNotNull(connector);
 	}
@@ -52,7 +52,7 @@ public class ConnectionPrototypeTest {
 	@Test
 	public void testFilePrototypeConnector() throws Exception {
 		ConnectionPrototype proto = new ConnectionPrototype(dbPropertiesFile);
-		proto.namePattern("proline_test");
+		proto.namePrefix("proline_test_");
 		DatabaseConnector connector = proto.toConnector(Databases.UDS);
 		assertNotNull(connector);
 		assertEquals("jdbc:sqlite:./target/proline_test_uds", connector.getConnection().getMetaData().getURL());

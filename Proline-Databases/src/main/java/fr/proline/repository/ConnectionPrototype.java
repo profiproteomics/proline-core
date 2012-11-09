@@ -2,7 +2,6 @@ package fr.proline.repository;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -16,7 +15,7 @@ public class ConnectionPrototype {
 	private Map<String, String> connectionProperties = new HashMap<String, String>();
 	private DatabaseProtocol protocol;
 	private String protocolValue;
-	private String namePattern = "test"; 
+	private String namePrefix = "test_";
 	private String options;
 	private DriverType driver;
 	
@@ -24,6 +23,11 @@ public class ConnectionPrototype {
 		connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, "");
 		connectionProperties.put(DatabaseConnector.PROPERTY_USERNAME, "sa");
 	}
+	
+    public ConnectionPrototype( HashMap<String, String> connProps ) {
+      this.connectionProperties = connProps;
+      this.updateFields();
+    }
 	
 	/**
 	 * Look for following entries in properties file
@@ -45,20 +49,42 @@ public class ConnectionPrototype {
 		
 		connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, fileProperties.getProperty(DatabaseConnector.PROPERTY_PASSWORD, ""));
 		connectionProperties.put(DatabaseConnector.PROPERTY_USERNAME, fileProperties.getProperty(DatabaseConnector.PROPERTY_USERNAME, "sa"));
-		this.protocol = DatabaseProtocol.valueOf(fileProperties.getProperty("database.protocol"));
-		if(fileProperties.getProperty("database.drivertype")!=null)
-			driver(DriverType.valueOf(fileProperties.getProperty("database.drivertype")));
-		protocoleValue(fileProperties.getProperty("database.protocolValue"));
 		
+		connectionProperties.put("database.protocol",fileProperties.getProperty("database.protocol"));
+		connectionProperties.put("database.protocolValue",fileProperties.getProperty("database.protocolValue"));		
+		connectionProperties.put("database.drivertype",fileProperties.getProperty("database.drivertype"));
+		
+		this.updateFields();
 	}
+	
+	protected void updateFields() {
+      this.protocol = DatabaseProtocol.valueOf(connectionProperties.get("database.protocol"));
+      this.protocoleValue(connectionProperties.get("database.protocolValue"));
+      this.driver( DriverType.valueOf(connectionProperties.get("database.drivertype")) );
+      
+      //if(fileProperties.getProperty("database.drivertype")!=null)
+      //    this.driver(DriverType.valueOf(fileProperties.getProperty("database.drivertype")));
+	}
+	
+    public DriverType getDriver() {
+      return driver;
+    }
+    
+    public DatabaseProtocol getProtocol() {
+      return protocol;
+    }
+
+    public String getProtocolValue() {
+      return protocolValue;
+    }
 	
 	public ConnectionPrototype protocol(DatabaseProtocol protocol) {
 		this.protocol = protocol;
 		return this;
 	}
 	
-	public ConnectionPrototype namePattern(String pattern) {
-		this.namePattern = pattern;
+	public ConnectionPrototype namePrefix(String prefix) {
+		this.namePrefix = prefix;
 		return this;
 	}
 	
@@ -89,21 +115,32 @@ public class ConnectionPrototype {
 		return this;
 	}
 	
-	public DatabaseConnector toConnector(ProlineRepository.Databases db) throws Exception {
+	public DatabaseConnector toConnector( ProlineRepository.Databases db ) throws Exception {
+	  return this.toConnector(db.toString().toLowerCase());
+	}
+	
+	public DatabaseConnector toConnector( String dbName ) throws Exception {
+	    
 		StringBuilder URLbuilder = new StringBuilder();
 		URLbuilder.append("jdbc:").append(driver.name().toLowerCase()).append(':');		
+		
 		switch (protocol) {
 		case MEMORY:
 			if(driver!=DriverType.SQLITE)
 				URLbuilder.append("mem:");
 			else 
-				URLbuilder.append("memory:");
+				URLbuilder.append(":memory:");
 			break;
 		case FILE:
 			if(driver!=DriverType.SQLITE)
 				URLbuilder.append("file:").append(protocolValue);
 			else
 				URLbuilder.append(protocolValue);
+			
+			// Append a last '/' if not already existing
+			if( URLbuilder.toString().endsWith("/") == false )
+			  URLbuilder.append('/');
+		
 			break;
 		case HOST:
 			URLbuilder.append("//").append(protocolValue).append('/');
@@ -112,10 +149,11 @@ public class ConnectionPrototype {
 			break;
 		}
 		
-		URLbuilder.append(namePattern).append('_').append(db.name().toLowerCase());
-
+		URLbuilder.append(namePrefix).append(dbName);
+		
 		if (options != null && !options.trim().isEmpty()) 
 			URLbuilder.append(options);
+		
 		connectionProperties.put(DatabaseConnector.PROPERTY_URL, URLbuilder.toString());
 		
 		return new DatabaseConnector(connectionProperties);
