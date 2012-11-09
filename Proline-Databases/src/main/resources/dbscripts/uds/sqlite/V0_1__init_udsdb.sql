@@ -97,7 +97,6 @@ CREATE TABLE fragmentation_rule (
                 serialized_properties TEXT,
                 theoretical_fragment_id INTEGER,
                 required_serie_id INTEGER,
-                PRIMARY KEY (id),
                 FOREIGN KEY (theoretical_fragment_id) REFERENCES theoretical_fragment (id),
                 FOREIGN KEY (required_serie_id) REFERENCES theoretical_fragment (id)
 );
@@ -254,7 +253,6 @@ CREATE TABLE quant_channel (
                 biological_sample_id INTEGER NOT NULL,
                 quantitation_fraction_id INTEGER NOT NULL,
                 quantitation_id INTEGER NOT NULL,
-                PRIMARY KEY (id),
                 FOREIGN KEY (quant_label_id) REFERENCES quant_label (id),
                 FOREIGN KEY (sample_analysis_replicate_id) REFERENCES sample_analysis_replicate (id),
                 FOREIGN KEY (biological_sample_id) REFERENCES biological_sample (id),
@@ -341,7 +339,6 @@ CREATE TABLE run (
                 analyst TEXT(50),
                 serialized_properties TEXT,
                 raw_file_name TEXT(250) NOT NULL,
-                PRIMARY KEY (id),
                 FOREIGN KEY (raw_file_name) REFERENCES raw_file (name)
 );
 
