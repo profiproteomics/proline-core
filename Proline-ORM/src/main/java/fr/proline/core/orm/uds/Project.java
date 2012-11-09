@@ -154,6 +154,12 @@ public class Project implements Serializable {
 		this.externalDatabases = externalDatabases;
 	}
 	
+    public boolean addExternalDatabase(ExternalDb extDb) {
+      if(this.externalDatabases == null)
+          this.externalDatabases = new HashSet<ExternalDb>();
+      return this.externalDatabases.add(extDb);
+    }
+	
 	public Set<VirtualFolder> getFolders() {
 		return this.folders;
 	}
