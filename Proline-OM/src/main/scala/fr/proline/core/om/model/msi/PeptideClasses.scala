@@ -257,8 +257,11 @@ object Peptide extends InMemoryIdGen with Logging {
     
     if( sequence ~~ "(?i)[BXZ]" ) mass = 0.0
     else {
+	  val massCalcObject = new MassCalc(SymbolPropertyTable.MONO_MASS, false)
+	  massCalcObject.setSymbolModification('U', 150.95363)
       mass = try {
-        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
+//        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
+		massCalcObject.getMass(ProteinTools.createProtein(sequence))
       } catch {
         case e: Exception => Double.NaN
       }
