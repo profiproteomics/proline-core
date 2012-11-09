@@ -43,7 +43,11 @@
       <groupId>com.googlecode.flyway</groupId>
       <artifactId>flyway-core</artifactId>
     </dependency>
-    <!-- Add : org.springframework:spring-jdbc:jar:2.5.6:compile -->
+    
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jdbc</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.hibernate</groupId>

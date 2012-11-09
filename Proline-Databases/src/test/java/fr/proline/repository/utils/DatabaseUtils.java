@@ -44,7 +44,7 @@ public class DatabaseUtils {
 	
 	public static void initDatabase(DatabaseTestConnector connector, String scriptDirectory) throws ClassNotFoundException {
 		Flyway flyway = new Flyway();
-		flyway.setBaseDir(scriptDirectory);
+		flyway.setLocations(scriptDirectory); //flyway.setBaseDir(scriptDirectory);		
 		flyway.setDataSource(connector.getDataSource());
 		flyway.migrate();
 	}

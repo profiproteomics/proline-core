@@ -91,7 +91,7 @@ public class ProlineRepository {
 		StringBuilder dir = new StringBuilder(MIGRATION_SCRIPTS_DIR);
 		dir.append(db.name().toLowerCase()).append('/').append(repository.get(db).getDriverType().name().toLowerCase())
 				.append('/');
-		flyway.setBaseDir(dir.toString());
+		flyway.setLocations(dir.toString());
 		flyway.setDataSource(repository.get(db).getDataSource());
 		flyway.migrate();
 	}
