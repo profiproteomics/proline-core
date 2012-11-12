@@ -49,10 +49,10 @@ COMMENT ON COLUMN public.peaklist_software.serialized_properties IS 'A JSON stri
 
 ALTER SEQUENCE public.peaklist_software_id_seq OWNED BY public.peaklist_software.id;
 
-CREATE SEQUENCE public.enzyme_enzyme_id_seq;
+CREATE SEQUENCE public.enzyme_id_seq;
 
 CREATE TABLE public.enzyme (
-                id INTEGER NOT NULL DEFAULT nextval('public.enzyme_enzyme_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.enzyme_id_seq'),
                 name VARCHAR(100) NOT NULL,
                 cleavage_regexp VARCHAR(50),
                 is_independant BOOLEAN NOT NULL,
@@ -63,12 +63,12 @@ COMMENT ON COLUMN public.enzyme.name IS 'MUST BE UNIQUE';
 COMMENT ON COLUMN public.enzyme.cleavage_regexp IS 'The regular expression used to find cleavage site';
 
 
-ALTER SEQUENCE public.enzyme_enzyme_id_seq OWNED BY public.enzyme.id;
+ALTER SEQUENCE public.enzyme_id_seq OWNED BY public.enzyme.id;
 
-CREATE SEQUENCE public.enzyme_cleavage_enzyme_cleavage_id_seq;
+CREATE SEQUENCE public.enzyme_cleavage_id_seq;
 
 CREATE TABLE public.enzyme_cleavage (
-                id INTEGER NOT NULL DEFAULT nextval('public.enzyme_cleavage_enzyme_cleavage_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.enzyme_cleavage_id_seq'),
                 site VARCHAR(6) NOT NULL,
                 residues VARCHAR(20) NOT NULL,
                 restrictive_residues VARCHAR(20),
@@ -79,7 +79,7 @@ COMMENT ON COLUMN public.enzyme_cleavage.site IS 'Must be N-term or C-term (clea
 COMMENT ON COLUMN public.enzyme_cleavage.restrictive_residues IS 'A string which main contains one or more symbols of amino acids restricting enzyme cleavage.';
 
 
-ALTER SEQUENCE public.enzyme_cleavage_enzyme_cleavage_id_seq OWNED BY public.enzyme_cleavage.id;
+ALTER SEQUENCE public.enzyme_cleavage_id_seq OWNED BY public.enzyme_cleavage.id;
 
 CREATE SEQUENCE public.theoretical_fragment_id_seq;
 
@@ -160,10 +160,10 @@ COMMENT ON TABLE public.activation IS 'Activation Method. The fragmentation meth
 COMMENT ON COLUMN public.activation.type IS 'HCD CID ETD.';
 
 
-CREATE SEQUENCE public.instrument_instrument_id_seq;
+CREATE SEQUENCE public.instrument_id_seq;
 
 CREATE TABLE public.instrument (
-                id INTEGER NOT NULL DEFAULT nextval('public.instrument_instrument_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.instrument_id_seq'),
                 name VARCHAR(100) NOT NULL,
                 source VARCHAR(100) NOT NULL,
                 serialized_properties TEXT,
@@ -173,7 +173,7 @@ COMMENT ON TABLE public.instrument IS 'The identification of a Mass Spectrometer
 COMMENT ON COLUMN public.instrument.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.instrument_instrument_id_seq OWNED BY public.instrument.id;
+ALTER SEQUENCE public.instrument_id_seq OWNED BY public.instrument.id;
 
 CREATE SEQUENCE public.instrument_config_id_seq;
 
@@ -253,10 +253,10 @@ COMMENT ON COLUMN public.run.serialized_properties IS 'A JSON string which store
 
 ALTER SEQUENCE public.run_id_seq OWNED BY public.run.id;
 
-CREATE SEQUENCE public.project_project_id_seq;
+CREATE SEQUENCE public.project_id_seq;
 
 CREATE TABLE public.project (
-                id INTEGER NOT NULL DEFAULT nextval('public.project_project_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.project_id_seq'),
                 name VARCHAR(250) NOT NULL,
                 description VARCHAR(1000),
                 creation_timestamp TIMESTAMP NOT NULL,
@@ -272,7 +272,7 @@ COMMENT ON COLUMN public.project.serialized_properties IS 'A JSON string which s
 COMMENT ON COLUMN public.project.owner_id IS 'The owner of this project. The owner is also a member of the project and then is represented in ''''project_user_account_map''''';
 
 
-ALTER SEQUENCE public.project_project_id_seq OWNED BY public.project.id;
+ALTER SEQUENCE public.project_id_seq OWNED BY public.project.id;
 
 CREATE SEQUENCE public.virtual_folder_id_seq;
 
@@ -304,10 +304,10 @@ COMMENT ON TABLE public.project_user_account_map IS 'Mappinng table between user
 COMMENT ON COLUMN public.project_user_account_map.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-CREATE SEQUENCE public.identification_identification_id_seq;
+CREATE SEQUENCE public.identification_id_seq;
 
 CREATE TABLE public.identification (
-                id INTEGER NOT NULL DEFAULT nextval('public.identification_identification_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.identification_id_seq'),
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 description VARCHAR(10000),
@@ -336,12 +336,12 @@ COMMENT ON COLUMN public.identification.active_summary_id IS 'The id of the "ide
 COMMENT ON COLUMN public.identification.project_id IS 'The project this identification belongs to.';
 
 
-ALTER SEQUENCE public.identification_identification_id_seq OWNED BY public.identification.id;
+ALTER SEQUENCE public.identification_id_seq OWNED BY public.identification.id;
 
-CREATE SEQUENCE public.identification_summary_identification_summary_id_seq;
+CREATE SEQUENCE public.identification_summary_id_seq;
 
 CREATE TABLE public.identification_summary (
-                id INTEGER NOT NULL DEFAULT nextval('public.identification_summary_identification_summary_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.identification_summary_id_seq'),
                 number INTEGER NOT NULL,
                 serialized_properties TEXT,
                 result_summary_id INTEGER NOT NULL,
@@ -355,12 +355,12 @@ COMMENT ON COLUMN public.identification_summary.result_summary_id IS 'The result
 COMMENT ON COLUMN public.identification_summary.identification_id IS 'The identification corresponding to this validation summary.';
 
 
-ALTER SEQUENCE public.identification_summary_identification_summary_id_seq OWNED BY public.identification_summary.id;
+ALTER SEQUENCE public.identification_summary_id_seq OWNED BY public.identification_summary.id;
 
-CREATE SEQUENCE public.identification_fraction_identification_fraction_id_seq;
+CREATE SEQUENCE public.identification_fraction_id_seq;
 
 CREATE TABLE public.identification_fraction (
-                id INTEGER NOT NULL DEFAULT nextval('public.identification_fraction_identification_fraction_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.identification_fraction_id_seq'),
                 number INTEGER NOT NULL,
                 serialized_properties TEXT,
                 result_set_id INTEGER NOT NULL,
@@ -374,12 +374,12 @@ COMMENT ON COLUMN public.identification_fraction.number IS 'unique pour l''ident
 COMMENT ON COLUMN public.identification_fraction.result_set_id IS 'The result_set_id refers to the MSIdb result set which stores the identified peptides and proteins of the corresponding fraction.';
 
 
-ALTER SEQUENCE public.identification_fraction_identification_fraction_id_seq OWNED BY public.identification_fraction.id;
+ALTER SEQUENCE public.identification_fraction_id_seq OWNED BY public.identification_fraction.id;
 
-CREATE SEQUENCE public.identification_fraction_summary_identification_fraction_summ165;
+CREATE SEQUENCE public.identification_fraction_summary_id_seq;
 
 CREATE TABLE public.identification_fraction_summary (
-                id INTEGER NOT NULL DEFAULT nextval('public.identification_fraction_summary_identification_fraction_summ165'),
+                id INTEGER NOT NULL DEFAULT nextval('public.identification_fraction_summary_id_seq'),
                 serialized_properties TEXT,
                 result_summary_id INTEGER NOT NULL,
                 identification_fraction_id INTEGER NOT NULL,
@@ -392,7 +392,7 @@ COMMENT ON COLUMN public.identification_fraction_summary.result_summary_id IS 'T
 COMMENT ON COLUMN public.identification_fraction_summary.identification_fraction_id IS 'The identification fraction corresponding to this validation summary.';
 
 
-ALTER SEQUENCE public.identification_fraction_summary_identification_fraction_summ165 OWNED BY public.identification_fraction_summary.id;
+ALTER SEQUENCE public.identification_fraction_summary_id_seq OWNED BY public.identification_fraction_summary.id;
 
 CREATE SEQUENCE public.quant_method_id_seq;
 
@@ -412,10 +412,10 @@ COMMENT ON COLUMN public.quant_method.serialized_properties IS 'A JSON string wh
 
 ALTER SEQUENCE public.quant_method_id_seq OWNED BY public.quant_method.id;
 
-CREATE SEQUENCE public.quant_label_quant_label_id_seq;
+CREATE SEQUENCE public.quant_label_id_seq;
 
 CREATE TABLE public.quant_label (
-                id INTEGER NOT NULL DEFAULT nextval('public.quant_label_quant_label_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.quant_label_id_seq'),
                 type VARCHAR(16) NOT NULL,
                 name VARCHAR(10) NOT NULL,
                 serialized_properties TEXT,
@@ -428,7 +428,7 @@ COMMENT ON COLUMN public.quant_label.name IS 'isobaric => 114/115/116/117 isotop
 COMMENT ON COLUMN public.quant_label.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.quant_label_quant_label_id_seq OWNED BY public.quant_label.id;
+ALTER SEQUENCE public.quant_label_id_seq OWNED BY public.quant_label.id;
 
 CREATE SEQUENCE public.quantitation_id_seq;
 
@@ -455,10 +455,10 @@ COMMENT ON COLUMN public.quantitation.serialized_properties IS 'A JSON string wh
 
 ALTER SEQUENCE public.quantitation_id_seq OWNED BY public.quantitation.id;
 
-CREATE SEQUENCE public.quantitation_fraction_quantitation_fraction_id_seq;
+CREATE SEQUENCE public.quantitation_fraction_id_seq;
 
 CREATE TABLE public.quantitation_fraction (
-                id INTEGER NOT NULL DEFAULT nextval('public.quantitation_fraction_quantitation_fraction_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.quantitation_fraction_id_seq'),
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties TEXT,
@@ -471,7 +471,7 @@ COMMENT ON TABLE public.quantitation_fraction IS 'Store the quantitation profile
 COMMENT ON COLUMN public.quantitation_fraction.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.quantitation_fraction_quantitation_fraction_id_seq OWNED BY public.quantitation_fraction.id;
+ALTER SEQUENCE public.quantitation_fraction_id_seq OWNED BY public.quantitation_fraction.id;
 
 CREATE SEQUENCE public.biological_sample_id_seq;
 
@@ -489,10 +489,10 @@ COMMENT ON COLUMN public.biological_sample.serialized_properties IS 'A JSON stri
 
 ALTER SEQUENCE public.biological_sample_id_seq OWNED BY public.biological_sample.id;
 
-CREATE SEQUENCE public.sample_analysis_replicate_sample_analysis_replicate_seq;
+CREATE SEQUENCE public.sample_analysis_replicate_id_seq;
 
 CREATE TABLE public.sample_analysis_replicate (
-                id INTEGER NOT NULL DEFAULT nextval('public.sample_analysis_replicate_sample_analysis_replicate_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.sample_analysis_replicate_id_seq'),
                 number INTEGER NOT NULL,
                 serialized_properties TEXT,
                 biological_sample_id INTEGER NOT NULL,
@@ -504,12 +504,12 @@ COMMENT ON COLUMN public.sample_analysis_replicate.number IS 'Number of the tech
 COMMENT ON COLUMN public.sample_analysis_replicate.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.sample_analysis_replicate_sample_analysis_replicate_seq OWNED BY public.sample_analysis_replicate.id;
+ALTER SEQUENCE public.sample_analysis_replicate_id_seq OWNED BY public.sample_analysis_replicate.id;
 
-CREATE SEQUENCE public.group_setup_group_setup_id_seq;
+CREATE SEQUENCE public.group_setup_id_seq;
 
 CREATE TABLE public.group_setup (
-                id INTEGER NOT NULL DEFAULT nextval('public.group_setup_group_setup_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.group_setup_id_seq'),
                 name VARCHAR(100) NOT NULL,
                 serialized_properties TEXT,
                 quantitation_id INTEGER NOT NULL,
@@ -518,7 +518,7 @@ CREATE TABLE public.group_setup (
 COMMENT ON COLUMN public.group_setup.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.group_setup_group_setup_id_seq OWNED BY public.group_setup.id;
+ALTER SEQUENCE public.group_setup_id_seq OWNED BY public.group_setup.id;
 
 CREATE SEQUENCE public.biological_group_id_seq;
 
@@ -615,10 +615,10 @@ COMMENT ON COLUMN public.object_tree_schema.serialized_properties IS 'A JSON str
 i.e. for document table a schema property may be the document file extension (.tsv, .protML, .pepML)';
 
 
-CREATE SEQUENCE public.object_tree_object_tree_id_seq;
+CREATE SEQUENCE public.object_tree_id_seq;
 
 CREATE TABLE public.object_tree (
-                id INTEGER NOT NULL DEFAULT nextval('public.object_tree_object_tree_id_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.object_tree_id_seq'),
                 serialized_data TEXT NOT NULL,
                 serialized_properties TEXT,
                 schema_name VARCHAR(1000) NOT NULL,
@@ -626,12 +626,12 @@ CREATE TABLE public.object_tree (
 );
 
 
-ALTER SEQUENCE public.object_tree_object_tree_id_seq OWNED BY public.object_tree.id;
+ALTER SEQUENCE public.object_tree_id_seq OWNED BY public.object_tree.id;
 
-CREATE SEQUENCE public.document_document_seq;
+CREATE SEQUENCE public.document_id_seq;
 
 CREATE TABLE public.document (
-                id INTEGER NOT NULL DEFAULT nextval('public.document_document_seq'),
+                id INTEGER NOT NULL DEFAULT nextval('public.document_id_seq'),
                 name VARCHAR(250) NOT NULL,
                 description VARCHAR(1000),
                 keywords VARCHAR(250),
@@ -652,7 +652,7 @@ COMMENT ON COLUMN public.document.modification_log IS 'A description relative to
 COMMENT ON COLUMN public.document.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.document_document_seq OWNED BY public.document.id;
+ALTER SEQUENCE public.document_id_seq OWNED BY public.document.id;
 
 CREATE SEQUENCE public.quant_channel_id_seq;
 
