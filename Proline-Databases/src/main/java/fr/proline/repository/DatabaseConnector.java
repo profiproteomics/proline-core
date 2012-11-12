@@ -73,7 +73,12 @@ public class DatabaseConnector {
 		for(DriverType type : DriverType.values()) {
 			if (type.driver.equals(driverClassName)) {
 				driverType = type;
-				properties.setProperty(PROPERTY_DIALECT, driverType.getJPADriver());
+				
+				// Set default Hibernate Dialect
+				if( properties.containsKey(PROPERTY_DIALECT) == false ) {
+				  properties.setProperty(PROPERTY_DIALECT, driverType.getJPADriver());
+				}
+				
 				break;
 			}
 		}

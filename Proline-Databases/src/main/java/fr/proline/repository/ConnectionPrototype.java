@@ -110,8 +110,13 @@ public class ConnectionPrototype {
 
 	public ConnectionPrototype driver(ProlineRepository.DriverType driver) {
 		this.driver = driver;
+		
 		connectionProperties.put(DatabaseConnector.PROPERTY_DRIVERCLASSNAME, driver.driver);
-		connectionProperties.put(DatabaseConnector.PROPERTY_DIALECT, driver.JPADialect);		
+		
+		// Set default Hibernate Dialect
+		if( connectionProperties.containsKey(DatabaseConnector.PROPERTY_DIALECT) == false )
+		  connectionProperties.put(DatabaseConnector.PROPERTY_DIALECT, driver.JPADialect);
+		
 		return this;
 	}
 	
