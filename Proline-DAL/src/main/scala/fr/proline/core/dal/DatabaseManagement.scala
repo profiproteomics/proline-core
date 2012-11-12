@@ -30,14 +30,19 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 	private def externalDbToDbConnector( extDb: ExternalDb ): DatabaseConnector = {
 	  
 	  // TODO: retrieve driver class name from serialized properties
+	  val driverClassName = this.udsDriverClassName
 	  
-    val properties = new HashMap[String, String]
-    properties += DatabaseConnector.PROPERTY_USERNAME -> Option(extDb.getDbUser).getOrElse("")
-    properties += DatabaseConnector.PROPERTY_PASSWORD-> Option(extDb.getDbPassword).getOrElse("")
-    properties += DatabaseConnector.PROPERTY_DRIVERCLASSNAME -> this.udsDriverClassName
-    properties += DatabaseConnector.PROPERTY_URL -> createURL(extDb)
-	  
-    new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(properties))
+      val properties = new HashMap[String, String]
+      properties += DatabaseConnector.PROPERTY_USERNAME -> Option(extDb.getDbUser).getOrElse("")
+      properties += DatabaseConnector.PROPERTY_PASSWORD -> Option(extDb.getDbPassword).getOrElse("")
+      properties += DatabaseConnector.PROPERTY_DRIVERCLASSNAME -> driverClassName
+      properties += DatabaseConnector.PROPERTY_URL -> createURL(extDb)
+      
+      // TODO: retrieve the dialect from serialized properties
+      if( driverClassName == DriverType.valueOf("POSTGRESQL").getDriverClassName() )
+        properties += DatabaseConnector.PROPERTY_DIALECT -> "fr.proline.core.orm.utils.TableNameSequencePostgresDialect"
+      
+      new DatabaseConnector(JavaConversions.mutableMapAsJavaMap(properties))
 	}
 	
 	lazy val pdiDBConnector : DatabaseConnector = {
@@ -68,11 +73,11 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 		externalDbToDbConnector(psDB)
 	}
 
-	lazy val psEMF : EntityManagerFactory  = {
-			Persistence.createEntityManagerFactory(
-											JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.PS),
-											psDBConnector.getEntityManagerSettings
-										)								
+	lazy val psEMF : EntityManagerFactory = {
+	  Persistence.createEntityManagerFactory(
+	      JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.PS),
+	      psDBConnector.getEntityManagerSettings
+	      )
 	}
 	
 	def getMSIDatabaseConnector(projectID : Int, createNew : Boolean = false) : DatabaseConnector = {	  
