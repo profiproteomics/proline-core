@@ -70,7 +70,7 @@ public class PeptideMatch implements Serializable {
 	private String serializedProperties;
 
 	//bi-directional many-to-one association to MsQuery
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="ms_query_id")
 	private MsQuery msQuery;
 
