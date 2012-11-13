@@ -6,6 +6,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -13,6 +14,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 /**
  * The persistent class for the ms_query database table.
@@ -42,13 +44,16 @@ public class MsQuery implements Serializable {
     private String serializedProperties;
 
     // uni-directional many-to-one association to Spectrum
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Spectrum spectrum;
 
     // bi-directional many-to-one association to PeptideMatch
     @OneToMany(mappedBy = "msQuery")
     private Set<PeptideMatch> peptideMatches;
 
+ // Transient Variable not saved in database
+  	@Transient private boolean isSpectrumSet = false;
+    
     public MsQuery() {
     }
 
@@ -141,4 +146,13 @@ public class MsQuery implements Serializable {
 
     }
 
+    public boolean getTransientIsSpectrumSet() {
+		return isSpectrumSet;
+	}
+
+	public void setTransientIsSpectrumSet(boolean isSpectrumSet) {
+		this.isSpectrumSet = isSpectrumSet;
+	}
+    
+    
 }
