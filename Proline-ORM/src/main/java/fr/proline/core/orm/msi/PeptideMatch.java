@@ -3,6 +3,8 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import javax.persistence.*;
 
+import fr.proline.core.orm.msi.ProteinSet.TransientData;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -101,7 +103,7 @@ public class PeptideMatch implements Serializable {
  	
  	
     // Transient Variable not saved in database
-    @Transient private Peptide peptide = null;
+ 	@Transient private TransientData transientData = null;
  	
     public PeptideMatch() {
     }
@@ -245,17 +247,45 @@ public class PeptideMatch implements Serializable {
 		this.objectTreeIdByName.put(schemaName, objectId);
 	}
 	
-	/**
-	 * Get of Transient peptide, Must be set by the user first.
-	 * @return
-	 */
-	public Peptide getTransientPeptide() {
-		return peptide;
+	public TransientData getTransientData() {
+		return transientData;
 	}
 
-	public void setTransientPeptide(Peptide peptide) {
-		this.peptide = peptide;
+	public void setTransientData(TransientData transientData) {
+		this.transientData = transientData;
 	}
+
 	
-	
+	/**
+	 * Transient Data which will be not saved in database
+	 * Used by the Proline Studio IHM
+	 * @author JM235353
+	 */
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+		private Peptide peptide = null;
+		boolean isMsQuerySet = false;
+		
+		public TransientData() {
+		}
+		
+		public Peptide getPeptide() {
+			return peptide;
+		}
+
+		public void setPeptide(Peptide peptide) {
+			this.peptide = peptide;
+		}
+		
+		public boolean getIsMsQuerySet() {
+			return isMsQuerySet;
+		}
+
+		public void setIsMsQuerySet(boolean isMsQuerySet) {
+			this.isMsQuerySet = isMsQuerySet;
+		}
+		
+		
+	}
 }
