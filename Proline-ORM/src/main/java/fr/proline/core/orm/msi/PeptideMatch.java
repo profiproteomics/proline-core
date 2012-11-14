@@ -265,7 +265,8 @@ public class PeptideMatch implements Serializable {
 		private static final long serialVersionUID = 1L;
 		
 		private Peptide peptide = null;
-		boolean isMsQuerySet = false;
+		private boolean isMsQuerySet = false;
+		private ProteinMatch[] proteinMatchArray = null;
 		
 		public TransientData() {
 		}
@@ -286,6 +287,13 @@ public class PeptideMatch implements Serializable {
 			this.isMsQuerySet = isMsQuerySet;
 		}
 		
+		public ProteinMatch[] getProteinMatches() {
+			return proteinMatchArray;
+		}
+		
+		public void setProteinMatches(ProteinMatch[] proteinMatchArray) {
+			this.proteinMatchArray = proteinMatchArray;
+		}
 		
 	}
 }
