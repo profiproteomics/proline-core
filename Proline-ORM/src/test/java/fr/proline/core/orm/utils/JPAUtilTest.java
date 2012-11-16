@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -24,6 +25,8 @@ import fr.proline.repository.utils.DatabaseUtils;
 public class JPAUtilTest extends DatabaseTestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(JPAUtilTest.class);
+
+    private static final AtomicBoolean STATISTICS_ENABLED = new AtomicBoolean(false);
 
     @Before
     public void setUp() throws Exception {
@@ -44,6 +47,12 @@ public class JPAUtilTest extends DatabaseTestCase {
     @Test
     public void testUtils() {
 	final EntityManager udsEm = getEntityManager();
+
+	if (!STATISTICS_ENABLED.getAndSet(true)) {
+	    /* Check Hibernate statistics only once */
+	    JPAUtil.enableStatistics(udsEm.getEntityManagerFactory(), "Tests-HibernateStats");
+	}
+
 	udsEm.setFlushMode(FlushModeType.COMMIT);
 
 	EntityTransaction transac = null;
