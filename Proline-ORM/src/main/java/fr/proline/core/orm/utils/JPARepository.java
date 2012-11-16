@@ -4,7 +4,9 @@ import javax.persistence.EntityManager;
 
 public class JPARepository {
 
-    private final EntityManager em;
+	protected final int BUFFER_SIZE=999;
+	
+	private final EntityManager em;
 
     protected JPARepository(final EntityManager em) {
 	JPAUtil.checkEntityManager(em);

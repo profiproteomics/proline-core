@@ -2,6 +2,8 @@ package fr.proline.core.orm.pdi.repository;
 
 import static fr.proline.core.orm.utils.MathUtils.EPSILON_LOW_PRECISION;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -13,105 +15,120 @@ import javax.persistence.TypedQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.pdi.BioSequence;
 import fr.proline.core.orm.utils.JPARepository;
 import fr.proline.core.orm.utils.StringUtils;
 
 public class PdiBioSequenceRepository extends JPARepository {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PdiBioSequenceRepository.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PdiBioSequenceRepository.class);
 
-    public PdiBioSequenceRepository(final EntityManager pdiEm) {
-	super(pdiEm);
-    }
-
-    /**
-     * Retrieves a BioSequence entity (assumed unique) by crc64 and mass.
-     * 
-     * @param crc64
-     *            CRC 64 of BioSequence to retrieve (matched ignoring case), must not be empty.
-     * @param mass
-     *            Mass of BioSequence to retrieve (compared with <code>EPSILON_LOW_PRECISION</code>).
-     * @return BioSequence entity or <code>null</code> if not found.
-     */
-    public BioSequence findBioSequenceForCrcAndMass(final String crc64, final double mass) {
-
-	if (StringUtils.isEmpty(crc64)) {
-	    throw new IllegalArgumentException("Invalid crc64");
+	public PdiBioSequenceRepository(final EntityManager pdiEm) {
+		super(pdiEm);
 	}
 
-	BioSequence result = null;
+	/**
+	 * Retrieves a BioSequence entity (assumed unique) by crc64 and mass.
+	 * 
+	 * @param crc64
+	 *          CRC 64 of BioSequence to retrieve (matched ignoring case), must
+	 *          not be empty.
+	 * @param mass
+	 *          Mass of BioSequence to retrieve (compared with
+	 *          <code>EPSILON_LOW_PRECISION</code>).
+	 * @return BioSequence entity or <code>null</code> if not found.
+	 */
+	public BioSequence findBioSequenceForCrcAndMass(final String crc64,	final double mass) {
 
-	final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery("findPdiBioSequenceForCrc",
-		BioSequence.class);
-	query.setParameter("crc64", crc64.toUpperCase());
+		if (StringUtils.isEmpty(crc64)) {
+			throw new IllegalArgumentException("Invalid crc64");
+		}
 
-	final List<BioSequence> bioSequences = query.getResultList();
+		BioSequence result = null;
 
-	if ((bioSequences != null) && !bioSequences.isEmpty()) {
+		final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery(
+				"findPdiBioSequenceForCrc", BioSequence.class);
+		query.setParameter("crc64", crc64.toUpperCase());
 
-	    for (final BioSequence bs : bioSequences) {
+		final List<BioSequence> bioSequences = query.getResultList();
 
-		if (Math.abs(bs.getMass() - mass) < EPSILON_LOW_PRECISION) {
+		if ((bioSequences != null) && !bioSequences.isEmpty()) {
 
-		    if (result == null) {
-			result = bs;
-		    } else {
-			throw new RuntimeException(
-				"There are more than one BioSequence for given crc64 and mass");
-		    }
+			for (final BioSequence bs : bioSequences) {
 
-		} // End if (bs.mass == mass)
+				if (Math.abs(bs.getMass() - mass) < EPSILON_LOW_PRECISION) {
 
-	    } // End loop for each BioSequence
+					if (result == null) {
+						result = bs;
+					} else {
+						throw new RuntimeException(
+								"There are more than one BioSequence for given crc64 and mass");
+					}
 
-	} // End if (bioSequences is not empty)
+				} // End if (bs.mass == mass)
 
-	return result;
-    }
+			} // End loop for each BioSequence
 
-    /**
-     * Retrieves Pdi BioSequences by a Collection (List, Set...) of crcs.
-     * 
-     * @param crcs
-     *            <code>Collection</code> of BioSequence's crc64s to retrieve (must not be empty and crc64s
-     *            must be in <strong>upper case</strong>).
-     * @return List of found BioSequences (can be empty if none found), associated ProteinIdentifier entities
-     *         are fetched.
-     */
-    public List<BioSequence> findBioSequencesForCrcs(final Collection<String> crcs) {
+		} // End if (bioSequences is not empty)
 
-	if ((crcs == null) || crcs.isEmpty()) {
-	    throw new IllegalArgumentException("Crcs collection is empty");
+		return result;
 	}
 
-	final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery(
-		"findPdiBioSequencesForCrcs", BioSequence.class);
-	query.setParameter("crcs", crcs);
+	/**
+	 * Retrieves Pdi BioSequences by a Collection (List, Set...) of crcs.
+	 * 
+	 * @param crcs
+	 *          <code>Collection</code> of BioSequence's crc64s to retrieve (must
+	 *          not be empty and crc64s must be in <strong>upper case</strong>).
+	 * @return List of found BioSequences (can be empty if none found), associated
+	 *         ProteinIdentifier entities are fetched.
+	 */
+	public List<BioSequence> findBioSequencesForCrcs(final Collection<String> crcs) {
 
-	return query.getResultList();
-    }
+		if ((crcs == null) || crcs.isEmpty()) {
+			throw new IllegalArgumentException("Crcs collection is empty");
+		}
 
-    public BioSequence findBioSequencePerAccessionAndSeqDB(String accession, Integer seqDbInstanceId) {
-	TypedQuery<BioSequence> query = getEntityManager()
-		.createQuery(
-			"Select bs from fr.proline.core.orm.pdi.BioSequence bs, fr.proline.core.orm.pdi.ProteinIdentifier pi, fr.proline.core.orm.pdi.SequenceDbEntry se, fr.proline.core.orm.pdi.SequenceDbInstance si, fr.proline.core.orm.pdi.DbEntryProteinIdentifierMap dbepi"
-				+ " where dbepi.proteinIdentifier = pi  and  dbepi.dbEntry = se and se.sequenceDbInstance = si and se.bioSequence = bs and pi.value = :acc and si.id = :seqDbInstId ",
-			BioSequence.class);
-	query.setParameter("acc", accession).setParameter("seqDbInstId", seqDbInstanceId);
+		List<BioSequence> resultBioSeqs = new ArrayList<BioSequence>();
+		String[] crcsArray = crcs.toArray(new String[crcs.size()]);		
+		
+		final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery(
+				"findPdiBioSequencesForCrcs", BioSequence.class);
+		
+		for (int index = 0; index < crcs.size();) {
+			int nextBatchSize = crcs.size() - index;
+			if (nextBatchSize > BUFFER_SIZE)
+				nextBatchSize = BUFFER_SIZE;			
+			String[] bioSeqCRCs = Arrays.copyOfRange(crcsArray, index, index + nextBatchSize);
+			query.setParameter("crcs", Arrays.asList(bioSeqCRCs));
+			resultBioSeqs.addAll(query.getResultList());
+			index = index + nextBatchSize;
+		}
+		
+		return resultBioSeqs;
 
-	try {
-	    return query.getSingleResult();
-	} catch (NoResultException nre) {
-	    LOG.info(" No BioSequence for accession {} and SequenceDbInstance {} ", accession,
-		    seqDbInstanceId);
-	    return null;
-	} catch (NonUniqueResultException nure) {
-	    LOG.warn(" More than one BioSequence for accession {} and SequenceDbInstance {} ", accession,
-		    seqDbInstanceId);
-	    return null;
 	}
 
-    }
+	public BioSequence findBioSequencePerAccessionAndSeqDB(String accession, Integer seqDbInstanceId) {
+			
+		TypedQuery<BioSequence> query = getEntityManager().createNamedQuery(
+				"findPdiBioSequenceForAccAndSeqDB", BioSequence.class);
+		query.setParameter("acc", accession).setParameter("seqDbInstId", seqDbInstanceId);
+
+		try {
+			return query.getSingleResult();
+		} catch (NoResultException nre) {
+			LOG.info(" No BioSequence for accession {} and SequenceDbInstance {} ",
+					accession, seqDbInstanceId);
+			return null;
+		} catch (NonUniqueResultException nure) {
+			LOG.warn(
+					" More than one BioSequence for accession {} and SequenceDbInstance {} ",
+					accession, seqDbInstanceId);
+			return null;
+		}
+
+	}
 
 }
