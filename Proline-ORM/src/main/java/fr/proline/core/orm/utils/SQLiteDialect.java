@@ -20,6 +20,9 @@ import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 
 public class SQLiteDialect extends org.hibernate.dialect.Dialect {
+    
+  private static final int IN_EXPRESSION_COUNT_LIMIT = 999; // See Defect #6561
+    
   public SQLiteDialect() {
     registerColumnType(Types.BIT, "boolean");
     registerColumnType(Types.TINYINT, "tinyint");
@@ -219,4 +222,11 @@ return true;
   public String getSelectGUIDString() {
     return "select hex(randomblob(16))";
   }
+
+  @Override
+  public int getInExpressionCountLimit() {    
+    return IN_EXPRESSION_COUNT_LIMIT;
+  }
+  
+  
 }
