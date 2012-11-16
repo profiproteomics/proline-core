@@ -1,6 +1,6 @@
 package fr.proline.core.orm.utils;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -93,9 +93,9 @@ public class JPAUtilTest extends DatabaseTestCase {
 
 	    };
 
-	    Long result = JPAUtil.doReturningWork(udsEm, jdbcWork);
+	    final Long result = JPAUtil.doReturningWork(udsEm, jdbcWork);
 
-	    assertEquals("2 instruments persisted", Long.valueOf(2), result);
+	    assertTrue("At least 2 instruments persisted", (result != null) && (result.longValue() >= 2L));
 
 	    LOG.info("Found instruments : {}", result);
 
