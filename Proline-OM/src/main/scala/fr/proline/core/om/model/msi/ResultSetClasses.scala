@@ -2,6 +2,8 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.reflect.BeanProperty
+
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
@@ -33,7 +35,7 @@ case class ResultSet (
                    protected var decoyResultSetId: Int = 0,
                    @transient var decoyResultSet: Option[ResultSet] = null,
                    
-                   var properties : HashMap[String, Any] = new HashMap[String, Any]
+                   var properties: Option[ResultSetProperties] = None
                    
                    ) {
   
@@ -90,6 +92,11 @@ case class ResultSet (
   }
 
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class ResultSetProperties
+
 
 object ResultSummary extends InMemoryIdGen
 
@@ -194,3 +201,59 @@ case class ResultSummary (
 
 }
 
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class ResultSummaryProperties (
+  @BeanProperty var validationProperties: Option[RsmValidationProperties] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RsmValidationProperties (
+  @BeanProperty var params: RsmValidationParamsProperties,
+  @BeanProperty var results: RsmValidationResultsProperties
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RsmValidationParamsProperties (
+  @BeanProperty var peptideParams: Option[RsmPepMatchValidationParamsProperties] = None,
+  @BeanProperty var proteinParams: Option[RsmProtSetValidationParamsProperties] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RsmPepMatchValidationParamsProperties (
+  @BeanProperty var expectedFdr: Option[Float] = None,
+  @BeanProperty var scoreThreshold: Option[Float] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RsmProtSetValidationParamsProperties (
+  @BeanProperty var methodName: String,
+  @BeanProperty var expectedFdr: Option[Float] = None  
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RsmValidationResultsProperties (
+  @BeanProperty var peptideResults: Option[RsmPepMatchValidationResultsProperties] = None,
+  @BeanProperty var proteinResults: Option[RsmProtSetValidationResultsProperties] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RsmPepMatchValidationResultsProperties (
+  @BeanProperty var pValueThreshold: Float,
+  @BeanProperty var targetMatchesCount: Int,
+  @BeanProperty var decoyMatchesCount: Option[Int] = None,
+  @BeanProperty var fdr: Option[Float] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RsmProtSetValidationResultsProperties (
+  //@BeanProperty var results: Option[RsmValidationProperties] = None
+  // TODO: expectedRocPoint and RocPoints model
+)

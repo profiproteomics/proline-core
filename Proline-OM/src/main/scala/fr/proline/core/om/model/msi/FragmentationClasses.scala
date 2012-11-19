@@ -1,6 +1,12 @@
 package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.ArrayBuffer
+
+import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
+
+import fr.proline.core.utils.misc.InMemoryIdGen
   
 object Fragmentation {
   
@@ -56,12 +62,18 @@ object NeutralLoss extends Enumeration {
   val NH3 = Value("NH3")
 }
 
-case class FragmentIonType(   
+object FragmentIonType extends InMemoryIdGen
+case class FragmentIonType(
+  
+  var id: Int = FragmentIonType.generateNewId(),
+  
   // Required fields
   val ionSeries: FragmentIonSeries.Value,
  
   // Immutable optional fields
-  val neutralLoss: Option[NeutralLoss.Value] = None
+  val neutralLoss: Option[NeutralLoss.Value] = None,
+  
+  var properties: Option[FragmentIonTypeProperties] = None
 ) {
   
   override def toString():String = {
@@ -69,20 +81,31 @@ case class FragmentIonType(
     else ionSeries.toString
   }
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class FragmentIonTypeProperties
   
-trait FragmentationRule{
+trait FragmentationRule {
   // Required fields
   val description: String
+  var properties: Option[FragmentationRuleProperties]
   
   require( description != null )
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class FragmentationRuleProperties
   
 case class ChargeConstraint(
   
   // Required fields
   val description: String,
   val fragmentCharge: Int,
-  val precursorMinCharge: Option[Int] = None
+  val precursorMinCharge: Option[Int] = None,
+  
+  var properties: Option[FragmentationRuleProperties] = None
   
 ) extends FragmentationRule
 
@@ -103,7 +126,9 @@ case class RequiredSeries (
   // Required fields
   val description: String,
   val requiredSeries: FragmentIonSeries.Value,
-  val requiredSeriesQualityLevel: String
+  val requiredSeriesQualityLevel: String,
+  
+  var properties: Option[FragmentationRuleProperties] = None
   
 ) extends FragmentationRule with FragmentationSeriesRequirement {
   
@@ -122,7 +147,9 @@ case class TheoreticalFragmentIon(
  
   // Immutable optional fields
   val fragmentMaxMoz: Option[Float] = None,
-  val residueConstraint: Option[String] = None  
+  val residueConstraint: Option[String] = None,
+  
+  var properties: Option[FragmentationRuleProperties] = None
   
 ) extends FragmentationRule with FragmentationSeriesRequirement
 

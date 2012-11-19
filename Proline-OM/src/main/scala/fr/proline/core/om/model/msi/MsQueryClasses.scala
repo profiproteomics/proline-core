@@ -1,13 +1,15 @@
 package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
+import scala.reflect.BeanProperty
+
 import org.apache.commons.lang3.StringUtils
+
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
+
 import fr.proline.core.utils.misc.InMemoryIdGen
-//import fr.proline.core.om.model.msi.serializer.{MsQueryProperties,MsQueryDbSearchProperties}
-//import fr.proline.core.utils.serialization._
 
 trait MsQuery {
   
@@ -43,16 +45,33 @@ trait MsQuery {
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class Ms1Query ( // Required fields
-                     var id: Int,
-                     val initialId: Int,
-                     val moz: Double,
-                     val charge: Int,
-                     
-                     // Mutable optional fields
-                     var properties: Option[MsQueryProperties] = None
-                     
-                     ) extends MsQuery {
+case class MsQueryProperties(
+  @BeanProperty var targetDbSearch: Option[MsQueryDbSearchProperties] = None,
+  @BeanProperty var decoyDbSearch: Option[MsQueryDbSearchProperties] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MsQueryDbSearchProperties(
+  @BeanProperty var candidatePeptidesCount: Int,
+  @BeanProperty var mascotIdentityThreshold: Option[Float] = None,
+  @BeanProperty var mascotHomologyThreshold: Option[Float] = None
+)
+
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class Ms1Query (
+  // Required fields
+  var id: Int,
+  val initialId: Int,
+  val moz: Double,
+  val charge: Int,
+ 
+  // Mutable optional fields
+  var properties: Option[MsQueryProperties] = None
+
+) extends MsQuery {
     
   // Requirements
   require( moz > 0 )
@@ -79,18 +98,19 @@ object Ms2Query extends InMemoryIdGen {
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class Ms2Query(  // Required fields
-                 var id: Int,
-                 val initialId: Int,
-                 val moz: Double,
-                 val charge: Int,
-                 val spectrumTitle: String,
-                                  
-                 // Mutable optional fields
-                 var spectrumId: Int = 0,                 
-                 var properties: Option[MsQueryProperties] = None
-                 
-                 ) extends MsQuery {
+case class Ms2Query(
+  // Required fields
+  var id: Int,
+  val initialId: Int,
+  val moz: Double,
+  val charge: Int,
+  val spectrumTitle: String,
+                  
+  // Mutable optional fields
+  var spectrumId: Int = 0,                 
+  var properties: Option[MsQueryProperties] = None
+ 
+) extends MsQuery {
   
   // Requirements
   require( StringUtils.isNotEmpty( spectrumTitle )  )

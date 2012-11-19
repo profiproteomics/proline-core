@@ -3,6 +3,8 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
+import scala.reflect.BeanProperty
+
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
@@ -287,7 +289,7 @@ case class Peptide ( // Required fields
                 val calculatedMass: Double,
                 
                 // Mutable optional fields
-                var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                var properties: Option[PeptideProperties] = None
                 ) {
   
   // Define secondary constructors
@@ -336,6 +338,10 @@ case class Peptide ( // Required fields
   @transient lazy val uniqueKey : String = sequence + "%" + ptmString
   
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeptideProperties
 
 object PeptideMatch extends InMemoryIdGen
 
@@ -390,6 +396,28 @@ case class PeptideMatch ( // Required fields
   def getMs2Query: Ms2Query = { if(msQuery != null) msQuery.asInstanceOf[Ms2Query] else null }
   
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeptideMatchProperties (
+  @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeptideMatchMascotProperties (
+  @BeanProperty var expectationValue: Double,
+  @BeanProperty var readableVarMods: Option[String] = None,
+  @BeanProperty var varModsPositions: Option[String] = None,
+  @BeanProperty var ambiguityString: Option[String] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeptideMatchValidationProperties (
+  @BeanProperty var mascotScoreOffset: Option[Float] = None,
+  @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
+)
  
 object PeptideInstance extends InMemoryIdGen
 
@@ -419,7 +447,7 @@ case class PeptideInstance ( // Required fields
                         var bestPeptideMatchId: Int = 0,
                         var resultSummaryId: Int = 0,
                         
-                        var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any],
+                        var properties: Option[PeptideInstanceProperties] = None,
                         var peptideMatchPropertiesById: Map[Int, PeptideMatchValidationProperties ] = null
                         
                         ) {
@@ -451,6 +479,12 @@ case class PeptideInstance ( // Required fields
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
+case class PeptideInstanceProperties(
+  @BeanProperty var bestPeptideMatchId: Option[Int] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class PeptideSetItem (
                    // Required fields                                  
                    var selectionLevel: Int,
@@ -464,7 +498,7 @@ case class PeptideSetItem (
                    var isBestPeptideSet: Option[Boolean] = None,
                    var resultSummaryId: Int = 0,
                    
-                   var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                   var properties: Option[PeptideSetItemProperties] = None
                    ) {
   
   lazy val peptideInstanceId = peptideInstance.id
@@ -472,6 +506,10 @@ case class PeptideSetItem (
   def getPeptideSetId : Int = { if(peptideSet != null && peptideSet != None) peptideSet.get.id else peptideSetId }
    
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeptideSetItemProperties
 
 object PeptideSet extends InMemoryIdGen
 
@@ -497,7 +535,7 @@ case class PeptideSet ( // Required fields
                    var subsumableSubsetIds: Array[Int] = null,
                    var subsumableSubsets: Option[Array[PeptideSet]] = null,
                    
-                   var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                   var properties: Option[PeptideSetProperties] = None
                    ) {
   
   // Requirements
@@ -565,4 +603,8 @@ case class PeptideSet ( // Required fields
 //    }
 
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeptideSetProperties
 

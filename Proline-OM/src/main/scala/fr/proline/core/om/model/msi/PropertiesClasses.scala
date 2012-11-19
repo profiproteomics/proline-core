@@ -5,19 +5,51 @@ import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 
-@JsonSnakeCase
-@JsonInclude( Include.NON_NULL )
-case class MsQueryDbSearchProperties( @BeanProperty var candidatePeptidesCount: Int,
-                                      @BeanProperty var mascotIdentityThreshold: Option[Float] = None,
-                                      @BeanProperty var mascotHomologyThreshold: Option[Float] = None
-                                     )
-                                     
-@JsonSnakeCase
-@JsonInclude( Include.NON_NULL )
-case class MsQueryProperties( @BeanProperty var targetDbSearch: Option[MsQueryDbSearchProperties] = None,
-                              @BeanProperty var decoyDbSearch: Option[MsQueryDbSearchProperties] = None
-                            )
+/*
 
+///////////////////////////////////////////////////////////////
+//////////////////// MSI SEARCH PROPERTIES ////////////////////
+///////////////////////////////////////////////////////////////
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MSISearchProperties
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MsQueryDbSearchProperties(
+  @BeanProperty var candidatePeptidesCount: Int,
+  @BeanProperty var mascotIdentityThreshold: Option[Float] = None,
+  @BeanProperty var mascotHomologyThreshold: Option[Float] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MsQueryProperties(
+  @BeanProperty var targetDbSearch: Option[MsQueryDbSearchProperties] = None,
+  @BeanProperty var decoyDbSearch: Option[MsQueryDbSearchProperties] = None
+)
+
+///////////////////////////////////////////////////////////////
+///////////////////// PEAKLIST PROPERTIES  ////////////////////
+///////////////////////////////////////////////////////////////
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeaklistProperties (
+  @BeanProperty var spectrumDataCompressionLevel: Option[Int] = None,
+  @BeanProperty var putativePrecursorCharges: Option[Seq[Int]] = None,
+  @BeanProperty var polarity: Option[Char] = None // +/-
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class SpectrumProperties
+
+///////////////////////////////////////////////////////////////
+////////////////// PEPTIDE MATCH PROPERTIES ///////////////////
+///////////////////////////////////////////////////////////////
+                            
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchProperties (
@@ -38,14 +70,6 @@ case class PeptideMatchMascotProperties (
 case class PeptideMatchValidationProperties (
   @BeanProperty var mascotScoreOffset: Option[Float] = None,
   @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
-)
-
-@JsonSnakeCase
-@JsonInclude( Include.NON_NULL )
-case class PeaklistProperties (
-  @BeanProperty var spectrumDataCompressionLevel: Option[Int] = None,
-  @BeanProperty var putativePrecursorCharges: Option[Seq[Int]] = None,
-  @BeanProperty var polarity: Option[Char] = None // +/-
 )
 
 @JsonSnakeCase
@@ -118,3 +142,4 @@ case class RsmValidationProperties (
 case class ResultSummaryProperties (
   @BeanProperty var validationProperties: Option[RsmValidationProperties] = None
 )
+*/

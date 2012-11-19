@@ -1,9 +1,12 @@
 package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
+import scala.reflect.BeanProperty
+
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
+
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.proline.core.utils.misc.InMemoryIdGen
 
@@ -63,7 +66,8 @@ case class Protein ( // Required fields
                    var mass: Double,
                    var pi: Float,
                    val crc64: String,
-                   val alphabet: String
+                   val alphabet: String,
+                   var properties: Option[ProteinProperties] = None
                    ) {
   
   // Requirements
@@ -88,40 +92,10 @@ case class Protein ( // Required fields
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class SequenceMatch ( // Required fields                     
-                   val start: Int,
-                   val end: Int,
-                   val residueBefore: Char,
-                   val residueAfter: Char,
-                   
-                   // Immutable optional fields
-                   val isDecoy: Boolean = false,
-                   var resultSetId : Int = 0,
-                   
-                   // Mutable optional fields
-                   protected var peptideId: Int = 0,
-                   @transient var peptide: Option[Peptide] = null,
-                   
-                   protected var bestPeptideMatchId: Int = 0,
-                   @transient var bestPeptideMatch: Option[PeptideMatch] = null,
-                   
-                   var properties: Option[SequenceMatchProperties] = None
-                   
-                   ) {
-  
-  // Requirements
-  require( start > 0 , "peptide sequence position must be striclty positive" )
-  require( end > start , "peptide end position must be greater than start position" )
-  
-  def getPeptideId : Int = { if(peptide != null && peptide != None) peptide.get.id else peptideId }
+case class ProteinProperties
 
-  def getBestPeptideMatchId : Int = { if(bestPeptideMatch != null && bestPeptideMatch != None) bestPeptideMatch.get.id else bestPeptideMatchId }
-  
-}
 
-object ProteinMatch extends InMemoryIdGen {
-  
-}  
+object ProteinMatch extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
@@ -161,6 +135,11 @@ case class ProteinMatch (
   def getProteinId : Int = { if(protein != null && protein != None) protein.get.id else proteinId }
   
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class ProteinMatchProperties
+
  
 object ProteinSet extends InMemoryIdGen
 
@@ -188,7 +167,7 @@ case class ProteinSet (
                  var isValidated: Boolean = true,
                  var selectionLevel: Int = 2,
 
-                 var properties : HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+                 var properties: Option[ProteinSetProperties] = None
                  
                  ) {
   
@@ -202,3 +181,46 @@ case class ProteinSet (
   def getTypicalProteinMatchId : Int = { if(typicalProteinMatch != null && typicalProteinMatch != None) typicalProteinMatch.get.id else typicalProteinMatchId }
   
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class ProteinSetProperties
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class SequenceMatch ( // Required fields                     
+                   val start: Int,
+                   val end: Int,
+                   val residueBefore: Char,
+                   val residueAfter: Char,
+                   
+                   // Immutable optional fields
+                   val isDecoy: Boolean = false,
+                   var resultSetId : Int = 0,
+                   
+                   // Mutable optional fields
+                   protected var peptideId: Int = 0,
+                   @transient var peptide: Option[Peptide] = null,
+                   
+                   protected var bestPeptideMatchId: Int = 0,
+                   @transient var bestPeptideMatch: Option[PeptideMatch] = null,
+                   
+                   var properties: Option[SequenceMatchProperties] = None
+                   
+                   ) {
+  
+  // Requirements
+  require( start > 0 , "peptide sequence position must be striclty positive" )
+  require( end > start , "peptide end position must be greater than start position" )
+  
+  def getPeptideId : Int = { if(peptide != null && peptide != None) peptide.get.id else peptideId }
+
+  def getBestPeptideMatchId : Int = { if(bestPeptideMatch != null && bestPeptideMatch != None) bestPeptideMatch.get.id else bestPeptideMatchId }
+  
+}
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class SequenceMatchProperties
+
+

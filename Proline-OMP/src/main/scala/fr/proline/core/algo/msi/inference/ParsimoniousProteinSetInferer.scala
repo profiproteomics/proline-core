@@ -36,14 +36,16 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
       if( pepMatchGroup.length == 1 ) { bestPepMatch = pepMatchGroup(0) }
       else { bestPepMatch = pepMatchGroup.toList.reduce { (a,b) => if( a.score > b.score ) a else b }  }
       
-      val pepInstProps = new HashMap[String,Any]
-      pepInstProps += ( "best_peptide_match_id" -> bestPepMatch.id )
+      //val pepInstProps = new HashMap[String,Any]
+      //pepInstProps += ( "best_peptide_match_id" -> bestPepMatch.id )
+      val pepInstProps = new PeptideInstanceProperties()
+      pepInstProps.setBestPeptideMatchId( Some(bestPepMatch.id) )
       
       val peptideInstance = new PeptideInstance(
                                   id = PeptideInstance.generateNewId(),
                                   peptide = bestPepMatch.peptide,
                                   peptideMatchIds = pepMatchIds,
-                                  properties = pepInstProps,
+                                  properties = Some(pepInstProps),
                                   //peptideMatchPropertiesById = peptideMatchPropertiesById,
                                   resultSummaryId = resultSummaryId
                                 )

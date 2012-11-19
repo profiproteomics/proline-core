@@ -1,5 +1,9 @@
 package fr.proline.core.om.model.msi
 
+import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
+
 import fr.proline.core.utils.misc.InMemoryIdGen
 
 object Activation extends Enumeration {
@@ -18,10 +22,17 @@ case class Instrument(
                    val name: String,
                    
                    // Immutable optional fields
-                   val source: String = null
+                   val source: String = null,
+                   
+                   var properties: Option[InstrumentProperties] = None
                    ) {
       
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class InstrumentProperties
+
 
 object InstrumentConfig extends InMemoryIdGen {
   
@@ -30,8 +41,8 @@ object InstrumentConfig extends InMemoryIdGen {
                ): String = {
     "%s (A1=%s F=%s A2=%s)".format( instrumentName, ms1Analyzer, activationType, msnAnalyzer )
   }
-  
 }
+
 case class InstrumentConfig(
                    // Required fields
                    val id: Int,
@@ -40,9 +51,9 @@ case class InstrumentConfig(
                    val ms1Analyzer: String,
                    val msnAnalyzer: String,
                    val activationType: String,
-                   val fragmentationRules: Option[Array[FragmentationRule]] = None
+                   val fragmentationRules: Option[Array[FragmentationRule]] = None,
                    
-                   // TODO: add properties
+                   var properties: Option[InstrumentConfigProperties] = None
                    ) {
   
   // Secondary constructor were the name is automatically built
@@ -53,4 +64,7 @@ case class InstrumentConfig(
   }
       
 }
-  
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class InstrumentConfigProperties
