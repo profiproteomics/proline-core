@@ -16,6 +16,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import fr.proline.core.orm.msi.PeptideMatch.TransientData;
+
 /**
  * The persistent class for the protein_match database table.
  * 
@@ -81,8 +83,7 @@ public class ProteinMatch implements Serializable {
     private Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems;
 
 	// Transient Variables not saved in database
-    @Transient private PeptideSet peptideSet   = null;
-    @Transient private BioSequence bioSequence = null;
+    @Transient private TransientData transientData = null;
     
     public ProteinMatch() {
     }
@@ -215,20 +216,53 @@ public class ProteinMatch implements Serializable {
 	this.isLastBioSequence = isLastBioSequence;
     }
     
-	public PeptideSet getTransientPeptideSet() {
-		return peptideSet;
+	public TransientData getTransientData() {
+		return transientData;
 	}
 
-	public void setTransientPeptideSet(PeptideSet peptideSet) {
-		this.peptideSet = peptideSet;
+	public void setTransientData(TransientData transientData) {
+		this.transientData = transientData;
 	}
 	
-	public BioSequence getTransientBioSequence() {
-		return bioSequence;
-	}
+	/**
+	 * Transient Data which will be not saved in database
+	 * Used by the Proline Studio IHM
+	 * @author JM235353
+	 */
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+	    private PeptideSet peptideSet   = null;
+	    private BioSequence bioSequence = null;
+		private ProteinSet[] proteinSetArray = null;
+		
+		public TransientData() {
+		}
+	
+		public PeptideSet getPeptideSet() {
+			return peptideSet;
+		}
 
-	public void setTransientBioSequence(BioSequence bioSequence) {
-		this.bioSequence = bioSequence;
-	}
+		public void setPeptideSet(PeptideSet peptideSet) {
+			this.peptideSet = peptideSet;
+		}
 
+		public BioSequence getBioSequence() {
+			return bioSequence;
+		}
+
+		public void setBioSequence(BioSequence bioSequence) {
+			this.bioSequence = bioSequence;
+		}
+
+		public ProteinSet[] getProteinSetArray() {
+			return proteinSetArray;
+		}
+
+		public void setProteinSetArray(ProteinSet[] proteinSetArray) {
+			this.proteinSetArray = proteinSetArray;
+		}
+	
+	}
+	
 }
