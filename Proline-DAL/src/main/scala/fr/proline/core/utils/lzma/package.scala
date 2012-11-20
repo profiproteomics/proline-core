@@ -7,22 +7,23 @@ package object lzma {
   object EasyLZMA1 {
     
     import _root_.lzma.streams.LzmaOutputStream
+    import _root_.lzma.sdk.lzma.Encoder;
     
     def compress( data: Array[Byte] ): Array[Byte] = {
       
       val baOS = new ByteArrayOutputStream()
-      val encoder = new LzmaOutputStream.Builder(baOS)
-                          .useBT2MatchFinder()
-                          .useMinimalDictionarySize()
-                          .useMinimalFastBytes()
-                          .useEndMarkerMode(true)                          
-                          .build()
+      val lzmaEncoder = new Encoder()
+      lzmaEncoder.setMatchFinder(Encoder.EMatchFinderTypeBT2)
+      lzmaEncoder.setDictionarySize(1 << 12)
+      lzmaEncoder.setNumFastBytes(16)
+      lzmaEncoder.setEndMarkerMode(true)
       
+      val output = new LzmaOutputStream(baOS, lzmaEncoder )    
       val sourceIn = new ByteArrayInputStream(data)
       
-      IOUtils.copyStream(sourceIn, encoder)
+      IOUtils.copyStream(sourceIn, output)
       sourceIn.close()
-      encoder.close()
+      output.close()
       
       baOS.toByteArray()
     }
