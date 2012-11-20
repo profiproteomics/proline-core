@@ -41,6 +41,15 @@ public class DatabaseUtils {
 	public static final String POSTGRESQL_DATABASE_MSI_SCRIPT_LOCATION = "/dbscripts/msi/postgresql";
 	public static final String POSTGRESQL_DATABASE_PS_SCRIPT_LOCATION = "/dbscripts/ps/postgresql";
 	
+	/**
+	 * Location for SQLite Databases for each schema
+	 */
+	public static final String SQLITE_DATABASE_UDS_SCRIPT_LOCATION = "/dbscripts/uds/sqlite";	
+	public static final String SQLITE_DATABASE_LCMS_SCRIPT_LOCATION = "/dbscripts/lcms/sqlite";
+	public static final String SQLITE_DATABASE_PDI_SCRIPT_LOCATION = "/dbscripts/pdi/sqlite";
+	public static final String SQLITE_DATABASE_MSI_SCRIPT_LOCATION = "/dbscripts/msi/sqlite";
+	public static final String SQLITE_DATABASE_PS_SCRIPT_LOCATION = "/dbscripts/ps/sqlite";
+	
 	
 	public static void initDatabase(DatabaseTestConnector connector, String scriptDirectory) throws ClassNotFoundException {
 		Flyway flyway = new Flyway();
