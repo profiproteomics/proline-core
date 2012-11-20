@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi.inference
 
-import org.scalatest.Spec
+import org.scalatest.FunSpec
 import org.scalatest.Assertions
 import org.scalatest.GivenWhenThen
 import org.junit.runner.RunWith
@@ -8,7 +8,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.junit.JUnitSuite
 
 @RunWith(classOf[JUnitRunner])
-class SetClustererTest extends Spec with GivenWhenThen {
+class SetClustererTest extends FunSpec with GivenWhenThen {
 
   describe("a map containing two same sets of integers ") {
     
