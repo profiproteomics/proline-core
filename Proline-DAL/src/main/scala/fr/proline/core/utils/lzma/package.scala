@@ -66,12 +66,10 @@ package object lzma {
       -eos:   write End Of Stream marker. By default LZMA doesn't write 
               eos marker, since LZMA decoder knows uncompressed size 
               stored in .lzma file header.
-     */
-    def compress( data: Array[Byte] ): Array[Byte] = {
-      
-      val options = this.defaultOptions
+     */    
+    def compress( data: Array[Byte], options: LzmaOptions = this.defaultOptions ): Array[Byte] = {
       val encoderOptions = new LZMA2Options(
-                                options.dictSize, 
+                                options.dictSize,
                                 options.lc,
                                 options.lp,
                                 options.pb,
@@ -80,6 +78,14 @@ package object lzma {
                                 options.mf,
                                 options.depth
                                 )
+      _compress( data, encoderOptions )
+    }
+    
+    def compress( data: Array[Byte], preset: Int ): Array[Byte] = {
+      _compress(data, new LZMA2Options(preset) )
+    }
+    
+    private def _compress( data: Array[Byte], encoderOptions: LZMA2Options ): Array[Byte] = {
       
       val baOS = new ByteArrayOutputStream();
       val encoder = new XZOutputStream(baOS, encoderOptions)
