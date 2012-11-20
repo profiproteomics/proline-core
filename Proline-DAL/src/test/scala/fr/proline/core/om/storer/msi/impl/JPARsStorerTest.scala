@@ -1,14 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.util.Sorting
-
 import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.dal.DatabaseManagementTestCase
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -22,46 +19,32 @@ import fr.proline.core.orm.utils.StringUtils
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
 import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.repository.utils.DatabaseUtils
+import fr.proline.core.om.utils.AbstractMultipleDBTestCase
 
 @Test
-class JPARsStorerTest extends Logging {
+class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
   val milliToNanos = 1000000L
-
   val msiTransaction = null
-  var pdiDBTestCase = new PDIDatabaseTestCase()
-  var msiDBTestCase = new MSIDatabaseTestCase()
-  var psDBTestCase = new PSDatabaseTestCase()
-  var udsDBTestCase = new UDSDatabaseTestCase()
+
 
   var stContext: StorerContext = null
-  var dbMgntTest: DatabaseManagementTestCase = null
   var storer: JPARsStorer = null
 
   @Before
   def initTests() = {
     logger.info("Initializing Dbs")
-    msiDBTestCase.initDatabase()
-    msiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName())
+    
+    super.initDBsDBManagement()
+    
+    //Load Data
     msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")
-
-    /* Init Ps Db connection */
-    psDBTestCase.initDatabase()
-    psDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
     psDBTestCase.loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-
-    /* Init Uds Db connection */
-    udsDBTestCase.initDatabase()
-    udsDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName())
     udsDBTestCase.loadDataSet("/fr/proline/core/om/uds/UDS_Simple_Dataset.xml")
-
-    /* Init Pdi Db connection */
-    pdiDBTestCase.initDatabase()
-    pdiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PDI_Key.getPersistenceUnitName())
     pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
 
     logger.info("Dbs succesfully initialized")
-    dbMgntTest = new DatabaseManagementTestCase(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector)
+    
     storer = new JPARsStorer(dbMgntTest, msiDBTestCase.getConnector)
     stContext = new StorerContext(dbMgntTest, dbMgntTest.getCurrentMsiConnector())
   }
@@ -348,54 +331,6 @@ class JPARsStorerTest extends Logging {
     assertEquals("ProteinMatch.seqDatabaseIds", normalizeArrayLength(src.seqDatabaseIds), normalizeArrayLength(loaded.seqDatabaseIds))
 
     assertEquals("ProteinMatch.sequenceMatches", normalizeArrayLength(src.sequenceMatches), normalizeArrayLength(loaded.sequenceMatches))
-  }
-
-}
-
-class MSIDatabaseTestCase extends DatabaseTestCase {
-
-  override def getSQLScriptLocation(): String = {
-    DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION
-  }
-
-  override def getPropertiesFilename(): String = {
-    return "/db_msi.properties";
-  }
-
-}
-
-class PSDatabaseTestCase extends DatabaseTestCase {
-
-  override def getSQLScriptLocation(): String = {
-    DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION
-  }
-
-  override def getPropertiesFilename(): String = {
-    return "/db_ps.properties";
-  }
-
-}
-
-class UDSDatabaseTestCase extends DatabaseTestCase {
-
-  override def getSQLScriptLocation(): String = {
-    DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION
-  }
-
-  override def getPropertiesFilename(): String = {
-    return "/db_uds.properties";
-  }
-
-}
-
-class PDIDatabaseTestCase extends DatabaseTestCase {
-
-  override def getSQLScriptLocation(): String = {
-    DatabaseUtils.H2_DATABASE_PDI_SCRIPT_LOCATION
-  }
-
-  override def getPropertiesFilename(): String = {
-    return "/db_pdi.properties";
   }
 
 }
