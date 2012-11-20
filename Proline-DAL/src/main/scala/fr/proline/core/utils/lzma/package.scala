@@ -1,10 +1,36 @@
 package fr.proline.core.utils
 
 package object lzma {
-
-  object EasyLzma {
+  
+  import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
+  
+  object EasyLZMA1 {
     
-    import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
+    import _root_.lzma.streams.LzmaOutputStream
+    
+    def compress( data: Array[Byte] ): Array[Byte] = {
+      
+      val baOS = new ByteArrayOutputStream()
+      val encoder = new LzmaOutputStream.Builder(baOS)
+                          .useBT2MatchFinder()
+                          .useMinimalDictionarySize()
+                          .useMinimalFastBytes()
+                          .useEndMarkerMode(true)                          
+                          .build()
+      
+      val sourceIn = new ByteArrayInputStream(data)
+      
+      IOUtils.copyStream(sourceIn, encoder)
+      sourceIn.close()
+      encoder.close()
+      
+      baOS.toByteArray()
+    }
+    
+  }
+  
+  object EasyLzma {    
+    
     import org.tukaani.xz.{LZMA2Options,XZOutputStream,XZInputStream}
     
     case class LzmaOptions( var dictSize: Int, var mode: Int, var niceLen: Int, var depth: Int,
@@ -13,7 +39,7 @@ package object lzma {
     var defaultOptions = new LzmaOptions( 
                                dictSize = 1 << 16, // 65536
                                mode = LZMA2Options.MODE_FAST,
-                               niceLen = 128,
+                               niceLen = 128, // number of fast bytes
                                depth = 4,
                                lc = LZMA2Options.LC_DEFAULT,
                                lp = LZMA2Options.LP_DEFAULT,
@@ -21,7 +47,8 @@ package object lzma {
                                mf = LZMA2Options.MF_HC4
                                )
     
-    /*
+    /* For more details: http://sevenzip.sourceforge.jp/chm/cmdline/switches/method.htm
+     *
      -a{N}:  set compression mode 0 = fast, 1 = normal
               default: 1 (normal)
     
@@ -102,18 +129,33 @@ package object lzma {
       val decoder = new XZInputStream(baIS);
       
       val decodedOS = new ByteArrayOutputStream();
-      val buf = new Array[Byte](256);
       
-      var n = decoder.read(buf);
-      while (n != -1) {
-    	  decodedOS.write(buf,0,n);
-    	  n = decoder.read(buf);
-      }
-
-      return decodedOS.toByteArray();
+      IOUtils.copyStream(decoder, decodedOS);
+      
+      decodedOS.toByteArray();
 
     }
     
   }
+  
+  object IOUtils {
+    
+    var BUFFER_SIZE = 256
+    
+    import java.io.{ByteArrayInputStream,ByteArrayOutputStream,InputStream,OutputStream}
+    
+    def copyStream( input: InputStream, output: OutputStream ) {
+      val buffer = new Array[Byte](BUFFER_SIZE)
+      
+      var n = 0
+      while ( { n = input.read(buffer); n != -1 } ) {
+        output.write(buffer, 0, n)
+      }
+      
+      output
+    }
+  }
+  
+
   
 }
