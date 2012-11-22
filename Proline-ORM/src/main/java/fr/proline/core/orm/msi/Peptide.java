@@ -129,12 +129,12 @@ public class Peptide implements Serializable, Comparable<Peptide> {
     }
 
     public TransientData getTransientData() {
-	return transientData;
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
     }
 
-    public void setTransientData(TransientData transientData) {
-	this.transientData = transientData;
-    }
 
     /**
      * Transient Data which will be not saved in database Used by the Proline Studio IHM
@@ -149,7 +149,7 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 							      // found
 	private HashMap<Integer, PeptidePtm> peptidePtmMap = null;
 
-	public TransientData() {
+	protected TransientData() {
 	}
 
 	public SequenceMatch getSequenceMatch() {

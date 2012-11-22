@@ -3,6 +3,8 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import javax.persistence.*;
 
+import fr.proline.core.orm.msi.Peptide.TransientData;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -166,13 +168,12 @@ public class ProteinSet implements Serializable {
 	}
 	
 	
-	public TransientData getTransientData() {
-		return transientData;
-	}
-
-	public void setTransientData(TransientData transientData) {
-		this.transientData = transientData;
-	}
+    public TransientData getTransientData() {
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
+    }
 
 	/**
 	 * Transient Data which will be not saved in database
@@ -190,7 +191,7 @@ public class ProteinSet implements Serializable {
 		private Integer        sameSetCount          = null;
 		private Integer        subSetCount           = null;
 		
-		public TransientData() {
+		protected TransientData() {
 		}
 		
 		public ProteinMatch getTypicalProteinMatch() {
@@ -241,6 +242,7 @@ public class ProteinSet implements Serializable {
 		public void setSubSetCount(Integer subSetCount) {
 			this.subSetCount = subSetCount;
 		}
+		
 		
 	}
 	

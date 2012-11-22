@@ -247,13 +247,12 @@ public class PeptideMatch implements Serializable {
 		this.objectTreeIdByName.put(schemaName, objectId);
 	}
 	
-	public TransientData getTransientData() {
-		return transientData;
-	}
-
-	public void setTransientData(TransientData transientData) {
-		this.transientData = transientData;
-	}
+    public TransientData getTransientData() {
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
+    }
 
 	
 	/**
@@ -268,7 +267,7 @@ public class PeptideMatch implements Serializable {
 		private boolean isMsQuerySet = false;
 		private ProteinMatch[] proteinMatchArray = null;
 		
-		public TransientData() {
+		protected TransientData() {
 		}
 		
 		public Peptide getPeptide() {

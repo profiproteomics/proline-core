@@ -1,6 +1,7 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -216,13 +217,12 @@ public class ProteinMatch implements Serializable {
 	this.isLastBioSequence = isLastBioSequence;
     }
     
-	public TransientData getTransientData() {
-		return transientData;
-	}
-
-	public void setTransientData(TransientData transientData) {
-		this.transientData = transientData;
-	}
+    public TransientData getTransientData() {
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
+    }
 	
 	/**
 	 * Transient Data which will be not saved in database
@@ -232,19 +232,25 @@ public class ProteinMatch implements Serializable {
 	public static class TransientData implements Serializable {
 		private static final long serialVersionUID = 1L;
 		
-	    private PeptideSet peptideSet   = null;
+	    private HashMap<Integer, PeptideSet> peptideSetMap   = null;
 	    private BioSequence bioSequence = null;
 		private ProteinSet[] proteinSetArray = null;
 		
-		public TransientData() {
+		protected TransientData() {
 		}
 	
-		public PeptideSet getPeptideSet() {
-			return peptideSet;
+		public PeptideSet getPeptideSet(Integer resultSummaryId) {
+			if (peptideSetMap == null) {
+				return null;
+			}
+			return peptideSetMap.get(resultSummaryId);
 		}
 
-		public void setPeptideSet(PeptideSet peptideSet) {
-			this.peptideSet = peptideSet;
+		public void setPeptideSet(Integer resultSummaryId, PeptideSet peptideSet) {
+			if (peptideSetMap == null) {
+				peptideSetMap = new HashMap<Integer, PeptideSet>();
+			}
+			peptideSetMap.put(resultSummaryId, peptideSet);
 		}
 
 		public BioSequence getBioSequence() {
