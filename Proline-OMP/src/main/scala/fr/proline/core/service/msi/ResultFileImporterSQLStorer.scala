@@ -13,7 +13,7 @@ import fr.proline.core.om.storer.msi.impl.JPARsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.service.IService
 
-class ResultFileImporter( dbMgnt: DatabaseManagement,
+class ResultFileImporterSQLStorer( dbMgnt: DatabaseManagement,
                           projectId: Int,
                           resultIdentFile: File,
                           fileType: String,
@@ -60,21 +60,13 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     val resultFile = rfProvider.get.getResultFile( resultIdentFile, providerKey, importerProperties )
     >>>
     
-    // Instantiate RsStorer
-    /*val driverType = msiDbConnector.getDriverType()
-    val rsStorer: IRsStorer = if( driverType.getDriverClassName == "org.sqlite.JDBC" ) {
-      //val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) 
-      RsStorer(dbMgnt, stContext.msiDB )//  VD Pour SQLStorer Only  TODO A RERENDRE AVEC SQLRsStorer 
-    } else {
-      new JPARsStorer(dbMgnt, msiDbConnector) //VD Pour ORMStorer Only
-    }*/
-    
-    val rsStorer = RsStorer( dbMgnt, stContext.msiDB )
-    
+    // Instantiate RsStorer   
+    val rsStorer: IRsStorer = RsStorer( dbMgnt, stContext.msiDB )
+     
 	  // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
     
-    //Fait par le Storer: Attentte partage transaction TODO    
+    //Fait par le Storer: Attente partage transaction TODO    
 //    val msiTransaction = stContext.msiEm.getTransaction
 //    var msiTransacOk: Boolean = false
     
@@ -82,7 +74,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
     
     //Start MSI Transaction and ResultSets store
     try {
-      //Fait par le Storer: Attentte partage transaction TODO  
+      //Fait par le Storer: Attente partage transaction TODO  
 //      msiTransaction.begin()
 //      msiTransacOk = false
       
@@ -101,12 +93,12 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
       if( driverType.getDriverClassName == "org.sqlite.JDBC" ) {
         
         // Store the peaklist    
-        val spectrumIdByTitle = rsStorer.storePeaklist( msiSearch.peakList, this.stContext )//  VD Pour SQLStorer Only  TODO A RERENDRE AVEC SQLRsStorer 
+        val spectrumIdByTitle = rsStorer.storePeaklist( msiSearch.peakList, this.stContext )
         rsStorer.storeSpectra( msiSearch.peakList.id, resultFile, this.stContext )
         >>>
         
     	  //Store the MSI search with related search settings and MS queries    
-        rsStorer.storeMsiSearch( msiSearch, this.stContext ) // VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 
+        rsStorer.storeMsiSearch( msiSearch, this.stContext ) 
         rsStorer.storeMsQueries( msiSearch.id, msQueries, this.stContext )        
         >>>
       }
@@ -128,7 +120,7 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
           decoyRs.name = msiSearch.title
          
         if( driverType.getDriverClassName == "org.sqlite.JDBC" )
-          rsStorer.storeResultSet(decoyRs,this.stContext) // VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 
+          rsStorer.storeResultSet(decoyRs,this.stContext) 
         else
           targetRs.decoyResultSet = Some(decoyRs)          
 		  }
@@ -150,17 +142,14 @@ class ResultFileImporter( dbMgnt: DatabaseManagement,
       else targetRs.decoyResultSet = None
 
      //  Store target result set
-      if( driverType.getDriverClassName == "org.sqlite.JDBC" )
-        this.targetResultSetId = rsStorer.storeResultSet(targetRs,this.stContext)// VD Pour SQLStorer Only TODO A RERENDRE AVEC SQLRsStorer 
-      else
-        this.targetResultSetId = rsStorer.storeResultSet(targetRs, msQueries, resultFile, this.stContext)// VD Pour ORMStorer Only
+  		this.targetResultSetId = rsStorer.storeResultSet(targetRs,this.stContext)       
       >>>
     
 //    this.msiDb.commitTransaction()// VD Pour SQLStorer Only
 //      msiTransaction.commit()
 //      msiTransacOk = true
     } finally {
-     //Fait par le Storer: Attentte partage transaction TODO  
+     //Fait par le Storer: Attente partage transaction TODO  
 //      /* Check msiTransaction integrity */
 //      if ((msiTransaction != null) && !msiTransacOk) {
 //        try {
