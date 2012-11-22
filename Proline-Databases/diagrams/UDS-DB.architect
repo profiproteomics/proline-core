@@ -987,13 +987,15 @@ UNIQUE(login)</remarks>
    </folder>
   </table>
   <table id="TAB269" populated="true" UUID="f1af8494-6bc5-431d-980f-f5703d548fa9" name="theoretical_fragment" objectType="TABLE" physicalName="theoretical_fragment" >
-   <remarks>The types of fragment ions that can be observed in an MS/MS spectrum.</remarks>
+   <remarks>The types of fragment ions that can be observed in an MS/MS spectrum.
+TODO: rename into fragmentation_series</remarks>
    <folder id="FOLTAB2691" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL270" populated="true" UUID="631198d5-0b38-4914-845f-3bc2d83de9b1" autoIncrement="true" autoIncrementSequenceName="theoretical_fragment_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
     <column id="COL271" populated="true" UUID="37d4709f-a397-4e47-9311-a861cc8703a5" autoIncrement="false" autoIncrementSequenceName="theoretical_fragment_type_seq" defaultValue="" name="type" nullable="1" physicalName="type" precision="9" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
-     <remarks>Must be one of : a b c d v w x y z z+1 z+2 ya yb immonium precursor</remarks>
+     <remarks>Must be one of : a b c d v w x y z z+1 z+2 ya yb immonium
+TODO: rename into name</remarks>
     </column>
     <column id="COL272" populated="true" UUID="90e864b3-c457-410f-9945-c7a5803266e9" autoIncrement="false" autoIncrementSequenceName="theoretical_fragment_neutral_loss_seq" defaultValue="" name="neutral_loss" nullable="1" physicalName="neutral_loss" precision="5" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>must be one of H2O, NH3, H3PO4</remarks>
@@ -1414,7 +1416,7 @@ Default is one because in the main case a raw file contains a single run.</remar
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  outputFormatAsString="ENGLISH"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="C:\Users\cb205360\Downloads\Old.UDS-DB.architect"  />
@@ -1422,7 +1424,7 @@ Default is one because in the main case a raw file contains a single run.</remar
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8367503291570026" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8367503291570026" viewportX="0" viewportY="172" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="157" y="63" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB8" x="1053" y="188" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB24" x="883" y="681" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
