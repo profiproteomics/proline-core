@@ -20,6 +20,7 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.SeqDatabase
 import fr.proline.core.om.model.msi.SequenceMatch
+import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.utils.PeptideIdent
 import fr.proline.core.orm.msi.ResultSet.Type
 import fr.proline.core.orm.msi.repository.MsiEnzymeRepository
@@ -37,12 +38,11 @@ import fr.proline.core.orm.ps.repository.PsPtmRepository
 import fr.proline.core.orm.uds.repository.UdsEnzymeRepository
 import fr.proline.core.orm.uds.repository.UdsInstrumentConfigurationRepository
 import fr.proline.core.orm.uds.repository.UdsPeaklistSoftwareRepository
-import fr.proline.core.orm.utils.StringUtils
-import fr.proline.repository.DatabaseConnector
-import javax.persistence.Persistence
 import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.DatabaseConnector
+import fr.proline.util.StringUtils
+import javax.persistence.Persistence
 import javax.persistence.EntityManager
-import fr.proline.core.om.storer.msi.IPeaklistWriter
 
 /**
  * JPA implementation of ResultSet storer.
@@ -395,7 +395,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
         msiSearch.getId
       }
 
-    } // End if (msiSearch is not in knownMsiSearchs)	
+    } // End if (msiSearch is not in knownMsiSearchs)
 
   }
 
@@ -478,10 +478,10 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
   //        } else{
   //         throw new IllegalArgumentException("peaklistSoftware can't be null !")
   //        }
-  //          
+  //
   //        // TODO handle PeakList.children    Uniquement pour le grouping ?
   //        storerContext.msiEm.persist(msiPeakList)
-  //        storerContext.msiEm.flush() // FLUSH to retrieve Msi Peaklist Id        
+  //        storerContext.msiEm.flush() // FLUSH to retrieve Msi Peaklist Id
   //
   //        knownPeaklists += omPeakListId -> msiPeakList
   //
@@ -639,7 +639,7 @@ class JPARsStorer(override val dbManagement: DatabaseManagement, override val ms
         val msiSeqDatabase = loadOrCreateSeqDatabase(storerContext, msiSeqDatabaseRepo, pdiSeqDatabaseRepo, seqDatabase)
         if (msiSeqDatabase != null) {
           msiSearchSettingsSeqDatabaseMap.setSeqDatabase(msiSeqDatabase) // msiSeqDatabase must be in persistence context
-          msiSeqDatabase.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association        
+          msiSeqDatabase.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association
 
           msiEm.persist(msiSearchSettingsSeqDatabaseMap)
           logger.debug("Msi SettingsSeqDatabaseMap SearchSetting {" + omSearchSettingsId + "} SeqDatabase #" + msiSeqDatabase.getId + " persisted")

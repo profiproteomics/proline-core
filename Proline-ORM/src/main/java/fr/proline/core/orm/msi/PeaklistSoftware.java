@@ -9,7 +9,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-import fr.proline.core.orm.utils.StringUtils;
+import fr.proline.util.StringUtils;
 
 /**
  * The persistent class for the peaklist_software database table.
@@ -61,12 +61,12 @@ public class PeaklistSoftware implements Serializable {
 	setName(udsPeakListSoftware.getName());
 	setSerializedProperties(udsPeakListSoftware.getSerializedProperties());
 
-	final String version = udsPeakListSoftware.getVersion();
+	final String vers = udsPeakListSoftware.getVersion();
 
-	if (StringUtils.isEmpty(version)) {
+	if (StringUtils.isEmpty(vers)) {
 	    setVersion(null);
 	} else {
-	    setVersion(version);
+	    setVersion(vers);
 	}
 
     }

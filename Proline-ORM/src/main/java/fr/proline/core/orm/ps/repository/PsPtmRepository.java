@@ -11,7 +11,7 @@ import fr.proline.core.orm.ps.PtmEvidence;
 import fr.proline.core.orm.ps.PtmEvidence.Type;
 import fr.proline.core.orm.ps.PtmSpecificity;
 import fr.proline.core.orm.utils.JPARepository;
-import fr.proline.core.orm.utils.StringUtils;
+import fr.proline.util.StringUtils;
 
 public class PsPtmRepository extends JPARepository {
 

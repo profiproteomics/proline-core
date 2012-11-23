@@ -7,6 +7,8 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.type.Type;
 
+import fr.proline.util.StringUtils;
+
 public class TableNameSequenceGenerator extends SequenceHiLoGenerator {
 
     /**

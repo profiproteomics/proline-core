@@ -1,6 +1,6 @@
 package fr.proline.core.om.utils
 
-import fr.proline.core.orm.utils.StringUtils
+import fr.proline.util.StringUtils
 
 class PeptideIdent(seq: String, ptmStr: String) {
   require(seq != null)

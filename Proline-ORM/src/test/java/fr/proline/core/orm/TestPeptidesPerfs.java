@@ -15,9 +15,9 @@ import fr.proline.core.orm.msi.repository.MsiPeptideRepository;
 import fr.proline.core.orm.ps.Peptide;
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
 import fr.proline.core.orm.utils.JPAUtil;
-import fr.proline.core.orm.utils.StringUtils;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.repository.utils.DatabaseUtils;
+import fr.proline.util.StringUtils;
 
 @Ignore
 public class TestPeptidesPerfs {

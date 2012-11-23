@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.ProlineRepository;
+import fr.proline.util.StringUtils;
 
 public final class JPAUtil {
 

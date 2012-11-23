@@ -12,7 +12,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
 import fr.proline.core.orm.ps.PeptidePtm;
-import fr.proline.core.orm.utils.StringUtils;
+import fr.proline.util.StringUtils;
 
 /**
  * The persistent class for the peptide database table.
@@ -76,12 +76,12 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	setId(psPeptide.getId());
 	setCalculatedMass(psPeptide.getCalculatedMass());
 
-	final String ptmString = psPeptide.getPtmString();
+	final String ptmStr = psPeptide.getPtmString();
 
-	if (StringUtils.isEmpty(ptmString)) {
+	if (StringUtils.isEmpty(ptmStr)) {
 	    setPtmString(null);
 	} else {
-	    setPtmString(ptmString);
+	    setPtmString(ptmStr);
 	}
 
 	setSequence(psPeptide.getSequence());
@@ -129,12 +129,11 @@ public class Peptide implements Serializable, Comparable<Peptide> {
     }
 
     public TransientData getTransientData() {
-    	if (transientData == null) {
-    		transientData = new TransientData();
-    	}
-    	return transientData;
+	if (transientData == null) {
+	    transientData = new TransientData();
+	}
+	return transientData;
     }
-
 
     /**
      * Transient Data which will be not saved in database Used by the Proline Studio IHM

@@ -12,6 +12,12 @@
 
   <dependencies>
 
+    <!-- ProFi Commons -->
+    <dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Java</artifactId>
+    </dependency>
+
     <!-- "Proline" modules -->
     <!-- Unused dependency : fr.proline:Proline-Databases:jar:0.0.2-SNAPSHOT:compile (runtime ?) -->
     <dependency>
@@ -19,14 +25,12 @@
       <artifactId>Proline-Databases</artifactId>
       <version>0.0.2-SNAPSHOT</version>
       <type>jar</type>
-      <scope>compile</scope>
     </dependency>
 
     <!-- Direct dependencies -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
-      <scope>compile</scope>
     </dependency>
 
     <!-- Unused dependency : com.googlecode.flyway:flyway-core:jar:1.5:compile -->

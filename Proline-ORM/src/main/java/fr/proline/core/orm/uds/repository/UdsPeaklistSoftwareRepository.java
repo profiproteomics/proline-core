@@ -7,7 +7,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.PeaklistSoftware;
 import fr.proline.core.orm.utils.JPARepository;
-import fr.proline.core.orm.utils.StringUtils;
+import fr.proline.util.StringUtils;
 
 public class UdsPeaklistSoftwareRepository extends JPARepository {
 

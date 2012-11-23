@@ -20,7 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import fr.proline.core.orm.pdi.SequenceDbConfig;
 import fr.proline.core.orm.pdi.SequenceDbInstance;
 import fr.proline.core.orm.pdi.SequenceDbRelease;
-import fr.proline.core.orm.utils.DateUtils;
+import fr.proline.util.DateUtils;
 
 /**
  * The persistent class for the seq_database database table.

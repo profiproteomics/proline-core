@@ -12,14 +12,14 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.orm.utils.MathUtils.EPSILON_HIGH_PRECISION
-import fr.proline.core.orm.utils.MathUtils.EPSILON_LOW_PRECISION
+import fr.proline.core.om.utils.AbstractMultipleDBTestCase
 import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.core.orm.utils.StringUtils
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
 import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.repository.utils.DatabaseUtils
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION
+import fr.proline.util.MathUtils.EPSILON_LOW_PRECISION
+import fr.proline.util.StringUtils
 
 @Test
 class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
@@ -34,9 +34,9 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
   @Before
   def initTests() = {
     logger.info("Initializing Dbs")
-    
+
     super.initDBsDBManagement()
-    
+
     //Load Data
     msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")
     psDBTestCase.loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
@@ -44,7 +44,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
     pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
 
     logger.info("Dbs succesfully initialized")
-    
+
     storer = new JPARsStorer(dbMgntTest, msiDBTestCase.getConnector)
     stContext = new StorerContext(dbMgntTest, dbMgntTest.getCurrentMsiConnector())
   }
@@ -70,7 +70,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
   //  @Test
   //  def testRollBack() {
   //    import scala.collection.JavaConversions.collectionAsScalaIterable
-  //     
+  //
   //    var start = System.nanoTime
   //    val rsb = new ResultSetFakeBuilder( 10, 2 )
   //
@@ -93,24 +93,24 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
   //         rawFileName= resultSet2.msiSearch.peakList.rawFileName,
   //         msLevel=  resultSet2.msiSearch.peakList.msLevel
   //     )
-  //     
+  //
   //    val errMsiSearch = new MSISearch (
   //        id=resultSet.msiSearch.id,
   //        resultFileName=resultSet.msiSearch.resultFileName,
   //        submittedQueriesCount=resultSet.msiSearch.submittedQueriesCount,
   //        searchSettings=resultSet.msiSearch.searchSettings ,
   //        peakList = errMsiSearchPL,
-  //        date = resultSet.msiSearch.date        
+  //        date = resultSet.msiSearch.date
   //     )
   //
   //    resultSet2.msiSearch = errMsiSearch
   //    stop = System.nanoTime
   //    logger.info( "ResultSet 2 creation time: " + ( ( stop - start ) / milliToNanos ) )
-  //    
+  //
   //    start = System.nanoTime
   //    storer.storeResultSet( resultSet2, stContext )
   //    stop = System.nanoTime
-  //   
+  //
   //    val rsList : List[fr.proline.core.orm.msi.ResultSet] = stContext.msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet",classOf[fr.proline.core.orm.msi.ResultSet]).getResultList.toList
   //    assertEquals(1, rsList.size)
   //    assertEquals(resultSet.id, rsList(0).getId)
@@ -185,7 +185,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       //          	case ex => logger.error("Error rollbacking Msi Db transaction", ex)
       //    			}
       //    		}
-      //    	} 
+      //    	}
     } // End fo throw 3 RS
   }
 

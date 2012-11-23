@@ -8,10 +8,10 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.orm.msi.ResultSet.Type
 import fr.proline.core.orm.msi.repository.{SequenceMatchRepository, ScoringRepository, ProteinMatchRepository, PeptideMatchRepository, MsiSeqDatabaseRepository}
 import fr.proline.core.orm.msi.MsiSearch
-import fr.proline.core.orm.utils.DateUtils
-import fr.proline.core.orm.utils.StringUtils
-import javax.persistence.EntityManager
 import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.util.DateUtils
+import fr.proline.util.StringUtils
+import javax.persistence.EntityManager
 
 class ORMResultSetProvider(private val msiEm: EntityManager,
   private val psEm: EntityManager,
@@ -407,7 +407,7 @@ class ORMResultSetProvider(private val msiEm: EntityManager,
       msiProteinMatch.getCoverage,
       msiProteinMatch.getPeptideMatchCount,
       sequenceMatches.result,
-      None // TODO handle properties        
+      None // TODO handle properties
       )
   }
 
@@ -509,7 +509,7 @@ class ORMResultSetProvider(private val msiEm: EntityManager,
       new Array[PtmEvidence](0), // TODO handle ptmEvidences
       StringUtils.convertStringResidueToChar(msiPtmSpecificity.getResidue),
       null, // TODO handle classification
-      0 // TODO handle PTM Id (Ps PTM)            
+      0 // TODO handle PTM Id (Ps PTM)
       )
   }
 

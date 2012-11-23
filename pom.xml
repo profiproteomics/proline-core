@@ -230,13 +230,13 @@
         <artifactId>flyway-core</artifactId>
         <version>1.7</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-jdbc</artifactId>
         <version>2.5.6</version>
       </dependency>
-      
+
       <!-- Latest Hibernate version (4.1.7.Final as of 30 oct. 2012) -->
       <dependency>
         <groupId>org.hibernate</groupId>
@@ -280,6 +280,13 @@
         <groupId>com.weiglewilczek.slf4s</groupId>
         <artifactId>slf4s_2.9.1</artifactId>
         <version>1.0.7</version>
+      </dependency>
+
+      <!-- ProFi Commons -->
+      <dependency>
+        <groupId>fr.proline.util</groupId>
+        <artifactId>ProFI-Commons-Java</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
       </dependency>
 
       <!-- "Proline" modules -->

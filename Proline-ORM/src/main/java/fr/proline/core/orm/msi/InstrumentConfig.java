@@ -10,7 +10,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 import fr.proline.core.orm.uds.InstrumentConfiguration;
-import fr.proline.core.orm.utils.StringUtils;
+import fr.proline.util.StringUtils;
 
 /**
  * The persistent class for the instrument_config database table.
@@ -65,12 +65,12 @@ public class InstrumentConfig implements Serializable {
 	setId(udsInstrumentConfig.getId());
 	setMs1Analyzer(udsInstrumentConfig.getMs1Analyzer());
 
-	final String msnAnalyzer = udsInstrumentConfig.getMsnAnalyzer();
+	final String msnAnalyz = udsInstrumentConfig.getMsnAnalyzer();
 
-	if (StringUtils.isEmpty(msnAnalyzer)) {
+	if (StringUtils.isEmpty(msnAnalyz)) {
 	    setMsnAnalyzer(null);
 	} else {
-	    setMsnAnalyzer(msnAnalyzer);
+	    setMsnAnalyzer(msnAnalyz);
 	}
 
 	setName(udsInstrumentConfig.getName());

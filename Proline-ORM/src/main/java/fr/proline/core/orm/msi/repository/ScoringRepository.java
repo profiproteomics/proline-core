@@ -9,7 +9,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Scoring;
 import fr.proline.core.orm.utils.JPARepository;
-import fr.proline.core.orm.utils.StringUtils;
+import fr.proline.util.StringUtils;
 
 public class ScoringRepository extends JPARepository {
 
