@@ -116,24 +116,16 @@ object RsStorer {
 
   def apply(dbMgmt: DatabaseManagement, msiDb: MsiDb ): IRsStorer = {
     
-    /*if(msiDb == null)
-      new JPARsStorer( dbMgmt, null, null) //Call JPARsStorer
-    */
-    //val dbMgmt = stContext.dbManagement
-    //val msiDb = stContext.msiDB
     
     msiDb.config.driver match {
     	case "org.postgresql.Driver" => new SQLRsStorer( dbMgmt, new PgRsWriter( msiDb ), IPeaklistWriter.apply(msiDb.config.driver.toString) )
     	case "org.sqlite.JDBC" => new SQLRsStorer( dbMgmt, new SQLiteRsWriter(msiDb ), IPeaklistWriter.apply(msiDb.config.driver.toString))
-//    case _ => new RsStorer( dbMgmt, new GenericRsWriter(msiDb )) 
       case _ => new JPARsStorer( dbMgmt, msiDb.dbConnector,IPeaklistWriter.apply(msiDb.config.driver.toString)) //Call JPARsStorer
     }
   }
   
   def apply(dbMgmt: DatabaseManagement, projectID: Int): IRsStorer = {
     val msiDbConnector = dbMgmt.getMSIDatabaseConnector(projectID,false)
-    if(msiDbConnector == null)
-      new JPARsStorer( dbMgmt, msiDbConnector, null) //Call JPARsStorer
     
     val driverName = msiDbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME) 
     driverName match {
