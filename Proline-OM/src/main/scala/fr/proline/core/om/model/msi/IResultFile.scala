@@ -22,6 +22,8 @@ trait IResultFile extends IPeaklistContainer {
   
   def getResultSet( wantDecoy: Boolean ): ResultSet
   
+  def eachSpectrumMatch( wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit ): Unit
+  
 }
 
 trait IResultFileProvider {
