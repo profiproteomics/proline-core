@@ -4,10 +4,10 @@ trait IMapLoader {
   
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.dal.LcmsDb
-  import fr.proline.core.utils.sql._
+  import fr.proline.core.dal.LcmsDb  
   import fr.proline.core.om.model.lcms._
   import fr.proline.core.dal.helper.LcmsDbHelper
+  import fr.proline.util.sql._
   
   /** If true then boolean will be stringified as integer (1|0), else as corresponding strings ("true"|"false") */
   val lcmsDb: LcmsDb

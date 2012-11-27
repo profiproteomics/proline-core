@@ -1,7 +1,5 @@
 package fr.proline.core.dal
 
-import fr.proline.core.utils.sql.TableDefinition
-
 object UdsDbActivationTable extends TableDefinition {
 
   val tableName = "activation"

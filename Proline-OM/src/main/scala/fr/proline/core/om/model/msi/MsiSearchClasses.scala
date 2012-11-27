@@ -5,7 +5,7 @@ import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 
-import fr.proline.core.utils.misc.InMemoryIdGen
+import fr.proline.util.misc.InMemoryIdGen
   
 object MSISearch extends InMemoryIdGen
 

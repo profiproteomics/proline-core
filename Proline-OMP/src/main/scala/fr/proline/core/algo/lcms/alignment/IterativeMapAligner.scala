@@ -3,7 +3,7 @@ package fr.proline.core.algo.lcms.alignment
 class IterativeMapAligner extends ILcmsMapAligner {
 
   import fr.proline.core.om.model.lcms._
-  import fr.proline.core.utils.misc.getMedianObject
+  import fr.proline.util.math.getMedianObject
   
   def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult = {
         

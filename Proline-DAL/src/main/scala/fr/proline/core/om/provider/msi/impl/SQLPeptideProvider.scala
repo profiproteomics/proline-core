@@ -96,7 +96,7 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   
   def getPeptides( peptideIds: Seq[Int] ): Array[Peptide] = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     val wasInTx = psDb.isInTransaction()
     val maxNbIters = psDb.maxVariableNumber
@@ -152,7 +152,7 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   
   def getPeptidesForSequences( peptideSeqs: Seq[String] ): Array[Peptide] = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     val wasInTx = psDb.isInTransaction()
     val maxNbIters = psDb.maxVariableNumber
@@ -219,7 +219,7 @@ class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPept
   private def _buildPeptides( pepRecords: Seq[Map[String,Any]],
                               locatedPtmsByPepId: Map[Int,Array[LocatedPtm]] ): Array[Peptide] = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     // Iterate over peptide records to convert them into peptide objects
     var peptides = new ArrayBuffer[Peptide](pepRecords.length)

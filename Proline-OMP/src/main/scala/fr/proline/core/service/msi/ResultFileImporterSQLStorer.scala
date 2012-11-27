@@ -11,7 +11,7 @@ import fr.proline.core.om.model.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.msi.{IRsStorer,MsiSearchStorer,RsStorer}
 import fr.proline.core.om.storer.msi.impl.JPARsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.core.service.IService
+import fr.proline.api.service.IService
 
 class ResultFileImporterSQLStorer( dbMgnt: DatabaseManagement,
                           projectId: Int,
@@ -196,7 +196,7 @@ class ResultFileImporterSQLStorer( dbMgnt: DatabaseManagement,
   
   private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     var udsInstConfigColNames: Seq[String] = null
     var udsInstConfigRecord: Map[String,Any] = null
@@ -225,7 +225,7 @@ class ResultFileImporterSQLStorer( dbMgnt: DatabaseManagement,
   
   private def _buildInstrumentConfig( instConfigRecord: Map[String,Any], instrument: Instrument ): InstrumentConfig = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     new InstrumentConfig(
          id = instConfigRecord("id").asInstanceOf[AnyVal],

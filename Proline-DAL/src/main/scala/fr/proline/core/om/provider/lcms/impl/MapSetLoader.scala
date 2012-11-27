@@ -6,7 +6,7 @@ class MapSetLoader( val lcmsDb: LcmsDb, val loadPeaks: Boolean = false )  {
   
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.utils.sql._ 
+  import fr.proline.util.sql._ 
   import fr.proline.core.om.model.lcms._
   
   val mapAlnSetLoader = new MapAlignmentSetLoader( lcmsDb )

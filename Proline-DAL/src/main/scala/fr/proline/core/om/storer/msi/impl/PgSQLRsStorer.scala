@@ -9,7 +9,7 @@ import org.postgresql.copy.CopyIn
 import fr.proline.core.om.model.msi.MsQuery
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-import fr.proline.core.utils.sql._
+import fr.proline.util.sql._
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 
 class PgSQLRsStorer(val dbMgmt: DatabaseManagement, private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends SQLRsStorer ( dbMgmt, _storer, _plWriter){

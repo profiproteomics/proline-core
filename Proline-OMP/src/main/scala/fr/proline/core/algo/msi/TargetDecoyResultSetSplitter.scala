@@ -3,7 +3,7 @@ package fr.proline.core.algo.msi
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.utils.misc.RegexUtils._
+import fr.proline.util.regex.RegexUtils._
 import scala.collection.mutable.ArrayBuffer
 
 /**

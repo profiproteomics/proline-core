@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
 import fr.proline.core.dal.{MsiDb,PsDb,MsiDbPeptideMatchTable}
-import fr.proline.core.utils.sql.SQLStrToBool
+import fr.proline.util.sql.SQLStrToBool
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.PeptideMatchProperties
 import fr.proline.core.om.model.msi.Peptide
@@ -81,7 +81,7 @@ class SQLPeptideMatchProvider( val msiDb: MsiDb,
   
   private def _buildPeptideMatches( rsIds: Seq[Int], pmRecords: Seq[Map[String,Any]] ): Array[PeptideMatch] = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     // Load peptides
     val uniqPepIds = pmRecords map { _(PepMatchCols.peptideId).asInstanceOf[Int] } distinct

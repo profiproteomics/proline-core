@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import com.codahale.jerkson.Json.parse
 import fr.proline.core.dal.{MsiDb,PsDb,MsiDbPeptideSetTable,MsiDbPeptideSetRelationTable}
 import fr.proline.core.dal.{MsiDbPeptideSetPeptideInstanceItemTable,MsiDbPeptideSetProteinMatchMapTable}
-import fr.proline.core.utils.sql.SQLStrToBool
+import fr.proline.util.sql.SQLStrToBool
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.PeptideSetItem
@@ -94,7 +94,7 @@ class SQLPeptideSetProvider( val msiDb: MsiDb, val psDb: PsDb ) extends IPeptide
                                  pepInstances: Seq[PeptideInstance],
                                  pepSetProtMatchMapRecords: Seq[Map[String,Any]] ): Array[PeptideSet] = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     // Load peptides
     //val uniqPepSetIds = pepSetRecords map { _(PepSetCols.peptideId).asInstanceOf[Int] } distinct

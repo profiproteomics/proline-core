@@ -15,7 +15,7 @@ import fr.proline.core.dal.MsiDbUsedPtmTable
 import fr.proline.core.dal.MsiDbPtmSpecificityTable
 import fr.proline.core.dal.MsiDbSeqDatabaseTable
 import fr.proline.core.dal.MsiDbMsQueryTable
-import fr.proline.core.utils.sql._
+import fr.proline.util.sql._
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 
 class SQLRsStorer( dbMgmt: DatabaseManagement,
@@ -25,7 +25,7 @@ class SQLRsStorer( dbMgmt: DatabaseManagement,
   import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.dal.SQLFormatterImplicits._
-  import fr.proline.core.utils.sql.BoolToSQLStr
+  import fr.proline.util.sql.BoolToSQLStr
   import fr.proline.core.om.model.msi._
   
   val msiDb1 = _rsWriter.msiDb1

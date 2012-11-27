@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
-import fr.proline.core.utils.misc.InMemoryIdGen
+import fr.proline.util.misc.InMemoryIdGen
 import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet,ResultSummary}
 
 trait Item {

@@ -8,8 +8,8 @@ object FeatureClusterer {
 
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
-  import fr.proline.core.utils.ms._
-  import fr.proline.core.utils.misc.getMedianObject
+  import fr.proline.util.ms._
+  import fr.proline.util.math.getMedianObject
   
   private val ftMozSortingFunc = new Function2[Feature, Feature, Boolean] {
     def apply(a: Feature, b: Feature): Boolean = if (a.moz < b.moz) true else false

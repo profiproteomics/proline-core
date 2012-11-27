@@ -6,7 +6,7 @@ import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
 
 import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.utils.sql.BoolToSQLStr
+import fr.proline.util.sql.BoolToSQLStr
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.dal.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsWriter

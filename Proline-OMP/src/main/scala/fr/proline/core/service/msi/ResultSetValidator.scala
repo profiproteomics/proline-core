@@ -6,7 +6,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.dal.{DatabaseManagement,MsiDb}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{MsiSearchStorer,RsStorer}
-import fr.proline.core.service.IService
+import fr.proline.api.service.IService
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.storer.msi.RsmStorer

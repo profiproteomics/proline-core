@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.weiglewilczek.slf4s.Logging
 import org.apache.commons.lang3.StringUtils.isNotEmpty
-import fr.proline.core.utils.misc.InMemoryIdGen
+import fr.proline.util.misc.InMemoryIdGen
 
 object Peptide extends InMemoryIdGen with Logging {
   
@@ -255,7 +255,7 @@ object Peptide extends InMemoryIdGen with Logging {
     var mass : Double = 0
     
     // FIXME: find another way to deal with ambiguous residues
-    import fr.proline.core.utils.misc.RegexUtils._
+    import fr.proline.util.regex.RegexUtils._
     
     if( sequence ~~ "(?i)[BXZ]" ) mass = 0.0
     else {

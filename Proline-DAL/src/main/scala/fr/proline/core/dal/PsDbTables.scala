@@ -1,7 +1,5 @@
 package fr.proline.core.dal
 
-import fr.proline.core.utils.sql.TableDefinition
-
 object PsDbAdminInfosTable extends TableDefinition {
 
   val tableName = "admin_infos"

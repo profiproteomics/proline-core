@@ -17,7 +17,6 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
 import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.core.utils.misc.RegexUtils.strToRichStr
 import fr.proline.repository.ProlineRepository.Databases
 import fr.proline.repository.ProlineRepository
 import javax.persistence.EntityManager
@@ -283,7 +282,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
    */
   def convertPeptidePtmPsORM2OM(psPeptidePtm: PsPeptidePtm): LocatedPtm = {
 
-    import fr.proline.core.utils.misc.RegexUtils._
+    import fr.proline.util.regex.RegexUtils._
 
     // Check if object is in cache 
     if (useCachedObject && locatedPTMsCache.contains(psPeptidePtm.getId)) {

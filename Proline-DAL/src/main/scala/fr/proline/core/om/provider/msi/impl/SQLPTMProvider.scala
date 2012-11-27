@@ -43,7 +43,7 @@ class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
   /** Returns a map */
   lazy val ptmDefinitionById: Map[Int,PtmDefinition] = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     val wasInTx = psDb.isInTransaction()
     var ptmColNames: Seq[String] = null

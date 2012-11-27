@@ -9,7 +9,7 @@ import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.PsDb
 import fr.proline.core.dal.{PsDbPeptideTable,PsDbPeptidePtmTable}
 import fr.proline.core.om.model.msi.{Peptide,LocatedPtm}
-import fr.proline.core.utils.sql._
+import fr.proline.util.sql._
 
 /** A factory object for implementations of the IRsStorer trait */
 object PeptideStorer {

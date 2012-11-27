@@ -1,7 +1,7 @@
 package fr.proline.core.om.model.lcms
 
 import scala.collection.mutable.HashMap
-import fr.proline.core.utils.misc.InMemoryIdGen
+import fr.proline.util.misc.InMemoryIdGen
 
 class Peak (
     
@@ -87,7 +87,7 @@ case class Feature (
   
   // Requirements
 
-  import fr.proline.core.utils.ms.mozToMass
+  import fr.proline.util.ms.mozToMass
   
   lazy val mass = mozToMass( moz, charge )
   lazy val isCluster = if( subFeatures == null ) false else subFeatures.length > 0

@@ -7,7 +7,7 @@ import fr.proline.core.om.provider.msi.IMsQueryProvider
 
 class SQLMsQueryProvider( val msiDb: MsiDb ) extends IMsQueryProvider {
   
-  import fr.proline.core.utils.primitives.LongOrIntAsInt._
+  import fr.proline.util.primitives.LongOrIntAsInt._
   import scala.collection.mutable.ArrayBuffer
   val MsQueryCols = MsiDbMsQueryTable.columns
 

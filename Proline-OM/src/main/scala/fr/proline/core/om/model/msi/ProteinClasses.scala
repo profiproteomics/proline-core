@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 
 import org.apache.commons.lang3.StringUtils.isNotEmpty
-import fr.proline.core.utils.misc.InMemoryIdGen
+import fr.proline.util.misc.InMemoryIdGen
 
 object Protein extends InMemoryIdGen{
   

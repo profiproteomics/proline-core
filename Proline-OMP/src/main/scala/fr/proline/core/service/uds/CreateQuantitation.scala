@@ -3,9 +3,9 @@ package fr.proline.core.service.uds
 import collection.mutable.HashMap
 import collection.JavaConversions.collectionAsScalaIterable
 import com.codahale.jerkson.JsonSnakeCase
-import fr.proline.core.service.IService
+import fr.proline.api.service.IService
 import fr.proline.core.dal.DatabaseManagement
-import fr.proline.core.utils.sql.getTimeAsSQLTimestamp
+import fr.proline.util.sql.getTimeAsSQLTimestamp
 import fr.proline.core.orm.uds.{ BiologicalGroup => UdsBiologicalGroup,
                                  BiologicalSample => UdsBiologicalSample,
                                  GroupSetup => UdsGroupSetup,

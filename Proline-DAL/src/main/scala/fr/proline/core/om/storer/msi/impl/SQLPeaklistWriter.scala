@@ -8,7 +8,7 @@ import fr.proline.core.dal.MsiDbSpectrumTable
 import fr.proline.core.om.model.msi.IPeaklistContainer
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.utils.lzma.EasyLzma
-import fr.proline.core.utils.sql._
+import fr.proline.util.sql._
 import net.noerd.prequel.SQLFormatterImplicits._
 import net.noerd.prequel.ReusableStatement
 import fr.proline.core.om.storer.msi.IPeaklistWriter

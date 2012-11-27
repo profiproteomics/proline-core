@@ -9,7 +9,7 @@ import fr.proline.core.dal.{MsiDbPeptideTable,MsiDbPeptideMatchTable,MsiDbPeptid
                             MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
-import fr.proline.core.utils.sql.{BoolToSQLStr,encodeRecordForPgCopy}
+import fr.proline.util.sql.{BoolToSQLStr,encodeRecordForPgCopy}
 
 private[msi] class PgRsWriter( override val msiDb1: MsiDb // Main DB connection                        
                              ) extends SQLiteRsWriter( msiDb1 ) {

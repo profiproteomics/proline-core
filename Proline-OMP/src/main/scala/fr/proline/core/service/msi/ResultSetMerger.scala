@@ -6,7 +6,7 @@ import net.noerd.prequel.SQLFormatterImplicits._
 import fr.proline.core.dal.{DatabaseManagement,MsiDb,MsiDbResultSetRelationTable}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.RsStorer
-import fr.proline.core.service.IService
+import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.{ ResultSetMerger => ResultSetMergerAlgo }
 import fr.proline.core.dal.helper.MsiDbHelper
 

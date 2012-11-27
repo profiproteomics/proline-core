@@ -23,7 +23,7 @@ object PtmDefinitionBuilder {
                           ptmClassification: String
                          ) : PtmDefinition = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     val ptmEvArray = new Array[PtmEvidence](ptmEvidenceRecords.length)
 

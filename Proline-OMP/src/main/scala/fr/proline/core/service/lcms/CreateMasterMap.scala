@@ -2,13 +2,14 @@ package fr.proline.core.service.lcms
 
 import scala.collection.mutable.ArrayBuffer
 import net.noerd.prequel.SQLFormatterImplicits._
+
+import fr.proline.api.service.IService
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.LcmsDb
 import fr.proline.core.algo.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl._
 import fr.proline.core.om.storer.lcms.MasterMapStorer
-import fr.proline.core.service.IService
 import fr.proline.core.service.lcms._
 
 object CreateMasterMap {

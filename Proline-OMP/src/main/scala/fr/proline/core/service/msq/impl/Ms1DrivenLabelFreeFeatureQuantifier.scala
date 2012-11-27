@@ -11,7 +11,7 @@ import collection.mutable.ArrayBuffer
 import fr.proline.core.algo.msi.ResultSummaryMerger
 import fr.proline.core.dal.{DatabaseManagement,LcmsDb,MsiDb,PsDb,MsiDbSpectrumTable}
 import fr.proline.core.service.msq.IQuantifier
-import fr.proline.core.utils.ms._
+import fr.proline.util.ms._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider

@@ -1,13 +1,13 @@
 package fr.proline.core.service.lcms
 
 import fr.proline.core.dal.LcmsDb
-import fr.proline.core.service.IService
+import fr.proline.api.service.IService
 import fr.proline.core.service.lcms._
 import fr.proline.core.algo.lcms.alignment.AlignmentParams
 import fr.proline.core.algo.lcms.LcmsMapAligner
 import fr.proline.core.om.model.lcms.MapSet
 //import fr.proline.core.om.provider.sql.lcms.MapSetLoader
-import fr.proline.core.utils.sql.BoolToSQLStr
+import fr.proline.util.sql.BoolToSQLStr
 import fr.proline.core.om.storer.lcms.MapAlnSetStorer
 
 object AlignMapSet {

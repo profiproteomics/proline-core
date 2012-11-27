@@ -25,7 +25,7 @@ trait SQLResultSetLoader {
                                protMatches: Array[ProteinMatch]
                              ): Array[ResultSet] = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     // Build some maps
     val pepMatchesByRsId = pepMatches.groupBy( _.resultSetId )

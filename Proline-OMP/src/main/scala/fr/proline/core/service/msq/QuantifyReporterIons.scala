@@ -1,6 +1,6 @@
 package fr.proline.core.service.msq.quantitation
 
-import fr.proline.core.service.IService
+import fr.proline.api.service.IService
 
 class ReporterIonQuantifier extends IService {
   

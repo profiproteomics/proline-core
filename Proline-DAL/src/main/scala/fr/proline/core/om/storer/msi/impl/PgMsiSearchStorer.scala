@@ -8,7 +8,7 @@ import net.noerd.prequel.SQLFormatterImplicits._
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.dal.{MsiDbMsQueryTable,MsiDbPtmSpecificityTable}
-import fr.proline.core.utils.sql._
+import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.dal.MsiDbUsedPtmTable
 

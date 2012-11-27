@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import com.weiglewilczek.slf4s.Logging
 import net.noerd.prequel.SQLFormatterImplicits._
-import fr.proline.core.service.IService
+import fr.proline.api.service.IService
 import fr.proline.core.dal.{DatabaseManagement,MsiDb,MsiDbResultSetRelationTable,MsiDbResultSummaryRelationTable}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.algo.msi.{ ResultSummaryMerger => RsmMergerAlgo }

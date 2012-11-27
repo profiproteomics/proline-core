@@ -9,7 +9,7 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
   import net.noerd.prequel.ReusableStatement
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.dal.SQLFormatterImplicits._
-  import fr.proline.core.utils.sql.BoolToSQLStr
+  import fr.proline.util.sql.BoolToSQLStr
   import fr.proline.core.om.model.lcms.ProcessedMap
   import fr.proline.core.om.model.lcms.Feature
   

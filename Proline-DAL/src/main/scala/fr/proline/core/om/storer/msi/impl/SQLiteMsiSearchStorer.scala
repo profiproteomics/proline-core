@@ -9,7 +9,7 @@ import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.dal.{MsiDbMsiSearchTable,MsiDbMsQueryTable,MsiDbSearchSettingsTable,MsiDbSeqDatabaseTable}
 import fr.proline.core.dal.{MsiDbPtmSpecificityTable,MsiDbUsedPtmTable}
-import fr.proline.core.utils.sql._
+import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchStorer
 

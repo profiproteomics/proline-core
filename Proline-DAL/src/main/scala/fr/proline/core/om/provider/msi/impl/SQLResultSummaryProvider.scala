@@ -8,7 +8,7 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ResultSummaryProperties
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
-import fr.proline.core.utils.sql.SQLStrToBool
+import fr.proline.util.sql.SQLStrToBool
 
 class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends SQLResultSetLoader with IResultSummaryProvider {
   
@@ -19,7 +19,7 @@ class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends SQLRe
   
   def getResultSummaries( rsmIds: Seq[Int], loadResultSet: Boolean ): Array[ResultSummary] = {
   
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     // Load peptide sets
     val pepSetProvider = new SQLPeptideSetProvider( msiDb, psDb )

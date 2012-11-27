@@ -64,7 +64,7 @@ class SQLPeptideInstanceProvider( val msiDb: MsiDb,
   private def _buildPeptideInstances( pepInstRecords: Seq[Map[String,Any]],
                                       pepInstPepMatchMapRecords: Seq[Map[String,Any]] ): Array[PeptideInstance] = {
     
-    import fr.proline.core.utils.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.LongOrIntAsInt._
     
     // Load peptides
     val uniqPepIds = pepInstRecords map { _(PepInstCols.peptideId).asInstanceOf[Int] } distinct

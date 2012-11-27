@@ -47,8 +47,15 @@
   </build>
 
   <dependencies>
-
-    <!-- "Proline" modules -->
+  
+    <!-- ProFi Commons -->
+    <dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Scala</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    
+    <!-- "Proline" modules -->    
     <!-- Unused dependency : fr.proline:Proline-OM:jar:0.0.2-SNAPSHOT:compile -->
     <dependency>
       <groupId>fr.proline</groupId>
