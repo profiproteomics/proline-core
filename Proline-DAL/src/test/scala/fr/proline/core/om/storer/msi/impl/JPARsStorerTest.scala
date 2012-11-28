@@ -17,6 +17,7 @@ import fr.proline.core.orm.utils.JPAUtil
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
 import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.repository.utils.DatabaseUtils
+import fr.proline.repository.ProlineRepository.DriverType
 import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION
 import fr.proline.util.MathUtils.EPSILON_LOW_PRECISION
 import fr.proline.util.StringUtils
@@ -35,7 +36,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
   def initTests() = {
     logger.info("Initializing Dbs")
 
-    super.initDBsDBManagement()
+    super.initDBsDBManagement( DriverType.H2 )
 
     //Load Data
     msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")

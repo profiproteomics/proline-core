@@ -1,28 +1,31 @@
 package fr.proline.core.om.utils
 
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.core.dal.DatabaseManagementTestCase
+import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.ProlineRepository.DriverType
 import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.core.dal.DatabaseManagementTestCase
-import com.weiglewilczek.slf4s.Logging
 
 class AbstractMultipleDBTestCase extends Logging  {
   
-	var pdiDBTestCase : PDIDatabaseTestCase = null
-  var msiDBTestCase : MSIDatabaseTestCase = null
+  var pdiDBTestCase: PDIDatabaseTestCase = null
+  var msiDBTestCase: MSIDatabaseTestCase = null
   var psDBTestCase: PSDatabaseTestCase = null
-  var udsDBTestCase : UDSDatabaseTestCase = null
+  var udsDBTestCase: UDSDatabaseTestCase = null
   
-	var dbMgntTest: DatabaseManagementTestCase = null
+  var dbMgntTest: DatabaseManagementTestCase = null
 	  
-	def initDBsDBManagement(){
-	  logger.info( " ---- initDBsDBManagement Dbs" )
-		pdiDBTestCase = new PDIDatabaseTestCase()
-		msiDBTestCase = new MSIDatabaseTestCase()
-		psDBTestCase = new PSDatabaseTestCase()
-		udsDBTestCase = new UDSDatabaseTestCase()
+  def initDBsDBManagement( driverType: DriverType ) {
+    
+    logger.info( " ---- initDBsDBManagement Dbs" )
+    pdiDBTestCase = new PDIDatabaseTestCase( driverType )
+    msiDBTestCase = new MSIDatabaseTestCase( driverType )
+    psDBTestCase = new PSDatabaseTestCase( driverType )
+    udsDBTestCase = new UDSDatabaseTestCase( driverType )
   
-		msiDBTestCase.initDatabase()
+    msiDBTestCase.initDatabase()
     msiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName())
     
     psDBTestCase.initDatabase()
@@ -35,7 +38,7 @@ class AbstractMultipleDBTestCase extends Logging  {
     pdiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PDI_Key.getPersistenceUnitName())
     
     dbMgntTest = new DatabaseManagementTestCase(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector)
-	}
+  }
 	
 	def closeDbs() = {
 	  msiDBTestCase.tearDown
@@ -45,50 +48,81 @@ class AbstractMultipleDBTestCase extends Logging  {
 	}
 }
 
-class MSIDatabaseTestCase extends DatabaseTestCase {
+abstract class DatabaseAndDriverTestCase extends DatabaseTestCase {
+  val driverType: DriverType
+  
+  lazy val driverException = new Exception("unsupported database driver for testing")
+  
+  protected val propertiesFileDirectory: String = {
+    driverType match {
+      case DriverType.H2 => "/db_settings/h2"
+      case DriverType.SQLITE => "/db_settings/sqlite"
+      case _ => throw driverException
+    }
+  }
+  
+}
+
+class MSIDatabaseTestCase( val driverType: DriverType ) extends DatabaseAndDriverTestCase {
 
   override def getSQLScriptLocation(): String = {
-    DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION
+    driverType match {
+      case DriverType.H2 => DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION
+      case DriverType.SQLITE => DatabaseUtils.SQLITE_DATABASE_MSI_SCRIPT_LOCATION
+      case _ => throw driverException
+    }
   }
 
   override def getPropertiesFilename(): String = {
-    return "/db_msi.properties";
+    propertiesFileDirectory + "/db_msi.properties"
   }
 
 }
 
-class PSDatabaseTestCase extends DatabaseTestCase {
+class PSDatabaseTestCase( val driverType: DriverType ) extends DatabaseAndDriverTestCase {
 
   override def getSQLScriptLocation(): String = {
-    DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION
+    driverType match {
+      case DriverType.H2 => DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION
+      case DriverType.SQLITE => DatabaseUtils.SQLITE_DATABASE_PS_SCRIPT_LOCATION
+      case _ => throw driverException
+    }
   }
 
   override def getPropertiesFilename(): String = {
-    return "/db_ps.properties";
+    propertiesFileDirectory + "/db_ps.properties"
   }
 
 }
 
-class UDSDatabaseTestCase extends DatabaseTestCase {
+class UDSDatabaseTestCase( val driverType: DriverType ) extends DatabaseAndDriverTestCase {
 
   override def getSQLScriptLocation(): String = {
-    DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION
+    driverType match {
+      case DriverType.H2 => DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION
+      case DriverType.SQLITE => DatabaseUtils.SQLITE_DATABASE_UDS_SCRIPT_LOCATION
+      case _ => throw driverException
+    }
   }
 
   override def getPropertiesFilename(): String = {
-    return "/db_uds.properties";
+    propertiesFileDirectory + "/db_uds.properties"
   }
 
 }
 
-class PDIDatabaseTestCase extends DatabaseTestCase {
+class PDIDatabaseTestCase( val driverType: DriverType ) extends DatabaseAndDriverTestCase {
 
   override def getSQLScriptLocation(): String = {
-    DatabaseUtils.H2_DATABASE_PDI_SCRIPT_LOCATION
+    driverType match {
+      case DriverType.H2 => DatabaseUtils.H2_DATABASE_PDI_SCRIPT_LOCATION
+      case DriverType.SQLITE => DatabaseUtils.SQLITE_DATABASE_PDI_SCRIPT_LOCATION
+      case _ => throw driverException
+    }
   }
-
+  
   override def getPropertiesFilename(): String = {
-    return "/db_pdi.properties";
+    propertiesFileDirectory + "/db_pdi.properties"
   }
   
 }

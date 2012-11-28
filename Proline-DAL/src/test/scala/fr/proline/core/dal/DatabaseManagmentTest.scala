@@ -24,7 +24,7 @@ class DatabaseManagmentTest extends JUnitSuite  with Logging {
   protected var emf:EntityManagerFactory = null
   
   lazy val udsConnector : DatabaseTestConnector = {
-	  val conn = new DatabaseTestConnector("/db_uds.properties");
+	  val conn = new DatabaseTestConnector("/db_settings/h2/db_uds.properties");
 	  try {
 		  // This is necessary since in-memory databases are closed when the last connection is closed. This
 		  // method call creates a first connection that will be closed by closeAll() method.
