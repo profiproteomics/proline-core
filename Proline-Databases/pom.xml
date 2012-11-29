@@ -11,7 +11,7 @@
   <name>${project.artifactId}</name>
   <description>Proline Database</description>
 
-  <dependencies>   
+  <dependencies>
 
     <!-- Direct dependencies -->
     <dependency>
