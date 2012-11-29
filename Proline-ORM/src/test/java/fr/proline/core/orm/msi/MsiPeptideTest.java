@@ -64,12 +64,12 @@ public class MsiPeptideTest extends DatabaseTestCase {
 	} finally {
 
 	    if ((msiTransaction1 != null) && !msiTransacOk) {
-		LOG.info("Rollbacking Msi Transaction");
+		LOG.info("Rollbacking first Msi Transaction");
 
 		try {
 		    msiTransaction1.rollback();
 		} catch (Exception ex) {
-		    LOG.error("Error rollbacking Msi Transaction", ex);
+		    LOG.error("Error rollbacking first Msi Transaction", ex);
 		}
 
 	    }
@@ -106,12 +106,12 @@ public class MsiPeptideTest extends DatabaseTestCase {
 	} finally {
 
 	    if ((msiTransaction2 != null) && !msiTransacOk) {
-		LOG.info("Rollbacking Msi Transaction");
+		LOG.info("Rollbacking second Msi Transaction");
 
 		try {
 		    msiTransaction2.rollback();
 		} catch (Exception ex) {
-		    LOG.error("Error rollbacking Msi Transaction", ex);
+		    LOG.error("Error rollbacking second Msi Transaction", ex);
 		}
 
 	    }

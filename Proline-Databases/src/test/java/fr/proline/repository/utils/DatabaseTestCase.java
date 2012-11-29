@@ -1,6 +1,7 @@
 package fr.proline.repository.utils;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -143,7 +144,7 @@ public abstract class DatabaseTestCase {
 
 		    try {
 			m_keepaliveConnection.close();
-		    } catch (Exception exClose) {
+		    } catch (SQLException exClose) {
 			LOG.error("Error closing keep-alive SQL connection", exClose);
 		    }
 
