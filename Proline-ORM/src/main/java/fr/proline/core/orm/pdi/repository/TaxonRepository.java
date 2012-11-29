@@ -10,7 +10,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.pdi.Taxon;
-import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.util.JPARepository;
 
 public class TaxonRepository extends JPARepository {
 

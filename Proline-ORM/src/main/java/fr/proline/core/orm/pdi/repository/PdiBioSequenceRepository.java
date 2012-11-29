@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.BioSequence;
-import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.util.JPARepository;
 import fr.proline.util.StringUtils;
 
 public class PdiBioSequenceRepository extends JPARepository {

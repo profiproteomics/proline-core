@@ -10,7 +10,7 @@ import fr.proline.core.orm.ps.PtmClassification;
 import fr.proline.core.orm.ps.PtmEvidence;
 import fr.proline.core.orm.ps.PtmEvidence.Type;
 import fr.proline.core.orm.ps.PtmSpecificity;
-import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.util.JPARepository;
 import fr.proline.util.StringUtils;
 
 public class PsPtmRepository extends JPARepository {

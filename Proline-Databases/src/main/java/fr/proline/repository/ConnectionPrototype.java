@@ -1,167 +1,199 @@
 package fr.proline.repository;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import fr.proline.repository.ProlineRepository.DriverType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import fr.proline.util.PropertiesUtils;
+import fr.proline.util.StringUtils;
 
 public class ConnectionPrototype {
 
-	public enum DatabaseProtocol { FILE, MEMORY, HOST };
-	
-	private Map<String, String> connectionProperties = new HashMap<String, String>();
-	private DatabaseProtocol protocol;
-	private String protocolValue;
-	private String namePrefix = "test_";
-	private String options;
-	private DriverType driver;
-	
-	public ConnectionPrototype() {
-		connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, "");
-		connectionProperties.put(DatabaseConnector.PROPERTY_USERNAME, "sa");
-	}
-	
-    public ConnectionPrototype( HashMap<String, String> connProps ) {
-      this.connectionProperties = connProps;
-      this.updateFields();
+    public enum DatabaseProtocol {
+	FILE, MEMORY, HOST
+    };
+
+    public enum DriverType {
+	H2, POSTGRESQL, SQLITE
+    };
+
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectionPrototype.class);
+
+    private Map<Object, Object> m_connectionProperties = new HashMap<Object, Object>();
+    private DatabaseProtocol m_protocol;
+    private DriverType m_driverType;
+    private String m_protocolValue;
+    private String m_namePrefix = "test_";
+    private String m_options;
+
+    public ConnectionPrototype() {
+	m_connectionProperties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_USER_KEY, "sa");
+	m_connectionProperties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_PASSWORD_KEY, "");
     }
-	
-	/**
-	 * Look for following entries in properties file
-	 * "database.userName"
-	 * "database.password"
-	 * "database.protocol" (Allowed values : FILE, MEMORY, HOST )
-	 * "database.drivertype" (Allowed values : H2, POSTGRESQL, SQLITE )
-	 * "database.protocolValue" if necessary  (Host or File path to DB)
-	 * 
-	 * @param filename
-	 * @throws IOException
-	 */
-	public ConnectionPrototype(String filename) throws IOException {
-		Properties fileProperties = new Properties();
-		InputStream is = ConnectionPrototype.class.getResourceAsStream(filename);
-		if(is==null)
-			throw new IOException("Invaid file specified "+filename);
-		fileProperties.load(is);
-		
-		connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, fileProperties.getProperty(DatabaseConnector.PROPERTY_PASSWORD, ""));
-		connectionProperties.put(DatabaseConnector.PROPERTY_USERNAME, fileProperties.getProperty(DatabaseConnector.PROPERTY_USERNAME, "sa"));
-		
-		connectionProperties.put("database.protocol",fileProperties.getProperty("database.protocol"));
-		connectionProperties.put("database.protocolValue",fileProperties.getProperty("database.protocolValue"));		
-		connectionProperties.put("database.drivertype",fileProperties.getProperty("database.drivertype"));
-		
-		this.updateFields();
-	}
-	
-	protected void updateFields() {
-      this.protocol = DatabaseProtocol.valueOf(connectionProperties.get("database.protocol"));
-      this.protocoleValue(connectionProperties.get("database.protocolValue"));
-      this.driver( DriverType.valueOf(connectionProperties.get("database.drivertype")) );
-      
-      //if(fileProperties.getProperty("database.drivertype")!=null)
-      //    this.driver(DriverType.valueOf(fileProperties.getProperty("database.drivertype")));
-	}
-	
-    public DriverType getDriver() {
-      return driver;
+
+    public ConnectionPrototype(final Map<Object, Object> connProps) {
+	m_connectionProperties = connProps;
+	updateFields();
     }
-    
+
+    /**
+     * Look for following entries in properties file "database.userName" "database.password"
+     * "database.protocol" (Allowed values : FILE, MEMORY, HOST ) "database.drivertype" (Allowed values : H2,
+     * POSTGRESQL, SQLITE ) "database.protocolValue" if necessary (Host or File path to DB).
+     * 
+     * @param filename
+     * @throws IOException
+     */
+    public ConnectionPrototype(final String propertiesFileName) {
+	final Properties props = PropertiesUtils.loadProperties(propertiesFileName);
+
+	if (props == null) {
+	    throw new IllegalArgumentException("Invalid properties file");
+	}
+
+	m_connectionProperties.putAll(props);
+
+	updateFields();
+    }
+
+    public void setDriverType(final DriverType driverType) {
+	m_driverType = driverType;
+    }
+
+    public DriverType getDriverType() {
+	return m_driverType;
+    }
+
+    public void setProtocol(final DatabaseProtocol protocol) {
+	m_protocol = protocol;
+    }
+
     public DatabaseProtocol getProtocol() {
-      return protocol;
+	return m_protocol;
+    }
+
+    public void setProtocolValue(final String value) {
+	m_protocolValue = value;
     }
 
     public String getProtocolValue() {
-      return protocolValue;
+	return m_protocolValue;
     }
-	
-	public ConnectionPrototype protocol(DatabaseProtocol protocol) {
-		this.protocol = protocol;
-		return this;
-	}
-	
-	public ConnectionPrototype namePrefix(String prefix) {
-		this.namePrefix = prefix;
-		return this;
-	}
-	
-	public ConnectionPrototype password(String passwd) {
-		if(passwd == null)
-			connectionProperties.remove(DatabaseConnector.PROPERTY_PASSWORD);
-		else
-			connectionProperties.put(DatabaseConnector.PROPERTY_PASSWORD, passwd);
-		return this;
+
+    public void setNamePrefix(final String namePrefix) {
+	m_namePrefix = namePrefix;
+    }
+
+    public String getNamePrefix() {
+	return m_namePrefix;
+    }
+
+    public void setUserName(final String userName) {
+
+	if (userName == null) {
+	    throw new IllegalArgumentException("User Name should not be null");
 	}
 
-	public ConnectionPrototype protocoleValue(String value) {
-		this.protocolValue = value;
-		return this;
+	m_connectionProperties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_USER_KEY, userName);
+    }
+
+    public void setPassword(final String passwd) {
+
+	if (passwd == null) {
+	    m_connectionProperties.remove(AbstractDatabaseConnector.PERSISTENCE_JDBC_PASSWORD_KEY);
+	} else {
+	    m_connectionProperties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_PASSWORD_KEY, passwd);
 	}
 
-	public ConnectionPrototype username(String username) {
-		if(username==null)
-			throw new NullPointerException("User Name should not be null");
-		connectionProperties.put(DatabaseConnector.PROPERTY_USERNAME, username);		
-		return this;
-	}
+    }
 
-	public ConnectionPrototype driver(ProlineRepository.DriverType driver) {
-		this.driver = driver;
-		
-		connectionProperties.put(DatabaseConnector.PROPERTY_DRIVERCLASSNAME, driver.driver);
-		
-		// Set default Hibernate Dialect
-		if( connectionProperties.containsKey(DatabaseConnector.PROPERTY_DIALECT) == false )
-		  connectionProperties.put(DatabaseConnector.PROPERTY_DIALECT, driver.JPADialect);
-		
-		return this;
-	}
-	
-	public DatabaseConnector toConnector( ProlineRepository.Databases db ) throws Exception {
-	  return this.toConnector(db.toString().toLowerCase());
-	}
-	
-	public DatabaseConnector toConnector( String dbName ) throws Exception {
-	    
-		StringBuilder URLbuilder = new StringBuilder();
-		URLbuilder.append("jdbc:").append(driver.name().toLowerCase()).append(':');		
-		
-		switch (protocol) {
-		case MEMORY:
-			if(driver!=DriverType.SQLITE)
-				URLbuilder.append("mem:");
-			else 
-				URLbuilder.append(":memory:");
-			break;
-		case FILE:
-			if(driver!=DriverType.SQLITE)
-				URLbuilder.append("file:").append(protocolValue);
-			else
-				URLbuilder.append(protocolValue);
-			
-			// Append a last '/' if not already existing
-			if( URLbuilder.toString().endsWith("/") == false )
-			  URLbuilder.append('/');
-		
-			break;
-		case HOST:
-			URLbuilder.append("//").append(protocolValue).append('/');
-			break;
-		default:
-			break;
+    protected void updateFields() {
+	setDriverType(DriverType.valueOf(PropertiesUtils.getProperty(m_connectionProperties,
+		"database.drivertype")));
+
+	setProtocol(DatabaseProtocol.valueOf(PropertiesUtils.getProperty(m_connectionProperties,
+		"database.protocol")));
+
+	setProtocolValue(PropertiesUtils.getProperty(m_connectionProperties, "database.protocolValue"));
+    }
+
+    public IDatabaseConnector toConnector(final Database db) {
+	final StringBuilder urlBuilder = new StringBuilder();
+
+	final DriverType driverType = getDriverType();
+
+	urlBuilder.append(AbstractDatabaseConnector.JDBC_SCHEME).append(':');
+	urlBuilder.append(driverType.name().toLowerCase()).append(':');
+
+	final String protocolValue = getProtocolValue();
+
+	switch (getProtocol()) {
+	case MEMORY:
+	    if (driverType == DriverType.SQLITE) {
+		urlBuilder.append("memory:");
+	    } else {
+		urlBuilder.append("mem:");
+	    }
+
+	    break;
+
+	case FILE:
+	    if (driverType != DriverType.SQLITE) {
+		urlBuilder.append("file:");
+	    }
+
+	    if (!StringUtils.isEmpty(protocolValue)) {
+		urlBuilder.append(protocolValue);
+
+		/* Append a last '/' if not already existing */
+		if (!StringUtils.isTerminated(urlBuilder, '/')) {
+		    urlBuilder.append('/');
 		}
-		
-		URLbuilder.append(namePrefix).append(dbName);
-		
-		if (options != null && !options.trim().isEmpty()) 
-			URLbuilder.append(options);
-		
-		connectionProperties.put(DatabaseConnector.PROPERTY_URL, URLbuilder.toString());
-		
-		return new DatabaseConnector(connectionProperties);
+
+	    }
+
+	    break;
+
+	case HOST:
+	    urlBuilder.append("//");
+
+	    if (!StringUtils.isEmpty(protocolValue)) {
+		urlBuilder.append(protocolValue);
+
+		/* Append a last '/' if not already existing */
+		if (!StringUtils.isTerminated(urlBuilder, '/')) {
+		    urlBuilder.append('/');
+		}
+
+	    }
+
+	    break;
+
+	default:
+
 	}
+
+	final String namePrefix = getNamePrefix();
+
+	if (!StringUtils.isEmpty(namePrefix)) {
+	    urlBuilder.append(namePrefix);
+	}
+
+	urlBuilder.append(db.name().toLowerCase());
+
+	if (!StringUtils.isEmpty(m_options)) {
+	    urlBuilder.append(m_options);
+	}
+
+	LOG.debug("Database URL [{}]", urlBuilder);
+
+	m_connectionProperties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_URL_KEY, urlBuilder.toString());
+
+	return AbstractDatabaseConnector.createDatabaseConnectorInstance(db, m_connectionProperties);
+    }
 
 }

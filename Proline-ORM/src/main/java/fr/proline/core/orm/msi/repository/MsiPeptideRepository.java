@@ -9,7 +9,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Peptide;
-import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.util.JPARepository;
 import fr.proline.util.StringUtils;
 
 public class MsiPeptideRepository extends JPARepository {

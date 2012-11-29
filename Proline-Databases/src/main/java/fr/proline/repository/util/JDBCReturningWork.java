@@ -1,4 +1,4 @@
-package fr.proline.core.orm.utils;
+package fr.proline.repository.util;
 
 import org.hibernate.jdbc.ReturningWork;
 

@@ -8,10 +8,10 @@
     </encoder>
   </appender>
 
-  <logger name="fr.proline.core.orm" level="DEBUG">    
+  <logger name="fr.proline" level="DEBUG">    
   </logger>
 
-  <root level="OFF">
+  <root level="WARN">
     <appender-ref ref="STDOUT" />
   </root>
   

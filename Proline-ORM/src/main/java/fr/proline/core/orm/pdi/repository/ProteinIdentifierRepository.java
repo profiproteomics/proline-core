@@ -5,7 +5,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.pdi.ProteinIdentifier;
-import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.util.JPARepository;
 
 public class ProteinIdentifierRepository extends JPARepository {
 

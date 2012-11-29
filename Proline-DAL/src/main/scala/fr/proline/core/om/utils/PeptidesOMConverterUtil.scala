@@ -4,7 +4,6 @@ import scala.collection.JavaConversions.asScalaSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
@@ -16,11 +15,10 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
-import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.repository.ProlineRepository.Databases
 import fr.proline.repository.ProlineRepository
 import javax.persistence.EntityManager
 import javax.persistence.Persistence
+import fr.proline.repository.Database
 
 /**
  * Provides method to convert Peptides and PTM objects from ORM to OM.
@@ -80,7 +78,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
 
     //Objects to access data in repositories
     val proSetRepo = new ProteinSetRepositorty(msiEM)
-    val prolineRepo = ProlineRepository.getRepositoryManager(null)
+    val prolineRepo = ProlineRepository.getProlineRepositoryInstance()
 
     //Found PeptideInstance Children mapped by their id
     val pepInstChildById = new HashMap[Integer, PeptideInstance]()
@@ -123,9 +121,9 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     val pepInstChildren = pepInstChildById.values.toArray
 
     //Get Peptide, Unmodified Peptide && PeptideInstance 
-    val psDBConnector = prolineRepo.getConnector(Databases.PS)
-    val em = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName(),
-      psDBConnector.getEntityManagerSettings()).createEntityManager()
+    val psDBConnector = prolineRepo.getConnector(Database.PS)
+    val emf = psDBConnector.getEntityManagerFactory()
+    val em = emf.createEntityManager()
 
     val psPeptide = em.find(classOf[PsPeptide], msiPepInst.getPeptideId())
     val psUnmodifiedPep = em.find(classOf[PsPeptide], msiPepInst.getUnmodifiedPeptideId())

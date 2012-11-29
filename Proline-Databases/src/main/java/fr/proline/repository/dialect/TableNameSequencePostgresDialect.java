@@ -1,6 +1,8 @@
-package fr.proline.core.orm.utils;
+package fr.proline.repository.dialect;
 
 import org.hibernate.dialect.PostgreSQL82Dialect;
+
+import fr.proline.repository.id.TableNameSequenceGenerator;
 
 /**
  * Creates a sequence per table instead of the default behavior of one global sequence named

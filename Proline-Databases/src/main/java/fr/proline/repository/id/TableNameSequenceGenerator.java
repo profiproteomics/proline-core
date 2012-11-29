@@ -1,4 +1,4 @@
-package fr.proline.core.orm.utils;
+package fr.proline.repository.id;
 
 import java.util.Properties;
 

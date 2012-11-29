@@ -9,7 +9,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.pdi.SequenceDbConfig;
 import fr.proline.core.orm.pdi.SequenceDbInstance;
-import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.util.JPARepository;
 import fr.proline.util.StringUtils;
 
 public class PdiSeqDatabaseRepository extends JPARepository {

@@ -1,6 +1,6 @@
-package fr.proline.core.orm.utils;
+package fr.proline.core.orm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -19,24 +19,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.uds.Instrument;
+import fr.proline.repository.Database;
+import fr.proline.repository.util.JDBCReturningWork;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.repository.utils.DatabaseUtils;
 
-public class JPAUtilTest extends DatabaseTestCase {
+public class JPAUtilsTest extends DatabaseTestCase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JPAUtilTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JPAUtilsTest.class);
 
     private static final AtomicBoolean STATISTICS_ENABLED = new AtomicBoolean(false);
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName());
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
 	super.tearDown();
+    }
+
+    @Override
+    public Database getDatabase() {
+	return Database.UDS;
     }
 
     @Override
@@ -50,7 +57,7 @@ public class JPAUtilTest extends DatabaseTestCase {
 
 	if (!STATISTICS_ENABLED.getAndSet(true)) {
 	    /* Check Hibernate statistics only once */
-	    JPAUtil.enableStatistics(udsEm.getEntityManagerFactory(), "Tests-HibernateStats");
+	    JPAUtils.enableStatistics(udsEm.getEntityManagerFactory(), "Tests-HibernateStats");
 	}
 
 	udsEm.setFlushMode(FlushModeType.COMMIT);
@@ -102,7 +109,7 @@ public class JPAUtilTest extends DatabaseTestCase {
 
 	    };
 
-	    final Long result = JPAUtil.doReturningWork(udsEm, jdbcWork);
+	    final Long result = JPAUtils.doReturningWork(udsEm, jdbcWork);
 
 	    assertTrue("At least 2 instruments persisted", (result != null) && (result.longValue() >= 2L));
 

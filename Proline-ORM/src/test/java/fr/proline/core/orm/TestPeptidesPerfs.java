@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import fr.proline.core.orm.msi.repository.MsiPeptideRepository;
 import fr.proline.core.orm.ps.Peptide;
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
-import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.repository.utils.DatabaseUtils;
 import fr.proline.util.StringUtils;
@@ -56,12 +56,10 @@ public class TestPeptidesPerfs {
 	    /* Init MSI Db connection */
 	    MSIDatabaseTestCase msiDBTestCase = new MSIDatabaseTestCase();
 	    msiDBTestCase.initDatabase();
-	    msiDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName());
 
 	    /* Init PS Db connection */
 	    PSDatabaseTestCase psDBTestCase = new PSDatabaseTestCase();
 	    psDBTestCase.initDatabase();
-	    psDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
 
 	    LOG.info("Dbs succesfully initialized");
 
@@ -365,17 +363,27 @@ public class TestPeptidesPerfs {
 
 class MSIDatabaseTestCase extends DatabaseTestCase {
 
+    @Override
+    public Database getDatabase() {
+	return Database.MSI;
+    }
+
     public String getSQLScriptLocation() {
 	return DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION;
     }
 
     public String getPropertiesFilename() {
-	return "/db_msi.properties";
+	return "db_msi.properties";
     }
 
 }
 
 class PSDatabaseTestCase extends DatabaseTestCase {
+
+    @Override
+    public Database getDatabase() {
+	return Database.PS;
+    }
 
     public String getSQLScriptLocation() {
 	return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;

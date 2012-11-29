@@ -1,6 +1,9 @@
 package fr.proline.core.orm.uds;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
@@ -9,46 +12,55 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fr.proline.core.orm.uds.repository.IdentificationRepository;
-import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.repository.utils.DatabaseUtils;
 
 public class IdentificationTest extends DatabaseTestCase {
 
-	IdentificationRepository identificationRepo;
+    IdentificationRepository identificationRepo;
 
-	@Before public void setUp() throws Exception {
-        initDatabase();
-        initEntityManager(JPAUtil.PersistenceUnitNames.UDS_Key.getPersistenceUnitName());
-        loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
-        identificationRepo = new IdentificationRepository(em);
-	}
+    @Before
+    public void setUp() throws Exception {
+	initDatabase();
+	loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
+	identificationRepo = new IdentificationRepository(getEntityManager());
+    }
 
-	@After public void tearDown() throws Exception {
-		super.tearDown();
-	}
-	
-	@Test public void readIdentification() {
-		Project project = em.find(Project.class, 1);		
-		List<Identification> identifications = identificationRepo.findIdentificationsByProject(project.getId());
-		assertThat(identifications.size(), is(1));
-		Identification identification = identifications.get(0);
-		assertThat(identification, notNullValue());
-		assertThat(identification.getName(), equalTo("CB_342"));
-		assertThat(identification.getNumber(), is(1));
-		assertThat(identification.getFractions().size(), is(identification.getFractionCount()));
-	}
+    @After
+    public void tearDown() {
+	super.tearDown();
+    }
 
-	@Test public void getIdentificationNames() {
-		Project project = em.find(Project.class, 1);		
-		List<String> identifications = identificationRepo.findIdentificationNamesByProject(project.getId());
-		assertThat(identifications.size(), is(1));
-		assertThat(identifications.get(0), equalTo("CB_342"));
-	}
+    @Test
+    public void readIdentification() {
+	Project project = getEntityManager().find(Project.class, 1);
+	List<Identification> identifications = identificationRepo.findIdentificationsByProject(project
+		.getId());
+	assertThat(identifications.size(), is(1));
+	Identification identification = identifications.get(0);
+	assertThat(identification, notNullValue());
+	assertThat(identification.getName(), equalTo("CB_342"));
+	assertThat(identification.getNumber(), is(1));
+	assertThat(identification.getFractions().size(), is(identification.getFractionCount()));
+    }
 
-	@Override
-	public String getSQLScriptLocation() {
-		return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
-	}
+    @Test
+    public void getIdentificationNames() {
+	Project project = getEntityManager().find(Project.class, 1);
+	List<String> identifications = identificationRepo.findIdentificationNamesByProject(project.getId());
+	assertThat(identifications.size(), is(1));
+	assertThat(identifications.get(0), equalTo("CB_342"));
+    }
+
+    @Override
+    public Database getDatabase() {
+	return Database.UDS;
+    }
+
+    @Override
+    public String getSQLScriptLocation() {
+	return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
+    }
 
 }

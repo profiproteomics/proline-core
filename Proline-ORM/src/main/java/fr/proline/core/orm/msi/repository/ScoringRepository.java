@@ -8,7 +8,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Scoring;
-import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.util.JPARepository;
 import fr.proline.util.StringUtils;
 
 public class ScoringRepository extends JPARepository {

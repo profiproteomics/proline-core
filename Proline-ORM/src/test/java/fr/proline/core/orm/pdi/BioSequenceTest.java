@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fr.proline.core.orm.pdi.repository.PdiBioSequenceRepository;
+import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class BioSequenceTest extends DatabaseTestCase {
@@ -24,19 +25,19 @@ public class BioSequenceTest extends DatabaseTestCase {
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	initEntityManager("pdidb_production");
+
 	loadDataSet("/fr/proline/core/orm/pdi/Proteins_Dataset.xml");
 	seqRepo = new PdiBioSequenceRepository(getEntityManager());
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
 	super.tearDown();
     }
 
     @Test
     public void readBioSequence() {
-	BioSequence bioSeq = em.find(BioSequence.class, 171);
+	BioSequence bioSeq = getEntityManager().find(BioSequence.class, 171);
 	assertThat(bioSeq, notNullValue());
 	assertThat(bioSeq.getLength(), is(338));
 	assertThat(bioSeq.getProteinIdentifiers().size(), is(4));
@@ -83,6 +84,11 @@ public class BioSequenceTest extends DatabaseTestCase {
 	final int distinctSize = distinctBioSequences.size();
 
 	assertEquals("Same BioSequences after two successive queries", size1, distinctSize);
+    }
+
+    @Override
+    public Database getDatabase() {
+	return Database.PDI;
     }
 
     public String getSQLScriptLocation() {

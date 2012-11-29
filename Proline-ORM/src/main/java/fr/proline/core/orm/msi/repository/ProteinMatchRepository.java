@@ -7,7 +7,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.core.orm.msi.ResultSet;
-import fr.proline.core.orm.utils.JPARepository;
+import fr.proline.core.orm.util.JPARepository;
 
 public class ProteinMatchRepository extends JPARepository {
 

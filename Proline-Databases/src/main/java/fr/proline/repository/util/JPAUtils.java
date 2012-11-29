@@ -1,4 +1,4 @@
-package fr.proline.core.orm.utils;
+package fr.proline.repository.util;
 
 import java.lang.management.ManagementFactory;
 import java.util.Hashtable;
@@ -15,48 +15,15 @@ import org.hibernate.jmx.StatisticsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.repository.ProlineRepository;
 import fr.proline.util.StringUtils;
 
-public final class JPAUtil {
+public final class JPAUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JPAUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JPAUtils.class);
 
     /* Private constructor (Utility class) */
-    private JPAUtil() {
+    private JPAUtils() {
     }
-
-    public enum PersistenceUnitNames {
-
-	UDS_Key("udsdb_production"), PS_Key("psdb_production"), MSI_Key("msidb_production"), PDI_Key(
-		"pdidb_production");
-	String pu_name;
-
-	PersistenceUnitNames(String name) {
-	    pu_name = name;
-	}
-
-	public String getPersistenceUnitName() {
-	    return pu_name;
-	}
-
-	public static String getPersistenceUnitNameForDB(ProlineRepository.Databases db) {
-	    switch (db) {
-	    case LCMS:
-		return null;
-	    case MSI:
-		return MSI_Key.getPersistenceUnitName();
-	    case PDI:
-		return PDI_Key.getPersistenceUnitName();
-	    case PS:
-		return PS_Key.getPersistenceUnitName();
-	    case UDS:
-		return UDS_Key.getPersistenceUnitName();
-	    default:
-		return null;
-	    }
-	}
-    };
 
     public static void enableStatistics(final EntityManagerFactory emf, final String description) {
 
@@ -84,7 +51,7 @@ public final class JPAUtil {
 		table.put("type", "statistics");
 		table.put("sessionFactory", description);
 
-		final ObjectName objName = new ObjectName(JPAUtil.class.getPackage().getName(), table);
+		final ObjectName objName = new ObjectName(JPAUtils.class.getPackage().getName(), table);
 
 		server.registerMBean(stats, objName);
 

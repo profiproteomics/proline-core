@@ -7,7 +7,7 @@
 * May you share freely, never taking more than you give.
 *
 */
-package fr.proline.core.orm.utils;
+package fr.proline.repository.dialect;
 
 import java.sql.Types;
 

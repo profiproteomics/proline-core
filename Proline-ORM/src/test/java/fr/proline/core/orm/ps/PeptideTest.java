@@ -6,12 +6,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
-import fr.proline.core.orm.utils.JPAUtil;
+import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.repository.utils.DatabaseUtils;
 
@@ -28,13 +31,12 @@ public class PeptideTest extends DatabaseTestCase {
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
 	loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
-	pepRepo = new PsPeptideRepository(em);
+	pepRepo = new PsPeptideRepository(getEntityManager());
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
 	super.tearDown();
     }
 
@@ -80,6 +82,11 @@ public class PeptideTest extends DatabaseTestCase {
 	LOG.info("Retrieved Msi Peptides count: " + retrievedPeptides);
 
 	Assert.assertTrue("Retrieved Msi Peptides count", retrievedPeptides > 0);
+    }
+
+    @Override
+    public Database getDatabase() {
+	return Database.PS;
     }
 
     @Override

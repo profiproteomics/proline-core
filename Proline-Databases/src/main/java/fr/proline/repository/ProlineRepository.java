@@ -10,120 +10,119 @@ import com.googlecode.flyway.core.Flyway;
 
 public class ProlineRepository {
 
-	private static final String MIGRATION_SCRIPTS_DIR = "/dbscripts/";
-	private static final Logger logger = LoggerFactory.getLogger(ProlineRepository.class);
+    /* Constants */
+    private static final Logger LOG = LoggerFactory.getLogger(ProlineRepository.class);
 
-	public enum Databases {
-		UDS, PS, PDI, MSI, LCMS
-	};
+    private static final String MIGRATION_SCRIPTS_DIR = "/dbscripts/";
 
-	public enum DriverType {
-		H2("org.h2.Driver", "org.hibernate.dialect.H2Dialect"), POSTGRESQL("org.postgresql.Driver",
-				"org.hibernate.dialect.PostgreSQLDialect"), SQLITE("org.sqlite.JDBC",
-				"fr.proline.core.orm.utils.SQLiteDialect");
+    /* @GuardedBy("ProlineRepository.class") */
+    private static ProlineRepository instance;
 
-		String driver;
-		String JPADialect;
+    /* Instance variables */
+    private final Map<Database, IDatabaseConnector> m_repository = new EnumMap<Database, IDatabaseConnector>(
+	    Database.class);
 
-		DriverType(String driver, String dialect) {
-			this.driver = driver;
-			this.JPADialect = dialect;
-		}
-		
-		public String getJPADriver(){
-			return JPADialect;
-		}
-		
-		public String getDriverClassName(){
-			return driver;
-		}
-		
-		
-	};
+    /* Constructors */
+    /**
+     * This constructor search for proline_repository.conf and initialize the database connectors from this
+     * properties file.
+     */
+    private ProlineRepository() {
+	// TODO
+    }
 
-	private static ProlineRepository instance;
+    /**
+     * Creates a set of database connections by using the specified prototype. This constructor creates four
+     * database connections : UDS, PS, LCMS and PDI.
+     * 
+     * @param prototype
+     */
+    private ProlineRepository(final ConnectionPrototype prototype) {
+	m_repository.put(Database.UDS, prototype.toConnector(Database.UDS));
+	m_repository.put(Database.PDI, prototype.toConnector(Database.PDI));
+	m_repository.put(Database.PS, prototype.toConnector(Database.PS));
+	m_repository.put(Database.LCMS, prototype.toConnector(Database.LCMS));
+    }
 
-	public static ProlineRepository getRepositoryManager(ConnectionPrototype prototype) throws Exception {
-		if (instance == null) {
-			instance = (prototype == null) ? new ProlineRepository() : new ProlineRepository(prototype);
-		} else if (prototype != null) {
-			throw new UnsupportedOperationException();
-		}
-		return instance;
+    /* Public class methods */
+    public static synchronized void initialize(final ConnectionPrototype prototype) {
+
+	if (instance != null) {
+	    throw new IllegalStateException("ProlineRepository ALREADY initialized");
 	}
 
-	private Map<Databases, DatabaseConnector> repository = new EnumMap<ProlineRepository.Databases, DatabaseConnector>(
-			Databases.class);
-
-	/**
-	 * This constructor search for proline_repository.conf and initialize the database connectors from this properties
-	 * file.
-	 */
-	private ProlineRepository() {
-		// TODO
+	if (prototype == null) {
+	    throw new UnsupportedOperationException("Initialization without prototype not supported");
 	}
 
-	/**
-	 * Creates a set of database connections by using the specified prototype. This constructor creates four database
-	 * connections : UDS, PS, LCMS and PDI.
-	 * 
-	 * @param prototype
-	 */
-	private ProlineRepository(ConnectionPrototype prototype) throws Exception {
-		repository.put(Databases.UDS, prototype.toConnector(Databases.UDS));
-		repository.put(Databases.PDI, prototype.toConnector(Databases.PDI));
-		repository.put(Databases.PS, prototype.toConnector(Databases.PS));
-		repository.put(Databases.LCMS, prototype.toConnector(Databases.LCMS));
+	instance = new ProlineRepository(prototype);
+    }
+
+    public static synchronized ProlineRepository getProlineRepositoryInstance() {
+
+	if (instance == null) {
+	    throw new IllegalStateException("ProlineRepository NOT yet initialized");
 	}
 
-	/**
-	 * Check if the repository structure needs to be upgraded and performs upgrade if necessary.
-	 */
-	public void upgradeRepositoryStructure() {
-		for (Databases db : repository.keySet()) {
-			upgradeDatabase(db);
-		}
+	return instance;
+    }
+
+    /* Public methods */
+    /**
+     * Check if the repository structure needs to be upgraded and performs upgrade if necessary.
+     */
+    public void upgradeRepositoryStructure() {
+	for (final Database db : m_repository.keySet()) {
+	    upgradeDatabase(db);
+	}
+    }
+
+    public void upgradeDatabase(final Database db) {
+	LOG.info("Upgrading {} database", db);
+	Flyway flyway = new Flyway();
+	StringBuilder dir = new StringBuilder(MIGRATION_SCRIPTS_DIR);
+	dir.append(db.name().toLowerCase()).append('/').append(retrieveDriverType(m_repository.get(db)))
+		.append('/');
+	flyway.setLocations(dir.toString());
+	flyway.setDataSource(m_repository.get(db).getDataSource());
+	flyway.migrate();
+    }
+
+    public IDatabaseConnector getConnector(final Database db) {
+	return m_repository.get(db);
+    }
+
+    public void closeAll() {
+	for (final IDatabaseConnector connector : m_repository.values()) {
+	    connector.close();
+	}
+    }
+
+    /* Private methods */
+    /**
+     * Creates a new MSIdb instance, register this database within the UDS and returns a DatabaseConnectorto
+     * the MSI.
+     * 
+     * @return a DatabaseConnector to perform connection on the newly created MSI or null if the creation
+     *         failed.
+     */
+    private IDatabaseConnector createMSIdbInstance() {
+	// TODO
+	return null;
+    }
+
+    private static String retrieveDriverType(final IDatabaseConnector connector) {
+	String result = null;
+
+	if (connector instanceof H2DatabaseConnector) {
+	    result = "h2";
+	} else if (connector instanceof PostgresDatabaseConnector) {
+	    result = "postgresql";
+	} else if (connector instanceof SQLiteDatabaseConnector) {
+	    result = "sqlite";
 	}
 
-	public void upgradeDatabase(Databases db) {
-		logger.info("Upgrading database " + db.toString());
-		Flyway flyway = new Flyway();
-		StringBuilder dir = new StringBuilder(MIGRATION_SCRIPTS_DIR);
-		dir.append(db.name().toLowerCase()).append('/').append(repository.get(db).getDriverType().name().toLowerCase())
-				.append('/');
-		flyway.setLocations(dir.toString());
-		flyway.setDataSource(repository.get(db).getDataSource());
-		flyway.migrate();
-	}
-
-	public DatabaseConnector getConnector(Databases db) {
-		return repository.get(db);
-	}
-
-	public void openAll() {
-		for (Databases db : repository.keySet()) {
-			try {
-				repository.get(db).getConnection();
-			} catch (Exception e) {
-				logger.error("Error while connecting to " + db.name(), e);
-			}
-		}
-	}
-
-	public void closeAll() throws Exception {
-		for (DatabaseConnector connector : repository.values()) {
-			connector.closeAll();
-		}
-	}
-
-	/**
-	 * Creates a new MSIdb instance, register this database within the UDS and returns a DatabaseConnectorto the MSI.
-	 * 
-	 * @return a DatabaseConnector to perform connection on the newly created MSI or null if the creation failed.
-	 */
-	private DatabaseConnector createMSIdbInstance() {
-		//TODO
-		return null;
-	}
+	return result;
+    }
 
 }
