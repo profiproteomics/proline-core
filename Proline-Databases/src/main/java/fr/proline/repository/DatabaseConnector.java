@@ -137,6 +137,10 @@ public class DatabaseConnector {
 			}
 	}
 
+	public boolean hasConnection()  {
+	  return connection != null;
+	}
+	
 	public Connection getConnection() throws Exception {
 		if (connection == null) {
 			Class driverClass = Class.forName(getProperty(PROPERTY_DRIVERCLASSNAME));

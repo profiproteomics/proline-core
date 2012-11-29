@@ -1,6 +1,7 @@
 package fr.proline.repository.utils;
 
 import java.io.FileOutputStream;
+import java.io.InputStream;
 
 import org.dbunit.IDatabaseTester;
 import org.dbunit.database.DatabaseSequenceFilter;
@@ -14,6 +15,8 @@ import org.dbunit.util.fileloader.DataFileLoader;
 import org.dbunit.util.fileloader.FlatXmlDataFileLoader;
 
 import com.googlecode.flyway.core.Flyway;
+
+import fr.proline.util.SQLUtils;
 
 public class DatabaseUtils {
 	
@@ -50,12 +53,74 @@ public class DatabaseUtils {
 	public static final String SQLITE_DATABASE_MSI_SCRIPT_LOCATION = "/dbscripts/msi/sqlite";
 	public static final String SQLITE_DATABASE_PS_SCRIPT_LOCATION = "/dbscripts/ps/sqlite";
 	
+	/**
+	 * Script name for each database type
+	 * TODO: remove these definitions when Flyway supports SQLite
+	 */
+	protected static final String UDS_DB_SCRIPT_NAME = "V0_1__init_udsdb.sql";
+	protected static final String LCMS_DB_SCRIPT_NAME = "V0_1__init_lcmsdb.sql";
+	protected static final String PDI_DB_SCRIPT_NAME = "V0_1__init_pdidb.sql";
+	protected static final String MSI_DB_SCRIPT_NAME = "V0_1__init_msidb.sql";
+	protected static final String PS_DB_SCRIPT_NAME = "V0_1__init_psdb.sql";
 	
-	public static void initDatabase(DatabaseTestConnector connector, String scriptDirectory) throws ClassNotFoundException {
-		Flyway flyway = new Flyway();
-		flyway.setLocations(scriptDirectory); //flyway.setBaseDir(scriptDirectory);		
-		flyway.setDataSource(connector.getDataSource());
-		flyway.migrate();
+	private static String _getDatabaseScriptName( String scriptDirectory ) {
+		
+		String scriptName = null;
+		
+		// TODO: find a safer way to do that
+		if ( scriptDirectory.contains("/uds/") )
+			scriptName = UDS_DB_SCRIPT_NAME;
+		else if (scriptDirectory.contains("/lcms/") )
+			scriptName = LCMS_DB_SCRIPT_NAME;
+		else if (scriptDirectory.contains("/pdi/") )
+			scriptName = PDI_DB_SCRIPT_NAME;
+		else if (scriptDirectory.contains("/msi/") )
+			scriptName = MSI_DB_SCRIPT_NAME;
+		else if (scriptDirectory.contains("/ps/") )
+			scriptName = PS_DB_SCRIPT_NAME;		
+		
+		return scriptName;
+	}
+	
+	private static void _createSQLiteDB(DatabaseTestConnector connector, InputStream scriptIS ) throws Exception {
+	    
+		// If connection mode is file
+	    boolean createSchema = true;
+		/*if( dbConfig.connectionConfig.getString("connectionMode") == "FILE" ) {
+	      
+			String dbPath = dbConfig.dbDirectory + "/"+ dbConfig.connectionConfig.getString("dbName")
+			if( new File(dbPath).exists == true ) {
+				this.logger.warn("database file already exists")
+				createSchema = false
+			}
+			else
+				this.logger.info("create new database file: "+dbPath)
+		}*/
+	    
+	    if( createSchema ) {
+	    	SQLUtils.executeSQLScript(connector.getConnection(), scriptIS );
+	    }
+	    
+	  }
+	
+	public static void initDatabase(DatabaseTestConnector connector, String scriptDirectory) throws Exception {
+		
+		if( connector.getDriverType() == fr.proline.repository.ProlineRepository.DriverType.SQLITE ) {
+			
+			String scriptName =  _getDatabaseScriptName( scriptDirectory );
+			if( scriptName == null ) {
+				throw new IllegalArgumentException("script directory doesn't match to any supported database");
+			}
+			
+			String scriptPath = scriptDirectory + "/" + scriptName;
+			_createSQLiteDB( connector, DatabaseUtils.class.getClass().getResourceAsStream( scriptPath ) );
+		}
+		else {
+			Flyway flyway = new Flyway();
+			flyway.setLocations(scriptDirectory); //flyway.setBaseDir(scriptDirectory);		
+			flyway.setDataSource(connector.getDataSource());
+			flyway.migrate();
+		}		
 	}
 	
 	public static void writeDataSetXML(DatabaseTestConnector connector, String outputFilename) throws Exception {

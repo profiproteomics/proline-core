@@ -32,6 +32,12 @@
   </build>
 
   <dependencies>
+  
+    <!-- ProFi Commons -->
+    <dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Java</artifactId>
+    </dependency>
 
     <!-- Direct dependencies -->
     <dependency>
