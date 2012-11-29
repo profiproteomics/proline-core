@@ -133,7 +133,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	synchronized (m_connectorLock) {
 
 	    if (m_closed) {
-		throw new IllegalStateException("This connector is already closed !");
+		throw new IllegalStateException("This connector is ALREADY closed");
 	    }
 
 	    if (m_dataSource == null) {
@@ -162,7 +162,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	synchronized (m_connectorLock) {
 
 	    if (m_closed) {
-		throw new IllegalStateException("This connector is already closed !");
+		throw new IllegalStateException("This connector is ALREADY closed");
 	    }
 
 	    if (m_entityManagerFactory == null) {
@@ -191,7 +191,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	synchronized (m_connectorLock) {
 
-	    if (!m_closed) {
+	    if (!m_closed) { // Close only once
 		m_closed = true;
 
 		final Database database = getDatabase();

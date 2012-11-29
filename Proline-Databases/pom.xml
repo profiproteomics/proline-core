@@ -11,13 +11,7 @@
   <name>${project.artifactId}</name>
   <description>Proline Database</description>
 
-  <dependencies>
-
-    <!-- ProFi Commons -->
-    <dependency>
-      <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Java</artifactId>
-    </dependency>
+  <dependencies>   
 
     <!-- Direct dependencies -->
     <dependency>
@@ -41,7 +35,7 @@
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
 
-    <!-- Databases (Compile to use Drivers DataSource) -->
+    <!-- Databases (Compile-scope to use Drivers DataSource) -->
     <dependency>
       <groupId>postgresql</groupId>
       <artifactId>postgresql</artifactId>

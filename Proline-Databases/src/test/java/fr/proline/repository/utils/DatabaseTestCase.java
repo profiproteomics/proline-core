@@ -83,6 +83,10 @@ public abstract class DatabaseTestCase {
 
 	synchronized (m_connectorLock) {
 
+	    if (m_toreDown) {
+		throw new IllegalStateException("TestCase ALREADY torn down");
+	    }
+
 	    if (m_currentEntityManager == null) {
 		final DatabaseTestConnector connector = getConnector();
 
@@ -117,39 +121,43 @@ public abstract class DatabaseTestCase {
     public void tearDown() {
 
 	synchronized (m_connectorLock) {
-	    m_toreDown = true;
 
-	    /* Close EntityManager then keep-alive connection and finally Connector */
-	    if (m_currentEntityManager != null) {
-		LOG.debug("Closing current EntityManager");
+	    if (!m_toreDown) { // Close only once
+		m_toreDown = true;
 
-		try {
-		    m_currentEntityManager.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing current EntityManager", exClose);
+		/* Close EntityManager then keep-alive connection and finally Connector */
+		if (m_currentEntityManager != null) {
+		    LOG.debug("Closing current EntityManager");
+
+		    try {
+			m_currentEntityManager.close();
+		    } catch (Exception exClose) {
+			LOG.error("Error closing current EntityManager", exClose);
+		    }
+
 		}
 
-	    }
+		if (m_keepaliveConnection != null) {
 
-	    if (m_keepaliveConnection != null) {
+		    LOG.debug("Closing keep-alive SQL connection");
 
-		LOG.debug("Closing keep-alive SQL connection");
+		    try {
+			m_keepaliveConnection.close();
+		    } catch (Exception exClose) {
+			LOG.error("Error closing keep-alive SQL connection", exClose);
+		    }
 
-		try {
-		    m_keepaliveConnection.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing keep-alive SQL connection", exClose);
 		}
 
-	    }
+		if (m_connector != null) {
+		    LOG.debug("Closing DatabaseTestConnector");
 
-	    if (m_connector != null) {
-		LOG.debug("Closing DatabaseTestConnector");
+		    try {
+			m_connector.close();
+		    } catch (Exception exClose) {
+			LOG.error("Error closing DatabaseTestConnector", exClose);
+		    }
 
-		try {
-		    m_connector.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing DatabaseTestConnector", exClose);
 		}
 
 	    }

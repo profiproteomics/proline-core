@@ -1,6 +1,6 @@
 package fr.proline.core.orm.msi;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +39,15 @@ public class MsiPeptideTest extends DatabaseTestCase {
     public void testMsiPeptideRepository() {
 	int retrievedPeptides = 0;
 
-	EntityTransaction msiTransaction = null;
+	final EntityManager msiEm = getEntityManager();
+
+	EntityTransaction msiTransaction1 = null;
 	boolean msiTransacOk = false;
 
 	try {
-	    EntityManager msiEm = getEntityManager();
-
 	    /* First transaction to persist some peptide */
-	    msiTransaction = msiEm.getTransaction();
-	    msiTransaction.begin();
+	    msiTransaction1 = msiEm.getTransaction();
+	    msiTransaction1.begin();
 	    msiTransacOk = false;
 
 	    for (int i = 0; i < PEPTIDE_COUNT; ++i) {
@@ -59,12 +59,29 @@ public class MsiPeptideTest extends DatabaseTestCase {
 		msiEm.persist(msiPeptide);
 	    }
 
-	    msiTransaction.commit();
+	    msiTransaction1.commit();
 	    msiTransacOk = true;
+	} finally {
 
+	    if ((msiTransaction1 != null) && !msiTransacOk) {
+		LOG.info("Rollbacking Msi Transaction");
+
+		try {
+		    msiTransaction1.rollback();
+		} catch (Exception ex) {
+		    LOG.error("Error rollbacking Msi Transaction", ex);
+		}
+
+	    }
+
+	}
+
+	EntityTransaction msiTransaction2 = null;
+
+	try {
 	    /* Second transaction to test peptide repository */
-	    msiTransaction = msiEm.getTransaction();
-	    msiTransaction.begin();
+	    msiTransaction2 = msiEm.getTransaction();
+	    msiTransaction2.begin();
 	    msiTransacOk = false;
 
 	    final MsiPeptideRepository msiPeptideRepo = new MsiPeptideRepository(msiEm);
@@ -84,19 +101,21 @@ public class MsiPeptideTest extends DatabaseTestCase {
 		}
 	    }
 
-	    msiTransaction.commit();
+	    msiTransaction2.commit();
 	    msiTransacOk = true;
 	} finally {
-	    if ((msiTransaction != null) && !msiTransacOk) {
+
+	    if ((msiTransaction2 != null) && !msiTransacOk) {
 		LOG.info("Rollbacking Msi Transaction");
 
 		try {
-		    msiTransaction.rollback();
+		    msiTransaction2.rollback();
 		} catch (Exception ex) {
 		    LOG.error("Error rollbacking Msi Transaction", ex);
 		}
 
 	    }
+
 	}
 
 	LOG.info("Retrieved Msi Peptides count: " + retrievedPeptides);
