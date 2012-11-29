@@ -4,7 +4,7 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>${core.version}</version>
   </parent>
   <artifactId>Proline-ORM</artifactId>
 
@@ -23,7 +23,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>${core.version}</version>
       <type>jar</type>
     </dependency>
 
@@ -62,7 +62,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

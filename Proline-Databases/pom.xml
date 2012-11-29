@@ -4,32 +4,12 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>${core.version}</version>
   </parent>
   <artifactId>Proline-Databases</artifactId>
 
   <name>${project.artifactId}</name>
   <description>Proline Database</description>
-
-  <build>
-    <plugins>
-
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.4</version>
-
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-
-      </plugin>
-
-    </plugins>
-  </build>
 
   <dependencies>
 
@@ -85,5 +65,24 @@
     </dependency>
 
   </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+
+      </plugin>
+
+    </plugins>
+  </build>
 
 </project>

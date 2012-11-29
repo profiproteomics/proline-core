@@ -6,7 +6,7 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>${core.version}</version>
   </parent>
   <artifactId>Proline-DAL</artifactId>
 
@@ -47,15 +47,14 @@
   </build>
 
   <dependencies>
-  
+
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
     </dependency>
-    
-    <!-- "Proline" modules -->    
+
+    <!-- "Proline" modules -->
     <!-- Unused dependency : fr.proline:Proline-OM:jar:0.0.2-SNAPSHOT:compile -->
     <dependency>
       <groupId>fr.proline</groupId>
@@ -74,7 +73,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>${core.version}</version>
       <type>jar</type>
     </dependency>
 
@@ -111,14 +110,14 @@
       <groupId>net.noerd</groupId>
       <artifactId>prequel_2.9.1</artifactId>
     </dependency>
-    
+
     <!-- Add : joda-time:joda-time:jar:1.6.2:compile -->
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>1.6.2</version>
     </dependency>
-    
+
     <!-- Compression -->
     <dependency>
       <groupId>com.github.jponge</groupId>
@@ -134,7 +133,7 @@
       <groupId>org.xerial.snappy</groupId>
       <artifactId>snappy-java</artifactId>
       <version>1.0.4.1</version>
-    </dependency>            
+    </dependency>
 
     <!-- Test -->
     <dependency>
@@ -153,7 +152,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -168,7 +167,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-OM</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

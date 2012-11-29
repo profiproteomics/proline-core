@@ -5,7 +5,7 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>${core.version}</version>
   </parent>
   <artifactId>Proline-OMP</artifactId>
 
@@ -77,11 +77,11 @@
 	<dependency>
   		<groupId>fr.proline</groupId>
   		<artifactId>Proline-OM</artifactId>
-  		<version>0.0.2-SNAPSHOT</version>
+  		<version>${core.version}</version>
   		<type>test-jar</type>
   		<scope>test</scope>
 	</dependency>
-	
+
   </dependencies>
 
 </project>
