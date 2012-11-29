@@ -1,5 +1,6 @@
 package fr.proline.core.dal
 
+import java.sql.Connection
 import net.noerd.prequel._
 import fr.proline.repository.DatabaseConnector
 
@@ -29,7 +30,22 @@ object UdsDb extends DatabaseConfigBuilder {
 }
 
 class UdsDb( val config: DatabaseConfig,
+             val dbConnector: DatabaseConnector = null,
              val boolStrAsInt: Boolean = false,
              val maxVariableNumber: Int = 999 ) extends Database {
+  
+  def this( dbConnector: DatabaseConnector, boolStrAsInt: Boolean = false, maxVariableNumber: Int = 999 ) = {
+    this( UdsDb.buildConfigFromDatabaseConnector( dbConnector ), dbConnector, boolStrAsInt, maxVariableNumber )
+  }
+  
+  override def getOrCreateConnection(): Connection = {
+    if( this.connection == null ) {
+      if( dbConnector != null && dbConnector.hasConnection && dbConnector.getConnection.isClosed == false ) {
+        this.connection = dbConnector.getConnection()
+      }
+      else { super.getOrCreateConnection() }
+    }
+    this.connection
+  }
   
 }

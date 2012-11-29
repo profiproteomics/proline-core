@@ -4,6 +4,7 @@ import java.io.File
 import com.weiglewilczek.slf4s.Logging
 import org.apache.commons.lang3.StringUtils
 
+import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
 import fr.proline.core.dal.{DatabaseManagement,MsiDb,UdsDb}
 import fr.proline.core.om.model.msi.{IResultFile,IResultFileProvider,Instrument,InstrumentConfig,PeaklistSoftware,ResultSet}
@@ -11,21 +12,21 @@ import fr.proline.core.om.model.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.msi.{IRsStorer,MsiSearchStorer,RsStorer}
 import fr.proline.core.om.storer.msi.impl.JPARsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.api.service.IService
+import fr.proline.repository.DatabaseConnector
 
-class ResultFileImporterSQLStorer( dbMgnt: DatabaseManagement,
-                          projectId: Int,
-                          resultIdentFile: File,
-                          fileType: String,
-                          providerKey: String,
-                          instrumentConfigId: Int,
-                          importerProperties: Map[String, Any],
-                          acDecoyRegex: Option[util.matching.Regex] = None ) extends IService with Logging {
+class ResultFileImporterSQLStorer(
+        dbMgnt: DatabaseManagement,
+        msiDbConnector: DatabaseConnector,
+        resultIdentFile: File,
+        fileType: String,
+        providerKey: String,
+        instrumentConfigId: Int,
+        importerProperties: Map[String, Any],
+        acDecoyRegex: Option[util.matching.Regex] = None ) extends IService with Logging {
   
   private var targetResultSetId = 0
   
-  private val msiDbConnector = dbMgnt.getMSIDatabaseConnector(projectId, false)
-  private val udsDb = new UdsDb( UdsDb.buildConfigFromDatabaseManagement(dbMgnt) )
+  private val udsDb = new UdsDb( dbMgnt.udsDBConnector )  
   private var stContext: StorerContext = null
   
   override protected def beforeInterruption = {
