@@ -30,7 +30,10 @@ Configuration Checkstyle 5.6 basée sur les conventions de Sun modifiées pour E
     <module name="ConstantName"/>
     <module name="LocalFinalVariableName"/>
     <module name="LocalVariableName"/>
-    <module name="MemberName"/>
+    <module name="MemberName">
+      <metadata name="net.sf.eclipsecs.core.comment" value="Autorise le préfixe m_ pour les données membres"/>
+      <property name="format" value="^(m_)?[a-z][a-zA-Z0-9]*$"/>
+    </module>
     <module name="MethodName"/>
     <module name="PackageName"/>
     <module name="ParameterName"/>

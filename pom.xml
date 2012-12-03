@@ -113,7 +113,7 @@
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>Proline-ORM</artifactId>
-        <version>${core.version}OT</version>
+        <version>${core.version}</version>
       </dependency>
 
       <dependency>
@@ -217,10 +217,10 @@
             <target>1.6</target>
           </configuration>
 
-        </plugin>        
-        
+        </plugin>
+
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
           <version>2.4</version>
         </plugin>
 
@@ -287,8 +287,8 @@
 
         </plugin>
 
-	  <!-- Cobertura plugin, format xml -->
-	  <plugin>
+      <!-- Cobertura plugin, format xml -->
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>cobertura-maven-plugin</artifactId>
         <version>2.5.1</version>
@@ -310,13 +310,13 @@
 
       </plugin>
 
-	  <!-- FindBugs plugin, format xml -->
-	  <plugin>
+      <!-- FindBugs plugin, format xml -->
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
         <version>2.5.2</version>
 
-	    <configuration>
+        <configuration>
           <findbugsXmlOutput>true</findbugsXmlOutput>
           <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
           <xmlOutput>true</xmlOutput>
@@ -335,7 +335,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javancss-maven-plugin</artifactId>
-	    <version>2.0-beta-2</version>
+        <version>2.0-beta-2</version>
       </plugin>
 
     </plugins>
