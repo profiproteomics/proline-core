@@ -1,11 +1,7 @@
 package fr.proline.repository;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 
@@ -13,15 +9,11 @@ import javax.sql.DataSource;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.ConnectionPrototype.DatabaseProtocol;
 import fr.proline.repository.ConnectionPrototype.DriverType;
 
 public class ConnectionPrototypeTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ConnectionPrototypeTest.class);
 
     private static final String DB_PROPERTIES_FILE = "connection_proto_db.properties";
 

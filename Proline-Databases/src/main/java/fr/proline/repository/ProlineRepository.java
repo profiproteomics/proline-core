@@ -13,7 +13,7 @@ public class ProlineRepository {
     /* Constants */
     private static final Logger LOG = LoggerFactory.getLogger(ProlineRepository.class);
 
-    private static final String MIGRATION_SCRIPTS_DIR = "/dbscripts/";
+    private static final String MIGRATION_SCRIPTS_DIR = "dbscripts/";
 
     /* @GuardedBy("ProlineRepository.class") */
     private static ProlineRepository instance;

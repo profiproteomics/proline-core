@@ -390,7 +390,7 @@ class PSDatabaseTestCase extends DatabaseTestCase {
     }
 
     public String getPropertiesFilename() {
-	return "/db_ps.properties";
+	return "db_ps.properties";
     }
 
 }

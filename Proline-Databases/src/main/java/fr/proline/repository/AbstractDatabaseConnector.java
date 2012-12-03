@@ -196,10 +196,6 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 		final Database database = getDatabase();
 
-		if (m_dataSource != null) {
-		    doClose(database, m_dataSource);
-		}
-
 		if (m_entityManagerFactory != null) {
 		    LOG.debug("Closing EntityManagerFactory for {}", database);
 
@@ -209,6 +205,10 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 			LOG.error("Error closing EntityManagerFactory for " + database, exClose);
 		    }
 
+		}
+
+		if (m_dataSource != null) {
+		    doClose(database, m_dataSource);
 		}
 
 	    }

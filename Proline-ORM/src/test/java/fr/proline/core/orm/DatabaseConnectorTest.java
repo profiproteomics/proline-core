@@ -47,7 +47,7 @@ public class DatabaseConnectorTest {
     }
 
     private static void checkDatabaseConnector(final String description, final IDatabaseConnector connector) {
-	assertNotNull(description + " DatbaseConnector instance", connector);
+	assertNotNull(description + " DatabaseConnector instance", connector);
 
 	final DataSource ds = connector.getDataSource();
 

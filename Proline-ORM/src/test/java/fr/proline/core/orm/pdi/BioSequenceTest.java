@@ -17,6 +17,7 @@ import org.junit.Test;
 import fr.proline.core.orm.pdi.repository.PdiBioSequenceRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.utils.DatabaseUtils;
 
 public class BioSequenceTest extends DatabaseTestCase {
 
@@ -92,7 +93,7 @@ public class BioSequenceTest extends DatabaseTestCase {
     }
 
     public String getSQLScriptLocation() {
-	return "/dbscripts/pdi/h2";
+	return DatabaseUtils.H2_DATABASE_PDI_SCRIPT_LOCATION;
     }
 
 }

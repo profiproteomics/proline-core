@@ -1,16 +1,23 @@
 package fr.proline.repository.utils;
 
+import static fr.proline.util.StringUtils.LINE_SEPARATOR;
+
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.Database;
+import fr.proline.repository.util.JDBCWork;
+import fr.proline.repository.util.JPAUtils;
 
 public abstract class DatabaseTestCase {
 
@@ -29,6 +36,43 @@ public abstract class DatabaseTestCase {
 
     /* @GuardedBy("m_connectorLock") */
     private boolean m_toreDown;
+
+    /**
+     * Retrives the list of table names from <code>DatabaseMetaData</code> of the given SQL JDBC Connection
+     * for debugging purpose.
+     * 
+     * @param con
+     *            SQL JDBC Connection, must not be <code>null</code>. If obtained from a JPA EntityManager, a
+     *            valid Transaction must be started.
+     * @return List of table names formated as a printable string.
+     */
+    public static String getTables(final Connection con) throws SQLException {
+
+	if (con == null) {
+	    throw new IllegalArgumentException("Con is null");
+	}
+
+	final DatabaseMetaData meta = con.getMetaData();
+
+	final StringBuilder buff = new StringBuilder("Database Tables :");
+	buff.append(LINE_SEPARATOR);
+
+	final ResultSet rs = meta.getTables(null, null, "%", new String[] { "TABLE" });
+
+	try {
+
+	    while (rs.next()) {
+		final String tableName = rs.getString("TABLE_NAME");
+		buff.append(tableName);
+		buff.append(LINE_SEPARATOR);
+	    }
+
+	} finally {
+	    rs.close();
+	}
+
+	return buff.toString();
+    }
 
     /**
      * @return Database used for Connector creation.
@@ -64,6 +108,8 @@ public abstract class DatabaseTestCase {
 		    final DataSource ds = m_connector.getDataSource();
 
 		    m_keepaliveConnection = ds.getConnection();
+
+		    LOG.info("Started keep-alive connection : {}", m_keepaliveConnection);
 		} catch (Exception ex) {
 		    LOG.error("Error creating keep-alive SQL connection", ex);
 		}
@@ -102,7 +148,51 @@ public abstract class DatabaseTestCase {
     }
 
     public void initDatabase() throws Exception, ClassNotFoundException {
-	DatabaseUtils.initDatabase(getConnector(), getSQLScriptLocation());
+	final DatabaseTestConnector connector = getConnector();
+
+	DatabaseUtils.initDatabase(connector, getSQLScriptLocation());
+
+	if (LOG.isDebugEnabled()) {
+	    /* Print Database Tables */
+	    final EntityManager currentEm = getEntityManager();
+	    final EntityTransaction transac = currentEm.getTransaction();
+	    boolean transacOk = false;
+
+	    try {
+		transac.begin();
+		transacOk = false;
+
+		final JDBCWork jdbcWork = new JDBCWork() {
+
+		    @Override
+		    public void execute(final Connection connection) throws SQLException {
+			LOG.debug("Post-init EntityManager Connection : {}  {}", connection,
+				getTables(connection));
+		    }
+
+		};
+
+		JPAUtils.doWork(currentEm, jdbcWork);
+
+		transac.commit();
+		transacOk = true;
+	    } finally {
+
+		if ((transac != null) && !transacOk) {
+		    LOG.info("Rollbacking EntityManager transaction");
+
+		    try {
+			transac.rollback();
+		    } catch (Exception ex) {
+			LOG.error("Error rollbacking EntityManager transaction", ex);
+		    }
+
+		}
+
+	    }
+
+	} // End if (LOG is Debug)
+
     }
 
     public void loadDataSet(final String datasetName) throws Exception {
@@ -139,7 +229,6 @@ public abstract class DatabaseTestCase {
 		}
 
 		if (m_keepaliveConnection != null) {
-
 		    LOG.debug("Closing keep-alive SQL connection");
 
 		    try {

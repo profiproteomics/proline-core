@@ -114,7 +114,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	    try {
 		((PGPoolingDataSource) source).close();
 	    } catch (Exception exClose) {
-		LOG.debug("Error closing PGPoolingDataSource for " + database, exClose);
+		LOG.error("Error closing PGPoolingDataSource for " + database, exClose);
 	    }
 
 	}
@@ -127,7 +127,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
      * 
      * @param rawDatabaseURL
      *            PostgreSQL database URL as retrieved from "javax.persistence.jdbc.url" property. Must be a
-     *            valid datbase URL.
+     *            valid database URL.
      * @return a <em>fake</em> HTTP URI or <code>null</code> if <code>rawDatabaseURL</code> cannot be parsed.
      */
     private static URI buildFakeURI(final String rawDatabaseURL) {
