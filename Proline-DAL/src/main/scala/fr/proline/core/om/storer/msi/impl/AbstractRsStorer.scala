@@ -118,8 +118,8 @@ abstract class AbstractRsStorer(val dbManagement : DatabaseManagement, val msiDb
       	msiTransaction.commit
       	msiTransacOk = true
 			} catch {
-			  case e: RuntimeException => {
-			   e.printStackTrace 
+			  case e: Throwable => {
+			   e.printStackTrace
 			   logger.debug ("Error "+e.getMessage)
 			  }
 			    
