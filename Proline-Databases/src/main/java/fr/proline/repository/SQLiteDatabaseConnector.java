@@ -24,7 +24,7 @@ public class SQLiteDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    public boolean isMemory(final Map<Object, Object> properties) {
+    protected boolean isMemory(final Map<Object, Object> properties) {
 
 	if (properties == null) {
 	    throw new IllegalArgumentException("Properties Map is null");
