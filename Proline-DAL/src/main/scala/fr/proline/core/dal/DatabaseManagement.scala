@@ -87,7 +87,7 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
   		val query : TypedQuery[Project] = udsEM.createQuery("Select prj from Project prj where prj.id =  :id", classOf[Project])
   		query.setParameter("id", projectID)		
   		val project = query.getSingleResult
-  		val assocMSIdbs = JavaConversions.asScalaSet(project.getExternalDatabases).filter(p => {p.getType == "msi"}).toList
+  		val assocMSIdbs = JavaConversions.asScalaSet(project.getExternalDatabases).filter(_.getType == "msi").toList
   		udsEM.close
   		
   		if(assocMSIdbs.size>1) {
