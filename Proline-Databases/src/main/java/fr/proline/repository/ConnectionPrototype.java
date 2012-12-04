@@ -17,10 +17,6 @@ public class ConnectionPrototype {
 	FILE, MEMORY, HOST
     };
 
-    public enum DriverType {
-	H2, POSTGRESQL, SQLITE
-    };
-
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionPrototype.class);
 
     private Map<Object, Object> m_connectionProperties = new HashMap<Object, Object>();

@@ -94,14 +94,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	final String normalizedDatabaseURL = databaseURL.toLowerCase();
 
 	/* Parametric factory based on normalizedDatabaseURL : add new supported Database protocols here */
-	if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':'
-		+ PostgresDatabaseConnector.PERSISTENCE_JDBC_URL_PROTOCOL)) {
+	if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':' + DriverType.POSTGRESQL.getJdbcURLProtocol())) {
 	    result = new PostgresDatabaseConnector(database, properties);
-	} else if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':'
-		+ SQLiteDatabaseConnector.PERSISTENCE_JDBC_URL_PROTOCOL)) {
+	} else if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':' + DriverType.SQLITE.getJdbcURLProtocol())) {
 	    result = new SQLiteDatabaseConnector(database, properties);
-	} else if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':'
-		+ H2DatabaseConnector.PERSISTENCE_JDBC_URL_PROTOCOL)) {
+	} else if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':' + DriverType.H2.getJdbcURLProtocol())) {
 	    result = new H2DatabaseConnector(database, properties);
 	} else {
 	    throw new IllegalArgumentException("Unknown database protocol");
@@ -126,6 +123,13 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
     public final Database getDatabase() {
 	return m_database;
+    }
+
+    public final boolean isMemory() {
+	/* Protection copy */
+	final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
+
+	return isMemory(propertiesCopy);
     }
 
     public final DataSource getDataSource() {
@@ -169,6 +173,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		final Database database = getDatabase();
 		/* Protection copy */
 		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
+
+		/* Force JDBC Driver, default Hibernate dialect and default ORM optimizations */
+		if (propertiesCopy.get(PERSISTENCE_JDBC_DRIVER_KEY) == null) {
+		    propertiesCopy.put(PERSISTENCE_JDBC_DRIVER_KEY, getDriverType().getJdbcDriver());
+		}
 
 		try {
 		    m_entityManagerFactory = createEntityManagerFactory(database, propertiesCopy,
@@ -215,6 +224,10 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	} // End of synchronized block on m_connectorLock
 
+    }
+
+    protected boolean isMemory(final Map<Object, Object> properties) {
+	return false;
     }
 
     /**

@@ -11,7 +11,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import fr.proline.repository.ConnectionPrototype.DatabaseProtocol;
-import fr.proline.repository.ConnectionPrototype.DriverType;
 
 public class ConnectionPrototypeTest {
 

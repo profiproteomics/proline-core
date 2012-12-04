@@ -23,6 +23,8 @@ public abstract class DatabaseTestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseTestCase.class);
 
+    private static final int BUFFER_SIZE = 2048;
+
     private final Object m_connectorLock = new Object();
 
     /* @GuardedBy("m_connectorLock") */
@@ -54,7 +56,8 @@ public abstract class DatabaseTestCase {
 
 	final DatabaseMetaData meta = con.getMetaData();
 
-	final StringBuilder buff = new StringBuilder("Database Tables :");
+	final StringBuilder buff = new StringBuilder(BUFFER_SIZE);
+	buff.append("Database Tables :");
 	buff.append(LINE_SEPARATOR);
 
 	final ResultSet rs = meta.getTables(null, null, "%", new String[] { "TABLE" });
@@ -62,9 +65,13 @@ public abstract class DatabaseTestCase {
 	try {
 
 	    while (rs.next()) {
-		final String tableName = rs.getString("TABLE_NAME");
-		buff.append(tableName);
-		buff.append(LINE_SEPARATOR);
+
+		final Object tableName = rs.getObject("TABLE_NAME");
+		if (tableName != null) {
+		    buff.append(tableName);
+		    buff.append(LINE_SEPARATOR);
+		}
+
 	    }
 
 	} finally {
@@ -104,15 +111,19 @@ public abstract class DatabaseTestCase {
 	    if (m_connector == null) {
 		m_connector = new DatabaseTestConnector(getDatabase(), getPropertiesFileName());
 
-		try {
-		    final DataSource ds = m_connector.getDataSource();
+		if (m_connector.isMemory()) {
 
-		    m_keepaliveConnection = ds.getConnection();
+		    try {
+			final DataSource ds = m_connector.getDataSource();
 
-		    LOG.info("Started keep-alive connection : {}", m_keepaliveConnection);
-		} catch (Exception ex) {
-		    LOG.error("Error creating keep-alive SQL connection", ex);
-		}
+			m_keepaliveConnection = ds.getConnection();
+
+			LOG.info("Started keep-alive connection : {}", m_keepaliveConnection);
+		    } catch (Exception ex) {
+			LOG.error("Error creating keep-alive SQL connection", ex);
+		    }
+
+		} // End if (connector is memory)
 
 	    }
 
@@ -166,7 +177,7 @@ public abstract class DatabaseTestCase {
 
 		    @Override
 		    public void execute(final Connection connection) throws SQLException {
-			LOG.debug("Post-init EntityManager Connection : {}  {}", connection,
+			LOG.debug("Post-init EntityManager connection : {}  {}", connection,
 				getTables(connection));
 		    }
 

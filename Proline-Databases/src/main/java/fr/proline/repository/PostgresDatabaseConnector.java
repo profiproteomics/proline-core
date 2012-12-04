@@ -18,18 +18,20 @@ import fr.proline.util.StringUtils;
 
 public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
-    public static final String PERSISTENCE_JDBC_URL_PROTOCOL = "postgresql";
-
-    public static final String PERSISTENCE_JDBC_DRIVER_CLASS_NAME = "org.postgresql.Driver";
-
     private static final Logger LOG = LoggerFactory.getLogger(PostgresDatabaseConnector.class);
 
-    private static final String POSTGRESQL_SCHEME = JDBC_SCHEME + ':' + PERSISTENCE_JDBC_URL_PROTOCOL + ':';
+    private static final String POSTGRESQL_SCHEME = JDBC_SCHEME + ':'
+	    + DriverType.POSTGRESQL.getJdbcURLProtocol() + ':';
 
     private static final AtomicLong NAME_SEQUENCE = new AtomicLong(0L);
 
     public PostgresDatabaseConnector(final Database database, final Map<Object, Object> properties) {
 	super(database, properties);
+    }
+
+    @Override
+    public DriverType getDriverType() {
+	return DriverType.POSTGRESQL;
     }
 
     @Override
@@ -90,14 +92,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	    throw new IllegalArgumentException("Properties Map is null");
 	}
 
-	/*
-	 * Force JDBC Driver, TableNameSequencePostgresDialect custom Hibernate dialect and default ORM
-	 * optimizations
-	 */
-	if (properties.get(PERSISTENCE_JDBC_DRIVER_KEY) == null) {
-	    properties.put(PERSISTENCE_JDBC_DRIVER_KEY, PERSISTENCE_JDBC_DRIVER_CLASS_NAME);
-	}
-
+	/* Force TableNameSequencePostgresDialect custom Hibernate dialect and default ORM optimizations. */
 	if (properties.get(HIBERNATE_DIALECT_KEY) == null) {
 	    properties.put(HIBERNATE_DIALECT_KEY, TableNameSequencePostgresDialect.class.getName());
 	}

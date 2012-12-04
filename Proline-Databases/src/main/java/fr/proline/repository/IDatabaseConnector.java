@@ -7,6 +7,10 @@ public interface IDatabaseConnector {
 
     Database getDatabase();
 
+    DriverType getDriverType();
+
+    boolean isMemory();
+
     DataSource getDataSource();
 
     EntityManagerFactory getEntityManagerFactory();

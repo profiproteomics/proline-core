@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.Database;
+import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.util.StringUtils;
 
@@ -63,6 +64,14 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 
     public Database getDatabase() {
 	return m_realConnector.getDatabase();
+    }
+
+    public DriverType getDriverType() {
+	return m_realConnector.getDriverType();
+    }
+
+    public boolean isMemory() {
+	return m_realConnector.isMemory();
     }
 
     public DataSource getDataSource() {
