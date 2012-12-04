@@ -56,6 +56,8 @@ public class ProlineRepository {
 	}
 
 	instance = new ProlineRepository(prototype);
+
+	// TODO systematically upgrade Databases with Flyway ?
     }
 
     public static synchronized ProlineRepository getProlineRepositoryInstance() {
@@ -78,13 +80,20 @@ public class ProlineRepository {
     }
 
     public void upgradeDatabase(final Database db) {
-	LOG.info("Upgrading {} database", db);
-	Flyway flyway = new Flyway();
-	StringBuilder dir = new StringBuilder(MIGRATION_SCRIPTS_DIR);
-	dir.append(db.name().toLowerCase()).append('/').append(retrieveDriverType(m_repository.get(db)))
-		.append('/');
-	flyway.setLocations(dir.toString());
-	flyway.setDataSource(m_repository.get(db).getDataSource());
+	LOG.info("Upgrading {} Db with Flyway", db);
+
+	final Flyway flyway = new Flyway();
+
+	final StringBuilder migrationScriptsLocation = new StringBuilder(MIGRATION_SCRIPTS_DIR);
+	migrationScriptsLocation.append(db.name().toLowerCase()).append('/');
+
+	final IDatabaseConnector connector = m_repository.get(db);
+
+	migrationScriptsLocation.append(connector.getDriverType().name().toLowerCase()).append('/');
+
+	flyway.setLocations(migrationScriptsLocation.toString());
+	flyway.setDataSource(connector.getDataSource());
+
 	flyway.migrate();
     }
 
@@ -94,8 +103,17 @@ public class ProlineRepository {
 
     public void closeAll() {
 	for (final IDatabaseConnector connector : m_repository.values()) {
-	    connector.close();
+
+	    if (connector != null) {
+		try {
+		    connector.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing IDatabaseConnector", exClose);
+		}
+	    }
+
 	}
+
     }
 
     /* Private methods */
@@ -109,20 +127,6 @@ public class ProlineRepository {
     private IDatabaseConnector createMSIdbInstance() {
 	// TODO
 	return null;
-    }
-
-    private static String retrieveDriverType(final IDatabaseConnector connector) {
-	String result = null;
-
-	if (connector instanceof H2DatabaseConnector) {
-	    result = "h2";
-	} else if (connector instanceof PostgresDatabaseConnector) {
-	    result = "postgresql";
-	} else if (connector instanceof SQLiteDatabaseConnector) {
-	    result = "sqlite";
-	}
-
-	return result;
     }
 
 }

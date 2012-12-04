@@ -16,11 +16,11 @@ import org.dbunit.util.fileloader.DataFileLoader;
 import org.dbunit.util.fileloader.FlatXmlDataFileLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlite.SQLiteDataSource;
 
 import com.googlecode.flyway.core.Flyway;
 
 import fr.proline.repository.Database;
+import fr.proline.repository.DriverType;
 import fr.proline.util.SQLUtils;
 import fr.proline.util.StringUtils;
 
@@ -88,7 +88,7 @@ public final class DatabaseUtils {
 
 	LOG.debug("ScriptDirectory [{}]", scriptDirectory);
 
-	if (connector.getDataSource() instanceof SQLiteDataSource) {
+	if (connector.getDriverType() == DriverType.SQLITE) {
 	    final String scriptName = _getDatabaseScriptName(scriptDirectory);
 
 	    if (scriptName == null) {
@@ -113,10 +113,12 @@ public final class DatabaseUtils {
 		}
 
 	    }
+
 	} else {
 	    final Flyway flyway = new Flyway();
-	    flyway.setLocations(scriptDirectory); // flyway.setBaseDir(scriptDirectory);
+	    flyway.setLocations(scriptDirectory);
 	    flyway.setDataSource(connector.getDataSource());
+
 	    final int migrationsCount = flyway.migrate();
 
 	    LOG.info("Flyway applies {} migrations", migrationsCount);
@@ -168,7 +170,7 @@ public final class DatabaseUtils {
      */
     public static void main(final String[] args) {
 	try {
-	    DatabaseTestConnector connector = new DatabaseTestConnector(Database.UDS,
+	    final DatabaseTestConnector connector = new DatabaseTestConnector(Database.UDS,
 		    DEFAULT_DATABASE_PROPERTIES_FILENAME);
 
 	    initDatabase(connector, H2_DATABASE_UDS_SCRIPT_LOCATION);
@@ -216,4 +218,5 @@ public final class DatabaseUtils {
 	}
 
     }
+
 }
