@@ -10,8 +10,8 @@ import org.dbunit.IDatabaseTester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.Database;
+import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.util.StringUtils;
@@ -41,7 +41,7 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 	    throw new IllegalArgumentException("Properties Map is null");
 	}
 
-	m_realConnector = AbstractDatabaseConnector.createDatabaseConnectorInstance(database, properties);
+	m_realConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(database, properties);
 
 	m_databaseTester = new DataSourceDatabaseTester(m_realConnector.getDataSource());
     }
@@ -56,7 +56,7 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 	    throw new IllegalArgumentException("Invalid propertiesFileName");
 	}
 
-	m_realConnector = AbstractDatabaseConnector.createDatabaseConnectorInstance(database,
+	m_realConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(database,
 		propertiesFileName);
 
 	m_databaseTester = new DataSourceDatabaseTester(m_realConnector.getDataSource());

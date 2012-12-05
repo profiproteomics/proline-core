@@ -13,8 +13,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.Database;
+import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
 
 public class DatabaseConnectorTest {
@@ -23,7 +23,7 @@ public class DatabaseConnectorTest {
 
     @Test
     public void testH2() {
-	final IDatabaseConnector h2Connector = AbstractDatabaseConnector.createDatabaseConnectorInstance(
+	final IDatabaseConnector h2Connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 		Database.MSI, "db_msi.properties");
 
 	checkDatabaseConnector("H2 MSI mem", h2Connector);
@@ -32,7 +32,7 @@ public class DatabaseConnectorTest {
     @Ignore
     // Work only on Grenoble CEA Network
     public void testPG() {
-	final IDatabaseConnector pgConnector = AbstractDatabaseConnector.createDatabaseConnectorInstance(
+	final IDatabaseConnector pgConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 		Database.PDI, "pg_pdi.properties");
 
 	checkDatabaseConnector("PostgreSQL PDI gre037784", pgConnector);
@@ -40,7 +40,7 @@ public class DatabaseConnectorTest {
 
     @Test
     public void testSQLite() {
-	final IDatabaseConnector sqliteConnector = AbstractDatabaseConnector.createDatabaseConnectorInstance(
+	final IDatabaseConnector sqliteConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 		Database.MSI, "sqlite_msi.properties");
 
 	checkDatabaseConnector("SQLite MSI mem", sqliteConnector);
