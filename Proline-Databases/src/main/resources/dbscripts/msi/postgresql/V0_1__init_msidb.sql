@@ -658,7 +658,7 @@ CREATE TABLE public.peptide_set (
                 peptide_count INTEGER,
                 peptide_match_count INTEGER,
                 serialized_properties TEXT,
-                protein_set_id INTEGER NOT NULL,
+                protein_set_id INTEGER,
                 result_summary_id INTEGER NOT NULL,
                 CONSTRAINT peptide_set_pk PRIMARY KEY (id)
 );

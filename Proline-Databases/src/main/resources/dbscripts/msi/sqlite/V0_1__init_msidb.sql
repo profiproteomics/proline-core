@@ -290,7 +290,7 @@ CREATE TABLE peptide_set (
                 peptide_count INTEGER,
                 peptide_match_count INTEGER,
                 serialized_properties TEXT,
-                protein_set_id INTEGER NOT NULL,
+                protein_set_id INTEGER,
                 result_summary_id INTEGER NOT NULL,
                 FOREIGN KEY (protein_set_id) REFERENCES protein_set (id),
                 FOREIGN KEY (result_summary_id) REFERENCES result_summary (id)
