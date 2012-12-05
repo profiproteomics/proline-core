@@ -130,7 +130,7 @@ public class ConnectionPrototype {
 	switch (getProtocol()) {
 	case MEMORY:
 	    if (driverType == DriverType.SQLITE) {
-		urlBuilder.append("memory:");
+		urlBuilder.append(":memory:"); // ':' char needed before memory => http://www.sqlite.org/inmemorydb.html
 	    } else {
 		urlBuilder.append("mem:");
 	    }
