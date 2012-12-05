@@ -2,6 +2,7 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,6 +14,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -30,6 +33,12 @@ import fr.proline.util.StringUtils;
  * 
  */
 @Entity
+@NamedQueries({
+	@NamedQuery(name = "findExternalDbByType", query = "select ed from fr.proline.core.orm.uds.ExternalDb ed"
+		+ " where ed.type = :type"),
+
+	@NamedQuery(name = "findExternalDbByTypeAndProject", query = "select ed from fr.proline.core.orm.uds.ExternalDb ed"
+		+ " join ed.projects as dBProject where (ed.type = :type) and (dBProject = :project)") })
 @Table(name = "external_db")
 public class ExternalDb implements Serializable {
 
@@ -172,12 +181,37 @@ public class ExternalDb implements Serializable {
 	type = databaseType;
     }
 
+    public void setProjects(final Set<Project> projects) {
+	this.projects = projects;
+    }
+
     public Set<Project> getProjects() {
 	return this.projects;
     }
 
-    public void setProjects(Set<Project> projects) {
-	this.projects = projects;
+    public void addProject(final Project project) {
+
+	if (project != null) {
+	    Set<Project> projs = getProjects();
+
+	    if (projs == null) {
+		projs = new HashSet<Project>();
+
+		setProjects(projs);
+	    }
+
+	    projs.add(project);
+	}
+
+    }
+
+    public void removeProject(final Project project) {
+	final Set<Project> projs = getProjects();
+
+	if (projs != null) {
+	    projs.remove(project);
+	}
+
     }
 
     public ConnectionMode getConnectionMode() {

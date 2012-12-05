@@ -19,171 +19,176 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 
-
 /**
  * The persistent class for the project database table.
  * 
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(
-		  name="findProjectsByMembership",
-		  query="Select p from Project p, UserAccount u where u.id=:id and u member OF p.members"),
-	@NamedQuery(
-		  name="findProjectsByOwner",
-		  query="Select p from Project p where p.owner.id=:id")
-})
+	@NamedQuery(name = "findProjectsByMembership", query = "Select p from Project p, UserAccount u where u.id=:id and u member OF p.members"),
+	@NamedQuery(name = "findProjectsByOwner", query = "Select p from Project p where p.owner.id=:id") })
 public class Project implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Integer id;
 
-	@Column(name="creation_timestamp")
-	private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
+    @Column(name = "creation_timestamp")
+    private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
 
-	private String description;
+    private String description;
 
-	private String name;
+    private String name;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//bi-directional many-to-one association to Document
-	@OneToMany(mappedBy="project")
-	private Set<Document> documents;
+    // bi-directional many-to-one association to Document
+    @OneToMany(mappedBy = "project")
+    private Set<Document> documents;
 
-	//bi-directional many-to-one association to UserAccount
+    // bi-directional many-to-one association to UserAccount
     @ManyToOne
-	private UserAccount owner;
+    private UserAccount owner;
 
-	//bi-directional many-to-many association to ExternalDb
+    // bi-directional many-to-many association to ExternalDb
     @ManyToMany
-	@JoinTable(
-		name="project_db_map"
-		, joinColumns={
-			@JoinColumn(name="project_id")
-			}
-		, inverseJoinColumns={
-			@JoinColumn(name="external_db_id")
-			}
-		)
-	private Set<ExternalDb> externalDatabases;
+    @JoinTable(name = "project_db_map", joinColumns = { @JoinColumn(name = "project_id") }, inverseJoinColumns = { @JoinColumn(name = "external_db_id") })
+    private Set<ExternalDb> externalDatabases;
 
-	//bi-directional many-to-one association to VirtualFolder
-	@OneToMany(mappedBy="project")
-	private Set<VirtualFolder> folders;
+    // bi-directional many-to-one association to VirtualFolder
+    @OneToMany(mappedBy = "project")
+    private Set<VirtualFolder> folders;
 
-	//bi-directional many-to-many association to UserAccount
+    // bi-directional many-to-many association to UserAccount
     @ManyToMany
-	@JoinColumn(name="id")
-	@JoinTable(name = "project_user_account_map", inverseJoinColumns = @JoinColumn(name = "user_account_id", referencedColumnName = "id"), joinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id"))
-	private Set<UserAccount> members;
+    @JoinColumn(name = "id")
+    @JoinTable(name = "project_user_account_map", inverseJoinColumns = @JoinColumn(name = "user_account_id", referencedColumnName = "id"), joinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id"))
+    private Set<UserAccount> members;
 
     protected Project() {
     }
 
     public Project(UserAccount owner) {
-    	this.owner = owner;
-    	setOwner(owner);
+	this.owner = owner;
+	setOwner(owner);
     }
-    
-	public Integer getId() {
-		return this.id;
-	}
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	public Timestamp getCreationTimestamp() {
-		return this.creationTimestamp;
-	}
-
-	public void setCreationTimestamp(Timestamp creationTimestamp) {
-		this.creationTimestamp = creationTimestamp;
-	}
-
-	public String getDescription() {
-		return this.description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
-
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
-
-	public Set<Document> getDocuments() {
-		return this.documents;
-	}
-
-	public void setDocuments(Set<Document> documents) {
-		this.documents = documents;
-	}
-	
-	public UserAccount getOwner() {
-		return this.owner;
-	}
-
-	public void setOwner(UserAccount owner) {
-		this.owner = owner;
-		addMember(owner);
-	}
-	
-	public Set<ExternalDb> getExternalDatabases() {
-		return this.externalDatabases;
-	}
-
-	public void setExternalDatabases(Set<ExternalDb> externalDatabases) {
-		this.externalDatabases = externalDatabases;
-	}
-	
-    public boolean addExternalDatabase(ExternalDb extDb) {
-      if(this.externalDatabases == null)
-          this.externalDatabases = new HashSet<ExternalDb>();
-      return this.externalDatabases.add(extDb);
+    public Integer getId() {
+	return this.id;
     }
-	
-	public Set<VirtualFolder> getFolders() {
-		return this.folders;
+
+    public void setId(Integer id) {
+	this.id = id;
+    }
+
+    public Timestamp getCreationTimestamp() {
+	return this.creationTimestamp;
+    }
+
+    public void setCreationTimestamp(Timestamp creationTimestamp) {
+	this.creationTimestamp = creationTimestamp;
+    }
+
+    public String getDescription() {
+	return this.description;
+    }
+
+    public void setDescription(String description) {
+	this.description = description;
+    }
+
+    public String getName() {
+	return this.name;
+    }
+
+    public void setName(String name) {
+	this.name = name;
+    }
+
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
+
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
+
+    public Set<Document> getDocuments() {
+	return this.documents;
+    }
+
+    public void setDocuments(Set<Document> documents) {
+	this.documents = documents;
+    }
+
+    public UserAccount getOwner() {
+	return this.owner;
+    }
+
+    public void setOwner(UserAccount owner) {
+	this.owner = owner;
+	addMember(owner);
+    }
+
+    public void setExternalDatabases(final Set<ExternalDb> externalDatabases) {
+	this.externalDatabases = externalDatabases;
+    }
+
+    public Set<ExternalDb> getExternalDatabases() {
+	return this.externalDatabases;
+    }
+
+    public void addExternalDatabase(final ExternalDb externalDb) {
+
+	if (externalDb != null) {
+	    Set<ExternalDb> externalDbs = getExternalDatabases();
+
+	    if (externalDbs == null) {
+		externalDbs = new HashSet<ExternalDb>();
+
+		setExternalDatabases(externalDbs);
+	    }
+
+	    externalDbs.add(externalDb);
 	}
 
-	public void setFolders(Set<VirtualFolder> folders) {
-		this.folders = folders;
-	}
-	
-	public Set<UserAccount> getMembers() {
-		return this.members;
+    }
+
+    public void removeExternalDb(final ExternalDb externalDb) {
+	final Set<ExternalDb> externalDbs = getExternalDatabases();
+
+	if (externalDbs != null) {
+	    externalDbs.remove(externalDb);
 	}
 
-	public boolean addMember(UserAccount member) {
-		if(this.members == null)
-			this.members = new HashSet<UserAccount>();
-		return this.members.add(member);
-	}
-	
-	public boolean removeMember(UserAccount member) {
-		return ((this.members != null) && (this.members.remove(member)));
-	}
-	
-	protected void setMembers(Set<UserAccount> members) {
-		this.members = members;
-	}
-	
+    }
+
+    public Set<VirtualFolder> getFolders() {
+	return this.folders;
+    }
+
+    public void setFolders(Set<VirtualFolder> folders) {
+	this.folders = folders;
+    }
+
+    public Set<UserAccount> getMembers() {
+	return this.members;
+    }
+
+    public boolean addMember(UserAccount member) {
+	if (this.members == null)
+	    this.members = new HashSet<UserAccount>();
+	return this.members.add(member);
+    }
+
+    public boolean removeMember(UserAccount member) {
+	return ((this.members != null) && (this.members.remove(member)));
+    }
+
+    protected void setMembers(Set<UserAccount> members) {
+	this.members = members;
+    }
+
 }
