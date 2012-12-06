@@ -335,7 +335,12 @@ case class Peptide ( // Required fields
   }
   
   /** Returns a string that can be used as a unique key for this peptide */
-  @transient lazy val uniqueKey : String = sequence + "%" + ptmString
+  @transient lazy val uniqueKey : String = { 
+    if (ptmString != null) 
+    	sequence + "%" + ptmString
+    else
+    	 sequence + "%" 
+  }
   
 }
 
