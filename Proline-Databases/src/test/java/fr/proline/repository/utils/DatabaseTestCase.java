@@ -1,6 +1,5 @@
 package fr.proline.repository.utils;
 
-import static fr.proline.repository.utils.DatabaseUtils.MIGRATION_SCRIPTS_DIR;
 import static fr.proline.util.StringUtils.LINE_SEPARATOR;
 
 import java.sql.Connection;
@@ -17,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.Database;
+import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.util.JDBCWork;
 import fr.proline.repository.util.JPAUtils;
 
@@ -100,11 +100,7 @@ public abstract class DatabaseTestCase {
      * @return
      */
     public String getMigrationScriptsLocation() {
-	final StringBuilder buffer = new StringBuilder(MIGRATION_SCRIPTS_DIR);
-	buffer.append(getDatabase().name().toLowerCase()).append('/');
-	buffer.append(getConnector().getDriverType().name().toLowerCase()).append('/');
-
-	return buffer.toString();
+	return DatabaseUpgrader.buildMigrationScriptsLocation(getDatabase(), getConnector().getDriverType());
     }
 
     public final DatabaseTestConnector getConnector() {
@@ -164,7 +160,7 @@ public abstract class DatabaseTestCase {
     }
 
     public void initDatabase() throws Exception, ClassNotFoundException {
-	DatabaseUtils.initDatabase(getConnector(), getMigrationScriptsLocation());
+	DatabaseUpgrader.upgradeDatabase(getConnector(), getMigrationScriptsLocation());
 
 	if (LOG.isDebugEnabled()) {
 	    /* Print Database Tables */

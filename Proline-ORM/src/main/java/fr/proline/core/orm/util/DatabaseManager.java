@@ -9,13 +9,12 @@ import javax.persistence.EntityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.flyway.core.Flyway;
-
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.DatabaseConnectorFactory;
+import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.util.StringUtils;
@@ -24,8 +23,6 @@ public class DatabaseManager {
 
     /* Constants */
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseManager.class);
-
-    private static final String MIGRATION_SCRIPTS_DIR = "dbscripts/";
 
     private static final DatabaseManager UNIQUE_INSTANCE = new DatabaseManager();
 
@@ -59,7 +56,7 @@ public class DatabaseManager {
 
 	m_udsDbConnector = udsDbConnector;
 
-	upgradeDatabase(udsDbConnector);
+	DatabaseUpgrader.upgradeDatabase(udsDbConnector);
 
 	final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
 
@@ -79,7 +76,7 @@ public class DatabaseManager {
 		m_pdiDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(Database.PDI,
 			pdiDb.toPropertiesMap(udsDriverType));
 
-		upgradeDatabase(m_pdiDbConnector);
+		DatabaseUpgrader.upgradeDatabase(m_pdiDbConnector);
 	    }
 
 	    /* Try to load PS Db Connector */
@@ -91,7 +88,7 @@ public class DatabaseManager {
 		m_psDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(Database.PS,
 			psDb.toPropertiesMap(udsDriverType));
 
-		upgradeDatabase(m_psDbConnector);
+		DatabaseUpgrader.upgradeDatabase(m_psDbConnector);
 	    }
 
 	} finally {
@@ -271,7 +268,7 @@ public class DatabaseManager {
 		connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(database,
 			externalDb.toPropertiesMap(udsDbConnector.getDriverType()));
 
-		upgradeDatabase(connector);
+		DatabaseUpgrader.upgradeDatabase(connector);
 	    }
 
 	} finally {
@@ -285,27 +282,6 @@ public class DatabaseManager {
 	}
 
 	return connector;
-    }
-
-    private static void upgradeDatabase(final IDatabaseConnector dbConnector) {
-	assert (dbConnector != null) : "upgradeDatabase() dbConnector is null";
-
-	final Database db = dbConnector.getDatabase();
-
-	final StringBuilder migrationScriptsLocation = new StringBuilder(MIGRATION_SCRIPTS_DIR);
-	migrationScriptsLocation.append(db.name().toLowerCase()).append('/');
-	migrationScriptsLocation.append(dbConnector.getDriverType().name().toLowerCase()).append('/');
-
-	LOG.debug("Upgrading {} Db with Flyway, migrationScriptsLocation [{}]", db, migrationScriptsLocation);
-
-	final Flyway flyway = new Flyway();
-
-	flyway.setLocations(migrationScriptsLocation.toString());
-	flyway.setDataSource(dbConnector.getDataSource());
-
-	final int migrationsCount = flyway.migrate();
-
-	LOG.info("Flyway applies {} migrations", migrationsCount);
     }
 
 }
