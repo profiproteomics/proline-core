@@ -1,13 +1,11 @@
 package fr.proline.core.om.utils
 
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.repository.util.JPAUtils
-import fr.proline.repository.DriverType
-import fr.proline.repository.utils.DatabaseUtils
+
+import fr.proline.core.dal.DatabaseManagerForTest
 import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.repository.Database
-import fr.proline.core.orm.util.DatabaseManagerTest
-import fr.proline.core.dal.DatabaseManagerForTest
+import fr.proline.repository.DriverType
 
 class AbstractMultipleDBTestCase extends Logging {
 
@@ -19,7 +17,7 @@ class AbstractMultipleDBTestCase extends Logging {
   var dbManagerForTest: DatabaseManagerForTest = null
 
   def initDBsDBManagement(driverType: DriverType) {
-    logger.info("Creating TEST UDS, PDI, PS, MSI test databases")
+    logger.info("Creating UDS, PDI, PS, MSI test databases")
 
     udsDBTestCase = new UDSDatabaseTestCase(driverType)
     udsDBTestCase.initDatabase()

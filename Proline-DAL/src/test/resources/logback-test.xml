@@ -22,7 +22,7 @@
   </appender>
 
 
-  <logger name="fr.proline.core" level="DEBUG" />
+  <logger name="fr.proline" level="DEBUG" />
 
  <!--  <logger name="org.hibernate.type" level="TRACE">
   </logger>

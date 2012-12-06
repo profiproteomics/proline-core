@@ -1,10 +1,12 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.util.Sorting
+
 import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.om.model.msi.Peptide
@@ -13,10 +15,7 @@ import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.repository.util.JPAUtils
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
-import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.DriverType
 import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION
 import fr.proline.util.MathUtils.EPSILON_LOW_PRECISION
@@ -28,7 +27,6 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
   val milliToNanos = 1000000L
   val msiTransaction = null
 
-
   var stContext: StorerContext = null
   var storer: JPARsStorer = null
 
@@ -36,7 +34,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
   def initTests() = {
     logger.info("Initializing Dbs")
 
-    super.initDBsDBManagement( DriverType.H2 )
+    super.initDBsDBManagement(DriverType.H2)
 
     //Load Data
     msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")
@@ -48,19 +46,6 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
     storer = new JPARsStorer(dbManagerForTest, msiDBTestCase.getConnector)
     stContext = new StorerContext(dbManagerForTest, dbManagerForTest.getMsiDbConnector(1))
-  }
-
-  @After
-  def tearDown() = {
-    if (this.stContext != null)
-      this.stContext.closeOpenedEM()
-
-    pdiDBTestCase.tearDown()
-    udsDBTestCase.tearDown()
-    psDBTestCase.tearDown()
-    msiDBTestCase.tearDown()
-
-    logger.info("Dbs succesfully closed")
   }
 
   /**
@@ -188,6 +173,16 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       //    		}
       //    	}
     } // End fo throw 3 RS
+  }
+
+  @After
+  def tearDown() = {
+    if (this.stContext != null)
+      this.stContext.closeOpenedEM()
+
+    closeDbs()
+
+    logger.info("Dbs succesfully closed")
   }
 
   private def compareRs(src: ResultSet, loaded: ResultSet) {
