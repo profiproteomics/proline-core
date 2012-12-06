@@ -367,7 +367,8 @@ class MSIDatabaseTestCase extends DatabaseTestCase {
 	return Database.MSI;
     }
 
-    public String getPropertiesFilename() {
+    @Override
+    public String getPropertiesFileName() {
 	return "db_msi.properties";
     }
 
@@ -380,7 +381,8 @@ class PSDatabaseTestCase extends DatabaseTestCase {
 	return Database.PS;
     }
 
-    public String getPropertiesFilename() {
+    @Override
+    public String getPropertiesFileName() {
 	return "db_ps.properties";
     }
 
