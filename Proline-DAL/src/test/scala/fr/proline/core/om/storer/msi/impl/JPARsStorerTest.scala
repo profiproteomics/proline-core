@@ -6,7 +6,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.DatabaseManagementTestCase
+
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
@@ -46,8 +46,8 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
     logger.info("Dbs succesfully initialized")
 
-    storer = new JPARsStorer(dbMgntTest.dbManager, msiDBTestCase.getConnector)
-    stContext = new StorerContext(dbMgntTest.dbManager, dbMgntTest.getCurrentMsiConnector())
+    storer = new JPARsStorer(dbManagerForTest, msiDBTestCase.getConnector)
+    stContext = new StorerContext(dbManagerForTest, dbManagerForTest.getMsiDbConnector(1))
   }
 
   @After
