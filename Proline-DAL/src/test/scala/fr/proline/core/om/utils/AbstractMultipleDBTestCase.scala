@@ -35,10 +35,17 @@ class AbstractMultipleDBTestCase extends Logging {
   }
 
   def closeDbs() = {
+    logger.debug("Closing MSI Db TestCase")
     msiDBTestCase.tearDown
+
+    logger.debug("Closing PS Db TestCase")
     psDBTestCase.tearDown
-    udsDBTestCase.tearDown
+
+    logger.debug("Closing PDI Db TestCase")
     pdiDBTestCase.tearDown
+
+    logger.debug("Closing UDS Db TestCase")
+    udsDBTestCase.tearDown
   }
 
 }
