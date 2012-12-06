@@ -14,22 +14,23 @@ import org.junit.Test;
 import fr.proline.core.orm.uds.repository.IdentificationRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class IdentificationTest extends DatabaseTestCase {
 
-    IdentificationRepository identificationRepo;
+    private IdentificationRepository identificationRepo;
+
+    @Override
+    public Database getDatabase() {
+	return Database.UDS;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
-	identificationRepo = new IdentificationRepository(getEntityManager());
-    }
 
-    @After
-    public void tearDown() {
-	super.tearDown();
+	loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
+
+	identificationRepo = new IdentificationRepository(getEntityManager());
     }
 
     @Test
@@ -53,14 +54,9 @@ public class IdentificationTest extends DatabaseTestCase {
 	assertThat(identifications.get(0), equalTo("CB_342"));
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.UDS;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

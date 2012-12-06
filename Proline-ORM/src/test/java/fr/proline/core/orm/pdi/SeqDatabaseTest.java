@@ -12,19 +12,19 @@ import org.junit.Test;
 import fr.proline.core.orm.pdi.repository.PdiSeqDatabaseRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class SeqDatabaseTest extends DatabaseTestCase {
+
+    @Override
+    public Database getDatabase() {
+	return Database.PDI;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	loadDataSet("/fr/proline/core/orm/pdi/Proteins_Dataset.xml");
-    }
 
-    @After
-    public void tearDown() {
-	super.tearDown();
+	loadDataSet("/fr/proline/core/orm/pdi/Proteins_Dataset.xml");
     }
 
     @Test
@@ -51,12 +51,9 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	assertThat(seqDB.getSequenceCount(), is(4));
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.PDI;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_PDI_SCRIPT_LOCATION;
-    }
 }

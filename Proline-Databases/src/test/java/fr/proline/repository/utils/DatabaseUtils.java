@@ -35,32 +35,7 @@ public final class DatabaseUtils {
      */
     public static final String DEFAULT_DATABASE_PROPERTIES_FILENAME = "database.properties";
 
-    /**
-     * Location for H2 Databases for each schema.
-     */
-    public static final String H2_DATABASE_UDS_SCRIPT_LOCATION = "dbscripts/uds/h2";
-    public static final String H2_DATABASE_LCMS_SCRIPT_LOCATION = "dbscripts/lcms/h2";
-    public static final String H2_DATABASE_PDI_SCRIPT_LOCATION = "dbscripts/pdi/h2";
-    public static final String H2_DATABASE_MSI_SCRIPT_LOCATION = "dbscripts/msi/h2";
-    public static final String H2_DATABASE_PS_SCRIPT_LOCATION = "dbscripts/ps/h2";
-
-    /**
-     * Location for Postgresql Databases for each schema.
-     */
-    public static final String POSTGRESQL_DATABASE_UDS_SCRIPT_LOCATION = "dbscripts/uds/postgresql";
-    public static final String POSTGRESQL_DATABASE_LCMS_SCRIPT_LOCATION = "dbscripts/lcms/postgresql";
-    public static final String POSTGRESQL_DATABASE_PDI_SCRIPT_LOCATION = "dbscripts/pdi/postgresql";
-    public static final String POSTGRESQL_DATABASE_MSI_SCRIPT_LOCATION = "dbscripts/msi/postgresql";
-    public static final String POSTGRESQL_DATABASE_PS_SCRIPT_LOCATION = "dbscripts/ps/postgresql";
-
-    /**
-     * Location for SQLite Databases for each schema.
-     */
-    public static final String SQLITE_DATABASE_UDS_SCRIPT_LOCATION = "dbscripts/uds/sqlite";
-    public static final String SQLITE_DATABASE_LCMS_SCRIPT_LOCATION = "dbscripts/lcms/sqlite";
-    public static final String SQLITE_DATABASE_PDI_SCRIPT_LOCATION = "dbscripts/pdi/sqlite";
-    public static final String SQLITE_DATABASE_MSI_SCRIPT_LOCATION = "dbscripts/msi/sqlite";
-    public static final String SQLITE_DATABASE_PS_SCRIPT_LOCATION = "dbscripts/ps/sqlite";
+    public static final String MIGRATION_SCRIPTS_DIR = "dbscripts/";
 
     /**
      * Script name for each database type TODO: remove these definitions when Flyway supports SQLite.
@@ -75,27 +50,27 @@ public final class DatabaseUtils {
     private DatabaseUtils() {
     }
 
-    public static void initDatabase(final DatabaseTestConnector connector, final String scriptDirectory)
-	    throws Exception {
+    public static void initDatabase(final DatabaseTestConnector connector,
+	    final String migrationScriptsLocation) throws Exception {
 
 	if (connector == null) {
 	    throw new IllegalArgumentException("Connector is null");
 	}
 
-	if (StringUtils.isEmpty(scriptDirectory)) {
-	    throw new IllegalArgumentException("Invalid scriptDirectory");
+	if (StringUtils.isEmpty(migrationScriptsLocation)) {
+	    throw new IllegalArgumentException("Invalid migrationScriptsLocation");
 	}
 
-	LOG.debug("ScriptDirectory [{}]", scriptDirectory);
+	LOG.debug("MigrationScriptsLocation [{}]", migrationScriptsLocation);
 
 	if (connector.getDriverType() == DriverType.SQLITE) {
-	    final String scriptName = _getDatabaseScriptName(scriptDirectory);
+	    final String scriptName = _getDatabaseScriptName(migrationScriptsLocation);
 
 	    if (scriptName == null) {
 		throw new IllegalArgumentException("Script directory doesn't match to any supported database");
 	    }
 
-	    final String scriptPath = scriptDirectory + "/" + scriptName;
+	    final String scriptPath = migrationScriptsLocation + '/' + scriptName;
 	    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
 	    InputStream is = cl.getResourceAsStream(scriptPath);
@@ -116,7 +91,7 @@ public final class DatabaseUtils {
 
 	} else {
 	    final Flyway flyway = new Flyway();
-	    flyway.setLocations(scriptDirectory);
+	    flyway.setLocations(migrationScriptsLocation);
 	    flyway.setDataSource(connector.getDataSource());
 
 	    final int migrationsCount = flyway.migrate();
@@ -173,7 +148,7 @@ public final class DatabaseUtils {
 	    final DatabaseTestConnector connector = new DatabaseTestConnector(Database.UDS,
 		    DEFAULT_DATABASE_PROPERTIES_FILENAME);
 
-	    initDatabase(connector, H2_DATABASE_UDS_SCRIPT_LOCATION);
+	    initDatabase(connector, MIGRATION_SCRIPTS_DIR + "/uds/h2/");
 	    writeDataSetDTD(connector, "uds-dataset.dtd");
 	    connector.close();
 	} catch (Exception ex) {

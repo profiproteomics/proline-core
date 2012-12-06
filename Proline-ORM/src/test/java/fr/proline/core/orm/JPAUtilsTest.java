@@ -1,6 +1,6 @@
 package fr.proline.core.orm;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -23,7 +23,6 @@ import fr.proline.repository.Database;
 import fr.proline.repository.util.JDBCReturningWork;
 import fr.proline.repository.util.JPAUtils;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class JPAUtilsTest extends DatabaseTestCase {
 
@@ -31,24 +30,14 @@ public class JPAUtilsTest extends DatabaseTestCase {
 
     private static final AtomicBoolean STATISTICS_ENABLED = new AtomicBoolean(false);
 
-    @Before
-    public void setUp() throws Exception {
-	initDatabase();
-    }
-
-    @After
-    public void tearDown() {
-	super.tearDown();
-    }
-
     @Override
     public Database getDatabase() {
 	return Database.UDS;
     }
 
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
+    @Before
+    public void setUp() throws Exception {
+	initDatabase();
     }
 
     @Test
@@ -132,6 +121,11 @@ public class JPAUtilsTest extends DatabaseTestCase {
 
 	}
 
+    }
+
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

@@ -17,22 +17,23 @@ import org.junit.Test;
 import fr.proline.core.orm.ps.repository.PsPtmRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class PtmTest extends DatabaseTestCase {
 
-    PsPtmRepository ptmRepo;
+    private PsPtmRepository ptmRepo;
+
+    @Override
+    public Database getDatabase() {
+	return Database.PS;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
-	ptmRepo = new PsPtmRepository(getEntityManager());
-    }
 
-    @After
-    public void tearDown() {
-	super.tearDown();
+	loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
+
+	ptmRepo = new PsPtmRepository(getEntityManager());
     }
 
     @Test
@@ -70,14 +71,9 @@ public class PtmTest extends DatabaseTestCase {
 	assertNotNull("Chemical derivative PtmClassification", classification);
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.PS;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

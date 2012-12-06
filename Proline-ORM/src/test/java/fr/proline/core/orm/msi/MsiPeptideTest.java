@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import fr.proline.core.orm.msi.repository.MsiPeptideRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class MsiPeptideTest extends DatabaseTestCase {
 
@@ -25,14 +24,14 @@ public class MsiPeptideTest extends DatabaseTestCase {
 
     private static final int PEPTIDE_COUNT = 10;
 
+    @Override
+    public Database getDatabase() {
+	return Database.MSI;
+    }
+
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-    }
-
-    @After
-    public void tearDown() {
-	super.tearDown();
     }
 
     @Test
@@ -123,14 +122,9 @@ public class MsiPeptideTest extends DatabaseTestCase {
 	assertTrue("Retrieved Msi Peptides count", retrievedPeptides > 0);
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.MSI;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

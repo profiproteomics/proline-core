@@ -14,26 +14,22 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class SearchSettingsTest extends DatabaseTestCase {
 
-    PeptideMatchRepository pmRepo;
+    @Override
+    public Database getDatabase() {
+	return Database.MSI;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
+
 	loadCompositeDataSet(new String[] { "/fr/proline/core/orm/msi/Resultset_Dataset.xml",
 		"/fr/proline/core/orm/msi/MsiSearch_Dataset.xml" });
-	pmRepo = new PeptideMatchRepository(getEntityManager());
-    }
-
-    @After
-    public void tearDown() {
-	super.tearDown();
     }
 
     @Test
@@ -86,14 +82,9 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	assertThat(readedMap.getSeqDatabase().getName(), is("Swissprot"));
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.MSI;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

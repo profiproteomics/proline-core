@@ -76,7 +76,6 @@ public class MsiPeptideRepositoryTest {
 
 	    final JDBCWork jdbcWork = new JDBCWork() {
 
-		@Override
 		public void execute(final Connection connection) throws SQLException {
 		    LOG.debug("Post-init EntityManager Connection : {}  {}", connection,
 			    DatabaseTestCase.getTables(connection));
@@ -162,26 +161,6 @@ public class MsiPeptideRepositoryTest {
 	return result;
     }
 
-    @After
-    public void tearDown() {
-
-	if (m_keepAliveEntityManager != null) {
-	    LOG.debug("Closing keep-alive EntityManager");
-
-	    try {
-		m_keepAliveEntityManager.close();
-	    } catch (Exception exClose) {
-		LOG.error("Error closing keep-alive EntityManager", exClose);
-	    }
-
-	}
-
-	if (m_connector != null) {
-	    m_connector.close();
-	}
-
-    }
-
     @Test
     public void testFindThousandsPeptidesForIds() {
 	LOG.debug("START testFindThousandsPeptidesForIds");
@@ -209,6 +188,26 @@ public class MsiPeptideRepositoryTest {
 		}
 	    }
 
+	}
+
+    }
+
+    @After
+    public void tearDown() {
+
+	if (m_keepAliveEntityManager != null) {
+	    LOG.debug("Closing keep-alive EntityManager");
+
+	    try {
+		m_keepAliveEntityManager.close();
+	    } catch (Exception exClose) {
+		LOG.error("Error closing keep-alive EntityManager", exClose);
+	    }
+
+	}
+
+	if (m_connector != null) {
+	    m_connector.close();
 	}
 
     }

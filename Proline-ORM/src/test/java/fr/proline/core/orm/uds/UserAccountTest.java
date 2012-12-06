@@ -16,22 +16,21 @@ import org.junit.Test;
 import fr.proline.core.orm.uds.repository.ProjectRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class UserAccountTest extends DatabaseTestCase {
 
     private ProjectRepository projectRepo;
+
+    @Override
+    public Database getDatabase() {
+	return Database.UDS;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
 	loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
 	projectRepo = new ProjectRepository(getEntityManager());
-    }
-
-    @After
-    public void tearDown() {
-	super.tearDown();
     }
 
     @Test
@@ -66,14 +65,9 @@ public class UserAccountTest extends DatabaseTestCase {
 	assertTrue(users.get(1) == user);
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.UDS;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

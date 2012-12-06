@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class PeptideTest extends DatabaseTestCase {
 
@@ -26,24 +25,26 @@ public class PeptideTest extends DatabaseTestCase {
 
     private static final int PEPTIDE_COUNT = 10;
 
-    PsPeptideRepository pepRepo;
+    private PsPeptideRepository pepRepo;
+
+    @Override
+    public Database getDatabase() {
+	return Database.PS;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
-	pepRepo = new PsPeptideRepository(getEntityManager());
-    }
 
-    @After
-    public void tearDown() {
-	super.tearDown();
+	loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
+
+	pepRepo = new PsPeptideRepository(getEntityManager());
     }
 
     @Test
     public void readPeptidesBySeq() {
-
 	List<Peptide> peps = pepRepo.findPeptidesForSequence(SEQ_TO_FOUND);
+
 	assertNotNull(peps);
 	assertEquals(2, peps.size());
 	boolean foundPepWOPtm = false;
@@ -84,14 +85,9 @@ public class PeptideTest extends DatabaseTestCase {
 	Assert.assertTrue("Retrieved Msi Peptides count", retrievedPeptides > 0);
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.PS;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

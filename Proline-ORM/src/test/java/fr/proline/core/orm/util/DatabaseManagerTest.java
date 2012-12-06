@@ -17,7 +17,6 @@ import fr.proline.core.orm.uds.UserAccount;
 import fr.proline.repository.ConnectionMode;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class DatabaseManagerTest extends DatabaseTestCase {
 
@@ -28,11 +27,6 @@ public class DatabaseManagerTest extends DatabaseTestCase {
     @Override
     public Database getDatabase() {
 	return Database.UDS;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
     }
 
     @Before
@@ -157,15 +151,15 @@ public class DatabaseManagerTest extends DatabaseTestCase {
     @After
     @Override
     public void tearDown() {
-	final DatabaseManager dbManager = DatabaseManager.getInstance();
+	/*
+	 * Special tearDown here : first close the DatabaseTestConnector (for UDS Db) then close all created
+	 * in-memory test Databases (PDI, PS, MSI, LCMS Dbs...) Note : UDS Db is closed twice (by tearDown and
+	 * DatabaseManager.closeAll), this cause a harmless IllegalStateException "Connection pool has been
+	 * disposed".
+	 */
+	super.tearDown();
 
-	if (dbManager.isInitialized()) {
-	    /* Special tearDown here for all created in-memory test Databases */
-	    dbManager.closeAll();
-	} else {
-	    super.tearDown();
-	}
-
+	DatabaseManager.getInstance().closeAll();
     }
 
 }

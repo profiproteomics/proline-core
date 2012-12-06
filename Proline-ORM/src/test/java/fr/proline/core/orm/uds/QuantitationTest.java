@@ -11,19 +11,19 @@ import org.junit.Test;
 
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class QuantitationTest extends DatabaseTestCase {
+
+    @Override
+    public Database getDatabase() {
+	return Database.UDS;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	loadDataSet("/fr/proline/core/orm/uds/Quanti_15N_Dataset.xml");
-    }
 
-    @After
-    public void tearDown() {
-	super.tearDown();
+	loadDataSet("/fr/proline/core/orm/uds/Quanti_15N_Dataset.xml");
     }
 
     @Test
@@ -36,14 +36,9 @@ public class QuantitationTest extends DatabaseTestCase {
 	assertThat(quanti.getMethod().getName(), equalTo("15N"));
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.UDS;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_UDS_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

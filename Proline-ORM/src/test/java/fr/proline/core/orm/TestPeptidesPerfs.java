@@ -16,7 +16,6 @@ import fr.proline.core.orm.ps.Peptide;
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 import fr.proline.util.StringUtils;
 
 @Ignore
@@ -368,10 +367,6 @@ class MSIDatabaseTestCase extends DatabaseTestCase {
 	return Database.MSI;
     }
 
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION;
-    }
-
     public String getPropertiesFilename() {
 	return "db_msi.properties";
     }
@@ -383,10 +378,6 @@ class PSDatabaseTestCase extends DatabaseTestCase {
     @Override
     public Database getDatabase() {
 	return Database.PS;
-    }
-
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_PS_SCRIPT_LOCATION;
     }
 
     public String getPropertiesFilename() {

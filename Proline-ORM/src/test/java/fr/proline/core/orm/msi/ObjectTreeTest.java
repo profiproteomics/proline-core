@@ -1,7 +1,7 @@
 package fr.proline.core.orm.msi;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
 
@@ -10,25 +10,21 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class ObjectTreeTest extends DatabaseTestCase {
 
-    PeptideMatchRepository pmRepo;
+    @Override
+    public Database getDatabase() {
+	return Database.MSI;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	loadDataSet("/fr/proline/core/orm/msi/Resultset_Dataset.xml");
-	pmRepo = new PeptideMatchRepository(getEntityManager());
-    }
 
-    @After
-    public void tearDown() {
-	super.tearDown();
+	loadDataSet("/fr/proline/core/orm/msi/Resultset_Dataset.xml");
     }
 
     @Test
@@ -39,7 +35,6 @@ public class ObjectTreeTest extends DatabaseTestCase {
 	assertThat(rs.getObjectsMap().get("grouping_history"), CoreMatchers.notNullValue());
 	assertThat(rs.getObjectsMap().get("filters_history"), is(1));
 	assertThat(rs.getObjectsMap().get("grouping_history"), is(2));
-
     }
 
     @Test
@@ -56,17 +51,11 @@ public class ObjectTreeTest extends DatabaseTestCase {
 	rs = em.find(ResultSet.class, 2);
 	assertThat(rs.getObjectsMap().size(), is(1));
 	assertThat(rs.getObjectsMap().get("filters_history"), is(1));
-
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.MSI;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }

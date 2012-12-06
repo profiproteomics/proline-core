@@ -1,5 +1,6 @@
 package fr.proline.repository.utils;
 
+import static fr.proline.repository.utils.DatabaseUtils.MIGRATION_SCRIPTS_DIR;
 import static fr.proline.util.StringUtils.LINE_SEPARATOR;
 
 import java.sql.Connection;
@@ -98,7 +99,13 @@ public abstract class DatabaseTestCase {
      * 
      * @return
      */
-    public abstract String getSQLScriptLocation();
+    public String getMigrationScriptsLocation() {
+	final StringBuilder buffer = new StringBuilder(MIGRATION_SCRIPTS_DIR);
+	buffer.append(getDatabase().name().toLowerCase()).append('/');
+	buffer.append(getConnector().getDriverType().name().toLowerCase()).append('/');
+
+	return buffer.toString();
+    }
 
     public final DatabaseTestConnector getConnector() {
 
@@ -146,9 +153,7 @@ public abstract class DatabaseTestCase {
 	    }
 
 	    if (m_currentEntityManager == null) {
-		final DatabaseTestConnector connector = getConnector();
-
-		final EntityManagerFactory emf = connector.getEntityManagerFactory();
+		final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
 		m_currentEntityManager = emf.createEntityManager();
 	    }
@@ -159,9 +164,7 @@ public abstract class DatabaseTestCase {
     }
 
     public void initDatabase() throws Exception, ClassNotFoundException {
-	final DatabaseTestConnector connector = getConnector();
-
-	DatabaseUtils.initDatabase(connector, getSQLScriptLocation());
+	DatabaseUtils.initDatabase(getConnector(), getMigrationScriptsLocation());
 
 	if (LOG.isDebugEnabled()) {
 	    /* Print Database Tables */

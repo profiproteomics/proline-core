@@ -19,23 +19,23 @@ import org.junit.Test;
 import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
-import fr.proline.repository.utils.DatabaseUtils;
 
 public class ResultsetTest extends DatabaseTestCase {
 
-    PeptideMatchRepository pmRepo;
+    private PeptideMatchRepository pmRepo;
+
+    @Override
+    public Database getDatabase() {
+	return Database.MSI;
+    }
 
     @Before
     public void setUp() throws Exception {
 	initDatabase();
 
 	loadDataSet("/fr/proline/core/orm/msi/Resultset_Dataset.xml");
-	pmRepo = new PeptideMatchRepository(getEntityManager());
-    }
 
-    @After
-    public void tearDown() {
-	super.tearDown();
+	pmRepo = new PeptideMatchRepository(getEntityManager());
     }
 
     @Test
@@ -131,14 +131,9 @@ public class ResultsetTest extends DatabaseTestCase {
 	assertThat(matches, hasItems(match));
     }
 
-    @Override
-    public Database getDatabase() {
-	return Database.MSI;
-    }
-
-    @Override
-    public String getSQLScriptLocation() {
-	return DatabaseUtils.H2_DATABASE_MSI_SCRIPT_LOCATION;
+    @After
+    public void tearDown() {
+	super.tearDown();
     }
 
 }
