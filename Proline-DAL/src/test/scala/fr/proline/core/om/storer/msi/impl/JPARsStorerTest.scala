@@ -13,11 +13,11 @@ import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.util.JPAUtils
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
 import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.repository.utils.DatabaseUtils
-import fr.proline.repository.ProlineRepository.DriverType
+import fr.proline.repository.DriverType
 import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION
 import fr.proline.util.MathUtils.EPSILON_LOW_PRECISION
 import fr.proline.util.StringUtils
@@ -46,8 +46,8 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
     logger.info("Dbs succesfully initialized")
 
-    storer = new JPARsStorer(dbMgntTest, msiDBTestCase.getConnector)
-    stContext = new StorerContext(dbMgntTest, dbMgntTest.getCurrentMsiConnector())
+    storer = new JPARsStorer(dbMgntTest.dbManager, msiDBTestCase.getConnector)
+    stContext = new StorerContext(dbMgntTest.dbManager, dbMgntTest.getCurrentMsiConnector())
   }
 
   @After

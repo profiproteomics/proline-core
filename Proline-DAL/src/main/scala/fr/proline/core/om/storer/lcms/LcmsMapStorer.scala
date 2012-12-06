@@ -1,7 +1,8 @@
 package fr.proline.core.om.storer.lcms
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.impl._
+import fr.proline.repository.DriverType
 
 trait IRunMapStorer {
   
@@ -37,9 +38,10 @@ trait IProcessedMapStorer {
 
 /** A factory object for implementations of the IProcessedMapStorer trait */
 object ProcessedMapStorer {
-  def apply( lcmsDb: LcmsDb ): IProcessedMapStorer = { lcmsDb.config.driver match {
-    case "org.postgresql.Driver" => new GenericProcessedMapStorer(lcmsDb)
-    case "org.sqlite.JDBC" => new SQLiteProcessedMapStorer(lcmsDb)
+  
+  def apply( lcmsDb: SQLQueryHelper ): IProcessedMapStorer = { lcmsDb.driverType match {
+    case DriverType.POSTGRESQL => new GenericProcessedMapStorer(lcmsDb)
+    case DriverType.SQLITE => new SQLiteProcessedMapStorer(lcmsDb)
     case _ => new GenericProcessedMapStorer(lcmsDb)
     }
   }
@@ -55,9 +57,9 @@ trait IMasterMapStorer {
 
 /** A factory object for implementations of the IMasterMapStorer trait */
 object MasterMapStorer {
-  def apply( lcmsDb: LcmsDb ): IMasterMapStorer = { lcmsDb.config.driver match {
-    case "org.postgresql.JDBC" => new GenericMasterMapStorer(lcmsDb)
-    case "org.sqlite.JDBC" => new SQLiteMasterMapStorer(lcmsDb)
+  def apply( lcmsDb: SQLQueryHelper ): IMasterMapStorer = { lcmsDb.driverType match {
+    case DriverType.POSTGRESQL => new GenericMasterMapStorer(lcmsDb)
+    case DriverType.SQLITE => new SQLiteMasterMapStorer(lcmsDb)
     case _ => new GenericMasterMapStorer(lcmsDb)
     }
   }

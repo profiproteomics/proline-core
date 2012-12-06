@@ -14,12 +14,15 @@ import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
-import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.util.JPAUtils
 import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.utils.DatabaseTestCase
+import fr.proline.repository.Database
 
 @Test
-class ORMPeptideProviderTest extends DatabaseTestCase  {
+class ORMPeptideProviderTest extends DatabaseTestCase {
+  
+  override def getDatabase() = Database.PS
 
   var ormPepProvider: ORMPeptideProvider = null
   private val SEQ_TO_FOUND : String = "LTGMAFR"
@@ -33,9 +36,9 @@ class ORMPeptideProviderTest extends DatabaseTestCase  {
   @throws(classOf[Exception])
   def setUp()  = {
 	  initDatabase()
-	  initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
+	  //initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
 	  loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-	  ormPepProvider = new ORMPeptideProvider(em)
+	  ormPepProvider = new ORMPeptideProvider(this.getEntityManager)
   }
   
   @After 

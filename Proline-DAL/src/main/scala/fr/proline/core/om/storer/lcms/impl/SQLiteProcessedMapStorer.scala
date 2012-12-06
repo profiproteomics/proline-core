@@ -1,9 +1,9 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.IProcessedMapStorer
 
-class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
+class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapStorer {
   
   import scala.collection.mutable.ArrayBuffer
   import net.noerd.prequel.ReusableStatement
@@ -64,9 +64,9 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
       statement.executeWith(  newMapId,
                               processedMap.number,
                               processedMap.normalizationFactor,
-                              BoolToSQLStr(processedMap.isMaster,lcmsDb.boolStrAsInt),
-                              BoolToSQLStr(processedMap.isAlnReference,lcmsDb.boolStrAsInt),
-                              BoolToSQLStr(processedMap.isLocked,lcmsDb.boolStrAsInt),
+                              BoolToSQLStr(processedMap.isMaster,false),
+                              BoolToSQLStr(processedMap.isAlnReference,false),
+                              BoolToSQLStr(processedMap.isLocked,false),
                               processedMap.mapSetId
                             )
     }
@@ -126,7 +126,7 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
     val runMapStorer = new SQLiteRunMapStorer( lcmsDb )
     
     // Retrieve or create database connection and transaction
-    val lcmsDbConn = lcmsDb.getOrCreateConnection()
+    val lcmsDbConn = lcmsDb.connection
     val lcmsDbTx = lcmsDb.getOrCreateTransaction()
     
     // Prepare feature insert statement
@@ -180,7 +180,7 @@ class SQLiteProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
     val normalizedIntensity = if( ft.normalizedIntensity.isNaN ) None else Some(ft.normalizedIntensity)
     
     statement.executeWith( ft.relations.mapId, ft.id, calibratedMoz, normalizedIntensity, ft.correctedElutionTime,                    
-                           BoolToSQLStr(ft.isClusterized,lcmsDb.boolStrAsInt), ft.selectionLevel, Some(null) )
+                           BoolToSQLStr(ft.isClusterized,false), ft.selectionLevel, Some(null) )
                            
   }
   

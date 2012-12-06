@@ -1,23 +1,24 @@
 package fr.proline.core.om.storer.msi.impl
 
 import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.{MsiDb, DatabaseManagement}
+import fr.proline.core.dal.{SQLQueryHelper}
 import fr.proline.core.om.model.msi.{ResultSet, Peaklist, MsQuery, InstrumentConfig, IPeaklistContainer}
-import fr.proline.core.om.storer.msi.{IRsStorer, IPeaklistWriter}
-import fr.proline.repository.DatabaseConnector
+import fr.proline.core.om.storer.msi.{IRsStorer, PeaklistWriter, IPeaklistWriter}
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
 import net.noerd.prequel.SQLFormatterImplicits._
 import net.noerd.prequel.ReusableStatement
 import javax.transaction.Transaction
 import javax.persistence.EntityTransaction
 
-abstract class AbstractRsStorer(val dbManagement : DatabaseManagement, val msiDbConnector : DatabaseConnector, val plWriter : IPeaklistWriter = null) extends IRsStorer {
+abstract class AbstractRsStorer(val dbManagement: DatabaseManager, val msiDbConnector: IDatabaseConnector, val plWriter: IPeaklistWriter = null) extends IRsStorer {
   
   // IPeaklistWriter to use to store PeakList and Spectrum 
-  val localPlWriter = if (plWriter == null) IPeaklistWriter.apply(msiDbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME))else plWriter
+  val localPlWriter = if (plWriter == null) PeaklistWriter( msiDbConnector.getDriverType )else plWriter
   
   //Other constructor
-  def this (dbManagement : DatabaseManagement, projectID : Int){
-    this(dbManagement, dbManagement.getMSIDatabaseConnector(projectID,true))
+  def this (dbManagement : DatabaseManager, projectID : Int){
+    this(dbManagement, dbManagement.getMsiDbConnector(projectID) )
   }
   
   type MsiResultSet = fr.proline.core.orm.msi.ResultSet

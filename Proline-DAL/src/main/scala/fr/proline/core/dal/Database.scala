@@ -1,83 +1,42 @@
 package fr.proline.core.dal
 
+import java.sql.Connection
+import java.sql.DriverManager
 import net.noerd.prequel._
 import net.noerd.prequel.Nullable
 import net.noerd.prequel.IntFormattable
 import net.noerd.prequel.DoubleFormattable
 import net.noerd.prequel.StringFormattable
 import net.noerd.prequel.SQLFormatter
-import org.apache.commons.lang3.StringUtils.isEmpty
-import fr.proline.repository.DatabaseConnector
+import fr.proline.util.StringUtils.isEmpty
+import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.DriverType
 
-trait DatabaseConfigBuilder {
+trait SQLQueryHelper {
   
-  def buildConfigFromDatabaseConnector(dbConnector: DatabaseConnector): DatabaseConfig = {
-    
-    val driverType = dbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME)
-    DatabaseConfig (    
-       driver = driverType,
-       jdbcURL = dbConnector.getProperty(DatabaseConnector.PROPERTY_URL),
-       username =  dbConnector.getProperty(DatabaseConnector.PROPERTY_USERNAME), 
-       password =  dbConnector.getProperty(DatabaseConnector.PROPERTY_PASSWORD),
-       isolationLevel = this.getTxIsolationLevel( driverType ),
-       sqlFormatter = SQLFormatter.HSQLDBSQLFormatter
-       )
-  }
+  // Required fields
+  val dbConnector: IDatabaseConnector  
+  val maxVariableNumber: Int = 999 // TODO: retrieve from elsewhere
   
-  protected def getTxIsolationLevel( driverName: String ): TransactionIsolation = {   
-    driverName match {
-      case "org.sqlite.JDBC" => IsolationLevels.Serializable
+  // Non required fields
+  val driverType = dbConnector.getDriverType  
+  lazy val txIsolationLevel: TransactionIsolation = this.getTxIsolationLevel
+  var sqlFormatter = SQLFormatter.HSQLDBSQLFormatter
+  
+  private var _transaction: Transaction = null
+  
+  // TODO: use connection pooling feature ?  
+  lazy val connection: java.sql.Connection = dbConnector.getDataSource.getConnection
+  
+  protected def getTxIsolationLevel(): TransactionIsolation = {   
+    this.driverType match {
+      case DriverType.SQLITE => IsolationLevels.Serializable
       case _ => IsolationLevels.ReadCommitted
     }
   }
   
-}
-
-trait Database {
-  
-  val config: DatabaseConfig
-  val boolStrAsInt: Boolean // TODO: set to false when DB model is updated
-  val maxVariableNumber: Int
-  //val hibernateDialect: String = ""
-  
-  private var transaction: Transaction = null
-  
-  // TODO: use connection pooling feature
-  import java.sql.Connection
-  import java.sql.DriverManager
-  
-  var connection: java.sql.Connection = null
-  if( transaction != null ) connection = transaction.connection
-  
-  def newConnection(): Unit = {
-    
-    val driver = config.driver
-    
-    // Load the driver
-    Class.forName( config.driver )
-    
-    // Open connection
-    if( isEmpty(config.username) ) { this.connection = DriverManager.getConnection( config.jdbcURL ) }
-    else { this.connection = DriverManager.getConnection( config.jdbcURL, config.username, config.password ) }
-      
-    this.onNewConnection()
-    
-    ()
-  }
-  
-    
-  def onNewConnection() {}
-  
-  def getOrCreateConnection(): Connection = {
-    if( this.connection == null ) newConnection()
-    this.connection
-  }
-  
   def closeConnection(): Unit = {
-    if( this.connection != null ) {
-      this.connection.close()
-      this.connection = null
-    }
+    this.connection.close()
   }
   
   def newTransaction(): Unit = {
@@ -92,67 +51,54 @@ trait Database {
      */
     
     // Create or retrieve the database connection
-    val conn = getOrCreateConnection
+    val conn = this.connection
     
     // Change the connection config to be ready for a new transaction
     conn.setAutoCommit(false)
-    conn.setTransactionIsolation( config.isolationLevel.id )
+    conn.setTransactionIsolation( this.txIsolationLevel.id )
     
     // Create new transaction
-    this.transaction = Transaction( conn, config.sqlFormatter )
+    this._transaction = Transaction( conn, this.sqlFormatter )
     
     ()
   }
   
   def getOrCreateTransaction(): Transaction = {
-    if( this.transaction == null ) newTransaction()
-    this.transaction
+    if( this._transaction == null ) newTransaction()
+    this._transaction
   }
   
   def rollbackTransaction(): Unit = { 
-    this.transaction.rollback()
-    this.transaction = null
+    this._transaction.rollback()
+    this._transaction = null
   }
   
   def commitTransaction(): Unit = {
-    transaction.commit()
-    transaction = null
+    _transaction.commit()
+    _transaction = null
   }
   
-  def isInTransaction(): Boolean = transaction != null
-  
-  /*def getConnector() = {
-    import fr.proline.repository.DatabaseConnector
-    val connProperties = new java.util.HashMap[String,String]
-    connProperties.put(DatabaseConnector.PROPERTY_DRIVERCLASSNAME, this.config.driver )
-    connProperties.put(DatabaseConnector.PROPERTY_URL, this.config.jdbcURL )
-    connProperties.put(DatabaseConnector.PROPERTY_USERNAME, this.config.username )
-    connProperties.put(DatabaseConnector.PROPERTY_PASSWORD, this.config.password )
-    connProperties.put(DatabaseConnector.PROPERTY_DIALECT, this.hibernateDialect )
-    
-    new DatabaseConnector( connProperties )
-  }*/
+  def isInTransaction(): Boolean = _transaction != null
   
   /** A workaround for date to string conversion (will be removed obsolete when prequel is fixed) */
-  def stringifyDate( date: java.util.Date ): String = {
-    
+  def stringifyDate( date: java.util.Date ): String = {    
     val dt = new org.joda.time.DateTime( date )
-    this.config.sqlFormatter.timeStampFormatter.print( dt )
-    
+    this.sqlFormatter.timeStampFormatter.print( dt )    
   }
   
-  // TODO: move to SQL utils
+  // TODO: move to SQL utils ?
   def extractGeneratedInt( statement: java.sql.Statement ): Int = {
     
     val rsWithGenKeys = statement.getGeneratedKeys()
     
-    this.config.driver match {
-      case "org.sqlite.JDBC" => rsWithGenKeys.getInt("last_insert_rowid()")
+    this.driverType match {
+      case DriverType.SQLITE => rsWithGenKeys.getInt("last_insert_rowid()")
       case _ => if( rsWithGenKeys.next() ) rsWithGenKeys.getInt(1) else 0
     }
     
   }
   
+  // TODO: move to SQL utils ?
   def selectRecordsAsMaps( queryString: String ): Array[Map[String,Any]] = {
     
     var colNames: Seq[String] = null

@@ -7,13 +7,13 @@ import net.noerd.prequel.SQLFormatterImplicits._
 
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.util.sql.BoolToSQLStr
-import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
 
-private[msi] class SQLiteRsWriter( val msiDb1: MsiDb // Main DB connection                        
+private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connection                        
                                  ) extends IRsWriter {
 
   def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ): Map[String,Int] = {

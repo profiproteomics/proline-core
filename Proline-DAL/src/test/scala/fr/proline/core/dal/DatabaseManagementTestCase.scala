@@ -1,16 +1,23 @@
 package fr.proline.core.dal
 
+
 import com.weiglewilczek.slf4s.Logging
+import fr.proline.repository.IDatabaseConnector
+import fr.proline.core.orm.util.DatabaseManager
 
-import fr.proline.repository.DatabaseConnector
+class DatabaseManagementTestCase(val udsDBConnector: IDatabaseConnector,/*
+                                 val testPdiDBConnector: IDatabaseConnector,
+                                 val testPsDBConnector: IDatabaseConnector, */
+                                 val msiDBConnector: IDatabaseConnector ) extends Logging {
 
-class DatabaseManagementTestCase(override val udsDBConnector : DatabaseConnector, val testPdiDBConnector: DatabaseConnector, val testPsDBConnector: DatabaseConnector,  val msiDBConnector: DatabaseConnector ) extends DatabaseManagement(udsDBConnector )  with Logging {
+  val dbManager = DatabaseManager.getInstance()
+  dbManager.initialize( udsDBConnector )
 
-   override lazy val pdiDBConnector: DatabaseConnector = testPdiDBConnector
+  //lazy val pdiDBConnector: IDatabaseConnector = testPdiDBConnector
    
-   override lazy val psDBConnector: DatabaseConnector = testPsDBConnector
+  //lazy val psDBConnector: IDatabaseConnector = testPsDBConnector
    
-   def getCurrentMsiConnector( ): DatabaseConnector = {
-     msiDBConnector
-   }
+  def getCurrentMsiConnector( ): IDatabaseConnector = {
+    msiDBConnector
+  }
 }

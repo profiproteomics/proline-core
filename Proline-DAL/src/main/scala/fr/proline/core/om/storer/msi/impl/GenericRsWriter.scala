@@ -1,5 +1,6 @@
 package fr.proline.core.om.storer.msi.impl
 
+/*
 import fr.proline.core.dal.MsiDb
 import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.model.msi._
@@ -23,4 +24,4 @@ private[msi] class GenericRsWriter( val msiDb1: MsiDb // Main DB connection
   
   def storeRsSequenceMatches( rs: ResultSet ): Int = 0
   
-}
+}*/

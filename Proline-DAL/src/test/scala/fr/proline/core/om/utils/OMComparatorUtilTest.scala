@@ -2,7 +2,7 @@ package fr.proline.core.om.utils
 
 import org.junit.Before
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.util.JPAUtils
 import org.junit.After
 import org.junit.Assert._
 import fr.proline.repository.utils.DatabaseUtils
@@ -13,14 +13,17 @@ import org.junit.Test
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.PtmNames
+import fr.proline.repository.Database
 
-class OMComparatorUtilTest extends DatabaseTestCase  {
+class OMComparatorUtilTest extends DatabaseTestCase {
+  
+  override def getDatabase() = Database.PS
   
   @Before
   @throws(classOf[Exception])
   def initialize() = {
      initDatabase();
-     initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
+     //initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
      loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");   
   }
   
@@ -36,7 +39,7 @@ class OMComparatorUtilTest extends DatabaseTestCase  {
    
    	@Test
 	def comparePepPtm() =  {
-		val pepPtm : PeptidePtm = em.find(classOf[PeptidePtm],1)
+		val pepPtm : PeptidePtm = this.getEntityManager.find(classOf[PeptidePtm],1)
 		
 		val ptmEvi = new PtmEvidence(ionType = IonTypes.Precursor,
 							composition= "Post-translational", 

@@ -120,7 +120,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
      if(peaklistId<0)
        throw new IllegalArgumentException("Peaklist (id <= 0) is not in repository ")     
          
-     val stmt = context.msiDB.getOrCreateConnection.createStatement()
+     val stmt = context.msiDB.connection.createStatement()
      
      // Retrieve generated protein match ids
      var idListBulder = new StringBuilder("(")
@@ -138,13 +138,13 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
 
   override def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext ): StorerContext = {
 
-    val bulkCopyManager = new CopyManager( context.msiDB.getOrCreateConnection().asInstanceOf[BaseConnection] )
+    val bulkCopyManager = new CopyManager( context.msiDB.connection.asInstanceOf[BaseConnection] )
     
     // Create TMP table
     val tmpSpectrumTableName = "tmp_spectrum_" + ( scala.math.random * 1000000 ).toInt
     logger.info( "creating temporary table '" + tmpSpectrumTableName + "'..." )
     
-    val stmt = context.msiDB.getOrCreateConnection.createStatement()
+    val stmt = context.msiDB.connection.createStatement()
     stmt.executeUpdate( "CREATE TEMP TABLE " + tmpSpectrumTableName + " (LIKE spectrum)" )
 
     // Bulk insert of spectra

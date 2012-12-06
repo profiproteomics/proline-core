@@ -1,18 +1,19 @@
 package fr.proline.core.om.provider.lcms.impl
 
+import java.util.HashMap
+import scala.collection.mutable.ArrayBuffer
+
+import fr.proline.core.om.model.lcms._
+import fr.proline.core.dal.helper.LcmsDbHelper
+import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.util.sql._
+
 trait IMapLoader {
   
-  import java.util.HashMap
-  import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.dal.LcmsDb  
-  import fr.proline.core.om.model.lcms._
-  import fr.proline.core.dal.helper.LcmsDbHelper
-  import fr.proline.util.sql._
-  
   /** If true then boolean will be stringified as integer (1|0), else as corresponding strings ("true"|"false") */
-  val lcmsDb: LcmsDb
+  val lcmsDb: SQLQueryHelper
   val lcmsDbTx = lcmsDb.getOrCreateTransaction
-  val boolStrAsInt = lcmsDb.boolStrAsInt
+  val boolStrAsInt = false //lcmsDb.boolStrAsInt
   
   val lcmsDbHelper = new LcmsDbHelper( lcmsDb )
   val featureScoringById = lcmsDbHelper.getFeatureScoringById()

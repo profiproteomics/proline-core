@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
+/*
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.dal.MsiDb
@@ -69,4 +70,4 @@ class ResultSetLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: Database
   
   
   
-}
+}*/

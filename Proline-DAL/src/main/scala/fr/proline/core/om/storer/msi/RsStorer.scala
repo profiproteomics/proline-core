@@ -1,12 +1,11 @@
 package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
-
-import fr.proline.core.dal.{MsiDb, DatabaseManagement}
+import fr.proline.core.dal.{MsiDbSQLHelper,SQLQueryHelper}
 import fr.proline.core.om.model.msi.{ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IPeaklistContainer}
 import fr.proline.core.om.storer.msi.impl.{StorerContext, SQLiteRsWriter, SQLRsStorer, PgRsWriter, JPARsStorer}
-import fr.proline.repository.DatabaseConnector
-
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
 
 trait IRsStorer extends Logging {
   
@@ -110,29 +109,26 @@ object RsStorer {
   
   //TODO : Define common algo for JPA & SQL! 
   
-  import fr.proline.core.om.storer.msi.impl.GenericRsWriter
+  //import fr.proline.core.om.storer.msi.impl.GenericRsWriter
   import fr.proline.core.om.storer.msi.impl.PgRsWriter
   import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
+  import fr.proline.repository.DriverType
 
-  def apply(dbMgmt: DatabaseManagement, msiDb: MsiDb ): IRsStorer = {
+  def apply(dbMgmt: DatabaseManager, msiDb: SQLQueryHelper ): IRsStorer = {
     
-    
-    msiDb.config.driver match {
-    	case "org.postgresql.Driver" => new SQLRsStorer( dbMgmt, new PgRsWriter( msiDb ), IPeaklistWriter.apply(msiDb.config.driver.toString) )
-    	case "org.sqlite.JDBC" => new SQLRsStorer( dbMgmt, new SQLiteRsWriter(msiDb ), IPeaklistWriter.apply(msiDb.config.driver.toString))
-      case _ => new JPARsStorer( dbMgmt, msiDb.dbConnector,IPeaklistWriter.apply(msiDb.config.driver.toString)) //Call JPARsStorer
+    msiDb.driverType match {
+      case DriverType.POSTGRESQL => {
+        // FIXME: create a secondary connection here (allows to insert new peptides outside of a transaction)
+        val msiDb2 = msiDb
+        new SQLRsStorer( dbMgmt, new PgRsWriter( msiDb, msiDb2 ), PeaklistWriter(msiDb.driverType) )
+      }
+      case DriverType.SQLITE => new SQLRsStorer( dbMgmt, new SQLiteRsWriter( msiDb ), PeaklistWriter(msiDb.driverType))
+      case _ => new JPARsStorer( dbMgmt, msiDb.dbConnector,PeaklistWriter(msiDb.driverType) ) //Call JPARsStorer
     }
   }
   
-  def apply(dbMgmt: DatabaseManagement, projectID: Int): IRsStorer = {
-    val msiDbConnector = dbMgmt.getMSIDatabaseConnector(projectID,false)
-    
-    val driverName = msiDbConnector.getProperty(DatabaseConnector.PROPERTY_DRIVERCLASSNAME) 
-    driverName match {
-    	case "org.postgresql.Driver" => new SQLRsStorer( dbMgmt, new PgRsWriter( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector))), IPeaklistWriter.apply(driverName) )
-    	case "org.sqlite.JDBC" => new SQLRsStorer( dbMgmt, new SQLiteRsWriter( new MsiDb(MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) ), IPeaklistWriter.apply(driverName))
-    	case _ => new JPARsStorer( dbMgmt, dbMgmt.getMSIDatabaseConnector(projectID, false), IPeaklistWriter.apply(driverName)) //Call JPARsStorer    
-    }
+  def apply(dbMgmt: DatabaseManager, projectID: Int): IRsStorer = {
+    this.apply( dbMgmt, new MsiDbSQLHelper( dbMgmt.getMsiDbConnector(projectID) ) )
   }
   
 }

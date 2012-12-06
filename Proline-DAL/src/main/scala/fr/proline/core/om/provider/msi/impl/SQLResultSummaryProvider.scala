@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-import fr.proline.core.dal.{MsiDb,PsDb,MsiDbResultSummaryTable}
+import fr.proline.core.dal.{SQLQueryHelper,MsiDbResultSummaryTable}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.ResultSet
@@ -10,7 +10,7 @@ import fr.proline.core.om.model.msi.ResultSummaryProperties
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.util.sql.SQLStrToBool
 
-class SQLResultSummaryProvider( val msiDb: MsiDb, val psDb: PsDb ) extends SQLResultSetLoader with IResultSummaryProvider {
+class SQLResultSummaryProvider( val msiDb: SQLQueryHelper, val psDb: SQLQueryHelper ) extends SQLResultSetLoader with IResultSummaryProvider {
   
   // Instantiate a MSIdb helper
   val msiDbHelper = new MsiDbHelper( msiDb )

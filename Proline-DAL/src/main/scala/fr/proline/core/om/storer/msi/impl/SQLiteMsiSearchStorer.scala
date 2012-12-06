@@ -6,14 +6,14 @@ import scala.collection.mutable.HashMap
 import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
 import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{MsiDbMsiSearchTable,MsiDbMsQueryTable,MsiDbSearchSettingsTable,MsiDbSeqDatabaseTable}
 import fr.proline.core.dal.{MsiDbPtmSpecificityTable,MsiDbUsedPtmTable}
 import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchStorer
 
-class SQLiteMsiSearchStorer( msiDb: MsiDb ) extends IMsiSearchStorer with Logging {
+class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer with Logging {
   
   def storeMsiSearch( msiSearch: MSISearch, context: StorerContext ): Int = {
     

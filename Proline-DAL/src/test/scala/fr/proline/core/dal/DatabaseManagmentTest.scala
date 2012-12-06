@@ -1,5 +1,6 @@
 package fr.proline.core.dal
 
+/*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -66,4 +67,4 @@ class DatabaseManagmentTest extends JUnitSuite  with Logging {
   }
 
   
-}
+}*/

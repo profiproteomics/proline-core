@@ -1,9 +1,9 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.IRunMapStorer
 
-class GenericRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
+class GenericRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
   
   import fr.proline.core.om.model.lcms.RunMap
   import fr.proline.core.om.model.lcms.LcmsMap

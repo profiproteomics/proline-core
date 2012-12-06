@@ -1,9 +1,9 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.IMasterMapStorer
 
-class GenericMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
+class GenericMasterMapStorer( lcmsDb: SQLQueryHelper ) extends IMasterMapStorer {
   
   import fr.proline.core.om.model.lcms.ProcessedMap
   import fr.proline.core.om.model.lcms.Feature

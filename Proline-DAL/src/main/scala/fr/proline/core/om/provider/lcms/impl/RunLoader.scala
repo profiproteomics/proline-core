@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 
-class RunLoader( val lcmsDb: LcmsDb )  {
+class RunLoader( val lcmsDb: SQLQueryHelper )  {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.util.sql._

@@ -1,7 +1,8 @@
 package fr.proline.core.dal
 
-import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.repository.DatabaseConnector
+/*
+import fr.proline.repository.util.JPAUtils
+import fr.proline.repository.IDatabaseConnector
 import fr.proline.repository.ProlineRepository
 import javax.persistence.EntityManagerFactory
 import javax.persistence.Persistence
@@ -11,18 +12,18 @@ import scala.collection.mutable.Map
 import scala.collection.JavaConversions
 import fr.proline.core.orm.uds.Project
 import javax.persistence.NoResultException
-import fr.proline.repository.ProlineRepository.DriverType
+import fr.proline.repository.DriverType
 import com.weiglewilczek.slf4s.Logging
 import scala.collection.mutable.HashMap
 
-class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Logging {
+class DatabaseManagement (val udsDBConnector : IDatabaseConnector ) extends Logging {
    
-	private val udsDriverClassName = udsDBConnector.getDriverType.getDriverClassName()
-	private val externalDbIdToDBConnector : Map[Int, DatabaseConnector] = new HashMap[Int, DatabaseConnector] 
+	//private val udsDriverClassName = udsDBConnector.getDriverType.getDriverClassName()
+	private val externalDbIdToDBConnector : Map[Int, IDatabaseConnector] = new HashMap[Int, DatabaseConnector] 
   
 	lazy val udsEMF : EntityManagerFactory  = {	
 			Persistence.createEntityManagerFactory(
-											JPAUtil.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.UDS),
+											JPAUtils.PersistenceUnitNames.getPersistenceUnitNameForDB(ProlineRepository.Databases.UDS),
 											udsDBConnector.getEntityManagerSettings
 		                                 )
 	}
@@ -149,4 +150,4 @@ class DatabaseManagement (val udsDBConnector : DatabaseConnector ) extends Loggi
 	  udsEMF.close
 	  udsDBConnector.closeAll
 	}
-}
+}*/

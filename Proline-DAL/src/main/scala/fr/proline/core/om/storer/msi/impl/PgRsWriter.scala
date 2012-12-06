@@ -4,14 +4,15 @@ import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.generate
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{MsiDbPeptideTable,MsiDbPeptideMatchTable,MsiDbPeptideMatchRelationTable,
                             MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.util.sql.{BoolToSQLStr,encodeRecordForPgCopy}
 
-private[msi] class PgRsWriter( override val msiDb1: MsiDb // Main DB connection                        
+private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB connection
+                               val msiDb2: SQLQueryHelper // Secondary DB connection
                              ) extends SQLiteRsWriter( msiDb1 ) {
   
   val bulkCopyManager = new CopyManager( msiDb1.connection.asInstanceOf[BaseConnection] )

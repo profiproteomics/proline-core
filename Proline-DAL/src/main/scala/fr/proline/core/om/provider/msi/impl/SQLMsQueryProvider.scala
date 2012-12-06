@@ -1,11 +1,11 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-import fr.proline.core.dal.{MsiDb,MsiDbMsQueryTable}
+import fr.proline.core.dal.{SQLQueryHelper,MsiDbMsQueryTable}
 import fr.proline.core.om.model.msi.{MsQuery,Ms1Query,Ms2Query,MsQueryProperties}
 import fr.proline.core.om.provider.msi.IMsQueryProvider
 
-class SQLMsQueryProvider( val msiDb: MsiDb ) extends IMsQueryProvider {
+class SQLMsQueryProvider( val msiDb: SQLQueryHelper ) extends IMsQueryProvider {
   
   import fr.proline.util.primitives.LongOrIntAsInt._
   import scala.collection.mutable.ArrayBuffer

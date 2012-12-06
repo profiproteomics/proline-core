@@ -1,15 +1,14 @@
 package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.SQLFormatterImplicits._
-import fr.proline.core.dal.{MsiDb,PsDb}
+import fr.proline.core.dal.{SQLQueryHelper}
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.model.msi.PtmSpecificity
 import fr.proline.core.om.provider.msi.IPTMProvider
 
-
-class SQLPTMProvider( val psDb: PsDb ) extends IPTMProvider {
+class SQLPTMProvider( val psDb: SQLQueryHelper ) extends IPTMProvider {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap

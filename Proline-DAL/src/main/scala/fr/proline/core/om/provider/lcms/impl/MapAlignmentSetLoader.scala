@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
   
-class MapAlignmentSetLoader( val lcmsDb: LcmsDb ) {
+class MapAlignmentSetLoader( val lcmsDb: SQLQueryHelper ) {
   
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer

@@ -1,14 +1,14 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-import fr.proline.core.dal.{MsiDb,PsDb,MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
+import fr.proline.core.dal.{SQLQueryHelper,MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.util.sql.SQLStrToBool
 import fr.proline.core.om.model.msi.{PeptideSet,ProteinSet}
 import fr.proline.core.om.provider.msi.{IPeptideSetProvider,IProteinSetProvider}
 
-class SQLProteinSetProvider( val msiDb: MsiDb,
-                             val psDb: PsDb,
+class SQLProteinSetProvider( val msiDb: SQLQueryHelper,
+                             val psDb: SQLQueryHelper,
                              val peptideSetProvider: Option[IPeptideSetProvider] = None ) {
   
   val ProtSetCols = MsiDbProteinSetTable.columns

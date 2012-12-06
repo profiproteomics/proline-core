@@ -1,8 +1,11 @@
 package fr.proline.core.dal
 
 import net.noerd.prequel._
+import fr.proline.repository.IDatabaseConnector
 
-object PdiDb extends DatabaseConfigBuilder {
+class PdiDbSQLHelper( val dbConnector: IDatabaseConnector ) extends SQLQueryHelper
+
+/*object PdiDb extends DatabaseConfigBuilder {
   
   def apply( projectId: Int ): PdiDb = {    
     val psDbConfig = this.getDefaultConfig
@@ -21,4 +24,4 @@ class PdiDb( val config: DatabaseConfig,
              val boolStrAsInt: Boolean = true, // TODO: set to false when DB model is updated
              val maxVariableNumber: Int = 998 ) extends Database {
   
-}
+}*/

@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 
-class RunMapLoader( val lcmsDb: LcmsDb,
+class RunMapLoader( val lcmsDb: SQLQueryHelper,
                     val loadPeaks: Boolean = false ) extends IMapLoader {
   
   import scala.collection.mutable.ArrayBuffer

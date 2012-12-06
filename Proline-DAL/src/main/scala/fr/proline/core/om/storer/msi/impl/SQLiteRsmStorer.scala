@@ -5,7 +5,7 @@ import com.codahale.jerkson.Json.generate
 import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
 import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.{MsiDb,MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable,MsiDbPeptideSetPeptideInstanceItemTable}
+import fr.proline.core.dal.{SQLQueryHelper,MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable,MsiDbPeptideSetPeptideInstanceItemTable}
 import fr.proline.core.dal.{MsiDbPeptideSetTable,MsiDbPeptideSetProteinMatchMapTable,MsiDbPeptideSetRelationTable}
 import fr.proline.core.dal.{MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
 import fr.proline.core.om.model.msi.PeptideInstance
@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.IRsmStorer
 
-private[msi] class SQLiteRsmStorer( val msiDb: MsiDb ) extends IRsmStorer {
+private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStorer {
   
   val msiDbTx = this.msiDb.getOrCreateTransaction
   

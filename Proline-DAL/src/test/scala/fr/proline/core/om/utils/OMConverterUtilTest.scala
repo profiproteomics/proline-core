@@ -2,7 +2,7 @@ package fr.proline.core.om.utils
 
 import org.junit.Before
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.util.JPAUtils
 import org.junit.After
 import org.junit.Assert._
 import fr.proline.repository.utils.DatabaseUtils
@@ -14,8 +14,11 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.PtmNames
 import scala.collection.mutable.ArrayBuilder
+import fr.proline.repository.Database
 
-class OMConverterUtilTest extends DatabaseTestCase  {  
+class OMConverterUtilTest extends DatabaseTestCase {
+  
+  override def getDatabase() = Database.PS
   
   var converter: PeptidesOMConverterUtil = null
   
@@ -23,7 +26,7 @@ class OMConverterUtilTest extends DatabaseTestCase  {
   @throws(classOf[Exception])
   def initialize() = {
      initDatabase();
-     initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
+     //initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName());
      loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");
      converter = new PeptidesOMConverterUtil(true );
   }
@@ -40,7 +43,7 @@ class OMConverterUtilTest extends DatabaseTestCase  {
    
    	@Test
 	def testConvertPeptides() =  {
-	   	val ormPep : fr.proline.core.orm.ps.Peptide  = em.find(classOf[fr.proline.core.orm.ps.Peptide], 4)
+	   	val ormPep : fr.proline.core.orm.ps.Peptide  = this.getEntityManager.find(classOf[fr.proline.core.orm.ps.Peptide], 4)
 		val omPep : fr.proline.core.om.model.msi.Peptide = converter.convertPeptidePsORM2OM(ormPep)
 		assertNotNull(omPep);
 		assertEquals(omPep.calculatedMass, ormPep.getCalculatedMass(),0.01d)

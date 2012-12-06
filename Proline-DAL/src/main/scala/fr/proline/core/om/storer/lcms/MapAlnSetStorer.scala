@@ -1,7 +1,8 @@
 package fr.proline.core.om.storer.lcms
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.impl._
+import fr.proline.repository.DriverType
 
 trait IMapAlnSetStorer {
   
@@ -13,9 +14,9 @@ trait IMapAlnSetStorer {
 
 /** A factory object for implementations of the IMapAlnSetStorer trait */
 object MapAlnSetStorer {
-  def apply( lcmsDb: LcmsDb ): IMapAlnSetStorer = { lcmsDb.config.driver match {
-    case "org.postgresql.Driver" => new GenericMapAlnSetStorer(lcmsDb)
-    case "org.sqlite.JDBC" => new SQLiteMapAlnSetStorer(lcmsDb)
+  def apply( lcmsDb: SQLQueryHelper ): IMapAlnSetStorer = { lcmsDb.driverType match {
+    case DriverType.POSTGRESQL => new GenericMapAlnSetStorer(lcmsDb)
+    case DriverType.SQLITE => new SQLiteMapAlnSetStorer(lcmsDb)
     case _ => new GenericMapAlnSetStorer(lcmsDb)
     }
   }

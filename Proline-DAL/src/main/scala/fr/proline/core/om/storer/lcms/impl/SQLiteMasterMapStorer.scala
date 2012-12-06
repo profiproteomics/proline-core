@@ -1,9 +1,9 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.IMasterMapStorer
 
-class SQLiteMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
+class SQLiteMasterMapStorer( lcmsDb: SQLQueryHelper ) extends IMasterMapStorer {
   
   import scala.collection.mutable.ArrayBuffer
   import net.noerd.prequel.SQLFormatterImplicits._
@@ -37,7 +37,7 @@ class SQLiteMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
     
     // Instantiate a run map storer
     val runMapStorer = new SQLiteRunMapStorer(lcmsDb)
-    val featureInsertStmt = runMapStorer.prepareStatementForFeatureInsert( lcmsDb.getOrCreateConnection() )
+    val featureInsertStmt = runMapStorer.prepareStatementForFeatureInsert( lcmsDb.connection )
     
     // Update master feature map id and insert master features in the feature table
     for( mft <- masterMap.features ) {
@@ -56,7 +56,7 @@ class SQLiteMasterMapStorer( lcmsDb: LcmsDb ) extends IMasterMapStorer {
         
         mft.children.foreach { childFt =>
           val isBestChild = if( childFt.id == bestChildId ) true else false
-          statement.executeWith( mft.id, childFt.id, BoolToSQLStr(isBestChild,lcmsDb.boolStrAsInt), newMasterMapId )
+          statement.executeWith( mft.id, childFt.id, BoolToSQLStr(isBestChild,false), newMasterMapId )
         }
       }
     }

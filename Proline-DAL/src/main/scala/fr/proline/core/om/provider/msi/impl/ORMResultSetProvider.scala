@@ -8,7 +8,7 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.orm.msi.ResultSet.Type
 import fr.proline.core.orm.msi.repository.{SequenceMatchRepository, ScoringRepository, ProteinMatchRepository, PeptideMatchRepository, MsiSeqDatabaseRepository}
 import fr.proline.core.orm.msi.MsiSearch
-import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.util.JPAUtils
 import fr.proline.util.DateUtils
 import fr.proline.util.StringUtils
 import javax.persistence.EntityManager
@@ -30,9 +30,9 @@ class ORMResultSetProvider(private val msiEm: EntityManager,
   type MsiPeaklist = fr.proline.core.orm.msi.Peaklist
   type MsiPeaklistSoftware = fr.proline.core.orm.msi.PeaklistSoftware
 
-  JPAUtil.checkEntityManager(msiEm)
-  JPAUtil.checkEntityManager(psEm)
-  JPAUtil.checkEntityManager(pdiEm)
+  JPAUtils.checkEntityManager(msiEm)
+  JPAUtils.checkEntityManager(psEm)
+  JPAUtils.checkEntityManager(pdiEm)
 
   val scoringRepo = new ScoringRepository(msiEm)
 

@@ -15,7 +15,8 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
-import fr.proline.repository.ProlineRepository
+//import fr.proline.repository.ProlineRepository
+import fr.proline.core.orm.util.DatabaseManager
 import javax.persistence.EntityManager
 import javax.persistence.Persistence
 import fr.proline.repository.Database
@@ -78,7 +79,8 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
 
     //Objects to access data in repositories
     val proSetRepo = new ProteinSetRepositorty(msiEM)
-    val prolineRepo = ProlineRepository.getProlineRepositoryInstance()
+    //val prolineRepo = ProlineRepository.getProlineRepositoryInstance()
+    val prolineRepo = DatabaseManager.getInstance()
 
     //Found PeptideInstance Children mapped by their id
     val pepInstChildById = new HashMap[Integer, PeptideInstance]()
@@ -121,7 +123,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     val pepInstChildren = pepInstChildById.values.toArray
 
     //Get Peptide, Unmodified Peptide && PeptideInstance 
-    val psDBConnector = prolineRepo.getConnector(Database.PS)
+    val psDBConnector = prolineRepo.getPsDbConnector()
     val emf = psDBConnector.getEntityManagerFactory()
     val em = emf.createEntityManager()
 

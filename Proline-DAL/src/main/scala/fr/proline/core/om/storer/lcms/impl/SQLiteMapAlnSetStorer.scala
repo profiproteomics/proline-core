@@ -1,9 +1,9 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.IMapAlnSetStorer
 
-class SQLiteMapAlnSetStorer( lcmsDb: LcmsDb ) extends IMapAlnSetStorer {
+class SQLiteMapAlnSetStorer( lcmsDb: SQLQueryHelper ) extends IMapAlnSetStorer {
   
   import net.noerd.prequel.SQLFormatterImplicits._
   import fr.proline.core.dal.SQLFormatterImplicits._
@@ -20,7 +20,7 @@ class SQLiteMapAlnSetStorer( lcmsDb: LcmsDb ) extends IMapAlnSetStorer {
 
     // Update processed reference map
     lcmsDbTx.execute( "UPDATE processed_map SET is_aln_reference = " + 
-                       BoolToSQLStr(true,lcmsDb.boolStrAsInt)  + " WHERE id = " + alnRefMapId )
+                       BoolToSQLStr(true,false)  + " WHERE id = " + alnRefMapId )
     
     // Store map alignments
     lcmsDbTx.executeBatch("INSERT INTO map_alignment VALUES (?,?,?,?,?,?,?,?)") { statement => 

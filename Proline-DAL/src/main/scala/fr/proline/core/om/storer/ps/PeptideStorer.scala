@@ -6,17 +6,17 @@ import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
 
 import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.PsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{PsDbPeptideTable,PsDbPeptidePtmTable}
 import fr.proline.core.om.model.msi.{Peptide,LocatedPtm}
 import fr.proline.util.sql._
 
 /** A factory object for implementations of the IRsStorer trait */
 object PeptideStorer {
-  def apply( psDb: PsDb ) = new PeptideStorer( psDb )
+  def apply( psDb: SQLQueryHelper ) = new PeptideStorer( psDb )
 }
 
-class PeptideStorer( psDb: PsDb ) extends Logging {
+class PeptideStorer( psDb: SQLQueryHelper ) extends Logging {
   
   def storePeptides( peptides: Seq[Peptide] ): Map[String,Int] = {
     

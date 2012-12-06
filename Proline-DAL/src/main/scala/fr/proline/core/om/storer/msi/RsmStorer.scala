@@ -7,13 +7,13 @@ import net.noerd.prequel.SQLFormatterImplicits._
 
 import fr.proline.core.dal.SQLFormatterImplicits._
 import fr.proline.util.sql.BoolToSQLStr
-import fr.proline.core.dal.{MsiDb,MsiDbResultSummaryTable}
+import fr.proline.core.dal.{SQLQueryHelper,MsiDbResultSummaryTable}
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLiteRsmStorer
 
 trait IRsmStorer extends Logging {
   
-  val msiDb: MsiDb // Main MSI db connection
+  val msiDb: SQLQueryHelper // Main MSI db connection
   val scoringIdByType = new fr.proline.core.dal.helper.MsiDbHelper( msiDb ).getScoringIdByType
   
   def storeRsmPeptideInstances( rsm: ResultSummary ): Int
@@ -33,9 +33,9 @@ object RsmStorer {
   import fr.proline.core.om.storer.msi.impl.PgRsStorer
   import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer*/
   
-  def apply( msiDb: MsiDb ): RsmStorer = { msiDb.config.driver match {
+  def apply( msiDb: SQLQueryHelper ): RsmStorer = { msiDb.driverType match {
     //case "org.postgresql.Driver" => new RsStorer( new PgRsStorer( msiDb ) )
-    case "org.sqlite.JDBC" => new RsmStorer( new SQLiteRsmStorer( msiDb ) )
+    case _ => new RsmStorer( new SQLiteRsmStorer( msiDb ) )
     //case _ => new RsStorer( new GenericRsStorer( msiDb ) )
     }
   }
@@ -68,7 +68,7 @@ class RsmStorer( private val _storer: IRsmStorer ) extends Logging {
   
   private def _insertResultSummary( rsm: ResultSummary ): Unit = {
     
-    val msiDbConn = this.msiDb.getOrCreateConnection()
+    val msiDbConn = this.msiDb.connection
     
     // Define some vars
     val rsmDesc = Option( rsm.description )
@@ -81,7 +81,7 @@ class RsmStorer( private val _storer: IRsmStorer ) extends Logging {
     // TODO: use JPA instead
     
     val stmt = msiDbConn.prepareStatement( this.rsmInsertQuery, java.sql.Statement.RETURN_GENERATED_KEYS )     
-    new ReusableStatement( stmt, msiDb.config.sqlFormatter ) <<
+    new ReusableStatement( stmt, msiDb.sqlFormatter ) <<
       rsmDesc <<
       modificationTimestamp <<
       BoolToSQLStr(false) <<

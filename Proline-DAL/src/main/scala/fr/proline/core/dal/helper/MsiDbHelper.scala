@@ -1,8 +1,8 @@
 package fr.proline.core.dal.helper
 
-import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.SQLQueryHelper
 
-class MsiDbHelper( msiDb: MsiDb ) {
+class MsiDbHelper( sqlHelper: SQLQueryHelper ) {
 
 /* ##############################################################################
 # Method: get_target_decoy_result_sets()
@@ -25,7 +25,7 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
   }*/
   
   def getDecoyRsId( targetResultSetId: Int ): Option[Int] = {
-    this.msiDb.getOrCreateTransaction.select(
+    this.sqlHelper.getOrCreateTransaction.select(
       "SELECT decoy_result_set_id FROM result_set WHERE id = " + targetResultSetId
     ) { _.nextInt } (0)
   }
@@ -34,7 +34,7 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
   def getResultSetsMsiSearchIds( rsIds: Seq[Int] ): Array[Int] = {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    val msiSearchIds = this.msiDb.getOrCreateTransaction.select(
+    val msiSearchIds = this.sqlHelper.getOrCreateTransaction.select(
                          "SELECT msi_search_id FROM result_set " +
                          "WHERE id IN ("+  rsIds.mkString(",") +")" ) { r => r.nextInt.get }
     
@@ -44,7 +44,7 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
   def getResultSetIdByResultSummaryId( rsmIds: Seq[Int] ): Map[Int,Int] = {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    this.msiDb.getOrCreateTransaction.select(
+    this.sqlHelper.getOrCreateTransaction.select(
      "SELECT id, result_set_id FROM result_summary " +
      "WHERE id IN ("+  rsmIds.mkString(",") +")" ) { r => (r.nextInt.get,r.nextInt.get) } toMap
   }
@@ -52,7 +52,7 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
   def getMsiSearchesPtmSpecificityIds( msiSearchIds: Seq[Int] ): Array[Int] = {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    val ptmSpecifIds = this.msiDb.getOrCreateTransaction.select(
+    val ptmSpecifIds = this.sqlHelper.getOrCreateTransaction.select(
                          "SELECT ptm_specificity_id FROM used_ptm, search_settings, msi_search " +
                          "WHERE used_ptm.search_settings_id = search_settings.id " +
                          "AND search_settings.id = msi_search.search_settings_id " +
@@ -142,7 +142,7 @@ method get_search_engine( Int $target_result_set_id! ) {
   /** Load and return scorings as records */
   private def _getScorings(): Seq[ScoringRecord] = {
 
-    this.msiDb.getOrCreateTransaction.select( "SELECT id, search_engine, name FROM scoring" ) { r =>
+    this.sqlHelper.getOrCreateTransaction.select( "SELECT id, search_engine, name FROM scoring" ) { r =>
       ScoringRecord( r.nextInt.get, r.nextString.get, r.nextString.get )
     }
     
@@ -150,8 +150,8 @@ method get_search_engine( Int $target_result_set_id! ) {
 
   def getSeqLengthByBioSeqId( bioSeqIds: Iterable[Int] ): Map[Int,Int] = {
     
-    val maxNbIters = this.msiDb.maxVariableNumber
-    val msiDbTx = this.msiDb.getOrCreateTransaction()
+    val maxNbIters = this.sqlHelper.maxVariableNumber
+    val tx = this.sqlHelper.getOrCreateTransaction()
     
     val seqLengthByProtIdBuilder = Map.newBuilder[Int,Int]
     
@@ -159,7 +159,7 @@ method get_search_engine( Int $target_result_set_id! ) {
     bioSeqIds.grouped(maxNbIters).foreach {
       tmpBioSeqIds => {      
         // Retrieve peptide PTMs for the current group of peptide ids
-        msiDbTx.selectAndProcess("SELECT id, length FROM bio_sequence WHERE id IN ("+tmpBioSeqIds.mkString(",")+")" ) { r =>
+        tx.selectAndProcess("SELECT id, length FROM bio_sequence WHERE id IN ("+tmpBioSeqIds.mkString(",")+")" ) { r =>
           seqLengthByProtIdBuilder += ( r.nextInt.get -> r.nextInt.get )
         }
       }

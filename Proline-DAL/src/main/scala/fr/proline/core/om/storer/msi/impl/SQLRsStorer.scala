@@ -3,22 +3,24 @@ package fr.proline.core.om.storer.msi.impl
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.storer.msi.IRsWriter
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.dal.DatabaseManagement
-import fr.proline.core.dal.MsiDbResultSetTable
-import fr.proline.core.dal.PsDb
 import com.weiglewilczek.slf4s.Logging
 import scala.collection.mutable.HashMap
 import fr.proline.core.utils.lzma.EasyLzma
+
+import fr.proline.core.dal.PsDbSQLHelper
+import fr.proline.core.dal.MsiDbResultSetTable
 import fr.proline.core.dal.MsiDbSearchSettingsTable
 import fr.proline.core.dal.MsiDbMsiSearchTable
 import fr.proline.core.dal.MsiDbUsedPtmTable
 import fr.proline.core.dal.MsiDbPtmSpecificityTable
 import fr.proline.core.dal.MsiDbSeqDatabaseTable
 import fr.proline.core.dal.MsiDbMsQueryTable
-import fr.proline.util.sql._
 import fr.proline.core.om.storer.msi.IPeaklistWriter
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
+import fr.proline.util.sql._
 
-class SQLRsStorer( dbMgmt: DatabaseManagement,
+class SQLRsStorer( dbMgmt: DatabaseManager,
                    private val _rsWriter: IRsWriter,
                    private val _pklWriter: IPeaklistWriter ) extends IRsStorer with Logging {
 
@@ -29,7 +31,8 @@ class SQLRsStorer( dbMgmt: DatabaseManagement,
   import fr.proline.core.om.model.msi._
   
   val msiDb1 = _rsWriter.msiDb1
-  lazy val psDb = new PsDb(PsDb.buildConfigFromDatabaseConnector(dbMgmt.psDBConnector) )
+  lazy val psDb = new PsDbSQLHelper( dbMgmt.getPsDbConnector )
+  //new PsDb(PsDb.buildConfigFromDatabaseConnector(dbMgmt.psDBConnector) )
     
   val peptideByUniqueKey = _rsWriter.peptideByUniqueKey
   val proteinBySequence = _rsWriter.proteinBySequence
@@ -80,7 +83,7 @@ class SQLRsStorer( dbMgmt: DatabaseManagement,
   
   private def _insertResultSet( resultSet: ResultSet ): Unit = {
     
-    val msiDbConn = this.msiDb1.getOrCreateConnection()
+    val msiDbConn = this.msiDb1.connection
     val msiDbTx = this.msiDb1.getOrCreateTransaction()
     
     /// Define some vars
@@ -101,7 +104,7 @@ class SQLRsStorer( dbMgmt: DatabaseManagement,
     }
     
     val stmt = msiDbConn.prepareStatement( rsInsertQuery, java.sql.Statement.RETURN_GENERATED_KEYS )     
-    new ReusableStatement( stmt, msiDb1.config.sqlFormatter ) <<
+    new ReusableStatement( stmt, msiDb1.sqlFormatter ) <<
       rsName <<
       rsDesc <<
       rsType <<

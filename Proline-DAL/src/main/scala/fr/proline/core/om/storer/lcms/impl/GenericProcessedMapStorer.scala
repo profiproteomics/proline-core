@@ -1,9 +1,9 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.IProcessedMapStorer
 
-class GenericProcessedMapStorer( lcmsDb: LcmsDb ) extends IProcessedMapStorer {
+class GenericProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapStorer {
   
   import fr.proline.core.om.model.lcms.ProcessedMap
   import fr.proline.core.om.model.lcms.Feature

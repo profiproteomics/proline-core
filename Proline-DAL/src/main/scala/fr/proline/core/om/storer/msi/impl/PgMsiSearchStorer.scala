@@ -6,16 +6,16 @@ import org.postgresql.core.BaseConnection
 import net.noerd.prequel.ReusableStatement
 import net.noerd.prequel.SQLFormatterImplicits._
 import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{MsiDbMsQueryTable,MsiDbPtmSpecificityTable}
 import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.dal.MsiDbUsedPtmTable
 
 
-class PgMsiSearchStorer( val msiDb: MsiDb ) extends SQLiteMsiSearchStorer( msiDb ) with Logging {
+class PgMsiSearchStorer( val msiDb: SQLQueryHelper ) extends SQLiteMsiSearchStorer( msiDb ) with Logging {
   
-  val bulkCopyManager = new CopyManager( msiDb.getOrCreateConnection().asInstanceOf[BaseConnection] )
+  val bulkCopyManager = new CopyManager( msiDb.connection.asInstanceOf[BaseConnection] )
   
   override def storeMsQueries( msiSearchId: Int, msQueries: Seq[MsQuery], context: StorerContext ): StorerContext = {
     

@@ -1,16 +1,15 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable
-
-import com.weiglewilczek.slf4s.Logging
-
-import fr.proline.core.dal.DatabaseManagement
-import fr.proline.core.dal.MsiDb
-import fr.proline.core.om.utils.PeptideIdent
-import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.repository.DatabaseConnector
 import javax.persistence.EntityManager
 import javax.persistence.Persistence
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.core.dal.MsiDbSQLHelper
+import fr.proline.core.om.utils.PeptideIdent
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.util.JPAUtils
 
 /**
  * RsStorer context container. Contains current ResultSet (and DecoyRS) "persistence context".
@@ -19,19 +18,19 @@ import javax.persistence.Persistence
  * @param spectrumIdByTitle already persisted Msi Spectrum Ids retrievable by {{{Spectrum.title}}} string.
  * The map can be {{{null}}}
  */
-class StorerContext(val dbManagement: DatabaseManagement, val msiConnector: DatabaseConnector = null) extends Logging {
+class StorerContext(val dbManagement: DatabaseManager, val msiConnector: IDatabaseConnector = null) extends Logging {
 
   type MsiPeptide = fr.proline.core.orm.msi.Peptide
 
   // Define secondary constructors
-  def this(dbManagement: DatabaseManagement, projectId: Int = 0) = {
-    this(dbManagement, dbManagement.getMSIDatabaseConnector(projectId, true))
+  def this(dbManagement: DatabaseManager, projectId: Int = 0) = {
+    this(dbManagement, dbManagement.getMsiDbConnector(projectId) )
   }
 
   lazy val msiEm: EntityManager = {
     if (msiConnector != null)
       null
-    val emf = Persistence.createEntityManagerFactory(JPAUtil.PersistenceUnitNames.MSI_Key.getPersistenceUnitName, msiConnector.getEntityManagerSettings)
+    val emf = msiConnector.getEntityManagerFactory
     msiEMOpened = true
     emf.createEntityManager
   }
@@ -39,23 +38,25 @@ class StorerContext(val dbManagement: DatabaseManagement, val msiConnector: Data
 
   lazy val psEm: EntityManager = {
     psEMOpened = true
-    dbManagement.psEMF.createEntityManager
+    dbManagement.getPsDbConnector.getEntityManagerFactory.createEntityManager
   }
   private var psEMOpened: Boolean = false
 
   lazy val udsEm: EntityManager = {
     udsEMOpened = true
-    dbManagement.udsEMF.createEntityManager
+    dbManagement.getUdsDbConnector.getEntityManagerFactory.createEntityManager
   }
   private var udsEMOpened: Boolean = false
 
   lazy val pdiEm: EntityManager = {
     pdiEMOpened = true
-    dbManagement.pdiEMF.createEntityManager
+    val p = dbManagement.getPdiDbConnector
+    val emf = p.getEntityManagerFactory
+    emf.createEntityManager
   }
   private var pdiEMOpened: Boolean = false
 
-  lazy val msiDB: MsiDb = new MsiDb(msiConnector)
+  lazy val msiDB = new MsiDbSQLHelper(msiConnector)
 
   var spectrumIdByTitle: Map[String, Int] = null
 

@@ -12,13 +12,16 @@ import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
-import fr.proline.core.orm.utils.JPAUtil
+import fr.proline.repository.util.JPAUtils
 import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.utils.DatabaseTestCase
 import fr.proline.core.om.model.msi.PtmLocation
+import fr.proline.repository.Database
 
 @Test
 class ORMPtmProviderTest extends DatabaseTestCase {
+  
+  override def getDatabase() = Database.PS
 
   var ormPtmProvider: ORMPTMProvider = null
      
@@ -31,9 +34,9 @@ class ORMPtmProviderTest extends DatabaseTestCase {
   @throws(classOf[Exception])
   def setUp()  = {
 	  initDatabase()
-	  initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
+	  //initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
 	  loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-	  ormPtmProvider = new ORMPTMProvider(em)
+	  ormPtmProvider = new ORMPTMProvider(this.getEntityManager)
   }
   
   @After 

@@ -1,9 +1,9 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.storer.lcms.IRunMapStorer
 
-class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
+class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
   
   import scala.collection.mutable.ArrayBuffer
   import net.noerd.prequel.ReusableStatement
@@ -15,7 +15,7 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit = {
     
     // Retrieve or create transaction
-    val lcmsDbConn = lcmsDb.getOrCreateConnection()
+    val lcmsDbConn = lcmsDb.connection
     val lcmsDbTx = lcmsDb.getOrCreateTransaction()
     
     // Create new map
@@ -181,7 +181,7 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
     
     // TODO: store properties    
     
-    val ftRecordBuilder = new ReusableStatement( stmt, lcmsDb.config.sqlFormatter )
+    val ftRecordBuilder = new ReusableStatement( stmt, lcmsDb.sqlFormatter )
     ftRecordBuilder <<
       Option.empty[Int] <<
       ft.moz <<
@@ -191,8 +191,8 @@ class SQLiteRunMapStorer( lcmsDb: LcmsDb ) extends IRunMapStorer {
       qualityScore <<
       ft.ms1Count <<
       ft.ms2Count <<
-      BoolToSQLStr(ft.isCluster,lcmsDb.boolStrAsInt) <<
-      BoolToSQLStr(ft.isOverlapping,lcmsDb.boolStrAsInt) <<
+      BoolToSQLStr(ft.isCluster,false) <<
+      BoolToSQLStr(ft.isOverlapping,false) <<
       Option(null) <<
       ftRelations.firstScanId <<
       ftRelations.lastScanId <<

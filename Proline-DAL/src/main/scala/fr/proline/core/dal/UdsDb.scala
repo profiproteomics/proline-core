@@ -2,8 +2,12 @@ package fr.proline.core.dal
 
 import java.sql.Connection
 import net.noerd.prequel._
-import fr.proline.repository.DatabaseConnector
+import fr.proline.repository.IDatabaseConnector
 
+class UdsDbSQLHelper( val dbConnector: IDatabaseConnector ) extends SQLQueryHelper
+
+
+/*
 object UdsDb extends DatabaseConfigBuilder {
   
   def apply( dbConnector: DatabaseConnector ): UdsDb = {
@@ -48,4 +52,4 @@ class UdsDb( val config: DatabaseConfig,
     this.connection
   }
   
-}
+}*/

@@ -4,14 +4,14 @@ import scala.collection.mutable.HashMap
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.core.dal.{MsiDb, DatabaseManagement}
+import fr.proline.core.dal.{SQLQueryHelper}
 import fr.proline.core.om.model.msi.{ResultSet, Protein, Peptide, IPeaklistContainer}
 import fr.proline.core.om.storer.msi.impl.SQLRsStorer
 
 trait IRsWriter extends Logging {
   
-  val msiDb1: MsiDb // Main MSI db connection
-  lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, maxVariableNumber = 10000 ) // Secondary MSI db connection
+  val msiDb1: SQLQueryHelper // Main MSI db connection
+  //lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, maxVariableNumber = 10000 ) // Secondary MSI db connection
   
   val scoringIdByType = new fr.proline.core.dal.helper.MsiDbHelper( msiDb1 ).getScoringIdByType
   

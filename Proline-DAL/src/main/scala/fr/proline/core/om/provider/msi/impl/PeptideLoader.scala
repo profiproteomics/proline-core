@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
+/*
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmSpecificity
@@ -270,3 +271,4 @@ import scala.collection.mutable.HashMap
   }
   
 }
+*/

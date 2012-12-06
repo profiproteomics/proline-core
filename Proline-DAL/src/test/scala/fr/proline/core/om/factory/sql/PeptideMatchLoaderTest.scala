@@ -1,5 +1,6 @@
 package fr.proline.core.om.factory.sql
 
+/*
 import org.junit._
 import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
@@ -38,4 +39,4 @@ class PeptideMatchLoaderTest extends JUnitSuite {
 	  	 assertTrue(true)
 	}
 	
-}
+}*/

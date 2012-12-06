@@ -3,8 +3,9 @@ package fr.proline.core.om.provider.msi.impl
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.SQLQueryHelper
 
+/*
 @deprecated
 class PeptideMatchLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: DatabaseConfig = null ) {
   
@@ -109,4 +110,4 @@ class PeptideMatchLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: Datab
     
   }
   
-}
+}*/

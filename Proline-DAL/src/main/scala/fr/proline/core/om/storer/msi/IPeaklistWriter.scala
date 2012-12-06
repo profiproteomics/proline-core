@@ -1,7 +1,7 @@
 package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.msi.{Peaklist,IPeaklistContainer}
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.storer.msi.impl.SQLPeaklistWriter
@@ -33,13 +33,14 @@ trait IPeaklistWriter extends Logging {
 }
 
 /** A factory object for implementations of the IPeaklistStorer trait */
-object IPeaklistWriter {
+object PeaklistWriter {
   
   //import fr.proline.core.om.storer.msi.impl.GenericRsStorer
+  import fr.proline.repository.DriverType
 
-  def apply( jdbcDriverClassName: String ): IPeaklistWriter = {
-    jdbcDriverClassName match {
-      case "org.postgresql.Driver" => new PgSQLSpectraWriter()
+  def apply( driverType: DriverType ): IPeaklistWriter = {
+    driverType match {
+      case DriverType.POSTGRESQL => new PgSQLSpectraWriter()
       case _ => new SQLPeaklistWriter()
     }
   }

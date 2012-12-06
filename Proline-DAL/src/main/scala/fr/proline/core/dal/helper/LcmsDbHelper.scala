@@ -1,8 +1,8 @@
 package fr.proline.core.dal.helper
 
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 
-class LcmsDbHelper( lcmsDb: LcmsDb ) {
+class LcmsDbHelper( sqlHelper: SQLQueryHelper ) {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
@@ -13,7 +13,7 @@ class LcmsDbHelper( lcmsDb: LcmsDb ) {
     var colNames: Seq[String] = null
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,FeatureScoring]
     
-    lcmsDb.getOrCreateTransaction.selectAndProcess( "SELECT * FROM feature_scoring" ) { r =>
+    sqlHelper.getOrCreateTransaction.selectAndProcess( "SELECT * FROM feature_scoring" ) { r =>
         
       if( colNames == null ) { colNames = r.columnNames }
       
@@ -40,7 +40,7 @@ class LcmsDbHelper( lcmsDb: LcmsDb ) {
     var colNames: Seq[String] = null
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,PeakPickingSoftware]
     
-    lcmsDb.getOrCreateTransaction.selectAndProcess( "SELECT * FROM peak_picking_software" ) { r =>
+    sqlHelper.getOrCreateTransaction.selectAndProcess( "SELECT * FROM peak_picking_software" ) { r =>
         
       if( colNames == null ) { colNames = r.columnNames }
       
@@ -68,7 +68,7 @@ class LcmsDbHelper( lcmsDb: LcmsDb ) {
     var colNames: Seq[String] = null
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,PeakelFittingModel]
     
-    lcmsDb.getOrCreateTransaction.selectAndProcess( "SELECT * FROM peakel_fitting_model" ) { r =>
+    sqlHelper.getOrCreateTransaction.selectAndProcess( "SELECT * FROM peakel_fitting_model" ) { r =>
         
       if( colNames == null ) { colNames = r.columnNames }
       
@@ -93,7 +93,7 @@ class LcmsDbHelper( lcmsDb: LcmsDb ) {
     
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Int]
     
-    lcmsDb.getOrCreateTransaction.selectAndProcess(
+    sqlHelper.getOrCreateTransaction.selectAndProcess(
         "SELECT id, initial_id FROM scan WHERE run_id IN (" + runIds.mkString(",") + ")"  ) { r =>
         val( scanId, scanInitialId ) = (r.nextInt.get, r.nextInt.get)
         mapBuilder += (scanId -> scanInitialId)
@@ -107,7 +107,7 @@ class LcmsDbHelper( lcmsDb: LcmsDb ) {
   def getMs2EventIdsByFtId( runMapIds: Seq[Int] ): Map[Int,Array[Int]] = {
     
     val featureMs2EventsByFtId = new java.util.HashMap[Int,ArrayBuffer[Int]]
-    lcmsDb.getOrCreateTransaction.selectAndProcess( 
+    sqlHelper.getOrCreateTransaction.selectAndProcess( 
         "SELECT feature_id, ms2_event_id FROM feature_ms2_event " + 
         "WHERE run_map_id IN (" + runMapIds.mkString(",") + ")" ) { r =>
           

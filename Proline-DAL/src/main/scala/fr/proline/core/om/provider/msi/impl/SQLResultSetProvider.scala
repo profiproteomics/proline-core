@@ -1,16 +1,15 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.dal.{MsiDb,PsDb,MsiDbResultSetTable}
+import fr.proline.core.dal.{SQLQueryHelper,MsiDbResultSetTable}
 import fr.proline.core.om.model.msi.{ProteinMatch,PeptideMatch,ResultSet}
-import fr.proline.core.dal.MsiDb
 import fr.proline.core.om.provider.msi.IResultSetProvider
 
 trait SQLResultSetLoader {
   
   import fr.proline.core.dal.helper.MsiDbHelper  
   
-  val msiDb: MsiDb  
+  val msiDb: SQLQueryHelper  
   val RSCols = MsiDbResultSetTable.columns
   
   protected def getResultSet( rsId: Int,
@@ -78,8 +77,8 @@ trait SQLResultSetLoader {
 
 }
 
-class SQLResultSetProvider( val msiDb: MsiDb,
-                            val psDb: PsDb = null ) extends SQLResultSetLoader with IResultSetProvider {
+class SQLResultSetProvider( val msiDb: SQLQueryHelper,
+                            val psDb: SQLQueryHelper = null ) extends SQLResultSetLoader with IResultSetProvider {
   
   def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
     

@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
+/*
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.Ms1Query
@@ -81,4 +82,4 @@ class MsQueryLoader( val msiDb: DatabaseConfig ) {
   }
   
 }
-
+*/

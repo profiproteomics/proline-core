@@ -1,18 +1,18 @@
 package fr.proline.core.dal.helper
 
-import fr.proline.core.dal.PdiDb
+import fr.proline.core.dal.SQLQueryHelper
 
-class PdiDbHelper( pdiDb: PdiDb ) {
+class PdiDbHelper( sqlHelper: SQLQueryHelper ) {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
   
   def getBioSequenceNameByTaxonAndId( bioSeqIds: Seq[Int]): Map[Pair[Int,Int],String] = {
     
-    val pdiDbTx = pdiDb.getOrCreateTransaction
+    val pdiDbTx = sqlHelper.getOrCreateTransaction
     val proteinNameByTaxonAndId = new scala.collection.mutable.HashMap[Pair[Int,Int],String]
     
-    bioSeqIds.grouped(pdiDb.maxVariableNumber).foreach { tmpBioSeqIds =>
+    bioSeqIds.grouped(sqlHelper.maxVariableNumber).foreach { tmpBioSeqIds =>
       
       val sqlQuery = "SELECT taxon_id, bio_sequence_id, name FROM seq_db_entry " +
                      "WHERE bio_sequence_id IN ("+ tmpBioSeqIds.mkString(",") + ") ORDER BY is_active DESC"

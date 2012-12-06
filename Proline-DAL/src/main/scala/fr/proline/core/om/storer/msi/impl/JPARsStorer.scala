@@ -5,7 +5,7 @@ import scala.annotation.elidable
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.DatabaseManagement
+
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.MSISearch
@@ -38,8 +38,10 @@ import fr.proline.core.orm.ps.repository.PsPtmRepository
 import fr.proline.core.orm.uds.repository.UdsEnzymeRepository
 import fr.proline.core.orm.uds.repository.UdsInstrumentConfigurationRepository
 import fr.proline.core.orm.uds.repository.UdsPeaklistSoftwareRepository
-import fr.proline.core.orm.utils.JPAUtil
-import fr.proline.repository.DatabaseConnector
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.util.JPAUtils
+
 import fr.proline.util.StringUtils
 import javax.persistence.Persistence
 import javax.persistence.EntityManager
@@ -50,14 +52,14 @@ import javax.persistence.EntityManager
  * @param dbManagement DatabaseManagement : From which connection to Ps Db,  Uds Db and Pdi Db is retrieve
  * @param projectID Id of the project to save information to
  */
-class JPARsStorer(override val dbManagement: DatabaseManagement, override val msiDbConnector: DatabaseConnector, override val plWriter: IPeaklistWriter = null) extends AbstractRsStorer(dbManagement, msiDbConnector, plWriter) with Logging {
+class JPARsStorer(override val dbManagement: DatabaseManager, override val msiDbConnector: IDatabaseConnector, override val plWriter: IPeaklistWriter = null) extends AbstractRsStorer(dbManagement, msiDbConnector, plWriter) with Logging {
 
-  def this(dbManagement: DatabaseManagement, msiDbConnector: DatabaseConnector) {
+  def this(dbManagement: DatabaseManager, msiDbConnector: IDatabaseConnector) {
     this(dbManagement, msiDbConnector, null)
   }
 
-  def this(dbManagement: DatabaseManagement, projectID: Int, plWriter: IPeaklistWriter) {
-    this(dbManagement, dbManagement.getMSIDatabaseConnector(projectID, true), plWriter)
+  def this(dbManagement: DatabaseManager, projectID: Int, plWriter: IPeaklistWriter) {
+    this(dbManagement, dbManagement.getMsiDbConnector(projectID), plWriter)
   }
 
   type MsiPeaklist = fr.proline.core.orm.msi.Peaklist

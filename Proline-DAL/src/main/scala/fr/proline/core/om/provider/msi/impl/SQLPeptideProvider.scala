@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
 import net.noerd.prequel.SQLFormatterImplicits._
-import fr.proline.core.dal.{MsiDb,PsDb}
+import fr.proline.core.dal.{SQLQueryHelper}
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmSpecificity
 import fr.proline.core.om.model.msi.PtmDefinition
@@ -13,7 +13,7 @@ import scala.collection.mutable.ArrayBuilder
 import org.apache.commons.lang3.StringUtils
 import fr.proline.core.om.model.msi.LocatedPtm
 
-class SQLPeptideProvider( psDb: PsDb ) extends SQLPTMProvider( psDb ) with IPeptideProvider with Logging {
+class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) with IPeptideProvider with Logging {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap

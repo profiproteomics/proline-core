@@ -1,6 +1,5 @@
 package fr.proline.core.om.storer.msi.impl
 
-import fr.proline.core.dal.DatabaseManagement
 import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.model.msi.Ms1Query
 import fr.proline.core.om.model.msi.Ms2Query
@@ -11,14 +10,15 @@ import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
 import fr.proline.util.sql._
 import fr.proline.core.om.storer.msi.IPeaklistWriter
+import fr.proline.core.orm.util.DatabaseManager
 
-class PgSQLRsStorer(val dbMgmt: DatabaseManagement, private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends SQLRsStorer ( dbMgmt, _storer, _plWriter){
+class PgSQLRsStorer(val dbMgmt: DatabaseManager, private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends SQLRsStorer ( dbMgmt, _storer, _plWriter){
     
   
   override def  storeMsQueries( msiSearchID : Int,
                       msQueries: Seq[MsQuery],
                       context : StorerContext ): StorerContext  = {     
-  val bulkCopyManager = new CopyManager( context.msiDB.getOrCreateConnection().asInstanceOf[BaseConnection] )  
+  val bulkCopyManager = new CopyManager( context.msiDB.connection.asInstanceOf[BaseConnection] )  
   
     // Create TMP table
     val tmpMsQueryTableName = "tmp_ms_query_" + ( scala.math.random * 1000000 ).toInt

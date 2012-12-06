@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
+/*
 import net.noerd.prequel.DatabaseConfig
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ProteinMatch
@@ -148,4 +149,4 @@ class ProteinMatchLoader( val msiDbConfig: DatabaseConfig ) {
   }
   
 }
-
+*/
