@@ -3,8 +3,6 @@ package fr.proline.repository.utils;
 import static fr.proline.util.StringUtils.LINE_SEPARATOR;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
@@ -49,34 +47,25 @@ public abstract class DatabaseTestCase {
      *            valid Transaction must be started.
      * @return List of table names formated as a printable string.
      */
-    public static String getTables(final Connection con) throws SQLException {
+    public static String formatTableNames(final Connection con) throws SQLException {
 
 	if (con == null) {
 	    throw new IllegalArgumentException("Con is null");
 	}
 
-	final DatabaseMetaData meta = con.getMetaData();
-
 	final StringBuilder buff = new StringBuilder(BUFFER_SIZE);
 	buff.append("Database Tables :");
 	buff.append(LINE_SEPARATOR);
 
-	final ResultSet rs = meta.getTables(null, null, "%", new String[] { "TABLE" });
+	final String[] tableNames = DatabaseUpgrader.extractTableNames(con);
 
-	try {
+	if ((tableNames != null) && (tableNames.length > 0)) {
 
-	    while (rs.next()) {
-
-		final Object tableName = rs.getObject("TABLE_NAME");
-		if (tableName != null) {
-		    buff.append(tableName);
-		    buff.append(LINE_SEPARATOR);
-		}
-
+	    for (final String tableName : tableNames) {
+		buff.append(tableName);
+		buff.append(LINE_SEPARATOR);
 	    }
 
-	} finally {
-	    rs.close();
 	}
 
 	return buff.toString();
@@ -177,7 +166,7 @@ public abstract class DatabaseTestCase {
 		    @Override
 		    public void execute(final Connection connection) throws SQLException {
 			LOG.debug("Post-init EntityManager connection : {}  {}", connection,
-				getTables(connection));
+				formatTableNames(connection));
 		    }
 
 		};

@@ -1,5 +1,7 @@
 package fr.proline.core.orm.msi.repository;
 
+import static junit.framework.Assert.*;
+
 import java.io.File;
 import java.net.URI;
 import java.sql.Connection;
@@ -12,8 +14,6 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-
-import junit.framework.Assert;
 
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.ReplacementDataSet;
@@ -78,7 +78,7 @@ public class MsiPeptideRepositoryTest {
 
 		public void execute(final Connection connection) throws SQLException {
 		    LOG.debug("Post-init EntityManager Connection : {}  {}", connection,
-			    DatabaseTestCase.getTables(connection));
+			    DatabaseTestCase.formatTableNames(connection));
 		}
 
 	    };
@@ -177,7 +177,7 @@ public class MsiPeptideRepositoryTest {
 	    final MsiPeptideRepository msiPeptideRepo = new MsiPeptideRepository(msiEm);
 	    List<Peptide> peptides = msiPeptideRepo.findPeptidesForIds(ids);
 	    LOG.debug("TEST JUnit Assertion");
-	    Assert.assertNotNull("Retrieved MSI Peptides", peptides);
+	    assertNotNull("Retrieved MSI Peptides", peptides);
 	} finally {
 
 	    if (msiEm != null) {
