@@ -245,6 +245,10 @@ public class ProteinMatch implements Serializable {
 			}
 			return peptideSetMap.get(resultSummaryId);
 		}
+		
+		public Set<Integer> getRecordedRsmId() {
+			return peptideSetMap.keySet();
+		}
 
 		public void setPeptideSet(Integer resultSummaryId, PeptideSet peptideSet) {
 			if (peptideSetMap == null) {
