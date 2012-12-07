@@ -143,6 +143,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
       start = System.nanoTime
       storer.storeResultSet(resultSet, stContext)
+
       stop = System.nanoTime
       ////Fait par le Storer: Attentte partage transaction TODO
       //      	msiTransaction.commit
@@ -177,8 +178,20 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
   @After
   def tearDown() = {
-    if (this.stContext != null)
-      this.stContext.closeOpenedEM()
+
+    if (stContext != null) {
+      logger.debug("Closing opened EntityManager")
+      stContext.closeOpenedEM()
+
+      logger.debug("Closing MSI Db Prequel Connection")
+
+      try {
+        stContext.msiDB.closeConnection()
+      } catch {
+        case exClose: Exception => logger.error("Error closing MSI Db Prequel Connection", exClose)
+      }
+
+    }
 
     closeDbs()
 
