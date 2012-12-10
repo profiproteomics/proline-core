@@ -4,11 +4,13 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>${core.version}</version>
+    <version>0.0.2-SNAPSHOT</version>
   </parent>
   <artifactId>Proline-ORM</artifactId>
 
   <name>${project.artifactId}</name>
+  
+  
 
   <dependencies>
 
@@ -18,13 +20,10 @@
       <artifactId>ProFI-Commons-Java</artifactId>
     </dependency>
 
-    <!-- "Proline" modules -->
-    <!-- Unused dependency : fr.proline:Proline-Databases:jar:0.0.2-SNAPSHOT:compile (runtime ?) -->
+    <!-- "Proline" modules -->    
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
-      <version>${core.version}</version>
-      <type>jar</type>
     </dependency>
 
     <!-- Direct dependencies -->
@@ -62,7 +61,6 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
-      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

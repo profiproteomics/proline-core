@@ -4,7 +4,7 @@
 
   <groupId>fr.proline</groupId>
   <artifactId>Proline-Core</artifactId>
-  <version>${core.version}</version>
+  <version>0.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Proline-Core</name>
@@ -107,6 +107,12 @@
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>Proline-OM</artifactId>
+        <version>${core.version}</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>Proline-Databases</artifactId>
         <version>${core.version}</version>
       </dependency>
 

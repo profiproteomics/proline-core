@@ -6,7 +6,7 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>${core.version}</version>
+    <version>0.0.2-SNAPSHOT</version>
   </parent>
   <artifactId>Proline-DAL</artifactId>
 
@@ -62,18 +62,14 @@
     <!-- Add : org.apache.commons:commons-lang3:jar:3.0.1:compile
                com.codahale:jerkson_2.9.1:jar:0.6.0-SNAPSHOT:compile -->
 
-    <!-- Unused dependency : fr.proline:Proline-ORM:jar:0.0.2-SNAPSHOT:compile -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-ORM</artifactId>
     </dependency>
 
-    <!-- Unused dependency : fr.proline:Proline-ORM:jar:0.0.2-SNAPSHOT:compile -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
-      <version>${core.version}</version>
-      <type>jar</type>
+      <artifactId>Proline-Databases</artifactId>     
     </dependency>
 
     <!-- Direct dependencies -->
@@ -150,8 +146,7 @@
     <!-- Unused dependency : fr.proline:Proline-Databases:test-jar:tests:0.0.2-SNAPSHOT:test -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
-      <version>${core.version}</version>
+      <artifactId>Proline-Databases</artifactId>      
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -165,8 +160,7 @@
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OM</artifactId>
-      <version>${core.version}</version>
+      <artifactId>Proline-OM</artifactId>      
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
