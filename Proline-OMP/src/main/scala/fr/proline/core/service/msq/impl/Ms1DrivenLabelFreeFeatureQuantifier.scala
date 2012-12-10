@@ -9,7 +9,8 @@ import collection.mutable.{HashMap,HashSet}
 import collection.mutable.ArrayBuffer
 
 import fr.proline.core.algo.msi.ResultSummaryMerger
-import fr.proline.core.dal.{DatabaseManagement,LcmsDb,MsiDb,PsDb,MsiDbSpectrumTable}
+import fr.proline.core.dal.MsiDbSpectrumTable
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.service.msq.IQuantifier
 import fr.proline.util.ms._
 import fr.proline.core.om.model.msi._
@@ -36,20 +37,21 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 ResultSummary => MsiResultSummary,
                                 SequenceMatch => MsiSequenceMatch
                                 }
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
 
 class Ms1DrivenLabelFreeFeatureQuantifier(
-        val dbManager: DatabaseManagement,
+        val dbManager: DatabaseManager,
         val udsEm: EntityManager,
         val udsQuantFraction: UdsQuantFraction
         ) extends IQuantifier with Logging {
   
-  // TODO: retrieve the LCMSdb using the dbManager when it is implemented
-  val lcmsDb = LcmsDb(projectId)
+  val lcmsDbConnector = dbManager.getLcMsDbConnector(projectId)
+  val lcmsSqlHelper = new SQLQueryHelper( lcmsDbConnector )
+  val lcmsEzDBC = lcmsSqlHelper.ezDBC
   
   // TODO: require some parameters
-  val mozTolInPPM = 10
-  
-
+  val mozTolInPPM = 10  
   
   val identRsIdByLcmsMapId = {
     udsQuantChannels.map { qc => qc.getLcmsMapId.intValue -> identRsIdByRsmId(qc.getIdentResultSummaryId) } toMap
@@ -73,7 +75,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       //mapSet = mapSetLoader.getMapSet( mapSetId )
     
     this.logger.info( "loading LCMS map set..." )
-    val mapSetLoader = new fr.proline.core.om.provider.lcms.impl.MapSetLoader( lcmsDb )
+    val mapSetLoader = new fr.proline.core.om.provider.lcms.impl.MapSetLoader( lcmsEzDBC )
     mapSetLoader.getMapSet(mapSetId)
 
   }
@@ -82,8 +84,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
   
   val lcmsRunIds = {
     val runMapIds = lcmsMapSet.getRunMapIds
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
-    lcmsDbTx.select( "SELECT run_id FROM run_map WHERE id IN("+runMapIds.mkString(",")+")" ) { _.nextInt.get }
+    lcmsEzDBC.selectInts( "SELECT run_id FROM run_map WHERE id IN("+runMapIds.mkString(",")+")" )
   }
   
   // Retrieve corresponding peaklist ids
@@ -98,11 +99,10 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     this.logger.info( "loading MS2 spectrum headers..." )
     
     var spectrumColNames: Seq[String] = null
-    val msiDbTx = msiDb.getOrCreateTransaction()
-    msiDbTx.select( "SELECT id,first_cycle,first_scan,first_time,peaklist_id FROM spectrum WHERE peaklist_id IN("+
+    msiEzDBC.select( "SELECT id,first_cycle,first_scan,first_time,peaklist_id FROM spectrum WHERE peaklist_id IN("+
                     peaklistIds.mkString(",")+")" ) { r =>
       if( spectrumColNames == null ) { spectrumColNames = r.columnNames }
-      spectrumColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      spectrumColNames.map( colName => ( colName -> r.nextObject ) ).toMap
     }
     
   }
@@ -133,7 +133,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
   val ms2ScanHeaderRecords = {   
     this.logger.info( "loading MS2 scan headers..." )
     val runIds = this.lcmsRunIds
-    this.lcmsDb.selectRecordsAsMaps( "SELECT id, initial_id, cycle, time FROM scan WHERE ms_level = 2 AND run_id IN ("+
+    lcmsEzDBC.selectRecordsAsMaps( "SELECT id, initial_id, cycle, time FROM scan WHERE ms_level = 2 AND run_id IN ("+
                                      runIds.mkString(",")+")")
   }
    
@@ -143,29 +143,26 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
       r("id").asInstanceOf[Int] -> r("initial_id").asInstanceOf[Int]
     } toMap
     
-    
     val lcmsMapSet = this.lcmsMapSet
     val runMapIds = lcmsMapSet.getRunMapIds
     
     this.logger.info( "loading MS2 scans/features map..." )
     val ms2ScanNumbersByFtId = new HashMap[Int,ArrayBuffer[Int]]
     
-    val lcmsDbTx = this.lcmsDb.getOrCreateTransaction()
-    lcmsDbTx.selectAndProcess( "SELECT feature_id, ms2_event_id FROM feature_ms2_event WHERE run_map_id IN("+
-                               runMapIds.mkString(",")+")") { r =>
-      val( featureId, ms2ScanId ) = ( r.nextInt.get, r.nextInt.get )
+    lcmsEzDBC.selectAndProcess( "SELECT feature_id, ms2_event_id FROM feature_ms2_event WHERE run_map_id IN("+
+                                runMapIds.mkString(",")+")") { r =>
+      val( featureId, ms2ScanId ) = ( r.nextInt, r.nextInt )
       val ms2ScanNumber = ms2ScanNumberById(ms2ScanId)
       ms2ScanNumbersByFtId.getOrElseUpdate(featureId, new ArrayBuffer[Int] ) += ms2ScanNumber
     }
     
     ms2ScanNumbersByFtId.toMap
-  }  
-
+  }
   
   def quantifyFraction(): Unit = {
     
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider( msiDb, psDb )
+    val rsmProvider = new SQLResultSummaryProvider( msiEzDBC, psSqlHelper.ezDBC )
     
     // Define some vars
     val identPepInstById = new HashMap[Int,PeptideInstance]()
@@ -266,10 +263,6 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
         }
       }
     }
-    
-    // Commit SQL transaction
-    // FIXME: remove this line when transaction sharing is fixed
-    val msiDbTx = this.msiDb.commitTransaction()
     
     // Begin new ORM transaction
     msiEm.getTransaction().begin()

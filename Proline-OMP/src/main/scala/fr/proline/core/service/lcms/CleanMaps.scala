@@ -1,17 +1,19 @@
 package fr.proline.core.service.lcms
 
+import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.core.dal.LcmsDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.algo.lcms.FeatureClusterer
+import fr.proline.repository.IDatabaseConnector
 
 object CleanMaps {
   
-  def apply( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, scans: Seq[LcmsScan],
+  def apply( lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcmsScan],
              clusteringParams: Option[ClusteringParams] ): ProcessedMap = {
     
-    val mapCleaningService = new CleanMaps( lcmsDb, lcmsMap, scans, clusteringParams )
+    val mapCleaningService = new CleanMaps( lcmsDbConnector, lcmsMap, scans, clusteringParams )
     mapCleaningService.runService()
     mapCleaningService.cleanedMap
     
@@ -19,8 +21,8 @@ object CleanMaps {
   
 }
 
-class CleanMaps( lcmsDb: LcmsDb, lcmsMap: ProcessedMap, scans: Seq[LcmsScan],
-                 clusteringParams: Option[ClusteringParams] ) extends IService {
+class CleanMaps( val lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcmsScan],
+                 clusteringParams: Option[ClusteringParams] ) extends MXLcmsService {
   
   var cleanedMap: ProcessedMap = null
   

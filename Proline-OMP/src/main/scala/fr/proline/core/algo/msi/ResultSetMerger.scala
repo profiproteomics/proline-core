@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi
 
 import scala.collection.mutable.{ArrayBuffer,HashMap,HashSet}
 import com.weiglewilczek.slf4s.Logging
-import org.apache.commons.lang.StringUtils.{isEmpty => isEmptyStr}
+import fr.proline.util.StringUtils.{isEmpty => isEmptyStr}
 import fr.proline.core.om.model.msi._
 
 object ResultSetMerger {

@@ -1,23 +1,23 @@
 package fr.proline.core.service.lcms
 
 import scala.collection.mutable.ArrayBuffer
-import net.noerd.prequel.SQLFormatterImplicits._
 
+import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.LcmsDb
 import fr.proline.core.algo.lcms.ClusteringParams
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl.RunLoader
 import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.core.service.lcms._
+import fr.proline.repository.IDatabaseConnector
 
 object CreateMapSet {
 
-  def apply( lcmsDb: LcmsDb, mapSetName: String, runMaps: Seq[RunMap], 
+  def apply( lcmsDbConnector: IDatabaseConnector, mapSetName: String, runMaps: Seq[RunMap], 
              clusteringParams: ClusteringParams ): MapSet = {
     
-    val mapSetCreator = new CreateMapSet( lcmsDb, mapSetName, runMaps, clusteringParams  )
+    val mapSetCreator = new CreateMapSet( lcmsDbConnector, mapSetName, runMaps, clusteringParams  )
     mapSetCreator.runService()
     mapSetCreator.createdMapSet
     
@@ -25,8 +25,8 @@ object CreateMapSet {
   
 }
 
-class CreateMapSet( lcmsDb: LcmsDb, mapSetName: String, runMaps: Seq[RunMap], 
-                    clusteringParams: ClusteringParams  ) extends IService {
+class CreateMapSet( val lcmsDbConnector: IDatabaseConnector, mapSetName: String, runMaps: Seq[RunMap], 
+                    clusteringParams: ClusteringParams  ) extends MXLcmsService {
 
   var createdMapSet: MapSet = null
   
@@ -40,16 +40,14 @@ class CreateMapSet( lcmsDb: LcmsDb, mapSetName: String, runMaps: Seq[RunMap],
     //die "can't filter data which are ! produced by mzDBaccess" if pps.name ne 'mzDBaccess' and this.hasFeatureFilters
     
     // Load runs
-    val runLoader = new RunLoader( lcmsDb )
+    val runLoader = new RunLoader( ezDBC )
     val runIds = runMaps.map { _.runId }
     val runs = runLoader.getRuns( runIds )
     val runById = runs.map { run => run.id -> run } toMap
     
     // Check if a transaction is already initiated
-    val wasInTransaction = lcmsDb.isInTransaction()
-    
-    // Retrieve database transaction
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
+    val wasInTransaction = ezDBC.isInTransaction()
+    if( !wasInTransaction ) ezDBC.beginTransaction()
     
     //print "Create map set\n" if this.verbose
     
@@ -57,13 +55,13 @@ class CreateMapSet( lcmsDb: LcmsDb, mapSetName: String, runMaps: Seq[RunMap],
     var newMapSetId = 0
     
     // TODO: use ORM layer to do this
-    lcmsDbTx.executeBatch("INSERT INTO map_set (name,map_count,creation_timestamp) VALUES (?,?,?)") { statement => 
-      statement.executeWith( mapSetName, mapCount, lcmsDb.stringifyDate( curTime ) )
-      newMapSetId = statement.wrapped.getGeneratedKeys().getInt("last_insert_rowid()") // SQLite specific query
+    ezDBC.executePrepared("INSERT INTO map_set (name,map_count,creation_timestamp) VALUES (?,?,?)") { stmt => 
+      stmt.executeWith( mapSetName, mapCount, curTime )
+      newMapSetId = stmt.generatedInt
     }
-  
+    
     // Instantiate a processed map storer
-    val processedMapStorer = ProcessedMapStorer( lcmsDb )
+    val processedMapStorer = ProcessedMapStorer( lcmsQueryHelper )
     val processedMaps = new ArrayBuffer[ProcessedMap]
     
     // Iterate over run maps to convert them in processed maps and store them
@@ -77,7 +75,7 @@ class CreateMapSet( lcmsDb: LcmsDb, mapSetName: String, runMaps: Seq[RunMap],
       
       // Clean the map
       val run = runById( runMap.runId )
-      processedMap = CleanMaps( lcmsDb, processedMap, run.scans, Some(clusteringParams) )
+      processedMap = CleanMaps( lcmsDbConnector, processedMap, run.scans, Some(clusteringParams) )
       
       // Set first map as default alignment reference
       if( mapCount == 1 ) processedMap.isAlnReference = true
@@ -89,7 +87,7 @@ class CreateMapSet( lcmsDb: LcmsDb, mapSetName: String, runMaps: Seq[RunMap],
       // Update map set alignment reference map
       if( processedMap.isAlnReference ) {
         alnRefMapId = processedMap.id
-        lcmsDbTx.execute( "UPDATE map_set SET al_reference_map_id = "+ alnRefMapId +" WHERE id = " + newMapSetId )
+        ezDBC.execute( "UPDATE map_set SET al_reference_map_id = "+ alnRefMapId +" WHERE id = " + newMapSetId )
       }
       
     }
@@ -104,7 +102,7 @@ class CreateMapSet( lcmsDb: LcmsDb, mapSetName: String, runMaps: Seq[RunMap],
     }*/
     
     // Commit transaction if it was initiated locally
-    if( !wasInTransaction ) lcmsDb.commitTransaction()
+    if( !wasInTransaction ) ezDBC.commitTransaction()
     
     createdMapSet = new MapSet(
                             id = newMapSetId,

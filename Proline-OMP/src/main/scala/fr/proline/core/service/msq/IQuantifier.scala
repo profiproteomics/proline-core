@@ -7,10 +7,8 @@ import collection.JavaConversions.{collectionAsScalaIterable,setAsJavaSet}
 import collection.JavaConverters.{asJavaCollectionConverter}
 
 import fr.proline.core.algo.msi.ResultSummaryMerger
-import fr.proline.core.dal.MsiDb
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.DatabaseManagement
-import fr.proline.core.dal.PsDb
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
@@ -35,21 +33,22 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 ResultSummary => MsiResultSummary,
                                 SequenceMatch => MsiSequenceMatch
                                 }
-
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
 
 trait IQuantifier extends Logging {
   
   // Required fields
-  val dbManager: DatabaseManagement
+  val dbManager: DatabaseManager
   val udsQuantFraction: QuantitationFraction
   
   // Instantiated fields
   val projectId = udsQuantFraction.getQuantitation.getProject.getId
-  val msiDb = MsiDb( dbManager, projectId )
-  val msiEm = msiDb.entityManager
-  // TODO: retrieve the PSdb using the dbManager when it is implemented
-  val psDbConfig = PsDb.buildConfigFromDatabaseConnector( dbManager.psDBConnector )
-  val psDb = new PsDb( psDbConfig )
+  val msiDbConnector = dbManager.getMsiDbConnector(projectId)
+  val msiEm = msiDbConnector.getEntityManagerFactory().createEntityManager()
+  val msiSqlHelper = new SQLQueryHelper( msiDbConnector )
+  val msiEzDBC = msiSqlHelper.ezDBC
+  val psSqlHelper = new SQLQueryHelper( dbManager.getPsDbConnector )
  
   val udsQuantChannels = udsQuantFraction.getQuantitationChannels
   val quantChannelIds = udsQuantChannels.map { _.getId } toArray
@@ -65,11 +64,10 @@ trait IQuantifier extends Logging {
     
   } toSeq
     
-  val identRsIdByRsmId = {    
-    val msiDbTx = this.msiDb.getOrCreateTransaction
-    msiDbTx.select( "SELECT id, result_set_id FROM result_summary WHERE id IN("+rsmIds.mkString(",")+")" ) { r =>
-      ( r.nextInt.get -> r.nextInt.get )
-    } toMap    
+  val identRsIdByRsmId = {
+    msiEzDBC.select( "SELECT id, result_set_id FROM result_summary WHERE id IN("+rsmIds.mkString(",")+")" ) { r =>
+      ( r.nextInt -> r.nextInt )
+    } toMap
   }
   
   val msiIdentResultSets = {   
@@ -85,11 +83,11 @@ trait IQuantifier extends Logging {
     this.logger.info( "loading result summaries..." )
         
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider( msiDb, psDb )
+    val rsmProvider = new SQLResultSummaryProvider( msiEzDBC, psSqlHelper.ezDBC )
     rsmProvider.getResultSummaries(rsmIds,true)
   }
   
-  val msiDbHelper = new MsiDbHelper( msiDb )
+  val msiDbHelper = new MsiDbHelper( msiEzDBC )
   
   val seqLengthByProtId = {
     val tmpIdentProteinIdSet = new collection.mutable.HashSet[Int]()
@@ -115,7 +113,6 @@ trait IQuantifier extends Logging {
   
   private var _quantified = false
   
-  
   /** Main method of the quantifier.
    * This method wraps the quantifyFraction method which has to be implemented
    * in each specific quantifier.
@@ -129,6 +126,9 @@ trait IQuantifier extends Logging {
     
     // Run the quantification process
     this.quantifyFraction()
+    
+    // Close entity managers
+    this.msiEm.close()
     
     this._quantified = true    
     this.logger.info("fraction has been quantified !")

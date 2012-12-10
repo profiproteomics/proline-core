@@ -2,36 +2,42 @@ package fr.proline.core.service.msi
 
 import java.io.File
 import com.weiglewilczek.slf4s.Logging
-import org.apache.commons.lang3.StringUtils
+import com.codahale.jerkson.Json.parse
 
+import fr.profi.jdbc.easy._
+import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
-import fr.proline.core.dal.{DatabaseManagement,MsiDb,UdsDb}
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.msi.{IResultFile,IResultFileProvider,Instrument,InstrumentConfig,PeaklistSoftware,ResultSet}
 import fr.proline.core.om.model.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.msi.{IRsStorer,MsiSearchStorer,RsStorer}
 import fr.proline.core.om.storer.msi.impl.JPARsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.api.service.IService
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
+import fr.proline.util.StringUtils
 
-class ResultFileImporterJPAStorer( dbMgnt: DatabaseManagement,
-                          projectId: Int,
-                          resultIdentFile: File,
-                          fileType: String,
-                          providerKey: String,
-                          instrumentConfigId: Int,
-                          importerProperties: Map[String, Any],
-                          acDecoyRegex: Option[util.matching.Regex] = None ) extends IService with Logging {
+class ResultFileImporterJPAStorer(
+  dbManager: DatabaseManager,
+  projectId: Int,
+  resultIdentFile: File,
+  fileType: String,
+  providerKey: String,
+  instrumentConfigId: Int,
+  importerProperties: Map[String, Any],
+  acDecoyRegex: Option[util.matching.Regex] = None
+) extends IService with Logging {
   
   private var targetResultSetId = 0
   
-  private val msiDbConnector = dbMgnt.getMSIDatabaseConnector(projectId, false)
-  private val udsDb = new UdsDb( UdsDb.buildConfigFromDatabaseManagement(dbMgnt) )
+  private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
+  private val udsSqlHelper = new SQLQueryHelper(dbManager.getUdsDbConnector)
   private var stContext: StorerContext = null
   
   override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    this.udsDb.closeConnection()
+    //this.udsDb.closeConnection()
     this.stContext.closeOpenedEM()
   }
   
@@ -47,7 +53,7 @@ class ResultFileImporterJPAStorer( dbMgnt: DatabaseManagement,
     // Retrieve the instrument configuration
     val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
 
-    this.stContext = new StorerContext(dbMgnt, msiDbConnector)
+    this.stContext = new StorerContext(dbManager, msiDbConnector)
     logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
     >>>
     
@@ -60,7 +66,7 @@ class ResultFileImporterJPAStorer( dbMgnt: DatabaseManagement,
     >>>
     
     // Instantiate RsStorer   
-    val rsStorer: IRsStorer = new JPARsStorer(dbMgnt, msiDbConnector) //<> SQLStorer
+    val rsStorer: IRsStorer = new JPARsStorer(dbManager, msiDbConnector) //<> SQLStorer
  
     
 	  // Configure result file before parsing
@@ -79,8 +85,7 @@ class ResultFileImporterJPAStorer( dbMgnt: DatabaseManagement,
 //      msiTransacOk = false
       
       // Insert instrument config in the MSIdb         
-    	rsStorer.insertInstrumentConfig( instrumentConfig, this.stContext)               
-      stContext.msiDB.commitTransaction()// Attente partage transaction TODO  ??
+      rsStorer.insertInstrumentConfig( instrumentConfig, this.stContext)
       
       // Retrieve MSISearch and related MS queries
       val msiSearch = resultFile.msiSearch
@@ -163,69 +168,52 @@ class ResultFileImporterJPAStorer( dbMgnt: DatabaseManagement,
 
   private def _getPeaklistSoftware( plName: String, plRevision: String ): PeaklistSoftware = {
 
-    var plSoftware: PeaklistSoftware = null
-    
-    val prepStmt = this.udsDb.getOrCreateConnection.prepareStatement("SELECT * FROM peaklist_software WHERE name= ? and version= ? ")
-    prepStmt.setString(1, plName)
-    prepStmt.setString(2, plRevision)
-    
-    val result = prepStmt.executeQuery ()  
-    if(result.next){
-      plSoftware = new PeaklistSoftware( id = result.getInt("id"),
-        name =result.getString("name"),
-        version =result.getString("version"))
-    }
-       
-    if ( plSoftware == null )
-      plSoftware = new PeaklistSoftware( id=  PeaklistSoftware.generateNewId,
-        name = "Default",
-        version = "0.1" )
-
-    plSoftware
+    udsSqlHelper.ezDBC.selectHeadOrElse(
+    "SELECT * FROM peaklist_software WHERE name= ? and version= ? ",plName,plRevision) ( r =>
+      new PeaklistSoftware( id = r, name = r, version = r )
+      ,
+      new PeaklistSoftware( id = PeaklistSoftware.generateNewId, name = "Default", version = "0.1" )
+    )
   }
   
+  // TODO: put in a dedicated provider
   private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
-    
-    var udsInstConfigColNames: Seq[String] = null
-    var udsInstConfigRecord: Map[String,Any] = null
+    import fr.proline.core.om.model.msi.{InstrumentProperties,InstrumentConfigProperties}
     
     // Load the instrument configuration record
-    udsDb.getOrCreateTransaction.selectAndProcess( "SELECT * FROM instrument_config WHERE id=" + instrumentConfigId ) { r => 
-      if( udsInstConfigColNames == null ) { udsInstConfigColNames = r.columnNames }      
-      udsInstConfigRecord = udsInstConfigColNames.map { colName => ( colName -> r.nextObject.getOrElse(null) ) } toMap      
-    }
-    
-    val instrumentId: Int = udsInstConfigRecord("instrument_id").asInstanceOf[AnyVal]    
-    var instrument: Instrument = null
-    
-    // Load the corresponding instrument
-    udsDb.getOrCreateTransaction.selectAndProcess( "SELECT * FROM instrument WHERE id=" + instrumentId ) { r => 
+    udsSqlHelper.ezDBC.selectHead(
+    "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config "+
+    "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId ) { r =>
       
-      instrument = new Instrument( id = r.nextInt.get,
-                                   name = r.nextString.get,
-                                   source = r.nextString.get
-                                  )
+      val instrument = new Instrument( id = r.nextObject.asInstanceOf[AnyVal], name = r, source = r )
+      val instPropStr: String = r
+      instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+      
+      // Skip instrument_config.id field
+      r.nextObject
+      
+      val instrumentConfig = new InstrumentConfig(
+        id = instrumentConfigId,
+        name = r.nextString,
+        instrument = instrument,
+        ms1Analyzer = r.nextString,
+        msnAnalyzer = r.nextString,
+        activationType = ""
+      )
+      val instConfigPropStr: String = r
+      instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+      
+      // Skip instrument_config.instrument_id field
+      r.nextObject
+      
+      // Update activation type
+      instrumentConfig.activationType = r.nextString
+      
+      instrumentConfig
     }
-    
-    this._buildInstrumentConfig( udsInstConfigRecord, instrument )
 
   }
-  
-  private def _buildInstrumentConfig( instConfigRecord: Map[String,Any], instrument: Instrument ): InstrumentConfig = {
-    
-    import fr.proline.util.primitives.LongOrIntAsInt._
-    
-    new InstrumentConfig(
-         id = instConfigRecord("id").asInstanceOf[AnyVal],
-         name = instConfigRecord("name").asInstanceOf[String],
-         instrument = instrument,
-         ms1Analyzer = instConfigRecord("ms1_analyzer").asInstanceOf[String],
-         msnAnalyzer = instConfigRecord("msn_analyzer").asInstanceOf[String],
-         activationType = instConfigRecord("activation_type").asInstanceOf[String]
-         )
-
-  }  
    
 }

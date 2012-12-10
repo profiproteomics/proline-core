@@ -1,21 +1,21 @@
 package fr.proline.core.service.lcms
 
-import fr.proline.core.dal.LcmsDb
+import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.service.lcms._
 import fr.proline.core.algo.lcms.alignment.AlignmentParams
 import fr.proline.core.algo.lcms.LcmsMapAligner
 import fr.proline.core.om.model.lcms.MapSet
-//import fr.proline.core.om.provider.sql.lcms.MapSetLoader
-import fr.proline.util.sql.BoolToSQLStr
 import fr.proline.core.om.storer.lcms.MapAlnSetStorer
+import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.repository.IDatabaseConnector
 
 object AlignMapSet {
 
-  def apply( lcmsDb: LcmsDb, mapSet: MapSet, 
+  def apply( lcmsDbConnector: IDatabaseConnector, mapSet: MapSet, 
              alnMethodName: String, alnParams: AlignmentParams ): Unit = {
     
-    val mapSetAligner = new AlignMapSet( lcmsDb, mapSet, alnMethodName, alnParams  )
+    val mapSetAligner = new AlignMapSet( lcmsDbConnector, mapSet, alnMethodName, alnParams  )
     mapSetAligner.runService()
     ()
     
@@ -23,8 +23,8 @@ object AlignMapSet {
   
 }
 
-class AlignMapSet( lcmsDb: LcmsDb, mapSet: MapSet, 
-                   alnMethodName: String, alnParams: AlignmentParams  ) {
+class AlignMapSet( val lcmsDbConnector: IDatabaseConnector, mapSet: MapSet, 
+                   alnMethodName: String, alnParams: AlignmentParams  ) extends MXLcmsService {
 
   def runService(): Boolean = {
     
@@ -33,20 +33,17 @@ class AlignMapSet( lcmsDb: LcmsDb, mapSet: MapSet,
     val mapSetId = mapSet.id
     
     // Check if a transaction is already initiated
-    val wasInTransaction = lcmsDb.isInTransaction()
-    
-    // Retrieve database transaction
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()    
+    val wasInTransaction = ezDBC.isInTransaction 
+    if( !wasInTransaction ) ezDBC.beginTransaction()
     
     // Check if reference map already exists: if so delete alignments
     val existingAlnRefMapId = mapSet.alnReferenceMapId
     if( existingAlnRefMapId > 0 ) {
       
-      lcmsDbTx.execute( "DELETE FROM map_alignment WHERE map_set_id = " + mapSetId )
+      ezDBC.execute( "DELETE FROM map_alignment WHERE map_set_id = " + mapSetId )
       
       // Update processed reference map
-      lcmsDbTx.execute( "UPDATE processed_map SET is_aln_reference = " + 
-                        BoolToSQLStr(false,lcmsDb.boolStrAsInt)  + " WHERE id = " + existingAlnRefMapId )
+      ezDBC.execute( "UPDATE processed_map SET is_aln_reference = ? WHERE id = ?", false, existingAlnRefMapId )
 
     }
     
@@ -58,11 +55,11 @@ class AlignMapSet( lcmsDb: LcmsDb, mapSet: MapSet,
     val mapAligner = LcmsMapAligner( methodName = alnMethodName )
     val alnResult = mapAligner.computeMapAlignments( childMapsWithoutClusters, alnParams )
     
-    val alnStorer = MapAlnSetStorer( lcmsDb )
+    val alnStorer = MapAlnSetStorer( lcmsQueryHelper )
     alnStorer.storeMapAlnSets( alnResult.mapAlnSets, mapSetId, alnResult.alnRefMapId )
     
-     // Commit transaction if it was initiated locally
-    if( !wasInTransaction ) lcmsDb.commitTransaction()
+    // Commit transaction if it was initiated locally
+    if( !wasInTransaction ) ezDBC.commitTransaction()
     
     // Update the maps the map set alignment sets
     mapSet.alnReferenceMapId = alnResult.alnRefMapId

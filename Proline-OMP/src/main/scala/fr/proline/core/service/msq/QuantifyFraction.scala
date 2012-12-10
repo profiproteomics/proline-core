@@ -1,15 +1,15 @@
 package fr.proline.core.service.msq
 
 import fr.proline.api.service.IService
-import fr.proline.core.dal.DatabaseManagement
 import fr.proline.core.orm.uds.{ QuantitationFraction => UdsQuantFraction }
+import fr.proline.core.orm.util.DatabaseManager
 
-class QuantifyFraction( dbManager: DatabaseManagement, quantFractionId: Int ) extends IService {
+class QuantifyFraction( dbManager: DatabaseManager, quantFractionId: Int ) extends IService {
   
   def runService() = {
     
-    // Open UDSdb connection
-    val udsEM = dbManager.udsEMF.createEntityManager()
+    // Create entity manager
+    val udsEM = dbManager.getUdsDbConnector.getEntityManagerFactory.createEntityManager()
     
     // Retrieve the quantitation fraction
     val udsQuantFraction = udsEM.find(classOf[UdsQuantFraction], quantFractionId)    
@@ -17,6 +17,9 @@ class QuantifyFraction( dbManager: DatabaseManagement, quantFractionId: Int ) ex
              "undefined quantitation fraction with id=" + udsQuantFraction )
     
     FractionQuantifier( dbManager, udsEM, udsQuantFraction ).quantify()
+    
+    // Close entity manager
+    udsEM.close()
     
     false
   }
@@ -28,7 +31,7 @@ object FractionQuantifier {
   import javax.persistence.EntityManager
   import fr.proline.core.service.msq.impl._
   
-  def apply( dbManager: DatabaseManagement,
+  def apply( dbManager: DatabaseManager,
              udsEm: EntityManager,
              udsQuantFraction: UdsQuantFraction ): IQuantifier = {
     

@@ -3,14 +3,18 @@ package fr.proline.core.service.msi
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.{DatabaseManagement,MsiDb}
+
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{MsiSearchStorer,RsStorer}
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.validation._
+import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
 
 /*object ResultSetValidator {
   
@@ -28,7 +32,7 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
   }
 }*/
 
-class ResultSetValidator( dbManager: DatabaseManagement,
+class ResultSetValidator( dbManager: DatabaseManager,
                           projectId: Int,
                           targetRs: ResultSet,
                           decoyRsOpt: Option[ResultSet] = None,
@@ -37,15 +41,16 @@ class ResultSetValidator( dbManager: DatabaseManagement,
                           targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
                           storeResultSummary: Boolean = true ) extends IService with Logging {
 
-  private val msiDbConnector = dbManager.getMSIDatabaseConnector(projectId, false)
-  private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) ) 
+  private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
+  private val msiSqlHelper = new SQLQueryHelper(msiDbConnector)
+  private val ezDBC = msiSqlHelper.ezDBC
   //private val psDb = new PsDb( PsDb.getDefaultConfig ) // TODO: retrieve from UDS-DB
   //private val udsDb = new UdsDb( UdsDb.getDefaultConfig ) // TODO: retrieve from config
   
   override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    this.msiDb.closeConnection()
+    //this.msiDb.closeConnection()
     //this.psDb.closeConnection()
     //this.udsDb.closeConnection()
   }
@@ -53,9 +58,7 @@ class ResultSetValidator( dbManager: DatabaseManagement,
   var validatedTargetRsm: ResultSummary = null
   var validatedDecoyRsm: Option[ResultSummary] = null
   
-  def runService(): Boolean = {
-    
-    import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+  def runService(): Boolean = {    
     
     val startTime = curTimeInSecs()
 
@@ -191,8 +194,12 @@ class ResultSetValidator( dbManager: DatabaseManagement,
       
     if( storeResultSummary ) {
       
+      // Check if a transaction is already initiated
+      val wasInTransaction = ezDBC.isInTransaction()
+      if( !wasInTransaction ) ezDBC.beginTransaction()
+      
       // Instantiate a RSM storer
-      val rsmStorer = RsmStorer( msiDb )
+      val rsmStorer = RsmStorer( msiSqlHelper )
       
       // Store decoy result summary
       if( decoyRsmOpt != None ) {
@@ -204,8 +211,8 @@ class ResultSetValidator( dbManager: DatabaseManagement,
       rsmStorer.storeResultSummary( targetRsm )
       >>>
       
-      // Commit transaction
-      this.msiDb.commitTransaction()
+      // Commit transaction if it was initiated locally
+      if( !wasInTransaction ) ezDBC.commitTransaction()
       
       this.logger.info( "result summary successfully stored !")
     }

@@ -2,20 +2,20 @@ package fr.proline.core.service.uds
 
 import com.weiglewilczek.slf4s.Logging
 import collection.JavaConversions.collectionAsScalaIterable
-import fr.proline.core.dal.{DatabaseManagement,MsiDb,PsDb,UdsDb}
+
 import fr.proline.api.service.IService
-import fr.proline.core.service.msi.ResultSummaryMerger
 import fr.proline.core.algo.msi.validation.{TargetDecoyModes,ValidationParams}
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}
 import fr.proline.core.orm.uds.{ Identification => UdsIdentification,
                                  IdentificationSummary => UdsIdfSummary,
                                  IdentificationFractionSummary => UdsIdfFractionSummary }
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger,ResultSummaryMerger}
 
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}
-import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger}
-
-class IdentificationValidator( dbManager: DatabaseManagement,
+class IdentificationValidator( dbManager: DatabaseManager,
                                identificationId: Int,
                                rsmIds: Seq[Int],
                                mergeResultSets: Boolean,
@@ -23,26 +23,27 @@ class IdentificationValidator( dbManager: DatabaseManagement,
                                protSetValParams: Option[ValidationParams] = None
                                ) extends IService with Logging {
   
-  private val udsEM = dbManager.udsEMF.createEntityManager() 
+  private val udsEM = dbManager.getUdsDbConnector.getEntityManagerFactory.createEntityManager()
   private val udsIdent = udsEM.find(classOf[UdsIdentification], identificationId)
-  private val projectId = udsIdent.getProject().getId()
+  private val psSqlHelper = new SQLQueryHelper( dbManager.getPsDbConnector )  
   
-  private val psDb = new PsDb(PsDb.buildConfigFromDatabaseConnector(dbManager.psDBConnector) ) 
-  
-  private val msiDbConnector = dbManager.getMSIDatabaseConnector(projectId, false)
-  private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) )
-  private val msiDbHelper = new MsiDbHelper( msiDb )
+  private val projectId = udsIdent.getProject.getId
+  private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
+  private val msiSqlHelper = new SQLQueryHelper( msiDbConnector )
+  private val msiDbHelper = new MsiDbHelper( msiSqlHelper.ezDBC )
   
   private def closeDbConnections() = {
     // Close connections before launching another service
-    this.msiDb.closeConnection()
-    this.psDb.closeConnection()
+    //this.msiDb.closeConnection()
+    //this.psDb.closeConnection()
   }
+  
   override def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    this.closeDbConnections()
-    this.dbManager.udsEMF.close()
+    //this.closeDbConnections()
+    //this.dbManager.udsEMF.close()
+    udsEM.close()
   }
   
   def runService(): Boolean = {
@@ -70,7 +71,7 @@ class IdentificationValidator( dbManager: DatabaseManagement,
         }
         
         // Instantiate a RS loader
-        val rsProvider = new SQLResultSetProvider( msiDb, psDb )
+        val rsProvider = new SQLResultSetProvider( msiSqlHelper.ezDBC, psSqlHelper.ezDBC )
         
         // Load result sets
         val rsIds = targetRsIds ++ decoyRsIdsAsOpts.map { _.get }
@@ -109,11 +110,11 @@ class IdentificationValidator( dbManager: DatabaseManagement,
       } else {
         
         // Iterate over result summary ids to load them
-        val resultSummaries = new SQLResultSummaryProvider( msiDb, psDb ).getResultSummaries( rsmIds, true )
+        val resultSummaries = new SQLResultSummaryProvider( msiSqlHelper.ezDBC, psSqlHelper.ezDBC ).getResultSummaries( rsmIds, true )
         
         // Close connections before launching another service
-        this.msiDb.closeConnection()
-        this.psDb.closeConnection()
+        //this.msiDb.closeConnection()
+        //this.psDb.closeConnection()
         
         // Merge result summaries
         val rsmMerger = new ResultSummaryMerger( dbManager, projectId, resultSummaries )

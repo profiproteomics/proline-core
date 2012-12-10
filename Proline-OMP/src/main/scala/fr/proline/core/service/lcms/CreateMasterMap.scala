@@ -1,20 +1,20 @@
 package fr.proline.core.service.lcms
 
 import scala.collection.mutable.ArrayBuffer
-import net.noerd.prequel.SQLFormatterImplicits._
 
+import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.LcmsDb
 import fr.proline.core.algo.lcms._
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl._
 import fr.proline.core.om.storer.lcms.MasterMapStorer
 import fr.proline.core.service.lcms._
+import fr.proline.repository.IDatabaseConnector
 
 object CreateMasterMap {
 
-  def apply( lcmsDb: LcmsDb, mapSet: MapSet,
+  def apply( lcmsDb: IDatabaseConnector, mapSet: MapSet,
              masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
              ftMappingParams: FeatureMappingParams,
              normalizationMethod: Option[String] ): ProcessedMap = {
@@ -27,12 +27,11 @@ object CreateMasterMap {
   
 }
 
-class CreateMasterMap( lcmsDb: LcmsDb, mapSet: MapSet,
+class CreateMasterMap( val lcmsDbConnector: IDatabaseConnector, mapSet: MapSet,
                        masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
                        ftMappingParams: FeatureMappingParams,
-                       normalizationMethod: Option[String] ) extends IService {
+                       normalizationMethod: Option[String] ) extends MXLcmsService {
   
-  val maxNbIters = lcmsDb.maxVariableNumber
   var createdMasterMap: ProcessedMap = null
   
   def runService(): Boolean = {
@@ -44,10 +43,8 @@ class CreateMasterMap( lcmsDb: LcmsDb, mapSet: MapSet,
     }
     
     // Check if a transaction is already initiated
-    val wasInTransaction = lcmsDb.isInTransaction()
-    
-    // Retrieve database transaction
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()   
+    val wasInTransaction = ezDBC.isInTransaction()
+    if( !wasInTransaction ) ezDBC.beginTransaction()
     
     // Delete current master map if it exists
     if( mapSet.masterMap != null ) {
@@ -55,11 +52,11 @@ class CreateMasterMap( lcmsDb: LcmsDb, mapSet: MapSet,
          
       // Delete links between master map features and child features
       println( "delete links between master map features and child features..." )        
-      lcmsDbTx.execute( "DELETE FROM master_feature_item WHERE master_map_id = " + existingMasterMapId )
+      ezDBC.execute( "DELETE FROM master_feature_item WHERE master_map_id = " + existingMasterMapId )
       
       // Delete master map features
       println( "delete master map features..." )      
-      lcmsDbTx.execute( "DELETE FROM feature WHERE map_id = " + existingMasterMapId )
+      ezDBC.execute( "DELETE FROM feature WHERE map_id = " + existingMasterMapId )
       
       /*
       // Make several requests
@@ -69,12 +66,12 @@ class CreateMasterMap( lcmsDb: LcmsDb, mapSet: MapSet,
 
       // Delete existing processed map feature items
       println( "delete processed map feature item for master map..." )
-      lcmsDbTx.execute( "DELETE FROM processed_map_feature_item WHERE processed_map_id = " + existingMasterMapId )
+      ezDBC.execute( "DELETE FROM processed_map_feature_item WHERE processed_map_id = " + existingMasterMapId )
       
       // Delete existing master map
       println( "delete existing master map..." )
-      lcmsDbTx.execute( "DELETE FROM processed_map WHERE id = " + existingMasterMapId )
-      lcmsDbTx.execute( "DELETE FROM map WHERE id = " + existingMasterMapId )
+      ezDBC.execute( "DELETE FROM processed_map WHERE id = " + existingMasterMapId )
+      ezDBC.execute( "DELETE FROM map WHERE id = " + existingMasterMapId )
       
       // Update map set
       this.mapSet.masterMap = null
@@ -101,7 +98,7 @@ class CreateMasterMap( lcmsDb: LcmsDb, mapSet: MapSet,
     }
     
     println( "saving master map..." )
-    val masterMapStorer = MasterMapStorer( lcmsDb )
+    val masterMapStorer = MasterMapStorer( lcmsQueryHelper )
     masterMapStorer.storeMasterMap( mapSet.masterMap )
     
     true

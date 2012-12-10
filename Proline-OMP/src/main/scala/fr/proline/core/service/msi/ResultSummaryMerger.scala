@@ -4,29 +4,39 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import com.weiglewilczek.slf4s.Logging
-import net.noerd.prequel.SQLFormatterImplicits._
-import fr.proline.api.service.IService
-import fr.proline.core.dal.{DatabaseManagement,MsiDb,MsiDbResultSetRelationTable,MsiDbResultSummaryRelationTable}
-import fr.proline.core.om.model.msi._
-import fr.proline.core.algo.msi.{ ResultSummaryMerger => RsmMergerAlgo }
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.om.storer.msi.{RsStorer,RsmStorer}
 
-class ResultSummaryMerger( dbManager: DatabaseManagement,
+import fr.profi.jdbc.easy._
+import fr.proline.api.service.IService
+import fr.proline.core.algo.msi.{ ResultSummaryMerger => RsmMergerAlgo }
+import fr.proline.core.dal.{MsiDbResultSetRelationTable,MsiDbResultSummaryRelationTable}
+import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.storer.msi.{RsStorer,RsmStorer}
+import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDatabaseConnector
+
+class ResultSummaryMerger( dbManager: DatabaseManager,
                            projectId: Int,
                            resultSummaries: Seq[ResultSummary] ) extends IService with Logging {
   
-  private val msiDbConnector = dbManager.getMSIDatabaseConnector(projectId, false)
-  private val msiDb = new MsiDb( MsiDb.buildConfigFromDatabaseConnector(msiDbConnector) )
+  private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
+  private val msiSqlHelper = new SQLQueryHelper(msiDbConnector)
+  private val ezDBC = msiSqlHelper.ezDBC
+  
   var mergedResultSummary: ResultSummary = null
   
   override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    this.msiDb.closeConnection()
+    //this.msiDb.closeConnection()
   }
   
   def runService(): Boolean = {
+    
+    // Check if a transaction is already initiated
+    val wasInTransaction = ezDBC.isInTransaction()
+    if( !wasInTransaction ) ezDBC.beginTransaction()
     
     // Retrieve protein ids
     val proteinIdSet = new HashSet[Int]
@@ -42,7 +52,7 @@ class ResultSummaryMerger( dbManager: DatabaseManagement,
     }
     
     // Retrieve sequence length mapped by the corresponding protein id
-    val seqLengthByProtId = new MsiDbHelper( msiDb ).getSeqLengthByBioSeqId(proteinIdSet)
+    val seqLengthByProtId = new MsiDbHelper( ezDBC ).getSeqLengthByBioSeqId(proteinIdSet)
     >>>
     
     // Merge result summaries
@@ -68,7 +78,7 @@ class ResultSummaryMerger( dbManager: DatabaseManagement,
     val protMatchByTmpId = mergedResultSet.proteinMatches.map { p => p.id -> p } toMap
     
     this.logger.info( "store result set..." )
-    val rsStorer = RsStorer( dbManager, msiDb )
+    val rsStorer = RsStorer( dbManager, msiSqlHelper )
     rsStorer.storeResultSet( mergedResultSet )
     >>>
     
@@ -78,7 +88,7 @@ class ResultSummaryMerger( dbManager: DatabaseManagement,
     
     // Insert result set relation between parent and its children
     val rsRelationInsertQuery = MsiDbResultSetRelationTable.makeInsertQuery()
-    this.msiDb.getOrCreateTransaction.executeBatch( rsRelationInsertQuery ) { stmt =>
+    ezDBC.executePrepared( rsRelationInsertQuery ) { stmt =>
       for( childRsId <- rsIds ) stmt.executeWith( parentRsId, childRsId )
     }
     >>>
@@ -124,11 +134,11 @@ class ResultSummaryMerger( dbManager: DatabaseManagement,
     
     // Store result summary
     this.logger.info( "store result summary..." )    
-    RsmStorer( msiDb ).storeResultSummary( tmpMergedResultSummary )
+    RsmStorer( msiSqlHelper ).storeResultSummary( tmpMergedResultSummary )
     >>>
     
-    // Commit transaction
-    this.msiDb.commitTransaction()
+    // Commit transaction if it was initiated locally
+    if( !wasInTransaction ) ezDBC.commitTransaction()
     
     this.mergedResultSummary = tmpMergedResultSummary
     

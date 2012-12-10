@@ -4,7 +4,6 @@ import collection.mutable.HashMap
 import collection.JavaConversions.collectionAsScalaIterable
 import com.codahale.jerkson.JsonSnakeCase
 import fr.proline.api.service.IService
-import fr.proline.core.dal.DatabaseManagement
 import fr.proline.util.sql.getTimeAsSQLTimestamp
 import fr.proline.core.orm.uds.{ BiologicalGroup => UdsBiologicalGroup,
                                  BiologicalSample => UdsBiologicalSample,
@@ -17,9 +16,10 @@ import fr.proline.core.orm.uds.{ BiologicalGroup => UdsBiologicalGroup,
                                  QuantitationFraction => UdsQuantitationFraction,
                                  RatioDefinition => UdsRatioDefinition,
                                  SampleAnalysisReplicate => UdsSampleAnalysisReplicate }
+import fr.proline.core.orm.util.DatabaseManager
 
 class CreateQuantitation(
-        dbManager: DatabaseManagement,
+        dbManager: DatabaseManager,
         name: String,
         description: String,
         projectId: Int,
@@ -31,8 +31,8 @@ class CreateQuantitation(
   
   def runService() = {
     
-    // Open UDSdb connection
-    val udsEM = dbManager.udsEMF.createEntityManager()    
+    // Create entity manager
+    val udsEM = dbManager.getUdsDbConnector.getEntityManagerFactory.createEntityManager()
     
     // Retrieve some vars
     val biologicalSamples = experimentalDesign.biologicalSamples
@@ -228,6 +228,9 @@ class CreateQuantitation(
     
     // Commit transaction
     udsEM.getTransaction().commit()    
+    
+    // Close entity manager
+    udsEM.close()
     
     true
   }

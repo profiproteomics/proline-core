@@ -5,9 +5,9 @@ import com.codahale.jerkson.Json.generate
 import javax.persistence.EntityManager
 import collection.JavaConversions.{collectionAsScalaIterable}
 import collection.mutable.{ArrayBuffer,HashMap}
+
 import fr.proline.core.algo.msi.ResultSummaryMerger
 import fr.proline.core.algo.msq.Ms2CountQuantifier
-import fr.proline.core.dal.DatabaseManagement
 import fr.proline.core.om.model.msi.{PeptideInstance,PeptideMatch,ResultSummary}
 import fr.proline.core.om.model.msq.{MasterQuantPeptide,MasterQuantProteinSet,QuantPeptide,QuantProteinSet}
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
@@ -19,23 +19,21 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 ResultSummary => MsiResultSummary
                                 }
 import fr.proline.core.orm.uds.{QuantitationFraction => UdsQuantFraction}
+import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.core.service.msq.IQuantifier
+import fr.proline.repository.IDatabaseConnector
 
 /**
  * @author David Bouyssie
  *
  */
 class SpectralCountQuantifier(
-        val dbManager: DatabaseManagement,
+        val dbManager: DatabaseManager,
         val udsEm: EntityManager,
         val udsQuantFraction: UdsQuantFraction
         ) extends IQuantifier with Logging {
   
   def quantifyFraction(): Unit = {
-    
-    // Commit SQL transaction
-    // FIXME: remove this line when transaction sharing is fixed
-    val msiDbTx = this.msiDb.commitTransaction()
     
     // Begin new ORM transaction
     msiEm.getTransaction().begin()
