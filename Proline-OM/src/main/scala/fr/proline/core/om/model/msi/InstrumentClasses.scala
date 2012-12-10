@@ -50,8 +50,8 @@ case class InstrumentConfig(
                    val instrument: Instrument,
                    val ms1Analyzer: String,
                    val msnAnalyzer: String,
-                   val activationType: String,
-                   val fragmentationRules: Option[Array[FragmentationRule]] = None,
+                   var activationType: String,
+                   var fragmentationRules: Option[Array[FragmentationRule]] = None,
                    
                    var properties: Option[InstrumentConfigProperties] = None
                    ) {
