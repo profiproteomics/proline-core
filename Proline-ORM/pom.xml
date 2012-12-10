@@ -9,8 +9,10 @@
   <artifactId>Proline-ORM</artifactId>
 
   <name>${project.artifactId}</name>
-  
-  
+
+  <properties>
+    <core.version>0.0.2-SNAPSHOT</core.version>
+  </properties>
 
   <dependencies>
 
@@ -20,7 +22,7 @@
       <artifactId>ProFI-Commons-Java</artifactId>
     </dependency>
 
-    <!-- "Proline" modules -->    
+    <!-- "Proline" modules -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
@@ -61,6 +63,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

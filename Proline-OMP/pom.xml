@@ -20,6 +20,10 @@
     </license>
   </licenses>
 
+  <properties>
+    <core.version>0.0.2-SNAPSHOT</core.version>
+  </properties>
+
   <build>
 
     <!-- Build Scala sources -->
@@ -76,7 +80,8 @@
 
 	<dependency>
   		<groupId>fr.proline</groupId>
-  		<artifactId>Proline-OM</artifactId>  		
+  		<artifactId>Proline-OM</artifactId>
+  		<version>${core.version}</version>
   		<type>test-jar</type>
   		<scope>test</scope>
 	</dependency>

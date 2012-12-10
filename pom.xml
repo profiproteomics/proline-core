@@ -109,7 +109,7 @@
         <artifactId>Proline-OM</artifactId>
         <version>${core.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>Proline-Databases</artifactId>
