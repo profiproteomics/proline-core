@@ -1,9 +1,8 @@
-package fr.proline.core.om.utils
+package fr.proline.core.orm.uds
 
 import com.codahale.jerkson.Json.parse
 import com.codahale.jerkson.Json.generate
 import fr.proline.core.om.model.uds.ExternalDbProperties
-import fr.proline.core.orm.uds.ExternalDb
 import fr.proline.repository.DriverType
 
 object ExternalDbPropertiesSerializer {
