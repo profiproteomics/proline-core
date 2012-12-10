@@ -13,9 +13,9 @@ import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchStorer
 
-class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer with Logging {
+class SQLiteMsiSearchStorer( msiSqlHelper: SQLQueryHelper ) extends IMsiSearchStorer with Logging {
   
-  val ezDBC = msiDb.ezDBC
+  val ezDBC = msiSqlHelper.ezDBC
   
   def storeMsiSearch( msiSearch: MSISearch, context: StorerContext ): Int = {
     
@@ -53,7 +53,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
     val msQueryColsList = MsiDbMsQueryTable.getColumnsAsStrList().filter { _ != "id" }
     val msQueryInsertQuery = MsiDbMsQueryTable.makeInsertQuery( msQueryColsList )
     
-    context.msiDB.executePrepared( msQueryInsertQuery, true ) { stmt =>
+    ezDBC.executePrepared( msQueryInsertQuery, true ) { stmt =>
       
       for( msQuery <- msQueries ) {
         
@@ -174,11 +174,11 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
     require( instrumentConfig.id > 0, "instrument configuration must have a strictly positive identifier" )
     
     // Check if the instrument config exists in the MSIdb
-    val count = context.msiDB.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id )
+    val count = ezDBC.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id )
     
     // If the instrument config doesn't exist in the MSIdb
     if( count == 0 ) {
-      context.msiDB.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
+      ezDBC.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
         stmt.executeWith( instrumentConfig.id,
                           instrumentConfig.name,
                           instrumentConfig.ms1Analyzer,

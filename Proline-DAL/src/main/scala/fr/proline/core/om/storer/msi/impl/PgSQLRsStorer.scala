@@ -14,17 +14,18 @@ import fr.proline.core.orm.util.DatabaseManager
 
 class PgSQLRsStorer(val dbMgmt: DatabaseManager, private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends SQLRsStorer ( dbMgmt, _storer, _plWriter){
     
-  
-  override def  storeMsQueries( msiSearchID : Int,
+  override def storeMsQueries( msiSearchID : Int,
                       msQueries: Seq[MsQuery],
-                      context : StorerContext ): StorerContext  = {     
-  val bulkCopyManager = new CopyManager( context.msiDB.connection.asInstanceOf[BaseConnection] )  
+                      context : StorerContext ): StorerContext  = {
+    
+    val ezDBC = context.msiSqlHelper.ezDBC
+    val bulkCopyManager = new CopyManager( ezDBC.connection.asInstanceOf[BaseConnection] )  
   
     // Create TMP table
     val tmpMsQueryTableName = "tmp_ms_query_" + ( scala.math.random * 1000000 ).toInt
     logger.info( "creating temporary table '" + tmpMsQueryTableName +"'..." )
     
-    val stmt = context.msiDB.connection.createStatement()
+    val stmt = ezDBC.connection.createStatement()
     stmt.executeUpdate("CREATE TEMP TABLE "+tmpMsQueryTableName+" (LIKE ms_query)")    
     
     // Bulk insert of MS queries
@@ -60,7 +61,7 @@ class PgSQLRsStorer(val dbMgmt: DatabaseManager, private val _storer: IRsWriter,
                        "SELECT "+msQueryTableCols+" FROM "+tmpMsQueryTableName )
     
     // Retrieve generated spectrum ids
-    val msQueryIdByInitialId = context.msiDB.select(
+    val msQueryIdByInitialId = ezDBC.select(
                                  "SELECT initial_id, id FROM ms_query WHERE msi_search_id = " + msiSearchID ) { r => 
                                    (r.nextInt -> r.nextInt)
                                  } toMap

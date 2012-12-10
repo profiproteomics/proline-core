@@ -56,7 +56,8 @@ class StorerContext(val dbManager: DatabaseManager, val msiConnector: IDatabaseC
   }
   private var pdiEMOpened: Boolean = false
 
-  lazy val msiDB = new SQLQueryHelper(msiConnector).ezDBC
+  lazy val msiSqlHelper = new SQLQueryHelper(msiConnector)
+  lazy val msiEzDBC = msiSqlHelper.ezDBC
 
   var spectrumIdByTitle: Map[String, Int] = null
 

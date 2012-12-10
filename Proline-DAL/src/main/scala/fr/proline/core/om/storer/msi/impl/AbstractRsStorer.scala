@@ -1,6 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 
 import fr.profi.jdbc.easy._
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.msi.{ResultSet, Peaklist, MsQuery, InstrumentConfig, IPeaklistContainer}
 import fr.proline.core.om.storer.msi.{IRsStorer, PeaklistWriter, IPeaklistWriter}
 import fr.proline.core.orm.util.DatabaseManager
@@ -10,6 +11,8 @@ import javax.transaction.Transaction
 import javax.persistence.EntityTransaction
 
 abstract class AbstractRsStorer(val dbManagement: DatabaseManager, val msiDbConnector: IDatabaseConnector, val plWriter: IPeaklistWriter = null) extends IRsStorer {
+  
+  val ezDBC = SQLQueryHelper( msiDbConnector )
   
   // IPeaklistWriter to use to store PeakList and Spectrum 
   val localPlWriter = if (plWriter == null) PeaklistWriter( msiDbConnector.getDriverType )else plWriter
@@ -94,8 +97,7 @@ abstract class AbstractRsStorer(val dbManagement: DatabaseManager, val msiDbConn
 				  	this.storeSpectra(plID, peakListContainer, localContext) 
 			  
 				  //TODO : Remove when shared transaction !!! : Close msiDB connection if used by previous store methods 
-			  	if(localContext.msiDB.isInTransaction)
-			  		localContext.msiDB.commitTransaction
+			  	if( ezDBC.isInTransaction ) ezDBC.commitTransaction
 				
 			    //START EM Transaction TODO : Remove when shared transaction !!!
 		  		msiTransaction =  localContext.msiEm.getTransaction
@@ -167,11 +169,11 @@ abstract class AbstractRsStorer(val dbManagement: DatabaseManager, val msiDbConn
      require( instrumCfg.id > 0, "instrument configuration must have a strictly positive identifier" )
     
     // Check if the instrument config exists in the MSIdb
-    val count = context.msiDB.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id )
+    val count = ezDBC.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id )
     
     // If the instrument config doesn't exist in the MSIdb
     if( count == 0 ) {
-      context.msiDB.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
+      ezDBC.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
         stmt.executeWith( instrumCfg.id,
                           instrumCfg.name,
                           instrumCfg.ms1Analyzer,

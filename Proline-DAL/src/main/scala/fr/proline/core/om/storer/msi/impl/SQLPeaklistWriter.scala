@@ -32,7 +32,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
   	val peaklistColsList = MsiDbPeaklistTable.getColumnsAsStrList().filter { _ != "id" } 
     val peaklistInsertQuery = MsiDbPeaklistTable.makeInsertQuery( peaklistColsList )
     
-    context.msiDB.executePrepared( peaklistInsertQuery, true ) { stmt =>
+    context.msiEzDBC.executePrepared( peaklistInsertQuery, true ) { stmt =>
       stmt.executeWith(
             peaklist.fileType,
             peaklist.path,
@@ -56,7 +56,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
     
     // Insert corresponding spectra
     val spectrumIdByTitle = collection.immutable.Map.newBuilder[String,Int]
-    context.msiDB.executePrepared( spectrumInsertQuery ) { stmt =>
+    context.msiEzDBC.executePrepared( spectrumInsertQuery ) { stmt =>
       peaklistContainer.eachSpectrum { spectrum => 
         this._insertSpectrum( stmt, spectrum, peaklistId, context)
         spectrumIdByTitle += ( spectrum.title -> spectrum.id )
@@ -116,7 +116,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
      if(peaklistId<0)
        throw new IllegalArgumentException("Peaklist (id <= 0) is not in repository ")     
          
-     val stmt = context.msiDB.connection.createStatement()
+     val stmt = context.msiEzDBC.connection.createStatement()
      
      // Retrieve generated protein match ids
      //val specIds = context.msiDB.selectInts("SELECT id FROM spectrum WHERE spectrum.peaklist_id = "+peaklistId)
@@ -124,6 +124,8 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
      
      stmt.executeUpdate("DELETE FROM spectrum WHERE peaklist_id = "+peaklistId)
      stmt.executeUpdate("DELETE FROM peaklist WHERE peaklist.id = "+peaklistId)
+     
+     stmt.close()
   }
 }
 
@@ -132,15 +134,14 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
 
   override def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext ): StorerContext = {
 
-    val bulkCopyManager = new CopyManager( context.msiDB.connection.asInstanceOf[BaseConnection] )
+    val bulkCopyManager = new CopyManager( context.msiEzDBC.asInstanceOf[BaseConnection] )
     
     // Create TMP table
     val tmpSpectrumTableName = "tmp_spectrum_" + ( scala.math.random * 1000000 ).toInt
     logger.info( "creating temporary table '" + tmpSpectrumTableName + "'..." )
     
-    val stmt = context.msiDB.connection.createStatement()
-    stmt.executeUpdate( "CREATE TEMP TABLE " + tmpSpectrumTableName + " (LIKE spectrum)" )
-
+    context.msiEzDBC.execute( "CREATE TEMP TABLE " + tmpSpectrumTableName + " (LIKE spectrum)" )
+    
     // Bulk insert of spectra
     logger.info( "BULK insert of spectra" )
 
@@ -201,11 +202,11 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
 
     // Move TMP table content to MAIN table
     logger.info( "move TMP table " + tmpSpectrumTableName + " into MAIN spectrum table" )
-    stmt.executeUpdate( "INSERT into spectrum (" + spectrumTableCols + ") " +
-      "SELECT " + spectrumTableCols + " FROM " + tmpSpectrumTableName )
+    context.msiEzDBC.execute( "INSERT into spectrum (" + spectrumTableCols + ") " +
+                              "SELECT " + spectrumTableCols + " FROM " + tmpSpectrumTableName )
 
     // Retrieve generated spectrum ids
-    val spectrumIdByTitle = context.msiDB.select(
+    val spectrumIdByTitle = context.msiEzDBC.select(
       "SELECT title, id FROM spectrum WHERE peaklist_id = " + peaklistId ) { r =>
         ( r.nextString -> r.nextInt )
       } toMap

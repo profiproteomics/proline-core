@@ -186,7 +186,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       logger.debug("Closing MSI Db Connection")
 
       try {
-        stContext.msiDB.connection.close()
+        stContext.msiEzDBC.connection.close()
       } catch {
         case exClose: Exception => logger.error("Error closing MSI Db Connection", exClose)
       }
