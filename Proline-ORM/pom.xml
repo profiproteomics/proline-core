@@ -10,9 +10,11 @@
 
   <name>${project.artifactId}</name>
 
+  <!--
   <properties>
     <core.version>0.0.2-SNAPSHOT</core.version>
   </properties>
+  -->
 
   <dependencies>
 
