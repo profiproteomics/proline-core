@@ -15,9 +15,9 @@ trait IMapAlnSetStorer {
 /** A factory object for implementations of the IMapAlnSetStorer trait */
 object MapAlnSetStorer {
   def apply( lcmsDb: SQLQueryHelper ): IMapAlnSetStorer = { lcmsDb.driverType match {
-    case DriverType.POSTGRESQL => new GenericMapAlnSetStorer(lcmsDb)
-    case DriverType.SQLITE => new SQLiteMapAlnSetStorer(lcmsDb)
-    case _ => new GenericMapAlnSetStorer(lcmsDb)
+    //case DriverType.POSTGRESQL => new GenericMapAlnSetStorer(lcmsDb)
+    //case DriverType.SQLITE => new SQLiteMapAlnSetStorer(lcmsDb)
+    case _ => new SQLiteMapAlnSetStorer(lcmsDb.ezDBC)
     }
   }
 }

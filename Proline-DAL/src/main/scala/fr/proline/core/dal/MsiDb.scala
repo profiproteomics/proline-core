@@ -1,5 +1,6 @@
 package fr.proline.core.dal
 
+/*
 import net.noerd.prequel._
 import java.sql.Connection
 import javax.persistence.Persistence
@@ -8,7 +9,7 @@ import fr.proline.repository.util.JPAUtils
 
 class MsiDbSQLHelper( val dbConnector: IDatabaseConnector ) extends SQLQueryHelper
 
-/*
+
 class MsiDb( val config: DatabaseConfig,
              val dbConnector: DatabaseConnector = null,
              val boolStrAsInt: Boolean = false,

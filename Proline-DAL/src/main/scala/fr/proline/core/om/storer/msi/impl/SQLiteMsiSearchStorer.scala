@@ -3,9 +3,9 @@ package fr.proline.core.om.storer.msi.impl
 import com.weiglewilczek.slf4s.Logging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import net.noerd.prequel.ReusableStatement
-import net.noerd.prequel.SQLFormatterImplicits._
-import fr.proline.core.dal.SQLFormatterImplicits._
+
+import fr.profi.jdbc.easy._
+import fr.profi.jdbc.PreparedStatementWrapper
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{MsiDbMsiSearchTable,MsiDbMsQueryTable,MsiDbSearchSettingsTable,MsiDbSeqDatabaseTable}
 import fr.proline.core.dal.{MsiDbPtmSpecificityTable,MsiDbUsedPtmTable}
@@ -14,6 +14,8 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchStorer
 
 class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer with Logging {
+  
+  val ezDBC = msiDb.ezDBC
   
   def storeMsiSearch( msiSearch: MSISearch, context: StorerContext ): Int = {
     
@@ -51,8 +53,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
     val msQueryColsList = MsiDbMsQueryTable.getColumnsAsStrList().filter { _ != "id" }
     val msQueryInsertQuery = MsiDbMsQueryTable.makeInsertQuery( msQueryColsList )
     
-    val msiDbTx = context.msiDB.getOrCreateTransaction()
-    msiDbTx.executeBatch( msQueryInsertQuery, true ) { stmt =>
+    context.msiDB.executePrepared( msQueryInsertQuery, true ) { stmt =>
       
       for( msQuery <- msQueries ) {
         
@@ -81,7 +82,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
     context
   }
   
-  private def _insertMsQuery( stmt: ReusableStatement, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int], context : StorerContext ): Unit = {
+  private def _insertMsQuery( stmt: PreparedStatementWrapper, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int], context : StorerContext ): Unit = {
     
     import com.codahale.jerkson.Json.generate
     // Retrieve some vars
@@ -100,7 +101,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
           msiSearchId
           )
 
-    msQuery.id = context.msiDB.extractGeneratedInt( stmt.wrapped )
+    msQuery.id = stmt.generatedInt
   }
   
   /*
@@ -173,11 +174,11 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
     require( instrumentConfig.id > 0, "instrument configuration must have a strictly positive identifier" )
     
     // Check if the instrument config exists in the MSIdb
-    val count = context.msiDB.getOrCreateTransaction.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id )
+    val count = context.msiDB.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id )
     
     // If the instrument config doesn't exist in the MSIdb
     if( count == 0 ) {
-      context.msiDB.getOrCreateTransaction.executeBatch("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
+      context.msiDB.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
         stmt.executeWith( instrumentConfig.id,
                           instrumentConfig.name,
                           instrumentConfig.ms1Analyzer,
@@ -191,7 +192,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
   private def _insertSeqDatabase( seqDatabase: SeqDatabase ): Unit = {    
     
     val fasta_path = seqDatabase.filePath
-    val seqDbIds = msiDb.getOrCreateTransaction.select( "SELECT id FROM seq_database WHERE fasta_file_path='" + fasta_path+"'" ) { _.nextInt.get }
+    val seqDbIds = ezDBC.select( "SELECT id FROM seq_database WHERE fasta_file_path='" + fasta_path+"'" ) { _.nextInt }
     
     // If the sequence database doesn't exist in the MSIdb
     if( seqDbIds.length == 0 ) {
@@ -199,8 +200,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
       val seqDbColsList = MsiDbSeqDatabaseTable.getColumnsAsStrList().filter { _ != "id" }
       val seqDbInsertQuery = MsiDbSeqDatabaseTable.makeInsertQuery( seqDbColsList )
       
-      val msiDbTx = msiDb.getOrCreateTransaction()
-      msiDbTx.executeBatch( seqDbInsertQuery, true ) { stmt =>
+      ezDBC.executePrepared( seqDbInsertQuery, true ) { stmt =>
       
         stmt.executeWith(
               seqDatabase.name,
@@ -211,7 +211,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
               Option.empty[String]
             )
           
-        seqDatabase.id = msiDb.extractGeneratedInt( stmt.wrapped )
+        seqDatabase.id = stmt.generatedInt
       }
       
     } else {
@@ -229,8 +229,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
     val searchSettingsColsList = MsiDbSearchSettingsTable.getColumnsAsStrList().filter { _ != "id" }
     val searchSettingsInsertQuery = MsiDbSearchSettingsTable.makeInsertQuery( searchSettingsColsList )
     
-    val msiDbTx = msiDb.getOrCreateTransaction()
-    msiDbTx.executeBatch( searchSettingsInsertQuery, true ) { stmt =>
+    ezDBC.executePrepared( searchSettingsInsertQuery, true ) { stmt =>
       stmt.executeWith(
             searchSettings.softwareName,
             searchSettings.softwareVersion,
@@ -245,11 +244,11 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
             searchSettings.instrumentConfig.id
             )
             
-      searchSettings.id = msiDb.extractGeneratedInt( stmt.wrapped )
+      searchSettings.id = stmt.generatedInt
     }
     
     // Link search settings to sequence databases
-    msiDb.getOrCreateTransaction.executeBatch( "INSERT INTO search_settings_seq_database_map VALUES (?,?,?,?)" ) { stmt =>
+    ezDBC.executePrepared( "INSERT INTO search_settings_seq_database_map VALUES (?,?,?,?)" ) { stmt =>
       searchSettings.seqDatabases.foreach { seqDb =>
         assert( seqDb.id > 0, "sequence database must first be persisted" )
         
@@ -262,8 +261,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
   protected def _insertUsedPTM( ssId: Int, ptmDef: PtmDefinition, isFixed: Boolean ): Unit = {
     
     // Check if the PTM specificity exists in the MSIdb
-    val msiDbTx = this.msiDb.getOrCreateTransaction()
-    val count = msiDbTx.selectInt( "SELECT count(*) FROM ptm_specificity WHERE id =" + ptmDef.id )
+    val count = ezDBC.selectInt( "SELECT count(*) FROM ptm_specificity WHERE id =" + ptmDef.id )
     
     // Insert PTM specificity if it doesn't exist in the MSIdb
     if( count == 0 ) {
@@ -271,7 +269,7 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
       val ptmSpecifInsertQuery = MsiDbPtmSpecificityTable.makeInsertQuery( ptmSpecifColsList )      
       val residueAsStr = if(ptmDef.residue == '\0') "" else ptmDef.residue.toString
       
-      msiDbTx.executeBatch( ptmSpecifInsertQuery, false ) { stmt =>
+      ezDBC.executePrepared( ptmSpecifInsertQuery, false ) { stmt =>
         stmt.executeWith(
               ptmDef.id,
               ptmDef.location,
@@ -284,15 +282,14 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
     // Link used PTMs to search settings
     val usedPtmColsList = MsiDbUsedPtmTable.getColumnsAsStrList()
     val usedPtmInsertQuery = MsiDbUsedPtmTable.makeInsertQuery( usedPtmColsList )
-    msiDbTx.executeBatch( usedPtmInsertQuery, false ) { stmt =>
+    ezDBC.executePrepared( usedPtmInsertQuery ) { stmt =>
       stmt.executeWith(
-            ssId,
-            ptmDef.id,
-            ptmDef.names.shortName,
-            isFixed,
-            Option.empty[String]
-            )
-            
+        ssId,
+        ptmDef.id,
+        ptmDef.names.shortName,
+        isFixed,
+        Option.empty[String]
+      )   
     }
     
   }
@@ -309,25 +306,24 @@ class SQLiteMsiSearchStorer( msiDb: SQLQueryHelper ) extends IMsiSearchStorer wi
     val msiSearchColsList = MsiDbMsiSearchTable.getColumnsAsStrList().filter { _ != "id" }
     val msiSearchInsertQuery = MsiDbMsiSearchTable.makeInsertQuery( msiSearchColsList )
     
-    val msiDbTx = this.msiDb.getOrCreateTransaction()
-    msiDbTx.executeBatch( msiSearchInsertQuery, true ) { stmt =>
+    ezDBC.executePrepared( msiSearchInsertQuery, true ) { stmt =>
       stmt.executeWith(
-            msiSearch.title,
-            msiSearch.date, // msiDb.stringifyDate( msiSearch.date ),
-            msiSearch.resultFileName,
-            msiSearch.resultFileDirectory,
-            msiSearch.jobNumber,
-            msiSearch.userName,
-            msiSearch.userEmail,
-            msiSearch.queriesCount,
-            msiSearch.submittedQueriesCount,
-            msiSearch.searchedSequencesCount,
-            Option.empty[String],
-            searchSettingsId,
-            peaklistId
-          )
+        msiSearch.title,
+        msiSearch.date, // msiDb.stringifyDate( msiSearch.date ),
+        msiSearch.resultFileName,
+        msiSearch.resultFileDirectory,
+        msiSearch.jobNumber,
+        msiSearch.userName,
+        msiSearch.userEmail,
+        msiSearch.queriesCount,
+        msiSearch.submittedQueriesCount,
+        msiSearch.searchedSequencesCount,
+        Option.empty[String],
+        searchSettingsId,
+        peaklistId
+      )
           
-      msiSearch.id = this.msiDb.extractGeneratedInt( stmt.wrapped )
+      msiSearch.id = stmt.generatedInt
     }
     
   }

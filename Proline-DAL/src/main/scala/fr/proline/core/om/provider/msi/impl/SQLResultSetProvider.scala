@@ -1,7 +1,10 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.dal.{SQLQueryHelper,MsiDbResultSetTable}
+
+import fr.profi.jdbc.SQLQueryExecution
+
+import fr.proline.core.dal.{MsiDbResultSetTable}
 import fr.proline.core.om.model.msi.{ProteinMatch,PeptideMatch,ResultSet}
 import fr.proline.core.om.provider.msi.IResultSetProvider
 
@@ -9,7 +12,7 @@ trait SQLResultSetLoader {
   
   import fr.proline.core.dal.helper.MsiDbHelper  
   
-  val msiDb: SQLQueryHelper  
+  val msiDb: SQLQueryExecution
   val RSCols = MsiDbResultSetTable.columns
   
   protected def getResultSet( rsId: Int,
@@ -35,11 +38,10 @@ trait SQLResultSetLoader {
     
     // Execute SQL query to load result sets
     var rsColNames: Seq[String] = null
-    val msiDbTx = msiDb.getOrCreateTransaction()
-    val resultSets = msiDbTx.select( "SELECT * FROM result_set WHERE id IN ("+ rsIds.mkString(",") +")" ) { r =>
+    val resultSets = msiDb.select( "SELECT * FROM result_set WHERE id IN ("+ rsIds.mkString(",") +")" ) { r =>
               
       if( rsColNames == null ) { rsColNames = r.columnNames }
-      val resultSetRecord = rsColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      val resultSetRecord = rsColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       
       // Retrieve some vars
       val rsId: Int = resultSetRecord(RSCols.id).asInstanceOf[AnyVal]
@@ -77,8 +79,8 @@ trait SQLResultSetLoader {
 
 }
 
-class SQLResultSetProvider( val msiDb: SQLQueryHelper,
-                            val psDb: SQLQueryHelper = null ) extends SQLResultSetLoader with IResultSetProvider {
+class SQLResultSetProvider( val msiDb: SQLQueryExecution,
+                            val psDb: SQLQueryExecution = null ) extends SQLResultSetLoader with IResultSetProvider {
   
   def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
     

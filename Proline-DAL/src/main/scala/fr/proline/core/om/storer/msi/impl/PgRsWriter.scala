@@ -9,13 +9,13 @@ import fr.proline.core.dal.{MsiDbPeptideTable,MsiDbPeptideMatchTable,MsiDbPeptid
                             MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
-import fr.proline.util.sql.{BoolToSQLStr,encodeRecordForPgCopy}
+import fr.proline.util.sql.encodeRecordForPgCopy
 
 private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB connection
                                val msiDb2: SQLQueryHelper // Secondary DB connection
                              ) extends SQLiteRsWriter( msiDb1 ) {
   
-  val bulkCopyManager = new CopyManager( msiDb1.connection.asInstanceOf[BaseConnection] )
+  val bulkCopyManager = new CopyManager( msiDb1.ezDBC.connection.asInstanceOf[BaseConnection] )
   
   private val peptideTableCols = MsiDbPeptideTable.getColumnsAsStrList().mkString(",")
   private val pepMatchTableCols = MsiDbPeptideMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
@@ -28,17 +28,20 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
   
   override def storeNewPeptides( peptides: Seq[Peptide] ): Array[Peptide] = {
     
+    val ezDBC2 = this.msiDb2.ezDBC
+    val conn2 = ezDBC2.connection
+    
     // Create a new transaction using secondary MsiDb connection
-    this.msiDb2.newTransaction()
+    ezDBC2.beginTransaction()
     
     // Instantiate a copy manager using secondary MsiDb connection
-    val bulkCopyManager2 = new CopyManager( this.msiDb2.connection.asInstanceOf[BaseConnection] )
+    val bulkCopyManager2 = new CopyManager( conn2.asInstanceOf[BaseConnection] )
     
     // Create TMP table
     val tmpPeptideTableName = "tmp_peptide_" + ( scala.math.random * 1000000 ).toInt
     logger.info( "creating temporary table '" + tmpPeptideTableName +"'..." )
     
-    val stmt = this.msiDb2.connection.createStatement();
+    val stmt = conn2.createStatement();
     stmt.executeUpdate("CREATE TEMP TABLE "+tmpPeptideTableName+" (LIKE peptide)")
     
     // Bulk insert of peptides
@@ -74,8 +77,8 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
                        "SELECT "+peptideTableCols+" FROM "+tmpPeptideTableName )
     
     // Commit transaction
-    this.msiDb2.connection.commit()
-                       
+    ezDBC2.commitTransaction()
+    
     peptides.toArray
   }
   
@@ -92,8 +95,8 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
     val peptideMatches = rs.peptideMatches
     val scoringIdByScoreType = this.scoringIdByType
     
-    // Retrieve primary db connection    
-    val conn = this.msiDb1.connection
+    // Retrieve primary db connection
+    val conn = this.msiDb1.ezDBC.connection
     
     // Create TMP table
     val tmpPepMatchTableName = "tmp_peptide_match_" + ( scala.math.random * 1000000 ).toInt
@@ -127,7 +130,7 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
                                  peptideMatch.deltaMoz,
                                  peptideMatch.missedCleavage,
                                  peptideMatch.fragmentMatchesCount,
-                                 BoolToSQLStr( peptideMatch.isDecoy ),
+                                 peptideMatch.isDecoy,
                                  pepMatchPropsAsJSON,
                                  peptide.id,
                                  peptideMatch.msQuery.id,
@@ -151,9 +154,9 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
                        "SELECT "+pepMatchTableCols+" FROM "+tmpPepMatchTableName )
     
     // Retrieve generated peptide match ids
-    val pepMatchIdByKey = msiDb1.getOrCreateTransaction.select(
+    val pepMatchIdByKey = msiDb1.ezDBC.select(
                            "SELECT ms_query_id, peptide_id, id FROM peptide_match WHERE result_set_id = " + rsId ) { r => 
-                             (r.nextInt.get +"%"+ r.nextInt.get -> r.nextInt.get)
+                             (r.nextInt +"%"+ r.nextInt -> r.nextInt)
                            } toMap
     
     // Iterate over peptide matches to update them
@@ -199,7 +202,7 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
     val scoringIdByScoreType = this.scoringIdByType
     
     // Retrieve primary db connection    
-    val conn = this.msiDb1.connection
+    val conn = this.msiDb1.ezDBC.connection
     
     // Create TMP table
     val tmpProtMatchTableName = "tmp_protein_match_" + ( scala.math.random * 1000000 ).toInt
@@ -230,8 +233,8 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
                                   proteinMatch.coverage,
                                   proteinMatch.sequenceMatches.length,
                                   proteinMatch.peptideMatchesCount,
-                                  BoolToSQLStr( proteinMatch.isDecoy ),
-                                  BoolToSQLStr(proteinMatch.isLastBioSequence), 
+                                  proteinMatch.isDecoy,
+                                  proteinMatch.isLastBioSequence, 
                                   "",
                                   proteinMatch.taxonId,
                                   "",// proteinMatch.getProteinId
@@ -254,9 +257,9 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
                        "SELECT "+protMatchTableCols+" FROM "+tmpProtMatchTableName )
     
     // Retrieve generated protein match ids
-    val protMatchIdByAc = msiDb1.getOrCreateTransaction.select(
+    val protMatchIdByAc = msiDb1.ezDBC.select(
                            "SELECT accession, id FROM protein_match WHERE result_set_id = " + rsId ) { r => 
-                             (r.nextString.get -> r.nextInt.get)
+                             (r.nextString -> r.nextInt)
                            } toMap
     
     // Iterate over protein matches to update them
@@ -273,7 +276,7 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
     val proteinMatches = rs.proteinMatches
     
     // Retrieve primary db connection    
-    val conn = this.msiDb1.connection
+    val conn = this.msiDb1.ezDBC.connection
     
     // Create TMP table
     val tmpSeqMatchTableName = "tmp_sequence_match_" + ( scala.math.random * 1000000 ).toInt
@@ -301,7 +304,7 @@ private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB c
                                     seqMatch.end,
                                     seqMatch.residueBefore.toString(),
                                     seqMatch.residueAfter.toString(),
-                                    BoolToSQLStr( isDecoy ),
+                                    isDecoy,
                                     "" , //seqMatch.hasProperties ? encode_json( seqMatch.properties ) : undef,
                                     seqMatch.getBestPeptideMatchId,
                                     seqMatch.resultSetId

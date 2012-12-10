@@ -1,8 +1,8 @@
 package fr.proline.core.dal.helper
 
-import fr.proline.core.dal.SQLQueryHelper
+import fr.profi.jdbc.SQLQueryExecution
 
-class LcmsDbHelper( sqlHelper: SQLQueryHelper ) {
+class LcmsDbHelper( sqlExec: SQLQueryExecution ) {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
@@ -13,12 +13,12 @@ class LcmsDbHelper( sqlHelper: SQLQueryHelper ) {
     var colNames: Seq[String] = null
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,FeatureScoring]
     
-    sqlHelper.getOrCreateTransaction.selectAndProcess( "SELECT * FROM feature_scoring" ) { r =>
+    sqlExec.selectAndProcess( "SELECT * FROM feature_scoring" ) { r =>
         
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the feature scoring record
-      val ftScoringRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val ftScoringRecord = colNames.map( colName => ( colName -> r.nextObject ) ).toMap
       val ftScoringId = ftScoringRecord("id").asInstanceOf[Int]
       
       val ftScoring = new FeatureScoring( id = ftScoringId,
@@ -40,12 +40,12 @@ class LcmsDbHelper( sqlHelper: SQLQueryHelper ) {
     var colNames: Seq[String] = null
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,PeakPickingSoftware]
     
-    sqlHelper.getOrCreateTransaction.selectAndProcess( "SELECT * FROM peak_picking_software" ) { r =>
+    sqlExec.selectAndProcess( "SELECT * FROM peak_picking_software" ) { r =>
         
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the feature scoring record
-      val ppsRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val ppsRecord = colNames.map( colName => ( colName -> r.nextObject ) ).toMap
       val ppsId = ppsRecord("id").asInstanceOf[Int]
       
       val pps = new PeakPickingSoftware( id = ppsId,
@@ -68,12 +68,12 @@ class LcmsDbHelper( sqlHelper: SQLQueryHelper ) {
     var colNames: Seq[String] = null
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,PeakelFittingModel]
     
-    sqlHelper.getOrCreateTransaction.selectAndProcess( "SELECT * FROM peakel_fitting_model" ) { r =>
+    sqlExec.selectAndProcess( "SELECT * FROM peakel_fitting_model" ) { r =>
         
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the feature scoring record
-      val peakelModelRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val peakelModelRecord = colNames.map( colName => ( colName -> r.nextObject ) ).toMap
       val peakelModelId = peakelModelRecord("id").asInstanceOf[Int]
       
       val peakelModel = new PeakelFittingModel( id = peakelModelId,
@@ -93,9 +93,9 @@ class LcmsDbHelper( sqlHelper: SQLQueryHelper ) {
     
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Int]
     
-    sqlHelper.getOrCreateTransaction.selectAndProcess(
+    sqlExec.selectAndProcess(
         "SELECT id, initial_id FROM scan WHERE run_id IN (" + runIds.mkString(",") + ")"  ) { r =>
-        val( scanId, scanInitialId ) = (r.nextInt.get, r.nextInt.get)
+        val( scanId, scanInitialId ) = (r.nextInt, r.nextInt)
         mapBuilder += (scanId -> scanInitialId)
         ()
       }
@@ -107,11 +107,11 @@ class LcmsDbHelper( sqlHelper: SQLQueryHelper ) {
   def getMs2EventIdsByFtId( runMapIds: Seq[Int] ): Map[Int,Array[Int]] = {
     
     val featureMs2EventsByFtId = new java.util.HashMap[Int,ArrayBuffer[Int]]
-    sqlHelper.getOrCreateTransaction.selectAndProcess( 
+    sqlExec.selectAndProcess( 
         "SELECT feature_id, ms2_event_id FROM feature_ms2_event " + 
         "WHERE run_map_id IN (" + runMapIds.mkString(",") + ")" ) { r =>
           
-        val( featureId, ms2EventId ) = (r.nextInt.get, r.nextInt.get)
+        val( featureId, ms2EventId ) = (r.nextInt, r.nextInt)
         if( !featureMs2EventsByFtId.containsKey(featureId) ) {
           featureMs2EventsByFtId.put(featureId, new ArrayBuffer[Int](1) )
         }

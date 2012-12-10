@@ -1,32 +1,30 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.proline.core.dal.SQLQueryHelper
+import fr.profi.jdbc.SQLQueryExecution
   
-class MapSetLoader( val lcmsDb: SQLQueryHelper, val loadPeaks: Boolean = false )  {
+class MapSetLoader( val sqlExec: SQLQueryExecution, val loadPeaks: Boolean = false )  {
   
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.util.sql._ 
   import fr.proline.core.om.model.lcms._
   
-  val mapAlnSetLoader = new MapAlignmentSetLoader( lcmsDb )
-  val processedMapLoader = new ProcessedMapLoader( lcmsDb, loadPeaks )
+  val mapAlnSetLoader = new MapAlignmentSetLoader( sqlExec )
+  val processedMapLoader = new ProcessedMapLoader( sqlExec, loadPeaks )
   
   def getMapSet( mapSetId: Int ): MapSet = {
     
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
-    
     var mapSetcolNames: Seq[String] = null
     var mapSetRecord: Map[String,Any] = null
-    lcmsDbTx.selectAndProcess( "SELECT * FROM map_set WHERE id = " + mapSetId  ) { r => 
+    sqlExec.selectAndProcess( "SELECT * FROM map_set WHERE id = " + mapSetId  ) { r => 
         if( mapSetcolNames == null ) { mapSetcolNames = r.columnNames }
-        mapSetRecord = mapSetcolNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+        mapSetRecord = mapSetcolNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
         ()
       }
     if( mapSetRecord == null ) throw new Exception("can't find a map set with id="+mapSetId)
        
     // Load processedMapIds
-    val processedMapIds = lcmsDbTx.select( "SELECT id FROM processed_map WHERE map_set_id = " + mapSetId  ) { _.nextInt.get }
+    val processedMapIds = sqlExec.selectInts( "SELECT id FROM processed_map WHERE map_set_id = " + mapSetId  )
     
     // Load some objects related to the map set
     val lcmsMaps = processedMapLoader.getMaps( processedMapIds )
@@ -36,17 +34,17 @@ class MapSetLoader( val lcmsDb: SQLQueryHelper, val loadPeaks: Boolean = false )
     
     // Try to load master map id
     var masterMapId = 0
-    lcmsDbTx.selectAndProcess( "SELECT master_map_id FROM map_set WHERE id = " + mapSetId ) { r =>
-      masterMapId = r.nextInt.getOrElse(0)
+    sqlExec.selectAndProcess( "SELECT master_map_id FROM map_set WHERE id = " + mapSetId ) { r =>
+      masterMapId = r.nextIntOrElse(0)
     }
     
     var masterMap: ProcessedMap = null
     if( masterMapId != 0) {
       // Load master feature items as records
       var mtItemcolNames: Seq[String] = null
-      val mftItemRecords = lcmsDbTx.select( "SELECT * FROM master_feature_item WHERE master_map_id = " + masterMapId  ) { r => 
+      val mftItemRecords = sqlExec.select( "SELECT * FROM master_feature_item WHERE master_map_id = " + masterMapId  ) { r => 
         if( mtItemcolNames == null ) { mtItemcolNames = r.columnNames }
-        mtItemcolNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+        mtItemcolNames.map( colName => ( colName -> r.nextObject ) ).toMap
       }
   
       // Load the master map

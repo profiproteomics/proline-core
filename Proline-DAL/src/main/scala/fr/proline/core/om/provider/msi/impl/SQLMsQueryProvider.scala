@@ -1,11 +1,13 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-import fr.proline.core.dal.{SQLQueryHelper,MsiDbMsQueryTable}
+
+import fr.profi.jdbc.SQLQueryExecution
+import fr.proline.core.dal.MsiDbMsQueryTable
 import fr.proline.core.om.model.msi.{MsQuery,Ms1Query,Ms2Query,MsQueryProperties}
 import fr.proline.core.om.provider.msi.IMsQueryProvider
 
-class SQLMsQueryProvider( val msiDb: SQLQueryHelper ) extends IMsQueryProvider {
+class SQLMsQueryProvider( val sqlExec: SQLQueryExecution ) extends IMsQueryProvider {
   
   import fr.proline.util.primitives.LongOrIntAsInt._
   import scala.collection.mutable.ArrayBuffer
@@ -13,18 +15,16 @@ class SQLMsQueryProvider( val msiDb: SQLQueryHelper ) extends IMsQueryProvider {
 
   def getMsiSearchesMsQueries( msiSearchIds: Seq[Int] ): Array[MsQuery] = {
     
-    val msiDbTx = msiDb.getOrCreateTransaction()
-    
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    val parentPeaklistIds = msiDbTx.select( "SELECT peaklist_id FROM msi_search" ) { r => r.nextInt.get }    
+    val parentPeaklistIds = sqlExec.select( "SELECT peaklist_id FROM msi_search" ) { r => r.nextInt }    
     
     // Retrieve child peaklist ids if they exist
     val pklIds = new ArrayBuffer[Int]    
     for( parentPeaklistId <- parentPeaklistIds ) {
 
       // Retrieve child peaklist ids corresponding to the current peaklist id
-      val childPeaklistIds = msiDbTx.select( "SELECT child_peaklist_id FROM peaklist_relation WHERE parent_peaklist_id = " + parentPeaklistId ) { r =>
-                                        r.nextInt.get
+      val childPeaklistIds = sqlExec.select( "SELECT child_peaklist_id FROM peaklist_relation WHERE parent_peaklist_id = " + parentPeaklistId ) { r =>
+                                        r.nextInt
                                       }
       
       if( childPeaklistIds.length > 0 ) { pklIds ++= childPeaklistIds }
@@ -32,14 +32,14 @@ class SQLMsQueryProvider( val msiDb: SQLQueryHelper ) extends IMsQueryProvider {
     }
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    val spectrumHeaders = msiDbTx.select( "SELECT id, title FROM spectrum WHERE peaklist_id IN ("+ pklIds.mkString(",") +")" ) { r => 
-                                    (r.nextInt.get, r.nextString.get)
+    val spectrumHeaders = sqlExec.select( "SELECT id, title FROM spectrum WHERE peaklist_id IN ("+ pklIds.mkString(",") +")" ) { r => 
+                                    (r.nextInt, r.nextString)
                                   }
     
     val spectrumTitleById = spectrumHeaders.toMap
     
     // Load MS queries corresponding to the provided MSI search ids
-    val msQueries = msiDbTx.select( "SELECT * FROM ms_query WHERE msi_search_id IN ("+ msiSearchIds.mkString(",") +")" ) { r =>
+    val msQueries = sqlExec.select( "SELECT * FROM ms_query WHERE msi_search_id IN ("+ msiSearchIds.mkString(",") +")" ) { r =>
       val rs = r.rs
            
       // Parse properties if they exist

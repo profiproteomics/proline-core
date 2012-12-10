@@ -2,15 +2,17 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
-import fr.proline.core.dal.{SQLQueryHelper,MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable}
+
+import fr.profi.jdbc.SQLQueryExecution
+import fr.proline.core.dal.{MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable}
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatchValidationProperties
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 
-class SQLPeptideInstanceProvider( val msiDb: SQLQueryHelper,
-                                  val psDb: SQLQueryHelper = null,
+class SQLPeptideInstanceProvider( val msiDb: SQLQueryExecution,
+                                  val psDb: SQLQueryExecution = null,
                                   var peptideProvider: Option[IPeptideProvider] = None ) extends IPeptideInstanceProvider {
   
   val PepInstCols = MsiDbPeptideInstanceTable.columns

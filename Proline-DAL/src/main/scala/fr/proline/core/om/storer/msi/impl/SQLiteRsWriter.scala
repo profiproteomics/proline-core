@@ -2,11 +2,8 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.generate
-import net.noerd.prequel.ReusableStatement
-import net.noerd.prequel.SQLFormatterImplicits._
 
-import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.util.sql.BoolToSQLStr
+import fr.profi.jdbc.easy._
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsWriter
@@ -15,22 +12,23 @@ import fr.proline.core.om.storer.msi._
 
 private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connection                        
                                  ) extends IRsWriter {
+  
+  val ezDBC = msiDb1.ezDBC
 
   def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ): Map[String,Int] = {
     
     // Retrieve some vars
-    val msiDbTx = msiDb1.getOrCreateTransaction
     val peptideMapBuilder = scala.collection.immutable.Map.newBuilder[String,Int]
     
     // Iterate over peptide sequences to retrieve their identifiers
-    pepSequences.grouped(msiDb1.maxVariableNumber).foreach { tmpPepSeqs =>
+    pepSequences.grouped(msiDb1.ezDBC.getInExpressionCountLimit).foreach { tmpPepSeqs =>
       val quotedPepSeqs = tmpPepSeqs map { "'"+ _ + "'" }
       val sqlQuery = "SELECT id,sequence,ptm_string FROM peptide WHERE peptide.sequence IN ("+quotedPepSeqs.mkString(",")+")"
-      msiDbTx.selectAndProcess( sqlQuery ) { r =>
+      ezDBC.selectAndProcess( sqlQuery ) { r =>
         
-        val pepId = r.nextInt.get
-        val pepSeq = r.nextString.get
-        var ptmString = r.nextString.getOrElse("")
+        val pepId = r.nextInt
+        val pepSeq = r.nextString
+        var ptmString = r.nextStringOrElse("")
         
         peptideMapBuilder += ( pepSeq + "%" + ptmString -> pepId )        
       }
@@ -42,11 +40,8 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
   
   def storeNewPeptides( peptides: Seq[Peptide] ): Array[Peptide] = {
     
-    // Create a transaction using secondary MsiDb connection
-    val msiDbTx = this.msiDb1.getOrCreateTransaction()
-    
     val newPeptides = new ArrayBuffer[Peptide](0)
-    msiDbTx.executeBatch( "INSERT INTO peptide VALUES (?,?,?,?,?)" ) { stmt =>
+    ezDBC.executePrepared( "INSERT INTO peptide VALUES (?,?,?,?,?)" ) { stmt =>
     
       // Iterate over the array of peptides to store them in the MSI-DB
       for( peptide <- peptides ) {
@@ -82,7 +77,7 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
     
     val newProteins = new ArrayBuffer[Protein](0)
     
-    msiDb1.getOrCreateTransaction().executeBatch("INSERT INTO bio_sequence VALUES ("+"?," *8 +"?)") { stmt =>
+    ezDBC.executePrepared("INSERT INTO bio_sequence VALUES ("+"?," *8 +"?)") { stmt =>
       for( protein <- proteins ) {
         
         // Store only proteins which don't exist in the MSI-DB  
@@ -123,7 +118,7 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
     val pepMatchColsList = MsiDbPeptideMatchTable.getColumnsAsStrList().filter { _ != "id" }
     val pepMatchInsertQuery = MsiDbPeptideMatchTable.makeInsertQuery( pepMatchColsList )
     
-    msiDb1.getOrCreateTransaction().executeBatch(pepMatchInsertQuery, true ) { stmt =>
+    ezDBC.executePrepared(pepMatchInsertQuery, true ) { stmt =>
       
       // Iterate over peptide matche to store them
       for( peptideMatch <- peptideMatches ) {
@@ -145,7 +140,7 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
                 peptideMatch.deltaMoz,
                 peptideMatch.missedCleavage,
                 peptideMatch.fragmentMatchesCount,
-                BoolToSQLStr( peptideMatch.isDecoy ),
+                peptideMatch.isDecoy,
                 pepMatchPropsAsJSON,
                 peptideMatch.peptide.id,
                 peptideMatch.msQuery.id,
@@ -155,13 +150,13 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
                 )
         
         // Update peptide match id
-        peptideMatch.id = this.msiDb1.extractGeneratedInt( stmt.wrapped )
+        peptideMatch.id = stmt.generatedInt
         
       }      
     }
     
     // Link peptide matches to their children
-    msiDb1.getOrCreateTransaction.executeBatch( "INSERT INTO peptide_match_relation VALUES (?,?,?)" ) { stmt =>
+    ezDBC.executePrepared( "INSERT INTO peptide_match_relation VALUES (?,?,?)" ) { stmt =>
       for( peptideMatch <- peptideMatches )    
         if( peptideMatch.children != null && peptideMatch.children != None )
           for( pepMatchChild <- peptideMatch.children.get )
@@ -184,7 +179,7 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
     val protMatchInsertQuery = MsiDbProteinMatchTable.makeInsertQuery( protMatchColsList )
     
     logger.info( "protein matches are going to be inserted..." )
-    msiDb1.getOrCreateTransaction().executeBatch( protMatchInsertQuery, true ) { stmt =>
+    ezDBC.executePrepared( protMatchInsertQuery, true ) { stmt =>
       
       // Iterate over protein matches to store them
       for( proteinMatch <- proteinMatches ) {
@@ -214,14 +209,14 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
         )
         
         // Update protein match id
-        proteinMatch.id = this.msiDb1.extractGeneratedInt( stmt.wrapped )
+        proteinMatch.id = stmt.generatedInt
       }
     }
     
     logger.info( "protein matches are going to be linked to seq databases..." )
     
     // Link protein matches to sequence databases
-    msiDb1.getOrCreateTransaction.executeBatch( "INSERT INTO protein_match_seq_database_map VALUES (?,?,?)" ) { stmt =>      
+    ezDBC.executePrepared( "INSERT INTO protein_match_seq_database_map VALUES (?,?,?)" ) { stmt =>      
       for( proteinMatch <- proteinMatches )
         for( seqDbId <- proteinMatch.seqDatabaseIds )
           stmt.executeWith( proteinMatch.id, seqDbId, rsId )
@@ -234,14 +229,13 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
   def storeRsSequenceMatches( rs: ResultSet ): Int = {
     
     // Retrieve some vars
-    val msiDbTx = msiDb1.getOrCreateTransaction
     val rsId = rs.id
     val isDecoy = rs.isDecoy
     val proteinMatches = rs.proteinMatches
     
     var count = 0
     
-    msiDbTx.executeBatch( MsiDbSequenceMatchTable.makeInsertQuery ) { stmt =>
+    ezDBC.executePrepared( MsiDbSequenceMatchTable.makeInsertQuery ) { stmt =>
       
       // Iterate over protein matches
       for( proteinMatch <- proteinMatches ) {
@@ -256,7 +250,7 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
                                       seqMatch.end,
                                       seqMatch.residueBefore.toString,
                                       seqMatch.residueAfter.toString,
-                                      BoolToSQLStr( seqMatch.isDecoy ),
+                                      seqMatch.isDecoy,
                                       Option(null),
                                       seqMatch.getBestPeptideMatchId,
                                       rsId

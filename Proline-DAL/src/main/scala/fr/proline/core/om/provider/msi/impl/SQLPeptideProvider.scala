@@ -1,60 +1,46 @@
 package fr.proline.core.om.provider.msi.impl
 
-import net.noerd.prequel.SQLFormatterImplicits._
-import fr.proline.core.dal.{SQLQueryHelper}
+import com.weiglewilczek.slf4s.Logging
+
+import fr.profi.jdbc.easy._
+import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.om.builder.PtmDefinitionBuilder
-import fr.proline.core.om.model.msi.PtmSpecificity
-import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import com.weiglewilczek.slf4s.Logging
-import scala.collection.mutable.ArrayBuilder
-import org.apache.commons.lang3.StringUtils
-import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.util.StringUtils
 
-class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) with IPeptideProvider with Logging {
+class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( sqlExec ) with IPeptideProvider with Logging {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
-   
   
   /** Returns a map of peptide PTMs grouped by the peptide id */
   def getPeptidePtmRecordsByPepId( peptideIds: Seq[Int] ): Map[Int,Array[Map[String,Any]]] = {
     
-    val wasInTx = psDb.isInTransaction()
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Map[String,Any]]
     
-    // TODO: Check if database driver is SQLite
-    //my $max_items_by_iter = $msi_rdb->driver eq 'sqlite' ? 998 : 50000;
-    val maxNbIters = psDb.maxVariableNumber
+    val maxNbIters = sqlExec.getInExpressionCountLimit
     var colNames: Seq[String] = null
     val pepPtmRecords = new ArrayBuffer[Map[String,Any]] // TODO: replace by an array
-    val psDbTx = psDb.getOrCreateTransaction
     
     // Iterate over groups of peptide ids
     peptideIds.grouped(maxNbIters).foreach( tmpPepIds => {      
       
       // Retrieve peptide PTMs for the current group of peptide ids
-      psDbTx.selectAndProcess( "SELECT * FROM peptide_ptm WHERE peptide_id IN ("+ tmpPepIds.mkString(",") +")" ) { r =>
+      sqlExec.selectAndProcess( "SELECT * FROM peptide_ptm WHERE peptide_id IN ("+ tmpPepIds.mkString(",") +")" ) { r =>
           
         if( colNames == null ) { colNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptidePtmRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+        val peptidePtmRecord = colNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
         pepPtmRecords += peptidePtmRecord
-        
-        // Map the record by its id
-        //mapBuilder += ( peptidePtmRecord("id").asInstanceOf[Int] -> peptidePtmRecord )
         
         }
       }
       
     )
-    
-    // TODO: remove when prequel is fixed
-    if( !wasInTx ) psDb.commitTransaction
-    //mapBuilder.result()
     
     pepPtmRecords.toArray.groupBy( _.get("peptide_id").get.asInstanceOf[Int] )
     
@@ -95,28 +81,27 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
   }
   
   def getPeptides( peptideIds: Seq[Int] ): Array[Peptide] = {
+    if( peptideIds.length == 0 ) return Array.empty[Peptide]
     
     import fr.proline.util.primitives.LongOrIntAsInt._
     
-    val wasInTx = psDb.isInTransaction()
-    val maxNbIters = psDb.maxVariableNumber
+    val maxNbIters = sqlExec.getInExpressionCountLimit
     
     // Declare some vars
     var pepColNames: Seq[String] = null
     val pepRecords = new ArrayBuffer[Map[String,Any]](0)
     var modifiedPepIdSet = new scala.collection.mutable.HashSet[Int]
-    val psDbTx = psDb.getOrCreateTransaction
     
     // Iterate over groups of peptide ids
     peptideIds.grouped(maxNbIters).foreach( tmpPepIds => {      
       
       // Retrieve peptide PTMs for the current group of peptide ids
-      psDbTx.selectAndProcess( "SELECT * FROM peptide WHERE id IN ("+ tmpPepIds.mkString(",") +")" ) { r =>
+      sqlExec.selectAndProcess( "SELECT * FROM peptide WHERE id IN ("+ tmpPepIds.mkString(",") +")" ) { r =>
           
         if( pepColNames == null ) { pepColNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
         pepRecords += peptideRecord
         
         // Map the record by its id    
@@ -126,9 +111,6 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
         
       }
     })
-    
-    // TODO: remove when prequel is fixed
-    if( !wasInTx ) psDb.commitTransaction
     
     // Load peptide PTM map corresponding to the modified peptides
     val locatedPtmsByPepId = this.getLocatedPtmsByPepId( modifiedPepIdSet.toArray[Int] )
@@ -154,14 +136,12 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
     
     import fr.proline.util.primitives.LongOrIntAsInt._
     
-    val wasInTx = psDb.isInTransaction()
-    val maxNbIters = psDb.maxVariableNumber
+    val maxNbIters = sqlExec.getInExpressionCountLimit
     
     // Declare some vars
     var pepColNames: Seq[String] = null
     val pepRecords = new ArrayBuffer[Map[String,Any]](0)
     var modifiedPepIdSet = new scala.collection.mutable.HashSet[Int]
-    val psDbTx = psDb.getOrCreateTransaction
     
     // Iterate over groups of peptide ids
     peptideSeqs.grouped(maxNbIters).foreach( tmpPepSeqs => {
@@ -169,12 +149,12 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
       val quotedSeqs = tmpPepSeqs.map { "'"+_+"'"}
       
       // Retrieve peptide PTMs for the current group of peptide ids
-      psDbTx.selectAndProcess( "SELECT * FROM peptide WHERE sequence IN ("+ quotedSeqs.mkString(",") +")" ) { r =>
+      sqlExec.selectAndProcess( "SELECT * FROM peptide WHERE sequence IN ("+ quotedSeqs.mkString(",") +")" ) { r =>
           
         if( pepColNames == null ) { pepColNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
         pepRecords += peptideRecord
         
         // Map the record by its id    
@@ -185,35 +165,12 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
       }
     })
     
-    // TODO: remove when prequel is fixed
-    if( !wasInTx ) psDb.commitTransaction
-    
     // Load peptide PTM map corresponding to the modified peptides
     val locatedPtmsByPepId = this.getLocatedPtmsByPepId( modifiedPepIdSet.toArray[Int] )
     
     val peptides = this._buildPeptides( pepRecords, locatedPtmsByPepId )
     
     peptides
-    /*val optPeptidesBuffer = new ArrayBuffer[Option[Peptide]]
-    
-    val nbPeptides = peptides.length
-    var pepIdx = 0
-    for( pepSeq <- peptideSeqs ) {
-      var foundPep = peptides(pepIdx)
-      
-      while( foundPep.sequence == pepSeq && pepIdx < nbPeptides  ) {
-        pepIdx += 1
-        optPeptidesBuffer += Some(foundPep)
-        foundPep = peptides(pepIdx)
-      }
-      
-      if( pepIdx < nbPeptides ) optPeptidesBuffer += None
-      
-    }
-    
-    optPeptidesBuffer.toArray*/
-
-    
   }
   
   private def _buildPeptides( pepRecords: Seq[Map[String,Any]],
@@ -247,36 +204,31 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
  
   def getPeptide( peptideSeq: String, pepPtms: Array[LocatedPtm] ): Option[Peptide] = {
     
-    val wasInTx = psDb.isInTransaction()
     val tmpPep = new Peptide( sequence = peptideSeq, ptms = pepPtms )
     
-    val psDbTx = psDb.getOrCreateTransaction()
-    var resultPepIds:Seq[Option[Int]] = null
-    if( StringUtils.isEmpty(tmpPep.ptmString ))
-    	resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string is null ",
-                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
-    else
-    	resultPepIds = psDbTx.select( "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
-                                tmpPep.sequence, tmpPep.ptmString ) {_.nextInt}
-    var pepId : Option[Int] = None
-    if(resultPepIds.size>0)
-      pepId = resultPepIds(0)
+    var resultPepIds: Seq[Int] = null
     
-    if( !wasInTx ) psDb.commitTransaction
-                                
-    if( pepId == None ) None
+    if( StringUtils.isEmpty(tmpPep.ptmString ) ) {
+      resultPepIds = sqlExec.select(
+                               "SELECT id FROM peptide WHERE sequence = ? AND ptm_string IS NULL ",
+                               tmpPep.sequence, tmpPep.ptmString ) { _.nextInt }
+    }
     else {
-      tmpPep.id = pepId.get
+      resultPepIds = sqlExec.select( 
+                              "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
+                              tmpPep.sequence, tmpPep.ptmString ) { _.nextInt }
+    }    
+                 
+    if( resultPepIds.length == 0 ) None
+    else {
+      tmpPep.id = resultPepIds(0)
       Some(tmpPep)
     }
   }
   
   def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]) : Array[Option[Peptide]] = {
     
-    val quotingChar = '\''
-    val maxNbIters = psDb.maxVariableNumber
-    val wasInTx = psDb.isInTransaction()
-    val psDbTx = psDb.getOrCreateTransaction()
+    val maxNbIters = sqlExec.getInExpressionCountLimit
     
     // Retrieve peptide sequences and map peptides by their unique key
     val quotedSeqs = new Array[String](peptideSeqsAndPtms.length)
@@ -290,7 +242,8 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
       val pepKey = peptide.uniqueKey
       peptideByUniqueKey += (pepKey -> peptide)
       
-      quotedSeqs(pepIdx) = quotingChar + pepSeq + quotingChar
+      quotedSeqs(pepIdx) = sqlExec.dialect.quoteString(pepSeq)
+      
       pepKeys(pepIdx) = pepKey
       
       pepIdx += 1
@@ -301,8 +254,8 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
     quotedSeqs.distinct.grouped(maxNbIters).foreach { tmpQuotedSeqs =>
       this.logger.trace( "search for peptides in the database using %d sequences".format(tmpQuotedSeqs.length) )
       
-      psDbTx.select( "SELECT id, sequence, ptm_string FROM peptide WHERE sequence IN ("+tmpQuotedSeqs.mkString(",") +")") { r =>
-        val( id, sequence, ptmString ) = (r.nextInt.get, r.nextString.get, r.nextString.getOrElse("") )        
+      sqlExec.select( "SELECT id, sequence, ptm_string FROM peptide WHERE sequence IN ("+tmpQuotedSeqs.mkString(",") +")") { r =>
+        val( id, sequence, ptmString ) = (r.nextInt, r.nextString, r.nextStringOrElse("") )        
         val uniqueKey = sequence + "%" + ptmString
         
         if( peptideByUniqueKey.contains(uniqueKey) ) {
@@ -316,8 +269,6 @@ class SQLPeptideProvider( psDb: SQLQueryHelper ) extends SQLPTMProvider( psDb ) 
       if( peptide.id > 0 ) Some(peptide)
       else None
     }
-	  
-    if( !wasInTx ) psDb.commitTransaction
     
     peptidesAsOpt                      
   }

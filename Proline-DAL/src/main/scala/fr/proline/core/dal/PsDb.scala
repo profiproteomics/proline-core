@@ -1,11 +1,11 @@
 package fr.proline.core.dal
 
+/*
 import net.noerd.prequel._
 import fr.proline.repository.IDatabaseConnector
 
 class PsDbSQLHelper( val dbConnector: IDatabaseConnector ) extends SQLQueryHelper
 
-/*
 object PsDb extends DatabaseConfigBuilder {
 
   def apply( projectId: Int ): PsDb = {

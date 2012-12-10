@@ -1,7 +1,8 @@
 package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.{MsiDbSQLHelper,SQLQueryHelper}
+
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.msi.{ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IPeaklistContainer}
 import fr.proline.core.om.storer.msi.impl.{StorerContext, SQLiteRsWriter, SQLRsStorer, PgRsWriter, JPARsStorer}
 import fr.proline.core.orm.util.DatabaseManager
@@ -128,7 +129,7 @@ object RsStorer {
   }
   
   def apply(dbMgmt: DatabaseManager, projectID: Int): IRsStorer = {
-    this.apply( dbMgmt, new MsiDbSQLHelper( dbMgmt.getMsiDbConnector(projectID) ) )
+    this.apply( dbMgmt, new SQLQueryHelper( dbMgmt.getMsiDbConnector(projectID) ) )
   }
   
 }

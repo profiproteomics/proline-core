@@ -1,11 +1,12 @@
 package fr.proline.core.dal
 
+/*
 import net.noerd.prequel._
 import fr.proline.repository.IDatabaseConnector
 
 class PdiDbSQLHelper( val dbConnector: IDatabaseConnector ) extends SQLQueryHelper
 
-/*object PdiDb extends DatabaseConfigBuilder {
+object PdiDb extends DatabaseConfigBuilder {
   
   def apply( projectId: Int ): PdiDb = {    
     val psDbConfig = this.getDefaultConfig

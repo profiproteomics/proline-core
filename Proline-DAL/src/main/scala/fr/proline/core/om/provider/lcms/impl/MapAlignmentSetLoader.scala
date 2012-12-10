@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.proline.core.dal.SQLQueryHelper
+import fr.profi.jdbc.SQLQueryExecution
   
-class MapAlignmentSetLoader( val lcmsDb: SQLQueryHelper ) {
+class MapAlignmentSetLoader( val sqlExec: SQLQueryExecution ) {
   
   import java.util.HashMap
   import scala.collection.mutable.ArrayBuffer
@@ -35,12 +35,12 @@ class MapAlignmentSetLoader( val lcmsDb: SQLQueryHelper ) {
     var colNames: Seq[String] = null
     
     // Load processed map features
-    val mapAlns = lcmsDb.getOrCreateTransaction.select( "SELECT * FROM map_alignment WHERE map_set_id = " + mapSetId ) { r =>
+    val mapAlns = sqlExec.select( "SELECT * FROM map_alignment WHERE map_set_id = " + mapSetId ) { r =>
         
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the map record
-      val mapAlnRecord = colNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      val mapAlnRecord = colNames.map( colName => ( colName -> r.nextObject ) ).toMap
       buildMapAlignment( mapAlnRecord )
       
     }

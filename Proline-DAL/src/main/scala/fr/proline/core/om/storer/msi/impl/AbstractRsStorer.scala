@@ -1,13 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
-import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.{SQLQueryHelper}
+import fr.profi.jdbc.easy._
 import fr.proline.core.om.model.msi.{ResultSet, Peaklist, MsQuery, InstrumentConfig, IPeaklistContainer}
 import fr.proline.core.om.storer.msi.{IRsStorer, PeaklistWriter, IPeaklistWriter}
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
-import net.noerd.prequel.SQLFormatterImplicits._
-import net.noerd.prequel.ReusableStatement
+
 import javax.transaction.Transaction
 import javax.persistence.EntityTransaction
 
@@ -169,11 +167,11 @@ abstract class AbstractRsStorer(val dbManagement: DatabaseManager, val msiDbConn
      require( instrumCfg.id > 0, "instrument configuration must have a strictly positive identifier" )
     
     // Check if the instrument config exists in the MSIdb
-    val count = context.msiDB.getOrCreateTransaction.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id )
+    val count = context.msiDB.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id )
     
     // If the instrument config doesn't exist in the MSIdb
     if( count == 0 ) {
-      context.msiDB.getOrCreateTransaction.executeBatch("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
+      context.msiDB.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
         stmt.executeWith( instrumCfg.id,
                           instrumCfg.name,
                           instrumCfg.ms1Analyzer,

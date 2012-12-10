@@ -1,11 +1,8 @@
 package fr.proline.core.om.storer.ps
 
 import com.weiglewilczek.slf4s.Logging
-
-import net.noerd.prequel.ReusableStatement
-import net.noerd.prequel.SQLFormatterImplicits._
-
-import fr.proline.core.dal.SQLFormatterImplicits._
+import fr.profi.jdbc.easy._
+import fr.profi.jdbc.PreparedStatementWrapper
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{PsDbPeptideTable,PsDbPeptidePtmTable}
 import fr.proline.core.om.model.msi.{Peptide,LocatedPtm}
@@ -22,19 +19,17 @@ class PeptideStorer( psDb: SQLQueryHelper ) extends Logging {
     
     logger.info( "storing peptides in PsDb..." )
     
-    val psDbTx = this.psDb.getOrCreateTransaction()
-    
     val peptideColsList = PsDbPeptideTable.getColumnsAsStrList().filter { _ != "id" }
     val peptideInsertQuery = PsDbPeptideTable.makeInsertQuery( peptideColsList )
     
-    psDbTx.executeBatch( peptideInsertQuery, true ) { stmt => 
+    psDb.ezDBC.executePrepared( peptideInsertQuery, true ) { stmt => 
       peptides.foreach { this._insertPeptide( stmt, _ ) }
     }
     
     val peptidePtmColsList = PsDbPeptidePtmTable.getColumnsAsStrList().filter { _ != "id" }
     val peptidePtmInsertQuery = PsDbPeptidePtmTable.makeInsertQuery( peptidePtmColsList )
     
-    psDbTx.executeBatch( peptidePtmInsertQuery, true ) { stmt => 
+    psDb.ezDBC.executePrepared( peptidePtmInsertQuery, false ) { stmt => 
       for( peptide <- peptides ) {
         if( peptide.ptms != null ) {
           peptide.ptms.foreach { this._insertPeptidePtm( stmt, _, peptide.id ) }
@@ -45,7 +40,7 @@ class PeptideStorer( psDb: SQLQueryHelper ) extends Logging {
     null
   }
   
-  private def _insertPeptide( stmt: ReusableStatement, peptide: Peptide ): Unit = {
+  private def _insertPeptide( stmt: PreparedStatementWrapper, peptide: Peptide ): Unit = {
     
     stmt.executeWith(
           peptide.sequence,
@@ -55,11 +50,11 @@ class PeptideStorer( psDb: SQLQueryHelper ) extends Logging {
           Option(null)
          )
         
-    peptide.id = this.psDb.extractGeneratedInt( stmt.wrapped )
+    peptide.id = stmt.generatedInt
     
   }
   
-  private def _insertPeptidePtm( stmt: ReusableStatement, locatedPtm: LocatedPtm, peptideId: Int ): Unit = {
+  private def _insertPeptidePtm( stmt: PreparedStatementWrapper, locatedPtm: LocatedPtm, peptideId: Int ): Unit = {
                                         
     stmt.executeWith(
           locatedPtm.seqPosition,

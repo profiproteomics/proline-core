@@ -5,9 +5,9 @@ import fr.proline.core.om.storer.msi.IRsWriter
 import scala.collection.mutable.ArrayBuffer
 import com.weiglewilczek.slf4s.Logging
 import scala.collection.mutable.HashMap
-import fr.proline.core.utils.lzma.EasyLzma
 
-import fr.proline.core.dal.PsDbSQLHelper
+import fr.profi.jdbc.easy._
+import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.MsiDbResultSetTable
 import fr.proline.core.dal.MsiDbSearchSettingsTable
 import fr.proline.core.dal.MsiDbMsiSearchTable
@@ -15,6 +15,7 @@ import fr.proline.core.dal.MsiDbUsedPtmTable
 import fr.proline.core.dal.MsiDbPtmSpecificityTable
 import fr.proline.core.dal.MsiDbSeqDatabaseTable
 import fr.proline.core.dal.MsiDbMsQueryTable
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
@@ -24,14 +25,9 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
                    private val _rsWriter: IRsWriter,
                    private val _pklWriter: IPeaklistWriter ) extends IRsStorer with Logging {
 
-  import net.noerd.prequel.ReusableStatement
-  import net.noerd.prequel.SQLFormatterImplicits._
-  import fr.proline.core.dal.SQLFormatterImplicits._
-  import fr.proline.util.sql.BoolToSQLStr
-  import fr.proline.core.om.model.msi._
   
   val msiDb1 = _rsWriter.msiDb1
-  lazy val psDb = new PsDbSQLHelper( dbMgmt.getPsDbConnector )
+  lazy val psDb = new SQLQueryHelper( dbMgmt.getPsDbConnector )
   //new PsDb(PsDb.buildConfigFromDatabaseConnector(dbMgmt.psDBConnector) )
     
   val peptideByUniqueKey = _rsWriter.peptideByUniqueKey
@@ -83,10 +79,9 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
   
   private def _insertResultSet( resultSet: ResultSet ): Unit = {
     
-    val msiDbConn = this.msiDb1.connection
-    val msiDbTx = this.msiDb1.getOrCreateTransaction()
+    val ezDBC = this.msiDb1.ezDBC
     
-    /// Define some vars
+    // Define some vars
     val isDecoy = resultSet.isDecoy
     val rsName = if( resultSet.name == null ) None else Some( resultSet.name )
     val rsDesc = if( resultSet.description == null ) None else Some( resultSet.description )
@@ -103,18 +98,20 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
       List( t.name, t.description, t.`type`, t.modificationTimestamp, t.decoyResultSetId, t.msiSearchId )
     }
     
-    val stmt = msiDbConn.prepareStatement( rsInsertQuery, java.sql.Statement.RETURN_GENERATED_KEYS )     
-    new ReusableStatement( stmt, msiDb1.sqlFormatter ) <<
-      rsName <<
-      rsDesc <<
-      rsType <<
-      new java.util.Date << // msiDb1.stringifyDate( new java.util.Date )
-      decoyRsId <<
-      msiSearchId
+    ezDBC.executePrepared( rsInsertQuery, true ) { stmt =>
+      stmt.executeWith(
+        rsName,
+        rsDesc,
+        rsType,
+        new java.util.Date,
+        decoyRsId,
+        msiSearchId
+      )
+      
+      resultSet.id = stmt.generatedInt
+      logger.debug("Created Result Set with ID "+ resultSet.id)
+    }
 
-    stmt.execute()
-    resultSet.id = this.msiDb1.extractGeneratedInt( stmt )
-    logger.debug("Created Result Set with ID "+ resultSet.id)
   }
   
   private def _storeNativeResultSetObjects( resultSet: ResultSet, seqDbIdByTmpId: Map[Int,Int] ): Unit = {
@@ -145,7 +142,7 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
       import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
       import fr.proline.core.om.storer.ps.PeptideStorer
       
-      val psPeptideProvider = new SQLPeptideProvider( this.psDb )
+      val psPeptideProvider = new SQLPeptideProvider( this.psDb.ezDBC )
       val psPeptideStorer = new PeptideStorer( this.psDb )
       
       // Define some vars
@@ -164,8 +161,9 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
       val peptidesInPsDb = peptidesForSeqsInPsDb filter { pep => newMsiPepKeySet.contains( pep.uniqueKey ) }           
       
       // Store missing PsDb peptides
+      this.psDb.ezDBC.beginTransaction()
       psPeptideStorer.storePeptides( newPsPeptides )
-      this.psDb.commitTransaction()
+      this.psDb.ezDBC.commitTransaction()
       
       // Map id of existing peptides and newly inserted peptides by their unique key
       val newMsiPepIdByUniqueKey = new collection.mutable.HashMap[String,Int]      

@@ -17,8 +17,12 @@ import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.repository.util.JPAUtils
 import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.core.dal.PsDbSQLHelper
+import fr.profi.jdbc.easy.SimpleQueryMaker
+import fr.profi.jdbc.DefaultSQLDialect
+import fr.profi.jdbc.SQLiteSQLDialect
 import fr.proline.repository.Database
+import fr.proline.repository.DriverType
+import fr.proline.core.dal.SQLQueryHelper
 
 @Test
 class SQLPeptideProviderTest extends DatabaseTestCase {
@@ -34,8 +38,8 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     initDatabase()
 
     loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-
-    sqlPepProvider = new SQLPeptideProvider(new PsDbSQLHelper(this.getConnector()))
+    
+    sqlPepProvider = new SQLPeptideProvider( SQLQueryHelper( this.getConnector ) )
   }
 
   @Test

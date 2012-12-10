@@ -3,11 +3,8 @@ package fr.proline.core.om.storer.msi.impl
 import com.weiglewilczek.slf4s.Logging
 import org.postgresql.copy.{CopyIn,CopyManager}
 import org.postgresql.core.BaseConnection
-import net.noerd.prequel.ReusableStatement
-import net.noerd.prequel.SQLFormatterImplicits._
-import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.dal.{MsiDbMsQueryTable,MsiDbPtmSpecificityTable}
+
+import fr.proline.core.dal.{SQLQueryHelper,MsiDbMsQueryTable,MsiDbPtmSpecificityTable}
 import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.dal.MsiDbUsedPtmTable
@@ -15,7 +12,8 @@ import fr.proline.core.dal.MsiDbUsedPtmTable
 
 class PgMsiSearchStorer( val msiDb: SQLQueryHelper ) extends SQLiteMsiSearchStorer( msiDb ) with Logging {
   
-  val bulkCopyManager = new CopyManager( msiDb.connection.asInstanceOf[BaseConnection] )
+  val connection = msiDb.ezDBC.connection
+  val bulkCopyManager = new CopyManager( msiDb.ezDBC.connection.asInstanceOf[BaseConnection] )
   
   override def storeMsQueries( msiSearchId: Int, msQueries: Seq[MsQuery], context: StorerContext ): StorerContext = {
     
@@ -23,7 +21,7 @@ class PgMsiSearchStorer( val msiDb: SQLQueryHelper ) extends SQLiteMsiSearchStor
     val tmpMsQueryTableName = "tmp_ms_query_" + ( scala.math.random * 1000000 ).toInt
     logger.info( "creating temporary table '" + tmpMsQueryTableName +"'..." )
     
-    val stmt = this.msiDb.connection.createStatement()
+    val stmt = connection.createStatement()
     stmt.executeUpdate("CREATE TEMP TABLE "+tmpMsQueryTableName+" (LIKE ms_query)")    
     
     // Bulk insert of MS queries
@@ -59,9 +57,9 @@ class PgMsiSearchStorer( val msiDb: SQLQueryHelper ) extends SQLiteMsiSearchStor
                        "SELECT "+msQueryTableCols+" FROM "+tmpMsQueryTableName )
     
     // Retrieve generated spectrum ids
-    val msQueryIdByInitialId = this.msiDb.getOrCreateTransaction.select(
+    val msQueryIdByInitialId = msiDb.ezDBC.select(
                                  "SELECT initial_id, id FROM ms_query WHERE msi_search_id = " + msiSearchId ) { r => 
-                                   (r.nextInt.get -> r.nextInt.get)
+                                   (r.nextInt -> r.nextInt)
                                  } toMap
     
     // Iterate over MS queries to update them

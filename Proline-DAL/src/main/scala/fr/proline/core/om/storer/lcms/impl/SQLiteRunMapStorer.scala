@@ -1,22 +1,18 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.SQLQueryHelper
+import scala.collection.mutable.ArrayBuffer
+import fr.profi.jdbc.SQLQueryExecution
+import fr.profi.jdbc.PreparedStatementWrapper
+import fr.profi.jdbc.easy._
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.storer.lcms.IRunMapStorer
 
-class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
-  
-  import scala.collection.mutable.ArrayBuffer
-  import net.noerd.prequel.ReusableStatement
-  import net.noerd.prequel.SQLFormatterImplicits._
-  import fr.proline.core.dal.SQLFormatterImplicits._
-  import fr.proline.util.sql.BoolToSQLStr
-  import fr.proline.core.om.model.lcms._
+class SQLiteRunMapStorer( lcmsDb: SQLQueryExecution ) extends IRunMapStorer {
 
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit = {
     
     // Retrieve or create transaction
     val lcmsDbConn = lcmsDb.connection
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
     
     // Create new map
     val newRunMapId = this.insertMap( runMap, null )
@@ -28,7 +24,7 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
     val peakPickingSoftwareId = if( runMap.featureScoring != null ) Some(runMap.peakPickingSoftware.id) else None
     val peakelFittingModelId = if( runMap.featureScoring != null ) Some(runMap.peakelFittingModel.id) else None
      
-    lcmsDbTx.execute("INSERT INTO run_map VALUES (?,?,?,?)",
+    lcmsDb.execute("INSERT INTO run_map VALUES (?,?,?,?)",
                         newRunMapId,
                         runMap.runId,
                         peakPickingSoftwareId,
@@ -36,7 +32,7 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
                       )
                       
     // Prepare insert statement
-    val featureInsertStmt = this.prepareStatementForFeatureInsert( lcmsDbConn )
+    val featureInsertStmt = this.prepareStatementForFeatureInsert()
     
     // Loop over features to import them
     val flattenedFeatures = new ArrayBuffer[Feature](runMap.features.length)
@@ -65,7 +61,7 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
     featureInsertStmt.close()
     
     // Link the features to overlapping features
-    lcmsDbTx.executeBatch("INSERT INTO feature_overlap_map VALUES (?,?,?)") { statement => 
+    lcmsDb.executePrepared("INSERT INTO feature_overlap_map VALUES (?,?,?)") { statement => 
       runMap.features.foreach { ft =>
         if( ft.overlappingFeatures != null ) {
           for( olpFt <- ft.overlappingFeatures ) {
@@ -76,7 +72,7 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
     }
     
     // Link the features to MS2 scans
-    lcmsDbTx.executeBatch("INSERT INTO feature_ms2_event VALUES (?,?,?)") { statement => 
+    lcmsDb.executePrepared("INSERT INTO feature_ms2_event VALUES (?,?,?)") { statement => 
       flattenedFeatures.foreach { ft =>
         if( ft.relations.ms2EventIds != null ) {
           for( ms2EventId <- ft.relations.ms2EventIds) statement.executeWith( ft.id, ms2EventId, newRunMapId )
@@ -121,9 +117,6 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
   
   def insertMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int = {
     
-    // Retrieve or create transaction
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
-    
     //val curDate = new java.util.Date
     val ftScoringId = if( lcmsMap.featureScoring != null ) Some(lcmsMap.featureScoring.id) else None
     val lcmsMapType = if( lcmsMap.isProcessed ) 1 else 0
@@ -150,28 +143,28 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
     stmt.close()*/
     
     var newMapId = 0
-    lcmsDbTx.executeBatch("INSERT INTO map("+mapColNamesAsStr+") VALUES(?,?,?,?,?,?)") { statement => 
+    lcmsDb.executePrepared("INSERT INTO map("+mapColNamesAsStr+") VALUES(?,?,?,?,?,?)",true) { statement => 
       val mapDesc = if( lcmsMap.description == null ) None else Some(lcmsMap.description)
       
       statement.executeWith( lcmsMap.name,
                              mapDesc,
                              lcmsMapType,
-                             lcmsDb.stringifyDate(lcmsMap.creationTimestamp),
-                             lcmsDb.stringifyDate(modificationTimestamp),
+                             lcmsMap.creationTimestamp,
+                             modificationTimestamp,
                              ftScoringId
                             )
-       newMapId = statement.wrapped.getGeneratedKeys().getInt("last_insert_rowid()") // SQLite specific query
+       newMapId = statement.generatedInt
     }
     
     newMapId
     
   }
   
-  def prepareStatementForFeatureInsert( lcmsDbConn: java.sql.Connection ): java.sql.PreparedStatement = {
-    lcmsDbConn.prepareStatement("INSERT INTO feature VALUES ("+ ("?" * 18).mkString(",") +")")
+  def prepareStatementForFeatureInsert(): PreparedStatementWrapper = {
+    lcmsDb.prepareStatementWrapper("INSERT INTO feature VALUES ("+ ("?" * 18).mkString(",") +")",true)
   }
   
-  def insertFeatureUsingPreparedStatement( ft: Feature, stmt: java.sql.PreparedStatement ): Int = {
+  def insertFeatureUsingPreparedStatement( ft: Feature, stmt: PreparedStatementWrapper ): Int = {
     
     val ftRelations = ft.relations
     val qualityScore = if( ft.qualityScore.isNaN ) None else Some(ft.qualityScore)
@@ -181,31 +174,31 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
     
     // TODO: store properties    
     
-    val ftRecordBuilder = new ReusableStatement( stmt, lcmsDb.sqlFormatter )
-    ftRecordBuilder <<
-      Option.empty[Int] <<
-      ft.moz <<
-      ft.intensity <<
-      ft.charge <<
-      ft.elutionTime <<
-      qualityScore <<
-      ft.ms1Count <<
-      ft.ms2Count <<
-      BoolToSQLStr(ft.isCluster,false) <<
-      BoolToSQLStr(ft.isOverlapping,false) <<
-      Option(null) <<
-      ftRelations.firstScanId <<
-      ftRelations.lastScanId <<
-      ftRelations.apexScanId <<
-      theoFtId <<
-      compoundId <<
-      mapLayerId <<
+    stmt.executeWith(
+      Option.empty[Int],
+      ft.moz,
+      ft.intensity,
+      ft.charge,
+      ft.elutionTime,
+      qualityScore,
+      ft.ms1Count,
+      ft.ms2Count,
+      ft.isCluster,
+      ft.isOverlapping,
+      Option(null),
+      ftRelations.firstScanId,
+      ftRelations.lastScanId,
+      ftRelations.apexScanId,
+      theoFtId,
+      compoundId,
+      mapLayerId,
       ftRelations.mapId
+      )
      
     // Execute statement
     stmt.execute()
-    stmt.getGeneratedKeys().getInt("last_insert_rowid()") // SQLite specific query
     
+    stmt.generatedInt    
   }
  
   

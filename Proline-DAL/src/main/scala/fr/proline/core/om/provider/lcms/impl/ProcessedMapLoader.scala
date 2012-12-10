@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.proline.core.dal.SQLQueryHelper
+import fr.profi.jdbc.SQLQueryExecution
 
-class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
+class ProcessedMapLoader( val sqlExec: SQLQueryExecution,
                           val loadPeaks: Boolean = false ) extends IMapLoader {
   
   import scala.collection.mutable.ArrayBuffer  
@@ -28,7 +28,7 @@ class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
     var lcmsMapIdx = 0
     
     // Load processed map features
-    lcmsDbTx.selectAndProcess(
+    sqlExec.selectAndProcess(
       "SELECT map.*, processed_map.number, processed_map.normalization_factor, processed_map.is_master, "+
       "processed_map.is_aln_reference, processed_map.is_locked, processed_map.map_set_id " +
       "FROM processed_map, map " + 
@@ -39,7 +39,7 @@ class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the map record
-      val mapRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      val mapRecord = colNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       
       val mapId = mapRecord("id").asInstanceOf[Int]
       val mapFeatures = featuresByMapId( mapId )
@@ -62,12 +62,12 @@ class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
     
     val runMapIdBufferByProcessedMapId = new java.util.HashMap[Int,ArrayBuffer[Int]]
     
-    lcmsDbTx.selectAndProcess( 
+    sqlExec.selectAndProcess( 
       "SELECT processed_map_run_map.processed_map_id, processed_map_run_map.run_map_id "+
       "FROM processed_map_run_map WHERE processed_map_run_map.processed_map_id "+ // TODO : add _mapping suffix
       "IN (" + processedMapIds.mkString(",") + ")" ) { r =>
                    
-      val( processedMapId, runMapId ) = (r.nextInt.get, r.nextInt.get) 
+      val( processedMapId, runMapId ) = (r.nextInt, r.nextInt) 
       if( !runMapIdBufferByProcessedMapId.containsKey(processedMapId) ) {
         runMapIdBufferByProcessedMapId.put(processedMapId, new ArrayBuffer[Int](1) )
       }
@@ -114,7 +114,7 @@ class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
   def getFeatures( processedMapIds: Seq[Int] ): Array[Feature] = {
  
     // Check that provided map ids correspond to run maps
-    val nbMaps: Int = lcmsDbTx.selectInt( "SELECT count(*) FROM processed_map WHERE id IN (" + processedMapIds.mkString(",") + ")" )
+    val nbMaps: Int = sqlExec.selectInt( "SELECT count(*) FROM processed_map WHERE id IN (" + processedMapIds.mkString(",") + ")" )
     if( nbMaps < processedMapIds.length ) {
       throw new Exception("map ids must correspond to existing processed maps");
     }
@@ -122,12 +122,12 @@ class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
     // Load run ids and run map ids
     var( runMapIds, runIds ) = ( new ArrayBuffer[Int](nbMaps), new ArrayBuffer[Int](nbMaps) )
     
-    lcmsDbTx.selectAndProcess(
+    sqlExec.selectAndProcess(
       "SELECT run_map.id, run_map.run_id FROM processed_map_run_map, run_map " +
       "WHERE processed_map_run_map.processed_map_id IN (" + processedMapIds.mkString(",") + ") " +
       "AND processed_map_run_map.run_map_id = run_map.id" ) { r => 
-        runMapIds += r.nextInt.get
-        runIds += r.nextInt.get                   
+        runMapIds += r.nextInt
+        runIds += r.nextInt
         ()
       }
     
@@ -213,7 +213,7 @@ class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
     // TODO: handle conflicting column names (serialized_properties)
     
     // Load processed map features
-    lcmsDbTx.selectAndProcess( "SELECT * FROM feature, processed_map_feature_item "+
+    sqlExec.selectAndProcess( "SELECT * FROM feature, processed_map_feature_item "+
                                "WHERE processed_map_feature_item.processed_map_id IN (" + processedMapIds.mkString(",")+") "+
                                "AND feature.id = processed_map_feature_item.feature_id " ) { r =>
       // "AND is_clusterized = " + BoolToSQLStr(isClusterized,boolStrAsInt)
@@ -221,7 +221,7 @@ class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
       if( processedFtColNames == null ) { processedFtColNames = r.columnNames }
       
       // Build the feature record
-      val processedFtRecord = processedFtColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      val processedFtRecord = processedFtColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       onEachFt( processedFtRecord )
       
       ()
@@ -233,10 +233,10 @@ class ProcessedMapLoader( val lcmsDb: SQLQueryHelper,
   def getSubFtIdsByClusterFtId( processedMapIds: Seq[Int] ): Map[Int,Array[Int]] = {
     
     val subFtIdBufferByClusterFtId = new java.util.HashMap[Int,ArrayBuffer[Int]]
-    lcmsDbTx.selectAndProcess( "SELECT cluster_feature_id, sub_feature_id FROM feature_cluster_item "+
+    sqlExec.selectAndProcess( "SELECT cluster_feature_id, sub_feature_id FROM feature_cluster_item "+
                                "WHERE processed_map_id IN (" + processedMapIds.mkString(",")+ ")" ) { r =>
         
-      val( clusterFeatureId, subFeatureId ) = (r.nextInt.get, r.nextInt.get) 
+      val( clusterFeatureId, subFeatureId ) = (r.nextInt, r.nextInt) 
       if( !subFtIdBufferByClusterFtId.containsKey(clusterFeatureId) ) {
         subFtIdBufferByClusterFtId.put(clusterFeatureId, new ArrayBuffer[Int](1) )
       }

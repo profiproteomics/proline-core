@@ -3,19 +3,18 @@ package fr.proline.core.om.provider.lcms.impl
 import java.util.HashMap
 import scala.collection.mutable.ArrayBuffer
 
+import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.dal.helper.LcmsDbHelper
-import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.util.sql._
 
 trait IMapLoader {
   
   /** If true then boolean will be stringified as integer (1|0), else as corresponding strings ("true"|"false") */
-  val lcmsDb: SQLQueryHelper
-  val lcmsDbTx = lcmsDb.getOrCreateTransaction
+  val sqlExec: SQLQueryExecution
   val boolStrAsInt = false //lcmsDb.boolStrAsInt
   
-  val lcmsDbHelper = new LcmsDbHelper( lcmsDb )
+  val lcmsDbHelper = new LcmsDbHelper( sqlExec )
   val featureScoringById = lcmsDbHelper.getFeatureScoringById()
   
   def getMaps( mapIds: Seq[Int] ): Array[_]
@@ -25,9 +24,9 @@ trait IMapLoader {
   def getOverlappingFtIdsByFtId( runMapIds: Seq[Int] ): Map[Int,Array[Int]] = {
     
     val olpFtIdsByFtId = new java.util.HashMap[Int,ArrayBuffer[Int]]
-    lcmsDbTx.selectAndProcess( "SELECT overlapped_feature_id, overlapping_feature_id FROM feature_overlap_map " + 
-                               "WHERE run_map_id IN (" + runMapIds.mkString(",") + ")" ) { r =>
-      val( overlappedFeatureId, overlappingFeatureId ) = (r.nextInt.get, r.nextInt.get)
+    sqlExec.selectAndProcess( "SELECT overlapped_feature_id, overlapping_feature_id FROM feature_overlap_map " + 
+                              "WHERE run_map_id IN (" + runMapIds.mkString(",") + ")" ) { r =>
+      val( overlappedFeatureId, overlappingFeatureId ) = (r.nextInt, r.nextInt)
       if( !olpFtIdsByFtId.containsKey(overlappedFeatureId) ) {
         olpFtIdsByFtId.put(overlappedFeatureId, new ArrayBuffer[Int](1) )
       }
@@ -53,13 +52,13 @@ trait IMapLoader {
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Feature]
     
     // Load overlapping features
-    lcmsDbTx.selectAndProcess( "SELECT * FROM feature WHERE map_id IN (" + mapIds.mkString(",")+") "+
-                               "AND is_overlapping = " + BoolToSQLStr(true,boolStrAsInt) ) { r =>
+    sqlExec.selectAndProcess( "SELECT * FROM feature WHERE map_id IN (" + mapIds.mkString(",")+") "+
+                              "AND is_overlapping = " + BoolToSQLStr(true,boolStrAsInt) ) { r =>
         
       if( featureColNames == null ) { featureColNames = r.columnNames }
       
       // Build the feature record
-      val ftRecord = featureColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      val ftRecord = featureColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       val mapId = ftRecord("map_id").asInstanceOf[Int]
       
       val feature = buildFeature( ftRecord, scanInitialIdById, ms2EventIdsByFtId, null, null, mapId )
@@ -74,13 +73,13 @@ trait IMapLoader {
   def eachFeatureRecord( mapIds: Seq[Int], onEachFt: Map[String,Any] => Unit ): Unit = {
     var featureColNames: Seq[String] = null
     
-    lcmsDbTx.selectAndProcess( "SELECT * FROM feature WHERE map_id IN (" + mapIds.mkString(",")+") "+
-                               "AND is_overlapping = " + BoolToSQLStr(false,boolStrAsInt) ) { r =>
+    sqlExec.selectAndProcess( "SELECT * FROM feature WHERE map_id IN (" + mapIds.mkString(",")+") "+
+                              "AND is_overlapping = " + BoolToSQLStr(false,boolStrAsInt) ) { r =>
       
       if( featureColNames == null ) { featureColNames = r.columnNames }
       
       // Build the feature record
-      val ftRecord = featureColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      val ftRecord = featureColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       onEachFt( ftRecord )
       
       ()

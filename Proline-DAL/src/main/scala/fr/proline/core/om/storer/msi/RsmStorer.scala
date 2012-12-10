@@ -2,19 +2,17 @@ package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
 import com.codahale.jerkson.Json.generate
-import net.noerd.prequel.ReusableStatement
-import net.noerd.prequel.SQLFormatterImplicits._
 
-import fr.proline.core.dal.SQLFormatterImplicits._
-import fr.proline.util.sql.BoolToSQLStr
+import fr.profi.jdbc.easy._
 import fr.proline.core.dal.{SQLQueryHelper,MsiDbResultSummaryTable}
+import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLiteRsmStorer
 
 trait IRsmStorer extends Logging {
   
   val msiDb: SQLQueryHelper // Main MSI db connection
-  val scoringIdByType = new fr.proline.core.dal.helper.MsiDbHelper( msiDb ).getScoringIdByType
+  val scoringIdByType = new MsiDbHelper( msiDb.ezDBC ).getScoringIdByType
   
   def storeRsmPeptideInstances( rsm: ResultSummary ): Int
   def storeRsmPeptideSets( rsm: ResultSummary ): Int
@@ -68,8 +66,6 @@ class RsmStorer( private val _storer: IRsmStorer ) extends Logging {
   
   private def _insertResultSummary( rsm: ResultSummary ): Unit = {
     
-    val msiDbConn = this.msiDb.connection
-    
     // Define some vars
     val rsmDesc = Option( rsm.description )
     val modificationTimestamp = new java.util.Date() // msiDb.stringifyDate( new java.util.Date )        
@@ -80,18 +76,18 @@ class RsmStorer( private val _storer: IRsmStorer ) extends Logging {
     // Store RDB result summary
     // TODO: use JPA instead
     
-    val stmt = msiDbConn.prepareStatement( this.rsmInsertQuery, java.sql.Statement.RETURN_GENERATED_KEYS )     
-    new ReusableStatement( stmt, msiDb.sqlFormatter ) <<
-      rsmDesc <<
-      modificationTimestamp <<
-      BoolToSQLStr(false) <<
-      rsmPropsAsJSON <<
-      decoyRsmId <<
-      rsId
-
-    stmt.execute()
-    rsm.id = this.msiDb.extractGeneratedInt( stmt )
-    
+    msiDb.ezDBC.executePrepared( this.rsmInsertQuery, true ) { stmt =>
+      stmt.executeWith(
+        rsmDesc,
+        modificationTimestamp,
+        false,
+        rsmPropsAsJSON,
+        decoyRsmId,
+        rsId
+      )
+      
+      rsm.id = stmt.generatedInt
+    }
   }
   
 }

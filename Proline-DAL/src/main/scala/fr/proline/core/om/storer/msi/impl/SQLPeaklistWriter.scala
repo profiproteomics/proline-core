@@ -1,25 +1,28 @@
 package fr.proline.core.om.storer.msi.impl
 
+import scala.collection.mutable.ArrayBuilder
+import com.weiglewilczek.slf4s.Logging
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.SQLFormatterImplicits._
+import org.xerial.snappy.Snappy
+
+import fr.profi.jdbc.easy._
+import fr.profi.jdbc.PreparedStatementWrapper
 import fr.proline.core.dal.MsiDbSpectrumTable
+import fr.proline.core.dal.MsiDbPeaklistTable
 import fr.proline.core.om.model.msi.IPeaklistContainer
 import fr.proline.core.om.model.msi.Spectrum
-import fr.proline.core.utils.lzma.EasyLzma
-import fr.proline.util.sql._
-import net.noerd.prequel.SQLFormatterImplicits._
-import net.noerd.prequel.ReusableStatement
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.model.msi.Peaklist
-import fr.proline.core.dal.MsiDbPeaklistTable
-import scala.collection.mutable.ArrayBuilder
+import fr.proline.util.sql._
+import fr.proline.util.bytes._
 
 class SQLPeaklistWriter extends IPeaklistWriter with Logging {
+  
+  val compressionAlgo = "snappy"//none | lzma | xz | snappy => TODO: create an enumeration near to the Peaklist class
    
-  protected val doubleFormatter = newDecimalFormat("#.######")
-  protected val floatFormatter = newDecimalFormat("#.##")
+  //protected val doubleFormatter = newDecimalFormat("#.######")
+  //protected val floatFormatter = newDecimalFormat("#.##")
   
   //TODO: GET/CREATE Peaklist SOFT
   def storePeaklist(peaklist: Peaklist, context : StorerContext):Int = {
@@ -29,19 +32,18 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
   	val peaklistColsList = MsiDbPeaklistTable.getColumnsAsStrList().filter { _ != "id" } 
     val peaklistInsertQuery = MsiDbPeaklistTable.makeInsertQuery( peaklistColsList )
     
-    val msiDbTx = context.msiDB.getOrCreateTransaction()
-    msiDbTx.executeBatch( peaklistInsertQuery, true ) { stmt =>
+    context.msiDB.executePrepared( peaklistInsertQuery, true ) { stmt =>
       stmt.executeWith(
             peaklist.fileType,
             peaklist.path,
             peaklist.rawFileName,
             peaklist.msLevel,
-            "xz", // none | lzma | xz TODO: create an enumeration near to the Peaklist class
+            compressionAlgo,
             Option(null),
             1 // peaklist.peaklistSoftware.id TODO !
           )
           
-      peaklist.id = context.msiDB.extractGeneratedInt( stmt.wrapped )
+      peaklist.id = stmt.generatedInt
     }
     peaklist.id
   }
@@ -54,7 +56,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
     
     // Insert corresponding spectra
     val spectrumIdByTitle = collection.immutable.Map.newBuilder[String,Int]
-    context.msiDB.getOrCreateTransaction.executeBatch( spectrumInsertQuery ) { stmt =>
+    context.msiDB.executePrepared( spectrumInsertQuery ) { stmt =>
       peaklistContainer.eachSpectrum { spectrum => 
         this._insertSpectrum( stmt, spectrum, peaklistId, context)
         spectrumIdByTitle += ( spectrum.title -> spectrum.id )
@@ -65,7 +67,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
     context
   }
   
-  private def _insertSpectrum( stmt: ReusableStatement, spectrum: Spectrum, peaklistId: Int , context : StorerContext): Unit = {
+  private def _insertSpectrum( stmt: PreparedStatementWrapper, spectrum: Spectrum, peaklistId: Int , context : StorerContext): Unit = {
     
     // Define some vars
     val precursorIntensity = if( !spectrum.precursorIntensity.isNaN ) Some(spectrum.precursorIntensity) else Option.empty[Float]
@@ -77,40 +79,34 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
     val lastTime = if( spectrum.lastTime > 0 ) Some(spectrum.lastTime) else Option.empty[Float]
     
     // moz and intensity lists are formatted as numbers separated by spaces
-    val mozList = spectrum.mozList.getOrElse(Array.empty[Double]).map { m => this.doubleFormatter.format( m ) } mkString(" ")
-    val intList = spectrum.intensityList.getOrElse(Array.empty[Float]).map { i => this.floatFormatter.format( i ) } mkString(" ")
+    //val mozList = spectrum.mozList.getOrElse(Array.empty[Double]).map { m => this.doubleFormatter.format( m ) } mkString(" ")
+    //val intList = spectrum.intensityList.getOrElse(Array.empty[Float]).map { i => this.floatFormatter.format( i ) } mkString(" ")
     
     // Compress peaks
-    val compressedMozList = EasyLzma.compress( mozList.getBytes )
-    val compressedIntList = EasyLzma.compress( intList.getBytes )
+    //val compressedMozList = EasyLzma.compress( mozList.getBytes )
+    //val compressedIntList = EasyLzma.compress( intList.getBytes )
     
-    stmt <<
-      spectrum.title <<
-      spectrum.precursorMoz <<
-      precursorIntensity <<
-      spectrum.precursorCharge <<
-      spectrum.isSummed <<
-      firstCycle <<
-      lastCycle <<
-      firstScan <<
-      lastScan <<
-      firstTime <<
-      lastTime <<
-      Option(null) <<
-      Option(null) <<
-      spectrum.peaksCount <<
-      Option(null) <<
-      peaklistId <<
+    stmt.executeWith(
+      spectrum.title,
+      spectrum.precursorMoz,
+      precursorIntensity,
+      spectrum.precursorCharge,
+      spectrum.isSummed,
+      firstCycle,
+      lastCycle,
+      firstScan,
+      lastScan,
+      firstTime,
+      lastTime,
+      Snappy.compress(doublesToBytes(spectrum.mozList.get)),
+      Snappy.compress(floatsToBytes(spectrum.intensityList.get)),
+      spectrum.peaksCount,
+      Option.empty[String],
+      peaklistId,
       spectrum.instrumentConfigId
-    
-    // Override BLOB values using JDBC
-    stmt.wrapped.setBytes(12,compressedMozList)
-    stmt.wrapped.setBytes(13,compressedIntList)
-    
-    // Execute statement
-    stmt.execute()
+      )
 
-    spectrum.id = context.msiDB.extractGeneratedInt( stmt.wrapped )
+    spectrum.id = stmt.generatedInt
     
     ()
   }
@@ -123,12 +119,10 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
      val stmt = context.msiDB.connection.createStatement()
      
      // Retrieve generated protein match ids
-     var idListBulder = new StringBuilder("(")
-     context.msiDB.getOrCreateTransaction.select(
-                           "id FROM spectrum WHERE spectrum.peaklist_id = "+peaklistId) { r => idListBulder.append(r.nextInt.get)}       
-     		      		 
-     idListBulder.append(")")     		 
-     stmt.executeUpdate("DELETE FROM spectrum WHERE spectrum.id IN "+idListBulder.toString)
+     //val specIds = context.msiDB.selectInts("SELECT id FROM spectrum WHERE spectrum.peaklist_id = "+peaklistId)
+     //stmt.executeUpdate("DELETE FROM spectrum WHERE spectrum.id IN ("+specIds.mkString(",")+")" )
+     
+     stmt.executeUpdate("DELETE FROM spectrum WHERE peaklist_id = "+peaklistId)
      stmt.executeUpdate("DELETE FROM peaklist WHERE peaklist.id = "+peaklistId)
   }
 }
@@ -169,12 +163,12 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
       //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
 
       // moz and intensity lists are formatted as numbers separated by spaces      
-      val mozList = spectrum.mozList.getOrElse( Array.empty[Double] ).map { m => this.doubleFormatter.format( m ) } mkString ( " " )
-      val intList = spectrum.intensityList.getOrElse( Array.empty[Float] ).map { i => this.floatFormatter.format( i ) } mkString ( " " )
+      //val mozList = spectrum.mozList.getOrElse( Array.empty[Double] ).map { m => this.doubleFormatter.format( m ) } mkString ( " " )
+      //val intList = spectrum.intensityList.getOrElse( Array.empty[Float] ).map { i => this.floatFormatter.format( i ) } mkString ( " " )
 
       // Compress peaks
-      val compressedMozList = EasyLzma.compress( mozList.getBytes )
-      val compressedIntList = EasyLzma.compress( intList.getBytes )
+      //val compressedMozList = EasyLzma.compress( mozList.getBytes )
+      //val compressedIntList = EasyLzma.compress( intList.getBytes )
 
       // Build a row containing spectrum values
       val spectrumValues = List( spectrum.id,
@@ -189,8 +183,8 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
         lastScan,
         firstTime,
         lastTime,
-        """\\x""" + bytes2Hex( compressedMozList ),
-        """\\x""" + bytes2Hex( compressedIntList ),
+        """\\x""" + bytes2Hex( Snappy.compress(doublesToBytes(spectrum.mozList.get)) ),
+        """\\x""" + bytes2Hex( Snappy.compress(floatsToBytes(spectrum.intensityList.get)) ),
         spectrum.peaksCount,
         "",
         peaklistId,
@@ -211,26 +205,14 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
       "SELECT " + spectrumTableCols + " FROM " + tmpSpectrumTableName )
 
     // Retrieve generated spectrum ids
-    val spectrumIdByTitle = context.msiDB.getOrCreateTransaction.select(
+    val spectrumIdByTitle = context.msiDB.select(
       "SELECT title, id FROM spectrum WHERE peaklist_id = " + peaklistId ) { r =>
-        ( r.nextString.get -> r.nextInt.get )
+        ( r.nextString -> r.nextInt )
       } toMap
 
     context.spectrumIdByTitle =  spectrumIdByTitle
     context
 
-  }
-
-  private val HEX_CHARS = "0123456789abcdef".toCharArray()
-
-  def bytes2Hex( bytes: Array[Byte] ): String = {
-    val chars = new Array[Char]( 2 * bytes.length )
-    for ( i <- 0 until bytes.length ) {
-      val b = bytes( i )
-      chars( 2 * i ) = HEX_CHARS( ( b & 0xF0 ) >>> 4 )
-      chars( 2 * i + 1 ) = HEX_CHARS( b & 0x0F )
-    }
-    new String( chars )
   }
 
 }

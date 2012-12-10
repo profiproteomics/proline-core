@@ -1,14 +1,14 @@
 package fr.proline.core.om.provider.msi.impl
 
-import net.noerd.prequel.SQLFormatterImplicits._
-import fr.proline.core.dal.{SQLQueryHelper}
+import fr.profi.jdbc.SQLQueryExecution
+
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.model.msi.PtmSpecificity
 import fr.proline.core.om.provider.msi.IPTMProvider
 
-class SQLPTMProvider( val psDb: SQLQueryHelper ) extends IPTMProvider {
+class SQLPTMProvider( val psDb: SQLQueryExecution ) extends IPTMProvider {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
@@ -44,18 +44,16 @@ class SQLPTMProvider( val psDb: SQLQueryHelper ) extends IPTMProvider {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
     
-    val wasInTx = psDb.isInTransaction()
     var ptmColNames: Seq[String] = null
     val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Int,Map[String,Any]]
-    val psDbTx = psDb.getOrCreateTransaction
     
     // Load PTM records
-    psDbTx.selectAndProcess( "SELECT * FROM ptm" ) { r => 
+    psDb.selectAndProcess( "SELECT * FROM ptm" ) { r => 
         
       if( ptmColNames == null ) { ptmColNames = r.columnNames }
       
       // Build the PTM record
-      val ptmRecord = ptmColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      val ptmRecord = ptmColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       val ptmId: Int = ptmRecord("id").asInstanceOf[AnyVal]
       ptmMapBuilder += ( ptmId -> ptmRecord )
       
@@ -67,13 +65,13 @@ class SQLPTMProvider( val psDb: SQLQueryHelper ) extends IPTMProvider {
     var ptmEvidColNames: Seq[String] = null
     
     // Execute SQL query to load PTM evidence records
-    val ptmEvidRecords = psDbTx.select( "SELECT * FROM ptm_evidence" ) { r => 
+    val ptmEvidRecords = psDb.select( "SELECT * FROM ptm_evidence" ) { r => 
         
       if( ptmEvidColNames == null ) { ptmEvidColNames = r.columnNames }
       
       // Build the PTM record
       var ptmEvidRecord = new collection.mutable.HashMap[String, Any]
-      ptmEvidColNames foreach { colName => ptmEvidRecord.put( colName, r.nextObject.getOrElse(null) ) }
+      ptmEvidColNames foreach { colName => ptmEvidRecord.put( colName, r.nextObjectOrElse(null) ) }
      // var ptmEvidRecord = ptmEvidColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
       
       // Fix is_required boolean field
@@ -91,12 +89,12 @@ class SQLPTMProvider( val psDb: SQLQueryHelper ) extends IPTMProvider {
     val ptmDefMapBuilder = scala.collection.immutable.Map.newBuilder[Int,PtmDefinition]
     
     // Load PTM specificity records
-    psDbTx.selectAndProcess( "SELECT * FROM ptm_specificity" ) { r => 
+    psDb.selectAndProcess( "SELECT * FROM ptm_specificity" ) { r => 
         
       if( ptmSpecifColNames == null ) { ptmSpecifColNames = r.columnNames }
       
       // Build the PTM specificity record
-      val ptmSpecifRecord = ptmSpecifColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      val ptmSpecifRecord = ptmSpecifColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       
       // Retrieve corresponding PTM
       val ptmId = ptmSpecifRecord("ptm_id").asInstanceOf[Int]
@@ -115,12 +113,7 @@ class SQLPTMProvider( val psDb: SQLQueryHelper ) extends IPTMProvider {
       
     }
     
-    // TODO: remove when prequel is fixed
-    if( !wasInTx ) psDb.commitTransaction
-    
-    ptmDefMapBuilder.result()
-    
-    
+    ptmDefMapBuilder.result()    
   }
   
   lazy val ptmDefByNameAndLocation: Map[Tuple3[String,Char,PtmLocation.Location],PtmDefinition] = {

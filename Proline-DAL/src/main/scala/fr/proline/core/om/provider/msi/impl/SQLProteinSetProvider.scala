@@ -1,14 +1,16 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-import fr.proline.core.dal.{SQLQueryHelper,MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
+
+import fr.profi.jdbc.SQLQueryExecution
+import fr.proline.core.dal.{MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.util.sql.SQLStrToBool
 import fr.proline.core.om.model.msi.{PeptideSet,ProteinSet}
 import fr.proline.core.om.provider.msi.{IPeptideSetProvider,IProteinSetProvider}
 
-class SQLProteinSetProvider( val msiDb: SQLQueryHelper,
-                             val psDb: SQLQueryHelper,
+class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
+                             val psDb: SQLQueryExecution,
                              val peptideSetProvider: Option[IPeptideSetProvider] = None ) {
   
   val ProtSetCols = MsiDbProteinSetTable.columns
@@ -34,8 +36,7 @@ class SQLProteinSetProvider( val msiDb: SQLQueryHelper,
   
   def getProteinSets( protSetIds: Seq[Int] ): Array[ProteinSet] = {
     
-    val msiDbTx = this.msiDb.getOrCreateTransaction()
-    val peptideSetIds = msiDbTx.select( "SELECT id FROM peptide_set WHERE protein_set_id IN (" + protSetIds.mkString(",") +")") { _.nextInt.get }
+    val peptideSetIds = msiDb.select( "SELECT id FROM peptide_set WHERE protein_set_id IN (" + protSetIds.mkString(",") +")") { _.nextInt }
     val peptideSets = this._getPeptideSetProvider.getPeptideSets( peptideSetIds )
     
     this._buildProteinSets( this._getProtSetRecords( protSetIds ),

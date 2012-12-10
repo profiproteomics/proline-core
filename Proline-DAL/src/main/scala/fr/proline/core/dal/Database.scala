@@ -1,5 +1,50 @@
 package fr.proline.core.dal
 
+import org.joda.time.format.DateTimeFormat
+
+import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.jdbc.AbstractSQLDialect
+import fr.profi.jdbc.AsShortStringBooleanFormatter
+import fr.profi.jdbc.DefaultSQLDialect
+import fr.profi.jdbc.SQLiteTypeMapper
+import fr.profi.jdbc.TxIsolationLevels
+
+import fr.proline.repository.DriverType
+import fr.proline.repository.IDatabaseConnector
+
+object ProlineSQLiteSQLDialect extends AbstractSQLDialect(
+  DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSS"),
+  AsShortStringBooleanFormatter,
+  SQLiteTypeMapper,
+  "last_insert_rowid()",
+  999
+)
+
+class SQLQueryHelper( val dbConnector: IDatabaseConnector ) {
+  
+  val driverType = dbConnector.getDriverType()
+  val dialect = driverType match {
+    case DriverType.SQLITE => ProlineSQLiteSQLDialect
+    case _ => DefaultSQLDialect
+  }
+  val txIsolationLevel = driverType match {
+    case DriverType.SQLITE => TxIsolationLevels.SERIALIZABLE
+    case _ => TxIsolationLevels.READ_COMMITTED
+  }
+  
+  lazy val ezDBC = EasyDBC( dbConnector.getDataSource().getConnection(),
+                           dialect,
+                           txIsolationLevel )
+
+}
+
+object SQLQueryHelper {
+  def apply(dbConnector: IDatabaseConnector): EasyDBC = {
+    new SQLQueryHelper(dbConnector).ezDBC
+  }
+}
+
+/*
 import java.sql.Connection
 import java.sql.DriverManager
 import net.noerd.prequel._
@@ -117,39 +162,6 @@ trait SQLQueryHelper {
   
 }
 
-// TODO: put these definitions in an other sub-package (i.e. table)
-  trait TableDefinition {
-    
-    val tableName: String
-    val columns: Enumeration
-    
-    def getColumnsAsStrList(): List[String] = {
-      List() ++ this.columns.values map { _.toString }
-    }
-    
-    // TODO: implicit conversion
-    def _getColumnsAsStrList[A <: Enumeration]( f: A => List[Enumeration#Value] ): List[String] = {
-      List() ++ f(this.columns.asInstanceOf[A]) map { _.toString }
-    }
-    
-    def makeInsertQuery(): String = {
-      this.makeInsertQuery( this.getColumnsAsStrList )
-    }
-    
-    // TODO: implicit conversion
-    def _makeInsertQuery[A <: Enumeration]( f: A => List[Enumeration#Value] ): String = {
-      this.makeInsertQuery( this._getColumnsAsStrList[A]( f ) )    
-    }
-    
-    def makeInsertQuery( colsAsStrList: List[String] ): String = {
-      val valuesStr = List.fill(colsAsStrList.length)("?").mkString(",")
-  
-      "INSERT INTO "+ this.tableName+" ("+ colsAsStrList.mkString(",") +") VALUES ("+valuesStr+")"
-    }
-    
-    implicit def enumValueToString(v: Enumeration#Value): String = v.toString
-    
-  }
 
 
 
@@ -191,3 +203,4 @@ object SQLFormatterImplicits {
                                                               case Some(value) => StringFormattable(value)
                                                             }
 }
+*/

@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.proline.core.dal.SQLQueryHelper
+import fr.profi.jdbc.SQLQueryExecution
 
-class RunLoader( val lcmsDb: SQLQueryHelper )  {
+class RunLoader( val sqlExec: SQLQueryExecution )  {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.util.sql._
@@ -21,13 +21,12 @@ class RunLoader( val lcmsDb: SQLQueryHelper )  {
     var runIdx = 0
     
     // Load runs
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
-    lcmsDbTx.select( "SELECT * FROM run WHERE id IN (" + runIds.mkString(",") + ")" ) { r =>
+    sqlExec.select( "SELECT * FROM run WHERE id IN (" + runIds.mkString(",") + ")" ) { r =>
         
         if( colNames == null ) { colNames = r.columnNames }
         
         // Build the run record
-        val runRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+        val runRecord = colNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
         val runId = runRecord("id").asInstanceOf[Int]
         val runScans = scansByRunId(runId)
         
@@ -58,19 +57,18 @@ class RunLoader( val lcmsDb: SQLQueryHelper )  {
   
   def getScans( runIds: Seq[Int] ): Array[LcmsScan] = {
     
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
-    val nbScans: Int = lcmsDbTx.selectInt( "SELECT count(*) FROM scan WHERE run_id IN (" + runIds.mkString(",") + ")" )
+    val nbScans: Int = sqlExec.selectInt( "SELECT count(*) FROM scan WHERE run_id IN (" + runIds.mkString(",") + ")" )
     val scans = new Array[LcmsScan](nbScans)    
     var colNames: Seq[String] = null
     var lcmsScanIdx = 0
     
     // Load scans
-    lcmsDbTx.select( "SELECT * FROM scan WHERE run_id IN (" + runIds.mkString(",") +")" ) { r =>
+    sqlExec.select( "SELECT * FROM scan WHERE run_id IN (" + runIds.mkString(",") +")" ) { r =>
         
         if( colNames == null ) { colNames = r.columnNames }
         
         // Build the scan record
-        val scanRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+        val scanRecord = colNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
         
         // Build the scan
         scans(lcmsScanIdx) = buildLcmsScan( scanRecord )

@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import fr.proline.core.dal.SQLQueryHelper
+import fr.profi.jdbc.SQLQueryExecution
 
-class RunMapLoader( val lcmsDb: SQLQueryHelper,
+class RunMapLoader( val sqlExec: SQLQueryExecution,
                     val loadPeaks: Boolean = false ) extends IMapLoader {
   
   import scala.collection.mutable.ArrayBuffer
@@ -24,7 +24,7 @@ class RunMapLoader( val lcmsDb: SQLQueryHelper,
     var lcmsMapIdx = 0
     
     // Load processed map features
-    lcmsDbTx.selectAndProcess( 
+    sqlExec.selectAndProcess( 
       "SELECT map.*, run_map.run_id, run_map.peak_picking_software_id, run_map.peakel_fitting_model_id FROM run_map, map " +
       "WHERE run_map.id IN (" + runMapIds.mkString(",")+") " +
       "AND map.id = run_map.id " ) { r =>
@@ -32,7 +32,7 @@ class RunMapLoader( val lcmsDb: SQLQueryHelper,
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the map record
-      val mapRecord = colNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      val mapRecord = colNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       
       val mapId = mapRecord("id").asInstanceOf[Int]
       val featureScoringId = mapRecord("feature_scoring_id").asInstanceOf[Int]
@@ -80,13 +80,13 @@ class RunMapLoader( val lcmsDb: SQLQueryHelper,
   def getFeatures( mapIds: Seq[Int] ): Array[Feature] = {
     
     // Check that provided map ids correspond to run maps
-    val nbMaps = lcmsDbTx.selectInt( "SELECT count(*) FROM run_map WHERE id IN (" + mapIds.mkString(",") + ")" )  
+    val nbMaps = sqlExec.selectInt( "SELECT count(*) FROM run_map WHERE id IN (" + mapIds.mkString(",") + ")" )  
     if( nbMaps < mapIds.length ) {
       throw new Exception("map ids must correspond to existing run maps");
     }
     
     // Load run ids
-    val runIds = lcmsDbTx.select( "SELECT run_id FROM run_map WHERE id IN (" + mapIds.mkString(",") + ")" ) { _.nextInt.get }
+    val runIds = sqlExec.selectInts( "SELECT run_id FROM run_map WHERE id IN (" + mapIds.mkString(",") + ")" )
     
     // Load mapping between scan ids and scan initial ids
     val scanInitialIdById = lcmsDbHelper.getScanInitialIdById( runIds ) 

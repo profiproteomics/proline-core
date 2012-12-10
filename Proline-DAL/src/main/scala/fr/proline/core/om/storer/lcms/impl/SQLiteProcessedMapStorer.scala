@@ -1,22 +1,18 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.SQLQueryHelper
+import scala.collection.mutable.ArrayBuffer
+
+import fr.profi.jdbc.SQLQueryExecution
+import fr.profi.jdbc.StatementWrapper
+import fr.profi.jdbc.easy._
+
+import fr.proline.core.om.model.lcms.ProcessedMap
+import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.storer.lcms.IProcessedMapStorer
 
-class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapStorer {
-  
-  import scala.collection.mutable.ArrayBuffer
-  import net.noerd.prequel.ReusableStatement
-  import net.noerd.prequel.SQLFormatterImplicits._
-  import fr.proline.core.dal.SQLFormatterImplicits._
-  import fr.proline.util.sql.BoolToSQLStr
-  import fr.proline.core.om.model.lcms.ProcessedMap
-  import fr.proline.core.om.model.lcms.Feature
+class SQLiteProcessedMapStorer( lcmsDb: SQLQueryExecution ) extends IProcessedMapStorer {
   
   def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = true ): Unit = {
-    
-    // Retrieve or create transaction
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
     
     // Insert processed map
     val newProcessedMapId = this.insertProcessedMap( processedMap )
@@ -39,9 +35,6 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
   
   def insertProcessedMap( processedMap: ProcessedMap ): Int = {
     
-    // Retrieve or create transaction
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
-    
     // Create new map
     val newMapId = new SQLiteRunMapStorer( lcmsDb ).insertMap( processedMap, processedMap.modificationTimestamp )
     
@@ -49,7 +42,7 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
     /*
     val processedMapColumns = Seq( "id","number","normalization_factor","is_master","is_aln_reference","is_locked","map_set_id")
     val processedMapColNamesAsStr = processedMapColumns.mkString(",")
-    lcmsDbTx.execute("INSERT INTO processed_map("+processedMapColNamesAsStr+") VALUES (?,?,?,?,?,?,?)",
+    lcmsDb.execute("INSERT INTO processed_map("+processedMapColNamesAsStr+") VALUES (?,?,?,?,?,?,?)",
                     newMapId,
                     processedMap.number,
                     processedMap.normalizationFactor,
@@ -60,13 +53,13 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
                   )
     */
                       
-    lcmsDbTx.executeBatch("INSERT INTO processed_map VALUES (?,?,?,?,?,?,?)") { statement => 
+    lcmsDb.executePrepared("INSERT INTO processed_map VALUES (?,?,?,?,?,?,?)") { statement => 
       statement.executeWith(  newMapId,
                               processedMap.number,
                               processedMap.normalizationFactor,
-                              BoolToSQLStr(processedMap.isMaster,false),
-                              BoolToSQLStr(processedMap.isAlnReference,false),
-                              BoolToSQLStr(processedMap.isLocked,false),
+                              processedMap.isMaster,
+                              processedMap.isAlnReference,
+                              processedMap.isLocked,
                               processedMap.mapSetId
                             )
     }
@@ -76,10 +69,7 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
   
   def linkProcessedMapToRunMaps( processedMap: ProcessedMap ): Unit = {
     
-    // Retrieve or create transaction
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
-    
-    lcmsDbTx.executeBatch("INSERT INTO processed_map_run_map VALUES (?,?)") { statement => 
+    lcmsDb.executePrepared("INSERT INTO processed_map_run_map VALUES (?,?)") { statement => 
       processedMap.runMapIds.foreach { runMapId =>
         statement.executeWith( processedMap.id, runMapId )
       }
@@ -89,13 +79,10 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
   
   def insertProcessedMapFeatureItems( processedMap: ProcessedMap ): Unit = {
     
-    // Retrieve or create transaction
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
-    
     val processedMapId = processedMap.id
     
     // Attach features to the processed map
-    lcmsDbTx.executeBatch("INSERT INTO processed_map_feature_item VALUES("+ ("?" * 8).mkString(",") +")") { statement => 
+    lcmsDb.executePrepared("INSERT INTO processed_map_feature_item VALUES("+ ("?" * 8).mkString(",") +")") { statement => 
       processedMap.features.foreach { feature =>
         
         // Update feature map id
@@ -108,12 +95,12 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
             // Update sub-feature map id
             subFt.relations.mapId = processedMapId
             // Store the processed feature
-            insertProcessedMapFtItemUsingReusableStatement( subFt, statement )
+            insertProcessedMapFtItemUsingWrappedStatement( subFt, statement )
           }
         }
         else {
           // Store the processed feature
-          insertProcessedMapFtItemUsingReusableStatement( feature, statement )
+          insertProcessedMapFtItemUsingWrappedStatement( feature, statement )
         }
       }
     }
@@ -127,10 +114,9 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
     
     // Retrieve or create database connection and transaction
     val lcmsDbConn = lcmsDb.connection
-    val lcmsDbTx = lcmsDb.getOrCreateTransaction()
     
     // Prepare feature insert statement
-    val featureInsertStmt = runMapStorer.prepareStatementForFeatureInsert( lcmsDbConn )
+    val featureInsertStmt = runMapStorer.prepareStatementForFeatureInsert()
     
     // Store feature clusters 
     features.withFilter( _.isCluster ).foreach { clusterFt =>
@@ -146,16 +132,16 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
     
     // Store processed feature items corresponding to feature clusters
     //var nbSubFts = 0
-    lcmsDbTx.executeBatch("INSERT INTO processed_map_feature_item VALUES("+ ("?" * 8).mkString(",") +")") { statement => 
+    lcmsDb.executePrepared("INSERT INTO processed_map_feature_item VALUES("+ ("?" * 8).mkString(",") +")") { statement => 
       features.withFilter( _.isCluster ).foreach { ft =>
         //nbSubFts += ft.subFeatures.length
-        insertProcessedMapFtItemUsingReusableStatement( ft, statement )
+        insertProcessedMapFtItemUsingWrappedStatement( ft, statement )
       }
     }
     
     // Link feature clusters to their corresponding sub-features
     //val subFtIds = new ArrayBuffer[Int](nbSubFts)
-    lcmsDbTx.executeBatch("INSERT INTO feature_cluster_item VALUES(?,?,?)") { statement => 
+    lcmsDb.executePrepared("INSERT INTO feature_cluster_item VALUES(?,?,?)") { statement => 
       features.withFilter( _.isCluster ).foreach { clusterFt =>
         for( subFt <- clusterFt.subFeatures ) {
           //subFtIds += subFt.id
@@ -166,7 +152,7 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
     
     // Set all sub-features of the processed map as clusterized
     /*subFtIds.grouped(lcmsDb.maxVariableNumber).foreach { tmpSubFtIds => {
-      lcmsDbTx.execute( "UPDATE processed_map_feature_item SET is_clusterized = " + BoolToSQLStr(true,lcmsDb.boolStrAsInt) +
+      lcmsDb.execute( "UPDATE processed_map_feature_item SET is_clusterized = " + BoolToSQLStr(true,lcmsDb.boolStrAsInt) +
                         " WHERE feature_id IN (" + tmpSubFtIds.mkString(",") +")" )
       }
     }*/
@@ -174,13 +160,13 @@ class SQLiteProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapSt
     ()
   }
   
-  private def insertProcessedMapFtItemUsingReusableStatement( ft: Feature, statement: ReusableStatement ): Unit = {
+  private def insertProcessedMapFtItemUsingWrappedStatement( ft: Feature, statement: StatementWrapper ): Unit = {
     
     val calibratedMoz = if( ft.calibratedMoz.isNaN ) None else Some(ft.calibratedMoz)
     val normalizedIntensity = if( ft.normalizedIntensity.isNaN ) None else Some(ft.normalizedIntensity)
     
     statement.executeWith( ft.relations.mapId, ft.id, calibratedMoz, normalizedIntensity, ft.correctedElutionTime,                    
-                           BoolToSQLStr(ft.isClusterized,false), ft.selectionLevel, Some(null) )
+                           ft.isClusterized, ft.selectionLevel, Option(null) )
                            
   }
   

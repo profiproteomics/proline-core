@@ -60,9 +60,9 @@ class PgSQLRsStorer(val dbMgmt: DatabaseManager, private val _storer: IRsWriter,
                        "SELECT "+msQueryTableCols+" FROM "+tmpMsQueryTableName )
     
     // Retrieve generated spectrum ids
-    val msQueryIdByInitialId = context.msiDB.getOrCreateTransaction.select(
+    val msQueryIdByInitialId = context.msiDB.select(
                                  "SELECT initial_id, id FROM ms_query WHERE msi_search_id = " + msiSearchID ) { r => 
-                                   (r.nextInt.get -> r.nextInt.get)
+                                   (r.nextInt -> r.nextInt)
                                  } toMap
     
     // Iterate over MS queries to update them

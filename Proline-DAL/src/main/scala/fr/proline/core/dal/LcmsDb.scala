@@ -1,9 +1,10 @@
 package fr.proline.core.dal
 
+/*
 import net.noerd.prequel._
 import fr.proline.repository.IDatabaseConnector
 
-class LcmsDbSQLHelper( val dbConnector: IDatabaseConnector ) extends SQLQueryHelper
+class LcmsDbSQLHelper( val dbConnector: IDatabaseConnector ) extends SQLQueryHelper*/
 
 /*
 object LcmsDb extends DatabaseConfigBuilder {

@@ -2,14 +2,16 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
-import fr.proline.core.dal.{SQLQueryHelper,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
+
+import fr.profi.jdbc.SQLQueryExecution
+import fr.proline.core.dal.{MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.util.sql.SQLStrToBool
 import fr.proline.core.om.model.msi.{ProteinMatch,SequenceMatch}
 import fr.proline.core.om.model.msi.{ProteinMatchProperties,SequenceMatchProperties}
 import fr.proline.core.om.provider.msi.IProteinMatchProvider
 
-class SQLProteinMatchProvider( val msiDb: SQLQueryHelper ) { //extends IProteinMatchProvider
+class SQLProteinMatchProvider( val msiDb: SQLQueryExecution ) { //extends IProteinMatchProvider
   
   val ProtMatchCols = MsiDbProteinMatchTable.columns
   val SeqMatchCols = MsiDbSequenceMatchTable.columns
@@ -18,18 +20,16 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryHelper ) { //extends IProteinM
     
     import fr.proline.util.primitives.LongOrIntAsInt._
     
-    val msiDbTx = msiDb.getOrCreateTransaction()
-    
     // Retrieve score type map
     val scoreTypeById = new MsiDbHelper( msiDb ).getScoringTypeById
     
     // Execute SQL query to load protein match records
     //val seqMatchMapBuilder = scala.collection.immutable.Map.newBuilder[Int,SequenceMatch]
     var seqMatchColNames: Seq[String] = null
-    val seqMatcheRecords = msiDbTx.select( "SELECT * FROM sequence_match WHERE result_set_id IN (" +
+    val seqMatcheRecords = msiDb.select( "SELECT * FROM sequence_match WHERE result_set_id IN (" +
                                            rsIds.mkString(",") +")" ) { r => 
       if( seqMatchColNames == null ) { seqMatchColNames = r.columnNames }
-      seqMatchColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+      seqMatchColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
       
     }
     
@@ -39,8 +39,8 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryHelper ) { //extends IProteinM
     // Load and map sequence database ids of each protein match
     val seqDbIdsByProtMatchId = new java.util.HashMap[Int,ArrayBuffer[Int]]
     
-    msiDbTx.selectAndProcess( "SELECT protein_match_id, seq_database_id FROM protein_match_seq_database_map" ) { r =>
-      val( proteinMatchId, seqDatabaseId ) = (r.nextInt.get, r.nextInt.get)
+    msiDb.selectAndProcess( "SELECT protein_match_id, seq_database_id FROM protein_match_seq_database_map" ) { r =>
+      val( proteinMatchId, seqDatabaseId ) = (r.nextInt, r.nextInt)
       if( !seqDbIdsByProtMatchId.containsKey(proteinMatchId) ) {
         seqDbIdsByProtMatchId.put(proteinMatchId, new ArrayBuffer[Int](1) )
       }
@@ -50,11 +50,11 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryHelper ) { //extends IProteinM
     
     // Execute SQL query to load protein match records
     var protMatchColNames: Seq[String] = null
-    val protMatches = msiDbTx.select( "SELECT * FROM protein_match WHERE result_set_id IN (" +
+    val protMatches = msiDb.select( "SELECT * FROM protein_match WHERE result_set_id IN (" +
                  rsIds.mkString(",") +")" ) { r =>
               
         if( protMatchColNames == null ) { protMatchColNames = r.columnNames }
-        val protMatchRecord = protMatchColNames.map( colName => ( colName -> r.nextObject.getOrElse(null) ) ).toMap
+        val protMatchRecord = protMatchColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
         
         val protMatchId: Int = protMatchRecord(ProtMatchCols.id).asInstanceOf[AnyVal]
         
@@ -166,9 +166,9 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryHelper ) { //extends IProteinM
   // TODO: retrieve only validated protein matches
   def getResultSummariesProteinMatches( rsmIds: Seq[Int] ): Array[ProteinMatch] = {
     
-    val msiDbTx = msiDb.getOrCreateTransaction()
-    val rsIds = msiDbTx.select( "SELECT result_set_id FROM result_summary WHERE id IN (" +
-                                rsmIds.mkString(",") +")" ) { _.nextInt.get }
+    val rsIds = msiDb.selectInts(
+                  "SELECT result_set_id FROM result_summary WHERE id IN (" +rsmIds.mkString(",") +")"
+                 )
     this.getResultSetsProteinMatches( rsIds )
   }
   
