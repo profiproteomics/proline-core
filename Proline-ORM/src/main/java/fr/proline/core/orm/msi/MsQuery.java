@@ -22,7 +22,7 @@ import javax.persistence.Transient;
  */
 @Entity
 @Table(name = "ms_query")
-public class MsQuery implements Serializable {
+public class MsQuery implements Serializable, Comparable<MsQuery> {
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -146,6 +146,18 @@ public class MsQuery implements Serializable {
 
     }
 
+    /**
+     * Method for Comparable interface. Compare Peptides according to their sequence
+     * 
+     * @param p
+     * @return
+     */
+    @Override
+    public int compareTo(MsQuery q) {
+    	return getInitialId().compareTo(q.getInitialId());
+    }
+    
+    
     public boolean getTransientIsSpectrumSet() {
 		return isSpectrumSet;
 	}
