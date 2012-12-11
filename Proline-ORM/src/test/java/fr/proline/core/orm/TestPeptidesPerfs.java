@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Ignore;
@@ -76,19 +77,23 @@ public class TestPeptidesPerfs {
 	    LOG.info(String.format("%d PsPeptides created in %.1f ms", PEPTIDES_COUNT,
 		    ((double) (end - start)) / MILLI_TO_NANOS));
 
+	    final EntityManagerFactory msiEmf = msiDBTestCase.getConnector().getEntityManagerFactory();
+
+	    final EntityManager msiEm = msiEmf.createEntityManager();
 	    EntityTransaction msiTransaction = null;
 	    boolean msiTransacOk = false;
 
+	    final EntityManagerFactory psEmf = psDBTestCase.getConnector().getEntityManagerFactory();
+
+	    final EntityManager psEm = psEmf.createEntityManager();
 	    EntityTransaction psTransaction = null;
 	    boolean psTransacOk = false;
 
 	    try {
-		EntityManager msiEm = msiDBTestCase.getEntityManager();
 		msiTransaction = msiEm.getTransaction();
 		msiTransaction.begin();
 		msiTransacOk = false;
 
-		EntityManager psEm = psDBTestCase.getEntityManager();
 		psTransaction = psEm.getTransaction();
 		psTransaction.begin();
 		psTransacOk = false;
@@ -194,7 +199,6 @@ public class TestPeptidesPerfs {
 			PEPTIDES_COUNT, ((double) (end - start)) / MILLI_TO_NANOS, hit, miss, ptm));
 
 		/* Retrieving in Msi Db by (sequence, ptmString) */
-		MsiPeptideRepository msiPeptideRepo = new MsiPeptideRepository(msiEm);
 
 		hit = 0;
 		miss = 0;
@@ -206,8 +210,8 @@ public class TestPeptidesPerfs {
 		    fr.proline.core.orm.msi.Peptide msiPeptide = null;
 
 		    try {
-			msiPeptide = msiPeptideRepo.findPeptideForSequenceAndPtmStr(sequenceAndPtmString[0],
-				sequenceAndPtmString[1]);
+			msiPeptide = MsiPeptideRepository.findPeptideForSequenceAndPtmStr(msiEm,
+				sequenceAndPtmString[0], sequenceAndPtmString[1]);
 		    } catch (Exception ex) {
 			LOG.error(String.format("Error retrieving MsiPeptide [%s] %s",
 				sequenceAndPtmString[0], (sequenceAndPtmString[1] == null) ? "NULL"
@@ -227,7 +231,6 @@ public class TestPeptidesPerfs {
 				SEQUENCE_LOOKUP_COUNT, ((double) (end - start)) / MILLI_TO_NANOS, hit, miss));
 
 		/* Retrieving in Ps Db by (sequence, ptmString) */
-		PsPeptideRepository psPeptideRepo = new PsPeptideRepository(psEm);
 
 		hit = 0;
 		miss = 0;
@@ -239,8 +242,8 @@ public class TestPeptidesPerfs {
 		    Peptide psPeptide = null;
 
 		    try {
-			psPeptide = psPeptideRepo.findPeptideForSequenceAndPtmStr(sequenceAndPtmString[0],
-				sequenceAndPtmString[1]);
+			psPeptide = PsPeptideRepository.findPeptideForSequenceAndPtmStr(psEm,
+				sequenceAndPtmString[0], sequenceAndPtmString[1]);
 		    } catch (Exception ex) {
 			LOG.error(String.format("Error retrieving PsPeptide [%s] %s",
 				sequenceAndPtmString[0], (sequenceAndPtmString[1] == null) ? "NULL"
@@ -279,6 +282,14 @@ public class TestPeptidesPerfs {
 
 		}
 
+		if (psEm != null) {
+		    try {
+			psEm.close();
+		    } catch (Exception exClose) {
+			LOG.error("Error closing PS EntityManager", exClose);
+		    }
+		}
+
 		if ((msiTransaction != null) && !msiTransacOk) {
 		    LOG.info("Rollbacking Msi Transaction");
 
@@ -288,6 +299,14 @@ public class TestPeptidesPerfs {
 			LOG.error("Error rollbacking Msi Transaction", ex);
 		    }
 
+		}
+
+		if (msiEm != null) {
+		    try {
+			msiEm.close();
+		    } catch (Exception exClose) {
+			LOG.error("Error closing MSI EntityManager", exClose);
+		    }
 		}
 
 	    }

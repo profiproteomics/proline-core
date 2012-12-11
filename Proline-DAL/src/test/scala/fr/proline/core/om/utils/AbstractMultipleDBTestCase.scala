@@ -111,6 +111,3 @@ class MSIDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverT
   val propertiesFile = "db_msi.properties"
 
 }
-
-
-

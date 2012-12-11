@@ -6,16 +6,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.PeaklistSoftware;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class UdsPeaklistSoftwareRepository extends JPARepository {
+public final class UdsPeaklistSoftwareRepository {
 
-    public UdsPeaklistSoftwareRepository(final EntityManager udsEm) {
-	super(udsEm);
+    private UdsPeaklistSoftwareRepository() {
     }
 
-    public PeaklistSoftware findPeaklistSoftForNameAndVersion(final String name, final String version) {
+    public static PeaklistSoftware findPeaklistSoftForNameAndVersion(final EntityManager udsEm,
+	    final String name, final String version) {
+
+	JPAUtils.checkEntityManager(udsEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -26,10 +28,9 @@ public class UdsPeaklistSoftwareRepository extends JPARepository {
 	TypedQuery<PeaklistSoftware> query = null;
 
 	if (version == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findUdsPeaklistSoftForName", PeaklistSoftware.class);
+	    query = udsEm.createNamedQuery("findUdsPeaklistSoftForName", PeaklistSoftware.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findUdsPeaklistSoftForNameAndVersion",
-		    PeaklistSoftware.class);
+	    query = udsEm.createNamedQuery("findUdsPeaklistSoftForNameAndVersion", PeaklistSoftware.class);
 	    query.setParameter("version", version.toUpperCase());
 	}
 

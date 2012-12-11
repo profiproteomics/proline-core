@@ -9,17 +9,16 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.pdi.SequenceDbConfig;
 import fr.proline.core.orm.pdi.SequenceDbInstance;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class PdiSeqDatabaseRepository extends JPARepository {
+public final class PdiSeqDatabaseRepository {
 
     private static final String RESIDUE_COUNT_QUERY = "select sum (bs1.length) from fr.proline.core.orm.pdi.BioSequence bs1 where bs1.id in"
 	    + " (select distinct bs2.id from fr.proline.core.orm.pdi.BioSequence bs2, fr.proline.core.orm.pdi.SequenceDbEntry sde"
 	    + " where (sde.bioSequence = bs2) and (sde.sequenceDbInstance = :seqDbInstance))";
 
-    public PdiSeqDatabaseRepository(final EntityManager pdiEm) {
-	super(pdiEm);
+    private PdiSeqDatabaseRepository() {
     }
 
     /**
@@ -31,10 +30,14 @@ public class PdiSeqDatabaseRepository extends JPARepository {
      *            : Fasta File path of the searched SequenceDBInstance
      * @return SequenceDbInstance with specified name and fasta file path, null if none is found.
      */
-    public SequenceDbInstance findSeqDbInstanceWithNameAndFile(String name, String filePath) {
+    public static SequenceDbInstance findSeqDbInstanceWithNameAndFile(final EntityManager pdiEm,
+	    final String name, final String filePath) {
+
+	JPAUtils.checkEntityManager(pdiEm);
+
 	try {
-	    TypedQuery<SequenceDbInstance> query = getEntityManager().createNamedQuery(
-		    "findSeqDBByNameAndFile", SequenceDbInstance.class);
+	    TypedQuery<SequenceDbInstance> query = pdiEm.createNamedQuery("findSeqDBByNameAndFile",
+		    SequenceDbInstance.class);
 	    query.setParameter("name", name);
 	    query.setParameter("filePath", filePath);
 	    return query.getSingleResult();
@@ -43,7 +46,9 @@ public class PdiSeqDatabaseRepository extends JPARepository {
 	}
     }
 
-    public SequenceDbConfig findSequenceDbConfigForName(final String name) {
+    public static SequenceDbConfig findSequenceDbConfigForName(final EntityManager pdiEm, final String name) {
+
+	JPAUtils.checkEntityManager(pdiEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -51,8 +56,8 @@ public class PdiSeqDatabaseRepository extends JPARepository {
 
 	SequenceDbConfig result = null;
 
-	final TypedQuery<SequenceDbConfig> query = getEntityManager().createNamedQuery(
-		"findSequenceDbConfigForName", SequenceDbConfig.class);
+	final TypedQuery<SequenceDbConfig> query = pdiEm.createNamedQuery("findSequenceDbConfigForName",
+		SequenceDbConfig.class);
 	query.setParameter("name", name.toUpperCase());
 
 	final List<SequenceDbConfig> seqDbConfigs = query.getResultList();
@@ -77,7 +82,9 @@ public class PdiSeqDatabaseRepository extends JPARepository {
      *            The <code>SequenceDbInstance</code> associated with BioSequences via SequenceDbEntries.
      * @return The calculated residue count or <code>-1L</code> if it cannot be calculated.
      */
-    public long calculateResidueCount(final SequenceDbInstance seqDbInstance) {
+    public static long calculateResidueCount(final EntityManager pdiEm, final SequenceDbInstance seqDbInstance) {
+
+	JPAUtils.checkEntityManager(pdiEm);
 
 	if (seqDbInstance == null) {
 	    throw new IllegalArgumentException("SeqDbInstance is null");
@@ -85,7 +92,7 @@ public class PdiSeqDatabaseRepository extends JPARepository {
 
 	long result = -1L;
 
-	final Query query = getEntityManager().createQuery(RESIDUE_COUNT_QUERY);
+	final Query query = pdiEm.createQuery(RESIDUE_COUNT_QUERY);
 	query.setParameter("seqDbInstance", seqDbInstance);
 
 	final List<?> results = query.getResultList();

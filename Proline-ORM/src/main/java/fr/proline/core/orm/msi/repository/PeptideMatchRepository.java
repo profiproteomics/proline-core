@@ -6,31 +6,44 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.PeptideMatch;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 
-public class PeptideMatchRepository extends JPARepository {
+public final class PeptideMatchRepository {
 
-	public PeptideMatchRepository(EntityManager em) {
-		super(em);
-	}
-	
-	public List<PeptideMatch> findPeptideMatchByResultSet(int resultSetId) {
-		TypedQuery<PeptideMatch> query = getEntityManager().createNamedQuery("findPeptideMatchesByResultSet", PeptideMatch.class);
-		query.setParameter("id", resultSetId);
-		return query.getResultList();
-	}
-	
-	public List<PeptideMatch> findPeptideMatchByPeptide(int peptideId) {
-		TypedQuery<PeptideMatch> query = getEntityManager().createNamedQuery("findPeptideMatchesByPeptide", PeptideMatch.class);
-		query.setParameter("id", peptideId);
-		return query.getResultList();
-	}
+    private PeptideMatchRepository() {
+    }
 
-	public List<PeptideMatch> findPeptideMatchByPeptideAndResultSet(int peptideId, int resultSetId) {
-		TypedQuery<PeptideMatch> query = getEntityManager().createNamedQuery("findPeptideMatchesByPeptideAndResultSet", PeptideMatch.class);
-		query.setParameter("peptide_id", peptideId);
-		query.setParameter("resultset_id", resultSetId);
-		return query.getResultList();
-	}
+    public static List<PeptideMatch> findPeptideMatchByResultSet(final EntityManager msiEm,
+	    final int resultSetId) {
+
+	JPAUtils.checkEntityManager(msiEm);
+
+	TypedQuery<PeptideMatch> query = msiEm.createNamedQuery("findPeptideMatchesByResultSet",
+		PeptideMatch.class);
+	query.setParameter("id", resultSetId);
+	return query.getResultList();
+    }
+
+    public static List<PeptideMatch> findPeptideMatchByPeptide(final EntityManager msiEm, final int peptideId) {
+
+	JPAUtils.checkEntityManager(msiEm);
+
+	TypedQuery<PeptideMatch> query = msiEm.createNamedQuery("findPeptideMatchesByPeptide",
+		PeptideMatch.class);
+	query.setParameter("id", peptideId);
+	return query.getResultList();
+    }
+
+    public static List<PeptideMatch> findPeptideMatchByPeptideAndResultSet(final EntityManager msiEm,
+	    final int peptideId, final int resultSetId) {
+
+	JPAUtils.checkEntityManager(msiEm);
+
+	TypedQuery<PeptideMatch> query = msiEm.createNamedQuery("findPeptideMatchesByPeptideAndResultSet",
+		PeptideMatch.class);
+	query.setParameter("peptide_id", peptideId);
+	query.setParameter("resultset_id", resultSetId);
+	return query.getResultList();
+    }
 
 }

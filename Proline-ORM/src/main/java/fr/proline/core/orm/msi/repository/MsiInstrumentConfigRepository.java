@@ -6,17 +6,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.InstrumentConfig;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class MsiInstrumentConfigRepository extends JPARepository {
+public final class MsiInstrumentConfigRepository {
 
-    public MsiInstrumentConfigRepository(final EntityManager msiEm) {
-	super(msiEm);
+    private MsiInstrumentConfigRepository() {
     }
 
-    public InstrumentConfig findInstrumConfForNameAndMs1AndMsn(final String name, final String ms1Analyzer,
-	    final String msnAnalyzer) {
+    public static InstrumentConfig findInstrumConfForNameAndMs1AndMsn(final EntityManager msiEm,
+	    final String name, final String ms1Analyzer, final String msnAnalyzer) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -31,11 +32,9 @@ public class MsiInstrumentConfigRepository extends JPARepository {
 	TypedQuery<InstrumentConfig> query = null;
 
 	if (msnAnalyzer == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findMsiInstrumConfForNameAndMs1",
-		    InstrumentConfig.class);
+	    query = msiEm.createNamedQuery("findMsiInstrumConfForNameAndMs1", InstrumentConfig.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findMsiInstrumConfForNameAndMs1AndMsn",
-		    InstrumentConfig.class);
+	    query = msiEm.createNamedQuery("findMsiInstrumConfForNameAndMs1AndMsn", InstrumentConfig.class);
 	    query.setParameter("msnAnalyzer", msnAnalyzer.toUpperCase());
 	}
 

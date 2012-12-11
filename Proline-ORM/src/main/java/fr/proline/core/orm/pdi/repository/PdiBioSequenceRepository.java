@@ -1,5 +1,6 @@
 package fr.proline.core.orm.pdi.repository;
 
+import static fr.proline.core.orm.util.JPARepositoryConstants.MAX_IN_BATCH_SIZE;
 import static fr.proline.util.MathUtils.EPSILON_LOW_PRECISION;
 
 import java.util.ArrayList;
@@ -16,15 +17,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.BioSequence;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class PdiBioSequenceRepository extends JPARepository {
+public final class PdiBioSequenceRepository {
 
     private static final Logger LOG = LoggerFactory.getLogger(PdiBioSequenceRepository.class);
 
-    public PdiBioSequenceRepository(final EntityManager pdiEm) {
-	super(pdiEm);
+    private PdiBioSequenceRepository() {
     }
 
     /**
@@ -36,7 +36,10 @@ public class PdiBioSequenceRepository extends JPARepository {
      *            Mass of BioSequence to retrieve (compared with <code>EPSILON_LOW_PRECISION</code>).
      * @return BioSequence entity or <code>null</code> if not found.
      */
-    public BioSequence findBioSequenceForCrcAndMass(final String crc64, final double mass) {
+    public static BioSequence findBioSequenceForCrcAndMass(final EntityManager pdiEm, final String crc64,
+	    final double mass) {
+
+	JPAUtils.checkEntityManager(pdiEm);
 
 	if (StringUtils.isEmpty(crc64)) {
 	    throw new IllegalArgumentException("Invalid crc64");
@@ -44,7 +47,7 @@ public class PdiBioSequenceRepository extends JPARepository {
 
 	BioSequence result = null;
 
-	final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery("findPdiBioSequenceForCrc",
+	final TypedQuery<BioSequence> query = pdiEm.createNamedQuery("findPdiBioSequenceForCrc",
 		BioSequence.class);
 	query.setParameter("crc64", crc64.toUpperCase());
 
@@ -81,7 +84,10 @@ public class PdiBioSequenceRepository extends JPARepository {
      * @return List of found BioSequences (can be empty if none found), associated ProteinIdentifier entities
      *         are fetched.
      */
-    public List<BioSequence> findBioSequencesForCrcs(final Collection<String> crcs) {
+    public static List<BioSequence> findBioSequencesForCrcs(final EntityManager pdiEm,
+	    final Collection<String> crcs) {
+
+	JPAUtils.checkEntityManager(pdiEm);
 
 	if ((crcs == null) || crcs.isEmpty()) {
 	    throw new IllegalArgumentException("Crcs collection is empty");
@@ -90,13 +96,13 @@ public class PdiBioSequenceRepository extends JPARepository {
 	List<BioSequence> resultBioSeqs = new ArrayList<BioSequence>();
 	String[] crcsArray = crcs.toArray(new String[crcs.size()]);
 
-	final TypedQuery<BioSequence> query = getEntityManager().createNamedQuery(
-		"findPdiBioSequencesForCrcs", BioSequence.class);
+	final TypedQuery<BioSequence> query = pdiEm.createNamedQuery("findPdiBioSequencesForCrcs",
+		BioSequence.class);
 
 	for (int index = 0; index < crcs.size();) {
 	    int nextBatchSize = crcs.size() - index;
-	    if (nextBatchSize > BUFFER_SIZE)
-		nextBatchSize = BUFFER_SIZE;
+	    if (nextBatchSize > MAX_IN_BATCH_SIZE)
+		nextBatchSize = MAX_IN_BATCH_SIZE;
 	    String[] bioSeqCRCs = Arrays.copyOfRange(crcsArray, index, index + nextBatchSize);
 	    query.setParameter("crcs", Arrays.asList(bioSeqCRCs));
 	    resultBioSeqs.addAll(query.getResultList());
@@ -107,10 +113,13 @@ public class PdiBioSequenceRepository extends JPARepository {
 
     }
 
-    public BioSequence findBioSequencePerAccessionAndSeqDB(String accession, Integer seqDbInstanceId) {
+    public static BioSequence findBioSequencePerAccessionAndSeqDB(final EntityManager pdiEm,
+	    final String accession, final int seqDbInstanceId) {
 
-	TypedQuery<BioSequence> query = getEntityManager().createNamedQuery(
-		"findPdiBioSequenceForAccAndSeqDB", BioSequence.class);
+	JPAUtils.checkEntityManager(pdiEm);
+
+	TypedQuery<BioSequence> query = pdiEm.createNamedQuery("findPdiBioSequenceForAccAndSeqDB",
+		BioSequence.class);
 	query.setParameter("acc", accession).setParameter("seqDbInstId", seqDbInstanceId);
 
 	try {

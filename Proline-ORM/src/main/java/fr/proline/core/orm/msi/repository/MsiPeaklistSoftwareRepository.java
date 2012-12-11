@@ -6,16 +6,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.PeaklistSoftware;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class MsiPeaklistSoftwareRepository extends JPARepository {
+public final class MsiPeaklistSoftwareRepository {
 
-    public MsiPeaklistSoftwareRepository(final EntityManager msiEm) {
-	super(msiEm);
+    private MsiPeaklistSoftwareRepository() {
     }
 
-    public PeaklistSoftware findPeaklistSoftForNameAndVersion(final String name, final String version) {
+    public static PeaklistSoftware findPeaklistSoftForNameAndVersion(final EntityManager msiEm,
+	    final String name, final String version) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -26,10 +28,9 @@ public class MsiPeaklistSoftwareRepository extends JPARepository {
 	TypedQuery<PeaklistSoftware> query = null;
 
 	if (version == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findMsiPeaklistSoftForName", PeaklistSoftware.class);
+	    query = msiEm.createNamedQuery("findMsiPeaklistSoftForName", PeaklistSoftware.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findMsiPeaklistSoftForNameAndVersion",
-		    PeaklistSoftware.class);
+	    query = msiEm.createNamedQuery("findMsiPeaklistSoftForNameAndVersion", PeaklistSoftware.class);
 	    query.setParameter("version", version.toUpperCase());
 	}
 

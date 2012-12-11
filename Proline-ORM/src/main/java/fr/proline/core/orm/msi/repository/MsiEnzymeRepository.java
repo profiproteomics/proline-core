@@ -6,16 +6,17 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Enzyme;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class MsiEnzymeRepository extends JPARepository {
+public final class MsiEnzymeRepository {
 
-    public MsiEnzymeRepository(final EntityManager msiEm) {
-	super(msiEm);
+    private MsiEnzymeRepository() {
     }
 
-    public Enzyme findEnzymeForName(final String name) {
+    public static Enzyme findEnzymeForName(final EntityManager msiEm, final String name) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -23,8 +24,7 @@ public class MsiEnzymeRepository extends JPARepository {
 
 	Enzyme result = null;
 
-	final TypedQuery<Enzyme> query = getEntityManager().createNamedQuery("findMsiEnzymeForName",
-		Enzyme.class);
+	final TypedQuery<Enzyme> query = msiEm.createNamedQuery("findMsiEnzymeForName", Enzyme.class);
 	query.setParameter("name", name.toUpperCase());
 
 	final List<Enzyme> enzymes = query.getResultList();

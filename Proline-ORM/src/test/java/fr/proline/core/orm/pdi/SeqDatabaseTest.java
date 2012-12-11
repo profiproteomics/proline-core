@@ -4,16 +4,23 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.*;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.repository.PdiSeqDatabaseRepository;
 import fr.proline.repository.Database;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class SeqDatabaseTest extends DatabaseTestCase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SeqDatabaseTest.class);
 
     @Override
     public Database getDatabase() {
@@ -29,26 +36,75 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 
     @Test
     public void findSeqDbPerNameAndFile() {
-	PdiSeqDatabaseRepository repo = new PdiSeqDatabaseRepository(getEntityManager());
-	SequenceDbInstance seqDB = repo.findSeqDbInstanceWithNameAndFile("sprot",
-		"H:/Sequences/uniprot/knowledgebase2011_06/uniprot_sprot.fasta");
-	assertThat(seqDB, notNullValue());
-	assertThat(seqDB.getSequenceCount(), is(4));
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
+
+	final EntityManager pdiEm = emf.createEntityManager();
+
+	try {
+	    SequenceDbInstance seqDB = PdiSeqDatabaseRepository.findSeqDbInstanceWithNameAndFile(pdiEm,
+		    "sprot", "H:/Sequences/uniprot/knowledgebase2011_06/uniprot_sprot.fasta");
+	    assertThat(seqDB, notNullValue());
+	    assertThat(seqDB.getSequenceCount(), is(4));
+	} finally {
+
+	    if (pdiEm != null) {
+		try {
+		    pdiEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing PDI EntityManager", exClose);
+		}
+	    }
+
+	}
+
     }
 
     @Test
     public void findUnknownSeqDbPerNameAndFile() {
-	PdiSeqDatabaseRepository repo = new PdiSeqDatabaseRepository(getEntityManager());
-	SequenceDbInstance seqDB = repo.findSeqDbInstanceWithNameAndFile("Sprot_2011_06",
-		"/path/to/myDB.fasta");
-	assertThat(seqDB, CoreMatchers.nullValue());
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
+
+	final EntityManager pdiEm = emf.createEntityManager();
+
+	try {
+	    SequenceDbInstance seqDB = PdiSeqDatabaseRepository.findSeqDbInstanceWithNameAndFile(pdiEm,
+		    "Sprot_2011_06", "/path/to/myDB.fasta");
+	    assertThat(seqDB, CoreMatchers.nullValue());
+	} finally {
+
+	    if (pdiEm != null) {
+		try {
+		    pdiEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing PDI EntityManager", exClose);
+		}
+	    }
+
+	}
+
     }
 
     @Test
     public void readSeqDbInstance() {
-	SequenceDbInstance seqDB = getEntityManager().find(SequenceDbInstance.class, 33);
-	assertThat(seqDB, notNullValue());
-	assertThat(seqDB.getSequenceCount(), is(4));
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
+
+	final EntityManager pdiEm = emf.createEntityManager();
+
+	try {
+	    SequenceDbInstance seqDB = pdiEm.find(SequenceDbInstance.class, 33);
+	    assertThat(seqDB, notNullValue());
+	    assertThat(seqDB.getSequenceCount(), is(4));
+	} finally {
+
+	    if (pdiEm != null) {
+		try {
+		    pdiEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing PDI EntityManager", exClose);
+		}
+	    }
+
+	}
+
     }
 
     @After

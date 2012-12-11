@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,8 +28,6 @@ public class PeptideTest extends DatabaseTestCase {
 
     private static final int PEPTIDE_COUNT = 10;
 
-    private PsPeptideRepository pepRepo;
-
     @Override
     public Database getDatabase() {
 	return Database.PS;
@@ -37,52 +38,83 @@ public class PeptideTest extends DatabaseTestCase {
 	initDatabase();
 
 	loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
-
-	pepRepo = new PsPeptideRepository(getEntityManager());
     }
 
     @Test
     public void readPeptidesBySeq() {
-	List<Peptide> peps = pepRepo.findPeptidesForSequence(SEQ_TO_FOUND);
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
-	assertNotNull(peps);
-	assertEquals(2, peps.size());
-	boolean foundPepWOPtm = false;
-	boolean foundPepWithPtm = false;
-	for (Peptide pep : peps) {
-	    if (pep.getPtms() == null || pep.getPtms().isEmpty())
-		foundPepWOPtm = true;
-	    else
-		foundPepWithPtm = true;
+	final EntityManager psEm = emf.createEntityManager();
+
+	try {
+	    List<Peptide> peps = PsPeptideRepository.findPeptidesForSequence(psEm, SEQ_TO_FOUND);
+
+	    assertNotNull(peps);
+	    assertEquals(2, peps.size());
+	    boolean foundPepWOPtm = false;
+	    boolean foundPepWithPtm = false;
+	    for (Peptide pep : peps) {
+		if (pep.getPtms() == null || pep.getPtms().isEmpty())
+		    foundPepWOPtm = true;
+		else
+		    foundPepWithPtm = true;
+	    }
+	    assertTrue(foundPepWithPtm);
+	    assertTrue(foundPepWOPtm);
+	} finally {
+
+	    if (psEm != null) {
+		try {
+		    psEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing PS EntityManager");
+		}
+	    }
+
 	}
-	assertTrue(foundPepWithPtm);
-	assertTrue(foundPepWOPtm);
 
     }
 
     @Test
     public void retrievePeptideForIds() {
-	int retrievedPeptides = 0;
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
-	/* Build a 0..9 Set */
-	final Set<Integer> ids = new HashSet<Integer>();
-	for (int i = 0; i < PEPTIDE_COUNT; ++i) {
-	    ids.add(Integer.valueOf(i));
-	}
+	final EntityManager psEm = emf.createEntityManager();
 
-	final List<Peptide> peptides = pepRepo.findPeptidesForIds(ids);
+	try {
+	    int retrievedPeptides = 0;
 
-	if (peptides != null) {
-	    for (final Peptide p : peptides) {
-		if (p != null) {
-		    ++retrievedPeptides;
+	    /* Build a 0..9 Set */
+	    final Set<Integer> ids = new HashSet<Integer>();
+	    for (int i = 0; i < PEPTIDE_COUNT; ++i) {
+		ids.add(Integer.valueOf(i));
+	    }
+
+	    final List<Peptide> peptides = PsPeptideRepository.findPeptidesForIds(psEm, ids);
+
+	    if (peptides != null) {
+		for (final Peptide p : peptides) {
+		    if (p != null) {
+			++retrievedPeptides;
+		    }
 		}
 	    }
+
+	    LOG.info("Retrieved Msi Peptides count: " + retrievedPeptides);
+
+	    Assert.assertTrue("Retrieved Msi Peptides count", retrievedPeptides > 0);
+	} finally {
+
+	    if (psEm != null) {
+		try {
+		    psEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing PS EntityManager");
+		}
+	    }
+
 	}
 
-	LOG.info("Retrieved Msi Peptides count: " + retrievedPeptides);
-
-	Assert.assertTrue("Retrieved Msi Peptides count", retrievedPeptides > 0);
     }
 
     @After

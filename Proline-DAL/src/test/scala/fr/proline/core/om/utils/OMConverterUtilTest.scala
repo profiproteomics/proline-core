@@ -34,33 +34,46 @@ class OMConverterUtilTest extends DatabaseTestCase {
 
   @Test
   def testConvertPeptides() = {
-    val ormPep: fr.proline.core.orm.ps.Peptide = getEntityManager.find(classOf[fr.proline.core.orm.ps.Peptide], 4)
-    val omPep: fr.proline.core.om.model.msi.Peptide = converter.convertPeptidePsORM2OM(ormPep)
-    assertNotNull(omPep);
-    assertEquals(omPep.calculatedMass, ormPep.getCalculatedMass(), 0.01d)
-    assertEquals(omPep.sequence, ormPep.getSequence())
+    val emf = getConnector.getEntityManagerFactory
 
-    //Test PTMs
-    val pepPTMsIT: java.util.Iterator[PeptidePtm] = ormPep.getPtms().iterator()
-    var pepPtmsNamesBuilder = Array.newBuilder[String]
-    var pepPtmsLocationsBuilder = Array.newBuilder[Int]
-    while (pepPTMsIT.hasNext()) {
-      val nextORMPtm: PeptidePtm = pepPTMsIT.next();
-      pepPtmsNamesBuilder += nextORMPtm.getSpecificity().getPtm().getFullName()
-      pepPtmsLocationsBuilder += nextORMPtm.getSeqPosition()
+    val psEm = emf.createEntityManager
+
+    try {
+      val ormPep: fr.proline.core.orm.ps.Peptide = psEm.find(classOf[fr.proline.core.orm.ps.Peptide], 4)
+      val omPep: fr.proline.core.om.model.msi.Peptide = converter.convertPeptidePsORM2OM(ormPep)
+      assertNotNull(omPep);
+      assertEquals(omPep.calculatedMass, ormPep.getCalculatedMass(), 0.01d)
+      assertEquals(omPep.sequence, ormPep.getSequence())
+
+      //Test PTMs
+      val pepPTMsIT: java.util.Iterator[PeptidePtm] = ormPep.getPtms().iterator()
+      var pepPtmsNamesBuilder = Array.newBuilder[String]
+      var pepPtmsLocationsBuilder = Array.newBuilder[Int]
+      while (pepPTMsIT.hasNext()) {
+        val nextORMPtm: PeptidePtm = pepPTMsIT.next();
+        pepPtmsNamesBuilder += nextORMPtm.getSpecificity().getPtm().getFullName()
+        pepPtmsLocationsBuilder += nextORMPtm.getSeqPosition()
+      }
+      val pepPtmsNames: Array[String] = pepPtmsNamesBuilder.result
+      val pepPtmsLocations: Array[Int] = pepPtmsLocationsBuilder.result
+
+      val omPtms = omPep.ptms
+
+      omPtms foreach (nextOMPtm => {
+        val indexPtm = pepPtmsNames.indexOf(nextOMPtm.definition.names.fullName);
+        if (indexPtm == -1)
+          fail("Ptm not found in OM Peptide");
+        else
+          assertEquals(Integer.valueOf(nextOMPtm.seqPosition), pepPtmsLocations.apply(indexPtm));
+      })
+
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
     }
-    val pepPtmsNames: Array[String] = pepPtmsNamesBuilder.result
-    val pepPtmsLocations: Array[Int] = pepPtmsLocationsBuilder.result
-
-    val omPtms = omPep.ptms
-
-    omPtms foreach (nextOMPtm => {
-      val indexPtm = pepPtmsNames.indexOf(nextOMPtm.definition.names.fullName);
-      if (indexPtm == -1)
-        fail("Ptm not found in OM Peptide");
-      else
-        assertEquals(Integer.valueOf(nextOMPtm.seqPosition), pepPtmsLocations.apply(indexPtm));
-    })
 
   }
 
@@ -68,5 +81,5 @@ class OMConverterUtilTest extends DatabaseTestCase {
   override def tearDown() = {
     super.tearDown();
   }
-  
+
 }

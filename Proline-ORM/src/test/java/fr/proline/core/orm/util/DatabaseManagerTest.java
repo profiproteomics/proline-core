@@ -3,6 +3,7 @@ package fr.proline.core.orm.util;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.junit.After;
@@ -33,8 +34,9 @@ public class DatabaseManagerTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	final EntityManager udsEm = getEntityManager();
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
+	final EntityManager udsEm = emf.createEntityManager();
 	EntityTransaction transac = udsEm.getTransaction();
 	boolean transacOk = false;
 
@@ -124,6 +126,14 @@ public class DatabaseManagerTest extends DatabaseTestCase {
 		    LOG.error("Error rollbacking UDS Db transaction", ex);
 		}
 
+	    }
+
+	    if (udsEm != null) {
+		try {
+		    udsEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing UDS EntityManager", exClose);
+		}
 	    }
 
 	}

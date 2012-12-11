@@ -21,18 +21,14 @@ import fr.proline.repository.Database
 @Test
 class ORMPtmProviderTest extends DatabaseTestCase {
 
-  var ormPtmProvider: ORMPTMProvider = null
-
   override def getDatabase() = Database.PS
 
   @Before
   @throws(classOf[Exception])
   def setUp() = {
     initDatabase()
-    
+
     loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-    
-    ormPtmProvider = new ORMPTMProvider(this.getEntityManager)
   }
 
   @Test
@@ -41,19 +37,34 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     ids += 7 //
     ids += 12
     ids += 1284
-    val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
-    assertThat(ptmDefs, CoreMatchers.notNullValue());
-    assertNotSame(ptmDefs(0), None);
-    assertThat(ptmDefs(0).get.location, CoreMatchers.equalTo(PtmLocation.PROT_N_TERM.toString));
-    assertThat(ptmDefs(0).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
-    assertThat(ptmDefs(0).get.classification, CoreMatchers.equalTo("Post-translational"));
 
-    assertThat(ptmDefs(1).get.location, CoreMatchers.equalTo(PtmLocation.ANY_N_TERM.toString));
-    assertThat(ptmDefs(1).get.residue, CoreMatchers.equalTo('\0'));
-    assertThat(ptmDefs(1).get.names.shortName, CoreMatchers.equalTo("Biotin"));
+    val emf = getConnector.getEntityManagerFactory
 
-    assertThat(ptmDefs(2).get.location, CoreMatchers.equalTo(PtmLocation.ANYWHERE.toString));
-    assertThat(ptmDefs(2).get.residue, CoreMatchers.equalTo('H'));
+    val psEm = emf.createEntityManager
+
+    try {
+      val ormPtmProvider = new ORMPTMProvider(psEm)
+
+      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
+      assertThat(ptmDefs, CoreMatchers.notNullValue());
+      assertNotSame(ptmDefs(0), None);
+      assertThat(ptmDefs(0).get.location, CoreMatchers.equalTo(PtmLocation.PROT_N_TERM.toString));
+      assertThat(ptmDefs(0).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
+      assertThat(ptmDefs(0).get.classification, CoreMatchers.equalTo("Post-translational"));
+
+      assertThat(ptmDefs(1).get.location, CoreMatchers.equalTo(PtmLocation.ANY_N_TERM.toString));
+      assertThat(ptmDefs(1).get.residue, CoreMatchers.equalTo('\0'));
+      assertThat(ptmDefs(1).get.names.shortName, CoreMatchers.equalTo("Biotin"));
+
+      assertThat(ptmDefs(2).get.location, CoreMatchers.equalTo(PtmLocation.ANYWHERE.toString));
+      assertThat(ptmDefs(2).get.residue, CoreMatchers.equalTo('H'));
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
+    }
 
   }
 
@@ -63,12 +74,27 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     ids += 7
     ids += 9879
 
-    val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
-    assertThat(ptmDefs, CoreMatchers.notNullValue());
-    assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
-    assertNotSame(ptmDefs(0), None);
-    assertThat(ptmDefs(0).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
-    assertSame(ptmDefs(1), None);
+    val emf = getConnector.getEntityManagerFactory
+
+    val psEm = emf.createEntityManager
+
+    try {
+      val ormPtmProvider = new ORMPTMProvider(psEm)
+
+      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
+      assertThat(ptmDefs, CoreMatchers.notNullValue());
+      assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
+      assertNotSame(ptmDefs(0), None);
+      assertThat(ptmDefs(0).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
+      assertSame(ptmDefs(1), None);
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
+    }
+
   }
 
   @Test
@@ -77,50 +103,125 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     ids += 9879
     ids += 7
 
-    val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
-    assertThat(ptmDefs, CoreMatchers.notNullValue());
-    assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
-    assertNotSame(ptmDefs(1), None);
-    assertThat(ptmDefs(1).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
-    assertSame(ptmDefs(0), None);
+    val emf = getConnector.getEntityManagerFactory
+
+    val psEm = emf.createEntityManager
+
+    try {
+      val ormPtmProvider = new ORMPTMProvider(psEm)
+
+      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
+      assertThat(ptmDefs, CoreMatchers.notNullValue());
+      assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
+      assertNotSame(ptmDefs(1), None);
+      assertThat(ptmDefs(1).get.names.fullName, CoreMatchers.equalTo("Acetylation"));
+      assertSame(ptmDefs(0), None);
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
+    }
+
   }
 
   @Test
   def getSinglePtmSpecificities() = {
+    val emf = getConnector.getEntityManagerFactory
 
-    val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(12);
-    assertThat(ptmDef, CoreMatchers.notNullValue());
-    assertNotSame(ptmDef, None);
+    val psEm = emf.createEntityManager
 
-    assertThat(ptmDef.get.location, CoreMatchers.equalTo(PtmLocation.ANY_N_TERM.toString));
-    assertThat(ptmDef.get.residue, CoreMatchers.equalTo('\0'));
-    assertThat(ptmDef.get.names.shortName, CoreMatchers.equalTo("Biotin"));
+    try {
+      val ormPtmProvider = new ORMPTMProvider(psEm)
+
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(12);
+      assertThat(ptmDef, CoreMatchers.notNullValue());
+      assertNotSame(ptmDef, None);
+
+      assertThat(ptmDef.get.location, CoreMatchers.equalTo(PtmLocation.ANY_N_TERM.toString));
+      assertThat(ptmDef.get.residue, CoreMatchers.equalTo('\0'));
+      assertThat(ptmDef.get.names.shortName, CoreMatchers.equalTo("Biotin"));
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
+    }
+
   }
 
   @Test
   def getNonExistantPtmSpecificity() = {
+    val emf = getConnector.getEntityManagerFactory
 
-    val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(9879);
-    assertThat(ptmDef, CoreMatchers.notNullValue());
-    assertSame(ptmDef, None);
+    val psEm = emf.createEntityManager
+
+    try {
+      val ormPtmProvider = new ORMPTMProvider(psEm)
+
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(9879);
+      assertThat(ptmDef, CoreMatchers.notNullValue());
+
+      assertSame(ptmDef, None);
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
+    }
+
   }
 
   @Test
   def getPtmSpecificityByNameResiduAndLoc() = {
-    //Param for PtmSpecificity ID 877 in Unimod_Dataset
-    val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plex", 'S', PtmLocation.ANYWHERE);
 
-    assertThat(ptmDef, CoreMatchers.notNullValue())
-    assertNotSame(ptmDef, None);
-    assertThat(ptmDef.get.id, CoreMatchers.equalTo(877))
+    val emf = getConnector.getEntityManagerFactory
+
+    val psEm = emf.createEntityManager
+
+    try {
+      val ormPtmProvider = new ORMPTMProvider(psEm)
+
+      //Param for PtmSpecificity ID 877 in Unimod_Dataset
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plex", 'S', PtmLocation.ANYWHERE);
+
+      assertThat(ptmDef, CoreMatchers.notNullValue())
+      assertNotSame(ptmDef, None);
+      assertThat(ptmDef.get.id, CoreMatchers.equalTo(877))
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
+    }
+
   }
 
   @Test
   def getInvalidPtmSpecificity() = {
-    //Param corresponding to No PtmSpecificity in Unimod_Dataset
-    val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plexA", '\0', PtmLocation.ANYWHERE);
-    assertThat(ptmDef, CoreMatchers.notNullValue());
-    assertSame(ptmDef, None);
+    val emf = getConnector.getEntityManagerFactory
+
+    val psEm = emf.createEntityManager
+
+    try {
+      val ormPtmProvider = new ORMPTMProvider(psEm)
+
+      //Param corresponding to No PtmSpecificity in Unimod_Dataset
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plexA", '\0', PtmLocation.ANYWHERE);
+      assertThat(ptmDef, CoreMatchers.notNullValue());
+      assertSame(ptmDef, None);
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
+    }
+
   }
 
   @After

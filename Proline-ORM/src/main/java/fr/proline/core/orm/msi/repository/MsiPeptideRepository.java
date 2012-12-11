@@ -1,5 +1,7 @@
 package fr.proline.core.orm.msi.repository;
 
+import static fr.proline.core.orm.util.JPARepositoryConstants.MAX_IN_BATCH_SIZE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,23 +11,23 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Peptide;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class MsiPeptideRepository extends JPARepository {
+public final class MsiPeptideRepository {
 
-    public MsiPeptideRepository(final EntityManager msiEm) {
-	super(msiEm);
+    private MsiPeptideRepository() {
     }
 
-    public List<Peptide> findPeptidesForSequence(final String seq) {
+    public static List<Peptide> findPeptidesForSequence(final EntityManager msiEm, final String seq) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (StringUtils.isEmpty(seq)) {
 	    throw new IllegalArgumentException("Invalid seq");
 	}
 
-	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findMsiPepsForSeq",
-		Peptide.class);
+	final TypedQuery<Peptide> query = msiEm.createNamedQuery("findMsiPepsForSeq", Peptide.class);
 	query.setParameter("seq", seq.toUpperCase());
 
 	return query.getResultList();
@@ -38,7 +40,9 @@ public class MsiPeptideRepository extends JPARepository {
      *            <code>Collection</code> of Peptide Ids to retrieve (must not be <code>null</code>).
      * @return List of found Peptides (can be empty if none found).
      */
-    public List<Peptide> findPeptidesForIds(final Collection<Integer> ids) {
+    public static List<Peptide> findPeptidesForIds(final EntityManager msiEm, final Collection<Integer> ids) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if ((ids == null) || ids.isEmpty()) {
 	    throw new IllegalArgumentException("Ids collection is empty");
@@ -48,13 +52,12 @@ public class MsiPeptideRepository extends JPARepository {
 
 	Integer[] idsArray = ids.toArray(new Integer[ids.size()]);
 
-	final TypedQuery<Peptide> query = getEntityManager().createNamedQuery("findMsiPepsForIds",
-		Peptide.class);
+	final TypedQuery<Peptide> query = msiEm.createNamedQuery("findMsiPepsForIds", Peptide.class);
 
 	for (int index = 0; index < ids.size();) {
 	    int nextBatchSize = ids.size() - index;
-	    if (nextBatchSize > BUFFER_SIZE)
-		nextBatchSize = BUFFER_SIZE;
+	    if (nextBatchSize > MAX_IN_BATCH_SIZE)
+		nextBatchSize = MAX_IN_BATCH_SIZE;
 	    Integer[] pepsIds = Arrays.copyOfRange(idsArray, index, index + nextBatchSize);
 	    query.setParameter("ids", Arrays.asList(pepsIds));
 	    resultPeps.addAll(query.getResultList());
@@ -63,7 +66,10 @@ public class MsiPeptideRepository extends JPARepository {
 	return resultPeps;
     }
 
-    public Peptide findPeptideForSequenceAndPtmStr(final String seq, final String ptmStr) {
+    public static Peptide findPeptideForSequenceAndPtmStr(final EntityManager msiEm, final String seq,
+	    final String ptmStr) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (StringUtils.isEmpty(seq)) {
 	    throw new IllegalArgumentException("Invalid seq");
@@ -74,9 +80,9 @@ public class MsiPeptideRepository extends JPARepository {
 	TypedQuery<Peptide> query = null;
 
 	if (ptmStr == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findMsiPeptForSeq", Peptide.class);
+	    query = msiEm.createNamedQuery("findMsiPeptForSeq", Peptide.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findMsiPeptForSeqAndPtmStr", Peptide.class);
+	    query = msiEm.createNamedQuery("findMsiPeptForSeqAndPtmStr", Peptide.class);
 	    query.setParameter("ptmStr", ptmStr.toUpperCase());
 	}
 

@@ -7,12 +7,11 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.core.orm.msi.ResultSet;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 
-public class ProteinMatchRepository extends JPARepository {
+public final class ProteinMatchRepository {
 
-    public ProteinMatchRepository(final EntityManager msiEm) {
-	super(msiEm);
+    private ProteinMatchRepository() {
     }
 
     /**
@@ -24,14 +23,17 @@ public class ProteinMatchRepository extends JPARepository {
      * 
      * @return List of ProteinMatches (can be empty).
      */
-    public List<ProteinMatch> findProteinMatchesForResultSet(final ResultSet resultSet) {
+    public static List<ProteinMatch> findProteinMatchesForResultSet(final EntityManager msiEm,
+	    final ResultSet resultSet) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (resultSet == null) {
 	    throw new IllegalArgumentException("ResultSet is null");
 	}
 
-	final TypedQuery<ProteinMatch> query = getEntityManager().createNamedQuery(
-		"findProteinMatchesForResultSet", ProteinMatch.class);
+	final TypedQuery<ProteinMatch> query = msiEm.createNamedQuery("findProteinMatchesForResultSet",
+		ProteinMatch.class);
 	query.setParameter("resultSet", resultSet);
 
 	return query.getResultList();
@@ -46,8 +48,12 @@ public class ProteinMatchRepository extends JPARepository {
      * 
      * @return List of ProteinMatches (can be empty).
      */
-    public List<ProteinMatch> findProteinMatchesForResultSetId(final int resultSetId) {
-	final TypedQuery<ProteinMatch> query = getEntityManager().createNamedQuery(
+    public static List<ProteinMatch> findProteinMatchesForResultSetId(final EntityManager msiEm,
+	    final int resultSetId) {
+
+	JPAUtils.checkEntityManager(msiEm);
+
+	final TypedQuery<ProteinMatch> query = msiEm.createNamedQuery(
 		"findProteinMatchesForResultSetId", ProteinMatch.class);
 	query.setParameter("resultSetId", resultSetId);
 

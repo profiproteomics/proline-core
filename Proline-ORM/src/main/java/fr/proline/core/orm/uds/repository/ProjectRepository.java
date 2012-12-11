@@ -6,23 +6,29 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.Project;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 
-public class ProjectRepository extends JPARepository {
-	
-	public ProjectRepository(EntityManager em) {
-		super(em);
-	}
-	
-	public List<Project> findProjects(int userAccountId) {
-		TypedQuery<Project> query = getEntityManager().createNamedQuery("findProjectsByMembership",Project.class);
-		query.setParameter("id", userAccountId);
-		return query.getResultList();
-	}
-	
-	public List<Project> findOwnedProjects(int userAccountId) {
-		TypedQuery<Project> query = getEntityManager().createNamedQuery("findProjectsByOwner", Project.class);
-		query.setParameter("id", userAccountId);
-		return query.getResultList();
-	}
+public final class ProjectRepository {
+
+    private ProjectRepository() {
+    }
+
+    public static List<Project> findProjects(final EntityManager udsEm, final int userAccountId) {
+
+	JPAUtils.checkEntityManager(udsEm);
+
+	TypedQuery<Project> query = udsEm.createNamedQuery("findProjectsByMembership", Project.class);
+	query.setParameter("id", userAccountId);
+	return query.getResultList();
+    }
+
+    public static List<Project> findOwnedProjects(final EntityManager udsEm, final int userAccountId) {
+
+	JPAUtils.checkEntityManager(udsEm);
+
+	TypedQuery<Project> query = udsEm.createNamedQuery("findProjectsByOwner", Project.class);
+	query.setParameter("id", userAccountId);
+	return query.getResultList();
+    }
+
 }

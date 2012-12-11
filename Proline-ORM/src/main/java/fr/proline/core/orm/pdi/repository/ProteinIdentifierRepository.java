@@ -5,23 +5,28 @@ import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.pdi.ProteinIdentifier;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 
-public class ProteinIdentifierRepository extends JPARepository {
+public final class ProteinIdentifierRepository {
 
-	public ProteinIdentifierRepository(EntityManager em) {
-		super(em);
+    private ProteinIdentifierRepository() {
+    }
+
+    public static ProteinIdentifier findProteinByValueAndTaxon(final EntityManager pdiEm, final String value,
+	    final int taxid) {
+
+	JPAUtils.checkEntityManager(pdiEm);
+
+	TypedQuery<ProteinIdentifier> query = pdiEm.createNamedQuery("findProteinByValueAndTaxon",
+		ProteinIdentifier.class);
+	query.setParameter("value", value);
+	query.setParameter("taxid", taxid);
+	try {
+	    return query.getSingleResult();
+	} catch (NoResultException nre) {
+	    return null;
 	}
 
-	public ProteinIdentifier findProteinByValueAndTaxon(String value, Integer taxid) {
-		TypedQuery<ProteinIdentifier> query = getEntityManager().createNamedQuery("findProteinByValueAndTaxon",
-				ProteinIdentifier.class);
-		query.setParameter("value", value);
-		query.setParameter("taxid", taxid);
-		try {
-			return query.getSingleResult();
-		} catch (NoResultException nre) {
-			return null;
-		}
-	}
+    }
+
 }

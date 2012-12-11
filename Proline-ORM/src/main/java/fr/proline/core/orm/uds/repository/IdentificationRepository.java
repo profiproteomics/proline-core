@@ -6,31 +6,42 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.Identification;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 
-public class IdentificationRepository extends JPARepository {
+public final class IdentificationRepository {
 
-	public IdentificationRepository(EntityManager em) {
-		super(em);
-	}
-	
-	public List<Identification> findIdentificationsByProject(int projectId) {
-		TypedQuery<Identification> query = getEntityManager().createNamedQuery("findIdentificationsByProject", Identification.class);
-		query.setParameter("id", projectId);
-		return query.getResultList();
-	}
-	
-	public List<String> findIdentificationNamesByProject(int projectId) {
-		TypedQuery<String> query = getEntityManager().createNamedQuery("findIdentificationNamesByProject", String.class);
-		query.setParameter("id", projectId);
-		return query.getResultList();
-	}
+    private IdentificationRepository() {
+    }
 
-	public Identification findIdentificationByName(int projectId, String name) {
-		TypedQuery<Identification> query = getEntityManager().createNamedQuery("findIdentificationByName", Identification.class);
-		query.setParameter("id", projectId).setParameter(":name", name);
-		return query.getSingleResult();
-	}
+    public static List<Identification> findIdentificationsByProject(final EntityManager udsEm,
+	    final int projectId) {
+
+	JPAUtils.checkEntityManager(udsEm);
+
+	TypedQuery<Identification> query = udsEm.createNamedQuery("findIdentificationsByProject",
+		Identification.class);
+	query.setParameter("id", projectId);
+	return query.getResultList();
+    }
+
+    public static List<String> findIdentificationNamesByProject(final EntityManager udsEm, final int projectId) {
+
+	JPAUtils.checkEntityManager(udsEm);
+
+	TypedQuery<String> query = udsEm.createNamedQuery("findIdentificationNamesByProject", String.class);
+	query.setParameter("id", projectId);
+	return query.getResultList();
+    }
+
+    public static Identification findIdentificationByName(final EntityManager udsEm, final int projectId,
+	    final String name) {
+
+	JPAUtils.checkEntityManager(udsEm);
+
+	TypedQuery<Identification> query = udsEm.createNamedQuery("findIdentificationByName",
+		Identification.class);
+	query.setParameter("id", projectId).setParameter(":name", name);
+	return query.getSingleResult();
+    }
 
 }
-

@@ -6,16 +6,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.SeqDatabase;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class MsiSeqDatabaseRepository extends JPARepository {
+public final class MsiSeqDatabaseRepository {
 
-    public MsiSeqDatabaseRepository(final EntityManager msiEm) {
-	super(msiEm);
+    private MsiSeqDatabaseRepository() {
     }
 
-    public SeqDatabase findSeqDatabaseForNameAndFastaAndVersion(final String name, final String fastaFilePath) {
+    public static SeqDatabase findSeqDatabaseForNameAndFastaAndVersion(final EntityManager msiEm,
+	    final String name, final String fastaFilePath) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -27,8 +29,8 @@ public class MsiSeqDatabaseRepository extends JPARepository {
 
 	SeqDatabase result = null;
 
-	final TypedQuery<SeqDatabase> query = getEntityManager().createNamedQuery(
-		"findMsiSeqDatabaseForNameAndFasta", SeqDatabase.class);
+	final TypedQuery<SeqDatabase> query = msiEm.createNamedQuery("findMsiSeqDatabaseForNameAndFasta",
+		SeqDatabase.class);
 	query.setParameter("name", name);
 	query.setParameter("fastaFilePath", fastaFilePath);
 
@@ -48,9 +50,12 @@ public class MsiSeqDatabaseRepository extends JPARepository {
 	return result;
     }
 
-    public List<Integer> findSeqDatabaseIdsForProteinMatch(final int proteinMatchId) {
+    public static List<Integer> findSeqDatabaseIdsForProteinMatch(final EntityManager msiEm,
+	    final int proteinMatchId) {
 
-	final TypedQuery<Integer> query = getEntityManager().createQuery(
+	JPAUtils.checkEntityManager(msiEm);
+
+	final TypedQuery<Integer> query = msiEm.createQuery(
 		"select map.id.seqDatabaseId from fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap map"
 			+ " where map.id.proteinMatchId = :proteinMatchId", Integer.class);
 	query.setParameter("proteinMatchId", Integer.valueOf(proteinMatchId));

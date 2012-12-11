@@ -9,28 +9,27 @@ import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import scala.collection.mutable.ArrayBuilder
 
-class ORMPeptideInstanceProvider (val em:EntityManager ) extends IPeptideInstanceProvider {
-  
-	var protSetRepo : ProteinSetRepositorty = new ProteinSetRepositorty(em) //Created by constructor
-	val converter : PeptidesOMConverterUtil= new PeptidesOMConverterUtil()
-	
-	def getPeptideInstancesAsOptions(pepInstIds: Seq[Int] ): Array[Option[PeptideInstance]] = { 
-	    
-		var foundPepInstBuilder =Array.newBuilder[Option[PeptideInstance]]
-		pepInstIds foreach (id => {		
-			val pepInstance : fr.proline.core.orm.msi.PeptideInstance = em.find(classOf[fr.proline.core.orm.msi.PeptideInstance], id)
-			if(pepInstance != null){
-				foundPepInstBuilder += Some(converter.convertPeptideInstanceORM2OM(pepInstance, true, protSetRepo.getEntityManager()))
-			} else
-				foundPepInstBuilder += None				
-		})
-		return foundPepInstBuilder.result()
-  }
-	
-	def getPeptideInstances(pepInstIds: Seq[Int] ): Array[PeptideInstance] = {
-	  this.getPeptideInstancesAsOptions( pepInstIds ).filter( _ != None ).map( _.get )
-	}
+class ORMPeptideInstanceProvider(val em: EntityManager) extends IPeptideInstanceProvider {
 
-  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int]):  Array[PeptideInstance] = { throw new Exception("NYI") }
+  val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
+
+  def getPeptideInstancesAsOptions(pepInstIds: Seq[Int]): Array[Option[PeptideInstance]] = {
+
+    var foundPepInstBuilder = Array.newBuilder[Option[PeptideInstance]]
+    pepInstIds foreach (id => {
+      val pepInstance: fr.proline.core.orm.msi.PeptideInstance = em.find(classOf[fr.proline.core.orm.msi.PeptideInstance], id)
+      if (pepInstance != null) {
+        foundPepInstBuilder += Some(converter.convertPeptideInstanceORM2OM(pepInstance, true, em))
+      } else
+        foundPepInstBuilder += None
+    })
+    return foundPepInstBuilder.result()
+  }
+
+  def getPeptideInstances(pepInstIds: Seq[Int]): Array[PeptideInstance] = {
+    this.getPeptideInstancesAsOptions(pepInstIds).filter(_ != None).map(_.get)
+  }
+
+  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int]): Array[PeptideInstance] = { throw new Exception("NYI") }
 
 }

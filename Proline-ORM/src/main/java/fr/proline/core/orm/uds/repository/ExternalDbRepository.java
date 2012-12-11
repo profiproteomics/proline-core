@@ -7,16 +7,17 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
-import fr.proline.core.orm.util.JPARepository;
 import fr.proline.repository.Database;
+import fr.proline.repository.util.JPAUtils;
 
-public class ExternalDbRepository extends JPARepository {
+public final class ExternalDbRepository {
 
-    public ExternalDbRepository(final EntityManager udsEm) {
-	super(udsEm);
+    private ExternalDbRepository() {
     }
 
-    public ExternalDb findExternalByType(final Database dbType) {
+    public static ExternalDb findExternalByType(final EntityManager udsEm, final Database dbType) {
+
+	JPAUtils.checkEntityManager(udsEm);
 
 	if (dbType == null) {
 	    throw new IllegalArgumentException("DbType is null");
@@ -24,8 +25,7 @@ public class ExternalDbRepository extends JPARepository {
 
 	ExternalDb result = null;
 
-	final TypedQuery<ExternalDb> query = getEntityManager().createNamedQuery("findExternalDbByType",
-		ExternalDb.class);
+	final TypedQuery<ExternalDb> query = udsEm.createNamedQuery("findExternalDbByType", ExternalDb.class);
 	query.setParameter("type", dbType);
 
 	final List<ExternalDb> externalDbs = query.getResultList();
@@ -43,7 +43,10 @@ public class ExternalDbRepository extends JPARepository {
 	return result;
     }
 
-    public ExternalDb findExternalByTypeAndProject(final Database dbType, final Project project) {
+    public static ExternalDb findExternalByTypeAndProject(final EntityManager udsEm, final Database dbType,
+	    final Project project) {
+
+	JPAUtils.checkEntityManager(udsEm);
 
 	if (dbType == null) {
 	    throw new IllegalArgumentException("DbType is null");
@@ -55,8 +58,8 @@ public class ExternalDbRepository extends JPARepository {
 
 	ExternalDb result = null;
 
-	final TypedQuery<ExternalDb> query = getEntityManager().createNamedQuery(
-		"findExternalDbByTypeAndProject", ExternalDb.class);
+	final TypedQuery<ExternalDb> query = udsEm.createNamedQuery("findExternalDbByTypeAndProject",
+		ExternalDb.class);
 	query.setParameter("type", dbType);
 	query.setParameter("project", project);
 

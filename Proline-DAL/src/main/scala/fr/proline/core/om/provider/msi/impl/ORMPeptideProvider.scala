@@ -13,69 +13,68 @@ import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.utils.OMComparatorUtil
 import fr.proline.core.om.utils.PeptidesOMConverterUtil
-import fr.proline.core.orm.ps.repository.PsPeptideRepository
+import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => pepRepo }
 
 /**
  * ORMPeptideProvider provides access to Peptide stored in PS database.
- * 
+ *
  * Specified EntityManager should be a PSdb EntityManager
  */
-class ORMPeptideProvider (val em:EntityManager ) extends IPeptideProvider with Logging {
-  
-  var pepRepo : PsPeptideRepository = new PsPeptideRepository(em) //Created by constructor
-  val converter : PeptidesOMConverterUtil= new PeptidesOMConverterUtil()
+class ORMPeptideProvider(val em: EntityManager) extends IPeptideProvider with Logging {
 
-  def getPeptidesAsOptions( peptideIds: Seq[Int] ): Array[Option[Peptide]] = {
-  	var foundOMPepBuilder = Array.newBuilder[Option[Peptide]]
-  	peptideIds foreach( id => {
-  		val psPep : fr.proline.core.orm.ps.Peptide  = em.find(classOf[fr.proline.core.orm.ps.Peptide], id);
-  		if(psPep != null){
-  			foundOMPepBuilder += Some(converter.convertPeptidePsORM2OM(psPep))
-  		} else 
-  			foundOMPepBuilder += None		
-    	})
-  	return foundOMPepBuilder.result() 
-  }
-  
-  def getPeptides( peptideIds: Seq[Int] ): Array[Peptide] = {
-    this.getPeptidesAsOptions(peptideIds).filter( _ != None ).map( _.get )
+  val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
+
+  def getPeptidesAsOptions(peptideIds: Seq[Int]): Array[Option[Peptide]] = {
+    var foundOMPepBuilder = Array.newBuilder[Option[Peptide]]
+    peptideIds foreach (id => {
+      val psPep: fr.proline.core.orm.ps.Peptide = em.find(classOf[fr.proline.core.orm.ps.Peptide], id);
+      if (psPep != null) {
+        foundOMPepBuilder += Some(converter.convertPeptidePsORM2OM(psPep))
+      } else
+        foundOMPepBuilder += None
+    })
+    return foundOMPepBuilder.result()
   }
 
-  def getPeptide( peptideSeq: String, pepPtms: Array[LocatedPtm] ): Option[Peptide]  = {
-    if(pepPtms == null || pepPtms.isEmpty ){      
-    	try {
-    		val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(peptideSeq, null)
-			return if(foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
-			
-    	} catch {
-  	  		case e:PersistenceException => {
-  	  			logger.warn(" Error while requiering Peptide "+e.getMessage)
-  	  			return None
-  	  		}
-    	}
-    	return None
-    }else  {      
+  def getPeptides(peptideIds: Seq[Int]): Array[Peptide] = {
+    this.getPeptidesAsOptions(peptideIds).filter(_ != None).map(_.get)
+  }
+
+  def getPeptide(peptideSeq: String, pepPtms: Array[LocatedPtm]): Option[Peptide] = {
+    if (pepPtms == null || pepPtms.isEmpty) {
+      try {
+        val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(em, peptideSeq, null) // TODO LMN don't keep "em" as instance variable
+        return if (foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
+
+      } catch {
+        case e: PersistenceException => {
+          logger.warn(" Error while requiering Peptide " + e.getMessage)
+          return None
+        }
+      }
+      return None
+    } else {
       val ptmStr = Peptide.makePtmString(pepPtms)
-      
-	  try {
-  		val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(peptideSeq, ptmStr)
-  		return if(foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
-	  } catch {
-  	  	case e:PersistenceException => {
-  	  		logger.warn(" Error while requiering Peptide "+e.getMessage)
-  	  		return None
-  	  	}
-	  }  	    
-  	return None
+
+      try {
+        val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(em, peptideSeq, ptmStr) // TODO LMN don't keep "em" as instance variable
+        return if (foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
+      } catch {
+        case e: PersistenceException => {
+          logger.warn(" Error while requiering Peptide " + e.getMessage)
+          return None
+        }
+      }
+      return None
     }
   }
-  
-   def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]) : Array[Option[Peptide]] = {
-       var result = Array.newBuilder[Option[Peptide]]
-       peptideSeqsAndPtms.foreach( entry =>  {
-         result += this.getPeptide(entry._1,entry._2)
-       })
-       result.result
-   }
+
+  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]): Array[Option[Peptide]] = {
+    var result = Array.newBuilder[Option[Peptide]]
+    peptideSeqsAndPtms.foreach(entry => {
+      result += this.getPeptide(entry._1, entry._2)
+    })
+    result.result
+  }
 
 }

@@ -6,12 +6,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.SequenceMatch;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 
-public class SequenceMatchRepository extends JPARepository {
+public final class SequenceMatchRepository {
 
-    public SequenceMatchRepository(final EntityManager msiEm) {
-	super(msiEm);
+    private SequenceMatchRepository() {
     }
 
     /**
@@ -21,8 +20,12 @@ public class SequenceMatchRepository extends JPARepository {
      *            Primary key of associated ProteinMatch entity.
      * @return List of associated SequenceMatches, can be empty if none found.
      */
-    public List<SequenceMatch> findSequenceMatchForProteinMatch(final int proteinMatchId) {
-	final TypedQuery<SequenceMatch> query = getEntityManager().createQuery(
+    public static List<SequenceMatch> findSequenceMatchForProteinMatch(final EntityManager msiEm,
+	    final int proteinMatchId) {
+
+	JPAUtils.checkEntityManager(msiEm);
+
+	final TypedQuery<SequenceMatch> query = msiEm.createQuery(
 		"select sm from fr.proline.core.orm.msi.SequenceMatch sm"
 			+ " where sm.id.proteinMatchId = :proteinMatchId", SequenceMatch.class);
 	query.setParameter("proteinMatchId", Integer.valueOf(proteinMatchId));

@@ -10,13 +10,12 @@ import fr.proline.core.orm.ps.PtmClassification;
 import fr.proline.core.orm.ps.PtmEvidence;
 import fr.proline.core.orm.ps.PtmEvidence.Type;
 import fr.proline.core.orm.ps.PtmSpecificity;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class PsPtmRepository extends JPARepository {
+public final class PsPtmRepository {
 
-    public PsPtmRepository(final EntityManager psEm) {
-	super(psEm);
+    private PsPtmRepository() {
     }
 
     /**
@@ -28,7 +27,9 @@ public class PsPtmRepository extends JPARepository {
      *            not be empty.
      * @return Ptm entity or <code>null</code> if not found.
      */
-    public Ptm findPtmForName(final String name) {
+    public static Ptm findPtmForName(final EntityManager psEm, final String name) {
+
+	JPAUtils.checkEntityManager(psEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -36,7 +37,7 @@ public class PsPtmRepository extends JPARepository {
 
 	Ptm result = null;
 
-	final TypedQuery<Ptm> query = getEntityManager().createNamedQuery("findPsPtmForName", Ptm.class);
+	final TypedQuery<Ptm> query = psEm.createNamedQuery("findPsPtmForName", Ptm.class);
 	query.setParameter("name", name.toUpperCase());
 
 	final List<Ptm> ptms = query.getResultList();
@@ -54,8 +55,12 @@ public class PsPtmRepository extends JPARepository {
 	return result;
     }
 
-    public PtmEvidence findPtmEvidenceByPtmAndType(int ptmId, Type type) {
-	TypedQuery<PtmEvidence> query = getEntityManager().createNamedQuery("findPtmEvidenceByPtmAndType",
+    public static PtmEvidence findPtmEvidenceByPtmAndType(final EntityManager psEm, final int ptmId,
+	    final Type type) {
+
+	JPAUtils.checkEntityManager(psEm);
+
+	TypedQuery<PtmEvidence> query = psEm.createNamedQuery("findPtmEvidenceByPtmAndType",
 		PtmEvidence.class);
 	query.setParameter("ptm_id", ptmId);
 	query.setParameter("type", type.name());
@@ -74,8 +79,10 @@ public class PsPtmRepository extends JPARepository {
      *            <code>PtmSpecificity</code> residue. Can be <code>null</code> (for C-term or N-term...)
      * @return PtmSpecificity entity or <code>null</code> if not found.
      */
-    public PtmSpecificity findPtmSpecificityForNameLocResidu(final String ptmShortName,
-	    final String location, final String residue) {
+    public static PtmSpecificity findPtmSpecificityForNameLocResidu(final EntityManager psEm,
+	    final String ptmShortName, final String location, final String residue) {
+
+	JPAUtils.checkEntityManager(psEm);
 
 	if (StringUtils.isEmpty(ptmShortName)) {
 	    throw new IllegalArgumentException("Invalid ptmShortName");
@@ -90,11 +97,10 @@ public class PsPtmRepository extends JPARepository {
 	TypedQuery<PtmSpecificity> query = null;
 
 	if (residue == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findPsPtmSpecForNameAndLoc", PtmSpecificity.class);
+	    query = psEm.createNamedQuery("findPsPtmSpecForNameAndLoc", PtmSpecificity.class);
 
 	} else {
-	    query = getEntityManager().createNamedQuery("findPsPtmSpecForNameLocResidue",
-		    PtmSpecificity.class);
+	    query = psEm.createNamedQuery("findPsPtmSpecForNameLocResidue", PtmSpecificity.class);
 
 	    query.setParameter("residue", String.valueOf(residue));
 	}
@@ -125,7 +131,9 @@ public class PsPtmRepository extends JPARepository {
      *            Name of the <code>PtmClassification</code> entity, must not be empty.
      * @return PtmClassification entity or <code>null</code> if not found.
      */
-    public PtmClassification findPtmClassificationForName(final String name) {
+    public static PtmClassification findPtmClassificationForName(final EntityManager psEm, final String name) {
+
+	JPAUtils.checkEntityManager(psEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -133,14 +141,13 @@ public class PsPtmRepository extends JPARepository {
 
 	PtmClassification result = null;
 
-	final TypedQuery<PtmClassification> query = getEntityManager().createNamedQuery(
-		"findPtmClassificationForName", PtmClassification.class);
+	final TypedQuery<PtmClassification> query = psEm.createNamedQuery("findPtmClassificationForName",
+		PtmClassification.class);
 	query.setParameter("name", name.toUpperCase());
 
 	final List<PtmClassification> classifications = query.getResultList();
 
 	if ((classifications != null) && !classifications.isEmpty()) {
-	    System.out.println("Reading classifications");
 
 	    if (classifications.size() == 1) {
 		result = classifications.get(0);

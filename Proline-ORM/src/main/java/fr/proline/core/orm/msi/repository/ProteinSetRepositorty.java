@@ -4,24 +4,32 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.PeptideInstance;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 
-public class ProteinSetRepositorty extends JPARepository {
+public final class ProteinSetRepositorty {
 
-	public  ProteinSetRepositorty(EntityManager em) {
-		super(em);	
-	}
-	
-	public PeptideInstance findPeptideInstanceForPepMatch(int pepMatchID){
-		TypedQuery<PeptideInstance> query = getEntityManager().createNamedQuery("findPepInstByPepMatch", PeptideInstance.class);
-		query.setParameter("pmID", pepMatchID);
-		return query.getSingleResult();
-	}
-	
-	public PeptideInstance findPeptideInstanceForPeptide(int pepID){
-		TypedQuery<PeptideInstance> query = getEntityManager().createNamedQuery("findPepInstForPeptideId", PeptideInstance.class);
-		query.setParameter("pepID", pepID);
-		return query.getSingleResult();
-	}
+    private ProteinSetRepositorty() {
+    }
+
+    public static PeptideInstance findPeptideInstanceForPepMatch(final EntityManager msiEm,
+	    final int pepMatchID) {
+
+	JPAUtils.checkEntityManager(msiEm);
+
+	TypedQuery<PeptideInstance> query = msiEm.createNamedQuery("findPepInstByPepMatch",
+		PeptideInstance.class);
+	query.setParameter("pmID", pepMatchID);
+	return query.getSingleResult();
+    }
+
+    public static PeptideInstance findPeptideInstanceForPeptide(final EntityManager msiEm, final int pepID) {
+
+	JPAUtils.checkEntityManager(msiEm);
+
+	TypedQuery<PeptideInstance> query = msiEm.createNamedQuery("findPepInstForPeptideId",
+		PeptideInstance.class);
+	query.setParameter("pepID", pepID);
+	return query.getSingleResult();
+    }
 
 }

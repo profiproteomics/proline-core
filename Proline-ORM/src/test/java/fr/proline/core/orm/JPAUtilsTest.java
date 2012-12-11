@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 
@@ -42,19 +43,20 @@ public class JPAUtilsTest extends DatabaseTestCase {
 
     @Test
     public void testUtils() {
-	final EntityManager udsEm = getEntityManager();
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
 	if (!STATISTICS_ENABLED.getAndSet(true)) {
 	    /* Check Hibernate statistics only once */
-	    JPAUtils.enableStatistics(udsEm.getEntityManagerFactory(), "Tests-HibernateStats");
+	    JPAUtils.enableStatistics(emf, "Tests-HibernateStats");
 	}
 
-	udsEm.setFlushMode(FlushModeType.COMMIT);
-
+	final EntityManager udsEm = emf.createEntityManager();
 	EntityTransaction transac = null;
 	boolean transacOk = false;
 
 	try {
+	    udsEm.setFlushMode(FlushModeType.COMMIT);
+
 	    transac = udsEm.getTransaction();
 	    transac.begin();
 	    transacOk = false;
@@ -117,6 +119,14 @@ public class JPAUtilsTest extends DatabaseTestCase {
 		    LOG.error("Error rollbacking Uds Db transaction", ex);
 		}
 
+	    }
+
+	    if (udsEm != null) {
+		try {
+		    udsEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing UDS EntityManager", exClose);
+		}
 	    }
 
 	}

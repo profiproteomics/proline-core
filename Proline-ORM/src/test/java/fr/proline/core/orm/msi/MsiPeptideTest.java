@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.junit.After;
@@ -38,81 +39,95 @@ public class MsiPeptideTest extends DatabaseTestCase {
     public void testMsiPeptideRepository() {
 	int retrievedPeptides = 0;
 
-	final EntityManager msiEm = getEntityManager();
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
-	EntityTransaction msiTransaction1 = null;
-	boolean msiTransacOk = false;
+	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    /* First transaction to persist some peptide */
-	    msiTransaction1 = msiEm.getTransaction();
-	    msiTransaction1.begin();
-	    msiTransacOk = false;
 
-	    for (int i = 0; i < PEPTIDE_COUNT; ++i) {
-		final Peptide msiPeptide = new Peptide();
-		msiPeptide.setId(Integer.valueOf(i));
-		msiPeptide.setSequence("Pept #" + i);
-		msiPeptide.setCalculatedMass(i);
+	    EntityTransaction msiTransaction1 = null;
+	    boolean msiTransacOk = false;
 
-		msiEm.persist(msiPeptide);
-	    }
+	    try {
+		/* First transaction to persist some peptide */
+		msiTransaction1 = msiEm.getTransaction();
+		msiTransaction1.begin();
+		msiTransacOk = false;
 
-	    msiTransaction1.commit();
-	    msiTransacOk = true;
-	} finally {
+		for (int i = 0; i < PEPTIDE_COUNT; ++i) {
+		    final Peptide msiPeptide = new Peptide();
+		    msiPeptide.setId(Integer.valueOf(i));
+		    msiPeptide.setSequence("Pept #" + i);
+		    msiPeptide.setCalculatedMass(i);
 
-	    if ((msiTransaction1 != null) && !msiTransacOk) {
-		LOG.info("Rollbacking first Msi Transaction");
+		    msiEm.persist(msiPeptide);
+		}
 
-		try {
-		    msiTransaction1.rollback();
-		} catch (Exception ex) {
-		    LOG.error("Error rollbacking first Msi Transaction", ex);
+		msiTransaction1.commit();
+		msiTransacOk = true;
+	    } finally {
+
+		if ((msiTransaction1 != null) && !msiTransacOk) {
+		    LOG.info("Rollbacking first Msi Transaction");
+
+		    try {
+			msiTransaction1.rollback();
+		    } catch (Exception ex) {
+			LOG.error("Error rollbacking first Msi Transaction", ex);
+		    }
+
 		}
 
 	    }
 
-	}
+	    EntityTransaction msiTransaction2 = null;
 
-	EntityTransaction msiTransaction2 = null;
+	    try {
+		/* Second transaction to test peptide repository */
+		msiTransaction2 = msiEm.getTransaction();
+		msiTransaction2.begin();
+		msiTransacOk = false;
 
-	try {
-	    /* Second transaction to test peptide repository */
-	    msiTransaction2 = msiEm.getTransaction();
-	    msiTransaction2.begin();
-	    msiTransacOk = false;
+		final List<Integer> ids = new ArrayList<Integer>();
+		for (int i = 0; i < PEPTIDE_COUNT; ++i) {
+		    ids.add(Integer.valueOf(i));
+		}
 
-	    final MsiPeptideRepository msiPeptideRepo = new MsiPeptideRepository(msiEm);
+		final List<Peptide> peptides = MsiPeptideRepository.findPeptidesForIds(msiEm, ids);
 
-	    final List<Integer> ids = new ArrayList<Integer>();
-	    for (int i = 0; i < PEPTIDE_COUNT; ++i) {
-		ids.add(Integer.valueOf(i));
-	    }
-
-	    final List<Peptide> peptides = msiPeptideRepo.findPeptidesForIds(ids);
-
-	    if (peptides != null) {
-		for (final Peptide p : peptides) {
-		    if (p != null) {
-			++retrievedPeptides;
+		if (peptides != null) {
+		    for (final Peptide p : peptides) {
+			if (p != null) {
+			    ++retrievedPeptides;
+			}
 		    }
 		}
-	    }
 
-	    msiTransaction2.commit();
-	    msiTransacOk = true;
-	} finally {
+		msiTransaction2.commit();
+		msiTransacOk = true;
+	    } finally {
 
-	    if ((msiTransaction2 != null) && !msiTransacOk) {
-		LOG.info("Rollbacking second Msi Transaction");
+		if ((msiTransaction2 != null) && !msiTransacOk) {
+		    LOG.info("Rollbacking second Msi Transaction");
 
-		try {
-		    msiTransaction2.rollback();
-		} catch (Exception ex) {
-		    LOG.error("Error rollbacking second Msi Transaction", ex);
+		    try {
+			msiTransaction2.rollback();
+		    } catch (Exception ex) {
+			LOG.error("Error rollbacking second Msi Transaction", ex);
+		    }
+
 		}
 
+	    }
+
+	} finally {
+
+	    if (msiEm != null) {
+		try {
+		    msiEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing MSI EntityManager", exClose);
+		}
 	    }
 
 	}

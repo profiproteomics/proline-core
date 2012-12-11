@@ -174,8 +174,7 @@ public class MsiPeptideRepositoryTest {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    final MsiPeptideRepository msiPeptideRepo = new MsiPeptideRepository(msiEm);
-	    List<Peptide> peptides = msiPeptideRepo.findPeptidesForIds(ids);
+	    List<Peptide> peptides = MsiPeptideRepository.findPeptidesForIds(msiEm, ids);
 	    LOG.debug("TEST JUnit Assertion");
 	    assertNotNull("Retrieved MSI Peptides", peptides);
 	} finally {

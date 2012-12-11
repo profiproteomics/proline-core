@@ -29,36 +29,49 @@ class OMComparatorUtilTest extends DatabaseTestCase {
 
   @Test
   def comparePepPtm() = {
-    val pepPtm: PeptidePtm = this.getEntityManager.find(classOf[PeptidePtm], 1)
+    val emf = getConnector.getEntityManagerFactory
 
-    val ptmEvi = new PtmEvidence(ionType = IonTypes.Precursor,
-      composition = "Post-translational",
-      monoMass = 15.994915,
-      averageMass = 15.9994,
-      isRequired = true)
+    val psEm = emf.createEntityManager
 
-    var ptmEvidences = new Array[PtmEvidence](1)
-    ptmEvidences.update(0, ptmEvi)
+    try {
+      val pepPtm: PeptidePtm = psEm.find(classOf[PeptidePtm], 1)
 
-    val ptmDef = new PtmDefinition(id = -100,
-      location = "ANYWHERE",
-      names = new PtmNames(shortName = "Oxidation", fullName = "Oxidation or Hydroxylation"),
-      ptmEvidences = ptmEvidences,
-      residue = 'M',
-      classification = "Post-translational", ptmId = 0)
+      val ptmEvi = new PtmEvidence(ionType = IonTypes.Precursor,
+        composition = "Post-translational",
+        monoMass = 15.994915,
+        averageMass = 15.9994,
+        isRequired = true)
 
-    val lPtm: LocatedPtm = new LocatedPtm(definition = ptmDef,
-      seqPosition = 3,
-      monoMass = Double.MaxValue,
-      averageMass = Double.MaxValue,
-      composition = "O",
-      isNTerm = false,
-      isCTerm = false)
+      var ptmEvidences = new Array[PtmEvidence](1)
+      ptmEvidences.update(0, ptmEvi)
 
-    assertTrue(OMComparatorUtil.comparePeptidePtm(lPtm, pepPtm));
+      val ptmDef = new PtmDefinition(id = -100,
+        location = "ANYWHERE",
+        names = new PtmNames(shortName = "Oxidation", fullName = "Oxidation or Hydroxylation"),
+        ptmEvidences = ptmEvidences,
+        residue = 'M',
+        classification = "Post-translational", ptmId = 0)
+
+      val lPtm: LocatedPtm = new LocatedPtm(definition = ptmDef,
+        seqPosition = 3,
+        monoMass = Double.MaxValue,
+        averageMass = Double.MaxValue,
+        composition = "O",
+        isNTerm = false,
+        isCTerm = false)
+
+      assertTrue(OMComparatorUtil.comparePeptidePtm(lPtm, pepPtm));
+    } finally {
+
+      if (psEm != null) {
+        psEm.close()
+      }
+
+    }
+
   }
 
-  @After  
+  @After
   override def tearDown() = {
     super.tearDown();
   }

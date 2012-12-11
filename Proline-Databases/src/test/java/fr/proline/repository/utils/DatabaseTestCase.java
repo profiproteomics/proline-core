@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.sql.DataSource;
 
@@ -31,9 +30,6 @@ public abstract class DatabaseTestCase {
 
     /* @GuardedBy("m_connectorLock") */
     private Connection m_keepaliveConnection;
-
-    /* @GuardedBy("m_connectorLock") */
-    private EntityManager m_currentEntityManager;
 
     /* @GuardedBy("m_connectorLock") */
     private boolean m_toreDown;
@@ -124,40 +120,19 @@ public abstract class DatabaseTestCase {
 	return m_connector;
     }
 
-    /**
-     * Get the EntityManager for this Database TestCase.
-     * 
-     * @return
-     */
-    public final EntityManager getEntityManager() {
-
-	synchronized (m_connectorLock) {
-
-	    if (m_toreDown) {
-		throw new IllegalStateException("TestCase ALREADY torn down");
-	    }
-
-	    if (m_currentEntityManager == null) {
-		final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-		m_currentEntityManager = emf.createEntityManager();
-	    }
-
-	} // End of synchronized block on m_connectorLock
-
-	return m_currentEntityManager;
-    }
-
     public void initDatabase() throws Exception, ClassNotFoundException {
-	DatabaseUpgrader.upgradeDatabase(getConnector(), getMigrationScriptsLocation());
+	final DatabaseTestConnector connector = getConnector();
+
+	DatabaseUpgrader.upgradeDatabase(connector, getMigrationScriptsLocation());
 
 	if (LOG.isDebugEnabled()) {
 	    /* Print Database Tables */
-	    final EntityManager currentEm = getEntityManager();
-	    final EntityTransaction transac = currentEm.getTransaction();
+	    final EntityManager em = connector.getEntityManagerFactory().createEntityManager();
+	    EntityTransaction transac = null;
 	    boolean transacOk = false;
 
 	    try {
+		transac = em.getTransaction();
 		transac.begin();
 		transacOk = false;
 
@@ -171,7 +146,7 @@ public abstract class DatabaseTestCase {
 
 		};
 
-		JPAUtils.doWork(currentEm, jdbcWork);
+		JPAUtils.doWork(em, jdbcWork);
 
 		transac.commit();
 		transacOk = true;
@@ -186,6 +161,14 @@ public abstract class DatabaseTestCase {
 			LOG.error("Error rollbacking EntityManager transaction", ex);
 		    }
 
+		}
+
+		if (em != null) {
+		    try {
+			em.close();
+		    } catch (Exception ex) {
+			LOG.error("Error closing EntityManager", ex);
+		    }
 		}
 
 	    }
@@ -215,18 +198,7 @@ public abstract class DatabaseTestCase {
 	    if (!m_toreDown) { // Close only once
 		m_toreDown = true;
 
-		/* Close EntityManager then keep-alive connection and finally Connector */
-		if (m_currentEntityManager != null) {
-		    LOG.debug("Closing current EntityManager");
-
-		    try {
-			m_currentEntityManager.close();
-		    } catch (Exception exClose) {
-			LOG.error("Error closing current EntityManager", exClose);
-		    }
-
-		}
-
+		/* Close the keep-alive connection and finally the Db Connector */
 		if (m_keepaliveConnection != null) {
 		    LOG.debug("Closing keep-alive SQL connection");
 

@@ -6,17 +6,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.InstrumentConfiguration;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class UdsInstrumentConfigurationRepository extends JPARepository {
+public final class UdsInstrumentConfigurationRepository {
 
-    public UdsInstrumentConfigurationRepository(final EntityManager udsEm) {
-	super(udsEm);
+    private UdsInstrumentConfigurationRepository() {
     }
 
-    public InstrumentConfiguration findInstrumConfForNameAndMs1AndMsn(final String name,
-	    final String ms1Analyzer, final String msnAnalyzer) {
+    public static InstrumentConfiguration findInstrumConfForNameAndMs1AndMsn(final EntityManager udsEm,
+	    final String name, final String ms1Analyzer, final String msnAnalyzer) {
+
+	JPAUtils.checkEntityManager(udsEm);
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
@@ -31,10 +32,9 @@ public class UdsInstrumentConfigurationRepository extends JPARepository {
 	TypedQuery<InstrumentConfiguration> query = null;
 
 	if (msnAnalyzer == null) { // Assume NULL <> "" (empty)
-	    query = getEntityManager().createNamedQuery("findUdsInstrumConfForNameAndMs1",
-		    InstrumentConfiguration.class);
+	    query = udsEm.createNamedQuery("findUdsInstrumConfForNameAndMs1", InstrumentConfiguration.class);
 	} else {
-	    query = getEntityManager().createNamedQuery("findUdsInstrumConfForNameAndMs1AndMsn",
+	    query = udsEm.createNamedQuery("findUdsInstrumConfForNameAndMs1AndMsn",
 		    InstrumentConfiguration.class);
 	    query.setParameter("msnAnalyzer", msnAnalyzer.toUpperCase());
 	}

@@ -68,12 +68,10 @@ public class DatabaseManager {
 	    EntityManager udsEm = udsEMF.createEntityManager();
 
 	    try {
-		final ExternalDbRepository externalDbRepo = new ExternalDbRepository(udsEm);
-
 		final DriverType udsDriverType = udsDbConnector.getDriverType();
 
 		/* Try to load PDI Db Connector */
-		final ExternalDb pdiDb = externalDbRepo.findExternalByType(Database.PDI);
+		final ExternalDb pdiDb = ExternalDbRepository.findExternalByType(udsEm, Database.PDI);
 
 		if (pdiDb == null) {
 		    LOG.warn("No ExternalDb for PDI Db");
@@ -85,7 +83,7 @@ public class DatabaseManager {
 		}
 
 		/* Try to load PS Db Connector */
-		final ExternalDb psDb = externalDbRepo.findExternalByType(Database.PS);
+		final ExternalDb psDb = ExternalDbRepository.findExternalByType(udsEm, Database.PS);
 
 		if (psDb == null) {
 		    LOG.warn("No ExternalDb for PS Db");
@@ -313,9 +311,8 @@ public class DatabaseManager {
 		throw new IllegalArgumentException("Project #" + projectId + " NOT found in UDS Db");
 	    }
 
-	    final ExternalDbRepository externalDbRepo = new ExternalDbRepository(udsEm);
-
-	    final ExternalDb externalDb = externalDbRepo.findExternalByTypeAndProject(database, project);
+	    final ExternalDb externalDb = ExternalDbRepository.findExternalByTypeAndProject(udsEm, database,
+		    project);
 
 	    if (externalDb == null) {
 		LOG.warn("No ExternalDb for {} Db of project #{}", database, projectId);

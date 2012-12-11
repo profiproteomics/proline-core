@@ -14,8 +14,7 @@ import fr.proline.core.om.model.msi.PeptideSetItem
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
-import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
-//import fr.proline.repository.ProlineRepository
+import fr.proline.core.orm.msi.repository.{ProteinSetRepositorty => proSetRepo}
 import fr.proline.core.orm.util.DatabaseManager
 import javax.persistence.EntityManager
 import javax.persistence.Persistence
@@ -77,8 +76,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       return peptideInstancesCache(msiPepInst.getId())
     }
 
-    //Objects to access data in repositories
-    val proSetRepo = new ProteinSetRepositorty(msiEM)
+    //Objects to access data in repositories    
     //val prolineRepo = ProlineRepository.getProlineRepositoryInstance()
     val prolineRepo = DatabaseManager.getInstance()
 
@@ -102,7 +100,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       while (msiPepMatchChildIT.hasNext()) {
 
         val nextMsiPMChild = msiPepMatchChildIT.next()
-        val msiPepInstChild = proSetRepo.findPeptideInstanceForPepMatch(nextMsiPMChild.getId)
+        val msiPepInstChild = proSetRepo.findPeptideInstanceForPepMatch(msiEM, nextMsiPMChild.getId)
 
         if (!pepInstChildById.contains(msiPepInstChild.getId)) {
           //Convert child ORM Peptide Instance to OM Peptide Instance
@@ -131,7 +129,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     val psUnmodifiedPep = em.find(classOf[PsPeptide], msiPepInst.getUnmodifiedPeptideId())
     var unmodifiedPep = if (psUnmodifiedPep == null) None else Some(convertPeptidePsORM2OM(psUnmodifiedPep))
 
-    val msiUnmodifiedPepInst = proSetRepo.findPeptideInstanceForPeptide(msiPepInst.getUnmodifiedPeptideId())
+    val msiUnmodifiedPepInst = proSetRepo.findPeptideInstanceForPeptide(msiEM, msiPepInst.getUnmodifiedPeptideId())
     val unmodifiedPepInst = if (msiUnmodifiedPepInst == null) None
     else Some(convertPeptideInstanceORM2OM(msiUnmodifiedPepInst, loadPepMatches, msiEM))
 

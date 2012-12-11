@@ -8,10 +8,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Scoring;
-import fr.proline.core.orm.util.JPARepository;
+import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
-public class ScoringRepository extends JPARepository {
+public final class ScoringRepository {
 
     /* Static caches are updated by getScoringIdForType() and getScoreTypeForId() methods */
     /* ScoreType -> Scoring.id , @GuardedBy("CACHE_LOCK") */
@@ -25,8 +25,7 @@ public class ScoringRepository extends JPARepository {
      */
     private static final Object CACHE_LOCK = new Object();
 
-    public ScoringRepository(final EntityManager msiEm) {
-	super(msiEm);
+    private ScoringRepository() {
     }
 
     /**
@@ -37,7 +36,9 @@ public class ScoringRepository extends JPARepository {
      *            be a non empty <code>String</code>).
      * @return Scoring entity or <code>null</code> if not found
      */
-    public Scoring findScoringForType(final String scoreType) {
+    public static Scoring findScoringForType(final EntityManager msiEm, final String scoreType) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (StringUtils.isEmpty(scoreType)) {
 	    throw new IllegalArgumentException("Invalid scoreType");
@@ -45,8 +46,7 @@ public class ScoringRepository extends JPARepository {
 
 	Scoring result = null;
 
-	final TypedQuery<Scoring> query = getEntityManager().createNamedQuery("findScoringForScoreType",
-		Scoring.class);
+	final TypedQuery<Scoring> query = msiEm.createNamedQuery("findScoringForScoreType", Scoring.class);
 	query.setParameter("scoreType", scoreType);
 
 	final List<Scoring> scorings = query.getResultList();
@@ -72,7 +72,9 @@ public class ScoringRepository extends JPARepository {
      *            be a non empty <code>String</code>).
      * @return Scoring.Id or <code>null</code> if not found
      */
-    public Integer getScoringIdForType(final String scoreType) {
+    public static Integer getScoringIdForType(final EntityManager msiEm, final String scoreType) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (StringUtils.isEmpty(scoreType)) {
 	    throw new IllegalArgumentException("Invalid scoreType");
@@ -85,7 +87,7 @@ public class ScoringRepository extends JPARepository {
 
 	    if (result == null) {
 
-		final Scoring foundScoring = findScoringForType(scoreType);
+		final Scoring foundScoring = findScoringForType(msiEm, scoreType);
 		if (foundScoring != null) {
 		    result = foundScoring.getId();
 
@@ -120,7 +122,9 @@ public class ScoringRepository extends JPARepository {
      * @return Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (
      *         <code>null</code>).
      */
-    public String getScoreTypeForId(final Integer scoringId) {
+    public static String getScoreTypeForId(final EntityManager msiEm, final Integer scoringId) {
+
+	JPAUtils.checkEntityManager(msiEm);
 
 	if (scoringId == null) {
 	    throw new IllegalArgumentException("ScoringId is null");
@@ -133,7 +137,7 @@ public class ScoringRepository extends JPARepository {
 
 	    if (result == null) {
 
-		final Scoring foundScoring = getEntityManager().find(Scoring.class, scoringId);
+		final Scoring foundScoring = msiEm.find(Scoring.class, scoringId);
 		if (foundScoring != null) {
 		    final String searchEngine = foundScoring.getSearchEngine();
 		    final String name = foundScoring.getName();
