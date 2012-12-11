@@ -1,9 +1,11 @@
 package fr.proline.repository.utils;
 
 import java.io.FileOutputStream;
+import java.sql.SQLException;
 
 import org.dbunit.IDatabaseTester;
 import org.dbunit.database.DatabaseSequenceFilter;
+import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.CompositeDataSet;
 import org.dbunit.dataset.FilteredDataSet;
 import org.dbunit.dataset.IDataSet;
@@ -35,37 +37,75 @@ public final class DatabaseUtils {
 
     public static void writeDataSetXML(final DatabaseTestConnector connector, final String outputFilename)
 	    throws Exception {
-	IDatabaseTester databaseTester = connector.getDatabaseTester();
-	ITableFilter filter = new DatabaseSequenceFilter(databaseTester.getConnection());
-	IDataSet fullDataSet = new FilteredDataSet(filter, databaseTester.getConnection().createDataSet());
-	FlatXmlDataSet.write(fullDataSet, new FileOutputStream(outputFilename));
+	final IDatabaseTester databaseTester = connector.getDatabaseTester();
+
+	final IDatabaseConnection con = databaseTester.getConnection();
+
+	try {
+	    final ITableFilter filter = new DatabaseSequenceFilter(con);
+	    final IDataSet fullDataSet = new FilteredDataSet(filter, con.createDataSet());
+	    FlatXmlDataSet.write(fullDataSet, new FileOutputStream(outputFilename));
+	} finally {
+
+	    if (con != null) {
+		try {
+		    con.close();
+		} catch (SQLException exClose) {
+		    LOG.error("Error closing IDatabaseConnection", exClose);
+		}
+	    }
+
+	}
+
     }
 
     public static void writeDataSetDTD(final DatabaseTestConnector connector, final String dtdFilename)
 	    throws Exception {
-	IDatabaseTester databaseTester = connector.getDatabaseTester();
-	FlatDtdDataSet.write(databaseTester.getConnection().createDataSet(),
-		new FileOutputStream(dtdFilename));
+	final IDatabaseTester databaseTester = connector.getDatabaseTester();
+
+	final IDatabaseConnection con = databaseTester.getConnection();
+
+	try {
+	    FlatDtdDataSet.write(con.createDataSet(), new FileOutputStream(dtdFilename));
+	} finally {
+
+	    if (con != null) {
+		try {
+		    con.close();
+		} catch (SQLException exClose) {
+		    LOG.error("Error closing IDatabaseConnection", exClose);
+		}
+	    }
+
+	}
+
     }
 
     public static void loadDataSet(final DatabaseTestConnector connector, final String datasetName)
 	    throws Exception {
-	IDatabaseTester databaseTester = connector.getDatabaseTester();
-	DataFileLoader dataLoader = new FlatXmlDataFileLoader();
-	IDataSet dataSet = dataLoader.load(datasetName);
+	final IDatabaseTester databaseTester = connector.getDatabaseTester();
+
+	final DataFileLoader dataLoader = new FlatXmlDataFileLoader();
+	final IDataSet dataSet = dataLoader.load(datasetName);
+
 	databaseTester.setDataSet(dataSet);
     }
 
     public static void loadCompositeDataSet(final DatabaseTestConnector connector, final String[] datasetNames)
 	    throws Exception {
-	IDatabaseTester databaseTester = connector.getDatabaseTester();
-	DataFileLoader dataLoader = new FlatXmlDataFileLoader();
-	IDataSet[] datasets = new IDataSet[datasetNames.length];
+	final IDatabaseTester databaseTester = connector.getDatabaseTester();
+
+	final DataFileLoader dataLoader = new FlatXmlDataFileLoader();
+
+	final IDataSet[] datasets = new IDataSet[datasetNames.length];
+
 	int count = 0;
-	for (String datasetName : datasetNames) {
+	for (final String datasetName : datasetNames) {
 	    datasets[count++] = dataLoader.load(datasetName);
 	}
-	IDataSet compositeDataSet = new CompositeDataSet(datasets);
+
+	final IDataSet compositeDataSet = new CompositeDataSet(datasets);
+
 	databaseTester.setDataSet(compositeDataSet);
     }
 
