@@ -4,17 +4,12 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.3-SNAPSHOT</version>
   </parent>
+
   <artifactId>Proline-ORM</artifactId>
 
   <name>${project.artifactId}</name>
-
-  <!--
-  <properties>
-    <core.version>0.0.2-SNAPSHOT</core.version>
-  </properties>
-  -->
 
   <dependencies>
 

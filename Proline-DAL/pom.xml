@@ -6,50 +6,12 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.3-SNAPSHOT</version>
   </parent>
+
   <artifactId>Proline-DAL</artifactId>
 
   <name>${project.artifactId}</name>
-  <description>My wonderfull scala app</description>
-  <inceptionYear>2010</inceptionYear>
-  <licenses>
-    <license>
-      <name>My License</name>
-      <url>http://....</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <!--
-  <properties>
-    <core.version>0.0.2-SNAPSHOT</core.version>
-  </properties>
-  -->
-
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-
-      </plugin>
-
-      <!-- Build Scala sources -->
-      <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
-      </plugin>
-
-    </plugins>
-  </build>
 
   <dependencies>
 
@@ -174,5 +136,29 @@
     </dependency>
 
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+
+      </plugin>
+
+      <!-- Build Scala sources -->
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+      </plugin>
+
+    </plugins>
+  </build>
 
 </project>

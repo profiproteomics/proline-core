@@ -4,10 +4,10 @@
 
   <groupId>fr.proline</groupId>
   <artifactId>Proline-Core</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Proline-Core</name>
+  <name>${project.artifactId}</name>
   <description>Multi Modules Projects containing all modules for Object Model, and data bases managment, and data access</description>
 
   <!-- "Proline" sub-modules -->
@@ -21,7 +21,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.0.2-SNAPSHOT</core.version>
+    <core.version>0.0.3-SNAPSHOT</core.version>
   </properties>
 
   <dependencyManagement>
