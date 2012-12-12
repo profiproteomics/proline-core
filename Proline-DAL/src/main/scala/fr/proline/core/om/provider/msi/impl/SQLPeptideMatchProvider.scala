@@ -88,7 +88,7 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
     // Load peptides
     val uniqPepIds = pmRecords map { _(PepMatchCols.peptideId).asInstanceOf[Int] } distinct
     val peptides = this._getPeptideProvider().getPeptides(uniqPepIds)
-        
+    
     // Map peptides by their id
     val peptideById = Map() ++ peptides.map { pep => ( pep.id -> pep ) }
     
@@ -107,7 +107,12 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
       
       // Retrieve the corresponding peptide
       val pepId = pepMatchRecord(PepMatchCols.peptideId).asInstanceOf[Int]      
-      if( ! peptideById.contains(pepId) ) throw new Exception("undefined peptide with id ='"+pepId+"'")
+      if( ! peptideById.contains(pepId) ) {
+        throw new Exception("undefined peptide with id ='"+pepId+"' "+
+            "nb peps=" + peptides.length + 
+            "nb pm="+pmRecords.length + "" +
+        	" count= " + this.psDb.selectInt("SELECT count(*) FROM peptide") )
+      }
       val peptide = peptideById(pepId)
       
       // Retrieve the corresponding MS query

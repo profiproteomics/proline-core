@@ -38,7 +38,8 @@ class ResultFileImporterJPAStorer(
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
     //this.udsDb.closeConnection()
-    this.stContext.closeOpenedEM()
+    this.stContext.closeOpenedEMs()
+    this.stContext.closeConnections()
   }
   
   def getTargetResultSetId = targetResultSetId
@@ -188,8 +189,9 @@ class ResultFileImporterJPAStorer(
     "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId ) { r =>
       
       val instrument = new Instrument( id = r.nextObject.asInstanceOf[AnyVal], name = r, source = r )
-      val instPropStr: String = r
-      instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+      for( instPropStr <- r.nextStringOption ) {
+        instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+      }
       
       // Skip instrument_config.id field
       r.nextObject
@@ -202,8 +204,9 @@ class ResultFileImporterJPAStorer(
         msnAnalyzer = r.nextString,
         activationType = ""
       )
-      val instConfigPropStr: String = r
-      instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+      for( instConfPropStr <- r.nextStringOption ) {
+        instrumentConfig.properties = Some( parse[InstrumentConfigProperties]( instConfPropStr ) )
+      }
       
       // Skip instrument_config.instrument_id field
       r.nextObject

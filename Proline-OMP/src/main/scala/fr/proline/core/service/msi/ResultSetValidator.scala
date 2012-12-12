@@ -49,10 +49,8 @@ class ResultSetValidator( dbManager: DatabaseManager,
   
   override protected def beforeInterruption = {
     // Release database connections
-    this.logger.info("releasing database connections before service interruption...")
-    //this.msiDb.closeConnection()
-    //this.psDb.closeConnection()
-    //this.udsDb.closeConnection()
+    this.logger.info("releasing database connections before service interruption...")    
+    this.msiSqlHelper.closeConnection()
   }
   
   var validatedTargetRsm: ResultSummary = null

@@ -115,21 +115,24 @@ object RsStorer {
   import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
   import fr.proline.repository.DriverType
 
-  def apply(dbMgmt: DatabaseManager, msiDb: SQLQueryHelper ): IRsStorer = {
+  def apply(storerContext: StorerContext): IRsStorer = {
     
-    msiDb.driverType match {
+    val msiSqlHelper = storerContext.msiSqlHelper
+    val driverType = msiSqlHelper.driverType
+    
+    driverType match {
       case DriverType.POSTGRESQL => {
         // FIXME: create a secondary connection here (allows to insert new peptides outside of a transaction)
-        val msiDb2 = msiDb
-        new SQLRsStorer( dbMgmt, new PgRsWriter( msiDb, msiDb2 ), PeaklistWriter(msiDb.driverType) )
+        val msiSqlHelper2 = msiSqlHelper
+        new SQLRsStorer( storerContext, new PgRsWriter( msiSqlHelper, msiSqlHelper2 ), PeaklistWriter(driverType) )
       }
-      case DriverType.SQLITE => new SQLRsStorer( dbMgmt, new SQLiteRsWriter( msiDb ), PeaklistWriter(msiDb.driverType))
-      case _ => new JPARsStorer( dbMgmt, msiDb.dbConnector,PeaklistWriter(msiDb.driverType) ) //Call JPARsStorer
+      case DriverType.SQLITE => new SQLRsStorer( storerContext, new SQLiteRsWriter( msiSqlHelper ), PeaklistWriter(driverType))
+      case _ => new JPARsStorer( storerContext.dbManager, storerContext.msiConnector, PeaklistWriter(driverType) ) //Call JPARsStorer
     }
   }
   
-  def apply(dbMgmt: DatabaseManager, projectID: Int): IRsStorer = {
-    this.apply( dbMgmt, new SQLQueryHelper( dbMgmt.getMsiDbConnector(projectID) ) )
-  }
+  /*def apply(storerContext: StorerContext, projectID: Int): IRsStorer = {
+    this.apply( storerContext.dbManager, new SQLQueryHelper( storerContext.dbManager.getMsiDbConnector(projectID) ) )
+  }*/
   
 }

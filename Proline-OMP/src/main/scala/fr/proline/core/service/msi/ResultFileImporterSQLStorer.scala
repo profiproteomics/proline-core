@@ -3,7 +3,6 @@ package fr.proline.core.service.msi
 import java.io.File
 import com.weiglewilczek.slf4s.Logging
 import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
@@ -17,10 +16,10 @@ import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.repository.DriverType
 import fr.proline.util.StringUtils
+import impl.StorerContext
 
 class ResultFileImporterSQLStorer(
-        dbManager: DatabaseManager,
-        msiDbConnector: IDatabaseConnector,
+        storerContext: StorerContext,
         resultIdentFile: File,
         fileType: String,
         providerKey: String,
@@ -28,17 +27,46 @@ class ResultFileImporterSQLStorer(
         importerProperties: Map[String, Any],
         acDecoyRegex: Option[util.matching.Regex] = None ) extends IService with Logging {
   
+  private var _hasInitiatedStorerContext: Boolean = false
+  
+  // Secondary constructor
+  def this( dbManager: DatabaseManager,
+            msiDbConnector: IDatabaseConnector,
+            resultIdentFile: File,
+            fileType: String,
+            providerKey: String,
+            instrumentConfigId: Int,
+            importerProperties: Map[String, Any],
+            acDecoyRegex: Option[util.matching.Regex] = None ) {
+    this(
+      new StorerContext( dbManager, msiDbConnector ),
+      resultIdentFile,
+      fileType,
+      providerKey,
+      instrumentConfigId,
+      importerProperties,
+      acDecoyRegex
+    )
+    _hasInitiatedStorerContext = true
+  }
+  
+  //val wasMsiConnectionOpened = storerContext.isMsiDbConnectionOpened
+  //val wasPsConnectionOpened = storerContext.isPsConnectionOpened
+  
   private var targetResultSetId = 0
   
-  private val udsSqlHelper = new SQLQueryHelper(dbManager.getUdsDbConnector)
-  private var stContext: StorerContext = null
+  private val udsSqlHelper = new SQLQueryHelper(storerContext.dbManager.getUdsDbConnector)
   
   override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
 //    this.msiDb.closeConnection()
-//    this.udsDb.closeConnection()
-    this.stContext.closeOpenedEM()
+    this.udsSqlHelper.closeConnection()
+    storerContext.closeOpenedEMs()
+    
+    //if( !wasMsiConnectionOpened ) storerContext.msiDbConnection.close()
+    //if( !wasPsConnectionOpened ) storerContext.psDbConnection.close()
+    if( _hasInitiatedStorerContext ) storerContext.closeConnections()
   }
   
   def getTargetResultSetId = targetResultSetId
@@ -49,14 +77,12 @@ class ResultFileImporterSQLStorer(
     
     // Check that a file is provided
     require(resultIdentFile != null, "ResultFileImporter service: No file specified.")
-    
-    this.stContext = new StorerContext(dbManager, msiDbConnector)
     logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
     >>>
     
     // Check if a transaction is already initiated
-    val wasInTransaction = stContext.msiEzDBC.isInTransaction 
-    if( !wasInTransaction ) stContext.msiEzDBC.beginTransaction()
+    val wasInTransaction = storerContext.msiEzDBC.isInTransaction 
+    if( !wasInTransaction ) storerContext.msiEzDBC.beginTransaction()
     
     // Retrieve the instrument configuration
     val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
@@ -70,7 +96,7 @@ class ResultFileImporterSQLStorer(
     >>>
     
     // Instantiate RsStorer   
-    val rsStorer: IRsStorer = RsStorer( dbManager, stContext.msiSqlHelper )
+    val rsStorer: IRsStorer = RsStorer( storerContext )
      
 	  // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
@@ -88,7 +114,7 @@ class ResultFileImporterSQLStorer(
 //      msiTransacOk = false
       
       // Insert instrument config in the MSIdb         
-      rsStorer.insertInstrumentConfig( instrumentConfig, this.stContext)      
+      rsStorer.insertInstrumentConfig( instrumentConfig, this.storerContext)      
       
       // Retrieve MSISearch and related MS queries
       val msiSearch = resultFile.msiSearch
@@ -98,17 +124,17 @@ class ResultFileImporterSQLStorer(
         msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
       }
       
-      val driverType = msiDbConnector.getDriverType()
+      val driverType = storerContext.msiConnector.getDriverType()
       if( driverType == DriverType.SQLITE ) {
         
         // Store the peaklist    
-        val spectrumIdByTitle = rsStorer.storePeaklist( msiSearch.peakList, this.stContext )
-        rsStorer.storeSpectra( msiSearch.peakList.id, resultFile, this.stContext )
+        val spectrumIdByTitle = rsStorer.storePeaklist( msiSearch.peakList, this.storerContext )
+        rsStorer.storeSpectra( msiSearch.peakList.id, resultFile, this.storerContext )
         >>>
         
     	  //Store the MSI search with related search settings and MS queries    
-        rsStorer.storeMsiSearch( msiSearch, this.stContext ) 
-        rsStorer.storeMsQueries( msiSearch.id, msQueries, this.stContext )        
+        rsStorer.storeMsiSearch( msiSearch, this.storerContext ) 
+        rsStorer.storeMsQueries( msiSearch.id, msQueries, this.storerContext )        
         >>>
       }
 	    
@@ -129,7 +155,7 @@ class ResultFileImporterSQLStorer(
             decoyRs.name = msiSearch.title
            
           if( driverType == DriverType.SQLITE )
-            rsStorer.storeResultSet(decoyRs,this.stContext) 
+            rsStorer.storeResultSet(decoyRs,this.storerContext) 
           else
             targetRs.decoyResultSet = Some(decoyRs)          
 		}
@@ -151,7 +177,7 @@ class ResultFileImporterSQLStorer(
       else targetRs.decoyResultSet = None
 
      //  Store target result set
-  		this.targetResultSetId = rsStorer.storeResultSet(targetRs,this.stContext)       
+  		this.targetResultSetId = rsStorer.storeResultSet(targetRs,this.storerContext)       
       >>>
     
 //    this.msiDb.commitTransaction()// VD Pour SQLStorer Only
@@ -173,7 +199,7 @@ class ResultFileImporterSQLStorer(
 //        	 stContext.msiDB.rollbackTransaction
     }
     
-    if( !wasInTransaction ) stContext.msiEzDBC.commitTransaction
+    if( !wasInTransaction ) storerContext.msiEzDBC.commitTransaction
     
     this.beforeInterruption()
     true 
@@ -202,8 +228,9 @@ class ResultFileImporterSQLStorer(
     "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId ) { r =>
       
       val instrument = new Instrument( id = r.nextObject.asInstanceOf[AnyVal], name = r, source = r )
-      val instPropStr: String = r
-      instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+      for( instPropStr <- r.nextStringOption ) {
+        instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+      }
       
       // Skip instrument_config.id field
       r.nextObject
@@ -216,8 +243,9 @@ class ResultFileImporterSQLStorer(
         msnAnalyzer = r.nextString,
         activationType = ""
       )
-      val instConfigPropStr: String = r
-      instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+      for( instConfPropStr <- r.nextStringOption ) {
+        instrumentConfig.properties = Some( parse[InstrumentConfigProperties]( instConfPropStr ) )
+      }
       
       // Skip instrument_config.instrument_id field
       r.nextObject

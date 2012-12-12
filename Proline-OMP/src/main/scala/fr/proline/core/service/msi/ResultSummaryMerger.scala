@@ -13,6 +13,7 @@ import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{RsStorer,RsmStorer}
+import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
 
@@ -21,7 +22,8 @@ class ResultSummaryMerger( dbManager: DatabaseManager,
                            resultSummaries: Seq[ResultSummary] ) extends IService with Logging {
   
   private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiSqlHelper = new SQLQueryHelper(msiDbConnector)
+  private val storerContext = new StorerContext(dbManager, msiDbConnector)
+  private val msiSqlHelper = storerContext.msiSqlHelper
   private val ezDBC = msiSqlHelper.ezDBC
   
   var mergedResultSummary: ResultSummary = null
@@ -30,6 +32,7 @@ class ResultSummaryMerger( dbManager: DatabaseManager,
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
     //this.msiDb.closeConnection()
+    storerContext.closeConnections()
   }
   
   def runService(): Boolean = {
@@ -78,7 +81,7 @@ class ResultSummaryMerger( dbManager: DatabaseManager,
     val protMatchByTmpId = mergedResultSet.proteinMatches.map { p => p.id -> p } toMap
     
     this.logger.info( "store result set..." )
-    val rsStorer = RsStorer( dbManager, msiSqlHelper )
+    val rsStorer = RsStorer( storerContext )
     rsStorer.storeResultSet( mergedResultSet )
     >>>
     

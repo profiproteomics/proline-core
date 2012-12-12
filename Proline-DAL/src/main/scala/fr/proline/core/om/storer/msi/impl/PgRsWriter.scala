@@ -11,7 +11,7 @@ import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.util.sql.encodeRecordForPgCopy
 
-private[msi] class PgRsWriter( override val msiDb1: SQLQueryHelper, // Main DB connection
+private[msi] class PgRsWriter( val msiDb1: SQLQueryHelper, // Main DB connection
                                val msiDb2: SQLQueryHelper // Secondary DB connection
                              ) extends SQLiteRsWriter( msiDb1 ) {
   

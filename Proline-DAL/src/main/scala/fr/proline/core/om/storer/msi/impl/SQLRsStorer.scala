@@ -21,19 +21,14 @@ import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.util.sql._
 
-class SQLRsStorer( dbMgmt: DatabaseManager,
+class SQLRsStorer( storerContext: StorerContext,
                    private val _rsWriter: IRsWriter,
                    private val _pklWriter: IPeaklistWriter ) extends IRsStorer with Logging {
-
   
-  val msiDb1 = _rsWriter.msiDb1
-  lazy val psDb = new SQLQueryHelper( dbMgmt.getPsDbConnector )
-  //new PsDb(PsDb.buildConfigFromDatabaseConnector(dbMgmt.psDBConnector) )
-    
   val peptideByUniqueKey = _rsWriter.peptideByUniqueKey
   val proteinBySequence = _rsWriter.proteinBySequence
   
-  val msiSearchStorer = new SQLiteMsiSearchStorer( msiDb1 )
+  val msiSearchStorer = new SQLiteMsiSearchStorer( storerContext.msiSqlHelper )
   
   def storeResultSet(resultSet: ResultSet, context: StorerContext): Int  = {
     require(resultSet != null, "ResultSet is null" )
@@ -43,9 +38,9 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
   }
    
   def storeResultSet( resultSet: ResultSet ): Int  = {
-    val context = new StorerContext(dbMgmt, _rsWriter.msiDb1.dbConnector)
-    val createdRsId = storeResultSet(resultSet, context)
-    context.closeOpenedEM()
+    //val context = new StorerContext(dbMgmt, _rsWriter.msiDb1.dbConnector)
+    val createdRsId = storeResultSet(resultSet, storerContext)
+    storerContext.closeOpenedEMs()
     createdRsId
   }
   
@@ -79,7 +74,7 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
   
   private def _insertResultSet( resultSet: ResultSet ): Unit = {
     
-    val ezDBC = this.msiDb1.ezDBC
+    val ezDBC = storerContext.msiSqlHelper.ezDBC
     
     // Define some vars
     val isDecoy = resultSet.isDecoy
@@ -142,8 +137,9 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
       import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
       import fr.proline.core.om.storer.ps.PeptideStorer
       
-      val psPeptideProvider = new SQLPeptideProvider( this.psDb.ezDBC )
-      val psPeptideStorer = new PeptideStorer( this.psDb )
+      val psSqlHelper = storerContext.psSqlHelper
+      val psPeptideProvider = new SQLPeptideProvider( psSqlHelper.ezDBC )
+      val psPeptideStorer = new PeptideStorer( psSqlHelper )
       
       // Define some vars
       val newMsiPepSeqs = newMsiPeptides.map { _.sequence }
@@ -161,9 +157,11 @@ class SQLRsStorer( dbMgmt: DatabaseManager,
       val peptidesInPsDb = peptidesForSeqsInPsDb filter { pep => newMsiPepKeySet.contains( pep.uniqueKey ) }           
       
       // Store missing PsDb peptides
-      this.psDb.ezDBC.beginTransaction()
+      psSqlHelper.ezDBC.beginTransaction()
       psPeptideStorer.storePeptides( newPsPeptides )
-      this.psDb.ezDBC.commitTransaction()
+      psSqlHelper.ezDBC.commitTransaction()
+      
+      //psDb.closeConnection()
       
       // Map id of existing peptides and newly inserted peptides by their unique key
       val newMsiPepIdByUniqueKey = new collection.mutable.HashMap[String,Int]      

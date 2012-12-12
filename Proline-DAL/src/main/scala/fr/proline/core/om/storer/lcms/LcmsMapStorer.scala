@@ -39,10 +39,10 @@ trait IProcessedMapStorer {
 /** A factory object for implementations of the IProcessedMapStorer trait */
 object ProcessedMapStorer {
   
-  def apply( lcmsDb: SQLQueryHelper ): IProcessedMapStorer = { lcmsDb.driverType match {
+  def apply( lcmsSqlHelper: SQLQueryHelper ): IProcessedMapStorer = { lcmsSqlHelper.driverType match {
     //case DriverType.POSTGRESQL => new GenericProcessedMapStorer(lcmsDb.ezDBC)
-    case DriverType.SQLITE => new SQLiteProcessedMapStorer(lcmsDb.ezDBC)
-    case _ => new SQLiteProcessedMapStorer(lcmsDb.ezDBC)
+    case DriverType.SQLITE => new SQLiteProcessedMapStorer(lcmsSqlHelper.ezDBC)
+    case _ => new SQLiteProcessedMapStorer(lcmsSqlHelper.ezDBC)
     }
   }
 }

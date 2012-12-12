@@ -125,11 +125,11 @@ public final class PdiBioSequenceRepository {
 	try {
 	    return query.getSingleResult();
 	} catch (NoResultException nre) {
-	    LOG.info(" No BioSequence for accession {} and SequenceDbInstance {} ", accession,
+	    LOG.trace(" No BioSequence for accession {} and SequenceDbInstance {} ", accession,
 		    seqDbInstanceId);
 	    return null;
 	} catch (NonUniqueResultException nure) {
-	    LOG.warn(" More than one BioSequence for accession {} and SequenceDbInstance {} ", accession,
+	    LOG.trace(" More than one BioSequence for accession {} and SequenceDbInstance {} ", accession,
 		    seqDbInstanceId);
 	    return null;
 	}

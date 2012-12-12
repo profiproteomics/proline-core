@@ -2,7 +2,6 @@ package fr.proline.core.service.msi
 
 import scala.collection.mutable.HashSet
 import com.weiglewilczek.slf4s.Logging
-
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.{ ResultSetMerger => ResultSetMergerAlgo }
@@ -11,6 +10,7 @@ import fr.proline.core.dal.MsiDbResultSetRelationTable
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.RsStorer
+import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
 
@@ -19,7 +19,8 @@ class ResultSetMerger( dbManager: DatabaseManager,
                        resultSets: Seq[ResultSet] ) extends IService with Logging {
 
   private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiSqlHelper = new SQLQueryHelper(msiDbConnector)
+  private val storerContext = new StorerContext(dbManager, msiDbConnector)
+  private val msiSqlHelper = storerContext.msiSqlHelper
   private val ezDBC = msiSqlHelper.ezDBC
   var mergedResultSet: ResultSet = null
   
@@ -27,6 +28,8 @@ class ResultSetMerger( dbManager: DatabaseManager,
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
     //this.msiDb.closeConnection()
+    
+    storerContext.closeConnections()
   }
   
   def runService(): Boolean = {
@@ -63,7 +66,7 @@ class ResultSetMerger( dbManager: DatabaseManager,
     val protMatchByTmpId = tmpMergedResultSet.proteinMatches.map { p => p.id -> p } toMap
         
     this.logger.info( "store result set..." )    
-    val rsStorer = RsStorer( dbManager, msiSqlHelper )
+    val rsStorer = RsStorer( storerContext )
     rsStorer.storeResultSet( tmpMergedResultSet )
     >>>
     

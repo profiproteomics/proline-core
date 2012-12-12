@@ -181,7 +181,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
     if (stContext != null) {
       logger.debug("Closing opened EntityManager")
-      stContext.closeOpenedEM()
+      stContext.closeOpenedEMs()
 
       logger.debug("Closing MSI Db Connection")
 

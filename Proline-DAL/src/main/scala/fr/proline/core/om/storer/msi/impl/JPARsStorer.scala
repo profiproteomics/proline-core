@@ -90,7 +90,7 @@ class JPARsStorer(override val dbManagement: DatabaseManager, override val msiDb
   override def storeResultSet(resultSet: ResultSet): Int = {
     val context = new StorerContext(dbManagement, msiDbConnector)
     val createdRsId = storeResultSet(resultSet, context)
-    context.closeOpenedEM()
+    context.closeOpenedEMs()
     createdRsId
   }
 

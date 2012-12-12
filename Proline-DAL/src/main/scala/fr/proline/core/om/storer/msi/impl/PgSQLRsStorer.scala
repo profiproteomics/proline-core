@@ -12,11 +12,11 @@ import fr.proline.util.sql._
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.orm.util.DatabaseManager
 
-class PgSQLRsStorer(val dbMgmt: DatabaseManager, private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends SQLRsStorer ( dbMgmt, _storer, _plWriter){
+class PgSQLRsStorer(val storerContext: StorerContext, private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends SQLRsStorer ( storerContext, _storer, _plWriter){
     
   override def storeMsQueries( msiSearchID : Int,
-                      msQueries: Seq[MsQuery],
-                      context : StorerContext ): StorerContext  = {
+                               msQueries: Seq[MsQuery],
+                               context : StorerContext ): StorerContext  = {
     
     val ezDBC = context.msiSqlHelper.ezDBC
     val bulkCopyManager = new CopyManager( ezDBC.connection.asInstanceOf[BaseConnection] )  

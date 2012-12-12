@@ -56,14 +56,32 @@ class StorerContext(val dbManager: DatabaseManager, val msiConnector: IDatabaseC
   }
   private var pdiEMOpened: Boolean = false
 
-  lazy val msiSqlHelper = new SQLQueryHelper(msiConnector)
+  private var _msiDbConnectionOpened: Boolean = false
+  def isMsiDbConnectionOpened = _msiDbConnectionOpened
+  
+  lazy val msiDbConnection = {
+    _msiDbConnectionOpened = true
+    msiConnector.getDataSource().getConnection()
+  }
+  lazy val msiSqlHelper = new SQLQueryHelper(msiDbConnection,msiConnector.getDriverType)
   lazy val msiEzDBC = msiSqlHelper.ezDBC
+  
+  private var _psConnectionOpened: Boolean = false  
+  def isPsConnectionOpened = _psConnectionOpened
+  
+  lazy val psDbConnector = dbManager.getPsDbConnector()
+  lazy val psDbConnection = {
+    _psConnectionOpened = true
+    psDbConnector.getDataSource().getConnection()
+  }
+  lazy val psSqlHelper = new SQLQueryHelper(psDbConnection,psDbConnector.getDriverType)
+  lazy val psEzDBC = psSqlHelper.ezDBC
 
   var spectrumIdByTitle: Map[String, Int] = null
 
   var seqDbIdByTmpId: Map[Int, Int] = null // TODO To be integrated to idCaches 
 
-  def closeOpenedEM() = {
+  def closeOpenedEMs() = {
     if (msiEMOpened)
       msiEm.close
 
@@ -75,7 +93,11 @@ class StorerContext(val dbManager: DatabaseManager, val msiConnector: IDatabaseC
 
     if (udsEMOpened)
       udsEm.close
-
+  }
+  
+  def closeConnections() = {
+    if( _msiDbConnectionOpened ) msiDbConnection.close()
+    if( _psConnectionOpened ) psDbConnection.close()
   }
 
   private val entityCaches = mutable.Map.empty[Class[_], mutable.Map[Int, _]]

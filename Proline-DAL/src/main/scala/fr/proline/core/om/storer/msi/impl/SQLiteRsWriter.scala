@@ -4,16 +4,22 @@ import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.generate
 
 import fr.profi.jdbc.easy._
+import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
 
-private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connection                        
+private[msi] class SQLiteRsWriter( val msiSqlHelper: SQLQueryHelper // Main DB connection                        
                                  ) extends IRsWriter {
   
-  val ezDBC = msiDb1.ezDBC
+  //val msiDbConnection: java.sql.Connection // Main MSI db connection
+  //val msiDbDriver: DriverType
+  //lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, maxVariableNumber = 10000 ) // Secondary MSI db connection
+  
+  val ezDBC = msiSqlHelper.ezDBC
+  val scoringIdByType = new MsiDbHelper( ezDBC ).getScoringIdByType
 
   def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ): Map[String,Int] = {
     
@@ -21,7 +27,7 @@ private[msi] class SQLiteRsWriter( val msiDb1: SQLQueryHelper // Main DB connect
     val peptideMapBuilder = scala.collection.immutable.Map.newBuilder[String,Int]
     
     // Iterate over peptide sequences to retrieve their identifiers
-    pepSequences.grouped(msiDb1.ezDBC.getInExpressionCountLimit).foreach { tmpPepSeqs =>
+    pepSequences.grouped(msiSqlHelper.ezDBC.getInExpressionCountLimit).foreach { tmpPepSeqs =>
       val quotedPepSeqs = tmpPepSeqs map { "'"+ _ + "'" }
       val sqlQuery = "SELECT id,sequence,ptm_string FROM peptide WHERE peptide.sequence IN ("+quotedPepSeqs.mkString(",")+")"
       ezDBC.selectAndProcess( sqlQuery ) { r =>
