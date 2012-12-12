@@ -16,7 +16,6 @@ import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.repository.DriverType
 import fr.proline.util.StringUtils
-import impl.StorerContext
 
 class ResultFileImporterSQLStorer(
         storerContext: StorerContext,
