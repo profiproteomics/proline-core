@@ -1,6 +1,8 @@
 package fr.proline.repository.utils;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.SQLException;
 
 import org.dbunit.IDatabaseTester;
@@ -35,17 +37,30 @@ public final class DatabaseUtils {
     private DatabaseUtils() {
     }
 
-    public static void writeDataSetXML(final DatabaseTestConnector connector, final String outputFilename)
+    public static void writeDataSetXML(final DatabaseTestConnector connector, final String outputFileName)
 	    throws Exception {
 	final IDatabaseTester databaseTester = connector.getDatabaseTester();
 
 	final IDatabaseConnection con = databaseTester.getConnection();
 
+	OutputStream out = null;
+
 	try {
 	    final ITableFilter filter = new DatabaseSequenceFilter(con);
 	    final IDataSet fullDataSet = new FilteredDataSet(filter, con.createDataSet());
-	    FlatXmlDataSet.write(fullDataSet, new FileOutputStream(outputFilename));
+
+	    out = new FileOutputStream(outputFileName);
+
+	    FlatXmlDataSet.write(fullDataSet, out);
 	} finally {
+
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException exClose) {
+		    LOG.error("Error closing [" + outputFileName + "] OutputStream", exClose);
+		}
+	    }
 
 	    if (con != null) {
 		try {
@@ -59,15 +74,27 @@ public final class DatabaseUtils {
 
     }
 
-    public static void writeDataSetDTD(final DatabaseTestConnector connector, final String dtdFilename)
+    public static void writeDataSetDTD(final DatabaseTestConnector connector, final String dtdFileName)
 	    throws Exception {
 	final IDatabaseTester databaseTester = connector.getDatabaseTester();
 
 	final IDatabaseConnection con = databaseTester.getConnection();
 
+	OutputStream out = null;
+
 	try {
-	    FlatDtdDataSet.write(con.createDataSet(), new FileOutputStream(dtdFilename));
+	    out = new FileOutputStream(dtdFileName);
+
+	    FlatDtdDataSet.write(con.createDataSet(), new FileOutputStream(dtdFileName));
 	} finally {
+
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException exClose) {
+		    LOG.error("Error closing [" + dtdFileName + "] OutputStream", exClose);
+		}
+	    }
 
 	    if (con != null) {
 		try {
@@ -116,6 +143,7 @@ public final class DatabaseUtils {
      * @param args
      */
     public static void main(final String[] args) {
+
 	try {
 	    final DatabaseTestConnector connector = new DatabaseTestConnector(Database.UDS,
 		    DEFAULT_DATABASE_PROPERTIES_FILENAME);
@@ -127,6 +155,7 @@ public final class DatabaseUtils {
 	} catch (Exception ex) {
 	    LOG.error("Error testing H2 UDS Db", ex);
 	}
+
     }
 
 }

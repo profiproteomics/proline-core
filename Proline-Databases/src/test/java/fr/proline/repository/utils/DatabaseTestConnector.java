@@ -7,7 +7,6 @@ import javax.sql.DataSource;
 
 import org.dbunit.DataSourceDatabaseTester;
 import org.dbunit.IDatabaseTester;
-import org.dbunit.database.IDatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +28,8 @@ public class DatabaseTestConnector implements IDatabaseConnector {
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseTestConnector.class);
 
     private final Object m_connectorLock = new Object();
+
+    /* onTearDown() and close() are @GuardedBy("m_connectorLock") */
 
     private final IDatabaseConnector m_realConnector;
 
@@ -89,17 +90,6 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 
 	synchronized (m_connectorLock) {
 	    LOG.debug("Tearing down DataSourceDatabaseTester");
-
-	    try {
-		final IDatabaseConnection con = m_databaseTester.getConnection();
-
-		if (con != null) {
-		    con.close();
-		}
-
-	    } catch (Exception exClose) {
-		LOG.error("Error closing IDatabaseConnection", exClose);
-	    }
 
 	    try {
 		m_databaseTester.onTearDown();
