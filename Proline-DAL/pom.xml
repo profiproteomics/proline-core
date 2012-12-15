@@ -98,7 +98,7 @@
       <version>1.0.4.1</version>
     </dependency>
 
-    <!-- Test -->
+    <!-- Tests -->
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
       <artifactId>specs_2.9.1</artifactId>
@@ -111,7 +111,14 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Unused dependency : fr.proline:Proline-Databases:test-jar:tests:0.0.2-SNAPSHOT:test -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
@@ -120,18 +127,9 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Unused dependency : org.dbunit:dbunit:jar:2.4.8:test -->
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>Proline-OM</artifactId>
-      <version>${core.version}</version>
-      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 

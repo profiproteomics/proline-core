@@ -31,12 +31,6 @@
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
 
-    <!-- Unused dependency : com.googlecode.flyway:flyway-core:jar:1.5:compile -->
-    <dependency>
-      <groupId>com.googlecode.flyway</groupId>
-      <artifactId>flyway-core</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -55,8 +49,7 @@
       <scope>runtime</scope>
     </dependency>
 
-    <!-- Test -->
-    <!-- Unused dependency : fr.proline:Proline-Databases:test-jar:tests:0.0.2-SNAPSHOT:test (tests runtime ?) -->
+    <!-- Tests -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
@@ -65,7 +58,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Unused dependency : org.dbunit:dbunit:jar:2.4.8:test (tests runtime ?) -->
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
