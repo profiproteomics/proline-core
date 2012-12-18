@@ -18,5 +18,14 @@ public enum Database {
     public String getPersistenceUnitName() {
 	return m_puName;
     }
+    
+    public static Database withPersistenceUnitName(String value) {
+      for (Database re : Database.values()) {
+        if (re.m_puName.compareTo(value) == 0) {
+          return re;
+        }
+      }
+      throw new IllegalArgumentException("Invalid Database value: " + value);
+    }
 
 }
