@@ -3,6 +3,7 @@ package fr.proline.core.service.msi
 import java.io.File
 import com.weiglewilczek.slf4s.Logging
 import com.codahale.jerkson.Json.parse
+
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
@@ -23,6 +24,7 @@ class ResultFileImporterSQLStorer(
         fileType: String,
         providerKey: String,
         instrumentConfigId: Int,
+        peaklistSoftwareId: Int,
         importerProperties: Map[String, Any],
         acDecoyRegex: Option[util.matching.Regex] = None ) extends IService with Logging {
   
@@ -35,6 +37,7 @@ class ResultFileImporterSQLStorer(
             fileType: String,
             providerKey: String,
             instrumentConfigId: Int,
+            peaklistSoftwareId: Int,
             importerProperties: Map[String, Any],
             acDecoyRegex: Option[util.matching.Regex] = None ) {
     this(
@@ -43,6 +46,7 @@ class ResultFileImporterSQLStorer(
       fileType,
       providerKey,
       instrumentConfigId,
+      peaklistSoftwareId,
       importerProperties,
       acDecoyRegex
     )
@@ -113,7 +117,7 @@ class ResultFileImporterSQLStorer(
 //      msiTransacOk = false
       
       // Insert instrument config in the MSIdb         
-      rsStorer.insertInstrumentConfig( instrumentConfig, this.storerContext)      
+      rsStorer.insertInstrumentConfig( instrumentConfig, this.storerContext)
       
       // Retrieve MSISearch and related MS queries
       val msiSearch = resultFile.msiSearch
@@ -123,8 +127,17 @@ class ResultFileImporterSQLStorer(
         msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
       }
       
-      val driverType = storerContext.msiConnector.getDriverType()
-      if( driverType == DriverType.SQLITE ) {
+      // Load the peaklist software from the MSidb if it is only an in memory object
+      if( msiSearch.peakList.peaklistSoftware == null || msiSearch.peakList.peaklistSoftware.id <= 0 )
+        msiSearch.peakList.peaklistSoftware = this._getOrCreatePeaklistSoftware( peaklistSoftwareId, this.storerContext )
+      
+      /*if(msiSearch != null && msiSearch.peakList.peaklistSoftware == null ){
+        //TODO : Define how to get this information !
+        msiSearch.peakList.peaklistSoftware = _getPeaklistSoftware("Default_PL","0.1" )
+      } */ 
+      
+      //val driverType = msiDbConnector.getDriverType()
+      //if( driverType.getDriverClassName == "org.sqlite.JDBC" ) {
         
         // Store the peaklist    
         val spectrumIdByTitle = rsStorer.storePeaklist( msiSearch.peakList, this.storerContext )
@@ -135,33 +148,32 @@ class ResultFileImporterSQLStorer(
         rsStorer.storeMsiSearch( msiSearch, this.storerContext ) 
         rsStorer.storeMsQueries( msiSearch.id, msQueries, this.storerContext )        
         >>>
-      }
+     // }
 	    
 		  // Load target result set
 		  var targetRs = resultFile.getResultSet(false)
-		  if(StringUtils.isEmpty(targetRs.name))
-		    targetRs.name = msiSearch.title
-		  
-		  if(targetRs.msiSearch != null && targetRs.msiSearch.peakList.peaklistSoftware ==null){
-		    //TODO : Define how to get this information !
-		    targetRs.msiSearch.peakList.peaklistSoftware = _getPeaklistSoftware("Default_PL","0.1" )		  	
-		  }
+		  if( StringUtils.isEmpty(targetRs.name) ) targetRs.name = msiSearch.title
 		    	    
 	    //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
 	
-		def storeDecoyRs( decoyRs: ResultSet ) {
-          if(StringUtils.isEmpty(decoyRs.name))
-            decoyRs.name = msiSearch.title
-           
-          if( driverType == DriverType.SQLITE )
-            rsStorer.storeResultSet(decoyRs,this.storerContext) 
-          else
-            targetRs.decoyResultSet = Some(decoyRs)          
-		}
+		  def storeDecoyRs( decoyRs: ResultSet ): ResultSet = {
+        if(StringUtils.isEmpty(decoyRs.name))
+          decoyRs.name = msiSearch.title
+         
+        //if( driverType.getDriverClassName == "org.sqlite.JDBC" )
+          rsStorer.storeResultSet(decoyRs,this.storerContext) 
+        //else
+        //  targetRs.decoyResultSet = Some(decoyRs)
+          decoyRs
+		  }
 		  
 	    // Load and store decoy result set if it exists
+		  //var decoyRsId = Option.empty[Int]
 		  if( resultFile.hasDecoyResultSet ) {
-		    storeDecoyRs( resultFile.getResultSet(true) )
+		    val dRs = resultFile.getResultSet(true)
+		    
+		    targetRs.decoyResultSet = Some( storeDecoyRs( dRs ) )
+		    //decoyRsId = Some(dRs.id)
 		    >>>
   	  }
 		  // Else if a regex has been passed to detect decoy protein matches		  
@@ -170,7 +182,8 @@ class ResultFileImporterSQLStorer(
         val( tRs, dRs ) = TargetDecoyResultSetSplitter.split(targetRs,acDecoyRegex.get)
         targetRs = tRs
         
-        storeDecoyRs(dRs)
+        targetRs.decoyResultSet = Some( storeDecoyRs(dRs) )
+        //decoyRsId = Some(dRs.id)
         >>>
       }
       else targetRs.decoyResultSet = None
@@ -215,7 +228,39 @@ class ResultFileImporterSQLStorer(
     )
   }
   
-  // TODO: put in a dedicated provider
+  private def _getOrCreatePeaklistSoftware( peaklistSoftwareId: Int, stContext: StorerContext ): PeaklistSoftware = {
+    
+    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.core.dal.MsiDbPeaklistSoftwareTable
+    
+    def getPeaklistSoftware( ezDBC: EasyDBC ): PeaklistSoftware = {
+
+      var peaklistSoftware: PeaklistSoftware = null
+      ezDBC.selectAndProcess( "SELECT name, version FROM peaklist_software WHERE id=" + peaklistSoftwareId ) { r => 
+        peaklistSoftware = new PeaklistSoftware( id = peaklistSoftwareId, name = r, version = r.nextStringOrElse("") )
+      }
+      
+      peaklistSoftware
+    }
+    
+    val msiDb = storerContext.msiEzDBC  
+    
+    // Try to retrieve peaklist software from the MSidb
+    var peaklistSoftware = getPeaklistSoftware( msiDb )
+    if( peaklistSoftware == null ) {
+      
+      // If it doesn't exist => retrieve from the UDSdb
+      peaklistSoftware = getPeaklistSoftware( udsSqlHelper.ezDBC )
+      
+      // Then insert it in the current MSIdb
+      val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.makeInsertQuery( c => List(c.id,c.name,c.version) )      
+      msiDb.execute(peaklistInsertQuery,peaklistSoftware.id,peaklistSoftware.name,peaklistSoftware.version)
+    }
+
+    peaklistSoftware
+
+  }
+  
   private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
@@ -228,7 +273,8 @@ class ResultFileImporterSQLStorer(
       
       val instrument = new Instrument( id = r.nextObject.asInstanceOf[AnyVal], name = r, source = r )
       for( instPropStr <- r.nextStringOption ) {
-        instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+        if( StringUtils.isEmpty(instPropStr) == false )
+          instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
       }
       
       // Skip instrument_config.id field
@@ -243,7 +289,8 @@ class ResultFileImporterSQLStorer(
         activationType = ""
       )
       for( instConfPropStr <- r.nextStringOption ) {
-        instrumentConfig.properties = Some( parse[InstrumentConfigProperties]( instConfPropStr ) )
+        if( StringUtils.isEmpty(instConfPropStr) == false )
+          instrumentConfig.properties = Some( parse[InstrumentConfigProperties]( instConfPropStr ) )
       }
       
       // Skip instrument_config.instrument_id field

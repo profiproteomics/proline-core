@@ -10,7 +10,6 @@ import fr.proline.api.service.IService
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.orm.util.DatabaseManager
@@ -49,7 +48,7 @@ class ResultSetValidator( dbManager: DatabaseManager,
   
   override protected def beforeInterruption = {
     // Release database connections
-    this.logger.info("releasing database connections before service interruption...")    
+    this.logger.info("releasing database connections before service interruption...")
     this.msiSqlHelper.closeConnection()
   }
   
@@ -57,6 +56,8 @@ class ResultSetValidator( dbManager: DatabaseManager,
   var validatedDecoyRsm: Option[ResultSummary] = null
   
   def runService(): Boolean = {    
+    
+    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
     
     val startTime = curTimeInSecs()
 
@@ -77,7 +78,9 @@ class ResultSetValidator( dbManager: DatabaseManager,
     if( pepMatchValParams != None ) {
       pepMatchValParams.get match {
         case computerPepMatchValParams: ComputerValidationParams => {
+          
           //val computerPepMatchValParams = pepMatchValParams.get
+          require( decoyRsOpt != None, "A decoy Result Set is required for Computer Mode validation" )
           
           // Set computer params
           val rsmPepValParams = new RsmPepMatchValidationParamsProperties(
@@ -96,7 +99,7 @@ class ResultSetValidator( dbManager: DatabaseManager,
           
           // Keep validation results at peptide level
           val pepValResults = RsmPepMatchValidationResultsProperties(
-                pValueThreshold = valResults.expectedResult.properties.get("p_value").asInstanceOf[Double].toFloat,
+                pValueThreshold = valResults.expectedResult.properties.get("p_value").asInstanceOf[AnyVal],
                 targetMatchesCount = expectedResult.nbTargetMatches,
                 decoyMatchesCount = expectedResult.nbDecoyMatches,
                 fdr = expectedResult.fdr

@@ -54,6 +54,8 @@ class PeptideMatchLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: Datab
   
   private def _getPeptideMatches( rsIds: Seq[Int], pmRecords: Seq[Map[String,Any]], peptides: Seq[Peptide] ): Array[PeptideMatch] = {
     
+	import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+	
     // Instantiate a MSIdb helper
     val msiDbHelper = new MsiDbHelper( new MsiDb( this.msiDbConfig ) )
     
@@ -92,9 +94,9 @@ class PeptideMatchLoader( val msiDbConfig: DatabaseConfig, val psDbConfig: Datab
       
       val pepMatch = new PeptideMatch( id = pepMatchRecord("id").asInstanceOf[Int],
                                        rank = pepMatchRecord("rank").asInstanceOf[Int],
-                                       score = pepMatchRecord("score").asInstanceOf[Double].toFloat,
+                                       score = pepMatchRecord("score").asInstanceOf[AnyVal],
                                        scoreType = scoreType,
-                                       deltaMoz = pepMatchRecord("delta_moz").asInstanceOf[Double],
+                                       deltaMoz = pepMatchRecord("delta_moz").asInstanceOf[AnyVal],
                                        isDecoy = isDecoy,
                                        peptide = peptide,
                                        missedCleavage = pepMatchRecord("missed_cleavage").asInstanceOf[Int],

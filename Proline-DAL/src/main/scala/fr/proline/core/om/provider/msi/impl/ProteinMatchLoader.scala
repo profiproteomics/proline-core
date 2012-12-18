@@ -6,6 +6,8 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.SequenceMatch
 import fr.proline.core.dal.MsiDb
+import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+import fr.proline.util.primitives.LongOrIntAsInt._
 
 @deprecated
 class ProteinMatchLoader( val msiDbConfig: DatabaseConfig ) {
@@ -111,7 +113,7 @@ class ProteinMatchLoader( val msiDbConfig: DatabaseConfig ) {
         // TODO: load properties
         
         val protMatch = new ProteinMatch(
-                              id = protMatchRecord("id").asInstanceOf[Int],
+                              id = protMatchRecord("id").asInstanceOf[AnyVal],
                               accession = protMatchRecord("accession").asInstanceOf[String],
                               description = protMatchRecord("description").asInstanceOf[String],
                               geneName = protMatchRecord("gene_name").asInstanceOf[String],
@@ -123,12 +125,12 @@ class ProteinMatchLoader( val msiDbConfig: DatabaseConfig ) {
                             )
         
         if( protMatchRecord("score") != null ) {
-          protMatch.score = protMatchRecord("score").asInstanceOf[Double].toFloat
+          protMatch.score = protMatchRecord("score").asInstanceOf[AnyVal]
           protMatch.scoreType = scoreTypeById(protMatchRecord("scoring_id").asInstanceOf[Int])
         }
         
         if( protMatchRecord("coverage") != null ) {
-          protMatch.coverage = protMatchRecord("coverage").asInstanceOf[Double].toFloat
+          protMatch.coverage = protMatchRecord("coverage").asInstanceOf[AnyVal]
         }
         
         if( protMatchRecord("peptide_match_count") != null ) {

@@ -34,7 +34,6 @@ object RsmStorer {
   def apply( msiDb: SQLQueryHelper ): RsmStorer = { msiDb.driverType match {
     //case "org.postgresql.Driver" => new RsStorer( new PgRsStorer( msiDb ) )
     case _ => new RsmStorer( new SQLiteRsmStorer( msiDb ) )
-    //case _ => new RsStorer( new GenericRsStorer( msiDb ) )
     }
   }
 }

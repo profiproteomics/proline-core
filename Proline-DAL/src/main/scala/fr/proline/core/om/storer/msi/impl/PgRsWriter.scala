@@ -53,13 +53,12 @@ private[msi] class PgRsWriter( val msiDb1: SQLQueryHelper, // Main DB connection
     
     // Iterate over peptides
     for ( peptide <- peptides ) {
-      
-      val ptmString = if( peptide.ptmString != null ) peptide.ptmString else ""              
+                
       var peptideValues = List(  peptide.id,
                                  peptide.sequence,
-                                 ptmString, 
+                                 Option(peptide.ptmString),
                                  peptide.calculatedMass,
-                                 ""
+                                 Option.empty[String]
                                )
       
       // Store peptide
@@ -118,7 +117,8 @@ private[msi] class PgRsWriter( val msiDb1: SQLQueryHelper, // Main DB connection
       val scoreType = peptideMatch.scoreType
       val scoringId = scoringIdByScoreType.get(scoreType)
       assert( scoringId != None, "can't find a scoring id for the score type '"+scoreType+"'" )
-      val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
+      
+      val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) Some( generate(peptideMatch.properties.get) ) else None
       val bestChildId = peptideMatch.getBestChildId
       
       // Build a row containing peptide match values
@@ -134,7 +134,7 @@ private[msi] class PgRsWriter( val msiDb1: SQLQueryHelper, // Main DB connection
                                  pepMatchPropsAsJSON,
                                  peptide.id,
                                  peptideMatch.msQuery.id,
-                                 if( bestChildId == 0 ) "" else bestChildId,
+                                 if( bestChildId == 0 ) None else Some(bestChildId),
                                  scoringId.get,
                                  peptideMatch.resultSetId
                               )
@@ -228,16 +228,16 @@ private[msi] class PgRsWriter( val msiDb1: SQLQueryHelper, // Main DB connection
       val protMatchValues = List( proteinMatch.id,
                                   proteinMatch.accession,
                                   proteinMatch.description,
-                                  if(proteinMatch.geneName == null) "" else proteinMatch.geneName,
+                                  Option(proteinMatch.geneName),
                                   proteinMatch.score,
                                   proteinMatch.coverage,
                                   proteinMatch.sequenceMatches.length,
                                   proteinMatch.peptideMatchesCount,
                                   proteinMatch.isDecoy,
                                   proteinMatch.isLastBioSequence, 
-                                  "",
+                                  Option.empty[String],
                                   proteinMatch.taxonId,
-                                  "",// proteinMatch.getProteinId
+                                  Option.empty[Int],// proteinMatch.getProteinId
                                   scoringId.get,
                                   rsId
                               )
@@ -305,7 +305,7 @@ private[msi] class PgRsWriter( val msiDb1: SQLQueryHelper, // Main DB connection
                                     seqMatch.residueBefore.toString(),
                                     seqMatch.residueAfter.toString(),
                                     isDecoy,
-                                    "" , //seqMatch.hasProperties ? encode_json( seqMatch.properties ) : undef,
+                                    Option.empty[String] , //seqMatch.hasProperties ? encode_json( seqMatch.properties ) : undef,
                                     seqMatch.getBestPeptideMatchId,
                                     seqMatch.resultSetId
                                  )

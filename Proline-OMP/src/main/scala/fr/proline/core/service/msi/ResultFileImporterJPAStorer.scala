@@ -107,7 +107,9 @@ class ResultFileImporterJPAStorer(
 		  
 		  if(targetRs.msiSearch != null && targetRs.msiSearch.peakList.peaklistSoftware ==null){
 		    //TODO : Define how to get this information !
-		    targetRs.msiSearch.peakList.peaklistSoftware = _getPeaklistSoftware("Default_PL","0.1" )		  	
+		    targetRs.msiSearch.peakList.peaklistSoftware = _getPeaklistSoftware("Default_PL","0.1" )	
+		    // FIXME: remove this line when peaklist software is effectively retrieved from the UDSdb
+		    targetRs.msiSearch.peakList.peaklistSoftware.id = 1
 		  }
 		    	    
 	    //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.

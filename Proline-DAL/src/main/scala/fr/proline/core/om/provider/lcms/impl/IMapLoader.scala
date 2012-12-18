@@ -106,6 +106,9 @@ trait IMapLoader {
                     selectionLevel: Int = 2
                     ): Feature = {
     
+    import fr.proline.util.sql.StringOrBoolAsBool._
+    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    
     val ftId = featureRecord("id").asInstanceOf[Int]
     val firstScanId = featureRecord("first_scan_id").asInstanceOf[Int]
     val lastScanId = featureRecord("last_scan_id").asInstanceOf[Int]
@@ -116,13 +119,13 @@ trait IMapLoader {
 
     new Feature( id = ftId,
                  moz = featureRecord("moz").asInstanceOf[Double],
-                 intensity = featureRecord("intensity").asInstanceOf[Double].toFloat,
+                 intensity = featureRecord("intensity").asInstanceOf[AnyVal],
                  charge = featureRecord("charge").asInstanceOf[Int],
-                 elutionTime = featureRecord("elution_time").asInstanceOf[Double].toFloat,
+                 elutionTime = featureRecord("elution_time").asInstanceOf[AnyVal],
                  qualityScore = featureRecord.getOrElse("quality_score",Double.NaN).asInstanceOf[Double],
                  ms1Count = featureRecord("ms1_count").asInstanceOf[Int],
                  ms2Count = featureRecord("ms2_count").asInstanceOf[Int],
-                 isOverlapping = SQLStrToBool( featureRecord("is_overlapping").toString() ),
+                 isOverlapping = featureRecord("is_overlapping"),
                  isotopicPatterns = isotopicPatterns,
                  overlappingFeatures = overlappingFeatures,
                  children = children,

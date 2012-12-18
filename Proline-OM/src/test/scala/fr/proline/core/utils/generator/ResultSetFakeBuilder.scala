@@ -269,7 +269,7 @@ class ResultSetFakeBuilder (
 	    	moz=getIonMzFromNeutralMass(neutralMass=pep.calculatedMass, charge=charge),
 	        charge=charge, spectrumTitle="generated spectrum "+queryID)      
     val builtPM:PeptideMatch = new PeptideMatch(id=PeptideMatch.generateNewId, rank=1,
-	        score=Randomator.matchScore, scoreType="mascot:standard score", deltaMoz=0.15, 
+	        score=Randomator.matchScore, scoreType="mascot:standard score", deltaMoz=0.15f, 
 	        isDecoy= false, peptide=pep, missedCleavage=missCleavage,
 	        msQuery=msq, resultSetId=RSId)     
 	allPepMatches += builtPM

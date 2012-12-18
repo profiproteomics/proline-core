@@ -66,6 +66,7 @@ class SQLPeptideInstanceProvider( val msiDb: SQLQueryExecution,
                                       pepInstPepMatchMapRecords: Seq[Map[String,Any]] ): Array[PeptideInstance] = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
     
     // Load peptides
     val uniqPepIds = pepInstRecords map { _(PepInstCols.peptideId).asInstanceOf[Int] } distinct
@@ -120,7 +121,7 @@ class SQLPeptideInstanceProvider( val msiDb: SQLQueryExecution,
                                          proteinMatchesCount = pepInstRecord(PepInstCols.proteinMatchCount).asInstanceOf[Int],
                                          proteinSetsCount = pepInstRecord(PepInstCols.proteinSetCount).asInstanceOf[Int],
                                          selectionLevel = pepInstRecord(PepInstCols.selectionLevel).asInstanceOf[Int],
-                                         elutionTime = pepInstRecord(PepInstCols.elutionTime).asInstanceOf[Double].toFloat,
+                                         elutionTime = pepInstRecord(PepInstCols.elutionTime).asInstanceOf[AnyVal],
                                          peptideMatchIds = pepMatchIds.toArray,
                                          bestPeptideMatchId = pepInstRecord(PepInstCols.bestPeptideMatchId).asInstanceOf[Int],
                                          unmodifiedPeptideId = pepInstRecord(PepInstCols.unmodifiedPeptideId).asInstanceOf[Int],

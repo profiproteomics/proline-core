@@ -6,7 +6,6 @@ import com.codahale.jerkson.Json.parse
 import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.dal.{MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.util.sql.SQLStrToBool
 import fr.proline.core.om.model.msi.{ProteinMatch,SequenceMatch}
 import fr.proline.core.om.model.msi.{ProteinMatchProperties,SequenceMatchProperties}
 import fr.proline.core.om.provider.msi.IProteinMatchProvider
@@ -19,6 +18,8 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryExecution ) { //extends IProte
   def getResultSetsProteinMatches( rsIds: Seq[Int] ): Array[ProteinMatch] = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    import fr.proline.util.sql.StringOrBoolAsBool._
     
     // Retrieve score type map
     val scoreTypeById = new MsiDbHelper( msiDb ).getScoringTypeById
@@ -74,9 +75,8 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryExecution ) { //extends IProte
               
             val resAfterStr = seqMatchRecord(SeqMatchCols.residueAfter).asInstanceOf[String]
             val resAfterChar = if( resAfterStr != null ) resAfterStr.charAt(0) else '\0'
-              
-            val isDecoy = SQLStrToBool( seqMatchRecord(SeqMatchCols.isDecoy).asInstanceOf[String] )
-      
+
+
             // Decode JSON properties
             val propertiesAsJSON = seqMatchRecord(SeqMatchCols.serializedProperties).asInstanceOf[String]
             var properties = Option.empty[SequenceMatchProperties]
@@ -90,7 +90,7 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryExecution ) { //extends IProte
                                 end = seqMatchRecord(SeqMatchCols.stop).asInstanceOf[Int],
                                 residueBefore = resBeforeChar,
                                 residueAfter = resAfterChar,
-                                isDecoy = isDecoy,
+                                isDecoy = seqMatchRecord(SeqMatchCols.isDecoy),
                                 peptideId = seqMatchRecord(SeqMatchCols.peptideId).asInstanceOf[Int],
                                 bestPeptideMatchId = seqMatchRecord(SeqMatchCols.bestPeptideMatchId).asInstanceOf[Int],
                                 resultSetId = seqMatchRecord(SeqMatchCols.resultSetId).asInstanceOf[Int],
@@ -113,8 +113,6 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryExecution ) { //extends IProte
         }
         
         // Build protein match object
-        val isDecoy = SQLStrToBool( protMatchRecord(ProtMatchCols.isDecoy).asInstanceOf[String] )
-        val isLastBioSeq = SQLStrToBool( protMatchRecord(ProtMatchCols.isLastBioSequence).asInstanceOf[String] )
         var bioSequenceId = if( protMatchRecord(ProtMatchCols.bioSequenceId) == null ) { 0 }       
                             else { protMatchRecord(ProtMatchCols.bioSequenceId).asInstanceOf[Int] }
         
@@ -125,14 +123,16 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryExecution ) { //extends IProte
           properties = Some( parse[ProteinMatchProperties](propertiesAsJSON) )
         }
         
+        val description = protMatchRecord(ProtMatchCols.description)
+        
         val protMatch = new ProteinMatch(
                               id = protMatchId,
                               accession = protMatchRecord(ProtMatchCols.accession).asInstanceOf[String],
-                              description = protMatchRecord(ProtMatchCols.description).asInstanceOf[String],
+                              description = if( description == null ) "" else description.asInstanceOf[String],
                               geneName = protMatchRecord(ProtMatchCols.geneName).asInstanceOf[String],
                               sequenceMatches = seqMatches,
-                              isDecoy = isDecoy,
-                              isLastBioSequence = isLastBioSeq,
+                              isDecoy = protMatchRecord(ProtMatchCols.isDecoy),
+                              isLastBioSequence = protMatchRecord(ProtMatchCols.isLastBioSequence),
                               seqDatabaseIds = seqDatabaseIds,
                               proteinId = bioSequenceId,
                               resultSetId = protMatchRecord(ProtMatchCols.resultSetId).asInstanceOf[Int],
@@ -140,12 +140,12 @@ class SQLProteinMatchProvider( val msiDb: SQLQueryExecution ) { //extends IProte
                             )
         
         if( protMatchRecord(ProtMatchCols.score) != null ) {
-          protMatch.score = protMatchRecord(ProtMatchCols.score).asInstanceOf[Double].toFloat
+          protMatch.score = protMatchRecord(ProtMatchCols.score).asInstanceOf[AnyVal]
           protMatch.scoreType = scoreTypeById(protMatchRecord(ProtMatchCols.scoringId).asInstanceOf[Int])
         }
         
         if( protMatchRecord(ProtMatchCols.coverage) != null ) {
-          protMatch.coverage = protMatchRecord(ProtMatchCols.coverage).asInstanceOf[Double].toFloat
+          protMatch.coverage = protMatchRecord(ProtMatchCols.coverage).asInstanceOf[AnyVal]
         }
         
         if( protMatchRecord(ProtMatchCols.peptideMatchCount) != null ) {

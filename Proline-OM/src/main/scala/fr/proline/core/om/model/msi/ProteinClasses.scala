@@ -130,7 +130,7 @@ case class ProteinMatch (
                    ) {
   
   // Requirements
-  require( accession != null && description != null )
+  require( accession != null && description != null, "accession and description must be defined" )
 
   def getProteinId : Int = { if(protein != null && protein != None) protein.get.id else proteinId }
   

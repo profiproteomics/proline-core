@@ -40,7 +40,7 @@ public class PeptideMatch implements Serializable {
 	private Integer charge;
 
 	@Column(name="delta_moz")
-	private Double deltaMoz;
+	private Float deltaMoz;
 
 	@Column(name="experimental_moz")
 	private Double experimentalMoz;
@@ -124,11 +124,11 @@ public class PeptideMatch implements Serializable {
 		this.charge = charge;
 	}
 
-	public double getDeltaMoz() {
+	public float getDeltaMoz() {
 		return this.deltaMoz;
 	}
 
-	public void setDeltaMoz(double deltaMoz) {
+	public void setDeltaMoz(float deltaMoz) {
 		this.deltaMoz = deltaMoz;
 	}
 

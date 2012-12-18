@@ -32,15 +32,15 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
   	val peaklistColsList = MsiDbPeaklistTable.getColumnsAsStrList().filter { _ != "id" } 
     val peaklistInsertQuery = MsiDbPeaklistTable.makeInsertQuery( peaklistColsList )
     
-    context.msiEzDBC.executePrepared( peaklistInsertQuery, true ) { stmt =>
-      stmt.executeWith(
+    val peaklistSoftwareId = if( peaklist.peaklistSoftware != null ) Option(peaklist.peaklistSoftware.id) else None
+    context.msiEzDBC.executePrepared( peaklistInsertQuery, true ) { stmt =>      stmt.executeWith(
             peaklist.fileType,
             peaklist.path,
             peaklist.rawFileName,
             peaklist.msLevel,
             compressionAlgo,
             Option(null),
-            1 // peaklist.peaklistSoftware.id TODO !
+            peaklistSoftwareId
           )
           
       peaklist.id = stmt.generatedInt
@@ -98,8 +98,8 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
       lastScan,
       firstTime,
       lastTime,
-      Snappy.compress(doublesToBytes(spectrum.mozList.get)),
-      Snappy.compress(floatsToBytes(spectrum.intensityList.get)),
+      doublesToBytes(spectrum.mozList.get), //Snappy.compress(
+      floatsToBytes(spectrum.intensityList.get), // Snappy.compress(
       spectrum.peaksCount,
       Option.empty[String],
       peaklistId,
@@ -154,13 +154,13 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
       logger.debug( "get spectrum "+ spectrum.title)
       
       // Define some vars
-      val precursorIntensity = if ( !spectrum.precursorIntensity.isNaN ) spectrum.precursorIntensity else ""
-      val firstCycle = if ( spectrum.firstCycle > 0 ) spectrum.firstCycle else ""
-      val lastCycle = if ( spectrum.lastCycle > 0 ) spectrum.lastCycle else ""
-      val firstScan = if ( spectrum.firstScan > 0 ) spectrum.firstScan else ""
-      val lastScan = if ( spectrum.lastScan > 0 ) spectrum.lastScan else ""
-      val firstTime = if ( spectrum.firstTime > 0 ) spectrum.firstTime else ""
-      val lastTime = if ( spectrum.lastTime > 0 ) spectrum.lastTime else ""
+      val precursorIntensity = if ( !spectrum.precursorIntensity.isNaN ) Option(spectrum.precursorIntensity) else None
+      val firstCycle = if ( spectrum.firstCycle > 0 ) Option(spectrum.firstCycle) else None
+      val lastCycle = if ( spectrum.lastCycle > 0 ) Option(spectrum.lastCycle) else None
+      val firstScan = if ( spectrum.firstScan > 0 ) Option(spectrum.firstScan) else None
+      val lastScan = if ( spectrum.lastScan > 0 ) Option(spectrum.lastScan) else None
+      val firstTime = if ( spectrum.firstTime > 0 ) Option(spectrum.firstTime) else None
+      val lastTime = if ( spectrum.lastTime > 0 ) Option(spectrum.lastTime) else None
       //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
 
       // moz and intensity lists are formatted as numbers separated by spaces      
@@ -172,7 +172,8 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
       //val compressedIntList = EasyLzma.compress( intList.getBytes )
 
       // Build a row containing spectrum values
-      val spectrumValues = List( spectrum.id,
+      val spectrumValues = List(
+        spectrum.id,
         escapeStringForPgCopy( spectrum.title ),
         spectrum.precursorMoz,
         precursorIntensity,
@@ -189,7 +190,8 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
         spectrum.peaksCount,
         "",
         peaklistId,
-        spectrum.instrumentConfigId )
+        spectrum.instrumentConfigId
+      )
 
       // Store spectrum
       val spectrumBytes = encodeRecordForPgCopy( spectrumValues, false )

@@ -75,8 +75,8 @@ class PgMsiSearchStorer( val msiDb: SQLQueryHelper ) extends SQLiteMsiSearchStor
     //if( spectrumId <= 0 )
       //throw new Exception("spectrum must first be persisted")
     
-    val spectrumIdAsStr = if( spectrumId == None ) "" else spectrumId.get.toString
-    val msqPropsAsJSON = if( msQuery.properties != None ) generate(msQuery.properties.get) else ""
+    //val spectrumIdAsStr = if( spectrumId == None ) "" else spectrumId.get.toString
+    val msqPropsAsJSON = if( msQuery.properties != None ) Some( generate(msQuery.properties.get) ) else None
     
     // Build a row containing MS queries values
     val msQueryValues = List(
@@ -85,7 +85,7 @@ class PgMsiSearchStorer( val msiDb: SQLQueryHelper ) extends SQLiteMsiSearchStor
                             msQuery.charge,
                             msQuery.moz,
                             msqPropsAsJSON,
-                            spectrumIdAsStr,
+                            spectrumId,
                             msiSearchId
                             )
     

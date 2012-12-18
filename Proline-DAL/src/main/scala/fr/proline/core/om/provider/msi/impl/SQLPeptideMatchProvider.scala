@@ -1,11 +1,11 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.mutable.ArrayBuffer
+
 import com.codahale.jerkson.Json.parse
 
 import fr.profi.jdbc.SQLQueryExecution
-import fr.proline.core.dal.{MsiDbPeptideMatchTable}
-import fr.proline.util.sql.SQLStrToBool
+import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.dal.MsiDbPeptideMatchTable
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.PeptideMatchProperties
 import fr.proline.core.om.model.msi.Peptide
@@ -81,9 +81,14 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
     this.msiDb.selectRecordsAsMaps("SELECT * FROM peptide_match WHERE id IN (" + pepMatchIds.mkString(",") +")")    
   }
   
+ 
+  
   private def _buildPeptideMatches( rsIds: Seq[Int], pmRecords: Seq[Map[String,Any]] ): Array[PeptideMatch] = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    import fr.proline.util.sql.StringOrBoolAsBool._
+   
     
     // Load peptides
     val uniqPepIds = pmRecords map { _(PepMatchCols.peptideId).asInstanceOf[Int] } distinct
@@ -120,7 +125,6 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
       
       // Retrieve some vars
       val scoreType = scoreTypeById( pepMatchRecord(PepMatchCols.scoringId).asInstanceOf[Int] )
-      val isDecoy = SQLStrToBool(pepMatchRecord(PepMatchCols.isDecoy).asInstanceOf[String])
       
       // Decode JSON properties
       val propertiesAsJSON = pepMatchRecord(PepMatchCols.serializedProperties).asInstanceOf[String]
@@ -131,10 +135,10 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
       
       val pepMatch = new PeptideMatch( id = pepMatchRecord(PepMatchCols.id).asInstanceOf[AnyVal],
                                        rank = pepMatchRecord(PepMatchCols.rank).asInstanceOf[Int],
-                                       score = pepMatchRecord(PepMatchCols.score).asInstanceOf[Double].toFloat,
+                                       score = pepMatchRecord(PepMatchCols.score).asInstanceOf[AnyVal],
                                        scoreType = scoreType,
-                                       deltaMoz = pepMatchRecord(PepMatchCols.deltaMoz).asInstanceOf[Double],
-                                       isDecoy = isDecoy,
+                                       deltaMoz = pepMatchRecord(PepMatchCols.deltaMoz).asInstanceOf[AnyVal],
+                                       isDecoy = pepMatchRecord(PepMatchCols.isDecoy),
                                        peptide = peptide,
                                        missedCleavage = pepMatchRecord(PepMatchCols.missedCleavage).asInstanceOf[Int],
                                        fragmentMatchesCount = pepMatchRecord(PepMatchCols.fragmentMatchCount).asInstanceOf[Int],

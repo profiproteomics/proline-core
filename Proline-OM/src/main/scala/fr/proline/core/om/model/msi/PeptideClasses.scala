@@ -357,7 +357,7 @@ case class PeptideMatch ( // Required fields
                      val rank: Int,
                      val score: Float,
                      val scoreType: String,
-                     val deltaMoz: Double,
+                     val deltaMoz: Float,
                      val isDecoy: Boolean,
                      @transient val peptide: Peptide,
                      
@@ -485,7 +485,7 @@ case class PeptideInstance ( // Required fields
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideInstanceProperties(
-  @BeanProperty var bestPeptideMatchId: Option[Int] = None
+  //@BeanProperty var bestPeptideMatchId: Option[Int] = None
 )
 
 @JsonSnakeCase

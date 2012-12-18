@@ -10,7 +10,6 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ResultSummaryProperties
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
-import fr.proline.util.sql.SQLStrToBool
 
 class SQLResultSummaryProvider( val msiDb: SQLQueryExecution, val psDb: SQLQueryExecution ) extends SQLResultSetLoader with IResultSummaryProvider {
   
@@ -22,6 +21,7 @@ class SQLResultSummaryProvider( val msiDb: SQLQueryExecution, val psDb: SQLQuery
   def getResultSummaries( rsmIds: Seq[Int], loadResultSet: Boolean ): Array[ResultSummary] = {
   
     import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.sql.StringOrBoolAsBool._
     
     // Load peptide sets
     val pepSetProvider = new SQLPeptideSetProvider( msiDb, psDb )
@@ -51,7 +51,7 @@ class SQLResultSummaryProvider( val msiDb: SQLQueryExecution, val psDb: SQLQuery
       //val decoyRsmId = if( decoyRsmIdField != null ) decoyRsmIdField.asInstanceOf[Int] else 0
 
       val isQuantifiedField = rsmRecord(RSMCols.isQuantified)        
-      val isQuantified = if( isQuantifiedField != null ) SQLStrToBool(isQuantifiedField.asInstanceOf[String]) else false
+      val isQuantified: Boolean = if( isQuantifiedField != null ) isQuantifiedField else false
 
       // Decode JSON properties
       val propertiesAsJSON = rsmRecord(RSMCols.serializedProperties).asInstanceOf[String]

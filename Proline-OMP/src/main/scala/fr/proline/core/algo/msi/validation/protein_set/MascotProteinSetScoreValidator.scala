@@ -168,7 +168,7 @@ class MascotProteinSetScoreValidator extends IProteinSetValidator with Logging {
       
       val protSetScore = MascotValidationHelper.sumPeptideMatchesScoreOffsets( filteredBestPepMatches, pepScoreThresholdOffset )
       proteinSet.score = protSetScore
-      proteinSet.scoreType = "mascot:prosper score"
+      proteinSet.scoreType = "mascot:protein set score"
     }
     
   }

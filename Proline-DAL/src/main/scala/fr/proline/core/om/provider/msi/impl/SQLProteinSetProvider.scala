@@ -5,7 +5,6 @@ import com.codahale.jerkson.Json.parse
 import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.dal.{MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.util.sql.SQLStrToBool
 import fr.proline.core.om.model.msi.{PeptideSet,ProteinSet}
 import fr.proline.core.om.provider.msi.{IPeptideSetProvider,IProteinSetProvider}
 
@@ -75,6 +74,8 @@ class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
                                  peptideSets: Seq[PeptideSet] ): Array[ProteinSet] = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    import fr.proline.util.sql.StringOrBoolAsBool._
     
     // Map peptide set by protein set id
     val pepSetByProtSetId = Map() ++ peptideSets.map { pepSet => pepSet.getProteinSetId -> pepSet }
@@ -120,9 +121,9 @@ class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
                            id = protSetId,
                            peptideSet = pepSet,
                            hasPeptideSubset = pepSet.hasSubset,
-                           score = protSetRecord(ProtSetCols.score).asInstanceOf[Double].toFloat,
+                           score = protSetRecord(ProtSetCols.score).asInstanceOf[AnyVal],
                            scoreType = scoreTypeById( protSetRecord(ProtSetCols.scoringId).asInstanceOf[Int] ),
-                           isValidated = SQLStrToBool( protSetRecord(ProtSetCols.isValidated).asInstanceOf[String] ),
+                           isValidated = protSetRecord(ProtSetCols.isValidated),
                            selectionLevel = protSetRecord(ProtSetCols.selectionLevel).asInstanceOf[Int],
                            proteinMatchIds = protMatchIdsBuilder.result(),
                            typicalProteinMatchId = protSetRecord(ProtSetCols.typicalProteinMatchId).asInstanceOf[Int],

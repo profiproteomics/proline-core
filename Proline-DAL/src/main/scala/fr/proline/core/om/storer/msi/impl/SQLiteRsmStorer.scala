@@ -36,7 +36,8 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
             Option.empty[String],
             pepInstance.bestPeptideMatchId,
             pepId,
-            pepInstance.getUnmodifiedPeptideId,
+            //FIXME : retrieve the right value
+            pepId,//pepInstance.getUnmodifiedPeptideId
             Option.empty[Int],
             rsmId
           )
@@ -182,6 +183,9 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     // Insert peptide sets
     ezDBC.executePrepared( pepSetInsertQuery, true ) { stmt =>      
       for( peptideSet <- rsm.peptideSets ) {
+        
+        val protSetId = peptideSet.getProteinSetId
+        
         //print(peptideSet.id+".")
         // Insert peptide set
         stmt.executeWith(
@@ -189,7 +193,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
           peptideSet.items.length,
           peptideSet.peptideMatchesCount,
           Option.empty[String],
-          peptideSet.getProteinSetId,
+          if( protSetId > 0 ) Some(protSetId) else Option.empty[Int],
           rsmId
         )
         
@@ -219,7 +223,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
           stmt.executeWith(
             peptideSet.id,
             peptideSetItem.peptideInstance.id,
-            peptideSetItem.isBestPeptideSet,
+            peptideSetItem.isBestPeptideSet, //.map { BoolToSQLStr(_) },
             peptideSetItem.selectionLevel,
             Option.empty[String],
             rsmId

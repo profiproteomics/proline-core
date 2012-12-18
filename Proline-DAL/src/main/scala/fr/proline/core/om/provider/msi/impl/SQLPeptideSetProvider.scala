@@ -5,7 +5,6 @@ import com.codahale.jerkson.Json.parse
 import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.dal.{MsiDbPeptideSetTable,MsiDbPeptideSetRelationTable}
 import fr.proline.core.dal.{MsiDbPeptideSetPeptideInstanceItemTable,MsiDbPeptideSetProteinMatchMapTable}
-import fr.proline.util.sql.SQLStrToBool
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.PeptideSetItem
@@ -97,6 +96,7 @@ class SQLPeptideSetProvider( val msiDb: SQLQueryExecution, val psDb: SQLQueryExe
                                  pepSetProtMatchMapRecords: Seq[Map[String,Any]] ): Array[PeptideSet] = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.sql.StringOrBoolAsBool._
     
     // Load peptides
     //val uniqPepSetIds = pepSetRecords map { _(PepSetCols.peptideId).asInstanceOf[Int] } distinct
@@ -136,7 +136,7 @@ class SQLPeptideSetProvider( val msiDb: SQLQueryExecution, val psDb: SQLQueryExe
         pepSetRelRecordsByOversetId(pepSetId).foreach { pepSetRelationRecord =>
           
           val peptideSubsetId = pepSetRelationRecord(PepSetRelationCols.peptideSubsetId).asInstanceOf[Int]
-          val isStrictSubset = SQLStrToBool( pepSetRelationRecord(PepSetRelationCols.isStrictSubset).asInstanceOf[String] )
+          val isStrictSubset: Boolean = pepSetRelationRecord(PepSetRelationCols.isStrictSubset)
           
           if( isStrictSubset) strictSubsetIdsBuilder += peptideSubsetId
           else subsumableSubsetIdsBuilder += peptideSubsetId
@@ -150,7 +150,7 @@ class SQLPeptideSetProvider( val msiDb: SQLQueryExecution, val psDb: SQLQueryExe
         val pepInstId = pepSetItemRecord(PepSetItemCols.peptideInstanceId).asInstanceOf[Int]
         val pepInst = pepInstById(pepInstId)
         val isBestPepSetField = pepSetItemRecord(PepSetItemCols.isBestPeptideSet)        
-        val isBestPepSet = if( isBestPepSetField != null ) Some(SQLStrToBool(isBestPepSetField.asInstanceOf[String])) else None
+        val isBestPepSet: Option[Boolean] = if( isBestPepSetField != null ) Some(isBestPepSetField) else None
         
         val pepSetItem = new PeptideSetItem(
                                selectionLevel = pepSetItemRecord(PepSetItemCols.selectionLevel).asInstanceOf[Int],
@@ -179,7 +179,7 @@ class SQLPeptideSetProvider( val msiDb: SQLQueryExecution, val psDb: SQLQueryExe
       val pepSet = new PeptideSet(
                          id = pepSetId,
                          items = pepSetItems.result(),
-                         isSubset = SQLStrToBool( pepSetRecord(PepSetCols.isSubset).asInstanceOf[String] ),
+                         isSubset = pepSetRecord(PepSetCols.isSubset),
                          peptideMatchesCount = pepSetRecord(PepSetCols.peptideMatchCount).asInstanceOf[Int],
                          proteinMatchIds = protMatchIds,
                          proteinSetId = pepSetRecord.getOrElse(PepSetCols.proteinSetId,0).asInstanceOf[Int],

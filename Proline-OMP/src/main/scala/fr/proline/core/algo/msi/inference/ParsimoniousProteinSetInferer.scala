@@ -39,12 +39,13 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
       //val pepInstProps = new HashMap[String,Any]
       //pepInstProps += ( "best_peptide_match_id" -> bestPepMatch.id )
       val pepInstProps = new PeptideInstanceProperties()
-      pepInstProps.setBestPeptideMatchId( Some(bestPepMatch.id) )
+      //pepInstProps.setBestPeptideMatchId( Some(bestPepMatch.id) )
       
       val peptideInstance = new PeptideInstance(
                                   id = PeptideInstance.generateNewId(),
                                   peptide = bestPepMatch.peptide,
                                   peptideMatchIds = pepMatchIds,
+                                  bestPeptideMatchId = bestPepMatch.id,
                                   properties = Some(pepInstProps),
                                   //peptideMatchPropertiesById = peptideMatchPropertiesById,
                                   resultSummaryId = resultSummaryId
