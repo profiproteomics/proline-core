@@ -67,7 +67,7 @@ public final class DatabaseUpgrader {
 	return buffer.toString();
     }
 
-    public static void upgradeDatabase(final IDatabaseConnector connector,
+    public static int upgradeDatabase(final IDatabaseConnector connector,
 	    final String migrationScriptsLocation) {
 
 	if (connector == null) {
@@ -83,7 +83,7 @@ public final class DatabaseUpgrader {
 	LOG.debug("Upgrading {} Db, migrationScriptsLocation [{}]", database, migrationScriptsLocation);
 
 	if (connector.getDriverType() == DriverType.SQLITE) {
-	    upgradeSQLiteDb(connector, migrationScriptsLocation);
+	    return upgradeSQLiteDb(connector, migrationScriptsLocation);
 	} else {
 	    final Flyway flyway = new Flyway();
 
@@ -93,17 +93,19 @@ public final class DatabaseUpgrader {
 	    final int migrationsCount = flyway.migrate();
 
 	    LOG.info("Flyway applies {} migration(s)", migrationsCount);
+	    
+	    return migrationsCount;
 	} // End if (driverType is not SQLITE)
-
+	
     }
 
-    public static void upgradeDatabase(final IDatabaseConnector connector) {
+    public static int upgradeDatabase(final IDatabaseConnector connector) {
 
 	if (connector == null) {
 	    throw new IllegalArgumentException("Connector is null");
 	}
 
-	upgradeDatabase(connector,
+	return upgradeDatabase(connector,
 		buildMigrationScriptsLocation(connector.getDatabase(), connector.getDriverType()));
     }
 
@@ -140,7 +142,7 @@ public final class DatabaseUpgrader {
     }
 
     /* Private methods */
-    private static void upgradeSQLiteDb(final IDatabaseConnector connector,
+    private static int upgradeSQLiteDb(final IDatabaseConnector connector,
 	    final String migrationScriptsLocation) {
 	final DataSource ds = connector.getDataSource();
 
@@ -159,8 +161,10 @@ public final class DatabaseUpgrader {
 
 	    if (tablesCount == 0) {
 		initSQLiteDb(con, migrationScriptsLocation);
+		return 1;
 	    } else {
 		LOG.info("SQLite table count: {}, conserving current schema", tablesCount);
+		return 0;
 	    }
 
 	} catch (Exception ex) {
