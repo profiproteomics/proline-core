@@ -19,13 +19,16 @@ object ExternalDbPropertiesSerializer {
   
   def serialize( extDb: ExternalDb ) {
     
-    // Build properties object
-    val extDbProps = new ExternalDbProperties()
-    extDbProps.setJdbcDriverClassName( Some(extDb.getDriverType.toString) )
-    
-    // Generate JSON string
-    val props = generate( extDb.getSerializedProperties() )
-    extDb.setSerializedProperties( generate( extDb.getSerializedProperties() ) )
+    // Build properties object    
+    if( extDb.getDriverType != null ) {
+      
+      val extDbProps = new ExternalDbProperties()
+      extDbProps.setJdbcDriverClassName( Some(extDb.getDriverType.toString) )
+      
+      // Generate JSON string
+      extDb.setSerializedProperties( generate( extDbProps ) )
+    }
+
   }
 
 }
