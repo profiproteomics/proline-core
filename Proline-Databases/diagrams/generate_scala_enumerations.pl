@@ -1,0 +1,198 @@
+package PowerArchitect::Column;
+
+use Class::XSAccessor {
+  constructor => 'new',  
+  accessors => {
+    id => 'id',
+    name => 'name',
+    is_pk => 'is_pk',
+    is_fk => 'is_fk',
+    fk_ref => 'fk_ref',
+    type => 'type',
+    precision => 'precision',
+    scale => 'scale',
+    nullable => 'nullable',
+    auto_increment => 'auto_increment',
+    default_value => 'default_value',
+    remarks => 'remarks'
+    
+  },
+
+};
+
+1;
+
+package PowerArchitect::Table;
+
+use Class::XSAccessor {
+  constructor => 'new',  
+  accessors => {
+    
+    ### Define foreign keys
+    name => 'name',
+    remarks => 'remarks',
+    columns => 'columns',
+    
+  },
+
+};
+
+1;
+
+package main;
+
+use strict;
+use XML::Simple;
+use Data::Dumper;
+use String::CamelCase qw/camelize/;
+no warnings;
+
+my $namespace = 'UdsDb';
+my $xmlFile = 'UDS-DB.architect';
+my $outputFile = 'uds-db_enums.txt';
+
+my $tables = get_tables( $xmlFile );
+my @sorted_tables = sort { $a->name cmp $b->name } @$tables;
+
+my( %table_name_by_col_id, %col_name_by_id );
+for my $table (@sorted_tables) {
+  for my $col (@{$table->columns}) {
+    $table_name_by_col_id{$col->id} = $table->name;
+    $col_name_by_id{$col->id} = $col->name;
+  }
+}
+  
+open( FILE, ">", $outputFile  ) or die $!;
+
+my $space = '    ';
+for my $table (@sorted_tables) {
+  
+  my $objectName = $namespace.camelize($table->name).'Table';
+  printf FILE "object %s extends TableDefinition {\n\n", $objectName;
+  printf FILE "  val tableName = \"%s\"\n\n", $table->name;
+  print FILE  "  object columns extends Enumeration {\n\n";
+  
+  my @colsAsStrings;
+  for my $col (@{$table->columns}) {
+    my $enumEntryName = lcfirst(camelize($col->name));
+    $enumEntryName = "`$enumEntryName`" if $enumEntryName eq 'type';
+    
+    my $colAsString = $space . sprintf( 'val %s = Value("%s")', $enumEntryName, $col->name );    
+    push( @colsAsStrings, $colAsString );
+  } 
+  
+  print FILE join("\n",@colsAsStrings) . "\n  }\n";
+  
+  print FILE <<"end_of_enum";
+
+  def getColumnsAsStrList( f: $objectName.columns.type => List[Enumeration#Value] ): List[String] = {
+    this._getColumnsAsStrList[$objectName.columns.type]( f )
+  }
+  
+  def makeInsertQuery( f: $objectName.columns.type => List[Enumeration#Value] ): String = {
+    this._makeInsertQuery[$objectName.columns.type]( f )
+  }
+end_of_enum
+
+  print FILE "\n}\n\n";
+}
+
+close FILE;
+
+sub get_tables {
+  my $xmlFilePath = shift;
+  
+  my %options = ( SuppressEmpty => undef, ForceArray => ['table','relationship'], KeyAttr => [] );
+  my $xmlParser = new XML::Simple( %options );
+  my $xmlObj = $xmlParser->XMLin($xmlFilePath);
+  
+  my %colTypeMapper = ( 1 => 'CHAR',
+                        4 => 'INTEGER',
+                        7 => 'REAL',
+                        8 => 'DOUBLE',
+                        12 => 'VARCHAR',
+                        16 => 'BOOLEAN',
+                        #91 => 'DATE',
+                        93 => 'TIMESTAMP',
+                        2004 => 'BLOB',
+                        2005 => 'CLOB',
+                        );
+  
+  my %sqliteColTypeMapper = ( CHAR => 'TEXT',
+                              INTEGER => 'INTEGER',
+                              REAL => 'REAL',
+                              DOUBLE => 'REAL',
+                              VARCHAR => 'TEXT',
+                              BOOLEAN => 'TEXT',
+                              DATE => 'TEXT',
+                              TIMESTAMP => 'TEXT',
+                              BLOB => 'BLOB',
+                              CLOB => 'TEXT'
+                              );
+  
+  ### Retrieve columns corresponding to foreign keys
+  my %pkByFk;
+  
+  my $relationships = $xmlObj->{'target-database'}->{relationships}->{relationship};  
+  foreach my $relationship ( @$relationships) {
+    if( defined $relationship->{'column-mapping'}   ) {
+      my $col_mapping = $relationship->{'column-mapping'};
+      my $fkColName = $col_mapping->{'fk-column-ref'};
+      my $pkColName = $col_mapping->{'pk-column-ref'};
+      $pkByFk{$fkColName} = $pkColName;
+    }
+  }
+  
+  #print Dumper( \%foreignColumns);
+  
+  ### Climb tree to extract column infos and write an HTML file
+  my $table_nodes = $xmlObj->{'target-database'}->{'table'};
+  
+  my @tables;
+  foreach my $table_node (@$table_nodes) {
+    
+    my %table_attrs = ( name => $table_node->{name}, remarks => $table_node->{remarks} );
+  
+    my $column_nodes = $table_node->{folder}->[0]->{column};
+    $column_nodes = [$column_nodes] if ref($column_nodes) ne 'ARRAY';
+    
+    my @columns;
+    foreach my $column_node (@$column_nodes) {
+      
+      my $colType = $colTypeMapper{ $column_node->{'type'} };
+      die "unknown type with id = " . $column_node->{'type'} if !defined $colType;
+      
+      my %col_attrs;
+      $col_attrs{$_} = $column_node->{$_} for qw/id name remarks precision scale/;      
+      $col_attrs{is_pk} = defined $column_node->{'primaryKeySeq'} ? 1 : 0;
+      $col_attrs{type} = $sqliteColTypeMapper{$colType};
+      $col_attrs{nullable} = $column_node->{'nullable'} eq '1' ? 1 : 0;
+      $col_attrs{auto_increment} = $column_node->{'autoIncrement'} eq 'true' ? 1 : 0;
+      
+      if( exists $pkByFk{ $column_node->{'id'} } ) {
+        $col_attrs{fk_ref} = $pkByFk{ $column_node->{'id'} };
+        $col_attrs{is_fk} = 1;
+      } else { $col_attrs{is_fk} = 0; }
+      
+      push( @columns, new PowerArchitect::Column( %col_attrs) );
+    }
+    
+    $table_attrs{columns} = \@columns;
+    
+    my $table = new PowerArchitect::Table( %table_attrs );
+    push( @tables, $table );
+  }
+  
+  return \@tables;
+  
+}
+
+
+
+
+
+
+
+
+1;
+
