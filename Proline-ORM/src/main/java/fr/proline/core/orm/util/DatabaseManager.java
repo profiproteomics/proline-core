@@ -93,7 +93,9 @@ public class DatabaseManager {
 
 		    DatabaseUpgrader.upgradeDatabase(m_psDbConnector);
 		}
-
+		
+	    } catch( Throwable e ) {
+	      LOG.error( e.getMessage() );
 	    } finally {
 
 		try {
