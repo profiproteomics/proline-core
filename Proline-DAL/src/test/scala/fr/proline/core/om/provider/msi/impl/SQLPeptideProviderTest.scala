@@ -39,7 +39,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
     loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
     
-    sqlPepProvider = new SQLPeptideProvider( SQLQueryHelper( this.getConnector ) )
+    sqlPepProvider = new SQLPeptideProvider( new SQLQueryHelper( this.getConnector ).ezDBC )
   }
 
   @Test

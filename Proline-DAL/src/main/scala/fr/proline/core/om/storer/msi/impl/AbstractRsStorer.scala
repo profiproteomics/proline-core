@@ -12,7 +12,7 @@ import javax.persistence.EntityTransaction
 
 abstract class AbstractRsStorer(val dbManagement: DatabaseManager, val msiDbConnector: IDatabaseConnector, val plWriter: IPeaklistWriter = null) extends IRsStorer {
   
-  val ezDBC = SQLQueryHelper( msiDbConnector )
+  val ezDBC = new SQLQueryHelper( msiDbConnector ).ezDBC
   
   // IPeaklistWriter to use to store PeakList and Spectrum 
   val localPlWriter = if (plWriter == null) PeaklistWriter( msiDbConnector.getDriverType )else plWriter
