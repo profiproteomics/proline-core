@@ -64,13 +64,14 @@ for my $table (@sorted_tables) {
   
 open( FILE, ">", $outputFile  ) or die $!;
 
-my $space = '    ';
+my $space = '  ';
 for my $table (@sorted_tables) {
   
-  my $objectName = $namespace.camelize($table->name).'Table';
-  printf FILE "object %s extends TableDefinition {\n\n", $objectName;
-  printf FILE "  val tableName = \"%s\"\n\n", $table->name;
-  print FILE  "  object columns extends Enumeration {\n\n";
+  my $tableName = $namespace.camelize($table->name);
+  my $tableDefName = $tableName.'Table';
+  my $colsDefName = $tableName.'Columns';
+  
+  print FILE  "object $colsDefName extends ColumnEnumeration {\n";
   
   my @colsAsStrings;
   for my $col (@{$table->columns}) {
@@ -79,22 +80,16 @@ for my $table (@sorted_tables) {
     
     my $colAsString = $space . sprintf( 'val %s = Value("%s")', $enumEntryName, $col->name );    
     push( @colsAsStrings, $colAsString );
-  } 
-  
-  print FILE join("\n",@colsAsStrings) . "\n  }\n";
-  
-  print FILE <<"end_of_enum";
-
-  def getColumnsAsStrList( f: $objectName.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[$objectName.columns.type]( f )
   }
   
-  def makeInsertQuery( f: $objectName.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[$objectName.columns.type]( f )
-  }
-end_of_enum
+  print FILE join("\n",@colsAsStrings) . "\n}\n\n";
+  
+  printf FILE "abstract class %s extends TableDefinition[%s.type]\n\n", $tableDefName, $colsDefName;
+  
+  printf FILE "object %s extends %s {\n", $tableDefName, $tableDefName;
+  printf FILE "  val tableName = \"%s\"\n", $table->name;
+  printf FILE "  val columns = %s\n}\n\n", $colsDefName;
 
-  print FILE "\n}\n\n";
 }
 
 close FILE;
@@ -108,6 +103,7 @@ sub get_tables {
   
   my %colTypeMapper = ( 1 => 'CHAR',
                         4 => 'INTEGER',
+                        -5 => 'BIGINT',
                         7 => 'REAL',
                         8 => 'DOUBLE',
                         12 => 'VARCHAR',
@@ -120,6 +116,7 @@ sub get_tables {
   
   my %sqliteColTypeMapper = ( CHAR => 'TEXT',
                               INTEGER => 'INTEGER',
+                              BIGINT => 'INTEGER',
                               REAL => 'REAL',
                               DOUBLE => 'REAL',
                               VARCHAR => 'TEXT',
