@@ -126,6 +126,7 @@ sub get_tables {
   
   my %colTypeMapper = ( 1 => 'CHAR',
                         4 => 'INTEGER',
+                        -5 => 'BIGINT',
                         7 => 'REAL',
                         8 => 'DOUBLE',
                         12 => 'VARCHAR',
@@ -139,6 +140,7 @@ sub get_tables {
   
   my %sqliteColTypeMapper = ( CHAR => 'TEXT',
                               INTEGER => 'INTEGER',
+                              BIGINT => 'INTEGER',
                               REAL => 'REAL',
                               DOUBLE => 'REAL',
                               VARCHAR => 'TEXT',
