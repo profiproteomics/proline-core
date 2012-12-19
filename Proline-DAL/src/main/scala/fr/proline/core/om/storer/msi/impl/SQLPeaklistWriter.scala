@@ -29,8 +29,10 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
    if (peaklist == null) {
       throw new IllegalArgumentException("peaklist is null")
     }
-  	val peaklistColsList = MsiDbPeaklistTable.getColumnsAsStrList().filter { _ != "id" } 
-    val peaklistInsertQuery = MsiDbPeaklistTable.makeInsertQuery( peaklistColsList )
+  	
+    val peaklistInsertQuery = MsiDbPeaklistTable.mkInsertQuery{ (c,colsList) => 
+                                colsList.filter( _ != c.id)
+                              }
     
     val peaklistSoftwareId = if( peaklist.peaklistSoftware != null ) Option(peaklist.peaklistSoftware.id) else None
     context.msiEzDBC.executePrepared( peaklistInsertQuery, true ) { stmt =>      stmt.executeWith(
@@ -50,9 +52,10 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
   
   def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext = {
     logger.info( "storing spectra..." )
- 
-    val spectrumColsList = MsiDbSpectrumTable.getColumnsAsStrList().filter { _ != "id" }
-    val spectrumInsertQuery = MsiDbSpectrumTable.makeInsertQuery( spectrumColsList )
+    
+    val spectrumInsertQuery = MsiDbSpectrumTable.mkInsertQuery{ (c,colsList) => 
+                                colsList.filter( _ != c.id)
+                              }
     
     // Insert corresponding spectra
     val spectrumIdByTitle = collection.immutable.Map.newBuilder[String,Int]
@@ -145,7 +148,7 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
     // Bulk insert of spectra
     logger.info( "BULK insert of spectra" )
 
-    val spectrumTableCols = MsiDbSpectrumTable.getColumnsAsStrList().filter( _ != "id" ).mkString( "," )
+    val spectrumTableCols = MsiDbSpectrumTable.selectColsAsStrList( (c,cl) => cl.filter(_ != c.id) ).mkString( "," )
 
     val pgBulkLoader = bulkCopyManager.copyIn( "COPY " + tmpSpectrumTableName + " ( id, " + spectrumTableCols + " ) FROM STDIN" )
 

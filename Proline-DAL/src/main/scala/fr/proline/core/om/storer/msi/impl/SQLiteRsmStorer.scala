@@ -48,9 +48,10 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     }
     
     logger.info( "storing peptide instances..." )
- 
-    val pepInstColsList = MsiDbPeptideInstanceTable.getColumnsAsStrList().filter { _ != "id" }
-    val pepInstInsertQuery = MsiDbPeptideInstanceTable.makeInsertQuery( pepInstColsList )
+    
+    val pepInstInsertQuery = MsiDbPeptideInstanceTable.mkInsertQuery { (c,colsList) => 
+                               colsList.filter( _ != c.id)
+                             }
     
     // Insert peptide instances
     ezDBC.executePrepared( pepInstInsertQuery, true ) { stmt =>
@@ -68,7 +69,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     }
     
     // Link peptide instances to peptide matches
-    val pepInstPepMatchMapInsertQuery = MsiDbPeptideInstancePeptideMatchMapTable.makeInsertQuery()
+    val pepInstPepMatchMapInsertQuery = MsiDbPeptideInstancePeptideMatchMapTable.mkInsertQuery()
     
     ezDBC.executePrepared( pepInstPepMatchMapInsertQuery ) { stmt =>
           
@@ -98,8 +99,9 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     val proteinMatchById = rsm.resultSet.get.proteinMatchById
     
     // Retrieve protein_set column list then remove id and master_quant_component_id columns
-    val protSetColsList = MsiDbProteinSetTable.getColumnsAsStrList().filter { !Set("id","master_quant_component_id").contains(_) }
-    val protSetInsertQuery = MsiDbProteinSetTable.makeInsertQuery( protSetColsList )
+    val protSetInsertQuery = MsiDbProteinSetTable.mkInsertQuery { (c,colsList) => 
+                               colsList.filter( Set(c.id,c.masterQuantComponentId).contains(_) == false )
+                             }
      
     // Insert protein sets
     ezDBC.executePrepared( protSetInsertQuery, true ) { stmt =>
@@ -147,7 +149,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     }
 
     // Link protein sets to protein matches
-    ezDBC.executePrepared( MsiDbProteinSetProteinMatchItemTable.makeInsertQuery ) { stmt =>
+    ezDBC.executePrepared( MsiDbProteinSetProteinMatchItemTable.mkInsertQuery ) { stmt =>
       
       rsm.proteinSets.foreach { protSet =>
         protSet.getProteinMatchIds.foreach { protMatchId =>
@@ -176,8 +178,9 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     val peptideSetIdByTmpId = new HashMap[Int,Int]()
     
     // Retrieve peptide_set columns then remove id column
-    val pepSetColsList = MsiDbPeptideSetTable.getColumnsAsStrList().filter { _ != "id" }
-    val pepSetInsertQuery = MsiDbPeptideSetTable.makeInsertQuery( pepSetColsList )
+    val pepSetInsertQuery = MsiDbPeptideSetTable.mkInsertQuery { (c,colsList) => 
+                              colsList.filter( _ != c.id)
+                            }
      
     // Insert peptide sets
     ezDBC.executePrepared( pepSetInsertQuery, true ) { stmt =>      
@@ -211,7 +214,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     //val samesetPeptideInstances = peptideSet.getPeptideInstances
     
     // Link peptide sets to peptide instances
-    ezDBC.executePrepared( MsiDbPeptideSetPeptideInstanceItemTable.makeInsertQuery ) { stmt =>
+    ezDBC.executePrepared( MsiDbPeptideSetPeptideInstanceItemTable.mkInsertQuery ) { stmt =>
       for( peptideSet <- rsm.peptideSets ) {
         for( peptideSetItem <- peptideSet.items ) {
           
@@ -238,7 +241,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     }
     
     // Link peptide sets to protein matches
-    ezDBC.executePrepared( MsiDbPeptideSetProteinMatchMapTable.makeInsertQuery ) { stmt =>
+    ezDBC.executePrepared( MsiDbPeptideSetProteinMatchMapTable.mkInsertQuery ) { stmt =>
       rsm.peptideSets.foreach { pepSet => pepSet.proteinMatchIds.foreach { proteinMatchId => 
           stmt.executeWith(
             pepSet.id,
@@ -259,7 +262,7 @@ private[msi] class SQLiteRsmStorer( val msiDb: SQLQueryHelper ) extends IRsmStor
     }
       
     // Store hierarchical relations between peptide sets
-    ezDBC.executePrepared( MsiDbPeptideSetRelationTable.makeInsertQuery ) { stmt =>
+    ezDBC.executePrepared( MsiDbPeptideSetRelationTable.mkInsertQuery ) { stmt =>
       for( peptideSet <- rsm.peptideSets ) {        
         
         // Update and store peptide set relation of type strict subsets

@@ -253,7 +253,7 @@ class ResultFileImporterSQLStorer(
       peaklistSoftware = getPeaklistSoftware( udsSqlHelper.ezDBC )
       
       // Then insert it in the current MSIdb
-      val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.makeInsertQuery( c => List(c.id,c.name,c.version) )      
+      val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery( c => List(c.id,c.name,c.version) )      
       msiDb.execute(peaklistInsertQuery,peaklistSoftware.id,peaklistSoftware.name,peaklistSoftware.version)
     }
 

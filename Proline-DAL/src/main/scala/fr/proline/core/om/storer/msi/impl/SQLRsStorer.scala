@@ -83,7 +83,7 @@ class SQLRsStorer( storerContext: StorerContext,
     // Store RDB result set
     // TODO: use JPA instead
     
-    val rsInsertQuery = MsiDbResultSetTable.makeInsertQuery( t =>
+    val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery( t =>
       List( t.name, t.description, t.`type`, t.modificationTimestamp, t.decoyResultSetId, t.msiSearchId )
     )
     

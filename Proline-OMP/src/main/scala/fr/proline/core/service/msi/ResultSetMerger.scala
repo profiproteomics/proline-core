@@ -75,7 +75,7 @@ class ResultSetMerger( dbManager: DatabaseManager,
     val rsIds = resultSets.map { _.id } distinct
     
     // Insert result set relation between parent and its children
-    val rsRelationInsertQuery = MsiDbResultSetRelationTable.makeInsertQuery()
+    val rsRelationInsertQuery = MsiDbResultSetRelationTable.mkInsertQuery()
     ezDBC.executePrepared( rsRelationInsertQuery ) { stmt =>
       for( childRsId <- rsIds ) stmt.executeWith( parentRsId, childRsId )
     }

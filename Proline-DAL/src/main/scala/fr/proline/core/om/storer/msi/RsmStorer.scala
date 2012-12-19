@@ -24,9 +24,9 @@ trait IRsmStorer extends Logging {
 /** A factory object for implementations of the IRsmStorer trait */
 object RsmStorer {
   
-  val rsmInsertQuery = MsiDbResultSummaryTable.makeInsertQuery(
-                         MsiDbResultSummaryTable.getColumnsAsStrList().filter( _ != "id" )
-                       )
+  val rsmInsertQuery = MsiDbResultSummaryTable.mkInsertQuery{ (c,colsList) => 
+                         colsList.filter( _ != c.id)
+                       }
   
   /*import fr.proline.core.om.storer.msi.impl.GenericRsStorer
   import fr.proline.core.om.storer.msi.impl.PgRsStorer

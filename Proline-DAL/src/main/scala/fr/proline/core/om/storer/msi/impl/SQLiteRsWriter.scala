@@ -121,8 +121,9 @@ private[msi] class SQLiteRsWriter( val msiSqlHelper: SQLQueryHelper // Main DB c
     val peptideMatches = rs.peptideMatches
     val scoringIdByType = this.scoringIdByType
     
-    val pepMatchColsList = MsiDbPeptideMatchTable.getColumnsAsStrList().filter { _ != "id" }
-    val pepMatchInsertQuery = MsiDbPeptideMatchTable.makeInsertQuery( pepMatchColsList )
+    val pepMatchInsertQuery = MsiDbPeptideMatchTable.mkInsertQuery{ (c,colsList) => 
+                                colsList.filter( _ != c.id)
+                              }
     
     ezDBC.executePrepared(pepMatchInsertQuery, true ) { stmt =>
       
@@ -181,8 +182,9 @@ private[msi] class SQLiteRsWriter( val msiSqlHelper: SQLQueryHelper // Main DB c
     val proteinMatches = rs.proteinMatches
     val scoringIdByScoreType = this.scoringIdByType
     
-    val protMatchColsList = MsiDbProteinMatchTable.getColumnsAsStrList().filter { _ != "id" }
-    val protMatchInsertQuery = MsiDbProteinMatchTable.makeInsertQuery( protMatchColsList )
+    val protMatchInsertQuery = MsiDbProteinMatchTable.mkInsertQuery { (c,colsList) => 
+                                 colsList.filter( _ != c.id)
+                               }
     
     logger.info( "protein matches are going to be inserted..." )
     ezDBC.executePrepared( protMatchInsertQuery, true ) { stmt =>
@@ -241,7 +243,7 @@ private[msi] class SQLiteRsWriter( val msiSqlHelper: SQLQueryHelper // Main DB c
     
     var count = 0
     
-    ezDBC.executePrepared( MsiDbSequenceMatchTable.makeInsertQuery ) { stmt =>
+    ezDBC.executePrepared( MsiDbSequenceMatchTable.mkInsertQuery ) { stmt =>
       
       // Iterate over protein matches
       for( proteinMatch <- proteinMatches ) {

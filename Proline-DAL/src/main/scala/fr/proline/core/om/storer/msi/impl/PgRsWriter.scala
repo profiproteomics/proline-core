@@ -16,11 +16,11 @@ private[msi] class PgRsWriter( val msiDb1: SQLQueryHelper, // Main DB connection
   
   val bulkCopyManager = new CopyManager( msiDb1.ezDBC.connection.asInstanceOf[BaseConnection] )
   
-  private val peptideTableCols = MsiDbPeptideTable.getColumnsAsStrList().mkString(",")
-  private val pepMatchTableCols = MsiDbPeptideMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
-  private val pepMatchRelTableCols = MsiDbPeptideMatchRelationTable.getColumnsAsStrList().mkString(",")
-  private val protMatchTableCols = MsiDbProteinMatchTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")
-  private val seqMatchTableCols = MsiDbSequenceMatchTable.getColumnsAsStrList().mkString(",")
+  private val peptideTableCols = MsiDbPeptideTable.columnsAsStrList.mkString(",")
+  private val pepMatchTableCols = MsiDbPeptideMatchTable.columnsAsStrList.filter( _ != "id" ).mkString(",")
+  private val pepMatchRelTableCols = MsiDbPeptideMatchRelationTable.columnsAsStrList.mkString(",")
+  private val protMatchTableCols = MsiDbProteinMatchTable.columnsAsStrList.filter( _ != "id" ).mkString(",")
+  private val seqMatchTableCols = MsiDbSequenceMatchTable.columnsAsStrList.mkString(",")
   
   //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
   // TODO: insert peptides into a TMP table

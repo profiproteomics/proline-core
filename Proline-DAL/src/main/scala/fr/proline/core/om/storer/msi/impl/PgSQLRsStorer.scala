@@ -31,7 +31,7 @@ class PgSQLRsStorer(val storerContext: StorerContext, private val _storer: IRsWr
     // Bulk insert of MS queries
     logger.info( "BULK insert of MS queries" )
     
-    val msQueryTableCols = MsiDbMsQueryTable.getColumnsAsStrList().filter( _ != "id" ).mkString(",")    
+    val msQueryTableCols = MsiDbMsQueryTable.columnsAsStrList.filter( _ != "id" ).mkString(",")    
     val pgBulkLoader = bulkCopyManager.copyIn("COPY "+ tmpMsQueryTableName +" ( id, "+ msQueryTableCols + " ) FROM STDIN" )
     
     for( msQuery <- msQueries ) {
