@@ -6,7 +6,7 @@ import com.codahale.jerkson.Json.generate
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.dal.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
+import fr.proline.core.dal.tables.msi.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._

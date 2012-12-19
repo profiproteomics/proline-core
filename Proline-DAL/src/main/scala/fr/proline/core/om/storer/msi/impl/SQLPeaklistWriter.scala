@@ -8,8 +8,8 @@ import org.xerial.snappy.Snappy
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
-import fr.proline.core.dal.MsiDbSpectrumTable
-import fr.proline.core.dal.MsiDbPeaklistTable
+import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
+import fr.proline.core.dal.tables.msi.MsiDbPeaklistTable
 import fr.proline.core.om.model.msi.IPeaklistContainer
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.storer.msi.IPeaklistWriter

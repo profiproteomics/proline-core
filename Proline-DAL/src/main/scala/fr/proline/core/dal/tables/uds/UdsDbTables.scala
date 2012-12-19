@@ -1,4 +1,6 @@
-package fr.proline.core.dal
+package fr.proline.core.dal.tables.uds
+
+import fr.proline.core.dal.tables.TableDefinition
 
 object UdsDbActivationTable extends TableDefinition {
 

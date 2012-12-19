@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.jdbc.SQLQueryExecution
 
-import fr.proline.core.dal.{MsiDbResultSetTable}
+import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi.{ProteinMatch,PeptideMatch,ResultSet}
 import fr.proline.core.om.provider.msi.IResultSetProvider
 

@@ -4,7 +4,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.dal.{PsDbPeptideTable,PsDbPeptidePtmTable}
+import fr.proline.core.dal.tables.ps.{PsDbPeptideTable,PsDbPeptidePtmTable}
 import fr.proline.core.om.model.msi.{Peptide,LocatedPtm}
 import fr.proline.util.sql._
 

@@ -5,9 +5,8 @@ import com.codahale.jerkson.Json.generate
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
-import fr.proline.core.dal.{SQLQueryHelper,MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable,MsiDbPeptideSetPeptideInstanceItemTable}
-import fr.proline.core.dal.{MsiDbPeptideSetTable,MsiDbPeptideSetProteinMatchMapTable,MsiDbPeptideSetRelationTable}
-import fr.proline.core.dal.{MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
+import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.dal.tables.msi._
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.ResultSummary

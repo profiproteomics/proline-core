@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
 
 import fr.profi.jdbc.SQLQueryExecution
-import fr.proline.core.dal.{MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable}
+import fr.proline.core.dal.tables.msi.{MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable}
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatchValidationProperties

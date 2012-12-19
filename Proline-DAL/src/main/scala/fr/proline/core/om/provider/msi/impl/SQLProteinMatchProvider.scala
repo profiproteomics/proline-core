@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
 
 import fr.profi.jdbc.SQLQueryExecution
-import fr.proline.core.dal.{MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
+import fr.proline.core.dal.tables.msi.{MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.{ProteinMatch,SequenceMatch}
 import fr.proline.core.om.model.msi.{ProteinMatchProperties,SequenceMatchProperties}

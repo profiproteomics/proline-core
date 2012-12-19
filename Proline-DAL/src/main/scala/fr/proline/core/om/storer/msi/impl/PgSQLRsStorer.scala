@@ -3,7 +3,7 @@ package fr.proline.core.om.storer.msi.impl
 import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.model.msi.Ms1Query
 import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.dal.MsiDbMsQueryTable
+import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
 import org.postgresql.copy.CopyIn
 import fr.proline.core.om.model.msi.MsQuery
 import org.postgresql.copy.CopyManager

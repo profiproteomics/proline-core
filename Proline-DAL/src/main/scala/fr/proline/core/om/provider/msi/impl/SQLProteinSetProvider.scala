@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import com.codahale.jerkson.Json.parse
 
 import fr.profi.jdbc.SQLQueryExecution
-import fr.proline.core.dal.{MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
+import fr.proline.core.dal.tables.msi.{MsiDbProteinSetTable,MsiDbProteinSetProteinMatchItemTable}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.{PeptideSet,ProteinSet}
 import fr.proline.core.om.provider.msi.{IPeptideSetProvider,IProteinSetProvider}

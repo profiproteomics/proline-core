@@ -7,8 +7,7 @@ import scala.collection.mutable.HashMap
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.dal.{MsiDbMsiSearchTable,MsiDbMsQueryTable,MsiDbSearchSettingsTable,MsiDbSeqDatabaseTable}
-import fr.proline.core.dal.{MsiDbPtmSpecificityTable,MsiDbUsedPtmTable}
+import fr.proline.core.dal.tables.msi._
 import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchStorer

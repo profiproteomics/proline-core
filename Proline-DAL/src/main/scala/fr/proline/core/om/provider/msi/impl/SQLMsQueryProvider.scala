@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import com.codahale.jerkson.Json.parse
 
 import fr.profi.jdbc.SQLQueryExecution
-import fr.proline.core.dal.MsiDbMsQueryTable
+import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
 import fr.proline.core.om.model.msi.{MsQuery,Ms1Query,Ms2Query,MsQueryProperties}
 import fr.proline.core.om.provider.msi.IMsQueryProvider
 

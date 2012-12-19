@@ -1,4 +1,4 @@
-package fr.proline.core.dal
+package fr.proline.core.dal.tables
 
 // TODO: put these definitions in an other sub-package (i.e. table)
 trait TableDefinition {

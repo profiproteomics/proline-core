@@ -4,10 +4,10 @@ import com.weiglewilczek.slf4s.Logging
 import org.postgresql.copy.{CopyIn,CopyManager}
 import org.postgresql.core.BaseConnection
 
-import fr.proline.core.dal.{SQLQueryHelper,MsiDbMsQueryTable,MsiDbPtmSpecificityTable}
+import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.dal.tables.msi.{MsiDbMsQueryTable,MsiDbPtmSpecificityTable}
 import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
-import fr.proline.core.dal.MsiDbUsedPtmTable
 
 
 class PgMsiSearchStorer( val msiDb: SQLQueryHelper ) extends SQLiteMsiSearchStorer( msiDb ) with Logging {

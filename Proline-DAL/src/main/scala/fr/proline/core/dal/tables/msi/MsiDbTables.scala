@@ -1,4 +1,6 @@
-package fr.proline.core.dal
+package fr.proline.core.dal.tables.msi
+
+import fr.proline.core.dal.tables.TableDefinition
 
 object MsiDbAdminInfosTable extends TableDefinition {
 
