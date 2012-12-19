@@ -6,7 +6,7 @@ import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.{ ResultSetMerger => ResultSetMergerAlgo }
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.MsiDbResultSetRelationTable
+import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.RsStorer

@@ -231,7 +231,7 @@ class ResultFileImporterSQLStorer(
   private def _getOrCreatePeaklistSoftware( peaklistSoftwareId: Int, stContext: StorerContext ): PeaklistSoftware = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
-    import fr.proline.core.dal.MsiDbPeaklistSoftwareTable
+    import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
     
     def getPeaklistSoftware( ezDBC: EasyDBC ): PeaklistSoftware = {
 

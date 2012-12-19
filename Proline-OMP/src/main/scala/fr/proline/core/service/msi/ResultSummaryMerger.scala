@@ -8,7 +8,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.{ ResultSummaryMerger => RsmMergerAlgo }
-import fr.proline.core.dal.{MsiDbResultSetRelationTable,MsiDbResultSummaryRelationTable}
+import fr.proline.core.dal.tables.msi.{MsiDbResultSetRelationTable,MsiDbResultSummaryRelationTable}
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi._

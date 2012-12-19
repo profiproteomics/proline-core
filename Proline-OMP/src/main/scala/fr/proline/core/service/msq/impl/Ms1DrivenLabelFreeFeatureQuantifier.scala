@@ -9,8 +9,8 @@ import collection.mutable.{HashMap,HashSet}
 import collection.mutable.ArrayBuffer
 
 import fr.proline.core.algo.msi.ResultSummaryMerger
-import fr.proline.core.dal.MsiDbSpectrumTable
 import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.service.msq.IQuantifier
 import fr.proline.util.ms._
 import fr.proline.core.om.model.msi._
