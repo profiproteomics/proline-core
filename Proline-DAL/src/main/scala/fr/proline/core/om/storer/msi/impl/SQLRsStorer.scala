@@ -83,9 +83,9 @@ class SQLRsStorer( storerContext: StorerContext,
     // Store RDB result set
     // TODO: use JPA instead
     
-    val rsInsertQuery = MsiDbResultSetTable.makeInsertQuery { t =>
+    val rsInsertQuery = MsiDbResultSetTable.makeInsertQuery( t =>
       List( t.name, t.description, t.`type`, t.modificationTimestamp, t.decoyResultSetId, t.msiSearchId )
-    }
+    )
     
     ezDBC.executePrepared( rsInsertQuery, true ) { stmt =>
       stmt.executeWith(

@@ -1,916 +1,610 @@
 package fr.proline.core.dal.tables.uds
 
-import fr.proline.core.dal.tables.TableDefinition
+import fr.proline.core.dal.tables._
 
-object UdsDbActivationTable extends TableDefinition {
+object UdsDbActivationColumns extends ColumnEnumeration {
+  val `type` = Value("type")
+}
 
+abstract class UdsDbActivationTable extends TableDefinition[UdsDbActivationColumns.type]
+
+object UdsDbActivationTable extends UdsDbActivationTable {
   val tableName = "activation"
-
-  object columns extends Enumeration {
-
-    val `type` = Value("type")
-  }
-
-  def getColumnsAsStrList( f: UdsDbActivationTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbActivationTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbActivationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbActivationTable.columns.type]( f )
-  }
-
+  val columns = UdsDbActivationColumns
 }
 
-object UdsDbAdminInfosTable extends TableDefinition {
+object UdsDbAdminInfosColumns extends ColumnEnumeration {
+  val modelVersion = Value("model_version")
+  val dbCreationDate = Value("db_creation_date")
+  val modelUpdateDate = Value("model_update_date")
+  val configuration = Value("configuration")
+}
 
+abstract class UdsDbAdminInfosTable extends TableDefinition[UdsDbAdminInfosColumns.type]
+
+object UdsDbAdminInfosTable extends UdsDbAdminInfosTable {
   val tableName = "admin_infos"
-
-  object columns extends Enumeration {
-
-    val modelVersion = Value("model_version")
-    val dbCreationDate = Value("db_creation_date")
-    val modelUpdateDate = Value("model_update_date")
-    val configuration = Value("configuration")
-  }
-
-  def getColumnsAsStrList( f: UdsDbAdminInfosTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbAdminInfosTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbAdminInfosTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbAdminInfosTable.columns.type]( f )
-  }
-
+  val columns = UdsDbAdminInfosColumns
 }
 
-object UdsDbBiologicalGroupTable extends TableDefinition {
+object UdsDbBiologicalGroupColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val name = Value("name")
+  val serializedProperties = Value("serialized_properties")
+  val groupSetupId = Value("group_setup_id")
+}
 
+abstract class UdsDbBiologicalGroupTable extends TableDefinition[UdsDbBiologicalGroupColumns.type]
+
+object UdsDbBiologicalGroupTable extends UdsDbBiologicalGroupTable {
   val tableName = "biological_group"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val name = Value("name")
-    val serializedProperties = Value("serialized_properties")
-    val groupSetupId = Value("group_setup_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbBiologicalGroupTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbBiologicalGroupTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbBiologicalGroupTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbBiologicalGroupTable.columns.type]( f )
-  }
-
+  val columns = UdsDbBiologicalGroupColumns
 }
 
-object UdsDbBiologicalGroupBiologicalSampleItemTable extends TableDefinition {
+object UdsDbBiologicalGroupBiologicalSampleItemColumns extends ColumnEnumeration {
+  val biologicalGroupId = Value("biological_group_id")
+  val biologicalSampleId = Value("biological_sample_id")
+}
 
+abstract class UdsDbBiologicalGroupBiologicalSampleItemTable extends TableDefinition[UdsDbBiologicalGroupBiologicalSampleItemColumns.type]
+
+object UdsDbBiologicalGroupBiologicalSampleItemTable extends UdsDbBiologicalGroupBiologicalSampleItemTable {
   val tableName = "biological_group_biological_sample_item"
-
-  object columns extends Enumeration {
-
-    val biologicalGroupId = Value("biological_group_id")
-    val biologicalSampleId = Value("biological_sample_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbBiologicalGroupBiologicalSampleItemTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbBiologicalGroupBiologicalSampleItemTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbBiologicalGroupBiologicalSampleItemTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbBiologicalGroupBiologicalSampleItemTable.columns.type]( f )
-  }
-
+  val columns = UdsDbBiologicalGroupBiologicalSampleItemColumns
 }
 
-object UdsDbBiologicalSampleTable extends TableDefinition {
+object UdsDbBiologicalSampleColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val name = Value("name")
+  val serializedProperties = Value("serialized_properties")
+  val quantitationId = Value("quantitation_id")
+}
 
+abstract class UdsDbBiologicalSampleTable extends TableDefinition[UdsDbBiologicalSampleColumns.type]
+
+object UdsDbBiologicalSampleTable extends UdsDbBiologicalSampleTable {
   val tableName = "biological_sample"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val name = Value("name")
-    val serializedProperties = Value("serialized_properties")
-    val quantitationId = Value("quantitation_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbBiologicalSampleTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbBiologicalSampleTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbBiologicalSampleTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbBiologicalSampleTable.columns.type]( f )
-  }
-
+  val columns = UdsDbBiologicalSampleColumns
 }
 
-object UdsDbDocumentTable extends TableDefinition {
+object UdsDbDocumentColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val description = Value("description")
+  val keywords = Value("keywords")
+  val creationTimestamp = Value("creation_timestamp")
+  val modificationTimestamp = Value("modification_timestamp")
+  val creationLog = Value("creation_log")
+  val modificationLog = Value("modification_log")
+  val serializedProperties = Value("serialized_properties")
+  val objectTreeId = Value("object_tree_id")
+  val virtualFolderId = Value("virtual_folder_id")
+  val projectId = Value("project_id")
+  val schemaName = Value("schema_name")
+}
 
+abstract class UdsDbDocumentTable extends TableDefinition[UdsDbDocumentColumns.type]
+
+object UdsDbDocumentTable extends UdsDbDocumentTable {
   val tableName = "document"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val description = Value("description")
-    val keywords = Value("keywords")
-    val creationTimestamp = Value("creation_timestamp")
-    val modificationTimestamp = Value("modification_timestamp")
-    val creationLog = Value("creation_log")
-    val modificationLog = Value("modification_log")
-    val serializedProperties = Value("serialized_properties")
-    val objectTreeId = Value("object_tree_id")
-    val virtualFolderId = Value("virtual_folder_id")
-    val projectId = Value("project_id")
-    val schemaName = Value("schema_name")
-  }
-
-  def getColumnsAsStrList( f: UdsDbDocumentTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbDocumentTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbDocumentTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbDocumentTable.columns.type]( f )
-  }
-
+  val columns = UdsDbDocumentColumns
 }
 
-object UdsDbEnzymeTable extends TableDefinition {
+object UdsDbEnzymeColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val cleavageRegexp = Value("cleavage_regexp")
+  val isIndependant = Value("is_independant")
+  val isSemiSpecific = Value("is_semi_specific")
+}
 
+abstract class UdsDbEnzymeTable extends TableDefinition[UdsDbEnzymeColumns.type]
+
+object UdsDbEnzymeTable extends UdsDbEnzymeTable {
   val tableName = "enzyme"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val cleavageRegexp = Value("cleavage_regexp")
-    val isIndependant = Value("is_independant")
-    val isSemiSpecific = Value("is_semi_specific")
-  }
-
-  def getColumnsAsStrList( f: UdsDbEnzymeTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbEnzymeTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbEnzymeTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbEnzymeTable.columns.type]( f )
-  }
-
+  val columns = UdsDbEnzymeColumns
 }
 
-object UdsDbEnzymeCleavageTable extends TableDefinition {
+object UdsDbEnzymeCleavageColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val site = Value("site")
+  val residues = Value("residues")
+  val restrictiveResidues = Value("restrictive_residues")
+  val enzymeId = Value("enzyme_id")
+}
 
+abstract class UdsDbEnzymeCleavageTable extends TableDefinition[UdsDbEnzymeCleavageColumns.type]
+
+object UdsDbEnzymeCleavageTable extends UdsDbEnzymeCleavageTable {
   val tableName = "enzyme_cleavage"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val site = Value("site")
-    val residues = Value("residues")
-    val restrictiveResidues = Value("restrictive_residues")
-    val enzymeId = Value("enzyme_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbEnzymeCleavageTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbEnzymeCleavageTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbEnzymeCleavageTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbEnzymeCleavageTable.columns.type]( f )
-  }
-
+  val columns = UdsDbEnzymeCleavageColumns
 }
 
-object UdsDbExternalDbTable extends TableDefinition {
+object UdsDbExternalDbColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val connectionMode = Value("connection_mode")
+  val username = Value("username")
+  val password = Value("password")
+  val host = Value("host")
+  val port = Value("port")
+  val `type` = Value("type")
+  val version = Value("version")
+  val isBusy = Value("is_busy")
+  val serializedProperties = Value("serialized_properties")
+}
 
+abstract class UdsDbExternalDbTable extends TableDefinition[UdsDbExternalDbColumns.type]
+
+object UdsDbExternalDbTable extends UdsDbExternalDbTable {
   val tableName = "external_db"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val connectionMode = Value("connection_mode")
-    val username = Value("username")
-    val password = Value("password")
-    val host = Value("host")
-    val port = Value("port")
-    val `type` = Value("type")
-    val version = Value("version")
-    val isBusy = Value("is_busy")
-    val serializedProperties = Value("serialized_properties")
-  }
-
-  def getColumnsAsStrList( f: UdsDbExternalDbTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbExternalDbTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbExternalDbTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbExternalDbTable.columns.type]( f )
-  }
-
+  val columns = UdsDbExternalDbColumns
 }
 
-object UdsDbFragmentationRuleTable extends TableDefinition {
+object UdsDbFragmentationRuleColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val description = Value("description")
+  val precursorMinCharge = Value("precursor_min_charge")
+  val fragmentCharge = Value("fragment_charge")
+  val fragmentMaxMoz = Value("fragment_max_moz")
+  val fragmentResidueConstraint = Value("fragment_residue_constraint")
+  val requiredSerieQualityLevel = Value("required_serie_quality_level")
+  val serializedProperties = Value("serialized_properties")
+  val theoreticalFragmentId = Value("theoretical_fragment_id")
+  val requiredSerieId = Value("required_serie_id")
+}
 
+abstract class UdsDbFragmentationRuleTable extends TableDefinition[UdsDbFragmentationRuleColumns.type]
+
+object UdsDbFragmentationRuleTable extends UdsDbFragmentationRuleTable {
   val tableName = "fragmentation_rule"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val description = Value("description")
-    val precursorMinCharge = Value("precursor_min_charge")
-    val fragmentCharge = Value("fragment_charge")
-    val fragmentMaxMoz = Value("fragment_max_moz")
-    val fragmentResidueConstraint = Value("fragment_residue_constraint")
-    val requiredSerieQualityLevel = Value("required_serie_quality_level")
-    val serializedProperties = Value("serialized_properties")
-    val theoreticalFragmentId = Value("theoretical_fragment_id")
-    val requiredSerieId = Value("required_serie_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbFragmentationRuleTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbFragmentationRuleTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbFragmentationRuleTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbFragmentationRuleTable.columns.type]( f )
-  }
-
+  val columns = UdsDbFragmentationRuleColumns
 }
 
-object UdsDbGroupSetupTable extends TableDefinition {
+object UdsDbGroupSetupColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val serializedProperties = Value("serialized_properties")
+  val quantitationId = Value("quantitation_id")
+}
 
+abstract class UdsDbGroupSetupTable extends TableDefinition[UdsDbGroupSetupColumns.type]
+
+object UdsDbGroupSetupTable extends UdsDbGroupSetupTable {
   val tableName = "group_setup"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val serializedProperties = Value("serialized_properties")
-    val quantitationId = Value("quantitation_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbGroupSetupTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbGroupSetupTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbGroupSetupTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbGroupSetupTable.columns.type]( f )
-  }
-
+  val columns = UdsDbGroupSetupColumns
 }
 
-object UdsDbIdentificationTable extends TableDefinition {
+object UdsDbIdentificationColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val name = Value("name")
+  val description = Value("description")
+  val keywords = Value("keywords")
+  val creationTimestamp = Value("creation_timestamp")
+  val modificationLog = Value("modification_log")
+  val fractionationType = Value("fractionation_type")
+  val fractionCount = Value("fraction_count")
+  val serializedProperties = Value("serialized_properties")
+  val activeSummaryId = Value("active_summary_id")
+  val projectId = Value("project_id")
+}
 
+abstract class UdsDbIdentificationTable extends TableDefinition[UdsDbIdentificationColumns.type]
+
+object UdsDbIdentificationTable extends UdsDbIdentificationTable {
   val tableName = "identification"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val name = Value("name")
-    val description = Value("description")
-    val keywords = Value("keywords")
-    val creationTimestamp = Value("creation_timestamp")
-    val modificationLog = Value("modification_log")
-    val fractionationType = Value("fractionation_type")
-    val fractionCount = Value("fraction_count")
-    val serializedProperties = Value("serialized_properties")
-    val activeSummaryId = Value("active_summary_id")
-    val projectId = Value("project_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbIdentificationTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbIdentificationTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbIdentificationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbIdentificationTable.columns.type]( f )
-  }
-
+  val columns = UdsDbIdentificationColumns
 }
 
-object UdsDbIdentificationFractionTable extends TableDefinition {
+object UdsDbIdentificationFractionColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val serializedProperties = Value("serialized_properties")
+  val resultSetId = Value("result_set_id")
+  val identificationId = Value("identification_id")
+  val runId = Value("run_id")
+  val rawFileName = Value("raw_file_name")
+}
 
+abstract class UdsDbIdentificationFractionTable extends TableDefinition[UdsDbIdentificationFractionColumns.type]
+
+object UdsDbIdentificationFractionTable extends UdsDbIdentificationFractionTable {
   val tableName = "identification_fraction"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val serializedProperties = Value("serialized_properties")
-    val resultSetId = Value("result_set_id")
-    val identificationId = Value("identification_id")
-    val runId = Value("run_id")
-    val rawFileName = Value("raw_file_name")
-  }
-
-  def getColumnsAsStrList( f: UdsDbIdentificationFractionTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbIdentificationFractionTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbIdentificationFractionTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbIdentificationFractionTable.columns.type]( f )
-  }
-
+  val columns = UdsDbIdentificationFractionColumns
 }
 
-object UdsDbIdentificationFractionSummaryTable extends TableDefinition {
+object UdsDbIdentificationFractionSummaryColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val serializedProperties = Value("serialized_properties")
+  val resultSummaryId = Value("result_summary_id")
+  val identificationFractionId = Value("identification_fraction_id")
+  val identificationSummaryId = Value("identification_summary_id")
+}
 
+abstract class UdsDbIdentificationFractionSummaryTable extends TableDefinition[UdsDbIdentificationFractionSummaryColumns.type]
+
+object UdsDbIdentificationFractionSummaryTable extends UdsDbIdentificationFractionSummaryTable {
   val tableName = "identification_fraction_summary"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val serializedProperties = Value("serialized_properties")
-    val resultSummaryId = Value("result_summary_id")
-    val identificationFractionId = Value("identification_fraction_id")
-    val identificationSummaryId = Value("identification_summary_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbIdentificationFractionSummaryTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbIdentificationFractionSummaryTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbIdentificationFractionSummaryTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbIdentificationFractionSummaryTable.columns.type]( f )
-  }
-
+  val columns = UdsDbIdentificationFractionSummaryColumns
 }
 
-object UdsDbIdentificationSummaryTable extends TableDefinition {
+object UdsDbIdentificationSummaryColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val serializedProperties = Value("serialized_properties")
+  val resultSummaryId = Value("result_summary_id")
+  val identificationId = Value("identification_id")
+}
 
+abstract class UdsDbIdentificationSummaryTable extends TableDefinition[UdsDbIdentificationSummaryColumns.type]
+
+object UdsDbIdentificationSummaryTable extends UdsDbIdentificationSummaryTable {
   val tableName = "identification_summary"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val serializedProperties = Value("serialized_properties")
-    val resultSummaryId = Value("result_summary_id")
-    val identificationId = Value("identification_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbIdentificationSummaryTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbIdentificationSummaryTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbIdentificationSummaryTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbIdentificationSummaryTable.columns.type]( f )
-  }
-
+  val columns = UdsDbIdentificationSummaryColumns
 }
 
-object UdsDbInstrumentTable extends TableDefinition {
+object UdsDbInstrumentColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val source = Value("source")
+  val serializedProperties = Value("serialized_properties")
+}
 
+abstract class UdsDbInstrumentTable extends TableDefinition[UdsDbInstrumentColumns.type]
+
+object UdsDbInstrumentTable extends UdsDbInstrumentTable {
   val tableName = "instrument"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val source = Value("source")
-    val serializedProperties = Value("serialized_properties")
-  }
-
-  def getColumnsAsStrList( f: UdsDbInstrumentTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbInstrumentTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbInstrumentTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbInstrumentTable.columns.type]( f )
-  }
-
+  val columns = UdsDbInstrumentColumns
 }
 
-object UdsDbInstrumentConfigTable extends TableDefinition {
+object UdsDbInstrumentConfigColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val ms1_analyzer = Value("ms1_analyzer")
+  val msnAnalyzer = Value("msn_analyzer")
+  val serializedProperties = Value("serialized_properties")
+  val instrumentId = Value("instrument_id")
+  val activationType = Value("activation_type")
+}
 
+abstract class UdsDbInstrumentConfigTable extends TableDefinition[UdsDbInstrumentConfigColumns.type]
+
+object UdsDbInstrumentConfigTable extends UdsDbInstrumentConfigTable {
   val tableName = "instrument_config"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val ms1_analyzer = Value("ms1_analyzer")
-    val msnAnalyzer = Value("msn_analyzer")
-    val serializedProperties = Value("serialized_properties")
-    val instrumentId = Value("instrument_id")
-    val activationType = Value("activation_type")
-  }
-
-  def getColumnsAsStrList( f: UdsDbInstrumentConfigTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbInstrumentConfigTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbInstrumentConfigTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbInstrumentConfigTable.columns.type]( f )
-  }
-
+  val columns = UdsDbInstrumentConfigColumns
 }
 
-object UdsDbInstrumentConfigFragmentationRuleMapTable extends TableDefinition {
+object UdsDbInstrumentConfigFragmentationRuleMapColumns extends ColumnEnumeration {
+  val instrumentConfigId = Value("instrument_config_id")
+  val fragmentationRuleId = Value("fragmentation_rule_id")
+}
 
+abstract class UdsDbInstrumentConfigFragmentationRuleMapTable extends TableDefinition[UdsDbInstrumentConfigFragmentationRuleMapColumns.type]
+
+object UdsDbInstrumentConfigFragmentationRuleMapTable extends UdsDbInstrumentConfigFragmentationRuleMapTable {
   val tableName = "instrument_config_fragmentation_rule_map"
-
-  object columns extends Enumeration {
-
-    val instrumentConfigId = Value("instrument_config_id")
-    val fragmentationRuleId = Value("fragmentation_rule_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbInstrumentConfigFragmentationRuleMapTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbInstrumentConfigFragmentationRuleMapTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbInstrumentConfigFragmentationRuleMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbInstrumentConfigFragmentationRuleMapTable.columns.type]( f )
-  }
-
+  val columns = UdsDbInstrumentConfigFragmentationRuleMapColumns
 }
 
-object UdsDbObjectTreeTable extends TableDefinition {
+object UdsDbObjectTreeColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val serializedData = Value("serialized_data")
+  val serializedProperties = Value("serialized_properties")
+  val schemaName = Value("schema_name")
+}
 
+abstract class UdsDbObjectTreeTable extends TableDefinition[UdsDbObjectTreeColumns.type]
+
+object UdsDbObjectTreeTable extends UdsDbObjectTreeTable {
   val tableName = "object_tree"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val serializedData = Value("serialized_data")
-    val serializedProperties = Value("serialized_properties")
-    val schemaName = Value("schema_name")
-  }
-
-  def getColumnsAsStrList( f: UdsDbObjectTreeTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbObjectTreeTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbObjectTreeTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbObjectTreeTable.columns.type]( f )
-  }
-
+  val columns = UdsDbObjectTreeColumns
 }
 
-object UdsDbObjectTreeSchemaTable extends TableDefinition {
+object UdsDbObjectTreeSchemaColumns extends ColumnEnumeration {
+  val name = Value("name")
+  val `type` = Value("type")
+  val version = Value("version")
+  val schema = Value("schema")
+  val description = Value("description")
+  val serializedProperties = Value("serialized_properties")
+}
 
+abstract class UdsDbObjectTreeSchemaTable extends TableDefinition[UdsDbObjectTreeSchemaColumns.type]
+
+object UdsDbObjectTreeSchemaTable extends UdsDbObjectTreeSchemaTable {
   val tableName = "object_tree_schema"
-
-  object columns extends Enumeration {
-
-    val name = Value("name")
-    val `type` = Value("type")
-    val version = Value("version")
-    val schema = Value("schema")
-    val description = Value("description")
-    val serializedProperties = Value("serialized_properties")
-  }
-
-  def getColumnsAsStrList( f: UdsDbObjectTreeSchemaTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbObjectTreeSchemaTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbObjectTreeSchemaTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbObjectTreeSchemaTable.columns.type]( f )
-  }
-
+  val columns = UdsDbObjectTreeSchemaColumns
 }
 
-object UdsDbPeaklistSoftwareTable extends TableDefinition {
+object UdsDbPeaklistSoftwareColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val version = Value("version")
+  val serializedProperties = Value("serialized_properties")
+  val specTitleParsingRuleId = Value("spec_title_parsing_rule_id")
+}
 
+abstract class UdsDbPeaklistSoftwareTable extends TableDefinition[UdsDbPeaklistSoftwareColumns.type]
+
+object UdsDbPeaklistSoftwareTable extends UdsDbPeaklistSoftwareTable {
   val tableName = "peaklist_software"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val version = Value("version")
-    val serializedProperties = Value("serialized_properties")
-    val specTitleParsingRuleId = Value("spec_title_parsing_rule_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbPeaklistSoftwareTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbPeaklistSoftwareTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbPeaklistSoftwareTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbPeaklistSoftwareTable.columns.type]( f )
-  }
-
+  val columns = UdsDbPeaklistSoftwareColumns
 }
 
-object UdsDbProjectTable extends TableDefinition {
+object UdsDbProjectColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val description = Value("description")
+  val creationTimestamp = Value("creation_timestamp")
+  val serializedProperties = Value("serialized_properties")
+  val ownerId = Value("owner_id")
+}
 
+abstract class UdsDbProjectTable extends TableDefinition[UdsDbProjectColumns.type]
+
+object UdsDbProjectTable extends UdsDbProjectTable {
   val tableName = "project"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val description = Value("description")
-    val creationTimestamp = Value("creation_timestamp")
-    val serializedProperties = Value("serialized_properties")
-    val ownerId = Value("owner_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbProjectTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbProjectTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbProjectTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbProjectTable.columns.type]( f )
-  }
-
+  val columns = UdsDbProjectColumns
 }
 
-object UdsDbProjectDbMapTable extends TableDefinition {
+object UdsDbProjectDbMapColumns extends ColumnEnumeration {
+  val externalDbId = Value("external_db_id")
+  val projectId = Value("project_id")
+}
 
+abstract class UdsDbProjectDbMapTable extends TableDefinition[UdsDbProjectDbMapColumns.type]
+
+object UdsDbProjectDbMapTable extends UdsDbProjectDbMapTable {
   val tableName = "project_db_map"
-
-  object columns extends Enumeration {
-
-    val externalDbId = Value("external_db_id")
-    val projectId = Value("project_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbProjectDbMapTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbProjectDbMapTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbProjectDbMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbProjectDbMapTable.columns.type]( f )
-  }
-
+  val columns = UdsDbProjectDbMapColumns
 }
 
-object UdsDbProjectUserAccountMapTable extends TableDefinition {
+object UdsDbProjectUserAccountMapColumns extends ColumnEnumeration {
+  val projectId = Value("project_id")
+  val userAccountId = Value("user_account_id")
+  val serializedProperties = Value("serialized_properties")
+}
 
+abstract class UdsDbProjectUserAccountMapTable extends TableDefinition[UdsDbProjectUserAccountMapColumns.type]
+
+object UdsDbProjectUserAccountMapTable extends UdsDbProjectUserAccountMapTable {
   val tableName = "project_user_account_map"
-
-  object columns extends Enumeration {
-
-    val projectId = Value("project_id")
-    val userAccountId = Value("user_account_id")
-    val serializedProperties = Value("serialized_properties")
-  }
-
-  def getColumnsAsStrList( f: UdsDbProjectUserAccountMapTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbProjectUserAccountMapTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbProjectUserAccountMapTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbProjectUserAccountMapTable.columns.type]( f )
-  }
-
+  val columns = UdsDbProjectUserAccountMapColumns
 }
 
-object UdsDbProteinMatchDecoyRuleTable extends TableDefinition {
+object UdsDbProteinMatchDecoyRuleColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val acDecoyTag = Value("ac_decoy_tag")
+}
 
+abstract class UdsDbProteinMatchDecoyRuleTable extends TableDefinition[UdsDbProteinMatchDecoyRuleColumns.type]
+
+object UdsDbProteinMatchDecoyRuleTable extends UdsDbProteinMatchDecoyRuleTable {
   val tableName = "protein_match_decoy_rule"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val acDecoyTag = Value("ac_decoy_tag")
-  }
-
-  def getColumnsAsStrList( f: UdsDbProteinMatchDecoyRuleTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbProteinMatchDecoyRuleTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbProteinMatchDecoyRuleTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbProteinMatchDecoyRuleTable.columns.type]( f )
-  }
-
+  val columns = UdsDbProteinMatchDecoyRuleColumns
 }
 
-object UdsDbQuantChannelTable extends TableDefinition {
+object UdsDbQuantChannelColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val name = Value("name")
+  val contextKey = Value("context_key")
+  val serializedProperties = Value("serialized_properties")
+  val lcmsMapId = Value("lcms_map_id")
+  val identResultSummaryId = Value("ident_result_summary_id")
+  val quantResultSummaryId = Value("quant_result_summary_id")
+  val quantLabelId = Value("quant_label_id")
+  val sampleAnalysisReplicateId = Value("sample_analysis_replicate_id")
+  val biologicalSampleId = Value("biological_sample_id")
+  val quantitationFractionId = Value("quantitation_fraction_id")
+  val quantitationId = Value("quantitation_id")
+}
 
+abstract class UdsDbQuantChannelTable extends TableDefinition[UdsDbQuantChannelColumns.type]
+
+object UdsDbQuantChannelTable extends UdsDbQuantChannelTable {
   val tableName = "quant_channel"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val name = Value("name")
-    val contextKey = Value("context_key")
-    val serializedProperties = Value("serialized_properties")
-    val lcmsMapId = Value("lcms_map_id")
-    val identResultSummaryId = Value("ident_result_summary_id")
-    val quantResultSummaryId = Value("quant_result_summary_id")
-    val quantLabelId = Value("quant_label_id")
-    val sampleAnalysisReplicateId = Value("sample_analysis_replicate_id")
-    val biologicalSampleId = Value("biological_sample_id")
-    val quantitationFractionId = Value("quantitation_fraction_id")
-    val quantitationId = Value("quantitation_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbQuantChannelTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbQuantChannelTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbQuantChannelTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbQuantChannelTable.columns.type]( f )
-  }
-
+  val columns = UdsDbQuantChannelColumns
 }
 
-object UdsDbQuantLabelTable extends TableDefinition {
+object UdsDbQuantLabelColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val `type` = Value("type")
+  val name = Value("name")
+  val serializedProperties = Value("serialized_properties")
+  val quantMethodId = Value("quant_method_id")
+}
 
+abstract class UdsDbQuantLabelTable extends TableDefinition[UdsDbQuantLabelColumns.type]
+
+object UdsDbQuantLabelTable extends UdsDbQuantLabelTable {
   val tableName = "quant_label"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val `type` = Value("type")
-    val name = Value("name")
-    val serializedProperties = Value("serialized_properties")
-    val quantMethodId = Value("quant_method_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbQuantLabelTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbQuantLabelTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbQuantLabelTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbQuantLabelTable.columns.type]( f )
-  }
-
+  val columns = UdsDbQuantLabelColumns
 }
 
-object UdsDbQuantMethodTable extends TableDefinition {
+object UdsDbQuantMethodColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val `type` = Value("type")
+  val abundanceUnit = Value("abundance_unit")
+  val serializedProperties = Value("serialized_properties")
+}
 
+abstract class UdsDbQuantMethodTable extends TableDefinition[UdsDbQuantMethodColumns.type]
+
+object UdsDbQuantMethodTable extends UdsDbQuantMethodTable {
   val tableName = "quant_method"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val `type` = Value("type")
-    val abundanceUnit = Value("abundance_unit")
-    val serializedProperties = Value("serialized_properties")
-  }
-
-  def getColumnsAsStrList( f: UdsDbQuantMethodTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbQuantMethodTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbQuantMethodTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbQuantMethodTable.columns.type]( f )
-  }
-
+  val columns = UdsDbQuantMethodColumns
 }
 
-object UdsDbQuantitationTable extends TableDefinition {
+object UdsDbQuantitationColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val name = Value("name")
+  val description = Value("description")
+  val keywords = Value("keywords")
+  val creationTimestamp = Value("creation_timestamp")
+  val modificationLog = Value("modification_log")
+  val fractionCount = Value("fraction_count")
+  val fractionationType = Value("fractionation_type")
+  val serializedProperties = Value("serialized_properties")
+  val quantMethodId = Value("quant_method_id")
+  val projectId = Value("project_id")
+}
 
+abstract class UdsDbQuantitationTable extends TableDefinition[UdsDbQuantitationColumns.type]
+
+object UdsDbQuantitationTable extends UdsDbQuantitationTable {
   val tableName = "quantitation"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val name = Value("name")
-    val description = Value("description")
-    val keywords = Value("keywords")
-    val creationTimestamp = Value("creation_timestamp")
-    val modificationLog = Value("modification_log")
-    val fractionCount = Value("fraction_count")
-    val fractionationType = Value("fractionation_type")
-    val serializedProperties = Value("serialized_properties")
-    val quantMethodId = Value("quant_method_id")
-    val projectId = Value("project_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbQuantitationTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbQuantitationTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbQuantitationTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbQuantitationTable.columns.type]( f )
-  }
-
+  val columns = UdsDbQuantitationColumns
 }
 
-object UdsDbQuantitationFractionTable extends TableDefinition {
+object UdsDbQuantitationFractionColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val name = Value("name")
+  val serializedProperties = Value("serialized_properties")
+  val lcmsMapSetId = Value("lcms_map_set_id")
+  val quantResultSummaryId = Value("quant_result_summary_id")
+  val quantitationId = Value("quantitation_id")
+}
 
+abstract class UdsDbQuantitationFractionTable extends TableDefinition[UdsDbQuantitationFractionColumns.type]
+
+object UdsDbQuantitationFractionTable extends UdsDbQuantitationFractionTable {
   val tableName = "quantitation_fraction"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val name = Value("name")
-    val serializedProperties = Value("serialized_properties")
-    val lcmsMapSetId = Value("lcms_map_set_id")
-    val quantResultSummaryId = Value("quant_result_summary_id")
-    val quantitationId = Value("quantitation_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbQuantitationFractionTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbQuantitationFractionTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbQuantitationFractionTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbQuantitationFractionTable.columns.type]( f )
-  }
-
+  val columns = UdsDbQuantitationFractionColumns
 }
 
-object UdsDbRatioDefinitionTable extends TableDefinition {
+object UdsDbRatioDefinitionColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val numeratorId = Value("numerator_id")
+  val denominatorId = Value("denominator_id")
+  val groupSetupId = Value("group_setup_id")
+}
 
+abstract class UdsDbRatioDefinitionTable extends TableDefinition[UdsDbRatioDefinitionColumns.type]
+
+object UdsDbRatioDefinitionTable extends UdsDbRatioDefinitionTable {
   val tableName = "ratio_definition"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val numeratorId = Value("numerator_id")
-    val denominatorId = Value("denominator_id")
-    val groupSetupId = Value("group_setup_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbRatioDefinitionTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbRatioDefinitionTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbRatioDefinitionTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbRatioDefinitionTable.columns.type]( f )
-  }
-
+  val columns = UdsDbRatioDefinitionColumns
 }
 
-object UdsDbRawFileTable extends TableDefinition {
+object UdsDbRawFileColumns extends ColumnEnumeration {
+  val name = Value("name")
+  val extension = Value("extension")
+  val directory = Value("directory")
+  val creationTimestamp = Value("creation_timestamp")
+  val instrumentId = Value("instrument_id")
+  val ownerId = Value("owner_id")
+}
 
+abstract class UdsDbRawFileTable extends TableDefinition[UdsDbRawFileColumns.type]
+
+object UdsDbRawFileTable extends UdsDbRawFileTable {
   val tableName = "raw_file"
-
-  object columns extends Enumeration {
-
-    val name = Value("name")
-    val extension = Value("extension")
-    val directory = Value("directory")
-    val creationTimestamp = Value("creation_timestamp")
-    val instrumentId = Value("instrument_id")
-    val ownerId = Value("owner_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbRawFileTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbRawFileTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbRawFileTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbRawFileTable.columns.type]( f )
-  }
-
+  val columns = UdsDbRawFileColumns
 }
 
-object UdsDbRunTable extends TableDefinition {
+object UdsDbRunColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val runStart = Value("run_start")
+  val runStop = Value("run_stop")
+  val duration = Value("duration")
+  val lcMethod = Value("lc_method")
+  val msMethod = Value("ms_method")
+  val analyst = Value("analyst")
+  val serializedProperties = Value("serialized_properties")
+  val rawFileName = Value("raw_file_name")
+}
 
+abstract class UdsDbRunTable extends TableDefinition[UdsDbRunColumns.type]
+
+object UdsDbRunTable extends UdsDbRunTable {
   val tableName = "run"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val runStart = Value("run_start")
-    val runStop = Value("run_stop")
-    val duration = Value("duration")
-    val lcMethod = Value("lc_method")
-    val msMethod = Value("ms_method")
-    val analyst = Value("analyst")
-    val serializedProperties = Value("serialized_properties")
-    val rawFileName = Value("raw_file_name")
-  }
-
-  def getColumnsAsStrList( f: UdsDbRunTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbRunTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbRunTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbRunTable.columns.type]( f )
-  }
-
+  val columns = UdsDbRunColumns
 }
 
-object UdsDbSampleAnalysisReplicateTable extends TableDefinition {
+object UdsDbSampleAnalysisReplicateColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val number = Value("number")
+  val serializedProperties = Value("serialized_properties")
+  val biologicalSampleId = Value("biological_sample_id")
+  val quantitationId = Value("quantitation_id")
+}
 
+abstract class UdsDbSampleAnalysisReplicateTable extends TableDefinition[UdsDbSampleAnalysisReplicateColumns.type]
+
+object UdsDbSampleAnalysisReplicateTable extends UdsDbSampleAnalysisReplicateTable {
   val tableName = "sample_analysis_replicate"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val number = Value("number")
-    val serializedProperties = Value("serialized_properties")
-    val biologicalSampleId = Value("biological_sample_id")
-    val quantitationId = Value("quantitation_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbSampleAnalysisReplicateTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbSampleAnalysisReplicateTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbSampleAnalysisReplicateTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbSampleAnalysisReplicateTable.columns.type]( f )
-  }
-
+  val columns = UdsDbSampleAnalysisReplicateColumns
 }
 
-object UdsDbSpecTitleParsingRuleTable extends TableDefinition {
+object UdsDbSpecTitleParsingRuleColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val rawFileName = Value("raw_file_name")
+  val firstCycle = Value("first_cycle")
+  val lastCycle = Value("last_cycle")
+  val firstScan = Value("first_scan")
+  val lastScan = Value("last_scan")
+  val firstTime = Value("first_time")
+  val lastTime = Value("last_time")
+  val name = Value("name")
+}
 
+abstract class UdsDbSpecTitleParsingRuleTable extends TableDefinition[UdsDbSpecTitleParsingRuleColumns.type]
+
+object UdsDbSpecTitleParsingRuleTable extends UdsDbSpecTitleParsingRuleTable {
   val tableName = "spec_title_parsing_rule"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val rawFileName = Value("raw_file_name")
-    val firstCycle = Value("first_cycle")
-    val lastCycle = Value("last_cycle")
-    val firstScan = Value("first_scan")
-    val lastScan = Value("last_scan")
-    val firstTime = Value("first_time")
-    val lastTime = Value("last_time")
-    val name = Value("name")
-  }
-
-  def getColumnsAsStrList( f: UdsDbSpecTitleParsingRuleTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbSpecTitleParsingRuleTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbSpecTitleParsingRuleTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbSpecTitleParsingRuleTable.columns.type]( f )
-  }
-
+  val columns = UdsDbSpecTitleParsingRuleColumns
 }
 
-object UdsDbTheoreticalFragmentTable extends TableDefinition {
+object UdsDbTheoreticalFragmentColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val `type` = Value("type")
+  val neutralLoss = Value("neutral_loss")
+  val serializedProperties = Value("serialized_properties")
+}
 
+abstract class UdsDbTheoreticalFragmentTable extends TableDefinition[UdsDbTheoreticalFragmentColumns.type]
+
+object UdsDbTheoreticalFragmentTable extends UdsDbTheoreticalFragmentTable {
   val tableName = "theoretical_fragment"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val `type` = Value("type")
-    val neutralLoss = Value("neutral_loss")
-    val serializedProperties = Value("serialized_properties")
-  }
-
-  def getColumnsAsStrList( f: UdsDbTheoreticalFragmentTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbTheoreticalFragmentTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbTheoreticalFragmentTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbTheoreticalFragmentTable.columns.type]( f )
-  }
-
+  val columns = UdsDbTheoreticalFragmentColumns
 }
 
-object UdsDbUserAccountTable extends TableDefinition {
+object UdsDbUserAccountColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val login = Value("login")
+  val creationMode = Value("creation_mode")
+  val serializedProperties = Value("serialized_properties")
+}
 
+abstract class UdsDbUserAccountTable extends TableDefinition[UdsDbUserAccountColumns.type]
+
+object UdsDbUserAccountTable extends UdsDbUserAccountTable {
   val tableName = "user_account"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val login = Value("login")
-    val creationMode = Value("creation_mode")
-    val serializedProperties = Value("serialized_properties")
-  }
-
-  def getColumnsAsStrList( f: UdsDbUserAccountTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbUserAccountTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbUserAccountTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbUserAccountTable.columns.type]( f )
-  }
-
+  val columns = UdsDbUserAccountColumns
 }
 
-object UdsDbVirtualFolderTable extends TableDefinition {
+object UdsDbVirtualFolderColumns extends ColumnEnumeration {
+  val id = Value("id")
+  val name = Value("name")
+  val path = Value("path")
+  val serializedProperties = Value("serialized_properties")
+  val parentVirtualFolderId = Value("parent_virtual_folder_id")
+  val projectId = Value("project_id")
+}
 
+abstract class UdsDbVirtualFolderTable extends TableDefinition[UdsDbVirtualFolderColumns.type]
+
+object UdsDbVirtualFolderTable extends UdsDbVirtualFolderTable {
   val tableName = "virtual_folder"
-
-  object columns extends Enumeration {
-
-    val id = Value("id")
-    val name = Value("name")
-    val path = Value("path")
-    val serializedProperties = Value("serialized_properties")
-    val parentVirtualFolderId = Value("parent_virtual_folder_id")
-    val projectId = Value("project_id")
-  }
-
-  def getColumnsAsStrList( f: UdsDbVirtualFolderTable.columns.type => List[Enumeration#Value] ): List[String] = {
-    this._getColumnsAsStrList[UdsDbVirtualFolderTable.columns.type]( f )
-  }
-  
-  def makeInsertQuery( f: UdsDbVirtualFolderTable.columns.type => List[Enumeration#Value] ): String = {
-    this._makeInsertQuery[UdsDbVirtualFolderTable.columns.type]( f )
-  }
-
+  val columns = UdsDbVirtualFolderColumns
 }
-
-

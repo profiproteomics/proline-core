@@ -1,17 +1,16 @@
 package fr.proline.core.dal.tables
 
 // TODO: put these definitions in an other sub-package (i.e. table)
-trait TableDefinition {
+trait TableDefinition[A  <: Enumeration] {
   
   val tableName: String
-  val columns: Enumeration
+  val columns: ColumnEnumeration
   
   def getColumnsAsStrList(): List[String] = {
     List() ++ this.columns.values map { _.toString }
   }
   
-  // TODO: implicit conversion
-  def _getColumnsAsStrList[A <: Enumeration]( f: A => List[Enumeration#Value] ): List[String] = {
+  def getColumnsAsStrList( f: A => List[A#Value] ): List[String] = {
     List() ++ f(this.columns.asInstanceOf[A]) map { _.toString }
   }
   
@@ -19,10 +18,9 @@ trait TableDefinition {
     this.makeInsertQuery( this.getColumnsAsStrList )
   }
   
-  // TODO: implicit conversion
   // TODO: rename to _composeInsertQuery
-  def _makeInsertQuery[A <: Enumeration]( f: A => List[Enumeration#Value] ): String = {
-    this.makeInsertQuery( this._getColumnsAsStrList[A]( f ) )    
+  def makeInsertQuery( f: A => List[A#Value] ): String = {
+    this.makeInsertQuery( this.getColumnsAsStrList( f ) )    
   }
   
   // TODO: create a this
@@ -34,6 +32,8 @@ trait TableDefinition {
     "INSERT INTO "+ this.tableName+" ("+ colsAsStrList.mkString(",") +") VALUES ("+valuesStr+")"
   }
   
+}
+
+trait ColumnEnumeration extends Enumeration {
   implicit def enumValueToString(v: Enumeration#Value): String = v.toString
-  
 }
