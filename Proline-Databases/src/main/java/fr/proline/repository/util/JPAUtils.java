@@ -125,22 +125,22 @@ public final class JPAUtils {
      *            <em>updated</em> entities, it must be <strong>explicitely flushed</strong> by client code
      *            before executing JDBC work.</li>
      *            </ul>
-     * @param work
+     * @param returningWork
      *            JDBC task to be executed by given <code>EntityManager</code> instance, eventually within its
      *            <code>EntityTransaction</code>.
      * @return Result of the executed JDBC task.
      */
-    public static <T> T doReturningWork(final EntityManager em, final JDBCReturningWork<T> work) {
+    public static <T> T doReturningWork(final EntityManager em, final JDBCReturningWork<T> returningWork) {
 
 	checkEntityManager(em);
 
-	if (work == null) {
-	    throw new IllegalArgumentException("Work is null");
+	if (returningWork == null) {
+	    throw new IllegalArgumentException("ReturningWork is null");
 	}
 
 	final Session hibSession = em.unwrap(Session.class);
 
-	return hibSession.doReturningWork(work);
+	return hibSession.doReturningWork(returningWork);
     }
 
 }

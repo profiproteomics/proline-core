@@ -7,15 +7,13 @@ import com.codahale.jerkson.Json.parse
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
-import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.om.model.msi.{IResultFile,IResultFileProvider,Instrument,InstrumentConfig,PeaklistSoftware,ResultSet}
-import fr.proline.core.om.model.msi.ResultFileProviderRegistry
+import fr.proline.core.dal.ProlineEzDBC
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{IRsStorer,MsiSearchStorer,RsStorer}
-import fr.proline.core.om.storer.msi.impl.JPARsStorer
-import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.om.storer.msi.impl.{JPARsStorer,StorerContext,StorerContextBuilder}
 import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.IDatabaseConnector
 import fr.proline.repository.DriverType
+import fr.proline.repository.IDatabaseConnector
 import fr.proline.util.StringUtils
 
 class ResultFileImporterSQLStorer(
@@ -41,7 +39,7 @@ class ResultFileImporterSQLStorer(
             importerProperties: Map[String, Any],
             acDecoyRegex: Option[util.matching.Regex] = None ) {
     this(
-      new StorerContext( dbManager, msiDbConnector ),
+      StorerContextBuilder( dbManager, msiDbConnector, false ), // Force SQL context
       resultIdentFile,
       fileType,
       providerKey,
@@ -56,20 +54,19 @@ class ResultFileImporterSQLStorer(
   //val wasMsiConnectionOpened = storerContext.isMsiDbConnectionOpened
   //val wasPsConnectionOpened = storerContext.isPsConnectionOpened
   
-  private var targetResultSetId = 0
-  
-  private val udsSqlHelper = new SQLQueryHelper(storerContext.dbManager.getUdsDbConnector)
+  private var targetResultSetId = 0  
+  private val udsEzDBC = ProlineEzDBC(storerContext.udsDbContext)
   
   override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
 //    this.msiDb.closeConnection()
-    this.udsSqlHelper.closeConnection()
-    storerContext.closeOpenedEMs()
+    //this.udsEzDBC.connection.close()
+    //storerContext.closeAll()
     
     //if( !wasMsiConnectionOpened ) storerContext.msiDbConnection.close()
     //if( !wasPsConnectionOpened ) storerContext.psDbConnection.close()
-    if( _hasInitiatedStorerContext ) storerContext.closeConnections()
+    if( _hasInitiatedStorerContext ) storerContext.closeAll()
   }
   
   def getTargetResultSetId = targetResultSetId
@@ -83,9 +80,11 @@ class ResultFileImporterSQLStorer(
     logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
     >>>
     
+    val msiEzDBC = ProlineEzDBC(storerContext.msiDbContext)
+    
     // Check if a transaction is already initiated
-    val wasInTransaction = storerContext.msiEzDBC.isInTransaction 
-    if( !wasInTransaction ) storerContext.msiEzDBC.beginTransaction()
+    val wasInTransaction = msiEzDBC.isInTransaction 
+    if( !wasInTransaction ) msiEzDBC.beginTransaction()
     
     // Retrieve the instrument configuration
     val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
@@ -99,7 +98,7 @@ class ResultFileImporterSQLStorer(
     >>>
     
     // Instantiate RsStorer   
-    val rsStorer: IRsStorer = RsStorer( storerContext )
+    val rsStorer: IRsStorer = RsStorer( storerContext.msiDbContext.getDriverType )
      
 	  // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
@@ -129,7 +128,7 @@ class ResultFileImporterSQLStorer(
       
       // Load the peaklist software from the MSidb if it is only an in memory object
       if( msiSearch.peakList.peaklistSoftware == null || msiSearch.peakList.peaklistSoftware.id <= 0 )
-        msiSearch.peakList.peaklistSoftware = this._getOrCreatePeaklistSoftware( peaklistSoftwareId, this.storerContext )
+        msiSearch.peakList.peaklistSoftware = this._getOrCreatePeaklistSoftware( peaklistSoftwareId,msiEzDBC )
       
       /*if(msiSearch != null && msiSearch.peakList.peaklistSoftware == null ){
         //TODO : Define how to get this information !
@@ -211,16 +210,17 @@ class ResultFileImporterSQLStorer(
 //        	 stContext.msiDB.rollbackTransaction
     }
     
-    if( !wasInTransaction ) storerContext.msiEzDBC.commitTransaction
+    if( !wasInTransaction ) msiEzDBC.commitTransaction
     
     this.beforeInterruption()
+    
     true 
 //    msiTransacOk   
   }
 
   private def _getPeaklistSoftware( plName: String, plRevision: String ): PeaklistSoftware = {
 
-    udsSqlHelper.ezDBC.selectHeadOrElse(
+    udsEzDBC.selectHeadOrElse(
     "SELECT * FROM peaklist_software WHERE name= ? and version= ? ",plName,plRevision) ( r =>
       new PeaklistSoftware( id = r, name = r, version = r )
       ,
@@ -228,7 +228,7 @@ class ResultFileImporterSQLStorer(
     )
   }
   
-  private def _getOrCreatePeaklistSoftware( peaklistSoftwareId: Int, stContext: StorerContext ): PeaklistSoftware = {
+  private def _getOrCreatePeaklistSoftware( peaklistSoftwareId: Int, msiEzDBC: EasyDBC ): PeaklistSoftware = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
     import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
@@ -243,18 +243,16 @@ class ResultFileImporterSQLStorer(
       peaklistSoftware
     }
     
-    val msiDb = storerContext.msiEzDBC  
-    
     // Try to retrieve peaklist software from the MSidb
-    var peaklistSoftware = getPeaklistSoftware( msiDb )
+    var peaklistSoftware = getPeaklistSoftware( msiEzDBC )
     if( peaklistSoftware == null ) {
       
       // If it doesn't exist => retrieve from the UDSdb
-      peaklistSoftware = getPeaklistSoftware( udsSqlHelper.ezDBC )
+      peaklistSoftware = getPeaklistSoftware( udsEzDBC )
       
       // Then insert it in the current MSIdb
       val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery( c => List(c.id,c.name,c.version) )      
-      msiDb.execute(peaklistInsertQuery,peaklistSoftware.id,peaklistSoftware.name,peaklistSoftware.version)
+      msiEzDBC.execute(peaklistInsertQuery,peaklistSoftware.id,peaklistSoftware.name,peaklistSoftware.version)
     }
 
     peaklistSoftware
@@ -267,7 +265,7 @@ class ResultFileImporterSQLStorer(
     import fr.proline.core.om.model.msi.{InstrumentProperties,InstrumentConfigProperties}
     
     // Load the instrument configuration record
-    udsSqlHelper.ezDBC.selectHead(
+    udsEzDBC.selectHead(
     "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config "+
     "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId ) { r =>
       

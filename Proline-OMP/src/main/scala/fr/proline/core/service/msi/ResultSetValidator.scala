@@ -9,11 +9,11 @@ import fr.proline.core.om.storer.msi.{MsiSearchStorer,RsStorer}
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.validation._
-import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.dal._
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.DatabaseContext
 
 /*object ResultSetValidator {
   
@@ -41,15 +41,13 @@ class ResultSetValidator( dbManager: DatabaseManager,
                           storeResultSummary: Boolean = true ) extends IService with Logging {
 
   private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiSqlHelper = new SQLQueryHelper(msiDbConnector)
-  private val ezDBC = msiSqlHelper.ezDBC
-  //private val psDb = new PsDb( PsDb.getDefaultConfig ) // TODO: retrieve from UDS-DB
-  //private val udsDb = new UdsDb( UdsDb.getDefaultConfig ) // TODO: retrieve from config
+  private val msiDbContext = new DatabaseContext(msiDbConnector)
+  private val msiEzDBC = ProlineEzDBC(msiDbContext)
   
   override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    this.msiSqlHelper.closeConnection()
+    this.msiDbContext.close()
   }
   
   var validatedTargetRsm: ResultSummary = null
@@ -196,11 +194,11 @@ class ResultSetValidator( dbManager: DatabaseManager,
     if( storeResultSummary ) {
       
       // Check if a transaction is already initiated
-      val wasInTransaction = ezDBC.isInTransaction()
-      if( !wasInTransaction ) ezDBC.beginTransaction()
+      val wasInTransaction = msiEzDBC.isInTransaction()
+      if( !wasInTransaction ) msiEzDBC.beginTransaction()
       
       // Instantiate a RSM storer
-      val rsmStorer = RsmStorer( msiSqlHelper )
+      val rsmStorer = RsmStorer( msiEzDBC )
       
       // Store decoy result summary
       if( decoyRsmOpt != None ) {
@@ -213,7 +211,7 @@ class ResultSetValidator( dbManager: DatabaseManager,
       >>>
       
       // Commit transaction if it was initiated locally
-      if( !wasInTransaction ) ezDBC.commitTransaction()
+      if( !wasInTransaction ) msiEzDBC.commitTransaction()
       
       this.logger.info( "result summary successfully stored !")
     }

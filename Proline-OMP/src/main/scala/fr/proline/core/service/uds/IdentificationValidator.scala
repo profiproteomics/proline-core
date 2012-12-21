@@ -75,7 +75,8 @@ class IdentificationValidator( dbManager: DatabaseManager,
         
         // Load result sets
         val rsIds = targetRsIds ++ decoyRsIdsAsOpts.map { _.get }
-        val( targetRsList, decoyRsList ) = rsProvider.getResultSets( rsIds ).partition { _.isDecoy == false }
+        // TODO LMN Use a real SQL Db Contexts here ->
+        val( targetRsList, decoyRsList ) = rsProvider.getResultSets( rsIds, null, null, null ).partition { _.isDecoy == false }
         
         this.closeDbConnections()
         

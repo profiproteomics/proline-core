@@ -2,7 +2,6 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.dal.tables.msi.{MsiDbPeptideInstanceTable,MsiDbPeptideInstancePeptideMatchMapTable}
 import fr.proline.core.om.model.msi.PeptideInstance
@@ -10,6 +9,7 @@ import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatchValidationProperties
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.repository.DatabaseContext
 
 class SQLPeptideInstanceProvider( val msiDb: SQLQueryExecution,
                                   val psDb: SQLQueryExecution = null,
@@ -23,25 +23,25 @@ class SQLPeptideInstanceProvider( val msiDb: SQLQueryExecution,
     else new SQLPeptideProvider(this.psDb)
   }
   
-  def getPeptideInstancesAsOptions( pepInstIds: Seq[Int] ): Array[Option[PeptideInstance]] = {
+  def getPeptideInstancesAsOptions( pepInstIds: Seq[Int], msiDb: DatabaseContext ): Array[Option[PeptideInstance]] = {
     
-    val pepInsts = this.getPeptideInstances( pepInstIds )
+    val pepInsts = this.getPeptideInstances( pepInstIds, msiDb )
     val pepInstById = pepInsts.map { p => p.id -> p } toMap
     
     pepInstIds.map { pepInstById.get( _ ) } toArray
     
   }
   
-  def getPeptideInstances( pepInstIds: Seq[Int] ): Array[PeptideInstance] = {
+  def getPeptideInstances( pepInstIds: Seq[Int], msiDb: DatabaseContext ): Array[PeptideInstance] = {
     val pepInstRecords = this._getPepInstRecords( pepInstIds )
     val pepInstPepMatchMapRecords = this._getPepInstPepMatchMapRecords( pepInstIds )
-    this._buildPeptideInstances( pepInstRecords, pepInstPepMatchMapRecords )
+    this._buildPeptideInstances( pepInstRecords, pepInstPepMatchMapRecords, msiDb )
   }
   
   def getResultSummariesPeptideInstances( rsmIds: Seq[Int] ): Array[PeptideInstance] = {
     val pepInstRecords =  this._getRSMsPepInstRecords( rsmIds )
     val pepInstPepMatchMapRecords = this._getRSMsPepInstPepMatchMapRecords( rsmIds )    
-    this._buildPeptideInstances( pepInstRecords, pepInstPepMatchMapRecords )    
+    this._buildPeptideInstances( pepInstRecords, pepInstPepMatchMapRecords, null ) // TODO LMN Use a real SQL Db Context here
   }
     
   private def _getRSMsPepInstRecords( rsmIds: Seq[Int] ): Array[Map[String,Any]] = {
@@ -63,14 +63,14 @@ class SQLPeptideInstanceProvider( val msiDb: SQLQueryExecution,
   }
   
   private def _buildPeptideInstances( pepInstRecords: Seq[Map[String,Any]],
-                                      pepInstPepMatchMapRecords: Seq[Map[String,Any]] ): Array[PeptideInstance] = {
+                                      pepInstPepMatchMapRecords: Seq[Map[String,Any]], psDb: DatabaseContext ): Array[PeptideInstance] = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
     import fr.proline.util.primitives.DoubleOrFloatAsFloat._
     
     // Load peptides
     val uniqPepIds = pepInstRecords map { _(PepInstCols.peptideId).asInstanceOf[Int] } distinct
-    val peptides = this._getPeptideProvider().getPeptides(uniqPepIds)
+    val peptides = this._getPeptideProvider().getPeptides(uniqPepIds, psDb)
     
     // Map peptides by their id
     val peptideById = Map() ++ peptides.map { pep => ( pep.id -> pep ) }

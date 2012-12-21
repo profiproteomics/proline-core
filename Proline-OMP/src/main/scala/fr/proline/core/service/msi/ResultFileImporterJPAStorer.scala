@@ -1,19 +1,20 @@
 package fr.proline.core.service.msi
 
 import java.io.File
+import javax.persistence.EntityTransaction
+
 import com.weiglewilczek.slf4s.Logging
 import com.codahale.jerkson.Json.parse
 
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
-import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.om.model.msi.{IResultFile,IResultFileProvider,Instrument,InstrumentConfig,PeaklistSoftware,ResultSet}
-import fr.proline.core.om.model.msi.ResultFileProviderRegistry
-import fr.proline.core.om.storer.msi.{IRsStorer,MsiSearchStorer,RsStorer}
-import fr.proline.core.om.storer.msi.impl.JPARsStorer
-import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.dal.ProlineEzDBC
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.storer.msi.{ IRsStorer, MsiSearchStorer, RsStorer }
+import fr.proline.core.om.storer.msi.impl.{JPARsStorer,StorerContext,StorerContextBuilder}
 import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.DatabaseContext
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.util.StringUtils
 
@@ -25,200 +26,202 @@ class ResultFileImporterJPAStorer(
   providerKey: String,
   instrumentConfigId: Int,
   importerProperties: Map[String, Any],
-  acDecoyRegex: Option[util.matching.Regex] = None
-) extends IService with Logging {
-  
+  acDecoyRegex: Option[util.matching.Regex] = None) extends IService with Logging {
+
   private var targetResultSetId = 0
-  
-  private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val udsSqlHelper = new SQLQueryHelper(dbManager.getUdsDbConnector)
-  private var stContext: StorerContext = null
-  
+
   override protected def beforeInterruption = {
     // Release database connections
-    this.logger.info("releasing database connections before service interruption...")
-    //this.udsDb.closeConnection()
-    this.stContext.closeOpenedEMs()
-    this.stContext.closeConnections()
+    //this.logger.info("releasing database connections before service interruption...")
   }
-  
+
   def getTargetResultSetId = targetResultSetId
-  
+
   def runService(): Boolean = {
-    
+
     var serviceResultOK: Boolean = true
-    
+
     // Check that a file is provided
     require(resultIdentFile != null, "ResultFileImporter service: No file specified.")
-    
-    // Retrieve the instrument configuration
-    val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
 
-    this.stContext = new StorerContext(dbManager, msiDbConnector)
-    logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
-    >>>
-    
-    // Get Right ResultFile provider
-    val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get( fileType )
-    require( rfProvider != None, "No ResultFileProvider for specified identification file format")
-    
-    // Open the result file
-    val resultFile = rfProvider.get.getResultFile( resultIdentFile, providerKey, importerProperties )
-    >>>
-    
-    // Instantiate RsStorer   
-    val rsStorer: IRsStorer = new JPARsStorer(dbManager, msiDbConnector) //<> SQLStorer
- 
-    
-	  // Configure result file before parsing
-    resultFile.instrumentConfig = instrumentConfig
-    
-    //Fait par le Storer: Attente partage transaction TODO    
-//    val msiTransaction = stContext.msiEm.getTransaction
-//    var msiTransacOk: Boolean = false
-    
-    logger.debug("Starting Msi Db transaction")
-    
-    //Start MSI Transaction and ResultSets store
+    var storerContext: StorerContext = null // For JPA use
+
+    var msiTransaction: EntityTransaction = null
+    var msiTransacOk: Boolean = false
+
     try {
+      storerContext = StorerContextBuilder( dbManager, projectId )
+      
+      val udsDbContext = storerContext.udsDbContext
+      val udsEzDBC = ProlineEzDBC( udsDbContext )
+
+      msiTransaction = storerContext.msiDbContext.getEntityManager.getTransaction
+      msiTransaction.begin()
+      msiTransacOk = false
+
+      logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
+      >>>
+
+      // Get Right ResultFile provider
+      val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
+      require(rfProvider != None, "No ResultFileProvider for specified identification file format")
+
+      // Open the result file
+      val resultFile = rfProvider.get.getResultFile(resultIdentFile, providerKey, importerProperties)
+      >>>
+
+      // Instantiate RsStorer   
+      val rsStorer: IRsStorer = new JPARsStorer() //<> SQLStorer
+      
+      // Retrieve the instrument configuration
+      val instrumentConfig = this._getInstrumentConfig(instrumentConfigId, udsEzDBC)
+
+      // Configure result file before parsing
+      resultFile.instrumentConfig = instrumentConfig
+
+      //Fait par le Storer: Attente partage transaction TODO    
+      //    val msiTransaction = stContext.msiEm.getTransaction
+      //    var msiTransacOk: Boolean = false
+
+      logger.debug("Starting Msi Db transaction")
+
+      //Start MSI Transaction and ResultSets store
+
       //Fait par le Storer: Attente partage transaction TODO  
-//      msiTransaction.begin()
-//      msiTransacOk = false
-      
-      // Insert instrument config in the MSIdb         
-      rsStorer.insertInstrumentConfig( instrumentConfig, this.stContext)
-      
+      //      msiTransaction.begin()
+      //      msiTransacOk = false
+
+      // Insert instrument config in the MSIdb
+      rsStorer.insertInstrumentConfig(instrumentConfig, storerContext)
+
       // Retrieve MSISearch and related MS queries
       val msiSearch = resultFile.msiSearch
       val msQueryByInitialId = resultFile.msQueryByInitialId
       var msQueries: List[fr.proline.core.om.model.msi.MsQuery] = null
-      if( msQueryByInitialId != null ) {
-        msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a,b) => a.initialId < b.initialId }
+      if (msQueryByInitialId != null) {
+        msQueries = msQueryByInitialId.map { _._2 }.toList.sort { (a, b) => a.initialId < b.initialId }
       }
-      
+
       //Done by RsStorer <> SQLStorer
-        //Store the MSI search with related search settings and MS queries ...
-        // Store the peaklist  ... 
-      	    
-		  // Load target result set
-		  var targetRs = resultFile.getResultSet(false)
-		  if(StringUtils.isEmpty(targetRs.name))
-		    targetRs.name = msiSearch.title
-		  
-		  if(targetRs.msiSearch != null && targetRs.msiSearch.peakList.peaklistSoftware ==null){
-		    //TODO : Define how to get this information !
-		    targetRs.msiSearch.peakList.peaklistSoftware = _getPeaklistSoftware("Default_PL","0.1" )	
-		    // FIXME: remove this line when peaklist software is effectively retrieved from the UDSdb
-		    targetRs.msiSearch.peakList.peaklistSoftware.id = 1
-		  }
-		    	    
-	    //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
-	
-		  def storeDecoyRs( decoyRs: ResultSet ) {
-        if(StringUtils.isEmpty(decoyRs.name))
+      //Store the MSI search with related search settings and MS queries ...
+      // Store the peaklist  ... 
+
+      // Load target result set
+      var targetRs = resultFile.getResultSet(false)
+      if (StringUtils.isEmpty(targetRs.name))
+        targetRs.name = msiSearch.title
+
+      if (targetRs.msiSearch != null && targetRs.msiSearch.peakList.peaklistSoftware == null) {
+        //TODO : Define how to get this information !
+        targetRs.msiSearch.peakList.peaklistSoftware = _getPeaklistSoftware("Default_PL", "0.1",udsEzDBC)
+      }
+
+      //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
+
+      def storeDecoyRs(decoyRs: ResultSet) {
+        if (StringUtils.isEmpty(decoyRs.name))
           decoyRs.name = msiSearch.title
-                
+
         //VDTESTif( msiDbConnector.getDriverType().getDriverClassName == "org.sqlite.JDBC" )
-//VDTEST          rsStorer.storeResultSet(decoyRs,this.stContext) //Comportement différent des implémentation RsStorer ?! 
+        //VDTEST          rsStorer.storeResultSet(decoyRs,this.stContext) //Comportement différent des implémentation RsStorer ?! 
         //VDTESTelse
-          targetRs.decoyResultSet = Some(decoyRs)          
-		  }
-		  
-	    // Load and store decoy result set if it exists
-		  if( resultFile.hasDecoyResultSet ) {
-		    storeDecoyRs( resultFile.getResultSet(true) )
-		    >>>
-  	  }
-		  // Else if a regex has been passed to detect decoy protein matches		  
-      else if( acDecoyRegex != None ) {
+        targetRs.decoyResultSet = Some(decoyRs)
+      }
+
+      // Load and store decoy result set if it exists
+      if (resultFile.hasDecoyResultSet) {
+        storeDecoyRs(resultFile.getResultSet(true))
+        >>>
+      } // Else if a regex has been passed to detect decoy protein matches		  
+      else if (acDecoyRegex != None) {
         // Then split the result set into a target and a decoy one
-        val( tRs, dRs ) = TargetDecoyResultSetSplitter.split(targetRs,acDecoyRegex.get)
+        val (tRs, dRs) = TargetDecoyResultSetSplitter.split(targetRs, acDecoyRegex.get)
         targetRs = tRs
-        
+
         storeDecoyRs(dRs)
         >>>
-      }
-      else 
-      	targetRs.decoyResultSet = None
+      } else
+        targetRs.decoyResultSet = None
 
       //  Store target result set
-   this.targetResultSetId = rsStorer.storeResultSet(targetRs, msQueries, resultFile, this.stContext)
+      this.targetResultSetId = rsStorer.storeResultSet(targetRs, msQueries, resultFile, storerContext)
       >>>
 
-
-//      msiTransaction.commit()
-//      msiTransacOk = true
+      //      msiTransaction.commit()
+      //      msiTransacOk = true
+      msiTransaction.commit()
+      msiTransacOk = true
     } finally {
-     //Fait par le Storer: Attente partage transaction TODO  
-//      /* Check msiTransaction integrity */
-//      if ((msiTransaction != null) && !msiTransacOk) {
-//        try {
-//          if(stContext.msiDB.isInTransaction)
-//          	 stContext.msiDB.rollbackTransaction
-//          msiTransaction.rollback()
-//        } catch {
-//          case ex => logger.error("Error rollbacking Msi Db transaction", ex)
-//        }
-//      } else 
-//         if(stContext.msiDB.isInTransaction)
-//        	 stContext.msiDB.rollbackTransaction
+
+      if ((msiTransaction != null) && !msiTransacOk) {
+        logger.info("Rollbacking MSI Db Transaction")
+
+        try {
+          msiTransaction.rollback()
+        } catch {
+          case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
+        }
+
+      }
+
+      if (storerContext != null) {
+        storerContext.closeAll()
+      }
+
     }
-    
+
     this.beforeInterruption()
-    true 
-//    msiTransacOk   
+    true
+    //    msiTransacOk   
   }
 
-  private def _getPeaklistSoftware( plName: String, plRevision: String ): PeaklistSoftware = {
+  private def _getPeaklistSoftware(plName: String, plRevision: String, udsEzDBC: EasyDBC): PeaklistSoftware = {
 
-    udsSqlHelper.ezDBC.selectHeadOrElse(
-    "SELECT * FROM peaklist_software WHERE name= ? and version= ? ",plName,plRevision) ( r =>
-      new PeaklistSoftware( id = r, name = r, version = r )
-      ,
-      new PeaklistSoftware( id = PeaklistSoftware.generateNewId, name = "Default", version = "0.1" )
-    )
+    udsEzDBC.selectHeadOrElse(
+      "SELECT * FROM peaklist_software WHERE name= ? and version= ? ", plName, plRevision)(r =>
+        new PeaklistSoftware(id = r, name = r, version = r),
+        new PeaklistSoftware(id = PeaklistSoftware.generateNewId, name = "Default", version = "0.1"))
   }
-  
+
   // TODO: put in a dedicated provider
-  private def _getInstrumentConfig( instrumentConfigId: Int ): InstrumentConfig = {
-    
+  private def _getInstrumentConfig(instrumentConfigId: Int, udsEzDBC: EasyDBC): InstrumentConfig = {
+
     import fr.proline.util.primitives.LongOrIntAsInt._
-    import fr.proline.core.om.model.msi.{InstrumentProperties,InstrumentConfigProperties}
-    
+    import fr.proline.core.om.model.msi.{ InstrumentProperties, InstrumentConfigProperties }
+
     // Load the instrument configuration record
-    udsSqlHelper.ezDBC.selectHead(
-    "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config "+
-    "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId ) { r =>
-      
-      val instrument = new Instrument( id = r.nextObject.asInstanceOf[AnyVal], name = r, source = r )
-      for( instPropStr <- r.nextStringOption ) {
-        instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
+    udsEzDBC.selectHead(
+      "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config " +
+        "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId) { r =>
+
+        val instrument = new Instrument(id = r.nextObject.asInstanceOf[AnyVal], name = r, source = r)
+        for (instPropStr <- r.nextStringOption) {
+          instrument.properties = Some(parse[InstrumentProperties](instPropStr))
+        }
+
+        // Skip instrument_config.id field
+        r.nextObject
+
+        val instrumentConfig = new InstrumentConfig(
+          id = instrumentConfigId,
+          name = r.nextString,
+          instrument = instrument,
+          ms1Analyzer = r.nextString,
+          msnAnalyzer = r.nextString,
+          activationType = "")
+        for (instConfPropStr <- r.nextStringOption) {
+          instrumentConfig.properties = Some(parse[InstrumentConfigProperties](instConfPropStr))
+        }
+
+        // Skip instrument_config.instrument_id field
+        r.nextObject
+
+        // Update activation type
+        instrumentConfig.activationType = r.nextString
+
+        instrumentConfig
       }
-      
-      // Skip instrument_config.id field
-      r.nextObject
-      
-      val instrumentConfig = new InstrumentConfig(
-        id = instrumentConfigId,
-        name = r.nextString,
-        instrument = instrument,
-        ms1Analyzer = r.nextString,
-        msnAnalyzer = r.nextString,
-        activationType = ""
-      )
-      for( instConfPropStr <- r.nextStringOption ) {
-        instrumentConfig.properties = Some( parse[InstrumentConfigProperties]( instConfPropStr ) )
-      }
-      
-      // Skip instrument_config.instrument_id field
-      r.nextObject
-      
-      // Update activation type
-      instrumentConfig.activationType = r.nextString
-      
-      instrumentConfig
-    }
 
   }
-   
+
 }

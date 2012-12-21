@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.PeptideInstance
+import fr.proline.repository.DatabaseContext
 
 trait IPeptideInstanceProvider {
   
@@ -11,14 +12,14 @@ trait IPeptideInstanceProvider {
    *  @param pepInstIds: Sequence of ids of PeptideInstance to search for
    *  @return Array of Option[PeptideInstance] corresponding to found PeptideInstance
    */
-  def getPeptideInstancesAsOptions( pepInstIds: Seq[Int] ): Array[Option[PeptideInstance]]
+  def getPeptideInstancesAsOptions( pepInstIds: Seq[Int], msiDb: DatabaseContext ): Array[Option[PeptideInstance]]
   
   /**
    *  Get PeptideInstances with specified Ids.
    *  @param pepInstIds: Sequence of ids of PeptideInstance to search for
    *  @return Array of PeptideInstance corresponding to found PeptideInstance
    */
-  def getPeptideInstances( pepInstIds: Seq[Int] ): Array[PeptideInstance]
+  def getPeptideInstances( pepInstIds: Seq[Int], msiDb: DatabaseContext ): Array[PeptideInstance]
   
   /**
    *  Get PeptideInstance (wrapped in Option) with specified Id.
@@ -26,8 +27,8 @@ trait IPeptideInstanceProvider {
    *  @param pepInstId: id of PeptideInstance to search for
    *  @return Option[PeptideInstance] corresponding to found PeptideInstance
    */
-  def getPeptideInstance( pepInstId:Int ): Option[PeptideInstance] = {
-    getPeptideInstancesAsOptions( Array(pepInstId) )(0)
+  def getPeptideInstance( pepInstId:Int, msiDb: DatabaseContext ): Option[PeptideInstance] = {
+    getPeptideInstancesAsOptions( Array(pepInstId), msiDb )(0)
   }
   
   /**

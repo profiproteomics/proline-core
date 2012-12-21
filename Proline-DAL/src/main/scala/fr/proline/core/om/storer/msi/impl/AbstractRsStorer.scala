@@ -1,186 +1,219 @@
 package fr.proline.core.om.storer.msi.impl
 
+import java.sql.Connection
 import fr.profi.jdbc.easy._
-import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.om.model.msi.{ResultSet, Peaklist, MsQuery, InstrumentConfig, IPeaklistContainer}
-import fr.proline.core.om.storer.msi.{IRsStorer, PeaklistWriter, IPeaklistWriter}
+import fr.proline.core.dal._
+import fr.proline.core.om.model.msi.IPeaklistContainer
+import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.core.om.model.msi.MsQuery
+import fr.proline.core.om.model.msi.Peaklist
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.storer.msi.IPeaklistWriter
+import fr.proline.core.om.storer.msi.IRsStorer
+import fr.proline.core.om.storer.msi.PeaklistWriter
+import fr.proline.repository.util.JDBCWork
 import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.IDatabaseConnector
-
-import javax.transaction.Transaction
+import fr.proline.repository.DatabaseContext
 import javax.persistence.EntityTransaction
 
-abstract class AbstractRsStorer(val dbManagement: DatabaseManager, val msiDbConnector: IDatabaseConnector, val plWriter: IPeaklistWriter = null) extends IRsStorer {
-  
-  val ezDBC = new SQLQueryHelper( msiDbConnector ).ezDBC
-  
+abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IRsStorer {
+
   // IPeaklistWriter to use to store PeakList and Spectrum 
-  val localPlWriter = if (plWriter == null) PeaklistWriter( msiDbConnector.getDriverType )else plWriter
-  
-  //Other constructor
-  def this (dbManagement : DatabaseManager, projectID : Int){
-    this(dbManagement, dbManagement.getMsiDbConnector(projectID) )
-  }
-  
+  var localPlWriter = plWriter
+
   type MsiResultSet = fr.proline.core.orm.msi.ResultSet
 
   /**
    * Store specified ResultSet in persistence repository, using  storerContext for context and mapping information
-   * 
-   * This default implementation of IRsStorer will call  final def storeResultSet(...) method without 
+   *
+   * This default implementation of IRsStorer will call  final def storeResultSet(...) method without
    * specifying spectra or MsQueries
-   * 
+   *
    */
-  def storeResultSet( resultSet: ResultSet, storerContext: StorerContext ): Int = {
+  def storeResultSet(resultSet: ResultSet, storerContext: StorerContext): Int = {
+
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
     }
-        
-    val omResultSetId = resultSet.id
-    
-    var localContext: StorerContext = if (storerContext == null) {
-      new StorerContext(dbManagement, msiDbConnector)
-    } else {
-      storerContext
+
+    if (storerContext == null) {
+      throw new IllegalArgumentException("StorerContext is null")
     }
-    
-    storeResultSet( resultSet = resultSet,
+
+    storeResultSet(resultSet = resultSet,
       msQueries = null,
       peakListContainer = null,
-      storerContext = storerContext )
+      storerContext = storerContext)
 
   }
-   
+
+  def storeResultSet(resultSet: ResultSet, dbManager: DatabaseManager, projectId: Int ): Int = {
+
+    if (resultSet == null) {
+      throw new IllegalArgumentException("ResultSet is null")
+    }
+
+    if (dbManager == null) {
+      throw new IllegalArgumentException("DbManager is null")
+    }
+
+    var rsId: Int = 0
+    var storerContext: StorerContext = null // For JPA use
+    var msiTransaction: EntityTransaction = null
+    var msiTransacOk: Boolean = false
+
+    try {
+      
+      storerContext = StorerContextBuilder( dbManager, projectId )
+      
+      val msiDb = storerContext.msiDbContext
+      val msiEm = msiDb.getEntityManager()
+
+      // Begin transaction
+      msiTransaction = msiEm.getTransaction
+      msiTransaction.begin()
+      msiTransacOk = false
+
+      rsId = storeResultSet(
+        resultSet = resultSet,
+        msQueries = null,
+        peakListContainer = null,
+        storerContext = storerContext
+      )
+
+      // Commit transaction
+      msiTransaction.commit()
+      msiTransacOk = true
+      
+    } finally {
+
+      if ((msiTransaction != null) && !msiTransacOk) {
+        logger.info("Rollbacking MSI Db Transaction")
+
+        try {
+          msiTransaction.rollback()
+        } catch {
+          case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
+        }
+
+      }
+
+      if (storerContext != null) {
+        storerContext.closeAll()
+      }
+
+    }
+
+    rsId
+  }
+
   /**
    * This method will first save spectra and queries related data specified by peakListContainer and msQueries. This will be done using
    * IRsStorer storePeaklist, storeMsiSearch,  storeMsQueries and storeSpectra methods
-   * 
-   * Then the implementation of the abstract createResultSet method will be executed to save other data. 
-   * TODO : use other Storer / Writer : peptideStorer / ProteinMatch 
-   * 
-   * 
+   *
+   * Then the implementation of the abstract createResultSet method will be executed to save other data.
+   * TODO : use other Storer / Writer : peptideStorer / ProteinMatch
+   *
+   *
    */
-  final def storeResultSet(resultSet : ResultSet, msQueries : Seq [MsQuery], peakListContainer : IPeaklistContainer, storerContext : StorerContext) : Int = {
-   
+  final def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], peakListContainer: IPeaklistContainer, storerContext: StorerContext): Int = {
+
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
     }
-    
-    logger.info(" Storing ResultSet "+resultSet.name)
+
+    if (storerContext == null) {
+      throw new IllegalArgumentException("StorerContext is null")
+    }
+
+    logger.info(" Storing ResultSet " + resultSet.name)
 
     //Create a StorerContext if none was specified
-    var localContext: StorerContext = if (storerContext == null) {
-      new StorerContext(dbManagement, msiDbConnector)
-    } else {
-      storerContext
-    }    
-        
-    if (resultSet.id > 0) 
-       throw new UnsupportedOperationException("Updating a ResultSet is not supported yet !")
-    
-    var msiTransaction : EntityTransaction = null	//TODO : Remove when shared transaction !!!
-		var msiTransacOk : Boolean = false	//TODO : Remove when shared transaction !!!
-		var plID : Int = -1
-		
-		try { //TODO : Remove when shared transaction !!!
-		  
-	      // Save Spectra and Queries information (MSISearch should  be defined)
-				if(resultSet.msiSearch != null) {
 
-				  // Save Peaklist information
-				  plID = this.storePeaklist(resultSet.msiSearch.peakList, localContext)
-				  //update Peaklist ID in MSISearch
-				  resultSet.msiSearch.peakList.id = plID 				  
+    if (resultSet.id > 0)
+      throw new UnsupportedOperationException("Updating a ResultSet is not supported yet !")
 
-				  // Save spectra retrieve by peakListContainer 
-				  if(peakListContainer != null)	  
-				  	this.storeSpectra(plID, peakListContainer, localContext) 
-			  
-				  //TODO : Remove when shared transaction !!! : Close msiDB connection if used by previous store methods 
-			  	if( ezDBC.isInTransaction ) ezDBC.commitTransaction
-				
-			    //START EM Transaction TODO : Remove when shared transaction !!!
-		  		msiTransaction =  localContext.msiEm.getTransaction
-		  		msiTransaction.begin()
-				
-					
-		  		/* Store MsiSearch and retrieve persisted ORM entity */
-		  		val tmpMsiSearchID = resultSet.msiSearch.id
-		  		val newMsiSearchID =  storeMsiSearch(resultSet.msiSearch, localContext)
- 
-		  		// Save MSQueries 
-		  		if(msQueries!=null && !msQueries.isEmpty)
-		  			localContext = storeMsQueries(newMsiSearchID, msQueries, localContext)
-				}
-  
-				resultSet.id =  createResultSet(resultSet, localContext)
-				
-				//Commit EM Transaction TODO : Remove when shared transaction !!!
-      	msiTransaction.commit
-      	msiTransacOk = true
-			} catch {
-			  case e: Throwable => {
-			   e.printStackTrace
-			   logger.debug ("Error "+e.getMessage)
-			  }
-			    
-			} finally {
-			  	logger.debug ("FINALLY Rollback if necessary ")
-    	  /* Check msiTransaction integrity */
-			  if(!msiTransacOk){
-			    if (msiTransaction != null){
-      			try {
-      				logger.debug ("Rollbacking EM Msi Db transaction")
-      				msiTransaction.rollback()    				    				
-      			} catch {
-          		case ex => logger.error("Error rollbacking Msi Db transaction", ex)
-      			}			   
-			    }
-			    if(plID>0){
-			      logger.debug ("Rollbacking EM Msi Db transaction")			    
-			    	//	ROLLBACK SQM MODIFICATION TODO : Remove when shared transaction !!!
-			    	plWriter.rollBackInfo(plID, localContext)
-			    }
-			  }
-    	}
-			
-     resultSet.id
+    val oldPlWriter = localPlWriter
+
+    if (localPlWriter == null) {
+      localPlWriter = PeaklistWriter(storerContext.msiDbContext.getDriverType)
+    }
+
+    var plID: Int = -1
+
+    // Save Spectra and Queries information (MSISearch should  be defined)
+    if (resultSet.msiSearch != null) {
+
+      // Save Peaklist information
+      plID = this.storePeaklist(resultSet.msiSearch.peakList, storerContext)
+      //update Peaklist ID in MSISearch
+      resultSet.msiSearch.peakList.id = plID
+
+      // Save spectra retrieve by peakListContainer 
+      if (peakListContainer != null)
+        this.storeSpectra(plID, peakListContainer, storerContext)
+
+      //TODO : Remove when shared transaction !!! : Close msiDB connection if used by previous store methods 
+
+      //START EM Transaction TODO : Remove when shared transaction !!!
+
+      /* Store MsiSearch and retrieve persisted ORM entity */
+      val tmpMsiSearchID = resultSet.msiSearch.id
+      val newMsiSearchID = storeMsiSearch(resultSet.msiSearch, storerContext)
+
+      // Save MSQueries 
+      if (msQueries != null && !msQueries.isEmpty)
+        storeMsQueries(newMsiSearchID, msQueries, storerContext)
+    }
+
+    resultSet.id = createResultSet(resultSet, storerContext)
+
+    localPlWriter = oldPlWriter
+
+    resultSet.id
   }
-  
-  def createResultSet( resultSet : ResultSet, context : StorerContext) : Int
-  
+
+  def createResultSet(resultSet: ResultSet, context: StorerContext): Int
+
   /**
-   * Use Constructor specified IPeaklistWriter 
-   * 
+   * Use Constructor specified IPeaklistWriter
+   *
    */
-  def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext = {
+  def storeSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
     localPlWriter.storeSpectra(peaklistId, peaklistContainer, context)
   }
-  
+
   /**
-   * Use Constructor specified IPeaklistWriter 
-   * 
+   * Use Constructor specified IPeaklistWriter
+   *
    */
-  def storePeaklist(peaklist: Peaklist, context : StorerContext):Int = {
+  def storePeaklist(peaklist: Peaklist, context: StorerContext): Int = {
     localPlWriter.storePeaklist(peaklist, context)
   }
-  
-  def insertInstrumentConfig(instrumCfg : InstrumentConfig, context : StorerContext) = {
-     require( instrumCfg.id > 0, "instrument configuration must have a strictly positive identifier" )
-    
-    // Check if the instrument config exists in the MSIdb
-    val count = ezDBC.selectInt( "SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id )
-    
-    // If the instrument config doesn't exist in the MSIdb
-    if( count == 0 ) {
-      ezDBC.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
-        stmt.executeWith( instrumCfg.id,
-                          instrumCfg.name,
-                          instrumCfg.ms1Analyzer,
-                          Option(instrumCfg.msnAnalyzer),
-                          Option.empty[String]
-                         )
+
+  def insertInstrumentConfig(instrumCfg: InstrumentConfig, context: StorerContext) = {
+    require(instrumCfg.id > 0, "instrument configuration must have a strictly positive identifier")
+
+    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.msiDbContext.getDriverType, { msiEzDBC =>
+      
+      // Check if the instrument config exists in the MSIdb
+      val count = msiEzDBC.selectInt("SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id)
+
+      // If the instrument config doesn't exist in the MSIdb
+      if (count == 0) {
+        msiEzDBC.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
+          stmt.executeWith(
+            instrumCfg.id,
+            instrumCfg.name,
+            instrumCfg.ms1Analyzer,
+            Option(instrumCfg.msnAnalyzer),
+            Option.empty[String])
+        }
       }
-    }
+
+    })
+    
+    context.msiDbContext.doWork(jdbcWork, true)
   }
+
 }

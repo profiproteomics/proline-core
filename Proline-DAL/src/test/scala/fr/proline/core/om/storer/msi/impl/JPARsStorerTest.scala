@@ -1,14 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.util.Sorting
-
 import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
@@ -20,15 +17,14 @@ import fr.proline.repository.DriverType
 import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION
 import fr.proline.util.MathUtils.EPSILON_LOW_PRECISION
 import fr.proline.util.StringUtils
+import fr.proline.repository.DatabaseContext
 
 @Test
 class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
   val milliToNanos = 1000000L
-  val msiTransaction = null
 
-  var stContext: StorerContext = null
-  var storer: JPARsStorer = null
+  val projectIdForTest = 1
 
   @Before
   def initTests() = {
@@ -43,9 +39,6 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
     pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
 
     logger.info("Dbs succesfully initialized")
-
-    storer = new JPARsStorer(dbManagerForTest, msiDBTestCase.getConnector)
-    stContext = new StorerContext(dbManagerForTest, dbManagerForTest.getMsiDbConnector(1))
   }
 
   /**
@@ -124,10 +117,10 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       val rsb = new ResultSetFakeBuilder(10, 2)
 
       val resultSet = rsb.toResultSet()
-      
+
       // FIXME: find a way to communicate with a UDSdb fake 
       resultSet.msiSearch.peakList.peaklistSoftware.id = 1
-      
+
       var stop = System.nanoTime
 
       logger.info("ResultSet creation time: " + ((stop - start) / milliToNanos))
@@ -146,7 +139,9 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       //      }
 
       start = System.nanoTime
-      storer.storeResultSet(resultSet, stContext)
+      val storer = new JPARsStorer()
+
+      storer.storeResultSet(resultSet, dbManagerForTest, projectIdForTest)
 
       stop = System.nanoTime
       ////Fait par le Storer: Attentte partage transaction TODO
@@ -159,9 +154,23 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
       logger.info("ResultSet #" + resultSetId + " persisted time: " + ((stop - start) / milliToNanos))
 
-      val provider = new ORMResultSetProvider(stContext.msiEm, stContext.psEm, stContext.pdiEm)
+      /* JPA Db Contexts */
 
-      val loadedResultSet = provider.getResultSet(resultSetId)
+      val pdiDb = new DatabaseContext(dbManagerForTest.getPdiDbConnector)
+
+      val psDb = new DatabaseContext(dbManagerForTest.getPsDbConnector)
+
+      val msiDb = new DatabaseContext(dbManagerForTest.getMsiDbConnector(projectIdForTest))
+
+      val provider = new ORMResultSetProvider()
+
+      val loadedResultSet = provider.getResultSet(resultSetId, pdiDb, psDb, msiDb)
+
+      msiDb.close()
+
+      psDb.close()
+
+      msiDb.close()
 
       assertTrue("Loaded ResultSet #" + resultSetId, loadedResultSet.isDefined)
 
@@ -177,26 +186,13 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       //    			}
       //    		}
       //    	}
+
     } // End fo throw 3 RS
+
   }
 
   @After
   def tearDown() = {
-
-    if (stContext != null) {
-      logger.debug("Closing opened EntityManager")
-      stContext.closeOpenedEMs()
-
-      logger.debug("Closing MSI Db Connection")
-
-      try {
-        stContext.msiEzDBC.connection.close()
-      } catch {
-        case exClose: Exception => logger.error("Error closing MSI Db Connection", exClose)
-      }
-
-    }
-
     closeDbs()
 
     logger.info("Dbs succesfully closed")

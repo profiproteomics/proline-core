@@ -2,137 +2,120 @@ package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.om.model.msi.{ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IPeaklistContainer}
-import fr.proline.core.om.storer.msi.impl.{StorerContext, SQLiteRsWriter, SQLRsStorer, PgRsWriter, JPARsStorer}
+import fr.proline.core.om.model.msi.{ ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IPeaklistContainer }
+import fr.proline.core.om.storer.msi.impl.{ StorerContext, SQLiteRsWriter, SQLRsStorer, PgRsWriter, JPARsStorer }
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
 
 trait IRsStorer extends Logging {
-  
+
+  def storeResultSet(resultSet: ResultSet, dbManager: DatabaseManager, projectId: Int): Int
+
   /**
    * Store in persistence repository specified ResultSet and associated data.
    * Specified data should have already been updated : temporary id on associated data means should be saved.
    * Transaction are not managed by this method, should be done by user.
-   * 
+   *
    * @param resultSet : ResultSet to store
    * @param context: StorerContext containing mapping and context information (EntityManager, IDs mapping...)
-   * @return ID of stored ResultSet 
+   * @return ID of stored ResultSet
    * @exception  Exception if an error occur while saving data
    */
-  def storeResultSet(resultSet : ResultSet, context : StorerContext) : Int 
-    
+  def storeResultSet(resultSet: ResultSet, context: StorerContext): Int
+
   /**
    * Store, in persistence repository, specified ResultSet and associated data.
    * Specified data should have already been updated : temporary id on associated data means should be saved.
    * Transaction are not managed by this method, should be done by user.
-   *  
-   * @param resultSet : ResultSet to store
-   * @return ID of stored ResultSet 
-   * @exception Exception if an error occur while saving data
-   */
-  def storeResultSet( resultSet: ResultSet ) : Int  
- 
-  /**
-   * Store, in persistence repository, specified ResultSet and associated data.
-   * Specified data should have already been updated : temporary id on associated data means should be saved.
-   * Transaction are not managed by this method, should be done by user.
-   *  
+   *
    * @param resultSet : ResultSet to store
    * @param msQueries Queries to store and to associate to MSISearch referenced by specified ResultSet
    * @param peaklistContainer IPeaklistContainer fro which Spectrum will be retrieve
    * @param context: StorerContext containing mapping and context information (EntityManager, IDs mapping...). This object will be updated by created entity cache
-   * @return Int : ID of created entity  
-   * @exception Exception if an error occur while saving data 
+   * @return Int : ID of created entity
+   * @exception Exception if an error occur while saving data
    */
-  def storeResultSet(resultSet : ResultSet, msQueries : Seq [MsQuery], peakListContainer : IPeaklistContainer, context : StorerContext) : Int
-  
+  def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], peakListContainer: IPeaklistContainer, context: StorerContext): Int
+
   /**
-   * Store PeakList and associated software, if necessary,  in repository 
+   * Store PeakList and associated software, if necessary,  in repository
    * Transaction are not managed by this method, should be done by user.
-   * 
-   * @param peaklist : Peaklist to save 
+   *
+   * @param peaklist : Peaklist to save
    * @return Id of the saved PeakList
-   */  
-  def storePeaklist(peaklist: Peaklist, context : StorerContext):Int
-  
+   */
+  def storePeaklist(peaklist: Peaklist, context: StorerContext): Int
+
   /**
-   * Store Spectra retrieve by specified IPeaklistContainer in repository. 
-   * Created spectra will be associated to specified PeakList ID, Spectra title mapped to their Id 
-   * will be stored in specified StorerContext.  
+   * Store Spectra retrieve by specified IPeaklistContainer in repository.
+   * Created spectra will be associated to specified PeakList ID, Spectra title mapped to their Id
+   * will be stored in specified StorerContext.
    * Transaction are not managed by this method, should be done by user.
-   *    
+   *
    * @param peaklistId Peaklist to associate created spectrum to
    * @param peaklistContainer IPeaklistContainer fro which Spectrum will be retrieve
    * @param context StorerContext containing mapping and context information (EntityManager, IDs mapping...). . This object will be updated by created entity cache
    * @return StorerContext with updated references
    */
-  def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext
- 
+  def storeSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext
+
   /**
    * Store specified MsiSearch and associated data if necessary (SearchSettings, Peaklist,...) in repository
    * Map between created data and temporary ones will be stores in StorerContext
    * Transaction are not managed by this method, should be done by user.
-   *  
+   *
    *  @param msiSearch MsiSearch to store
    *  @param context StorerContext where mapping will be saved and/or retrieve as well as repository connection information. This object will be updated by created entity cache
-   *  
-   *  @return Int : Id of created MsiSearch 
+   *
+   *  @return Int : Id of created MsiSearch
    */
-  def storeMsiSearch(msiSearch : MSISearch, context : StorerContext) : Int
-  
-  
+  def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Int
+
   /**
    * Store specified queries in repository and associated them with specified MSISearch.
    * Map between created queries and temporary ones will be stores in StorerContext
-   * 
+   *
    * Transaction are not managed by this method, should be done by user.
-   * 
+   *
    * @param msiSearchID MSISearch to associate MSQuery to
    * @param msQueries Queries to store
    * @param StorerContext where mapping will be saved and/or retrieve as well as repository connexion information
-   * 
+   *
    * @return StorerContext with updated references
-   *  
+   *
    */
-  def storeMsQueries(msiSearchID : Int, msQueries : Seq[MsQuery], context : StorerContext) : StorerContext
-  
+  def storeMsQueries(msiSearchID: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext
+
   /**
    * Insert definition of InstrumentConfig (which should exist in uds) in current MSI db if not already defined
    * Transaction are not managed by this method, should be done by user.
    */
-  def insertInstrumentConfig(instrumCfg : InstrumentConfig, context : StorerContext) 
-  
+  def insertInstrumentConfig(instrumCfg: InstrumentConfig, context: StorerContext)
+
 }
 
 /** A factory object for implementations of the IRsStorer trait */
 object RsStorer {
-  
+
   //TODO : Define common algo for JPA & SQL! 
-  
+
   //import fr.proline.core.om.storer.msi.impl.GenericRsWriter
   import fr.proline.core.om.storer.msi.impl.PgRsWriter
   import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
   import fr.proline.repository.DriverType
 
-  def apply(storerContext: StorerContext): IRsStorer = {
-    
-    val msiSqlHelper = storerContext.msiSqlHelper
-    val driverType = msiSqlHelper.driverType
-    
-    driverType match {
+  def apply( msiDbDriverType: DriverType ): IRsStorer = {
+
+    val plWriter = PeaklistWriter(msiDbDriverType)
+
+    msiDbDriverType match {
       case DriverType.POSTGRESQL => {
-        // FIXME: create a secondary connection here (allows to insert new peptides outside of a transaction)
-        val msiSqlHelper2 = msiSqlHelper
-        new SQLRsStorer( storerContext, new PgRsWriter( msiSqlHelper, msiSqlHelper2 ), PeaklistWriter(driverType) )
+        new SQLRsStorer(new PgRsWriter(), plWriter)
       }
-      case DriverType.SQLITE => new SQLRsStorer( storerContext, new SQLiteRsWriter( msiSqlHelper ), PeaklistWriter(driverType))
-      case _ => new JPARsStorer( storerContext.dbManager, storerContext.msiConnector, PeaklistWriter(driverType) ) //Call JPARsStorer
+      case DriverType.SQLITE => new SQLRsStorer(new SQLiteRsWriter(), plWriter)
+      case _ => new JPARsStorer(plWriter) //Call JPARsStorer
     }
+
   }
-  
-  /*def apply(storerContext: StorerContext, projectID: Int): IRsStorer = {
-    this.apply( storerContext.dbManager, new SQLQueryHelper( storerContext.dbManager.getMsiDbConnector(projectID) ) )
-  }*/
   
 }

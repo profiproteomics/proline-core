@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
@@ -10,6 +9,7 @@ import fr.proline.core.om.model.msi.PeptideMatchProperties
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideMatchProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.repository.DatabaseContext
 
 class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
                                val psDb: SQLQueryExecution = null,
@@ -33,7 +33,7 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
   def getPeptideMatches( pepMatchIds: Seq[Int] ): Array[PeptideMatch] = {
     val pmRecords = _getPepMatchRecords( pepMatchIds )
     val rsIds = pmRecords.map { _(PepMatchCols.resultSetId).asInstanceOf[Int] } .distinct
-    this._buildPeptideMatches( rsIds, pmRecords )
+    this._buildPeptideMatches( rsIds, pmRecords, null ) // TODO LMN Use a real SQL Db Context here
   }
   
   def getPeptideMatchesAsOptions( pepMatchIds: Seq[Int] ): Array[Option[PeptideMatch]] = {
@@ -47,7 +47,7 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
   def getResultSetsPeptideMatches( rsIds: Seq[Int] ): Array[PeptideMatch] = {
     
     val pmRecords = _getResultSetsPepMatchRecords( rsIds )
-    this._buildPeptideMatches( rsIds, pmRecords )
+    this._buildPeptideMatches( rsIds, pmRecords, null ) // TODO LMN Use a real SQL Db Context here
     
   }
   
@@ -55,7 +55,7 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
     
     val pmRecords = _getResultSummariesPepMatchRecords( rsmIds )
     val rsIds = pmRecords.map( _("result_set_id").asInstanceOf[Int] ).distinct
-    this._buildPeptideMatches( rsIds, pmRecords )
+    this._buildPeptideMatches( rsIds, pmRecords, null ) // TODO LMN Use a real SQL Db Context here
     
   }
   
@@ -80,9 +80,7 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
     this.msiDb.selectRecordsAsMaps("SELECT * FROM peptide_match WHERE id IN (" + pepMatchIds.mkString(",") +")")    
   }
   
- 
-  
-  private def _buildPeptideMatches( rsIds: Seq[Int], pmRecords: Seq[Map[String,Any]] ): Array[PeptideMatch] = {
+  private def _buildPeptideMatches( rsIds: Seq[Int], pmRecords: Seq[Map[String,Any]], psDb: DatabaseContext ): Array[PeptideMatch] = {
     
     import fr.proline.util.primitives.LongOrIntAsInt._
     import fr.proline.util.primitives.DoubleOrFloatAsFloat._
@@ -91,7 +89,7 @@ class SQLPeptideMatchProvider( val msiDb: SQLQueryExecution,
     
     // Load peptides
     val uniqPepIds = pmRecords map { _(PepMatchCols.peptideId).asInstanceOf[Int] } distinct
-    val peptides = this._getPeptideProvider().getPeptides(uniqPepIds)
+    val peptides = this._getPeptideProvider().getPeptides(uniqPepIds, psDb)
     
     // Map peptides by their id
     val peptideById = Map() ++ peptides.map { pep => ( pep.id -> pep ) }

@@ -2,6 +2,7 @@ package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
+import fr.proline.repository.DatabaseContext
 
 trait IPeptideProvider {
   
@@ -12,18 +13,18 @@ trait IPeptideProvider {
    *  @param peptideIds: Sequence of ids of Peptide to search for
    *  @return Array of Option[Peptide] corresponding to found Peptide
    */
-  def getPeptidesAsOptions( peptideIds: Seq[Int] ): Array[Option[Peptide]]
+  def getPeptidesAsOptions( peptideIds: Seq[Int], psDb: DatabaseContext ): Array[Option[Peptide]]
   
   /**
    *  Get Peptides with specified Ids.
    *  @param peptideIds: Sequence of ids of Peptide to search for
    *  @return Array of Peptide corresponding to found Peptide
    */
-  def getPeptides( peptideIds: Seq[Int] ): Array[Peptide]
+  def getPeptides( peptideIds: Seq[Int], psDb: DatabaseContext ): Array[Peptide]
   
   //def getPeptidesForSequences( peptideSeqs: Seq[String] ): Array[Peptide]
   
-  def getPeptide( peptideId:Int ): Option[Peptide] = { getPeptidesAsOptions( Array(peptideId) )(0) }  
+  def getPeptide( peptideId:Int, psDb: DatabaseContext ): Option[Peptide] = { getPeptidesAsOptions( Array(peptideId), psDb )(0) }  
   
   /**
    *  Get Peptide (wrapped in Option) with specified sequence and LocatedPtms.
@@ -33,7 +34,7 @@ trait IPeptideProvider {
    *  @param pepPtms: Array of LocatedPtm of Peptide to search for
    *  @return Option[Peptide] corresponding to found Peptide
    */
-  def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm]) : Option[Peptide]
+  def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm], psDb: DatabaseContext) : Option[Peptide]
   
-	def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]) : Array[Option[Peptide]]
+	def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]], psDb: DatabaseContext) : Array[Option[Peptide]]
 }

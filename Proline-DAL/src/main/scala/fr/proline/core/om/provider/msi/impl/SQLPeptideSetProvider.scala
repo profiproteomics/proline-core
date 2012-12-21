@@ -38,7 +38,7 @@ class SQLPeptideSetProvider( val msiDb: SQLQueryExecution, val psDb: SQLQueryExe
     this._buildPeptideSets( this._getPepSetRecords( pepSetIds ),
                             this._getPepSetRelationRecords( pepSetIds ),
                             pepSetItemRecords,
-                            this._getPeptideInstanceProvider.getPeptideInstances( pepInstIds ),
+                            this._getPeptideInstanceProvider.getPeptideInstances( pepInstIds, null ), // TODO LMN Use a real SQL Db Context here
                             this._getPepSetProtMatchMapRecords( pepSetIds )
                             )
   }

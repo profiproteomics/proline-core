@@ -1,41 +1,34 @@
 package fr.proline.core.om.storer.msi
 
 import scala.collection.mutable.HashMap
-
 import com.weiglewilczek.slf4s.Logging
-
-import fr.proline.core.om.model.msi.{ResultSet, Protein, Peptide, IPeaklistContainer}
+import fr.proline.core.om.model.msi.{ ResultSet, Protein, Peptide, IPeaklistContainer }
 import fr.proline.core.om.storer.msi.impl.SQLRsStorer
+import fr.proline.repository.DatabaseContext
 
 trait IRsWriter extends Logging {
-  
-  /*val msiDbConnection: java.sql.Connection // Main MSI db connection
-  val msiDbDriver: DriverType
-  //lazy val msiDb2: MsiDb = new MsiDb( msiDb1.config, maxVariableNumber = 10000 ) // Secondary MSI db connection
-  
-  val scoringIdByType = new MsiDbHelper( new SQLQueryHelper(msiDbConnection,msiDbDriver).ezDBC ).getScoringIdByType*/
-  
+
   // TODO: implement as InMemoryProvider
-  val peptideByUniqueKey = new HashMap[String,Peptide]()
-  val proteinBySequence = new HashMap[String,Protein]()
-  
+  val peptideByUniqueKey = new HashMap[String, Peptide]()
+  val proteinBySequence = new HashMap[String, Protein]()
+
   /**
-   * Store specified new ResultSet and all associated data into dbs. 
+   * Store specified new ResultSet and all associated data into dbs.
    * Protein and peptides referenced by the result set will be created as well
    * if necessary.
    */
-  def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ): Map[String,Int]
-  def storeNewPeptides( peptides: Seq[Peptide] ): Array[Peptide]
-  
-  def fetchProteinIdentifiers( accessions: Seq[String] ): Array[Any]// TODO: use JPA
-  
-  def fetchExistingProteins( protCRCs: Seq[String] ): Array[Protein]
-  def storeNewProteins( proteins: Seq[Protein] ): Array[Protein]
-  
-  def storeRsPeptideMatches( rs: ResultSet ): Int
-  def storeRsProteinMatches( rs: ResultSet ): Int 
-  def storeRsSequenceMatches( rs: ResultSet ): Int
-  
+  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDb: DatabaseContext): Map[String, Int]
+  def storeNewPeptides(peptides: Seq[Peptide], msiDb: DatabaseContext): Array[Peptide]
+
+  def fetchProteinIdentifiers(accessions: Seq[String]): Array[Any] // TODO: use JPA
+
+  def fetchExistingProteins(protCRCs: Seq[String]): Array[Protein]
+  def storeNewProteins(proteins: Seq[Protein], msiDb: DatabaseContext): Array[Protein]
+
+  def storeRsPeptideMatches(rs: ResultSet, msiDb: DatabaseContext): Int
+  def storeRsProteinMatches(rs: ResultSet, msiDb: DatabaseContext): Int
+  def storeRsSequenceMatches(rs: ResultSet, msiDb: DatabaseContext): Int
+
 }
 
 

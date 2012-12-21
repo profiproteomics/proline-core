@@ -14,20 +14,21 @@ import javax.persistence.NoResultException
 import javax.persistence.NonUniqueResultException
 import fr.proline.core.orm.pdi.repository.{ PdiBioSequenceRepository => bioSeqRepo }
 import fr.proline.core.om.utils.ProteinsOMConverterUtil
+import fr.proline.repository.DatabaseContext
 
 /**
  * ORMProteinProvider provides access to Protein stored in PDI database.
  *
  * Specified EntityManager should be a PDIdb EntityManager
  */
-class ORMProteinProvider(val em: EntityManager) extends IProteinProvider with Logging {
+class ORMProteinProvider() extends IProteinProvider with Logging {
 
   val converter = new ProteinsOMConverterUtil(true)
 
-  def getProteinsAsOptions(protIds: Seq[Int]): Array[Option[Protein]] = {
+  def getProteinsAsOptions(protIds: Seq[Int], pdiDb: DatabaseContext): Array[Option[Protein]] = {
 
     var foundOMProtBuilder = Array.newBuilder[Option[Protein]]
-    val pdiBioSeqs = em.createQuery("FROM fr.proline.core.orm.pdi.BioSequence bioSeq WHERE id IN (:ids)",
+    val pdiBioSeqs = pdiDb.getEntityManager.createQuery("FROM fr.proline.core.orm.pdi.BioSequence bioSeq WHERE id IN (:ids)",
       classOf[fr.proline.core.orm.pdi.BioSequence])
       .setParameter("ids", seqAsJavaList(protIds)).getResultList().toList
 
@@ -51,9 +52,9 @@ class ORMProteinProvider(val em: EntityManager) extends IProteinProvider with Lo
     foundOMProtBuilder.result
   }
 
-  def getProtein(seq: String): Option[Protein] = {
+  def getProtein(seq: String, pdiDb: DatabaseContext): Option[Protein] = {
     try {
-      val bioSeq: BioSequence = em.createQuery("SELECT bs FROM fr.proline.core.orm.pdi.BioSequence bs where bs.sequence = :seq", classOf[fr.proline.core.orm.pdi.BioSequence])
+      val bioSeq: BioSequence = pdiDb.getEntityManager.createQuery("SELECT bs FROM fr.proline.core.orm.pdi.BioSequence bs where bs.sequence = :seq", classOf[fr.proline.core.orm.pdi.BioSequence])
         .setParameter("seq", seq).getSingleResult()
       Some(converter.convertPdiBioSeqORM2OM(bioSeq))
     } catch {
@@ -65,9 +66,9 @@ class ORMProteinProvider(val em: EntityManager) extends IProteinProvider with Lo
 
   }
 
-  def getProtein(accession: String, seqDb: SeqDatabase): Option[Protein] = {
-    // TODO LMN don't keep "em" as instance variable
-    val bioSeq = bioSeqRepo.findBioSequencePerAccessionAndSeqDB(em, accession, seqDb.id)
+  def getProtein(accession: String, seqDb: SeqDatabase, pdiDb: DatabaseContext): Option[Protein] = {
+    
+    val bioSeq = bioSeqRepo.findBioSequencePerAccessionAndSeqDB(pdiDb.getEntityManager, accession, seqDb.id)
     if (bioSeq == null)
       return None
 

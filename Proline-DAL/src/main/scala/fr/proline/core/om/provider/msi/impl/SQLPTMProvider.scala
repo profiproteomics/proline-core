@@ -1,12 +1,12 @@
 package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.SQLQueryExecution
-
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.model.msi.PtmSpecificity
 import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.repository.DatabaseContext
 
 class SQLPTMProvider( val psDb: SQLQueryExecution ) extends IPTMProvider {
   
@@ -147,20 +147,20 @@ class SQLPTMProvider( val psDb: SQLQueryExecution ) extends IPTMProvider {
     
   }*/
   
-  def getPtmDefinitionsAsOptions( ptmDefIds: Seq[Int] ): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions( ptmDefIds: Seq[Int], psDb: DatabaseContext ): Array[Option[PtmDefinition]] = {
     val ptmDefById = this.ptmDefinitionById
     ptmDefIds.map { ptmDefById.get(_) } toArray
   }
   
-  def getPtmDefinitions( ptmDefIds: Seq[Int] ): Array[PtmDefinition] = {
-    this.getPtmDefinitionsAsOptions( ptmDefIds ).filter( _ != None ).map( _.get )
+  def getPtmDefinitions( ptmDefIds: Seq[Int], psDb: DatabaseContext ): Array[PtmDefinition] = {
+    this.getPtmDefinitionsAsOptions( ptmDefIds, psDb ).filter( _ != None ).map( _.get )
   }
     
-  def getPtmDefinition( ptmShortName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition] = {
+  def getPtmDefinition( ptmShortName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location, psDb: DatabaseContext ): Option[PtmDefinition] = {
     this.ptmDefByNameAndLocation.get( ptmShortName, ptmResidue, ptmLocation )
   }
   
-  def getPtmId( shortName: String ): Option[Int] = {
+  def getPtmId( shortName: String, psDb: DatabaseContext ): Option[Int] = {
     this.ptmIdByName.get( shortName )
   }
   

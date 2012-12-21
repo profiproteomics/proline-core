@@ -1,12 +1,11 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-
 import fr.profi.jdbc.SQLQueryExecution
-
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi.{ProteinMatch,PeptideMatch,ResultSet}
 import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.repository.DatabaseContext
 
 trait SQLResultSetLoader {
   
@@ -82,7 +81,7 @@ trait SQLResultSetLoader {
 class SQLResultSetProvider( val msiDb: SQLQueryExecution,
                             val psDb: SQLQueryExecution = null ) extends SQLResultSetLoader with IResultSetProvider {
   
-  def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
+  def getResultSets( rsIds: Seq[Int], pdiDbCtx: DatabaseContext, psDbCtx: DatabaseContext, msiDbCtx: DatabaseContext ): Array[ResultSet] = {
     
     // Load peptide matches
     val pepMatchProvider = new SQLPeptideMatchProvider( msiDb, psDb )
@@ -96,9 +95,9 @@ class SQLResultSetProvider( val msiDb: SQLQueryExecution,
 
   }
   
-  def getResultSetsAsOptions( resultSetIds: Seq[Int] ): Array[Option[ResultSet]] = {
+  def getResultSetsAsOptions( resultSetIds: Seq[Int], pdiDbCtx: DatabaseContext, psDbCtx: DatabaseContext, msiDbCtx: DatabaseContext ): Array[Option[ResultSet]] = {
     
-    val resultSets = this.getResultSets( resultSetIds )
+    val resultSets = this.getResultSets( resultSetIds, pdiDbCtx, psDbCtx, msiDbCtx )
     val resultSetById = resultSets.map { rs => rs.id -> rs } toMap
     
     resultSetIds.map { resultSetById.get( _ ) } toArray

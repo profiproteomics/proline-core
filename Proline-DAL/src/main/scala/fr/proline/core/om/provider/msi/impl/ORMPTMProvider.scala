@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -10,19 +9,19 @@ import fr.proline.core.orm.ps.repository.{ PsPtmRepository => psPtmRepo }
 import fr.proline.core.orm.ps.PtmSpecificity
 import javax.persistence.EntityManager
 import javax.persistence.PersistenceException
-
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters.asJavaCollectionConverter
+import fr.proline.repository.DatabaseContext
 
-class ORMPTMProvider(val em: EntityManager) extends IPTMProvider with Logging {
+class ORMPTMProvider() extends IPTMProvider with Logging {
 
   val converter = new PeptidesOMConverterUtil(true)
 
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int], psDb: DatabaseContext): Array[Option[PtmDefinition]] = {
 
     var foundPtmDefBuilder = Array.newBuilder[Option[PtmDefinition]]
 
-    val ptmSpecificityORMs = em.createQuery("FROM fr.proline.core.orm.ps.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
+    val ptmSpecificityORMs = psDb.getEntityManager.createQuery("FROM fr.proline.core.orm.ps.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
       classOf[fr.proline.core.orm.ps.PtmSpecificity])
       .setParameter("ids", ptmDefIds.asJavaCollection).getResultList().toList
 
@@ -47,20 +46,18 @@ class ORMPTMProvider(val em: EntityManager) extends IPTMProvider with Logging {
     foundPtmDefBuilder.result
   }
 
-  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[PtmDefinition] = {
-    this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_ != None).map(_.get)
+  def getPtmDefinitions(ptmDefIds: Seq[Int], psDb: DatabaseContext): Array[PtmDefinition] = {
+    this.getPtmDefinitionsAsOptions(ptmDefIds, psDb).filter(_ != None).map(_.get)
   }
 
-  def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
+  def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location, psDb: DatabaseContext): Option[PtmDefinition] = {
     try {
 
       var ptmSpecificity: PtmSpecificity = null
-      if (ptmResidu.equals('\0')) {
-        // TODO LMN don't keep "em" as instance variable
-        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(em, ptmName, ptmLocation.toString, null)
-      } else {
-        // TODO LMN don't keep "em" as instance variable
-        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(em, ptmName, ptmLocation.toString, "" + ptmResidu)
+      if (ptmResidu.equals('\0')) {       
+        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDb.getEntityManager, ptmName, ptmLocation.toString, null)
+      } else {        
+        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDb.getEntityManager, ptmName, ptmLocation.toString, "" + ptmResidu)
       }
       if (ptmSpecificity == null)
         return None
@@ -74,9 +71,9 @@ class ORMPTMProvider(val em: EntityManager) extends IPTMProvider with Logging {
     }
   }
 
-  def getPtmId(shortName: String): Option[Int] = {
+  def getPtmId(shortName: String, psDb: DatabaseContext): Option[Int] = {
     try {
-      val ptm = em.createQuery("FROM Ptm ptm WHERE ptm.shortName = :shortName", classOf[fr.proline.core.orm.ps.Ptm]).setParameter("shortName", shortName).getSingleResult
+      val ptm = psDb.getEntityManager.createQuery("FROM Ptm ptm WHERE ptm.shortName = :shortName", classOf[fr.proline.core.orm.ps.Ptm]).setParameter("shortName", shortName).getSingleResult
       if (ptm == null)
         return None
       else

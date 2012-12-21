@@ -11,16 +11,17 @@ import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => seqDBRepo }
 import fr.proline.core.om.utils.ProteinsOMConverterUtil
+import fr.proline.repository.DatabaseContext
 
-class ORMSeqDatabaseProvider(val em: EntityManager) extends ISeqDatabaseProvider with Logging {
+class ORMSeqDatabaseProvider() extends ISeqDatabaseProvider with Logging {
 
   val converter = new ProteinsOMConverterUtil()
 
-  def getSeqDatabasesAsOptions(seqDBIds: Seq[Int]): Array[Option[SeqDatabase]] = {
+  def getSeqDatabasesAsOptions(seqDBIds: Seq[Int], pdiDb: DatabaseContext): Array[Option[SeqDatabase]] = {
 
     var foundSeqDBBuilder = Array.newBuilder[Option[SeqDatabase]]
 
-    val seqDBORMs = em.createQuery("FROM fr.proline.core.orm.pdi.SequenceDbInstance WHERE id IN (:ids)",
+    val seqDBORMs = pdiDb.getEntityManager.createQuery("FROM fr.proline.core.orm.pdi.SequenceDbInstance WHERE id IN (:ids)",
       classOf[fr.proline.core.orm.pdi.SequenceDbInstance])
       .setParameter("ids", seqDBIds.asJavaCollection).getResultList().toList
 
@@ -49,9 +50,8 @@ class ORMSeqDatabaseProvider(val em: EntityManager) extends ISeqDatabaseProvider
     throw new Exception("NYI")
   }
 
-  def getSeqDatabase(seqDBName: String, fastaPath: String): Option[SeqDatabase] = {
-    // TODO LMN don't keep "em" as instance variable
-    val pdiSeqdb = seqDBRepo.findSeqDbInstanceWithNameAndFile(em, seqDBName, fastaPath)
+  def getSeqDatabase(seqDBName: String, fastaPath: String, pdiDb: DatabaseContext ): Option[SeqDatabase] = {   
+    val pdiSeqdb = seqDBRepo.findSeqDbInstanceWithNameAndFile(pdiDb.getEntityManager, seqDBName, fastaPath)
     if (pdiSeqdb == null)
       return None
     else {

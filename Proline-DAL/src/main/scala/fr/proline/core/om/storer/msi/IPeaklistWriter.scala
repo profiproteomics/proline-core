@@ -1,7 +1,7 @@
 package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal.SQLQueryHelper
+
 import fr.proline.core.om.model.msi.{Peaklist,IPeaklistContainer}
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.storer.msi.impl.SQLPeaklistWriter

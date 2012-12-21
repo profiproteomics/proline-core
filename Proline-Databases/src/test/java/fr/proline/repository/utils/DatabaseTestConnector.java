@@ -27,13 +27,15 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseTestConnector.class);
 
-    private final Object m_connectorLock = new Object();
+    private final Object m_closeLock = new Object();
 
-    /* onTearDown() and close() are @GuardedBy("m_connectorLock") */
+    /* m_closed, onTearDown() and close() are @GuardedBy("m_closeLock") */
 
     private final IDatabaseConnector m_realConnector;
 
     private final IDatabaseTester m_databaseTester;
+
+    private boolean m_closed;
 
     public DatabaseTestConnector(final Database database, final Map<Object, Object> properties) {
 
@@ -88,18 +90,34 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 
     public void close() {
 
-	synchronized (m_connectorLock) {
-	    LOG.debug("Tearing down DataSourceDatabaseTester");
+	synchronized (m_closeLock) {
 
-	    try {
-		m_databaseTester.onTearDown();
-	    } catch (Exception ex) {
-		LOG.error("Error tearing down DataSourceDatabaseTester", ex);
+	    if (!m_closed) { // Close only once
+		m_closed = true;
+
+		LOG.debug("Tearing down DataSourceDatabaseTester");
+
+		try {
+		    m_databaseTester.onTearDown();
+		} catch (Exception ex) {
+		    LOG.error("Error tearing down DataSourceDatabaseTester", ex);
+		}
+
+		m_realConnector.close();
 	    }
 
-	    m_realConnector.close();
-	} // End of synchronized block on m_connectorLock
+	} // End of synchronized block on m_closeLock
 
+    }
+
+    public boolean isClosed() {
+	boolean result;
+
+	synchronized (m_closeLock) {
+	    result = (m_closed || m_realConnector.isClosed());
+	} // End of synchronized block on m_closeLock
+
+	return result;
     }
 
     public IDatabaseTester getDatabaseTester() {

@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.msi
 import fr.proline.core.om.model.msi.Protein
 import fr.proline.core.om.model.msi.SeqDatabase
+import fr.proline.repository.DatabaseContext
 
 
 
@@ -14,7 +15,7 @@ trait IProteinProvider {
    *  @param protIds: Sequence of ids of Protein to search for
    *  @return Array of Option[Protein] corresponding to found Protein
    */
-  def getProteinsAsOptions( protIds: Seq[Int] ): Array[Option[Protein]]
+  def getProteinsAsOptions( protIds: Seq[Int], pdiDb: DatabaseContext ): Array[Option[Protein]]
   
   /**
    * Get Protein (wrapped in Option) with specified Id.
@@ -23,7 +24,7 @@ trait IProteinProvider {
    *  @param protId: id of Protein to search for
    *  @return Option[Protein] corresponding to found Protein
    */
-  def getProtein( protId:Int ): Option[Protein] = { getProteinsAsOptions( Array(protId) )(0) }
+  def getProtein( protId:Int, pdiDb: DatabaseContext ): Option[Protein] = { getProteinsAsOptions( Array(protId), pdiDb )(0) }
  
   /**
    * Get Protein (wrapped in Option) with specified sequence.
@@ -32,7 +33,7 @@ trait IProteinProvider {
    *  @param seq: sequence of Protein to search for
    *  @return Option[Protein] corresponding to found Protein
    */
-  def getProtein( seq:String): Option[Protein]
+  def getProtein( seq:String, pdiDb: DatabaseContext): Option[Protein]
   
    /**
    * Get Protein (wrapped in Option) with specified accession and belonging to specified SeqDatabase.
@@ -42,5 +43,5 @@ trait IProteinProvider {
    *  @param seqDb: SeqDatabase to which searched Protein belongs to 
    *  @return Option[Protein] corresponding to found Protein
    */
-  def getProtein(accession:String, seqDb: SeqDatabase): Option[Protein]
+  def getProtein(accession:String, seqDb: SeqDatabase, pdiDb: DatabaseContext): Option[Protein]
 }

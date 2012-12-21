@@ -17,4 +17,6 @@ public interface IDatabaseConnector {
 
     void close();
 
+    boolean isClosed();
+
 }

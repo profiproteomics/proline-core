@@ -85,8 +85,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	synchronized (m_connectorLock) {
 
-	    if (m_closed) {
-		throw new IllegalStateException("This connector is ALREADY closed");
+	    if (isClosed()) {
+		throw new IllegalStateException("Connector is ALREADY closed");
 	    }
 
 	    if (m_dataSource == null) {
@@ -114,8 +114,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	synchronized (m_connectorLock) {
 
-	    if (m_closed) {
-		throw new IllegalStateException("This connector is ALREADY closed");
+	    if (isClosed()) {
+		throw new IllegalStateException("Connector is ALREADY closed");
 	    }
 
 	    if (m_entityManagerFactory == null) {
@@ -169,10 +169,20 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		    doClose(database, m_dataSource);
 		}
 
-	    }
+	    } // End if (connector is not already closed)
 
 	} // End of synchronized block on m_connectorLock
 
+    }
+
+    public final boolean isClosed() {
+	boolean result;
+
+	synchronized (m_connectorLock) {
+	    result = m_closed;
+	} // End of synchronized block on m_connectorLock
+
+	return result;
     }
 
     protected boolean isMemory(final Map<Object, Object> properties) {
