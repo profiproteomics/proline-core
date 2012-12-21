@@ -93,9 +93,12 @@ public class DatabaseManager {
 
 		    DatabaseUpgrader.upgradeDatabase(m_psDbConnector);
 		}
-		
-	    } catch( Throwable e ) {
-	      LOG.error( e.getMessage() );
+
+	    } catch (Exception ex) {
+		/* Log and re-throw */
+		final String message = "Error initializing DatabaseManager";
+		LOG.error(message, ex);
+		throw new RuntimeException(message, ex);
 	    } finally {
 
 		try {

@@ -97,7 +97,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		try {
 		    m_dataSource = createDataSource(database, propertiesCopy);
 		} catch (Exception ex) {
-		    /* Log and rethrow */
+		    /* Log and re-throw */
 		    final String message = "Error creating DataSource for " + database;
 		    LOG.error(message, ex);
 		    throw new RuntimeException(message, ex);
@@ -132,7 +132,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		    m_entityManagerFactory = createEntityManagerFactory(database, propertiesCopy,
 			    DEFAULT_ORM_OPTIMIZATIONS);
 		} catch (Exception ex) {
-		    /* Log and rethrow */
+		    /* Log and re-throw */
 		    final String message = "Error creating EntityManagerFactory for " + database;
 		    LOG.error(message, ex);
 		    throw new RuntimeException(message, ex);

@@ -56,7 +56,7 @@ public class DatabaseManagerTest extends DatabaseTestCase {
 
 	    udsEm.persist(pdiDb);
 
-	    /* Create a Test PDI Db */
+	    /* Create a Test PS Db */
 	    final ExternalDb psDb = new ExternalDb();
 	    psDb.setType(Database.PS);
 	    psDb.setConnectionMode(ConnectionMode.MEMORY);
