@@ -180,11 +180,11 @@ public class ResultSummary implements Serializable {
 			this.proteinSetArray = proteinSetArray;
 		}
 
-		public Object getObject() {
+		public Object getDataSet() {
 			return dataSet;
 		}
 		
-		public void setObject(Object dataSet) { // JPM.TODO : replace Object by DataSet from orm
+		public void setDataSet(Object dataSet) { // JPM.TODO : replace Object by DataSet from orm
 			this.dataSet = dataSet;
 		}
 
