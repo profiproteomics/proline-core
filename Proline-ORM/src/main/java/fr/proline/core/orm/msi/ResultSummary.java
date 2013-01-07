@@ -3,6 +3,7 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import javax.persistence.*;
 
+
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,8 +64,10 @@ public class ResultSummary implements Serializable {
    @CollectionTable(name="result_summary_object_tree_map",joinColumns = @JoinColumn(name = "result_summary_id", referencedColumnName = "id"))
    Map<String, Integer> objectTreeIdByName;  
 
+
+	
 	// Transient Variables not saved in database
-	@Transient private ProteinSet[] proteinSets = null;
+    @Transient private TransientData transientData = null;
 	
 	
     public ResultSummary() {
@@ -144,16 +147,48 @@ public class ResultSummary implements Serializable {
 		this.objectTreeIdByName.put(schemaName, objectId);
 	}
 	
-	/**
-	 * Get of Transient proteinSets, Must be set by the user first.
-	 * @return
-	 */
-	public ProteinSet[] getTransientProteinSets() {
-		return proteinSets;
-	}
 
-	public void setTransientProteinSets(ProteinSet[] proteinSets) {
-		this.proteinSets = proteinSets;
+    public TransientData getTransientData() {
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
+    }
+	
+	/**
+	 * Transient Data which will be not saved in database
+	 * Used by the Proline Studio IHM
+	 * @author JM235353
+	 */
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+
+		private ProteinSet[] proteinSetArray = null;
+		private Object dataSet = null; // JPM.TODO : replace Object by DataSet from orm
+		
+		protected TransientData() {
+		}
+	
+
+
+		public ProteinSet[] getProteinSetArray() {
+			return proteinSetArray;
+		}
+
+		public void setProteinSetArray(ProteinSet[] proteinSetArray) {
+			this.proteinSetArray = proteinSetArray;
+		}
+
+		public Object getObject() {
+			return dataSet;
+		}
+		
+		public void setObject(Object dataSet) { // JPM.TODO : replace Object by DataSet from orm
+			this.dataSet = dataSet;
+		}
+
+	
 	}
 	
 }
