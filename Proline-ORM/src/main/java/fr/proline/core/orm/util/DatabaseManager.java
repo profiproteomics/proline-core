@@ -19,6 +19,15 @@ import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.util.StringUtils;
 
+/**
+ * Manage the set of IDatabaseConnector used in a Proline module or application. This singleton object is 
+ * initialized from the UDSdb connection (specified as an IDatabaseConnector object or as a map of connection properties.
+ * See {@link #initialize(IDatabaseConnector)} methods. The UDS database model is initialized by this object if
+ * needed. Since initialized, this object give access to other databases (PDI, PS, LCMS and MSI).
+ *  
+ * @author CB205360
+ *
+ */
 public class DatabaseManager {
 
     /* Constants */
