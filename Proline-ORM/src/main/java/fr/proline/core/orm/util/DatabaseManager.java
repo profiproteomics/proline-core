@@ -19,15 +19,6 @@ import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.util.StringUtils;
 
-/**
- * Manage the set of IDatabaseConnector used in a Proline module or application. This singleton object is 
- * initialized from the UDSdb connection (specified as an IDatabaseConnector object or as a map of connection properties.
- * See {@link #initialize(IDatabaseConnector)} methods. The UDS database model is initialized by this object if
- * needed. Since initialized, this object give access to other databases (PDI, PS, LCMS and MSI).
- *  
- * @author CB205360
- *
- */
 public class DatabaseManager {
 
     /* Constants */
@@ -70,13 +61,16 @@ public class DatabaseManager {
 
 	    m_udsDbConnector = udsDbConnector;
 
+	    EntityManager udsEm = null;
+	    try {
+	    
 	    DatabaseUpgrader.upgradeDatabase(udsDbConnector);
 
 	    final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
 
-	    EntityManager udsEm = udsEMF.createEntityManager();
+	    udsEm = udsEMF.createEntityManager();
 
-	    try {
+	    
 		final DriverType udsDriverType = udsDbConnector.getDriverType();
 
 		/* Try to load PDI Db Connector */
@@ -107,11 +101,22 @@ public class DatabaseManager {
 		/* Log and re-throw */
 		final String message = "Error initializing DatabaseManager";
 		LOG.error(message, ex);
+		
+		// close and set to null connectors, 
+		// so we can retry to initialize uds connector
+		// ( otherwise isInitialized() returns true even if the connection has failed )
+		closeUdsPdiPsConnectors();
+		m_udsDbConnector = null;
+		m_pdiDbConnector = null;
+		m_psDbConnector = null;
+		
 		throw new RuntimeException(message, ex);
 	    } finally {
 
 		try {
-		    udsEm.close();
+			if (udsEm != null) {
+				udsEm.close();
+			}
 		} catch (Exception exClose) {
 		    LOG.error("Error closing UDS Db EntityManager", exClose);
 		}
@@ -257,29 +262,7 @@ public class DatabaseManager {
 
 	synchronized (m_managerLock) {
 
-	    if (m_udsDbConnector != null) {
-		try {
-		    m_udsDbConnector.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing UDS Db Connector", exClose);
-		}
-	    }
-
-	    if (m_pdiDbConnector != null) {
-		try {
-		    m_pdiDbConnector.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing PDI Db Connector", exClose);
-		}
-	    }
-
-	    if (m_psDbConnector != null) {
-		try {
-		    m_psDbConnector.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing PS Db Connector", exClose);
-		}
-	    }
+		closeUdsPdiPsConnectors();
 
 	    for (final IDatabaseConnector msiDbConnector : m_msiDbConnectors.values()) {
 		try {
@@ -300,6 +283,32 @@ public class DatabaseManager {
 	} // End of synchronized block on m_managerLock
 
     }
+
+	private void closeUdsPdiPsConnectors() {
+		if (m_udsDbConnector != null) {
+			try {
+				m_udsDbConnector.close();
+			} catch (Exception exClose) {
+				LOG.error("Error closing UDS Db Connector", exClose);
+			}
+		}
+
+		if (m_pdiDbConnector != null) {
+			try {
+				m_pdiDbConnector.close();
+			} catch (Exception exClose) {
+				LOG.error("Error closing PDI Db Connector", exClose);
+			}
+		}
+
+		if (m_psDbConnector != null) {
+			try {
+				m_psDbConnector.close();
+			} catch (Exception exClose) {
+				LOG.error("Error closing PS Db Connector", exClose);
+			}
+		}
+	}
 
     private void checkInitialization() {
 
