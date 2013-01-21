@@ -39,6 +39,41 @@ use Class::XSAccessor {
 
 1;
 
+package PowerArchitect::IndexColumn;
+
+use Class::XSAccessor {
+  constructor => 'new',  
+  accessors => {
+    id => 'id',
+    name => 'name',
+    physical_name => 'physical_name',    
+    asc_or_desc => 'asc_or_desc',
+    column_ref => 'column_ref',
+  },
+};
+
+1;
+
+package PowerArchitect::Index;
+
+use Class::XSAccessor {
+  constructor => 'new',  
+  accessors => {
+    
+    ### Define foreign keys
+    name => 'name',
+    physical_name => 'physical_name',
+    is_pk_index => 'is_pk_index',
+    is_unique => 'is_unique',
+    is_clustered => 'is_clustered',
+    table_name => 'table_name',
+    columns => 'columns',
+  },
+
+};
+
+1;
+
 package main;
 
 use strict;
@@ -55,10 +90,10 @@ architect2sqlite($_) for @arch_files;
 
 sub architect2sqlite {
   my $archFile = shift;
-  my($outputFile,$path,$suffix) = fileparse($archFile,'.architect');
+  my($outputFile,$path,$suffix) = fileparse($archFile,'.architect');  
   $outputFile .='.sql';
   
-  my $tables = get_tables( $archFile );
+  my( $tables, $indexes ) = parse_schema( $archFile );
   my @sorted_tables = sort { $a->name cmp $b->name } @$tables;
   
   my( %table_name_by_col_id, %col_name_by_id );
@@ -71,6 +106,8 @@ sub architect2sqlite {
     
   open( FILE, ">", $outputFile ) or die $!;
   
+  
+  ### Export table definitions
   my $space = '                ';
   for my $table (@sorted_tables) {
     printf FILE "CREATE TABLE %s (\n", $table->name;
@@ -114,13 +151,27 @@ sub architect2sqlite {
   
   }
   
+  ### Export indexes
+  for my $index (@$indexes) {
+    next if $index->is_pk_index;
+    
+    my $unicity = $index->is_unique ? 'UNIQUE ' : '';
+    my @colsAsStrings = ();
+    for my $index_col (@{$index->columns}) {
+      my $asc_or_desc = defined $index_col->asc_or_desc ? ' ' . $index_col->asc_or_desc : '';
+      push( @colsAsStrings, $index_col->name . $asc_or_desc );
+    }
+    
+    printf FILE "CREATE %sINDEX %s ON %s (%s);\n\n", $unicity, $index->name, $index->table_name, join(",",@colsAsStrings);
+  }
+  
   close FILE;
 }
 
-sub get_tables {
+sub parse_schema {
   my $xmlFilePath = shift;
   
-  my %options = ( SuppressEmpty => undef, ForceArray => ['table','relationship'], KeyAttr => [] );
+  my %options = ( SuppressEmpty => undef, ForceArray => ['table','column','relationship','index','index-column'], KeyAttr => [] );
   my $xmlParser = new XML::Simple( %options );
   my $xmlObj = $xmlParser->XMLin($xmlFilePath);
   
@@ -170,13 +221,13 @@ sub get_tables {
   ### Climb tree to extract column infos and write an HTML file
   my $table_nodes = $xmlObj->{'target-database'}->{'table'};
   
-  my @tables;
+  my( @tables, @indexes );
   foreach my $table_node (@$table_nodes) {
     
     my %table_attrs = ( name => $table_node->{name}, remarks => $table_node->{remarks} );
   
     my $column_nodes = $table_node->{folder}->[0]->{column};
-    $column_nodes = [$column_nodes] if ref($column_nodes) ne 'ARRAY';
+    #$column_nodes = [$column_nodes] if ref($column_nodes) ne 'ARRAY';
     
     my @columns;
     foreach my $column_node (@$column_nodes) {
@@ -203,9 +254,41 @@ sub get_tables {
     
     my $table = new PowerArchitect::Table( %table_attrs );
     push( @tables, $table );
+    
+    my $index_nodes = $table_node->{folder}->[3]->{index};
+    for my $index_node (@$index_nodes) {
+      
+      my @index_cols;
+      for my $index_col_node (@{$index_node->{'index-column'}}) {
+        my $asc_or_desc = $index_col_node->{ascendingOrDescending};
+  
+        if( $asc_or_desc eq 'ASCENDING' ) { $asc_or_desc = 'ASC'; }
+        elsif( $asc_or_desc eq 'DESCENDING' ) { $asc_or_desc = 'DESC'; }
+        else { $asc_or_desc = undef; }
+        
+        push( @index_cols, new PowerArchitect::IndexColumn(
+          id => $index_col_node->{id},
+          name => $index_col_node->{physicalName},
+          physical_name => $index_col_node->{id},
+          column_ref => $index_col_node->{'column-ref'},
+          asc_or_desc => $asc_or_desc, 
+        ) );        
+      }
+      
+      push( @indexes, new PowerArchitect::Index(
+        name => $index_node->{name},
+        physical_name => $index_node->{physicalName},
+        is_pk_index => $index_node->{primaryKeyIndex} eq 'true' ? 1 : 0,
+        is_unique => $index_node->{unique} eq 'true' ? 1 : 0,
+        is_clustered => $index_node->{clustered} eq 'true' ? 1 : 0,
+        table_name => $table->name,
+        columns => \@index_cols
+      ) );
+    }
+    
   }
   
-  return \@tables;
+  return ( \@tables, \@indexes );
   
 }
 
