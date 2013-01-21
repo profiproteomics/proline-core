@@ -44,55 +44,79 @@ package main;
 use strict;
 use XML::Simple;
 use Data::Dumper;
+use File::Find::Rule;
+use File::Basename qw/fileparse/;
 use String::CamelCase qw/camelize/;
 no warnings;
 
-my $namespace = 'UdsDb';
-my $xmlFile = 'UDS-DB.architect';
-my $outputFile = 'uds-db_enums.txt';
 
-my $tables = get_tables( $xmlFile );
-my @sorted_tables = sort { $a->name cmp $b->name } @$tables;
+#my $xmlFile = 'UDS-DB.architect';
+#my $outputFile = 'uds-db_enums.txt';
 
-my( %table_name_by_col_id, %col_name_by_id );
-for my $table (@sorted_tables) {
-  for my $col (@{$table->columns}) {
-    $table_name_by_col_id{$col->id} = $table->name;
-    $col_name_by_id{$col->id} = $col->name;
-  }
+my @arch_files = File::Find::Rule->file()
+                              ->name( '*.architect' )
+                              ->in( './' );
+architect2enums($_) for @arch_files;
+
+sub name2namespace {
+  my $name = shift;
+  $name =~ s/-/_/g;
+  $name = lc($name);
+  return camelize($name);
 }
-  
-open( FILE, ">", $outputFile  ) or die $!;
 
-my $space = '  ';
-for my $table (@sorted_tables) {
+sub architect2enums {
+  my $archFile = shift;
+  my($fileName,$path,$suffix) = fileparse($archFile,'.architect');
   
-  my $tableName = $namespace.camelize($table->name);
-  my $tableDefName = $tableName.'Table';
-  my $colsDefName = $tableName.'Columns';
+  my $namespace = name2namespace($fileName);
+  my $outputFile = $fileName.'_enums.txt';
+
+  my $tables = get_tables( $archFile );
+  my @sorted_tables = sort { $a->name cmp $b->name } @$tables;
   
-  print FILE  "object $colsDefName extends ColumnEnumeration {\n";
-  
-  my @colsAsStrings;
-  for my $col (@{$table->columns}) {
-    my $enumEntryName = lcfirst(camelize($col->name));
-    $enumEntryName = "`$enumEntryName`" if $enumEntryName eq 'type';
+  my( %table_name_by_col_id, %col_name_by_id );
+  for my $table (@sorted_tables) {
+    for my $col (@{$table->columns}) {
+      $table_name_by_col_id{$col->id} = $table->name;
+      $col_name_by_id{$col->id} = $col->name;
+    }
+  }
     
-    my $colAsString = $space . sprintf( 'val %s = Value("%s")', $enumEntryName, $col->name );    
-    push( @colsAsStrings, $colAsString );
+  open( FILE, ">", $outputFile  ) or die $!;
+  
+  my $space = '  ';
+  for my $table (@sorted_tables) {
+    
+    my $tableName = $namespace.camelize($table->name);
+    my $tableDefName = $tableName.'Table';
+    my $colsDefName = $tableName.'Columns';
+    
+    print FILE  "object $colsDefName extends ColumnEnumeration {\n";
+    printf FILE "  val \$tableName = %s.name\n", $tableDefName;
+    
+    my @colsAsStrings;
+    for my $col (@{$table->columns}) {
+      #my $enumEntryName = lcfirst(camelize($col->name));
+      my $enumEntryName = uc($col->name);
+      #$enumEntryName = "`$enumEntryName`" if $enumEntryName eq 'TYPE';
+      
+      my $colAsString = $space . sprintf( 'val %s = Column("%s")', $enumEntryName, $col->name );    
+      push( @colsAsStrings, $colAsString );
+    }
+    
+    print FILE join("\n",@colsAsStrings) . "\n}\n\n";
+    
+    printf FILE "abstract class %s extends TableDefinition[%s.type]\n\n", $tableDefName, $colsDefName;
+    
+    printf FILE "object %s extends %s {\n", $tableDefName, $tableDefName;
+    printf FILE "  val name = \"%s\"\n", $table->name;
+    printf FILE "  val columns = %s\n}\n\n", $colsDefName;
+  
   }
   
-  print FILE join("\n",@colsAsStrings) . "\n}\n\n";
-  
-  printf FILE "abstract class %s extends TableDefinition[%s.type]\n\n", $tableDefName, $colsDefName;
-  
-  printf FILE "object %s extends %s {\n", $tableDefName, $tableDefName;
-  printf FILE "  val tableName = \"%s\"\n", $table->name;
-  printf FILE "  val columns = %s\n}\n\n", $colsDefName;
-
+  close FILE;
 }
-
-close FILE;
 
 sub get_tables {
   my $xmlFilePath = shift;
