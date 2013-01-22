@@ -4,7 +4,7 @@
 
   <groupId>fr.proline</groupId>
   <artifactId>Proline-Core</artifactId>
-  <version>0.0.4-SNAPSHOT</version>
+  <version>0.0.4</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
