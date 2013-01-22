@@ -19,6 +19,7 @@ case class Peaklist(
   val path: String,
   val rawFileName: String,
   val msLevel: Int,
+  val spectrumDataCompression: String = "none",
   var peaklistSoftware: PeaklistSoftware = null,
   
   var properties: Option[PeaklistProperties] = None

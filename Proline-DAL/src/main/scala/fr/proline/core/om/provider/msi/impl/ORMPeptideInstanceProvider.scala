@@ -10,27 +10,27 @@ import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import scala.collection.mutable.ArrayBuilder
 import fr.proline.repository.DatabaseContext
 
-class ORMPeptideInstanceProvider() extends IPeptideInstanceProvider {
+class ORMPeptideInstanceProvider( val msiDbCtx: DatabaseContext, val psDbCtx: DatabaseContext = null ) extends IPeptideInstanceProvider {
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 
-  def getPeptideInstancesAsOptions(pepInstIds: Seq[Int], msiDb: DatabaseContext): Array[Option[PeptideInstance]] = {
+  def getPeptideInstancesAsOptions(pepInstIds: Seq[Int]): Array[Option[PeptideInstance]] = {
 
     var foundPepInstBuilder = Array.newBuilder[Option[PeptideInstance]]
     pepInstIds foreach (id => {
-      val pepInstance: fr.proline.core.orm.msi.PeptideInstance = msiDb.getEntityManager.find(classOf[fr.proline.core.orm.msi.PeptideInstance], id)
+      val pepInstance: fr.proline.core.orm.msi.PeptideInstance = msiDbCtx.getEntityManager.find(classOf[fr.proline.core.orm.msi.PeptideInstance], id)
       if (pepInstance != null) {
-        foundPepInstBuilder += Some(converter.convertPeptideInstanceORM2OM(pepInstance, true, msiDb.getEntityManager))
+        foundPepInstBuilder += Some(converter.convertPeptideInstanceORM2OM(pepInstance, true, msiDbCtx.getEntityManager))
       } else
         foundPepInstBuilder += None
     })
     return foundPepInstBuilder.result()
   }
 
-  def getPeptideInstances(pepInstIds: Seq[Int], msiDb: DatabaseContext): Array[PeptideInstance] = {
-    this.getPeptideInstancesAsOptions(pepInstIds, msiDb).filter(_ != None).map(_.get)
+  def getPeptideInstances(pepInstIds: Seq[Int] ): Array[PeptideInstance] = {
+    this.getPeptideInstancesAsOptions(pepInstIds).filter(_ != None).map(_.get)
   }
 
-  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int]): Array[PeptideInstance] = { throw new Exception("NYI") }
+  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int] ): Array[PeptideInstance] = { throw new Exception("NYI") }
 
 }

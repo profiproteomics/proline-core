@@ -99,7 +99,7 @@ class SpectralCountQuantifier(
                                           msiMasterPepInst: MsiPeptideInstance,
                                           msiRSM: MsiResultSummary ) = {
     
-    val schemaName = "spectral_counting_peptides"
+    val schemaName = "object_tree.spectral_counting_peptides"
     // TODO: load the schema
     val schemaFake = new fr.proline.core.orm.msi.ObjectTreeSchema()
     schemaFake.setName( schemaName )
@@ -136,7 +136,7 @@ class SpectralCountQuantifier(
                                              msiMasterProtSet: MsiProteinSet,
                                              msiRSM: MsiResultSummary ) = {
     
-    val schemaName = "quant_protein_sets"
+    val schemaName = "object_tree.quant_protein_sets"
     // TODO: load the schema
     val schemaFake = new fr.proline.core.orm.msi.ObjectTreeSchema()
     schemaFake.setName( schemaName )

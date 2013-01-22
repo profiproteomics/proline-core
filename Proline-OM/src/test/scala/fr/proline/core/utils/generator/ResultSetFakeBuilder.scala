@@ -4,23 +4,10 @@ import scala.collection.mutable.ListBuffer
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.Protein
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.SequenceMatch
+import fr.proline.core.om.model.msi._
 import scala.collection.mutable.Buffer
-import fr.proline.core.om.model.msi.MSISearch
 import java.util.Date
 import java.text.SimpleDateFormat
-import fr.proline.core.om.model.msi.SearchSettings
-import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.Instrument
-import fr.proline.core.om.model.msi.Peaklist
-import fr.proline.core.om.model.msi.PeaklistSoftware
 
 /**
  * Utility class to generate a fake ResultSet
@@ -411,33 +398,75 @@ class ResultSetFakeBuilder (
      
   def toResultSet():ResultSet= {
     
-    val peaksSoft:PeaklistSoftware = new PeaklistSoftware(id=PeaklistSoftware.generateNewId,
-                             name="Distiller", version="4.3.2")
+    val peaklistSoft = new PeaklistSoftware(
+      id=PeaklistSoftware.generateNewId,
+      name="Distiller",
+      version="4.3.2"
+    )
     
-    val peaks = new Peaklist(id=Peaklist.generateNewId, fileType="Mascot generic",
-    	path="/fake/filepath/data/VENUS1234.RAW", rawFileName="VENUS1234.RAW", msLevel=2, peaklistSoftware=peaksSoft)
+    val peaklist = new Peaklist(
+      id=Peaklist.generateNewId,
+      fileType="Mascot generic",
+      path="/fake/filepath/data/VENUS1234.RAW",
+      rawFileName="VENUS1234.RAW",
+      msLevel=2,
+      peaklistSoftware=peaklistSoft
+    )
                      
-    val instrum = new Instrument(id=Instrument.generateNewId, name="VENUS", source="ESI")
+    val instrum = new Instrument(
+      id=Instrument.generateNewId, name="VENUS", source="ESI"
+    )
+    val instrumConf = new InstrumentConfig(
+      id=InstrumentConfig.generateNewId,
+      name="VENUS_CFG",
+      instrument=instrum,
+      ms1Analyzer="Analyzer",
+      msnAnalyzer=null,
+      activationType=Activation.CID.toString
+    )
   
-    val instrumConf:InstrumentConfig = new InstrumentConfig(id=InstrumentConfig.generateNewId,
-        name="VENUS_CFG", instrument=instrum, ms1Analyzer="Analyzer", msnAnalyzer=null, activationType="ActivationType1")
-  
-    val seqDB:SeqDatabase = new SeqDatabase(id=SeqDatabase.generateNewId, name="Fake_Seq_DB", 
-        filePath="/fake/filepath/Fake_Seq_DB.fasta", sequencesCount=9999, version="1.0", releaseDate="2012-07-24 16:28:39.085")
-        
-    val settings:SearchSettings = new SearchSettings(id=SearchSettings.generateNewId,
-        softwareName="Mascot", softwareVersion="2.4", 
-        taxonomy="All entries", maxMissedCleavages=MAX_MISSED_CLEAVAGES, 
-        ms1ChargeStates="2+,3+", ms1ErrorTol=10.0, ms1ErrorTolUnit="ppm", 
-        isDecoy=false, usedEnzymes=Array("TRYPSIC"), 
-        variablePtmDefs=Array(), fixedPtmDefs=Array(), 
-        seqDatabases=Array(seqDB), instrumentConfig=instrumConf, quantitation="")
+    val dtPparser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    val dateStr = "2012-07-24 16:28:39"// was "2012-07-24 16:28:39.085"
+    val date = dtPparser.parse(dateStr)
     
-    val search:MSISearch = new MSISearch( id=MSISearch.generateNewId,
-  		  resultFileName="F123456.dat", submittedQueriesCount=allPepMatches.size,   
-  		  searchSettings=settings, peakList=peaks, date=new Date())
+    val seqDB = new SeqDatabase(
+        id=SeqDatabase.generateNewId,
+        name="Fake_Seq_DB", 
+        filePath="/fake/filepath/Fake_Seq_DB.fasta",
+        sequencesCount=9999,
+        releaseDate= date,
+        version="1.0"
+    )
     
-    new ResultSet(id=RESULT_SET_ID,
+    val settings = new SearchSettings(
+        id=SearchSettings.generateNewId,
+        softwareName="Mascot",
+        softwareVersion="2.4", 
+        taxonomy="All entries",
+        maxMissedCleavages=MAX_MISSED_CLEAVAGES,
+        ms1ChargeStates="2+,3+",
+        ms1ErrorTol=10.0,
+        ms1ErrorTolUnit="ppm",
+        isDecoy=false,
+        usedEnzymes=Array( new Enzyme("TRYPSIC") ), 
+        variablePtmDefs=Array(),
+        fixedPtmDefs=Array(),
+        seqDatabases=Array(seqDB),
+        instrumentConfig=instrumConf,
+        quantitation=""
+    )
+    
+    val search = new MSISearch(
+        id=MSISearch.generateNewId,
+  		resultFileName="F123456.dat",
+  		submittedQueriesCount=allPepMatches.size,   
+  		searchSettings=settings,
+  		peakList=peaklist,
+  		date=new Date()
+    )
+    
+    new ResultSet(
+        id=RESULT_SET_ID,
         peptides=allPepsForProtSeq.flatMap(e => e._2).toArray, //Updated in createPepAndCoForProteinMatch
         peptideMatches=allPepMatches.toArray, //Updated in createPepAndCo
         proteinMatches=allProtMatches.toArray, //Created in constructor

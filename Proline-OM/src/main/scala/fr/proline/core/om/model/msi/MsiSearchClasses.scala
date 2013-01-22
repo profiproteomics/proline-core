@@ -17,8 +17,8 @@ case class MSISearch (
   var id: Int,
   val resultFileName: String,
   val submittedQueriesCount: Int,
-  val searchSettings: SearchSettings,
-  val peakList: Peaklist,
+  var searchSettings: SearchSettings,
+  var peakList: Peaklist,
   val date: Date,
   
   // Immutable optional fields
@@ -55,13 +55,17 @@ case class SearchSettings(
   val ms1ErrorTol: Double,
   val ms1ErrorTolUnit: String,
   val isDecoy: Boolean,
-  val usedEnzymes: Array[String], // TODO: create an enzyme class
-  val variablePtmDefs: Array[PtmDefinition],
-  val fixedPtmDefs: Array[PtmDefinition],
-  val seqDatabases: Array[SeqDatabase],
-  val instrumentConfig: InstrumentConfig,
+  
+  // Mutable required fields
+  var usedEnzymes: Array[Enzyme],
+  var variablePtmDefs: Array[PtmDefinition],
+  var fixedPtmDefs: Array[PtmDefinition],
+  var seqDatabases: Array[SeqDatabase],
+  var instrumentConfig: InstrumentConfig,
   
   // Mutable optional fields
+  var msmsSearchSettings: Option[MSMSSearchSettings] = None,
+  var pmfSearchSettings: Option[PMFSearchSettings] = None,
   var quantitation: String = "",
   var properties: Option[SearchSettingsProperties] = None
       
@@ -69,8 +73,45 @@ case class SearchSettings(
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
+case class MSMSSearchSettings(
+  // MS/MS search settings
+  val ms2ChargeStates: String,
+  val ms2ErrorTol: Double,
+  val ms2ErrorTolUnit: String
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PMFSearchSettings(  
+  // PMF search settings
+  val maxProteinMass: Option[Double] = None,
+  val minProteinMass: Option[Double] = None,
+  val proteinPI: Option[Float] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class SearchSettingsProperties
 
+object Enzyme extends InMemoryIdGen
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class Enzyme(
+    
+  // Required fields
+  var id: Int,
+  val name: String,
+  val cleavageRegexp: Option[String] = None,
+  val isIndependant: Boolean = false,
+  val isSemiSpecific: Boolean = false
+   
+) {
+  
+  def this( name: String ) = {
+    this( Enzyme.generateNewId, name)
+  }
+}
 
 object SeqDatabase extends InMemoryIdGen
 
@@ -83,10 +124,10 @@ case class SeqDatabase(
   val name: String,
   val filePath: String,
   val sequencesCount: Int,
+  val releaseDate: Date,
    
   // Immutable optional fields
   val version: String = "",
-  val releaseDate: String = "",
   
   var properties: Option[SeqDatabaseProperties] = None
    
@@ -95,5 +136,4 @@ case class SeqDatabase(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SeqDatabaseProperties
-
 

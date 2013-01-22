@@ -2,13 +2,13 @@ package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
 import com.codahale.jerkson.Json.generate
-
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.msi.{MsiDbResultSummaryTable}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLiteRsmStorer
+import fr.proline.repository.DatabaseContext
 
 trait IRsmStorer extends Logging {
   
@@ -25,14 +25,20 @@ trait IRsmStorer extends Logging {
 object RsmStorer {
   
   val rsmInsertQuery = MsiDbResultSummaryTable.mkInsertQuery{ (c,colsList) => 
-                         colsList.filter( _ != c.id)
+                         colsList.filter( _ != c.ID)
                        }
   
   /*import fr.proline.core.om.storer.msi.impl.GenericRsStorer
   import fr.proline.core.om.storer.msi.impl.PgRsStorer
   import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer*/
   
-  def apply( msiEzDBC: EasyDBC ): RsmStorer = {
+  def apply( msiDbContext: DatabaseContext ): RsmStorer = {
+    this.apply( msiDbContext, ProlineEzDBC(msiDbContext) )
+  }
+  
+  def apply( msiDbContext: DatabaseContext, msiEzDBC: EasyDBC ): RsmStorer = {
+    //if( msiDbContext.isJPA() ) return new JPARsmStorer
+    
     msiEzDBC.dialect match {
       //case "org.postgresql.Driver" => new RsStorer( new PgRsStorer( msiDb ) )
       case ProlineSQLiteSQLDialect => new RsmStorer( new SQLiteRsmStorer( msiEzDBC ) )

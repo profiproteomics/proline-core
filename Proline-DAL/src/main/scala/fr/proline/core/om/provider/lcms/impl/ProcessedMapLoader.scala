@@ -39,7 +39,7 @@ class ProcessedMapLoader( val sqlExec: SQLQueryExecution,
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the map record
-      val mapRecord = colNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+      val mapRecord = colNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
       
       val mapId = mapRecord("id").asInstanceOf[Int]
       val mapFeatures = featuresByMapId( mapId )
@@ -221,7 +221,7 @@ class ProcessedMapLoader( val sqlExec: SQLQueryExecution,
       if( processedFtColNames == null ) { processedFtColNames = r.columnNames }
       
       // Build the feature record
-      val processedFtRecord = processedFtColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+      val processedFtRecord = processedFtColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
       onEachFt( processedFtRecord )
       
       ()

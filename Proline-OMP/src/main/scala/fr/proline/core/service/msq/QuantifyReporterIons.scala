@@ -2,7 +2,7 @@ package fr.proline.core.service.msq.quantitation
 
 import fr.proline.api.service.IService
 
-class ReporterIonQuantifier extends IService {
+class QuantifyReporterIons extends IService {
   
   def runService() = {
     false

@@ -198,7 +198,7 @@ object MascotValidationHelper {
                    pmScoringParam: String = "log_evalue" ): Array[ValidationResult] = { // pmScoringParam = log_evalue || score_offset
     
     // Create anonymous functions to extract the right peptide match values
-    val logEvaluePicker = { pm: PeptideMatch => if( pm != null) - log10( calcPepMatchEvalue(pm) ) else 1 } // 1 is for S=0 and IT=13
+    val logEvaluePicker = { pm: PeptideMatch => if( pm != null) - log10( calcPepMatchEvalue(pm) ) else 0 } // 0 is for S=0 and IT=13
     val scoreOffsetPicker = { pm: PeptideMatch => if( pm != null) calcPepMatchScoreOffset(pm).toDouble else -13 } // -13 is for S=0 and IT=13
     val valuePickerMap = Map( "log_evalue" -> logEvaluePicker, "score_offset" -> scoreOffsetPicker )
     

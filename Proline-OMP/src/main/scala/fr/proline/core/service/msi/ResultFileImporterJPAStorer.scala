@@ -2,32 +2,56 @@ package fr.proline.core.service.msi
 
 import java.io.File
 import javax.persistence.EntityTransaction
-
 import com.weiglewilczek.slf4s.Logging
 import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
-import fr.proline.core.dal.ProlineEzDBC
+import fr.proline.core.dal.JDBCWorkBuilder
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.msi.{IResultFileProvider,ResultFileProviderRegistry}
+//import fr.proline.core.om.provider.msi.impl.ResultFileProviderContext
 import fr.proline.core.om.storer.msi.{ IRsStorer, MsiSearchStorer, RsStorer }
 import fr.proline.core.om.storer.msi.impl.{JPARsStorer,StorerContext,StorerContextBuilder}
 import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.DatabaseContext
-import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.{DatabaseContext,IDatabaseConnector}
 import fr.proline.util.StringUtils
 
 class ResultFileImporterJPAStorer(
-  dbManager: DatabaseManager,
-  projectId: Int,
+  storerContext: StorerContext,
   resultIdentFile: File,
   fileType: String,
   providerKey: String,
   instrumentConfigId: Int,
+  peaklistSoftwareId: Int,
   importerProperties: Map[String, Any],
-  acDecoyRegex: Option[util.matching.Regex] = None) extends IService with Logging {
+  acDecoyRegex: Option[util.matching.Regex] = None ) extends IService with Logging {
 
+  private var _hasInitiatedStorerContext: Boolean = false
+  
+  // Secondary constructor
+  def this( dbManager: DatabaseManager,
+            msiDbConnector: IDatabaseConnector,
+            resultIdentFile: File,
+            fileType: String,
+            providerKey: String,
+            instrumentConfigId: Int,
+            peaklistSoftwareId: Int,
+            importerProperties: Map[String, Any],
+            acDecoyRegex: Option[util.matching.Regex] = None ) {
+    this(
+      StorerContextBuilder( dbManager, msiDbConnector, useJpa = true ), // Force JPA context
+      resultIdentFile,
+      fileType,
+      providerKey,
+      instrumentConfigId,
+      peaklistSoftwareId,
+      importerProperties,
+      acDecoyRegex
+    )
+    _hasInitiatedStorerContext = true
+  }
+  
   private var targetResultSetId = 0
 
   override protected def beforeInterruption = {
@@ -44,16 +68,15 @@ class ResultFileImporterJPAStorer(
     // Check that a file is provided
     require(resultIdentFile != null, "ResultFileImporter service: No file specified.")
 
-    var storerContext: StorerContext = null // For JPA use
+    //var storerContext: StorerContext = null // For JPA use
 
     var msiTransaction: EntityTransaction = null
     var msiTransacOk: Boolean = false
 
     try {
-      storerContext = StorerContextBuilder( dbManager, projectId )
+      //storerContext = StorerContextBuilder(dbManager,projectId,useJpa = true)
       
       val udsDbContext = storerContext.udsDbContext
-      val udsEzDBC = ProlineEzDBC( udsDbContext )
 
       msiTransaction = storerContext.msiDbContext.getEntityManager.getTransaction
       msiTransaction.begin()
@@ -67,14 +90,15 @@ class ResultFileImporterJPAStorer(
       require(rfProvider != None, "No ResultFileProvider for specified identification file format")
 
       // Open the result file
-      val resultFile = rfProvider.get.getResultFile(resultIdentFile, providerKey, importerProperties)
+      //val providerCtx = new ResultFileProviderContext(providerKey,storerContext.pdiDbContext,storerContext.psDbContext)
+      val resultFile = rfProvider.get.getResultFile(resultIdentFile,importerProperties,providerKey)
       >>>
 
       // Instantiate RsStorer   
       val rsStorer: IRsStorer = new JPARsStorer() //<> SQLStorer
       
       // Retrieve the instrument configuration
-      val instrumentConfig = this._getInstrumentConfig(instrumentConfigId, udsEzDBC)
+      val instrumentConfig = this._getInstrumentConfig(instrumentConfigId, udsDbContext)
 
       // Configure result file before parsing
       resultFile.instrumentConfig = instrumentConfig
@@ -113,7 +137,10 @@ class ResultFileImporterJPAStorer(
 
       if (targetRs.msiSearch != null && targetRs.msiSearch.peakList.peaklistSoftware == null) {
         //TODO : Define how to get this information !
-        targetRs.msiSearch.peakList.peaklistSoftware = _getPeaklistSoftware("Default_PL", "0.1",udsEzDBC)
+        val peaklistSoftware = _getPeaklistSoftware("Default_PL", "0.1",udsDbContext)
+        // FIXME: implement the method _getOrCreatePeaklistSoftware instead
+        if( peaklistSoftware.id < 0 ) peaklistSoftware.id = peaklistSoftwareId
+        targetRs.msiSearch.peakList.peaklistSoftware = peaklistSoftware        
       }
 
       //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
@@ -164,45 +191,58 @@ class ResultFileImporterJPAStorer(
 
       }
 
-      if (storerContext != null) {
+      if (this._hasInitiatedStorerContext) {
         storerContext.closeAll()
       }
 
     }
 
     this.beforeInterruption()
+    
     true
     //    msiTransacOk   
   }
 
-  private def _getPeaklistSoftware(plName: String, plRevision: String, udsEzDBC: EasyDBC): PeaklistSoftware = {
-
-    udsEzDBC.selectHeadOrElse(
-      "SELECT * FROM peaklist_software WHERE name= ? and version= ? ", plName, plRevision)(r =>
-        new PeaklistSoftware(id = r, name = r, version = r),
-        new PeaklistSoftware(id = PeaklistSoftware.generateNewId, name = "Default", version = "0.1"))
+  // TODO: put in a dedicated provider
+  private def _getPeaklistSoftware(plName: String, plRevision: String, udsDbContext: DatabaseContext ): PeaklistSoftware = {
+    
+    var pklSoft: PeaklistSoftware = null
+    val jdbcWork = JDBCWorkBuilder.withEzDBC( udsDbContext.getDriverType, { udsEzDBC =>    
+      pklSoft = udsEzDBC.selectHeadOrElse(
+        "SELECT * FROM peaklist_software WHERE name= ? and version= ? ", plName, plRevision)(r =>
+          new PeaklistSoftware(id = r, name = r, version = r),
+          new PeaklistSoftware(id = PeaklistSoftware.generateNewId, name = "Default", version = "0.1")
+        )
+    })
+    
+    udsDbContext.doWork(jdbcWork, false)
+    
+    pklSoft    
   }
 
   // TODO: put in a dedicated provider
-  private def _getInstrumentConfig(instrumentConfigId: Int, udsEzDBC: EasyDBC): InstrumentConfig = {
+  private def _getInstrumentConfig(instrumentConfigId: Int, udsDbContext: DatabaseContext ): InstrumentConfig = {
 
     import fr.proline.util.primitives.LongOrIntAsInt._
     import fr.proline.core.om.model.msi.{ InstrumentProperties, InstrumentConfigProperties }
 
-    // Load the instrument configuration record
-    udsEzDBC.selectHead(
-      "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config " +
+    var instrumentConfig: InstrumentConfig = null
+    
+    val jdbcWork = JDBCWorkBuilder.withEzDBC( udsDbContext.getDriverType, { udsEzDBC => 
+      // Load the instrument configuration record
+      udsEzDBC.selectHead(
+        "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config " +
         "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId) { r =>
 
-        val instrument = new Instrument(id = r.nextObject.asInstanceOf[AnyVal], name = r, source = r)
+        val instrument = new Instrument(id = r.nextAnyVal, name = r, source = r)
         for (instPropStr <- r.nextStringOption) {
           instrument.properties = Some(parse[InstrumentProperties](instPropStr))
         }
 
         // Skip instrument_config.id field
-        r.nextObject
+        r.nextAny
 
-        val instrumentConfig = new InstrumentConfig(
+        instrumentConfig = new InstrumentConfig(
           id = instrumentConfigId,
           name = r.nextString,
           instrument = instrument,
@@ -214,13 +254,19 @@ class ResultFileImporterJPAStorer(
         }
 
         // Skip instrument_config.instrument_id field
-        r.nextObject
+        r.nextAny
 
         // Update activation type
         instrumentConfig.activationType = r.nextString
 
         instrumentConfig
       }
+      
+    })
+    
+    udsDbContext.doWork(jdbcWork, false)
+    
+    instrumentConfig  
 
   }
 

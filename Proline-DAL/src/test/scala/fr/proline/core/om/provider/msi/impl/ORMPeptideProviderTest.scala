@@ -40,9 +40,9 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
     val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPepProvider = new ORMPeptideProvider()
+      val ormPepProvider = new ORMPeptideProvider(psDb)
 
-      val pep: Option[Peptide] = ormPepProvider.getPeptide(4, psDb);
+      val pep: Option[Peptide] = ormPepProvider.getPeptide(4);
       assertThat(pep, CoreMatchers.notNullValue());
       assertNotSame(pep, None);
       assertThat(pep.get.calculatedMass, CoreMatchers.equalTo(810.405807));
@@ -62,9 +62,9 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
    val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPepProvider = new ORMPeptideProvider()
+      val ormPepProvider = new ORMPeptideProvider(psDb)
 
-      val peps: Array[Option[Peptide]] = ormPepProvider.getPeptidesAsOptions(ids, psDb)
+      val peps: Array[Option[Peptide]] = ormPepProvider.getPeptidesAsOptions(ids)
       assertThat(peps, CoreMatchers.notNullValue())
       assertThat(peps.length, CoreMatchers.equalTo(3))
       assertThat(peps.apply(2).get.id, CoreMatchers.equalTo(4))
@@ -80,9 +80,9 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
     val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPepProvider = new ORMPeptideProvider()
+      val ormPepProvider = new ORMPeptideProvider(psDb)
 
-      val pep: Option[Peptide] = ormPepProvider.getPeptide(6, psDb)
+      val pep: Option[Peptide] = ormPepProvider.getPeptide(6)
       assertThat(pep, CoreMatchers.notNullValue())
       assertNotSame(pep, None);
 
@@ -101,10 +101,10 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
    val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPepProvider = new ORMPeptideProvider()
+      val ormPepProvider = new ORMPeptideProvider(psDb)
 
       val ptms = new Array[LocatedPtm](0)
-      val pep: Option[Peptide] = ormPepProvider.getPeptide(SEQ_TO_FOUND, ptms, psDb);
+      val pep: Option[Peptide] = ormPepProvider.getPeptide(SEQ_TO_FOUND, ptms);
       assertThat(pep, CoreMatchers.notNullValue());
       assertNotSame(pep, None);
       assertTrue(pep.get.ptms == null || pep.get.ptms.length == 0);
@@ -119,7 +119,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
    val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPepProvider = new ORMPeptideProvider()
+      val ormPepProvider = new ORMPeptideProvider(psDb)
 
       var ptmsBuilder = Array.newBuilder[LocatedPtm]
 
@@ -133,7 +133,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 	  val ptmDefs = provTest.getPtmDefinitions(List(1,2,30))
 	  ptmDefs.foreach { ptm => println(ptm.get.names.shortName ) }*/
 
-      val pep: Option[Peptide] = ormPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result(), psDb);
+      val pep: Option[Peptide] = ormPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result());
       assertThat(pep, CoreMatchers.notNullValue());
       assertNotSame(pep, None$.MODULE$);
       assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1));

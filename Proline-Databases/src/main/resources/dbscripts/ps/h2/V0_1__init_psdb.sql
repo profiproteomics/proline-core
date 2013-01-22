@@ -232,3 +232,9 @@ ALTER TABLE ptm_evidence ADD CONSTRAINT ptm_specificity_ptm_evidence_fk
 FOREIGN KEY (specificity_id)
 REFERENCES ptm_specificity (id)
 ON UPDATE NO ACTION;
+
+CREATE UNIQUE INDEX peptide_sequence_ptm_idx ON peptide (sequence,ptm_string);
+
+CREATE INDEX peptide_mass_idx ON peptide (calculated_mass);
+
+CREATE INDEX peptide_ptm_peptide_idx ON peptide_ptm (peptide_id);

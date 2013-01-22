@@ -11,13 +11,13 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.util.StringUtils
 import fr.proline.repository.DatabaseContext
 
-class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( sqlExec ) with IPeptideProvider with Logging {
+class SQLPeptideProvider( psDbCtx: DatabaseContext, sqlExec: SQLQueryExecution ) extends SQLPTMProvider( psDbCtx, sqlExec ) with IPeptideProvider with Logging {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
   
   /** Returns a map of peptide PTMs grouped by the peptide id */
-  def getPeptidePtmRecordsByPepId( peptideIds: Seq[Int], psDb: DatabaseContext ): Map[Int,Array[Map[String,Any]]] = {
+  def getPeptidePtmRecordsByPepId( peptideIds: Seq[Int] ): Map[Int,Array[Map[String,Any]]] = {
     
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Map[String,Any]]
     
@@ -34,7 +34,7 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
         if( colNames == null ) { colNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptidePtmRecord = colNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+        val peptidePtmRecord = colNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
         pepPtmRecords += peptidePtmRecord
         
         }
@@ -46,14 +46,14 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
     
   }
   
-  def getLocatedPtmsByPepId( peptideIds: Seq[Int], psDb: DatabaseContext ): Map[Int,Array[LocatedPtm]] = {
+  def getLocatedPtmsByPepId( peptideIds: Seq[Int] ): Map[Int,Array[LocatedPtm]] = {
     
     // Retrieve PTM definition map
     val ptmDefMap = this.ptmDefinitionById
     
     val locatedPtmMapBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[LocatedPtm]]
     
-    for( (pepId, pepPtmRecords) <- this.getPeptidePtmRecordsByPepId( peptideIds, psDb ) ) {
+    for( (pepId, pepPtmRecords) <- this.getPeptidePtmRecordsByPepId( peptideIds ) ) {
       
       var locatedPtms = new ArrayBuffer[LocatedPtm]
       for( pepPtmRecord <- pepPtmRecords ) {
@@ -80,7 +80,7 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
       
   }
   
-  def getPeptides( peptideIds: Seq[Int], psDb: DatabaseContext ): Array[Peptide] = {
+  def getPeptides( peptideIds: Seq[Int] ): Array[Peptide] = {
     if( peptideIds.length == 0 ) return Array.empty[Peptide]
     
     import fr.proline.util.primitives.LongOrIntAsInt._
@@ -101,7 +101,7 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
         if( pepColNames == null ) { pepColNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
         pepRecords += peptideRecord
         
         // Map the record by its id    
@@ -113,15 +113,15 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
     })
     
     // Load peptide PTM map corresponding to the modified peptides
-    val locatedPtmsByPepId = this.getLocatedPtmsByPepId( modifiedPepIdSet.toArray[Int], psDb )
+    val locatedPtmsByPepId = this.getLocatedPtmsByPepId( modifiedPepIdSet.toArray[Int] )
     
     this._buildPeptides( pepRecords, locatedPtmsByPepId )
 
   }
   
-  def getPeptidesAsOptions( peptideIds: Seq[Int], psDb: DatabaseContext ): Array[Option[Peptide]] = {
+  def getPeptidesAsOptions( peptideIds: Seq[Int] ): Array[Option[Peptide]] = {
     
-    val peptides = this.getPeptides( peptideIds, psDb )
+    val peptides = this.getPeptides( peptideIds )
     val pepById = peptides.map { pep => pep.id -> pep } toMap
     
     val optPeptidesBuffer = new ArrayBuffer[Option[Peptide]]
@@ -154,7 +154,7 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
         if( pepColNames == null ) { pepColNames = r.columnNames }
         
         // Build the peptide PTM record
-        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+        val peptideRecord = pepColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
         pepRecords += peptideRecord
         
         // Map the record by its id    
@@ -166,7 +166,7 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
     })
     
     // Load peptide PTM map corresponding to the modified peptides
-    val locatedPtmsByPepId = this.getLocatedPtmsByPepId( modifiedPepIdSet.toArray[Int], null ) // TODO LMN Use a real SQL Db Context here
+    val locatedPtmsByPepId = this.getLocatedPtmsByPepId( modifiedPepIdSet.toArray[Int] )
     
     val peptides = this._buildPeptides( pepRecords, locatedPtmsByPepId )
     
@@ -202,7 +202,7 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
     
   }
  
-  def getPeptide( peptideSeq: String, pepPtms: Array[LocatedPtm], psDb: DatabaseContext ): Option[Peptide] = {
+  def getPeptide( peptideSeq: String, pepPtms: Array[LocatedPtm] ): Option[Peptide] = {
     
     val tmpPep = new Peptide( sequence = peptideSeq, ptms = pepPtms )
     
@@ -226,7 +226,7 @@ class SQLPeptideProvider( sqlExec: SQLQueryExecution ) extends SQLPTMProvider( s
     }
   }
   
-  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]], psDb: DatabaseContext) : Array[Option[Peptide]] = {
+  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]] ) : Array[Option[Peptide]] = {
     
     val maxNbIters = sqlExec.getInExpressionCountLimit
     

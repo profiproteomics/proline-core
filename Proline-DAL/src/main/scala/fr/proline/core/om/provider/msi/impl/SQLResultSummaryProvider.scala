@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.SQLQueryExecution
+import fr.proline.core.dal.SQLContext
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ProteinSet
@@ -10,11 +10,17 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ResultSummaryProperties
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
+import fr.proline.repository.DatabaseContext
+import fr.profi.jdbc.easy.EasyDBC
 
-class SQLResultSummaryProvider( val msiDb: SQLQueryExecution, val psDb: SQLQueryExecution ) extends SQLResultSetLoader with IResultSummaryProvider {
+class SQLResultSummaryProvider( val msiDbCtx: DatabaseContext,
+                                val msiSqlExec: EasyDBC,
+                                val psDbCtx: DatabaseContext = null,
+                                val psSqlExec: EasyDBC = null,
+                                val udsSqlCtx: SQLContext = null ) extends SQLResultSetLoader with IResultSummaryProvider {
   
   // Instantiate a MSIdb helper
-  val msiDbHelper = new MsiDbHelper( msiDb )
+  val msiDbHelper = new MsiDbHelper( msiSqlExec )
   
   val RSMCols = MsiDbResultSummaryTable.columns
   
@@ -24,48 +30,48 @@ class SQLResultSummaryProvider( val msiDb: SQLQueryExecution, val psDb: SQLQuery
     import fr.proline.util.sql.StringOrBoolAsBool._
     
     // Load peptide sets
-    val pepSetProvider = new SQLPeptideSetProvider( msiDb, psDb )
+    val pepSetProvider = new SQLPeptideSetProvider( msiDbCtx, msiSqlExec, psDbCtx, psSqlExec )
     val pepSets = pepSetProvider.getResultSummariesPeptideSets( rsmIds )    
     val inMemPepSetProvider = new InMemoryPeptideSetProvider( pepSets )
     
     // Load protein sets
-    val protSetProvider = new SQLProteinSetProvider( msiDb, psDb, Some(pepSetProvider) )
+    val protSetProvider = new SQLProteinSetProvider( msiDbCtx, msiSqlExec, psDbCtx, psSqlExec, Some(pepSetProvider) )
     val protSets = protSetProvider.getResultSummariesProteinSets( rsmIds )
     val protSetsByRsmId = protSets.groupBy( _.resultSummaryId )
     
     // Execute SQL query to load result sets
     var rsmColNames: Seq[String] = null
 
-    val rsms = msiDb.select( "SELECT * FROM result_summary WHERE id IN ("+ rsmIds.mkString(",") +")" ) { r =>
+    val rsms = msiSqlExec.select( "SELECT * FROM result_summary WHERE id IN ("+ rsmIds.mkString(",") +")" ) { r =>
       
       if( rsmColNames == null ) { rsmColNames = r.columnNames }
-      val rsmRecord = rsmColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+      val rsmRecord = rsmColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
       
       // Retrieve some vars
-      val rsmId: Int = rsmRecord(RSMCols.id).asInstanceOf[AnyVal]
+      val rsmId: Int = rsmRecord(RSMCols.ID).asInstanceOf[AnyVal]
       val rsmPepSets = inMemPepSetProvider.getResultSummaryPeptideSets(rsmId)
-      val rsmPepInsts = rsmPepSets.flatMap { _.getPeptideInstances }      
+      val rsmPepInsts = rsmPepSets.flatMap( _.getPeptideInstances ).distinct
       val rsmProtSets = protSetsByRsmId.getOrElse(rsmId, Array.empty[ProteinSet] )
             
-      val decoyRsmId = rsmRecord.getOrElse(RSMCols.decoyResultSummaryId,0).asInstanceOf[Int]
+      val decoyRsmId = rsmRecord.getOrElse(RSMCols.DECOY_RESULT_SUMMARY_ID,0).asInstanceOf[Int]
       //val decoyRsmId = if( decoyRsmIdField != null ) decoyRsmIdField.asInstanceOf[Int] else 0
 
-      val isQuantifiedField = rsmRecord(RSMCols.isQuantified)        
+      val isQuantifiedField = rsmRecord(RSMCols.IS_QUANTIFIED)        
       val isQuantified: Boolean = if( isQuantifiedField != null ) isQuantifiedField else false
 
       // Decode JSON properties
-      val propertiesAsJSON = rsmRecord(RSMCols.serializedProperties).asInstanceOf[String]
+      val propertiesAsJSON = rsmRecord(RSMCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
       var properties = Option.empty[ResultSummaryProperties]
       if( propertiesAsJSON != null ) {
         properties = Some( parse[ResultSummaryProperties](propertiesAsJSON) )
       }
       
-      val rsId = rsmRecord(RSMCols.resultSetId).asInstanceOf[Int]
+      val rsId = rsmRecord(RSMCols.RESULT_SET_ID).asInstanceOf[Int]
       var rsAsOpt = Option.empty[ResultSet]
       if( loadResultSet ) {
         
-        val pepMatchProvider = new SQLPeptideMatchProvider( msiDb, psDb )
-        val protMatchProvider = new SQLProteinMatchProvider( msiDb )
+        val pepMatchProvider = new SQLPeptideMatchProvider( msiDbCtx, msiSqlExec, psDbCtx, psSqlExec )
+        val protMatchProvider = new SQLProteinMatchProvider( msiDbCtx, msiSqlExec )
         
         val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches( rsmId )
         val protMatches = protMatchProvider.getResultSummariesProteinMatches( Array(rsmId) )
@@ -81,7 +87,7 @@ class SQLResultSummaryProvider( val msiDb: SQLQueryExecution, val psDb: SQLQuery
       
       new ResultSummary(
             id = rsmId,
-            description = rsmRecord(RSMCols.description).asInstanceOf[String],
+            description = rsmRecord(RSMCols.DESCRIPTION).asInstanceOf[String],
             isQuantified = isQuantified,
             modificationTimestamp = new java.util.Date, // TODO: retrieve the date
             peptideInstances = rsmPepInsts,

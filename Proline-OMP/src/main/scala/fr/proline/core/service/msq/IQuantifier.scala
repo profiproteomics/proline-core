@@ -5,9 +5,8 @@ import com.codahale.jerkson.Json.generate
 import collection.mutable.{HashMap,HashSet}
 import collection.JavaConversions.{collectionAsScalaIterable,setAsJavaSet}
 import collection.JavaConverters.{asJavaCollectionConverter}
-
 import fr.proline.core.algo.msi.ResultSummaryMerger
-import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.ResultSummary
@@ -34,7 +33,7 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 SequenceMatch => MsiSequenceMatch
                                 }
 import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.{IDatabaseConnector,DatabaseContext}
 
 trait IQuantifier extends Logging {
   
@@ -45,10 +44,13 @@ trait IQuantifier extends Logging {
   // Instantiated fields
   val projectId = udsQuantFraction.getQuantitation.getProject.getId
   val msiDbConnector = dbManager.getMsiDbConnector(projectId)
+  val msiDbCtx = new DatabaseContext( msiDbConnector )
   val msiEm = msiDbConnector.getEntityManagerFactory().createEntityManager()
-  val msiSqlHelper = new SQLQueryHelper( msiDbConnector )
-  val msiEzDBC = msiSqlHelper.ezDBC
-  val psSqlHelper = new SQLQueryHelper( dbManager.getPsDbConnector )
+  val msiEzDBC = ProlineEzDBC( msiDbConnector.getDataSource.getConnection, msiDbConnector.getDriverType )
+  
+  val psDbConnector = dbManager.getPsDbConnector
+  val psDbCtx = new DatabaseContext( psDbConnector )
+  val psEzDBC = ProlineEzDBC( psDbConnector.getDataSource.getConnection, psDbConnector.getDriverType )
  
   val udsQuantChannels = udsQuantFraction.getQuantitationChannels
   val quantChannelIds = udsQuantChannels.map { _.getId } toArray
@@ -83,7 +85,7 @@ trait IQuantifier extends Logging {
     this.logger.info( "loading result summaries..." )
         
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider( msiEzDBC, psSqlHelper.ezDBC )
+    val rsmProvider = new SQLResultSummaryProvider( msiDbCtx, msiEzDBC, psDbCtx, psEzDBC )
     rsmProvider.getResultSummaries(rsmIds,true)
   }
   

@@ -32,7 +32,7 @@ class RunMapLoader( val sqlExec: SQLQueryExecution,
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the map record
-      val mapRecord = colNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+      val mapRecord = colNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
       
       val mapId = mapRecord("id").asInstanceOf[Int]
       val featureScoringId = mapRecord("feature_scoring_id").asInstanceOf[Int]

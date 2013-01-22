@@ -2,16 +2,13 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import org.hamcrest.CoreMatchers
-
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 import fr.proline.core.om.model.msi._
-
 import fr.proline.repository.util.JPAUtils
 import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.utils.DatabaseTestCase
@@ -19,6 +16,7 @@ import fr.proline.repository.Database
 import fr.proline.repository.DriverType
 import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.DatabaseContext
 
 @Test
 class SQLPeptideProviderTest extends DatabaseTestCase {
@@ -35,25 +33,26 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
   }
 
+  def newSqlDbContext(connector: IDatabaseConnector) = {
+    new DatabaseContext(connector.getDataSource().getConnection(),connector.getDriverType())
+  }
+  
   @Test
   def getSinglePeptide() = {
-    val connector = getConnector
-    val ds = connector.getDataSource
-
-    val con = ds.getConnection
+    val psDb = newSqlDbContext( getConnector() )
 
     try {
-      val ezDbc = ProlineEzDBC(con, connector.getDriverType)
+      val ezDbc = ProlineEzDBC(psDb)
 
-      val sqlPepProvider = new SQLPeptideProvider(ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
 
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(4, null); // TODO LMN Use a real SQL Db Context here
+      val pep: Option[Peptide] = sqlPepProvider.getPeptide(4)
       assertThat(pep, CoreMatchers.notNullValue());
       assertNotSame(pep, None);
       assertThat(pep.get.calculatedMass, CoreMatchers.equalTo(810.405807));
 
     } finally {
-      con.close
+      psDb.close
     }
 
   }
@@ -65,41 +64,36 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     ids += 1
     ids += 4
 
-    val connector = getConnector
-    val ds = connector.getDataSource
-
-    val con = ds.getConnection
+    val psDb = newSqlDbContext( getConnector() )
 
     try {
-      val ezDbc = ProlineEzDBC(con, connector.getDriverType)
+      val ezDbc = ProlineEzDBC(psDb)
 
-      val sqlPepProvider = new SQLPeptideProvider(ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
 
-      val peps: Array[Option[Peptide]] = sqlPepProvider.getPeptidesAsOptions(ids, null) // TODO LMN Use a real SQL Db Context here
+      val peps: Array[Option[Peptide]] = sqlPepProvider.getPeptidesAsOptions(ids)
       assertThat(peps, CoreMatchers.notNullValue())
       assertThat(peps.length, CoreMatchers.equalTo(3))
       assertThat(peps.apply(2).get.id, CoreMatchers.equalTo(4))
       assertThat(peps(2).get.calculatedMass, CoreMatchers.equalTo(810.405807))
 
     } finally {
-      con.close
+      psDb.close
     }
 
   }
 
   @Test
   def getPeptideWithNTermPTM() = {
-    val connector = getConnector
-    val ds = connector.getDataSource
-
-    val con = ds.getConnection
+    
+    val psDb = newSqlDbContext( getConnector() )
 
     try {
-      val ezDbc = ProlineEzDBC(con, connector.getDriverType)
+      val ezDbc = ProlineEzDBC(psDb)
 
-      val sqlPepProvider = new SQLPeptideProvider(ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
 
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(6, null) // TODO LMN Use a real SQL Db Context here
+      val pep: Option[Peptide] = sqlPepProvider.getPeptide(6)
       assertThat(pep, CoreMatchers.notNullValue())
       assertNotSame(pep, None);
 
@@ -109,46 +103,42 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
       assertTrue(pep.get.ptms(0).isNTerm)
 
     } finally {
-      con.close
+      psDb.close
     }
 
   }
 
   @Test
   def getPeptideOnSeqAndNoPtms() = {
-    val connector = getConnector
-    val ds = connector.getDataSource
-
-    val con = ds.getConnection
-
+    
+    val psDb = newSqlDbContext( getConnector() )
+    
     try {
-      val ezDbc = ProlineEzDBC(con, connector.getDriverType)
+      val ezDbc = ProlineEzDBC(psDb)
 
-      val sqlPepProvider = new SQLPeptideProvider(ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
 
       val ptms = new Array[LocatedPtm](0)
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptms, null); // TODO LMN Use a real SQL Db Context here
+      val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptms)
       assertThat(pep, CoreMatchers.notNullValue());
       assertNotSame(pep, None);
       assertTrue(pep.get.ptms == null || pep.get.ptms.length == 0);
 
     } finally {
-      con.close
+      psDb.close
     }
 
   }
 
   @Test
   def getPeptideOnSeqAndPtms() = {
-    val connector = getConnector
-    val ds = connector.getDataSource
-
-    val con = ds.getConnection
+    
+    val psDb = newSqlDbContext( getConnector() )
 
     try {
-      val ezDbc = ProlineEzDBC(con, connector.getDriverType)
+      val ezDbc = ProlineEzDBC(psDb)
 
-      val sqlPepProvider = new SQLPeptideProvider(ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
 
       var ptmsBuilder = Array.newBuilder[LocatedPtm]
 
@@ -162,14 +152,14 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 	  val ptmDefs = provTest.getPtmDefinitions(List(1,2,30))
 	  ptmDefs.foreach { ptm => println(ptm.get.names.shortName ) }*/
 
-      val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result(), null); // TODO LMN Use a real SQL Db Context here
+      val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result())
       assertThat(pep, CoreMatchers.notNullValue());
       assertNotSame(pep, None$.MODULE$);
       assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1));
       assertThat(pep.get.ptms(0).seqPosition, CoreMatchers.equalTo(3));
 
     } finally {
-      con.close
+      psDb.close
     }
 
   }

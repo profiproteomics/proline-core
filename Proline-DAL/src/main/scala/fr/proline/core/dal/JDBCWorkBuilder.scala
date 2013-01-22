@@ -1,7 +1,7 @@
 package fr.proline.core.dal
 
 import java.sql.Connection
-import fr.proline.repository.util.JDBCWork
+import fr.proline.repository.util.{JDBCWork,JDBCReturningWork}
 import fr.proline.repository.DriverType
 import fr.profi.jdbc.easy.EasyDBC
 
@@ -23,4 +23,24 @@ object JDBCWorkBuilder {
     }
   }
 
+}
+
+class JDBCReturningWorkBuilder[T] {
+  
+  def withConnection( jdbcWorkFunction: Connection => T ): JDBCReturningWork[T] = {
+    new JDBCReturningWork[T]() {
+      override def execute(con: Connection): T =  {        
+        jdbcWorkFunction(con)
+      }
+    }
+  }
+  
+  def withEzDBC( driverType: DriverType, jdbcWorkFunction: EasyDBC => T ): JDBCReturningWork[T] = {
+    new JDBCReturningWork[T]() {
+      override def execute(con: Connection): T = {
+        jdbcWorkFunction( ProlineEzDBC(con, driverType) )
+      }
+    }
+  }
+  
 }

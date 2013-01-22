@@ -38,7 +38,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
     val jdbcWork = JDBCWorkBuilder.withEzDBC( context.msiDbContext.getDriverType, { msiEzDBC =>
 
       val peaklistInsertQuery = MsiDbPeaklistTable.mkInsertQuery{ (c,colsList) => 
-                                 colsList.filter( _ != c.id)
+                                 colsList.filter( _ != c.ID)
                                }
       
       msiEzDBC.executePrepared(peaklistInsertQuery, true) { stmt =>
@@ -68,7 +68,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
     val jdbcWork = JDBCWorkBuilder.withEzDBC( context.msiDbContext.getDriverType, { msiEzDBC =>
       
       val spectrumInsertQuery = MsiDbSpectrumTable.mkInsertQuery{ (c,colsList) => 
-                                  colsList.filter( _ != c.id)
+                                  colsList.filter( _ != c.ID)
                                 }
 
       // Insert corresponding spectra

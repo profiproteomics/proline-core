@@ -8,7 +8,7 @@ import fr.proline.core.om.model.msi.PtmSpecificity
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.repository.DatabaseContext
 
-class SQLPTMProvider( val psDb: SQLQueryExecution ) extends IPTMProvider {
+class SQLPTMProvider( val psDbCtx: DatabaseContext, val sqlExec: SQLQueryExecution ) extends IPTMProvider {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
@@ -48,12 +48,12 @@ class SQLPTMProvider( val psDb: SQLQueryExecution ) extends IPTMProvider {
     val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Int,Map[String,Any]]
     
     // Load PTM records
-    psDb.selectAndProcess( "SELECT * FROM ptm" ) { r => 
+    sqlExec.selectAndProcess( "SELECT * FROM ptm" ) { r => 
         
       if( ptmColNames == null ) { ptmColNames = r.columnNames }
       
       // Build the PTM record
-      val ptmRecord = ptmColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+      val ptmRecord = ptmColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
       val ptmId: Int = ptmRecord("id").asInstanceOf[AnyVal]
       ptmMapBuilder += ( ptmId -> ptmRecord )
       
@@ -65,14 +65,14 @@ class SQLPTMProvider( val psDb: SQLQueryExecution ) extends IPTMProvider {
     var ptmEvidColNames: Seq[String] = null
     
     // Execute SQL query to load PTM evidence records
-    val ptmEvidRecords = psDb.select( "SELECT * FROM ptm_evidence" ) { r => 
+    val ptmEvidRecords = sqlExec.select( "SELECT * FROM ptm_evidence" ) { r => 
         
       if( ptmEvidColNames == null ) { ptmEvidColNames = r.columnNames }
       
       // Build the PTM record
       var ptmEvidRecord = new collection.mutable.HashMap[String, Any]
-      ptmEvidColNames foreach { colName => ptmEvidRecord.put( colName, r.nextObjectOrElse(null) ) }
-     // var ptmEvidRecord = ptmEvidColNames.map( colName => ( colName -> r.nextObject.get ) ).toMap
+      ptmEvidColNames foreach { colName => ptmEvidRecord.put( colName, r.nextAnyRefOrElse(null) ) }
+     // var ptmEvidRecord = ptmEvidColNames.map( colName => ( colName -> r.nextAnyRef.get ) ).toMap
       
       // Fix is_required boolean field
       if( ptmEvidRecord("is_required") == "true" ) { ptmEvidRecord("is_required") = true }
@@ -89,12 +89,12 @@ class SQLPTMProvider( val psDb: SQLQueryExecution ) extends IPTMProvider {
     val ptmDefMapBuilder = scala.collection.immutable.Map.newBuilder[Int,PtmDefinition]
     
     // Load PTM specificity records
-    psDb.selectAndProcess( "SELECT * FROM ptm_specificity" ) { r => 
+    sqlExec.selectAndProcess( "SELECT * FROM ptm_specificity" ) { r => 
         
       if( ptmSpecifColNames == null ) { ptmSpecifColNames = r.columnNames }
       
       // Build the PTM specificity record
-      val ptmSpecifRecord = ptmSpecifColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+      val ptmSpecifRecord = ptmSpecifColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
       
       // Retrieve corresponding PTM
       val ptmId = ptmSpecifRecord("ptm_id").asInstanceOf[Int]
@@ -147,20 +147,20 @@ class SQLPTMProvider( val psDb: SQLQueryExecution ) extends IPTMProvider {
     
   }*/
   
-  def getPtmDefinitionsAsOptions( ptmDefIds: Seq[Int], psDb: DatabaseContext ): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions( ptmDefIds: Seq[Int] ): Array[Option[PtmDefinition]] = {
     val ptmDefById = this.ptmDefinitionById
     ptmDefIds.map { ptmDefById.get(_) } toArray
   }
   
-  def getPtmDefinitions( ptmDefIds: Seq[Int], psDb: DatabaseContext ): Array[PtmDefinition] = {
-    this.getPtmDefinitionsAsOptions( ptmDefIds, psDb ).filter( _ != None ).map( _.get )
+  def getPtmDefinitions( ptmDefIds: Seq[Int] ): Array[PtmDefinition] = {
+    this.getPtmDefinitionsAsOptions( ptmDefIds ).filter( _ != None ).map( _.get )
   }
     
-  def getPtmDefinition( ptmShortName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location, psDb: DatabaseContext ): Option[PtmDefinition] = {
+  def getPtmDefinition( ptmShortName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition] = {
     this.ptmDefByNameAndLocation.get( ptmShortName, ptmResidue, ptmLocation )
   }
   
-  def getPtmId( shortName: String, psDb: DatabaseContext ): Option[Int] = {
+  def getPtmId( shortName: String ): Option[Int] = {
     this.ptmIdByName.get( shortName )
   }
   

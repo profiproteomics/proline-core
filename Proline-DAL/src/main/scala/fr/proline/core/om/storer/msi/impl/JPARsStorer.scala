@@ -593,7 +593,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       msiSearchSetting.setInstrumentConfig(loadOrCreateInstrumentConfig(storerContext, searchSettings.instrumentConfig))
 
       for (enzyme <- searchSettings.usedEnzymes) {
-        msiSearchSetting.addEnzyme(loadOrCreateEnzyme(storerContext, enzyme))
+        msiSearchSetting.addEnzyme(loadOrCreateEnzyme(storerContext, enzyme.name))
       }
 
       msiEm.persist(msiSearchSetting)

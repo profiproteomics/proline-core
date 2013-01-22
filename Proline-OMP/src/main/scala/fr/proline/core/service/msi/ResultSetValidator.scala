@@ -41,7 +41,10 @@ class ResultSetValidator( dbManager: DatabaseManager,
                           storeResultSummary: Boolean = true ) extends IService with Logging {
 
   private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiDbContext = new DatabaseContext(msiDbConnector)
+  private val msiDbContext = new DatabaseContext(
+      msiDbConnector.getDataSource().getConnection(),
+      msiDbConnector.getDriverType()
+      )
   private val msiEzDBC = ProlineEzDBC(msiDbContext)
   
   override protected def beforeInterruption = {
@@ -198,7 +201,7 @@ class ResultSetValidator( dbManager: DatabaseManager,
       if( !wasInTransaction ) msiEzDBC.beginTransaction()
       
       // Instantiate a RSM storer
-      val rsmStorer = RsmStorer( msiEzDBC )
+      val rsmStorer = RsmStorer( msiDbContext, msiEzDBC )
       
       // Store decoy result summary
       if( decoyRsmOpt != None ) {

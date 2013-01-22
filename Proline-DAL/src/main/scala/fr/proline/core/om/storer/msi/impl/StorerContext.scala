@@ -130,6 +130,11 @@ class StorerContext(val udsDbContext: DatabaseContext,
 }
 
 object StorerContextBuilder {
+  
+  def buildDbContext(dbConnector: IDatabaseConnector, useJpa: Boolean): DatabaseContext = {
+    if (useJpa) new DatabaseContext(dbConnector)
+    else new DatabaseContext(dbConnector.getDataSource.getConnection, dbConnector.getDriverType)
+  }
 
   def apply(dbManager: DatabaseManager, projectId: Int, useJpa: Boolean = true): StorerContext = {
     this.apply(dbManager, dbManager.getMsiDbConnector(projectId), useJpa)
@@ -137,35 +142,10 @@ object StorerContextBuilder {
 
   def apply(dbManager: DatabaseManager, msiDbConnector: IDatabaseConnector, useJpa: Boolean): StorerContext = {
 
-    val udsDbConnector = dbManager.getUdsDbConnector
-
-    val udsDb = if (useJpa) {
-      new DatabaseContext(udsDbConnector)
-    } else {
-      new DatabaseContext(udsDbConnector.getDataSource.getConnection, udsDbConnector.getDriverType)
-    }
-
-    val pdiDbConnector = dbManager.getPdiDbConnector
-
-    val pdiDb = if (useJpa) {
-      new DatabaseContext(pdiDbConnector)
-    } else {
-      new DatabaseContext(pdiDbConnector.getDataSource.getConnection, pdiDbConnector.getDriverType)
-    }
-
-    val psDbConnector = dbManager.getPsDbConnector
-
-    val psDb = if (useJpa) {
-      new DatabaseContext(psDbConnector)
-    } else {
-      new DatabaseContext(psDbConnector.getDataSource.getConnection, psDbConnector.getDriverType)
-    }
-
-    val msiDb = if (useJpa) {
-      new DatabaseContext(msiDbConnector)
-    } else {
-      new DatabaseContext(msiDbConnector.getDataSource.getConnection, msiDbConnector.getDriverType)
-    }
+    val udsDb = buildDbContext(dbManager.getUdsDbConnector,useJpa)
+    val pdiDb = buildDbContext(dbManager.getPdiDbConnector,useJpa)
+    val psDb = buildDbContext(dbManager.getPsDbConnector,useJpa)
+    val msiDb = buildDbContext(msiDbConnector,useJpa)
 
     new StorerContext(udsDb, pdiDb, psDb, msiDb)
   }

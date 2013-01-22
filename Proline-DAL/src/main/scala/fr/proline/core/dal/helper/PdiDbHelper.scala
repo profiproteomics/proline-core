@@ -5,7 +5,6 @@ import fr.profi.jdbc.SQLQueryExecution
 class PdiDbHelper( sqlExec: SQLQueryExecution ) {
   
   import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.model.lcms._
   
   def getBioSequenceNameByTaxonAndId( bioSeqIds: Seq[Int]): Map[Pair[Int,Int],String] = {
     

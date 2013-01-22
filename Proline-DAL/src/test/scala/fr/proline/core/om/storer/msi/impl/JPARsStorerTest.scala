@@ -162,9 +162,9 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
       val msiDb = new DatabaseContext(dbManagerForTest.getMsiDbConnector(projectIdForTest))
 
-      val provider = new ORMResultSetProvider()
+      val provider = new ORMResultSetProvider(msiDb,psDb,pdiDb)
 
-      val loadedResultSet = provider.getResultSet(resultSetId, pdiDb, psDb, msiDb)
+      val loadedResultSet = provider.getResultSet(resultSetId)
 
       msiDb.close()
 

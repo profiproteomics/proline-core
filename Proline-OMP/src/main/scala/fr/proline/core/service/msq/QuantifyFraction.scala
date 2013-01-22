@@ -21,9 +21,24 @@ class QuantifyFraction( dbManager: DatabaseManager, quantFractionId: Int ) exten
     // Close entity manager
     udsEM.close()
     
-    false
+    true
   }
 
+}
+
+
+object AbundanceUnit extends Enumeration {
+  val FEATURE = Value("feature")
+  val REPORTER_ION = Value("reporter_ion")  
+  val SPECTRAL_COUNTS = Value("spectral_counts")
+}
+
+object QuantMethodType extends Enumeration {
+  val ATOM_LABELING = Value("atom_labeling")
+  val ISOBARIC_LABELING = Value("isobaric_labeling")
+  val LABEL_FREE = Value("label_free")
+  val RESIDUE_LABELING = Value("residue_labeling")
+  val SPECTRAL_COUNTING = Value("spectral_counting")
 }
 
 object FractionQuantifier {
@@ -41,7 +56,8 @@ object FractionQuantifier {
     
     var fractionQuantifier: IQuantifier = null
     
-    if( abundanceUnit == "reporter_ion" ) {      
+    // TODO: create some enumerations
+    if( abundanceUnit == AbundanceUnit.REPORTER_ION ) {      
     
     /*require Pairs::Msq::Module::Quantifier::ReporterIons
     fractionQuantifier = new Pairs::Msq::Module::Quantifier::ReporterIons(
@@ -49,15 +65,15 @@ object FractionQuantifier {
                                   )*/
     
     } 
-    else if( quantMethodType == "label_free" ) {
-      if( abundanceUnit == "feature" ) {
+    else if( quantMethodType == QuantMethodType.LABEL_FREE ) {
+      if( abundanceUnit == AbundanceUnit.FEATURE ) {
         fractionQuantifier = new Ms1DrivenLabelFreeFeatureQuantifier(
                                    dbManager = dbManager,
                                    udsEm = udsEm,
                                    udsQuantFraction = udsQuantFraction
                                  )
       }
-      else if( abundanceUnit == "spectral_count" ) {
+      else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS ) {
         fractionQuantifier = new SpectralCountQuantifier(
                                    dbManager = dbManager,
                                    udsEm = udsEm,

@@ -1,9 +1,11 @@
 package fr.proline.core.om.provider.msi
+
 import fr.proline.core.om.model.msi.SeqDatabase
 import fr.proline.repository.DatabaseContext
 
-
 trait ISeqDatabaseProvider {
+  
+  val pdiDbCtx: DatabaseContext  
   
   /**
    * Get SeqDatabases (wrapped in Option) with specified Ids.
@@ -13,7 +15,7 @@ trait ISeqDatabaseProvider {
    *  @param seqDBIds: Sequence of ids of SeqDatabase to search for
    *  @return Array of Option[SeqDatabase] corresponding to found SeqDatabases
    */
-  def getSeqDatabasesAsOptions( seqDBIds: Seq[Int], pdiDb: DatabaseContext ): Array[Option[SeqDatabase]]
+  def getSeqDatabasesAsOptions( seqDBIds: Seq[Int] ): Array[Option[SeqDatabase]]
   
   /**
    * Get SeqDatabases with specified Ids.
@@ -30,7 +32,7 @@ trait ISeqDatabaseProvider {
    *  @param seqDBId: id of SeqDatabase to search for
    *  @return Option[SeqDatabase] corresponding to found SeqDatabase
    */
-  def getSeqDatabase( seqDBId:Int, pdiDb: DatabaseContext ): Option[SeqDatabase] = { getSeqDatabasesAsOptions( Array(seqDBId), pdiDb )(0) }
+  def getSeqDatabase( seqDBId:Int ): Option[SeqDatabase] = { getSeqDatabasesAsOptions( Array(seqDBId) )(0) }
  
   /**
    * Get SeqDatabase (wrapped in Option) with specified name and fasta file path.
@@ -40,6 +42,6 @@ trait ISeqDatabaseProvider {
    *  @param fastaPath: Path of the fasta file used for identification corresponding to SeqDatabase to search for
    *  @return Option[SeqDatabase] corresponding to found SeqDatabase
    */
-  def getSeqDatabase( seqDBName: String,fastaPath : String, pdiDb: DatabaseContext ): Option[SeqDatabase]
+  def getSeqDatabase( seqDBName: String,fastaPath : String ): Option[SeqDatabase]
   
 }

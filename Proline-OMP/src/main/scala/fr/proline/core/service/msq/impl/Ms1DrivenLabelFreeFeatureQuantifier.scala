@@ -7,9 +7,8 @@ import collection.JavaConversions.{collectionAsScalaIterable,setAsJavaSet}
 import collection.JavaConverters.{asJavaCollectionConverter}
 import collection.mutable.{HashMap,HashSet}
 import collection.mutable.ArrayBuffer
-
 import fr.proline.core.algo.msi.ResultSummaryMerger
-import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.service.msq.IQuantifier
 import fr.proline.util.ms._
@@ -39,6 +38,7 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 }
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.DatabaseContext
 
 class Ms1DrivenLabelFreeFeatureQuantifier(
         val dbManager: DatabaseManager,
@@ -47,8 +47,8 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
         ) extends IQuantifier with Logging {
   
   val lcmsDbConnector = dbManager.getLcMsDbConnector(projectId)
-  val lcmsSqlHelper = new SQLQueryHelper( lcmsDbConnector )
-  val lcmsEzDBC = lcmsSqlHelper.ezDBC
+  val lcmsDbCtx = new DatabaseContext( lcmsDbConnector )
+  val lcmsEzDBC = ProlineEzDBC( lcmsDbConnector.getDataSource.getConnection, lcmsDbConnector.getDriverType )
   
   // TODO: require some parameters
   val mozTolInPPM = 10  
@@ -102,15 +102,15 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     msiEzDBC.select( "SELECT id,first_cycle,first_scan,first_time,peaklist_id FROM spectrum WHERE peaklist_id IN("+
                     peaklistIds.mkString(",")+")" ) { r =>
       if( spectrumColNames == null ) { spectrumColNames = r.columnNames }
-      spectrumColNames.map( colName => ( colName -> r.nextObject ) ).toMap
+      spectrumColNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
     }
     
   }
   
   val spectrumIdMap = {
     
-    val firstScanColName = MsiDbSpectrumTable.columns.firstScan
-    val peaklistIdColName = MsiDbSpectrumTable.columns.peaklistId
+    val firstScanColName = MsiDbSpectrumTable.columns.FIRST_SCAN
+    val peaklistIdColName = MsiDbSpectrumTable.columns.PEAKLIST_ID
     
     // Map spectrum id by scan number and result set id
     val spectrumIdMap = HashMap[Int,HashMap[Int,Int]]()
@@ -133,8 +133,8 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
   val ms2ScanHeaderRecords = {   
     this.logger.info( "loading MS2 scan headers..." )
     val runIds = this.lcmsRunIds
-    lcmsEzDBC.selectRecordsAsMaps( "SELECT id, initial_id, cycle, time FROM scan WHERE ms_level = 2 AND run_id IN ("+
-                                     runIds.mkString(",")+")")
+    lcmsEzDBC.selectAllRecordsAsMaps( "SELECT id, initial_id, cycle, time FROM scan WHERE ms_level = 2 AND run_id IN ("+
+                                       runIds.mkString(",")+")")
   }
    
   val ms2ScanNumbersByFtId = {
@@ -162,7 +162,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
   def quantifyFraction(): Unit = {
     
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider( msiEzDBC, psSqlHelper.ezDBC )
+    val rsmProvider = new SQLResultSummaryProvider( msiDbCtx, msiEzDBC, psDbCtx, psEzDBC )
     
     // Define some vars
     val identPepInstById = new HashMap[Int,PeptideInstance]()

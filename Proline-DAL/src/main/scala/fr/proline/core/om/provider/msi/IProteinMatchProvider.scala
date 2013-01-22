@@ -1,8 +1,11 @@
 package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.ProteinMatch
+import fr.proline.repository.DatabaseContext
 
 trait IProteinMatchProvider {
+  
+  val msiDbCtx: DatabaseContext
   
   def getProteinMatchesAsOptions( protMatchIds: Seq[Int] ): Array[Option[ProteinMatch]]
 

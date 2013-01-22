@@ -1,6 +1,8 @@
 package fr.proline.core.dal.helper
 
+import scala.collection.mutable.HashMap
 import fr.profi.jdbc.SQLQueryExecution
+import fr.proline.util.primitives.LongOrIntAsInt._
 
 class MsiDbHelper( sqlExec: SQLQueryExecution ) {
 
@@ -32,13 +34,10 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
 
 
   def getResultSetsMsiSearchIds( rsIds: Seq[Int] ): Array[Int] = {
-    
-    // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    val msiSearchIds = this.sqlExec.select(
-                         "SELECT msi_search_id FROM result_set " +
-                         "WHERE id IN ("+  rsIds.mkString(",") +")" ) { _.nextInt }
-    
-    msiSearchIds.distinct.toArray
+    this.sqlExec.selectInts(
+      "SELECT DISTINCT msi_search_id FROM result_set " +
+      "WHERE id IN ("+  rsIds.mkString(",") +")"
+    )
   }
   
   def getResultSetIdByResultSummaryId( rsmIds: Seq[Int] ): Map[Int,Int] = {
@@ -201,4 +200,19 @@ method get_search_engine( Int $target_result_set_id! ) {
     
     return $seq_by_pep_id;
   }*/
+  
+  // TODO: add number field to the table
+  def getSpectrumNumberById( peaklistId: Int ): Map[Int,Int] = {
+    
+    val specNumById = new HashMap[Int,Int]    
+    var specCount = 0
+    
+    sqlExec.selectAndProcess( "SELECT id FROM spectrum WHERE peaklist_id = " + peaklistId ) { r =>
+      val ptmId: Int = r.nextAnyVal
+      specNumById += (ptmId -> specCount )      
+      specCount += 1
+    }
+    
+    Map() ++ specNumById
+  }  
 }

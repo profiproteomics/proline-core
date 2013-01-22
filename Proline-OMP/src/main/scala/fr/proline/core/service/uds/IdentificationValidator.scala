@@ -2,10 +2,9 @@ package fr.proline.core.service.uds
 
 import com.weiglewilczek.slf4s.Logging
 import collection.JavaConversions.collectionAsScalaIterable
-
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.validation.{TargetDecoyModes,ValidationParams}
-import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}
@@ -14,6 +13,8 @@ import fr.proline.core.orm.uds.{ Identification => UdsIdentification,
                                  IdentificationFractionSummary => UdsIdfFractionSummary }
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger,ResultSummaryMerger}
+import fr.proline.repository.DatabaseContext
+import fr.proline.core.dal.SQLContext
 
 class IdentificationValidator( dbManager: DatabaseManager,
                                identificationId: Int,
@@ -23,39 +24,51 @@ class IdentificationValidator( dbManager: DatabaseManager,
                                protSetValParams: Option[ValidationParams] = None
                                ) extends IService with Logging {
   
-  private val udsEM = dbManager.getUdsDbConnector.getEntityManagerFactory.createEntityManager()
-  private val udsIdent = udsEM.find(classOf[UdsIdentification], identificationId)
-  private val psSqlHelper = new SQLQueryHelper( dbManager.getPsDbConnector )  
+  private val udsDbConnector = dbManager.getUdsDbConnector
   
-  private val projectId = udsIdent.getProject.getId
+  private val udsDbCtx = new DatabaseContext( udsDbConnector.getDataSource.getConnection, udsDbConnector.getDriverType )
+  private val udsEzDBC = ProlineEzDBC( udsDbCtx )
+  private val udsSqlCtx = new SQLContext( udsDbCtx, udsEzDBC )
+  private val projectId = udsEzDBC.selectInt("SELECT project_id FROM identification WHERE id ="+identificationId)
+  
+  private val psDbConnector = dbManager.getPsDbConnector
+  private val psDbCtx = new DatabaseContext( psDbConnector.getDataSource.getConnection, psDbConnector.getDriverType )
+  private val psEzDBC = ProlineEzDBC( psDbCtx )
+  
   private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiSqlHelper = new SQLQueryHelper( msiDbConnector )
-  private val msiDbHelper = new MsiDbHelper( msiSqlHelper.ezDBC )
+  private val msiDbCtx = new DatabaseContext( msiDbConnector.getDataSource.getConnection, msiDbConnector.getDriverType )
+  private val msiEzDBC = ProlineEzDBC( msiDbCtx )
+  private val msiDbHelper = new MsiDbHelper( msiEzDBC )
   
   private def closeDbConnections() = {
     // Close connections before launching another service
-    //this.msiDb.closeConnection()
+    udsDbCtx.close()
+    psDbCtx.close()
+    msiDbCtx.close()
     //this.psDb.closeConnection()
   }
   
   override def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    //this.closeDbConnections()
+    this.closeDbConnections()
     //this.dbManager.udsEMF.close()
-    udsEM.close()
+    //udsEM.close()
   }
   
   def runService(): Boolean = {
     
-    val udsIdfFractions = udsIdent.getFractions()    
+    /*val fractionCount = udsEzDBC.selectInt(
+      "SELECT count(*) FROM identification_fraction WHERE identification_id ="+identificationId
+    )*/
     
     // Retrieve existing identification summaries for this identification        
     val rsIdByRsmId = msiDbHelper.getResultSetIdByResultSummaryId( rsmIds )
     val rsmIdByRsId = for( (rsId, rsmId) <- rsIdByRsmId ) yield (rsmId, rsId)
     
     var identInstanceRsmId = 0
-    if( udsIdfFractions.size() > 1 ) {
+    //if( udsIdfFractions.size() > 1 ) {
+    if( rsmIds.length > 1 ) {
       
       if( this.mergeResultSets ) {
         
@@ -71,13 +84,14 @@ class IdentificationValidator( dbManager: DatabaseManager,
         }
         
         // Instantiate a RS loader
-        val rsProvider = new SQLResultSetProvider( msiSqlHelper.ezDBC, psSqlHelper.ezDBC )
+        val rsProvider = new SQLResultSetProvider( msiDbCtx, msiEzDBC, psDbCtx, psEzDBC, udsSqlCtx )
         
         // Load result sets
         val rsIds = targetRsIds ++ decoyRsIdsAsOpts.map { _.get }
         // TODO LMN Use a real SQL Db Contexts here ->
-        val( targetRsList, decoyRsList ) = rsProvider.getResultSets( rsIds, null, null, null ).partition { _.isDecoy == false }
+        val( targetRsList, decoyRsList ) = rsProvider.getResultSets( rsIds ).partition { _.isDecoy == false }
         
+        // Close connections before launching another service
         this.closeDbConnections()
         
         // Merge result set
@@ -111,11 +125,10 @@ class IdentificationValidator( dbManager: DatabaseManager,
       } else {
         
         // Iterate over result summary ids to load them
-        val resultSummaries = new SQLResultSummaryProvider( msiSqlHelper.ezDBC, psSqlHelper.ezDBC ).getResultSummaries( rsmIds, true )
+        val resultSummaries = new SQLResultSummaryProvider( msiDbCtx, msiEzDBC, psDbCtx, psEzDBC, udsSqlCtx ).getResultSummaries( rsmIds, true )
         
         // Close connections before launching another service
-        //this.msiDb.closeConnection()
-        //this.psDb.closeConnection()
+        this.closeDbConnections()
         
         // Merge result summaries
         val rsmMerger = new ResultSummaryMerger( dbManager, projectId, resultSummaries )
@@ -125,13 +138,19 @@ class IdentificationValidator( dbManager: DatabaseManager,
       }
     
     } else {
-      identInstanceRsmId = rsmIdByRsId( udsIdfFractions.get(0).getResultSetId() )
+      identInstanceRsmId = rsmIds(0)
+      this.closeDbConnections()
+      //identInstanceRsmId = rsmIdByRsId( udsIdfFractions.get(0).getResultSetId() )
     }
     
     // Create a new instance with fractions in UDS DB
     
     // Begin new transaction
-    this.udsEM.getTransaction().begin()
+    val udsEM = udsDbConnector.getEntityManagerFactory.createEntityManager()
+    val udsIdent = udsEM.find(classOf[UdsIdentification], identificationId)    
+    val udsIdfFractions = udsIdent.getFractions() 
+  
+    udsEM.getTransaction().begin()
     
     val mergedDataType = if( mergeResultSets ) "result_set" else "result_summary"
     val udsIdentSummaries = udsIdent.getIdentificationSummaries().toList.sort { (a,b) => b.getNumber() < a.getNumber() }
@@ -146,7 +165,7 @@ class IdentificationValidator( dbManager: DatabaseManager,
     // TODO: store properties
     //udsIdfSummary.setSerializedProperties() // merged_data_type = mergedDataType
     
-    this.udsEM.persist( udsIdfSummary )
+    udsEM.persist( udsIdfSummary )
     
     for( udsIdfFraction <- udsIdfFractions ) {
       
@@ -156,12 +175,13 @@ class IdentificationValidator( dbManager: DatabaseManager,
       udsIdfFractionSummary.setFraction( udsIdfFraction )
       udsIdfFractionSummary.setIdentificationSummary( udsIdfSummary )
       
-      this.udsEM.persist( udsIdfFractionSummary )
+      udsEM.persist( udsIdfFractionSummary )
       
     }
     
     // Commit transaction
-    this.udsEM.getTransaction().commit()
+    udsEM.getTransaction().commit()
+    udsEM.close()
     
     this.beforeInterruption()
   

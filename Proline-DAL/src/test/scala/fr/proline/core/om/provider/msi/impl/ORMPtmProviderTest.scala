@@ -37,9 +37,9 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPtmProvider = new ORMPTMProvider()
+      val ormPtmProvider = new ORMPTMProvider(psDb)
 
-      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids, psDb);
+      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
       assertThat(ptmDefs, CoreMatchers.notNullValue());
       assertNotSame(ptmDefs(0), None);
       assertThat(ptmDefs(0).get.location, CoreMatchers.equalTo(PtmLocation.PROT_N_TERM.toString));
@@ -66,9 +66,9 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
     val psDb = new DatabaseContext(getConnector)
     try {
-      val ormPtmProvider = new ORMPTMProvider()
+      val ormPtmProvider = new ORMPTMProvider(psDb)
 
-      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids, psDb);
+      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
       assertThat(ptmDefs, CoreMatchers.notNullValue());
       assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
       assertNotSame(ptmDefs(0), None);
@@ -89,9 +89,9 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPtmProvider = new ORMPTMProvider()
+      val ormPtmProvider = new ORMPTMProvider(psDb)
 
-      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids, psDb);
+      val ptmDefs: Array[Option[PtmDefinition]] = ormPtmProvider.getPtmDefinitionsAsOptions(ids);
       assertThat(ptmDefs, CoreMatchers.notNullValue());
       assertThat(ptmDefs.length, CoreMatchers.equalTo(2));
       assertNotSame(ptmDefs(1), None);
@@ -108,9 +108,9 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPtmProvider = new ORMPTMProvider()
+      val ormPtmProvider = new ORMPTMProvider(psDb)
 
-      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(12, psDb);
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(12);
       assertThat(ptmDef, CoreMatchers.notNullValue());
       assertNotSame(ptmDef, None);
 
@@ -128,9 +128,9 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPtmProvider = new ORMPTMProvider()
+      val ormPtmProvider = new ORMPTMProvider(psDb)
 
-      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(9879, psDb);
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(9879);
       assertThat(ptmDef, CoreMatchers.notNullValue());
 
       assertSame(ptmDef, None);
@@ -145,10 +145,10 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPtmProvider = new ORMPTMProvider()
+      val ormPtmProvider = new ORMPTMProvider(psDb)
 
       //Param for PtmSpecificity ID 877 in Unimod_Dataset
-      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plex", 'S', PtmLocation.ANYWHERE, psDb);
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plex", 'S', PtmLocation.ANYWHERE);
 
       assertThat(ptmDef, CoreMatchers.notNullValue())
       assertNotSame(ptmDef, None);
@@ -164,10 +164,10 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     val psDb = new DatabaseContext(getConnector)
 
     try {
-      val ormPtmProvider = new ORMPTMProvider()
+      val ormPtmProvider = new ORMPTMProvider(psDb)
 
       //Param corresponding to No PtmSpecificity in Unimod_Dataset
-      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plexA", '\0', PtmLocation.ANYWHERE, psDb);
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition("iTRAQ8plexA", '\0', PtmLocation.ANYWHERE);
       assertThat(ptmDef, CoreMatchers.notNullValue());
       assertSame(ptmDef, None);
     } finally {

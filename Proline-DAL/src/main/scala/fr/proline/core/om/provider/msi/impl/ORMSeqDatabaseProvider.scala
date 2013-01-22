@@ -13,15 +13,15 @@ import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => seqDBRep
 import fr.proline.core.om.utils.ProteinsOMConverterUtil
 import fr.proline.repository.DatabaseContext
 
-class ORMSeqDatabaseProvider() extends ISeqDatabaseProvider with Logging {
+class ORMSeqDatabaseProvider( val pdiDbCtx: DatabaseContext ) extends ISeqDatabaseProvider with Logging {
 
   val converter = new ProteinsOMConverterUtil()
 
-  def getSeqDatabasesAsOptions(seqDBIds: Seq[Int], pdiDb: DatabaseContext): Array[Option[SeqDatabase]] = {
+  def getSeqDatabasesAsOptions(seqDBIds: Seq[Int]): Array[Option[SeqDatabase]] = {
 
     var foundSeqDBBuilder = Array.newBuilder[Option[SeqDatabase]]
 
-    val seqDBORMs = pdiDb.getEntityManager.createQuery("FROM fr.proline.core.orm.pdi.SequenceDbInstance WHERE id IN (:ids)",
+    val seqDBORMs = pdiDbCtx.getEntityManager.createQuery("FROM fr.proline.core.orm.pdi.SequenceDbInstance WHERE id IN (:ids)",
       classOf[fr.proline.core.orm.pdi.SequenceDbInstance])
       .setParameter("ids", seqDBIds.asJavaCollection).getResultList().toList
 
@@ -50,8 +50,8 @@ class ORMSeqDatabaseProvider() extends ISeqDatabaseProvider with Logging {
     throw new Exception("NYI")
   }
 
-  def getSeqDatabase(seqDBName: String, fastaPath: String, pdiDb: DatabaseContext ): Option[SeqDatabase] = {   
-    val pdiSeqdb = seqDBRepo.findSeqDbInstanceWithNameAndFile(pdiDb.getEntityManager, seqDBName, fastaPath)
+  def getSeqDatabase(seqDBName: String, fastaPath: String): Option[SeqDatabase] = {   
+    val pdiSeqdb = seqDBRepo.findSeqDbInstanceWithNameAndFile(pdiDbCtx.getEntityManager, seqDBName, fastaPath)
     if (pdiSeqdb == null)
       return None
     else {

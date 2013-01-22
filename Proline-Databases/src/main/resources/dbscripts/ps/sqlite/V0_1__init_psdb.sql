@@ -83,3 +83,8 @@ CREATE TABLE ptm_specificity (
                 FOREIGN KEY (classification_id) REFERENCES ptm_classification (id)
 );
 
+CREATE UNIQUE INDEX peptide_sequence_ptm_idx ON peptide (sequence,ptm_string);
+
+CREATE INDEX peptide_mass_idx ON peptide (calculated_mass);
+
+CREATE INDEX peptide_ptm_peptide_idx ON peptide_ptm (peptide_id);

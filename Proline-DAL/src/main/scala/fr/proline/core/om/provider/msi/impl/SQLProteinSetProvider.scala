@@ -7,23 +7,26 @@ import fr.proline.core.dal.tables.msi.{MsiDbProteinSetTable,MsiDbProteinSetProte
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.{PeptideSet,ProteinSet}
 import fr.proline.core.om.provider.msi.{IPeptideSetProvider,IProteinSetProvider}
+import fr.proline.repository.DatabaseContext
 
-class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
-                             val psDb: SQLQueryExecution,
+class SQLProteinSetProvider( val msiDbCtx: DatabaseContext,
+                             val msiSqlExec: SQLQueryExecution,
+                             val psDbCtx: DatabaseContext,
+                             val psSqlExec: SQLQueryExecution,
                              val peptideSetProvider: Option[IPeptideSetProvider] = None ) {
   
   val ProtSetCols = MsiDbProteinSetTable.columns
   val ProtSetItemCols = MsiDbProteinSetProteinMatchItemTable.columns
   
   // Instantiate a MSIdb helper
-  val msiDbHelper = new MsiDbHelper( this.msiDb )
+  val msiDbHelper = new MsiDbHelper( this.msiSqlExec )
   
   // Retrieve score type map
   val scoreTypeById = msiDbHelper.getScoringTypeById
   
   private def _getPeptideSetProvider(): IPeptideSetProvider = {
     if( this.peptideSetProvider != None ) this.peptideSetProvider.get
-    else new SQLPeptideSetProvider(this.msiDb,this.psDb)    
+    else new SQLPeptideSetProvider(msiDbCtx,msiSqlExec,psDbCtx,psSqlExec)    
   }
   
   def getProteinSetsAsOptions( protSetIds: Seq[Int] ): Array[Option[ProteinSet]] = {
@@ -35,7 +38,7 @@ class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
   
   def getProteinSets( protSetIds: Seq[Int] ): Array[ProteinSet] = {
     
-    val peptideSetIds = msiDb.select( "SELECT id FROM peptide_set WHERE protein_set_id IN (" + protSetIds.mkString(",") +")") { _.nextInt }
+    val peptideSetIds = msiSqlExec.select( "SELECT id FROM peptide_set WHERE protein_set_id IN (" + protSetIds.mkString(",") +")") { _.nextInt }
     val peptideSets = this._getPeptideSetProvider.getPeptideSets( peptideSetIds )
     
     this._buildProteinSets( this._getProtSetRecords( protSetIds ),
@@ -52,21 +55,21 @@ class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
   }
     
   private def _getRSMsProtSetRecords( rsmIds: Seq[Int] ): Array[Map[String,Any]] = {
-    this.msiDb.selectRecordsAsMaps("SELECT * FROM protein_set WHERE result_summary_id IN (" + rsmIds.mkString(",") +")")
+    this.msiSqlExec.selectAllRecordsAsMaps("SELECT * FROM protein_set WHERE result_summary_id IN (" + rsmIds.mkString(",") +")")
   } 
   
   private def _getProtSetRecords( protSetIds: Seq[Int] ): Array[Map[String,Any]] = {    
     // TODO: use max nb iterations
-    this.msiDb.selectRecordsAsMaps("SELECT * FROM protein_set WHERE id IN (" + protSetIds.mkString(",") +")")    
+    this.msiSqlExec.selectAllRecordsAsMaps("SELECT * FROM protein_set WHERE id IN (" + protSetIds.mkString(",") +")")    
   }
   
   private def _getRSMsProtSetItemRecords( rsmIds: Seq[Int] ): Array[Map[String,Any]] = {
-    this.msiDb.selectRecordsAsMaps("SELECT * FROM protein_set_protein_match_item WHERE result_summary_id IN (" + rsmIds.mkString(",") +")")
+    this.msiSqlExec.selectAllRecordsAsMaps("SELECT * FROM protein_set_protein_match_item WHERE result_summary_id IN (" + rsmIds.mkString(",") +")")
   }
   
   private def _getProtSetItemRecords( protSetIds: Seq[Int] ): Array[Map[String,Any]] = {    
     // TODO: use max nb iterations
-    this.msiDb.selectRecordsAsMaps("SELECT * FROM protein_set_protein_match_item WHERE protein_set_id IN (" + protSetIds.mkString(",") +")")    
+    this.msiSqlExec.selectAllRecordsAsMaps("SELECT * FROM protein_set_protein_match_item WHERE protein_set_id IN (" + protSetIds.mkString(",") +")")    
   }
   
   private def _buildProteinSets( protSetRecords: Seq[Map[String,Any]],
@@ -82,7 +85,7 @@ class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
     
     // Group protein set items by protein set id
     val protSetItemRecordsByProtSetId = protSetItemRecords.groupBy { 
-                                          _(ProtSetItemCols.proteinSetId).asInstanceOf[Int]
+                                          _(ProtSetItemCols.PROTEIN_SET_ID).asInstanceOf[Int]
                                         }
     
     // Build protein sets
@@ -92,7 +95,7 @@ class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
       
       // Retrieve peptide instance record
       val protSetRecord = protSetRecords(protSetIds)
-      val protSetId: Int = protSetRecord(ProtSetCols.id).asInstanceOf[AnyVal]
+      val protSetId: Int = protSetRecord(ProtSetCols.ID).asInstanceOf[AnyVal]
       
       // Retrieve corresponding peptide set
       val pepSet = pepSetByProtSetId(protSetId)
@@ -101,7 +104,7 @@ class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
       val protMatchIdsBuilder = Array.newBuilder[Int]
       
       protSetItemRecordsByProtSetId(protSetId).foreach { protSetItems =>
-        protMatchIdsBuilder += protSetItems(ProtSetItemCols.proteinMatchId).asInstanceOf[Int]
+        protMatchIdsBuilder += protSetItems(ProtSetItemCols.PROTEIN_MATCH_ID).asInstanceOf[Int]
         
         /*val propertiesAsJSON = pepMatchMapping(PepMatchMappingCols.serializedProperties).asInstanceOf[String]        
         if( propertiesAsJSON != null ) {
@@ -121,13 +124,13 @@ class SQLProteinSetProvider( val msiDb: SQLQueryExecution,
                            id = protSetId,
                            peptideSet = pepSet,
                            hasPeptideSubset = pepSet.hasSubset,
-                           score = protSetRecord(ProtSetCols.score).asInstanceOf[AnyVal],
-                           scoreType = scoreTypeById( protSetRecord(ProtSetCols.scoringId).asInstanceOf[Int] ),
-                           isValidated = protSetRecord(ProtSetCols.isValidated),
-                           selectionLevel = protSetRecord(ProtSetCols.selectionLevel).asInstanceOf[Int],
+                           score = protSetRecord(ProtSetCols.SCORE).asInstanceOf[AnyVal],
+                           scoreType = scoreTypeById( protSetRecord(ProtSetCols.SCORING_ID).asInstanceOf[Int] ),
+                           isValidated = protSetRecord(ProtSetCols.IS_VALIDATED),
+                           selectionLevel = protSetRecord(ProtSetCols.SELECTION_LEVEL).asInstanceOf[Int],
                            proteinMatchIds = protMatchIdsBuilder.result(),
-                           typicalProteinMatchId = protSetRecord(ProtSetCols.typicalProteinMatchId).asInstanceOf[Int],
-                           resultSummaryId = protSetRecord(ProtSetCols.resultSummaryId).asInstanceOf[Int]
+                           typicalProteinMatchId = protSetRecord(ProtSetCols.TYPICAL_PROTEIN_MATCH_ID).asInstanceOf[Int],
+                           resultSummaryId = protSetRecord(ProtSetCols.RESULT_SUMMARY_ID).asInstanceOf[Int]
                           )
       
       protSets(protSetIds) = protSet

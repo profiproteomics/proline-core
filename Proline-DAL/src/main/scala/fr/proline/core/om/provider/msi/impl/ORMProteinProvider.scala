@@ -21,14 +21,14 @@ import fr.proline.repository.DatabaseContext
  *
  * Specified EntityManager should be a PDIdb EntityManager
  */
-class ORMProteinProvider() extends IProteinProvider with Logging {
+class ORMProteinProvider( val pdiDbCtx: DatabaseContext ) extends IProteinProvider with Logging {
 
   val converter = new ProteinsOMConverterUtil(true)
 
-  def getProteinsAsOptions(protIds: Seq[Int], pdiDb: DatabaseContext): Array[Option[Protein]] = {
+  def getProteinsAsOptions(protIds: Seq[Int]): Array[Option[Protein]] = {
 
     var foundOMProtBuilder = Array.newBuilder[Option[Protein]]
-    val pdiBioSeqs = pdiDb.getEntityManager.createQuery("FROM fr.proline.core.orm.pdi.BioSequence bioSeq WHERE id IN (:ids)",
+    val pdiBioSeqs = pdiDbCtx.getEntityManager.createQuery("FROM fr.proline.core.orm.pdi.BioSequence bioSeq WHERE id IN (:ids)",
       classOf[fr.proline.core.orm.pdi.BioSequence])
       .setParameter("ids", seqAsJavaList(protIds)).getResultList().toList
 
@@ -52,9 +52,9 @@ class ORMProteinProvider() extends IProteinProvider with Logging {
     foundOMProtBuilder.result
   }
 
-  def getProtein(seq: String, pdiDb: DatabaseContext): Option[Protein] = {
+  def getProtein(seq: String): Option[Protein] = {
     try {
-      val bioSeq: BioSequence = pdiDb.getEntityManager.createQuery("SELECT bs FROM fr.proline.core.orm.pdi.BioSequence bs where bs.sequence = :seq", classOf[fr.proline.core.orm.pdi.BioSequence])
+      val bioSeq: BioSequence = pdiDbCtx.getEntityManager.createQuery("SELECT bs FROM fr.proline.core.orm.pdi.BioSequence bs where bs.sequence = :seq", classOf[fr.proline.core.orm.pdi.BioSequence])
         .setParameter("seq", seq).getSingleResult()
       Some(converter.convertPdiBioSeqORM2OM(bioSeq))
     } catch {
@@ -66,9 +66,9 @@ class ORMProteinProvider() extends IProteinProvider with Logging {
 
   }
 
-  def getProtein(accession: String, seqDb: SeqDatabase, pdiDb: DatabaseContext): Option[Protein] = {
+  def getProtein(accession: String, seqDb: SeqDatabase): Option[Protein] = {
     
-    val bioSeq = bioSeqRepo.findBioSequencePerAccessionAndSeqDB(pdiDb.getEntityManager, accession, seqDb.id)
+    val bioSeq = bioSeqRepo.findBioSequencePerAccessionAndSeqDB(pdiDbCtx.getEntityManager, accession, seqDb.id)
     if (bioSeq == null)
       return None
 

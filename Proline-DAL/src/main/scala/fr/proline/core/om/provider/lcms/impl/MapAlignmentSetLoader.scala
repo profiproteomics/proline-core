@@ -40,7 +40,7 @@ class MapAlignmentSetLoader( val sqlExec: SQLQueryExecution ) {
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the map record
-      val mapAlnRecord = colNames.map( colName => ( colName -> r.nextObject ) ).toMap
+      val mapAlnRecord = colNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
       buildMapAlignment( mapAlnRecord )
       
     }

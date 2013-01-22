@@ -131,6 +131,11 @@ case class ProteinMatch (
   
   // Requirements
   require( accession != null && description != null, "accession and description must be defined" )
+  
+  lazy val peptidesCount: Int = {
+    if( sequenceMatches == null) 0
+    else sequenceMatches.map( _.getPeptideId ).distinct.length
+  }
 
   def getProteinId : Int = { if(protein != null && protein != None) protein.get.id else proteinId }
   

@@ -1,8 +1,12 @@
 package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.MsQuery
+import fr.proline.repository.DatabaseContext
 
 trait IMsQueryProvider {
+  
+  val msiDbCtx: DatabaseContext
+  
   // TODO: remove comments when JPA implementation is done
   
   //def getMsQueriesAsOptions( msQueryIds: Seq[Int] ): Array[Option[MsQuery]]

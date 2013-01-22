@@ -2,16 +2,26 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.SQLQueryExecution
+import fr.proline.core.dal.SQLContext
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi.{ProteinMatch,PeptideMatch,ResultSet}
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.repository.DatabaseContext
+import fr.profi.jdbc.easy.EasyDBC
 
 trait SQLResultSetLoader {
   
   import fr.proline.core.dal.helper.MsiDbHelper  
   
-  val msiDb: SQLQueryExecution
+  val udsSqlCtx: SQLContext
+  val msiDbCtx: DatabaseContext
+  val psDbCtx: DatabaseContext  
+  val msiSqlExec: EasyDBC
+  val psSqlExec: EasyDBC
+  
+  val msiSqlCtx = new SQLContext( msiDbCtx, msiSqlExec )
+  val psSqlCtx = new SQLContext( psDbCtx, psSqlExec )
+  
   val RSCols = MsiDbResultSetTable.columns
   
   protected def getResultSet( rsId: Int,
@@ -33,43 +43,50 @@ trait SQLResultSetLoader {
     val protMatchesByRsId = protMatches.groupBy( _.resultSetId )    
     
     // Instantiate a MSIdb helper
-    val msiDbHelper = new MsiDbHelper( msiDb )
+    val msiDbHelper = new MsiDbHelper( msiSqlExec )
+    val msiSearchIds = msiDbHelper.getResultSetsMsiSearchIds( rsIds )
+    
+    var msiSearchById: Map[Int,fr.proline.core.om.model.msi.MSISearch] = Map()
+    if( udsSqlCtx != null ) {
+      val msiSearches = new SQLMsiSearchProvider(udsSqlCtx,msiSqlCtx,psSqlCtx).getMSISearches(msiSearchIds)
+      msiSearchById = Map() ++ msiSearches.map( ms => ms.id -> ms )
+    }
     
     // Execute SQL query to load result sets
     var rsColNames: Seq[String] = null
-    val resultSets = msiDb.select( "SELECT * FROM result_set WHERE id IN ("+ rsIds.mkString(",") +")" ) { r =>
+    val resultSets = msiSqlExec.select( "SELECT * FROM result_set WHERE id IN ("+ rsIds.mkString(",") +")" ) { r =>
               
       if( rsColNames == null ) { rsColNames = r.columnNames }
-      val resultSetRecord = rsColNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+      val resultSetRecord = rsColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
       
       // Retrieve some vars
-      val rsId: Int = resultSetRecord(RSCols.id).asInstanceOf[AnyVal]
+      val rsId: Int = resultSetRecord(RSCols.ID).asInstanceOf[AnyVal]
       val rsProtMatches = protMatchesByRsId(rsId)
       val rsPepMatches = pepMatchesByRsId(rsId)
       val rsPeptides = rsPepMatches map { _.peptide } distinct
-      val rsType = resultSetRecord(RSCols.`type`).asInstanceOf[String]
+      val rsType = resultSetRecord(RSCols.TYPE).asInstanceOf[String]
       val isDecoy = rsType matches "DECOY_SEARCH"
       val isNative = rsType matches "SEARCH"
-      //val msiSearchIds = msiDbHelper.getResultSetsMsiSearchIds( Array(rsId) )
-      var decoyRsId: Int = 0
-      if( resultSetRecord(RSCols.decoyResultSetId) != null )
-        decoyRsId = resultSetRecord(RSCols.decoyResultSetId).asInstanceOf[Int]
+      val msiSearchId = resultSetRecord(RSCols.MSI_SEARCH_ID).asInstanceOf[Int]
+      val msiSearch = msiSearchById.getOrElse(msiSearchId,null)
       
-      // TODO: load MSI search
+      var decoyRsId: Int = 0
+      if( resultSetRecord(RSCols.DECOY_RESULT_SET_ID) != null )
+        decoyRsId = resultSetRecord(RSCols.DECOY_RESULT_SET_ID).asInstanceOf[Int]
+      
       // TODO: parse properties
       new ResultSet(
             id = rsId,
-            name = resultSetRecord(RSCols.name).asInstanceOf[String],
-            description = resultSetRecord(RSCols.description).asInstanceOf[String],
+            name = resultSetRecord(RSCols.NAME).asInstanceOf[String],
+            description = resultSetRecord(RSCols.DESCRIPTION).asInstanceOf[String],
             peptides = rsPeptides,
             peptideMatches = rsPepMatches,
             proteinMatches = rsProtMatches,
             isDecoy = isDecoy,
             isNative = isNative,
-         //TODO   msiSearchIds = msiSearchIds,
+            msiSearch = msiSearch,
             decoyResultSetId = decoyRsId
           )
-                            
     }
     
     resultSets.toArray
@@ -78,26 +95,32 @@ trait SQLResultSetLoader {
 
 }
 
-class SQLResultSetProvider( val msiDb: SQLQueryExecution,
-                            val psDb: SQLQueryExecution = null ) extends SQLResultSetLoader with IResultSetProvider {
+class SQLResultSetProvider( val msiDbCtx: DatabaseContext,
+                            val msiSqlExec: EasyDBC,
+                            val psDbCtx: DatabaseContext,
+                            val psSqlExec: EasyDBC,
+                            val udsSqlCtx: SQLContext ) extends SQLResultSetLoader with IResultSetProvider {
   
-  def getResultSets( rsIds: Seq[Int], pdiDbCtx: DatabaseContext, psDbCtx: DatabaseContext, msiDbCtx: DatabaseContext ): Array[ResultSet] = {
+  val udsDbCtx: DatabaseContext = udsSqlCtx.dbContext
+  val pdiDbCtx: DatabaseContext = null
+  
+  def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
     
     // Load peptide matches
-    val pepMatchProvider = new SQLPeptideMatchProvider( msiDb, psDb )
-    val pepMatches = pepMatchProvider.getResultSetsPeptideMatches( rsIds )    
+    val pepMatchProvider = new SQLPeptideMatchProvider( msiDbCtx, msiSqlExec, psDbCtx, psSqlExec )
+    val pepMatches = pepMatchProvider.getResultSetsPeptideMatches( rsIds )
     
     // Load protein matches
-    val protMatchProvider = new SQLProteinMatchProvider( msiDb )
+    val protMatchProvider = new SQLProteinMatchProvider( msiDbCtx, msiSqlExec )
     val protMatches = protMatchProvider.getResultSetsProteinMatches( rsIds )    
 
     this.getResultSets( rsIds, pepMatches, protMatches )
 
   }
   
-  def getResultSetsAsOptions( resultSetIds: Seq[Int], pdiDbCtx: DatabaseContext, psDbCtx: DatabaseContext, msiDbCtx: DatabaseContext ): Array[Option[ResultSet]] = {
+  def getResultSetsAsOptions( resultSetIds: Seq[Int] ): Array[Option[ResultSet]] = {
     
-    val resultSets = this.getResultSets( resultSetIds, pdiDbCtx, psDbCtx, msiDbCtx )
+    val resultSets = this.getResultSets( resultSetIds )
     val resultSetById = resultSets.map { rs => rs.id -> rs } toMap
     
     resultSetIds.map { resultSetById.get( _ ) } toArray

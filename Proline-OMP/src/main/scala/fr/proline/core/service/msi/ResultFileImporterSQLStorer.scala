@@ -3,28 +3,31 @@ package fr.proline.core.service.msi
 import java.io.File
 import com.weiglewilczek.slf4s.Logging
 import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
 import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.msi.{IRsStorer,MsiSearchStorer,RsStorer}
 import fr.proline.core.om.storer.msi.impl.{JPARsStorer,StorerContext,StorerContextBuilder}
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.DriverType
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.util.StringUtils
+import fr.proline.core.om.storer.msi.impl.SQLRsStorer
+import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
+import fr.proline.core.om.storer.msi.impl.SQLPeaklistWriter
 
 class ResultFileImporterSQLStorer(
-        storerContext: StorerContext,
-        resultIdentFile: File,
-        fileType: String,
-        providerKey: String,
-        instrumentConfigId: Int,
-        peaklistSoftwareId: Int,
-        importerProperties: Map[String, Any],
-        acDecoyRegex: Option[util.matching.Regex] = None ) extends IService with Logging {
+  storerContext: StorerContext,
+  resultIdentFile: File,
+  fileType: String,
+  providerKey: String,
+  instrumentConfigId: Int,
+  peaklistSoftwareId: Int,
+  importerProperties: Map[String, Any],
+  acDecoyRegex: Option[util.matching.Regex] = None ) extends IService with Logging {
   
   private var _hasInitiatedStorerContext: Boolean = false
   
@@ -39,7 +42,7 @@ class ResultFileImporterSQLStorer(
             importerProperties: Map[String, Any],
             acDecoyRegex: Option[util.matching.Regex] = None ) {
     this(
-      StorerContextBuilder( dbManager, msiDbConnector, false ), // Force SQL context
+      StorerContextBuilder( dbManager, msiDbConnector, useJpa = false ), // Force SQL context
       resultIdentFile,
       fileType,
       providerKey,
@@ -90,17 +93,19 @@ class ResultFileImporterSQLStorer(
     val instrumentConfig = this._getInstrumentConfig( instrumentConfigId )
     
     // Get Right ResultFile provider
-    val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get( fileType )
-    require( rfProvider != None, "No ResultFileProvider for specified identification file format")
+    val rfProviderOpt = ResultFileProviderRegistry.get( fileType )
+    require( rfProviderOpt != None, "No ResultFileProvider for specified identification file format")
     
     // Open the result file
-    val resultFile = rfProvider.get.getResultFile( resultIdentFile, providerKey, importerProperties )
+    //val providerCtx = new ResultFileProviderContext(providerKey,storerContext.pdiDbContext,storerContext.psDbContext)
+    val resultFile = rfProviderOpt.get.getResultFile( resultIdentFile, importerProperties, providerKey )
     >>>
     
-    // Instantiate RsStorer   
-    val rsStorer: IRsStorer = RsStorer( storerContext.msiDbContext.getDriverType )
-     
-	  // Configure result file before parsing
+    // Instantiate RsStorer
+    //val rsStorer: IRsStorer = RsStorer( storerContext.msiDbContext.getDriverType )
+    val rsStorer = new SQLRsStorer(new SQLiteRsWriter, new SQLPeaklistWriter) 
+	
+    // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
     
     //Fait par le Storer: Attente partage transaction TODO    
@@ -251,7 +256,7 @@ class ResultFileImporterSQLStorer(
       peaklistSoftware = getPeaklistSoftware( udsEzDBC )
       
       // Then insert it in the current MSIdb
-      val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery( c => List(c.id,c.name,c.version) )      
+      val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery( c => List(c.ID,c.NAME,c.VERSION) )      
       msiEzDBC.execute(peaklistInsertQuery,peaklistSoftware.id,peaklistSoftware.name,peaklistSoftware.version)
     }
 
@@ -269,14 +274,14 @@ class ResultFileImporterSQLStorer(
     "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config "+
     "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId ) { r =>
       
-      val instrument = new Instrument( id = r.nextObject.asInstanceOf[AnyVal], name = r, source = r )
+      val instrument = new Instrument( id = r.nextAnyVal, name = r, source = r )
       for( instPropStr <- r.nextStringOption ) {
         if( StringUtils.isEmpty(instPropStr) == false )
           instrument.properties = Some( parse[InstrumentProperties]( instPropStr ) )
       }
       
       // Skip instrument_config.id field
-      r.nextObject
+      r.nextAny
       
       val instrumentConfig = new InstrumentConfig(
         id = instrumentConfigId,
@@ -292,7 +297,7 @@ class ResultFileImporterSQLStorer(
       }
       
       // Skip instrument_config.instrument_id field
-      r.nextObject
+      r.nextAny
       
       // Update activation type
       instrumentConfig.activationType = r.nextString

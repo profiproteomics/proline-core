@@ -1,9 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
@@ -15,6 +13,7 @@ import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.storer.ps.PeptideStorer
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.DatabaseContext
+import fr.proline.core.dal.JDBCWorkBuilder
 
 class SQLRsStorer(private val _rsWriter: IRsWriter,
   private val _pklWriter: IPeaklistWriter) extends IRsStorer with Logging {
@@ -46,8 +45,8 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   def storeResultSet(resultSet: ResultSet, context: StorerContext): Int = {
     require(resultSet != null, "ResultSet is null")
 
-    if (resultSet.isNative) this._storeResultSet(resultSet, context.seqDbIdByTmpId, context.msiDbContext)
-    else this._storeResultSet(resultSet, context.msiDbContext)
+    if (resultSet.isNative) this._storeResultSet(resultSet, context.seqDbIdByTmpId, context)
+    else this._storeResultSet(resultSet, context )
   }
 
   def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], peakListContainer: IPeaklistContainer, context: StorerContext): Int = {
@@ -55,11 +54,11 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   }
 
   // Only for native result sets
-  def _storeResultSet(resultSet: ResultSet, seqDbIdByTmpId: Map[Int, Int], msiDb: DatabaseContext): Int = {
+  def _storeResultSet(resultSet: ResultSet, seqDbIdByTmpId: Map[Int, Int], context: StorerContext): Int = {
     require(resultSet.isNative, "too many arguments for a non native result set")
 
-    this._insertResultSet(resultSet, msiDb)
-    this._storeNativeResultSetObjects(resultSet, seqDbIdByTmpId, msiDb)
+    this._insertResultSet(resultSet, context)
+    this._storeNativeResultSetObjects(resultSet, seqDbIdByTmpId, context)
 
     // Clear mappings which are now inconsistent because of PKs update
     //resultSet.clearMappings
@@ -67,19 +66,20 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   }
 
   // Only for non native result sets
-  def _storeResultSet(resultSet: ResultSet, msiDb: DatabaseContext): Int = {
+  def _storeResultSet(resultSet: ResultSet, context: StorerContext): Int = {
     require(resultSet.isNative == false, "not enough arguments for a native result set")
 
-    this._insertResultSet(resultSet, msiDb)
-    this._storeNonNativeResultSetObjects(resultSet, msiDb)
+    this._insertResultSet(resultSet, context)
+    this._storeNonNativeResultSetObjects(resultSet, context)
 
     // Clear mappings which are now inconsistent because of PKs update
     //resultSet.clearMappings
     resultSet.id
   }
 
-  private def _insertResultSet(resultSet: ResultSet, msiDb: DatabaseContext): Unit = {
+  private def _insertResultSet(resultSet: ResultSet, context: StorerContext): Unit = {
 
+    val msiDb = context.msiDbContext
     val msiEzDBC = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType)
 
     // Define some vars
@@ -96,7 +96,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
     // TODO: use JPA instead
 
     val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery( t =>
-      List(t.name, t.description, t.`type`, t.modificationTimestamp, t.decoyResultSetId, t.msiSearchId)
+      List(t.NAME, t.DESCRIPTION, t.TYPE, t.MODIFICATION_TIMESTAMP, t.DECOY_RESULT_SET_ID, t.MSI_SEARCH_ID)
     )
 
     msiEzDBC.executePrepared(rsInsertQuery, true) { stmt =>
@@ -114,8 +114,10 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
 
   }
 
-  private def _storeNativeResultSetObjects(resultSet: ResultSet, seqDbIdByTmpId: Map[Int, Int], msiDb: DatabaseContext): Unit = {
+  private def _storeNativeResultSetObjects(resultSet: ResultSet, seqDbIdByTmpId: Map[Int, Int], context: StorerContext): Unit = {
 
+    val msiDb = context.msiDbContext
+    
     /*val rsPeptides = resultSet.peptides
     if( rsPeptides.find( _.id < 0 ) != None )
       throw new Exception("result set peptides must first be persisted")    
@@ -142,9 +144,10 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
       import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
       import fr.proline.core.om.storer.ps.PeptideStorer
 
-      val psEzDBC = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType)
+      val psDb = context.psDbContext
+      val psEzDBC = ProlineEzDBC(psDb.getConnection, psDb.getDriverType)
 
-      val psPeptideProvider = new SQLPeptideProvider(psEzDBC)
+      val psPeptideProvider = new SQLPeptideProvider(psDb,psEzDBC)
       val psPeptideStorer = new PeptideStorer(psEzDBC)
 
       // Define some vars
@@ -286,7 +289,9 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
 
   }
 
-  private def _storeNonNativeResultSetObjects(resultSet: ResultSet, msiDb: DatabaseContext): Unit = {
+  private def _storeNonNativeResultSetObjects(resultSet: ResultSet, context: StorerContext): Unit = {
+    
+    val msiDb = context.msiDbContext
 
     //resultSet.updateRsIdOfAllObjects() ////// is it still needed ?
 
@@ -437,6 +442,21 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   }
 
   def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Int = {
+    
+    import fr.proline.util.primitives.LongOrIntAsInt._
+    
+    // Synchronize the some related objects with the UDSdb
+    val udsDbWork = JDBCWorkBuilder.withEzDBC( context.udsDbContext.getDriverType, { udsEzDBC =>
+      val enzymes = msiSearch.searchSettings.usedEnzymes
+      for( enzyme <- enzymes ) {
+        udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
+          enzyme.id = r.nextAnyVal
+        }
+        assert( enzyme.id > 0, "can't find an enzyme named '"+enzyme.name+"' in the UDS-DB" )
+      }
+    })
+    context.udsDbContext.doWork(udsDbWork, true)
+    
     this.msiSearchStorer.storeMsiSearch(msiSearch, context)
   }
 

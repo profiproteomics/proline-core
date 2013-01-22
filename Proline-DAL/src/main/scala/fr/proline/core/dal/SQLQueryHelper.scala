@@ -42,7 +42,8 @@ object ProlineEzDBC {
   }
   
   def apply( dbContext: DatabaseContext ): EasyDBC = {
-    this.apply( dbContext.getConnection(), dbContext.getDriverType() )
+    require( dbContext.isJPA == false, "database context must be created in SQL mode")
+    this.apply( dbContext.getConnection, dbContext.getDriverType )
   }
   
 }

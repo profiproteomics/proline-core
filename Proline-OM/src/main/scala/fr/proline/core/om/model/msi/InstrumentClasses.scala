@@ -36,9 +36,9 @@ case class InstrumentProperties
 
 object InstrumentConfig extends InMemoryIdGen {
   
-  def buildName( instrumentName: String, activationType: String,
-                 ms1Analyzer: String, msnAnalyzer: String
-               ): String = {
+  def makeName( instrumentName: String, activationType: String, 
+                ms1Analyzer: String, msnAnalyzer: String
+              ): String = {
     "%s (A1=%s F=%s A2=%s)".format( instrumentName, ms1Analyzer, activationType, msnAnalyzer )
   }
 }
@@ -47,7 +47,7 @@ case class InstrumentConfig(
                    // Required fields
                    val id: Int,
                    val name: String,
-                   val instrument: Instrument,
+                   var instrument: Instrument,
                    val ms1Analyzer: String,
                    val msnAnalyzer: String,
                    var activationType: String,
@@ -59,7 +59,7 @@ case class InstrumentConfig(
   // Secondary constructor were the name is automatically built
   def this( id: Int, instrument: Instrument, ms1Analyzer: String, msnAnalyzer: String,
             activationType: String, fragmentationRules: Option[Array[FragmentationRule]] = None ) {
-    this( id,InstrumentConfig.buildName(instrument.name,activationType,ms1Analyzer,msnAnalyzer),
+    this( id,InstrumentConfig.makeName(instrument.name,activationType,ms1Analyzer,msnAnalyzer),
           instrument,ms1Analyzer,msnAnalyzer,activationType,fragmentationRules)
   }
       

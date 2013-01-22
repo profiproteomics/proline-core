@@ -30,13 +30,19 @@ class ProteinsOMConverterUtil ( useCachedObject: Boolean = true ){
   def convertSeqDbInstanceORM2OM( pdiSeqDBInstance: SequenceDbInstance): SeqDatabase= {
 	  if(useCachedObject && seqDatabaseCache.contains( pdiSeqDBInstance.getId ) )
 		  return seqDatabaseCache(pdiSeqDBInstance.getId)
+	  // TODO: convert to date object
+	  //val relDate = pdiSeqDBInstance.getSequenceDbRelease.getDate()
       
-	  val seqDB = new SeqDatabase(id = pdiSeqDBInstance.getId,
-						name = pdiSeqDBInstance.getSequenceDbConfig.getName,
-						filePath = pdiSeqDBInstance.getFastaFilePath,
-						sequencesCount = pdiSeqDBInstance.getSequenceCount,
-						version = pdiSeqDBInstance.getSequenceDbRelease.getVersion,
-						releaseDate =pdiSeqDBInstance.getSequenceDbRelease.getDate )
+	  // TODO: create a SequenceDbInstance OM
+	  val seqDB = new SeqDatabase(
+	    id = pdiSeqDBInstance.getId,
+  		name = pdiSeqDBInstance.getSequenceDbConfig.getName,
+  		filePath = pdiSeqDBInstance.getFastaFilePath,
+  		sequencesCount = pdiSeqDBInstance.getSequenceCount,
+  		releaseDate = pdiSeqDBInstance.getCreationTimestamp,
+  		version = pdiSeqDBInstance.getSequenceDbRelease.getVersion
+      )
+	  
 	  if(useCachedObject)
 		  seqDatabaseCache.put(pdiSeqDBInstance.getId(),seqDB)
       

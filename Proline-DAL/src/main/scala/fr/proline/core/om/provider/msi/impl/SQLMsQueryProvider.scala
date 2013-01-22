@@ -1,13 +1,13 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
 import fr.proline.core.om.model.msi.{MsQuery,Ms1Query,Ms2Query,MsQueryProperties}
 import fr.proline.core.om.provider.msi.IMsQueryProvider
+import fr.proline.repository.DatabaseContext
 
-class SQLMsQueryProvider( val sqlExec: SQLQueryExecution ) extends IMsQueryProvider {
+class SQLMsQueryProvider( val msiDbCtx: DatabaseContext, val sqlExec: SQLQueryExecution ) extends IMsQueryProvider {
   
   import fr.proline.util.primitives.LongOrIntAsInt._
   import scala.collection.mutable.ArrayBuffer
@@ -45,25 +45,25 @@ class SQLMsQueryProvider( val sqlExec: SQLQueryExecution ) extends IMsQueryProvi
       // Parse properties if they exist
       //my $serialized_properties = $ms_query_attrs->{serialized_properties};
       //$ms_query_attrs->{properties} = decode_json( $serialized_properties ) if not is_empty_string($serialized_properties);
-      val spectrumId = rs.getInt(MsQueryCols.spectrumId)
+      val spectrumId = rs.getInt(MsQueryCols.SPECTRUM_ID)
       
       // Decode JSON properties
-      val propertiesAsJSON = rs.getString(MsQueryCols.serializedProperties)
+      val propertiesAsJSON = rs.getString(MsQueryCols.SERIALIZED_PROPERTIES)
       var properties = Option.empty[MsQueryProperties]
       if( propertiesAsJSON != null ) {
         properties = Some( parse[MsQueryProperties](propertiesAsJSON) )
       }
       
-      val msQueryId: Int = rs.getObject(MsQueryCols.id).asInstanceOf[AnyVal]
+      val msQueryId: Int = rs.getObject(MsQueryCols.ID).asInstanceOf[AnyVal]
       
       // Build the MS query object
       var msQuery: MsQuery = null
       if( spectrumId != 0 ) { // we can assume it is a MS2 query
         val spectrumTitle = spectrumTitleById( spectrumId )
         msQuery = new Ms2Query( id = msQueryId,
-                                initialId = rs.getInt(MsQueryCols.initialId),
-                                moz = rs.getDouble(MsQueryCols.moz),
-                                charge = rs.getInt(MsQueryCols.charge),
+                                initialId = rs.getInt(MsQueryCols.INITIAL_ID),
+                                moz = rs.getDouble(MsQueryCols.MOZ),
+                                charge = rs.getInt(MsQueryCols.CHARGE),
                                 spectrumTitle = spectrumTitle,
                                 spectrumId = spectrumId,
                                 properties = properties
@@ -71,9 +71,9 @@ class SQLMsQueryProvider( val sqlExec: SQLQueryExecution ) extends IMsQueryProvi
 
       } else { 
          msQuery = new Ms1Query( id = msQueryId, 
-                                 initialId = rs.getInt(MsQueryCols.initialId),
-                                 moz = rs.getDouble(MsQueryCols.moz),
-                                 charge = rs.getInt(MsQueryCols.charge),
+                                 initialId = rs.getInt(MsQueryCols.INITIAL_ID),
+                                 moz = rs.getDouble(MsQueryCols.MOZ),
+                                 charge = rs.getInt(MsQueryCols.CHARGE),
                                  properties = properties
                                )
       }

@@ -13,15 +13,15 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters.asJavaCollectionConverter
 import fr.proline.repository.DatabaseContext
 
-class ORMPTMProvider() extends IPTMProvider with Logging {
-
+class ORMPTMProvider( val psDbCtx: DatabaseContext ) extends IPTMProvider with Logging {
+  
   val converter = new PeptidesOMConverterUtil(true)
 
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int], psDb: DatabaseContext): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
 
     var foundPtmDefBuilder = Array.newBuilder[Option[PtmDefinition]]
 
-    val ptmSpecificityORMs = psDb.getEntityManager.createQuery("FROM fr.proline.core.orm.ps.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
+    val ptmSpecificityORMs = psDbCtx.getEntityManager.createQuery("FROM fr.proline.core.orm.ps.PtmSpecificity ptm_specificity WHERE id IN (:ids)",
       classOf[fr.proline.core.orm.ps.PtmSpecificity])
       .setParameter("ids", ptmDefIds.asJavaCollection).getResultList().toList
 
@@ -46,18 +46,18 @@ class ORMPTMProvider() extends IPTMProvider with Logging {
     foundPtmDefBuilder.result
   }
 
-  def getPtmDefinitions(ptmDefIds: Seq[Int], psDb: DatabaseContext): Array[PtmDefinition] = {
-    this.getPtmDefinitionsAsOptions(ptmDefIds, psDb).filter(_ != None).map(_.get)
+  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[PtmDefinition] = {
+    this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_ != None).map(_.get)
   }
 
-  def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location, psDb: DatabaseContext): Option[PtmDefinition] = {
+  def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
     try {
 
       var ptmSpecificity: PtmSpecificity = null
       if (ptmResidu.equals('\0')) {       
-        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDb.getEntityManager, ptmName, ptmLocation.toString, null)
+        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, null)
       } else {        
-        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDb.getEntityManager, ptmName, ptmLocation.toString, "" + ptmResidu)
+        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, "" + ptmResidu)
       }
       if (ptmSpecificity == null)
         return None
@@ -71,9 +71,9 @@ class ORMPTMProvider() extends IPTMProvider with Logging {
     }
   }
 
-  def getPtmId(shortName: String, psDb: DatabaseContext): Option[Int] = {
+  def getPtmId(shortName: String): Option[Int] = {
     try {
-      val ptm = psDb.getEntityManager.createQuery("FROM Ptm ptm WHERE ptm.shortName = :shortName", classOf[fr.proline.core.orm.ps.Ptm]).setParameter("shortName", shortName).getSingleResult
+      val ptm = psDbCtx.getEntityManager.createQuery("FROM Ptm ptm WHERE ptm.shortName = :shortName", classOf[fr.proline.core.orm.ps.Ptm]).setParameter("shortName", shortName).getSingleResult
       if (ptm == null)
         return None
       else

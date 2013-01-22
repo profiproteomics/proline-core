@@ -159,7 +159,7 @@ class ResultSummaryMerger(
 
         // Store result summary
         logger.info("store result summary...")
-        RsmStorer(msiEzDBC).storeResultSummary(tmpMergedResultSummary)
+        RsmStorer(msiDb,msiEzDBC).storeResultSummary(tmpMergedResultSummary)
         >>>
 
         mergedResultSummary = tmpMergedResultSummary

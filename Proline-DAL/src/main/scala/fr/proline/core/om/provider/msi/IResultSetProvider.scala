@@ -4,11 +4,15 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DatabaseContext
 
 trait IResultSetProvider {
+  
+  val msiDbCtx: DatabaseContext
+  val psDbCtx: DatabaseContext
+  val pdiDbCtx: DatabaseContext
 
-  def getResultSetsAsOptions( resultSetIds: Seq[Int], pdiDb: DatabaseContext, psDb: DatabaseContext, msiDb: DatabaseContext ): Array[Option[ResultSet]]
+  def getResultSetsAsOptions( resultSetIds: Seq[Int] ): Array[Option[ResultSet]]
   
-  def getResultSets( resultSetIds: Seq[Int], pdiDb: DatabaseContext, psDb: DatabaseContext, msiDb: DatabaseContext ): Array[ResultSet]
+  def getResultSets( resultSetIds: Seq[Int] ): Array[ResultSet]
   
-  def getResultSet( resultSetId:Int, pdiDb: DatabaseContext, psDb: DatabaseContext, msiDb: DatabaseContext ): Option[ResultSet] = { getResultSetsAsOptions( Array(resultSetId), pdiDb, psDb, msiDb )(0) }
+  def getResultSet( resultSetId:Int ): Option[ResultSet] = { getResultSetsAsOptions( Array(resultSetId) )(0) }
  
 }

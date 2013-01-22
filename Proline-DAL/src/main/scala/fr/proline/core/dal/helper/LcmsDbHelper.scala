@@ -18,7 +18,7 @@ class LcmsDbHelper( sqlExec: SQLQueryExecution ) {
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the feature scoring record
-      val ftScoringRecord = colNames.map( colName => ( colName -> r.nextObject ) ).toMap
+      val ftScoringRecord = colNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
       val ftScoringId = ftScoringRecord("id").asInstanceOf[Int]
       
       val ftScoring = new FeatureScoring( id = ftScoringId,
@@ -45,7 +45,7 @@ class LcmsDbHelper( sqlExec: SQLQueryExecution ) {
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the feature scoring record
-      val ppsRecord = colNames.map( colName => ( colName -> r.nextObject ) ).toMap
+      val ppsRecord = colNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
       val ppsId = ppsRecord("id").asInstanceOf[Int]
       
       val pps = new PeakPickingSoftware( id = ppsId,
@@ -73,7 +73,7 @@ class LcmsDbHelper( sqlExec: SQLQueryExecution ) {
       if( colNames == null ) { colNames = r.columnNames }
       
       // Build the feature scoring record
-      val peakelModelRecord = colNames.map( colName => ( colName -> r.nextObject ) ).toMap
+      val peakelModelRecord = colNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
       val peakelModelId = peakelModelRecord("id").asInstanceOf[Int]
       
       val peakelModel = new PeakelFittingModel( id = peakelModelId,

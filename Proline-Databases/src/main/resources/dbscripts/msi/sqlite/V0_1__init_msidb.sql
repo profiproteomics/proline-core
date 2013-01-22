@@ -560,3 +560,62 @@ CREATE TABLE used_ptm (
                 PRIMARY KEY (search_settings_id, ptm_specificity_id)
 );
 
+
+CREATE INDEX sequence_match_pep_idx ON sequence_match (peptide_id);
+
+CREATE INDEX sequence_match_prot_match_idx ON sequence_match (protein_match_id);
+
+CREATE INDEX sequence_match_rs_idx ON sequence_match (result_set_id ASC);
+
+CREATE INDEX peptide_match_relation_rs_idx ON peptide_match_relation (parent_result_set_id ASC);
+
+CREATE INDEX peptide_set_rsm_idx ON peptide_set (result_summary_id ASC);
+
+CREATE INDEX bio_sequence_crc_idx ON bio_sequence (crc64);
+
+CREATE INDEX protein_set_rsm_idx ON protein_set (result_summary_id ASC);
+
+CREATE INDEX protein_match_ac_idx ON protein_match (accession);
+
+CREATE INDEX protein_match_seq_idx ON protein_match (bio_sequence_id);
+
+CREATE INDEX protein_match_rs_idx ON protein_match (result_set_id ASC);
+
+CREATE INDEX ms_query_search_idx ON ms_query (msi_search_id ASC);
+
+CREATE INDEX spectrum_pkl_idx ON spectrum (peaklist_id ASC);
+
+CREATE UNIQUE INDEX peptide_seq_ptm_idx ON peptide (sequence,ptm_string);
+
+CREATE INDEX peptide_mass_idx ON peptide (calculated_mass);
+
+CREATE INDEX peptide_match_ms_query_idx ON peptide_match (ms_query_id);
+
+CREATE INDEX peptide_match_peptide_idx ON peptide_match (peptide_id);
+
+CREATE INDEX peptide_match_rs_idx ON peptide_match (result_set_id ASC);
+
+CREATE INDEX peptide_set_relation_rsm_idx ON peptide_set_relation (result_summary_id ASC);
+
+CREATE INDEX cache_scope_idx ON cache (scope);
+
+CREATE INDEX peptide_instance_rsm_idx ON peptide_instance (result_summary_id ASC);
+
+CREATE INDEX master_quant_component_rsm_idx ON master_quant_component (result_summary_id ASC);
+
+CREATE INDEX master_quant_peptide_ion_peptide_idx ON master_quant_peptide_ion (peptide_id);
+
+CREATE INDEX master_quant_peptide_ion_rsm_idx ON master_quant_peptide_ion (result_summary_id ASC);
+
+CREATE INDEX pep_set_pep_inst_item_rsm_idx ON peptide_set_peptide_instance_item (result_summary_id ASC);
+
+CREATE INDEX prot_set_prot_match_item_rsm_idx ON protein_set_protein_match_item (result_summary_id ASC);
+
+CREATE INDEX pep_inst_pep_match_map_rsm_idx ON peptide_instance_peptide_match_map (result_summary_id ASC);
+
+CREATE INDEX pep_set_prot_match_map_rsm_idx ON peptide_set_protein_match_map (result_summary_id ASC);
+
+CREATE INDEX prot_match_seq_db_map_rs_idx ON protein_match_seq_database_map (result_set_id ASC);
+
+CREATE INDEX master_quant_reporter_ion_rsm_idx ON master_quant_reporter_ion (result_summary_id ASC);
+

@@ -263,3 +263,9 @@ REFERENCES public.ptm_specificity (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
+
+CREATE UNIQUE INDEX peptide_sequence_ptm_idx ON peptide (sequence,ptm_string);
+
+CREATE INDEX peptide_mass_idx ON peptide (calculated_mass);
+
+CREATE INDEX peptide_ptm_peptide_idx ON peptide_ptm (peptide_id);

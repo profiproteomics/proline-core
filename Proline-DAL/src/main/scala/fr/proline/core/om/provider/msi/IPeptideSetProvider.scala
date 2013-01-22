@@ -1,8 +1,12 @@
 package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.PeptideSet
+import fr.proline.repository.DatabaseContext
 
 trait IPeptideSetProvider {
+  
+  val msiDbCtx: DatabaseContext
+  val psDbCtx: DatabaseContext
   
   def getPeptideSetsAsOptions( protSetIds: Seq[Int] ): Array[Option[PeptideSet]]
   

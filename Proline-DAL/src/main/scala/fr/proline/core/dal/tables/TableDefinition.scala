@@ -6,18 +6,20 @@ package fr.proline.core.dal.tables
  * @param <A> the generic type corresponding to the column Enumeration
  * @author David Bouyssie
  */
-trait TableDefinition[A  <: Enumeration] {
+trait TableDefinition[A  <: ColumnEnumeration] {
   
-  val tableName: String
-  val columns: ColumnEnumeration
+  val name: String
+  val columns: A
+  
+  override def toString = this.name
   
   /**
    * Gets the table columns enumeration as a List.
    * 
    * @return a List of columns as column enumeration members
    */
-  lazy val columnsAsList: List[A#Value] = {
-    List() ++ this.columns.asInstanceOf[A].values
+  lazy val columnsAsList: List[A#Column] = {
+    this.columns.values.toList.map( _.asInstanceOf[A#Column] ).filter( _ != this.columns.* )
   }
   
   /**
@@ -26,7 +28,7 @@ trait TableDefinition[A  <: Enumeration] {
    * @return a List of columns as String objects
    */
   lazy val columnsAsStrList: List[String] = {
-    List() ++ this.columns.values map { _.toString }
+    this.columnsAsList.map { _.toString }
   }
   
   /**
@@ -50,7 +52,7 @@ trait TableDefinition[A  <: Enumeration] {
    * @see TableDefinition#makeInsertQuery()
    * @see TableDefinition#selectColumns()
    */
-  def mkInsertQuery( f: A => List[A#Value] ): String = {
+  def mkInsertQuery( f: A => List[A#Column] ): String = {
     this._makeInsertQuery( this.selectColsAsStrList( f ) )
   }
   
@@ -62,7 +64,7 @@ trait TableDefinition[A  <: Enumeration] {
    * @see TableDefinition#makeInsertQuery()
    * @see TableDefinition#selectColumns()
    */
-  def mkInsertQuery( f: (A,List[A#Value]) => List[A#Value] ): String = {
+  def mkInsertQuery( f: (A,List[A#Column]) => List[A#Column] ): String = {
     this._makeInsertQuery( this.selectColsAsStrList( f ) )
   }
   
@@ -75,7 +77,17 @@ trait TableDefinition[A  <: Enumeration] {
    */
   private def _makeInsertQuery( colsAsStrList: List[String] ): String = {
     val valuesStr = List.fill(colsAsStrList.length)("?").mkString(",")
-    "INSERT INTO "+ this.tableName+" ("+ colsAsStrList.mkString(",") +") VALUES ("+valuesStr+")"
+    "INSERT INTO "+ this.name+" ("+ colsAsStrList.mkString(",") +") VALUES ("+valuesStr+")"
+  }
+  
+  def mkSelectQuery( whereClause: Option[String] = None ): String = {
+    this._makeSelectQuery( List("*"), List(this.name), whereClause )
+  }
+  
+  private def _makeSelectQuery( colsAsStrList: List[String], tblsAsStrList: List[String], whereClause: Option[String] = None ): String = {
+    var query = "SELECT "+ colsAsStrList.mkString(",")+" FROM "+ tblsAsStrList.mkString(",")
+    if( whereClause != None ) query += " WHERE " + whereClause.get
+    query
   }
 
   /**
@@ -84,8 +96,8 @@ trait TableDefinition[A  <: Enumeration] {
    * @param f A function which select a list of columns using a column enumeration object
    * @return a List of columns as String objects
    */
-  def selectColsAsStrList( f: A => List[A#Value] ): List[String] = {
-    f(this.columns.asInstanceOf[A]) map { _.toString }
+  def selectColsAsStrList( f: A => List[A#Column] ): List[String] = {
+    f(this.columns) map { _.toString }
   }
   
   /**
@@ -94,14 +106,25 @@ trait TableDefinition[A  <: Enumeration] {
    * @param f A function which select a list of columns using a column enumeration object
    * @return a List of columns as String objects
    */
-  def selectColsAsStrList( f: (A,List[A#Value]) => List[A#Value] ): List[String] = {
-    f( this.columns.asInstanceOf[A],this.columnsAsList ) map { _.toString }
+  def selectColsAsStrList( f: (A,List[A#Column]) => List[A#Column] ): List[String] = {
+    f( this.columns,this.columnsAsList ) map { _.toString }
   }
   
 }
 
 trait ColumnEnumeration extends Enumeration {
+  thisenum =>
   
+  val $tableName: String
+  val * = Column("*")
+    
+  protected final def Column(name: String): Column = new Column(this.nextId, name)  
+  class Column(i: Int, name: String) extends Val(i: Int, name: String) {
+    val $columns: ColumnEnumeration = thisenum
+    
+    def toFullString() = $tableName + "." + this.toString()
+  }
   
-  implicit def enumValueToString(v: Enumeration#Value): String = v.toString
+  implicit def columnToString(col: ColumnEnumeration#Column): String = col.toString
+  
 }

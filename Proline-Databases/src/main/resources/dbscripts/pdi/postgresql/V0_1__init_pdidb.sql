@@ -578,3 +578,41 @@ REFERENCES public.seq_db_entry (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
+
+
+CREATE UNIQUE INDEX bio_sequence_crc_alphabet_mass_idx ON bio_sequence (crc64,alphabet,mass);
+
+CREATE INDEX protein_identifier_bio_sequence_id_idx ON protein_identifier (bio_sequence_id);
+
+CREATE INDEX protein_identifier_seq_db_config_idx ON protein_identifier (seq_db_config_id);
+
+CREATE UNIQUE INDEX protein_identifier_value_taxon_idx ON protein_identifier (value,taxon_id);
+
+CREATE INDEX seq_db_entry_identifier_idx ON seq_db_entry (identifier);
+
+CREATE INDEX seq_db_entry_is_active_idx ON seq_db_entry (is_active);
+
+CREATE INDEX seq_db_entry_bio_sequence_idx ON seq_db_entry (bio_sequence_id);
+
+CREATE INDEX seq_db_entry_taxon_idx ON seq_db_entry (taxon_id);
+
+CREATE INDEX seq_db_entry_seq_db_config_idx ON seq_db_entry (seq_db_config_id);
+
+CREATE INDEX seq_db_entry_seq_db_instance_idx ON seq_db_entry (seq_db_instance_id);
+
+CREATE INDEX fasta_file_entry_index_bio_sequence_idx ON fasta_file_entry_index (bio_sequence_id);
+
+CREATE INDEX fasta_file_entry_index_seq_db_entry_idx ON fasta_file_entry_index (seq_db_entry_id);
+
+CREATE INDEX fasta_file_entry_index_seq_db_instance_idx ON fasta_file_entry_index (seq_db_instance_id);
+
+CREATE UNIQUE INDEX gene_name_taxon_idx ON gene (name,taxon_id);
+
+CREATE INDEX gene_taxon_idx ON gene (taxon_id);
+
+CREATE INDEX seq_db_entry_protein_identifier_map_prot_identifier_idx ON seq_db_entry_protein_identifier_map (protein_identifier_id);
+
+CREATE INDEX chromosome_location_taxon_idx ON chromosome_location (taxon_id);
+
+CREATE INDEX bio_sequence_gene_map_gene_id_idx ON bio_sequence_gene_map (gene_id);
+

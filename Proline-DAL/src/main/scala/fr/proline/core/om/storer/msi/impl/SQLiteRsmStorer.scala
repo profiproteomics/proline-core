@@ -47,7 +47,7 @@ private[msi] class SQLiteRsmStorer( val msiEzDBC: EasyDBC ) extends IRsmStorer {
     logger.info( "storing peptide instances..." )
     
     val pepInstInsertQuery = MsiDbPeptideInstanceTable.mkInsertQuery { (c,colsList) => 
-                               colsList.filter( _ != c.id)
+                               colsList.filter( _ != c.ID)
                              }
     
     // Insert peptide instances
@@ -97,7 +97,7 @@ private[msi] class SQLiteRsmStorer( val msiEzDBC: EasyDBC ) extends IRsmStorer {
     
     // Retrieve protein_set column list then remove id and master_quant_component_id columns
     val protSetInsertQuery = MsiDbProteinSetTable.mkInsertQuery { (c,colsList) => 
-                               colsList.filter( Set(c.id,c.masterQuantComponentId).contains(_) == false )
+                               colsList.filter( Set(c.ID,c.MASTER_QUANT_COMPONENT_ID).contains(_) == false )
                              }
      
     // Insert protein sets
@@ -176,7 +176,7 @@ private[msi] class SQLiteRsmStorer( val msiEzDBC: EasyDBC ) extends IRsmStorer {
     
     // Retrieve peptide_set columns then remove id column
     val pepSetInsertQuery = MsiDbPeptideSetTable.mkInsertQuery { (c,colsList) => 
-                              colsList.filter( _ != c.id)
+                              colsList.filter( _ != c.ID)
                             }
      
     // Insert peptide sets

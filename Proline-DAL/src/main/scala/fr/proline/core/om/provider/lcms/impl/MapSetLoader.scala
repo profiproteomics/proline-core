@@ -18,7 +18,7 @@ class MapSetLoader( val sqlExec: SQLQueryExecution, val loadPeaks: Boolean = fal
     var mapSetRecord: Map[String,Any] = null
     sqlExec.selectAndProcess( "SELECT * FROM map_set WHERE id = " + mapSetId  ) { r => 
         if( mapSetcolNames == null ) { mapSetcolNames = r.columnNames }
-        mapSetRecord = mapSetcolNames.map( colName => ( colName -> r.nextObjectOrElse(null) ) ).toMap
+        mapSetRecord = mapSetcolNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
         ()
       }
     if( mapSetRecord == null ) throw new Exception("can't find a map set with id="+mapSetId)
@@ -44,7 +44,7 @@ class MapSetLoader( val sqlExec: SQLQueryExecution, val loadPeaks: Boolean = fal
       var mtItemcolNames: Seq[String] = null
       val mftItemRecords = sqlExec.select( "SELECT * FROM master_feature_item WHERE master_map_id = " + masterMapId  ) { r => 
         if( mtItemcolNames == null ) { mtItemcolNames = r.columnNames }
-        mtItemcolNames.map( colName => ( colName -> r.nextObject ) ).toMap
+        mtItemcolNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
       }
   
       // Load the master map

@@ -11,7 +11,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
 import fr.proline.repository.DatabaseContext
 
-private[msi] class SQLiteRsWriter() extends IRsWriter {
+private[core] class SQLiteRsWriter() extends IRsWriter {
 
   def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDb: DatabaseContext): Map[String, Int] = {
 
@@ -120,7 +120,7 @@ private[msi] class SQLiteRsWriter() extends IRsWriter {
     val peptideMatches = rs.peptideMatches
 
     val pepMatchInsertQuery = MsiDbPeptideMatchTable.mkInsertQuery{ (c,colsList) => 
-                                colsList.filter( _ != c.id)
+                                colsList.filter( _ != c.ID)
                               }
     
     msiEzDbc.executePrepared(pepMatchInsertQuery, true ) { stmt =>
@@ -182,7 +182,7 @@ private[msi] class SQLiteRsWriter() extends IRsWriter {
     val proteinMatches = rs.proteinMatches
 
     val protMatchInsertQuery = MsiDbProteinMatchTable.mkInsertQuery { (c,colsList) => 
-                                 colsList.filter( _ != c.id)
+                                 colsList.filter( _ != c.ID)
                                }
     
     logger.info( "protein matches are going to be inserted..." )

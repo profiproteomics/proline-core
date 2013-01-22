@@ -20,7 +20,7 @@ class PeptideStorer(psEzDBC: EasyDBC) extends Logging {
     logger.info("storing peptides in PsDb...")
 
     val peptideInsertQuery = PsDbPeptideTable.mkInsertQuery{ (c,colsList) => 
-                               colsList.filter( _ != c.id)
+                               colsList.filter( _ != c.ID)
                              }
     
     psEzDBC.executePrepared( peptideInsertQuery, true ) { stmt => 
@@ -28,7 +28,7 @@ class PeptideStorer(psEzDBC: EasyDBC) extends Logging {
     }
 
     val peptidePtmInsertQuery = PsDbPeptidePtmTable.mkInsertQuery{ (c,colsList) => 
-                                  colsList.filter( _ != c.id)
+                                  colsList.filter( _ != c.ID)
                                 }
     
     psEzDBC.executePrepared( peptidePtmInsertQuery, false ) { stmt => 
