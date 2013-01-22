@@ -51,7 +51,7 @@
     </dependency>
 
     <!--  Gson: Java to Json conversion -->
-    <!-- Unused dependency : com.google.code.gson:gson:jar:2.1:compile -->
+    <!-- Unused dependency: com.google.code.gson:gson:jar:2.1:compile -->
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
