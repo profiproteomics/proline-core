@@ -35,7 +35,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
       throw new IllegalArgumentException("peaklist is null")
     }
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.msiDbContext.getDriverType, { msiEzDBC =>
+    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
 
       val peaklistInsertQuery = MsiDbPeaklistTable.mkInsertQuery{ (c,colsList) => 
                                  colsList.filter( _ != c.ID)
@@ -57,7 +57,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
 
     })
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
 
     peaklist.id
   }
@@ -65,7 +65,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
   def storeSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
     logger.info("storing spectra...")
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.msiDbContext.getDriverType, { msiEzDBC =>
+    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
       
       val spectrumInsertQuery = MsiDbSpectrumTable.mkInsertQuery{ (c,colsList) => 
                                   colsList.filter( _ != c.ID)
@@ -84,7 +84,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
       context.spectrumIdByTitle = spectrumIdByTitle.result()
     })
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
 
     context
   }
@@ -153,7 +153,7 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
 
     } // End of jdbcWork anonymous inner class
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
   }
 
 }
@@ -171,7 +171,7 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
         val tmpSpectrumTableName = "tmp_spectrum_" + (scala.math.random * 1000000).toInt
         logger.info("creating temporary table '" + tmpSpectrumTableName + "'...")
 
-        val msiEzDBC = ProlineEzDBC(con, context.msiDbContext.getDriverType)
+        val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
 
         msiEzDBC.execute("CREATE TEMP TABLE " + tmpSpectrumTableName + " (LIKE spectrum)")
 
@@ -249,7 +249,7 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
 
     } // End of jdbcWork anonymous inner class
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
 
     context
   }

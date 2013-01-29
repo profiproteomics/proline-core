@@ -18,11 +18,11 @@ import fr.proline.repository.util.JPAUtils
 import fr.proline.util.DateUtils
 import fr.proline.util.StringUtils
 import javax.persistence.EntityManager
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class ORMResultSetProvider( val msiDbCtx: DatabaseContext,
-                            val psDbCtx: DatabaseContext,
-                            val pdiDbCtx: DatabaseContext ) extends IResultSetProvider with Logging {
+class ORMResultSetProvider( val msiDbCtx: DatabaseConnectionContext,
+                            val psDbCtx: DatabaseConnectionContext,
+                            val pdiDbCtx: DatabaseConnectionContext ) extends IResultSetProvider with Logging {
 
     require((msiDbCtx != null) && msiDbCtx.isJPA(), "Invalid MSI Db Context")
     require((psDbCtx != null) && psDbCtx.isJPA(), "Invalid PS Db Context")

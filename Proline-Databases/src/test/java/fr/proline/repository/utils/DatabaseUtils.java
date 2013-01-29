@@ -19,7 +19,7 @@ import org.dbunit.util.fileloader.FlatXmlDataFileLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.DatabaseUpgrader;
 
 public final class DatabaseUtils {
@@ -145,7 +145,7 @@ public final class DatabaseUtils {
     public static void main(final String[] args) {
 
 	try {
-	    final DatabaseTestConnector connector = new DatabaseTestConnector(Database.UDS,
+	    final DatabaseTestConnector connector = new DatabaseTestConnector(ProlineDatabaseType.UDS,
 		    DEFAULT_DATABASE_PROPERTIES_FILENAME);
 
 	    DatabaseUpgrader.upgradeDatabase(connector);

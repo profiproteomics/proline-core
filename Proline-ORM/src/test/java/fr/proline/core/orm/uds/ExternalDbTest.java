@@ -10,7 +10,7 @@ import javax.sql.DataSource;
 import org.junit.Test;
 
 import fr.proline.repository.ConnectionMode;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
@@ -20,7 +20,7 @@ public class ExternalDbTest {
     @Test
     public void testH2Mem() throws Exception {
 	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(Database.UDS);
+	externalDb.setType(ProlineDatabaseType.UDS);
 	externalDb.setDriverType(DriverType.H2);
 	externalDb.setConnectionMode(ConnectionMode.MEMORY);
 	externalDb.setDbName("test_uds");
@@ -52,7 +52,7 @@ public class ExternalDbTest {
     @Test
     public void testH2File() throws Exception {
 	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(Database.PDI);
+	externalDb.setType(ProlineDatabaseType.PDI);
 	externalDb.setDriverType(DriverType.H2);
 	externalDb.setConnectionMode(ConnectionMode.FILE);
 	externalDb.setDbName("./target/h2_pdi");
@@ -84,7 +84,7 @@ public class ExternalDbTest {
     @Test
     public void testSQLiteMem() throws Exception {
 	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(Database.MSI);
+	externalDb.setType(ProlineDatabaseType.MSI);
 	externalDb.setDriverType(DriverType.SQLITE);
 	externalDb.setConnectionMode(ConnectionMode.MEMORY);
 
@@ -112,7 +112,7 @@ public class ExternalDbTest {
     @Test
     public void testSQLiteFile() throws Exception {
 	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(Database.PS);
+	externalDb.setType(ProlineDatabaseType.PS);
 	externalDb.setDriverType(DriverType.SQLITE);
 	externalDb.setConnectionMode(ConnectionMode.FILE);
 	externalDb.setDbName("./target/pdi.dat");
@@ -141,7 +141,7 @@ public class ExternalDbTest {
     @Test
     public void testPGHost() throws Exception {
 	final ExternalDb externalDb = new ExternalDb();
-	externalDb.setType(Database.UDS);
+	externalDb.setType(ProlineDatabaseType.UDS);
 	externalDb.setDriverType(DriverType.POSTGRESQL);
 	externalDb.setConnectionMode(ConnectionMode.HOST);
 	externalDb.setHost("localhost");

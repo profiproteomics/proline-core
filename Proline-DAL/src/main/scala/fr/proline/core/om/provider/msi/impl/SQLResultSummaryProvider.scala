@@ -10,12 +10,12 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ResultSummaryProperties
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 import fr.profi.jdbc.easy.EasyDBC
 
-class SQLResultSummaryProvider( val msiDbCtx: DatabaseContext,
+class SQLResultSummaryProvider( val msiDbCtx: DatabaseConnectionContext,
                                 val msiSqlExec: EasyDBC,
-                                val psDbCtx: DatabaseContext = null,
+                                val psDbCtx: DatabaseConnectionContext = null,
                                 val psSqlExec: EasyDBC = null,
                                 val udsSqlCtx: SQLContext = null ) extends SQLResultSetLoader with IResultSummaryProvider {
   

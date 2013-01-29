@@ -2,9 +2,9 @@ package fr.proline.core.om.utils
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.core.dal.DatabaseManagerForTest
+import fr.proline.core.dal.DataStoreConnectorFactoryForTest
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.Database
+import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.DriverType
 
 class AbstractMultipleDBTestCase extends Logging {
@@ -14,7 +14,7 @@ class AbstractMultipleDBTestCase extends Logging {
   var psDBTestCase: PSDatabaseTestCase = null
   var udsDBTestCase: UDSDatabaseTestCase = null
 
-  var dbManagerForTest: DatabaseManagerForTest = null
+  var dsConnectorFactoryForTest: DataStoreConnectorFactoryForTest = null
 
   def initDBsDBManagement(driverType: DriverType) {
     logger.info("Creating UDS, PDI, PS, MSI test databases")
@@ -31,7 +31,7 @@ class AbstractMultipleDBTestCase extends Logging {
     msiDBTestCase = new MSIDatabaseTestCase(driverType)
     msiDBTestCase.initDatabase()
 
-    dbManagerForTest = new DatabaseManagerForTest(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector, null, false)
+    dsConnectorFactoryForTest = new DataStoreConnectorFactoryForTest(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector, null, false)
   }
 
   def closeDbs() = {
@@ -74,8 +74,8 @@ abstract class DatabaseAndDriverTestCase extends DatabaseTestCase {
 
 class UDSDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTestCase {
 
-  override def getDatabase() = {
-    Database.UDS
+  override def getProlineDatabaseType() = {
+    ProlineDatabaseType.UDS
   }
 
   val propertiesFile = "db_uds.properties"
@@ -84,8 +84,8 @@ class UDSDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverT
 
 class PDIDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTestCase {
 
-  override def getDatabase() = {
-    Database.PDI
+  override def getProlineDatabaseType() = {
+    ProlineDatabaseType.PDI
   }
 
   val propertiesFile = "db_pdi.properties"
@@ -94,8 +94,8 @@ class PDIDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverT
 
 class PSDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTestCase {
 
-  override def getDatabase() = {
-    Database.PS
+  override def getProlineDatabaseType() = {
+    ProlineDatabaseType.PS
   }
 
   val propertiesFile = "db_ps.properties"
@@ -104,8 +104,8 @@ class PSDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTe
 
 class MSIDatabaseTestCase(val driverType: DriverType) extends DatabaseAndDriverTestCase {
 
-  override def getDatabase() = {
-    Database.MSI
+  override def getProlineDatabaseType() = {
+    ProlineDatabaseType.MSI
   }
 
   val propertiesFile = "db_msi.properties"

@@ -2,11 +2,11 @@ package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 trait IPTMProvider {
   
-  val psDbCtx: DatabaseContext
+  val psDbCtx: DatabaseConnectionContext
 
   /**
    *  Get PtmDefinitions (wrapped in Option) with specified Ids.

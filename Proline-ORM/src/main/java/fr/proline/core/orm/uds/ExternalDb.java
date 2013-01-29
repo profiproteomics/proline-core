@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.ConnectionMode;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.DriverType;
 import fr.proline.util.StringUtils;
 
@@ -80,7 +80,7 @@ public class ExternalDb implements Serializable {
     private String serializedProperties;
 
     @Enumerated(value = EnumType.STRING)
-    private Database type;
+    private ProlineDatabaseType type;
 
     @Column(name = "connection_mode")
     @Enumerated(value = EnumType.STRING)
@@ -173,11 +173,11 @@ public class ExternalDb implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
-    public Database getType() {
+    public ProlineDatabaseType getType() {
 	return type;
     }
 
-    public void setType(final Database databaseType) {
+    public void setType(final ProlineDatabaseType databaseType) {
 	type = databaseType;
     }
 

@@ -16,18 +16,18 @@ import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.UserAccount;
 import fr.proline.repository.ConnectionMode;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
-public class DatabaseManagerTest extends DatabaseTestCase {
+public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DatabaseManagerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DataStoreConnectorFactoryTest.class);
 
     private int m_projectId;
 
     @Override
-    public Database getDatabase() {
-	return Database.UDS;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.UDS;
     }
 
     @Before
@@ -46,7 +46,7 @@ public class DatabaseManagerTest extends DatabaseTestCase {
 
 	    /* Create a Test PDI Db */
 	    final ExternalDb pdiDb = new ExternalDb();
-	    pdiDb.setType(Database.PDI);
+	    pdiDb.setType(ProlineDatabaseType.PDI);
 	    pdiDb.setConnectionMode(ConnectionMode.MEMORY);
 	    pdiDb.setDbName("pdi_test");
 	    pdiDb.setDbUser("sa");
@@ -58,7 +58,7 @@ public class DatabaseManagerTest extends DatabaseTestCase {
 
 	    /* Create a Test PS Db */
 	    final ExternalDb psDb = new ExternalDb();
-	    psDb.setType(Database.PS);
+	    psDb.setType(ProlineDatabaseType.PS);
 	    psDb.setConnectionMode(ConnectionMode.MEMORY);
 	    psDb.setDbName("ps_test");
 	    psDb.setDbUser("sa");
@@ -83,7 +83,7 @@ public class DatabaseManagerTest extends DatabaseTestCase {
 
 	    /* Create a Project MSI Db */
 	    final ExternalDb msiDb = new ExternalDb();
-	    msiDb.setType(Database.MSI);
+	    msiDb.setType(ProlineDatabaseType.MSI);
 	    msiDb.setConnectionMode(ConnectionMode.MEMORY);
 	    msiDb.setDbName("msi_1_test");
 	    msiDb.setDbUser("sa");
@@ -98,7 +98,7 @@ public class DatabaseManagerTest extends DatabaseTestCase {
 
 	    /* Create a Project LCMS Db */
 	    final ExternalDb lcMsDb = new ExternalDb();
-	    lcMsDb.setType(Database.LCMS);
+	    lcMsDb.setType(ProlineDatabaseType.LCMS);
 	    lcMsDb.setConnectionMode(ConnectionMode.MEMORY);
 	    lcMsDb.setDbName("lcms_1_test");
 	    lcMsDb.setDbUser("sa");
@@ -142,7 +142,7 @@ public class DatabaseManagerTest extends DatabaseTestCase {
 
     @Test
     public void testDatabaseManager() {
-	final DatabaseManager dbManager = DatabaseManager.getInstance();
+	final DataStoreConnectorFactory dbManager = DataStoreConnectorFactory.getInstance();
 
 	dbManager.initialize(getConnector());
 
@@ -169,7 +169,7 @@ public class DatabaseManagerTest extends DatabaseTestCase {
 	 */
 	super.tearDown();
 
-	DatabaseManager.getInstance().closeAll();
+	DataStoreConnectorFactory.getInstance().closeAll();
     }
 
 }

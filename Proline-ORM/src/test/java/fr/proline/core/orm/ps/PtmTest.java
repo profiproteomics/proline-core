@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.ps.repository.PsPtmRepository;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class PtmTest extends DatabaseTestCase {
@@ -27,8 +27,8 @@ public class PtmTest extends DatabaseTestCase {
     private static final Logger LOG = LoggerFactory.getLogger(PtmTest.class);
 
     @Override
-    public Database getDatabase() {
-	return Database.PS;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.PS;
     }
 
     @Before

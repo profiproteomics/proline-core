@@ -17,15 +17,15 @@ import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.repository.util.JPAUtils
 import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.Database
-import fr.proline.repository.DatabaseContext
+import fr.proline.repository.ProlineDatabaseType
+import fr.proline.context.DatabaseConnectionContext
 
 @Test
 class ORMPeptideProviderTest extends DatabaseTestCase {
 
   private val SEQ_TO_FOUND: String = "LTGMAFR"
 
-  override def getDatabase() = Database.PS
+  override def getProlineDatabaseType() = ProlineDatabaseType.PS
 
   @Before
   @throws(classOf[Exception])
@@ -37,7 +37,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getSinglePeptide() = {
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPepProvider = new ORMPeptideProvider(psDb)
@@ -59,7 +59,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
     ids += 1
     ids += 4
 
-   val psDb = new DatabaseContext(getConnector)
+   val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPepProvider = new ORMPeptideProvider(psDb)
@@ -77,7 +77,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideWithNTermPTM() = {
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPepProvider = new ORMPeptideProvider(psDb)
@@ -98,7 +98,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideOnSeqAndNoPtms() = {
-   val psDb = new DatabaseContext(getConnector)
+   val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPepProvider = new ORMPeptideProvider(psDb)
@@ -116,7 +116,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideOnSeqAndPtms() = {
-   val psDb = new DatabaseContext(getConnector)
+   val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPepProvider = new ORMPeptideProvider(psDb)

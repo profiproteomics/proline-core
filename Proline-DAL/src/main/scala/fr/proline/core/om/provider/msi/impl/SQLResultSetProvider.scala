@@ -6,7 +6,7 @@ import fr.proline.core.dal.SQLContext
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi.{ProteinMatch,PeptideMatch,ResultSet}
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 import fr.profi.jdbc.easy.EasyDBC
 
 trait SQLResultSetLoader {
@@ -14,8 +14,8 @@ trait SQLResultSetLoader {
   import fr.proline.core.dal.helper.MsiDbHelper  
   
   val udsSqlCtx: SQLContext
-  val msiDbCtx: DatabaseContext
-  val psDbCtx: DatabaseContext  
+  val msiDbCtx: DatabaseConnectionContext
+  val psDbCtx: DatabaseConnectionContext  
   val msiSqlExec: EasyDBC
   val psSqlExec: EasyDBC
   
@@ -95,14 +95,14 @@ trait SQLResultSetLoader {
 
 }
 
-class SQLResultSetProvider( val msiDbCtx: DatabaseContext,
+class SQLResultSetProvider( val msiDbCtx: DatabaseConnectionContext,
                             val msiSqlExec: EasyDBC,
-                            val psDbCtx: DatabaseContext,
+                            val psDbCtx: DatabaseConnectionContext,
                             val psSqlExec: EasyDBC,
                             val udsSqlCtx: SQLContext ) extends SQLResultSetLoader with IResultSetProvider {
   
-  val udsDbCtx: DatabaseContext = udsSqlCtx.dbContext
-  val pdiDbCtx: DatabaseContext = null
+  val udsDbCtx: DatabaseConnectionContext = udsSqlCtx.dbContext
+  val pdiDbCtx: DatabaseConnectionContext = null
   
   def getResultSets( rsIds: Seq[Int] ): Array[ResultSet] = {
     

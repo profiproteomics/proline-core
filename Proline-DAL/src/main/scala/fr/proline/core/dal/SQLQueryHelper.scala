@@ -9,7 +9,7 @@ import fr.profi.jdbc.AsShortStringBooleanFormatter
 import fr.profi.jdbc.DefaultSQLDialect
 import fr.profi.jdbc.SQLiteTypeMapper
 import fr.profi.jdbc.TxIsolationLevels
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.repository.DriverType
 import fr.proline.repository.util.JDBCWork
 
@@ -41,7 +41,7 @@ object ProlineEzDBC {
     EasyDBC( connection, getDriverDialect(driverType), getDriverTxIsolationLevel(driverType) )    
   }
   
-  def apply( dbContext: DatabaseContext ): EasyDBC = {
+  def apply( dbContext: DatabaseConnectionContext ): EasyDBC = {
     require( dbContext.isJPA == false, "database context must be created in SQL mode")
     this.apply( dbContext.getConnection, dbContext.getDriverType )
   }
@@ -55,7 +55,7 @@ class SQLQueryHelper( val connection: Connection, val driverType: DriverType ) e
   
   def this( dbConnector: IDatabaseConnector ) {
     this( dbConnector.getDataSource.getConnection, dbConnector.getDriverType )
-    this.logger.debug("opening database connection (database type =" + dbConnector.getDatabase().name() +")" )
+    this.logger.debug("opening database connection (database type =" + dbConnector.getProlineDatabaseType.name() +")" )
   }
   
   val dialect = ProlineEzDBC.getDriverDialect(driverType)

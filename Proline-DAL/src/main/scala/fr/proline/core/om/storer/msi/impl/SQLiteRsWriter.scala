@@ -9,11 +9,11 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.msi.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 private[core] class SQLiteRsWriter() extends IRsWriter {
 
-  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDb: DatabaseContext): Map[String, Int] = {
+  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDb: DatabaseConnectionContext): Map[String, Int] = {
 
     val msiEzDbc = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType) // MUST be in SQL mode
 
@@ -38,7 +38,7 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
 
   }
 
-  def storeNewPeptides(peptides: Seq[Peptide], msiDb: DatabaseContext): Array[Peptide] = {
+  def storeNewPeptides(peptides: Seq[Peptide], msiDb: DatabaseConnectionContext): Array[Peptide] = {
 
     val msiEzDbc = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType) // MUST be in SQL mode
 
@@ -75,7 +75,7 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
     new Array[Protein](0)
   }
 
-  def storeNewProteins(proteins: Seq[Protein], msiDb: DatabaseContext): Array[Protein] = {
+  def storeNewProteins(proteins: Seq[Protein], msiDb: DatabaseConnectionContext): Array[Protein] = {
 
     val msiEzDbc = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType) // MUST be in SQL mode
 
@@ -109,7 +109,7 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
 
   }
 
-  def storeRsPeptideMatches(rs: ResultSet, msiDb: DatabaseContext): Int = {
+  def storeRsPeptideMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int = {
 
     val msiEzDbc = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType) // MUST be in SQL mode
     val scoringIdByType = new MsiDbHelper(msiEzDbc).getScoringIdByType
@@ -171,7 +171,7 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
 
   }
 
-  def storeRsProteinMatches(rs: ResultSet, msiDb: DatabaseContext): Int = {
+  def storeRsProteinMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int = {
 
     val msiEzDbc = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType) // MUST be in SQL mode
     val scoringIdByType = new MsiDbHelper(msiEzDbc).getScoringIdByType
@@ -232,7 +232,7 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
 
   }
 
-  def storeRsSequenceMatches(rs: ResultSet, msiDb: DatabaseContext): Int = {
+  def storeRsSequenceMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int = {
 
     val msiEzDbc = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType) // MUST be in SQL mode
 

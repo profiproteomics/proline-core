@@ -12,19 +12,20 @@ import org.slf4j.LoggerFactory;
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
-import fr.proline.repository.Database;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
+import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.util.StringUtils;
 
-public class DatabaseManager {
+public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
     /* Constants */
-    private static final Logger LOG = LoggerFactory.getLogger(DatabaseManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DataStoreConnectorFactory.class);
 
-    private static final DatabaseManager UNIQUE_INSTANCE = new DatabaseManager();
+    private static final DataStoreConnectorFactory UNIQUE_INSTANCE = new DataStoreConnectorFactory();
 
     /* Instance variables */
     private final Object m_managerLock = new Object();
@@ -38,11 +39,11 @@ public class DatabaseManager {
     private final Map<Integer, IDatabaseConnector> m_lcMsDbConnectors = new HashMap<Integer, IDatabaseConnector>();
 
     /* Constructors */
-    protected DatabaseManager() {
+    protected DataStoreConnectorFactory() {
     }
 
     /* Public class methods */
-    public static DatabaseManager getInstance() {
+    public static DataStoreConnectorFactory getInstance() {
 	return UNIQUE_INSTANCE;
     }
 
@@ -52,7 +53,7 @@ public class DatabaseManager {
 	synchronized (m_managerLock) {
 
 	    if (isInitialized()) {
-		throw new IllegalStateException("DatabaseManager ALREADY initialized");
+		throw new IllegalStateException("DataStoreConnectorFactory ALREADY initialized");
 	    }
 
 	    if (udsDbConnector == null) {
@@ -62,63 +63,62 @@ public class DatabaseManager {
 	    m_udsDbConnector = udsDbConnector;
 
 	    EntityManager udsEm = null;
+
 	    try {
-	    
-	    DatabaseUpgrader.upgradeDatabase(udsDbConnector);
+		DatabaseUpgrader.upgradeDatabase(udsDbConnector);
 
-	    final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
+		final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
 
-	    udsEm = udsEMF.createEntityManager();
+		udsEm = udsEMF.createEntityManager();
 
-	    
 		final DriverType udsDriverType = udsDbConnector.getDriverType();
 
 		/* Try to load PDI Db Connector */
-		final ExternalDb pdiDb = ExternalDbRepository.findExternalByType(udsEm, Database.PDI);
+		final ExternalDb pdiDb = ExternalDbRepository.findExternalByType(udsEm,
+			ProlineDatabaseType.PDI);
 
 		if (pdiDb == null) {
 		    LOG.warn("No ExternalDb for PDI Db");
 		} else {
-		    m_pdiDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(Database.PDI,
-			    pdiDb.toPropertiesMap(udsDriverType));
+		    m_pdiDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+			    ProlineDatabaseType.PDI, pdiDb.toPropertiesMap(udsDriverType));
 
 		    DatabaseUpgrader.upgradeDatabase(m_pdiDbConnector);
 		}
 
 		/* Try to load PS Db Connector */
-		final ExternalDb psDb = ExternalDbRepository.findExternalByType(udsEm, Database.PS);
+		final ExternalDb psDb = ExternalDbRepository
+			.findExternalByType(udsEm, ProlineDatabaseType.PS);
 
 		if (psDb == null) {
 		    LOG.warn("No ExternalDb for PS Db");
 		} else {
-		    m_psDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(Database.PS,
-			    psDb.toPropertiesMap(udsDriverType));
+		    m_psDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+			    ProlineDatabaseType.PS, psDb.toPropertiesMap(udsDriverType));
 
 		    DatabaseUpgrader.upgradeDatabase(m_psDbConnector);
 		}
 
 	    } catch (Exception ex) {
 		/* Log and re-throw */
-		final String message = "Error initializing DatabaseManager";
+		final String message = "Error initializing DataStoreConnectorFactory";
 		LOG.error(message, ex);
-		
-		// close and set to null connectors, 
-		// so we can retry to initialize uds connector
-		// ( otherwise isInitialized() returns true even if the connection has failed )
-		closeUdsPdiPsConnectors();
-		m_udsDbConnector = null;
-		m_pdiDbConnector = null;
-		m_psDbConnector = null;
-		
+
+		/*
+		 * Close and set to null partially created connectors, so we can retry to initialize
+		 * DataStoreConnectorFactory with a valid UDS connector.
+		 */
+		closeAll();
+
 		throw new RuntimeException(message, ex);
 	    } finally {
 
-		try {
-			if (udsEm != null) {
-				udsEm.close();
-			}
-		} catch (Exception exClose) {
-		    LOG.error("Error closing UDS Db EntityManager", exClose);
+		if (udsEm != null) {
+		    try {
+			udsEm.close();
+		    } catch (Exception exClose) {
+			LOG.error("Error closing UDS Db EntityManager", exClose);
+		    }
 		}
 
 	    }
@@ -132,15 +132,15 @@ public class DatabaseManager {
 	synchronized (m_managerLock) {
 
 	    if (isInitialized()) {
-		throw new IllegalStateException("DatabaseManager ALREADY initialized");
+		throw new IllegalStateException("DataStoreConnectorFactory ALREADY initialized");
 	    }
 
 	    if (udsDbProperties == null) {
 		throw new IllegalArgumentException("UdsDbProperties Map is null");
 	    }
 
-	    initialize(DatabaseConnectorFactory
-		    .createDatabaseConnectorInstance(Database.UDS, udsDbProperties));
+	    initialize(DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.UDS,
+		    udsDbProperties));
 	} // End of synchronized block on m_managerLock
 
     }
@@ -150,20 +150,21 @@ public class DatabaseManager {
 	synchronized (m_managerLock) {
 
 	    if (isInitialized()) {
-		throw new IllegalStateException("DatabaseManager ALREADY initialized");
+		throw new IllegalStateException("DataStoreConnectorFactory ALREADY initialized");
 	    }
 
 	    if (StringUtils.isEmpty(udsDbPropertiesFileName)) {
 		throw new IllegalArgumentException("Invalid udsDbPropertiesFileName");
 	    }
 
-	    initialize(DatabaseConnectorFactory.createDatabaseConnectorInstance(Database.UDS,
+	    initialize(DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.UDS,
 		    udsDbPropertiesFileName));
 
 	} // End of synchronized block on m_managerLock
 
     }
 
+    @Override
     public boolean isInitialized() {
 	boolean result;
 
@@ -174,6 +175,7 @@ public class DatabaseManager {
 	return result;
     }
 
+    @Override
     public IDatabaseConnector getUdsDbConnector() {
 	IDatabaseConnector udsDbConnector;
 
@@ -186,6 +188,7 @@ public class DatabaseManager {
 	return udsDbConnector;
     }
 
+    @Override
     public IDatabaseConnector getPdiDbConnector() {
 	IDatabaseConnector pdiDbConnector;
 
@@ -198,6 +201,7 @@ public class DatabaseManager {
 	return pdiDbConnector;
     }
 
+    @Override
     public IDatabaseConnector getPsDbConnector() {
 	IDatabaseConnector psDbConnector;
 
@@ -210,6 +214,7 @@ public class DatabaseManager {
 	return psDbConnector;
     }
 
+    @Override
     public IDatabaseConnector getMsiDbConnector(final int projectId) {
 	IDatabaseConnector msiDbConnector = null;
 
@@ -221,7 +226,7 @@ public class DatabaseManager {
 	    msiDbConnector = m_msiDbConnectors.get(key);
 
 	    if (msiDbConnector == null) {
-		msiDbConnector = createProjectDatabaseConnector(Database.MSI, projectId);
+		msiDbConnector = createProjectDatabaseConnector(ProlineDatabaseType.MSI, projectId);
 
 		if (msiDbConnector != null) {
 		    m_msiDbConnectors.put(key, msiDbConnector);
@@ -234,6 +239,7 @@ public class DatabaseManager {
 	return msiDbConnector;
     }
 
+    @Override
     public IDatabaseConnector getLcMsDbConnector(final int projectId) {
 	IDatabaseConnector lcMsDbConnector = null;
 
@@ -245,7 +251,7 @@ public class DatabaseManager {
 	    lcMsDbConnector = m_lcMsDbConnectors.get(key);
 
 	    if (lcMsDbConnector == null) {
-		lcMsDbConnector = createProjectDatabaseConnector(Database.LCMS, projectId);
+		lcMsDbConnector = createProjectDatabaseConnector(ProlineDatabaseType.LCMS, projectId);
 
 		if (lcMsDbConnector != null) {
 		    m_lcMsDbConnectors.put(key, lcMsDbConnector);
@@ -258,11 +264,21 @@ public class DatabaseManager {
 	return lcMsDbConnector;
     }
 
+    @Override
     public void closeAll() {
 
 	synchronized (m_managerLock) {
 
-		closeUdsPdiPsConnectors();
+	    /* Reverse order of Dbs creation : LCMS, MSI, PS, PDI, UDS */
+	    for (final IDatabaseConnector lcMsDbConnector : m_lcMsDbConnectors.values()) {
+		try {
+		    lcMsDbConnector.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing LCMS Db Connector", exClose);
+		}
+	    }
+
+	    m_lcMsDbConnectors.clear(); // Remove all LCMS Db connectors
 
 	    for (final IDatabaseConnector msiDbConnector : m_msiDbConnectors.values()) {
 		try {
@@ -272,53 +288,56 @@ public class DatabaseManager {
 		}
 	    }
 
-	    for (final IDatabaseConnector lcMsDbConnector : m_lcMsDbConnectors.values()) {
+	    m_msiDbConnectors.clear(); // Remove all MSI Db connectors
+
+	    if (m_psDbConnector != null) {
+
 		try {
-		    lcMsDbConnector.close();
+		    m_psDbConnector.close();
 		} catch (Exception exClose) {
-		    LOG.error("Error closing LCMS Db Connector", exClose);
+		    LOG.error("Error closing PS Db Connector", exClose);
 		}
+
+		m_psDbConnector = null;
+	    }
+
+	    if (m_pdiDbConnector != null) {
+
+		try {
+		    m_pdiDbConnector.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing PDI Db Connector", exClose);
+		}
+
+		m_pdiDbConnector = null;
+	    }
+
+	    if (m_udsDbConnector != null) {
+
+		try {
+		    m_udsDbConnector.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing UDS Db Connector", exClose);
+		}
+
+		m_udsDbConnector = null;
 	    }
 
 	} // End of synchronized block on m_managerLock
 
     }
 
-	private void closeUdsPdiPsConnectors() {
-		if (m_udsDbConnector != null) {
-			try {
-				m_udsDbConnector.close();
-			} catch (Exception exClose) {
-				LOG.error("Error closing UDS Db Connector", exClose);
-			}
-		}
-
-		if (m_pdiDbConnector != null) {
-			try {
-				m_pdiDbConnector.close();
-			} catch (Exception exClose) {
-				LOG.error("Error closing PDI Db Connector", exClose);
-			}
-		}
-
-		if (m_psDbConnector != null) {
-			try {
-				m_psDbConnector.close();
-			} catch (Exception exClose) {
-				LOG.error("Error closing PS Db Connector", exClose);
-			}
-		}
-	}
-
+    /* Private methods */
     private void checkInitialization() {
 
 	if (!isInitialized()) {
-	    throw new IllegalStateException("DatabaseManager NOT yet initialized");
+	    throw new IllegalStateException("DataStoreConnectorFactory NOT yet initialized");
 	}
 
     }
 
-    private IDatabaseConnector createProjectDatabaseConnector(final Database database, final int projectId) {
+    private IDatabaseConnector createProjectDatabaseConnector(final ProlineDatabaseType database,
+	    final int projectId) {
 	IDatabaseConnector connector = null;
 
 	final IDatabaseConnector udsDbConnector = getUdsDbConnector();

@@ -8,7 +8,7 @@ import fr.proline.core.dal.tables.msi.{MsiDbResultSummaryTable}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLiteRsmStorer
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 trait IRsmStorer extends Logging {
   
@@ -32,11 +32,11 @@ object RsmStorer {
   import fr.proline.core.om.storer.msi.impl.PgRsStorer
   import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer*/
   
-  def apply( msiDbContext: DatabaseContext ): RsmStorer = {
+  def apply( msiDbContext: DatabaseConnectionContext ): RsmStorer = {
     this.apply( msiDbContext, ProlineEzDBC(msiDbContext) )
   }
   
-  def apply( msiDbContext: DatabaseContext, msiEzDBC: EasyDBC ): RsmStorer = {
+  def apply( msiDbContext: DatabaseConnectionContext, msiEzDBC: EasyDBC ): RsmStorer = {
     //if( msiDbContext.isJPA() ) return new JPARsmStorer
     
     msiEzDBC.dialect match {

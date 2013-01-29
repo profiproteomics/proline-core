@@ -10,10 +10,10 @@ import org.dbunit.IDatabaseTester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.repository.Database;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.util.StringUtils;
 
 /**
@@ -37,7 +37,7 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 
     private boolean m_closed;
 
-    public DatabaseTestConnector(final Database database, final Map<Object, Object> properties) {
+    public DatabaseTestConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
 
 	if (database == null) {
 	    throw new IllegalArgumentException("Database is null");
@@ -52,7 +52,7 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 	m_databaseTester = new DataSourceDatabaseTester(m_realConnector.getDataSource());
     }
 
-    public DatabaseTestConnector(final Database database, final String propertiesFileName) {
+    public DatabaseTestConnector(final ProlineDatabaseType database, final String propertiesFileName) {
 
 	if (database == null) {
 	    throw new IllegalArgumentException("Database is null");
@@ -68,8 +68,8 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 	m_databaseTester = new DataSourceDatabaseTester(m_realConnector.getDataSource());
     }
 
-    public Database getDatabase() {
-	return m_realConnector.getDatabase();
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return m_realConnector.getProlineDatabaseType();
     }
 
     public DriverType getDriverType() {

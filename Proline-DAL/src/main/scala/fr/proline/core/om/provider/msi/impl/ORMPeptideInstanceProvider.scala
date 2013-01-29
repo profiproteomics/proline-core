@@ -8,9 +8,9 @@ import fr.proline.core.om.model.msi.PeptideInstance
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import scala.collection.mutable.ArrayBuilder
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class ORMPeptideInstanceProvider( val msiDbCtx: DatabaseContext, val psDbCtx: DatabaseContext = null ) extends IPeptideInstanceProvider {
+class ORMPeptideInstanceProvider( val msiDbCtx: DatabaseConnectionContext, val psDbCtx: DatabaseConnectionContext = null ) extends IPeptideInstanceProvider {
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 

@@ -16,7 +16,7 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
 
     private static final String MEMORY_URL_PROTOCOL = ":mem:";
 
-    public H2DatabaseConnector(final Database database, final Map<Object, Object> properties) {
+    public H2DatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
 	super(database, properties);
     }
 
@@ -43,7 +43,7 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected DataSource createDataSource(final Database database, final Map<Object, Object> properties) {
+    protected DataSource createDataSource(final ProlineDatabaseType database, final Map<Object, Object> properties) {
 
 	if (properties == null) {
 	    throw new IllegalArgumentException("Properties Map is null");
@@ -60,7 +60,7 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected void doClose(final Database database, final DataSource source) {
+    protected void doClose(final ProlineDatabaseType database, final DataSource source) {
 
 	if (source instanceof JdbcConnectionPool) {
 	    LOG.debug("Disposing H2 JdbcConnectionPool for {}", database);

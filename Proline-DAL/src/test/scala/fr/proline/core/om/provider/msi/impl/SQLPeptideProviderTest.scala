@@ -12,18 +12,18 @@ import fr.proline.core.om.model.msi._
 import fr.proline.repository.util.JPAUtils
 import fr.proline.repository.utils.DatabaseUtils
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.Database
+import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.DriverType
 import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.repository.IDatabaseConnector
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 @Test
 class SQLPeptideProviderTest extends DatabaseTestCase {
 
   private val SEQ_TO_FOUND: String = "LTGMAFR"
 
-  override def getDatabase() = Database.PS
+  override def getProlineDatabaseType() = ProlineDatabaseType.PS
 
   @Before
   @throws(classOf[Exception])
@@ -34,7 +34,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
   }
 
   def newSqlDbContext(connector: IDatabaseConnector) = {
-    new DatabaseContext(connector.getDataSource().getConnection(),connector.getDriverType())
+    new DatabaseConnectionContext(connector.getDataSource().getConnection(),connector.getDriverType())
   }
   
   @Test

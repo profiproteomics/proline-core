@@ -17,7 +17,7 @@ import fr.proline.core.om.model.msi.PeaklistSoftware
 import fr.proline.core.om.model.msi.SearchSettings
 import fr.proline.core.om.model.msi.SeqDatabase
 import fr.proline.core.om.provider.msi.IMSISearchProvider
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.util.primitives.DoubleOrFloatAsFloat._
 import fr.proline.util.primitives.LongOrIntAsInt._
 import fr.proline.util.sql.StringOrBoolAsBool._

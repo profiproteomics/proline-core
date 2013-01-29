@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.repository.AbstractDatabaseConnector;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.JDBCWork;
 import fr.proline.repository.util.JPAUtils;
 import fr.proline.repository.utils.DatabaseTestCase;
@@ -58,7 +58,7 @@ public class MsiPeptideRepositoryTest {
 	props.put("hibernate.hbm2ddl.auto", "create-drop");
 
 	LOG.debug("START setUp");
-	m_connector = new DatabaseTestConnector(Database.MSI, props);
+	m_connector = new DatabaseTestConnector(ProlineDatabaseType.MSI, props);
 
 	/* Force creation of Database schema by ORM by retrieving an EntityManager */
 	final EntityManagerFactory emf = m_connector.getEntityManagerFactory();

@@ -19,7 +19,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
 
     val ss = msiSearch.searchSettings
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.msiDbContext.getDriverType, { msiEzDBC =>
+    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
 
       // Insert sequence databases
       // TODO : If seqDb does not exist in PDI do not create it !!
@@ -42,7 +42,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
 
     })
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
 
     msiSearch.id
   }
@@ -51,7 +51,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
     
     val msQueryInsertQuery = MsiDbMsQueryTable.mkInsertQuery( (col,colsList) => colsList.filter(_ != col.ID) )
     
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.msiDbContext.getDriverType, { msiEzDBC =>
+    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
 
       msiEzDBC.executePrepared(msQueryInsertQuery, true) { stmt =>
 
@@ -79,7 +79,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
       }
     })
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
 
     context
   }
@@ -109,7 +109,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
 
     require(instrumentConfig.id > 0, "instrument configuration must have a strictly positive identifier")
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.msiDbContext.getDriverType, { msiEzDBC =>
+    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
       
       // Check if the instrument config exists in the MSIdb
       val count = msiEzDBC.selectInt("SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id)
@@ -127,7 +127,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
 
     })
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
   }
 
   private def _insertSeqDatabase(seqDatabase: SeqDatabase, msiEzDBC: EasyDBC): Unit = {

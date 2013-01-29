@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import fr.proline.core.orm.msi.repository.MsiPeptideRepository;
 import fr.proline.core.orm.ps.Peptide;
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.util.StringUtils;
 
@@ -382,8 +382,8 @@ public class TestPeptidesPerfs {
 class MSIDatabaseTestCase extends DatabaseTestCase {
 
     @Override
-    public Database getDatabase() {
-	return Database.MSI;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.MSI;
     }
 
     @Override
@@ -396,8 +396,8 @@ class MSIDatabaseTestCase extends DatabaseTestCase {
 class PSDatabaseTestCase extends DatabaseTestCase {
 
     @Override
-    public Database getDatabase() {
-	return Database.PS;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.PS;
     }
 
     @Override

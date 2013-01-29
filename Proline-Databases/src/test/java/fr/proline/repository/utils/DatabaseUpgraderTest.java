@@ -7,7 +7,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import fr.proline.repository.AbstractDatabaseConnector;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
@@ -24,7 +24,7 @@ public class DatabaseUpgraderTest {
 		.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_URL_KEY, "jdbc:sqlite:./target/db_test.dat");
 
 	final IDatabaseConnector sqliteConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		Database.UDS, properties);
+		ProlineDatabaseType.UDS, properties);
 
 	DatabaseUpgrader.upgradeDatabase(sqliteConnector);
 

@@ -11,9 +11,9 @@ import javax.persistence.EntityManager
 import javax.persistence.PersistenceException
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters.asJavaCollectionConverter
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class ORMPTMProvider( val psDbCtx: DatabaseContext ) extends IPTMProvider with Logging {
+class ORMPTMProvider( val psDbCtx: DatabaseConnectionContext ) extends IPTMProvider with Logging {
   
   val converter = new PeptidesOMConverterUtil(true)
 

@@ -6,9 +6,9 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.model.msi.PtmSpecificity
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class SQLPTMProvider( val psDbCtx: DatabaseContext, val sqlExec: SQLQueryExecution ) extends IPTMProvider {
+class SQLPTMProvider( val psDbCtx: DatabaseConnectionContext, val sqlExec: SQLQueryExecution ) extends IPTMProvider {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap

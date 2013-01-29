@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.repository.PdiBioSequenceRepository;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class BioSequenceTest extends DatabaseTestCase {
@@ -28,8 +28,8 @@ public class BioSequenceTest extends DatabaseTestCase {
     private static final Logger LOG = LoggerFactory.getLogger(BioSequenceTest.class);
 
     @Override
-    public Database getDatabase() {
-	return Database.PDI;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.PDI;
     }
 
     @Before

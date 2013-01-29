@@ -11,13 +11,13 @@ import org.junit.Test
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.Database
-import fr.proline.repository.DatabaseContext
+import fr.proline.repository.ProlineDatabaseType
+import fr.proline.context.DatabaseConnectionContext
 
 @Test
 class ORMPtmProviderTest extends DatabaseTestCase {
 
-  override def getDatabase() = Database.PS
+  override def getProlineDatabaseType() = ProlineDatabaseType.PS
 
   @Before
   @throws(classOf[Exception])
@@ -34,7 +34,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     ids += 12
     ids += 1284
 
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPtmProvider = new ORMPTMProvider(psDb)
@@ -64,7 +64,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     ids += 7
     ids += 9879
 
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
     try {
       val ormPtmProvider = new ORMPTMProvider(psDb)
 
@@ -86,7 +86,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     ids += 9879
     ids += 7
 
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPtmProvider = new ORMPTMProvider(psDb)
@@ -105,7 +105,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
   @Test
   def getSinglePtmSpecificities() = {
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPtmProvider = new ORMPTMProvider(psDb)
@@ -125,7 +125,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
   @Test
   def getNonExistantPtmSpecificity() = {
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPtmProvider = new ORMPTMProvider(psDb)
@@ -142,7 +142,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
   @Test
   def getPtmSpecificityByNameResiduAndLoc() = {
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPtmProvider = new ORMPTMProvider(psDb)
@@ -161,7 +161,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
   @Test
   def getInvalidPtmSpecificity() = {
-    val psDb = new DatabaseContext(getConnector)
+    val psDb = new DatabaseConnectionContext(getConnector)
 
     try {
       val ormPtmProvider = new ORMPTMProvider(psDb)

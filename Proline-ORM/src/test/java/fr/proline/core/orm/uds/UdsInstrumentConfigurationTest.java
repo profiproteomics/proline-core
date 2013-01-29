@@ -14,7 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.uds.repository.UdsInstrumentConfigurationRepository;
-import fr.proline.repository.Database;
+
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
@@ -22,8 +23,8 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
     private static final Logger LOG = LoggerFactory.getLogger(UdsInstrumentConfigurationTest.class);
 
     @Override
-    public Database getDatabase() {
-	return Database.UDS;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.UDS;
     }
 
     @Before
@@ -40,10 +41,11 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    InstrumentConfiguration insCfg = UdsInstrumentConfigurationRepository.findInstrumConfForNameAndMs1AndMsn(udsEm, "VENUS_CFG", "Analyzer", null);	   
-	    assertThat(insCfg, notNullValue());	    
+	    InstrumentConfiguration insCfg = UdsInstrumentConfigurationRepository
+		    .findInstrumConfForNameAndMs1AndMsn(udsEm, "VENUS_CFG", "Analyzer", null);
+	    assertThat(insCfg, notNullValue());
 	    assertThat(insCfg.getActivation().getType(), is("ActivationType1"));
-	    
+
 	} finally {
 
 	    if (udsEm != null) {
@@ -56,7 +58,7 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
 	}
     }
 
-      @After
+    @After
     public void tearDown() {
 	super.tearDown();
     }

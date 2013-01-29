@@ -4,12 +4,12 @@ import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.om.model.msi.{ ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IPeaklistContainer }
 import fr.proline.core.om.storer.msi.impl.{ StorerContext, SQLiteRsWriter, SQLRsStorer, PgRsWriter, JPARsStorer }
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
 
 trait IRsStorer extends Logging {
 
-  def storeResultSet(resultSet: ResultSet, dbManager: DatabaseManager, projectId: Int): Int
+  def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Int): Int
 
   /**
    * Store in persistence repository specified ResultSet and associated data.

@@ -9,9 +9,9 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.{ProteinMatch,SequenceMatch}
 import fr.proline.core.om.model.msi.{ProteinMatchProperties,SequenceMatchProperties}
 import fr.proline.core.om.provider.msi.IProteinMatchProvider
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class SQLProteinMatchProvider( val msiDbCtx: DatabaseContext, val msiSqlExec: SQLQueryExecution ) { //extends IProteinMatchProvider
+class SQLProteinMatchProvider( val msiDbCtx: DatabaseConnectionContext, val msiSqlExec: SQLQueryExecution ) { //extends IProteinMatchProvider
   
   val ProtMatchCols = MsiDbProteinMatchTable.columns
   val SeqMatchCols = MsiDbSequenceMatchTable.columns

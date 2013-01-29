@@ -38,7 +38,6 @@ import fr.proline.core.orm.ps.repository.{ PsPtmRepository => psPtmRepo }
 import fr.proline.core.orm.uds.repository.{ UdsEnzymeRepository => udsEnzymeRepo }
 import fr.proline.core.orm.uds.repository.{ UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo }
 import fr.proline.core.orm.uds.repository.{ UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo }
-import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.util.StringUtils
 
 /**
@@ -133,7 +132,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val omResultSetId = resultSet.id
 
@@ -198,7 +197,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         knownResultSets += omResultSetId -> msiResultSet
 
-        logger.debug("Msi ResultSet {" + omResultSetId + "} persisted")
+        logger.trace("Msi ResultSet {" + omResultSetId + "} persisted")
 
         /* Peptides & PeptideMatches */
         retrievePeptides(storerContext, resultSet.peptides)
@@ -284,7 +283,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     if (knownMsiResultSet.isDefined) {
       knownMsiResultSet.get
     } else {
-      val msiResultSet = storerContext.msiDbContext.getEntityManager.find(classOf[MsiResultSet], resultSetId)
+      val msiResultSet = storerContext.getMSIDbConnectionContext.getEntityManager.find(classOf[MsiResultSet], resultSetId)
 
       if (msiResultSet == null) {
         throw new IllegalArgumentException("ResultSet #" + msiResultSet + " NOT found in Msi Db")
@@ -315,7 +314,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
     checkStorerContext(storerContext)
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val omMsiSearchId = search.id
 
@@ -370,7 +369,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         knownMsiSearchs += omMsiSearchId -> msiSearch
 
-        logger.debug("MsiSearch {" + omMsiSearchId + "} presisted")
+        logger.trace("MsiSearch {" + omMsiSearchId + "} presisted")
 
         msiSearch.getId
       }
@@ -390,7 +389,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     if (knownMsiSearch.isDefined) {
       knownMsiSearch.get
     } else {
-      val msiSearch = storerContext.msiDbContext.getEntityManager.find(classOf[MsiSearch], msiSearchId)
+      val msiSearch = storerContext.getMSIDbConnectionContext.getEntityManager.find(classOf[MsiSearch], msiSearchId)
 
       if (msiSearch == null) {
         throw new IllegalArgumentException("MsiSearch #" + msiSearchId + " NOT found in Msi Db")
@@ -485,7 +484,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     if (knownPeaklist.isDefined) {
       knownPeaklist.get
     } else {
-      val msiPeaklist = storerContext.msiDbContext.getEntityManager.find(classOf[MsiPeaklist], peaklistId)
+      val msiPeaklist = storerContext.getMSIDbConnectionContext.getEntityManager.find(classOf[MsiPeaklist], peaklistId)
 
       if (msiPeaklist == null) {
         throw new IllegalArgumentException("Peaklist #" + peaklistId + " NOT found in Msi Db")
@@ -513,7 +512,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("PeaklistSoftware is null")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val omPeakListSoftwareId = peaklistSoftware.id
 
@@ -533,7 +532,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     }
 
     if (msiPeaklistSoftware == null) {
-      val udsPeaklistSoftware = udsPeaklistSoftwareRepo.findPeaklistSoftForNameAndVersion(storerContext.udsDbContext.getEntityManager, peaklistSoftware.name, peaklistSoftware.version)
+      val udsPeaklistSoftware = udsPeaklistSoftwareRepo.findPeaklistSoftForNameAndVersion(storerContext.getUDSDbConnectionContext.getEntityManager, peaklistSoftware.name, peaklistSoftware.version)
 
       if (udsPeaklistSoftware == null) {
         throw new IllegalArgumentException("PeaklistSoftware [" + peaklistSoftware.name + "] [" + peaklistSoftware.version + "] NOT found in Uds Db")
@@ -544,7 +543,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         peaklistSoftware.id = udsPeaklistSoftware.getId // Update OM entity with persisted Primary key
 
-        logger.debug("Msi PeaklistSoftware #" + udsPeaklistSoftware.getId + " persisted")
+        logger.trace("Msi PeaklistSoftware #" + udsPeaklistSoftware.getId + " persisted")
       }
 
     }
@@ -566,9 +565,9 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("Search is null")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
-    val udsEm = storerContext.udsDbContext.getEntityManager
+    val udsEm = storerContext.getUDSDbConnectionContext.getEntityManager
 
     val searchSettings = search.searchSettings
     val omSearchSettingsId = searchSettings.id
@@ -597,7 +596,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       }
 
       msiEm.persist(msiSearchSetting)
-      logger.debug("Msi SearchSetting {" + omSearchSettingsId + "} persisted")
+      logger.trace("Msi SearchSetting {" + omSearchSettingsId + "} persisted")
 
       /* Task done after persisting msiSearchSetting */
       for (seqDatabase <- searchSettings.seqDatabases) {
@@ -615,7 +614,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
           msiSeqDatabase.addSearchSettingsSeqDatabaseMap(msiSearchSettingsSeqDatabaseMap) // Reverse association
 
           msiEm.persist(msiSearchSettingsSeqDatabaseMap)
-          logger.debug("Msi SettingsSeqDatabaseMap SearchSetting {" + omSearchSettingsId + "} SeqDatabase #" + msiSeqDatabase.getId + " persisted")
+          logger.trace("Msi SettingsSeqDatabaseMap SearchSetting {" + omSearchSettingsId + "} SeqDatabase #" + msiSeqDatabase.getId + " persisted")
         }
 
       }
@@ -649,7 +648,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("InstrumentConfig is null")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     var msiInstrumentConfig: MsiInstrumentConfig = null
 
@@ -663,7 +662,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     }
 
     if (msiInstrumentConfig == null) {
-      val udsInstrumentConfiguration = udsInstrumentConfigRepo.findInstrumConfForNameAndMs1AndMsn(storerContext.udsDbContext.getEntityManager, instrumentConfig.name,
+      val udsInstrumentConfiguration = udsInstrumentConfigRepo.findInstrumConfForNameAndMs1AndMsn(storerContext.getUDSDbConnectionContext.getEntityManager, instrumentConfig.name,
         instrumentConfig.ms1Analyzer, instrumentConfig.msnAnalyzer)
 
       if (udsInstrumentConfiguration == null) {
@@ -673,7 +672,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiInstrumentConfig = new MsiInstrumentConfig(udsInstrumentConfiguration)
 
         msiEm.persist(msiInstrumentConfig)
-        logger.debug("Msi InstrumentConfig #" + udsInstrumentConfiguration.getId + " persisted")
+        logger.trace("Msi InstrumentConfig #" + udsInstrumentConfiguration.getId + " persisted")
       }
 
     }
@@ -695,12 +694,12 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("Invalid enzymeName")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     var msiEnzyme: MsiEnzyme = msiEnzymeRepo.findEnzymeForName(msiEm, enzymeName)
 
     if (msiEnzyme == null) {
-      val udsEnzyme = udsEnzymeRepo.findEnzymeForName(storerContext.udsDbContext.getEntityManager, enzymeName)
+      val udsEnzyme = udsEnzymeRepo.findEnzymeForName(storerContext.getUDSDbConnectionContext.getEntityManager, enzymeName)
 
       if (udsEnzyme == null) {
         throw new IllegalArgumentException("Enzyme [" + enzymeName + "] NOT found in Uds Db")
@@ -708,7 +707,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiEnzyme = new MsiEnzyme(udsEnzyme)
 
         msiEm.persist(msiEnzyme)
-        logger.debug("Msi Enzyme #" + udsEnzyme.getId + " persisted")
+        logger.trace("Msi Enzyme #" + udsEnzyme.getId + " persisted")
       }
 
     }
@@ -731,7 +730,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("SeqDatabase is null")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val omSeqDatabaseId = seqDatabase.id
 
@@ -756,7 +755,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
       if (msiSeqDatabase == null) {
         /* Try to load from Pdi Db by name and Fasta file path */
-        val pdiSeqDatabaseInstance = pdiSeqDatabaseRepo.findSeqDbInstanceWithNameAndFile(storerContext.pdiDbContext.getEntityManager, seqDatabase.name, seqDatabase.filePath)
+        val pdiSeqDatabaseInstance = pdiSeqDatabaseRepo.findSeqDbInstanceWithNameAndFile(storerContext.getPDIDbConnectionContext.getEntityManager, seqDatabase.name, seqDatabase.filePath)
 
         if (pdiSeqDatabaseInstance == null) {
           logger.warn("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
@@ -772,7 +771,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
           seqDatabase.id = pdiSeqDatabaseInstance.getId // Update OM entity with Primary key
 
-          logger.debug("Msi SeqDatabase #" + pdiSeqDatabaseInstance.getId + " persisted")
+          logger.trace("Msi SeqDatabase #" + pdiSeqDatabaseInstance.getId + " persisted")
         } // End if (pdiSeqDatabaseInstance is not null)
 
       } else {
@@ -800,7 +799,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("PtmDefinition is null")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val knownPtmSpecificities = storerContext.getEntityCache(classOf[MsiPtmSpecificity])
 
@@ -818,7 +817,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
       if (msiPtmSpecificity == null) {
         /* Try to load from Ps Db by name, location and residue */
-        val psPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(storerContext.psDbContext.getEntityManager, ptmDefinition.names.shortName, ptmDefinition.location,
+        val psPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(storerContext.getPSDbConnectionContext.getEntityManager, ptmDefinition.names.shortName, ptmDefinition.location,
           StringUtils.convertCharResidueToString(ptmDefinition.residue))
 
         if (psPtmSpecificity == null) {
@@ -832,7 +831,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
             msiPtmSpecificity = new MsiPtmSpecificity(psPtmSpecificity)
 
             msiEm.persist(msiPtmSpecificity)
-            logger.debug("Msi PtmSpecificity #" + psPtmSpecificity.getId + " persisted")
+            logger.trace("Msi PtmSpecificity #" + psPtmSpecificity.getId + " persisted")
           }
 
         } // End if (psPtmSpecificity is not null)
@@ -879,7 +878,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       javaIds
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val msiPeptides = storerContext.msiPeptides
 
@@ -930,7 +929,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     if (!remainingOmPeptidesIds.isEmpty) {
       logger.debug("Trying to retrieve " + remainingOmPeptidesIds.size + " Peptides from Ps by Ids")
 
-      val foundPsPeptides = psPeptideRepo.findPeptidesForIds(storerContext.psDbContext.getEntityManager, buildIdsList(remainingOmPeptidesIds))
+      val foundPsPeptides = psPeptideRepo.findPeptidesForIds(storerContext.getPSDbConnectionContext.getEntityManager, buildIdsList(remainingOmPeptidesIds))
       if ((foundPsPeptides != null) && !foundPsPeptides.isEmpty) {
 
         for (psPeptide <- foundPsPeptides) {
@@ -944,7 +943,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
             msiPeptide = new MsiPeptide(psPeptide)
 
             msiEm.persist(msiPeptide)
-            logger.debug("Msi Peptide #" + peptideId + " persisted")
+            logger.trace("Msi Peptide #" + peptideId + " persisted")
           }
 
           msiPeptides += peptIdent -> msiPeptide
@@ -983,7 +982,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
           omPeptide.get.id = psPeptide.getId // Update OM entity with persisted Primary key
         }
 
-        logger.debug("Msi Peptide #" + psPeptide.getId + " persisted")
+        logger.trace("Msi Peptide #" + psPeptide.getId + " persisted")
       } // End loop for each createdPsPeptide => create in Msi
 
     } // End if (remainingPeptides is not empty)
@@ -1009,7 +1008,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("Peptides map is null")
     }
 
-    val psEm = storerContext.psDbContext.getEntityManager
+    val psEm = storerContext.getPSDbConnectionContext.getEntityManager
 
     logger.debug("Creating " + peptides.size + " Peptides into Ps Db")
 
@@ -1048,7 +1047,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         createdPsPeptides += peptIdent -> newPsPeptide
 
-        logger.debug("Ps Peptide {" + peptide.id + "} persisted")
+        logger.trace("Ps Peptide {" + peptide.id + "} persisted")
       } // End loop for each Peptides
 
       psTransaction.commit()
@@ -1063,7 +1062,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         try {
           psTransaction.rollback()
         } catch {
-          case ex => logger.error("Error rollbacking Ps Db transaction", ex)
+          case ex: Exception => logger.error("Error rollbacking Ps Db transaction", ex)
         }
 
       }
@@ -1095,7 +1094,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("MsiResultSet is null")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val omPeptideMatchId = peptideMatch.id
 
@@ -1196,7 +1195,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         knownPeptideMatches += omPeptideMatchId -> msiPeptideMatch
 
-        logger.debug("Msi PeptideMatch {" + omPeptideMatchId + "} persisted")
+        logger.trace("Msi PeptideMatch {" + omPeptideMatchId + "} persisted")
 
         msiPeptideMatch
       } // End if (omPeptideMatchId <= 0)
@@ -1225,7 +1224,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("MsiSearch is null")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val omMsQueryId = msQuery.id
 
@@ -1297,7 +1296,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         knownMsQueries += omMsQueryId -> msiMsQuery
 
-        logger.debug("Msi MsQuery {" + omMsQueryId + "} persisted")
+        logger.trace("Msi MsQuery {" + omMsQueryId + "} persisted")
 
         // TODO handle MsQueryProperties
 
@@ -1334,7 +1333,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("MsiResultSet is null")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     /* Create new MsiProteinMatch */
     val msiProteinMatch = new MsiProteinMatch()
@@ -1395,7 +1394,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     }
 
     msiEm.persist(msiProteinMatch)
-    logger.debug("Msi ProteinMatch {" + omProteinMatchId + "} persisted")
+    logger.trace("Msi ProteinMatch {" + omProteinMatchId + "} persisted")
 
     // TODO handle ProteinMatchProperties
 
@@ -1415,7 +1414,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("Invalid proteinId")
     }
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val knownBioSequences = storerContext.getEntityCache(classOf[MsiBioSequence])
 
@@ -1427,7 +1426,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       var msiBioSequence: MsiBioSequence = msiEm.find(classOf[MsiBioSequence], proteinId)
 
       if (msiBioSequence == null) {
-        val pdiBioSequence = storerContext.pdiDbContext.getEntityManager.find(classOf[PdiBioSequence], proteinId)
+        val pdiBioSequence = storerContext.getPDIDbConnectionContext.getEntityManager.find(classOf[PdiBioSequence], proteinId)
 
         if (pdiBioSequence == null) {
           throw new IllegalArgumentException("BioSequence #" + proteinId + " NOT found in Pdi Db")
@@ -1435,7 +1434,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
           msiBioSequence = new MsiBioSequence(pdiBioSequence)
 
           msiEm.persist(msiBioSequence)
-          logger.debug("Msi BioSequence #" + pdiBioSequence.getId + " persisted")
+          logger.trace("Msi BioSequence #" + pdiBioSequence.getId + " persisted")
         }
 
       }
@@ -1560,8 +1559,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
     // TODO handle serializedProperties
 
-    storerContext.msiDbContext.getEntityManager.persist(msiSequenceMatch)
-    logger.debug("Msi SequenceMatch for ProteinMatch #" + msiProteinMatchId + " Peptide #" + msiPeptideId + " persisted")
+    storerContext.getMSIDbConnectionContext.getEntityManager.persist(msiSequenceMatch)
+    logger.trace("Msi SequenceMatch for ProteinMatch #" + msiProteinMatchId + " Peptide #" + msiPeptideId + " persisted")
 
     msiSequenceMatch
   }
@@ -1605,8 +1604,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     msiUsedPtm.setSearchSetting(msiSearchSetting) // msiSearchSetting must be in persistence context
     msiSearchSetting.addUsedPtms(msiUsedPtm) // Reverse association
 
-    storerContext.msiDbContext.getEntityManager.persist(msiUsedPtm)
-    logger.debug("Msi UsedPtm Specificity #" + msiPtmSpecificity.getId + " for current SearchSetting persisted")
+    storerContext.getMSIDbConnectionContext.getEntityManager.persist(msiUsedPtm)
+    logger.trace("Msi UsedPtm Specificity #" + msiPtmSpecificity.getId + " for current SearchSetting persisted")
   }
 
   private def bindPeptidePtm(storerContext: StorerContext,
@@ -1619,11 +1618,11 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
     assert(locatedPtm != null, "LocatedPtm is null")
 
-    val psEm = storerContext.psDbContext.getEntityManager
+    val psEm = storerContext.getPSDbConnectionContext.getEntityManager
 
     val ptmDefinition = locatedPtm.definition
 
-    val omSpecificityId = ptmDefinition.id
+    val omSpecificityId = ptmDefinition.id // Immutable val here
 
     var psPtmSpecificity: PsPtmSpecificity = null
 
@@ -1651,7 +1650,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       psPeptidePtm.setSpecificity(psPtmSpecificity)
 
       psEm.persist(psPeptide)
-      logger.debug("Ps PeptidePtm Specificity #" + psPtmSpecificity.getId + " Peptide sequence [" + psPeptide.getSequence + "] persisted")
+      logger.trace("Ps PeptidePtm Specificity #" + psPtmSpecificity.getId + " Peptide sequence [" + psPeptide.getSequence + "] persisted")
     }
 
   }
@@ -1667,7 +1666,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
     assert(msiResultSet != null, "MsiResultSet is null")
 
-    val msiEm = storerContext.msiDbContext.getEntityManager
+    val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     def retrieveMsiSeqDatabase(seqDatabseId: Int): MsiSeqDatabase = {
       val knownSeqDatabases = storerContext.getEntityCache(classOf[MsiSeqDatabase])
@@ -1711,7 +1710,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       msiProteinMatchSeqDatabase.setResultSetId(msiResultSet)
 
       msiEm.persist(msiProteinMatchSeqDatabase)
-      logger.debug("Msi ProteinMatchSeqDatabase for ProteinMatch #" + msiProteinMatchId + " SeqDatabase #" + msiSeqDatabase.getId + " persisted")
+      logger.trace("Msi ProteinMatchSeqDatabase for ProteinMatch #" + msiProteinMatchId + " SeqDatabase #" + msiSeqDatabase.getId + " persisted")
     }
 
   }

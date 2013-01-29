@@ -1,4 +1,4 @@
-package fr.proline.repository;
+package fr.proline.context;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -8,6 +8,8 @@ import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.proline.repository.DriverType;
+import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.util.JDBCReturningWork;
 import fr.proline.repository.util.JDBCWork;
 import fr.proline.repository.util.JPAUtils;
@@ -20,9 +22,9 @@ import fr.proline.repository.util.JPAUtils;
  * @author LMN
  * 
  */
-public class DatabaseContext {
+public class DatabaseConnectionContext {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DatabaseContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DatabaseConnectionContext.class);
 
     private final EntityManager m_entityManager;
 
@@ -44,7 +46,7 @@ public class DatabaseContext {
      * @param driverType
      *            Database DriverType (H2, PostgreSQL, SQLLite).
      */
-    public DatabaseContext(final EntityManager entityManager, final DriverType driverType) {
+    public DatabaseConnectionContext(final EntityManager entityManager, final DriverType driverType) {
 
 	if (entityManager == null) {
 	    throw new IllegalArgumentException("EntityManager is null");
@@ -61,7 +63,7 @@ public class DatabaseContext {
      * @param dbConnector
      *            Connector to target DataBase.
      */
-    public DatabaseContext(final IDatabaseConnector dbConnector) {
+    public DatabaseConnectionContext(final IDatabaseConnector dbConnector) {
 	this(dbConnector.getEntityManagerFactory().createEntityManager(), dbConnector.getDriverType());
     }
 
@@ -73,7 +75,7 @@ public class DatabaseContext {
      * @param driverType
      *            Database DriverType (H2, PostgreSQL, SQLLite).
      */
-    public DatabaseContext(final Connection connection, final DriverType driverType) {
+    public DatabaseConnectionContext(final Connection connection, final DriverType driverType) {
 
 	if (connection == null) {
 	    throw new IllegalArgumentException("Connection is null");

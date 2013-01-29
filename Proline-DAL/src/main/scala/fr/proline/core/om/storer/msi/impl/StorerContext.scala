@@ -3,9 +3,12 @@ package fr.proline.core.om.storer.msi.impl
 import scala.collection.mutable
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.utils.PeptideIdent
-import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.DatabaseContext
+import fr.proline.repository.IDataStoreConnectorFactory
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.repository.IDatabaseConnector
+import fr.proline.context.DecoratedExecutionContext
+import fr.proline.context.IExecutionContext
+import fr.proline.context.BasicExecutionContext
 
 /**
  * RsStorer context container. Contains current ResultSet (and DecoyRS) "persistence context".
@@ -14,46 +17,20 @@ import fr.proline.repository.IDatabaseConnector
  * @param spectrumIdByTitle already persisted Msi Spectrum Ids retrievable by {{{Spectrum.title}}} string.
  * The map can be {{{null}}}
  */
-class StorerContext(val udsDbContext: DatabaseContext,
-  val pdiDbContext: DatabaseContext,
-  val psDbContext: DatabaseContext,
-  val msiDbContext: DatabaseContext) extends Logging {
+class StorerContext(wrappedExecutionContext: IExecutionContext)
+  extends DecoratedExecutionContext(wrappedExecutionContext) with Logging {
 
   type MsiPeptide = fr.proline.core.orm.msi.Peptide
 
-  /* Constructor params check */
-  require(udsDbContext != null, "UDS Db Context is null")
-  require(pdiDbContext != null, "PDI Db Context Db Context is null")
-  require(psDbContext != null, "PS Db Context Db Context is null")
-  require(msiDbContext != null, "MSI Db Context is null")
+  /* Db Context params check */
+  require(getUDSDbConnectionContext != null, "UDS Db Context is null")
+  require(getPDIDbConnectionContext != null, "PDI Db Context Db Context is null")
+  require(getPSDbConnectionContext != null, "PS Db Context Db Context is null")
+  require(getMSIDbConnectionContext != null, "MSI Db Context is null")
 
   var spectrumIdByTitle: Map[String, Int] = null
 
   var seqDbIdByTmpId: Map[Int, Int] = null // TODO To be integrated to idCaches
-
-  def isJPA(): Boolean = {
-    msiDbContext.isJPA
-  }
-
-  def closeAll() {
-
-    if (msiDbContext != null) {
-      msiDbContext.close()
-    }
-
-    if (psDbContext != null) {
-      psDbContext.close()
-    }
-
-    if (pdiDbContext != null) {
-      pdiDbContext.close()
-    }
-
-    if (udsDbContext != null) {
-      udsDbContext.close()
-    }
-
-  }
 
   private val entityCaches = mutable.Map.empty[Class[_], mutable.Map[Int, _]]
 
@@ -125,29 +102,6 @@ class StorerContext(val udsDbContext: DatabaseContext,
       newCache
     }
 
-  }
-
-}
-
-object StorerContextBuilder {
-  
-  def buildDbContext(dbConnector: IDatabaseConnector, useJpa: Boolean): DatabaseContext = {
-    if (useJpa) new DatabaseContext(dbConnector)
-    else new DatabaseContext(dbConnector.getDataSource.getConnection, dbConnector.getDriverType)
-  }
-
-  def apply(dbManager: DatabaseManager, projectId: Int, useJpa: Boolean = true): StorerContext = {
-    this.apply(dbManager, dbManager.getMsiDbConnector(projectId), useJpa)
-  }
-
-  def apply(dbManager: DatabaseManager, msiDbConnector: IDatabaseConnector, useJpa: Boolean): StorerContext = {
-
-    val udsDb = buildDbContext(dbManager.getUdsDbConnector,useJpa)
-    val pdiDb = buildDbContext(dbManager.getPdiDbConnector,useJpa)
-    val psDb = buildDbContext(dbManager.getPsDbConnector,useJpa)
-    val msiDb = buildDbContext(msiDbConnector,useJpa)
-
-    new StorerContext(udsDb, pdiDb, psDb, msiDb)
   }
 
 }

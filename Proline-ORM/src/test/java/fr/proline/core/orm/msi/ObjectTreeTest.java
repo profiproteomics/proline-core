@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class ObjectTreeTest extends DatabaseTestCase {
@@ -21,8 +21,8 @@ public class ObjectTreeTest extends DatabaseTestCase {
     private static final Logger LOG = LoggerFactory.getLogger(ObjectTreeTest.class);
 
     @Override
-    public Database getDatabase() {
-	return Database.MSI;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.MSI;
     }
 
     @Before

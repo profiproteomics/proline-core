@@ -25,7 +25,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
     private static final AtomicLong NAME_SEQUENCE = new AtomicLong(0L);
 
-    public PostgresDatabaseConnector(final Database database, final Map<Object, Object> properties) {
+    public PostgresDatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
 	super(database, properties);
     }
 
@@ -35,7 +35,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected DataSource createDataSource(final Database database, final Map<Object, Object> properties) {
+    protected DataSource createDataSource(final ProlineDatabaseType database, final Map<Object, Object> properties) {
 
 	if (properties == null) {
 	    throw new IllegalArgumentException("Properties Map is null");
@@ -85,7 +85,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected EntityManagerFactory createEntityManagerFactory(final Database database,
+    protected EntityManagerFactory createEntityManagerFactory(final ProlineDatabaseType database,
 	    final Map<Object, Object> properties, final boolean ormOptimizations) {
 
 	if (properties == null) {
@@ -101,7 +101,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected void doClose(final Database database, final DataSource source) {
+    protected void doClose(final ProlineDatabaseType database, final DataSource source) {
 
 	if (source instanceof PGPoolingDataSource) {
 	    LOG.debug("Closing PGPoolingDataSource for {}", database);

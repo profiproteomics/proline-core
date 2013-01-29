@@ -15,7 +15,7 @@ public final class DatabaseConnectorFactory {
     }
 
     /* Public class methods */
-    public static IDatabaseConnector createDatabaseConnectorInstance(final Database database,
+    public static IDatabaseConnector createDatabaseConnectorInstance(final ProlineDatabaseType database,
 	    final Map<Object, Object> properties) {
 
 	if (database == null) {
@@ -51,7 +51,7 @@ public final class DatabaseConnectorFactory {
 	return result;
     }
 
-    public static IDatabaseConnector createDatabaseConnectorInstance(final Database database,
+    public static IDatabaseConnector createDatabaseConnectorInstance(final ProlineDatabaseType database,
 	    final String propertiesFileName) {
 
 	if (database == null) {

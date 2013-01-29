@@ -2,12 +2,14 @@ package fr.proline.core.om.provider.msi
 
 import java.io.File
 import fr.proline.core.om.model.msi.IResultFile
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 //import fr.proline.core.om.provider.msi.impl.ResultFileProviderContext
 
 trait IResultFileProvider {
   
   val fileType: String
-  def getResultFile( fileLocation: File, importProperties: Map[String, Any], providerKey: String ): IResultFile //providerCtx: ResultFileProviderContext
+  def getResultFile( fileLocation: File, importProperties: Map[String, Any],
+      parserContext: ProviderDecoratedExecutionContext): IResultFile
   val resultFileProperties : Map[String, Class[_]]
 
 }

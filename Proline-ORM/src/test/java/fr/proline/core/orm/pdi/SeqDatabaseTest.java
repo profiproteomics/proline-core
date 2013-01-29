@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.repository.PdiSeqDatabaseRepository;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class SeqDatabaseTest extends DatabaseTestCase {
@@ -23,8 +23,8 @@ public class SeqDatabaseTest extends DatabaseTestCase {
     private static final Logger LOG = LoggerFactory.getLogger(SeqDatabaseTest.class);
 
     @Override
-    public Database getDatabase() {
-	return Database.PDI;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.PDI;
     }
 
     @Before

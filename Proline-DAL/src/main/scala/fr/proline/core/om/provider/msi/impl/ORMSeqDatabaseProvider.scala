@@ -11,9 +11,9 @@ import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => seqDBRepo }
 import fr.proline.core.om.utils.ProteinsOMConverterUtil
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class ORMSeqDatabaseProvider( val pdiDbCtx: DatabaseContext ) extends ISeqDatabaseProvider with Logging {
+class ORMSeqDatabaseProvider( val pdiDbCtx: DatabaseConnectionContext ) extends ISeqDatabaseProvider with Logging {
 
   val converter = new ProteinsOMConverterUtil()
 

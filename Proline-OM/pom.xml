@@ -4,28 +4,12 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.6</version>
+    <version>0.0.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>Proline-OM</artifactId>
 
   <name>${project.artifactId}</name>
-
-  <repositories>
-    <repository>
-
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-
-      <id>repo.codahale.com</id>
-      <url>http://repo.codahale.com</url>
-    </repository>
-  </repositories>
 
   <dependencies>
 

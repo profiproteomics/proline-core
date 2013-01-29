@@ -38,7 +38,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
     private static final boolean DEFAULT_ORM_OPTIMIZATIONS = true;
 
-    private final Database m_database;
+    private final ProlineDatabaseType m_prolineDbType;
 
     private final Map<Object, Object> m_properties;
 
@@ -54,13 +54,14 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     private boolean m_closed;
 
     /* Constructors */
-    protected AbstractDatabaseConnector(final Database database, final Map<Object, Object> properties) {
+    protected AbstractDatabaseConnector(final ProlineDatabaseType prolineDbType,
+	    final Map<Object, Object> properties) {
 
-	if (database == null) {
-	    throw new IllegalArgumentException("Database is null");
+	if (prolineDbType == null) {
+	    throw new IllegalArgumentException("ProlineDbType is null");
 	}
 
-	m_database = database;
+	m_prolineDbType = prolineDbType;
 
 	if (properties == null) {
 	    throw new IllegalArgumentException("Properties Map is null");
@@ -70,8 +71,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     }
 
     /* Public methods */
-    public final Database getDatabase() {
-	return m_database;
+    public final ProlineDatabaseType getProlineDatabaseType() {
+	return m_prolineDbType;
     }
 
     public final boolean isMemory() {
@@ -90,15 +91,15 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	    }
 
 	    if (m_dataSource == null) {
-		final Database database = getDatabase();
+		final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
 		/* Protection copy */
 		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
 
 		try {
-		    m_dataSource = createDataSource(database, propertiesCopy);
+		    m_dataSource = createDataSource(prolineDbType, propertiesCopy);
 		} catch (Exception ex) {
 		    /* Log and re-throw */
-		    final String message = "Error creating DataSource for " + database;
+		    final String message = "Error creating DataSource for " + prolineDbType;
 		    LOG.error(message, ex);
 		    throw new RuntimeException(message, ex);
 		}
@@ -119,7 +120,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	    }
 
 	    if (m_entityManagerFactory == null) {
-		final Database database = getDatabase();
+		final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
 		/* Protection copy */
 		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
 
@@ -129,11 +130,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		}
 
 		try {
-		    m_entityManagerFactory = createEntityManagerFactory(database, propertiesCopy,
+		    m_entityManagerFactory = createEntityManagerFactory(prolineDbType, propertiesCopy,
 			    DEFAULT_ORM_OPTIMIZATIONS);
 		} catch (Exception ex) {
 		    /* Log and re-throw */
-		    final String message = "Error creating EntityManagerFactory for " + database;
+		    final String message = "Error creating EntityManagerFactory for " + prolineDbType;
 		    LOG.error(message, ex);
 		    throw new RuntimeException(message, ex);
 		}
@@ -152,21 +153,21 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	    if (!m_closed) { // Close only once
 		m_closed = true;
 
-		final Database database = getDatabase();
+		final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
 
 		if (m_entityManagerFactory != null) {
-		    LOG.debug("Closing EntityManagerFactory for {}", database);
+		    LOG.debug("Closing EntityManagerFactory for {}", prolineDbType);
 
 		    try {
 			m_entityManagerFactory.close();
 		    } catch (Exception exClose) {
-			LOG.error("Error closing EntityManagerFactory for " + database, exClose);
+			LOG.error("Error closing EntityManagerFactory for " + prolineDbType, exClose);
 		    }
 
 		}
 
 		if (m_dataSource != null) {
-		    doClose(database, m_dataSource);
+		    doClose(prolineDbType, m_dataSource);
 		}
 
 	    } // End if (connector is not already closed)
@@ -197,7 +198,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
      * @param properties
      * @return
      */
-    protected abstract DataSource createDataSource(final Database database,
+    protected abstract DataSource createDataSource(final ProlineDatabaseType database,
 	    final Map<Object, Object> properties);
 
     /**
@@ -209,7 +210,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
      * @param ormOptimizations
      * @return
      */
-    protected EntityManagerFactory createEntityManagerFactory(final Database database,
+    protected EntityManagerFactory createEntityManagerFactory(final ProlineDatabaseType database,
 	    final Map<Object, Object> properties, final boolean ormOptimizations) {
 
 	if (database == null) {
@@ -238,7 +239,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
      * 
      * @param source
      */
-    protected void doClose(final Database database, final DataSource source) {
+    protected void doClose(final ProlineDatabaseType database, final DataSource source) {
     }
 
     private static void optimize(final Map<Object, Object> properties) {

@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msi.Ms1Query
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.storer.msi.IPeaklistWriter
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.sql._
 
 class PgSQLRsStorer(private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends SQLRsStorer(_storer, _plWriter) {
@@ -63,7 +63,7 @@ class PgSQLRsStorer(private val _storer: IRsWriter, private val _plWriter: IPeak
       stmt.executeUpdate("INSERT into ms_query (" + msQueryTableCols + ") " +
         "SELECT " + msQueryTableCols + " FROM " + tmpMsQueryTableName)
 
-      val msiEzDBC = ProlineEzDBC(con, context.msiDbContext.getDriverType)
+      val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
 
       // Retrieve generated spectrum ids
       val msQueryIdByInitialId = msiEzDBC.select(
@@ -76,7 +76,7 @@ class PgSQLRsStorer(private val _storer: IRsWriter, private val _plWriter: IPeak
 
     }
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
 
     context
   }

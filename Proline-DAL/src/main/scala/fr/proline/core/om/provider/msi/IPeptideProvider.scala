@@ -2,11 +2,11 @@ package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 trait IPeptideProvider {
   
-  val psDbCtx: DatabaseContext
+  val psDbCtx: DatabaseConnectionContext
   
   /**
    *  Get Peptides (wrapped in Option) with specified Ids.

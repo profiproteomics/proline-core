@@ -13,14 +13,14 @@ import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.utils.OMComparatorUtil
 import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => pepRepo }
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 /**
  * ORMPeptideProvider provides access to Peptide stored in PS database.
  *
  * Specified EntityManager should be a PSdb EntityManager
  */
-class ORMPeptideProvider( val psDbCtx: DatabaseContext ) extends IPeptideProvider with Logging {
+class ORMPeptideProvider( val psDbCtx: DatabaseConnectionContext ) extends IPeptideProvider with Logging {
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 

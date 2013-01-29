@@ -14,14 +14,14 @@ import javax.persistence.NoResultException
 import javax.persistence.NonUniqueResultException
 import fr.proline.core.orm.pdi.repository.{ PdiBioSequenceRepository => bioSeqRepo }
 import fr.proline.core.om.utils.ProteinsOMConverterUtil
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 /**
  * ORMProteinProvider provides access to Protein stored in PDI database.
  *
  * Specified EntityManager should be a PDIdb EntityManager
  */
-class ORMProteinProvider( val pdiDbCtx: DatabaseContext ) extends IProteinProvider with Logging {
+class ORMProteinProvider( val pdiDbCtx: DatabaseConnectionContext ) extends IProteinProvider with Logging {
 
   val converter = new ProteinsOMConverterUtil(true)
 

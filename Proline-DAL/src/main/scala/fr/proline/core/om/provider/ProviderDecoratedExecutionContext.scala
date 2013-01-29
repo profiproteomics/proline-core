@@ -1,0 +1,52 @@
+package fr.proline.core.om.provider
+
+import scala.collection.mutable
+
+import fr.proline.context.DecoratedExecutionContext
+import fr.proline.context.IExecutionContext
+
+/**
+ * ExecutionContext with a map of context Providers (can be used in Mascot / OMSSA parsers).
+ * Default factory for Providers is fr.proline.core.om.provider.ProviderFactory .
+ */
+class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionContext, providerFactory: IProviderFactory = ProviderFactory) extends DecoratedExecutionContext(wrappedExecutionContext) {
+
+  private val m_providers = mutable.Map.empty[Class[_], AnyRef]
+
+  def putProvider[T <: AnyRef](providerClassifier: Class[T], providerInstance: T): Option[T] = {
+
+    if (providerClassifier == null) {
+      throw new IllegalArgumentException("ProviderClassifier is null")
+    }
+
+    val oldProvider = m_providers.put(providerClassifier, providerInstance)
+
+    if (oldProvider.isDefined) {
+      Option(oldProvider.get.asInstanceOf[T]) // Must be a T
+    } else {
+      None
+    }
+
+  }
+
+  def getProvider[T <: AnyRef](providerClassifier: Class[T]): T = {
+
+    if (providerClassifier == null) {
+      throw new IllegalArgumentException("ProviderClassifier is null")
+    }
+
+    val currentProviderOpt = m_providers.get(providerClassifier)
+
+    if (currentProviderOpt.isDefined) {
+      currentProviderOpt.get.asInstanceOf[T]
+    } else {
+      val newProviderInstance = providerFactory.getProviderInstance(providerClassifier, this)
+
+      putProvider(providerClassifier, newProviderInstance)
+
+      newProviderInstance
+    }
+
+  }
+
+}

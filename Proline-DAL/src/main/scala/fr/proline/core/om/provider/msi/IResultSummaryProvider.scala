@@ -1,12 +1,12 @@
 package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 trait IResultSummaryProvider {
   
-  val msiDbCtx: DatabaseContext
-  val psDbCtx: DatabaseContext
+  val msiDbCtx: DatabaseConnectionContext
+  val psDbCtx: DatabaseConnectionContext
   
   def getResultSummariesAsOptions( rsmIds: Seq[Int], loadResultSet: Boolean ): Array[Option[ResultSummary]]
   

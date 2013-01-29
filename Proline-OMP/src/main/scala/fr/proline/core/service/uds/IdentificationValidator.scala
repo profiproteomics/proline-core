@@ -9,12 +9,12 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}
 import fr.proline.core.orm.uds.{ Dataset => UdsIdentificationDataset }
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger,ResultSummaryMerger}
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.SQLContext
 
-class IdentificationValidator( dbManager: DatabaseManager,
+class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                identificationId: Int,
                                rsmIds: Seq[Int],
                                mergeResultSets: Boolean,
@@ -24,17 +24,17 @@ class IdentificationValidator( dbManager: DatabaseManager,
   
   private val udsDbConnector = dbManager.getUdsDbConnector
   
-  private val udsDbCtx = new DatabaseContext( udsDbConnector.getDataSource.getConnection, udsDbConnector.getDriverType )
+  private val udsDbCtx = new DatabaseConnectionContext( udsDbConnector.getDataSource.getConnection, udsDbConnector.getDriverType )
   private val udsEzDBC = ProlineEzDBC( udsDbCtx )
   private val udsSqlCtx = new SQLContext( udsDbCtx, udsEzDBC )
   private val projectId = udsEzDBC.selectInt("SELECT project_id FROM identification WHERE id ="+identificationId)
   
   private val psDbConnector = dbManager.getPsDbConnector
-  private val psDbCtx = new DatabaseContext( psDbConnector.getDataSource.getConnection, psDbConnector.getDriverType )
+  private val psDbCtx = new DatabaseConnectionContext( psDbConnector.getDataSource.getConnection, psDbConnector.getDriverType )
   private val psEzDBC = ProlineEzDBC( psDbCtx )
   
   private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiDbCtx = new DatabaseContext( msiDbConnector.getDataSource.getConnection, msiDbConnector.getDriverType )
+  private val msiDbCtx = new DatabaseConnectionContext( msiDbConnector.getDataSource.getConnection, msiDbConnector.getDriverType )
   private val msiEzDBC = ProlineEzDBC( msiDbCtx )
   private val msiDbHelper = new MsiDbHelper( msiEzDBC )
   

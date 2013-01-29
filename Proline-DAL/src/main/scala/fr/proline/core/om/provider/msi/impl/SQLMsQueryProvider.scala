@@ -5,9 +5,9 @@ import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
 import fr.proline.core.om.model.msi.{MsQuery,Ms1Query,Ms2Query,MsQueryProperties}
 import fr.proline.core.om.provider.msi.IMsQueryProvider
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class SQLMsQueryProvider( val msiDbCtx: DatabaseContext, val sqlExec: SQLQueryExecution ) extends IMsQueryProvider {
+class SQLMsQueryProvider( val msiDbCtx: DatabaseConnectionContext, val sqlExec: SQLQueryExecution ) extends IMsQueryProvider {
   
   import fr.proline.util.primitives.LongOrIntAsInt._
   import scala.collection.mutable.ArrayBuffer

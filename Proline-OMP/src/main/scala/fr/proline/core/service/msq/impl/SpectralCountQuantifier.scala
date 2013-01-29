@@ -19,7 +19,7 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 ResultSummary => MsiResultSummary
                                 }
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.core.service.msq.IQuantifier
 import fr.proline.repository.IDatabaseConnector
 
@@ -28,7 +28,7 @@ import fr.proline.repository.IDatabaseConnector
  *
  */
 class SpectralCountQuantifier(
-        val dbManager: DatabaseManager,
+        val dbManager: IDataStoreConnectorFactory,
         val udsEm: EntityManager,
         val udsMasterQuantChannel: MasterQuantitationChannel
         ) extends IQuantifier with Logging {

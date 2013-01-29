@@ -70,7 +70,7 @@ class PgMsiSearchStorer() extends SQLiteMsiSearchStorer() with Logging {
           "SELECT " + msQueryTableCols + " FROM " + tmpMsQueryTableName)
 
         // Retrieve generated spectrum ids
-        val msiEzDBC = ProlineEzDBC(con, context.msiDbContext.getDriverType)
+        val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
 
         val msQueryIdByInitialId = msiEzDBC.select(
           "SELECT initial_id, id FROM ms_query WHERE msi_search_id = " + msiSearchId) { r =>
@@ -84,7 +84,7 @@ class PgMsiSearchStorer() extends SQLiteMsiSearchStorer() with Logging {
 
     } // End of jdbcWork anonymous inner class
 
-    context.msiDbContext.doWork(jdbcWork, true)
+    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
 
     context
   }

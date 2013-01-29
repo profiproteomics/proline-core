@@ -16,11 +16,11 @@ import fr.proline.core.orm.uds.{ BiologicalGroup => UdsBiologicalGroup,
                                  MasterQuantitationChannel => UdsMasterQuantitationChannel,
                                  RatioDefinition => UdsRatioDefinition,
                                  SampleAnalysis => UdsSampleAnalysis }
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDataStoreConnectorFactory
 import java.util.HashSet
 
 class CreateQuantitation(
-        dbManager: DatabaseManager,
+        dbManager: IDataStoreConnectorFactory,
         name: String,
         description: String,
         projectId: Int,

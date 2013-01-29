@@ -17,7 +17,7 @@ import fr.proline.core.dal.tables.msi.{
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.util.sql.encodeRecordForPgCopy
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.helper.MsiDbHelper
 
 private[msi] class PgRsWriter() extends SQLiteRsWriter() {
@@ -33,7 +33,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
   //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
   // TODO: insert peptides into a TMP table
 
-  override def storeNewPeptides(peptides: Seq[Peptide], msiDb: DatabaseContext): Array[Peptide] = {
+  override def storeNewPeptides(peptides: Seq[Peptide], msiDb: DatabaseConnectionContext): Array[Peptide] = {
 
     val msiCon = msiDb.getConnection // MUST be in SQL (Postgres) mode
     val bulkCopyManager = new CopyManager(msiCon.asInstanceOf[BaseConnection])
@@ -85,7 +85,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
 
   //def storeNewProteins( proteins: Seq[Protein] ): Array[Protein] = null
 
-  override def storeRsPeptideMatches(rs: ResultSet, msiDb: DatabaseContext): Int = {
+  override def storeRsPeptideMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int = {
 
     val msiCon = msiDb.getConnection // MUST be in SQL (Postgres) mode
     val msiEzDbc = ProlineEzDBC(msiCon, msiDb.getDriverType)
@@ -166,7 +166,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
     nbInsertedPepMatches.toInt
   }
 
-  private def _linkPeptideMatchesToChildren(peptideMatches: Seq[PeptideMatch], msiDb: DatabaseContext): Unit = {
+  private def _linkPeptideMatchesToChildren(peptideMatches: Seq[PeptideMatch], msiDb: DatabaseConnectionContext): Unit = {
 
     val bulkCopyManager = new CopyManager(msiDb.getConnection.asInstanceOf[BaseConnection]) // MUST be in SQL (Postgres) mode
 
@@ -194,7 +194,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
 
   }
 
-  override def storeRsProteinMatches(rs: ResultSet, msiDb: DatabaseContext): Int = {
+  override def storeRsProteinMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int = {
 
     val msiCon = msiDb.getConnection // MUST be in SQL (Postgres) mode
     val msiEzDbc = ProlineEzDBC(msiCon, msiDb.getDriverType)
@@ -271,7 +271,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
     nbInsertedProtMatches.toInt
   }
 
-  override def storeRsSequenceMatches(rs: ResultSet, msiDb: DatabaseContext): Int = {
+  override def storeRsSequenceMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int = {
 
     val msiCon = msiDb.getConnection // MUST be in SQL (Postgres) mode
     val bulkCopyManager = new CopyManager(msiCon.asInstanceOf[BaseConnection])

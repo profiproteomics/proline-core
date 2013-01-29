@@ -7,7 +7,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.JPAUtils;
 
 public final class ExternalDbRepository {
@@ -15,7 +15,7 @@ public final class ExternalDbRepository {
     private ExternalDbRepository() {
     }
 
-    public static ExternalDb findExternalByType(final EntityManager udsEm, final Database dbType) {
+    public static ExternalDb findExternalByType(final EntityManager udsEm, final ProlineDatabaseType dbType) {
 
 	JPAUtils.checkEntityManager(udsEm);
 
@@ -43,7 +43,7 @@ public final class ExternalDbRepository {
 	return result;
     }
 
-    public static ExternalDb findExternalByTypeAndProject(final EntityManager udsEm, final Database dbType,
+    public static ExternalDb findExternalByTypeAndProject(final EntityManager udsEm, final ProlineDatabaseType dbType,
 	    final Project project) {
 
 	JPAUtils.checkEntityManager(udsEm);

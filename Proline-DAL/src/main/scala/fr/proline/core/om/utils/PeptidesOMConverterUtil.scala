@@ -15,10 +15,10 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.orm.msi.repository.{ProteinSetRepositorty => proSetRepo}
-import fr.proline.core.orm.util.DatabaseManager
 import javax.persistence.EntityManager
 import javax.persistence.Persistence
-import fr.proline.repository.Database
+import fr.proline.repository.ProlineDatabaseType
+import fr.proline.core.orm.util.DataStoreConnectorFactory
 
 /**
  * Provides method to convert Peptides and PTM objects from ORM to OM.
@@ -78,7 +78,10 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
 
     //Objects to access data in repositories    
     //val prolineRepo = ProlineRepository.getProlineRepositoryInstance()
-    val prolineRepo = DatabaseManager.getInstance()
+    
+    // FIXME this code is NOT Thread / Context safe
+    
+    val dataStoreConnectorFactory = DataStoreConnectorFactory.getInstance
 
     //Found PeptideInstance Children mapped by their id
     val pepInstChildById = new HashMap[Integer, PeptideInstance]()
@@ -121,7 +124,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     val pepInstChildren = pepInstChildById.values.toArray
 
     //Get Peptide, Unmodified Peptide && PeptideInstance 
-    val psDBConnector = prolineRepo.getPsDbConnector()
+    val psDBConnector = dataStoreConnectorFactory.getPsDbConnector()
     val emf = psDBConnector.getEntityManagerFactory()
     val em = emf.createEntityManager()
 

@@ -1,12 +1,12 @@
 package fr.proline.core.om.provider.msi
 import fr.proline.core.om.model.msi.Protein
 import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 
 trait IProteinProvider {
   
-  val pdiDbCtx: DatabaseContext
+  val pdiDbCtx: DatabaseConnectionContext
   
   /**
    * Get Protein (wrapped in Option) with specified Ids.

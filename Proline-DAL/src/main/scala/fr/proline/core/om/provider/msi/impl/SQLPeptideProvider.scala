@@ -9,9 +9,9 @@ import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.util.StringUtils
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class SQLPeptideProvider( psDbCtx: DatabaseContext, sqlExec: SQLQueryExecution ) extends SQLPTMProvider( psDbCtx, sqlExec ) with IPeptideProvider with Logging {
+class SQLPeptideProvider( psDbCtx: DatabaseConnectionContext, sqlExec: SQLQueryExecution ) extends SQLPTMProvider( psDbCtx, sqlExec ) with IPeptideProvider with Logging {
   
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap

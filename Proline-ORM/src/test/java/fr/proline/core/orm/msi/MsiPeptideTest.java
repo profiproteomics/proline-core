@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.msi.repository.MsiPeptideRepository;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class MsiPeptideTest extends DatabaseTestCase {
@@ -26,8 +26,8 @@ public class MsiPeptideTest extends DatabaseTestCase {
     private static final int PEPTIDE_COUNT = 10;
 
     @Override
-    public Database getDatabase() {
-	return Database.MSI;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.MSI;
     }
 
     @Before

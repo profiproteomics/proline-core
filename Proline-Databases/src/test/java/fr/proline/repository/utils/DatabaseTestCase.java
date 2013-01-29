@@ -12,8 +12,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.repository.Database;
 import fr.proline.repository.DatabaseUpgrader;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.JDBCWork;
 import fr.proline.repository.util.JPAUtils;
 
@@ -70,7 +70,7 @@ public abstract class DatabaseTestCase {
     /**
      * @return Database used for Connector creation.
      */
-    public abstract Database getDatabase();
+    public abstract ProlineDatabaseType getProlineDatabaseType();
 
     /**
      * @return Full Path and Name of db properties file in classpath
@@ -85,7 +85,8 @@ public abstract class DatabaseTestCase {
      * @return
      */
     public String getMigrationScriptsLocation() {
-	return DatabaseUpgrader.buildMigrationScriptsLocation(getDatabase(), getConnector().getDriverType());
+	return DatabaseUpgrader.buildMigrationScriptsLocation(getProlineDatabaseType(), getConnector()
+		.getDriverType());
     }
 
     public final DatabaseTestConnector getConnector() {
@@ -97,7 +98,7 @@ public abstract class DatabaseTestCase {
 	    }
 
 	    if (m_connector == null) {
-		m_connector = new DatabaseTestConnector(getDatabase(), getPropertiesFileName());
+		m_connector = new DatabaseTestConnector(getProlineDatabaseType(), getPropertiesFileName());
 
 		if (m_connector.isMemory()) {
 

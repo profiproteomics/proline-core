@@ -14,7 +14,7 @@ public class SQLiteDatabaseConnector extends AbstractDatabaseConnector {
 
     private static final String MEMORY_URL_PROTOCOL = ":memory:";
 
-    public SQLiteDatabaseConnector(final Database database, final Map<Object, Object> properties) {
+    public SQLiteDatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
 	super(database, properties);
     }
 
@@ -41,7 +41,7 @@ public class SQLiteDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected DataSource createDataSource(final Database database, final Map<Object, Object> properties) {
+    protected DataSource createDataSource(final ProlineDatabaseType database, final Map<Object, Object> properties) {
 
 	if (properties == null) {
 	    throw new IllegalArgumentException("Properties Map is null");
@@ -54,7 +54,7 @@ public class SQLiteDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected EntityManagerFactory createEntityManagerFactory(final Database database,
+    protected EntityManagerFactory createEntityManagerFactory(final ProlineDatabaseType database,
 	    final Map<Object, Object> properties, final boolean ormOptimizations) {
 
 	if (properties == null) {

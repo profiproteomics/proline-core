@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.util.MathUtils;
 
@@ -29,8 +29,8 @@ public class ResultsetTest extends DatabaseTestCase {
     private static final Logger LOG = LoggerFactory.getLogger(ResultsetTest.class);
 
     @Override
-    public Database getDatabase() {
-	return Database.MSI;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.MSI;
     }
 
     @Before

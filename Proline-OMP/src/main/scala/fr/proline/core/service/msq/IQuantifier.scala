@@ -32,24 +32,25 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 ResultSummary => MsiResultSummary,
                                 SequenceMatch => MsiSequenceMatch
                                 }
-import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.{IDatabaseConnector,DatabaseContext}
+import fr.proline.repository.IDataStoreConnectorFactory
+import fr.proline.repository.IDatabaseConnector
+import fr.proline.context.DatabaseConnectionContext
 
 trait IQuantifier extends Logging {
   
   // Required fields
-  val dbManager: DatabaseManager
+  val dbManager: IDataStoreConnectorFactory
   val udsMasterQuantChannel: MasterQuantitationChannel
   
   // Instantiated fields
   val projectId = udsMasterQuantChannel.getDataset.getProject.getId
   val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  val msiDbCtx = new DatabaseContext( msiDbConnector )
+  val msiDbCtx = new DatabaseConnectionContext( msiDbConnector )
   val msiEm = msiDbConnector.getEntityManagerFactory().createEntityManager()
   val msiEzDBC = ProlineEzDBC( msiDbConnector.getDataSource.getConnection, msiDbConnector.getDriverType )
   
   val psDbConnector = dbManager.getPsDbConnector
-  val psDbCtx = new DatabaseContext( psDbConnector )
+  val psDbCtx = new DatabaseConnectionContext( psDbConnector )
   val psEzDBC = ProlineEzDBC( psDbConnector.getDataSource.getConnection, psDbConnector.getDriverType )
  
   val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels

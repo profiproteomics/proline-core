@@ -1,9 +1,9 @@
 package fr.proline.core.service.msq
 
 import fr.proline.api.service.IService
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDataStoreConnectorFactory
 
-class ExportQuantRSM( dbManager: DatabaseManager, quantRsmId: Int ) extends IService {
+class ExportQuantRSM( dbManager: IDataStoreConnectorFactory, quantRsmId: Int ) extends IService {
   
   def runService() = {
     

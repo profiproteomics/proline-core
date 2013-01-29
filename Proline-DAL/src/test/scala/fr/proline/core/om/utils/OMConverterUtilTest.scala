@@ -14,13 +14,13 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.PtmNames
 import scala.collection.mutable.ArrayBuilder
-import fr.proline.repository.Database
+import fr.proline.repository.ProlineDatabaseType
 
 class OMConverterUtilTest extends DatabaseTestCase {
 
   var converter: PeptidesOMConverterUtil = null
 
-  override def getDatabase() = Database.PS
+  override def getProlineDatabaseType() = ProlineDatabaseType.PS
 
   @Before
   @throws(classOf[Exception])

@@ -10,20 +10,22 @@ import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.msi.{IRsStorer,MsiSearchStorer,RsStorer}
-import fr.proline.core.om.storer.msi.impl.{JPARsStorer,StorerContext,StorerContextBuilder}
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.core.om.storer.msi.impl.{JPARsStorer,StorerContext}
+import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.DriverType
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.util.StringUtils
 import fr.proline.core.om.storer.msi.impl.SQLRsStorer
 import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
 import fr.proline.core.om.storer.msi.impl.SQLPeaklistWriter
+import fr.proline.context.IExecutionContext
+import fr.proline.context.ContextFactory
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 
 class ResultFileImporterSQLStorer(
-  storerContext: StorerContext,
+  executionContext: IExecutionContext,
   resultIdentFile: File,
-  fileType: String,
-  providerKey: String,
+  fileType: String,  
   instrumentConfigId: Int,
   peaklistSoftwareId: Int,
   importerProperties: Map[String, Any],
@@ -32,20 +34,18 @@ class ResultFileImporterSQLStorer(
   private var _hasInitiatedStorerContext: Boolean = false
   
   // Secondary constructor
-  def this( dbManager: DatabaseManager,
-            msiDbConnector: IDatabaseConnector,
+  def this( dbManager: IDataStoreConnectorFactory,
+           projectId: Int,
             resultIdentFile: File,
-            fileType: String,
-            providerKey: String,
+            fileType: String,           
             instrumentConfigId: Int,
             peaklistSoftwareId: Int,
             importerProperties: Map[String, Any],
             acDecoyRegex: Option[util.matching.Regex] = None ) {
     this(
-      StorerContextBuilder( dbManager, msiDbConnector, useJpa = false ), // Force SQL context
+      ContextFactory.getExecutionContextInstance(dbManager, projectId, false), // Force SQL context
       resultIdentFile,
-      fileType,
-      providerKey,
+      fileType,     
       instrumentConfigId,
       peaklistSoftwareId,
       importerProperties,
@@ -58,7 +58,7 @@ class ResultFileImporterSQLStorer(
   //val wasPsConnectionOpened = storerContext.isPsConnectionOpened
   
   private var targetResultSetId = 0  
-  private val udsEzDBC = ProlineEzDBC(storerContext.udsDbContext)
+  private val udsEzDBC = ProlineEzDBC(executionContext.getUDSDbConnectionContext)
   
   override protected def beforeInterruption = {
     // Release database connections
@@ -69,7 +69,7 @@ class ResultFileImporterSQLStorer(
     
     //if( !wasMsiConnectionOpened ) storerContext.msiDbConnection.close()
     //if( !wasPsConnectionOpened ) storerContext.psDbConnection.close()
-    if( _hasInitiatedStorerContext ) storerContext.closeAll()
+    if( _hasInitiatedStorerContext ) executionContext.closeAll()
   }
   
   def getTargetResultSetId = targetResultSetId
@@ -83,7 +83,7 @@ class ResultFileImporterSQLStorer(
     logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
     >>>
     
-    val msiEzDBC = ProlineEzDBC(storerContext.msiDbContext)
+    val msiEzDBC = ProlineEzDBC(executionContext.getMSIDbConnectionContext)
     
     // Check if a transaction is already initiated
     val wasInTransaction = msiEzDBC.isInTransaction 
@@ -97,12 +97,18 @@ class ResultFileImporterSQLStorer(
     require( rfProviderOpt != None, "No ResultFileProvider for specified identification file format")
     
     // Open the result file
-    //val providerCtx = new ResultFileProviderContext(providerKey,storerContext.pdiDbContext,storerContext.psDbContext)
-    val resultFile = rfProviderOpt.get.getResultFile( resultIdentFile, importerProperties, providerKey )
+     /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Parser service use */
+      val parserContext = if (executionContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
+        executionContext.asInstanceOf[ProviderDecoratedExecutionContext]
+      } else {
+        new ProviderDecoratedExecutionContext(executionContext)
+      }
+    
+    val resultFile = rfProviderOpt.get.getResultFile( resultIdentFile, importerProperties, parserContext )
     >>>
     
     // Instantiate RsStorer
-    //val rsStorer: IRsStorer = RsStorer( storerContext.msiDbContext.getDriverType )
+    //val rsStorer: IRsStorer = RsStorer( storerContext.getMSIDbConnectionContext.getDriverType )
     val rsStorer = new SQLRsStorer(new SQLiteRsWriter, new SQLPeaklistWriter) 
 	
     // Configure result file before parsing
@@ -112,7 +118,14 @@ class ResultFileImporterSQLStorer(
 //    val msiTransaction = stContext.msiEm.getTransaction
 //    var msiTransacOk: Boolean = false
     
-    logger.debug("Starting Msi Db transaction")
+    logger.debug("Starting JPA RSStorer work")
+
+      /* Wrap ExecutionContext in StorerContext for RSStorer service use */
+      val storerContext = if (executionContext.isInstanceOf[StorerContext]) {
+        executionContext.asInstanceOf[StorerContext]
+      } else {
+        new StorerContext(executionContext)
+      }
     
     //Start MSI Transaction and ResultSets store
     try {
@@ -121,7 +134,7 @@ class ResultFileImporterSQLStorer(
 //      msiTransacOk = false
       
       // Insert instrument config in the MSIdb         
-      rsStorer.insertInstrumentConfig( instrumentConfig, this.storerContext)
+      rsStorer.insertInstrumentConfig( instrumentConfig, storerContext)
       
       // Retrieve MSISearch and related MS queries
       val msiSearch = resultFile.msiSearch
@@ -144,13 +157,13 @@ class ResultFileImporterSQLStorer(
       //if( driverType.getDriverClassName == "org.sqlite.JDBC" ) {
         
         // Store the peaklist    
-        val spectrumIdByTitle = rsStorer.storePeaklist( msiSearch.peakList, this.storerContext )
-        rsStorer.storeSpectra( msiSearch.peakList.id, resultFile, this.storerContext )
+        val spectrumIdByTitle = rsStorer.storePeaklist( msiSearch.peakList, storerContext )
+        rsStorer.storeSpectra( msiSearch.peakList.id, resultFile, storerContext )
         >>>
         
     	  //Store the MSI search with related search settings and MS queries    
-        rsStorer.storeMsiSearch( msiSearch, this.storerContext ) 
-        rsStorer.storeMsQueries( msiSearch.id, msQueries, this.storerContext )        
+        rsStorer.storeMsiSearch( msiSearch, storerContext ) 
+        rsStorer.storeMsQueries( msiSearch.id, msQueries, storerContext )        
         >>>
      // }
 	    
@@ -165,7 +178,7 @@ class ResultFileImporterSQLStorer(
           decoyRs.name = msiSearch.title
          
         //if( driverType.getDriverClassName == "org.sqlite.JDBC" )
-          rsStorer.storeResultSet(decoyRs,this.storerContext) 
+          rsStorer.storeResultSet(decoyRs, storerContext) 
         //else
         //  targetRs.decoyResultSet = Some(decoyRs)
           decoyRs
@@ -193,7 +206,7 @@ class ResultFileImporterSQLStorer(
       else targetRs.decoyResultSet = None
 
      //  Store target result set
-  		this.targetResultSetId = rsStorer.storeResultSet(targetRs,this.storerContext)       
+  		this.targetResultSetId = rsStorer.storeResultSet(targetRs, storerContext)       
       >>>
     
 //    this.msiDb.commitTransaction()// VD Pour SQLStorer Only

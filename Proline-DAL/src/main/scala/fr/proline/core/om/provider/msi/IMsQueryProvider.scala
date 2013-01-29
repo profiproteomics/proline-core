@@ -1,11 +1,11 @@
 package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.MsQuery
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 trait IMsQueryProvider {
   
-  val msiDbCtx: DatabaseContext
+  val msiDbCtx: DatabaseConnectionContext
   
   // TODO: remove comments when JPA implementation is done
   

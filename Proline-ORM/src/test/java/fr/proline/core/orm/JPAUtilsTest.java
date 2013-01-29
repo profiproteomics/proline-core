@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.uds.Instrument;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.JDBCReturningWork;
 import fr.proline.repository.util.JPAUtils;
 import fr.proline.repository.utils.DatabaseTestCase;
@@ -32,8 +32,8 @@ public class JPAUtilsTest extends DatabaseTestCase {
     private static final AtomicBoolean STATISTICS_ENABLED = new AtomicBoolean(false);
 
     @Override
-    public Database getDatabase() {
-	return Database.UDS;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.UDS;
     }
 
     @Before

@@ -36,18 +36,18 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 ResultSummary => MsiResultSummary,
                                 SequenceMatch => MsiSequenceMatch
                                 }
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 class Ms1DrivenLabelFreeFeatureQuantifier(
-        val dbManager: DatabaseManager,
+        val dbManager: IDataStoreConnectorFactory,
         val udsEm: EntityManager,
         val udsMasterQuantChannel: MasterQuantitationChannel
         ) extends IQuantifier with Logging {
   
   val lcmsDbConnector = dbManager.getLcMsDbConnector(projectId)
-  val lcmsDbCtx = new DatabaseContext( lcmsDbConnector )
+  val DatabaseConnectionContext = new DatabaseConnectionContext( lcmsDbConnector )
   val lcmsEzDBC = ProlineEzDBC( lcmsDbConnector.getDataSource.getConnection, lcmsDbConnector.getDriverType )
   
   // TODO: require some parameters

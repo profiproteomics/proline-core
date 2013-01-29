@@ -7,11 +7,11 @@ import fr.proline.core.dal.tables.msi.{MsiDbProteinSetTable,MsiDbProteinSetProte
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.{PeptideSet,ProteinSet}
 import fr.proline.core.om.provider.msi.{IPeptideSetProvider,IProteinSetProvider}
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class SQLProteinSetProvider( val msiDbCtx: DatabaseContext,
+class SQLProteinSetProvider( val msiDbCtx: DatabaseConnectionContext,
                              val msiSqlExec: SQLQueryExecution,
-                             val psDbCtx: DatabaseContext,
+                             val psDbCtx: DatabaseConnectionContext,
                              val psSqlExec: SQLQueryExecution,
                              val peptideSetProvider: Option[IPeptideSetProvider] = None ) {
   

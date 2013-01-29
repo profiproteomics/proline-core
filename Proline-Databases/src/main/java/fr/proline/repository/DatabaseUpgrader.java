@@ -49,7 +49,8 @@ public final class DatabaseUpgrader {
     }
 
     /* Public class methods */
-    public static String buildMigrationScriptsLocation(final Database database, final DriverType driverType) {
+    public static String buildMigrationScriptsLocation(final ProlineDatabaseType database,
+	    final DriverType driverType) {
 
 	if (database == null) {
 	    throw new IllegalArgumentException("Database is null");
@@ -78,9 +79,9 @@ public final class DatabaseUpgrader {
 	    throw new IllegalArgumentException("Invalid migrationScriptsLocation");
 	}
 
-	final Database database = connector.getDatabase();
+	final ProlineDatabaseType prolineDbType = connector.getProlineDatabaseType();
 
-	LOG.debug("Upgrading {} Db, migrationScriptsLocation [{}]", database, migrationScriptsLocation);
+	LOG.debug("Upgrading {} Db, migrationScriptsLocation [{}]", prolineDbType, migrationScriptsLocation);
 
 	if (connector.getDriverType() == DriverType.SQLITE) {
 	    return upgradeSQLiteDb(connector, migrationScriptsLocation);
@@ -93,10 +94,10 @@ public final class DatabaseUpgrader {
 	    final int migrationsCount = flyway.migrate();
 
 	    LOG.info("Flyway applies {} migration(s)", migrationsCount);
-	    
+
 	    return migrationsCount;
 	} // End if (driverType is not SQLITE)
-	
+
     }
 
     public static int upgradeDatabase(final IDatabaseConnector connector) {
@@ -106,7 +107,7 @@ public final class DatabaseUpgrader {
 	}
 
 	return upgradeDatabase(connector,
-		buildMigrationScriptsLocation(connector.getDatabase(), connector.getDriverType()));
+		buildMigrationScriptsLocation(connector.getProlineDatabaseType(), connector.getDriverType()));
     }
 
     public static String[] extractTableNames(final Connection con) throws SQLException {

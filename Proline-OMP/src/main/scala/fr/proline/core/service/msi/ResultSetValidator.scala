@@ -12,8 +12,8 @@ import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal._
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.DatabaseContext
+import fr.proline.repository.IDataStoreConnectorFactory
+import fr.proline.context.DatabaseConnectionContext
 
 /*object ResultSetValidator {
   
@@ -31,7 +31,7 @@ import fr.proline.repository.DatabaseContext
   }
 }*/
 
-class ResultSetValidator( dbManager: DatabaseManager,
+class ResultSetValidator( dbManager: IDataStoreConnectorFactory,
                           projectId: Int,
                           targetRs: ResultSet,
                           decoyRsOpt: Option[ResultSet] = None,
@@ -41,7 +41,7 @@ class ResultSetValidator( dbManager: DatabaseManager,
                           storeResultSummary: Boolean = true ) extends IService with Logging {
 
   private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiDbContext = new DatabaseContext(
+  private val msiDbContext = new DatabaseConnectionContext(
       msiDbConnector.getDataSource().getConnection(),
       msiDbConnector.getDriverType()
       )

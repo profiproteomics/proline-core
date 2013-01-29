@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.uds.repository.ProjectRepository;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class UserAccountTest extends DatabaseTestCase {
@@ -25,8 +25,8 @@ public class UserAccountTest extends DatabaseTestCase {
     private static final Logger LOG = LoggerFactory.getLogger(UserAccountTest.class);
 
     @Override
-    public Database getDatabase() {
-	return Database.UDS;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.UDS;
     }
 
     @Before

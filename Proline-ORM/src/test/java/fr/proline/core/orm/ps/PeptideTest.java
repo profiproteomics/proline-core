@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
-import fr.proline.repository.Database;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
 public class PeptideTest extends DatabaseTestCase {
@@ -29,8 +29,8 @@ public class PeptideTest extends DatabaseTestCase {
     private static final int PEPTIDE_COUNT = 10;
 
     @Override
-    public Database getDatabase() {
-	return Database.PS;
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return ProlineDatabaseType.PS;
     }
 
     @Before

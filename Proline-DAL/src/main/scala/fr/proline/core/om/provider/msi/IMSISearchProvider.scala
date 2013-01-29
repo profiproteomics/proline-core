@@ -1,13 +1,13 @@
 package fr.proline.core.om.provider.msi
 
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.MSISearch
 
 trait IMSISearchProvider {
 
-  val udsDbCtx: DatabaseContext
-  val msiDbCtx: DatabaseContext
-  val psDbCtx: DatabaseContext
+  val udsDbCtx: DatabaseConnectionContext
+  val msiDbCtx: DatabaseConnectionContext
+  val psDbCtx: DatabaseConnectionContext
 
   def getMSISearchesAsOptions( msiSearchIds: Seq[Int] ): Array[Option[MSISearch]]
   

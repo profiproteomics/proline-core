@@ -13,11 +13,11 @@ import org.junit.Test
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.PtmNames
-import fr.proline.repository.Database
+import fr.proline.repository.ProlineDatabaseType
 
 class OMComparatorUtilTest extends DatabaseTestCase {
 
-  override def getDatabase() = Database.PS
+  override def getProlineDatabaseType() = ProlineDatabaseType.PS
 
   @Before
   @throws(classOf[Exception])

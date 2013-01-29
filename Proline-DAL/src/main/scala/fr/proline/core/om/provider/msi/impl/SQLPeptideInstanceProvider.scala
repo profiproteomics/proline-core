@@ -9,11 +9,11 @@ import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatchValidationProperties
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class SQLPeptideInstanceProvider( val msiDbCtx: DatabaseContext,                                  
+class SQLPeptideInstanceProvider( val msiDbCtx: DatabaseConnectionContext,                                  
                                   val msiSqlExec: SQLQueryExecution,
-                                  val psDbCtx: DatabaseContext = null,
+                                  val psDbCtx: DatabaseConnectionContext = null,
                                   val psSqlExec: SQLQueryExecution = null,
                                   var peptideProvider: Option[IPeptideProvider] = None ) extends IPeptideInstanceProvider {
   

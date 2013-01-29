@@ -2,16 +2,18 @@ package fr.proline.core.dal
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.repository.DatabaseUpgrader
+import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
 
-class DatabaseManagerForTest(private val udsDb: IDatabaseConnector = null,
+class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = null,
   private val pdiDb: IDatabaseConnector = null,
   private val psDb: IDatabaseConnector = null,
   private val msiDb: IDatabaseConnector = null,
   private val lcMsDb: IDatabaseConnector = null,
-  private val initialize: Boolean = false) extends DatabaseManager with Logging {
+  private val initialize: Boolean = false) extends IDataStoreConnectorFactory with Logging {
+
+  private val m_closeLock = new AnyRef()
 
   if (udsDb == null) {
     logger.warn("No UDS Db Connector")
@@ -94,27 +96,31 @@ class DatabaseManagerForTest(private val udsDb: IDatabaseConnector = null,
   }
 
   override def closeAll() {
-    logger.warn("Closing this DatabaseManagerForTest : use DatabaseTestCase.tearDown() preferably")
+    logger.warn("Closing this DataStoreConnectorFactoryForTest : use DatabaseTestCase.tearDown() preferably")
 
-    if (udsDb != null) {
-      udsDb.close();
-    }
+    m_closeLock.synchronized {
 
-    if (pdiDb != null) {
-      pdiDb.close();
-    }
+      if (lcMsDb != null) {
+        lcMsDb.close()
+      }
 
-    if (psDb != null) {
-      psDb.close();
-    }
+      if (msiDb != null) {
+        msiDb.close()
+      }
 
-    if (msiDb != null) {
-      msiDb.close();
-    }
+      if (psDb != null) {
+        psDb.close()
+      }
 
-    if (lcMsDb != null) {
-      lcMsDb.close();
-    }
+      if (pdiDb != null) {
+        pdiDb.close()
+      }
+
+      if (udsDb != null) {
+        udsDb.close()
+      }
+
+    } // End of synchronized block on m_closeLock
 
   }
 

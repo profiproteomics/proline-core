@@ -2,9 +2,9 @@ package fr.proline.core.service.msq
 
 import fr.proline.api.service.IService
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.orm.util.DatabaseManager
+import fr.proline.repository.IDataStoreConnectorFactory
 
-class QuantifyFraction( dbManager: DatabaseManager, masterQuantChannelID: Int ) extends IService {
+class QuantifyFraction( dbManager: IDataStoreConnectorFactory, masterQuantChannelID: Int ) extends IService {
   
   def runService() = {
     
@@ -46,7 +46,7 @@ object FractionQuantifier {
   import javax.persistence.EntityManager
   import fr.proline.core.service.msq.impl._
   
-  def apply( dbManager: DatabaseManager,
+  def apply( dbManager: IDataStoreConnectorFactory,
              udsEm: EntityManager,
              udsMasterQuantChannel: MasterQuantitationChannel ): IQuantifier = {
     

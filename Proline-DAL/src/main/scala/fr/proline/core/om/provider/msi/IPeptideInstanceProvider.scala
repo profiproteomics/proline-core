@@ -1,12 +1,12 @@
 package fr.proline.core.om.provider.msi
 
 import fr.proline.core.om.model.msi.PeptideInstance
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 trait IPeptideInstanceProvider {
   
-  val msiDbCtx: DatabaseContext
-  val psDbCtx: DatabaseContext
+  val msiDbCtx: DatabaseConnectionContext
+  val psDbCtx: DatabaseConnectionContext
   
   /**
    *  Get PeptideInstances (wrapped in Option) with specified Ids.

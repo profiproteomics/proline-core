@@ -11,9 +11,10 @@ import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.storer.ps.PeptideStorer
-import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.DatabaseContext
+import fr.proline.repository.IDataStoreConnectorFactory
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.JDBCWorkBuilder
+import fr.proline.context.ContextFactory
 
 class SQLRsStorer(private val _rsWriter: IRsWriter,
   private val _pklWriter: IPeaklistWriter) extends IRsStorer with Logging {
@@ -23,13 +24,13 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   val peptideByUniqueKey = _rsWriter.peptideByUniqueKey
   val proteinBySequence = _rsWriter.proteinBySequence
 
-  def storeResultSet(resultSet: ResultSet, dbManager: DatabaseManager, projectId: Int = 0): Int = {
+  def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Int = 0): Int = {
     var createdRsId: Int = 0
 
     var storerContext: StorerContext = null // For SQL use ONLY
 
     try {
-      storerContext = StorerContextBuilder( dbManager, projectId )
+      storerContext = new StorerContext(ContextFactory.getExecutionContextInstance(dbManager, projectId, false))
       createdRsId = storeResultSet(resultSet, storerContext)
     } finally {
 
@@ -79,7 +80,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
 
   private def _insertResultSet(resultSet: ResultSet, context: StorerContext): Unit = {
 
-    val msiDb = context.msiDbContext
+    val msiDb = context.getMSIDbConnectionContext
     val msiEzDBC = ProlineEzDBC(msiDb.getConnection, msiDb.getDriverType)
 
     // Define some vars
@@ -116,7 +117,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
 
   private def _storeNativeResultSetObjects(resultSet: ResultSet, seqDbIdByTmpId: Map[Int, Int], context: StorerContext): Unit = {
 
-    val msiDb = context.msiDbContext
+    val msiDb = context.getMSIDbConnectionContext
     
     /*val rsPeptides = resultSet.peptides
     if( rsPeptides.find( _.id < 0 ) != None )
@@ -144,7 +145,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
       import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
       import fr.proline.core.om.storer.ps.PeptideStorer
 
-      val psDb = context.psDbContext
+      val psDb = context.getPSDbConnectionContext
       val psEzDBC = ProlineEzDBC(psDb.getConnection, psDb.getDriverType)
 
       val psPeptideProvider = new SQLPeptideProvider(psDb,psEzDBC)
@@ -291,7 +292,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
 
   private def _storeNonNativeResultSetObjects(resultSet: ResultSet, context: StorerContext): Unit = {
     
-    val msiDb = context.msiDbContext
+    val msiDb = context.getMSIDbConnectionContext
 
     //resultSet.updateRsIdOfAllObjects() ////// is it still needed ?
 
@@ -446,7 +447,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
     import fr.proline.util.primitives.LongOrIntAsInt._
     
     // Synchronize the some related objects with the UDSdb
-    val udsDbWork = JDBCWorkBuilder.withEzDBC( context.udsDbContext.getDriverType, { udsEzDBC =>
+    val udsDbWork = JDBCWorkBuilder.withEzDBC( context.getUDSDbConnectionContext.getDriverType, { udsEzDBC =>
       val enzymes = msiSearch.searchSettings.usedEnzymes
       for( enzyme <- enzymes ) {
         udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
@@ -455,7 +456,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
         assert( enzyme.id > 0, "can't find an enzyme named '"+enzyme.name+"' in the UDS-DB" )
       }
     })
-    context.udsDbContext.doWork(udsDbWork, true)
+    context.getUDSDbConnectionContext.doWork(udsDbWork, true)
     
     this.msiSearchStorer.storeMsiSearch(msiSearch, context)
   }

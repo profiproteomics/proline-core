@@ -17,7 +17,7 @@ import fr.proline.repository.DriverType
 import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION
 import fr.proline.util.MathUtils.EPSILON_LOW_PRECISION
 import fr.proline.util.StringUtils
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
 @Test
 class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
@@ -141,7 +141,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       start = System.nanoTime
       val storer = new JPARsStorer()
 
-      storer.storeResultSet(resultSet, dbManagerForTest, projectIdForTest)
+      storer.storeResultSet(resultSet, dsConnectorFactoryForTest, projectIdForTest)
 
       stop = System.nanoTime
       ////Fait par le Storer: Attentte partage transaction TODO
@@ -156,11 +156,11 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
       /* JPA Db Contexts */
 
-      val pdiDb = new DatabaseContext(dbManagerForTest.getPdiDbConnector)
+      val pdiDb = new DatabaseConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector)
 
-      val psDb = new DatabaseContext(dbManagerForTest.getPsDbConnector)
+      val psDb = new DatabaseConnectionContext(dsConnectorFactoryForTest.getPsDbConnector)
 
-      val msiDb = new DatabaseContext(dbManagerForTest.getMsiDbConnector(projectIdForTest))
+      val msiDb = new DatabaseConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(projectIdForTest))
 
       val provider = new ORMResultSetProvider(msiDb,psDb,pdiDb)
 

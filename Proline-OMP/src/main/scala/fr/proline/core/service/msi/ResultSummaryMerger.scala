@@ -1,13 +1,10 @@
 package fr.proline.core.service.msi
 
 import javax.persistence.EntityTransaction
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.{ ResultSummaryMerger => RsmMergerAlgo }
@@ -16,12 +13,13 @@ import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{ RsStorer, RsmStorer }
-import fr.proline.core.om.storer.msi.impl.{StorerContext,StorerContextBuilder}
-import fr.proline.core.orm.util.DatabaseManager
-import fr.proline.repository.DatabaseContext
+import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.repository.IDataStoreConnectorFactory
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.ContextFactory
 
 class ResultSummaryMerger(
-  dbManager: DatabaseManager,
+  dbManager: IDataStoreConnectorFactory,
   projectId: Int,
   resultSummaries: Seq[ResultSummary]
 ) extends IService with Logging {
@@ -45,12 +43,12 @@ class ResultSummaryMerger(
     var msiTransacOk: Boolean = false
 
     try {
-      storerContext = StorerContextBuilder( dbManager, projectId )
+      storerContext = new StorerContext(ContextFactory.getExecutionContextInstance(dbManager, projectId, true))
       
-      val msiDb = storerContext.msiDbContext
+      val msiDb = storerContext.getMSIDbConnectionContext
       val msiDriverType = msiDb.getDriverType
 
-      msiTransaction = storerContext.msiDbContext.getEntityManager.getTransaction
+      msiTransaction = storerContext.getMSIDbConnectionContext.getEntityManager.getTransaction
       msiTransaction.begin()
       msiTransacOk = false
 

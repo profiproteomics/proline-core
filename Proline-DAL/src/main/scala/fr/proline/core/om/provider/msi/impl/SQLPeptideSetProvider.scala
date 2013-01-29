@@ -8,11 +8,11 @@ import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.PeptideSetItem
 import fr.proline.core.om.provider.msi.{IPeptideSetProvider,IPeptideInstanceProvider}
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.DatabaseConnectionContext
 
-class SQLPeptideSetProvider( val msiDbCtx: DatabaseContext,
+class SQLPeptideSetProvider( val msiDbCtx: DatabaseConnectionContext,
                              val msiSqlExec: SQLQueryExecution,
-                             val psDbCtx: DatabaseContext,                             
+                             val psDbCtx: DatabaseConnectionContext,                             
                              val psSqlExec: SQLQueryExecution ) extends IPeptideSetProvider {
   
   val PepSetCols = MsiDbPeptideSetTable.columns
