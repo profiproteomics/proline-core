@@ -1,7 +1,15 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 
 /**
@@ -29,11 +37,17 @@ public class QuantitationChannel implements Serializable {
 	@Column(name="number")
 	private Integer number;
 	
+	 // uni-directional many-to-one association to Run
+	@ManyToOne
+	@JoinColumn(name = "run_id")
+	private Run run;
+	
 	private String name;
 
 	@Column(name="quant_result_summary_id")
 	private Integer quantResultSummaryId;
 
+	
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
@@ -47,19 +61,20 @@ public class QuantitationChannel implements Serializable {
 	@JoinColumn(name="quant_label_id")
 	private QuantitationLabel label;
 
-	//bi-directional many-to-one association to Quantitation
+	//bi-directional many-to-one association to Dataset
     @ManyToOne
-	private Quantitation quantitation;
+    	@JoinColumn(name="dataset_id")
+	private Dataset dataset;
 
-	//bi-directional many-to-one association to QuantitationFraction
+	//bi-directional many-to-one association to MasterQuantitationChannel
     @ManyToOne
-	@JoinColumn(name="quantitation_fraction_id")
-	private QuantitationFraction quantitationFraction;
+	@JoinColumn(name="master_quant_channel_id")
+	private MasterQuantitationChannel masterQuantitationChannel;
 
-	//bi-directional many-to-one association to SampleAnalysisReplicate
+	//bi-directional many-to-one association to SampleAnalysis
     @ManyToOne
-	@JoinColumn(name="sample_analysis_replicate_id")
-	private SampleAnalysisReplicate sampleReplicate;
+	@JoinColumn(name="sample_analysis_id")
+	private SampleAnalysis sampleAnalysis;
 
     public QuantitationChannel() {
     }
@@ -112,6 +127,15 @@ public class QuantitationChannel implements Serializable {
 		this.name = name;
 	}
 
+	public Run getRun() {
+	    return run;
+	}
+
+	public void setRun(Run run) {
+	    this.run = run;
+	}
+	
+
 	public Integer getQuantResultSummaryId() {
 		return this.quantResultSummaryId;
 	}
@@ -144,28 +168,28 @@ public class QuantitationChannel implements Serializable {
 		this.label = label;
 	}
 	
-	public Quantitation getQuantitation() {
-		return this.quantitation;
+	public Dataset getDataset() {
+		return this.dataset;
 	}
 
-	public void setQuantitation(Quantitation quantitation) {
-		this.quantitation = quantitation;
+	public void setDataset(Dataset dataset) {
+		this.dataset = dataset;
 	}
 	
-	public QuantitationFraction getQuantitationFraction() {
-		return this.quantitationFraction;
+	public MasterQuantitationChannel getMasterQuantitationChannel() {
+		return this.masterQuantitationChannel;
 	}
 
-	public void setQuantitationFraction(QuantitationFraction quantitationFraction) {
-		this.quantitationFraction = quantitationFraction;
+	public void setMasterQuantitationChannel(MasterQuantitationChannel masterQuantitationChannel) {
+		this.masterQuantitationChannel = masterQuantitationChannel;
 	}
 	
-	public SampleAnalysisReplicate getSampleReplicate() {
-		return this.sampleReplicate;
+	public SampleAnalysis getSampleReplicate() {
+		return this.sampleAnalysis;
 	}
 
-	public void setSampleReplicate(SampleAnalysisReplicate sampleReplicate) {
-		this.sampleReplicate = sampleReplicate;
+	public void setSampleReplicate(SampleAnalysis sampleReplicate) {
+		this.sampleAnalysis = sampleReplicate;
 	}
 	
 }

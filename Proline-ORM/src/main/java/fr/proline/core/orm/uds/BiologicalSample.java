@@ -2,6 +2,7 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
 import java.util.Set;
 
 
@@ -25,17 +26,18 @@ public class BiologicalSample implements Serializable {
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	//bi-directional many-to-one association to Quantitation
-    @ManyToOne
-	private Quantitation quantitation;
+	//bi-directional many-to-one association to Dataset
+	@ManyToOne
+	@JoinColumn(name="quantitation_id")
+	private Dataset dataset;
 
 	//bi-directional many-to-one association to QuantChannel
 	@OneToMany(mappedBy="biologicalSample")
 	private Set<QuantitationChannel> quantitationChannels;
 
-	//bi-directional many-to-one association to SampleAnalysisReplicate
-	@OneToMany(mappedBy="biologicalSample")
-	private Set<SampleAnalysisReplicate> sampleReplicates;
+	//bi-directional many-to-many association to SampleAnalysis
+	@ManyToMany(mappedBy="biologicalSamples")
+	private Set<SampleAnalysis> sampleAnalysis;
 
     public BiologicalSample() {
     }
@@ -72,12 +74,12 @@ public class BiologicalSample implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public Quantitation getQuantitation() {
-		return this.quantitation;
+	public Dataset getDataset() {
+		return this.dataset;
 	}
 
-	public void setQuantitation(Quantitation quantitation) {
-		this.quantitation = quantitation;
+	public void setDataset(Dataset dataset) {
+		this.dataset = dataset;
 	}
 	
 	public Set<QuantitationChannel> getQuantitationChannels() {
@@ -88,12 +90,12 @@ public class BiologicalSample implements Serializable {
 		this.quantitationChannels = quantitationChannels;
 	}
 	
-	public Set<SampleAnalysisReplicate> getSampleReplicates() {
-		return this.sampleReplicates;
+	public Set<SampleAnalysis> getSampleReplicates() {
+		return this.sampleAnalysis;
 	}
 
-	public void setSampleReplicates(Set<SampleAnalysisReplicate> sampleReplicates) {
-		this.sampleReplicates = sampleReplicates;
+	public void setSampleReplicates(Set<SampleAnalysis> sampleReplicates) {
+		this.sampleAnalysis = sampleReplicates;
 	}
 	
 }

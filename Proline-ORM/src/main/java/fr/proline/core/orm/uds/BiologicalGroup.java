@@ -25,10 +25,18 @@ public class BiologicalGroup implements Serializable {
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	//bi-directional many-to-one association to GroupSetup
-    @ManyToOne
-	@JoinColumn(name="group_setup_id")
-	private GroupSetup groupSetup;
+	//bi-directional many-to-many association to GroupSetup
+    @ManyToMany
+    	@JoinTable(
+		name="group_setup_biological_group_map"
+		, joinColumns={
+			@JoinColumn(name="biological_group_id")
+			}	
+		, inverseJoinColumns={
+			@JoinColumn(name="group_setup_id")
+			}		
+		)
+	private Set<GroupSetup> groupSetups;
 
 	//uni-directional many-to-many association to BiologicalSample
     @ManyToMany
@@ -78,12 +86,12 @@ public class BiologicalGroup implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public GroupSetup getGroupSetup() {
-		return this.groupSetup;
+	public Set<GroupSetup> getGroupSetups() {
+		return this.groupSetups;
 	}
 
-	public void setGroupSetup(GroupSetup groupSetup) {
-		this.groupSetup = groupSetup;
+	public void setGroupSetup(Set<GroupSetup> groupSetups) {
+		this.groupSetups = groupSetups;
 	}
 	
 	public Set<BiologicalSample> getBiologicalSamples() {

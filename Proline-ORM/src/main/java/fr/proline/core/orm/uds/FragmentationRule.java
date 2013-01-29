@@ -32,18 +32,18 @@ public class FragmentationRule implements Serializable {
 	private Integer precursorMinCharge;
 
 	@Column(name="required_serie_id")
-	private Integer requiredSerieId;
+	private Integer requiredSeriesId;
 
 	@Column(name="required_serie_quality_level")
-	private String requiredSerieQualityLevel;
+	private String requiredSeriesQualityLevel;
 
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	//uni-directional many-to-one association to TheoreticalFragment
+	//uni-directional many-to-one association to FragmentationSeries
 	@ManyToOne
 	@JoinColumn(name="theoretical_fragment_id")
-	private TheoreticalFragment theoreticalFragment;
+	private FragmentationSeries fragmentationSeries;
 
     public FragmentationRule() {
     }
@@ -96,20 +96,20 @@ public class FragmentationRule implements Serializable {
 		this.precursorMinCharge = precursorMinCharge;
 	}
 
-	public Integer getRequiredSerieId() {
-		return this.requiredSerieId;
+	public Integer getRequiredSeriesId() {
+		return this.requiredSeriesId;
 	}
 
-	public void setRequiredSerieId(Integer requiredSerieId) {
-		this.requiredSerieId = requiredSerieId;
+	public void setRequiredSeriesId(Integer requiredSeriesId) {
+		this.requiredSeriesId = requiredSeriesId;
 	}
 
-	public String getRequiredSerieQualityLevel() {
-		return this.requiredSerieQualityLevel;
+	public String getRequiredSeriesQualityLevel() {
+		return this.requiredSeriesQualityLevel;
 	}
 
-	public void setRequiredSerieQualityLevel(String requiredSerieQualityLevel) {
-		this.requiredSerieQualityLevel = requiredSerieQualityLevel;
+	public void setRequiredSeriesQualityLevel(String requiredSeriesQualityLevel) {
+		this.requiredSeriesQualityLevel = requiredSeriesQualityLevel;
 	}
 
 	public String getSerializedProperties() {
@@ -120,12 +120,12 @@ public class FragmentationRule implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public TheoreticalFragment getTheoreticalFragment() {
-		return this.theoreticalFragment;
+	public FragmentationSeries getFragmentationSeries() {
+		return this.fragmentationSeries;
 	}
 
-	public void setTheoreticalFragment(TheoreticalFragment theoreticalFragment) {
-		this.theoreticalFragment = theoreticalFragment;
+	public void setFragmentationSeries(FragmentationSeries fragmentationSeries) {
+		this.fragmentationSeries = fragmentationSeries;
 	}
 	
 }

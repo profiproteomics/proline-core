@@ -2,15 +2,16 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
 import java.util.List;
 
 /**
- * The persistent class for the quantitation_fraction database table.
+ * The persistent class for the master_quant_channel database table.
  * 
  */
 @Entity
-@Table(name="quantitation_fraction")
-public class QuantitationFraction implements Serializable {
+@Table(name="master_quant_channel")
+public class MasterQuantitationChannel implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -31,15 +32,16 @@ public class QuantitationFraction implements Serializable {
 	private String serializedProperties;
 
 	//bi-directional many-to-one association to QuantChannel
-	@OneToMany(mappedBy="quantitationFraction")
+	@OneToMany(mappedBy="masterQuantitationChannel")
 	@OrderBy("id ASC") // TODO: add a number column to the quant_channel table
 	private List<QuantitationChannel> quantitationChannels;
 
-	//bi-directional many-to-one association to Quantitation
-    @ManyToOne
-	private Quantitation quantitation;
+	//bi-directional many-to-one association to Dataset
+    @ManyToOne    
+    @JoinColumn(name="quantitation_id")
+	private Dataset dataset;
 
-    public QuantitationFraction() {
+    public MasterQuantitationChannel() {
     }
 
 	public Integer getId() {
@@ -98,12 +100,12 @@ public class QuantitationFraction implements Serializable {
 		this.quantitationChannels = quantitationChannels;
 	}
 	
-	public Quantitation getQuantitation() {
-		return this.quantitation;
+	public Dataset getDataset() {
+		return this.dataset;
 	}
 
-	public void setQuantitation(Quantitation quantitation) {
-		this.quantitation = quantitation;
+	public void setDataset(Dataset dataset) {
+		this.dataset = dataset;
 	}
 	
 }

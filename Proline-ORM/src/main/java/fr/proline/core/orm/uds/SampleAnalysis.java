@@ -2,16 +2,17 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
 import java.util.Set;
 
 
 /**
- * The persistent class for the sample_analysis_replicate database table.
+ * The persistent class for the sample_analysis database table.
  * 
  */
 @Entity
-@Table(name="sample_analysis_replicate")
-public class SampleAnalysisReplicate implements Serializable {
+@Table(name="sample_analysis")
+public class SampleAnalysis implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -24,19 +25,29 @@ public class SampleAnalysisReplicate implements Serializable {
 	private String serializedProperties;
 
 	//bi-directional many-to-one association to QuantChannel
-	@OneToMany(mappedBy="sampleReplicate")
+	@OneToMany(mappedBy="sampleAnalysis")
 	private Set<QuantitationChannel> quantitationChannels;
 
-	//bi-directional many-to-one association to BiologicalSample
-    @ManyToOne
-	@JoinColumn(name="biological_sample_id")
-	private BiologicalSample biologicalSample;
+	//bi-directional many-to-many association to BiologicalSample
+	@ManyToMany
+		@JoinTable(
+			name="biological_sample_sample_analysis_map"
+			, joinColumns={
+				@JoinColumn(name="sample_analysis_id")
+				}	
+			, inverseJoinColumns={
+				@JoinColumn(name="biological_sample_id")
+				}		
+			)
+	private Set<BiologicalSample> biologicalSamples;
 
-	//bi-directional many-to-one association to Quantitation
-    @ManyToOne
-	private Quantitation quantitation;
 
-    public SampleAnalysisReplicate() {
+	//bi-directional many-to-one association to Dataset
+    @ManyToOne
+      @JoinColumn(name="quantitation_id")
+	private Dataset dataset;
+
+    public SampleAnalysis() {
     }
 
 	public Integer getId() {
@@ -71,20 +82,20 @@ public class SampleAnalysisReplicate implements Serializable {
 		this.quantitationChannels = quantitationChannels;
 	}
 	
-	public BiologicalSample getBiologicalSample() {
-		return this.biologicalSample;
+	public Set<BiologicalSample> getBiologicalSample() {
+		return this.biologicalSamples;		
 	}
 
-	public void setBiologicalSample(BiologicalSample biologicalSample) {
-		this.biologicalSample = biologicalSample;
+	public void setBiologicalSample(Set<BiologicalSample> biologicalSamples) {
+		this.biologicalSamples = biologicalSamples;
 	}
 	
-	public Quantitation getQuantitation() {
-		return this.quantitation;
+	public Dataset getDataset() {
+		return this.dataset;
 	}
 
-	public void setQuantitation(Quantitation quantitation) {
-		this.quantitation = quantitation;
+	public void setDataset(Dataset dataset) {
+		this.dataset = dataset;
 	}
 	
 }

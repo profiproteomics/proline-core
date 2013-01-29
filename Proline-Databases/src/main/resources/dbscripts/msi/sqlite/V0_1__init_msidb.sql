@@ -221,6 +221,7 @@ CREATE TABLE peptide_instance (
                 peptide_match_count INTEGER NOT NULL,
                 protein_match_count INTEGER NOT NULL,
                 protein_set_count INTEGER NOT NULL,
+                total_leaves_match_count INTEGER NOT NULL,
                 selection_level INTEGER NOT NULL,
                 elution_time REAL,
                 serialized_properties TEXT,
@@ -559,7 +560,6 @@ CREATE TABLE used_ptm (
                 type TEXT(50),
                 PRIMARY KEY (search_settings_id, ptm_specificity_id)
 );
-
 
 CREATE INDEX sequence_match_pep_idx ON sequence_match (peptide_id);
 

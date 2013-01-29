@@ -11,7 +11,7 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.orm.uds.QuantitationFraction
+import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 MasterQuantComponent => MsiMasterQuantComponent,
                                 ObjectTree => MsiObjectTree,
@@ -39,10 +39,10 @@ trait IQuantifier extends Logging {
   
   // Required fields
   val dbManager: DatabaseManager
-  val udsQuantFraction: QuantitationFraction
+  val udsMasterQuantChannel: MasterQuantitationChannel
   
   // Instantiated fields
-  val projectId = udsQuantFraction.getQuantitation.getProject.getId
+  val projectId = udsMasterQuantChannel.getDataset.getProject.getId
   val msiDbConnector = dbManager.getMsiDbConnector(projectId)
   val msiDbCtx = new DatabaseContext( msiDbConnector )
   val msiEm = msiDbConnector.getEntityManagerFactory().createEntityManager()
@@ -52,7 +52,7 @@ trait IQuantifier extends Logging {
   val psDbCtx = new DatabaseContext( psDbConnector )
   val psEzDBC = ProlineEzDBC( psDbConnector.getDataSource.getConnection, psDbConnector.getDriverType )
  
-  val udsQuantChannels = udsQuantFraction.getQuantitationChannels
+  val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
   val quantChannelIds = udsQuantChannels.map { _.getId } toArray
   
   val rsmIds = udsQuantChannels.map { udsQuantChannel =>    

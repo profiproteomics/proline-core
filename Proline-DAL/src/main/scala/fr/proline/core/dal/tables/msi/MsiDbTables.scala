@@ -352,6 +352,7 @@ object MsiDbPeptideInstanceColumns extends ColumnEnumeration {
   val PEPTIDE_MATCH_COUNT = Column("peptide_match_count")
   val PROTEIN_MATCH_COUNT = Column("protein_match_count")
   val PROTEIN_SET_COUNT = Column("protein_set_count")
+  val TOTAL_LEAVES_MATCH_COUNT = Column("total_leaves_match_count")
   val SELECTION_LEVEL = Column("selection_level")
   val ELUTION_TIME = Column("elution_time")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")

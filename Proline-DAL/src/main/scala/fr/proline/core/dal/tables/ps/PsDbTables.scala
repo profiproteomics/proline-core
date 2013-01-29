@@ -71,9 +71,8 @@ object PsDbPeptidePtmTable extends PsDbPeptidePtmTable {
 
 object PsDbPeptidePtmInsertStatusColumns extends ColumnEnumeration {
   val $tableName = PsDbPeptidePtmInsertStatusTable.name
-  val ID = Column("id")
-  val IS_OK = Column("is_ok")
   val PEPTIDE_ID = Column("peptide_id")
+  val IS_OK = Column("is_ok")
 }
 
 abstract class PsDbPeptidePtmInsertStatusTable extends TableDefinition[PsDbPeptidePtmInsertStatusColumns.type]

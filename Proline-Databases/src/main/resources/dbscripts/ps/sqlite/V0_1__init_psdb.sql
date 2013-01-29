@@ -39,9 +39,9 @@ CREATE TABLE peptide_ptm (
 );
 
 CREATE TABLE peptide_ptm_insert_status (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                is_ok TEXT NOT NULL,
                 peptide_id INTEGER NOT NULL,
+                is_ok TEXT NOT NULL,
+                PRIMARY KEY (peptide_id),
                 FOREIGN KEY (peptide_id) REFERENCES peptide (id)
 );
 
@@ -83,8 +83,9 @@ CREATE TABLE ptm_specificity (
                 FOREIGN KEY (classification_id) REFERENCES ptm_classification (id)
 );
 
+CREATE INDEX peptide_ptm_peptide_idx ON peptide_ptm (peptide_id);
+
 CREATE UNIQUE INDEX peptide_sequence_ptm_idx ON peptide (sequence,ptm_string);
 
 CREATE INDEX peptide_mass_idx ON peptide (calculated_mass);
 
-CREATE INDEX peptide_ptm_peptide_idx ON peptide_ptm (peptide_id);

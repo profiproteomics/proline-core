@@ -15,7 +15,7 @@ import fr.proline.util.ms._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.orm.uds.{QuantitationFraction => UdsQuantFraction}
+import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 MasterQuantComponent => MsiMasterQuantComponent,
                                 ObjectTree => MsiObjectTree,
@@ -43,7 +43,7 @@ import fr.proline.repository.DatabaseContext
 class Ms1DrivenLabelFreeFeatureQuantifier(
         val dbManager: DatabaseManager,
         val udsEm: EntityManager,
-        val udsQuantFraction: UdsQuantFraction
+        val udsMasterQuantChannel: MasterQuantitationChannel
         ) extends IQuantifier with Logging {
   
   val lcmsDbConnector = dbManager.getLcMsDbConnector(projectId)
@@ -67,7 +67,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
   
   val lcmsMapSet = {    
     
-    val mapSetId = udsQuantFraction.getLcmsMapSetId()    
+    val mapSetId = udsMasterQuantChannel.getLcmsMapSetId()    
 
     assert( mapSetId > 0, "a LCMS map set must be created first" )
       //require Pairs::Lcms::Module::Loader::MapSet
@@ -342,8 +342,8 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     val quantRsmId = msiQuantRSM.getId
     
     // Update quant result summary id of the quantitation fraction
-    udsQuantFraction.setQuantResultSummaryId(quantRsmId)
-    udsEm.persist(udsQuantFraction)
+    udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
+    udsEm.persist(udsMasterQuantChannel)
     
     // Store master quant result summary
     this.storeMasterQuantResultSummary( this.mergedResultSummary, msiQuantRSM, msiQuantResultSet )

@@ -767,6 +767,7 @@ CREATE TABLE public.peptide_instance (
                 peptide_match_count INTEGER NOT NULL,
                 protein_match_count INTEGER NOT NULL,
                 protein_set_count INTEGER NOT NULL,
+                total_leaves_match_count INTEGER NOT NULL,
                 selection_level INTEGER NOT NULL,
                 elution_time REAL,
                 serialized_properties TEXT,
@@ -781,6 +782,7 @@ COMMENT ON TABLE public.peptide_instance IS 'Table to list all the distinct pept
 COMMENT ON COLUMN public.peptide_instance.peptide_match_count IS 'The number of peptide matches related to the same peptide instance.';
 COMMENT ON COLUMN public.peptide_instance.protein_match_count IS 'The number of protein matches containaning an AA sequence corresponding to this peptide instance. Note: a peptide could be considered as proteotypic if this number equals 1.';
 COMMENT ON COLUMN public.peptide_instance.protein_set_count IS 'The number of protein sets related to this peptide instance.';
+COMMENT ON COLUMN public.peptide_instance.total_leaves_match_count IS 'The number of leave peptide matches related to this peptide instance. This value correspond is Spectral Count';
 COMMENT ON COLUMN public.peptide_instance.selection_level IS 'An integer coding for the selection of this peptide instance : 0 = manual deselection 1 = automatic deselection 2 = automatic selection 4 = manual selection';
 COMMENT ON COLUMN public.peptide_instance.elution_time IS 'A value representing an elution time property of the peptide instance. Elution time is expressed is seconds.';
 COMMENT ON COLUMN public.peptide_instance.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details). TODO: store is_proteotypic';
@@ -837,7 +839,7 @@ COMMENT ON TABLE public.master_quant_peptide_ion IS 'A master quant peptide ion 
 COMMENT ON COLUMN public.master_quant_peptide_ion.charge IS 'The charge of the quantified item (example : 2+, 3+, etc...)';
 COMMENT ON COLUMN public.master_quant_peptide_ion.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.master_quant_peptide_ion.lcms_feature_id IS 'A link to a lcms feature in an lcms database';
-COMMENT ON COLUMN public.master_quant_peptide_ion.peptide_instance_id IS 'Raccourci pour savoir si le peptide à été identifié (=si non null)';
+COMMENT ON COLUMN public.master_quant_peptide_ion.peptide_instance_id IS 'Raccourci pour savoir si le peptide ï¿½ ï¿½tï¿½ identifiï¿½ (=si non null)';
 COMMENT ON COLUMN public.master_quant_peptide_ion.result_summary_id IS 'Used for indexation by result summary';
 
 

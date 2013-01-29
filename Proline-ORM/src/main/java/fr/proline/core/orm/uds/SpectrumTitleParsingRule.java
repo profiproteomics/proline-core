@@ -2,7 +2,6 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import javax.persistence.*;
-import java.util.Set;
 
 
 /**

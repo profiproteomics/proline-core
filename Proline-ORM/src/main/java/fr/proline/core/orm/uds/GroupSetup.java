@@ -2,6 +2,7 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
 import java.util.Set;
 
 
@@ -23,13 +24,14 @@ public class GroupSetup implements Serializable {
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	//bi-directional many-to-one association to BiologicalGroup
-	@OneToMany(mappedBy="groupSetup")
+	//bi-directional many-to-many association to BiologicalGroup
+	@ManyToMany(mappedBy="groupSetups")
 	private Set<BiologicalGroup> biologicalGroups;
 
-	//bi-directional many-to-one association to Quantitation
-    @ManyToOne
-	private Quantitation quantitation;
+	//bi-directional many-to-one association to Dataset
+    @ManyToOne    
+    @JoinColumn(name="quantitation_id")
+	private Dataset dataset;
 
 	//bi-directional many-to-one association to RatioDefinition
 	@OneToMany(mappedBy="groupSetup")
@@ -70,12 +72,12 @@ public class GroupSetup implements Serializable {
 		this.biologicalGroups = biologicalGroups;
 	}
 	
-	public Quantitation getQuantitation() {
-		return this.quantitation;
+	public Dataset getDataset() {
+		return this.dataset;
 	}
 
-	public void setQuantitation(Quantitation quantitation) {
-		this.quantitation = quantitation;
+	public void setDataset(Dataset dataset) {
+		this.dataset = dataset;
 	}
 	
 	public Set<RatioDefinition> getRatioDefinitions() {

@@ -188,7 +188,7 @@ CREATE TABLE seq_db_instance (
                 is_deleted TEXT NOT NULL,
                 revision INTEGER NOT NULL,
                 creation_timestamp TEXT NOT NULL,
-                sequence_count INTEGER NOT NULL,
+                sequence_count INTEGER,
                 residue_count INTEGER,
                 serialized_properties TEXT,
                 seq_db_release_id INTEGER,
@@ -222,7 +222,6 @@ CREATE TABLE taxon_extra_name (
                 taxon_id INTEGER NOT NULL,
                 FOREIGN KEY (taxon_id) REFERENCES taxon (id)
 );
-
 
 CREATE UNIQUE INDEX bio_sequence_crc_alphabet_mass_idx ON bio_sequence (crc64,alphabet,mass);
 

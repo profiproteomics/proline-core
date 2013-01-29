@@ -18,7 +18,7 @@ import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
                                 ProteinSet => MsiProteinSet,
                                 ResultSummary => MsiResultSummary
                                 }
-import fr.proline.core.orm.uds.{QuantitationFraction => UdsQuantFraction}
+import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.core.service.msq.IQuantifier
 import fr.proline.repository.IDatabaseConnector
@@ -30,7 +30,7 @@ import fr.proline.repository.IDatabaseConnector
 class SpectralCountQuantifier(
         val dbManager: DatabaseManager,
         val udsEm: EntityManager,
-        val udsQuantFraction: UdsQuantFraction
+        val udsMasterQuantChannel: MasterQuantitationChannel
         ) extends IQuantifier with Logging {
   
   def quantifyFraction(): Unit = {
@@ -48,15 +48,15 @@ class SpectralCountQuantifier(
     val quantRsmId = msiQuantRSM.getId
     
     // Update quant result summary id of the quantitation fraction
-    udsQuantFraction.setQuantResultSummaryId(quantRsmId)
-    udsEm.persist(udsQuantFraction)
+    udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
+    udsEm.persist(udsMasterQuantChannel)
     
     // Store master quant result summary
     this.storeMasterQuantResultSummary( this.mergedResultSummary, msiQuantRSM, msiQuantResultSet )
     
     // Compute master quant peptides
     val mqPeptides = Ms2CountQuantifier.computeMasterQuantPeptides(
-                       udsQuantFraction,
+                       udsMasterQuantChannel,
                        this.mergedResultSummary,
                        this.identResultSummaries
                        )
@@ -77,7 +77,7 @@ class SpectralCountQuantifier(
     
     // Compute master quant protein sets
     val mqProtSets = Ms2CountQuantifier.computeMasterQuantProteinSets(
-                        udsQuantFraction,
+                        udsMasterQuantChannel,
                         mqPeptides,
                         this.mergedResultSummary,
                         this.identResultSummaries

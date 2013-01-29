@@ -9,27 +9,24 @@
 		<class>fr.proline.core.orm.uds.VirtualFolder</class>
 		<class>fr.proline.core.orm.uds.Enzyme</class>
 		<class>fr.proline.core.orm.uds.EnzymeCleavage</class>
-		<class>fr.proline.core.orm.uds.Identification</class>
-		<class>fr.proline.core.orm.uds.IdentificationFraction</class>
-		<class>fr.proline.core.orm.uds.IdentificationFractionSummary</class>
-		<class>fr.proline.core.orm.uds.IdentificationSummary</class>
+		<class>fr.proline.core.orm.uds.IdentificationDataset</class>
 		<class>fr.proline.core.orm.uds.Activation</class>
 		<class>fr.proline.core.orm.uds.AdminInformation</class>
 		<class>fr.proline.core.orm.uds.FragmentationRule</class>
 		<class>fr.proline.core.orm.uds.Instrument</class>
 		<class>fr.proline.core.orm.uds.InstrumentConfiguration</class>
 		<class>fr.proline.core.orm.uds.ProteinMatchDecoyRule</class>
-		<class>fr.proline.core.orm.uds.TheoreticalFragment</class>
+		<class>fr.proline.core.orm.uds.FragmentationSeries</class>
 		<class>fr.proline.core.orm.uds.BiologicalGroup</class>
 		<class>fr.proline.core.orm.uds.BiologicalSample</class>
 		<class>fr.proline.core.orm.uds.GroupSetup</class>
 		<class>fr.proline.core.orm.uds.QuantitationChannel</class>
 		<class>fr.proline.core.orm.uds.QuantitationLabel</class>
 		<class>fr.proline.core.orm.uds.QuantitationMethod</class>
-		<class>fr.proline.core.orm.uds.Quantitation</class>
-		<class>fr.proline.core.orm.uds.QuantitationFraction</class>
+		<class>fr.proline.core.orm.uds.Dataset</class>
+		<class>fr.proline.core.orm.uds.MasterQuantitationChannel</class>
 		<class>fr.proline.core.orm.uds.RatioDefinition</class>
-		<class>fr.proline.core.orm.uds.SampleAnalysisReplicate</class>
+		<class>fr.proline.core.orm.uds.SampleAnalysis</class>
 		<class>fr.proline.core.orm.uds.PeaklistSoftware</class>
 		<class>fr.proline.core.orm.uds.RawFile</class>
 		<class>fr.proline.core.orm.uds.Run</class>

@@ -11,13 +11,16 @@ CREATE TABLE admin_infos (
                 PRIMARY KEY (model_version)
 );
 
+CREATE TABLE aggregation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                child_nature TEXT NOT NULL
+);
+
 CREATE TABLE biological_group (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
                 name TEXT(100) NOT NULL,
-                serialized_properties TEXT,
-                group_setup_id INTEGER NOT NULL,
-                FOREIGN KEY (group_setup_id) REFERENCES group_setup (id)
+                serialized_properties TEXT
 );
 
 CREATE TABLE biological_group_biological_sample_item (
@@ -32,7 +35,39 @@ CREATE TABLE biological_sample (
                 name TEXT(100) NOT NULL,
                 serialized_properties TEXT,
                 quantitation_id INTEGER NOT NULL,
-                FOREIGN KEY (quantitation_id) REFERENCES quantitation (id)
+                FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
+);
+
+CREATE TABLE biological_sample_sample_analysis_map (
+                biological_sample_id INTEGER NOT NULL,
+                sample_analysis_id INTEGER NOT NULL,
+                PRIMARY KEY (biological_sample_id, sample_analysis_id)
+);
+
+CREATE TABLE data_set (
+                id INTEGER NOT NULL,
+                number INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT(10000),
+                type TEXT NOT NULL,
+                keywords TEXT,
+                creation_timestamp TEXT NOT NULL,
+                modification_log TEXT,
+                fraction_count INTEGER NOT NULL,
+                serialized_properties TEXT,
+                result_set_id INTEGER,
+                result_summary_id INTEGER,
+                aggregation_id INTEGER,
+                fractionation_id INTEGER,
+                quant_method_id INTEGER,
+                parent_dataset_id INTEGER,
+                project_id INTEGER NOT NULL,
+                PRIMARY KEY (id),
+                FOREIGN KEY (aggregation_id) REFERENCES aggregation (id),
+                FOREIGN KEY (fractionation_id) REFERENCES fractionation (id),
+                FOREIGN KEY (quant_method_id) REFERENCES quant_method (id),
+                FOREIGN KEY (parent_dataset_id) REFERENCES data_set (id),
+                FOREIGN KEY (project_id) REFERENCES project (id)
 );
 
 CREATE TABLE document (
@@ -86,6 +121,11 @@ CREATE TABLE external_db (
                 serialized_properties TEXT
 );
 
+CREATE TABLE fractionation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type TEXT NOT NULL
+);
+
 CREATE TABLE fragmentation_rule (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 description TEXT(1000),
@@ -93,12 +133,19 @@ CREATE TABLE fragmentation_rule (
                 fragment_charge INTEGER,
                 fragment_max_moz REAL,
                 fragment_residue_constraint TEXT(20),
-                required_serie_quality_level TEXT(15),
+                required_series_quality_level TEXT(15),
                 serialized_properties TEXT,
                 theoretical_fragment_id INTEGER,
-                required_serie_id INTEGER,
-                FOREIGN KEY (theoretical_fragment_id) REFERENCES theoretical_fragment (id),
-                FOREIGN KEY (required_serie_id) REFERENCES theoretical_fragment (id)
+                required_series_id INTEGER,
+                FOREIGN KEY (theoretical_fragment_id) REFERENCES fragmentation_series (id),
+                FOREIGN KEY (required_series_id) REFERENCES fragmentation_series (id)
+);
+
+CREATE TABLE fragmentation_series (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT(9),
+                neutral_loss TEXT(5),
+                serialized_properties TEXT
 );
 
 CREATE TABLE group_setup (
@@ -106,56 +153,13 @@ CREATE TABLE group_setup (
                 name TEXT(100) NOT NULL,
                 serialized_properties TEXT,
                 quantitation_id INTEGER NOT NULL,
-                FOREIGN KEY (quantitation_id) REFERENCES quantitation (id)
+                FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
 );
 
-CREATE TABLE identification (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                number INTEGER NOT NULL,
-                name TEXT(100) NOT NULL,
-                description TEXT(10000),
-                keywords TEXT(250),
-                creation_timestamp TEXT NOT NULL,
-                modification_log TEXT,
-                fractionation_type TEXT(10),
-                fraction_count INTEGER NOT NULL,
-                serialized_properties TEXT,
-                active_summary_id INTEGER,
-                project_id INTEGER NOT NULL,
-                FOREIGN KEY (active_summary_id) REFERENCES identification_summary (id),
-                FOREIGN KEY (project_id) REFERENCES project (id)
-);
-
-CREATE TABLE identification_fraction (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                number INTEGER NOT NULL,
-                serialized_properties TEXT,
-                result_set_id INTEGER NOT NULL,
-                identification_id INTEGER NOT NULL,
-                run_id INTEGER,
-                raw_file_name TEXT(250),
-                FOREIGN KEY (identification_id) REFERENCES identification (id),
-                FOREIGN KEY (run_id) REFERENCES run (id),
-                FOREIGN KEY (raw_file_name) REFERENCES raw_file (name)
-);
-
-CREATE TABLE identification_fraction_summary (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                serialized_properties TEXT,
-                result_summary_id INTEGER NOT NULL,
-                identification_fraction_id INTEGER NOT NULL,
-                identification_summary_id INTEGER NOT NULL,
-                FOREIGN KEY (identification_fraction_id) REFERENCES identification_fraction (id),
-                FOREIGN KEY (identification_summary_id) REFERENCES identification_summary (id)
-);
-
-CREATE TABLE identification_summary (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                number INTEGER NOT NULL,
-                serialized_properties TEXT,
-                result_summary_id INTEGER NOT NULL,
-                identification_id INTEGER NOT NULL,
-                FOREIGN KEY (identification_id) REFERENCES identification (id)
+CREATE TABLE group_setup_biological_group_map (
+                group_setup_id INTEGER NOT NULL,
+                biological_group_id INTEGER NOT NULL,
+                PRIMARY KEY (group_setup_id, biological_group_id)
 );
 
 CREATE TABLE instrument (
@@ -181,6 +185,18 @@ CREATE TABLE instrument_config_fragmentation_rule_map (
                 instrument_config_id INTEGER NOT NULL,
                 fragmentation_rule_id INTEGER NOT NULL,
                 PRIMARY KEY (instrument_config_id, fragmentation_rule_id)
+);
+
+CREATE TABLE master_quant_channel (
+                id INTEGER NOT NULL,
+                number INTEGER NOT NULL,
+                name TEXT(100) NOT NULL,
+                serialized_properties TEXT,
+                lcms_map_set_id INTEGER,
+                quant_result_summary_id INTEGER,
+                quantitation_id INTEGER NOT NULL,
+                PRIMARY KEY (id),
+                FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
 );
 
 CREATE TABLE object_tree (
@@ -221,9 +237,9 @@ CREATE TABLE project (
 );
 
 CREATE TABLE project_db_map (
-                external_db_id INTEGER NOT NULL,
                 project_id INTEGER NOT NULL,
-                PRIMARY KEY (external_db_id, project_id)
+                external_db_id INTEGER NOT NULL,
+                PRIMARY KEY (project_id, external_db_id)
 );
 
 CREATE TABLE project_user_account_map (
@@ -240,7 +256,7 @@ CREATE TABLE protein_match_decoy_rule (
 );
 
 CREATE TABLE quant_channel (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER NOT NULL,
                 number INTEGER NOT NULL,
                 name TEXT(100) NOT NULL,
                 context_key TEXT(100) NOT NULL,
@@ -248,16 +264,19 @@ CREATE TABLE quant_channel (
                 lcms_map_id INTEGER,
                 ident_result_summary_id INTEGER NOT NULL,
                 quant_result_summary_id INTEGER,
+                run_id INTEGER,
                 quant_label_id INTEGER,
-                sample_analysis_replicate_id INTEGER NOT NULL,
+                sample_analysis_id INTEGER NOT NULL,
                 biological_sample_id INTEGER NOT NULL,
-                quantitation_fraction_id INTEGER NOT NULL,
-                quantitation_id INTEGER NOT NULL,
+                master_quant_channel_id INTEGER NOT NULL,
+                dataset_id INTEGER NOT NULL,
+                PRIMARY KEY (id),
+                FOREIGN KEY (run_id) REFERENCES run (id),
                 FOREIGN KEY (quant_label_id) REFERENCES quant_label (id),
-                FOREIGN KEY (sample_analysis_replicate_id) REFERENCES sample_analysis_replicate (id),
+                FOREIGN KEY (sample_analysis_id) REFERENCES sample_analysis (id),
                 FOREIGN KEY (biological_sample_id) REFERENCES biological_sample (id),
-                FOREIGN KEY (quantitation_fraction_id) REFERENCES quantitation_fraction (id),
-                FOREIGN KEY (quantitation_id) REFERENCES quantitation (id)
+                FOREIGN KEY (master_quant_channel_id) REFERENCES master_quant_channel (id),
+                FOREIGN KEY (dataset_id) REFERENCES data_set (id)
 );
 
 CREATE TABLE quant_label (
@@ -275,34 +294,6 @@ CREATE TABLE quant_method (
                 type TEXT(20) NOT NULL,
                 abundance_unit TEXT(30) NOT NULL,
                 serialized_properties TEXT
-);
-
-CREATE TABLE quantitation (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                number INTEGER NOT NULL,
-                name TEXT(100) NOT NULL,
-                description TEXT(1000),
-                keywords TEXT(250),
-                creation_timestamp TEXT NOT NULL,
-                modification_log TEXT,
-                fraction_count INTEGER NOT NULL,
-                fractionation_type TEXT(10),
-                serialized_properties TEXT,
-                quant_method_id INTEGER NOT NULL,
-                project_id INTEGER NOT NULL,
-                FOREIGN KEY (quant_method_id) REFERENCES quant_method (id),
-                FOREIGN KEY (project_id) REFERENCES project (id)
-);
-
-CREATE TABLE quantitation_fraction (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                number INTEGER NOT NULL,
-                name TEXT(100) NOT NULL,
-                serialized_properties TEXT,
-                lcms_map_set_id INTEGER,
-                quant_result_summary_id INTEGER,
-                quantitation_id INTEGER NOT NULL,
-                FOREIGN KEY (quantitation_id) REFERENCES quantitation (id)
 );
 
 CREATE TABLE ratio_definition (
@@ -342,14 +333,22 @@ CREATE TABLE run (
                 FOREIGN KEY (raw_file_name) REFERENCES raw_file (name)
 );
 
-CREATE TABLE sample_analysis_replicate (
+CREATE TABLE run_identification (
+                id INTEGER NOT NULL,
+                serialized_properties TEXT,
+                run_id INTEGER,
+                raw_file_name TEXT(250),
+                PRIMARY KEY (id),
+                FOREIGN KEY (run_id) REFERENCES run (id),
+                FOREIGN KEY (raw_file_name) REFERENCES raw_file (name)
+);
+
+CREATE TABLE sample_analysis (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
                 serialized_properties TEXT,
-                biological_sample_id INTEGER NOT NULL,
                 quantitation_id INTEGER NOT NULL,
-                FOREIGN KEY (biological_sample_id) REFERENCES biological_sample (id),
-                FOREIGN KEY (quantitation_id) REFERENCES quantitation (id)
+                FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
 );
 
 CREATE TABLE spec_title_parsing_rule (
@@ -362,13 +361,6 @@ CREATE TABLE spec_title_parsing_rule (
                 first_time TEXT(100),
                 last_time TEXT(100),
                 name TEXT(100) NOT NULL
-);
-
-CREATE TABLE theoretical_fragment (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                type TEXT(9),
-                neutral_loss TEXT(5),
-                serialized_properties TEXT
 );
 
 CREATE TABLE user_account (

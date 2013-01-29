@@ -8,9 +8,7 @@ import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}
-import fr.proline.core.orm.uds.{ Identification => UdsIdentification,
-                                 IdentificationSummary => UdsIdfSummary,
-                                 IdentificationFractionSummary => UdsIdfFractionSummary }
+import fr.proline.core.orm.uds.{ Dataset => UdsIdentificationDataset }
 import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger,ResultSummaryMerger}
 import fr.proline.repository.DatabaseContext
@@ -147,35 +145,36 @@ class IdentificationValidator( dbManager: DatabaseManager,
     
     // Begin new transaction
     val udsEM = udsDbConnector.getEntityManagerFactory.createEntityManager()
-    val udsIdent = udsEM.find(classOf[UdsIdentification], identificationId)    
-    val udsIdfFractions = udsIdent.getFractions() 
+    val udsIdent = udsEM.find(classOf[UdsIdentificationDataset], identificationId)    
+    val udsIdfDatasets = udsIdent.getIdentificationDataset().toList.sortBy(_.getNumber())
   
     udsEM.getTransaction().begin()
     
     val mergedDataType = if( mergeResultSets ) "result_set" else "result_summary"
-    val udsIdentSummaries = udsIdent.getIdentificationSummaries().toList.sort { (a,b) => b.getNumber() < a.getNumber() }
-    val prevNbIdfSummaries: Int = if ( udsIdentSummaries.length == 0 ) 0
-                                  else udsIdentSummaries(0).getNumber()
+      
+   // val udsIdentSummaries = udsIdent.getIdentificationSummaries().toList.sort { (a,b) => b.getNumber() < a.getNumber() }
+   // val prevNbIdfSummaries: Int = if ( udsIdentSummaries.length == 0 ) 0
+   //                               else udsIdentSummaries(0).getNumber()
     
     // Create a new identification instance in UDS database
-    val udsIdfSummary = new UdsIdfSummary()
-    udsIdfSummary.setNumber( prevNbIdfSummaries + 1 )
-    udsIdfSummary.setResultSummaryId( identInstanceRsmId )
-    udsIdfSummary.setIdentification( udsIdent )
+    //val udsIdfSummary = new UdsIdfSummary()
+    //udsIdfSummary.setNumber( prevNbIdfSummaries + 1 )
+    //udsIdfSummary.setResultSummaryId( identInstanceRsmId )
+    //udsIdfSummary.setIdentification( udsIdent )
     // TODO: store properties
     //udsIdfSummary.setSerializedProperties() // merged_data_type = mergedDataType
     
-    udsEM.persist( udsIdfSummary )
+    //udsEM.persist( udsIdfSummary )
     
-    for( udsIdfFraction <- udsIdfFractions ) {
+    for( udsIdfDataset <- udsIdfDatasets ) {
       
       // Create a new identification instance fraction in UDS database
-      val udsIdfFractionSummary = new UdsIdfFractionSummary()
-      udsIdfFractionSummary.setResultSummaryId( rsmIdByRsId(udsIdfFraction.getResultSetId) )      
-      udsIdfFractionSummary.setFraction( udsIdfFraction )
-      udsIdfFractionSummary.setIdentificationSummary( udsIdfSummary )
+      //val udsIdfFractionSummary = new UdsIdfFractionSummary()
+      udsIdfDataset.setResultSummaryId( rsmIdByRsId(udsIdfDataset.getResultSetId) )      
+      //udsIdfFractionSummary.setFraction( udsIdfFraction )
+      //udsIdfFractionSummary.setIdentificationSummary( udsIdfSummary )
       
-      udsEM.persist( udsIdfFractionSummary )
+      udsEM.persist( udsIdfDataset )
       
     }
     

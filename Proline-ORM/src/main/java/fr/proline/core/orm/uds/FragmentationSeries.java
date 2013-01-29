@@ -9,8 +9,8 @@ import javax.persistence.*;
  * 
  */
 @Entity
-@Table(name="theoretical_fragment")
-public class TheoreticalFragment implements Serializable {
+@Table(name="fragmentation_series")
+public class FragmentationSeries implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -23,9 +23,9 @@ public class TheoreticalFragment implements Serializable {
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	private String type;
+	private String name;
 
-    public TheoreticalFragment() {
+    public FragmentationSeries() {
     }
 
 	public Integer getId() {
@@ -52,12 +52,12 @@ public class TheoreticalFragment implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public String getType() {
-		return this.type;
+	public String getName() {
+		return this.name;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }
