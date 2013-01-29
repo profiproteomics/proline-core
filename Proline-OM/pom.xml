@@ -4,7 +4,7 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.6-SNAPSHOT</version>
+    <version>0.0.6</version>
   </parent>
 
   <artifactId>Proline-OM</artifactId>
@@ -70,7 +70,6 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
     </dependency>
 
     <!-- Test -->
