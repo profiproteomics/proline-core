@@ -61,7 +61,7 @@ COMMENT ON COLUMN peptide.serialized_properties IS 'A JSON string which stores o
 CREATE TABLE peptide_ptm_insert_status (
                 peptide_id INTEGER NOT NULL,
                 is_ok BOOLEAN NOT NULL,
-                CONSTRAINT peptide_ptm_insert_status_pk PRIMARY KEY (id)
+                CONSTRAINT peptide_ptm_insert_status_pk PRIMARY KEY (peptide_id)
 );
 COMMENT ON TABLE peptide_ptm_insert_status IS 'Used to specify if the peptide_ptm records corresponding to a given peptide have been correctly inserted.  Modified peptides without link to peptide_ptm must be considered as boggus and should be manually removed from the database. The discussed information is usefull to track inconsistent peptides records and thus maintain the database integrity.';
 COMMENT ON COLUMN peptide_ptm_insert_status.is_ok IS 'A boolean value wich tells us if the peptide PTMs have been correctly stored in the database.';
