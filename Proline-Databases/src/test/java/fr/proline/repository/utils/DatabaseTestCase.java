@@ -126,7 +126,7 @@ public abstract class DatabaseTestCase {
 
 	DatabaseUpgrader.upgradeDatabase(connector, getMigrationScriptsLocation());
 
-	if (LOG.isDebugEnabled()) {
+	if (LOG.isTraceEnabled()) {
 	    /* Print Database Tables */
 	    final EntityManager em = connector.getEntityManagerFactory().createEntityManager();
 	    EntityTransaction transac = null;
@@ -141,7 +141,7 @@ public abstract class DatabaseTestCase {
 
 		    @Override
 		    public void execute(final Connection connection) throws SQLException {
-			LOG.debug("Post-init EntityManager connection : {}  {}", connection,
+			LOG.trace("Post-init EntityManager connection : {}  {}", connection,
 				formatTableNames(connection));
 		    }
 
@@ -174,7 +174,7 @@ public abstract class DatabaseTestCase {
 
 	    }
 
-	} // End if (LOG is Debug)
+	} // End if (LOG is Trace)
 
     }
 
@@ -182,6 +182,7 @@ public abstract class DatabaseTestCase {
 	final DatabaseTestConnector connector = getConnector();
 
 	DatabaseUtils.loadDataSet(connector, datasetName);
+
 	connector.getDatabaseTester().onSetup();
     }
 
@@ -189,6 +190,7 @@ public abstract class DatabaseTestCase {
 	final DatabaseTestConnector connector = getConnector();
 
 	DatabaseUtils.loadCompositeDataSet(connector, datasets);
+
 	connector.getDatabaseTester().onSetup();
     }
 
