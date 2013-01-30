@@ -19,7 +19,7 @@ import fr.proline.core.om.storer.msi.impl.SQLRsStorer
 import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
 import fr.proline.core.om.storer.msi.impl.SQLPeaklistWriter
 import fr.proline.context.IExecutionContext
-import fr.proline.context.ContextFactory
+import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 
 class ResultFileImporterSQLStorer(
@@ -43,7 +43,7 @@ class ResultFileImporterSQLStorer(
             importerProperties: Map[String, Any],
             acDecoyRegex: Option[util.matching.Regex] = None ) {
     this(
-      ContextFactory.getExecutionContextInstance(dbManager, projectId, false), // Force SQL context
+      ContextFactory.buildExecutionContext(dbManager, projectId, false), // Force SQL context
       resultIdentFile,
       fileType,     
       instrumentConfigId,

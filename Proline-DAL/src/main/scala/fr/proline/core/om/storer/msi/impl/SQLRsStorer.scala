@@ -14,7 +14,7 @@ import fr.proline.core.om.storer.ps.PeptideStorer
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.JDBCWorkBuilder
-import fr.proline.context.ContextFactory
+import fr.proline.core.dal.ContextFactory
 
 class SQLRsStorer(private val _rsWriter: IRsWriter,
   private val _pklWriter: IPeaklistWriter) extends IRsStorer with Logging {
@@ -30,7 +30,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
     var storerContext: StorerContext = null // For SQL use ONLY
 
     try {
-      storerContext = new StorerContext(ContextFactory.getExecutionContextInstance(dbManager, projectId, false))
+      storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, false))
       createdRsId = storeResultSet(resultSet, storerContext)
     } finally {
 
@@ -47,7 +47,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
     require(resultSet != null, "ResultSet is null")
 
     if (resultSet.isNative) this._storeResultSet(resultSet, context.seqDbIdByTmpId, context)
-    else this._storeResultSet(resultSet, context )
+    else this._storeResultSet(resultSet, context)
   }
 
   def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], peakListContainer: IPeaklistContainer, context: StorerContext): Int = {
@@ -96,9 +96,8 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
     // Store RDB result set
     // TODO: use JPA instead
 
-    val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery( t =>
-      List(t.NAME, t.DESCRIPTION, t.TYPE, t.MODIFICATION_TIMESTAMP, t.DECOY_RESULT_SET_ID, t.MSI_SEARCH_ID)
-    )
+    val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery(t =>
+      List(t.NAME, t.DESCRIPTION, t.TYPE, t.MODIFICATION_TIMESTAMP, t.DECOY_RESULT_SET_ID, t.MSI_SEARCH_ID))
 
     msiEzDBC.executePrepared(rsInsertQuery, true) { stmt =>
       stmt.executeWith(
@@ -118,7 +117,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   private def _storeNativeResultSetObjects(resultSet: ResultSet, seqDbIdByTmpId: Map[Int, Int], context: StorerContext): Unit = {
 
     val msiDb = context.getMSIDbConnectionContext
-    
+
     /*val rsPeptides = resultSet.peptides
     if( rsPeptides.find( _.id < 0 ) != None )
       throw new Exception("result set peptides must first be persisted")    
@@ -148,7 +147,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
       val psDb = context.getPSDbConnectionContext
       val psEzDBC = ProlineEzDBC(psDb.getConnection, psDb.getDriverType)
 
-      val psPeptideProvider = new SQLPeptideProvider(psDb,psEzDBC)
+      val psPeptideProvider = new SQLPeptideProvider(psDb, psEzDBC)
       val psPeptideStorer = new PeptideStorer(psEzDBC)
 
       // Define some vars
@@ -291,7 +290,7 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   }
 
   private def _storeNonNativeResultSetObjects(resultSet: ResultSet, context: StorerContext): Unit = {
-    
+
     val msiDb = context.getMSIDbConnectionContext
 
     //resultSet.updateRsIdOfAllObjects() ////// is it still needed ?
@@ -443,21 +442,21 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   }
 
   def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Int = {
-    
+
     import fr.proline.util.primitives.LongOrIntAsInt._
-    
+
     // Synchronize the some related objects with the UDSdb
-    val udsDbWork = JDBCWorkBuilder.withEzDBC( context.getUDSDbConnectionContext.getDriverType, { udsEzDBC =>
+    val udsDbWork = JDBCWorkBuilder.withEzDBC(context.getUDSDbConnectionContext.getDriverType, { udsEzDBC =>
       val enzymes = msiSearch.searchSettings.usedEnzymes
-      for( enzyme <- enzymes ) {
+      for (enzyme <- enzymes) {
         udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
           enzyme.id = r.nextAnyVal
         }
-        assert( enzyme.id > 0, "can't find an enzyme named '"+enzyme.name+"' in the UDS-DB" )
+        assert(enzyme.id > 0, "can't find an enzyme named '" + enzyme.name + "' in the UDS-DB")
       }
     })
     context.getUDSDbConnectionContext.doWork(udsDbWork, true)
-    
+
     this.msiSearchStorer.storeMsiSearch(msiSearch, context)
   }
 

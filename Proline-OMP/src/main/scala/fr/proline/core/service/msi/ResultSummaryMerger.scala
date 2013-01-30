@@ -16,7 +16,7 @@ import fr.proline.core.om.storer.msi.{ RsStorer, RsmStorer }
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.context.ContextFactory
+import fr.proline.core.dal.ContextFactory
 
 class ResultSummaryMerger(
   dbManager: IDataStoreConnectorFactory,
@@ -43,7 +43,7 @@ class ResultSummaryMerger(
     var msiTransacOk: Boolean = false
 
     try {
-      storerContext = new StorerContext(ContextFactory.getExecutionContextInstance(dbManager, projectId, true))
+      storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
       
       val msiDb = storerContext.getMSIDbConnectionContext
       val msiDriverType = msiDb.getDriverType

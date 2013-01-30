@@ -47,14 +47,7 @@ public class DatabaseConnectionContext {
      *            Database DriverType (H2, PostgreSQL, SQLLite).
      */
     public DatabaseConnectionContext(final EntityManager entityManager, final DriverType driverType) {
-
-	if (entityManager == null) {
-	    throw new IllegalArgumentException("EntityManager is null");
-	}
-
-	m_entityManager = entityManager;
-
-	m_driverType = driverType;
+	this(entityManager, null, driverType);
     }
 
     /**
@@ -76,12 +69,20 @@ public class DatabaseConnectionContext {
      *            Database DriverType (H2, PostgreSQL, SQLLite).
      */
     public DatabaseConnectionContext(final Connection connection, final DriverType driverType) {
+	this(null, connection, driverType);
+    }
 
-	if (connection == null) {
-	    throw new IllegalArgumentException("Connection is null");
+    /**
+     * Full constructor for sub-classes.
+     */
+    protected DatabaseConnectionContext(final EntityManager entityManager, final Connection connection,
+	    final DriverType driverType) {
+
+	if ((entityManager == null) && (connection == null)) {
+	    throw new IllegalArgumentException("EntityManager and Connection are both null");
 	}
 
-	m_entityManager = null;
+	m_entityManager = entityManager;
 
 	m_driverType = driverType;
 

@@ -4,14 +4,12 @@ import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 import com.weiglewilczek.slf4s.Logging
-
-import fr.proline.context.ContextFactory
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideMatchProvider
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
+import fr.proline.core.dal.ContextFactory
 
 @Test
 class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase with Logging {
@@ -25,7 +23,7 @@ class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase w
 
   @Test
   def test() {
-    val executionContext = ContextFactory.getExecutionContextInstance(dsConnectorFactoryForTest, 1, true)
+    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
 
     val parserContext = new ProviderDecoratedExecutionContext(executionContext)
 

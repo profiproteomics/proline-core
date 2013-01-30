@@ -17,7 +17,7 @@ import fr.proline.repository.IDatabaseConnector
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.util.StringUtils
 import fr.proline.context.IExecutionContext
-import fr.proline.context.ContextFactory
+import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 
 class ResultFileImporterJPAStorer(
@@ -41,7 +41,7 @@ class ResultFileImporterJPAStorer(
     importerProperties: Map[String, Any],
     acDecoyRegex: Option[util.matching.Regex] = None) {
     this(
-      ContextFactory.getExecutionContextInstance(dbManager, projectId, true), // Force JPA context
+      ContextFactory.buildExecutionContext(dbManager, projectId, true), // Force JPA context
       resultIdentFile,
       fileType,
       instrumentConfigId,

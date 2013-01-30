@@ -15,7 +15,6 @@ import fr.proline.repository.util.JDBCWork
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.DatabaseConnectionContext
 import javax.persistence.EntityTransaction
-import fr.proline.context.ContextFactory
 
 abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IRsStorer {
 
@@ -48,7 +47,7 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
 
   }
 
-  def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Int ): Int = {
+  def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Int): Int = {
 
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
@@ -64,9 +63,9 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
     var msiTransacOk: Boolean = false
 
     try {
-      
-      storerContext = new StorerContext(ContextFactory.getExecutionContextInstance(dbManager, projectId, true))
-      
+
+      storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
+
       val msiDb = storerContext.getMSIDbConnectionContext
       val msiEm = msiDb.getEntityManager()
 
@@ -79,13 +78,12 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
         resultSet = resultSet,
         msQueries = null,
         peakListContainer = null,
-        storerContext = storerContext
-      )
+        storerContext = storerContext)
 
       // Commit transaction
       msiTransaction.commit()
       msiTransacOk = true
-      
+
     } finally {
 
       if ((msiTransaction != null) && !msiTransacOk) {
@@ -130,7 +128,7 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
     logger.info("Storing ResultSet " + resultSet.name)
 
     //Create a StorerContext if none was specified
-    
+
     val omResultSetId = resultSet.id
 
     if (omResultSetId > 0)
@@ -146,7 +144,7 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
 
     // Save Spectra and Queries information (MSISearch should  be defined)
     val msiSearch = resultSet.msiSearch
-    
+
     if (msiSearch != null) {
 
       // Save Peaklist information
@@ -199,8 +197,8 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
   def insertInstrumentConfig(instrumCfg: InstrumentConfig, context: StorerContext) = {
     require(instrumCfg.id > 0, "Instrument configuration must have a strictly positive identifier")
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
-      
+    val jdbcWork = JDBCWorkBuilder.withEzDBC(context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
+
       // Check if the instrument config exists in the MSIdb
       val count = msiEzDBC.selectInt("SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id)
 
@@ -217,7 +215,7 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
       }
 
     })
-    
+
     context.getMSIDbConnectionContext.doWork(jdbcWork, true)
   }
 

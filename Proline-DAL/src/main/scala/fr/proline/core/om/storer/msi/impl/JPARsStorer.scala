@@ -162,10 +162,16 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiResultSet.setType(parseType(resultSet))
 
         /* Store MsiSearch and retrieve persisted ORM entity */
-        val tmpMsiSearchId = resultSet.msiSearch.id
-        storeMsiSearch(resultSet.msiSearch, storerContext)
-        val storedMsiSearch = retrieveStoredMsiSearch(storerContext, tmpMsiSearchId)
-        resultSet.msiSearch.id = storedMsiSearch.getId
+        val msiSearch = resultSet.msiSearch
+
+        val omMsiSearchId = msiSearch.id
+
+        storeMsiSearch(msiSearch, storerContext)
+        val storedMsiSearch = retrieveStoredMsiSearch(storerContext, omMsiSearchId)
+
+        if (storedMsiSearch != null) {
+          msiSearch.id = storedMsiSearch.getId // Update OM entity with persisted Primary key
+        }
 
         msiResultSet.setMsiSearch(storedMsiSearch)
 
@@ -180,11 +186,11 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
           if ((decoyResultSet != null) && decoyResultSet.isDefined) {
             /* Store Msi decoy ResultSet and retrieve persisted ORM entity */
             val definedDecoyResultSet = decoyResultSet.get
-            val tmpDecoyRSId = definedDecoyResultSet.id
+            val omDecoyResultSetId = definedDecoyResultSet.id
 
             createResultSet(definedDecoyResultSet, storerContext)
 
-            retrieveCreatedResultSet(storerContext, tmpDecoyRSId)
+            retrieveCreatedResultSet(storerContext, omDecoyResultSetId)
           } else {
             null
           }
@@ -353,11 +359,14 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiSearch.setUserName(search.userName)
 
         /* Store Msi Peaklist and retrieve persisted ORM entity */
-        val tmpPeaklistId = search.peakList.id
-        if (tmpPeaklistId <= 0)
-          storePeaklist(search.peakList, storerContext)
+        val peaklist = search.peakList
+        val omPeaklistId = peaklist.id
 
-        val storedPeaklist = retrieveStoredPeaklist(storerContext, tmpPeaklistId)
+        if (omPeaklistId <= 0) {
+          storePeaklist(peaklist, storerContext)
+        }
+
+        val storedPeaklist = retrieveStoredPeaklist(storerContext, omPeaklistId)
 
         msiSearch.setPeaklist(storedPeaklist)
 
