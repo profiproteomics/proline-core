@@ -28,12 +28,12 @@ class SQLResultSummaryProvider(val msiDbCtx: SQLConnectionContext,
     import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Load peptide sets
-    val pepSetProvider = new SQLPeptideSetProvider(msiDbCtx, msiDbCtx.ezDBC, psDbCtx, psDbCtx.ezDBC)
+    val pepSetProvider = new SQLPeptideSetProvider(msiDbCtx, psDbCtx)
     val pepSets = pepSetProvider.getResultSummariesPeptideSets(rsmIds)
     val inMemPepSetProvider = new InMemoryPeptideSetProvider(pepSets)
 
     // Load protein sets
-    val protSetProvider = new SQLProteinSetProvider(msiDbCtx, msiDbCtx.ezDBC, psDbCtx, psDbCtx.ezDBC, Some(pepSetProvider))
+    val protSetProvider = new SQLProteinSetProvider(msiDbCtx, psDbCtx, Some(pepSetProvider))
     val protSets = protSetProvider.getResultSummariesProteinSets(rsmIds)
     val protSetsByRsmId = protSets.groupBy(_.resultSummaryId)
 
@@ -68,8 +68,8 @@ class SQLResultSummaryProvider(val msiDbCtx: SQLConnectionContext,
       var rsAsOpt = Option.empty[ResultSet]
       if (loadResultSet) {
 
-        val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, msiDbCtx.ezDBC, psDbCtx, psDbCtx.ezDBC)
-        val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx, msiDbCtx.ezDBC)
+        val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
+        val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
 
         val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches(rsmId)
         val protMatches = protMatchProvider.getResultSummariesProteinMatches(Array(rsmId))

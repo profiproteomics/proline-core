@@ -1,18 +1,19 @@
 package fr.proline.core.om.provider.msi.impl
 
-import fr.profi.jdbc.SQLQueryExecution
+import scala.Array.canBuildFrom
+
+import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
-import fr.proline.core.om.model.msi.PtmSpecificity
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.util.primitives.LongOrIntAsInt.anyVal2Int
 
-class SQLPTMProvider( val psDbCtx: DatabaseConnectionContext, val sqlExec: SQLQueryExecution ) extends IPTMProvider {
-  
+class SQLPTMProvider(val psDbCtx: SQLConnectionContext) extends IPTMProvider {
+
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
- 
+
   /*
   /** Returns a map */
   lazy val ptmSpecificityMap: Map[Int,PtmSpecificity] = {
@@ -38,92 +39,92 @@ class SQLPTMProvider( val psDbCtx: DatabaseConnectionContext, val sqlExec: SQLQu
     mapBuilder.result()
     
   }*/
-  
+
   /** Returns a map */
-  lazy val ptmDefinitionById: Map[Int,PtmDefinition] = {
-    
+  lazy val ptmDefinitionById: Map[Int, PtmDefinition] = {
+
     import fr.proline.util.primitives.LongOrIntAsInt._
-    
+
     var ptmColNames: Seq[String] = null
-    val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Int,Map[String,Any]]
-    
+    val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Int, Map[String, Any]]
+
     // Load PTM records
-    sqlExec.selectAndProcess( "SELECT * FROM ptm" ) { r => 
-        
-      if( ptmColNames == null ) { ptmColNames = r.columnNames }
-      
+    psDbCtx.ezDBC.selectAndProcess("SELECT * FROM ptm") { r =>
+
+      if (ptmColNames == null) { ptmColNames = r.columnNames }
+
       // Build the PTM record
-      val ptmRecord = ptmColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
+      val ptmRecord = ptmColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
       val ptmId: Int = ptmRecord("id").asInstanceOf[AnyVal]
-      ptmMapBuilder += ( ptmId -> ptmRecord )
-      
+      ptmMapBuilder += (ptmId -> ptmRecord)
+
     }
-    
+
     val ptmRecordById = ptmMapBuilder.result()
-    
+
     // Load PTM evidence records   
     var ptmEvidColNames: Seq[String] = null
-    
+
     // Execute SQL query to load PTM evidence records
-    val ptmEvidRecords = sqlExec.select( "SELECT * FROM ptm_evidence" ) { r => 
-        
-      if( ptmEvidColNames == null ) { ptmEvidColNames = r.columnNames }
-      
+    val ptmEvidRecords = psDbCtx.ezDBC.select("SELECT * FROM ptm_evidence") { r =>
+
+      if (ptmEvidColNames == null) { ptmEvidColNames = r.columnNames }
+
       // Build the PTM record
       var ptmEvidRecord = new collection.mutable.HashMap[String, Any]
-      ptmEvidColNames foreach { colName => ptmEvidRecord.put( colName, r.nextAnyRefOrElse(null) ) }
-     // var ptmEvidRecord = ptmEvidColNames.map( colName => ( colName -> r.nextAnyRef.get ) ).toMap
-      
+      ptmEvidColNames foreach { colName => ptmEvidRecord.put(colName, r.nextAnyRefOrElse(null)) }
+      // var ptmEvidRecord = ptmEvidColNames.map( colName => ( colName -> r.nextAnyRef.get ) ).toMap
+
       // Fix is_required boolean field
-      if( ptmEvidRecord("is_required") == "true" ) { ptmEvidRecord("is_required") = true }
+      if (ptmEvidRecord("is_required") == "true") { ptmEvidRecord("is_required") = true }
       else { ptmEvidRecord("is_required") = false }
-      
+
       ptmEvidRecord.toMap
-      
+
     }
-    
+
     // Group PTM evidences by PTM id
-    val ptmEvidRecordsByPtmId = ptmEvidRecords.groupBy( _.get("ptm_id").get.asInstanceOf[Int] )
-    
+    val ptmEvidRecordsByPtmId = ptmEvidRecords.groupBy(_.get("ptm_id").get.asInstanceOf[Int])
+
     var ptmSpecifColNames: Seq[String] = null
-    val ptmDefMapBuilder = scala.collection.immutable.Map.newBuilder[Int,PtmDefinition]
-    
+    val ptmDefMapBuilder = scala.collection.immutable.Map.newBuilder[Int, PtmDefinition]
+
     // Load PTM specificity records
-    sqlExec.selectAndProcess( "SELECT * FROM ptm_specificity" ) { r => 
-        
-      if( ptmSpecifColNames == null ) { ptmSpecifColNames = r.columnNames }
-      
+    psDbCtx.ezDBC.selectAndProcess("SELECT * FROM ptm_specificity") { r =>
+
+      if (ptmSpecifColNames == null) { ptmSpecifColNames = r.columnNames }
+
       // Build the PTM specificity record
-      val ptmSpecifRecord = ptmSpecifColNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
-      
+      val ptmSpecifRecord = ptmSpecifColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
+
       // Retrieve corresponding PTM
       val ptmId = ptmSpecifRecord("ptm_id").asInstanceOf[Int]
       val ptmRecord = ptmRecordById(ptmId)
-      
+
       // Retrieve corresponding PTM evidences
       val ptmEvidRecords = ptmEvidRecordsByPtmId.get(ptmId).get
-      
+
       // TODO : load classification
-      val ptmDef = PtmDefinitionBuilder.buildPtmDefinition( ptmRecord = ptmRecord ,
-                                                            ptmSpecifRecord = ptmSpecifRecord,
-                                                            ptmEvidenceRecords = ptmEvidRecords,
-                                                            ptmClassification = "" )
-      
-      ptmDefMapBuilder += ( ptmDef.id -> ptmDef )
-      
+      val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(ptmRecord = ptmRecord,
+        ptmSpecifRecord = ptmSpecifRecord,
+        ptmEvidenceRecords = ptmEvidRecords,
+        ptmClassification = "")
+
+      ptmDefMapBuilder += (ptmDef.id -> ptmDef)
+
     }
-    
-    ptmDefMapBuilder.result()    
+
+    ptmDefMapBuilder.result()
   }
-  
-  lazy val ptmDefByNameAndLocation: Map[Tuple3[String,Char,PtmLocation.Location],PtmDefinition] = {
-    this.ptmDefinitionById.values.map { p => ( p.names.shortName, p.residue, PtmLocation.withName(p.location) ) -> p } toMap
+
+  lazy val ptmDefByNameAndLocation: Map[Tuple3[String, Char, PtmLocation.Location], PtmDefinition] = {
+    this.ptmDefinitionById.values.map { p => (p.names.shortName, p.residue, PtmLocation.withName(p.location)) -> p } toMap
   }
-  
-  lazy val ptmIdByName: Map[String,Int] = {
+
+  lazy val ptmIdByName: Map[String, Int] = {
     this.ptmDefinitionById.values.map { p => p.names.shortName -> p.id } toMap
   }
-  
+
   /*private var ptmDefinitionMap: HashMap[Int, PtmDefinition] = new collection.mutable.HashMap[Int, PtmDefinition]
   
   /** Extends the map of PTM definitions using a provided list of PTM specificity ids */
@@ -146,22 +147,22 @@ class SQLPTMProvider( val psDbCtx: DatabaseConnectionContext, val sqlExec: SQLQu
     }
     
   }*/
-  
-  def getPtmDefinitionsAsOptions( ptmDefIds: Seq[Int] ): Array[Option[PtmDefinition]] = {
+
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
     val ptmDefById = this.ptmDefinitionById
     ptmDefIds.map { ptmDefById.get(_) } toArray
   }
-  
-  def getPtmDefinitions( ptmDefIds: Seq[Int] ): Array[PtmDefinition] = {
-    this.getPtmDefinitionsAsOptions( ptmDefIds ).filter( _ != None ).map( _.get )
+
+  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[PtmDefinition] = {
+    this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_ != None).map(_.get)
   }
-    
-  def getPtmDefinition( ptmShortName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition] = {
-    this.ptmDefByNameAndLocation.get( ptmShortName, ptmResidue, ptmLocation )
+
+  def getPtmDefinition(ptmShortName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
+    this.ptmDefByNameAndLocation.get(ptmShortName, ptmResidue, ptmLocation)
   }
-  
-  def getPtmId( shortName: String ): Option[Int] = {
-    this.ptmIdByName.get( shortName )
+
+  def getPtmId(shortName: String): Option[Int] = {
+    this.ptmIdByName.get(shortName)
   }
-  
+
 }

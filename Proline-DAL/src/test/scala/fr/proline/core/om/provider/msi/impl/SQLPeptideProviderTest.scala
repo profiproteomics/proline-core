@@ -1,22 +1,23 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
+
 import org.hamcrest.CoreMatchers
-import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertThat
-import org.junit.Assert.assertTrue
 import org.junit.After
+import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
-import fr.proline.core.om.model.msi._
-import fr.proline.repository.util.JPAUtils
-import fr.proline.repository.utils.DatabaseUtils
-import fr.proline.repository.utils.DatabaseTestCase
+
+import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.PtmEvidence
+import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.repository.ProlineDatabaseType
-import fr.proline.repository.DriverType
-import fr.proline.core.dal.ProlineEzDBC
-import fr.proline.repository.IDatabaseConnector
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.repository.utils.DatabaseTestCase
 
 @Test
 class SQLPeptideProviderTest extends DatabaseTestCase {
@@ -33,18 +34,13 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
   }
 
-  def newSqlDbContext(connector: IDatabaseConnector) = {
-    new DatabaseConnectionContext(connector.getDataSource().getConnection(),connector.getDriverType())
-  }
-  
   @Test
   def getSinglePeptide() = {
-    val psDb = newSqlDbContext( getConnector() )
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
 
     try {
-      val ezDbc = ProlineEzDBC(psDb)
 
-      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb)
 
       val pep: Option[Peptide] = sqlPepProvider.getPeptide(4)
       assertThat(pep, CoreMatchers.notNullValue());
@@ -64,12 +60,11 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     ids += 1
     ids += 4
 
-    val psDb = newSqlDbContext( getConnector() )
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
 
     try {
-      val ezDbc = ProlineEzDBC(psDb)
 
-      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb)
 
       val peps: Array[Option[Peptide]] = sqlPepProvider.getPeptidesAsOptions(ids)
       assertThat(peps, CoreMatchers.notNullValue())
@@ -85,13 +80,10 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideWithNTermPTM() = {
-    
-    val psDb = newSqlDbContext( getConnector() )
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
 
     try {
-      val ezDbc = ProlineEzDBC(psDb)
-
-      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb)
 
       val pep: Option[Peptide] = sqlPepProvider.getPeptide(6)
       assertThat(pep, CoreMatchers.notNullValue())
@@ -110,13 +102,10 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideOnSeqAndNoPtms() = {
-    
-    val psDb = newSqlDbContext( getConnector() )
-    
-    try {
-      val ezDbc = ProlineEzDBC(psDb)
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
 
-      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
+    try {
+      val sqlPepProvider = new SQLPeptideProvider(psDb)
 
       val ptms = new Array[LocatedPtm](0)
       val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptms)
@@ -132,13 +121,10 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideOnSeqAndPtms() = {
-    
-    val psDb = newSqlDbContext( getConnector() )
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
 
     try {
-      val ezDbc = ProlineEzDBC(psDb)
-
-      val sqlPepProvider = new SQLPeptideProvider(psDb,ezDbc)
+      val sqlPepProvider = new SQLPeptideProvider(psDb)
 
       var ptmsBuilder = Array.newBuilder[LocatedPtm]
 

@@ -15,6 +15,7 @@ import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.JDBCWorkBuilder
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.SQLConnectionContext
 
 class SQLRsStorer(private val _rsWriter: IRsWriter,
   private val _pklWriter: IPeaklistWriter) extends IRsStorer with Logging {
@@ -145,10 +146,16 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
       import fr.proline.core.om.storer.ps.PeptideStorer
 
       val psDb = context.getPSDbConnectionContext
-      val psEzDBC = ProlineEzDBC(psDb.getConnection, psDb.getDriverType)
 
-      val psPeptideProvider = new SQLPeptideProvider(psDb, psEzDBC)
-      val psPeptideStorer = new PeptideStorer(psEzDBC)
+      /* Create a specific SQL Context if needed */
+      val psSQLDbCtx = if (psDb.isInstanceOf[SQLConnectionContext]) {
+        psDb.asInstanceOf[SQLConnectionContext]
+      } else {
+        new SQLConnectionContext(psDb)
+      }
+
+      val psPeptideProvider = new SQLPeptideProvider(psSQLDbCtx)
+      val psPeptideStorer = new PeptideStorer(psSQLDbCtx.ezDBC)
 
       // Define some vars
       val newMsiPepSeqs = newMsiPeptides.map { _.sequence }
@@ -166,9 +173,9 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
       val peptidesInPsDb = peptidesForSeqsInPsDb filter { pep => newMsiPepKeySet.contains(pep.uniqueKey) }
 
       // Store missing PsDb peptides
-      psEzDBC.beginTransaction()
+      psSQLDbCtx.ezDBC.beginTransaction()
       psPeptideStorer.storePeptides(newPsPeptides)
-      psEzDBC.commitTransaction()
+      psSQLDbCtx.ezDBC.commitTransaction()
 
       //psDb.closeConnection()
 
