@@ -28,7 +28,7 @@ class CreateQuantitation(
         experimentalDesign: ExperimentalDesign
       ) extends IService {
   
-  var udsDataset: UdsDataset = null
+  var udsQuantitation: UdsDataset = null
   
   def runService() = {
     
@@ -60,14 +60,14 @@ class CreateQuantitation(
     val fractionCount = fractions.length
     
     // Create new quantitation
-    this.udsDataset = new UdsDataset( udsProject )
-    udsDataset.setNumber( previousQuantNum + 1 )
-    udsDataset.setName( name )
-    udsDataset.setDescription( description )
-    udsDataset.setCreationTimestamp( getTimeAsSQLTimestamp )
-    udsDataset.setFractionCount( fractionCount )
-    udsDataset.setMethod( udsQuantMethod )
-    udsEM.persist( udsDataset )
+    this.udsQuantitation = new UdsDataset( udsProject )
+    udsQuantitation.setNumber( previousQuantNum + 1 )
+    udsQuantitation.setName( name )
+    udsQuantitation.setDescription( description )
+    udsQuantitation.setCreationTimestamp( getTimeAsSQLTimestamp )
+    udsQuantitation.setFractionCount( fractionCount )
+    udsQuantitation.setMethod( udsQuantMethod )
+    udsEM.persist( udsQuantitation )
     
     // Store biological samples
     val udsBioSampleByNum = new HashMap[Int,UdsBiologicalSample]
@@ -78,7 +78,7 @@ class CreateQuantitation(
       val udsBioSample = new UdsBiologicalSample()
       udsBioSample.setNumber( bioSampleNum )
       udsBioSample.setName( bioSample.name )
-      udsBioSample.setDataset( udsDataset)
+      udsBioSample.setDataset( udsQuantitation)
       udsEM.persist( udsBioSample )
       
       udsBioSampleByNum(bioSampleNum) = udsBioSample
@@ -90,7 +90,7 @@ class CreateQuantitation(
       // Save group setup
       val udsGroupSetup = new UdsGroupSetup()
       udsGroupSetup.setName(groupSetup.name)
-      udsGroupSetup.setDataset(udsDataset)
+      udsGroupSetup.setDataset(udsQuantitation)
       udsEM.persist( udsGroupSetup )
       
       // Retrieve biological groups
@@ -160,7 +160,7 @@ class CreateQuantitation(
       val udsQf = new UdsMasterQuantitationChannel()
       udsQf.setNumber( fractionNumber )
       udsQf.setName( fraction.name.getOrElse("") )
-      udsQf.setDataset(udsDataset)
+      udsQf.setDataset(udsQuantitation)
       
       if( fraction.lcmsMapSetId != None ) {
         udsQf.setLcmsMapSetId( fraction.lcmsMapSetId.get )
@@ -195,7 +195,7 @@ class CreateQuantitation(
           val bioSpl = new HashSet[UdsBiologicalSample]()
           bioSpl.add(udsBioSample)
           udsReplicate.setBiologicalSample( bioSpl )
-          udsReplicate.setDataset(udsDataset)
+          udsReplicate.setDataset(udsQuantitation)
           udsEM.persist( udsReplicate )
           
           udsSampleReplicateByKey(contextKey) = udsReplicate
@@ -209,7 +209,7 @@ class CreateQuantitation(
         udsQuantChannel.setSampleReplicate( udsSampleReplicateByKey(contextKey) )
         udsQuantChannel.setBiologicalSample( udsBioSample )
         udsQuantChannel.setMasterQuantitationChannel( udsQf )
-        udsQuantChannel.setDataset( udsDataset)
+        udsQuantChannel.setDataset( udsQuantitation)
         
         // TODO: check method type
         if( quantChannel.lcmsMapId != None ) {

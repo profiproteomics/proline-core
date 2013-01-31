@@ -1,6 +1,8 @@
 package fr.proline.core.dal.helper
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
 import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.util.primitives.LongOrIntAsInt._
 
@@ -34,10 +36,41 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
 
 
   def getResultSetsMsiSearchIds( rsIds: Seq[Int] ): Array[Int] = {
-    this.sqlExec.selectInts(
+    
+    val parentMsiSearchIds = this.sqlExec.selectInts(
       "SELECT DISTINCT msi_search_id FROM result_set " +
       "WHERE id IN ("+  rsIds.mkString(",") +")"
+    ) 
+    val childMsiSearchIds = this.sqlExec.selectInts(
+      "SELECT DISTINCT msi_search_id FROM result_set, result_set_relation " +
+      "WHERE result_set.id = result_set_relation.child_result_set_id " +
+      "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +")"
     )
+    
+    parentMsiSearchIds ++ childMsiSearchIds
+  }
+  
+  def getMsiSearchIdsByParentResultSetId( rsIds: Seq[Int] ): Map[Int,Set[Int]] = {
+   
+    val msiSearchIdsByParentResultSetId = new HashMap[Int,HashSet[Int]]
+    
+    this.sqlExec.selectAndProcess(
+      "SELECT id, msi_search_id FROM result_set " +
+      "WHERE id IN ("+  rsIds.mkString(",") +")"
+    ) { r =>
+      val id: Int = r.nextAnyVal
+      msiSearchIdsByParentResultSetId.getOrElseUpdate(id, new HashSet[Int]) += r.nextInt
+    }
+    
+    this.sqlExec.selectAndProcess(
+      "SELECT result_set_relation.parent_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
+      "WHERE result_set.id = result_set_relation.child_result_set_id " +
+      "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +")"
+    ) { r =>
+      msiSearchIdsByParentResultSetId.getOrElseUpdate(r.nextInt, new HashSet[Int]) += r.nextInt
+    }
+    
+    Map() ++ msiSearchIdsByParentResultSetId.map( t => (t._1 -> t._2.toSet) )
   }
   
   def getResultSetIdByResultSummaryId( rsmIds: Seq[Int] ): Map[Int,Int] = {
@@ -52,7 +85,7 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
     val ptmSpecifIds = this.sqlExec.select(
-                         "SELECT ptm_specificity_id FROM used_ptm, search_settings, msi_search " +
+                         "SELECT DISTINCT ptm_specificity_id FROM used_ptm, search_settings, msi_search " +
                          "WHERE used_ptm.search_settings_id = search_settings.id " +
                          "AND search_settings.id = msi_search.search_settings_id " +
                          "AND msi_search.id IN ("+  msiSearchIds.mkString(",") +")" ) { _.nextInt }

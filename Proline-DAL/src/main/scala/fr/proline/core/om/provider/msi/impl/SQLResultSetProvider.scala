@@ -37,13 +37,14 @@ trait SQLResultSetLoader {
     val protMatchesByRsId = protMatches.groupBy(_.resultSetId)
 
     // Instantiate a MSIdb helper
-    val msiDbHelper = new MsiDbHelper(msiDbCtx.ezDBC)
-    val msiSearchIds = msiDbHelper.getResultSetsMsiSearchIds(rsIds)
-
-    var msiSearchById: Map[Int, fr.proline.core.om.model.msi.MSISearch] = Map()
-    if (udsDbCtx != null) {
-      val msiSearches = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx).getMSISearches(msiSearchIds)
-      msiSearchById = Map() ++ msiSearches.map(ms => ms.id -> ms)
+    val msiDbHelper = new MsiDbHelper( msiDbCtx.ezDBC )
+    val msiSearchIdsByRsId = msiDbHelper.getMsiSearchIdsByParentResultSetId( rsIds )
+    val msiSearchIds = msiSearchIdsByRsId.flatMap( _._2 ).toArray.distinct
+    
+    var msiSearchById: Map[Int,fr.proline.core.om.model.msi.MSISearch] = Map()
+    if( udsDbCtx != null ) {
+      val msiSearches = new SQLMsiSearchProvider(udsDbCtx,msiDbCtx,psDbCtx).getMSISearches(msiSearchIds)
+      msiSearchById = Map() ++ msiSearches.map( ms => ms.id -> ms )
     }
 
     // Execute SQL query to load result sets
@@ -61,9 +62,16 @@ trait SQLResultSetLoader {
       val rsType = resultSetRecord(RSCols.TYPE).asInstanceOf[String]
       val isDecoy = rsType matches "DECOY_SEARCH"
       val isNative = rsType matches "SEARCH"
-      val msiSearchId = resultSetRecord(RSCols.MSI_SEARCH_ID).asInstanceOf[Int]
-      val msiSearch = msiSearchById.getOrElse(msiSearchId, null)
-
+      
+      val rsMsiSearchId = if( isNative ) {
+        resultSetRecord.getOrElse(RSCols.MSI_SEARCH_ID,0).asInstanceOf[Int]
+      } else if( msiSearchIdsByRsId.contains(rsId) ) {
+        // FIXME: we should attach all MSI searches to the result set ???
+        msiSearchIdsByRsId(rsId)(0)
+      } else 0
+      
+      val msiSearch = msiSearchById.getOrElse(rsMsiSearchId,null)
+      
       var decoyRsId: Int = 0
       if (resultSetRecord(RSCols.DECOY_RESULT_SET_ID) != null)
         decoyRsId = resultSetRecord(RSCols.DECOY_RESULT_SET_ID).asInstanceOf[Int]
