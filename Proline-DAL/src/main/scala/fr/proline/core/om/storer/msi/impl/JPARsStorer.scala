@@ -1,12 +1,9 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Timestamp
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.MSISearch
@@ -39,6 +36,8 @@ import fr.proline.core.orm.uds.repository.{ UdsEnzymeRepository => udsEnzymeRepo
 import fr.proline.core.orm.uds.repository.{ UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo }
 import fr.proline.core.orm.uds.repository.{ UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo }
 import fr.proline.util.StringUtils
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Buffer
 
 /**
  * JPA implementation of ResultSet storer.
@@ -218,6 +217,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         val proteinMatchSeqDatabases = mutable.Map.empty[MsiProteinMatch, Array[Int]]
 
         val proteinMatchSequenceMatches = mutable.Map.empty[MsiProteinMatch, Array[SequenceMatch]]
+        val unknownSeqDatabaseIds = new ArrayBuffer[Int]
 
         /* Proteins (BioSequence) & ProteinMatches */
         for (protMatch <- resultSet.proteinMatches) {
@@ -244,7 +244,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
           /* Handle proteinMatchSeqDatabaseMap after having persisted MsiProteinMatches, SeqDatabases and current MsiResultSet */
           for (pMSDEntry <- proteinMatchSeqDatabases; seqDatabaseId <- pMSDEntry._2) {
-            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId, seqDatabaseId, msiResultSet)
+            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId, seqDatabaseId, msiResultSet, unknownSeqDatabaseIds)
           }
 
         } // End if (proteinMatchSeqDatabases is not empty)
@@ -1667,7 +1667,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
   private def bindProteinMatchSeqDatabaseMap(storerContext: StorerContext,
     msiProteinMatchId: Int,
     seqDatabaseId: Int,
-    msiResultSet: MsiResultSet) {
+    msiResultSet: MsiResultSet,
+    unknowSeqDatabaseIds: Buffer[Int]) {
 
     checkStorerContext(storerContext)
 
@@ -1678,8 +1679,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     def retrieveMsiSeqDatabase(seqDatabseId: Int): MsiSeqDatabase = {
-      val knownSeqDatabases = storerContext.getEntityCache(classOf[MsiSeqDatabase])
 
+      val knownSeqDatabases = storerContext.getEntityCache(classOf[MsiSeqDatabase])
       val knownMsiSeqDatabase = knownSeqDatabases.get(seqDatabseId)
 
       if (knownMsiSeqDatabase.isDefined) {
@@ -1702,26 +1703,29 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
     }
 
-    val msiSeqDatabase = retrieveMsiSeqDatabase(seqDatabaseId)
+    if (!unknowSeqDatabaseIds.contains(seqDatabaseId)) {
 
-    if (msiSeqDatabase == null) {
-      logger.warn("Unknown Msi SeqDatabase Id: " + seqDatabaseId)
-    } else {
-      val proteinMatchSeqDatabaseMapPK = new ProteinMatchSeqDatabaseMapPK()
-      proteinMatchSeqDatabaseMapPK.setProteinMatchId(Integer.valueOf(msiProteinMatchId))
-      proteinMatchSeqDatabaseMapPK.setSeqDatabaseId(msiSeqDatabase.getId)
+      val msiSeqDatabase = retrieveMsiSeqDatabase(seqDatabaseId)
 
-      val msiProteinMatchSeqDatabase = new MsiProteinMatchSeqDatabaseMap()
+      if (msiSeqDatabase == null) {
+        unknowSeqDatabaseIds += seqDatabaseId
+        logger.warn("Unknown Msi SeqDatabase Id: " + seqDatabaseId)
+      } else {
+        val proteinMatchSeqDatabaseMapPK = new ProteinMatchSeqDatabaseMapPK()
+        proteinMatchSeqDatabaseMapPK.setProteinMatchId(Integer.valueOf(msiProteinMatchId))
+        proteinMatchSeqDatabaseMapPK.setSeqDatabaseId(msiSeqDatabase.getId)
 
-      // TODO handle serializedProperties
+        val msiProteinMatchSeqDatabase = new MsiProteinMatchSeqDatabaseMap()
 
-      msiProteinMatchSeqDatabase.setId(proteinMatchSeqDatabaseMapPK)
-      msiProteinMatchSeqDatabase.setResultSetId(msiResultSet)
+        // TODO handle serializedProperties
 
-      msiEm.persist(msiProteinMatchSeqDatabase)
-      logger.trace("Msi ProteinMatchSeqDatabase for ProteinMatch #" + msiProteinMatchId + " SeqDatabase #" + msiSeqDatabase.getId + " persisted")
+        msiProteinMatchSeqDatabase.setId(proteinMatchSeqDatabaseMapPK)
+        msiProteinMatchSeqDatabase.setResultSetId(msiResultSet)
+
+        msiEm.persist(msiProteinMatchSeqDatabase)
+        logger.trace("Msi ProteinMatchSeqDatabase for ProteinMatch #" + msiProteinMatchId + " SeqDatabase #" + msiSeqDatabase.getId + " persisted")
+      }
     }
-
   }
 
 }
