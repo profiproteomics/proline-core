@@ -2,7 +2,6 @@ package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
 
-import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideSet

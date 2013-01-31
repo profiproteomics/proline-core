@@ -4,7 +4,6 @@ import com.weiglewilczek.slf4s.Logging
 import collection.JavaConversions.collectionAsScalaIterable
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.validation.{TargetDecoyModes,ValidationParams}
-import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}

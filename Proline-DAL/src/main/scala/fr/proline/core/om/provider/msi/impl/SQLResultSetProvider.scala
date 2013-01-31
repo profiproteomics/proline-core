@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-import fr.profi.jdbc.SQLQueryExecution
 
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi.{ ProteinMatch, PeptideMatch, ResultSet }

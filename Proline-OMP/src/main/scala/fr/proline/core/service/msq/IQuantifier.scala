@@ -6,7 +6,6 @@ import collection.mutable.{ HashMap, HashSet }
 import collection.JavaConversions.{ collectionAsScalaIterable, setAsJavaSet }
 import collection.JavaConverters.{ asJavaCollectionConverter }
 import fr.proline.core.algo.msi.ResultSummaryMerger
-import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.ResultSummary
