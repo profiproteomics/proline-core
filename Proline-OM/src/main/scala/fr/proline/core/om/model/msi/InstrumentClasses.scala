@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 
 import fr.proline.util.misc.InMemoryIdGen
 
+@deprecated("use ORM ActivationType enumeration instead","0.0.7")
 object Activation extends Enumeration {
   type Type = Value
   val CID = Value("CID")

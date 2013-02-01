@@ -22,7 +22,7 @@ public class Aggregation implements Serializable {
 private static final long serialVersionUID = 1L;
     
     public enum ChildNature{
-	SAMPLE_ANALYSIS, QUANTITATION_FRACTION, BIOLOGICAL_SAMPLE, BIOLOGICAL_GROUP, OTHER
+	    SAMPLE_ANALYSIS, QUANTITATION_FRACTION, BIOLOGICAL_SAMPLE, BIOLOGICAL_GROUP, OTHER
     };
     
     @Id

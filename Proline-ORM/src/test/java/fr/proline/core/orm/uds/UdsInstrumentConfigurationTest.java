@@ -44,7 +44,7 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
 	    InstrumentConfiguration insCfg = UdsInstrumentConfigurationRepository
 		    .findInstrumConfForNameAndMs1AndMsn(udsEm, "VENUS_CFG", "Analyzer", null);
 	    assertThat(insCfg, notNullValue());
-	    assertThat(insCfg.getActivation().getType(), is("ActivationType1"));
+	    assertThat(insCfg.getActivation().getType(), is(Activation.ActivationType.CID));
 
 	} finally {
 

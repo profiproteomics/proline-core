@@ -22,9 +22,8 @@ public class Fractionation implements Serializable {
     private static final long serialVersionUID = 1L;
     
     public enum FractionationType {
-	PROTEIN, PEPTIDE, OTHER, NONE
+	    PROTEIN, PEPTIDE, OTHER, NONE
     };
-
 
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
@@ -42,11 +41,11 @@ public class Fractionation implements Serializable {
         this.id = id;
     }
 
-    public FractionationType getFractionationType() {
+    public FractionationType getType() {
         return fractionationType;
     }
 
-    public void setFractionationType(FractionationType fractionationType) {
+    public void setType(FractionationType fractionationType) {
         this.fractionationType = fractionationType;
     }
     

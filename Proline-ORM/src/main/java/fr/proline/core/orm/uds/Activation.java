@@ -13,21 +13,22 @@ public class Activation implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
     public enum ActivationType {
-      CID, ECD, ETD, HCD, PSD
+        CID, ECD, ETD, HCD, PSD
     };
 
 	@Id
 	@Column(name="type")
-	private String type;
+	@Enumerated(value = EnumType.STRING)
+	private ActivationType type;
 	
     public Activation() {
     }
 
-	public String getType() {
+	public ActivationType getType() {
 		return this.type;
 	}
 
-	public void setType(String type) {
+	public void setType(ActivationType type) {
 		this.type = type;
 	}
 
