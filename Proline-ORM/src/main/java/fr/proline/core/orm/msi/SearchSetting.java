@@ -32,6 +32,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @Table(name = "search_settings")
 public class SearchSetting implements Serializable {
     private static final long serialVersionUID = 1L;
+    
+    public enum SoftwareName {
+      MASCOT, OMSSA
+    };
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
