@@ -1,43 +1,23 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Timestamp
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
+
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.om.model.msi.MSISearch
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.MsQuery
-import fr.proline.core.om.model.msi.PeaklistSoftware
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.core.om.model.msi.SequenceMatch
+
+import fr.proline.core.om.model.msi.{InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch}
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.utils.PeptideIdent
+import fr.proline.core.orm.msi.{MsiSearch, ProteinMatchSeqDatabaseMapPK}
 import fr.proline.core.orm.msi.ResultSet.Type
-import fr.proline.core.orm.msi.repository.{ MsiEnzymeRepository => msiEnzymeRepo }
-import fr.proline.core.orm.msi.repository.{ MsiInstrumentConfigRepository => msiInstrumentConfigRepo }
-import fr.proline.core.orm.msi.repository.{ MsiPeaklistSoftwareRepository => msiPeaklistSoftwareRepo }
-import fr.proline.core.orm.msi.repository.{ MsiPeptideRepository => msiPeptideRepo }
-import fr.proline.core.orm.msi.repository.{ MsiSeqDatabaseRepository => msiSeqDatabaseRepo }
-import fr.proline.core.orm.msi.repository.{ ScoringRepository => scoringRepo }
-import fr.proline.core.orm.msi.MsiSearch
-import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK
 import fr.proline.core.orm.msi.SequenceMatchPK
-import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => pdiSeqDatabaseRepo }
-import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => psPeptideRepo }
-import fr.proline.core.orm.ps.repository.{ PsPtmRepository => psPtmRepo }
-import fr.proline.core.orm.uds.repository.{ UdsEnzymeRepository => udsEnzymeRepo }
-import fr.proline.core.orm.uds.repository.{ UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo }
-import fr.proline.core.orm.uds.repository.{ UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo }
+import fr.proline.core.orm.msi.repository.{MsiEnzymeRepository => msiEnzymeRepo, MsiInstrumentConfigRepository => msiInstrumentConfigRepo, MsiPeaklistSoftwareRepository => msiPeaklistSoftwareRepo, MsiPeptideRepository => msiPeptideRepo, MsiSeqDatabaseRepository => msiSeqDatabaseRepo, ScoringRepository => scoringRepo}
+import fr.proline.core.orm.pdi.repository.{PdiSeqDatabaseRepository => pdiSeqDatabaseRepo}
+import fr.proline.core.orm.ps.repository.{PsPeptideRepository => psPeptideRepo, PsPtmRepository => psPtmRepo}
+import fr.proline.core.orm.uds.repository.{UdsEnzymeRepository => udsEnzymeRepo, UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo, UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo}
 import fr.proline.util.StringUtils
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.Buffer
 
 /**
  * JPA implementation of ResultSet storer.
@@ -217,7 +197,6 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         val proteinMatchSeqDatabases = mutable.Map.empty[MsiProteinMatch, Array[Int]]
 
         val proteinMatchSequenceMatches = mutable.Map.empty[MsiProteinMatch, Array[SequenceMatch]]
-        val unknownSeqDatabaseIds = new ArrayBuffer[Int]
 
         /* Proteins (BioSequence) & ProteinMatches */
         for (protMatch <- resultSet.proteinMatches) {
@@ -244,7 +223,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
           /* Handle proteinMatchSeqDatabaseMap after having persisted MsiProteinMatches, SeqDatabases and current MsiResultSet */
           for (pMSDEntry <- proteinMatchSeqDatabases; seqDatabaseId <- pMSDEntry._2) {
-            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId, seqDatabaseId, msiResultSet, unknownSeqDatabaseIds)
+            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId, seqDatabaseId, msiResultSet)
           }
 
         } // End if (proteinMatchSeqDatabases is not empty)
@@ -725,7 +704,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
   }
 
   /**
-   * Retrieves a known SeqDatabase or an already persisted SeqDatabase or persists a new SeqDatabase entity into Msi Db from an existing Pdi Db entity.
+   * Retrieves a known SeqDatabase or an already persisted SeqDatabase or persists a new SeqDatabase entity into Msi Db from an existing Pdi Db entity
+   * or directly from OM SeqDatabase.
    *
    * @param seqDatabase SeqDatabase object, must not be {{{null}}}.
    * @return Msi SeqDatabase entity or {{{null}}} if SeqDatabase does not exist in Pdi Db.
@@ -760,37 +740,59 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       if (msiSeqDatabase == null) {
         /* Try to load from Msi Db by name and Fasta file path */
         msiSeqDatabase = msiSeqDatabaseRepo.findSeqDatabaseForNameAndFastaAndVersion(msiEm, seqDatabase.name, seqDatabase.filePath)
+
+        if (msiSeqDatabase == null) {
+          /* Try to load from Pdi Db by name and Fasta file path */
+          val pdiSeqDatabaseInstance = pdiSeqDatabaseRepo.findSeqDbInstanceWithNameAndFile(storerContext.getPDIDbConnectionContext.getEntityManager, seqDatabase.name, seqDatabase.filePath)
+
+          if (pdiSeqDatabaseInstance == null) {
+            logger.warn("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db, create one from OM")
+
+            /* Create a SeqDatabase into MSI directly from OM SeqDatabase  */
+            msiSeqDatabase = new MsiSeqDatabase()
+            msiSeqDatabase.setFastaFilePath(seqDatabase.filePath)
+            msiSeqDatabase.setName(seqDatabase.name)
+
+            val releaseDate = seqDatabase.releaseDate
+
+            if (releaseDate != null) {
+              msiSeqDatabase.setReleaseDate(new Timestamp(releaseDate.getTime))
+            }
+
+            msiSeqDatabase.setSequenceCount(seqDatabase.sequencesCount)
+
+            // TODO handle  serializedProperties
+
+            msiSeqDatabase.setVersion(seqDatabase.version)
+
+            msiEm.persist(msiSeqDatabase);
+            logger.trace("Msi SeqDatabase {" + omSeqDatabaseId + "} persisted")
+          } else {
+            /* Create derived Msi entity from Pdi */
+            msiSeqDatabase = new MsiSeqDatabase(pdiSeqDatabaseInstance);
+
+            msiEm.persist(msiSeqDatabase);
+            logger.trace("Msi SeqDatabase #" + pdiSeqDatabaseInstance.getId + " persisted")
+          } // End if (pdiSeqDatabaseInstance is not null)
+
+        } // End if (msiSeqDatabase is null)
+
       } // End if (msiSeqDatabase is null)
 
-      if (msiSeqDatabase == null) {
-        /* Try to load from Pdi Db by name and Fasta file path */
-        val pdiSeqDatabaseInstance = pdiSeqDatabaseRepo.findSeqDbInstanceWithNameAndFile(storerContext.getPDIDbConnectionContext.getEntityManager, seqDatabase.name, seqDatabase.filePath)
-
-        if (pdiSeqDatabaseInstance == null) {
-          logger.warn("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
-          msiSeqDatabase = new MsiSeqDatabase()
-          msiSeqDatabase.setFastaFilePath(seqDatabase.filePath);
-          msiSeqDatabase.setName(seqDatabase.name);
-          msiSeqDatabase.setReleaseDate(new Timestamp(seqDatabase.releaseDate.getTime()));
-          msiSeqDatabase.setSequenceCount(seqDatabase.sequencesCount);
-          msiSeqDatabase.setVersion(seqDatabase.version);
-          
-        } else {
-          msiSeqDatabase = new MsiSeqDatabase(pdiSeqDatabaseInstance);
-        }
-        msiEm.persist(msiSeqDatabase);
-
-        knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
-
-        seqDatabase.id = msiSeqDatabase.getId // Update OM entity with Primary key
-
-        logger.trace("Msi SeqDatabase #" + msiSeqDatabase.getId  + " persisted")
-
-      } else {
-        seqDatabase.id = msiSeqDatabase.getId // Update OM entity with persisted Primary key
-      } // End if (msiSeqDatabase is not null)
-
       knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
+
+      val msiSeqDatabaseId = msiSeqDatabase.getId
+
+      if (msiSeqDatabaseId != null) {
+        val msiSeqDatabaseIdValue = msiSeqDatabaseId.intValue
+
+        if (msiSeqDatabaseIdValue > 0) {
+          seqDatabase.id = msiSeqDatabaseIdValue // Update OM entity with persisted Primary key
+
+          knownSeqDatabases += msiSeqDatabaseIdValue -> msiSeqDatabase // Cache with MSI Primary Key
+        }
+
+      }
 
       msiSeqDatabase
     } // End if (msiSeqDatabase not in knownSeqDatabases)
@@ -1670,8 +1672,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
   private def bindProteinMatchSeqDatabaseMap(storerContext: StorerContext,
     msiProteinMatchId: Int,
     seqDatabaseId: Int,
-    msiResultSet: MsiResultSet,
-    unknowSeqDatabaseIds: Buffer[Int]) {
+    msiResultSet: MsiResultSet) {
 
     checkStorerContext(storerContext)
 
@@ -1706,29 +1707,26 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
     }
 
-    if (!unknowSeqDatabaseIds.contains(seqDatabaseId)) {
+    val msiSeqDatabase = retrieveMsiSeqDatabase(seqDatabaseId)
 
-      val msiSeqDatabase = retrieveMsiSeqDatabase(seqDatabaseId)
+    if (msiSeqDatabase == null) {
+      logger.warn("Unknown Msi SeqDatabase Id: " + seqDatabaseId)
+    } else {
+      val proteinMatchSeqDatabaseMapPK = new ProteinMatchSeqDatabaseMapPK()
+      proteinMatchSeqDatabaseMapPK.setProteinMatchId(Integer.valueOf(msiProteinMatchId))
+      proteinMatchSeqDatabaseMapPK.setSeqDatabaseId(msiSeqDatabase.getId)
 
-      if (msiSeqDatabase == null) {
-        unknowSeqDatabaseIds += seqDatabaseId
-        logger.warn("Unknown Msi SeqDatabase Id: " + seqDatabaseId)
-      } else {
-        val proteinMatchSeqDatabaseMapPK = new ProteinMatchSeqDatabaseMapPK()
-        proteinMatchSeqDatabaseMapPK.setProteinMatchId(Integer.valueOf(msiProteinMatchId))
-        proteinMatchSeqDatabaseMapPK.setSeqDatabaseId(msiSeqDatabase.getId)
+      val msiProteinMatchSeqDatabase = new MsiProteinMatchSeqDatabaseMap()
 
-        val msiProteinMatchSeqDatabase = new MsiProteinMatchSeqDatabaseMap()
+      // TODO handle serializedProperties
 
-        // TODO handle serializedProperties
+      msiProteinMatchSeqDatabase.setId(proteinMatchSeqDatabaseMapPK)
+      msiProteinMatchSeqDatabase.setResultSetId(msiResultSet)
 
-        msiProteinMatchSeqDatabase.setId(proteinMatchSeqDatabaseMapPK)
-        msiProteinMatchSeqDatabase.setResultSetId(msiResultSet)
-
-        msiEm.persist(msiProteinMatchSeqDatabase)
-        logger.trace("Msi ProteinMatchSeqDatabase for ProteinMatch #" + msiProteinMatchId + " SeqDatabase #" + msiSeqDatabase.getId + " persisted")
-      }
+      msiEm.persist(msiProteinMatchSeqDatabase)
+      logger.trace("Msi ProteinMatchSeqDatabase for ProteinMatch #" + msiProteinMatchId + " SeqDatabase #" + msiSeqDatabase.getId + " persisted")
     }
+
   }
 
 }
