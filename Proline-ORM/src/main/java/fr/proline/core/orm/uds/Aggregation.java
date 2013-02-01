@@ -9,6 +9,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 /**
@@ -16,6 +18,12 @@ import javax.persistence.Table;
  * 
  */
 @Entity
+@NamedQueries({
+  @NamedQuery(
+    name = "findAggregationByType",
+    query = "SELECT aggreg FROM fr.proline.core.orm.uds.Aggregation aggreg WHERE aggreg.childNature = :child_nature"
+  )
+})
 @Table(name="aggregation")
 public class Aggregation implements Serializable {
     

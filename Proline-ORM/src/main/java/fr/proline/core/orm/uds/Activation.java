@@ -8,6 +8,12 @@ import javax.persistence.*;
  * 
  */
 @Entity(name = "fr.proline.core.orm.uds.Activation")
+@NamedQueries({
+  @NamedQuery(
+    name = "findActivationByType",
+    query = "SELECT activ FROM fr.proline.core.orm.uds.Activation activ WHERE activ.type = :type"
+  )
+})
 @Table(name="activation")
 public class Activation implements Serializable {
 	private static final long serialVersionUID = 1L;

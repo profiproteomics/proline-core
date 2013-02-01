@@ -9,6 +9,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 
@@ -17,6 +19,12 @@ import javax.persistence.Table;
  * 
  */
 @Entity
+@NamedQueries({
+  @NamedQuery(
+    name = "findFractionationByType",
+    query = "SELECT frac FROM fr.proline.core.orm.uds.Fractionation frac WHERE frac.type = :type"
+  )
+})
 @Table(name="fractionation")
 public class Fractionation implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -31,7 +39,7 @@ public class Fractionation implements Serializable {
 
     @Column(name = "type")
     @Enumerated(value = EnumType.STRING)    
-    private FractionationType fractionationType;
+    private FractionationType type;
     
     public Integer getId() {
         return id;
@@ -42,11 +50,11 @@ public class Fractionation implements Serializable {
     }
 
     public FractionationType getType() {
-        return fractionationType;
+        return type;
     }
 
     public void setType(FractionationType fractionationType) {
-        this.fractionationType = fractionationType;
+        this.type = fractionationType;
     }
     
         
