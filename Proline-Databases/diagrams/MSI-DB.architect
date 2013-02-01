@@ -1256,7 +1256,7 @@ UNIQUE( accession, result_set_id )</remarks>
     <column id="COL388" populated="true" UUID="c01cef24-efe0-4ed2-9cab-70b013d83618" autoIncrement="false" autoIncrementSequenceName="peptide_instance_protein_set_count_seq" defaultValue="" name="protein_set_count" nullable="0" physicalName="protein_set_count" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>The number of protein sets related to this peptide instance.</remarks>
     </column>
-    <column id="COL389" populated="true" UUID="8098bdf2-0fe7-48fc-89d1-a84e16ea42b4" autoIncrement="false" autoIncrementSequenceName="peptide_instance_total_leaves_match_count_seq" defaultValue="" name="total_leaves_match_count" nullable="0" physicalName="total_leaves_match_count" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL389" populated="true" UUID="8098bdf2-0fe7-48fc-89d1-a84e16ea42b4" autoIncrement="false" autoIncrementSequenceName="peptide_instance_total_leaves_match_count_seq" defaultValue="0" name="total_leaves_match_count" nullable="0" physicalName="total_leaves_match_count" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>The total number of leaves peptide matches related to this peptide instance. This value correspond to Spectral Count.</remarks>
     </column>
     <column id="COL390" populated="true" UUID="8e5ecf5b-706f-4173-8177-5da15e7cef69" autoIncrement="false" autoIncrementSequenceName="peptide_instance_selection_level_seq" defaultValue="" name="selection_level" nullable="0" physicalName="selection_level" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -2112,7 +2112,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8465468252641619" viewportX="0" viewportY="441" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8465468252641619" viewportX="0" viewportY="478" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB504" x="20" y="878" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB1" x="198" y="27" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB7" x="1785" y="893" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
