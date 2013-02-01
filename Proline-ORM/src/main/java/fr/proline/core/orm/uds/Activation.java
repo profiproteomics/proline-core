@@ -11,6 +11,10 @@ import javax.persistence.*;
 @Table(name="activation")
 public class Activation implements Serializable {
 	private static final long serialVersionUID = 1L;
+	
+    public enum ActivationType {
+      CID, ECD, ETD, HCD, PSD
+    };
 
 	@Id
 	@Column(name="type")
