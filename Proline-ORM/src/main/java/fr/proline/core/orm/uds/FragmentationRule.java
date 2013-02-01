@@ -31,10 +31,10 @@ public class FragmentationRule implements Serializable {
 	@Column(name="precursor_min_charge")
 	private Integer precursorMinCharge;
 
-	@Column(name="required_serie_id")
+	@Column(name="required_series_id")
 	private Integer requiredSeriesId;
 
-	@Column(name="required_serie_quality_level")
+	@Column(name="required_series_quality_level")
 	private String requiredSeriesQualityLevel;
 
 	@Column(name="serialized_properties")
