@@ -768,20 +768,23 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         if (pdiSeqDatabaseInstance == null) {
           logger.warn("SeqDatabase [" + seqDatabase.name + "] [" + seqDatabase.filePath + "] NOT found in Pdi Db");
-
-          // Cache non existent Pdi SeqDatabase
+          msiSeqDatabase = new MsiSeqDatabase()
+          msiSeqDatabase.setFastaFilePath(seqDatabase.filePath);
+          msiSeqDatabase.setName(seqDatabase.name);
+          msiSeqDatabase.setReleaseDate(new Timestamp(seqDatabase.releaseDate.getTime()));
+          msiSeqDatabase.setSequenceCount(seqDatabase.sequencesCount);
+          msiSeqDatabase.setVersion(seqDatabase.version);
+          
         } else {
-          /* Create derived Msi entity */
           msiSeqDatabase = new MsiSeqDatabase(pdiSeqDatabaseInstance);
+        }
+        msiEm.persist(msiSeqDatabase);
 
-          msiEm.persist(msiSeqDatabase);
+        knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
 
-          knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
+        seqDatabase.id = msiSeqDatabase.getId // Update OM entity with Primary key
 
-          seqDatabase.id = pdiSeqDatabaseInstance.getId // Update OM entity with Primary key
-
-          logger.trace("Msi SeqDatabase #" + pdiSeqDatabaseInstance.getId + " persisted")
-        } // End if (pdiSeqDatabaseInstance is not null)
+        logger.trace("Msi SeqDatabase #" + msiSeqDatabase.getId  + " persisted")
 
       } else {
         seqDatabase.id = msiSeqDatabase.getId // Update OM entity with persisted Primary key
