@@ -1,15 +1,53 @@
 package fr.proline.core.dal.tables
 
+import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.dal.tables.{ColumnEnumeration => ColEnum}
 
-trait CanBuildSelectQuery {
+trait CanBuildSelectQuery extends Logging {
   
   def colsListToStrList( colsList: List[ColEnum#Column] ): List[String] = {
     colsList.map { col => col.toFullString }
   }
   
-  protected def _makeSelectQuery( colsAsStrList: List[String], tblsAsStrList: List[String], clauses: Option[String] = None ): String = {
-    var query = "SELECT "+ colsAsStrList.mkString(",") +" FROM "+ tblsAsStrList.mkString(",")
+  protected def _makeSelectQuery( colsAsStrList: List[String], tblsList: List[TableDefinition[_]], clauses: Option[String] = None ): String = {
+    
+    val tblsAsStrList = tblsList.map(_.name)
+    val colNamesByTblName = tblsList.map( tbl => tbl.name -> tbl.columnsAsStrList ) toMap
+    
+    // Build a set of column names
+    val colCountByName = new collection.mutable.HashMap[String,Int]
+    val tblAndColNames = colsAsStrList.map { colAsStr =>
+      val parts = colAsStr.split("\\.")
+      val(tblName, colName) = Tuple2( parts(0), parts(1) )
+      
+      // Unroll column names if special star character has been used
+      if( colName == "*" ) {
+        val unrolledColNames = colNamesByTblName(tblName)
+        for( unrolledColName <- unrolledColNames ) {
+          colCountByName(unrolledColName) = colCountByName.getOrElse(colName, 0) + 1
+        }
+      } else {
+        colCountByName(colName) = colCountByName.getOrElse(colName, 0) + 1
+      }
+      
+      (tblName, colName) 
+    }
+    
+    // Alias duplicated columns in the current select query
+    val aliasedColsAsStrList = new collection.mutable.ArrayBuffer[String]
+    for( tblAndColName <- tblAndColNames ) {
+      val( tblName, colName ) = tblAndColName
+      
+      if( colName != "*" && colCountByName(colName) > 1 ) {
+        val colAlias = tblName +"_"+ colName
+        this.logger.debug("duplicated column ("+colName+") detected and automatically aliased as " + colAlias)
+        aliasedColsAsStrList += (tblName +"."+ colName +" AS "+ colAlias )
+      } else {
+        aliasedColsAsStrList += (tblName +"."+ colName)
+      }
+    }
+    
+    var query = "SELECT "+ aliasedColsAsStrList.mkString(",") +" FROM "+ tblsAsStrList.mkString(",")
     if( clauses != None ) query += " " + clauses.get
     query
   }
@@ -35,7 +73,7 @@ class SelectQueryBuilder1[A<:ColEnum]( table: TableDefinition[A] ) extends CanBu
 
   def mkSelectQuery( fn: (A,List[A#Column]) => Tuple2[List[ColEnum#Column],String] ): String = {
     val( colsList, clauses ) = fn(table.columns,table.columnsAsList)
-    val tblsList = List( table.name )
+    val tblsList = List( table )
     this._makeSelectQuery( this.colsListToStrList( colsList ), tblsList, Option(clauses) )
   }
 
@@ -52,7 +90,7 @@ class SelectQueryBuilder2[A<:ColEnum,B<:ColEnum](
       tables._2.columns,tables._2.columnsAsList
     )
     
-    val tblsList = List( tables._1.name, tables._2.name )
+    val tblsList = List( tables._1, tables._2 )
     
     this._makeSelectQuery( this.colsListToStrList( colsList ), tblsList, Option(clauses) )
   }
@@ -76,7 +114,7 @@ class SelectQueryBuilder3[A<:ColEnum,B<:ColEnum,C<:ColEnum](
                          C,List[C#Column]) => List[ColEnum#Column],
                      clauses: String = null ): String = {
     val colsListAsStrList = this.colsListToStrList( selectCols( s ) )    
-    val tblsList = List( tables._1.name, tables._2.name, tables._3.name  )
+    val tblsList = List( tables._1, tables._2, tables._3  )
     this._makeSelectQuery( colsListAsStrList, tblsList, Option(clauses) )
   }
  
@@ -112,8 +150,8 @@ class SelectQueryBuilder4[A<:ColEnum,B<:ColEnum,C<:ColEnum,D<:ColEnum](
                      clauses: String = null,
                      excludedTables: Set[String] = null ): String = {
     val colsListAsStrList = this.colsListToStrList( selectCols( s ) )    
-    var tblsList = List( tables._1.name, tables._2.name, tables._3.name, tables._4.name )
-    if( excludedTables != null ) tblsList = tblsList.filter( excludedTables.contains(_) == false )
+    var tblsList = List( tables._1, tables._2, tables._3, tables._4 )
+    if( excludedTables != null ) tblsList = tblsList.filter( t => excludedTables.contains(t.name) == false )
     
     this._makeSelectQuery( colsListAsStrList, tblsList, Option(clauses) )
   }

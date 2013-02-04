@@ -318,8 +318,8 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
         releaseDate = r.getDate(seqDbCols.RELEASE_DATE),
         version = r.getStringOrElse(seqDbCols.FASTA_FILE_PATH, ""),
         searchedSequencesCount = r.getInt(ssSeqDbMapCols.SEARCHED_SEQUENCES_COUNT),
-        properties = r.getStringOption(seqDbTblName+"."+seqDbCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseProperties](_)),
-        searchProperties = r.getStringOption(ssSeqDbMapTblName+"."+ssSeqDbMapCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseSearchProperties](_))
+        properties = r.getStringOption(seqDbCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseProperties](_)),
+        searchProperties = r.getStringOption(ssSeqDbMapTblName+"_"+ssSeqDbMapCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseSearchProperties](_))
       )
     } toArray
   }
