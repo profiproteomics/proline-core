@@ -5,8 +5,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IProteinSetProvider {
   
-  val msiDbCtx: DatabaseConnectionContext
-  
   def getProteinSetsAsOptions( protSetIds: Seq[Int] ): Array[Option[ProteinSet]]
   
   def getProteinSets( protSetIds: Seq[Int] ): Array[ProteinSet]

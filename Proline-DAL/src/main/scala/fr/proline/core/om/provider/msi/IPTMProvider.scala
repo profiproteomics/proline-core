@@ -5,8 +5,6 @@ import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.context.DatabaseConnectionContext
 
 trait IPTMProvider {
-  
-  val psDbCtx: DatabaseConnectionContext
 
   /**
    *  Get PtmDefinitions (wrapped in Option) with specified Ids.

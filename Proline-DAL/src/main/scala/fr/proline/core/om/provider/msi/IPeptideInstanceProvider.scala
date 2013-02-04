@@ -5,9 +5,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IPeptideInstanceProvider {
   
-  val msiDbCtx: DatabaseConnectionContext
-  val psDbCtx: DatabaseConnectionContext
-  
   /**
    *  Get PeptideInstances (wrapped in Option) with specified Ids.
    *  If no PeptideInstance is defined for a specified id, Option.None will be returned.

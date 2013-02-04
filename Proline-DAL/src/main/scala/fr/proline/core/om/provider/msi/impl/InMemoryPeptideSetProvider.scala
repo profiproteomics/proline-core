@@ -6,9 +6,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 class InMemoryPeptideSetProvider( peptideSets: Seq[PeptideSet] ) extends IPeptideSetProvider {
   
-  val msiDbCtx: DatabaseConnectionContext = null
-  val psDbCtx: DatabaseConnectionContext = null
-  
   lazy val peptideSetById = Map() ++ peptideSets.map { p => p.id -> p }
   lazy val peptideSetsByRsmId = peptideSets.groupBy( _.resultSummaryId )
 

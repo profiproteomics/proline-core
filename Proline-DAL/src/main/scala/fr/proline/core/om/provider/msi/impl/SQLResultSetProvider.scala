@@ -66,7 +66,7 @@ trait SQLResultSetLoader {
         resultSetRecord.getOrElse(RSCols.MSI_SEARCH_ID, 0).asInstanceOf[Int]
       } else if (msiSearchIdsByRsId.contains(rsId)) {
         // FIXME: we should attach all MSI searches to the result set ???
-        msiSearchIdsByRsId(rsId)(0)
+        msiSearchIdsByRsId(rsId).head
       } else 0
 
       val msiSearch = msiSearchById.getOrElse(rsMsiSearchId, null)

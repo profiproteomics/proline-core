@@ -4,9 +4,6 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.context.DatabaseConnectionContext
 
 trait IPeptideMatchProvider {
-  
-  val msiDbCtx: DatabaseConnectionContext
-  val psDbCtx: DatabaseConnectionContext
  
   def getPeptideMatchesAsOptions( pepMatchIds: Seq[Int] ): Array[Option[PeptideMatch]]
   

@@ -6,8 +6,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IProteinProvider {
   
-  val pdiDbCtx: DatabaseConnectionContext
-  
   /**
    * Get Protein (wrapped in Option) with specified Ids.
    *  If no Proteins is defined for a specified id, Option.None will be returned.

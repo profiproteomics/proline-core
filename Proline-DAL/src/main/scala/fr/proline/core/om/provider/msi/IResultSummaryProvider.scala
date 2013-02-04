@@ -5,9 +5,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IResultSummaryProvider {
   
-  val msiDbCtx: DatabaseConnectionContext
-  val psDbCtx: DatabaseConnectionContext
-  
   def getResultSummariesAsOptions( rsmIds: Seq[Int], loadResultSet: Boolean ): Array[Option[ResultSummary]]
   
   def getResultSummaries( rsmIds: Seq[Int], loadResultSet: Boolean ): Array[ResultSummary]

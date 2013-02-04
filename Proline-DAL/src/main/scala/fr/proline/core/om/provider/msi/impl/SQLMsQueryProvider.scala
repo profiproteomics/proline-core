@@ -1,86 +1,97 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-
 import com.codahale.jerkson.Json.parse
-
+import fr.profi.jdbc.easy._
 import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.core.dal.tables.msi.MsiDbMsQueryColumns.columnToString
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
 import fr.proline.core.om.model.msi.Ms1Query
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.MsQueryProperties
 import fr.proline.core.om.provider.msi.IMsQueryProvider
-import fr.proline.util.primitives.LongOrIntAsInt.anyVal2Int
+import fr.proline.util.primitives.LongOrIntAsInt._
+import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
+import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
+import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 
-class SQLMsQueryProvider(val msiDbCtx: SQLConnectionContext) extends IMsQueryProvider {
+class SQLMsQueryProvider(val msiSqlCtx: SQLConnectionContext) extends IMsQueryProvider {
 
   import fr.proline.util.primitives.LongOrIntAsInt._
   import scala.collection.mutable.ArrayBuffer
   val MsQueryCols = MsiDbMsQueryTable.columns
 
   def getMsiSearchesMsQueries(msiSearchIds: Seq[Int]): Array[MsQuery] = {
+    
+    val msiEzDBC = msiSqlCtx.ezDBC
+    
+    val msiSearchIdsAsStr = msiSearchIds.mkString(",")
+    val msqQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.MSI_SEARCH_ID ~" IN("~ msiSearchIdsAsStr ~")"
+    )
+    val pklIdQuery = new SelectQueryBuilder1(MsiDbMsiSearchTable).mkSelectQuery( (t,c) =>
+      List(t.PEAKLIST_ID) -> "WHERE "~ t.ID ~" IN("~ msiSearchIdsAsStr ~")"
+    )
+    val childPklIdQuery = new SelectQueryBuilder1(MsiDbPeaklistRelationTable).mkSelectQuery( (t,c) =>
+      List(t.CHILD_PEAKLIST_ID) -> "WHERE "~ t.PARENT_PEAKLIST_ID ~" = ?"
+    )
 
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    val parentPeaklistIds = msiDbCtx.ezDBC.select("SELECT peaklist_id FROM msi_search") { r => r.nextInt }
-
+    val parentPeaklistIds = msiEzDBC.selectInts(pklIdQuery)
+    
     // Retrieve child peaklist ids if they exist
     val pklIds = new ArrayBuffer[Int]
     for (parentPeaklistId <- parentPeaklistIds) {
 
       // Retrieve child peaklist ids corresponding to the current peaklist id
-      val childPeaklistIds = msiDbCtx.ezDBC.select("SELECT child_peaklist_id FROM peaklist_relation WHERE parent_peaklist_id = " + parentPeaklistId) { r =>
-        r.nextInt
-      }
-
+      val childPeaklistIds = msiSqlCtx.ezDBC.select(childPklIdQuery, parentPeaklistId) { _.nextInt }
+      
       if (childPeaklistIds.length > 0) { pklIds ++= childPeaklistIds }
       else { pklIds += parentPeaklistId }
     }
+    
+    val specTitleQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
+      List(t.ID,t.TITLE) -> "WHERE "~ t.PEAKLIST_ID ~" IN("~ pklIds.mkString(",") ~")"
+    )
 
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    val spectrumHeaders = msiDbCtx.ezDBC.select("SELECT id, title FROM spectrum WHERE peaklist_id IN (" + pklIds.mkString(",") + ")") { r =>
-      (r.nextInt, r.nextString)
-    }
-
-    val spectrumTitleById = spectrumHeaders.toMap
+    val spectrumTitleById = msiEzDBC.select(specTitleQuery) { r => (r.nextInt, r.nextString) } toMap
 
     // Load MS queries corresponding to the provided MSI search ids
-    val msQueries = msiDbCtx.ezDBC.select("SELECT * FROM ms_query WHERE msi_search_id IN (" + msiSearchIds.mkString(",") + ")") { r =>
-      val rs = r.rs
+    val msQueries = msiSqlCtx.ezDBC.select(msqQuery) { r =>
 
       // Parse properties if they exist
       //my $serialized_properties = $ms_query_attrs->{serialized_properties};
       //$ms_query_attrs->{properties} = decode_json( $serialized_properties ) if not is_empty_string($serialized_properties);
-      val spectrumId = rs.getInt(MsQueryCols.SPECTRUM_ID)
+      val spectrumId = r.getInt(MsQueryCols.SPECTRUM_ID)
 
       // Decode JSON properties
-      val propertiesAsJSON = rs.getString(MsQueryCols.SERIALIZED_PROPERTIES)
-      var properties = Option.empty[MsQueryProperties]
-      if (propertiesAsJSON != null) {
-        properties = Some(parse[MsQueryProperties](propertiesAsJSON))
-      }
-
-      val msQueryId: Int = rs.getObject(MsQueryCols.ID).asInstanceOf[AnyVal]
+      val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(parse[MsQueryProperties](_))
+      val msQueryId: Int = r.getAnyVal(MsQueryCols.ID)
 
       // Build the MS query object
-      var msQuery: MsQuery = null
-      if (spectrumId != 0) { // we can assume it is a MS2 query
+      val msQuery = if (spectrumId != 0) { // we can assume it is a MS2 query
         val spectrumTitle = spectrumTitleById(spectrumId)
-        msQuery = new Ms2Query(id = msQueryId,
-          initialId = rs.getInt(MsQueryCols.INITIAL_ID),
-          moz = rs.getDouble(MsQueryCols.MOZ),
-          charge = rs.getInt(MsQueryCols.CHARGE),
+        new Ms2Query(
+          id = msQueryId,
+          initialId = r.getInt(MsQueryCols.INITIAL_ID),
+          moz = r.getDouble(MsQueryCols.MOZ),
+          charge = r.getInt(MsQueryCols.CHARGE),
           spectrumTitle = spectrumTitle,
           spectrumId = spectrumId,
-          properties = properties)
+          properties = properties
+        )
 
       } else {
-        msQuery = new Ms1Query(id = msQueryId,
-          initialId = rs.getInt(MsQueryCols.INITIAL_ID),
-          moz = rs.getDouble(MsQueryCols.MOZ),
-          charge = rs.getInt(MsQueryCols.CHARGE),
-          properties = properties)
+        new Ms1Query(
+          id = msQueryId,
+          initialId = r.getInt(MsQueryCols.INITIAL_ID),
+          moz = r.getDouble(MsQueryCols.MOZ),
+          charge = r.getInt(MsQueryCols.CHARGE),
+          properties = properties
+        )
       }
 
       msQuery

@@ -4,10 +4,6 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.context.DatabaseConnectionContext
 
 trait IResultSetProvider {
-  
-  val msiDbCtx: DatabaseConnectionContext
-  val psDbCtx: DatabaseConnectionContext
-  val pdiDbCtx: DatabaseConnectionContext
 
   def getResultSetsAsOptions( resultSetIds: Seq[Int] ): Array[Option[ResultSet]]
   

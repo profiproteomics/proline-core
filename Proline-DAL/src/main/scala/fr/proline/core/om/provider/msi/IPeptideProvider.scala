@@ -6,8 +6,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IPeptideProvider {
   
-  val psDbCtx: DatabaseConnectionContext
-  
   /**
    *  Get Peptides (wrapped in Option) with specified Ids.
    *  If no Peptides is defined for a specified id, Option.None will be returned.

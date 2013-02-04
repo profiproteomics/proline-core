@@ -5,8 +5,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IMsQueryProvider {
   
-  val msiDbCtx: DatabaseConnectionContext
-  
   // TODO: remove comments when JPA implementation is done
   
   //def getMsQueriesAsOptions( msQueryIds: Seq[Int] ): Array[Option[MsQuery]]

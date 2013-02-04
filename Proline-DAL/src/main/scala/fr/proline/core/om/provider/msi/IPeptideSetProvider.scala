@@ -5,9 +5,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IPeptideSetProvider {
   
-  val msiDbCtx: DatabaseConnectionContext
-  val psDbCtx: DatabaseConnectionContext
-  
   def getPeptideSetsAsOptions( protSetIds: Seq[Int] ): Array[Option[PeptideSet]]
   
   def getPeptideSets( protSetIds: Seq[Int] ): Array[PeptideSet]

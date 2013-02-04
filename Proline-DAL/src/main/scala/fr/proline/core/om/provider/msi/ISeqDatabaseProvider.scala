@@ -5,8 +5,6 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait ISeqDatabaseProvider {
   
-  val pdiDbCtx: DatabaseConnectionContext  
-  
   /**
    * Get SeqDatabases (wrapped in Option) with specified Ids.
    *  If no SeqDatabases is defined for a specified id, Option.None will be returned.
