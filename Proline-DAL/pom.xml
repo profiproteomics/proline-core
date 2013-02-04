@@ -51,12 +51,6 @@
       <artifactId>slf4s_2.9.1</artifactId>
     </dependency>
 
-    <!-- Unused dependency : com.googlecode.flyway:flyway-core:jar:1.5:compile -->
-    <dependency>
-      <groupId>com.googlecode.flyway</groupId>
-      <artifactId>flyway-core</artifactId>
-    </dependency>
-
     <!-- Databases -->
     <dependency>
       <groupId>postgresql</groupId>

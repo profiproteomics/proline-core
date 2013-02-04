@@ -29,6 +29,7 @@
     <dependency>
       <groupId>com.googlecode.flyway</groupId>
       <artifactId>flyway-core</artifactId>
+	  <version>1.7</version> <!-- Latest version is 2.0.3 on 4 feb. 2013 -->
     </dependency>
 
     <dependency>
