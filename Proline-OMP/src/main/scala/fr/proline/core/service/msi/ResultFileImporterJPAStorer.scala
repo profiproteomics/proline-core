@@ -7,7 +7,7 @@ import com.codahale.jerkson.Json.parse
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
-import fr.proline.core.dal.JDBCWorkBuilder
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ IResultFileProvider, ResultFileProviderRegistry }
 import fr.proline.core.om.storer.msi.{ IRsStorer, MsiSearchStorer, RsStorer }
@@ -208,17 +208,13 @@ class ResultFileImporterJPAStorer(
   // TODO: put in a dedicated provider
   private def _getPeaklistSoftware(plName: String, plRevision: String, udsDbContext: DatabaseConnectionContext): PeaklistSoftware = {
 
-    var pklSoft: PeaklistSoftware = null
-    val jdbcWork = JDBCWorkBuilder.withEzDBC(udsDbContext.getDriverType, { udsEzDBC =>
-      pklSoft = udsEzDBC.selectHeadOrElse(
+    DoJDBCReturningWork.withEzDBC(udsDbContext, { udsEzDBC =>
+      udsEzDBC.selectHeadOrElse(
         "SELECT * FROM peaklist_software WHERE name= ? and version= ? ", plName, plRevision)(r =>
           new PeaklistSoftware(id = r, name = r, version = r),
           new PeaklistSoftware(id = PeaklistSoftware.generateNewId, name = "Default", version = "0.1"))
     })
 
-    udsDbContext.doWork(jdbcWork, false)
-
-    pklSoft
   }
 
   // TODO: put in a dedicated provider
@@ -227,47 +223,42 @@ class ResultFileImporterJPAStorer(
     import fr.proline.util.primitives.LongOrIntAsInt._
     import fr.proline.core.om.model.msi.{ InstrumentProperties, InstrumentConfigProperties }
 
-    var instrumentConfig: InstrumentConfig = null
-
-    val jdbcWork = JDBCWorkBuilder.withEzDBC(udsDbContext.getDriverType, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbContext, { udsEzDBC =>
+      
       // Load the instrument configuration record
       udsEzDBC.selectHead(
         "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config " +
-          "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId) { r =>
+        "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId) { r =>
 
-          val instrument = new Instrument(id = r.nextAnyVal, name = r, source = r)
-          for (instPropStr <- r.nextStringOption) {
-            instrument.properties = Some(parse[InstrumentProperties](instPropStr))
-          }
-
-          // Skip instrument_config.id field
-          r.nextAny
-
-          instrumentConfig = new InstrumentConfig(
-            id = instrumentConfigId,
-            name = r.nextString,
-            instrument = instrument,
-            ms1Analyzer = r.nextString,
-            msnAnalyzer = r.nextString,
-            activationType = "")
-          for (instConfPropStr <- r.nextStringOption) {
-            instrumentConfig.properties = Some(parse[InstrumentConfigProperties](instConfPropStr))
-          }
-
-          // Skip instrument_config.instrument_id field
-          r.nextAny
-
-          // Update activation type
-          instrumentConfig.activationType = r.nextString
-
-          instrumentConfig
+        val instrument = new Instrument(id = r.nextAnyVal, name = r, source = r)
+        for (instPropStr <- r.nextStringOption) {
+          instrument.properties = Some(parse[InstrumentProperties](instPropStr))
         }
 
+        // Skip instrument_config.id field
+        r.nextAny
+
+        val instrumentConfig = new InstrumentConfig(
+          id = instrumentConfigId,
+          name = r.nextString,
+          instrument = instrument,
+          ms1Analyzer = r.nextString,
+          msnAnalyzer = r.nextString,
+          activationType = "")
+        for (instConfPropStr <- r.nextStringOption) {
+          instrumentConfig.properties = Some(parse[InstrumentConfigProperties](instConfPropStr))
+        }
+
+        // Skip instrument_config.instrument_id field
+        r.nextAny
+
+        // Update activation type
+        instrumentConfig.activationType = r.nextString
+
+        instrumentConfig
+      }
+
     })
-
-    udsDbContext.doWork(jdbcWork, false)
-
-    instrumentConfig
 
   }
 

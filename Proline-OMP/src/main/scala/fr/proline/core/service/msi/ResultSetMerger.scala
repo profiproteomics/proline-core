@@ -15,10 +15,10 @@ import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.ContextFactory
+import fr.proline.context.IExecutionContext
 
 class ResultSetMerger(
-  dbManager: IDataStoreConnectorFactory,
-  projectId: Int,
+  execCtx: IExecutionContext,
   resultSets: Seq[ResultSet]
 ) extends IService with Logging {
 
@@ -38,7 +38,8 @@ class ResultSetMerger(
     var msiTransacOk: Boolean = false
 
     try {
-      storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
+      //storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
+      storerContext = new StorerContext(execCtx)
       
       val msiDb = storerContext.getMSIDbConnectionContext
       val msiDriverType = msiDb.getDriverType
@@ -47,7 +48,7 @@ class ResultSetMerger(
       msiTransaction.begin()
       msiTransacOk = false
 
-      val jdbcWork = JDBCWorkBuilder.withEzDBC( msiDriverType, { msiEzDBC =>
+      DoJDBCWork.withEzDBC( msiDb, { msiEzDBC =>
 
         // Retrieve protein ids
         val proteinIdSet = new HashSet[Int]
@@ -103,9 +104,7 @@ class ResultSetMerger(
         // Commit transaction if it was initiated locally
 
         mergedResultSet = tmpMergedResultSet
-      })
-
-      msiDb.doWork(jdbcWork, false)
+      }) // end of JDBC work
 
       msiTransaction.commit()
       msiTransacOk = true

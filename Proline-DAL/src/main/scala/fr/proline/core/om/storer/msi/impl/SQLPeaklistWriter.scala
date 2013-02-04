@@ -6,6 +6,7 @@ import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
 import org.xerial.snappy.Snappy
 
+import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
 
 import fr.profi.jdbc.PreparedStatementWrapper
@@ -31,15 +32,13 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
   //TODO: GET/CREATE Peaklist SOFT
   def storePeaklist(peaklist: Peaklist, context: StorerContext): Int = {
 
-    if (peaklist == null) {
-      throw new IllegalArgumentException("peaklist is null")
-    }
+    require(peaklist != null, "peaklist is null")
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
+    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
 
       val peaklistInsertQuery = MsiDbPeaklistTable.mkInsertQuery{ (c,colsList) => 
-                                 colsList.filter( _ != c.ID)
-                               }
+        colsList.filter( _ != c.ID)
+      }
       
       msiEzDBC.executePrepared(peaklistInsertQuery, true) { stmt =>
         stmt.executeWith(
@@ -48,48 +47,47 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
           peaklist.rawFileName,
           peaklist.msLevel,
           compressionAlgo,
-          Option(null),
-          if( peaklist.peaklistSoftware != null ) Option(peaklist.peaklistSoftware.id) else Option.empty[Int]
-          )
+          peaklist.properties.map(generate(_)),
+          Option(peaklist.peaklistSoftware).map(_.id)
+        )
 
         peaklist.id = stmt.generatedInt
       }
 
-    })
-
-    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
+    },true)
 
     peaklist.id
   }
 
   def storeSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
+    
     logger.info("storing spectra...")
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
+    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
       
       val spectrumInsertQuery = MsiDbSpectrumTable.mkInsertQuery{ (c,colsList) => 
-                                  colsList.filter( _ != c.ID)
-                                }
+        colsList.filter( _ != c.ID)
+      }
 
       // Insert corresponding spectra
       val spectrumIdByTitle = collection.immutable.Map.newBuilder[String, Int]
       
       msiEzDBC.executePrepared(spectrumInsertQuery) { stmt =>
         peaklistContainer.eachSpectrum { spectrum =>
-          this._insertSpectrum(stmt, spectrum, peaklistId, context)
+          this._insertSpectrum(stmt, spectrum, peaklistId)
           spectrumIdByTitle += (spectrum.title -> spectrum.id)
         }
       }
 
+      // TODO: use id cache
       context.spectrumIdByTitle = spectrumIdByTitle.result()
-    })
-
-    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
+      
+    },true)
 
     context
   }
 
-  private def _insertSpectrum(stmt: PreparedStatementWrapper, spectrum: Spectrum, peaklistId: Int, context: StorerContext): Unit = {
+  private def _insertSpectrum(stmt: PreparedStatementWrapper, spectrum: Spectrum, peaklistId: Int): Unit = {
 
     // Define some vars
     val precursorIntensity = if (!spectrum.precursorIntensity.isNaN) Some(spectrum.precursorIntensity) else Option.empty[Float]
@@ -120,22 +118,23 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
       lastScan,
       firstTime,
       lastTime,
-      doublesToBytes(spectrum.mozList.get), //Snappy.compress(
-      floatsToBytes(spectrum.intensityList.get), // Snappy.compress(
+      Snappy.compress(doublesToBytes(spectrum.mozList.get)),
+      Snappy.compress(floatsToBytes(spectrum.intensityList.get)),
       spectrum.peaksCount,
-      Option.empty[String],
+      spectrum.properties.map(generate(_)),
       peaklistId,
-      spectrum.instrumentConfigId)
+      spectrum.instrumentConfigId
+    )
 
     spectrum.id = stmt.generatedInt
 
   }
 
+  // TODO: is this really useful ???
   def rollBackInfo(peaklistId: Int, context: StorerContext) = {
 
-    if (peaklistId < 0)
-      throw new IllegalArgumentException("Peaklist (id <= 0) is not in repository ")
-
+    require (peaklistId > 0, "peaklist must first be persisted in the MSIdb")
+    
     val jdbcWork = new JDBCWork() {
 
       override def execute(con: Connection) {
@@ -162,94 +161,92 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
 
   override def storeSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
 
-    val jdbcWork = new JDBCWork() {
+    DoJDBCWork.withConnection(context.getMSIDbConnectionContext, { con =>
 
-      override def execute(con: Connection) {
-        val bulkCopyManager = new CopyManager(con.asInstanceOf[BaseConnection])
+      val bulkCopyManager = new CopyManager(con.asInstanceOf[BaseConnection])
 
-        // Create TMP table
-        val tmpSpectrumTableName = "tmp_spectrum_" + (scala.math.random * 1000000).toInt
-        logger.info("creating temporary table '" + tmpSpectrumTableName + "'...")
+      // Create TMP table
+      val tmpSpectrumTableName = "tmp_spectrum_" + (scala.math.random * 1000000).toInt
+      logger.info("creating temporary table '" + tmpSpectrumTableName + "'...")
 
-        val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
+      val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
 
-        msiEzDBC.execute("CREATE TEMP TABLE " + tmpSpectrumTableName + " (LIKE spectrum)")
+      msiEzDBC.execute("CREATE TEMP TABLE " + tmpSpectrumTableName + " (LIKE spectrum)")
 
-        // Bulk insert of spectra
-        logger.info("BULK insert of spectra")
+      // Bulk insert of spectra
+      logger.info("BULK insert of spectra")
 
-        val spectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.filter(_ != "id").mkString(",")
+      val spectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.filter(_ != "id").mkString(",")
 
-        val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpSpectrumTableName + " ( id, " + spectrumTableCols + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpSpectrumTableName + " ( id, " + spectrumTableCols + " ) FROM STDIN")
 
-        // Iterate over spectra to store them
-        peaklistContainer.eachSpectrum { spectrum =>
-          logger.debug("get spectrum " + spectrum.title)
+      // Iterate over spectra to store them
+      peaklistContainer.eachSpectrum { spectrum =>
+        logger.debug("get spectrum " + spectrum.title)
 
-          // Define some vars
-          val precursorIntensity = if (!spectrum.precursorIntensity.isNaN) spectrum.precursorIntensity else ""
-          val firstCycle = if (spectrum.firstCycle > 0) spectrum.firstCycle else ""
-          val lastCycle = if (spectrum.lastCycle > 0) spectrum.lastCycle else ""
-          val firstScan = if (spectrum.firstScan > 0) spectrum.firstScan else ""
-          val lastScan = if (spectrum.lastScan > 0) spectrum.lastScan else ""
-          val firstTime = if (spectrum.firstTime > 0) spectrum.firstTime else ""
-          val lastTime = if (spectrum.lastTime > 0) spectrum.lastTime else ""
-          //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
+        // Define some vars
+        val precursorIntensity = if (!spectrum.precursorIntensity.isNaN) spectrum.precursorIntensity else ""
+        val firstCycle = if (spectrum.firstCycle > 0) spectrum.firstCycle else ""
+        val lastCycle = if (spectrum.lastCycle > 0) spectrum.lastCycle else ""
+        val firstScan = if (spectrum.firstScan > 0) spectrum.firstScan else ""
+        val lastScan = if (spectrum.lastScan > 0) spectrum.lastScan else ""
+        val firstTime = if (spectrum.firstTime > 0) spectrum.firstTime else ""
+        val lastTime = if (spectrum.lastTime > 0) spectrum.lastTime else ""
+        //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
 
-          // moz and intensity lists are formatted as numbers separated by spaces      
-          //val mozList = spectrum.mozList.getOrElse( Array.empty[Double] ).map { m => this.doubleFormatter.format( m ) } mkString ( " " )
-          //val intList = spectrum.intensityList.getOrElse( Array.empty[Float] ).map { i => this.floatFormatter.format( i ) } mkString ( " " )
+        // moz and intensity lists are formatted as numbers separated by spaces      
+        //val mozList = spectrum.mozList.getOrElse( Array.empty[Double] ).map { m => this.doubleFormatter.format( m ) } mkString ( " " )
+        //val intList = spectrum.intensityList.getOrElse( Array.empty[Float] ).map { i => this.floatFormatter.format( i ) } mkString ( " " )
 
-          // Compress peaks
-          //val compressedMozList = EasyLzma.compress( mozList.getBytes )
-          //val compressedIntList = EasyLzma.compress( intList.getBytes )
+        // Compress peaks
+        //val compressedMozList = EasyLzma.compress( mozList.getBytes )
+        //val compressedIntList = EasyLzma.compress( intList.getBytes )
 
-          // Build a row containing spectrum values
-          val spectrumValues = List(spectrum.id,
-            escapeStringForPgCopy(spectrum.title),
-            spectrum.precursorMoz,
-            precursorIntensity,
-            spectrum.precursorCharge,
-            spectrum.isSummed,
-            firstCycle,
-            lastCycle,
-            firstScan,
-            lastScan,
-            firstTime,
-            lastTime,
-            """\\x""" + bytes2Hex(Snappy.compress(doublesToBytes(spectrum.mozList.get))),
-            """\\x""" + bytes2Hex(Snappy.compress(floatsToBytes(spectrum.intensityList.get))),
-            spectrum.peaksCount,
-            "",
-            peaklistId,
-            spectrum.instrumentConfigId)
+        // Build a row containing spectrum values
+        val spectrumValues = List(
+          spectrum.id,
+          escapeStringForPgCopy(spectrum.title),
+          spectrum.precursorMoz,
+          precursorIntensity,
+          spectrum.precursorCharge,
+          spectrum.isSummed,
+          firstCycle,
+          lastCycle,
+          firstScan,
+          lastScan,
+          firstTime,
+          lastTime,
+          """\\x""" + bytes2Hex(Snappy.compress(doublesToBytes(spectrum.mozList.get))),
+          """\\x""" + bytes2Hex(Snappy.compress(floatsToBytes(spectrum.intensityList.get))),
+          spectrum.peaksCount,
+          spectrum.properties.map(generate(_)).getOrElse(""),
+          peaklistId,
+          spectrum.instrumentConfigId
+        )
 
-          // Store spectrum
-          val spectrumBytes = encodeRecordForPgCopy(spectrumValues, false)
-          pgBulkLoader.writeToCopy(spectrumBytes, 0, spectrumBytes.length)
+        // Store spectrum
+        val spectrumBytes = encodeRecordForPgCopy(spectrumValues, false)
+        pgBulkLoader.writeToCopy(spectrumBytes, 0, spectrumBytes.length)
 
-        }
-
-        // End of BULK copy
-        val nbInsertedSpectra = pgBulkLoader.endCopy()
-
-        // Move TMP table content to MAIN table
-        logger.info("move TMP table " + tmpSpectrumTableName + " into MAIN spectrum table")
-        msiEzDBC.execute("INSERT into spectrum (" + spectrumTableCols + ") " +
-          "SELECT " + spectrumTableCols + " FROM " + tmpSpectrumTableName)
-
-        // Retrieve generated spectrum ids
-        val spectrumIdByTitle = msiEzDBC.select(
-          "SELECT title, id FROM spectrum WHERE peaklist_id = " + peaklistId) { r =>
-            (r.nextString -> r.nextInt)
-          } toMap
-
-        context.spectrumIdByTitle = spectrumIdByTitle
       }
 
-    } // End of jdbcWork anonymous inner class
+      // End of BULK copy
+      val nbInsertedSpectra = pgBulkLoader.endCopy()
 
-    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
+      // Move TMP table content to MAIN table
+      logger.info("move TMP table " + tmpSpectrumTableName + " into MAIN spectrum table")
+      msiEzDBC.execute("INSERT into spectrum (" + spectrumTableCols + ") " +
+        "SELECT " + spectrumTableCols + " FROM " + tmpSpectrumTableName)
+
+      // Retrieve generated spectrum ids
+      val spectrumIdByTitle = msiEzDBC.select(
+        "SELECT title, id FROM spectrum WHERE peaklist_id = " + peaklistId) { r =>
+          (r.nextString -> r.nextInt)
+        } toMap
+
+      context.spectrumIdByTitle = spectrumIdByTitle
+
+    }, true) // End of jdbcWork
 
     context
   }

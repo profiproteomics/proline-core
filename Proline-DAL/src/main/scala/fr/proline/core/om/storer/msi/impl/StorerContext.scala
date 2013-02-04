@@ -53,9 +53,7 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
    */
   def getEntityCache[T](classifier: Class[T]): mutable.Map[Int, T] = {
 
-    if (classifier == null) {
-      throw new IllegalArgumentException("Classifier is null")
-    }
+    require(classifier != null, "Classifier is null")
 
     val knownCache = entityCaches.get(classifier)
 
@@ -84,9 +82,7 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
    */
   def getIdCache[T](classifier: Class[T]): mutable.Map[Int, Int] = {
 
-    if (classifier == null) {
-      throw new IllegalArgumentException("Classifier is null")
-    }
+    require(classifier != null, "Classifier is null")
 
     val knownCache = idCaches.get(classifier)
 

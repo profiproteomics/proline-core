@@ -36,19 +36,29 @@ object SelectQueryBuilder {
     
 class SelectQueryBuilder1[A<:ColEnum]( table: TableDefinition[A] ) extends CanBuildSelectQuery {
   
-  def mkClause( f: (A) => String ): String = {
+  /*def mkClause( f: (A) => String ): String = {
     f( table.columns )
-  }
+  }*/
   
-  def mkSelectQuery( s: (A,List[A#Column]) => List[ColEnum#Column], clauses: Option[String] = None ): String = {
-    val colsList = this.selectCols( s ). map { _.toString }
+  def mkSelectQuery( fn: (A,List[A#Column]) => Tuple2[List[ColEnum#Column],String] ): String = {
+    val( colsList, clauses ) = fn(table.columns,table.columnsAsList)
     val tblsList = List( table.name )
-    this._makeSelectQuery( colsList, tblsList, clauses )
+    this._makeSelectQuery( colsList.map( _.toString ), tblsList, Option(clauses) )
   }
   
-  def selectCols( s: (A,List[A#Column]) => List[ColEnum#Column] ): List[ColEnum#Column] = {
+  /*def mkSelectQuery( tc: (A,List[A#Column]) => Tuple1[List[ColEnum#Column]] ): String = {
+    val colsList = tc( table.columns,table.columnsAsList )._1
+    val tblsList = List( table.name )
+    this._makeSelectQuery( colsList.map( _.toString ), tblsList, Option.empty[String] )
+  }*/
+  
+  /*def mkSelectQuery( s: (A,List[A#Column]) => List[ColEnum#Column], cb: (A) => String ): String = {
+    this.mkSelectQuery( s, this.mkClause(cb) )
+  }*/
+  
+  /*def selectCols( s: (A,List[A#Column]) => List[ColEnum#Column] ): List[ColEnum#Column] = {
     s( table.columns,table.columnsAsList )
-  }
+  }*/
   
 }
 
@@ -56,24 +66,33 @@ class SelectQueryBuilder2[A<:ColEnum,B<:ColEnum](
   val tables: Tuple2[TableDefinition[A],TableDefinition[B]]
 )extends CanBuildSelectQuery {
   
-  val cols1 = tables._1.columns
-  val cols2 = tables._2.columns
+  def mkSelectQuery( fn: (A,List[A#Column],B,List[B#Column]) => Tuple2[List[ColEnum#Column],String] ): String = {
+    
+    val( colsList, clauses ) = fn(
+      tables._1.columns,tables._1.columnsAsList,
+      tables._2.columns,tables._2.columnsAsList
+    )
+    
+    val tblsList = List( tables._1.name, tables._2.name )
+    
+    this._makeSelectQuery( colsList.map( _.toString ), tblsList, Option(clauses) )
+  }
 
-  def mkClause( f: (A,B) => String ): String = {
+  /*def mkClause( f: (A,B) => String ): String = {
     f( cols1, cols2 )
   }
   
-  def mkSelectQuery( s: (A,List[A#Column],B,List[B#Column]) => List[ColEnum#Column], clauses: Option[String] = None ): String = {
+  def mkSelectQuery( s: (A,List[A#Column],B,List[B#Column]) => List[ColEnum#Column], clauses: String = null ): String = {
     val colsListAsStrList = this.colsListToStrList( selectCols( s ) )  
     val tblsList = List( tables._1.name, tables._2.name )
-    this._makeSelectQuery( colsListAsStrList, tblsList, clauses )
+    this._makeSelectQuery( colsListAsStrList, tblsList, Option(clauses) )
   }
  
   def selectCols( s: (A,List[A#Column],B,List[B#Column]) => List[ColEnum#Column] ): List[ColEnum#Column] = {
     s( cols1,tables._1.columnsAsList,
        cols2,tables._2.columnsAsList
       )
-  }
+  }*/
   
 }
 
@@ -92,10 +111,10 @@ class SelectQueryBuilder3[A<:ColEnum,B<:ColEnum,C<:ColEnum](
   def mkSelectQuery( s: (A,List[A#Column],
                          B,List[B#Column],
                          C,List[C#Column]) => List[ColEnum#Column],
-                     clauses: Option[String] = None ): String = {
+                     clauses: String = null ): String = {
     val colsListAsStrList = this.colsListToStrList( selectCols( s ) )    
     val tblsList = List( tables._1.name, tables._2.name, tables._3.name  )
-    this._makeSelectQuery( colsListAsStrList, tblsList, clauses )
+    this._makeSelectQuery( colsListAsStrList, tblsList, Option(clauses) )
   }
  
   def selectCols( s: (A,List[A#Column],
@@ -127,13 +146,13 @@ class SelectQueryBuilder4[A<:ColEnum,B<:ColEnum,C<:ColEnum,D<:ColEnum](
                          B,List[B#Column],
                          C,List[C#Column],
                          D,List[D#Column]) => List[ColEnum#Column],
-                     clauses: Option[String] = None,
-                     excludedTables: Option[Set[String]] = None ): String = {
+                     clauses: String = null,
+                     excludedTables: Set[String] = null ): String = {
     val colsListAsStrList = this.colsListToStrList( selectCols( s ) )    
     var tblsList = List( tables._1.name, tables._2.name, tables._3.name, tables._4.name )
-    if( excludedTables != None ) tblsList = tblsList.filter( excludedTables.get.contains(_) == false )
+    if( excludedTables != null ) tblsList = tblsList.filter( excludedTables.contains(_) == false )
     
-    this._makeSelectQuery( colsListAsStrList, tblsList, clauses )
+    this._makeSelectQuery( colsListAsStrList, tblsList, Option(clauses) )
   }
  
   def selectCols( s: (A,List[A#Column],

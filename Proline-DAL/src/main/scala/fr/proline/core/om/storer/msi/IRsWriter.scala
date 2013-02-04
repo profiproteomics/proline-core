@@ -17,17 +17,17 @@ trait IRsWriter extends Logging {
    * Protein and peptides referenced by the result set will be created as well
    * if necessary.
    */
-  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDb: DatabaseConnectionContext): Map[String, Int]
-  def storeNewPeptides(peptides: Seq[Peptide], msiDb: DatabaseConnectionContext): Array[Peptide]
+  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Int]
+  def storeNewPeptides(peptides: Seq[Peptide], msiDbCtx: DatabaseConnectionContext): Unit
 
   def fetchProteinIdentifiers(accessions: Seq[String]): Array[Any] // TODO: use JPA
 
   def fetchExistingProteins(protCRCs: Seq[String]): Array[Protein]
-  def storeNewProteins(proteins: Seq[Protein], msiDb: DatabaseConnectionContext): Array[Protein]
+  def storeNewProteins(proteins: Seq[Protein], msiDbCtx: DatabaseConnectionContext): Array[Protein]
 
-  def storeRsPeptideMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int
-  def storeRsProteinMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int
-  def storeRsSequenceMatches(rs: ResultSet, msiDb: DatabaseConnectionContext): Int
+  def storeRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
+  def storeRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
+  def storeRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
 
 }
 

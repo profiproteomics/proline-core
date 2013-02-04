@@ -11,8 +11,9 @@ import fr.proline.core.orm.uds.{ Dataset => UdsIdentificationDataset }
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger,ResultSummaryMerger}
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal._
+import fr.proline.core.dal.helper.UdsDbHelper
+import fr.proline.context.BasicExecutionContext
 
 class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                identificationId: Int,
@@ -25,8 +26,8 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
   private val udsDbConnector = dbManager.getUdsDbConnector
   
   private val udsDbCtx = ContextFactory.buildDbConnectionContext(udsDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
-  
-  private val projectId = udsDbCtx.ezDBC.selectInt("SELECT project_id FROM identification WHERE id ="+identificationId)
+  private val udsDbHelper = new UdsDbHelper( udsDbCtx )
+  private val projectId = udsDbHelper.getDatasetProjectId(identificationId)
   
   private val psDbConnector = dbManager.getPsDbConnector
   private val psDbCtx = ContextFactory.buildDbConnectionContext(psDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
@@ -35,20 +36,12 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
   private val msiDbCtx = ContextFactory.buildDbConnectionContext(msiDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context
   private val msiDbHelper = new MsiDbHelper( msiDbCtx.ezDBC )
   
-  private def closeDbConnections() = {
-    // Close connections before launching another service
-    udsDbCtx.close()
-    psDbCtx.close()
-    msiDbCtx.close()
-    //this.psDb.closeConnection()
-  }
+  private val execSqlContext = new BasicExecutionContext(udsDbCtx,null,psDbCtx,msiDbCtx,null)
   
   override def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    this.closeDbConnections()
-    //this.dbManager.udsEMF.close()
-    //udsEM.close()
+    execSqlContext.closeAll()
   }
   
   def runService(): Boolean = {
@@ -86,25 +79,21 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
         // TODO LMN Use a real SQL Db Contexts here ->
         val( targetRsList, decoyRsList ) = rsProvider.getResultSets( rsIds ).partition { _.isDecoy == false }
         
-        // Close connections before launching another service
-        this.closeDbConnections()
-        
         // Merge result set
-        val targetRsMerger = new ResultSetMerger( dbManager, projectId, targetRsList )
-        targetRsMerger.runService()        
+        val targetRsMerger = new ResultSetMerger( execSqlContext, targetRsList )
+        targetRsMerger.runService()
         val mergedTargetRs = targetRsMerger.mergedResultSet
         
         var mergedDecoyRs = Option.empty[ResultSet]
         if( nbDecoyRs > 0 ) {
-          val decoyRsMerger = new ResultSetMerger( dbManager, projectId, decoyRsList )
+          val decoyRsMerger = new ResultSetMerger( execSqlContext, decoyRsList )
           decoyRsMerger.runService()
           mergedDecoyRs = Some(decoyRsMerger.mergedResultSet)
         }
         
         // Instantiate a result set validator
         val rsValidator = new ResultSetValidator(
-                                dbManager = dbManager,
-                                projectId = projectId,
+                                execCtx = execSqlContext,
                                 targetRs = mergedTargetRs,
                                 decoyRsOpt = mergedDecoyRs,
                                 pepMatchValParams = pepMatchValParams,
@@ -122,11 +111,8 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
         // Iterate over result summary ids to load them
         val resultSummaries = new SQLResultSummaryProvider( msiDbCtx, psDbCtx,  udsDbCtx ).getResultSummaries( rsmIds, true )
         
-        // Close connections before launching another service
-        this.closeDbConnections()
-        
         // Merge result summaries
-        val rsmMerger = new ResultSummaryMerger( dbManager, projectId, resultSummaries )
+        val rsmMerger = new ResultSummaryMerger( execCtx = execSqlContext, resultSummaries )
         rsmMerger.runService()
         
         identInstanceRsmId = rsmMerger.mergedResultSummary.id
@@ -134,9 +120,11 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
     
     } else {
       identInstanceRsmId = rsmIds(0)
-      this.closeDbConnections()
       //identInstanceRsmId = rsmIdByRsId( udsIdfFractions.get(0).getResultSetId() )
     }
+    
+    // Close SQL context
+    execSqlContext.closeAll()
     
     // Create a new instance with fractions in UDS DB
     

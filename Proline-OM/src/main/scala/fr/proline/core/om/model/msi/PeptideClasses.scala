@@ -445,7 +445,7 @@ case class PeptideInstance ( // Required fields
                         // Mutable optional fields
                         var proteinMatchesCount: Int = 0,
                         var proteinSetsCount: Int = 0,
-                        var selectionLevel: Int = -1,
+                        var selectionLevel: Int = 2,
                         var elutionTime: Float = 0,
                         
                         @transient var peptideSets: Array[PeptideSet] = null,

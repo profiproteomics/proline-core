@@ -172,7 +172,8 @@ case class ProteinSet (
                  var isValidated: Boolean = true,
                  var selectionLevel: Int = 2,
 
-                 var properties: Option[ProteinSetProperties] = None
+                 var properties: Option[ProteinSetProperties] = None,
+                 var proteinMatchPropertiesById: Map[Int, ProteinMatchResultSummaryProperties ] = null
                  
                  ) {
   
@@ -190,6 +191,10 @@ case class ProteinSet (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ProteinSetProperties
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class ProteinMatchResultSummaryProperties
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )

@@ -13,7 +13,7 @@ import fr.proline.core.dal._
 import fr.proline.core.om.storer.msi.RsmStorer
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context._
 
 /*object ResultSetValidator {
   
@@ -31,8 +31,8 @@ import fr.proline.context.DatabaseConnectionContext
   }
 }*/
 
-class ResultSetValidator(dbManager: IDataStoreConnectorFactory,
-  projectId: Int,
+class ResultSetValidator(
+  execCtx: IExecutionContext,
   targetRs: ResultSet,
   decoyRsOpt: Option[ResultSet] = None,
   pepMatchValParams: Option[ValidationParams] = None,
@@ -40,13 +40,12 @@ class ResultSetValidator(dbManager: IDataStoreConnectorFactory,
   targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
   storeResultSummary: Boolean = true) extends IService with Logging {
 
-  private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiDbContext = ContextFactory.buildDbConnectionContext(msiDbConnector, false).asInstanceOf[SQLConnectionContext]
+  private val msiDbCtx = execCtx.getMSIDbConnectionContext()
 
   override protected def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
-    this.msiDbContext.close()
+    //this.msiDbContext.close()
   }
 
   var validatedTargetRsm: ResultSummary = null
@@ -186,24 +185,24 @@ class ResultSetValidator(dbManager: IDataStoreConnectorFactory,
     if (storeResultSummary) {
 
       // Check if a transaction is already initiated
-      val wasInTransaction = msiDbContext.ezDBC.isInTransaction()
-      if (!wasInTransaction) msiDbContext.ezDBC.beginTransaction()
+      val wasInTransaction = msiDbCtx.isInTransaction()
+      if (!wasInTransaction) msiDbCtx.beginTransaction()
 
       // Instantiate a RSM storer
-      val rsmStorer = RsmStorer(msiDbContext, msiDbContext.ezDBC)
+      val rsmStorer = RsmStorer(msiDbCtx)
 
       // Store decoy result summary
       if (decoyRsmOpt != None) {
-        rsmStorer.storeResultSummary(decoyRsmOpt.get)
+        rsmStorer.storeResultSummary(decoyRsmOpt.get,execCtx)
         targetRsm.decoyResultSummary = decoyRsmOpt
       }
 
       // Store target result summary
-      rsmStorer.storeResultSummary(targetRsm)
+      rsmStorer.storeResultSummary(targetRsm,execCtx)
       >>>
 
       // Commit transaction if it was initiated locally
-      if (!wasInTransaction) msiDbContext.ezDBC.commitTransaction()
+      if (!wasInTransaction) msiDbCtx.commitTransaction()
 
       this.logger.info("result summary successfully stored !")
     }

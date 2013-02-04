@@ -112,6 +112,10 @@ trait TableDefinition[A  <: ColumnEnumeration] {
   
 }
 
+object ColumnEnumeration {
+  implicit def columnToString(col: ColumnEnumeration#Column): String = col.toString
+}
+
 trait ColumnEnumeration extends Enumeration {
   thisenum =>
   
@@ -124,7 +128,5 @@ trait ColumnEnumeration extends Enumeration {
     
     def toFullString() = $tableName + "." + this.toString()
   }
-  
-  implicit def columnToString(col: ColumnEnumeration#Column): String = col.toString
   
 }

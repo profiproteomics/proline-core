@@ -3,7 +3,7 @@ package fr.proline.core.om.storer.msi
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.om.model.msi.{ ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IPeaklistContainer }
-import fr.proline.core.om.storer.msi.impl.{ StorerContext, SQLiteRsWriter, SQLRsStorer, PgRsWriter, JPARsStorer }
+import fr.proline.core.om.storer.msi.impl._
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
 
@@ -110,7 +110,7 @@ object RsStorer {
 
     msiDbDriverType match {
       case DriverType.POSTGRESQL => {
-        new SQLRsStorer(new PgRsWriter(), plWriter)
+        new PgSQLRsStorer(new PgRsWriter(), plWriter)
       }
       case DriverType.SQLITE => new SQLRsStorer(new SQLiteRsWriter(), plWriter)
       case _ => new JPARsStorer(plWriter) //Call JPARsStorer

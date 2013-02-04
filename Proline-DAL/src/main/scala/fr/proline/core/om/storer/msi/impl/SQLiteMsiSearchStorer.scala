@@ -19,7 +19,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
 
     val ss = msiSearch.searchSettings
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
+    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
 
       // Insert sequence databases
       // TODO : If seqDb does not exist in PDI do not create it !!
@@ -40,9 +40,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
       // Store MS queries
       //this.storeMsQueries( msiSearch, msQueries, context )
 
-    })
-
-    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
+    }, true)
 
     msiSearch.id
   }
@@ -51,7 +49,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
     
     val msQueryInsertQuery = MsiDbMsQueryTable.mkInsertQuery( (col,colsList) => colsList.filter(_ != col.ID) )
     
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
+    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
 
       msiEzDBC.executePrepared(msQueryInsertQuery, true) { stmt =>
 
@@ -77,30 +75,26 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
 
         }
       }
-    })
-
-    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
+    }, true )
 
     context
   }
 
   private def _insertMsQuery(stmt: PreparedStatementWrapper, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int], context: StorerContext): Unit = {
 
-    import com.codahale.jerkson.Json.generate
     // Retrieve some vars
     //val spectrumId = ms2Query.spectrumId
     //if( spectrumId <= 0 )
     //throw new Exception("spectrum must first be persisted")
 
-    val msqPropsAsJSON = if (msQuery.properties != None) Some(generate(msQuery.properties.get)) else None
-
     stmt.executeWith(
       msQuery.initialId,
       msQuery.charge,
       msQuery.moz,
-      msqPropsAsJSON,
+      msQuery.properties.map(generate(_)),
       spectrumId,
-      msiSearchId)
+      msiSearchId
+    )
 
     msQuery.id = stmt.generatedInt
   }
@@ -109,7 +103,7 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
 
     require(instrumentConfig.id > 0, "instrument configuration must have a strictly positive identifier")
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC( context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
+    DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
       
       // Check if the instrument config exists in the MSIdb
       val count = msiEzDBC.selectInt("SELECT count(*) FROM instrument_config WHERE id=" + instrumentConfig.id)
@@ -125,9 +119,8 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
         }
       }
 
-    })
+    }, true )
 
-    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
   }
 
   private def _insertSeqDatabase(seqDatabase: SeqDatabase, msiEzDBC: EasyDBC): Unit = {
@@ -180,8 +173,9 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
         searchSettings.ms1ErrorTolUnit,
         searchSettings.quantitation,
         searchSettings.isDecoy,
-        Option.empty[String],
-        searchSettings.instrumentConfig.id)
+        searchSettings.properties.map(generate(_)),
+        searchSettings.instrumentConfig.id
+      )
 
       searchSettings.id = stmt.generatedInt
     }
@@ -235,7 +229,12 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
       searchSettings.seqDatabases.foreach { seqDb =>
         assert(seqDb.id > 0, "sequence database must first be persisted")
 
-        stmt.executeWith(searchSettings.id, seqDb.id, seqDb.sequencesCount, Option.empty[String])
+        stmt.executeWith(
+          searchSettings.id,
+          seqDb.id,
+          seqDb.sequencesCount,
+          seqDb.searchProperties.map(generate(_))
+        )
       }
     }
 
@@ -275,7 +274,8 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
           ptmDef.id,
           ptmDef.location,
           residueAsStr,
-          Option.empty[String])
+          Option.empty[String] // TODO: retrieve properties
+        )
       }
     }
 
@@ -286,7 +286,8 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
         ptmDef.id,
         ptmDef.names.shortName,
         isFixed,
-        Option.empty[String])
+        Option.empty[String]
+      )
     }
 
   }
@@ -301,8 +302,8 @@ class SQLiteMsiSearchStorer extends IMsiSearchStorer with Logging {
     require(peaklistId > 0, "peaklist must first be persisted")
 
     val msiSearchInsertQuery = MsiDbMsiSearchTable.mkInsertQuery { (c,colsList) => 
-                                 colsList.filter( _ != c.ID)
-                               }
+      colsList.filter( _ != c.ID)
+    }
     
     msiEzDBC.executePrepared( msiSearchInsertQuery, true ) { stmt =>
       stmt.executeWith(

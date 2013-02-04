@@ -5,19 +5,16 @@ import com.codahale.jerkson.Json.generate
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.msi.{MsiDbResultSummaryTable}
-import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLiteRsmStorer
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.IExecutionContext
 
 trait IRsmStorer extends Logging {
   
-  val msiEzDBC: EasyDBC // Main MSI db connection
-  val scoringIdByType = new MsiDbHelper( msiEzDBC ).getScoringIdByType
-  
-  def storeRsmPeptideInstances( rsm: ResultSummary ): Int
-  def storeRsmPeptideSets( rsm: ResultSummary ): Int
-  def storeRsmProteinSets( rsm: ResultSummary ): Int
+  def storeRsmPeptideInstances( rsm: ResultSummary, execCtx: IExecutionContext ): Int
+  def storeRsmPeptideSets( rsm: ResultSummary, execCtx: IExecutionContext ): Int
+  def storeRsmProteinSets( rsm: ResultSummary, execCtx: IExecutionContext ): Int
   
 }
 
@@ -28,74 +25,55 @@ object RsmStorer {
                          colsList.filter( _ != c.ID)
                        }
   
-  /*import fr.proline.core.om.storer.msi.impl.GenericRsStorer
-  import fr.proline.core.om.storer.msi.impl.PgRsStorer
-  import fr.proline.core.om.storer.msi.impl.SQLiteRsStorer*/
-  
   def apply( msiDbContext: DatabaseConnectionContext ): RsmStorer = {
-    this.apply( msiDbContext, ProlineEzDBC(msiDbContext) )
-  }
-  
-  def apply( msiDbContext: DatabaseConnectionContext, msiEzDBC: EasyDBC ): RsmStorer = {
-    //if( msiDbContext.isJPA() ) return new JPARsmStorer
     
-    msiEzDBC.dialect match {
-      //case "org.postgresql.Driver" => new RsStorer( new PgRsStorer( msiDb ) )
-      case ProlineSQLiteSQLDialect => new RsmStorer( new SQLiteRsmStorer( msiEzDBC ) )
-      case _ => new RsmStorer( new SQLiteRsmStorer( msiEzDBC ) )
+    msiDbContext.isJPA match {
+      case true => new RsmStorer( new SQLiteRsmStorer() )
+      case false => new RsmStorer( new SQLiteRsmStorer() )
     }
   }
 }
 
-class RsmStorer( private val _storer: IRsmStorer ) extends Logging {
+class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
   
   val rsmInsertQuery = RsmStorer.rsmInsertQuery
-  val msiEzDBC = _storer.msiEzDBC
   
-  def storeResultSummary( rsm: ResultSummary ): Unit = {
+  def storeResultSummary( rsm: ResultSummary, execCtx: IExecutionContext ): Unit = {
     
-    this._insertResultSummary( rsm )
+    this._insertResultSummary( rsm, execCtx )
     
     // Store peptide instances
-    this._storer.storeRsmPeptideInstances( rsm )
+    this._writer.storeRsmPeptideInstances( rsm, execCtx )
     logger.info( "peptide instances have been stored !" )
     
     // Store protein sets
-    this._storer.storeRsmProteinSets( rsm )
+    this._writer.storeRsmProteinSets( rsm, execCtx )
     logger.info( "protein sets have been stored" )
     
     // Store peptides sets
-    this._storer.storeRsmPeptideSets( rsm )
+    this._writer.storeRsmPeptideSets( rsm, execCtx )
     logger.info( "peptides sets have been stored" )
-    
-
     
   }
   
-  private def _insertResultSummary( rsm: ResultSummary ): Unit = {
-    
-    // Define some vars
-    val rsmDesc = Option( rsm.description )
-    val modificationTimestamp = new java.util.Date() // msiDb.stringifyDate( new java.util.Date )        
-    var decoyRsmId = if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else None
-    val rsId = rsm.getResultSetId
-    val rsmPropsAsJSON = if( rsm.properties != None ) Some(generate( rsm.properties )) else None
+  private def _insertResultSummary( rsm: ResultSummary, execCtx: IExecutionContext ): Unit = {
     
     // Store RDB result summary
-    // TODO: use JPA instead
-    
-    msiEzDBC.executePrepared( this.rsmInsertQuery, true ) { stmt =>
-      stmt.executeWith(
-        rsmDesc,
-        modificationTimestamp,
-        false,
-        rsmPropsAsJSON,
-        decoyRsmId,
-        rsId
-      )
-      
-      rsm.id = stmt.generatedInt
-    }
+    // TODO: use JPA instead    
+    DoJDBCWork.withEzDBC( execCtx.getMSIDbConnectionContext, { msiEzDBC =>
+      msiEzDBC.executePrepared( this.rsmInsertQuery, true ) { stmt =>
+        stmt.executeWith(
+          Option( rsm.description ),
+          new java.util.Date(),
+          false,
+          rsm.properties.map(generate(_)),
+          if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else Option.empty[Int],
+          rsm.getResultSetId
+        )
+        
+        rsm.id = stmt.generatedInt
+      }
+    })
   }
   
 }

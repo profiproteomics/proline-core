@@ -73,6 +73,10 @@ case class SearchSettings(
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
+case class SearchSettingsProperties
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class MSMSSearchSettings(
   // MS/MS search settings
   val ms2ChargeStates: String,
@@ -88,10 +92,6 @@ case class PMFSearchSettings(
   val minProteinMass: Option[Double] = None,
   val proteinPI: Option[Float] = None
 )
-
-@JsonSnakeCase
-@JsonInclude( Include.NON_NULL )
-case class SearchSettingsProperties
 
 object Enzyme extends InMemoryIdGen
 
@@ -129,11 +129,19 @@ case class SeqDatabase(
   // Immutable optional fields
   val version: String = "",
   
-  var properties: Option[SeqDatabaseProperties] = None
+  // Mutable optional fields
+  var searchedSequencesCount: Int = 0,
+  
+  var properties: Option[SeqDatabaseProperties] = None,
+  var searchProperties: Option[SeqDatabaseSearchProperties] = None
    
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SeqDatabaseProperties
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class SeqDatabaseSearchProperties
 

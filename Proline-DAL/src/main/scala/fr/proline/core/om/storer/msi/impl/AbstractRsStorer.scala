@@ -197,7 +197,7 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
   def insertInstrumentConfig(instrumCfg: InstrumentConfig, context: StorerContext) = {
     require(instrumCfg.id > 0, "Instrument configuration must have a strictly positive identifier")
 
-    val jdbcWork = JDBCWorkBuilder.withEzDBC(context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
+    val jdbcWork = BuildJDBCWork.withEzDBC(context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
 
       // Check if the instrument config exists in the MSIdb
       val count = msiEzDBC.selectInt("SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id)

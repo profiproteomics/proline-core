@@ -15,16 +15,12 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{ RsStorer, RsmStorer }
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.ContextFactory
+import fr.proline.context._
 
 class ResultSummaryMerger(
-  dbManager: IDataStoreConnectorFactory,
-  projectId: Int,
+  execCtx: IExecutionContext,
   resultSummaries: Seq[ResultSummary]
 ) extends IService with Logging {
-
-  private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
 
   var mergedResultSummary: ResultSummary = null
 
@@ -43,7 +39,7 @@ class ResultSummaryMerger(
     var msiTransacOk: Boolean = false
 
     try {
-      storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
+      storerContext = new StorerContext(execCtx)
       
       val msiDb = storerContext.getMSIDbConnectionContext
       val msiDriverType = msiDb.getDriverType
@@ -52,7 +48,7 @@ class ResultSummaryMerger(
       msiTransaction.begin()
       msiTransacOk = false
 
-      val jdbcWork = JDBCWorkBuilder.withEzDBC( msiDriverType, { msiEzDBC =>
+      DoJDBCWork.withEzDBC( msiDb, { msiEzDBC =>
 
         // Retrieve protein ids
         val proteinIdSet = new HashSet[Int]
@@ -157,13 +153,11 @@ class ResultSummaryMerger(
 
         // Store result summary
         logger.info("store result summary...")
-        RsmStorer(msiDb,msiEzDBC).storeResultSummary(tmpMergedResultSummary)
+        RsmStorer(execCtx.getMSIDbConnectionContext).storeResultSummary(tmpMergedResultSummary,execCtx)
         >>>
 
         mergedResultSummary = tmpMergedResultSummary
-      })
-
-      msiDb.doWork(jdbcWork, false)
+      }) // End of JDBC work
 
       msiTransaction.commit()
       msiTransacOk = true
