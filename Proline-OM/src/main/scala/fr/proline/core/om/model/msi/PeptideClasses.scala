@@ -419,6 +419,7 @@ case class PeptideMatchMascotProperties (
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
+// TODO: rename to PeptideMatchResultSummaryProperties
 case class PeptideMatchValidationProperties (
   @BeanProperty var mascotScoreOffset: Option[Float] = None,
   @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None

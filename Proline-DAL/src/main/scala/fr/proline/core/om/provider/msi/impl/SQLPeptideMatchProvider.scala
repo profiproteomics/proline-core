@@ -142,10 +142,7 @@ class SQLPeptideMatchProvider(
 
       // Decode JSON properties
       val propertiesAsJSON = pepMatchRecord(PepMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-      var properties = Option.empty[PeptideMatchProperties]
-      if (propertiesAsJSON != null) {
-        properties = Some(parse[PeptideMatchProperties](propertiesAsJSON))
-      }
+      val properties = if (propertiesAsJSON != null) Some(parse[PeptideMatchProperties](propertiesAsJSON)) else None
 
       val pepMatch = new PeptideMatch(id = pepMatchRecord(PepMatchCols.ID).asInstanceOf[AnyVal],
         rank = pepMatchRecord(PepMatchCols.RANK).asInstanceOf[Int],

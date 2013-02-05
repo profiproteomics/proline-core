@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.Array.canBuildFrom
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
 import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.builder.PtmDefinitionBuilder
@@ -10,10 +11,7 @@ import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.util.primitives.LongOrIntAsInt.anyVal2Int
 
 class SQLPTMProvider(val psDbCtx: SQLConnectionContext) extends IPTMProvider {
-
-  import scala.collection.mutable.ArrayBuffer
-  import scala.collection.mutable.HashMap
-
+  
   /*
   /** Returns a map */
   lazy val ptmSpecificityMap: Map[Int,PtmSpecificity] = {
@@ -105,10 +103,12 @@ class SQLPTMProvider(val psDbCtx: SQLConnectionContext) extends IPTMProvider {
       val ptmEvidRecords = ptmEvidRecordsByPtmId.get(ptmId).get
 
       // TODO : load classification
-      val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(ptmRecord = ptmRecord,
+      val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(
+        ptmRecord = ptmRecord,
         ptmSpecifRecord = ptmSpecifRecord,
         ptmEvidenceRecords = ptmEvidRecords,
-        ptmClassification = "")
+        ptmClassification = ""
+      )
 
       ptmDefMapBuilder += (ptmDef.id -> ptmDef)
 

@@ -3,17 +3,19 @@ package fr.proline.core.om.provider.msi.impl
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.profi.jdbc.easy.string2Formattable
 import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.util.StringUtils
 import fr.proline.util.primitives.LongOrIntAsInt.anyVal2Int
+import fr.proline.core.dal.tables.ps.PsDbPeptidePtmTable
+import fr.proline.core.dal.tables.ps.PsDbPeptideTable
 
 class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(psDbCtx) with IPeptideProvider with Logging {
 
@@ -33,7 +35,11 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
     peptideIds.grouped(maxNbIters).foreach(tmpPepIds => {
 
       // Retrieve peptide PTMs for the current group of peptide ids
-      psDbCtx.ezDBC.selectAndProcess("SELECT * FROM peptide_ptm WHERE peptide_id IN (" + tmpPepIds.mkString(",") + ")") { r =>
+      val pepPtmQuery = new SelectQueryBuilder1(PsDbPeptidePtmTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.PEPTIDE_ID ~" IN("~ tmpPepIds.mkString(",") ~")"
+      )
+    
+      psDbCtx.ezDBC.selectAndProcess(pepPtmQuery) { r =>
 
         if (colNames == null) { colNames = r.columnNames }
 
@@ -96,13 +102,17 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
 
     // Iterate over groups of peptide ids
     peptideIds.grouped(maxNbIters).foreach(tmpPepIds => {
+      
+      val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.ID ~" IN("~ tmpPepIds.mkString(",") ~")"
+      )
 
-      // Retrieve peptide PTMs for the current group of peptide ids
-      psDbCtx.ezDBC.selectAndProcess("SELECT * FROM peptide WHERE id IN (" + tmpPepIds.mkString(",") + ")") { r =>
+      // Retrieve peptides for the current group of peptide ids
+      psDbCtx.ezDBC.selectAndProcess(pepQuery) { r =>
 
         if (pepColNames == null) { pepColNames = r.columnNames }
 
-        // Build the peptide PTM record
+        // Build the peptide record
         val peptideRecord = pepColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
         pepRecords += peptideRecord
 
@@ -149,9 +159,13 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
     peptideSeqs.grouped(maxNbIters).foreach(tmpPepSeqs => {
 
       val quotedSeqs = tmpPepSeqs.map { "'" + _ + "'" }
+      
+      val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.SEQUENCE ~" IN("~ quotedSeqs.mkString(",") ~")"
+      )
 
       // Retrieve peptide PTMs for the current group of peptide ids
-      psDbCtx.ezDBC.selectAndProcess("SELECT * FROM peptide WHERE sequence IN (" + quotedSeqs.mkString(",") + ")") { r =>
+      psDbCtx.ezDBC.selectAndProcess(pepQuery) { r =>
 
         if (pepColNames == null) { pepColNames = r.columnNames }
 
@@ -207,16 +221,16 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
 
     val tmpPep = new Peptide(sequence = peptideSeq, ptms = pepPtms)
 
-    var resultPepIds: Seq[Int] = null
-
-    if (StringUtils.isEmpty(tmpPep.ptmString)) {
-      resultPepIds = psDbCtx.ezDBC.select(
-        "SELECT id FROM peptide WHERE sequence = ? AND ptm_string IS NULL ",
-        tmpPep.sequence, tmpPep.ptmString) { _.nextInt }
+    val resultPepIds: Seq[Int] = if (StringUtils.isEmpty(tmpPep.ptmString)) {
+      val pepIdQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
+        List(t.ID) -> "WHERE "~ t.SEQUENCE ~" = ? AND "~ t.PTM_STRING ~" IS NULL"
+      )
+      psDbCtx.ezDBC.select(pepIdQuery,tmpPep.sequence) { _.nextInt }
     } else {
-      resultPepIds = psDbCtx.ezDBC.select(
-        "SELECT id FROM peptide WHERE sequence = ? AND ptm_string = ?",
-        tmpPep.sequence, tmpPep.ptmString) { _.nextInt }
+      val pepIdQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
+        List(t.ID) -> "WHERE "~ t.SEQUENCE ~" = ? AND "~ t.PTM_STRING ~" = ?"
+      )
+      psDbCtx.ezDBC.select(pepIdQuery,tmpPep.sequence, tmpPep.ptmString) { _.nextInt }
     }
 
     if (resultPepIds.length == 0) None
@@ -254,7 +268,11 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
     quotedSeqs.distinct.grouped(maxNbIters).foreach { tmpQuotedSeqs =>
       this.logger.trace("search for peptides in the database using %d sequences".format(tmpQuotedSeqs.length))
 
-      psDbCtx.ezDBC.select("SELECT id, sequence, ptm_string FROM peptide WHERE sequence IN (" + tmpQuotedSeqs.mkString(",") + ")") { r =>
+      val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
+        List(t.ID,t.SEQUENCE,t.PTM_STRING) -> "WHERE "~ t.SEQUENCE ~" IN ("~ tmpQuotedSeqs.mkString(",") ~")"
+      )
+      
+      psDbCtx.ezDBC.selectAndProcess(pepQuery) { r =>
         val (id, sequence, ptmString) = (r.nextInt, r.nextString, r.nextStringOrElse(""))
         val uniqueKey = sequence + "%" + ptmString
 

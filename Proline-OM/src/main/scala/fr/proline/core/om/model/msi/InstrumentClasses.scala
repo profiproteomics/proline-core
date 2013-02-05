@@ -44,6 +44,8 @@ object InstrumentConfig extends InMemoryIdGen {
   }
 }
 
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class InstrumentConfig(
                    // Required fields
                    val id: Int,

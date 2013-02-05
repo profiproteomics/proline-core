@@ -2,17 +2,19 @@ package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
 
-import fr.proline.core.dal.tables.msi.{ MsiDbProteinSetTable, MsiDbProteinSetProteinMatchItemTable }
+import fr.proline.core.dal.tables.msi.{ MsiDbProteinSetTable, MsiDbProteinSetProteinMatchItemTable, MsiDbPeptideSetTable }
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.om.model.msi.{ PeptideSet, ProteinSet }
+import fr.proline.core.om.model.msi.{ PeptideSet, ProteinSet, ProteinSetProperties, ProteinMatchResultSummaryProperties }
 import fr.proline.core.om.provider.msi.{ IPeptideSetProvider, IProteinSetProvider }
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.SQLConnectionContext
 
-class SQLProteinSetProvider(val msiDbCtx: SQLConnectionContext,
+class SQLProteinSetProvider(
+  val msiDbCtx: SQLConnectionContext,
   val psDbCtx: SQLConnectionContext,
-
-  val peptideSetProvider: Option[IPeptideSetProvider] = None) {
+  val peptideSetProvider: Option[IPeptideSetProvider] = None ) {
 
   val ProtSetCols = MsiDbProteinSetTable.columns
   val ProtSetItemCols = MsiDbProteinSetProteinMatchItemTable.columns
@@ -36,42 +38,64 @@ class SQLProteinSetProvider(val msiDbCtx: SQLConnectionContext,
   }
 
   def getProteinSets(protSetIds: Seq[Int]): Array[ProteinSet] = {
+    
+    val pepSetIdQuery = new SelectQueryBuilder1(MsiDbPeptideSetTable).mkSelectQuery( (t,c) =>
+      List(t.ID) -> "WHERE "~ t.PROTEIN_SET_ID ~" IN("~ protSetIds.mkString(",") ~")"
+    )
 
-    val peptideSetIds = msiDbCtx.ezDBC.select("SELECT id FROM peptide_set WHERE protein_set_id IN (" + protSetIds.mkString(",") + ")") { _.nextInt }
+    val peptideSetIds = msiDbCtx.ezDBC.select(pepSetIdQuery) { _.nextInt }
     val peptideSets = this._getPeptideSetProvider.getPeptideSets(peptideSetIds)
 
-    this._buildProteinSets(this._getProtSetRecords(protSetIds),
+    this._buildProteinSets(
+      this._getProtSetRecords(protSetIds),
       this._getProtSetItemRecords(protSetIds),
-      peptideSets)
+      peptideSets
+    )
   }
 
   def getResultSummariesProteinSets(rsmIds: Seq[Int]): Array[ProteinSet] = {
-    this._buildProteinSets(this._getRSMsProtSetRecords(rsmIds),
+    this._buildProteinSets(
+      this._getRSMsProtSetRecords(rsmIds),
       this._getRSMsProtSetItemRecords(rsmIds),
-      this._getPeptideSetProvider.getResultSummariesPeptideSets(rsmIds))
+      this._getPeptideSetProvider.getResultSummariesPeptideSets(rsmIds)
+    )
   }
 
   private def _getRSMsProtSetRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps("SELECT * FROM protein_set WHERE result_summary_id IN (" + rsmIds.mkString(",") + ")")
+    val protSetQuery = new SelectQueryBuilder1(MsiDbProteinSetTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
+    )
+    msiDbCtx.ezDBC.selectAllRecordsAsMaps(protSetQuery)
   }
 
   private def _getProtSetRecords(protSetIds: Seq[Int]): Array[Map[String, Any]] = {
     // TODO: use max nb iterations
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps("SELECT * FROM protein_set WHERE id IN (" + protSetIds.mkString(",") + ")")
+    val protSetQuery = new SelectQueryBuilder1(MsiDbProteinSetTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ protSetIds.mkString(",") ~")"
+    )
+    msiDbCtx.ezDBC.selectAllRecordsAsMaps(protSetQuery)
   }
 
-  private def _getRSMsProtSetItemRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps("SELECT * FROM protein_set_protein_match_item WHERE result_summary_id IN (" + rsmIds.mkString(",") + ")")
+  private def _getRSMsProtSetItemRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {    
+    val protSetItemQuery = new SelectQueryBuilder1(MsiDbProteinSetProteinMatchItemTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
+    )
+    msiDbCtx.ezDBC.selectAllRecordsAsMaps(protSetItemQuery)
   }
 
   private def _getProtSetItemRecords(protSetIds: Seq[Int]): Array[Map[String, Any]] = {
     // TODO: use max nb iterations
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps("SELECT * FROM protein_set_protein_match_item WHERE protein_set_id IN (" + protSetIds.mkString(",") + ")")
+    val protSetItemQuery = new SelectQueryBuilder1(MsiDbProteinSetProteinMatchItemTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.PROTEIN_SET_ID ~" IN("~ protSetIds.mkString(",") ~")"
+    )
+    msiDbCtx.ezDBC.selectAllRecordsAsMaps(protSetItemQuery)
   }
 
-  private def _buildProteinSets(protSetRecords: Seq[Map[String, Any]],
+  private def _buildProteinSets(
+    protSetRecords: Seq[Map[String, Any]],
     protSetItemRecords: Seq[Map[String, Any]],
-    peptideSets: Seq[PeptideSet]): Array[ProteinSet] = {
+    peptideSets: Seq[PeptideSet]
+  ): Array[ProteinSet] = {
 
     import fr.proline.util.primitives.LongOrIntAsInt._
     import fr.proline.util.primitives.DoubleOrFloatAsFloat._
@@ -99,24 +123,23 @@ class SQLProteinSetProvider(val msiDbCtx: SQLConnectionContext,
 
       // Retrieve protein match ids and properties
       val protMatchIdsBuilder = Array.newBuilder[Int]
+      val protMatchPropertiesById = Map.newBuilder[Int, ProteinMatchResultSummaryProperties]
 
-      protSetItemRecordsByProtSetId(protSetId).foreach { protSetItems =>
-        protMatchIdsBuilder += protSetItems(ProtSetItemCols.PROTEIN_MATCH_ID).asInstanceOf[Int]
-
-        /*val propertiesAsJSON = pepMatchMapping(PepMatchMappingCols.serializedProperties).asInstanceOf[String]        
-        if( propertiesAsJSON != null ) {
-          pepMatchPropertyMapBuilder += pepMatchId -> parse[ProteinSetPeptideMatchMapProperties](propertiesAsJSON)
-        }*/
+      protSetItemRecordsByProtSetId(protSetId).foreach { protSetItem =>
+        
+        val protMatchId = protSetItem(ProtSetItemCols.PROTEIN_MATCH_ID).asInstanceOf[Int]
+        protMatchIdsBuilder += protMatchId
+        
+        val propertiesAsJSON = protSetItem(ProtSetItemCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
+        if (propertiesAsJSON != null) {
+          protMatchPropertiesById += protMatchId -> parse[ProteinMatchResultSummaryProperties](propertiesAsJSON)
+        }
       }
 
       // Decode JSON properties
-      /*val propertiesAsJSON = protSetRecord(ProtSetCols.serializedProperties).asInstanceOf[String]
-      var properties = Option.empty[PeptideMatchProperties]
-      if( propertiesAsJSON != null ) {
-        properties = Some( parse[PeptideMatchProperties](propertiesAsJSON) )
-      }*/
-
-      // TODO: load properties
+      val propertiesAsJSON = protSetRecord(ProtSetCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
+      val properties = if (propertiesAsJSON != null) Some(parse[ProteinSetProperties](propertiesAsJSON)) else None
+      
       val protSet = new ProteinSet(
         id = protSetId,
         peptideSet = pepSet,
@@ -127,7 +150,10 @@ class SQLProteinSetProvider(val msiDbCtx: SQLConnectionContext,
         selectionLevel = protSetRecord(ProtSetCols.SELECTION_LEVEL).asInstanceOf[Int],
         proteinMatchIds = protMatchIdsBuilder.result(),
         typicalProteinMatchId = protSetRecord(ProtSetCols.TYPICAL_PROTEIN_MATCH_ID).asInstanceOf[Int],
-        resultSummaryId = protSetRecord(ProtSetCols.RESULT_SUMMARY_ID).asInstanceOf[Int])
+        resultSummaryId = protSetRecord(ProtSetCols.RESULT_SUMMARY_ID).asInstanceOf[Int],
+        properties = properties,
+        proteinMatchPropertiesById = protMatchPropertiesById.result
+      )
 
       protSets(protSetIds) = protSet
 
