@@ -168,7 +168,11 @@ public class DatabaseConnectionContext {
     if( this.isJPA() ) {
     	return this.getEntityManager().getTransaction().isActive();
     } else {
-    	return !this.getConnection().getAutoCommit();
+    	if (m_connection != null && !m_connection.isClosed()) {
+    		return !m_connection.getAutoCommit();
+    	} else {
+    		return false;
+    	}
     }
     
     }
@@ -185,7 +189,7 @@ public class DatabaseConnectionContext {
     } else {
     	// TODO: handle transaction isolation levels
     	//this.getConnection().setTransactionIsolation( this.txIsolationLevel.id )
-    	this.getConnection().setAutoCommit(false);
+    	m_connection.setAutoCommit(false);
     }
     
     }
@@ -200,8 +204,8 @@ public class DatabaseConnectionContext {
     if( this.isJPA() ) {
     	this.getEntityManager().getTransaction().commit();
     } else {
-        this.getConnection().commit();
-        this.getConnection().setAutoCommit(true);
+    	m_connection.commit();
+    	m_connection.setAutoCommit(true);
     }
     
     }

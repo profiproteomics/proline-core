@@ -4,18 +4,16 @@ import com.weiglewilczek.slf4s.Logging
 import collection.JavaConversions.collectionAsScalaIterable
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.validation.{TargetDecoyModes,ValidationParams}
+import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}
 import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger,ResultSummaryMerger}
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal._
-import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.context.BasicExecutionContext
 
 class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
+                               projectId: Int,
                                identificationId: Int,
                                rsmIds: Seq[Int],
                                mergeResultSets: Boolean,
@@ -23,7 +21,7 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                protSetValParams: Option[ValidationParams] = None
                                ) extends IService with Logging {
   
-  private val udsDbConnector = dbManager.getUdsDbConnector
+  /*private val udsDbConnector = dbManager.getUdsDbConnector
   
   private val udsDbCtx = ContextFactory.buildDbConnectionContext(udsDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
   private val udsDbHelper = new UdsDbHelper( udsDbCtx )
@@ -34,9 +32,15 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
   
   private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
   private val msiDbCtx = ContextFactory.buildDbConnectionContext(msiDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context
-  private val msiDbHelper = new MsiDbHelper( msiDbCtx.ezDBC )
   
   private val execSqlContext = new BasicExecutionContext(udsDbCtx,null,psDbCtx,msiDbCtx,null)
+  */
+  
+  private val execSqlContext = BuildExecutionContext( dbManager, projectId, false )
+  private val udsDbCtx = execSqlContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext]
+  private val psDbCtx = execSqlContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext]
+  private val msiDbCtx = execSqlContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext]
+  private val msiDbHelper = new MsiDbHelper( msiDbCtx.ezDBC )
   
   override def beforeInterruption = {
     // Release database connections
@@ -123,13 +127,13 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
       //identInstanceRsmId = rsmIdByRsId( udsIdfFractions.get(0).getResultSetId() )
     }
     
-    // Close SQL context
+    // Close execution context
     execSqlContext.closeAll()
     
     // Create a new instance with fractions in UDS DB
     
     // Begin new transaction
-    val udsEM = udsDbConnector.getEntityManagerFactory.createEntityManager()
+    val udsEM = dbManager.getUdsDbConnector.getEntityManagerFactory.createEntityManager()
     val udsIdentAggregate = udsEM.find(classOf[UdsDataset], identificationId)
     val udsIdfDatasets = udsIdentAggregate.getChildren().toList.sortBy(_.getNumber())
   

@@ -1,21 +1,21 @@
 package fr.proline.core.service.msi
 
-import javax.persistence.EntityTransaction
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
+
 import com.weiglewilczek.slf4s.Logging
+
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.core.algo.msi.{ ResultSummaryMerger => RsmMergerAlgo }
-import fr.proline.core.dal.tables.msi.{ MsiDbResultSetRelationTable, MsiDbResultSummaryRelationTable }
+import fr.proline.context._
+import fr.proline.core.algo.msi.{ResultSummaryMerger => RsmMergerAlgo}
 import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.storer.msi.{ RsStorer, RsmStorer }
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.context._
+import fr.proline.core.om.storer.msi.{RsStorer,RsmStorer}
 
 class ResultSummaryMerger(
   execCtx: IExecutionContext,
@@ -34,21 +34,17 @@ class ResultSummaryMerger(
   def runService(): Boolean = {
 
     var storerContext: StorerContext = null // For JPA use
-
-    var msiTransaction: EntityTransaction = null
+    var msiDbCtx: DatabaseConnectionContext = null
     var msiTransacOk: Boolean = false
 
     try {
       storerContext = new StorerContext(execCtx)
-      
-      val msiDb = storerContext.getMSIDbConnectionContext
-      val msiDriverType = msiDb.getDriverType
+      msiDbCtx = storerContext.getMSIDbConnectionContext
 
-      msiTransaction = storerContext.getMSIDbConnectionContext.getEntityManager.getTransaction
-      msiTransaction.begin()
+      msiDbCtx.beginTransaction()
       msiTransacOk = false
 
-      DoJDBCWork.withEzDBC( msiDb, { msiEzDBC =>
+      DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
 
         // Retrieve protein ids
         val proteinIdSet = new HashSet[Int]
@@ -94,10 +90,10 @@ class ResultSummaryMerger(
         //val rsStorer = new JPARsStorer()
         //storerContext = new StorerContext(udsDb, pdiDb, psDb, msiDb)
         //rsStorer.storeResultSet(mergedResultSet, storerContext)
-        val rsStorer = RsStorer( msiDriverType )
+        val rsStorer = RsStorer( msiDbCtx.getDriverType )
         rsStorer.storeResultSet( mergedResultSet, storerContext )
 
-        msiDb.getEntityManager.flush() // Flush before returning to SQL msiEzDBC
+        //msiDbCtx.getEntityManager.flush() // Flush before returning to SQL msiEzDBC
 
         >>>
 
@@ -157,26 +153,27 @@ class ResultSummaryMerger(
         >>>
 
         mergedResultSummary = tmpMergedResultSummary
-      }) // End of JDBC work
+      }, true) // End of JDBC work
 
-      msiTransaction.commit()
+      msiDbCtx.commitTransaction()
       msiTransacOk = true
+      
     } finally {
 
-      if ((msiTransaction != null) && !msiTransacOk) {
+      if (msiDbCtx.isInTransaction() && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
 
         try {
-          msiTransaction.rollback()
+          msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
         }
 
       }
 
-      if (storerContext != null) {
+      /*if (storerContext != null) {
         storerContext.closeAll()
-      }
+      }*/
 
     }
 
