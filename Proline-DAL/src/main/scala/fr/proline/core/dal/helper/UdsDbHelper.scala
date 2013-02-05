@@ -53,7 +53,7 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
       ezDBC.selectInts( datasetQB.mkSelectQuery( (t,cols) => 
         List(t.RESULT_SET_ID) ->
         " WHERE "~ t.PARENT_DATASET_ID ~"="~ parentDsId ~
-        " AND "~ t.TYPE ~"="~ DatasetType.IDENTIFICATION
+        " AND "~ t.TYPE ~"= '"~ DatasetType.IDENTIFICATION ~ "'"
       ) )
     
     })

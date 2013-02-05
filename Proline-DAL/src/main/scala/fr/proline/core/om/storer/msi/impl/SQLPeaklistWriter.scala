@@ -24,7 +24,7 @@ import fr.proline.util.sql._
 
 class SQLPeaklistWriter extends IPeaklistWriter with Logging {
 
-  val compressionAlgo = "snappy" //none | lzma | xz | snappy => TODO: create an enumeration near to the Peaklist class
+  val compressionAlgo = "none" //none | lzma | xz | snappy => TODO: create an enumeration near to the Peaklist class
 
   //protected val doubleFormatter = newDecimalFormat("#.######")
   //protected val floatFormatter = newDecimalFormat("#.##")
@@ -118,8 +118,8 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
       lastScan,
       firstTime,
       lastTime,
-      Snappy.compress(doublesToBytes(spectrum.mozList.get)),
-      Snappy.compress(floatsToBytes(spectrum.intensityList.get)),
+      doublesToBytes(spectrum.mozList.get), // Snappy.compress(
+      floatsToBytes(spectrum.intensityList.get), // Snappy.compress(
       spectrum.peaksCount,
       spectrum.properties.map(generate(_)),
       peaklistId,
@@ -216,8 +216,8 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
           lastScan,
           firstTime,
           lastTime,
-          """\\x""" + bytes2Hex(Snappy.compress(doublesToBytes(spectrum.mozList.get))),
-          """\\x""" + bytes2Hex(Snappy.compress(floatsToBytes(spectrum.intensityList.get))),
+          """\\x""" + bytes2Hex(doublesToBytes(spectrum.mozList.get)), // Snappy.compress(
+          """\\x""" + bytes2Hex(floatsToBytes(spectrum.intensityList.get)), // Snappy.compress(
           spectrum.peaksCount,
           spectrum.properties.map(generate(_)).getOrElse(""),
           peaklistId,

@@ -7,7 +7,7 @@ import fr.proline.core.algo.msi.validation.{TargetDecoyModes,ValidationParams}
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}
-import fr.proline.core.orm.uds.{ Dataset => UdsIdentificationDataset }
+import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger,ResultSummaryMerger}
 import fr.proline.context.DatabaseConnectionContext
@@ -130,8 +130,8 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
     
     // Begin new transaction
     val udsEM = udsDbConnector.getEntityManagerFactory.createEntityManager()
-    val udsIdent = udsEM.find(classOf[UdsIdentificationDataset], identificationId)    
-    val udsIdfDatasets = udsIdent.getIdentificationDataset().toList.sortBy(_.getNumber())
+    val udsIdentAggregate = udsEM.find(classOf[UdsDataset], identificationId)
+    val udsIdfDatasets = udsIdentAggregate.getChildren().toList.sortBy(_.getNumber())
   
     udsEM.getTransaction().begin()
     
