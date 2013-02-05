@@ -8,7 +8,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2,SelectQueryBuilder4}
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.tables.uds.UdsDbInstrumentColumns
-import fr.proline.core.dal.tables.uds.UdsDbInstrumentConfigColumns
+import fr.proline.core.dal.tables.uds.UdsDbInstrumentConfigTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IMSISearchProvider
 import fr.proline.util.primitives.LongOrIntAsInt._
@@ -32,7 +32,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
   protected val enzCols = MsiDbEnzymeColumns
 
   protected val instCols = UdsDbInstrumentColumns
-  protected val instConfigCols = UdsDbInstrumentConfigColumns
+  protected val instConfigCols = UdsDbInstrumentConfigTable.columns
 
   def getMSISearches(msiSearchIds: Seq[Int]): Array[MSISearch] = {
 
@@ -318,7 +318,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
         releaseDate = r.getDate(seqDbCols.RELEASE_DATE),
         version = r.getStringOrElse(seqDbCols.FASTA_FILE_PATH, ""),
         searchedSequencesCount = r.getInt(ssSeqDbMapCols.SEARCHED_SEQUENCES_COUNT),
-        properties = r.getStringOption(seqDbCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseProperties](_)),
+        properties = r.getStringOption(seqDbTblName+"_"+seqDbCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseProperties](_)),
         searchProperties = r.getStringOption(ssSeqDbMapTblName+"_"+ssSeqDbMapCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseSearchProperties](_))
       )
     } toArray
@@ -343,7 +343,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
   // TODO: put in a dedicated provider
   def getInstrumentConfigs(instConfigIds: Seq[Int]): Array[InstrumentConfig] = {
     
-    val instConfigQuery = new SelectQueryBuilder1(MsiDbInstrumentConfigTable).mkSelectQuery( (t,c) =>
+    val instConfigQuery = new SelectQueryBuilder1(UdsDbInstrumentConfigTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ instConfigIds.mkString(",") ~")"
     )
 

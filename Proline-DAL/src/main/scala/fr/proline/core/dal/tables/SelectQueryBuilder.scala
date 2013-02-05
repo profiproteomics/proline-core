@@ -11,26 +11,35 @@ trait CanBuildSelectQuery extends Logging {
   
   protected def _makeSelectQuery( colsAsStrList: List[String], tblsList: List[TableDefinition[_]], clauses: Option[String] = None ): String = {
     
+    // Retrieve table names as strings
     val tblsAsStrList = tblsList.map(_.name)
+    // Map columns names by the table name
     val colNamesByTblName = tblsList.map( tbl => tbl.name -> tbl.columnsAsStrList ) toMap
     
-    // Build a set of column names
+    // Define some vars
     val colCountByName = new collection.mutable.HashMap[String,Int]
-    val tblAndColNames = colsAsStrList.map { colAsStr =>
-      val parts = colAsStr.split("\\.")
-      val(tblName, colName) = Tuple2( parts(0), parts(1) )
+    val tblAndColNames = new collection.mutable.ArrayBuffer[Tuple2[String,String]]
+    
+    // Count columns and unroll stars
+    colsAsStrList.foreach { colAsStr =>
+      
+      // Split table and column names
+      val strParts = colAsStr.split("\\.")
+      val(tblName, colName) = Tuple2( strParts(0), strParts(1) )
       
       // Unroll column names if special star character has been used
       if( colName == "*" ) {
         val unrolledColNames = colNamesByTblName(tblName)
         for( unrolledColName <- unrolledColNames ) {
           colCountByName(unrolledColName) = colCountByName.getOrElse(colName, 0) + 1
+          tblAndColNames += tblName -> unrolledColName
         }
+      // Else just count the column and append it to the list as is
       } else {
         colCountByName(colName) = colCountByName.getOrElse(colName, 0) + 1
+        tblAndColNames += tblName -> colName
       }
       
-      (tblName, colName) 
     }
     
     // Alias duplicated columns in the current select query
@@ -38,7 +47,7 @@ trait CanBuildSelectQuery extends Logging {
     for( tblAndColName <- tblAndColNames ) {
       val( tblName, colName ) = tblAndColName
       
-      if( colName != "*" && colCountByName(colName) > 1 ) {
+      if( colCountByName(colName) > 1 ) {
         val colAlias = tblName +"_"+ colName
         this.logger.debug("duplicated column ("+colName+") detected and automatically aliased as " + colAlias)
         aliasedColsAsStrList += (tblName +"."+ colName +" AS "+ colAlias )
