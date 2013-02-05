@@ -21,6 +21,12 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import fr.proline.core.orm.msi.ResultSummary;
+import fr.proline.core.orm.msi.ResultSet;
+
+
 
 
 /**
@@ -134,6 +140,9 @@ public class Dataset implements Serializable{
 	@OneToMany(mappedBy="dataset")
 	private Set<SampleAnalysis> sampleReplicates;
 
+	// Transient Variables not saved in database
+    @Transient private TransientData transientData = null;
+	
     protected Dataset() {
     }
 
@@ -339,5 +348,44 @@ public class Dataset implements Serializable{
 	    return idfDS;
 	    
 	}
+	
+	 
+    public TransientData getTransientData() {
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
+    }
+    
+    /**
+     * Transient Data which will be not saved in database Used by the Proline
+     * Studio IHM
+     *
+     * @author JM235353
+     */
+    public static class TransientData implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+        private ResultSummary resultSummary = null; //JPM.WART : uds package has no access to msi package
+        private ResultSet resultSet = null;
+
+
+        protected TransientData() {
+        }
+
+        public ResultSummary getResultSummary() {  
+            return resultSummary;
+        }
+        public void setResultSummary(ResultSummary resultSummary) {  
+            this.resultSummary = resultSummary;
+        }
+        
+        public ResultSet getResultSet() {  
+            return resultSet;
+        }
+        public void setResultSet(ResultSet resultSet) {  
+            this.resultSet = resultSet;
+        }
+    }
 	
 }
