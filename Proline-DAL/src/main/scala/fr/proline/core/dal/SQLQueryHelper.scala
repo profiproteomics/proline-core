@@ -1,17 +1,20 @@
 package fr.proline.core.dal
 
-import com.weiglewilczek.slf4s.Logging
 import java.sql.Connection
+
 import org.joda.time.format.DateTimeFormat
-import fr.profi.jdbc.easy.EasyDBC
+
+import com.weiglewilczek.slf4s.Logging
+
 import fr.profi.jdbc.AbstractSQLDialect
 import fr.profi.jdbc.AsShortStringBooleanFormatter
 import fr.profi.jdbc.DefaultSQLDialect
 import fr.profi.jdbc.SQLiteTypeMapper
 import fr.profi.jdbc.TxIsolationLevels
+import fr.profi.jdbc.easy.EasyDBC
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.repository.DriverType
-import fr.proline.repository.util.JDBCWork
+import fr.proline.repository.IDatabaseConnector
 
 object ProlineSQLiteSQLDialect extends AbstractSQLDialect(
   DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSS"),
@@ -21,7 +24,7 @@ object ProlineSQLiteSQLDialect extends AbstractSQLDialect(
   999
 )
 
-object ProlineEzDBC {
+object ProlineEzDBC extends Logging {
   
   def getDriverDialect( driverType: DriverType ) = {
     driverType match {
@@ -38,7 +41,16 @@ object ProlineEzDBC {
   }
   
   def apply( connection: Connection, driverType: DriverType ): EasyDBC = {
-    EasyDBC( connection, getDriverDialect(driverType), getDriverTxIsolationLevel(driverType) )    
+    val ezDBC = EasyDBC( connection, getDriverDialect(driverType), getDriverTxIsolationLevel(driverType) )
+    
+    // Make some driver based optimizations
+    if( driverType == DriverType.SQLITE ) {
+      this.logger.debug("Setting SQLite DB cache to 100Mo and temp_store to MEMORY" )
+      ezDBC.execute("PRAGMA cache_size=100000;")
+      ezDBC.execute("PRAGMA temp_store=MEMORY;")
+    }
+    
+    ezDBC 
   }
   
   def apply( dbContext: DatabaseConnectionContext ): EasyDBC = {
@@ -47,10 +59,8 @@ object ProlineEzDBC {
   }
   
 }
-
-import fr.proline.repository.IDatabaseConnector
   
-@deprecated( message = "Use ProlineEzDBC instead", since = "0.0.3.2" )
+@deprecated( "Use ProlineEzDBC instead", "0.0.3.2" )
 class SQLQueryHelper( val connection: Connection, val driverType: DriverType ) extends Logging {
   
   def this( dbConnector: IDatabaseConnector ) {

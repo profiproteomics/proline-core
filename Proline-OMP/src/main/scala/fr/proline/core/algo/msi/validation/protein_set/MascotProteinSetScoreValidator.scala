@@ -80,7 +80,7 @@ class MascotProteinSetScoreValidator extends IProteinSetValidator with Logging {
         val decoyValidProteinSetCount = validDecoyProtSets.length
         this.logger.debug( decoyValidProteinSetCount + " decoy" )
         
-        currentFdr = 100 * decoyValidProteinSetCount / targetValidProteinSetCount
+        currentFdr = (100 * decoyValidProteinSetCount).toFloat / targetValidProteinSetCount
         this.logger.debug( "current fdr: " + currentFdr )
         
         val rocPoint = ValidationResult(  //id = rocPointId,

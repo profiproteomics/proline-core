@@ -53,7 +53,7 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
       val decoyValidProteinSetCount = validDecoyProtSets.length
       println( decoyValidProteinSetCount + " decoy" )
       
-      currentFdr = 100 * decoyValidProteinSetCount / targetValidProteinSetCount
+      currentFdr = (100 * decoyValidProteinSetCount).toFloat / targetValidProteinSetCount
       println( "current fdr: " + currentFdr )
       
       if( currentFdr <= expectedFdr ) {
@@ -206,7 +206,7 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
     val validDecoyProtSets = this.validateProteinSets( decoyRsm.proteinSets, decoyRsm.getBestPepMatchesByProtSetId, validationRules )
     
     val( nbTargetMatches, nbDecoyMatches ) = ( validTargetProtSets.length, validDecoyProtSets.length )    
-    val fdr = 100 * nbDecoyMatches / nbTargetMatches
+    val fdr = (100 * nbDecoyMatches).toFloat / nbTargetMatches
     
     val expectedResult = ValidationResult( nbTargetMatches, Some(nbTargetMatches), Some(fdr) )    
     ValidationResults( expectedResult, None )

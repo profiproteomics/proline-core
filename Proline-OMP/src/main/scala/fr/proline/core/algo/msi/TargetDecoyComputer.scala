@@ -76,7 +76,7 @@ object TargetDecoyComputer {
   def computeFdr( tp: Int, fp: Int ): Float = { 
     require( tp > 0 && fp >= 0 )
     
-    100 * fp / (tp + fp )
+    (100 * fp).toFloat / (tp + fp )
   }
 
   /** Computes FDR for separate target/decoy databases (Matrix Science).
@@ -85,7 +85,7 @@ object TargetDecoyComputer {
   def computeSdFdr( tp: Int, dp: Int ): Float = {
     require( tp > 0 && dp >= 0 )
     
-    100 * dp / tp
+    (100 * dp).toFloat / tp
   }
   
   /** Computes FDR for concatenated target/decoy databases (Elias and Gygi, Nature Methods, 2007)
@@ -94,7 +94,7 @@ object TargetDecoyComputer {
   def computeCdFdr( tp: Int, dp: Int ): Float = {
     require( tp > 0 && dp >= 0 )
     
-    100 * 2 * dp  / (tp + dp )
+    (100 * 2 * dp).toFloat / (tp + dp )
   }
 
   /** Computes FDR using the refined method described by Navarro et al. (JPR, 2009)
@@ -103,7 +103,7 @@ object TargetDecoyComputer {
   def computeTdFdr( tB: Int, tO: Int, dB: Int, dO: Int ): Float = { 
     require( tB + tO + dB > 0 )
     
-    100 * (2 * dB + dO) / (tB + tO + dB)
+    (100 * (2 * dB + dO)).toFloat / (tB + tO + dB)
   }
 
 }

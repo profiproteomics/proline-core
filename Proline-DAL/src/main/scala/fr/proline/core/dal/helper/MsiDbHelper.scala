@@ -34,17 +34,18 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
     ) { _.nextIntOption } (0)
   }
 
-
   def getResultSetsMsiSearchIds( rsIds: Seq[Int] ): Array[Int] = {
     
     val parentMsiSearchIds = this.sqlExec.selectInts(
       "SELECT DISTINCT msi_search_id FROM result_set " +
-      "WHERE id IN ("+  rsIds.mkString(",") +")"
+      "WHERE id IN ("+  rsIds.mkString(",") +") " +
+      "AND msi_search_id IS NOT NULL"
     ) 
     val childMsiSearchIds = this.sqlExec.selectInts(
       "SELECT DISTINCT msi_search_id FROM result_set, result_set_relation " +
       "WHERE result_set.id = result_set_relation.child_result_set_id " +
-      "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +")"
+      "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +") " +
+      "AND msi_search_id IS NOT NULL"
     )
     
     parentMsiSearchIds ++ childMsiSearchIds
@@ -56,7 +57,8 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
     
     this.sqlExec.selectAndProcess(
       "SELECT id, msi_search_id FROM result_set " +
-      "WHERE id IN ("+  rsIds.mkString(",") +")"
+      "WHERE id IN ("+  rsIds.mkString(",") +") " +
+      "AND msi_search_id IS NOT NULL"
     ) { r =>
       val id: Int = r.nextAnyVal
       msiSearchIdsByParentResultSetId.getOrElseUpdate(id, new HashSet[Int]) += r.nextInt
@@ -65,7 +67,8 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
     this.sqlExec.selectAndProcess(
       "SELECT result_set_relation.parent_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
       "WHERE result_set.id = result_set_relation.child_result_set_id " +
-      "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +")"
+      "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +") " +
+      "AND msi_search_id IS NOT NULL"
     ) { r =>
       msiSearchIdsByParentResultSetId.getOrElseUpdate(r.nextInt, new HashSet[Int]) += r.nextInt
     }
@@ -235,14 +238,14 @@ method get_search_engine( Int $target_result_set_id! ) {
   }*/
   
   // TODO: add number field to the table
-  def getSpectrumNumberById( peaklistId: Int ): Map[Int,Int] = {
+  def getSpectrumNumberById( pklIds: Seq[Int] ): Map[Int,Int] = {
     
     val specNumById = new HashMap[Int,Int]    
     var specCount = 0
     
-    sqlExec.selectAndProcess( "SELECT id FROM spectrum WHERE peaklist_id = " + peaklistId ) { r =>
-      val ptmId: Int = r.nextAnyVal
-      specNumById += (ptmId -> specCount )      
+    sqlExec.selectAndProcess( "SELECT id FROM spectrum WHERE peaklist_id IN (" + pklIds.mkString(",")+")" ) { r =>
+      val spectrumId: Int = r.nextAnyVal
+      specNumById += (spectrumId -> specCount )      
       specCount += 1
     }
     

@@ -44,7 +44,7 @@ trait SQLResultSetLoader {
     val msiDbHelper = new MsiDbHelper(msiDbCtx.ezDBC)
     val msiSearchIdsByRsId = msiDbHelper.getMsiSearchIdsByParentResultSetId(rsIds)
     val msiSearchIds = msiSearchIdsByRsId.flatMap(_._2).toArray.distinct
-
+    
     var msiSearchById = Map.empty[Int, fr.proline.core.om.model.msi.MSISearch]
     if (udsDbCtx != null) {
       val msiSearches = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx).getMSISearches(msiSearchIds)

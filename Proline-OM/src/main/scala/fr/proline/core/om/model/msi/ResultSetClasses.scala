@@ -197,8 +197,39 @@ case class ResultSummary (
     bestPepMatchesByProtSetIdBuilder.result
     
   }
-
-
+  
+  def getAllPeptideMatchesByProteinSetId(): Map[Int,Array[PeptideMatch]] = {
+    
+    val peptideMatchMap = this.resultSet.get.peptideMatchById
+    
+    val peptideMatchesByProteinSetId = Map.newBuilder[Int,Array[PeptideMatch]]
+    for( proteinSet <- this.proteinSets ) {
+      
+      val pepMatchesByMsQueryId = new HashMap[Int,ArrayBuffer[PeptideMatch]]
+      
+      // Iterate over peptide instances of the protein set to find the best peptide match of each peptide instance
+      val peptideInstances = proteinSet.peptideSet.getPeptideInstances    
+      for( peptideInstance <- peptideInstances ) {
+        
+        for( peptideMatchId <- peptideInstance.peptideMatchIds ) {
+          val pepMatch = peptideMatchMap(peptideMatchId)
+          val msqPepMatches = pepMatchesByMsQueryId.getOrElseUpdate( pepMatch.msQueryId, new ArrayBuffer[PeptideMatch] )
+          msqPepMatches += pepMatch
+        }
+        
+      }
+      
+      // Take arbitrary the first isobaric peptide if we have multiple ones for a given MS query
+      // FIXME: find an other solution
+      val protSetPeptideMatches = pepMatchesByMsQueryId.values.map { _(0) }
+      peptideMatchesByProteinSetId += proteinSet.id -> protSetPeptideMatches.toArray
+      
+    }
+    
+    peptideMatchesByProteinSetId.result
+    
+  }
+  
 }
 
 @JsonSnakeCase

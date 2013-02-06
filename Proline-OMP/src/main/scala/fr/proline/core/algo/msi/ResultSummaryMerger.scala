@@ -213,7 +213,51 @@ class ResultSummaryMerger extends Logging {
     //mergedResultSummary.updateScoresOfProteinSets( search_engine = 'mascot' )
     //mergedResultSummary.updatePeptideRelations()
     
+    this.updateScoresOfProteinSets(mergedRsm, "mascot" )
+    
     mergedRsm
   }
+  
+
+  // TODO: create an enumeration of search engines
+  def updateScoresOfProteinSets( rsm: ResultSummary, searchEngine: String) {
+    
+    val allPepMatchesByProtSetId = rsm.getAllPeptideMatchesByProteinSetId
+    val bestPepMatchesByProtSetId = rsm.getBestPepMatchesByProtSetId
+    
+    if( searchEngine == "mascot" ) {
+      
+      // Require some needed features
+      import fr.proline.core.algo.msi.validation.MascotValidationHelper
+      
+      // Retrieve some vars
+      val proteinSets = rsm.proteinSets
+      val pepMatchMap = rsm.resultSet.get.peptideMatchById
+      
+      // Iterate over protein sets to compute their scores
+      for( proteinSet <- proteinSets ) {
+        
+        val protSetPeptideMatches = allPepMatchesByProtSetId(proteinSet.id)
+        val protSetBestPeptideMatches = bestPepMatchesByProtSetId(proteinSet.id)
+        
+        // Retrieve protein set properties
+        //val protSetProperties = proteinSet.properties.get
+        
+        // Compute standard score
+        //val protSetStandardScore = protSetBestPeptideMatches.foldLeft(0f)( (sum,prot) => sum + prot.score )        
+        //protSetProperties('mascot:standard score') = protSetStandardScore
+        
+        // Compute mudpit score
+        val protSetMudpitScore = MascotValidationHelper.calcMascotMudpitScore( protSetPeptideMatches )
+        //protSetProperties('mascot:mudpit score') = protSetMudpitScore
+        
+        proteinSet.score = protSetMudpitScore
+        proteinSet.scoreType = "mascot:mudpit score"
+        
+      }
+    } else { throw new Exception( "unknown search engine named: searchEngine" ) }
+    
+  }
+
 
 }

@@ -3,8 +3,8 @@ package fr.proline.core.algo.msi.validation
 import math.{pow,log10}
 import collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import fr.proline.core.om.model.msi.{MsQuery,PeptideMatch}
+import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
 
 case class MascotIonScoreThresholds( identityThreshold: Float, homologyThreshold: Float )
 
@@ -16,24 +16,24 @@ object MascotValidationHelper {
     probability * pow(10, (identityThreshold-ionsScore)/10 )
   }
   
-  def calcNbCandidatePeptides( identityThreshold: Float, probability: Double = 0.05 ): Float = {
+  def calcCandidatePeptidesCount( identityThreshold: Float, probability: Double = 0.05 ): Float = {
     (probability/0.05) * pow(10, identityThreshold/10 )
   }
   
-  def inferNbPeptideCandidates( ionsScore: Float, eValue: Double ): Unit = {
-    this.calcNbCandidatePeptides( ionsScore, eValue )
+  def inferCandidatePeptidesCount( ionsScore: Float, eValue: Double ): Unit = {
+    this.calcCandidatePeptidesCount( ionsScore, eValue )
   }
   
-  def calcIdentityThreshold( nbPeptideCandidates: Double, probability: Double ): Float = {
-    - 10 * log10( (probability/0.05) / nbPeptideCandidates )
+  def calcIdentityThreshold( candidatePeptidesCount: Double, probability: Double ): Float = {
+    - 10.0 * log10( (probability/0.05) / candidatePeptidesCount )
   }
   
   def inferIdentityThreshold( ionsScore: Float, eValue: Double, probability: Double = 0.05 ): Float = {
-    ionsScore -10 * log10(probability/eValue)
+    ionsScore - 10.0 * log10(probability/eValue)
   }
   
   def calcScoreThresholdOffset( newProb: Double, oldProb: Double ): Float = {
-    - 10 * log10(newProb/oldProb)
+    - 10.0 * log10(newProb/oldProb)
   }
   
   def sumPeptideMatchesScoreOffsets( peptideMatches: Seq[PeptideMatch], mascotThresholdsByPepMatchId: Map[Int,MascotIonScoreThresholds] ): Float = {
@@ -173,18 +173,14 @@ object MascotValidationHelper {
     lowestThreshold
   }
   
-  def getTargetMsQueryProperties( msQuery: MsQuery ): Map[String,Any] = {
-    val msQueryProperties = msQuery.properties
-    //msQueryProperties("target_db_search").asInstanceOf[Map[String,Any]]    
-    null
+  def getTargetMsQueryProperties( msQuery: MsQuery ): Option[MsQueryDbSearchProperties] = {
+    msQuery.properties.get.getDecoyDbSearch
   }
   
-  def getDecoyMsQueryProperties( msQuery: MsQuery ): Map[String,Any] = {
-    val msQueryProperties = msQuery.properties
-    //msQueryProperties("decoy_db_search").asInstanceOf[Map[String,Any]]    
-    null
+  def getDecoyMsQueryProperties( msQuery: MsQuery ): Option[MsQueryDbSearchProperties] = {
+    msQuery.properties.get.getTargetDbSearch
   }
-    
+  
   def buildJointTable( pepMatchJointTable: Array[Pair[PeptideMatch,PeptideMatch]],
                        valuePicker: (PeptideMatch) => Double ): Array[Pair[Double,Double]] = {
     
@@ -203,8 +199,8 @@ object MascotValidationHelper {
     val valuePickerMap = Map( "log_evalue" -> logEvaluePicker, "score_offset" -> scoreOffsetPicker )
     
     // Create anonymous functions to compute the right threshold value
-    val thresholdComputerMap = Map( "log_evalue" -> { prob:Double => - log10( prob ) },
-                                    "score_offset" -> { prob:Double =>  - 10 * log10(prob/0.05) }
+    val thresholdComputerMap = Map( "log_evalue" -> { prob: Double => - log10( prob ) },
+                                    "score_offset" -> { prob: Double =>  - 10 * log10(prob/0.05) }
                                   )
     
     // Build log evalue joint table
