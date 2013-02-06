@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 public class BasicExecutionContext implements IExecutionContext {
 
-    private final static Logger LOG = LoggerFactory.getLogger(BasicExecutionContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasicExecutionContext.class);
 
     private final DatabaseConnectionContext m_udsDb;
     private final DatabaseConnectionContext m_pdiDb;
@@ -41,6 +41,7 @@ public class BasicExecutionContext implements IExecutionContext {
 	if (msiDb == null) {
 	    LOG.info("MSI DatabaseConnectionContext is null");
 	}
+
 	m_msiDb = msiDb;
 
 	if (lcMsDb == null) {
