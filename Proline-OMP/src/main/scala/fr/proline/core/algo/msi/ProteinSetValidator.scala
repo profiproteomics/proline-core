@@ -1,6 +1,8 @@
 package fr.proline.core.algo.msi
 
-import validation.protein_set._
+import fr.proline.core.algo.msi.validation.proteinset.MascotPeptideMatchRulesValidator
+import fr.proline.core.algo.msi.validation.proteinset.MascotProteinSetScoreValidator
+import fr.proline.core.algo.msi.validation.proteinset.IProteinSetValidator
 
 object ValidationMethods extends Enumeration {
   type MethodName = Value
@@ -10,7 +12,7 @@ object ValidationMethods extends Enumeration {
 
 object ProteinSetValidator {
   
-  def apply( searchEngine: String, method: ValidationMethods.MethodName ): IProteinSetValidator = { searchEngine match {
+  def apply( searchEngine: String, method: ValidationMethods.MethodName ): IProteinSetValidator = { searchEngine.toLowerCase match {
     case "mascot" => MascotProteinSetValidator( method )
     case _ => throw new Exception("unknown validator for search engine : "+ searchEngine )
     }
