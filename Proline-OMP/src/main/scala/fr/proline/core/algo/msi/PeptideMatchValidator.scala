@@ -1,11 +1,13 @@
 package fr.proline.core.algo.msi
 
-import validation.peptide_match._
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.algo.msi.validation.pepmatch.MascotPeptideMatchValidator
+import fr.proline.core.algo.msi.validation.pepmatch.IPeptideMatchValidator
 
 object PeptideMatchValidator {
   
-  def apply( searchEngine: String ): IPeptideMatchValidator = { searchEngine match {
-    case "mascot" => new MascotPeptideMatchValidator()
+  def apply( searchEngine: String , targetRs: ResultSet): IPeptideMatchValidator = { searchEngine.toLowerCase match {
+    case "mascot" => new MascotPeptideMatchValidator(targetRs)
     case _ => throw new Exception("unknown search engine : "+ searchEngine )
     }
   }
