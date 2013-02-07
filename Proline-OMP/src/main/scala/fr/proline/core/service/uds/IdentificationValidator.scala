@@ -1,24 +1,28 @@
 package fr.proline.core.service.uds
 
+import scala.collection.JavaConversions.collectionAsScalaIterable
 import com.weiglewilczek.slf4s.Logging
-import collection.JavaConversions.collectionAsScalaIterable
 import fr.proline.api.service.IService
-import fr.proline.core.algo.msi.validation.{TargetDecoyModes,ValidationParams}
-import fr.proline.core.dal._
+import fr.proline.context.{IExecutionContext, DatabaseConnectionContext, BasicExecutionContext}
+import fr.proline.core.algo.msi.filter.{IProteinSetFilter, IPeptideMatchFilter, ComputedFDRPeptideMatchFilter}
 import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.dal.{SQLConnectionContext, ContextFactory}
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider,SQLResultSummaryProvider}
-import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
+import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider, SQLResultSummaryProvider}
+import fr.proline.core.orm.uds.{Dataset => UdsDataset}
+import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger, ResultSummaryMerger}
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger,ResultSummaryMerger}
+import fr.proline.core.algo.msi.filter.TargetDecoyModes
+import fr.proline.core.dal.BuildExecutionContext
 
 class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                projectId: Int,
                                identificationId: Int,
                                rsmIds: Seq[Int],
                                mergeResultSets: Boolean,
-                               pepMatchValParams: Option[ValidationParams] = None,
-                               protSetValParams: Option[ValidationParams] = None
+                               pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
+                               computerPSMFilter: Option[ComputedFDRPeptideMatchFilter] = None,
+                               protSetFilters: Option[Seq[IProteinSetFilter]] = None
                                ) extends IService with Logging {
   
   /*private val udsDbConnector = dbManager.getUdsDbConnector
@@ -95,16 +99,23 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
           mergedDecoyRs = Some(decoyRsMerger.mergedResultSet)
         }
         
+        //Create ExecutionContext
+        val exCtxt : IExecutionContext = new BasicExecutionContext(udsDbCtx ,ContextFactory.buildDbConnectionContext(dbManager.getPdiDbConnector, false), 
+           this.psDbCtx, this.msiDbCtx,   null)
+       
+        
         // Instantiate a result set validator
         val rsValidator = new ResultSetValidator(
-                                execCtx = execSqlContext,
-                                targetRs = mergedTargetRs,
-                                decoyRsOpt = mergedDecoyRs,
-                                pepMatchValParams = pepMatchValParams,
-                                protSetValParams = protSetValParams,
+        	  		execContext = execSqlContext,                              
+                                targetRsId = mergedTargetRs.id,
+                                pepMatchPreFilters = pepMatchPreFilters,
+                                computerPSMFilter = computerPSMFilter,
+                                protSetFilters = protSetFilters,
                                 // TODO: retrieve from the MSIdb
                                 targetDecoyMode = Some(TargetDecoyModes.withName( "separated" ))
                                 )
+        
+                                                              
         rsValidator.runService()
         
         // Retrieve target RSM id
@@ -133,7 +144,8 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
     // Create a new instance with fractions in UDS DB
     
     // Begin new transaction
-    val udsEM = dbManager.getUdsDbConnector.getEntityManagerFactory.createEntityManager()
+     val udsEM = dbManager.getUdsDbConnector.getEntityManagerFactory.createEntityManager()
+    
     val udsIdentAggregate = udsEM.find(classOf[UdsDataset], identificationId)
     val udsIdfDatasets = udsIdentAggregate.getChildren().toList.sortBy(_.getNumber())
   
