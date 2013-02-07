@@ -40,7 +40,7 @@
   <table id="TAB8" populated="true" UUID="252b7f4c-8b61-4868-9b16-e9857743d0ad" name="quant_channel" objectType="TABLE" physicalName="quant_channel" >
    <remarks>A quanti channel represents all quantified peptides from a single replicate of a single fraction of a biological sample. UNIQUE(context_key, quantitation_fraction_id).</remarks>
    <folder id="FOLTAB81" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL9" populated="true" UUID="fa2c78db-94db-408c-bbcd-8f16f189f185" autoIncrement="false" autoIncrementSequenceName="quant_channel_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL9" populated="true" UUID="fa2c78db-94db-408c-bbcd-8f16f189f185" autoIncrement="true" autoIncrementSequenceName="quant_channel_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
     <column id="COL10" populated="true" UUID="10d966b9-7d82-4d2d-9733-f3ad39c4701c" autoIncrement="false" autoIncrementSequenceName="quant_channel_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -366,7 +366,7 @@ Could be the path/name of the database in case of embedded file DB engine (H2 / 
   <table id="TAB99" populated="true" UUID="01996a17-03a7-44bf-9d3b-3e229c717ca1" name="master_quant_channel" objectType="TABLE" physicalName="master_quant_channel" >
    <remarks>Store the quantitation profiles and ratios. May correspond to a quantitation overview (one unique fraction).</remarks>
    <folder id="FOLTAB991" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL100" populated="true" UUID="8f0a4322-1872-4573-bd80-f32ed866f07a" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL100" populated="true" UUID="8f0a4322-1872-4573-bd80-f32ed866f07a" autoIncrement="true" autoIncrementSequenceName="master_quant_channel_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
     <column id="COL101" populated="true" UUID="151bfcf8-09cd-4f39-a731-7a25ff5947b9" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -1094,7 +1094,7 @@ Default is one because in the main case a raw file contains a single run.</remar
   <table id="TAB296" populated="true" UUID="7ecffd08-7bd5-44e1-b318-164fc160c479" name="data_set" objectType="TABLE" physicalName="data_set" >
    <remarks></remarks>
    <folder id="FOLTAB2961" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL297" populated="true" UUID="52af16e0-d368-4760-95fb-df5df301e3f9" autoIncrement="false" autoIncrementSequenceName="data_set_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL297" populated="true" UUID="52af16e0-d368-4760-95fb-df5df301e3f9" autoIncrement="true" autoIncrementSequenceName="data_set_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
     <column id="COL298" populated="true" UUID="fe1a424e-5519-4958-9365-63e08601249e" autoIncrement="false" autoIncrementSequenceName="data_set_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -1401,7 +1401,7 @@ IDENTIFICATION, QUANTITATION, AGGREGATE.</remarks>
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  outputFormatAsString="ENGLISH"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="C:\Users\cb205360\Downloads\Old.UDS-DB.architect"  />
@@ -1409,7 +1409,7 @@ IDENTIFICATION, QUANTITATION, AGGREGATE.</remarks>
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8367503291570026" viewportX="0" viewportY="344" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8367503291570026" viewportX="479" viewportY="354" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="157" y="71" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB8" x="1052" y="187" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB25" x="883" y="689" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
