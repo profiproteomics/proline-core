@@ -45,7 +45,7 @@ CREATE TABLE biological_sample_sample_analysis_map (
 );
 
 CREATE TABLE data_set (
-                id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 description TEXT(10000),
@@ -62,7 +62,6 @@ CREATE TABLE data_set (
                 quant_method_id INTEGER,
                 parent_dataset_id INTEGER,
                 project_id INTEGER NOT NULL,
-                PRIMARY KEY (id),
                 FOREIGN KEY (aggregation_id) REFERENCES aggregation (id),
                 FOREIGN KEY (fractionation_id) REFERENCES fractionation (id),
                 FOREIGN KEY (quant_method_id) REFERENCES quant_method (id),
@@ -188,14 +187,13 @@ CREATE TABLE instrument_config_fragmentation_rule_map (
 );
 
 CREATE TABLE master_quant_channel (
-                id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
                 name TEXT(100) NOT NULL,
                 serialized_properties TEXT,
                 lcms_map_set_id INTEGER,
                 quant_result_summary_id INTEGER,
                 quantitation_id INTEGER NOT NULL,
-                PRIMARY KEY (id),
                 FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
 );
 
@@ -256,7 +254,7 @@ CREATE TABLE protein_match_decoy_rule (
 );
 
 CREATE TABLE quant_channel (
-                id INTEGER NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
                 name TEXT(100) NOT NULL,
                 context_key TEXT(100) NOT NULL,
@@ -270,7 +268,6 @@ CREATE TABLE quant_channel (
                 biological_sample_id INTEGER NOT NULL,
                 master_quant_channel_id INTEGER NOT NULL,
                 dataset_id INTEGER NOT NULL,
-                PRIMARY KEY (id),
                 FOREIGN KEY (run_id) REFERENCES run (id),
                 FOREIGN KEY (quant_label_id) REFERENCES quant_label (id),
                 FOREIGN KEY (sample_analysis_id) REFERENCES sample_analysis (id),
@@ -380,4 +377,8 @@ CREATE TABLE virtual_folder (
                 FOREIGN KEY (parent_virtual_folder_id) REFERENCES virtual_folder (id),
                 FOREIGN KEY (project_id) REFERENCES project (id)
 );
+
+CREATE UNIQUE INDEX fractionation_type_idx ON fractionation (type);
+
+CREATE UNIQUE INDEX aggregation_child_nature_idx ON aggregation (child_nature);
 
