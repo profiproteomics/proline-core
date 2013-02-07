@@ -35,7 +35,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected DataSource createDataSource(final ProlineDatabaseType database, final Map<Object, Object> properties) {
+    protected DataSource createDataSource(final String ident, final Map<Object, Object> properties) {
 
 	if (properties == null) {
 	    throw new IllegalArgumentException("Properties Map is null");
@@ -57,8 +57,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
 	final PGPoolingDataSource source = new PGPoolingDataSource();
 
-	final String datasourceName = database.getPersistenceUnitName() + '#'
-		+ NAME_SEQUENCE.getAndIncrement();
+	final String datasourceName = ident + '_' + NAME_SEQUENCE.getAndIncrement();
 	source.setDataSourceName(datasourceName);
 
 	final String serverName = fakeURI.getHost();
@@ -101,15 +100,15 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected void doClose(final ProlineDatabaseType database, final DataSource source) {
+    protected void doClose(final String ident, final DataSource source) {
 
 	if (source instanceof PGPoolingDataSource) {
-	    LOG.debug("Closing PGPoolingDataSource for {}", database);
+	    LOG.debug("Closing PGPoolingDataSource for {}", ident);
 
 	    try {
 		((PGPoolingDataSource) source).close();
 	    } catch (Exception exClose) {
-		LOG.error("Error closing PGPoolingDataSource for " + database, exClose);
+		LOG.error("Error closing PGPoolingDataSource for " + ident, exClose);
 	    }
 
 	}

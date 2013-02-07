@@ -9,7 +9,7 @@ public enum ProlineDatabaseType {
 
     private final String m_puName;
 
-    ProlineDatabaseType(final String puName) {
+    private ProlineDatabaseType(final String puName) {
 	assert (!StringUtils.isEmpty(puName)) : "ProlineDatabaseType() invalid puName";
 
 	m_puName = puName;
@@ -28,6 +28,11 @@ public enum ProlineDatabaseType {
 	throw new IllegalArgumentException("Unknown puName");
     }
 
+    /**
+     * Retrieves the persistence-unit name used by ORM <code>EntityManagerFactory</code> mapping files.
+     * 
+     * @return the persistence-unit name
+     */
     public String getPersistenceUnitName() {
 	return m_puName;
     }

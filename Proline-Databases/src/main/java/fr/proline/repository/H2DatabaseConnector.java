@@ -43,7 +43,7 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected DataSource createDataSource(final ProlineDatabaseType database, final Map<Object, Object> properties) {
+    protected DataSource createDataSource(final String ident, final Map<Object, Object> properties) {
 
 	if (properties == null) {
 	    throw new IllegalArgumentException("Properties Map is null");
@@ -60,17 +60,17 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected void doClose(final ProlineDatabaseType database, final DataSource source) {
+    protected void doClose(final String ident, final DataSource source) {
 
 	if (source instanceof JdbcConnectionPool) {
-	    LOG.debug("Disposing H2 JdbcConnectionPool for {}", database);
+	    LOG.debug("Disposing H2 JdbcConnectionPool for {}", ident);
 
 	    final JdbcConnectionPool h2Source = (JdbcConnectionPool) source;
 
 	    try {
 		h2Source.dispose();
 	    } catch (Exception exClose) {
-		LOG.error("Error disposing H2 JdbcConnectionPool for " + database, exClose);
+		LOG.error("Error disposing H2 JdbcConnectionPool for " + ident, exClose);
 	    }
 
 	    LOG.debug("Remaining H2 Connections : {}", h2Source.getActiveConnections());

@@ -13,9 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.util.PropertiesUtils;
+import fr.proline.util.StringUtils;
 
 public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
+    /* Constants */
     public static final String PERSISTENCE_JDBC_DRIVER_KEY = "javax.persistence.jdbc.driver";
     public static final String PERSISTENCE_JDBC_URL_KEY = "javax.persistence.jdbc.url";
     public static final String PERSISTENCE_JDBC_USER_KEY = "javax.persistence.jdbc.user";
@@ -36,21 +38,25 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDatabaseConnector.class);
 
+    private static final Map<String, Integer> CONNECTOR_INSTANCES = new HashMap<String, Integer>();
+
     private static final boolean DEFAULT_ORM_OPTIMIZATIONS = true;
 
+    /* Instance variables */
     private final ProlineDatabaseType m_prolineDbType;
 
     private final Map<Object, Object> m_properties;
 
+    private final String m_ident;
+
     private final Object m_connectorLock = new Object();
 
-    /* @GuardedBy("m_connectorLock") */
+    /* All mutable fields are @GuardedBy("m_connectorLock") */
+
     private DataSource m_dataSource;
 
-    /* @GuardedBy("m_connectorLock") */
     private EntityManagerFactory m_entityManagerFactory;
 
-    /* @GuardedBy("m_connectorLock") */
     private boolean m_closed;
 
     /* Constructors */
@@ -68,6 +74,26 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	}
 
 	m_properties = new HashMap<Object, Object>(properties); // Protection copy
+
+	final StringBuilder identBuffer = new StringBuilder(prolineDbType.getPersistenceUnitName());
+
+	final String jdbcURL = PropertiesUtils.getProperty(m_properties, PERSISTENCE_JDBC_URL_KEY);
+
+	if (!StringUtils.isEmpty(jdbcURL)) {
+	    identBuffer.append('_').append(jdbcURL);
+	}
+
+	m_ident = identBuffer.toString();
+
+	final int connectorInstancesCount = checkConnectorInstances(m_ident);
+
+	if (connectorInstancesCount > 1) {
+	    final Exception ex = new Exception("Multiple DatabaseConnector");
+
+	    LOG.error("There are " + connectorInstancesCount + " DatabaseConnector instances for [" + m_ident
+		    + ']', ex);
+	}
+
     }
 
     /* Public methods */
@@ -96,7 +122,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
 
 		try {
-		    m_dataSource = createDataSource(prolineDbType, propertiesCopy);
+		    m_dataSource = createDataSource(m_ident, propertiesCopy);
 		} catch (Exception ex) {
 		    /* Log and re-throw */
 		    final String message = "Error creating DataSource for " + prolineDbType;
@@ -130,8 +156,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		}
 
 		try {
-		    m_entityManagerFactory = createEntityManagerFactory(prolineDbType, propertiesCopy,
-			    DEFAULT_ORM_OPTIMIZATIONS);
+		    m_entityManagerFactory = createEntityManagerFactory(getProlineDatabaseType(),
+			    propertiesCopy, DEFAULT_ORM_OPTIMIZATIONS);
 		} catch (Exception ex) {
 		    /* Log and re-throw */
 		    final String message = "Error creating EntityManagerFactory for " + prolineDbType;
@@ -146,6 +172,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	return m_entityManagerFactory;
     }
 
+    @Override
+    public String toString() {
+	return getClass().getSimpleName() + ' ' + m_ident;
+    }
+
     public final void close() {
 
 	synchronized (m_connectorLock) {
@@ -153,21 +184,21 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	    if (!m_closed) { // Close only once
 		m_closed = true;
 
-		final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
+		LOG.warn("Closing DatabaseConnector does not close already retrieved EntityManager and SQL JDBC Connection resources");
 
 		if (m_entityManagerFactory != null) {
-		    LOG.debug("Closing EntityManagerFactory for {}", prolineDbType);
+		    LOG.debug("Closing EntityManagerFactory for {}", m_ident);
 
 		    try {
 			m_entityManagerFactory.close();
 		    } catch (Exception exClose) {
-			LOG.error("Error closing EntityManagerFactory for " + prolineDbType, exClose);
+			LOG.error("Error closing EntityManagerFactory for " + m_ident, exClose);
 		    }
 
 		}
 
 		if (m_dataSource != null) {
-		    doClose(prolineDbType, m_dataSource);
+		    doClose(m_ident, m_dataSource);
 		}
 
 	    } // End if (connector is not already closed)
@@ -198,8 +229,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
      * @param properties
      * @return
      */
-    protected abstract DataSource createDataSource(final ProlineDatabaseType database,
-	    final Map<Object, Object> properties);
+    protected abstract DataSource createDataSource(final String ident, final Map<Object, Object> properties);
 
     /**
      * This method is called holding <code>m_connectorLock</code> implicit object <strong>lock</strong> by
@@ -210,10 +240,10 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
      * @param ormOptimizations
      * @return
      */
-    protected EntityManagerFactory createEntityManagerFactory(final ProlineDatabaseType database,
+    protected EntityManagerFactory createEntityManagerFactory(final ProlineDatabaseType prolineDbType,
 	    final Map<Object, Object> properties, final boolean ormOptimizations) {
 
-	if (database == null) {
+	if (prolineDbType == null) {
 	    throw new IllegalArgumentException("Database is null");
 	}
 
@@ -226,11 +256,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	}
 
 	if (LOG.isDebugEnabled()) {
-	    LOG.debug("Effective EntityManagerFactory settings for " + database + " :" + LINE_SEPARATOR
+	    LOG.debug("Effective EntityManagerFactory settings for " + prolineDbType + " :" + LINE_SEPARATOR
 		    + PropertiesUtils.formatProperties(properties));
 	}
 
-	return Persistence.createEntityManagerFactory(database.getPersistenceUnitName(), properties);
+	return Persistence.createEntityManagerFactory(prolineDbType.getPersistenceUnitName(), properties);
     }
 
     /**
@@ -239,7 +269,27 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
      * 
      * @param source
      */
-    protected void doClose(final ProlineDatabaseType database, final DataSource source) {
+    protected void doClose(final String ident, final DataSource source) {
+    }
+
+    private static int checkConnectorInstances(final String ident) {
+	assert (!StringUtils.isEmpty(ident)) : "checkConnectorInstance() invalid ident";
+
+	int result = 0;
+
+	synchronized (CONNECTOR_INSTANCES) {
+	    final Integer oldCount = CONNECTOR_INSTANCES.get(ident);
+
+	    if (oldCount == null) {
+		result = 1;
+	    } else {
+		result = oldCount.intValue() + 1;
+	    }
+
+	    CONNECTOR_INSTANCES.put(ident, Integer.valueOf(result));
+	} // End of synchronized block on CONNECTOR_INSTANCES
+
+	return result;
     }
 
     private static void optimize(final Map<Object, Object> properties) {

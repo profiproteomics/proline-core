@@ -41,7 +41,7 @@ public class SQLiteDatabaseConnector extends AbstractDatabaseConnector {
     }
 
     @Override
-    protected DataSource createDataSource(final ProlineDatabaseType database, final Map<Object, Object> properties) {
+    protected DataSource createDataSource(final String ident, final Map<Object, Object> properties) {
 
 	if (properties == null) {
 	    throw new IllegalArgumentException("Properties Map is null");

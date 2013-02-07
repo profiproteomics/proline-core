@@ -264,6 +264,11 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	return lcMsDbConnector;
     }
 
+    /**
+     * Closes all DatabaseConnectors.
+     * <p>
+     * Only call this method on application exiting.
+     */
     @Override
     public void closeAll() {
 
