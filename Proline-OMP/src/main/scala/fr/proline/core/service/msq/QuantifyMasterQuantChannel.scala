@@ -4,7 +4,7 @@ import fr.proline.api.service.IService
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 
-class QuantifyFraction( dbManager: IDataStoreConnectorFactory, masterQuantChannelID: Int ) extends IService {
+class QuantifyMasterQuantChannel( dbManager: IDataStoreConnectorFactory, masterQuantChannelID: Int ) extends IService {
   
   def runService() = {
     
@@ -16,7 +16,7 @@ class QuantifyFraction( dbManager: IDataStoreConnectorFactory, masterQuantChanne
     require( udsMasterQuantChannel != null,
              "undefined quantitation fraction with id=" + udsMasterQuantChannel )
     
-    FractionQuantifier( dbManager, udsEM, udsMasterQuantChannel ).quantify()
+    MasterQuantChannelQuantifier( dbManager, udsEM, udsMasterQuantChannel ).quantify()
     
     // Close entity manager
     udsEM.close()
@@ -41,7 +41,7 @@ object QuantMethodType extends Enumeration {
   val SPECTRAL_COUNTING = Value("spectral_counting")
 }
 
-object FractionQuantifier {
+object MasterQuantChannelQuantifier {
   
   import javax.persistence.EntityManager
   import fr.proline.core.service.msq.impl._
@@ -54,7 +54,7 @@ object FractionQuantifier {
     val quantMethodType = udsQuantMethod.getType
     val abundanceUnit = udsQuantMethod.getAbundanceUnit
     
-    var fractionQuantifier: IQuantifier = null
+    var masterQuantChannelQuantifier: IQuantifier = null
     
     // TODO: create some enumerations
     if( abundanceUnit == AbundanceUnit.REPORTER_ION ) {      
@@ -67,14 +67,14 @@ object FractionQuantifier {
     } 
     else if( quantMethodType == QuantMethodType.LABEL_FREE ) {
       if( abundanceUnit == AbundanceUnit.FEATURE ) {
-        fractionQuantifier = new Ms1DrivenLabelFreeFeatureQuantifier(
+        masterQuantChannelQuantifier = new Ms1DrivenLabelFreeFeatureQuantifier(
                                    dbManager = dbManager,
                                    udsEm = udsEm,
                                    udsMasterQuantChannel = udsMasterQuantChannel
                                  )
       }
       else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS ) {
-        fractionQuantifier = new SpectralCountQuantifier(
+        masterQuantChannelQuantifier = new SpectralCountQuantifier(
                                    dbManager = dbManager,
                                    udsEm = udsEm,
                                    udsMasterQuantChannel = udsMasterQuantChannel
@@ -82,9 +82,9 @@ object FractionQuantifier {
       }
     }
     
-    assert( fractionQuantifier != null, "The needed quantifier is not yet implemented" )
+    assert( masterQuantChannelQuantifier != null, "The needed quantifier is not yet implemented" )
     
-    fractionQuantifier
+    masterQuantChannelQuantifier
 
   }
 

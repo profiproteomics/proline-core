@@ -2,7 +2,7 @@ package fr.proline.core.service.msq
 
 import fr.proline.api.service.IService
 
-class NormalizeQuantFraction extends IService {
+class NormalizeMasterQuantChannel extends IService {
   
   def runService() = {
     false
