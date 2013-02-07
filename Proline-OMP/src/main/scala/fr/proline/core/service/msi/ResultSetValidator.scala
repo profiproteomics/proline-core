@@ -33,15 +33,26 @@ import fr.proline.core.algo.msi.filter.ParamProteinSetFilter
  *
  */
 class ResultSetValidator( execContext: IExecutionContext,
-                          targetRsId: Int,
+                          targetRs: ResultSet,
                           pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
                           computerPSMFilter: Option[ComputedFDRPeptideMatchFilter] = None,
                           protSetFilters: Option[Seq[IProteinSetFilter]] = None,
                           targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
                           storeResultSummary: Boolean = true ) extends IService with Logging {
 
-  private val msiDbContext = execContext.getMSIDbConnectionContext
+  def this( execContext: IExecutionContext,
+            targetRsId: Int,
+            pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
+            computerPSMFilter: Option[ComputedFDRPeptideMatchFilter] = None,
+            protSetFilters: Option[Seq[IProteinSetFilter]] = None,
+            targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
+            storeResultSummary: Boolean = true ) {
 
+    this( execContext, execContext.getMSIDbConnectionContext.getEntityManager().find( classOf[ResultSet], targetRsId ), pepMatchPreFilters, computerPSMFilter, protSetFilters, targetDecoyMode, storeResultSummary )
+  }
+  
+  private val msiDbContext = execContext.getMSIDbConnectionContext    
+ 
   override protected def beforeInterruption = {
     // Release database connections -VDS: No more necessary... should be done by IExecutionContext initializer
         this.logger.info("releasing database connections before service interruption...")
@@ -50,7 +61,7 @@ class ResultSetValidator( execContext: IExecutionContext,
 
   var validatedTargetRsm: ResultSummary = null
   var validatedDecoyRsm: Option[ResultSummary] = null
-  val targetRs = msiDbContext.getEntityManager().find( classOf[ResultSet], targetRsId )
+//  val targetRs = msiDbContext.getEntityManager().find( classOf[ResultSet], targetRsId )
 
   def runService(): Boolean = {
 

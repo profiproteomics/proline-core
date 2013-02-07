@@ -107,7 +107,7 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
         // Instantiate a result set validator
         val rsValidator = new ResultSetValidator(
         	  		execContext = execSqlContext,                              
-                                targetRsId = mergedTargetRs.id,
+                                targetRs = mergedTargetRs,
                                 pepMatchPreFilters = pepMatchPreFilters,
                                 computerPSMFilter = computerPSMFilter,
                                 protSetFilters = protSetFilters,
