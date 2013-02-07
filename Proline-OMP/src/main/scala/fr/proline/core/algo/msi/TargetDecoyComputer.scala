@@ -1,10 +1,31 @@
 package fr.proline.core.algo.msi
 
+import scala.collection.mutable.ArrayBuffer
+
 import fr.proline.core.om.model.msi.PeptideMatch
 
 object TargetDecoyComputer {
   
   import scala.collection.mutable.ArrayBuffer
+  
+  def buildPeptideMatchJointMap( targetPeptideMatches: Seq[PeptideMatch], decoyPeptideMatches: Option[Seq[PeptideMatch]] ): Map[Int, Seq[PeptideMatch]]= {
+    
+    val peptideMatches = targetPeptideMatches ++ decoyPeptideMatches.getOrElse(scala.collection.mutable.Seq[PeptideMatch]())
+    
+    // Group PSMs by MS query initial id
+    var pepMatchesByMsQueryInitialId = peptideMatches.groupBy( _.msQuery.initialId )
+    
+    // Build peptide match joint table
+    for( (msQueryInitialId, pepMatches) <- pepMatchesByMsQueryInitialId ) {
+      
+      // Group peptide matches by result set id
+	val sortedPepMatches : Seq[PeptideMatch]= pepMatches.sortBy(_.rank)
+	pepMatchesByMsQueryInitialId += msQueryInitialId -> sortedPepMatches
+    }
+  
+    pepMatchesByMsQueryInitialId 
+  }
+  
   
   def buildPeptideMatchJointTable( peptideMatches: Seq[PeptideMatch] ): Array[Pair[PeptideMatch,PeptideMatch]] = {
     
@@ -42,8 +63,12 @@ object TargetDecoyComputer {
     jointTable.toArray
   }
     
-  case class TDCompetitionCounts( var better: Int = 0, var only: Int = 0, var under: Int = 0 )
-  
+   
+  /**
+   *  Compute Pair of TDCompetitionCounts based on specified scores.
+   *  Pair of Score are organized as [target value, decoy value]
+   *    
+   */
   def computeTdCompetition( scoreJointTable: Seq[Pair[Double,Double]], scoreThreshold: Double 
                           ): Pair[TDCompetitionCounts,TDCompetitionCounts] = {
   
