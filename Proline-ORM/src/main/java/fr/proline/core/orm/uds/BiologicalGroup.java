@@ -90,7 +90,7 @@ public class BiologicalGroup implements Serializable {
 		return this.groupSetups;
 	}
 
-	public void setGroupSetup(Set<GroupSetup> groupSetups) {
+	public void setGroupSetups(Set<GroupSetup> groupSetups) {
 		this.groupSetups = groupSetups;
 	}
 	
