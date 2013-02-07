@@ -3,11 +3,14 @@ package fr.proline.core.om.utils
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.dal.DataStoreConnectorFactoryForTest
+import fr.proline.repository.{ DriverType, ProlineDatabaseType }
 import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.ProlineDatabaseType
-import fr.proline.repository.DriverType
 
 class AbstractMultipleDBTestCase extends Logging {
+
+  private val m_testCaseLock = new AnyRef()
+
+  /* All mutable fields are @GuardedBy("m_testCaseLock") */
 
   var pdiDBTestCase: PDIDatabaseTestCase = null
   var msiDBTestCase: MSIDatabaseTestCase = null
@@ -16,36 +19,77 @@ class AbstractMultipleDBTestCase extends Logging {
 
   var dsConnectorFactoryForTest: DataStoreConnectorFactoryForTest = null
 
+  private var m_toreDown = false
+
   def initDBsDBManagement(driverType: DriverType) {
-    logger.info("Creating UDS, PDI, PS, MSI test databases")
 
-    udsDBTestCase = new UDSDatabaseTestCase(driverType)
-    udsDBTestCase.initDatabase()
+    m_testCaseLock.synchronized {
 
-    pdiDBTestCase = new PDIDatabaseTestCase(driverType)
-    pdiDBTestCase.initDatabase()
+      if (m_toreDown) {
+        throw new IllegalStateException("TestCase ALREADY torn down");
+      }
 
-    psDBTestCase = new PSDatabaseTestCase(driverType)
-    psDBTestCase.initDatabase()
+      logger.info("Creating UDS, PDI, PS, MSI Database TestCases")
 
-    msiDBTestCase = new MSIDatabaseTestCase(driverType)
-    msiDBTestCase.initDatabase()
+      udsDBTestCase = new UDSDatabaseTestCase(driverType)
+      udsDBTestCase.initDatabase()
 
-    dsConnectorFactoryForTest = new DataStoreConnectorFactoryForTest(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector, null, false)
+      pdiDBTestCase = new PDIDatabaseTestCase(driverType)
+      pdiDBTestCase.initDatabase()
+
+      psDBTestCase = new PSDatabaseTestCase(driverType)
+      psDBTestCase.initDatabase()
+
+      msiDBTestCase = new MSIDatabaseTestCase(driverType)
+      msiDBTestCase.initDatabase()
+
+      dsConnectorFactoryForTest = new DataStoreConnectorFactoryForTest(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector, null, false)
+    } // End of synchronized block on m_testCaseLock
+
   }
 
-  def closeDbs() = {
-    logger.debug("Closing MSI Db TestCase")
-    msiDBTestCase.tearDown
+  def tearDown() = {
 
-    logger.debug("Closing PS Db TestCase")
-    psDBTestCase.tearDown
+    m_testCaseLock.synchronized {
 
-    logger.debug("Closing PDI Db TestCase")
-    pdiDBTestCase.tearDown
+      if (!m_toreDown) {
+        m_toreDown = true
 
-    logger.debug("Closing UDS Db TestCase")
-    udsDBTestCase.tearDown
+        if (msiDBTestCase != null) {
+          logger.debug("Closing MSI Db TestCase")
+          msiDBTestCase.tearDown()
+        }
+
+        if (psDBTestCase != null) {
+          logger.debug("Closing PS Db TestCase")
+          psDBTestCase.tearDown()
+        }
+
+        if (pdiDBTestCase != null) {
+          logger.debug("Closing PDI Db TestCase")
+          pdiDBTestCase.tearDown()
+        }
+
+        if (udsDBTestCase != null) {
+          logger.debug("Closing UDS Db TestCase")
+          udsDBTestCase.tearDown()
+        }
+
+        logger.info("All Database TestCases closed successfully")
+      }
+
+    } // End of synchronized block on m_testCaseLock
+
+  }
+
+  override def finalize() {
+
+    try {
+      tearDown();
+    } finally {
+      super.finalize();
+    }
+
   }
 
 }

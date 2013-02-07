@@ -192,10 +192,8 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
   }
 
   @After
-  def tearDown() = {
-    closeDbs()
-
-    logger.info("Dbs succesfully closed")
+  override def tearDown() = {
+    super.tearDown()
   }
 
   private def compareRs(src: ResultSet, loaded: ResultSet) {

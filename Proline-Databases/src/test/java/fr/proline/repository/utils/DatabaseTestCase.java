@@ -24,15 +24,14 @@ public abstract class DatabaseTestCase {
 
     private static final int BUFFER_SIZE = 2048;
 
-    private final Object m_connectorLock = new Object();
+    private final Object m_testCaseLock = new Object();
 
-    /* @GuardedBy("m_connectorLock") */
+    /* All mutable fields are @GuardedBy("m_connectorLock") */
+
     private DatabaseTestConnector m_connector;
 
-    /* @GuardedBy("m_connectorLock") */
     private Connection m_keepaliveConnection;
 
-    /* @GuardedBy("m_connectorLock") */
     private boolean m_toreDown;
 
     static { // Set test mode
@@ -96,7 +95,7 @@ public abstract class DatabaseTestCase {
 
     public final DatabaseTestConnector getConnector() {
 
-	synchronized (m_connectorLock) {
+	synchronized (m_testCaseLock) {
 
 	    if (m_toreDown) {
 		throw new IllegalStateException("TestCase ALREADY torn down");
@@ -121,7 +120,7 @@ public abstract class DatabaseTestCase {
 
 	    }
 
-	} // End of synchronized block on m_connectorLock
+	} // End of synchronized block on m_testCaseLock
 
 	return m_connector;
     }
@@ -201,7 +200,7 @@ public abstract class DatabaseTestCase {
 
     public void tearDown() {
 
-	synchronized (m_connectorLock) {
+	synchronized (m_testCaseLock) {
 
 	    if (!m_toreDown) { // Close only once
 		m_toreDown = true;
@@ -231,7 +230,7 @@ public abstract class DatabaseTestCase {
 
 	    }
 
-	} // End of synchronized block on m_connectorLock
+	} // End of synchronized block on m_testCaseLock
 
     }
 

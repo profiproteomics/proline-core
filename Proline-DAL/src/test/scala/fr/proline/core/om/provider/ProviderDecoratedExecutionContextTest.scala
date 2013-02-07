@@ -51,10 +51,8 @@ class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase w
   }
 
   @After
-  def tearDown() = {
-    closeDbs()
-
-    logger.info("Dbs succesfully closed")
+  override def tearDown() = {
+    super.tearDown()
   }
 
 }

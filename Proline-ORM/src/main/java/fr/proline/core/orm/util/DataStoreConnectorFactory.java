@@ -19,6 +19,7 @@ import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.util.StringUtils;
+import fr.proline.util.ThreadLogger;
 
 public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
@@ -58,6 +59,12 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
 	    if (udsDbConnector == null) {
 		throw new UnsupportedOperationException("UdsDbConnector is null");
+	    }
+
+	    final Thread currentThread = Thread.currentThread();
+
+	    if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
+		currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
 	    }
 
 	    m_udsDbConnector = udsDbConnector;

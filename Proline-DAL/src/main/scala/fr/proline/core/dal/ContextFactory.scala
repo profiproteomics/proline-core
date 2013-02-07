@@ -7,6 +7,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
+import fr.proline.util.ThreadLogger
 
 object ContextFactory extends Logging {
 
@@ -24,6 +25,12 @@ object ContextFactory extends Logging {
    * @return A new instance of ExecutionContext
    */
   def buildExecutionContext(dsFactory: IDataStoreConnectorFactory, projectId: Int, useJPA: Boolean): IExecutionContext = {
+    val currentThread = Thread.currentThread
+
+    if (!currentThread.isInstanceOf[ThreadLogger]) {
+      currentThread.setUncaughtExceptionHandler(new ThreadLogger("fr.proline.core.dal.ContextFactory"))
+    }
+
     var udsDb: DatabaseConnectionContext = null
 
     val udsDbConnector = dsFactory.getUdsDbConnector
@@ -78,7 +85,7 @@ object ContextFactory extends Logging {
    *            <code>false</code> returned SQLConnectionContext wraps a new SQL JDBC <code>Connection</code>.
    * @return A new instance of <code>DatabaseConnectionContext</code> or <code>SQLConnectionContext</code> for SQL
    */
-  def buildDbConnectionContext(dbConnector: IDatabaseConnector,useJPA: Boolean): DatabaseConnectionContext = {
+  def buildDbConnectionContext(dbConnector: IDatabaseConnector, useJPA: Boolean): DatabaseConnectionContext = {
     if (dbConnector == null) {
       throw new IllegalArgumentException("DbConnector is null")
     }
@@ -128,25 +135,25 @@ object BuildExecutionContext extends Logging {
 }
 
 object BuildDbConnectionContext extends Logging {
-  
+
   /**
    * Creates a <code>DatabaseConnectionContext</code> from given DatabaseConnector.
    *
    * @param dbConnector
    *            DatabaseConnector used to access a Proline Db.
-   * 
+   *
    * @return A new instance of <code>DatabaseConnectionContext</code> or <code>SQLConnectionContext</code> for SQL
    */
-  def apply[CtxType <: DatabaseConnectionContext](dbConnector: IDatabaseConnector)(implicit m:Manifest[CtxType]): CtxType = {
-    
-    val useJPA = if( m.erasure == classOf[SQLConnectionContext] ) false
+  def apply[CtxType <: DatabaseConnectionContext](dbConnector: IDatabaseConnector)(implicit m: Manifest[CtxType]): CtxType = {
+
+    val useJPA = if (m.erasure == classOf[SQLConnectionContext]) false
     else true
-    
-    this.logger.info( "creation of execution context " + (if(useJPA) "using JPA mode" else "using SQL mode ") )
-    
-    this.apply(dbConnector, useJPA).asInstanceOf[CtxType]    
+
+    this.logger.info("creation of execution context " + (if (useJPA) "using JPA mode" else "using SQL mode "))
+
+    this.apply(dbConnector, useJPA).asInstanceOf[CtxType]
   }
-  
+
   /**
    * Creates a <code>DatabaseConnectionContext</code> from given DatabaseConnector.
    *
