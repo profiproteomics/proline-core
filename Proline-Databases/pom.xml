@@ -20,12 +20,6 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <!-- ProFi Commons -->
-    <dependency>
-      <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Java</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>com.googlecode.flyway</groupId>
       <artifactId>flyway-core</artifactId>

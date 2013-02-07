@@ -13,12 +13,6 @@
 
   <dependencies>
 
-    <!-- ProFi Commons -->
-    <dependency>
-      <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Java</artifactId>
-    </dependency>
-
     <!-- "Proline" modules -->
     <dependency>
       <groupId>fr.proline</groupId>
