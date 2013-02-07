@@ -243,28 +243,15 @@ case class ResultSummaryProperties (
 case class RsmValidationProperties (
   @BeanProperty var params: RsmValidationParamsProperties,
   @BeanProperty var results: RsmValidationResultsProperties
-)
+) 
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class RsmValidationParamsProperties (
-  @BeanProperty var peptideParams: Option[RsmPepMatchValidationParamsProperties] = None,
-  @BeanProperty var proteinParams: Option[RsmProtSetValidationParamsProperties] = None
+  @BeanProperty var peptideFilters: Option[Map[Int, FilterProperties]] = None,
+  @BeanProperty var proteinFilters: Option[Map[Int, FilterProperties]] = None
 )
 
-@JsonSnakeCase
-@JsonInclude( Include.NON_NULL )
-case class RsmPepMatchValidationParamsProperties (
-  @BeanProperty var expectedFdr: Option[Float] = None,
-  @BeanProperty var scoreThreshold: Option[Float] = None
-)
-
-@JsonSnakeCase
-@JsonInclude( Include.NON_NULL )
-case class RsmProtSetValidationParamsProperties (
-  @BeanProperty var methodName: String,
-  @BeanProperty var expectedFdr: Option[Float] = None  
-)
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
@@ -276,7 +263,7 @@ case class RsmValidationResultsProperties (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class RsmPepMatchValidationResultsProperties (
-  @BeanProperty var pValueThreshold: Float,
+  @BeanProperty var lastFilterThreshold: Any,
   @BeanProperty var targetMatchesCount: Int,
   @BeanProperty var decoyMatchesCount: Option[Int] = None,
   @BeanProperty var fdr: Option[Float] = None
