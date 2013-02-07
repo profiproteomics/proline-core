@@ -7,6 +7,10 @@ CREATE TABLE public.aggregation (
 COMMENT ON COLUMN public.aggregation.child_nature IS 'Describes the nature of the corresponding level of aggregation. Valid values are: SAMPLE_ANALYSIS, QUANTITATION_FRACTION, BIOLOGICAL_SAMPLE, BIOLOGICAL_GROUP, OTHER.';
 
 
+CREATE UNIQUE INDEX public.aggregation_child_nature_idx
+ ON public.aggregation
+ ( child_nature );
+
 CREATE TABLE public.fractionation (
                 id IDENTITY NOT NULL,
                 type VARCHAR NOT NULL,
@@ -14,6 +18,10 @@ CREATE TABLE public.fractionation (
 );
 COMMENT ON COLUMN public.fractionation.type IS 'Describes the type of the separation used for the analysis of the sample. Valid values are: PROTEIN, PEPTIDE, OTHER, NONE.';
 
+
+CREATE UNIQUE INDEX public.fractionation_type_idx
+ ON public.fractionation
+ ( type );
 
 CREATE TABLE public.protein_match_decoy_rule (
                 id IDENTITY NOT NULL,
@@ -283,7 +291,7 @@ COMMENT ON COLUMN public.quant_method.serialized_properties IS 'A JSON string wh
 
 
 CREATE TABLE public.data_set (
-                id INTEGER NOT NULL,
+                id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
                 name VARCHAR NOT NULL,
                 description VARCHAR(10000),
@@ -291,7 +299,7 @@ CREATE TABLE public.data_set (
                 keywords VARCHAR,
                 creation_timestamp TIMESTAMP NOT NULL,
                 modification_log LONGVARCHAR,
-                fraction_count INTEGER NOT NULL,
+                fraction_count INTEGER DEFAULT 0 NOT NULL,
                 serialized_properties LONGVARCHAR,
                 result_set_id INTEGER,
                 result_summary_id INTEGER,
@@ -330,7 +338,7 @@ COMMENT ON COLUMN public.sample_analysis.serialized_properties IS 'A JSON string
 
 
 CREATE TABLE public.master_quant_channel (
-                id INTEGER NOT NULL,
+                id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
@@ -507,7 +515,7 @@ COMMENT ON COLUMN public.document.serialized_properties IS 'A JSON string which 
 
 
 CREATE TABLE public.quant_channel (
-                id INTEGER NOT NULL,
+                id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 context_key VARCHAR(100) NOT NULL,

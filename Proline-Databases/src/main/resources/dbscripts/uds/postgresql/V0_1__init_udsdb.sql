@@ -11,6 +11,10 @@ COMMENT ON COLUMN public.aggregation.child_nature IS 'Describes the nature of th
 
 ALTER SEQUENCE public.aggregation_id_seq OWNED BY public.aggregation.id;
 
+CREATE UNIQUE INDEX aggregation_child_nature_idx
+ ON public.aggregation
+ ( child_nature );
+
 CREATE SEQUENCE public.fractionation_id_seq;
 
 CREATE TABLE public.fractionation (
@@ -22,6 +26,10 @@ COMMENT ON COLUMN public.fractionation.type IS 'Describes the type of the separa
 
 
 ALTER SEQUENCE public.fractionation_id_seq OWNED BY public.fractionation.id;
+
+CREATE UNIQUE INDEX fractionation_type_idx
+ ON public.fractionation
+ ( type );
 
 CREATE SEQUENCE public.protein_match_decoy_rule_id_seq;
 
@@ -346,8 +354,10 @@ COMMENT ON COLUMN public.quant_method.serialized_properties IS 'A JSON string wh
 
 ALTER SEQUENCE public.quant_method_id_seq OWNED BY public.quant_method.id;
 
+CREATE SEQUENCE public.data_set_id_seq;
+
 CREATE TABLE public.data_set (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.data_set_id_seq'),
                 number INTEGER NOT NULL,
                 name VARCHAR NOT NULL,
                 description VARCHAR(10000),
@@ -355,7 +365,7 @@ CREATE TABLE public.data_set (
                 keywords VARCHAR,
                 creation_timestamp TIMESTAMP NOT NULL,
                 modification_log TEXT,
-                fraction_count INTEGER NOT NULL,
+                fraction_count INTEGER DEFAULT 0 NOT NULL,
                 serialized_properties TEXT,
                 result_set_id INTEGER,
                 result_summary_id INTEGER,
@@ -370,6 +380,8 @@ COMMENT ON COLUMN public.data_set.name IS 'Could be the sample name.';
 COMMENT ON COLUMN public.data_set.type IS 'Valid values are:
 IDENTIFICATION, QUANTITATION, AGGREGATE.';
 
+
+ALTER SEQUENCE public.data_set_id_seq OWNED BY public.data_set.id;
 
 CREATE TABLE public.run_identification (
                 id INTEGER NOT NULL,
@@ -397,8 +409,10 @@ COMMENT ON COLUMN public.sample_analysis.serialized_properties IS 'A JSON string
 
 ALTER SEQUENCE public.sample_analysis_id_seq OWNED BY public.sample_analysis.id;
 
+CREATE SEQUENCE public.master_quant_channel_id_seq;
+
 CREATE TABLE public.master_quant_channel (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.master_quant_channel_id_seq'),
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties TEXT,
@@ -410,6 +424,8 @@ CREATE TABLE public.master_quant_channel (
 COMMENT ON TABLE public.master_quant_channel IS 'Store the quantitation profiles and ratios. May correspond to a quantitation overview (one unique fraction).';
 COMMENT ON COLUMN public.master_quant_channel.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+ALTER SEQUENCE public.master_quant_channel_id_seq OWNED BY public.master_quant_channel.id;
 
 CREATE SEQUENCE public.quant_label_id_seq;
 
@@ -606,8 +622,10 @@ COMMENT ON COLUMN public.document.serialized_properties IS 'A JSON string which 
 
 ALTER SEQUENCE public.document_id_seq OWNED BY public.document.id;
 
+CREATE SEQUENCE public.quant_channel_id_seq;
+
 CREATE TABLE public.quant_channel (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL DEFAULT nextval('public.quant_channel_id_seq'),
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 context_key VARCHAR(100) NOT NULL,
@@ -629,6 +647,8 @@ COMMENT ON COLUMN public.quant_channel.context_key IS 'string representation of 
 biological_sample.number and sample_analysis_replicate.number';
 COMMENT ON COLUMN public.quant_channel.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+ALTER SEQUENCE public.quant_channel_id_seq OWNED BY public.quant_channel.id;
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(50) NOT NULL,
