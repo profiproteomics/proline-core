@@ -4,12 +4,12 @@ import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.SequenceHiLoGenerator;
+import org.hibernate.id.SequenceGenerator;
 import org.hibernate.type.Type;
 
 import fr.proline.util.StringUtils;
 
-public class TableNameSequenceGenerator extends SequenceHiLoGenerator {
+public class TableNameSequenceGenerator extends SequenceGenerator {
 
     /**
      * {@inheritDoc} If the parameters do not contain a {@link org.hibernate.id.SequenceGenerator#SEQUENCE}
