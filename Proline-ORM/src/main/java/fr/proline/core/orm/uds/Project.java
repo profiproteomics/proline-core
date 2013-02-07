@@ -19,6 +19,9 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 
+import javax.persistence.Transient;
+
+
 /**
  * The persistent class for the project database table.
  * 
@@ -67,6 +70,9 @@ public class Project implements Serializable {
     @JoinTable(name = "project_user_account_map", inverseJoinColumns = @JoinColumn(name = "user_account_id", referencedColumnName = "id"), joinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id"))
     private Set<UserAccount> members;
 
+	// Transient Variables not saved in database
+    @Transient private TransientData transientData = null;
+    
     protected Project() {
     }
 
@@ -191,4 +197,36 @@ public class Project implements Serializable {
 	this.members = members;
     }
 
+    
+    public TransientData getTransientData() {
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
+    }
+    
+    /**
+     * Transient Data which will be not saved in database Used by the Proline
+     * Studio IHM
+     *
+     * @author JM235353
+     */
+    public static class TransientData implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+        private int childrenNumber = 0;
+
+        protected TransientData() {
+        }
+
+        public int getChildrenNumber() {  
+            return childrenNumber;
+        }
+        public void setChildrenNumber(int childrenNumber) {  
+            this.childrenNumber = childrenNumber;
+        }
+
+    }
+    
+    
 }
