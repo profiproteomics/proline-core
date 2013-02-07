@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.JDBCWork;
@@ -33,6 +34,10 @@ public abstract class DatabaseTestCase {
 
     /* @GuardedBy("m_connectorLock") */
     private boolean m_toreDown;
+
+    static { // Set test mode
+	System.setProperty(AbstractDatabaseConnector.PROLINE_TEST_KEY, Boolean.TRUE.toString());
+    }
 
     /**
      * Retrives the list of table names from <code>DatabaseMetaData</code> of the given SQL JDBC Connection

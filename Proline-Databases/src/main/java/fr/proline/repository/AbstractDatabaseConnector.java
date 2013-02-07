@@ -36,6 +36,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
     public static final String JDBC_SCHEME = "jdbc";
 
+    public static final String PROLINE_TEST_KEY = "proline.test";
+
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDatabaseConnector.class);
 
     private static final Map<String, Integer> CONNECTOR_INSTANCES = new HashMap<String, Integer>();
@@ -88,10 +90,19 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	final int connectorInstancesCount = checkConnectorInstances(m_ident);
 
 	if (connectorInstancesCount > 1) {
-	    final Exception ex = new Exception("Multiple DatabaseConnector");
 
-	    LOG.error("There are " + connectorInstancesCount + " DatabaseConnector instances for [" + m_ident
-		    + ']', ex);
+	    if (System.getProperty(PROLINE_TEST_KEY) == null) {
+		/* Production mode */
+		final Exception ex = new Exception("Multiple DatabaseConnector");
+
+		LOG.error("There are " + connectorInstancesCount + " DatabaseConnector instances for ["
+			+ m_ident + ']', ex);
+	    } else {
+		/* Test mode */
+		LOG.debug("There are {} TEST DatabaseConnector instances for [{}]", connectorInstancesCount,
+			m_ident);
+	    }
+
 	}
 
     }
