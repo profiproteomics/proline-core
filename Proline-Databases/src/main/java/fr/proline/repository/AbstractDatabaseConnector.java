@@ -255,8 +255,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	    optimize(properties);
 	}
 
-	if (LOG.isDebugEnabled()) {
-	    LOG.debug("Effective EntityManagerFactory settings for " + prolineDbType + " :" + LINE_SEPARATOR
+	if (LOG.isTraceEnabled()) {
+	    LOG.trace("Effective EntityManagerFactory settings for " + prolineDbType + " :" + LINE_SEPARATOR
 		    + PropertiesUtils.formatProperties(properties));
 	}
 

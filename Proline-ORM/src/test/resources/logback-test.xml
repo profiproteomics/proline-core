@@ -1,5 +1,6 @@
 <configuration>
  <contextName>Proline ORM Test</contextName>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
@@ -8,11 +9,12 @@
     </encoder>
   </appender>
 
-  <logger name="fr.proline" level="DEBUG">    
-  </logger>
+  <logger name="fr.proline" level="DEBUG" />
+
+  <logger name="org.dbunit.dataset" level="ERROR" />
 
   <root level="WARN">
     <appender-ref ref="STDOUT" />
   </root>
-  
+
 </configuration>
