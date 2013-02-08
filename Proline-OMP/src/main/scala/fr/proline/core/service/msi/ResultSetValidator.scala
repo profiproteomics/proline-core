@@ -22,6 +22,21 @@ import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.filter.FilterUtils
 import fr.proline.core.algo.msi.filter.ParamProteinSetFilter
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+
+object ResultSetValidator {
+  
+    def getResultSetProvider( execContext: IExecutionContext ): IResultSetProvider = {
+    if ( execContext.isJPA )
+      new ORMResultSetProvider( execContext.getMSIDbConnectionContext, execContext.getPSDbConnectionContext, execContext.getUDSDbConnectionContext )
+    else
+      new SQLResultSetProvider( execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
+          execContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext],
+          execContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext] )
+  }
+}
+
 
 /**
  * Validate a ResultSet to create an associated ResultSummary.
@@ -39,7 +54,8 @@ class ResultSetValidator( execContext: IExecutionContext,
                           protSetFilters: Option[Seq[IProteinSetFilter]] = None,
                           targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
                           storeResultSummary: Boolean = true ) extends IService with Logging {
-
+  
+  
   def this( execContext: IExecutionContext,
             targetRsId: Int,
             pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
@@ -47,9 +63,16 @@ class ResultSetValidator( execContext: IExecutionContext,
             protSetFilters: Option[Seq[IProteinSetFilter]] = None,
             targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
             storeResultSummary: Boolean = true ) {
-
-    this( execContext, execContext.getMSIDbConnectionContext.getEntityManager().find( classOf[ResultSet], targetRsId ), pepMatchPreFilters, computerPSMFilter, protSetFilters, targetDecoyMode, storeResultSummary )
+    
+      this( execContext, 
+          ResultSetValidator.getResultSetProvider(execContext).getResultSet(targetRsId).get, 
+          pepMatchPreFilters, 
+          computerPSMFilter, 
+          protSetFilters, 
+          targetDecoyMode, 
+          storeResultSummary )
   }
+
   
   private val msiDbContext = execContext.getMSIDbConnectionContext    
  
