@@ -9,6 +9,17 @@ import org.hibernate.type.Type;
 
 import fr.proline.util.StringUtils;
 
+/**
+ * This class uses one sequence by entity (using PostgreSQL convention for sequence name) instead of global
+ * <code>hibernate_sequence</code>.
+ * <p>
+ * Note : When Hibernate use <code>SequenceHiLoGenerator</code>, generated Ids are
+ * <code>nextval(sequence) * maxLo + n</code> which is not compatible with raw SQL insertions.
+ * <code>SequenceGenerator</code> works with both SQL and Hibernate insertions.
+ * 
+ * @author LMN
+ * 
+ */
 public class TableNameSequenceGenerator extends SequenceGenerator {
 
     /**
