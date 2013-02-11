@@ -3,17 +3,10 @@ package fr.proline.core.om.provider
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.impl.ORMPTMProvider
-import fr.proline.core.om.provider.msi.impl.ORMPeptideProvider
-import fr.proline.core.om.provider.msi.impl.ORMProteinProvider
-import fr.proline.core.om.provider.msi.impl.ORMSeqDatabaseProvider
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideMatchProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.util.PropertiesUtils
-import fr.proline.util.StringUtils
+import fr.proline.core.om.provider.msi.impl.{ ORMSeqDatabaseProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
+import fr.proline.core.om.provider.msi.{ IProteinProvider, IPeptideProvider, IPTMProvider }
+import fr.proline.core.om.provider.msi.{ ISeqDatabaseProvider, IPeptideMatchProvider }
+import fr.proline.util.{ StringUtils, PropertiesUtils }
 
 trait IProviderFactory {
 
@@ -70,6 +63,8 @@ object ProviderFactory extends IProviderFactory with Logging {
       val psDb = executionContext.getPSDbConnectionContext
 
       if ((psDb != null) && psDb.isJPA) {
+        logger.debug("Creating a default ORMPeptideProvider in current executionContext")
+
         result = new ORMPeptideProvider(psDb)
       }
 
@@ -99,6 +94,8 @@ object ProviderFactory extends IProviderFactory with Logging {
       val pdiDb = executionContext.getPDIDbConnectionContext
 
       if ((pdiDb != null) && pdiDb.isJPA) {
+        logger.debug("Creating a default ORMProteinProvider in current executionContext")
+
         result = new ORMProteinProvider(pdiDb)
       }
 
@@ -118,6 +115,8 @@ object ProviderFactory extends IProviderFactory with Logging {
       val pdiDb = executionContext.getPDIDbConnectionContext
 
       if ((pdiDb != null) && pdiDb.isJPA) {
+        logger.debug("Creating a default ORMSeqDatabaseProvider in current executionContext")
+
         result = new ORMSeqDatabaseProvider(pdiDb)
       }
 
@@ -137,6 +136,8 @@ object ProviderFactory extends IProviderFactory with Logging {
       val psDb = executionContext.getPSDbConnectionContext
 
       if ((psDb != null) && psDb.isJPA) {
+        logger.debug("Creating a default ORMPTMProvider in current executionContext")
+
         result = new ORMPTMProvider(psDb)
       }
 
