@@ -81,10 +81,13 @@ public class DatabaseConnectionContext {
 
     /**
      * Full constructor for sub-classes.
-     *
-     * @param entityManager the entity manager
-     * @param connection the connection
-     * @param driverType the driver type
+     * 
+     * @param entityManager
+     *            the entity manager
+     * @param connection
+     *            the connection
+     * @param driverType
+     *            the driver type
      */
     protected DatabaseConnectionContext(final EntityManager entityManager, final Connection connection,
 	    final DriverType driverType) {
@@ -152,79 +155,128 @@ public class DatabaseConnectionContext {
 	    }
 
 	    result = m_connection;
-	}
+	} // End of synchronized block on m_contextLock
 
 	return result;
     }
-    
+
     /**
      * Checks if is in transaction.
-     *
+     * 
      * @return true, if is in transaction
-     * @throws SQLException the sQL exception
+     * @throws SQLException
+     *             the sQL exception
      */
     public boolean isInTransaction() throws SQLException {
-    
-    if( this.isJPA() ) {
-    	return this.getEntityManager().getTransaction().isActive();
-    } else {
-    	if (m_connection != null && !m_connection.isClosed()) {
-    		return !m_connection.getAutoCommit();
-    	} else {
-    		return false;
-    	}
+	boolean result = false;
+
+	synchronized (m_contextLock) {
+
+	    if (isClosed()) {
+		throw new IllegalStateException("Context ALREADY closed");
+	    }
+
+	    if (isJPA()) {
+		result = getEntityManager().getTransaction().isActive();
+	    } else {
+		final Connection contextConnection = getConnection();
+
+		if ((contextConnection != null) && !contextConnection.isClosed()) {
+		    result = !contextConnection.getAutoCommit();
+		}
+
+	    }
+
+	} // End of synchronized block on m_contextLock
+
+	LOG.debug("IsInTransaction in Context: {}", result);
+
+	return result;
     }
-    
-    }
-    
+
     /**
      * Begin transaction.
-     *
-     * @throws SQLException the sQL exception
+     * 
+     * @throws SQLException
+     *             the sQL exception
      */
     public void beginTransaction() throws SQLException {
-    
-    if( this.isJPA() ) {
-    	this.getEntityManager().getTransaction().begin();
-    } else {
-    	// TODO: handle transaction isolation levels
-    	//this.getConnection().setTransactionIsolation( this.txIsolationLevel.id )
-    	m_connection.setAutoCommit(false);
+
+	synchronized (m_contextLock) {
+
+	    if (isClosed()) {
+		throw new IllegalStateException("Context ALREADY closed");
+	    }
+
+	    LOG.debug("Begin Transaction in Context");
+
+	    if (isJPA()) {
+		getEntityManager().getTransaction().begin();
+	    } else {
+		// TODO: handle transaction isolation levels
+		// this.getConnection().setTransactionIsolation( this.txIsolationLevel.id )
+		getConnection().setAutoCommit(false);
+	    }
+
+	} // End of synchronized block on m_contextLock
+
     }
-    
-    }
-    
+
     /**
      * Commit transaction.
-     *
-     * @throws SQLException the sQL exception
+     * 
+     * @throws SQLException
+     *             the sQL exception
      */
     public void commitTransaction() throws SQLException {
-    
-    if( this.isJPA() ) {
-    	this.getEntityManager().getTransaction().commit();
-    } else {
-    	m_connection.commit();
-    	m_connection.setAutoCommit(true);
-    }
-    
+
+	synchronized (m_contextLock) {
+
+	    if (isClosed()) {
+		throw new IllegalStateException("Context ALREADY closed");
+	    }
+
+	    LOG.debug("Commit Transaction in Context");
+
+	    if (isJPA()) {
+		getEntityManager().getTransaction().commit();
+	    } else {
+		final Connection contextConnection = getConnection();
+
+		contextConnection.commit();
+		contextConnection.setAutoCommit(true);
+	    }
+
+	} // End of synchronized block on m_contextLock
+
     }
 
     /**
      * Rollback transaction.
-     *
-     * @throws SQLException the sQL exception
+     * 
+     * @throws SQLException
+     *             the sQL exception
      */
     public void rollbackTransaction() throws SQLException {
-    
-    if( this.isJPA() ) {
-    	this.getEntityManager().getTransaction().rollback();
-    } else {
-    	this.getConnection().rollback();
+
+	synchronized (m_contextLock) {
+
+	    if (isClosed()) {
+		throw new IllegalStateException("Context ALREADY closed");
+	    }
+
+	    LOG.debug("Rollback Transaction in Context");
+
+	    if (isJPA()) {
+		getEntityManager().getTransaction().rollback();
+	    } else {
+		getConnection().rollback();
+	    }
+
+	} // End of synchronized block on m_contextLock
+
     }
-    
-    }
-    
+
     /**
      * Closes wrapped SQL JDBC Connection and/or JPA EntityManager.
      */
@@ -259,7 +311,7 @@ public class DatabaseConnectionContext {
 
     /**
      * Checks if is closed.
-     *
+     * 
      * @return true, if is closed
      */
     public boolean isClosed() {
@@ -274,12 +326,15 @@ public class DatabaseConnectionContext {
 
     /**
      * Executes an SQL JDBC work on raw current SQL Connection or current <code>EntityManager</code>.
-     *
-     * @param work JDBC task to be executed by given <code>EntityManager</code> instance, eventually within its
-     * <code>EntityTransaction</code>.
-     * @param flushEntityManager If <code>true</code> and there is no current SQL JDBC Connection, flush JPA EntityManager
-     * before calling doWork.
-     * @throws SQLException the sQL exception
+     * 
+     * @param work
+     *            JDBC task to be executed by given <code>EntityManager</code> instance, eventually within its
+     *            <code>EntityTransaction</code>.
+     * @param flushEntityManager
+     *            If <code>true</code> and there is no current SQL JDBC Connection, flush JPA EntityManager
+     *            before calling doWork.
+     * @throws SQLException
+     *             the sQL exception
      */
     public void doWork(final JDBCWork work, final boolean flushEntityManager) throws SQLException {
 
@@ -300,7 +355,8 @@ public class DatabaseConnectionContext {
 
 		JPAUtils.checkEntityManager(contextEntityMananger);
 
-		LOG.debug("Executing JDBCWork on JPA EntityManager");
+		LOG.debug("Executing JDBCWork on JPA EntityManager, flushEntityManager: {}",
+			flushEntityManager);
 
 		if (flushEntityManager) {
 		    contextEntityMananger.flush();
@@ -335,14 +391,18 @@ public class DatabaseConnectionContext {
     /**
      * Executes an SQL JDBC work (returning a result) on raw current SQL Connection or current
      * <code>EntityManager</code>.
-     *
-     * @param <T> Generic type of the result of the SQL JDBC work.
-     * @param returningWork JDBC task to be executed by given <code>EntityManager</code> instance, eventually within its
-     * <code>EntityTransaction</code>.
-     * @param flushEntityManager If <code>true</code> and there is no current SQL JDBC Connection, flush JPA EntityManager
-     * before calling doWork.
+     * 
+     * @param <T>
+     *            Generic type of the result of the SQL JDBC work.
+     * @param returningWork
+     *            JDBC task to be executed by given <code>EntityManager</code> instance, eventually within its
+     *            <code>EntityTransaction</code>.
+     * @param flushEntityManager
+     *            If <code>true</code> and there is no current SQL JDBC Connection, flush JPA EntityManager
+     *            before calling doWork.
      * @return Result of the executed JDBC task.
-     * @throws SQLException the sQL exception
+     * @throws SQLException
+     *             the sQL exception
      */
     public <T> T doReturningWork(final JDBCReturningWork<T> returningWork, final boolean flushEntityManager)
 	    throws SQLException {
@@ -366,7 +426,8 @@ public class DatabaseConnectionContext {
 
 		JPAUtils.checkEntityManager(contextEntityMananger);
 
-		LOG.debug("Executing JDBCReturningWork on JPA EntityManager");
+		LOG.debug("Executing JDBCReturningWork on JPA EntityManager, flushEntityManager: {}",
+			flushEntityManager);
 
 		if (flushEntityManager) {
 		    contextEntityMananger.flush();
