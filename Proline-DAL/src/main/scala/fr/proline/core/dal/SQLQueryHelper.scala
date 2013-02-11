@@ -44,7 +44,9 @@ object ProlineEzDBC extends Logging {
     val ezDBC = EasyDBC( connection, getDriverDialect(driverType), getDriverTxIsolationLevel(driverType) )
     
     // Make some driver based optimizations
-    if( driverType == DriverType.SQLITE ) {
+    if( (driverType == DriverType.SQLITE) && connection.getAutoCommit()) {
+      /* Only change PRAGMA outside transaction */
+      // TODO LMN : move this code outside any JPA / EasyDBC transactions
       this.logger.debug("Setting SQLite DB cache to 100Mo and temp_store to MEMORY" )
       ezDBC.execute("PRAGMA cache_size=100000;")
       ezDBC.execute("PRAGMA temp_store=MEMORY;")
