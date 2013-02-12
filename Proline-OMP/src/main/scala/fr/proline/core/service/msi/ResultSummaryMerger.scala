@@ -3,9 +3,7 @@ package fr.proline.core.service.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context._
@@ -16,6 +14,7 @@ import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.storer.msi.{RsStorer,RsmStorer}
+import fr.proline.repository.DriverType
 
 class ResultSummaryMerger(
   execCtx: IExecutionContext,
@@ -164,7 +163,10 @@ class ResultSummaryMerger(
         logger.info("Rollbacking MSI Db Transaction")
 
         try {
-          msiDbCtx.rollbackTransaction()
+          // Rollback is not useful for SQLite and has locking issue
+          // http://www.sqlite.org/lang_transaction.html
+          if( msiDbCtx.getDriverType() != DriverType.SQLITE )
+            msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
         }
