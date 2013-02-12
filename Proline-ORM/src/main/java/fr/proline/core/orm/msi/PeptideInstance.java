@@ -44,6 +44,9 @@ public class PeptideInstance implements Serializable {
 
 	@Column(name="protein_set_count")
 	private Integer proteinSetCount;
+	
+    @Column(name="total_leaves_match_count")
+    private Integer totalLeavesMatchCount;
 
 	@Column(name="elution_time")
 	private Float elutionTime;
@@ -142,6 +145,14 @@ public class PeptideInstance implements Serializable {
 	public void setProteinSetCount(Integer proteinSetCount) {
 		this.proteinSetCount = proteinSetCount;
 	}
+	
+    public Integer getTotalLeavesMatchCount() {
+      return this.totalLeavesMatchCount;
+    }
+
+    public void setTotalLeavesMatchCount(Integer totalLeavesMatchCount) {
+      this.totalLeavesMatchCount = totalLeavesMatchCount;
+    }  
 
 	public ResultSummary getResultSummary() {
 		return this.resultSummary;
