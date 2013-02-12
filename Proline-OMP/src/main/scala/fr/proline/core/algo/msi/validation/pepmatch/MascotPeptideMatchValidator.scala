@@ -2,7 +2,6 @@ package fr.proline.core.algo.msi.validation.pepmatch
 
 import math.abs
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.PeptideMatchValidationProperties
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.algo.msi.validation.ValidationResult
 import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
@@ -55,10 +54,11 @@ class MascotPeptideMatchValidator (targetRs: ResultSet) extends IPeptideMatchVal
         case _ => throw new Exception("unknown target decoy mode: " + targetDecoyMode )
     }
     
-    new ValidationResult(nbTargetMatches = nbTargetMatches ,
-	    		 nbDecoyMatches =  nbDecoyMatchesOp,
-	    		 fdr = fdr
-	    		 )
+    new ValidationResult(
+      nbTargetMatches = nbTargetMatches,
+	  nbDecoyMatches =  nbDecoyMatchesOp,
+	  fdr = fdr
+	)
   }
     
     /*

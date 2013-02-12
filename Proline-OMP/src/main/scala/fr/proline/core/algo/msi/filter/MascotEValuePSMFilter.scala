@@ -4,7 +4,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.Seq
 
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.core.om.model.msi.{PeptideMatchValidationProperties, PeptideMatch}
+import fr.proline.core.om.model.msi.{PeptideMatch,PeptideMatchResultSummaryProperties}
 
 class MascotEValuePSMFilter( var eValueThreshold: Double ) extends IComputablePeptideMatchFilter {
 
@@ -35,7 +35,7 @@ class MascotEValuePSMFilter( var eValueThreshold: Double ) extends IComputablePe
 
   def updatePeptideMatchProperties( pepMatch: PeptideMatch ) {
 
-    var pepMatchValProps = pepMatch.validationProperties.orElse( Some( new PeptideMatchValidationProperties() ) ).get
+    var pepMatchValProps = pepMatch.validationProperties.orElse( Some( new PeptideMatchResultSummaryProperties() ) ).get
     var filtersPropByRank = pepMatchValProps.setMascotAdjustedExpectationValue( Some( MascotValidationHelper.calcPepMatchEvalue( pepMatch ) ) )
 
     pepMatch.validationProperties = Some( pepMatchValProps )

@@ -4,7 +4,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.Seq
 
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.core.om.model.msi.{PeptideMatchValidationProperties, PeptideMatch}
+import fr.proline.core.om.model.msi.{PeptideMatch}
 
 class ScoreEValuePSMFilter(var scoreThreshold: Double= 1,  val startThreshold : Double = 1 ) extends IComputablePeptideMatchFilter {
 

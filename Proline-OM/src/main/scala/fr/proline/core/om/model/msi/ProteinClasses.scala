@@ -212,7 +212,7 @@ case class SequenceMatch ( // Required fields
                    protected var peptideId: Int = 0,
                    @transient var peptide: Option[Peptide] = null,
                    
-                   protected var bestPeptideMatchId: Int = 0,
+                   var bestPeptideMatchId: Int = 0,
                    @transient var bestPeptideMatch: Option[PeptideMatch] = null,
                    
                    var properties: Option[SequenceMatchProperties] = None

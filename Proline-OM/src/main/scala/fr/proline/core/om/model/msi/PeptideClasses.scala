@@ -379,7 +379,7 @@ case class PeptideMatch ( // Required fields
                      
                      var properties: Option[PeptideMatchProperties] = None,
                      
-                     @transient var validationProperties : Option[PeptideMatchValidationProperties] = None
+                     @transient var validationProperties : Option[PeptideMatchResultSummaryProperties] = None
                      
                      ) {
   
@@ -419,8 +419,7 @@ case class PeptideMatchMascotProperties (
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-// TODO: rename to PeptideMatchResultSummaryProperties
-case class PeptideMatchValidationProperties (
+case class PeptideMatchResultSummaryProperties (
   @BeanProperty var mascotScoreOffset: Option[Float] = None,
   @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
 )
@@ -454,7 +453,7 @@ case class PeptideInstance ( // Required fields
                         var resultSummaryId: Int = 0,
                         
                         var properties: Option[PeptideInstanceProperties] = None,
-                        var peptideMatchPropertiesById: Map[Int, PeptideMatchValidationProperties ] = null
+                        var peptideMatchPropertiesById: Map[Int, PeptideMatchResultSummaryProperties ] = null
                         
                         ) {
   
@@ -470,7 +469,7 @@ case class PeptideInstance ( // Required fields
   
   def getUnmodifiedPeptideId : Int = { if(unmodifiedPeptide != null && unmodifiedPeptide != None) unmodifiedPeptide.get.id else unmodifiedPeptideId }
   
-  def getPeptideMatchProperties( peptideMatchId: Int ): Option[PeptideMatchValidationProperties] = {
+  def getPeptideMatchProperties( peptideMatchId: Int ): Option[PeptideMatchResultSummaryProperties] = {
     if( peptideMatchPropertiesById != null ) { peptideMatchPropertiesById.get(peptideMatchId) }
     else { None }
   }
