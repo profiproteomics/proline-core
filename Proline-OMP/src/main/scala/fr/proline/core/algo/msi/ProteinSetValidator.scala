@@ -4,7 +4,7 @@ import fr.proline.core.algo.msi.validation.proteinset.MascotPeptideMatchRulesVal
 import fr.proline.core.algo.msi.validation.proteinset.MascotProteinSetScoreValidator
 import fr.proline.core.algo.msi.validation.proteinset.IProteinSetValidator
 
-object ValidationMethods extends Enumeration {
+object ProtSetValidationMethods extends Enumeration {
   type MethodName = Value
   val proteinSetScore = Value("protein_set_score")
   val peptideMatchRules = Value("peptide_match_rules")
@@ -12,7 +12,7 @@ object ValidationMethods extends Enumeration {
 
 object ProteinSetValidator {
   
-  def apply( searchEngine: String, method: ValidationMethods.MethodName ): IProteinSetValidator = { searchEngine.toLowerCase match {
+  def apply( searchEngine: String, method: ProtSetValidationMethods.MethodName ): IProteinSetValidator = { searchEngine.toLowerCase match {
     case "mascot" => MascotProteinSetValidator( method )
     case _ => throw new Exception("unknown validator for search engine : "+ searchEngine )
     }
@@ -22,9 +22,9 @@ object ProteinSetValidator {
 
 object MascotProteinSetValidator {
   
-  def apply( method: ValidationMethods.MethodName ): IProteinSetValidator = { method match {
-    case ValidationMethods.proteinSetScore => new MascotProteinSetScoreValidator()
-    case ValidationMethods.peptideMatchRules => new MascotPeptideMatchRulesValidator()
+  def apply( method: ProtSetValidationMethods.MethodName ): IProteinSetValidator = { method match {
+    case ProtSetValidationMethods.proteinSetScore => new MascotProteinSetScoreValidator()
+    case ProtSetValidationMethods.peptideMatchRules => new MascotPeptideMatchRulesValidator()
     case _ => throw new Exception("unknown mascot validator for method named : "+ method )
     }
   }

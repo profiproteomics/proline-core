@@ -1,9 +1,9 @@
 package fr.proline.core.algo.msi.validation.pepmatch
 
 import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filter.TargetDecoyModes
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.algo.msi.validation.ValidationResult
-import fr.proline.core.algo.msi.filter.ComputedFDRPeptideMatchFilter
+import fr.proline.core.algo.msi.filter.IComputedFDRPeptideMatchFilter
 import fr.proline.core.algo.msi.validation.ValidationResults
 
 trait IPeptideMatchValidator {
@@ -26,8 +26,8 @@ trait IPeptideMatchValidator {
    *  ValidationResults.computedResults will contain all calculated filter 
    * 
    */
-  def applyComputedPSMFilter( filter: ComputedFDRPeptideMatchFilter,
-                      targetDecoyMode: Option[TargetDecoyModes.Mode] ): ValidationResults
+  def applyComputedPSMFilter( filter: IComputedFDRPeptideMatchFilter,
+                              targetDecoyMode: Option[TargetDecoyModes.Mode] ): ValidationResults
                       
 //  def validateWithComputerParams( validationParams: ComputerValidationParams,
 //                                  targetPeptideMatches: Seq[PeptideMatch],

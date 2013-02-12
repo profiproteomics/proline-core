@@ -1,16 +1,41 @@
 package fr.proline.core.algo.msi.filter
 
 import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.FilterDescriptor
+import fr.proline.core.algo.msi.validation.ValidationResults
 
-object FilterUtils {
+object FiltersPropertyKeys {
   
    final val THRESHOLD_PROP_NAME : String = "threshold_value"
 }
 
+object PeptideMatchFilterParams extends Enumeration {
+  type Param = Value
+  val MASCOT_EVALUE = Value("MASCOT_EVALUE")
+  val PEPTIDE_SEQUENCE_LENGTH = Value("PEP_SEQ_LENGTH")
+  val RANK = Value("RANK")
+  val SCORE = Value("SCORE")
+}
 
-trait IPeptideMatchFilter {
+trait IFilter {
 
-  val filterName : String
+  val filterParameter: String
+  val filterDescription: String
+
+   /**
+    * Return all properties that will be usefull to know wich kind iof filter have been applied
+    * and be able to reapply it. 
+    *  
+    */
+  def getFilterProperties() : Option[Map[String, Any]]
+  
+  def toFilterDescriptor(): FilterDescriptor = {
+    new FilterDescriptor( filterParameter, Some(filterDescription), getFilterProperties )
+  }
+  
+}
+
+trait IPeptideMatchFilter extends IFilter {
   
   /**
    * Validate each PeptideMatch by setting their isValidated attribute.
@@ -23,14 +48,8 @@ trait IPeptideMatchFilter {
    * @param traceability : specify if filter could saved information in peptideMatch properties 
    *  
    */
-   def filterPSM( pepMatches : Seq[PeptideMatch], incrementalValidation: Boolean, traceability : Boolean) : Unit
-  
-   /**
-    * Return all properties that will be usefull to know wich kind iof filter have been applied
-    * and be able to reapply it. 
-    *  
-    */
-   def getFilterProperties() : Option[Map[String, Any]]
+  // TODO: rename to filterPeptideMatches and return Seq[PeptideMatch]
+  def filterPSM( pepMatches : Seq[PeptideMatch], incrementalValidation: Boolean, traceability : Boolean) : Unit  
   
 //def updatePeptideMatchProperties(pepMatch : PeptideMatch){
 //    
@@ -49,7 +68,8 @@ trait IPeptideMatchFilter {
 //   }
 }
 
-trait IComputablePeptideMatchFilter  extends IPeptideMatchFilter {
+// TODO: rename to IOptimizablePeptideMatchFilter
+trait IComputablePeptideMatchFilter extends IPeptideMatchFilter {
 
   /**
    * Get the higher or lowest (depending on the filter type) threshold value for this filter.  
@@ -73,39 +93,41 @@ trait IComputablePeptideMatchFilter  extends IPeptideMatchFilter {
    
 }
 
-
-trait ComputedFDRPeptideMatchFilter {
+// TODO: move to validation package
+trait ITargetDecoyAnalyzer {
  
-  val expectedFdr : Float
-  val fdrValidationFilter : IComputablePeptideMatchFilter
+  /** 
+   * Perform FDR analysis which may include basic FDR computation or more sophisticated ROC analysis.
+   * @return the final value of the computed FDR
+   */
+  def performTDAnalysis(): ValidationResults
  
 }
 
-trait IProteinSetFilter {
-    val filterName : String
+// TODO: rename to IFDROptimizer
+// TODO: move to validation package
+trait IComputedFDRPeptideMatchFilter extends ITargetDecoyAnalyzer {
+ 
+  val expectedFdr: Float // TODO: rename to expectedFDR
+  val fdrValidationFilter: IComputablePeptideMatchFilter // TODO: rename to validationFilter
   
-    /**
-    * Return all properties that will be usefull to know wich kind iof filter have been applied
-    * and be able to reapply it. 
-    *  
-    */
-   def getFilterProperties() : Option[Map[String, Any]]
+  def getValidationFilterDescriptor(): FilterDescriptor = fdrValidationFilter.toFilterDescriptor
+  
+  // TODO: implement this method in trait implementations
+  def performTDAnalysis(): ValidationResults = null
+ 
 }
+
+trait IProteinSetFilter extends IFilter {}
 
 //VDS TODO: replace with real filter 
-class ParamProteinSetFilter( val filterName: String, val minPepSeqLength : Int,val expectedFdr : Float ) extends IProteinSetFilter  {
+class ParamProteinSetFilter( val filterParameter: String, val minPepSeqLength: Int, val expectedFdr: Float ) extends IProteinSetFilter  {
    
- var pValueThreshold : Float = 0.00f
+  val filterDescription = "no description"
+  var pValueThreshold : Float = 0.00f
  
- def getFilterProperties() : Option[Map[String, Any]] = {
-   None
- }
+  def getFilterProperties() : Option[Map[String, Any]] = {
+    None
+  }
   
 }
-
-object TargetDecoyModes extends Enumeration {
-  type Mode = Value
-  val separated = Value("separated")
-  val concatenated = Value("concatenated")
-}
-

@@ -4,7 +4,7 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.api.service.IService
 import fr.proline.context.{IExecutionContext, DatabaseConnectionContext, BasicExecutionContext}
-import fr.proline.core.algo.msi.filter.{IProteinSetFilter, IPeptideMatchFilter, ComputedFDRPeptideMatchFilter}
+import fr.proline.core.algo.msi.filter._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.{SQLConnectionContext, ContextFactory}
 import fr.proline.core.om.model.msi.ResultSet
@@ -12,7 +12,7 @@ import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider, SQLResultSumm
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger, ResultSummaryMerger}
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.core.algo.msi.filter.TargetDecoyModes
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.BuildExecutionContext
 
 class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
@@ -21,7 +21,7 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                rsmIds: Seq[Int],
                                mergeResultSets: Boolean,
                                pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
-                               computerPSMFilter: Option[ComputedFDRPeptideMatchFilter] = None,
+                               computerPSMFilter: Option[IComputedFDRPeptideMatchFilter] = None,
                                protSetFilters: Option[Seq[IProteinSetFilter]] = None
                                ) extends IService with Logging {
   

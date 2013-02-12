@@ -8,7 +8,8 @@ import fr.proline.core.om.model.msi.{PeptideMatch,PeptideMatchResultSummaryPrope
 
 class MascotEValuePSMFilter( var eValueThreshold: Double ) extends IComputablePeptideMatchFilter {
 
-  val filterName = "peptide match mascot eValue filter"
+  val filterParameter = PeptideMatchFilterParams.MASCOT_EVALUE.toString
+  val filterDescription = "peptide match mascot eValue filter"
 
   def filterPSM( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
 

@@ -4,6 +4,7 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.algo.msi.validation.pepmatch.MascotPeptideMatchValidator
 import fr.proline.core.algo.msi.validation.pepmatch.IPeptideMatchValidator
 
+// TODO: remove this object
 object PeptideMatchValidator {
   
   def apply( searchEngine: String , targetRs: ResultSet): IPeptideMatchValidator = { searchEngine.toLowerCase match {

@@ -248,8 +248,8 @@ case class RsmValidationProperties (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class RsmValidationParamsProperties (
-  @BeanProperty var peptideFilters: Option[Map[Int, FilterProperties]] = None,
-  @BeanProperty var proteinFilters: Option[Map[Int, FilterProperties]] = None
+  @BeanProperty var peptideFilters: Option[Map[Int, FilterDescriptor]] = None,
+  @BeanProperty var proteinFilters: Option[Map[Int, FilterDescriptor]] = None
 )
 
 

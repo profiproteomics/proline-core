@@ -5,12 +5,14 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.algo.msi.validation.ValidationResult
 import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filter.TargetDecoyModes
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.algo.msi.validation.ValidationResults
-import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.core.algo.msi.filter.ComputedFDRPeptideMatchFilter
-import fr.proline.core.algo.msi.filter.FilterUtils
+import fr.proline.core.algo.msi.TargetDecoyComputer
+import fr.proline.core.algo.msi.filter.IComputedFDRPeptideMatchFilter
+import fr.proline.core.algo.msi.filter.FiltersPropertyKeys
 
+// TODO: split this code to a class implementing ITargetDecoyAnalyzer (i.e. PeptideMatchFDRComputer)
+//       and another one implementing IFDROptimizer (i.e. PeptideMatchFDROptimizer)
 /**
  * Class that will apply ValidationPSMFilters on ResultSets. If Decoy ResultSet exist, it should have been
  * loaded into Object Model.
@@ -60,7 +62,7 @@ class MascotPeptideMatchValidator(targetRs: ResultSet) extends IPeptideMatchVali
   /*
      *
      */
-  def applyComputedPSMFilter(filter: ComputedFDRPeptideMatchFilter,
+  def applyComputedPSMFilter(filter: IComputedFDRPeptideMatchFilter,
                              targetDecoyMode: Option[TargetDecoyModes.Mode]): ValidationResults = {
 
     require(decoyPeptideMatches.isDefined, "A decoy Result Set is required for Computer Mode filtering")
@@ -68,11 +70,11 @@ class MascotPeptideMatchValidator(targetRs: ResultSet) extends IPeptideMatchVali
     val expectedFdr = filter.expectedFdr
     var psmByQueries: Map[Int, Seq[PeptideMatch]] = tdComputer.buildPeptideMatchJointMap(targetPeptideMatches, decoyPeptideMatches)
 
-    val rocPoints = MascotValidationHelper.rocAnalysis(psmByQueries, filter)
+    val rocPoints = TargetDecoyComputer.rocAnalysis(psmByQueries, filter)
 
     // Retrieve the nearest ROC point of the expected FDR and associated threshold
     val expectedRocPoint = rocPoints.reduce { (a, b) => if (abs(a.fdr.get - expectedFdr) < abs(b.fdr.get - expectedFdr)) a else b }
-    val thrToApply = expectedRocPoint.properties.get(FilterUtils.THRESHOLD_PROP_NAME)
+    val thrToApply = expectedRocPoint.properties.get(FiltersPropertyKeys.THRESHOLD_PROP_NAME)
 
     filter.fdrValidationFilter.setThresholdValue(thrToApply)
     this.applyPSMFilter(filter.fdrValidationFilter, targetDecoyMode)

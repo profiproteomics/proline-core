@@ -7,7 +7,8 @@ import fr.proline.core.om.model.msi.PeptideMatch
 
 class RankPSMFilter( pepMatchRank: Int ) extends IPeptideMatchFilter {
 
-  val filterName = "peptide match rank filter"
+  val filterParameter = PeptideMatchFilterParams.RANK.toString
+  val filterDescription = "peptide match rank filter"
 
   def filterPSM( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
 

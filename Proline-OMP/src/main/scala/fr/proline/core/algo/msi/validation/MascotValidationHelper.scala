@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 import scala.math.{ pow, log10 }
-import fr.proline.core.algo.msi.filter.{ FilterUtils, ComputedFDRPeptideMatchFilter }
+import fr.proline.core.algo.msi.filter.{ FiltersPropertyKeys, IComputedFDRPeptideMatchFilter }
 import fr.proline.core.algo.msi.TargetDecoyComputer
 import fr.proline.core.om.model.msi.{ MsQuery, PeptideMatch }
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
@@ -190,7 +190,8 @@ object MascotValidationHelper {
 
     jointTable
   }
-
+  
+  // TODO: move to an other package
   def rocAnalysisOnPair(pmJointTable: Array[Pair[PeptideMatch, PeptideMatch]],
                         pmScoringParam: String = "log_evalue"): Array[ValidationResult] = { // pmScoringParam = log_evalue || score_offset
 
@@ -240,89 +241,6 @@ object MascotValidationHelper {
       // Update probablity threshold
       probThreshold *= 0.95 // has been arbitrary chosen
     }
-
-    rocPoints.toArray
-  }
-
-  def rocAnalysis(pmJointMap: Map[Int, Seq[PeptideMatch]],
-                  computedFDRFilter: ComputedFDRPeptideMatchFilter): Array[ValidationResult] = {
-
-    var filterThreshold = computedFDRFilter.fdrValidationFilter.getThresholdStartValue
-    var fdr = 100.0f
-    val rocPoints = new ArrayBuffer[ValidationResult]
-
-    while (fdr > 0) { // iterate from FDR = 100.0 to 0.0 
-
-      var (tB, tO, dB, dO) = (0, 0, 0, 0) // Counts to target / decoy only or better 
-
-      pmJointMap.iterator.foreach(entry => {
-
-        //Save previous isValidated status
-        val isValStatus: Seq[Boolean] = entry._2.map(_.isValidated)
-
-        //-- Filter incrementally without traceability 
-        computedFDRFilter.fdrValidationFilter.setThresholdValue(filterThreshold)
-        computedFDRFilter.fdrValidationFilter.filterPSM(entry._2, true, false)
-
-        //Keep only validated PSM
-        val selectedPsm = entry._2.filter(_.isValidated)
-
-        //-- Look which type of PSM (Target or Decoy) are still valid        
-        var foundDecoy = false
-        var foundTarget = false
-        //Specify which type of PSM (Target or Decoy) was first found. Set to -1 for Decoy and to 1 for Target 
-        var firstFound = 0
-
-        // verify witch type of PSM (Target or Decoy) are still valid
-        selectedPsm.foreach(psm => {
-          if (psm.isDecoy) {
-            foundDecoy = true
-            if (firstFound == 0) firstFound = -1
-          } else {
-            foundTarget = true
-            if (firstFound == 0) firstFound = 1
-          }
-        })
-
-        // Upadte Target/Decoy count
-        if (foundDecoy && !foundTarget)
-          tO += 1
-        if (foundTarget && !foundDecoy)
-          dO += 1
-        if (foundTarget && foundDecoy) {
-          //VDS Should found better : take first in list... Should use Filter sort method ?? 
-          if (firstFound == -1)
-            dB += 1
-          else
-            tB += 1
-        }
-
-        //Reinit previous isValidated status
-        var psmIndex = 0
-        val psmList: Seq[PeptideMatch] = entry._2
-        while (psmIndex < psmList.size) {
-          psmList(psmIndex).isValidated = isValStatus(psmIndex)
-        }
-
-      }) // End go through pmJointMap entries
-
-      // Compute FDR (note that FDR may be greater than 100%) for current filterThreshold
-      fdr = TargetDecoyComputer.computeTdFdr(tB, tO, dB, dO)
-
-      // Add ROC point to the list
-      val rocPoint = ValidationResult(nbTargetMatches = tB + tO + dB,
-        nbDecoyMatches = Some(dB + dO + tB),
-        fdr = Some(fdr),
-        properties = Some(HashMap(FilterUtils.THRESHOLD_PROP_NAME -> filterThreshold))
-      )
-      rocPoints += rocPoint
-
-      // Update threshold value 
-      filterThreshold = computedFDRFilter.fdrValidationFilter.getNextValue(filterThreshold)
-      if (filterThreshold == null)
-        fdr = 0 //Break current loop
-
-    } //Go through all possible threshold value until FDR is positive
 
     rocPoints.toArray
   }

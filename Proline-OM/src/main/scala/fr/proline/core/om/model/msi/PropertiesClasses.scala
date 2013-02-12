@@ -8,8 +8,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class FilterProperties(
-    @BeanProperty var name : String ,
-    @BeanProperty var properties : Option[Map[String,Any]] = None
+case class FilterDescriptor (
+  @BeanProperty var parameter: String,
+  @BeanProperty var description: Option[String] = None,
+  @BeanProperty var properties: Option[Map[String,Any]] = None
 )
 

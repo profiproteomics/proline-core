@@ -8,7 +8,8 @@ import fr.proline.core.om.model.msi.{PeptideMatch}
 
 class ScoreEValuePSMFilter(var scoreThreshold: Double= 1,  val startThreshold : Double = 1 ) extends IComputablePeptideMatchFilter {
 
-  val filterName = "peptide match score filter"
+  val filterParameter = PeptideMatchFilterParams.SCORE.toString
+  val filterDescription = "peptide match score filter"
 
   def filterPSM( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
 

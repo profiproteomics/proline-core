@@ -9,4 +9,9 @@ case class ValidationResult( nbTargetMatches: Int,
                             )
                             
 case class ValidationResults( expectedResult: ValidationResult, computedResults: Option[Seq[ValidationResult]] )
-  
+
+object TargetDecoyModes extends Enumeration {
+  type Mode = Value
+  val separated = Value("separated")
+  val concatenated = Value("concatenated")
+}

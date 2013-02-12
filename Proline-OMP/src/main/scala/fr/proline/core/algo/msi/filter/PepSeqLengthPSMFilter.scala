@@ -7,7 +7,8 @@ import scala.collection.mutable.HashMap
 
 class PepSeqLengthPSMFilter( minSeqLength: Int = 0 ) extends IPeptideMatchFilter {
 
-  val filterName = "peptide sequence lenght filter"
+  val filterParameter = PeptideMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH.toString
+  val filterDescription = "peptide sequence length filter"
 
   def filterPSM( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean,
                  traceability: Boolean ): Unit = {
