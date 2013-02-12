@@ -115,7 +115,7 @@ class ResultSummaryMerger(
 
           // Retrieve new pep match ids and re-map peptide match RSM properties with the new ids
           val newPepMatchIds = new ArrayBuffer[Int](pepInstance.getPeptideMatchIds.length)
-          val newPepMatchPropsById = new HashMap[Int, PeptideMatchValidationProperties]
+          val newPepMatchPropsById = new HashMap[Int, PeptideMatchResultSummaryProperties]
 
           for (oldPepMatchId <- oldPepMatchIds) {
             val newPepMatchId = mergedPepMatchByTmpId(oldPepMatchId).id
