@@ -1,5 +1,6 @@
 package fr.proline.core.service.uds
 
+import java.util.HashSet
 import collection.mutable.HashMap
 import collection.JavaConversions.collectionAsScalaIterable
 import com.codahale.jerkson.JsonSnakeCase
@@ -17,7 +18,7 @@ import fr.proline.core.orm.uds.{ BiologicalGroup => UdsBiologicalGroup,
                                  RatioDefinition => UdsRatioDefinition,
                                  SampleAnalysis => UdsSampleAnalysis }
 import fr.proline.repository.IDataStoreConnectorFactory
-import java.util.HashSet
+import fr.proline.core.orm.uds.Dataset.DatasetType
 
 class CreateQuantitation(
         dbManager: IDataStoreConnectorFactory,
@@ -28,7 +29,8 @@ class CreateQuantitation(
         experimentalDesign: ExperimentalDesign
       ) extends IService {
   
-  var udsQuantitation: UdsDataset = null
+  private var _udsQuantitation: UdsDataset = null
+  def getUdsQuantitation() = _udsQuantitation
   
   def runService() = {
     
@@ -38,7 +40,7 @@ class CreateQuantitation(
     // Retrieve some vars
     val biologicalSamples = experimentalDesign.biologicalSamples
     val groupSetups = experimentalDesign.groupSetups
-    val fractions = experimentalDesign.fractions 
+    val masterQuantChannels = experimentalDesign.masterQuantChannels 
     
     val udsProject = udsEM.find(classOf[UdsProject], projectId)    
     require( udsProject != null, "undefined project with id=" + udsProject )
@@ -57,17 +59,20 @@ class CreateQuantitation(
     // Begin new transaction
     udsEM.getTransaction().begin()
     
-    val fractionCount = fractions.length
+    val mqcCount = masterQuantChannels.length
     
     // Create new quantitation
-    this.udsQuantitation = new UdsDataset( udsProject )
+    val udsQuantitation = new UdsDataset( udsProject )
     udsQuantitation.setNumber( previousQuantNum + 1 )
     udsQuantitation.setName( name )
     udsQuantitation.setDescription( description )
+    udsQuantitation.setType( DatasetType.QUANTITATION )
     udsQuantitation.setCreationTimestamp( getTimeAsSQLTimestamp )
-    udsQuantitation.setFractionCount( fractionCount )
+    udsQuantitation.setFractionCount( mqcCount )
     udsQuantitation.setMethod( udsQuantMethod )
     udsEM.persist( udsQuantitation )
+    
+    this._udsQuantitation = udsQuantitation
     
     // Store biological samples
     val udsBioSampleByNum = new HashMap[Int,UdsBiologicalSample]
@@ -93,6 +98,10 @@ class CreateQuantitation(
       udsGroupSetup.setDataset(udsQuantitation)
       udsEM.persist( udsGroupSetup )
       
+      // Create a set of group setups
+      val udsGroupSetups = new HashSet[UdsGroupSetup]()
+      udsGroupSetups.add(udsGroupSetup)
+      
       // Retrieve biological groups
       val biologicalGroups = groupSetup.biologicalGroups
       
@@ -106,7 +115,7 @@ class CreateQuantitation(
         val udsBioGroup = new UdsBiologicalGroup()
         udsBioGroup.setNumber( bioGroupNumber )
         udsBioGroup.setName( biologicalGroup.name )
-        udsBioGroup.getGroupSetups.add( udsGroupSetup )
+        udsBioGroup.setGroupSetups( udsGroupSetups )
         udsEM.persist( udsBioGroup )
         
         // Map the group id by the group number
@@ -115,7 +124,7 @@ class CreateQuantitation(
         // Retrieve the list of biological samples belonging to this biological group
         val sampleNumbers = biologicalGroup.sampleNumbers
         
-        val udsBioSampleSet = new java.util.HashSet[UdsBiologicalSample]
+        val udsBioSampleSet = new HashSet[UdsBiologicalSample]
         for( sampleNumber <- sampleNumbers ) {
           
           if( udsBioSampleByNum.contains(sampleNumber) == false ) {
@@ -153,22 +162,22 @@ class CreateQuantitation(
     var fractionNumber = 0
     
     val udsSampleReplicateByKey = new HashMap[String,UdsSampleAnalysis]
-    for( fraction <- fractions ) {
+    for( masterQuantChannel <- masterQuantChannels ) {
       fractionNumber += 1
       
       // Save quantitation fraction
       val udsQf = new UdsMasterQuantitationChannel()
       udsQf.setNumber( fractionNumber )
-      udsQf.setName( fraction.name.getOrElse("") )
+      udsQf.setName( masterQuantChannel.name.getOrElse("") )
       udsQf.setDataset(udsQuantitation)
       
-      if( fraction.lcmsMapSetId != None ) {
-        udsQf.setLcmsMapSetId( fraction.lcmsMapSetId.get )
+      if( masterQuantChannel.lcmsMapSetId != None ) {
+        udsQf.setLcmsMapSetId( masterQuantChannel.lcmsMapSetId.get )
       }
       
       udsEM.persist( udsQf )
       
-      val quantChannels = fraction.quantChannels
+      val quantChannels = masterQuantChannel.quantChannels
       var quantChannelNum = 0
       
       // Iterate over each fraction quant channel
@@ -243,13 +252,13 @@ class CreateQuantitation(
 /** 
 * @param biologicalSamples
 * @param groupSetups
-* @param fractions
+* @param masterQuantChannels
 **/
 @JsonSnakeCase
 case class ExperimentalDesign (
   val biologicalSamples: Array[BiologicalSample],
   val groupSetups: Array[GroupSetup],
-  val fractions: Array[QuantFraction]
+  val masterQuantChannels: Array[MasterQuantChannel]
 )
 
 /** 
@@ -312,7 +321,7 @@ case class QuantChannel (
 * @param quantChannels
 **/
 @JsonSnakeCase
-case class QuantFraction (
+case class MasterQuantChannel (
   val name: Option[String] = None,
   val lcmsMapSetId: Option[Int] = None,
   val quantChannels: Array[QuantChannel]

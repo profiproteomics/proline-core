@@ -159,7 +159,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     ms2ScanNumbersByFtId.toMap
   }
 
-  def quantifyFraction(): Unit = {
+  def quantifyMasterChannel(): Unit = {
 
     // Instantiate a RSM provider
     val rsmProvider = new SQLResultSummaryProvider(msiSqlCtx, psSqlCtx)
@@ -340,7 +340,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     val msiQuantRSM = this.storeMsiQuantResultSummary(msiQuantResultSet)
     val quantRsmId = msiQuantRSM.getId
 
-    // Update quant result summary id of the quantitation fraction
+    // Update quant result summary id of the master quant channel
     udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
     udsEm.persist(udsMasterQuantChannel)
 
@@ -377,6 +377,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
         }*/
 
         new MasterQuantPeptide(
+          id = MasterQuantPeptide.generateNewId,
           peptideInstance = masterPepInstAsOpt,
           quantPeptideMap = null,
           masterQuantPeptideIons = Array(mqPepIon),
@@ -432,9 +433,11 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
             }
           }
 
-          this._storeMasterQuantPeptide(
+          this.storeMasterQuantPeptide(
             newMasterQuantPeptide(quantPeptideIonMap.toMap, Some(masterPepInst), Some(masterFt.id)),
-            msiQuantRSM)
+            msiQuantRSM,
+            None
+          )
 
         }
       } else {
@@ -459,9 +462,11 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
           }
         }
 
-        this._storeMasterQuantPeptide(
+        this.storeMasterQuantPeptide(
           newMasterQuantPeptide(quantPeptideIonMap.toMap, None, Some(masterFt.id)),
-          msiQuantRSM)
+          msiQuantRSM,
+          None
+          )
 
       }
     }
@@ -475,58 +480,39 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     ()
 
   }
+  
+  protected lazy val labelFreeQuantPeptidesSchema = {
+    this.loadObjectTreeSchema("object_tree.label_free_quant_peptides")
+  }
+  
+  protected def buildMasterQuantPeptideObjectTree( mqPep: MasterQuantPeptide ): MsiObjectTree = {
+    
+    val quantPeptideMap = mqPep.quantPeptideMap
+    val quantPeptides = this.quantChannelIds.map { quantPeptideMap.getOrElse(_,null) }
+    
+    // Store the object tree
+    val msiMQPepObjectTree = new MsiObjectTree()
+    msiMQPepObjectTree.setSchema( labelFreeQuantPeptidesSchema )
+    msiMQPepObjectTree.setSerializedData( generate[Array[QuantPeptide]](quantPeptides) )   
+    
+    msiMQPepObjectTree
+  }
 
-  protected def _storeMasterQuantPeptide(mqPep: MasterQuantPeptide, msiRSM: MsiResultSummary) = {
-
-    val schemaName = "label_free_peptide_ions"
-    // TODO: load the schema
-    val schemaFake = new fr.proline.core.orm.msi.ObjectTreeSchema()
-    schemaFake.setName(schemaName)
-    schemaFake.setType("JSON")
-    schemaFake.setVersion("0.1")
-    schemaFake.setSchema("")
-
-    for (mqPepIon <- mqPep.masterQuantPeptideIons) {
-
-      val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
-      val quantPepIons = quantChannelIds.map { quantPeptideIonMap.getOrElse(_, null) }
-
-      // Store the object tree
-      val msiMQCObjectTree = new MsiObjectTree()
-      msiMQCObjectTree.setSchema(schemaFake)
-      msiMQCObjectTree.setSerializedData(generate[Array[QuantPeptideIon]](quantPepIons))
-      this.msiEm.persist(msiMQCObjectTree)
-
-      // Store master quant component
-      val msiMQC = new MsiMasterQuantComponent()
-      msiMQC.setSelectionLevel(mqPepIon.selectionLevel)
-      if (mqPepIon.properties != None) msiMQC.setSerializedProperties(generate(mqPepIon.properties))
-      msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
-      msiMQC.setSchemaName(schemaName)
-      msiMQC.setResultSummary(msiRSM)
-
-      this.msiEm.persist(msiMQC)
-
-      // Store master quant peptide ion
-      val msiMQPepIon = new MsiMasterQuantPepIon()
-      msiMQPepIon.setCharge(mqPepIon.charge)
-      msiMQPepIon.setMoz(mqPepIon.unlabeledMoz)
-      msiMQPepIon.setElutionTime(mqPepIon.elutionTime)
-      if (mqPepIon.properties != None) msiMQPepIon.setSerializedProperties(generate(mqPepIon.properties))
-
-      msiMQPepIon.setMasterQuantComponent(msiMQC)
-      msiMQPepIon.setResultSummary(msiRSM)
-
-      if (mqPep.peptideInstance != None) {
-        msiMQPepIon.setPeptideInstanceId(mqPep.id)
-        msiMQPepIon.setPeptideId(mqPep.getPeptideId.get)
-      }
-      if (mqPepIon.lcmsFeatureId != None) msiMQPepIon.setLcmsFeatureId(mqPepIon.lcmsFeatureId.get)
-      if (mqPepIon.bestPeptideMatchId != None) msiMQPepIon.setBestPeptideMatchId(mqPepIon.bestPeptideMatchId.get)
-      if (mqPepIon.unmodifiedPeptideIonId != None) msiMQPepIon.setUnmodifiedPeptideIonId(mqPepIon.unmodifiedPeptideIonId.get)
-
-      this.msiEm.persist(msiMQPepIon)
-    }
+  protected lazy val labelFreeQuantPeptideIonsSchema = {
+    this.loadObjectTreeSchema("object_tree.label_free_quant_peptide_ions")
+  }
+  
+  protected def buildMasterQuantPeptideIonObjectTree( mqPepIon: MasterQuantPeptideIon ): MsiObjectTree = {
+    
+    val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
+    val quantPepIons = quantChannelIds.map { quantPeptideIonMap.getOrElse(_, null) }
+    
+    // Store the object tree
+    val msiMQCObjectTree = new MsiObjectTree()
+    msiMQCObjectTree.setSchema(labelFreeQuantPeptideIonsSchema)
+    msiMQCObjectTree.setSerializedData(generate[Array[QuantPeptideIon]](quantPepIons))
+    
+    msiMQCObjectTree
   }
 
 }

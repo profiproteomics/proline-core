@@ -38,7 +38,6 @@ object QuantMethodType extends Enumeration {
   val ISOBARIC_LABELING = Value("isobaric_labeling")
   val LABEL_FREE = Value("label_free")
   val RESIDUE_LABELING = Value("residue_labeling")
-  val SPECTRAL_COUNTING = Value("spectral_counting")
 }
 
 object MasterQuantChannelQuantifier {
@@ -57,7 +56,7 @@ object MasterQuantChannelQuantifier {
     var masterQuantChannelQuantifier: IQuantifier = null
     
     // TODO: create some enumerations
-    if( abundanceUnit == AbundanceUnit.REPORTER_ION ) {      
+    if( abundanceUnit == AbundanceUnit.REPORTER_ION.toString() ) {      
     
     /*require Pairs::Msq::Module::Quantifier::ReporterIons
     fractionQuantifier = new Pairs::Msq::Module::Quantifier::ReporterIons(
@@ -65,20 +64,20 @@ object MasterQuantChannelQuantifier {
                                   )*/
     
     } 
-    else if( quantMethodType == QuantMethodType.LABEL_FREE ) {
+    else if( quantMethodType == QuantMethodType.LABEL_FREE.toString() ) {
       if( abundanceUnit == AbundanceUnit.FEATURE ) {
         masterQuantChannelQuantifier = new Ms1DrivenLabelFreeFeatureQuantifier(
-                                   dbManager = dbManager,
-                                   udsEm = udsEm,
-                                   udsMasterQuantChannel = udsMasterQuantChannel
-                                 )
+          dbManager = dbManager,
+          udsEm = udsEm,
+          udsMasterQuantChannel = udsMasterQuantChannel
+        )
       }
-      else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS ) {
+      else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString() ) {
         masterQuantChannelQuantifier = new SpectralCountQuantifier(
-                                   dbManager = dbManager,
-                                   udsEm = udsEm,
-                                   udsMasterQuantChannel = udsMasterQuantChannel
-                                 )
+          dbManager = dbManager,
+          udsEm = udsEm,
+          udsMasterQuantChannel = udsMasterQuantChannel
+        )
       }
     }
     

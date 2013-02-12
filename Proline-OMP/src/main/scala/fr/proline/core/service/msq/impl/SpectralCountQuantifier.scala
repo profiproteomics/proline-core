@@ -5,7 +5,6 @@ import com.codahale.jerkson.Json.generate
 import javax.persistence.EntityManager
 import collection.JavaConversions.{collectionAsScalaIterable}
 import collection.mutable.{ArrayBuffer,HashMap}
-
 import fr.proline.core.algo.msi.ResultSummaryMerger
 import fr.proline.core.algo.msq.Ms2CountQuantifier
 import fr.proline.core.om.model.msi.{PeptideInstance,PeptideMatch,ResultSummary}
@@ -22,6 +21,8 @@ import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.core.service.msq.IQuantifier
 import fr.proline.repository.IDatabaseConnector
+import fr.proline.core.om.model.msq.MasterQuantPeptideIon
+import fr.proline.core.om.model.msq.QuantPeptideIon
 
 /**
  * @author David Bouyssie
@@ -33,7 +34,7 @@ class SpectralCountQuantifier(
         val udsMasterQuantChannel: MasterQuantitationChannel
         ) extends IQuantifier with Logging {
   
-  def quantifyFraction(): Unit = {
+  def quantifyMasterChannel(): Unit = {
     
     // Begin new ORM transaction
     msiEm.getTransaction().begin()
@@ -47,7 +48,7 @@ class SpectralCountQuantifier(
     val msiQuantRSM = this.storeMsiQuantResultSummary( msiQuantResultSet )
     val quantRsmId = msiQuantRSM.getId
     
-    // Update quant result summary id of the quantitation fraction
+    // Update quant result summary id of the master quant channel
     udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
     udsEm.persist(udsMasterQuantChannel)
     
@@ -70,7 +71,7 @@ class SpectralCountQuantifier(
       //val masterPepInst = this.masterPepInstByPepId( peptideId )
       //val msiMasterPepInst = this.msiMasterPepInstById(masterPepInst.id)
       val msiMasterPepInst = this.msiMasterPepInstById(mqPeptide.peptideInstance.get.id)      
-      this._storeMasterQuantPeptide( mqPeptide, msiMasterPepInst, msiQuantRSM )
+      this.storeMasterQuantPeptide( mqPeptide, msiQuantRSM, Some(msiMasterPepInst) )
     }
     
     this.logger.info( "storing master proteins set quant data..." )
@@ -86,7 +87,7 @@ class SpectralCountQuantifier(
     // Iterate over master quant protein sets to store corresponding spectral counts
     for( mqProtSet <- mqProtSets ) {
       val msiMasterProtSet = this.msiMasterProtSetById(mqProtSet.proteinSet.id)
-      this._storeMasterQuantProteinSet( mqProtSet, msiMasterProtSet, msiQuantRSM )
+      this.storeMasterQuantProteinSet( mqProtSet, msiMasterProtSet, msiQuantRSM )
     }
     
     // Commit ORM transaction
@@ -95,76 +96,40 @@ class SpectralCountQuantifier(
     
   }
   
-  protected def _storeMasterQuantPeptide( mqPep: MasterQuantPeptide,
-                                          msiMasterPepInst: MsiPeptideInstance,
-                                          msiRSM: MsiResultSummary ) = {
-    
-    val schemaName = "object_tree.spectral_counting_peptides"
-    // TODO: load the schema
-    val schemaFake = new fr.proline.core.orm.msi.ObjectTreeSchema()
-    schemaFake.setName( schemaName )
-    schemaFake.setType( "JSON" )
-    schemaFake.setVersion( "0.1" )
-    schemaFake.setSchema( "" )
+  // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
+  protected lazy val spectralCountingPeptidesSchema = {
+    this.loadObjectTreeSchema("object_tree.spectral_counting_peptides")
+  }
+  
+  protected def buildMasterQuantPeptideObjectTree( mqPep: MasterQuantPeptide ): MsiObjectTree = {
     
     val quantPeptideMap = mqPep.quantPeptideMap
     val quantPeptides = this.quantChannelIds.map { quantPeptideMap.getOrElse(_,null) }
     
     // Store the object tree
-    val msiMQCObjectTree = new MsiObjectTree()
-    msiMQCObjectTree.setSchema( schemaFake )
-    msiMQCObjectTree.setSerializedData( generate[Array[QuantPeptide]](quantPeptides) )      
-    this.msiEm.persist(msiMQCObjectTree)
-  
-    // Store master quant component
-    val msiMQC = new MsiMasterQuantComponent()
-    msiMQC.setSelectionLevel(mqPep.selectionLevel)
-    if( mqPep.properties != None ) msiMQC.setSerializedProperties( generate(mqPep.properties) )
-    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
-    msiMQC.setSchemaName(schemaName)
-    msiMQC.setResultSummary(msiRSM)
+    val msiMQPepObjectTree = new MsiObjectTree()
+    msiMQPepObjectTree.setSchema( spectralCountingPeptidesSchema )
+    msiMQPepObjectTree.setSerializedData( generate[Array[QuantPeptide]](quantPeptides) )   
     
-    this.msiEm.persist(msiMQC)
-    
-    // Link master quant peptide to the corresponding master quant component
-    msiMasterPepInst.setMasterQuantComponentId( msiMQC.getId )
-    this.msiEm.persist(msiMasterPepInst)
-    
+    msiMQPepObjectTree
   }
   
-  protected def _storeMasterQuantProteinSet( mqProtSet: MasterQuantProteinSet,
-                                             msiMasterProtSet: MsiProteinSet,
-                                             msiRSM: MsiResultSummary ) = {
+  // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
+  protected lazy val spectralCountingQuantPepIonsSchema = {
+    this.loadObjectTreeSchema("object_tree.spectral_counting_quant_peptide_ions")
+  }
+  
+  protected def buildMasterQuantPeptideIonObjectTree( mqPepIon: MasterQuantPeptideIon ): MsiObjectTree = {
     
-    val schemaName = "object_tree.quant_protein_sets"
-    // TODO: load the schema
-    val schemaFake = new fr.proline.core.orm.msi.ObjectTreeSchema()
-    schemaFake.setName( schemaName )
-    schemaFake.setType( "JSON" )
-    schemaFake.setVersion( "0.1" )
-    schemaFake.setSchema( "" )
-    
-    val quantProtSetMap = mqProtSet.quantProteinSetMap
-    val quantProtSets = this.quantChannelIds.map { quantProtSetMap.getOrElse(_,null) }
+    val quantPeptideIonMap = mqPepIon.quantPeptideIonMap
+    val quantPeptideIons = this.quantChannelIds.map { quantPeptideIonMap.getOrElse(_,null) }
     
     // Store the object tree
-    val msiMQCObjectTree = new MsiObjectTree()
-    msiMQCObjectTree.setSchema( schemaFake )
-    msiMQCObjectTree.setSerializedData( generate[Array[QuantProteinSet]](quantProtSets) )      
-    this.msiEm.persist(msiMQCObjectTree)
+    val msiMQPepIonObjectTree = new MsiObjectTree()
+    msiMQPepIonObjectTree.setSchema( spectralCountingQuantPepIonsSchema )
+    msiMQPepIonObjectTree.setSerializedData( generate[Array[QuantPeptideIon]](quantPeptideIons) )          
     
-    // Store master quant component
-    val msiMQC = new MsiMasterQuantComponent()
-    msiMQC.setSelectionLevel(mqProtSet.selectionLevel)
-    if( mqProtSet.properties != None ) msiMQC.setSerializedProperties( generate(mqProtSet.properties) )
-    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
-    msiMQC.setSchemaName(schemaName)
-    msiMQC.setResultSummary(msiRSM)    
-    this.msiEm.persist(msiMQC)
-    
-    // Link master quant protein set to the corresponding master quant component
-    msiMasterProtSet.setMasterQuantComponentId( msiMQC.getId )
-    
+    msiMQPepIonObjectTree
   }
   
 }

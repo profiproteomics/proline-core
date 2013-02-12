@@ -36,8 +36,15 @@ import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildDbConnectionContext
+import fr.proline.core.om.model.msq.MasterQuantPeptide
+import fr.proline.core.om.model.msq.MasterQuantProteinSet
+import fr.proline.core.om.model.msq.QuantProteinSet
+import fr.proline.core.om.model.msq.QuantPeptide
+import fr.proline.core.om.model.msq.QuantPeptideIon
+import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 
+// TODO: rename into MXQuantifier
 trait IQuantifier extends Logging {
 
   // Required fields
@@ -47,15 +54,17 @@ trait IQuantifier extends Logging {
   // Instantiated fields
   val projectId = udsMasterQuantChannel.getDataset.getProject.getId
   val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  val msiDbCtx = new DatabaseConnectionContext(msiDbConnector)
+  //val msiDbCtx = new DatabaseConnectionContext(msiDbConnector)
   val msiEm = msiDbConnector.getEntityManagerFactory().createEntityManager()
 
-  protected val msiSqlCtx = ContextFactory.buildDbConnectionContext(msiDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
+  protected val msiSqlCtx = BuildDbConnectionContext[SQLConnectionContext]( msiDbConnector) // SQL Context
+  //ContextFactory.buildDbConnectionContext(msiDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
 
   val psDbConnector = dbManager.getPsDbConnector
-  val psDbCtx = new DatabaseConnectionContext(psDbConnector)
+  //val psDbCtx = new DatabaseConnectionContext(psDbConnector)
 
-  protected val psSqlCtx = ContextFactory.buildDbConnectionContext(psDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
+  protected val psSqlCtx = BuildDbConnectionContext[SQLConnectionContext]( psDbConnector)  // SQL Context
+  //ContextFactory.buildDbConnectionContext(psDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
 
   val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
   val quantChannelIds = udsQuantChannels.map { _.getId } toArray
@@ -69,7 +78,9 @@ trait IQuantifier extends Logging {
     identRsmId.toInt
 
   } toSeq
-
+  
+  assert( rsmIds.length > 0, "result sets have to be validated first")
+  
   val identRsIdByRsmId = {
     msiSqlCtx.ezDBC.select("SELECT id, result_set_id FROM result_summary WHERE id IN(" + rsmIds.mkString(",") + ")") { r =>
       (r.nextInt -> r.nextInt)
@@ -121,7 +132,7 @@ trait IQuantifier extends Logging {
 
   /**
    * Main method of the quantifier.
-   * This method wraps the quantifyFraction method which has to be implemented
+   * This method wraps the quantifyMasterChannel method which has to be implemented
    * in each specific quantifier.
    */
   def quantify() = {
@@ -132,7 +143,7 @@ trait IQuantifier extends Logging {
     }
 
     // Run the quantification process
-    this.quantifyFraction()
+    this.quantifyMasterChannel()
 
     // Close entity managers
     this.msiEm.close()
@@ -141,7 +152,22 @@ trait IQuantifier extends Logging {
     this.logger.info("fraction has been quantified !")
   }
 
-  protected def quantifyFraction(): Unit
+  // Define the interface required to implement the trait
+  protected def quantifyMasterChannel(): Unit
+  protected def buildMasterQuantPeptideObjectTree( mqPep: MasterQuantPeptide ): MsiObjectTree
+  protected def buildMasterQuantPeptideIonObjectTree( mqPepIon: MasterQuantPeptideIon ): MsiObjectTree
+  //protected def buildMasterQuantProteinSetObjectTree( mqProtSet: MasterQuantProteinSet ): MsiObjectTree
+  
+  // TODO: load the schema
+  protected def loadObjectTreeSchema( schemaName: String ): fr.proline.core.orm.msi.ObjectTreeSchema = {
+    val schemaFake = new fr.proline.core.orm.msi.ObjectTreeSchema()
+    schemaFake.setName( schemaName )
+    schemaFake.setType( "JSON" )
+    schemaFake.setVersion( "0.1" )
+    schemaFake.setSchema( "" )
+    
+    schemaFake
+  }
 
   protected def storeMsiQuantResultSet(msiIdentResultSets: List[MsiResultSet]): MsiResultSet = {
 
@@ -207,13 +233,13 @@ trait IQuantifier extends Logging {
 
       val peptideId = masterPepInstance.peptide.id
       val masterPepInstPepMatchIds = masterPepInstance.getPeptideMatchIds
-      assert(masterPepInstPepMatchIds.length == 1,
-        "peptide matches have not been correctly merged")
+      assert(masterPepInstPepMatchIds.length == 1,"peptide matches have not been correctly merged")
 
       val msiMasterPepInstance = new MsiPeptideInstance()
       msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
       msiMasterPepInstance.setProteinMatchCount(masterPepInstance.proteinMatchesCount)
       msiMasterPepInstance.setProteinSetCount(masterPepInstance.proteinSetsCount)
+      msiMasterPepInstance.setTotalLeavesMatchCount(0)
       msiMasterPepInstance.setSelectionLevel(2)
       msiMasterPepInstance.setPeptideId(peptideId)
       msiMasterPepInstance.setBestPeptideMatchId(masterPepInstance.bestPeptideMatchId)
@@ -230,7 +256,7 @@ trait IQuantifier extends Logging {
       // TODO: remove this mapping when ORM is updated
       msiMasterPepInstById(masterPepInstanceId) = msiMasterPepInstance
 
-      // Retrieve the best peptide match
+      // TODO: Retrieve the best peptide match
       //val identParentPepMatches = masterPepInstPepMatchIds.map { masterPepMatchById(_) }
       //val bestParentPepMatch = identParentPepMatches.reduce { (a,b) => if( a.score > b.score ) a else b } 
       val bestParentPepMatch = masterPepMatchById(masterPepInstPepMatchIds(0))
@@ -269,6 +295,7 @@ trait IQuantifier extends Logging {
 
       // Update the best parent peptide match id
       bestParentPepMatch.id = quantPepMatchId
+      masterPepInstance.peptideMatchIds = Array(quantPepMatchId)
 
       // Map this quant peptide match to the quant peptide instance
       val msiPepInstMatchPK = new MsiPepInstPepMatchMapPK()
@@ -447,7 +474,10 @@ trait IQuantifier extends Logging {
             val bestPepMatchId = seqMatch.getBestPeptideMatchId
             if (masterQuantPepMatchIdByTmpPepMatchId.contains(bestPepMatchId)) {
               val masterPepMatchId = masterQuantPepMatchIdByTmpPepMatchId(bestPepMatchId)
-
+              
+              // Update seqMatch best peptide match id
+              seqMatch.bestPeptideMatchId = masterPepMatchId
+              
               if (mappedMasterPepMatchesIdSet.contains(masterPepMatchId) == false) {
                 mappedMasterPepMatchesIdSet(masterPepMatchId) = true
 
@@ -462,7 +492,7 @@ trait IQuantifier extends Logging {
                 msiMasterSeqMatch.setResidueBefore(seqMatch.residueBefore.toString) // TODO: change ORM mapping to Char
                 msiMasterSeqMatch.setResidueBefore(seqMatch.residueAfter.toString) // TODO: change ORM mapping to Char
                 msiMasterSeqMatch.setIsDecoy(false)
-                msiMasterSeqMatch.setBestPeptideMatchId(seqMatch.getBestPeptideMatchId)
+                msiMasterSeqMatch.setBestPeptideMatchId(masterPepMatchId)
                 msiMasterSeqMatch.setResultSetId(quantRsId)
                 msiEm.persist(msiMasterSeqMatch)
 
@@ -474,5 +504,115 @@ trait IQuantifier extends Logging {
     }
 
   }
+  
+  protected def storeMasterQuantPeptide(
+    mqPep: MasterQuantPeptide,
+    msiRSM: MsiResultSummary,
+    msiMasterPepInstAsOpt: Option[MsiPeptideInstance]) = {
+    
+    val msiMQCObjectTree = this.buildMasterQuantPeptideObjectTree(mqPep)    
+    this.msiEm.persist(msiMQCObjectTree)
+    
+    if( msiMasterPepInstAsOpt != None ) {
+      
+      // Store master quant component
+      val msiMQC = new MsiMasterQuantComponent()
+      msiMQC.setSelectionLevel(mqPep.selectionLevel)
+      if( mqPep.properties != None ) msiMQC.setSerializedProperties( generate(mqPep.properties) )
+      msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
+      msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
+      msiMQC.setResultSummary(msiRSM)
+      
+      this.msiEm.persist(msiMQC)
+      
+      // Link master quant peptide to the corresponding master quant component
+      msiMasterPepInstAsOpt.get.setMasterQuantComponentId( msiMQC.getId )
+      this.msiEm.persist(msiMasterPepInstAsOpt.get)
+    }
+    
+    for( mqPepIon <- mqPep.masterQuantPeptideIons ) {
+      this.storeMasterQuantPeptideIon(mqPepIon,mqPep,msiRSM)
+    }
+    
+  }
+  
+  protected def storeMasterQuantPeptideIon(
+    mqPepIon: MasterQuantPeptideIon,
+    mqPep: MasterQuantPeptide,
+    msiRSM: MsiResultSummary ) = {
+    
+    val msiMQCObjectTree = this.buildMasterQuantPeptideIonObjectTree(mqPepIon)    
+    this.msiEm.persist(msiMQCObjectTree)
+    
+    // Store master quant component
+    val msiMQC = new MsiMasterQuantComponent()
+    msiMQC.setSelectionLevel(mqPepIon.selectionLevel)
+    // TODO: decide what to store in the master quant component properties
+    //if( mqPepIon.properties != None ) msiMQC.setSerializedProperties( generate(mqPepIon.properties) )
+    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
+    msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
+    msiMQC.setResultSummary(msiRSM)
+    
+    this.msiEm.persist(msiMQC)
 
+    // Store master quant peptide ion
+    val msiMQPepIon = new MsiMasterQuantPepIon()
+    msiMQPepIon.setCharge(mqPepIon.charge)
+    msiMQPepIon.setMoz(mqPepIon.unlabeledMoz)
+    msiMQPepIon.setElutionTime(mqPepIon.elutionTime)
+    msiMQPepIon.setMasterQuantComponent(msiMQC)
+    msiMQPepIon.setResultSummary(msiRSM)
+    
+    if( mqPepIon.properties != None ) msiMQPepIon.setSerializedProperties( generate(mqPepIon.properties) )
+    if (mqPep.peptideInstance != None) {
+      msiMQPepIon.setPeptideInstanceId(mqPep.id)
+      msiMQPepIon.setPeptideId(mqPep.getPeptideId.get)
+    }
+    if (mqPepIon.lcmsFeatureId != None) msiMQPepIon.setLcmsFeatureId(mqPepIon.lcmsFeatureId.get)
+    if (mqPepIon.bestPeptideMatchId != None) msiMQPepIon.setBestPeptideMatchId(mqPepIon.bestPeptideMatchId.get)
+    if (mqPepIon.unmodifiedPeptideIonId != None) msiMQPepIon.setUnmodifiedPeptideIonId(mqPepIon.unmodifiedPeptideIonId.get)   
+
+    this.msiEm.persist(msiMQPepIon)
+  }
+  
+  protected def storeMasterQuantProteinSet(
+    mqProtSet: MasterQuantProteinSet,
+    msiMasterProtSet: MsiProteinSet,
+    msiRSM: MsiResultSummary ) = {
+    
+    val msiMQCObjectTree = this.buildMasterQuantProteinSetObjectTree(mqProtSet)    
+    this.msiEm.persist(msiMQCObjectTree)
+    
+    // Store master quant component
+    val msiMQC = new MsiMasterQuantComponent()
+    msiMQC.setSelectionLevel(mqProtSet.selectionLevel)
+    if( mqProtSet.properties != None ) msiMQC.setSerializedProperties( generate(mqProtSet.properties) )
+    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
+    msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
+    msiMQC.setResultSummary(msiRSM)
+    this.msiEm.persist(msiMQC)
+    
+    // Link master quant protein set to the corresponding master quant component
+    msiMasterProtSet.setMasterQuantComponentId( msiMQC.getId )
+    
+  }
+  
+  // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
+  protected lazy val quantProteinSetsSchema = {
+    this.loadObjectTreeSchema("object_tree.quant_protein_sets")
+  }
+  
+  protected def buildMasterQuantProteinSetObjectTree( mqProtSet: MasterQuantProteinSet ): MsiObjectTree = {
+    
+    val quantProtSetMap = mqProtSet.quantProteinSetMap
+    val quantProtSets = this.quantChannelIds.map { quantProtSetMap.getOrElse(_,null) }
+    
+    // Store the object tree
+    val msiMQProtSetObjectTree = new MsiObjectTree()
+    msiMQProtSetObjectTree.setSchema( quantProteinSetsSchema )
+    msiMQProtSetObjectTree.setSerializedData( generate[Array[QuantProteinSet]](quantProtSets) )
+    
+    msiMQProtSetObjectTree    
+  }
+  
 }

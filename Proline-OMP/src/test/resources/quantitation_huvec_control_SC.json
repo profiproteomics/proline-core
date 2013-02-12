@@ -39,7 +39,7 @@
         }
       ]
     }],
-    "fractions" : [
+    "master_quant_channels" : [
       {
         "name": "stackings SC",
         "quant_channels" : [

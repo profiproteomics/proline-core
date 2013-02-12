@@ -108,7 +108,7 @@ case class MasterQuantPeptideIon(  var id: Int,
                                    val unlabeledMoz: Double,
                                    val charge: Int,
                                    val elutionTime: Float,
-                                   val peptideMatchesCount: Int,
+                                   val peptideMatchesCount: Int, // TODO: add to MSIdb model
                                    val calculatedMoz: Option[Double] = None,
                                                   
                                    var selectionLevel: Int,
@@ -160,18 +160,19 @@ case class QuantPeptide( val rawAbundance: Float,
 object MasterQuantPeptide extends InMemoryIdGen
 
 @JsonSnakeCase
-case class MasterQuantPeptide( val peptideInstance: Option[PeptideInstance], // without label in the context of isotopic labeling
+case class MasterQuantPeptide( var id: Int, // important: master quant component id
+                               val peptideInstance: Option[PeptideInstance], // without label in the context of isotopic labeling
                                var quantPeptideMap: Map[Int,QuantPeptide], // QuantPeptide by quant channel id
-                               var masterQuantPeptideIons: Array[MasterQuantPeptideIon] = null,
+                               var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
                                
                                var selectionLevel: Int,
                                var properties: Option[MasterQuantPeptideProperties] = None
                                
                              ) extends MasterQuantComponent {
   
-  private lazy val _id = MasterQuantPeptide.generateNewId
+  //private lazy val _id = MasterQuantPeptide.generateNewId
   
-  def id(): Int = if( this.peptideInstance != None ) this.peptideInstance.get.id else this._id
+  //def id(): Int = if( this.peptideInstance != None ) this.peptideInstance.get.id else this._id // TODO: replace by true MQC id
   def getPeptideId: Option[Int] = if( this.peptideInstance != None ) Some(this.peptideInstance.get.peptide.id) else None
   
   def getMasterQuantProteinSetIds(): Option[Array[Int]] = {

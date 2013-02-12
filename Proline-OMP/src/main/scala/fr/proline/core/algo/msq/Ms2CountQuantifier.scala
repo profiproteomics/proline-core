@@ -86,6 +86,8 @@ object Ms2CountQuantifier extends Logging {
         val quantPepIonByQcId = new HashMap[Int,QuantPeptideIon]
         var bestPepMatchScore = 0f
         var bestPepMatch: PeptideMatch = null
+        var bestQCAbundance = 0.0
+        var bestQCId = 0
         
         for( (rsId,rsPepMatches) <- childPepMatchesByRsId ) {
           
@@ -128,12 +130,16 @@ object Ms2CountQuantifier extends Logging {
                                       msQueryIds = Some(msQueryIds.toArray),
                                       lcmsFeatureId = 0
                                       )
+          if( pepMatchesCount > bestQCAbundance ) {
+            bestQCAbundance = pepMatchesCount
+            bestQCId = qcId
+          }
           
           quantPepIonByQcId( qcId ) = quantPeptideIon
           quantPepIonsByQcId.getOrElseUpdate( qcId, new ArrayBuffer[QuantPeptideIon] ) += quantPeptideIon
         }
         
-        mqPepIons += new MasterQuantPeptideIon(
+        val mqPepIon = new MasterQuantPeptideIon(
           id = MasterQuantPeptideIon.generateNewId(),
           unlabeledMoz = bestPepMatch.msQuery.moz,
           charge = bestPepMatch.msQuery.charge,
@@ -144,6 +150,14 @@ object Ms2CountQuantifier extends Logging {
           selectionLevel = 2,
           quantPeptideIonMap = quantPepIonByQcId.toMap
         )
+        
+        if( bestQCId != 0 ) {
+          val mqPepIonProps = new MasterQuantPeptideIonProperties()
+          mqPepIonProps.setBestQuantChannelId( Some(bestQCId) )
+          mqPepIon.properties = Some( mqPepIonProps )
+        }
+        
+        mqPepIons += mqPepIon
       
       }
       
@@ -175,10 +189,11 @@ object Ms2CountQuantifier extends Logging {
       }
       
       mqPeptides += new MasterQuantPeptide(
+                          id = MasterQuantPeptide.generateNewId,
                           peptideInstance = Some(mergedPepInst),
                           quantPeptideMap = quantPepByQcId.toMap,
                           // TODO: decide if attach or not
-                          //masterQuantPeptideIons = mqPepIons.toArray,
+                          masterQuantPeptideIons = mqPepIons.toArray,
                           selectionLevel = 2
                          )
     }
@@ -192,7 +207,7 @@ object Ms2CountQuantifier extends Logging {
                                      resultSummaries: Seq[ResultSummary]
                                     ): Array[MasterQuantProteinSet] = {
     
-    val mqPepById = masterQuantPeptides.map { mqp => mqp.id -> mqp } toMap
+    val mqPepByPepInstId = masterQuantPeptides.map { mqp => mqp.peptideInstance.get.id -> mqp } toMap
     val mqProtSets = new ArrayBuffer[MasterQuantProteinSet]
     
     for( mergedProtSet <- mergedResultSummary.proteinSets ) {
@@ -202,7 +217,7 @@ object Ms2CountQuantifier extends Logging {
 
       val ms2CountSumByQcId = new HashMap[Int,Int]
       for( mergedPepInst <- mergedPepSet.getPeptideInstances ) {
-        val mqp = mqPepById( mergedPepInst.id )
+        val mqp = mqPepByPepInstId( mergedPepInst.id )
         if( mqp.selectionLevel >= 2 ) selectedMQPepIds += mqp.id
         
         for( (qcId,quantPep) <- mqp.quantPeptideMap ) {
