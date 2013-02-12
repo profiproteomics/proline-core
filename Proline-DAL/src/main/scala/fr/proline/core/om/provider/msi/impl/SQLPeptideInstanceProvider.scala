@@ -10,7 +10,7 @@ import fr.proline.core.dal.tables.msi.{ MsiDbPeptideInstanceTable, MsiDbPeptideI
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideInstanceProperties
 import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PeptideMatchValidationProperties
+import fr.proline.core.om.model.msi.PeptideMatchResultSummaryProperties
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.context.DatabaseConnectionContext
@@ -115,7 +115,7 @@ class SQLPeptideInstanceProvider(
       // Retrieve peptide match ids and properties
       val pepInstId: Int = pepInstRecord(PepInstCols.ID).asInstanceOf[AnyVal]
       val pepMatchIds = new ArrayBuffer[Int]()
-      val pepMatchPropertyMapBuilder = Map.newBuilder[Int, PeptideMatchValidationProperties]
+      val pepMatchPropertyMapBuilder = Map.newBuilder[Int, PeptideMatchResultSummaryProperties]
 
       pepMatchesMappingsByPepInstId(pepInstId).foreach { pepMatchMapping =>
         val pepMatchId = pepMatchMapping(PepMatchMappingCols.PEPTIDE_MATCH_ID).asInstanceOf[Int]
@@ -123,7 +123,7 @@ class SQLPeptideInstanceProvider(
 
         val propertiesAsJSON = pepMatchMapping(PepMatchMappingCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
         if (propertiesAsJSON != null) {
-          pepMatchPropertyMapBuilder += pepMatchId -> parse[PeptideMatchValidationProperties](propertiesAsJSON)
+          pepMatchPropertyMapBuilder += pepMatchId -> parse[PeptideMatchResultSummaryProperties](propertiesAsJSON)
         }
       }
 

@@ -109,8 +109,26 @@ class SelectQueryBuilder2[A<:ColEnum,B<:ColEnum](
 class SelectQueryBuilder3[A<:ColEnum,B<:ColEnum,C<:ColEnum](
   val tables: Tuple3[TableDefinition[A],TableDefinition[B],TableDefinition[C]]
 ) extends CanBuildSelectQuery {
+  
+  def mkSelectQuery(
+    fn: (
+      A,List[A#Column],
+      B,List[B#Column],
+      C,List[C#Column]
+    ) => Tuple2[List[ColEnum#Column],String] ): String = {
+    
+    val( colsList, clauses ) = fn(
+      tables._1.columns,tables._1.columnsAsList,
+      tables._2.columns,tables._2.columnsAsList,
+      tables._3.columns,tables._3.columnsAsList
+    )
+    
+    val tblsList = List( tables._1, tables._2, tables._3 )
+    
+    this._makeSelectQuery( this.colsListToStrList( colsList ), tblsList, Option(clauses) )
+  }
 
-  val cols1 = tables._1.columns
+  /*val cols1 = tables._1.columns
   val cols2 = tables._2.columns
   val cols3 = tables._3.columns
 
@@ -134,7 +152,7 @@ class SelectQueryBuilder3[A<:ColEnum,B<:ColEnum,C<:ColEnum](
        cols2,tables._2.columnsAsList,
        cols3,tables._3.columnsAsList
       )
-  }
+  }*/
   
 }
 

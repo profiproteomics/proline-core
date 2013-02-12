@@ -18,9 +18,7 @@ import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 
 class SQLMsQueryProvider(val msiSqlCtx: SQLConnectionContext) extends IMsQueryProvider {
-
-  import fr.proline.util.primitives.LongOrIntAsInt._
-  import scala.collection.mutable.ArrayBuffer
+  
   val MsQueryCols = MsiDbMsQueryTable.columns
 
   def getMsiSearchesMsQueries(msiSearchIds: Seq[Int]): Array[MsQuery] = {
@@ -61,10 +59,7 @@ class SQLMsQueryProvider(val msiSqlCtx: SQLConnectionContext) extends IMsQueryPr
 
     // Load MS queries corresponding to the provided MSI search ids
     val msQueries = msiSqlCtx.ezDBC.select(msqQuery) { r =>
-
-      // Parse properties if they exist
-      //my $serialized_properties = $ms_query_attrs->{serialized_properties};
-      //$ms_query_attrs->{properties} = decode_json( $serialized_properties ) if not is_empty_string($serialized_properties);
+      
       val spectrumId = r.getInt(MsQueryCols.SPECTRUM_ID)
 
       // Decode JSON properties
