@@ -72,6 +72,8 @@ object ProviderFactory extends IProviderFactory with Logging {
         logger.warn("No IPeptideProvider implementing instance found !!")
       }
 
+    } else {
+      logger.debug("PeptideProvider implementation : " + result.getClass.getName)
     }
 
     result
@@ -82,6 +84,8 @@ object ProviderFactory extends IProviderFactory with Logging {
 
     if (result == null) {
       logger.warn("No IPeptideMatchProvider implementing instance found !!")
+    } else {
+      logger.debug("PeptideMatchProvider implementation : " + result.getClass.getName)
     }
 
     result
@@ -103,6 +107,8 @@ object ProviderFactory extends IProviderFactory with Logging {
         logger.warn("No IProteinProvider implementing instance found !!")
       }
 
+    } else {
+      logger.debug("ProteinProvider implementation : " + result.getClass.getName)
     }
 
     result
@@ -124,6 +130,8 @@ object ProviderFactory extends IProviderFactory with Logging {
         logger.warn("No ISeqDatabaseProvider implementing instance found !!")
       }
 
+    } else {
+      logger.debug("SeqDatabaseProvider implementation : " + result.getClass.getName)
     }
 
     result
@@ -145,6 +153,8 @@ object ProviderFactory extends IProviderFactory with Logging {
         logger.warn("No IPTMProvider implementing instance found !!")
       }
 
+    } else {
+      logger.debug("PTMProvider implementation : " + result.getClass.getName)
     }
 
     result
