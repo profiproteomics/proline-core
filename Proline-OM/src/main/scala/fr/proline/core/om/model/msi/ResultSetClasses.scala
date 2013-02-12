@@ -46,7 +46,7 @@ case class ResultSet (
   
   def getDecoyResultSetId : Int = { if(decoyResultSet != null && decoyResultSet != None) decoyResultSet.get.id else decoyResultSetId }
   
-  lazy val peptideById: Map[Int, Peptide] = {
+  def peptideById: Map[Int, Peptide] = {
     
     val tmpPeptideById = Map() ++ peptides.map { pep => ( pep.id -> pep ) }      
     if( tmpPeptideById.size != peptides.length ) 
@@ -56,7 +56,7 @@ case class ResultSet (
 
   }
   
-  lazy val peptideMatchById: Map[Int, PeptideMatch] = {
+  def peptideMatchById: Map[Int, PeptideMatch] = {
     
     val tmpPeptideMatchById = Map() ++ peptideMatches.map { pepMatch => ( pepMatch.id -> pepMatch ) }      
     if( tmpPeptideMatchById.size != peptideMatches.length ) 
@@ -66,7 +66,7 @@ case class ResultSet (
 
   }
   
-  lazy val proteinMatchById: Map[Int, ProteinMatch] = {
+  def proteinMatchById: Map[Int, ProteinMatch] = {
     
     val tmpProtMatchById = Map() ++ proteinMatches.map { protMatch => ( protMatch.id -> protMatch ) }      
     if( tmpProtMatchById.size != proteinMatches.length ) 
@@ -134,7 +134,7 @@ case class ResultSummary (
   
   def getDecoyResultSummaryId : Int = { if(decoyResultSummary != null && decoyResultSummary != None) decoyResultSummary.get.id else decoyResultSummaryId }
    
-  lazy val peptideInstanceById: Map[Int, PeptideInstance] = {
+  def peptideInstanceById: Map[Int, PeptideInstance] = {
     
     val tmpPepInstById = Map() ++ peptideInstances.map { pepInst => ( pepInst.id -> pepInst ) }      
     if( tmpPepInstById.size != peptideInstances.length ) 
@@ -144,7 +144,7 @@ case class ResultSummary (
 
   }
   
-  lazy val proteinSetById: Map[Int, ProteinSet] = {
+  def proteinSetById: Map[Int, ProteinSet] = {
     
     val tmpProtSetById = Map() ++ proteinSets.map { protSet => ( protSet.id -> protSet ) }      
     if( tmpProtSetById.size != proteinSets.length ) 
