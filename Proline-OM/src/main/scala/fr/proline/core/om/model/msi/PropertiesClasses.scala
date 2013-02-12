@@ -10,6 +10,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 @JsonInclude( Include.NON_NULL )
 case class FilterProperties(
     @BeanProperty var name : String ,
-    @BeanProperty var propeties : Option[Map[String,Any]] = None
+    @BeanProperty var properties : Option[Map[String,Any]] = None
 )
 

@@ -27,26 +27,30 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 
 object ResultSetValidator {
 
-  def apply(execContext: IExecutionContext,
+  def apply(
+    execContext: IExecutionContext,
     targetRsId: Int,
     pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
     computerPSMFilter: Option[ComputedFDRPeptideMatchFilter] = None,
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
     targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
     storeResultSummary: Boolean = true): ResultSetValidator = {
+
     val targetRs = getResultSetProvider(execContext).getResultSet(targetRsId)
 
     if (targetRs.isEmpty) {
       throw new IllegalArgumentException("Unknown ResultSet Id: " + targetRsId)
     }
 
-    new ResultSetValidator(execContext,
+    new ResultSetValidator(
+      execContext,
       targetRs.get,
       pepMatchPreFilters,
       computerPSMFilter,
       protSetFilters,
       targetDecoyMode,
-      storeResultSummary)
+      storeResultSummary
+    )
   }
 
   // TODO Retrieve a ResultSetProvider from a decorated ExecutionContext ?
@@ -73,7 +77,8 @@ object ResultSetValidator {
  * - Validate Protein Set : Multiple Filters could be used
  *
  */
-class ResultSetValidator(execContext: IExecutionContext,
+class ResultSetValidator(
+  execContext: IExecutionContext,
   targetRs: ResultSet,
   pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
   computerPSMFilter: Option[ComputedFDRPeptideMatchFilter] = None,
