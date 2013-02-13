@@ -13,8 +13,8 @@ object ExternalDbPropertiesSerializer {
     val extDbProps = parse[ExternalDbProperties]( extDb.getSerializedProperties() )
     
     // Populate properties
-    val driverType = extDbProps.getJdbcDriverClassName.get
-    extDb.setDriverType( DriverType.valueOf(extDbProps.getJdbcDriverClassName.get) )
+    val driverType = extDbProps.getDriverType.get
+    extDb.setDriverType( DriverType.valueOf(extDbProps.getDriverType.get) )
   }
   
   def serialize( extDb: ExternalDb ) {
@@ -23,7 +23,7 @@ object ExternalDbPropertiesSerializer {
     if( extDb.getDriverType != null ) {
       
       val extDbProps = new ExternalDbProperties()
-      extDbProps.setJdbcDriverClassName( Some(extDb.getDriverType.toString) )
+      extDbProps.setDriverType( Some(extDb.getDriverType.toString) )
       
       // Generate JSON string
       extDb.setSerializedProperties( generate( extDbProps ) )
