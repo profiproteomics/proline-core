@@ -103,7 +103,8 @@ abstract class DatabaseAndDriverTestCase extends DatabaseTestCase {
     driverType match {
       case DriverType.H2 => "db_settings/h2"
       case DriverType.SQLITE => "db_settings/sqlite"
-      case _ => throw new Exception("Unsupported database driver for testing")
+      case DriverType.POSTGRESQL => "db_settings/postgresql"
+      case _ => throw new IllegalArgumentException("Unsupported database driver for testing")
     }
 
   }
