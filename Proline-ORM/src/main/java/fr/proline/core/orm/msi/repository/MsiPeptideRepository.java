@@ -1,9 +1,5 @@
 package fr.proline.core.orm.msi.repository;
 
-import static fr.proline.core.orm.util.JPARepositoryConstants.MAX_IN_BATCH_SIZE;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -11,6 +7,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Peptide;
+import fr.proline.core.orm.util.JPARepositoryUtils;
 import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
@@ -44,26 +41,8 @@ public final class MsiPeptideRepository {
 
 	JPAUtils.checkEntityManager(msiEm);
 
-	if ((ids == null) || ids.isEmpty()) {
-	    throw new IllegalArgumentException("Ids collection is empty");
-	}
-
-	List<Peptide> resultPeps = new ArrayList<Peptide>();
-
-	Integer[] idsArray = ids.toArray(new Integer[ids.size()]);
-
-	final TypedQuery<Peptide> query = msiEm.createNamedQuery("findMsiPepsForIds", Peptide.class);
-
-	for (int index = 0; index < ids.size();) {
-	    int nextBatchSize = ids.size() - index;
-	    if (nextBatchSize > MAX_IN_BATCH_SIZE)
-		nextBatchSize = MAX_IN_BATCH_SIZE;
-	    Integer[] pepsIds = Arrays.copyOfRange(idsArray, index, index + nextBatchSize);
-	    query.setParameter("ids", Arrays.asList(pepsIds));
-	    resultPeps.addAll(query.getResultList());
-	    index = index + nextBatchSize;
-	}
-	return resultPeps;
+	return JPARepositoryUtils.executeInQueryAsBatch(
+		msiEm.createNamedQuery("findMsiPepsForIds", Peptide.class), "ids", ids);
     }
 
     public static Peptide findPeptideForSequenceAndPtmStr(final EntityManager msiEm, final String seq,

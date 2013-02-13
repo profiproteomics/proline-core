@@ -1,9 +1,5 @@
 package fr.proline.core.orm.pdi.repository;
 
-import static fr.proline.core.orm.util.JPARepositoryConstants.MAX_IN_BATCH_SIZE;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -12,6 +8,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.pdi.BioSequenceGeneMap;
 import fr.proline.core.orm.pdi.Gene;
+import fr.proline.core.orm.util.JPARepositoryUtils;
 import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
@@ -61,26 +58,8 @@ public final class GeneRepository {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
-	if ((names == null) || names.isEmpty()) {
-	    throw new IllegalArgumentException("Names collection is empty");
-	}
-
-	List<Gene> resultGenes = new ArrayList<Gene>();
-
-	String[] namesArray = names.toArray(new String[names.size()]);
-	final TypedQuery<Gene> query = pdiEm.createNamedQuery("findGenesForNames", Gene.class);
-
-	for (int index = 0; index < names.size();) {
-	    int nextBatchSize = names.size() - index;
-	    if (nextBatchSize > MAX_IN_BATCH_SIZE)
-		nextBatchSize = MAX_IN_BATCH_SIZE;
-	    String[] geneNames = Arrays.copyOfRange(namesArray, index, index + nextBatchSize);
-	    query.setParameter("names", Arrays.asList(geneNames));
-	    resultGenes.addAll(query.getResultList());
-	    index = index + nextBatchSize;
-	}
-
-	return resultGenes;
+	return JPARepositoryUtils.executeInQueryAsBatch(
+		pdiEm.createNamedQuery("findGenesForNames", Gene.class), "names", names);
     }
 
     /**
@@ -95,27 +74,9 @@ public final class GeneRepository {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
-	if ((genes == null) || genes.isEmpty()) {
-	    throw new IllegalArgumentException("Genes collection is empty");
-	}
-
-	List<BioSequenceGeneMap> resultBioSeqGeneMaps = new ArrayList<BioSequenceGeneMap>();
-	Gene[] namesArray = genes.toArray(new Gene[genes.size()]);
-
-	final TypedQuery<BioSequenceGeneMap> query = pdiEm.createNamedQuery(
-		"findBioSequenceGeneMapsForGenes", BioSequenceGeneMap.class);
-
-	for (int index = 0; index < genes.size();) {
-	    int nextBatchSize = genes.size() - index;
-	    if (nextBatchSize > MAX_IN_BATCH_SIZE)
-		nextBatchSize = MAX_IN_BATCH_SIZE;
-	    Gene[] bioSeqGeneMaps = Arrays.copyOfRange(namesArray, index, index + nextBatchSize);
-	    query.setParameter("genes", Arrays.asList(bioSeqGeneMaps));
-	    resultBioSeqGeneMaps.addAll(query.getResultList());
-	    index = index + nextBatchSize;
-	}
-
-	return resultBioSeqGeneMaps;
+	return JPARepositoryUtils.executeInQueryAsBatch(
+		pdiEm.createNamedQuery("findBioSequenceGeneMapsForGenes", BioSequenceGeneMap.class), "genes",
+		genes);
 
     }
 

@@ -1,10 +1,7 @@
 package fr.proline.core.orm.pdi.repository;
 
-import static fr.proline.core.orm.util.JPARepositoryConstants.MAX_IN_BATCH_SIZE;
 import static fr.proline.util.MathUtils.EPSILON_LOW_PRECISION;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -17,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.BioSequence;
+import fr.proline.core.orm.util.JPARepositoryUtils;
 import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
@@ -89,27 +87,8 @@ public final class PdiBioSequenceRepository {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
-	if ((crcs == null) || crcs.isEmpty()) {
-	    throw new IllegalArgumentException("Crcs collection is empty");
-	}
-
-	List<BioSequence> resultBioSeqs = new ArrayList<BioSequence>();
-	String[] crcsArray = crcs.toArray(new String[crcs.size()]);
-
-	final TypedQuery<BioSequence> query = pdiEm.createNamedQuery("findPdiBioSequencesForCrcs",
-		BioSequence.class);
-
-	for (int index = 0; index < crcs.size();) {
-	    int nextBatchSize = crcs.size() - index;
-	    if (nextBatchSize > MAX_IN_BATCH_SIZE)
-		nextBatchSize = MAX_IN_BATCH_SIZE;
-	    String[] bioSeqCRCs = Arrays.copyOfRange(crcsArray, index, index + nextBatchSize);
-	    query.setParameter("crcs", Arrays.asList(bioSeqCRCs));
-	    resultBioSeqs.addAll(query.getResultList());
-	    index = index + nextBatchSize;
-	}
-
-	return resultBioSeqs;
+	return JPARepositoryUtils.executeInQueryAsBatch(
+		pdiEm.createNamedQuery("findPdiBioSequencesForCrcs", BioSequence.class), "crcs", crcs);
 
     }
 

@@ -2,21 +2,20 @@ package fr.proline.core.orm.ps;
 
 import static org.junit.Assert.*;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
+import fr.proline.core.orm.util.JPARepositoryUtils;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
@@ -27,6 +26,8 @@ public class PeptideTest extends DatabaseTestCase {
     private static final String SEQ_TO_FOUND = "LTGMAFR";
 
     private static final int PEPTIDE_COUNT = 10;
+
+    private static final int BIG_PEPTIDE_COUNT = 2534;
 
     @Override
     public ProlineDatabaseType getProlineDatabaseType() {
@@ -77,6 +78,22 @@ public class PeptideTest extends DatabaseTestCase {
 
     @Test
     public void retrievePeptideForIds() {
+	retrievePeptideForIds(PEPTIDE_COUNT);
+
+	retrievePeptideForIds(JPARepositoryUtils.MAX_BATCH_SIZE - 1);
+
+	retrievePeptideForIds(JPARepositoryUtils.MAX_BATCH_SIZE);
+
+	retrievePeptideForIds(JPARepositoryUtils.MAX_BATCH_SIZE + 1);
+
+	retrievePeptideForIds(JPARepositoryUtils.MAX_BATCH_SIZE + 2);
+
+	retrievePeptideForIds(BIG_PEPTIDE_COUNT);
+    }
+
+    private void retrievePeptideForIds(final int nIds) {
+	assert (nIds > 0) : "retrievePeptideForIds() invalid nIds";
+
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
 	final EntityManager psEm = emf.createEntityManager();
@@ -84,9 +101,9 @@ public class PeptideTest extends DatabaseTestCase {
 	try {
 	    int retrievedPeptides = 0;
 
-	    /* Build a 0..9 Set */
-	    final Set<Integer> ids = new HashSet<Integer>();
-	    for (int i = 0; i < PEPTIDE_COUNT; ++i) {
+	    /* Build a 0..nIds Set */
+	    final List<Integer> ids = new ArrayList<Integer>(nIds);
+	    for (int i = 0; i < nIds; ++i) {
 		ids.add(Integer.valueOf(i));
 	    }
 
@@ -100,9 +117,7 @@ public class PeptideTest extends DatabaseTestCase {
 		}
 	    }
 
-	    LOG.info("Retrieved Msi Peptides count: " + retrievedPeptides);
-
-	    Assert.assertTrue("Retrieved Msi Peptides count", retrievedPeptides > 0);
+	    assertTrue("Retrieved Msi Peptides count", retrievedPeptides > 0);
 	} finally {
 
 	    if (psEm != null) {
