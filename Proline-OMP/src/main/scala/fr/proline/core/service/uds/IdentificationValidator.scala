@@ -1,5 +1,6 @@
 package fr.proline.core.service.uds
 
+
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.api.service.IService
@@ -14,6 +15,7 @@ import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger, ResultS
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.core.algo.msi.validation.IPeptideMatchValidator
 
 class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                projectId: Int,
@@ -21,8 +23,9 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                rsmIds: Seq[Int],
                                mergeResultSets: Boolean,
                                pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
-                               computerPSMFilter: Option[IComputedFDRPeptideMatchFilter] = None,
-                               protSetFilters: Option[Seq[IProteinSetFilter]] = None
+                               pepMatchValidator: Option[IPeptideMatchValidator] = None,
+                               protSetFilters: Option[Seq[IProteinSetFilter]] = None,
+                               targetDecoyMode: Option[TargetDecoyModes.Mode]
                                ) extends IService with Logging {
   
   /*private val udsDbConnector = dbManager.getUdsDbConnector
@@ -106,14 +109,14 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
         
         // Instantiate a result set validator
         val rsValidator = new ResultSetValidator(
-        	  		execContext = execSqlContext,                              
-                                targetRs = mergedTargetRs,
-                                pepMatchPreFilters = pepMatchPreFilters,
-                                computerPSMFilter = computerPSMFilter,
-                                protSetFilters = protSetFilters,
-                                // TODO: retrieve from the MSIdb
-                                targetDecoyMode = Some(TargetDecoyModes.withName( "separated" ))
-                                )
+          execContext = execSqlContext,                              
+          targetRs = mergedTargetRs,
+          pepMatchPreFilters = pepMatchPreFilters,
+          pepMatchValidator = pepMatchValidator,
+          protSetFilters = protSetFilters,
+          // TODO: retrieve from the MSIdb
+          targetDecoyMode = targetDecoyMode
+        )
         
                                                               
         rsValidator.runService()

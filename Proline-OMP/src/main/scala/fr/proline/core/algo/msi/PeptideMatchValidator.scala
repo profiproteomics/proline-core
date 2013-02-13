@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi
 
-import fr.proline.core.om.model.msi.ResultSet
+/*import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.algo.msi.validation.pepmatch.MascotPeptideMatchValidator
 import fr.proline.core.algo.msi.validation.pepmatch.IPeptideMatchValidator
 
@@ -13,4 +13,4 @@ object PeptideMatchValidator {
     }
   }
 
-}
+}*/

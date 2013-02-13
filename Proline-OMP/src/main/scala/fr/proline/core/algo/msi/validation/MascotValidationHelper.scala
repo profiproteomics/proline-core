@@ -2,7 +2,6 @@ package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 import scala.math.{ pow, log10 }
-import fr.proline.core.algo.msi.filter.{ FiltersPropertyKeys, IComputedFDRPeptideMatchFilter }
 import fr.proline.core.algo.msi.TargetDecoyComputer
 import fr.proline.core.om.model.msi.{ MsQuery, PeptideMatch }
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties

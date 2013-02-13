@@ -7,10 +7,10 @@ import fr.proline.core.om.model.msi.PeptideMatch
 
 class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter {
   
-  val filterParameter = PeptideMatchFilterParams.RANK.toString
+  val filterParameter = PepMatchFilterParams.RANK.toString
   val filterDescription = "peptide match rank filter"
 
-  def filterPSM( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
+  def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
 
     val orderedPepMatch = pepMatches.sortWith( _.score > _.score )
 
@@ -38,7 +38,7 @@ class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter 
 
   def getFilterProperties(): Option[Map[String, Any]] = {
     val props = new HashMap[String, Any]
-    props += (FiltersPropertyKeys.MAX_RANK -> pepMatchMaxRank )
+    props += (PepMatchFilterPropertyKeys.MAX_RANK -> pepMatchMaxRank )
     Some( props.toMap )
   }
   

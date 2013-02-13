@@ -17,7 +17,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filter._
 import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.HashMap
-import fr.proline.core.algo.msi.filter.FiltersPropertyKeys
+import fr.proline.core.algo.msi.filter.PepMatchFilterPropertyKeys
 import fr.proline.core.algo.msi.filter.ParamProteinSetFilter
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
@@ -28,7 +28,7 @@ object ResultSetValidator {
     execContext: IExecutionContext,
     targetRsId: Int,
     pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
-    computerPSMFilter: Option[IComputedFDRPeptideMatchFilter] = None,
+    pepMatchValidator: Option[IPeptideMatchValidator] = None,
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
     targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
     storeResultSummary: Boolean = true): ResultSetValidator = {
@@ -43,7 +43,7 @@ object ResultSetValidator {
       execContext,
       targetRs.get,
       pepMatchPreFilters,
-      computerPSMFilter,
+      pepMatchValidator,
       protSetFilters,
       targetDecoyMode,
       storeResultSummary
@@ -78,7 +78,7 @@ class ResultSetValidator(
   execContext: IExecutionContext,
   targetRs: ResultSet,
   pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None, // TODO: rename to pepMatchFilters
-  computerPSMFilter: Option[IComputedFDRPeptideMatchFilter] = None, // TODO: rename to pepMatchTDAnalyzer
+  pepMatchValidator: Option[IPeptideMatchValidator] = None,
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   // TODO: add a protSetTDAnalyzer
   targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
@@ -127,7 +127,7 @@ class ResultSetValidator(
       params = RsmValidationParamsProperties(),
       results = RsmValidationResultsProperties())
     >>>
-    filterPSMs(rsmValProperties, searchEngine)
+    filterPSMs(targetRs,rsmValProperties, searchEngine)
 
     >>>
 
@@ -214,10 +214,10 @@ class ResultSetValidator(
 
   def curTimeInSecs() = System.currentTimeMillis() / 1000
 
-  private def filterPSMs(rsmValProperties: RsmValidationProperties, searchEngine: String): Unit = {
+  private def filterPSMs(targetRs: ResultSet, rsmValProperties: RsmValidationProperties, searchEngine: String): Unit = {
 
     // Instantiate a peptide match validator
-    val pepMatchValidator = PeptideMatchValidator(searchEngine, targetRs)
+    //val pepMatchValidator = PeptideMatchValidator(searchEngine, targetRs)
 
     var finalValidationResult: ValidationResult = null
 
@@ -227,7 +227,8 @@ class ResultSetValidator(
     if (pepMatchPreFilters != None) {
       pepMatchPreFilters.get.foreach { psmFilter =>
 
-        finalValidationResult = pepMatchValidator.applyPSMFilter(filter = psmFilter,targetDecoyMode = targetDecoyMode)
+        //finalValidationResult = pepMatchValidator.applyPSMFilter(filter = psmFilter,targetDecoyMode = targetDecoyMode)
+        psmFilter.filterPeptideMatches(targetRs.peptideMatches, true, false)
         
         filtersParam += (filterNbr -> psmFilter.toFilterDescriptor)
         filterNbr += 1
@@ -236,14 +237,14 @@ class ResultSetValidator(
     >>>
 
     // If define, execute ComputedValidationPSMFilter  
-    if (computerPSMFilter.isDefined) {
+    if (pepMatchValidator.isDefined) {
 
       //Apply Filter
-      val valResults = pepMatchValidator.applyComputedPSMFilter(computerPSMFilter.get, targetDecoyMode)
-      finalValidationResult = valResults.expectedResult
+      val valResults = pepMatchValidator.get.validatePeptideMatches(targetRs)
+      finalValidationResult = valResults.finalResult
 
       //Set RSM Validation Param : VDS TODO
-      filtersParam += filterNbr -> computerPSMFilter.get.getValidationFilterDescriptor
+      filtersParam += filterNbr -> pepMatchValidator.get.validationFilter.toFilterDescriptor
       
       filterNbr += 1
     }
@@ -254,7 +255,7 @@ class ResultSetValidator(
     if (finalValidationResult != null) {
 
       val pepValResults = RsmPepMatchValidationResultsProperties(
-        lastFilterThreshold = finalValidationResult.properties.getOrElse(null)(FiltersPropertyKeys.THRESHOLD_PROP_NAME),
+        lastFilterThreshold = finalValidationResult.properties.getOrElse(null)(PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME),
         targetMatchesCount = finalValidationResult.nbTargetMatches,
         decoyMatchesCount = finalValidationResult.nbDecoyMatches,
         fdr = finalValidationResult.fdr)

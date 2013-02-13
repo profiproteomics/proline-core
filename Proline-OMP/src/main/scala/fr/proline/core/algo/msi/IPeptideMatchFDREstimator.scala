@@ -1,7 +1,7 @@
 package fr.proline.core.algo.msi
 
 //import fr.proline.core.algo.msi.TargetDecoyComputer.TDCompetitionCounts
-
+/*
  case class TDCompetitionCounts( var better: Int = 0, var only: Int = 0, var under: Int = 0 )
 
 trait IPeptideMatchFDREstimator {
@@ -22,4 +22,4 @@ class NavarroFDREstimator extends IPeptideMatchFDREstimator{
       require( tB + tO + dB > 0 )    
       100 * (2 * dB + dO) / (tB + tO + dB)
   }
-}
+}*/

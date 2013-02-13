@@ -8,16 +8,17 @@ import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.algo.msi.validation.ValidationResults
 import fr.proline.core.algo.msi.TargetDecoyComputer
-import fr.proline.core.algo.msi.filter.IComputedFDRPeptideMatchFilter
-import fr.proline.core.algo.msi.filter.FiltersPropertyKeys
+import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
+import fr.proline.core.algo.msi.filter.PepMatchFilterPropertyKeys
 
-// TODO: split this code to a class implementing ITargetDecoyAnalyzer (i.e. PeptideMatchFDRComputer)
-//       and another one implementing IFDROptimizer (i.e. PeptideMatchFDROptimizer)
+// TODO: remove this class
 /**
  * Class that will apply ValidationPSMFilters on ResultSets. If Decoy ResultSet exist, it should have been
  * loaded into Object Model.
  *
  */
+
+/*
 class MascotPeptideMatchValidator(targetRs: ResultSet) extends IPeptideMatchValidator {
 
   // get Peptide Matches from Target ResultSet and related Decoy Result if defined. 
@@ -83,4 +84,4 @@ class MascotPeptideMatchValidator(targetRs: ResultSet) extends IPeptideMatchVali
 
   }
 
-}
+}*/

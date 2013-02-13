@@ -3,9 +3,11 @@ package fr.proline.core.algo.msi
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.validation.ValidationResult
-import fr.proline.core.algo.msi.filter.IComputedFDRPeptideMatchFilter
+import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
 import scala.collection.mutable.HashMap
-import fr.proline.core.algo.msi.filter.FiltersPropertyKeys
+import fr.proline.core.algo.msi.filter.PepMatchFilterPropertyKeys
+
+case class TDCompetitionCounts( var better: Int = 0, var only: Int = 0, var under: Int = 0 )
 
 // TODO: move to validation package ?
 object TargetDecoyComputer {
@@ -101,9 +103,9 @@ object TargetDecoyComputer {
   }
   
   def rocAnalysis(pmJointMap: Map[Int, Seq[PeptideMatch]],
-                  computedFDRFilter: IComputedFDRPeptideMatchFilter): Array[ValidationResult] = {
+                  validationFilter: IOptimizablePeptideMatchFilter ): Array[ValidationResult] = {
 
-    var filterThreshold = computedFDRFilter.fdrValidationFilter.getThresholdStartValue
+    var filterThreshold = validationFilter.getThresholdStartValue
     var fdr = 100.0f
     val rocPoints = new ArrayBuffer[ValidationResult]
 
@@ -117,8 +119,8 @@ object TargetDecoyComputer {
         val isValStatus: Seq[Boolean] = entry._2.map(_.isValidated)
 
         //-- Filter incrementally without traceability 
-        computedFDRFilter.fdrValidationFilter.setThresholdValue(filterThreshold)
-        computedFDRFilter.fdrValidationFilter.filterPSM(entry._2, true, false)
+        validationFilter.setThresholdValue(filterThreshold)
+        validationFilter.filterPeptideMatches(entry._2, true, false)
 
         //Keep only validated PSM
         val selectedPsm = entry._2.filter(_.isValidated)
@@ -169,12 +171,12 @@ object TargetDecoyComputer {
       val rocPoint = ValidationResult(nbTargetMatches = tB + tO + dB,
         nbDecoyMatches = Some(dB + dO + tB),
         fdr = Some(fdr),
-        properties = Some(HashMap(FiltersPropertyKeys.THRESHOLD_PROP_NAME -> filterThreshold))
+        properties = Some(HashMap(PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME -> filterThreshold))
       )
       rocPoints += rocPoint
 
       // Update threshold value 
-      filterThreshold = computedFDRFilter.fdrValidationFilter.getNextValue(filterThreshold)
+      filterThreshold = validationFilter.getNextValue(filterThreshold)
       if (filterThreshold == null)
         fdr = 0 //Break current loop
 

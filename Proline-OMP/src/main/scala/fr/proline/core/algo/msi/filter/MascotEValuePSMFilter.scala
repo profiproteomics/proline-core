@@ -6,12 +6,12 @@ import scala.collection.Seq
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch,PeptideMatchResultSummaryProperties}
 
-class MascotEValuePSMFilter( var eValueThreshold: Double = 1.0 ) extends IComputablePeptideMatchFilter {
+class MascotEValuePSMFilter( var eValueThreshold: Double = 1.0 ) extends IOptimizablePeptideMatchFilter {
   
-  val filterParameter = PeptideMatchFilterParams.MASCOT_EVALUE.toString
+  val filterParameter = PepMatchFilterParams.MASCOT_EVALUE.toString
   val filterDescription = "peptide match mascot eValue filter"
 
-  def filterPSM( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
+  def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
 
     //Create a Map : List of PeptideMatch by eValue
     val psmsByEValue = pepMatches.groupBy( MascotValidationHelper.calcPepMatchEvalue( _ ) )
@@ -44,7 +44,7 @@ class MascotEValuePSMFilter( var eValueThreshold: Double = 1.0 ) extends IComput
 
   def getFilterProperties(): Option[Map[String, Any]] = {
     val props =new HashMap[String, Any]
-    props += (FiltersPropertyKeys.MASCOT_EVALUE_THRESHOLD -> eValueThreshold )
+    props += (PepMatchFilterPropertyKeys.MASCOT_EVALUE_THRESHOLD -> eValueThreshold )
     Some( props.toMap )
   }
 

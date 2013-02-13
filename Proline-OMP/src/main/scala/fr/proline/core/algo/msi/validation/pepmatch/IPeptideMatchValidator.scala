@@ -1,11 +1,12 @@
 package fr.proline.core.algo.msi.validation.pepmatch
 
 import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
+import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.algo.msi.validation.ValidationResult
-import fr.proline.core.algo.msi.filter.IComputedFDRPeptideMatchFilter
 import fr.proline.core.algo.msi.validation.ValidationResults
 
+/*
 trait IPeptideMatchValidator {
 
   /**
@@ -41,3 +42,5 @@ trait IPeptideMatchValidator {
 //                              ): ValidationResult
 //  
 }
+
+*/

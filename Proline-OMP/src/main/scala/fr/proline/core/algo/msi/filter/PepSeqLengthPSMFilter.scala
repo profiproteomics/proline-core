@@ -6,11 +6,10 @@ import scala.collection.mutable.HashMap
 
 class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFilter {
   
-  val filterParameter = PeptideMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH.toString
+  val filterParameter = PepMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH.toString
   val filterDescription = "peptide sequence length filter"
 
-  def filterPSM( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean,
-                 traceability: Boolean ): Unit = {
+  def filterPeptideMatches(pepMatches: Seq[PeptideMatch],incrementalValidation: Boolean,traceability: Boolean ): Unit = {
 
     for ( peptideMatch <- pepMatches ) {
       if ( !incrementalValidation ) {
@@ -25,7 +24,7 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
 
   def getFilterProperties(): Option[Map[String, Any]] = {
      val props =new HashMap[String, Any]
-    props += ( FiltersPropertyKeys.MIN_PEPTIDE_SEQUENCE_LENGTH ->  minSeqLength )
+    props += ( PepMatchFilterPropertyKeys.MIN_PEPTIDE_SEQUENCE_LENGTH ->  minSeqLength )
     Some( props.toMap )
   }
   

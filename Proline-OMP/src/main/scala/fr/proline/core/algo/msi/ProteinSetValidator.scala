@@ -4,11 +4,13 @@ import fr.proline.core.algo.msi.validation.proteinset.MascotPeptideMatchRulesVal
 import fr.proline.core.algo.msi.validation.proteinset.MascotProteinSetScoreValidator
 import fr.proline.core.algo.msi.validation.proteinset.IProteinSetValidator
 
+// TODO: move to validation package and upper case
 object ProtSetValidationMethods extends Enumeration {
   type MethodName = Value
   val proteinSetScore = Value("protein_set_score")
   val peptideMatchRules = Value("peptide_match_rules")
 }
+
 
 object ProteinSetValidator {
   
@@ -19,6 +21,7 @@ object ProteinSetValidator {
   }
 
 }
+
 
 object MascotProteinSetValidator {
   

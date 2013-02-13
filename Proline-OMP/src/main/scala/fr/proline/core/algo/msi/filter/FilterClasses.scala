@@ -4,7 +4,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.algo.msi.validation.ValidationResults
 
-object FiltersPropertyKeys {  
+object PepMatchFilterPropertyKeys {
   final val THRESHOLD_PROP_NAME = "threshold_value"
   final val MASCOT_EVALUE_THRESHOLD = "mascot_evalue_threshold"
   final val MIN_PEPTIDE_SEQUENCE_LENGTH = "min_pep_seq_length"
@@ -12,7 +12,7 @@ object FiltersPropertyKeys {
   final val SCORE_THRESHOLD = "score_threshold"
 }
 
-object PeptideMatchFilterParams extends Enumeration {
+object PepMatchFilterParams extends Enumeration {
   type Param = Value
   val MASCOT_EVALUE = Value("MASCOT_EVALUE")
   val PEPTIDE_SEQUENCE_LENGTH = Value("PEP_SEQ_LENGTH")
@@ -24,29 +24,29 @@ object PeptideMatchFilterParams extends Enumeration {
 object BuildPeptideMatchFilter {
   
   def apply(filterParamStr: String): IPeptideMatchFilter = {    
-    this.apply( PeptideMatchFilterParams.withName(filterParamStr) )
+    this.apply( PepMatchFilterParams.withName(filterParamStr) )
   }
   
-  def apply(filterParam: PeptideMatchFilterParams.Param): IPeptideMatchFilter = {    
+  def apply(filterParam: PepMatchFilterParams.Param): IPeptideMatchFilter = {    
     filterParam match {
-      case PeptideMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
-      case PeptideMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH => new PepSeqLengthPSMFilter()
-      case PeptideMatchFilterParams.RANK => new RankPSMFilter()
-      case PeptideMatchFilterParams.SCORE => new ScorePSMFilter()
+      case PepMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
+      case PepMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH => new PepSeqLengthPSMFilter()
+      case PepMatchFilterParams.RANK => new RankPSMFilter()
+      case PepMatchFilterParams.SCORE => new ScorePSMFilter()
     }
   }
 }
 
-object BuildComputablePeptideMatchFilter {
+object BuildOptimizablePeptideMatchFilter {
   
-  def apply(filterParamStr: String): IComputablePeptideMatchFilter = {    
-    this.apply( PeptideMatchFilterParams.withName(filterParamStr) )
+  def apply(filterParamStr: String): IOptimizablePeptideMatchFilter = {    
+    this.apply( PepMatchFilterParams.withName(filterParamStr) )
   }
   
-  def apply(filterParam: PeptideMatchFilterParams.Param): IComputablePeptideMatchFilter = {    
+  def apply(filterParam: PepMatchFilterParams.Param): IOptimizablePeptideMatchFilter = {    
     filterParam match {
-      case PeptideMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
-      case PeptideMatchFilterParams.SCORE => new ScorePSMFilter()
+      case PepMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
+      case PepMatchFilterParams.SCORE => new ScorePSMFilter()
     }
   }
   
@@ -58,14 +58,12 @@ trait IFilter {
   val filterParameter: String
   val filterDescription: String
   
-  // TODO: create a filterProperties attribute instead of getFilterProperties getter
-
    /**
     * Return all properties that will be usefull to know wich kind iof filter have been applied
     * and be able to reapply it. 
     *  
     */
-  def getFilterProperties() : Option[Map[String, Any]]
+  def getFilterProperties(): Option[Map[String, Any]]
   
   def toFilterDescriptor(): FilterDescriptor = {
     new FilterDescriptor( filterParameter, Some(filterDescription), getFilterProperties )
@@ -93,8 +91,8 @@ trait IPeptideMatchFilter extends IFilter {
    * @param traceability : specify if filter could saved information in peptideMatch properties 
    *  
    */
-  // TODO: rename to filterPeptideMatches and return Seq[PeptideMatch]
-  def filterPSM( pepMatches : Seq[PeptideMatch], incrementalValidation: Boolean, traceability : Boolean) : Unit  
+  // TODO: return Seq[PeptideMatch] and create a validatePeptideMaches in IOptimizablePeptideMatchFilter which change the validation flag
+  def filterPeptideMatches( pepMatches : Seq[PeptideMatch], incrementalValidation: Boolean, traceability : Boolean) : Unit  
   
 //def updatePeptideMatchProperties(pepMatch : PeptideMatch){
 //    
@@ -113,8 +111,7 @@ trait IPeptideMatchFilter extends IFilter {
 //   }
 }
 
-// TODO: rename to IOptimizableFilter
-trait IComputableFilter extends IFilter {
+trait IOptimizableFilter extends IFilter {
 
   /**
    * Get the higher or lowest (depending on the filter type) threshold value for this filter.  
@@ -130,34 +127,11 @@ trait IComputableFilter extends IFilter {
    
 }
 
-trait IComputablePeptideMatchFilter extends IComputableFilter with IPeptideMatchFilter
+trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter
 
-// TODO: move to validation package
-trait ITargetDecoyAnalyzer {
- 
-  /** 
-   * Perform FDR analysis which may include basic FDR computation or more sophisticated ROC analysis.
-   * @return the final value of the computed FDR
-   */
-  def performTDAnalysis(): ValidationResults
- 
-}
-
-// TODO: rename to IFDROptimizer
-// TODO: move to validation package
-trait IComputedFDRPeptideMatchFilter extends ITargetDecoyAnalyzer {
- 
-  val expectedFdr: Float // TODO: rename to expectedFDR
-  val fdrValidationFilter: IComputablePeptideMatchFilter // TODO: rename to validationFilter
-  
-  def getValidationFilterDescriptor(): FilterDescriptor = fdrValidationFilter.toFilterDescriptor
-  
-  // TODO: implement this method in trait implementations
-  def performTDAnalysis(): ValidationResults = null
- 
-}
 
 trait IProteinSetFilter extends IFilter {}
+trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFilter
 
 //VDS TODO: replace with real filter 
 class ParamProteinSetFilter( val filterParameter: String, val minPepSeqLength: Int, val expectedFdr: Float ) extends IProteinSetFilter  {
@@ -174,3 +148,5 @@ class ParamProteinSetFilter( val filterParameter: String, val minPepSeqLength: I
   }
   
 }
+
+
