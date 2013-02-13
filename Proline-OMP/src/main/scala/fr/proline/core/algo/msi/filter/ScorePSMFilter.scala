@@ -6,7 +6,7 @@ import scala.collection.Seq
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch}
 
-class ScoreEValuePSMFilter(var scoreThreshold: Double= 1,  val startThreshold : Double = 1 ) extends IComputablePeptideMatchFilter {
+class ScorePSMFilter(var scoreThreshold: Double = 1.0, val startThreshold: Double = 1.0 ) extends IComputablePeptideMatchFilter {
 
   val filterParameter = PeptideMatchFilterParams.SCORE.toString
   val filterDescription = "peptide match score filter"
@@ -33,19 +33,19 @@ class ScoreEValuePSMFilter(var scoreThreshold: Double= 1,  val startThreshold : 
 
   def getFilterProperties(): Option[Map[String, Any]] = {
     val props =new HashMap[String, Any]
-    props += ("score threashold" ->  scoreThreshold )
+    props += (FiltersPropertyKeys.SCORE_THRESHOLD ->  scoreThreshold )
     Some( props.toMap )
   }
 
-  def getNextValue( currentVal: Any ) = {
+  def getNextValue( currentVal: AnyVal ) = {
     currentVal.asInstanceOf[Double] + 1.0
   }
 
-  def getThresholdStartValue(): Any = {
+  def getThresholdStartValue(): AnyVal = {
     1
   }
 
-  def setThresholdValue( currentVal : Any ){
+  def setThresholdValue( currentVal: AnyVal ){
     scoreThreshold = currentVal.asInstanceOf[Double]
   }
 }

@@ -1,12 +1,11 @@
 package fr.proline.core.algo.msi.filter
 
-
 import fr.proline.core.om.model.msi.PeptideMatch
 import scala.collection.Seq
 import scala.collection.mutable.HashMap
 
-class PepSeqLengthPSMFilter( minSeqLength: Int = 0 ) extends IPeptideMatchFilter {
-
+class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFilter {
+  
   val filterParameter = PeptideMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH.toString
   val filterDescription = "peptide sequence length filter"
 
@@ -26,8 +25,12 @@ class PepSeqLengthPSMFilter( minSeqLength: Int = 0 ) extends IPeptideMatchFilter
 
   def getFilterProperties(): Option[Map[String, Any]] = {
      val props =new HashMap[String, Any]
-    props += ("min sequence length" ->  minSeqLength )
+    props += ( FiltersPropertyKeys.MIN_PEPTIDE_SEQUENCE_LENGTH ->  minSeqLength )
     Some( props.toMap )
+  }
+  
+  def setThresholdValue( currentVal: AnyVal ){
+    minSeqLength = currentVal.asInstanceOf[Int]
   }
 
 }

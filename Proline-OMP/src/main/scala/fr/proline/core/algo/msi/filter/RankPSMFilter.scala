@@ -5,8 +5,8 @@ import scala.collection.Seq
 
 import fr.proline.core.om.model.msi.PeptideMatch
 
-class RankPSMFilter( pepMatchRank: Int ) extends IPeptideMatchFilter {
-
+class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter {
+  
   val filterParameter = PeptideMatchFilterParams.RANK.toString
   val filterDescription = "peptide match rank filter"
 
@@ -16,7 +16,7 @@ class RankPSMFilter( pepMatchRank: Int ) extends IPeptideMatchFilter {
 
     var currentpepMatchRank = 1
     var pepMatchesIndex = 0
-    while ( currentpepMatchRank <= pepMatchRank ) {
+    while ( currentpepMatchRank <= pepMatchMaxRank ) {
       if ( !incrementalValidation ) { //Current PeptideMatch has a valid rank 
         orderedPepMatch( pepMatchesIndex ).isValidated = true //save information if not incremental mode
       }
@@ -38,8 +38,12 @@ class RankPSMFilter( pepMatchRank: Int ) extends IPeptideMatchFilter {
 
   def getFilterProperties(): Option[Map[String, Any]] = {
     val props = new HashMap[String, Any]
-    props += ("rank" -> pepMatchRank )
+    props += (FiltersPropertyKeys.MAX_RANK -> pepMatchMaxRank )
     Some( props.toMap )
+  }
+  
+  def setThresholdValue( currentVal : AnyVal ){
+    pepMatchMaxRank = currentVal.asInstanceOf[Int]
   }
 
 }

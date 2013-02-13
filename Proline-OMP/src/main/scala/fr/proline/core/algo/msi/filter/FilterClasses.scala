@@ -4,9 +4,12 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.algo.msi.validation.ValidationResults
 
-object FiltersPropertyKeys {
-  
-   final val THRESHOLD_PROP_NAME : String = "threshold_value"
+object FiltersPropertyKeys {  
+  final val THRESHOLD_PROP_NAME = "threshold_value"
+  final val MASCOT_EVALUE_THRESHOLD = "mascot_evalue_threshold"
+  final val MIN_PEPTIDE_SEQUENCE_LENGTH = "min_pep_seq_length"
+  final val MAX_RANK = "max_rank"
+  final val SCORE_THRESHOLD = "score_threshold"
 }
 
 object PeptideMatchFilterParams extends Enumeration {
@@ -17,10 +20,45 @@ object PeptideMatchFilterParams extends Enumeration {
   val SCORE = Value("SCORE")
 }
 
+
+object BuildPeptideMatchFilter {
+  
+  def apply(filterParamStr: String): IPeptideMatchFilter = {    
+    this.apply( PeptideMatchFilterParams.withName(filterParamStr) )
+  }
+  
+  def apply(filterParam: PeptideMatchFilterParams.Param): IPeptideMatchFilter = {    
+    filterParam match {
+      case PeptideMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
+      case PeptideMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH => new PepSeqLengthPSMFilter()
+      case PeptideMatchFilterParams.RANK => new RankPSMFilter()
+      case PeptideMatchFilterParams.SCORE => new ScorePSMFilter()
+    }
+  }
+}
+
+object BuildComputablePeptideMatchFilter {
+  
+  def apply(filterParamStr: String): IComputablePeptideMatchFilter = {    
+    this.apply( PeptideMatchFilterParams.withName(filterParamStr) )
+  }
+  
+  def apply(filterParam: PeptideMatchFilterParams.Param): IComputablePeptideMatchFilter = {    
+    filterParam match {
+      case PeptideMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
+      case PeptideMatchFilterParams.SCORE => new ScorePSMFilter()
+    }
+  }
+  
+}
+
+
 trait IFilter {
 
   val filterParameter: String
   val filterDescription: String
+  
+  // TODO: create a filterProperties attribute instead of getFilterProperties getter
 
    /**
     * Return all properties that will be usefull to know wich kind iof filter have been applied
@@ -32,6 +70,13 @@ trait IFilter {
   def toFilterDescriptor(): FilterDescriptor = {
     new FilterDescriptor( filterParameter, Some(filterDescription), getFilterProperties )
   }
+  
+  /**
+   * Given a current Threshold value, return the next possible value. This 
+   * is useful for ComputedValidationPSMFilter in order to determine 
+   * best threshold value to reach specified FDR 
+   */
+  def setThresholdValue( currentVal : AnyVal )
   
 }
 
@@ -68,30 +113,24 @@ trait IPeptideMatchFilter extends IFilter {
 //   }
 }
 
-// TODO: rename to IOptimizablePeptideMatchFilter
-trait IComputablePeptideMatchFilter extends IPeptideMatchFilter {
+// TODO: rename to IOptimizableFilter
+trait IComputableFilter extends IFilter {
 
   /**
    * Get the higher or lowest (depending on the filter type) threshold value for this filter.  
    */
-  def getThresholdStartValue(): Any
+  def getThresholdStartValue(): AnyVal
   
   /**
    * Given a current Threshold value, return the next possible value. This 
    * is useful for ComputedValidationPSMFilter in order to determine 
    * best threshold value to reach specified FDR 
    */
-  def getNextValue( currentVal : Any ): Any
-  
-    
-  /**
-   * Given a current Threshold value, return the next possible value. This 
-   * is useful for ComputedValidationPSMFilter in order to determine 
-   * best threshold value to reach specified FDR 
-   */
-  def setThresholdValue( currentVal : Any )
+  def getNextValue( currentVal : AnyVal ): AnyVal
    
 }
+
+trait IComputablePeptideMatchFilter extends IComputableFilter with IPeptideMatchFilter
 
 // TODO: move to validation package
 trait ITargetDecoyAnalyzer {
@@ -128,6 +167,10 @@ class ParamProteinSetFilter( val filterParameter: String, val minPepSeqLength: I
  
   def getFilterProperties() : Option[Map[String, Any]] = {
     None
+  }
+  
+  def setThresholdValue( currentVal : AnyVal ){
+    pValueThreshold = currentVal.asInstanceOf[Float]
   }
   
 }

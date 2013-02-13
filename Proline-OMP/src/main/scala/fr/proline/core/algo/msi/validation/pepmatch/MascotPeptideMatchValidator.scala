@@ -76,7 +76,7 @@ class MascotPeptideMatchValidator(targetRs: ResultSet) extends IPeptideMatchVali
     val expectedRocPoint = rocPoints.reduce { (a, b) => if (abs(a.fdr.get - expectedFdr) < abs(b.fdr.get - expectedFdr)) a else b }
     val thrToApply = expectedRocPoint.properties.get(FiltersPropertyKeys.THRESHOLD_PROP_NAME)
 
-    filter.fdrValidationFilter.setThresholdValue(thrToApply)
+    filter.fdrValidationFilter.setThresholdValue(thrToApply.asInstanceOf[AnyVal])
     this.applyPSMFilter(filter.fdrValidationFilter, targetDecoyMode)
 
     new ValidationResults(expectedRocPoint, Some(rocPoints))

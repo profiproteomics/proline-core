@@ -6,8 +6,8 @@ import scala.collection.Seq
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch,PeptideMatchResultSummaryProperties}
 
-class MascotEValuePSMFilter( var eValueThreshold: Double ) extends IComputablePeptideMatchFilter {
-
+class MascotEValuePSMFilter( var eValueThreshold: Double = 1.0 ) extends IComputablePeptideMatchFilter {
+  
   val filterParameter = PeptideMatchFilterParams.MASCOT_EVALUE.toString
   val filterDescription = "peptide match mascot eValue filter"
 
@@ -44,19 +44,17 @@ class MascotEValuePSMFilter( var eValueThreshold: Double ) extends IComputablePe
 
   def getFilterProperties(): Option[Map[String, Any]] = {
     val props =new HashMap[String, Any]
-    props += ("eValue threashold" ->  eValueThreshold )
+    props += (FiltersPropertyKeys.MASCOT_EVALUE_THRESHOLD -> eValueThreshold )
     Some( props.toMap )
   }
 
-  def getNextValue( currentVal: Any ) = {
+  def getNextValue( currentVal: AnyVal ) = {
     currentVal.asInstanceOf[Double] * 0.95
   }
 
-  def getThresholdStartValue(): Any = {
-    1
-  }
+  def getThresholdStartValue(): AnyVal = 1.0
 
-  def setThresholdValue( currentVal : Any ){
+  def setThresholdValue( currentVal : AnyVal ) {
     eValueThreshold = currentVal.asInstanceOf[Double]
   }
 }
