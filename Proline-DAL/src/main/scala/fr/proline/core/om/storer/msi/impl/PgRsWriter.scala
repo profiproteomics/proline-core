@@ -2,10 +2,8 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.generate
-
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -22,6 +20,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.util.sql.encodeRecordForPgCopy
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.repository.util.PostgresUtils
 
 private[msi] class PgRsWriter() extends SQLiteRsWriter() {
 
@@ -49,7 +48,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
 
     DoJDBCWork.withConnection( msiDbCtx, { msiCon =>
       
-      val bulkCopyManager = new CopyManager(msiCon.asInstanceOf[BaseConnection])
+      val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
   
       // Create TMP table
       val tmpPeptideTableName = "tmp_peptide_" + (scala.math.random * 1000000).toInt
@@ -120,7 +119,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
       // Bulk insert of peptide matches
       logger.info("BULK insert of peptide matches")
   
-      val bulkCopyManager = new CopyManager(msiCon.asInstanceOf[BaseConnection])
+      val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
   
       val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpPepMatchTableName + " ( id, " + pepMatchTableCols + " ) FROM STDIN")
   
@@ -234,7 +233,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
       // Bulk insert of protein matches
       logger.info("BULK insert of protein matches")
   
-      val bulkCopyManager = new CopyManager(msiCon.asInstanceOf[BaseConnection])
+      val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
       val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpProtMatchTableName + " ( id, " + protMatchTableCols + " ) FROM STDIN")
   
       // Iterate over protein matches to store them
@@ -298,7 +297,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
 
     DoJDBCReturningWork.withConnection( msiDbCtx, { msiCon =>
       
-      val bulkCopyManager = new CopyManager(msiCon.asInstanceOf[BaseConnection])
+      val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
   
       // Retrieve some vars
       val rsId = rs.id

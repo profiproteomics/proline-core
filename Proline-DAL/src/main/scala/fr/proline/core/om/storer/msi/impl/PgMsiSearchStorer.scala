@@ -1,14 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
-
 import org.postgresql.copy.CopyIn
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-
 import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
-
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -18,6 +15,7 @@ import fr.proline.core.om.model.msi.Ms1Query
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.util.sql.encodeRecordForPgCopy
+import fr.proline.repository.util.PostgresUtils
 
 class PgMsiSearchStorer() extends SQLiteMsiSearchStorer() with Logging {
 
@@ -46,7 +44,7 @@ class PgMsiSearchStorer() extends SQLiteMsiSearchStorer() with Logging {
 
       val msQueryTableCols = MsiDbMsQueryTable.columnsAsStrList.filter(_ != "id").mkString(",")
 
-      val bulkCopyManager = new CopyManager(con.asInstanceOf[BaseConnection])
+      val bulkCopyManager =  PostgresUtils.getCopyManager(con)
       val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpMsQueryTableName + " ( id, " + msQueryTableCols + " ) FROM STDIN")
 
       for (msQuery <- msQueries) {

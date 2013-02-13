@@ -1,14 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
-
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
 import org.xerial.snappy.Snappy
-
 import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
-
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal._
@@ -21,6 +18,7 @@ import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.repository.util.JDBCWork
 import fr.proline.util.bytes._
 import fr.proline.util.sql._
+import fr.proline.repository.util.PostgresUtils
 
 class SQLPeaklistWriter extends IPeaklistWriter with Logging {
 
@@ -163,7 +161,7 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
 
     DoJDBCWork.withConnection(context.getMSIDbConnectionContext, { con =>
 
-      val bulkCopyManager = new CopyManager(con.asInstanceOf[BaseConnection])
+      val bulkCopyManager = PostgresUtils.getCopyManager(con)
 
       // Create TMP table
       val tmpSpectrumTableName = "tmp_spectrum_" + (scala.math.random * 1000000).toInt
