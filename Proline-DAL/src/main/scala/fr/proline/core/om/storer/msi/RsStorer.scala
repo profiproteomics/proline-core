@@ -107,12 +107,13 @@ object RsStorer {
   def apply( msiDbDriverType: DriverType ): IRsStorer = {
 
     val plWriter = PeaklistWriter(msiDbDriverType)
+    val msiSearchStorer = MsiSearchStorer(msiDbDriverType)
 
     msiDbDriverType match {
       case DriverType.POSTGRESQL => {
-        new PgSQLRsStorer(new PgRsWriter(), plWriter)
+        new SQLRsStorer(new PgRsWriter(), MsiSearchStorer(msiDbDriverType), plWriter)
       }
-      case DriverType.SQLITE => new SQLRsStorer(new SQLiteRsWriter(), plWriter)
+      case DriverType.SQLITE => new SQLRsStorer(new SQLiteRsWriter(), MsiSearchStorer(msiDbDriverType), plWriter)
       case _ => new JPARsStorer(plWriter) //Call JPARsStorer
     }
 

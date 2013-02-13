@@ -13,11 +13,15 @@ import fr.proline.core.om.storer.ps.PeptideStorer
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal._
+import fr.proline.core.om.storer.msi.IMsiSearchStorer
 
-class SQLRsStorer(private val _rsWriter: IRsWriter,
-  private val _pklWriter: IPeaklistWriter) extends IRsStorer with Logging {
+class SQLRsStorer(
+  private val _rsWriter: IRsWriter,
+  private val _msiSearchStorer: IMsiSearchStorer,
+  private val _pklWriter: IPeaklistWriter
+) extends IRsStorer with Logging {
 
-  protected val msiSearchStorer = new SQLiteMsiSearchStorer()
+  protected val msiSearchStorer = _msiSearchStorer //new SQLiteMsiSearchStorer()
 
   val peptideByUniqueKey = _rsWriter.peptideByUniqueKey
   val proteinBySequence = _rsWriter.proteinBySequence

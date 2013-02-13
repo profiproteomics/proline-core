@@ -72,7 +72,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
           peptide.sequence,
           ptmString,
           peptide.calculatedMass,
-          peptide.properties.map(generate(_)).getOrElse("")
+          peptide.properties.map(generate(_))
         )
   
         // Store peptide
@@ -147,7 +147,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
           peptideMatch.properties.map(generate(_)),
           peptideMatch.peptide.id,
           msQuery.id,
-          if (bestChildId == 0) "" else bestChildId,
+          if (bestChildId == 0) None else Some(bestChildId),
           scoringId.get,
           peptideMatch.resultSetId
         )
@@ -251,16 +251,16 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
           proteinMatch.id,
           proteinMatch.accession,
           proteinMatch.description,
-          if (proteinMatch.geneName == null) "" else proteinMatch.geneName,
+          Option(proteinMatch.geneName),
           proteinMatch.score,
           proteinMatch.coverage,
           proteinMatch.sequenceMatches.length,
           proteinMatch.peptideMatchesCount,
           proteinMatch.isDecoy,
           proteinMatch.isLastBioSequence,
-          proteinMatch.properties.map(generate(_)).getOrElse(""),
+          proteinMatch.properties.map(generate(_)),
           proteinMatch.taxonId,
-          if (proteinId > 0) proteinId.toString else "",
+          if (proteinId > 0) Some(proteinId) else None,
           scoringId.get,
           rsId
         )
@@ -334,7 +334,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
             seqMatch.residueBefore.toString(),
             seqMatch.residueAfter.toString(),
             isDecoy,
-            seqMatch.properties.map(generate(_)).getOrElse(""),
+            seqMatch.properties.map(generate(_)),
             seqMatch.getBestPeptideMatchId,
             seqMatch.resultSetId
           )

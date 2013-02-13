@@ -16,9 +16,10 @@ import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.sql._
 
+/*
 class PgSQLRsStorer(private val _storer: IRsWriter, private val _plWriter: IPeaklistWriter) extends SQLRsStorer(_storer, _plWriter) {
 
   // TODO: add to SQLRsStorer constructor instead ???
   override val msiSearchStorer = new PgMsiSearchStorer()
 
-}
+}*/

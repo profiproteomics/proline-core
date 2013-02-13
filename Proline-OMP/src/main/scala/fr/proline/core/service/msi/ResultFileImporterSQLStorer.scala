@@ -108,8 +108,8 @@ class ResultFileImporterSQLStorer(
     >>>
     
     // Instantiate RsStorer
-    //val rsStorer: IRsStorer = RsStorer( storerContext.getMSIDbConnectionContext.getDriverType )
-    val rsStorer = new SQLRsStorer(new SQLiteRsWriter, new SQLPeaklistWriter) 
+    val rsStorer: IRsStorer = RsStorer( executionContext.getMSIDbConnectionContext.getDriverType )
+    //val rsStorer = new SQLRsStorer(new SQLiteRsWriter, new SQLPeaklistWriter) 
 	
     // Configure result file before parsing
     resultFile.instrumentConfig = instrumentConfig
@@ -229,6 +229,7 @@ class ResultFileImporterSQLStorer(
     }
     
     if( !wasInTransaction ) msiEzDBC.commitTransaction
+    logger.debug("End of result file importer service")
     
     this.beforeInterruption()
     

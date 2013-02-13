@@ -23,7 +23,7 @@ class PgMsiSearchStorer() extends SQLiteMsiSearchStorer() with Logging {
   // val bulkCopyManager = new CopyManager( msiDb.ezDBC.connection.asInstanceOf[BaseConnection] )
   
   private val msqIdQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery( (t,c) => 
-    List(t.ID,t.INITIAL_ID) -> "WHERE "~ t.MSI_SEARCH_ID ~" = ?"
+    List(t.INITIAL_ID,t.ID) -> "WHERE "~ t.MSI_SEARCH_ID ~" = ?"
   )
 
   override def storeMsQueries(msiSearchId: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
@@ -58,6 +58,9 @@ class PgMsiSearchStorer() extends SQLiteMsiSearchStorer() with Logging {
             if (context.spectrumIdByTitle != null) {
               ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
               spectrumId = Some(ms2Query.spectrumId)
+            }
+            else {
+              throw new Exception("spectrumIdByTitle must not be null")
             }
             _copyMsQuery(pgBulkLoader, msQuery, msiSearchId, spectrumId)
           }
@@ -98,7 +101,7 @@ class PgMsiSearchStorer() extends SQLiteMsiSearchStorer() with Logging {
       msQuery.charge,
       msQuery.moz,
       msQuery.properties.map(generate(_)),
-      spectrumId.getOrElse("").toString,
+      spectrumId,
       msiSearchId
     )
 

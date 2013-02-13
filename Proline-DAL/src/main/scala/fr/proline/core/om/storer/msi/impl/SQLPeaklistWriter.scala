@@ -180,16 +180,15 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
 
       // Iterate over spectra to store them
       peaklistContainer.eachSpectrum { spectrum =>
-        logger.debug("get spectrum " + spectrum.title)
-
+        
         // Define some vars
-        val precursorIntensity = if (!spectrum.precursorIntensity.isNaN) spectrum.precursorIntensity else ""
-        val firstCycle = if (spectrum.firstCycle > 0) spectrum.firstCycle else ""
-        val lastCycle = if (spectrum.lastCycle > 0) spectrum.lastCycle else ""
-        val firstScan = if (spectrum.firstScan > 0) spectrum.firstScan else ""
-        val lastScan = if (spectrum.lastScan > 0) spectrum.lastScan else ""
-        val firstTime = if (spectrum.firstTime > 0) spectrum.firstTime else ""
-        val lastTime = if (spectrum.lastTime > 0) spectrum.lastTime else ""
+        val precursorIntensity = if (!spectrum.precursorIntensity.isNaN) Some(spectrum.precursorIntensity) else None
+        val firstCycle = if (spectrum.firstCycle > 0) Some(spectrum.firstCycle) else None
+        val lastCycle = if (spectrum.lastCycle > 0) Some(spectrum.lastCycle) else None
+        val firstScan = if (spectrum.firstScan > 0) Some(spectrum.firstScan) else None
+        val lastScan = if (spectrum.lastScan > 0) Some(spectrum.lastScan) else None
+        val firstTime = if (spectrum.firstTime > 0) Some(spectrum.firstTime) else None
+        val lastTime = if (spectrum.lastTime > 0) Some(spectrum.lastTime) else None
         //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
 
         // moz and intensity lists are formatted as numbers separated by spaces      
@@ -217,7 +216,7 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
           """\\x""" + bytes2Hex(doublesToBytes(spectrum.mozList.get)), // Snappy.compress(
           """\\x""" + bytes2Hex(floatsToBytes(spectrum.intensityList.get)), // Snappy.compress(
           spectrum.peaksCount,
-          spectrum.properties.map(generate(_)).getOrElse(""),
+          spectrum.properties.map(generate(_)),
           peaklistId,
           spectrum.instrumentConfigId
         )
