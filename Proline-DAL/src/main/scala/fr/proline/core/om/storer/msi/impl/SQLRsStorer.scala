@@ -468,7 +468,11 @@ class SQLRsStorer(private val _rsWriter: IRsWriter,
   }
 
   def storeMsQueries(msiSearchID: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
-    this.msiSearchStorer.storeMsQueries(msiSearchID, msQueries, context)
+    val toto = this.msiSearchStorer.storeMsQueries(msiSearchID, msQueries, context)
+    
+    logger.info(" + + +  MsiSearch stored !")
+    
+    toto
   }
 
   def insertInstrumentConfig(instrumentConfig: InstrumentConfig, context: StorerContext) = {
