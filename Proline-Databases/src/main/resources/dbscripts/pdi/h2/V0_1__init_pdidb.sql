@@ -55,7 +55,7 @@ CREATE TABLE public.fasta_parsing_rule (
 CREATE TABLE public.seq_db_config (
                 id IDENTITY NOT NULL,
                 name VARCHAR(100) NOT NULL,
-                alphabet CHAR(3) NOT NULL,
+                alphabet VARCHAR(3) NOT NULL,
                 ref_entry_format VARCHAR(10) NOT NULL,
                 serialized_properties LONGVARCHAR,
                 fasta_parsing_rule_id INTEGER NOT NULL,

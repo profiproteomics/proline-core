@@ -69,7 +69,7 @@ CREATE SEQUENCE public.seq_db_config_id_seq;
 CREATE TABLE public.seq_db_config (
                 id INTEGER NOT NULL DEFAULT nextval('public.seq_db_config_id_seq'),
                 name VARCHAR(100) NOT NULL,
-                alphabet CHAR(3) NOT NULL,
+                alphabet VARCHAR(3) NOT NULL,
                 ref_entry_format VARCHAR(10) NOT NULL,
                 serialized_properties TEXT,
                 fasta_parsing_rule_id INTEGER NOT NULL,
