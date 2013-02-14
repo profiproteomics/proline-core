@@ -2,12 +2,12 @@ package fr.proline.core.algo.msi.validation.pepmatch
 
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
+import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
 
 
 /** Implementation of IPeptideMatchValidator performing a simple target/decoy analysis. */
 class TDPepMatchValidator(
-  val validationFilter: IOptimizablePeptideMatchFilter,
+  val validationFilter: IPeptideMatchFilter,
   val targetDecoyMode: TargetDecoyModes.Mode
 ) extends IPeptideMatchValidator {
   

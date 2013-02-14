@@ -218,6 +218,7 @@ class ResultSetValidator(
 
     // Instantiate a peptide match validator
     //val pepMatchValidator = PeptideMatchValidator(searchEngine, targetRs)
+    import fr.proline.core.algo.msi.validation.pepmatch.FilteringPeptideMatchValidator
 
     var finalValidationResult: ValidationResult = null
 
@@ -226,9 +227,10 @@ class ResultSetValidator(
     var filterNbr = 1
     if (pepMatchPreFilters != None) {
       pepMatchPreFilters.get.foreach { psmFilter =>
-
+        
         //finalValidationResult = pepMatchValidator.applyPSMFilter(filter = psmFilter,targetDecoyMode = targetDecoyMode)
-        psmFilter.filterPeptideMatches(targetRs.peptideMatches, true, false)
+        //psmFilter.filterPeptideMatches(targetRs.peptideMatches, true, false)
+        finalValidationResult = new FilteringPeptideMatchValidator( psmFilter ).validatePeptideMatches(targetRs).finalResult
         
         filtersParam += (filterNbr -> psmFilter.toFilterDescriptor)
         filterNbr += 1

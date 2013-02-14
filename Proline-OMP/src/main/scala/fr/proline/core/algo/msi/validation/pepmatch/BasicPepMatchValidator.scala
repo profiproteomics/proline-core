@@ -2,14 +2,13 @@ package fr.proline.core.algo.msi.validation.pepmatch
 
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
-import fr.proline.core.algo.msi.filter.NullOptimizablePSMFilter
+import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
+import fr.proline.core.algo.msi.filter.NullPSMFilter
 
 /** Basic implementation of IPeptideMatchValidator. */
 class BasicPeptideMatchValidator extends IPeptideMatchValidator {
   
-  // FIXME: create a NullPeptideMatchFilter to fake this
-  val validationFilter: IOptimizablePeptideMatchFilter = NullOptimizablePSMFilter
+  val validationFilter: IPeptideMatchFilter = NullPSMFilter
   
   def validatePeptideMatches( peptideMatches: Seq[PeptideMatch], decoyPepMaches: Option[Seq[PeptideMatch]] = None ): ValidationResults = {
     

@@ -21,3 +21,18 @@ object NullOptimizablePSMFilter extends IOptimizablePeptideMatchFilter {
   
 
 }
+
+object NullPSMFilter extends IPeptideMatchFilter {
+  
+  val filterParameter = PepMatchFilterParams.NONE.toString
+  val filterDescription = "a filter which does nothing"
+
+  def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
+  }
+
+  def getFilterProperties(): Option[Map[String, Any]] = None
+  
+  def setThresholdValue( currentVal : AnyVal ) { }
+  
+
+}

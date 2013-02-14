@@ -2,10 +2,10 @@ package fr.proline.core.algo.msi.validation.pepmatch
 
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
+import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
 
 /** Implementation of IPeptideMatchValidator which performs a filtering operation. */
-class FilteringPeptideMatchValidator( val validationFilter: IOptimizablePeptideMatchFilter ) extends IPeptideMatchValidator {
+class FilteringPeptideMatchValidator( val validationFilter: IPeptideMatchFilter ) extends IPeptideMatchValidator {
   
   def validatePeptideMatches( peptideMatches: Seq[PeptideMatch], decoyPepMaches: Option[Seq[PeptideMatch]] = None ): ValidationResults = {
     
