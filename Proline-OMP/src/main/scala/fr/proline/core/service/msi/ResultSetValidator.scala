@@ -30,7 +30,7 @@ object ResultSetValidator {
     pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
     pepMatchValidator: Option[IPeptideMatchValidator] = None,
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
-    targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
+    //targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
     storeResultSummary: Boolean = true): ResultSetValidator = {
 
     val targetRs = getResultSetProvider(execContext).getResultSet(targetRsId)
@@ -45,7 +45,7 @@ object ResultSetValidator {
       pepMatchPreFilters,
       pepMatchValidator,
       protSetFilters,
-      targetDecoyMode,
+      //targetDecoyMode,
       storeResultSummary
     )
   }
@@ -81,7 +81,7 @@ class ResultSetValidator(
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   // TODO: add a protSetTDAnalyzer
-  targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
+  //targetDecoyMode: Option[TargetDecoyModes.Mode] = None,
   storeResultSummary: Boolean = true) extends IService with Logging {
 
   //  def this( execContext: IExecutionContext,

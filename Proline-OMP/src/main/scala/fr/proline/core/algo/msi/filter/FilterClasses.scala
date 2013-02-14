@@ -18,6 +18,7 @@ object PepMatchFilterParams extends Enumeration {
   val PEPTIDE_SEQUENCE_LENGTH = Value("PEP_SEQ_LENGTH")
   val RANK = Value("RANK")
   val SCORE = Value("SCORE")
+  val NONE = Value("NONE")
 }
 
 
@@ -33,6 +34,7 @@ object BuildPeptideMatchFilter {
       case PepMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH => new PepSeqLengthPSMFilter()
       case PepMatchFilterParams.RANK => new RankPSMFilter()
       case PepMatchFilterParams.SCORE => new ScorePSMFilter()
+      case PepMatchFilterParams.NONE => NullOptimizablePSMFilter
     }
   }
 }
@@ -47,6 +49,7 @@ object BuildOptimizablePeptideMatchFilter {
     filterParam match {
       case PepMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
       case PepMatchFilterParams.SCORE => new ScorePSMFilter()
+      case PepMatchFilterParams.NONE => NullOptimizablePSMFilter
     }
   }
   

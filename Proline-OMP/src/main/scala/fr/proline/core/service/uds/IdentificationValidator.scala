@@ -24,8 +24,8 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                mergeResultSets: Boolean,
                                pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
                                pepMatchValidator: Option[IPeptideMatchValidator] = None,
-                               protSetFilters: Option[Seq[IProteinSetFilter]] = None,
-                               targetDecoyMode: Option[TargetDecoyModes.Mode]
+                               protSetFilters: Option[Seq[IProteinSetFilter]] = None
+                               //targetDecoyMode: Option[TargetDecoyModes.Mode]
                                ) extends IService with Logging {
   
   /*private val udsDbConnector = dbManager.getUdsDbConnector
@@ -113,9 +113,9 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
           targetRs = mergedTargetRs,
           pepMatchPreFilters = pepMatchPreFilters,
           pepMatchValidator = pepMatchValidator,
-          protSetFilters = protSetFilters,
+          protSetFilters = protSetFilters
           // TODO: retrieve from the MSIdb
-          targetDecoyMode = targetDecoyMode
+          //targetDecoyMode = targetDecoyMode
         )
         
                                                               

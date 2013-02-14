@@ -4,12 +4,12 @@ import scala.collection.mutable.HashMap
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
-
 import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.algo.msi.validation.pepmatch._
 
 object TargetDecoyModes extends Enumeration {
   type Mode = Value
@@ -28,6 +28,46 @@ case class ValidationResult( nbTargetMatches: Int,
 @JsonInclude( Include.NON_NULL )
 case class ValidationResults( finalResult: ValidationResult, computedResults: Option[Seq[ValidationResult]] = None )
 
+/** A factory to instantiate the appropriate peptide match validator */
+object BuildPeptideMatchValidator {
+  
+  protected def apply(): IPeptideMatchValidator = new BasicPeptideMatchValidator()
+  
+  protected def apply(validationFilter: IOptimizablePeptideMatchFilter): IPeptideMatchValidator = {
+    new FilteringPeptideMatchValidator( validationFilter )
+  }
+  
+  protected def apply(validationFilter: IOptimizablePeptideMatchFilter, targetDecoyMode: TargetDecoyModes.Mode): IPeptideMatchValidator = {
+    new TDPepMatchValidator( validationFilter, targetDecoyMode )
+  }
+  
+  protected def apply(
+    validationFilter: IOptimizablePeptideMatchFilter,
+    targetDecoyMode: TargetDecoyModes.Mode,
+    expectedFdr: Float
+  ): IPeptideMatchValidator = {
+    new TDPepMatchValidatorWithFDROptimization( validationFilter, targetDecoyMode, expectedFdr )
+  }
+  
+  def apply(
+    validationFilterOpt: Option[IOptimizablePeptideMatchFilter] = None,
+    targetDecoyModeOpt: Option[TargetDecoyModes.Mode] = None,
+    expectedFdrOpt: Option[Float] = None
+  ): IPeptideMatchValidator = {
+    
+    if (expectedFdrOpt.isDefined) {
+      this.apply(validationFilterOpt.get,targetDecoyModeOpt.get,expectedFdrOpt.get)
+    }
+    else if (targetDecoyModeOpt.isDefined) {
+      this.apply(validationFilterOpt.get,targetDecoyModeOpt.get)
+    }
+    else if (validationFilterOpt.isDefined) {
+      this.apply(validationFilterOpt.get)
+    }
+    else this.apply()
+  }
+  
+}
 
 trait IPeptideMatchValidator {
   
