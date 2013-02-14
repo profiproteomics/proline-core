@@ -11,11 +11,13 @@ class FilteringPeptideMatchValidator( val validationFilter: IPeptideMatchFilter 
     
     // Set validation flag to true for all provided peptide matches
     validationFilter.filterPeptideMatches(peptideMatches, false, true)
+    if( decoyPepMaches.isDefined ) validationFilter.filterPeptideMatches(decoyPepMaches.get, false, true)
     
     // Return the number of provided peptide matches as validation result
     ValidationResults(
       ValidationResult(
-        nbTargetMatches = peptideMatches.count(_.isValidated)
+        nbTargetMatches = peptideMatches.count(_.isValidated),
+        nbDecoyMatches = decoyPepMaches.map( _.count( p => p.isValidated ) )
       )
     )
     
