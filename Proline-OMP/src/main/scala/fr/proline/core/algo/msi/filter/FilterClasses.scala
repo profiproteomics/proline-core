@@ -91,7 +91,7 @@ trait IPeptideMatchFilter extends IFilter {
    * @param traceability : specify if filter could saved information in peptideMatch properties 
    *  
    */
-  // TODO: return Seq[PeptideMatch] and create a validatePeptideMaches in IOptimizablePeptideMatchFilter which change the validation flag
+  // TODO: rename to selectPeptideMatches and add a isSelected flag to peptideMatches
   def filterPeptideMatches( pepMatches : Seq[PeptideMatch], incrementalValidation: Boolean, traceability : Boolean) : Unit  
   
 //def updatePeptideMatchProperties(pepMatch : PeptideMatch){

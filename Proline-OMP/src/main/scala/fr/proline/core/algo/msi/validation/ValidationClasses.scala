@@ -1,6 +1,10 @@
 package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.HashMap
+import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
+
 import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinSet
@@ -13,13 +17,15 @@ object TargetDecoyModes extends Enumeration {
   val concatenated = Value("concatenated")
 }
 
-
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class ValidationResult( nbTargetMatches: Int,
                              nbDecoyMatches: Option[Int] = None,
                              fdr: Option[Float] = None,
                              properties: Option[HashMap[String,Any]] = None
                             )
-                            
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class ValidationResults( finalResult: ValidationResult, computedResults: Option[Seq[ValidationResult]] = None )
 
 
