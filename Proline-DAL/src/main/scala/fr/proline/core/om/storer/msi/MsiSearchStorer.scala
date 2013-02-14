@@ -43,8 +43,7 @@ object MsiSearchStorer {
   def apply(msiDbDriverType: DriverType): IMsiSearchStorer = {
     msiDbDriverType match {
       case DriverType.POSTGRESQL => new PgMsiSearchStorer()
-      case DriverType.SQLITE => new SQLiteMsiSearchStorer()
-      //case _ => 
+      case _ => new SQLiteMsiSearchStorer()
     }
   }
 
