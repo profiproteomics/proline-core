@@ -30,7 +30,7 @@ public class DatabaseConnectorTest {
     }
 
     @Ignore
-    // Work only on Grenoble CEA Network
+    /* PostgreSQL manual test ; default configuration for Grenoble CEA Network */
     public void testPG() {
 	final IDatabaseConnector pgConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 		ProlineDatabaseType.PDI, "pg_pdi.properties");

@@ -35,6 +35,7 @@ public final class JPAUtils {
 	    throw new IllegalArgumentException("Invalid description");
 	}
 
+	/* HibernateEntityManagerFactory interface and StatisticsService class are specific to Hibernate ORM */
 	final HibernateEntityManagerFactory hibEMF = (HibernateEntityManagerFactory) emf;
 
 	final SessionFactory hibSF = hibEMF.getSessionFactory();
@@ -104,6 +105,7 @@ public final class JPAUtils {
 	    throw new IllegalArgumentException("Work is null");
 	}
 
+	/* Session interface is specific to Hibernate ORM */
 	final Session hibSession = em.unwrap(Session.class);
 
 	hibSession.doWork(work);
@@ -138,6 +140,7 @@ public final class JPAUtils {
 	    throw new IllegalArgumentException("ReturningWork is null");
 	}
 
+	/* Session interface is specific to Hibernate ORM */
 	final Session hibSession = em.unwrap(Session.class);
 
 	return hibSession.doReturningWork(returningWork);

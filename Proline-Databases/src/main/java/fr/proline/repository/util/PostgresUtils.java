@@ -1,7 +1,8 @@
 package fr.proline.repository.util;
 
+import static fr.proline.util.StringUtils.LINE_SEPARATOR;
+
 import java.lang.reflect.Proxy;
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
@@ -9,8 +10,6 @@ import org.postgresql.PGConnection;
 import org.postgresql.copy.CopyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import fr.proline.util.StringUtils;
 
 public final class PostgresUtils {
 
@@ -22,40 +21,38 @@ public final class PostgresUtils {
     /**
      * Retrieves the PostgreSQL <code>CopyManager</code> of the given <code>Connection</code>.
      * 
-     * @param con
-     *            SQL JDBC Connection, must be a <code>PGConnection</code>. All connections returned by
-     *            PostgreSQL Drivers and DataSources implement <code>PGConnection</code>.
+     * @param connection
+     *            SQL JDBC Connection, must be a <code>PGConnection</code> or a Hibernate wrapped connection.
+     *            All connections returned by PostgreSQL Drivers and DataSources implement
+     *            <code>PGConnection</code>.
      * @return The <code>CopyManager</code> instance of the given connection.
      * @throws SQLException
      *             If an SQL error occured.
      */
-    public static CopyManager getCopyManager(final Connection con) throws SQLException {
+    public static CopyManager getCopyManager(final Object connection) throws SQLException {
 
-	if (con == null) {
+	if (connection == null) {
 	    throw new IllegalArgumentException("Con is null");
 	}
 
 	CopyManager result = null;
 
-	if (con instanceof PGConnection) {
-	    final PGConnection pgConnection = (PGConnection) con;
+	/*
+	 * WARNING : As connection object can be a Proxy or a Wrapper, type checks must only be done on
+	 * interface types (NOT Java class types).
+	 */
+	if (connection instanceof PGConnection) {
+	    final PGConnection pgConnection = (PGConnection) connection;
 
 	    result = pgConnection.getCopyAPI();
-	} else if (con instanceof JdbcWrapper<?>) {
-	    /* This code is specific to Hibernate ORM */
-	    final JdbcWrapper<?> jdbcWrapper = (JdbcWrapper<?>) con;
+	} else if (connection instanceof JdbcWrapper<?>) {
+	    /* JdbcWrapper interface is specific to Hibernate ORM */
+	    final JdbcWrapper<?> jdbcWrapper = (JdbcWrapper<?>) connection;
 	    final Object wrappedObject = jdbcWrapper.getWrappedObject();
 
-	    if (wrappedObject instanceof Connection) {
-		final Connection rawConnection = (Connection) wrappedObject;
-
-		result = getCopyManager(rawConnection);
-	    } else {
-		debugProxy(wrappedObject);
-	    }
-
+	    result = getCopyManager(wrappedObject);
 	} else {
-	    debugProxy(con);
+	    debugProxy(connection);
 
 	    throw new IllegalArgumentException("Invalid PostgreSQL connection");
 	}
@@ -73,13 +70,13 @@ public final class PostgresUtils {
 	    buff.append("  Java Proxy class");
 	}
 
-	buff.append(StringUtils.LINE_SEPARATOR);
+	buff.append(LINE_SEPARATOR);
 
 	final Class<?>[] interfaces = clazz.getInterfaces();
 
 	for (final Class<?> intf : interfaces) {
-	    buff.append("  implement : ").append(intf);
-	    buff.append(StringUtils.LINE_SEPARATOR);
+	    buff.append("  implement : ").append(intf.getName());
+	    buff.append(LINE_SEPARATOR);
 	}
 
 	LOG.warn(buff.toString());
