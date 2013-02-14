@@ -89,7 +89,7 @@ class ResultSummaryMerger(
         //val rsStorer = new JPARsStorer()
         //storerContext = new StorerContext(udsDb, pdiDb, psDb, msiDb)
         //rsStorer.storeResultSet(mergedResultSet, storerContext)
-        val rsStorer = RsStorer( msiDbCtx.getDriverType )
+        val rsStorer = RsStorer( msiDbCtx )
         rsStorer.storeResultSet( mergedResultSet, storerContext )
 
         //msiDbCtx.getEntityManager.flush() // Flush before returning to SQL msiEzDBC

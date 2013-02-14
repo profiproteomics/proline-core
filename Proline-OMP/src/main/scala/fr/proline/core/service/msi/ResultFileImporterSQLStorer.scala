@@ -108,7 +108,7 @@ class ResultFileImporterSQLStorer(
     >>>
     
     // Instantiate RsStorer
-    val rsStorer: IRsStorer = RsStorer( executionContext.getMSIDbConnectionContext.getDriverType )
+    val rsStorer: IRsStorer = RsStorer( executionContext.getMSIDbConnectionContext )
     //val rsStorer = new SQLRsStorer(new SQLiteRsWriter, new SQLPeaklistWriter) 
 	
     // Configure result file before parsing

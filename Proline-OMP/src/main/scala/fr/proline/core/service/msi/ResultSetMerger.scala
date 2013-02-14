@@ -76,7 +76,7 @@ class ResultSetMerger(
         //storerContext = new StorerContext(udsDb, pdiDb, psDb, msiDb)
         //rsStorer.storeResultSet(tmpMergedResultSet, storerContext)
         
-        val rsStorer = RsStorer( msiDbCtx.getDriverType )
+        val rsStorer = RsStorer( msiDbCtx )
         rsStorer.storeResultSet( tmpMergedResultSet, storerContext )
         
         //msiDb.getEntityManager.flush() // Flush before returning to SQL msiEzDBC

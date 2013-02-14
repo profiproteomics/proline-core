@@ -1,11 +1,11 @@
 package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi.{ ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IPeaklistContainer }
 import fr.proline.core.om.storer.msi.impl._
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
+import fr.proline.context.DatabaseConnectionContext
 
 trait IRsStorer extends Logging {
 
@@ -96,25 +96,28 @@ trait IRsStorer extends Logging {
 
 /** A factory object for implementations of the IRsStorer trait */
 object RsStorer {
-
-  //TODO : Define common algo for JPA & SQL! 
-
-  //import fr.proline.core.om.storer.msi.impl.GenericRsWriter
+  
   import fr.proline.core.om.storer.msi.impl.PgRsWriter
   import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
   import fr.proline.repository.DriverType
 
-  def apply( msiDbDriverType: DriverType ): IRsStorer = {
+  def apply( msiDbCtx: DatabaseConnectionContext ): IRsStorer = {
 
+    val msiDbDriverType = msiDbCtx.getDriverType    
     val plWriter = PeaklistWriter(msiDbDriverType)
-    val msiSearchStorer = MsiSearchStorer(msiDbDriverType)
-
-    msiDbDriverType match {
-      case DriverType.POSTGRESQL => {
-        new SQLRsStorer(new PgRsWriter(), MsiSearchStorer(msiDbDriverType), plWriter)
+    
+    if( msiDbCtx.isJPA() ) {
+      new JPARsStorer(plWriter)
+    }
+    else {
+      val msiSearchStorer = MsiSearchStorer(msiDbDriverType)
+      
+      msiDbDriverType match {
+        case DriverType.POSTGRESQL => {
+          new SQLRsStorer(new PgRsWriter(), msiSearchStorer, plWriter)
+        }
+        case _ => new SQLRsStorer(new SQLiteRsWriter(), msiSearchStorer, plWriter)
       }
-      case DriverType.SQLITE => new SQLRsStorer(new SQLiteRsWriter(), MsiSearchStorer(msiDbDriverType), plWriter)
-      case _ => new JPARsStorer(plWriter) //Call JPARsStorer
     }
 
   }
