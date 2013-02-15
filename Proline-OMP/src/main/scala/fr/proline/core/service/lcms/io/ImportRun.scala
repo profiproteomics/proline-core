@@ -1,7 +1,7 @@
 package fr.proline.core.service.lcms.io
 
 import fr.proline.core.om.model.lcms.PeakPickingSoftware
-import fr.proline.core.dal.LcmsDb
+import fr.profi.jdbc.SQLQueryExecution
 import fr.proline.api.service.IService
 import java.io.File
 import fr.proline.core.om.model.lcms.LcmsScan
@@ -70,13 +70,13 @@ object ImportRun extends String2FileConverter {
 
 
 
-class ImportRun(lcmsDb : LcmsDb, lcmsRun: LcmsRun, var instrument: Instrument = null ) extends IService {
+class ImportRun(lcmsDb : SQLQueryExecution, lcmsRun: LcmsRun, var instrument: Instrument = null ) extends IService {
   
-  def this(lcmsDb : LcmsDb, scans: Seq[LcmsScan], pps : PeakPickingSoftware, rawfile: RawFile) {
+  def this(lcmsDb : SQLQueryExecution, scans: Seq[LcmsScan], pps : PeakPickingSoftware, rawfile: RawFile) {
     this(lcmsDb, ImportRun.buildLcmsRun(scans, pps , rawfile) )
   }
   
-  def this(lcmsDb : LcmsDb, file: File, pps : PeakPickingSoftware, rawfile: RawFile) {
+  def this(lcmsDb : SQLQueryExecution, file: File, pps : PeakPickingSoftware, rawfile: RawFile) {
     this(lcmsDb, ImportRun.buildLcmsRun(file,pps,rawfile))
   }
   //var scans = ImportRun.readRunFile(file)
