@@ -14,3 +14,12 @@ case class FeatureProperties (
   @BeanProperty var overlapFactor: Option[Float] = None
   //@BeanProperty var maPRopDuJour2: Option[Float] = None
 )
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class LcmsRunProperties
+
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class LcmsScanProperties 

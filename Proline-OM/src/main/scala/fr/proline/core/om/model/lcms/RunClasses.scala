@@ -3,6 +3,7 @@ package fr.proline.core.om.model.lcms
 import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
+import fr.proline.util.misc.InMemoryIdGen
 
 case class Instrument( 
     
@@ -31,7 +32,7 @@ case class RawFile(
         
             )
 
-object LcmsRun {
+object LcmsRun extends InMemoryIdGen {
   var timeIndexWidth = 10
   def calcTimeIndex( time: Double ): Int = (time/timeIndexWidth).toInt
 }
@@ -50,7 +51,7 @@ case class LcmsRun(
             val scans: Array[LcmsScan],
             
             // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+            var properties: Option[LcmsRunProperties] = None
             
             ) {
   require( scans != null )
@@ -115,6 +116,10 @@ case class LcmsRun(
 
   }
   
+  def isEmpty() : Boolean = {
+    scans.length == 0
+  }
+  
 }
 
 case class LcmsScan(
@@ -136,6 +141,6 @@ case class LcmsScan(
             val precursorCharge: Int = 0,
             
             // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
+            var properties: Option[LcmsScanProperties] = None
         
             )
