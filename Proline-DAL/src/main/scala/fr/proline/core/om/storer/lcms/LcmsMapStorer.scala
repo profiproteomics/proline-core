@@ -1,7 +1,17 @@
 package fr.proline.core.om.storer.lcms
 
+import java.io.File
 import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.om.storer.lcms.impl._
+import fr.proline.core.om.model.lcms.Feature
+import fr.proline.core.om.model.lcms.Instrument
+import fr.proline.core.om.model.lcms.LcmsMap
+import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.om.model.lcms.ProcessedMap
+import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.storer.lcms.impl.GenericMasterMapStorer
+import fr.proline.core.om.storer.lcms.impl.GenericProcessedMapStorer
+import fr.proline.core.om.storer.lcms.impl.SQLiteMasterMapStorer
+import fr.proline.core.om.storer.lcms.impl.SQLiteProcessedMapStorer
 import fr.proline.repository.DriverType
 
 trait IRunMapStorer {
@@ -13,6 +23,13 @@ trait IRunMapStorer {
   def insertMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int
   
  }
+
+
+trait IRunStorer {
+  import fr.proline.core.om.model.lcms.LcmsRun
+  
+  def storeLcmsRun( run: LcmsRun, instrument: Instrument) : Unit
+}
 
 /*
 /** A factory object for implementations of the IRunMapStorer trait */
