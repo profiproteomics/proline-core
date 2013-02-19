@@ -5,13 +5,13 @@ import com.codahale.jerkson.Json.generate
 import fr.profi.jdbc.SQLQueryExecution
 import fr.profi.jdbc.easy._
 
-import fr.proline.core.om.model.lcms.Instrument
-import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.storer.lcms.IRunStorer
 
 class SQLRunStorer(lcmsDb: SQLQueryExecution) extends IRunStorer {
 
-  def storeLcmsRun(run: LcmsRun, instrument: Instrument) = {
+  def storeLcmsRun(run: LcMsRun, instrument: Instrument) = {
 
     //implicit def string2File(tsvFile: String) = new File(tsvFile) 
 

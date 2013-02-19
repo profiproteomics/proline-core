@@ -3,104 +3,130 @@ package fr.proline.core.om.model.lcms
 import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.BeanProperty
+import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
 
 case class FeatureScoring(
     
-            // Required fields
-            val id: Int,
-            val name: String,
-            val description: String,
+  // Required fields
+  val id: Int,
+  val name: String,
+  val description: String,
+
+  // Mutable optional fields
+  var properties: Option[FeatureScoringProperties] = None
   
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            )
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class FeatureScoringProperties
 
 case class PeakPickingSoftware(
     
-            // Required fields
-            val id: Int,
-            val name: String,
-            val version: String,
-            val algorithm: String,
-  
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            )
+  // Required fields
+  val id: Int,
+  val name: String,
+  val version: String,
+  val algorithm: String,
+
+  // Mutable optional fields
+  var properties: Option[PeakPickingSoftwareProperties] = None
+
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeakPickingSoftwareProperties
 
 case class PeakelFittingModel( 
     
-            // Required fields
-            val id: Int,
-            val name: String,
-            
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            )
+  // Required fields
+  val id: Int,
+  val name: String,
+  
+  // Mutable optional fields
+  var properties: Option[PeakelFittingModelProperties] = None
+  
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeakelFittingModelProperties
 
 case class MapMozCalibration( 
     
-            // Required fields
-            val id: Int,
-            val mozList: Array[Double],
-            val deltaMozList: Array[Double],
-            
-            val mapId: Int,
-            val scanId: Int,
-            
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            ) {
+  // Required fields
+  val id: Int,
+  val mozList: Array[Double],
+  val deltaMozList: Array[Double],
+  
+  val mapId: Int,
+  val scanId: Int,
+  
+  // Mutable optional fields
+  var properties: Option[MapMozCalibrationProperties] = None
+  
+) {
   // Requirements
   require( mozList != null && deltaMozList != null )
 }
 
-sealed abstract class LcmsMap(
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MapMozCalibrationProperties
+
+sealed trait ILcMsMap {
             
-            // Required fields
-            //val id: Int,
-            val name: String,
-            val isProcessed: Boolean,
-            val creationTimestamp: Date,
-            val features: Array[Feature],
-            
-            // Immutable optional fields
-            val description: String = null,
-            val featureScoring: FeatureScoring = null
-            
-            ) {
-  // Requirements
+  // Required fields
+  //val id: Int,
+  val name: String
+  val isProcessed: Boolean
+  val creationTimestamp: Date
+  val features: Array[Feature]
+  
+  // Immutable optional fields
+  val description: String
+  val featureScoring: FeatureScoring
+  
+  // Mutable optional fields
+  var properties: Option[LcMsMapProperties]
+  
   require( creationTimestamp != null && features != null )
+
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class LcMsMapProperties
 
 object RunMap extends InMemoryIdGen
 
 case class RunMap(
             
-            // Required fields
-            var id: Int,
-            override val name: String,
-            override val isProcessed: Boolean,
-            override val creationTimestamp: Date,
-            override val features: Array[Feature],
-            
-            val runId: Int,
-            val peakPickingSoftware: PeakPickingSoftware,
-            
-            // Immutable optional fields
-            override val description: String = null,
-            override val featureScoring: FeatureScoring = null,
-            
-            val peakelFittingModel: PeakelFittingModel = null,
-            
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            ) extends LcmsMap( name, isProcessed, creationTimestamp, features, description, featureScoring ) {
+  // Required fields
+  var id: Int,
+  val name: String,
+  val isProcessed: Boolean,
+  val creationTimestamp: Date,
+  val features: Array[Feature],
+  
+  val runId: Int,
+  val peakPickingSoftware: PeakPickingSoftware,
+  
+  // Immutable optional fields
+  val description: String = null,
+  val featureScoring: FeatureScoring = null,
+  
+  val peakelFittingModel: PeakelFittingModel = null,
+  
+  // Mutable optional fields
+  var properties: Option[LcMsMapProperties] = None
+  
+) extends ILcMsMap {
   
   // Requirements
   require( peakPickingSoftware != null )
@@ -109,20 +135,21 @@ case class RunMap(
     
     val curTime = new Date()
     
-    ProcessedMap( id = id,
-                  number = number,
-                  name = name,
-                  description = description,
-                  creationTimestamp = curTime,
-                  modificationTimestamp = curTime,
-                  isProcessed = true,
-                  isMaster = false,
-                  isAlnReference = false,
-                  features = features,
-                  featureScoring = featureScoring,
-                  runMapIds = Array( id ),
-                  mapSetId = mapSetId
-                  )
+    ProcessedMap(
+      id = id,
+      number = number,
+      name = name,
+      description = description,
+      creationTimestamp = curTime,
+      modificationTimestamp = curTime,
+      isProcessed = true,
+      isMaster = false,
+      isAlnReference = false,
+      features = features,
+      featureScoring = featureScoring,
+      runMapIds = Array( id ),
+      mapSetId = mapSetId
+    )
     
   }
   
@@ -132,33 +159,33 @@ object ProcessedMap extends InMemoryIdGen
 
 case class ProcessedMap(
             
-            // Required fields
-            var id: Int,
-            override val name: String,
-            override val isProcessed: Boolean,
-            override val creationTimestamp: Date,
-            override val features: Array[Feature],
-            
-            val number: Int,
-            var modificationTimestamp: Date,
-            val isMaster: Boolean,
-            var isAlnReference: Boolean,
-            
-            val mapSetId: Int,
-            var runMapIds: Array[Int], // Many values only for a master map
-            
-            // Immutable optional fields
-            override val description: String = null,
-            override val featureScoring: FeatureScoring = null,              
-            
-            // Mutable optional fields
-            var isLocked: Boolean = false,
-            var normalizationFactor: Float = 1,
-            var mozCalibrations: Option[Array[MapMozCalibration]] = None, // m/z calibration matrix for the entire run
-            
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            ) extends LcmsMap( name, isProcessed, creationTimestamp, features, description, featureScoring ) {
+  // Required fields
+  var id: Int,
+  val name: String,
+  val isProcessed: Boolean,
+  val creationTimestamp: Date,
+  val features: Array[Feature],
+  
+  val number: Int,
+  var modificationTimestamp: Date,
+  val isMaster: Boolean,
+  var isAlnReference: Boolean,
+  
+  val mapSetId: Int,
+  var runMapIds: Array[Int], // Many values only for a master map
+  
+  // Immutable optional fields
+  val description: String = null,
+  val featureScoring: FeatureScoring = null,              
+  
+  // Mutable optional fields
+  var isLocked: Boolean = false,
+  var normalizationFactor: Float = 1,
+  var mozCalibrations: Option[Array[MapMozCalibration]] = None, // m/z calibration matrix for the entire run
+  
+  var properties: Option[LcMsMapProperties] = None
+  
+) extends ILcMsMap {
   
   // Requirements
   require( modificationTimestamp != null )
@@ -190,17 +217,17 @@ case class Landmark( time: Float, deltaTime: Float )
 
 case class MapAlignment(
     
-            // Required fields
-            val fromMapId: Int,
-            val toMapId: Int,
-            val massRange: Tuple2[Double,Double],
-            val timeList: Array[Float],
-            val deltaTimeList: Array[Float],
+  // Required fields
+  val fromMapId: Int,
+  val toMapId: Int,
+  val massRange: Tuple2[Double,Double],
+  val timeList: Array[Float],
+  val deltaTimeList: Array[Float],
+
+  // Mutable optional fields
+  var properties: Option[MapAlignmentProperties] = None
   
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            ) {
+) {
   
   // Requirements
   require( massRange != null && timeList != null && deltaTimeList != null )
@@ -260,20 +287,23 @@ case class MapAlignment(
     
   }
   
-  
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MapAlignmentProperties
 
 case class MapAlignmentSet(
     
-            // Required fields
-            val fromMapId: Int,
-            val toMapId: Int,
-            val mapAlignments: Array[MapAlignment],
+  // Required fields
+  val fromMapId: Int,
+  val toMapId: Int,
+  val mapAlignments: Array[MapAlignment],
+
+  // Mutable optional fields
+  var properties: Option[MapAlignmentSetProperties] = None
   
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            ) {
+) {
   
   // Requirements
   require( mapAlignments != null )
@@ -301,22 +331,26 @@ case class MapAlignmentSet(
   
 }
 
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MapAlignmentSetProperties
+
 case class MapSet(
     
-            // Required fields
-            val id: Int,
-            val name: String,
-            val creationTimestamp: Date,
-            val childMaps: Array[ProcessedMap],
-            
-            // Mutable optional fields
-            var masterMap: ProcessedMap = null,
-            var alnReferenceMapId: Int = 0,
-            var mapAlnSets: Array[MapAlignmentSet] = null,
-            
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            ) {
+  // Required fields
+  val id: Int,
+  val name: String,
+  val creationTimestamp: Date,
+  val childMaps: Array[ProcessedMap],
+  
+  // Mutable optional fields
+  var masterMap: ProcessedMap = null,
+  var alnReferenceMapId: Int = 0,
+  var mapAlnSets: Array[MapAlignmentSet] = null,
+  
+  var properties: Option[MapSetProperties] = None
+  
+  ) {
   
   // Requirements
   require( creationTimestamp != null && childMaps != null )
@@ -362,3 +396,6 @@ case class MapSet(
   
 }
 
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MapSetProperties

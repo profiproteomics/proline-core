@@ -6,7 +6,7 @@ import fr.proline.core.om.storer.lcms.IRunMapStorer
 class GenericRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
   
   import fr.proline.core.om.model.lcms.RunMap
-  import fr.proline.core.om.model.lcms.LcmsMap
+  import fr.proline.core.om.model.lcms.ILcMsMap
   
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit = {
     throw new Exception("not yet implemented")
@@ -15,7 +15,7 @@ class GenericRunMapStorer( lcmsDb: SQLQueryHelper ) extends IRunMapStorer {
   
   }
   
-  def insertMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int = {
+  def insertMap( lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date ): Int = {
     throw new Exception("not yet implemented")
     
     0

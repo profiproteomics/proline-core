@@ -3,57 +3,53 @@ package fr.proline.core.om.model.lcms
 import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.BeanProperty
+import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
-
-case class Instrument( 
-    
-            // Required fields
-            val id: Int,
-            val name: String,
-            val source: String,
-  
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-            
-            )
+import fr.proline.core.om.model.msi.Instrument
 
 case class RawFile( 
     
-            // Required fields
-            val id: Int,
-            val name: String,
-            val extension: String,
-            val directory: String,
-            val creationTimestamp: Date,
-            val instrument: Instrument,
+  // Required fields
+  val id: Int,
+  val name: String,
+  val extension: String,
+  val directory: String,
+  val creationTimestamp: Date,
+  val instrument: Instrument,
+  
+  // Mutable optional fields
+  var properties: Option[RawFileProperties] = None
+)
             
-            // Mutable optional fields
-            var properties: HashMap[String, Any] = new collection.mutable.HashMap[String, Any]
-        
-            )
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RawFileProperties
 
-object LcmsRun extends InMemoryIdGen {
+object LcMsRun extends InMemoryIdGen {
   var timeIndexWidth = 10
   def calcTimeIndex( time: Double ): Int = (time/timeIndexWidth).toInt
 }
 
-case class LcmsRun(
+case class LcMsRun(
         
-            // Required fields
-            val id: Int,
-            val rawFileName: String,
-            //val instrumentName: String,
-            val minIntensity: Double,
-            val maxIntensity: Double,
-            val ms1ScanCount: Int,
-            val ms2ScanCount: Int,
-            val rawFile: RawFile,
-            val scans: Array[LcmsScan],
-            
-            // Mutable optional fields
-            var properties: Option[LcmsRunProperties] = None
-            
-            ) {
+  // Required fields
+  val id: Int,
+  val rawFileName: String,
+  //val instrumentName: String,
+  val minIntensity: Double,
+  val maxIntensity: Double,
+  val ms1ScanCount: Int,
+  val ms2ScanCount: Int,
+  val rawFile: RawFile,
+  val scans: Array[LcMsScan],
+  
+  // Mutable optional fields
+  var properties: Option[LcMsRunProperties] = None
+  
+) {
   require( scans != null )
   
   lazy val scanById = Map() ++ scans.map { scan => ( scan.id -> scan ) }
@@ -64,14 +60,14 @@ case class LcmsRun(
   
   lazy val scanIdsByTimeIndex: Map[Int,Array[Int]] = {
 
-    val timeIndexWidth = LcmsRun.timeIndexWidth;
+    val timeIndexWidth = LcMsRun.timeIndexWidth;
     
     import scala.collection.JavaConversions._
     val scanIdsByTimeIndexHashMap = new java.util.HashMap[Int,ArrayBuffer[Int]]()
     
     for( scan <- scans ) {
       
-      val timeIndex = LcmsRun.calcTimeIndex(scan.time)
+      val timeIndex = LcMsRun.calcTimeIndex(scan.time)
       
       if( !scanIdsByTimeIndex.containsKey(timeIndex) ) {
         scanIdsByTimeIndexHashMap.put(timeIndex, new ArrayBuffer[Int](1) )
@@ -89,13 +85,13 @@ case class LcmsRun(
     scanIdsIndexBuilder.result()
   }
 
-  def getScanAtTime( time: Float, msLevel: Int = 1 ): LcmsScan = {
+  def getScanAtTime( time: Float, msLevel: Int = 1 ): LcMsScan = {
     if( time < 0 ) { throw new IllegalArgumentException("time must be a positive number" ); }
     
     val runEndTime = endTime
     val safeTime = if( time > runEndTime ) runEndTime else time
     
-    val timeIndex = LcmsRun.calcTimeIndex(time)      
+    val timeIndex = LcMsRun.calcTimeIndex(time)      
     val scanIdsIndex = scanIdsByTimeIndex      
     var matchingScanIds = new ArrayBuffer[Int]
     
@@ -122,25 +118,34 @@ case class LcmsRun(
   
 }
 
-case class LcmsScan(
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class LcMsRunProperties
+
+case class LcMsScan(
     
-            // Required fields
-            val id: Int,
-            val initialId: Int,
-            val cycle: Int,
-            val time: Float,
-            val msLevel: Int,
-            val tic: Double,
-            val basePeakMoz: Double,
-            val basePeakIntensity: Double,
+  // Required fields
+  val id: Int,
+  val initialId: Int,
+  val cycle: Int,
+  val time: Float,
+  val msLevel: Int,
+  val tic: Double,
+  val basePeakMoz: Double,
+  val basePeakIntensity: Double,
+  
+  val runId: Int,
+  
+  // Immutable optional fields
+  val precursorMoz: Double = Double.NaN,
+  val precursorCharge: Int = 0,
+  
+  // Mutable optional fields
+  var properties: Option[LcMsScanProperties] = None
+
+)
             
-            val runId: Int,
-            
-            // Immutable optional fields
-            val precursorMoz: Double = Double.NaN,
-            val precursorCharge: Int = 0,
-            
-            // Mutable optional fields
-            var properties: Option[LcmsScanProperties] = None
-        
-            )
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class LcMsScanProperties
+

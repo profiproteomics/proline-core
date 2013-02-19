@@ -3,11 +3,11 @@ package fr.proline.core.om.storer.lcms
 import java.io.File
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.model.lcms.Feature
-import fr.proline.core.om.model.lcms.Instrument
-import fr.proline.core.om.model.lcms.LcmsMap
-import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.om.model.lcms.ILcMsMap
+import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.ProcessedMap
 import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.storer.lcms.impl.GenericMasterMapStorer
 import fr.proline.core.om.storer.lcms.impl.GenericProcessedMapStorer
 import fr.proline.core.om.storer.lcms.impl.SQLiteMasterMapStorer
@@ -16,19 +16,18 @@ import fr.proline.repository.DriverType
 
 trait IRunMapStorer {
   
-  import fr.proline.core.om.model.lcms.LcmsMap
+  import fr.proline.core.om.model.lcms.ILcMsMap
   import fr.proline.core.om.model.lcms.RunMap
   
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit
-  def insertMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int
+  def insertMap( lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date ): Int
   
  }
 
 
 trait IRunStorer {
-  import fr.proline.core.om.model.lcms.LcmsRun
   
-  def storeLcmsRun( run: LcmsRun, instrument: Instrument) : Unit
+  def storeLcmsRun( run: LcMsRun, instrument: Instrument) : Unit
 }
 
 /*

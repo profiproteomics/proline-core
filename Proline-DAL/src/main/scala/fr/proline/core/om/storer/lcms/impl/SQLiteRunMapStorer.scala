@@ -115,7 +115,7 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryExecution ) extends IRunMapStorer {
   
   }
   
-  def insertMap( lcmsMap: LcmsMap, modificationTimestamp: java.util.Date ): Int = {
+  def insertMap( lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date ): Int = {
     
     //val curDate = new java.util.Date
     val ftScoringId = if( lcmsMap.featureScoring != null ) Some(lcmsMap.featureScoring.id) else None

@@ -8,7 +8,7 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
   import fr.proline.util.sql._
   import fr.proline.core.om.model.lcms._
   
-  def getRuns( runIds: Seq[Int] ): Array[LcmsRun] = {
+  def getRuns( runIds: Seq[Int] ): Array[LcMsRun] = {
     
     val scans = this.getScans( runIds )
     // Group scans by run id
@@ -16,7 +16,7 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
     
     // TODO: load related raw file and instrument
     
-    val runs = new Array[LcmsRun](runIds.length)    
+    val runs = new Array[LcMsRun](runIds.length)    
     var colNames: Seq[String] = null
     var runIdx = 0
     
@@ -40,11 +40,11 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
     runs
   }
   
-  def buildRunMap( runRecord: Map[String,Any], scans: Array[LcmsScan] ): LcmsRun = {
+  def buildRunMap( runRecord: Map[String,Any], scans: Array[LcMsScan] ): LcMsRun = {
     
     import java.util.Date
     
-    new LcmsRun( id = runRecord("id").asInstanceOf[Int],
+    new LcMsRun( id = runRecord("id").asInstanceOf[Int],
                  rawFileName = runRecord("raw_file_path").asInstanceOf[String],// raw_file_name
                  minIntensity = runRecord.getOrElse("min_intensity",Double.NaN).asInstanceOf[Double],
                  maxIntensity = runRecord.getOrElse("max_intensity",Double.NaN).asInstanceOf[Double],
@@ -55,10 +55,10 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
                )
   }
   
-  def getScans( runIds: Seq[Int] ): Array[LcmsScan] = {
+  def getScans( runIds: Seq[Int] ): Array[LcMsScan] = {
     
     val nbScans: Int = sqlExec.selectInt( "SELECT count(*) FROM scan WHERE run_id IN (" + runIds.mkString(",") + ")" )
-    val scans = new Array[LcmsScan](nbScans)    
+    val scans = new Array[LcMsScan](nbScans)    
     var colNames: Seq[String] = null
     var lcmsScanIdx = 0
     
@@ -80,7 +80,7 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
     scans
   }
   
-  def buildLcmsScan( scanRecord: Map[String,Any] ): LcmsScan = {
+  def buildLcmsScan( scanRecord: Map[String,Any] ): LcMsScan = {
     
     import fr.proline.util.primitives.DoubleOrFloatAsFloat._
     import fr.proline.util.primitives.LongOrIntAsInt._
@@ -88,7 +88,7 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
     val precursorMoz = scanRecord.getOrElse("precursor_moz",Double.NaN).asInstanceOf[Double]
     val precursorCharge = scanRecord.getOrElse("precursor_charge",0).asInstanceOf[Int]
     
-    new LcmsScan( id = scanRecord("id").asInstanceOf[AnyVal],
+    new LcMsScan( id = scanRecord("id").asInstanceOf[AnyVal],
                   initialId = scanRecord("initial_id").asInstanceOf[Int],
                   cycle = scanRecord("cycle").asInstanceOf[Int],
                   time = scanRecord("time").asInstanceOf[AnyVal],
