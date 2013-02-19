@@ -5,6 +5,7 @@ import java.sql.Timestamp
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
 
+import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.om.model.msi.{InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch}
@@ -66,7 +67,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
   override def storeMsQueries(msiSearchId: Int, msQueries: Seq[MsQuery], storerContext: StorerContext): StorerContext = {
 
     if (msQueries == null) {
-      throw new IllegalArgumentException("msQueries sequence is null")
+      throw new IllegalArgumentException("MsQueries seq is null")
     }
 
     checkStorerContext(storerContext)
@@ -492,7 +493,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param peaklistSoftware PeaklistSoftware object, must not be {{{null}}}.
    */
   def loadOrCreatePeaklistSoftware(storerContext: StorerContext,
-    peaklistSoftware: PeaklistSoftware): MsiPeaklistSoftware = {
+                                   peaklistSoftware: PeaklistSoftware): MsiPeaklistSoftware = {
 
     checkStorerContext(storerContext)
 
@@ -545,7 +546,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param search Associated MSISearch object, must not be {{{null}}} and must be attached to {{{msiEm}}} persistence context before calling this method.
    */
   def loadOrCreateSearchSetting(storerContext: StorerContext,
-    search: MSISearch): MsiSearchSetting = {
+                                search: MSISearch): MsiSearchSetting = {
 
     checkStorerContext(storerContext)
 
@@ -628,7 +629,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param instrumentConfig InstrumentConfig object, must not be {{{null}}}.
    */
   def loadOrCreateInstrumentConfig(storerContext: StorerContext,
-    instrumentConfig: InstrumentConfig): MsiInstrumentConfig = {
+                                   instrumentConfig: InstrumentConfig): MsiInstrumentConfig = {
 
     checkStorerContext(storerContext)
 
@@ -674,7 +675,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param enzymeName Name of the Enzyme (ignoring case), must not be empty.
    */
   def loadOrCreateEnzyme(storerContext: StorerContext,
-    enzymeName: String): MsiEnzyme = {
+                         enzymeName: String): MsiEnzyme = {
 
     checkStorerContext(storerContext)
 
@@ -711,7 +712,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @return Msi SeqDatabase entity or {{{null}}} if SeqDatabase does not exist in Pdi Db.
    */
   def loadOrCreateSeqDatabase(storerContext: StorerContext,
-    seqDatabase: SeqDatabase): MsiSeqDatabase = {
+                              seqDatabase: SeqDatabase): MsiSeqDatabase = {
 
     checkStorerContext(storerContext)
 
@@ -805,7 +806,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param ptmDefinition PtmDefinition object, must not be {{{null}}}.
    */
   def loadOrCreatePtmSpecificity(storerContext: StorerContext,
-    ptmDefinition: PtmDefinition): MsiPtmSpecificity = {
+                                 ptmDefinition: PtmDefinition): MsiPtmSpecificity = {
 
     checkStorerContext(storerContext)
 
@@ -871,7 +872,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * The map can contain already fetched Peptides in current Msi transaction.
    */
   def retrievePeptides(storerContext: StorerContext,
-    peptides: Array[Peptide]) {
+                       peptides: Array[Peptide]) {
 
     checkStorerContext(storerContext)
 
@@ -1094,9 +1095,9 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param msiSearch Associated MsiSearch entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
   def createPeptideMatch(storerContext: StorerContext,
-    peptideMatch: PeptideMatch,
-    msiResultSet: MsiResultSet,
-    msiSearch: MsiSearch): MsiPeptideMatch = {
+                         peptideMatch: PeptideMatch,
+                         msiResultSet: MsiResultSet,
+                         msiSearch: MsiSearch): MsiPeptideMatch = {
 
     checkStorerContext(storerContext)
 
@@ -1158,7 +1159,10 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
           msiPeptideMatch.setScoringId(msiScoringId)
         }
 
-        // TODO handle serializedProperties
+        val peptideMatchProperties = peptideMatch.properties
+        if (peptideMatchProperties.isDefined) {
+          msiPeptideMatch.setSerializedProperties(Json.generate(peptideMatchProperties.get))
+        }
 
         if (peptideMatch.msQuery == null) {
           throw new IllegalArgumentException("MsQuery is mandatory in PeptideMatch")
@@ -1225,8 +1229,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param msiSearch Associated MsiSearch entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
   def loadOrCreateMsQuery(storerContext: StorerContext,
-    msQuery: MsQuery,
-    msiSearch: MsiSearch): MsiMsQuery = {
+                          msQuery: MsQuery,
+                          msiSearch: MsiSearch): MsiMsQuery = {
 
     checkStorerContext(storerContext)
 
@@ -1265,7 +1269,10 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiMsQuery.setMoz(msQuery.moz)
         msiMsQuery.setMsiSearch(msiSearch) // msiSearch must be in persistence context
 
-        // TODO handle serializedProperties
+        val msQueryProperties = msQuery.properties
+        if (msQueryProperties.isDefined) {
+          msiMsQuery.setSerializedProperties(Json.generate(msQueryProperties.get))
+        }
 
         if (msQuery.isInstanceOf[Ms2Query]) {
           val ms2Query = msQuery.asInstanceOf[Ms2Query]
@@ -1312,8 +1319,6 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         logger.trace("Msi MsQuery {" + omMsQueryId + "} persisted")
 
-        // TODO handle MsQueryProperties
-
         msiMsQuery
       } // End if (omMsQueryId <= 0)
 
@@ -1328,8 +1333,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param msiResultSet Associated Msi ResultSet entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
   def createProteinMatch(storerContext: StorerContext,
-    proteinMatch: ProteinMatch,
-    msiResultSet: MsiResultSet): MsiProteinMatch = {
+                         proteinMatch: ProteinMatch,
+                         msiResultSet: MsiResultSet): MsiProteinMatch = {
 
     checkStorerContext(storerContext)
 
@@ -1410,8 +1415,6 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     msiEm.persist(msiProteinMatch)
     logger.trace("Msi ProteinMatch {" + omProteinMatchId + "} persisted")
 
-    // TODO handle ProteinMatchProperties
-
     msiProteinMatch
   }
 
@@ -1472,9 +1475,9 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    * @param msiResultSetId ResultSet Primary key, must be > 0 and denote an existing ResultSet entity in Msi Db (Msi transaction committed).
    */
   def createSequenceMatch(storerContext: StorerContext,
-    sequenceMatch: SequenceMatch,
-    msiProteinMatchId: Int,
-    msiResultSetId: Int): MsiSequenceMatch = {
+                          sequenceMatch: SequenceMatch,
+                          msiProteinMatchId: Int,
+                          msiResultSetId: Int): MsiSequenceMatch = {
 
     checkStorerContext(storerContext)
 
@@ -1592,8 +1595,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
    *  @param msiSearchSetting Associated Msi SearchSetting entity, must be attached to {{{msiEm}}} persistence context before calling this method.
    */
   private def bindUsedPtm(storerContext: StorerContext,
-    ptmDefinition: PtmDefinition, isFixed: Boolean,
-    msiSearchSetting: MsiSearchSetting) {
+                          ptmDefinition: PtmDefinition, isFixed: Boolean,
+                          msiSearchSetting: MsiSearchSetting) {
 
     checkStorerContext(storerContext)
 
@@ -1623,8 +1626,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
   }
 
   private def bindPeptidePtm(storerContext: StorerContext,
-    psPeptide: PsPeptide,
-    locatedPtm: LocatedPtm) {
+                             psPeptide: PsPeptide,
+                             locatedPtm: LocatedPtm) {
 
     checkStorerContext(storerContext)
 
@@ -1670,9 +1673,9 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
   }
 
   private def bindProteinMatchSeqDatabaseMap(storerContext: StorerContext,
-    msiProteinMatchId: Int,
-    seqDatabaseId: Int,
-    msiResultSet: MsiResultSet) {
+                                             msiProteinMatchId: Int,
+                                             seqDatabaseId: Int,
+                                             msiResultSet: MsiResultSet) {
 
     checkStorerContext(storerContext)
 
