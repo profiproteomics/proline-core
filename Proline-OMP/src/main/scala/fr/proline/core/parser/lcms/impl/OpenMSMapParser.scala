@@ -12,7 +12,7 @@ import fr.proline.core.om.model.lcms.Peak
 import fr.proline.core.om.model.lcms.IsotopicPattern
 import fr.proline.core.om.model.lcms.FeatureRelations
 import fr.proline.core.om.model.lcms.PeakPickingSoftware
-import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.lcms.Feature
@@ -30,7 +30,7 @@ object OpenMSMapParser {
 
 class OpenMSMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
     val node = XML.load(io.Source.fromFile(filePath).getLines.toString)
 
     val nodeSequence = node \ OpenMSMapParser.targetLabel

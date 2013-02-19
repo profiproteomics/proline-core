@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.util.control.Breaks._
 import java.util.Date
-import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.IsotopicPattern
 import fr.proline.core.om.model.lcms.Peak
@@ -32,7 +32,7 @@ object ProgenesisMapParser {
 
 class ProgenesisMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
     val lines = io.Source.fromFile(filePath).getLines();
 
     //skip the first 2 lines
@@ -113,7 +113,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     Some(runMap)
   }
   
-  def getAllRunMap(filePath: String, lcmsRunMaps : Array[LcmsRun]) {
+  def getAllRunMap(filePath: String, lcmsRunMaps : Array[LcMsRun]) {
     val lines = io.Source.fromFile(filePath).getLines();
 
     //skip the first 2 lines
@@ -129,7 +129,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       throw new Exception("Errors too much or less lcmsRun provided")
     
     //order mapping namefile runMaps
-    var nameFileRunMap = new HashMap[String, LcmsRun] 
+    var nameFileRunMap = new HashMap[String, LcMsRun] 
     
     for (namefile <- sampleNames)
       breakable { for (lcmsRun <- lcmsRunMaps) {

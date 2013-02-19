@@ -10,7 +10,7 @@ import fr.proline.repository.IDatabaseConnector
 
 object CleanMaps {
   
-  def apply( lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcmsScan],
+  def apply( lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcMsScan],
              clusteringParams: Option[ClusteringParams] ): ProcessedMap = {
     
     val mapCleaningService = new CleanMaps( lcmsDbConnector, lcmsMap, scans, clusteringParams )
@@ -21,7 +21,7 @@ object CleanMaps {
   
 }
 
-class CleanMaps( val lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcmsScan],
+class CleanMaps( val lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcMsScan],
                  clusteringParams: Option[ClusteringParams] ) extends MXLcmsService {
   
   var cleanedMap: ProcessedMap = null

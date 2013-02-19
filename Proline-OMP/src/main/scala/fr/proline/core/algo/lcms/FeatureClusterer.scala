@@ -19,7 +19,7 @@ object FeatureClusterer {
     def apply(a: Feature, b: Feature): Boolean = if (a.elutionTime < b.elutionTime) true else false
   }
   
-  def clusterizeFeatures( lcmsMap: LcmsMap, scans: Seq[LcmsScan], params: ClusteringParams ): ProcessedMap = {
+  def clusterizeFeatures( lcmsMap: ILcMsMap, scans: Seq[LcMsScan], params: ClusteringParams ): ProcessedMap = {
     
     val lcmsMapId = if( lcmsMap.isProcessed ) lcmsMap.asInstanceOf[ProcessedMap].id
                     else lcmsMap.asInstanceOf[RunMap].id
@@ -235,7 +235,7 @@ object FeatureClusterer {
   
   private def splitFtGroupByTime( ftGroup: Seq[Feature],
                                   timeTol: Float,
-                                  scanById: Map[Int,LcmsScan] ): ArrayBuffer[ArrayBuffer[Feature]] = {
+                                  scanById: Map[Int,LcMsScan] ): ArrayBuffer[ArrayBuffer[Feature]] = {
     
     // Sort features by first scan time
     val nbFts = ftGroup.length

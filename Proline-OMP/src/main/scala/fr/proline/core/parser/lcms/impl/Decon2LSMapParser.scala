@@ -7,7 +7,7 @@ import collection.mutable.HashMap
 import scala.collection.mutable.{ ArrayBuffer, Set }
 
 import fr.proline.core.parser.lcms.{ ILcmsMapFileParser, ExtraParameters }
-import fr.proline.core.om.model.lcms.{ LcmsRun, LcmsScan, IsotopicPattern, FeatureRelations, PeakPickingSoftware }
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.model.lcms.Peak
 import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.lcms.Feature
@@ -30,7 +30,7 @@ object Decon2LSMapParser {
 
 class Decon2LSMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters) = {
+  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters) = {
 
     ////// Retrieve some vars from extra hash params
     val params = extraParams.asInstanceOf[Decon2LSParams]

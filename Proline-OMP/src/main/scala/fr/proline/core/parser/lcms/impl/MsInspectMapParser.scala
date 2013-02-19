@@ -7,7 +7,7 @@ import java.util.Date
 import scala.collection.mutable.ArrayBuffer
 
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
-import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.lcms.{Feature, IsotopicPattern, FeatureRelations, Peak, PeakPickingSoftware}
 import fr.proline.core.parser.lcms.ExtraParameters
@@ -19,7 +19,7 @@ object MsInspectMapParser {
 
 class MsInspectMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
     val linesIterator = io.Source.fromFile(filePath).getLines()
     
     var line = if (linesIterator.hasNext) linesIterator.next else return None

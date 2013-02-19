@@ -4,7 +4,7 @@ import java.util.Date
 
 import collection.mutable.ArrayBuffer
 
-import fr.proline.core.om.model.lcms.LcmsRun
+import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.parser.lcms.ExtraParameters
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
@@ -14,16 +14,13 @@ import fr.proline.core.om.model.lcms.FeatureRelations
 import fr.proline.core.om.model.lcms.PeakPickingSoftware
 
 
-
-
 object MaxQuantMapParser {
   var sepChar = "\t"
 }
 
-
 class MaxQuantMapParser extends ILcmsMapFileParser {
   
-  def getRunMap( filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap( filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
     
     def toStandardName(s: String): String = {
       //to put in ILcmsMapFileParser maybe

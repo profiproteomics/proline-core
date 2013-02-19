@@ -9,12 +9,12 @@ trait ExtraParameters {}
 
 trait ILcmsMapFileParser {
   
-  import fr.proline.core.om.model.lcms.LcmsRun
+  import fr.proline.core.om.model.lcms.LcMsRun
   
   
-  def getRunMap( filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters ) : Option[RunMap]
+  def getRunMap( filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters ) : Option[RunMap]
   
-  def getMs2Events(lcmsRun: LcmsRun, idx:Int) : Array[Int] = {
+  def getMs2Events(lcmsRun: LcMsRun, idx:Int) : Array[Int] = {
     /**
      * from the id of the ms2 scan taken at the apex, find all consecutive ms2
      * assume scans ordering same when the were acquired 

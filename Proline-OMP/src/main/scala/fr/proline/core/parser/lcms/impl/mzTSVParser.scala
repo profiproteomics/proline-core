@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.codahale.jerkson.Json.parse
 
 import fr.proline.core.parser.lcms.{ ILcmsMapFileParser, ExtraParameters }
-import fr.proline.core.om.model.lcms.{ Feature, IsotopicPattern, RunMap, LcmsRun, Peak, FeatureRelations, FeatureProperties, PeakPickingSoftware }
+import fr.proline.core.om.model.lcms._
 
 /**
  * mzDBaccess file parser
@@ -79,7 +79,7 @@ case class mzFeature (
   @BeanProperty var overlappingFeature: Option[mzFeature] = None,
   @BeanProperty var isotopicPatterns: Option[Array[mzIsotopicPattern]] = None) {
 
-  def toFeature(lcmsRun: LcmsRun, id: Int, ms2Events: Array[Int]): Feature = {
+  def toFeature(lcmsRun: LcMsRun, id: Int, ms2Events: Array[Int]): Feature = {
 
     return Feature(id = id,
       moz = moz,
@@ -106,7 +106,7 @@ object mzTSVParser {
 
 class mzTSVParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcmsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
 
     val lineIterator = io.Source.fromFile(filePath).getLines()
     val columnNames = lineIterator.next.stripLineEnd.split(mzTSVParser.sepChar)
