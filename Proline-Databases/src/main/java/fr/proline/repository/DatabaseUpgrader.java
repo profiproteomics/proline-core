@@ -136,7 +136,13 @@ public final class DatabaseUpgrader {
 
 	    result = tableNames.toArray(new String[tableNames.size()]);
 	} finally {
-	    rs.close();
+
+	    try {
+		rs.close();
+	    } catch (SQLException exClose) {
+		LOG.error("Error closing tables ResultSet", exClose);
+	    }
+
 	}
 
 	return result;

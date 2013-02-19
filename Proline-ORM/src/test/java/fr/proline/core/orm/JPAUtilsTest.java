@@ -83,17 +83,32 @@ public class JPAUtilsTest extends DatabaseTestCase {
 
 		    final Statement stm = connection.createStatement();
 
-		    if (stm.execute("select count(*) from instrument")) {
-			final ResultSet rs = stm.getResultSet();
+		    try {
 
-			if (rs.next()) {
-			    result = Long.valueOf(rs.getLong(1));
+			if (stm.execute("select count(*) from instrument")) {
+			    final ResultSet rs = stm.getResultSet();
+
+			    while ((result == null) && rs.next()) {
+				final Object obj = rs.getObject(1); // 1st column
+
+				if (obj instanceof Long) {
+				    result = (Long) obj;
+				}
+
+			    }
+
+			    rs.close();
 			}
 
-			rs.close();
-		    }
+		    } finally {
 
-		    stm.close();
+			try {
+			    stm.close();
+			} catch (SQLException exClose) {
+			    LOG.error("Error closing count statement", exClose);
+			}
+
+		    }
 
 		    return result;
 		}
