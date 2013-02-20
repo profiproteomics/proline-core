@@ -280,6 +280,10 @@ public class ExternalDb implements Serializable {
 	    break;
 
 	case HOST:
+		
+		if (dt == DriverType.H2) {
+			urlBuilder.append("tcp:");
+		}
 	    urlBuilder.append("//");
 
 	    final String serverHostName = getHost();
