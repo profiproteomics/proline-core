@@ -66,7 +66,7 @@ class ProteinsOMConverterUtil ( useCachedObject: Boolean = true ){
 	      					mass = pdiBioSequence.getMass,
 	      					pi = pdiBioSequence.getPi,
 	      					crc64 = pdiBioSequence.getCrc64,
-	      					alphabet = pdiBioSequence.getAlphabet
+	      					alphabet = pdiBioSequence.getAlphabet.trim()
 	      )
 
 	  
