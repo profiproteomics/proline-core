@@ -1,14 +1,11 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable
+
 import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.{DecoratedExecutionContext, IExecutionContext}
 import fr.proline.core.om.utils.PeptideIdent
-import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.repository.IDatabaseConnector
-import fr.proline.context.DecoratedExecutionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.context.BasicExecutionContext
 
 /**
  * RsStorer context container. Contains current ResultSet (and DecoyRS) "persistence context".
@@ -32,9 +29,9 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
 
   var seqDbIdByTmpId: Map[Int, Int] = null // TODO To be integrated to idCaches
 
-  private val entityCaches = mutable.Map.empty[Class[_], mutable.Map[Int, _]]
+  private val m_entityCaches = mutable.Map.empty[Class[_], mutable.Map[Int, _]]
 
-  private val idCaches = mutable.Map.empty[Class[_], mutable.Map[Int, Int]]
+  // private val m_idCaches = mutable.Map.empty[Class[_], mutable.Map[Int, Int]]
 
   /**
    * Retrieved and created Msi Peptide entities.
@@ -55,7 +52,7 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
 
     require(classifier != null, "Classifier is null")
 
-    val knownCache = entityCaches.get(classifier)
+    val knownCache = m_entityCaches.get(classifier)
 
     if (knownCache.isDefined) {
       knownCache.get.asInstanceOf[mutable.Map[Int, T]]
@@ -64,40 +61,40 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
 
       val newCache = mutable.Map.empty[Int, T]
 
-      entityCaches += classifier -> newCache
+      m_entityCaches += classifier -> newCache
 
       newCache
     }
 
   }
 
-  /**
-   * Retrieves the current cache for a given Msi entity.
-   * These are global caches (for entities shared by ResultSets: Decoy, children...)
-   * within the current persistence context (Msi {{{EntityManager}}} session and transaction).
-   * Caches associate OM Id (can be "In memory" < 0) -> ORM Id once persisted {{{EntityManager}}}.
-   *
-   * @param classifier Class of relevant OM Msi entity obtained with Scala {{{classOf[]}}} operator.
-   * @return current cache for given Msi entity.
-   */
-  def getIdCache[T](classifier: Class[T]): mutable.Map[Int, Int] = {
-
-    require(classifier != null, "Classifier is null")
-
-    val knownCache = idCaches.get(classifier)
-
-    if (knownCache.isDefined) {
-      knownCache.get.asInstanceOf[mutable.Map[Int, Int]]
-    } else {
-      logger.debug("Creating ID context cache for " + classifier)
-
-      val newCache = mutable.Map.empty[Int, Int]
-
-      idCaches += classifier -> newCache
-
-      newCache
-    }
-
-  }
+  //  /**
+  //   * Retrieves the current persisted Id for a given OM temp Id.
+  //   * These are global caches (for entities shared by ResultSets: Decoy, children...)
+  //   * within the current DatabaseConnectionContext.
+  //   * Caches associate OM Id (can be "In memory" < 0) -> Entity Id (Primary key) once persisted.
+  //   *
+  //   * @param classifier Class of relevant OM entity obtained with Scala {{{classOf[]}}} operator.
+  //   * @return current cache for given Msi entity.
+  //   */
+  //  private def getIdCache[T](classifier: Class[T]): mutable.Map[Int, Int] = {
+  //
+  //    require(classifier != null, "Classifier is null")
+  //
+  //    val knownCache = m_idCaches.get(classifier)
+  //
+  //    if (knownCache.isDefined) {
+  //      knownCache.get
+  //    } else {
+  //      logger.debug("Creating ID context cache for " + classifier)
+  //
+  //      val newCache = mutable.Map.empty[Int, Int]
+  //
+  //      m_idCaches += classifier -> newCache
+  //
+  //      newCache
+  //    }
+  //
+  //  }
 
 }
