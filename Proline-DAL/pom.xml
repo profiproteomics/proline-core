@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>Proline-Core</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.0.7</version>
+  </parent>
+
+  <artifactId>Proline-DAL</artifactId>
+
+  <name>${project.artifactId}</name>
+
+  <dependencies>
+
+    <!-- ProFi Commons -->
+    <dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Scala</artifactId>
+    </dependency>
+
+    <!-- "Proline" modules -->
+    <!-- Unused dependency : fr.proline:Proline-OM:jar:0.0.2-SNAPSHOT:compile -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+    </dependency>
+    <!-- Add : org.apache.commons:commons-lang3:jar:3.0.1:compile
+               com.codahale:jerkson_2.9.1:jar:0.6.0-SNAPSHOT:compile -->
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-ORM</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+    </dependency>
+
+    <!-- Direct dependencies -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.weiglewilczek.slf4s</groupId>
+      <artifactId>slf4s_2.9.1</artifactId>
+    </dependency>
+
+    <!-- Databases -->
+    <dependency>
+      <groupId>postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- Add : joda-time:joda-time:jar:1.6.2:compile -->
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>1.6.2</version>
+    </dependency>
+
+    <!-- Compression -->
+    <dependency>
+      <groupId>com.github.jponge</groupId>
+      <artifactId>lzma-java</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.tukaani</groupId>
+      <artifactId>xz</artifactId>
+      <version>1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xerial.snappy</groupId>
+      <artifactId>snappy-java</artifactId>
+      <version>1.0.4.1</version>
+    </dependency>
+
+    <!-- Tests -->
+    <dependency>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>specs_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dbunit</groupId>
+      <artifactId>dbunit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+
+      </plugin>
+
+      <!-- Build Scala sources -->
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>

@@ -1,0 +1,26 @@
+package fr.proline.core.algo.msi.validation.pepmatch
+
+import fr.proline.core.algo.msi.validation._
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
+
+/** Implementation of IPeptideMatchValidator which performs a filtering operation. */
+class FilteringPeptideMatchValidator( val validationFilter: IPeptideMatchFilter ) extends IPeptideMatchValidator {
+  
+  def validatePeptideMatches( peptideMatches: Seq[PeptideMatch], decoyPepMaches: Option[Seq[PeptideMatch]] = None ): ValidationResults = {
+    
+    // Set validation flag to true for all provided peptide matches
+    validationFilter.filterPeptideMatches(peptideMatches, false, true)
+    if( decoyPepMaches.isDefined ) validationFilter.filterPeptideMatches(decoyPepMaches.get, false, true)
+    
+    // Return the number of provided peptide matches as validation result
+    ValidationResults(
+      ValidationResult(
+        nbTargetMatches = peptideMatches.count(_.isValidated),
+        nbDecoyMatches = decoyPepMaches.map( _.count( p => p.isValidated ) )
+      )
+    )
+    
+  }
+  
+}

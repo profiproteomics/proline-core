@@ -1,0 +1,66 @@
+package fr.proline.core.om.storer.lcms.impl
+
+import fr.profi.jdbc.SQLQueryExecution
+import fr.profi.jdbc.easy._
+import fr.proline.core.om.storer.lcms.IMasterMapStorer
+
+class SQLiteMasterMapStorer( lcmsDb: SQLQueryExecution ) extends IMasterMapStorer {
+  
+  import scala.collection.mutable.ArrayBuffer
+  import fr.proline.core.om.model.lcms.ProcessedMap
+  import fr.proline.core.om.model.lcms.Feature
+  
+  def storeMasterMap( masterMap: ProcessedMap ): Unit = {
+    
+    val mapSetId = masterMap.mapSetId
+    if( mapSetId <= 0 ) {
+      throw new Exception("invalid map set id for the current master map")
+    }
+    
+    // Insert the master map in the processed_map and map tables
+    val processedMapStorer = new SQLiteProcessedMapStorer(lcmsDb)
+    val newMasterMapId = processedMapStorer.insertProcessedMap( masterMap )
+    
+    // Update the master map id
+    masterMap.id = newMasterMapId
+    
+    // Update master map id of the map set in the database
+    lcmsDb.execute( "UPDATE map_set SET master_map_id = " + newMasterMapId + " WHERE id = " + mapSetId )
+    
+    // Link the master map to the corresponding run maps
+    processedMapStorer.linkProcessedMapToRunMaps( masterMap )
+    
+    // Instantiate a run map storer
+    val runMapStorer = new SQLiteRunMapStorer(lcmsDb)
+    val featureInsertStmt = runMapStorer.prepareStatementForFeatureInsert()
+    
+    // Update master feature map id and insert master features in the feature table
+    for( mft <- masterMap.features ) {
+      mft.relations.mapId = newMasterMapId      
+      mft.id = runMapStorer.insertFeatureUsingPreparedStatement( mft, featureInsertStmt )
+    }
+    
+    featureInsertStmt.close()
+    
+    // Link master features to their children
+    lcmsDb.executePrepared("INSERT INTO master_feature_item VALUES (?,?,?,?)") { statement => 
+      masterMap.features.foreach { mft =>
+        
+        // Retrieve best child id
+        val bestChildId = mft.relations.bestChildId
+        
+        mft.children.foreach { childFt =>
+          val isBestChild = if( childFt.id == bestChildId ) true else false
+          statement.executeWith( mft.id, childFt.id, isBestChild, newMasterMapId )
+        }
+      }
+    }
+    
+    // Insert processed map feature items
+    processedMapStorer.insertProcessedMapFeatureItems( masterMap )
+    
+    ()
+  
+  }
+    
+}

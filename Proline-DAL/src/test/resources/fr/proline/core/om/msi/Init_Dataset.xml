@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dataset SYSTEM "../../../../../msi-dataset.dtd">
+<dataset>
+  <SCORING ID="1" SEARCH_ENGINE="mascot" NAME="standard score"/>
+  <PEAKLIST_SOFTWARE ID="1"  VERSION="4.3.2" NAME="Distiller"  />
+
+</dataset>

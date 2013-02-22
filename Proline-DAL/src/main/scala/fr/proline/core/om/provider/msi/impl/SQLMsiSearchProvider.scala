@@ -1,0 +1,396 @@
+package fr.proline.core.om.provider.msi.impl
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import com.codahale.jerkson.Json.parse
+import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2,SelectQueryBuilder4}
+import fr.proline.core.dal.tables.msi._
+import fr.proline.core.dal.tables.uds.UdsDbInstrumentColumns
+import fr.proline.core.dal.tables.uds.UdsDbInstrumentConfigTable
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.msi.IMSISearchProvider
+import fr.proline.util.primitives.LongOrIntAsInt._
+import fr.proline.util.sql.StringOrBoolAsBool._
+import fr.proline.core.dal.tables.uds.UdsDbInstrumentTable
+
+class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: SQLConnectionContext, val psSqlCtx: SQLConnectionContext) extends IMSISearchProvider {
+
+  protected lazy val ptmProvider = new SQLPTMProvider(psSqlCtx)
+
+  protected val msiSearchCols = MsiDbMsiSearchColumns
+  protected val peaklistCols = MsiDbPeaklistColumns
+  protected val pklSoftCols = MsiDbPeaklistSoftwareColumns
+  protected val ssCols = MsiDbSearchSettingsColumns
+  //protected val instConfigCols = MsiDbInstrumentConfigColumns
+  protected val ionSearchCols = MsiDbIonSearchColumns
+  protected val msmsSearchCols = MsiDbMsmsSearchColumns
+  protected val seqDbCols = MsiDbSeqDatabaseColumns
+  protected val ssSeqDbMapCols = MsiDbSearchSettingsSeqDatabaseMapColumns
+  protected val usedEnzCols = MsiDbUsedEnzymeColumns
+  protected val enzCols = MsiDbEnzymeColumns
+
+  protected val instCols = UdsDbInstrumentColumns
+  protected val instConfigCols = UdsDbInstrumentConfigTable.columns
+
+  def getMSISearches(msiSearchIds: Seq[Int]): Array[MSISearch] = {
+
+    val searchSettingsIdByMsiSearchId = new HashMap[Int, Int]
+    val peaklistIdByMsiSearchId = new HashMap[Int, Int]
+    
+    val msiSearchQuery = new SelectQueryBuilder1(MsiDbMsiSearchTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ msiSearchIds.mkString(",") ~")"
+    )
+
+    val msiSearches = msiSqlCtx.ezDBC.select(msiSearchQuery) { r =>
+
+      val msiSearchId: Int = r.getAnyVal(msiSearchCols.ID)
+
+      searchSettingsIdByMsiSearchId += (msiSearchId -> r.getInt(msiSearchCols.SEARCH_SETTINGS_ID))
+      peaklistIdByMsiSearchId += (msiSearchId -> r.getInt(msiSearchCols.PEAKLIST_ID))
+      
+      val propsOpt = r.getStringOption(msiSearchCols.SERIALIZED_PROPERTIES).map( propStr =>
+        parse[MSISearchProperties](propStr)
+      )
+
+      new MSISearch(
+        id = msiSearchId,
+        resultFileName = r.getString(msiSearchCols.RESULT_FILE_NAME),
+        submittedQueriesCount = r.getInt(msiSearchCols.SUBMITTED_QUERIES_COUNT),
+        searchSettings = null,
+        peakList = null,
+        date = r.getDate(msiSearchCols.DATE),
+        title = r.getStringOrElse(msiSearchCols.TITLE, ""),
+        resultFileDirectory = r.getStringOrElse(msiSearchCols.RESULT_FILE_DIRECTORY, ""),
+        jobNumber = r.getIntOrElse(msiSearchCols.JOB_NUMBER, 0),
+        userName = r.getStringOrElse(msiSearchCols.USER_NAME, ""),
+        userEmail = r.getStringOrElse(msiSearchCols.USER_EMAIL, ""),
+        queriesCount = r.getIntOrElse(msiSearchCols.QUERIES_COUNT, 0),
+        searchedSequencesCount = r.getIntOrElse(msiSearchCols.SEARCHED_SEQUENCES_COUNT, 0),
+        properties = propsOpt
+      )
+    }
+
+    // Retrieve the peaklists
+    val peaklists = getPeaklists(peaklistIdByMsiSearchId.values.toArray.distinct)
+    val pklById = Map() ++ peaklists.map(pkl => pkl.id -> pkl)
+
+    // Retrieve the search settings
+    val searchSettingsList = getSearchSettingsList(searchSettingsIdByMsiSearchId.values.toArray.distinct)
+    val ssById = Map() ++ searchSettingsList.map(ss => ss.id -> ss)
+
+    for (msiSearch <- msiSearches) {
+      msiSearch.peakList = pklById(peaklistIdByMsiSearchId(msiSearch.id))
+      msiSearch.searchSettings = ssById(searchSettingsIdByMsiSearchId(msiSearch.id))
+    }
+
+    msiSearches.toArray
+  }
+
+  def getMSISearchesAsOptions(msiSearchIds: Seq[Int]): Array[Option[MSISearch]] = {
+    val msiSearches = this.getMSISearches(msiSearchIds)
+    val msiSearchById = msiSearches.map { s => s.id -> s } toMap
+
+    msiSearchIds.map { msiSearchById.get(_) } toArray
+  }
+
+  def getPeaklists(peaklistIds: Seq[Int]): Array[Peaklist] = {
+
+    val pklSoftIdByPklId = new HashMap[Int, Int]
+    
+    val pklQuery = new SelectQueryBuilder1(MsiDbPeaklistTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ peaklistIds.mkString(",") ~")"
+    )
+
+    val peaklists = msiSqlCtx.ezDBC.select(pklQuery) { r =>
+
+      val pklId: Int = r.getAnyVal(peaklistCols.ID)
+      pklSoftIdByPklId += (pklId -> r.getInt(peaklistCols.PEAKLIST_SOFTWARE_ID))
+      
+      val propsOpt = r.getStringOption(peaklistCols.SERIALIZED_PROPERTIES).map( propStr =>
+        parse[PeaklistProperties](propStr)
+      )
+      
+      new Peaklist(
+        id = pklId,
+        fileType = r.getString(peaklistCols.TYPE),
+        path = r.getString(peaklistCols.PATH),
+        rawFileName = r.getString(peaklistCols.RAW_FILE_NAME),
+        msLevel = r.getInt(peaklistCols.MS_LEVEL),
+        properties = propsOpt
+      )
+    }
+
+    val pklSofts = getPeaklistSoftwareList(pklSoftIdByPklId.values.toArray.distinct)
+    val pklSoftById = Map() ++ pklSofts.map(ps => ps.id -> ps)
+
+    for (pkl <- peaklists) {
+      pkl.peaklistSoftware = pklSoftById(pklSoftIdByPklId(pkl.id))
+    }
+
+    peaklists.toArray
+
+  }
+
+  def getPeaklistSoftwareList(pklSoftIds: Seq[Int]): Array[PeaklistSoftware] = {
+    
+    val pklSoftQuery = new SelectQueryBuilder1(MsiDbPeaklistSoftwareTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ pklSoftIds.mkString(",") ~")"
+    )
+
+    msiSqlCtx.ezDBC.select(pklSoftQuery) { r =>
+      new PeaklistSoftware(
+        id = r.getAnyVal(pklSoftCols.ID),
+        name = r.getString(pklSoftCols.NAME),
+        version = r.getString(pklSoftCols.VERSION),
+        properties = r.getStringOption(pklSoftCols.SERIALIZED_PROPERTIES).map( parse[PeaklistSoftwareProperties](_) )
+      )
+    } toArray
+
+  }
+
+  def getSearchSettingsList(searchSettingsIds: Seq[Int]): Array[SearchSettings] = {
+
+    val ssIdsStr = searchSettingsIds.mkString(",")
+    
+    // Retrieve PMF search settings
+    val pmfSearchQuery = new SelectQueryBuilder1( MsiDbIonSearchTable ).mkSelectQuery( (t,c) =>
+      List(t.*) -> " WHERE " ~ t.ID ~ " IN (" ~ ssIdsStr ~ ")"
+    )
+    val pmfSettingsById = new HashMap[Int,PMFSearchSettings]
+    msiSqlCtx.ezDBC.selectAndProcess(pmfSearchQuery) { r =>
+      pmfSettingsById += r.nextInt -> new PMFSearchSettings(
+        maxProteinMass = r.getDoubleOption(ionSearchCols.MAX_PROTEIN_MASS),
+        minProteinMass = r.getDoubleOption(ionSearchCols.MIN_PROTEIN_MASS),
+        proteinPI = r.getDoubleOption(ionSearchCols.PROTEIN_PI).map( _.toFloat )
+      )
+    }
+    
+    // Retrieve MS/MS search settings
+    val msmsSearchQuery = new SelectQueryBuilder1( MsiDbMsmsSearchTable ).mkSelectQuery( (t,c) =>
+      List(t.*) -> " WHERE " ~ t.ID ~ " IN (" ~ ssIdsStr ~ ")"
+    )
+    val msmsSettingsById = new HashMap[Int,MSMSSearchSettings]
+    msiSqlCtx.ezDBC.selectAndProcess(msmsSearchQuery) { r =>
+      msmsSettingsById += r.nextInt -> new MSMSSearchSettings(
+        ms2ChargeStates = r.getString(msmsSearchCols.FRAGMENT_CHARGE_STATES),
+        ms2ErrorTol = r.getDouble(msmsSearchCols.FRAGMENT_MASS_ERROR_TOLERANCE),
+        ms2ErrorTolUnit = r.getString(msmsSearchCols.FRAGMENT_MASS_ERROR_TOLERANCE_UNIT)
+      )
+    }
+    
+    val ssQuery = new SelectQueryBuilder1(MsiDbSearchSettingsTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> " WHERE " ~ t.ID ~ " IN (" ~ ssIdsStr ~ ")"
+    )
+
+    val instConfigIdBySSId = new HashMap[Int, Int]
+    val searchSettingsList = msiSqlCtx.ezDBC.select(ssQuery) { r =>
+
+      val ssId: Int = r.getAnyVal(ssCols.ID)
+      instConfigIdBySSId += ssId -> r.getInt(ssCols.INSTRUMENT_CONFIG_ID)
+      
+      new SearchSettings(
+        // Required fields
+        id = ssId,
+        softwareName = r.getString(ssCols.SOFTWARE_NAME),
+        softwareVersion = r.getString(ssCols.SOFTWARE_VERSION),
+        taxonomy = r.getString(ssCols.TAXONOMY),
+        maxMissedCleavages = r.getInt(ssCols.MAX_MISSED_CLEAVAGES),
+        ms1ChargeStates = r.getString(ssCols.PEPTIDE_CHARGE_STATES),
+        ms1ErrorTol = r.getDouble(ssCols.PEPTIDE_MASS_ERROR_TOLERANCE),
+        ms1ErrorTolUnit = r.getString(ssCols.PEPTIDE_MASS_ERROR_TOLERANCE_UNIT),
+        isDecoy = r.getAnyVal(ssCols.IS_DECOY),
+        usedEnzymes = null,
+        variablePtmDefs = null,
+        fixedPtmDefs = null,
+        seqDatabases = null,
+        instrumentConfig = null,
+        msmsSearchSettings = msmsSettingsById.get(ssId),
+        pmfSearchSettings = pmfSettingsById.get(ssId),
+        properties = r.getStringOption(ssCols.SERIALIZED_PROPERTIES).map( parse[SearchSettingsProperties](_) )
+      )
+    }
+
+    /*val seqDbIdsBySSId = new HashMap[Int, ArrayBuffer[Int]]
+    val seqDbIds = new ArrayBuffer[Int]
+
+    msiDbCtx.ezDBC.selectAndProcess(
+      "SELECT * FROM search_settings_seq_database_map" +
+      " WHERE " + ssSeqDbMapCols.SEARCH_SETTINGS_ID + " IN (" + ssIdsStr + ")") { r =>
+      val (ssId, seqDbId) = (r.nextInt, r.nextInt)
+      seqDbIdsBySSId.getOrElseUpdate(ssId, new ArrayBuffer[Int]) += seqDbId
+      seqDbIds += seqDbId
+    }*/
+
+    val enzymeIdsBySSId = new HashMap[Int, ArrayBuffer[Int]]
+    val enzIds = new ArrayBuffer[Int]
+    
+    val usedEnzQuery = new SelectQueryBuilder1(MsiDbUsedEnzymeTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.SEARCH_SETTINGS_ID ~" IN("~ ssIdsStr ~")"
+    )
+
+    msiSqlCtx.ezDBC.selectAndProcess(usedEnzQuery) { r =>
+      val (ssId, enzId) = (r.nextInt, r.nextInt)
+      enzymeIdsBySSId.getOrElseUpdate(ssId, new ArrayBuffer[Int]) += enzId
+      enzIds += enzId
+    }
+
+    val ptmSpecIdsBySSId = new HashMap[Int, ArrayBuffer[Int]]
+    val ptmSpecIds = new ArrayBuffer[Int]
+    val fixedPtmById = new HashMap[Int, Boolean]
+    
+    val usedPtmQuery = new SelectQueryBuilder1(MsiDbUsedPtmTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.SEARCH_SETTINGS_ID ~" IN("~ ssIdsStr ~")"
+    )
+
+    msiSqlCtx.ezDBC.selectAndProcess(usedPtmQuery) { r =>
+      val (ssId, ptmSpecId, shortName) = (r.nextInt, r.nextInt, r.nextString)
+      val isFixed: Boolean = r.nextAnyVal
+
+      ptmSpecIdsBySSId.getOrElseUpdate(ssId, new ArrayBuffer[Int]) += ptmSpecId
+      ptmSpecIds += ptmSpecId
+      fixedPtmById += ptmSpecId -> isFixed
+    }
+
+    //val seqDbById = Map() ++ this.getSeqDatabases(seqDbIds.distinct).map(s => s.id -> s)
+    val enzById = Map() ++ this.getEnzymes(enzIds.distinct).map(s => s.id -> s)
+    // TODO: override the short name with the MsiDb one
+    val ptmSpecById = Map() ++ ptmProvider.getPtmDefinitions(ptmSpecIds.distinct).map(s => s.id -> s)
+    val instConfById = Map() ++ this.getInstrumentConfigs(instConfigIdBySSId.values.toArray.distinct).map(i => i.id -> i)
+    
+    for (ss <- searchSettingsList) {
+      val ssId = ss.id
+      //ss.seqDatabases = seqDbIdsBySSId(ssId).map(seqDbById(_)).toArray      
+      ss.seqDatabases = this.getSearchedSeqDatabases(ssId)
+      
+      // TODO: enzyme should be always defined
+      ss.usedEnzymes = enzymeIdsBySSId.getOrElse(ssId, ArrayBuffer.empty[Int]).map(enzById(_)).toArray
+
+      val ptms = ptmSpecIdsBySSId.getOrElse(ssId, ArrayBuffer.empty[Int]).map(ptmSpecById(_)).toArray
+      val (fixedPtms, varPtms) = ptms.partition(p => fixedPtmById(p.id))
+      ss.fixedPtmDefs = fixedPtms
+      ss.variablePtmDefs = varPtms
+
+      ss.instrumentConfig = instConfById(instConfigIdBySSId(ss.id))
+    }
+
+    searchSettingsList.toArray
+  }
+
+  def getSeqDatabases(seqDbIds: Seq[Int]): Array[SeqDatabase] = {
+    
+    val seqDbQuery = new SelectQueryBuilder1(MsiDbSeqDatabaseTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ seqDbIds.mkString(",") ~")"
+    )
+    
+    msiSqlCtx.ezDBC.select(seqDbQuery) { r =>
+      new SeqDatabase(
+        id = r.getAnyVal(seqDbCols.ID),
+        name = r.getString(seqDbCols.NAME),
+        filePath = r.getString(seqDbCols.FASTA_FILE_PATH),
+        sequencesCount = r.getIntOrElse(seqDbCols.SEQUENCE_COUNT, 0),
+        releaseDate = r.getDate(seqDbCols.RELEASE_DATE),
+        version = r.getStringOrElse(seqDbCols.FASTA_FILE_PATH, ""),
+        properties = r.getStringOption(seqDbCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseProperties](_))
+      )
+    } toArray
+  }
+  
+  def getSearchedSeqDatabases(searchSettingsId: Int): Array[SeqDatabase] = {
+    
+    val seqDbTblName = MsiDbSeqDatabaseTable.name
+    val ssSeqDbMapTblName = MsiDbSearchSettingsSeqDatabaseMapTable.name
+    val sqb2 = new SelectQueryBuilder2(MsiDbSeqDatabaseTable, MsiDbSearchSettingsSeqDatabaseMapTable)
+    
+    val sqlQuery = sqb2.mkSelectQuery( (t1, c1, t2, c2) =>
+      List(t1.*,t2.SEARCHED_SEQUENCES_COUNT,t2.SERIALIZED_PROPERTIES) ->
+      " WHERE " ~ t1.ID ~ " = " ~ t2.SEQ_DATABASE_ID ~
+      " AND " ~ t2.SEARCH_SETTINGS_ID ~ " = " ~ searchSettingsId
+    )
+    
+    msiSqlCtx.ezDBC.select(sqlQuery) { r =>
+      new SeqDatabase(
+        id = r.getAnyVal(seqDbCols.ID),
+        name = r.getString(seqDbCols.NAME),
+        filePath = r.getString(seqDbCols.FASTA_FILE_PATH),
+        sequencesCount = r.getIntOrElse(seqDbCols.SEQUENCE_COUNT, 0),
+        releaseDate = r.getDate(seqDbCols.RELEASE_DATE),
+        version = r.getStringOrElse(seqDbCols.FASTA_FILE_PATH, ""),
+        searchedSequencesCount = r.getInt(ssSeqDbMapCols.SEARCHED_SEQUENCES_COUNT),
+        properties = r.getStringOption(seqDbTblName+"_"+seqDbCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseProperties](_)),
+        searchProperties = r.getStringOption(ssSeqDbMapTblName+"_"+ssSeqDbMapCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseSearchProperties](_))
+      )
+    } toArray
+  }
+
+  def getEnzymes(enzymeIds: Seq[Int]): Array[Enzyme] = {
+    
+    val enzQuery = new SelectQueryBuilder1(MsiDbEnzymeTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ enzymeIds.mkString(",") ~")"
+    )
+    
+    msiSqlCtx.ezDBC.select(enzQuery) { r =>
+      new Enzyme(
+        id = r.getAnyVal(enzCols.ID),
+        name = r.getString(enzCols.NAME),
+        cleavageRegexp = r.getStringOption(enzCols.CLEAVAGE_REGEXP),
+        isIndependant = r.getBooleanOrElse(enzCols.IS_INDEPENDANT, false),
+        isSemiSpecific = r.getBooleanOrElse(enzCols.IS_SEMI_SPECIFIC, false))
+    } toArray
+  }
+
+  // TODO: put in a dedicated provider
+  def getInstrumentConfigs(instConfigIds: Seq[Int]): Array[InstrumentConfig] = {
+    
+    val instConfigQuery = new SelectQueryBuilder1(UdsDbInstrumentConfigTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ instConfigIds.mkString(",") ~")"
+    )
+
+    val instIdByInstConfigId = new HashMap[Int, Int]
+    val instConfigs = udsSqlCtx.ezDBC.select(instConfigQuery) { r =>
+      
+      val instConfigId: Int = r.getAnyVal(instConfigCols.ID)
+      val instId = r.getInt(instConfigCols.INSTRUMENT_ID)
+      instIdByInstConfigId += instConfigId -> instId
+
+      new InstrumentConfig(
+        id = instConfigId,
+        name = r.getString(instConfigCols.NAME),
+        instrument = null,
+        ms1Analyzer = r.getString(instConfigCols.MS1_ANALYZER),
+        msnAnalyzer = r.getString(instConfigCols.MSN_ANALYZER),
+        activationType = r.getString(instConfigCols.ACTIVATION_TYPE),
+        properties = r.getStringOption(instConfigCols.SERIALIZED_PROPERTIES).map(parse[InstrumentConfigProperties](_))
+      )
+    }
+
+    val instIds = instIdByInstConfigId.values.toArray.distinct
+    val instruments = this.getInstruments(instIds)
+    val instById = Map() ++ instruments.map(i => i.id -> i)
+
+    for (instConfig <- instConfigs)
+      instConfig.instrument = instById(instIdByInstConfigId(instConfig.id))
+
+    instConfigs.toArray
+  }
+
+  // TODO: put in a dedicated provider
+  def getInstruments(instIds: Seq[Int]): Array[Instrument] = {
+    
+    val instQuery = new SelectQueryBuilder1(UdsDbInstrumentTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ instIds.mkString(",") ~")"
+    )
+    
+    udsSqlCtx.ezDBC.select(instQuery) { r =>
+      new Instrument(
+        id = r.getAnyVal(instCols.ID),
+        name = r.getString(instCols.NAME),
+        source = r.getStringOrElse(instCols.SOURCE, null),
+        properties = r.getStringOption(instCols.SERIALIZED_PROPERTIES).map(parse[InstrumentProperties](_))
+      )
+    } toArray
+
+  }
+
+}

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>ProFI-Pom</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>Proline-Core</artifactId>
+  <version>0.0.7</version>
+  <packaging>pom</packaging>
+
+  <name>${project.artifactId}</name>
+  <description>Multi Modules Projects containing all modules for Object Model, and data bases managment, and data access</description>
+
+  <!-- "Proline" sub-modules -->
+  <modules>
+    <module>Proline-Databases</module>
+    <module>Proline-OM</module>
+    <module>Proline-ORM</module>
+    <module>Proline-DAL</module>
+    <module>Proline-OMP</module>
+  </modules>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>0.0.7</core.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+
+      <!-- ProFi Commons -->
+      <dependency>
+        <groupId>fr.proline.util</groupId>
+        <artifactId>ProFI-Commons-Scala</artifactId>
+        <version>0.0.2-SNAPSHOT</version>
+      </dependency>
+
+      <!-- "Proline" modules -->
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>Proline-OM</artifactId>
+        <version>${core.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>Proline-Databases</artifactId>
+        <version>${core.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>Proline-ORM</artifactId>
+        <version>${core.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>Proline-DAL</artifactId>
+        <version>${core.version}</version>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+
+     <!-- ProFi Commons -->
+     <dependency>
+       <groupId>fr.proline.util</groupId>
+       <artifactId>ProFI-Commons-Java</artifactId>
+       <version>0.0.3-SNAPSHOT</version> <!-- Latest SNAPSHOT version -->
+     </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JUnit tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+</project>
