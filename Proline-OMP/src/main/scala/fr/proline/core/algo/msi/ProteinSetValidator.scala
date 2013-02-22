@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msi
 
+/*
 import fr.proline.core.algo.msi.validation.proteinset.MascotPeptideMatchRulesValidator
 import fr.proline.core.algo.msi.validation.proteinset.MascotProteinSetScoreValidator
 import fr.proline.core.algo.msi.validation.proteinset.IProteinSetValidator
@@ -32,4 +33,4 @@ object MascotProteinSetValidator {
     }
   }
 
-}
+}*/

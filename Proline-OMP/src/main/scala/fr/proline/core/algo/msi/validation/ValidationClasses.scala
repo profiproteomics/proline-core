@@ -20,6 +20,12 @@ object TargetDecoyModes extends Enumeration {
   val SEPARATED = Value("SEPARATED")  
 }
 
+object ProtSetValidationMethods extends Enumeration {
+  type MethodName = Value
+  val PEPTIDE_MATCH_RULES = Value("PEPTIDE_MATCH_RULES")
+  val PROTEIN_SET_SCORE = Value("PROTEIN_SET_SCORE")  
+}
+
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ValidationResult( targetMatchesCount: Int,
@@ -99,7 +105,9 @@ trait IProteinSetValidator {
   def validateProteinSets( targetRsm: ResultSummary ): ValidationResults = {
     
     val targetProtSets: Seq[ProteinSet] = targetRsm.proteinSets
-    val decoyProtSets: Option[Seq[ProteinSet]] = targetRsm.decoyResultSummary.map(_.proteinSets)
+    
+    val decoyRsm = if( targetRsm.decoyResultSummary == null ) None else targetRsm.decoyResultSummary
+    val decoyProtSets: Option[Seq[ProteinSet]] = decoyRsm.map(_.proteinSets)
     
     this.validateProteinSets( targetProtSets, decoyProtSets )
   }

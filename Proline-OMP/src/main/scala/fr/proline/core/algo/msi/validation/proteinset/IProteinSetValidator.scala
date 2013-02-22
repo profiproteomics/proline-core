@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msi.validation.proteinset
 
+/*
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi._
@@ -32,4 +33,4 @@ trait IProteinSetValidator {
                                   decoyRsm: ResultSummary
                                  ): ValidationResults
 
-}
+}*/
