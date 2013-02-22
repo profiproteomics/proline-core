@@ -2,8 +2,7 @@ package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
+import fr.proline.core.algo.msi.filtering._
 import com.weiglewilczek.slf4s.Logging
 
 
@@ -169,7 +168,7 @@ class BasicTDAnalyzer( targetDecoyMode: TargetDecoyModes.Mode ) extends Abstract
   
 }
 
-class CompetitionBasedTDAnalyzer( val validationFilter: IPeptideMatchFilter ) extends AbstractTargetDecoyAnalyzer {
+class CompetitionBasedTDAnalyzer( val validationFilter: IOptimizablePeptideMatchFilter ) extends AbstractTargetDecoyAnalyzer {
 
   def calcTDStatistics( targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch] ): ValidationResult = {    
     val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches,Some(decoyPepMatches))

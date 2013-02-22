@@ -1,11 +1,10 @@
-package fr.proline.core.algo.msi.filter
+package fr.proline.core.algo.msi.filtering.pepmatch
 
 import scala.collection.mutable.HashMap
 import scala.collection.Seq
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.algo.msi.filtering._
 
 object RankPSMFilter {
   
@@ -101,7 +100,7 @@ class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter 
     
   }
   
-  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
+  /*def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
     
     // Memorize peptide matches rank
     val pepMatchRankMap = RankPSMFilter.getPeptideMatchesRankMap(pepMatches)
@@ -117,7 +116,7 @@ class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter 
     RankPSMFilter.restorePeptideMatchesRank(pepMatches, pepMatchRankMap)
     
     sortedPepMatches
-  }
+  }*/
     
   def filterPeptideMatchesVDS( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
 
@@ -157,7 +156,7 @@ class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter 
 
   def getFilterProperties(): Map[String, Any] = {
     val props = new HashMap[String, Any]
-    props += (PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME -> pepMatchMaxRank )
+    props += (FilterPropertyKeys.THRESHOLD_VALUE -> pepMatchMaxRank )
     props.toMap
   }
   

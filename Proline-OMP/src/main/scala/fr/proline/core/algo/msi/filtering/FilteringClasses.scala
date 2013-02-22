@@ -1,4 +1,4 @@
-package fr.proline.core.algo.msi.filter
+package fr.proline.core.algo.msi.filtering
 
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.FilterDescriptor
@@ -8,13 +8,13 @@ object FilterPropertyKeys {
   final val THRESHOLD_VALUE = "threshold_value"
 }
 
-object PepMatchFilterPropertyKeys {
+/*object PepMatchFilterPropertyKeys {
   final val THRESHOLD_PROP_NAME = "threshold_value"
   final val MASCOT_EVALUE_THRESHOLD = "mascot_evalue_threshold"
   final val MIN_PEPTIDE_SEQUENCE_LENGTH = "min_pep_seq_length"
   final val MAX_RANK = "max_rank"
   final val SCORE_THRESHOLD = "score_threshold"
-}
+}*/
 
 object PepMatchFilterParams extends Enumeration {
   type Param = Value
@@ -56,6 +56,23 @@ trait IFilter {
   
 }
 
+trait IOptimizableFilter extends IFilter {
+
+  /**
+   * Get the higher or lowest (depending on the filter type) threshold value for this filter.  
+   */
+  def getThresholdStartValue(): AnyVal
+  
+  /**
+   * Given a current Threshold value, return the next possible value. This 
+   * is useful for ComputedValidationPSMFilter in order to determine 
+   * best threshold value to reach specified FDR 
+   */
+  def getNextValue( currentVal: AnyVal ): AnyVal
+   
+}
+
+
 trait IPeptideMatchFilter extends IFilter {
   
   /**
@@ -78,13 +95,6 @@ trait IPeptideMatchFilter extends IFilter {
    */
   def getPeptideMatchValueForFiltering( pepMatch: PeptideMatch ): AnyVal
   
-  /**
-   * Sorts peptide matches in the order corresponding to the filter parameter,
-   * from thes best peptide match to the worst.
-   */
-  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch]
-  
-  
   // TODO: is incrementalValidation still needed ?
   /**
    * Resets the validation status of peptide matches.
@@ -95,24 +105,15 @@ trait IPeptideMatchFilter extends IFilter {
   
 }
 
-trait IOptimizableFilter extends IFilter {
-
-  /**
-   * Get the higher or lowest (depending on the filter type) threshold value for this filter.  
-   */
-  def getThresholdStartValue(): AnyVal
+trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter {
   
   /**
-   * Given a current Threshold value, return the next possible value. This 
-   * is useful for ComputedValidationPSMFilter in order to determine 
-   * best threshold value to reach specified FDR 
+   * Sorts peptide matches in the order corresponding to the filter parameter,
+   * from thes best peptide match to the worst.
    */
-  def getNextValue( currentVal: AnyVal ): AnyVal
-   
+  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch]
+  
 }
-
-trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter
-
 
 trait IProteinSetFilter extends IFilter {}
 trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFilter
@@ -134,5 +135,3 @@ class ParamProteinSetFilter( val filterParameter: String, val minPepSeqLength: I
   }
   
 }
-
-

@@ -2,8 +2,7 @@ package fr.proline.core.algo.msi.validation.pepmatch
 
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
-
+import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 
 /** Implementation of IPeptideMatchValidator performing a simple target/decoy analysis. */
 class BasicPepMatchValidator(

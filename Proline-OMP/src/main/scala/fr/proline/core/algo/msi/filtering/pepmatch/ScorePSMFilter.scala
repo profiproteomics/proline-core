@@ -1,10 +1,12 @@
-package fr.proline.core.algo.msi.filter
+package fr.proline.core.algo.msi.filtering.pepmatch
 
 import scala.collection.mutable.HashMap
 import scala.collection.Seq
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch}
-import com.weiglewilczek.slf4s.Logging
 
 object ScorePSMFilter {
   val thresholdStartValue = 13.0f
@@ -32,7 +34,7 @@ class ScorePSMFilter(var scoreThreshold: Float = ScorePSMFilter.thresholdStartVa
 
   def getFilterProperties(): Map[String, Any] = {
     val props = new HashMap[String, Any]
-    props += (PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME -> scoreThreshold )
+    props += (FilterPropertyKeys.THRESHOLD_VALUE -> scoreThreshold )
     props.toMap
   }
 

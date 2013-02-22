@@ -6,8 +6,8 @@ import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.algo.msi.filter.IProteinSetFilter
-import fr.proline.core.algo.msi.filter.ParamProteinSetFilter
+import fr.proline.core.algo.msi.filtering._
+
 
 class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
   

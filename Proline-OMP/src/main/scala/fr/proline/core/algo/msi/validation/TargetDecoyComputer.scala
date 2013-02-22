@@ -1,11 +1,9 @@
 package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
 import scala.collection.mutable.HashMap
-import fr.proline.core.algo.msi.filter.PepMatchFilterPropertyKeys
-import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.algo.msi.filtering._
 
 case class TDCompetitionCounts( var better: Int = 0, var only: Int = 0, var under: Int = 0 )
 case class TDCompetitionResult( winnerKey: String, winnerValue: Option[AnyVal], looserValue: Option[AnyVal] )
@@ -104,7 +102,7 @@ object TargetDecoyComputer {
    */
   def computeTdCompetition(
     pmJointMap: Map[Int, Seq[PeptideMatch]],
-    filter: IPeptideMatchFilter
+    filter: IOptimizablePeptideMatchFilter
   ): Pair[TDCompetitionCounts,TDCompetitionCounts] = {
     
     val competitionCounts = Map( TARGET_KEY -> TDCompetitionCounts(),
@@ -179,7 +177,7 @@ object TargetDecoyComputer {
   
   def validatePepMatchesWithCompetition(
     pmJointMap: Map[Int, Seq[PeptideMatch]],
-    validationFilter: IPeptideMatchFilter
+    validationFilter: IOptimizablePeptideMatchFilter
   ): ValidationResult = {
     
     // Compute target/decoy competition
@@ -197,7 +195,7 @@ object TargetDecoyComputer {
       targetMatchesCount = tB + tO + dB,
       decoyMatchesCount = Some(dB + dO + tB),
       fdr = Some(fdr),
-      properties = Some(HashMap(PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME -> validationFilter.getThresholdValue) )
+      properties = Some(HashMap(FilterPropertyKeys.THRESHOLD_VALUE -> validationFilter.getThresholdValue) )
     )
   }
 

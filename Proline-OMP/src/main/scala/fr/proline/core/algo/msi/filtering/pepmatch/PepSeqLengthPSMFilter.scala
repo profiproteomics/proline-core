@@ -1,8 +1,9 @@
-package fr.proline.core.algo.msi.filter
+package fr.proline.core.algo.msi.filtering.pepmatch
 
 import fr.proline.core.om.model.msi.PeptideMatch
 import scala.collection.Seq
 import scala.collection.mutable.HashMap
+import fr.proline.core.algo.msi.filtering._
 
 class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFilter {
   
@@ -26,13 +27,13 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
     }
   }
   
-  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
+  /*def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
     pepMatches.sortWith( getPeptideMatchSequenceLength(_) > getPeptideMatchSequenceLength(_) )
-  }
+  }*/
 
   def getFilterProperties(): Map[String, Any] = {
     val props =new HashMap[String, Any]    
-    props += (PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME -> minSeqLength)
+    props += (FilterPropertyKeys.THRESHOLD_VALUE -> minSeqLength)
     props.toMap
   }
   

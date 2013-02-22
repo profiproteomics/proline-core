@@ -6,8 +6,7 @@ import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 
-import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
-import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
+import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.pepmatch._
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinSet

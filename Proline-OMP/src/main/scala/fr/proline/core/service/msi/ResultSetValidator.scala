@@ -2,7 +2,10 @@ package fr.proline.core.service.msi
 
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuilder
+import scala.collection.mutable.HashMap
 import com.weiglewilczek.slf4s.Logging
+
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{ MsiSearchStorer, RsStorer }
 import fr.proline.api.service.IService
@@ -14,11 +17,7 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msi.filter._
-import scala.collection.mutable.ArrayBuilder
-import scala.collection.mutable.HashMap
-import fr.proline.core.algo.msi.filter.PepMatchFilterPropertyKeys
-import fr.proline.core.algo.msi.filter.ParamProteinSetFilter
+import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 
@@ -31,6 +30,7 @@ object ResultSetValidator {
     pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
     pepMatchValidator: Option[IPeptideMatchValidator] = None,
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
+    protSetValidator: Option[IProteinSetValidator] = None,
     storeResultSummary: Boolean = true): ResultSetValidator = {
 
     val rsProvider = getResultSetProvider(execContext)    
@@ -55,6 +55,7 @@ object ResultSetValidator {
       pepMatchPreFilters,
       pepMatchValidator,
       protSetFilters,
+      protSetValidator,
       storeResultSummary
     )
   }
@@ -90,8 +91,9 @@ class ResultSetValidator(
   pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
-  // TODO: add a protSetValidator
-  storeResultSummary: Boolean = true) extends IService with Logging {
+  protSetValidator: Option[IProteinSetValidator] = None,
+  storeResultSummary: Boolean = true
+  ) extends IService with Logging {
 
   private val msiDbContext = execContext.getMSIDbConnectionContext
   var validatedTargetRsm: ResultSummary = null
@@ -265,7 +267,7 @@ class ResultSetValidator(
 
   private def filterProteinSets(rsmValProperties: RsmValidationProperties, searchEngine: String, targetRsm: ResultSummary, decoyRsmOpt: Option[ResultSummary]): Unit = {
     
-    if(!protSetFilters.isDefined)
+    if(!protSetValidator.isDefined)
       return
 
     //VDS TODO: Remove once ProteinFilter Refactoring will have been done !
@@ -273,7 +275,7 @@ class ResultSetValidator(
     val lastFilterThr = if( pepFilters.isDefined ) {
       Some(
         pepFilters.get.last.getProperties.get( 
-          PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME
+          FilterPropertyKeys.THRESHOLD_VALUE
         ).asInstanceOf[AnyVal]
       )
     } else None
@@ -290,9 +292,10 @@ class ResultSetValidator(
     }
     
     // Instantiate a protein set validator
-    val protSetValidator = ProteinSetValidator(searchEngine, ProtSetValidationMethods.proteinSetScore)
+    //val protSetValidator = ProteinSetValidator(searchEngine, ProtSetValidationMethods.proteinSetScore)
     val filterDescriptors = new ArrayBuffer[FilterDescriptor]()
 
+    /*
     // Run all protein set filters
     protSetFilters.get.foreach { protSetFilter =>
       
@@ -309,6 +312,8 @@ class ResultSetValidator(
       filterDescriptors += protSetFilter.toFilterDescriptor
       
     } //End go through all Prot Filters
+    
+    */
 
     >>>
 

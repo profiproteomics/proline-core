@@ -4,8 +4,7 @@ import math.abs
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.algo.msi.filter.IOptimizablePeptideMatchFilter
-import fr.proline.core.algo.msi.filter.PepMatchFilterPropertyKeys
+import fr.proline.core.algo.msi.filtering._
 
 /** Implementation of IPeptideMatchValidator performing a target/decoy analysis with a FDR optimization procedure. */
 class TDPepMatchValidatorWithFDROptimization(  
@@ -27,7 +26,7 @@ class TDPepMatchValidatorWithFDROptimization(
     } else {
       // Retrieve the nearest ROC point of the expected FDR and associated threshold
       val expectedRocPoint = rocPoints.reduce { (a, b) => if (abs(a.fdr.get - expectedFdr.get) < abs(b.fdr.get - expectedFdr.get)) a else b }
-      val threshToApply = expectedRocPoint.properties.get(PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME)
+      val threshToApply = expectedRocPoint.properties.get(FilterPropertyKeys.THRESHOLD_VALUE)
       
       // Update threshold and apply validation filter with this final value
       validationFilter.setThresholdValue(threshToApply.asInstanceOf[AnyVal])

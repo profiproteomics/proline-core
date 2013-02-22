@@ -1,10 +1,10 @@
-package fr.proline.core.algo.msi.filter
+package fr.proline.core.algo.msi.filtering.pepmatch
 
 import scala.collection.mutable.HashMap
 import scala.collection.Seq
-
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch,PeptideMatchResultSummaryProperties}
+import fr.proline.core.algo.msi.filtering._
 
 abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter {
   
@@ -45,7 +45,7 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
   
   def getFilterProperties(): Map[String, Any] = {
     val props =new HashMap[String, Any]
-    props += (PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME -> eValueThreshold )
+    props += (FilterPropertyKeys.THRESHOLD_VALUE -> eValueThreshold )
     props.toMap
   }
 
