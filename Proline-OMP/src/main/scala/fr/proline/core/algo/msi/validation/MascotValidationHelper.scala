@@ -2,7 +2,6 @@ package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 import scala.math.{ pow, log10 }
-import fr.proline.core.algo.msi.TargetDecoyComputer
 import fr.proline.core.om.model.msi.{ MsQuery, PeptideMatch }
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
 
@@ -32,8 +31,8 @@ object MascotValidationHelper {
     ionsScore - 10.0 * log10(probability / eValue)
   }
 
-  def calcScoreThresholdOffset(newProb: Double, oldProb: Double): Float = {
-    -10.0 * log10(newProb / oldProb)
+  def calcScoreThresholdOffset(prob: Double, probRef: Double): Float = {
+    -10.0 * log10(prob / probRef)
   }
 
   def sumPeptideMatchesScoreOffsets(peptideMatches: Seq[PeptideMatch], mascotThresholdsByPepMatchId: Map[Int, MascotIonScoreThresholds]): Float = {
@@ -208,7 +207,7 @@ object MascotValidationHelper {
     val jointTable = this.buildJointTable(pmJointTable, valuePickerMap(pmScoringParam))
 
     // Instantiate a target decoy computer
-    val tdComputer = fr.proline.core.algo.msi.TargetDecoyComputer
+    val tdComputer = TargetDecoyComputer
 
     // Define some vars
     var (probThreshold, fdr) = (1.0, 100.0f)
@@ -224,11 +223,12 @@ object MascotValidationHelper {
       val (tB, tO, dB, dO) = (targetCount.better, targetCount.only, decoyCount.better, decoyCount.only)
 
       // Compute FDR (note that FDR may be greater than 100%)
-      fdr = tdComputer.computeTdFdr(tB, tO, dB, dO)
+      fdr = tdComputer.calcCompetitionFDR(tB, tO, dB, dO)
 
       // Add ROC point to the list
-      val rocPoint = ValidationResult(nbTargetMatches = tB + tO + dB,
-        nbDecoyMatches = Some(dB + dO + tB),
+      val rocPoint = ValidationResult(
+        targetMatchesCount = tB + tO + dB,
+        decoyMatchesCount = Some(dB + dO + tB),
         fdr = Some(fdr),
         properties = Some(HashMap("p_value" -> probThreshold))
       )

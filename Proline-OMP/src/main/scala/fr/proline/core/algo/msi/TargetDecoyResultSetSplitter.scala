@@ -23,7 +23,7 @@ object TargetDecoyResultSetSplitter {
   def split(rs: ResultSet, acDecoyRegex: util.matching.Regex): Pair[ResultSet, ResultSet] = {
 
     // Partition target/decoy protein matches using the provided regex
-    val (targetProtMatches, decoyProtMatches) = rs.proteinMatches.partition { protMatch =>
+    val (decoyProtMatches, targetProtMatches) = rs.proteinMatches.partition { protMatch =>
       protMatch.accession =~ acDecoyRegex
     }
 

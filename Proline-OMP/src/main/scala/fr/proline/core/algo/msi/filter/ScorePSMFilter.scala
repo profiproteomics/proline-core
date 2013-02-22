@@ -2,50 +2,47 @@ package fr.proline.core.algo.msi.filter
 
 import scala.collection.mutable.HashMap
 import scala.collection.Seq
-
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch}
+import com.weiglewilczek.slf4s.Logging
 
-class ScorePSMFilter(var scoreThreshold: Double = 1.0, val startThreshold: Double = 1.0 ) extends IOptimizablePeptideMatchFilter {
+object ScorePSMFilter {
+  val thresholdStartValue = 13.0f
+  val thresholdIncreaseValue = 0.1f
+}
+
+class ScorePSMFilter(var scoreThreshold: Float = ScorePSMFilter.thresholdStartValue ) extends IOptimizablePeptideMatchFilter with Logging {
 
   val filterParameter = PepMatchFilterParams.SCORE.toString
   val filterDescription = "peptide match score filter"
-
+    
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = pepMatch.score
+  
   def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
-
-    //Create a Map : List of PeptideMatch by eValue
-    val psmsByScore = pepMatches.groupBy( _.score )
-
-    //Get Map entry for valid eValue
-    val validePsmsByEValue = psmsByScore.filterKeys( _ <= scoreThreshold )
-
-    //Get Map entry for invalid eValue
-    val invalidePsmsByEValue = psmsByScore.filterKeys( _ > scoreThreshold )
-
-    // Set isValidated property 
-    if ( !incrementalValidation ) {
-      validePsmsByEValue.flatten( _._2 ).foreach( _.isValidated = true )
-    }
-
-    invalidePsmsByEValue.flatten( _._2 ).foreach( _.isValidated = false )
-   
+    
+    // Reset validation status if validation is not incremental
+    if( !incrementalValidation ) this.resetPepMatchValidationStatus(pepMatches)
+    
+    pepMatches.filter(_.score < scoreThreshold ).foreach( _.isValidated = false )
+  }
+  
+  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
+    pepMatches.sortWith( _.score > _.score )
   }
 
-  def getFilterProperties(): Option[Map[String, Any]] = {
-    val props =new HashMap[String, Any]
-    props += (PepMatchFilterPropertyKeys.SCORE_THRESHOLD ->  scoreThreshold )
-    Some( props.toMap )
+  def getFilterProperties(): Map[String, Any] = {
+    val props = new HashMap[String, Any]
+    props += (PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME -> scoreThreshold )
+    props.toMap
   }
 
-  def getNextValue( currentVal: AnyVal ) = {
-    currentVal.asInstanceOf[Double] + 1.0
-  }
-
-  def getThresholdStartValue(): AnyVal = {
-    1
-  }
-
+  def getNextValue( currentVal: AnyVal ) = currentVal.asInstanceOf[Float] + ScorePSMFilter.thresholdIncreaseValue
+  
+  def getThresholdStartValue(): AnyVal = ScorePSMFilter.thresholdStartValue
+  
+  def getThresholdValue(): AnyVal = scoreThreshold
+  
   def setThresholdValue( currentVal: AnyVal ){
-    scoreThreshold = currentVal.asInstanceOf[Double]
+    scoreThreshold = currentVal.asInstanceOf[Float]
   }
 }

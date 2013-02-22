@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msi.filter
 
+/*
 import fr.proline.core.om.model.msi.PeptideMatch
 import scala.collection.mutable.HashMap
 
@@ -35,4 +36,4 @@ object NullPSMFilter extends IPeptideMatchFilter {
   def setThresholdValue( currentVal : AnyVal ) { }
   
 
-}
+}*/

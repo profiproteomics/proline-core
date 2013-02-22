@@ -89,8 +89,8 @@ class MascotPeptideMatchRulesValidator extends IProteinSetValidator {
           println( "current fdr: currentFdr" )
           
           // Add ROC point to the list
-          val rocPoint = ValidationResult( nbTargetMatches = targetValidProteinSetCount,
-                                           nbDecoyMatches = Some(decoyValidProteinSetCount),
+          val rocPoint = ValidationResult( targetMatchesCount = targetValidProteinSetCount,
+                                           decoyMatchesCount = Some(decoyValidProteinSetCount),
                                            fdr = Some(currentFdr),
                                            properties = Some( HashMap("p_value_rule_1" -> validationRules(0).pValueThreshold,
                                                                       "p_value_rule_2" -> validationRules(1).pValueThreshold )) 

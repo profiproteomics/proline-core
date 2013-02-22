@@ -46,6 +46,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
                                   peptide = bestPepMatch.peptide,
                                   peptideMatchIds = pepMatchIds,
                                   bestPeptideMatchId = bestPepMatch.id,
+                                  peptideMatches = pepMatchGroup,
                                   //properties = Some(pepInstProps),
                                   //peptideMatchPropertiesById = peptideMatchPropertiesById,
                                   resultSummaryId = resultSummaryId

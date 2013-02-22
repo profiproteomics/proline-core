@@ -88,8 +88,8 @@ class MascotProteinSetScoreValidator extends IProteinSetValidator with Logging {
         this.logger.debug( "current fdr: " + currentFdr )
         
         val rocPoint = ValidationResult(  //id = rocPointId,
-                                          nbTargetMatches = targetValidProteinSetCount,
-                                          nbDecoyMatches = Some(decoyValidProteinSetCount),
+                                          targetMatchesCount = targetValidProteinSetCount,
+                                          decoyMatchesCount = Some(decoyValidProteinSetCount),
                                           fdr = Some(currentFdr),
                                           properties = Some( HashMap( "p_value_threshold" -> pValueThreshold,
                                                                       "pep_score_threshold_offset" -> pepScoreThresholdOffset,
@@ -126,7 +126,7 @@ class MascotProteinSetScoreValidator extends IProteinSetValidator with Logging {
       }
     }
     
-    val expectedRocPoint = expectedFdrRocPoints.reduce { (a,b) => if( a.nbTargetMatches >= b.nbTargetMatches ) a else b } 
+    val expectedRocPoint = expectedFdrRocPoints.reduce { (a,b) => if( a.targetMatchesCount >= b.targetMatchesCount ) a else b } 
     this.logger.debug(expectedRocPoint.toString)
     
     // Retrieve the best ROC curve and delete the ROC curve identifier from the data points

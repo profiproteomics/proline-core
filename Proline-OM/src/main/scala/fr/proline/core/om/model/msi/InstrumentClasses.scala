@@ -1,9 +1,9 @@
 package fr.proline.core.om.model.msi
 
+import scala.reflect.BeanProperty
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
-
 import fr.proline.util.misc.InMemoryIdGen
 
 @deprecated("use ORM ActivationType enumeration instead","0.0.7")
@@ -71,5 +71,5 @@ case class InstrumentConfig(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class InstrumentConfigProperties ( 
-  val isHidden: Boolean
+  @BeanProperty protected val isHidden: Boolean
 )

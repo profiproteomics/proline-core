@@ -9,24 +9,34 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
   val filterParameter = PepMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH.toString
   val filterDescription = "peptide sequence length filter"
 
+  def getPeptideMatchSequenceLength(pepMatch: PeptideMatch): Int = pepMatch.peptide.sequence.length
+  
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = getPeptideMatchSequenceLength(pepMatch)
+    
   def filterPeptideMatches(pepMatches: Seq[PeptideMatch],incrementalValidation: Boolean,traceability: Boolean ): Unit = {
 
     for ( peptideMatch <- pepMatches ) {
-      if ( !incrementalValidation ) {
-        peptideMatch.isValidated = !( peptideMatch.peptide.sequence.length < minSeqLength )
-      } else {
-        if ( peptideMatch.peptide.sequence.length < minSeqLength )
-          peptideMatch.isValidated = false
-      }
+      
+      // Reset validation status if validation is not incremental
+      if ( !incrementalValidation ) peptideMatch.isValidated = true
+
+      // Update validation status
+      if ( peptideMatch.peptide.sequence.length < minSeqLength ) peptideMatch.isValidated = false
 
     }
   }
-
-  def getFilterProperties(): Option[Map[String, Any]] = {
-     val props =new HashMap[String, Any]
-    props += ( PepMatchFilterPropertyKeys.MIN_PEPTIDE_SEQUENCE_LENGTH ->  minSeqLength )
-    Some( props.toMap )
+  
+  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
+    pepMatches.sortWith( getPeptideMatchSequenceLength(_) > getPeptideMatchSequenceLength(_) )
   }
+
+  def getFilterProperties(): Map[String, Any] = {
+    val props =new HashMap[String, Any]    
+    props += (PepMatchFilterPropertyKeys.THRESHOLD_PROP_NAME -> minSeqLength)
+    props.toMap
+  }
+  
+  def getThresholdValue(): AnyVal = minSeqLength
   
   def setThresholdValue( currentVal: AnyVal ){
     minSeqLength = currentVal.asInstanceOf[Int]

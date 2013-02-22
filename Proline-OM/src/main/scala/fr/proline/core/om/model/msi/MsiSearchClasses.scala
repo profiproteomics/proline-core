@@ -1,6 +1,7 @@
 package fr.proline.core.om.model.msi
  
 import java.util.Date
+import scala.reflect.BeanProperty
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
@@ -68,12 +69,14 @@ case class SearchSettings(
   var pmfSearchSettings: Option[PMFSearchSettings] = None,
   var quantitation: String = "",
   var properties: Option[SearchSettingsProperties] = None
-      
+  
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class SearchSettingsProperties
+case class SearchSettingsProperties {
+  @BeanProperty protected var targetDecoyMode: Option[String] = None // CONCATENATED | SEPARATED
+}
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )

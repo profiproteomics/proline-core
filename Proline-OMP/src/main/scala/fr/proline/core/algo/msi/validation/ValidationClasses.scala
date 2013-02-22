@@ -16,17 +16,24 @@ import fr.proline.core.om.model.msi.ResultSummary
 
 object TargetDecoyModes extends Enumeration {
   type Mode = Value
-  val separated = Value("separated")
-  val concatenated = Value("concatenated")
+  val CONCATENATED = Value("CONCATENATED")
+  val SEPARATED = Value("SEPARATED")  
 }
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class ValidationResult( nbTargetMatches: Int,
-                             nbDecoyMatches: Option[Int] = None,
+case class ValidationResult( targetMatchesCount: Int,
+                             decoyMatchesCount: Option[Int] = None,
                              fdr: Option[Float] = None,
-                             properties: Option[HashMap[String,Any]] = None
-                            )
+                             var properties: Option[HashMap[String,Any]] = None
+                            ) {
+  def addProperties( newProps: Map[String,Any] ) {
+    var props = this.properties.getOrElse( new collection.mutable.HashMap[String,Any]() )
+    props ++= newProps
+    this.properties = Some(props)
+  }
+}
+
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ValidationResults( finalResult: ValidationResult, computedResults: Option[Seq[ValidationResult]] = None )
@@ -34,50 +41,31 @@ case class ValidationResults( finalResult: ValidationResult, computedResults: Op
 /** A factory to instantiate the appropriate peptide match validator */
 object BuildPeptideMatchValidator {
   
-  protected def apply(): IPeptideMatchValidator = new BasicPeptideMatchValidator()
-  
-  protected def apply(validationFilter: IPeptideMatchFilter): IPeptideMatchValidator = {
-    new FilteringPeptideMatchValidator( validationFilter )
-  }
-  
-  protected def apply(validationFilter: IPeptideMatchFilter, targetDecoyMode: TargetDecoyModes.Mode): IPeptideMatchValidator = {
-    new TDPepMatchValidator( validationFilter, targetDecoyMode )
-  }
-  
-  protected def apply(
-    validationFilter: IOptimizablePeptideMatchFilter,
-    targetDecoyMode: TargetDecoyModes.Mode,
-    expectedFdr: Float
-  ): IPeptideMatchValidator = {
-    new TDPepMatchValidatorWithFDROptimization( validationFilter, targetDecoyMode, expectedFdr )
-  }
-  
   def apply(
-    validationFilterOpt: Option[IPeptideMatchFilter] = None,
-    targetDecoyModeOpt: Option[TargetDecoyModes.Mode] = None,
-    expectedFdrOpt: Option[Float] = None
+    validationFilter: IPeptideMatchFilter,
+    expectedFdrOpt: Option[Float] = None,
+    tdAnalyzerOpt: Option[ITargetDecoyAnalyzer] = None
   ): IPeptideMatchValidator = {
     
     if (expectedFdrOpt.isDefined) {
-      require( validationFilterOpt.get.isInstanceOf[IOptimizablePeptideMatchFilter], "an optimizable fitler must be provided" )
+      require( validationFilter.isInstanceOf[IOptimizablePeptideMatchFilter], "an optimizable fitler must be provided" )
       
-      this.apply(validationFilterOpt.get.asInstanceOf[IOptimizablePeptideMatchFilter],targetDecoyModeOpt.get,expectedFdrOpt.get)
+      val valFilter = validationFilter.asInstanceOf[IOptimizablePeptideMatchFilter]
+      
+      new TDPepMatchValidatorWithFDROptimization( valFilter, expectedFdrOpt, tdAnalyzerOpt )
     }
-    else if (targetDecoyModeOpt.isDefined) {
-      this.apply(validationFilterOpt.get,targetDecoyModeOpt.get)
+    else {
+      new BasicPepMatchValidator( validationFilter, tdAnalyzerOpt )
     }
-    else if (validationFilterOpt.isDefined) {
-      this.apply(validationFilterOpt.get)
-    }
-    else this.apply()
   }
-  
 }
 
 trait IPeptideMatchValidator {
   
   val validationFilter: IPeptideMatchFilter
- 
+  val expectedFdr: Option[Float]
+  var tdAnalyzer: Option[ITargetDecoyAnalyzer]  
+  
   /**
    * Validates peptide matches.
    * @param pepMatches The list of peptide matches to validate
@@ -89,7 +77,9 @@ trait IPeptideMatchValidator {
   def validatePeptideMatches( targetRs: ResultSet ): ValidationResults = {
     
     val targetPepMatches: Seq[PeptideMatch] = targetRs.peptideMatches
-    val decoyPepMatches: Option[Seq[PeptideMatch]] = targetRs.decoyResultSet.map(_.peptideMatches)
+    
+    val decoyRs = if( targetRs.decoyResultSet == null ) None else targetRs.decoyResultSet
+    val decoyPepMatches: Option[Seq[PeptideMatch]] = decoyRs.map(_.peptideMatches)
     
     this.validatePeptideMatches( targetPepMatches, decoyPepMatches )
   }

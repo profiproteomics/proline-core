@@ -354,7 +354,7 @@ object PeptideMatch extends InMemoryIdGen
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatch ( // Required fields
                      var id: Int, 
-                     val rank: Int,
+                     var rank: Int,
                      val score: Float,
                      val scoreType: String,
                      val deltaMoz: Float,
@@ -368,7 +368,7 @@ case class PeptideMatch ( // Required fields
                      @transient val msQuery: MsQuery = null, // TODO: require ?
                      
                      // Mutable optional fields
-                     var isValidated: Boolean = false, // only defined in the model
+                     var isValidated: Boolean = true, // only defined in the model
                      var resultSetId: Int = 0,
                      
                      protected var childrenIds: Array[Int] = null,
@@ -405,23 +405,23 @@ case class PeptideMatch ( // Required fields
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchProperties (
-  @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None
+  @BeanProperty protected var mascotProperties: Option[PeptideMatchMascotProperties] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchMascotProperties (
-  @BeanProperty var expectationValue: Double,
-  @BeanProperty var readableVarMods: Option[String] = None,
-  @BeanProperty var varModsPositions: Option[String] = None,
-  @BeanProperty var ambiguityString: Option[String] = None
+  @BeanProperty protected var expectationValue: Double,
+  @BeanProperty protected var readableVarMods: Option[String] = None,
+  @BeanProperty protected var varModsPositions: Option[String] = None,
+  @BeanProperty protected var ambiguityString: Option[String] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchResultSummaryProperties (
-  @BeanProperty var mascotScoreOffset: Option[Float] = None,
-  @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
+  @BeanProperty protected var mascotScoreOffset: Option[Float] = None,
+  @BeanProperty protected var mascotAdjustedExpectationValue: Option[Double] = None
 )
  
 object PeptideInstance extends InMemoryIdGen
@@ -485,7 +485,7 @@ case class PeptideInstance ( // Required fields
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideInstanceProperties(
-  //@BeanProperty var bestPeptideMatchId: Option[Int] = None
+  //@BeanProperty protected var bestPeptideMatchId: Option[Int] = None
 )
 
 @JsonSnakeCase

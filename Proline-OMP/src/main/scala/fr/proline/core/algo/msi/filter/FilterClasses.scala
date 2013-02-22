@@ -4,6 +4,10 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.algo.msi.validation.ValidationResults
 
+object FilterPropertyKeys {
+  final val THRESHOLD_VALUE = "threshold_value"
+}
+
 object PepMatchFilterPropertyKeys {
   final val THRESHOLD_PROP_NAME = "threshold_value"
   final val MASCOT_EVALUE_THRESHOLD = "mascot_evalue_threshold"
@@ -15,46 +19,12 @@ object PepMatchFilterPropertyKeys {
 object PepMatchFilterParams extends Enumeration {
   type Param = Value
   val MASCOT_EVALUE = Value("MASCOT_EVALUE")
+  val MASCOT_ADJUSTED_EVALUE = Value("MASCOT_ADJUSTED_EVALUE")
   val PEPTIDE_SEQUENCE_LENGTH = Value("PEP_SEQ_LENGTH")
   val RANK = Value("RANK")
   val SCORE = Value("SCORE")
   val NONE = Value("NONE")
 }
-
-
-object BuildPeptideMatchFilter {
-  
-  def apply(filterParamStr: String): IPeptideMatchFilter = {    
-    this.apply( PepMatchFilterParams.withName(filterParamStr) )
-  }
-  
-  def apply(filterParam: PepMatchFilterParams.Param): IPeptideMatchFilter = {    
-    filterParam match {
-      case PepMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
-      case PepMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH => new PepSeqLengthPSMFilter()
-      case PepMatchFilterParams.RANK => new RankPSMFilter()
-      case PepMatchFilterParams.SCORE => new ScorePSMFilter()
-      case PepMatchFilterParams.NONE => NullOptimizablePSMFilter
-    }
-  }
-}
-
-object BuildOptimizablePeptideMatchFilter {
-  
-  def apply(filterParamStr: String): IOptimizablePeptideMatchFilter = {    
-    this.apply( PepMatchFilterParams.withName(filterParamStr) )
-  }
-  
-  def apply(filterParam: PepMatchFilterParams.Param): IOptimizablePeptideMatchFilter = {    
-    filterParam match {
-      case PepMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
-      case PepMatchFilterParams.SCORE => new ScorePSMFilter()
-      case PepMatchFilterParams.NONE => NullOptimizablePSMFilter
-    }
-  }
-  
-}
-
 
 trait IFilter {
 
@@ -66,11 +36,16 @@ trait IFilter {
     * and be able to reapply it. 
     *  
     */
-  def getFilterProperties(): Option[Map[String, Any]]
+  def getFilterProperties(): Map[String, Any]
   
   def toFilterDescriptor(): FilterDescriptor = {
-    new FilterDescriptor( filterParameter, Some(filterDescription), getFilterProperties )
+    new FilterDescriptor( filterParameter, Some(filterDescription), Some(getFilterProperties) )
   }
+  
+  /**
+   * Returns the Threshold value that has been set.
+   */
+  def getThresholdValue(): AnyVal
   
   /**
    * Given a current Threshold value, return the next possible value. This 
@@ -87,31 +62,37 @@ trait IPeptideMatchFilter extends IFilter {
    * Validate each PeptideMatch by setting their isValidated attribute.
    * Validation criteria will depend on implementation.
    * 
+   * Default behavior will be to exclude PeptideMatch which do not pass filter parameters
+   * 
    * @param pepMatches : All PeptiMatches for a single query.
    * @param incrementalValidation : if incrementalValidation is set to false, 
-   * all PeptideMatch's isValidated property will explicitly be set to true and false. 
-   * Otherwise, only excluded PeptideMatch will be changed to isValidated = false   
+   * all PeptideMatch's isValidated property will be explicitly set to true or false. 
+   * Otherwise, only excluded PeptideMatch will be changed bu setting their isValidated prooperty to false   
    * @param traceability : specify if filter could saved information in peptideMatch properties 
    *  
    */
-  // TODO: rename to selectPeptideMatches and add a isSelected flag to peptideMatches
-  def filterPeptideMatches( pepMatches : Seq[PeptideMatch], incrementalValidation: Boolean, traceability : Boolean) : Unit  
+  def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit
   
-//def updatePeptideMatchProperties(pepMatch : PeptideMatch){
-//    
-//      var pepMatchValProps = pepMatch.validationProperties.orElse( Some( new PeptideMatchValidationProperties() ) ).get 
-//      var filtersPropByRank = pepMatchValProps.getValidationFiltersProperties.getOrElse( Map.empty[Int, FilterProperties])
-//	  
-//      //Read last filter Rank to add new one
-//       val lastRank = filtersPropByRank.maxBy(_._1 )._1
-//              
-//       val filterProp = new FilterProperties(name = filterName)
-//            
-//	filterProp.propeties = getFilterProperties()
-//	filtersPropByRank += (lastRank+1 -> filterProp)
-//	pepMatchValProps.validationFiltersProperties = Some(filtersPropByRank)
-//        pepMatch.validationProperties = Some( pepMatchValProps )
-//   }
+  /**
+   * Returns the value that will be used to filter the peptide match.
+   */
+  def getPeptideMatchValueForFiltering( pepMatch: PeptideMatch ): AnyVal
+  
+  /**
+   * Sorts peptide matches in the order corresponding to the filter parameter,
+   * from thes best peptide match to the worst.
+   */
+  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch]
+  
+  
+  // TODO: is incrementalValidation still needed ?
+  /**
+   * Resets the validation status of peptide matches.
+   */
+  def resetPepMatchValidationStatus( pepMatches: Seq[PeptideMatch] ) = {
+    pepMatches.foreach( _.isValidated = true )
+  }
+  
 }
 
 trait IOptimizableFilter extends IFilter {
@@ -126,7 +107,7 @@ trait IOptimizableFilter extends IFilter {
    * is useful for ComputedValidationPSMFilter in order to determine 
    * best threshold value to reach specified FDR 
    */
-  def getNextValue( currentVal : AnyVal ): AnyVal
+  def getNextValue( currentVal: AnyVal ): AnyVal
    
 }
 
@@ -142,9 +123,11 @@ class ParamProteinSetFilter( val filterParameter: String, val minPepSeqLength: I
   val filterDescription = "no description"
   var pValueThreshold : Float = 0.00f
  
-  def getFilterProperties() : Option[Map[String, Any]] = {
-    None
+  def getFilterProperties() : Map[String, Any] = {
+    Map.empty[String, Any]
   }
+  
+  def getThresholdValue(): AnyVal = pValueThreshold
   
   def setThresholdValue( currentVal : AnyVal ){
     pValueThreshold = currentVal.asInstanceOf[Float]

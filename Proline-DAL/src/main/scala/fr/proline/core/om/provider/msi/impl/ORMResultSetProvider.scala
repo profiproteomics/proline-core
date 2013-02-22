@@ -241,7 +241,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         msiPeptideMatch.getMissedCleavage,
         msiPeptideMatch.getFragmentMatchCount,
         buildMsQuery(msiPeptideMatch.getMsQuery),
-        false, // isValidated always false when loading from ORM
+        true, // isValidated always true when loading from ORM
         resultSetId,
         null, // TODO handle children
         null, // TODO handle children
