@@ -12,6 +12,7 @@ import fr.proline.core.om.model.msi.MsQueryProperties
 import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.filtering.IOptimizablePeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
+import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
 
 class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold : Boolean = false, var pValueStartValue : Float = 0.05f) extends IOptimizablePeptideMatchFilter with Logging {
 
@@ -22,10 +23,14 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold 
     
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = pepMatch.score
   
+  def isPeptideMatchValid( pepMatch: PeptideMatch ): Boolean = {
+    throw new Exception("Not Yet Implemented") 
+  }
+  
   def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
     
     // Reset validation status if validation is not incremental
-    if( !incrementalValidation ) MascotPValuePSMFilter.this.resetPepMatchValidationStatus(pepMatches)
+    if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
 
     
     val pepMatchesByMsqId = pepMatches.groupBy(_.msQueryId)
