@@ -8,9 +8,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ExternalDbProperties(  
-  @BeanProperty protected var jdbcDriverClassName: Option[String] = None, // TODO: remove ???
+  @BeanProperty var jdbcDriverClassName: Option[String] = None, // TODO: remove ???
   var driverType: Option[String] = None,
-  @BeanProperty protected var hibernateDialect: Option[String] = None
+  @BeanProperty var hibernateDialect: Option[String] = None
 ) {
 
   // Small hack
