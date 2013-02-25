@@ -28,9 +28,9 @@ case class Peaklist(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeaklistProperties (
-  @BeanProperty protected var spectrumDataCompressionLevel: Option[Int] = None,
-  @BeanProperty protected var putativePrecursorCharges: Option[Seq[Int]] = None,
-  @BeanProperty protected var polarity: Option[Char] = None // +/-
+  @BeanProperty var spectrumDataCompressionLevel: Option[Int] = None,
+  @BeanProperty var putativePrecursorCharges: Option[Seq[Int]] = None,
+  @BeanProperty var polarity: Option[Char] = None // +/-
 )
 
 

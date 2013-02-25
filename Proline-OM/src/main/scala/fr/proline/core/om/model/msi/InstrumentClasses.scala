@@ -71,5 +71,5 @@ case class InstrumentConfig(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class InstrumentConfigProperties ( 
-  @BeanProperty protected val isHidden: Boolean
+  @BeanProperty val isHidden: Boolean
 )

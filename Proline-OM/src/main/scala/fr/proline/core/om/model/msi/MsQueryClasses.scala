@@ -46,16 +46,16 @@ trait MsQuery {
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MsQueryProperties(
-  @BeanProperty protected var targetDbSearch: Option[MsQueryDbSearchProperties] = None,
-  @BeanProperty protected var decoyDbSearch: Option[MsQueryDbSearchProperties] = None
+  @BeanProperty var targetDbSearch: Option[MsQueryDbSearchProperties] = None,
+  @BeanProperty var decoyDbSearch: Option[MsQueryDbSearchProperties] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MsQueryDbSearchProperties(
-  @BeanProperty protected var candidatePeptidesCount: Int,
-  @BeanProperty protected var mascotIdentityThreshold: Option[Float] = None,
-  @BeanProperty protected var mascotHomologyThreshold: Option[Float] = None
+  @BeanProperty var candidatePeptidesCount: Int,
+  @BeanProperty var mascotIdentityThreshold: Option[Float] = None,
+  @BeanProperty var mascotHomologyThreshold: Option[Float] = None
 )
 
 

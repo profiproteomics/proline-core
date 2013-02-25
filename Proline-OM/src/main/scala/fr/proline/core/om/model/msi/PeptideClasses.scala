@@ -405,23 +405,23 @@ case class PeptideMatch ( // Required fields
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchProperties (
-  @BeanProperty protected var mascotProperties: Option[PeptideMatchMascotProperties] = None
+  @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchMascotProperties (
-  @BeanProperty protected var expectationValue: Double,
-  @BeanProperty protected var readableVarMods: Option[String] = None,
-  @BeanProperty protected var varModsPositions: Option[String] = None,
-  @BeanProperty protected var ambiguityString: Option[String] = None
+  @BeanProperty var expectationValue: Double,
+  @BeanProperty var readableVarMods: Option[String] = None,
+  @BeanProperty var varModsPositions: Option[String] = None,
+  @BeanProperty var ambiguityString: Option[String] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchResultSummaryProperties (
-  @BeanProperty protected var mascotScoreOffset: Option[Float] = None,
-  @BeanProperty protected var mascotAdjustedExpectationValue: Option[Double] = None
+  @BeanProperty var mascotScoreOffset: Option[Float] = None,
+  @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
 )
  
 object PeptideInstance extends InMemoryIdGen
@@ -485,7 +485,7 @@ case class PeptideInstance ( // Required fields
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideInstanceProperties(
-  //@BeanProperty protected var bestPeptideMatchId: Option[Int] = None
+  //@BeanProperty var bestPeptideMatchId: Option[Int] = None
 )
 
 @JsonSnakeCase

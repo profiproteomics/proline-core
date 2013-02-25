@@ -180,10 +180,10 @@ case class Feature (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class FeatureProperties (
-  @BeanProperty protected var peakelsCount: Option[Int] = None,
-  @BeanProperty protected var peakelsRatios: Option[Array[Float]] = None,
-  @BeanProperty protected var overlapCorrelation: Option[Float] = None,
-  @BeanProperty protected var overlapFactor: Option[Float] = None
+  @BeanProperty var peakelsCount: Option[Int] = None,
+  @BeanProperty var peakelsRatios: Option[Array[Float]] = None,
+  @BeanProperty var overlapCorrelation: Option[Float] = None,
+  @BeanProperty var overlapFactor: Option[Float] = None
 )
 
 

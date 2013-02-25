@@ -236,38 +236,38 @@ case class ResultSummary (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ResultSummaryProperties (
-  @BeanProperty protected var validationProperties: Option[RsmValidationProperties] = None
+  @BeanProperty var validationProperties: Option[RsmValidationProperties] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class RsmValidationProperties (
-  @BeanProperty protected var params: RsmValidationParamsProperties,
-  @BeanProperty protected var results: RsmValidationResultsProperties
+  @BeanProperty var params: RsmValidationParamsProperties,
+  @BeanProperty var results: RsmValidationResultsProperties
 ) 
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class RsmValidationParamsProperties (
-  @BeanProperty protected var peptideExpectedFdr: Option[Float] = None,
-  @BeanProperty protected var peptideFilters: Option[Array[FilterDescriptor]] = None,
-  @BeanProperty protected var proteinExpectedFdr: Option[Float] = None,
-  @BeanProperty protected var proteinFilters: Option[Array[FilterDescriptor]] = None
+  @BeanProperty var peptideExpectedFdr: Option[Float] = None,
+  @BeanProperty var peptideFilters: Option[Array[FilterDescriptor]] = None,
+  @BeanProperty var proteinExpectedFdr: Option[Float] = None,
+  @BeanProperty var proteinFilters: Option[Array[FilterDescriptor]] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class RsmValidationResultsProperties (
-  @BeanProperty protected var peptideResults: Option[RsmPepMatchValidationResultsProperties] = None,
-  @BeanProperty protected var proteinResults: Option[RsmProtSetValidationResultsProperties] = None
+  @BeanProperty var peptideResults: Option[RsmPepMatchValidationResultsProperties] = None,
+  @BeanProperty var proteinResults: Option[RsmProtSetValidationResultsProperties] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class RsmPepMatchValidationResultsProperties (
-  @BeanProperty protected var targetMatchesCount: Int,
-  @BeanProperty protected var decoyMatchesCount: Option[Int] = None,
-  @BeanProperty protected var fdr: Option[Float] = None
+  @BeanProperty var targetMatchesCount: Int,
+  @BeanProperty var decoyMatchesCount: Option[Int] = None,
+  @BeanProperty var fdr: Option[Float] = None
 )
 
 @JsonSnakeCase
