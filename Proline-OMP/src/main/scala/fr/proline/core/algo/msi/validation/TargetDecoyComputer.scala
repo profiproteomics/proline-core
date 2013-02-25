@@ -51,7 +51,7 @@ object TargetDecoyComputer {
   
   def buildPeptideMatchJointMap( targetPeptideMatches: Seq[PeptideMatch], decoyPeptideMatches: Option[Seq[PeptideMatch]] ): Map[Int, Seq[PeptideMatch]] = {
     
-    val peptideMatches = targetPeptideMatches ++ decoyPeptideMatches.getOrElse(scala.collection.mutable.Seq[PeptideMatch]())
+    val peptideMatches = targetPeptideMatches ++ decoyPeptideMatches.getOrElse(Seq())
     
     // Group peptide matches by MS query id and sort them by descendant score
     // TODO: do we need to sort here ???

@@ -132,17 +132,17 @@ object MascotValidationHelper {
 
   def getPeptideMatchThresholds(peptideMatch: PeptideMatch): MascotIonScoreThresholds = {
 
-    val targetMsqProps = peptideMatch.msQuery.properties.get.getTargetDbSearch.get
-    val decoyMsqProps = peptideMatch.msQuery.properties.get.getDecoyDbSearch.get
+    val targetMsqProps = this.getTargetMsQueryProperties(peptideMatch.msQuery)
+    val decoyMsqProps = this.getDecoyMsQueryProperties(peptideMatch.msQuery)
 
     // Determine homology threshold
-    val targetHt = targetMsqProps.getMascotHomologyThreshold.getOrElse(0f)
-    val decoyHt = decoyMsqProps.getMascotHomologyThreshold.getOrElse(0f)
+    val targetHt = targetMsqProps.map(_.getMascotHomologyThreshold.getOrElse(0f)).getOrElse(0f)
+    val decoyHt = decoyMsqProps.map(_.getMascotHomologyThreshold.getOrElse(0f)).getOrElse(0f)
     val homologyThreshold = if (decoyHt > 0) decoyHt else targetHt
 
     // Determine identity threshold
-    val targetIt = targetMsqProps.getMascotHomologyThreshold.getOrElse(0f)
-    val decoyIt = decoyMsqProps.getMascotIdentityThreshold.getOrElse(0f)
+    val targetIt = targetMsqProps.map(_.getMascotIdentityThreshold.getOrElse(0f)).getOrElse(0f)
+    val decoyIt = decoyMsqProps.map(_.getMascotIdentityThreshold.getOrElse(0f)).getOrElse(0f)
 
     var identityThreshold = 0.0f
     if (decoyIt > 0 && targetIt > 0) { identityThreshold = (decoyIt + targetIt) / 2 }
@@ -171,11 +171,11 @@ object MascotValidationHelper {
   }
 
   def getTargetMsQueryProperties(msQuery: MsQuery): Option[MsQueryDbSearchProperties] = {
-    msQuery.properties.get.getDecoyDbSearch
+    msQuery.properties.get.getTargetDbSearch
   }
 
   def getDecoyMsQueryProperties(msQuery: MsQuery): Option[MsQueryDbSearchProperties] = {
-    msQuery.properties.get.getTargetDbSearch
+    msQuery.properties.get.getDecoyDbSearch
   }
 
   def buildJointTable(pepMatchJointTable: Array[Pair[PeptideMatch, PeptideMatch]],

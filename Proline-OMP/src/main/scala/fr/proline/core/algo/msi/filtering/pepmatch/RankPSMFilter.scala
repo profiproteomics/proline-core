@@ -67,7 +67,7 @@ class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter 
   def filterPeptideMatchesDBO( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
     
     // Reset validation status if validation is not incremental
-    if( !incrementalValidation ) this.resetPepMatchValidationStatus(pepMatches)
+    if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
     
     // Memorize peptide matches rank
     val pepMatchRankMap = RankPSMFilter.getPeptideMatchesRankMap(pepMatches)

@@ -34,24 +34,6 @@ class BasicPepMatchValidator(
     
     // Add validation filter properties to validation results
     valResult.addProperties( validationFilter.getFilterProperties )
-    
-    /*
-    // Calculate FDR after filter have been applied
-    val targetMatchesCount = pepMatches.count(_.isValidated)
-    val decoyMatchesCount = decoyPepMatches.get.count(_.isValidated)
-    
-    val fdr = if( decoyPepMatches.isDefined == false ) Option.empty[Float]
-    else if( targetDecoyMode.isDefined)
-      targetDecoyMode.get match {
-        case TargetDecoyModes.CONCATENATED => Some(tdComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount))
-        case TargetDecoyModes.SEPARATED    => Some(tdComputer.calcSdFDR(targetMatchesCount, decoyMatchesCount))
-        case _                             => throw new Exception("unknown target decoy mode: " + targetDecoyMode)
-      }
-    else {
-      val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(pepMatches,decoyPepMatches)
-      val valResult = TargetDecoyComputer.validatePepMatchesWithCompetition(pmJointMap, validationFilter)
-      valResult.fdr
-    }*/
 
     // Return validation results
     ValidationResults( valResult )

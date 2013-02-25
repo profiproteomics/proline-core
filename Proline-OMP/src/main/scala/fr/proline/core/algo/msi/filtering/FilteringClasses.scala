@@ -3,18 +3,11 @@ package fr.proline.core.algo.msi.filtering
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.algo.msi.validation.ValidationResults
+import fr.proline.core.om.model.msi.ProteinSet
 
 object FilterPropertyKeys {
   final val THRESHOLD_VALUE = "threshold_value"
 }
-
-/*object PepMatchFilterPropertyKeys {
-  final val THRESHOLD_PROP_NAME = "threshold_value"
-  final val MASCOT_EVALUE_THRESHOLD = "mascot_evalue_threshold"
-  final val MIN_PEPTIDE_SEQUENCE_LENGTH = "min_pep_seq_length"
-  final val MAX_RANK = "max_rank"
-  final val SCORE_THRESHOLD = "score_threshold"
-}*/
 
 object PepMatchFilterParams extends Enumeration {
   type Param = Value
@@ -23,7 +16,11 @@ object PepMatchFilterParams extends Enumeration {
   val PEPTIDE_SEQUENCE_LENGTH = Value("PEP_SEQ_LENGTH")
   val RANK = Value("RANK")
   val SCORE = Value("SCORE")
-  val NONE = Value("NONE")
+}
+
+object ProtSetFilterParams extends Enumeration {
+  type Param = Value
+  val MASCOT_ADJUSTED_SCORE = Value("MASCOT_ADJUSTED_SCORE")
 }
 
 trait IFilter {
@@ -46,6 +43,19 @@ trait IFilter {
    * Returns the Threshold value that has been set.
    */
   def getThresholdValue(): AnyVal
+  
+  /**
+   * Returns the Threshold value that has been set with conversion to a Double.
+   */
+  def getThresholdValueAsDouble(): Double = {
+    this.getThresholdValue match {
+      case d: Double => d
+      case f: Float => f.toDouble
+      case i: Int => i.toDouble
+      case l: Long => l.toDouble
+      case _ => throw new Exception("unsupported primitive type for the threshold value")
+    }
+  }
   
   /**
    * Given a current Threshold value, return the next possible value. This 
@@ -72,6 +82,25 @@ trait IOptimizableFilter extends IFilter {
    
 }
 
+object PeptideMatchFiltering {
+  
+  // TODO: is incrementalValidation still needed ?
+  /**
+   * Resets the validation status of peptide matches.
+   */
+  def resetPepMatchValidationStatus( pepMatches: Seq[PeptideMatch] ) {
+    pepMatches.foreach( _.isValidated = true )
+  }
+  
+  def getPepMatchValidationStatusMap( pepMatches: Seq[PeptideMatch] ):  Map[Int,Boolean] = {
+    Map() ++ pepMatches.map( pm => pm.id -> pm.isValidated )
+  }
+  
+  def restorePepMatchValidationStatus( pepMatches: Seq[PeptideMatch], pepMatchValStatusMap: Map[Int,Boolean] ) {
+    pepMatches.foreach { pm => pm.isValidated = pepMatchValStatusMap(pm.id) }
+  }
+}
+
 
 trait IPeptideMatchFilter extends IFilter {
   
@@ -81,7 +110,7 @@ trait IPeptideMatchFilter extends IFilter {
    * 
    * Default behavior will be to exclude PeptideMatch which do not pass filter parameters
    * 
-   * @param pepMatches : All PeptiMatches for a single query.
+   * @param pepMatches : All PeptideMatches.
    * @param incrementalValidation : if incrementalValidation is set to false, 
    * all PeptideMatch's isValidated property will be explicitly set to true or false. 
    * Otherwise, only excluded PeptideMatch will be changed bu setting their isValidated prooperty to false   
@@ -95,43 +124,78 @@ trait IPeptideMatchFilter extends IFilter {
    */
   def getPeptideMatchValueForFiltering( pepMatch: PeptideMatch ): AnyVal
   
-  // TODO: is incrementalValidation still needed ?
-  /**
-   * Resets the validation status of peptide matches.
-   */
-  def resetPepMatchValidationStatus( pepMatches: Seq[PeptideMatch] ) = {
-    pepMatches.foreach( _.isValidated = true )
-  }
-  
 }
 
 trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter {
   
   /**
    * Sorts peptide matches in the order corresponding to the filter parameter,
-   * from thes best peptide match to the worst.
+   * from the best peptide match to the worst.
    */
   def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch]
   
-}
-
-trait IProteinSetFilter extends IFilter {}
-trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFilter
-
-//VDS TODO: replace with real filter 
-class ParamProteinSetFilter( val filterParameter: String, val minPepSeqLength: Int, val expectedFdr: Float ) extends IProteinSetFilter  {
-   
-  val filterDescription = "no description"
-  var pValueThreshold : Float = 0.00f
- 
-  def getFilterProperties() : Map[String, Any] = {
-    Map.empty[String, Any]
-  }
-  
-  def getThresholdValue(): AnyVal = pValueThreshold
-  
-  def setThresholdValue( currentVal : AnyVal ){
-    pValueThreshold = currentVal.asInstanceOf[Float]
-  }
+  def isPeptideMatchValid( pepMatch: PeptideMatch ): Boolean
   
 }
+
+object ProteinSetFiltering {
+  
+  // TODO: is incrementalValidation still needed ?
+  /**
+   * Resets the validation status of peptide matches.
+   */
+  def resetProteinSetValidationStatus( protSets: Seq[ProteinSet] ) = {
+    protSets.foreach( _.isValidated = true )
+  }
+  
+  def getProtSetValidationStatusMap( protSets: Seq[ProteinSet] ):  Map[Int,Boolean] = {
+    Map() ++ protSets.map( ps => ps.id -> ps.isValidated )
+  }
+  
+  def restoreProtSetValidationStatus( protSets: Seq[ProteinSet], protSetValStatusMap: Map[Int,Boolean] ) {
+    protSets.foreach { ps => ps.isValidated = protSetValStatusMap(ps.id) }
+  }
+  
+}
+
+trait IProteinSetFilter extends IFilter {
+  
+  /**
+   * Validate each PeptideMatch by setting their isValidated attribute.
+   * Validation criteria will depend on implementation.
+   * 
+   * Default behavior will be to exclude PeptideMatch which do not pass filter parameters
+   * 
+   * @param proteinSets : All proteinSets.
+   * @param incrementalValidation : if incrementalValidation is set to false, 
+   * all PeptideMatch's isValidated property will be explicitly set to true or false. 
+   * Otherwise, only excluded PeptideMatch will be changed bu setting their isValidated prooperty to false   
+   * @param traceability : specify if filter could saved information in peptideMatch properties 
+   * 
+   */
+  def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit
+  
+}
+
+trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFilter {
+  
+  /**
+   * Returns the validity status of the protein set, considering the current filter.
+   */
+  def isProteinSetValid( protSet: ProteinSet ): Boolean
+  
+  /**
+   * Sorts protein sets in the order corresponding to the filter parameter,
+   * from the best protein set to the worst.
+   */
+  def sortProteinSets( protSets: Seq[ProteinSet] ): Seq[ProteinSet]
+  
+  def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {
+    
+    // Reset validation status if validation is not incremental
+    if( !incrementalValidation ) ProteinSetFiltering.resetProteinSetValidationStatus(protSets)
+    
+    protSets.filter( ! isProteinSetValid(_) ).foreach( _.isValidated = false )
+  }
+}
+

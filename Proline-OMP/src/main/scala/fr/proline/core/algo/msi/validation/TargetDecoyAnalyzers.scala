@@ -30,7 +30,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
     
     // Memorize validation status of peptide matches
     val allPepMatches = ( targetPepMatches ++ decoyPepMatches )
-    val valStatusByPmId = allPepMatches.map( pm => pm.id -> pm.isValidated).toMap
+    val pepMatchValStatusMap = PeptideMatchFiltering.getPepMatchValidationStatusMap(allPepMatches)
     
     // Build the peptide match joint map
     val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches, Some(decoyPepMatches))
@@ -99,11 +99,11 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
       } // End go through pmJointMap entries
       */
       
+      // Restore peptide matches validation status to include previous filtering steps
+      PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches,pepMatchValStatusMap)
+      
       // Update filter threshold
       validationFilter.setThresholdValue(filterThreshold)
-      
-      // Restore peptide matches validation status to include previous filtering steps
-      allPepMatches.foreach( pm => pm.isValidated = valStatusByPmId(pm.id) )
       
       // Apply filter on target and decoy peptide matches
       validationFilter.filterPeptideMatches(allPepMatches, true, false)
@@ -119,7 +119,8 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
       
       // Update the current FDR
       if( rocPoint.fdr.isDefined ) fdr = rocPoint.fdr.get
-      logger.debug(" New FDR = "+fdr)
+      logger.debug("New FDR = "+fdr + " for threshold = "+filterThreshold)
+      
       // Update threshold value
       filterThreshold = validationFilter.getNextValue(filterThreshold)
       
@@ -128,7 +129,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
     } //Go through all possible threshold value while FDR is greater than zero
     
     // Restore peptide matches validation status
-    allPepMatches.foreach( pm => pm.isValidated = valStatusByPmId(pm.id) )
+    PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches,pepMatchValStatusMap)
     
     rocPoints.toArray
   }

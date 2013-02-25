@@ -1,6 +1,5 @@
 package fr.proline.core.algo.msi.validation.pepmatch
 
-import math.abs
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -25,12 +24,15 @@ class TDPepMatchValidatorWithFDROptimization(
       ValidationResults(ValidationResult(0,None,None))
     } else {
       // Retrieve the nearest ROC point of the expected FDR and associated threshold
-      val expectedRocPoint = rocPoints.reduce { (a, b) => if (abs(a.fdr.get - expectedFdr.get) < abs(b.fdr.get - expectedFdr.get)) a else b }
+      val expectedRocPoint = rocPoints.reduce { (a, b) => if ((a.fdr.get - expectedFdr.get).abs < (b.fdr.get - expectedFdr.get).abs) a else b }
+      this.logger.debug("Effective FDR of expected ROC point = " + expectedRocPoint.fdr)
+      
       val threshToApply = expectedRocPoint.properties.get(FilterPropertyKeys.THRESHOLD_VALUE)
+      this.logger.debug("Threshold value of expected ROC point = " + threshToApply)
       
       // Update threshold and apply validation filter with this final value
       validationFilter.setThresholdValue(threshToApply.asInstanceOf[AnyVal])
-      validationFilter.filterPeptideMatches(pepMatches ++ decoyPepMatches.getOrElse(Seq()), true, true)
+      validationFilter.filterPeptideMatches(pepMatches ++ decoyPepMatches.get, true, true)
       
       ValidationResults(expectedRocPoint, Some(rocPoints))
     }

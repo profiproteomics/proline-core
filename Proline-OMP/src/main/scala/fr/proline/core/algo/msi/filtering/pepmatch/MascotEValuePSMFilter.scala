@@ -17,11 +17,13 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
     this.getPeptideMatchValueForFiltering( pepMatch ).asInstanceOf[Double]
   }
   
+  // TODO: maybe we can move this method in IOptimizablePeptideMatchFilter
   def filterPeptideMatches( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
   
     // Reset validation status if validation is not incremental
-    if( !incrementalValidation ) this.resetPepMatchValidationStatus(pepMatches)
+    if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
     
+    /*
     // Create a Map : List of PeptideMatch by eValue
     val psmsByEValue = pepMatches.groupBy( getPeptideMatchEValue( _ ) )
 
@@ -33,10 +35,18 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
     
     // Update validation status of invalid peptide matches
     invalidPsmsByEValue.flatten( _._2 ).foreach( _.isValidated = false )
+    */
+    
+    // Unvalidate peptide matches that doesn't have the riht eValue
+    pepMatches.foreach( pm => if(isPeptideMatchValid(pm) == false) pm.isValidated = false )
 
     if ( traceability ) {
       pepMatches.foreach( updatePeptideMatchProperties( _ ) )
     }
+  }
+  
+  def isPeptideMatchValid( pepMatch: PeptideMatch ): Boolean = {
+    getPeptideMatchEValue(pepMatch) <= eValueThreshold    
   }
   
   def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
@@ -57,7 +67,7 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
   
   def getThresholdValue(): AnyVal = eValueThreshold
 
-  def setThresholdValue( currentVal : AnyVal ) {
+  def setThresholdValue( currentVal : AnyVal ) = {
     eValueThreshold = currentVal.asInstanceOf[Double]
   }
   
