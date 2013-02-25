@@ -26,7 +26,7 @@ class SQLPeptideMatchProvider(
   val PepMatchCols = MsiDbPeptideMatchTable.columns
 
   // Instantiate a MSIdb helper
-  val msiDbHelper = new MsiDbHelper(msiSqlCtx.ezDBC)
+  val msiDbHelper = new MsiDbHelper(msiSqlCtx)
 
   // Retrieve score type map
   val scoreTypeById = msiDbHelper.getScoringTypeById

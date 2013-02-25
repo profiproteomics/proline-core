@@ -20,7 +20,7 @@ class SQLProteinSetProvider(
   val ProtSetItemCols = MsiDbProteinSetProteinMatchItemTable.columns
 
   // Instantiate a MSIdb helper
-  val msiDbHelper = new MsiDbHelper(msiDbCtx.ezDBC)
+  val msiDbHelper = new MsiDbHelper(msiDbCtx)
 
   // Retrieve score type map
   val scoreTypeById = msiDbHelper.getScoringTypeById

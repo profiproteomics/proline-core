@@ -3,10 +3,12 @@ package fr.proline.core.dal.helper
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import fr.profi.jdbc.SQLQueryExecution
+
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.dal.{DoJDBCReturningWork,DoJDBCWork}
 import fr.proline.util.primitives.LongOrIntAsInt._
 
-class MsiDbHelper( sqlExec: SQLQueryExecution ) {
+class MsiDbHelper( msiDbCtx: DatabaseConnectionContext ) {
 
 /* ##############################################################################
 # Method: get_target_decoy_result_sets()
@@ -28,25 +30,32 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
   return \@result_sets;
   }*/
   
-  def getDecoyRsId( targetResultSetId: Int ): Option[Int] = {
-    this.sqlExec.select(
-      "SELECT decoy_result_set_id FROM result_set WHERE id = " + targetResultSetId
-    ) { _.nextIntOption } (0)
+  def getDecoyRsId( targetResultSetId: Int ): Option[Int] = {    
+    DoJDBCReturningWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.select(
+        "SELECT decoy_result_set_id FROM result_set WHERE id = " + targetResultSetId
+      ) { _.nextIntOption } (0)
+    })
   }
 
   def getResultSetsMsiSearchIds( rsIds: Seq[Int] ): Array[Int] = {
     
-    val parentMsiSearchIds = this.sqlExec.selectInts(
-      "SELECT DISTINCT msi_search_id FROM result_set " +
-      "WHERE id IN ("+  rsIds.mkString(",") +") " +
-      "AND msi_search_id IS NOT NULL"
-    ) 
-    val childMsiSearchIds = this.sqlExec.selectInts(
-      "SELECT DISTINCT msi_search_id FROM result_set, result_set_relation " +
-      "WHERE result_set.id = result_set_relation.child_result_set_id " +
-      "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +") " +
-      "AND msi_search_id IS NOT NULL"
-    )
+    val parentMsiSearchIds = DoJDBCReturningWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.selectInts(
+        "SELECT DISTINCT msi_search_id FROM result_set " +
+        "WHERE id IN ("+  rsIds.mkString(",") +") " +
+        "AND msi_search_id IS NOT NULL"
+      )
+    })
+    
+    val childMsiSearchIds = DoJDBCReturningWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.selectInts(      
+        "SELECT DISTINCT msi_search_id FROM result_set, result_set_relation " +
+        "WHERE result_set.id = result_set_relation.child_result_set_id " +
+        "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +") " +
+        "AND msi_search_id IS NOT NULL"
+      )
+    })
     
     parentMsiSearchIds ++ childMsiSearchIds
   }
@@ -55,23 +64,27 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
    
     val msiSearchIdsByParentResultSetId = new HashMap[Int,HashSet[Int]]
     
-    this.sqlExec.selectAndProcess(
-      "SELECT id, msi_search_id FROM result_set " +
-      "WHERE id IN ("+  rsIds.mkString(",") +") " +
-      "AND msi_search_id IS NOT NULL"
-    ) { r =>
-      val id: Int = r.nextAnyVal
-      msiSearchIdsByParentResultSetId.getOrElseUpdate(id, new HashSet[Int]) += r.nextInt
-    }
+    DoJDBCWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.selectAndProcess(
+        "SELECT id, msi_search_id FROM result_set " +
+        "WHERE id IN ("+  rsIds.mkString(",") +") " +
+        "AND msi_search_id IS NOT NULL"
+      ) { r =>
+        val id: Int = r.nextAnyVal
+        msiSearchIdsByParentResultSetId.getOrElseUpdate(id, new HashSet[Int]) += r.nextInt
+      }
+    })
     
-    this.sqlExec.selectAndProcess(
-      "SELECT result_set_relation.parent_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
-      "WHERE result_set.id = result_set_relation.child_result_set_id " +
-      "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +") " +
-      "AND msi_search_id IS NOT NULL"
-    ) { r =>
-      msiSearchIdsByParentResultSetId.getOrElseUpdate(r.nextInt, new HashSet[Int]) += r.nextInt
-    }
+    DoJDBCWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.selectAndProcess(
+        "SELECT result_set_relation.parent_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
+        "WHERE result_set.id = result_set_relation.child_result_set_id " +
+        "AND result_set_relation.parent_result_set_id IN ("+  rsIds.mkString(",") +") " +
+        "AND msi_search_id IS NOT NULL"
+      ) { r =>
+        msiSearchIdsByParentResultSetId.getOrElseUpdate(r.nextInt, new HashSet[Int]) += r.nextInt
+      }
+    })
     
     Map() ++ msiSearchIdsByParentResultSetId.map( t => (t._1 -> t._2.toSet) )
   }
@@ -79,19 +92,23 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
   def getResultSetIdByResultSummaryId( rsmIds: Seq[Int] ): Map[Int,Int] = {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    this.sqlExec.select(
-     "SELECT id, result_set_id FROM result_summary " +
-     "WHERE id IN ("+  rsmIds.mkString(",") +")" ) { r => (r.nextInt,r.nextInt) } toMap
+    DoJDBCReturningWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.select(
+       "SELECT id, result_set_id FROM result_summary " +
+       "WHERE id IN ("+  rsmIds.mkString(",") +")" ) { r => (r.nextInt,r.nextInt) } toMap
+    })
   }
   
   def getMsiSearchesPtmSpecificityIds( msiSearchIds: Seq[Int] ): Array[Int] = {
     
     // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-    val ptmSpecifIds = this.sqlExec.select(
-                         "SELECT DISTINCT ptm_specificity_id FROM used_ptm, search_settings, msi_search " +
-                         "WHERE used_ptm.search_settings_id = search_settings.id " +
-                         "AND search_settings.id = msi_search.search_settings_id " +
-                         "AND msi_search.id IN ("+  msiSearchIds.mkString(",") +")" ) { _.nextInt }
+    val ptmSpecifIds = DoJDBCReturningWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.select(    
+       "SELECT DISTINCT ptm_specificity_id FROM used_ptm, search_settings, msi_search " +
+       "WHERE used_ptm.search_settings_id = search_settings.id " +
+       "AND search_settings.id = msi_search.search_settings_id " +
+       "AND msi_search.id IN ("+  msiSearchIds.mkString(",") +")" ) { _.nextInt }
+    })
     
     ptmSpecifIds.distinct.toArray
   }
@@ -176,28 +193,30 @@ method get_search_engine( Int $target_result_set_id! ) {
   
   /** Load and return scorings as records */
   private def _getScorings(): Seq[ScoringRecord] = {
-
-    this.sqlExec.select( "SELECT id, search_engine, name FROM scoring" ) { r =>
-      ScoringRecord( r.nextInt, r.nextString, r.nextString )
-    }
-    
+    DoJDBCReturningWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.select( "SELECT id, search_engine, name FROM scoring" ) { r =>
+        ScoringRecord( r.nextInt, r.nextString, r.nextString )
+      }
+    })    
   }
 
   def getSeqLengthByBioSeqId( bioSeqIds: Iterable[Int] ): Map[Int,Int] = {
     
-    val maxNbIters = this.sqlExec.getInExpressionCountLimit
-    
     val seqLengthByProtIdBuilder = Map.newBuilder[Int,Int]
     
-    // Iterate over groups of peptide ids
-    bioSeqIds.grouped(maxNbIters).foreach {
-      tmpBioSeqIds => {      
-        // Retrieve peptide PTMs for the current group of peptide ids
-        sqlExec.selectAndProcess("SELECT id, length FROM bio_sequence WHERE id IN ("+tmpBioSeqIds.mkString(",")+")" ) { r =>
-          seqLengthByProtIdBuilder += ( r.nextInt -> r.nextInt )
+    DoJDBCWork.withEzDBC( msiDbCtx, { ezDBC =>
+      val maxNbIters = ezDBC.getInExpressionCountLimit
+      
+      // Iterate over groups of peptide ids
+      bioSeqIds.grouped(maxNbIters).foreach {
+        tmpBioSeqIds => {      
+          // Retrieve peptide PTMs for the current group of peptide ids
+          ezDBC.selectAndProcess("SELECT id, length FROM bio_sequence WHERE id IN ("+tmpBioSeqIds.mkString(",")+")" ) { r =>
+            seqLengthByProtIdBuilder += ( r.nextInt -> r.nextInt )
+          }
         }
       }
-    }
+    })
     
     seqLengthByProtIdBuilder.result()
     
@@ -243,11 +262,13 @@ method get_search_engine( Int $target_result_set_id! ) {
     val specNumById = new HashMap[Int,Int]    
     var specCount = 0
     
-    sqlExec.selectAndProcess( "SELECT id FROM spectrum WHERE peaklist_id IN (" + pklIds.mkString(",")+")" ) { r =>
-      val spectrumId: Int = r.nextAnyVal
-      specNumById += (spectrumId -> specCount )      
-      specCount += 1
-    }
+    DoJDBCWork.withEzDBC( msiDbCtx, { ezDBC =>
+      ezDBC.selectAndProcess( "SELECT id FROM spectrum WHERE peaklist_id IN (" + pklIds.mkString(",")+")" ) { r =>
+        val spectrumId: Int = r.nextAnyVal
+        specNumById += (spectrumId -> specCount )      
+        specCount += 1
+      }
+    })
     
     Map() ++ specNumById
   }  

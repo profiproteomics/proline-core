@@ -37,7 +37,7 @@ class SQLProteinMatchProvider(val msiDbCtx: SQLConnectionContext) { //extends IP
     import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Retrieve score type map
-    val scoreTypeById = new MsiDbHelper(msiDbCtx.ezDBC).getScoringTypeById
+    val scoreTypeById = new MsiDbHelper(msiDbCtx).getScoringTypeById
 
     // Execute SQL query to load sequence match records
     //val seqMatchMapBuilder = scala.collection.immutable.Map.newBuilder[Int,SequenceMatch]

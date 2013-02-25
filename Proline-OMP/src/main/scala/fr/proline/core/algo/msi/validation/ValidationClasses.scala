@@ -60,7 +60,7 @@ object BuildPeptideMatchValidator {
   ): IPeptideMatchValidator = {
     
     if (expectedFdrOpt.isDefined) {
-      require( validationFilter.isInstanceOf[IOptimizablePeptideMatchFilter], "an optimizable fitler must be provided" )
+      require( validationFilter.isInstanceOf[IOptimizablePeptideMatchFilter], "an optimizable filter must be provided" )
       
       val valFilter = validationFilter.asInstanceOf[IOptimizablePeptideMatchFilter]
       

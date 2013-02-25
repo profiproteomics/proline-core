@@ -41,7 +41,7 @@ trait SQLResultSetLoader {
     val protMatchesByRsId = protMatches.groupBy(_.resultSetId)
 
     // Instantiate a MSIdb helper
-    val msiDbHelper = new MsiDbHelper(msiDbCtx.ezDBC)
+    val msiDbHelper = new MsiDbHelper(msiDbCtx)
     val msiSearchIdsByRsId = msiDbHelper.getMsiSearchIdsByParentResultSetId(rsIds)
     val msiSearchIds = msiSearchIdsByRsId.flatMap(_._2).toArray.distinct
     

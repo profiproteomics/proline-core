@@ -103,9 +103,9 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
     DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
       val msiCon = msiEzDBC.connection
-      val scoringIdByType = new MsiDbHelper(msiEzDBC).getScoringIdByType
-  
-      /// Retrieve some vars
+      val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
+      
+      // Retrieve some vars
       val rsId = rs.id
       val peptideMatches = rs.peptideMatches
   
@@ -217,7 +217,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
       val msiCon = msiEzDBC.connection
       
       // TODO: retrieve this only once
-      val scoringIdByType = new MsiDbHelper(msiEzDBC).getScoringIdByType
+      val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
       
       // Retrieve some vars
       val rsId = rs.id

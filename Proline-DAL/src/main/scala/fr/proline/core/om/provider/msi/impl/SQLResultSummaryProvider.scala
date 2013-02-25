@@ -22,7 +22,7 @@ class SQLResultSummaryProvider(
 ) extends SQLResultSetLoader with IResultSummaryProvider {
 
   // Instantiate a MSIdb helper
-  val msiDbHelper = new MsiDbHelper(msiDbCtx.ezDBC)
+  val msiDbHelper = new MsiDbHelper(msiDbCtx)
 
   val RSMCols = MsiDbResultSummaryTable.columns
 

@@ -120,7 +120,7 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
     
     DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
-      val scoringIdByType = new MsiDbHelper(msiEzDBC).getScoringIdByType
+      val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
       
       // Retrieve some vars
       val rsId = rs.id
@@ -181,9 +181,9 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
   def storeRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
 
     DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
-    
-      val scoringIdByType = new MsiDbHelper(msiEzDBC).getScoringIdByType
-  
+      
+      val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
+      
       // Retrieve some vars
       val rsId = rs.id
       val isDecoy = rs.isDecoy

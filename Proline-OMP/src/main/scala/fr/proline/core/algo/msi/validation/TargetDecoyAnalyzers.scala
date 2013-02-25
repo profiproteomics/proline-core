@@ -136,7 +136,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
   
 }
 
-class BasicTDAnalyzer( targetDecoyMode: TargetDecoyModes.Mode ) extends AbstractTargetDecoyAnalyzer {
+class BasicTDAnalyzer( targetDecoyMode: TargetDecoyModes.Value ) extends AbstractTargetDecoyAnalyzer {
 
   def calcTDStatistics( targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch] ): ValidationResult = {
     

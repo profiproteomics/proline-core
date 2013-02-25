@@ -59,7 +59,7 @@ class ResultSummaryMerger(
         }
 
         // Retrieve sequence length mapped by the corresponding protein id
-        val seqLengthByProtId = new MsiDbHelper(msiEzDBC).getSeqLengthByBioSeqId(proteinIdSet)
+        val seqLengthByProtId = new MsiDbHelper(msiDbCtx).getSeqLengthByBioSeqId(proteinIdSet)
         >>>
 
         // Merge result summaries

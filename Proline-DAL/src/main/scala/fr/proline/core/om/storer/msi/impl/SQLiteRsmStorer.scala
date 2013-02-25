@@ -219,9 +219,11 @@ private[msi] class SQLiteRsmStorer() extends IRsmStorer {
     val protSetInsertQuery = MsiDbProteinSetTable.mkInsertQuery { (c,colsList) => 
                                colsList.filter( Set(c.ID,c.MASTER_QUANT_COMPONENT_ID).contains(_) == false )
                              }
-    DoJDBCWork.withEzDBC( execCtx.getMSIDbConnectionContext, { msiEzDBC =>
+    val msiDbCtx = execCtx.getMSIDbConnectionContext
+    
+    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
-      val scoringIdByType = new MsiDbHelper( msiEzDBC ).getScoringIdByType
+      val scoringIdByType = new MsiDbHelper( msiDbCtx ).getScoringIdByType
     
       // Insert protein sets
       msiEzDBC.executePrepared( protSetInsertQuery, true ) { stmt =>
@@ -244,7 +246,11 @@ private[msi] class SQLiteRsmStorer() extends IRsmStorer {
           // Determine the typical protein match id using the sequence coverage
           var typicalProtMatchId = proteinSet.getTypicalProteinMatchId
           if( typicalProtMatchId == 0 ) {
-            typicalProtMatchId = peptideSet.proteinMatchIds.reduce { (a,b) => 
+            /*if( proteinMatchById.contains(proteinSet.proteinMatchIds(0)) == false ) {
+              println("searched id="+proteinSet.proteinMatchIds(0))
+              println("first id is="+proteinMatchById.keys.head)
+            }*/
+            typicalProtMatchId = proteinSet.proteinMatchIds.reduce { (a,b) => 
               if( proteinMatchById(a).coverage > proteinMatchById(b).coverage ) a else b
             }
           }

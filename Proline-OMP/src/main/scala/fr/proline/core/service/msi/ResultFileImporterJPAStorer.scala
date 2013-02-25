@@ -19,6 +19,7 @@ import fr.proline.util.StringUtils
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
 
 class ResultFileImporterJPAStorer(
   executionContext: IExecutionContext,
@@ -156,10 +157,17 @@ class ResultFileImporterJPAStorer(
         //VDTESTelse
         targetRs.decoyResultSet = Some(decoyRs)
       }
+      
+      val ssProps = targetRs.msiSearch.searchSettings.properties.getOrElse(new SearchSettingsProperties)
 
       // Load and store decoy result set if it exists
       if (resultFile.hasDecoyResultSet) {
         storeDecoyRs(resultFile.getResultSet(true))
+        
+        // Update search settings properties
+        // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
+        ssProps.setTargetDecoyMode(Some(TargetDecoyModes.SEPARATED.toString))
+        targetRs.msiSearch.searchSettings.properties = Some(ssProps)
         >>>
       } // Else if a regex has been passed to detect decoy protein matches		  
       else if (acDecoyRegex != None) {
@@ -168,6 +176,11 @@ class ResultFileImporterJPAStorer(
         targetRs = tRs
 
         storeDecoyRs(dRs)
+        
+        // Update search settings properties
+        ssProps.setTargetDecoyMode(Some(TargetDecoyModes.CONCATENATED.toString))
+        targetRs.msiSearch.searchSettings.properties = Some(ssProps)
+        
         >>>
       } else
         targetRs.decoyResultSet = None

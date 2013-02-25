@@ -156,6 +156,8 @@ class SQLPeaklistWriter extends IPeaklistWriter with Logging {
 }
 
 class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
+  
+  import org.postgresql.core.Utils
 
   override def storeSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
 
@@ -175,9 +177,8 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
       logger.info("BULK insert of spectra")
 
       val spectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.filter(_ != "id").mkString(",")
-
       val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpSpectrumTableName + " ( id, " + spectrumTableCols + " ) FROM STDIN")
-
+      
       // Iterate over spectra to store them
       peaklistContainer.eachSpectrum { spectrum =>
         
@@ -189,7 +190,6 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
         val lastScan = if (spectrum.lastScan > 0) Some(spectrum.lastScan) else None
         val firstTime = if (spectrum.firstTime > 0) Some(spectrum.firstTime) else None
         val lastTime = if (spectrum.lastTime > 0) Some(spectrum.lastTime) else None
-        //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
 
         // moz and intensity lists are formatted as numbers separated by spaces      
         //val mozList = spectrum.mozList.getOrElse( Array.empty[Double] ).map { m => this.doubleFormatter.format( m ) } mkString ( " " )
@@ -198,7 +198,7 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
         // Compress peaks
         //val compressedMozList = EasyLzma.compress( mozList.getBytes )
         //val compressedIntList = EasyLzma.compress( intList.getBytes )
-
+        
         // Build a row containing spectrum values
         val spectrumValues = List(
           spectrum.id,
@@ -213,14 +213,14 @@ class PgSQLSpectraWriter extends SQLPeaklistWriter with Logging {
           lastScan,
           firstTime,
           lastTime,
-          """\\x""" + bytes2Hex(doublesToBytes(spectrum.mozList.get)), // Snappy.compress(
-          """\\x""" + bytes2Hex(floatsToBytes(spectrum.intensityList.get)), // Snappy.compress(
+          """\\x""" + Utils.toHexString(doublesToBytes(spectrum.mozList.get)), // Snappy.compress(
+          """\\x""" + Utils.toHexString(floatsToBytes(spectrum.intensityList.get)), // Snappy.compress(
           spectrum.peaksCount,
           spectrum.properties.map(generate(_)),
           peaklistId,
           spectrum.instrumentConfigId
         )
-
+        
         // Store spectrum
         val spectrumBytes = encodeRecordForPgCopy(spectrumValues, false)
         pgBulkLoader.writeToCopy(spectrumBytes, 0, spectrumBytes.length)

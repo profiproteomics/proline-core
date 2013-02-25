@@ -104,7 +104,7 @@ trait IQuantifier extends Logging {
     rsmProvider.getResultSummaries(rsmIds, true)
   }
 
-  val msiDbHelper = new MsiDbHelper(msiSqlCtx.ezDBC)
+  val msiDbHelper = new MsiDbHelper(msiSqlCtx)
 
   val seqLengthByProtId = {
     val tmpIdentProteinIdSet = new collection.mutable.HashSet[Int]()

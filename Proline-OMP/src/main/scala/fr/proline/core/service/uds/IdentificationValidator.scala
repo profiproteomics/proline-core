@@ -46,7 +46,7 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
   private val udsDbCtx = execSqlContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext]
   private val psDbCtx = execSqlContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext]
   private val msiDbCtx = execSqlContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext]
-  private val msiDbHelper = new MsiDbHelper( msiDbCtx.ezDBC )
+  private val msiDbHelper = new MsiDbHelper( msiDbCtx )
   
   override def beforeInterruption = {
     // Release database connections
