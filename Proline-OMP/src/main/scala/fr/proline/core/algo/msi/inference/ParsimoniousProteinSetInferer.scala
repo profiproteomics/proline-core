@@ -201,12 +201,10 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
         val proteinSetId = ProteinSet.generateNewId()
         peptideSet = buildPeptideSet( proteinSetId )
         
-        //TODO : Where do we get score type information from  
         val proteinSet = new ProteinSet(
                                   id = proteinSetId,
                                   peptideSet = peptideSet,
                                   hasPeptideSubset = peptideSet.hasSubset,
-                                  scoreType = "mascot:protein set score",
                                   proteinMatchIds = peptideSet.proteinMatchIds,                                  
                                   resultSummaryId = resultSummaryId
                                 )
