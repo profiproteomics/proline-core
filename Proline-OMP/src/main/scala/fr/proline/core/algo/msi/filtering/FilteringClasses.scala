@@ -16,6 +16,8 @@ object PepMatchFilterParams extends Enumeration {
   val PEPTIDE_SEQUENCE_LENGTH = Value("PEP_SEQ_LENGTH")
   val RANK = Value("RANK")
   val SCORE = Value("SCORE")
+  val SCORE_IT_PVALUE= Value("SCORE_IT_P-VALUE")
+  val SCORE_HT_PVALUE= Value("SCORE_HT_P-VALUE")
 }
 
 object ProtSetFilterParams extends Enumeration {
