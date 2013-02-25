@@ -5,6 +5,12 @@ import scala.math.{ pow, log10 }
 import fr.proline.core.om.model.msi.{ MsQuery, PeptideMatch }
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
 
+object MascotThresholdTypes extends Enumeration {
+  val IDENTITY_THRESHOLD = Value("IDENTITY_THRESHOLD")
+  val HOMOLOGY_THRESHOLD = Value("HOMOLOGY_THRESHOLD")
+  val LOWEST_THRESHOLD = Value("LOWEST_THRESHOLD")
+}
+
 case class MascotIonScoreThresholds(identityThreshold: Float, homologyThreshold: Float)
 
 object MascotValidationHelper {
@@ -113,7 +119,7 @@ object MascotValidationHelper {
     this.calcMascotMudpitScore(peptideMatches, this.getMascotThresholdsByPepMatchId(peptideMatches))
   }
 
-  private def getMascotThresholdsByPepMatchId(peptideMatches: Seq[PeptideMatch]): Map[Int, MascotIonScoreThresholds] = {
+  def getMascotThresholdsByPepMatchId(peptideMatches: Seq[PeptideMatch]): Map[Int, MascotIonScoreThresholds] = {
 
     val pmThresholdsMapBuilder = collection.immutable.Map.newBuilder[Int, MascotIonScoreThresholds]
     for (peptideMatch <- peptideMatches) {

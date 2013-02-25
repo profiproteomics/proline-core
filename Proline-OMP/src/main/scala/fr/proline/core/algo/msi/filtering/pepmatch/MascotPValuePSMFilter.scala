@@ -14,13 +14,15 @@ import fr.proline.core.algo.msi.filtering.IOptimizablePeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
 
+// TODO: use MascotThresholdTypes enumeration value instead of useHomologyThreshold
+// TODO: usefilterPeptideMatchesDBO
 class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold : Boolean = false, var pValueStartValue : Float = 0.05f) extends IOptimizablePeptideMatchFilter with Logging {
 
   var pValuethresholdIncreaseValue : Float = 0.001f 
   val filterParameter = if(useHomologyThreshold) PepMatchFilterParams.SCORE_HT_PVALUE.toString else PepMatchFilterParams.SCORE_IT_PVALUE.toString
-            
-  val filterDescription =if(useHomologyThreshold) "peptide match homology threshold filter using p-value" else  "peptide match identity threshold filter using p-value"
-    
+  
+  val filterDescription =if(useHomologyThreshold) "peptide match Mascot thresholds filter using p-value" else  "peptide match identity threshold filter using p-value"
+  
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = pepMatch.score
   
   def isPeptideMatchValid( pepMatch: PeptideMatch ): Boolean = {
@@ -31,7 +33,6 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold 
     
     // Reset validation status if validation is not incremental
     if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
-
     
     val pepMatchesByMsqId = pepMatches.groupBy(_.msQueryId)
     pepMatchesByMsqId.foreach(entry => {
@@ -81,6 +82,38 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold 
       
     })//End go through Map QID->[PSM]
     
+  }
+  
+  def filterPeptideMatchesDBO( pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean ): Unit = {
+    
+    // Reset validation status if validation is not incremental
+    if( !incrementalValidation ) PeptideMatchFiltering.resetPepMatchValidationStatus(pepMatches)
+    
+    // Thresholds are computed for default pValue (0.05)
+    val mascotThresholdsByPmId = MascotValidationHelper.getMascotThresholdsByPepMatchId(pepMatches)
+    
+    // Compute score threshold offset for the current pValue
+    val scoreThreshOffset = MascotValidationHelper.calcScoreThresholdOffset(pValue,0.05) // positive if pValue < 0.05
+    
+    pepMatches.foreach { pepMatch =>
+      
+      // Retrieve peptide match thresholds
+      val pepMatchThresholds = mascotThresholdsByPmId(pepMatch.id)
+      
+      // TODO: handle lowest threshold case
+      var threshold = if (useHomologyThreshold) {
+        pepMatchThresholds.homologyThreshold
+      } else {
+        pepMatchThresholds.identityThreshold
+      }
+      
+      // Add score threshold offset to the threshold value in order to consider the current pValue
+      threshold += scoreThreshOffset
+
+      // Updater status of peptide match if it is invalid
+      if( pepMatch.score < threshold ) pepMatch.isValidated = false
+      
+    }
   }
   
   def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
