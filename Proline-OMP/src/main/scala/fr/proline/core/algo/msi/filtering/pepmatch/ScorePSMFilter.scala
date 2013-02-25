@@ -9,11 +9,11 @@ import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch}
 
 object ScorePSMFilter {
-  val thresholdStartValue = 13.0f
+//  val thresholdStartValue = 13.0f
   val thresholdIncreaseValue = 0.1f
 }
 
-class ScorePSMFilter(var scoreThreshold: Float = ScorePSMFilter.thresholdStartValue ) extends IOptimizablePeptideMatchFilter with Logging {
+class ScorePSMFilter(var scoreThreshold: Float = 13.0f, var thresholdStartValue : Float = 13.0f ) extends IOptimizablePeptideMatchFilter with Logging {
 
   val filterParameter = PepMatchFilterParams.SCORE.toString
   val filterDescription = "peptide match score filter"
@@ -44,7 +44,7 @@ class ScorePSMFilter(var scoreThreshold: Float = ScorePSMFilter.thresholdStartVa
 
   def getNextValue( currentVal: AnyVal ) = currentVal.asInstanceOf[Float] + ScorePSMFilter.thresholdIncreaseValue
   
-  def getThresholdStartValue(): AnyVal = ScorePSMFilter.thresholdStartValue
+  def getThresholdStartValue(): AnyVal = thresholdStartValue
   
   def getThresholdValue(): AnyVal = scoreThreshold
   
