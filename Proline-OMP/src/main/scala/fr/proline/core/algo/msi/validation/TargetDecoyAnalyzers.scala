@@ -5,6 +5,34 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
 import com.weiglewilczek.slf4s.Logging
 
+object BuildTDAnalyzer {
+  
+  import fr.proline.core.om.model.msi.ResultSet
+  
+  def apply(
+    useTdCompetition: Boolean,
+    rs: ResultSet,
+    pepMatchValidator: Option[IPeptideMatchValidator] ): Option[ITargetDecoyAnalyzer] = {
+    
+    // Build target decoy analyzer if a peptide match validator is provided
+    if( rs.decoyResultSet != null && rs.decoyResultSet.isDefined && pepMatchValidator.isDefined ) {
+      val tdAnalyzer = if( useTdCompetition == false ) {
+        val ssProps = rs.msiSearch.searchSettings.properties.get
+        val tdModeAsStr = ssProps.getTargetDecoyMode.getOrElse(
+          throw new Exception("missing target/decoy mode in search settings properties")
+        )
+        val tdMode = TargetDecoyModes.withName(tdModeAsStr)
+        new BasicTDAnalyzer(tdMode)
+      }
+      else  {        
+        new CompetitionBasedTDAnalyzer(
+          pepMatchValidator.get.validationFilter.asInstanceOf[IOptimizablePeptideMatchFilter]
+        )
+      }
+      Some(tdAnalyzer)
+    } else None
+  }
+}
 
 abstract class ITargetDecoyAnalyzer {
   
