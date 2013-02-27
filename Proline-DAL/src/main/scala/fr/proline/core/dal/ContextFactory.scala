@@ -69,9 +69,7 @@ object ContextFactory extends Logging {
     val lcMsDbConnector = dsFactory.getLcMsDbConnector(projectId)
 
     if (lcMsDbConnector != null) {
-      // FIXME: remove this when LCMS ORM is implemented
-      lcMsDb = buildDbConnectionContext(lcMsDbConnector, false)
-      //lcMsDb = buildDbConnectionContext(lcMsDbConnector, useJPA)
+      lcMsDb = buildDbConnectionContext(lcMsDbConnector, useJPA)
     }
 
     new BasicExecutionContext(udsDb, pdiDb, psDb, msiDb, lcMsDb)
