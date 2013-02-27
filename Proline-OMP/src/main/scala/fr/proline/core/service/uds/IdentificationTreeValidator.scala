@@ -30,13 +30,17 @@ class IdentificationTreeValidator(
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   protSetValidator: Option[IProteinSetValidator] = None 
-) extends IService with Logging {  
-  require( execJpaContext.isJPA, "a JPA execution context is needed" )
+) extends IService with Logging {
+  // TODO: uncomment this require when LCMS ORM is implemented
+  //require( execJpaContext.isJPA, "a JPA execution context is needed" )  
   
   private val udsDbCtx = execJpaContext.getUDSDbConnectionContext()
   private val psDbCtx = execJpaContext.getPSDbConnectionContext()
   private val msiDbCtx = execJpaContext.getMSIDbConnectionContext()
   private val msiDbHelper = new MsiDbHelper( msiDbCtx )
+  
+  // TODO: remove this require when LCMS ORM is implemented
+  require( udsDbCtx.isJPA, "a JPA execution context is needed" )
   
   override def beforeInterruption = {
     // Release database connections
@@ -52,10 +56,12 @@ class IdentificationTreeValidator(
     // Retrieve identification datasets ids
     val udsIdentTreeDS = udsEM.find(classOf[UdsDataset], identTreeId)
     val projectId = udsIdentTreeDS.getProject.getId
-    val identDatasets = udsIdentTreeDS.getIdentificationDataset() 
+    val udsIdentDatasets = udsIdentTreeDS.getIdentificationDatasets()
     
     // Retrieve target result sets ids
-    val targetRsIds: Array[Int] = identDatasets.map(_.getResultSetId.toInt).toArray
+    val targetRsIds: Array[Int] = udsIdentDatasets.map(_.getResultSetId.toInt).toArray
+    this.logger.debug("rs ids count = " + targetRsIds.length)
+    this.logger.debug("first RS id = " + targetRsIds(0))
     
     // Retrieve decoy RS ids if they exists
     val decoyRsIdsAsOpts = targetRsIds.map { msiDbHelper.getDecoyRsId( _ ) } filter { _ != None }
@@ -65,6 +71,7 @@ class IdentificationTreeValidator(
     if( nbDecoyRs > 0 && nbDecoyRs != nbTargetRs ) {
       throw new Exception( "missing decoy result set for one of the provided result sets" )
     }
+    this.logger.debug("decoy rs ids count = " + nbDecoyRs)
     
     // Load result sets
     val rsIds = targetRsIds ++ decoyRsIdsAsOpts.map { _.get }
@@ -76,29 +83,25 @@ class IdentificationTreeValidator(
     val rsmByRsId = new HashMap[Int,ResultSummary]
     for( targetRS <- targetRsList ) {
       targetRS.decoyResultSet = decoyRsById.get(targetRS.getDecoyResultSetId)
+      
+      this.logger.debug("validating target RS")
       val rsm = this._validateResultSet(targetRS)
+      
       rsmByRsId += targetRS.id -> rsm
     }
     
-    // Map result summaries by the corresponding dataset id
-    val rsmByDsId = new HashMap[Int,ResultSummary]
-    for( identDataset <- identDatasets ) {
-      val rsId = identDataset.getResultSetId      
-      rsmByDsId += identDataset.getId.toInt -> rsmByRsId(rsId)
+    // Link result summaries to the corresponding dataset id
+    //val rsmByDsId = new HashMap[Int,ResultSummary]
+    for( udsIdentDataset <- udsIdentDatasets ) {
+      val rsId = udsIdentDataset.getResultSetId   
+      udsIdentDataset.setResultSummaryId(rsmByRsId(rsId).id)
+      
+      udsEM.persist(udsIdentDataset)
+      //rsmByDsId += udsIdentDataset.getId.toInt -> rsmByRsId(rsId)
     }
     
-    // Begin new transaction  
-    udsEM.getTransaction().begin()
-    
     // Validate datasets recursively from leaves to the root
-    this._validateDatasetTree( udsEM, identDatasets.toList, rsmByDsId )
-    
-    // Commit transaction
-    udsEM.getTransaction().commit()
-    udsEM.close()
-    
-    // Close execution context => caller need to close
-    //execJpaContext.closeAll()
+    this._validateDatasetTree( udsEM, udsIdentDatasets.toList, rsmByRsId )
     
     true
   }
@@ -116,6 +119,7 @@ class IdentificationTreeValidator(
     
     // Instantiate a RS loader
     val rsProvider = new SQLResultSetProvider( msiDbCtx, psDbCtx, udsDbCtx )
+    this.logger.warn("loading " + rsIds.length +" result sets")
     val resultSets = rsProvider.getResultSets( rsIds )
     
     execSqlContext.closeAll()
@@ -180,6 +184,8 @@ class IdentificationTreeValidator(
       protSetValidator = protSetValidator
     )
     
+    rsValidator.run()
+    
     rsValidator.validatedTargetRsm
   }
   
@@ -187,7 +193,9 @@ class IdentificationTreeValidator(
    * Validates dataset tree recursively from leaves to root
    */
   private def _validateDatasetTree(udsEM: EntityManager, udsDatasets: List[UdsDataset], rsmByRsId: HashMap[Int,ResultSummary]) {
-    if( udsDatasets.length == 1 ) return
+    if( udsDatasets.length == 1 && udsDatasets(0).getParentDataset == null ) return
+    
+    this.logger.warn("validating tree node with " + udsDatasets.length +" dataset(s)")
     
     // Group RSMs by parent DS id
     val rsmsByUdsParentDs = new HashMap[UdsDataset,ArrayBuffer[ResultSummary]]
@@ -208,7 +216,7 @@ class IdentificationTreeValidator(
       
       // Validate dataset child result summaries
       val mergedRsm = this._mergeAndValidateDatasets(rsms)
-      newRsmByRsId += mergedRsm.getResultSetId ->  mergedRsm
+      newRsmByRsId += mergedRsm.getResultSetId -> mergedRsm
       
       // Replace existing result set/summary ids
       // Note: to preserve existing mappings it is needed to clone the tree in a previous step      
@@ -259,11 +267,11 @@ class IdentificationTreeValidator(
         storeResultSummary = true
       )
       
-      rsValidator.runService()
+      rsValidator.run()
       
       rsValidator.validatedTargetRsm
       
-    } else {      
+    } else {
       
       // Merge result summaries
       val rsmMerger = new ResultSummaryMerger( execCtx = execJpaContext, resultSummaries = rsms )

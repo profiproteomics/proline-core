@@ -38,8 +38,10 @@ class ResultSetMerger(
       //storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
       storerContext = new StorerContext(execCtx)      
       msiDbCtx = storerContext.getMSIDbConnectionContext
-      msiDbCtx.beginTransaction()
-      msiTransacOk = false
+      
+      // Check if a transaction is already initiated
+      val wasInTransaction = msiDbCtx.isInTransaction()
+      if (!wasInTransaction) msiDbCtx.beginTransaction()
 
       DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
 
@@ -99,8 +101,11 @@ class ResultSetMerger(
         mergedResultSet = tmpMergedResultSet
       },true) // end of JDBC work
 
-      msiDbCtx.commitTransaction()
+      // Commit transaction if it was initiated locally
+      if (!wasInTransaction) msiDbCtx.commitTransaction()
+      
       msiTransacOk = true
+      
     } finally {
 
       if (msiDbCtx.isInTransaction() && !msiTransacOk) {

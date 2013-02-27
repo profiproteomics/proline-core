@@ -231,7 +231,9 @@ class ResultSetMerger extends Logging {
                                 peptideMatches = mergedPeptideMatches.toArray,
                                 peptides = peptideById.values.toArray,
                                 isDecoy = resultSets(0).isDecoy,
-                                isNative = false
+                                isNative = false,
+                                // FIXME: is this the best solution ???
+                                msiSearch = resultSets(0).msiSearch
                               )
     this.logger.info( "result sets have been merged:")
     this.logger.info( "- nb merged protein matches = " + mergedResultSet.proteinMatches.length )

@@ -190,7 +190,9 @@ class ResultSummaryMerger extends Logging {
                                 peptideMatches = mergedPeptideMatches.toArray,
                                 peptides =  validPeptideById.values.toArray,
                                 isDecoy = resultSummaries(0).resultSet.get.isDecoy,
-                                isNative = false
+                                isNative = false,
+                                // FIXME: is this the best solution ???
+                                msiSearch = resultSummaries(0).resultSet.get.msiSearch
                                 //msiSearchId = nrMsiSearchIds
                                 )
     
@@ -220,6 +222,7 @@ class ResultSummaryMerger extends Logging {
   
 
   // TODO: create an enumeration of search engines
+  // TODO: use score updaters
   def updateScoresOfProteinSets( rsm: ResultSummary, searchEngine: String) {
     
     val allPepMatchesByProtSetId = rsm.getAllPeptideMatchesByProteinSetId

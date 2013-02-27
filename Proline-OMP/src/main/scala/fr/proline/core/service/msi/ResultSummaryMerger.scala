@@ -39,10 +39,11 @@ class ResultSummaryMerger(
     try {
       storerContext = new StorerContext(execCtx)
       msiDbCtx = storerContext.getMSIDbConnectionContext
-
-      msiDbCtx.beginTransaction()
-      msiTransacOk = false
-
+      
+      // Check if a transaction is already initiated
+      val wasInTransaction = msiDbCtx.isInTransaction()
+      if (!wasInTransaction) msiDbCtx.beginTransaction()
+      
       DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
 
         // Retrieve protein ids
@@ -154,7 +155,9 @@ class ResultSummaryMerger(
         mergedResultSummary = tmpMergedResultSummary
       }, true) // End of JDBC work
 
-      msiDbCtx.commitTransaction()
+      // Commit transaction if it was initiated locally
+      if (!wasInTransaction) msiDbCtx.commitTransaction()
+
       msiTransacOk = true
       
     } finally {
