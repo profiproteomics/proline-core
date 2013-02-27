@@ -349,6 +349,21 @@ public class Dataset implements Serializable{
 	    
 	}
 	
+	// FIXME: (IdentificationDataset)this in getIdentificationDataset throws a ClassCastException
+	// this method is just a workaround but a better solution has to be implemented
+    public Set<Dataset> getIdentificationDatasets(){
+      Set<Dataset> idfDS = new HashSet<Dataset>();
+      if ( (getChildren() == null || getChildren().isEmpty())&& (getType().equals(DatasetType.IDENTIFICATION)) ) {
+      idfDS.add((Dataset)this);
+      }
+      
+      for (Dataset ds : getChildren()) {
+      idfDS.addAll(ds.getIdentificationDatasets());
+      }
+      return idfDS;
+      
+  }
+	
 	 
     public TransientData getTransientData() {
     	if (transientData == null) {
