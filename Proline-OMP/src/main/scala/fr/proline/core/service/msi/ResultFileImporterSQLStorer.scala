@@ -161,12 +161,23 @@ class ResultFileImporterSQLStorer(
       val spectrumIdByTitle = rsStorer.storePeaklist(msiSearch.peakList, storerContext)
       rsStorer.storeSpectra(msiSearch.peakList.id, resultFile, storerContext)
       >>>
+        
+      // Update search settings properties
+      val ssProps = msiSearch.searchSettings.properties.getOrElse(new SearchSettingsProperties)
+      if (resultFile.hasDecoyResultSet) {        
+        // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
+        ssProps.setTargetDecoyMode(Some(TargetDecoyModes.SEPARATED.toString))
+        msiSearch.searchSettings.properties = Some(ssProps)
+      }
+      else if (acDecoyRegex != None) {
+        ssProps.setTargetDecoyMode(Some(TargetDecoyModes.CONCATENATED.toString))
+        msiSearch.searchSettings.properties = Some(ssProps)
+      }
 
       //Store the MSI search with related search settings and MS queries    
       rsStorer.storeMsiSearch(msiSearch, storerContext)
       rsStorer.storeMsQueries(msiSearch.id, msQueries, storerContext)
       >>>
-      // }
 
       // Load target result set
       var targetRs = resultFile.getResultSet(false)
@@ -184,37 +195,22 @@ class ResultFileImporterSQLStorer(
         //  targetRs.decoyResultSet = Some(decoyRs)
         decoyRs
       }
-      
-      val ssProps = targetRs.msiSearch.searchSettings.properties.getOrElse(new SearchSettingsProperties)
 
       // Load and store decoy result set if it exists
       //var decoyRsId = Option.empty[Int]
       if (resultFile.hasDecoyResultSet) {
         val dRs = resultFile.getResultSet(true)
-
         targetRs.decoyResultSet = Some(storeDecoyRs(dRs))
-        
-        // Update search settings properties
-        // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
-        ssProps.setTargetDecoyMode(Some(TargetDecoyModes.SEPARATED.toString))
-        targetRs.msiSearch.searchSettings.properties = Some(ssProps)
-        
-        >>>
-      } // Else if a regex has been passed to detect decoy protein matches		  
+      } // Else if a regex has been passed to detect decoy protein matches
       else if (acDecoyRegex != None) {
         // Then split the result set into a target and a decoy one
         val (tRs, dRs) = TargetDecoyResultSetSplitter.split(targetRs, acDecoyRegex.get)
         targetRs = tRs
-
         targetRs.decoyResultSet = Some(storeDecoyRs(dRs))
         
-        // Update search settings properties
-        ssProps.setTargetDecoyMode(Some(TargetDecoyModes.CONCATENATED.toString))
-        targetRs.msiSearch.searchSettings.properties = Some(ssProps)
-        
-        >>>
       } else targetRs.decoyResultSet = None
-
+      >>>
+      
       //  Store target result set
       this.targetResultSetId = rsStorer.storeResultSet(targetRs, storerContext)
       >>>
