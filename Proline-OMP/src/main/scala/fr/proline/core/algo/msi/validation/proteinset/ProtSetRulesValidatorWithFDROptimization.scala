@@ -14,7 +14,6 @@ import fr.proline.core.algo.msi.scoring.IProteinSetScoreUpdater
 import fr.proline.core.algo.msi.filtering.proteinset.ScoreProtSetFilter
 
 class ProtSetRulesValidatorWithFDROptimization(
-  val protSetScoreUpdater: Option[IProteinSetScoreUpdater], // TODO: update score before
   val protSetFilterRule1: IOptimizableProteinSetFilter,
   val protSetFilterRule2: IOptimizableProteinSetFilter,
   val expectedFdr: Option[Float] = None
@@ -36,11 +35,6 @@ class ProtSetRulesValidatorWithFDROptimization(
     val( targetProtSets, decoyProtSets ) = ( targetRsm.proteinSets, decoyRsm.get.proteinSets )
     val allProtSets = targetProtSets ++ decoyProtSets
     val protSetValStatusMap = ProteinSetFiltering.getProtSetValidationStatusMap(allProtSets)
-    
-    // Update score of protein sets
-    // TODO: perform this step before
-    //protSetScoreUpdater.get.updateScoreOfProteinSets( targetRsm )
-    //protSetScoreUpdater.get.updateScoreOfProteinSets( decoyRsm.get )
     
     // Partition protein sets by considering the number of identified peptides
     val(singlePepProtSets,multiPepProtSets) = allProtSets.partition(_.peptideSet.items.length == 1)

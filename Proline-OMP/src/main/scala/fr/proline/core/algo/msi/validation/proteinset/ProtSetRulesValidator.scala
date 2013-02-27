@@ -11,7 +11,6 @@ import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.scoring.IProteinSetScoreUpdater
 
 class ProtSetRulesValidator(
-  val protSetScoreUpdater: Option[IProteinSetScoreUpdater], // TODO: update score before
   val protSetFilterRule1: IOptimizableProteinSetFilter,
   val protSetFilterRule2: IOptimizableProteinSetFilter
 ) extends IProteinSetValidator with Logging {
@@ -23,11 +22,7 @@ class ProtSetRulesValidator(
     // Retrieve some vars
     val targetProtSets = targetRsm.proteinSets
     val decoyProtSets = decoyRsm.map(_.proteinSets)
-    val allProtSets = targetProtSets ++ decoyProtSets.getOrElse(Array())
-    
-    // Update score of protein sets
-    //protSetScoreUpdater.get.updateScoreOfProteinSets( targetRsm )
-    //if (decoyRsm.isDefined) protSetScoreUpdater.get.updateScoreOfProteinSets( decoyRsm.get )    
+    val allProtSets = targetProtSets ++ decoyProtSets.getOrElse(Array()) 
     
     // Partition protein sets by considering the number of identified peptides
     val(singlePepProtSets,multiPepProtSets) = allProtSets.partition( _.peptideSet.items.length == 1)

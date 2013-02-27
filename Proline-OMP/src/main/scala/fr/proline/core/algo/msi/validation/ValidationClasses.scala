@@ -27,9 +27,15 @@ object ProtSetValidationMethods extends Enumeration {
   val PROTEIN_SET_RULES = Value("PROTEIN_SET_RULES")  
 }
 
-object ValidationPropertyKeys {
+trait ValidationSharedKeys {
+  final val THRESHOLD_VALUE = "threshold_value"
   final val RULE_1_THRESHOLD_VALUE = "rule_1_threshold_value"
   final val RULE_2_THRESHOLD_VALUE = "rule_2_threshold_value"
+}
+
+object ValidationThresholdKeys extends ValidationSharedKeys
+
+object ValidationPropertyKeys extends ValidationSharedKeys {  
   final val P_VALUE_THRESHOLD = "p_value_threshold"
   final val PEP_SCORE_THRESHOLD_OFFSET = "pep_score_threshold_offset"
   final val PROT_SET_SCORE_THRESHOLD = "prot_set_score_threshold"
@@ -84,6 +90,12 @@ object BuildOptimizablePeptideMatchFilter {
   
   def apply(filterParamStr: String): IOptimizablePeptideMatchFilter = {    
     this.apply( PepMatchFilterParams.withName(filterParamStr) )
+  }
+  
+  def apply(filterParamStr: String, thresholdValue: AnyVal): IOptimizablePeptideMatchFilter = {    
+    val filter = this.apply( filterParamStr )
+    filter.setThresholdValue(thresholdValue)
+    filter
   }
   
   def apply(filterParam: PepMatchFilterParams.Param): IOptimizablePeptideMatchFilter = {    
@@ -155,32 +167,57 @@ object BuildProteinSetValidator {
   def apply(
     validationMethod: ProtSetValidationMethods.Value,
     validationFilterParam: String,
-    thresholds: Option[Map[String,Any]] = None,
+    thresholds: Option[Map[String,AnyVal]] = None,
     expectedFdrOpt: Option[Float] = None
   ): IProteinSetValidator = {
     
-    // FIXME: set the thresholds
-    
     validationMethod match {
       case ProtSetValidationMethods.BASIC => {
+        val threshold = thresholds.get(ValidationThresholdKeys.THRESHOLD_VALUE)
         new BasicProtSetValidator(BuildProteinSetFilter(validationFilterParam))
       }
       case ProtSetValidationMethods.PEPTIDE_MATCH_RULES => {
-        val filter1 = BuildOptimizablePeptideMatchFilter(validationFilterParam)
-        val filter2 = BuildOptimizablePeptideMatchFilter(validationFilterParam)
+
         if( expectedFdrOpt.isEmpty ) {
+          
+          // Retrieve the thresholds
+          val threshold1 = thresholds.get(ValidationThresholdKeys.RULE_1_THRESHOLD_VALUE)
+          val threshold2 = thresholds.get(ValidationThresholdKeys.RULE_2_THRESHOLD_VALUE)
+          
+          // Build the filters
+          val filter1 = BuildOptimizablePeptideMatchFilter(validationFilterParam,threshold1)
+          val filter2 = BuildOptimizablePeptideMatchFilter(validationFilterParam,threshold2)
+          
           new PepMatchRulesValidator(filter1,filter2)
         } else {
+          
+          // Build the filters
+          val filter1 = BuildOptimizablePeptideMatchFilter(validationFilterParam)
+          val filter2 = BuildOptimizablePeptideMatchFilter(validationFilterParam)
+        
           new PepMatchRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt)
         }
       }
       case ProtSetValidationMethods.PROTEIN_SET_RULES => {
-        val filter1 = BuildOptimizableProteinSetFilter(validationFilterParam)
-        val filter2 = BuildOptimizableProteinSetFilter(validationFilterParam)
+        
         if( expectedFdrOpt.isEmpty ) {
-          new ProtSetRulesValidator(None,filter1,filter2)
+          
+          // Retrieve the thresholds
+          val threshold1 = thresholds.get(ValidationThresholdKeys.RULE_1_THRESHOLD_VALUE)
+          val threshold2 = thresholds.get(ValidationThresholdKeys.RULE_2_THRESHOLD_VALUE)
+          
+          // Build the filters
+          val filter1 = BuildOptimizableProteinSetFilter(validationFilterParam,threshold1)
+          val filter2 = BuildOptimizableProteinSetFilter(validationFilterParam,threshold2)
+        
+          new ProtSetRulesValidator(filter1,filter2)
         } else {
-          new ProtSetRulesValidatorWithFDROptimization(None,filter1,filter2,expectedFdrOpt)
+          
+          // Build the filters
+          val filter1 = BuildOptimizableProteinSetFilter(validationFilterParam)
+          val filter2 = BuildOptimizableProteinSetFilter(validationFilterParam)
+          
+          new ProtSetRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt)
         }
       }
     }
