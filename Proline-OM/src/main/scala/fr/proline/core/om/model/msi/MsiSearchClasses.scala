@@ -74,9 +74,9 @@ case class SearchSettings(
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class SearchSettingsProperties {
+case class SearchSettingsProperties(
   @BeanProperty var targetDecoyMode: Option[String] = None // CONCATENATED | SEPARATED
-}
+)
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
