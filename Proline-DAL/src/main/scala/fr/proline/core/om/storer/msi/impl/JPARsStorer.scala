@@ -180,6 +180,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiResultSet.setDecoyResultSet(msiDecoyRs)
 
         msiEm.persist(msiResultSet)
+        resultSet.id = msiResultSet.getId
 
         knownResultSets += omResultSetId -> msiResultSet
 
@@ -353,6 +354,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiSearch.setSearchSetting(loadOrCreateSearchSetting(storerContext, search))
 
         msiEm.persist(msiSearch)
+        search.id = msiSearch.getId
 
         msiEm.flush() // FLUSH to retrieve Msi MsiSearch Id
 
@@ -585,6 +587,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       }
 
       msiEm.persist(msiSearchSetting)
+      searchSettings.id = msiSearchSetting.getId
       logger.trace("Msi SearchSetting {" + omSearchSettingsId + "} persisted")
 
       /* Task done after persisting msiSearchSetting */
@@ -766,7 +769,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
             msiSeqDatabase.setVersion(seqDatabase.version)
 
-            msiEm.persist(msiSeqDatabase);
+            msiEm.persist(msiSeqDatabase);            
             logger.trace("Msi SeqDatabase {" + omSeqDatabaseId + "} persisted")
           } else {
             /* Create derived Msi entity from Pdi */
@@ -775,6 +778,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
             msiEm.persist(msiSeqDatabase);
             logger.trace("Msi SeqDatabase #" + pdiSeqDatabaseInstance.getId + " persisted")
           } // End if (pdiSeqDatabaseInstance is not null)
+          
+          seqDatabase.id = msiSeqDatabase.getId
 
         } // End if (msiSeqDatabase is null)
 
@@ -1210,6 +1215,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         // TODO handle PeptideMatch.children    Uniquement pour le grouping ?
 
         msiEm.persist(msiPeptideMatch)
+        peptideMatch.id = msiPeptideMatch.getId
 
         knownPeptideMatches += omPeptideMatchId -> msiPeptideMatch
 
@@ -1314,6 +1320,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         } // End if (msQuery is a Ms2Query)
 
         msiEm.persist(msiMsQuery)
+        msQuery.id = msiMsQuery.getId
 
         knownMsQueries += omMsQueryId -> msiMsQuery
 
@@ -1413,6 +1420,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     }
 
     msiEm.persist(msiProteinMatch)
+    proteinMatch.id = msiProteinMatch.getId
     logger.trace("Msi ProteinMatch {" + omProteinMatchId + "} persisted")
 
     msiProteinMatch
