@@ -39,8 +39,8 @@ class ProtSetRulesValidatorWithFDROptimization(
     
     // Update score of protein sets
     // TODO: perform this step before
-    protSetScoreUpdater.get.updateScoreOfProteinSets( targetRsm )
-    protSetScoreUpdater.get.updateScoreOfProteinSets( decoyRsm.get )
+    //protSetScoreUpdater.get.updateScoreOfProteinSets( targetRsm )
+    //protSetScoreUpdater.get.updateScoreOfProteinSets( decoyRsm.get )
     
     // Partition protein sets by considering the number of identified peptides
     val(singlePepProtSets,multiPepProtSets) = allProtSets.partition(_.peptideSet.items.length == 1)

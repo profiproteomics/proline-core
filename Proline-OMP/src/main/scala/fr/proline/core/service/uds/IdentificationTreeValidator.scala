@@ -25,7 +25,7 @@ class IdentificationTreeValidator(
   execJpaContext: IExecutionContext,
   identTreeId: Int,
   mergeResultSets: Boolean,
-  tdAnalyzer: Option[ITargetDecoyAnalyzer] = None,
+  useTdCompetition: Boolean,
   pepMatchFilters: Option[Seq[IPeptideMatchFilter]] = None,
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
@@ -143,7 +143,31 @@ class IdentificationTreeValidator(
     resultSets
   }*/
   
+  private def _buildTDAnalyzer( rs: ResultSet ): Option[ITargetDecoyAnalyzer] = {
+    
+    // Build target decoy analyzer if a peptide match validator is provided
+    if( rs.decoyResultSet.isDefined && pepMatchValidator.isDefined ) {
+      val tdAnalyzer = if( useTdCompetition == false ) {
+        val ssProps = rs.msiSearch.searchSettings.properties.get
+        val tdModeAsStr = ssProps.getTargetDecoyMode.getOrElse(
+          throw new Exception("missing target/decoy mode in search settings properties")
+        )
+        val tdMode = TargetDecoyModes.withName(tdModeAsStr)
+        new BasicTDAnalyzer(tdMode)
+      }
+      else  {        
+        new CompetitionBasedTDAnalyzer(
+          pepMatchValidator.get.validationFilter.asInstanceOf[IOptimizablePeptideMatchFilter]
+        )
+      }
+      Some(tdAnalyzer)
+    } else None
+    
+  }
+  
   private def _validateResultSet( rs: ResultSet ): ResultSummary = {
+    
+    val tdAnalyzer = this._buildTDAnalyzer( rs )
     
     // Instantiate a result set validator
     val rsValidator = new ResultSetValidator(
@@ -219,6 +243,9 @@ class IdentificationTreeValidator(
         decoyRsMerger.runService()
         mergedTargetRs.decoyResultSet = Some(decoyRsMerger.mergedResultSet)
       }
+      
+      // Build Target/Decoy analyzer
+      val tdAnalyzer = this._buildTDAnalyzer( mergedTargetRs )
       
       // Instantiate a result set validator
       val rsValidator = new ResultSetValidator(

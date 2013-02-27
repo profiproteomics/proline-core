@@ -26,8 +26,8 @@ class ProtSetRulesValidator(
     val allProtSets = targetProtSets ++ decoyProtSets.getOrElse(Array())
     
     // Update score of protein sets
-    protSetScoreUpdater.get.updateScoreOfProteinSets( targetRsm )
-    if (decoyRsm.isDefined) protSetScoreUpdater.get.updateScoreOfProteinSets( decoyRsm.get )    
+    //protSetScoreUpdater.get.updateScoreOfProteinSets( targetRsm )
+    //if (decoyRsm.isDefined) protSetScoreUpdater.get.updateScoreOfProteinSets( decoyRsm.get )    
     
     // Partition protein sets by considering the number of identified peptides
     val(singlePepProtSets,multiPepProtSets) = allProtSets.partition( _.peptideSet.items.length == 1)

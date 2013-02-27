@@ -131,6 +131,10 @@ class ResultSetValidator(
 
     // Instantiate a protein set inferer
     val protSetInferer = ProteinSetInferer(InferenceMethods.parsimonious)
+    
+    // TODO: require in constructor
+    import fr.proline.core.algo.msi.scoring.MascotProteinSetScoreUpdater
+    val protSetScoreUpdater = new MascotProteinSetScoreUpdater()
 
     val decoyRs = if( targetRs.decoyResultSet != null ) targetRs.decoyResultSet else None
     val resultSets = List(Some(targetRs), decoyRs)
@@ -138,15 +142,22 @@ class ResultSetValidator(
 
     // Build result summary for each individual result set
     for (rs <- resultSets) {
-      if (rs != null && rs.isDefined) {        
+      if (rs != null && rs.isDefined) {
+        
         // Create new result set with validated peptide matches and compute result summary
         val validatedRs = this._copyRsWithValidatedPepMatches(rs.get)
         val rsm = protSetInferer.computeResultSummary(validatedRs)
-        rsm.resultSet = rs // affect complete RS 
+        rsm.resultSet = rs // affect complete RS
+        
+        // Update score of protein sets
+        this.logger.debug("updating score of protein sets")
+        protSetScoreUpdater.updateScoreOfProteinSets(rsm)
+        
         resultSummaries += Some(rsm)
       } else {
         resultSummaries += Option.empty[ResultSummary]
       }
+      
     }
     >>>
 

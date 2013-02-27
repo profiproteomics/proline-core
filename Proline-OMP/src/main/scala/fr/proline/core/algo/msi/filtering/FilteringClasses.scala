@@ -22,7 +22,7 @@ object PepMatchFilterParams extends Enumeration {
 
 object ProtSetFilterParams extends Enumeration {
   type Param = Value
-  val MASCOT_ADJUSTED_SCORE = Value("MASCOT_ADJUSTED_SCORE")
+  val SCORE = Value("SCORE")
 }
 
 trait IFilter {

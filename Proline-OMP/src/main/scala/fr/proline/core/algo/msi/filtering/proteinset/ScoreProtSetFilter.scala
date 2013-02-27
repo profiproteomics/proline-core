@@ -17,7 +17,7 @@ class ScoreProtSetFilter(
   var scoreThreshold: Float = ScoreProtSetFilter.thresholdStartValue
 ) extends IOptimizableProteinSetFilter with Logging {
 
-  val filterParameter = PepMatchFilterParams.SCORE.toString
+  val filterParameter = ProtSetFilterParams.SCORE.toString
   val filterDescription = "protein set score filter"
   
   def isProteinSetValid( protSet: ProteinSet ): Boolean = {
