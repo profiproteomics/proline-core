@@ -21,7 +21,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold 
   var pValuethresholdIncreaseValue : Float = 0.001f 
   val filterParameter = if(useHomologyThreshold) PepMatchFilterParams.SCORE_HT_PVALUE.toString else PepMatchFilterParams.SCORE_IT_PVALUE.toString
   
-  val filterDescription =if(useHomologyThreshold) "peptide match Mascot thresholds filter using p-value" else  "peptide match identity threshold filter using p-value"
+  val filterDescription =if(useHomologyThreshold) "peptide match Mascot homology thresholds filter using p-value" else  "peptide match identity threshold filter using p-value"
   
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = pepMatch.score
   
@@ -45,7 +45,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold 
 
         //Infer IT 
         if(!msQProp.getTargetDbSearch.isDefined){
-          logger.warn(" UNABLE TO CALCULATE P VALUE  !!")
+          logger.warn(" UNABLE TO CALCULATE P VALUE  !getTargetDbSearch!"+entry._2(0).msQueryId)
         } else {
           //WARNING !!!!! If no decoy prop suppose same as target 
             val tRSCandPSM = msQProp.getTargetDbSearch.get.getCandidatePeptidesCount 
@@ -56,20 +56,20 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold 
             } else {
         	//Infer HT 
                 if(!msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.isDefined){
-                  logger.warn(" ------ UNABLE TO CALCULATE P VALUE  !!")
+                  logger.warn(" ------ UNABLE TO CALCULATE P VALUE  getMascotHomologyThreshold !!"+entry._2(0).msQueryId)
                 }else {
                   
-                    val tRs_ht0_5: Float =  msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.get 
-                    val dRs_ht0_5: Float = if ( msQProp.getDecoyDbSearch.isDefined && msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.isDefined) msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.get else tRs_ht0_5
+                    val tRs_ht0_05: Float =  msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.get 
+                    val dRs_ht0_05: Float = if ( msQProp.getDecoyDbSearch.isDefined && msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.isDefined) msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.get else tRs_ht0_05
             
-        	    val targetHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount( tRs_ht0_5, 0.5 )
+        	    val targetHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount( tRs_ht0_05, 0.05 )
         	    targetTh = MascotValidationHelper.calcIdentityThreshold( targetHtProbCstValue, pValue )
-        	    val decoyHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount( dRs_ht0_5, 0.5 )
+        	    val decoyHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount( dRs_ht0_05, 0.05 )
         	    decoyTh =  MascotValidationHelper.calcIdentityThreshold( decoyHtProbCstValue, pValue )
                 }
           } //ERnd use IT or HT                     
         } // END NO TargetDbSearch properties
-        logger.debug(" --------------- QID "+entry._2(0).msQueryId+" => Tth "+ targetTh+" Dth ");
+        logger.debug("\tQID\t"+entry._2(0).msQueryId+"\t"+ targetTh+"\t"+decoyTh);
         //---- Apply Threshold ------
         entry._2.foreach(psm => {
           if(psm.isDecoy)
