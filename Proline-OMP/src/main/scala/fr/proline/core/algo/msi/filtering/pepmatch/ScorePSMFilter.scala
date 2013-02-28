@@ -48,7 +48,7 @@ class ScorePSMFilter(var scoreThreshold: Float = 13.0f, var thresholdStartValue 
   
   def getThresholdValue(): AnyVal = scoreThreshold
   
-  def setThresholdValue( currentVal: AnyVal ){
-    scoreThreshold = currentVal.asInstanceOf[Float]
+  def setThresholdValue( currentVal: AnyVal ){    
+    scoreThreshold = currentVal.asInstanceOf[java.lang.Number].floatValue
   }
 }
