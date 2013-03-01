@@ -70,63 +70,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
     logger.debug(" # Map entries "+pmJointMap.size)
 	
     while (fdr > 0) { // iterate from FDR = 100.0 to 0.0
-      
-      /*
-      var (tB, tO, dB, dO) = (0, 0, 0, 0) // Counts to target / decoy only or better 
-
-	  validationFilter.setThresholdValue(filterThreshold)
-      pmJointMap.foreach { entry => 
-	  
-//--------  For Map entry : Query ID => Associated PSM
-        // Save previous isValidated status
-        val isValStatus: Seq[Boolean] = entry._2.map(_.isValidated)
-
-        //-- Filter incrementally without traceability 
-        validationFilter.filterPeptideMatches(entry._2, true, false)
-
-        // Keep only validated PSM
-        val selectedPsm = entry._2.filter(_.isValidated)
-
-        //-- Look which type of PSM (Target or Decoy) are still valid        
-        var foundDecoy = false
-        var foundTarget = false
-        // Specify which type of PSM (Target or Decoy) was first found. Set to -1 for Decoy and to 1 for Target 
-        var firstFound = 0
-
-        // Verify witch type of PSM (Target or Decoy) are still valid
-        selectedPsm.foreach { psm =>
-          if (psm.isDecoy) {
-            foundDecoy = true
-            if (firstFound == 0) firstFound = -1
-          } else {
-            foundTarget = true
-            if (firstFound == 0) firstFound = 1
-          }
-        }
-
-        // Update Target/Decoy count
-        if (foundDecoy && !foundTarget)
-          tO += 1
-        if (foundTarget && !foundDecoy)
-          dO += 1
-        if (foundTarget && foundDecoy) {
-          // VDS Should found better : take first in list... Should use Filter sort method ?? 
-          if (firstFound == -1)
-            dB += 1
-          else
-            tB += 1
-        }
-
-        // Reinit previous isValidated status
-        var psmIndex = 0      
-        while (psmIndex < entry._2.size) {
-          entry._2(psmIndex).isValidated = isValStatus(psmIndex)
-		  psmIndex+=1
-        }
-
-      } // End go through pmJointMap entries
-      */
-      
+          
       // Restore peptide matches validation status to include previous filtering steps
       PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches,pepMatchValStatusMap)
       
@@ -197,7 +141,7 @@ class BasicTDAnalyzer( targetDecoyMode: TargetDecoyModes.Value ) extends Abstrac
   
 }
 
-class CompetitionBasedTDAnalyzer( val validationFilter: IOptimizablePeptideMatchFilter ) extends AbstractTargetDecoyAnalyzer {
+class CompetitionBasedTDAnalyzer( val validationFilter: IPeptideMatchFilter ) extends AbstractTargetDecoyAnalyzer {
 
   def calcTDStatistics( targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch] ): ValidationResult = {    
     val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches,Some(decoyPepMatches))
@@ -205,7 +149,7 @@ class CompetitionBasedTDAnalyzer( val validationFilter: IOptimizablePeptideMatch
   }
   
   def calcTDStatistics( pepMatchJointMap: Map[Int, Seq[PeptideMatch]]): ValidationResult = {
-    TargetDecoyComputer.validatePepMatchesWithCompetition(pepMatchJointMap, validationFilter)
+    TargetDecoyComputer.createCompetitionBasedValidationResult(pepMatchJointMap, validationFilter)
   }
   
 }
