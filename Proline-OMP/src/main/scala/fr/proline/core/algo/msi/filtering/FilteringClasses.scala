@@ -106,6 +106,13 @@ object PeptideMatchFiltering {
 
 trait IPeptideMatchFilter extends IFilter {
   
+    
+  /**
+   * Sorts peptide matches in the order corresponding to the filter parameter,
+   * from the best peptide match to the worst.
+   */
+  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch]
+  
   /**
    * Validate each PeptideMatch by setting their isValidated attribute.
    * Validation criteria will depend on implementation.
@@ -129,12 +136,7 @@ trait IPeptideMatchFilter extends IFilter {
 }
 
 trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter {
-  
-  /**
-   * Sorts peptide matches in the order corresponding to the filter parameter,
-   * from the best peptide match to the worst.
-   */
-  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch]
+
   
   def isPeptideMatchValid( pepMatch: PeptideMatch ): Boolean
   
