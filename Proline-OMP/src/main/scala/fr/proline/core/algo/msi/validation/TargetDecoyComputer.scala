@@ -49,6 +49,11 @@ object TargetDecoyComputer {
     jointTable.toArray
   }
   
+  /**
+   * Create a Map queryID to PeptideMatches array for all specified PeptideMatches, issued from target or decoy searches.
+   * PeptideMatches are sorted by their score. 
+   *  
+   */
   def buildPeptideMatchJointMap( targetPeptideMatches: Seq[PeptideMatch], decoyPeptideMatches: Option[Seq[PeptideMatch]] ): Map[Int, Seq[PeptideMatch]] = {
     
     val peptideMatches = targetPeptideMatches ++ decoyPeptideMatches.getOrElse(Seq())
@@ -63,7 +68,7 @@ object TargetDecoyComputer {
     
    
   /**
-   *  Compute Pair of TDCompetitionCounts based on specified scores.
+   *  Compute Pair of TDCompetitionCounts based on specified Pair of scores.
    *  Pair of Score are organized as [target value, decoy value]
    *    
    */
@@ -96,13 +101,14 @@ object TargetDecoyComputer {
   }
   
   /**
-   *  Compute Pair of TDCompetitionCounts based on specified scores.
-   *  Pair of Score are organized as [target value, decoy value]
-   *    
+   *  Compute Pair of TDCompetitionCounts using specified filter. 
+   *  PeptideMathes associated to a query are sorted using specified filter and
+   *  target/decoy counts are done based on this ordering.
+   *  No filtering is done !   
    */
   def computeTdCompetition(
     pmJointMap: Map[Int, Seq[PeptideMatch]],
-    filter: IOptimizablePeptideMatchFilter
+    filter: IPeptideMatchFilter
   ): Pair[TDCompetitionCounts,TDCompetitionCounts] = {
     
     val competitionCounts = Map( TARGET_KEY -> TDCompetitionCounts(),
@@ -114,7 +120,7 @@ object TargetDecoyComputer {
     pmJointMap.foreach { case (msqId,pepMatches) =>
       
       // Filter peptide matches incrementally without traceability
-      filter.filterPeptideMatches(pepMatches, true, false)
+//      filter.filterPeptideMatches(pepMatches, true, false)
       
       // Sort peptide matches by the filtering parameter
       val sortedPepMatches = filter.sortPeptideMatches(pepMatches)
@@ -139,45 +145,21 @@ object TargetDecoyComputer {
       }
       else { competitionCounts(winnerKey).under += 1 }
       
-      /*
-      // Retrieve
-      val( targetPepMatches, decoyPepMatches ) = pepMatches.partition( ! _.isDecoy )
-      
-      val targetPMCount = targetPepMatches.length
-      val validTargetPMCount = targetPepMatches.count( _.isValidated )
-      val invalidTargetPMCount = targetPMCount - validTargetPMCount
-      val decoyPMCount = decoyPepMatches.length
-      val validDecoyPMCount = decoyPepMatches.count( _.isValidated )
-      val invalidDecoyPMCount = decoyPMCount - validDecoyPMCount
-      
-      // If no decoy PM above threshold
-      if(validDecoyPMCount == 0) {
-        tO += validTargetPMCount
-      // Else if some decoy PMs above threshold
-      } else {
-        tB += validTargetPMCount
-        // If no valid target PM => only decoy
-        if( validTargetPMCount == 0 ) dU += invalidDecoyPMCount        
-      }
-      
-      // If no target PM above threshold
-      if(validTargetPMCount == 0) {
-        dO += validDecoyPMCount
-      // Else if some target PMs above threshold
-      } else {
-        dB += validDecoyPMCount
-        if( validDecoyPMCount == 0 ) tU += invalidTargetPMCount
-      }*/
-
     } // End go through pmJointMap entries
  
     
     Pair(competitionCounts(TARGET_KEY), competitionCounts(DECOY_KEY))
   }
   
-  def validatePepMatchesWithCompetition(
+  /**
+   *  Create a ValidationResult for specified joined Map and filter. 
+   *  This method will compute TD Competition using specified filtered Map 
+   *  and with filter ordering behaviour. 
+   *  No filtering is done !   
+   */
+  def createCompetitionBasedValidationResult(
     pmJointMap: Map[Int, Seq[PeptideMatch]],
-    validationFilter: IOptimizablePeptideMatchFilter
+    validationFilter: IPeptideMatchFilter
   ): ValidationResult = {
     
     // Compute target/decoy competition
