@@ -133,6 +133,6 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold 
   def getThresholdValue(): AnyVal = pValue
   
   def setThresholdValue( currentVal: AnyVal ){
-    pValue = currentVal.asInstanceOf[Float]
+    pValue = currentVal.asInstanceOf[java.lang.Number].asInstanceOf[Float]
   }
 }
