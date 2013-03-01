@@ -42,5 +42,8 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
   def setThresholdValue( currentVal: AnyVal ){
     minSeqLength = currentVal.asInstanceOf[Int]
   }
-
+   
+  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
+    pepMatches.sortWith( _.peptide.sequence.length > _.peptide.sequence.length )
+  }
 }
