@@ -147,7 +147,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
       
       // Update the current FDR
       if( rocPoint.fdr.isDefined ) fdr = rocPoint.fdr.get
-      logger.debug("New FDR = "+fdr + " for threshold = "+filterThreshold)
+//      logger.debug("New FDR = "+fdr + " for threshold = "+filterThreshold)
       
       // Update threshold value
       filterThreshold = validationFilter.getNextValue(filterThreshold)
