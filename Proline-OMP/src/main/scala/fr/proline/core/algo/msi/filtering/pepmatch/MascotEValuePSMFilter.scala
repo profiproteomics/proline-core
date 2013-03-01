@@ -5,6 +5,7 @@ import scala.collection.Seq
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch,PeptideMatchResultSummaryProperties}
 import fr.proline.core.algo.msi.filtering._
+import fr.proline.util.math.MathUtils
 
 abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter {
   
@@ -14,7 +15,7 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
   protected def updatePeptideMatchProperties( pepMatch: PeptideMatch ): Unit
   
   def getPeptideMatchEValue( pepMatch: PeptideMatch ): Double = {    
-    this.getPeptideMatchValueForFiltering( pepMatch ).asInstanceOf[Double]
+    MathUtils.toDouble(getPeptideMatchValueForFiltering( pepMatch ))
   }
   
   // TODO: maybe we can move this method in IOptimizablePeptideMatchFilter
@@ -60,7 +61,7 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
   }
 
   def getNextValue( currentVal: AnyVal ) = {
-    currentVal.asInstanceOf[Double] * 0.95
+    MathUtils.toDouble(currentVal) * 0.95
   }
 
   def getThresholdStartValue(): AnyVal = 1.0
@@ -68,7 +69,7 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
   def getThresholdValue(): AnyVal = eValueThreshold
 
   def setThresholdValue( currentVal : AnyVal ) = {
-    eValueThreshold = currentVal.asInstanceOf[Double]
+    eValueThreshold = MathUtils.toDouble(currentVal)
   }
   
 }

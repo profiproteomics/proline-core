@@ -13,6 +13,7 @@ import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.filtering.IOptimizablePeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
+import fr.proline.util.math.MathUtils
 
 // TODO: use MascotThresholdTypes enumeration value instead of useHomologyThreshold
 // TODO: usefilterPeptideMatchesDBO
@@ -126,13 +127,13 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold 
     props.toMap
   }
 
-  def getNextValue( currentVal: AnyVal ) = currentVal.asInstanceOf[Float] + pValuethresholdIncreaseValue
+  def getNextValue( currentVal: AnyVal ) = MathUtils.toFloat(currentVal) + pValuethresholdIncreaseValue
   
   def getThresholdStartValue(): AnyVal = pValueStartValue
   
   def getThresholdValue(): AnyVal = pValue
   
   def setThresholdValue( currentVal: AnyVal ){
-    pValue = currentVal.asInstanceOf[java.lang.Number].asInstanceOf[Float]
+    pValue = MathUtils.toFloat(currentVal)
   }
 }
