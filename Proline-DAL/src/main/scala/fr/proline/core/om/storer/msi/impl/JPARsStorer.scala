@@ -2,22 +2,23 @@ package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Timestamp
 
+import scala.annotation.elidable
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
 
 import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.core.om.model.msi.{InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch}
+import fr.proline.core.om.model.msi.{ InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.utils.PeptideIdent
-import fr.proline.core.orm.msi.{MsiSearch, ProteinMatchSeqDatabaseMapPK}
+import fr.proline.core.orm.msi.{ MsiSearch, ProteinMatchSeqDatabaseMapPK }
 import fr.proline.core.orm.msi.ResultSet.Type
 import fr.proline.core.orm.msi.SequenceMatchPK
-import fr.proline.core.orm.msi.repository.{MsiEnzymeRepository => msiEnzymeRepo, MsiInstrumentConfigRepository => msiInstrumentConfigRepo, MsiPeaklistSoftwareRepository => msiPeaklistSoftwareRepo, MsiPeptideRepository => msiPeptideRepo, MsiSeqDatabaseRepository => msiSeqDatabaseRepo, ScoringRepository => scoringRepo}
-import fr.proline.core.orm.pdi.repository.{PdiSeqDatabaseRepository => pdiSeqDatabaseRepo}
-import fr.proline.core.orm.ps.repository.{PsPeptideRepository => psPeptideRepo, PsPtmRepository => psPtmRepo}
-import fr.proline.core.orm.uds.repository.{UdsEnzymeRepository => udsEnzymeRepo, UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo, UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo}
+import fr.proline.core.orm.msi.repository.{ MsiEnzymeRepository => msiEnzymeRepo, MsiInstrumentConfigRepository => msiInstrumentConfigRepo, MsiPeaklistSoftwareRepository => msiPeaklistSoftwareRepo, MsiPeptideRepository => msiPeptideRepo, MsiSeqDatabaseRepository => msiSeqDatabaseRepo, ScoringRepository => scoringRepo }
+import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => pdiSeqDatabaseRepo }
+import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => psPeptideRepo, PsPtmRepository => psPtmRepo }
+import fr.proline.core.orm.uds.repository.{ UdsEnzymeRepository => udsEnzymeRepo, UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo, UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo }
 import fr.proline.util.StringUtils
 
 /**
@@ -121,7 +122,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     val knownMsiResultSet = knownResultSets.get(omResultSetId)
 
     if (knownMsiResultSet.isDefined) {
-      knownMsiResultSet.get.getId
+      knownMsiResultSet.get.getId.intValue
     } else {
 
       if (omResultSetId > 0) {
@@ -133,8 +134,10 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         knownResultSets += omResultSetId -> foundMsiResultSet
 
-        foundMsiResultSet.getId
+        foundMsiResultSet.getId.intValue
       } else {
+        var msiResultSetPK: Int = -1
+
         val msiResultSet = new MsiResultSet()
         msiResultSet.setDescription(resultSet.description)
         // ResultSet.modificationTimestamp field is initialized by MsiResultSet constructor
@@ -150,7 +153,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         val storedMsiSearch = retrieveStoredMsiSearch(storerContext, omMsiSearchId)
 
         if (storedMsiSearch != null) {
-          msiSearch.id = storedMsiSearch.getId // Update OM entity with persisted Primary key
+          msiSearch.id = storedMsiSearch.getId.intValue // Update OM entity with persisted Primary key
         }
 
         msiResultSet.setMsiSearch(storedMsiSearch)
@@ -180,7 +183,6 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiResultSet.setDecoyResultSet(msiDecoyRs)
 
         msiEm.persist(msiResultSet)
-        resultSet.id = msiResultSet.getId
 
         knownResultSets += omResultSetId -> msiResultSet
 
@@ -220,12 +222,24 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         msiEm.flush() // FLUSH to handle ProteinMatchSeqDatabaseMap and proteinMatchSequenceMatches and retrieve Msi ResultSet Id
 
+        val obj = msiResultSet.getId // Try to retrieve persisted Primary Key (after FLUSH)
+
+        if ((obj != null) && (obj.intValue > 0)) {
+          msiResultSetPK = obj.intValue
+
+          resultSet.id = msiResultSetPK
+
+          knownResultSets += msiResultSetPK -> msiResultSet // Cache with MSI Primary Key
+        } else {
+          logger.warn("Cannot retrieve Primary Key of ResultSet " + omResultSetId)
+        }
+
         if (!proteinMatchSeqDatabases.isEmpty) {
           logger.debug("Handling proteinMatchSeqDatabases after flushing of Msi EntityManager")
 
           /* Handle proteinMatchSeqDatabaseMap after having persisted MsiProteinMatches, SeqDatabases and current MsiResultSet */
           for (pMSDEntry <- proteinMatchSeqDatabases; seqDatabaseId <- pMSDEntry._2) {
-            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId, seqDatabaseId, msiResultSet)
+            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId.intValue, seqDatabaseId, msiResultSet)
           }
 
         } // End if (proteinMatchSeqDatabases is not empty)
@@ -241,7 +255,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
             val peptideIds = mutable.Set.empty[Int]
 
             for (sequenceMatch <- pMSMEntry._2) {
-              val msiSequenceMatch = createSequenceMatch(storerContext, sequenceMatch, msiProteinMatchId, msiResultSet.getId)
+              val msiSequenceMatch = createSequenceMatch(storerContext, sequenceMatch, msiProteinMatchId, msiResultSetPK)
 
               peptideIds += msiSequenceMatch.getId.getPeptideId.intValue
             } // End loop for each sequenceMatch
@@ -252,7 +266,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         } // End if (proteinMatchSequenceMatches is not empty)
 
-        msiResultSet.getId
+        msiResultSetPK
       } // End if (omResultSetId <= 0)
 
     } // End if (msiResultSet is not in knownResultSets)
@@ -310,7 +324,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     val knownMsiSearch = knownMsiSearchs.get(omMsiSearchId)
 
     if (knownMsiSearch.isDefined) {
-      knownMsiSearch.get.getId
+      knownMsiSearch.get.getId.intValue
     } else {
 
       if (omMsiSearchId > 0) {
@@ -322,8 +336,10 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         knownMsiSearchs += omMsiSearchId -> foundMsiSearch
 
-        foundMsiSearch.getId
+        foundMsiSearch.getId.intValue
       } else {
+        var msiSearchPK: Int = -1
+
         val msiSearch = new MsiSearch()
         msiSearch.setDate(new Timestamp(search.date.getTime))
         msiSearch.setQueriesCount(Integer.valueOf(search.queriesCount))
@@ -354,7 +370,6 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiSearch.setSearchSetting(loadOrCreateSearchSetting(storerContext, search))
 
         msiEm.persist(msiSearch)
-        search.id = msiSearch.getId
 
         msiEm.flush() // FLUSH to retrieve Msi MsiSearch Id
 
@@ -362,7 +377,19 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         logger.trace("MsiSearch {" + omMsiSearchId + "} presisted")
 
-        msiSearch.getId
+        val obj = msiSearch.getId // Try to retrieve persisted Primary Key (after FLUSH)
+
+        if ((obj != null) && (obj.intValue > 0)) {
+          msiSearchPK = obj.intValue
+
+          search.id = msiSearchPK
+
+          knownMsiSearchs += msiSearchPK -> msiSearch // Cache with MSI Primary Key
+        } else {
+          logger.warn("Cannot retrieve Primary Key of MSI Search " + omMsiSearchId)
+        }
+
+        msiSearchPK
       }
 
     } // End if (msiSearch is not in knownMsiSearchs)
@@ -517,7 +544,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       msiPeaklistSoftware = msiPeaklistSoftwareRepo.findPeaklistSoftForNameAndVersion(msiEm, peaklistSoftware.name, peaklistSoftware.version)
 
       if (msiPeaklistSoftware != null) {
-        peaklistSoftware.id = msiPeaklistSoftware.getId // Update OM entity with persisted Primary key
+        peaklistSoftware.id = msiPeaklistSoftware.getId.intValue // Update OM entity with persisted Primary key
       }
 
     }
@@ -531,10 +558,9 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiPeaklistSoftware = new MsiPeaklistSoftware(udsPeaklistSoftware)
 
         msiEm.persist(msiPeaklistSoftware)
-
-        peaklistSoftware.id = udsPeaklistSoftware.getId // Update OM entity with persisted Primary key
-
         logger.trace("Msi PeaklistSoftware #" + udsPeaklistSoftware.getId + " persisted")
+
+        peaklistSoftware.id = udsPeaklistSoftware.getId.intValue // Update OM entity with persisted Primary key        
       }
 
     }
@@ -587,8 +613,15 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       }
 
       msiEm.persist(msiSearchSetting)
-      searchSettings.id = msiSearchSetting.getId
       logger.trace("Msi SearchSetting {" + omSearchSettingsId + "} persisted")
+
+      val obj = msiSearchSetting.getId // Try to retrieve persisted Primary Key
+
+      if ((obj != null) && (obj.intValue > 0)) {
+        searchSettings.id = obj.intValue
+      } else {
+        logger.warn("Cannot retrieve Primary Key of SearchSettings " + omSearchSettingsId)
+      }
 
       /* Task done after persisting msiSearchSetting */
       for (seqDatabase <- searchSettings.seqDatabases) {
@@ -769,7 +802,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
             msiSeqDatabase.setVersion(seqDatabase.version)
 
-            msiEm.persist(msiSeqDatabase);            
+            msiEm.persist(msiSeqDatabase);
             logger.trace("Msi SeqDatabase {" + omSeqDatabaseId + "} persisted")
           } else {
             /* Create derived Msi entity from Pdi */
@@ -778,8 +811,6 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
             msiEm.persist(msiSeqDatabase);
             logger.trace("Msi SeqDatabase #" + pdiSeqDatabaseInstance.getId + " persisted")
           } // End if (pdiSeqDatabaseInstance is not null)
-          
-          seqDatabase.id = msiSeqDatabase.getId
 
         } // End if (msiSeqDatabase is null)
 
@@ -787,17 +818,16 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
       knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
 
-      val msiSeqDatabaseId = msiSeqDatabase.getId
+      val obj = msiSeqDatabase.getId // Try to retrieve persisted Primary Key
 
-      if (msiSeqDatabaseId != null) {
-        val msiSeqDatabaseIdValue = msiSeqDatabaseId.intValue
+      if ((obj != null) && (obj.intValue > 0)) {
+        val msiSeqDatabasePK = obj.intValue
 
-        if (msiSeqDatabaseIdValue > 0) {
-          seqDatabase.id = msiSeqDatabaseIdValue // Update OM entity with persisted Primary key
+        seqDatabase.id = msiSeqDatabasePK
 
-          knownSeqDatabases += msiSeqDatabaseIdValue -> msiSeqDatabase // Cache with MSI Primary Key
-        }
-
+        knownSeqDatabases += msiSeqDatabasePK -> msiSeqDatabase // Cache with MSI Primary Key
+      } else {
+        logger.warn("Cannot retrieve Primary Key of SeqDatabase " + omSeqDatabaseId)
       }
 
       msiSeqDatabase
@@ -997,12 +1027,13 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         msiPeptides += peptIdent -> msiPeptide
 
+        logger.trace("Msi Peptide #" + psPeptide.getId + " persisted")
+
         val omPeptide = remainingPeptides.remove(peptIdent)
         if (omPeptide.isDefined) {
-          omPeptide.get.id = psPeptide.getId // Update OM entity with persisted Primary key
+          omPeptide.get.id = psPeptide.getId.intValue // Update OM entity with persisted Primary key
         }
 
-        logger.trace("Msi Peptide #" + psPeptide.getId + " persisted")
       } // End loop for each createdPsPeptide => create in Msi
 
     } // End if (remainingPeptides is not empty)
@@ -1139,7 +1170,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         val msiPeptideId: Int =
           if (msiPeptide.isDefined) {
-            msiPeptide.get.getId
+            msiPeptide.get.getId.intValue
           } else {
             -1
           }
@@ -1215,11 +1246,22 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         // TODO handle PeptideMatch.children    Uniquement pour le grouping ?
 
         msiEm.persist(msiPeptideMatch)
-        peptideMatch.id = msiPeptideMatch.getId
 
         knownPeptideMatches += omPeptideMatchId -> msiPeptideMatch
 
         logger.trace("Msi PeptideMatch {" + omPeptideMatchId + "} persisted")
+
+        val obj = msiPeptideMatch.getId // Try to retrieve persisted Primary Key
+
+        if ((obj != null) && (obj.intValue > 0)) {
+          val msiPeptideMatchPK = obj.intValue
+
+          peptideMatch.id = msiPeptideMatchPK
+
+          knownPeptideMatches += msiPeptideMatchPK -> msiPeptideMatch // Cache with MSI Primary Key
+        } else {
+          logger.warn("Cannot retrieve Primary Key of PeptideMatch " + omPeptideMatchId)
+        }
 
         msiPeptideMatch
       } // End if (omPeptideMatchId <= 0)
@@ -1320,11 +1362,22 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         } // End if (msQuery is a Ms2Query)
 
         msiEm.persist(msiMsQuery)
-        msQuery.id = msiMsQuery.getId
 
         knownMsQueries += omMsQueryId -> msiMsQuery
 
         logger.trace("Msi MsQuery {" + omMsQueryId + "} persisted")
+
+        val obj = msiMsQuery.getId // Try to retrieve persisted Primary Key
+
+        if ((obj != null) && (obj.intValue > 0)) {
+          val msiMsQueryPK = obj.intValue
+
+          msQuery.id = msiMsQueryPK
+
+          knownMsQueries += msiMsQueryPK -> msiMsQuery // Cache with MSI Primary Key
+        } else {
+          logger.warn("Cannot retrieve Primary Key of MsQuery " + omMsQueryId)
+        }
 
         msiMsQuery
       } // End if (omMsQueryId <= 0)
@@ -1420,8 +1473,15 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     }
 
     msiEm.persist(msiProteinMatch)
-    proteinMatch.id = msiProteinMatch.getId
     logger.trace("Msi ProteinMatch {" + omProteinMatchId + "} persisted")
+
+    val obj = msiProteinMatch.getId // Try to retrieve persisted Primary Key
+
+    if ((obj != null) && (obj.intValue > 0)) {
+      proteinMatch.id = obj.intValue
+    } else {
+      logger.warn("Cannot retrieve Primary Key of ProteinMatch " + omProteinMatchId)
+    }
 
     msiProteinMatch
   }
@@ -1518,7 +1578,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
           val knownMsiPeptide = storerContext.msiPeptides.get(peptideIdent)
 
           if (knownMsiPeptide.isDefined) {
-            msiPeptideId = knownMsiPeptide.get.getId
+            msiPeptideId = knownMsiPeptide.get.getId.intValue
           }
 
         }
@@ -1542,7 +1602,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         val knownMsiPeptideMatch = knownPeptideMatches.get(peptideMatchId)
 
         if (knownMsiPeptideMatch.isDefined) {
-          msiPeptideMatchId = knownMsiPeptideMatch.get.getId
+          msiPeptideMatchId = knownMsiPeptideMatch.get.getId.intValue
         }
 
       }
