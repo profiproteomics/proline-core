@@ -4,6 +4,8 @@ import scala.collection.mutable.{ HashMap, ArrayBuffer }
 import scala.math.{ pow, log10 }
 import fr.proline.core.om.model.msi.{ MsQuery, PeptideMatch }
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
+import fr.proline.core.om.model.msi.MsQueryProperties
+import com.weiglewilczek.slf4s.Logging
 
 object MascotThresholdTypes extends Enumeration {
   val IDENTITY_THRESHOLD = Value("IDENTITY_THRESHOLD")
@@ -13,7 +15,7 @@ object MascotThresholdTypes extends Enumeration {
 
 case class MascotIonScoreThresholds(identityThreshold: Float, homologyThreshold: Float)
 
-object MascotValidationHelper {
+object MascotValidationHelper extends Logging {
 
   implicit def doubleToFloat(d: Double): Float = d.toFloat
 
@@ -136,6 +138,40 @@ object MascotValidationHelper {
     pmThresholdsMapBuilder.result()
   }
 
+  def getPeptideMatchThresholds(peptideMatch: PeptideMatch, pValue : Float) : Seq[MascotIonScoreThresholds] = {
+		    
+		  	 val msQProp = peptideMatch.msQuery.properties.get
+    
+          val tRSCandPSM = msQProp.getTargetDbSearch.get.getCandidatePeptidesCount
+          val dRSCandPSM = if (msQProp.getDecoyDbSearch.isDefined) msQProp.getDecoyDbSearch.get.getCandidatePeptidesCount else tRSCandPSM
+
+          var targetITh = MascotValidationHelper.calcIdentityThreshold(tRSCandPSM, pValue)
+          if (targetITh == 0.0) targetITh = 13.0
+          var decoyITh = MascotValidationHelper.calcIdentityThreshold(dRSCandPSM, pValue)
+          if (decoyITh == 0.0) decoyITh = 13.0
+          //Infer HT 
+            if (!msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.isDefined) {
+              logger.warn(" ------ UNABLE TO CALCULATE P VALUE  getMascotHomologyThreshold !!" + peptideMatch.msQueryId)
+              Seq(MascotIonScoreThresholds(0.0, 0.0), MascotIonScoreThresholds(0.0, 0.0))
+            } else {
+
+              val tRs_ht0_05: Float = msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.get
+              val dRs_ht0_05: Float = if (msQProp.getDecoyDbSearch.isDefined && msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.isDefined) msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.get else tRs_ht0_05
+
+              val targetHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount(tRs_ht0_05, 0.05)
+              var targetHTh = MascotValidationHelper.calcIdentityThreshold(targetHtProbCstValue, pValue)
+              val decoyHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount(dRs_ht0_05, 0.05)
+              var decoyHTh = MascotValidationHelper.calcIdentityThreshold(decoyHtProbCstValue, pValue)
+                            
+              // if Homology is undefined then use Identity threshold
+              if ((targetHTh > targetITh) || (targetHTh < 13) || (tRSCandPSM <= 100)) { targetHTh = 0.0 }
+              if ((decoyHTh > decoyITh) || (decoyHTh < 13) || (dRSCandPSM <= 100))  { decoyHTh = 0.0 }
+            
+              Seq(MascotIonScoreThresholds(targetITh, targetHTh), MascotIonScoreThresholds(decoyITh, decoyHTh))
+            }
+        
+  }
+  
   def getPeptideMatchThresholds(peptideMatch: PeptideMatch): MascotIonScoreThresholds = {
 
     val targetMsqProps = this.getTargetMsQueryProperties(peptideMatch.msQuery)
