@@ -2,7 +2,6 @@ package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Timestamp
 
-import scala.annotation.elidable
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
 
@@ -150,13 +149,14 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         val omMsiSearchId = msiSearch.id
 
         storeMsiSearch(msiSearch, storerContext)
+
         val storedMsiSearch = retrieveStoredMsiSearch(storerContext, omMsiSearchId)
 
-        if (storedMsiSearch != null) {
-          msiSearch.id = storedMsiSearch.getId.intValue // Update OM entity with persisted Primary key
-        }
+        /* Stored MSI Search OM Id is updated with PK by storeMsiSearch() */
 
-        msiResultSet.setMsiSearch(storedMsiSearch)
+        if (storedMsiSearch != null) {
+          msiResultSet.setMsiSearch(storedMsiSearch)
+        }
 
         /* Check associated decoy ResultSet */
         val omDecoyResultSetId = resultSet.getDecoyResultSetId
@@ -593,7 +593,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       msiEm.getReference(classOf[MsiSearchSetting], omSearchSettingsId) // Must exist in Msi Db if OM Id > 0
     } else {
       val msiSearchSetting = new MsiSearchSetting()
-      msiSearchSetting.setIsDecoy(searchSettings.isDecoy)
+      msiSearchSetting.setIsDecoy(java.lang.Boolean.valueOf(searchSettings.isDecoy))
       msiSearchSetting.setMaxMissedCleavages(Integer.valueOf(searchSettings.maxMissedCleavages))
       msiSearchSetting.setPeptideChargeStates(searchSettings.ms1ChargeStates)
       msiSearchSetting.setPeptideMassErrorTolerance(searchSettings.ms1ErrorTol)
@@ -790,13 +790,11 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
             msiSeqDatabase.setFastaFilePath(seqDatabase.filePath)
             msiSeqDatabase.setName(seqDatabase.name)
 
-            val releaseDate = seqDatabase.releaseDate
-
-            if (releaseDate != null) {
-              msiSeqDatabase.setReleaseDate(new Timestamp(releaseDate.getTime))
+            if (seqDatabase.releaseDate != null) {
+              msiSeqDatabase.setReleaseDate(new Timestamp(seqDatabase.releaseDate.getTime))
             }
 
-            msiSeqDatabase.setSequenceCount(seqDatabase.sequencesCount)
+            msiSeqDatabase.setSequenceCount(Integer.valueOf(seqDatabase.sequencesCount))
 
             // TODO handle  serializedProperties
 
@@ -961,7 +959,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       if ((foundMsiPeptides != null) && !foundMsiPeptides.isEmpty) {
 
         for (msiPeptide <- foundMsiPeptides) {
-          val peptideId = msiPeptide.getId
+          val peptideId = msiPeptide.getId.intValue
           val peptIdent = new PeptideIdent(msiPeptide.getSequence, msiPeptide.getPtmString)
 
           msiPeptides += peptIdent -> msiPeptide
@@ -999,7 +997,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
           msiPeptides += peptIdent -> msiPeptide
 
           remainingPeptides.remove(peptIdent)
-          remainingOmPeptidesIds.remove(msiPeptide.getId)
+          remainingOmPeptidesIds.remove(peptideId)
         }
 
       }
@@ -1031,6 +1029,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
         val omPeptide = remainingPeptides.remove(peptIdent)
         if (omPeptide.isDefined) {
+          /* PS transaction is committed by persistPsPeptides() : Primary Keys of persisted PS Peptide must be OK here */
           omPeptide.get.id = psPeptide.getId.intValue // Update OM entity with persisted Primary key
         }
 
@@ -1077,7 +1076,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       for (peptideEntry <- peptides.toMap[PeptideIdent, Peptide]) {
         val peptIdent = peptideEntry._1
         val peptide = peptideEntry._2
-        val newPsPeptide = new PsPeptide
+
+        val newPsPeptide = new PsPeptide()
         newPsPeptide.setSequence(peptIdent.sequence)
         newPsPeptide.setPtmString(peptIdent.ptmString)
         newPsPeptide.setCalculatedMass(peptide.calculatedMass)
@@ -1163,7 +1163,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         val msiPeptideMatch = new MsiPeptideMatch()
         msiPeptideMatch.setDeltaMoz(peptideMatch.deltaMoz)
         msiPeptideMatch.setFragmentMatchCount(Integer.valueOf(peptideMatch.fragmentMatchesCount))
-        msiPeptideMatch.setIsDecoy(peptideMatch.isDecoy)
+        msiPeptideMatch.setIsDecoy(java.lang.Boolean.valueOf(peptideMatch.isDecoy))
         msiPeptideMatch.setMissedCleavage(Integer.valueOf(peptideMatch.missedCleavage))
 
         val msiPeptide = storerContext.msiPeptides.get(new PeptideIdent(peptideMatch.peptide.sequence, peptideMatch.peptide.ptmString))
@@ -1209,7 +1209,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiPeptideMatch.setMsQuery(msiMsQuery) // msiMsQuery must be in persistence context
         msiMsQuery.addPeptideMatch(msiPeptideMatch) // Reverse association
 
-        msiPeptideMatch.setCharge(Integer.valueOf(msiMsQuery.getCharge))
+        msiPeptideMatch.setCharge(msiMsQuery.getCharge)
         msiPeptideMatch.setExperimentalMoz(msiMsQuery.getMoz)
 
         /* Check associated best PeptideMatch */
@@ -1438,11 +1438,11 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
 
     }
 
-    msiProteinMatch.setIsLastBioSequence(proteinMatch.isLastBioSequence)
+    msiProteinMatch.setIsLastBioSequence(java.lang.Boolean.valueOf(proteinMatch.isLastBioSequence))
     msiProteinMatch.setCoverage(proteinMatch.coverage)
     msiProteinMatch.setDescription(proteinMatch.description)
     msiProteinMatch.setGeneName(proteinMatch.geneName)
-    msiProteinMatch.setIsDecoy(proteinMatch.isDecoy)
+    msiProteinMatch.setIsDecoy(java.lang.Boolean.valueOf(proteinMatch.isDecoy))
 
     /* PeptideCount fields are handled by HQL query after Msi SequenceMatches creation */
     msiProteinMatch.setPeptideCount(Integer.valueOf(-1))
@@ -1611,7 +1611,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     }
 
     val msiSequenceMatchPK = new SequenceMatchPK()
-    msiSequenceMatchPK.setProteinMatchId(msiProteinMatchId)
+    msiSequenceMatchPK.setProteinMatchId(Integer.valueOf(msiProteinMatchId))
 
     /* Retrieve Peptide Id from Msi */
     val msiPeptideId = retrieveMsiPeptideId(sequenceMatch.getPeptideId, sequenceMatch.peptide)
@@ -1637,7 +1637,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("Unknown Msi best PeptideMatch Id: " + msiPeptideMatchId)
     }
 
-    msiSequenceMatch.setIsDecoy(sequenceMatch.isDecoy)
+    msiSequenceMatch.setIsDecoy(java.lang.Boolean.valueOf(sequenceMatch.isDecoy))
     msiSequenceMatch.setResidueAfter(StringUtils.convertCharResidueToString(sequenceMatch.residueAfter))
     msiSequenceMatch.setResidueBefore(StringUtils.convertCharResidueToString(sequenceMatch.residueBefore))
     msiSequenceMatch.setResultSetId(Integer.valueOf(msiResultSetId))
@@ -1673,7 +1673,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     assert(msiSearchSetting != null, "MsiSearchSetting is null")
 
     val msiUsedPtm = new MsiUsedPtm()
-    msiUsedPtm.setIsFixed(isFixed)
+    msiUsedPtm.setIsFixed(java.lang.Boolean.valueOf(isFixed))
     msiUsedPtm.setShortName(ptmDefinition.names.shortName)
     // TODO UsedPtm.type field should be removed from Msi Db schema
 
@@ -1727,7 +1727,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       val psPeptidePtm = new PsPeptidePtm()
       psPeptidePtm.setAverageMass(locatedPtm.averageMass)
       psPeptidePtm.setMonoMass(locatedPtm.monoMass)
-      psPeptidePtm.setSeqPosition(locatedPtm.seqPosition)
+      psPeptidePtm.setSeqPosition(Integer.valueOf(locatedPtm.seqPosition))
 
       // TODO handle AtomLabel
 

@@ -1,25 +1,16 @@
 package fr.proline.core.om.storer.msi.impl
 
-import java.sql.Connection
-import fr.profi.jdbc.easy._
-import fr.proline.core.dal._
-import fr.proline.core.om.model.msi.IPeaklistContainer
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.MsQuery
-import fr.proline.core.om.model.msi.Peaklist
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.storer.msi.IPeaklistWriter
-import fr.proline.core.om.storer.msi.IRsStorer
-import fr.proline.core.om.storer.msi.PeaklistWriter
-import fr.proline.repository.util.JDBCWork
+import fr.profi.jdbc.easy.{ int2Formattable, string2Formattable, stringOption2Formattable }
+import fr.proline.core.dal.{ BuildJDBCWork, ContextFactory }
+import fr.proline.core.om.model.msi.{ IPeaklistContainer, InstrumentConfig, MsQuery, Peaklist, ResultSet }
+import fr.proline.core.om.storer.msi.{ IPeaklistWriter, IRsStorer, PeaklistWriter }
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.context.DatabaseConnectionContext
 import javax.persistence.EntityTransaction
 
 abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IRsStorer {
 
   // IPeaklistWriter to use to store PeakList and Spectrum 
-  var localPlWriter = plWriter
+  var localPlWriter: IPeaklistWriter = plWriter
 
   type MsiResultSet = fr.proline.core.orm.msi.ResultSet
 
@@ -57,13 +48,12 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
       throw new IllegalArgumentException("DbManager is null")
     }
 
-    var rsId: Int = 0
+    var msiResultSetId: Int = -1
     var storerContext: StorerContext = null // For JPA use
     var msiTransaction: EntityTransaction = null
     var msiTransacOk: Boolean = false
 
     try {
-
       storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
 
       val msiDb = storerContext.getMSIDbConnectionContext
@@ -74,7 +64,7 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
       msiTransaction.begin()
       msiTransacOk = false
 
-      rsId = storeResultSet(
+      msiResultSetId = storeResultSet(
         resultSet = resultSet,
         msQueries = null,
         peakListContainer = null,
@@ -83,7 +73,6 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
       // Commit transaction
       msiTransaction.commit()
       msiTransacOk = true
-
     } finally {
 
       if ((msiTransaction != null) && !msiTransacOk) {
@@ -103,7 +92,7 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
 
     }
 
-    rsId
+    msiResultSetId
   }
 
   /**
@@ -125,55 +114,60 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
       throw new IllegalArgumentException("StorerContext is null")
     }
 
-    logger.info("Storing ResultSet " + resultSet.name)
-
-    //Create a StorerContext if none was specified
-
     val omResultSetId = resultSet.id
 
-    if (omResultSetId > 0)
+    if (omResultSetId > 0) {
       throw new UnsupportedOperationException("Updating a ResultSet is not supported yet !")
+    }
+
+    logger.info("Storing ResultSet " + omResultSetId + "  [" + resultSet.name + ']')
+
+    /* Create a StorerContext if none was specified */
 
     val oldPlWriter = localPlWriter
 
-    if (localPlWriter == null) {
+    if (oldPlWriter == null) {
       localPlWriter = PeaklistWriter(storerContext.getMSIDbConnectionContext.getDriverType)
     }
-
-    var plID: Int = -1
 
     // Save Spectra and Queries information (MSISearch should  be defined)
     val msiSearch = resultSet.msiSearch
 
     if (msiSearch != null) {
-
       // Save Peaklist information
-      plID = this.storePeaklist(msiSearch.peakList, storerContext)
-      //update Peaklist ID in MSISearch
-      msiSearch.peakList.id = plID
+      val peakList = msiSearch.peakList
+      val msiPeaklistId = storePeaklist(peakList, storerContext)
+
+      peakList.id = msiPeaklistId // Update OM entity with persisted Primary key
 
       // Save spectra retrieve by peakListContainer 
-      if (peakListContainer != null)
-        this.storeSpectra(plID, peakListContainer, storerContext)
+      if (peakListContainer != null) {
+        storeSpectra(msiPeaklistId, peakListContainer, storerContext)
+      }
 
       //TODO : Remove when shared transaction !!! : Close msiDB connection if used by previous store methods 
 
       //START EM Transaction TODO : Remove when shared transaction !!!
 
       /* Store MsiSearch and retrieve persisted ORM entity */
-      val tmpMsiSearchID = msiSearch.id
-      val newMsiSearchID = storeMsiSearch(msiSearch, storerContext)
+
+      val msiSearchId = storeMsiSearch(msiSearch, storerContext)
 
       // Save MSQueries 
-      if (msQueries != null && !msQueries.isEmpty)
-        storeMsQueries(newMsiSearchID, msQueries, storerContext)
+      if ((msQueries != null) && !msQueries.isEmpty) {
+        storeMsQueries(msiSearchId, msQueries, storerContext)
+      }
+
     }
 
-    resultSet.id = createResultSet(resultSet, storerContext)
+    val msiResultSetPK = createResultSet(resultSet, storerContext)
 
+    resultSet.id = msiResultSetPK
+
+    /* Restore oldPlWriter */
     localPlWriter = oldPlWriter
 
-    resultSet.id
+    msiResultSetPK
   }
 
   def createResultSet(resultSet: ResultSet, context: StorerContext): Int
@@ -190,7 +184,7 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
    * Use Constructor specified IPeaklistWriter
    *
    */
-  def storePeaklist(peaklist: Peaklist, context: StorerContext): Int = {
+  final def storePeaklist(peaklist: Peaklist, context: StorerContext): Int = {
     localPlWriter.storePeaklist(peaklist, context)
   }
 
