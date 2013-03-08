@@ -16,6 +16,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+
 /**
  * The persistent class for the ms_query database table.
  * 
@@ -166,5 +167,8 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
 		this.isSpectrumSet = isSpectrumSet;
 	}
     
-    
+	@Override
+	public String toString() {
+		return Integer.toString(initialId);
+	} 
 }
