@@ -129,11 +129,7 @@ class ResultFileImporterSQLStorer(
     }
 
     //Start MSI Transaction and ResultSets store
-    try {
-      //Fait par le Storer: Attente partage transaction TODO  
-      //      msiTransaction.begin()
-      //      msiTransacOk = false
-
+   
       // Insert instrument config in the MSIdb         
       rsStorer.insertInstrumentConfig(instrumentConfig, storerContext)
 
@@ -218,21 +214,7 @@ class ResultFileImporterSQLStorer(
       //    this.msiDb.commitTransaction()// VD Pour SQLStorer Only
       //      msiTransaction.commit()
       //      msiTransacOk = true
-    } finally {
-      //Fait par le Storer: Attente partage transaction TODO  
-      //      /* Check msiTransaction integrity */
-      //      if ((msiTransaction != null) && !msiTransacOk) {
-      //        try {
-      //          if(stContext.msiDB.isInTransaction)
-      //          	 stContext.msiDB.rollbackTransaction
-      //          msiTransaction.rollback()
-      //        } catch {
-      //          case ex => logger.error("Error rollbacking Msi Db transaction", ex)
-      //        }
-      //      } else 
-      //         if(stContext.msiDB.isInTransaction)
-      //        	 stContext.msiDB.rollbackTransaction
-    }
+   
 
     if (!wasInTransaction) msiEzDBC.commitTransaction
     logger.debug("End of result file importer service")
