@@ -80,8 +80,8 @@ object BuildPeptideMatchFilter {
       case PepMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH => new PepSeqLengthPSMFilter()
       case PepMatchFilterParams.RANK => new RankPSMFilter()
       case PepMatchFilterParams.SCORE => new ScorePSMFilter()
-      case PepMatchFilterParams.SCORE_IT_PVALUE => new MascotPValuePSMFilter()
-      case PepMatchFilterParams.SCORE_HT_PVALUE => new MascotPValuePSMFilter()
+      case PepMatchFilterParams.SCORE_IT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = false)
+      case PepMatchFilterParams.SCORE_HT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = true)
     }
   }
 }
@@ -103,8 +103,8 @@ object BuildOptimizablePeptideMatchFilter {
       case PepMatchFilterParams.MASCOT_EVALUE => new MascotEValuePSMFilter()
       case PepMatchFilterParams.MASCOT_ADJUSTED_EVALUE => new MascotAdjustedEValuePSMFilter()
       case PepMatchFilterParams.SCORE => new ScorePSMFilter()
-      case PepMatchFilterParams.SCORE_IT_PVALUE => new MascotPValuePSMFilter()
-      case PepMatchFilterParams.SCORE_HT_PVALUE => new MascotPValuePSMFilter()
+      case PepMatchFilterParams.SCORE_IT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = false)
+      case PepMatchFilterParams.SCORE_HT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = true)
     }
   }
   
