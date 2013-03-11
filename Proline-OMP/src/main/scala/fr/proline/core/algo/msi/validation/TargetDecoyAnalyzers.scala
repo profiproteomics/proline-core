@@ -12,10 +12,10 @@ object BuildTDAnalyzer {
   def apply(
     useTdCompetition: Boolean,
     rs: ResultSet,
-    pepMatchValidator: Option[IPeptideMatchValidator] ): Option[ITargetDecoyAnalyzer] = {
+    pepMatchSorter: Option[IPeptideMatchSorter] ): Option[ITargetDecoyAnalyzer] = {
     
     // Build target decoy analyzer if a peptide match validator is provided
-    if( rs.decoyResultSet != null && rs.decoyResultSet.isDefined && pepMatchValidator.isDefined ) {
+    if( rs.decoyResultSet != null && rs.decoyResultSet.isDefined && pepMatchSorter.isDefined ) {
       val tdAnalyzer = if( useTdCompetition == false ) {
         val ssProps = rs.msiSearch.searchSettings.properties.get
         val tdModeAsStr = ssProps.getTargetDecoyMode.getOrElse(
@@ -26,7 +26,7 @@ object BuildTDAnalyzer {
       }
       else  {        
         new CompetitionBasedTDAnalyzer(
-          pepMatchValidator.get.validationFilter.asInstanceOf[IOptimizablePeptideMatchFilter]
+          pepMatchSorter.get
         )
       }
       Some(tdAnalyzer)
@@ -141,7 +141,7 @@ class BasicTDAnalyzer( targetDecoyMode: TargetDecoyModes.Value ) extends Abstrac
   
 }
 
-class CompetitionBasedTDAnalyzer( val validationFilter: IPeptideMatchFilter ) extends AbstractTargetDecoyAnalyzer {
+class CompetitionBasedTDAnalyzer( val psmSorter: IPeptideMatchSorter ) extends AbstractTargetDecoyAnalyzer {
 
   def calcTDStatistics( targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch] ): ValidationResult = {    
     val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches,Some(decoyPepMatches))
@@ -149,7 +149,7 @@ class CompetitionBasedTDAnalyzer( val validationFilter: IPeptideMatchFilter ) ex
   }
   
   def calcTDStatistics( pepMatchJointMap: Map[Int, Seq[PeptideMatch]]): ValidationResult = {
-    TargetDecoyComputer.createCompetitionBasedValidationResult(pepMatchJointMap, validationFilter)
+    TargetDecoyComputer.createCompetitionBasedValidationResult(pepMatchJointMap, psmSorter)
   }
   
 }

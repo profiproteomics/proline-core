@@ -101,14 +101,14 @@ object TargetDecoyComputer {
   }
   
   /**
-   *  Compute Pair of TDCompetitionCounts using specified filter. 
-   *  PeptideMathes associated to a query are sorted using specified filter and
+   *  Compute Pair of TDCompetitionCounts using specified sorter. 
+   *  PeptideMathes associated to a query are sorted using specified IPeptideMatchSorter and
    *  target/decoy counts are done based on this ordering.
    *  No filtering is done !   
    */
   def computeTdCompetition(
     pmJointMap: Map[Int, Seq[PeptideMatch]],
-    filter: IPeptideMatchFilter
+    sorter: IPeptideMatchSorter
   ): Pair[TDCompetitionCounts,TDCompetitionCounts] = {
     
     val competitionCounts = Map( TARGET_KEY -> TDCompetitionCounts(),
@@ -119,11 +119,9 @@ object TargetDecoyComputer {
     // Iterate over peptide matches grouped by MS query id and sorted by rank 
     pmJointMap.foreach { case (msqId,pepMatches) =>
       
-      // Filter peptide matches incrementally without traceability
-//      filter.filterPeptideMatches(pepMatches, true, false)
       
       // Sort peptide matches by the filtering parameter
-      val sortedPepMatches = filter.sortPeptideMatches(pepMatches)
+      val sortedPepMatches = sorter.sortPeptideMatches(pepMatches)
       
       // Retrieve best peptide match
       val bestPM = sortedPepMatches.head
@@ -152,18 +150,20 @@ object TargetDecoyComputer {
   }
   
   /**
-   *  Create a ValidationResult for specified joined Map and filter. 
+   *  Create a ValidationResult for specified joined Map containing counts and FDR values.
+   *  
    *  This method will compute TD Competition using specified filtered Map 
-   *  and with filter ordering behaviour. 
+   *  and with IPeptideMatchSorter ordering. 
+   *  
    *  No filtering is done !   
    */
   def createCompetitionBasedValidationResult(
     pmJointMap: Map[Int, Seq[PeptideMatch]],
-    validationFilter: IPeptideMatchFilter
+    pepMatchSorter: IPeptideMatchSorter
   ): ValidationResult = {
     
     // Compute target/decoy competition
-    val competitionCount = this.computeTdCompetition(pmJointMap, validationFilter)
+    val competitionCount = this.computeTdCompetition(pmJointMap, pepMatchSorter)
     
     // Retrieve competition counts
     val (targetCount, decoyCount) = (competitionCount._1, competitionCount._2)
@@ -176,8 +176,7 @@ object TargetDecoyComputer {
     ValidationResult(
       targetMatchesCount = tB + tO + dB,
       decoyMatchesCount = Some(dB + dO + tB),
-      fdr = Some(fdr),
-      properties = Some(HashMap(FilterPropertyKeys.THRESHOLD_VALUE -> validationFilter.getThresholdValue) )
+      fdr = Some(fdr)
     )
   }
 

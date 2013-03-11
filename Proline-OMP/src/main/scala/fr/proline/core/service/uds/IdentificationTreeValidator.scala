@@ -149,7 +149,10 @@ class IdentificationTreeValidator(
   
   private def _validateResultSet( rs: ResultSet ): ResultSummary = {
     
-    val tdAnalyzer = BuildTDAnalyzer(useTdCompetition,rs,pepMatchValidator)
+    val tdAnalyzer = if(pepMatchValidator.isDefined) { BuildTDAnalyzer(useTdCompetition,rs,Some(pepMatchValidator.get.validationFilter)) 
+      } else { 
+	BuildTDAnalyzer(useTdCompetition,rs,None)
+      }
     
     // Instantiate a result set validator
     val rsValidator = new ResultSetValidator(
@@ -231,7 +234,11 @@ class IdentificationTreeValidator(
       }
       
       // Build Target/Decoy analyzer
-      val tdAnalyzer = BuildTDAnalyzer( useTdCompetition,mergedTargetRs,pepMatchValidator )
+       val tdAnalyzer = if(pepMatchValidator.isDefined) { BuildTDAnalyzer(useTdCompetition,mergedTargetRs,Some(pepMatchValidator.get.validationFilter)) 
+      } else { 
+	BuildTDAnalyzer(useTdCompetition,mergedTargetRs,None)
+      }
+
       
       // Instantiate a result set validator
       val rsValidator = new ResultSetValidator(
