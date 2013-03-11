@@ -28,7 +28,7 @@ object ContextFactory extends Logging {
     val currentThread = Thread.currentThread
 
     if (!currentThread.isInstanceOf[ThreadLogger]) {
-      currentThread.setUncaughtExceptionHandler(new ThreadLogger("fr.proline.core.dal.ContextFactory"))
+      currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.name))
     }
 
     var udsDb: DatabaseConnectionContext = null
