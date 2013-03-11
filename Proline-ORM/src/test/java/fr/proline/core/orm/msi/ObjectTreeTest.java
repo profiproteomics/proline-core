@@ -51,7 +51,7 @@ public class ObjectTreeTest extends DatabaseTestCase {
 		try {
 		    msiEm.close();
 		} catch (Exception exClose) {
-		    LOG.error("Error closing MSI EntityManager", msiEm);
+		    LOG.error("Error closing MSI EntityManager", exClose);
 		}
 	    }
 
@@ -83,7 +83,7 @@ public class ObjectTreeTest extends DatabaseTestCase {
 		try {
 		    msiEm.close();
 		} catch (Exception exClose) {
-		    LOG.error("Error closing MSI EntityManager", msiEm);
+		    LOG.error("Error closing MSI EntityManager", exClose);
 		}
 	    }
 

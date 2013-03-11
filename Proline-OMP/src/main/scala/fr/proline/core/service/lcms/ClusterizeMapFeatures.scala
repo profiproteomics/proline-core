@@ -12,84 +12,84 @@ import fr.proline.repository.IDatabaseConnector
 
 object ClusterizeMapFeatures {
 
-  def apply( lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, params: ClusteringParams ): Array[Feature] = {
-    
-    val mapCleaner = new ClusterizeMapFeatures( lcmsDbConnector, lcmsMap, params )
+  def apply(lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, params: ClusteringParams): Array[Feature] = {
+
+    val mapCleaner = new ClusterizeMapFeatures(lcmsDbConnector, lcmsMap, params)
     mapCleaner.runService()
     mapCleaner.getFeaturesWithClusters
-    
+
   }
-  
+
 }
 
-class ClusterizeMapFeatures( lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, params: ClusteringParams ) extends IService {
-  
+class ClusterizeMapFeatures(lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, params: ClusteringParams) extends IService {
+
   val lcmsQueryHelper = new SQLQueryHelper(lcmsDbConnector)
   val ezDBC = lcmsQueryHelper.ezDBC
   val inExprLimit = ezDBC.getInExpressionCountLimit
   var featuresWithClusters: Array[Feature] = null
-  
+
   def getFeaturesWithClusters = featuresWithClusters
-  
+
   def runService(): Boolean = {
-    
+
     // Make some requirements
-    require( lcmsMap.isProcessed,"the map must be a processed map" )
-    
+    require(lcmsMap.isProcessed, "the map must be a processed map")
+
     val runMapIds = lcmsMap.runMapIds
-    require( runMapIds.length == 1, "the processed map must correspond to a unique run map" )
-    
+    require(runMapIds.length == 1, "the processed map must correspond to a unique run map")
+
     // Check if a transaction is already initiated
     val wasInTransaction = ezDBC.isInTransaction()
-    if( !wasInTransaction ) ezDBC.beginTransaction()
-    
+    if (!wasInTransaction) ezDBC.beginTransaction()
+
     // Define some vars
     val processedMapId = lcmsMap.id
     val runMapId = runMapIds(0)
-    
+
     // Retrieve run id corresponding to run map id
-    val runId = ezDBC.selectInt( "SELECT run_id FROM run_map WHERE id = " + runMapId )
-    
-    println("clusterizing features...")
-    
+    val runId = ezDBC.selectInt("SELECT run_id FROM run_map WHERE id = " + runMapId)
+
+    logger.info("clusterizing features...")
+
     // Retrieve corresponding scans
-    val runLoader = new RunLoader( ezDBC )
-    val scans = runLoader.getScans( Array(runId) )
-    
+    val runLoader = new RunLoader(ezDBC)
+    val scans = runLoader.getScans(Array(runId))
+
     // Remove existing cluster from the processed map
     val lcmsMapWithoutClusters = lcmsMap.copyWithoutClusters()
-    
+
     // Perform the feature clustering
-    val lcmsMapWithClusters = FeatureClusterer.clusterizeFeatures( lcmsMapWithoutClusters, scans, params )
-    
+    val lcmsMapWithClusters = FeatureClusterer.clusterizeFeatures(lcmsMapWithoutClusters, scans, params)
+
     // Retrieve feature cluster ids if they exist
     val existingFtClusterIds = ezDBC.select("SELECT cluster_feature_id FROM feature_cluster_item " +
-                                            "WHERE processed_map_id="+ processedMapId +" " +
-                                            "GROUP BY cluster_feature_id") { _.nextInt }
-    
-    if( existingFtClusterIds.length > 0 ) {
-      
+      "WHERE processed_map_id=" + processedMapId + " " +
+      "GROUP BY cluster_feature_id") { _.nextInt }
+
+    if (existingFtClusterIds.length > 0) {
+
       // Delete existing clusters from this processed map
-      println( "delete existing feature clusters..." )
-      existingFtClusterIds.grouped(inExprLimit).foreach( tmpFtIds => {
-        ezDBC.execute("DELETE FROM feature WHERE id IN (" + tmpFtIds.mkString(",") +")")
-        ezDBC.execute("DELETE FROM processed_map_feature_item WHERE feature_id IN (" + tmpFtIds.mkString(",") +")")
+      logger.info("delete existing feature clusters...")
+      existingFtClusterIds.grouped(inExprLimit).foreach(tmpFtIds => {
+        ezDBC.execute("DELETE FROM feature WHERE id IN (" + tmpFtIds.mkString(",") + ")")
+        ezDBC.execute("DELETE FROM processed_map_feature_item WHERE feature_id IN (" + tmpFtIds.mkString(",") + ")")
       })
-      
+
       // Delete existing feature_cluster_items for this map
-      ezDBC.execute( "DELETE FROM feature_cluster_item WHERE processed_map_id = " + processedMapId )
-      
+      ezDBC.execute("DELETE FROM feature_cluster_item WHERE processed_map_id = " + processedMapId)
+
       // Set all sub-features of the map as not clusterized
-      ezDBC.execute( "UPDATE processed_map_feature_item SET is_clusterized = ? WHERE processed_map_id = ?",
-                     false, processedMapId ) //+
-                        //" AND is_clusterized = " + BoolToSQLStr(true,boolStrAsInt) )
-    
-    } else println( "no feature cluster detected..." )
-    
+      ezDBC.execute("UPDATE processed_map_feature_item SET is_clusterized = ? WHERE processed_map_id = ?",
+        false, processedMapId) //+
+      //" AND is_clusterized = " + BoolToSQLStr(true,boolStrAsInt) )
+
+    } else logger.info("no feature cluster detected...")
+
     // Store the feature clusters
-    val processedMapStorer = ProcessedMapStorer( lcmsQueryHelper )
-    processedMapStorer.storeFeatureClusters( lcmsMapWithClusters.features )
-    
+    val processedMapStorer = ProcessedMapStorer(lcmsQueryHelper)
+    processedMapStorer.storeFeatureClusters(lcmsMapWithClusters.features)
+
     /*
     // TODO: Update map modification time
     Pairs::Lcms::RDBO::Map::Manager.updateMaps(
@@ -97,19 +97,18 @@ class ClusterizeMapFeatures( lcmsDbConnector: IDatabaseConnector, lcmsMap: Proce
       where = ( id = processedMapId ),
       db = lcmsRdb
       )*/
-    
+
     // Commit transaction if it was initiated locally
-    if( !wasInTransaction ) ezDBC.commitTransaction()
-    
+    if (!wasInTransaction) ezDBC.commitTransaction()
+
     // Update service results
     featuresWithClusters = lcmsMapWithClusters.features
-    
+
     // Exit the service with a success status
     true
-    
+
   }
 
-  
 }
 
 /*

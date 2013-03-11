@@ -97,22 +97,23 @@ public final class PdiBioSequenceRepository {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
-	TypedQuery<BioSequence> query = pdiEm.createNamedQuery("findPdiBioSequenceForAccAndSeqDB",
+	BioSequence result = null;
+
+	final TypedQuery<BioSequence> query = pdiEm.createNamedQuery("findPdiBioSequenceForAccAndSeqDB",
 		BioSequence.class);
 	query.setParameter("acc", accession).setParameter("seqDbInstId", seqDbInstanceId);
 
 	try {
-	    return query.getSingleResult();
-	} catch (NoResultException nre) {
-	    LOG.trace(" No BioSequence for accession {} and SequenceDbInstance {} ", accession,
-		    seqDbInstanceId);
-	    return null;
-	} catch (NonUniqueResultException nure) {
-	    LOG.trace(" More than one BioSequence for accession {} and SequenceDbInstance {} ", accession,
-		    seqDbInstanceId);
-	    return null;
+	    result = query.getSingleResult();
+	} catch (NoResultException nrEx) {
+	    LOG.info(String.format("No BioSequence for accession [%s] and SequenceDbInstance %d", accession,
+		    seqDbInstanceId), nrEx);
+	} catch (NonUniqueResultException nurEx) {
+	    LOG.info(String.format("More than one BioSequence for accession [%s] and SequenceDbInstance %d",
+		    accession, seqDbInstanceId), nurEx);
 	}
 
+	return result;
     }
 
 }

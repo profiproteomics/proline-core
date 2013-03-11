@@ -4,10 +4,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import fr.proline.core.orm.pdi.ProteinIdentifier;
 import fr.proline.repository.util.JPAUtils;
 
 public final class ProteinIdentifierRepository {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProteinIdentifierRepository.class);
 
     private ProteinIdentifierRepository() {
     }
@@ -17,16 +22,20 @@ public final class ProteinIdentifierRepository {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
-	TypedQuery<ProteinIdentifier> query = pdiEm.createNamedQuery("findProteinByValueAndTaxon",
+	ProteinIdentifier result = null;
+
+	final TypedQuery<ProteinIdentifier> query = pdiEm.createNamedQuery("findProteinByValueAndTaxon",
 		ProteinIdentifier.class);
 	query.setParameter("value", value);
 	query.setParameter("taxid", taxid);
+
 	try {
-	    return query.getSingleResult();
-	} catch (NoResultException nre) {
-	    return null;
+	    result = query.getSingleResult();
+	} catch (NoResultException nrEx) {
+	    LOG.info(String.format("No ProteinIdentifier for [%s] and Taxon #%d", value, taxid), nrEx);
 	}
 
+	return result;
     }
 
 }

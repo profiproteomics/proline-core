@@ -20,7 +20,7 @@ import fr.proline.context.DatabaseConnectionContext
  *
  * Specified EntityManager should be a PSdb EntityManager
  */
-class ORMPeptideProvider( val psDbCtx: DatabaseConnectionContext ) extends IPeptideProvider with Logging {
+class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptideProvider with Logging {
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 
@@ -47,10 +47,13 @@ class ORMPeptideProvider( val psDbCtx: DatabaseConnectionContext ) extends IPept
         return if (foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
 
       } catch {
-        case e: PersistenceException => {
-          logger.warn(" Error while requiering Peptide ", e)
+
+        case pEx: PersistenceException => {
+          logger.error("Error while retrieving Peptide from PS Db", pEx)
+
           return None
         }
+
       }
       return None
     } else {
@@ -60,10 +63,13 @@ class ORMPeptideProvider( val psDbCtx: DatabaseConnectionContext ) extends IPept
         val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(psDbCtx.getEntityManager, peptideSeq, ptmStr)
         return if (foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
       } catch {
-        case e: PersistenceException => {
-          logger.warn(" Error while requiering Peptide ", e)
+
+        case pEx: PersistenceException => {
+          logger.error("Error while retrieving Peptide from PS Db", pEx)
+
           return None
         }
+
       }
       return None
     }

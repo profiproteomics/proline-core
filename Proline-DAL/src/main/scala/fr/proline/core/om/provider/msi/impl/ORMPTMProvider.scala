@@ -13,8 +13,8 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters.asJavaCollectionConverter
 import fr.proline.context.DatabaseConnectionContext
 
-class ORMPTMProvider( val psDbCtx: DatabaseConnectionContext ) extends IPTMProvider with Logging {
-  
+class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider with Logging {
+
   val converter = new PeptidesOMConverterUtil(true)
 
   def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
@@ -54,9 +54,9 @@ class ORMPTMProvider( val psDbCtx: DatabaseConnectionContext ) extends IPTMProvi
     try {
 
       var ptmSpecificity: PtmSpecificity = null
-      if (ptmResidu.equals('\0')) {       
+      if (ptmResidu.equals('\0')) {
         ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, null)
-      } else {        
+      } else {
         ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, "" + ptmResidu)
       }
       if (ptmSpecificity == null)
@@ -64,11 +64,15 @@ class ORMPTMProvider( val psDbCtx: DatabaseConnectionContext ) extends IPTMProvi
       else
         return Some(converter.convertPtmSpecificityORM2OM(ptmSpecificity))
     } catch {
-      case e: PersistenceException => {
-        logger.warn(" Error while requiering PtmSpecificity (name: " + ptmName + " residu: " + ptmResidu + " location: " + ptmLocation.toString + ") : " + e.getMessage)
+
+      case pEx: PersistenceException => {
+        logger.error("Error while retrieving PtmSpecificity (name: " + ptmName + " residu: " + ptmResidu + " location: " + ptmLocation.toString + ")", pEx)
+
         return None
       }
+
     }
+
   }
 
   def getPtmId(shortName: String): Option[Int] = {
@@ -79,10 +83,13 @@ class ORMPTMProvider( val psDbCtx: DatabaseConnectionContext ) extends IPTMProvi
       else
         return Some(ptm.getId)
     } catch {
-      case e: PersistenceException => {
-        logger.warn(" Error while requiering Ptm " + shortName + " : " + e.getMessage)
+
+      case pEx: PersistenceException => {
+        logger.error("Error while retrieving Ptm " + shortName, pEx)
+
         return None
       }
+
     }
     return None
   }

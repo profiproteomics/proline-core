@@ -64,7 +64,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 		try {
 		    msiEm.close();
 		} catch (Exception exClose) {
-		    LOG.error("Error closing MSI EntityManager", msiEm);
+		    LOG.error("Error closing MSI EntityManager", exClose);
 		}
 	    }
 
@@ -79,7 +79,6 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, 1);
 	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, 2);
 
 	    SeqDatabase database = msiEm.find(SeqDatabase.class, 1);
@@ -111,7 +110,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 		try {
 		    msiEm.close();
 		} catch (Exception exClose) {
-		    LOG.error("Error closing MSI EntityManager", msiEm);
+		    LOG.error("Error closing MSI EntityManager", exClose);
 		}
 	    }
 

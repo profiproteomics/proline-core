@@ -21,7 +21,7 @@ import fr.proline.context.DatabaseConnectionContext
  *
  * Specified EntityManager should be a PDIdb EntityManager
  */
-class ORMProteinProvider( val pdiDbCtx: DatabaseConnectionContext ) extends IProteinProvider with Logging {
+class ORMProteinProvider(val pdiDbCtx: DatabaseConnectionContext) extends IProteinProvider with Logging {
 
   val converter = new ProteinsOMConverterUtil(true)
 
@@ -58,16 +58,19 @@ class ORMProteinProvider( val pdiDbCtx: DatabaseConnectionContext ) extends IPro
         .setParameter("seq", seq).getSingleResult()
       Some(converter.convertPdiBioSeqORM2OM(bioSeq))
     } catch {
+
       case ex: Exception => {
-        logger.warn(ex.getMessage)
+        logger.error("Error while retrieving BioSequence from PDI Db", ex)
+
         return None
       }
+
     }
 
   }
 
   def getProtein(accession: String, seqDb: SeqDatabase): Option[Protein] = {
-    
+
     val bioSeq = bioSeqRepo.findBioSequencePerAccessionAndSeqDB(pdiDbCtx.getEntityManager, accession, seqDb.id)
     if (bioSeq == null)
       return None

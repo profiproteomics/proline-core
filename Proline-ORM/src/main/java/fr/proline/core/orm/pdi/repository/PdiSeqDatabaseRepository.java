@@ -7,12 +7,17 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import fr.proline.core.orm.pdi.SequenceDbConfig;
 import fr.proline.core.orm.pdi.SequenceDbInstance;
 import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
 public final class PdiSeqDatabaseRepository {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PdiSeqDatabaseRepository.class);
 
     private static final String RESIDUE_COUNT_QUERY = "select sum (bs1.length) from fr.proline.core.orm.pdi.BioSequence bs1 where bs1.id in"
 	    + " (select distinct bs2.id from fr.proline.core.orm.pdi.BioSequence bs2, fr.proline.core.orm.pdi.SequenceDbEntry sde"
@@ -35,15 +40,20 @@ public final class PdiSeqDatabaseRepository {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
+	SequenceDbInstance result = null;
+
+	final TypedQuery<SequenceDbInstance> query = pdiEm.createNamedQuery("findSeqDBByNameAndFile",
+		SequenceDbInstance.class);
+	query.setParameter("name", name);
+	query.setParameter("filePath", filePath);
+
 	try {
-	    TypedQuery<SequenceDbInstance> query = pdiEm.createNamedQuery("findSeqDBByNameAndFile",
-		    SequenceDbInstance.class);
-	    query.setParameter("name", name);
-	    query.setParameter("filePath", filePath);
-	    return query.getSingleResult();
-	} catch (NoResultException nre) {
-	    return null;
+	    result = query.getSingleResult();
+	} catch (NoResultException nrEx) {
+	    LOG.info(String.format("No SequenceDbInstance for name [%s] and file [%s]", name, filePath), nrEx);
 	}
+
+	return result;
     }
 
     public static SequenceDbConfig findSequenceDbConfigForName(final EntityManager pdiEm, final String name) {

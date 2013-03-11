@@ -64,6 +64,7 @@ public class DatabaseConnectorTest {
 	} catch (Exception ex) {
 	    final String message = description + " JDBC DataSource handling";
 	    LOG.error(message, ex);
+
 	    fail(message);
 	}
 

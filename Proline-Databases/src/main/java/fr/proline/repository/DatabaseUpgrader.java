@@ -178,6 +178,7 @@ public final class DatabaseUpgrader {
 	    /* Log and re-throw */
 	    final String message = "Error upgrading SQLite Db";
 	    LOG.error(message, ex);
+
 	    throw new RuntimeException(message, ex);
 	} finally {
 

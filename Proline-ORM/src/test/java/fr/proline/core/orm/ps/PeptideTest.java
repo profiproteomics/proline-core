@@ -68,7 +68,7 @@ public class PeptideTest extends DatabaseTestCase {
 		try {
 		    psEm.close();
 		} catch (Exception exClose) {
-		    LOG.error("Error closing PS EntityManager");
+		    LOG.error("Error closing PS EntityManager", exClose);
 		}
 	    }
 
@@ -124,7 +124,7 @@ public class PeptideTest extends DatabaseTestCase {
 		try {
 		    psEm.close();
 		} catch (Exception exClose) {
-		    LOG.error("Error closing PS EntityManager");
+		    LOG.error("Error closing PS EntityManager", exClose);
 		}
 	    }
 

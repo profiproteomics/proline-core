@@ -138,6 +138,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		    /* Log and re-throw */
 		    final String message = "Error creating DataSource for " + prolineDbType;
 		    LOG.error(message, ex);
+
 		    throw new RuntimeException(message, ex);
 		}
 
@@ -173,6 +174,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		    /* Log and re-throw */
 		    final String message = "Error creating EntityManagerFactory for " + prolineDbType;
 		    LOG.error(message, ex);
+
 		    throw new RuntimeException(message, ex);
 		}
 
