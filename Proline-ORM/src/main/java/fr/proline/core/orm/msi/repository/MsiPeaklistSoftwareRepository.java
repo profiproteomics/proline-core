@@ -3,6 +3,7 @@ package fr.proline.core.orm.msi.repository;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.PeaklistSoftware;
@@ -43,7 +44,7 @@ public final class MsiPeaklistSoftwareRepository {
 	    if (softs.size() == 1) {
 		result = softs.get(0);
 	    } else {
-		throw new RuntimeException(
+		throw new NonUniqueResultException(
 			"There are more than one PeaklistSoftware for given name and version");
 	    }
 

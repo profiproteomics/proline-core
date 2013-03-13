@@ -3,12 +3,9 @@ package fr.proline.core.orm.pdi.repository;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.SequenceDbConfig;
 import fr.proline.core.orm.pdi.SequenceDbInstance;
@@ -16,8 +13,6 @@ import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
 public final class PdiSeqDatabaseRepository {
-
-    private static final Logger LOG = LoggerFactory.getLogger(PdiSeqDatabaseRepository.class);
 
     private static final String RESIDUE_COUNT_QUERY = "select sum (bs1.length) from fr.proline.core.orm.pdi.BioSequence bs1 where bs1.id in"
 	    + " (select distinct bs2.id from fr.proline.core.orm.pdi.BioSequence bs2, fr.proline.core.orm.pdi.SequenceDbEntry sde"
@@ -47,10 +42,17 @@ public final class PdiSeqDatabaseRepository {
 	query.setParameter("name", name);
 	query.setParameter("filePath", filePath);
 
-	try {
-	    result = query.getSingleResult();
-	} catch (NoResultException nrEx) {
-	    LOG.info(String.format("No SequenceDbInstance for name [%s] and file [%s]", name, filePath), nrEx);
+	final List<SequenceDbInstance> seqDbInstances = query.getResultList();
+
+	if ((seqDbInstances != null) && !seqDbInstances.isEmpty()) {
+
+	    if (seqDbInstances.size() == 1) {
+		result = seqDbInstances.get(0);
+	    } else {
+		throw new NonUniqueResultException(
+			"There are more than one SequenceDbInstance for given name and filePath");
+	    }
+
 	}
 
 	return result;
@@ -77,7 +79,7 @@ public final class PdiSeqDatabaseRepository {
 	    if (seqDbConfigs.size() == 1) {
 		result = seqDbConfigs.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one SequenceDbConfig for given name");
+		throw new NonUniqueResultException("There are more than one SequenceDbConfig for given name");
 	    }
 
 	}

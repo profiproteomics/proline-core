@@ -3,6 +3,7 @@ package fr.proline.core.orm.msi.repository;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.SeqDatabase;
@@ -41,7 +42,7 @@ public final class MsiSeqDatabaseRepository {
 	    if (seqDatabases.size() == 1) {
 		result = seqDatabases.get(0);
 	    } else {
-		throw new RuntimeException(
+		throw new NonUniqueResultException(
 			"There are more than one SeqDatabases for given name and fastaFilePath");
 	    }
 

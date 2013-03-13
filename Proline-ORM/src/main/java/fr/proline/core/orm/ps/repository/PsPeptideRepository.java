@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.ps.Peptide;
@@ -74,7 +75,8 @@ public final class PsPeptideRepository {
 	    if (peptides.size() == 1) {
 		result = peptides.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one Peptide for given sequence and ptmString");
+		throw new NonUniqueResultException(
+			"There are more than one Peptide for given sequence and ptmString");
 	    }
 
 	}

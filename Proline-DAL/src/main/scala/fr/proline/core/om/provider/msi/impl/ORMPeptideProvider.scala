@@ -1,19 +1,15 @@
 package fr.proline.core.om.provider.msi.impl
 
+import scala.Array.canBuildFrom
 import scala.collection.Seq
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.JavaConversions
-import javax.persistence.EntityManager
-import javax.persistence.PersistenceException
+
 import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.msi.{ LocatedPtm, Peptide }
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.om.utils.OMComparatorUtil
 import fr.proline.core.om.utils.PeptidesOMConverterUtil
 import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => pepRepo }
-import fr.proline.context.DatabaseConnectionContext
 
 /**
  * ORMPeptideProvider provides access to Peptide stored in PS database.
@@ -41,38 +37,20 @@ class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptid
   }
 
   def getPeptide(peptideSeq: String, pepPtms: Array[LocatedPtm]): Option[Peptide] = {
-    if (pepPtms == null || pepPtms.isEmpty) {
-      try {
-        val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(psDbCtx.getEntityManager, peptideSeq, null)
-        return if (foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
+    var ptmStr: String = null
 
-      } catch {
-
-        case pEx: PersistenceException => {
-          logger.error("Error while retrieving Peptide from PS Db", pEx)
-
-          return None
-        }
-
-      }
-      return None
-    } else {
-      val ptmStr = Peptide.makePtmString(pepPtms)
-
-      try {
-        val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(psDbCtx.getEntityManager, peptideSeq, ptmStr)
-        return if (foundORMPep != null) Some(converter.convertPeptidePsORM2OM(foundORMPep)) else None
-      } catch {
-
-        case pEx: PersistenceException => {
-          logger.error("Error while retrieving Peptide from PS Db", pEx)
-
-          return None
-        }
-
-      }
-      return None
+    if ((pepPtms != null) && !pepPtms.isEmpty) {
+      ptmStr = Peptide.makePtmString(pepPtms)
     }
+
+    val foundORMPep = pepRepo.findPeptideForSequenceAndPtmStr(psDbCtx.getEntityManager, peptideSeq, ptmStr)
+
+    if (foundORMPep == null) {
+      None
+    } else {
+      Some(converter.convertPeptidePsORM2OM(foundORMPep))
+    }
+
   }
 
   def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]): Array[Option[Peptide]] = {

@@ -3,6 +3,7 @@ package fr.proline.core.orm.uds.repository;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.ExternalDb;
@@ -35,7 +36,7 @@ public final class ExternalDbRepository {
 	    if (externalDbs.size() == 1) {
 		result = externalDbs.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one ExternalDb for given dbType");
+		throw new NonUniqueResultException("There are more than one ExternalDb for given dbType");
 	    }
 
 	}
@@ -43,8 +44,8 @@ public final class ExternalDbRepository {
 	return result;
     }
 
-    public static ExternalDb findExternalByTypeAndProject(final EntityManager udsEm, final ProlineDatabaseType dbType,
-	    final Project project) {
+    public static ExternalDb findExternalByTypeAndProject(final EntityManager udsEm,
+	    final ProlineDatabaseType dbType, final Project project) {
 
 	JPAUtils.checkEntityManager(udsEm);
 
@@ -70,7 +71,8 @@ public final class ExternalDbRepository {
 	    if (externalDbs.size() == 1) {
 		result = externalDbs.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one ExternalDb for given dbType and project");
+		throw new NonUniqueResultException(
+			"There are more than one ExternalDb for given dbType and project");
 	    }
 
 	}

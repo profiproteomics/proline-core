@@ -1,17 +1,18 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.PtmLocation
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.utils.PeptidesOMConverterUtil
-import fr.proline.core.orm.ps.repository.{ PsPtmRepository => psPtmRepo }
-import fr.proline.core.orm.ps.PtmSpecificity
-import javax.persistence.EntityManager
-import javax.persistence.PersistenceException
+import scala.Array.canBuildFrom
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters.asJavaCollectionConverter
+
+import com.weiglewilczek.slf4s.Logging
+
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.msi.{ PtmDefinition, PtmLocation }
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.utils.PeptidesOMConverterUtil
+import fr.proline.core.orm.ps.{ Ptm, PtmSpecificity }
+import fr.proline.core.orm.ps.repository.{ PsPtmRepository => psPtmRepo }
+import javax.persistence.PersistenceException
 
 class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider with Logging {
 
@@ -51,47 +52,45 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
   }
 
   def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
-    try {
 
-      var ptmSpecificity: PtmSpecificity = null
-      if (ptmResidu.equals('\0')) {
-        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, null)
-      } else {
-        ptmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, "" + ptmResidu)
-      }
-      if (ptmSpecificity == null)
-        return None
-      else
-        return Some(converter.convertPtmSpecificityORM2OM(ptmSpecificity))
-    } catch {
+    var ptmResiduStr: String = null
 
-      case pEx: PersistenceException => {
-        logger.error("Error while retrieving PtmSpecificity (name: " + ptmName + " residu: " + ptmResidu + " location: " + ptmLocation.toString + ")", pEx)
+    if (ptmResidu != '\0') {
+      ptmResiduStr = "" + ptmResidu
+    }
 
-        return None
-      }
+    val foundPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, ptmResiduStr)
 
+    if (foundPtmSpecificity == null) {
+      None
+    } else {
+      Some(converter.convertPtmSpecificityORM2OM(foundPtmSpecificity))
     }
 
   }
 
   def getPtmId(shortName: String): Option[Int] = {
+
     try {
-      val ptm = psDbCtx.getEntityManager.createQuery("FROM Ptm ptm WHERE ptm.shortName = :shortName", classOf[fr.proline.core.orm.ps.Ptm]).setParameter("shortName", shortName).getSingleResult
-      if (ptm == null)
-        return None
-      else
-        return Some(ptm.getId)
+      val foundPtm = psDbCtx.getEntityManager.createQuery("FROM Ptm ptm WHERE ptm.shortName = :shortName", classOf[fr.proline.core.orm.ps.Ptm]).setParameter("shortName", shortName).getSingleResult
+
+      if (foundPtm == null) {
+        None
+      } else {
+        Some(foundPtm.getId)
+      }
+
     } catch {
 
       case pEx: PersistenceException => {
-        logger.error("Error while retrieving Ptm " + shortName, pEx)
+        /* No full stacktrace here : just a Warning message */
+        logger.warn("Error while retrieving Ptm [" + shortName + "]  " + pEx)
 
-        return None
+        None
       }
 
     }
-    return None
+
   }
 
 }

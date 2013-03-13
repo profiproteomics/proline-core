@@ -6,12 +6,8 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.BioSequence;
 import fr.proline.core.orm.util.JPARepositoryUtils;
@@ -19,8 +15,6 @@ import fr.proline.repository.util.JPAUtils;
 import fr.proline.util.StringUtils;
 
 public final class PdiBioSequenceRepository {
-
-    private static final Logger LOG = LoggerFactory.getLogger(PdiBioSequenceRepository.class);
 
     private PdiBioSequenceRepository() {
     }
@@ -60,7 +54,7 @@ public final class PdiBioSequenceRepository {
 		    if (result == null) {
 			result = bs;
 		    } else {
-			throw new RuntimeException(
+			throw new NonUniqueResultException(
 				"There are more than one BioSequence for given crc64 and mass");
 		    }
 
@@ -103,14 +97,17 @@ public final class PdiBioSequenceRepository {
 		BioSequence.class);
 	query.setParameter("acc", accession).setParameter("seqDbInstId", seqDbInstanceId);
 
-	try {
-	    result = query.getSingleResult();
-	} catch (NoResultException nrEx) {
-	    LOG.info(String.format("No BioSequence for accession [%s] and SequenceDbInstance %d", accession,
-		    seqDbInstanceId), nrEx);
-	} catch (NonUniqueResultException nurEx) {
-	    LOG.info(String.format("More than one BioSequence for accession [%s] and SequenceDbInstance %d",
-		    accession, seqDbInstanceId), nurEx);
+	final List<BioSequence> bioSequences = query.getResultList();
+
+	if ((bioSequences != null) && !bioSequences.isEmpty()) {
+
+	    if (bioSequences.size() == 1) {
+		result = bioSequences.get(0);
+	    } else {
+		throw new NonUniqueResultException(
+			"There are more than one BioSequence for given accession and SequenceDbInstance");
+	    }
+
 	}
 
 	return result;

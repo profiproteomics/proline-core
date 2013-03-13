@@ -1,20 +1,16 @@
 package fr.proline.core.om.provider.msi.impl
 
-import fr.proline.core.om.provider.msi.IProteinProvider
+import scala.collection.JavaConversions.{ collectionAsScalaIterable, seqAsJavaList }
 import scala.collection.Seq
-import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.core.om.model.msi.Protein
-import javax.persistence.EntityManager
-import fr.proline.core.orm.pdi.BioSequence
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConversions.seqAsJavaList
-import fr.proline.core.om.utils.PeptidesOMConverterUtil
+
 import com.weiglewilczek.slf4s.Logging
-import javax.persistence.NoResultException
-import javax.persistence.NonUniqueResultException
-import fr.proline.core.orm.pdi.repository.{ PdiBioSequenceRepository => bioSeqRepo }
-import fr.proline.core.om.utils.ProteinsOMConverterUtil
+
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.msi.{ Protein, SeqDatabase }
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.utils.ProteinsOMConverterUtil
+import fr.proline.core.orm.pdi.BioSequence
+import fr.proline.core.orm.pdi.repository.{ PdiBioSequenceRepository => bioSeqRepo }
 
 /**
  * ORMProteinProvider provides access to Protein stored in PDI database.

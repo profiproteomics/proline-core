@@ -3,6 +3,7 @@ package fr.proline.core.orm.msi.repository;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.InstrumentConfig;
@@ -49,7 +50,7 @@ public final class MsiInstrumentConfigRepository {
 	    if (instrumConfs.size() == 1) {
 		result = instrumConfs.get(0);
 	    } else {
-		throw new RuntimeException(
+		throw new NonUniqueResultException(
 			"There are more than one InstrumentConfiguration for given name, ms1Analyzer and msnAnalyzer");
 	    }
 

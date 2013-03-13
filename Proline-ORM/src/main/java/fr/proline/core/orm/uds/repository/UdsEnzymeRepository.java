@@ -3,6 +3,7 @@ package fr.proline.core.orm.uds.repository;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.uds.Enzyme;
@@ -34,7 +35,7 @@ public final class UdsEnzymeRepository {
 	    if (enzymes.size() == 1) {
 		result = enzymes.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one Enzyme for given name");
+		throw new NonUniqueResultException("There are more than one Enzyme for given name");
 	    }
 
 	}

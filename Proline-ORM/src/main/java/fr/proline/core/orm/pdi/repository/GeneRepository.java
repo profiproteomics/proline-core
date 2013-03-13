@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.pdi.BioSequenceGeneMap;
@@ -38,7 +39,7 @@ public final class GeneRepository {
 	    if (genes.size() == 1) {
 		result = genes.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one Gene for given name and taxonId");
+		throw new NonUniqueResultException("There are more than one Gene for given name and taxonId");
 	    }
 
 	}

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.msi.Scoring;
@@ -56,7 +57,7 @@ public final class ScoringRepository {
 	    if (scorings.size() == 1) {
 		result = scorings.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one Scoring for given scoreType");
+		throw new NonUniqueResultException("There are more than one Scoring for given scoreType");
 	    }
 
 	}

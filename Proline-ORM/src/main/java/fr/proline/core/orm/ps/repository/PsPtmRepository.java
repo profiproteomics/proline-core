@@ -3,6 +3,7 @@ package fr.proline.core.orm.ps.repository;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import fr.proline.core.orm.ps.Ptm;
@@ -47,7 +48,7 @@ public final class PsPtmRepository {
 	    if (ptms.size() == 1) {
 		result = ptms.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one Ptm for given name");
+		throw new NonUniqueResultException("There are more than one Ptm for given name");
 	    }
 
 	}
@@ -115,7 +116,7 @@ public final class PsPtmRepository {
 	    if (ptms.size() == 1) {
 		result = ptms.get(0);
 	    } else {
-		throw new RuntimeException(
+		throw new NonUniqueResultException(
 			"There are more than one PtmSpecificity for given name, location and residue");
 	    }
 
@@ -152,7 +153,7 @@ public final class PsPtmRepository {
 	    if (classifications.size() == 1) {
 		result = classifications.get(0);
 	    } else {
-		throw new RuntimeException("There are more than one PtmClassification for given name");
+		throw new NonUniqueResultException("There are more than one PtmClassification for given name");
 	    }
 
 	}
