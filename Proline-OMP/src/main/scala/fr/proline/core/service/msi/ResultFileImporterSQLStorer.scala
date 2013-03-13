@@ -119,7 +119,7 @@ class ResultFileImporterSQLStorer(
     //    val msiTransaction = stContext.msiEm.getTransaction
     //    var msiTransacOk: Boolean = false
 
-    logger.debug("Starting JPA RSStorer work")
+    logger.debug("Starting RSStorer work")
 
     /* Wrap ExecutionContext in StorerContext for RSStorer service use */
     val storerContext = if (executionContext.isInstanceOf[StorerContext]) {
