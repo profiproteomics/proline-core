@@ -112,6 +112,8 @@ class ResultSetValidator(
     
   def runService(): Boolean = {
     
+    logger.info("ResultSet validator service starts")
+    
     import fr.proline.util.primitives.DoubleOrFloatAsFloat._
 
     val startTime = curTimeInSecs()
