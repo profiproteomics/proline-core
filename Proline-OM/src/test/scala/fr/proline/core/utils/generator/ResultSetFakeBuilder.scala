@@ -45,21 +45,21 @@ class ResultSetFakeBuilder(
   val RESULT_SET_ID: Int = ResultSet.generateNewId
 
   //PeptideMatch 
-  var allPepMatches: ListBuffer[PeptideMatch] = ListBuffer[PeptideMatch]()
-  private var tmpPepMatchById: collection.mutable.Map[Int, PeptideMatch] = collection.mutable.Map[Int, PeptideMatch]()
-  private var peptideIdByPeptideMatchId: Map[Int, Int] = Map[Int, Int]() // ++ allPepMatches.map { pepMatchInst => pepMatchInst.id -> pepMatchInst.peptide.id}    
-  private var peptideMatchIdByPeptideId: Map[Int, Iterable[Int]] = Map[Int, Iterable[Int]]() //peptideIdByPeptideMatchId groupBy {_._2} map {case (key,value) => (key, value.unzip._1)}
+  var allPepMatches = ListBuffer[PeptideMatch]()
+  private var tmpPepMatchById = collection.mutable.Map[Int, PeptideMatch]()
+  private var peptideIdByPeptideMatchId = Map[Int, Int]() // ++ allPepMatches.map { pepMatchInst => pepMatchInst.id -> pepMatchInst.peptide.id}    
+  private var peptideMatchIdByPeptideId = Map[Int, Iterable[Int]]() //peptideIdByPeptideMatchId groupBy {_._2} map {case (key,value) => (key, value.unzip._1)}
 
   //ProteinMatch 
-  var allProtMatches: ListBuffer[ProteinMatch] = ListBuffer[ProteinMatch]()
-  private var tmpProtMatchById: collection.mutable.Map[Int, ProteinMatch] = collection.mutable.Map[Int, ProteinMatch]()
+  var allProtMatches = ListBuffer[ProteinMatch]()
+  private var tmpProtMatchById = collection.mutable.Map[Int, ProteinMatch]()
 
   //Protein 
-  var allProts: ListBuffer[Protein] = ListBuffer[Protein]()
+  var allProts = ListBuffer[Protein]()
 
   //Peptide 
-  var allPeps: ListBuffer[Peptide] = ListBuffer[Peptide]()
-  private var tmpPepById: collection.mutable.Map[Int, Peptide] = collection.mutable.Map[Int, Peptide]()
+  var allPeps = ListBuffer[Peptide]()
+  private var tmpPepById = collection.mutable.Map[Int, Peptide]()
   var allPepsForProtSeq = collection.mutable.Map[String, List[Peptide]]() //Peptides for Protein sequence  
 
   private val avgNbPepPerGroup: Int = pepNb / proNb
@@ -88,7 +88,7 @@ class ResultSetFakeBuilder(
     if (!(allPepSeqs contains (currPepSeq))) { //Check Peptide sequence is unique    	  
       allPepSeqs += currPepSeq
 
-      val currPep = createPepAndCo(pepSequence = currPepSeq, missCleavage = 0, RSId = RESULT_SET_ID)
+      val currPep = createPeptideAndPeptideMatch(pepSequence = currPepSeq, missCleavage = 0, RSId = RESULT_SET_ID)
 
       currPepList += currPep //Collect peptides that match on the current protein 	  	 
 
@@ -198,7 +198,7 @@ class ResultSetFakeBuilder(
     val builtSequence: String = pepIdList.foldLeft("")(_ + tmpPepById(_).sequence)
     //    logger.info("MERGED Sequence = "+builtSequence+" from Pep IDs: "+pepIdList)
 
-    var builtPep = createPepAndCo(pepSequence = builtSequence, missCleavage = missCleavage, RSId = RSId)
+    var builtPep = createPeptideAndPeptideMatch(pepSequence = builtSequence, missCleavage = missCleavage, RSId = RSId)
 
     allPepsForProtSeq += proMatch.protein.get.sequence ->
       (allPepsForProtSeq.apply(proMatch.protein.get.sequence).+:(builtPep))
@@ -230,7 +230,7 @@ class ResultSetFakeBuilder(
    * Create a new missed cleaved Peptide from a Peptide list & PeptideMatch
    * Update allPepMatches collection
    */
-  private def createPepAndCo(pepSequence: String, missCleavage: Int, RSId: Int): Peptide = {
+  private def createPeptideAndPeptideMatch(pepSequence: String, missCleavage: Int, RSId: Int): Peptide = {
 
     val builtPep = new Peptide(id = Peptide.generateNewId, sequence = pepSequence,
       ptms = null, calculatedMass = Peptide.calcMass(pepSequence))

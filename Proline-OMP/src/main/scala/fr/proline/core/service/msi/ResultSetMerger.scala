@@ -65,7 +65,7 @@ class ResultSetMerger(
         val rsMergerAlgo = new ResultSetMergerAlgo()
 
         logger.info("merging result sets...")
-        val tmpMergedResultSet = rsMergerAlgo.mergeResultSets(resultSets, seqLengthByProtId)
+        val tmpMergedResultSet = rsMergerAlgo.mergeResultSets(resultSets, Some(seqLengthByProtId))
         >>>
 
         // Map peptide matches and protein matches by their tmp id

@@ -78,7 +78,7 @@ object ResultSetMerger {
 
 class ResultSetMerger extends Logging {
 
-  def mergeResultSets( resultSets: Seq[ResultSet], seqLengthByProtId: Map[Int,Int] ): ResultSet = {
+  def mergeResultSets( resultSets: Seq[ResultSet], seqLengthByProtId: Option[Map[Int,Int]] = None ): ResultSet = {
     
     // TODO: check that all result sets come from the same search engine
     
@@ -194,8 +194,8 @@ class ResultSetMerger extends Logging {
       
       // Compute protein match sequence coverage  
       var coverage = 0f
-      if( proteinId != 0 ) {
-        val seqLength = seqLengthByProtId.get(proteinId)
+      if( proteinId != 0 && seqLengthByProtId.isDefined) {
+        val seqLength = seqLengthByProtId.get.get(proteinId)
         if( seqLength == None ) {
           throw new Exception( "can't find a sequence length for the protein with id='"+proteinId+"'" )
         }
