@@ -67,7 +67,7 @@ object Ms2CountQuantifier extends Logging {
       
       val peptideId = mergedPepInst.peptide.id
       val mergedPepInstPepMatchIds = mergedPepInst.getPeptideMatchIds
-      assert( mergedPepInstPepMatchIds.length == 1, "peptide matches have not been correctly merged" )
+      require( mergedPepInstPepMatchIds.length == 1, "peptide matches have not been correctly merged" )
       
       // Retrieve parent peptide match
       val parentPepMatch = mergedPepMatchById(mergedPepInstPepMatchIds(0))

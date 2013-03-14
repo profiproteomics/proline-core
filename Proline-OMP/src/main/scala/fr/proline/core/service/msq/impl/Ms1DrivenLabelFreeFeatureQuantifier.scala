@@ -69,7 +69,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
 
     val mapSetId = udsMasterQuantChannel.getLcmsMapSetId()
 
-    assert(mapSetId > 0, "a LCMS map set must be created first")
+    require(mapSetId > 0, "a LCMS map set must be created first")
     //require Pairs::Lcms::Module::Loader::MapSet
     //val mapSetLoader = new Pairs::Lcms::Module::Loader::MapSet()
     //mapSet = mapSetLoader.getMapSet( mapSetId )
@@ -117,7 +117,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
 
     for (spectrumHeader <- this.ms2SpectrumHeaders) {
 
-      assert(spectrumHeader(firstScanColName) != null,
+      require(spectrumHeader(firstScanColName) != null,
         "a scan id must be defined for each MS2 spectrum")
 
       val identRsId = identRsIdByPeaklistId(spectrumHeader(peaklistIdColName).asInstanceOf[Int])
@@ -423,7 +423,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
 
               val childPeptideIons = quantPepIonsByFtId(ftChild.id)
               val matchingPepChildPepIons = childPeptideIons.filter { p => p.peptideId != None && p.peptideId.get == tmpPeptideId }
-              assert(matchingPepChildPepIons.length == 1, "peptide ion identification conflict")
+              require(matchingPepChildPepIons.length == 1, "peptide ion identification conflict")
 
               // Try to retrieve peptide ion corresponding to current peptide instance
               val qcId = quantChannelIdByLcmsMapId(mapId)

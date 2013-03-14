@@ -138,7 +138,7 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
           
           val scoreType = peptideMatch.scoreType
           val scoringId = scoringIdByType.get(scoreType)
-          assert(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
+          require(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
   
           val msQuery = peptideMatch.msQuery
           val bestChildId = peptideMatch.getBestChildId
@@ -202,7 +202,7 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
   
           val scoreType = proteinMatch.scoreType
           val scoringId = scoringIdByType.get(scoreType)
-          assert(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
+          require(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
           
           stmt.executeWith(
             proteinMatch.accession,

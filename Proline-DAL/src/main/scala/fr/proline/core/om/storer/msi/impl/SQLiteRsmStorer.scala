@@ -240,7 +240,7 @@ private[msi] class SQLiteRsmStorer() extends IRsmStorer {
             proteinSetScore = Some( proteinSet.score )
             proteinSetScoringId = scoringIdByType.get( scoreType )
             
-            assert( proteinSetScoringId != None, "can't find a scoring id for the score type '"+scoreType+"'" )
+            require( proteinSetScoringId != None, "can't find a scoring id for the score type '"+scoreType+"'" )
           }
           
           // Determine the typical protein match id using the sequence coverage

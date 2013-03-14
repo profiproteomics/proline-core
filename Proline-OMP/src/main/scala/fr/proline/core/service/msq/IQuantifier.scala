@@ -72,7 +72,7 @@ trait IQuantifier extends Logging {
   val rsmIds = udsQuantChannels.map { udsQuantChannel =>
     val qcId = udsQuantChannel.getId()
     val identRsmId = udsQuantChannel.getIdentResultSummaryId
-    assert(identRsmId != 0,
+    require(identRsmId != 0,
       "the quant_channel with id='" + qcId + "' is not assocciated with an identification result summary")
 
     identRsmId.toInt

@@ -128,7 +128,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
         
         val scoreType = peptideMatch.scoreType  
         val scoringId = scoringIdByType.get(scoreType)
-        assert(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
+        require(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
         
         val msQuery = peptideMatch.msQuery
         val bestChildId = peptideMatch.getBestChildId
@@ -241,7 +241,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
   
         val scoreType = proteinMatch.scoreType  
         val scoringId = scoringIdByType.get(scoreType)
-        assert(scoringId != None,"can't find a scoring id for the score type '" + scoreType + "'")
+        require(scoringId != None,"can't find a scoring id for the score type '" + scoreType + "'")
         //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
   
         val proteinId = proteinMatch.getProteinId

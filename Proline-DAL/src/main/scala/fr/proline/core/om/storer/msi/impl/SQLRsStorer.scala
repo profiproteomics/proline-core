@@ -463,7 +463,7 @@ class SQLRsStorer(
         udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
           enzyme.id = r.nextAnyVal
         }
-        assert(enzyme.id > 0, "can't find an enzyme named '" + enzyme.name + "' in the UDS-DB")
+        require(enzyme.id > 0, "can't find an enzyme named '" + enzyme.name + "' in the UDS-DB")
       }
     })
     context.getUDSDbConnectionContext.doWork(udsDbWork, true)

@@ -20,7 +20,7 @@ class ResultSummaryMerger extends Logging {
     for( resultSummary <- resultSummaries ) {
       
       val resultSetAsOpt = resultSummary.resultSet
-      assert( resultSetAsOpt != None, "the result summary must contain a result set" )
+      require( resultSetAsOpt != None, "the result summary must contain a result set" )
       
       val resultSet = resultSetAsOpt.get
       

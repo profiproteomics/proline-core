@@ -109,7 +109,7 @@ class SQLPeptideInstanceProvider(
 
       // Retrieve the corresponding peptide
       val pepId: Int = pepInstRecord(PepInstCols.PEPTIDE_ID).asInstanceOf[AnyVal]
-      assert(peptideById.contains(pepId), "undefined peptide with id ='" + pepId + "'")
+      require(peptideById.contains(pepId), "undefined peptide with id ='" + pepId + "'")
       val peptide = peptideById(pepId)
 
       // Retrieve peptide match ids and properties
