@@ -235,7 +235,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     }
 
     /**
-     * This method is called holding <code>m_connectorLock</code> implicit object <strong>lock</strong> by
+     * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
      * <code>getDataSource</code>.
      * 
      * @param database
@@ -245,7 +245,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     protected abstract DataSource createDataSource(final String ident, final Map<Object, Object> properties);
 
     /**
-     * This method is called holding <code>m_connectorLock</code> implicit object <strong>lock</strong> by
+     * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
      * <code>getEntityManagerFactory</code>.
      * 
      * @param database
@@ -277,7 +277,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     }
 
     /**
-     * This method is called holding <code>m_connectorLock</code> implicit object <strong>lock</strong> by
+     * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
      * <code>close</code>.
      * 
      * @param source
