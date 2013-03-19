@@ -23,6 +23,7 @@ object PepMatchFilterParams extends Enumeration {
 object ProtSetFilterParams extends Enumeration {
   type Param = Value
   val SCORE = Value("SCORE")
+  val PROTEOTYPIQUE_PEP= Value("PROTEOTYPIQUE_PEP")
 }
 
 trait IFilter {
@@ -167,16 +168,16 @@ object ProteinSetFiltering {
 trait IProteinSetFilter extends IFilter {
   
   /**
-   * Validate each PeptideMatch by setting their isValidated attribute.
+   * Validate each ProteinSet by setting their isValidated attribute.
    * Validation criteria will depend on implementation.
    * 
-   * Default behavior will be to exclude PeptideMatch which do not pass filter parameters
+   * Default behavior will be to exclude ProteinSet which do not pass filter parameters
    * 
    * @param proteinSets : All proteinSets.
    * @param incrementalValidation : if incrementalValidation is set to false, 
-   * all PeptideMatch's isValidated property will be explicitly set to true or false. 
-   * Otherwise, only excluded PeptideMatch will be changed bu setting their isValidated prooperty to false   
-   * @param traceability : specify if filter could saved information in peptideMatch properties 
+   * all ProteinSet's isValidated property will be explicitly set to true or false. 
+   * Otherwise, only excluded ProteinSet will be changed by setting their isValidated property to false   
+   * @param traceability : specify if filter could saved information in ProteinSet properties 
    * 
    */
   def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit
