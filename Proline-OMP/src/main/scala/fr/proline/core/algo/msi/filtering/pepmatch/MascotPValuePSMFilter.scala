@@ -37,7 +37,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
 
     val pepMatchesByMsqId = pepMatches.groupBy(_.msQueryId)
     pepMatchesByMsqId.foreach(entry => {
-      if (entry._2 != null && entry._2(0).msQuery.properties.isDefined) {
+	if (entry._2 != null && entry._2(0).msQuery.properties.isDefined) {
         val msQProp: MsQueryProperties = entry._2(0).msQuery.properties.get
 
         //---- get Threshold ------
@@ -47,36 +47,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
         //Infer IT 
         if (!msQProp.getTargetDbSearch.isDefined) {
           logger.warn(" UNABLE TO CALCULATE P VALUE  !getTargetDbSearch!" + entry._2(0).msQueryId)
-        } else {
-//          //WARNING !!!!! If no decoy prop suppose same as target 
-//          val tRSCandPSM = msQProp.getTargetDbSearch.get.getCandidatePeptidesCount
-//          val dRSCandPSM = if (msQProp.getDecoyDbSearch.isDefined) msQProp.getDecoyDbSearch.get.getCandidatePeptidesCount else tRSCandPSM
-//          if (!useHomologyThreshold) {
-//            targetTh = MascotValidationHelper.calcIdentityThreshold(tRSCandPSM, pValue)
-//            decoyTh = MascotValidationHelper.calcIdentityThreshold(dRSCandPSM, pValue)
-//          } else {
-//            //Infer HT 
-//            if (!msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.isDefined) {
-//              logger.warn(" ------ UNABLE TO CALCULATE P VALUE  getMascotHomologyThreshold !!" + entry._2(0).msQueryId)
-//            } else {
-//
-//              val tRs_ht0_05: Float = msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.get
-//              val dRs_ht0_05: Float = if (msQProp.getDecoyDbSearch.isDefined && msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.isDefined) msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.get else tRs_ht0_05
-//
-//              val targetHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount(tRs_ht0_05, 0.05)
-//              targetTh = MascotValidationHelper.calcIdentityThreshold(targetHtProbCstValue, pValue)
-//              val decoyHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount(dRs_ht0_05, 0.05)
-//              decoyTh = MascotValidationHelper.calcIdentityThreshold(decoyHtProbCstValue, pValue)
-//              
-//              val targetITh = MascotValidationHelper.calcIdentityThreshold(tRSCandPSM, pValue)
-//              val decoyITh = MascotValidationHelper.calcIdentityThreshold(dRSCandPSM, pValue)
-//              
-//              // if Homology is undefined then use Identity threshold
-//              if ((targetTh > targetITh) || (targetTh < 13)) targetTh = targetITh
-//              if ((decoyTh > decoyITh) || (decoyTh < 13))  decoyTh = decoyITh
-//            
-//            }
-//          } //ERnd use IT or HT         
+        } else {  
           
           val thresholds = MascotValidationHelper.getPeptideMatchThresholds(entry._2(0) , pValue)
           
