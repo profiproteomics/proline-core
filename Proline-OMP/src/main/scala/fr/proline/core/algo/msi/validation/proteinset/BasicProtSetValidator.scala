@@ -9,6 +9,12 @@ import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
 
+/**
+ * This Validator will filter all ProteinSet from target and decoy using specified IProteinSetFilter
+ * A ValidationResult will be created by counting # valid target ProteinSet,  # valid decoy ProteinSet
+ * and calculating a FDR using : 100 *  # valid decoy ProteinSet / # valid target ProteinSet
+ * 
+ */
 class BasicProtSetValidator( val protSetFilter: IProteinSetFilter ) extends IProteinSetValidator with Logging {
   
   val expectedFdr: Option[Float] = None
