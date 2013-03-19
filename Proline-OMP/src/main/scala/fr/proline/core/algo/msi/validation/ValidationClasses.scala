@@ -1,18 +1,17 @@
 package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.HashMap
+
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
-import fr.proline.core.algo.msi.filtering._
+
 import fr.proline.core.algo.msi.filtering.pepmatch._
 import fr.proline.core.algo.msi.filtering.proteinset._
+import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.pepmatch._
 import fr.proline.core.algo.msi.validation.proteinset._
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.ProteinSet
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.{ResultSummary, ResultSet, ProteinSet, PeptideMatch}
 
 object TargetDecoyModes extends Enumeration {
   type Mode = Value
@@ -133,13 +132,22 @@ object BuildPeptideMatchValidator {
 }
 
 object BuildProteinSetFilter {
-  
+
   def apply(filterParamStr: String): IProteinSetFilter = {
-    BuildOptimizableProteinSetFilter(filterParamStr)
+    this.apply(ProtSetFilterParams.withName(filterParamStr))
   }
-  
+
   def apply(filterParamStr: String, thresholdValue: AnyVal): IProteinSetFilter = {
-    BuildOptimizableProteinSetFilter(filterParamStr,thresholdValue)
+    val filter = this.apply(filterParamStr)
+    filter.setThresholdValue(thresholdValue)
+    filter
+  }
+
+  def apply(filterParam: ProtSetFilterParams.Param): IProteinSetFilter = {
+    filterParam match {
+      case ProtSetFilterParams.PROTEOTYPIQUE_PEP => new ProteotypiquePeptidePSFilter()
+      case ProtSetFilterParams.SCORE => new ScoreProtSetFilter()
+    }
   }
 }
 
