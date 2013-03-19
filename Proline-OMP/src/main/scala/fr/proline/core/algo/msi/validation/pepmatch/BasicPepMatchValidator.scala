@@ -13,14 +13,7 @@ class BasicPepMatchValidator(
   val expectedFdr: Option[Float] = None
 
   def validatePeptideMatches( pepMatches: Seq[PeptideMatch], decoyPepMatches: Option[Seq[PeptideMatch]] = None ): ValidationResults = {
-    //require( decoyPepMatches.isDefined, "decoy peptide matches must be provided")
-    
-    // Create pepMatchJointMap.  Map each query to a list to PSM from target and/or decoy resultSet     
-    //val psmByQueries: Map[Int, Seq[PeptideMatch]] = tdComputer.buildPeptideMatchJointMap(pepMatches, decoyPepMatches)
-
-    //Apply specified Filter to each map value (PeptideMatch array for one queryID) 
-    //psmByQueries.foreach(entry => validationFilter.filterPeptideMatches(entry._2, false, true))
-    
+        
     // Apply validation filter
     validationFilter.filterPeptideMatches(pepMatches ++ decoyPepMatches.getOrElse(Seq.empty[PeptideMatch]), true, true)
     
