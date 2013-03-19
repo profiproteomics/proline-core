@@ -10,9 +10,14 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.scoring.IProteinSetScoreUpdater
 
+/**
+ * This class will allow to filter ProteinSet with single peptide with an IProteinFilter (protSetFilterRule1) 
+ * and others ProteinSets with an other one (protSetFilterRule2).
+ * 
+ */
 class ProtSetRulesValidator(
-  val protSetFilterRule1: IOptimizableProteinSetFilter,
-  val protSetFilterRule2: IOptimizableProteinSetFilter
+  val protSetFilterRule1: IProteinSetFilter,
+  val protSetFilterRule2: IProteinSetFilter
 ) extends IProteinSetValidator with Logging {
   
   val expectedFdr: Option[Float] = None
