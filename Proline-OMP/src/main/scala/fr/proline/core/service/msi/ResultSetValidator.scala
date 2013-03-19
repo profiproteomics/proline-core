@@ -104,10 +104,7 @@ class ResultSetValidator(
   // Update the target analyzer of the validators
   pepMatchValidator.foreach( _.tdAnalyzer = tdAnalyzer )
 
-  override protected def beforeInterruption = {
-    // Release database connections -VDS: No more necessary... should be done by IExecutionContext initializer
-    this.logger.info("releasing database connections before service interruption...")
-    //    this.msiDbContext.close()
+  override protected def beforeInterruption = { 
   }
     
   def runService(): Boolean = {
@@ -118,19 +115,19 @@ class ResultSetValidator(
 
     val startTime = curTimeInSecs()
 
-    // Retrieve search engine name    
-    //val searchEngine = this._getSearchEngineName(targetRs)
-
-    // Create RSM validation properties
+    // --- Create RSM validation properties
     val rsmValProperties = RsmValidationProperties(
       params = RsmValidationParamsProperties(),
       results = RsmValidationResultsProperties())
     >>>
     
+    // --- Validate PSM 
     this._validatePeptideMatches(targetRs,rsmValProperties)
 
     >>>
 
+    // --- Compute RSM from validated PSMs
+    
     // Instantiate a protein set inferer
     val protSetInferer = ProteinSetInferer(InferenceMethods.parsimonious)
     
@@ -144,7 +141,7 @@ class ResultSetValidator(
 
     // Build result summary for each individual result set
     for (rs <- resultSets) {
-      if (rs != null && rs.isDefined) {
+      if (rs.isDefined) {
         
         // Create new result set with validated peptide matches and compute result summary
         val validatedRs = this._copyRsWithValidatedPepMatches(rs.get)
@@ -158,8 +155,7 @@ class ResultSetValidator(
         resultSummaries += Some(rsm)
       } else {
         resultSummaries += Option.empty[ResultSummary]
-      }
-      
+      }      
     }
     >>>
 
@@ -180,7 +176,9 @@ class ResultSetValidator(
       // Set decoy RSM validation properties
       decoyRsmOpt.get.properties = Some(ResultSummaryProperties(validationProperties = Some(rsmValProperties)))
     }
-
+    
+    
+    // --- Validate ProteinSet 
     this._validateProteinSets(targetRsm, rsmValProperties)
 
     val took = curTimeInSecs() - startTime
@@ -217,16 +215,6 @@ class ResultSetValidator(
     this.beforeInterruption()
 
     true
-  }
-
-  private def _getSearchEngineName(rs: ResultSet): String = {
-
-    if (rs.msiSearch != null)
-      return rs.msiSearch.searchSettings.softwareName;
-    else if (rs.getMSISearchId > 0)
-      return msiDbContext.getEntityManager.find(classOf[MSISearch], rs.getMSISearchId).searchSettings.softwareName
-    else
-      return "mascot"
   }
 
   private def _copyRsWithValidatedPepMatches(rs: ResultSet): ResultSet = {
@@ -299,7 +287,7 @@ class ResultSetValidator(
         val protSetValidatorForFiltering = new BasicProtSetValidator( protSetFilter )
         finalValidationResult = protSetValidatorForFiltering.validateProteinSets(targetRsm).finalResult
         
-        logger.debug("After Filter "+protSetFilter.filterDescription+" Nbr protein set target validated = "+finalValidationResult.targetMatchesCount )
+        logger.debug("After Filter "+protSetFilter.filterDescription+" Nbr protein set target validated = "+finalValidationResult.targetMatchesCount+ " <> "+ targetRsm.proteinSets.filter(_.isValidated).length)
   
         filterDescriptors += protSetFilter.toFilterDescriptor
         
@@ -310,30 +298,7 @@ class ResultSetValidator(
     
     // If define, execute protein set validator  
     if (protSetValidator.isDefined) {
-      
-      // TODO: retrieve the initial threshold if possible    
-      
-    //VDS TODO: Remove once ProteinFilter Refactoring will have been done !
-    /*val pepFilters = rsmValProperties.getParams.getPeptideFilters
-    val lastFilterThr = if( pepFilters.isDefined ) {
-      Some(
-        pepFilters.get.last.getProperties.get( 
-          FilterPropertyKeys.THRESHOLD_VALUE
-        ).asInstanceOf[AnyVal]
-      )
-    } else None
-    
-    var threshold: Float = -1.0f
-    if( lastFilterThr.isDefined == false ) {
-      throw new Exception("No valid threshold was specified in RSM Validation Properties  ")
-    } else {
-      threshold = lastFilterThr.get match {
-        case d: Double => d.toFloat
-        case f: Float => f
-        case _ => throw new Exception("invalid threshold value")
-      }
-    }*/
-      
+          
       logger.debug("Run protein set validator")
 
       finalValidationResult = protSetValidator.get.validateProteinSets(targetRsm).finalResult
