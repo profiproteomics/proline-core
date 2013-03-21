@@ -103,12 +103,12 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
     protected void doClose(final String ident, final DataSource source) {
 
 	if (source instanceof PGPoolingDataSource) {
-	    LOG.debug("Closing PGPoolingDataSource for {}", ident);
+	    LOG.debug("Closing PGPoolingDataSource for [{}]", ident);
 
 	    try {
 		((PGPoolingDataSource) source).close();
 	    } catch (Exception exClose) {
-		LOG.error("Error closing PGPoolingDataSource for " + ident, exClose);
+		LOG.error("Error closing PGPoolingDataSource for [" + ident + ']', exClose);
 	    }
 
 	}

@@ -63,17 +63,22 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
     protected void doClose(final String ident, final DataSource source) {
 
 	if (source instanceof JdbcConnectionPool) {
-	    LOG.debug("Disposing H2 JdbcConnectionPool for {}", ident);
+	    LOG.debug("Disposing H2 JdbcConnectionPool for [{}]", ident);
 
 	    final JdbcConnectionPool h2Source = (JdbcConnectionPool) source;
 
 	    try {
 		h2Source.dispose();
 	    } catch (Exception exClose) {
-		LOG.error("Error disposing H2 JdbcConnectionPool for " + ident, exClose);
+		LOG.error("Error disposing H2 JdbcConnectionPool for [" + ident + ']', exClose);
 	    }
 
-	    LOG.debug("Remaining H2 Connections : {}", h2Source.getActiveConnections());
+	    final int remainingH2ConnectionsCount = h2Source.getActiveConnections();
+
+	    if (remainingH2ConnectionsCount > 0) {
+		LOG.debug("Remaining H2 Connections for [{}]: {}", ident, remainingH2ConnectionsCount);
+	    }
+
 	}
 
     }

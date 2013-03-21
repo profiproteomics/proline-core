@@ -36,8 +36,6 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
     public static final String JDBC_SCHEME = "jdbc";
 
-    public static final String PROLINE_TEST_KEY = "proline.test";
-
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDatabaseConnector.class);
 
     private static final Map<String, Integer> CONNECTOR_INSTANCES = new HashMap<String, Integer>();
@@ -87,22 +85,14 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	m_ident = identBuffer.toString();
 
-	final int connectorInstancesCount = checkConnectorInstances(m_ident);
+	final int newConnectorInstancesCount = addConnectorInstances(m_ident);
 
-	if (connectorInstancesCount > 1) {
+	if (newConnectorInstancesCount > 1) {
+	    /* Trace error in Production and Test mode */
+	    final Exception ex = new Exception("Multiple DatabaseConnector");
 
-	    if (System.getProperty(PROLINE_TEST_KEY) == null) {
-		/* Production mode */
-		final Exception ex = new Exception("Multiple DatabaseConnector");
-
-		LOG.error("There are " + connectorInstancesCount + " DatabaseConnector instances for ["
-			+ m_ident + ']', ex);
-	    } else {
-		/* Test mode */
-		LOG.debug("There are {} TEST DatabaseConnector instances for [{}]", connectorInstancesCount,
-			m_ident);
-	    }
-
+	    LOG.error("There are " + newConnectorInstancesCount + " DatabaseConnector instances for ["
+		    + m_ident + ']', ex);
 	}
 
     }
@@ -197,21 +187,26 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	    if (!m_closed) { // Close only once
 		m_closed = true;
 
-		LOG.warn("Closing DatabaseConnector does not close already retrieved EntityManager and SQL JDBC Connection resources");
-
 		if (m_entityManagerFactory != null) {
-		    LOG.debug("Closing EntityManagerFactory for {}", m_ident);
+		    LOG.debug("Closing EntityManagerFactory for [{}]", m_ident);
 
 		    try {
 			m_entityManagerFactory.close();
 		    } catch (Exception exClose) {
-			LOG.error("Error closing EntityManagerFactory for " + m_ident, exClose);
+			LOG.error("Error closing EntityManagerFactory for [" + m_ident + ']', exClose);
 		    }
 
 		}
 
 		if (m_dataSource != null) {
 		    doClose(m_ident, m_dataSource);
+		}
+
+		final int remainingConnectorInstancesCount = removeConnectorInstances(m_ident);
+
+		if (remainingConnectorInstancesCount > 0) {
+		    LOG.error("There are {} remaining DatabaseConnector instances for [{}]",
+			    remainingConnectorInstancesCount, m_ident);
 		}
 
 	    } // End if (connector is not already closed)
@@ -283,20 +278,57 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
      * @param source
      */
     protected void doClose(final String ident, final DataSource source) {
+	LOG.warn(
+		"Closing DatabaseConnector [{}] does not close already retrieved SQL JDBC Connection resources",
+		ident);
     }
 
-    private static int checkConnectorInstances(final String ident) {
-	assert (!StringUtils.isEmpty(ident)) : "checkConnectorInstance() invalid ident";
+    private static int addConnectorInstances(final String ident) {
+	assert (!StringUtils.isEmpty(ident)) : "addConnectorInstances() invalid ident";
 
 	int result = 0;
 
 	synchronized (CONNECTOR_INSTANCES) {
-	    final Integer oldCount = CONNECTOR_INSTANCES.get(ident);
+	    final Integer oldCountObj = CONNECTOR_INSTANCES.get(ident);
 
-	    if (oldCount == null) {
-		result = 1;
+	    int oldCount = 0;
+
+	    if (oldCountObj != null) {
+		oldCount = oldCountObj.intValue();
+	    }
+
+	    if (oldCount < 0) {
+		LOG.error("Inconsistent Connector instances count (adding to {}): {}", ident, oldCount);
+
+		oldCount = 0;
+	    }
+
+	    result = oldCount + 1;
+
+	    CONNECTOR_INSTANCES.put(ident, Integer.valueOf(result));
+	} // End of synchronized block on CONNECTOR_INSTANCES
+
+	return result;
+    }
+
+    private static int removeConnectorInstances(final String ident) {
+	assert (!StringUtils.isEmpty(ident)) : "removeConnectorInstances() invalid ident";
+
+	int result = 0;
+
+	synchronized (CONNECTOR_INSTANCES) {
+	    final Integer oldCountObj = CONNECTOR_INSTANCES.get(ident);
+
+	    int oldCount = 0;
+
+	    if (oldCountObj != null) {
+		oldCount = oldCountObj.intValue();
+	    }
+
+	    if (oldCount <= 0) {
+		LOG.error("Inconsistent Connector instances count (removing from {}): {}", ident, oldCount);
 	    } else {
-		result = oldCount.intValue() + 1;
+		result = oldCount - 1;
 	    }
 
 	    CONNECTOR_INSTANCES.put(ident, Integer.valueOf(result));
