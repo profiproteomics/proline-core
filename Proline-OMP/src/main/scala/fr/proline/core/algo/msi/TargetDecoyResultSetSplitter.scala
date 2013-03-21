@@ -73,9 +73,9 @@ object TargetDecoyResultSetSplitter {
    * @return the fr.proline.core.om.model.msi. result set
    */
   private def _buildResultSet(tmpRs: ResultSet,
-    protMatches: Array[ProteinMatch],
-    pepMatches: Seq[PeptideMatch],
-    isDecoy: Boolean): ResultSet = {
+                              protMatches: Array[ProteinMatch],
+                              pepMatches: Seq[PeptideMatch],
+                              isDecoy: Boolean): ResultSet = {
 
     val newPepMatches = new ArrayBuffer[PeptideMatch]()
 
@@ -94,7 +94,7 @@ object TargetDecoyResultSetSplitter {
     }
 
     val peptideByIds = newPepMatches.groupBy(_.peptide.id)
-    
+
     val newProtMatches = protMatches.map { protMatch =>
       val seqMatches = protMatch.sequenceMatches.filter { seqMatch => peptideByIds.contains(seqMatch.peptide.get.id) }
 
@@ -110,7 +110,7 @@ object TargetDecoyResultSetSplitter {
         seqMatch.copy(resultSetId = rsId, bestPeptideMatch = Some(bestPepMatch), isDecoy = isDecoy)
       }
 
-      protMatch.copy(resultSetId = rsId, sequenceMatches = newSeqMatch)
+      protMatch.copy(isDecoy = isDecoy, resultSetId = rsId, sequenceMatches = newSeqMatch)
     }
 
     // Build the result set: create a copy of the TMP one and replace some attributes
