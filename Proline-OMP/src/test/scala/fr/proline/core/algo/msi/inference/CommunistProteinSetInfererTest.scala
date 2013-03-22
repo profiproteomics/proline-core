@@ -13,9 +13,10 @@ import fr.proline.core.om.model.msi.ProteinMatch
 import org.junit.Before
 
 @Test
-class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
+class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
 
-  var ppsi = new ParsimoniousProteinSetInferer()    
+ 
+  var ppsi = new CommunistProteinSetInferer()    
 
   
   @Test
@@ -68,18 +69,14 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     }
 
     rsb.createNewProteinMatchFromPeptides(sharedPeptides2)
-
-    //	  val sharedPeptides = Seq(rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide, 
-    //			  							rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide)			  							
-    //	  rsb.createNewProteinMatchFromPeptides(sharedPeptides)
-
-    //	  rsb.printForDebug  
+    
+        rsb.printForDebug  
 
     var rs: ResultSet = rsb.toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
     assert(rsu != null)
     assertEquals(4, rsu.peptideSets.length)
-    assertEquals( /*3+1*/ 3, rsu.proteinSets.length)
+    assertEquals(4, rsu.proteinSets.length)
   }
 
   @Test
@@ -87,7 +84,7 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     val rsb = new ResultSetFakeBuilder(pepNb = 6, proNb = 3)
     var sharedPeptides = ListBuffer[Peptide]()
 
-    sharedPeptides += rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide
+     sharedPeptides += rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide
     sharedPeptides += rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide
 
     rsb.createNewProteinMatchFromPeptides(sharedPeptides)
@@ -99,14 +96,14 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     sharedPeptides(0) = rsb.allProtMatches(1).sequenceMatches(1).bestPeptideMatch.get.peptide
     sharedPeptides(1) = rsb.allProtMatches(2).sequenceMatches(1).bestPeptideMatch.get.peptide
     rsb.createNewProteinMatchFromPeptides(sharedPeptides)
-
-    rsb.printForDebug  
+    
+    //	  rsb.printForDebug  
 
     var rs: ResultSet = rsb.toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
     assert(rsu != null)
     assertEquals(6, rsu.peptideSets.length)
-    assertEquals(6, rsu.proteinSets.length)  
+    assertEquals(6, rsu.proteinSets.length)   
   }
 
   @Test
@@ -145,7 +142,7 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     rsb.addSharedPeptide(pms)
 
 
-    rsb.printForDebug  
+//    rsb.printForDebug  
 
     var rs: ResultSet = rsb.toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
