@@ -5,7 +5,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.HashMap
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.{ MsiSearchStorer, RsStorer }
 import fr.proline.api.service.IService
@@ -22,6 +21,9 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.algo.msi.scoring.ProtSetScoreUpdater
+import fr.proline.core.algo.msi.scoring.ProtSetScoring
+import fr.proline.core.algo.msi.InferenceMethods
 
 object ResultSetValidator {
 
@@ -33,6 +35,8 @@ object ResultSetValidator {
     pepMatchValidator: Option[IPeptideMatchValidator] = None,
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
     protSetValidator: Option[IProteinSetValidator] = None,
+    inferenceMethod: Option[InferenceMethods.InferenceMethods] = Some(InferenceMethods.communist), 
+    proteinSetScoring: Option[ProtSetScoring.Updater] = Some(ProtSetScoring.MASCOT_STANDARD_SCORE),
     storeResultSummary: Boolean = true): ResultSetValidator = {
 
     val rsProvider = getResultSetProvider(execContext)    
@@ -58,6 +62,8 @@ object ResultSetValidator {
       pepMatchValidator,
       protSetFilters,
       protSetValidator,
+      inferenceMethod, 
+      proteinSetScoring,
       storeResultSummary
     )
   }
@@ -94,6 +100,8 @@ class ResultSetValidator(
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   protSetValidator: Option[IProteinSetValidator] = None,
+  inferenceMethod: Option[InferenceMethods.InferenceMethods] = Some(InferenceMethods.communist), 
+  proteinSetScoring: Option[ProtSetScoring.Updater] = Some(ProtSetScoring.MASCOT_STANDARD_SCORE),
   storeResultSummary: Boolean = true
   ) extends IService with Logging {
 
@@ -129,12 +137,8 @@ class ResultSetValidator(
     // --- Compute RSM from validated PSMs
     
     // Instantiate a protein set inferer
-    val protSetInferer = ProteinSetInferer(InferenceMethods.parsimonious)
+    val protSetInferer = ProteinSetInferer(inferenceMethod.get)
     
-    // TODO: require in constructor
-    import fr.proline.core.algo.msi.scoring.MascotProteinSetScoreUpdater
-    val protSetScoreUpdater = new MascotProteinSetScoreUpdater()
-
     val decoyRs = if( targetRs.decoyResultSet != null ) targetRs.decoyResultSet else None
     val resultSets = List(Some(targetRs), decoyRs)
     val resultSummaries = List.newBuilder[Option[ResultSummary]]
@@ -144,12 +148,13 @@ class ResultSetValidator(
       if (rs.isDefined) {
         
         // Create new result set with validated peptide matches and compute result summary
-        val validatedRs = this._copyRsWithValidatedPepMatches(rs.get)
-        val rsm = protSetInferer.computeResultSummary(validatedRs)
+//        val validatedRs = this._copyRsWithValidatedPepMatches(rs.get)
+        val rsm = protSetInferer.computeResultSummary(rs.get)
         rsm.resultSet = rs // affect complete RS
         
         // Update score of protein sets
         this.logger.debug("updating score of protein sets")
+        val protSetScoreUpdater = ProtSetScoreUpdater(proteinSetScoring.get)
         protSetScoreUpdater.updateScoreOfProteinSets(rsm)
         
         resultSummaries += Some(rsm)

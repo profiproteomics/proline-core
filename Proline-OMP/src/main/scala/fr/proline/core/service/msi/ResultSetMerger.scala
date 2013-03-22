@@ -6,7 +6,7 @@ import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msi.{ResultSetMerger => ResultSetMergerAlgo}
+import fr.proline.core.algo.msi.{ ResultSetMerger => ResultSetMergerAlgo }
 import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
@@ -14,11 +14,52 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.repository.DriverType
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import scala.collection.mutable.ArrayBuffer
+
+object ResultSetMerger {
+
+  def apply(
+    execContext: IExecutionContext,
+    resultSetIds: Seq[Int]): ResultSetMerger = {
+
+    val rsProvider = getResultSetProvider(execContext)
+    val resultSets = new ArrayBuffer[ResultSet](resultSetIds.size)
+
+    for (rsId <- resultSetIds) {
+      val rs = rsProvider.getResultSet(rsId)
+
+      if (rs.isEmpty) {
+        throw new IllegalArgumentException("Unknown ResultSet Id: " + rs)
+      } else {
+        resultSets += rs.get
+      }
+    }
+
+    new ResultSetMerger(
+      execContext,
+      resultSets)
+  }
+
+  // TODO Retrieve a ResultSetProvider from a decorated ExecutionContext ?
+  private def getResultSetProvider(execContext: IExecutionContext): IResultSetProvider = {
+
+    if (execContext.isJPA) {
+      new ORMResultSetProvider(execContext.getMSIDbConnectionContext, execContext.getPSDbConnectionContext, execContext.getUDSDbConnectionContext)
+    } else {
+      new SQLResultSetProvider(execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
+        execContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext],
+        execContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext])
+    }
+
+  }
+}
 
 class ResultSetMerger(
   execCtx: IExecutionContext,
-  resultSets: Seq[ResultSet]
-) extends IService with Logging {
+  resultSets: Seq[ResultSet]) extends IService with Logging {
 
   var mergedResultSet: ResultSet = null
 
@@ -36,14 +77,14 @@ class ResultSetMerger(
 
     try {
       //storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
-      storerContext = new StorerContext(execCtx)      
+      storerContext = new StorerContext(execCtx)
       msiDbCtx = storerContext.getMSIDbConnectionContext
-      
+
       // Check if a transaction is already initiated
       val wasInTransaction = msiDbCtx.isInTransaction()
       if (!wasInTransaction) msiDbCtx.beginTransaction()
 
-      DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+      DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
 
         // Retrieve protein ids
         val proteinIdSet = new HashSet[Int]
@@ -73,14 +114,14 @@ class ResultSetMerger(
         val protMatchByTmpId = tmpMergedResultSet.proteinMatches.map { p => p.id -> p } toMap
 
         logger.info("store result set...")
-        
+
         //val rsStorer = new JPARsStorer()
         //storerContext = new StorerContext(udsDb, pdiDb, psDb, msiDb)
         //rsStorer.storeResultSet(tmpMergedResultSet, storerContext)
-        
-        val rsStorer = RsStorer( msiDbCtx )
-        rsStorer.storeResultSet( tmpMergedResultSet, storerContext )
-        
+
+        val rsStorer = RsStorer(msiDbCtx)
+        rsStorer.storeResultSet(tmpMergedResultSet, storerContext)
+
         //msiDb.getEntityManager.flush() // Flush before returning to SQL msiEzDBC
 
         >>>
@@ -99,13 +140,13 @@ class ResultSetMerger(
         // Commit transaction if it was initiated locally
 
         mergedResultSet = tmpMergedResultSet
-      },true) // end of JDBC work
+      }, true) // end of JDBC work
 
       // Commit transaction if it was initiated locally
       if (!wasInTransaction) msiDbCtx.commitTransaction()
-      
+
       msiTransacOk = true
-      
+
     } finally {
 
       if (msiDbCtx.isInTransaction() && !msiTransacOk) {
@@ -114,7 +155,7 @@ class ResultSetMerger(
         try {
           // Rollback is not useful for SQLite and has locking issue
           // http://www.sqlite.org/lang_transaction.html
-          if( msiDbCtx.getDriverType() != DriverType.SQLITE )
+          if (msiDbCtx.getDriverType() != DriverType.SQLITE)
             msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
