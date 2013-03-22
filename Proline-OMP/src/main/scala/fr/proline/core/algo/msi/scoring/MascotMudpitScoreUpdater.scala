@@ -4,7 +4,7 @@ import fr.proline.core.om.model.msi.ResultSummary
 
 
 class MascotMudpitScoreUpdater extends IProteinSetScoreUpdater {
-  def updateScoreOfProteinSets( rsm: ResultSummary ) {
+  def updateScoreOfProteinSets( rsm: ResultSummary, params:Any*) {
     ()
   }
 }
