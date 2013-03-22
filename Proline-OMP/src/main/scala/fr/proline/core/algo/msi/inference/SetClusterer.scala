@@ -8,7 +8,8 @@ case class SetCluster[K,V]( id: Int,
                             samesetsKeys: ArrayBuffer[K] = new ArrayBuffer[K](1),
                             var isSubset: Boolean,
                             var strictSubsetsIds: Option[ArrayBuffer[Int]] = None,
-                            var subsumableSubsetsIds: Option[ArrayBuffer[Int]] = None
+                            var subsumableSubsetsIds: Option[ArrayBuffer[Int]] = None, 
+                            var oversetId: Option[Int] = None
                            )
 
 object SetClusterer {
@@ -128,6 +129,7 @@ object SetClusterer {
                 sameset.strictSubsetsIds = Some( new ArrayBuffer[Int](1) )
               }
               sameset.strictSubsetsIds.get += unspeSamesetId
+              unspeSameset.oversetId = Some(sameset.id)
             }
           }
         }
