@@ -15,19 +15,22 @@ object BuildTDAnalyzer {
     pepMatchSorter: Option[IPeptideMatchSorter] ): Option[ITargetDecoyAnalyzer] = {
     
     // Build target decoy analyzer if a peptide match validator is provided
-    if( rs.decoyResultSet != null && rs.decoyResultSet.isDefined && pepMatchSorter.isDefined ) {
-      val tdAnalyzer = if( useTdCompetition == false ) {
+    if( rs.decoyResultSet != null && rs.decoyResultSet.isDefined  ) {
+      val tdAnalyzer = if( useTdCompetition == false ) {        
+        require( rs.msiSearch.searchSettings.properties.isDefined, "target/decoy mode should be specified in search settings properties ")
         val ssProps = rs.msiSearch.searchSettings.properties.get
         val tdModeAsStr = ssProps.getTargetDecoyMode.getOrElse(
           throw new Exception("missing target/decoy mode in search settings properties")
         )
         val tdMode = TargetDecoyModes.withName(tdModeAsStr)
         new BasicTDAnalyzer(tdMode)
-      }
-      else  {        
+      } 
+      else if(pepMatchSorter.isDefined) {        
         new CompetitionBasedTDAnalyzer(
           pepMatchSorter.get
         )
+      } else {
+        throw new Exception("Can't used competition based analyzer without IPeptideMatchSorter ")
       }
       Some(tdAnalyzer)
     } else None
