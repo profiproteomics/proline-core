@@ -10,7 +10,8 @@ class MascotProteinSetScoreUpdater() extends IProteinSetScoreUpdater {
   def updateScoreOfProteinSets( rsm: ResultSummary, params: Any* ) {
     
     val bestPepMatchesByProtSetId = rsm.getBestPepMatchesByProtSetId
-    val scoreThresholdOffset = MathUtils.toFloat(params(0))
+    
+    val scoreThresholdOffset = if(params != null && params.length > 0) MathUtils.toFloat(params(0)) else 0f
     
     for( proteinSet <- rsm.proteinSets ) {
       
