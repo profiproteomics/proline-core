@@ -150,7 +150,7 @@ class ResultSetValidator(
         // Create new result set with validated peptide matches and compute result summary
 //        val validatedRs = this._copyRsWithValidatedPepMatches(rs.get)
         val rsm = protSetInferer.computeResultSummary(rs.get)
-        rsm.resultSet = rs // affect complete RS
+//        rsm.resultSet = rs // affect complete RS : No More necessary , complete RS passed to inferer 
         
         // Update score of protein sets
         this.logger.debug("updating score of protein sets")
