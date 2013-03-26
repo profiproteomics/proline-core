@@ -107,7 +107,7 @@ trait IMapLoader {
                     ): Feature = {
     
     import fr.proline.util.sql.StringOrBoolAsBool._
-    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    import fr.proline.util.primitives._
     
     val ftId = featureRecord("id").asInstanceOf[Int]
     val firstScanId = featureRecord("first_scan_id").asInstanceOf[Int]
@@ -119,9 +119,9 @@ trait IMapLoader {
 
     new Feature( id = ftId,
                  moz = featureRecord("moz").asInstanceOf[Double],
-                 intensity = featureRecord("intensity").asInstanceOf[AnyVal],
+                 intensity = toFloat(featureRecord("intensity")),
                  charge = featureRecord("charge").asInstanceOf[Int],
-                 elutionTime = featureRecord("elution_time").asInstanceOf[AnyVal],
+                 elutionTime = toFloat(featureRecord("elution_time")),
                  qualityScore = featureRecord.getOrElse("quality_score",Double.NaN).asInstanceOf[Double],
                  ms1Count = featureRecord("ms1_count").asInstanceOf[Int],
                  ms2Count = featureRecord("ms2_count").asInstanceOf[Int],

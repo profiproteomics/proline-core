@@ -23,7 +23,7 @@ object PtmDefinitionBuilder {
                           ptmClassification: String
                          ) : PtmDefinition = {
     
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
     
     val ptmEvArray = new Array[PtmEvidence](ptmEvidenceRecords.length)
 
@@ -45,13 +45,13 @@ object PtmDefinitionBuilder {
       
     var ptmDefId: Int =0 
     if(ptmSpecifRecord.contains("id"))
-      ptmDefId = ptmSpecifRecord("id").asInstanceOf[AnyVal]
+      ptmDefId = toInt(ptmSpecifRecord("id"))
     else
       ptmDefId =PtmDefinition.generateNewId
       
     return new PtmDefinition(
                           id = ptmDefId,
-                          ptmId = ptmRecord("id").asInstanceOf[AnyVal],
+                          ptmId = toInt(ptmRecord("id")),
                           location = ptmSpecifRecord("location").asInstanceOf[String],
                           residue = resChar,
                           classification = ptmClassification,

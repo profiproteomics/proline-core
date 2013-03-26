@@ -28,7 +28,7 @@ class SQLResultSummaryProvider(
 
   def getResultSummaries(rsmIds: Seq[Int], loadResultSet: Boolean): Array[ResultSummary] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Load peptide sets
@@ -49,7 +49,7 @@ class SQLResultSummaryProvider(
     val rsms = msiDbCtx.ezDBC.select(rsmQuery) { r =>
 
       // Retrieve some vars
-      val rsmId: Int = r.getAnyVal(RSMCols.ID)
+      val rsmId: Int = toInt(r.getAnyVal(RSMCols.ID))
       val rsmPepSets = inMemPepSetProvider.getResultSummaryPeptideSets(rsmId)
       val rsmPepInsts = rsmPepSets.flatMap(_.getPeptideInstances).distinct
       val rsmProtSets = protSetsByRsmId.getOrElse(rsmId, Array.empty[ProteinSet])

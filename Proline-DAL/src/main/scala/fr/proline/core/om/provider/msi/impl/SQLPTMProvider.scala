@@ -8,7 +8,6 @@ import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.util.primitives.LongOrIntAsInt.anyVal2Int
 
 class SQLPTMProvider(val psDbCtx: SQLConnectionContext) extends IPTMProvider {
   
@@ -41,7 +40,7 @@ class SQLPTMProvider(val psDbCtx: SQLConnectionContext) extends IPTMProvider {
   /** Returns a map */
   lazy val ptmDefinitionById: Map[Int, PtmDefinition] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
 
     var ptmColNames: Seq[String] = null
     val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Int, Map[String, Any]]
@@ -53,7 +52,7 @@ class SQLPTMProvider(val psDbCtx: SQLConnectionContext) extends IPTMProvider {
 
       // Build the PTM record
       val ptmRecord = ptmColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
-      val ptmId: Int = ptmRecord("id").asInstanceOf[AnyVal]
+      val ptmId: Int = toInt(ptmRecord("id"))
       ptmMapBuilder += (ptmId -> ptmRecord)
 
     }

@@ -119,8 +119,6 @@ class ResultSetValidator(
     
     logger.info("ResultSet validator service starts")
     
-    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
-
     val startTime = curTimeInSecs()
 
     // --- Create RSM validation properties

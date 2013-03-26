@@ -12,7 +12,7 @@ import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.MsQueryProperties
 import fr.proline.core.om.provider.msi.IMsQueryProvider
-import fr.proline.util.primitives.LongOrIntAsInt._
+import fr.proline.util.primitives._
 import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
@@ -64,7 +64,7 @@ class SQLMsQueryProvider(val msiSqlCtx: SQLConnectionContext) extends IMsQueryPr
 
       // Decode JSON properties
       val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(parse[MsQueryProperties](_))
-      val msQueryId: Int = r.getAnyVal(MsQueryCols.ID)
+      val msQueryId: Int = toInt(r.getAnyVal(MsQueryCols.ID))
 
       // Build the MS query object
       val msQuery = if (spectrumId != 0) { // we can assume it is a MS2 query

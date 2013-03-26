@@ -32,8 +32,7 @@ class SQLProteinMatchProvider(val msiDbCtx: SQLConnectionContext) { //extends IP
 
   private def _getProteinMatches(rsIds: Seq[Int], rsmIds: Option[Seq[Int]] = None ): Array[ProteinMatch] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
-    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Retrieve score type map
@@ -83,7 +82,7 @@ class SQLProteinMatchProvider(val msiDbCtx: SQLConnectionContext) { //extends IP
       if (protMatchColNames == null) { protMatchColNames = r.columnNames }
       val protMatchRecord = protMatchColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
 
-      val protMatchId: Int = protMatchRecord(ProtMatchCols.ID).asInstanceOf[AnyVal]
+      val protMatchId: Int = toInt(protMatchRecord(ProtMatchCols.ID))
 
       var seqMatches: Array[SequenceMatch] = null
       for ( seqMatchRecords <- seqMatchRecordsByProtMatchId.get(protMatchId) ) {
@@ -151,12 +150,12 @@ class SQLProteinMatchProvider(val msiDbCtx: SQLConnectionContext) { //extends IP
       )
 
       if (protMatchRecord(ProtMatchCols.SCORE) != null) {
-        protMatch.score = protMatchRecord(ProtMatchCols.SCORE).asInstanceOf[AnyVal]
+        protMatch.score = toFloat(protMatchRecord(ProtMatchCols.SCORE))
         protMatch.scoreType = scoreTypeById(protMatchRecord(ProtMatchCols.SCORING_ID).asInstanceOf[Int])
       }
 
       if (protMatchRecord(ProtMatchCols.COVERAGE) != null) {
-        protMatch.coverage = protMatchRecord(ProtMatchCols.COVERAGE).asInstanceOf[AnyVal]
+        protMatch.coverage = toFloat(protMatchRecord(ProtMatchCols.COVERAGE))
       }
 
       if (protMatchRecord(ProtMatchCols.PEPTIDE_MATCH_COUNT) != null) {

@@ -97,8 +97,7 @@ class SQLProteinSetProvider(
     peptideSets: Seq[PeptideSet]
   ): Array[ProteinSet] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
-    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Map peptide set by protein set id
@@ -116,7 +115,7 @@ class SQLProteinSetProvider(
 
       // Retrieve peptide instance record
       val protSetRecord = protSetRecords(protSetIds)
-      val protSetId: Int = protSetRecord(ProtSetCols.ID).asInstanceOf[AnyVal]
+      val protSetId: Int = toInt(protSetRecord(ProtSetCols.ID))
 
       // Retrieve corresponding peptide set
       val pepSet = pepSetByProtSetId(protSetId)
@@ -144,7 +143,7 @@ class SQLProteinSetProvider(
         id = protSetId,
         peptideSet = pepSet,
         hasPeptideSubset = pepSet.hasSubset,
-        score = protSetRecord(ProtSetCols.SCORE).asInstanceOf[AnyVal],
+        score = toFloat(protSetRecord(ProtSetCols.SCORE)),
         scoreType = scoreTypeById(protSetRecord(ProtSetCols.SCORING_ID).asInstanceOf[Int]),
         isValidated = protSetRecord(ProtSetCols.IS_VALIDATED),
         selectionLevel = protSetRecord(ProtSetCols.SELECTION_LEVEL).asInstanceOf[Int],

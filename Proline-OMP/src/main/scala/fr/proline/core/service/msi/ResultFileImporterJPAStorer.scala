@@ -233,7 +233,7 @@ class ResultFileImporterJPAStorer(
   // TODO: put in a dedicated provider
   private def _getInstrumentConfig(instrumentConfigId: Int, udsDbContext: DatabaseConnectionContext): InstrumentConfig = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
     import fr.proline.core.om.model.msi.{ InstrumentProperties, InstrumentConfigProperties }
 
     DoJDBCReturningWork.withEzDBC(udsDbContext, { udsEzDBC =>
@@ -243,7 +243,7 @@ class ResultFileImporterJPAStorer(
         "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config " +
         "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId) { r =>
 
-        val instrument = new Instrument(id = r.nextAnyVal, name = r, source = r)
+        val instrument = new Instrument(id = toInt(r.nextAnyVal), name = r, source = r)
         for (instPropStr <- r.nextStringOption) {
           instrument.properties = Some(parse[InstrumentProperties](instPropStr))
         }

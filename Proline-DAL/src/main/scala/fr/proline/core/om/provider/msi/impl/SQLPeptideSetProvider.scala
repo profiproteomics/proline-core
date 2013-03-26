@@ -116,7 +116,7 @@ class SQLPeptideSetProvider(val msiDbCtx: SQLConnectionContext,
     pepSetProtMatchMapRecords: Seq[Map[String, Any]]
   ): Array[PeptideSet] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Load peptides
@@ -147,7 +147,7 @@ class SQLPeptideSetProvider(val msiDbCtx: SQLConnectionContext,
 
       // Retrieve peptide instance record
       val pepSetRecord = pepSetRecords(pepSetIdx)
-      val pepSetId: Int = pepSetRecord(PepSetCols.ID).asInstanceOf[AnyVal]
+      val pepSetId: Int = toInt(pepSetRecord(PepSetCols.ID))
 
       // Retrieve peptide set relations
       var strictSubsetIdsBuilder = Array.newBuilder[Int]

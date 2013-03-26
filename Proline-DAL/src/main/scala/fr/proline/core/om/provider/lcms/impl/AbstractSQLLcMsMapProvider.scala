@@ -13,7 +13,6 @@ import fr.proline.core.om.model.lcms.FeatureProperties
 import fr.proline.core.om.model.lcms.FeatureRelations
 import fr.proline.core.om.model.lcms.IsotopicPattern
 import fr.proline.core.om.model.lcms.ILcMsMap
-import fr.proline.util.primitives.DoubleOrFloatAsFloat.anyVal2Float
 import fr.proline.util.sql.BoolToSQLStr
 import fr.proline.util.sql.StringOrBoolAsBool.string2boolean
 import fr.proline.core.om.provider.lcms.ILcMsMapProvider
@@ -113,10 +112,9 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
                     ): Feature = {
     
     import fr.proline.util.sql.StringOrBoolAsBool._
-    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
-    import fr.proline.util.primitives.LongOrIntAsInt._
-    
-    val ftId: Int = ftRecord.getAnyVal(FtCols.ID)
+    import fr.proline.util.primitives._
+
+    val ftId: Int = toInt(ftRecord.getAnyVal(FtCols.ID))
     val firstScanId = ftRecord.getInt(FtCols.FIRST_SCAN_ID)
     val lastScanId = ftRecord.getInt(FtCols.LAST_SCAN_ID)
     val apexScanId = ftRecord.getInt(FtCols.APEX_SCAN_ID)
@@ -125,9 +123,9 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     new Feature(
        id = ftId,
        moz = ftRecord.getDouble(FtCols.MOZ),
-       intensity = ftRecord.getAnyVal(FtCols.INTENSITY),
+       intensity = toFloat(ftRecord.getAnyVal(FtCols.INTENSITY)),
        charge = ftRecord.getInt(FtCols.CHARGE),
-       elutionTime = ftRecord.getAnyVal(FtCols.ELUTION_TIME),
+       elutionTime = toFloat(ftRecord.getAnyVal(FtCols.ELUTION_TIME)),
        qualityScore = ftRecord.getDoubleOrElse(FtCols.QUALITY_SCORE,Double.NaN),
        ms1Count = ftRecord.getInt(FtCols.MS1_COUNT),
        ms2Count = ftRecord.getInt(FtCols.MS2_COUNT),

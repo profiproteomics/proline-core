@@ -34,7 +34,7 @@ trait SQLResultSetLoader {
     protMatches: Array[ProteinMatch]
   ): Array[ResultSet] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
 
     // Build some maps
     val pepMatchesByRsId = pepMatches.groupBy(_.resultSetId)
@@ -59,7 +59,7 @@ trait SQLResultSetLoader {
     val resultSets = msiDbCtx.ezDBC.select(rsQuery) { r =>
 
       // Retrieve some vars
-      val rsId: Int = r.getAnyVal(RSCols.ID)
+      val rsId: Int = toInt(r.getAnyVal(RSCols.ID))
       val rsProtMatches = protMatchesByRsId(rsId)
       val rsPepMatches = pepMatchesByRsId(rsId)
       val rsPeptides = rsPepMatches map { _.peptide } distinct

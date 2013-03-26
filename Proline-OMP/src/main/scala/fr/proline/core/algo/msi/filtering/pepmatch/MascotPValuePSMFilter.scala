@@ -12,7 +12,7 @@ import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.filtering.IOptimizablePeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
-import fr.proline.util.math.MathUtils
+import fr.proline.util.primitives._
 import fr.proline.core.algo.msi.validation.MascotIonScoreThresholds
 
 // TODO: use MascotThresholdTypes enumeration value instead of useHomologyThreshold
@@ -119,13 +119,13 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
     props.toMap
   }
 
-  def getNextValue(currentVal: AnyVal) = MathUtils.toFloat(currentVal) + pValuethresholdIncreaseValue
+  def getNextValue(currentVal: AnyVal) = toFloat(currentVal) + pValuethresholdIncreaseValue
 
   def getThresholdStartValue(): AnyVal = pValueStartValue
 
   def getThresholdValue(): AnyVal = pValue
 
   def setThresholdValue(currentVal: AnyVal) {
-    pValue = MathUtils.toFloat(currentVal)
+    pValue = toFloat(currentVal)
   }
 }

@@ -15,7 +15,7 @@ import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
-import fr.proline.util.primitives.LongOrIntAsInt._
+import fr.proline.util.primitives._
 
 class SQLQuantResultSummaryProvider(
   override val msiDbCtx: SQLConnectionContext,
@@ -97,7 +97,7 @@ class SQLQuantResultSummaryProvider(
     
     msiDbCtx.ezDBC.select(mqPepCompQuery) { r =>
 
-      val mqPepId: Int = r.getAnyVal(MQCompCols.ID)
+      val mqPepId: Int = toInt(r.getAnyVal(MQCompCols.ID))
       val pepInst = pepInstByMqPepId.get(mqPepId)
       val quantPeptides = parse[Array[QuantPeptide]]( r.getString(ObjectTreeTable.columns.SERIALIZED_DATA) )
       
@@ -140,7 +140,7 @@ class SQLQuantResultSummaryProvider(
     
     msiDbCtx.ezDBC.select(mqProtSetCompQuery) { r =>
 
-      val mqProtSetId: Int = r.getAnyVal(MQCompCols.ID)
+      val mqProtSetId: Int = toInt(r.getAnyVal(MQCompCols.ID))
       
       /*val pepInst = pepInstByMqPepId.get(mqPepId)
       val quantPeptides = parse[Array[QuantPeptide]]( r.getString(ObjectTreeTable.columns.SERIALIZED_DATA) )

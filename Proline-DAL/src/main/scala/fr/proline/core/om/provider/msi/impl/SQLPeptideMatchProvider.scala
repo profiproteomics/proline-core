@@ -10,8 +10,6 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.PeptideMatchProperties
 import fr.proline.core.om.provider.msi.IPeptideMatchProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.util.primitives.DoubleOrFloatAsFloat.anyVal2Float
-import fr.proline.util.primitives.LongOrIntAsInt.anyVal2Int
 import fr.proline.util.sql.StringOrBoolAsBool.string2boolean
 import fr.proline.core.dal.tables.msi.MsiDbPeptideInstancePeptideMatchMapTable
 
@@ -100,8 +98,7 @@ class SQLPeptideMatchProvider(
 
   private def _buildPeptideMatches(rsIds: Seq[Int], pmRecords: Seq[Map[String, Any]]): Array[PeptideMatch] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
-    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Load peptides
@@ -144,11 +141,11 @@ class SQLPeptideMatchProvider(
       val propertiesAsJSON = pepMatchRecord(PepMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
       val properties = if (propertiesAsJSON != null) Some(parse[PeptideMatchProperties](propertiesAsJSON)) else None
 
-      val pepMatch = new PeptideMatch(id = pepMatchRecord(PepMatchCols.ID).asInstanceOf[AnyVal],
+      val pepMatch = new PeptideMatch(id = toInt(pepMatchRecord(PepMatchCols.ID)),
         rank = pepMatchRecord(PepMatchCols.RANK).asInstanceOf[Int],
-        score = pepMatchRecord(PepMatchCols.SCORE).asInstanceOf[AnyVal],
+        score = toInt(pepMatchRecord(PepMatchCols.SCORE)),
         scoreType = scoreType,
-        deltaMoz = pepMatchRecord(PepMatchCols.DELTA_MOZ).asInstanceOf[AnyVal],
+        deltaMoz = toFloat(pepMatchRecord(PepMatchCols.DELTA_MOZ)),
         isDecoy = pepMatchRecord(PepMatchCols.IS_DECOY),
         peptide = peptide,
         missedCleavage = pepMatchRecord(PepMatchCols.MISSED_CLEAVAGE).asInstanceOf[Int],

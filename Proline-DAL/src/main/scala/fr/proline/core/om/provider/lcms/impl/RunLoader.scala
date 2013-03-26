@@ -82,16 +82,15 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
   
   def buildLcmsScan( scanRecord: Map[String,Any] ): LcMsScan = {
     
-    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
-    import fr.proline.util.primitives.LongOrIntAsInt._
-    
+    import fr.proline.util.primitives._
+
     val precursorMoz = scanRecord.getOrElse("precursor_moz",Double.NaN).asInstanceOf[Double]
     val precursorCharge = scanRecord.getOrElse("precursor_charge",0).asInstanceOf[Int]
     
-    new LcMsScan( id = scanRecord("id").asInstanceOf[AnyVal],
+    new LcMsScan( id = toInt(scanRecord("id")),
                   initialId = scanRecord("initial_id").asInstanceOf[Int],
                   cycle = scanRecord("cycle").asInstanceOf[Int],
-                  time = scanRecord("time").asInstanceOf[AnyVal],
+                  time = toFloat(scanRecord("time")),
                   msLevel = scanRecord("ms_level").asInstanceOf[Int],
                   tic = scanRecord("tic").asInstanceOf[Double],
                   basePeakMoz = scanRecord("base_peak_moz").asInstanceOf[Double],

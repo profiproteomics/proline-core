@@ -454,14 +454,14 @@ class SQLRsStorer(
 
   def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Int = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
 
     // Synchronize the some related objects with the UDSdb
     val udsDbWork = BuildJDBCWork.withEzDBC(context.getUDSDbConnectionContext.getDriverType, { udsEzDBC =>
       val enzymes = msiSearch.searchSettings.usedEnzymes
       for (enzyme <- enzymes) {
         udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
-          enzyme.id = r.nextAnyVal
+          enzyme.id = toInt(r.nextAnyVal)
         }
         require(enzyme.id > 0, "can't find an enzyme named '" + enzyme.name + "' in the UDS-DB")
       }

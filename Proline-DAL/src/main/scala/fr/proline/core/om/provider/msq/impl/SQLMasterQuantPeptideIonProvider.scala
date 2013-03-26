@@ -11,8 +11,7 @@ import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 import fr.proline.core.om.model.msq.MasterQuantPeptideIonProperties
 import fr.proline.core.om.model.msq.QuantPeptideIon
-import fr.proline.util.primitives.DoubleOrFloatAsFloat._
-import fr.proline.util.primitives.LongOrIntAsInt._
+import fr.proline.util.primitives._
 
 class SQLMasterQuantPeptideIonProvider(val msiSqlCtx: SQLConnectionContext) { //extends IMasterQuantPeptideIonProvider
   
@@ -38,7 +37,7 @@ class SQLMasterQuantPeptideIonProvider(val msiSqlCtx: SQLConnectionContext) { //
     
     msiSqlCtx.ezDBC.select(mqPepIonQuery) { r =>
 
-      val mqPepIonId: Int = r.getAnyVal(MQPepIonCols.ID)
+      val mqPepIonId: Int = toInt(r.getAnyVal(MQPepIonCols.ID))
       val quantPepIons = parse[Array[QuantPeptideIon]]( r.getString(ObjectTreeTable.columns.SERIALIZED_DATA) )
       
       // Build the master quant peptide ion
@@ -46,7 +45,7 @@ class SQLMasterQuantPeptideIonProvider(val msiSqlCtx: SQLConnectionContext) { //
         id = mqPepIonId,
         unlabeledMoz = r.getDouble(MQPepIonCols.MOZ),
         charge = r.getInt(MQPepIonCols.CHARGE),
-        elutionTime = r.getAnyVal(MQPepIonCols.ELUTION_TIME),
+        elutionTime = toFloat(r.getAnyVal(MQPepIonCols.ELUTION_TIME)),
         peptideMatchesCount = 0,//r.getInt(MQPepIonCols.p), // TODO: add to MSIdb
         selectionLevel = r.getInt(MQComponentTable.columns.SELECTION_LEVEL),
         resultSummaryId = r.getInt(MQPepIonCols.RESULT_SUMMARY_ID),

@@ -13,7 +13,6 @@ import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.util.StringUtils
-import fr.proline.util.primitives.LongOrIntAsInt.anyVal2Int
 import fr.proline.core.dal.tables.ps.PsDbPeptidePtmTable
 import fr.proline.core.dal.tables.ps.PsDbPeptideTable
 
@@ -91,7 +90,7 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
   def getPeptides(peptideIds: Seq[Int]): Array[Peptide] = {
     if (peptideIds.length == 0) return Array.empty[Peptide]
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
 
     val maxNbIters = psDbCtx.ezDBC.getInExpressionCountLimit
 
@@ -118,7 +117,7 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
 
         // Map the record by its id    
         if (peptideRecord("ptm_string").asInstanceOf[String] != null) {
-          modifiedPepIdSet += peptideRecord("id").asInstanceOf[AnyVal]
+          modifiedPepIdSet += toInt(peptideRecord("id"))
         }
 
       }
@@ -146,7 +145,7 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
 
   def getPeptidesForSequences(peptideSeqs: Seq[String]): Array[Peptide] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
 
     val maxNbIters = psDbCtx.ezDBC.getInExpressionCountLimit
 
@@ -175,7 +174,7 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
 
         // Map the record by its id    
         if (peptideRecord("ptm_string").asInstanceOf[String] != null) {
-          modifiedPepIdSet += peptideRecord("id").asInstanceOf[AnyVal]
+          modifiedPepIdSet += toInt(peptideRecord("id"))
         }
 
       }
@@ -192,14 +191,14 @@ class SQLPeptideProvider(psDbCtx: SQLConnectionContext) extends SQLPTMProvider(p
   private def _buildPeptides(pepRecords: Seq[Map[String, Any]],
     locatedPtmsByPepId: Map[Int, Array[LocatedPtm]]): Array[Peptide] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
 
     // Iterate over peptide records to convert them into peptide objects
     var peptides = new ArrayBuffer[Peptide](pepRecords.length)
 
     for (pepRecord <- pepRecords) {
 
-      val pepId: Int = pepRecord("id").asInstanceOf[AnyVal]
+      val pepId: Int = toInt(pepRecord("id"))
       val sequence = pepRecord("sequence").asInstanceOf[String]
       val locatedPtms = locatedPtmsByPepId.getOrElse(pepId, Array.empty[LocatedPtm])
 

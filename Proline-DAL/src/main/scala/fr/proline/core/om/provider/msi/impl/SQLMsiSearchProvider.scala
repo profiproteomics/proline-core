@@ -11,7 +11,7 @@ import fr.proline.core.dal.tables.uds.UdsDbInstrumentColumns
 import fr.proline.core.dal.tables.uds.UdsDbInstrumentConfigTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IMSISearchProvider
-import fr.proline.util.primitives.LongOrIntAsInt._
+import fr.proline.util.primitives._
 import fr.proline.util.sql.StringOrBoolAsBool._
 import fr.proline.core.dal.tables.uds.UdsDbInstrumentTable
 
@@ -45,7 +45,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
 
     val msiSearches = msiSqlCtx.ezDBC.select(msiSearchQuery) { r =>
 
-      val msiSearchId: Int = r.getAnyVal(msiSearchCols.ID)
+      val msiSearchId: Int = toInt(r.getAnyVal(msiSearchCols.ID))
 
       searchSettingsIdByMsiSearchId += (msiSearchId -> r.getInt(msiSearchCols.SEARCH_SETTINGS_ID))
       peaklistIdByMsiSearchId += (msiSearchId -> r.getInt(msiSearchCols.PEAKLIST_ID))
@@ -105,7 +105,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
 
     val peaklists = msiSqlCtx.ezDBC.select(pklQuery) { r =>
 
-      val pklId: Int = r.getAnyVal(peaklistCols.ID)
+      val pklId: Int = toInt(r.getAnyVal(peaklistCols.ID))
       pklSoftIdByPklId += (pklId -> r.getInt(peaklistCols.PEAKLIST_SOFTWARE_ID))
       
       val propsOpt = r.getStringOption(peaklistCols.SERIALIZED_PROPERTIES).map( propStr =>
@@ -141,7 +141,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
 
     msiSqlCtx.ezDBC.select(pklSoftQuery) { r =>
       new PeaklistSoftware(
-        id = r.getAnyVal(pklSoftCols.ID),
+        id = toInt(r.getAnyVal(pklSoftCols.ID)),
         name = r.getString(pklSoftCols.NAME),
         version = r.getString(pklSoftCols.VERSION),
         properties = r.getStringOption(pklSoftCols.SERIALIZED_PROPERTIES).map( parse[PeaklistSoftwareProperties](_) )
@@ -187,7 +187,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
     val instConfigIdBySSId = new HashMap[Int, Int]
     val searchSettingsList = msiSqlCtx.ezDBC.select(ssQuery) { r =>
 
-      val ssId: Int = r.getAnyVal(ssCols.ID)
+      val ssId: Int = toInt(r.getAnyVal(ssCols.ID))
       instConfigIdBySSId += ssId -> r.getInt(ssCols.INSTRUMENT_CONFIG_ID)
       
       new SearchSettings(
@@ -286,7 +286,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
     
     msiSqlCtx.ezDBC.select(seqDbQuery) { r =>
       new SeqDatabase(
-        id = r.getAnyVal(seqDbCols.ID),
+        id = toInt(r.getAnyVal(seqDbCols.ID)),
         name = r.getString(seqDbCols.NAME),
         filePath = r.getString(seqDbCols.FASTA_FILE_PATH),
         sequencesCount = r.getIntOrElse(seqDbCols.SEQUENCE_COUNT, 0),
@@ -311,7 +311,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
     
     msiSqlCtx.ezDBC.select(sqlQuery) { r =>
       new SeqDatabase(
-        id = r.getAnyVal(seqDbCols.ID),
+        id = toInt(r.getAnyVal(seqDbCols.ID)),
         name = r.getString(seqDbCols.NAME),
         filePath = r.getString(seqDbCols.FASTA_FILE_PATH),
         sequencesCount = r.getIntOrElse(seqDbCols.SEQUENCE_COUNT, 0),
@@ -332,7 +332,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
     
     msiSqlCtx.ezDBC.select(enzQuery) { r =>
       new Enzyme(
-        id = r.getAnyVal(enzCols.ID),
+        id = toInt(r.getAnyVal(enzCols.ID)),
         name = r.getString(enzCols.NAME),
         cleavageRegexp = r.getStringOption(enzCols.CLEAVAGE_REGEXP),
         isIndependant = r.getBooleanOrElse(enzCols.IS_INDEPENDANT, false),
@@ -350,7 +350,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
     val instIdByInstConfigId = new HashMap[Int, Int]
     val instConfigs = udsSqlCtx.ezDBC.select(instConfigQuery) { r =>
       
-      val instConfigId: Int = r.getAnyVal(instConfigCols.ID)
+      val instConfigId: Int = toInt(r.getAnyVal(instConfigCols.ID))
       val instId = r.getInt(instConfigCols.INSTRUMENT_ID)
       instIdByInstConfigId += instConfigId -> instId
 
@@ -384,7 +384,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: SQLConnectionContext, val msiSqlCtx: S
     
     udsSqlCtx.ezDBC.select(instQuery) { r =>
       new Instrument(
-        id = r.getAnyVal(instCols.ID),
+        id = toInt(r.getAnyVal(instCols.ID)),
         name = r.getString(instCols.NAME),
         source = r.getStringOrElse(instCols.SOURCE, null),
         properties = r.getStringOption(instCols.SERIALIZED_PROPERTIES).map(parse[InstrumentProperties](_))

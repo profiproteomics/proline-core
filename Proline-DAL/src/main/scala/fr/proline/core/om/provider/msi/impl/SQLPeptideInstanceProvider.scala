@@ -84,8 +84,7 @@ class SQLPeptideInstanceProvider(
     pepInstPepMatchMapRecords: Seq[Map[String, Any]]
   ): Array[PeptideInstance] = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
-    import fr.proline.util.primitives.DoubleOrFloatAsFloat._
+    import fr.proline.util.primitives._
 
     // Load peptides
     val uniqPepIds = pepInstRecords.map { _(PepInstCols.PEPTIDE_ID).asInstanceOf[Int] } distinct
@@ -108,12 +107,12 @@ class SQLPeptideInstanceProvider(
       val pepInstRecord = pepInstRecords(pepInstIdx)
 
       // Retrieve the corresponding peptide
-      val pepId: Int = pepInstRecord(PepInstCols.PEPTIDE_ID).asInstanceOf[AnyVal]
+      val pepId: Int = toInt(pepInstRecord(PepInstCols.PEPTIDE_ID))
       require(peptideById.contains(pepId), "undefined peptide with id ='" + pepId + "'")
       val peptide = peptideById(pepId)
 
       // Retrieve peptide match ids and properties
-      val pepInstId: Int = pepInstRecord(PepInstCols.ID).asInstanceOf[AnyVal]
+      val pepInstId: Int = toInt(pepInstRecord(PepInstCols.ID))
       val pepMatchIds = new ArrayBuffer[Int]()
       val pepMatchPropertyMapBuilder = Map.newBuilder[Int, PeptideMatchResultSummaryProperties]
 
@@ -137,7 +136,7 @@ class SQLPeptideInstanceProvider(
         proteinMatchesCount = pepInstRecord(PepInstCols.PROTEIN_MATCH_COUNT).asInstanceOf[Int],
         proteinSetsCount = pepInstRecord(PepInstCols.PROTEIN_SET_COUNT).asInstanceOf[Int],
         selectionLevel = pepInstRecord(PepInstCols.SELECTION_LEVEL).asInstanceOf[Int],
-        elutionTime = pepInstRecord(PepInstCols.ELUTION_TIME).asInstanceOf[AnyVal],
+        elutionTime = toInt(pepInstRecord(PepInstCols.ELUTION_TIME)),
         peptideMatchIds = pepMatchIds.toArray,
         bestPeptideMatchId = pepInstRecord(PepInstCols.BEST_PEPTIDE_MATCH_ID).asInstanceOf[Int],
         unmodifiedPeptideId = pepInstRecord(PepInstCols.UNMODIFIED_PEPTIDE_ID).asInstanceOf[Int],

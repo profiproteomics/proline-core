@@ -6,7 +6,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch}
-import fr.proline.util.math.MathUtils
+import fr.proline.util.primitives._
 
 object ScorePSMFilter {
 //  val thresholdStartValue = 13.0f
@@ -42,13 +42,13 @@ class ScorePSMFilter(var scoreThreshold: Float = 13.0f, var thresholdStartValue 
     props.toMap
   }
 
-  def getNextValue( currentVal: AnyVal ) = MathUtils.toFloat(currentVal) + ScorePSMFilter.thresholdIncreaseValue
+  def getNextValue( currentVal: AnyVal ) = toFloat(currentVal) + ScorePSMFilter.thresholdIncreaseValue
   
   def getThresholdStartValue(): AnyVal = thresholdStartValue
   
   def getThresholdValue(): AnyVal = scoreThreshold
   
   def setThresholdValue( currentVal: AnyVal ){    
-    scoreThreshold = MathUtils.toFloat(currentVal)
+    scoreThreshold = toFloat(currentVal)
   }
 }

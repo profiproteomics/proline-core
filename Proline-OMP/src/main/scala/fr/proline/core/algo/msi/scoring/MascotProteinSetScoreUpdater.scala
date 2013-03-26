@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi.scoring
 
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.util.math.MathUtils
+import fr.proline.util.primitives._
 
 
 class MascotProteinSetScoreUpdater() extends IProteinSetScoreUpdater {
@@ -11,7 +11,7 @@ class MascotProteinSetScoreUpdater() extends IProteinSetScoreUpdater {
     
     val bestPepMatchesByProtSetId = rsm.getBestPepMatchesByProtSetId
     
-    val scoreThresholdOffset = if(params != null && params.length > 0) MathUtils.toFloat(params(0)) else 0f
+    val scoreThresholdOffset = if(params != null && params.length > 0) toFloat(params(0)) else 0f
     
     for( proteinSet <- rsm.proteinSets ) {
       

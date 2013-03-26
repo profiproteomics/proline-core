@@ -236,7 +236,6 @@ class ResultFileImporterSQLStorer(
 
   private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Int, msiEzDBC: EasyDBC): PeaklistSoftware = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
     import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
 
     def getPeaklistSoftware(ezDBC: EasyDBC): PeaklistSoftware = {
@@ -267,7 +266,7 @@ class ResultFileImporterSQLStorer(
 
   private def _getInstrumentConfig(instrumentConfigId: Int): InstrumentConfig = {
 
-    import fr.proline.util.primitives.LongOrIntAsInt._
+    import fr.proline.util.primitives._
     import fr.proline.core.om.model.msi.{ InstrumentProperties, InstrumentConfigProperties }
 
     // Load the instrument configuration record
@@ -275,7 +274,7 @@ class ResultFileImporterSQLStorer(
       "SELECT instrument.*,instrument_config.* FROM instrument,instrument_config " +
         "WHERE instrument.id = instrument_config.instrument_id AND instrument_config.id =" + instrumentConfigId) { r =>
 
-        val instrument = new Instrument(id = r.nextAnyVal, name = r, source = r)
+        val instrument = new Instrument(id = toInt(r.nextAnyVal), name = r, source = r)
         for (instPropStr <- r.nextStringOption) {
           if (StringUtils.isEmpty(instPropStr) == false)
             instrument.properties = Some(parse[InstrumentProperties](instPropStr))

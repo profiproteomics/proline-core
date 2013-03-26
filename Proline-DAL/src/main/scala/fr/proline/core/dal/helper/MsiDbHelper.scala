@@ -6,7 +6,7 @@ import scala.collection.mutable.HashSet
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{DoJDBCReturningWork,DoJDBCWork}
-import fr.proline.util.primitives.LongOrIntAsInt._
+import fr.proline.util.primitives._
 
 class MsiDbHelper( msiDbCtx: DatabaseConnectionContext ) {
 
@@ -70,7 +70,7 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
         "WHERE id IN ("+  rsIds.mkString(",") +") " +
         "AND msi_search_id IS NOT NULL"
       ) { r =>
-        val id: Int = r.nextAnyVal
+        val id: Int = toInt(r.nextAnyVal)
         msiSearchIdsByParentResultSetId.getOrElseUpdate(id, new HashSet[Int]) += r.nextInt
       }
     })
@@ -264,7 +264,7 @@ method get_search_engine( Int $target_result_set_id! ) {
     
     DoJDBCWork.withEzDBC( msiDbCtx, { ezDBC =>
       ezDBC.selectAndProcess( "SELECT id FROM spectrum WHERE peaklist_id IN (" + pklIds.mkString(",")+")" ) { r =>
-        val spectrumId: Int = r.nextAnyVal
+        val spectrumId: Int = toInt(r.nextAnyVal)
         specNumById += (spectrumId -> specCount )      
         specCount += 1
       }
