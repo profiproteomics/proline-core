@@ -143,7 +143,7 @@ class SQLPeptideMatchProvider(
 
       val pepMatch = new PeptideMatch(id = toInt(pepMatchRecord(PepMatchCols.ID)),
         rank = pepMatchRecord(PepMatchCols.RANK).asInstanceOf[Int],
-        score = toInt(pepMatchRecord(PepMatchCols.SCORE)),
+        score = toFloat(pepMatchRecord(PepMatchCols.SCORE)),
         scoreType = scoreType,
         deltaMoz = toFloat(pepMatchRecord(PepMatchCols.DELTA_MOZ)),
         isDecoy = pepMatchRecord(PepMatchCols.IS_DECOY),
