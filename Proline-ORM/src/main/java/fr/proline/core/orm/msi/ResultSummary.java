@@ -3,6 +3,8 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import javax.persistence.*;
 
+import fr.proline.core.orm.msi.PeptideInstance;
+
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -163,14 +165,20 @@ public class ResultSummary implements Serializable {
 	public static class TransientData implements Serializable {
 		private static final long serialVersionUID = 1L;
 		
-
+		private PeptideInstance[] peptideInstanceArray = null;
 		private ProteinSet[] proteinSetArray = null;
 		private Object dataSet = null; // JPM.TODO : replace Object by DataSet from orm
 		
 		protected TransientData() {
 		}
 	
+		public PeptideInstance[] getPeptideInstanceArray() {
+			return peptideInstanceArray;
+		}
 
+		public void setPeptideInstanceArray(PeptideInstance[] peptideInstanceArray) {
+			this.peptideInstanceArray = peptideInstanceArray;
+		}
 
 		public ProteinSet[] getProteinSetArray() {
 			return proteinSetArray;
@@ -187,6 +195,8 @@ public class ResultSummary implements Serializable {
 		public void setDataSet(Object dataSet) { // JPM.TODO : replace Object by DataSet from orm
 			this.dataSet = dataSet;
 		}
+		
+		
 
 	
 	}
