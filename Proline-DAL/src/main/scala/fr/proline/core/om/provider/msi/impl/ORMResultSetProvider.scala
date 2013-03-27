@@ -14,6 +14,7 @@ import fr.proline.repository.util.JPAUtils
 import fr.proline.util.StringUtils
 import javax.persistence.EntityManager
 import fr.proline.core.om.model.msi.ResultSetProperties
+import fr.proline.core.om.model.msi.SearchSettingsProperties
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,
@@ -173,12 +174,12 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         decoyRs = Some(definedDecoyRs)
       }
 
-      val serializedProprties = msiResultSet.getSerializedProperties
+      val serializedProperties = msiResultSet.getSerializedProperties
 
-      val resultSetProperties: Option[ResultSetProperties] = if (StringUtils.isEmpty(serializedProprties)) {
+      val resultSetProperties: Option[ResultSetProperties] = if (StringUtils.isEmpty(serializedProperties)) {
         None
       } else {
-        Some(Json.parse[ResultSetProperties](serializedProprties))
+        Some(Json.parse[ResultSetProperties](serializedProperties))
       }
 
       val resultSet = new ResultSet(peptides,
@@ -230,12 +231,12 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         bestChild = Some(definedBestChild)
       }
 
-      val serializedProprties = msiPeptideMatch.getSerializedProperties
+      val serializedProperties = msiPeptideMatch.getSerializedProperties
 
-      val peptideMatchProperties: Option[PeptideMatchProperties] = if (StringUtils.isEmpty(serializedProprties)) {
+      val peptideMatchProperties: Option[PeptideMatchProperties] = if (StringUtils.isEmpty(serializedProperties)) {
         None
       } else {
-        Some(Json.parse[PeptideMatchProperties](serializedProprties))
+        Some(Json.parse[PeptideMatchProperties](serializedProperties))
       }
 
       val peptideMatch = new PeptideMatch(msiPeptideMatchId,
@@ -312,12 +313,12 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
           spectrumTitle = msiSpectrum.getTitle
         }
 
-        val serializedProprties = msiMsQuery.getSerializedProperties
+        val serializedProperties = msiMsQuery.getSerializedProperties
 
-        val msQueryProperties: Option[MsQueryProperties] = if (StringUtils.isEmpty(serializedProprties)) {
+        val msQueryProperties: Option[MsQueryProperties] = if (StringUtils.isEmpty(serializedProperties)) {
           None
         } else {
-          Some(Json.parse[MsQueryProperties](serializedProprties))
+          Some(Json.parse[MsQueryProperties](serializedProperties))
         }
 
         val msQuery = new Ms2Query(msiMsQueryId,
@@ -502,6 +503,14 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       }
     }
 
+    val serializedProperties = msiSearchSetting.getSerializedProperties
+
+    val searchSettingsProperties: Option[SearchSettingsProperties] = if (StringUtils.isEmpty(serializedProperties)) {
+      None
+    } else {
+      Some(Json.parse[SearchSettingsProperties](serializedProperties))
+    }
+
     new SearchSettings(msiSearchSetting.getId,
       msiSearchSetting.getSoftwareName,
       msiSearchSetting.getSoftwareVersion,
@@ -518,7 +527,9 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       buildInstrumentConfig(msiSearchSetting.getInstrumentConfig),
       None,
       None,
-      msiSearchSetting.getQuantitation)
+      msiSearchSetting.getQuantitation,
+      searchSettingsProperties)
+
   }
 
   private def buildPtmDefinition(msiUsedPtm: MsiUsedPtm): PtmDefinition = {

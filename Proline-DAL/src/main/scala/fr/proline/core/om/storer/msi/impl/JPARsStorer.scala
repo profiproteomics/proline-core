@@ -606,7 +606,10 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       msiSearchSetting.setPeptideMassErrorToleranceUnit(searchSettings.ms1ErrorTolUnit)
       msiSearchSetting.setQuantitation(searchSettings.quantitation)
 
-      // TODO handle serializedProperties
+      val searchSettingProperties = searchSettings.properties
+      if (searchSettingProperties.isDefined) {
+        msiSearchSetting.setSerializedProperties(Json.generate(searchSettingProperties.get))
+      }
 
       msiSearchSetting.setSoftwareName(searchSettings.softwareName)
       msiSearchSetting.setSoftwareVersion(searchSettings.softwareVersion)
