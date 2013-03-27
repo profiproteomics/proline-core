@@ -141,6 +141,12 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiResultSet.setDescription(resultSet.description)
         // ResultSet.modificationTimestamp field is initialized by MsiResultSet constructor
         msiResultSet.setName(resultSet.name)
+
+        val resultSetProperties = resultSet.properties
+        if (resultSetProperties.isDefined) {
+          msiResultSet.setSerializedProperties(Json.generate(resultSetProperties.get))
+        }
+
         msiResultSet.setType(parseType(resultSet))
 
         /* Store MsiSearch and retrieve persisted ORM entity */

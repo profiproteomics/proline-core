@@ -1,20 +1,19 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.JavaConversions.{asScalaBuffer, asScalaSet}
+import scala.collection.JavaConversions.{ asScalaBuffer, asScalaSet }
 import scala.collection.mutable
-
 import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.msi.{Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, SearchSettings, SeqDatabase, SequenceMatch}
+import fr.proline.core.om.model.msi.{ Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, SearchSettings, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.ResultSet.Type
-import fr.proline.core.orm.msi.repository.{MsiSeqDatabaseRepository => seqDatabaseRepo, PeptideMatchRepository => peptideMatchRepo, ProteinMatchRepository => proteinMatchRepo, ScoringRepository => scoringRepo, SequenceMatchRepository => sequenceMatchRepo}
+import fr.proline.core.orm.msi.repository.{ MsiSeqDatabaseRepository => seqDatabaseRepo, PeptideMatchRepository => peptideMatchRepo, ProteinMatchRepository => proteinMatchRepo, ScoringRepository => scoringRepo, SequenceMatchRepository => sequenceMatchRepo }
 import fr.proline.repository.util.JPAUtils
 import fr.proline.util.StringUtils
 import javax.persistence.EntityManager
+import fr.proline.core.om.model.msi.ResultSetProperties
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,
@@ -174,6 +173,14 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         decoyRs = Some(definedDecoyRs)
       }
 
+      val serializedProprties = msiResultSet.getSerializedProperties
+
+      val resultSetProperties: Option[ResultSetProperties] = if (StringUtils.isEmpty(serializedProprties)) {
+        None
+      } else {
+        Some(Json.parse[ResultSetProperties](serializedProprties))
+      }
+
       val resultSet = new ResultSet(peptides,
         peptideMatches,
         proteinMatches,
@@ -187,7 +194,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         msiSearch,
         decoyRsId,
         decoyRs,
-        null // TODO handle properties
+        resultSetProperties
       )
 
       knownResultSets += msiResultSetId -> resultSet
