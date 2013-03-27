@@ -3,6 +3,9 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import javax.persistence.*;
 
+
+import fr.proline.core.orm.msi.ProteinSet;
+
 import java.util.Set;
 
 
@@ -88,8 +91,11 @@ public class PeptideInstance implements Serializable {
     }*/
 
     //Transient Variable not saved in database
-    @Transient private PeptideMatch bestPeptideMatch = null;
+    @Transient private PeptideMatch bestPeptideMatch = null; //JPM.DEPRECATED : will remove it
 	
+	// Transient Variables not saved in database
+    @Transient private TransientData transientData = null;
+    
 	public Integer getId() {
 		return this.id;
 	}
@@ -222,13 +228,50 @@ public class PeptideInstance implements Serializable {
 	 * Get of Transient peptideSet, Must be set by the user first.
 	 * @return
 	 */
-	public PeptideMatch getTransientBestPeptideMatch() {
+	public PeptideMatch getTransientBestPeptideMatch() {  //JPM.DEPRECATED : will remove it
 		return bestPeptideMatch;
 	}
 
-	public void setTransientBestPeptideMatch(PeptideMatch bestPeptideMatch) {
+	public void setTransientBestPeptideMatch(PeptideMatch bestPeptideMatch) {  //JPM.DEPRECATED : will remove it
 		this.bestPeptideMatch = bestPeptideMatch;
 	}
   
+    public TransientData getTransientData() {
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
+    }
   
+
+	/**
+	 * Transient Data which will be not saved in database
+	 * Used by the Proline Studio IHM
+	 * @author JM235353
+	 */
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+		private ProteinSet[] proteinSetArray = null;
+		private PeptideMatch bestPeptideMatch = null;
+		
+		protected TransientData() {
+		}
+		
+		public ProteinSet[] getProteinSetArray() {
+			return proteinSetArray;
+		}
+
+		public void setProteinSetArray(ProteinSet[] proteinSetArray) {
+			this.proteinSetArray = proteinSetArray;
+		}
+		
+		public PeptideMatch getBestPeptideMatch() {
+			return bestPeptideMatch;
+		}
+
+		public void setBestPeptideMatch(PeptideMatch bestPeptideMatch) {
+			this.bestPeptideMatch = bestPeptideMatch;
+		}
+	}
 }
