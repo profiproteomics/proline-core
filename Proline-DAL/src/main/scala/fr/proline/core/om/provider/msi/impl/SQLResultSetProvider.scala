@@ -56,10 +56,14 @@ trait SQLResultSetLoader {
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ rsIds.mkString(",") ~")"
     )
     
-    val resultSets = msiDbCtx.ezDBC.select(rsQuery) { r =>
+    val resultSets = msiDbCtx.ezDBC.select(rsQuery) { r =>      
 
       // Retrieve some vars
       val rsId: Int = toInt(r.getAnyVal(RSCols.ID))
+      if( !protMatchesByRsId.contains(rsId) ) {
+        throw new Exception("this result set doesn't have any protein match and can't be loaded")
+      }
+      
       val rsProtMatches = protMatchesByRsId(rsId)
       val rsPepMatches = pepMatchesByRsId(rsId)
       val rsPeptides = rsPepMatches map { _.peptide } distinct
