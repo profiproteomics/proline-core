@@ -1,17 +1,16 @@
 package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.HashMap
-
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
-
 import fr.proline.core.algo.msi.filtering.pepmatch._
 import fr.proline.core.algo.msi.filtering.proteinset._
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.pepmatch._
 import fr.proline.core.algo.msi.validation.proteinset._
 import fr.proline.core.om.model.msi.{ResultSummary, ResultSet, ProteinSet, PeptideMatch}
+import fr.proline.core.om.model.msi.FilterDescriptor
 
 object TargetDecoyModes extends Enumeration {
   type Mode = Value
@@ -261,6 +260,11 @@ trait IPeptideMatchValidator {
 trait IProteinSetValidator {
   
   val expectedFdr: Option[Float]
+  
+  // TODO: add validator description and properties to IProteinSetValidator
+  def toFilterDescriptor(): FilterDescriptor = {
+    new FilterDescriptor( "protein set validator", None, Some( Map("expected_fdr"-> this.expectedFdr) ) )
+  }
   
   /**
    * Validates protein sets.

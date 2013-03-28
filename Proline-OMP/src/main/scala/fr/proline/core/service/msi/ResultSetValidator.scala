@@ -306,7 +306,8 @@ class ResultSetValidator(
 
       finalValidationResult = protSetValidator.get.validateProteinSets(targetRsm).finalResult
 
-      filterDescriptors += pepMatchValidator.get.validationFilter.toFilterDescriptor      
+      // TODO: log something about the validator
+      filterDescriptors += protSetValidator.get.toFilterDescriptor
     }
 
     this.logger.info( "Final target protein sets count = " + finalValidationResult.targetMatchesCount )
