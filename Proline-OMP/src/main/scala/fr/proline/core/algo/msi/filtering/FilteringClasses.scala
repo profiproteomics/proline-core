@@ -4,6 +4,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.algo.msi.validation.ValidationResults
 import fr.proline.core.om.model.msi.ProteinSet
+import fr.proline.util.primitives._
 
 object FilterPropertyKeys {
   final val THRESHOLD_VALUE = "threshold_value"
@@ -51,13 +52,7 @@ trait IFilter {
    * Returns the Threshold value that has been set with conversion to a Double.
    */
   def getThresholdValueAsDouble(): Double = {
-    this.getThresholdValue match {
-      case d: Double => d
-      case f: Float => f.toDouble
-      case i: Int => i.toDouble
-      case l: Long => l.toDouble
-      case _ => throw new Exception("unsupported primitive type for the threshold value")
-    }
+    toDouble( this.getThresholdValue )
   }
   
   /**
