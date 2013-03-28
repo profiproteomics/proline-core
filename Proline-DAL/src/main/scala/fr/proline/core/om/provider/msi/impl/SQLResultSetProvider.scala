@@ -3,22 +3,21 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
 
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.om.model.msi.{ ProteinMatch, PeptideMatch, ResultSet, ResultSetProperties }
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.context.DatabaseConnectionContext
-import fr.profi.jdbc.easy.EasyDBC
-import fr.proline.core.dal.SQLConnectionContext
 
 trait SQLResultSetLoader {
 
   import fr.proline.core.dal.helper.MsiDbHelper
 
-  val msiDbCtx: SQLConnectionContext
-  val psDbCtx: SQLConnectionContext
-  val udsDbCtx: SQLConnectionContext
+  val msiDbCtx: DatabaseConnectionContext
+  val psDbCtx: DatabaseConnectionContext
+  val udsDbCtx: DatabaseConnectionContext
 
   val RSCols = MsiDbResultSetTable.columns
 
@@ -56,60 +55,64 @@ trait SQLResultSetLoader {
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ rsIds.mkString(",") ~")"
     )
     
-    val resultSets = msiDbCtx.ezDBC.select(rsQuery) { r =>      
-
-      // Retrieve some vars
-      val rsId: Int = toInt(r.getAnyVal(RSCols.ID))
-      /*if( !protMatchesByRsId.contains(rsId) ) {
-        throw new Exception("this result set doesn't have any protein match and can't be loaded")
-      }*/
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
-      val rsProtMatches = protMatchesByRsId.getOrElse(rsId,Array.empty[ProteinMatch])
-      val rsPepMatches = pepMatchesByRsId.getOrElse(rsId,Array.empty[PeptideMatch])
-      val rsPeptides = rsPepMatches map { _.peptide } distinct
-      val rsType = r.getString(RSCols.TYPE)
-      val isDecoy = rsType matches "DECOY_SEARCH"
-      val isNative = rsType matches "SEARCH"
-      val decoyRsId = r.getIntOrElse(RSCols.DECOY_RESULT_SET_ID, 0)
-
-      val rsMsiSearchId = if (isNative) {
-        r.getIntOrElse(RSCols.MSI_SEARCH_ID, 0)
-      } else if (msiSearchIdsByRsId.contains(rsId)) {
-        // FIXME: we should attach all MSI searches to the result set ???
-        msiSearchIdsByRsId(rsId).head
-      } else 0
-
-      val msiSearch = msiSearchById.getOrElse(rsMsiSearchId, null)      
-
-      // Decode JSON properties
-      val propertiesAsJSON = r.getString(RSCols.SERIALIZED_PROPERTIES)
-      val properties = if (propertiesAsJSON != null) Some(parse[ResultSetProperties](propertiesAsJSON)) else None
-      
-      new ResultSet(
-        id = rsId,
-        name = r.getString(RSCols.NAME),
-        description = r.getString(RSCols.DESCRIPTION),
-        peptides = rsPeptides,
-        peptideMatches = rsPepMatches,
-        proteinMatches = rsProtMatches,
-        isDecoy = isDecoy,
-        isNative = isNative,
-        msiSearch = msiSearch,
-        decoyResultSetId = decoyRsId,
-        properties = properties
-      )
-    }
-
-    resultSets.toArray
+      val resultSets = msiEzDBC.select(rsQuery) { r =>      
+  
+        // Retrieve some vars
+        val rsId: Int = toInt(r.getAnyVal(RSCols.ID))
+        /*if( !protMatchesByRsId.contains(rsId) ) {
+          throw new Exception("this result set doesn't have any protein match and can't be loaded")
+        }*/
+        
+        val rsProtMatches = protMatchesByRsId.getOrElse(rsId,Array.empty[ProteinMatch])
+        val rsPepMatches = pepMatchesByRsId.getOrElse(rsId,Array.empty[PeptideMatch])
+        val rsPeptides = rsPepMatches map { _.peptide } distinct
+        val rsType = r.getString(RSCols.TYPE)
+        val isDecoy = rsType matches "DECOY_SEARCH"
+        val isNative = rsType matches "SEARCH"
+        val decoyRsId = r.getIntOrElse(RSCols.DECOY_RESULT_SET_ID, 0)
+  
+        val rsMsiSearchId = if (isNative) {
+          r.getIntOrElse(RSCols.MSI_SEARCH_ID, 0)
+        } else if (msiSearchIdsByRsId.contains(rsId)) {
+          // FIXME: we should attach all MSI searches to the result set ???
+          msiSearchIdsByRsId(rsId).head
+        } else 0
+  
+        val msiSearch = msiSearchById.getOrElse(rsMsiSearchId, null)      
+  
+        // Decode JSON properties
+        val propertiesAsJSON = r.getString(RSCols.SERIALIZED_PROPERTIES)
+        val properties = if (propertiesAsJSON != null) Some(parse[ResultSetProperties](propertiesAsJSON)) else None
+        
+        new ResultSet(
+          id = rsId,
+          name = r.getString(RSCols.NAME),
+          description = r.getString(RSCols.DESCRIPTION),
+          peptides = rsPeptides,
+          peptideMatches = rsPepMatches,
+          proteinMatches = rsProtMatches,
+          isDecoy = isDecoy,
+          isNative = isNative,
+          msiSearch = msiSearch,
+          decoyResultSetId = decoyRsId,
+          properties = properties
+        )
+      }
+  
+      resultSets.toArray
+    
+    })
 
   }
 
 }
 
 class SQLResultSetProvider(
-  val msiDbCtx: SQLConnectionContext,
-  val psDbCtx: SQLConnectionContext,
-  val udsDbCtx: SQLConnectionContext
+  val msiDbCtx: DatabaseConnectionContext,
+  val psDbCtx: DatabaseConnectionContext,
+  val udsDbCtx: DatabaseConnectionContext
 ) extends SQLResultSetLoader with IResultSetProvider {
 
   val pdiDbCtx = null

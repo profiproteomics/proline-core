@@ -2,6 +2,9 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
+
+import fr.profi.jdbc.easy.EasyDBC
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2}
@@ -9,28 +12,33 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.{ ProteinMatch, SequenceMatch,ProteinMatchProperties, SequenceMatchProperties }
 import fr.proline.core.om.provider.msi.IProteinMatchProvider
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.SQLConnectionContext
 
-class SQLProteinMatchProvider(val msiDbCtx: SQLConnectionContext) { //extends IProteinMatchProvider
+class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //extends IProteinMatchProvider
 
   val ProtMatchCols = MsiDbProteinMatchTable.columns
   val SeqMatchCols = MsiDbSequenceMatchTable.columns
   
-  def getResultSetsProteinMatches(rsIds: Seq[Int]): Array[ProteinMatch] = {
-    this._getProteinMatches(rsIds)
+  def getResultSetsProteinMatches(rsIds: Seq[Int]): Array[ProteinMatch] = {    
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+      this._getProteinMatches(msiEzDBC,rsIds)
+    })    
   }
   
   def getResultSummariesProteinMatches(rsmIds: Seq[Int]): Array[ProteinMatch] = {
-
-    val rsIdQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
-      List(t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN("~ rsmIds.mkString(",") ~")"
-    )    
-    val rsIds = msiDbCtx.ezDBC.selectInts(rsIdQuery)
     
-    this._getProteinMatches(rsIds,Some(rsmIds))
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+
+      val rsIdQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
+        List(t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN("~ rsmIds.mkString(",") ~")"
+      )    
+      val rsIds = msiEzDBC.selectInts(rsIdQuery)
+      
+      this._getProteinMatches(msiEzDBC,rsIds,Some(rsmIds))
+    
+    })
   }
 
-  private def _getProteinMatches(rsIds: Seq[Int], rsmIds: Option[Seq[Int]] = None ): Array[ProteinMatch] = {
+  private def _getProteinMatches(msiEzDBC: EasyDBC, rsIds: Seq[Int], rsmIds: Option[Seq[Int]] = None ): Array[ProteinMatch] = {
 
     import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
@@ -46,7 +54,7 @@ class SQLProteinMatchProvider(val msiDbCtx: SQLConnectionContext) { //extends IP
     val seqMatchQuery = new SelectQueryBuilder1(MsiDbSequenceMatchTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
     )
-    val seqMatchRecords = msiDbCtx.ezDBC.selectAllRecordsAsMaps(seqMatchQuery)
+    val seqMatchRecords = msiEzDBC.selectAllRecordsAsMaps(seqMatchQuery)
     val seqMatchRecordsByProtMatchId = seqMatchRecords.groupBy(_(SeqMatchCols.PROTEIN_MATCH_ID).asInstanceOf[Int])
 
     // Load and map sequence database ids of each protein match
@@ -56,7 +64,7 @@ class SQLProteinMatchProvider(val msiDbCtx: SQLConnectionContext) { //extends IP
       List(t.PROTEIN_MATCH_ID,t.SEQ_DATABASE_ID) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
     )
     
-    msiDbCtx.ezDBC.selectAndProcess(protMatchDbMapQuery) { r =>
+    msiEzDBC.selectAndProcess(protMatchDbMapQuery) { r =>
       val (proteinMatchId, seqDatabaseId) = (r.nextInt, r.nextInt)
       seqDbIdsByProtMatchId.getOrElseUpdate(proteinMatchId, new ArrayBuffer[Int](1) ) += seqDatabaseId
     }
@@ -77,12 +85,12 @@ class SQLProteinMatchProvider(val msiDbCtx: SQLConnectionContext) { //extends IP
     }
     
     var protMatchColNames: Seq[String] = null
-    val protMatches = msiDbCtx.ezDBC.select(protMatchQuery) { r =>
+    val protMatches = msiEzDBC.select(protMatchQuery) { r =>
 
       if (protMatchColNames == null) { protMatchColNames = r.columnNames }
       val protMatchRecord = protMatchColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
 
-      val protMatchId: Int = toInt(protMatchRecord(ProtMatchCols.ID))
+      val protMatchId = toInt(protMatchRecord(ProtMatchCols.ID))
 
       var seqMatches: Array[SequenceMatch] = null
       for ( seqMatchRecords <- seqMatchRecordsByProtMatchId.get(protMatchId) ) {

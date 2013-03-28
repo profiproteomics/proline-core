@@ -3,6 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
 
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.TableDefinition
@@ -14,21 +15,20 @@ import fr.proline.core.om.model.msi.PeptideMatchResultSummaryProperties
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.util.primitives._
 
 class SQLPeptideInstanceProvider(
-  val msiSqlCtx: SQLConnectionContext,
-  val psSqlCtx: SQLConnectionContext = null,
-  var peptideProvider: Option[IPeptideProvider] = None
+  val msiSqlCtx: DatabaseConnectionContext,
+  var peptideProvider: IPeptideProvider
 ) extends IPeptideInstanceProvider {
+  
+  def this(msiSqlCtx: DatabaseConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
+    this(msiSqlCtx, new SQLPeptideProvider(psSqlCtx) )
+  }
 
   val PepInstCols = MsiDbPeptideInstanceTable.columns
   val PepMatchMappingCols = MsiDbPeptideInstancePeptideMatchMapTable.columns
-
-  private def _getPeptideProvider(): IPeptideProvider = {
-    this.peptideProvider.getOrElse(new SQLPeptideProvider(psSqlCtx))
-  }
-
+  
   def getPeptideInstancesAsOptions(pepInstIds: Seq[Int]): Array[Option[PeptideInstance]] = {
 
     val pepInsts = this.getPeptideInstances(pepInstIds)
@@ -38,57 +38,53 @@ class SQLPeptideInstanceProvider(
   }
 
   def getPeptideInstances(pepInstIds: Seq[Int]): Array[PeptideInstance] = {
-    val pepInstRecords = this._getPepInstRecords(pepInstIds)
-    val pepInstPepMatchMapRecords = this._getPepInstPepMatchMapRecords(pepInstIds)
-    this._buildPeptideInstances(pepInstRecords, pepInstPepMatchMapRecords)
+    
+    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+      
+      // TODO: use max nb iterations
+      val sqlQuery1 = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.ID ~" IN("~ pepInstIds.mkString(",") ~")"
+      )
+      val pepInstRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery1)
+      
+      val sqlQuery2 = new SelectQueryBuilder1(MsiDbPeptideInstancePeptideMatchMapTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.PEPTIDE_INSTANCE_ID ~" IN("~ pepInstIds.mkString(",") ~")"
+      )
+      val pepInstPepMatchMapRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery2)
+      
+      this._buildPeptideInstances(pepInstRecords, pepInstPepMatchMapRecords)
+      
+    })
   }
 
   def getResultSummariesPeptideInstances(rsmIds: Seq[Int]): Array[PeptideInstance] = {
-    val pepInstRecords = this._getRSMsPepInstRecords(rsmIds)
-    val pepInstPepMatchMapRecords = this._getRSMsPepInstPepMatchMapRecords(rsmIds)
-    this._buildPeptideInstances(pepInstRecords, pepInstPepMatchMapRecords)
+    
+    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+      
+      // TODO: use max nb iterations
+      val sqlQuery1 = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
+      )      
+      val pepInstRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery1)
+      
+      val sqlQuery2 = new SelectQueryBuilder1(MsiDbPeptideInstancePeptideMatchMapTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
+      )
+      val pepInstPepMatchMapRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery2)
+  
+      this._buildPeptideInstances(pepInstRecords, pepInstPepMatchMapRecords)
+      
+    })    
   }
-
-  private def _getRSMsPepInstRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
-    val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
-    )
-    msiSqlCtx.ezDBC.selectAllRecordsAsMaps(sqlQuery)
-  }
-
-  private def _getPepInstRecords(pepInstIds: Seq[Int]): Array[Map[String, Any]] = {
-    // TODO: use max nb iterations
-    val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.ID ~" IN("~ pepInstIds.mkString(",") ~")"
-    )
-    msiSqlCtx.ezDBC.selectAllRecordsAsMaps(sqlQuery)
-  }
-
-  private def _getRSMsPepInstPepMatchMapRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
-    val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideInstancePeptideMatchMapTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
-    )
-    msiSqlCtx.ezDBC.selectAllRecordsAsMaps(sqlQuery)
-  }
-
-  private def _getPepInstPepMatchMapRecords(pepInstIds: Seq[Int]): Array[Map[String, Any]] = {
-    // TODO: use max nb iterations
-    val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideInstancePeptideMatchMapTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.PEPTIDE_INSTANCE_ID ~" IN("~ pepInstIds.mkString(",") ~")"
-    )
-    msiSqlCtx.ezDBC.selectAllRecordsAsMaps(sqlQuery)
-  }
-
+  
   private def _buildPeptideInstances(
     pepInstRecords: Seq[Map[String, Any]],
     pepInstPepMatchMapRecords: Seq[Map[String, Any]]
   ): Array[PeptideInstance] = {
-
-    import fr.proline.util.primitives._
-
+    
     // Load peptides
     val uniqPepIds = pepInstRecords.map { _(PepInstCols.PEPTIDE_ID).asInstanceOf[Int] } distinct
-    val peptides = this._getPeptideProvider().getPeptides(uniqPepIds)
+    val peptides = this.peptideProvider.getPeptides(uniqPepIds)
 
     // Map peptides by their id
     val peptideById = Map() ++ peptides.map { pep => (pep.id -> pep) }
@@ -128,8 +124,7 @@ class SQLPeptideInstanceProvider(
 
       // Decode JSON properties
       val propertiesAsJSON = pepInstRecord(PepInstCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-
-      // TODO: load properties
+      
       val pepInst = new PeptideInstance(
         id = pepInstId,
         peptide = peptide,

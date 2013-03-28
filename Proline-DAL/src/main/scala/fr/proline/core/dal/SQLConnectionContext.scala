@@ -6,6 +6,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.repository.DriverType
 import javax.persistence.EntityManager
 
+@deprecated("try to use a plain DatabaseConnectionContext instead","0.0.9")
 class SQLConnectionContext private (entityManager: EntityManager, connection: Connection, driverType: DriverType) extends DatabaseConnectionContext(entityManager, connection, driverType) {
 
   /* SQL Constructor */

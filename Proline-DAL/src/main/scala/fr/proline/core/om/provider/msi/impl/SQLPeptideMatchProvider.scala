@@ -1,7 +1,8 @@
 package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
-import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2}
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -14,12 +15,13 @@ import fr.proline.util.sql.StringOrBoolAsBool.string2boolean
 import fr.proline.core.dal.tables.msi.MsiDbPeptideInstancePeptideMatchMapTable
 
 class SQLPeptideMatchProvider(
-  val msiSqlCtx: SQLConnectionContext,
-  val psSqlCtx: SQLConnectionContext = null,
-  var peptideProvider: Option[IPeptideProvider] = None
+  val msiSqlCtx: DatabaseConnectionContext,
+  var peptideProvider: IPeptideProvider
 ) extends IPeptideMatchProvider {
-
-  import fr.proline.core.dal.helper.MsiDbHelper
+  
+  def this(msiSqlCtx: DatabaseConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
+    this(msiSqlCtx, new SQLPeptideProvider(psSqlCtx) )
+  }
 
   val PepMatchCols = MsiDbPeptideMatchTable.columns
 
@@ -29,14 +31,20 @@ class SQLPeptideMatchProvider(
   // Retrieve score type map
   val scoreTypeById = msiDbHelper.getScoringTypeById
 
-  private def _getPeptideProvider(): IPeptideProvider = {
-    this.peptideProvider.getOrElse(new SQLPeptideProvider(psSqlCtx))
-  }
-
   def getPeptideMatches(pepMatchIds: Seq[Int]): Array[PeptideMatch] = {
-    val pmRecords = _getPepMatchRecords(pepMatchIds)
-    val rsIds = pmRecords.map { _(PepMatchCols.RESULT_SET_ID).asInstanceOf[Int] }.distinct
-    this._buildPeptideMatches(rsIds, pmRecords)
+    
+    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+    
+      // TODO: use max nb iterations
+      val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.ID ~" IN("~ pepMatchIds.mkString(",") ~")"
+      )
+      val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
+      
+      val rsIds = pmRecords.map { _(PepMatchCols.RESULT_SET_ID).asInstanceOf[Int] }.distinct
+      this._buildPeptideMatches(rsIds, pmRecords)
+    
+    })
   }
 
   def getPeptideMatchesAsOptions(pepMatchIds: Seq[Int]): Array[Option[PeptideMatch]] = {
@@ -48,52 +56,39 @@ class SQLPeptideMatchProvider(
   }
 
   def getResultSetsPeptideMatches(rsIds: Seq[Int]): Array[PeptideMatch] = {
-
-    val pmRecords = _getResultSetsPepMatchRecords(rsIds)
-    this._buildPeptideMatches(rsIds, pmRecords)
+    
+    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+    
+      val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIds.mkString(",") ~")"
+      )
+      val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
+  
+      this._buildPeptideMatches(rsIds, pmRecords)
+    
+    })
 
   }
 
   def getResultSummariesPeptideMatches(rsmIds: Seq[Int]): Array[PeptideMatch] = {
-
-    val pmRecords = _getResultSummariesPepMatchRecords(rsmIds)
-    val rsIds = pmRecords.map(_("result_set_id").asInstanceOf[Int]).distinct
-    this._buildPeptideMatches(rsIds, pmRecords)
-
-  }
-
-  /*def getPeptideMatches( rsIds: Seq[Int], peptides: Array[Peptide] ): Array[PeptideMatch] = {
     
-    val pmRecords = _getResultSetsPepMatchRecords( rsIds )
-    this._buildPeptideMatches( rsIds, pmRecords, peptides )
-  }*/
-
-  private def _getResultSetsPepMatchRecords(rsIds: Seq[Int]): Array[Map[String, Any]] = {
-    val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIds.mkString(",") ~")"
-    )
-    msiSqlCtx.ezDBC.selectAllRecordsAsMaps(sqlQuery)
-  }
-
-  private def _getResultSummariesPepMatchRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
+    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+  
+      val sqb2 = new SelectQueryBuilder2(MsiDbPeptideMatchTable, MsiDbPeptideInstancePeptideMatchMapTable)
+      
+      val sqlQuery = sqb2.mkSelectQuery( (t1, c1, t2, c2) =>
+        List(t1.*) ->
+        " WHERE " ~ t1.ID ~ " = " ~ t2.PEPTIDE_MATCH_ID ~
+        " AND " ~ t2.RESULT_SUMMARY_ID ~ " IN (" ~ rsmIds.mkString(",") ~ ")"
+      )
+      
+      val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
+      
+      val rsIds = pmRecords.map(_("result_set_id").asInstanceOf[Int]).distinct
+      this._buildPeptideMatches(rsIds, pmRecords)
     
-    val sqb2 = new SelectQueryBuilder2(MsiDbPeptideMatchTable, MsiDbPeptideInstancePeptideMatchMapTable)
-    
-    val sqlQuery = sqb2.mkSelectQuery( (t1, c1, t2, c2) =>
-      List(t1.*) ->
-      " WHERE " ~ t1.ID ~ " = " ~ t2.PEPTIDE_MATCH_ID ~
-      " AND " ~ t2.RESULT_SUMMARY_ID ~ " IN (" ~ rsmIds.mkString(",") ~ ")"
-    )
-    
-    msiSqlCtx.ezDBC.selectAllRecordsAsMaps(sqlQuery)
-  }
+    })
 
-  private def _getPepMatchRecords(pepMatchIds: Seq[Int]): Array[Map[String, Any]] = {
-    // TODO: use max nb iterations
-    val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.ID ~" IN("~ pepMatchIds.mkString(",") ~")"
-    )
-    msiSqlCtx.ezDBC.selectAllRecordsAsMaps(sqlQuery)
   }
 
   private def _buildPeptideMatches(rsIds: Seq[Int], pmRecords: Seq[Map[String, Any]]): Array[PeptideMatch] = {
@@ -103,7 +98,7 @@ class SQLPeptideMatchProvider(
 
     // Load peptides
     val uniqPepIds = pmRecords map { _(PepMatchCols.PEPTIDE_ID).asInstanceOf[Int] } distinct
-    val peptides = this._getPeptideProvider().getPeptides(uniqPepIds)
+    val peptides = this.peptideProvider.getPeptides(uniqPepIds)
 
     // Map peptides by their id
     val peptideById = Map() ++ peptides.map { pep => (pep.id -> pep) }
@@ -124,10 +119,7 @@ class SQLPeptideMatchProvider(
       // Retrieve the corresponding peptide
       val pepId = pepMatchRecord(PepMatchCols.PEPTIDE_ID).asInstanceOf[Int]
       if (!peptideById.contains(pepId)) {
-        throw new Exception("undefined peptide with id ='" + pepId + "' " +
-          "nb peps=" + peptides.length +
-          "nb pm=" + pmRecords.length + "" +
-          " count= " + psSqlCtx.ezDBC.selectInt("SELECT count(*) FROM peptide"))
+        throw new Exception("undefined peptide with id ='" + pepId + "' ")
       }
       val peptide = peptideById(pepId)
 

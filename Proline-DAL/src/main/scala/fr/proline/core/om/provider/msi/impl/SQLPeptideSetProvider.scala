@@ -2,6 +2,9 @@ package fr.proline.core.om.provider.msi.impl
 
 import com.codahale.jerkson.Json.parse
 
+import fr.profi.jdbc.easy.EasyDBC
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -11,22 +14,20 @@ import fr.proline.core.om.model.msi.PeptideSetItem
 import fr.proline.core.om.model.msi.PeptideSetItemProperties
 import fr.proline.core.om.model.msi.PeptideSetProperties
 import fr.proline.core.om.provider.msi.{ IPeptideSetProvider, IPeptideInstanceProvider }
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.SQLConnectionContext
 
-class SQLPeptideSetProvider(val msiDbCtx: SQLConnectionContext,
-  val psDbCtx: SQLConnectionContext) extends IPeptideSetProvider {
+class SQLPeptideSetProvider(
+  val msiDbCtx: DatabaseConnectionContext,
+  val peptideInstanceProvider: IPeptideInstanceProvider
+) extends IPeptideSetProvider {
+  
+  def this(msiDbCtx: DatabaseConnectionContext, psDbCtx: DatabaseConnectionContext) {
+    this(msiDbCtx, new SQLPeptideInstanceProvider(msiDbCtx,psDbCtx) )
+  }
 
   val PepSetCols = MsiDbPeptideSetTable.columns
   val PepSetRelationCols = MsiDbPeptideSetRelationTable.columns
   val PepSetItemCols = MsiDbPeptideSetPeptideInstanceItemTable.columns
   val ProtMatchMappingCols = MsiDbPeptideSetProteinMatchMapTable.columns
-
-  private def _getPeptideInstanceProvider(): IPeptideInstanceProvider = {
-    //if( this.peptideInstanceProvider != None ) this.peptideProvider.get
-    //else new SQLPeptideProvider(this.psDb)
-    new SQLPeptideInstanceProvider(msiDbCtx, psDbCtx)
-  }
 
   def getPeptideSetsAsOptions(pepSetIds: Seq[Int]): Array[Option[PeptideSet]] = {
 
@@ -38,72 +39,86 @@ class SQLPeptideSetProvider(val msiDbCtx: SQLConnectionContext,
   }
 
   def getPeptideSets(pepSetIds: Seq[Int]): Array[PeptideSet] = {
-    val pepSetItemRecords = this._getPepSetItemRecords(pepSetIds)
-    val pepInstIds = pepSetItemRecords.map { _(PepSetItemCols.PEPTIDE_INSTANCE_ID).asInstanceOf[Int] } distinct
-
-    this._buildPeptideSets(this._getPepSetRecords(pepSetIds),
-      this._getPepSetRelationRecords(pepSetIds),
-      pepSetItemRecords,
-      this._getPeptideInstanceProvider.getPeptideInstances(pepInstIds),
-      this._getPepSetProtMatchMapRecords(pepSetIds))
+    
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    
+      val pepSetItemRecords = this._getPepSetItemRecords(msiEzDBC,pepSetIds)
+      val pepInstIds = pepSetItemRecords.map { _(PepSetItemCols.PEPTIDE_INSTANCE_ID).asInstanceOf[Int] } distinct
+  
+      this._buildPeptideSets(
+        this._getPepSetRecords(msiEzDBC,pepSetIds),
+        this._getPepSetRelationRecords(msiEzDBC,pepSetIds),
+        pepSetItemRecords,
+        this.peptideInstanceProvider.getPeptideInstances(pepInstIds),
+        this._getPepSetProtMatchMapRecords(msiEzDBC,pepSetIds)
+      )
+    
+    })
   }
 
   def getResultSummariesPeptideSets(rsmIds: Seq[Int]): Array[PeptideSet] = {
-    this._buildPeptideSets(this._getRSMsPepSetRecords(rsmIds),
-      this._getRSMsPepSetRelationRecords(rsmIds),
-      this._getRSMsPepSetItemRecords(rsmIds),
-      this._getPeptideInstanceProvider.getResultSummariesPeptideInstances(rsmIds),
-      this._getRSMsPepSetProtMatchMapRecords(rsmIds))
+    
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    
+      this._buildPeptideSets(
+        this._getRSMsPepSetRecords(msiEzDBC,rsmIds),
+        this._getRSMsPepSetRelationRecords(msiEzDBC,rsmIds),
+        this._getRSMsPepSetItemRecords(msiEzDBC,rsmIds),
+        this.peptideInstanceProvider.getResultSummariesPeptideInstances(rsmIds),
+        this._getRSMsPepSetProtMatchMapRecords(msiEzDBC,rsmIds)
+      )
+      
+    })
   }
 
-  private def _getRSMsPepSetRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetTable).mkSelectQuery( (t,c) =>
+  private def _getRSMsPepSetRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Int]): Array[Map[String, Any]] = {
+    msiEzDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getPepSetRecords(pepSetIds: Seq[Int]): Array[Map[String, Any]] = {
+  private def _getPepSetRecords(msiEzDBC: EasyDBC, pepSetIds: Seq[Int]): Array[Map[String, Any]] = {
     // TODO: use max nb iterations
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetTable).mkSelectQuery( (t,c) =>
+    msiEzDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ pepSetIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getRSMsPepSetRelationRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetRelationTable).mkSelectQuery( (t,c) =>
+  private def _getRSMsPepSetRelationRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Int]): Array[Map[String, Any]] = {
+    msiEzDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetRelationTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getPepSetRelationRecords(pepSetIds: Seq[Int]): Array[Map[String, Any]] = {
+  private def _getPepSetRelationRecords(msiEzDBC: EasyDBC, pepSetIds: Seq[Int]): Array[Map[String, Any]] = {
     // TODO: use max nb iterations
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetRelationTable).mkSelectQuery( (t,c) =>
+    msiEzDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetRelationTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.PEPTIDE_OVERSET_ID ~" IN("~ pepSetIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getRSMsPepSetItemRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetPeptideInstanceItemTable).mkSelectQuery( (t,c) =>
+  private def _getRSMsPepSetItemRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Int]): Array[Map[String, Any]] = {
+    msiEzDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetPeptideInstanceItemTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getPepSetItemRecords(pepSetIds: Seq[Int]): Array[Map[String, Any]] = {
+  private def _getPepSetItemRecords(msiEzDBC: EasyDBC, pepSetIds: Seq[Int]): Array[Map[String, Any]] = {
     // TODO: use max nb iterations
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetPeptideInstanceItemTable).mkSelectQuery( (t,c) =>
+    msiEzDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetPeptideInstanceItemTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.PEPTIDE_SET_ID ~" IN("~ pepSetIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getRSMsPepSetProtMatchMapRecords(rsmIds: Seq[Int]): Array[Map[String, Any]] = {
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t,c) =>
+  private def _getRSMsPepSetProtMatchMapRecords(msiEzDBC: EasyDBC, rsmIds: Seq[Int]): Array[Map[String, Any]] = {
+    msiEzDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SUMMARY_ID ~" IN("~ rsmIds.mkString(",") ~")"
     ) )
   }
 
-  private def _getPepSetProtMatchMapRecords(pepSetIds: Seq[Int]): Array[Map[String, Any]] = {
+  private def _getPepSetProtMatchMapRecords(msiEzDBC: EasyDBC, pepSetIds: Seq[Int]): Array[Map[String, Any]] = {
     // TODO: use max nb iterations
-    msiDbCtx.ezDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t,c) =>
+    msiEzDBC.selectAllRecordsAsMaps( new SelectQueryBuilder1(MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.PEPTIDE_SET_ID ~" IN("~ pepSetIds.mkString(",") ~")"
     ) )
   }
