@@ -47,7 +47,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     var rocPoints = new ArrayBuffer[ValidationResult]
     var expectedRocPoint: ValidationResult = null
     
-    while( currentFdr > 0 && expectedRocPoint == null ) {
+    while( currentFdr > 0 ) {
       
       // Retrieve single peptide rule threshold
       val thresholdRule2 = protSetFilterRule2.getThresholdValue
@@ -75,10 +75,10 @@ class ProtSetRulesValidatorWithFDROptimization(
         protSetFilterRule1.setThresholdValue(thresholdStartValue)
         
         // Reset other temp vars
-        rocPoints = new ArrayBuffer[ValidationResult]        
+        rocPoints = new ArrayBuffer[ValidationResult]
         currentFdr = 1 // be sure to test rule 1 at least one time
         
-        while( currentFdr > 0 ) {
+        while( currentFdr > 0 && expectedRocPoint == null ) {
           // && protSetFilterRule2.getThresholdValueAsDouble <= protSetFilterRule1.getThresholdValueAsDouble
           
           // Retrieve single peptide rule threshold
