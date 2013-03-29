@@ -47,7 +47,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
   val udsMasterQuantChannel: MasterQuantitationChannel) extends IQuantifier with Logging {
 
   val lcmsDbConnector = dbManager.getLcMsDbConnector(projectId)
-  val DatabaseConnectionContext = new DatabaseConnectionContext(lcmsDbConnector)
+  val lcmsDbCtx = new DatabaseConnectionContext(lcmsDbConnector)
   val lcmsEzDBC = ProlineEzDBC(lcmsDbConnector.getDataSource.getConnection, lcmsDbConnector.getDriverType)
 
   // TODO: require some parameters
@@ -75,7 +75,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     //mapSet = mapSetLoader.getMapSet( mapSetId )
 
     this.logger.info("loading LCMS map set...")
-    val mapSetLoader = new fr.proline.core.om.provider.lcms.impl.MapSetLoader(lcmsEzDBC)
+    val mapSetLoader = new fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider(lcmsDbCtx)
     mapSetLoader.getMapSet(mapSetId)
 
   }
