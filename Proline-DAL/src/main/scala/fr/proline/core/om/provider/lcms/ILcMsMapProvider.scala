@@ -1,12 +1,11 @@
 package fr.proline.core.om.provider.lcms
 
-import fr.profi.jdbc.ResultSetRow
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.ILcMsMap
 
 trait ILcMsMapProvider {
   
-  def getLcMsMaps( mapIds: Seq[Int] ): Array[ILcMsMap]
+  def getLcMsMaps( mapIds: Seq[Int] ): Seq[ILcMsMap]
   def getFeatures( mapIds: Seq[Int] ): Array[Feature]
 
   /** Returns a map of overlapping feature ids keyed by feature id */
@@ -17,7 +16,5 @@ trait ILcMsMapProvider {
                                  scanInitialIdById: Map[Int,Int],
                                  ms2EventIdsByFtId: Map[Int,Array[Int]] 
                                ): Map[Int,Feature]
-  
-  def eachFeatureRecord( mapIds: Seq[Int], onEachFt: ResultSetRow => Unit ): Unit
 
 }

@@ -1,77 +1,85 @@
 package fr.proline.core.om.provider.lcms.impl
 
-/*
-import fr.profi.jdbc.SQLQueryExecution
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import fr.profi.jdbc.ResultSetRow
+import fr.profi.jdbc.easy.EasyDBC
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.{ SelectQueryBuilder1 }
+import fr.proline.core.dal.tables.lcms.{ LcmsDbMapSetTable,LcmsDbMasterFeatureItemTable, LcmsDbProcessedMapTable }
+import fr.proline.core.om.model.lcms._
+import fr.proline.core.om.provider.lcms.IMapSetProvider
+import fr.proline.util.primitives._
+//import fr.proline.util.sql._
   
-class MapSetLoader( val sqlExec: SQLQueryExecution, val loadPeaks: Boolean = false )  {
+class SQLMapSetProvider(
+  val lcmsDbCtx: DatabaseConnectionContext,
+  val loadPeaks: Boolean = false
+) extends IMapSetProvider {
   
-  import java.util.HashMap
-  import scala.collection.mutable.ArrayBuffer
-  import fr.proline.util.sql._ 
-  import fr.proline.core.om.model.lcms._
+  val MapSetCols = LcmsDbMapSetTable.columns
+  val MftItemCols = LcmsDbMasterFeatureItemTable.columns
+  val mapAlnSetProvider = new SQLMapAlignmentSetProvider( lcmsDbCtx )
+  val processedMapProvider = new SQLProcessedMapProvider( lcmsDbCtx, loadPeaks )
   
-  val mapAlnSetLoader = new MapAlignmentSetLoader( sqlExec )
-  val processedMapLoader = new ProcessedMapLoader( sqlExec, loadPeaks )
-  
-  def getMapSet( mapSetId: Int ): MapSet = {
+  def getMapSet( mapSetId: Int ): MapSet = {    
     
-    var mapSetcolNames: Seq[String] = null
-    var mapSetRecord: Map[String,Any] = null
-    sqlExec.selectAndProcess( "SELECT * FROM map_set WHERE id = " + mapSetId  ) { r => 
-        if( mapSetcolNames == null ) { mapSetcolNames = r.columnNames }
-        mapSetRecord = mapSetcolNames.map( colName => ( colName -> r.nextAnyRefOrElse(null) ) ).toMap
-        ()
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+    
+      // Try to retrieve the master map id
+      val masterMapIdQuery = new SelectQueryBuilder1(LcmsDbMapSetTable).mkSelectQuery( (t,c) =>
+        List(t.MASTER_MAP_ID) -> "WHERE "~ t.ID ~" = "~ mapSetId
+      )
+      val masterMapId = ezDBC.selectHeadOrElse(masterMapIdQuery) ( _.nextIntOrElse(0),
+        throw new Exception("can't find a map set with id="+mapSetId)
+      )
+      
+      // Load processedMapIds
+      val procMapIdQuery = new SelectQueryBuilder1(LcmsDbProcessedMapTable).mkSelectQuery( (t,c) =>
+        List(t.ID) -> "WHERE "~ t.MAP_SET_ID ~" = "~ mapSetId
+      )
+      val processedMapIds = ezDBC.selectInts( procMapIdQuery )
+      
+      // Load some objects related to the map set
+      val lcmsMaps = processedMapProvider.getProcessedMaps( processedMapIds )
+      val childMaps = lcmsMaps.filter( ! _.isMaster )
+      var mapAlnSets = mapAlnSetProvider.getMapAlignmentSets( mapSetId )
+      if( mapAlnSets.length == 0 ) mapAlnSets = null
+      
+      var masterMap: ProcessedMap = null
+      if( masterMapId != 0 ) {    
+        // Load the master map
+        masterMap = this._rebuildMasterMap( ezDBC, masterMapId, lcmsMaps )
       }
-    if( mapSetRecord == null ) throw new Exception("can't find a map set with id="+mapSetId)
-       
-    // Load processedMapIds
-    val processedMapIds = sqlExec.selectInts( "SELECT id FROM processed_map WHERE map_set_id = " + mapSetId  )
-    
-    // Load some objects related to the map set
-    val lcmsMaps = processedMapLoader.getMaps( processedMapIds )
-    val childMaps = lcmsMaps.filter( ! _.isMaster )
-    var mapAlnSets = mapAlnSetLoader.getMapAlignmentSets( mapSetId )
-    if( mapAlnSets.length == 0 ) mapAlnSets = null
-    
-    // Try to load master map id
-    var masterMapId = 0
-    sqlExec.selectAndProcess( "SELECT master_map_id FROM map_set WHERE id = " + mapSetId ) { r =>
-      masterMapId = r.nextIntOrElse(0)
-    }
-    
-    var masterMap: ProcessedMap = null
-    if( masterMapId != 0) {
-      // Load master feature items as records
-      var mtItemcolNames: Seq[String] = null
-      val mftItemRecords = sqlExec.select( "SELECT * FROM master_feature_item WHERE master_map_id = " + masterMapId  ) { r => 
-        if( mtItemcolNames == null ) { mtItemcolNames = r.columnNames }
-        mtItemcolNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
+      
+      val mapSetQuery = new SelectQueryBuilder1(LcmsDbMapSetTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.ID ~" = "~ mapSetId
+      )
+      ezDBC.selectHead(mapSetQuery) { mapSetRecord =>
+        // Build and return the map set
+        buildMapSet( mapSetRecord, childMaps, masterMap, mapAlnSets )
       }
-  
-      // Load the master map
-      masterMap = this.rebuildMasterMap( masterMapId, lcmsMaps, mftItemRecords )
-    }
     
-    // Build and return the map set
-    buildMapSet( mapSetRecord, childMaps, masterMap, mapAlnSets )
+    })
     
   }
   
-  def buildMapSet( mapSetRecord: Map[String,Any],
+  def buildMapSet( mapSetRecord: ResultSetRow,
                    childMaps: Array[ProcessedMap],
                    masterMap: ProcessedMap,                   
                    mapAlnSets: Array[MapAlignmentSet] ): MapSet = {
     
-    import java.util.Date
-    
-    new MapSet( id = mapSetRecord("id").asInstanceOf[Int],
-                name = mapSetRecord("name").asInstanceOf[String],
-                creationTimestamp = new Date(), // TODO: parse date
-                childMaps = childMaps,
-                masterMap = masterMap,
-                alnReferenceMapId = mapSetRecord("aln_reference_map_id").asInstanceOf[Int],
-                mapAlnSets = mapAlnSets
-                )
+    new MapSet(
+      id = toInt(mapSetRecord.getAnyVal(MapSetCols.ID)),
+      name = mapSetRecord.getString(MapSetCols.NAME),
+      creationTimestamp = mapSetRecord.getTimestamp(MapSetCols.CREATION_TIMESTAMP),
+      childMaps = childMaps,
+      masterMap = masterMap,
+      alnReferenceMapId = mapSetRecord.getInt(MapSetCols.ALN_REFERENCE_MAP_ID),
+      mapAlnSets = mapAlnSets
+    )
   }
   
   /*
@@ -151,10 +159,11 @@ class MapSetLoader( val sqlExec: SQLQueryExecution, val loadPeaks: Boolean = fal
   }
   */
   
-  private def rebuildMasterMap( masterMapId: Int,
-                                lcmsMaps: Array[ProcessedMap],
-                                mftItemRecords: Seq[Map[String,Any]]
-                              ): ProcessedMap = {
+  private def _rebuildMasterMap(
+    ezDBC: EasyDBC,
+    masterMapId: Int,
+    lcmsMaps: Array[ProcessedMap]
+  ): ProcessedMap = {
     
     // Retrieve master map and its child maps
     var masterMap: ProcessedMap = null
@@ -177,45 +186,40 @@ class MapSetLoader( val sqlExec: SQLQueryExecution, val loadPeaks: Boolean = fal
     }
     
     // Map master feature children by their id
-    val childFtById = new java.util.HashMap[Int,Feature]
-    for( childMap <- childMaps ) {
-      for( ft <- childMap.features) {
-        childFtById.put( ft.id, ft )
-      }
-    }
+    val childFtById = Map() ++ childMaps.flatMap( _.features.map( ft => ft.id -> ft ) )
     
-    val childFtBufferByMftId = new java.util.HashMap[Int,ArrayBuffer[Feature]]
-    val bestChildIdByMftId = new java.util.HashMap[Int,Int]
+    val childFtBufferByMftId = new HashMap[Int,ArrayBuffer[Feature]]
+    //val bestChildIdByMftId = new HashMap[Int,Int]
     
-    for( mftItemRecord <- mftItemRecords ) {
+    // Iterate over master feature items
+    val mftItemQuery = new SelectQueryBuilder1(LcmsDbMasterFeatureItemTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.MASTER_MAP_ID ~" = "~ masterMapId
+    )
+    val mftItemRecords = ezDBC.selectAndProcess( mftItemQuery ) { mftItemRecord =>      
       
-      // Retrieve master ID
-      val masterFtId = mftItemRecord("master_feature_id").asInstanceOf[Int]
+      // Retrieve master and child FT IDs
+      val masterFtId = mftItemRecord.getInt(MftItemCols.MASTER_FEATURE_ID)
+      val childFtId = mftItemRecord.getInt(MftItemCols.CHILD_FEATURE_ID)
       
-      // Retrieve child feature
-      val childFtId = mftItemRecord("child_feature_id").asInstanceOf[Int]
-      val childFt = childFtById.get(childFtId)
+      // Retrieve child feature      
+      val childFt = childFtById(childFtId)
       
       // Check if child feature is defined
       if( childFt == null ) throw new Exception("undefined child feature with id=" + childFtId)
       
-      if( !childFtBufferByMftId.containsKey(masterFtId) ) {
-        childFtBufferByMftId.put(masterFtId, new ArrayBuffer[Feature](nbChildMaps) )
-      }
-      
-      childFtBufferByMftId.get(masterFtId) += childFt
+      childFtBufferByMftId.getOrElseUpdate(masterFtId, new ArrayBuffer[Feature](nbChildMaps)) += childFt
     }
     
     // Map master feature by their id
     val masterFtById = masterFeatures map { mft => ( mft.id -> mft ) } toMap
     
-    for( mftId <- childFtBufferByMftId.keySet().toArray() ) {
+    for( mftId <- childFtBufferByMftId.keys ) {
       
       // Retrieve master feature
       val masterFt = masterFtById.getOrElse(mftId.asInstanceOf[Int], null )
       if( masterFt == null ) throw new Exception("undefined master feature with id=" + mftId)
       
-      masterFt.children = childFtBufferByMftId.get(mftId).toArray[Feature]
+      masterFt.children = childFtBufferByMftId(mftId).toArray
       //masterFt.bestChildId = 
       
     }
@@ -224,4 +228,4 @@ class MapSetLoader( val sqlExec: SQLQueryExecution, val loadPeaks: Boolean = fal
     
   }
   
-}*/
+}

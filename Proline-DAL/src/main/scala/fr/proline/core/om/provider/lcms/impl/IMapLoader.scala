@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.lcms.impl
 
+/*
 import java.util.HashMap
 import scala.collection.mutable.ArrayBuffer
 
@@ -153,4 +154,4 @@ trait IMapLoader {
   }
   
 
-}
+}*/

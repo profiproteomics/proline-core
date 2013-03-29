@@ -1,5 +1,6 @@
 package fr.proline.core.om.provider.lcms.impl
 
+/*
 import fr.profi.jdbc.SQLQueryExecution
 
 class RunMapLoader( val sqlExec: SQLQueryExecution,
@@ -142,3 +143,4 @@ class RunMapLoader( val sqlExec: SQLQueryExecution,
 
 
 }
+*/
