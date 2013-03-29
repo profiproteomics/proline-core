@@ -12,7 +12,7 @@ import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IRunMapProvider
 import fr.proline.util.sql._
 
-class RunMapProvider(
+class SQLRunMapProvider(
   val lcmsDbCtx: DatabaseConnectionContext,
   val loadPeaks: Boolean = false
 ) extends AbstractSQLLcMsMapProvider with IRunMapProvider {
