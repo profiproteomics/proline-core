@@ -15,10 +15,12 @@ import org.junit.Before
 @Test
 class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
 
- 
-  var ppsi = new CommunistProteinSetInferer()    
+  var ppsi = new CommunistProteinSetInferer()
 
-  
+  /**
+   * P1 = (pep1, pep2, pep3,pep4, pep5)
+   * P2 = (pep6, pep7, pep8,pep9, pep10)
+   */
   @Test
   def simpleCheckWithGenData() = {
     var rs: ResultSet = new ResultSetFakeBuilder(pepNb = 10, proNb = 2).toResultSet()
@@ -27,8 +29,11 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(2, rsu.peptideSets.length)
     assertEquals(2, rsu.proteinSets.length)
   }
-  
-   @Test
+
+  /**
+   * 5000 Prot avec 2 pep specifique chacunes
+   */
+  @Test
   def largerGenData() = {
     var rs: ResultSet = new ResultSetFakeBuilder(pepNb = 10000, proNb = 5000).toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
@@ -48,6 +53,12 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(2, rsu.proteinSets.length)
   }
 
+  /**
+   * P1 = (pep1, pep2)
+   * P2 = (pep3,pep4)
+   * P3 = ( pep5,pep6)
+   * P4 = (pep1, pep2,pep3,pep4, pep5,pep6)
+   */
   @Test
   def simpleCheckWithGenData3() = {
     val rsb = new ResultSetFakeBuilder(pepNb = 6, proNb = 3)
@@ -60,6 +71,12 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(1, rsu.proteinSets.length)
   }
 
+  /**
+   * P1 = (pep1, pep2)
+   * P2 = (pep3,pep4)
+   * P3 = ( pep5,pep6)
+   * P4= (pep1, pep3,pep5)
+   */
   @Test
   def simpleCheckWithGenData4() = {
     val rsb = new ResultSetFakeBuilder(pepNb = 6, proNb = 3)
@@ -69,8 +86,8 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     }
 
     rsb.createNewProteinMatchFromPeptides(sharedPeptides2)
-    
-        rsb.printForDebug  
+
+    rsb.printForDebug
 
     var rs: ResultSet = rsb.toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
@@ -79,12 +96,22 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(4, rsu.proteinSets.length)
   }
 
+  /**
+   * 5 Prot Matches : aucun pep specifique
+   * P1 = (pep1, pep2)
+   * P2 = (pep3,pep4)
+   * P3 = ( pep5,pep6)
+   *
+   * P4= (pep1, pep3)
+   * P5= (pep2,pep5)
+   * P5= (pep4,pep6)
+   */
   @Test
   def simpleCheckWithGenData5() = {
     val rsb = new ResultSetFakeBuilder(pepNb = 6, proNb = 3)
     var sharedPeptides = ListBuffer[Peptide]()
 
-     sharedPeptides += rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide
+    sharedPeptides += rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide
     sharedPeptides += rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide
 
     rsb.createNewProteinMatchFromPeptides(sharedPeptides)
@@ -96,16 +123,23 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     sharedPeptides(0) = rsb.allProtMatches(1).sequenceMatches(1).bestPeptideMatch.get.peptide
     sharedPeptides(1) = rsb.allProtMatches(2).sequenceMatches(1).bestPeptideMatch.get.peptide
     rsb.createNewProteinMatchFromPeptides(sharedPeptides)
-    
+
     //	  rsb.printForDebug  
 
     var rs: ResultSet = rsb.toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
     assert(rsu != null)
     assertEquals(6, rsu.peptideSets.length)
-    assertEquals(6, rsu.proteinSets.length)   
+    assertEquals(6, rsu.proteinSets.length)
   }
 
+  /**
+   * Triangles Prot Matches : aucun pep specifique
+   * P1 = (pep1, pep3)
+   * P2 = (pep2, pep3)
+   * P3 = (pep1, pep2)
+   *
+   */
   @Test
   def simpleCheckWithGenData6() = {
     val rsb = new ResultSetFakeBuilder(pepNb = 2, proNb = 2)
@@ -127,7 +161,16 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(3, rsu.proteinSets.length)
   }
 
-    @Test
+  /**
+   * 2 ProtSet wo specific pepMatches
+   * P1 = (pep1, pep2)
+   * P2 = (pep3, pep4)
+   *
+   * P3 = (pep1, pep5)
+   * P4 = (pep3, pep5)
+   *
+   */
+  @Test
   def simpleCheckWithGenData7() = {
     val rsb = new ResultSetFakeBuilder(pepNb = 4, proNb = 2)
 
@@ -135,14 +178,13 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     rsb.createNewProteinMatchFromPeptides(Seq(rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide))
 
     var pms = ListBuffer[ProteinMatch]()
-    
+
     for (pm <- rsb.allProtMatches) {
-   	 if (pm.sequenceMatches.length == 1) pms += pm
+      if (pm.sequenceMatches.length == 1) pms += pm
     }
     rsb.addSharedPeptide(pms)
 
-
-//    rsb.printForDebug  
+    //    rsb.printForDebug  
 
     var rs: ResultSet = rsb.toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
@@ -151,6 +193,5 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(4, rsu.proteinSets.length)
   }
 
-  
 }
 
