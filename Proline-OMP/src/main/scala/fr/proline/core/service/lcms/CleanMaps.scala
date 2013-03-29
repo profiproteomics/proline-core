@@ -22,7 +22,7 @@ object CleanMaps {
 }
 
 class CleanMaps( val lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcMsScan],
-                 clusteringParams: Option[ClusteringParams] ) extends MXLcmsService {
+                 clusteringParams: Option[ClusteringParams] ) extends ILcmsService {
   
   var cleanedMap: ProcessedMap = null
   

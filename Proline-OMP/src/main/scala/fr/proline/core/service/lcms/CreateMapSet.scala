@@ -26,7 +26,7 @@ object CreateMapSet {
 }
 
 class CreateMapSet( val lcmsDbConnector: IDatabaseConnector, mapSetName: String, runMaps: Seq[RunMap], 
-                    clusteringParams: ClusteringParams  ) extends MXLcmsService {
+                    clusteringParams: ClusteringParams  ) extends ILcmsService {
 
   var createdMapSet: MapSet = null
   

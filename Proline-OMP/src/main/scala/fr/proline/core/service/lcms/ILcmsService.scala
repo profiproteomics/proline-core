@@ -4,7 +4,7 @@ import fr.proline.api.service.IService
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.repository.IDatabaseConnector
 
-trait MXLcmsService extends IService {
+trait ILcmsService extends IService {
 
   val lcmsDbConnector: IDatabaseConnector
   val lcmsQueryHelper = new SQLQueryHelper(lcmsDbConnector)

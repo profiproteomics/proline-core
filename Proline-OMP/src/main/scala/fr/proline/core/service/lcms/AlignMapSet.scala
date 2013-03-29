@@ -24,7 +24,7 @@ object AlignMapSet {
 }
 
 class AlignMapSet( val lcmsDbConnector: IDatabaseConnector, mapSet: MapSet, 
-                   alnMethodName: String, alnParams: AlignmentParams  ) extends MXLcmsService {
+                   alnMethodName: String, alnParams: AlignmentParams  ) extends ILcmsService {
 
   def runService(): Boolean = {
     

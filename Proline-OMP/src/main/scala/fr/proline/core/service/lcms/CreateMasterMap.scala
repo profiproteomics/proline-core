@@ -30,7 +30,7 @@ object CreateMasterMap {
 class CreateMasterMap(val lcmsDbConnector: IDatabaseConnector, mapSet: MapSet,
                       masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
                       ftMappingParams: FeatureMappingParams,
-                      normalizationMethod: Option[String]) extends MXLcmsService {
+                      normalizationMethod: Option[String]) extends ILcmsService {
 
   var createdMasterMap: ProcessedMap = null
 
