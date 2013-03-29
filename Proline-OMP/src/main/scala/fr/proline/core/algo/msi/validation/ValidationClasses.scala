@@ -144,7 +144,7 @@ object BuildProteinSetFilter {
 
   def apply(filterParam: ProtSetFilterParams.Param): IProteinSetFilter = {
     filterParam match {
-      case ProtSetFilterParams.PROTEOTYPIQUE_PEP => new ProteotypiquePeptidePSFilter()
+      case ProtSetFilterParams.SPECIFIC_PEP => new SpecificPeptidesPSFilter()
       case ProtSetFilterParams.SCORE => new ScoreProtSetFilter()
     }
   }
