@@ -72,13 +72,12 @@ case class Feature (
   val isOverlapping: Boolean,
   
   val isotopicPatterns: Option[Array[IsotopicPattern]],
-  var overlappingFeatures: Array[Feature],
-  
   val relations: FeatureRelations,
   
   // Mutable optional fields
   var children: Array[Feature] = null,
   var subFeatures: Array[Feature] = null,
+  var overlappingFeatures: Array[Feature] = null,
   var calibratedMoz: Double = Double.NaN,
   var normalizedIntensity: Double = Double.NaN,
   var correctedElutionTime: Float = Float.NaN,

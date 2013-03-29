@@ -90,7 +90,7 @@ sealed trait ILcMsMap {
   
   // Immutable optional fields
   val description: String
-  val featureScoring: FeatureScoring
+  val featureScoring: Option[FeatureScoring]
   
   // Mutable optional fields
   var properties: Option[LcMsMapProperties]
@@ -118,10 +118,10 @@ case class RunMap(
   val peakPickingSoftware: PeakPickingSoftware,
   
   // Immutable optional fields
-  val description: String = null,
-  val featureScoring: FeatureScoring = null,
+  val description: String = "",
+  val featureScoring: Option[FeatureScoring] = None,
   
-  val peakelFittingModel: PeakelFittingModel = null,
+  val peakelFittingModel: Option[PeakelFittingModel] = None,
   
   // Mutable optional fields
   var properties: Option[LcMsMapProperties] = None
@@ -175,8 +175,8 @@ case class ProcessedMap(
   var runMapIds: Array[Int], // Many values only for a master map
   
   // Immutable optional fields
-  val description: String = null,
-  val featureScoring: FeatureScoring = null,              
+  val description: String = "",
+  val featureScoring: Option[FeatureScoring] = None,
   
   // Mutable optional fields
   var isLocked: Boolean = false,
