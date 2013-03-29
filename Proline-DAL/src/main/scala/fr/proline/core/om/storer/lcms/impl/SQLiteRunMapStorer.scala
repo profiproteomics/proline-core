@@ -21,8 +21,8 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryExecution ) extends IRunMapStorer {
     runMap.id = newRunMapId
     
     // Store the related run map   
-    val peakPickingSoftwareId = if( runMap.featureScoring != null ) Some(runMap.peakPickingSoftware.id) else None
-    val peakelFittingModelId = if( runMap.featureScoring != null ) Some(runMap.peakelFittingModel.id) else None
+    val peakPickingSoftwareId = if( runMap.featureScoring.isDefined) Some(runMap.peakPickingSoftware.id) else None
+    val peakelFittingModelId = if( runMap.featureScoring.isDefined ) runMap.peakelFittingModel.map(_.id) else None
      
     lcmsDb.execute("INSERT INTO run_map VALUES (?,?,?,?)",
                         newRunMapId,
@@ -118,7 +118,7 @@ class SQLiteRunMapStorer( lcmsDb: SQLQueryExecution ) extends IRunMapStorer {
   def insertMap( lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date ): Int = {
     
     //val curDate = new java.util.Date
-    val ftScoringId = if( lcmsMap.featureScoring != null ) Some(lcmsMap.featureScoring.id) else None
+    val ftScoringId = lcmsMap.featureScoring.map(_.id)
     val lcmsMapType = if( lcmsMap.isProcessed ) 1 else 0
     
     // TODO: store properties
