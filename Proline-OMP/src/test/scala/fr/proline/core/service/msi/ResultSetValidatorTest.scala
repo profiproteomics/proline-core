@@ -7,7 +7,7 @@ import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.pepmatch.{ ScorePSMFilter, RankPSMFilter, _ }
-import fr.proline.core.algo.msi.filtering.proteinset.{ ScoreProtSetFilter, ProteotypiquePeptidePSFilter }
+import fr.proline.core.algo.msi.filtering.proteinset.{ ScoreProtSetFilter, SpecificPeptidesPSFilter }
 import fr.proline.core.algo.msi.filtering.{ IPeptideMatchFilter, FilterPropertyKeys, _ }
 import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
 import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
@@ -377,7 +377,7 @@ class ResultSetValidatorTest extends AbstractMultipleDBTestCase with Logging {
     val scoreTh = 22.0f
     val nbrPepProteo = 1
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
-    val protProteoTypiqueFilters = Seq(new ProteotypiquePeptidePSFilter(nbrPepProteo))
+    val protProteoTypiqueFilters = Seq(new SpecificPeptidesPSFilter(nbrPepProteo))
 
     logger.info(" ResultSetValidator testProtPrototypiquePSMValidation Create service")
     val rsValidation = ResultSetValidator(
