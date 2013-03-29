@@ -24,7 +24,7 @@ object PepMatchFilterParams extends Enumeration {
 object ProtSetFilterParams extends Enumeration {
   type Param = Value
   val SCORE = Value("SCORE")
-  val PROTEOTYPIQUE_PEP= Value("PROTEOTYPIQUE_PEP")
+  val SPECIFIC_PEP= Value("SPECIFIC_PEP")
 }
 
 trait IFilter {
