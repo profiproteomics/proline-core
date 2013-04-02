@@ -191,11 +191,11 @@ public class ResultSummary implements Serializable {
 			numberOfProteinSets = Integer.valueOf(proteinSetArray.length);
 		}
 		
-		public Integer getNumberOfProteinSetArray() {
+		public Integer getNumberOfProteinSet() {
 			return numberOfProteinSets;
 		}
 
-		public void setNumberOfProteinSetArray(Integer numberOfProteinSets) {
+		public void setNumberOfProteinSet(Integer numberOfProteinSets) {
 			this.numberOfProteinSets = numberOfProteinSets;
 		}
 
