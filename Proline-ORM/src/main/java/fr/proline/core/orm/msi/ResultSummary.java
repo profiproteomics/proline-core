@@ -4,6 +4,7 @@ import java.io.Serializable;
 import javax.persistence.*;
 
 import fr.proline.core.orm.msi.PeptideInstance;
+import fr.proline.core.orm.msi.ProteinSet;
 
 
 import java.sql.Timestamp;
@@ -168,6 +169,7 @@ public class ResultSummary implements Serializable {
 		private PeptideInstance[] peptideInstanceArray = null;
 		private ProteinSet[] proteinSetArray = null;
 		private Object dataSet = null; // JPM.TODO : replace Object by DataSet from orm
+		private Integer numberOfProteinSets = null;
 		
 		protected TransientData() {
 		}
@@ -186,6 +188,15 @@ public class ResultSummary implements Serializable {
 
 		public void setProteinSetArray(ProteinSet[] proteinSetArray) {
 			this.proteinSetArray = proteinSetArray;
+			numberOfProteinSets = Integer.valueOf(proteinSetArray.length);
+		}
+		
+		public Integer getNumberOfProteinSetArray() {
+			return numberOfProteinSets;
+		}
+
+		public void setNumberOfProteinSetArray(Integer numberOfProteinSets) {
+			this.numberOfProteinSets = numberOfProteinSets;
 		}
 
 		public Object getDataSet() {
