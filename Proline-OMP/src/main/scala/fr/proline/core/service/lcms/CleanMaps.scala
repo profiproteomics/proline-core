@@ -2,7 +2,7 @@ package fr.proline.core.service.lcms
 
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
-import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.algo.lcms.FeatureClusterer
@@ -10,10 +10,10 @@ import fr.proline.repository.IDatabaseConnector
 
 object CleanMaps {
   
-  def apply( lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcMsScan],
+  def apply( lcmsDbCtx: DatabaseConnectionContext, lcmsMap: ProcessedMap, scans: Seq[LcMsScan],
              clusteringParams: Option[ClusteringParams] ): ProcessedMap = {
     
-    val mapCleaningService = new CleanMaps( lcmsDbConnector, lcmsMap, scans, clusteringParams )
+    val mapCleaningService = new CleanMaps( lcmsDbCtx, lcmsMap, scans, clusteringParams )
     mapCleaningService.runService()
     mapCleaningService.cleanedMap
     
@@ -21,8 +21,12 @@ object CleanMaps {
   
 }
 
-class CleanMaps( val lcmsDbConnector: IDatabaseConnector, lcmsMap: ProcessedMap, scans: Seq[LcMsScan],
-                 clusteringParams: Option[ClusteringParams] ) extends ILcmsService {
+class CleanMaps(
+  val lcmsDbCtx: DatabaseConnectionContext,
+  lcmsMap: ProcessedMap,
+  scans: Seq[LcMsScan],
+  clusteringParams: Option[ClusteringParams]
+) extends ILcmsService {
   
   var cleanedMap: ProcessedMap = null
   
