@@ -28,7 +28,7 @@ object ClusterizeMapFeatures {
 
 }
 
-class ClusterizeMapFeatures(lcmsDbCtx: DatabaseConnectionContext, lcmsMap: ProcessedMap, params: ClusteringParams) extends IService {
+class ClusterizeMapFeatures(val lcmsDbCtx: DatabaseConnectionContext, lcmsMap: ProcessedMap, params: ClusteringParams) extends ILcMsService {
   
   //val ezDBC = lcmsQueryHelper.ezDBC
   //val inExprLimit = ezDBC.getInExpressionCountLimit
