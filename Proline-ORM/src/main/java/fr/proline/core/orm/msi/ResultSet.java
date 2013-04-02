@@ -26,6 +26,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 
+
 /**
  * The persistent class for the result_set database table.
  * 
@@ -78,7 +79,11 @@ public class ResultSet implements Serializable {
     Map<String, Integer> objectTreeIdByName;  
 	
 	// Transient Variables not saved in database
-	@Transient private PeptideMatch[] peptideMatches = null;
+    @Transient private TransientData transientData = null;
+
+	// Transient Variables not saved in database
+	@Transient private PeptideMatch[] peptideMatches = null; //JPM.TODO : remove it
+
 	
 	public ResultSet() {
 	}
@@ -169,6 +174,7 @@ public class ResultSet implements Serializable {
 	 * Get of Transient peptideMatches, Must be set beforehand.
 	 * @return
 	 */
+	//JPM.TODO : remove two next methodes
 	public PeptideMatch[] getTransientPeptideMatches() {
 		return peptideMatches;
 	}
@@ -177,4 +183,60 @@ public class ResultSet implements Serializable {
 		this.peptideMatches = peptideMatches;
 	}
 	
+    public TransientData getTransientData() {
+    	if (transientData == null) {
+    		transientData = new TransientData();
+    	}
+    	return transientData;
+    }
+    
+	/**
+	 * Transient Data which will be not saved in database
+	 * Used by the Proline Studio IHM
+	 * @author JM235353
+	 */
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+		private PeptideMatch[] peptideMatches;
+		
+		private Integer peptideMatchesCount = null;
+		private Integer msQueriesCount= null;
+		private Integer proteinMatchesCount= null;
+		
+		public PeptideMatch[] getPeptideMatches() {
+			return peptideMatches;
+		}
+
+		public void setPeptideMatches(PeptideMatch[] peptideMatches) {
+			this.peptideMatches = peptideMatches;
+			peptideMatchesCount = peptideMatches.length;
+		}
+		
+		
+		public Integer getPeptideMatchesCount() {
+			return peptideMatchesCount;
+		}
+
+		public void setPeptideMatchesCount(Integer peptideMatchesCount) {
+			this.peptideMatchesCount = peptideMatchesCount;
+		}
+		
+		public Integer getProteinMatchesCount() {
+			return proteinMatchesCount;
+		}
+
+		public void setProteinMatchesCount(Integer proteinMatchesCount) {
+			this.proteinMatchesCount = proteinMatchesCount;
+		}
+		
+		public Integer getMSQueriesCount() {
+			return msQueriesCount;
+		}
+
+		public void setMSQueriesCount(Integer msQueriesCount) {
+			this.msQueriesCount = msQueriesCount;
+		}
+	}
+    
 }
