@@ -1,26 +1,19 @@
 package fr.proline.core.om.storer.lcms
 
 import java.io.File
-import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.ILcMsMap
 import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.ProcessedMap
 import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.msi.Instrument
-import fr.proline.core.om.storer.lcms.impl.GenericMasterMapStorer
-import fr.proline.core.om.storer.lcms.impl.GenericProcessedMapStorer
-import fr.proline.core.om.storer.lcms.impl.SQLiteMasterMapStorer
-import fr.proline.core.om.storer.lcms.impl.SQLiteProcessedMapStorer
+import fr.proline.core.om.storer.lcms.impl._
 import fr.proline.repository.DriverType
 
 trait IRunMapStorer {
   
-  import fr.proline.core.om.model.lcms.ILcMsMap
-  import fr.proline.core.om.model.lcms.RunMap
-  
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit
-  def insertMap( lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date ): Int
   
  }
 
@@ -30,17 +23,19 @@ trait IRunStorer {
   def storeLcmsRun( run: LcMsRun, instrument: Instrument) : Unit
 }
 
-/*
 /** A factory object for implementations of the IRunMapStorer trait */
 object RunMapStorer {
-  def apply(driver: String ): IRunMapStorer = { driver match {
-    case "pg" => new GenericRunMapStorer()
-    case "sqlite" => new GenericRunMapStorer()
-    case _ => new GenericRunMapStorer()
+  def apply( lcmsDbCtx: DatabaseConnectionContext ): IRunMapStorer = {
+    if( lcmsDbCtx.isJPA ) new JPARunMapStorer(lcmsDbCtx)
+    else {
+      lcmsDbCtx.getDriverType match {
+        //case DriverType.POSTGRESQL => new PgRunMapStorer(lcmsDbCtx)
+        case _ => new SQLRunMapStorer(lcmsDbCtx)
+      }
     }
+    
   }
 }
-*/
 
 trait IProcessedMapStorer {
   
@@ -55,10 +50,13 @@ trait IProcessedMapStorer {
 /** A factory object for implementations of the IProcessedMapStorer trait */
 object ProcessedMapStorer {
   
-  def apply( lcmsSqlHelper: SQLQueryHelper ): IProcessedMapStorer = { lcmsSqlHelper.driverType match {
-    //case DriverType.POSTGRESQL => new GenericProcessedMapStorer(lcmsDb.ezDBC)
-    case DriverType.SQLITE => new SQLiteProcessedMapStorer(lcmsSqlHelper.ezDBC)
-    case _ => new SQLiteProcessedMapStorer(lcmsSqlHelper.ezDBC)
+  def apply( lcmsDbCtx: DatabaseConnectionContext ): IProcessedMapStorer = {
+    if( lcmsDbCtx.isJPA ) new JPAProcessedMapStorer(lcmsDbCtx)
+    else {
+      lcmsDbCtx.getDriverType match {
+        //case DriverType.POSTGRESQL => new PgProcessedMapStorer(lcmsDbCtx)
+        case _ => new SQLProcessedMapStorer(lcmsDbCtx)
+      }
     }
   }
 }
@@ -73,10 +71,15 @@ trait IMasterMapStorer {
 
 /** A factory object for implementations of the IMasterMapStorer trait */
 object MasterMapStorer {
-  def apply( lcmsDb: SQLQueryHelper ): IMasterMapStorer = { lcmsDb.driverType match {
-    //case DriverType.POSTGRESQL => new GenericMasterMapStorer(lcmsDb)
-    //case DriverType.SQLITE => new SQLiteMasterMapStorer(lcmsDb)
-    case _ => new SQLiteMasterMapStorer(lcmsDb.ezDBC)
+  
+  def apply( lcmsDbCtx: DatabaseConnectionContext ): IMasterMapStorer = {
+    if( lcmsDbCtx.isJPA ) new JPAMasterMapStorer(lcmsDbCtx)
+    else {
+      lcmsDbCtx.getDriverType match {
+        //case DriverType.POSTGRESQL => new PgMasterMapStorer(lcmsDbCtx)
+        case _ => new SQLMasterMapStorer(lcmsDbCtx)
+      }
     }
   }
+  
 }

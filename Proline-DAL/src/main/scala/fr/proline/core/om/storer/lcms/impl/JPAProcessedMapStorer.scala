@@ -1,12 +1,11 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.lcms.ProcessedMap
+import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.storer.lcms.IProcessedMapStorer
 
-class GenericProcessedMapStorer( lcmsDb: SQLQueryHelper ) extends IProcessedMapStorer {
-  
-  import fr.proline.core.om.model.lcms.ProcessedMap
-  import fr.proline.core.om.model.lcms.Feature
+class JPAProcessedMapStorer( lcmsDbCtx: DatabaseConnectionContext ) extends IProcessedMapStorer {
   
   def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean ): Unit = {
     throw new Exception("not yet implemented")

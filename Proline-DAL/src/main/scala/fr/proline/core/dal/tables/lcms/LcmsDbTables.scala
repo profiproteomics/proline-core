@@ -84,18 +84,18 @@ object LcmsDbFeatureClusterItemTable extends LcmsDbFeatureClusterItemTable {
   val columns = LcmsDbFeatureClusterItemColumns
 }
 
-object LcmsDbFeatureMs2_eventColumns extends ColumnEnumeration {
-  val $tableName = LcmsDbFeatureMs2_eventTable.name
+object LcmsDbFeatureMs2EventColumns extends ColumnEnumeration {
+  val $tableName = LcmsDbFeatureMs2EventTable.name
   val FEATURE_ID = Column("feature_id")
   val MS2_EVENT_ID = Column("ms2_event_id")
   val RUN_MAP_ID = Column("run_map_id")
 }
 
-abstract class LcmsDbFeatureMs2_eventTable extends TableDefinition[LcmsDbFeatureMs2_eventColumns.type]
+abstract class LcmsDbFeatureMs2EventTable extends TableDefinition[LcmsDbFeatureMs2EventColumns.type]
 
-object LcmsDbFeatureMs2_eventTable extends LcmsDbFeatureMs2_eventTable {
+object LcmsDbFeatureMs2EventTable extends LcmsDbFeatureMs2EventTable {
   val name = "feature_ms2_event"
-  val columns = LcmsDbFeatureMs2_eventColumns
+  val columns = LcmsDbFeatureMs2EventColumns
 }
 
 object LcmsDbFeatureObjectTreeMappingColumns extends ColumnEnumeration {

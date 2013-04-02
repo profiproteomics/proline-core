@@ -1,15 +1,19 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import fr.profi.jdbc.SQLQueryExecution
+import scala.collection.mutable.ArrayBuffer
+
 import fr.profi.jdbc.easy._
+
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.tables.lcms.LcmsDbFeatureTable
+import fr.proline.core.dal.tables.lcms.LcmsDbMasterFeatureItemTable
+import fr.proline.core.om.model.lcms.Feature
+import fr.proline.core.om.model.lcms.ProcessedMap
 import fr.proline.core.om.storer.lcms.IMasterMapStorer
 
-class SQLiteMasterMapStorer( lcmsDb: SQLQueryExecution ) extends IMasterMapStorer {
-  
-  import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.model.lcms.ProcessedMap
-  import fr.proline.core.om.model.lcms.Feature
-  
+class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProcessedMapStorer(lcmsDbCtx) with IMasterMapStorer {
+
   def storeMasterMap( masterMap: ProcessedMap ): Unit = {
     
     val mapSetId = masterMap.mapSetId
@@ -17,49 +21,51 @@ class SQLiteMasterMapStorer( lcmsDb: SQLQueryExecution ) extends IMasterMapStore
       throw new Exception("invalid map set id for the current master map")
     }
     
-    // Insert the master map in the processed_map and map tables
-    val processedMapStorer = new SQLiteProcessedMapStorer(lcmsDb)
-    val newMasterMapId = processedMapStorer.insertProcessedMap( masterMap )
+    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
     
-    // Update the master map id
-    masterMap.id = newMasterMapId
-    
-    // Update master map id of the map set in the database
-    lcmsDb.execute( "UPDATE map_set SET master_map_id = " + newMasterMapId + " WHERE id = " + mapSetId )
-    
-    // Link the master map to the corresponding run maps
-    processedMapStorer.linkProcessedMapToRunMaps( masterMap )
-    
-    // Instantiate a run map storer
-    val runMapStorer = new SQLiteRunMapStorer(lcmsDb)
-    val featureInsertStmt = runMapStorer.prepareStatementForFeatureInsert()
-    
-    // Update master feature map id and insert master features in the feature table
-    for( mft <- masterMap.features ) {
-      mft.relations.mapId = newMasterMapId      
-      mft.id = runMapStorer.insertFeatureUsingPreparedStatement( mft, featureInsertStmt )
-    }
-    
-    featureInsertStmt.close()
-    
-    // Link master features to their children
-    lcmsDb.executePrepared("INSERT INTO master_feature_item VALUES (?,?,?,?)") { statement => 
-      masterMap.features.foreach { mft =>
-        
-        // Retrieve best child id
-        val bestChildId = mft.relations.bestChildId
-        
-        mft.children.foreach { childFt =>
-          val isBestChild = if( childFt.id == bestChildId ) true else false
-          statement.executeWith( mft.id, childFt.id, isBestChild, newMasterMapId )
+      // Insert the master map in the processed_map and map tables
+      val newMasterMapId = this.insertProcessedMap( ezDBC, masterMap )
+      
+      // Update the master map id
+      masterMap.id = newMasterMapId
+      
+      // Update master map id of the map set in the database
+      ezDBC.execute( "UPDATE map_set SET master_map_id = " + newMasterMapId + " WHERE id = " + mapSetId )
+      
+      // Link the master map to the corresponding run maps
+      this.linkProcessedMapToRunMaps( ezDBC, masterMap )
+      
+      // Insert features
+      ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery, true) { featureInsertStmt =>
+      
+        // Update master feature map id and insert master features in the feature table
+        for( mft <- masterMap.features ) {
+          mft.relations.mapId = newMasterMapId      
+          mft.id = this.insertFeatureUsingPreparedStatement( mft, featureInsertStmt )
         }
+        
       }
-    }
+      
+      // Link master features to their children
+      ezDBC.executePrepared(LcmsDbMasterFeatureItemTable.mkInsertQuery) { statement =>
+        
+        masterMap.features.foreach { mft =>
+          
+          // Retrieve best child id
+          val bestChildId = mft.relations.bestChildId
+          
+          mft.children.foreach { childFt =>
+            val isBestChild = if( childFt.id == bestChildId ) true else false
+            statement.executeWith( mft.id, childFt.id, isBestChild, newMasterMapId )
+          }
+        }
+        
+      }
+      
+      // Insert processed map feature items
+      this.insertProcessedMapFeatureItems( ezDBC, masterMap )
     
-    // Insert processed map feature items
-    processedMapStorer.insertProcessedMapFeatureItems( masterMap )
-    
-    ()
+    })
   
   }
     

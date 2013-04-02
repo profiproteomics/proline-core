@@ -15,6 +15,9 @@ import fr.proline.util.primitives._
 
 class SQLRunProvider( val lcmsDbCtx: DatabaseConnectionContext ) extends IRunProvider {
   
+  val RunCols = LcmsDbRunTable.columns
+  val ScanCols = LcmsDbScanTable.columns
+  
   def getRuns( runIds: Seq[Int] ): Array[LcMsRun] = {
     
     val scans = this.getScans( runIds )
@@ -50,12 +53,12 @@ class SQLRunProvider( val lcmsDbCtx: DatabaseConnectionContext ) extends IRunPro
   def buildRunMap( runRecord: ResultSetRow, scans: Array[LcMsScan] ): LcMsRun = {
     
     new LcMsRun(
-      id = toInt(runRecord.getAnyVal("id")),
-      rawFileName = runRecord.getString("raw_file_name"),
-      minIntensity = runRecord.getDoubleOrElse("min_intensity",Double.NaN),
-      maxIntensity = runRecord.getDoubleOrElse("max_intensity",Double.NaN),
-      ms1ScanCount = runRecord.getIntOrElse("ms1_scan_count",0),
-      ms2ScanCount = runRecord.getIntOrElse("ms2_scan_count",0),
+      id = toInt(runRecord.getAnyVal(RunCols.ID)),
+      rawFileName = runRecord.getString(RunCols.RAW_FILE_NAME),
+      minIntensity = runRecord.getDoubleOrElse(RunCols.MIN_INTENSITY,Double.NaN),
+      maxIntensity = runRecord.getDoubleOrElse(RunCols.MAX_INTENSITY,Double.NaN),
+      ms1ScanCount = runRecord.getIntOrElse(RunCols.MS1_SCAN_COUNT,0),
+      ms2ScanCount = runRecord.getIntOrElse(RunCols.MS2_SCAN_COUNT,0),
       rawFile = null,
       scans = scans
     )
@@ -87,19 +90,19 @@ class SQLRunProvider( val lcmsDbCtx: DatabaseConnectionContext ) extends IRunPro
   
   def buildLcmsScan( scanRecord: ResultSetRow ): LcMsScan = {
 
-    val precursorMoz = scanRecord.getDoubleOrElse("precursor_moz",Double.NaN)
-    val precursorCharge = scanRecord.getIntOrElse("precursor_charge",0)
+    val precursorMoz = scanRecord.getDoubleOrElse(ScanCols.PRECURSOR_MOZ,Double.NaN)
+    val precursorCharge = scanRecord.getIntOrElse(ScanCols.PRECURSOR_CHARGE,0)
     
     new LcMsScan(
-      id = toInt(scanRecord.getAnyVal("id")),
-      initialId = scanRecord.getInt("initial_id"),
-      cycle = scanRecord.getInt("cycle"),
-      time = toFloat(scanRecord.getDouble("time")),
-      msLevel = scanRecord.getInt("ms_level"),
-      tic = scanRecord.getDouble("tic"),
-      basePeakMoz = scanRecord.getDouble("base_peak_moz"),
-      basePeakIntensity = scanRecord.getDouble("base_peak_intensity"),
-      runId = scanRecord.getInt("run_id"),
+      id = toInt(scanRecord.getAnyVal(ScanCols.ID)),
+      initialId = scanRecord.getInt(ScanCols.INITIAL_ID),
+      cycle = scanRecord.getInt(ScanCols.CYCLE),
+      time = toFloat(scanRecord.getDouble(ScanCols.TIME)),
+      msLevel = scanRecord.getInt(ScanCols.MS_LEVEL),
+      tic = scanRecord.getDouble(ScanCols.TIC),
+      basePeakMoz = scanRecord.getDouble(ScanCols.BASE_PEAK_MOZ),
+      basePeakIntensity = scanRecord.getDouble(ScanCols.BASE_PEAK_INTENSITY),
+      runId = scanRecord.getInt(ScanCols.RUN_ID),
       precursorMoz = precursorMoz,
       precursorCharge = precursorCharge
     )
