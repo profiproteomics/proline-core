@@ -37,7 +37,7 @@ class CreateMasterMap(
   masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
   ftMappingParams: FeatureMappingParams,
   normalizationMethod: Option[String]
-) extends ILcmsService {
+) extends ILcMsService {
 
   var createdMasterMap: ProcessedMap = null
 

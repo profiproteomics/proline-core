@@ -32,7 +32,7 @@ class CreateMapSet(
   mapSetName: String,
   runMaps: Seq[RunMap],
   clusteringParams: ClusteringParams
-) extends ILcmsService {
+) extends ILcMsService {
 
   var createdMapSet: MapSet = null
   

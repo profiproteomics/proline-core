@@ -26,7 +26,7 @@ class CleanMaps(
   lcmsMap: ProcessedMap,
   scans: Seq[LcMsScan],
   clusteringParams: Option[ClusteringParams]
-) extends ILcmsService {
+) extends ILcMsService {
   
   var cleanedMap: ProcessedMap = null
   

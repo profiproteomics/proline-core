@@ -29,7 +29,7 @@ class AlignMapSet(
   mapSet: MapSet,
   alnMethodName: String,
   alnParams: AlignmentParams
-) extends ILcmsService {
+) extends ILcMsService {
 
   def runService(): Boolean = {
     
