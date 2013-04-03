@@ -37,6 +37,12 @@
       <groupId>com.weiglewilczek.slf4s</groupId>
       <artifactId>slf4s_2.9.1</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>mzdb-processing</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
 
     <!-- Test -->
     <dependency>
