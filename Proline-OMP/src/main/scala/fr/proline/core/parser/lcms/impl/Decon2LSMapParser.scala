@@ -44,7 +44,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
     elutionTimeUnit.toLowerCase match {
       case "seconds" => timeConversionFactor = 60
       case "minutes" => timeConversionFactor = 1
-      case _ => throw new Exception("Invalid elution time unit")
+      case _         => throw new Exception("Invalid elution time unit")
     }
 
     val lines = io.Source.fromFile(filePath).getLines()
@@ -57,13 +57,13 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
       val valuesAsHash = columnNames.zip(values) toMap
       //val ipProps = ( fwhm = valuesAsHash("fwhm"), snr = valuesAsHash("signal_noise"))
 
-      val ip = new IsotopicPattern(moz = valuesAsHash("mz") toDouble,
+      val ip = new IsotopicPattern(
+        moz = valuesAsHash("mz") toDouble,
         intensity = valuesAsHash("abundance") toFloat,
         charge = valuesAsHash("charge") toInt,
-        fitScore = valuesAsHash("fit") toFloat,
-        scanInitialId = valuesAsHash("scan_num") toInt,
-        peaks = null,
-        overlappingIPs = null)
+        fitScore = Some(valuesAsHash("fit") toFloat),
+        scanInitialId = valuesAsHash("scan_num") toInt
+      )
 
       isotopicPatterns += ip
     } //end

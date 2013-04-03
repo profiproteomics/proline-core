@@ -13,7 +13,7 @@ import fr.proline.core.om.storer.lcms.IRunStorer
 
 class SQLRunStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunStorer {
 
-  def storeLcmsRun(run: LcMsRun, instrument: Instrument) = {
+  def storeLcmsRun(run: LcMsRun) = {
 
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -24,10 +24,10 @@ class SQLRunStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunStorer {
           run.rawFileName,
           run.minIntensity,
           run.maxIntensity,
-          run.ms1ScanCount,
-          run.ms2ScanCount,
+          run.ms1ScansCount,
+          run.ms2ScansCount,
           run.properties.map( generate(_) ),
-          instrument.id
+          run.rawFile.instrument.map( _.id )
         )
         runId = statement.generatedInt
       }

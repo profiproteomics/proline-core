@@ -48,8 +48,8 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
                  rawFileName = runRecord("raw_file_path").asInstanceOf[String],// raw_file_name
                  minIntensity = runRecord.getOrElse("min_intensity",Double.NaN).asInstanceOf[Double],
                  maxIntensity = runRecord.getOrElse("max_intensity",Double.NaN).asInstanceOf[Double],
-                 ms1ScanCount = runRecord.getOrElse("ms1_scan_count",0).asInstanceOf[Int],
-                 ms2ScanCount = runRecord.getOrElse("ms2_scan_count",0).asInstanceOf[Int],
+                 ms1ScansCount = runRecord.getOrElse("ms1_scan_count",0).asInstanceOf[Int],
+                 ms2ScansCount = runRecord.getOrElse("ms2_scan_count",0).asInstanceOf[Int],
                  rawFile = null,
                  scans = scans
                )

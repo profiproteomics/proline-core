@@ -47,13 +47,13 @@ class ComprehensiveMapAligner extends ILcmsMapAligner {
     
     val mapAlnSetsByMapId = new java.util.HashMap[Int,ArrayBuffer[MapAlignmentSet]]
     for( mapAlnSet <- mapAlnSets ) {
-      for( mapId <- Array( mapAlnSet.fromMapId, mapAlnSet.toMapId) ) {
+      for( mapId <- Array( mapAlnSet.refMapId, mapAlnSet.targetMapId) ) {
         if( !mapAlnSetsByMapId.containsKey(mapId) ) {
           mapAlnSetsByMapId.put(mapId, new ArrayBuffer[MapAlignmentSet](0))
         }
       }
-      mapAlnSetsByMapId.get( mapAlnSet.fromMapId ) += mapAlnSet
-      mapAlnSetsByMapId.get( mapAlnSet.toMapId ) += mapAlnSet
+      mapAlnSetsByMapId.get( mapAlnSet.refMapId ) += mapAlnSet
+      mapAlnSetsByMapId.get( mapAlnSet.targetMapId ) += mapAlnSet
     }
     
     var refMap: ProcessedMap = null

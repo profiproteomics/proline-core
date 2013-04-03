@@ -48,15 +48,14 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) ext
       ezDBC.select( mapAlnQuery ) { buildMapAlignment( _ ) }
     })
     
-    val mapAlnByKey = mapAlns.groupBy( mapAln => mapAln.fromMapId + "%" + mapAln.toMapId )
+    val mapAlnByKey = mapAlns.groupBy( mapAln => mapAln.refMapId -> mapAln.targetMapId )
     
     val mapAlnSetBuffer = new ArrayBuffer[MapAlignmentSet](mapAlnByKey.size)
     for( ( alnSetKey, mapAlns) <- mapAlnByKey) {
-      val alnSetKeyParts = alnSetKey.split("%")
-      val fromMapId = alnSetKeyParts(0).toInt
-      val toMapId = alnSetKeyParts(1).toInt
+      val refMapId = alnSetKey._1
+      val targetMapId = alnSetKey._2
       
-      mapAlnSetBuffer += new MapAlignmentSet( fromMapId = fromMapId, toMapId = toMapId, mapAlignments = mapAlns.toArray )
+      mapAlnSetBuffer += new MapAlignmentSet( refMapId = refMapId, targetMapId = targetMapId, mapAlignments = mapAlns.toArray )
     }
     
     mapAlnSetBuffer.toArray
@@ -71,8 +70,8 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) ext
     val deltaTimeList = mapAlnRecord.getString(MapAlnCols.DELTA_TIME_LIST).split(" ") map { _.toFloat }
     
     new MapAlignment(
-      fromMapId = mapAlnRecord.getInt(MapAlnCols.FROM_MAP_ID),
-      toMapId = mapAlnRecord.getInt(MapAlnCols.TO_MAP_ID),
+      refMapId = mapAlnRecord.getInt(MapAlnCols.FROM_MAP_ID),
+      targetMapId = mapAlnRecord.getInt(MapAlnCols.TO_MAP_ID),
       massRange = (massStart,massEnd),
       timeList = timeList,
       deltaTimeList = deltaTimeList

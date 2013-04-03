@@ -8,6 +8,7 @@ import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
+import fr.proline.util.misc.InMemoryIdGen
 
 case class FeatureScoring(
     
@@ -24,6 +25,8 @@ case class FeatureScoring(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class FeatureScoringProperties
+
+object PeakPickingSoftware extends InMemoryIdGen
 
 case class PeakPickingSoftware(
     
@@ -114,7 +117,7 @@ case class RunMap(
   val creationTimestamp: Date,
   val features: Array[Feature],
   
-  val runId: Int,
+  var runId: Int,
   val peakPickingSoftware: PeakPickingSoftware,
   
   // Immutable optional fields
@@ -218,8 +221,8 @@ case class Landmark( time: Float, deltaTime: Float )
 case class MapAlignment(
     
   // Required fields
-  val fromMapId: Int,
-  val toMapId: Int,
+  val refMapId: Int,
+  val targetMapId: Int,
   val massRange: Tuple2[Double,Double],
   val timeList: Array[Float],
   val deltaTimeList: Array[Float],
@@ -243,12 +246,41 @@ case class MapAlignment(
     
   }
   
-  def calcReferenceElutionTime( elutionTime: Float ) = {
-    
-    import fr.proline.util.math.calcLineParams
+  @deprecated("0.0.9","can't compute reference time using a time list of the reference map")
+  def calcReferenceElutionTime( elutionTime: Float ): Float = {
+    // Delta = aln_map - ref_map
+    elutionTime - this.calcDeltaTime(elutionTime)
+  }
+  
+  /*def calcFromMapElutionTime( toMapTime: Float ): Float = {    
+    // Delta = aln_map - ref_map
+    elutionTime - this.calcDeltaTime(toMapTime)
+  }*/
+  
+  /**
+   * Converts an elution time using the time list of the reference map (refMap)
+   * and the corresponding delta time list allowing to compute targetMap elution times.
+   * 
+   * @param refMapTime The time to convert (must be a in the refMap scale).
+   * @return The elution time converted in the targetMap scale.
+   */
+  def calcTargetMapElutionTime( refMapTime: Float ): Float = {    
+    // Delta = aln_map - ref_map
+    refMapTime + this.calcDeltaTime(refMapTime)
+  }
+  
+  protected def calcDeltaTime( elutionTime: Float ): Float = {
     
     val timeIndex = timeList.indexWhere( _ >= elutionTime )
     //if( timeIndex == -1 ) throw new Exception("undefined time index for elution time " + elutionTime)
+    
+    this._calcDeltaTime( timeIndex, elutionTime )    
+  }
+  
+  private def _calcDeltaTime( timeIndex: Int, elutionTime: Float ) = {
+    require( timeIndex > 0 && timeIndex < deltaTimeList.length, "time index is out of range" )
+    
+    import fr.proline.util.math.calcLineParams
     
     var deltaTime: Float = 0
     
@@ -263,26 +295,35 @@ case class MapAlignment(
     // Else we are inside the  alignment boundaries
     // We compute the linear interpolation
     } else {
-      val( x1, y1 ) = ( timeList(timeIndex-1), deltaTimeList(timeIndex-1) );
-      val( x2, y2) = ( timeList(timeIndex) , deltaTimeList(timeIndex) );        
+      val( x1, y1 ) = ( timeList(timeIndex-1), deltaTimeList(timeIndex-1) )
+      val( x2, y2) = ( timeList(timeIndex) , deltaTimeList(timeIndex) )
       
       val ( a, b ) = calcLineParams( x1, y1, x2, y2 )
       deltaTime = (a * elutionTime + b).toFloat;
     }
     
-    // Delta = aln_map - ref_map
-    elutionTime - deltaTime
-    
+    deltaTime    
   }
-  
  
-  def getReversedAlignment(): MapAlignment = {      
+  def getReversedAlignment(): MapAlignment = {
+    
+    val nbLandmarks = timeList.length
+    val revTimeList = new Array[Float](nbLandmarks)
+    val revDeltaTimeList = new Array[Float](nbLandmarks)
+    
+    for( i <- 0 until nbLandmarks) {
+      val deltaTime = deltaTimeList(i)
+      val targetMapTime = timeList(i) + deltaTime
+      revTimeList(i) = targetMapTime
+      revDeltaTimeList(i) = -deltaTime
+    }
+    
     MapAlignment(
-      fromMapId = toMapId,
-      toMapId = fromMapId,
+      refMapId = targetMapId,
+      targetMapId = refMapId,
       massRange = massRange,
-      timeList = timeList,
-      deltaTimeList = deltaTimeList map { _ * -1 }               
+      timeList = revTimeList,
+      deltaTimeList = revDeltaTimeList             
     )
     
   }
@@ -296,8 +337,8 @@ case class MapAlignmentProperties
 case class MapAlignmentSet(
     
   // Required fields
-  val fromMapId: Int,
-  val toMapId: Int,
+  val refMapId: Int,
+  val targetMapId: Int,
   val mapAlignments: Array[MapAlignment],
 
   // Mutable optional fields
@@ -308,6 +349,7 @@ case class MapAlignmentSet(
   // Requirements
   require( mapAlignments != null )
   
+  @deprecated("0.0.9","can't compute reference time using a time list of the reference map")
   def calcReferenceElutionTime( elutionTime: Float, mass: Double ): Float = {
 
     // Select right map alignment
@@ -319,11 +361,35 @@ case class MapAlignmentSet(
     mapAln.get.calcReferenceElutionTime( elutionTime )
   }
   
+  /**
+   * Converts an elution time using the time list of the reference map (refMap)
+   * and the corresponding delta time list allowing to compute targetMap elution times.
+   * 
+   * @param fromMapTime The elution time to convert (must be in the fromMap scale).
+   * @param mass A mass value which may be used to select the appropriate map alignment.
+   * @return The elution time converted in the targetMap scale.
+   */
+  def calcTargetMapElutionTime( refMapTime: Float, mass: Option[Double] ): Float = {
+
+    val mapAln = if( mapAlignments.length == 0 ) mapAlignments(0)
+    else {
+      // Select right map alignment
+      val foundMapAln = mass.map { m => mapAlignments find { x => m >= x.massRange._1 && m < x.massRange._2 } } getOrElse(None)
+        
+      // Small workaround for masses greater than the map alignment with highest number of data points
+      if( foundMapAln.isDefined ) foundMapAln.get    
+      else mapAlignments.sortBy( _.timeList.length).last
+    }
+    
+    // Convert reference map elution time into the target map one
+    mapAln.calcTargetMapElutionTime( refMapTime )
+  }
+  
   def getReversedAlnSet(): MapAlignmentSet = {
     
     MapAlignmentSet(
-      fromMapId = toMapId,
-      toMapId = fromMapId,
+      refMapId = targetMapId,
+      targetMapId = refMapId,
       mapAlignments = mapAlignments map { _.getReversedAlignment }
     )
 
@@ -334,6 +400,8 @@ case class MapAlignmentSet(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MapAlignmentSetProperties
+
+object MapSet extends InMemoryIdGen
 
 case class MapSet(
     
@@ -354,7 +422,11 @@ case class MapSet(
   
   // Requirements
   require( creationTimestamp != null && childMaps != null )
-
+  
+  private lazy val _mapAlnSetByMapIdPair: Map[Pair[Int,Int],MapAlignmentSet] = {
+    val allMapAlnSets = mapAlnSets ++ mapAlnSets.map(_.getReversedAlnSet)
+    Map() ++ allMapAlnSets.map( alnSet => (alnSet.refMapId,alnSet.targetMapId) -> alnSet )    
+  }
 
   def getChildMapIds() = childMaps map { _.id }
 
@@ -378,22 +450,48 @@ case class MapSet(
     else childMaps find { _.id == alnReferenceMapId }
   }
   
-  def getRefMapAlnSetByMapId(): Option[Map[Int,MapAlignmentSet]] = {
-    if( alnReferenceMapId == 0 ) return None
+  def convertElutionTime( time: Float, refMapId: Int, targetMapId: Int, mass: Option[Double] = None): Float = {
+    require( mapAlnSets != null, "can't convert elution time without map alignments" )
     
-    // Retrieve alignments of the reference map
-    val refMapAlnSets = mapAlnSets filter { _.fromMapId == alnReferenceMapId }
-    val revRefMapAlnSets = mapAlnSets . 
-                           filter { _.toMapId == alnReferenceMapId } . 
-                           map { _.getReversedAlnSet }
+    // If the reference is the target map => returns the provided time
+    if( refMapId == targetMapId ) return time
     
-    val refMapAlnSetByMapId = ( refMapAlnSets ++ revRefMapAlnSets ) .
-                              map( alnSet => ( alnSet.toMapId -> alnSet ) ).toMap
-                              
-    Some(refMapAlnSetByMapId)
-    
+    if( _mapAlnSetByMapIdPair.contains(refMapId->targetMapId) ) {
+      val mapAlnSet = _mapAlnSetByMapIdPair(refMapId->targetMapId)
+      mapAlnSet.calcTargetMapElutionTime(time, mass)
+    } else {
+      // Convert time into the reference map scale
+      val toRefMapAlnSet = _mapAlnSetByMapIdPair(refMapId->this.alnReferenceMapId)
+      val refMapTime = toRefMapAlnSet.calcTargetMapElutionTime(time, mass)
+     
+      // Convert reference map time into the target map scale
+      val mapAlnSet = _mapAlnSetByMapIdPair(this.alnReferenceMapId->targetMapId)
+      mapAlnSet.calcTargetMapElutionTime(time, mass)
+    }
+
   }
   
+  @deprecated("0.0.9","use map set convertElutionTime method instead")
+  def getRefMapAlnSetByMapId(): Option[Map[Int,MapAlignmentSet]] = {
+    if( this.alnReferenceMapId == 0 ) return None
+    
+    val refMapAlnSetByMapId = this._getRefMapAlnSets.map( alnSet => ( alnSet.targetMapId -> alnSet ) ).toMap
+    
+    Some(refMapAlnSetByMapId)
+  }
+  
+  private def _getRefMapAlnSets(): Array[MapAlignmentSet] = {    
+    
+    // Retrieve alignments of the reference map
+    val refMapAlnSets = mapAlnSets filter { _.refMapId == alnReferenceMapId }
+    val revRefMapAlnSets = mapAlnSets . 
+                           filter { _.targetMapId == alnReferenceMapId } . 
+                           map { _.getReversedAlnSet }
+    
+    ( refMapAlnSets ++ revRefMapAlnSets )
+    
+  }
+
 }
 
 @JsonSnakeCase

@@ -45,15 +45,14 @@ class MapAlignmentSetLoader( val sqlExec: SQLQueryExecution ) {
       
     }
     
-    val mapAlnByKey = mapAlns.groupBy( mapAln => mapAln.fromMapId + "%" + mapAln.toMapId )
+    val mapAlnByKey = mapAlns.groupBy( mapAln => mapAln.refMapId -> mapAln.targetMapId )
     
     val mapAlnSetBuffer = new ArrayBuffer[MapAlignmentSet](mapAlnByKey.size)
     for( ( alnSetKey, mapAlns) <- mapAlnByKey) {
-      val alnSetKeyParts = alnSetKey.split("%")
-      val fromMapId = alnSetKeyParts(0).toInt
-      val toMapId = alnSetKeyParts(1).toInt
+      val refMapId = alnSetKey._1
+      val targetMapId = alnSetKey._2
       
-      mapAlnSetBuffer += new MapAlignmentSet( fromMapId = fromMapId, toMapId = toMapId, mapAlignments = mapAlns.toArray )
+      mapAlnSetBuffer += new MapAlignmentSet( refMapId = refMapId, targetMapId = targetMapId, mapAlignments = mapAlns.toArray )
     }
     
     mapAlnSetBuffer.toArray
@@ -67,8 +66,8 @@ class MapAlignmentSetLoader( val sqlExec: SQLQueryExecution ) {
     val timeList = mapAlnRecord("time_list").asInstanceOf[String].split(" ") map { _.toFloat }
     val deltaTimeList = mapAlnRecord("delta_time_list").asInstanceOf[String].split(" ") map { _.toFloat }
     
-    new MapAlignment( fromMapId = mapAlnRecord("from_map_id").asInstanceOf[Int],
-                      toMapId = mapAlnRecord("to_map_id").asInstanceOf[Int],
+    new MapAlignment( refMapId = mapAlnRecord("from_map_id").asInstanceOf[Int],
+                      targetMapId = mapAlnRecord("to_map_id").asInstanceOf[Int],
                       massRange = (massStart,massEnd),
                       timeList = timeList,
                       deltaTimeList = deltaTimeList

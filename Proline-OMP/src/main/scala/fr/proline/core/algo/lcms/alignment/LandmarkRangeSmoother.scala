@@ -49,8 +49,8 @@ class LandmarkRangeSmoother extends IAlnSmoother {
     
     // Instantiate a new map alignment
     val newMapAln = new MapAlignment (
-                          fromMapId = mapAln.fromMapId,
-                          toMapId = mapAln.toMapId,
+                          refMapId = mapAln.refMapId,
+                          targetMapId = mapAln.targetMapId,
                           massRange = mapAln.massRange,
                           timeList = newTimeList.toArray,
                           deltaTimeList = newDeltaTimeList.toArray

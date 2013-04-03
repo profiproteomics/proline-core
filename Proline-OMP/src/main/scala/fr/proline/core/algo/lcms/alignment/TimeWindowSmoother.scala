@@ -52,12 +52,12 @@ class TimeWindowSmoother extends IAlnSmoother {
   
     // Instantiate a new map alignment
     val newMapAln = new MapAlignment (
-                          fromMapId = mapAln.fromMapId,
-                          toMapId = mapAln.toMapId,
-                          massRange = mapAln.massRange,
-                          timeList = newTimeList.toArray,
-                          deltaTimeList = newDeltaTimeList.toArray
-                        )
+      refMapId = mapAln.refMapId,
+      targetMapId = mapAln.targetMapId,
+      massRange = mapAln.massRange,
+      timeList = newTimeList.toArray,
+      deltaTimeList = newDeltaTimeList.toArray
+    )
     
     newMapAln
   }

@@ -7,7 +7,6 @@ import scala.xml.Elem
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.HashMap
 
-
 import fr.proline.core.om.model.lcms.Peak
 import fr.proline.core.om.model.lcms.IsotopicPattern
 import fr.proline.core.om.model.lcms.FeatureRelations
@@ -17,7 +16,6 @@ import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.parser.lcms.ExtraParameters
-
 
 object OpenMSMapParser {
   val targetLabel = "feature"
@@ -62,17 +60,16 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       var estimatedBeginTime = scanMs1.time - (math.abs(lastTime - scanMs1.time))
       //Or use rt in file begin last dataPoints
 
-      val ip = new IsotopicPattern(//id = id,
+      val ip = new IsotopicPattern( //id = id,
         moz = moz,
         intensity = intensity,
         charge = charge,
-        fitScore = Float.NaN,
-        peaks = dataPoints,
-        scanInitialId = scanMs1.initialId,
-        overlappingIPs = Array[IsotopicPattern]())
-      
+        peaks = Some(dataPoints),
+        scanInitialId = scanMs1.initialId
+      )
+
       val ms2EventIds = getMs2Events(lcmsRun, lcmsRun.scans.indexOf(scanMs2))
-      
+
       val ftRelation = new FeatureRelations(ms2EventIds = ms2EventIds,
         firstScanInitialId = lcmsRun.getScanAtTime(estimatedBeginTime, 1).initialId,
         lastScanInitialId = lcmsRun.getScanAtTime(lastTime, 1).initialId,

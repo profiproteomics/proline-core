@@ -57,8 +57,8 @@ class SQLRunProvider( val lcmsDbCtx: DatabaseConnectionContext ) extends IRunPro
       rawFileName = runRecord.getString(RunCols.RAW_FILE_NAME),
       minIntensity = runRecord.getDoubleOrElse(RunCols.MIN_INTENSITY,Double.NaN),
       maxIntensity = runRecord.getDoubleOrElse(RunCols.MAX_INTENSITY,Double.NaN),
-      ms1ScanCount = runRecord.getIntOrElse(RunCols.MS1_SCAN_COUNT,0),
-      ms2ScanCount = runRecord.getIntOrElse(RunCols.MS2_SCAN_COUNT,0),
+      ms1ScansCount = runRecord.getIntOrElse(RunCols.MS1_SCAN_COUNT,0),
+      ms2ScansCount = runRecord.getIntOrElse(RunCols.MS2_SCAN_COUNT,0),
       rawFile = null,
       scans = scans
     )

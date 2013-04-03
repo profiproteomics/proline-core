@@ -20,7 +20,7 @@ trait IRunMapStorer {
 
 trait IRunStorer {
   
-  def storeLcmsRun( run: LcMsRun, instrument: Instrument) : Unit
+  def storeLcmsRun( run: LcMsRun ) : Unit
 }
 
 /** A factory object for implementations of the IRunMapStorer trait */

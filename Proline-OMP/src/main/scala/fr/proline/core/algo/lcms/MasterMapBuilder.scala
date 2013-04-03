@@ -34,9 +34,9 @@ object MasterMapBuilder {
       //println( alnRefMapId )
   
       // Retrieve alignments of the reference map (TODO: put in a helper)      
-      val revRefMapAlnSets = mapAlnSets filter { _.toMapId == alnRefMapId } 
+      /*val revRefMapAlnSets = mapAlnSets filter { _.toMapId == alnRefMapId } 
       val refMapAlnSets = (mapAlnSets filter { _.fromMapId == alnRefMapId }) ++ (revRefMapAlnSets map {_.getReversedAlnSet})
-      var refMapAlnSetByMapId = refMapAlnSets map { alnSet => alnSet.toMapId -> alnSet }  toMap
+      var refMapAlnSetByMapId = refMapAlnSets map { alnSet => alnSet.toMapId -> alnSet }  toMap*/
       
       // Feed master map with the best features (above intensity threshold)
       for( childMap <- childMaps ) {
@@ -49,15 +49,15 @@ object MasterMapBuilder {
           val highIntensityFts = childMap.features filter { _.selectionLevel >= 2 }
           
           // Retrieve the alignment between the reference map and the current map
-          val mapAlnSet = refMapAlnSetByMapId(childMap.id)
+          //val mapAlnSet = refMapAlnSetByMapId(childMap.id)
           
           // Feed the master map with the filtered features
-          this.feedMasterMapFeatures(masterFts, highIntensityFts, mapAlnSet, ftMappingParams, true )
+          this.feedMasterMapFeatures(masterFts, highIntensityFts, mapSet, ftMappingParams, true )
         }
       }
       
       // Create an alignment fake from reference map to reference map
-      val alnRefMapNbFeatures = alnRefMap.features.length
+      /*val alnRefMapNbFeatures = alnRefMap.features.length
       var refMapTimeList = new ArrayBuffer[Float](alnRefMapNbFeatures)
       val refMapDeltaTimeList = new ArrayBuffer[Float](alnRefMapNbFeatures)
       
@@ -67,19 +67,20 @@ object MasterMapBuilder {
       }
       val sortedRefMapTimeList = refMapTimeList.toList.sort { (a,b) => a < b } toArray
       
-      val refMapFakeAln = new MapAlignment (
-                                fromMapId = alnRefMapId,
-                                toMapId = alnRefMapId,
-                                massRange = (0,100000),
-                                timeList = sortedRefMapTimeList,
-                                deltaTimeList = refMapDeltaTimeList.toArray
-                              )
-      val refMapFakeAlnSet = new MapAlignmentSet (
-                                  fromMapId = alnRefMapId,
-                                  toMapId = alnRefMapId,
-                                  mapAlignments = Array(refMapFakeAln)
-                                 )
+      val refMapFakeAln = new MapAlignment(
+        refMapId = alnRefMapId,
+        targetMapId = alnRefMapId,
+        massRange = (0,100000),
+        timeList = sortedRefMapTimeList,
+        deltaTimeList = refMapDeltaTimeList.toArray
+      )
+      val refMapFakeAlnSet = new MapAlignmentSet(
+        refMapId = alnRefMapId,
+        targetMapId = alnRefMapId,
+        mapAlignments = Array(refMapFakeAln)
+       )
       refMapAlnSetByMapId = refMapAlnSets ++ Array(refMapFakeAlnSet) map { alnSet => alnSet.toMapId -> alnSet }  toMap
+      */
       
       //print "feed master map with low quality features\n"
         
@@ -90,12 +91,11 @@ object MasterMapBuilder {
         val lowIntensityFts = childMap.features filter { _.selectionLevel < 2 }
         
         // Retrieve the alignement between the reference map and the current map
-        val mapAlnSet = refMapAlnSetByMapId(childMap.id)
+        //val mapAlnSet = refMapAlnSetByMapId(childMap.id)
         
         // Assign these poor quality features to existing master features
         // but don't make them master features if they can't be assigned
-        this.feedMasterMapFeatures(masterFts,lowIntensityFts,mapAlnSet,ftMappingParams, false )
-        
+        this.feedMasterMapFeatures(masterFts,lowIntensityFts,mapSet,ftMappingParams, false )        
       }
       
       // Try to map single features to existing master features with charge error tolerance
@@ -160,19 +160,20 @@ object MasterMapBuilder {
   }
   
   private def feedMasterMapFeatures( masterMapFeatures: ArrayBuffer[Feature], childMapFeatures: Array[Feature], 
-                                     mapAlnSet: MapAlignmentSet, ftMappingParams: FeatureMappingParams,
+                                     mapSet: MapSet, ftMappingParams: FeatureMappingParams,
                                      addNonMatchingFeatures: Boolean ): Unit = {
     
     for( val childFt <- childMapFeatures ) {
       
+      val childMapId = childFt.relations.mapId
+      if( childMapId == 0 ) {
+        throw new Exception( "a map id must be defined for each child feature (m/z=" + childFt.moz +")")
+      }    
+      
       // Calculate corrected elution time using the elution time alignment
-      val correctedTime = mapAlnSet.calcReferenceElutionTime( childFt.elutionTime, childFt.mass )
-      childFt.correctedElutionTime = correctedTime
-      
-      if( childFt.relations.mapId == 0 ) {
-        throw new Exception( "map id must be defined for each child feature (m/z=" + childFt.moz +")")
-      }       
-      
+      //val correctedTime = mapAlnSet.calcReferenceElutionTime( childFt.elutionTime, childFt.mass )
+      val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.alnReferenceMapId)
+      childFt.correctedElutionTime = correctedTime      
     }
     //print "compute pairwise ft mapping\n" if ! addNonMatchingFeatures
     

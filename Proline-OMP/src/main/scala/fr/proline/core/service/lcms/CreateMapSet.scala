@@ -16,8 +16,12 @@ import fr.proline.repository.IDatabaseConnector
 
 object CreateMapSet {
 
-  def apply( lcmsDbCtx: DatabaseConnectionContext, mapSetName: String, runMaps: Seq[RunMap], 
-             clusteringParams: ClusteringParams ): MapSet = {
+  def apply(
+    lcmsDbCtx: DatabaseConnectionContext,
+    mapSetName: String,
+    runMaps: Seq[RunMap], 
+    clusteringParams: ClusteringParams
+  ): MapSet = {
     
     val mapSetCreator = new CreateMapSet( lcmsDbCtx, mapSetName, runMaps, clusteringParams  )
     mapSetCreator.runService()

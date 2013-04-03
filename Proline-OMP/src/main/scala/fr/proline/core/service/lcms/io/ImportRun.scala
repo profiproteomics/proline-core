@@ -67,15 +67,15 @@ object ImportRun { // extends String2FileConverter
       //instrumentName = rawfile.instrument.name,
       minIntensity = 0.,
       maxIntensity = 0.,
-      ms1ScanCount = ms1Count,
-      ms2ScanCount = ms2Count,
+      ms1ScansCount = ms1Count,
+      ms2ScansCount = ms2Count,
       rawFile = rawFile,
       scans = scans.toArray
     )
   }
 }
 
-class ImportRun(lcmsDbCtx: DatabaseConnectionContext, lcmsRun: LcMsRun, var instrument: Instrument = null) extends IService {
+class ImportRun(lcmsDbCtx: DatabaseConnectionContext, lcmsRun: LcMsRun) extends IService {
 
   def this(lcmsDbCtx: DatabaseConnectionContext, scans: Seq[LcMsScan], pps: PeakPickingSoftware, rawfile: RawFile) {
     this(lcmsDbCtx, ImportRun.buildLcMsRun(scans, pps, rawfile))
@@ -84,16 +84,11 @@ class ImportRun(lcmsDbCtx: DatabaseConnectionContext, lcmsRun: LcMsRun, var inst
   def this(lcmsDbCtx: DatabaseConnectionContext, file: File, pps: PeakPickingSoftware, rawfile: RawFile) {
     this(lcmsDbCtx, ImportRun.buildLcMsRun(file, pps, rawfile))
   }
-  //var scans = ImportRun.readRunFile(file)
 
   def runService(): Boolean = {
     
     val storer = new SQLRunStorer(lcmsDbCtx)
-    if (instrument == null) {
-      logger.warn("Empty Instrument, building an empty one...\n")
-      instrument = new Instrument(id = 0, name = "", source = "")
-    }
-    storer.storeLcmsRun(lcmsRun, instrument)
+    storer.storeLcmsRun(lcmsRun)
     
     true
   }

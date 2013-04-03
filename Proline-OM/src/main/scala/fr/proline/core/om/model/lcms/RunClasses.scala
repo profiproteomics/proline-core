@@ -18,11 +18,13 @@ case class RawFile(
   val extension: String,
   val directory: String,
   val creationTimestamp: Date,
-  val instrument: Instrument,
+  val instrument: Option[Instrument] = None,
   
   // Mutable optional fields
   var properties: Option[RawFileProperties] = None
-)
+) {
+  require( instrument != null )
+}
             
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
@@ -41,8 +43,8 @@ case class LcMsRun(
   //val instrumentName: String,
   val minIntensity: Double,
   val maxIntensity: Double,
-  val ms1ScanCount: Int,
-  val ms2ScanCount: Int,
+  val ms1ScansCount: Int,
+  val ms2ScansCount: Int,
   val rawFile: RawFile,
   val scans: Array[LcMsScan],
   
@@ -50,6 +52,7 @@ case class LcMsRun(
   var properties: Option[LcMsRunProperties] = None
   
 ) {
+  require( RawFile != null )
   require( scans != null )
   
   lazy val scanById = Map() ++ scans.map { scan => ( scan.id -> scan ) }
@@ -120,7 +123,9 @@ case class LcMsRun(
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class LcMsRunProperties
+case class LcMsRunProperties(
+  @BeanProperty var mzDbFilePath: String
+)
 
 case class LcMsScan(
     
@@ -134,7 +139,7 @@ case class LcMsScan(
   val basePeakMoz: Double,
   val basePeakIntensity: Double,
   
-  val runId: Int,
+  var runId: Int,
   
   // Immutable optional fields
   val precursorMoz: Double = Double.NaN,

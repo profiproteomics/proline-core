@@ -25,12 +25,13 @@ class IsotopicPattern (
   val moz: Double,
   val intensity: Float,
   val charge: Int,
-  val fitScore: Float,
-  val peaks: Array[Peak],
   val scanInitialId: Int,
-  val overlappingIPs: Array[IsotopicPattern],
+  
+  val peaks: Option[Array[Peak]] = None,
+  val overlappingIPs: Option[Array[IsotopicPattern]] = None,
   
   // Mutable optional fields
+  var fitScore: Option[Float] = None,
   var properties: Option[IsotopicPatternProperties] = None
   
 )

@@ -1,7 +1,7 @@
 package fr.proline.core.dal.helper
 
 import scala.collection.mutable.ArrayBuffer
-import fr.profi.jdbc.SQLQueryExecution
+import fr.profi.jdbc.easy._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{DoJDBCReturningWork,DoJDBCWork}
 import fr.proline.core.om.model.lcms._
@@ -97,6 +97,11 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     })
   }
   
+  def getRunIdForRawFileName( rawFileName: String ): Option[Int] = {    
+    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>    
+      ezDBC.selectHeadOption( "SELECT id FROM run WHERE raw_file_name = ?", rawFileName ) { _.nextInt }    
+    })
+  }
 
   def getScanInitialIdById( runIds: Seq[Int] ): Map[Int,Int] = {
     

@@ -24,8 +24,8 @@ class SQLMapAlnSetStorer( lcmsDbCtx: DatabaseConnectionContext ) extends IMapAln
         mapAlnSets.foreach { mapAlnSet =>
           mapAlnSet.mapAlignments.foreach { mapAln =>
             statement.executeWith(
-              mapAln.fromMapId,
-              mapAln.toMapId,
+              mapAln.refMapId,
+              mapAln.targetMapId,
               mapAln.massRange._1,
               mapAln.massRange._2,
               mapAln.timeList.mkString(" "),

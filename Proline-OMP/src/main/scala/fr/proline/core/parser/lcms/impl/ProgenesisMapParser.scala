@@ -14,8 +14,6 @@ import fr.proline.core.om.model.lcms.PeakPickingSoftware
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.parser.lcms.ExtraParameters
 
-
-
 case class ProgenesisExtraParams extends ExtraParameters {
   /**
    * actually empty because no parameters needed
@@ -24,10 +22,8 @@ case class ProgenesisExtraParams extends ExtraParameters {
   //val mapName: Option[String] = None
 }
 
-
-
 object ProgenesisMapParser {
-  val fields = HashMap("mapNb" -> Int, "mapName" -> AnyRef) 
+  val fields = HashMap("mapNb" -> Int, "mapName" -> AnyRef)
 }
 
 class ProgenesisMapParser extends ILcmsMapFileParser {
@@ -42,17 +38,16 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     val columnNames = lines.next().stripLineEnd.split(";")
 
     //the seven first columns are reserved  
-    val sampleNames = columnNames.slice(7, columnNames.length)//for (k <- 7 until columnNames.length) yield columnNames(k)
+    val sampleNames = columnNames.slice(7, columnNames.length) //for (k <- 7 until columnNames.length) yield columnNames(k)
 
     val (found, mapName) = format(sampleNames, lcmsRun.rawFileName)
     if (!found)
       throw new Exception("requested file not found")
 
-
     var features = new ArrayBuffer[Feature]
 
     while (lines.hasNext) {
-      
+
       val l = lines.next.stripLineEnd.split(";")
       val rowValueMap = columnNames.zip(l) toMap
 
@@ -69,15 +64,13 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       val ms2IdEvents = getMs2Events(lcmsRun, idx)
 
       //dont know what to do for ID...
-      val biggestIp = new IsotopicPattern(//id = id,
+      val biggestIp = new IsotopicPattern( //id = id,
         moz = rowValueMap("m/z").toDouble,
         intensity = rowValueMap(mapName).toFloat,
         charge = rowValueMap("Charge").toInt,
-        fitScore = Float.NaN,
-        peaks = Array[Peak](),
-        scanInitialId = scanms1.initialId,
-        overlappingIPs = Array[IsotopicPattern]())
-      
+        scanInitialId = scanms1.initialId
+      )
+
       val featureRelation = FeatureRelations(ms2EventIds = ms2IdEvents toArray,
         firstScanInitialId = firstScanInitialId,
         lastScanInitialId = lastScanInitialId,
@@ -95,7 +88,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
         isotopicPatterns = Some(Array[IsotopicPattern](biggestIp)),
         overlappingFeatures = Array[Feature](),
         relations = featureRelation)
-      
+
       features += feature
     }
 
@@ -109,11 +102,11 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
         "Progenesis",
         "unknown",
         "unknown"))
-    
+
     Some(runMap)
   }
-  
-  def getAllRunMap(filePath: String, lcmsRunMaps : Array[LcMsRun]) {
+
+  def getAllRunMap(filePath: String, lcmsRunMaps: Array[LcMsRun]) {
     val lines = io.Source.fromFile(filePath).getLines();
 
     //skip the first 2 lines
@@ -124,27 +117,27 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
 
     //the seven first columns are reserved  
     val sampleNames = (for (k <- 7 until columnNames.length - 1) yield columnNames(k))
-    
+
     if (sampleNames.length != lcmsRunMaps.length)
       throw new Exception("Errors too much or less lcmsRun provided")
-    
+
     //order mapping namefile runMaps
-    var nameFileRunMap = new HashMap[String, LcMsRun] 
-    
+    var nameFileRunMap = new HashMap[String, LcMsRun]
+
     for (namefile <- sampleNames)
-      breakable { for (lcmsRun <- lcmsRunMaps) {
-        if (lcmsRun.rawFileName.contains(namefile)) {
-          nameFileRunMap += (namefile -> lcmsRun)
-          break
+      breakable {
+        for (lcmsRun <- lcmsRunMaps) {
+          if (lcmsRun.rawFileName.contains(namefile)) {
+            nameFileRunMap += (namefile -> lcmsRun)
+            break
+          }
         }
       }
-    }
-    
+
     var runmaps = new ArrayBuffer[Option[RunMap]]
     nameFileRunMap.par.foreach(key => (runmaps += getRunMap(key._1, key._2, ProgenesisExtraParams())))
-    
+
   }
-  
 
   def format(sampleNames: IndexedSeq[String], filename: String): (Boolean, String) = {
 

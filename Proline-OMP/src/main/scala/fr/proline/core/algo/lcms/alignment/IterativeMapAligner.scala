@@ -66,7 +66,7 @@ class IterativeMapAligner extends ILcmsMapAligner with Logging {
 
     if (lcmsMaps.length <= 2) return lcmsMaps(0)
 
-    val mapAlnSetByMapId = mapAlnSets.map { alnSet => (alnSet.toMapId -> alnSet) } toMap
+    val mapAlnSetByMapId = mapAlnSets.map { alnSet => (alnSet.targetMapId -> alnSet) } toMap
     val mapDistanceByIdBuilder = scala.collection.immutable.Map.newBuilder[Int, Float]
     mapDistanceByIdBuilder += (currentRefMap.id -> 0)
 

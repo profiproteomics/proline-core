@@ -68,21 +68,22 @@ trait ILcmsMapAligner {
       val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }
       
       val mapAlignment = new MapAlignment(
-                              fromMapId = map1.id,
-                              toMapId = map2.id,
-                              massRange = (massRangeIndex*massInterval,(massRangeIndex+1)*massInterval),
-                              timeList = timeList.toArray,
-                              deltaTimeList = deltaTimeList.toArray
-                            )
+        refMapId = map1.id,
+        targetMapId = map2.id,
+        massRange = (massRangeIndex*massInterval,(massRangeIndex+1)*massInterval),
+        timeList = timeList.toArray,
+        deltaTimeList = deltaTimeList.toArray
+      )
       
       ftAlignments += alnSmoother.smoothMapAlignment( mapAlignment, alnParams.smoothingParams )
       
     }
     
-     new MapAlignmentSet( fromMapId = map1.id,
-                          toMapId = map2.id,
-                          mapAlignments = ftAlignments.toArray
-                        )
+     new MapAlignmentSet(
+       refMapId = map1.id,
+       targetMapId = map2.id,
+       mapAlignments = ftAlignments.toArray
+     )
     
   }
 

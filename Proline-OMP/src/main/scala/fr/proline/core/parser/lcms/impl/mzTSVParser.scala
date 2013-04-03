@@ -21,12 +21,12 @@ import fr.proline.core.om.model.lcms._
 //define some case class to read json encoded properties and not pollute model
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
-case class mzPeak (
+case class mzPeak(
   @BeanProperty var moz: Double,
-  @BeanProperty var intensity: Float, 
-  @BeanProperty var leftHwhm: Float, 
+  @BeanProperty var intensity: Float,
+  @BeanProperty var leftHwhm: Float,
   @BeanProperty var rightHwhm: Float) {
-  
+
   def toPeak(): Peak = {
     return new Peak(moz = moz,
       intensity = intensity,
@@ -37,7 +37,7 @@ case class mzPeak (
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
-case class mzIsotopicPattern (
+case class mzIsotopicPattern(
 
   @BeanProperty var scanId: Int = 0,
   @BeanProperty var mz: Double = Double.NaN,
@@ -46,20 +46,19 @@ case class mzIsotopicPattern (
   @BeanProperty var peaks: Option[Array[mzPeak]] = None) {
 
   def toIsotopicPattern(): IsotopicPattern = {
-    return new IsotopicPattern(//id = 0,
+    return new IsotopicPattern( //id = 0,
       moz = mz,
       intensity = intensity,
       charge = charge,
-      fitScore = Float.NaN,
-      peaks = peaks.get.map(p => p.toPeak),
-      scanInitialId = scanId,
-      overlappingIPs = Array[IsotopicPattern]())
+      peaks = Some(peaks.get.map(p => p.toPeak)),
+      scanInitialId = scanId
+    )
   }
 }
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
-case class mzFeature (
+case class mzFeature(
 
   @BeanProperty var apexIp: mzIsotopicPattern = null,
   @BeanProperty var apexScan: Int = 0,
@@ -135,7 +134,7 @@ class mzTSVParser extends ILcmsMapFileParser {
       val peakelsRatios = if (data("peakels_ratios") != "") Some(parse[Array[Float]](data("peakels_ratio"))) else None
       val overlapCorrelation = Some(data("overlap_correlation").toFloat)
       val overlapFactor = Some(data("overlap_factor").toFloat)
-      
+
       val ms2EventIds = getMs2Events(lcmsRun, lcmsRun.getScanAtTime(apexScanId, 2).initialId)
       val featureId = Feature.generateNewId()
 
