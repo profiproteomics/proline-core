@@ -822,8 +822,7 @@ z+1 series
 d and d&apos; series
 v series
 w and w&apos; series
-z+2 series
-</remarks>
+z+2 series</remarks>
     </column>
     <column id="COL222" populated="true" UUID="2ef7f7f9-4b58-496c-9099-6b4e13b1f64f" autoIncrement="false" autoIncrementSequenceName="fragmentation_rule_precursor_min_charge_seq" defaultValue="" name="precursor_min_charge" nullable="1" physicalName="precursor_min_charge" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>The minimum charge of the precursor required to observe this fragment type.</remarks>
@@ -1168,7 +1167,7 @@ It should not contain an extension and be unique across all the database.</remar
     <column id="COL316" populated="true" UUID="d05e7096-08cd-40b2-a1a8-e9994e243503" autoIncrement="false" autoIncrementSequenceName="data_set_type_seq" defaultValue="" name="type" nullable="0" physicalName="type" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>There are two concrete types which can only be defined for the leaves of data_set tree: IDENTIFICATION and QUANTITATION. Each node of the data_set tree has to be typed as AGGREGATE.
 Valid values are for this field are:
-IDENTIFICATION, QUANTITATION, AGGREGATE.</remarks>
+IDENTIFICATION, QUANTITATION, AGGREGATE, TRASH.</remarks>
     </column>
     <column id="COL317" populated="true" UUID="24f28eb7-bea9-482c-9f76-c0e3ee6ae92e" autoIncrement="false" autoIncrementSequenceName="data_set_keywords_seq" defaultValue="" name="keywords" nullable="1" physicalName="keywords" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>A list of comma separated keywords that are provided by the user in order to tag the data_sets. These keywords can be used at the application level to search/filter data_sets. For instance one can set a keyword as the sub-project name of the related project, and then retrieve quickly all the data_sets corresponding to this sub-project.</remarks>
@@ -1466,7 +1465,7 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  outputFormatAsString="ENGLISH"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="C:\Users\cb205360\Downloads\Old.UDS-DB.architect"  />
@@ -1474,7 +1473,7 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8367503291570026" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8367503291570026" viewportX="433" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="157" y="71" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB8" x="1052" y="187" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB28" x="883" y="689" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
