@@ -36,7 +36,7 @@
       <dependency>
         <groupId>fr.proline.util</groupId>
         <artifactId>ProFI-Commons-Scala</artifactId>
-        <version>0.0.3-SNAPSHOT</version>
+        <version>0.0.3-SNAPSHOT</version> <!-- Latest SNAPSHOT version -->
       </dependency>
 
       <!-- "Proline" modules -->
@@ -73,7 +73,7 @@
      <dependency>
        <groupId>fr.proline.util</groupId>
        <artifactId>ProFI-Commons-Java</artifactId>
-       <version>0.0.3</version> <!-- Latest SNAPSHOT version -->
+       <version>0.0.3</version>
      </dependency>
 
     <dependency>
