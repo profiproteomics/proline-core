@@ -2,6 +2,7 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import javax.persistence.*;
+
 import java.sql.Timestamp;
 import java.util.Set;
 
@@ -32,6 +33,9 @@ public class RawFile implements Serializable {
 
 	@Column(name="owner_id")
 	private Integer ownerId;
+
+	@Column(name="serialized_properties")
+	private String serializedProperties;
 
 	//bi-directional many-to-one association to Run
 	@OneToMany(mappedBy="rawFile")
@@ -86,6 +90,14 @@ public class RawFile implements Serializable {
 
 	public void setOwnerId(Integer ownerId) {
 		this.ownerId = ownerId;
+	}
+
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
+
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
 	}
 
 	public Set<Run> getRuns() {
