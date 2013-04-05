@@ -257,6 +257,7 @@ CREATE TABLE public.raw_file (
                 extension VARCHAR(10) NOT NULL,
                 directory VARCHAR(500),
                 creation_timestamp TIMESTAMP,
+                serialized_properties TEXT,
                 instrument_id INTEGER NOT NULL,
                 owner_id INTEGER NOT NULL,
                 CONSTRAINT raw_file_pk PRIMARY KEY (name)

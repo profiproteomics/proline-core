@@ -309,6 +309,7 @@ CREATE TABLE raw_file (
                 extension TEXT(10) NOT NULL,
                 directory TEXT(500),
                 creation_timestamp TEXT,
+                serialized_properties TEXT,
                 instrument_id INTEGER NOT NULL,
                 owner_id INTEGER NOT NULL,
                 PRIMARY KEY (name),
