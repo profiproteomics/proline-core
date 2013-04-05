@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.msi
 
 import scala.collection.mutable.HashMap
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.{ ResultSet, Protein, Peptide, IPeaklistContainer }
+import fr.proline.core.om.model.msi.{ IResultFile, IPeaklistContainer, ResultSet, Protein, Peptide }
 import fr.proline.core.om.storer.msi.impl.SQLRsStorer
 import fr.proline.context.DatabaseConnectionContext
 
@@ -26,6 +26,7 @@ trait IRsWriter extends Logging {
   def storeNewProteins(proteins: Seq[Protein], msiDbCtx: DatabaseConnectionContext): Array[Protein]
 
   def storeRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
+  def storeRsSpectrumMatches(rs: ResultSet, rf: IResultFile, msiDbCtx: DatabaseConnectionContext): Int
   def storeRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
   def storeRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
 

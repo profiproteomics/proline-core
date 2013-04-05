@@ -1,6 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 import com.codahale.jerkson.Json.generate
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal._
@@ -175,6 +176,54 @@ private[core] class SQLiteRsWriter() extends IRsWriter {
       
       peptideMatches.length
     })
+
+  }
+  
+  def storeRsSpectrumMatches(rs: ResultSet, rf: IResultFile, msiDbCtx: DatabaseConnectionContext): Int = {
+    
+    // TODO: create a schema name enumeration
+    val schemaName = "peptide_match.spectrum_match"
+    val pepMatchIdByMsQueryInitialId = Map() ++ rs.peptideMatches.map( pm => pm.msQuery.initialId -> pm.id )    
+    var spectrumCount = 0
+    
+    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+
+      val msqInitialIdBySpectrumMatchId = new HashMap[Int,Int]()
+      
+      // Store spectrum matches
+      msiEzDBC.executePrepared("INSERT INTO object_tree VALUES (?,?,?,?)", true ) { stmt =>
+        rf.eachSpectrumMatch(rs.isDecoy, { spectrumMatch =>
+
+          stmt.executeWith(
+            Option.empty[Int],
+            generate(spectrumMatch),
+            Option.empty[String],
+            schemaName
+          )
+          
+          msqInitialIdBySpectrumMatchId += stmt.generatedInt -> spectrumMatch.msQueryInitialId
+          
+          spectrumCount += 1
+        }) 
+      }
+      
+      // Link spectrum matches to peptide matches
+      msiEzDBC.executePrepared("INSERT INTO peptide_match_object_tree_map VALUES (?,?,?)" ) { stmt =>
+        
+        for( (spectrumMatchId,msQueryInitialId) <- msqInitialIdBySpectrumMatchId ) {
+          val pepMatchId = pepMatchIdByMsQueryInitialId( msQueryInitialId )
+          
+          stmt.executeWith(
+            pepMatchId,
+            spectrumMatchId,
+            schemaName
+          )
+        }
+      }
+      
+    })
+    
+    spectrumCount
 
   }
 
