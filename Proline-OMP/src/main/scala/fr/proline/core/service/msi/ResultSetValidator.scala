@@ -328,9 +328,9 @@ class ResultSetValidator(
     // TODO: save the expectedFDR
 
     // Select only validated protein sets
-    val decoyRsmOpt = targetRsm.decoyResultSummary
-    val allProteinSets = targetRsm.proteinSets ++ decoyRsmOpt.map(_.proteinSets).getOrElse(Array())
-
+    val decoyRsmOpt = targetRsm.decoyResultSummary    
+    val allProteinSets = if(decoyRsmOpt.isDefined) targetRsm.proteinSets ++ decoyRsmOpt.get.proteinSets else targetRsm.proteinSets     
+    
     for (proteinSet <- allProteinSets) {
       if (proteinSet.isValidated) proteinSet.selectionLevel = 2
       else proteinSet.selectionLevel = 1
