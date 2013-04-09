@@ -132,7 +132,7 @@ class ResultFileImporterJPAStorer(
       //Done by RsStorer <> SQLStorer
       //Store the MSI search with related search settings and MS queries ...
       // Store the peaklist  ... 
-
+      
       // Load target result set
       var targetRs = resultFile.getResultSet(false)
       if (StringUtils.isEmpty(targetRs.name))
@@ -140,13 +140,11 @@ class ResultFileImporterJPAStorer(
 
       if (targetRs.msiSearch != null && targetRs.msiSearch.peakList.peaklistSoftware == null) {
         //TODO : Define how to get this information !
-        val peaklistSoftware = _getPeaklistSoftware("Default_PL", "0.1", udsDbContext)
+        val peaklistSoftware = _getOrCreatePeaklistSoftware(peaklistSoftwareId)//PeaklistSoftware("Default_PL", "0.1", udsDbContext)
         // FIXME: implement the method _getOrCreatePeaklistSoftware instead
         if (peaklistSoftware.id < 0) peaklistSoftware.id = peaklistSoftwareId
         targetRs.msiSearch.peakList.peaklistSoftware = peaklistSoftware
       }
-
-      //-- VDS TODO: Identify decoy mode to get decoy RS from parser or to create it from target RS.
 
       def storeDecoyRs(decoyRs: ResultSet) {
         if (StringUtils.isEmpty(decoyRs.name))
@@ -229,7 +227,31 @@ class ResultFileImporterJPAStorer(
     })
 
   }
+  private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Int): PeaklistSoftware = {
 
+    def _getPeaklistSoftware(udsDbContext: DatabaseConnectionContext): PeaklistSoftware = {
+	 var peaklistSoftware: PeaklistSoftware = null
+    DoJDBCReturningWork.withEzDBC(udsDbContext, { udsEzDBC =>
+      udsEzDBC.selectAndProcess( "SELECT name, version FROM peaklist_software WHERE id = "+ peaklistSoftwareId) {r =>
+        peaklistSoftware =  new PeaklistSoftware(id = peaklistSoftwareId, name = r, version = r.nextStringOrElse(""))}
+    })
+
+      peaklistSoftware
+    }
+
+    // Try to retrieve peaklist software from the MSidb
+    var peaklistSoftware = _getPeaklistSoftware(this.executionContext.getMSIDbConnectionContext)
+    if (peaklistSoftware == null) {
+
+      // If it doesn't exist => retrieve from the UDSdb
+      peaklistSoftware = _getPeaklistSoftware(this.executionContext.getUDSDbConnectionContext)
+
+    }
+
+    peaklistSoftware
+
+  }
+  
   // TODO: put in a dedicated provider
   private def _getInstrumentConfig(instrumentConfigId: Int, udsDbContext: DatabaseConnectionContext): InstrumentConfig = {
 
