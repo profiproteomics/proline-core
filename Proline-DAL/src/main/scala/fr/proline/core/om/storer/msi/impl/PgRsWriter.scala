@@ -109,6 +109,8 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
       val rsId = rs.id
       val peptideMatches = rs.peptideMatches
   
+      logger.debug("Number of peptideMatches to write :"+peptideMatches.length)
+      
       // Create TMP table
       val tmpPepMatchTableName = "tmp_peptide_match_" + (scala.math.random * 1000000).toInt
       logger.info("creating temporary table '" + tmpPepMatchTableName + "'...")
@@ -149,28 +151,30 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
           msQuery.id,
           if (bestChildId == 0) None else Some(bestChildId),
           scoringId.get,
-          peptideMatch.resultSetId
+          rsId
         )
-  
-        // Store peptide match
+        
+       // Store peptide match
         val pepMatchBytes = encodeRecordForPgCopy(pepMatchValues)
         pgBulkLoader.writeToCopy(pepMatchBytes, 0, pepMatchBytes.length)
-  
+        
       }
   
       // End of BULK copy
       val nbInsertedPepMatches = pgBulkLoader.endCopy()
-  
+
       // Move TMP table content to MAIN table
-      logger.info("move TMP table " + tmpPepMatchTableName + " into MAIN peptide_match table")
-      stmt.executeUpdate("INSERT into peptide_match (" + pepMatchTableCols + ") " +
+      logger.info("move TMP table " + tmpPepMatchTableName + " into MAIN peptide_match table. # of tmp pepMatches: "+nbInsertedPepMatches)
+      val insertedPepMatched = stmt.executeUpdate("INSERT into peptide_match (" + pepMatchTableCols + ") " +
         "SELECT " + pepMatchTableCols + " FROM " + tmpPepMatchTableName)
-  
+      
+      
       // Retrieve generated peptide match ids
       val pepMatchIdByKey = msiEzDBC.select( pepMatchUniqueFKsQuery, rsId) { r =>
           (r.nextInt + "%" + r.nextInt -> r.nextInt)
         } toMap
-  
+             
+        
       // Iterate over peptide matches to update them
       peptideMatches.foreach { pepMatch => pepMatch.id = pepMatchIdByKey(pepMatch.msQuery.id + "%" + pepMatch.peptide.id) }
   
@@ -336,7 +340,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
             isDecoy,
             seqMatch.properties.map(generate(_)),
             seqMatch.getBestPeptideMatchId,
-            seqMatch.resultSetId
+            rsId
           )
   
           // Store sequence match
