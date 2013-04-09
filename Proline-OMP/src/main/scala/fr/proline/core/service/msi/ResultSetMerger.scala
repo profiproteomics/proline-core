@@ -62,6 +62,7 @@ class ResultSetMerger(
   resultSets: Seq[ResultSet]) extends IService with Logging {
 
   var mergedResultSet: ResultSet = null
+  var mergedResultSetId : Int = 0
 
   override protected def beforeInterruption = {
     // Release database connections
@@ -140,6 +141,7 @@ class ResultSetMerger(
         // Commit transaction if it was initiated locally
 
         mergedResultSet = tmpMergedResultSet
+        mergedResultSetId = mergedResultSet.id
       }, true) // end of JDBC work
 
       // Commit transaction if it was initiated locally
