@@ -180,12 +180,13 @@ class ResultSummaryMerger extends Logging {
     // Create a non redundant list of MSI search ids
     //val nrMsiSearchIds = msiSearchIds.distinct
     
+    val mergedRsID =  ResultSet.generateNewId()
     // Merge peptide matches and related protein matches
-    val( mergedPeptideMatches, mergedProteinMatches) = ResultSetMerger.mergePeptideMatches( allValidPeptideMatches, nrProteinMatches )
+    val( mergedPeptideMatches, mergedProteinMatches) = ResultSetMerger.mergePeptideMatches( allValidPeptideMatches, nrProteinMatches,mergedRsID )
     
     // Create a merged result set
     val mergedResultSet = new ResultSet(
-                                id = ResultSet.generateNewId(),
+                                id = mergedRsID,
                                 proteinMatches = mergedProteinMatches.toArray,
                                 peptideMatches = mergedPeptideMatches.toArray,
                                 peptides =  validPeptideById.values.toArray,
