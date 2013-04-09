@@ -8,7 +8,7 @@ import fr.proline.core.om.model.msi._
 object ResultSetMerger {
   
   def mergePeptideMatches( peptideMatches: Seq[PeptideMatch],
-                           proteinMatches: Seq[ProteinMatch] ):
+                           proteinMatches: Seq[ProteinMatch], rsID: Int ):
                            Tuple2[Seq[PeptideMatch],Seq[ProteinMatch]] = {
     
     // TODO: check if this code can be abstracted (shared with ResultSummaryMerger)
@@ -36,7 +36,7 @@ object ResultSetMerger {
       scoreTypeSet += bestChild.scoreType
       
       // Create a peptide match which correspond to the best peptide match of this group
-      val parentPepMatch = bestChild.copy( id = newPepMatchId, childrenIds= nrPepMatchChildIds.toArray)
+      val parentPepMatch = bestChild.copy( id = newPepMatchId, childrenIds= nrPepMatchChildIds.toArray, resultSetId = rsID )
       
       mergedPeptideMatches += parentPepMatch
      
@@ -62,13 +62,13 @@ object ResultSetMerger {
         if( parentPepMatchId != None ) {
           
           // Build new sequence match corresponding to the merged peptide match
-          val parentSeqMatch = seqMatch.copy( bestPeptideMatchId = parentPepMatchId.get )
+          val parentSeqMatch = seqMatch.copy( bestPeptideMatchId = parentPepMatchId.get, resultSetId = rsID )
           
           mergedSeqMatches += parentSeqMatch
         }
       }
       
-      mergedProteinMatches += proteinMatch.copy( sequenceMatches = mergedSeqMatches.toArray )
+      mergedProteinMatches += proteinMatch.copy( sequenceMatches = mergedSeqMatches.toArray, resultSetId = rsID )
     }
     
     (mergedPeptideMatches,mergedProteinMatches)
@@ -87,9 +87,9 @@ class ResultSetMerger extends Logging {
     val allPeptideMatches = new ArrayBuffer[PeptideMatch](0)
     val proteinMatchesByKey = new HashMap[String,ArrayBuffer[ProteinMatch]]
     val peptideById = new HashMap[Int,Peptide]
-    
+    var allRSDecoy = true 
     for( resultSet <- resultSets ) {
-      
+      allRSDecoy = allRSDecoy && resultSet.isDecoy
       // Retrieve some vars
       val proteinMatches = resultSet.proteinMatches
       val peptideMatches = resultSet.peptideMatches
@@ -221,19 +221,20 @@ class ResultSetMerger extends Logging {
       nrProteinMatches += newProteinMatch
     }
     
+    val resultSetId= ResultSet.generateNewId
     // Merge peptide matches and related protein matches
-    val( mergedPeptideMatches, mergedProteinMatches) = ResultSetMerger.mergePeptideMatches( allPeptideMatches, nrProteinMatches )
+    val( mergedPeptideMatches, mergedProteinMatches) = ResultSetMerger.mergePeptideMatches( allPeptideMatches, nrProteinMatches, resultSetId )
 
     // Create merged result set    
     val mergedResultSet = new ResultSet(
-                                id = ResultSet.generateNewId,
+                                id = resultSetId,
                                 proteinMatches = mergedProteinMatches.toArray,
                                 peptideMatches = mergedPeptideMatches.toArray,
                                 peptides = peptideById.values.toArray,
-                                isDecoy = resultSets(0).isDecoy,
-                                isNative = false,
+                                isDecoy = allRSDecoy,
+                                isNative = false
                                 // FIXME: is this the best solution ???
-                                msiSearch = resultSets(0).msiSearch
+                                //msiSearch = resultSets(0).msiSearch
                               )
     this.logger.info( "result sets have been merged:")
     this.logger.info( "- nb merged protein matches = " + mergedResultSet.proteinMatches.length )
