@@ -25,6 +25,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fr.proline.core.orm.util.JsonSerializer;
+
 
 
 /**
@@ -73,17 +77,14 @@ public class ResultSet implements Serializable {
 	private Set<ResultSet> children;
 
 	@ElementCollection
-    @MapKeyColumn(name="schema_name")
-    @Column(name="object_tree_id")
-    @CollectionTable(name="result_set_object_tree_map",joinColumns = @JoinColumn(name = "result_set_id", referencedColumnName = "id"))
-    Map<String, Integer> objectTreeIdByName;  
+   @MapKeyColumn(name="schema_name")
+   @Column(name="object_tree_id")
+   @CollectionTable(name="result_set_object_tree_map",joinColumns = @JoinColumn(name = "result_set_id", referencedColumnName = "id"))
+   Map<String, Integer> objectTreeIdByName;  
 	
-	// Transient Variables not saved in database
-    @Transient private TransientData transientData = null;
-
-	// Transient Variables not saved in database
+   @Transient private TransientData transientData = null;
 	@Transient private PeptideMatch[] peptideMatches = null; //JPM.TODO : remove it
-
+	@Transient private Map<String, Object> serializedPropertiesMap;
 	
 	public ResultSet() {
 	}
@@ -126,6 +127,7 @@ public class ResultSet implements Serializable {
 
 	public void setSerializedProperties(String serializedProperties) {
 		this.serializedProperties = serializedProperties;
+		this.serializedPropertiesMap = null;
 	}
 
 	public Type getType() {
@@ -190,6 +192,18 @@ public class ResultSet implements Serializable {
     	return transientData;
     }
     
+	public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+		if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+			serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(), Map.class);
+		}
+		return serializedPropertiesMap;
+	}
+
+	public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
+		this.serializedPropertiesMap = serializedPropertiesMap;
+		this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
+	}
+
 	/**
 	 * Transient Data which will be not saved in database
 	 * Used by the Proline Studio IHM

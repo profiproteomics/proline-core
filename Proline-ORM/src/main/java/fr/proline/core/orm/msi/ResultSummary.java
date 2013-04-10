@@ -5,6 +5,7 @@ import javax.persistence.*;
 
 import fr.proline.core.orm.msi.PeptideInstance;
 import fr.proline.core.orm.msi.ProteinSet;
+import fr.proline.core.orm.util.JsonSerializer;
 
 
 import java.sql.Timestamp;
@@ -71,7 +72,7 @@ public class ResultSummary implements Serializable {
 	
 	// Transient Variables not saved in database
     @Transient private TransientData transientData = null;
-	
+    @Transient private Map<String, Object> serializedPropertiesMap;
 	
     public ResultSummary() {
     }
@@ -150,6 +151,17 @@ public class ResultSummary implements Serializable {
 		this.objectTreeIdByName.put(schemaName, objectId);
 	}
 	
+	public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+		if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+			serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(), Map.class);
+		}
+		return serializedPropertiesMap;
+	}
+
+	public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
+		this.serializedPropertiesMap = serializedPropertiesMap;
+		this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
+	}
 
     public TransientData getTransientData() {
     	if (transientData == null) {
