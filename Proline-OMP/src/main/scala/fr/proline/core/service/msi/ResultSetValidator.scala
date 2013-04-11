@@ -21,7 +21,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.algo.msi.scoring.ProtSetScoreUpdater
+import fr.proline.core.algo.msi.scoring.ProtSetAndPepSetScoreUpdater
 import fr.proline.core.algo.msi.scoring.ProtSetScoring
 import fr.proline.core.algo.msi.InferenceMethods
 
@@ -151,7 +151,7 @@ class ResultSetValidator(
 
         // Update score of protein sets
         this.logger.debug("updating score of protein sets")
-        val protSetScoreUpdater = ProtSetScoreUpdater(proteinSetScoring.get)
+        val protSetScoreUpdater = ProtSetAndPepSetScoreUpdater(proteinSetScoring.get)
         protSetScoreUpdater.updateScoreOfProteinSets(rsm)
 
         resultSummaries += Some(rsm)
