@@ -3,9 +3,10 @@ package fr.proline.core.algo.msi.scoring
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.util.primitives._
+import fr.proline.core.om.model.msi.PeptideMatch
 
 
-class MascotProteinSetScoreUpdater() extends IProteinSetScoreUpdater {
+class MascotProteinSetScoreUpdater() extends IProtSetAndPepSetScoreUpdater {
 
   def updateScoreOfProteinSets( rsm: ResultSummary, params: Any* ) {
     
@@ -21,6 +22,19 @@ class MascotProteinSetScoreUpdater() extends IProteinSetScoreUpdater {
       val protSetScore = MascotValidationHelper.sumPeptideMatchesScoreOffsets(bestPepMatches,scoreThresholdOffset)
       proteinSet.score = protSetScore
       proteinSet.scoreType = ProtSetScoring.MASCOT_PROTEIN_SET_SCORE.toString
+    }
+    
+    for(orphanPepSet <- rsm.peptideSets.filterNot(_.getProteinSetId>0)){
+       orphanPepSet.score = 0
+       var bestPepMatches = Seq.newBuilder[PeptideMatch]
+       val pepMatchesByPepInsID = orphanPepSet.getPeptideInstances.map( pi => pi.id -> pi.peptideMatches)        
+       pepMatchesByPepInsID.foreach( entry => {
+          val pepMatches = entry._2.sortWith((a,b) => a.score > b.score)
+	  bestPepMatches += pepMatches(0)
+       })
+       
+       val pepSetScore = MascotValidationHelper.sumPeptideMatchesScoreOffsets(bestPepMatches.result,scoreThresholdOffset)
+       orphanPepSet.score = pepSetScore
     }
     
     ()

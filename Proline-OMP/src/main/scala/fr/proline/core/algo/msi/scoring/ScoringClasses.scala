@@ -9,16 +9,16 @@ object ProtSetScoring extends Enumeration {
   val MASCOT_MUDPIT_SCORE = Value("mascot:mudpit score")
 }
 
-trait IProteinSetScoreUpdater {
+trait IProtSetAndPepSetScoreUpdater {
   
   def updateScoreOfProteinSets( rsm: ResultSummary, params:Any* ): Unit
   
 }
 
 
-object ProtSetScoreUpdater {
+object ProtSetAndPepSetScoreUpdater {
   
-  def apply( methodName: ProtSetScoring.Updater ): IProteinSetScoreUpdater = { methodName match {
+  def apply( methodName: ProtSetScoring.Updater ): IProtSetAndPepSetScoreUpdater = { methodName match {
     case ProtSetScoring.MASCOT_MUDPIT_SCORE => new MascotMudpitScoreUpdater()
     case ProtSetScoring.MASCOT_STANDARD_SCORE => new MascotStandardScoreUpdater()    
     case ProtSetScoring.MASCOT_PROTEIN_SET_SCORE => new MascotProteinSetScoreUpdater()
