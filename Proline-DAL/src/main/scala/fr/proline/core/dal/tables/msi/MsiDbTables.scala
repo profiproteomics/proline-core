@@ -443,6 +443,7 @@ object MsiDbPeptideSetColumns extends ColumnEnumeration {
   val $tableName = MsiDbPeptideSetTable.name
   val ID = Column("id")
   val IS_SUBSET = Column("is_subset")
+  val SCORE = Column("score")
   val PEPTIDE_COUNT = Column("peptide_count")
   val PEPTIDE_MATCH_COUNT = Column("peptide_match_count")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")

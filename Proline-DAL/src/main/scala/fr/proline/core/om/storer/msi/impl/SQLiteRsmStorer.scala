@@ -118,13 +118,15 @@ private[msi] class SQLiteRsmStorer() extends IRsmStorer {
           // Insert peptide set
           stmt.executeWith(
             peptideSet.isSubset,
+            peptideSet.score,
             peptideSet.items.length,
             peptideSet.peptideMatchesCount,
             peptideSet.properties.map(generate(_)),
             if( protSetId > 0 ) Some(protSetId) else Option.empty[Int],
             rsmId
           )
-          
+  
+  
           val peptideSetId = stmt.generatedInt
           peptideSetIdByTmpId(peptideSet.id) = peptideSetId
           
