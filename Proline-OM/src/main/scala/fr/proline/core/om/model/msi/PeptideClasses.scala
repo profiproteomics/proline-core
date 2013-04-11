@@ -532,7 +532,7 @@ case class PeptideSet ( // Required fields
                    @transient var proteinSet: Option[ProteinSet] = null,
                    
                    var resultSummaryId: Int = 0,
-                   
+                   var score: Float = 0,
                    // Mutable optional fields
                    var strictSubsetIds: Array[Int] = null,
                    var strictSubsets: Option[Array[PeptideSet]] = null,
