@@ -1,0 +1,1 @@
+ALTER TABLE peptide_set ADD COLUMN score INTEGER;
