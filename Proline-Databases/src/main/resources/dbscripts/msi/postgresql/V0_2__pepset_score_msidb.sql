@@ -1,1 +1,2 @@
 ALTER TABLE peptide_set ADD COLUMN score REAL;
+ALTER TABLE peptide_set ALTER COLUMN score SET NOT NULL;
