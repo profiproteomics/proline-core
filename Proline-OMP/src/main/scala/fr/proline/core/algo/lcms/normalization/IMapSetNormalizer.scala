@@ -12,7 +12,7 @@ trait IMapSetNormalizer {
       val nf = nfByMapId(childMap.id)
       childMap.normalizationFactor = nf
       
-      for( ft <- childMap.features ) ft.normalizedIntensity = ft.intensity * nf
+      for( ft <- childMap.features ) ft.normalizedIntensity = Some( ft.intensity * nf )
     }
     
   }

@@ -135,7 +135,7 @@ object MasterMapBuilder {
       
       // Retrieve the highest feature child    
       val highestFtChild = mftChildren.reduceLeft { (a,b) => 
-        if( a.getNormalizedIntensity > b.getNormalizedIntensity ) a else b
+        if( a.getNormalizedIntensityOrIntensity > b.getNormalizedIntensityOrIntensity ) a else b
       }
       val newMasterFt = highestFtChild.toMasterFeature
       newMasterFt.id = mft.id
@@ -173,7 +173,7 @@ object MasterMapBuilder {
       // Calculate corrected elution time using the elution time alignment
       //val correctedTime = mapAlnSet.calcReferenceElutionTime( childFt.elutionTime, childFt.mass )
       val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.alnReferenceMapId)
-      childFt.correctedElutionTime = correctedTime      
+      childFt.correctedElutionTime = Some(correctedTime)
     }
     //print "compute pairwise ft mapping\n" if ! addNonMatchingFeatures
     
@@ -194,8 +194,8 @@ object MasterMapBuilder {
       val masterMapFt = masterMapFtById(masterMapFtId)
       val mftTime = masterMapFt.elutionTime
       val nearestChildFt = matchingChildFeatures.toList.reduceLeft { (a,b) =>
-                             if( math.abs(a.correctedElutionTime - mftTime) <
-                                 math.abs(b.correctedElutionTime - mftTime) ) a else b
+                             if( math.abs(a.correctedElutionTime.get - mftTime) <
+                                 math.abs(b.correctedElutionTime.get - mftTime) ) a else b
                            }
                                     
       matchingFtIdSet += nearestChildFt.id

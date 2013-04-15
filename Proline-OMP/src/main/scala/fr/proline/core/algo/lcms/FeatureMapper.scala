@@ -53,15 +53,15 @@ object FeatureMapper {
           // Define some vars
           val map1FtId = map1Ft.id
           val map1FtMoz = map1Ft.moz
-          var map1FtTime = map1Ft.getCorrectedElutionTime
+          var map1FtTime = map1Ft.getCorrectedElutionTimeOrElutionTime
           
           // Be more tolerant for feature clusters
           var localTimeTol = timeTol
           if( map1Ft.isCluster ) {
             val subFts = map1Ft.subFeatures
-            val subFtsSortedByTime = subFts.toList.sort { (a,b) => a.elutionTime <= b.elutionTime } toArray
-            val clusterElutionDuration = subFtsSortedByTime( subFts.length - 1 ).getCorrectedElutionTime - 
-                                         subFtsSortedByTime(0).getCorrectedElutionTime
+            val subFtsSortedByTime = subFts.sortBy( _.elutionTime )
+            val clusterElutionDuration = subFtsSortedByTime( subFts.length - 1 ).getCorrectedElutionTimeOrElutionTime - 
+                                         subFtsSortedByTime(0).getCorrectedElutionTimeOrElutionTime
             localTimeTol += clusterElutionDuration
           }
           
@@ -80,7 +80,7 @@ object FeatureMapper {
           for( map2Ft <- sameMozRangeMap2Fts ) {
             
             val deltaMoz = math.abs(map1FtMoz - map2Ft.moz)
-            val deltaTime = math.abs(map1FtTime - map2Ft.getCorrectedElutionTime)
+            val deltaTime = math.abs(map1FtTime - map2Ft.getCorrectedElutionTimeOrElutionTime)
             
             if( deltaMoz < mozTolInDalton && deltaTime < localTimeTol ) {
               if( !ftMapping.containsKey(map1FtId) ) {

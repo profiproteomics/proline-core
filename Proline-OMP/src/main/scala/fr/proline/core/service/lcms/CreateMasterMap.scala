@@ -96,11 +96,13 @@ class CreateMasterMap(
 
     // Update map set
     mapSet.masterMap = newMasterMap
-
+    
     if (normalizationMethod != None && mapSet.childMaps.length > 1) {
 
       // Instantiate a Cmd for map set normalization
       logger.info("normalizing maps...")
+      
+      // TODO: create a service which updates the normalized intensities
       MapSetNormalizer(normalizationMethod.get).normalizeFeaturesIntensity(mapSet)
 
       // Update master map feature intensity
