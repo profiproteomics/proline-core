@@ -123,10 +123,8 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
       }
       
       // Store processed feature items corresponding to feature clusters
-      //var nbSubFts = 0
       ezDBC.executePrepared(LcmsDbProcessedMapFeatureItemTable.mkInsertQuery) { statement => 
         features.withFilter( _.isCluster ).foreach { ft =>
-          //nbSubFts += ft.subFeatures.length
           _insertProcessedMapFtItemUsingWrappedStatement( ft, statement )
         }
       }
@@ -155,14 +153,17 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
   
   private def _insertProcessedMapFtItemUsingWrappedStatement( ft: Feature, statement: StatementWrapper ): Unit = {
     
-    val calibratedMoz = if( ft.calibratedMoz.isNaN ) None else Some(ft.calibratedMoz)
-    val normalizedIntensity = if( ft.normalizedIntensity.isNaN ) None else Some(ft.normalizedIntensity)
+    require( ft.id > 0, "features must be persisted first")
+    require( ft.relations.mapId > 0, "features must belong to a persisted map")
+    
+    // TODO: store properties
     
     statement.executeWith(
       ft.relations.mapId,
-      ft.id, calibratedMoz,
-      normalizedIntensity,
-      ft.correctedElutionTime,
+      ft.id,
+      ft.getCalibratedMozOrMoz,
+      ft.getNormalizedIntensityOrIntensity,
+      ft.getCorrectedElutionTimeOrElutionTime,
       ft.isClusterized,
       ft.selectionLevel,
       Option.empty[String]

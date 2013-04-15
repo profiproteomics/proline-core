@@ -183,9 +183,9 @@ class SQLProcessedMapProvider(
           olpFeatures,
           null,
           null,
-          processedFtRecord.getDoubleOrElse(ProcFtCols.CALIBRATED_MOZ,Double.NaN),
-          processedFtRecord.getDoubleOrElse(ProcFtCols.NORMALIZED_INTENSITY,Double.NaN),
-          toFloat( processedFtRecord.getDoubleOrElse(ProcFtCols.CORRECTED_ELUTION_TIME,Double.NaN) ),
+          processedFtRecord.getDoubleOption(ProcFtCols.CALIBRATED_MOZ),
+          processedFtRecord.getDoubleOption(ProcFtCols.NORMALIZED_INTENSITY).map( _.toFloat ),
+          processedFtRecord.getDoubleOption(ProcFtCols.CORRECTED_ELUTION_TIME).map( _.toFloat ),
           processedFtRecord.getBoolean(ProcFtCols.IS_CLUSTERIZED),
           processedFtRecord.getIntOrElse(ProcFtCols.SELECTION_LEVEL,2)
         )

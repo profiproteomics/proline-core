@@ -119,9 +119,9 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     // Processed map feature attributes
     subFeatures: Array[Feature] = null,
     children: Array[Feature] = null,
-    calibratedMoz: Double = Double.NaN,
-    normalizedIntensity: Double = Double.NaN,
-    correctedElutionTime: Float = Float.NaN,
+    calibratedMoz: Option[Double] = None,
+    normalizedIntensity: Option[Float] = None,
+    correctedElutionTime: Option[Float] = None,
     isClusterized: Boolean = false,
     selectionLevel: Int = 2
   ): Feature = {
