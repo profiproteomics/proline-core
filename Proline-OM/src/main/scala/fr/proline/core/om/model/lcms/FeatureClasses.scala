@@ -79,9 +79,9 @@ case class Feature (
   var children: Array[Feature] = null,
   var subFeatures: Array[Feature] = null,
   var overlappingFeatures: Array[Feature] = null,
-  var calibratedMoz: Double = Double.NaN,
-  var normalizedIntensity: Double = Double.NaN,
-  var correctedElutionTime: Float = Float.NaN,
+  var calibratedMoz: Option[Double] = None,
+  var normalizedIntensity: Option[Float] = None,
+  var correctedElutionTime: Option[Float] = None,
   var isClusterized: Boolean = false,
   var selectionLevel: Int = 2,
   
@@ -90,15 +90,16 @@ case class Feature (
 ) {
   
   // Requirements
+  require( elutionTime.isNaN == false, "elution time must be a valid float value" )
 
   import fr.proline.util.ms.mozToMass
   
   lazy val mass = mozToMass( moz, charge )
-  lazy val isCluster = if( subFeatures == null ) false else subFeatures.length > 0
+  def isCluster = if( subFeatures == null ) false else subFeatures.length > 0
   
-  def getCalibratedMoz = if( calibratedMoz.isNaN ) moz else calibratedMoz
-  def getNormalizedIntensity = if( normalizedIntensity.isNaN ) intensity else normalizedIntensity
-  def getCorrectedElutionTime = if( correctedElutionTime.isNaN ) elutionTime else correctedElutionTime
+  def getCorrectedElutionTimeOrElutionTime = correctedElutionTime.getOrElse(elutionTime)
+  def getCalibratedMozOrMoz = calibratedMoz.getOrElse(moz)
+  def getNormalizedIntensityOrIntensity = normalizedIntensity.getOrElse(intensity)  
   
   def toMasterFeature(): Feature = {
     val ftRelations = this.relations
@@ -108,7 +109,7 @@ case class Feature (
       moz = this.moz,
       intensity = this.intensity,
       charge = this.charge,
-      elutionTime = this.correctedElutionTime,
+      elutionTime = this.getCorrectedElutionTimeOrElutionTime, // master time scale must be corrected or be the ref
       calibratedMoz = this.calibratedMoz,
       normalizedIntensity = this.normalizedIntensity,
       correctedElutionTime = this.correctedElutionTime,
