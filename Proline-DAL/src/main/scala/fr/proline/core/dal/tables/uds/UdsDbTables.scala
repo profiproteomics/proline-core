@@ -531,6 +531,7 @@ object UdsDbRawFileColumns extends ColumnEnumeration {
   val EXTENSION = Column("extension")
   val DIRECTORY = Column("directory")
   val CREATION_TIMESTAMP = Column("creation_timestamp")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val INSTRUMENT_ID = Column("instrument_id")
   val OWNER_ID = Column("owner_id")
 }
