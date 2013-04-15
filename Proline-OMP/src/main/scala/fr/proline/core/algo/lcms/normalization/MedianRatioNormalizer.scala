@@ -9,7 +9,7 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
   protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float] = {
     
     val masterMap = mapSet.masterMap
-    if( masterMap == null ) { throw new Exception( "The map_set #"+ mapSet.id +" must have a master map\n") }
+    require( masterMap != null, "the map_set #"+ mapSet.id +" must have a master map")
     
     // Retrieve some vars
     val masterMapFeatures = masterMap.features
@@ -23,7 +23,7 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
     
     // Compute ratios of feature intensities between each map and the reference map
     val intensityRatiosByMapId = new java.util.HashMap[Int,ArrayBuffer[Float]]
-    for( mapId <- mapIdsAsList ) intensityRatiosByMapId.put( mapId, new ArrayBuffer[Float](0) )
+    for( mapId <- nonRefMapIds ) intensityRatiosByMapId.put( mapId, new ArrayBuffer[Float](0) )
     
     for( masterFt <- masterMapFeatures ) {
       val childFtByMapId = masterFt.children.map { ft => ( ft.relations.mapId -> ft ) } toMap
@@ -46,9 +46,11 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
     val nfByByMapIdBuilder = scala.collection.immutable.Map.newBuilder[Int,Float]
     nfByByMapIdBuilder += ( refMapId -> 1 )
     
-    for( mapId <- mapIdsAsList ) {
+    for( mapId <- nonRefMapIds ) {
       val intensityRatios = intensityRatiosByMapId.get(mapId)
-      val mapMedianRatio = median( intensityRatios.toArray[Float] )
+      require(intensityRatios.length > 0,"ratios list must not be empty")
+      
+      val mapMedianRatio = median( intensityRatios )
       nfByByMapIdBuilder += (mapId -> mapMedianRatio)
     }
     
