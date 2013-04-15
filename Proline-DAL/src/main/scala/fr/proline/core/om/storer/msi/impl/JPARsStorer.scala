@@ -150,18 +150,22 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiResultSet.setType(parseType(resultSet))
 
         /* Store MsiSearch and retrieve persisted ORM entity */
+        var storedMsiSearch: MsiSearch = null
+
         val msiSearch = resultSet.msiSearch
+        if (msiSearch != null) { // ResultSet.msiSearch can be null for merged ResultSet
+          val omMsiSearchId = msiSearch.id
 
-        val omMsiSearchId = msiSearch.id
+          storeMsiSearch(msiSearch, storerContext)
 
-        storeMsiSearch(msiSearch, storerContext)
+          storedMsiSearch = retrieveStoredMsiSearch(storerContext, omMsiSearchId)
 
-        val storedMsiSearch = retrieveStoredMsiSearch(storerContext, omMsiSearchId)
+          /* Stored MSI Search OM Id is updated with PK by storeMsiSearch() */
 
-        /* Stored MSI Search OM Id is updated with PK by storeMsiSearch() */
+          if (storedMsiSearch != null) {
+            msiResultSet.setMsiSearch(storedMsiSearch)
+          }
 
-        if (storedMsiSearch != null) {
-          msiResultSet.setMsiSearch(storedMsiSearch)
         }
 
         /* Check associated decoy ResultSet */
@@ -1295,10 +1299,6 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       throw new IllegalArgumentException("MsQuery is null")
     }
 
-    if (msiSearch == null) {
-      throw new IllegalArgumentException("MsiSearch is null")
-    }
-
     val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
     val omMsQueryId = msQuery.id
@@ -1310,6 +1310,10 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     if (knownMsiMsQuery.isDefined) {
       knownMsiMsQuery.get
     } else {
+
+      if (msiSearch == null) {
+        logger.warn("MsQuery {" + omMsQueryId + "} has no associated MsiSearch")
+      }
 
       if (omMsQueryId > 0) {
         val foundMsiMsQuery = msiEm.getReference(classOf[MsiMsQuery], omMsQueryId) // Must exist in Msi Db if OM Id > 0
