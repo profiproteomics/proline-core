@@ -2,6 +2,19 @@ package fr.proline.core.algo.lcms.filtering
 
 case class Filter( val name: String, val operator: String, val value: Double ) {
   require( name != null )
+  
+  @transient lazy val parsedOperator = {
+    try {
+      FilterOperator.withName( operator.toUpperCase() )
+    } catch {
+      case _ => throw new Exception("invalid operator: " + operator)
+    }
+  }
+}
+
+object FilterOperator extends Enumeration {
+  val LT = Value("LT")
+  val GT = Value("GT")
 }
 
 case class FilterNode( val filter: Filter = null,

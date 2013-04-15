@@ -8,21 +8,22 @@ class IntensityBasedSelector extends IFeatureSelector {
     
     val intensityFilter = filterTree.filter
     val intensityThreshold = intensityFilter.value
-    val operator = intensityFilter.operator
+    val operator = intensityFilter.parsedOperator
     
     // Filter features according to global intensity threshold
     val features = processedMap.features
     
-    if( operator == "gt" ) {
-      features.foreach { ft => 
-        if( ft.intensity > intensityThreshold ) ft.selectionLevel = 2 else ft.selectionLevel = 1
+    operator match {
+      case FilterOperator.GT => {
+        features.foreach { ft =>
+          if( ft.intensity > intensityThreshold ) ft.selectionLevel = 2 else ft.selectionLevel = 1
+        }
       }
-    } else if( operator == "lt" ) {
-      features.foreach { ft => 
-        if( ft.intensity < intensityThreshold ) ft.selectionLevel = 2 else ft.selectionLevel = 1
+      case FilterOperator.LT => {
+        features.foreach { ft => 
+          if( ft.intensity < intensityThreshold ) ft.selectionLevel = 2 else ft.selectionLevel = 1
+        }
       }
-    } else { 
-      throw new Exception( "unsupported filtering operator 'operator'")
     }
 
   }
