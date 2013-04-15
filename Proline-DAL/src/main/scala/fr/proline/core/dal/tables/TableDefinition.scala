@@ -126,7 +126,9 @@ trait ColumnEnumeration extends Enumeration {
   class Column(i: Int, name: String) extends Val(i: Int, name: String) {
     val $columns: ColumnEnumeration = thisenum
     
+    def toAliasedString() = $tableName + "_" + this.toString()
     def toFullString() = $tableName + "." + this.toString()
+    
   }
   
 }

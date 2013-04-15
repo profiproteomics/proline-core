@@ -31,7 +31,7 @@ trait CanBuildSelectQuery extends Logging {
       if( colName == "*" ) {
         val unrolledColNames = colNamesByTblName(tblName)
         for( unrolledColName <- unrolledColNames ) {
-          colCountByName(unrolledColName) = colCountByName.getOrElse(colName, 0) + 1
+          colCountByName(unrolledColName) = colCountByName.getOrElse(unrolledColName, 0) + 1
           tblAndColNames += tblName -> unrolledColName
         }
       // Else just count the column and append it to the list as is
@@ -48,8 +48,13 @@ trait CanBuildSelectQuery extends Logging {
       val( tblName, colName ) = tblAndColName
       
       if( colCountByName(colName) > 1 ) {
+        
         val colAlias = tblName +"_"+ colName
         this.logger.debug("duplicated column ("+colName+") detected and automatically aliased as " + colAlias)
+        
+        // Update column count for this alias
+        colCountByName(colAlias) = colCountByName.getOrElse(colAlias, 0) + 1
+        
         aliasedColsAsStrList += (tblName +"."+ colName +" AS "+ colAlias )
       } else {
         aliasedColsAsStrList += (tblName +"."+ colName)
@@ -58,6 +63,7 @@ trait CanBuildSelectQuery extends Logging {
     
     var query = "SELECT "+ aliasedColsAsStrList.mkString(",") +" FROM "+ tblsAsStrList.mkString(",")
     if( clauses != None ) query += " " + clauses.get
+    
     query
   }
   
