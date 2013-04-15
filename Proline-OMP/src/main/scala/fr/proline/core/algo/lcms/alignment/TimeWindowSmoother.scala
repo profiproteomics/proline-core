@@ -14,7 +14,7 @@ class TimeWindowSmoother extends IAlnSmoother {
     // Create an array of landmarks
     val landmarks = mapAln.getLandmarks
     val nbLandmarks = landmarks.length
-    val landmarksSortedByTime = landmarks.toList.sort { (a,b) => a.time <= b.time } 
+    val landmarksSortedByTime = landmarks.sortBy( _.time )
     
     // last landmark time
     val totalTime = landmarksSortedByTime(nbLandmarks-1).time
@@ -26,15 +26,15 @@ class TimeWindowSmoother extends IAlnSmoother {
       
       def apply(minVal: Float, maxVal: Float): Unit = {
         
-        var nextLandmarkTime = minVal        
-        var landmarkIndex = 0
+        var nextLandmarkTime = minVal
+        var landmarkIdx = landmarksSortedByTime.indexWhere(_.time >= minVal)
         
         val landmarkGroup = new ArrayBuffer[Landmark](0)
-        while( landmarkIndex < nbLandmarks && landmarksSortedByTime(landmarkIndex).time <= maxVal ) {
+        while( landmarkIdx < nbLandmarks && landmarksSortedByTime(landmarkIdx).time <= maxVal ) {
           
-          landmarkGroup += landmarksSortedByTime(landmarkIndex)
+          landmarkGroup += landmarksSortedByTime(landmarkIdx)
           
-          landmarkIndex += 1
+          landmarkIdx += 1
         }
       
         // If the landmark group is filled enough

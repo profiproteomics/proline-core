@@ -1,15 +1,17 @@
 package fr.proline.core.algo.lcms.alignment
 
+import scala.collection.mutable.HashMap
 import fr.proline.core.algo.lcms.FeatureMappingParams
 import fr.proline.core.om.model.lcms._
   
-case class AlignmentParams( massInterval: Int,
-                            smoothingMethodName: String,
-                            smoothingParams: AlnSmoothingParams,
-                            ftMappingParams: FeatureMappingParams,
-                            maxIterations: Int = 3
-                            )
-                            
+case class AlignmentParams(
+  massInterval: Int,
+  smoothingMethodName: String,
+  smoothingParams: AlnSmoothingParams,
+  ftMappingParams: FeatureMappingParams,
+  maxIterations: Int = 3
+)
+
 case class AlignmentResult( alnRefMapId: Int, mapAlnSets: Array[MapAlignmentSet] )
 
 trait ILcmsMapAligner {
@@ -34,7 +36,7 @@ trait ILcmsMapAligner {
     ftMapping
     
     // two possibilities: keep nearest mass match or exclude matching conflicts (more than one match)
-    val landmarksByMassRangeIndex = new java.util.HashMap[Int,ArrayBuffer[Landmark]]
+    val landmarksByMassIdx = new HashMap[Int,ArrayBuffer[Landmark]]
     
     for( (map1FtId, matchingFeatures) <- ftMapping ) {
       // method 2: exclude conflicts
@@ -43,11 +45,7 @@ trait ILcmsMapAligner {
         val deltaTime = matchingFeatures(0).elutionTime - map1Ft.elutionTime      
         val massRangePos = ( map1Ft.mass / massInterval ).toInt
         
-        if( ! landmarksByMassRangeIndex.containsKey(massRangePos) ) {
-          landmarksByMassRangeIndex.put( massRangePos, new ArrayBuffer[Landmark](1) )
-        }
-        
-        landmarksByMassRangeIndex.get(massRangePos) += Landmark( map1Ft.elutionTime, deltaTime)
+        landmarksByMassIdx.getOrElseUpdate(massRangePos,new ArrayBuffer[Landmark]) += Landmark( map1Ft.elutionTime, deltaTime)
       }
     }
     
@@ -57,20 +55,17 @@ trait ILcmsMapAligner {
     
     // Compute feature alignments
     val ftAlignments = new ArrayBuffer[MapAlignment](0)
-
-    val landmarksIter = landmarksByMassRangeIndex.entrySet().iterator()    
-    while( landmarksIter.hasNext() ) {
-      val landmarksEntry = landmarksIter.next
-      val massRangeIndex = landmarksEntry.getKey
+   
+    for( (massRangeIdx,landmarks) <- landmarksByMassIdx ){
       
-      val landmarksSortedByTime = landmarksEntry.getValue.toList.sort { (a,b) => a.time < b.time }
+      val landmarksSortedByTime = landmarks.sortBy( _.time )
       val timeList = landmarksSortedByTime.map { _.time }
       val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }
       
       val mapAlignment = new MapAlignment(
         refMapId = map1.id,
         targetMapId = map2.id,
-        massRange = (massRangeIndex*massInterval,(massRangeIndex+1)*massInterval),
+        massRange = (massRangeIdx*massInterval,(massRangeIdx+1)*massInterval),
         timeList = timeList.toArray,
         deltaTimeList = deltaTimeList.toArray
       )

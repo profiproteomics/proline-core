@@ -10,7 +10,7 @@ trait IAlnSmoother {
 
   protected def computeMedianLandmark( landmarkGroup: Seq[Landmark] ): Landmark = {
     
-    val lmSortedByDeltaTime = landmarkGroup.toList.sort { (a,b) => a.deltaTime <= b.deltaTime }     
+    val lmSortedByDeltaTime = landmarkGroup.sortBy( _.deltaTime )
     val nbLandmarks = landmarkGroup.length
     
     // Compute median landmark considering the delta time
