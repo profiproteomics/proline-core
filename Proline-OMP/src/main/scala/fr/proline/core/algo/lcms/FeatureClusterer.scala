@@ -2,8 +2,23 @@ package fr.proline.core.algo.lcms
 
 import com.weiglewilczek.slf4s.Logging
 
-case class ClusteringParams(mozTol: Double, mozTolUnit: String, timeTol: Float,
-                            intensityComputation: String, timeComputation: String)
+case class ClusteringParams(
+  mozTol: Double,
+  mozTolUnit: String,
+  timeTol: Float,
+  intensityComputation: String,
+  timeComputation: String
+)
+
+object ClusterIntensityComputation extends Enumeration {
+  val MOST_INTENSE = Value("MOST_INTENSE")
+  val SUM = Value("SUM")
+}
+
+object ClusterTimeComputation extends Enumeration {
+  val MOST_INTENSE = Value("MOST_INTENSE")
+  val MEDIAN = Value("MEDIAN")
+}
 
 object FeatureClusterer extends Logging {
 
@@ -29,15 +44,25 @@ object FeatureClusterer extends Logging {
     val mozTol = params.mozTol
     val mozTolUnit = params.mozTolUnit
     val timeTol = params.timeTol
-    val intensityComputationMethod = params.intensityComputation
-    val timeComputationMethod = params.timeComputation
+    
+    val intensityComputationMethod = try {
+      ClusterIntensityComputation.withName( params.intensityComputation.toUpperCase() )
+    } catch {
+      case _ => throw new Exception("the cluster intensity computation method '" + params.intensityComputation + "' is not implemented")
+    }
+    
+    val timeComputationMethod = try {
+      ClusterTimeComputation.withName( params.timeComputation.toUpperCase() )
+    } catch {
+      case _ => throw new Exception("the cluster time computation method '" + params.timeComputation + "' is not implemented")
+    }
 
     // Retrieve some vars
     val scanById = scans map { scan => (scan.id -> scan) } toMap
     val features = lcmsMap.features
 
     val featuresByCharge = features.groupBy(_.charge)
-    val chargeStates = featuresByCharge.keys.toList.sort { (a, b) => a < b }
+    val chargeStates = featuresByCharge.keys.toList.sorted
 
     // Iterate over charge states
     val singleFeatures = new ArrayBuffer[Feature]
@@ -51,7 +76,7 @@ object FeatureClusterer extends Logging {
       val sameChargeFeatures = featuresByCharge.get(charge).get
 
       // Sort features by m/z
-      var ftsSortedByMoz = sameChargeFeatures.toList.sort { (a, b) => a.moz < b.moz }
+      var ftsSortedByMoz = sameChargeFeatures.sortBy( _.moz )
 
       // Set some vars
       var prevFt = ftsSortedByMoz(0)
@@ -147,8 +172,8 @@ object FeatureClusterer extends Logging {
       val medianFt = getMedianObject(totalFtGroupAsList, this.ftMozSortingFunc)
       val moz = medianFt.moz
 
-      val intensity = this.computeClusterIntensity(totalFtGroupAsList, intensityComputationMethod);
-      val elutionTime = this.computeClusterTime(totalFtGroupAsList, timeComputationMethod);
+      val intensity = this.computeClusterIntensity(totalFtGroupAsList, intensityComputationMethod)
+      val elutionTime = this.computeClusterTime(totalFtGroupAsList, timeComputationMethod)
 
       // Set some vars
       val ms2EventIdSetBuilder = scala.collection.immutable.Set.newBuilder[Int]
@@ -175,7 +200,8 @@ object FeatureClusterer extends Logging {
       val (lastScanId, lastScanInitialId) = (lastSubft.relations.lastScanId, lastSubft.relations.lastScanInitialId)
       val ms1Count = 1 + scanById(lastScanId).cycle - scanById(firstScanId).cycle
 
-      val ftCluster = new Feature(id = Feature.generateNewId,
+      val ftCluster = new Feature(
+        id = Feature.generateNewId,
         moz = moz,
         charge = charge,
         intensity = intensity,
@@ -240,10 +266,8 @@ object FeatureClusterer extends Logging {
 
     // Sort features by first scan time
     val nbFts = ftGroup.length
-    val ftsSortedByTime = ftGroup.toList.sort { (a, b) =>
-      scanById(a.relations.firstScanId).time <
-        scanById(b.relations.firstScanId).time
-    }
+    val ftsSortedByTime = ftGroup.toList.sortBy( ft => scanById(ft.relations.firstScanId).time )
+    
     // Set some vars
     var curFtIdx = 0
     val ftsGroupedByTime = new ArrayBuffer[ArrayBuffer[Feature]](1)
@@ -299,7 +323,7 @@ object FeatureClusterer extends Logging {
     if (nbFeatures == 0) return null
 
     // Sort features by m/z
-    val sortedFts = ftGroup.toList.sort { (a, b) => a.moz < b.moz }
+    val sortedFts = ftGroup.toList.sortBy( _.moz )
 
     // Check if first ft moz is too far from last ft moz
     val firstFt = sortedFts(0)
@@ -345,7 +369,7 @@ object FeatureClusterer extends Logging {
 
   private def findMostIntenseFeature(features: List[Feature]): Feature = {
 
-    val sortedFeatures = features.sort { (a, b) => a.intensity > b.intensity }
+    val sortedFeatures = features.sortWith { (a, b) => a.intensity > b.intensity }
     sortedFeatures(0)
 
     // Group features by intensity
@@ -359,27 +383,20 @@ object FeatureClusterer extends Logging {
 
   }
 
-  private def computeClusterTime(features: List[Feature], methodName: String): Float = {
-
-    var ftClusterTime = Float.NaN
-
-    if (methodName == "median") ftClusterTime = getMedianObject(features, ftTimeSortingFunc).elutionTime
-    else if (methodName == "most_intense") ftClusterTime = this.findMostIntenseFeature(features).elutionTime
-    else throw new Exception("the cluster time computation method '" + methodName + "' is not implemented")
-
-    ftClusterTime
+  private def computeClusterTime(features: List[Feature], method: ClusterTimeComputation.Value ): Float = {    
+    method match {
+      case ClusterTimeComputation.MEDIAN => getMedianObject(features, ftTimeSortingFunc).elutionTime
+      case ClusterTimeComputation.MOST_INTENSE => this.findMostIntenseFeature(features).elutionTime
+    }
 
   }
 
-  private def computeClusterIntensity(features: List[Feature], methodName: String): Float = {
-
-    var ftClusterIntensity = 0.0f
-    if (methodName == "sum") for (ft <- features) ftClusterIntensity += ft.intensity
-    else if (methodName == "most_intense") ftClusterIntensity = this.findMostIntenseFeature(features).intensity
-    else throw new Exception("the cluster intensity computation method '" + methodName + "' is not implemented")
-
-    ftClusterIntensity
-
+  private def computeClusterIntensity(features: List[Feature], method: ClusterIntensityComputation.Value ): Float = {
+    method match {
+      case ClusterIntensityComputation.SUM => features.foldLeft(0f) { (r,c) => r + c.intensity }
+      case ClusterIntensityComputation.MOST_INTENSE => this.findMostIntenseFeature(features).intensity
+    }
+    
   }
 
 }
