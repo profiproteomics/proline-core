@@ -9,7 +9,7 @@ import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.algo.msi.ResultSummaryMerger
 import scala.collection.mutable.HashMap
 
-object Ms2CountQuantifier extends Logging {
+object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
 
   def computeMasterQuantPeptides( udsMasterQuantChannel: MasterQuantitationChannel,
                                   mergedRSM: ResultSummary,
@@ -203,14 +203,14 @@ object Ms2CountQuantifier extends Logging {
   
   def computeMasterQuantProteinSets(udsMasterQuantChannel: MasterQuantitationChannel,
                                      masterQuantPeptides: Seq[MasterQuantPeptide],
-                                     mergedResultSummary: ResultSummary,                                     
+                                     mergedRSM: ResultSummary,                                     
                                      resultSummaries: Seq[ResultSummary]
                                     ): Array[MasterQuantProteinSet] = {
     
     val mqPepByPepInstId = masterQuantPeptides.map { mqp => mqp.peptideInstance.get.id -> mqp } toMap
     val mqProtSets = new ArrayBuffer[MasterQuantProteinSet]
     
-    for( mergedProtSet <- mergedResultSummary.proteinSets ) {
+    for( mergedProtSet <- mergedRSM.proteinSets ) {
       val mergedPepSet = mergedProtSet.peptideSet
       
       val selectedMQPepIds = new ArrayBuffer[Int]
