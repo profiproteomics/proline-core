@@ -9,6 +9,7 @@ import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
 import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+import fr.proline.core.om.provider.msi.impl.SQLInstrumentConfigProvider
 import fr.proline.core.om.storer.msi.{ IRsStorer, MsiSearchStorer, RsStorer }
 import fr.proline.core.om.storer.msi.impl.{ JPARsStorer, StorerContext }
 import fr.proline.repository.IDataStoreConnectorFactory
@@ -265,7 +266,11 @@ class ResultFileImporterSQLStorer(
   }
 
   private def _getInstrumentConfig(instrumentConfigId: Int): InstrumentConfig = {
+    
+    val instConfigProvider = new SQLInstrumentConfigProvider( executionContext.getMSIDbConnectionContext )
+    instConfigProvider.getInstrumentConfig(instrumentConfigId)
 
+    /*
     import fr.proline.util.primitives._
     import fr.proline.core.om.model.msi.{ InstrumentProperties, InstrumentConfigProperties }
 
@@ -303,7 +308,7 @@ class ResultFileImporterSQLStorer(
         instrumentConfig.activationType = r.nextString
 
         instrumentConfig
-      }
+      }*/
 
   }
 
