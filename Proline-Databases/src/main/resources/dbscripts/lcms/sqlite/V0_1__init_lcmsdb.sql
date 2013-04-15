@@ -18,7 +18,7 @@ CREATE TABLE compound (
                 formula TEXT(1000),
                 serialized_properties TEXT,
                 best_feature_id INTEGER NOT NULL,
-                map_layer_id INTEGER NOT NULL,
+                map_layer_id INTEGER,
                 map_id INTEGER NOT NULL,
                 FOREIGN KEY (best_feature_id) REFERENCES feature (id),
                 FOREIGN KEY (map_layer_id) REFERENCES map_layer (id),
@@ -40,9 +40,9 @@ CREATE TABLE feature (
                 first_scan_id INTEGER NOT NULL,
                 last_scan_id INTEGER NOT NULL,
                 apex_scan_id INTEGER NOT NULL,
-                theoretical_feature_id INTEGER NOT NULL,
-                compound_id INTEGER NOT NULL,
-                map_layer_id INTEGER NOT NULL,
+                theoretical_feature_id INTEGER,
+                compound_id INTEGER,
+                map_layer_id INTEGER,
                 map_id INTEGER NOT NULL,
                 FOREIGN KEY (first_scan_id) REFERENCES scan (id),
                 FOREIGN KEY (last_scan_id) REFERENCES scan (id),
@@ -150,8 +150,8 @@ CREATE TABLE map_set (
                 map_count INTEGER NOT NULL,
                 creation_timestamp TEXT NOT NULL,
                 serialized_properties TEXT,
-                master_map_id INTEGER NOT NULL,
-                aln_reference_map_id INTEGER NOT NULL,
+                master_map_id INTEGER,
+                aln_reference_map_id INTEGER,
                 FOREIGN KEY (master_map_id) REFERENCES processed_map (id),
                 FOREIGN KEY (aln_reference_map_id) REFERENCES processed_map (id)
 );
@@ -271,7 +271,7 @@ CREATE TABLE run_map (
                 id INTEGER NOT NULL,
                 run_id INTEGER NOT NULL,
                 peak_picking_software_id INTEGER NOT NULL,
-                peakel_fitting_model_id INTEGER NOT NULL,
+                peakel_fitting_model_id INTEGER,
                 PRIMARY KEY (id),
                 FOREIGN KEY (run_id) REFERENCES run (id),
                 FOREIGN KEY (peak_picking_software_id) REFERENCES peak_picking_software (id),
@@ -301,7 +301,7 @@ CREATE TABLE theoretical_feature (
                 elution_time REAL NOT NULL,
                 source_type TEXT(50) NOT NULL,
                 serialized_properties TEXT,
-                map_layer_id INTEGER NOT NULL,
+                map_layer_id INTEGER,
                 map_id INTEGER NOT NULL,
                 FOREIGN KEY (map_layer_id) REFERENCES map_layer (id),
                 FOREIGN KEY (map_id) REFERENCES map (id)
@@ -322,4 +322,32 @@ CREATE TABLE tile (
                 ms_picture_id INTEGER NOT NULL,
                 FOREIGN KEY (ms_picture_id) REFERENCES ms_picture (id)
 );
+
+CREATE INDEX scan_run_idx ON scan (run_id);
+
+CREATE INDEX scan_precursor_moz_idx ON scan (precursor_moz);
+
+CREATE INDEX feature_map_idx ON feature (map_id);
+
+CREATE INDEX feature_moz_time_charge_idx ON feature (moz,elution_time,charge);
+
+CREATE INDEX feature_cluster_item_processed_map_idx ON feature_cluster_item (processed_map_id);
+
+CREATE INDEX compound_map_idx ON compound (map_id);
+
+CREATE INDEX processed_map_map_set_idx ON processed_map (map_set_id);
+
+CREATE INDEX map_layer_processed_map_idx ON map_layer (processed_map_id);
+
+CREATE INDEX map_layer_map_set_idx ON map_layer (map_set_id);
+
+CREATE INDEX theoretical_feature_map_idx ON theoretical_feature (map_id);
+
+CREATE INDEX map_alignment_map_set_idx ON map_alignment (map_set_id);
+
+CREATE INDEX feature_ms2_event_run_map_idx ON feature_ms2_event (run_map_id);
+
+CREATE INDEX master_feature_item_master_map_idx ON master_feature_item (master_map_id);
+
+CREATE INDEX feature_overlap_mapping_map_idx ON feature_overlap_mapping (map_id);
 
