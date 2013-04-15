@@ -29,8 +29,8 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
       runMap.id = newRunMapId
 
       // Store the related run map   
-      val peakPickingSoftwareId = if (runMap.featureScoring.isDefined) Some(runMap.peakPickingSoftware.id) else None
-      val peakelFittingModelId = if (runMap.featureScoring.isDefined) runMap.peakelFittingModel.map(_.id) else None
+      val peakPickingSoftwareId = runMap.peakPickingSoftware.id
+      val peakelFittingModelId = runMap.peakelFittingModel.map(_.id)
 
       ezDBC.execute(
         LcmsDbRunMapTable.mkInsertQuery,
@@ -60,7 +60,7 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
               //ft.relations.mapId = newRunMapId
   
               val newFtId = this.insertFeatureUsingPreparedStatement(olpFt, featureInsertStmt)
-              ft.id = newFtId
+              olpFt.id = newFtId
   
               flattenedFeatures += olpFt
             }
@@ -84,7 +84,8 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
       ezDBC.executePrepared(LcmsDbFeatureMs2EventTable.mkInsertQuery) { statement =>
         flattenedFeatures.foreach { ft =>
           if (ft.relations.ms2EventIds != null) {
-            for (ms2EventId <- ft.relations.ms2EventIds) statement.executeWith(ft.id, ms2EventId, newRunMapId)
+            for (ms2EventId <- ft.relations.ms2EventIds) {
+              statement.executeWith(ft.id, ms2EventId, newRunMapId)}
           }
         }
       }
@@ -128,8 +129,8 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
 
   protected def insertMap(ezDBC: EasyDBC, lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date): Int = {
 
-    //val curDate = new java.util.Date
-    val ftScoringId = lcmsMap.featureScoring.map(_.id)
+    // FIXME: scoring should not be null
+    val ftScoringId = lcmsMap.featureScoring.map(_.id).getOrElse(1)
     val lcmsMapType = if (lcmsMap.isProcessed) 1 else 0
     
     var newMapId = 0
