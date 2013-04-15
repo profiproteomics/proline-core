@@ -1311,14 +1311,12 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       knownMsiMsQuery.get
     } else {
 
-      if (msiSearch == null) {
-        logger.warn("MsQuery {" + omMsQueryId + "} has no associated MsiSearch")
-      }
-
       if (omMsQueryId > 0) {
         val foundMsiMsQuery = msiEm.getReference(classOf[MsiMsQuery], omMsQueryId) // Must exist in Msi Db if OM Id > 0
 
-        foundMsiMsQuery.setMsiSearch(msiSearch)
+        if (msiSearch != null) {
+          foundMsiMsQuery.setMsiSearch(msiSearch)
+        }
 
         knownMsQueries += omMsQueryId -> foundMsiMsQuery
 
@@ -1328,7 +1326,12 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         msiMsQuery.setCharge(Integer.valueOf(msQuery.charge))
         msiMsQuery.setInitialId(Integer.valueOf(msQuery.initialId))
         msiMsQuery.setMoz(msQuery.moz)
-        msiMsQuery.setMsiSearch(msiSearch) // msiSearch must be in persistence context
+
+        if (msiSearch == null) {
+          logger.warn("MsQuery {" + omMsQueryId + "} has no associated MsiSearch")
+        } else {
+          msiMsQuery.setMsiSearch(msiSearch) // msiSearch must be in persistence context
+        }
 
         val msQueryProperties = msQuery.properties
         if (msQueryProperties.isDefined) {
