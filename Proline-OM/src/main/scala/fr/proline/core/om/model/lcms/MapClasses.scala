@@ -4,11 +4,15 @@ import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.BeanProperty
+
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.weiglewilczek.slf4s.Logging
+
 import fr.proline.util.misc.InMemoryIdGen
 import fr.proline.util.misc.InMemoryIdGen
+
 
 case class FeatureScoring(
     
@@ -82,7 +86,7 @@ case class MapMozCalibration(
 @JsonInclude( Include.NON_NULL )
 case class MapMozCalibrationProperties
 
-sealed trait ILcMsMap {
+trait ILcMsMap {
             
   // Required fields
   //val id: Int,
@@ -151,6 +155,7 @@ case class RunMap(
       features = features,
       featureScoring = featureScoring,
       runMapIds = Array( id ),
+      runId = Some(runId),
       mapSetId = mapSetId
     )
     
@@ -182,6 +187,7 @@ case class ProcessedMap(
   val featureScoring: Option[FeatureScoring] = None,
   
   // Mutable optional fields
+  var runId: Option[Int] = None,
   var isLocked: Boolean = false,
   var normalizationFactor: Float = 1,
   var mozCalibrations: Option[Array[MapMozCalibration]] = None, // m/z calibration matrix for the entire run
@@ -230,7 +236,7 @@ case class MapAlignment(
   // Mutable optional fields
   var properties: Option[MapAlignmentProperties] = None
   
-) {
+) extends Logging {
   
   // Requirements
   require( massRange != null && timeList != null && deltaTimeList != null )
@@ -271,14 +277,17 @@ case class MapAlignment(
   
   protected def calcDeltaTime( elutionTime: Float ): Float = {
     
-    val timeIndex = timeList.indexWhere( _ >= elutionTime )
-    //if( timeIndex == -1 ) throw new Exception("undefined time index for elution time " + elutionTime)
-    
-    this._calcDeltaTime( timeIndex, elutionTime )    
+    var timeIndex = timeList.indexWhere( _ >= elutionTime )
+    if( timeIndex == -1 ) {
+      //this.logger.debug("undefined time index for elution time " + elutionTime)
+      timeIndex = deltaTimeList.length - 1
+    }
+      
+    this._calcDeltaTime( timeIndex, elutionTime )
   }
   
   private def _calcDeltaTime( timeIndex: Int, elutionTime: Float ) = {
-    require( timeIndex > 0 && timeIndex < deltaTimeList.length, "time index is out of range" )
+    require( timeIndex >= -1 && timeIndex < deltaTimeList.length, "time index is out of range" )
     
     import fr.proline.util.math.calcLineParams
     
