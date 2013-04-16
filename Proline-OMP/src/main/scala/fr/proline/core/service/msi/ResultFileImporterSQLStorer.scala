@@ -267,7 +267,7 @@ class ResultFileImporterSQLStorer(
 
   private def _getInstrumentConfig(instrumentConfigId: Int): InstrumentConfig = {
     
-    val instConfigProvider = new SQLInstrumentConfigProvider( executionContext.getMSIDbConnectionContext )
+    val instConfigProvider = new SQLInstrumentConfigProvider( executionContext.getUDSDbConnectionContext )
     instConfigProvider.getInstrumentConfig(instrumentConfigId)
 
     /*
