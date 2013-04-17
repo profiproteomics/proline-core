@@ -46,6 +46,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     val maxFdr = expectedFdr.get * 1.2 // 20% of FDR
     var rocPoints = new ArrayBuffer[ValidationResult]
     var expectedRocPoint: ValidationResult = null
+    var valResult: ValidationResult = null
     
     while( currentFdr > 0 && expectedRocPoint == null ) {
       
@@ -59,7 +60,7 @@ class ProtSetRulesValidatorWithFDROptimization(
       protSetFilterRule2.filterProteinSets(multiPepProtSets,true,false)
       
       // Compute validation result
-      val valResult = this.computeValidationResult(multiPepTargetProtSets, Some(multiPepDecoyProtSets))
+      valResult = this.computeValidationResult(multiPepTargetProtSets, Some(multiPepDecoyProtSets))
       
       // Update current FDR
       currentFdr = valResult.fdr.get
@@ -134,6 +135,9 @@ class ProtSetRulesValidatorWithFDROptimization(
       protSetFilterRule2.setThresholdValue(protSetFilterRule2.getNextValue(thresholdRule2))
       
     }
+    
+    // Set the expect ROC point to the last validation result if no result found
+    if( expectedRocPoint == null ) expectedRocPoint = valResult
     
     // Set validation rules probability thresholds using the previously obtained expected ROC point
     val rocPointProps = expectedRocPoint.properties.get
