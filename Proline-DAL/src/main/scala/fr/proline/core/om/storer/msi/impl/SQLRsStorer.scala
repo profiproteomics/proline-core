@@ -1,7 +1,10 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
+
+import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
+
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi._
@@ -98,15 +101,15 @@ class SQLRsStorer(
       val msiSearchId = resultSet.msiSearch.map( _.id )
       
       // Store RDB result set  
-      val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery(t =>
-        List(t.NAME, t.DESCRIPTION, t.TYPE, t.MODIFICATION_TIMESTAMP, t.DECOY_RESULT_SET_ID, t.MSI_SEARCH_ID))
-  
+      val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery
+      
       msiEzDBC.executePrepared(rsInsertQuery, true) { stmt =>
         stmt.executeWith(
           rsName,
           rsDesc,
           rsType,
           new java.util.Date,
+          resultSet.properties.map( Json.generate(_) ),
           decoyRsId,
           msiSearchId
         )

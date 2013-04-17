@@ -90,12 +90,29 @@ case class ResultSet (
     else Some(proteins.toArray)
     
   }
+  
+  // TMP workaround for result sets which have this value defined at the search settings level
+  def getTargetDecoyMode(): Option[String] = {
+    
+    // Try to retrieve the parameter form SearchSettings first
+    val msiSearchOpt = this.msiSearch
+    val ssTDMode = if( msiSearchOpt.isDefined && msiSearchOpt.get.searchSettings.properties.isDefined  ) {
+      msiSearchOpt.get.searchSettings.properties.get.getTargetDecoyMode
+    } else None
+    
+    // If not defined in search settings => try to retrieve it from result set properties
+    if( ssTDMode.isDefined ) ssTDMode
+    else if ( this.properties.isDefined ) this.properties.get.getTargetDecoyMode
+    else None    
+  }
 
 }
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class ResultSetProperties
+case class ResultSetProperties {
+  @BeanProperty var targetDecoyMode: Option[String] = None
+}
 
 
 object ResultSummary extends InMemoryIdGen

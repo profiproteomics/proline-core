@@ -14,12 +14,14 @@ object BuildTDAnalyzer extends Logging {
   def apply(
     useTdCompetition: Boolean,
     rs: ResultSet,
-    pepMatchSorter: Option[IPeptideMatchSorter]): Option[ITargetDecoyAnalyzer] = {
+    pepMatchSorter: Option[IPeptideMatchSorter]
+  ): Option[ITargetDecoyAnalyzer] = {
+    
     require(rs != null, "ResultSet is null")
 
     val rsId = rs.id
-
     val decoyRS = rs.decoyResultSet
+    
     if ((decoyRS != null) && decoyRS.isDefined) {
 
       val tdAnalyzer = if (useTdCompetition) {
@@ -29,6 +31,19 @@ object BuildTDAnalyzer extends Logging {
 
         new CompetitionBasedTDAnalyzer(pepMatchSorter.get)
       } else {
+        
+        val tdModeAsStrOpt = rs.getTargetDecoyMode
+        require( tdModeAsStrOpt.isDefined, "ResultSet #" + rsId + " has no valid TargetDecoyMode Property")
+        
+        val tdMode = TargetDecoyModes.withName(tdModeAsStrOpt.get)
+        
+        if( tdMode == TargetDecoyModes.MIXED ) {
+          this.logger.warn("ResultSet #" + rsId + "has mixed target/decoy modes => competition based TD analyzer has to be used")
+          new CompetitionBasedTDAnalyzer(pepMatchSorter.get)
+        } else
+          new BasicTDAnalyzer(tdMode)
+        
+        /*
         val msiSearchOpt = rs.msiSearch
         require(msiSearchOpt.isDefined, "ResultSet #" + rsId + " has no associated MSISearch")
 
@@ -49,6 +64,7 @@ object BuildTDAnalyzer extends Logging {
         val tdMode = TargetDecoyModes.withName(optionalRawTargetDecoyMode.get)
 
         new BasicTDAnalyzer(tdMode)
+        */
       }
 
       Some(tdAnalyzer)
@@ -146,7 +162,7 @@ class BasicTDAnalyzer(targetDecoyMode: TargetDecoyModes.Value) extends AbstractT
       targetDecoyMode match {
         case TargetDecoyModes.CONCATENATED => TargetDecoyComputer.calcCdFDR(targetMatchesCount, decoyMatchesCount)
         case TargetDecoyModes.SEPARATED    => TargetDecoyComputer.calcSdFDR(targetMatchesCount, decoyMatchesCount)
-        case _                             => throw new Exception("unknown target decoy mode: " + targetDecoyMode)
+        case _                             => throw new Exception("unsupported target decoy mode: " + targetDecoyMode)
       }
     }
 

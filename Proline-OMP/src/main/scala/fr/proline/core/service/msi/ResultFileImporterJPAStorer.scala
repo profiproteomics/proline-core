@@ -20,6 +20,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.om.provider.msi.impl.SQLInstrumentConfigProvider
 
 class ResultFileImporterJPAStorer(
   executionContext: IExecutionContext,
@@ -156,16 +157,17 @@ class ResultFileImporterJPAStorer(
         targetRs.decoyResultSet = Some(decoyRs)
       }
       
-      val ssProps = targetRs.msiSearch.get.searchSettings.properties.getOrElse(new SearchSettingsProperties)
-
+      val rsProps = targetRs.properties.getOrElse(new ResultSetProperties)
+      
       // Load and store decoy result set if it exists
       if (resultFile.hasDecoyResultSet) {
         storeDecoyRs(resultFile.getResultSet(true))
         
-        // Update search settings properties
+        // Update result set properties
         // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
-        ssProps.setTargetDecoyMode(Some(TargetDecoyModes.SEPARATED.toString))
-        targetRs.msiSearch.get.searchSettings.properties = Some(ssProps)
+        rsProps.setTargetDecoyMode(Some(TargetDecoyModes.SEPARATED.toString))        
+        targetRs.properties = Some(rsProps)
+
         >>>
       } // Else if a regex has been passed to detect decoy protein matches		  
       else if (acDecoyRegex != None) {
@@ -175,14 +177,19 @@ class ResultFileImporterJPAStorer(
 
         storeDecoyRs(dRs)
         
-        // Update search settings properties
-        ssProps.setTargetDecoyMode(Some(TargetDecoyModes.CONCATENATED.toString))
-        targetRs.msiSearch.get.searchSettings.properties = Some(ssProps)
+        // Update result set properties
+        rsProps.setTargetDecoyMode(Some(TargetDecoyModes.CONCATENATED.toString))
+        targetRs.properties = Some(rsProps)
         
         >>>
       } else
         targetRs.decoyResultSet = None
-
+      
+      // FIXME: remove these 3 lines when we know that TargetDecoyMode is not needed at searchSettingsLevel
+      val ssProps = targetRs.msiSearch.get.searchSettings.properties.getOrElse(new SearchSettingsProperties)
+      ssProps.setTargetDecoyMode(rsProps.getTargetDecoyMode)
+      targetRs.msiSearch.get.searchSettings.properties = Some(ssProps)
+      
       //  Store target result set
       this.targetResultSetId = rsStorer.storeResultSet(targetRs, msQueries, resultFile, storerContext)
       >>>
@@ -255,6 +262,10 @@ class ResultFileImporterJPAStorer(
   // TODO: put in a dedicated provider
   private def _getInstrumentConfig(instrumentConfigId: Int, udsDbContext: DatabaseConnectionContext): InstrumentConfig = {
 
+    val instConfigProvider = new SQLInstrumentConfigProvider(executionContext.getUDSDbConnectionContext)
+    instConfigProvider.getInstrumentConfig(instrumentConfigId)
+    
+    /*
     import fr.proline.util.primitives._
     import fr.proline.core.om.model.msi.{ InstrumentProperties, InstrumentConfigProperties }
 
@@ -293,7 +304,7 @@ class ResultFileImporterJPAStorer(
         instrumentConfig
       }
 
-    })
+    })*/
 
   }
 

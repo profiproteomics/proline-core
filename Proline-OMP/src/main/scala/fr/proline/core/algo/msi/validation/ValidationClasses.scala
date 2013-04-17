@@ -15,7 +15,8 @@ import fr.proline.core.om.model.msi.FilterDescriptor
 object TargetDecoyModes extends Enumeration {
   type Mode = Value
   val CONCATENATED = Value("CONCATENATED")
-  val SEPARATED = Value("SEPARATED")  
+  val SEPARATED = Value("SEPARATED")
+  val MIXED = Value("MIXED") // for merged result sets having children in CONCATENATED and SEPARATED modes
 }
 
 object ProtSetValidationMethods extends Enumeration {
