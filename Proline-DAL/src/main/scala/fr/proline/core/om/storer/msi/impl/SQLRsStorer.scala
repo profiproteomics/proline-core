@@ -105,6 +105,7 @@ class SQLRsStorer(
       
       msiEzDBC.executePrepared(rsInsertQuery, true) { stmt =>
         stmt.executeWith(
+          Option.empty[Int],
           rsName,
           rsDesc,
           rsType,
