@@ -110,9 +110,9 @@ case class ResultSet (
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class ResultSetProperties {
+case class ResultSetProperties(
   @BeanProperty var targetDecoyMode: Option[String] = None
-}
+)
 
 
 object ResultSummary extends InMemoryIdGen
