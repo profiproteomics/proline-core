@@ -152,8 +152,9 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         /* Store MsiSearch and retrieve persisted ORM entity */
         var storedMsiSearch: MsiSearch = null
 
-        val msiSearchOpt = resultSet.msiSearch
-        for( msiSearch <- msiSearchOpt ) { // ResultSet.msiSearch can be None for merged ResultSet
+        val optionalMsiSearch = resultSet.msiSearch
+        if ((optionalMsiSearch != null) && optionalMsiSearch.isDefined) { // ResultSet.msiSearch can be None for merged ResultSet
+          val msiSearch = optionalMsiSearch.get
           val omMsiSearchId = msiSearch.id
 
           storeMsiSearch(msiSearch, storerContext)
@@ -174,14 +175,14 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         val msiDecoyRs = if (omDecoyResultSetId > 0) {
           retrieveCreatedResultSet(storerContext, omDecoyResultSetId)
         } else {
-          val decoyResultSet = resultSet.decoyResultSet
+          val optionalDecoyResultSet = resultSet.decoyResultSet
 
-          if ((decoyResultSet != null) && decoyResultSet.isDefined) {
+          if ((optionalDecoyResultSet != null) && optionalDecoyResultSet.isDefined) {
             /* Store Msi decoy ResultSet and retrieve persisted ORM entity */
-            val definedDecoyResultSet = decoyResultSet.get
-            val omDecoyResultSetId = definedDecoyResultSet.id
+            val decoyResutSet = optionalDecoyResultSet.get
+            val omDecoyResultSetId = decoyResutSet.id
 
-            createResultSet(definedDecoyResultSet, storerContext)
+            createResultSet(decoyResutSet, storerContext)
 
             retrieveCreatedResultSet(storerContext, omDecoyResultSetId)
           } else {
@@ -1444,12 +1445,12 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
       }
 
     } else {
-      val protein = proteinMatch.protein
+      val optionalProtein = proteinMatch.protein
 
-      if ((protein != null) && protein.isDefined) {
-        val definedProtein = protein.get
+      if ((optionalProtein != null) && optionalProtein.isDefined) {
+        val protein = optionalProtein.get
 
-        logger.warn("Unknown Protein {" + omProteinId + "} sequence [" + definedProtein.sequence + ']')
+        logger.warn("Unknown Protein {" + omProteinId + "} sequence [" + protein.sequence + ']')
       }
 
     }
@@ -1580,16 +1581,16 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
     /**
      * Retrieves Msi Peptide entity Primary key from given OM Id or Peptide object.
      */
-    def retrieveMsiPeptideId(peptideId: Int, peptide: Option[Peptide]): Int = {
+    def retrieveMsiPeptideId(peptideId: Int, optionalPeptide: Option[Peptide]): Int = {
       var msiPeptideId: Int = -1
 
       if (peptideId > 0) {
         msiPeptideId = peptideId
       } else {
 
-        if ((peptide != null) && peptide.isDefined) {
-          val definedPeptide = peptide.get
-          val peptideIdent = new PeptideIdent(definedPeptide.sequence, definedPeptide.ptmString)
+        if ((optionalPeptide != null) && optionalPeptide.isDefined) {
+          val peptide = optionalPeptide.get
+          val peptideIdent = new PeptideIdent(peptide.sequence, peptide.ptmString)
 
           val knownMsiPeptide = storerContext.msiPeptides.get(peptideIdent)
 
