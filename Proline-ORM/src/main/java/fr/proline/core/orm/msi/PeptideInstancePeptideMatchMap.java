@@ -9,7 +9,7 @@ import javax.persistence.*;
  * 
  */
 @Entity
-@Table(name="peptide_set_peptide_instance_item")
+@Table(name="peptide_instance_peptide_match_map")
 public class PeptideInstancePeptideMatchMap implements Serializable {
 	private static final long serialVersionUID = 1L;
 
