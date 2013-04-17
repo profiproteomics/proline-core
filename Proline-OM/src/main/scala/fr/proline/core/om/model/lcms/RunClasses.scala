@@ -13,11 +13,12 @@ import fr.proline.core.om.model.msi.Instrument
 case class RawFile( 
     
   // Required fields
-  val id: Int,
   val name: String,
   val extension: String,
-  val directory: String,
-  val creationTimestamp: Date,
+  
+  // Immutable optional fields
+  val directory: Option[String] = None,
+  val creationTimestamp: Option[Date] = None,
   val instrument: Option[Instrument] = None,
   
   // Mutable optional fields
@@ -28,31 +29,59 @@ case class RawFile(
             
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class RawFileProperties
+case class RawFileProperties(
+  @BeanProperty var mzdbFilePath: String
+)
 
-object LcMsRun extends InMemoryIdGen {
+case class LcMsRun(
+  
+  // Required fields
+  val id: Int,
+  val number: Int,
+  val runStart: Float,
+  val runStop: Float,
+  val duration: Float,
+  val rawFile: RawFile,
+  
+  var lcMethod: Option[String] = None,
+  var msMethod: Option[String] = None,
+  var analyst: Option[String] = None,
+  var scanSequence: Option[LcMsScanSequence] = None,  
+  var properties: Option[LcMsRunProperties] = None
+) {
+  require( RawFile != null )
+  
+  def getRawFileName = rawFile.name
+  
+}
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class LcMsRunProperties
+
+
+object LcMsScanSequence extends InMemoryIdGen {
   var timeIndexWidth = 10
   def calcTimeIndex( time: Double ): Int = (time/timeIndexWidth).toInt
 }
 
-case class LcMsRun(
-        
+case class LcMsScanSequence(
+  
   // Required fields
   val id: Int,
+  
   val rawFileName: String,
-  //val instrumentName: String,
   val minIntensity: Double,
   val maxIntensity: Double,
   val ms1ScansCount: Int,
   val ms2ScansCount: Int,
-  val rawFile: RawFile,
   val scans: Array[LcMsScan],
+  var instrumentId: Option[Int] = None,
   
   // Mutable optional fields
-  var properties: Option[LcMsRunProperties] = None
+  var properties: Option[LcMsScanSequenceProperties] = None
   
 ) {
-  require( RawFile != null )
   require( scans != null )
   
   lazy val scanById = Map() ++ scans.map { scan => ( scan.id -> scan ) }
@@ -63,14 +92,14 @@ case class LcMsRun(
   
   lazy val scanIdsByTimeIndex: Map[Int,Array[Int]] = {
 
-    val timeIndexWidth = LcMsRun.timeIndexWidth;
+    val timeIndexWidth = LcMsScanSequence.timeIndexWidth;
     
     import scala.collection.JavaConversions._
     val scanIdsByTimeIndexHashMap = new java.util.HashMap[Int,ArrayBuffer[Int]]()
     
     for( scan <- scans ) {
       
-      val timeIndex = LcMsRun.calcTimeIndex(scan.time)
+      val timeIndex = LcMsScanSequence.calcTimeIndex(scan.time)
       
       if( !scanIdsByTimeIndex.containsKey(timeIndex) ) {
         scanIdsByTimeIndexHashMap.put(timeIndex, new ArrayBuffer[Int](1) )
@@ -94,7 +123,7 @@ case class LcMsRun(
     val runEndTime = endTime
     val safeTime = if( time > runEndTime ) runEndTime else time
     
-    val timeIndex = LcMsRun.calcTimeIndex(time)      
+    val timeIndex = LcMsScanSequence.calcTimeIndex(time)      
     val scanIdsIndex = scanIdsByTimeIndex      
     var matchingScanIds = new ArrayBuffer[Int]
     
@@ -123,9 +152,7 @@ case class LcMsRun(
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class LcMsRunProperties(
-  @BeanProperty var mzDbFilePath: String
-)
+case class LcMsScanSequenceProperties
 
 case class LcMsScan(
     

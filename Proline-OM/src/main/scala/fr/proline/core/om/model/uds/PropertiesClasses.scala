@@ -24,3 +24,9 @@ case class ExternalDbProperties(
     this.driverType = driverType
   }
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class RawFileProperties(
+  @BeanProperty var mzdbFilePath: Option[String] = None
+)
