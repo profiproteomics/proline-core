@@ -2,8 +2,10 @@ package fr.proline.core.algo.msi
 
 import scala.collection.mutable.{ArrayBuffer,HashMap,HashSet}
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.util.StringUtils.{isEmpty => isEmptyStr}
+
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi._
+import fr.proline.util.StringUtils.{isEmpty => isEmptyStr}
 
 object ResultSetMerger {
   
@@ -225,17 +227,32 @@ class ResultSetMerger extends Logging {
     // Merge peptide matches and related protein matches
     val( mergedPeptideMatches, mergedProteinMatches) = ResultSetMerger.mergePeptideMatches( allPeptideMatches, nrProteinMatches, resultSetId )
 
+    // Try to retrieve a consensus target/decoy mode through all children ones
+    val distinctTdModes = resultSets.map( _.getTargetDecoyMode.getOrElse("") ).distinct
+    
+    val mergedTdModeOpt = if( distinctTdModes.length > 1 ) Some(TargetDecoyModes.MIXED.toString)
+    else {
+      val tdModeStr = distinctTdModes(0)
+      if( tdModeStr == "" ) None else Some(tdModeStr)
+    }
+    
+    // Set merged RS properties
+    val mergedProperties = new ResultSetProperties()
+    mergedProperties.setTargetDecoyMode(mergedTdModeOpt)
+    
     // Create merged result set    
     val mergedResultSet = new ResultSet(
-                                id = resultSetId,
-                                proteinMatches = mergedProteinMatches.toArray,
-                                peptideMatches = mergedPeptideMatches.toArray,
-                                peptides = peptideById.values.toArray,
-                                isDecoy = allRSDecoy,
-                                isNative = false
-                                // FIXME: is this the best solution ???
-                                //msiSearch = resultSets(0).msiSearch
-                              )
+      id = resultSetId,
+      proteinMatches = mergedProteinMatches.toArray,
+      peptideMatches = mergedPeptideMatches.toArray,
+      peptides = peptideById.values.toArray,
+      isDecoy = allRSDecoy,
+      isNative = false,
+      properties = Some(mergedProperties)
+      // FIXME: is this the best solution ???
+      //msiSearch = resultSets(0).msiSearch
+    )
+    
     this.logger.info( "result sets have been merged:")
     this.logger.info( "- nb merged protein matches = " + mergedResultSet.proteinMatches.length )
     this.logger.info( "- nb merged peptide matches = " + mergedResultSet.peptideMatches.length )
