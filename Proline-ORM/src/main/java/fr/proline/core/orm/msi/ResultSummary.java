@@ -5,6 +5,8 @@ import javax.persistence.*;
 
 import fr.proline.core.orm.msi.PeptideInstance;
 import fr.proline.core.orm.msi.ProteinSet;
+import fr.proline.core.orm.msi.PeptideMatch;
+import fr.proline.core.orm.uds.Dataset;
 import fr.proline.core.orm.util.JsonSerializer;
 
 
@@ -180,7 +182,9 @@ public class ResultSummary implements Serializable {
 		
 		private PeptideInstance[] peptideInstanceArray = null;
 		private ProteinSet[] proteinSetArray = null;
-		private Object dataSet = null; // JPM.TODO : replace Object by DataSet from orm
+		private PeptideMatch[] peptideMatches;
+		
+		private Dataset dataSet = null;
 		private Integer numberOfProteinSets = null;
 		
 		protected TransientData() {
@@ -211,14 +215,22 @@ public class ResultSummary implements Serializable {
 			this.numberOfProteinSets = numberOfProteinSets;
 		}
 
-		public Object getDataSet() {
+		public Dataset getDataSet() {
 			return dataSet;
 		}
 		
-		public void setDataSet(Object dataSet) { // JPM.TODO : replace Object by DataSet from orm
+		public void setDataSet(Dataset dataSet) { 
 			this.dataSet = dataSet;
 		}
 		
+		public PeptideMatch[] getPeptideMatches() {
+			return peptideMatches;
+		}
+
+		public void setPeptideMatches(PeptideMatch[] peptideMatches) {
+			this.peptideMatches = peptideMatches;
+			//peptideMatchesCount = peptideMatches.length;
+		}
 		
 
 	
