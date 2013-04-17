@@ -152,8 +152,8 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         /* Store MsiSearch and retrieve persisted ORM entity */
         var storedMsiSearch: MsiSearch = null
 
-        val msiSearch = resultSet.msiSearch
-        if (msiSearch != null) { // ResultSet.msiSearch can be null for merged ResultSet
+        val msiSearchOpt = resultSet.msiSearch
+        for( msiSearch <- msiSearchOpt ) { // ResultSet.msiSearch can be None for merged ResultSet
           val omMsiSearchId = msiSearch.id
 
           storeMsiSearch(msiSearch, storerContext)

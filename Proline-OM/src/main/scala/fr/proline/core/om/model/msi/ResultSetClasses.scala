@@ -30,7 +30,7 @@ case class ResultSet (
                    var isQuantified: Boolean = false,                    
                    
                    protected var msiSearchId: Int = 0,
-                   var msiSearch: MSISearch = null,
+                   var msiSearch: Option[MSISearch] = None,
                   
                    protected var decoyResultSetId: Int = 0,
                    @transient var decoyResultSet: Option[ResultSet] = null,
@@ -42,9 +42,9 @@ case class ResultSet (
   // Requirements
   require( peptides != null && peptideMatches != null & proteinMatches != null )
   
-  def getMSISearchId : Int = { if(msiSearch != null) msiSearch.id else msiSearchId }
+  def getMSISearchId: Int = { if(msiSearch.isDefined) msiSearch.get.id else msiSearchId }
   
-  def getDecoyResultSetId : Int = { if(decoyResultSet != null && decoyResultSet != None) decoyResultSet.get.id else decoyResultSetId }
+  def getDecoyResultSetId: Int = { if(decoyResultSet != null && decoyResultSet != None) decoyResultSet.get.id else decoyResultSetId }
   
   def peptideById: Map[Int, Peptide] = {
     

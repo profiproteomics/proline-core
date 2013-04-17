@@ -192,7 +192,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         msiResultSet.getDescription,
         false, // TODO handle isQuantified
         msiSearch.id,
-        msiSearch,
+        Some(msiSearch),
         decoyRsId,
         decoyRs,
         resultSetProperties

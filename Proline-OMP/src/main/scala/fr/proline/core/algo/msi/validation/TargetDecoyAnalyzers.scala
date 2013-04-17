@@ -29,17 +29,18 @@ object BuildTDAnalyzer extends Logging {
 
         new CompetitionBasedTDAnalyzer(pepMatchSorter.get)
       } else {
-        val msiSearch = rs.msiSearch
-        require(msiSearch != null, "ResultSet #" + rsId + " has no associated MSISearch")
+        val msiSearchOpt = rs.msiSearch
+        require(msiSearchOpt.isDefined, "ResultSet #" + rsId + " has no associated MSISearch")
 
+        val msiSearch = msiSearchOpt.get
         val searchSettings = msiSearch.searchSettings
         require(searchSettings != null, "ResultSet #" + rsId + " has no associated SearchSettings")
 
-        val optionalSearchSettinsProperties = searchSettings.properties
-        require((optionalSearchSettinsProperties != null) && optionalSearchSettinsProperties.isDefined,
+        val searchSettingsPropertiesOpt = searchSettings.properties
+        require((searchSettingsPropertiesOpt != null) && searchSettingsPropertiesOpt.isDefined,
           "ResultSet #" + rsId + " has no associated SearchSettings Properties")
 
-        val searchSettingsProperties = optionalSearchSettinsProperties.get
+        val searchSettingsProperties = searchSettingsPropertiesOpt.get
 
         val optionalRawTargetDecoyMode = searchSettingsProperties.getTargetDecoyMode
         require((optionalRawTargetDecoyMode != null) && optionalRawTargetDecoyMode.isDefined,

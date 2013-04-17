@@ -95,7 +95,7 @@ trait SQLResultSetLoader {
           proteinMatches = rsProtMatches,
           isDecoy = isDecoy,
           isNative = isNative,
-          msiSearch = msiSearch,
+          msiSearch = Some(msiSearch),
           decoyResultSetId = decoyRsId,
           properties = properties
         )

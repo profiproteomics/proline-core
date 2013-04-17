@@ -536,7 +536,7 @@ class ResultSetFakeBuilder(
       peptides = allPepsByProtSeq.flatMap(e => e._2).toArray, //Updated in createPepAndCoForProteinMatch
       peptideMatches = allPepMatches.toArray, //Updated in createPepAndCo
       proteinMatches = allProtMatches.toArray, //Created in constructor
-      msiSearch = search,
+      msiSearch = Some(search),
       isDecoy = false, isNative = true)
 
   }

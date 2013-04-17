@@ -95,10 +95,9 @@ class SQLRsStorer(
       rsType = if (isDecoy) "DECOY_" + rsType else rsType
   
       val decoyRsId = if (resultSet.getDecoyResultSetId > 0) Some(resultSet.getDecoyResultSetId) else None
-      val msiSearchId = if (resultSet.msiSearch != null) Some(resultSet.msiSearch.id) else None
-      // Store RDB result set
-      // TODO: use JPA instead
-  
+      val msiSearchId = resultSet.msiSearch.map( _.id )
+      
+      // Store RDB result set  
       val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery(t =>
         List(t.NAME, t.DESCRIPTION, t.TYPE, t.MODIFICATION_TIMESTAMP, t.DECOY_RESULT_SET_ID, t.MSI_SEARCH_ID))
   

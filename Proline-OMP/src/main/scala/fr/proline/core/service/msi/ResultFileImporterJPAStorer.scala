@@ -138,12 +138,12 @@ class ResultFileImporterJPAStorer(
       if (StringUtils.isEmpty(targetRs.name))
         targetRs.name = msiSearch.title
 
-      if (targetRs.msiSearch != null && targetRs.msiSearch.peakList.peaklistSoftware == null) {
+      if (targetRs.msiSearch.isDefined && targetRs.msiSearch.get.peakList.peaklistSoftware == null) {
         //TODO : Define how to get this information !
         val peaklistSoftware = _getOrCreatePeaklistSoftware(peaklistSoftwareId)//PeaklistSoftware("Default_PL", "0.1", udsDbContext)
         // FIXME: implement the method _getOrCreatePeaklistSoftware instead
         if (peaklistSoftware.id < 0) peaklistSoftware.id = peaklistSoftwareId
-        targetRs.msiSearch.peakList.peaklistSoftware = peaklistSoftware
+        targetRs.msiSearch.get.peakList.peaklistSoftware = peaklistSoftware
       }
 
       def storeDecoyRs(decoyRs: ResultSet) {
@@ -156,7 +156,7 @@ class ResultFileImporterJPAStorer(
         targetRs.decoyResultSet = Some(decoyRs)
       }
       
-      val ssProps = targetRs.msiSearch.searchSettings.properties.getOrElse(new SearchSettingsProperties)
+      val ssProps = targetRs.msiSearch.get.searchSettings.properties.getOrElse(new SearchSettingsProperties)
 
       // Load and store decoy result set if it exists
       if (resultFile.hasDecoyResultSet) {
@@ -165,7 +165,7 @@ class ResultFileImporterJPAStorer(
         // Update search settings properties
         // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
         ssProps.setTargetDecoyMode(Some(TargetDecoyModes.SEPARATED.toString))
-        targetRs.msiSearch.searchSettings.properties = Some(ssProps)
+        targetRs.msiSearch.get.searchSettings.properties = Some(ssProps)
         >>>
       } // Else if a regex has been passed to detect decoy protein matches		  
       else if (acDecoyRegex != None) {
@@ -177,7 +177,7 @@ class ResultFileImporterJPAStorer(
         
         // Update search settings properties
         ssProps.setTargetDecoyMode(Some(TargetDecoyModes.CONCATENATED.toString))
-        targetRs.msiSearch.searchSettings.properties = Some(ssProps)
+        targetRs.msiSearch.get.searchSettings.properties = Some(ssProps)
         
         >>>
       } else

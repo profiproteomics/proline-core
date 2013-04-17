@@ -28,7 +28,7 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with Logging {
   def getCorrectBasicTDAnalyzer() = {
     val prop = new SearchSettingsProperties()
     prop.targetDecoyMode = Some("CONCATENATED")
-    rs.msiSearch.searchSettings.properties = Some(prop)
+    rs.msiSearch.get.searchSettings.properties = Some(prop)
 
     val tdAnalyzer = BuildTDAnalyzer(false, rs, None)
     assertNotNull(tdAnalyzer)
@@ -46,7 +46,7 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with Logging {
   def getCorrectBasicTDAnalyzerWSorter() = {
     val prop = new SearchSettingsProperties()
     prop.targetDecoyMode = Some("CONCATENATED")
-    rs.msiSearch.searchSettings.properties = Some(prop)
+    rs.msiSearch.get.searchSettings.properties = Some(prop)
 
     val sorter: IPeptideMatchSorter = new ScorePSMFilter()
     val tdAnalyzer = BuildTDAnalyzer(false, rs, Some(sorter))

@@ -131,9 +131,10 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
     }
 
     // Save Spectra and Queries information (MSISearch should  be defined)
-    val msiSearch = resultSet.msiSearch
+    val msiSearchOpt = resultSet.msiSearch
 
-    if (msiSearch != null) {
+    for( msiSearch <- msiSearchOpt ) {
+      
       // Save Peaklist information
       val peakList = msiSearch.peakList
       val msiPeaklistId = storePeaklist(peakList, storerContext)
