@@ -97,7 +97,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     })
   }
   
-  def getRunIdForRawFileName( rawFileName: String ): Option[Int] = {    
+  def getScanSequenceIdForRawFileName( rawFileName: String ): Option[Int] = {    
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>    
       ezDBC.selectHeadOption( "SELECT id FROM run WHERE raw_file_name = ?", rawFileName ) { _.nextInt }    
     })

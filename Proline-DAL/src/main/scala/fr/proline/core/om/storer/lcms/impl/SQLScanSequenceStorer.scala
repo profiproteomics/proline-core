@@ -6,42 +6,34 @@ import fr.profi.jdbc.easy._
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCWork
-import fr.proline.core.om.model.lcms.LcMsRun
-import fr.proline.core.om.storer.lcms.{IRunStorer,IScanSequenceStorer}
+import fr.proline.core.dal.tables.lcms.{ LcmsDbRunTable, LcmsDbScanTable }
+import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.om.model.lcms.LcMsScanSequence
+import fr.proline.core.om.storer.lcms.IScanSequenceStorer
 
-class SQLRunStorer(
-  val udsDbCtx: DatabaseConnectionContext,
-  val scanSeqStorer: Option[IScanSequenceStorer]
-) extends IRunStorer {
+class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanSequenceStorer {
 
-  def storeLcMsRun(run: LcMsRun) = {
-    
-    if( scanSeqStorer.isDefined && run.scanSequence.isDefined ) {
-      scanSeqStorer.get.storeScanSequence(run.scanSequence.get)
-    }
-    
-    // TODO: store data in the UDSdb run table
+  def storeScanSequence(scanSeq: LcMsScanSequence) = {
 
-    /*
-    DoJDBCWork.withEzDBC(udsDbCtx, { ezDBC =>
+    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
       var runId = 0
       ezDBC.executePrepared(LcmsDbRunTable.mkInsertQuery,true) { statement =>
         statement.executeWith(
           Option.empty[Int],
-          run.rawFileName,
-          run.minIntensity,
-          run.maxIntensity,
-          run.ms1ScansCount,
-          run.ms2ScansCount,
-          run.properties.map( generate(_) ),
-          run.rawFile.instrument.map( _.id )
+          scanSeq.rawFileName,
+          scanSeq.minIntensity,
+          scanSeq.maxIntensity,
+          scanSeq.ms1ScansCount,
+          scanSeq.ms2ScansCount,
+          scanSeq.properties.map( generate(_) ),
+          scanSeq.instrumentId
         )
         runId = statement.generatedInt
       }
   
       ezDBC.executePrepared(LcmsDbScanTable.mkInsertQuery,true) { statement =>
-        run.scans.foreach { scan =>
+        scanSeq.scans.foreach { scan =>
           statement.executeWith(
             Option.empty[Int],
             scan.initialId,
@@ -59,7 +51,7 @@ class SQLRunStorer(
         }
       }
     
-    })*/
+    })
 
   }
 

@@ -2,11 +2,7 @@ package fr.proline.core.om.storer.lcms
 
 import java.io.File
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.lcms.Feature
-import fr.proline.core.om.model.lcms.ILcMsMap
-import fr.proline.core.om.model.lcms.LcMsRun
-import fr.proline.core.om.model.lcms.ProcessedMap
-import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.storer.lcms.impl._
 import fr.proline.repository.DriverType
@@ -15,12 +11,16 @@ trait IRunMapStorer {
   
   def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit
   
- }
+}
 
+trait IScanSequenceStorer {
+  
+  def storeScanSequence( scanSeq: LcMsScanSequence ) : Unit
+}
 
 trait IRunStorer {
   
-  def storeLcmsRun( run: LcMsRun ) : Unit
+  def storeLcMsRun( run: LcMsRun ) : Unit
 }
 
 /** A factory object for implementations of the IRunMapStorer trait */

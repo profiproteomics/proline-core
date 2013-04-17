@@ -2,6 +2,7 @@ package fr.proline.core.om.provider.lcms.impl
 
 import fr.profi.jdbc.SQLQueryExecution
 
+/*
 class RunLoader( val sqlExec: SQLQueryExecution )  {
   
   import scala.collection.mutable.ArrayBuffer
@@ -101,4 +102,4 @@ class RunLoader( val sqlExec: SQLQueryExecution )  {
                  )
   }
 
-}
+}*/
