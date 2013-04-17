@@ -1,16 +1,26 @@
 package fr.proline.core.service.msq
 
-import com.weiglewilczek.slf4s.Logging
+import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConversions.setAsJavaSet
+import scala.collection.JavaConverters.asJavaCollectionConverter
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
+
 import com.codahale.jerkson.Json.generate
-import collection.mutable.{ HashMap, HashSet }
-import collection.JavaConversions.{ collectionAsScalaIterable, setAsJavaSet }
-import collection.JavaConverters.{ asJavaCollectionConverter }
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.ResultSummaryMerger
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.orm.msi.{
   MasterQuantPeptideIon => MsiMasterQuantPepIon,
   MasterQuantComponent => MsiMasterQuantComponent,
@@ -32,81 +42,69 @@ import fr.proline.core.orm.msi.{
   ResultSummary => MsiResultSummary,
   SequenceMatch => MsiSequenceMatch
 }
+import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.repository.IDatabaseConnector
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.core.dal.BuildDbConnectionContext
-import fr.proline.core.om.model.msq.MasterQuantPeptide
-import fr.proline.core.om.model.msq.MasterQuantProteinSet
-import fr.proline.core.om.model.msq.QuantProteinSet
-import fr.proline.core.om.model.msq.QuantPeptide
-import fr.proline.core.om.model.msq.QuantPeptideIon
-import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 
-// TODO: rename into MXQuantifier
+// TODO: rename into abstract class AbstractMasterQuantChannelQuantifier and move to impl folder
 trait IQuantifier extends Logging {
 
   // Required fields
-  val dbManager: IDataStoreConnectorFactory
+  val executionContext: IExecutionContext
   val udsMasterQuantChannel: MasterQuantitationChannel
 
   // Instantiated fields
-  val projectId = udsMasterQuantChannel.getDataset.getProject.getId
-  val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  //val msiDbCtx = new DatabaseConnectionContext(msiDbConnector)
-  val msiEm = msiDbConnector.getEntityManagerFactory().createEntityManager()
+  protected val udsEm = executionContext.getUDSDbConnectionContext.getEntityManager
+  //protected val projectId = udsMasterQuantChannel.getDataset.getProject.getId
+  //protected val msiDbConnector = dsConnectorFactory.getMsiDbConnector(projectId)
+  protected val msiDbCtx = executionContext.getMSIDbConnectionContext
+  protected val msiEm = msiDbCtx.getEntityManager
+  //protected val psDbConnector = dsConnectorFactory.getPsDbConnector
+  protected val psDbCtx = executionContext.getPSDbConnectionContext
 
-  protected val msiSqlCtx = BuildDbConnectionContext[SQLConnectionContext](msiDbConnector) // SQL Context
-  //ContextFactory.buildDbConnectionContext(msiDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
+  protected val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
+  protected val quantChannelIds = udsQuantChannels.map { _.getId } toArray
 
-  val psDbConnector = dbManager.getPsDbConnector
-  //val psDbCtx = new DatabaseConnectionContext(psDbConnector)
-
-  protected val psSqlCtx = BuildDbConnectionContext[SQLConnectionContext](psDbConnector) // SQL Context
-  //ContextFactory.buildDbConnectionContext(psDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
-
-  val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
-  val quantChannelIds = udsQuantChannels.map { _.getId } toArray
-
-  val rsmIds = udsQuantChannels.map { udsQuantChannel =>
+  protected val rsmIds = udsQuantChannels.map { udsQuantChannel =>
     val qcId = udsQuantChannel.getId()
     val identRsmId = udsQuantChannel.getIdentResultSummaryId
-    require(identRsmId != 0,
-      "the quant_channel with id='" + qcId + "' is not assocciated with an identification result summary")
+    require(identRsmId != 0, "the quant_channel with id='" + qcId + "' is not assocciated with an identification result summary")
 
     identRsmId.intValue
 
   } toSeq
 
-  assert(rsmIds.length > 0, "result sets have to be validated first")
+  require(rsmIds.length > 0, "result sets have to be validated first")
 
-  val identRsIdByRsmId = {
-    msiSqlCtx.ezDBC.select("SELECT id, result_set_id FROM result_summary WHERE id IN(" + rsmIds.mkString(",") + ")") { r =>
-      (r.nextInt -> r.nextInt)
-    } toMap
+  protected val identRsIdByRsmId = {    
+    DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+      
+      val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
+        List(t.ID,t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN("~ rsmIds.mkString(",") ~")"
+      )
+      msiEzDBC.select(sqlQuery) { r => r.nextInt -> r.nextInt } toMap
+    })
   }
 
-  val msiIdentResultSets = {
+  protected val msiIdentResultSets = {    
     val identRsIds = identRsIdByRsmId.values.asJavaCollection
     msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet WHERE id IN (:ids)",
       classOf[fr.proline.core.orm.msi.ResultSet])
       .setParameter("ids", identRsIds).getResultList().toList
   }
 
-  val identResultSummaries = {
+  protected val identResultSummaries = {
 
     // Load the result summaries corresponding to the quant channels
     this.logger.info("loading result summaries...")
 
     // Instantiate a RSM provider
-    val rsmProvider = new SQLResultSummaryProvider(msiSqlCtx, psSqlCtx)
+    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx)
     rsmProvider.getResultSummaries(rsmIds, true)
   }
 
-  val msiDbHelper = new MsiDbHelper(msiSqlCtx)
+  protected val msiDbHelper = new MsiDbHelper(msiDbCtx)
 
-  val seqLengthByProtId = {
+  protected val seqLengthByProtId = {
     val tmpIdentProteinIdSet = new collection.mutable.HashSet[Int]()
 
     for (identRSM <- identResultSummaries) {
@@ -119,14 +117,14 @@ trait IQuantifier extends Logging {
     this.msiDbHelper.getSeqLengthByBioSeqId(tmpIdentProteinIdSet.toList)
   }
 
-  val mergedResultSummary = {
+  protected val mergedResultSummary = {
     // Merge result summaries
     val resultSummaryMerger = new ResultSummaryMerger()
     this.logger.info("merging result summaries...")
     resultSummaryMerger.mergeResultSummaries(this.identResultSummaries, this.seqLengthByProtId)
   }
 
-  lazy val curSQLTime = new java.sql.Timestamp(new java.util.Date().getTime)
+  protected lazy val curSQLTime = new java.sql.Timestamp(new java.util.Date().getTime)
 
   private var _quantified = false
 
@@ -146,7 +144,7 @@ trait IQuantifier extends Logging {
     this.quantifyMasterChannel()
 
     // Close entity managers
-    this.msiEm.close()
+    //this.msiEm.close()
 
     this._quantified = true
     this.logger.info("fraction has been quantified !")
@@ -394,8 +392,6 @@ trait IQuantifier extends Logging {
         masterPeptideSet.id = masterPeptideSetId
 
         // Link master peptide set to master peptide instances
-
-        masterPeptideSet.items
         for (samesetItem <- samesetItems) {
           val tmpPepInstance = samesetItem.peptideInstance
           val msiMasterPepInst = msiMasterPepInstById(tmpPepInstance.id)
@@ -528,6 +524,9 @@ trait IQuantifier extends Logging {
       // Link master quant peptide to the corresponding master quant component
       msiMasterPepInstAsOpt.get.setMasterQuantComponentId(msiMQC.getId)
       this.msiEm.persist(msiMasterPepInstAsOpt.get)
+      
+      // Update master quant peptide id
+      mqPep.id = msiMQC.getId
     }
 
     for (mqPepIon <- mqPep.masterQuantPeptideIons) {
@@ -565,7 +564,7 @@ trait IQuantifier extends Logging {
 
     if (mqPepIon.properties != None) msiMQPepIon.setSerializedProperties(generate(mqPepIon.properties))
     if (mqPep.peptideInstance != None) {
-      msiMQPepIon.setPeptideInstanceId(mqPep.id)
+      msiMQPepIon.setPeptideInstanceId(mqPep.peptideInstance.get.id)
       msiMQPepIon.setPeptideId(mqPep.getPeptideId.get)
     }
     if (mqPepIon.lcmsFeatureId != None) msiMQPepIon.setLcmsFeatureId(mqPepIon.lcmsFeatureId.get)
@@ -573,6 +572,9 @@ trait IQuantifier extends Logging {
     if (mqPepIon.unmodifiedPeptideIonId != None) msiMQPepIon.setUnmodifiedPeptideIonId(mqPepIon.unmodifiedPeptideIonId.get)
 
     this.msiEm.persist(msiMQPepIon)
+    
+    // Update master quant peptide ion id
+    mqPepIon.id = msiMQPepIon.getId
   }
 
   protected def storeMasterQuantProteinSet(
@@ -594,7 +596,6 @@ trait IQuantifier extends Logging {
 
     // Link master quant protein set to the corresponding master quant component
     msiMasterProtSet.setMasterQuantComponentId(msiMQC.getId)
-
   }
 
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)

@@ -78,7 +78,7 @@ case class mzFeature(
   @BeanProperty var overlappingFeature: Option[mzFeature] = None,
   @BeanProperty var isotopicPatterns: Option[Array[mzIsotopicPattern]] = None) {
 
-  def toFeature(lcmsRun: LcMsRun, id: Int, ms2Events: Array[Int]): Feature = {
+  def toFeature(lcmsScanSeq: LcMsScanSequence, id: Int, ms2Events: Array[Int]): Feature = {
 
     return Feature(id = id,
       moz = moz,
@@ -90,11 +90,11 @@ case class mzFeature(
       ms2Count = ms2Count,
       isOverlapping = if (overlappingFeature != None) true else false,
       isotopicPatterns = if (isotopicPatterns != None) Some(Array[IsotopicPattern](apexIp.toIsotopicPattern) ++ isotopicPatterns.get.map(ip => ip.toIsotopicPattern)) else Some(Array[IsotopicPattern](apexIp.toIsotopicPattern)),
-      overlappingFeatures = if (overlappingFeature.get != None) Array[Feature](overlappingFeature.get.toFeature(lcmsRun, id, ms2Events)) else Array[Feature](),
+      overlappingFeatures = if (overlappingFeature.get != None) Array[Feature](overlappingFeature.get.toFeature(lcmsScanSeq, id, ms2Events)) else Array[Feature](),
       relations = FeatureRelations(ms2EventIds = ms2Events,
-        firstScanInitialId = lcmsRun.scanById.get(firstScan).get.initialId,
-        lastScanInitialId = lcmsRun.scanById.get(lastScan).get.initialId,
-        apexScanInitialId = lcmsRun.scanById.get(apexScan).get.initialId))
+        firstScanInitialId = lcmsScanSeq.scanById.get(firstScan).get.initialId,
+        lastScanInitialId = lcmsScanSeq.scanById.get(lastScan).get.initialId,
+        apexScanInitialId = lcmsScanSeq.scanById.get(apexScan).get.initialId))
 
   }
 }
@@ -105,7 +105,7 @@ object mzTSVParser {
 
 class mzTSVParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
 
     val lineIterator = io.Source.fromFile(filePath).getLines()
     val columnNames = lineIterator.next.stripLineEnd.split(mzTSVParser.sepChar)
@@ -135,7 +135,7 @@ class mzTSVParser extends ILcmsMapFileParser {
       val overlapCorrelation = Some(data("overlap_correlation").toFloat)
       val overlapFactor = Some(data("overlap_factor").toFloat)
 
-      val ms2EventIds = getMs2Events(lcmsRun, lcmsRun.getScanAtTime(apexScanId, 2).initialId)
+      val ms2EventIds = getMs2Events(lcmsScanSeq, lcmsScanSeq.getScanAtTime(apexScanId, 2).initialId)
       val featureId = Feature.generateNewId()
 
       val feature = Feature(id = featureId,
@@ -148,11 +148,11 @@ class mzTSVParser extends ILcmsMapFileParser {
         ms2Count = ms2Count,
         isOverlapping = isOverlapping,
         isotopicPatterns = Some(parse[Array[mzIsotopicPattern]](isotopicPatterns).map(ip => ip.toIsotopicPattern)),
-        overlappingFeatures = Array[Feature](parse[mzFeature](overlappingFeatures).toFeature(lcmsRun, featureId, ms2EventIds)),
+        overlappingFeatures = Array[Feature](parse[mzFeature](overlappingFeatures).toFeature(lcmsScanSeq, featureId, ms2EventIds)),
         relations = FeatureRelations(ms2EventIds,
-          firstScanInitialId = lcmsRun.scanById.get(firstScanId).get.initialId,
-          lastScanInitialId = lcmsRun.scanById.get(lastScanId).get.initialId,
-          apexScanInitialId = lcmsRun.scanById.get(apexScanId).get.initialId))
+          firstScanInitialId = lcmsScanSeq.scanById.get(firstScanId).get.initialId,
+          lastScanInitialId = lcmsScanSeq.scanById.get(lastScanId).get.initialId,
+          apexScanInitialId = lcmsScanSeq.scanById.get(apexScanId).get.initialId))
 
       feature.properties = Some(FeatureProperties(peakelsCount = peakelsCount,
         peakelsRatios = peakelsRatios,
@@ -164,12 +164,12 @@ class mzTSVParser extends ILcmsMapFileParser {
 
     lineIterator.map(s => treatOneLine(columnNames.zip((s.split(mzTSVParser.sepChar))) toMap))
 
-    val runMap = new RunMap(id = lcmsRun.id,
-      name = lcmsRun.rawFileName,
+    val runMap = new RunMap(id = lcmsScanSeq.id,
+      name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,
-      runId = lcmsRun.id,
+      runId = lcmsScanSeq.id,
       peakPickingSoftware = new PeakPickingSoftware(1,
         "MzDbAccess",
         "0.1",

@@ -9,26 +9,26 @@ trait ExtraParameters {}
 
 trait ILcmsMapFileParser {
   
-  import fr.proline.core.om.model.lcms.LcMsRun
+  import fr.proline.core.om.model.lcms.LcMsScanSequence
   
   
-  def getRunMap( filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters ) : Option[RunMap]
+  def getRunMap( filePath: String, lcmsRun: LcMsScanSequence, extraParams: ExtraParameters ) : Option[RunMap]
   
-  def getMs2Events(lcmsRun: LcMsRun, idx:Int) : Array[Int] = {
+  def getMs2Events(lcmsScanSeq: LcMsScanSequence, idx:Int) : Array[Int] = {
     /**
      * from the id of the ms2 scan taken at the apex, find all consecutive ms2
      * assume scans ordering same when the were acquired 
      */
     var ms2IdEvents = new ArrayBuffer[Int]
     var idxTmp = idx - 1
-      while (lcmsRun.scans(idxTmp).msLevel == 2) {
-        ms2IdEvents += lcmsRun.scans(idxTmp).initialId
+      while (lcmsScanSeq.scans(idxTmp).msLevel == 2) {
+        ms2IdEvents += lcmsScanSeq.scans(idxTmp).initialId
         idxTmp -= 1
       }
       //go the right
       idxTmp = idx + 1
-      while (lcmsRun.scans(idxTmp).msLevel == 2) {
-        ms2IdEvents += lcmsRun.scans(idxTmp).initialId
+      while (lcmsScanSeq.scans(idxTmp).msLevel == 2) {
+        ms2IdEvents += lcmsScanSeq.scans(idxTmp).initialId
         idxTmp += 1
       }
       ms2IdEvents.sortBy(i => i)

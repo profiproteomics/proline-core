@@ -1,25 +1,52 @@
 package fr.proline.core.service.msq
 
 import fr.proline.api.service.IService
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.ContextFactory
 import fr.proline.core.orm.uds.MasterQuantitationChannel
+import fr.proline.core.service.msq.impl.LabelFreeQuantConfig
+import fr.proline.core.service.msq.impl.Ms2DrivenLabelFreeFeatureQuantifier
+import fr.proline.core.service.msq.impl.SpectralCountQuantifier
 import fr.proline.repository.IDataStoreConnectorFactory
 
-class QuantifyMasterQuantChannel( dbManager: IDataStoreConnectorFactory, masterQuantChannelID: Int ) extends IService {
+class QuantifyMasterQuantChannel(
+  executionContext: IExecutionContext,
+  masterQuantChannelID: Int,
+  quantConfig: AnyRef
+) extends IService {
+  
+  private var _hasInitiatedExecContext: Boolean = false
+
+  // Secondary constructor
+  def this(
+    dsFactory: IDataStoreConnectorFactory,
+    projectId: Int,
+    masterQuantChannelID: Int,
+    quantConfig: AnyRef
+  ) {
+    this(
+      ContextFactory.buildExecutionContext(dsFactory, projectId, true), // Force JPA context
+      masterQuantChannelID: Int,
+      quantConfig: AnyRef
+    )
+    _hasInitiatedExecContext = true
+  }
   
   def runService() = {
     
-    // Create entity manager
-    val udsEM = dbManager.getUdsDbConnector.getEntityManagerFactory.createEntityManager()
+    // Get entity manager
+    val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
     
     // Retrieve the quantitation fraction
     val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelID)    
     require( udsMasterQuantChannel != null,
-             "undefined quantitation fraction with id=" + udsMasterQuantChannel )
+             "undefined master quant channel with id=" + udsMasterQuantChannel )
     
-    MasterQuantChannelQuantifier( dbManager, udsEM, udsMasterQuantChannel ).quantify()
+    MasterQuantChannelQuantifier( executionContext, udsMasterQuantChannel, quantConfig ).quantify()
     
-    // Close entity manager
-    udsEM.close()
+    // Close execution context if initiated locally
+    if( this._hasInitiatedExecContext )
+      executionContext.closeAll()
     
     true
   }
@@ -28,8 +55,8 @@ class QuantifyMasterQuantChannel( dbManager: IDataStoreConnectorFactory, masterQ
 
 
 object AbundanceUnit extends Enumeration {
-  val FEATURE = Value("feature")
-  val REPORTER_ION = Value("reporter_ion")  
+  val FEATURE_INTENSITY = Value("feature_intensity")
+  val REPORTER_ION_INTENSITY = Value("reporter_ion_intensity")
   val SPECTRAL_COUNTS = Value("spectral_counts")
 }
 
@@ -45,9 +72,11 @@ object MasterQuantChannelQuantifier {
   import javax.persistence.EntityManager
   import fr.proline.core.service.msq.impl._
   
-  def apply( dbManager: IDataStoreConnectorFactory,
-             udsEm: EntityManager,
-             udsMasterQuantChannel: MasterQuantitationChannel ): IQuantifier = {
+  def apply(
+    executionContext: IExecutionContext,
+    udsMasterQuantChannel: MasterQuantitationChannel,
+    quantConfig: AnyRef
+  ): IQuantifier = {
     
     val udsQuantMethod = udsMasterQuantChannel.getDataset.getMethod
     val quantMethodType = udsQuantMethod.getType
@@ -56,7 +85,7 @@ object MasterQuantChannelQuantifier {
     var masterQuantChannelQuantifier: IQuantifier = null
     
     // TODO: create some enumerations
-    if( abundanceUnit == AbundanceUnit.REPORTER_ION.toString() ) {      
+    if( abundanceUnit == AbundanceUnit.REPORTER_ION_INTENSITY.toString() ) {
     
     /*require Pairs::Msq::Module::Quantifier::ReporterIons
     fractionQuantifier = new Pairs::Msq::Module::Quantifier::ReporterIons(
@@ -65,17 +94,16 @@ object MasterQuantChannelQuantifier {
     
     } 
     else if( quantMethodType == QuantMethodType.LABEL_FREE.toString() ) {
-      if( abundanceUnit == AbundanceUnit.FEATURE ) {
-        masterQuantChannelQuantifier = new Ms1DrivenLabelFreeFeatureQuantifier(
-          dbManager = dbManager,
-          udsEm = udsEm,
-          udsMasterQuantChannel = udsMasterQuantChannel
+      if( abundanceUnit == AbundanceUnit.FEATURE_INTENSITY.toString() ) {
+        masterQuantChannelQuantifier = new Ms2DrivenLabelFreeFeatureQuantifier(
+          executionContext = executionContext,
+          udsMasterQuantChannel = udsMasterQuantChannel,
+          quantConfig.asInstanceOf[LabelFreeQuantConfig]
         )
       }
       else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString() ) {
         masterQuantChannelQuantifier = new SpectralCountQuantifier(
-          dbManager = dbManager,
-          udsEm = udsEm,
+          executionContext = executionContext,
           udsMasterQuantChannel = udsMasterQuantChannel
         )
       }

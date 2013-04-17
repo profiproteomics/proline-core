@@ -6,18 +6,18 @@ import scala.io.Source._
 
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.LcMsScan
+import fr.proline.core.om.model.lcms.LcMsScanSequence
 import fr.proline.core.om.model.lcms.PeakPickingSoftware
 import fr.proline.core.om.model.lcms.RawFile
 import fr.proline.core.om.model.msi.Instrument
-import fr.proline.core.om.storer.lcms.impl.SQLRunStorer
+import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
 
 /*trait String2FileConverter {
   implicit def string2File(filename:String) = new File(filename)
 }*/
 
-object ImportRun { // extends String2FileConverter
+object ImportScanSequence { // extends String2FileConverter
 
   def parseMsScans(file: File): Seq[LcMsScan] = {
     val it = fromFile(file).getLines()
@@ -40,55 +40,55 @@ object ImportRun { // extends String2FileConverter
 
   }
 
-  def buildLcMsRun(file: File, pps: PeakPickingSoftware, rawFile: RawFile): LcMsRun = {
-    this.buildLcMsRun(this.parseMsScans(file), pps, rawFile)
+  def buildScanSequence(file: File, pps: PeakPickingSoftware, rawFile: RawFile): LcMsScanSequence = {
+    this.buildScanSequence(this.parseMsScans(file), pps, rawFile)
   }
 
-  def buildLcMsRun(scans: Seq[LcMsScan], pps: PeakPickingSoftware, rawFile: RawFile): LcMsRun = {
+  def buildScanSequence(scans: Seq[LcMsScan], pps: PeakPickingSoftware, rawFile: RawFile): LcMsScanSequence = {
 
     val ms1Count = scans.filter(_.msLevel == 1).length
     val ms2Count = scans.length - ms1Count
 
-    this.buildLcMsRun(scans, pps, rawFile, ms1Count, ms2Count, 0., 0.0)
+    this.buildScanSequence(scans, pps, rawFile, ms1Count, ms2Count, 0., 0.0)
   }
 
-  def buildLcMsRun(
+  def buildScanSequence(
     scans: Seq[LcMsScan],
     pps: PeakPickingSoftware,
     rawFile: RawFile,
     ms1Count: Int,
     ms2Count: Int,
     minIntensity: Double = 0.0,
-    maxIntensity: Double = 0.0): LcMsRun = {
+    maxIntensity: Double = 0.0): LcMsScanSequence = {
 
-    LcMsRun(
-      id = LcMsRun.generateNewId(),
+    LcMsScanSequence(
+      id = LcMsScanSequence.generateNewId(),
       rawFileName = rawFile.name,
       //instrumentName = rawfile.instrument.name,
       minIntensity = 0.,
       maxIntensity = 0.,
       ms1ScansCount = ms1Count,
       ms2ScansCount = ms2Count,
-      rawFile = rawFile,
+      instrumentId = rawFile.instrument.map( _.id ),
       scans = scans.toArray
     )
   }
 }
 
-class ImportRun(lcmsDbCtx: DatabaseConnectionContext, lcmsRun: LcMsRun) extends IService {
+class ImportScanSequence(lcmsDbCtx: DatabaseConnectionContext, lcmsScanSeq: LcMsScanSequence) extends IService {
 
   def this(lcmsDbCtx: DatabaseConnectionContext, scans: Seq[LcMsScan], pps: PeakPickingSoftware, rawfile: RawFile) {
-    this(lcmsDbCtx, ImportRun.buildLcMsRun(scans, pps, rawfile))
+    this(lcmsDbCtx, ImportScanSequence.buildScanSequence(scans, pps, rawfile))
   }
 
   def this(lcmsDbCtx: DatabaseConnectionContext, file: File, pps: PeakPickingSoftware, rawfile: RawFile) {
-    this(lcmsDbCtx, ImportRun.buildLcMsRun(file, pps, rawfile))
+    this(lcmsDbCtx, ImportScanSequence.buildScanSequence(file, pps, rawfile))
   }
 
   def runService(): Boolean = {
     
-    val storer = new SQLRunStorer(lcmsDbCtx)
-    storer.storeLcmsRun(lcmsRun)
+    val storer = new SQLScanSequenceStorer(lcmsDbCtx)
+    storer.storeScanSequence(lcmsScanSeq)
     
     true
   }

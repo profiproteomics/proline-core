@@ -1,24 +1,18 @@
 package fr.proline.core.parser.lcms.impl
 
 import java.util.Date
-
 import scala.xml.XML
 import scala.xml.Elem
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.HashMap
 
-import fr.proline.core.om.model.lcms.Peak
-import fr.proline.core.om.model.lcms.IsotopicPattern
-import fr.proline.core.om.model.lcms.FeatureRelations
-import fr.proline.core.om.model.lcms.PeakPickingSoftware
-import fr.proline.core.om.model.lcms.LcMsRun
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
-import fr.proline.core.om.model.lcms.RunMap
-import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.parser.lcms.ExtraParameters
 
 class SuperHirnMapParser extends ILcmsMapFileParser {
-  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  
+  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
     val node = XML.load(io.Source.fromFile(filePath).getLines.toString)
 
     val features = ArrayBuffer[Feature]()
@@ -32,9 +26,9 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
       val intensity = (coord \ "@intensity").toString.toFloat
       val charge = (coord \ "@charge").toString.toInt
 
-      val firstScan = lcmsRun.scanById((coord \ "scan_range" \ "@min").toString().toInt)
-      val lastScan = lcmsRun.scanById((coord \ "scan_range" \ "@max").toString.toInt)
-      val apexScan = lcmsRun.getScanAtTime(elutionTime, 1)
+      val firstScan = lcmsScanSeq.scanById((coord \ "scan_range" \ "@min").toString().toInt)
+      val lastScan = lcmsScanSeq.scanById((coord \ "scan_range" \ "@max").toString.toInt)
+      val apexScan = lcmsScanSeq.getScanAtTime(elutionTime, 1)
 
       val ip = new IsotopicPattern(
         moz = mz,
@@ -43,7 +37,7 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
         scanInitialId = apexScan.initialId
       ) //take the first scan for id ? or apex ?
 
-      val ms2EventIds = getMs2Events(lcmsRun, lcmsRun.getScanAtTime(elutionTime, 2).initialId)
+      val ms2EventIds = getMs2Events(lcmsScanSeq, lcmsScanSeq.getScanAtTime(elutionTime, 2).initialId)
 
       val feature = Feature(id = Feature.generateNewId(),
         moz = mz,
@@ -67,12 +61,12 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
 
     }
     val runMap = new RunMap(
-      id = lcmsRun.id,
-      name = lcmsRun.rawFileName,
+      id = lcmsScanSeq.id,
+      name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,
-      runId = lcmsRun.id,
+      runId = lcmsScanSeq.id,
       peakPickingSoftware = new PeakPickingSoftware(1,
         "SuperHirn",
         "unknown",

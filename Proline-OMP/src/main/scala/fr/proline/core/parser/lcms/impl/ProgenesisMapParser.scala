@@ -4,13 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.util.control.Breaks._
 import java.util.Date
-import fr.proline.core.om.model.lcms.LcMsRun
-import fr.proline.core.om.model.lcms.Feature
-import fr.proline.core.om.model.lcms.IsotopicPattern
-import fr.proline.core.om.model.lcms.Peak
-import fr.proline.core.om.model.lcms.FeatureRelations
-import fr.proline.core.om.model.lcms.RunMap
-import fr.proline.core.om.model.lcms.PeakPickingSoftware
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.parser.lcms.ExtraParameters
 
@@ -28,7 +22,7 @@ object ProgenesisMapParser {
 
 class ProgenesisMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
     val lines = io.Source.fromFile(filePath).getLines();
 
     //skip the first 2 lines
@@ -40,7 +34,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     //the seven first columns are reserved  
     val sampleNames = columnNames.slice(7, columnNames.length) //for (k <- 7 until columnNames.length) yield columnNames(k)
 
-    val (found, mapName) = format(sampleNames, lcmsRun.rawFileName)
+    val (found, mapName) = format(sampleNames, lcmsScanSeq.rawFileName)
     if (!found)
       throw new Exception("requested file not found")
 
@@ -54,14 +48,14 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       val time = rowValueMap("Retention time (min)").toFloat * 60f
       val timeSpan = rowValueMap("Retention time window (min)").toFloat * 60f
       val (t1, t2) = (time - timeSpan / 2f, time + timeSpan / 2f)
-      val firstScanInitialId = lcmsRun.getScanAtTime(t1, 1).initialId
-      val lastScanInitialId = lcmsRun.getScanAtTime(t2, 1).initialId
+      val firstScanInitialId = lcmsScanSeq.getScanAtTime(t1, 1).initialId
+      val lastScanInitialId = lcmsScanSeq.getScanAtTime(t2, 1).initialId
 
-      val scanms1 = lcmsRun.getScanAtTime(time, 1)
-      val scanms2 = lcmsRun.getScanAtTime(time, 2)
+      val scanms1 = lcmsScanSeq.getScanAtTime(time, 1)
+      val scanms2 = lcmsScanSeq.getScanAtTime(time, 2)
 
-      val idx = lcmsRun.scans.indexOf(scanms2)
-      val ms2IdEvents = getMs2Events(lcmsRun, idx)
+      val idx = lcmsScanSeq.scans.indexOf(scanms2)
+      val ms2IdEvents = getMs2Events(lcmsScanSeq, idx)
 
       //dont know what to do for ID...
       val biggestIp = new IsotopicPattern( //id = id,
@@ -82,7 +76,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
         charge = rowValueMap("Charge").toInt,
         elutionTime = time,
         qualityScore = Double.NaN,
-        ms1Count = lcmsRun.scanById(lastScanInitialId).cycle - scanms1.cycle + 1, //number of ms1
+        ms1Count = lcmsScanSeq.scanById(lastScanInitialId).cycle - scanms1.cycle + 1, //number of ms1
         ms2Count = ms2IdEvents.length, //give the number of ms2
         isOverlapping = false,
         isotopicPatterns = Some(Array[IsotopicPattern](biggestIp)),
@@ -92,12 +86,12 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       features += feature
     }
 
-    val runMap = new RunMap(id = lcmsRun.id,
-      name = lcmsRun.rawFileName,
+    val runMap = new RunMap(id = lcmsScanSeq.id,
+      name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,
-      runId = lcmsRun.id,
+      runId = lcmsScanSeq.id,
       peakPickingSoftware = new PeakPickingSoftware(1,
         "Progenesis",
         "unknown",
@@ -106,7 +100,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     Some(runMap)
   }
 
-  def getAllRunMap(filePath: String, lcmsRunMaps: Array[LcMsRun]) {
+  def getAllRunMap(filePath: String, lcmsScanSeqs: Array[LcMsScanSequence]) {
     val lines = io.Source.fromFile(filePath).getLines();
 
     //skip the first 2 lines
@@ -118,17 +112,17 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     //the seven first columns are reserved  
     val sampleNames = (for (k <- 7 until columnNames.length - 1) yield columnNames(k))
 
-    if (sampleNames.length != lcmsRunMaps.length)
+    if (sampleNames.length != lcmsScanSeqs.length)
       throw new Exception("Errors too much or less lcmsRun provided")
 
     //order mapping namefile runMaps
-    var nameFileRunMap = new HashMap[String, LcMsRun]
+    var nameFileRunMap = new HashMap[String, LcMsScanSequence]
 
     for (namefile <- sampleNames)
       breakable {
-        for (lcmsRun <- lcmsRunMaps) {
-          if (lcmsRun.rawFileName.contains(namefile)) {
-            nameFileRunMap += (namefile -> lcmsRun)
+        for (lcmsScanSeq <- lcmsScanSeqs) {
+          if (lcmsScanSeq.rawFileName.contains(namefile)) {
+            nameFileRunMap += (namefile -> lcmsScanSeq)
             break
           }
         }

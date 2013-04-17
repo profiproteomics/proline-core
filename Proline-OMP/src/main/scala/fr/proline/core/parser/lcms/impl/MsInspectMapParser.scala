@@ -6,7 +6,7 @@ import java.util.Date
 import scala.collection.mutable.ArrayBuffer
 
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
-import fr.proline.core.om.model.lcms.LcMsRun
+import fr.proline.core.om.model.lcms.LcMsScanSequence
 import fr.proline.core.om.model.lcms.RunMap
 import fr.proline.core.om.model.lcms.{ Feature, IsotopicPattern, FeatureRelations, Peak, PeakPickingSoftware }
 import fr.proline.core.parser.lcms.ExtraParameters
@@ -17,7 +17,7 @@ object MsInspectMapParser {
 
 class MsInspectMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
     val linesIterator = io.Source.fromFile(filePath).getLines()
 
     var line = if (linesIterator.hasNext) linesIterator.next else return None
@@ -46,14 +46,14 @@ class MsInspectMapParser extends ILcmsMapFileParser {
       val firstScanId = data("scanFirst") toInt
       val lastScanId = data("scanLast") toInt
 
-      val ms2EventIds = getMs2Events(lcmsRun, scanId)
+      val ms2EventIds = getMs2Events(lcmsScanSeq, scanId)
 
       val ip = new IsotopicPattern(
         //id = id,
         moz = moz,
         intensity = intensity,
         charge = charge,
-        scanInitialId = lcmsRun.scanById(scanId).initialId
+        scanInitialId = lcmsScanSeq.scanById(scanId).initialId
       )
 
       val feature = Feature(
@@ -63,26 +63,26 @@ class MsInspectMapParser extends ILcmsMapFileParser {
         elutionTime = elutionTime,
         charge = charge,
         qualityScore = Double.NaN,
-        ms1Count = math.abs(lcmsRun.scanById(firstScanId).cycle - lcmsRun.scanById(lastScanId).cycle) + 1,
+        ms1Count = math.abs(lcmsScanSeq.scanById(firstScanId).cycle - lcmsScanSeq.scanById(lastScanId).cycle) + 1,
         ms2Count = ms2EventIds.length,
         isOverlapping = false,
         isotopicPatterns = Some(Array[IsotopicPattern](ip)),
         overlappingFeatures = Array[Feature](),
         relations = FeatureRelations(ms2EventIds = ms2EventIds,
-          firstScanInitialId = lcmsRun.scanById(firstScanId).initialId,
-          lastScanInitialId = lcmsRun.scanById(lastScanId).initialId,
-          apexScanInitialId = lcmsRun.scanById(scanId).initialId
+          firstScanInitialId = lcmsScanSeq.scanById(firstScanId).initialId,
+          lastScanInitialId = lcmsScanSeq.scanById(lastScanId).initialId,
+          apexScanInitialId = lcmsScanSeq.scanById(scanId).initialId
         )
       )
 
       features += feature
     }
-    val runMap = new RunMap(id = lcmsRun.id,
-      name = lcmsRun.rawFileName,
+    val runMap = new RunMap(id = lcmsScanSeq.id,
+      name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = timeStamp,
       features = features toArray,
-      runId = lcmsRun.id,
+      runId = lcmsScanSeq.id,
       peakPickingSoftware = new PeakPickingSoftware(1,
         "MsInspect",
         "0.1",

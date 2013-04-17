@@ -9,7 +9,7 @@ import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.lcms.LcmsDbMapSetTable
 import fr.proline.core.om.model.lcms._
-import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
+import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.core.service.lcms._
 import fr.proline.repository.IDatabaseConnector
@@ -50,9 +50,9 @@ class CreateMapSet(
     //die "can't filter data which are ! produced by mzDBaccess" if pps.name ne 'mzDBaccess' and this.hasFeatureFilters
     
     // Load runs
-    val runProvider = new SQLRunProvider( lcmsDbCtx )
+    val scanSeqProvider = new SQLScanSequenceProvider( lcmsDbCtx )
     val runIds = runMaps.map { _.runId }
-    val runs = runProvider.getRuns( runIds )
+    val runs = scanSeqProvider.getScanSequences( runIds )
     val runById = runs.map { run => run.id -> run } toMap
     
     // Check if a transaction is already initiated
@@ -78,7 +78,7 @@ class CreateMapSet(
       }
       
       // Instantiate a processed map storer
-      val processedMapStorer = ProcessedMapStorer( lcmsDbCtx )      
+      val processedMapStorer = ProcessedMapStorer( lcmsDbCtx )
       
       // Iterate over run maps to convert them in processed maps and store them
       var mapNumber = 0
@@ -126,8 +126,7 @@ class CreateMapSet(
       id = newMapSetId,
       name = mapSetName,
       creationTimestamp = curTime,
-      childMaps = processedMaps.toArray,
-      alnReferenceMapId = alnRefMapId
+      childMaps = processedMaps.toArray
     )
     
     true

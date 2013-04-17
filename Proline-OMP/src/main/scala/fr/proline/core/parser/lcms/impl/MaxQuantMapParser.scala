@@ -4,14 +4,9 @@ import java.util.Date
 
 import collection.mutable.ArrayBuffer
 
-import fr.proline.core.om.model.lcms.LcMsRun
-import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ExtraParameters
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
-import fr.proline.core.om.model.lcms.Feature
-import fr.proline.core.om.model.lcms.IsotopicPattern
-import fr.proline.core.om.model.lcms.FeatureRelations
-import fr.proline.core.om.model.lcms.PeakPickingSoftware
 
 object MaxQuantMapParser {
   var sepChar = "\t"
@@ -19,7 +14,7 @@ object MaxQuantMapParser {
 
 class MaxQuantMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
 
     def toStandardName(s: String): String = {
       //to put in ILcmsMapFileParser maybe
@@ -28,7 +23,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
       s
     }
 
-    val shortFileName = toStandardName(lcmsRun.rawFileName).split("/").last.split(".").first
+    val shortFileName = toStandardName(lcmsScanSeq.rawFileName).split("/").last.split(".").first
 
     val lines = io.Source.fromFile(filePath).getLines
 
@@ -49,11 +44,11 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
 
         val intensities = data("Intensities").split(";").map(_.toFloat).sortBy(f => f)
 
-        val apexScan = lcmsRun.getScanAtTime(elutionTime, 1)
-        val firstScan = lcmsRun.getScanAtTime(elutionTime - retentionLength / 2f, 1)
-        val lastScan = lcmsRun.getScanAtTime(elutionTime + retentionLength / 2f, 1)
+        val apexScan = lcmsScanSeq.getScanAtTime(elutionTime, 1)
+        val firstScan = lcmsScanSeq.getScanAtTime(elutionTime - retentionLength / 2f, 1)
+        val lastScan = lcmsScanSeq.getScanAtTime(elutionTime + retentionLength / 2f, 1)
 
-        val ms2EventIds = getMs2Events(lcmsRun, apexScan.initialId)
+        val ms2EventIds = getMs2Events(lcmsScanSeq, apexScan.initialId)
 
         val ips = ArrayBuffer[IsotopicPattern]()
         if (intensities.length == 0) {
@@ -100,12 +95,12 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
 
     lines.map(s => processLine(s))
 
-    val runMap = new RunMap(id = lcmsRun.id,
-      name = lcmsRun.rawFileName,
+    val runMap = new RunMap(id = lcmsScanSeq.id,
+      name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,
-      runId = lcmsRun.id,
+      runId = lcmsScanSeq.id,
       peakPickingSoftware = new PeakPickingSoftware(1,
         "MaxQuant",
         "unknown",

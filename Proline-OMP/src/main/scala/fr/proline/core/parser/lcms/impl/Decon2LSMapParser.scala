@@ -30,7 +30,7 @@ object Decon2LSMapParser {
 
 class Decon2LSMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters) = {
+  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters) = {
 
     ////// Retrieve some vars from extra hash params
     val params = extraParams.asInstanceOf[Decon2LSParams]
@@ -92,7 +92,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
           //processedIp(ipId) = 1
           val mozOfRef = ips.moz
           val scanIdOfRef = ips.scanInitialId
-          val cycleNumOfRef = lcmsRun.scanById(scanIdOfRef).cycle
+          val cycleNumOfRef = lcmsScanSeq.scanById(scanIdOfRef).cycle
 
           ////// Retrieve putative isotopic patterns which belong to the same feature (same moz range)
           val mozInt = mozOfRef.toInt
@@ -104,7 +104,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
 
           val sameMozIpsByCycle = new HashMap[Int, ArrayBuffer[IsotopicPattern]]()
           sameMozRangeIps.filter(ip => (math.abs(ip.moz - mozOfRef) < Decon2LSMapParser.getMozInDalton(mozOfRef, ms1MozTol, ms1MozTolUnit)))
-            .map(ip => sameMozIpsByCycle.getOrElseUpdate(lcmsRun.scanById(ip.scanInitialId).cycle, new ArrayBuffer[IsotopicPattern]() += ip))
+            .map(ip => sameMozIpsByCycle.getOrElseUpdate(lcmsScanSeq.scanById(ip.scanInitialId).cycle, new ArrayBuffer[IsotopicPattern]() += ip))
 
           ////// For each scan keep only the nearest moz from the reference moz
 
@@ -178,17 +178,17 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
           val ftScanCount = sameFtIps.length
           if (ftScanCount < minFtScanCount) {
 
-            val dataPoints = sameFtIps.map(ip => (lcmsRun.scanById(ip.scanInitialId).time -> ip.intensity)) toMap //map { (timeByScanId(_.scanInitialId),_.intensity) } sameFtIps
+            val dataPoints = sameFtIps.map(ip => (lcmsScanSeq.scanById(ip.scanInitialId).time -> ip.intensity)) toMap //map { (timeByScanId(_.scanInitialId),_.intensity) } sameFtIps
 
             val area = calcArea(dataPoints)
 
-            val ms2EventIds = getMs2Events(lcmsRun, lcmsRun.getScanAtTime(lcmsRun.scanById(scanIdOfRef).time, 2).initialId)
+            val ms2EventIds = getMs2Events(lcmsScanSeq, lcmsScanSeq.getScanAtTime(lcmsScanSeq.scanById(scanIdOfRef).time, 2).initialId)
             ////// new FT with sameFtIps
             val ft = Feature(id = Feature.generateNewId(),
               moz = mozOfRef,
               intensity = area,
               charge = ips.charge,
-              elutionTime = lcmsRun.scanById(scanIdOfRef).time,
+              elutionTime = lcmsScanSeq.scanById(scanIdOfRef).time,
               qualityScore = Double.NaN,
               ms1Count = sameFtIps.length,
               ms2Count = ms2EventIds.length,
@@ -206,12 +206,12 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
         }
       }
     }
-    val runMap = new RunMap(id = lcmsRun.id,
-      name = lcmsRun.rawFileName,
+    val runMap = new RunMap(id = lcmsScanSeq.id,
+      name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,
-      runId = lcmsRun.id,
+      runId = lcmsScanSeq.id,
       peakPickingSoftware = new PeakPickingSoftware(1,
         "Decon2LS",
         "unknown",

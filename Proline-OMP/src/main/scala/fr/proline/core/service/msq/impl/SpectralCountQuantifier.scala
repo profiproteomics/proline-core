@@ -1,42 +1,33 @@
 package fr.proline.core.service.msq.impl
 
-import com.weiglewilczek.slf4s.Logging
-import com.codahale.jerkson.Json.generate
 import javax.persistence.EntityManager
-import collection.JavaConversions.{collectionAsScalaIterable}
-import collection.mutable.{ArrayBuffer,HashMap}
-import fr.proline.core.algo.msi.ResultSummaryMerger
+import com.codahale.jerkson.Json.generate
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.Ms2CountQuantifier
-import fr.proline.core.om.model.msi.{PeptideInstance,PeptideMatch,ResultSummary}
-import fr.proline.core.om.model.msq.{MasterQuantPeptide,MasterQuantProteinSet,QuantPeptide,QuantProteinSet}
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon,
-                                MasterQuantComponent => MsiMasterQuantComponent,
-                                ObjectTree => MsiObjectTree,
-                                PeptideInstance => MsiPeptideInstance,
-                                ProteinSet => MsiProteinSet,
-                                ResultSummary => MsiResultSummary
-                                }
-import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.core.service.msq.IQuantifier
-import fr.proline.repository.IDatabaseConnector
+import fr.proline.core.om.model.msq.MasterQuantPeptide
 import fr.proline.core.om.model.msq.MasterQuantPeptideIon
+import fr.proline.core.om.model.msq.QuantPeptide
 import fr.proline.core.om.model.msq.QuantPeptideIon
+import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
+import fr.proline.core.orm.uds.MasterQuantitationChannel
+import fr.proline.core.service.msq.IQuantifier
+import fr.proline.repository.IDataStoreConnectorFactory
 
 /**
  * @author David Bouyssie
  *
  */
 class SpectralCountQuantifier(
-        val dbManager: IDataStoreConnectorFactory,
-        val udsEm: EntityManager,
-        val udsMasterQuantChannel: MasterQuantitationChannel
-        ) extends IQuantifier with Logging {
+  val executionContext: IExecutionContext,
+  val udsMasterQuantChannel: MasterQuantitationChannel
+  ) extends IQuantifier with Logging {
   
   def quantifyMasterChannel(): Unit = {
     
     // Begin new ORM transaction
+    // TODO: handle transactions at db context level
     msiEm.getTransaction().begin()
     udsEm.getTransaction().begin()
     

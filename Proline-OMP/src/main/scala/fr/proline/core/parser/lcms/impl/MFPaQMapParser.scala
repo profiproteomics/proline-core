@@ -4,14 +4,8 @@ import java.util.Date
 
 import scala.collection.mutable.ArrayBuffer
 
+import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
-import fr.proline.core.om.model.lcms.LcMsRun
-import fr.proline.core.om.model.lcms.RunMap
-import fr.proline.core.om.model.lcms.IsotopicPattern
-import fr.proline.core.om.model.lcms.Peak
-import fr.proline.core.om.model.lcms.Feature
-import fr.proline.core.om.model.lcms.FeatureRelations
-import fr.proline.core.om.model.lcms.PeakPickingSoftware
 import fr.proline.core.parser.lcms.ExtraParameters
 
 case class MFPaQMapParams extends ExtraParameters {
@@ -25,7 +19,7 @@ object MFPaQMapParser {
 
 class MFPaQMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsRun: LcMsRun, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
     val lines = io.Source.fromFile(filePath).getLines
     val columnNames = lines.next.stripLineEnd.split(MFPaQMapParser.sepChar).slice(1, MFPaQMapParser.nbColumns + 1)
 
@@ -46,11 +40,11 @@ class MFPaQMapParser extends ILcmsMapFileParser {
         val moz = data("m/z") toDouble
         val intensity = data("Area") toFloat
         val firstRt = data("First RT") toFloat
-        val firstScan = lcmsRun.getScanAtTime(firstRt, 1)
+        val firstScan = lcmsScanSeq.getScanAtTime(firstRt, 1)
         val lastRt = data("Last RT") toFloat
-        val lastScan = lcmsRun.getScanAtTime(lastRt, 1)
+        val lastScan = lcmsScanSeq.getScanAtTime(lastRt, 1)
         val apexRt = data("Apex RT") toFloat
-        val apexScan = lcmsRun.getScanAtTime(apexRt, 1)
+        val apexScan = lcmsScanSeq.getScanAtTime(apexRt, 1)
 
         val ip = new IsotopicPattern(
           moz = moz,
@@ -59,7 +53,7 @@ class MFPaQMapParser extends ILcmsMapFileParser {
           scanInitialId = apexScan.initialId
         )
 
-        val ms2EventIds = getMs2Events(lcmsRun, apexScan.initialId)
+        val ms2EventIds = getMs2Events(lcmsScanSeq, apexScan.initialId)
 
         val feature = Feature(id = Feature.generateNewId(),
           moz = moz,
@@ -82,12 +76,12 @@ class MFPaQMapParser extends ILcmsMapFileParser {
 
     } //end while
 
-    val runMap = new RunMap(id = lcmsRun.id,
-      name = lcmsRun.rawFileName,
+    val runMap = new RunMap(id = lcmsScanSeq.id,
+      name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,
-      runId = lcmsRun.id,
+      runId = lcmsScanSeq.id,
       peakPickingSoftware = new PeakPickingSoftware(1,
         "MFPaQ",
         "4.5",

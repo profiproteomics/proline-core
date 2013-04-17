@@ -12,7 +12,7 @@ import fr.proline.core.dal.tables.{ SelectQueryBuilder1 }
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureClusterItemTable
 import fr.proline.core.dal.tables.lcms.LcmsDbRunMapTable
 import fr.proline.core.om.model.lcms._
-import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
+import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.repository.IDatabaseConnector
 
@@ -63,8 +63,8 @@ class ClusterizeMapFeatures(val lcmsDbCtx: DatabaseConnectionContext, lcmsMap: P
       val runId = ezDBC.selectInt(runMapRunIdQuery)
       
       // Retrieve corresponding scans
-      val runProvider = new SQLRunProvider(lcmsDbCtx)
-      val scans = runProvider.getScans(Array(runId))
+      val scanSeqProvider = new SQLScanSequenceProvider(lcmsDbCtx)
+      val scans = scanSeqProvider.getScans(Array(runId))
 
       logger.info("clusterizing features...")
       
