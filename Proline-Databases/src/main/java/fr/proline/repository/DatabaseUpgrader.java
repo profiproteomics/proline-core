@@ -1,5 +1,7 @@
 package fr.proline.repository;
 
+import static fr.proline.util.StringUtils.LINE_SEPARATOR;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -7,6 +9,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -15,6 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.flyway.core.Flyway;
+import com.googlecode.flyway.core.api.MigrationInfo;
+import com.googlecode.flyway.core.api.MigrationState;
+import com.googlecode.flyway.core.api.MigrationType;
+import com.googlecode.flyway.core.api.MigrationVersion;
 
 import fr.proline.util.SQLUtils;
 import fr.proline.util.StringUtils;
@@ -68,6 +75,14 @@ public final class DatabaseUpgrader {
 	return buffer.toString();
     }
 
+    /**
+     * 
+     * @param connector
+     *            DatabaseConnector of Database to upgrade (must not be <code>null</code>).
+     * @param migrationScriptsLocation
+     * @return Applied migrations count : 0 if no migration applied, -1 if a migration Error occured (see
+     *         Log).
+     */
     public static int upgradeDatabase(final IDatabaseConnector connector,
 	    final String migrationScriptsLocation) {
 
@@ -83,31 +98,83 @@ public final class DatabaseUpgrader {
 
 	LOG.debug("Upgrading {} Db, migrationScriptsLocation [{}]", prolineDbType, migrationScriptsLocation);
 
-	if (connector.getDriverType() == DriverType.SQLITE) {
-	    return upgradeSQLiteDb(connector, migrationScriptsLocation);
-	} else {
-	    final Flyway flyway = new Flyway();
+	int migrationsCount = -1;
 
-	    flyway.setLocations(migrationScriptsLocation);
-	    flyway.setDataSource(connector.getDataSource());
+	try {
 
-	    final int migrationsCount = flyway.migrate();
+	    if (connector.getDriverType() == DriverType.SQLITE) {
+		migrationsCount = upgradeSQLiteDb(connector, migrationScriptsLocation);
+	    } else {
+		final Flyway flyway = new Flyway();
 
-	    LOG.info("Flyway applies {} migration(s)", migrationsCount);
+		flyway.setLocations(migrationScriptsLocation);
+		flyway.setDataSource(connector.getDataSource());
 
-	    return migrationsCount;
-	} // End if (driverType is not SQLITE)
+		/* Trace applied Flyway migrations before migrate() call */
+		final MigrationInfo[] appliedMigrations = flyway.info().applied();
+		if (appliedMigrations != null) {
+		    final int nAppliedMigrations = appliedMigrations.length;
 
+		    if (nAppliedMigrations > 0) {
+			final StringBuilder allMigrationsBuilder = new StringBuilder(BUFFER_SIZE);
+			allMigrationsBuilder.append("Applied ").append(prolineDbType)
+				.append(" Db Flyway migrations (").append(nAppliedMigrations).append("):");
+
+			for (int i = 0; i < nAppliedMigrations; ++i) {
+			    allMigrationsBuilder.append(LINE_SEPARATOR);
+			    allMigrationsBuilder.append("Migration ").append(i).append(' ')
+				    .append(formatMigrationInfo(appliedMigrations[i]));
+			}
+
+			LOG.info(allMigrationsBuilder.toString());
+		    }
+
+		}
+
+		migrationsCount = flyway.migrate();
+		LOG.info("Flyway applies {} migration(s) to {}", migrationsCount, prolineDbType);
+
+		/* Trace current Flyway migration after migrate() call */
+		final MigrationInfo currentMigrationInfo = flyway.info().current();
+		if (currentMigrationInfo != null) {
+		    LOG.info("Current {} Db Flyway Migration {}", prolineDbType,
+			    formatMigrationInfo(currentMigrationInfo));
+		}
+
+	    } // End if (driverType is not SQLITE)
+
+	} catch (Exception ex) {
+	    LOG.error("Error upgrading " + prolineDbType + " Db", ex);
+	}
+
+	return migrationsCount;
     }
 
+    /**
+     * 
+     * @param connector
+     *            DatabaseConnector of Database to upgrade (must not be <code>null</code>).
+     * @return Applied migrations count : 0 if no migration applied, -1 if a migration Error occured (see
+     *         Log).
+     */
     public static int upgradeDatabase(final IDatabaseConnector connector) {
 
 	if (connector == null) {
 	    throw new IllegalArgumentException("Connector is null");
 	}
 
-	return upgradeDatabase(connector,
-		buildMigrationScriptsLocation(connector.getProlineDatabaseType(), connector.getDriverType()));
+	int result = -1;
+
+	try {
+	    result = upgradeDatabase(
+		    connector,
+		    buildMigrationScriptsLocation(connector.getProlineDatabaseType(),
+			    connector.getDriverType()));
+	} catch (Exception ex) {
+	    LOG.error("Error upgrading " + connector.getProlineDatabaseType() + " Db", ex);
+	}
+
+	return result;
     }
 
     public static String[] extractTableNames(final Connection con) throws SQLException {
@@ -148,14 +215,86 @@ public final class DatabaseUpgrader {
 	return result;
     }
 
+    private static String formatMigrationInfo(final MigrationInfo info) {
+	assert (info != null) : "formatMigrationInfo() info is null";
+
+	final StringBuilder buff = new StringBuilder(BUFFER_SIZE);
+
+	final MigrationType type = info.getType();
+	if (type != null) {
+	    buff.append("type: ").append(type);
+	}
+
+	final Integer checksum = info.getChecksum();
+	if (checksum != null) {
+
+	    if (buff.length() > 0) {
+		buff.append(' ');
+	    }
+
+	    buff.append("checksum: ").append(String.format("0x%08X", checksum));
+	}
+
+	final MigrationVersion version = info.getVersion();
+	if (version != null) {
+
+	    if (buff.length() > 0) {
+		buff.append(' ');
+	    }
+
+	    buff.append(" version: ").append(version);
+	}
+
+	final String description = info.getDescription();
+	if (description != null) {
+
+	    if (buff.length() > 0) {
+		buff.append(' ');
+	    }
+
+	    buff.append(" description [").append(description).append(']');
+	}
+
+	final String script = info.getScript();
+	if (script != null) {
+
+	    if (buff.length() > 0) {
+		buff.append(' ');
+	    }
+
+	    buff.append(" script [").append(script).append(']');
+	}
+
+	final MigrationState state = info.getState();
+	if (state != null) {
+
+	    if (buff.length() > 0) {
+		buff.append(' ');
+	    }
+
+	    buff.append(" state: ").append(state);
+	}
+
+	final Date installedOn = info.getInstalledOn();
+	if (installedOn != null) {
+	    buff.append(" installed on ").append(installedOn);
+	}
+
+	return buff.toString();
+    }
+
     /* Private methods */
     private static int upgradeSQLiteDb(final IDatabaseConnector connector,
-	    final String migrationScriptsLocation) {
-	final DataSource ds = connector.getDataSource();
+	    final String migrationScriptsLocation) throws SQLException {
+	final ProlineDatabaseType prolineDbType = connector.getProlineDatabaseType();
+
+	int result = -1;
 
 	Connection con = null;
 
 	try {
+	    final DataSource ds = connector.getDataSource();
+
 	    con = ds.getConnection();
 
 	    int tablesCount = 0;
@@ -168,30 +307,30 @@ public final class DatabaseUpgrader {
 
 	    if (tablesCount == 0) {
 		initSQLiteDb(con, migrationScriptsLocation);
-		return 1;
+
+		LOG.info("{} SQLite Db initialized", prolineDbType);
+
+		result = 1;
 	    } else {
-		LOG.info("SQLite table count: {}, conserving current schema", tablesCount);
-		return 0;
+		LOG.info("{} SQLite Db table count: {}, conserving current schema", prolineDbType,
+			tablesCount);
+
+		result = 0;
 	    }
 
-	} catch (Exception ex) {
-	    /* Log and re-throw */
-	    final String message = "Error upgrading SQLite Db";
-	    LOG.error(message, ex);
-
-	    throw new RuntimeException(message, ex);
 	} finally {
 
 	    if (con != null) {
 		try {
 		    con.close();
 		} catch (SQLException exClose) {
-		    LOG.error("Error closing SQLite Connection", exClose);
+		    LOG.error("Error closing  " + prolineDbType + " SQLite Db Connection", exClose);
 		}
 	    }
 
 	} // End of try - catch - finally block for con
 
+	return result;
     }
 
     private static void initSQLiteDb(final Connection con, final String migrationScriptsLocation)

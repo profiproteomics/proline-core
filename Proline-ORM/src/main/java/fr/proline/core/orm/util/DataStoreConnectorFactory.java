@@ -72,7 +72,11 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	    EntityManager udsEm = null;
 
 	    try {
-		DatabaseUpgrader.upgradeDatabase(udsDbConnector);
+		final int udsDbMigrationsCount = DatabaseUpgrader.upgradeDatabase(udsDbConnector);
+
+		if (udsDbMigrationsCount < 0) {
+		    LOG.warn("Unable to upgrade UDS Db");
+		}
 
 		final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
 
@@ -90,7 +94,12 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 		    m_pdiDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 			    ProlineDatabaseType.PDI, pdiDb.toPropertiesMap(udsDriverType));
 
-		    DatabaseUpgrader.upgradeDatabase(m_pdiDbConnector);
+		    final int pdiDbMigrationsCount = DatabaseUpgrader.upgradeDatabase(m_pdiDbConnector);
+
+		    if (pdiDbMigrationsCount < 0) {
+			LOG.warn("Unable to upgrade PDI Db");
+		    }
+
 		}
 
 		/* Try to load PS Db Connector */
@@ -103,7 +112,12 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 		    m_psDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 			    ProlineDatabaseType.PS, psDb.toPropertiesMap(udsDriverType));
 
-		    DatabaseUpgrader.upgradeDatabase(m_psDbConnector);
+		    final int psDbMigrationsCount = DatabaseUpgrader.upgradeDatabase(m_psDbConnector);
+
+		    if (psDbMigrationsCount < 0) {
+			LOG.warn("Unable to upgrade PS Db");
+		    }
+
 		}
 
 	    } catch (Exception ex) {
@@ -348,7 +362,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
     }
 
-    private IDatabaseConnector createProjectDatabaseConnector(final ProlineDatabaseType database,
+    private IDatabaseConnector createProjectDatabaseConnector(final ProlineDatabaseType prolineDbType,
 	    final int projectId) {
 	IDatabaseConnector connector = null;
 
@@ -365,16 +379,21 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 		throw new IllegalArgumentException("Project #" + projectId + " NOT found in UDS Db");
 	    }
 
-	    final ExternalDb externalDb = ExternalDbRepository.findExternalByTypeAndProject(udsEm, database,
-		    project);
+	    final ExternalDb externalDb = ExternalDbRepository.findExternalByTypeAndProject(udsEm,
+		    prolineDbType, project);
 
 	    if (externalDb == null) {
-		LOG.warn("No ExternalDb for {} Db of project #{}", database, projectId);
+		LOG.warn("No ExternalDb for {} Db of project #{}", prolineDbType, projectId);
 	    } else {
-		connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(database,
+		connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(prolineDbType,
 			externalDb.toPropertiesMap(udsDbConnector.getDriverType()));
 
-		DatabaseUpgrader.upgradeDatabase(connector);
+		final int migrationsCount = DatabaseUpgrader.upgradeDatabase(connector);
+
+		if (migrationsCount < 0) {
+		    LOG.warn("Unable to upgrade {} Db of project #{}", prolineDbType, projectId);
+		}
+
 	    }
 
 	} finally {

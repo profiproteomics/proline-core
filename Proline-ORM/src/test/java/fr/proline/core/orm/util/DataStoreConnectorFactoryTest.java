@@ -16,6 +16,8 @@ import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.UserAccount;
 import fr.proline.repository.ConnectionMode;
+import fr.proline.repository.DatabaseUpgrader;
+import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
@@ -148,7 +150,11 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
 	assertTrue("DatabaseManager is initialized", dbManager.isInitialized());
 
-	assertNotNull("PDI Db Connector", dbManager.getPdiDbConnector());
+	final IDatabaseConnector pdiDb =  dbManager.getPdiDbConnector();
+	
+	assertNotNull("PDI Db Connector",pdiDb);
+	
+	DatabaseUpgrader.upgradeDatabase(pdiDb);
 
 	assertNotNull("PS Db Connector", dbManager.getPsDbConnector());
 
