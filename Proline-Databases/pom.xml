@@ -23,7 +23,22 @@
     <dependency>
       <groupId>com.googlecode.flyway</groupId>
       <artifactId>flyway-core</artifactId>
-	  <version>2.1.1</version> <!-- Latest version checked on 16 avr. 2013 -->
+    <version>2.1.1</version> <!-- Latest version checked on 16 avr. 2013 -->
+
+    <!-- Use SLF4J instead of Apache common-loggings -->
+    <exclusions>
+      <exclusion>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging</artifactId>
+      </exclusion>
+    </exclusions>
+
+    </dependency>
+
+    <!-- Use SLF4J instead of Apache common-loggings -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
 
     <dependency>
