@@ -101,11 +101,10 @@ class SQLRsStorer(
       val msiSearchId = resultSet.msiSearch.map( _.id )
       
       // Store RDB result set  
-      val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery
+      val rsInsertQuery = MsiDbResultSetTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID) )
       
       msiEzDBC.executePrepared(rsInsertQuery, true) { stmt =>
         stmt.executeWith(
-          Option.empty[Int],
           rsName,
           rsDesc,
           rsType,
