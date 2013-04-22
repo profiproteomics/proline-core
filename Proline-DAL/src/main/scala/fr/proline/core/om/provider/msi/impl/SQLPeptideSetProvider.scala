@@ -215,7 +215,7 @@ class SQLPeptideSetProvider(
         id = pepSetId,
         items = pepSetItems.result(),
         isSubset = pepSetRecord(PepSetCols.IS_SUBSET),
-        score = pepSetRecord(PepSetCols.SCORE).asInstanceOf[Float],
+        score = toFloat( pepSetRecord(PepSetCols.SCORE) ),
         peptideMatchesCount = pepSetRecord(PepSetCols.PEPTIDE_MATCH_COUNT).asInstanceOf[Int],
         proteinMatchIds = protMatchIds,
         proteinSetId = pepSetRecord.getOrElse(PepSetCols.PROTEIN_SET_ID, 0).asInstanceOf[Int],
