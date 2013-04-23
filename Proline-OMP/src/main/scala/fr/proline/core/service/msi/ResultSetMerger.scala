@@ -92,7 +92,9 @@ class ResultSetMerger(
 
       DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
         
-        val decoyResultSets = for (rs <- resultSets if rs.decoyResultSet.isDefined) yield rs.decoyResultSet.get
+        val decoyResultSets = for (rs <- resultSets
+            if ((rs.decoyResultSet != null) && rs.decoyResultSet.isDefined)) yield rs.decoyResultSet.get
+
         val allResultSets = resultSets ++ decoyResultSets
 
         // Retrieve protein ids
