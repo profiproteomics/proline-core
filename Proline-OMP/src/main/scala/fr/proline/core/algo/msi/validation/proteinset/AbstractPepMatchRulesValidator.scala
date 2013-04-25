@@ -7,7 +7,6 @@ import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
-import fr.proline.core.algo.msi.scoring.IProtSetAndPepSetScoreUpdater
 
 case class ValidationRule( minPeptideCount: Int, pepMatchFilter: IOptimizablePeptideMatchFilter )
 

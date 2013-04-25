@@ -10,7 +10,6 @@ import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
-import fr.proline.core.algo.msi.scoring.IProtSetAndPepSetScoreUpdater
 import fr.proline.core.algo.msi.filtering.proteinset.ScoreProtSetFilter
 
 class ProtSetRulesValidatorWithFDROptimization(
