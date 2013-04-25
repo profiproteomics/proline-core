@@ -227,7 +227,7 @@ class ResultSummaryMerger extends Logging {
   def updateScoresOfProteinSets( rsm: ResultSummary, searchEngine: String) {
     
     val allPepMatchesByProtSetId = rsm.getAllPeptideMatchesByProteinSetId
-    val bestPepMatchesByProtSetId = rsm.getBestPepMatchesByProtSetId
+    val bestPepMatchesByProtSetId = rsm.getBestPepMatchesByProtSetId()
     
     if( searchEngine == "mascot" ) {
       

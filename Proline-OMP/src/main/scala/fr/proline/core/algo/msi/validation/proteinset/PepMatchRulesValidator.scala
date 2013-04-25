@@ -22,9 +22,9 @@ class PepMatchRulesValidator(
     val targetProtSets = targetRsm.proteinSets
     val decoyProtSets = decoyRsm.map(_.proteinSets)
     val allProtSets = targetProtSets ++ decoyProtSets.getOrElse(Array())
-    var allPepMatchesByProtSetId = targetRsm.getBestPepMatchesByProtSetId
+    var allPepMatchesByProtSetId = targetRsm.getBestPepMatchesByProtSetId()
     if( decoyRsm.isDefined ) {
-      allPepMatchesByProtSetId ++= decoyRsm.get.getBestPepMatchesByProtSetId
+      allPepMatchesByProtSetId ++= decoyRsm.get.getBestPepMatchesByProtSetId()
     }
     
     // Validate results with the thresholds that provide the best results
