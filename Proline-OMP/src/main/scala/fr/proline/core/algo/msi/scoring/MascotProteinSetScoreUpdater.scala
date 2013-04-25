@@ -22,9 +22,10 @@ class MascotProteinSetScoreUpdater() extends IProtSetAndPepSetScoreUpdater {
       val protSetScore = MascotValidationHelper.sumPeptideMatchesScoreOffsets(bestPepMatches,scoreThresholdOffset)
       proteinSet.score = protSetScore
       proteinSet.scoreType = ProtSetScoring.MASCOT_PROTEIN_SET_SCORE.toString
+      proteinSet.peptideSet.score = proteinSet.score
     }
     
-    for(orphanPepSet <- rsm.peptideSets.filterNot(_.getProteinSetId>0)){
+    for(orphanPepSet <- rsm.peptideSets.filterNot(_.getProteinSetId!=0)){
        orphanPepSet.score = 0
        var bestPepMatches = Seq.newBuilder[PeptideMatch]
        val pepMatchesByPepInsID = orphanPepSet.getPeptideInstances.map( pi => pi.id -> pi.peptideMatches)        
