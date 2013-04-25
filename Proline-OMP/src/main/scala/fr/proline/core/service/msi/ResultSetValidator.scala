@@ -150,8 +150,8 @@ class ResultSetValidator(
         //        rsm.resultSet = rs // affect complete RS : No More necessary , complete RS passed to inferer 
 
         // Update score of protein sets
-        this.logger.debug("updating score of protein sets")
         val protSetScoreUpdater = ProtSetAndPepSetScoreUpdater(proteinSetScoring.get)
+        this.logger.debug("updating score of protein sets using "+proteinSetScoring.get.toString)
         protSetScoreUpdater.updateScoreOfProteinSets(rsm)
 
         resultSummaries += Some(rsm)
