@@ -139,9 +139,11 @@ class ProtSetRulesValidatorWithFDROptimization(
     if( expectedRocPoint == null ) expectedRocPoint = valResult
     
     // Set validation rules probability thresholds using the previously obtained expected ROC point
-    val rocPointProps = expectedRocPoint.properties.get
-    protSetFilterRule1.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
-    protSetFilterRule2.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
+    if(expectedRocPoint.properties.isDefined){
+	val rocPointProps = expectedRocPoint.properties.get
+	protSetFilterRule1.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
+	protSetFilterRule2.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
+    }
     
     // Validate protein sets identified with a single peptide 
     protSetFilterRule1.filterProteinSets(singlePepProtSets,true,true)
