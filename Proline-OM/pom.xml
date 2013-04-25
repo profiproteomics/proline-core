@@ -35,14 +35,11 @@
     </dependency>
 
     <!-- Gson: Java to Json conversion -->
-    <!-- Unused dependency: com.google.code.gson:gson:jar:2.1:compile -->
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.1</version>
     </dependency>
-
-    <!-- Add : com.fasterxml.jackson.core:jackson-annotations:jar:2.0.2:compile -->
 
     <dependency>
       <groupId>com.codahale</groupId>

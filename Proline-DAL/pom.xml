@@ -22,13 +22,10 @@
     </dependency>
 
     <!-- "Proline" modules -->
-    <!-- Unused dependency : fr.proline:Proline-OM:jar:0.0.2-SNAPSHOT:compile -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-OM</artifactId>
     </dependency>
-    <!-- Add : org.apache.commons:commons-lang3:jar:3.0.1:compile
-               com.codahale:jerkson_2.9.1:jar:0.6.0-SNAPSHOT:compile -->
 
     <dependency>
       <groupId>fr.proline</groupId>
@@ -63,11 +60,11 @@
       <scope>runtime</scope>
     </dependency>
 
-    <!-- Add : joda-time:joda-time:jar:1.6.2:compile -->
+    <!-- Used by ProlineEzDBC -->
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
-      <version>1.6.2</version>
+      <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
     <!-- Compression -->
