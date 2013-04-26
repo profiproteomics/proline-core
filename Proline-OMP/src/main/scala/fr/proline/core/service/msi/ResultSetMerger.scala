@@ -113,18 +113,21 @@ class ResultSetMerger(
         val seqLengthByProtId = msiDbHelper.getSeqLengthByBioSeqId(proteinIdSet)
         >>>
         
-        mergedResultSet = this._mergeAndStoreResultSet(storerContext,msiEzDBC,resultSets,seqLengthByProtId)
+        // Merge target result sets
+        mergedResultSet = this._mergeResultSets(resultSets,seqLengthByProtId)
         
+        // Merge decoy result sets if they are defined
         if( decoyResultSets.length > 0 ) {
-          mergedResultSet.decoyResultSet = Some(
-            this._mergeAndStoreResultSet(
-              storerContext,
-              msiEzDBC,
-              decoyResultSets,
-              seqLengthByProtId
-            )
-          )
-        } 
+          
+          val decoyRS = this._mergeResultSets( decoyResultSets, seqLengthByProtId )
+          this._storeMergedResultSet(storerContext, msiEzDBC, decoyRS)
+          
+          // Then store merged decoy result set
+          mergedResultSet.decoyResultSet = Some( decoyRS )
+        }
+        
+        // Store merged target result set
+        this._storeMergedResultSet(storerContext,msiEzDBC,mergedResultSet)
         
       }, true) // end of JDBC work
 
@@ -160,35 +163,37 @@ class ResultSetMerger(
     true
   }
   
-  private def _mergeAndStoreResultSet(
-    storerContext: StorerContext,
-    msiEzDBC: EasyDBC,    
+  private def _mergeResultSets(
     resultSets: Seq[ResultSet],
-    seqLengthByProtId: Map[Int,Int] ): ResultSet = {
-
+    seqLengthByProtId: Map[Int,Int]
+  ): ResultSet = {
+    
     logger.info("merging result sets...")
     val tmpMergedResultSet = rsMergerAlgo.mergeResultSets(resultSets, Some(seqLengthByProtId))
     >>>
 
     // Map peptide matches and protein matches by their tmp id
-    val mergedPepMatchByTmpId = tmpMergedResultSet.peptideMatches.map { p => p.id -> p } toMap
-    val protMatchByTmpId = tmpMergedResultSet.proteinMatches.map { p => p.id -> p } toMap
-
-    logger.info("store result set...")
-
-    //val rsStorer = new JPARsStorer()
-    //storerContext = new StorerContext(udsDb, pdiDb, psDb, msiDb)
-    //rsStorer.storeResultSet(tmpMergedResultSet, storerContext)
+    //val mergedPepMatchByTmpId = tmpMergedResultSet.peptideMatches.map { p => p.id -> p } toMap
+    //val protMatchByTmpId = tmpMergedResultSet.proteinMatches.map { p => p.id -> p } toMap
     
-    val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-    rsStorer.storeResultSet(tmpMergedResultSet, storerContext)
+    tmpMergedResultSet
+  }
+  
+  private def _storeMergedResultSet(
+    storerContext: StorerContext,
+    msiEzDBC: EasyDBC,
+    resultSet: ResultSet
+  ) {
+    
+    logger.info("storing merged result set...")
 
-    //msiDb.getEntityManager.flush() // Flush before returning to SQL msiEzDBC
+    val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+    rsStorer.storeResultSet(resultSet, storerContext)
 
     >>>
 
     // Link parent result set to its child result sets
-    val parentRsId = tmpMergedResultSet.id
+    val parentRsId = resultSet.id
     val rsIds = resultSets.map { _.id } distinct
 
     // Insert result set relation between parent and its children
@@ -198,7 +203,6 @@ class ResultSetMerger(
     }
     >>>
 
-    tmpMergedResultSet
   }
 
 }
