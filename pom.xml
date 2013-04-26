@@ -5,11 +5,11 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.2</version>
   </parent>
 
   <artifactId>Proline-Core</artifactId>
-  <version>0.0.9-SNAPSHOT</version>
+  <version>0.0.9</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -26,7 +26,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.0.9-SNAPSHOT</core.version>
+    <core.version>0.0.9</core.version>
   </properties>
 
   <dependencyManagement>
@@ -36,7 +36,7 @@
       <dependency>
         <groupId>fr.proline.util</groupId>
         <artifactId>ProFI-Commons-Scala</artifactId>
-        <version>0.0.3-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+        <version>0.0.3</version> <!-- Snapshot Trunk version -->
       </dependency>
 
       <!-- "Proline" modules -->
