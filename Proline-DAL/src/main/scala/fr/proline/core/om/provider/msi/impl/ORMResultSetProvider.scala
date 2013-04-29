@@ -1,20 +1,22 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.collection.JavaConversions.{ asScalaBuffer, asScalaSet }
+import scala.annotation.elidable
+import scala.collection.JavaConversions.{asScalaBuffer, asScalaSet}
 import scala.collection.mutable
+
 import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
+
+import annotation.elidable.ASSERTION
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.msi.{ Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, SearchSettings, SeqDatabase, SequenceMatch }
+import fr.proline.core.om.model.msi.{Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, ResultSetProperties, SearchSettings, SearchSettingsProperties, SeqDatabase, SequenceMatch}
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.ResultSet.Type
-import fr.proline.core.orm.msi.repository.{ MsiSeqDatabaseRepository => seqDatabaseRepo, PeptideMatchRepository => peptideMatchRepo, ProteinMatchRepository => proteinMatchRepo, ScoringRepository => scoringRepo, SequenceMatchRepository => sequenceMatchRepo }
+import fr.proline.core.orm.msi.repository.{MsiSeqDatabaseRepository => seqDatabaseRepo, PeptideMatchRepository => peptideMatchRepo, ProteinMatchRepository => proteinMatchRepo, ScoringRepository => scoringRepo, SequenceMatchRepository => sequenceMatchRepo}
 import fr.proline.repository.util.JPAUtils
 import fr.proline.util.StringUtils
 import javax.persistence.EntityManager
-import fr.proline.core.om.model.msi.ResultSetProperties
-import fr.proline.core.om.model.msi.SearchSettingsProperties
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,
@@ -160,18 +162,28 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       }
 
       /* MsiSearch */
-      val msiSearch = buildMsiSearch(msiResultSet.getMsiSearch)
+
+      var msiSearchId: Int = 0
+      var optionalMsiSearch: Option[MSISearch] = None
+
+      val msiMsiSearch = msiResultSet.getMsiSearch
+      if (msiMsiSearch != null) {
+        val omMsiSearch = buildMsiSearch(msiMsiSearch)
+
+        msiSearchId = omMsiSearch.id
+        optionalMsiSearch = Some(omMsiSearch)
+      }
 
       /* Decoy RS */
-      var decoyRsId: Int = 0
-      var decoyRs: Option[ResultSet] = None
+      var decoyRSId: Int = 0
+      var optionalDecoyRS: Option[ResultSet] = None
 
       val msiDecoyRs = msiResultSet.getDecoyResultSet
       if (msiDecoyRs != null) {
-        val definedDecoyRs = buildResultSet(msiDecoyRs)
+        val omDecoyRs = buildResultSet(msiDecoyRs)
 
-        decoyRsId = definedDecoyRs.id
-        decoyRs = Some(definedDecoyRs)
+        decoyRSId = omDecoyRs.id
+        optionalDecoyRS = Some(omDecoyRs)
       }
 
       val serializedProperties = msiResultSet.getSerializedProperties
@@ -191,10 +203,10 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         msiResultSet.getName,
         msiResultSet.getDescription,
         false, // TODO handle isQuantified
-        msiSearch.id,
-        Some(msiSearch),
-        decoyRsId,
-        decoyRs,
+        msiSearchId,
+        optionalMsiSearch,
+        decoyRSId,
+        optionalDecoyRS,
         resultSetProperties
       )
 
@@ -221,14 +233,14 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     } else {
       /* Handle best child */
       var bestChildId: Int = 0
-      var bestChild: Option[PeptideMatch] = None
+      var optionalBestChild: Option[PeptideMatch] = None
 
       val msiBestChild = msiPeptideMatch.getBestPeptideMatch
       if (msiBestChild != null) {
-        val definedBestChild = buildPeptideMatch(msiBestChild, resultSetId, msiEm)
+        val omBestChild = buildPeptideMatch(msiBestChild, resultSetId, msiEm)
 
-        bestChildId = definedBestChild.id
-        bestChild = Some(definedBestChild)
+        bestChildId = omBestChild.id
+        optionalBestChild = Some(omBestChild)
       }
 
       val serializedProperties = msiPeptideMatch.getSerializedProperties
@@ -254,7 +266,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         null, // TODO handle children
         null, // TODO handle children
         bestChildId,
-        bestChild,
+        optionalBestChild,
         peptideMatchProperties,
         None)
 
@@ -273,14 +285,14 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     if (knownPeptide.isDefined) {
       knownPeptide.get
     } else {
-      val peptide = peptideProvider.getPeptide(peptideId)
+      val optionalPeptide = peptideProvider.getPeptide(peptideId)
 
-      if ((peptide != null) && peptide.isDefined) {
-        val definedPeptide = peptide.get
+      if ((optionalPeptide != null) && optionalPeptide.isDefined) {
+        val peptide = optionalPeptide.get
 
-        knownPeptides += peptideId -> definedPeptide
+        knownPeptides += peptideId -> peptide
 
-        definedPeptide
+        peptide
       } else {
         throw new IllegalArgumentException("Peptide #" + peptideId + " NOT found in Ps Db")
       }
@@ -349,14 +361,14 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       if (knownProtein.isDefined) {
         knownProtein.get
       } else {
-        val protein = proteinProvider.getProtein(proteinId)
+        val optionalProtein = proteinProvider.getProtein(proteinId)
 
-        if ((protein != null) && protein.isDefined) {
-          val definedProtein = protein.get
+        if ((optionalProtein != null) && optionalProtein.isDefined) {
+          val protein = optionalProtein.get
 
-          knownProteins += proteinId -> definedProtein
+          knownProteins += proteinId -> protein
 
-          definedProtein
+          protein
         } else {
           throw new IllegalArgumentException("Protein #" + proteinId + " NOT found in Pdi Db")
         }
@@ -377,17 +389,17 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
     /* Optional BioSequence (Protein) */
     var proteinId: Int = 0
-    var protein: Option[Protein] = None
+    var optionalProtein: Option[Protein] = None
 
     val msiProteinId = msiProteinMatch.getBioSequenceId
     if (msiProteinId != null) {
 
       val numericProteinId = msiProteinId.intValue
       if (numericProteinId > 0) {
-        val definedProtein = retrieveProtein(numericProteinId)
+        val omProtein = retrieveProtein(numericProteinId)
 
-        proteinId = definedProtein.id
-        protein = Some(definedProtein)
+        proteinId = omProtein.id
+        optionalProtein = Some(omProtein)
       }
 
     }
@@ -423,7 +435,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       taxonId,
       resultSetId,
       proteinId,
-      protein,
+      optionalProtein,
       seqDatabasesIds.result,
       msiProteinMatch.getGeneName,
       msiProteinMatch.getScore,

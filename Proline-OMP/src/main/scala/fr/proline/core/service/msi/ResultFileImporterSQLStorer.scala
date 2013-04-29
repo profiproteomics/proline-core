@@ -1,28 +1,24 @@
 package fr.proline.core.service.msi
 
 import java.io.File
+
 import com.weiglewilczek.slf4s.Logging
-import com.codahale.jerkson.Json.parse
-import fr.profi.jdbc.easy._
+
+import fr.profi.jdbc.easy.{EasyDBC, int2Formattable, row2Int, row2String, string2Formattable}
 import fr.proline.api.service.IService
+import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
-import fr.proline.core.dal.ProlineEzDBC
-import fr.proline.core.om.model.msi._
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.dal.{ContextFactory, ProlineEzDBC}
+import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
+import fr.proline.core.om.model.msi.{InstrumentConfig, PeaklistSoftware, ResultSet, ResultSetProperties, SearchSettingsProperties}
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.impl.SQLInstrumentConfigProvider
-import fr.proline.core.om.storer.msi.{ IRsStorer, MsiSearchStorer, RsStorer }
-import fr.proline.core.om.storer.msi.impl.{ JPARsStorer, StorerContext }
+import fr.proline.core.om.storer.msi.{IRsStorer, RsStorer}
+import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.repository.DriverType
-import fr.proline.repository.IDatabaseConnector
 import fr.proline.util.StringUtils
-import fr.proline.core.om.storer.msi.impl.SQLRsStorer
-import fr.proline.core.om.storer.msi.impl.SQLiteRsWriter
-import fr.proline.core.om.storer.msi.impl.SQLPeaklistWriter
-import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
 
 class ResultFileImporterSQLStorer(
   executionContext: IExecutionContext,
@@ -158,7 +154,7 @@ class ResultFileImporterSQLStorer(
     val spectrumIdByTitle = rsStorer.storePeaklist(msiSearch.peakList, storerContext)
     rsStorer.storeSpectra(msiSearch.peakList.id, resultFile, storerContext)
     >>>
-      
+
     // Load target result set
     var targetRs = resultFile.getResultSet(false)
     if (StringUtils.isEmpty(targetRs.name)) targetRs.name = msiSearch.title
@@ -168,11 +164,11 @@ class ResultFileImporterSQLStorer(
 
     if (resultFile.hasDecoyResultSet) {
       // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
-      rsProps.setTargetDecoyMode(Some(TargetDecoyModes.SEPARATED.toString))      
+      rsProps.setTargetDecoyMode(Some(TargetDecoyModes.SEPARATED.toString))
     } else if (acDecoyRegex != None) {
       rsProps.setTargetDecoyMode(Some(TargetDecoyModes.CONCATENATED.toString))
     }
-    
+
     targetRs.properties = Some(rsProps)
 
     // FIXME: remove these 3 lines when we know that TargetDecoyMode is not needed at searchSettingsLevel
@@ -207,6 +203,14 @@ class ResultFileImporterSQLStorer(
     else if (acDecoyRegex != None) {
       // Then split the result set into a target and a decoy one
       val (tRs, dRs) = TargetDecoyResultSetSplitter.split(targetRs, acDecoyRegex.get)
+
+      logger.debug {
+        val targetRSId = if (tRs == null) { 0 } else { tRs.id }
+        val decoyRSId = if (dRs == null) { 0 } else { dRs.id }
+
+        "Temporary TARGET ResultSet Id: " + targetRSId + "  DECOY ResultSet id: " + decoyRSId
+      }
+
       targetRs = tRs
       targetRs.decoyResultSet = Some(storeDecoyRs(dRs))
 
