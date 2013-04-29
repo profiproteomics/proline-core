@@ -1,19 +1,17 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.annotation.elidable
-import scala.collection.JavaConversions.{asScalaBuffer, asScalaSet}
+import scala.collection.JavaConversions.{ asScalaBuffer, asScalaSet }
 import scala.collection.mutable
 
 import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
 
-import annotation.elidable.ASSERTION
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.msi.{Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, ResultSetProperties, SearchSettings, SearchSettingsProperties, SeqDatabase, SequenceMatch}
+import fr.proline.core.om.model.msi.{ Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, ResultSetProperties, SearchSettings, SearchSettingsProperties, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.ResultSet.Type
-import fr.proline.core.orm.msi.repository.{MsiSeqDatabaseRepository => seqDatabaseRepo, PeptideMatchRepository => peptideMatchRepo, ProteinMatchRepository => proteinMatchRepo, ScoringRepository => scoringRepo, SequenceMatchRepository => sequenceMatchRepo}
+import fr.proline.core.orm.msi.repository.{ MsiSeqDatabaseRepository => seqDatabaseRepo, PeptideMatchRepository => peptideMatchRepo, ProteinMatchRepository => proteinMatchRepo, ScoringRepository => scoringRepo, SequenceMatchRepository => sequenceMatchRepo }
 import fr.proline.repository.util.JPAUtils
 import fr.proline.util.StringUtils
 import javax.persistence.EntityManager
@@ -130,10 +128,10 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         }
 
       val peptides = getEntityCache(classOf[Peptide]).values.toArray[Peptide]
-      logger.debug("Loaded Peptides: " + peptides.size)
+      logger.trace("Loaded Peptides: " + peptides.size)
 
       val peptideMatches = omPeptideMatches.toArray[PeptideMatch]
-      logger.debug("Loaded PeptideMatches: " + peptideMatches.size)
+      logger.trace("Loaded PeptideMatches: " + peptideMatches.size)
 
       /* ProteinMaches */
       val msiProteinMatches = proteinMatchRepo.findProteinMatchesForResultSet(msiEm, msiResultSet)
@@ -144,7 +142,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         }
 
       val proteinMatches = omProteinMatches.toArray[ProteinMatch]
-      logger.debug("Loaded ProteinMatches: " + proteinMatches.size)
+      logger.trace("Loaded ProteinMatches: " + proteinMatches.size)
 
       val rsType = msiResultSet.getType
 
@@ -162,7 +160,6 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       }
 
       /* MsiSearch */
-
       var msiSearchId: Int = 0
       var optionalMsiSearch: Option[MSISearch] = None
 
@@ -252,14 +249,14 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       }
 
       val peptideMatch = new PeptideMatch(msiPeptideMatchId,
-        msiPeptideMatch.getRank,
+        msiPeptideMatch.getRank.intValue,
         msiPeptideMatch.getScore,
         scoringRepo.getScoreTypeForId(msiEm, msiPeptideMatch.getScoringId),
         msiPeptideMatch.getDeltaMoz,
-        msiPeptideMatch.getIsDecoy,
-        retrievePeptide(msiPeptideMatch.getPeptideId),
-        msiPeptideMatch.getMissedCleavage,
-        msiPeptideMatch.getFragmentMatchCount,
+        msiPeptideMatch.getIsDecoy.booleanValue,
+        retrievePeptide(msiPeptideMatch.getPeptideId.intValue),
+        msiPeptideMatch.getMissedCleavage.intValue,
+        msiPeptideMatch.getFragmentMatchCount.intValue,
         buildMsQuery(msiPeptideMatch.getMsQuery),
         true, // isValidated always true when loading from ORM
         resultSetId,
@@ -321,7 +318,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
         val msiSpectrum = msiMsQuery.getSpectrum
         if (msiSpectrum != null) {
-          spectrumId = msiSpectrum.getId
+          spectrumId = msiSpectrum.getId.intValue
           spectrumTitle = msiSpectrum.getTitle
         }
 
@@ -334,9 +331,9 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         }
 
         val msQuery = new Ms2Query(msiMsQueryId,
-          msiMsQuery.getInitialId,
+          msiMsQuery.getInitialId.intValue,
           msiMsQuery.getMoz,
-          msiMsQuery.getCharge,
+          msiMsQuery.getCharge.intValue,
           spectrumTitle,
           spectrumId,
           msQueryProperties)
@@ -409,9 +406,11 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
     val msiSeqDatabaseIds = seqDatabaseRepo.findSeqDatabaseIdsForProteinMatch(msiEm, msiProteinMatchId)
     if ((msiSeqDatabaseIds != null) && !msiSeqDatabaseIds.isEmpty) {
+
       for (msiSeqDatabaseId <- msiSeqDatabaseIds) {
         seqDatabasesIds += msiSeqDatabaseId.intValue
       }
+
     }
 
     /* SequenceMatches */
@@ -429,8 +428,8 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
     new ProteinMatch(msiProteinMatch.getAccession,
       msiProteinMatch.getDescription,
-      msiProteinMatch.getIsDecoy,
-      msiProteinMatch.getIsLastBioSequence,
+      msiProteinMatch.getIsDecoy.booleanValue,
+      msiProteinMatch.getIsLastBioSequence.booleanValue,
       msiProteinMatchId,
       taxonId,
       resultSetId,
@@ -441,7 +440,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       msiProteinMatch.getScore,
       scoringRepo.getScoreTypeForId(msiEm, msiProteinMatch.getScoringId),
       msiProteinMatch.getCoverage,
-      msiProteinMatch.getPeptideMatchCount,
+      msiProteinMatch.getPeptideMatchCount.intValue,
       sequenceMatches.result,
       None // TODO handle properties
     )
@@ -450,19 +449,19 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
   private def buildMsiSearch(msiSearch: MsiSearch): MSISearch = {
     assert(msiSearch != null, "buildMsiSearch() msiSearch is null")
 
-    new MSISearch(msiSearch.getId,
+    new MSISearch(msiSearch.getId.intValue,
       msiSearch.getResultFileName,
-      msiSearch.getSubmittedQueriesCount,
+      msiSearch.getSubmittedQueriesCount.intValue,
       buildSearchSettings(msiSearch.getSearchSetting),
       buildPeaklist(msiSearch.getPeaklist),
       msiSearch.getDate,
       msiSearch.getTitle,
       msiSearch.getResultFileDirectory,
-      msiSearch.getJobNumber,
+      msiSearch.getJobNumber.intValue,
       msiSearch.getUserName,
       msiSearch.getUserEmail,
-      msiSearch.getQueriesCount,
-      msiSearch.getSearchedSequencesCount)
+      msiSearch.getQueriesCount.intValue,
+      msiSearch.getSearchedSequencesCount.intValue)
   }
 
   private def buildSearchSettings(msiSearchSetting: MsiSearchSetting): SearchSettings = {
@@ -487,6 +486,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
     val msiUsedPtms = msiSearchSetting.getUsedPtms
     if ((msiUsedPtms != null) && !msiUsedPtms.isEmpty) {
+
       for (msiUsedPtm <- msiUsedPtms) {
         val ptmDef = buildPtmDefinition(msiUsedPtm)
 
@@ -505,6 +505,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
     val searchSettingsSeqDatabaseMaps = msiSearchSetting.getSearchSettingsSeqDatabaseMaps
     if ((searchSettingsSeqDatabaseMaps != null) && !searchSettingsSeqDatabaseMaps.isEmpty) {
+
       for (entry <- searchSettingsSeqDatabaseMaps) {
         val msiSeqDatabase = entry.getSeqDatabase
 
@@ -513,6 +514,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         }
 
       }
+
     }
 
     val serializedProperties = msiSearchSetting.getSerializedProperties
@@ -523,15 +525,15 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       Some(Json.parse[SearchSettingsProperties](serializedProperties))
     }
 
-    new SearchSettings(msiSearchSetting.getId,
+    new SearchSettings(msiSearchSetting.getId.intValue,
       msiSearchSetting.getSoftwareName,
       msiSearchSetting.getSoftwareVersion,
       msiSearchSetting.getTaxonomy,
-      msiSearchSetting.getMaxMissedCleavages,
+      msiSearchSetting.getMaxMissedCleavages.intValue,
       msiSearchSetting.getPeptideChargeStates,
       msiSearchSetting.getPeptideMassErrorTolerance,
       msiSearchSetting.getPeptideMassErrorToleranceUnit,
-      msiSearchSetting.getIsDecoy,
+      msiSearchSetting.getIsDecoy.booleanValue,
       enzymes,
       variablePtmDefs.result,
       fixedPtmDefs.result,
@@ -578,7 +580,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         msiSeqDatabaseId,
         msiSeqDatabase.getName,
         msiSeqDatabase.getFastaFilePath,
-        msiSeqDatabase.getSequenceCount,
+        msiSeqDatabase.getSequenceCount.intValue,
         relDate, // DateUtils.formatReleaseDate(msiSeqDatabase.getReleaseDate)
         msiSeqDatabase.getVersion)
 
@@ -595,7 +597,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     val msiSequenceMatchId = msiSequenceMatch.getId
 
     /* Peptide */
-    val peptide = retrievePeptide(msiSequenceMatchId.getPeptideId)
+    val peptide = retrievePeptide(msiSequenceMatchId.getPeptideId.intValue)
 
     /* BestPeptideMatch */
     val msiBestPeptideMatchId = msiSequenceMatch.getBestPeptideMatchId.intValue
@@ -608,12 +610,12 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       throw new IllegalArgumentException("Unknown best PeptideMatch Id: " + msiBestPeptideMatchId)
     }
 
-    new SequenceMatch(msiSequenceMatchId.getStart,
-      msiSequenceMatchId.getStop,
+    new SequenceMatch(msiSequenceMatchId.getStart.intValue,
+      msiSequenceMatchId.getStop.intValue,
       StringUtils.convertStringResidueToChar(msiSequenceMatch.getResidueBefore),
       StringUtils.convertStringResidueToChar(msiSequenceMatch.getResidueAfter),
-      msiSequenceMatch.getIsDecoy,
-      msiSequenceMatch.getResultSetId,
+      msiSequenceMatch.getIsDecoy.booleanValue,
+      msiSequenceMatch.getResultSetId.intValue,
       peptide.id,
       Some(peptide),
       knownBestPeptideMatch.get.id,
@@ -652,11 +654,11 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
   private def buildPeaklist(msiPeaklist: MsiPeaklist): Peaklist = {
     assert(msiPeaklist != null, "buildPeaklist() msiPeaklist is null")
 
-    new Peaklist(msiPeaklist.getId,
+    new Peaklist(msiPeaklist.getId.intValue,
       msiPeaklist.getType,
       msiPeaklist.getPath,
       msiPeaklist.getRawFileName,
-      msiPeaklist.getMsLevel,
+      msiPeaklist.getMsLevel.intValue,
       msiPeaklist.getSpectrumDataCompression,
       buildPeaklistSoftware(msiPeaklist.getPeaklistSoftware))
   }

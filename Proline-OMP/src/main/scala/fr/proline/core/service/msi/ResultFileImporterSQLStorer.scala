@@ -4,18 +4,18 @@ import java.io.File
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.profi.jdbc.easy.{EasyDBC, int2Formattable, row2Int, row2String, string2Formattable}
+import fr.profi.jdbc.easy.{ EasyDBC, int2Formattable, row2Int, row2String, string2Formattable }
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.dal.{ContextFactory, ProlineEzDBC}
+import fr.proline.core.dal.{ ContextFactory, ProlineEzDBC }
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
-import fr.proline.core.om.model.msi.{InstrumentConfig, PeaklistSoftware, ResultSet, ResultSetProperties, SearchSettingsProperties}
+import fr.proline.core.om.model.msi.{ InstrumentConfig, PeaklistSoftware, ResultSet, ResultSetProperties, SearchSettingsProperties }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.impl.SQLInstrumentConfigProvider
-import fr.proline.core.om.storer.msi.{IRsStorer, RsStorer}
+import fr.proline.core.om.storer.msi.{ IRsStorer, RsStorer }
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.StringUtils
@@ -60,7 +60,7 @@ class ResultFileImporterSQLStorer(
 
   override protected def beforeInterruption = {
     // Release database connections
-    this.logger.info("releasing database connections before service interruption...")
+    logger.debug("Releasing database connections before service interruption...")
     //    this.msiDb.closeConnection()
     //this.udsEzDBC.connection.close()
     //storerContext.closeAll()
@@ -78,7 +78,7 @@ class ResultFileImporterSQLStorer(
 
     // Check that a file is provided
     require(resultIdentFile != null, "ResultFileImporter service: No file specified.")
-    logger.info(" Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
+    logger.info("Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
     >>>
 
     val msiEzDBC = ProlineEzDBC(executionContext.getMSIDbConnectionContext)
@@ -208,7 +208,7 @@ class ResultFileImporterSQLStorer(
         val targetRSId = if (tRs == null) { 0 } else { tRs.id }
         val decoyRSId = if (dRs == null) { 0 } else { dRs.id }
 
-        "Temporary TARGET ResultSet Id: " + targetRSId + "  DECOY ResultSet id: " + decoyRSId
+        "TARGET ResultSet {" + targetRSId + "}  DECOY ResultSet {" + decoyRSId + '}'
       }
 
       targetRs = tRs
