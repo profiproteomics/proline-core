@@ -604,20 +604,11 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
     val knownBestPeptideMatch = knownPeptideMatches.get(msiBestPeptideMatchId)
 
-    val omBestPeptideMatch =
-      if (knownBestPeptideMatch.isDefined) {
-        knownBestPeptideMatch.get
-      } else {
-        logger.warn("Best PeptideMatch #" + msiBestPeptideMatchId + " is not in ResultSet.peptideMatches")
+    if (knownBestPeptideMatch.isEmpty) {
+      throw new IllegalArgumentException("Unknown best PeptideMatch Id: " + msiBestPeptideMatchId)
+    }
 
-        val msiBestPeptideMatch = msiEM.find(classOf[MsiPeptideMatch], msiBestPeptideMatchId)
-
-        if (msiBestPeptideMatch == null) {
-          throw new IllegalArgumentException("Best PeptideMatch #" + msiBestPeptideMatchId + " NOT found in MSI Db")
-        }
-
-        buildPeptideMatch(msiBestPeptideMatch, resultSetId, msiEM)
-      }
+    val omBestPeptideMatch = knownBestPeptideMatch.get
 
     new SequenceMatch(msiSequenceMatchId.getStart.intValue,
       msiSequenceMatchId.getStop.intValue,
@@ -628,7 +619,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       peptide.id,
       Some(peptide),
       omBestPeptideMatch.id,
-      knownBestPeptideMatch,
+      Some(omBestPeptideMatch),
       None) // TODO handle properties
   }
 
