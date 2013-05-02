@@ -300,16 +300,11 @@ case class ResultSummary (
       throw new Exception("a result set should linked to the result summary first")
     }
     
-    // Retrieve the result set
     val resultSet = this.resultSet.get
     
-    // Filter peptide matches if wanted
-    val rsPepMatches = if(onlyValidated) resultSet.peptideMatches.filter( _.isValidated == true ) else resultSet.peptideMatches
-    
-    // Retrieve object maps    
-    val peptideMatchesByPepId = rsPepMatches.groupBy( _.peptide.id )
-    val peptideMatchById = Map() ++ rsPepMatches.map( pm => pm.id -> pm )
-    val proteinMatchById = resultSet.proteinMatchById
+    // Retrieve object maps
+    val peptideMatchMap = resultSet.peptideMatchById
+    val proteinMatchMap = resultSet.proteinMatchById 
     
     val bestPepMatchesByProtSetIdBuilder = collection.immutable.HashMap.newBuilder[Int,Array[PeptideMatch]]
     for( proteinSet <- this.proteinSets ) {
@@ -320,24 +315,14 @@ case class ResultSummary (
       // Iterate over sequence matches of the protein set to find the best peptide matches
       for( val proteinMatchId <- proteinSet.getProteinMatchIds ) {
         
-        val proteinMatch = proteinMatchById(proteinMatchId)
+        val proteinMatch = proteinMatchMap(proteinMatchId)
         val seqMatches = proteinMatch.sequenceMatches
         
         for( val seqMatch <- seqMatches ) {
+          val bestPeptideMatch = peptideMatchMap.get( seqMatch.getBestPeptideMatchId )
           
-          var bestPeptideMatch = peptideMatchById.get( seqMatch.getBestPeptideMatchId )
-          
-          // Try to find another best peptide match if the default one can't be found
-          if( bestPeptideMatch.isEmpty ) {
-            val seqMatchPepMatches = peptideMatchesByPepId.get( seqMatch.peptide.get.id )
-            if( seqMatchPepMatches.isDefined ) {
-              val sortedPepMatches = seqMatchPepMatches.get.sortWith( (a,b) => a.score > b.score )
-              bestPeptideMatch = Some( sortedPepMatches(0) )
-            }
-          }
-          
-          // If the best peptide match has been found
-          if( bestPeptideMatch.isDefined ) {
+          // if the peptide is not in the map (its score may be too low)
+          if( bestPeptideMatch != None ) {
             bestPepMatchByMsQueryId += ( bestPeptideMatch.get.msQuery.id -> bestPeptideMatch.get )
           }
         }

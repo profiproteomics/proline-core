@@ -21,11 +21,11 @@ class ScoreProtSetFilter(
   val filterDescription = "protein set score filter"
   
   def isProteinSetValid( protSet: ProteinSet ): Boolean = {
-    protSet.score >= scoreThreshold
+    protSet.peptideSet.score >= scoreThreshold
   }
   
   def sortProteinSets( protSets: Seq[ProteinSet] ): Seq[ProteinSet] = {
-    protSets.sortWith( _.score > _.score )
+    protSets.sortWith( _.peptideSet.score > _.peptideSet.score )
   }
 
   def getFilterProperties(): Map[String, Any] = {

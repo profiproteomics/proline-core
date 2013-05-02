@@ -36,8 +36,8 @@ class PepMatchRulesValidatorWithFDROptimization(
     // Retrieve some vars
     val( targetProtSets, decoyProtSets ) = ( targetRsm.proteinSets, decoyRsm.get.proteinSets )
     val allProtSets = targetProtSets ++ decoyProtSets
-    val allPepMatchesByProtSetId = targetRsm.getBestPepMatchesByProtSetId() ++ decoyRsm.get.getBestPepMatchesByProtSetId()
-    val protSetValStatusMap = ProteinSetFiltering.getProtSetValidationStatusMap(allProtSets)    
+    val allPepMatchesByProtSetId = targetRsm.getBestValidatedPepMatchesByPepSetId() ++ decoyRsm.get.getBestValidatedPepMatchesByPepSetId()
+    val protSetValStatusMap = ProteinSetFiltering.getProtSetValidationStatusMap(allProtSets)
     
     // Define some vars
     var currentFdr = 100.0f

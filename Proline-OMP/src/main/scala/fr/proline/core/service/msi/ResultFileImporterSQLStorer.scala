@@ -71,7 +71,7 @@ class ResultFileImporterSQLStorer(
   def getTargetResultSetId = targetResultSetId
 
   def runService(): Boolean = {
-
+    
     // Check that a file is provided
     require(resultIdentFile != null, "ResultFileImporter service: No file specified.")
     

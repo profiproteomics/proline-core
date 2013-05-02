@@ -210,7 +210,7 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
       // Update peptide instance
       pepInstance.proteinMatchesCount = proteinMatchCount
       pepInstance.proteinSetsCount = proteinSetCount
-      
+      pepInstance.validatedProteinSetsCount = proteinSetCount
     }
         
     // Create result summary

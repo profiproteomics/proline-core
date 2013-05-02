@@ -47,9 +47,6 @@ public class PeptideInstance implements Serializable {
 
 	@Column(name="protein_set_count")
 	private Integer proteinSetCount;
-	
-    @Column(name="total_leaves_match_count")
-    private Integer totalLeavesMatchCount;
 
 	@Column(name="validated_protein_set_count")
 	private Integer validatedProteinSetCount;

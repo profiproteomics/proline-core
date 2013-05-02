@@ -10,7 +10,6 @@ import fr.proline.core.dal._
 import fr.proline.core.dal.tables.msi.{MsiDbResultSummaryTable}
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLRsmStorer
-import fr.proline.context.IExecutionContext
 
 trait IRsmStorer extends Logging {
   

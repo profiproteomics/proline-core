@@ -22,13 +22,13 @@ class PepMatchRulesValidator(
     val targetProtSets = targetRsm.proteinSets
     val decoyProtSets = decoyRsm.map(_.proteinSets)
     val allProtSets = targetProtSets ++ decoyProtSets.getOrElse(Array())
-    var allPepMatchesByProtSetId = targetRsm.getBestPepMatchesByProtSetId()
+    var allBestValidPepMatchesByPepSetId = targetRsm.getBestValidatedPepMatchesByPepSetId()
     if( decoyRsm.isDefined ) {
-      allPepMatchesByProtSetId ++= decoyRsm.get.getBestPepMatchesByProtSetId()
+      allBestValidPepMatchesByPepSetId ++= decoyRsm.get.getBestValidatedPepMatchesByPepSetId()
     }
     
     // Validate results with the thresholds that provide the best results
-    this._validateProteinSets( allProtSets, allPepMatchesByProtSetId, validationRules )
+    this._validateProteinSets( allProtSets, allBestValidPepMatchesByPepSetId, validationRules )
     
     // Compute validation result
     val valResult = this.computeValidationResult(targetRsm, decoyRsm)

@@ -12,8 +12,8 @@ import fr.proline.util.primitives._
 class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) extends IInstrumentConfigProvider {
   
   def getInstrumentConfigsAsOptions( instConfigIds: Seq[Int] ): Array[Option[InstrumentConfig]] = {
-    throw new Exception("NYI")
-    null
+    val instConfigById = Map() ++ this.getInstrumentConfigs(instConfigIds).map( ic => ic.id -> ic )
+    instConfigIds.toArray.map( instConfigById.get(_) )
   }
   
   def getInstrumentConfigs( instConfigIds: Seq[Int] ): Array[InstrumentConfig] = {

@@ -8,8 +8,6 @@ trait IInstrumentConfigProvider {
   
   def getInstrumentConfigs( instConfigIds: Seq[Int] ): Array[InstrumentConfig]
   
-  def getInstrumentConfigAsOption( instConfigId: Int ): Option[InstrumentConfig] = { getInstrumentConfigsAsOptions( Seq(instConfigId) )(0) }
-
-  def getInstrumentConfig( instConfigId: Int ): InstrumentConfig = { getInstrumentConfigs( Seq(instConfigId) )(0) }
+  def getInstrumentConfig( instConfigId: Int ): Option[InstrumentConfig] = { getInstrumentConfigsAsOptions( Seq(instConfigId) )(0) }
   
 }

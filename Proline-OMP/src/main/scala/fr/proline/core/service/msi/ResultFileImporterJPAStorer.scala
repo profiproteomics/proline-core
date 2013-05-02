@@ -145,12 +145,7 @@ class ResultFileImporterJPAStorer(
         acDecoyRegex,
         if( acDecoyRegex != None ) Some(TargetDecoyResultSetSplitter) else None        
       )
-      
-      // FIXME: remove these 3 lines when we know that TargetDecoyMode is not needed at searchSettingsLevel
-      val ssProps = targetRs.msiSearch.get.searchSettings.properties.getOrElse(new SearchSettingsProperties)
-      ssProps.setTargetDecoyMode(rsProps.getTargetDecoyMode)
-      targetRs.msiSearch.get.searchSettings.properties = Some(ssProps)
-      
+
       >>>
 
       // Commit transaction if it was initiated locally
@@ -217,7 +212,7 @@ class ResultFileImporterJPAStorer(
     }
 
     pklSoftOpt.get
-  
+
   }
   
   private def _getInstrumentConfig(instrumentConfigId: Int, udsDbContext: DatabaseConnectionContext): InstrumentConfig = {

@@ -13,7 +13,7 @@ import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROp
 import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
 import fr.proline.core.algo.msi.validation.{ BasicTDAnalyzer, _ }
 import fr.proline.core.algo.msi.InferenceMethods
-import fr.proline.core.algo.msi.scoring.ProtSetScoring
+import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.dal.{ ContextFactory, SQLConnectionContext }
 import fr.proline.core.om.model.msi.{ ResultSet, PeptideMatch, FilterDescriptor }
 import fr.proline.core.om.provider.msi.impl._

@@ -19,13 +19,12 @@ abstract class AbstractPepMatchRulesValidator extends IProteinSetValidator {
   
   protected def _validateProteinSets(
     proteinSets: Seq[ProteinSet],
-    bestPepMatchesByProtSetId: Map[Int,Array[PeptideMatch]],
+    bestPepMatchesByPepSetId: Map[Int,Array[PeptideMatch]],
     rules: Array[ValidationRule] ): Unit = {
     
     for( proteinSet <- proteinSets ) {
       
-      val proteinSetId = proteinSet.id
-      val bestPepMatches = bestPepMatchesByProtSetId(proteinSetId)      
+      val bestPepMatches = bestPepMatchesByPepSetId(proteinSet.peptideSet.id)      
       var isProteinSetValid = false
       
       for( rule <- rules ) {

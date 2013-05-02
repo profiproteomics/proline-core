@@ -1,8 +1,10 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
+
 import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
+
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal.DoJDBCWork
@@ -14,7 +16,6 @@ import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.repository.util.JDBCWork
 import fr.proline.util.bytes._
-import fr.proline.repository.util.PostgresUtils
 
 object SQLPeaklistWriter extends AbstractSQLPeaklistWriter
 
@@ -55,7 +56,6 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
   }
 
   def insertSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
-    
     
     logger.info("storing spectra...")
 

@@ -2,26 +2,26 @@ package fr.proline.core.algo.msi.scoring
 
 import fr.proline.core.om.model.msi.ResultSummary
 
-object ProtSetScoring extends Enumeration {
-  type Updater = Value
-  val MASCOT_PROTEIN_SET_SCORE = Value("mascot:protein set score")
+object PepSetScoring extends Enumeration {
+  val MASCOT_PEPTIDE_SET_SCORE = Value("mascot:peptide set score")
   val MASCOT_STANDARD_SCORE = Value("mascot:standard score")
   val MASCOT_MUDPIT_SCORE = Value("mascot:mudpit score")
 }
 
-trait IProtSetAndPepSetScoreUpdater {
+trait IPeptideSetScoreUpdater {
   
-  def updateScoreOfProteinSets( rsm: ResultSummary, params:Any* ): Unit
+  def updateScoreOfPeptideSets( rsm: ResultSummary, params:Any* ): Unit
   
 }
 
 
-object ProtSetAndPepSetScoreUpdater {
+object PeptideSetScoreUpdater {
   
-  def apply( methodName: ProtSetScoring.Updater ): IProtSetAndPepSetScoreUpdater = { methodName match {
-    case ProtSetScoring.MASCOT_MUDPIT_SCORE => new MascotMudpitScoreUpdater()
-    case ProtSetScoring.MASCOT_STANDARD_SCORE => new MascotStandardScoreUpdater()    
-    case ProtSetScoring.MASCOT_PROTEIN_SET_SCORE => new MascotProteinSetScoreUpdater()
+  def apply( methodName: PepSetScoring.Value ): IPeptideSetScoreUpdater = {
+    methodName match {
+      case PepSetScoring.MASCOT_MUDPIT_SCORE => new MascotMudpitScoreUpdater()
+      case PepSetScoring.MASCOT_STANDARD_SCORE => new MascotStandardScoreUpdater()    
+      case PepSetScoring.MASCOT_PEPTIDE_SET_SCORE => new MascotPeptideSetScoreUpdater()
     }
   }
 
