@@ -319,5 +319,4 @@
   <quant_channel/>
   <ratio_definition/>
   <run_identification/>
-  <schema_version version="0.1" description="init udsdb" type="SQL" script="V0_1__init_udsdb.sql" checksum="1780922819" installed_by="proline_db_user" installed_on="2013-02-13 12:40:15.502" execution_time="624" state="SUCCESS" current_version="true"/>
 </dataset>

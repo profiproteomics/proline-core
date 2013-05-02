@@ -16612,5 +16612,4 @@
   <ptm_evidence id="985" type="Precursor" is_required="true" composition="H(28) C(12) 13C(4) N(3) 15N O(3)" mono_mass="329.226595" average_mass="329.3825" ptm_id="951"/>
   <ptm_evidence id="986" type="Precursor" is_required="true" composition="H(10) C(6) O(6)" mono_mass="178.047738" average_mass="178.14" ptm_id="952"/>
   <ptm_evidence id="987" type="Precursor" is_required="true" composition="H(11) C(6) O(9) P" mono_mass="258.014069" average_mass="258.1199" ptm_id="953"/>
-  <schema_version version="0.1" description="init psdb" type="SQL" script="V0_1__init_psdb.sql" checksum="-821527608" installed_by="proline_db_user" installed_on="2013-02-13 12:40:19.573" execution_time="168" state="SUCCESS" current_version="true"/>
 </dataset>

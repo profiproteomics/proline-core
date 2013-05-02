@@ -126,7 +126,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
     //      entry._1.score = score
     //    })
     val scoring = new MascotStandardScoreUpdater()
-    scoring.updateScoreOfProteinSets(rsu)
+    scoring.updateScoreOfPeptideSets(rsu)
 
     val filter = new SpecificPeptidesPSFilter(minNbrPep = 1)
 
@@ -164,7 +164,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
     assertEquals(3, rsu.proteinSets.length)
 
     val scoring = new MascotStandardScoreUpdater()
-    scoring.updateScoreOfProteinSets(rsu)
+    scoring.updateScoreOfPeptideSets(rsu)
 
     val filter = new SpecificPeptidesPSFilter(minNbrPep = 1)
 
@@ -205,7 +205,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
     assertEquals(4, rsu.proteinSets.length)
 
     val scoring = new MascotStandardScoreUpdater()
-    scoring.updateScoreOfProteinSets(rsu)
+    scoring.updateScoreOfPeptideSets(rsu)
 
     val filter = new SpecificPeptidesPSFilter(minNbrPep = 1)
     filter.filterProteinSets(protSets = rsu.proteinSets, incrementalValidation = true, traceability = true)

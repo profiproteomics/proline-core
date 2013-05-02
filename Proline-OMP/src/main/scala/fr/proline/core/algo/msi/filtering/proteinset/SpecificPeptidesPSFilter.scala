@@ -36,7 +36,7 @@ class SpecificPeptidesPSFilter(
   // IProteinSetFilter  methods   
   def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {
 
-    protSets.sortBy(_.score)
+    protSets.sortBy(_.peptideSet.score)
     val protSetCountByPepInst = getPepInstanceProtSetCount(protSets)
 
     // Reset validation status if validation is not incremental
