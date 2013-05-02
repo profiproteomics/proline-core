@@ -22,8 +22,6 @@ public class UsedPtm implements Serializable {
 	@Column(name="short_name")
 	private String shortName;
 
-	private String type;
-
 	//bi-directional many-to-one association to PtmSpecificity
    @ManyToOne
 	@JoinColumn(name="ptm_specificity_id")
@@ -62,14 +60,6 @@ public class UsedPtm implements Serializable {
 
 	public void setShortName(String shortName) {
 		this.shortName = shortName;
-	}
-
-	public String getType() {
-		return this.type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	public PtmSpecificity getPtmSpecificity() {

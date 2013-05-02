@@ -7,7 +7,6 @@ import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.{ MsiDbProteinSetTable, MsiDbProteinSetProteinMatchItemTable, MsiDbPeptideSetTable }
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.{ PeptideSet, ProteinSet, ProteinSetProperties, ProteinMatchResultSummaryProperties }
 import fr.proline.core.om.provider.msi.{ IPeptideSetProvider, IProteinSetProvider }
 import fr.proline.context.DatabaseConnectionContext
@@ -23,12 +22,6 @@ class SQLProteinSetProvider(
 
   val ProtSetCols = MsiDbProteinSetTable.columns
   val ProtSetItemCols = MsiDbProteinSetProteinMatchItemTable.columns
-
-  // Instantiate a MSIdb helper
-  val msiDbHelper = new MsiDbHelper(msiDbCtx)
-
-  // Retrieve score type map
-  val scoreTypeById = msiDbHelper.getScoringTypeById
 
   def getProteinSetsAsOptions(protSetIds: Seq[Int]): Array[Option[ProteinSet]] = {
 
@@ -149,8 +142,6 @@ class SQLProteinSetProvider(
         id = protSetId,
         peptideSet = pepSet,
         hasPeptideSubset = pepSet.hasSubset,
-        score = toFloat(protSetRecord(ProtSetCols.SCORE)),
-        scoreType = scoreTypeById(protSetRecord(ProtSetCols.SCORING_ID).asInstanceOf[Int]),
         isValidated = protSetRecord(ProtSetCols.IS_VALIDATED),
         selectionLevel = protSetRecord(ProtSetCols.SELECTION_LEVEL).asInstanceOf[Int],
         proteinMatchIds = protMatchIdsBuilder.result(),

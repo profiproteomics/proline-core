@@ -142,8 +142,8 @@ object PdiDbGeneColumns extends ColumnEnumeration {
   val $tableName = PdiDbGeneTable.name
   val ID = Column("id")
   val NAME = Column("name")
+  val NAME_TYPE = Column("name_type")
   val SYNONYMS = Column("synonyms")
-  val ORF_NAMES = Column("orf_names")
   val IS_ACTIVE = Column("is_active")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val TAXON_ID = Column("taxon_id")
@@ -333,6 +333,7 @@ object PdiDbTaxonColumns extends ColumnEnumeration {
   val ID = Column("id")
   val SCIENTIFIC_NAME = Column("scientific_name")
   val RANK = Column("rank")
+  val IS_ACTIVE = Column("is_active")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val PARENT_TAXON_ID = Column("parent_taxon_id")
 }

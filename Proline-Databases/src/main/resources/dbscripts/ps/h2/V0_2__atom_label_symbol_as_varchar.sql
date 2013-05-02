@@ -1,0 +1,1 @@
+ALTER TABLE atom_label ALTER COLUMN symbol VARCHAR(2) NOT NULL;

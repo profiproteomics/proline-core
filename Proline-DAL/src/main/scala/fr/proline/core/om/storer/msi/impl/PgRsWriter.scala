@@ -1,11 +1,16 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
 import com.codahale.jerkson.Json.generate
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
+
 import fr.profi.jdbc.easy._
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal._
+import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.msi.{
@@ -17,12 +22,10 @@ import fr.proline.core.dal.tables.msi.{
 }
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
-import fr.proline.util.sql.encodeRecordForPgCopy
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.repository.util.PostgresUtils
+import fr.proline.util.sql.encodeRecordForPgCopy
 
-private[msi] class PgRsWriter() extends SQLiteRsWriter() {
+private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
   // val bulkCopyManager = new CopyManager( msiDb1.ezDBC.connection.asInstanceOf[BaseConnection] )
 
@@ -43,8 +46,8 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
   
   //def fetchExistingPeptidesIdByUniqueKey( pepSequences: Seq[String] ):  Map[String,Int] = null
   // TODO: insert peptides into a TMP table
-
-  override def storeNewPeptides(peptides: Seq[Peptide], msiDbCtx: DatabaseConnectionContext): Unit = {
+  // TODO: check first peptideByUniqueKey ???
+  override def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit = {
 
     DoJDBCWork.withConnection( msiDbCtx, { msiCon =>
       
@@ -98,7 +101,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
 
   //def storeNewProteins( proteins: Seq[Protein] ): Array[Protein] = null
 
-  override def storeRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
+  override def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
 
     DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
@@ -214,7 +217,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
 
   }
 
-  override def storeRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
+  override def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
 
     DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
@@ -297,7 +300,7 @@ private[msi] class PgRsWriter() extends SQLiteRsWriter() {
     
   }
 
-  override def storeRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
+  override def insertRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
 
     DoJDBCReturningWork.withConnection( msiDbCtx, { msiCon =>
       

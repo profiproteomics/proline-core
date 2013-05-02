@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.HashMap
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.storer.msi.{ MsiSearchStorer, RsStorer }
+import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.filtering._
@@ -21,8 +21,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.algo.msi.scoring.ProtSetAndPepSetScoreUpdater
-import fr.proline.core.algo.msi.scoring.ProtSetScoring
+import fr.proline.core.algo.msi.scoring._
 import fr.proline.core.algo.msi.InferenceMethods
 
 object ResultSetValidator {
@@ -36,8 +35,9 @@ object ResultSetValidator {
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
     protSetValidator: Option[IProteinSetValidator] = None,
     inferenceMethod: Option[InferenceMethods.InferenceMethods] = Some(InferenceMethods.communist),
-    proteinSetScoring: Option[ProtSetScoring.Updater] = Some(ProtSetScoring.MASCOT_STANDARD_SCORE),
-    storeResultSummary: Boolean = true): ResultSetValidator = {
+    proteinSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
+    storeResultSummary: Boolean = true
+  ): ResultSetValidator = {
 
     val rsProvider = getResultSetProvider(execContext)
     val targetRs = rsProvider.getResultSet(targetRsId)
@@ -101,8 +101,9 @@ class ResultSetValidator(
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   protSetValidator: Option[IProteinSetValidator] = None,
   inferenceMethod: Option[InferenceMethods.InferenceMethods] = Some(InferenceMethods.communist),
-  proteinSetScoring: Option[ProtSetScoring.Updater] = Some(ProtSetScoring.MASCOT_STANDARD_SCORE),
-  storeResultSummary: Boolean = true) extends IService with Logging {
+  proteinSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
+  storeResultSummary: Boolean = true
+) extends IService with Logging {
 
   private val msiDbContext = execContext.getMSIDbConnectionContext
   var validatedTargetRsm: ResultSummary = null
@@ -150,9 +151,9 @@ class ResultSetValidator(
         //        rsm.resultSet = rs // affect complete RS : No More necessary , complete RS passed to inferer 
 
         // Update score of protein sets
-        val protSetScoreUpdater = ProtSetAndPepSetScoreUpdater(proteinSetScoring.get)
-        this.logger.debug("updating score of protein sets using "+proteinSetScoring.get.toString)
-        protSetScoreUpdater.updateScoreOfProteinSets(rsm)
+        val pepSetScoreUpdater = PeptideSetScoreUpdater(proteinSetScoring.get)
+        this.logger.debug("updating score of peptide sets using "+proteinSetScoring.get.toString)
+        pepSetScoreUpdater.updateScoreOfPeptideSets(rsm)
 
         resultSummaries += Some(rsm)
       } else {

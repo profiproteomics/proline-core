@@ -2,42 +2,109 @@ package fr.proline.core.om.storer.msi.impl
 
 import fr.profi.jdbc.easy.{ int2Formattable, string2Formattable, stringOption2Formattable }
 import fr.proline.core.dal.{ BuildJDBCWork, ContextFactory }
-import fr.proline.core.om.model.msi.{ IPeaklistContainer, InstrumentConfig, MsQuery, Peaklist, ResultSet }
+import fr.proline.core.om.model.msi.{ IResultFile, MsQuery, Peaklist, ResultSet }
 import fr.proline.core.om.storer.msi.{ IPeaklistWriter, IRsStorer, PeaklistWriter }
 import fr.proline.repository.IDataStoreConnectorFactory
 import javax.persistence.EntityTransaction
 
-abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IRsStorer {
+abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) extends IRsStorer {
 
   // IPeaklistWriter to use to store PeakList and Spectrum 
-  var localPlWriter: IPeaklistWriter = plWriter
+  //var localPlWriter: IPeaklistWriter = plWriter
 
   type MsiResultSet = fr.proline.core.orm.msi.ResultSet
-
+  
   /**
-   * Store specified ResultSet in persistence repository, using  storerContext for context and mapping information
-   *
-   * This default implementation of IRsStorer will call  final def storeResultSet(...) method without
-   * specifying spectra or MsQueries
-   *
+   * Create and persist ResultSet in repository, using storerContext for context and mapping information.
+   * This method has to be implemented in concrete ResultSet storers.
    */
-  def storeResultSet(resultSet: ResultSet, storerContext: StorerContext): Int = {
-
-    if (resultSet == null) {
-      throw new IllegalArgumentException("ResultSet is null")
-    }
-
-    if (storerContext == null) {
-      throw new IllegalArgumentException("StorerContext is null")
-    }
-
-    storeResultSet(resultSet = resultSet,
-      msQueries = null,
-      peakListContainer = null,
-      storerContext = storerContext)
-
+  protected def createResultSet(resultSet: ResultSet, context: StorerContext): Int
+  
+  /**
+   * Store specified ResultSet in persistence repository, using storerContext for context and mapping information.
+   * This default implementation of IRsStorer will call private method _storeResultSetmethod without specifying spectra or MsQueries
+   * 
+   * Transaction are not managed by this method, should be done by user.
+   */
+  final def storeResultSet(resultSet: ResultSet, storerContext: StorerContext): Int = {
+    this._storeResultSet(resultSet, None, None, storerContext)    
   }
 
+  /**
+   * Store specified ResultSet in persistence repository, using storerContext for context and mapping information.
+   * Some checks are performed then the private method _storeResultSet is executed to save the ResultSet.
+   * 
+   * Transaction are not managed by this method, should be done by user.
+   * 
+   * TODO: move to ResultFileStorer ???
+   */
+  final def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], storerContext: StorerContext): Int = {
+
+    require(resultSet.isNative, "only native result sets can be saved using this method")
+    require(msQueries != null, "msQueries must not be null")
+    //require(resultFile != null, "resultFile must not be null")
+    require(resultSet.msiSearch.isDefined, "MSISearch must be defined")
+    
+    this._storeResultSet(resultSet, Some(msQueries), None, storerContext)
+  }
+
+  /**
+   * This method will first save spectra and queries related data specified by peakListContainer and msQueries.
+   * This will be done using IRsStorer storePeaklist, storeMsiSearch, storeMsQueries and storeSpectra methods.
+   * 
+   * Then the implementation of the abstract createResultSet method will be executed to save other data.
+   * 
+   * TODO: use other writers : peptideMatch / ProteinMatch
+   *
+   */
+   final private def _storeResultSet(
+    resultSet: ResultSet,
+    msQueriesOpt: Option[Seq[MsQuery]],
+    resultFileOpt: Option[IResultFile],
+    storerContext: StorerContext
+  ): Int = {
+    
+    require(resultSet != null, "resultSet must not be null")
+    require(storerContext != null, "storerContext must not be null")
+    
+    val omResultSetId = resultSet.id
+
+    if (omResultSetId > 0) {
+      throw new UnsupportedOperationException("Updating a ResultSet is not supported yet !")
+    }
+
+    logger.info("Storing ResultSet " + omResultSetId + "  [" + resultSet.name + "]") 
+    
+    // Save Spectra and Queries information (MSISearch should be defined)
+    for( msiSearch <- resultSet.msiSearch ) {
+
+      // FIXME: it should be only called in the ResultFile storer
+      if( msiSearch.peakList.id < 0 ) {
+      
+        // Create a PeakListWriter if none was specified
+        val pklWriter = this.getOrBuildPeaklistWriter(storerContext)
+        
+        // Insert the Peaklist information
+        msiSearch.peakList.id = pklWriter.insertPeaklist(msiSearch.peakList, storerContext)
+      }
+      
+      // Insert the MSI search  and retrieve its new id
+      logger.info("storing MSI search...")
+      val msiSearchId = this.storeMsiSearch(msiSearch, storerContext)
+      
+      // Insert MS queries if they are provided
+      for( msQueries <- msQueriesOpt if !msQueries.isEmpty ) {
+        this.storeMsQueries(msiSearchId, msQueries, storerContext)
+      }
+    }
+
+    resultSet.id = createResultSet(resultSet, storerContext)
+
+    resultSet.id
+    
+  }  
+
+  // TODO: remove me ???
   def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Int): Int = {
 
     if (resultSet == null) {
@@ -64,11 +131,10 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
       msiTransaction.begin()
       msiTransacOk = false
 
-      msiResultSetId = storeResultSet(
+      msiResultSetId = this.storeResultSet(
         resultSet = resultSet,
-        msQueries = null,
-        peakListContainer = null,
-        storerContext = storerContext)
+        storerContext = storerContext
+      )
 
       // Commit transaction
       msiTransaction.commit()
@@ -95,90 +161,13 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
     msiResultSetId
   }
 
-  /**
-   * This method will first save spectra and queries related data specified by peakListContainer and msQueries. This will be done using
-   * IRsStorer storePeaklist, storeMsiSearch,  storeMsQueries and storeSpectra methods
-   *
-   * Then the implementation of the abstract createResultSet method will be executed to save other data.
-   * TODO : use other Storer / Writer : peptideStorer / ProteinMatch
-   *
-   *
-   */
-  final def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], peakListContainer: IPeaklistContainer, storerContext: StorerContext): Int = {
-
-    if (resultSet == null) {
-      throw new IllegalArgumentException("ResultSet is null")
-    }
-
-    if (storerContext == null) {
-      throw new IllegalArgumentException("StorerContext is null")
-    }
-
-    val omResultSetId = resultSet.id
-
-    if (omResultSetId > 0) {
-      throw new UnsupportedOperationException("Updating a ResultSet is not supported yet !")
-    }
-
-    logger.info("Storing ResultSet " + omResultSetId + "  [" + resultSet.name + ']')
-
-    /* Create a StorerContext if none was specified */
-
-    val oldPlWriter = localPlWriter
-
-    if (oldPlWriter == null) {
-      localPlWriter = PeaklistWriter(storerContext.getMSIDbConnectionContext.getDriverType)
-    }
-
-    // Save Spectra and Queries information (MSISearch should  be defined)
-    val msiSearchOpt = resultSet.msiSearch
-
-    for( msiSearch <- msiSearchOpt ) {
-      
-      // Save Peaklist information
-      val peakList = msiSearch.peakList
-      val msiPeaklistId = storePeaklist(peakList, storerContext)
-
-      peakList.id = msiPeaklistId // Update OM entity with persisted Primary key
-
-      // Save spectra retrieve by peakListContainer 
-      if (peakListContainer != null) {
-        storeSpectra(msiPeaklistId, peakListContainer, storerContext)
-      }
-
-      //TODO : Remove when shared transaction !!! : Close msiDB connection if used by previous store methods 
-
-      //START EM Transaction TODO : Remove when shared transaction !!!
-
-      /* Store MsiSearch and retrieve persisted ORM entity */
-
-      val msiSearchId = storeMsiSearch(msiSearch, storerContext)
-
-      // Save MSQueries 
-      if ((msQueries != null) && !msQueries.isEmpty) {
-        storeMsQueries(msiSearchId, msQueries, storerContext)
-      }
-
-    }
-
-    val msiResultSetPK = createResultSet(resultSet, storerContext)
-
-    resultSet.id = msiResultSetPK
-
-    /* Restore oldPlWriter */
-    localPlWriter = oldPlWriter
-
-    msiResultSetPK
-  }
-
-  def createResultSet(resultSet: ResultSet, context: StorerContext): Int
-
+  /*
   /**
    * Use Constructor specified IPeaklistWriter
    *
    */
-  def storeSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
-    localPlWriter.storeSpectra(peaklistId, peaklistContainer, context)
+  def storeSpectra(peaklistId: Int, peaklistContainer: IResultFile, context: StorerContext): StorerContext = {
+    localPlWriter.insertSpectra(peaklistId, peaklistContainer, context)
   }
 
   /**
@@ -186,32 +175,9 @@ abstract class AbstractRsStorer(val plWriter: IPeaklistWriter = null) extends IR
    *
    */
   final def storePeaklist(peaklist: Peaklist, context: StorerContext): Int = {
-    localPlWriter.storePeaklist(peaklist, context)
-  }
+    localPlWriter.insertPeaklist(peaklist, context)
+  }*/
 
-  def insertInstrumentConfig(instrumCfg: InstrumentConfig, context: StorerContext) = {
-    require(instrumCfg.id > 0, "Instrument configuration must have a strictly positive identifier")
 
-    val jdbcWork = BuildJDBCWork.withEzDBC(context.getMSIDbConnectionContext.getDriverType, { msiEzDBC =>
-
-      // Check if the instrument config exists in the MSIdb
-      val count = msiEzDBC.selectInt("SELECT count(*) FROM instrument_config WHERE id=" + instrumCfg.id)
-
-      // If the instrument config doesn't exist in the MSIdb
-      if (count == 0) {
-        msiEzDBC.executePrepared("INSERT INTO instrument_config VALUES (?,?,?,?,?)") { stmt =>
-          stmt.executeWith(
-            instrumCfg.id,
-            instrumCfg.name,
-            instrumCfg.ms1Analyzer,
-            Option(instrumCfg.msnAnalyzer),
-            Option.empty[String])
-        }
-      }
-
-    })
-
-    context.getMSIDbConnectionContext.doWork(jdbcWork, true)
-  }
 
 }

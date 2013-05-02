@@ -35,6 +35,9 @@ public class MasterQuantPeptideIon implements Serializable {
 
 	@Column(name = "lcms_feature_id")
 	private Integer lcmsFeatureId;
+	
+	@Column(name = "master_quant_peptide_id")
+	private Integer masterQuantPeptideId;
 
 	@Column(name = "peptide_id")
 	private Integer peptideId;

@@ -8,6 +8,7 @@ import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.PeptideSetItem
@@ -28,6 +29,12 @@ class SQLPeptideSetProvider(
   val PepSetRelationCols = MsiDbPeptideSetRelationTable.columns
   val PepSetItemCols = MsiDbPeptideSetPeptideInstanceItemTable.columns
   val ProtMatchMappingCols = MsiDbPeptideSetProteinMatchMapTable.columns
+
+  // Instantiate a MSIdb helper
+  val msiDbHelper = new MsiDbHelper(msiDbCtx)
+
+  // Retrieve score type map
+  val scoreTypeById = msiDbHelper.getScoringTypeById
 
   def getPeptideSetsAsOptions(pepSetIds: Seq[Int]): Array[Option[PeptideSet]] = {
 
@@ -215,7 +222,8 @@ class SQLPeptideSetProvider(
         id = pepSetId,
         items = pepSetItems.result(),
         isSubset = pepSetRecord(PepSetCols.IS_SUBSET),
-        score = toFloat( pepSetRecord(PepSetCols.SCORE) ),
+        score = toFloat(pepSetRecord(PepSetCols.SCORE)),
+        scoreType = scoreTypeById(pepSetRecord(PepSetCols.SCORING_ID).asInstanceOf[Int]),
         peptideMatchesCount = pepSetRecord(PepSetCols.PEPTIDE_MATCH_COUNT).asInstanceOf[Int],
         proteinMatchIds = protMatchIds,
         proteinSetId = pepSetRecord.getOrElse(PepSetCols.PROTEIN_SET_ID, 0).asInstanceOf[Int],

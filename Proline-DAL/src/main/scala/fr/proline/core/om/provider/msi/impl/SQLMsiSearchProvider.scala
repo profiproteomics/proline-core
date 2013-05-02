@@ -363,7 +363,8 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
           name = r.getString(enzCols.NAME),
           cleavageRegexp = r.getStringOption(enzCols.CLEAVAGE_REGEXP),
           isIndependant = r.getBooleanOrElse(enzCols.IS_INDEPENDANT, false),
-          isSemiSpecific = r.getBooleanOrElse(enzCols.IS_SEMI_SPECIFIC, false)
+          isSemiSpecific = r.getBooleanOrElse(enzCols.IS_SEMI_SPECIFIC, false),
+          properties = r.getStringOption(enzCols.SERIALIZED_PROPERTIES).map( parse[EnzymeProperties](_))
         )
       } toArray
     

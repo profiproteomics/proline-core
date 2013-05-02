@@ -40,6 +40,7 @@ import fr.proline.core.orm.msi.{
   ProteinSet => MsiProteinSet,
   ResultSet => MsiResultSet,
   ResultSummary => MsiResultSummary,
+  Scoring => MsiScoring,
   SequenceMatch => MsiSequenceMatch
 }
 import fr.proline.core.orm.uds.MasterQuantitationChannel
@@ -220,6 +221,10 @@ trait IQuantifier extends Logging {
     // Retrieve peptide instances of the merged result summary
     val masterPepInstances = masterRSM.peptideInstances
     val masterPepMatchById = masterRSM.resultSet.get.peptideMatchById
+    
+    // TODO: load scoring from MSIdb
+    val msiScoring = new MsiScoring()
+    msiScoring.setId(4)
 
     // Iterate over merged peptide instances to create quant peptide instances
     this.logger.info("storing master quant peptide instances...")
@@ -237,6 +242,7 @@ trait IQuantifier extends Logging {
       msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
       msiMasterPepInstance.setProteinMatchCount(masterPepInstance.proteinMatchesCount)
       msiMasterPepInstance.setProteinSetCount(masterPepInstance.proteinSetsCount)
+      msiMasterPepInstance.setValidatedProteinSetCount(masterPepInstance.validatedProteinSetsCount)
       msiMasterPepInstance.setTotalLeavesMatchCount(0)
       msiMasterPepInstance.setSelectionLevel(2)
       msiMasterPepInstance.setPeptideId(peptideId)
@@ -363,8 +369,6 @@ trait IQuantifier extends Logging {
         msiMasterProteinSet.setIsValidated(true)
         msiMasterProteinSet.setSelectionLevel(2)
         msiMasterProteinSet.setProteinMatchId(typicalProtMatchId)
-        // FIXME: retrieve the right scoring id
-        msiMasterProteinSet.setScoringId(4)
         msiMasterProteinSet.setResultSummary(msiQuantRSM)
         msiEm.persist(msiMasterProteinSet)
 
@@ -383,6 +387,9 @@ trait IQuantifier extends Logging {
         msiMasterPeptideSet.setPeptideCount(samesetItems.length)
         msiMasterPeptideSet.setPeptideMatchCount(masterPeptideSet.peptideMatchesCount)
         msiMasterPeptideSet.setProteinSet(msiMasterProteinSet)
+        // FIXME: retrieve the right scoring id
+        msiMasterPeptideSet.setScore(masterPeptideSet.score)
+        msiMasterPeptideSet.setScoring(msiScoring)
         msiMasterPeptideSet.setResultSummaryId(quantRsmId)
         msiEm.persist(msiMasterPeptideSet)
 

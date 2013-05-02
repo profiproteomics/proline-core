@@ -57,8 +57,8 @@ public class Dataset implements Serializable {
 
     private String description;
 
-    @Column(name = "fraction_count")
-    private Integer fractionCount;
+    @Column(name = "children_count")
+    private Integer childrenCount;
 
     private String keywords;
 
@@ -145,6 +145,14 @@ public class Dataset implements Serializable {
     public void setId(Integer id) {
 	this.id = id;
     }
+    
+    public Integer getChildrenCount() {
+	return this.childrenCount;
+    }
+
+    public void setChildrenCount(Integer childrenCount) {
+	this.childrenCount = childrenCount;
+    }
 
     public Timestamp getCreationTimestamp() {
 	return this.creationTimestamp;
@@ -160,14 +168,6 @@ public class Dataset implements Serializable {
 
     public void setDescription(String description) {
 	this.description = description;
-    }
-
-    public Integer getFractionCount() {
-	return this.fractionCount;
-    }
-
-    public void setFractionCount(Integer fractionCount) {
-	this.fractionCount = fractionCount;
     }
 
     public DatasetType getType() {

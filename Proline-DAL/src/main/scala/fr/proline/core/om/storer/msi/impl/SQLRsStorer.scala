@@ -1,6 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
 import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
@@ -9,77 +10,61 @@ import fr.profi.jdbc.easy._
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.storer.msi.IMsiSearchWriter
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.storer.msi.IRsWriter
 import fr.proline.core.om.storer.ps.PeptideStorer
+import fr.proline.core.orm.msi.ResultSet.{ Type => RSType }
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal._
-import fr.proline.core.om.storer.msi.IMsiSearchStorer
 
 class SQLRsStorer(
-  private val _rsWriter: IRsWriter,
-  private val _msiSearchStorer: IMsiSearchStorer,
-  private val _pklWriter: IPeaklistWriter
-) extends IRsStorer with Logging {
+  val rsWriter: IRsWriter,
+  val msiSearchWriter: Option[IMsiSearchWriter] = None,
+  override val pklWriter: Option[IPeaklistWriter] = None
+) extends AbstractRsStorer(pklWriter) with Logging {
+  
+  // TODO: implement as InMemoryProvider
+  val peptideByUniqueKey = new HashMap[String, Peptide]
+  val proteinBySequence = new HashMap[String, Protein]
 
-  protected val msiSearchStorer = _msiSearchStorer //new SQLiteMsiSearchStorer()
-
-  val peptideByUniqueKey = _rsWriter.peptideByUniqueKey
-  val proteinBySequence = _rsWriter.proteinBySequence
-
-  def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Int = 0): Int = {
-    var createdRsId: Int = 0
-
-    var storerContext: StorerContext = null // For SQL use ONLY
-
-    try {
-      storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, false))
-      createdRsId = storeResultSet(resultSet, storerContext)
-    } finally {
-
-      if (storerContext != null) {
-        storerContext.closeAll()
-      }
-
-    }
-
-    createdRsId
-  }
-
-  def storeResultSet(resultSet: ResultSet, context: StorerContext): Int = {
+  def createResultSet(resultSet: ResultSet, context: StorerContext): Int = {
     require(resultSet != null, "ResultSet is null")
-
+    
+    // Store decoy result set if it is defined and not already stored
+    if( resultSet.decoyResultSet.isDefined && resultSet.decoyResultSet.get.id <= 0 ) {
+      this._createResultSet(resultSet.decoyResultSet.get, context)
+    }
+    
+    // Store target result set
+    this._createResultSet(resultSet, context)
+  }
+  
+  private def _createResultSet(resultSet: ResultSet, context: StorerContext): Int = {
+    // TODO: retrieve seqDbIdByTmpId in an other way
     if (resultSet.isNative) this._storeResultSet(resultSet, context.seqDbIdByTmpId, context)
     else this._storeResultSet(resultSet, context)
   }
 
-  def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], peakListContainer: IPeaklistContainer, context: StorerContext): Int = {
-    throw new Exception("NYI")
-  }
-
   // Only for native result sets
-  def _storeResultSet(resultSet: ResultSet, seqDbIdByTmpId: Map[Int, Int], context: StorerContext): Int = {
+  private def _storeResultSet(resultSet: ResultSet, seqDbIdByTmpId: Map[Int, Int], context: StorerContext): Int = {
     require(resultSet.isNative, "too many arguments for a non native result set")
 
     this._insertResultSet(resultSet, context)
     this._storeNativeResultSetObjects(resultSet, seqDbIdByTmpId, context)
-
-    // Clear mappings which are now inconsistent because of PKs update
-    //resultSet.clearMappings
+    
     resultSet.id
   }
 
   // Only for non native result sets
-  def _storeResultSet(resultSet: ResultSet, context: StorerContext): Int = {
+  private def _storeResultSet(resultSet: ResultSet, context: StorerContext): Int = {
     require(resultSet.isNative == false, "not enough arguments for a native result set")
 
     this._insertResultSet(resultSet, context)
     this._storeNonNativeResultSetObjects(resultSet, context)
-
-    // Clear mappings which are now inconsistent because of PKs update
-    //resultSet.clearMappings
+    
     resultSet.id
   }
 
@@ -93,9 +78,11 @@ class SQLRsStorer(
       val isDecoy = resultSet.isDecoy
       val rsName = if (resultSet.name == null) None else Some(resultSet.name)
       val rsDesc = if (resultSet.description == null) None else Some(resultSet.description)
-      var rsType = ""
-      rsType = if (resultSet.isNative) "SEARCH" else "USER"
-      rsType = if (isDecoy) "DECOY_" + rsType else rsType
+      
+      val rsType = if (resultSet.isNative ) if (isDecoy) RSType.DECOY_SEARCH else RSType.SEARCH
+      else if (isDecoy) RSType.DECOY_USER else RSType.USER
+      //rsType = if (resultSet.isNative) "SEARCH" else "USER"
+      //rsType = if (isDecoy) "DECOY_" + rsType else rsType
   
       val decoyRsId = if (resultSet.getDecoyResultSetId > 0) Some(resultSet.getDecoyResultSetId) else None
       val msiSearchId = resultSet.msiSearch.map( _.id )
@@ -107,7 +94,8 @@ class SQLRsStorer(
         stmt.executeWith(
           rsName,
           rsDesc,
-          rsType,
+          rsType.toString,
+          Option.empty[String],
           new java.util.Date,
           resultSet.properties.map( Json.generate(_) ),
           decoyRsId,
@@ -137,7 +125,7 @@ class SQLRsStorer(
 
     // Retrieve the list of existing peptides in the current MSIdb
     // TODO: do this using the PSdb
-    val existingMsiPeptidesIdByKey = this._rsWriter.fetchExistingPeptidesIdByUniqueKey(resultSet.getUniquePeptideSequences, msiDb)
+    val existingMsiPeptidesIdByKey = this.rsWriter.fetchExistingPeptidesIdByUniqueKey(resultSet.getUniquePeptideSequences, msiDb)
     logger.info(existingMsiPeptidesIdByKey.size + " existing peptides have been loaded from the database !")
 
     // Retrieve existing peptides and map them by unique key
@@ -199,7 +187,7 @@ class SQLRsStorer(
       }
 
       logger.info("storing " + nbNewMsiPeptides + " new peptides in the MSIdb...")
-      _rsWriter.storeNewPeptides(newMsiPeptides, msiDb)
+      this.rsWriter.insertNewPeptides(newMsiPeptides, this.peptideByUniqueKey, msiDb)
       logger.info(newMsiPeptides.length + " new peptides have been effectively stored !")
 
       /*for( insertedPeptide <- insertedPeptides ) {
@@ -222,7 +210,7 @@ class SQLRsStorer(
     this._updateRsPeptideMatches(resultSet)
 
     // Store peptide matches
-    val peptideMatchCount = this._rsWriter.storeRsPeptideMatches(resultSet, msiDb)
+    val peptideMatchCount = this.rsWriter.insertRsPeptideMatches(resultSet, msiDb)
     logger.info(peptideMatchCount + " peptide matches have been stored !")
 
     // Retrieve protein matches and their accession numbers
@@ -290,14 +278,14 @@ class SQLRsStorer(
     this._updateRsProteinMatches(resultSet, null, null, null, seqDbIdByTmpId)
 
     // Store protein matches
-    this._rsWriter.storeRsProteinMatches(resultSet, msiDb)
+    this.rsWriter.insertRsProteinMatches(resultSet, msiDb)
     logger.info("protein matches have been stored")
 
     // Update sequence matches
     this._updateRsSequenceMatches(resultSet, peptideMatchByTmpId)
 
     // Store sequence matches
-    this._rsWriter.storeRsSequenceMatches(resultSet, msiDb)
+    this.rsWriter.insertRsSequenceMatches(resultSet, msiDb)
     logger.info("sequence matches have been stored")
 
   }
@@ -313,25 +301,23 @@ class SQLRsStorer(
     val peptideMatchByTmpId = peptideMatches map { pepMatch => pepMatch.id -> pepMatch } toMap
 
     // Store peptide matches
-    val peptideMatchCount = this._rsWriter.storeRsPeptideMatches(resultSet, msiDb)
+    val peptideMatchCount = this.rsWriter.insertRsPeptideMatches(resultSet, msiDb)
     logger.info(peptideMatchCount + " peptide matches have been stored !")
 
     // Store protein matches
-    this._rsWriter.storeRsProteinMatches(resultSet, msiDb)
+    this.rsWriter.insertRsProteinMatches(resultSet, msiDb)
     logger.info("protein matches have been stored")
 
     // Update sequence matches (replace peptide match tmp ids by database ids)
     this._updateRsSequenceMatches(resultSet, peptideMatchByTmpId)
 
     // Store sequence matches
-    this._rsWriter.storeRsSequenceMatches(resultSet, msiDb)
+    this.rsWriter.insertRsSequenceMatches(resultSet, msiDb)
     logger.info("sequence matches have been stored")
 
   }
 
   private def _updateRsPeptideMatches(resultSet: ResultSet): Unit = {
-
-    // msQueryIdByTmpId: Map[Int,Int]
 
     // Retrieve some vars
     val rsId = resultSet.id
@@ -355,8 +341,7 @@ class SQLRsStorer(
     val unmappedAccessions = new ArrayBuffer[String](0)
     for (proteinMatch <- proteinMatches) {
 
-      proteinMatch.seqDatabaseIds = proteinMatch.seqDatabaseIds.map { seqDbIdByTmpId.get(_).getOrElse(0) }
-        .filter { _ != 0 }
+      proteinMatch.seqDatabaseIds = proteinMatch.seqDatabaseIds.map( seqDbIdByTmpId.get(_).getOrElse(0) ).filter { _ != 0 }
       proteinMatch.resultSetId = rsId
 
       // TODO: fix this when JPA is ok
@@ -444,22 +429,14 @@ class SQLRsStorer(
     }
   }
 
-  def storePeaklist(peaklist: Peaklist, context: StorerContext): Int = {
-    logger.info("storing peaklist...")
-    _pklWriter.storePeaklist(peaklist, context)
-  }
 
-  def storeSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
-    logger.info("storing spectra...")
-    _pklWriter.storeSpectra(peaklistId, peaklistContainer, context)
-  }
-
-  def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Int = {
+  def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Int = {    
+    require( msiSearchWriter.isDefined, "A MSI search writer must be provided")
 
     import fr.proline.util.primitives._
 
-    // Synchronize the some related objects with the UDSdb
-    val udsDbWork = BuildJDBCWork.withEzDBC(context.getUDSDbConnectionContext.getDriverType, { udsEzDBC =>
+    // Synchronize some related objects with the UDSdb
+    DoJDBCWork.withEzDBC(context.getUDSDbConnectionContext, { udsEzDBC =>
       val enzymes = msiSearch.searchSettings.usedEnzymes
       for (enzyme <- enzymes) {
         udsEzDBC.selectAndProcess("SELECT id FROM enzyme WHERE name = ?", enzyme.name) { r =>
@@ -467,18 +444,15 @@ class SQLRsStorer(
         }
         require(enzyme.id > 0, "can't find an enzyme named '" + enzyme.name + "' in the UDS-DB")
       }
-    })
-    context.getUDSDbConnectionContext.doWork(udsDbWork, true)
+    },true)
 
-    this.msiSearchStorer.storeMsiSearch(msiSearch, context)
+    this.msiSearchWriter.get.insertMsiSearch(msiSearch, context)
   }
 
   def storeMsQueries(msiSearchID: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
-    this.msiSearchStorer.storeMsQueries(msiSearchID, msQueries, context)
-  }
-
-  def insertInstrumentConfig(instrumentConfig: InstrumentConfig, context: StorerContext) = {
-    this.msiSearchStorer.insertInstrumentConfig(instrumentConfig, context)
+    require( msiSearchWriter.isDefined, "A MSI search writer must be provided")
+    
+    this.msiSearchWriter.get.insertMsQueries(msiSearchID, msQueries, context)
   }
 
 }

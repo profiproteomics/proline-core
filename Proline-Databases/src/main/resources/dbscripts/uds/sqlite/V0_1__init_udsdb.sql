@@ -20,7 +20,9 @@ CREATE TABLE biological_group (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
                 name TEXT(100) NOT NULL,
-                serialized_properties TEXT
+                serialized_properties TEXT,
+                quantitation_id INTEGER NOT NULL,
+                FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
 );
 
 CREATE TABLE biological_group_biological_sample_item (
@@ -53,7 +55,7 @@ CREATE TABLE data_set (
                 keywords TEXT,
                 creation_timestamp TEXT NOT NULL,
                 modification_log TEXT,
-                fraction_count INTEGER NOT NULL,
+                children_count INTEGER NOT NULL,
                 serialized_properties TEXT,
                 result_set_id INTEGER,
                 result_summary_id INTEGER,
@@ -94,7 +96,8 @@ CREATE TABLE enzyme (
                 name TEXT(100) NOT NULL,
                 cleavage_regexp TEXT(50),
                 is_independant TEXT NOT NULL,
-                is_semi_specific TEXT NOT NULL
+                is_semi_specific TEXT NOT NULL,
+                serialized_properties TEXT
 );
 
 CREATE TABLE enzyme_cleavage (
@@ -134,9 +137,9 @@ CREATE TABLE fragmentation_rule (
                 fragment_residue_constraint TEXT(20),
                 required_series_quality_level TEXT(15),
                 serialized_properties TEXT,
-                theoretical_fragment_id INTEGER,
+                fragment_series_id INTEGER,
                 required_series_id INTEGER,
-                FOREIGN KEY (theoretical_fragment_id) REFERENCES fragmentation_series (id),
+                FOREIGN KEY (fragment_series_id) REFERENCES fragmentation_series (id),
                 FOREIGN KEY (required_series_id) REFERENCES fragmentation_series (id)
 );
 
@@ -256,24 +259,23 @@ CREATE TABLE protein_match_decoy_rule (
 CREATE TABLE quant_channel (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
-                name TEXT(100) NOT NULL,
+                name TEXT(100),
                 context_key TEXT(100) NOT NULL,
                 serialized_properties TEXT,
                 lcms_map_id INTEGER,
                 ident_result_summary_id INTEGER NOT NULL,
-                quant_result_summary_id INTEGER,
                 run_id INTEGER,
                 quant_label_id INTEGER,
                 sample_analysis_id INTEGER NOT NULL,
                 biological_sample_id INTEGER NOT NULL,
                 master_quant_channel_id INTEGER NOT NULL,
-                dataset_id INTEGER NOT NULL,
+                quantitation_id INTEGER NOT NULL,
                 FOREIGN KEY (run_id) REFERENCES run (id),
                 FOREIGN KEY (quant_label_id) REFERENCES quant_label (id),
                 FOREIGN KEY (sample_analysis_id) REFERENCES sample_analysis (id),
                 FOREIGN KEY (biological_sample_id) REFERENCES biological_sample (id),
                 FOREIGN KEY (master_quant_channel_id) REFERENCES master_quant_channel (id),
-                FOREIGN KEY (dataset_id) REFERENCES data_set (id)
+                FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
 );
 
 CREATE TABLE quant_label (
@@ -378,6 +380,18 @@ CREATE TABLE virtual_folder (
                 FOREIGN KEY (parent_virtual_folder_id) REFERENCES virtual_folder (id),
                 FOREIGN KEY (project_id) REFERENCES project (id)
 );
+
+CREATE UNIQUE INDEX quant_channel_context_idx ON quant_channel (context_key,quantitation_id);
+
+CREATE UNIQUE INDEX quant_method_name_idx ON quant_method (name);
+
+CREATE UNIQUE INDEX user_account_login_idx ON user_account (login);
+
+CREATE UNIQUE INDEX instrument_config_name_idx ON instrument_config (name);
+
+CREATE UNIQUE INDEX instrument_idx ON instrument (name,source);
+
+CREATE UNIQUE INDEX enzyme_name_idx ON enzyme (name);
 
 CREATE UNIQUE INDEX fractionation_type_idx ON fractionation (type);
 

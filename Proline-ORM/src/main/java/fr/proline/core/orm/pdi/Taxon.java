@@ -31,6 +31,9 @@ public class Taxon implements Serializable {
 
     @Id
     private Integer id;
+    
+    @Column(name = "is_active")
+    private Boolean isActive = true; // defaults to true
 
     private String rank;
 
@@ -66,6 +69,14 @@ public class Taxon implements Serializable {
 
     public void setId(Integer id) {
 	this.id = id;
+    }
+    
+    public Boolean getIsActive() {
+	return this.isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+	this.isActive = isActive;
     }
 
     public String getRank() {

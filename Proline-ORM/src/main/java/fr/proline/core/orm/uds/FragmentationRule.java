@@ -42,7 +42,7 @@ public class FragmentationRule implements Serializable {
 
 	//uni-directional many-to-one association to FragmentationSeries
 	@ManyToOne
-	@JoinColumn(name="theoretical_fragment_id")
+	@JoinColumn(name="fragment_series_id")
 	private FragmentationSeries fragmentationSeries;
 
     public FragmentationRule() {

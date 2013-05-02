@@ -107,14 +107,24 @@ case class Enzyme(
   val name: String,
   val cleavageRegexp: Option[String] = None,
   val isIndependant: Boolean = false,
-  val isSemiSpecific: Boolean = false
-   
+  val isSemiSpecific: Boolean = false,
+  val properties: Option[EnzymeProperties] = None
+  
 ) {
   
   def this( name: String ) = {
     this( Enzyme.generateNewId, name)
   }
 }
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class EnzymeProperties(
+  @BeanProperty var ctermGain: Option[String] = None,
+  @BeanProperty var ntermGain: Option[String] = None,
+  @BeanProperty var minDistance: Option[Int] = None,
+  @BeanProperty var maxMissedCleavages: Option[Int] = None  
+)
 
 object SeqDatabase extends InMemoryIdGen
 

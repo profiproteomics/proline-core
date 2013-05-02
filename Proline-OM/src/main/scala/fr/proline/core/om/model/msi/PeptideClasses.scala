@@ -297,6 +297,10 @@ case class Peptide ( // Required fields
       this( id, sequence, Peptide.makePtmString( ptms ), ptms, calculatedMass )
   }
   
+  def this( sequence: String, ptms: Array[LocatedPtm], calculatedMass: Double ) = {
+      this( Peptide.generateNewId(), sequence, Peptide.makePtmString( ptms ), ptms, calculatedMass )
+  }
+  
   def this( sequence: String, ptms: Array[LocatedPtm], id: Int = Peptide.generateNewId() ) = {
       this( id, sequence, ptms, Peptide.calcMass( sequence, ptms ) )
   }
@@ -445,6 +449,7 @@ case class PeptideInstance ( // Required fields
                         // Mutable optional fields
                         var proteinMatchesCount: Int = 0,
                         var proteinSetsCount: Int = 0,
+                        var validatedProteinSetsCount: Int = 0,
                         var selectionLevel: Int = 2,
                         var elutionTime: Float = 0,
                         
@@ -527,13 +532,14 @@ case class PeptideSet ( // Required fields
                    val peptideMatchesCount: Int,
                    var proteinMatchIds: Array[Int],
                    
-                   // Immutable optional fields
+                   // Mutable optional fields
                    protected val proteinSetId: Int = 0,
                    @transient var proteinSet: Option[ProteinSet] = null,
                    
                    var resultSummaryId: Int = 0,
                    var score: Float = 0,
-                   // Mutable optional fields
+                   var scoreType: String = null,
+                   
                    var strictSubsetIds: Array[Int] = null,
                    var strictSubsets: Option[Array[PeptideSet]] = null,
                    

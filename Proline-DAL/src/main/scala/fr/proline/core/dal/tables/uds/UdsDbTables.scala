@@ -48,6 +48,7 @@ object UdsDbBiologicalGroupColumns extends ColumnEnumeration {
   val NUMBER = Column("number")
   val NAME = Column("name")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val QUANTITATION_ID = Column("quantitation_id")
 }
 
 abstract class UdsDbBiologicalGroupTable extends TableDefinition[UdsDbBiologicalGroupColumns.type]
@@ -109,7 +110,7 @@ object UdsDbDataSetColumns extends ColumnEnumeration {
   val KEYWORDS = Column("keywords")
   val CREATION_TIMESTAMP = Column("creation_timestamp")
   val MODIFICATION_LOG = Column("modification_log")
-  val FRACTION_COUNT = Column("fraction_count")
+  val CHILDREN_COUNT = Column("children_count")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val RESULT_SET_ID = Column("result_set_id")
   val RESULT_SUMMARY_ID = Column("result_summary_id")
@@ -158,6 +159,7 @@ object UdsDbEnzymeColumns extends ColumnEnumeration {
   val CLEAVAGE_REGEXP = Column("cleavage_regexp")
   val IS_INDEPENDANT = Column("is_independant")
   val IS_SEMI_SPECIFIC = Column("is_semi_specific")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
 }
 
 abstract class UdsDbEnzymeTable extends TableDefinition[UdsDbEnzymeColumns.type]
@@ -228,7 +230,7 @@ object UdsDbFragmentationRuleColumns extends ColumnEnumeration {
   val FRAGMENT_RESIDUE_CONSTRAINT = Column("fragment_residue_constraint")
   val REQUIRED_SERIES_QUALITY_LEVEL = Column("required_series_quality_level")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
-  val THEORETICAL_FRAGMENT_ID = Column("theoretical_fragment_id")
+  val FRAGMENT_SERIES_ID = Column("fragment_series_id")
   val REQUIRED_SERIES_ID = Column("required_series_id")
 }
 
@@ -461,13 +463,13 @@ object UdsDbQuantChannelColumns extends ColumnEnumeration {
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val LCMS_MAP_ID = Column("lcms_map_id")
   val IDENT_RESULT_SUMMARY_ID = Column("ident_result_summary_id")
-  val QUANT_RESULT_SUMMARY_ID = Column("quant_result_summary_id")
+
   val RUN_ID = Column("run_id")
   val QUANT_LABEL_ID = Column("quant_label_id")
   val SAMPLE_ANALYSIS_ID = Column("sample_analysis_id")
   val BIOLOGICAL_SAMPLE_ID = Column("biological_sample_id")
   val MASTER_QUANT_CHANNEL_ID = Column("master_quant_channel_id")
-  val DATASET_ID = Column("dataset_id")
+  val QUANTITATION_ID = Column("quantitation_id")
 }
 
 abstract class UdsDbQuantChannelTable extends TableDefinition[UdsDbQuantChannelColumns.type]
@@ -645,4 +647,5 @@ object UdsDbVirtualFolderTable extends UdsDbVirtualFolderTable {
   val name = "virtual_folder"
   val columns = UdsDbVirtualFolderColumns
 }
+
 

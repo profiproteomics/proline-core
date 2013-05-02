@@ -162,7 +162,7 @@ Each PTM is described by its delta composition. The prefix number gives the posi
     <column id="COL44" populated="true" UUID="060d6490-ef45-4b74-ac73-6f3410dc8f6d" autoIncrement="false" autoIncrementSequenceName="atom_label_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The name of the label. EX: 15N</remarks>
     </column>
-    <column id="COL45" populated="true" UUID="f5500b38-706a-410d-ae6f-ac7a524aad78" autoIncrement="false" autoIncrementSequenceName="atom_label_symbol_seq" defaultValue="" name="symbol" nullable="0" physicalName="symbol" precision="2" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="1" userDefinedTypeUUID="67ddc63f-5541-4dd1-9236-632d9d155e80" >
+    <column id="COL45" populated="true" UUID="f5500b38-706a-410d-ae6f-ac7a524aad78" autoIncrement="false" autoIncrementSequenceName="atom_label_symbol_seq" defaultValue="" name="symbol" nullable="0" physicalName="symbol" precision="2" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The symbol of the atom. EX: N</remarks>
     </column>
     <column id="COL46" populated="true" UUID="c247ffda-05df-4772-aa89-ebd9fdd6664b" autoIncrement="false" autoIncrementSequenceName="atom_label_mono_mass_seq" defaultValue="" name="mono_mass" nullable="0" physicalName="mono_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >

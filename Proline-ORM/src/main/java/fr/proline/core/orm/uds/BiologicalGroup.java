@@ -1,8 +1,8 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.util.Set;
+import javax.persistence.*;
 
 
 /**
@@ -21,6 +21,11 @@ public class BiologicalGroup implements Serializable {
 	private String name;
 
 	private Integer number;
+	
+	//bi-directional many-to-one association to Dataset
+    @ManyToOne
+    @JoinColumn(name="quantitation_id")
+	private Dataset dataset;
 
 	@Column(name="serialized_properties")
 	private String serializedProperties;
@@ -100,6 +105,15 @@ public class BiologicalGroup implements Serializable {
 
 	public void setBiologicalSamples(Set<BiologicalSample> biologicalSamples) {
 		this.biologicalSamples = biologicalSamples;
+	}
+	
+	// TODO: return a true QuantitationDataset object when it is implemented
+	public Dataset getQuantitationDataset() {
+		return this.dataset;
+	}
+
+	public void setQuantitationDataset(Dataset dataset) {
+		this.dataset = dataset;
 	}
 	
 }

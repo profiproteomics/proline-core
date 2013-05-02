@@ -3,5 +3,7 @@
 <dataset>
   <SCORING ID="1" SEARCH_ENGINE="mascot" NAME="standard score"/>
   <PEAKLIST_SOFTWARE ID="1"  VERSION="4.3.2" NAME="Distiller"  />
+  
+  <PEAKLIST ID="1" TYPE = "Mascot generic" PATH="/fake/filepath/data/VENUS1234.RAW" RAW_FILE_NAME="VENUS1234.RAW" MS_LEVEL="2" SPECTRUM_DATA_COMPRESSION="NONE" PEAKLIST_SOFTWARE_ID="1" />
 
 </dataset>

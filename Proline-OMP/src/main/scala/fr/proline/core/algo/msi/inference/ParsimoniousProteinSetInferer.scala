@@ -228,7 +228,8 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
       // Update peptide instance
       pepInstance.proteinMatchesCount = proteinMatchCount
       pepInstance.proteinSetsCount = proteinSetCount
-      
+      pepInstance.validatedProteinSetsCount = proteinSetCount
+        
     }
         
     // Create result summary

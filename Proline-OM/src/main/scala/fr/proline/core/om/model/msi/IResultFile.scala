@@ -17,7 +17,8 @@ trait IResultFile extends IPeaklistContainer {
   val hasDecoyResultSet: Boolean
   val hasMs2Peaklist: Boolean
   
-  var instrumentConfig: InstrumentConfig = null
+  var instrumentConfig: Option[InstrumentConfig] = None
+  var peaklistSoftware: Option[PeaklistSoftware] = None
   
   def getResultSet( wantDecoy: Boolean ): ResultSet
   

@@ -5,7 +5,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi.{Peaklist,IPeaklistContainer}
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.storer.msi.impl.SQLPeaklistWriter
-import fr.proline.core.om.storer.msi.impl.PgSQLSpectraWriter
+import fr.proline.core.om.storer.msi.impl.PgPeaklistWriter
 
 /**
  * Provides methods to write PeakList information and associated data 
@@ -21,27 +21,27 @@ trait IPeaklistWriter extends Logging {
    * Store PeakList & Peaklist software 
    *
    */  
-   def storePeaklist(peaklist: Peaklist, context : StorerContext):Int
+   def insertPeaklist(peaklist: Peaklist, context : StorerContext): Int
   
   /**
    * Specific implementation of IRsStorer storeSpectra method
    */
-  def storeSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext
+  def insertSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext
   
-  def rollBackInfo(peaklistId: Int, context : StorerContext): Unit
+  // FIXME: what is this method ???
+  //def rollBackInfo(peaklistId: Int, context : StorerContext): Unit
    
 }
 
 /** A factory object for implementations of the IPeaklistStorer trait */
 object PeaklistWriter {
   
-  //import fr.proline.core.om.storer.msi.impl.GenericRsStorer
   import fr.proline.repository.DriverType
 
   def apply( driverType: DriverType ): IPeaklistWriter = {
     driverType match {
-      case DriverType.POSTGRESQL => new PgSQLSpectraWriter()
-      case _ => new SQLPeaklistWriter()
+      case DriverType.POSTGRESQL => PgPeaklistWriter
+      case _ => SQLPeaklistWriter
     }
   }
 }

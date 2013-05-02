@@ -2,6 +2,8 @@ package fr.proline.core.algo.msi
 
 import collection.mutable.ArrayBuffer
 import collection.mutable.HashMap
+import collection.mutable.HashSet
+
 import org.apache.commons.lang3.StringUtils.{isNotEmpty => isStrNotEmpty}
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi._
@@ -78,16 +80,24 @@ class ResultSummaryMerger extends Logging {
     // Peptide matches related to the same peptide will use the same object
     val validPeptideById = new HashMap[Int,Peptide]()
     val validPepMatchesByPepId = new HashMap[Int,ArrayBuffer[PeptideMatch]]()
+    val scoreTypeSet = new HashSet[String]()
     
-    for( peptideMatch <- allValidPeptideMatches ) {      
+    for( peptideMatch <- allValidPeptideMatches ) {
+      
+      // Update score type map
+      scoreTypeSet += peptideMatch.scoreType
+      
       val peptideId = peptideMatch.peptide.id
       val peptide = peptideById(peptideId)
       //TODO: find an other way to reduce the redundancy (use a cache in the provider ?)
-      //peptideMatch.peptide = peptide
+      //peptideMatch.peptide = peptide      
       
       validPeptideById(peptideId) = peptide
       validPepMatchesByPepId.getOrElseUpdate(peptideId, new ArrayBuffer[PeptideMatch] ) += peptideMatch
     }
+    
+    // Check if all peptide matches have the same type of score
+    require( scoreTypeSet.size == 1, "can't merge peptide matches from different search engines yet" )
     
     // Define some vars
     val nrProteinMatches = new ArrayBuffer[ProteinMatch]
@@ -191,9 +201,9 @@ class ResultSummaryMerger extends Logging {
                                 peptideMatches = mergedPeptideMatches.toArray,
                                 peptides =  validPeptideById.values.toArray,
                                 isDecoy = resultSummaries(0).resultSet.get.isDecoy,
-                                isNative = false,
+                                isNative = false
                                 // FIXME: is this the best solution ???
-                                msiSearch = resultSummaries(0).resultSet.get.msiSearch
+                                //msiSearch = resultSummaries(0).resultSet.get.msiSearch
                                 //msiSearchId = nrMsiSearchIds
                                 )
     
@@ -206,17 +216,12 @@ class ResultSummaryMerger extends Logging {
     val protInferenceAlgo = ProteinSetInferer( InferenceMethods.parsimonious )
     val mergedRsm = protInferenceAlgo.computeResultSummary( mergedResultSet )
     
-    // FIXME: retrieve the right score type
-    for( proteinSet <- mergedRsm.proteinSets ) {
-      proteinSet.scoreType = "mascot:mudpit score"
-    }
-    
     // TODO: Make some updates of result set and result summary objects
     //mergedResultSet.updateScoresOfProteinMatches( search_engine = 'mascot' )
     //mergedResultSummary.updateScoresOfProteinSets( search_engine = 'mascot' )
     //mergedResultSummary.updatePeptideRelations()
     
-    this.updateScoresOfProteinSets(mergedRsm, "mascot" )
+    //this.updateScoresOfProteinSets(mergedRsm, "mascot" )
     
     mergedRsm
   }
@@ -224,7 +229,7 @@ class ResultSummaryMerger extends Logging {
 
   // TODO: create an enumeration of search engines
   // TODO: use score updaters
-  def updateScoresOfProteinSets( rsm: ResultSummary, searchEngine: String) {
+  /*def updateScoresOfProteinSets( rsm: ResultSummary, searchEngine: String) {
     
     val allPepMatchesByProtSetId = rsm.getAllPeptideMatchesByProteinSetId
     val bestPepMatchesByProtSetId = rsm.getBestPepMatchesByProtSetId()
@@ -261,7 +266,7 @@ class ResultSummaryMerger extends Logging {
       }
     } else { throw new Exception( "unknown search engine named: searchEngine" ) }
     
-  }
+  }*/
 
 
 }

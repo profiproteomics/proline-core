@@ -45,9 +45,7 @@ object ResultSetMerger {
     }
     
     // Check if all peptide matches have the same type of score
-    if( scoreTypeSet.size > 1 ) {
-      throw new Exception( "can't merge peptide matches from different search engines yet" )
-    }
+    require( scoreTypeSet.size == 1, "can't merge peptide matches from different search engines yet" )
     
     val mergedProteinMatches = new ArrayBuffer[ProteinMatch](proteinMatches.length)
     // Retrieve sequence matches corresponding to best child peptide matches

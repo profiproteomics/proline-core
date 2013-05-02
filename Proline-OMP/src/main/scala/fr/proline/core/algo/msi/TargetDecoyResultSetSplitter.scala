@@ -1,16 +1,17 @@
 package fr.proline.core.algo.msi
 
+import scala.collection.mutable.ArrayBuffer
+
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.util.regex.RegexUtils._
-import scala.collection.mutable.ArrayBuffer
 
 /**
  * @author David Bouyssie
  *
  */
-object TargetDecoyResultSetSplitter {
+object TargetDecoyResultSetSplitter extends IResultSetSplitter {
 
   /**
    * Split the provided result set.
@@ -121,7 +122,8 @@ object TargetDecoyResultSetSplitter {
       proteinMatches = newProtMatches,
       isDecoy = isDecoy,
       decoyResultSetId = 0,
-      decoyResultSet = null)
+      decoyResultSet = None
+    )
   }
 
 }

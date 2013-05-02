@@ -42,8 +42,8 @@ public class Gene implements Serializable {
 
     private String name;
 
-    @Column(name = "orf_names")
-    private String orfNames;
+    @Column(name = "name_type")
+    private String nameType;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -86,12 +86,12 @@ public class Gene implements Serializable {
 	this.name = name;
     }
 
-    public String getOrfNames() {
-	return this.orfNames;
+    public String getNameType() {
+	return this.nameType;
     }
 
-    public void setOrfNames(String orfNames) {
-	this.orfNames = orfNames;
+    public void setNameType(String nameType) {
+	this.nameType = nameType;
     }
 
     public String getSerializedProperties() {

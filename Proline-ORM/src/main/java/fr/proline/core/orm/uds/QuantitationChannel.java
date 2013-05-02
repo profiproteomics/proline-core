@@ -27,7 +27,7 @@ public class QuantitationChannel implements Serializable {
 
 	@Column(name="context_key")
 	private String contextKey;
-
+	
 	@Column(name="ident_result_summary_id")
 	private Integer identResultSummaryId;
 
@@ -43,10 +43,6 @@ public class QuantitationChannel implements Serializable {
 	private Run run;
 	
 	private String name;
-
-	@Column(name="quant_result_summary_id")
-	private Integer quantResultSummaryId;
-
 	
 	@Column(name="serialized_properties")
 	private String serializedProperties;
@@ -63,7 +59,7 @@ public class QuantitationChannel implements Serializable {
 
 	//bi-directional many-to-one association to Dataset
     @ManyToOne
-    	@JoinColumn(name="dataset_id")
+    @JoinColumn(name="quantitation_id")
 	private Dataset dataset;
 
 	//bi-directional many-to-one association to MasterQuantitationChannel
@@ -86,21 +82,13 @@ public class QuantitationChannel implements Serializable {
 	public void setId(Integer id) {
 		this.id = id;
 	}
-
+	
 	public String getContextKey() {
 		return this.contextKey;
 	}
 
 	public void setContextKey(String contextKey) {
 		this.contextKey = contextKey;
-	}
-
-	public Integer getNumber() {
-		return this.number;
-	}
-
-	public void setNumber(Integer number) {
-		this.number = number;
 	}
 	
 	public Integer getIdentResultSummaryId() {
@@ -109,6 +97,14 @@ public class QuantitationChannel implements Serializable {
 
 	public void setIdentResultSummaryId(Integer identResultSummaryId) {
 		this.identResultSummaryId = identResultSummaryId;
+	}
+	
+	public Integer getNumber() {
+		return this.number;
+	}
+
+	public void setNumber(Integer number) {
+		this.number = number;
 	}
 
 	public Integer getLcmsMapId() {
@@ -133,15 +129,6 @@ public class QuantitationChannel implements Serializable {
 
 	public void setRun(Run run) {
 	    this.run = run;
-	}
-	
-
-	public Integer getQuantResultSummaryId() {
-		return this.quantResultSummaryId;
-	}
-
-	public void setQuantResultSummaryId(Integer quantResultSummaryId) {
-		this.quantResultSummaryId = quantResultSummaryId;
 	}
 
 	public String getSerializedProperties() {
@@ -168,11 +155,12 @@ public class QuantitationChannel implements Serializable {
 		this.label = label;
 	}
 	
-	public Dataset getDataset() {
+	// TODO: return a true QuantitationDataset object when it is implemented
+	public Dataset getQuantitationDataset() {
 		return this.dataset;
 	}
 
-	public void setDataset(Dataset dataset) {
+	public void setQuantitationDataset(Dataset dataset) {
 		this.dataset = dataset;
 	}
 	

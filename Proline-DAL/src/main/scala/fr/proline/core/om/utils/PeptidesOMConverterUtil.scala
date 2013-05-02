@@ -147,6 +147,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       unmodifiedPeptide = unmodifiedPep,
       proteinMatchesCount = msiPepInst.getProteinMatchCount(),
       proteinSetsCount = msiPepInst.getProteinSetCount(),
+      validatedProteinSetsCount=msiPepInst.getValidatedProteinSetCount(),      
       selectionLevel = msiPepInst.getSelectionLevel(),
       elutionTime = msiPepInst.getElutionTime().floatValue(),
       bestPeptideMatchId = msiPepInst.getBestPeptideMatchId(),
@@ -205,10 +206,12 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       items = null,
       isSubset = msiPepSet.getIsSubset(),
       score = msiPepSet.getScore(),
+      scoreType = msiPepSet.getScoring().getName(),
       peptideMatchesCount = msiPepSet.getPeptideMatchCount(),
       proteinMatchIds = protMatchesIds,
       proteinSetId = msiPepSet.getProteinSet().getId(),
-      resultSummaryId = msiPepSet.getResultSummaryId())
+      resultSummaryId = msiPepSet.getResultSummaryId()
+    )
 
     val msiPepSetItems = msiPepSet.getPeptideSetPeptideInstanceItems()
     val msiPepSetItemIT = msiPepSetItems.iterator()

@@ -36,6 +36,9 @@ public class Enzyme implements Serializable {
     private Boolean isSemiSpecific;
 
     private String name;
+    
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
     // bi-directional many-to-one association to EnzymeCleavage
     @OneToMany(mappedBy = "enzyme")
@@ -82,6 +85,14 @@ public class Enzyme implements Serializable {
 
     public void setName(String name) {
 	this.name = name;
+    }
+    
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
+
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
     }
 
     public Set<EnzymeCleavage> getCleavages() {

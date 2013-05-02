@@ -2,12 +2,14 @@ package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
 import com.codahale.jerkson.Json.generate
+
 import fr.profi.jdbc.easy._
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.IExecutionContext
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables.msi.{MsiDbResultSummaryTable}
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.storer.msi.impl.SQLiteRsmStorer
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.storer.msi.impl.SQLRsmStorer
 import fr.proline.context.IExecutionContext
 
 trait IRsmStorer extends Logging {
@@ -28,8 +30,8 @@ object RsmStorer {
   def apply( msiDbContext: DatabaseConnectionContext ): RsmStorer = {
     
     msiDbContext.isJPA match {
-      case true => new RsmStorer( new SQLiteRsmStorer() )
-      case false => new RsmStorer( new SQLiteRsmStorer() )
+      case true => new RsmStorer( new SQLRsmStorer() )
+      case false => new RsmStorer( new SQLRsmStorer() )
     }
   }
 }
@@ -64,7 +66,8 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
       msiEzDBC.executePrepared( this.rsmInsertQuery, true ) { stmt =>
         stmt.executeWith(
           Option( rsm.description ),
-          new java.util.Date(),
+          Option.empty[String],
+          new java.util.Date(),          
           false,
           rsm.properties.map(generate(_)),
           if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else Option.empty[Int],

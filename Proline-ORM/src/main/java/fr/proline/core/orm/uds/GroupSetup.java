@@ -72,11 +72,12 @@ public class GroupSetup implements Serializable {
 		this.biologicalGroups = biologicalGroups;
 	}
 	
-	public Dataset getDataset() {
+	// TODO: return a true QuantitationDataset object when it is implemented
+	public Dataset getQuantitationDataset() {
 		return this.dataset;
 	}
 
-	public void setDataset(Dataset dataset) {
+	public void setQuantitationDataset(Dataset dataset) {
 		this.dataset = dataset;
 	}
 	

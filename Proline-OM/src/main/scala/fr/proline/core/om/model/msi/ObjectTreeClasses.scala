@@ -67,6 +67,7 @@ object FragmentMatchType extends Enumeration {
 @JsonInclude( Include.NON_NULL )
 case class SpectrumMatch (
   val msQueryInitialId: Int,
+  @transient val peptideMatchRank: Int,
   val fragmentationTable: Array[TheoreticalFragmentSeries],
   val fragmentMatches: Array[FragmentMatch]
 )

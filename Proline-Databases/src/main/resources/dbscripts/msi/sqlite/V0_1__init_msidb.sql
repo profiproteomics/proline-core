@@ -49,6 +49,7 @@ CREATE TABLE enzyme (
                 cleavage_regexp TEXT(50),
                 is_independant TEXT NOT NULL,
                 is_semi_specific TEXT NOT NULL,
+                serialized_properties TEXT,
                 PRIMARY KEY (id)
 );
 
@@ -91,12 +92,14 @@ CREATE TABLE master_quant_peptide_ion (
                 lcms_feature_id INTEGER,
                 peptide_id INTEGER,
                 peptide_instance_id INTEGER,
+                master_quant_peptide_id INTEGER NOT NULL,
                 master_quant_component_id INTEGER NOT NULL,
                 best_peptide_match_id INTEGER,
                 unmodified_peptide_ion_id INTEGER,
                 result_summary_id INTEGER NOT NULL,
                 FOREIGN KEY (peptide_id) REFERENCES peptide (id),
                 FOREIGN KEY (peptide_instance_id) REFERENCES peptide_instance (id),
+                FOREIGN KEY (master_quant_peptide_id) REFERENCES master_quant_component (id),
                 FOREIGN KEY (master_quant_component_id) REFERENCES master_quant_component (id),
                 FOREIGN KEY (best_peptide_match_id) REFERENCES peptide_match (id),
                 FOREIGN KEY (unmodified_peptide_ion_id) REFERENCES master_quant_peptide_ion (id),
@@ -221,6 +224,7 @@ CREATE TABLE peptide_instance (
                 peptide_match_count INTEGER NOT NULL,
                 protein_match_count INTEGER NOT NULL,
                 protein_set_count INTEGER NOT NULL,
+                validated_protein_set_count INTEGER NOT NULL,
                 total_leaves_match_count INTEGER NOT NULL,
                 selection_level INTEGER NOT NULL,
                 elution_time REAL,
@@ -288,12 +292,15 @@ CREATE TABLE peptide_match_relation (
 CREATE TABLE peptide_set (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 is_subset TEXT,
+                score REAL NOT NULL,
                 peptide_count INTEGER,
                 peptide_match_count INTEGER,
                 serialized_properties TEXT,
                 protein_set_id INTEGER,
+                scoring_id INTEGER NOT NULL,
                 result_summary_id INTEGER NOT NULL,
                 FOREIGN KEY (protein_set_id) REFERENCES protein_set (id),
+                FOREIGN KEY (scoring_id) REFERENCES scoring (id),
                 FOREIGN KEY (result_summary_id) REFERENCES result_summary (id)
 );
 
@@ -301,7 +308,7 @@ CREATE TABLE peptide_set_peptide_instance_item (
                 peptide_set_id INTEGER NOT NULL,
                 peptide_instance_id INTEGER NOT NULL,
                 is_best_peptide_set TEXT,
-                selection_level INTEGER,
+                selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
                 result_summary_id INTEGER NOT NULL,
                 PRIMARY KEY (peptide_set_id, peptide_instance_id),
@@ -356,34 +363,14 @@ CREATE TABLE protein_match_seq_database_map (
 
 CREATE TABLE protein_set (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                score REAL,
                 is_validated TEXT NOT NULL,
                 selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
                 typical_protein_match_id INTEGER NOT NULL,
-                scoring_id INTEGER NOT NULL,
                 master_quant_component_id INTEGER,
                 result_summary_id INTEGER NOT NULL,
                 FOREIGN KEY (typical_protein_match_id) REFERENCES protein_match (id),
-                FOREIGN KEY (scoring_id) REFERENCES scoring (id),
                 FOREIGN KEY (master_quant_component_id) REFERENCES master_quant_component (id),
-                FOREIGN KEY (result_summary_id) REFERENCES result_summary (id)
-);
-
-CREATE TABLE protein_set_cluster (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                serialized_properties TEXT,
-                best_protein_set_id INTEGER NOT NULL,
-                result_summary_id INTEGER NOT NULL,
-                FOREIGN KEY (best_protein_set_id) REFERENCES protein_set (id),
-                FOREIGN KEY (result_summary_id) REFERENCES result_summary (id)
-);
-
-CREATE TABLE protein_set_cluster_item (
-                protein_set_cluster_id INTEGER NOT NULL,
-                protein_set_id INTEGER NOT NULL,
-                result_summary_id INTEGER NOT NULL,
-                PRIMARY KEY (protein_set_cluster_id, protein_set_id),
                 FOREIGN KEY (result_summary_id) REFERENCES result_summary (id)
 );
 
@@ -417,6 +404,7 @@ CREATE TABLE result_set (
                 name TEXT(1000),
                 description TEXT(10000),
                 type TEXT(50) NOT NULL,
+                creation_log TEXT,
                 modification_timestamp TEXT NOT NULL,
                 serialized_properties TEXT,
                 decoy_result_set_id INTEGER,
@@ -442,6 +430,7 @@ CREATE TABLE result_set_relation (
 CREATE TABLE result_summary (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 description TEXT(10000),
+                creation_log TEXT,
                 modification_timestamp TEXT NOT NULL,
                 is_quantified TEXT,
                 serialized_properties TEXT,
@@ -557,7 +546,6 @@ CREATE TABLE used_ptm (
                 ptm_specificity_id INTEGER NOT NULL,
                 short_name TEXT(100) NOT NULL,
                 is_fixed TEXT NOT NULL,
-                type TEXT(50),
                 PRIMARY KEY (search_settings_id, ptm_specificity_id)
 );
 

@@ -3,8 +3,6 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import javax.persistence.*;
 
-import fr.proline.core.orm.msi.Peptide.TransientData;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -32,11 +30,6 @@ public class ProteinSet implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="result_summary_id")
 	private ResultSummary resultSummary;
-
-	private float score;
-
-	@Column(name="scoring_id")
-	private Integer scoringId;
 
 	@Column(name="selection_level")
 	private Integer selectionLevel;
@@ -99,22 +92,6 @@ public class ProteinSet implements Serializable {
 
 	public void setResultSummary(ResultSummary resultSummary) {
 		this.resultSummary = resultSummary;
-	}
-
-	public float getScore() {
-		return this.score;
-	}
-
-	public void setScore(float score) {
-		this.score = score;
-	}
-
-	public Integer getScoringId() {
-		return this.scoringId;
-	}
-
-	public void setScoringId(Integer scoringId) {
-		this.scoringId = scoringId;
 	}
 
 	public Integer getSelectionLevel() {

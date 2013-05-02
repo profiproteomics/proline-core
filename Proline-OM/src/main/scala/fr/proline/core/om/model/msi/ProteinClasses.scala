@@ -167,8 +167,6 @@ case class ProteinSet (
                  protected var typicalProteinMatchId: Int = 0,
                  @transient var typicalProteinMatch: Option[ProteinMatch] = null,
                  
-                 var score: Float = 0,
-                 var scoreType: String = null,
                  var isValidated: Boolean = true,
                  var selectionLevel: Int = 2,
 

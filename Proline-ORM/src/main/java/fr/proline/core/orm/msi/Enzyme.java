@@ -34,6 +34,9 @@ public class Enzyme implements Serializable {
     private Boolean isSemiSpecific;
 
     private String name;
+    
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
     public Enzyme() {
     }
@@ -105,6 +108,14 @@ public class Enzyme implements Serializable {
 
     public void setName(String name) {
 	this.name = name;
+    }
+    
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
+
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
     }
 
 }

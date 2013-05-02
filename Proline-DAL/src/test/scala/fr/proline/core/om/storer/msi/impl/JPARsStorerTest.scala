@@ -118,9 +118,10 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
       val resultSet = rsb.toResultSet()
 
-      // FIXME: find a way to communicate with a UDSdb fake 
+      // FIXME 1: find a way to communicate with a UDSdb fake      
       resultSet.msiSearch.get.peakList.peaklistSoftware.id = 1
-
+      resultSet.msiSearch.get.peakList.id = 1
+      
       var stop = System.nanoTime
 
       logger.info("ResultSet creation time: " + ((stop - start) / milliToNanos))

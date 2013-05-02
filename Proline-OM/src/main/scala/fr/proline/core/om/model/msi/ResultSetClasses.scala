@@ -27,13 +27,13 @@ case class ResultSet (
                    var id: Int = 0,
                    var name: String = null,
                    var description: String = null,
-                   var isQuantified: Boolean = false,                    
+                   var isQuantified: Boolean = false,
                    
                    protected var msiSearchId: Int = 0,
                    var msiSearch: Option[MSISearch] = None,
                   
                    protected var decoyResultSetId: Int = 0,
-                   @transient var decoyResultSet: Option[ResultSet] = null,
+                   @transient var decoyResultSet: Option[ResultSet] = None,
                    
                    var properties: Option[ResultSetProperties] = None
                    
@@ -41,10 +41,12 @@ case class ResultSet (
   
   // Requirements
   require( peptides != null && peptideMatches != null & proteinMatches != null )
+  require( msiSearch != null, "MSI search can't be null => provide None instead" )
+  require( decoyResultSet != null, "decoy result set can't be null => provide None instead" )
   
   def getMSISearchId: Int = { if(msiSearch.isDefined) msiSearch.get.id else msiSearchId }
   
-  def getDecoyResultSetId: Int = { if(decoyResultSet != null && decoyResultSet != None) decoyResultSet.get.id else decoyResultSetId }
+  def getDecoyResultSetId: Int = { if(decoyResultSet.isDefined) decoyResultSet.get.id else decoyResultSetId }
   
   def peptideById: Map[Int, Peptide] = {
     
@@ -111,9 +113,17 @@ case class ResultSet (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ResultSetProperties(
-  @BeanProperty var targetDecoyMode: Option[String] = None
+  @BeanProperty var targetDecoyMode: Option[String] = None,
+  @BeanProperty var mascotImportProperties: Option[MascotImportProperties] = None
 )
 
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class MascotImportProperties(
+  @BeanProperty var ionsScoreCutoff: Option[Float] = None, // it's ions score not ion score
+  @BeanProperty var subsetsThreshold: Option[Float] = None,
+  @BeanProperty var proteinsPvalueCutoff: Option[Float] = None
+)
 
 object ResultSummary extends InMemoryIdGen
 
@@ -171,7 +181,60 @@ case class ResultSummary (
 
   }
   
-  def getBestPepMatchesByProtSetId( onlyValidated: Boolean = true ): Map[Int,Array[PeptideMatch]] = {
+  def getBestValidatedPepMatchesByPepSetId(): Map[Int,Array[PeptideMatch]] = {
+    
+    require( this.resultSet.isDefined, "a result set should be linked to the result summary first")
+    
+    // Retrieve the result set
+    val resultSet = this.resultSet.get
+    
+    // Filter peptide matches if wanted
+    val rsPepMatches = resultSet.peptideMatches.filter( _.isValidated == true )
+    
+    // Retrieve object maps
+    val peptideMatchesByPepId = rsPepMatches.groupBy( _.peptide.id )
+    val peptideMatchById = Map() ++ rsPepMatches.map( pm => pm.id -> pm )
+    val proteinMatchById = resultSet.proteinMatchById
+    
+    val bestPepMatchesByPepSetIdBuilder = collection.immutable.HashMap.newBuilder[Int,Array[PeptideMatch]]
+    for( peptideSet <- this.peptideSets ) {
+      
+      // Create a hash which will remove possible redundancy (same peptide located at different positions on the protein sequence) 
+      val bestPepMatchByMsQueryId = new HashMap[Int,PeptideMatch]
+      
+      // Iterate over sequence matches of the protein set to find the best peptide matches
+      for( val pepSetItem <- peptideSet.items ) {
+        
+        val pepInstance = pepSetItem.peptideInstance
+        var bestPeptideMatch = peptideMatchById.get( pepSetItem.peptideInstance.bestPeptideMatchId )
+        
+        // Try to find another best peptide match if the default one can't be found
+        if( bestPeptideMatch.isEmpty ) {
+          val otherValidPepMatches = peptideMatchesByPepId.get( pepInstance.peptide.id )
+          if( otherValidPepMatches.isDefined ) {
+            val sortedPepMatches = otherValidPepMatches.get.sortWith( (a,b) => a.score > b.score )
+            bestPeptideMatch = Some( sortedPepMatches(0) )
+          }
+        }
+        
+        // If the best peptide match has been found
+        if( bestPeptideMatch.isDefined ) {
+          bestPepMatchByMsQueryId += ( bestPeptideMatch.get.msQuery.id -> bestPeptideMatch.get )
+        }
+
+      }
+      
+      // Retrieve a non-redundant list of best peptide matches for this protein set
+      val pepSetBestPeptideMatches = bestPepMatchByMsQueryId.values
+      bestPepMatchesByPepSetIdBuilder += ( peptideSet.id -> pepSetBestPeptideMatches.toArray )
+      
+    }
+    
+    bestPepMatchesByPepSetIdBuilder.result
+    
+  }
+  
+  /*def getBestPepMatchesByProtSetId( onlyValidated: Boolean = true ): Map[Int,Array[PeptideMatch]] = {
     
     if( this.resultSet == None ) {
       throw new Exception("a result set should linked to the result summary first")
@@ -228,37 +291,93 @@ case class ResultSummary (
     
     bestPepMatchesByProtSetIdBuilder.result
     
-  }
+  }*/
   
-  def getAllPeptideMatchesByProteinSetId(): Map[Int,Array[PeptideMatch]] = {
+  /*
+  def getBestPepMatchesByProtSetId(): Map[Int,Array[PeptideMatch]] = {
+    
+    if( this.resultSet == None ) {
+      throw new Exception("a result set should linked to the result summary first")
+    }
+    
+    // Retrieve the result set
+    val resultSet = this.resultSet.get
+    
+    // Filter peptide matches if wanted
+    val rsPepMatches = if(onlyValidated) resultSet.peptideMatches.filter( _.isValidated == true ) else resultSet.peptideMatches
+    
+    // Retrieve object maps    
+    val peptideMatchesByPepId = rsPepMatches.groupBy( _.peptide.id )
+    val peptideMatchById = Map() ++ rsPepMatches.map( pm => pm.id -> pm )
+    val proteinMatchById = resultSet.proteinMatchById
+    
+    val bestPepMatchesByProtSetIdBuilder = collection.immutable.HashMap.newBuilder[Int,Array[PeptideMatch]]
+    for( proteinSet <- this.proteinSets ) {
+      
+      // Create a hash which will remove possible redundancy (same peptide located at different positions on the protein sequence) 
+      val bestPepMatchByMsQueryId = new HashMap[Int,PeptideMatch]
+      
+      // Iterate over sequence matches of the protein set to find the best peptide matches
+      for( val proteinMatchId <- proteinSet.getProteinMatchIds ) {
+        
+        val proteinMatch = proteinMatchById(proteinMatchId)
+        val seqMatches = proteinMatch.sequenceMatches
+        
+        for( val seqMatch <- seqMatches ) {
+          
+          var bestPeptideMatch = peptideMatchById.get( seqMatch.getBestPeptideMatchId )
+          
+          // Try to find another best peptide match if the default one can't be found
+          if( bestPeptideMatch.isEmpty ) {
+            val seqMatchPepMatches = peptideMatchesByPepId.get( seqMatch.peptide.get.id )
+            if( seqMatchPepMatches.isDefined ) {
+              val sortedPepMatches = seqMatchPepMatches.get.sortWith( (a,b) => a.score > b.score )
+              bestPeptideMatch = Some( sortedPepMatches(0) )
+            }
+          }
+          
+          // If the best peptide match has been found
+          if( bestPeptideMatch.isDefined ) {
+            bestPepMatchByMsQueryId += ( bestPeptideMatch.get.msQuery.id -> bestPeptideMatch.get )
+          }
+        }
+      }
+      
+      // Retrieve a non-redundant list of best peptide matches for this protein set
+      val protSetBestPeptideMatches = bestPepMatchByMsQueryId.values
+      bestPepMatchesByProtSetIdBuilder += ( proteinSet.id -> protSetBestPeptideMatches.toArray )
+      
+    }
+    
+    bestPepMatchesByProtSetIdBuilder.result
+    
+  }*/
+  
+  def getAllPeptideMatchesByPeptideSetId(): Map[Int,Array[PeptideMatch]] = {
     
     val peptideMatchMap = this.resultSet.get.peptideMatchById
     
-    val peptideMatchesByProteinSetId = Map.newBuilder[Int,Array[PeptideMatch]]
-    for( proteinSet <- this.proteinSets ) {
+    val peptideMatchesByPepSetId = Map.newBuilder[Int,Array[PeptideMatch]]
+    for( peptideSet <- this.peptideSets ) {
       
       val pepMatchesByMsQueryId = new HashMap[Int,ArrayBuffer[PeptideMatch]]
       
-      // Iterate over peptide instances of the protein set to find the best peptide match of each peptide instance
-      val peptideInstances = proteinSet.peptideSet.getPeptideInstances    
-      for( peptideInstance <- peptideInstances ) {
-        
-        for( peptideMatchId <- peptideInstance.peptideMatchIds ) {
-          val pepMatch = peptideMatchMap(peptideMatchId)
-          val msqPepMatches = pepMatchesByMsQueryId.getOrElseUpdate( pepMatch.msQueryId, new ArrayBuffer[PeptideMatch] )
-          msqPepMatches += pepMatch
-        }
-        
+      // Iterate over peptide instances of the peptide set
+      val peptideInstances = peptideSet.getPeptideInstances    
+      for( peptideInstance <- peptideInstances; peptideMatchId <- peptideInstance.peptideMatchIds ) {
+        val pepMatch = peptideMatchMap(peptideMatchId)
+        val msqPepMatches = pepMatchesByMsQueryId.getOrElseUpdate( pepMatch.msQueryId, new ArrayBuffer[PeptideMatch] )
+        msqPepMatches += pepMatch        
       }
       
       // Take arbitrary the first isobaric peptide if we have multiple ones for a given MS query
       // FIXME: find an other solution
-      val protSetPeptideMatches = pepMatchesByMsQueryId.values.map { _(0) }
-      peptideMatchesByProteinSetId += proteinSet.id -> protSetPeptideMatches.toArray
+      val pepSetPeptideMatches = pepMatchesByMsQueryId.values.map { _(0) }
+      peptideMatchesByPepSetId += peptideSet.id -> pepSetPeptideMatches.toArray
       
     }
     
-    peptideMatchesByProteinSetId.result
+    peptideMatchesByPepSetId.result
     
   }
   

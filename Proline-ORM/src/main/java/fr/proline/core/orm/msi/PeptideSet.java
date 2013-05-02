@@ -22,8 +22,12 @@ public class PeptideSet implements Serializable {
 	@Column(name="is_subset")
 	private Boolean isSubset;
 	
-	@Column(name="score")
 	private float score;
+	
+	//uni-directional many-to-one association to Scoring
+	@ManyToOne
+	@JoinColumn(name="scoring_id")
+	private Scoring scoring;
 	
 	@Column(name="peptide_count")
 	private Integer peptideCount;
@@ -81,15 +85,6 @@ public class PeptideSet implements Serializable {
 	public void setIsSubset(Boolean isSubset) {
 		this.isSubset = isSubset;
 	}
-	
-	public float getScore() {
-		return this.score;
-	}
-
-	public void setScore(float score) {
-		this.score = score;
-	}
-
 
 	public Integer getPeptideCount() {
 		return this.peptideCount;
@@ -113,6 +108,22 @@ public class PeptideSet implements Serializable {
 
 	public void setResultSummaryId(Integer resultSummaryId) {
 		this.resultSummaryId = resultSummaryId;
+	}
+	
+	public float getScore() {
+		return this.score;
+	}
+
+	public void setScore(float score) {
+		this.score = score;
+	}
+	
+	public Scoring getScoring() {
+		return this.scoring;
+	}
+
+	public void setScoring(Scoring scoring) {
+		this.scoring = scoring;
 	}
 
 	public String getSerializedProperties() {

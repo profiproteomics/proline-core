@@ -51,6 +51,12 @@ public class PeptideInstance implements Serializable {
     @Column(name="total_leaves_match_count")
     private Integer totalLeavesMatchCount;
 
+	@Column(name="validated_protein_set_count")
+	private Integer validatedProteinSetCount;
+
+	@Column(name="total_leaves_match_count")
+	private Integer totalLeavesMatchCount;
+
 	@Column(name="elution_time")
 	private Float elutionTime;
 	
@@ -198,6 +204,14 @@ public class PeptideInstance implements Serializable {
 
 	public void setUnmodifiedPeptideId(Integer unmodifiedPeptideId) {
 		this.unmodifiedPeptideId = unmodifiedPeptideId;
+	}
+	
+	public Integer getValidatedProteinSetCount() {
+		return this.validatedProteinSetCount;
+	}
+
+	public void setValidatedProteinSetCount(Integer validatedProteinSetCount) {
+		this.validatedProteinSetCount = validatedProteinSetCount;
 	}
 
 	public Set<PeptideSetPeptideInstanceItem> getPeptideSetPeptideInstanceItems() {

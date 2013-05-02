@@ -68,7 +68,7 @@ class CreateQuantitation(
     udsQuantitation.setDescription( description )
     udsQuantitation.setType( DatasetType.QUANTITATION )
     udsQuantitation.setCreationTimestamp( getTimeAsSQLTimestamp )
-    udsQuantitation.setFractionCount( mqcCount )
+    udsQuantitation.setChildrenCount( mqcCount )
     udsQuantitation.setMethod( udsQuantMethod )
     udsEM.persist( udsQuantitation )
     
@@ -95,7 +95,7 @@ class CreateQuantitation(
       // Save group setup
       val udsGroupSetup = new UdsGroupSetup()
       udsGroupSetup.setName(groupSetup.name)
-      udsGroupSetup.setDataset(udsQuantitation)
+      udsGroupSetup.setQuantitationDataset(udsQuantitation)
       udsEM.persist( udsGroupSetup )
       
       // Create a set of group setups
@@ -218,7 +218,7 @@ class CreateQuantitation(
         udsQuantChannel.setSampleReplicate( udsSampleReplicateByKey(contextKey) )
         udsQuantChannel.setBiologicalSample( udsBioSample )
         udsQuantChannel.setMasterQuantitationChannel( udsQf )
-        udsQuantChannel.setDataset( udsQuantitation)
+        udsQuantChannel.setQuantitationDataset( udsQuantitation)
         
         // TODO: check method type
         if( quantChannel.lcmsMapId != None ) {

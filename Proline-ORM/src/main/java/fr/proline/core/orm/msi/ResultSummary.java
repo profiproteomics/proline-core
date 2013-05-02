@@ -28,6 +28,9 @@ public class ResultSummary implements Serializable {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
+	
+    @Column(name = "creation_log")
+    private String creationLog;
 
 	private String description;
 
@@ -85,6 +88,14 @@ public class ResultSummary implements Serializable {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+	
+	public String getCreationLog() {
+		return this.creationLog;
+	}
+
+	public void setCreationLog(String creationLog) {
+		this.creationLog = creationLog;
 	}
 
 	public String getDescription() {

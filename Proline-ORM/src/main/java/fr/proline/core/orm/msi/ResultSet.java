@@ -25,10 +25,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import fr.proline.core.orm.util.JsonSerializer;
-
 
 
 /**
@@ -40,7 +37,7 @@ import fr.proline.core.orm.util.JsonSerializer;
 public class ResultSet implements Serializable {
 
 	public enum Type {
-		SEARCH, DECOY_SEARCH, USER, QUANTITATION
+		SEARCH, DECOY_SEARCH, USER, DECOY_USER, QUANTITATION
 	}
 	
 	private static final long serialVersionUID = 1L;
@@ -48,6 +45,9 @@ public class ResultSet implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
+	
+    @Column(name = "creation_log")
+    private String creationLog;
 
 	private String description;
 
@@ -95,6 +95,14 @@ public class ResultSet implements Serializable {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+	
+	public String getCreationLog() {
+		return this.creationLog;
+	}
+
+	public void setCreationLog(String creationLog) {
+		this.creationLog = creationLog;
 	}
 
 	public String getDescription() {

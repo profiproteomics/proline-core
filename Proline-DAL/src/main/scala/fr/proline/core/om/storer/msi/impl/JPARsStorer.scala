@@ -26,7 +26,7 @@ import fr.proline.util.StringUtils
  * @param dbManagement DatabaseManagement : From which connection to Ps Db,  Uds Db and Pdi Db is retrieve
  * @param projectID Id of the project to save information to
  */
-class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends AbstractRsStorer(plWriter) with Logging {
+class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extends AbstractRsStorer(pklWriter) with Logging {
 
   type MsiPeaklist = fr.proline.core.orm.msi.Peaklist
   type MsiPeaklistSoftware = fr.proline.core.orm.msi.PeaklistSoftware
@@ -371,7 +371,7 @@ class JPARsStorer(override val plWriter: IPeaklistWriter = null) extends Abstrac
         val omPeaklistId = peaklist.id
 
         if (omPeaklistId <= 0) {
-          storePeaklist(peaklist, storerContext)
+          this.getOrBuildPeaklistWriter( storerContext ).insertPeaklist(peaklist, storerContext)
         }
 
         val storedPeaklist = retrieveStoredPeaklist(storerContext, omPeaklistId)

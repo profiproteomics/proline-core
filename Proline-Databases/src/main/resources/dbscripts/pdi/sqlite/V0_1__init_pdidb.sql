@@ -12,7 +12,7 @@ CREATE TABLE bio_sequence (
                 alphabet TEXT(3) NOT NULL,
                 sequence TEXT NOT NULL,
                 length INTEGER,
-                mass REAL NOT NULL,
+                mass INTEGER NOT NULL,
                 pi REAL,
                 crc64 TEXT(32) NOT NULL,
                 serialized_properties TEXT
@@ -86,8 +86,8 @@ CREATE TABLE fasta_parsing_rule (
 CREATE TABLE gene (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT(100) NOT NULL,
+                name_type TEXT(20) NOT NULL,
                 synonyms TEXT,
-                orf_names TEXT,
                 is_active TEXT NOT NULL,
                 serialized_properties TEXT,
                 taxon_id INTEGER NOT NULL,
@@ -208,6 +208,7 @@ CREATE TABLE taxon (
                 id INTEGER NOT NULL,
                 scientific_name TEXT(512) NOT NULL,
                 rank TEXT(30) NOT NULL,
+                is_active TEXT NOT NULL,
                 serialized_properties TEXT,
                 parent_taxon_id INTEGER NOT NULL,
                 PRIMARY KEY (id),

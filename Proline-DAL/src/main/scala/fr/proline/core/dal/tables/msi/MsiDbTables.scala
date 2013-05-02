@@ -81,6 +81,7 @@ object MsiDbEnzymeColumns extends ColumnEnumeration {
   val CLEAVAGE_REGEXP = Column("cleavage_regexp")
   val IS_INDEPENDANT = Column("is_independant")
   val IS_SEMI_SPECIFIC = Column("is_semi_specific")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
 }
 
 abstract class MsiDbEnzymeTable extends TableDefinition[MsiDbEnzymeColumns.type]
@@ -149,6 +150,7 @@ object MsiDbMasterQuantPeptideIonColumns extends ColumnEnumeration {
   val LCMS_FEATURE_ID = Column("lcms_feature_id")
   val PEPTIDE_ID = Column("peptide_id")
   val PEPTIDE_INSTANCE_ID = Column("peptide_instance_id")
+  val MASTER_QUANT_PEPTIDE_ID = Column("master_quant_peptide_id")
   val MASTER_QUANT_COMPONENT_ID = Column("master_quant_component_id")
   val BEST_PEPTIDE_MATCH_ID = Column("best_peptide_match_id")
   val UNMODIFIED_PEPTIDE_ION_ID = Column("unmodified_peptide_ion_id")
@@ -352,6 +354,7 @@ object MsiDbPeptideInstanceColumns extends ColumnEnumeration {
   val PEPTIDE_MATCH_COUNT = Column("peptide_match_count")
   val PROTEIN_MATCH_COUNT = Column("protein_match_count")
   val PROTEIN_SET_COUNT = Column("protein_set_count")
+  val VALIDATED_PROTEIN_SET_COUNT = Column("validated_protein_set_count")
   val TOTAL_LEAVES_MATCH_COUNT = Column("total_leaves_match_count")
   val SELECTION_LEVEL = Column("selection_level")
   val ELUTION_TIME = Column("elution_time")
@@ -448,6 +451,7 @@ object MsiDbPeptideSetColumns extends ColumnEnumeration {
   val PEPTIDE_MATCH_COUNT = Column("peptide_match_count")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val PROTEIN_SET_ID = Column("protein_set_id")
+  val SCORING_ID = Column("scoring_id")
   val RESULT_SUMMARY_ID = Column("result_summary_id")
 }
 
@@ -547,12 +551,10 @@ object MsiDbProteinMatchSeqDatabaseMapTable extends MsiDbProteinMatchSeqDatabase
 object MsiDbProteinSetColumns extends ColumnEnumeration {
   val $tableName = MsiDbProteinSetTable.name
   val ID = Column("id")
-  val SCORE = Column("score")
   val IS_VALIDATED = Column("is_validated")
   val SELECTION_LEVEL = Column("selection_level")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val TYPICAL_PROTEIN_MATCH_ID = Column("typical_protein_match_id")
-  val SCORING_ID = Column("scoring_id")
   val MASTER_QUANT_COMPONENT_ID = Column("master_quant_component_id")
   val RESULT_SUMMARY_ID = Column("result_summary_id")
 }
@@ -562,35 +564,6 @@ abstract class MsiDbProteinSetTable extends TableDefinition[MsiDbProteinSetColum
 object MsiDbProteinSetTable extends MsiDbProteinSetTable {
   val name = "protein_set"
   val columns = MsiDbProteinSetColumns
-}
-
-object MsiDbProteinSetClusterColumns extends ColumnEnumeration {
-  val $tableName = MsiDbProteinSetClusterTable.name
-  val ID = Column("id")
-  val SERIALIZED_PROPERTIES = Column("serialized_properties")
-  val BEST_PROTEIN_SET_ID = Column("best_protein_set_id")
-  val RESULT_SUMMARY_ID = Column("result_summary_id")
-}
-
-abstract class MsiDbProteinSetClusterTable extends TableDefinition[MsiDbProteinSetClusterColumns.type]
-
-object MsiDbProteinSetClusterTable extends MsiDbProteinSetClusterTable {
-  val name = "protein_set_cluster"
-  val columns = MsiDbProteinSetClusterColumns
-}
-
-object MsiDbProteinSetClusterItemColumns extends ColumnEnumeration {
-  val $tableName = MsiDbProteinSetClusterItemTable.name
-  val PROTEIN_SET_CLUSTER_ID = Column("protein_set_cluster_id")
-  val PROTEIN_SET_ID = Column("protein_set_id")
-  val RESULT_SUMMARY_ID = Column("result_summary_id")
-}
-
-abstract class MsiDbProteinSetClusterItemTable extends TableDefinition[MsiDbProteinSetClusterItemColumns.type]
-
-object MsiDbProteinSetClusterItemTable extends MsiDbProteinSetClusterItemTable {
-  val name = "protein_set_cluster_item"
-  val columns = MsiDbProteinSetClusterItemColumns
 }
 
 object MsiDbProteinSetObjectTreeMapColumns extends ColumnEnumeration {
@@ -643,6 +616,7 @@ object MsiDbResultSetColumns extends ColumnEnumeration {
   val NAME = Column("name")
   val DESCRIPTION = Column("description")
   val TYPE = Column("type")
+  val CREATION_LOG = Column("creation_log")
   val MODIFICATION_TIMESTAMP = Column("modification_timestamp")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val DECOY_RESULT_SET_ID = Column("decoy_result_set_id")
@@ -687,6 +661,7 @@ object MsiDbResultSummaryColumns extends ColumnEnumeration {
   val $tableName = MsiDbResultSummaryTable.name
   val ID = Column("id")
   val DESCRIPTION = Column("description")
+  val CREATION_LOG = Column("creation_log")
   val MODIFICATION_TIMESTAMP = Column("modification_timestamp")
   val IS_QUANTIFIED = Column("is_quantified")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
@@ -869,7 +844,6 @@ object MsiDbUsedPtmColumns extends ColumnEnumeration {
   val PTM_SPECIFICITY_ID = Column("ptm_specificity_id")
   val SHORT_NAME = Column("short_name")
   val IS_FIXED = Column("is_fixed")
-  val TYPE = Column("type")
 }
 
 abstract class MsiDbUsedPtmTable extends TableDefinition[MsiDbUsedPtmColumns.type]
