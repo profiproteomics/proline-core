@@ -29,8 +29,14 @@ public class QuantitationTest extends DatabaseTestCase {
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-
-	loadDataSet("/fr/proline/core/orm/uds/Quanti_15N_Dataset.xml");
+	
+	//"/fr/proline/core/orm/uds/Quanti_15N_Dataset.xml"
+	String[] datasets = new String[]{
+		"/dbunit/datasets/uds-db_init_dataset.xml",
+		"/dbunit/datasets/uds/Quanti_15N_Dataset.xml"
+	};
+	
+	loadCompositeDataSet(datasets);
     }
 
     @Test

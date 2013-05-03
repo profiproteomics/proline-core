@@ -3,6 +3,7 @@ package fr.proline.core.orm.msi.repository;
 import static junit.framework.Assert.*;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -40,7 +41,7 @@ public class MsiPeptideRepositoryTest {
     private static final String DB_USER = "sa";
     private static final String DB_PASSWORD = "";
 
-    private static final String MSI_SEARCH_DATASET_LOCATION = "fr/proline/core/orm/msi/MsiSearch_Dataset.xml";
+    private static final String MSI_SEARCH_DATASET_LOCATION = "dbunit/datasets/msi/MsiSearch_Dataset.xml";
 
     private static final Logger LOG = LoggerFactory.getLogger(MsiPeptideRepositoryTest.class);
 
@@ -107,12 +108,13 @@ public class MsiPeptideRepositoryTest {
 	ReplacementDataSet dataSet = null;
 
 	try {
-	    dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileURL(), false, true));
+		//dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileURL(), false, true));
+	    dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileIS()));
 
 	    LOG.debug("START addReplacementSubstring");
 	    dataSet.addReplacementSubstring("NaN", "0.0");
 	} catch (Exception ex) {
-	    LOG.error("Cannot create dataSet from flat file: " + getTestFileURL(), ex);
+	    LOG.error("Cannot create dataSet from flat file: " + MSI_SEARCH_DATASET_LOCATION, ex);
 
 	}
 
@@ -142,18 +144,17 @@ public class MsiPeptideRepositoryTest {
 
     }
 
-    private static File getTestFileURL() {
+    private static InputStream getTestFileIS() {
 
-	File result = null;
+    	InputStream result = null;
 
 	try {
 	    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-	    final URI fileURI = cl.getResource(MSI_SEARCH_DATASET_LOCATION).toURI();
+	    result = cl.getResourceAsStream(MSI_SEARCH_DATASET_LOCATION);
 
-	    LOG.debug("MsiSearch Dataset location [{}]", fileURI);
+	    LOG.debug("MsiSearch Dataset location [{}]", MSI_SEARCH_DATASET_LOCATION);
 
-	    result = new File(fileURI);
 	} catch (Exception ex) {
 	    LOG.error("Error retieving MsiSearch Dataset location", ex);
 	}

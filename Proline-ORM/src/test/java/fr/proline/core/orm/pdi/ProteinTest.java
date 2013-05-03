@@ -29,7 +29,8 @@ public class ProteinTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	loadDataSet("/fr/proline/core/orm/pdi/Proteins_Dataset.xml");
+	//"/fr/proline/core/orm/pdi/Proteins_Dataset.xml"
+	loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml");
     }
 
     @Test

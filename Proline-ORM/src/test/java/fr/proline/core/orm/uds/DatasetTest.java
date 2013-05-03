@@ -36,7 +36,13 @@ public class DatasetTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
+	//"/fr/proline/core/orm/uds/Project_Dataset.xml"
+	String[] datasets = new String[]{
+		"/dbunit/datasets/uds-db_init_dataset.xml",
+		"/dbunit/datasets/uds/Project_Dataset.xml"
+	};
+	
+	loadCompositeDataSet(datasets);
     }
 
     @Test

@@ -31,7 +31,13 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	loadDataSet("/fr/proline/core/orm/uds/Project_Dataset.xml");
+	//"/fr/proline/core/orm/uds/Project_Dataset.xml"
+	String[] datasets = new String[]{
+		"/dbunit/datasets/uds-db_init_dataset.xml",
+		"/dbunit/datasets/uds/Project_Dataset.xml"
+	};
+	
+	loadCompositeDataSet(datasets);
     }
 
     @Test
@@ -42,7 +48,7 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
 
 	try {
 	    InstrumentConfiguration insCfg = UdsInstrumentConfigurationRepository
-		    .findInstrumConfForNameAndMs1AndMsn(udsEm, "VENUS_CFG", "Analyzer", null);
+		    .findInstrumConfForNameAndMs1AndMsn(udsEm, "LTQ-ORBITRAP XL (A1=FTMS F=CID A2=TRAP)", "FTMS", "TRAP");
 	    assertThat(insCfg, notNullValue());
 	    assertThat(insCfg.getActivation().getType(), is(Activation.ActivationType.CID));
 

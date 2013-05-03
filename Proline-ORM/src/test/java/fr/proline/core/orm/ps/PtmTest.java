@@ -35,7 +35,13 @@ public class PtmTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	loadDataSet("/fr/proline/core/orm/ps/Unimod_Dataset.xml");
+	//"/fr/proline/core/orm/ps/Unimod_Dataset.xml"
+	String[] datasets = new String[]{
+		"/dbunit/datasets/ps-db_init_dataset.xml",
+		"/dbunit/datasets/ps/Peptides_Dataset.xml"
+	};
+	
+	loadCompositeDataSet(datasets);
     }
 
     @Test

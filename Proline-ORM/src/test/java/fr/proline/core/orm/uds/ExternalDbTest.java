@@ -115,7 +115,7 @@ public class ExternalDbTest {
 	externalDb.setType(ProlineDatabaseType.PS);
 	externalDb.setDriverType(DriverType.SQLITE);
 	externalDb.setConnectionMode(ConnectionMode.FILE);
-	externalDb.setDbName("./target/pdi.dat");
+	externalDb.setDbName("./target/pdi.sqlite");
 
 	final IDatabaseConnector connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 		externalDb.getType(), externalDb.toPropertiesMap());
@@ -127,7 +127,7 @@ public class ExternalDbTest {
 	try {
 	    final DatabaseMetaData metaData = con.getMetaData();
 
-	    assertEquals("jdbc:sqlite:./target/pdi.dat", metaData.getURL());
+	    assertEquals("jdbc:sqlite:./target/pdi.sqlite", metaData.getURL());
 	} finally {
 
 	    if (ds != null) {

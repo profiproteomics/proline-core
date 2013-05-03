@@ -36,8 +36,14 @@ public class ResultsetTest extends DatabaseTestCase {
     @Before
     public void setUp() throws Exception {
 	initDatabase();
+	
+	//"/fr/proline/core/orm/msi/Resultset_Dataset.xml"
+	String[] datasets = new String[]{
+		"/dbunit/datasets/msi-db_init_dataset.xml",
+		"/dbunit/datasets/msi/Resultset_Dataset.xml"
+	};
 
-	loadDataSet("/fr/proline/core/orm/msi/Resultset_Dataset.xml");
+	loadCompositeDataSet(datasets);
     }
 
     @Test
