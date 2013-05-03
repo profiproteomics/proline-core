@@ -41,7 +41,7 @@ class ResultSetValidatorTest extends AbstractMultipleDBTestCase with Logging {
     super.initDBsDBManagement(driverType)
 
     //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit_samples/pdi-db.xml")
+    pdiDBTestCase.loadDataSet("/dbunit/datasets/Proteins_Dataset.xml")
     psDBTestCase.loadDataSet("/dbunit_samples/STR_F136482_CTD/ps-db.xml")
     msiDBTestCase.loadDataSet("/dbunit_samples/STR_F136482_CTD/msi-db.xml")
     udsDBTestCase.loadDataSet("/dbunit_samples/STR_F136482_CTD/uds-db.xml")
