@@ -95,19 +95,31 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     checkStorerContext(storerContext)
 
-    // TODO Check this algo (QUANTITATION = resultSet.isQuantified ? )
+    // TODO Decoy, Native and Quantified bools must be coherant with ORMResultSetProvider.buildResultSet()
     def parseType(resultSet: ResultSet): Type = {
 
-      if (resultSet.isNative) {
+      if (resultSet.isQuantified) {
+        Type.QUANTITATION
+      } else {
 
-        if (resultSet.isDecoy) {
-          Type.DECOY_SEARCH
+        if (resultSet.isNative) {
+
+          if (resultSet.isDecoy) {
+            Type.DECOY_SEARCH
+          } else {
+            Type.SEARCH
+          }
+
         } else {
-          Type.SEARCH
+
+          if (resultSet.isDecoy) {
+            Type.DECOY_USER
+          } else {
+            Type.USER
+          }
+
         }
 
-      } else {
-        Type.USER
       }
 
     }
@@ -371,7 +383,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         val omPeaklistId = peaklist.id
 
         if (omPeaklistId <= 0) {
-          this.getOrBuildPeaklistWriter( storerContext ).insertPeaklist(peaklist, storerContext)
+          this.getOrBuildPeaklistWriter(storerContext).insertPeaklist(peaklist, storerContext)
         }
 
         val storedPeaklist = retrieveStoredPeaklist(storerContext, omPeaklistId)

@@ -145,8 +145,8 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
       val rsType = msiResultSet.getType
 
-      // TODO Decoy and Native bools must be coherant with JPARsStorer parseType()
-      val isDecoy = if (rsType == Type.DECOY_SEARCH) {
+      // TODO Decoy, Native and Quantified bools must be coherant with JPARsStorer parseType()
+      val isDecoy = if ((rsType == Type.DECOY_SEARCH) || (rsType == Type.DECOY_USER)) {
         true
       } else {
         false
@@ -157,6 +157,8 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       } else {
         false
       }
+
+      val isQuantified = (rsType == Type.QUANTITATION)
 
       /* MsiSearch */
       var msiSearchId: Int = 0
@@ -198,7 +200,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         msiResultSetId,
         msiResultSet.getName,
         msiResultSet.getDescription,
-        false, // TODO handle isQuantified
+        isQuantified,
         msiSearchId,
         optionalMsiSearch,
         decoyRSId,
