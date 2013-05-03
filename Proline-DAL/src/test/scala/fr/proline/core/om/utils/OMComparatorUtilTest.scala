@@ -22,9 +22,10 @@ class OMComparatorUtilTest extends DatabaseTestCase {
   @Before
   @throws(classOf[Exception])
   def initialize() = {
-    initDatabase();
+    initDatabase()
 
-    loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");
+    //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");
+    loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
   }
 
   @Test
@@ -36,11 +37,13 @@ class OMComparatorUtilTest extends DatabaseTestCase {
     try {
       val pepPtm: PeptidePtm = psEm.find(classOf[PeptidePtm], 1)
 
-      val ptmEvi = new PtmEvidence(ionType = IonTypes.Precursor,
+      val ptmEvi = new PtmEvidence(
+        ionType = IonTypes.Precursor,
         composition = "Post-translational",
         monoMass = 15.994915,
         averageMass = 15.9994,
-        isRequired = true)
+        isRequired = true
+      )
 
       var ptmEvidences = new Array[PtmEvidence](1)
       ptmEvidences.update(0, ptmEvi)
@@ -52,15 +55,17 @@ class OMComparatorUtilTest extends DatabaseTestCase {
         residue = 'M',
         classification = "Post-translational", ptmId = 0)
 
-      val lPtm: LocatedPtm = new LocatedPtm(definition = ptmDef,
+      val lPtm: LocatedPtm = new LocatedPtm(
+        definition = ptmDef,
         seqPosition = 3,
         monoMass = Double.MaxValue,
         averageMass = Double.MaxValue,
         composition = "O",
         isNTerm = false,
-        isCTerm = false)
+        isCTerm = false
+      )
 
-      assertTrue(OMComparatorUtil.comparePeptidePtm(lPtm, pepPtm));
+      assertTrue(OMComparatorUtil.comparePeptidePtm(lPtm, pepPtm))
     } finally {
 
       if (psEm != null) {

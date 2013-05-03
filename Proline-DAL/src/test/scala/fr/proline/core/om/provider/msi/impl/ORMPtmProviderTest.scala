@@ -24,15 +24,16 @@ class ORMPtmProviderTest extends DatabaseTestCase {
   def setUp() = {
     initDatabase()
 
-    loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
+    //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
+    loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
   }
 
   @Test
   def getPtmSpecificities() = {
     val ids = new ArrayBuffer[Int]
-    ids += 7 //
-    ids += 12
-    ids += 1284
+    ids += 2 //
+    ids += 11
+    ids += 1287
 
     val psDb = new DatabaseConnectionContext(getConnector)
 
@@ -61,7 +62,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
   @Test
   def getPtmSpecificitiesWithNonExistant() = {
     val ids = new ArrayBuffer[Int]
-    ids += 7
+    ids += 2
     ids += 9879
 
     val psDb = new DatabaseConnectionContext(getConnector)
@@ -84,7 +85,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
   def getPtmSpecificitiesWithNonExistant2() = {
     val ids = new ArrayBuffer[Int]
     ids += 9879
-    ids += 7
+    ids += 2
 
     val psDb = new DatabaseConnectionContext(getConnector)
 
@@ -110,7 +111,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     try {
       val ormPtmProvider = new ORMPTMProvider(psDb)
 
-      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(12);
+      val ptmDef: Option[PtmDefinition] = ormPtmProvider.getPtmDefinition(11);
       assertThat(ptmDef, CoreMatchers.notNullValue());
       assertNotSame(ptmDef, None);
 
@@ -152,7 +153,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
       assertThat(ptmDef, CoreMatchers.notNullValue())
       assertNotSame(ptmDef, None);
-      assertThat(ptmDef.get.id, CoreMatchers.equalTo(877))
+      assertThat(ptmDef.get.id, CoreMatchers.equalTo(883))
     } finally {
       psDb.close()
     }

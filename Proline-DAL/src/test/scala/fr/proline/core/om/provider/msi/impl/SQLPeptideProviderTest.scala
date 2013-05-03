@@ -31,7 +31,8 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
   def setUp() = {
     initDatabase()
 
-    loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
+    //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
+    loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
   }
 
   @Test

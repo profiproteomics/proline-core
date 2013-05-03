@@ -27,7 +27,8 @@ class OMConverterUtilTest extends DatabaseTestCase {
   def initialize() = {
     initDatabase();
 
-    loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");
+    //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml");
+    loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
 
     converter = new PeptidesOMConverterUtil(true);
   }
