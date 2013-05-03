@@ -1,4 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE dataset SYSTEM "../uds-dataset.dtd"> 
 <dataset>
   <ACTIVATION TYPE="CID"/>
   <ACTIVATION TYPE="ECD"/>
@@ -15,23 +16,13 @@
   <FRACTIONATION ID="2" TYPE="PEPTIDE"/>
   <FRACTIONATION ID="3" TYPE="OTHER"/>
   <FRACTIONATION ID="4" TYPE="NONE"/>
-  <USER_ACCOUNT/>
-  <PROJECT/>
+
   <QUANT_METHOD ID="1" NAME="label free based on the extraction of feature abundance" TYPE="label_free" ABUNDANCE_UNIT="feature_intensity"/>
   <QUANT_METHOD ID="2" NAME="label free based on spectral counting" TYPE="label_free" ABUNDANCE_UNIT="spectral_counts"/>
   <QUANT_METHOD ID="3" NAME="iTRAQ 4plex" TYPE="isobaric_tag" ABUNDANCE_UNIT="reporter_ion_intensity"/>
   <QUANT_METHOD ID="4" NAME="iTRAQ 8plex" TYPE="isobaric_tag" ABUNDANCE_UNIT="reporter_ion_intensity"/>
   <QUANT_METHOD ID="5" NAME="TMT 6plex" TYPE="isobaric_tag" ABUNDANCE_UNIT="reporter_ion_intensity"/>
-  <DATA_SET/>
-  <BIOLOGICAL_GROUP/>
-  <BIOLOGICAL_SAMPLE/>
-  <BIOLOGICAL_GROUP_BIOLOGICAL_SAMPLE_ITEM/>
-  <SAMPLE_ANALYSIS/>
-  <BIOLOGICAL_SAMPLE_SAMPLE_ANALYSIS_MAP/>
-  <OBJECT_TREE_SCHEMA/>
-  <OBJECT_TREE/>
-  <VIRTUAL_FOLDER/>
-  <DOCUMENT/>
+
   <ENZYME ID="1" NAME="CNBr+Trypsin" IS_INDEPENDANT="false" IS_SEMI_SPECIFIC="false"/>
   <ENZYME ID="2" NAME="Chymotrypsin" IS_INDEPENDANT="false" IS_SEMI_SPECIFIC="false"/>
   <ENZYME ID="3" NAME="Formic_acid" IS_INDEPENDANT="false" IS_SEMI_SPECIFIC="false"/>
@@ -81,9 +72,9 @@
   <ENZYME_CLEAVAGE ID="25" SITE="N-term" RESIDUES="DB" ENZYME_ID="19"/>
   <ENZYME_CLEAVAGE ID="26" SITE="C-term" RESIDUES="FL" ENZYME_ID="20"/>
   <ENZYME_CLEAVAGE ID="27" SITE="C-term" RESIDUES="KR" ENZYME_ID="21"/>
-  <ENZYME_CLEAVAGE ID="28" SITE="C-term" RESIDUES="EZ" RESTRICTIVE_RESIDUES="P" ENZYME_ID="22"/>
-  <EXTERNAL_DB ID="1" NAME="D:\proline\data\test_v1/ps-db" CONNECTION_MODE="FILE" USERNAME="proline_db_user" PASSWORD="proline" HOST="haldir" PORT="5432" TYPE="PS" VERSION="no.version" IS_BUSY="false" SERIALIZED_PROPERTIES="{&quot;driver_type&quot;:&quot;H2&quot;}"/>
-  <EXTERNAL_DB ID="2" NAME="D:\proline\data\test_v1/pdi-db" CONNECTION_MODE="FILE" USERNAME="proline_db_user" PASSWORD="proline" HOST="haldir" PORT="5432" TYPE="PDI" VERSION="no.version" IS_BUSY="false" SERIALIZED_PROPERTIES="{&quot;driver_type&quot;:&quot;H2&quot;}"/>
+  <ENZYME_CLEAVAGE ID="28" SITE="C-term" RESIDUES="EZ" RESTRICTIVE_RESIDUES="P" ENZYME_ID="22"/>  
+  <EXTERNAL_DB ID="1" NAME="ps_test" CONNECTION_MODE="MEMORY" USERNAME="sa" PASSWORD="myPass" TYPE="PS" VERSION="no.version" IS_BUSY="false" SERIALIZED_PROPERTIES="{&quot;driver_type&quot;:&quot;H2&quot;}"/>
+  <EXTERNAL_DB ID="2" NAME="pdi_test" CONNECTION_MODE="MEMORY" USERNAME="sa" PASSWORD="myPass" TYPE="PDI" VERSION="no.version" IS_BUSY="false" SERIALIZED_PROPERTIES="{&quot;driver_type&quot;:&quot;H2&quot;}"/>
   <FRAGMENTATION_SERIES ID="1" NAME="a"/>
   <FRAGMENTATION_SERIES ID="2" NAME="a-NH3" NEUTRAL_LOSS="NH3"/>
   <FRAGMENTATION_SERIES ID="3" NAME="a-H2O" NEUTRAL_LOSS="H2O"/>
@@ -129,8 +120,7 @@
   <FRAGMENTATION_RULE ID="23" DESCRIPTION="v series" FRAGMENT_SERIES_ID="9"/>
   <FRAGMENTATION_RULE ID="24" DESCRIPTION="w and w&apos; series" FRAGMENT_SERIES_ID="10"/>
   <FRAGMENTATION_RULE ID="25" DESCRIPTION="z+2 series" FRAGMENT_SERIES_ID="17"/>
-  <GROUP_SETUP/>
-  <GROUP_SETUP_BIOLOGICAL_GROUP_MAP/>
+
   <INSTRUMENT ID="1" NAME="ESI-QUAD-TOF" SOURCE="ESI"/>
   <INSTRUMENT ID="2" NAME="MALDI-TOF-PSD" SOURCE="MALDI"/>
   <INSTRUMENT ID="3" NAME="ESI-TRAP" SOURCE="ESI"/>
@@ -276,7 +266,7 @@
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="12" FRAGMENTATION_RULE_ID="11"/>
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="12" FRAGMENTATION_RULE_ID="13"/>
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="12" FRAGMENTATION_RULE_ID="25"/>
-  <MASTER_QUANT_CHANNEL/>
+
   <SPEC_TITLE_PARSING_RULE ID="1" RAW_FILE_NAME="(.+)\.\d+\.\d+\.\d+\.dta" FIRST_SCAN=".+\.(\d+)\.\d+\.\d+\.dta" LAST_SCAN=".+\.\d+\.(\d+)\.\d+\.dta" NAME="extract_msn.exe"/>
   <SPEC_TITLE_PARSING_RULE ID="2" RAW_FILE_NAME="^File: (.+?)," FIRST_CYCLE="Cycle\(s\): (\d+) \(Experiment \d+\)|Cycle\(s\): (\d+), \d+" LAST_CYCLE="Cycle\(s\): (\d+) \(Experiment \d+\)|Cycle\(s\): \d+, (\d+)" FIRST_TIME="Elution: (.+?) to .+? min|Elution: (.+?) min" LAST_TIME="Elution: .+? to (.+?) min|Elution: (.+?) min" NAME="mascot.dll"/>
   <SPEC_TITLE_PARSING_RULE ID="3" RAW_FILE_NAME="\[(.+?)\]" FIRST_CYCLE="(\d+?) \(rt=" LAST_CYCLE="- \d+: Scan (\d+?) \(rt=" FIRST_TIME="\(rt=(\d+?\.\d+?)\)" LAST_TIME="-.+Scan \d+ \(rt=(\d+\.\d+)" NAME="Mascot Distiller"/>
@@ -293,9 +283,7 @@
   <PEAKLIST_SOFTWARE ID="6" NAME="ProteoWizard" VERSION="2.0" SPEC_TITLE_PARSING_RULE_ID="6"/>
   <PEAKLIST_SOFTWARE ID="7" NAME="ProteoWizard" VERSION="2.1" SPEC_TITLE_PARSING_RULE_ID="7"/>
   <PEAKLIST_SOFTWARE ID="8" NAME="Spectrum Mill/Bruker" SPEC_TITLE_PARSING_RULE_ID="8"/>
-  <PROJECT_DB_MAP/>
-  <PROJECT_USER_ACCOUNT_MAP/>
-  <PROTEIN_MATCH_DECOY_RULE/>
+
   <QUANT_LABEL ID="1" TYPE="isobaric_tag" NAME="114" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 114.110679 }" QUANT_METHOD_ID="3"/>
   <QUANT_LABEL ID="2" TYPE="isobaric_tag" NAME="115" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 115.107714 }" QUANT_METHOD_ID="3"/>
   <QUANT_LABEL ID="3" TYPE="isobaric_tag" NAME="116" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 116.111069 }" QUANT_METHOD_ID="3"/>
@@ -314,9 +302,5 @@
   <QUANT_LABEL ID="16" TYPE="isobaric_tag" NAME="129" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 129.137790 }" QUANT_METHOD_ID="5"/>
   <QUANT_LABEL ID="17" TYPE="isobaric_tag" NAME="130" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 130.141145 }" QUANT_METHOD_ID="5"/>
   <QUANT_LABEL ID="18" TYPE="isobaric_tag" NAME="131" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 131.138180 }" QUANT_METHOD_ID="5"/>
-  <RAW_FILE/>
-  <RUN/>
-  <QUANT_CHANNEL/>
-  <RATIO_DEFINITION/>
-  <RUN_IDENTIFICATION/>
+
 </dataset>
