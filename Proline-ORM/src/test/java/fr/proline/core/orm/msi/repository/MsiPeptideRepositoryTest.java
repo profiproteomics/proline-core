@@ -37,7 +37,7 @@ import fr.proline.repository.utils.DatabaseTestConnector;
 public class MsiPeptideRepositoryTest {
 
     private static final String DB_DRIVER = "org.sqlite.JDBC";
-    private static final String DB_URL = "jdbc:sqlite:msi-db.sqlite";
+    private static final String DB_URL = "jdbc:sqlite:./target/msi-db_pep_repo.sqlite";
     private static final String DB_USER = "sa";
     private static final String DB_PASSWORD = "";
 
@@ -109,7 +109,7 @@ public class MsiPeptideRepositoryTest {
 
 	try {
 		//dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileURL(), false, true));
-	    dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileIS()));
+	    dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileIS(),false));
 
 	    LOG.debug("START addReplacementSubstring");
 	    dataSet.addReplacementSubstring("NaN", "0.0");
