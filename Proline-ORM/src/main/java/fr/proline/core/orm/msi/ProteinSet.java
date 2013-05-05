@@ -37,9 +37,9 @@ public class ProteinSet implements Serializable {
 	@Column(name="serialized_properties")
 	private String serializedProperties;
 
-	//bi-directional many-to-one association to PeptideSet
-	@OneToMany(mappedBy="proteinSet")
-	private Set<PeptideSet> peptideSets;
+	//bi-directional one-to-one association to PeptideSet
+	@OneToOne(mappedBy="proteinSet")
+	private PeptideSet peptideOverSet;
 
 	@Column(name="typical_protein_match_id")
 	private Integer typicalProteinMatchId;
@@ -110,12 +110,12 @@ public class ProteinSet implements Serializable {
 		this.serializedProperties = serializedProperties;
 	}
 
-	public Set<PeptideSet> getPeptideSets() {
-		return this.peptideSets;
+	public PeptideSet getPeptideOverSet() {
+		return this.peptideOverSet;
 	}
 
-	public void setPeptideSets(Set<PeptideSet> peptideSets) {
-		this.peptideSets = peptideSets;
+	public void setPeptideOverSet(PeptideSet peptideSet) {
+		this.peptideOverSet = peptideSet;
 	}
 	
 	public Integer getProteinMatchId() {
