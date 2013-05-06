@@ -73,6 +73,8 @@ abstract class ITargetDecoyAnalyzer {
 }
 
 abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Logging {
+  
+  private val MAX_FDR = 50f
 
   def performROCAnalysisV1(
     targetPepMatches: Seq[PeptideMatch],
@@ -155,7 +157,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
         // Restore peptide matches validation status to include previous filtering steps
         PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches, pepMatchValStatusMap)
         
-        // Update filter threshold
+        // Retrieve next filter threshold
         val thresholdValue = validationFilter.getPeptideMatchValueForFiltering(threshDecoyPepMatch)
         
         // Increase the threshold just a little bit in order to exclude the current decoy PSM (should maximize sensitivity)
@@ -175,7 +177,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
         rocPoints += rocPoint
         
         // Breaks if current FDR equals zero
-        if (rocPoint.fdr.isDefined && rocPoint.fdr.get > 50f) break
+        if (rocPoint.fdr.isDefined && rocPoint.fdr.get > MAX_FDR) break
         
       }
     }

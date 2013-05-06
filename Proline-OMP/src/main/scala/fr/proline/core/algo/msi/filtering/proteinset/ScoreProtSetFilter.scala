@@ -19,6 +19,10 @@ class ScoreProtSetFilter(
 
   val filterParameter = ProtSetFilterParams.SCORE.toString
   val filterDescription = "protein set score filter"
+    
+  def getProteinSetValueForFiltering( protSet: ProteinSet ): AnyVal = {
+    protSet.peptideSet.score
+  }
   
   def isProteinSetValid( protSet: ProteinSet ): Boolean = {
     protSet.peptideSet.score >= scoreThreshold

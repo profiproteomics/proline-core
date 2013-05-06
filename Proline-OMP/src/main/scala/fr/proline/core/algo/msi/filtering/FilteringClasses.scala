@@ -192,6 +192,19 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
    */
   def sortProteinSets( protSets: Seq[ProteinSet] ): Seq[ProteinSet]
   
+  /**
+   * Validate each ProteinSet by setting their isValidated attribute.
+   * Validation criteria will depend on implementation.
+   * 
+   * Default behavior will be to exclude ProteinSet which do not pass filter parameters
+   * 
+   * @param protSets : All ProteinSets.
+   * @param incrementalValidation : if incrementalValidation is set to false, 
+   * all ProteinSets isValidated property will be explicitly set to true or false. 
+   * Otherwise, only excluded ProteinSets will be changed by setting their isValidated property to false   
+   * @param traceability : specify if filter could saved information in ProteinSet properties 
+   *  
+   */
   def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {
     
     // Reset validation status if validation is not incremental
@@ -199,5 +212,10 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
     
     protSets.filter( ! isProteinSetValid(_) ).foreach( _.isValidated = false )
   }
+  
+  /**
+   * Returns the value that will be used to filter the protein set.
+   */
+  def getProteinSetValueForFiltering( protSet: ProteinSet ): AnyVal
 }
 
