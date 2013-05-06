@@ -13,7 +13,7 @@ import fr.proline.core.algo.msi.filtering.IOptimizablePeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
 import fr.proline.util.primitives._
-import fr.proline.core.algo.msi.validation.MascotIonScoreThresholds
+import fr.proline.core.algo.msi.validation.MascotIonsScoreThresholds
 
 // TODO: use MascotThresholdTypes enumeration value instead of useHomologyThreshold
 // TODO: usefilterPeptideMatchesDBO
@@ -24,7 +24,11 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
 
   val filterDescription = if (useHomologyThreshold) "peptide match Mascot homology thresholds filter using p-value" else "peptide match identity threshold filter using p-value"
 
-  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = pepMatch.score
+  def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = {
+    val thresholds = MascotValidationHelper.calcPeptideMatchThresholds(pepMatch, pValue)    
+    if (useHomologyThreshold) thresholds.homologyThreshold
+    thresholds.identityThreshold
+  }
 
   def isPeptideMatchValid(pepMatch: PeptideMatch): Boolean = {
     throw new Exception("Not Yet Implemented")
@@ -37,7 +41,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
 
     val pepMatchesByMsqId = pepMatches.groupBy(_.msQueryId)
     pepMatchesByMsqId.foreach(entry => {
-	if (entry._2 != null && entry._2(0).msQuery.properties.isDefined) {
+      if (entry._2 != null && entry._2(0).msQuery.properties.isDefined) {
         val msQProp: MsQueryProperties = entry._2(0).msQuery.properties.get
 
         //---- get Threshold ------
@@ -47,20 +51,20 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
         //Infer IT 
         if (!msQProp.getTargetDbSearch.isDefined) {
           logger.warn(" UNABLE TO CALCULATE P VALUE  !getTargetDbSearch!" + entry._2(0).msQueryId)
-        } else {  
-          
-          val thresholds = MascotValidationHelper.getPeptideMatchThresholds(entry._2(0) , pValue)
-          
-        if (!useHomologyThreshold) {
-          targetTh = thresholds(0).identityThreshold
-          decoyTh = thresholds(1).identityThreshold
         } else {
-          targetTh = thresholds(0).homologyThreshold
-          if (targetTh == 0) targetTh = thresholds(0).identityThreshold
-          decoyTh = thresholds(1).homologyThreshold
-          if (decoyTh == 0) decoyTh = thresholds(1).identityThreshold
-        }
-          
+
+          val thresholds = MascotValidationHelper.calcPeptideMatchTDThresholds(entry._2(0), pValue)
+
+          if (!useHomologyThreshold) {
+            targetTh = thresholds._1.identityThreshold
+            decoyTh = thresholds._2.identityThreshold
+          } else {
+            targetTh = thresholds._1.homologyThreshold
+            if (targetTh == 0) targetTh = thresholds._1.identityThreshold
+            decoyTh = thresholds._2.homologyThreshold
+            if (decoyTh == 0) decoyTh = thresholds._2.identityThreshold
+          }
+
         } // END NO TargetDbSearch properties
         //logger.debug("\tQID\t"+entry._2(0).msQueryId+"\t"+ targetTh+"\t"+decoyTh);
         //---- Apply Threshold ------

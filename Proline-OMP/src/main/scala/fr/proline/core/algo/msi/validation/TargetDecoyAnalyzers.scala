@@ -1,6 +1,7 @@
 package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.control.Breaks._
 
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -25,9 +26,11 @@ object BuildTDAnalyzer extends Logging {
     if ((decoyRS != null) && decoyRS.isDefined) {
 
       val tdAnalyzer = if (useTdCompetition) {
-        /* useTdCompetition : Build target decoy analyzer if a peptide match validator is provided */
-        require((pepMatchSorter != null) && pepMatchSorter.isDefined,
-          "Invalid IPeptideMatchSorter for CompetitionBasedTDAnalyzer")
+        // UseTdCompetition : Build target decoy analyzer if a peptide match validator is provided
+        require(
+          pepMatchSorter != null && pepMatchSorter.isDefined,
+          "Invalid IPeptideMatchSorter for CompetitionBasedTDAnalyzer"
+        )
 
         new CompetitionBasedTDAnalyzer(pepMatchSorter.get)
       } else {
@@ -43,28 +46,6 @@ object BuildTDAnalyzer extends Logging {
         } else
           new BasicTDAnalyzer(tdMode)
         
-        /*
-        val msiSearchOpt = rs.msiSearch
-        require(msiSearchOpt.isDefined, "ResultSet #" + rsId + " has no associated MSISearch")
-
-        val msiSearch = msiSearchOpt.get
-        val searchSettings = msiSearch.searchSettings
-        require(searchSettings != null, "ResultSet #" + rsId + " has no associated SearchSettings")
-
-        val searchSettingsPropertiesOpt = searchSettings.properties
-        require((searchSettingsPropertiesOpt != null) && searchSettingsPropertiesOpt.isDefined,
-          "ResultSet #" + rsId + " has no associated SearchSettings Properties")
-
-        val searchSettingsProperties = searchSettingsPropertiesOpt.get
-
-        val optionalRawTargetDecoyMode = searchSettingsProperties.getTargetDecoyMode
-        require((optionalRawTargetDecoyMode != null) && optionalRawTargetDecoyMode.isDefined,
-          "ResultSet #" + rsId + " has no valid TargetDecoyMode SearchSettings Properties")
-
-        val tdMode = TargetDecoyModes.withName(optionalRawTargetDecoyMode.get)
-
-        new BasicTDAnalyzer(tdMode)
-        */
       }
 
       Some(tdAnalyzer)
@@ -93,7 +74,7 @@ abstract class ITargetDecoyAnalyzer {
 
 abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Logging {
 
-  def performROCAnalysis(
+  def performROCAnalysisV1(
     targetPepMatches: Seq[PeptideMatch],
     decoyPepMatches: Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter): Array[ValidationResult] = {
@@ -142,6 +123,63 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
 
     } //Go through all possible threshold value while FDR is greater than zero
 
+    // Restore peptide matches validation status
+    PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches, pepMatchValStatusMap)
+
+    rocPoints.toArray
+  }
+  
+  def performROCAnalysis(
+    targetPepMatches: Seq[PeptideMatch],
+    decoyPepMatches: Seq[PeptideMatch],
+    validationFilter: IOptimizablePeptideMatchFilter): Array[ValidationResult] = {
+    
+    // Memorize validation status of peptide matches
+    val allPepMatches = (targetPepMatches ++ decoyPepMatches)
+    val pepMatchValStatusMap = PeptideMatchFiltering.getPepMatchValidationStatusMap(allPepMatches)
+
+    // Build the peptide match joint map
+    val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches, Some(decoyPepMatches))
+    logger.debug(" # Map entries " + pmJointMap.size)
+    
+    // Define some vars
+    val rocPoints = new ArrayBuffer[ValidationResult]    
+    
+    // Sort decoy PSMs from the best to the worst according to the validation filter
+    val sortedDecoyPepMatches = validationFilter.sortPeptideMatches(decoyPepMatches)
+    
+    // Iterate over sorted decoy PSMs => each PSM is taken as a new threshold (breaks if FDR is greater than 50%)
+    breakable {
+      for( threshDecoyPepMatch <- sortedDecoyPepMatches ) {
+        
+        // Restore peptide matches validation status to include previous filtering steps
+        PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches, pepMatchValStatusMap)
+        
+        // Update filter threshold
+        val thresholdValue = validationFilter.getPeptideMatchValueForFiltering(threshDecoyPepMatch)
+        
+        // Increase the threshold just a little bit in order to exclude the current decoy PSM (should maximize sensitivity)
+        // and inject the obtained value in the validation filter
+        validationFilter.setThresholdValue(validationFilter.getNextValue(thresholdValue))
+        
+        // Apply filter on target and decoy peptide matches
+        validationFilter.filterPeptideMatches(allPepMatches, true, false)
+        
+        // Compute the ROC point
+        val rocPoint = this.calcTDStatistics(pmJointMap)
+        
+        // Set ROC point validation properties
+        rocPoint.addProperties(validationFilter.getFilterProperties)
+        
+        // Add ROC point to the curve
+        rocPoints += rocPoint
+        
+        // Breaks if current FDR equals zero
+        if (rocPoint.fdr.isDefined && rocPoint.fdr.get > 50f) break
+        
+      }
+    }
+    
     // Restore peptide matches validation status
     PeptideMatchFiltering.restorePepMatchValidationStatus(allPepMatches, pepMatchValStatusMap)
 

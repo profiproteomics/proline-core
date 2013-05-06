@@ -13,7 +13,7 @@ object MascotThresholdTypes extends Enumeration {
   val LOWEST_THRESHOLD = Value("LOWEST_THRESHOLD")
 }
 
-case class MascotIonScoreThresholds(identityThreshold: Float, homologyThreshold: Float)
+case class MascotIonsScoreThresholds(identityThreshold: Float, homologyThreshold: Float)
 
 object MascotValidationHelper extends Logging {
 
@@ -43,7 +43,7 @@ object MascotValidationHelper extends Logging {
     -10.0 * log10(prob / probRef)
   }
 
-  def sumPeptideMatchesScoreOffsets(peptideMatches: Seq[PeptideMatch], mascotThresholdsByPepMatchId: Map[Int, MascotIonScoreThresholds]): Float = {
+  def sumPeptideMatchesScoreOffsets(peptideMatches: Seq[PeptideMatch], mascotThresholdsByPepMatchId: Map[Int, MascotIonsScoreThresholds]): Float = {
 
     var (sumOfScoreOffsets, substractedThresholds) = (0.0f, 0.0f)
     for (peptideMatch <- peptideMatches) {
@@ -72,7 +72,7 @@ object MascotValidationHelper extends Logging {
   def sumPeptideMatchesScoreOffsets(peptideMatches: Seq[PeptideMatch], scoreThresholdOffset: Float): Float = {
 
     val pepMatchThresholdsMap = this.getMascotThresholdsByPepMatchId(peptideMatches)
-    val pmThresholdsMapBuilder = collection.immutable.Map.newBuilder[Int, MascotIonScoreThresholds]
+    val pmThresholdsMapBuilder = collection.immutable.Map.newBuilder[Int, MascotIonsScoreThresholds]
 
     // Add the score threshold offset to the peptide matches thresholds
     for ((pepMatchId, pmThresholds) <- pepMatchThresholdsMap) {
@@ -81,13 +81,13 @@ object MascotValidationHelper extends Logging {
       identityThreshold += scoreThresholdOffset
       if (!homologyThreshold.isNaN && homologyThreshold > 0) homologyThreshold += scoreThresholdOffset
 
-      pmThresholdsMapBuilder += pepMatchId -> MascotIonScoreThresholds(identityThreshold, homologyThreshold)
+      pmThresholdsMapBuilder += pepMatchId -> MascotIonsScoreThresholds(identityThreshold, homologyThreshold)
     }
 
     this.sumPeptideMatchesScoreOffsets(peptideMatches, pmThresholdsMapBuilder.result())
   }
 
-  def calcMascotMudpitScore(peptideMatches: Seq[PeptideMatch], pepMatchThresholdsMap: Map[Int, MascotIonScoreThresholds]): Float = {
+  def calcMascotMudpitScore(peptideMatches: Seq[PeptideMatch], pepMatchThresholdsMap: Map[Int, MascotIonsScoreThresholds]): Float = {
 
     var (mudpitScore, substractedThresholds, nbValidPepMatches) = (0.0f, 0.0f, 0)
 
@@ -121,9 +121,9 @@ object MascotValidationHelper extends Logging {
     this.calcMascotMudpitScore(peptideMatches, this.getMascotThresholdsByPepMatchId(peptideMatches))
   }
 
-  def getMascotThresholdsByPepMatchId(peptideMatches: Seq[PeptideMatch]): Map[Int, MascotIonScoreThresholds] = {
+  def getMascotThresholdsByPepMatchId(peptideMatches: Seq[PeptideMatch]): Map[Int, MascotIonsScoreThresholds] = {
 
-    val pmThresholdsMapBuilder = collection.immutable.Map.newBuilder[Int, MascotIonScoreThresholds]
+    val pmThresholdsMapBuilder = collection.immutable.Map.newBuilder[Int, MascotIonsScoreThresholds]
     for (peptideMatch <- peptideMatches) {
 
       val pmThresholds = this.getPeptideMatchThresholds(peptideMatch)
@@ -132,47 +132,65 @@ object MascotValidationHelper extends Logging {
       if (identityThreshold.isNaN || identityThreshold < 13) identityThreshold = 13
       if (homologyThreshold.isNaN || homologyThreshold < 13) homologyThreshold = 13
 
-      pmThresholdsMapBuilder += peptideMatch.id -> MascotIonScoreThresholds(identityThreshold, homologyThreshold)
+      pmThresholdsMapBuilder += peptideMatch.id -> MascotIonsScoreThresholds(identityThreshold, homologyThreshold)
     }
 
     pmThresholdsMapBuilder.result()
   }
 
-  def getPeptideMatchThresholds(peptideMatch: PeptideMatch, pValue : Float) : Seq[MascotIonScoreThresholds] = {
-		    
-		  	 val msQProp = peptideMatch.msQuery.properties.get
+  def calcPeptideMatchTDThresholds(peptideMatch: PeptideMatch, pValue: Float): Pair[MascotIonsScoreThresholds,MascotIonsScoreThresholds] = {
+
+    val msQProp = peptideMatch.msQuery.properties.get
+
+    val tRSCandPSM = msQProp.getTargetDbSearch.get.getCandidatePeptidesCount
+    val dRSCandPSM = if (msQProp.getDecoyDbSearch.isDefined) msQProp.getDecoyDbSearch.get.getCandidatePeptidesCount else tRSCandPSM
+
+    var targetITh = MascotValidationHelper.calcIdentityThreshold(tRSCandPSM, pValue)
+    if (targetITh == 0.0) targetITh = 13.0
+    var decoyITh = MascotValidationHelper.calcIdentityThreshold(dRSCandPSM, pValue)
+    if (decoyITh == 0.0) decoyITh = 13.0
     
-          val tRSCandPSM = msQProp.getTargetDbSearch.get.getCandidatePeptidesCount
-          val dRSCandPSM = if (msQProp.getDecoyDbSearch.isDefined) msQProp.getDecoyDbSearch.get.getCandidatePeptidesCount else tRSCandPSM
+    //Infer HT 
+    if (!msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.isDefined) {
+      logger.warn(" ------ UNABLE TO CALCULATE P VALUE  getMascotHomologyThreshold !!" + peptideMatch.msQueryId)
+      Pair(MascotIonsScoreThresholds(0.0, 0.0), MascotIonsScoreThresholds(0.0, 0.0))
+    } else {
 
-          var targetITh = MascotValidationHelper.calcIdentityThreshold(tRSCandPSM, pValue)
-          if (targetITh == 0.0) targetITh = 13.0
-          var decoyITh = MascotValidationHelper.calcIdentityThreshold(dRSCandPSM, pValue)
-          if (decoyITh == 0.0) decoyITh = 13.0
-          //Infer HT 
-            if (!msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.isDefined) {
-              logger.warn(" ------ UNABLE TO CALCULATE P VALUE  getMascotHomologyThreshold !!" + peptideMatch.msQueryId)
-              Seq(MascotIonScoreThresholds(0.0, 0.0), MascotIonScoreThresholds(0.0, 0.0))
-            } else {
+      val tRs_ht0_05: Float = msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.get
+      val dRs_ht0_05: Float = if (msQProp.getDecoyDbSearch.isDefined && msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.isDefined) msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.get else tRs_ht0_05
 
-              val tRs_ht0_05: Float = msQProp.getTargetDbSearch.get.getMascotHomologyThreshold.get
-              val dRs_ht0_05: Float = if (msQProp.getDecoyDbSearch.isDefined && msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.isDefined) msQProp.getDecoyDbSearch.get.getMascotHomologyThreshold.get else tRs_ht0_05
+      val targetHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount(tRs_ht0_05, 0.05)
+      var targetHTh = MascotValidationHelper.calcIdentityThreshold(targetHtProbCstValue, pValue)
+      val decoyHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount(dRs_ht0_05, 0.05)
+      var decoyHTh = MascotValidationHelper.calcIdentityThreshold(decoyHtProbCstValue, pValue)
 
-              val targetHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount(tRs_ht0_05, 0.05)
-              var targetHTh = MascotValidationHelper.calcIdentityThreshold(targetHtProbCstValue, pValue)
-              val decoyHtProbCstValue = MascotValidationHelper.calcCandidatePeptidesCount(dRs_ht0_05, 0.05)
-              var decoyHTh = MascotValidationHelper.calcIdentityThreshold(decoyHtProbCstValue, pValue)
-                            
-              // if Homology is undefined then use Identity threshold
-              if ((targetHTh > targetITh) || (targetHTh < 13) || (tRSCandPSM <= 100)) { targetHTh = 0.0 }
-              if ((decoyHTh > decoyITh) || (decoyHTh < 13) || (dRSCandPSM <= 100))  { decoyHTh = 0.0 }
-            
-              Seq(MascotIonScoreThresholds(targetITh, targetHTh), MascotIonScoreThresholds(decoyITh, decoyHTh))
-            }
-        
+      // if Homology is undefined then use Identity threshold
+      if ((targetHTh > targetITh) || (targetHTh < 13) || (tRSCandPSM <= 100)) { targetHTh = 0.0 }
+      if ((decoyHTh > decoyITh) || (decoyHTh < 13) || (dRSCandPSM <= 100)) { decoyHTh = 0.0 }
+
+      Pair(MascotIonsScoreThresholds(targetITh, targetHTh), MascotIonsScoreThresholds(decoyITh, decoyHTh))
+    }
+
   }
   
-  def getPeptideMatchThresholds(peptideMatch: PeptideMatch): MascotIonScoreThresholds = {
+  def calcPeptideMatchThresholds(peptideMatch: PeptideMatch, pValue: Float): MascotIonsScoreThresholds = {
+    
+    val thresholds = MascotValidationHelper.calcPeptideMatchTDThresholds(peptideMatch, pValue)
+    
+    val( targetThresholds, decoyThresholds ) = thresholds
+    
+    val HT = if (decoyThresholds.homologyThreshold > 0) decoyThresholds.homologyThreshold else targetThresholds.homologyThreshold
+    val( targetIT, decoyIT ) = (targetThresholds.identityThreshold,decoyThresholds.identityThreshold)
+      
+    val IT = if (decoyIT > 0 && targetIT > 0) { (decoyIT + targetIT) / 2f }
+    else if (decoyIT > 0) { decoyIT }
+    else if (targetIT > 0) { targetIT }
+    else 0.0f
+    
+    MascotIonsScoreThresholds(IT,HT)
+  }
+  
+  def getPeptideMatchThresholds(peptideMatch: PeptideMatch): MascotIonsScoreThresholds = {
 
     val targetMsqProps = this.getTargetMsQueryProperties(peptideMatch.msQuery)
     val decoyMsqProps = this.getDecoyMsQueryProperties(peptideMatch.msQuery)
@@ -191,14 +209,14 @@ object MascotValidationHelper extends Logging {
     else if (decoyIt > 0) { identityThreshold = decoyIt }
     else if (targetIt > 0) { identityThreshold = targetIt }
 
-    MascotIonScoreThresholds(identityThreshold, homologyThreshold)
+    MascotIonsScoreThresholds(identityThreshold, homologyThreshold)
   }
 
   def getLowestPeptideMatchThreshold(peptideMatch: PeptideMatch): Float = {
     this.getLowestPeptideMatchThreshold(this.getPeptideMatchThresholds(peptideMatch))
   }
 
-  def getLowestPeptideMatchThreshold(pmThresholds: MascotIonScoreThresholds): Float = {
+  def getLowestPeptideMatchThreshold(pmThresholds: MascotIonsScoreThresholds): Float = {
 
     var (identityThreshold, homologyThreshold) = (pmThresholds.identityThreshold, pmThresholds.homologyThreshold)
 

@@ -9,11 +9,10 @@ import fr.proline.core.om.model.msi.{PeptideMatch}
 import fr.proline.util.primitives._
 
 object ScorePSMFilter {
-//  val thresholdStartValue = 13.0f
   val thresholdIncreaseValue = 0.1f
 }
 
-class ScorePSMFilter(var scoreThreshold: Float = 13.0f, var thresholdStartValue : Float = 13.0f ) extends IOptimizablePeptideMatchFilter with Logging {
+class ScorePSMFilter(var scoreThreshold: Float = 0.0f, var thresholdStartValue : Float = 0.0f ) extends IOptimizablePeptideMatchFilter with Logging {
 
   val filterParameter = PepMatchFilterParams.SCORE.toString
   val filterDescription = "peptide match score filter"
