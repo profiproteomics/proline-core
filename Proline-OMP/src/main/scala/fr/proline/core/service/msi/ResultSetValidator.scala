@@ -35,7 +35,7 @@ object ResultSetValidator {
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
     protSetValidator: Option[IProteinSetValidator] = None,
     inferenceMethod: Option[InferenceMethods.InferenceMethods] = Some(InferenceMethods.communist),
-    proteinSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
+    peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
     storeResultSummary: Boolean = true
   ): ResultSetValidator = {
 
@@ -63,7 +63,7 @@ object ResultSetValidator {
       protSetFilters,
       protSetValidator,
       inferenceMethod,
-      proteinSetScoring,
+      peptideSetScoring,
       storeResultSummary
     )
   }
@@ -101,7 +101,7 @@ class ResultSetValidator(
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   protSetValidator: Option[IProteinSetValidator] = None,
   inferenceMethod: Option[InferenceMethods.InferenceMethods] = Some(InferenceMethods.communist),
-  proteinSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
+  peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
   storeResultSummary: Boolean = true
 ) extends IService with Logging {
 
@@ -151,8 +151,8 @@ class ResultSetValidator(
         //        rsm.resultSet = rs // affect complete RS : No More necessary , complete RS passed to inferer 
 
         // Update score of protein sets
-        val pepSetScoreUpdater = PeptideSetScoreUpdater(proteinSetScoring.get)
-        this.logger.debug("updating score of peptide sets using "+proteinSetScoring.get.toString)
+        val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring.get)
+        this.logger.debug("updating score of peptide sets using "+peptideSetScoring.get.toString)
         pepSetScoreUpdater.updateScoreOfPeptideSets(rsm)
 
         resultSummaries += Some(rsm)
