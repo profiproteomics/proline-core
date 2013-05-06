@@ -483,7 +483,7 @@ class ResultSetValidatorF136482Test extends Logging {
   }
 
   @Test
-  def testProtPrototypiquePSMValidation() = {
+  def testProtSpecificPSMValidation() = {
 
     val testTDAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
     val scoreTh = 22.0f
@@ -491,7 +491,7 @@ class ResultSetValidatorF136482Test extends Logging {
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
     val protProteoTypiqueFilters = Seq(new SpecificPeptidesPSFilter(nbrPepProteo))
 
-    logger.info(" ResultSetValidator testProtPrototypiquePSMValidation Create service")
+    logger.info(" ResultSetValidator testProtSpecificPSMValidation Create service")
     val rsValidation = new ResultSetValidator(
       execContext = ResultSetValidatorF136482Test.executionContext,
       targetRs = ResultSetValidatorF136482Test.getRS,
@@ -502,7 +502,7 @@ class ResultSetValidatorF136482Test extends Logging {
       storeResultSummary = false
     )
 
-    logger.debug(" ResultSetValidator testProtPrototypiquePSMValidation RUN  service")
+    logger.debug(" ResultSetValidator testProtSpecificPSMValidation RUN service")
     val result = rsValidation.runService
     Assert.assertTrue(result)
     logger.debug(" End Run ResultSetValidator Service with FDR filter using Score, in Test ")
@@ -521,7 +521,7 @@ class ResultSetValidatorF136482Test extends Logging {
     Assert.assertEquals(ProtSetFilterParams.SPECIFIC_PEP.toString, fPrp.getParameter)
 
     val nbrPep = props(FilterPropertyKeys.THRESHOLD_VALUE).asInstanceOf[Int]
-    Assert.assertEquals("Proteotypique peptide # compare", nbrPepProteo, nbrPep)
+    Assert.assertEquals("Specific peptide # compare", nbrPepProteo, nbrPep)
 
     logger.debug(" Verify Result IN RSM ")
     val removedTarProtSet2 = rsValidation.validatedTargetRsm.proteinSets.filter(!_.isValidated)
