@@ -393,22 +393,18 @@ case class RsmValidationParamsProperties (
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class RsmValidationResultsProperties (
-  @BeanProperty var peptideResults: Option[RsmPepMatchValidationResultsProperties] = None,
-  @BeanProperty var proteinResults: Option[RsmProtSetValidationResultsProperties] = None
+case class RsmValidationResultsProperties(
+  @BeanProperty var peptideResults: Option[RsmValidationResultProperties] = None,
+  @BeanProperty var proteinResults: Option[RsmValidationResultProperties] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class RsmPepMatchValidationResultsProperties (
+case class RsmValidationResultProperties(
+  // TODO: expectedRocPoint and RocPoints model
   @BeanProperty var targetMatchesCount: Int,
   @BeanProperty var decoyMatchesCount: Option[Int] = None,
   @BeanProperty var fdr: Option[Float] = None
 )
 
-@JsonSnakeCase
-@JsonInclude( Include.NON_NULL )
-case class RsmProtSetValidationResultsProperties (
-  //@BeanProperty var results: Option[RsmValidationProperties] = None
-  // TODO: expectedRocPoint and RocPoints model
-)
+
