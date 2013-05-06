@@ -32,8 +32,7 @@ trait IRsStorer extends Logging {
    * @return the number of inserted spectrum matches
    */
   def insertSpectrumMatches(resultSet: ResultSet, resultFile: IResultFile, context: StorerContext): Int = {
-    //SQLRsWriter.insertRsSpectrumMatches(resultSet, resultFile, context.getMSIDbConnectionContext)
-    0
+    SQLRsWriter.insertRsSpectrumMatches(resultSet, resultFile, context.getMSIDbConnectionContext)
   }
 
   /**
