@@ -10,7 +10,7 @@ import fr.proline.core.dal._
 import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.tables.msi.{MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
+import fr.proline.core.dal.tables.msi.{MsiDbObjectTreeTable,MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
 import fr.proline.context.DatabaseConnectionContext
@@ -23,6 +23,8 @@ import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
 private[core] object SQLRsWriter extends AbstractSQLRsWriter
 
 abstract class AbstractSQLRsWriter() extends IRsWriter {
+  
+  val objTreeInsertQuery = MsiDbObjectTreeTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID) )
 
   def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Int] = {
     
@@ -185,6 +187,9 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   def insertRsSpectrumMatches(rs: ResultSet, rf: IResultFile, msiDbCtx: DatabaseConnectionContext): Int = {
     
+    import fr.proline.core.utils.serialization.ProlineJson
+    //import org.msgpack.ScalaMessagePack
+    
     // TODO: create a schema name enumeration
     val schemaName = "peptide_match.spectrum_match"
     val pepMatchIdByKey = Map() ++ rs.peptideMatches.map( pm => Pair(pm.msQuery.initialId,pm.rank) -> pm.id )    
@@ -195,12 +200,12 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       val spectrumMatchKeyById = new HashMap[Int,Pair[Int,Int]]()
       
       // Store spectrum matches
-      msiEzDBC.executePrepared("INSERT INTO object_tree VALUES (?,?,?,?)", true ) { stmt =>
+      msiEzDBC.executePrepared(objTreeInsertQuery, true ) { stmt =>
         rf.eachSpectrumMatch(rs.isDecoy, { spectrumMatch =>
 
           stmt.executeWith(
-            Option.empty[Int],
-            generate(spectrumMatch),
+            ProlineJson.generate(spectrumMatch),
+            //ScalaMessagePack.write(spectrumMatch),
             Option.empty[String],
             schemaName
           )
