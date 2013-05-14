@@ -698,9 +698,14 @@ class ResultSetValidatorF136482Test extends Logging {
     val allDecProtSets = rsValidation.validatedDecoyRsm.get.proteinSets
     Assert.assertEquals("AllTarProtSets validated count", 7, allTarProtSets.count(_.isValidated))
     Assert.assertEquals("AllDecProtSets validated count", 0, allDecProtSets.count(_.isValidated))
+    
+    logger.debug("Check that validatedProteinSetsCount is updated")
+    val myPepInst = rsValidation.validatedTargetRsm.peptideInstances.find(_.peptide.uniqueKey == "QDILDR%")
+    Assert.assertEquals("Protein sets count",1,myPepInst.get.proteinSetsCount)
+    Assert.assertEquals("Validated protein sets count",0,myPepInst.get.validatedProteinSetsCount)
+    
+    ()
   }
-
-
 
   @Test
   def testMascotPValueValidation() = {
