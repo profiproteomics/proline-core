@@ -1,8 +1,12 @@
 package fr.proline.core.algo.msi.filtering
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.algo.msi.validation.ValidationResults
+import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.util.primitives._
 
@@ -210,7 +214,23 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
     // Reset validation status if validation is not incremental
     if( !incrementalValidation ) ProteinSetFiltering.resetProteinSetValidationStatus(protSets)
     
+    // Apply the filtering procedure
     protSets.filter( ! isProteinSetValid(_) ).foreach( _.isValidated = false )
+    
+    // Map protein sets by peptide instance
+    val protSetsByPepInst = new HashMap[PeptideInstance,ArrayBuffer[ProteinSet]]
+    protSets.map { protSet =>
+      protSet.peptideSet.getPeptideInstances.foreach { pepInst =>
+        protSetsByPepInst.getOrElseUpdate(pepInst, new ArrayBuffer[ProteinSet]() ) += protSet
+      }
+    }
+    
+    // Update validatedProteinSetsCount
+    for( (pepInst,protSets) <- protSetsByPepInst ) {
+      // TODO: is distinct needed ???
+      pepInst.validatedProteinSetsCount = protSets.distinct.count( _.isValidated )
+    }
+
   }
   
   /**
