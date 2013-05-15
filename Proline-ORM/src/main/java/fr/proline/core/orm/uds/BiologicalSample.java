@@ -1,101 +1,112 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import javax.persistence.*;
+import java.util.List;
 
-import java.util.Set;
-
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the biological_sample database table.
  * 
  */
 @Entity
-@Table(name="biological_sample")
+@Table(name = "biological_sample")
 public class BiologicalSample implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Integer id;
 
-	private String name;
+    private String name;
 
-	private Integer number;
+    private Integer number;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//bi-directional many-to-one association to Dataset
-	@ManyToOne
-	@JoinColumn(name="quantitation_id")
-	private Dataset dataset;
+    // bi-directional many-to-one association to Dataset
+    @ManyToOne
+    @JoinColumn(name = "quantitation_id")
+    private Dataset dataset;
 
-	//bi-directional many-to-one association to QuantChannel
-	@OneToMany(mappedBy="biologicalSample")
-	private Set<QuantitationChannel> quantitationChannels;
+    // bi-directional many-to-one association to QuantChannel
+    @OneToMany(mappedBy = "biologicalSample")
+    @OrderBy("number")
+    private List<QuantitationChannel> quantitationChannels;
 
-	//bi-directional many-to-many association to SampleAnalysis
-	@ManyToMany(mappedBy="biologicalSamples")
-	private Set<SampleAnalysis> sampleAnalysis;
+    // bi-directional many-to-many association to SampleAnalysis
+    @ManyToMany(mappedBy = "biologicalSamples")
+    @OrderBy("number")
+    private List<SampleAnalysis> sampleAnalysis;
 
     public BiologicalSample() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public Integer getId() {
+	return this.id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(Integer id) {
+	this.id = id;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getName() {
+	return this.name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public Integer getNumber() {
-		return this.number;
-	}
+    public Integer getNumber() {
+	return this.number;
+    }
 
-	public void setNumber(Integer number) {
-		this.number = number;
-	}
+    public void setNumber(Integer number) {
+	this.number = number;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public Dataset getDataset() {
-		return this.dataset;
-	}
+    public Dataset getDataset() {
+	return this.dataset;
+    }
 
-	public void setDataset(Dataset dataset) {
-		this.dataset = dataset;
-	}
-	
-	public Set<QuantitationChannel> getQuantitationChannels() {
-		return this.quantitationChannels;
-	}
+    public void setDataset(Dataset dataset) {
+	this.dataset = dataset;
+    }
 
-	public void setQuantitationChannels(Set<QuantitationChannel> quantitationChannels) {
-		this.quantitationChannels = quantitationChannels;
-	}
-	
-	public Set<SampleAnalysis> getSampleReplicates() {
-		return this.sampleAnalysis;
-	}
+    public List<QuantitationChannel> getQuantitationChannels() {
+	return quantitationChannels;
+    }
 
-	public void setSampleReplicates(Set<SampleAnalysis> sampleReplicates) {
-		this.sampleAnalysis = sampleReplicates;
-	}
-	
+    public void setQuantitationChannels(final List<QuantitationChannel> quantitationChannels) {
+	this.quantitationChannels = quantitationChannels;
+    }
+
+    public List<SampleAnalysis> getSampleReplicates() {
+	return sampleAnalysis;
+    }
+
+    public void setSampleReplicates(final List<SampleAnalysis> sampleReplicates) {
+	this.sampleAnalysis = sampleReplicates;
+    }
+
 }

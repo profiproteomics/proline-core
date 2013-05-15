@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -20,6 +21,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -94,7 +96,8 @@ public class Dataset implements Serializable {
 
     // bi-directional many-to-one association to DataSet
     @OneToMany(mappedBy = "parentDataset")
-    private Set<Dataset> children;
+    @OrderBy("number")
+    private List<Dataset> children;
 
     @Column(name = "result_set_id")
     private Integer resultSetId;
@@ -104,7 +107,8 @@ public class Dataset implements Serializable {
 
     // bi-directional many-to-one association to BiologicalSample
     @OneToMany(mappedBy = "dataset")
-    private Set<BiologicalSample> biologicalSamples;
+    @OrderBy("number)")
+    private List<BiologicalSample> biologicalSamples;
 
     // bi-directional many-to-one association to GroupSetup
     @OneToMany(mappedBy = "dataset")
@@ -112,7 +116,8 @@ public class Dataset implements Serializable {
 
     // bi-directional many-to-one association to QuantChannel
     @OneToMany(mappedBy = "dataset")
-    private Set<QuantitationChannel> quantitationChannels;
+    @OrderBy("number")
+    private List<QuantitationChannel> quantitationChannels;
 
     // uni-directional many-to-one association to QuantMethod
     @ManyToOne
@@ -121,11 +126,13 @@ public class Dataset implements Serializable {
 
     // bi-directional many-to-one association to MasterQuantitationChannel
     @OneToMany(mappedBy = "dataset")
-    private Set<MasterQuantitationChannel> masterQuantitationChannels;
+    @OrderBy("number")
+    private List<MasterQuantitationChannel> masterQuantitationChannels;
 
     // bi-directional many-to-one association to SampleAnalysis
     @OneToMany(mappedBy = "dataset")
-    private Set<SampleAnalysis> sampleReplicates;
+    @OrderBy("number")
+    private List<SampleAnalysis> sampleReplicates;
 
     // Transient Variables not saved in database
     @Transient
@@ -145,7 +152,7 @@ public class Dataset implements Serializable {
     public void setId(Integer id) {
 	this.id = id;
     }
-    
+
     public Integer getChildrenCount() {
 	return this.childrenCount;
     }
@@ -250,11 +257,11 @@ public class Dataset implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
-    public Set<BiologicalSample> getBiologicalSamples() {
-	return this.biologicalSamples;
+    public List<BiologicalSample> getBiologicalSamples() {
+	return biologicalSamples;
     }
 
-    public void setBiologicalSamples(Set<BiologicalSample> biologicalSamples) {
+    public void setBiologicalSamples(final List<BiologicalSample> biologicalSamples) {
 	this.biologicalSamples = biologicalSamples;
     }
 
@@ -266,11 +273,11 @@ public class Dataset implements Serializable {
 	this.groupSetups = groupSetups;
     }
 
-    public Set<QuantitationChannel> getQuantitationChannels() {
-	return this.quantitationChannels;
+    public List<QuantitationChannel> getQuantitationChannels() {
+	return quantitationChannels;
     }
 
-    public void setQuantitationChannels(Set<QuantitationChannel> quantitationChannels) {
+    public void setQuantitationChannels(final List<QuantitationChannel> quantitationChannels) {
 	this.quantitationChannels = quantitationChannels;
     }
 
@@ -282,19 +289,19 @@ public class Dataset implements Serializable {
 	this.method = method;
     }
 
-    public Set<MasterQuantitationChannel> getMasterQuantitationChannels() {
-	return this.masterQuantitationChannels;
+    public List<MasterQuantitationChannel> getMasterQuantitationChannels() {
+	return masterQuantitationChannels;
     }
 
-    public void setMasterQuantitationChannels(Set<MasterQuantitationChannel> masterQuantitationChannels) {
+    public void setMasterQuantitationChannels(final List<MasterQuantitationChannel> masterQuantitationChannels) {
 	this.masterQuantitationChannels = masterQuantitationChannels;
     }
 
-    public Set<SampleAnalysis> getSampleReplicates() {
-	return this.sampleReplicates;
+    public List<SampleAnalysis> getSampleReplicates() {
+	return sampleReplicates;
     }
 
-    public void setSampleReplicates(Set<SampleAnalysis> sampleReplicates) {
+    public void setSampleReplicates(final List<SampleAnalysis> sampleReplicates) {
 	this.sampleReplicates = sampleReplicates;
     }
 
@@ -314,11 +321,11 @@ public class Dataset implements Serializable {
 	this.aggregation = aggregation;
     }
 
-    public Set<Dataset> getChildren() {
+    public List<Dataset> getChildren() {
 	return children;
     }
 
-    public void setChildren(Set<Dataset> children) {
+    public void setChildren(final List<Dataset> children) {
 	this.children = children;
     }
 

@@ -1,111 +1,118 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import javax.persistence.*;
-
 import java.sql.Timestamp;
-import java.util.Set;
+import java.util.List;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the raw_file database table.
  * 
  */
 @Entity
-@Table(name="raw_file")
+@Table(name = "raw_file")
 public class RawFile implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="name")
-	private String rawFileName;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "name")
+    private String rawFileName;
 
-	@Column(name="creation_timestamp")
-	private Timestamp creationTimestamp;
+    @Column(name = "creation_timestamp")
+    private Timestamp creationTimestamp;
 
-	private String directory;
+    private String directory;
 
-	private String extension;
+    private String extension;
 
-	@Column(name="instrument_id")
-	private Integer instrumentId;
+    @Column(name = "instrument_id")
+    private Integer instrumentId;
 
-	@Column(name="owner_id")
-	private Integer ownerId;
+    @Column(name = "owner_id")
+    private Integer ownerId;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//bi-directional many-to-one association to Run
-	@OneToMany(mappedBy="rawFile")
-	private Set<Run> runs;
+    // bi-directional many-to-one association to Run
+    @OneToMany(mappedBy = "rawFile")
+    @OrderBy("number")
+    private List<Run> runs;
 
     public RawFile() {
     }
 
-	public String getRawFileName() {
-		return this.rawFileName;
-	}
+    public String getRawFileName() {
+	return this.rawFileName;
+    }
 
-	public void setRawFileName(String rawFileName) {
-		this.rawFileName = rawFileName;
-	}
+    public void setRawFileName(String rawFileName) {
+	this.rawFileName = rawFileName;
+    }
 
-	public Timestamp getCreationTimestamp() {
-		return this.creationTimestamp;
-	}
+    public Timestamp getCreationTimestamp() {
+	return this.creationTimestamp;
+    }
 
-	public void setCreationTimestamp(Timestamp creationTimestamp) {
-		this.creationTimestamp = creationTimestamp;
-	}
+    public void setCreationTimestamp(Timestamp creationTimestamp) {
+	this.creationTimestamp = creationTimestamp;
+    }
 
-	public String getDirectory() {
-		return this.directory;
-	}
+    public String getDirectory() {
+	return this.directory;
+    }
 
-	public void setDirectory(String directory) {
-		this.directory = directory;
-	}
+    public void setDirectory(String directory) {
+	this.directory = directory;
+    }
 
-	public String getExtension() {
-		return this.extension;
-	}
+    public String getExtension() {
+	return this.extension;
+    }
 
-	public void setExtension(String extension) {
-		this.extension = extension;
-	}
+    public void setExtension(String extension) {
+	this.extension = extension;
+    }
 
-	public Integer getInstrumentId() {
-		return this.instrumentId;
-	}
+    public Integer getInstrumentId() {
+	return this.instrumentId;
+    }
 
-	public void setInstrumentId(Integer instrumentId) {
-		this.instrumentId = instrumentId;
-	}
+    public void setInstrumentId(Integer instrumentId) {
+	this.instrumentId = instrumentId;
+    }
 
-	public Integer getOwnerId() {
-		return this.ownerId;
-	}
+    public Integer getOwnerId() {
+	return this.ownerId;
+    }
 
-	public void setOwnerId(Integer ownerId) {
-		this.ownerId = ownerId;
-	}
+    public void setOwnerId(Integer ownerId) {
+	this.ownerId = ownerId;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public Set<Run> getRuns() {
-		return this.runs;
-	}
+    public List<Run> getRuns() {
+	return runs;
+    }
 
-	public void setRuns(Set<Run> runs) {
-		this.runs = runs;
-	}
-	
+    public void setRuns(final List<Run> runs) {
+	this.runs = runs;
+    }
+
 }

@@ -103,7 +103,7 @@ public class DatasetTest extends DatabaseTestCase {
 
 	try {
 	    Dataset rootDS = udsEm.find(Dataset.class, 1);
-	    Set<Dataset> childs = rootDS.getChildren();
+	    List<Dataset> childs = rootDS.getChildren();
 	    assertThat(childs, notNullValue());
 	    assertThat(childs.size(), is(2));
 	    for (Dataset nextDS : childs) {
