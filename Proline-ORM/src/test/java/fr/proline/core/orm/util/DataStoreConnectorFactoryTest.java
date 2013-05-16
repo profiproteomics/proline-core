@@ -39,10 +39,12 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
 	final EntityManager udsEm = emf.createEntityManager();
-	EntityTransaction transac = udsEm.getTransaction();
+
+	EntityTransaction transac = null;
 	boolean transacOk = false;
 
 	try {
+	    transac = udsEm.getTransaction();
 	    transac.begin();
 	    transacOk = false;
 
@@ -116,7 +118,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 	    transac.commit();
 	    transacOk = true;
 
-	    m_projectId = project.getId();
+	    m_projectId = project.getId().intValue();
 	} finally {
 
 	    if ((transac != null) & !transacOk) {
@@ -144,24 +146,28 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
     @Test
     public void testDatabaseManager() {
-	final DataStoreConnectorFactory dbManager = DataStoreConnectorFactory.getInstance();
+	final DataStoreConnectorFactory connectorFactory = DataStoreConnectorFactory.getInstance();
 
-	dbManager.initialize(getConnector());
+	connectorFactory.initialize(getConnector());
 
-	assertTrue("DatabaseManager is initialized", dbManager.isInitialized());
+	assertTrue("DatabaseManager is initialized", connectorFactory.isInitialized());
 
-	final IDatabaseConnector pdiDb =  dbManager.getPdiDbConnector();
-	
-	assertNotNull("PDI Db Connector",pdiDb);
-	
+	/* Explicitly upgrade all Databases */
+	DataStoreUpgrader.upgradeAllDatabases(connectorFactory);
+
+	final IDatabaseConnector pdiDb = connectorFactory.getPdiDbConnector();
+
+	assertNotNull("PDI Db Connector", pdiDb);
+
 	DatabaseUpgrader.upgradeDatabase(pdiDb);
 
-	assertNotNull("PS Db Connector", dbManager.getPsDbConnector());
+	assertNotNull("PS Db Connector", connectorFactory.getPsDbConnector());
 
-	assertNotNull("MSI DB Connector for Project " + m_projectId, dbManager.getMsiDbConnector(m_projectId));
+	assertNotNull("MSI DB Connector for Project " + m_projectId,
+		connectorFactory.getMsiDbConnector(m_projectId));
 
 	assertNotNull("LCMS DB Connector for Project " + m_projectId,
-		dbManager.getLcMsDbConnector(m_projectId));
+		connectorFactory.getLcMsDbConnector(m_projectId));
     }
 
     @After

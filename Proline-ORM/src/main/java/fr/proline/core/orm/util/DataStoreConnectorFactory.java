@@ -13,7 +13,6 @@ import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
 import fr.proline.repository.DatabaseConnectorFactory;
-import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
@@ -49,6 +48,15 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
     }
 
     /* Public methods */
+    /**
+     * Initializes this <code>DataStoreConnectorFactory</code> instance from an existing UDS Db
+     * DatabaseConnector using ExternalDb entities.
+     * <p>
+     * initialize() must be called only once.
+     * 
+     * @param udsDbConnector
+     *            DatabaseConnector to a valid UDS Db (must not be <code>null</code>).
+     */
     public void initialize(final IDatabaseConnector udsDbConnector) {
 
 	synchronized (m_managerLock) {
@@ -72,12 +80,6 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	    EntityManager udsEm = null;
 
 	    try {
-		final int udsDbMigrationsCount = DatabaseUpgrader.upgradeDatabase(udsDbConnector);
-
-		if (udsDbMigrationsCount < 0) {
-		    LOG.warn("Unable to upgrade UDS Db");
-		}
-
 		final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
 
 		udsEm = udsEMF.createEntityManager();
@@ -93,13 +95,6 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 		} else {
 		    m_pdiDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 			    ProlineDatabaseType.PDI, pdiDb.toPropertiesMap(udsDriverType));
-
-		    final int pdiDbMigrationsCount = DatabaseUpgrader.upgradeDatabase(m_pdiDbConnector);
-
-		    if (pdiDbMigrationsCount < 0) {
-			LOG.warn("Unable to upgrade PDI Db");
-		    }
-
 		}
 
 		/* Try to load PS Db Connector */
@@ -111,13 +106,6 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 		} else {
 		    m_psDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 			    ProlineDatabaseType.PS, psDb.toPropertiesMap(udsDriverType));
-
-		    final int psDbMigrationsCount = DatabaseUpgrader.upgradeDatabase(m_psDbConnector);
-
-		    if (psDbMigrationsCount < 0) {
-			LOG.warn("Unable to upgrade PS Db");
-		    }
-
 		}
 
 	    } catch (Exception ex) {
@@ -387,13 +375,6 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	    } else {
 		connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(prolineDbType,
 			externalDb.toPropertiesMap(udsDbConnector.getDriverType()));
-
-		final int migrationsCount = DatabaseUpgrader.upgradeDatabase(connector);
-
-		if (migrationsCount < 0) {
-		    LOG.warn("Unable to upgrade {} Db of project #{}", prolineDbType, projectId);
-		}
-
 	    }
 
 	} finally {

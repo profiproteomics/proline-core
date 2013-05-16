@@ -35,12 +35,10 @@ public class ProjectTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	//"/fr/proline/core/orm/uds/Project_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/uds-db_init_dataset.xml",
-		"/dbunit/datasets/uds/Project_Dataset.xml"
-	};
-	
+	// "/fr/proline/core/orm/uds/Project_Dataset.xml"
+	String[] datasets = new String[] { "/dbunit/datasets/uds-db_init_dataset.xml",
+		"/dbunit/datasets/uds/Project_Dataset.xml" };
+
 	loadCompositeDataSet(datasets);
     }
 
@@ -149,6 +147,11 @@ public class ProjectTest extends DatabaseTestCase {
 	    Project rProject = udsEm.find(Project.class, 2);
 	    assertThat(rProject, equalTo(project));
 	    assertTrue(rProject.getMembers().contains(owner));
+
+	    final List<Integer> projectIds = ProjectRepository.findAllProjectIds(udsEm);
+	    assertTrue("Project Ids List", (projectIds != null) && !projectIds.isEmpty());
+
+	    LOG.debug("Total count of Projects: " + projectIds.size());
 	} finally {
 
 	    if (udsEm != null) {

@@ -31,4 +31,13 @@ public final class ProjectRepository {
 	return query.getResultList();
     }
 
+    public static List<Integer> findAllProjectIds(final EntityManager udsEm) {
+
+	JPAUtils.checkEntityManager(udsEm);
+
+	final TypedQuery<Integer> query = udsEm.createNamedQuery("findAllProjectIds", Integer.class);
+
+	return query.getResultList();
+    }
+
 }
