@@ -18,9 +18,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-
 import javax.persistence.Transient;
-
 
 /**
  * The persistent class for the project database table.
@@ -29,7 +27,8 @@ import javax.persistence.Transient;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "findProjectsByMembership", query = "Select p from Project p, UserAccount u where u.id=:id and u member OF p.members"),
-	@NamedQuery(name = "findProjectsByOwner", query = "Select p from Project p where p.owner.id=:id") })
+	@NamedQuery(name = "findProjectsByOwner", query = "Select p from Project p where p.owner.id=:id"),
+	@NamedQuery(name = "findAllProjectIds", query = "select p.id from fr.proline.core.orm.uds.Project p order by p.id") })
 public class Project implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -70,9 +69,10 @@ public class Project implements Serializable {
     @JoinTable(name = "project_user_account_map", inverseJoinColumns = @JoinColumn(name = "user_account_id", referencedColumnName = "id"), joinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id"))
     private Set<UserAccount> members;
 
-	// Transient Variables not saved in database
-    @Transient private TransientData transientData = null;
-    
+    // Transient Variables not saved in database
+    @Transient
+    private TransientData transientData = null;
+
     protected Project() {
     }
 
@@ -183,50 +183,63 @@ public class Project implements Serializable {
 	return this.members;
     }
 
-    public boolean addMember(UserAccount member) {
-	if (this.members == null)
-	    this.members = new HashSet<UserAccount>();
-	return this.members.add(member);
+    public void addMember(final UserAccount member) {
+
+	if (member != null) {
+	    Set<UserAccount> localMembers = getMembers();
+
+	    if (localMembers == null) {
+		localMembers = new HashSet<UserAccount>();
+
+		setMembers(localMembers);
+	    }
+
+	    localMembers.add(member);
+	}
+
     }
 
-    public boolean removeMember(UserAccount member) {
-	return ((this.members != null) && (this.members.remove(member)));
+    public void removeMember(final UserAccount member) {
+	final Set<UserAccount> localMembers = getMembers();
+
+	if (localMembers != null) {
+	    localMembers.remove(member);
+	}
+
     }
 
     protected void setMembers(Set<UserAccount> members) {
 	this.members = members;
     }
 
-    
     public TransientData getTransientData() {
-    	if (transientData == null) {
-    		transientData = new TransientData();
-    	}
-    	return transientData;
+	if (transientData == null) {
+	    transientData = new TransientData();
+	}
+	return transientData;
     }
-    
+
     /**
-     * Transient Data which will be not saved in database Used by the Proline
-     * Studio IHM
-     *
+     * Transient Data which will be not saved in database Used by the Proline Studio IHM
+     * 
      * @author JM235353
      */
     public static class TransientData implements Serializable {
 
-        private static final long serialVersionUID = 1L;
-        private int childrenNumber = 0;
+	private static final long serialVersionUID = 1L;
+	private int childrenNumber = 0;
 
-        protected TransientData() {
-        }
+	protected TransientData() {
+	}
 
-        public int getChildrenNumber() {  
-            return childrenNumber;
-        }
-        public void setChildrenNumber(int childrenNumber) {  
-            this.childrenNumber = childrenNumber;
-        }
+	public int getChildrenNumber() {
+	    return childrenNumber;
+	}
+
+	public void setChildrenNumber(int childrenNumber) {
+	    this.childrenNumber = childrenNumber;
+	}
 
     }
-    
-    
+
 }
