@@ -10,10 +10,10 @@ import javax.sql.DataSource;
 import org.junit.Test;
 
 import fr.proline.repository.ConnectionMode;
-import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
+import fr.proline.repository.ProlineDatabaseType;
 
 public class ExternalDbTest {
 
@@ -41,7 +41,7 @@ public class ExternalDbTest {
 	    assertEquals("sa", metaData.getUserName().toLowerCase());
 	} finally {
 
-	    if (ds != null) {
+	    if (con != null) {
 		con.close();
 	    }
 
@@ -73,7 +73,7 @@ public class ExternalDbTest {
 	    assertEquals("sa", metaData.getUserName().toLowerCase());
 	} finally {
 
-	    if (ds != null) {
+	    if (con != null) {
 		con.close();
 	    }
 
@@ -101,7 +101,7 @@ public class ExternalDbTest {
 	    assertEquals("jdbc:sqlite::memory:", metaData.getURL());
 	} finally {
 
-	    if (ds != null) {
+	    if (con != null) {
 		con.close();
 	    }
 
@@ -130,7 +130,7 @@ public class ExternalDbTest {
 	    assertEquals("jdbc:sqlite:./target/pdi.sqlite", metaData.getURL());
 	} finally {
 
-	    if (ds != null) {
+	    if (con != null) {
 		con.close();
 	    }
 
