@@ -20,6 +20,8 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgresDatabaseConnector.class);
 
+    private static final String HIBERNATE_CONNECTION_KEEPALIVE_KEY = "hibernate.connection.tcpKeepAlive";
+
     private static final String POSTGRESQL_SCHEME = JDBC_SCHEME + ':'
 	    + DriverType.POSTGRESQL.getJdbcURLProtocol() + ':';
 
@@ -80,6 +82,9 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
 	source.setMaxConnections(DEFAULT_MAX_POOL_CONNECTIONS);
 
+	/* Force TCP keepalive on raw SQL JDBC connections */
+	source.setTcpKeepAlive(true);
+
 	return source;
     }
 
@@ -94,6 +99,11 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	/* Force TableNameSequencePostgresDialect custom Hibernate dialect and default ORM optimizations. */
 	if (properties.get(HIBERNATE_DIALECT_KEY) == null) {
 	    properties.put(HIBERNATE_DIALECT_KEY, TableNameSequencePostgresDialect.class.getName());
+	}
+
+	/* Force TCP keepalive on EntityManager connections */
+	if (properties.get(HIBERNATE_CONNECTION_KEEPALIVE_KEY) == null) {
+	    properties.put(HIBERNATE_CONNECTION_KEEPALIVE_KEY, "true");
 	}
 
 	return super.createEntityManagerFactory(database, properties, ormOptimizations);
