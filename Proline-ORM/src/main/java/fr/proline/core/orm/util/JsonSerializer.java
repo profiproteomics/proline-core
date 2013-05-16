@@ -2,12 +2,16 @@ package fr.proline.core.orm.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonSerializer {
+public final class JsonSerializer {
 
-	private static ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-	public static ObjectMapper getMapper() {
-		return MAPPER;
-	}
-	
+    /* Private constructor (Utility class) */
+    private JsonSerializer() {
+    }
+
+    public static ObjectMapper getMapper() {
+	return MAPPER;
+    }
+
 }
