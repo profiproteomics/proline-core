@@ -28,34 +28,27 @@ class SpecificPeptidesPSFilter(
     minNbrPep = toInt(currentVal)
   }
 
-  private def getPepInstanceProtSetCount(protSets: Seq[ProteinSet]): collection.mutable.Map[Int, Int] = {
-    val pepInst = protSets.flatten(_.peptideSet.getPeptideInstances)
-    collection.mutable.Map() ++ (pepInst.map(pi => pi.id -> pi.proteinSetsCount).toMap)
-  }
 
   // IProteinSetFilter  methods   
   def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {
 
     protSets.sortBy(_.peptideSet.score)
-    val protSetCountByPepInst = getPepInstanceProtSetCount(protSets)
 
     // Reset validation status if validation is not incremental
     if (!incrementalValidation) ProteinSetFiltering.resetProteinSetValidationStatus(protSets)
 
     protSets.foreach(pSet => {
-      var nbrPepSpecific = 0
-      var pSetPepInstIdSeq = Seq.newBuilder[Int]
+      var nbrPepSpecific = 0     
       pSet.peptideSet.getPeptideInstances.foreach(pInst => {
-        pSetPepInstIdSeq += pInst.id
-        if (protSetCountByPepInst(pInst.id) == 1)
-          nbrPepSpecific += 1
-
+		if(pInst.validatedProteinSetsCount <= 1){
+            nbrPepSpecific += 1
+        }
       })
 
       if (nbrPepSpecific < minNbrPep) {
         pSet.isValidated = false
-        pSetPepInstIdSeq.result.foreach(pId => {
-          protSetCountByPepInst(pId) = protSetCountByPepInst(pId) - 1
+        pSet.peptideSet.getPeptideInstances.foreach(pInst => {
+          pInst.validatedProteinSetsCount = pInst.validatedProteinSetsCount-1
         })
       }
     })
