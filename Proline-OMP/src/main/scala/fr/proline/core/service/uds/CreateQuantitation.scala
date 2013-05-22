@@ -61,7 +61,7 @@ class CreateQuantitation(
     udsQuantitation.setDescription(description)
     udsQuantitation.setType(DatasetType.QUANTITATION)
     udsQuantitation.setCreationTimestamp(getTimeAsSQLTimestamp)
-    udsQuantitation.setChildrenCount(mqcCount)
+    udsQuantitation.setChildrenCount(0)
     udsQuantitation.setMethod(udsQuantMethod)
     udsEM.persist(udsQuantitation)
 
@@ -109,6 +109,7 @@ class CreateQuantitation(
         udsBioGroup.setNumber(bioGroupNumber)
         udsBioGroup.setName(biologicalGroup.name)
         udsBioGroup.setGroupSetups(udsGroupSetups)
+        udsBioGroup.setQuantitationDataset(udsQuantitation)
         udsEM.persist(udsBioGroup)
 
         // Map the group id by the group number
@@ -180,7 +181,7 @@ class CreateQuantitation(
         // Retrieve some vars
         val sampleNum = quantChannel.sampleNumber
         val udsBioSample = udsBioSampleByNum(sampleNum)
-
+        
         // Retrieve replicate number and increment it
         val replicateNum = replicateNumBySampleNum.getOrElseUpdate(sampleNum, 0) + 1
         replicateNumBySampleNum(sampleNum) = replicateNum
@@ -298,8 +299,10 @@ case class BiologicalGroup(
 case class QuantChannel(
   val sampleNumber: Int,
   val identResultSummaryId: Int,
-  val lcmsMapId: Option[Int],
-  val quantLabelId: Option[Int])
+  val lcmsMapId: Option[Int] = None,
+  val runId: Option[Int] = None,
+  val quantLabelId: Option[Int] = None
+)
 
 /**
  * @param name
