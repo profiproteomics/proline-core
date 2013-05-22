@@ -56,10 +56,10 @@
 	<PROTEIN_MATCH_SEQ_DATABASE_MAP SEQ_DATABASE_ID="1" PROTEIN_MATCH_ID="1" RESULT_SET_ID="1" />
 	<PROTEIN_MATCH_SEQ_DATABASE_MAP SEQ_DATABASE_ID="1" PROTEIN_MATCH_ID="2" RESULT_SET_ID="1" />
 	
-	<OBJECT_TREE_SCHEMA SCHEMA="a string decribing filters history schema model" VERSION="1.0" NAME="filters_history" TYPE="JSON"/>
-	<OBJECT_TREE ID="1" SERIALIZED_DATA="a string containing filters history data" SCHEMA_NAME="filters_history"/>
-	<OBJECT_TREE_SCHEMA SCHEMA="another string decribing grouping history schema model" VERSION="1.0" NAME="grouping_history" TYPE="JSON"/>
-	<OBJECT_TREE ID="2" SERIALIZED_DATA="a string containing grouping history data" SCHEMA_NAME="grouping_history"/>
+	<OBJECT_TREE_SCHEMA IS_BINARY_MODE="0" SCHEMA="a string decribing filters history schema model" VERSION="1.0" NAME="filters_history" TYPE="JSON"/>
+	<OBJECT_TREE ID="1" CLOB_DATA="a string containing filters history data" SCHEMA_NAME="filters_history"/>
+	<OBJECT_TREE_SCHEMA IS_BINARY_MODE="0" SCHEMA="another string decribing grouping history schema model" VERSION="1.0" NAME="grouping_history" TYPE="JSON"/>
+	<OBJECT_TREE ID="2" CLOB_DATA="a string containing grouping history data" SCHEMA_NAME="grouping_history"/>
 	
 	<RESULT_SET_OBJECT_TREE_MAP RESULT_SET_ID="3" OBJECT_TREE_ID="1" SCHEMA_NAME="filters_history"/>
 	<RESULT_SET_OBJECT_TREE_MAP RESULT_SET_ID="3" OBJECT_TREE_ID="2" SCHEMA_NAME="grouping_history"/>
