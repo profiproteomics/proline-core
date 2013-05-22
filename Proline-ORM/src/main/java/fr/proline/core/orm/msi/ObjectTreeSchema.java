@@ -23,6 +23,9 @@ public class ObjectTreeSchema implements Serializable {
 
 	@Column(name="type")
 	private String type;
+	
+    @Column(name="is_binary_mode")
+    private boolean isBinaryMode;
 
 	@Column(name="version")
 	private String version;
@@ -38,6 +41,14 @@ public class ObjectTreeSchema implements Serializable {
 	
 	public ObjectTreeSchema() {
     }
+	
+	public boolean getIsBinaryMode() {
+		return this.isBinaryMode;
+	}
+
+	public void setIsBinaryMode(boolean isBinaryMode) {
+		this.isBinaryMode = isBinaryMode;
+	}
 
 	public String getName() {
 		return name;

@@ -9,7 +9,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
 import javax.persistence.Table;
 
 
@@ -26,8 +25,11 @@ public class ObjectTree implements Serializable {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
 
-	@Column(name="serialized_data")
-	private String serializedData;
+	@Column(name="blob_data")
+	private byte[] blobData;
+	
+	@Column(name="clob_data")
+	private String clobData;
 
 	@Column(name="serialized_properties")
 	private String serializedProperties;
@@ -47,13 +49,21 @@ public class ObjectTree implements Serializable {
 	public void setId(Integer id) {
 		this.id = id;
 	}
-
-	public String getSerializedData() {
-		return serializedData;
+	
+	public byte[] getBlobData() {
+		return this.blobData;
 	}
 
-	public void setSerializedData(String serializedData) {
-		this.serializedData = serializedData;
+	public void setBlobData(byte[] blobData) {
+		this.blobData = blobData;
+	}
+
+	public String getClobData() {
+		return clobData;
+	}
+
+	public void setClobData(String clobData) {
+		this.clobData = clobData;
 	}
 
 	public String getSerializedProperties() {

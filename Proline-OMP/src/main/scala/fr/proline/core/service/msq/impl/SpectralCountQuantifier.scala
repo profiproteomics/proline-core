@@ -100,7 +100,7 @@ class SpectralCountQuantifier(
     // Store the object tree
     val msiMQPepObjectTree = new MsiObjectTree()
     msiMQPepObjectTree.setSchema( spectralCountingPeptidesSchema )
-    msiMQPepObjectTree.setSerializedData( generate[Array[QuantPeptide]](quantPeptides) )   
+    msiMQPepObjectTree.setClobData( generate[Array[QuantPeptide]](quantPeptides) )   
     
     msiMQPepObjectTree
   }
@@ -118,7 +118,7 @@ class SpectralCountQuantifier(
     // Store the object tree
     val msiMQPepIonObjectTree = new MsiObjectTree()
     msiMQPepIonObjectTree.setSchema( spectralCountingQuantPepIonsSchema )
-    msiMQPepIonObjectTree.setSerializedData( generate[Array[QuantPeptideIon]](quantPeptideIons) )          
+    msiMQPepIonObjectTree.setClobData( generate[Array[QuantPeptideIon]](quantPeptideIons) )          
     
     msiMQPepIonObjectTree
   }

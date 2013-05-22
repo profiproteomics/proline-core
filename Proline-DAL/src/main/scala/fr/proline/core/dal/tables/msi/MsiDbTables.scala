@@ -256,7 +256,8 @@ object MsiDbMsmsSearchTable extends MsiDbMsmsSearchTable {
 object MsiDbObjectTreeColumns extends ColumnEnumeration {
   val $tableName = MsiDbObjectTreeTable.name
   val ID = Column("id")
-  val SERIALIZED_DATA = Column("serialized_data")
+  val BLOB_DATA = Column("blob_data")
+  val CLOB_DATA = Column("clob_data")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val SCHEMA_NAME = Column("schema_name")
 }
@@ -272,6 +273,7 @@ object MsiDbObjectTreeSchemaColumns extends ColumnEnumeration {
   val $tableName = MsiDbObjectTreeSchemaTable.name
   val NAME = Column("name")
   val TYPE = Column("type")
+  val IS_BINARY_MODE = Column("is_binary_mode")
   val VERSION = Column("version")
   val SCHEMA = Column("schema")
   val DESCRIPTION = Column("description")

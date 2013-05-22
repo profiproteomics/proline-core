@@ -219,7 +219,7 @@ trait XLabelFreeFeatureQuantifier extends IQuantifier with Logging {
     // Store the object tree
     val msiMQPepObjectTree = new MsiObjectTree()
     msiMQPepObjectTree.setSchema(labelFreeQuantPeptidesSchema)
-    msiMQPepObjectTree.setSerializedData(generate[Array[QuantPeptide]](quantPeptides))
+    msiMQPepObjectTree.setClobData(generate[Array[QuantPeptide]](quantPeptides))
 
     msiMQPepObjectTree
   }
@@ -236,7 +236,7 @@ trait XLabelFreeFeatureQuantifier extends IQuantifier with Logging {
     // Store the object tree
     val msiMQCObjectTree = new MsiObjectTree()
     msiMQCObjectTree.setSchema(labelFreeQuantPeptideIonsSchema)
-    msiMQCObjectTree.setSerializedData(generate[Array[QuantPeptideIon]](quantPepIons))
+    msiMQCObjectTree.setClobData(generate[Array[QuantPeptideIon]](quantPepIons))
 
     msiMQCObjectTree
   }
