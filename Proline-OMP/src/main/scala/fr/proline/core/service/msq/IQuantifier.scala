@@ -33,7 +33,8 @@ import fr.proline.core.orm.msi.{
   PeptideSet => MsiPeptideSet,
   PeptideSetPeptideInstanceItem => MsiPeptideSetItem,
   PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK,
-  //PeptideSetProteinMatchMap => MsiPepSetProtMatchMap,
+  PeptideSetProteinMatchMap => MsiPepSetProtMatchMap,
+  PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK,
   ProteinSetProteinMatchItem => MsiProtSetProtMatchItem,
   ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK,
   ProteinMatch => MsiProteinMatch,
@@ -205,7 +206,6 @@ trait IQuantifier extends Logging {
   }
 
   // Define some vars
-  // TODO: define a QuantStorerContext ?
   protected val masterPepInstByPepId = new HashMap[Int, PeptideInstance]
   protected val msiMasterPepInstById = new HashMap[Int, MsiPeptideInstance]
   protected val msiMasterProtSetById = new HashMap[Int, MsiProteinSet]
@@ -238,28 +238,6 @@ trait IQuantifier extends Logging {
       val masterPepInstPepMatchIds = masterPepInstance.getPeptideMatchIds
       assert(masterPepInstPepMatchIds.length == 1, "peptide matches have not been correctly merged")
 
-      val msiMasterPepInstance = new MsiPeptideInstance()
-      msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
-      msiMasterPepInstance.setProteinMatchCount(masterPepInstance.proteinMatchesCount)
-      msiMasterPepInstance.setProteinSetCount(masterPepInstance.proteinSetsCount)
-      msiMasterPepInstance.setValidatedProteinSetCount(masterPepInstance.validatedProteinSetsCount)
-      msiMasterPepInstance.setTotalLeavesMatchCount(0)
-      msiMasterPepInstance.setSelectionLevel(2)
-      msiMasterPepInstance.setPeptideId(peptideId)
-      msiMasterPepInstance.setBestPeptideMatchId(masterPepInstance.bestPeptideMatchId)
-      msiMasterPepInstance.setResultSummary(msiQuantRSM)
-      msiEm.persist(msiMasterPepInstance)
-
-      val masterPepInstanceId = msiMasterPepInstance.getId
-
-      // Update the peptide instance id
-      masterPepInstance.id = masterPepInstanceId
-
-      // Map the peptide instance by the peptide id
-      masterPepInstByPepId(peptideId) = masterPepInstance
-      // TODO: remove this mapping when ORM is updated
-      msiMasterPepInstById(masterPepInstanceId) = msiMasterPepInstance
-
       // TODO: Retrieve the best peptide match
       //val identParentPepMatches = masterPepInstPepMatchIds.map { masterPepMatchById(_) }
       //val bestParentPepMatch = identParentPepMatches.reduce { (a,b) => if( a.score > b.score ) a else b } 
@@ -290,32 +268,55 @@ trait IQuantifier extends Logging {
       msiMasterPepMatch.setMsQuery(msiMSQFake)
 
       msiMasterPepMatch.setResultSet(msiQuantRS)
-      if (bestParentPepMatch.properties != None) msiMasterPepMatch.setSerializedProperties(generate(bestParentPepMatch.properties))
+      bestParentPepMatch.properties.map( props => msiMasterPepMatch.setSerializedProperties(generate(props)) )
 
       // Save master peptide match
       msiEm.persist(msiMasterPepMatch)
 
-      val quantPepMatchId = msiMasterPepMatch.getId
+      val masterPepMatchId = msiMasterPepMatch.getId
+      
+      // Map master peptide match id by in memory merged peptide match id
+      masterQuantPepMatchIdByTmpPepMatchId(bestParentPepMatch.id) = masterPepMatchId
 
       // Update the best parent peptide match id
-      bestParentPepMatch.id = quantPepMatchId
-      masterPepInstance.peptideMatchIds = Array(quantPepMatchId)
+      bestParentPepMatch.id = masterPepMatchId
+      
+      val msiMasterPepInstance = new MsiPeptideInstance()
+      msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
+      msiMasterPepInstance.setProteinMatchCount(masterPepInstance.proteinMatchesCount)
+      msiMasterPepInstance.setProteinSetCount(masterPepInstance.proteinSetsCount)
+      msiMasterPepInstance.setTotalLeavesMatchCount(0)
+      msiMasterPepInstance.setSelectionLevel(2)
+      msiMasterPepInstance.setPeptideId(peptideId)
+      msiMasterPepInstance.setBestPeptideMatchId(masterPepMatchId)
+      msiMasterPepInstance.setResultSummary(msiQuantRSM)
+      msiEm.persist(msiMasterPepInstance)
 
-      // Map this quant peptide match to the quant peptide instance
+      val masterPepInstanceId = msiMasterPepInstance.getId
+
+      // Update the peptide instance id and some FKs
+      masterPepInstance.id = masterPepInstanceId
+      masterPepInstance.peptideMatchIds = Array(masterPepMatchId)
+      masterPepInstance.bestPeptideMatchId = masterPepMatchId
+      
+      // Map the peptide instance by the peptide id
+      masterPepInstByPepId(peptideId) = masterPepInstance
+      // TODO: remove this mapping when ORM is updated
+      msiMasterPepInstById(masterPepInstanceId) = msiMasterPepInstance
+
+      // Link the best master peptide match to the quant peptide instance
       val msiPepInstMatchPK = new MsiPepInstPepMatchMapPK()
       msiPepInstMatchPK.setPeptideInstanceId(masterPepInstanceId)
-      msiPepInstMatchPK.setPeptideMatchId(quantPepMatchId)
+      msiPepInstMatchPK.setPeptideMatchId(masterPepMatchId)
 
       val msiPepInstMatch = new MsiPepInstPepMatchMap()
       msiPepInstMatch.setId(msiPepInstMatchPK)
       msiPepInstMatch.setPeptideInstance(msiMasterPepInstance)
+      msiPepInstMatch.setPeptideMatch(msiMasterPepMatch)      
       msiPepInstMatch.setResultSummary(msiQuantRSM)
 
       //msiMasterPepInstance.setPeptidesMatches(Set(msiMasterPepMatch))
-      msiEm.persist(msiMasterPepInstance)
-
-      // Map quant peptide match id by in memory merged peptide match id
-      masterQuantPepMatchIdByTmpPepMatchId(bestParentPepMatch.id) = quantPepMatchId
+      msiEm.persist(msiPepInstMatch)
 
       // Map this quant peptide match to identified child peptide matches
       for (childPepMatchId <- bestParentPepMatch.getChildrenIds) {
@@ -334,18 +335,65 @@ trait IQuantifier extends Logging {
     this.logger.info("number of grouped peptide sets: " + masterPeptideSets.length)
     val masterProteinSets = masterRSM.proteinSets
     this.logger.info("number of grouped protein sets: " + masterProteinSets.length)
-    val masterProtSetById = masterRSM.proteinSetById
-    val masterProtMatchById = masterRSM.resultSet.get.proteinMatchById
+    val masterProtSetByTmpId = masterRSM.proteinSetById
+    val masterProtMatchByTmpId = masterRSM.resultSet.get.proteinMatchById
 
     // Iterate over identified peptide sets to create quantified peptide sets
     this.logger.info("storing quantified peptide sets...")
     for (masterPeptideSet <- masterPeptideSets) {
+      
+      val masterProtMatchIdByTmpId = new HashMap[Int,Int]
+      val masterProtMatchTmpIdById = new HashMap[Int,Int]
+      
+      // Store master protein matches
+      val msiMasterProtMatches = masterPeptideSet.proteinMatchIds.map { protMatchId =>
 
+        val masterProtMatch = masterProtMatchByTmpId(protMatchId)
+
+        val msiMasterProtMatch = new MsiProteinMatch()
+        msiMasterProtMatch.setAccession(masterProtMatch.accession)
+        msiMasterProtMatch.setDescription(masterProtMatch.description)
+        msiMasterProtMatch.setGeneName(masterProtMatch.geneName)
+        msiMasterProtMatch.setScore(masterProtMatch.score)
+        msiMasterProtMatch.setCoverage(masterProtMatch.coverage)
+        msiMasterProtMatch.setPeptideCount(masterProtMatch.sequenceMatches.length)
+        msiMasterProtMatch.setPeptideMatchCount(masterProtMatch.peptideMatchesCount)
+        msiMasterProtMatch.setIsDecoy(masterProtMatch.isDecoy)
+        msiMasterProtMatch.setIsLastBioSequence(masterProtMatch.isLastBioSequence)
+        msiMasterProtMatch.setTaxonId(masterProtMatch.taxonId)
+        msiMasterProtMatch.setBioSequenceId(masterProtMatch.getProteinId)
+        // FIXME: retrieve the right scoring id
+        msiMasterProtMatch.setScoringId(3)
+        msiMasterProtMatch.setResultSet(msiQuantRS)
+        msiEm.persist(msiMasterProtMatch)
+
+        val masterProtMatchId = msiMasterProtMatch.getId
+        
+        // Map new protein match id by TMP id
+        masterProtMatchIdByTmpId += masterProtMatch.id -> masterProtMatchId
+        // Map protein match TMP id by the new id
+        masterProtMatchTmpIdById += masterProtMatchId.toInt -> masterProtMatch.id
+
+        // Update master protein match id
+        masterProtMatch.id = masterProtMatchId
+
+        // TODO: map protein_match to seq_databases
+        
+        msiMasterProtMatch
+      }
+      
+      // Map MSI protein matches by their id
+      //val msiMasterProtMatchById = Map() ++ msiMasterProtMatches.map( pm => pm.getId -> pm )
+      
+      // Update master peptide set protein match ids
+      masterPeptideSet.proteinMatchIds = masterPeptideSet.proteinMatchIds.map(masterProtMatchIdByTmpId(_))
+
+      // TODO: find what to do with subsets
       if (masterPeptideSet.isSubset == false) {
 
-        val masterProteinSet = masterProtSetById.get(masterPeptideSet.getProteinSetId)
-        assert(masterProteinSet != None, "missing protein set with id=" + masterPeptideSet.getProteinSetId)
-
+        val masterProteinSetOpt = masterProtSetByTmpId.get(masterPeptideSet.getProteinSetId)
+        assert(masterProteinSetOpt != None, "missing protein set with id=" + masterPeptideSet.getProteinSetId)
+        
         //////// Check if the protein set has at least a peptide instance with a relevant quantitation
         //val isProteinSetQuantitationRelevant = 0
         //for( tmpPepInstance <- samesetPeptideInstances ) {
@@ -357,12 +405,18 @@ trait IQuantifier extends Logging {
         //}
 
         // Determine the typical protein match id using the sequence coverage
-        var typicalProtMatchId = masterProteinSet.get.getTypicalProteinMatchId // if( idfProteinSet == None ) 0 else 
-        if (typicalProtMatchId == 0) {
-          typicalProtMatchId = masterPeptideSet.proteinMatchIds.reduce { (a, b) =>
-            if (masterProtMatchById(a).coverage > masterProtMatchById(b).coverage) a else b
-          }
+        val masterProteinSet = masterProteinSetOpt.get
+        var typicalProtMatchId = masterProteinSet.getTypicalProteinMatchId
+        
+        if (typicalProtMatchId <= 0) {
+          val typicalProtMatchTmpId = masterProteinSet.proteinMatchIds.reduce { (a, b) =>
+            if (masterProtMatchByTmpId(a).coverage > masterProtMatchByTmpId(b).coverage) a else b
+          }          
+          typicalProtMatchId = masterProtMatchIdByTmpId(typicalProtMatchTmpId)
         }
+        
+        // Update master protein set protein match ids        
+        masterProteinSet.proteinMatchIds = masterProteinSet.peptideSet.proteinMatchIds
 
         // Store master protein set
         val msiMasterProteinSet = new MsiProteinSet()
@@ -376,12 +430,12 @@ trait IQuantifier extends Logging {
         msiMasterProtSetById(masterProteinSetId) = msiMasterProteinSet
 
         // Update the master protein set id
-        masterProteinSet.get.id = masterProteinSetId
+        masterProteinSet.id = masterProteinSetId
 
         // Retrieve peptide set items
         val samesetItems = masterPeptideSet.items
 
-        // Store master peptide set      
+        // Store master peptide set
         val msiMasterPeptideSet = new MsiPeptideSet()
         msiMasterPeptideSet.setIsSubset(false)
         msiMasterPeptideSet.setPeptideCount(samesetItems.length)
@@ -412,40 +466,16 @@ trait IQuantifier extends Logging {
           msiPepSetItem.setId(msiPepSetItemPK)
           msiPepSetItem.setPeptideSet(msiMasterPeptideSet)
           msiPepSetItem.setPeptideInstance(msiMasterPepInst)
+          msiPepSetItem.setSelectionLevel(2)
           msiPepSetItem.setResultSummary(msiQuantRSM)
 
           msiEm.persist(msiPepSetItem)
         }
-
-        // Store master protein matches
-        for (protMatchId <- masterPeptideSet.proteinMatchIds) {
-
-          val masterProtMatch = masterProtMatchById(protMatchId)
-
-          val msiMasterProtMatch = new MsiProteinMatch()
-          msiMasterProtMatch.setAccession(masterProtMatch.accession)
-          msiMasterProtMatch.setDescription(masterProtMatch.description)
-          msiMasterProtMatch.setGeneName(masterProtMatch.geneName)
-          msiMasterProtMatch.setScore(masterProtMatch.score)
-          msiMasterProtMatch.setCoverage(masterProtMatch.coverage)
-          msiMasterProtMatch.setPeptideCount(masterProtMatch.sequenceMatches.length)
-          msiMasterProtMatch.setPeptideMatchCount(masterProtMatch.peptideMatchesCount)
-          msiMasterProtMatch.setIsDecoy(masterProtMatch.isDecoy)
-          msiMasterProtMatch.setIsLastBioSequence(masterProtMatch.isLastBioSequence)
-          msiMasterProtMatch.setTaxonId(masterProtMatch.taxonId)
-          msiMasterProtMatch.setBioSequenceId(masterProtMatch.getProteinId)
-          // FIXME: retrieve the right scoring id
-          msiMasterProtMatch.setScoringId(3)
-          msiMasterProtMatch.setResultSet(msiQuantRS)
-          msiEm.persist(msiMasterProtMatch)
-
+        
+        for( msiMasterProtMatch <- msiMasterProtMatches ) {
+          
           val masterProtMatchId = msiMasterProtMatch.getId
-
-          // Update master protein match id
-          masterProtMatch.id = masterProtMatchId
-
-          // TODO: map protein_match to seq_databases
-
+          
           // TODO: Map master protein match to master peptide set => ORM has to be fixed
           /*val msiPepSetProtMatchMap = new MsiPepSetProtMatchMap()
           new Pairs::Msi::RDBO::PeptideSetProteinMatchMap(
@@ -454,8 +484,8 @@ trait IQuantifier extends Logging {
                                   result_summary_id = quantRsmId,
                                   db = msiRdb
                                 ).save*/
-
-          // Map master protein match to master protein set
+ 
+          // Link master protein match to master protein set
           val msiProtSetProtMatchItemPK = new MsiProtSetProtMatchItemPK()
           msiProtSetProtMatchItemPK.setProteinSetId(msiMasterProteinSet.getId)
           msiProtSetProtMatchItemPK.setProteinMatchId(msiMasterProtMatch.getId)
@@ -467,8 +497,21 @@ trait IQuantifier extends Logging {
           msiProtSetProtMatchItem.setProteinMatch(msiMasterProtMatch)
           msiProtSetProtMatchItem.setResultSummary(msiQuantRSM)
           msiEm.persist(msiProtSetProtMatchItem)
+          
+          // Link master protein match to master peptide set
+          val msiPepSetProtMatchMapPK = new MsiPepSetProtMatchMapPK()
+          msiPepSetProtMatchMapPK.setPeptideSetId(msiMasterPeptideSet.getId)
+          msiPepSetProtMatchMapPK.setProteinMatchId(masterProtMatchId)
+          
+          val msiPepSetProtMatchMap = new MsiPepSetProtMatchMap()
+          msiPepSetProtMatchMap.setId(msiPepSetProtMatchMapPK)
+          msiPepSetProtMatchMap.setPeptideSet(msiMasterPeptideSet)
+          msiPepSetProtMatchMap.setProteinMatch(msiMasterProtMatch)
+          msiPepSetProtMatchMap.setResultSummary(msiQuantRSM)
+          msiEm.persist(msiPepSetProtMatchMap)
 
-          // Map master protein match to master peptide matches using master sequence matches
+          // Link master protein match to master peptide matches using master sequence matches
+          val masterProtMatch = masterProtMatchByTmpId( masterProtMatchTmpIdById(masterProtMatchId) )
           val seqMatches = masterProtMatch.sequenceMatches
           val mappedMasterPepMatchesIdSet = new HashSet[Int]
 
@@ -618,7 +661,7 @@ trait IQuantifier extends Logging {
     // Store the object tree
     val msiMQProtSetObjectTree = new MsiObjectTree()
     msiMQProtSetObjectTree.setSchema(quantProteinSetsSchema)
-    msiMQProtSetObjectTree.setSerializedData(generate[Array[QuantProteinSet]](quantProtSets))
+    msiMQProtSetObjectTree.setClobData(generate[Array[QuantProteinSet]](quantProtSets))
 
     msiMQProtSetObjectTree
   }
