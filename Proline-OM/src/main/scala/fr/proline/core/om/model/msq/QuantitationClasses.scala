@@ -113,6 +113,7 @@ case class MasterQuantPeptideIon(  var id: Int,
                                                   
                                    var selectionLevel: Int,
                                    var resultSummaryId: Int,
+                                   var peptideInstanceId: Option[Int] = None,
                                    var bestPeptideMatchId: Option[Int] = None,
                                    var lcmsFeatureId: Option[Int] = None,
                                    var unmodifiedPeptideIonId: Option[Int] = None,
@@ -269,8 +270,8 @@ case class MasterQuantProteinSet(  val proteinSet: ProteinSet,
 @JsonInclude( Include.NON_NULL )
 case class QuantResultSummary( 
                                var masterQuantProteinSets: Array[MasterQuantProteinSet],
-                               var masterQuantPeptides: Array[MasterQuantProteinSet],
-                               var masterQuantPeptideIons: Array[MasterQuantProteinSet],
+                               var masterQuantPeptides: Array[MasterQuantPeptide],
+                               var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
                                
                                var resultSummary: ResultSummary
                                
