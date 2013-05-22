@@ -21,16 +21,20 @@ public final class DataStoreUpgrader {
     }
 
     /**
-     * Upgrade all Proline Databases (UDS, PDI, PS and all projects MSI and LCMS Dbs).
+     * Upgrades all Proline Databases (UDS, PDI, PS and all projects MSI and LCMS Dbs).
      * 
      * @param connectorFactory
      *            Must be a valid initialized DataStoreConnectorFactory instance.
+     * @return <code>true</code> if all Databases where successfully upgraded ; <code>false</code> if a
+     *         Database upgrade failed.
      */
-    public static void upgradeAllDatabases(final IDataStoreConnectorFactory connectorFactory) {
+    public static boolean upgradeAllDatabases(final IDataStoreConnectorFactory connectorFactory) {
 
 	if ((connectorFactory == null) || !connectorFactory.isInitialized()) {
 	    throw new IllegalArgumentException("Invalid connectorFactory");
 	}
+
+	boolean result = true; // Optimistic initialization
 
 	/* Upgrade UDS Db */
 	final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
@@ -41,6 +45,7 @@ public final class DataStoreUpgrader {
 	    final int udsDbMigrationCount = DatabaseUpgrader.upgradeDatabase(udsDbConnector);
 
 	    if (udsDbMigrationCount < 0) {
+		result = false;
 		LOG.warn("Unable to upgrade UDS Db");
 	    }
 
@@ -52,6 +57,7 @@ public final class DataStoreUpgrader {
 	    final int pdiDbMigrationCount = DatabaseUpgrader.upgradeDatabase(pdiDbConnector);
 
 	    if (pdiDbMigrationCount < 0) {
+		result = false;
 		LOG.warn("Unable to upgrade PDI Db");
 	    }
 
@@ -66,6 +72,7 @@ public final class DataStoreUpgrader {
 	    final int psDbMigrationCount = DatabaseUpgrader.upgradeDatabase(psDbConnector);
 
 	    if (psDbMigrationCount < 0) {
+		result = false;
 		LOG.warn("Unable to upgrade PS Db");
 	    }
 
@@ -90,6 +97,7 @@ public final class DataStoreUpgrader {
 			final int msiDbMigrationCount = DatabaseUpgrader.upgradeDatabase(msiDbConnector);
 
 			if (msiDbMigrationCount < 0) {
+			    result = false;
 			    LOG.warn("Unable to upgrade MSI Db of project #{}", projectId);
 			}
 
@@ -101,6 +109,7 @@ public final class DataStoreUpgrader {
 			final int lcMsDbMigrationCount = DatabaseUpgrader.upgradeDatabase(lcMsDbConnector);
 
 			if (lcMsDbMigrationCount < 0) {
+			    result = false;
 			    LOG.warn("Unable to upgrade LCMS Db of Project #{}", projectId);
 			}
 
@@ -112,6 +121,7 @@ public final class DataStoreUpgrader {
 
 	}
 
+	return result;
     }
 
     private static List<Integer> retrieveProjectIds(final IDatabaseConnector udsDbConnector) {
