@@ -204,8 +204,8 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
         rf.eachSpectrumMatch(rs.isDecoy, { spectrumMatch =>
 
           stmt.executeWith(
+            Option(null),//ScalaMessagePack.write(spectrumMatch),
             ProlineJson.generate(spectrumMatch),
-            //ScalaMessagePack.write(spectrumMatch),
             Option.empty[String],
             schemaName
           )
