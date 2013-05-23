@@ -107,7 +107,7 @@ public class Dataset implements Serializable {
 
     // bi-directional many-to-one association to BiologicalSample
     @OneToMany(mappedBy = "dataset")
-    @OrderBy("number)")
+    @OrderBy("number")
     private List<BiologicalSample> biologicalSamples;
 
     // bi-directional many-to-one association to GroupSetup
