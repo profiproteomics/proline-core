@@ -76,7 +76,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
   
   private val MAX_FDR = 50f
 
-  def performROCAnalysisV1(
+  def performROCAnalysis(
     targetPepMatches: Seq[PeptideMatch],
     decoyPepMatches: Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter): Array[ValidationResult] = {
@@ -87,13 +87,22 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
 
     // Build the peptide match joint map
     val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches, Some(decoyPepMatches))
+    logger.debug("# Map entries = " + pmJointMap.size)
+    
+    // Sort decoy PSMs from the best to the worst according to the validation filter
+    val sortedDecoyPepMatches = validationFilter.sortPeptideMatches(decoyPepMatches)
+    
+    // Retrieve the worst decoy peptide match
+    val worstDecoyPepMatch = sortedDecoyPepMatches.last
 
+    // Initialize filterThreshold to the worst decoy value
+    var filterThreshold = validationFilter.getPeptideMatchValueForFiltering(worstDecoyPepMatch)
+    //var filterThreshold = validationFilter.getThresholdStartValue
+    
     // Define some vars
-    var filterThreshold = validationFilter.getThresholdStartValue
     var fdr = 100.0f
     val rocPoints = new ArrayBuffer[ValidationResult]
-    logger.debug(" # Map entries " + pmJointMap.size)
-
+    
     while (fdr > 0) { // iterate from FDR = 100.0 to 0.0
 
       // Restore peptide matches validation status to include previous filtering steps
@@ -131,7 +140,9 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
     rocPoints.toArray
   }
   
-  def performROCAnalysis(
+  // Note : this implementation seeems to be too long to process (too many decoy peptide matches)
+  // TODO: remove me
+  def performROCAnalysisV2(
     targetPepMatches: Seq[PeptideMatch],
     decoyPepMatches: Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter): Array[ValidationResult] = {
@@ -168,7 +179,8 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
         validationFilter.filterPeptideMatches(allPepMatches, true, false)
         
         // Compute the ROC point
-        val rocPoint = this.calcTDStatistics(pmJointMap)
+        val rocPoint = this.calcTDStatistics(pmJointMap)        
+        logger.debug("New FDR = "+rocPoint.fdr )
         
         // Set ROC point validation properties
         rocPoint.addProperties(validationFilter.getFilterProperties)

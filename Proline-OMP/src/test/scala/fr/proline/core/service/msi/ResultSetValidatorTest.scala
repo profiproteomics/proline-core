@@ -458,14 +458,14 @@ class ResultSetValidatorF136482Test extends Logging {
     Assert.assertEquals(new ScorePSMFilter().filterDescription, fPrp.getDescription.get)
 
     val scoreThresh = props(FilterPropertyKeys.THRESHOLD_VALUE).asInstanceOf[Float]
-    Assert.assertEquals("ScoreThresh float compare", 50.61, scoreThresh, 0.01)
+    Assert.assertEquals("ScoreThresh float compare", 52.89, scoreThresh, 0.01) // 50.61 with decoy sorting
 
-    Assert.assertEquals(6.66f, rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getFdr.get, 0.01)
+    Assert.assertEquals(7.01f, rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getFdr.get, 0.01)
 
     logger.debug(" Verify Result IN RSM ")
     val allTarPepMatc = rsValidation.validatedTargetRsm.peptideInstances.flatMap(pi => pi.peptideMatches)
     val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap(pi => pi.peptideMatches)
-    Assert.assertEquals(58, allTarPepMatc.length)
+    Assert.assertEquals(55, allTarPepMatc.length)
     Assert.assertEquals(2, allDecPepMatc.length)
 
     allTarPepMatc.foreach(peptideM => {
@@ -606,13 +606,13 @@ class ResultSetValidatorF136482Test extends Logging {
     logger.debug("Verify Result IN RS")
     val rsTarPepMatches = rsValidation.validatedTargetRsm.resultSet.get.peptideMatches
     val rsDecPepMatches = rsValidation.validatedDecoyRsm.get.resultSet.get.peptideMatches
-    Assert.assertEquals("RsTarPepMatches validated count", 107, rsTarPepMatches.count(_.isValidated))
+    Assert.assertEquals("RsTarPepMatches validated count", 102, rsTarPepMatches.count(_.isValidated)) // 107 with PSM sorting
     Assert.assertEquals("RsDecPepMatches validated count", 16, rsDecPepMatches.count(_.isValidated))
 
     logger.debug("Verify Result IN RSM")
     val allTarPepMatc = rsValidation.validatedTargetRsm.peptideInstances.flatMap(pi => pi.peptideMatches)
     val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap(pi => pi.peptideMatches)
-    Assert.assertEquals(107, allTarPepMatc.length)
+    Assert.assertEquals(102, allTarPepMatc.length) // 107 with PSM sorting
     Assert.assertEquals(16, allDecPepMatc.length)
 
   }
