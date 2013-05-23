@@ -7,8 +7,9 @@ import collection.mutable.HashSet
 import org.apache.commons.lang3.StringUtils.{isNotEmpty => isStrNotEmpty}
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi._
+import  fr.proline.core.algo.msi.scoring.IPeptideSetScoreUpdater
 
-class ResultSummaryMerger extends Logging {
+class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends Logging {
 
   def mergeResultSummaries( resultSummaries: Seq[ResultSummary], seqLengthByProtId: Map[Int,Int] ): ResultSummary = {
     
@@ -72,6 +73,8 @@ class ResultSummaryMerger extends Logging {
       peptides.foreach { p => peptideById( p.id ) = p }
     
     }
+    
+    require(allValidPeptideMatches.length > 0, "can't merge result summaries without any validated peptide match")
     
     // Retrieve non-redundant list of peptides
     val nrPeptides = peptideById.values
@@ -215,6 +218,9 @@ class ResultSummaryMerger extends Logging {
     // Instantiate a protein inference algo and build the merged result summary
     val protInferenceAlgo = ProteinSetInferer( InferenceMethods.parsimonious )
     val mergedRsm = protInferenceAlgo.computeResultSummary( mergedResultSet )
+    
+    // Update score of peptide sets
+    pepSetScoreUpdater.updateScoreOfPeptideSets(mergedRsm)
     
     // TODO: Make some updates of result set and result summary objects
     //mergedResultSet.updateScoresOfProteinMatches( search_engine = 'mascot' )

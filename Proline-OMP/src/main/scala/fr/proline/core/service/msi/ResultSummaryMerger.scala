@@ -8,6 +8,7 @@ import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context._
 import fr.proline.core.algo.msi.{ResultSummaryMerger => RsmMergerAlgo}
+import fr.proline.core.algo.msi.scoring.{PepSetScoring,PeptideSetScoreUpdater}
 import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
@@ -64,7 +65,10 @@ class ResultSummaryMerger(
         >>>
 
         // Merge result summaries
-        val rsmMerger = new RsmMergerAlgo()
+        // FIXME: check that all peptide sets have the same score type
+        val peptideSetScoring = PepSetScoring.withName( resultSummaries(0).peptideSets(0).scoreType )
+        val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring)
+        val rsmMerger = new RsmMergerAlgo(pepSetScoreUpdater)
 
         logger.info("merging result summaries...")
         val tmpMergedResultSummary = rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)

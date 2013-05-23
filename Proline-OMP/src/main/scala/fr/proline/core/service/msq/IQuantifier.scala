@@ -12,6 +12,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.ResultSummaryMerger
+import fr.proline.core.algo.msi.scoring.{PepSetScoring,PeptideSetScoreUpdater}
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -120,8 +121,13 @@ trait IQuantifier extends Logging {
   }
 
   protected val mergedResultSummary = {
+    
+    // FIXME: check that all peptide sets have the same scoring
+    val pepSetScoring = PepSetScoring.withName( this.identResultSummaries(0).peptideSets(0).scoreType )
+    val pepSetScoreUpdater = PeptideSetScoreUpdater(pepSetScoring)
+    
     // Merge result summaries
-    val resultSummaryMerger = new ResultSummaryMerger()
+    val resultSummaryMerger = new ResultSummaryMerger(pepSetScoreUpdater)
     this.logger.info("merging result summaries...")
     resultSummaryMerger.mergeResultSummaries(this.identResultSummaries, this.seqLengthByProtId)
   }
