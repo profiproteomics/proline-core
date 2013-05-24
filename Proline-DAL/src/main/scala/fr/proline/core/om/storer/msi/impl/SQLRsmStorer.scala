@@ -31,7 +31,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             pepInstance.proteinMatchesCount,
             pepInstance.proteinSetsCount,
             pepInstance.validatedProteinSetsCount,
-            0,
+            pepInstance.totalLeavesMatchCount,
             pepInstance.selectionLevel,
             pepInstance.elutionTime,
             pepInstance.properties.map(generate(_)),

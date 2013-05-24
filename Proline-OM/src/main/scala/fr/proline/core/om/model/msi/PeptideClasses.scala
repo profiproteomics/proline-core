@@ -450,6 +450,7 @@ case class PeptideInstance ( // Required fields
                         var proteinMatchesCount: Int = 0,
                         var proteinSetsCount: Int = 0,
                         var validatedProteinSetsCount: Int = 0,
+                        var totalLeavesMatchCount: Int = 0,
                         var selectionLevel: Int = 2,
                         var elutionTime: Float = 0,
                         
@@ -481,6 +482,9 @@ case class PeptideInstance ( // Required fields
   
   /** Returns true if the sequence is specific to a protein set. */
   def isProteinSetSpecific: Boolean = { proteinSetsCount == 1 }
+  
+  /** Returns true if the sequence is specific to a validated protein set. */
+  def isValidProteinSetSpecific: Boolean = { validatedProteinSetsCount == 1 }
   
   /** Returns true if the sequence is specific to a protein match. */
   def isProteinMatchSpecific: Boolean = { proteinMatchesCount == 1 }

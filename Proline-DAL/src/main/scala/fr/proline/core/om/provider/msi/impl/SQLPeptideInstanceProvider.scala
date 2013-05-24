@@ -131,6 +131,7 @@ class SQLPeptideInstanceProvider(
         proteinMatchesCount = pepInstRecord(PepInstCols.PROTEIN_MATCH_COUNT).asInstanceOf[Int],
         proteinSetsCount = pepInstRecord(PepInstCols.PROTEIN_SET_COUNT).asInstanceOf[Int],
         validatedProteinSetsCount = pepInstRecord(PepInstCols.VALIDATED_PROTEIN_SET_COUNT).asInstanceOf[Int],
+        totalLeavesMatchCount = pepInstRecord(PepInstCols.TOTAL_LEAVES_MATCH_COUNT).asInstanceOf[Int],
         selectionLevel = pepInstRecord(PepInstCols.SELECTION_LEVEL).asInstanceOf[Int],
         elutionTime = Option(pepInstRecord(PepInstCols.ELUTION_TIME)).map( toFloat(_) ).getOrElse(0f),
         peptideMatchIds = pepMatchIds.toArray,
