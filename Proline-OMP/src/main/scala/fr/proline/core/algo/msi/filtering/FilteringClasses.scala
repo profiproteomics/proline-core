@@ -1,12 +1,12 @@
 package fr.proline.core.algo.msi.filtering
 
-import scala.collection.mutable.{ArrayBuffer, HashMap}
+import scala.collection.mutable.{ ArrayBuffer, HashMap }
 
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.validation.BuildPeptideMatchFilter
-import fr.proline.core.om.model.msi.{FilterDescriptor, PeptideInstance, PeptideMatch, ProteinSet, ResultSet, ResultSummary}
+import fr.proline.core.om.model.msi.{ FilterDescriptor, PeptideInstance, PeptideMatch, ProteinSet, ResultSet, ResultSummary }
 import fr.proline.util.StringUtils
 import fr.proline.util.primitives.toDouble
 
@@ -282,7 +282,7 @@ object FilteredPSMSpectralCounter extends Logging {
 
 object ResultSummaryFilterBuilder {
 
-  def buildPeptideMatchFiltersList(rsm: ResultSummary): Array[IPeptideMatchFilter] = {
+  def buildPeptideMatchFilters(rsm: ResultSummary): Array[IPeptideMatchFilter] = {
     require(rsm != null, "Rsm is null")
 
     val result = new ArrayBuffer[IPeptideMatchFilter]()
