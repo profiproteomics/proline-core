@@ -59,8 +59,8 @@ case class FragmentMatch (
 }
 
 object FragmentMatchType extends Enumeration {
-  val INTERNAL = Value("I")
-  val IMMONIUM = Value("M")
+  val INTERNAL = Value("IN")
+  val IMMONIUM = Value("IM")
 }
 
 /** 
