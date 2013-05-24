@@ -217,7 +217,10 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
     
     // Instantiate a protein inference algo and build the merged result summary
     val protInferenceAlgo = ProteinSetInferer( InferenceMethods.parsimonious )
-    val mergedRsm = protInferenceAlgo.computeResultSummary( mergedResultSet )
+    val mergedRsm = protInferenceAlgo.computeResultSummary( mergedResultSet, scByPepId = None )
+    
+    //TODO FIXME VDS: Add algo to go through mergedRsm PeptideInstance and update their totalLeavesMatchCount 
+    // totalLeavesMatchCount = Sum totalLeavesMatchCount of each child RSM
     
     // Update score of peptide sets
     pepSetScoreUpdater.updateScoreOfPeptideSets(mergedRsm)
