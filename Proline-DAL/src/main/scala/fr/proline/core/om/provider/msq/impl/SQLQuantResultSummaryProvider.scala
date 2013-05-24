@@ -35,8 +35,8 @@ class SQLQuantResultSummaryProvider(
   val ObjectTreeCols = ObjectTreeTable.columns
   
   // TODO: create an enumeration
-  val LabelFreeQuantPeptidesSchema = "object_tree.object_tree.label_free_quant_peptides"
-  val QuantProteinSetSchema = "object_tree.quant_protein_sets"    
+  val LabelFreeQuantPeptidesSchema = "object_tree.label_free_quant_peptides"
+  val QuantProteinSetSchema = "object_tree.quant_protein_sets"
 
   def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Int], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
     val rsms = this.getQuantResultSummaries(quantRsmIds, loadResultSet)
@@ -52,7 +52,7 @@ class SQLQuantResultSummaryProvider(
     // Map peptide instances bey thier id
     val pepInstById = Map() ++ rsms.flatMap( _.peptideInstances.map( pi => pi.id -> pi ) )
     
-    val pepInstByMqPepId = DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    val pepInstByMQPepId = DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
       // Retrieve the mapping of ids between peptide instances and master quant peptides
       val mqPepIdByPepInstIdQuery = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t1,c1) => 
@@ -74,26 +74,20 @@ class SQLQuantResultSummaryProvider(
     // Load master quant peptide ions
     val mqPepIons = mqPepIonsProvider.getQuantResultSummariesMQPeptideIons(quantRsmIds)
     
-    // FIXME: map by master_quant_peptide_id field when it is added to master_quant_peptide_ion table
-    val mqPepIonsByPepInstId = new HashMap[Int,ArrayBuffer[MasterQuantPeptideIon]]
-    mqPepIons.foreach { mqPepIon => 
-      //val pepInstId = mqPepIon.getBestQuantPeptideIon.get.peptideInstanceId.get
-      val pepInstIdOpt = mqPepIon.peptideInstanceId
-      if( pepInstIdOpt.isDefined)
-        mqPepIonsByPepInstId.getOrElseUpdate(pepInstIdOpt.get, new ArrayBuffer[MasterQuantPeptideIon]) += mqPepIon
-    }
+    // Group master quant peptides ions by the masterQuantPeptideId
+    val mqPepIonsByMQPepId = mqPepIons.groupBy(_.masterQuantPeptideId)
     
     // Load master quant peptides
-    val mqPeps = this.getMasterQuantPeptides( quantRsmIds, pepInstByMqPepId, mqPepIonsByPepInstId.toMap )
+    val mqPeps = this.getMasterQuantPeptides( quantRsmIds, pepInstByMQPepId,mqPepIonsByMQPepId )
     
     // Load master quant protein sets
     val protSetById = Map() ++ rsms.flatMap( _.proteinSets.map( ps => ps.id -> ps ) )
-    val mqPepByPepInstId = Map() ++ mqPeps.map(mqp => mqp.peptideInstance.get.id -> mqp)
+    val mqPepByPepInstId = Map() ++ mqPeps.withFilter(_.peptideInstance.isDefined).map(mqp => mqp.peptideInstance.get.id -> mqp)
     val mqProtSets = this.getMasterQuantProteinSets(quantRsmIds, protSetById, mqPepByPepInstId)
     
     // Group master quant components by RSM id
     val mqPepIonsByRsmId = mqPepIons.groupBy( _.resultSummaryId )
-    val mqPepsByRsmId = mqPeps.groupBy( _.peptideInstance.get.resultSummaryId )
+    val mqPepsByRsmId = mqPeps.groupBy( _.resultSummaryId )
     val mqProtSetsByRsmId = mqProtSets.groupBy( _.proteinSet.resultSummaryId )
 
     rsms.map { rsm =>      
@@ -101,7 +95,7 @@ class SQLQuantResultSummaryProvider(
         masterQuantProteinSets = mqProtSetsByRsmId(rsm.id),
         masterQuantPeptides = mqPepsByRsmId(rsm.id),
         masterQuantPeptideIons = mqPepIonsByRsmId(rsm.id),
-        resultSummary = null
+        resultSummary = rsm
       )
     }
 
@@ -109,15 +103,15 @@ class SQLQuantResultSummaryProvider(
   
   protected def getMasterQuantPeptides(
     quantRsmIds: Seq[Int],
-    pepInstByMqPepId: Map[Int,PeptideInstance],
-    mqPepIonsByPepInstId: Map[Int,ArrayBuffer[MasterQuantPeptideIon]]
+    pepInstByMQPepId: Map[Int,PeptideInstance],
+    mqPepIonsByMQPepId: Map[Int,Array[MasterQuantPeptideIon]]
   ): Array[MasterQuantPeptide] = {
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     
       val mqPepCompQueryBuilder = new SelectQueryBuilder2(MQComponentTable,ObjectTreeTable)
       val mqPepCompQuery = mqPepCompQueryBuilder.mkSelectQuery(
-        (t1,c1,t2,c2) => List(t1.ID,t1.SELECTION_LEVEL,t1.SERIALIZED_PROPERTIES,t2.CLOB_DATA) -> 
+        (t1,c1,t2,c2) => List(t1.ID,t1.SELECTION_LEVEL,t1.RESULT_SUMMARY_ID,t1.SERIALIZED_PROPERTIES,t2.CLOB_DATA) -> 
         " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN("~ quantRsmIds.mkString(",") ~")" ~
         " AND "~ t1.OBJECT_TREE_ID ~" = "~ t2.ID ~
         " AND "~ t2.SCHEMA_NAME ~" = '"~ LabelFreeQuantPeptidesSchema ~"'"
@@ -126,18 +120,10 @@ class SQLQuantResultSummaryProvider(
       msiEzDBC.select(mqPepCompQuery) { r =>
   
         val mqPepId: Int = toInt(r.getAnyVal(MQCompCols.ID))
-        val pepInst = pepInstByMqPepId.get(mqPepId)
+        val pepInst = pepInstByMQPepId.get(mqPepId)
+        val mqPepIons = mqPepIonsByMQPepId(mqPepId)
         val quantPeptides = parse[Array[QuantPeptide]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
-        
-        var quantPeptideMap = Map.empty[Int,QuantPeptide]
-        var mqPepIons= Array.empty[MasterQuantPeptideIon]
-        if( pepInst != None ) {
-          val quantPeptides = parse[Array[QuantPeptide]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
-          quantPeptideMap = Map() ++ (for( qp <- quantPeptides if qp != null ) yield qp.quantChannelId -> qp)
-          
-          // TODO: use master_quant_peptide_id field when it is added to master_quant_peptide_ion table
-          mqPepIons = mqPepIonsByPepInstId(pepInst.get.id).toArray
-        }
+        val quantPeptideMap = Map() ++ (for( qp <- quantPeptides if qp != null ) yield qp.quantChannelId -> qp)
         
         // Build the master quant peptide ion
         new MasterQuantPeptide(
@@ -146,6 +132,7 @@ class SQLQuantResultSummaryProvider(
           quantPeptideMap = quantPeptideMap,
           masterQuantPeptideIons = mqPepIons,
           selectionLevel = r.getInt(MQCompCols.SELECTION_LEVEL),
+          resultSummaryId = r.getInt(MQCompCols.RESULT_SUMMARY_ID),
           properties = r.getStringOption(MQCompCols.SERIALIZED_PROPERTIES).map(parse[MasterQuantPeptideProperties](_))
         )
         
@@ -182,7 +169,10 @@ class SQLQuantResultSummaryProvider(
         val quantProtSetMap = Map() ++ (for( qps <- quantProtSets if qps != null ) yield qps.quantChannelId -> qps)
         
         // Retrieve master quant peptides corresponding to this protein set
-        val mqPeptides = protSet.peptideSet.getPeptideInstances.map( pi => mqPepByPepInstId(pi.id) )      
+        //val mqPeptides = for( pepInst <- protSet.peptideSet.getPeptideInstances if mqPepByPepInstId.contains(pi.id) ) yield
+        val mqPeptides = protSet.peptideSet.getPeptideInstances
+          .withFilter(pi => mqPepByPepInstId.contains(pi.id) )
+          .map( pi => mqPepByPepInstId(pi.id) )
         
         new MasterQuantProteinSet(
            proteinSet = protSet,

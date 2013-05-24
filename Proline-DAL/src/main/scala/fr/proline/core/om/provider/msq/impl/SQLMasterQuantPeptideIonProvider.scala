@@ -22,7 +22,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val ObjectTreeTable = MsiDbObjectTreeTable
   
-  val LabelFreeQuantPeptideIonsSchema = "object_tree.object_tree.label_free_quant_peptides_ions"
+  val LabelFreeQuantPeptideIonsSchema = "object_tree.label_free_quant_peptide_ions"
   
   def getMasterQuantPeptideIonsAsOptions( mqPepIonIds: Seq[Int] ): Array[Option[MasterQuantPeptideIon]] = {
     throw new Exception("NYI")
@@ -63,6 +63,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
           elutionTime = toFloat(r.getAnyVal(MQPepIonCols.ELUTION_TIME)),
           peptideMatchesCount = 0,//r.getInt(MQPepIonCols.p), // TODO: add to MSIdb
           selectionLevel = r.getInt(MQComponentTable.columns.SELECTION_LEVEL),
+          masterQuantPeptideId = r.getInt(MQPepIonCols.MASTER_QUANT_PEPTIDE_ID),
           resultSummaryId = r.getInt(MQPepIonCols.RESULT_SUMMARY_ID),
           peptideInstanceId = r.getIntOption(MQPepIonCols.PEPTIDE_INSTANCE_ID),
           bestPeptideMatchId = r.getIntOption(MQPepIonCols.BEST_PEPTIDE_MATCH_ID),

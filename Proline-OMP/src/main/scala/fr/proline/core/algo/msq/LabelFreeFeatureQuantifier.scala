@@ -216,6 +216,8 @@ class LabelFreeFeatureQuantifier(
       def newMasterQuantPeptide(quantPepIonMap: Map[Int, QuantPeptideIon],
         masterPepInstAsOpt: Option[PeptideInstance],
         lcmsFtId: Option[Int]): MasterQuantPeptide = {
+        
+        val mqPeptideId = MasterQuantPeptide.generateNewId
 
         val mqPepIon = new MasterQuantPeptideIon(
           id = MasterQuantPeptideIon.generateNewId(),
@@ -223,6 +225,7 @@ class LabelFreeFeatureQuantifier(
           charge = masterFt.charge,
           elutionTime = masterFt.elutionTime,
           peptideMatchesCount = 0,
+          masterQuantPeptideId = mqPeptideId,
           bestPeptideMatchId = None,
           resultSummaryId = 0,
           lcmsFeatureId = lcmsFtId,
@@ -258,11 +261,12 @@ class LabelFreeFeatureQuantifier(
         }*/
 
         new MasterQuantPeptide(
-          id = MasterQuantPeptide.generateNewId,
+          id = mqPeptideId,
           peptideInstance = masterPepInstAsOpt,
           quantPeptideMap = quantPepByQcId.result,
           masterQuantPeptideIons = Array(mqPepIon),
-          selectionLevel = 2
+          selectionLevel = 2,
+          resultSummaryId = 0
         )
 
       }

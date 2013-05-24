@@ -8,8 +8,21 @@ import scala.collection.mutable.HashMap
 import com.codahale.jerkson.JsonSnakeCase
 
 import fr.proline.api.service.IService
-import fr.proline.core.orm.uds.{ BiologicalGroup => UdsBiologicalGroup, BiologicalSample => UdsBiologicalSample, Dataset => UdsDataset }
-import fr.proline.core.orm.uds.{ GroupSetup => UdsGroupSetup, MasterQuantitationChannel => UdsMasterQuantitationChannel, Project => UdsProject, QuantitationChannel => UdsQuantChannel, QuantitationLabel => UdsQuantLabel, QuantitationMethod => UdsQuantMethod, RatioDefinition => UdsRatioDefinition, SampleAnalysis => UdsSampleAnalysis }
+import fr.proline.core.orm.uds.{
+  BiologicalGroup => UdsBiologicalGroup,
+  BiologicalSample => UdsBiologicalSample,
+  Dataset => UdsDataset }
+import fr.proline.core.orm.uds.{
+  GroupSetup => UdsGroupSetup,
+  MasterQuantitationChannel => UdsMasterQuantitationChannel,
+  Project => UdsProject,
+  QuantitationChannel => UdsQuantChannel,
+  QuantitationLabel => UdsQuantLabel,
+  QuantitationMethod => UdsQuantMethod,
+  RatioDefinition => UdsRatioDefinition,
+  Run => UdsRun,
+  SampleAnalysis => UdsSampleAnalysis
+}
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.sql.getTimeAsSQLTimestamp
@@ -177,7 +190,8 @@ class CreateQuantitation(
       // Iterate over each fraction quant channel
       val replicateNumBySampleNum = new HashMap[Int, Int]
       for (quantChannel <- quantChannels) {
-
+        quantChannelNum += 1
+        
         // Retrieve some vars
         val sampleNum = quantChannel.sampleNumber
         val udsBioSample = udsBioSampleByNum(sampleNum)
@@ -213,6 +227,11 @@ class CreateQuantitation(
         udsQuantChannel.setBiologicalSample(udsBioSample)
         udsQuantChannel.setMasterQuantitationChannel(udsQf)
         udsQuantChannel.setQuantitationDataset(udsQuantitation)
+        
+        if( quantChannel.runId.isDefined ) {
+          val udsRun = udsEM.find(classOf[UdsRun], quantChannel.runId.get)
+          udsQuantChannel.setRun(udsRun)
+        }
 
         // TODO: check method type
         if (quantChannel.lcmsMapId != None) {
@@ -224,7 +243,6 @@ class CreateQuantitation(
 
         udsEM.persist(udsQuantChannel)
 
-        quantChannelNum += 1
       }
     }
 

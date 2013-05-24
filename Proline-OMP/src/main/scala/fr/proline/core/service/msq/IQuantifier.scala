@@ -291,7 +291,8 @@ trait IQuantifier extends Logging {
       msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
       msiMasterPepInstance.setProteinMatchCount(masterPepInstance.proteinMatchesCount)
       msiMasterPepInstance.setProteinSetCount(masterPepInstance.proteinSetsCount)
-      msiMasterPepInstance.setTotalLeavesMatchCount(masterPepInstance.totalLeavesMatchCount)      
+      msiMasterPepInstance.setTotalLeavesMatchCount(masterPepInstance.totalLeavesMatchCount)
+      msiMasterPepInstance.setValidatedProteinSetCount(masterPepInstance.validatedProteinSetsCount)
       msiMasterPepInstance.setSelectionLevel(2)
       msiMasterPepInstance.setPeptideId(peptideId)
       msiMasterPepInstance.setBestPeptideMatchId(masterPepMatchId)
@@ -565,24 +566,24 @@ trait IQuantifier extends Logging {
     val msiMQCObjectTree = this.buildMasterQuantPeptideObjectTree(mqPep)
     this.msiEm.persist(msiMQCObjectTree)
 
+    // Store master quant component for this master quant peptide
+    val msiMQC = new MsiMasterQuantComponent()
+    msiMQC.setSelectionLevel(mqPep.selectionLevel)
+    if (mqPep.properties != None) msiMQC.setSerializedProperties(generate(mqPep.properties))
+    msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
+    msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
+    msiMQC.setResultSummary(msiRSM)
+    
+    this.msiEm.persist(msiMQC)
+    
+    // Update master quant peptide id
+    mqPep.id = msiMQC.getId
+
+    // If this master quant peptide has been identified by a master peptide instance
     if (msiMasterPepInstAsOpt != None) {
-
-      // Store master quant component
-      val msiMQC = new MsiMasterQuantComponent()
-      msiMQC.setSelectionLevel(mqPep.selectionLevel)
-      if (mqPep.properties != None) msiMQC.setSerializedProperties(generate(mqPep.properties))
-      msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
-      msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
-      msiMQC.setResultSummary(msiRSM)
-
-      this.msiEm.persist(msiMQC)
-
-      // Link master quant peptide to the corresponding master quant component
+      // Link master peptide instance to the corresponding master quant component
       msiMasterPepInstAsOpt.get.setMasterQuantComponentId(msiMQC.getId)
       this.msiEm.persist(msiMasterPepInstAsOpt.get)
-      
-      // Update master quant peptide id
-      mqPep.id = msiMQC.getId
     }
 
     for (mqPepIon <- mqPep.masterQuantPeptideIons) {
@@ -616,6 +617,7 @@ trait IQuantifier extends Logging {
     msiMQPepIon.setMoz(mqPepIon.unlabeledMoz)
     msiMQPepIon.setElutionTime(mqPepIon.elutionTime)
     msiMQPepIon.setMasterQuantComponent(msiMQC)
+    msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
     msiMQPepIon.setResultSummary(msiRSM)
 
     if (mqPepIon.properties != None) msiMQPepIon.setSerializedProperties(generate(mqPepIon.properties))

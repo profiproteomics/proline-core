@@ -65,6 +65,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
     val mqPeptides = new ArrayBuffer[MasterQuantPeptide]
     for( mergedPepInst <- mergedPepInstances ) {
       
+      val masterQuantPeptideId = MasterQuantPeptide.generateNewId
       val peptideId = mergedPepInst.peptide.id
       val mergedPepInstPepMatchIds = mergedPepInst.getPeptideMatchIds
       require( mergedPepInstPepMatchIds.length == 1, "peptide matches have not been correctly merged" )
@@ -117,19 +118,19 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
           
           // Create a quant peptide ion corresponding the these peptide matches
           val quantPeptideIon = new QuantPeptideIon(
-                                      rawAbundance = pepMatchesCount,
-                                      abundance = pepMatchesCount,
-                                      moz = bestRsPepMatch.msQuery.moz,
-                                      elutionTime = 0,
-                                      scanNumber = 0,
-                                      peptideMatchesCount = pepMatchesCount,
-                                      bestPeptideMatchScore = Some(bestRsPepMatchScore),
-                                      quantChannelId = qcId,
-                                      peptideId = Some(bestRsPepMatch.peptideId),
-                                      peptideInstanceId = Some(pepInstIdByRsIdAndPepId(rsId,peptideId)),
-                                      msQueryIds = Some(msQueryIds.toArray),
-                                      lcmsFeatureId = 0
-                                      )
+            rawAbundance = pepMatchesCount,
+            abundance = pepMatchesCount,
+            moz = bestRsPepMatch.msQuery.moz,
+            elutionTime = 0,
+            scanNumber = 0,
+            peptideMatchesCount = pepMatchesCount,
+            bestPeptideMatchScore = Some(bestRsPepMatchScore),
+            quantChannelId = qcId,
+            peptideId = Some(bestRsPepMatch.peptideId),
+            peptideInstanceId = Some(pepInstIdByRsIdAndPepId(rsId,peptideId)),
+            msQueryIds = Some(msQueryIds.toArray),
+            lcmsFeatureId = 0
+          )
           if( pepMatchesCount > bestQCAbundance ) {
             bestQCAbundance = pepMatchesCount
             bestQCId = qcId
@@ -145,6 +146,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
           charge = bestPepMatch.msQuery.charge,
           elutionTime = 0,
           peptideMatchesCount = childPepMatchGroup.length,
+          masterQuantPeptideId = masterQuantPeptideId,
           bestPeptideMatchId = Some(bestPepMatch.id),
           resultSummaryId = 0,
           selectionLevel = 2,
@@ -175,27 +177,28 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
         
         // Build the quant peptide
         val qp = new QuantPeptide(
-                       rawAbundance = ms2Sum,
-                       abundance = ms2Sum,
-                       elutionTime = 0,
-                       peptideMatchesCount = ms2Sum,
-                       quantChannelId = qcId,
-                       peptideId = firstQuantPepIon.peptideId.get,
-                       peptideInstanceId = firstQuantPepIon.peptideInstanceId.get,
-                       selectionLevel = 2
+          rawAbundance = ms2Sum,
+          abundance = ms2Sum,
+          elutionTime = 0,
+          peptideMatchesCount = ms2Sum,
+          quantChannelId = qcId,
+          peptideId = firstQuantPepIon.peptideId.get,
+          peptideInstanceId = firstQuantPepIon.peptideInstanceId.get,
+          selectionLevel = 2
         )
         
         quantPepByQcId(qcId) = qp
       }
       
       mqPeptides += new MasterQuantPeptide(
-                          id = MasterQuantPeptide.generateNewId,
-                          peptideInstance = Some(mergedPepInst),
-                          quantPeptideMap = quantPepByQcId.toMap,
-                          // TODO: decide if attach or not
-                          masterQuantPeptideIons = mqPepIons.toArray,
-                          selectionLevel = 2
-                         )
+        id = masterQuantPeptideId,
+        peptideInstance = Some(mergedPepInst),
+        quantPeptideMap = quantPepByQcId.toMap,
+        // TODO: decide if attach or not
+        masterQuantPeptideIons = mqPepIons.toArray,
+        selectionLevel = 2,
+        resultSummaryId = 0
+      )
     }
     
     mqPeptides.toArray

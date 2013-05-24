@@ -48,6 +48,8 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
             scan.properties.map( generate(_) ),
             runId
           )
+          
+          scan.id = statement.generatedInt
         }
       }
     

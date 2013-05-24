@@ -112,7 +112,9 @@ case class MasterQuantPeptideIon(  var id: Int,
                                    val calculatedMoz: Option[Double] = None,
                                                   
                                    var selectionLevel: Int,
+                                   var masterQuantPeptideId: Int, // is a master quant component id id DB
                                    var resultSummaryId: Int,
+
                                    var peptideInstanceId: Option[Int] = None,
                                    var bestPeptideMatchId: Option[Int] = None,
                                    var lcmsFeatureId: Option[Int] = None,
@@ -167,6 +169,7 @@ case class MasterQuantPeptide( var id: Int, // important: master quant component
                                var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
                                
                                var selectionLevel: Int,
+                               var resultSummaryId: Int,
                                var properties: Option[MasterQuantPeptideProperties] = None
                                
                              ) extends MasterQuantComponent {
@@ -273,9 +276,15 @@ case class QuantResultSummary(
                                var masterQuantPeptides: Array[MasterQuantPeptide],
                                var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
                                
+                               //var experimentalDesign
+                               
                                var resultSummary: ResultSummary
                                
                                )  {
+  require(masterQuantProteinSets != null, "masterQuantProteinSets must be provided")
+  require(masterQuantPeptides != null, "masterQuantPeptides must be provided")
+  require(masterQuantPeptideIons != null, "masterQuantPeptideIons must be provided")
+  require(resultSummary != null, "resultSummary must be provided")
   
   def id() = resultSummary.id
 }

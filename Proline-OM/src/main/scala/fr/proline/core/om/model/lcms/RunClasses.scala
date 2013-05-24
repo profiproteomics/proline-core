@@ -154,10 +154,11 @@ case class LcMsScanSequence(
 @JsonInclude( Include.NON_NULL )
 case class LcMsScanSequenceProperties
 
+object LcMsScan extends InMemoryIdGen
 case class LcMsScan(
     
   // Required fields
-  val id: Int,
+  var id: Int,
   val initialId: Int,
   val cycle: Int,
   val time: Float,

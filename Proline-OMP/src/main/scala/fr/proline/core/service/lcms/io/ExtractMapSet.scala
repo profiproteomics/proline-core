@@ -237,7 +237,7 @@ class ExtractMapSet(
       val mzDbScans = mzDb.getScanHeaders()
       val scans = mzDbScans.map { mzDbScan =>
         new LcMsScan(
-          id = mzDbScan.getId,
+          id = LcMsScan.generateNewId(),
           initialId = mzDbScan.getInitialId,
           cycle = mzDbScan.getCycle,
           time = mzDbScan.getTime,
