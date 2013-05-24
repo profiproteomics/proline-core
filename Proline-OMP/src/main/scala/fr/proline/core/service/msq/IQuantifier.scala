@@ -291,7 +291,7 @@ trait IQuantifier extends Logging {
       msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
       msiMasterPepInstance.setProteinMatchCount(masterPepInstance.proteinMatchesCount)
       msiMasterPepInstance.setProteinSetCount(masterPepInstance.proteinSetsCount)
-      msiMasterPepInstance.setTotalLeavesMatchCount(0)
+      msiMasterPepInstance.setTotalLeavesMatchCount(masterPepInstance.totalLeavesMatchCount)      
       msiMasterPepInstance.setSelectionLevel(2)
       msiMasterPepInstance.setPeptideId(peptideId)
       msiMasterPepInstance.setBestPeptideMatchId(masterPepMatchId)
