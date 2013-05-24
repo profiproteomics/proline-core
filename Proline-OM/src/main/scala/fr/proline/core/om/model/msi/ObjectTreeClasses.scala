@@ -4,6 +4,7 @@ import scala.reflect.BeanProperty
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
+import org.msgpack.annotation.Message
 
 /** 
 * @param label 
@@ -18,17 +19,21 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 **/
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
+@Message
 case class FragmentMatch (  
   var label: String,
   //val ionSeries: String,
   //val aaPosition: Int,
-  var `type`: String = FragmentMatchType.REGULAR.toString,
+  var `type`: Option[String] = None,
   //var charge: Int,
   var moz: Double,
-  var calculatedMoz: Double,  
+  var calculatedMoz: Double,
   var intensity: Float,
   var neutralLossMass: Option[Double] = None
 ) {
+  
+  // Plain constructor needed for MessagePack
+  def this() = this("",None,Double.NaN,Double.NaN,Float.NaN,None)
   
   @transient private var _ionSeries: String = null
   @transient private var _aaPosition: Int = 0
@@ -54,9 +59,8 @@ case class FragmentMatch (
 }
 
 object FragmentMatchType extends Enumeration {
-  val REGULAR = Value("REGULAR")
-  val INTERNAL = Value("INTERNAL")
-  val IMMONIUM = Value("IMMONIUM")
+  val INTERNAL = Value("I")
+  val IMMONIUM = Value("M")
 }
 
 /** 
@@ -65,19 +69,28 @@ object FragmentMatchType extends Enumeration {
 **/
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
+@Message
 case class SpectrumMatch (
-  val msQueryInitialId: Int,
+  @transient val msQueryInitialId: Int,
   @transient val peptideMatchRank: Int,
-  val fragmentationTable: Array[TheoreticalFragmentSeries],
-  val fragmentMatches: Array[FragmentMatch]
-)
+  var fragTable: Array[TheoreticalFragmentSeries],
+  var fragMatches: Array[FragmentMatch]
+) {
+  // Plain constructor needed for MessagePack
+  def this() = this(0,0,Array.empty[TheoreticalFragmentSeries],Array.empty[FragmentMatch])
+}
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
+@Message
 case class TheoreticalFragmentSeries (
-  val fragSeries: String, // begins by an ionSeries name and may be followed by a "++" for doubly charge state
-  val masses: Array[Double]
+  var fragSeries: String, // begins by an ionSeries name and may be followed by a "++" for doubly charge state
+  var masses: Array[Double]
 ) {
+  
+  // Plain constructor needed for MessagePack
+  def this() = this("",Array.empty[Double])
+  
   @transient lazy val isReverse = Fragmentation.isReverseSeries(fragSeries)
   
   @transient private var _ionSeries: String = null

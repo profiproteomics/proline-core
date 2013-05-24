@@ -46,6 +46,12 @@
       <artifactId>jerkson_2.9.1</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
+    
+    <dependency>
+      <groupId>org.msgpack</groupId>
+      <artifactId>msgpack-scala_2.9.1</artifactId>
+      <version>0.6.7</version>
+    </dependency>
 
     <!-- ProFi Commons -->
     <dependency>
