@@ -1,16 +1,14 @@
 package fr.proline.core.algo.msi.filtering
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.algo.msi.validation.ValidationResults
-import fr.proline.core.om.model.msi.PeptideInstance
-import fr.proline.core.om.model.msi.ProteinSet
-import fr.proline.util.primitives._
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.model.msi.ResultSet
+import scala.collection.mutable.{ArrayBuffer, HashMap}
+
 import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.validation.BuildPeptideMatchFilter
+import fr.proline.core.om.model.msi.{FilterDescriptor, PeptideInstance, PeptideMatch, ProteinSet, ResultSet, ResultSummary}
+import fr.proline.util.StringUtils
+import fr.proline.util.primitives.toDouble
 
 object FilterPropertyKeys {
   final val THRESHOLD_VALUE = "threshold_value"
@@ -246,7 +244,7 @@ object FilteredPSMSpectralCounter extends Logging {
                      rs: ResultSet): Map[Int, Int] = {
 
     var spectralCountByPepId = new HashMap[Int, Int]()
-	val startTime =System.currentTimeMillis()
+    val startTime = System.currentTimeMillis()
     for (psmFilter <- allValidationFilters) {
       for (psm <- validatedPSM) {
         var pepSC = spectralCountByPepId.getOrElse(psm.peptideId, 0)
@@ -257,8 +255,8 @@ object FilteredPSMSpectralCounter extends Logging {
         spectralCountByPepId.put(psm.peptideId, pepSC)
       }
     }
-    val endTime =System.currentTimeMillis()
-    logger.debug(" Needed Time to calculate "+validatedPSM.size+" = "+(endTime - startTime)+" ms")
+    val endTime = System.currentTimeMillis()
+    logger.debug(" Needed Time to calculate " + validatedPSM.size + " = " + (endTime - startTime) + " ms")
     spectralCountByPepId.toMap
   }
 
@@ -278,6 +276,69 @@ object FilteredPSMSpectralCounter extends Logging {
     //      execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
 
     0
+  }
+
+}
+
+object ResultSummaryFilterBuilder {
+
+  def buildPeptideMatchFiltersList(rsm: ResultSummary): Array[IPeptideMatchFilter] = {
+    require(rsm != null, "Rsm is null")
+
+    val result = new ArrayBuffer[IPeptideMatchFilter]()
+
+    val optionalProperties = rsm.properties
+    if ((optionalProperties != null) && optionalProperties.isDefined) {
+      val rsmProperties = optionalProperties.get
+
+      val optionalValidProperties = rsmProperties.getValidationProperties
+      if ((optionalValidProperties != null) && optionalValidProperties.isDefined) {
+        val validationProperties = optionalValidProperties.get
+
+        val params = validationProperties.getParams
+        if (params != null) {
+
+          val optionalPepFilters = params.getPeptideFilters
+          if ((optionalPepFilters != null) && optionalPepFilters.isDefined) {
+            val peptideFilters = optionalPepFilters.get
+
+            for (filterDescr <- peptideFilters) {
+              val filterParameterStr = filterDescr.getParameter
+
+              if (!StringUtils.isEmpty(filterParameterStr)) {
+                var optionalThresholdValue: Option[AnyVal] = None
+
+                val optionalFiltProperties = filterDescr.getProperties
+                if ((optionalFiltProperties != null) && optionalFiltProperties.isDefined) {
+                  val filterProperties = optionalFiltProperties.get
+
+                  val optionalRawValue = filterProperties.get(FilterPropertyKeys.THRESHOLD_VALUE)
+                  if (optionalRawValue.isDefined) {
+                    val threshold = optionalRawValue.get.asInstanceOf[AnyVal] // Force a cast to Scala Primitive wrapper
+                    optionalThresholdValue = Some(threshold)
+                  }
+
+                } // End if (filterProperties is defined)
+
+                if (optionalThresholdValue.isDefined) {
+                  result += BuildPeptideMatchFilter(filterParameterStr, optionalThresholdValue.get)
+                } else {
+                  result += BuildPeptideMatchFilter(filterParameterStr)
+                }
+
+              } // End (if filterParameterStr is not empty)
+
+            } // End loop for each peptideFilter
+
+          } // En if (peptideFilters is define)
+
+        } // End if (params is not null)
+
+      } // End if (validationProperties is defined)
+
+    } // End if (rsmProperties is defined)
+
+    result.toArray
   }
 
 }
