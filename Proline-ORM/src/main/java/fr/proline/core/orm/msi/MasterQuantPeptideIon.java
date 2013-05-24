@@ -37,7 +37,7 @@ public class MasterQuantPeptideIon implements Serializable {
 	private Integer lcmsFeatureId;
 	
 	@Column(name = "master_quant_peptide_id")
-	private Integer masterQuantPeptideId;
+	private int masterQuantPeptideId;
 
 	@Column(name = "peptide_id")
 	private Integer peptideId;
@@ -120,6 +120,14 @@ public class MasterQuantPeptideIon implements Serializable {
 
 	public void setLcmsFeatureId(Integer lcmsFeatureId) {
 		this.lcmsFeatureId = lcmsFeatureId;
+	}
+	
+	public Integer getMasterQuantPeptideId() {
+		return masterQuantPeptideId;
+	}
+
+	public void setMasterQuantPeptideId(int masterQuantPeptideId) {
+		this.masterQuantPeptideId = masterQuantPeptideId;
 	}
 
 	public Integer getPeptideId() {
