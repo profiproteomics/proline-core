@@ -28,6 +28,7 @@ object ResultFileStorer extends Logging {
     sqlCompatMode: Boolean, // TODO: remove me when SQL & JPA importers are removed
     targetDecoyMode: Option[String],
     acDecoyRegex: Option[util.matching.Regex] = None,
+    saveSpectrumMatch: Boolean = false,
     rsSplitter: Option[IResultSetSplitter] = None
   ): Int = {
 
@@ -75,13 +76,15 @@ object ResultFileStorer extends Logging {
       // Store target and decoy result sets
       rsStorer.storeResultSet(targetRs, msQueries, storerContext)
       
-      // Insert target spectrum matches
-      logger.info("storing target spectrum matches...")
-      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
-      
-      // Insert decoy spectrum matches
-      logger.info("storing decoy spectrum matches...")
-      rsStorer.insertSpectrumMatches(decoyRs, resultFile, storerContext)
+      if(saveSpectrumMatch){
+	      // Insert target spectrum matches
+	      logger.info("storing target spectrum matches...")
+	      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
+	      
+	      // Insert decoy spectrum matches
+	      logger.info("storing decoy spectrum matches...")
+	      rsStorer.insertSpectrumMatches(decoyRs, resultFile, storerContext)      
+      }
       
       return targetRs.id
       
@@ -114,9 +117,11 @@ object ResultFileStorer extends Logging {
         pm.id = pepMatchMapAfterSplit( (pm.msQuery.id, pm.peptide.uniqueKey) ).id
       }
       
-      // Insert target and decoy spectrum matches
-      logger.info("storing target and decoy spectrum matches...")
-      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
+      if(saveSpectrumMatch){
+	      // Insert target and decoy spectrum matches
+	      logger.info("storing target and decoy spectrum matches...")
+	      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
+      }
       
       return tRs.id
     }
@@ -124,9 +129,11 @@ object ResultFileStorer extends Logging {
       // Store target result set
       rsStorer.storeResultSet(targetRs, msQueries, storerContext)
       
-      // Insert target spectrum matches
-      logger.info("storing target spectrum matches...")
-      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
+      if(saveSpectrumMatch){
+	      // Insert target spectrum matches
+	      logger.info("storing target spectrum matches...")
+	      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
+      }
       
       return targetRs.id
     }
