@@ -27,7 +27,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
   @Test
   def simpleCheckWithGenData() = {
     var rs: ResultSet = new ResultSetFakeBuilder(pepNb = 10, proNb = 2).toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
+    var rsu = ppsi.computeResultSummary(resultSet = rs, scByPepId=None)
     assert(rsu != null)
     assertEquals(2, rsu.peptideSets.length)
     assertEquals(2, rsu.proteinSets.length)
@@ -42,7 +42,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
   @Test
   def largerGenData() = {
     var rs: ResultSet = new ResultSetFakeBuilder(pepNb = 10000, proNb = 5000).toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
+    var rsu = ppsi.computeResultSummary(resultSet = rs,scByPepId=None)
     assert(rsu != null)
     assertEquals(5000, rsu.peptideSets.length)
     assertEquals(5000, rsu.proteinSets.length)
@@ -71,7 +71,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
     rsb.printForDebug
 
     var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
+    var rsu = ppsi.computeResultSummary(resultSet = rs,scByPepId=None)
     assert(rsu != null)
     assertEquals(4, rsu.peptideSets.length)
     assertEquals(4, rsu.proteinSets.length)
@@ -113,7 +113,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
     //	  rsb.printForDebug  
 
     var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
+    var rsu = ppsi.computeResultSummary(resultSet = rs,scByPepId=None)
     assert(rsu != null)
     assertEquals(6, rsu.peptideSets.length)
     assertEquals(6, rsu.proteinSets.length)
@@ -158,7 +158,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
     //	  rsb.printForDebug  
 
     var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
+    var rsu = ppsi.computeResultSummary(resultSet = rs,scByPepId=None)
     assert(rsu != null)
     assertEquals(3, rsu.peptideSets.length)
     assertEquals(3, rsu.proteinSets.length)
@@ -199,7 +199,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
     //    rsb.printForDebug  
 
     var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
+    var rsu = ppsi.computeResultSummary(resultSet = rs,scByPepId=None)
     assert(rsu != null)
     assertEquals(4, rsu.peptideSets.length)
     assertEquals(4, rsu.proteinSets.length)
