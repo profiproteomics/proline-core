@@ -33,7 +33,8 @@ class ResultFileImporter(
   instrumentConfigId: Int,
   peaklistSoftwareId: Int,
   importerProperties: Map[String, Any],
-  acDecoyRegex: Option[util.matching.Regex] = None
+  acDecoyRegex: Option[util.matching.Regex] = None,
+  saveSpectrumMatch: Boolean = false
 ) extends IService with Logging {
   
   private var targetResultSetId = 0
@@ -118,6 +119,7 @@ class ResultFileImporter(
         !executionContext.isJPA, // SQL compat => FIXME: remove me when ResultFileStorer has the same behavior for JPA/SQL
         tdMode,
         acDecoyRegex,
+        saveSpectrumMatch,
         if( acDecoyRegex != None ) Some(TargetDecoyResultSetSplitter) else None        
       )
 

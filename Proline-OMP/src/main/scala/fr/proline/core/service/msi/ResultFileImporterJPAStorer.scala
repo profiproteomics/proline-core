@@ -34,7 +34,9 @@ class ResultFileImporterJPAStorer(
   instrumentConfigId: Int,
   peaklistSoftwareId: Int,
   importerProperties: Map[String, Any],
-  acDecoyRegex: Option[util.matching.Regex] = None) extends IService with Logging {
+  acDecoyRegex: Option[util.matching.Regex] = None,
+  saveSpectrumMatch: Boolean = false
+  ) extends IService with Logging {
 
   private var _hasInitiatedStorerContext: Boolean = false
 
@@ -143,6 +145,7 @@ class ResultFileImporterJPAStorer(
         !executionContext.isJPA,
         tdMode,
         acDecoyRegex,
+        saveSpectrumMatch,
         if( acDecoyRegex != None ) Some(TargetDecoyResultSetSplitter) else None        
       )
 
