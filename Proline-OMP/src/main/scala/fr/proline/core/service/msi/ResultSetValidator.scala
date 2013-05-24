@@ -131,47 +131,43 @@ class ResultSetValidator(
     >>>
 
     // --- Validate PSM ---
-    this._validatePeptideMatches(targetRs, rsmValProperties)
+    val appliedPSMFilters = this._validatePeptideMatches(targetRs, rsmValProperties)
     >>>
 
+    
     // --- Compute RSM from validated PSMs ---
 
     // Instantiate a protein set inferer
     val protSetInferer = ProteinSetInferer(inferenceMethod.get)
 
-    val decoyRs = if (targetRs.decoyResultSet != null) targetRs.decoyResultSet else None
-    val resultSets = List(Some(targetRs), decoyRs)
-    val resultSummaries = List.newBuilder[Option[ResultSummary]]
+    //-- createRSM
+    def createRSM(currentRS: Option[ResultSet]) : Option[ResultSummary] = {
+       if (currentRS.isDefined) {
+    	   // --- Compute Peptide SpectralCount for Validated PSM       
+    	   val validPeptideMatches = currentRS.get.peptideMatches.filter { _.isValidated }
+    	   val spectralCountByPepId : Map[Int, Int] =  FilteredPSMSpectralCounter.calculatePepSC(execContext, appliedPSMFilters, validPeptideMatches, currentRS.get)
 
-    // Build result summary for each individual result set
-    for (rs <- resultSets) {
-      if (rs.isDefined) {
+    	   // Create new result set with validated peptide matches and compute result summary
+           val rsm = protSetInferer.computeResultSummary(currentRS.get,Some(spectralCountByPepId ))
 
-        // Create new result set with validated peptide matches and compute result summary
-        val rsm = protSetInferer.computeResultSummary(rs.get)
+           // Update score of protein sets
+           val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring.get)
+           this.logger.debug("updating score of peptide sets using " + peptideSetScoring.get.toString)
+           pepSetScoreUpdater.updateScoreOfPeptideSets(rsm)
 
-        // Update score of protein sets
-        val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring.get)
-        this.logger.debug("updating score of peptide sets using " + peptideSetScoring.get.toString)
-        pepSetScoreUpdater.updateScoreOfPeptideSets(rsm)
-
-        resultSummaries += Some(rsm)
-      } else {
-        resultSummaries += Option.empty[ResultSummary]
+           Some(rsm)
+       } else {
+           Option.empty[ResultSummary]
       }
-    }
+    }    
+      
+    // Build result summary for each individual result set
+    val targetRsm = createRSM(Some(targetRs)).get
+    val decoyRsmOpt = createRSM(if (targetRs.decoyResultSet != null) targetRs.decoyResultSet else None)
     >>>
-
-    // Build the list of validated RSMs
-    val rsmList = resultSummaries.result()
-
-    // Retrieve target/decoy RSMs
-    val targetRsm = rsmList(0).get
-    val decoyRsmOpt = rsmList(1)
 
     // Set target RSM validation properties
     targetRsm.properties = Some(ResultSummaryProperties(validationProperties = Some(rsmValProperties)))
-
     if (decoyRsmOpt.isDefined) {
       // Link decoy RSM to target RSM
       targetRsm.decoyResultSummary = decoyRsmOpt
@@ -218,9 +214,16 @@ class ResultSetValidator(
 
     true
   }
+  
+  /**
+   * Validate PSM using filters specified in service and PSM validator specified is service.
+   * PeptideMatches are set as isValidated or not by each filter and a FDR is calculated after each filter.
+   * 
+   * All applied IPeptideMatchFilter are returned 
+   */
+  private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): Seq[IPeptideMatchFilter] = {
 
-  private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): Unit = {
-
+    var appliedFilters = Seq.newBuilder[IPeptideMatchFilter]
     val filterDescriptors = new ArrayBuffer[FilterDescriptor](pepMatchPreFilters.map(_.length).getOrElse(0))
     var finalValidationResult: ValidationResult = null
 
@@ -233,7 +236,7 @@ class ResultSetValidator(
           "After Filter " + psmFilter.filterDescription + 
           " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
         )
-
+        appliedFilters += psmFilter
         filterDescriptors += psmFilter.toFilterDescriptor
       }
     } //End execute all PSM filters
@@ -249,6 +252,7 @@ class ResultSetValidator(
       val valResults = somePepMatchValidator.validatePeptideMatches(targetRs)
       finalValidationResult = valResults.finalResult
 
+      appliedFilters += validationFilter
       // Store Validation Params obtained after filtering
       filterDescriptors += validationFilter.toFilterDescriptor
     }
@@ -281,7 +285,9 @@ class ResultSetValidator(
     // Update PSM validation result of the ResultSummary
     rsmValProperties.getResults.setPeptideResults(Some(pepValResults))
     
+    appliedFilters.result
   }
+
 
   private def _validateProteinSets(targetRsm: ResultSummary, rsmValProperties: RsmValidationProperties): Unit = {
     if (protSetFilters.isEmpty && protSetValidator.isEmpty) return ()
