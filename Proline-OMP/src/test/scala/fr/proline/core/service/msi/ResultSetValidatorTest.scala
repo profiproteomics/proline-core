@@ -192,6 +192,7 @@ class ResultSetValidatorF136482Test extends Logging {
     Assert.assertNotNull(dRSM)
     Assert.assertTrue(dRSM.isDefined)
 
+    //--- TEST Properties values
     Assert.assertTrue(tRSM.properties.isDefined)
     Assert.assertTrue(tRSM.properties.get.getValidationProperties.get.getParams.getPeptideFilters.isDefined)
 
@@ -211,20 +212,26 @@ class ResultSetValidatorF136482Test extends Logging {
     Assert.assertEquals(251, pepValResults.getDecoyMatchesCount.get)
     Assert.assertEquals(72.86, pepValResults.getFdr.get, 0.01)
 
+    //--- TEST PSM Count
     logger.debug(" Verify Result IN RSM ")
     val allTarPepMatc = rsValidation.validatedTargetRsm.peptideInstances.flatMap(pi => pi.peptideMatches)
     val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap(pi => pi.peptideMatches)
     Assert.assertEquals("AllTarPepMatc length", 438, allTarPepMatc.length)
     Assert.assertEquals("AllTarPepMatc length", 251, allDecPepMatc.length)
 
+        //--- TEST Peptide and PSM properties 
     rsValidation.validatedTargetRsm.peptideInstances.foreach(pepInst => {
+      
+      //leaveCount = PSMCount as RSM was created from native RS
+      Assert.assertEquals(pepInst.totalLeavesMatchCount, pepInst.peptideMatchesCount) 
       pepInst.peptideMatches.foreach(peptideM => {
         Assert.assertTrue("PeptideMatch is validated", peptideM.isValidated)
         Assert.assertTrue("PeptideMatch.score > scoreTh", peptideM.score > scoreTh)
       })
     })
   }
-
+  
+  
   @Test
   def testRankValidation() = {
 
