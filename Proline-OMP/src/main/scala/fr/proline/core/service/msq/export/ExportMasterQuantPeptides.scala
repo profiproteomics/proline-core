@@ -8,6 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import fr.proline.api.service.IService
+import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet}
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.context.IExecutionContext
 
@@ -19,39 +20,74 @@ class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Int, ou
   val proSetHeaders = "AC description".split(" ")
   val pepHeaders = "sequence".split(" ")
   val mqPepHeaders = "quant_peptide_id selection_level".split(" ")  
-  val qPepHeaders = "raw_abundance".split(" ") 
+  val qPepHeaders = "raw_abundance".split(" ")
 
-  
-  def runService() = {
-    
+  val quantRSM = {
     val quantRsmProvider = new SQLQuantResultSummaryProvider(
       execCtx.getMSIDbConnectionContext,
       execCtx.getPSDbConnectionContext,
       execCtx.getUDSDbConnectionContext
     )
+    quantRsmProvider.getQuantResultSummary(quantRsmId, true).get
+  }
+  
+  // FIXME: retrieve from quantRSM 
+  val qcIds = Array(1,2)
+  
+  // Create some mappings   
+  val protSetByPepInst = Map()++ quantRSM.resultSummary.proteinSets.flatMap( protSet => protSet.peptideSet.getPeptideInstances.map( pi => pi.id -> protSet ) )
+  val protMatchById = quantRSM.resultSummary.resultSet.get.proteinMatchById
+  
+  val protSetCellsById = {
     
-    val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, true).get
-    // FIXME: retrieve from quantRSM 
-    val qcIds = Array(1,2)
-    
-    // Create somme mappings
-    val mqPepById = Map() ++ quantRSM.masterQuantPeptides.map( mqPep => mqPep.id -> mqPep )    
-    val protSetByPepInst = Map()++ quantRSM.resultSummary.proteinSets.flatMap( protSet => protSet.peptideSet.getPeptideInstances.map( pi => pi.id -> protSet ) )
-    val protMatchById = quantRSM.resultSummary.resultSet.get.proteinMatchById
-      
-    // Stringify protein set data
-    val protSetCellsById = new HashMap[Int,ArrayBuffer[Any]]
+    val tmpProtSetCellsById = new HashMap[Int,ArrayBuffer[Any]]
     for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
       val protMatch = protMatchById( mqProtSet.proteinSet.proteinMatchIds(0) )
       val protSetCells = new ArrayBuffer[Any]
       protSetCells += protMatch.accession
       protSetCells += protMatch.description
       
-      protSetCellsById += mqProtSet.id -> protSetCells
+      tmpProtSetCellsById += mqProtSet.id -> protSetCells
     }
     
-    // TODO: stringify peptide instance data
+    tmpProtSetCellsById
+  }
+  
+  val mqPepCellsById = {
     
+    val tmpMqPepCellsById = new HashMap[Int,ArrayBuffer[Any]]
+    
+    quantRSM.masterQuantPeptides.foreach { mqPep =>
+      
+      val mqPepCells = new ArrayBuffer[Any]
+    
+      // Append master quant peptide data
+      mqPepCells ++= Array(mqPep.id,mqPep.selectionLevel)
+      
+      // Append quant peptide data for each condition
+      val qPepCellsByQcId = new HashMap[Int,Seq[Any]]
+      for( (qcId, qPep) <- mqPep.quantPeptideMap ) {
+        val qPepCells = List(
+          qPep.rawAbundance
+        )
+        
+        qPepCellsByQcId += qcId -> qPepCells
+      }
+      
+      for(qcId <- qcIds) {
+        val qPepCellsOpt = qPepCellsByQcId.get(qcId)
+        if( qPepCellsOpt.isDefined ) mqPepCells ++= qPepCellsOpt.get
+        else mqPepCells ++= Array.fill(qPepHeaders.length)("")
+      }
+      
+      tmpMqPepCellsById += mqPep.id -> mqPepCells
+    }
+    
+    tmpMqPepCellsById
+  }
+  
+  def runService() = {
+          
     // Create a file writer and print the header
     val fileWriter = new PrintWriter(new FileOutputStream(outputFile))
     fileWriter.println(mkRowHeader(qcIds.length))
@@ -59,66 +95,23 @@ class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Int, ou
     
     // Iterate over master quant peptides to export them
     quantRSM.masterQuantPeptides.foreach { mqPep =>
+      
       val row = new ArrayBuffer[Any]
       
       // Append protein set and peptide data if they are defined
+      // TODO: stringify peptide instance data
       if( mqPep.peptideInstance.isDefined) {
-        
-        for( pepInst <- mqPep.peptideInstance ) {
-          val proSetOpt = protSetByPepInst.get(pepInst.id)
-          if( proSetOpt.isDefined ) {
-            row ++= protSetCellsById(proSetOpt.get.id)
-          } else {
-            row ++= Array.fill(proSetHeaders.length)("")
-          }
-
-          row ++= Array(pepInst.peptide.sequence)
-        }
+        val pepInstId = mqPep.peptideInstance.get.id
+        appendProtSetAndPepInstCells(row,protSetByPepInst.get(pepInstId),mqPep.peptideInstance)
       } else {
-        row ++= Array.fill(proSetHeaders.length + pepHeaders.length)("")
-      }
-
-      // Append master quant peptide data
-      row ++= Array(mqPep.id,mqPep.selectionLevel)
-      
-      // Append quant peptide data for each condition
-      val qPepCellsByQcId = new HashMap[Int,ArrayBuffer[Any]]
-      for( (qcId, qPep) <- mqPep.quantPeptideMap ) {
-        val qPepCells = new ArrayBuffer[Any]
-        qPepCells += qPep.rawAbundance
-        
-        qPepCellsByQcId += qcId -> qPepCells
+        appendProtSetAndPepInstCells(row,None,None)
       }
       
-      for(qcId <- qcIds) {
-        val qPepCellsOpt = qPepCellsByQcId.get(qcId)
-        if( qPepCellsOpt.isDefined ) row ++= qPepCellsOpt.get
-        else row ++= Array.fill(qPepHeaders.length)("")
-      }
+      row ++= mqPepCellsById(mqPep.id)
       
       fileWriter.println(row.mkString("\t"))
       fileWriter.flush()
       
-/*val rawAbundance: Float,
-                         var abundance: Float,
-                         val elutionTime: Float,
-                         val peptideMatchesCount: Int,
-                         
-                         val quantChannelId: Int,
-                         val peptideId: Int,
-                         val peptideInstanceId: Int,*/
-      
-          /*
-          var id: Int, // important: master quant component id
-                               val peptideInstance: Option[PeptideInstance], // without label in the context of isotopic labeling
-                               var quantPeptideMap: Map[Int,QuantPeptide], // QuantPeptide by quant channel id
-                               var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
-                               
-                               var selectionLevel: Int,
-                               var resultSummaryId: Int,*/
-        
-
-
     }
 
     fileWriter.close()
@@ -126,9 +119,24 @@ class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Int, ou
     true
   }
   
+  def appendProtSetCells(row: ArrayBuffer[Any], protSetOpt: Option[ProteinSet]) {
+    if( protSetOpt.isDefined ) row ++= protSetCellsById(protSetOpt.get.id)
+    else row ++= Array.fill(proSetHeaders.length)("")
+  }
+  
+  def appendPepInstCells(row: ArrayBuffer[Any], pepInstOpt: Option[PeptideInstance]) {
+    if( pepInstOpt.isDefined ) row ++= Array(pepInstOpt.get.peptide.sequence)
+    else row ++= Array.fill(pepHeaders.length)("")
+  }
+  
+  def appendProtSetAndPepInstCells(row: ArrayBuffer[Any], protSetOpt: Option[ProteinSet], pepInstOpt: Option[PeptideInstance]) {
+    appendProtSetCells(row,protSetOpt)
+    appendPepInstCells(row,pepInstOpt)
+  }
+  
   def mkRowHeader( quantChannelCount: Int ): String = {
     val rowHeaders = new ArrayBuffer[String] ++ proSetHeaders ++ pepHeaders ++ mqPepHeaders
-    for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qPepHeaders )
+    for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qPepHeaders.map(_+"_"+i) )
     rowHeaders.mkString("\t")
   }
 
