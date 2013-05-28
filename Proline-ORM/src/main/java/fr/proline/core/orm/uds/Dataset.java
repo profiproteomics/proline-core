@@ -328,6 +328,24 @@ public class Dataset implements Serializable {
     public void setChildren(final List<Dataset> children) {
 	this.children = children;
     }
+    
+    public void addChild(Dataset child) {
+    	children.add(child);
+    	child.setNumber(childrenCount);
+    	childrenCount++;
+    	child.setParentDataset(this);
+    }
+    
+    public void insertChild(Dataset child, int index) {
+    	children.add(index, child);
+    	child.setNumber(index);
+    	childrenCount++;
+    	for (int i=index+1;i<children.size();i++) {
+    		children.get(i).setNumber(i);
+    	}
+    	child.setParentDataset(this);
+    }
+    
 
     public Set<IdentificationDataset> getIdentificationDataset() {
 	Set<IdentificationDataset> idfDS = new HashSet<IdentificationDataset>();
