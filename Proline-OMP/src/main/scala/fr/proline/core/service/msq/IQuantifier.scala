@@ -48,8 +48,8 @@ import fr.proline.core.orm.msi.{
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 
-// TODO: rename into abstract class AbstractMasterQuantChannelQuantifier and move to impl folder
-trait IQuantifier extends Logging {
+
+abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
   // Required fields
   val executionContext: IExecutionContext
