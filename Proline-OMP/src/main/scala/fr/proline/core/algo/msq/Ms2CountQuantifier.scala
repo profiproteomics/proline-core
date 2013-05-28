@@ -122,6 +122,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
             abundance = pepMatchesCount,
             moz = bestRsPepMatch.msQuery.moz,
             elutionTime = 0,
+            correctedElutionTime = 0,
             scanNumber = 0,
             peptideMatchesCount = pepMatchesCount,
             bestPeptideMatchScore = Some(bestRsPepMatchScore),
@@ -182,8 +183,8 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
           elutionTime = 0,
           peptideMatchesCount = ms2Sum,
           quantChannelId = qcId,
-          peptideId = firstQuantPepIon.peptideId.get,
-          peptideInstanceId = firstQuantPepIon.peptideInstanceId.get,
+          //peptideId = firstQuantPepIon.peptideId.get, // only for labeling ???
+          //peptideInstanceId = firstQuantPepIon.peptideInstanceId.get, // only for labeling ???
           selectionLevel = 2
         )
         

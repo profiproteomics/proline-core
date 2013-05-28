@@ -79,6 +79,7 @@ case class QuantPeptideIon(  val rawAbundance: Float,
                              var abundance: Float,
                              val moz: Double,
                              val elutionTime: Float,
+                             val correctedElutionTime: Float,
                              val scanNumber: Int,
                              
                              var peptideMatchesCount: Int,
@@ -90,7 +91,8 @@ case class QuantPeptideIon(  val rawAbundance: Float,
                              val peptideId: Option[Int] = None,
                              val peptideInstanceId: Option[Int] = None,
                              val msQueryIds: Option[Array[Int]] = None,
-                             val lcmsFeatureId: Int,
+                             val lcmsFeatureId: Int, // TODO set as Option[Int] = None
+                             val lcmsMasterFeatureId: Option[Int] = None,
                              val unmodifiedPeptideIonId: Option[Int] = None,
                              
                              var selectionLevel: Int = 2
@@ -117,7 +119,7 @@ case class MasterQuantPeptideIon(  var id: Int,
 
                                    var peptideInstanceId: Option[Int] = None,
                                    var bestPeptideMatchId: Option[Int] = None,
-                                   var lcmsFeatureId: Option[Int] = None,
+                                   var lcmsFeatureId: Option[Int] = None, // TODO: rename to lcmsMasterFeatureId or remove ?
                                    var unmodifiedPeptideIonId: Option[Int] = None,
                                    
                                    var quantPeptideIonMap: Map[Int,QuantPeptideIon],
@@ -138,7 +140,11 @@ case class MasterQuantPeptideIon(  var id: Int,
     val bestQuantChannelId = this.properties.get.getBestQuantChannelId
     if( bestQuantChannelId == None ) None
     else this.quantPeptideIonMap.get( bestQuantChannelId.get )
-  }    
+  }
+  
+  def calcAbundanceSum: Float = {
+    quantPeptideIonMap.values.foldLeft(0f)( (s,qp) => s + qp.abundance )
+  }
   
 }
 
@@ -149,12 +155,11 @@ case class QuantPeptide( val rawAbundance: Float,
                          var abundance: Float,
                          val elutionTime: Float,
                          val peptideMatchesCount: Int,
+                         var selectionLevel: Int,
                          
                          val quantChannelId: Int,
-                         val peptideId: Int,
-                         val peptideInstanceId: Int,
-                         
-                         var selectionLevel: Int
+                         val peptideId: Option[Int] = None,
+                         val peptideInstanceId: Option[Int] = None
 
                        ) extends QuantComponent {
   
