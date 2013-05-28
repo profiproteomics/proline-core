@@ -170,8 +170,8 @@ case class LcMsScan(
   var runId: Int,
   
   // Immutable optional fields
-  val precursorMoz: Double = Double.NaN,
-  val precursorCharge: Int = 0,
+  val precursorMoz: Option[Double] = None,
+  val precursorCharge: Option[Int] = None,
   
   // Mutable optional fields
   var properties: Option[LcMsScanProperties] = None

@@ -90,8 +90,8 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
   
   def buildLcmsScan( scanRecord: ResultSetRow ): LcMsScan = {
 
-    val precursorMoz = scanRecord.getDoubleOrElse(ScanCols.PRECURSOR_MOZ,Double.NaN)
-    val precursorCharge = scanRecord.getIntOrElse(ScanCols.PRECURSOR_CHARGE,0)
+    val precursorMoz = scanRecord.getDoubleOption(ScanCols.PRECURSOR_MOZ)
+    val precursorCharge = scanRecord.getIntOption(ScanCols.PRECURSOR_CHARGE)
     
     new LcMsScan(
       id = toInt(scanRecord.getAnyVal(ScanCols.ID)),

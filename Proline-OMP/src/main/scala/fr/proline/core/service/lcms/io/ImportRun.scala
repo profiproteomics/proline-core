@@ -12,6 +12,7 @@ import fr.proline.core.om.model.lcms.PeakPickingSoftware
 import fr.proline.core.om.model.lcms.RawFile
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
+import fr.proline.util.StringUtils
 
 /*trait String2FileConverter {
   implicit def string2File(filename:String) = new File(filename)
@@ -25,7 +26,14 @@ object ImportScanSequence { // extends String2FileConverter
 
     it.map { s =>
       var value = header.zip(s.split("\t")).toMap
-      new LcMsScan(value("id").toInt,
+      
+      val precMozStr = value("precursor_moz")
+      val precChargeStr = value("precursor_charge")
+      val precMoz = if( StringUtils.isEmpty(precMozStr) == false ) Some(precMozStr.toDouble) else None
+      val precCharge = if( StringUtils.isEmpty(precChargeStr) == false ) Some(precChargeStr.toInt) else None
+      
+      new LcMsScan(
+        value("id").toInt,
         value("initial_id").toInt,
         value("cycle").toInt,
         value("time").toFloat,
@@ -34,8 +42,9 @@ object ImportScanSequence { // extends String2FileConverter
         value("base_peak_moz").toDouble,
         value("base_peak_intensity").toDouble,
         value("run_id").toInt,
-        value("precursor_moz").toDouble,
-        value("precursor_charge").toInt)
+        precMoz,
+        precCharge
+      )
     }.toSeq
 
   }

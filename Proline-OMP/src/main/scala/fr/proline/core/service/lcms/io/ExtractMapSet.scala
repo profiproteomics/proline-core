@@ -236,6 +236,10 @@ class ExtractMapSet(
       
       val mzDbScans = mzDb.getScanHeaders()
       val scans = mzDbScans.map { mzDbScan =>
+        
+        val precMz = mzDbScan.getPrecursorMz
+        val precCharge = mzDbScan.getPrecursorCharge
+        
         new LcMsScan(
           id = LcMsScan.generateNewId(),
           initialId = mzDbScan.getInitialId,
@@ -246,8 +250,8 @@ class ExtractMapSet(
           basePeakMoz = mzDbScan.getBasePeakMz,
           basePeakIntensity = mzDbScan.getBasePeakIntensity,
           runId = newScanSeqId,
-          precursorMoz = mzDbScan.getPrecursorMz,
-          precursorCharge = mzDbScan.getPrecursorCharge
+          precursorMoz = if( precMz > 0 ) Some(precMz) else None,
+          precursorCharge = if( precCharge > 0 ) Some(precCharge) else None
         )
       }
       

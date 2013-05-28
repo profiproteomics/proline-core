@@ -96,6 +96,7 @@ case class Feature (
   
   lazy val mass = mozToMass( moz, charge )
   def isCluster = if( subFeatures == null ) false else subFeatures.length > 0
+  def isMaster = if( children == null ) false else children.length > 0
   
   def getCorrectedElutionTimeOrElutionTime = correctedElutionTime.getOrElse(elutionTime)
   def getCalibratedMozOrMoz = calibratedMoz.getOrElse(moz)
