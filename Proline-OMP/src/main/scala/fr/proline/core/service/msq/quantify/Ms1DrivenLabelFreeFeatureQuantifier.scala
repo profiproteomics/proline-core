@@ -16,7 +16,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
   val quantConfig: ILabelFreeQuantConfig
-) extends XLabelFreeFeatureQuantifier with AbstractMasterQuantChannelQuantifier {
+) extends AbstractLabelFreeFeatureQuantifier {
   
   /*val identRsIdByLcmsMapId = {
     udsQuantChannels.map { qc => qc.getLcmsMapId.intValue -> identRsIdByRsmId(qc.getIdentResultSummaryId) } toMap

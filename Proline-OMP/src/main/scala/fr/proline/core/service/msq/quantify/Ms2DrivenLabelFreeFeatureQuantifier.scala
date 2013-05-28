@@ -32,7 +32,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
   val quantConfig: LabelFreeQuantConfig
-) extends XLabelFreeFeatureQuantifier with AbstractMasterQuantChannelQuantifier {
+) extends AbstractLabelFreeFeatureQuantifier {
   
   // Extract the LC-MS map set
   lazy val lcmsMapSet: MapSet = {

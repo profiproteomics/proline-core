@@ -30,8 +30,7 @@ import fr.proline.core.service.lcms.io.IMsQuantConfig
 
 trait ILabelFreeQuantConfig extends ILcMsQuantConfig
 
-// TODO: rename to class AbstractLabelFreeFeatureQuantifier
-trait XLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
+abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
   
   val quantConfig: ILabelFreeQuantConfig
   val lcmsMapSet: MapSet

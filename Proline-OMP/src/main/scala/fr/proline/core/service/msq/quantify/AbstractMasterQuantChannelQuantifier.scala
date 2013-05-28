@@ -1,4 +1,4 @@
-package fr.proline.core.service.msq
+package fr.proline.core.service.msq.quantify
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConversions.setAsJavaSet
