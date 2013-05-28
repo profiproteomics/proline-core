@@ -11,7 +11,7 @@ import fr.proline.repository.util.JDBCWork;
 
 class ParsimoniousProteinSetInferer extends IProteinSetInferer {
 
-  def computeResultSummary( resultSet: ResultSet,   scByPepId: Option[Map[Int, Int]] ): ResultSummary = {
+  def computeResultSummary( resultSet: ResultSet): ResultSummary = {
     
     // Retrieve some vars
     val proteinMatches = resultSet.proteinMatches
@@ -43,9 +43,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
       //val pepInstProps = new HashMap[String,Any]
       //pepInstProps += ( "best_peptide_match_id" -> bestPepMatch.id )
       //val pepInstProps = new PeptideInstanceProperties()
-      //pepInstProps.setBestPeptideMatchId( Some(bestPepMatch.id) )
-
-      val totalLeavePepMatchesCount : Int = if(scByPepId.isDefined) scByPepId.get.getOrElse(bestPepMatch.peptideId, -1) else -1
+      //pepInstProps.setBestPeptideMatchId( Some(bestPepMatch.id) )      
              
       val peptideInstance = new PeptideInstance(
                                   id = PeptideInstance.generateNewId(),
@@ -53,7 +51,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
                                   peptideMatchIds = pepMatchIds,
                                   bestPeptideMatchId = bestPepMatch.id,
                                   peptideMatches = pepMatchGroup,
-                                  totalLeavesMatchCount = totalLeavePepMatchesCount,
+                                  totalLeavesMatchCount = -1,
                                   //properties = Some(pepInstProps),
                                   //peptideMatchPropertiesById = peptideMatchPropertiesById,
                                   resultSummaryId = resultSummaryId

@@ -9,7 +9,7 @@ import fr.proline.context.IExecutionContext
 
 class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
 
-  def computeResultSummary( resultSet: ResultSet ,  scByPepId: Option[Map[Int, Int]]): ResultSummary = {
+  def computeResultSummary( resultSet: ResultSet ): ResultSummary = {
     
 
     // Retrieve some vars
@@ -41,7 +41,7 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
       //pepInstProps += ( "best_peptide_match_id" -> bestPepMatch.id )
       //val pepInstProps = new PeptideInstanceProperties()
       //pepInstProps.setBestPeptideMatchId( Some(bestPepMatch.id) )
-      val totalLeavePepMatchesCount : Int = if(scByPepId.isDefined) scByPepId.get.getOrElse(bestPepMatch.peptideId, -1) else -1
+
 
       val peptideInstance = new PeptideInstance(
                                   id = PeptideInstance.generateNewId(),
@@ -49,11 +49,12 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
                                   peptideMatchIds = pepMatchIds,
                                   bestPeptideMatchId = bestPepMatch.id,
                                   peptideMatches = pepMatchGroup,
-                                  totalLeavesMatchCount =totalLeavePepMatchesCount,
+                                  totalLeavesMatchCount = -1,
                                   //properties = Some(pepInstProps),
                                   //peptideMatchPropertiesById = peptideMatchPropertiesById,
                                   resultSummaryId = resultSummaryId
                                 )
+
       
       peptideInstanceById += ( peptideInstance.id -> peptideInstance )
       pepInstanceByPepId += ( peptideInstance.peptide.id -> peptideInstance )
