@@ -1,12 +1,14 @@
 package fr.proline.core.algo.msi.filtering
 
-import scala.collection.mutable.{ ArrayBuffer, HashMap }
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
-import com.weiglewilczek.slf4s.Logging
-
-import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.validation.BuildPeptideMatchFilter
-import fr.proline.core.om.model.msi.{ FilterDescriptor, PeptideInstance, PeptideMatch, ProteinSet, ResultSet, ResultSummary }
+import fr.proline.core.om.model.msi.FilterDescriptor
+import fr.proline.core.om.model.msi.PeptideInstance
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.ProteinSet
+import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.util.StringUtils
 import fr.proline.util.primitives.toDouble
 
@@ -236,49 +238,6 @@ trait IOptimizableProteinSetFilter extends IProteinSetFilter with IOptimizableFi
   def getProteinSetValueForFiltering(protSet: ProteinSet): AnyVal
 }
 
-object FilteredPSMSpectralCounter extends Logging {
-
-  def calculatePepSC(execContext: IExecutionContext,
-                     allValidationFilters: Seq[IPeptideMatchFilter],
-                     validatedPSM: Seq[PeptideMatch],
-                     rs: ResultSet): Map[Int, Int] = {
-
-    var spectralCountByPepId = new HashMap[Int, Int]()
-    val startTime = System.currentTimeMillis()
-    for (psmFilter <- allValidationFilters) {
-      for (psm <- validatedPSM) {
-        var pepSC = spectralCountByPepId.getOrElse(psm.peptideId, 0)
-        if (rs.isNative)
-          pepSC += 1
-        else
-          pepSC += countChildSC(psm)
-        spectralCountByPepId.put(psm.peptideId, pepSC)
-      }
-    }
-    val endTime = System.currentTimeMillis()
-    logger.debug(" Needed Time to calculate " + validatedPSM.size + " = " + (endTime - startTime) + " ms")
-    spectralCountByPepId.toMap
-  }
-
-  private def countChildSC(psm: PeptideMatch): Int = {
-
-    //     val jdbcWork = new JDBCWork() {
-    //
-    //    	  override def execute(con: Connection) {
-    //    		  val stmt = con.createStatement()
-    //
-    //			  stmt.execute...
-    //
-    //			  stmt.close()
-    //    	  }
-    //
-    //      } // End of jdbcWork anonymous inner class
-    //      execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-
-    0
-  }
-
-}
 
 object ResultSummaryFilterBuilder {
 
