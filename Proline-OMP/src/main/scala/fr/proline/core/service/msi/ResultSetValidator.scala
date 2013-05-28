@@ -143,12 +143,9 @@ class ResultSetValidator(
     //-- createRSM
     def createRSM(currentRS: Option[ResultSet]) : Option[ResultSummary] = {
        if (currentRS.isDefined) {
-    	   // --- Compute Peptide SpectralCount for Validated PSM       
-    	   val validPeptideMatches = currentRS.get.peptideMatches.filter { _.isValidated }
-    	   val spectralCountByPepId : Map[Int, Int] =  FilteredPSMSpectralCounter.calculatePepSC(execContext, appliedPSMFilters, validPeptideMatches, currentRS.get)
 
     	   // Create new result set with validated peptide matches and compute result summary
-           val rsm = protSetInferer.computeResultSummary(currentRS.get,Some(spectralCountByPepId ))
+           val rsm = protSetInferer.computeResultSummary(currentRS.get)
 
            // Update score of protein sets
            val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring.get)
@@ -159,7 +156,7 @@ class ResultSetValidator(
        } else {
            Option.empty[ResultSummary]
       }
-    }    
+    }
       
     // Build result summary for each individual result set
     val targetRsm = createRSM(Some(targetRs)).get
