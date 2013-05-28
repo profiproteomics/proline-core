@@ -1,4 +1,4 @@
-package fr.proline.core.service.msq.impl
+package fr.proline.core.service.msq.quantify
 
 class Ms1DrivenLabelingFeatureQuantifier {
 

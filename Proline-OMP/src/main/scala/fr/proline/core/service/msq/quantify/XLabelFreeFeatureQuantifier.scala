@@ -1,4 +1,4 @@
-package fr.proline.core.service.msq.impl
+package fr.proline.core.service.msq.quantify
 
 import javax.persistence.EntityManager
 import scala.collection.JavaConversions.collectionAsScalaIterable

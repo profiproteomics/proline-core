@@ -4,9 +4,9 @@ import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.service.msq.impl.LabelFreeQuantConfig
-import fr.proline.core.service.msq.impl.Ms2DrivenLabelFreeFeatureQuantifier
-import fr.proline.core.service.msq.impl.SpectralCountQuantifier
+import fr.proline.core.service.msq.quantify.LabelFreeQuantConfig
+import fr.proline.core.service.msq.quantify.Ms2DrivenLabelFreeFeatureQuantifier
+import fr.proline.core.service.msq.quantify.SpectralCountQuantifier
 import fr.proline.repository.IDataStoreConnectorFactory
 
 class QuantifyMasterQuantChannel(
