@@ -10,14 +10,13 @@ import fr.proline.core.algo.lcms.alignment.AlignmentParams
 import fr.proline.core.service.lcms.io.IMsQuantConfig
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.service.msq.IQuantifier
 import fr.proline.repository.IDataStoreConnectorFactory
 
 class Ms1DrivenLabelFreeFeatureQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
   val quantConfig: ILabelFreeQuantConfig
-) extends XLabelFreeFeatureQuantifier with IQuantifier {
+) extends XLabelFreeFeatureQuantifier with AbstractMasterQuantChannelQuantifier {
   
   /*val identRsIdByLcmsMapId = {
     udsQuantChannels.map { qc => qc.getLcmsMapId.intValue -> identRsIdByRsmId(qc.getIdentResultSummaryId) } toMap

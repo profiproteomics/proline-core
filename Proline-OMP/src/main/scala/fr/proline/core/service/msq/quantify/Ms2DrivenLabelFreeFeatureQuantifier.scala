@@ -14,7 +14,6 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
-import fr.proline.core.service.msq.IQuantifier
 import fr.proline.repository.IDataStoreConnectorFactory
 
 case class LabelFreeQuantConfig(
@@ -33,7 +32,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
   val quantConfig: LabelFreeQuantConfig
-) extends XLabelFreeFeatureQuantifier with IQuantifier {
+) extends XLabelFreeFeatureQuantifier with AbstractMasterQuantChannelQuantifier {
   
   // Extract the LC-MS map set
   lazy val lcmsMapSet: MapSet = {

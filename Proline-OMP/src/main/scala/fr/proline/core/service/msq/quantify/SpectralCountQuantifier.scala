@@ -12,7 +12,6 @@ import fr.proline.core.om.model.msq.QuantPeptide
 import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.service.msq.IQuantifier
 import fr.proline.repository.IDataStoreConnectorFactory
 
 /**
@@ -22,7 +21,7 @@ import fr.proline.repository.IDataStoreConnectorFactory
 class SpectralCountQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel
-  ) extends IQuantifier with Logging {
+  ) extends AbstractMasterQuantChannelQuantifier with Logging {
   
   def quantifyMasterChannel(): Unit = {
     

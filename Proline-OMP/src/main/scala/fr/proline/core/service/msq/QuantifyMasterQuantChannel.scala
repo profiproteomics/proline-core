@@ -4,9 +4,7 @@ import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.service.msq.quantify.LabelFreeQuantConfig
-import fr.proline.core.service.msq.quantify.Ms2DrivenLabelFreeFeatureQuantifier
-import fr.proline.core.service.msq.quantify.SpectralCountQuantifier
+import fr.proline.core.service.msq.quantify._
 import fr.proline.repository.IDataStoreConnectorFactory
 
 class QuantifyMasterQuantChannel(
@@ -76,13 +74,13 @@ object MasterQuantChannelQuantifier {
     executionContext: IExecutionContext,
     udsMasterQuantChannel: MasterQuantitationChannel,
     quantConfig: AnyRef
-  ): IQuantifier = {
+  ): AbstractMasterQuantChannelQuantifier = {
     
     val udsQuantMethod = udsMasterQuantChannel.getDataset.getMethod
     val quantMethodType = udsQuantMethod.getType
     val abundanceUnit = udsQuantMethod.getAbundanceUnit
     
-    var masterQuantChannelQuantifier: IQuantifier = null
+    var masterQuantChannelQuantifier: AbstractMasterQuantChannelQuantifier = null
     
     // TODO: create some enumerations
     if( abundanceUnit == AbundanceUnit.REPORTER_ION_INTENSITY.toString() ) {

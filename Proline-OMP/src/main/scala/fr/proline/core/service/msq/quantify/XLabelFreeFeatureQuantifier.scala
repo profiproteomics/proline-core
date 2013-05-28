@@ -27,12 +27,11 @@ import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.service.lcms.io.ILcMsQuantConfig
 import fr.proline.core.service.lcms.io.IMsQuantConfig
-import fr.proline.core.service.msq.IQuantifier
 
 trait ILabelFreeQuantConfig extends ILcMsQuantConfig
 
 // TODO: rename to class AbstractLabelFreeFeatureQuantifier
-trait XLabelFreeFeatureQuantifier extends IQuantifier with Logging {
+trait XLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
   
   val quantConfig: ILabelFreeQuantConfig
   val lcmsMapSet: MapSet
