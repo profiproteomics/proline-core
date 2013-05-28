@@ -222,8 +222,6 @@ class ResultSetValidatorF136482Test extends Logging {
         //--- TEST Peptide and PSM properties 
     rsValidation.validatedTargetRsm.peptideInstances.foreach(pepInst => {
       
-      //leaveCount = PSMCount as RSM was created from native RS
-      Assert.assertEquals(pepInst.totalLeavesMatchCount, pepInst.peptideMatchesCount) 
       pepInst.peptideMatches.foreach(peptideM => {
         Assert.assertTrue("PeptideMatch is validated", peptideM.isValidated)
         Assert.assertTrue("PeptideMatch.score > scoreTh", peptideM.score > scoreTh)
