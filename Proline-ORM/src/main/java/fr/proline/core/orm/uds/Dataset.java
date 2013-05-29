@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -345,6 +346,24 @@ public class Dataset implements Serializable {
     	}
     	child.setParentDataset(this);
     }
+    
+    public void replaceAllChildren(List<Dataset> newChildren) {
+    	Iterator<Dataset> it = children.iterator();
+    	while (it.hasNext()) {
+    		Dataset child = it.next();
+    		child.setParentDataset(null);
+    		child.setNumber(0);
+    	}
+    	children.clear();
+    	childrenCount = 0;
+    	
+    	it = newChildren.iterator();
+    	while (it.hasNext()) {
+    		Dataset newChild = it.next();
+    		addChild(newChild);
+    	}
+    }
+    
     
 
     public Set<IdentificationDataset> getIdentificationDataset() {
