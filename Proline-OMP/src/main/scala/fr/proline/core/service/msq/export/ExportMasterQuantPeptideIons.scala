@@ -19,7 +19,7 @@ class ExportMasterQuantPeptideIons(
 ) extends ExportMasterQuantPeptides(execCtx,quantRsmId,outputFile) {
   
   val mqPepIonHeaders = "charge master_elution_time master_feature_id".split(" ")  
-  val qPepIonHeaders = "moz elution_time correct_elution_time raw_abundance ms2_count feature_id".split(" ")
+  val qPepIonHeaders = "moz elution_time correct_elution_time duration raw_abundance ms2_count feature_id".split(" ")
   
   // Create some mappings
   val mqPepById = Map() ++ quantRSM.masterQuantPeptides.map( mqPep => mqPep.id -> mqPep ) 
@@ -59,6 +59,7 @@ class ExportMasterQuantPeptideIons(
           qPepIon.moz,
           qPepIon.elutionTime,
           qPepIon.correctedElutionTime,
+          qPepIon.duration,
           qPepIon.rawAbundance,
           qPepIon.peptideMatchesCount,
           qPepIon.lcmsFeatureId
