@@ -2,6 +2,7 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -331,33 +332,45 @@ public class Dataset implements Serializable {
     }
     
     public void addChild(Dataset child) {
-    	children.add(child);
+    	List<Dataset> childrenList = getChildren();
+    	if (childrenList == null) {
+    		childrenList = new ArrayList<Dataset>(1);
+    		setChildren(childrenList);
+    	}
+    	childrenList.add(child);
     	child.setNumber(childrenCount);
     	childrenCount++;
     	child.setParentDataset(this);
     }
     
     public void insertChild(Dataset child, int index) {
-    	children.add(index, child);
+    	List<Dataset> childrenList = getChildren();
+    	if (childrenList == null) {
+    		childrenList = new ArrayList<Dataset>(1);
+    		setChildren(childrenList);
+    	}
+    	childrenList.add(index, child);
     	child.setNumber(index);
     	childrenCount++;
-    	for (int i=index+1;i<children.size();i++) {
-    		children.get(i).setNumber(i);
+    	for (int i=index+1;i<childrenList.size();i++) {
+    		childrenList.get(i).setNumber(i);
     	}
     	child.setParentDataset(this);
     }
     
     public void replaceAllChildren(List<Dataset> newChildren) {
-    	Iterator<Dataset> it = children.iterator();
-    	while (it.hasNext()) {
-    		Dataset child = it.next();
-    		child.setParentDataset(null);
-    		child.setNumber(0);
+    	List<Dataset> childrenList = getChildren();
+    	if (childrenList != null) {
+			Iterator<Dataset> it = childrenList.iterator();
+			while (it.hasNext()) {
+				Dataset child = it.next();
+				child.setParentDataset(null);
+				child.setNumber(0);
+			}
+			childrenList.clear();
+			childrenCount = 0;
     	}
-    	children.clear();
-    	childrenCount = 0;
-    	
-    	it = newChildren.iterator();
+    	Iterator<Dataset> it = newChildren.iterator();
     	while (it.hasNext()) {
     		Dataset newChild = it.next();
     		addChild(newChild);
