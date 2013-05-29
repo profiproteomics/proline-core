@@ -10,6 +10,7 @@ import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl._
 import fr.proline.core.om.storer.lcms.MasterMapStorer
+import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.core.service.lcms._
 import fr.proline.repository.IDatabaseConnector
 
@@ -102,7 +103,7 @@ class CreateMasterMap(
       // Instantiate a Cmd for map set normalization
       logger.info("normalizing maps...")
       
-      // TODO: create a service which updates the normalized intensities
+      // Updates the normalized intensities
       MapSetNormalizer(normalizationMethod.get).normalizeFeaturesIntensity(mapSet)
 
       // Update master map feature intensity
@@ -110,8 +111,27 @@ class CreateMasterMap(
       mapSet.masterMap = newMasterMap.copy(features = MasterMapBuilder.rebuildMftsUsingBestChild(newMasterMap.features))
 
     }
+    
+    // Store the processed maps
+    logger.info("saving the processed maps...")
+    DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+      
+      // Instantiate a processed map storer
+      val processedMapStorer = ProcessedMapStorer( lcmsDbCtx )
+      
+      for( processedMap <- mapSet.childMaps ) {
+        // Store the map
+        processedMapStorer.storeProcessedMap( processedMap )
+        
+        // Update map set alignment reference map
+        if( processedMap.isAlnReference ) {
+          ezDBC.execute( "UPDATE map_set SET al_reference_map_id = "+ processedMap.id +" WHERE id = " + mapSet.id )
+        }
+      }
+      
+    })
 
-    logger.info("saving master map...")
+    logger.info("saving the master map...")
     val masterMapStorer = MasterMapStorer(lcmsDbCtx)
     masterMapStorer.storeMasterMap(mapSet.masterMap)
     

@@ -163,6 +163,7 @@ object MasterMapBuilder {
                                      mapSet: MapSet, ftMappingParams: FeatureMappingParams,
                                      addNonMatchingFeatures: Boolean ): Unit = {
     
+    // Iterate over all child map features in order to correct their elution time
     for( val childFt <- childMapFeatures ) {
       
       val childMapId = childFt.relations.mapId
@@ -170,19 +171,21 @@ object MasterMapBuilder {
         throw new Exception( "a map id must be defined for each child feature (m/z=" + childFt.moz +")")
       }    
       
-      // Calculate corrected elution time using the elution time alignment
-      //val correctedTime = mapAlnSet.calcReferenceElutionTime( childFt.elutionTime, childFt.mass )
-      val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.alnReferenceMapId)
-      childFt.correctedElutionTime = Some(correctedTime)
+      if( childMapId != mapSet.alnReferenceMapId ) {
+        // Calculate corrected elution time using the elution time alignment
+        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.alnReferenceMapId)
+        childFt.correctedElutionTime = Some(correctedTime)
+      }
+
     }
     //print "compute pairwise ft mapping\n" if ! addNonMatchingFeatures
     
     // Align child map features with master map features
     val ftMapping = FeatureMapper.computePairwiseFtMapping(
-                                    masterMapFeatures.toArray,
-                                    childMapFeatures,
-                                    ftMappingParams
-                                  )
+      masterMapFeatures.toArray,
+      childMapFeatures,
+      ftMappingParams
+    )
    
     val masterMapFtById = masterMapFeatures.map { ft => ft.id -> ft } toMap
     
@@ -193,11 +196,10 @@ object MasterMapBuilder {
       
       val masterMapFt = masterMapFtById(masterMapFtId)
       val mftTime = masterMapFt.elutionTime
-      val nearestChildFt = matchingChildFeatures.toList.reduceLeft { (a,b) =>
-                             if( math.abs(a.correctedElutionTime.get - mftTime) <
-                                 math.abs(b.correctedElutionTime.get - mftTime) ) a else b
-                           }
-                                    
+      val nearestChildFt = matchingChildFeatures.reduceLeft { (a,b) =>
+        if( math.abs(a.getCorrectedElutionTimeOrElutionTime - mftTime) < math.abs(b.getCorrectedElutionTimeOrElutionTime - mftTime) ) a else b
+      }
+      
       matchingFtIdSet += nearestChildFt.id
       
       // Append nearest child to the current list of master feature children
@@ -209,6 +211,14 @@ object MasterMapBuilder {
       
       // Retrieve child map features which weren't aligned with master map
       val nonMatchingChildFts = childMapFeatures filter { ft => ! matchingFtIdSet.contains( ft.id ) }
+      
+      // Set the corrected elution time using the elution time alignment
+      /*nonMatchingChildFts.foreach { childFt =>
+        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childFt.relations.mapId, mapSet.alnReferenceMapId)
+        childFt.correctedElutionTime = Some(correctedTime)
+      }*/
+      
+      // Convert child features into master features
       val newMasterFeatures = nonMatchingChildFts.map { _.toMasterFeature() }
       
       //val newMasterFeatures = new ArrayBuffer[Feature](nonMatchingChildFts.length)
@@ -299,10 +309,11 @@ object MasterMapBuilder {
       if ( putativeMatchingMfts.length > 0 ) {
       
         val ftMapping = FeatureMapper.computePairwiseFtMapping(
-                                          singleFeatures.toArray,
-                                          putativeMatchingMfts.toArray,
-                                          ftMappingParams,
-                                          true )
+          singleFeatures.toArray,
+          putativeMatchingMfts.toArray,
+          ftMappingParams,
+          false // was true in Prosper
+        )
         
         val singleFtById = singleFeatures.map { ft => ft.id -> ft } toMap
         
@@ -311,13 +322,13 @@ object MasterMapBuilder {
           
           // TODO: keep this ?
           if( matchingMfts.length == 1 ) {
-          val singleFt = singleFtById(singleFtId)
-          val matchingMft = matchingMfts(0)
-          
-          // Add single feature to matching not fulfilled master feature
-          matchingMft.children ++= singleFt.children
-          
-          toDeleteSingleFtIdSet += singleFtId
+            val singleFt = singleFtById(singleFtId)
+            val matchingMft = matchingMfts(0)
+            
+            // Add single feature to matching not fulfilled master feature
+            matchingMft.children ++= singleFt.children
+            
+            toDeleteSingleFtIdSet += singleFtId
           }
         }
       }

@@ -136,7 +136,8 @@ case class RunMap(
 ) extends ILcMsMap {
   
   // Requirements
-  require( peakPickingSoftware != null )
+  require( peakPickingSoftware != null, "a pick peaking software must be provided" )
+  require( features.count(_.correctedElutionTime.isDefined) == 0, "can't use processed map features as run map features" )
   
   def toProcessedMap( id: Int, number: Int, mapSetId: Int, features: Array[Feature] = this.features ) = {
     
@@ -465,21 +466,24 @@ case class MapSet(
     // If the reference is the target map => returns the provided time
     if( refMapId == targetMapId ) return time
     
+    // If we have an alignment between the reference and the target
     if( _mapAlnSetByMapIdPair.contains(refMapId->targetMapId) ) {
       val mapAlnSet = _mapAlnSetByMapIdPair(refMapId->targetMapId)
       mapAlnSet.calcTargetMapElutionTime(time, mass)
+    // Else we need to make to consecutive time conversions
     } else {
       // Convert time into the reference map scale
-      val toRefMapAlnSet = _mapAlnSetByMapIdPair(refMapId->this.alnReferenceMapId)
+      val toRefMapAlnSet = _mapAlnSetByMapIdPair(refMapId -> this.alnReferenceMapId)
       val refMapTime = toRefMapAlnSet.calcTargetMapElutionTime(time, mass)
      
       // Convert reference map time into the target map scale
-      val mapAlnSet = _mapAlnSetByMapIdPair(this.alnReferenceMapId->targetMapId)
-      mapAlnSet.calcTargetMapElutionTime(time, mass)
+      val mapAlnSet = _mapAlnSetByMapIdPair(this.alnReferenceMapId -> targetMapId)
+      mapAlnSet.calcTargetMapElutionTime(refMapTime, mass)
     }
 
   }
   
+  /*
   @deprecated("0.0.9","use map set convertElutionTime method instead")
   def getRefMapAlnSetByMapId(): Option[Map[Int,MapAlignmentSet]] = {
     if( this.alnReferenceMapId == 0 ) return None
@@ -499,7 +503,7 @@ case class MapSet(
     
     ( refMapAlnSets ++ revRefMapAlnSets )
     
-  }
+  }*/
 
 }
 

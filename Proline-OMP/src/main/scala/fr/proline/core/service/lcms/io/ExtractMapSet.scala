@@ -181,7 +181,7 @@ class ExtractMapSet(
       runMapStorer.storeRunMap(x2RunMap, false)
     }
     
-    // --- Store the corresponding map set ---
+    // --- Create the corresponding map set ---
     val x2MapSet = CreateMapSet( lcmsDbCtx, mapSetName, x2RunMaps, clusteringParams )
     
     // --- Align the map set and store the alignment ---
@@ -192,7 +192,7 @@ class ExtractMapSet(
       alnParams = alnParams
     )
     
-    // --- Create and store the master map ---
+    // --- Create and store the master map and the associated processed maps ---
     CreateMasterMap(
       lcmsDbCtx = lcmsDbCtx,
       mapSet = x2MapSet, 
@@ -364,8 +364,10 @@ class ExtractMapSet(
         
         val childFtOpt = mft.children.find( _.relations.mapId == mzDbMapId )
         if( childFtOpt.isDefined ) {
-          lcmsFeatures += childFtOpt.get
-          /*val childFt = childFtOpt.get
+          // Very important because otherwise it could corrupt the corrected elution time
+          lcmsFeatures += childFtOpt.get.toRunMapFeature
+          
+          /*
           pfs += new PutativeFeature(
             id = PutativeFeature.generateNewId,
             mz = childFt.moz,
@@ -461,6 +463,7 @@ class ExtractMapSet(
        intensity = mzDbFt.area,
        charge = mzDbFt.charge,
        elutionTime = mzDbFt.elutionTime,
+       duration = scanSeq.calcDeltaTime(firstLcMsScanId, lastLcMsScanId),
        qualityScore = mzDbFt.qualityScore,
        ms1Count = mzDbFt.getMs1Count,
        ms2Count = mzDbFt.getMs2Count,
