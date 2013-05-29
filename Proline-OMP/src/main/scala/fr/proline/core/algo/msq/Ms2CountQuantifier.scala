@@ -122,6 +122,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
             abundance = pepMatchesCount,
             moz = bestRsPepMatch.msQuery.moz,
             elutionTime = 0,
+            duration = 0,
             correctedElutionTime = 0,
             scanNumber = 0,
             peptideMatchesCount = pepMatchesCount,

@@ -59,6 +59,7 @@ class MFPaQMapParser extends ILcmsMapFileParser {
           moz = moz,
           intensity = intensity,
           elutionTime = apexRt,
+          duration = 0, // FIXME
           charge = charge,
           qualityScore = Double.NaN,
           ms1Count = lastScan.cycle - firstScan.cycle + 1,
@@ -66,7 +67,8 @@ class MFPaQMapParser extends ILcmsMapFileParser {
           isOverlapping = false,
           isotopicPatterns = Some(Array[IsotopicPattern](ip)),
           overlappingFeatures = Array[Feature](),
-          relations = FeatureRelations(ms2EventIds,
+          relations = FeatureRelations(
+            ms2EventIds = ms2EventIds,
             firstScanInitialId = firstScan.initialId,
             lastScanInitialId = lastScan.initialId,
             apexScanInitialId = apexScan.initialId))

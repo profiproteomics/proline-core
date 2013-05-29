@@ -33,7 +33,7 @@ object FeatureMapper {
       chargeStates = List( 0 )
     }
     
-    val ftMapping = new java.util.HashMap[Int,ArrayBuffer[Feature]] // ft1Id => Array(ft2) 
+    val ftMapping = new collection.mutable.HashMap[Int,ArrayBuffer[Feature]] // ft1Id => Array(ft2) 
     for( chargeState <- chargeStates ) {
 
       if( map1FtsByCharge.contains(chargeState) && map2FtsByCharge.contains(chargeState) ) {
@@ -54,16 +54,17 @@ object FeatureMapper {
           val map1FtId = map1Ft.id
           val map1FtMoz = map1Ft.moz
           var map1FtTime = map1Ft.getCorrectedElutionTimeOrElutionTime
+          val map1FtDuration = map1Ft.duration // duration is updated for clusters
           
           // Be more tolerant for feature clusters
-          var localTimeTol = timeTol
+          /*val localTimeTol = map1Ft.time 
           if( map1Ft.isCluster ) {
             val subFts = map1Ft.subFeatures
             val subFtsSortedByTime = subFts.sortBy( _.elutionTime )
             val clusterElutionDuration = subFtsSortedByTime( subFts.length - 1 ).getCorrectedElutionTimeOrElutionTime - 
                                          subFtsSortedByTime(0).getCorrectedElutionTimeOrElutionTime
-            localTimeTol += clusterElutionDuration
-          }
+            map1FtDuration += clusterElutionDuration
+          }*/
           
           // Retrieve putative features of map2 which match the current map1 feature (same m/z range)
           val moz1AsInt = map1FtMoz.toInt
@@ -81,28 +82,20 @@ object FeatureMapper {
             
             val deltaMoz = math.abs(map1FtMoz - map2Ft.moz)
             val deltaTime = math.abs(map1FtTime - map2Ft.getCorrectedElutionTimeOrElutionTime)
+            val map2FtDuration = map2Ft.duration
+            // Compute the shortest duration which will be used to adjust the time tolerance window
+            val shortestDuration = if (map1FtDuration < map2FtDuration) map1FtDuration else map2FtDuration
             
-            if( deltaMoz < mozTolInDalton && deltaTime < localTimeTol ) {
-              if( !ftMapping.containsKey(map1FtId) ) {
-                ftMapping.put( map1FtId, new ArrayBuffer[Feature](1) )
-              }
-              ftMapping.get(map1FtId) += map2Ft
+            // If the m/z falls in the m/z and time tol windows
+            if( deltaMoz < mozTolInDalton && deltaTime < (shortestDuration + timeTol) ) {
+              ftMapping.getOrElseUpdate(map1FtId,new ArrayBuffer[Feature](1)) += map2Ft
             }
           }
         }
       }
     }
     
-    // Convert the java HashMap into a scala immutable Map
-    val immutableFtMappingBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[Feature]]
-    
-    val ftMappingIter = ftMapping.entrySet().iterator()    
-    while( ftMappingIter.hasNext() ) {
-      val entry = ftMappingIter.next
-      immutableFtMappingBuilder += ( entry.getKey -> entry.getValue.toArray )
-    }    
-    
-    immutableFtMappingBuilder.result()
+    Map() ++ ftMapping.map { case (a,b) => a -> b.toArray }
   }
 
 }

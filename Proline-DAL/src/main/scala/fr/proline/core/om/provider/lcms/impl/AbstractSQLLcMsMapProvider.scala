@@ -20,6 +20,9 @@ import fr.proline.util.primitives._
 
 abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   
+  val scans: Array[LcMsScan]
+  protected val scanById = Map() ++ scans.map( s => s.id -> s )
+  
   protected val lcmsDbCtx: DatabaseConnectionContext
   protected val LcMsMapCols = LcmsDbMapTable.columns
   protected val FtCols = LcmsDbFeatureTable.columns
@@ -131,6 +134,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     val lastScanId = ftRecord.getInt(FtCols.LAST_SCAN_ID)
     val apexScanId = ftRecord.getInt(FtCols.APEX_SCAN_ID)
     val ms2EventIds = ms2EventIdsByFtId.getOrElse(ftId,null)
+    val duration = scanById(lastScanId).time - scanById(firstScanId).time
     
     new Feature(
        id = ftId,
@@ -138,6 +142,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
        intensity = toFloat(ftRecord.getAnyVal(FtCols.INTENSITY)),
        charge = ftRecord.getInt(FtCols.CHARGE),
        elutionTime = toFloat(ftRecord.getAnyVal(FtCols.ELUTION_TIME)),
+       duration = duration,
        qualityScore = ftRecord.getDoubleOrElse(FtCols.QUALITY_SCORE,Double.NaN),
        ms1Count = ftRecord.getInt(FtCols.MS1_COUNT),
        ms2Count = ftRecord.getInt(FtCols.MS2_COUNT),

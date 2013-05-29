@@ -198,7 +198,9 @@ object FeatureClusterer extends Logging {
       val (firstSubft, lastSubft) = (subftsSortedByAscTime(0), subftsSortedByAscTime(nbSubFts - 1))
       val (firstScanId, firstScanInitialId) = (firstSubft.relations.firstScanId, firstSubft.relations.firstScanInitialId)
       val (lastScanId, lastScanInitialId) = (lastSubft.relations.lastScanId, lastSubft.relations.lastScanInitialId)
-      val ms1Count = 1 + scanById(lastScanId).cycle - scanById(firstScanId).cycle
+      val( firstScan, lastScan ) = (scanById(firstScanId),scanById(lastScanId))
+      val ms1Count = 1 + lastScan.cycle - firstScan.cycle
+      val duration = lastScan.time - firstScan.time
 
       val ftCluster = new Feature(
         id = Feature.generateNewId,
@@ -206,6 +208,7 @@ object FeatureClusterer extends Logging {
         charge = charge,
         intensity = intensity,
         elutionTime = elutionTime,
+        duration = duration,
         ms1Count = ms1Count,
         ms2Count = ms2Count,
         subFeatures = subftsSortedByAscTime.toArray,

@@ -40,14 +40,21 @@ class IsotopicPattern (
 @JsonInclude( Include.NON_NULL )
 case class IsotopicPatternProperties
 
+object Compound extends InMemoryIdGen
+case class Compound(
+  var id: Int,
+  var identifier: String // maybe a peptide sequence and its ptm_string or a chemical formula
+)
 
 object Feature extends InMemoryIdGen
 
 case class FeatureRelations(
+  @transient var compound: Option[Compound] = None,
+  
   val ms2EventIds: Array[Int],
   val firstScanInitialId: Int,
   val lastScanInitialId: Int,
-  val apexScanInitialId: Int,        
+  val apexScanInitialId: Int,
   var firstScanId: Int = 0,
   var lastScanId: Int = 0,
   var apexScanId: Int = 0,
@@ -60,13 +67,14 @@ case class FeatureRelations(
 )
 
 case class Feature (
-        
+  
   // Required fields
   var id: Int,
   val moz: Double,
   var intensity: Float,
   val charge: Int,
   val elutionTime: Float,
+  val duration: Float,
   val qualityScore: Double,
   var ms1Count: Int,
   var ms2Count: Int,
@@ -100,7 +108,19 @@ case class Feature (
   
   def getCorrectedElutionTimeOrElutionTime = correctedElutionTime.getOrElse(elutionTime)
   def getCalibratedMozOrMoz = calibratedMoz.getOrElse(moz)
-  def getNormalizedIntensityOrIntensity = normalizedIntensity.getOrElse(intensity)  
+  def getNormalizedIntensityOrIntensity = normalizedIntensity.getOrElse(intensity)
+  
+  def toRunMapFeature(): Feature = {
+    require( isCluster == false, "can't convert a cluster feature into a run map feature" )
+    require( isMaster == false, "can't convert a master feature into a run map feature" )
+    
+    this.copy(
+      calibratedMoz = None,
+      normalizedIntensity = None,
+      correctedElutionTime = None,
+      isClusterized = false
+    )
+  }
   
   def toMasterFeature(): Feature = {
     val ftRelations = this.relations
@@ -111,6 +131,7 @@ case class Feature (
       intensity = this.intensity,
       charge = this.charge,
       elutionTime = this.getCorrectedElutionTimeOrElutionTime, // master time scale must be corrected or be the ref
+      duration = this.duration,
       calibratedMoz = this.calibratedMoz,
       normalizedIntensity = this.normalizedIntensity,
       correctedElutionTime = this.correctedElutionTime,

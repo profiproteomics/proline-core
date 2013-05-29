@@ -148,6 +148,14 @@ case class LcMsScanSequence(
     scans.length == 0
   }
   
+  def calcFeatureDuration( feature: Feature ): Float = {
+    calcDeltaTime(feature.relations.firstScanId,feature.relations.lastScanId)
+  }
+  
+  def calcDeltaTime( firstSanId: Int, lastScanId: Int ): Float = {
+    this.scanById(lastScanId).time - this.scanById(firstSanId).time
+  }
+  
 }
 
 @JsonSnakeCase

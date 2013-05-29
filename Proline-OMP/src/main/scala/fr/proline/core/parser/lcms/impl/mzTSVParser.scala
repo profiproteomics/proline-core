@@ -85,6 +85,7 @@ case class mzFeature(
       intensity = area,
       charge = charge,
       elutionTime = elutionTime,
+      duration = 0, // FIXME
       qualityScore = qualityScore,
       ms1Count = ms1Count,
       ms2Count = ms2Count,
@@ -138,18 +139,21 @@ class mzTSVParser extends ILcmsMapFileParser {
       val ms2EventIds = getMs2Events(lcmsScanSeq, lcmsScanSeq.getScanAtTime(apexScanId, 2).initialId)
       val featureId = Feature.generateNewId()
 
-      val feature = Feature(id = featureId,
+      val feature = Feature(
+        id = featureId,
         moz = mz,
         intensity = area,
         charge = charge,
         elutionTime = elutionTime,
+        duration = 0, // FIXME
         qualityScore = qualityScore,
         ms1Count = ms1Count,
         ms2Count = ms2Count,
         isOverlapping = isOverlapping,
         isotopicPatterns = Some(parse[Array[mzIsotopicPattern]](isotopicPatterns).map(ip => ip.toIsotopicPattern)),
         overlappingFeatures = Array[Feature](parse[mzFeature](overlappingFeatures).toFeature(lcmsScanSeq, featureId, ms2EventIds)),
-        relations = FeatureRelations(ms2EventIds,
+        relations = FeatureRelations(
+          ms2EventIds = ms2EventIds,
           firstScanInitialId = lcmsScanSeq.scanById.get(firstScanId).get.initialId,
           lastScanInitialId = lcmsScanSeq.scanById.get(lastScanId).get.initialId,
           apexScanInitialId = lcmsScanSeq.scanById.get(apexScanId).get.initialId))

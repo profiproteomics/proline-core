@@ -69,11 +69,13 @@ class OpenMSMapParser extends ILcmsMapFileParser {
         lastScanInitialId = lcmsScanSeq.getScanAtTime(lastTime, 1).initialId,
         apexScanInitialId = scanMs1.initialId)
 
-      val feature = Feature(id = Feature.generateNewId(),
+      val feature = Feature(
+        id = Feature.generateNewId(),
         moz = moz,
         intensity = intensity,
         charge = charge,
         elutionTime = elutionTime,
+        duration = 0, // FIXME
         qualityScore = Double.NaN,
         ms1Count = math.abs(lcmsScanSeq.getScanAtTime(lastTime, 1).cycle - lcmsScanSeq.getScanAtTime(estimatedBeginTime, 1).cycle) + 1,
         ms2Count = ms2EventIds.length,

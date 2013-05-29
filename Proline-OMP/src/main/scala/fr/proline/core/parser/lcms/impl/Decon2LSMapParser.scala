@@ -184,11 +184,13 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
 
             val ms2EventIds = getMs2Events(lcmsScanSeq, lcmsScanSeq.getScanAtTime(lcmsScanSeq.scanById(scanIdOfRef).time, 2).initialId)
             ////// new FT with sameFtIps
-            val ft = Feature(id = Feature.generateNewId(),
+            val ft = Feature(
+              id = Feature.generateNewId(),
               moz = mozOfRef,
               intensity = area,
               charge = ips.charge,
               elutionTime = lcmsScanSeq.scanById(scanIdOfRef).time,
+              duration = 0, // FIXME
               qualityScore = Double.NaN,
               ms1Count = sameFtIps.length,
               ms2Count = ms2EventIds.length,
@@ -198,7 +200,8 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
               relations = FeatureRelations(ms2EventIds = null,
                 firstScanInitialId = sameFtIps.first.scanInitialId,
                 lastScanInitialId = sameFtIps.last.scanInitialId,
-                apexScanInitialId = apex.scanInitialId))
+                apexScanInitialId = apex.scanInitialId)
+              )
             //die Dumper ft if !defined ft.firstScanInitialId
             features += ft
             processedIp += ips

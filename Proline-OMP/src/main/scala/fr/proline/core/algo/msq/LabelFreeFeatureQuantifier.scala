@@ -212,6 +212,7 @@ class LabelFreeFeatureQuantifier(
             abundance = ftIntensity * normFactor,// TODO: getNormalizedIntensity
             moz = feature.moz,
             elutionTime = feature.elutionTime,
+            duration = feature.duration,
             correctedElutionTime = feature.getCorrectedElutionTimeOrElutionTime,
             scanNumber = feature.relations.apexScanInitialId,
             peptideMatchesCount = feature.ms2Count,
@@ -304,7 +305,7 @@ class LabelFreeFeatureQuantifier(
         id = MasterQuantPeptideIon.generateNewId(),
         unlabeledMoz = refFt.moz,
         charge = refFt.charge,
-        elutionTime = refFt.elutionTime,
+        elutionTime = refFt.getCorrectedElutionTimeOrElutionTime,
         peptideMatchesCount = 0,
         masterQuantPeptideId = mqPeptideId,
         bestPeptideMatchId = None,

@@ -79,6 +79,7 @@ case class QuantPeptideIon(  val rawAbundance: Float,
                              var abundance: Float,
                              val moz: Double,
                              val elutionTime: Float,
+                             val duration: Float,
                              val correctedElutionTime: Float,
                              val scanNumber: Int,
                              

@@ -76,6 +76,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
           moz = moz,
           intensity = intensity,
           elutionTime = elutionTime,
+          duration = 0, // FIXME
           charge = charge,
           qualityScore = Double.NaN,
           ms1Count = lastScan.cycle - firstScan.cycle + 1,
@@ -83,7 +84,8 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
           isOverlapping = false,
           isotopicPatterns = Some(ips.toArray),
           overlappingFeatures = null,
-          relations = FeatureRelations(ms2EventIds,
+          relations = FeatureRelations(
+            ms2EventIds = ms2EventIds,
             firstScanInitialId = firstScan.initialId,
             lastScanInitialId = lastScan.initialId,
             apexScanInitialId = apexScan.initialId))

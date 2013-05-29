@@ -39,10 +39,12 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
 
       val ms2EventIds = getMs2Events(lcmsScanSeq, lcmsScanSeq.getScanAtTime(elutionTime, 2).initialId)
 
-      val feature = Feature(id = Feature.generateNewId(),
+      val feature = Feature(
+        id = Feature.generateNewId(),
         moz = mz,
         intensity = intensity,
         elutionTime = elutionTime,
+        duration = 0, // FIXME
         charge = charge,
         qualityScore = Double.NaN,
         ms1Count = lastScan.initialId - firstScan.initialId + 1,

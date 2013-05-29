@@ -61,6 +61,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
         moz = moz,
         intensity = intensity,
         elutionTime = elutionTime,
+        duration = 0, // FIXME
         charge = charge,
         qualityScore = Double.NaN,
         ms1Count = math.abs(lcmsScanSeq.scanById(firstScanId).cycle - lcmsScanSeq.scanById(lastScanId).cycle) + 1,

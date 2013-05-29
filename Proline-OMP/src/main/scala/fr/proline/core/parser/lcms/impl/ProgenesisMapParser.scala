@@ -70,11 +70,13 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
         lastScanInitialId = lastScanInitialId,
         apexScanInitialId = scanms1.initialId)
 
-      val feature = Feature(id = Feature.generateNewId(),
+      val feature = Feature(
+        id = Feature.generateNewId(),
         moz = rowValueMap("m/z").toDouble,
         intensity = rowValueMap(mapName).toFloat,
         charge = rowValueMap("Charge").toInt,
         elutionTime = time,
+        duration = 0, // FIXME
         qualityScore = Double.NaN,
         ms1Count = lcmsScanSeq.scanById(lastScanInitialId).cycle - scanms1.cycle + 1, //number of ms1
         ms2Count = ms2IdEvents.length, //give the number of ms2
