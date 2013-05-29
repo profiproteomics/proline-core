@@ -17,7 +17,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import fr.proline.core.orm.msi.PeptideMatch.TransientData;
 
 /**
  * The persistent class for the protein_match database table.
@@ -233,7 +232,8 @@ public class ProteinMatch implements Serializable {
 		private static final long serialVersionUID = 1L;
 		
 	    private HashMap<Integer, PeptideSet> peptideSetMap   = null;
-	    private BioSequence bioSequence = null;
+	    private fr.proline.core.orm.msi.BioSequence bioSequenceMSI = null;
+	    private fr.proline.core.orm.pdi.BioSequence bioSequencePDI = null; // bioSequence is not always available in MSI, in this case, we look for it in PDI
 		private ProteinSet[] proteinSetArray = null;
 		
 		protected TransientData() {
@@ -257,12 +257,20 @@ public class ProteinMatch implements Serializable {
 			peptideSetMap.put(resultSummaryId, peptideSet);
 		}
 
-		public BioSequence getBioSequence() {
-			return bioSequence;
+		public fr.proline.core.orm.msi.BioSequence getBioSequenceMSI() {
+			return bioSequenceMSI;
 		}
 
-		public void setBioSequence(BioSequence bioSequence) {
-			this.bioSequence = bioSequence;
+		public void setBioSequenceMSI(fr.proline.core.orm.msi.BioSequence bioSequence) {
+			this.bioSequenceMSI = bioSequence;
+		}
+		
+		public fr.proline.core.orm.pdi.BioSequence getBioSequencePDI() {
+			return bioSequencePDI;
+		}
+
+		public void setBioSequencePDI(fr.proline.core.orm.pdi.BioSequence bioSequence) {
+			this.bioSequencePDI = bioSequence;
 		}
 
 		public ProteinSet[] getProteinSetArray() {
