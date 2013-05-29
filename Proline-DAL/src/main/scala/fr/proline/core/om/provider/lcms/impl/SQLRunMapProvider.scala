@@ -14,6 +14,7 @@ import fr.proline.util.sql._
 
 class SQLRunMapProvider(
   val lcmsDbCtx: DatabaseConnectionContext,
+  val scans: Array[LcMsScan],
   val loadPeaks: Boolean = false
 ) extends AbstractSQLLcMsMapProvider with IRunMapProvider {
 

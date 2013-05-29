@@ -24,6 +24,7 @@ import fr.proline.core.om.model.msq.MasterQuantPeptide
 import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 import fr.proline.core.om.model.msq.QuantPeptide
 import fr.proline.core.om.model.msq.QuantPeptideIon
+import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.service.lcms.io.ILcMsQuantConfig
 import fr.proline.core.service.lcms.io.IMsQuantConfig
@@ -93,25 +94,30 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     })
   }
 
-  lazy val ms2ScanHeaderRecords = {
+  // TODO: load the scan sequence instead
+  lazy val lcmsScans = {
     this.logger.info("loading MS2 scan headers...")
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
+    val scanSeqProvider = new SQLScanSequenceProvider(lcmsDbCtx)
+    scanSeqProvider.getScans(this.lcmsRunIds)
+    
+    /*DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
       
       val sqlQuery = new SelectQueryBuilder1(LcmsDbScanTable).mkSelectQuery( (t,c) =>
         List(t.ID,t.INITIAL_ID,t.CYCLE,t.TIME)
         -> "WHERE "~ t.MS_LEVEL ~" = 2 AND "~ t.RUN_ID ~" IN("~ this.lcmsRunIds.mkString(",") ~")"
       )
       lcmsEzDBC.selectAllRecordsAsMaps(sqlQuery)    
-    })
+    })*/
     
   }
 
   lazy val ms2ScanNumbersByFtId = {
 
-    val ms2ScanNumberById = ms2ScanHeaderRecords.map { r =>
+    /*val ms2ScanNumberById = ms2ScanHeaderRecords.map { r =>
       r("id").asInstanceOf[Int] -> r("initial_id").asInstanceOf[Int]
-    } toMap
+    } toMap*/
+    val ms2ScanNumberById = Map() ++ lcmsScans.map( s => s.id -> s.initialId )
 
     val lcmsMapSet = this.lcmsMapSet
     val runMapIds = lcmsMapSet.getRunMapIds

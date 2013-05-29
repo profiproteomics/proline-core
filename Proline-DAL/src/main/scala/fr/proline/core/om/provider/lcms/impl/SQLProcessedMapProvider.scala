@@ -16,6 +16,7 @@ import fr.proline.util.primitives._
   
 class SQLProcessedMapProvider(
   val lcmsDbCtx: DatabaseConnectionContext,
+  val scans: Array[LcMsScan],
   val loadPeaks: Boolean = false
 ) extends AbstractSQLLcMsMapProvider with IProcessedMapProvider {
   

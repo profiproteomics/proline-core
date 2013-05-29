@@ -16,15 +16,16 @@ import fr.proline.util.primitives._
   
 class SQLMapSetProvider(
   val lcmsDbCtx: DatabaseConnectionContext,
+  val scans: Array[LcMsScan],
   val loadPeaks: Boolean = false
 ) extends IMapSetProvider {
   
   val MapSetCols = LcmsDbMapSetTable.columns
   val MftItemCols = LcmsDbMasterFeatureItemTable.columns
   val mapAlnSetProvider = new SQLMapAlignmentSetProvider( lcmsDbCtx )
-  val processedMapProvider = new SQLProcessedMapProvider( lcmsDbCtx, loadPeaks )
+  val processedMapProvider = new SQLProcessedMapProvider( lcmsDbCtx, scans, loadPeaks )
   
-  def getMapSet( mapSetId: Int ): MapSet = {    
+  def getMapSet( mapSetId: Int ): MapSet = {
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
     

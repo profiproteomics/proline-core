@@ -62,7 +62,7 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
         
       }
       
-      // Insert processed map feature items
+      // Insert extra master map features data into to processed map feature items
       this.insertProcessedMapFeatureItems( ezDBC, masterMap )
     
     })
