@@ -26,7 +26,7 @@ import fr.proline.core.om.storer.msi.impl.JPARsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 
-
+@deprecated("0.1.0","use ResultFileImporter instead")
 class ResultFileImporterJPAStorer(
   executionContext: IExecutionContext,
   resultIdentFile: File,
