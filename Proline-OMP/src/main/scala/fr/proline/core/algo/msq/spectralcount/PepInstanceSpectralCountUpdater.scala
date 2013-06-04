@@ -11,7 +11,11 @@ import fr.proline.core.algo.msi.filtering.ResultSummaryFilterBuilder
 import fr.proline.repository.util.JDBCWork
 import java.sql.Connection
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-
+import scala.collection.JavaConversions.collectionAsScalaIterable
+import java.util.HashSet
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IResultSetProvider
+//import scala.collection.JavaConverters.asJavaCollectionConverter
 
 trait IPepInstanceSpectralCountUpdater {
   
@@ -104,28 +108,83 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
     })
   }
 
-  //TODO VDS !!! 
+  //A Optimiser: Prendre en entre la Map globale et l'incrementer...  
   private def countValidPSMInResultSet(rs: ResultSet, appliedPSMFilters: Array[IPeptideMatchFilter]): HashMap[Int, Int] = {
-    new HashMap[Int, Int]()
+    appliedPSMFilters.foreach( psmFilter =>{
+      var allPSMs = rs.peptideMatches.toSeq 
+      if(rs.decoyResultSet.isDefined){
+        allPSMs ++= rs.decoyResultSet.get.peptideMatches
+      }
+      psmFilter.filterPeptideMatches(allPSMs, true, false)
+    })
+    
+    val resultMap  =  new HashMap[Int, Int]()
+    rs.peptideMatches.filter(_.isValidated).foreach(psm =>{
+        var psmCount = 0
+    	if(resultMap.contains(psm.peptideId)){
+    	  psmCount = resultMap.get(psm.peptideId).get
+    	}
+        psmCount += 1
+		resultMap.put(psm.peptideId, psmCount)
+    })
+    
+   resultMap
   }
+
+
   
-  //TODO VDS !!! 
   private def getLeavesRS(rsm: ResultSummary, execContext: IExecutionContext): Seq[ResultSet] = {
 
-    //     val jdbcWork = new JDBCWork() {
-    //
-    //    	  override def execute(con: Connection) {
-    //    		  val stmt = con.createStatement()
-    //
-    //			  stmt.execute...
-    //
-    //			  stmt.close()
-    //    	  }
-    //
-    //      } // End of jdbcWork anonymous inner class
-    //      execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-
-    Seq.empty[ResultSet]
+	  /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Provider service use */
+      val providerContext = if (execContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
+        execContext.asInstanceOf[ProviderDecoratedExecutionContext]
+      } else {
+        new ProviderDecoratedExecutionContext(execContext)
+      }
+      
+      
+    var leavesRsIds : Seq[Int] = getLeafChildsID(rsm.getResultSetId, providerContext)
+    var leavesRsBuilder  = Seq.newBuilder[ResultSet]
+   
+    val provider:IResultSetProvider=  providerContext.getProvider(classOf[IResultSetProvider])
+    
+    leavesRsIds.foreach(rsID =>{
+      val resultRS = provider.getResultSet(rsID)
+      if(resultRS.isDefined){
+        leavesRsBuilder += resultRS.get
+      } else{
+        logger.warn(" !!! Unable to get leave search result with id "+rsID)
+      }        
+    })
+    
+    leavesRsBuilder.result
+   
   }
 
+    
+  private def getLeafChildsID( rsId: Int, execContext: IExecutionContext) : Seq[Int] = {
+    var allRSIds = Seq.newBuilder[Int]
+    
+	val jdbcWork = new JDBCWork() {
+    
+    	override def execute(con: Connection) {
+    	    
+    		val stmt = con.prepareStatement("select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = :rsId")
+			stmt.setInt(1, rsId)
+			val sqlResultSet = stmt.executeQuery()
+			var childDefined = false 
+			while (sqlResultSet.next){
+			  childDefined = true
+			  allRSIds += sqlResultSet.getInt(1)
+			} 
+    		if(!childDefined)
+    		  allRSIds += rsId
+    		stmt.close()
+          } // End of jdbcWork anonymous inner class
+    }
+    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+    
+    
+    allRSIds.result
+  }
 }
