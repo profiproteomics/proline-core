@@ -183,7 +183,29 @@ case class ProteinSet (
   def getProteinMatchIds : Array[Int] = { if(proteinMatches != null && proteinMatches != None) proteinMatches.get.map(_.id)  else proteinMatchIds  }
 
   def getTypicalProteinMatchId : Int = { if(typicalProteinMatch != null && typicalProteinMatch != None) typicalProteinMatch.get.id else typicalProteinMatchId }
-  
+   
+  /**
+   * Return a list of all ProteinMatch ids, identified as same set or sub set of this ProteinSet, 
+   * referenced by their PeptideSet.
+   * If PeptideSet are not accessible, a IllegalAccessException will be thrown. 
+   *	
+   */
+  @throws(classOf[IllegalAccessException])
+  def getAllProteinMatchesIdByPeptideSet :  Map[PeptideSet,Array[Int]]   = {
+    if(peptideSet.hasStrictSubset && (!peptideSet.strictSubsets.isDefined) )
+      throw new IllegalAccessException("PeptideSets not accessible")
+    
+    val resultMapBuilder = Map.newBuilder[PeptideSet,Array[Int]]
+    
+    resultMapBuilder += peptideSet -> getProteinMatchIds
+    if(peptideSet.hasStrictSubset) {
+       peptideSet.strictSubsets.get.foreach(pepSet => {
+         resultMapBuilder += pepSet -> pepSet.proteinMatchIds
+       })       
+     }
+    resultMapBuilder.result
+  }
+
 }
 
 @JsonSnakeCase
