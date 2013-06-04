@@ -4,15 +4,14 @@ import java.sql.Connection
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.Map
 
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msq.spectralcount.IPepInstanceSpectralCountUpdater
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
 import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
@@ -26,6 +25,9 @@ class WeightedSCCalculatorWId (
   
 ) extends IService with Logging{ 
 
+ var fullService : WeightedSCCalculator = null
+ def wscByProtMatchAccessionByRSM : Map[Int, Map[String, Float]] = if(fullService!= null) {fullService.wscByProtMatchAccessionByRSM} else Map.empty[Int, Map[String, Float]] 
+    
  def runService(): Boolean = { 
     require(rsmIdsToCalculate!=null && referenceRSMId != 0 &&  rsmIdsToCalculate.length > 0)
     
@@ -44,7 +46,7 @@ class WeightedSCCalculatorWId (
       rsmToCalculateBuilder  += nextRSMOpt.get
     })
     
-    val fullService = new WeightedSCCalculator(
+    fullService = new WeightedSCCalculator(
       execContext,
       referenceRSMOpt.get,
       rsmToCalculateBuilder.result
@@ -74,27 +76,66 @@ class WeightedSCCalculator (
 
   override protected def  beforeInterruption  = {  }
 
+  var _wscByProtMatchAccessionByRSM : scala.collection.mutable.Map[Int, Map[String, Float]] = scala.collection.mutable.Map.empty[Int, Map[String, Float]] 
+  def wscByProtMatchAccessionByRSM : Map[Int, Map[String, Float]] = {_wscByProtMatchAccessionByRSM.toMap }
+  
   def runService(): Boolean = { 
 
 	  // -- Create ProteinPepsWeightStruct from reference RSM
 	 val proteinSetWeightStructsById = createProteinPepsWeightStructs()
     
-	 val scUpdater : IPepInstanceSpectralCountUpdater = PepInstanceFilteringLeafSCUpdater
 	 // Compute SpectralCount for each RSM
 	 rsmToCalculate.foreach(rsm => {
-	    var wscByProtMatchAccession : Map[String, Float] = scala.collection.mutable.Map[String, Float]()
+	   
+	   //Store result in Map (ProtMatch Accession -> Weight Spectral Count)
+	    var wscByProtMatchAccession : scala.collection.mutable.Map[String, Float] = scala.collection.mutable.Map[String, Float]()
+	    
 		 //--- Update RSM SpectralCount
-	    scUpdater.updatePepInstanceSC(rsm, execContext)
+	    PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm, execContext)
+
+	    //--- Get RSM Protein Match information 	     
+	    // map   list of ProtMatch accession by PeptideSet
+	    val pepSetByPMAccList : Map[PeptideSet, Seq[String]] = createProtMatchesAccByPeptideSet(rsm)
 	    
 	    //--- Calculate weight SC
+	    proteinSetWeightStructsById.foreach(entry =>{
+	      val currentProteinSetWeightStruct = entry._2
+	      
+	       var peptideSetForPM : PeptideSet = null //PeptideSet containing protein in current RSM
+	       
+	       val pepSetIt  = pepSetByPMAccList.iterator	       
+	       while(pepSetIt.hasNext && peptideSetForPM==null){
+	         val nextEntry : (PeptideSet, Seq[String]) = pepSetIt.next
+	         if(nextEntry._2.contains(currentProteinSetWeightStruct.typicalPMAcc))
+	        	 peptideSetForPM = nextEntry._1
+	       }
+	       
+	      var protWSC : Float = 0.0f // ProteinMatch Spectral Count
+	       if( peptideSetForPM!=null){	         
+	         //Go through peptides and compute SC
+	    	 peptideSetForPM.getPeptideInstances.foreach(pepInst =>{
+	    	   protWSC += (pepInst.totalLeavesMatchCount * currentProteinSetWeightStruct.weightByPeptideId.get(pepInst.peptideId).get)
+	    	 })
+	       } else{ //Protein not identified in current RSM
+	         protWSC = Float.NaN
+	       }
+	      
+	      wscByProtMatchAccession +=currentProteinSetWeightStruct.typicalPMAcc -> protWSC
+
+	    }) // End go through  proteinSetWeightStructsById
 	    
-		 
-	 })
+	    _wscByProtMatchAccessionByRSM += rsm.id -> wscByProtMatchAccession.toMap //Save Result
+	     
+	 }) //End go through RSMs
 	 
     false
      
   }
   
+   private def createProtMatchesAccByPeptideSet(rsm: ResultSummary) : Map[PeptideSet, Seq[String]] = {
+     Map.empty[PeptideSet, Seq[String]]
+   }
+   
   /**
    * Create a Map of ProteinPepsWeightStruct by ProteinSet Id.
    * For each referenceRSM's ProteinSet create a ProteinPepsWeightStruct which contains
@@ -169,7 +210,7 @@ class WeightedSCCalculator (
    *  
    *      
    */
-  def computePeptideWeight(proteinWeightStructByProtSetId : Map[Int,ProteinPepsWeightStruct], protSetIdByPep:Map[Int,ArrayBuffer[Int]]) : Unit = {
+  def computePeptideWeight(proteinWeightStructByProtSetId : Map[Int,ProteinPepsWeightStruct], protSetIdByPep:HashMap[Int,ArrayBuffer[Int]]) : Unit = {
     
 	  proteinWeightStructByProtSetId.foreach( entry =>{
 		  val currentProteinWeightStruct =  entry._2
