@@ -448,8 +448,9 @@ class ExtractMapSet(
     // Retrieve some vars
     val lcmsScanIdByInitialId = scanSeq.scanIdByInitialId
     val scanHeaders = mzDbFt.scanHeaders
-    val firstScanInitialId = scanHeaders.head.getInitialId
-    val lastScanInitialId = scanHeaders.last.getInitialId
+    val( firstScanH, lastScanH ) = (scanHeaders.head,scanHeaders.last)
+    val firstScanInitialId = firstScanH.getInitialId
+    val lastScanInitialId = lastScanH.getInitialId
     val apexScanInitialId = mzDbFt.apexScanHeader.getInitialId
     val firstLcMsScanId = lcmsScanIdByInitialId(firstScanInitialId)
     val lastLcMsScanId = lcmsScanIdByInitialId(lastScanInitialId)
@@ -463,7 +464,7 @@ class ExtractMapSet(
        intensity = mzDbFt.area,
        charge = mzDbFt.charge,
        elutionTime = mzDbFt.elutionTime,
-       duration = scanSeq.calcDeltaTime(firstLcMsScanId, lastLcMsScanId),
+       duration = lastScanH.getElutionTime - firstScanH.getElutionTime,
        qualityScore = mzDbFt.qualityScore,
        ms1Count = mzDbFt.getMs1Count,
        ms2Count = mzDbFt.getMs2Count,
