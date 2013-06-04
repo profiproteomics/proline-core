@@ -1,12 +1,14 @@
 package fr.proline.core.om.provider
 
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.{ ORMSeqDatabaseProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
 import fr.proline.core.om.provider.msi.{ IProteinProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.msi.{ ISeqDatabaseProvider, IPeptideMatchProvider }
 import fr.proline.util.{ StringUtils, PropertiesUtils }
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 
 trait IProviderFactory {
 
@@ -50,6 +52,8 @@ object ProviderFactory extends IProviderFactory with Logging {
       getSeqDatabaseProviderInstance(executionContext).asInstanceOf[T]
     } else if (providerClassifier == classOf[IPTMProvider]) {
       getPTMProviderInstance(executionContext).asInstanceOf[T]
+    } else if (providerClassifier == classOf[IResultSetProvider]) {
+      getResultSetProviderInstance(executionContext).asInstanceOf[T]
     } else {
       throw new IllegalArgumentException("ProviderFactory does not support " + providerClassifier)
     }
@@ -137,6 +141,37 @@ object ProviderFactory extends IProviderFactory with Logging {
     result
   }
 
+   def getResultSetProviderInstance(executionContext: IExecutionContext): IResultSetProvider = {
+    var result: IResultSetProvider = getDefaultProviderInstance(classOf[IResultSetProvider])
+
+    if (result == null) {
+      val msiDb = executionContext.getMSIDbConnectionContext()
+      val psDb =  executionContext.getPSDbConnectionContext()
+      val pdiDb = executionContext.getPDIDbConnectionContext()
+
+      if (( msiDb != null )&&  msiDb.isJPA) {
+        logger.debug("Creating a default ORMResultSetProvider in current executionContext")
+
+        result = new ORMResultSetProvider(msiDb,psDb,pdiDb)
+        
+      } else if (( msiDb != null ) &&  !msiDb.isJPA) {
+        
+        logger.debug("Creating a default SQLResultSetProvider in current executionContext")
+
+        result = new SQLResultSetProvider(msiDb,psDb,pdiDb)
+      }
+
+      if (result == null) {
+        logger.warn("No IResultSetProvider implementing instance found !!")
+      }
+
+    } else {
+      logger.debug("ResultSetProvider implementation : " + result.getClass.getName)
+    }
+
+    result
+  }
+   
   def getPTMProviderInstance(executionContext: IExecutionContext): IPTMProvider = {
     var result: IPTMProvider = getDefaultProviderInstance(classOf[IPTMProvider])
 
