@@ -15,7 +15,7 @@ class PeptideStorer extends Logging {
   def storePeptides(peptides: Seq[Peptide], psDbCtx: DatabaseConnectionContext): Unit = {
 
     DoJDBCWork.withEzDBC(psDbCtx, { psEzDBC =>
-      logger.info("storing peptides in PsDb...")
+      logger.info("Storing "+peptides.length+" Peptides in PsDb...")
   
       val peptideInsertQuery = PsDbPeptideTable.mkInsertQuery{ (c,colsList) => 
                                  colsList.filter( _ != c.ID)

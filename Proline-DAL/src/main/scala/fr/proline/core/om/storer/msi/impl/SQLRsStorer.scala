@@ -186,9 +186,9 @@ class SQLRsStorer(
         //peptide.id = this.peptideByUniqueKey( peptide.uniqueKey ).id
       }
 
-      logger.info("storing " + nbNewMsiPeptides + " new peptides in the MSIdb...")
+      logger.info("Storing " + nbNewMsiPeptides + " new Peptides in the MSIdb...")
       this.rsWriter.insertNewPeptides(newMsiPeptides, this.peptideByUniqueKey, msiDb)
-      logger.info(newMsiPeptides.length + " new peptides have been effectively stored !")
+      logger.info(newMsiPeptides.length + " new Peptides have been effectively stored")
 
       /*for( insertedPeptide <- insertedPeptides ) {
         this.peptideByUniqueKey += ( insertedPeptide.uniqueKey -> insertedPeptide )
@@ -211,13 +211,13 @@ class SQLRsStorer(
 
     // Store peptide matches
     val peptideMatchCount = this.rsWriter.insertRsPeptideMatches(resultSet, msiDb)
-    logger.info(peptideMatchCount + " peptide matches have been stored !")
+    logger.info(peptideMatchCount + " PeptideMatches have been stored !")
 
     // Retrieve protein matches and their accession numbers
     val proteinMatches = resultSet.proteinMatches
     val acNumbers = proteinMatches map { _.accession }
 
-    logger.info(proteinMatches.length + " protein identifiers are going to be loaded...")
+    logger.info(proteinMatches.length + " ProteinMatches are going to be loaded...")
 
     /*
     // Retrieve protein identifiers from the PDI-DB
@@ -278,15 +278,15 @@ class SQLRsStorer(
     this._updateRsProteinMatches(resultSet, null, null, null, seqDbIdByTmpId)
 
     // Store protein matches
-    this.rsWriter.insertRsProteinMatches(resultSet, msiDb)
-    logger.info("protein matches have been stored")
+    val proteinMatchesCount = this.rsWriter.insertRsProteinMatches(resultSet, msiDb)
+    logger.info(proteinMatchesCount +" ProteinMatches have been stored")
 
     // Update sequence matches
     this._updateRsSequenceMatches(resultSet, peptideMatchByTmpId)
 
     // Store sequence matches
-    this.rsWriter.insertRsSequenceMatches(resultSet, msiDb)
-    logger.info("sequence matches have been stored")
+    val seqMatchesCount = this.rsWriter.insertRsSequenceMatches(resultSet, msiDb)
+    logger.info(seqMatchesCount + " SequenceMatches have been stored")
 
   }
 

@@ -73,7 +73,9 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
       throw new UnsupportedOperationException("Updating a ResultSet is not supported yet !")
     }
 
-    logger.info("Storing ResultSet " + omResultSetId + "  [" + resultSet.name + "]") 
+    val start = System.currentTimeMillis()
+    
+    logger.info("Storing ResultSet id(temp)=" + omResultSetId + ", name=" + resultSet.name) 
     
     // Save Spectra and Queries information (MSISearch should be defined)
     for( msiSearch <- resultSet.msiSearch ) {
@@ -89,7 +91,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
       }
       
       // Insert the MSI search  and retrieve its new id
-      logger.info("storing MSI search...")
+      logger.info("Storing MSI search...")
       val msiSearchId = this.storeMsiSearch(msiSearch, storerContext)
       
       // Insert MS queries if they are provided
@@ -100,6 +102,8 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
 
     resultSet.id = createResultSet(resultSet, storerContext)
 
+    logger.info("ResultSet id(temp)=" + omResultSetId + " stored with id=" + resultSet.id+" in "+(System.currentTimeMillis - start)/1000.0+" s")
+    
     resultSet.id
     
   }  

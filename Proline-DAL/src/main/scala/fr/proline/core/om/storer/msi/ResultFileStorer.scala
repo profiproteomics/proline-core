@@ -32,6 +32,9 @@ object ResultFileStorer extends Logging {
     rsSplitter: Option[IResultSetSplitter] = None
   ): Int = {
 
+    val start = System.currentTimeMillis()
+    logger.info("Storing ResultFile " + resultFile.fileLocation.getName())
+    
     // Store the instrument configuration
     this._insertInstrumentConfig(resultFile.instrumentConfig.get, storerContext)
 
@@ -61,7 +64,7 @@ object ResultFileStorer extends Logging {
     msiSearch.peakList.id = pklWriter.insertPeaklist(msiSearch.peakList, storerContext)
     
     // Insert spectra contained in result file
-    logger.info("storing spectra...")
+    logger.info("Storing spectra...")
     pklWriter.insertSpectra(msiSearch.peakList.id, resultFile, storerContext)
 
     // Load and store decoy result set if it exists
@@ -78,14 +81,15 @@ object ResultFileStorer extends Logging {
       
       if(saveSpectrumMatch){
 	      // Insert target spectrum matches
-	      logger.info("storing target spectrum matches...")
+	      logger.info("Storing TARGET spectrum matches...")
 	      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
 	      
 	      // Insert decoy spectrum matches
-	      logger.info("storing decoy spectrum matches...")
+	      logger.info("Storing DECOY spectrum matches...")
 	      rsStorer.insertSpectrumMatches(decoyRs, resultFile, storerContext)      
       }
       
+      logger.info("ResultFile " + resultFile.fileLocation.getName()+" stored in "+(System.currentTimeMillis() - start)/1000.0+" s")
       return targetRs.id
       
     } // Else if a regex has been passed to detect decoy protein matches        
@@ -119,10 +123,12 @@ object ResultFileStorer extends Logging {
       
       if(saveSpectrumMatch){
 	      // Insert target and decoy spectrum matches
-	      logger.info("storing target and decoy spectrum matches...")
+	      logger.info("Storing target and decoy spectrum matches...")
 	      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
       }
       
+      logger.info("ResultFile " + resultFile.fileLocation.getName()+" stored in "+(System.currentTimeMillis() - start)/1000.0+" s")
+
       return tRs.id
     }
     else {
@@ -131,7 +137,7 @@ object ResultFileStorer extends Logging {
       
       if(saveSpectrumMatch){
 	      // Insert target spectrum matches
-	      logger.info("storing target spectrum matches...")
+	      logger.info("Storing target spectrum matches...")
 	      rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
       }
       

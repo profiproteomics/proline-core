@@ -251,7 +251,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
         colsList.filter( _ != c.ID)
       }
       
-      logger.info( "protein matches are going to be inserted..." )
+      logger.info(proteinMatches.length + " ProteinMatches are going to be inserted..." )
       
       msiEzDBC.executePrepared( protMatchInsertQuery, true ) { stmt =>
         
@@ -284,7 +284,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
         }
       }
   
-      logger.info("protein matches are going to be linked to seq databases...")
+      logger.info("ProteinMatches are going to be linked to seq databases...")
   
       // Link protein matches to sequence databases
       msiEzDBC.executePrepared(MsiDbProteinMatchSeqDatabaseMapTable.mkInsertQuery()) { stmt =>
