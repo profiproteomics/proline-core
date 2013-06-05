@@ -94,8 +94,6 @@ class ResultFileImporter(
       }
       >>>
       
-      logger.debug("Starting JPA RSStorer work")
-      
       /* Wrap ExecutionContext in StorerContext for RSStorer service use */
       val storerContext = if (executionContext.isInstanceOf[StorerContext]) {
         executionContext.asInstanceOf[StorerContext]
