@@ -22,6 +22,8 @@ public interface IDatabaseConnector {
 
     boolean isMemory();
 
+    void setAdditionalProperties(Map<Object, Object> params);
+
     DataSource getDataSource();
 
     EntityManagerFactory getEntityManagerFactory();
@@ -29,7 +31,5 @@ public interface IDatabaseConnector {
     void close();
 
     boolean isClosed();
-    
-    void setAdditionalProperties(Map<Object, Object> params);
 
 }

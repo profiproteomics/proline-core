@@ -2,6 +2,9 @@ package fr.proline.core.orm.util;
 
 import static org.junit.Assert.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -16,6 +19,7 @@ import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.UserAccount;
 import fr.proline.repository.ConnectionMode;
+import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
@@ -32,9 +36,17 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
     @Before
     public void setUp() throws Exception {
+	final IDatabaseConnector connector = getConnector();
+
+	final Map<Object, Object> props = new HashMap<Object, Object>();
+	props.put("hibernate.show_sql", "true");
+	props.put("hibernate.format_sql", "true");
+
+	connector.setAdditionalProperties(props);
+
 	initDatabase();
 
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
+	final EntityManagerFactory emf = connector.getEntityManagerFactory();
 
 	final EntityManager udsEm = emf.createEntityManager();
 
@@ -130,12 +142,10 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
 	    }
 
-	    if (udsEm != null) {
-		try {
-		    udsEm.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing UDS EntityManager", exClose);
-		}
+	    try {
+		udsEm.close();
+	    } catch (Exception exClose) {
+		LOG.error("Error closing UDS EntityManager", exClose);
 	    }
 
 	}

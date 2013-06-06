@@ -17,370 +17,402 @@ import fr.proline.util.StringUtils;
 
 public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
-	/* Constants */
-	public static final String PERSISTENCE_JDBC_DRIVER_KEY = "javax.persistence.jdbc.driver";
-	public static final String PERSISTENCE_JDBC_URL_KEY = "javax.persistence.jdbc.url";
-	public static final String PERSISTENCE_JDBC_USER_KEY = "javax.persistence.jdbc.user";
-	public static final String PERSISTENCE_JDBC_PASSWORD_KEY = "javax.persistence.jdbc.password";
+    /* Constants */
+    public static final String PERSISTENCE_JDBC_DRIVER_KEY = "javax.persistence.jdbc.driver";
+    public static final String PERSISTENCE_JDBC_URL_KEY = "javax.persistence.jdbc.url";
+    public static final String PERSISTENCE_JDBC_USER_KEY = "javax.persistence.jdbc.user";
+    public static final String PERSISTENCE_JDBC_PASSWORD_KEY = "javax.persistence.jdbc.password";
 
-	public static final String HIBERNATE_DIALECT_KEY = "hibernate.dialect";
+    public static final String HIBERNATE_DIALECT_KEY = "hibernate.dialect";
 
-	public static final String PERSISTENCE_VALIDATION_MODE_KEY = "javax.persistence.validation.mode";
-	public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
-	public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
-	public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
-	public static final String HIBERNATE_CONNECTION_RELEASE_MODE_KEY = "hibernate.connection.release_mode";
-	public static final String HIBERNATE_BYTECODE_OPTIMIZER_KEY = "hibernate.bytecode.use_reflection_optimizer";
+    public static final String PERSISTENCE_VALIDATION_MODE_KEY = "javax.persistence.validation.mode";
+    public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
+    public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
+    public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
+    public static final String HIBERNATE_CONNECTION_RELEASE_MODE_KEY = "hibernate.connection.release_mode";
+    public static final String HIBERNATE_BYTECODE_OPTIMIZER_KEY = "hibernate.bytecode.use_reflection_optimizer";
 
-	public static final int DEFAULT_MAX_POOL_CONNECTIONS = 20;
+    public static final int DEFAULT_MAX_POOL_CONNECTIONS = 20;
 
-	public static final String JDBC_SCHEME = "jdbc";
+    public static final String JDBC_SCHEME = "jdbc";
 
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractDatabaseConnector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDatabaseConnector.class);
 
-	private static final Map<String, Integer> CONNECTOR_INSTANCES = new HashMap<String, Integer>();
+    private static final Map<String, Integer> CONNECTOR_INSTANCES = new HashMap<String, Integer>();
 
-	private static final boolean DEFAULT_ORM_OPTIMIZATIONS = true;
+    private static final boolean DEFAULT_ORM_OPTIMIZATIONS = true;
 
-	/* Instance variables */
-	private final ProlineDatabaseType m_prolineDbType;
+    /* Instance variables */
+    private final ProlineDatabaseType m_prolineDbType;
 
-	private final Map<Object, Object> m_properties;
-	
-	private final Map<Object, Object> m_added_properties = new HashMap<Object, Object>();
+    private final Map<Object, Object> m_properties;
 
-	private final String m_ident;
+    private final String m_ident;
 
-	private final Object m_connectorLock = new Object();
+    private final Object m_connectorLock = new Object();
 
-	/* All mutable fields are @GuardedBy("m_connectorLock") */
+    /* All mutable fields are @GuardedBy("m_connectorLock") */
 
-	private DataSource m_dataSource;
+    private Map<Object, Object> m_additionalProperties;
 
-	private EntityManagerFactory m_entityManagerFactory;
+    private DataSource m_dataSource;
 
-	private boolean m_closed;
+    private EntityManagerFactory m_entityManagerFactory;
 
-	/* Constructors */
-	protected AbstractDatabaseConnector(final ProlineDatabaseType prolineDbType, final Map<Object, Object> properties) {
+    private boolean m_closed;
 
-		if (prolineDbType == null) {
-			throw new IllegalArgumentException("ProlineDbType is null");
-		}
+    /* Constructors */
+    protected AbstractDatabaseConnector(final ProlineDatabaseType prolineDbType,
+	    final Map<Object, Object> properties) {
 
-		m_prolineDbType = prolineDbType;
+	if (prolineDbType == null) {
+	    throw new IllegalArgumentException("ProlineDbType is null");
+	}
 
-		if (properties == null) {
-			throw new IllegalArgumentException("Properties Map is null");
-		}
+	m_prolineDbType = prolineDbType;
 
-		m_properties = new HashMap<Object, Object>(properties); // Protection copy
+	if (properties == null) {
+	    throw new IllegalArgumentException("Properties Map is null");
+	}
 
-		final StringBuilder identBuffer = new StringBuilder(prolineDbType.getPersistenceUnitName());
+	m_properties = new HashMap<Object, Object>(properties); // Protection copy
 
-		final String jdbcURL = PropertiesUtils.getProperty(m_properties, PERSISTENCE_JDBC_URL_KEY);
+	final StringBuilder identBuffer = new StringBuilder(prolineDbType.getPersistenceUnitName());
 
-		if (!StringUtils.isEmpty(jdbcURL)) {
-			identBuffer.append('_').append(jdbcURL);
-		}
+	final String jdbcURL = PropertiesUtils.getProperty(m_properties, PERSISTENCE_JDBC_URL_KEY);
 
-		m_ident = identBuffer.toString();
+	if (!StringUtils.isEmpty(jdbcURL)) {
+	    identBuffer.append('_').append(jdbcURL);
+	}
 
-		final int newConnectorInstancesCount = addConnectorInstances(m_ident);
+	m_ident = identBuffer.toString();
 
-		if (newConnectorInstancesCount > 1) {
-			/* Trace error in Production and Test mode */
-			final Exception ex = new Exception("Multiple DatabaseConnector");
+	final int newConnectorInstancesCount = addConnectorInstances(m_ident);
 
-			LOG.error("There are " + newConnectorInstancesCount + " DatabaseConnector instances for [" + m_ident + ']', ex);
-		}
+	if (newConnectorInstancesCount > 1) {
+	    /* Trace error in Production and Test mode */
+	    final Exception ex = new Exception("Multiple DatabaseConnector");
+
+	    LOG.error("There are " + newConnectorInstancesCount + " DatabaseConnector instances for ["
+		    + m_ident + ']', ex);
+	}
+
+    }
+
+    /* Public methods */
+    public final ProlineDatabaseType getProlineDatabaseType() {
+	return m_prolineDbType;
+    }
+
+    public final boolean isMemory() {
+	/* Protection copy */
+	final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
+
+	return isMemory(propertiesCopy);
+    }
+
+    public void setAdditionalProperties(final Map<Object, Object> additionalProperties) {
+
+	synchronized (m_connectorLock) {
+
+	    if (isClosed()) {
+		throw new IllegalStateException("Connector is ALREADY closed");
+	    }
+
+	    if (m_dataSource != null) {
+		LOG.warn("DataSource ALREADY created, AdditionalProperties ignored");
+	    }
+
+	    if (m_entityManagerFactory != null) {
+		LOG.warn("EntityManagerFactory ALREADY created, AdditionalProperties ignored");
+	    }
+
+	    if (additionalProperties == null) {
+		m_additionalProperties = null;
+	    } else {
+		m_additionalProperties = new HashMap<Object, Object>(additionalProperties); // Protection copy
+	    }
 
 	}
 
-	/* Public methods */
-	public final ProlineDatabaseType getProlineDatabaseType() {
-		return m_prolineDbType;
-	}
+    }
 
-	public final boolean isMemory() {
+    public final DataSource getDataSource() {
+
+	synchronized (m_connectorLock) {
+
+	    if (isClosed()) {
+		throw new IllegalStateException("Connector is ALREADY closed");
+	    }
+
+	    if (m_dataSource == null) {
+		final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
 		/* Protection copy */
 		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
 
-		return isMemory(propertiesCopy);
-	}
-
-	public final DataSource getDataSource() {
-
-		synchronized (m_connectorLock) {
-
-			if (isClosed()) {
-				throw new IllegalStateException("Connector is ALREADY closed");
-			}
-
-			if (m_dataSource == null) {
-				final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
-				/* Protection copy */
-				final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
-
-				for (Map.Entry<Object, Object> e : m_added_properties.entrySet()) {
-					if (!propertiesCopy.containsKey(e.getKey()))
-						propertiesCopy.put(e.getKey(), e.getValue());
-				}
-				
-				try {
-					m_dataSource = createDataSource(m_ident, propertiesCopy);
-				} catch (Exception ex) {
-					/* Log and re-throw */
-					final String message = "Error creating DataSource for " + prolineDbType;
-					LOG.error(message, ex);
-
-					throw new RuntimeException(message, ex);
-				}
-
-			}
-
-		} // End of synchronized block on m_connectorLock
-
-		return m_dataSource;
-	}
-
-	public final EntityManagerFactory getEntityManagerFactory() {
-
-		synchronized (m_connectorLock) {
-
-			if (isClosed()) {
-				throw new IllegalStateException("Connector is ALREADY closed");
-			}
-
-			if (m_entityManagerFactory == null) {
-				final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
-				/* Protection copy */
-				final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
-
-				/*
-				 * Force JDBC Driver, default Hibernate dialect and default ORM
-				 * optimizations
-				 */
-				if (propertiesCopy.get(PERSISTENCE_JDBC_DRIVER_KEY) == null) {
-					propertiesCopy.put(PERSISTENCE_JDBC_DRIVER_KEY, getDriverType().getJdbcDriver());
-				}
-
-				for (Map.Entry<Object, Object> e : m_added_properties.entrySet()) {
-					if (!propertiesCopy.containsKey(e.getKey()))
-						propertiesCopy.put(e.getKey(), e.getValue());
-				}
-				
-				try {
-					m_entityManagerFactory = createEntityManagerFactory(getProlineDatabaseType(), propertiesCopy,
-							DEFAULT_ORM_OPTIMIZATIONS);
-				} catch (Exception ex) {
-					/* Log and re-throw */
-					final String message = "Error creating EntityManagerFactory for " + prolineDbType;
-					LOG.error(message, ex);
-
-					throw new RuntimeException(message, ex);
-				}
-
-			}
-
-		} // End of synchronized block on m_connectorLock
-
-		return m_entityManagerFactory;
-	}
-
-	public void setAdditionalProperties(Map<Object, Object> properties) {
-		for (Map.Entry<Object, Object> e : properties.entrySet()) {
-				m_added_properties.put(e.getKey(), e.getValue());
-		}	
-	}
-	
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + ' ' + m_ident;
-	}
-
-	public final void close() {
-
-		synchronized (m_connectorLock) {
-
-			if (!m_closed) { // Close only once
-				m_closed = true;
-
-				if (m_entityManagerFactory != null) {
-					LOG.debug("Closing EntityManagerFactory for [{}]", m_ident);
-
-					try {
-						m_entityManagerFactory.close();
-					} catch (Exception exClose) {
-						LOG.error("Error closing EntityManagerFactory for [" + m_ident + ']', exClose);
-					}
-
-				}
-
-				if (m_dataSource != null) {
-					doClose(m_ident, m_dataSource);
-				}
-
-				final int remainingConnectorInstancesCount = removeConnectorInstances(m_ident);
-
-				if (remainingConnectorInstancesCount > 0) {
-					LOG.error("There are {} remaining DatabaseConnector instances for [{}]",
-							remainingConnectorInstancesCount, m_ident);
-				}
-
-			} // End if (connector is not already closed)
-
-		} // End of synchronized block on m_connectorLock
-
-	}
-
-	public final boolean isClosed() {
-		boolean result;
-
-		synchronized (m_connectorLock) {
-			result = m_closed;
-		} // End of synchronized block on m_connectorLock
-
-		return result;
-	}
-
-	protected boolean isMemory(final Map<Object, Object> properties) {
-		return false;
-	}
-
-	/**
-	 * This method is called holding <code>m_connectorLock</code> intrinsic
-	 * object <strong>lock</strong> by <code>getDataSource</code>.
-	 * 
-	 * @param database
-	 * @param properties
-	 * @return
-	 */
-	protected abstract DataSource createDataSource(final String ident, final Map<Object, Object> properties);
-
-	/**
-	 * This method is called holding <code>m_connectorLock</code> intrinsic
-	 * object <strong>lock</strong> by <code>getEntityManagerFactory</code>.
-	 * 
-	 * @param database
-	 * @param properties
-	 * @param ormOptimizations
-	 * @return
-	 */
-	protected EntityManagerFactory createEntityManagerFactory(final ProlineDatabaseType prolineDbType,
-			final Map<Object, Object> properties, final boolean ormOptimizations) {
-
-		if (prolineDbType == null) {
-			throw new IllegalArgumentException("Database is null");
+		if ((m_additionalProperties != null) && !m_additionalProperties.isEmpty()) {
+		    addAdditionalProperties(propertiesCopy, m_additionalProperties);
 		}
 
-		if (properties == null) {
-			throw new IllegalArgumentException("Properties Map is null");
+		try {
+		    m_dataSource = createDataSource(m_ident, propertiesCopy);
+		} catch (Exception ex) {
+		    /* Log and re-throw */
+		    final String message = "Error creating DataSource for " + prolineDbType;
+		    LOG.error(message, ex);
+
+		    throw new RuntimeException(message, ex);
 		}
 
-		if (ormOptimizations) {
-			optimize(properties);
+	    }
+
+	} // End of synchronized block on m_connectorLock
+
+	return m_dataSource;
+    }
+
+    public final EntityManagerFactory getEntityManagerFactory() {
+
+	synchronized (m_connectorLock) {
+
+	    if (isClosed()) {
+		throw new IllegalStateException("Connector is ALREADY closed");
+	    }
+
+	    if (m_entityManagerFactory == null) {
+		final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
+		/* Protection copy */
+		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
+
+		if ((m_additionalProperties != null) && !m_additionalProperties.isEmpty()) {
+		    addAdditionalProperties(propertiesCopy, m_additionalProperties);
 		}
 
-		if (LOG.isTraceEnabled()) {
-			LOG.trace("Effective EntityManagerFactory settings for " + prolineDbType + " :" + LINE_SEPARATOR
-					+ PropertiesUtils.formatProperties(properties));
+		/*
+		 * Force JDBC Driver, default Hibernate dialect and default ORM optimizations
+		 */
+		if (propertiesCopy.get(PERSISTENCE_JDBC_DRIVER_KEY) == null) {
+		    propertiesCopy.put(PERSISTENCE_JDBC_DRIVER_KEY, getDriverType().getJdbcDriver());
 		}
 
-		return Persistence.createEntityManagerFactory(prolineDbType.getPersistenceUnitName(), properties);
+		try {
+		    m_entityManagerFactory = createEntityManagerFactory(getProlineDatabaseType(),
+			    propertiesCopy, DEFAULT_ORM_OPTIMIZATIONS);
+		} catch (Exception ex) {
+		    /* Log and re-throw */
+		    final String message = "Error creating EntityManagerFactory for " + prolineDbType;
+		    LOG.error(message, ex);
+
+		    throw new RuntimeException(message, ex);
+		}
+
+	    }
+
+	} // End of synchronized block on m_connectorLock
+
+	return m_entityManagerFactory;
+    }
+
+    @Override
+    public String toString() {
+	return getClass().getSimpleName() + ' ' + m_ident;
+    }
+
+    public final void close() {
+
+	synchronized (m_connectorLock) {
+
+	    if (!m_closed) { // Close only once
+		m_closed = true;
+
+		if (m_entityManagerFactory != null) {
+		    LOG.debug("Closing EntityManagerFactory for [{}]", m_ident);
+
+		    try {
+			m_entityManagerFactory.close();
+		    } catch (Exception exClose) {
+			LOG.error("Error closing EntityManagerFactory for [" + m_ident + ']', exClose);
+		    }
+
+		}
+
+		if (m_dataSource != null) {
+		    doClose(m_ident, m_dataSource);
+		}
+
+		final int remainingConnectorInstancesCount = removeConnectorInstances(m_ident);
+
+		if (remainingConnectorInstancesCount > 0) {
+		    LOG.error("There are {} remaining DatabaseConnector instances for [{}]",
+			    remainingConnectorInstancesCount, m_ident);
+		}
+
+	    } // End if (connector is not already closed)
+
+	} // End of synchronized block on m_connectorLock
+
+    }
+
+    public final boolean isClosed() {
+	boolean result;
+
+	synchronized (m_connectorLock) {
+	    result = m_closed;
+	} // End of synchronized block on m_connectorLock
+
+	return result;
+    }
+
+    protected boolean isMemory(final Map<Object, Object> properties) {
+	return false;
+    }
+
+    /**
+     * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
+     * <code>getDataSource</code>.
+     * 
+     * @param database
+     * @param properties
+     * @return
+     */
+    protected abstract DataSource createDataSource(final String ident, final Map<Object, Object> properties);
+
+    /**
+     * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
+     * <code>getEntityManagerFactory</code>.
+     * 
+     * @param database
+     * @param properties
+     * @param ormOptimizations
+     * @return
+     */
+    protected EntityManagerFactory createEntityManagerFactory(final ProlineDatabaseType prolineDbType,
+	    final Map<Object, Object> properties, final boolean ormOptimizations) {
+
+	if (prolineDbType == null) {
+	    throw new IllegalArgumentException("Database is null");
 	}
 
-	/**
-	 * This method is called holding <code>m_connectorLock</code> intrinsic
-	 * object <strong>lock</strong> by <code>close</code>.
-	 * 
-	 * @param source
-	 */
-	protected void doClose(final String ident, final DataSource source) {
-		LOG.warn("Closing DatabaseConnector [{}] does not close already retrieved SQL JDBC Connection resources", ident);
+	if (properties == null) {
+	    throw new IllegalArgumentException("Properties Map is null");
 	}
 
-	private static int addConnectorInstances(final String ident) {
-		assert (!StringUtils.isEmpty(ident)) : "addConnectorInstances() invalid ident";
-
-		int result = 0;
-
-		synchronized (CONNECTOR_INSTANCES) {
-			final Integer oldCountObj = CONNECTOR_INSTANCES.get(ident);
-
-			int oldCount = 0;
-
-			if (oldCountObj != null) {
-				oldCount = oldCountObj.intValue();
-			}
-
-			if (oldCount < 0) {
-				LOG.error("Inconsistent Connector instances count (adding to {}): {}", ident, oldCount);
-
-				oldCount = 0;
-			}
-
-			result = oldCount + 1;
-
-			CONNECTOR_INSTANCES.put(ident, Integer.valueOf(result));
-		} // End of synchronized block on CONNECTOR_INSTANCES
-
-		return result;
+	if (ormOptimizations) {
+	    optimize(properties);
 	}
 
-	private static int removeConnectorInstances(final String ident) {
-		assert (!StringUtils.isEmpty(ident)) : "removeConnectorInstances() invalid ident";
-
-		int result = 0;
-
-		synchronized (CONNECTOR_INSTANCES) {
-			final Integer oldCountObj = CONNECTOR_INSTANCES.get(ident);
-
-			int oldCount = 0;
-
-			if (oldCountObj != null) {
-				oldCount = oldCountObj.intValue();
-			}
-
-			if (oldCount <= 0) {
-				LOG.error("Inconsistent Connector instances count (removing from {}): {}", ident, oldCount);
-			} else {
-				result = oldCount - 1;
-			}
-
-			CONNECTOR_INSTANCES.put(ident, Integer.valueOf(result));
-		} // End of synchronized block on CONNECTOR_INSTANCES
-
-		return result;
+	if (LOG.isTraceEnabled()) {
+	    LOG.trace("Effective EntityManagerFactory settings for " + prolineDbType + " :" + LINE_SEPARATOR
+		    + PropertiesUtils.formatProperties(properties));
 	}
 
-	private static void optimize(final Map<Object, Object> properties) {
-		assert (properties != null) : "optimize() properties is null";
+	return Persistence.createEntityManagerFactory(prolineDbType.getPersistenceUnitName(), properties);
+    }
 
-		if (properties.get(PERSISTENCE_VALIDATION_MODE_KEY) == null) {
-			properties.put(PERSISTENCE_VALIDATION_MODE_KEY, "none");
-		}
+    /**
+     * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
+     * <code>close</code>.
+     * 
+     * @param source
+     */
+    protected void doClose(final String ident, final DataSource source) {
+	LOG.warn(
+		"Closing DatabaseConnector [{}] does not close already retrieved SQL JDBC Connection resources",
+		ident);
+    }
 
-		if (properties.get(HIBERNATE_FETCH_SIZE_KEY) == null) {
-			properties.put(HIBERNATE_FETCH_SIZE_KEY, "100");
-		}
+    private static void addAdditionalProperties(final Map<Object, Object> baseProperties,
+	    final Map<Object, Object> additionalProperties) {
+	assert (baseProperties != null) : "addAdditionalPropertrie() baseProperties Map is null";
+	assert (additionalProperties != null) : "addAdditionalPropertrie() additionalProperties Map is null";
 
-		if (properties.get(HIBERNATE_BATCH_SIZE_KEY) == null) {
-			properties.put(HIBERNATE_BATCH_SIZE_KEY, "30");
-		}
+	LOG.debug("Additional Properties: " + LINE_SEPARATOR
+		+ PropertiesUtils.formatProperties(additionalProperties));
 
-		if (properties.get(HIBERNATE_BATCH_VERSIONED_DATA_KEY) == null) {
-			properties.put(HIBERNATE_BATCH_VERSIONED_DATA_KEY, "true");
-		}
+	baseProperties.putAll(additionalProperties);
+    }
 
-		if (properties.get(HIBERNATE_CONNECTION_RELEASE_MODE_KEY) == null) {
-			properties.put(HIBERNATE_CONNECTION_RELEASE_MODE_KEY, "on_close");
-		}
+    private static int addConnectorInstances(final String ident) {
+	assert (!StringUtils.isEmpty(ident)) : "addConnectorInstances() invalid ident";
 
-		if (properties.get(HIBERNATE_BYTECODE_OPTIMIZER_KEY) == null) {
-			properties.put(HIBERNATE_BYTECODE_OPTIMIZER_KEY, "true");
-		}
+	int result = 0;
 
+	synchronized (CONNECTOR_INSTANCES) {
+	    final Integer oldCountObj = CONNECTOR_INSTANCES.get(ident);
+
+	    int oldCount = 0;
+
+	    if (oldCountObj != null) {
+		oldCount = oldCountObj.intValue();
+	    }
+
+	    if (oldCount < 0) {
+		LOG.error("Inconsistent Connector instances count (adding to {}): {}", ident, oldCount);
+
+		oldCount = 0;
+	    }
+
+	    result = oldCount + 1;
+
+	    CONNECTOR_INSTANCES.put(ident, Integer.valueOf(result));
+	} // End of synchronized block on CONNECTOR_INSTANCES
+
+	return result;
+    }
+
+    private static int removeConnectorInstances(final String ident) {
+	assert (!StringUtils.isEmpty(ident)) : "removeConnectorInstances() invalid ident";
+
+	int result = 0;
+
+	synchronized (CONNECTOR_INSTANCES) {
+	    final Integer oldCountObj = CONNECTOR_INSTANCES.get(ident);
+
+	    int oldCount = 0;
+
+	    if (oldCountObj != null) {
+		oldCount = oldCountObj.intValue();
+	    }
+
+	    if (oldCount <= 0) {
+		LOG.error("Inconsistent Connector instances count (removing from {}): {}", ident, oldCount);
+	    } else {
+		result = oldCount - 1;
+	    }
+
+	    CONNECTOR_INSTANCES.put(ident, Integer.valueOf(result));
+	} // End of synchronized block on CONNECTOR_INSTANCES
+
+	return result;
+    }
+
+    private static void optimize(final Map<Object, Object> properties) {
+	assert (properties != null) : "optimize() properties is null";
+
+	if (properties.get(PERSISTENCE_VALIDATION_MODE_KEY) == null) {
+	    properties.put(PERSISTENCE_VALIDATION_MODE_KEY, "none");
 	}
+
+	if (properties.get(HIBERNATE_FETCH_SIZE_KEY) == null) {
+	    properties.put(HIBERNATE_FETCH_SIZE_KEY, "100");
+	}
+
+	if (properties.get(HIBERNATE_BATCH_SIZE_KEY) == null) {
+	    properties.put(HIBERNATE_BATCH_SIZE_KEY, "30");
+	}
+
+	if (properties.get(HIBERNATE_BATCH_VERSIONED_DATA_KEY) == null) {
+	    properties.put(HIBERNATE_BATCH_VERSIONED_DATA_KEY, "true");
+	}
+
+	if (properties.get(HIBERNATE_CONNECTION_RELEASE_MODE_KEY) == null) {
+	    properties.put(HIBERNATE_CONNECTION_RELEASE_MODE_KEY, "on_close");
+	}
+
+	if (properties.get(HIBERNATE_BYTECODE_OPTIMIZER_KEY) == null) {
+	    properties.put(HIBERNATE_BYTECODE_OPTIMIZER_KEY, "true");
+	}
+
+    }
 
 }

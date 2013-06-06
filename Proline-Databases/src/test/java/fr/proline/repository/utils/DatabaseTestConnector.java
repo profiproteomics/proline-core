@@ -80,6 +80,11 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 	return m_realConnector.isMemory();
     }
 
+    @Override
+    public void setAdditionalProperties(Map<Object, Object> additionalProperties) {
+	m_realConnector.setAdditionalProperties(additionalProperties);
+    }
+
     public DataSource getDataSource() {
 	return m_realConnector.getDataSource();
     }
