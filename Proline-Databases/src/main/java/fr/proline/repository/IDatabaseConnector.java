@@ -1,5 +1,7 @@
 package fr.proline.repository;
 
+import java.util.Map;
+
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -27,5 +29,7 @@ public interface IDatabaseConnector {
     void close();
 
     boolean isClosed();
+    
+    void setAdditionalProperties(Map<Object, Object> params);
 
 }
