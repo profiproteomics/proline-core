@@ -120,11 +120,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	    }
 
 	    if (m_dataSource != null) {
-		LOG.warn("DataSource ALREADY created, AdditionalProperties ignored");
+		LOG.warn("DataSource ALREADY created : AdditionalProperties IGNORED");
 	    }
 
 	    if (m_entityManagerFactory != null) {
-		LOG.warn("EntityManagerFactory ALREADY created, AdditionalProperties ignored");
+		LOG.warn("EntityManagerFactory ALREADY created : AdditionalProperties IGNORED");
 	    }
 
 	    if (additionalProperties == null) {
@@ -151,7 +151,13 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
 
 		if ((m_additionalProperties != null) && !m_additionalProperties.isEmpty()) {
-		    addAdditionalProperties(propertiesCopy, m_additionalProperties);
+
+		    if (LOG.isDebugEnabled()) {
+			LOG.debug("Creating DataSource with additionalProperties :" + LINE_SEPARATOR
+				+ PropertiesUtils.formatProperties(m_additionalProperties));
+		    }
+
+		    propertiesCopy.putAll(m_additionalProperties);
 		}
 
 		try {
@@ -185,7 +191,13 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
 
 		if ((m_additionalProperties != null) && !m_additionalProperties.isEmpty()) {
-		    addAdditionalProperties(propertiesCopy, m_additionalProperties);
+
+		    if (LOG.isDebugEnabled()) {
+			LOG.debug("Creating EntityManagerFactory with additionalProperties :"
+				+ LINE_SEPARATOR + PropertiesUtils.formatProperties(m_additionalProperties));
+		    }
+
+		    propertiesCopy.putAll(m_additionalProperties);
 		}
 
 		/*
@@ -319,17 +331,6 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	LOG.warn(
 		"Closing DatabaseConnector [{}] does not close already retrieved SQL JDBC Connection resources",
 		ident);
-    }
-
-    private static void addAdditionalProperties(final Map<Object, Object> baseProperties,
-	    final Map<Object, Object> additionalProperties) {
-	assert (baseProperties != null) : "addAdditionalPropertrie() baseProperties Map is null";
-	assert (additionalProperties != null) : "addAdditionalPropertrie() additionalProperties Map is null";
-
-	LOG.debug("Additional Properties: " + LINE_SEPARATOR
-		+ PropertiesUtils.formatProperties(additionalProperties));
-
-	baseProperties.putAll(additionalProperties);
     }
 
     private static int addConnectorInstances(final String ident) {
