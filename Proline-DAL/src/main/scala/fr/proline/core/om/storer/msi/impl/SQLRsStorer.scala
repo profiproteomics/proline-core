@@ -126,7 +126,7 @@ class SQLRsStorer(
     // Retrieve the list of existing peptides in the current MSIdb
     // TODO: do this using the PSdb
     val existingMsiPeptidesIdByKey = this.rsWriter.fetchExistingPeptidesIdByUniqueKey(resultSet.getUniquePeptideSequences, msiDb)
-    logger.info(existingMsiPeptidesIdByKey.size + " existing peptides have been loaded from the database !")
+    logger.info(existingMsiPeptidesIdByKey.size + " existing peptides have been loaded from the MSIdb")
 
     // Retrieve existing peptides and map them by unique key
     val (peptidesInMsiDb, newMsiPeptides) = resultSet.peptides.partition(pep => existingMsiPeptidesIdByKey.contains(pep.uniqueKey))
@@ -166,6 +166,8 @@ class SQLRsStorer(
       // Retrieve peptides which exist in the PsDb but not in the MsiDb
       val peptidesInPsDb = peptidesForSeqsInPsDb filter { pep => newMsiPepKeySet.contains(pep.uniqueKey) }
   
+      logger.info(peptidesInPsDb.length + " existing peptides have been loaded from the PSdb")
+
       // Store missing PsDb peptides
       psDbCtx.beginTransaction()
       new PeptideStorer().storePeptides(newPsPeptides,psDbCtx)
