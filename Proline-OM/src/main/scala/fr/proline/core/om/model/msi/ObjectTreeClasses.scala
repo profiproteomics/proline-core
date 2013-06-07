@@ -98,7 +98,7 @@ case class TheoreticalFragmentSeries (
   
   private def _parseFragSeriesIfNotDone() {
     if( _ionSeries == null ) {
-      val FragSeriesRegex = """(\w+)([+]*).*""".r      
+      val FragSeriesRegex = """(\w+\*?)([+]*).*""".r
       val FragSeriesRegex(ionSeries, chargeStr) = fragSeries
       
       this._ionSeries = ionSeries.replace("0","-H2O").replace("*","-NH3")
