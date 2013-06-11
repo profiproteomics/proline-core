@@ -223,7 +223,6 @@ public class ResultSet implements Serializable {
 		private PeptideMatch[] peptideMatches;
 		
 		private Integer peptideMatchesCount = null;
-		private Integer msQueriesCount= null;
 		private Integer proteinMatchesCount= null;
 		
 		public PeptideMatch[] getPeptideMatches() {
@@ -251,14 +250,7 @@ public class ResultSet implements Serializable {
 		public void setProteinMatchesCount(Integer proteinMatchesCount) {
 			this.proteinMatchesCount = proteinMatchesCount;
 		}
-		
-		public Integer getMSQueriesCount() {
-			return msQueriesCount;
-		}
 
-		public void setMSQueriesCount(Integer msQueriesCount) {
-			this.msQueriesCount = msQueriesCount;
-		}
 	}
     
 }
