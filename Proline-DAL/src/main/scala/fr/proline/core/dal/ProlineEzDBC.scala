@@ -1,11 +1,8 @@
 package fr.proline.core.dal
 
 import java.sql.Connection
-
 import org.joda.time.format.DateTimeFormat
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.profi.jdbc.AbstractSQLDialect
 import fr.profi.jdbc.AsShortStringBooleanFormatter
 import fr.profi.jdbc.DefaultSQLDialect
@@ -15,6 +12,7 @@ import fr.profi.jdbc.easy.EasyDBC
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.repository.DriverType
 import fr.proline.repository.IDatabaseConnector
+import fr.profi.jdbc.AbstractSQLDialect
 
 object ProlineSQLiteSQLDialect extends AbstractSQLDialect(
   DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSS"),
@@ -24,12 +22,15 @@ object ProlineSQLiteSQLDialect extends AbstractSQLDialect(
   999
 )
 
+object ProlinePgSQLDialect extends AbstractSQLDialect(inExpressionCountLimit = 1000)
+
 object ProlineEzDBC extends Logging {
   
   def getDriverDialect( driverType: DriverType ) = {
     driverType match {
       case DriverType.SQLITE => ProlineSQLiteSQLDialect
-      case _ => DefaultSQLDialect
+      case DriverType.POSTGRESQL => ProlinePgSQLDialect
+      case _ =>  DefaultSQLDialect
     }
   }
   
