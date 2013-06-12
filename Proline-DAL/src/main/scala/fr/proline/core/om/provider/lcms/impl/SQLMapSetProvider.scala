@@ -25,7 +25,7 @@ class SQLMapSetProvider(
   val mapAlnSetProvider = new SQLMapAlignmentSetProvider( lcmsDbCtx )
   val processedMapProvider = new SQLProcessedMapProvider( lcmsDbCtx, scans, loadPeaks )
   
-  def getMapSet( mapSetId: Int ): MapSet = {
+  def getMapSet( mapSetId: Long ): MapSet = {    
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
     
@@ -33,7 +33,7 @@ class SQLMapSetProvider(
       val masterMapIdQuery = new SelectQueryBuilder1(LcmsDbMapSetTable).mkSelectQuery( (t,c) =>
         List(t.MASTER_MAP_ID) -> "WHERE "~ t.ID ~" = "~ mapSetId
       )
-      val masterMapId = ezDBC.selectHeadOrElse(masterMapIdQuery) ( _.nextIntOrElse(0),
+      val masterMapId = ezDBC.selectHeadOrElse(masterMapIdQuery) ( _.nextLongOrElse(0L),
         throw new Exception("can't find a map set with id="+mapSetId)
       )
       
@@ -41,7 +41,7 @@ class SQLMapSetProvider(
       val procMapIdQuery = new SelectQueryBuilder1(LcmsDbProcessedMapTable).mkSelectQuery( (t,c) =>
         List(t.ID) -> "WHERE "~ t.MAP_SET_ID ~" = "~ mapSetId
       )
-      val processedMapIds = ezDBC.selectInts( procMapIdQuery )
+      val processedMapIds = ezDBC.selectLongs( procMapIdQuery )
       
       // Load some objects related to the map set
       val lcmsMaps = processedMapProvider.getProcessedMaps( processedMapIds )
@@ -73,12 +73,12 @@ class SQLMapSetProvider(
                    mapAlnSets: Array[MapAlignmentSet] ): MapSet = {
     
     new MapSet(
-      id = toInt(mapSetRecord.getAnyVal(MapSetCols.ID)),
+      id = toLong(mapSetRecord.getAny(MapSetCols.ID)),
       name = mapSetRecord.getString(MapSetCols.NAME),
       creationTimestamp = mapSetRecord.getTimestamp(MapSetCols.CREATION_TIMESTAMP),
       childMaps = childMaps,
       masterMap = masterMap,
-      alnReferenceMapId = mapSetRecord.getInt(MapSetCols.ALN_REFERENCE_MAP_ID),
+      alnReferenceMapId = toLong(mapSetRecord.getAny(MapSetCols.ALN_REFERENCE_MAP_ID)),
       mapAlnSets = mapAlnSets
     )
   }
@@ -162,7 +162,7 @@ class SQLMapSetProvider(
   
   private def _rebuildMasterMap(
     ezDBC: EasyDBC,
-    masterMapId: Int,
+    masterMapId: Long,
     lcmsMaps: Array[ProcessedMap]
   ): ProcessedMap = {
     
@@ -189,7 +189,7 @@ class SQLMapSetProvider(
     // Map master feature children by their id
     val childFtById = Map() ++ childMaps.flatMap( _.features.map( ft => ft.id -> ft ) )
     
-    val childFtBufferByMftId = new HashMap[Int,ArrayBuffer[Feature]]
+    val childFtBufferByMftId = new HashMap[Long,ArrayBuffer[Feature]]
     //val bestChildIdByMftId = new HashMap[Int,Int]
     
     // Iterate over master feature items
@@ -199,8 +199,8 @@ class SQLMapSetProvider(
     val mftItemRecords = ezDBC.selectAndProcess( mftItemQuery ) { mftItemRecord =>      
       
       // Retrieve master and child FT IDs
-      val masterFtId = mftItemRecord.getInt(MftItemCols.MASTER_FEATURE_ID)
-      val childFtId = mftItemRecord.getInt(MftItemCols.CHILD_FEATURE_ID)
+      val masterFtId = toLong(mftItemRecord.getAny(MftItemCols.MASTER_FEATURE_ID))
+      val childFtId = toLong(mftItemRecord.getAny(MftItemCols.CHILD_FEATURE_ID))
       
       // Retrieve child feature      
       val childFt = childFtById(childFtId)
@@ -217,7 +217,7 @@ class SQLMapSetProvider(
     for( mftId <- childFtBufferByMftId.keys ) {
       
       // Retrieve master feature
-      val masterFt = masterFtById.getOrElse(mftId.asInstanceOf[Int], null )
+      val masterFt = masterFtById.getOrElse(mftId, null )
       if( masterFt == null ) throw new Exception("undefined master feature with id=" + mftId)
       
       masterFt.children = childFtBufferByMftId(mftId).toArray

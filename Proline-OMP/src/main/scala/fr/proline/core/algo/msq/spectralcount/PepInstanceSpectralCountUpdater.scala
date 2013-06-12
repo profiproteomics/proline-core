@@ -31,7 +31,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
       override def execute(con: Connection) {
         val getPMQuery = "SELECT type from result_set WHERE id = ?"
         val pStmt = con.prepareStatement(getPMQuery)
-        pStmt.setInt(1, rsm.getResultSetId)
+        pStmt.setLong(1, rsm.getResultSetId)
         val sqlResultSet = pStmt.executeQuery()
         if (sqlResultSet.next)
           rsType = sqlResultSet.getString(1)
@@ -57,7 +57,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
    */
   def updatePepInstanceSC( rsm: ResultSummary, execContext: IExecutionContext ): Unit = {    
   
-    var spectralCountByPepId = new HashMap[Int, Int]()
+    var spectralCountByPepId = new HashMap[Long, Int]()
 	val startTime =System.currentTimeMillis()
 
 	val validPeptideMatchesB  = Seq.newBuilder[PeptideMatch]
@@ -85,7 +85,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
 		
 		// Get PepID->SC for each RS
 		leavesRSs.foreach(rs =>{
-			val rsPepInstSC : HashMap[Int, Int] = countValidPSMInResultSet(rs,appliedPSMFilters)
+			val rsPepInstSC : HashMap[Long, Int] = countValidPSMInResultSet(rs,appliedPSMFilters)
 			// Merge result in global result 
 			rsPepInstSC.foreach(entry => {
 			  var pepSC = spectralCountByPepId.getOrElse(entry._1, 0)
@@ -109,7 +109,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
   }
 
   //A Optimiser: Prendre en entre la Map globale et l'incrementer...  
-  private def countValidPSMInResultSet(rs: ResultSet, appliedPSMFilters: Array[IPeptideMatchFilter]): HashMap[Int, Int] = {
+  private def countValidPSMInResultSet(rs: ResultSet, appliedPSMFilters: Array[IPeptideMatchFilter]): HashMap[Long, Int] = {
     appliedPSMFilters.foreach( psmFilter =>{
       var allPSMs = rs.peptideMatches.toSeq 
       if(rs.decoyResultSet.isDefined){
@@ -118,9 +118,9 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
       psmFilter.filterPeptideMatches(allPSMs, true, false)
     })
     
-    val resultMap  =  new HashMap[Int, Int]()
+    val resultMap  =  new HashMap[Long, Int]()
     rs.peptideMatches.filter(_.isValidated).foreach(psm =>{
-        var psmCount = 0
+        var psmCount: Int = 0
     	if(resultMap.contains(psm.peptideId)){
     	  psmCount = resultMap.get(psm.peptideId).get
     	}
@@ -143,7 +143,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
       }
       
       
-    var leavesRsIds : Seq[Int] = getLeafChildsID(rsm.getResultSetId, providerContext)
+    var leavesRsIds : Seq[Long] = getLeafChildsID(rsm.getResultSetId, providerContext)
     var leavesRsBuilder  = Seq.newBuilder[ResultSet]
    
     val provider:IResultSetProvider=  providerContext.getProvider(classOf[IResultSetProvider])
@@ -162,15 +162,15 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
   }
 
     
-  private def getLeafChildsID( rsId: Int, execContext: IExecutionContext) : Seq[Int] = {
-    var allRSIds = Seq.newBuilder[Int]
+  private def getLeafChildsID( rsId: Long, execContext: IExecutionContext) : Seq[Long] = {
+    var allRSIds = Seq.newBuilder[Long]
     
 	val jdbcWork = new JDBCWork() {
     
     	override def execute(con: Connection) {
     	    
     		val stmt = con.prepareStatement("select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = :rsId")
-			stmt.setInt(1, rsId)
+			stmt.setLong(1, rsId)
 			val sqlResultSet = stmt.executeQuery()
 			var childDefined = false 
 			while (sqlResultSet.next){

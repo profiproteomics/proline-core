@@ -3,7 +3,15 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import java.util.Set;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the consensus_spectrum database table.
@@ -12,178 +20,178 @@ import javax.persistence.*;
 @Entity
 @Table(name = "master_quant_peptide_ion")
 public class MasterQuantPeptideIon implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name = "charge")
-	private Integer charge;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name = "moz")
-	private Double moz;
+    @Column(name = "charge")
+    private Integer charge;
 
-	@Column(name = "elution_time")
-	private Float elutionTime;
+    @Column(name = "moz")
+    private double moz;
 
-	@Column(name = "scan_number")
-	private Integer scanNumber;
+    @Column(name = "elution_time")
+    private float elutionTime;
 
-	@Column(name = "serialized_properties")
-	private String serializedProperties;
+    @Column(name = "scan_number")
+    private Integer scanNumber;
 
-	@Column(name = "lcms_feature_id")
-	private Integer lcmsFeatureId;
-	
-	@Column(name = "master_quant_peptide_id")
-	private int masterQuantPeptideId;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	@Column(name = "peptide_id")
-	private Integer peptideId;
+    @Column(name = "lcms_feature_id")
+    private Long lcmsFeatureId;
 
-	@Column(name = "peptide_instance_id")
-	private Integer peptideInstanceId;
+    @Column(name = "master_quant_peptide_id")
+    private long masterQuantPeptideId;
 
-	@Column(name = "best_peptide_match_id")
-	private Integer bestPeptideMatchId;
+    @Column(name = "peptide_id")
+    private Long peptideId;
 
-	@Column(name = "unmodified_peptide_ion_id")
-	private Integer unmodifiedPeptideIonId;
+    @Column(name = "peptide_instance_id")
+    private Long peptideInstanceId;
 
-	@ManyToOne
-	@JoinColumn(name = "master_quant_component_id")
-	private MasterQuantComponent masterQuantComponent;
+    @Column(name = "best_peptide_match_id")
+    private Long bestPeptideMatchId;
 
-	@OneToMany(mappedBy="masterQuantPeptideIon")
-	private Set<MasterQuantReporterIon> masterQuantReporterIons;
+    @Column(name = "unmodified_peptide_ion_id")
+    private Long unmodifiedPeptideIonId;
 
-	@ManyToOne
-	@JoinColumn(name = "result_summary_id")
-	private ResultSummary resultSummary;
+    @ManyToOne
+    @JoinColumn(name = "master_quant_component_id")
+    private MasterQuantComponent masterQuantComponent;
 
+    @OneToMany(mappedBy = "masterQuantPeptideIon")
+    private Set<MasterQuantReporterIon> masterQuantReporterIons;
 
-	public MasterQuantPeptideIon() {
-	}
+    @ManyToOne
+    @JoinColumn(name = "result_summary_id")
+    private ResultSummary resultSummary;
 
-	public Integer getId() {
-		return this.id;
-	}
+    public MasterQuantPeptideIon() {
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public Integer getCharge() {
-		return charge;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public void setCharge(Integer charge) {
-		this.charge = charge;
-	}
+    public Integer getCharge() {
+	return charge;
+    }
 
-	public Double getMoz() {
-		return moz;
-	}
+    public void setCharge(Integer charge) {
+	this.charge = charge;
+    }
 
-	public void setMoz(Double moz) {
-		this.moz = moz;
-	}
+    public double getMoz() {
+	return moz;
+    }
 
-	public Float getElutionTime() {
-		return elutionTime;
-	}
+    public void setMoz(final double pMoz) {
+	moz = pMoz;
+    }
 
-	public void setElutionTime(Float elutionTime) {
-		this.elutionTime = elutionTime;
-	}
+    public float getElutionTime() {
+	return elutionTime;
+    }
 
-	public Integer getScanNumber() {
-		return scanNumber;
-	}
+    public void setElutionTime(final float pElutionTime) {
+	elutionTime = pElutionTime;
+    }
 
-	public void setScanNumber(Integer scanNumber) {
-		this.scanNumber = scanNumber;
-	}
+    public Integer getScanNumber() {
+	return scanNumber;
+    }
 
-	public String getSerializedProperties() {
-		return serializedProperties;
-	}
+    public void setScanNumber(Integer scanNumber) {
+	this.scanNumber = scanNumber;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return serializedProperties;
+    }
 
-	public Integer getLcmsFeatureId() {
-		return lcmsFeatureId;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public void setLcmsFeatureId(Integer lcmsFeatureId) {
-		this.lcmsFeatureId = lcmsFeatureId;
-	}
-	
-	public Integer getMasterQuantPeptideId() {
-		return masterQuantPeptideId;
-	}
+    public Long getLcmsFeatureId() {
+	return lcmsFeatureId;
+    }
 
-	public void setMasterQuantPeptideId(int masterQuantPeptideId) {
-		this.masterQuantPeptideId = masterQuantPeptideId;
-	}
+    public void setLcmsFeatureId(final Long pLcmsFeatureId) {
+	lcmsFeatureId = pLcmsFeatureId;
+    }
 
-	public Integer getPeptideId() {
-		return peptideId;
-	}
+    public long getMasterQuantPeptideId() {
+	return masterQuantPeptideId;
+    }
 
-	public void setPeptideId(Integer peptideId) {
-		this.peptideId = peptideId;
-	}
+    public void setMasterQuantPeptideId(final long pMasterQuantPeptideId) {
+	masterQuantPeptideId = pMasterQuantPeptideId;
+    }
 
-	public Integer getPeptideInstanceId() {
-		return peptideInstanceId;
-	}
+    public Long getPeptideId() {
+	return peptideId;
+    }
 
-	public void setPeptideInstanceId(Integer peptideInstanceId) {
-		this.peptideInstanceId = peptideInstanceId;
-	}
+    public void setPeptideId(final Long pPeptideId) {
+	peptideId = pPeptideId;
+    }
 
-	public Integer getBestPeptideMatchId() {
-		return bestPeptideMatchId;
-	}
+    public Long getPeptideInstanceId() {
+	return peptideInstanceId;
+    }
 
-	public void setBestPeptideMatchId(Integer bestPeptideMatchId) {
-		this.bestPeptideMatchId = bestPeptideMatchId;
-	}
-	
-  public Integer getUnmodifiedPeptideIonId() {
-    return unmodifiedPeptideIonId;
-  }
+    public void setPeptideInstanceId(final Long pPeptideInstanceId) {
+	peptideInstanceId = pPeptideInstanceId;
+    }
 
-  public void setUnmodifiedPeptideIonId(Integer unmodifiedPeptideIonId) {
-    this.unmodifiedPeptideIonId = unmodifiedPeptideIonId;
-  }
+    public Long getBestPeptideMatchId() {
+	return bestPeptideMatchId;
+    }
 
-	public MasterQuantComponent getMasterQuantComponent() {
-		return masterQuantComponent;
-	}
+    public void setBestPeptideMatchId(final Long pBestPeptideMatchId) {
+	bestPeptideMatchId = pBestPeptideMatchId;
+    }
 
-	public void setMasterQuantComponent(MasterQuantComponent masterQuantComponent) {
-		this.masterQuantComponent = masterQuantComponent;
-	}
+    public Long getUnmodifiedPeptideIonId() {
+	return unmodifiedPeptideIonId;
+    }
 
-	public ResultSummary getResultSummary() {
-		return resultSummary;
-	}
+    public void setUnmodifiedPeptideIonId(final Long pUnmodifiedPeptideIonId) {
+	unmodifiedPeptideIonId = pUnmodifiedPeptideIonId;
+    }
 
-	public void setResultSummary(ResultSummary resultSummary) {
-		this.resultSummary = resultSummary;
-	}
+    public MasterQuantComponent getMasterQuantComponent() {
+	return masterQuantComponent;
+    }
 
-	public Set<MasterQuantReporterIon> getMasterQuantReporterIons() {
-		return masterQuantReporterIons;
-	}
+    public void setMasterQuantComponent(MasterQuantComponent masterQuantComponent) {
+	this.masterQuantComponent = masterQuantComponent;
+    }
 
-	public void setMasterQuantReporterIons(Set<MasterQuantReporterIon> masterQuantReporterIons) {
-		this.masterQuantReporterIons = masterQuantReporterIons;
-	}
+    public ResultSummary getResultSummary() {
+	return resultSummary;
+    }
+
+    public void setResultSummary(ResultSummary resultSummary) {
+	this.resultSummary = resultSummary;
+    }
+
+    public Set<MasterQuantReporterIon> getMasterQuantReporterIons() {
+	return masterQuantReporterIons;
+    }
+
+    public void setMasterQuantReporterIons(Set<MasterQuantReporterIon> masterQuantReporterIons) {
+	this.masterQuantReporterIons = masterQuantReporterIons;
+    }
 
 }

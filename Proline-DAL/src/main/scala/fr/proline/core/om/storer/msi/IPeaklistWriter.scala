@@ -21,12 +21,12 @@ trait IPeaklistWriter extends Logging {
    * Store PeakList & Peaklist software 
    *
    */  
-   def insertPeaklist(peaklist: Peaklist, context : StorerContext): Int
+   def insertPeaklist(peaklist: Peaklist, context : StorerContext): Long
   
   /**
    * Specific implementation of IRsStorer storeSpectra method
    */
-  def insertSpectra( peaklistId: Int, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext
+  def insertSpectra( peaklistId: Long, peaklistContainer: IPeaklistContainer, context : StorerContext ): StorerContext
   
   // FIXME: what is this method ???
   //def rollBackInfo(peaklistId: Int, context : StorerContext): Unit

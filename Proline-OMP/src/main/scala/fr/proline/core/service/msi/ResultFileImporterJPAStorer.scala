@@ -31,8 +31,8 @@ class ResultFileImporterJPAStorer(
   executionContext: IExecutionContext,
   resultIdentFile: File,
   fileType: String,
-  instrumentConfigId: Int,
-  peaklistSoftwareId: Int,
+  instrumentConfigId: Long,
+  peaklistSoftwareId: Long,
   importerProperties: Map[String, Any],
   acDecoyRegex: Option[util.matching.Regex] = None,
   saveSpectrumMatch: Boolean = false
@@ -60,7 +60,7 @@ class ResultFileImporterJPAStorer(
     _hasInitiatedStorerContext = true
   }*/
 
-  private var targetResultSetId = 0
+  private var targetResultSetId: Long = 0L
 
   override protected def beforeInterruption = {
     // Release database connections
@@ -184,7 +184,7 @@ class ResultFileImporterJPAStorer(
     msiTransacOk
   }
   
-  private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Int): PeaklistSoftware = {
+  private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Long): PeaklistSoftware = {
     
     val msiDbCtx = this.executionContext.getMSIDbConnectionContext
     val msiPklSoftProvider = new SQLPeaklistSoftwareProvider(msiDbCtx)
@@ -218,7 +218,7 @@ class ResultFileImporterJPAStorer(
 
   }
   
-  private def _getInstrumentConfig(instrumentConfigId: Int, udsDbContext: DatabaseConnectionContext): InstrumentConfig = {
+  private def _getInstrumentConfig(instrumentConfigId: Long, udsDbContext: DatabaseConnectionContext): InstrumentConfig = {
 
     val instConfigProvider = new SQLInstrumentConfigProvider(executionContext.getUDSDbConnectionContext)
     instConfigProvider.getInstrumentConfig(instrumentConfigId).get   

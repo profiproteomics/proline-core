@@ -36,7 +36,7 @@ case class RawFileProperties(
 case class LcMsRun(
   
   // Required fields
-  val id: Int,
+  val id: Long,
   val number: Int,
   val runStart: Float,
   val runStop: Float,
@@ -68,7 +68,7 @@ object LcMsScanSequence extends InMemoryIdGen {
 case class LcMsScanSequence(
   
   // Required fields
-  val id: Int,
+  val id: Long,
   
   val rawFileName: String,
   val minIntensity: Double,
@@ -76,7 +76,7 @@ case class LcMsScanSequence(
   val ms1ScansCount: Int,
   val ms2ScansCount: Int,
   val scans: Array[LcMsScan],
-  var instrumentId: Option[Int] = None,
+  var instrumentId: Option[Long] = None,
   
   // Mutable optional fields
   var properties: Option[LcMsScanSequenceProperties] = None
@@ -90,25 +90,25 @@ case class LcMsScanSequence(
   
   lazy val endTime: Float = scans.last.time
   
-  lazy val scanIdsByTimeIndex: Map[Int,Array[Int]] = {
+  lazy val scanIdsByTimeIndex: Map[Int,Array[Long]] = {
 
     val timeIndexWidth = LcMsScanSequence.timeIndexWidth;
     
     import scala.collection.JavaConversions._
-    val scanIdsByTimeIndexHashMap = new java.util.HashMap[Int,ArrayBuffer[Int]]()
+    val scanIdsByTimeIndexHashMap = new java.util.HashMap[Int,ArrayBuffer[Long]]()
     
     for( scan <- scans ) {
       
       val timeIndex = LcMsScanSequence.calcTimeIndex(scan.time)
       
       if( !scanIdsByTimeIndex.containsKey(timeIndex) ) {
-        scanIdsByTimeIndexHashMap.put(timeIndex, new ArrayBuffer[Int](1) )
+        scanIdsByTimeIndexHashMap.put(timeIndex, new ArrayBuffer[Long](1) )
       }
       
       scanIdsByTimeIndexHashMap.get(timeIndex) += scan.id
     }
     
-    val scanIdsIndexBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[Int]]
+    val scanIdsIndexBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[Long]]
     for( timeIndex <- scanIdsByTimeIndexHashMap.keys ) {
       val scanIds = scanIdsByTimeIndexHashMap.get(timeIndex)
       scanIdsIndexBuilder += ( timeIndex -> scanIds.toArray )
@@ -125,7 +125,7 @@ case class LcMsScanSequence(
     
     val timeIndex = LcMsScanSequence.calcTimeIndex(time)      
     val scanIdsIndex = scanIdsByTimeIndex      
-    var matchingScanIds = new ArrayBuffer[Int]
+    var matchingScanIds = new ArrayBuffer[Long]
     
     for( index <- timeIndex-1 to timeIndex+1 ) {
       val tmpScanIds = scanIdsIndex(index)
@@ -152,7 +152,7 @@ case class LcMsScanSequence(
     calcDeltaTime(feature.relations.firstScanId,feature.relations.lastScanId)
   }
   
-  def calcDeltaTime( firstSanId: Int, lastScanId: Int ): Float = {
+  def calcDeltaTime( firstSanId: Long, lastScanId: Long ): Float = {
     this.scanById(lastScanId).time - this.scanById(firstSanId).time
   }
   
@@ -166,7 +166,7 @@ object LcMsScan extends InMemoryIdGen
 case class LcMsScan(
     
   // Required fields
-  var id: Int,
+  var id: Long,
   val initialId: Int,
   val cycle: Int,
   val time: Float,
@@ -175,7 +175,7 @@ case class LcMsScan(
   val basePeakMoz: Double,
   val basePeakIntensity: Double,
   
-  var runId: Int,
+  var runId: Long,
   
   // Immutable optional fields
   val precursorMoz: Option[Double] = None,
@@ -189,4 +189,3 @@ case class LcMsScan(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class LcMsScanProperties
-

@@ -1,10 +1,6 @@
 package fr.proline.core.orm.uds;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.Set;
@@ -36,12 +32,10 @@ public class DatasetTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	//"/fr/proline/core/orm/uds/Project_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/uds-db_init_dataset.xml",
-		"/dbunit/datasets/uds/Project_Dataset.xml"
-	};
-	
+	// "/fr/proline/core/orm/uds/Project_Dataset.xml"
+	String[] datasets = new String[] { "/dbunit/datasets/uds-db_init_dataset.xml",
+		"/dbunit/datasets/uds/Project_Dataset.xml" };
+
 	loadCompositeDataSet(datasets);
     }
 
@@ -52,33 +46,33 @@ public class DatasetTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    Project project = udsEm.find(Project.class, 1);
+	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
 	    List<Dataset> rootDsets = DatasetRepository.findRootDatasetsByProject(udsEm, project.getId());
-	    assertThat(rootDsets.size(), is(1));
+	    assertEquals(rootDsets.size(), 1);
 	    Dataset rootDS = rootDsets.get(0);
-	    assertThat(rootDS, notNullValue());
-	    assertThat(rootDS.getName(), equalTo("CB_342"));
-	    assertThat(rootDS.getNumber(), is(1));
+	    assertNotNull(rootDS);
+	    assertEquals(rootDS.getName(), "CB_342");
+	    assertEquals(rootDS.getNumber(), 1);
 
 	    List<Dataset> datasets = DatasetRepository.findDatasetsByProject(udsEm, project.getId());
-	    assertThat(datasets.size(), is(3));
-	    for (Dataset nextDS : datasets) {
-		switch (nextDS.getId()) {
-		case 1:
-		    assertThat(nextDS.getName(), equalTo("CB_342"));
-		    assertThat(nextDS.getNumber(), is(1));
-		    break;
-		case 2:
-		    assertThat(nextDS.getName(), equalTo("CB_342_1"));
-		    assertThat(nextDS.getNumber(), is(1));
+	    assertEquals(datasets.size(), 3);
+
+	    for (final Dataset nextDS : datasets) {
+		final long nextDSId = nextDS.getId();
+
+		if (nextDSId == 1L) {
+		    assertEquals(nextDS.getName(), "CB_342");
+		    assertEquals(nextDS.getNumber(), 1);
+		} else if (nextDSId == 2L) {
+		    assertEquals(nextDS.getName(), "CB_342_1");
+		    assertEquals(nextDS.getNumber(), 1);
 		    assertThat(nextDS.getParentDataset(), CoreMatchers.sameInstance(rootDS));
-		    break;
-		case 3:
-		    assertThat(nextDS.getName(), equalTo("CB_342_2"));
-		    assertThat(nextDS.getNumber(), is(1));
+		} else if (nextDSId == 3L) {
+		    assertEquals(nextDS.getName(), "CB_342_2");
+		    assertEquals(nextDS.getNumber(), 1);
 		    assertThat(nextDS.getParentDataset(), CoreMatchers.sameInstance(rootDS));
-		    break;
 		}
+
 	    }
 
 	} finally {
@@ -102,18 +96,18 @@ public class DatasetTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    Dataset rootDS = udsEm.find(Dataset.class, 1);
+	    Dataset rootDS = udsEm.find(Dataset.class, Long.valueOf(1L));
 	    List<Dataset> childs = rootDS.getChildren();
-	    assertThat(childs, notNullValue());
-	    assertThat(childs.size(), is(2));
-	    for (Dataset nextDS : childs) {
-		assertThat(nextDS.getParentDataset(), CoreMatchers.sameInstance(rootDS));
-		assertTrue(IdentificationDataset.class.isAssignableFrom(nextDS.getClass()));
+	    assertNotNull(childs);
+	    assertEquals(childs.size(), 2);
+
+	    for (final Dataset nextDS : childs) {
+		assertSame(nextDS.getParentDataset(), rootDS);
+		assertTrue(nextDS instanceof IdentificationDataset);
 	    }
 
 	    Set<IdentificationDataset> ids = rootDS.getIdentificationDataset();
-	    assertThat(ids.size(), is(2));
-
+	    assertEquals(ids.size(), 2);
 	} finally {
 
 	    if (udsEm != null) {
@@ -124,6 +118,7 @@ public class DatasetTest extends DatabaseTestCase {
 		}
 	    }
 	}
+
     }
 
     @Test
@@ -133,10 +128,10 @@ public class DatasetTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    Project project = udsEm.find(Project.class, 1);
+	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
 	    List<String> dsNames = DatasetRepository.findRootDatasetNamesByProject(udsEm, project.getId());
-	    assertThat(dsNames.size(), is(1));
-	    assertThat(dsNames.get(0), equalTo("CB_342"));
+	    assertEquals(dsNames.size(), 1);
+	    assertEquals(dsNames.get(0), "CB_342");
 	} finally {
 
 	    if (udsEm != null) {
@@ -158,10 +153,10 @@ public class DatasetTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    IdentificationDataset idfDS = udsEm.find(IdentificationDataset.class, 2);
+	    IdentificationDataset idfDS = udsEm.find(IdentificationDataset.class, Long.valueOf(2L));
 
-	    assertThat(idfDS.getName(), is("CB_342_1"));
-	    assertThat(idfDS.getRawFile().getRawFileName(), equalTo("CAVEN456"));
+	    assertEquals(idfDS.getName(), "CB_342_1");
+	    assertEquals(idfDS.getRawFile().getRawFileName(), "CAVEN456");
 	} finally {
 
 	    if (udsEm != null) {

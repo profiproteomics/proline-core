@@ -39,7 +39,7 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 
     @Id
     // MSI Peptide Id are not generated (taken from Ps Peptide entity)
-    private Integer id;
+    private long id;
 
     @Column(name = "calculated_mass")
     private double calculatedMass;
@@ -76,24 +76,32 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	setId(psPeptide.getId());
 	setCalculatedMass(psPeptide.getCalculatedMass());
 
-	final String ptmStr = psPeptide.getPtmString();
+	final String psPtmString = psPeptide.getPtmString();
 
-	if (StringUtils.isEmpty(ptmStr)) {
+	if (StringUtils.isEmpty(psPtmString)) {
 	    setPtmString(null);
 	} else {
-	    setPtmString(ptmStr);
+	    setPtmString(psPtmString);
 	}
 
 	setSequence(psPeptide.getSequence());
-	setSerializedProperties(psPeptide.getSerializedProperties());
+
+	final String psPeptideProps = psPeptide.getSerializedProperties();
+
+	if (StringUtils.isEmpty(psPeptideProps)) {
+	    setSerializedProperties(null);
+	} else {
+	    setSerializedProperties(psPeptideProps);
+	}
+
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public double getCalculatedMass() {

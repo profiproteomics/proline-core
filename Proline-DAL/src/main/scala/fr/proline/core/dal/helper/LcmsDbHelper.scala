@@ -5,15 +5,16 @@ import fr.profi.jdbc.easy._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{DoJDBCReturningWork,DoJDBCWork}
 import fr.proline.core.om.model.lcms._
+import fr.proline.util.primitives._
   
 class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
   
-  def getFeatureScoringById(): Map[Int,FeatureScoring] = {
+  def getFeatureScoringById(): Map[Long,FeatureScoring] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
       var colNames: Seq[String] = null
-      val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,FeatureScoring]
+      val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,FeatureScoring]
       
       ezDBC.selectAndProcess( "SELECT * FROM feature_scoring" ) { r =>
           
@@ -21,7 +22,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
         
         // Build the feature scoring record
         val ftScoringRecord = colNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
-        val ftScoringId = ftScoringRecord("id").asInstanceOf[Int]
+        val ftScoringId = toLong(ftScoringRecord("id"))
         
         val ftScoring = new FeatureScoring( id = ftScoringId,
                                             name = ftScoringRecord("name").asInstanceOf[String],
@@ -38,12 +39,12 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     })
   }
   
-  def getPeakPickingSoftwareById(): Map[Int,PeakPickingSoftware] = {
+  def getPeakPickingSoftwareById(): Map[Long,PeakPickingSoftware] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
       var colNames: Seq[String] = null
-      val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,PeakPickingSoftware]
+      val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,PeakPickingSoftware]
       
       ezDBC.selectAndProcess( "SELECT * FROM peak_picking_software" ) { r =>
           
@@ -51,7 +52,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
         
         // Build the feature scoring record
         val ppsRecord = colNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
-        val ppsId = ppsRecord("id").asInstanceOf[Int]
+        val ppsId = toLong(ppsRecord("id"))
         
         val pps = new PeakPickingSoftware( id = ppsId,
                                            name = ppsRecord("name").asInstanceOf[String],
@@ -69,12 +70,12 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     })
   }
   
-  def getPeakelFittingModelById(): Map[Int,PeakelFittingModel] = {
+  def getPeakelFittingModelById(): Map[Long,PeakelFittingModel] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
       var colNames: Seq[String] = null
-      val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,PeakelFittingModel]
+      val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,PeakelFittingModel]
       
       ezDBC.selectAndProcess( "SELECT * FROM peakel_fitting_model" ) { r =>
           
@@ -82,7 +83,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
         
         // Build the feature scoring record
         val peakelModelRecord = colNames.map( colName => ( colName -> r.nextAnyRef ) ).toMap
-        val peakelModelId = peakelModelRecord("id").asInstanceOf[Int]
+        val peakelModelId = toLong(peakelModelRecord("id"))
         
         val peakelModel = new PeakelFittingModel( id = peakelModelId,
                                                   name = peakelModelRecord("name").asInstanceOf[String]
@@ -97,21 +98,21 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     })
   }
   
-  def getScanSequenceIdForRawFileName( rawFileName: String ): Option[Int] = {    
+  def getScanSequenceIdForRawFileName( rawFileName: String ): Option[Long] = {    
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>    
-      ezDBC.selectHeadOption( "SELECT id FROM run WHERE raw_file_name = ?", rawFileName ) { _.nextInt }    
+      ezDBC.selectHeadOption( "SELECT id FROM run WHERE raw_file_name = ?", rawFileName ) { v => toLong(v.nextAny) }    
     })
   }
 
-  def getScanInitialIdById( runIds: Seq[Int] ): Map[Int,Int] = {
+  def getScanInitialIdById( runIds: Seq[Long] ): Map[Long,Int] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
-      val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Int]
+      val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Int]
       
       ezDBC.selectAndProcess(
           "SELECT id, initial_id FROM scan WHERE run_id IN (" + runIds.mkString(",") + ")"  ) { r =>
-          val( scanId, scanInitialId ) = (r.nextInt, r.nextInt)
+          val( scanId, scanInitialId ) = (toLong(r.nextAny), r.nextInt)
           mapBuilder += (scanId -> scanInitialId)
           ()
         }
@@ -122,26 +123,26 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
   }
   
 
-  def getMs2EventIdsByFtId( runMapIds: Seq[Int] ): Map[Int,Array[Int]] = {
+  def getMs2EventIdsByFtId( runMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
-      val featureMs2EventsByFtId = new java.util.HashMap[Int,ArrayBuffer[Int]]
+      val featureMs2EventsByFtId = new java.util.HashMap[Long,ArrayBuffer[Long]]
       ezDBC.selectAndProcess( 
           "SELECT feature_id, ms2_event_id FROM feature_ms2_event " + 
           "WHERE run_map_id IN (" + runMapIds.mkString(",") + ")" ) { r =>
             
-          val( featureId, ms2EventId ) = (r.nextInt, r.nextInt)
+          val( featureId, ms2EventId ) = (toLong(r.nextAny), toLong(r.nextAny))
           if( !featureMs2EventsByFtId.containsKey(featureId) ) {
-            featureMs2EventsByFtId.put(featureId, new ArrayBuffer[Int](1) )
+            featureMs2EventsByFtId.put(featureId, new ArrayBuffer[Long](1) )
           }
           featureMs2EventsByFtId.get(featureId) += ms2EventId
           ()
         }
       
-      val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[Int]]
+      val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]
       for( ftId <- featureMs2EventsByFtId.keySet().toArray() ) { 
-        mapBuilder += ( ftId.asInstanceOf[Int] -> featureMs2EventsByFtId.get(ftId).toArray[Int] )
+        mapBuilder += ( toLong(ftId) -> featureMs2EventsByFtId.get(ftId).toArray[Long] )
       }
       mapBuilder.result()
     

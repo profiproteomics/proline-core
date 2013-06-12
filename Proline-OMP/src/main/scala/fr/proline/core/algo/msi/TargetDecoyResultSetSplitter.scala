@@ -58,7 +58,7 @@ object TargetDecoyResultSetSplitter extends IResultSetSplitter {
    * @param protMatches the protein matches
    * @return a sequence of peptide ids
    */
-  private def _getProtMatchesPepIds(protMatches: Seq[ProteinMatch]): Seq[Int] = {
+  private def _getProtMatchesPepIds(protMatches: Seq[ProteinMatch]): Seq[Long] = {
     for (protMatch <- protMatches; seqMatch <- protMatch.sequenceMatches) yield seqMatch.getPeptideId
   }
 

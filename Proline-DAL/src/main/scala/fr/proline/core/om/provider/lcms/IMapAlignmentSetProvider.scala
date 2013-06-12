@@ -4,6 +4,6 @@ import fr.proline.core.om.model.lcms.MapAlignmentSet
 
 trait IMapAlignmentSetProvider {
   
-  def getMapAlignmentSets( mapSetId: Int ): Array[MapAlignmentSet]
+  def getMapAlignmentSets( mapSetId: Long ): Array[MapAlignmentSet]
 
 }

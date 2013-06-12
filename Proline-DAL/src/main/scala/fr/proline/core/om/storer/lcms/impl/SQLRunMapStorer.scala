@@ -127,13 +127,13 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
 
   }
 
-  protected def insertMap(ezDBC: EasyDBC, lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date): Int = {
+  protected def insertMap(ezDBC: EasyDBC, lcmsMap: ILcMsMap, modificationTimestamp: java.util.Date): Long = {
 
     // FIXME: scoring should not be null
-    val ftScoringId = lcmsMap.featureScoring.map(_.id).getOrElse(1)
+    val ftScoringId = lcmsMap.featureScoring.map(_.id).getOrElse(1L)
     val lcmsMapType = if (lcmsMap.isProcessed) 1 else 0
     
-    var newMapId = 0
+    var newMapId:Long = 0L
     ezDBC.executePrepared(LcmsDbMapTable.mkInsertQuery, true) { statement =>
       val mapDesc = if (lcmsMap.description == null) None else Some(lcmsMap.description)
 
@@ -148,14 +148,14 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
         ftScoringId
       )
 
-      newMapId = statement.generatedInt
+      newMapId = statement.generatedLong
     }
 
     newMapId
 
   }
 
-  protected def insertFeatureUsingPreparedStatement(ft: Feature, stmt: PreparedStatementWrapper): Int = {
+  protected def insertFeatureUsingPreparedStatement(ft: Feature, stmt: PreparedStatementWrapper): Long = {
 
     val ftRelations = ft.relations
     val qualityScore = if (ft.qualityScore.isNaN) None else Some(ft.qualityScore)
@@ -184,7 +184,7 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
       ftRelations.mapId
     )
 
-    stmt.generatedInt
+    stmt.generatedLong
   }
 
 }

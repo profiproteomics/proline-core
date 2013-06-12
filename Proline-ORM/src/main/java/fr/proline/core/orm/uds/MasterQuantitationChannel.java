@@ -21,21 +21,22 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "master_quant_channel")
 public class MasterQuantitationChannel implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "lcms_map_set_id")
-    private Integer lcmsMapSetId;
+    private Long lcmsMapSetId;
 
     private String name;
 
-    private Integer number;
+    private int number;
 
     @Column(name = "quant_result_summary_id")
-    private Integer quantResultSummaryId;
+    private Long quantResultSummaryId;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -53,20 +54,20 @@ public class MasterQuantitationChannel implements Serializable {
     public MasterQuantitationChannel() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public Integer getLcmsMapSetId() {
-	return this.lcmsMapSetId;
+    public Long getLcmsMapSetId() {
+	return lcmsMapSetId;
     }
 
-    public void setLcmsMapSetId(Integer lcmsMapSetId) {
-	this.lcmsMapSetId = lcmsMapSetId;
+    public void setLcmsMapSetId(final Long pLcmsMapSetId) {
+	lcmsMapSetId = pLcmsMapSetId;
     }
 
     public String getName() {
@@ -77,20 +78,20 @@ public class MasterQuantitationChannel implements Serializable {
 	this.name = name;
     }
 
-    public Integer getNumber() {
-	return this.number;
+    public int getNumber() {
+	return number;
     }
 
-    public void setNumber(Integer number) {
-	this.number = number;
+    public void setNumber(final int pNumber) {
+	number = pNumber;
     }
 
-    public Integer getQuantResultSummaryId() {
-	return this.quantResultSummaryId;
+    public Long getQuantResultSummaryId() {
+	return quantResultSummaryId;
     }
 
-    public void setQuantResultSummaryId(Integer quantResultSummaryId) {
-	this.quantResultSummaryId = quantResultSummaryId;
+    public void setQuantResultSummaryId(final Long pQuantResultSummaryId) {
+	quantResultSummaryId = pQuantResultSummaryId;
     }
 
     public String getSerializedProperties() {

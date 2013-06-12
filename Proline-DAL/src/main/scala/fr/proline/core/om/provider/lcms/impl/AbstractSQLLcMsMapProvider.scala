@@ -33,23 +33,23 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   private def _boolToStr(ezDBC: EasyDBC, bool: Boolean) = ezDBC.dialect.booleanFormatter.formatBoolean(bool)
   
   /** Returns a map of overlapping feature ids keyed by feature id */
-  def getOverlappingFtIdsByFtId( runMapIds: Seq[Int] ): Map[Int,Array[Int]] = {
+  def getOverlappingFtIdsByFtId( runMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
       
-      val olpFtIdsByFtId = new HashMap[Int,ArrayBuffer[Int]]
+      val olpFtIdsByFtId = new HashMap[Long,ArrayBuffer[Long]]
       val olpIdMapQuery = new SelectQueryBuilder1(LcmsDbFeatureOverlapMappingTable).mkSelectQuery( (t,c) =>
         List(t.OVERLAPPED_FEATURE_ID,t.OVERLAPPING_FEATURE_ID) ->
         "WHERE "~ t.MAP_ID ~" IN("~ runMapIds.mkString(",") ~") "
       )
       
       ezDBC.selectAndProcess( olpIdMapQuery ) { r =>
-        val( overlappedFeatureId, overlappingFeatureId ) = (r.nextInt, r.nextInt)
-        olpFtIdsByFtId.getOrElseUpdate(overlappedFeatureId, new ArrayBuffer[Int](1) ) += overlappingFeatureId
+        val( overlappedFeatureId, overlappingFeatureId ) = (toLong(r.nextAny), toLong(r.nextAny))
+        olpFtIdsByFtId.getOrElseUpdate(overlappedFeatureId, new ArrayBuffer[Long](1) ) += overlappingFeatureId
         ()
       }
       
-      val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[Int]]
+      val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]
       for( (ftId,olpFtIds) <- olpFtIdsByFtId ) { 
         mapBuilder += ( ftId -> olpFtIds.toArray )
       }
@@ -61,14 +61,14 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   
   /** Returns a map of overlapping feature keyed by its id */
   def getOverlappingFeatureById(
-    mapIds: Seq[Int],
-    scanInitialIdById: Map[Int,Int],
-    ms2EventIdsByFtId: Map[Int,Array[Int]]
-  ): Map[Int,Feature] = {
+    mapIds: Seq[Long],
+    scanInitialIdById: Map[Long,Int],
+    ms2EventIdsByFtId: Map[Long,Array[Long]]
+  ): Map[Long,Feature] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
-      val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Feature]
+      val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Feature]
       
       // Load overlapping features
       val olpFtQuery = new SelectQueryBuilder1(LcmsDbFeatureTable).mkSelectQuery( (t,c) =>
@@ -90,7 +90,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     })
   }
   
-  def eachFeatureRecord(mapIds: Seq[Int], onEachFt: ResultSetRow => Unit): Unit = {
+  def eachFeatureRecord(mapIds: Seq[Long], onEachFt: ResultSetRow => Unit): Unit = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
@@ -114,8 +114,8 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   def buildFeature(
     // Run map feature attributes
     ftRecord: ResultSetRow,
-    scanInitialIdById: Map[Int,Int],
-    ms2EventIdsByFtId: Map[Int,Array[Int]],
+    scanInitialIdById: Map[Long,Int],
+    ms2EventIdsByFtId: Map[Long,Array[Long]],
     isotopicPatterns: Option[Array[IsotopicPattern]] = None,
     overlappingFeatures: Array[Feature] = null,
     
@@ -129,24 +129,24 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     selectionLevel: Int = 2
   ): Feature = {
 
-    val ftId: Int = toInt(ftRecord.getAnyVal(FtCols.ID))
-    val firstScanId = ftRecord.getInt(FtCols.FIRST_SCAN_ID)
-    val lastScanId = ftRecord.getInt(FtCols.LAST_SCAN_ID)
-    val apexScanId = ftRecord.getInt(FtCols.APEX_SCAN_ID)
+    val ftId: Long = toLong(ftRecord.getAny(FtCols.ID))
+    val firstScanId = toLong(ftRecord.getAny(FtCols.FIRST_SCAN_ID))
+    val lastScanId = toLong(ftRecord.getAny(FtCols.LAST_SCAN_ID))
+    val apexScanId = toLong(ftRecord.getAny(FtCols.APEX_SCAN_ID))
     val ms2EventIds = ms2EventIdsByFtId.getOrElse(ftId,null)
     val duration = scanById(lastScanId).time - scanById(firstScanId).time
     
     new Feature(
        id = ftId,
        moz = ftRecord.getDouble(FtCols.MOZ),
-       intensity = toFloat(ftRecord.getAnyVal(FtCols.INTENSITY)),
+       intensity = toFloat(ftRecord.getAny(FtCols.INTENSITY)),
        charge = ftRecord.getInt(FtCols.CHARGE),
-       elutionTime = toFloat(ftRecord.getAnyVal(FtCols.ELUTION_TIME)),
+       elutionTime = toFloat(ftRecord.getAny(FtCols.ELUTION_TIME)),
        duration = duration,
        qualityScore = ftRecord.getDoubleOrElse(FtCols.QUALITY_SCORE,Double.NaN),
        ms1Count = ftRecord.getInt(FtCols.MS1_COUNT),
        ms2Count = ftRecord.getInt(FtCols.MS2_COUNT),
-       isOverlapping = ftRecord.getAnyVal(FtCols.IS_OVERLAPPING),
+       isOverlapping = toBoolean(ftRecord.getAny(FtCols.IS_OVERLAPPING)),
        isotopicPatterns = isotopicPatterns,
        overlappingFeatures = overlappingFeatures,
        children = children,
@@ -165,10 +165,10 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
          firstScanId = firstScanId,
          lastScanId = lastScanId,
          apexScanId = apexScanId,
-         theoreticalFeatureId = ftRecord.getIntOrElse(FtCols.THEORETICAL_FEATURE_ID, 0),
-         compoundId = ftRecord.getIntOrElse(FtCols.COMPOUND_ID, 0),
-         mapLayerId = ftRecord.getIntOrElse(FtCols.MAP_LAYER_ID, 0),
-         mapId = ftRecord.getInt(FtCols.MAP_ID)
+         theoreticalFeatureId = ftRecord.getLongOrElse(FtCols.THEORETICAL_FEATURE_ID, 0L),
+         compoundId = ftRecord.getLongOrElse(FtCols.COMPOUND_ID, 0L),
+         mapLayerId = ftRecord.getLongOrElse(FtCols.MAP_LAYER_ID, 0L),
+         mapId = toLong(ftRecord.getAny(FtCols.MAP_ID))
        )
      )
     

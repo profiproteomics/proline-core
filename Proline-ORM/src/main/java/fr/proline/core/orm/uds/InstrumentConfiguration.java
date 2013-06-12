@@ -36,7 +36,7 @@ public class InstrumentConfiguration implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "ms1_analyzer")
     private String ms1Analyzer;
@@ -65,12 +65,12 @@ public class InstrumentConfiguration implements Serializable {
     public InstrumentConfiguration() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getMs1Analyzer() {

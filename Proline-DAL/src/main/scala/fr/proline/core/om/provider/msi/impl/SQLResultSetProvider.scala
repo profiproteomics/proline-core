@@ -21,14 +21,14 @@ trait SQLResultSetLoader {
 
   val RSCols = MsiDbResultSetTable.columns
 
-  protected def getResultSet(rsId: Int,
+  protected def getResultSet(rsId: Long,
     pepMatches: Array[PeptideMatch],
     protMatches: Array[ProteinMatch]): ResultSet = {
     this.getResultSets(Array(rsId), pepMatches, protMatches)(0)
   }
 
   protected def getResultSets(
-    rsIds: Seq[Int],
+    rsIds: Seq[Long],
     pepMatches: Array[PeptideMatch],
     protMatches: Array[ProteinMatch]
   ): Array[ResultSet] = {
@@ -44,7 +44,7 @@ trait SQLResultSetLoader {
     val msiSearchIdsByRsId = msiDbHelper.getMsiSearchIdsByParentResultSetId(rsIds)
     val msiSearchIds = msiSearchIdsByRsId.flatMap(_._2).toArray.distinct
     
-    var msiSearchById = Map.empty[Int, fr.proline.core.om.model.msi.MSISearch]
+    var msiSearchById = Map.empty[Long, fr.proline.core.om.model.msi.MSISearch]
     if (udsDbCtx != null) {
       val msiSearches = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx).getMSISearches(msiSearchIds)
       msiSearchById = Map() ++ msiSearches.map(ms => ms.id -> ms)
@@ -60,7 +60,7 @@ trait SQLResultSetLoader {
       val resultSets = msiEzDBC.select(rsQuery) { r =>      
   
         // Retrieve some vars
-        val rsId: Int = toInt(r.getAnyVal(RSCols.ID))
+        val rsId: Long = toLong(r.getAny(RSCols.ID))
         /*if( !protMatchesByRsId.contains(rsId) ) {
           throw new Exception("this result set doesn't have any protein match and can't be loaded")
         }*/
@@ -71,10 +71,10 @@ trait SQLResultSetLoader {
         val rsType = r.getString(RSCols.TYPE)
         val isDecoy = rsType matches "DECOY_SEARCH"
         val isNative = rsType matches "SEARCH"
-        val decoyRsId = r.getIntOrElse(RSCols.DECOY_RESULT_SET_ID, 0)
+        val decoyRsId = r.getLongOrElse(RSCols.DECOY_RESULT_SET_ID, 0L)
   
         val rsMsiSearchId = if (isNative) {
-          r.getIntOrElse(RSCols.MSI_SEARCH_ID, 0)
+          r.getLongOrElse(RSCols.MSI_SEARCH_ID, 0L)
         } else if (msiSearchIdsByRsId.contains(rsId)) {
           // FIXME: we should attach all MSI searches to the result set ???
           msiSearchIdsByRsId(rsId).head
@@ -117,7 +117,7 @@ class SQLResultSetProvider(
 
   val pdiDbCtx = null
 
-  def getResultSets(rsIds: Seq[Int]): Array[ResultSet] = {
+  def getResultSets(rsIds: Seq[Long]): Array[ResultSet] = {
 
     // Load peptide matches
     val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
@@ -131,7 +131,7 @@ class SQLResultSetProvider(
 
   }
 
-  def getResultSetsAsOptions(resultSetIds: Seq[Int]): Array[Option[ResultSet]] = {
+  def getResultSetsAsOptions(resultSetIds: Seq[Long]): Array[Option[ResultSet]] = {
 
     val resultSets = this.getResultSets(resultSetIds)
     val resultSetById = resultSets.map { rs => rs.id -> rs } toMap

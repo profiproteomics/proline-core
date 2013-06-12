@@ -13,7 +13,7 @@ trait ISeqDatabaseProvider {
    *  @param seqDBIds: Sequence of ids of SeqDatabase to search for
    *  @return Array of Option[SeqDatabase] corresponding to found SeqDatabases
    */
-  def getSeqDatabasesAsOptions( seqDBIds: Seq[Int] ): Array[Option[SeqDatabase]]
+  def getSeqDatabasesAsOptions( seqDBIds: Seq[Long] ): Array[Option[SeqDatabase]]
   
   /**
    * Get SeqDatabases with specified Ids.
@@ -21,7 +21,7 @@ trait ISeqDatabaseProvider {
    *  @param seqDBIds: Sequence of ids of SeqDatabase to search for
    *  @return Array of SeqDatabase corresponding to found SeqDatabases
    */
-  def getSeqDatabases( seqDBIds: Seq[Int] ): Array[SeqDatabase]
+  def getSeqDatabases( seqDBIds: Seq[Long] ): Array[SeqDatabase]
   
   /**
    * Get SeqDatabase (wrapped in Option) with specified Id.
@@ -30,7 +30,7 @@ trait ISeqDatabaseProvider {
    *  @param seqDBId: id of SeqDatabase to search for
    *  @return Option[SeqDatabase] corresponding to found SeqDatabase
    */
-  def getSeqDatabase( seqDBId:Int ): Option[SeqDatabase] = { getSeqDatabasesAsOptions( Array(seqDBId) )(0) }
+  def getSeqDatabase( seqDBId:Long ): Option[SeqDatabase] = { getSeqDatabasesAsOptions( Array(seqDBId) )(0) }
  
   /**
    * Get SeqDatabase (wrapped in Option) with specified name and fasta file path.

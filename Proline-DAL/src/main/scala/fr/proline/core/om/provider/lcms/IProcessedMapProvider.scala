@@ -4,6 +4,6 @@ import fr.proline.core.om.model.lcms.ProcessedMap
 
 trait IProcessedMapProvider extends ILcMsMapProvider {
   
-  def getProcessedMaps( processedMapIds: Seq[Int] ): Array[ProcessedMap]
+  def getProcessedMaps( processedMapIds: Seq[Long] ): Array[ProcessedMap]
 
 }

@@ -16,6 +16,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
+import fr.proline.util.StringUtils;
+
 /**
  * The persistent class for the seq_db_entry database table.
  * 
@@ -28,12 +30,12 @@ public class SequenceDbEntry implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     private String identifier;
 
     @Column(name = "is_active")
-    private Boolean isActive;
+    private boolean isActive;
 
     private String name;
 
@@ -72,17 +74,17 @@ public class SequenceDbEntry implements Serializable {
     @MapKeyColumn(name = "schema_name")
     @Column(name = "object_tree_id")
     @CollectionTable(name = "seq_db_entry_object_tree_map", joinColumns = @JoinColumn(name = "seq_db_entry_id", referencedColumnName = "id"))
-    Map<String, Integer> objectTreeIdByName;
+    private Map<String, Long> objectTreeIdByName;
 
     public SequenceDbEntry() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getIdentifier() {
@@ -93,12 +95,12 @@ public class SequenceDbEntry implements Serializable {
 	this.identifier = identifier;
     }
 
-    public Boolean getIsActive() {
-	return this.isActive;
+    public boolean getIsActive() {
+	return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-	this.isActive = isActive;
+    public void setIsActive(final boolean pIsActive) {
+	isActive = pIsActive;
     }
 
     public String getName() {
@@ -173,14 +175,40 @@ public class SequenceDbEntry implements Serializable {
 	this.taxon = taxon;
     }
 
-    public Map<String, Integer> getObjectsMap() {
+    void setObjectTreeIdByName(final Map<String, Long> objectTree) {
+	objectTreeIdByName = objectTree;
+    }
+
+    public Map<String, Long> getObjectTreeIdByName() {
 	return objectTreeIdByName;
     }
 
-    public void putObject(String schemaName, Integer objectId) {
-	if (this.objectTreeIdByName == null)
-	    this.objectTreeIdByName = new HashMap<String, Integer>();
-	this.objectTreeIdByName.put(schemaName, objectId);
+    public Long putObject(final String schemaName, final long objectId) {
+
+	if (StringUtils.isEmpty(schemaName)) {
+	    throw new IllegalArgumentException("Invalid schemaName");
+	}
+
+	Map<String, Long> localObjectTree = getObjectTreeIdByName();
+
+	if (localObjectTree == null) {
+	    localObjectTree = new HashMap<String, Long>();
+
+	    setObjectTreeIdByName(localObjectTree);
+	}
+
+	return localObjectTree.put(schemaName, Long.valueOf(objectId));
+    }
+
+    public Long removeObject(final String schemaName) {
+	Long result = null;
+
+	final Map<String, Long> localObjectTree = getObjectTreeIdByName();
+	if (localObjectTree != null) {
+	    result = localObjectTree.remove(schemaName);
+	}
+
+	return result;
     }
 
 }

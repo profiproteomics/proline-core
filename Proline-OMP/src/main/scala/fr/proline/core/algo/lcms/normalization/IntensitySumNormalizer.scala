@@ -5,15 +5,15 @@ class IntensitySumMapNormalizer extends IMapSetNormalizer {
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
 
-  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float] = {
+  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Long,Float] = {
 
     this.calcNormalizationFactorByMapId( mapSet.getChildMapIds.toList, this.getIntensitySumByMapId(mapSet)  )
 
   }
   
-  private[normalization] def getIntensitySumByMapId( mapSet: MapSet ): Map[Int,Double] = {
+  private[normalization] def getIntensitySumByMapId( mapSet: MapSet ): Map[Long,Double] = {
     
-    val intensitySumByMapIdBuilder = scala.collection.immutable.Map.newBuilder[Int,Double]
+    val intensitySumByMapIdBuilder = scala.collection.immutable.Map.newBuilder[Long,Double]
     
     // Compute intensity sum for each map
     for( map <- mapSet.childMaps ) {

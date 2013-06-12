@@ -13,18 +13,18 @@ trait IPeptideProvider {
    *  @param peptideIds: Sequence of ids of Peptide to search for
    *  @return Array of Option[Peptide] corresponding to found Peptide
    */
-  def getPeptidesAsOptions( peptideIds: Seq[Int] ): Array[Option[Peptide]]
+  def getPeptidesAsOptions( peptideIds: Seq[Long] ): Array[Option[Peptide]]
   
   /**
    *  Get Peptides with specified Ids.
    *  @param peptideIds: Sequence of ids of Peptide to search for
    *  @return Array of Peptide corresponding to found Peptide
    */
-  def getPeptides( peptideIds: Seq[Int] ): Array[Peptide]
+  def getPeptides( peptideIds: Seq[Long] ): Array[Peptide]
   
   //def getPeptidesForSequences( peptideSeqs: Seq[String] ): Array[Peptide]
   
-  def getPeptide( peptideId:Int ): Option[Peptide] = getPeptidesAsOptions( Array(peptideId) )(0)
+  def getPeptide( peptideId:Long ): Option[Peptide] = getPeptidesAsOptions( Array(peptideId) )(0)
   
   /**
    *  Get Peptide (wrapped in Option) with specified sequence and LocatedPtms.

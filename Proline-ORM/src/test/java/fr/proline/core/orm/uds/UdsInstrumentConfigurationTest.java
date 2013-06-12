@@ -1,8 +1,6 @@
 package fr.proline.core.orm.uds;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -14,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.uds.repository.UdsInstrumentConfigurationRepository;
-
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 
@@ -31,12 +28,10 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	//"/fr/proline/core/orm/uds/Project_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/uds-db_init_dataset.xml",
-		"/dbunit/datasets/uds/Project_Dataset.xml"
-	};
-	
+	// "/fr/proline/core/orm/uds/Project_Dataset.xml"
+	String[] datasets = new String[] { "/dbunit/datasets/uds-db_init_dataset.xml",
+		"/dbunit/datasets/uds/Project_Dataset.xml" };
+
 	loadCompositeDataSet(datasets);
     }
 
@@ -48,10 +43,10 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
 
 	try {
 	    InstrumentConfiguration insCfg = UdsInstrumentConfigurationRepository
-		    .findInstrumConfForNameAndMs1AndMsn(udsEm, "LTQ-ORBITRAP XL (A1=FTMS F=CID A2=TRAP)", "FTMS", "TRAP");
-	    assertThat(insCfg, notNullValue());
-	    assertThat(insCfg.getActivation().getType(), is(Activation.ActivationType.CID));
-
+		    .findInstrumConfForNameAndMs1AndMsn(udsEm, "LTQ-ORBITRAP XL (A1=FTMS F=CID A2=TRAP)",
+			    "FTMS", "TRAP");
+	    assertNotNull(insCfg);
+	    assertEquals(insCfg.getActivation().getType(), Activation.ActivationType.CID);
 	} finally {
 
 	    if (udsEm != null) {

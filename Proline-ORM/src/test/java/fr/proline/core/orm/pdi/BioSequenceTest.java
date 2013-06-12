@@ -1,8 +1,5 @@
 package fr.proline.core.orm.pdi;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.*;
 
 import java.util.HashSet;
@@ -12,7 +9,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,8 +31,8 @@ public class BioSequenceTest extends DatabaseTestCase {
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	
-	//"/fr/proline/core/orm/pdi/Proteins_Dataset.xml"	
+
+	// "/fr/proline/core/orm/pdi/Proteins_Dataset.xml"
 	loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml");
     }
 
@@ -47,10 +43,10 @@ public class BioSequenceTest extends DatabaseTestCase {
 	final EntityManager pdiEm = emf.createEntityManager();
 
 	try {
-	    BioSequence bioSeq = pdiEm.find(BioSequence.class, 171);
-	    assertThat(bioSeq, notNullValue());
-	    assertThat(bioSeq.getLength(), is(338));
-	    assertThat(bioSeq.getProteinIdentifiers().size(), is(4));
+	    BioSequence bioSeq = pdiEm.find(BioSequence.class, Long.valueOf(171L));
+	    assertNotNull(bioSeq);
+	    assertEquals(bioSeq.getLength(), Integer.valueOf(338));
+	    assertEquals(bioSeq.getProteinIdentifiers().size(), 4);
 	} finally {
 
 	    if (pdiEm != null) {
@@ -74,7 +70,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 	try {
 	    BioSequence seq = PdiBioSequenceRepository.findBioSequenceForCrcAndMass(pdiEm,
 		    "01FC286177012FDF", 36672.0);
-	    assertThat(seq, notNullValue());
+	    assertNotNull(seq);
 	} finally {
 
 	    if (pdiEm != null) {
@@ -97,7 +93,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 
 	try {
 	    BioSequence seq = PdiBioSequenceRepository.findBioSequenceForCrcAndMass(pdiEm, "FFFFFFF", 9999.0);
-	    assertThat(seq, nullValue());
+	    assertNull(seq);
 	} finally {
 
 	    if (pdiEm != null) {
@@ -121,8 +117,8 @@ public class BioSequenceTest extends DatabaseTestCase {
 	try {
 	    BioSequence seq = PdiBioSequenceRepository.findBioSequencePerAccessionAndSeqDB(pdiEm, "Q6WN28",
 		    33);
-	    assertThat(seq, notNullValue());
-	    assertThat(seq.getLength(), CoreMatchers.equalTo(146));
+	    assertNotNull(seq);
+	    assertEquals(seq.getLength(), Integer.valueOf(146));
 	} finally {
 
 	    if (pdiEm != null) {

@@ -3,9 +3,8 @@ package fr.proline.core.orm.ps;
 import static javax.persistence.CascadeType.PERSIST;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -40,7 +39,7 @@ public class PtmSpecificity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
-    private Integer id;
+    private long id;
 
     private String location;
 
@@ -57,17 +56,17 @@ public class PtmSpecificity implements Serializable {
     private PtmClassification classification;
 
     @OneToMany(mappedBy = "specificity", cascade = PERSIST)
-    private List<PtmEvidence> evidences;
+    private Set<PtmEvidence> evidences;
 
     public PtmSpecificity() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getLocation() {
@@ -102,45 +101,35 @@ public class PtmSpecificity implements Serializable {
 	this.classification = classification;
     }
 
-    public void setEvidences(final List<PtmEvidence> evids) {
-	evidences = evids;
+    public void setEvidences(final Set<PtmEvidence> pEvidences) {
+	evidences = pEvidences;
     }
 
-    public List<PtmEvidence> getEvidences() {
+    public Set<PtmEvidence> getEvidences() {
 	return evidences;
     }
 
     public void addEvidence(final PtmEvidence evidence) {
 
 	if (evidence != null) {
-	    List<PtmEvidence> evids = getEvidences();
+	    Set<PtmEvidence> localEvidences = getEvidences();
 
-	    if (evids == null) {
-		evids = new ArrayList<PtmEvidence>();
+	    if (localEvidences == null) {
+		localEvidences = new HashSet<PtmEvidence>();
 
-		setEvidences(evids);
+		setEvidences(localEvidences);
 	    }
 
-	    evids.add(evidence);
+	    localEvidences.add(evidence);
 	}
 
     }
 
     public void removeEvidence(final PtmEvidence evidence) {
 
-	final List<PtmEvidence> evids = getEvidences();
-	if (evids != null) {
-	    Iterator<PtmEvidence> iter = evids.iterator();
-
-	    while (iter.hasNext()) {
-		final PtmEvidence value = iter.next();
-
-		if ((value == null) || value.equals(evidence)) {
-		    iter.remove();
-		}
-
-	    }
-
+	final Set<PtmEvidence> localEvidences = getEvidences();
+	if (localEvidences != null) {
+	    localEvidences.remove(evidence);
 	}
 
     }

@@ -19,7 +19,7 @@ object Activation extends Enumeration {
 object Instrument extends InMemoryIdGen
 case class Instrument(
                    // Required fields
-                   val id: Int,
+                   val id: Long,
                    val name: String,
                    
                    // Immutable optional fields
@@ -48,7 +48,7 @@ object InstrumentConfig extends InMemoryIdGen {
 @JsonInclude( Include.NON_NULL )
 case class InstrumentConfig(
                    // Required fields
-                   val id: Int,
+                   val id: Long,
                    val name: String,
                    var instrument: Instrument,
                    val ms1Analyzer: String,
@@ -60,7 +60,7 @@ case class InstrumentConfig(
                    ) {
   
   // Secondary constructor were the name is automatically built
-  def this( id: Int, instrument: Instrument, ms1Analyzer: String, msnAnalyzer: String,
+  def this( id: Long, instrument: Instrument, ms1Analyzer: String, msnAnalyzer: String,
             activationType: String, fragmentationRules: Option[Array[FragmentationRule]] = None ) {
     this( id,InstrumentConfig.makeName(instrument.name,activationType,ms1Analyzer,msnAnalyzer),
           instrument,ms1Analyzer,msnAnalyzer,activationType,fragmentationRules)

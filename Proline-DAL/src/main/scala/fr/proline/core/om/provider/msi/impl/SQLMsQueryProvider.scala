@@ -22,7 +22,7 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
   
   val MsQueryCols = MsiDbMsQueryTable.columns
 
-  def getMsiSearchesMsQueries(msiSearchIds: Seq[Int]): Array[MsQuery] = {
+  def getMsiSearchesMsQueries(msiSearchIds: Seq[Long]): Array[MsQuery] = {
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
       
@@ -38,14 +38,14 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
       )
   
       // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-      val parentPeaklistIds = msiEzDBC.selectInts(pklIdQuery)
+      val parentPeaklistIds = msiEzDBC.selectLongs(pklIdQuery)
       
       // Retrieve child peaklist ids if they exist
-      val pklIds = new ArrayBuffer[Int]
+      val pklIds = new ArrayBuffer[Long]
       for (parentPeaklistId <- parentPeaklistIds) {
   
         // Retrieve child peaklist ids corresponding to the current peaklist id
-        val childPeaklistIds = msiEzDBC.select(childPklIdQuery, parentPeaklistId) { _.nextInt }
+        val childPeaklistIds = msiEzDBC.select(childPklIdQuery, parentPeaklistId) { v => toLong(v.nextAny) }
         
         if (childPeaklistIds.length > 0) { pklIds ++= childPeaklistIds }
         else { pklIds += parentPeaklistId }
@@ -56,16 +56,16 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
       )
   
       // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-      val spectrumTitleById = msiEzDBC.select(specTitleQuery) { r => (r.nextInt, r.nextString) } toMap
+      val spectrumTitleById = msiEzDBC.select(specTitleQuery) { r => (toLong(r.nextAny), r.nextString) } toMap
   
       // Load MS queries corresponding to the provided MSI search ids
       val msQueries = msiEzDBC.select(msqQuery) { r =>
         
-        val spectrumId = r.getInt(MsQueryCols.SPECTRUM_ID)
+        val spectrumId = toLong(r.getAny(MsQueryCols.SPECTRUM_ID))
   
         // Decode JSON properties
         val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(parse[MsQueryProperties](_))
-        val msQueryId: Int = toInt(r.getAnyVal(MsQueryCols.ID))
+        val msQueryId = toLong(r.getAny(MsQueryCols.ID))
   
         // Build the MS query object
         val msQuery = if (spectrumId != 0) { // we can assume it is a MS2 query

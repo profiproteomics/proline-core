@@ -1,12 +1,10 @@
 package fr.proline.core.orm.msi;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,12 +26,10 @@ public class ObjectTreeTest extends DatabaseTestCase {
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	
+
 	// "/fr/proline/core/orm/msi/Resultset_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/msi-db_init_dataset.xml",
-		"/dbunit/datasets/msi/Resultset_Dataset.xml"
-	};
+	String[] datasets = new String[] { "/dbunit/datasets/msi-db_init_dataset.xml",
+		"/dbunit/datasets/msi/Resultset_Dataset.xml" };
 
 	loadCompositeDataSet(datasets);
     }
@@ -45,12 +41,10 @@ public class ObjectTreeTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    ResultSet rs = msiEm.find(ResultSet.class, 3);
-	    assertThat(rs.getObjectsMap().size(), is(2));
-	    assertThat(rs.getObjectsMap().get("filters_history"), CoreMatchers.notNullValue());
-	    assertThat(rs.getObjectsMap().get("grouping_history"), CoreMatchers.notNullValue());
-	    assertThat(rs.getObjectsMap().get("filters_history"), is(1));
-	    assertThat(rs.getObjectsMap().get("grouping_history"), is(2));
+	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(3L));
+	    assertEquals(rs.getObjectTreeIdByName().size(), 2);
+	    assertEquals(rs.getObjectTreeIdByName().get("filters_history"), Long.valueOf(1L));
+	    assertEquals(rs.getObjectTreeIdByName().get("grouping_history"), Long.valueOf(2));
 	} finally {
 
 	    if (msiEm != null) {
@@ -72,17 +66,17 @@ public class ObjectTreeTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    ResultSet rs = msiEm.find(ResultSet.class, 2);
-	    assertThat(rs.getObjectsMap().size(), is(0));
+	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
+	    assertEquals(rs.getObjectTreeIdByName().size(), 0);
 	    rs.putObject("filters_history", 1);
 	    msiEm.getTransaction().begin();
 	    msiEm.persist(rs);
 	    msiEm.getTransaction().commit();
 
 	    msiEm.clear();
-	    rs = msiEm.find(ResultSet.class, 2);
-	    assertThat(rs.getObjectsMap().size(), is(1));
-	    assertThat(rs.getObjectsMap().get("filters_history"), is(1));
+	    rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
+	    assertEquals(rs.getObjectTreeIdByName().size(), 1);
+	    assertEquals(rs.getObjectTreeIdByName().get("filters_history"), Long.valueOf(1));
 	} finally {
 
 	    if (msiEm != null) {

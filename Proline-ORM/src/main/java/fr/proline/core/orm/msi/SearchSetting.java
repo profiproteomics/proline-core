@@ -31,18 +31,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @DiscriminatorColumn(discriminatorType = DiscriminatorType.INTEGER, name = "id")
 @Table(name = "search_settings")
 public class SearchSetting implements Serializable {
+
     private static final long serialVersionUID = 1L;
-    
+
     public enum SoftwareName {
-      MASCOT, OMSSA
+	MASCOT, OMSSA
     };
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "is_decoy")
-    private Boolean isDecoy;
+    private boolean isDecoy;
 
     @Column(name = "max_missed_cleavages")
     private Integer maxMissedCleavages;
@@ -74,9 +75,6 @@ public class SearchSetting implements Serializable {
     @JoinColumn(name = "instrument_config_id")
     private InstrumentConfig instrumentConfig;
 
-    @Column(name = "instrument_config_id", insertable = false, updatable = false)
-    private Integer InstrumentConfigId;
-
     // bi-directional many-to-one association to SearchSettingsSeqDatabaseMap
     @OneToMany(mappedBy = "searchSetting")
     private Set<SearchSettingsSeqDatabaseMap> searchSettingsSeqDatabaseMaps;
@@ -93,20 +91,20 @@ public class SearchSetting implements Serializable {
     public SearchSetting() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public Boolean getIsDecoy() {
-	return this.isDecoy;
+    public boolean getIsDecoy() {
+	return isDecoy;
     }
 
-    public void setIsDecoy(Boolean isDecoy) {
-	this.isDecoy = isDecoy;
+    public void setIsDecoy(final boolean pIsDecoy) {
+	isDecoy = pIsDecoy;
     }
 
     public Integer getMaxMissedCleavages() {
@@ -189,17 +187,13 @@ public class SearchSetting implements Serializable {
 	this.instrumentConfig = instrumentConfig;
     }
 
-    public Integer getInstrumentConfigId() {
-	return InstrumentConfigId;
-    }
-
     public Set<SearchSettingsSeqDatabaseMap> getSearchSettingsSeqDatabaseMaps() {
 	return this.searchSettingsSeqDatabaseMaps;
     }
 
     public void setSearchSettingsSeqDatabaseMaps(
-	    final Set<SearchSettingsSeqDatabaseMap> searchSettingsSeqDatabaseMaps) {
-	this.searchSettingsSeqDatabaseMaps = searchSettingsSeqDatabaseMaps;
+	    final Set<SearchSettingsSeqDatabaseMap> pSearchSettingsSeqDatabaseMaps) {
+	searchSettingsSeqDatabaseMaps = pSearchSettingsSeqDatabaseMaps;
     }
 
     public void addSearchSettingsSeqDatabaseMap(final SearchSettingsSeqDatabaseMap searchSettingsSeqDatabase) {
@@ -220,8 +214,8 @@ public class SearchSetting implements Serializable {
 
     public void removeSearchSettingsSeqDatabaseMap(
 	    final SearchSettingsSeqDatabaseMap searchSettingsSeqDatabase) {
-	final Set<SearchSettingsSeqDatabaseMap> seqDatabaseMaps = getSearchSettingsSeqDatabaseMaps();
 
+	final Set<SearchSettingsSeqDatabaseMap> seqDatabaseMaps = getSearchSettingsSeqDatabaseMaps();
 	if (seqDatabaseMaps != null) {
 	    seqDatabaseMaps.remove(searchSettingsSeqDatabase);
 	}
@@ -232,31 +226,31 @@ public class SearchSetting implements Serializable {
 	return this.enzymes;
     }
 
-    public void setEnzymes(final Set<Enzyme> enzymes) {
-	this.enzymes = enzymes;
+    public void setEnzymes(final Set<Enzyme> pEnzymes) {
+	enzymes = pEnzymes;
     }
 
     public void addEnzyme(final Enzyme enzyme) {
 
 	if (enzyme != null) {
-	    Set<Enzyme> enzs = getEnzymes();
+	    Set<Enzyme> localEnzymes = getEnzymes();
 
-	    if (enzs == null) {
-		enzs = new HashSet<Enzyme>();
+	    if (localEnzymes == null) {
+		localEnzymes = new HashSet<Enzyme>();
 
-		setEnzymes(enzs);
+		setEnzymes(localEnzymes);
 	    }
 
-	    enzs.add(enzyme);
+	    localEnzymes.add(enzyme);
 	}
 
     }
 
     public void removeEnzyme(final Enzyme enzyme) {
-	final Set<Enzyme> enzs = getEnzymes();
 
-	if (enzs != null) {
-	    enzs.remove(enzyme);
+	final Set<Enzyme> localEnzymes = getEnzymes();
+	if (localEnzymes != null) {
+	    localEnzymes.remove(enzyme);
 	}
 
     }
@@ -265,40 +259,40 @@ public class SearchSetting implements Serializable {
 	return this.usedPtms;
     }
 
-    public void setUsedPtms(final Set<UsedPtm> usedPtms) {
-	this.usedPtms = usedPtms;
+    public void setUsedPtms(final Set<UsedPtm> pUsedPtms) {
+	usedPtms = pUsedPtms;
     }
 
     public void addUsedPtms(final UsedPtm usedPtm) {
 
 	if (usedPtm != null) {
-	    Set<UsedPtm> ptms = getUsedPtms();
+	    Set<UsedPtm> localUsedPtms = getUsedPtms();
 
-	    if (ptms == null) {
-		ptms = new HashSet<UsedPtm>();
+	    if (localUsedPtms == null) {
+		localUsedPtms = new HashSet<UsedPtm>();
 
-		setUsedPtms(ptms);
+		setUsedPtms(localUsedPtms);
 	    }
 
-	    ptms.add(usedPtm);
+	    localUsedPtms.add(usedPtm);
 	}
 
     }
 
     public void removeUsedPtms(final UsedPtm usedPtm) {
-	final Set<UsedPtm> ptms = getUsedPtms();
 
-	if (ptms != null) {
-	    ptms.remove(usedPtm);
+	final Set<UsedPtm> localUsedPtms = getUsedPtms();
+	if (localUsedPtms != null) {
+	    localUsedPtms.remove(usedPtm);
 	}
 
     }
 
     @Override
     public String toString() {
-	return new ToStringBuilder(this).append("id", id).append("taxonomy", taxonomy)
-		.append("miss cleav.", maxMissedCleavages).append("mass error", peptideMassErrorTolerance)
-		.toString();
+	return new ToStringBuilder(this).append("id", getId()).append("taxonomy", getTaxonomy())
+		.append("miss cleav.", getMaxMissedCleavages())
+		.append("mass error", getPeptideMassErrorTolerance()).toString();
     }
 
 }

@@ -17,7 +17,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
 
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
-      var runId = 0
+      var runId: Long = 0L
       ezDBC.executePrepared(LcmsDbRunTable.mkInsertQuery,true) { statement =>
         statement.executeWith(
           Option.empty[Int],
@@ -29,7 +29,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
           scanSeq.properties.map( generate(_) ),
           scanSeq.instrumentId
         )
-        runId = statement.generatedInt
+        runId = statement.generatedLong
       }
   
       ezDBC.executePrepared(LcmsDbScanTable.mkInsertQuery,true) { statement =>
@@ -49,7 +49,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
             runId
           )
           
-          scan.id = statement.generatedInt
+          scan.id = statement.generatedLong
         }
       }
     

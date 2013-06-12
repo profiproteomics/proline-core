@@ -25,11 +25,11 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
   require(getPSDbConnectionContext != null, "PS Db Context Db Context is null")
   require(getMSIDbConnectionContext != null, "MSI Db Context is null")
 
-  var spectrumIdByTitle: Map[String, Int] = null
+  var spectrumIdByTitle: Map[String, Long] = null
 
-  var seqDbIdByTmpId: Map[Int, Int] = null // TODO To be integrated to idCaches
+  var seqDbIdByTmpId: Map[Long, Long] = null // TODO To be integrated to idCaches
 
-  private val m_entityCaches = mutable.Map.empty[Class[_], mutable.Map[Int, _]]
+  private val m_entityCaches = mutable.Map.empty[Class[_], mutable.Map[Long, _]]
 
   // private val m_idCaches = mutable.Map.empty[Class[_], mutable.Map[Int, Int]]
 
@@ -48,18 +48,18 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
    * @param classifier Class of relevant Msi entity obtained with Scala {{{classOf[]}}} operator.
    * @return current cache for given Msi entity.
    */
-  def getEntityCache[T](classifier: Class[T]): mutable.Map[Int, T] = {
+  def getEntityCache[T](classifier: Class[T]): mutable.Map[Long, T] = {
 
     require(classifier != null, "Classifier is null")
 
     val knownCache = m_entityCaches.get(classifier)
 
     if (knownCache.isDefined) {
-      knownCache.get.asInstanceOf[mutable.Map[Int, T]]
+      knownCache.get.asInstanceOf[mutable.Map[Long, T]]
     } else {
       logger.debug("Creating context cache for " + classifier)
 
-      val newCache = mutable.Map.empty[Int, T]
+      val newCache = mutable.Map.empty[Long, T]
 
       m_entityCaches += classifier -> newCache
 

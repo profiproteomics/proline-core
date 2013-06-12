@@ -14,7 +14,7 @@ object Peaklist extends InMemoryIdGen
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Peaklist(
-  var id: Int,
+  var id: Long,
   val fileType: String,
   val path: String,
   val rawFileName: String,
@@ -39,7 +39,7 @@ object PeaklistSoftware extends InMemoryIdGen
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeaklistSoftware(
-  var id: Int,
+  var id: Long,
   val name: String,
   val version: String,
   
@@ -56,7 +56,7 @@ object Spectrum extends InMemoryIdGen
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Spectrum (
-  var id: Int,
+  var id: Long,
   val title: String,
   val precursorMoz: Double,
   val precursorIntensity: Float = Float.NaN,
@@ -71,8 +71,8 @@ case class Spectrum (
   var mozList: Option[Array[Double]],
   var intensityList: Option[Array[Float]],
   val peaksCount: Int,
-  val instrumentConfigId: Int,
-  val peaklistId: Int,
+  val instrumentConfigId: Long,
+  val peaklistId: Long,
   
   var properties: Option[SpectrumProperties] = None
 )

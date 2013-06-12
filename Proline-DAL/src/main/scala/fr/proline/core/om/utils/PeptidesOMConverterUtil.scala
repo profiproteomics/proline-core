@@ -29,13 +29,13 @@ import fr.proline.core.orm.util.DataStoreConnectorFactory
  */
 class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
 
-  val peptideInstancesCache = new HashMap[Int, fr.proline.core.om.model.msi.PeptideInstance]
-  val peptideMatchesCache = new HashMap[Int, fr.proline.core.om.model.msi.PeptideMatch]
-  val peptidesCache = new HashMap[Int, fr.proline.core.om.model.msi.Peptide]
-  val locatedPTMsCache = new HashMap[Int, LocatedPtm]
+  val peptideInstancesCache = new HashMap[Long, fr.proline.core.om.model.msi.PeptideInstance]
+  val peptideMatchesCache = new HashMap[Long, fr.proline.core.om.model.msi.PeptideMatch]
+  val peptidesCache = new HashMap[Long, fr.proline.core.om.model.msi.Peptide]
+  val locatedPTMsCache = new HashMap[Long, LocatedPtm]
   val ptmNamesCache = new HashMap[String, PtmNames]
-  val ptmDefinitionsCache = new HashMap[Int, PtmDefinition]
-  val peptideSetsCache = new HashMap[Int, fr.proline.core.om.model.msi.PeptideSet]
+  val ptmDefinitionsCache = new HashMap[Long, PtmDefinition]
+  val peptideSetsCache = new HashMap[Long, fr.proline.core.om.model.msi.PeptideSet]
 
   type MsiPeptideMatch = fr.proline.core.orm.msi.PeptideMatch
   type MsiPeptideInstance = fr.proline.core.orm.msi.PeptideInstance
@@ -84,7 +84,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     val dataStoreConnectorFactory = DataStoreConnectorFactory.getInstance
 
     //Found PeptideInstance Children mapped by their id
-    val pepInstChildById = new HashMap[Integer, PeptideInstance]()
+    val pepInstChildById = new HashMap[Long, PeptideInstance]()
 
     //---- Peptide Matches Arrays 
     val msiPepMatches = msiPepInst.getPeptideInstancePeptideMatchMaps.map { _.getPeptideMatch } //ORM PeptideMatches
@@ -92,7 +92,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     var pepMatches: Array[PeptideMatch] = null //OM PeptideMatches. Get only if asked for 
     if (loadPepMatches) pepMatches = new Array[PeptideMatch](msiPepMatches.size)
 
-    val pepMatchIds = new Array[Int](msiPepMatches.size) //OM PeptideMatches ids
+    val pepMatchIds = new Array[Long](msiPepMatches.size) //OM PeptideMatches ids
 
     //**** Create PeptideMatches array and PeptideInstance Children    
     var index = 0
@@ -156,10 +156,10 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     if (useCachedObject) peptideInstancesCache.put(msiPepInst.getId(), convertedPepInst)
 
     //*** Create PeptideSets for current PeptideInstance    
-    val pepInstanceById = new HashMap[Integer, PeptideInstance]()
+    val pepInstanceById = new HashMap[Long, PeptideInstance]()
 
     val msiPepSetItemIT = msiPepInst.getPeptideSetPeptideInstanceItems().iterator()
-    val pepSetById = new HashMap[Integer, PeptideSet]()
+    val pepSetById = new HashMap[Long, PeptideSet]()
 
     while (msiPepSetItemIT.hasNext()) {
       val msiPepSetItem = msiPepSetItemIT.next()
@@ -193,7 +193,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       return peptideSetsCache(msiPepSet.getId)
 
     val msiProtMatches = msiPepSet.getProteinMatches()
-    val protMatchesIds = new Array[Int](msiProtMatches.size)
+    val protMatchesIds = new Array[Long](msiProtMatches.size)
     val msiProtMatchesIter = msiProtMatches.iterator()
 
     var index = 0

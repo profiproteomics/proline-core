@@ -8,7 +8,7 @@ trait IMapAlnSetStorer {
   
   import fr.proline.core.om.model.lcms.MapAlignmentSet
   
-  def storeMapAlnSets( mapAlnSets: Seq[MapAlignmentSet], mapSetId: Int, alnRefMapId: Int ): Unit
+  def storeMapAlnSets( mapAlnSets: Seq[MapAlignmentSet], mapSetId: Long, alnRefMapId: Long): Unit
   
 }
 

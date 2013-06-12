@@ -3,109 +3,117 @@ package fr.proline.core.orm.msi;
 import java.io.Serializable;
 import java.util.Set;
 
-import javax.persistence.*;
-
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the consensus_spectrum database table.
  * 
  */
 @Entity
-@Table(name="master_quant_component")
+@Table(name = "master_quant_component")
 public class MasterQuantComponent implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="selection_level")
-	private Integer selectionLevel;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name="schema_name")
-	private String schemaName;
+    @Column(name = "selection_level")
+    private int selectionLevel;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "schema_name")
+    private String schemaName;
 
-	@Column(name="object_tree_id")
-	private Integer objectTreeId;
-	
-	@ManyToOne
-	@JoinColumn(name = "result_summary_id")
-	private ResultSummary resultSummary;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	@OneToMany(mappedBy="masterQuantComponent")
-	private Set<MasterQuantPeptideIon> masterQuantPeptideIons;
+    @Column(name = "object_tree_id")
+    private long objectTreeId;
 
-	@OneToMany(mappedBy="masterQuantComponent")
-	private Set<MasterQuantReporterIon> masterQuantReporterIons;
+    @ManyToOne
+    @JoinColumn(name = "result_summary_id")
+    private ResultSummary resultSummary;
+
+    @OneToMany(mappedBy = "masterQuantComponent")
+    private Set<MasterQuantPeptideIon> masterQuantPeptideIons;
+
+    @OneToMany(mappedBy = "masterQuantComponent")
+    private Set<MasterQuantReporterIon> masterQuantReporterIons;
 
     public MasterQuantComponent() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public Integer getSelectionLevel() {
-		return selectionLevel;
-	}
+    public int getSelectionLevel() {
+	return selectionLevel;
+    }
 
-	public void setSelectionLevel(Integer selectionLevel) {
-		this.selectionLevel = selectionLevel;
-	}
+    public void setSelectionLevel(final int pSelectionLevel) {
+	selectionLevel = pSelectionLevel;
+    }
 
-	public String getSchemaName() {
-		return schemaName;
-	}
+    public String getSchemaName() {
+	return schemaName;
+    }
 
-	public void setSchemaName(String schemaName) {
-		this.schemaName = schemaName;
-	}
+    public void setSchemaName(String schemaName) {
+	this.schemaName = schemaName;
+    }
 
-	public String getSerializedProperties() {
-		return serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public Integer getObjectTreeId() {
-		return objectTreeId;
-	}
+    public long getObjectTreeId() {
+	return objectTreeId;
+    }
 
-	public void setObjectTreeId(Integer objectTreeId) {
-		this.objectTreeId = objectTreeId;
-	}
+    public void setObjectTreeId(final long pObjectTreeId) {
+	objectTreeId = pObjectTreeId;
+    }
 
-	public ResultSummary getResultSummary() {
-		return resultSummary;
-	}
+    public ResultSummary getResultSummary() {
+	return resultSummary;
+    }
 
-	public void setResultSummary(ResultSummary resultSummary) {
-		this.resultSummary = resultSummary;
-	}
+    public void setResultSummary(ResultSummary resultSummary) {
+	this.resultSummary = resultSummary;
+    }
 
-	public Set<MasterQuantPeptideIon> getMasterQuantPeptideIons() {
-		return masterQuantPeptideIons;
-	}
+    public Set<MasterQuantPeptideIon> getMasterQuantPeptideIons() {
+	return masterQuantPeptideIons;
+    }
 
-	public void setMasterQuantPeptideIons(Set<MasterQuantPeptideIon> masterQuantPeptideIons) {
-		this.masterQuantPeptideIons = masterQuantPeptideIons;
-	}
+    public void setMasterQuantPeptideIons(Set<MasterQuantPeptideIon> masterQuantPeptideIons) {
+	this.masterQuantPeptideIons = masterQuantPeptideIons;
+    }
 
-	public Set<MasterQuantReporterIon> getMasterQuantReporterIons() {
-		return masterQuantReporterIons;
-	}
+    public Set<MasterQuantReporterIon> getMasterQuantReporterIons() {
+	return masterQuantReporterIons;
+    }
 
-	public void setMasterQuantReporterIons(Set<MasterQuantReporterIon> masterQuantReporterIons) {
-		this.masterQuantReporterIons = masterQuantReporterIons;
-	}
+    public void setMasterQuantReporterIons(Set<MasterQuantReporterIon> masterQuantReporterIons) {
+	this.masterQuantReporterIons = masterQuantReporterIons;
+    }
 
 }

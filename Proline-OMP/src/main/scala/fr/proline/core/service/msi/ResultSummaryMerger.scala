@@ -48,7 +48,7 @@ class ResultSummaryMerger(
       DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
 
         // Retrieve protein ids
-        val proteinIdSet = new HashSet[Int]
+        val proteinIdSet = new HashSet[Long]
         for (rsm <- resultSummaries) {
 
           val resultSetAsOpt = rsm.resultSet
@@ -56,7 +56,7 @@ class ResultSummaryMerger(
 
           for (proteinMatch <- resultSetAsOpt.get.proteinMatches) {
             val proteinId = proteinMatch.getProteinId
-            if (proteinId != 0) proteinIdSet += proteinId
+            if (proteinId != 0L) proteinIdSet += proteinId
           }
         }
 
@@ -119,8 +119,8 @@ class ResultSummaryMerger(
           val oldPepMatchPropsById = pepInstance.peptideMatchPropertiesById
 
           // Retrieve new pep match ids and re-map peptide match RSM properties with the new ids
-          val newPepMatchIds = new ArrayBuffer[Int](pepInstance.getPeptideMatchIds.length)
-          val newPepMatchPropsById = new HashMap[Int, PeptideMatchResultSummaryProperties]
+          val newPepMatchIds = new ArrayBuffer[Long](pepInstance.getPeptideMatchIds.length)
+          val newPepMatchPropsById = new HashMap[Long, PeptideMatchResultSummaryProperties]
 
           for (oldPepMatchId <- oldPepMatchIds) {
             val newPepMatchId = mergedPepMatchByTmpId(oldPepMatchId).id

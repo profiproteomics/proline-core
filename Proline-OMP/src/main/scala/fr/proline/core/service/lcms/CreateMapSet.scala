@@ -61,8 +61,8 @@ class CreateMapSet(
     //print "Create map set\n" if this.verbose
     
     // Define some vars
-    var newMapSetId = 0
-    var alnRefMapId = 0
+    var newMapSetId: Long = 0L
+    var alnRefMapId: Long = 0L
     val processedMaps = new ArrayBuffer[ProcessedMap]
     
     DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
@@ -73,7 +73,7 @@ class CreateMapSet(
       )      
       ezDBC.executePrepared(mapSetInsertQuery,true) { stmt => 
         stmt.executeWith( mapSetName, mapCount, curTime )
-        newMapSetId = stmt.generatedInt
+        newMapSetId = stmt.generatedLong
       }
       
       // Iterate over run maps to convert them in processed maps and store them

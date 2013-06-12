@@ -190,7 +190,7 @@ object MasterMapBuilder {
     val masterMapFtById = masterMapFeatures.map { ft => ft.id -> ft } toMap
     
     // Retrieve nearest matching children (considering elution time) and their id
-    val matchingFtIdSet = new scala.collection.mutable.HashSet[Int]()
+    val matchingFtIdSet = new scala.collection.mutable.HashSet[Long]()
     
     for( val(masterMapFtId, matchingChildFeatures) <- ftMapping ) {
       
@@ -262,8 +262,8 @@ object MasterMapBuilder {
     val nbMaps = mapIds.length
     
     // Build a hash map of unfulfilled master features and another one for single features
-    val notFullMftsByMapId = new java.util.HashMap[Int,ArrayBuffer[Feature]]
-    val singleFeaturesByMapId = new java.util.HashMap[Int,ArrayBuffer[Feature]]
+    val notFullMftsByMapId = new java.util.HashMap[Long,ArrayBuffer[Feature]]
+    val singleFeaturesByMapId = new java.util.HashMap[Long,ArrayBuffer[Feature]]
     
     // Initialize the hash maps
     for( mapId <- mapIds ) {
@@ -297,7 +297,7 @@ object MasterMapBuilder {
     
     // Align child map features with master map features    
     // Iterate over single features of each map
-    val toDeleteSingleFtIdSet = new scala.collection.mutable.HashSet[Int]()
+    val toDeleteSingleFtIdSet = new scala.collection.mutable.HashSet[Long]()
     
     val entryIter = singleFeaturesByMapId.entrySet().iterator()
     while( entryIter.hasNext() ) {

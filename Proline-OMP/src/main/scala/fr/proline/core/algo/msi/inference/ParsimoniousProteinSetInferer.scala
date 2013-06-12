@@ -23,10 +23,10 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
     // Define some vars
     val resultSummaryId = ResultSummary.generateNewId()
     val peptideInstances = new ArrayBuffer[PeptideInstance](peptideMatchesByPepId.size)
-    val peptideInstanceById = new HashMap[Int,PeptideInstance]()
-    val pepInstanceByPepId = new HashMap[Int,PeptideInstance]()
-    val nrPepKeyByPepInstanceId = new HashMap[Int,String]()
-    val pepInstanceIdsByNrPepKey = new HashMap[String,ArrayBuffer[Int]]()
+    val peptideInstanceById = new HashMap[Long,PeptideInstance]()
+    val pepInstanceByPepId = new HashMap[Long,PeptideInstance]()
+    val nrPepKeyByPepInstanceId = new HashMap[Long,String]()
+    val pepInstanceIdsByNrPepKey = new HashMap[String,ArrayBuffer[Long]]()
     
     // Build peptide instances and map them
     for( (peptideId, pepMatchGroup) <- (peptideMatchesByPepId) ) {
@@ -64,21 +64,21 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
       val nrPepKey = "q"+ bestPepMatch.msQuery.id +"_r"+ bestPepMatch.rank
       nrPepKeyByPepInstanceId += ( peptideInstance.id -> nrPepKey )
       
-      pepInstanceIdsByNrPepKey.getOrElseUpdate( nrPepKey, new ArrayBuffer[Int](1) ) += peptideInstance.id
+      pepInstanceIdsByNrPepKey.getOrElseUpdate( nrPepKey, new ArrayBuffer[Long](1) ) += peptideInstance.id
       
     }
     
     // Map peptide instance ids by protein match id
-    val nrPepKeysByProtMatchIdBuilder = collection.immutable.Map.newBuilder[Int,Set[String]]
-    val proteinCountByPepId = new HashMap[Int,Int]()
+    val nrPepKeysByProtMatchIdBuilder = collection.immutable.Map.newBuilder[Long,Set[String]]
+    val proteinCountByPepId = new HashMap[Long,Int]()
     
     for( protMatch <- proteinMatches ) {
       val seqMatches = protMatch.sequenceMatches
       
       // Retrieve only validated peptide matches (i.e. present in peptide matches)
-      val pepInstanceIdSet = new HashSet[Int]()
+      val pepInstanceIdSet = new HashSet[Long]()
       val nrPepKeySet = new HashSet[String]()
-      val nrPepIdSet = new HashSet[Int]()
+      val nrPepIdSet = new HashSet[Long]()
       for( seqMatch <- seqMatches ) {
         
         val pepId = seqMatch.getPeptideId
@@ -111,13 +111,13 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
     
     // Clusterize peptides
     val nrPepKeysByProtMatchId = nrPepKeysByProtMatchIdBuilder.result()
-    val clusters = SetClusterer.clusterizeMappedSets[Int,String]( nrPepKeysByProtMatchId )
+    val clusters = SetClusterer.clusterizeMappedSets[Long,String]( nrPepKeysByProtMatchId )
     
     // Define some vars
     val proteinSets = new ArrayBuffer[ProteinSet]
     val peptideSets = new ArrayBuffer[PeptideSet]
-    val proteinSetCountByPepInstanceId = new HashMap[Int,Int]
-    val peptideSetIdByClusterId = new HashMap[Int,Int]
+    val proteinSetCountByPepInstanceId = new HashMap[Long,Int]
+    val peptideSetIdByClusterId = new HashMap[Long,Long]
     
     // Generate id for each cluster and map it by the provided cluster id
     for( cluster <- clusters ) {
@@ -138,7 +138,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
       val clusterNrPepKeys = nrPepKeysByProtMatchId( clusterProtMatchIds(0) )
       
       // Retrieve peptide instances corresponding to this set
-      val samesetPeptideInstanceIds = new ArrayBuffer[Int]
+      val samesetPeptideInstanceIds = new ArrayBuffer[Long]
       for( nrPepKey <- clusterNrPepKeys ) {
         val tmpPepInstanceIds = pepInstanceIdsByNrPepKey(nrPepKey)
         samesetPeptideInstanceIds ++= tmpPepInstanceIds
@@ -171,11 +171,11 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
       }
       
       // Build peptide set
-      val buildPeptideSet = new Function[Int,PeptideSet] {
-        def apply( proteinSetId: Int ): PeptideSet = {
+      val buildPeptideSet = new Function[Long,PeptideSet] {
+        def apply( proteinSetId: Long ): PeptideSet = {
           
-          var strictSubsetIds: Array[Int] = null
-          var subsumableSubsetIds: Array[Int] = null
+          var strictSubsetIds: Array[Long] = null
+          var subsumableSubsetIds: Array[Long] = null
           if( cluster.strictSubsetsIds != None ) {
             strictSubsetIds = cluster.strictSubsetsIds.get.map { peptideSetIdByClusterId(_) } toArray
           }

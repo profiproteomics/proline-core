@@ -51,11 +51,11 @@ class PeptideStorer extends Logging {
       Option(null)
     )
 
-    peptide.id = stmt.generatedInt
+    peptide.id = stmt.generatedLong
 
   }
 
-  private def _insertPeptidePtm(stmt: PreparedStatementWrapper, locatedPtm: LocatedPtm, peptideId: Int): Unit = {
+  private def _insertPeptidePtm(stmt: PreparedStatementWrapper, locatedPtm: LocatedPtm, peptideId: Long): Unit = {
 
     stmt.executeWith(
       locatedPtm.seqPosition,

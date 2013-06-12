@@ -11,63 +11,63 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-
 /**
  * The persistent class for the admin_infos database table.
  * 
  */
-@Entity(name="fr.proline.core.orm.pdi.ObjectTree")
-@Table(name="object_tree")
+@Entity(name = "fr.proline.core.orm.pdi.ObjectTree")
+@Table(name = "object_tree")
 public class ObjectTree implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="serialized_data")
-	private String serializedData;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "serialized_data")
+    private String serializedData;
 
-	@ManyToOne
-	@JoinColumn(name="schema_name")
-	private ObjectTreeSchema schemaName;
-	
-	public ObjectTree() {
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
+
+    @ManyToOne
+    @JoinColumn(name = "schema_name")
+    private ObjectTreeSchema schemaName;
+
+    public ObjectTree() {
     }
 
-	public Integer getId() {
-		return id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public String getSerializedData() {
-		return serializedData;
-	}
+    public String getSerializedData() {
+	return serializedData;
+    }
 
-	public void setSerializedData(String serializedData) {
-		this.serializedData = serializedData;
-	}
+    public void setSerializedData(String serializedData) {
+	this.serializedData = serializedData;
+    }
 
-	public String getSerializedProperties() {
-		return serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public ObjectTreeSchema getSchemaName() {
-		return schemaName;
-	}
+    public ObjectTreeSchema getSchemaName() {
+	return schemaName;
+    }
 
-	public void setSchemaName(ObjectTreeSchema schemaName) {
-		this.schemaName = schemaName;
-	}
+    public void setSchemaName(ObjectTreeSchema schemaName) {
+	this.schemaName = schemaName;
+    }
 
 }

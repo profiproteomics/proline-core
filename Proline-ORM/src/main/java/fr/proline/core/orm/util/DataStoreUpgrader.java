@@ -80,15 +80,15 @@ public final class DataStoreUpgrader {
 
 	/* Upgrade all Projects (MSI and LCMS) Dbs */
 	if (udsDbConnector != null) {
-	    final List<Integer> projectIds = retrieveProjectIds(udsDbConnector);
+	    final List<Long> projectIds = retrieveProjectIds(udsDbConnector);
 
 	    if ((projectIds != null) && !projectIds.isEmpty()) {
 
-		for (final Integer projectId : projectIds) {
+		for (final Long projectId : projectIds) {
 		    LOG.debug("Upgrading databases of Project #{}", projectId);
 
 		    final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId
-			    .intValue());
+			    .longValue());
 
 		    if (msiDbConnector == null) {
 			LOG.warn("DataStoreConnectorFactory has no valid MSI Db connector for Project #{}",
@@ -104,7 +104,7 @@ public final class DataStoreUpgrader {
 		    }
 
 		    final IDatabaseConnector lcMsDbConnector = connectorFactory.getLcMsDbConnector(projectId
-			    .intValue());
+			    .longValue());
 		    if (lcMsDbConnector != null) {
 			final int lcMsDbMigrationCount = DatabaseUpgrader.upgradeDatabase(lcMsDbConnector);
 
@@ -124,8 +124,8 @@ public final class DataStoreUpgrader {
 	return result;
     }
 
-    private static List<Integer> retrieveProjectIds(final IDatabaseConnector udsDbConnector) {
-	List<Integer> projectIds = null;
+    private static List<Long> retrieveProjectIds(final IDatabaseConnector udsDbConnector) {
+	List<Long> projectIds = null;
 
 	final EntityManager udsDbEm = udsDbConnector.getEntityManagerFactory().createEntityManager();
 

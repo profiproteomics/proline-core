@@ -32,7 +32,7 @@ public class InstrumentConfig implements Serializable {
 
     @Id
     // MSI InstrumentConfig Id are not generated (taken from Uds InstrumentConfig entity)
-    private Integer id;
+    private long id;
 
     @Column(name = "ms1_analyzer")
     private String ms1Analyzer;
@@ -65,24 +65,32 @@ public class InstrumentConfig implements Serializable {
 	setId(udsInstrumentConfig.getId());
 	setMs1Analyzer(udsInstrumentConfig.getMs1Analyzer());
 
-	final String msnAnalyz = udsInstrumentConfig.getMsnAnalyzer();
+	final String udsMsnAnalyz = udsInstrumentConfig.getMsnAnalyzer();
 
-	if (StringUtils.isEmpty(msnAnalyz)) {
+	if (StringUtils.isEmpty(udsMsnAnalyz)) {
 	    setMsnAnalyzer(null);
 	} else {
-	    setMsnAnalyzer(msnAnalyz);
+	    setMsnAnalyzer(udsMsnAnalyz);
 	}
 
 	setName(udsInstrumentConfig.getName());
-	setSerializedProperties(udsInstrumentConfig.getSerializedProperties());
+
+	final String udsInstrumentConfigProps = udsInstrumentConfig.getSerializedProperties();
+
+	if (StringUtils.isEmpty(udsInstrumentConfigProps)) {
+	    setSerializedProperties(null);
+	} else {
+	    setSerializedProperties(udsInstrumentConfigProps);
+	}
+
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getMs1Analyzer() {

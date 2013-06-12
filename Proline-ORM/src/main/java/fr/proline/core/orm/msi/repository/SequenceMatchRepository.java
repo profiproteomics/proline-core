@@ -21,14 +21,14 @@ public final class SequenceMatchRepository {
      * @return List of associated SequenceMatches, can be empty if none found.
      */
     public static List<SequenceMatch> findSequenceMatchForProteinMatch(final EntityManager msiEm,
-	    final int proteinMatchId) {
+	    final long proteinMatchId) {
 
 	JPAUtils.checkEntityManager(msiEm);
 
 	final TypedQuery<SequenceMatch> query = msiEm.createQuery(
 		"select sm from fr.proline.core.orm.msi.SequenceMatch sm"
 			+ " where sm.id.proteinMatchId = :proteinMatchId", SequenceMatch.class);
-	query.setParameter("proteinMatchId", Integer.valueOf(proteinMatchId));
+	query.setParameter("proteinMatchId", Long.valueOf(proteinMatchId));
 
 	return query.getResultList();
     }

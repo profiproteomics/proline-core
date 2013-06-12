@@ -14,7 +14,7 @@ import fr.proline.context.IExecutionContext
 
 class ExportMasterQuantPeptideIons(
   execCtx: IExecutionContext,
-  quantRsmId: Int,
+  quantRsmId: Long,
   outputFile: File
 ) extends ExportMasterQuantPeptides(execCtx,quantRsmId,outputFile) {
   
@@ -53,7 +53,7 @@ class ExportMasterQuantPeptideIons(
       row ++= Array(mqPepIon.charge,mqPepIon.elutionTime,mqPepIon.lcmsFeatureId.getOrElse(""))
       
       // Append quant peptide data for each condition
-      val qPepIonCellsByQcId = new HashMap[Int,Seq[Any]]
+      val qPepIonCellsByQcId = new HashMap[Long,Seq[Any]]
       for( (qcId, qPepIon) <- mqPepIon.quantPeptideIonMap ) {
         val qPepIonCells = List(
           qPepIon.moz,

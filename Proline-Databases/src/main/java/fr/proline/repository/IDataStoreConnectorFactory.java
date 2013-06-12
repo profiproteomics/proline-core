@@ -16,9 +16,9 @@ public interface IDataStoreConnectorFactory {
 
     IDatabaseConnector getPsDbConnector();
 
-    IDatabaseConnector getMsiDbConnector(int projectId);
+    IDatabaseConnector getMsiDbConnector(long projectId);
 
-    IDatabaseConnector getLcMsDbConnector(int projectId);
+    IDatabaseConnector getLcMsDbConnector(long projectId);
 
     void closeAll();
 

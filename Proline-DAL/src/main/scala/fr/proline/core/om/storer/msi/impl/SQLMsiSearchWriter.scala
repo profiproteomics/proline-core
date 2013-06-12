@@ -12,12 +12,13 @@ import fr.proline.core.dal._
 import fr.proline.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchWriter
+import fr.proline.util.primitives._
 
 object SQLMsiSearchWriter extends AbstractSQLMsiSearchWriter
 
 abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging {
 
-  def insertMsiSearch(msiSearch: MSISearch, context: StorerContext): Int = {
+  def insertMsiSearch(msiSearch: MSISearch, context: StorerContext): Long = {
 
     val ss = msiSearch.searchSettings
 
@@ -25,7 +26,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
 
       // Insert sequence databases
       // TODO : If seqDb does not exist in PDI do not create it !!
-      val seqDbIdByTmpIdBuilder = collection.immutable.Map.newBuilder[Int, Int]
+      val seqDbIdByTmpIdBuilder = collection.immutable.Map.newBuilder[Long, Long]
       ss.seqDatabases.foreach { seqDb =>
         val tmpSeqDbId = seqDb.id
         _insertSeqDatabase(seqDb, msiEzDBC)
@@ -47,7 +48,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
     msiSearch.id
   }
 
-  def insertMsQueries(msiSearchId: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
+  def insertMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
     
     val msQueryInsertQuery = MsiDbMsQueryTable.mkInsertQuery( (col,colsList) => colsList.filter(_ != col.ID) )
     
@@ -60,11 +61,11 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
           //val tmpMsQueryId = msQuery.id
 
           msQuery.msLevel match {
-            case 1 => _insertMsQuery(stmt, msQuery.asInstanceOf[Ms1Query], msiSearchId, Option.empty[Int], context)
+            case 1 => _insertMsQuery(stmt, msQuery.asInstanceOf[Ms1Query], msiSearchId, Option.empty[Long], context)
             case 2 => {
               val ms2Query = msQuery.asInstanceOf[Ms2Query]
               // FIXME: it should not be null
-              var spectrumId = Option.empty[Int]
+              var spectrumId = Option.empty[Long]
               if (context.spectrumIdByTitle != null) {
                 ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
                 spectrumId = Some(ms2Query.spectrumId)
@@ -82,7 +83,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
     context
   }
 
-  private def _insertMsQuery(stmt: PreparedStatementWrapper, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int], context: StorerContext): Unit = {
+  private def _insertMsQuery(stmt: PreparedStatementWrapper, msQuery: MsQuery, msiSearchId: Long, spectrumId: Option[Long], context: StorerContext): Unit = {
 
     // Retrieve some vars
     //val spectrumId = ms2Query.spectrumId
@@ -98,7 +99,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
       msiSearchId
     )
 
-    msQuery.id = stmt.generatedInt
+    msQuery.id = stmt.generatedLong
   }
   
   def insertInstrumentConfig(instrumentConfig: InstrumentConfig, context: StorerContext): Unit = {
@@ -128,7 +129,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
   private def _insertSeqDatabase(seqDatabase: SeqDatabase, msiEzDBC: EasyDBC): Unit = {
 
     val fasta_path = seqDatabase.filePath
-    val seqDbIds = msiEzDBC.select("SELECT id FROM seq_database WHERE fasta_file_path='" + fasta_path + "'") { _.nextInt }
+    val seqDbIds = msiEzDBC.select("SELECT id FROM seq_database WHERE fasta_file_path='" + fasta_path + "'") { v => toLong(v.nextAny) }
 
     // If the sequence database doesn't exist in the MSIdb
     if (seqDbIds.length == 0) {
@@ -147,7 +148,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
           seqDatabase.sequencesCount,
           Option.empty[String])
 
-        seqDatabase.id = stmt.generatedInt
+        seqDatabase.id = stmt.generatedLong
       }
 
     } else {
@@ -179,7 +180,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
         searchSettings.instrumentConfig.id
       )
 
-      searchSettings.id = stmt.generatedInt
+      searchSettings.id = stmt.generatedLong
     }
     
     val ssId = searchSettings.id
@@ -242,7 +243,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
 
   }
   
-  protected def _insertUsedEnzyme(ssId: Int, enzyme: Enzyme, msiEzDBC: EasyDBC): Unit = {
+  protected def _insertUsedEnzyme(ssId: Long, enzyme: Enzyme, msiEzDBC: EasyDBC): Unit = {
 
     // Check if the enzyme exists in the MSIdb
     val count = msiEzDBC.selectInt("SELECT count(*) FROM enzyme WHERE id =" + enzyme.id)
@@ -263,7 +264,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
     
   }
 
-  protected def _insertUsedPTM(ssId: Int, ptmDef: PtmDefinition, isFixed: Boolean, msiEzDBC: EasyDBC): Unit = {
+  protected def _insertUsedPTM(ssId: Long, ptmDef: PtmDefinition, isFixed: Boolean, msiEzDBC: EasyDBC): Unit = {
 
     // Check if the PTM specificity exists in the MSIdb
     val count = msiEzDBC.selectInt("SELECT count(*) FROM ptm_specificity WHERE id =" + ptmDef.id)
@@ -323,7 +324,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
         searchSettingsId,
         peaklistId)
 
-      msiSearch.id = stmt.generatedInt
+      msiSearch.id = stmt.generatedLong
     }
 
   }

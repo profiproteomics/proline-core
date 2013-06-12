@@ -3,13 +3,13 @@ package fr.proline.core.algo.msi.inference
 import collection.mutable.ArrayBuffer
 import util.control.Breaks._
 
-case class SetCluster[K,V]( id: Int,
+case class SetCluster[K,V]( id: Long,
                             samesetsValues: Set[V],
                             samesetsKeys: ArrayBuffer[K] = new ArrayBuffer[K](1),
                             var isSubset: Boolean,
-                            var strictSubsetsIds: Option[ArrayBuffer[Int]] = None,
-                            var subsumableSubsetsIds: Option[ArrayBuffer[Int]] = None, 
-                            var oversetId: Option[Int] = None
+                            var strictSubsetsIds: Option[ArrayBuffer[Long]] = None,
+                            var subsumableSubsetsIds: Option[ArrayBuffer[Long]] = None, 
+                            var oversetId: Option[Long] = None
                            )
 
 object SetClusterer {
@@ -82,8 +82,8 @@ object SetClusterer {
       
       // Split samesets based on the specificity of their values
       val unspecificSamesets = new ArrayBuffer[SetCluster[K,V]](0)
-      val samesetById = new collection.mutable.HashMap[Int,SetCluster[K,V]]()
-      val oversetIdsByValue = new collection.mutable.HashMap[V,ArrayBuffer[Int]]()
+      val samesetById = new collection.mutable.HashMap[Long,SetCluster[K,V]]()
+      val oversetIdsByValue = new collection.mutable.HashMap[V,ArrayBuffer[Long]]()
       
       val samesets = samesetMap.values
       for( sameset <- samesets ) {
@@ -108,7 +108,7 @@ object SetClusterer {
         if( ! hasSpecificValue ) { unspecificSamesets += sameset }
         else {
           for( value <- values ) {
-            oversetIdsByValue.getOrElseUpdate( value, new ArrayBuffer[Int](1) ) += samesetId
+            oversetIdsByValue.getOrElseUpdate( value, new ArrayBuffer[Long](1) ) += samesetId
           }
         }
       }
@@ -126,7 +126,7 @@ object SetClusterer {
             if( isSubsetOf(unspeSamesetValues,samesetValues) ) {
               unspeSameset.isSubset = true
               if( sameset.strictSubsetsIds == None ) {
-                sameset.strictSubsetsIds = Some( new ArrayBuffer[Int](1) )
+                sameset.strictSubsetsIds = Some( new ArrayBuffer[Long](1) )
               }
               sameset.strictSubsetsIds.get += unspeSamesetId
               unspeSameset.oversetId = Some(sameset.id)
@@ -145,7 +145,7 @@ object SetClusterer {
           val values = cluster.samesetsValues
           
           // Check if the current cluster has at least one specific value compare to other oversets
-          val oversetClusterIdSet = new collection.mutable.HashSet[Int]
+          val oversetClusterIdSet = new collection.mutable.HashSet[Long]
           var hasSpecificValue = false
           
           for( value <- values ) {
@@ -171,7 +171,7 @@ object SetClusterer {
             for( val oversetClusterId <- oversetClusterIdSet ) {
               val oversetCluster = samesetById(oversetClusterId)
               if( oversetCluster.subsumableSubsetsIds == None ) {
-                oversetCluster.subsumableSubsetsIds = Some( new ArrayBuffer[Int] )
+                oversetCluster.subsumableSubsetsIds = Some( new ArrayBuffer[Long] )
               }
               oversetCluster.subsumableSubsetsIds.get += clusterId
             }
@@ -232,12 +232,18 @@ object SetClusterer {
   private def stringifySortedList( values: List[Any] ): String = {
     values(0) match {
       case int: Int => stringifySortedIntList(values.asInstanceOf[List[Int]])
+      case v: Long => stringifySortedLongList(values.asInstanceOf[List[Long]]) // Handle Int and Long Scala primitives
       case str: String => stringifySortedStringList(values.asInstanceOf[List[String]])
       case _ => throw new Exception("can only sort integers or strings")
     }
   }
     
   private def stringifySortedIntList( values: List[Int] ): String = {
+    val sortedValues = values.sort { (a,b) => a < b }
+    sortedValues.map { _.toString } mkString("&")
+  }
+  
+  private def stringifySortedLongList( values: List[Long] ): String = {
     val sortedValues = values.sort { (a,b) => a < b }
     sortedValues.map { _.toString } mkString("&")
   }

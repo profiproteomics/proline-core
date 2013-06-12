@@ -65,11 +65,12 @@ abstract class ITargetDecoyAnalyzer {
 
   def calcTDStatistics(targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch]): ValidationResult
 
-  def calcTDStatistics(pepMatchJointMap: Map[Int, Seq[PeptideMatch]]): ValidationResult  
-  
   def updateValidationResult( oldValResult: ValidationResult,
-                              pepMatchJointMap: Map[Int, Seq[PeptideMatch]],
+                              pepMatchJointMap: Map[Long, Seq[PeptideMatch]],
                               newValidDecoyPSM: PeptideMatch ): ValidationResult
+
+  def calcTDStatistics(pepMatchJointMap: Map[Long, Seq[PeptideMatch]]): ValidationResult
+
 
   def performROCAnalysis(
     targetPepMatches: Seq[PeptideMatch],
@@ -304,7 +305,7 @@ class BasicTDAnalyzer(targetDecoyMode: TargetDecoyModes.Value) extends AbstractT
 
   }
 
-  def calcTDStatistics(pepMatchJointMap: Map[Int, Seq[PeptideMatch]]): ValidationResult = {
+  def calcTDStatistics(pepMatchJointMap: Map[Long, Seq[PeptideMatch]]): ValidationResult = {
     val allPepMatches = pepMatchJointMap.flatMap(_._2).toSeq
     val (decoyPepMatches, targetPepMatches) = allPepMatches.partition(_.isDecoy)
 
@@ -312,7 +313,7 @@ class BasicTDAnalyzer(targetDecoyMode: TargetDecoyModes.Value) extends AbstractT
   }
   
   def updateValidationResult( oldValResult: ValidationResult,
-                              pepMatchJointMap: Map[Int, Seq[PeptideMatch]],
+                              pepMatchJointMap: Map[Long, Seq[PeptideMatch]],
                               newValidPepMatch: PeptideMatch
                              ): ValidationResult = {
     
@@ -337,7 +338,7 @@ class CompetitionBasedTDAnalyzer(val psmSorter: IPeptideMatchSorter) extends Abs
     this.calcTDStatistics(pmJointMap)
   }
 
-  def calcTDStatistics(pepMatchJointMap: Map[Int, Seq[PeptideMatch]]): ValidationResult = {
+  def calcTDStatistics(pepMatchJointMap: Map[Long, Seq[PeptideMatch]]): ValidationResult = {
     TargetDecoyComputer.createCompetitionBasedValidationResult(pepMatchJointMap, psmSorter)
   }
   

@@ -18,7 +18,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
   def storeRsmPeptideInstances( rsm: ResultSummary, execCtx: IExecutionContext ): Int = {
     
     val rsmId = rsm.id
-    //val( pepInstanceIdByPepId, pepInstanceIdMap ) = ( new HashMap[Int,Int], new HashMap[Int,Int] )
+    //val( pepInstanceIdByPepId, pepInstanceIdMap ) = ( new HashMap[Long,Long], new HashMap[Long,Long] )
     
     val insertPepInstance = ( stmt: PreparedStatementWrapper, pepInstance: PeptideInstance ) => {
       
@@ -37,13 +37,13 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             pepInstance.properties.map(generate(_)),
             pepInstance.bestPeptideMatchId,
             pepId,
-            if( unmodPepId > 0 ) Some(unmodPepId) else Option.empty[Int],
-            Option.empty[Int],
+            if( unmodPepId > 0 ) Some(unmodPepId) else Option.empty[Long],
+            Option.empty[Long],
             rsmId
           )
       
       // Update peptide instance id
-      pepInstance.id = stmt.generatedInt
+      pepInstance.id = stmt.generatedLong
       pepInstance.resultSummaryId = rsmId
       
     }
@@ -105,7 +105,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
     
     // Iterate over peptide sets to initialize the creation of RDB protein/peptide sets
     //val rdbPeptideSetsByTmpId // map RDB peptide set with temporary ids
-    val peptideSetIdByTmpId = new HashMap[Int,Int]()
+    val peptideSetIdByTmpId = new HashMap[Long,Long]()
     
     // Retrieve peptide_set columns then remove id column
     val pepSetInsertQuery = MsiDbPeptideSetTable.mkInsertQuery { (c,colsList) => colsList.filter( _ != c.ID) }
@@ -129,12 +129,12 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             peptideSet.items.length,
             peptideSet.peptideMatchesCount,
             peptideSet.properties.map(generate(_)),
-            if( protSetId > 0 ) Some(protSetId) else Option.empty[Int],
+            if( protSetId > 0 ) Some(protSetId) else Option.empty[Long],
             pepSetScoringId,
             rsmId
           )
   
-          val peptideSetId = stmt.generatedInt
+          val peptideSetId = stmt.generatedLong
           peptideSetIdByTmpId(peptideSet.id) = peptideSetId
           
           // Update protein set id
@@ -187,7 +187,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
         }
       }
       
-      val storePeptideSetRelation = ( stmt: PreparedStatementWrapper, peptideOverset: PeptideSet, subsetId: Int, isStrictSubset: Boolean ) => {
+      val storePeptideSetRelation = ( stmt: PreparedStatementWrapper, peptideOverset: PeptideSet, subsetId: Long, isStrictSubset: Boolean ) => {
         stmt.executeWith(
           peptideOverset.id,
           subsetId,
@@ -261,7 +261,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           )
           
           // Update protein set
-          proteinSet.id = stmt.generatedInt
+          proteinSet.id = stmt.generatedLong
           proteinSet.resultSummaryId = rsmId
           peptideSet.proteinSet = Some(proteinSet)
           

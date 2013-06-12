@@ -1,7 +1,8 @@
 package fr.proline.core.om.provider.lcms.impl
 
 import fr.profi.jdbc.SQLQueryExecution
-  
+import fr.proline.util.primitives._
+
 class MapAlignmentSetLoader( val sqlExec: SQLQueryExecution ) {
   
   import java.util.HashMap
@@ -66,8 +67,8 @@ class MapAlignmentSetLoader( val sqlExec: SQLQueryExecution ) {
     val timeList = mapAlnRecord("time_list").asInstanceOf[String].split(" ") map { _.toFloat }
     val deltaTimeList = mapAlnRecord("delta_time_list").asInstanceOf[String].split(" ") map { _.toFloat }
     
-    new MapAlignment( refMapId = mapAlnRecord("from_map_id").asInstanceOf[Int],
-                      targetMapId = mapAlnRecord("to_map_id").asInstanceOf[Int],
+    new MapAlignment( refMapId = toLong(mapAlnRecord("from_map_id")),
+                      targetMapId = toLong(mapAlnRecord("to_map_id")),
                       massRange = (massStart,massEnd),
                       timeList = timeList,
                       deltaTimeList = deltaTimeList

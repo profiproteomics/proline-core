@@ -4,6 +4,7 @@ import java.io.File
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 import org.junit.{ After, AfterClass, Assert, Test, Before, BeforeClass, Ignore }
 import com.weiglewilczek.slf4s.Logging
+import fr.proline.util.primitives._
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.pepmatch.{ ScorePSMFilter, RankPSMFilter, _ }
@@ -33,8 +34,8 @@ abstract class AbstractResultSetValidator extends AbstractMultipleDBTestCase wit
   // Define the interface to be implemented
   val driverType: DriverType
   val fileName: String
-  val targetRSId: Int
-  val decoyRSId: Option[Int]
+  val targetRSId: Long
+  val decoyRSId: Option[Long]
   
   def getRS(): ResultSet = {
     this.resetRSValidation(readRS)
@@ -112,8 +113,8 @@ object ResultSetValidatorF122817Test extends AbstractResultSetValidator with Log
 
   val driverType = DriverType.H2
   val fileName = "STR_F122817_Mascot_v2.3"
-  val targetRSId = 1
-  val decoyRSId = Option.empty[Int]
+  val targetRSId: Long = 1L
+  val decoyRSId = Option.empty[Long]
   
 }
 
@@ -156,8 +157,8 @@ object ResultSetValidatorF136482Test extends AbstractResultSetValidator with Log
 
   val driverType = DriverType.H2
   val fileName = "STR_F136482_CTD"
-  val targetRSId = 2
-  val decoyRSId = Some(1)
+  val targetRSId = 2L
+  val decoyRSId = Some(1L)
   
 }
 
@@ -261,7 +262,7 @@ class ResultSetValidatorF136482Test extends Logging {
     Assert.assertEquals("AllTarPepMatc length", 774, allTarPepMatc.length)
     Assert.assertEquals("AllDecPepMatc length", 638, allDecPepMatc.length)
 
-    val pepMatchByQuId = new HashMap[Int, ArrayBuffer[PeptideMatch]]()
+    val pepMatchByQuId = new HashMap[Long, ArrayBuffer[PeptideMatch]]()
     allTarPepMatc.foreach(peptideM => {
       val pepMatches = pepMatchByQuId.get(peptideM.msQueryId).getOrElse(new ArrayBuffer[PeptideMatch]())
       //             println(peptideM.msQueryId+"\t"+peptideM.peptide.sequence+"\t"+peptideM.peptide.ptmString+"\t"+peptideM.score)
@@ -300,7 +301,7 @@ class ResultSetValidatorF136482Test extends Logging {
     Assert.assertEquals(" RSM validation properties target count ", allTarPepMatc.length, rsmPropTargetCount)
     Assert.assertEquals(" RSM validation properties target count ", allDecPepMatc.length, rsmPropDecoyCount.get)
 
-    val rsPepMatchByQuId = new HashMap[Int, ArrayBuffer[PeptideMatch]]()
+    val rsPepMatchByQuId = new HashMap[Long, ArrayBuffer[PeptideMatch]]()
     val rsPsm = readRS.peptideMatches ++ readRS.decoyResultSet.get.peptideMatches
     rsPsm.foreach(peptideM => {
       val pepMatches = rsPepMatchByQuId.get(peptideM.msQueryId).getOrElse(new ArrayBuffer[PeptideMatch]())
@@ -389,7 +390,7 @@ class ResultSetValidatorF136482Test extends Logging {
     Assert.assertEquals("AllDecPepMatc length", 638, allDecPepMatc.length)
     Assert.assertEquals("All PepMatc length", 638 + 774, allPepMatc.length)
 
-    val pepMatchByQuId = new HashMap[Int, ArrayBuffer[PeptideMatch]]()
+    val pepMatchByQuId = new HashMap[Long, ArrayBuffer[PeptideMatch]]()
     allPepMatc.foreach(peptideM => {
       val pepMatches = pepMatchByQuId.get(peptideM.msQueryId).getOrElse(new ArrayBuffer[PeptideMatch]())
       //             println(peptideM.msQueryId+"\t"+peptideM.peptide.sequence+"\t"+peptideM.peptide.ptmString+"\t"+peptideM.score)
@@ -525,7 +526,7 @@ class ResultSetValidatorF136482Test extends Logging {
     Assert.assertEquals(1, props.size)
     Assert.assertEquals(ProtSetFilterParams.SPECIFIC_PEP.toString, fPrp.getParameter)
 
-    val nbrPep = props(FilterPropertyKeys.THRESHOLD_VALUE).asInstanceOf[Int]
+    val nbrPep = toInt(props(FilterPropertyKeys.THRESHOLD_VALUE))
     Assert.assertEquals("Specific peptide # compare", nbrPepProteo, nbrPep)
 
     logger.debug(" Verify Result IN RSM ")
@@ -857,8 +858,8 @@ object ResultSetValidatorF068213Test extends AbstractResultSetValidator with Log
 
   val driverType = DriverType.H2
   val fileName = "GRE_F068213_M2.4_TD_EColi"
-  val targetRSId = 2
-  val decoyRSId = Some(1)
+  val targetRSId = 2L
+  val decoyRSId = Some(1L)
   
 }
 

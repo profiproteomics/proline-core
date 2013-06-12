@@ -12,6 +12,7 @@ import fr.proline.core.om.model.msi.IPeaklistContainer
 import fr.proline.repository.util.PostgresUtils
 import fr.proline.util.bytes._
 import fr.proline.util.sql._
+import fr.proline.util.primitives._
 
 /**
  * @author David Bouyssie
@@ -20,8 +21,8 @@ import fr.proline.util.sql._
 object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
   
   import org.postgresql.core.Utils
-
-  override def insertSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
+ 
+  override def insertSpectra(peaklistId: Long, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
 
     DoJDBCWork.withConnection(context.getMSIDbConnectionContext, { con =>
 
@@ -100,7 +101,7 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
       // Retrieve generated spectrum ids
       val spectrumIdByTitle = msiEzDBC.select(
         "SELECT title, id FROM spectrum WHERE peaklist_id = " + peaklistId) { r =>
-          (r.nextString -> r.nextInt)
+          (r.nextString -> toLong(r.nextAny))
         } toMap
 
       context.spectrumIdByTitle = spectrumIdByTitle

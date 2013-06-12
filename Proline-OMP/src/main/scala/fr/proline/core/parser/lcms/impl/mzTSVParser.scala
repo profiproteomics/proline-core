@@ -78,7 +78,7 @@ case class mzFeature(
   @BeanProperty var overlappingFeature: Option[mzFeature] = None,
   @BeanProperty var isotopicPatterns: Option[Array[mzIsotopicPattern]] = None) {
 
-  def toFeature(lcmsScanSeq: LcMsScanSequence, id: Int, ms2Events: Array[Int]): Feature = {
+  def toFeature(lcmsScanSeq: LcMsScanSequence, id: Long, ms2Events: Array[Long]): Feature = {
 
     return Feature(id = id,
       moz = moz,
@@ -114,7 +114,7 @@ class mzTSVParser extends ILcmsMapFileParser {
 
     def treatOneLine(data: Map[String, String]): Unit = {
 
-      val id = data("id").toInt
+      val id = data("id")
       val mz = data("mz").toDouble
       val area = data("area").toFloat
       val intensity = data("intensity_sum").toFloat

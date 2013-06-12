@@ -13,7 +13,7 @@ import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.context.IExecutionContext
 
 
-class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Int, outputFile: File ) extends IService {
+class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Long, outputFile: File ) extends IService {
   
   val locale = java.util.Locale.ENGLISH
 
@@ -40,7 +40,7 @@ class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Int, ou
   
   val protSetCellsById = {
     
-    val tmpProtSetCellsById = new HashMap[Int,ArrayBuffer[Any]]
+    val tmpProtSetCellsById = new HashMap[Long,ArrayBuffer[Any]]
     for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
       val protMatch = protMatchById( mqProtSet.proteinSet.proteinMatchIds(0) )
       val protSetCells = new ArrayBuffer[Any]
@@ -55,7 +55,7 @@ class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Int, ou
   
   val mqPepCellsById = {
     
-    val tmpMqPepCellsById = new HashMap[Int,ArrayBuffer[Any]]
+    val tmpMqPepCellsById = new HashMap[Long,ArrayBuffer[Any]]
     
     quantRSM.masterQuantPeptides.foreach { mqPep =>
       
@@ -65,7 +65,7 @@ class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Int, ou
       mqPepCells ++= Array(mqPep.id,mqPep.selectionLevel)
       
       // Append quant peptide data for each condition
-      val qPepCellsByQcId = new HashMap[Int,Seq[Any]]
+      val qPepCellsByQcId = new HashMap[Long,Seq[Any]]
       for( (qcId, qPep) <- mqPep.quantPeptideMap ) {
         val qPepCells = List(
           qPep.rawAbundance

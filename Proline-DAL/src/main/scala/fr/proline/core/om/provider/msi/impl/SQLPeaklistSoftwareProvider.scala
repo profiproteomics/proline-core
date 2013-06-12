@@ -11,19 +11,19 @@ import fr.proline.util.primitives._
 // TODO: use Select Query builder
 class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends IPeaklistSoftwareProvider {
   
-  def getPeaklistSoftwareListAsOptions( pklSoftIds: Seq[Int] ): Array[Option[PeaklistSoftware]] = {
+  def getPeaklistSoftwareListAsOptions( pklSoftIds: Seq[Long] ): Array[Option[PeaklistSoftware]] = {
     val pklSoftById = Map() ++ this.getPeaklistSoftwareList(pklSoftIds).map( ps => ps.id -> ps )
     pklSoftIds.toArray.map( pklSoftById.get(_) )
   }
   
-  def getPeaklistSoftwareList( pklSoftIds: Seq[Int] ): Array[PeaklistSoftware] = {
+  def getPeaklistSoftwareList( pklSoftIds: Seq[Long] ): Array[PeaklistSoftware] = {
 
     import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
 
     DoJDBCReturningWork.withEzDBC(dbCtx, { ezDBC =>
 
       ezDBC.select("SELECT id, name, version FROM peaklist_software WHERE id IN(" + pklSoftIds.mkString(",") +")") { r =>
-        new PeaklistSoftware(id = toInt(r.nextAnyVal), name = r.nextString, version = r.nextStringOrElse(""))
+        new PeaklistSoftware(id = toLong(r.nextAny), name = r.nextString, version = r.nextStringOrElse(""))
       } toArray
       
     })

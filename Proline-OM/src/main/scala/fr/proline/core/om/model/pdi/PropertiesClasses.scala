@@ -16,6 +16,6 @@ case class SeqDbEntryProperties (
   @BeanProperty var isTaxonUpdated: Option[Boolean] = None,  
   @BeanProperty var newAcNumbers: Option[Array[String]] = None,
   @BeanProperty var newIdentifiers: Option[Array[String]] = None,
-  @BeanProperty var newBioSequenceId: Option[Int] = None,
-  @BeanProperty var newTaxonId: Option[Int] = None
+  @BeanProperty var newBioSequenceId: Option[Long] = None,
+  @BeanProperty var newTaxonId: Option[Long] = None
 )

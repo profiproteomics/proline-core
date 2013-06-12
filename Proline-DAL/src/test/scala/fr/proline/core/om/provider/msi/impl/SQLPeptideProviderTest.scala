@@ -56,7 +56,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getMultiplePeptides() = {
-    val ids = new ArrayBuffer[Int]
+    val ids = new ArrayBuffer[Long]
     ids += 0
     ids += 1
     ids += 4
@@ -70,7 +70,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
       val peps: Array[Option[Peptide]] = sqlPepProvider.getPeptidesAsOptions(ids)
       assertThat(peps, CoreMatchers.notNullValue())
       assertThat(peps.length, CoreMatchers.equalTo(3))
-      assertThat(peps.apply(2).get.id, CoreMatchers.equalTo(4))
+      assertEquals(peps.apply(2).get.id, 4L)
       assertThat(peps(2).get.calculatedMass, CoreMatchers.equalTo(810.405807))
 
     } finally {
@@ -90,7 +90,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
       assertThat(pep, CoreMatchers.notNullValue())
       assertNotSame(pep, None);
 
-      assertThat(pep.get.id, CoreMatchers.equalTo(6))
+      assertEquals(pep.get.id, 6L)
       assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
       assertThat(pep.get.ptms(0).definition.names.shortName, CoreMatchers.equalTo("Acetyl"))
       assertTrue(pep.get.ptms(0).isNTerm)

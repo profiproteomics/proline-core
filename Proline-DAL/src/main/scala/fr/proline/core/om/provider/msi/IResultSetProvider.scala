@@ -5,10 +5,10 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IResultSetProvider {
 
-  def getResultSetsAsOptions( resultSetIds: Seq[Int] ): Array[Option[ResultSet]]
+  def getResultSetsAsOptions( resultSetIds: Seq[Long] ): Array[Option[ResultSet]]
   
-  def getResultSets( resultSetIds: Seq[Int] ): Array[ResultSet]
+  def getResultSets( resultSetIds: Seq[Long] ): Array[ResultSet]
   
-  def getResultSet( resultSetId:Int ): Option[ResultSet] = { getResultSetsAsOptions( Array(resultSetId) )(0) }
+  def getResultSet( resultSetId:Long ): Option[ResultSet] = { getResultSetsAsOptions( Array(resultSetId) )(0) }
  
 }

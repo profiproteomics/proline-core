@@ -99,7 +99,7 @@ public class TestPostgresUtils extends DatabaseTestCase {
 
     }
 
-    private class CopyManagerWork implements JDBCWork {
+    private static class CopyManagerWork implements JDBCWork {
 
 	public void execute(final Connection paramConnection) throws SQLException {
 	    assertNotNull("EntityManager wrapped SQL connection", paramConnection);

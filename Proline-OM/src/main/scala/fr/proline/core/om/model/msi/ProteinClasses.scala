@@ -61,7 +61,7 @@ object Protein extends InMemoryIdGen{
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Protein ( // Required fields
-                   val id: Int,
+                   val id: Long,
                    val sequence: String,
                    var mass: Double,
                    var pi: Float,
@@ -75,7 +75,7 @@ case class Protein ( // Required fields
   require( alphabet.matches("aa|rna|dna") ) // TODO: create an enumeration
   
   // Define secondary constructors
-  def this( sequence: String, id: Int = Protein.generateNewId(), alphabet: String = "aa" ) = {
+  def this( sequence: String, id: Long = Protein.generateNewId(), alphabet: String = "aa" ) = {
       this( id,sequence, Protein.calcMass(sequence),
                          Protein.calcPI(sequence),
                          Protein.calcCRC64(sequence),
@@ -109,14 +109,14 @@ case class ProteinMatch (
                    val isLastBioSequence: Boolean = false,
                    
                    // Mutable optional fields                     
-                   var id: Int = 0,                   
-                   var taxonId: Int = 0,
-                   var resultSetId: Int = 0,
+                   var id: Long = 0,                   
+                   var taxonId: Long = 0,
+                   var resultSetId: Long = 0,
 
-                   protected var proteinId: Int = 0,
+                   protected var proteinId: Long = 0,
                    @transient var protein: Option[Protein] = null,
 
-                   var seqDatabaseIds: Array[Int] = null,
+                   var seqDatabaseIds: Array[Long] = null,
                    
                    var geneName: String = null,
                    var score: Float = 0,
@@ -137,7 +137,7 @@ case class ProteinMatch (
     else sequenceMatches.map( _.getPeptideId ).distinct.length
   }
 
-  def getProteinId : Int = { if(protein != null && protein != None) protein.get.id else proteinId }
+  def getProteinId : Long = { if(protein != null && protein != None) protein.get.id else proteinId }
   
 }
 
@@ -158,20 +158,20 @@ case class ProteinSet (
                  // Immutable optional fields
                   
                  // Mutable optional fields
-                 var id: Int = 0,
-                 var resultSummaryId: Int = 0,
+                 var id: Long = 0,
+                 var resultSummaryId: Long = 0,
                  
-                 var proteinMatchIds: Array[Int] = null, //One of these 2 values should be specified
+                 var proteinMatchIds: Array[Long] = null, //One of these 2 values should be specified
                  @transient var proteinMatches: Option[Array[ProteinMatch]] = null,
                  
-                 protected var typicalProteinMatchId: Int = 0,
+                 protected var typicalProteinMatchId: Long = 0,
                  @transient var typicalProteinMatch: Option[ProteinMatch] = null,
                  
                  var isValidated: Boolean = true,
                  var selectionLevel: Int = 2,
 
                  var properties: Option[ProteinSetProperties] = None,
-                 var proteinMatchPropertiesById: Map[Int, ProteinMatchResultSummaryProperties ] = null
+                 var proteinMatchPropertiesById: Map[Long, ProteinMatchResultSummaryProperties ] = null
                  
                  ) {
   
@@ -180,9 +180,9 @@ case class ProteinSet (
   // Requirements
   require( proteinMatchIds != null || proteinMatches != null )
   
-  def getProteinMatchIds : Array[Int] = { if(proteinMatches != null && proteinMatches != None) proteinMatches.get.map(_.id)  else proteinMatchIds  }
+  def getProteinMatchIds : Array[Long] = { if(proteinMatches != null && proteinMatches != None) proteinMatches.get.map(_.id)  else proteinMatchIds  }
 
-  def getTypicalProteinMatchId : Int = { if(typicalProteinMatch != null && typicalProteinMatch != None) typicalProteinMatch.get.id else typicalProteinMatchId }
+  def getTypicalProteinMatchId : Long = { if(typicalProteinMatch != null && typicalProteinMatch != None) typicalProteinMatch.get.id else typicalProteinMatchId }
    
   /**
    * Return a list of all ProteinMatch ids, identified as same set or sub set of this ProteinSet, 
@@ -191,11 +191,11 @@ case class ProteinSet (
    *	
    */
   @throws(classOf[IllegalAccessException])
-  def getAllProteinMatchesIdByPeptideSet :  Map[PeptideSet,Array[Int]]   = {
+  def getAllProteinMatchesIdByPeptideSet :  Map[PeptideSet,Array[Long]]   = {
     if(peptideSet.hasStrictSubset && (!peptideSet.strictSubsets.isDefined) )
       throw new IllegalAccessException("PeptideSets not accessible")
     
-    val resultMapBuilder = Map.newBuilder[PeptideSet,Array[Int]]
+    val resultMapBuilder = Map.newBuilder[PeptideSet,Array[Long]]
     
     resultMapBuilder += peptideSet -> getProteinMatchIds
     if(peptideSet.hasStrictSubset) {
@@ -226,13 +226,13 @@ case class SequenceMatch ( // Required fields
                    
                    // Immutable optional fields
                    val isDecoy: Boolean = false,
-                   var resultSetId : Int = 0,
+                   var resultSetId : Long = 0,
                    
                    // Mutable optional fields
-                   protected var peptideId: Int = 0,
+                   protected var peptideId: Long = 0,
                    @transient var peptide: Option[Peptide] = null,
                    
-                   var bestPeptideMatchId: Int = 0,
+                   var bestPeptideMatchId: Long = 0,
                    @transient var bestPeptideMatch: Option[PeptideMatch] = null,
                    
                    var properties: Option[SequenceMatchProperties] = None
@@ -243,9 +243,9 @@ case class SequenceMatch ( // Required fields
   require( start > 0 , "peptide sequence position must be striclty positive" )
   require( end > start , "peptide end position must be greater than start position" )
   
-  def getPeptideId : Int = { if(peptide != null && peptide != None) peptide.get.id else peptideId }
+  def getPeptideId : Long = { if(peptide != null && peptide != None) peptide.get.id else peptideId }
 
-  def getBestPeptideMatchId : Int = { if(bestPeptideMatch != null && bestPeptideMatch != None) bestPeptideMatch.get.id else bestPeptideMatchId }
+  def getBestPeptideMatchId : Long = { if(bestPeptideMatch != null && bestPeptideMatch != None) bestPeptideMatch.get.id else bestPeptideMatchId }
   
 }
 

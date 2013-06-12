@@ -20,8 +20,8 @@ import fr.proline.util.ms._
  */
 class LabelFreeFeatureQuantifier(
   lcmsMapSet: MapSet,
-  spectrumIdMap: Map[Int,HashMap[Int,Int]],
-  ms2ScanNumbersByFtId : Map[Int,Seq[Int]],
+  spectrumIdMap: Map[Long,HashMap[Long,Long]],
+  ms2ScanNumbersByFtId : Map[Long,Seq[Int]],
   mozTolInPPM: Float
 ) extends IQuantifierAlgo with Logging {
   
@@ -34,19 +34,19 @@ class LabelFreeFeatureQuantifier(
     // Define some vars
     val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
     val quantChannelIdByLcmsMapId = {
-      udsQuantChannels.map { qc => qc.getLcmsMapId.intValue -> qc.getId.intValue } toMap
+      udsQuantChannels.map { qc => qc.getLcmsMapId -> qc.getId } toMap
     }
     
     val masterPepInstByPepId = Map() ++ mergedRSM.peptideInstances.map( pi => pi.peptide.id -> pi )
     val identRsIdByRsmId = Map() ++ resultSummaries.map( rsm => rsm.id -> rsm.getResultSetId )
     val identRsIdByLcmsMapId = {
-      udsQuantChannels.map { qc => qc.getLcmsMapId.intValue -> identRsIdByRsmId(qc.getIdentResultSummaryId) } toMap
+      udsQuantChannels.map { qc => qc.getLcmsMapId.longValue -> identRsIdByRsmId(qc.getIdentResultSummaryId) } toMap
     }
     
     // Define some maps
-    val identPepInstById = new HashMap[Int, PeptideInstance]()
-    val identPepMatchById = new HashMap[Int, PeptideMatch]()
-    val identPepInstIdByPepMatchId = new HashMap[Int, Int]()
+    val identPepInstById = new HashMap[Long, PeptideInstance]()
+    val identPepMatchById = new HashMap[Long, PeptideMatch]()
+    val identPepInstIdByPepMatchId = new HashMap[Long, Long]()
 
     // Load the result summaries corresponding to the quant channels
     for (identResultSummary <- resultSummaries) {
@@ -77,9 +77,9 @@ class LabelFreeFeatureQuantifier(
     val masterMap = lcmsMapSet.masterMap
 
     // Try to find peptide instances which could correspond to detected features
-    val pepInstIdSetByFtId = new HashMap[Int, HashSet[Int]]
-    val masterFtByFtId = new HashMap[Int, Feature]
-    val masterFtById = new HashMap[Int, Feature]
+    val pepInstIdSetByFtId = new HashMap[Long, HashSet[Long]]
+    val masterFtByFtId = new HashMap[Long, Feature]
+    val masterFtById = new HashMap[Long, Feature]
     
     val masterFeatures = masterMap.features
     for (masterFt <- masterFeatures) {
@@ -126,7 +126,7 @@ class LabelFreeFeatureQuantifier(
 
                   if (deltaMoz <= pepMozTolInDalton) {
                     val pepInstanceId = identPepInstIdByPepMatchId(identPepMatch.id)
-                    pepInstIdSetByFtId.getOrElseUpdate(ftChild.id, new HashSet[Int]) += pepInstanceId
+                    pepInstIdSetByFtId.getOrElseUpdate(ftChild.id, new HashSet[Long]) += pepInstanceId
                   }
                 }
               }
@@ -141,7 +141,7 @@ class LabelFreeFeatureQuantifier(
     val lcmsMapById = lcmsMapSet.childMaps.map { m => m.id -> m } toMap
     val normFactorByMapId = lcmsMapSet.getNormalizationFactorByMapId
 
-    val ftById = new HashMap[Int, Feature]
+    val ftById = new HashMap[Long, Feature]
     val quantPepIonsByMasterPepInst = new HashMap[PeptideInstance, ArrayBuffer[QuantPeptideIon]]
     val unidentifiedQuantPepIonsByFt = new HashMap[Feature, ArrayBuffer[QuantPeptideIon]]
     
@@ -188,8 +188,8 @@ class LabelFreeFeatureQuantifier(
 
         for (matchingPepInstAsOpt <- matchingPepInstsAsOpts) {
 
-          var (peptideId, pepInstId) = (Option.empty[Int], Option.empty[Int])
-          var (msQueryIds, bestPepMatchScore) = (Option.empty[Array[Int]], Option.empty[Float])
+          var (peptideId, pepInstId) = (Option.empty[Long], Option.empty[Long])
+          var (msQueryIds, bestPepMatchScore) = (Option.empty[Array[Long]], Option.empty[Float])
 
           if (matchingPepInstAsOpt != None) {
             val pepInst = matchingPepInstAsOpt.get
@@ -256,7 +256,7 @@ class LabelFreeFeatureQuantifier(
       val quantPepIonsByFtId = pepInstQuantPepIons.groupBy( qpi => qpi.lcmsMasterFeatureId.getOrElse(qpi.lcmsFeatureId) )
       
       // Convert the quantPepIonsByFtId map into a quantPepIonMapByFt one
-      val quantPepIonMapByFt = new HashMap[Feature,Map[Int,QuantPeptideIon]]
+      val quantPepIonMapByFt = new HashMap[Feature,Map[Long,QuantPeptideIon]]
       for( (ftId,quantPepIons) <- quantPepIonsByFtId ) {
        
         // Retrieve the corresponding feature
@@ -290,7 +290,7 @@ class LabelFreeFeatureQuantifier(
   }
   
   private def newMasterQuantPeptide(
-    quantPepIonMapByFt: HashMap[Feature,Map[Int,QuantPeptideIon]],
+    quantPepIonMapByFt: HashMap[Feature,Map[Long,QuantPeptideIon]],
     masterPepInstAsOpt: Option[PeptideInstance]
   ): MasterQuantPeptide = {
     require( quantPepIonMapByFt != null && quantPepIonMapByFt.size > 0, "quantPepIonMapByFt must not be empty")
@@ -320,7 +320,7 @@ class LabelFreeFeatureQuantifier(
     // TODO: allows to sum charge states
     val bestMQP = mqPepIons.reduceLeft { (a,b) => if( a.calcAbundanceSum > b.calcAbundanceSum ) a else b }
     
-    val quantPepByQcId = Map.newBuilder[Int,QuantPeptide]
+    val quantPepByQcId = Map.newBuilder[Long,QuantPeptide]
     for( (qcId,quantPepIon) <- bestMQP.quantPeptideIonMap ) {
       
       // Build the quant peptide
@@ -360,9 +360,9 @@ class LabelFreeFeatureQuantifier(
     
     for( mergedProtSet <- mergedRSM.proteinSets ) {
       
-      val selectedMQPepIds = new ArrayBuffer[Int]
-      val abundanceSumByQcId = new HashMap[Int,Float]
-      val pepMatchesCountByQcId = new HashMap[Int,Int]
+      val selectedMQPepIds = new ArrayBuffer[Long]
+      val abundanceSumByQcId = new HashMap[Long,Float]
+      val pepMatchesCountByQcId = new HashMap[Long,Int]
       
       for( mergedPepInst <- mergedProtSet.peptideSet.getPeptideInstances ) {
         // If the peptide has been quantified
@@ -380,7 +380,7 @@ class LabelFreeFeatureQuantifier(
         }
       }
       
-      val quantProteinSetByQcId = new HashMap[Int,QuantProteinSet]
+      val quantProteinSetByQcId = new HashMap[Long,QuantProteinSet]
       for( (qcId,abundanceSum) <- abundanceSumByQcId ) {
         quantProteinSetByQcId(qcId) = new QuantProteinSet(
           rawAbundance = abundanceSum,

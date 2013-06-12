@@ -31,8 +31,8 @@ class CreateQuantitation(
   dbManager: IDataStoreConnectorFactory,
   name: String,
   description: String,
-  projectId: Int,
-  methodId: Int,
+  projectId: Long,
+  methodId: Long,
   experimentalDesign: ExperimentalDesign) extends IService {
 
   private var _udsQuantitation: UdsDataset = null
@@ -236,8 +236,8 @@ class CreateQuantitation(
         // TODO: check method type
         if (quantChannel.lcmsMapId != None) {
           udsQuantChannel.setLcmsMapId(quantChannel.lcmsMapId.get)
-        } else if (quantChannel.quantLabelId != None) {
-          val udsQuantLabel = udsEM.find(classOf[UdsQuantLabel], quantChannel.quantLabelId)
+        } else if (quantChannel.quantLabelId.isDefined) {
+          val udsQuantLabel = udsEM.find(classOf[UdsQuantLabel], quantChannel.quantLabelId.get)
           udsQuantChannel.setLabel(udsQuantLabel)
         }
 
@@ -317,9 +317,9 @@ case class BiologicalGroup(
 case class QuantChannel(
   val sampleNumber: Int,
   val identResultSummaryId: Int,
-  val lcmsMapId: Option[Int] = None,
-  val runId: Option[Int] = None,
-  val quantLabelId: Option[Int] = None
+  val lcmsMapId: Option[Long] = None,
+  val runId: Option[Long] = None,
+  val quantLabelId: Option[Long] = None
 )
 
 /**
@@ -330,5 +330,5 @@ case class QuantChannel(
 @JsonSnakeCase
 case class MasterQuantChannel(
   val name: Option[String] = None,
-  val lcmsMapSetId: Option[Int] = None,
+  val lcmsMapSetId: Option[Long] = None,
   val quantChannels: Array[QuantChannel])

@@ -30,10 +30,10 @@ public class Taxon implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    private Integer id;
-    
+    private long id;
+
     @Column(name = "is_active")
-    private Boolean isActive = true; // defaults to true
+    private boolean isActive;
 
     private String rank;
 
@@ -59,24 +59,25 @@ public class Taxon implements Serializable {
     protected Taxon() {
     }
 
-    public Taxon(Integer id) {
-	this.id = id;
+    public Taxon(final long pId) {
+	setId(pId);
+	setIsActive(true); // Default to true
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
-    }
-    
-    public Boolean getIsActive() {
-	return this.isActive;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public void setIsActive(Boolean isActive) {
-	this.isActive = isActive;
+    public boolean getIsActive() {
+	return isActive;
+    }
+
+    public void setIsActive(final boolean pIsActive) {
+	isActive = pIsActive;
     }
 
     public String getRank() {
@@ -111,8 +112,8 @@ public class Taxon implements Serializable {
 	this.parentTaxon = parentTaxon;
     }
 
-    public void setChildren(final Set<Taxon> childs) {
-	children = childs;
+    public void setChildren(final Set<Taxon> pChildren) {
+	children = pChildren;
     }
 
     public Set<Taxon> getChildren() {
@@ -122,24 +123,24 @@ public class Taxon implements Serializable {
     public void addChildTaxon(final Taxon taxon) {
 
 	if (taxon != null) {
-	    Set<Taxon> childs = getChildren();
+	    Set<Taxon> localChildren = getChildren();
 
-	    if (childs == null) {
-		childs = new HashSet<Taxon>();
+	    if (localChildren == null) {
+		localChildren = new HashSet<Taxon>();
 
-		setChildren(childs);
+		setChildren(localChildren);
 	    }
 
-	    childs.add(taxon);
+	    localChildren.add(taxon);
 	}
 
     }
 
     public void removeChildTaxon(final Taxon taxon) {
 
-	final Set<Taxon> childs = getChildren();
-	if (childs != null) {
-	    childs.remove(taxon);
+	final Set<Taxon> localChildren = getChildren();
+	if (localChildren != null) {
+	    localChildren.remove(taxon);
 	}
 
     }
@@ -169,8 +170,8 @@ public class Taxon implements Serializable {
     }
 
     public void removeTaxonExtraName(final TaxonExtraName extraName) {
-	final Set<TaxonExtraName> extraNames = getTaxonExtraNames();
 
+	final Set<TaxonExtraName> extraNames = getTaxonExtraNames();
 	if (extraNames != null) {
 	    extraNames.remove(extraName);
 	}
@@ -179,8 +180,8 @@ public class Taxon implements Serializable {
 
     @Override
     public String toString() {
-	return new ToStringBuilder(this).append("id", id).append("scientific name", scientificName)
-		.append("rank", rank).append("parent_id", parentTaxon.id).toString();
+	return new ToStringBuilder(this).append("id", getId()).append("scientific name", getScientificName())
+		.append("rank", getRank()).append("parent_id", getParentTaxon().getId()).toString();
     }
 
 }

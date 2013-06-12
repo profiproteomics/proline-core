@@ -67,7 +67,7 @@ class IterativeMapAligner extends ILcmsMapAligner with Logging {
     if (lcmsMaps.length <= 2) return lcmsMaps(0)
 
     val mapAlnSetByMapId = mapAlnSets.map { alnSet => (alnSet.targetMapId -> alnSet) } toMap
-    val mapDistanceByIdBuilder = scala.collection.immutable.Map.newBuilder[Int, Float]
+    val mapDistanceByIdBuilder = scala.collection.immutable.Map.newBuilder[Long, Float]
     mapDistanceByIdBuilder += (currentRefMap.id -> 0)
 
     for (map <- lcmsMaps) {
@@ -96,8 +96,8 @@ class IterativeMapAligner extends ILcmsMapAligner with Logging {
     //print Dumper( mapDistanceById )
     val mapDistanceById = mapDistanceByIdBuilder.result()
 
-    val mapDistanceSortFunc = new Function2[Int, Int, Boolean] {
-      def apply(a: Int, b: Int): Boolean = if (mapDistanceById(a) < mapDistanceById(a)) true else false
+    val mapDistanceSortFunc = new Function2[Long, Long, Boolean] {
+      def apply(a: Long, b: Long): Boolean = if (mapDistanceById(a) < mapDistanceById(a)) true else false
     }
 
     val medianMapId = getMedianObject(mapDistanceById.keys.toList, mapDistanceSortFunc)

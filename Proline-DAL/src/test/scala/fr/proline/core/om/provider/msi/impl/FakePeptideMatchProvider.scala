@@ -9,12 +9,12 @@ class FakePeptideMatchProvider extends IPeptideMatchProvider {
   val msiDbCtx = null
   val psDbCtx = null
 
-  def getPeptideMatchesAsOptions(pepMatchIds: Seq[Int]): Array[Option[PeptideMatch]] = { Array.empty[Option[PeptideMatch]] }
+  def getPeptideMatchesAsOptions(pepMatchIds: Seq[Long]): Array[Option[PeptideMatch]] = { Array.empty[Option[PeptideMatch]] }
 
-  def getPeptideMatches(pepMatchIds: Seq[Int]): Array[PeptideMatch] = { Array.empty[PeptideMatch] }
+  def getPeptideMatches(pepMatchIds: Seq[Long]): Array[PeptideMatch] = { Array.empty[PeptideMatch] }
 
-  def getResultSetsPeptideMatches(resultSetIds: Seq[Int]): Array[PeptideMatch] = { Array.empty[PeptideMatch] }
+  def getResultSetsPeptideMatches(resultSetIds: Seq[Long]): Array[PeptideMatch] = { Array.empty[PeptideMatch] }
 
-  def getResultSummariesPeptideMatches(rsmIds: Seq[Int]): Array[PeptideMatch] = { Array.empty[PeptideMatch] }
+  def getResultSummariesPeptideMatches(rsmIds: Seq[Long]): Array[PeptideMatch] = { Array.empty[PeptideMatch] }
 
 }

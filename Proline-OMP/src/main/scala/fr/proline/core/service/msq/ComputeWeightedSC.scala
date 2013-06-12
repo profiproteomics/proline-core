@@ -1,12 +1,9 @@
 package fr.proline.core.service.msq
 
 import java.sql.Connection
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
@@ -17,16 +14,18 @@ import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.repository.util.JDBCWork
+import scala.collection.mutable.MapBuilder
 
 class WeightedSCCalculatorWId (
 	execContext: IExecutionContext,
-	referenceRSMId: Int,
-	rsmIdsToCalculate : Seq[Int]
+	referenceRSMId: Long,
+	rsmIdsToCalculate : Seq[Long]
   
 ) extends IService with Logging{ 
 
  var fullService : WeightedSCCalculator = null
- def wscByProtMatchAccessionByRSM : Map[Int, Map[String, Float]] = if(fullService!= null) {fullService.wscByProtMatchAccessionByRSM} else Map.empty[Int, Map[String, Float]] 
+ 
+ def wscByProtMatchAccessionByRSM : Map[Long, Map[String, Float]] = if(fullService!= null) {fullService.wscByProtMatchAccessionByRSM} else Map.empty[Long, Map[String, Float]] 
     
  def runService(): Boolean = { 
     require(rsmIdsToCalculate!=null && referenceRSMId != 0 &&  rsmIdsToCalculate.length > 0)
@@ -76,8 +75,8 @@ class WeightedSCCalculator (
 
   override protected def  beforeInterruption  = {  }
 
-  var _wscByProtMatchAccessionByRSM : scala.collection.mutable.Map[Int, Map[String, Float]] = scala.collection.mutable.Map.empty[Int, Map[String, Float]] 
-  def wscByProtMatchAccessionByRSM : Map[Int, Map[String, Float]] = {_wscByProtMatchAccessionByRSM.toMap }
+  var _wscByProtMatchAccessionByRSM : scala.collection.mutable.Map[Long, Map[String, Float]] = scala.collection.mutable.Map.empty[Long, Map[String, Float]] 
+  def wscByProtMatchAccessionByRSM : Map[Long, Map[String, Float]] = {_wscByProtMatchAccessionByRSM.toMap }
   
   def runService(): Boolean = { 
 
@@ -145,18 +144,18 @@ class WeightedSCCalculator (
    *  - the list of peptides identifying the ProteinSet with their weight 
    */
   
-  private def createProteinPepsWeightStructs() : Map[Int,ProteinPepsWeightStruct] = {
+  private def createProteinPepsWeightStructs() : Map[Long,ProteinPepsWeightStruct] = {
 
     //ProteinPepsWeightStruct for each RSM ProteinSet referenced by ProteinSet id  
-    val proteinPepsWeightStructsByProtSetId = Map.newBuilder[Int,ProteinPepsWeightStruct]
+    val proteinPepsWeightStructsByProtSetId = Map.newBuilder[Long,ProteinPepsWeightStruct]
     
     // Map each peptide to the list of identified ProteinSet id 
-    val protSetIdByPepId : HashMap[Int, ArrayBuffer[Int]] = new HashMap[Int, ArrayBuffer[Int]]()
+    val protSetIdByPepId = new HashMap[Long, ArrayBuffer[Long]]()
     
     //****  For each ProteinSet, initialize a ProteinPepsWeightStruct and create Maps
     referenceRSM.proteinSets.foreach( protSet =>{
       //Map of weight by peptide Id
-      val weightByPepId = new HashMap[Int,Float]()
+      val weightByPepId = new HashMap[Long,Float]()
       
       //-- Get Typical Protein Match Accession 
       var pmAccession : String = null
@@ -167,7 +166,7 @@ class WeightedSCCalculator (
         	  override def execute(con: Connection) {
         		  val getPMQuery = "SELECT accession from protein_match WHERE id = ?"
         		  val pStmt = con.prepareStatement(getPMQuery)
-        		  pStmt.setInt(1, protSet.getTypicalProteinMatchId)
+        		  pStmt.setLong(1, protSet.getTypicalProteinMatchId)
         		  val sqlResultSet = pStmt.executeQuery()        	
         		  if(sqlResultSet.next)
         			 pmAccession= sqlResultSet.getString(1)
@@ -182,7 +181,7 @@ class WeightedSCCalculator (
       //-- Get peptide specific count and create Map : peptide => List ProtSet.Id identified by peptide
       var nbrPepSpecif : Int =0      
       protSet.peptideSet.getPeptideInstances.foreach(pepI =>{
-    	  val proSetIds = protSetIdByPepId.getOrElseUpdate(pepI.peptideId, new ArrayBuffer[Int])
+    	  val proSetIds = protSetIdByPepId.getOrElseUpdate(pepI.peptideId, new ArrayBuffer[Long])
     	  proSetIds += protSet.id
     	  if (pepI.validatedProteinSetsCount == 1) {
     	    nbrPepSpecif +=1 
@@ -194,7 +193,7 @@ class WeightedSCCalculator (
       
     }) // End ProteinPepsWeightStruct initialization 
     
-    val resultStruct : Map[Int,ProteinPepsWeightStruct]= proteinPepsWeightStructsByProtSetId.result
+    val resultStruct : Map[Long,ProteinPepsWeightStruct]= proteinPepsWeightStructsByProtSetId.result
     //**** Compute Peptides Weight
    computePeptideWeight(resultStruct,protSetIdByPepId)
         
@@ -210,7 +209,7 @@ class WeightedSCCalculator (
    *  
    *      
    */
-  def computePeptideWeight(proteinWeightStructByProtSetId : Map[Int,ProteinPepsWeightStruct], protSetIdByPep:HashMap[Int,ArrayBuffer[Int]]) : Unit = {
+  def computePeptideWeight(proteinWeightStructByProtSetId : Map[Long,ProteinPepsWeightStruct], protSetIdByPep: HashMap[Long,ArrayBuffer[Long]]) : Unit = {
     
 	  proteinWeightStructByProtSetId.foreach( entry =>{
 		  val currentProteinWeightStruct =  entry._2
@@ -237,5 +236,5 @@ case class ProteinPepsWeightStruct(
 			val proteinSet: ProteinSet, 
 			val typicalPMAcc: String, 
 			val nbrPepSpecific: Int, 
-			val weightByPeptideId: scala.collection.mutable.Map[Int, Float] = null)
+			val weightByPeptideId: scala.collection.mutable.Map[Long, Float] = null)
 

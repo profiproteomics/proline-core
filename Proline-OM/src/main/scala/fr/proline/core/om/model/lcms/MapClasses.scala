@@ -17,7 +17,7 @@ import fr.proline.util.misc.InMemoryIdGen
 case class FeatureScoring(
     
   // Required fields
-  val id: Int,
+  val id: Long,
   val name: String,
   val description: String,
 
@@ -35,7 +35,7 @@ object PeakPickingSoftware extends InMemoryIdGen
 case class PeakPickingSoftware(
     
   // Required fields
-  val id: Int,
+  val id: Long,
   val name: String,
   val version: String,
   val algorithm: String,
@@ -52,7 +52,7 @@ case class PeakPickingSoftwareProperties
 case class PeakelFittingModel( 
     
   // Required fields
-  val id: Int,
+  val id: Long,
   val name: String,
   
   // Mutable optional fields
@@ -67,12 +67,12 @@ case class PeakelFittingModelProperties
 case class MapMozCalibration( 
     
   // Required fields
-  val id: Int,
+  val id: Long,
   val mozList: Array[Double],
   val deltaMozList: Array[Double],
   
-  val mapId: Int,
-  val scanId: Int,
+  val mapId: Long,
+  val scanId: Long,
   
   // Mutable optional fields
   var properties: Option[MapMozCalibrationProperties] = None
@@ -89,7 +89,7 @@ case class MapMozCalibrationProperties
 trait ILcMsMap {
             
   // Required fields
-  //val id: Int,
+  //val id: Long,
   val name: String
   val isProcessed: Boolean
   val creationTimestamp: Date
@@ -115,13 +115,13 @@ object RunMap extends InMemoryIdGen
 case class RunMap(
             
   // Required fields
-  var id: Int,
+  var id: Long,
   val name: String,
   val isProcessed: Boolean,
   val creationTimestamp: Date,
   val features: Array[Feature],
   
-  var runId: Int,
+  var runId: Long,
   val peakPickingSoftware: PeakPickingSoftware,
   
   // Immutable optional fields
@@ -139,7 +139,7 @@ case class RunMap(
   require( peakPickingSoftware != null, "a pick peaking software must be provided" )
   require( features.count(_.correctedElutionTime.isDefined) == 0, "can't use processed map features as run map features" )
   
-  def toProcessedMap( id: Int, number: Int, mapSetId: Int, features: Array[Feature] = this.features ) = {
+  def toProcessedMap( id: Long, number: Int, mapSetId: Long, features: Array[Feature] = this.features ) = {
     
     val curTime = new Date()
     
@@ -169,7 +169,7 @@ object ProcessedMap extends InMemoryIdGen
 case class ProcessedMap(
             
   // Required fields
-  var id: Int,
+  var id: Long,
   val name: String,
   val isProcessed: Boolean,
   val creationTimestamp: Date,
@@ -180,15 +180,15 @@ case class ProcessedMap(
   val isMaster: Boolean,
   var isAlnReference: Boolean,
   
-  val mapSetId: Int,
-  var runMapIds: Array[Int], // Many values only for a master map
+  val mapSetId: Long,
+  var runMapIds: Array[Long], // Many values only for a master map
   
   // Immutable optional fields
   val description: String = "",
   val featureScoring: Option[FeatureScoring] = None,
   
   // Mutable optional fields
-  var runId: Option[Int] = None,
+  var runId: Option[Long] = None,
   var isLocked: Boolean = false,
   var normalizationFactor: Float = 1,
   var mozCalibrations: Option[Array[MapMozCalibration]] = None, // m/z calibration matrix for the entire run
@@ -228,8 +228,8 @@ case class Landmark( time: Float, deltaTime: Float )
 case class MapAlignment(
     
   // Required fields
-  val refMapId: Int,
-  val targetMapId: Int,
+  val refMapId: Long,
+  val targetMapId: Long,
   val massRange: Tuple2[Double,Double],
   val timeList: Array[Float],
   val deltaTimeList: Array[Float],
@@ -347,8 +347,8 @@ case class MapAlignmentProperties
 case class MapAlignmentSet(
     
   // Required fields
-  val refMapId: Int,
-  val targetMapId: Int,
+  val refMapId: Long,
+  val targetMapId: Long,
   val mapAlignments: Array[MapAlignment],
 
   // Mutable optional fields
@@ -416,14 +416,14 @@ object MapSet extends InMemoryIdGen
 case class MapSet(
     
   // Required fields
-  val id: Int,
+  val id: Long,
   val name: String,
   val creationTimestamp: Date,
   val childMaps: Array[ProcessedMap],
   
   // Mutable optional fields
   var masterMap: ProcessedMap = null,
-  var alnReferenceMapId: Int = 0,
+  var alnReferenceMapId: Long = 0,
   var mapAlnSets: Array[MapAlignmentSet] = null,
   
   var properties: Option[MapSetProperties] = None
@@ -433,16 +433,16 @@ case class MapSet(
   // Requirements
   require( creationTimestamp != null && childMaps != null )
   
-  private lazy val _mapAlnSetByMapIdPair: Map[Pair[Int,Int],MapAlignmentSet] = {
+  private lazy val _mapAlnSetByMapIdPair: Map[Pair[Long,Long],MapAlignmentSet] = {
     val allMapAlnSets = mapAlnSets ++ mapAlnSets.map(_.getReversedAlnSet)
     Map() ++ allMapAlnSets.map( alnSet => (alnSet.refMapId,alnSet.targetMapId) -> alnSet )    
   }
 
   def getChildMapIds() = childMaps map { _.id }
 
-  def getRunMapIds(): Array[Int] = {
+  def getRunMapIds(): Array[Long] = {
   
-    val runMapIds = new ArrayBuffer[Int](childMaps.length)
+    val runMapIds = new ArrayBuffer[Long](childMaps.length)
     for( childMap <- childMaps ) {
       if( !childMap.isProcessed ) { runMapIds += childMap.id }
       else { runMapIds ++= childMap.runMapIds }
@@ -451,7 +451,7 @@ case class MapSet(
     runMapIds.toArray
   }
 
-  def getNormalizationFactorByMapId: Map[Int,Float] = { 
+  def getNormalizationFactorByMapId: Map[Long,Float] = { 
     childMaps.map( childMap => ( childMap.id -> childMap.normalizationFactor ) ).toMap
   }
   
@@ -460,7 +460,7 @@ case class MapSet(
     else childMaps find { _.id == alnReferenceMapId }
   }
   
-  def convertElutionTime( time: Float, refMapId: Int, targetMapId: Int, mass: Option[Double] = None): Float = {
+  def convertElutionTime( time: Float, refMapId: Long, targetMapId: Long, mass: Option[Double] = None): Float = {
     require( mapAlnSets != null, "can't convert elution time without map alignments" )
     
     // If the reference is the target map => returns the provided time
@@ -485,7 +485,7 @@ case class MapSet(
   
   /*
   @deprecated("0.0.9","use map set convertElutionTime method instead")
-  def getRefMapAlnSetByMapId(): Option[Map[Int,MapAlignmentSet]] = {
+  def getRefMapAlnSetByMapId(): Option[Map[Long,MapAlignmentSet]] = {
     if( this.alnReferenceMapId == 0 ) return None
     
     val refMapAlnSetByMapId = this._getRefMapAlnSets.map( alnSet => ( alnSet.targetMapId -> alnSet ) ).toMap

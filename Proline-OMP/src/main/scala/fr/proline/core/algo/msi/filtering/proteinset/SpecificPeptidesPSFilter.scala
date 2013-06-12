@@ -7,7 +7,7 @@ import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IProteinSetFilter, ProtSetFilterParams, ProteinSetFiltering}
 import fr.proline.core.om.model.msi.ProteinSet
-import fr.proline.util.primitives.toInt
+import fr.proline.util.primitives._
 
 class SpecificPeptidesPSFilter(
   var minNbrPep: Int = 1) extends IProteinSetFilter with Logging {

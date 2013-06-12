@@ -16,10 +16,10 @@ public final class ScoringRepository {
 
     /* Static caches are updated by getScoringIdForType() and getScoreTypeForId() methods */
     /* ScoreType -> Scoring.id , @GuardedBy("CACHE_LOCK") */
-    private static final Map<String, Integer> SCORING_IDS_CACHE = new HashMap<String, Integer>();
+    private static final Map<String, Long> SCORING_IDS_CACHE = new HashMap<String, Long>();
 
     /* Scoring.id -> ScoreType , @GuardedBy("CACHE_LOCK") */
-    private static final Map<Integer, String> SCORE_TYPES_CACHE = new HashMap<Integer, String>();
+    private static final Map<Long, String> SCORE_TYPES_CACHE = new HashMap<Long, String>();
 
     /**
      * Lock object for caches.
@@ -73,7 +73,7 @@ public final class ScoringRepository {
      *            be a non empty <code>String</code>).
      * @return Scoring.Id or <code>null</code> if not found
      */
-    public static Integer getScoringIdForType(final EntityManager msiEm, final String scoreType) {
+    public static Long getScoringIdForType(final EntityManager msiEm, final String scoreType) {
 
 	JPAUtils.checkEntityManager(msiEm);
 
@@ -81,7 +81,7 @@ public final class ScoringRepository {
 	    throw new IllegalArgumentException("Invalid scoreType");
 	}
 
-	Integer result = null;
+	Long result = null;
 
 	synchronized (CACHE_LOCK) {
 	    result = SCORING_IDS_CACHE.get(scoreType);
@@ -90,7 +90,7 @@ public final class ScoringRepository {
 
 		final Scoring foundScoring = findScoringForType(msiEm, scoreType);
 		if (foundScoring != null) {
-		    result = foundScoring.getId();
+		    result = Long.valueOf(foundScoring.getId());
 
 		    if (result != null) {
 			/* Cache Scoring Id */
@@ -123,22 +123,20 @@ public final class ScoringRepository {
      * @return Score type (in domain model) is <code>Scoring.searchEngine + ':' + Scoring.name</code> (
      *         <code>null</code>).
      */
-    public static String getScoreTypeForId(final EntityManager msiEm, final Integer scoringId) {
+    public static String getScoreTypeForId(final EntityManager msiEm, final long scoringId) {
 
 	JPAUtils.checkEntityManager(msiEm);
 
-	if (scoringId == null) {
-	    throw new IllegalArgumentException("ScoringId is null");
-	}
+	final Long scoringIdKey = Long.valueOf(scoringId);
 
 	String result = null;
 
 	synchronized (CACHE_LOCK) {
-	    result = SCORE_TYPES_CACHE.get(scoringId);
+	    result = SCORE_TYPES_CACHE.get(scoringIdKey);
 
 	    if (result == null) {
 
-		final Scoring foundScoring = msiEm.find(Scoring.class, scoringId);
+		final Scoring foundScoring = msiEm.find(Scoring.class, scoringIdKey);
 		if (foundScoring != null) {
 		    final String searchEngine = foundScoring.getSearchEngine();
 		    final String name = foundScoring.getName();
@@ -146,10 +144,10 @@ public final class ScoringRepository {
 		    if ((searchEngine != null) && (name != null)) {
 			final String scoreType = searchEngine + ':' + name;
 			/* Cache Scoring Id */
-			SCORING_IDS_CACHE.put(scoreType, scoringId);
+			SCORING_IDS_CACHE.put(scoreType, scoringIdKey);
 
 			/* Cache scoreType String */
-			SCORE_TYPES_CACHE.put(scoringId, scoreType);
+			SCORE_TYPES_CACHE.put(scoringIdKey, scoreType);
 		    }
 
 		} // End if (foundScoring is not null)

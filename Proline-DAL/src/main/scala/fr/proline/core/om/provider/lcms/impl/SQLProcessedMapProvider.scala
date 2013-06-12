@@ -24,10 +24,10 @@ class SQLProcessedMapProvider(
   val ProcMapCols = LcmsDbProcessedMapTable.columns
   
   /** Returns a list of LC-MS maps corresponding to a given list of processed map ids */
-  def getLcMsMaps(mapIds: Seq[Int]): Seq[ILcMsMap] = this.getProcessedMaps(mapIds)
+  def getLcMsMaps(mapIds: Seq[Long]): Seq[ILcMsMap] = this.getProcessedMaps(mapIds)
   
   /** Returns a list of features corresponding to a given list of processed map ids */
-  def getProcessedMaps( processedMapIds: Seq[Int] ): Array[ProcessedMap] = {
+  def getProcessedMaps( processedMapIds: Seq[Long] ): Array[ProcessedMap] = {
     
     val runMapIdsByProcessedMapId = getRunMapIdsByProcessedMapId( processedMapIds )
     val features = this.getFeatures( processedMapIds )
@@ -48,9 +48,9 @@ class SQLProcessedMapProvider(
       // Load processed map features
       ezDBC.selectAndProcess( procMapQuery ) { r =>
         
-        val mapId = toInt(r.getAnyVal(LcMsMapCols.ID))
+        val mapId = toLong(r.getAny(LcMsMapCols.ID))
         val mapFeatures = featuresByMapId( mapId )
-        val featureScoring = featureScoringById.get(r.getInt(LcMsMapCols.FEATURE_SCORING_ID))
+        val featureScoring = featureScoringById.get(toLong(r.getAny(LcMsMapCols.FEATURE_SCORING_ID)))
         
         // Build the map
         processedMaps(lcmsMapIdx) = new ProcessedMap(
@@ -63,7 +63,7 @@ class SQLProcessedMapProvider(
           modificationTimestamp = r.getTimestamp(LcMsMapCols.MODIFICATION_TIMESTAMP),
           isMaster = r.getBoolean(ProcMapCols.IS_MASTER),
           isAlnReference = r.getBoolean(ProcMapCols.IS_ALN_REFERENCE),
-          mapSetId = r.getInt(ProcMapCols.MAP_SET_ID),
+          mapSetId = toLong(r.getAny(ProcMapCols.MAP_SET_ID)),
           runMapIds = runMapIdsByProcessedMapId(mapId),
           description = r.getString(LcMsMapCols.DESCRIPTION),
           featureScoring = featureScoring,
@@ -83,9 +83,9 @@ class SQLProcessedMapProvider(
     
   }
   
-  def getRunMapIdsByProcessedMapId( processedMapIds: Seq[Int] ): Map[Int,Array[Int]] = {
+  def getRunMapIdsByProcessedMapId( processedMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     
-    val runMapIdBufferByProcessedMapId = new HashMap[Int,ArrayBuffer[Int]]
+    val runMapIdBufferByProcessedMapId = new HashMap[Long,ArrayBuffer[Long]]
     
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -95,27 +95,27 @@ class SQLProcessedMapProvider(
       
       ezDBC.selectAndProcess( mapMappingQuery ) { r =>
         
-        val( processedMapId, runMapId ) = (r.nextInt, r.nextInt)
-        runMapIdBufferByProcessedMapId.getOrElseUpdate(processedMapId, new ArrayBuffer[Int](1) ) += runMapId
+        val( processedMapId, runMapId ) = (toLong(r.nextAny), toLong(r.nextAny))
+        runMapIdBufferByProcessedMapId.getOrElseUpdate(processedMapId, new ArrayBuffer[Long](1) ) += runMapId
         
       }
       
     })
     
     // Convert the HashMap into an immutable Map
-    val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[Int]]
+    val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]
     for( processedMapId <- runMapIdBufferByProcessedMapId.keys ) {
-      mapBuilder += ( processedMapId.asInstanceOf[Int] -> runMapIdBufferByProcessedMapId(processedMapId).toArray[Int] )
+      mapBuilder += ( processedMapId -> runMapIdBufferByProcessedMapId(processedMapId).toArray[Long] )
     }
     mapBuilder.result()
   }
   
-  def getProcessedMapRunMapIds( processedMapId: Int ): Array[Int] = {    
+  def getProcessedMapRunMapIds( processedMapId: Long ): Array[Long] = {    
     getRunMapIdsByProcessedMapId( Array(processedMapId) )(processedMapId)
   }
 
   /** Returns a list of features corresponding to a given list of processed map ids */
-  def getFeatures( processedMapIds: Seq[Int] ): Array[Feature] = {
+  def getFeatures( processedMapIds: Seq[Long] ): Array[Feature] = {
  
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -126,7 +126,7 @@ class SQLProcessedMapProvider(
       }
       
       // --- Load run ids and run map ids
-      var( runMapIds, runIds ) = ( new ArrayBuffer[Int](nbMaps), new ArrayBuffer[Int](nbMaps) )
+      var( runMapIds, runIds ) = ( new ArrayBuffer[Long](nbMaps), new ArrayBuffer[Long](nbMaps) )
       
       val sqlQuery = new SelectQueryBuilder2(LcmsDbRunMapTable, LcmsDbProcessedMapRunMapMappingTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.ID,t1.RUN_ID) ->
@@ -135,8 +135,8 @@ class SQLProcessedMapProvider(
       )
       
       ezDBC.selectAndProcess( sqlQuery ) { r => 
-        runMapIds += r.nextInt
-        runIds += r.nextInt
+        runMapIds += toLong(r.nextAny)
+        runIds += toLong(r.nextAny)
         ()
       }
     
@@ -152,7 +152,7 @@ class SQLProcessedMapProvider(
       // Retrieve mapping between overlapping features
       val olpFtIdsByFtId = getOverlappingFtIdsByFtId( runMapIds )
       
-      var olpFeatureById: Map[Int,Feature] = null
+      var olpFeatureById: Map[Long,Feature] = null
       if( olpFtIdsByFtId.size > 0 ) {
         olpFeatureById = getOverlappingFeatureById( runMapIds, scanInitialIdById, ms2EventIdsByFtId )
       }
@@ -161,12 +161,12 @@ class SQLProcessedMapProvider(
       val subFtIdsByClusterFtId = getSubFtIdsByClusterFtId( processedMapIds )
       
       val ftBuffer = new ArrayBuffer[Feature]
-      val subFtById = new java.util.HashMap[Int,Feature]
+      val subFtById = new java.util.HashMap[Long,Feature]
       
       // Load processed features
       this.eachProcessedFeatureRecord(processedMapIds, processedFtRecord => {
         
-        val ftId = processedFtRecord.getInt(FtCols.ID)
+        val ftId = toLong(processedFtRecord.getAny(FtCols.ID))
         
         // Try to retrieve overlapping features
         var olpFeatures: Array[Feature] = null
@@ -220,7 +220,7 @@ class SQLProcessedMapProvider(
     
   }
   
-  def eachProcessedFeatureRecord( processedMapIds: Seq[Int], onEachFt: ResultSetRow => Unit ): Unit = {
+  def eachProcessedFeatureRecord( processedMapIds: Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
     
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
     
@@ -245,9 +245,9 @@ class SQLProcessedMapProvider(
   }
   
   /** Returns a map of sub features feature keyed by its id */
-  def getSubFtIdsByClusterFtId( processedMapIds: Seq[Int] ): Map[Int,Array[Int]] = {
+  def getSubFtIdsByClusterFtId( processedMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     
-    val subFtIdBufferByClusterFtId = new HashMap[Int,ArrayBuffer[Int]]
+    val subFtIdBufferByClusterFtId = new HashMap[Long,ArrayBuffer[Long]]
     
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -258,17 +258,17 @@ class SQLProcessedMapProvider(
       
       ezDBC.selectAndProcess( ftClusterRelationQuery ) { r =>
         
-        val( clusterFeatureId, subFeatureId ) = (r.nextInt, r.nextInt)
-        subFtIdBufferByClusterFtId.getOrElseUpdate(clusterFeatureId, new ArrayBuffer[Int](1)) += subFeatureId
+        val( clusterFeatureId, subFeatureId ) = (toLong(r.nextAny), toLong(r.nextAny))
+        subFtIdBufferByClusterFtId.getOrElseUpdate(clusterFeatureId, new ArrayBuffer[Long](1)) += subFeatureId
         
         ()
       }
     })
     
     // Convert the HashMap into an immutable Map
-    val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[Int]]
+    val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]
     for( clusterFtId <- subFtIdBufferByClusterFtId.keys ) { 
-      mapBuilder += ( clusterFtId.asInstanceOf[Int] -> subFtIdBufferByClusterFtId(clusterFtId).toArray[Int] )
+      mapBuilder += ( clusterFtId -> subFtIdBufferByClusterFtId(clusterFtId).toArray[Long] )
     }
     mapBuilder.result()
     

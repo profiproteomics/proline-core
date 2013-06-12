@@ -22,7 +22,7 @@ case class MasterQuantReporterIonProperties (
 /*
 @JsonSnakeCase
 case class QuantPeptideIonProperties (
-  @BeanProperty val quantChannelId: Int,
+  @BeanProperty val quantChannelId: Long,
   @BeanProperty val rawAbundance: Float,
   @BeanProperty var abundance: Float,
   @BeanProperty var selectionLevel: Int,
@@ -38,29 +38,29 @@ case class QuantPeptideIonProperties (
   @BeanProperty var unmodifiedPeptideIonId: Option[Int] = None,  
   @BeanProperty var peptideInstanceId: Option[Int] = None,
   @BeanProperty var msQueryIds: Array[Int],
-  @BeanProperty var lcmsFeatureId: Int
+  @BeanProperty var lcmsFeatureId: Long
 ) extends QuantComponent*/
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideIonProperties (
-  @BeanProperty var bestQuantChannelId: Option[Int] = None
+  @BeanProperty var bestQuantChannelId: Option[Long] = None
 )
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideProperties (
-  @BeanProperty var masterQuantProteinSetIds: Option[Array[Int]] = None,
-  @BeanProperty var quantClusterId: Option[Int] = None,
+  @BeanProperty var masterQuantProteinSetIds: Option[Array[Long]] = None,
+  @BeanProperty var quantClusterId: Option[Long] = None,
   @BeanProperty var ratioDataMap: Option[Map[Int,RatioDataMapProperty]] = None
 )
  
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSetProperties (
-  @BeanProperty var specificSampleId: Option[Int] = None, // defined if the protein has been seen in a single sample
+  @BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
   @BeanProperty var ratioDataMap: Option[Map[Int,RatioDataMapProperty]] = None,
-  @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Int]] = None,
-  @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Int]] = None
+  @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
+  @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None
 )
  

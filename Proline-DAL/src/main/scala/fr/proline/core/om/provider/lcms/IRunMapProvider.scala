@@ -4,6 +4,6 @@ import fr.proline.core.om.model.lcms.RunMap
 
 trait IRunMapProvider extends ILcMsMapProvider {
   
-  def getRunMaps(runMapIds: Seq[Int]): Array[RunMap]
+  def getRunMaps(runMapIds: Seq[Long]): Array[RunMap]
 
 }

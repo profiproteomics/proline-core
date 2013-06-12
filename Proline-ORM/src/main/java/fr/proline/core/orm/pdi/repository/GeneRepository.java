@@ -18,7 +18,8 @@ public final class GeneRepository {
     private GeneRepository() {
     }
 
-    public static Gene findGeneForNameAndTaxon(final EntityManager pdiEm, final String name, final int taxonId) {
+    public static Gene findGeneForNameAndTaxon(final EntityManager pdiEm, final String name,
+	    final long taxonId) {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
@@ -30,7 +31,7 @@ public final class GeneRepository {
 
 	final TypedQuery<Gene> query = pdiEm.createNamedQuery("findGeneForNameAndTaxon", Gene.class);
 	query.setParameter("name", name.toUpperCase());
-	query.setParameter("taxonId", Integer.valueOf(taxonId));
+	query.setParameter("taxonId", Long.valueOf(taxonId));
 
 	final List<Gene> genes = query.getResultList();
 

@@ -7,6 +7,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import scala.collection.mutable.HashMap
+import fr.proline.util.primitives._
 
 class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
   
@@ -47,11 +48,11 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
 
   }
   
-  def getDatasetsFirstChildrenIds( dsIds: Seq[Int] ): Array[Int] = {
+  def getDatasetsFirstChildrenIds( dsIds: Seq[Long] ): Array[Long] = {
     
     DoJDBCReturningWork.withEzDBC( udsDbCtx, { ezDBC =>
       
-      ezDBC.selectInts( datasetQB.mkSelectQuery( (t,cols) => 
+      ezDBC.selectLongs( datasetQB.mkSelectQuery( (t,cols) => 
         List(t.RESULT_SET_ID) ->
         " WHERE "~ t.PARENT_DATASET_ID ~" IN("~ dsIds.mkString(",") ~")"
       ) )
@@ -60,18 +61,18 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
 
   }
   
-  def getDatasetsChildrenIds( dsIds: Array[Int], isRoot: Boolean = true ): Array[Int] = {
+  def getDatasetsChildrenIds( dsIds: Array[Long], isRoot: Boolean = true ): Array[Long] = {
     
-    val childrenIds = if( dsIds.length == 0 ) Array.empty[Int]
+    val childrenIds = if( dsIds.length == 0 ) Array.empty[Long]
     else this.getDatasetsChildrenIds(this.getDatasetsFirstChildrenIds(dsIds),false)
     
     if( isRoot ) childrenIds
     else dsIds ++ childrenIds
   }
   
-  def fillDatasetHierarchyIdMap( dsIds: Seq[Int], hierachyMap: HashMap[Int,Int] ) {
+  def fillDatasetHierarchyIdMap( dsIds: Seq[Long], hierachyMap: HashMap[Long,Long] ) {
     
-    val firstChildrenIds = if( dsIds.length == 0 ) Array.empty[Int]
+    val firstChildrenIds = if( dsIds.length == 0 ) Array.empty[Long]
     else this.getDatasetsFirstChildrenIds(dsIds)
     
     if( firstChildrenIds.length > 0 ) {
@@ -84,7 +85,7 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
     ()
   }
   
-  def getIdentificationIdsForParentDSId( parentDsId: Int ): Array[Int] = {
+  def getIdentificationIdsForParentDSId( parentDsId: Long ): Array[Long] = {
     
     // Retrieve all children ids recursively
     val childrenIds = this.getDatasetsChildrenIds( Array(parentDsId) )
@@ -92,7 +93,7 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
     // Retrieve RS ids of IDENTIFICATION datasets
     DoJDBCReturningWork.withEzDBC( udsDbCtx, { ezDBC =>
       
-      ezDBC.selectInts( datasetQB.mkSelectQuery( (t,cols) => 
+      ezDBC.selectLongs( datasetQB.mkSelectQuery( (t,cols) => 
         List(t.ID) ->
         " WHERE "~ t.ID ~" IN("~ childrenIds.mkString(",") ~")" ~
         " AND "~ t.TYPE ~"= '"~ DatasetType.IDENTIFICATION ~ "'"
@@ -102,7 +103,7 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
 
   }
   
-  def getRSIdByIdentificationId( identIds: Seq[Int] ): Map[Int,Int] = {
+  def getRSIdByIdentificationId( identIds: Seq[Long] ): Map[Long,Long] = {
     
     DoJDBCReturningWork.withEzDBC( udsDbCtx, { ezDBC =>
       
@@ -110,14 +111,14 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
         List(t.ID,t.RESULT_SET_ID) ->
         " WHERE "~ t.ID ~" IN("~ identIds.mkString(",") ~")"
       ) ) { r =>
-        r.nextInt -> r.nextInt
+        toLong(r.nextAny) ->toLong(r.nextAny)
       } toMap
     
     })
 
   }
   
-  def getRSIdByIdentificationIdForParentDSId( parentDsId: Int ): Map[Int,Int] = {
+  def getRSIdByIdentificationIdForParentDSId( parentDsId: Long ): Map[Long, Long] = {
     
     DoJDBCReturningWork.withEzDBC( udsDbCtx, { ezDBC =>
       
@@ -126,7 +127,7 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
         " WHERE "~ t.PARENT_DATASET_ID ~"="~ parentDsId ~
         " AND "~ t.TYPE ~"= '"~ DatasetType.IDENTIFICATION ~ "'"
       ) ) { r =>
-        r.nextInt -> r.nextInt
+        toLong(r.nextAny) -> toLong(r.nextAny)
       } toMap
     
     })

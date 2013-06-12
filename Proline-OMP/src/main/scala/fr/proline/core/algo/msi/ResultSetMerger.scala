@@ -10,7 +10,7 @@ import fr.proline.util.StringUtils.{isEmpty => isEmptyStr}
 object ResultSetMerger {
   
   def mergePeptideMatches( peptideMatches: Seq[PeptideMatch],
-                           proteinMatches: Seq[ProteinMatch], rsID: Int ):
+                           proteinMatches: Seq[ProteinMatch], rsID: Long ):
                            Tuple2[Seq[PeptideMatch],Seq[ProteinMatch]] = {
     
     // TODO: check if this code can be abstracted (shared with ResultSummaryMerger)
@@ -18,7 +18,7 @@ object ResultSetMerger {
     val pepMatchByPepId = peptideMatches.groupBy { _.peptide.id }
     
     // Merge peptide matches
-    val parentPepMatchIdByPepId = new HashMap[Int,Int]()
+    val parentPepMatchIdByPepId = new HashMap[Long,Long]()
     val scoreTypeSet = new HashSet[String]()
     val mergedPeptideMatches = new ArrayBuffer[PeptideMatch]( pepMatchByPepId.size )
     
@@ -78,7 +78,7 @@ object ResultSetMerger {
 
 class ResultSetMerger extends Logging {
 
-  def mergeResultSets( resultSets: Seq[ResultSet], seqLengthByProtId: Option[Map[Int,Int]] = None ): ResultSet = {
+  def mergeResultSets( resultSets: Seq[ResultSet], seqLengthByProtId: Option[Map[Long,Int]] = None ): ResultSet = {
     
     // TODO: check that all result sets come from the same search engine
     
@@ -86,7 +86,7 @@ class ResultSetMerger extends Logging {
     //val msiSearchIds = new ArrayBuffer[Int](resultSets.length)
     val allPeptideMatches = new ArrayBuffer[PeptideMatch](0)
     val proteinMatchesByKey = new HashMap[String,ArrayBuffer[ProteinMatch]]
-    val peptideById = new HashMap[Int,Peptide]
+    val peptideById = new HashMap[Long,Peptide]
     var allRSDecoy = true 
     for( resultSet <- resultSets ) {
       allRSDecoy = allRSDecoy && resultSet.isDecoy
@@ -122,7 +122,7 @@ class ResultSetMerger extends Logging {
     
     // Re-map the non-redundant list of peptides to peptide matches
     // Peptide matches related to the same peptide will use the same object
-    val pepMatchesByPepId = new HashMap[Int,ArrayBuffer[PeptideMatch]]
+    val pepMatchesByPepId = new HashMap[Long,ArrayBuffer[PeptideMatch]]
     for( peptideMatch <- allPeptideMatches ) {
       val peptideId = peptideMatch.peptide.id
       //val peptideMatch.peptide = peptideById(peptideId)
@@ -144,8 +144,8 @@ class ResultSetMerger extends Logging {
       if( firstDescribedProtMatch == null ) firstDescribedProtMatch = protMatchGroup(0)
       
       // Retrieve all sequence matches of this protein match group
-      val seqMatchByPepId = new HashMap[Int,SequenceMatch]
-      val seqDatabaseIdSet = new HashSet[Int]
+      val seqMatchByPepId = new HashMap[Long,SequenceMatch]
+      val seqDatabaseIdSet = new HashSet[Long]
       
       for( proteinMatch <- protMatchGroup ) {
         for( seqMatch <- proteinMatch.sequenceMatches ) seqMatchByPepId(seqMatch.getPeptideId) = seqMatch 

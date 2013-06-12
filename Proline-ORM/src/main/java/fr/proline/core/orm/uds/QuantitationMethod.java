@@ -1,86 +1,93 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.util.Set;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the quant_method database table.
  * 
  */
 @Entity
-@Table(name="quant_method")
+@Table(name = "quant_method")
 public class QuantitationMethod implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="abundance_unit")
-	private String abundanceUnit;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	private String name;
+    @Column(name = "abundance_unit")
+    private String abundanceUnit;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    private String name;
 
-	private String type;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//bi-directional many-to-one association to QuantLabel
-	@OneToMany(mappedBy="method")
-	private Set<QuantitationLabel> labels;
+    private String type;
+
+    // bi-directional many-to-one association to QuantLabel
+    @OneToMany(mappedBy = "method")
+    private Set<QuantitationLabel> labels;
 
     public QuantitationMethod() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public String getAbundanceUnit() {
-		return this.abundanceUnit;
-	}
+    public String getAbundanceUnit() {
+	return this.abundanceUnit;
+    }
 
-	public void setAbundanceUnit(String abundanceUnit) {
-		this.abundanceUnit = abundanceUnit;
-	}
+    public void setAbundanceUnit(String abundanceUnit) {
+	this.abundanceUnit = abundanceUnit;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getName() {
+	return this.name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public String getType() {
-		return this.type;
-	}
+    public String getType() {
+	return this.type;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public void setType(String type) {
+	this.type = type;
+    }
 
-	public Set<QuantitationLabel> getLabels() {
-		return this.labels;
-	}
+    public Set<QuantitationLabel> getLabels() {
+	return this.labels;
+    }
 
-	public void setLabels(Set<QuantitationLabel> labels) {
-		this.labels = labels;
-	}
-	
+    public void setLabels(Set<QuantitationLabel> labels) {
+	this.labels = labels;
+    }
+
 }

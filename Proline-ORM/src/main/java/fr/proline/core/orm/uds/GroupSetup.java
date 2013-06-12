@@ -22,11 +22,12 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "group_setup")
 public class GroupSetup implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     private String name;
 
@@ -51,12 +52,12 @@ public class GroupSetup implements Serializable {
     public GroupSetup() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getName() {

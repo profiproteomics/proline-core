@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.ConnectionMode;
-import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.DriverType;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.util.StringUtils;
 
 /**
@@ -52,7 +52,7 @@ public class ExternalDb implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Transient
     private DriverType driverType;
@@ -72,7 +72,7 @@ public class ExternalDb implements Serializable {
     private String host;
 
     @Column(name = "is_busy")
-    private Boolean isBusy;
+    private boolean isBusy;
 
     private Integer port;
 
@@ -93,8 +93,12 @@ public class ExternalDb implements Serializable {
     public ExternalDb() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public void setId(final long pId) {
+	id = pId;
+    }
+
+    public long getId() {
+	return id;
     }
 
     public void setDriverType(final DriverType dt) {
@@ -103,10 +107,6 @@ public class ExternalDb implements Serializable {
 
     public DriverType getDriverType() {
 	return driverType;
-    }
-
-    public void setId(Integer id) {
-	this.id = id;
     }
 
     public String getDbName() {
@@ -149,12 +149,12 @@ public class ExternalDb implements Serializable {
 	this.host = host;
     }
 
-    public Boolean getIsBusy() {
-	return this.isBusy;
+    public boolean getIsBusy() {
+	return isBusy;
     }
 
-    public void setIsBusy(Boolean isBusy) {
-	this.isBusy = isBusy;
+    public void setIsBusy(final boolean pIsBusy) {
+	isBusy = pIsBusy;
     }
 
     public Integer getPort() {
@@ -181,8 +181,8 @@ public class ExternalDb implements Serializable {
 	type = databaseType;
     }
 
-    public void setProjects(final Set<Project> projects) {
-	this.projects = projects;
+    public void setProjects(final Set<Project> pProjects) {
+	projects = pProjects;
     }
 
     public Set<Project> getProjects() {
@@ -192,24 +192,24 @@ public class ExternalDb implements Serializable {
     public void addProject(final Project project) {
 
 	if (project != null) {
-	    Set<Project> projs = getProjects();
+	    Set<Project> localProjects = getProjects();
 
-	    if (projs == null) {
-		projs = new HashSet<Project>();
+	    if (localProjects == null) {
+		localProjects = new HashSet<Project>();
 
-		setProjects(projs);
+		setProjects(localProjects);
 	    }
 
-	    projs.add(project);
+	    localProjects.add(project);
 	}
 
     }
 
     public void removeProject(final Project project) {
-	final Set<Project> projs = getProjects();
+	final Set<Project> localProjects = getProjects();
 
-	if (projs != null) {
-	    projs.remove(project);
+	if (localProjects != null) {
+	    localProjects.remove(project);
 	}
 
     }
@@ -280,10 +280,11 @@ public class ExternalDb implements Serializable {
 	    break;
 
 	case HOST:
-		
-		if (dt == DriverType.H2) {
-			urlBuilder.append("tcp:");
-		}
+
+	    if (dt == DriverType.H2) {
+		urlBuilder.append("tcp:");
+	    }
+
 	    urlBuilder.append("//");
 
 	    final String serverHostName = getHost();

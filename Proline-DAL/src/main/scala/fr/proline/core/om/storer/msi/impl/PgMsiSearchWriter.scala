@@ -16,6 +16,7 @@ import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.util.sql.encodeRecordForPgCopy
 import fr.proline.repository.util.PostgresUtils
+import fr.proline.util.primitives._
 
 object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with Logging {
 
@@ -26,7 +27,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with Logging {
     List(t.INITIAL_ID,t.ID) -> "WHERE "~ t.MSI_SEARCH_ID ~" = ?"
   )
 
-  override def insertMsQueries(msiSearchId: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
+  override def insertMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext = {
 
     DoJDBCWork.withEzDBC( context.getMSIDbConnectionContext, { msiEzDBC =>
       
@@ -50,11 +51,11 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with Logging {
       for (msQuery <- msQueries) {
 
         msQuery.msLevel match {
-          case 1 => _copyMsQuery(pgBulkLoader, msQuery.asInstanceOf[Ms1Query], msiSearchId, Option.empty[Int])
+          case 1 => _copyMsQuery(pgBulkLoader, msQuery.asInstanceOf[Ms1Query], msiSearchId, Option.empty[Long])
           case 2 => {
             val ms2Query = msQuery.asInstanceOf[Ms2Query]
             // FIXME: it should not be null
-            var spectrumId = Option.empty[Int]
+            var spectrumId = Option.empty[Long]
             if (context.spectrumIdByTitle != null) {
               ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
               spectrumId = Some(ms2Query.spectrumId)
@@ -78,7 +79,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with Logging {
 
       // Retrieve generated spectrum ids
       val msQueryIdByInitialId = msiEzDBC.select(msqIdQuery, msiSearchId) { r =>
-        (r.nextInt -> r.nextInt)
+        (toLong(r.nextAny) -> toLong(r.nextAny))
       } toMap
 
       // Iterate over MS queries to update them
@@ -89,7 +90,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with Logging {
     context
   }
 
-  private def _copyMsQuery(pgBulkLoader: CopyIn, msQuery: MsQuery, msiSearchId: Int, spectrumId: Option[Int]): Unit = {
+  private def _copyMsQuery(pgBulkLoader: CopyIn, msQuery: MsQuery, msiSearchId: Long, spectrumId: Option[Long]): Unit = {
     
     //if( spectrumId <= 0 )
     //throw new Exception("spectrum must first be persisted")

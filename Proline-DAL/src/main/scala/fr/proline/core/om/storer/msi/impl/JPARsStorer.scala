@@ -64,7 +64,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    * @param msQueries Sequence of MsQuery object, the sequence must not be {{{null}}}.
    *
    */
-  override def storeMsQueries(msiSearchId: Int, msQueries: Seq[MsQuery], storerContext: StorerContext): StorerContext = {
+  override def storeMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], storerContext: StorerContext): StorerContext = {
 
     if (msQueries == null) {
       throw new IllegalArgumentException("MsQueries seq is null")
@@ -87,7 +87,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    * @param resultSet ResultSet object, must not be {{{null}}}.
    * @param msiEm Msi EntityManager must have a valid transaction started.
    */
-  def createResultSet(resultSet: ResultSet, storerContext: StorerContext): Int = {
+  def createResultSet(resultSet: ResultSet, storerContext: StorerContext): Long = {
 
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
@@ -133,10 +133,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     val knownMsiResultSet = knownResultSets.get(omResultSetId)
 
     if (knownMsiResultSet.isDefined) {
-      knownMsiResultSet.get.getId.intValue
+      knownMsiResultSet.get.getId
     } else {
 
-      if (omResultSetId > 0) {
+      if (omResultSetId > 0L) {
         val foundMsiResultSet = msiEm.find(classOf[MsiResultSet], omResultSetId)
 
         if (foundMsiResultSet == null) {
@@ -145,9 +145,9 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         knownResultSets += omResultSetId -> foundMsiResultSet
 
-        foundMsiResultSet.getId.intValue
+        foundMsiResultSet.getId
       } else {
-        var msiResultSetPK: Int = -1
+        var msiResultSetPK: Long = -1L
 
         val msiResultSet = new MsiResultSet()
         msiResultSet.setDescription(resultSet.description)
@@ -184,7 +184,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         /* Check associated decoy ResultSet */
         val omDecoyResultSetId = resultSet.getDecoyResultSetId
 
-        val msiDecoyRs = if (omDecoyResultSetId > 0) {
+        val msiDecoyRs = if (omDecoyResultSetId > 0L) {
           retrieveCreatedResultSet(storerContext, omDecoyResultSetId)
         } else {
           val optionalDecoyResultSet = resultSet.decoyResultSet
@@ -223,7 +223,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         
         /* Fill proteinMatchSeqDatabases and proteinMatchSequenceMatches Maps for postponed handling
          * (after flushing of Msi EntityManager) */
-        val proteinMatchSeqDatabases = mutable.Map.empty[MsiProteinMatch, Array[Int]]
+        val proteinMatchSeqDatabases = mutable.Map.empty[MsiProteinMatch, Array[Long]]
 
         val proteinMatchSequenceMatches = mutable.Map.empty[MsiProteinMatch, Array[SequenceMatch]]
 
@@ -249,10 +249,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         msiEm.flush() // FLUSH to handle ProteinMatchSeqDatabaseMap and proteinMatchSequenceMatches and retrieve Msi ResultSet Id
 
-        val obj = msiResultSet.getId // Try to retrieve persisted Primary Key (after FLUSH)
+        val generatedPK = msiResultSet.getId // Try to retrieve persisted Primary Key (after FLUSH)
 
-        if ((obj != null) && (obj.intValue > 0)) {
-          msiResultSetPK = obj.intValue
+        if (generatedPK > 0L) {
+          msiResultSetPK = generatedPK
 
           resultSet.id = msiResultSetPK
 
@@ -266,7 +266,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
           /* Handle proteinMatchSeqDatabaseMap after having persisted MsiProteinMatches, SeqDatabases and current MsiResultSet */
           for (pMSDEntry <- proteinMatchSeqDatabases; seqDatabaseId <- pMSDEntry._2) {
-            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId.intValue, seqDatabaseId, msiResultSet)
+            bindProteinMatchSeqDatabaseMap(storerContext, pMSDEntry._1.getId, seqDatabaseId, msiResultSet)
           }
 
         } // End if (proteinMatchSeqDatabases is not empty)
@@ -279,18 +279,18 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
           
           for (pMSMEntry <- proteinMatchSequenceMatches) {
             val msiProteinMatch = pMSMEntry._1
-            val msiProteinMatchId = msiProteinMatch.getId.intValue
+            val msiProteinMatchId = msiProteinMatch.getId
 
-            val peptideIds = mutable.Set.empty[Int]
+            val peptideIds = mutable.Set.empty[Long]
 
             for (sequenceMatch <- pMSMEntry._2) {
               val msiSequenceMatch = createSequenceMatch(storerContext, sequenceMatch, msiProteinMatchId, msiResultSetPK)
               sequenceMatchCount+=1
-              peptideIds += msiSequenceMatch.getId.getPeptideId.intValue
+              peptideIds += msiSequenceMatch.getId.getPeptideId
             } // End loop for each sequenceMatch
 
             /* Update ProteinMatch.peptideCount after having persisted sequenceMatches for current MsiProteinMatch  */
-            msiProteinMatch.setPeptideCount(Integer.valueOf(peptideIds.size))
+            msiProteinMatch.setPeptideCount(peptideIds.size)
           } // End loop for each Msi ProteinMatch
 
           logger.info(sequenceMatchCount + " SequenceMatches have been stored")
@@ -308,7 +308,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
   /**
    * @param resultSetId Id of ResultSet, can accept "In memory" OM Id or Msi ResultSet Primary key.
    */
-  private def retrieveCreatedResultSet(storerContext: StorerContext, resultSetId: Int): MsiResultSet = {
+  private def retrieveCreatedResultSet(storerContext: StorerContext, resultSetId: Long): MsiResultSet = {
     val knownResultSets = storerContext.getEntityCache(classOf[MsiResultSet])
 
     val knownMsiResultSet = knownResultSets.get(resultSetId)
@@ -339,7 +339,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    * @param search MSISearch object, must not be {{{null}}}
    *
    */
-  def storeMsiSearch(search: MSISearch, storerContext: StorerContext): Int = {
+  def storeMsiSearch(search: MSISearch, storerContext: StorerContext): Long = {
 
     if (search == null) {
       throw new IllegalArgumentException("MsiSearch is mandatory")
@@ -356,10 +356,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     val knownMsiSearch = knownMsiSearchs.get(omMsiSearchId)
 
     if (knownMsiSearch.isDefined) {
-      knownMsiSearch.get.getId.intValue
+      knownMsiSearch.get.getId
     } else {
 
-      if (omMsiSearchId > 0) {
+      if (omMsiSearchId > 0L) {
         val foundMsiSearch = msiEm.find(classOf[MsiSearch], omMsiSearchId)
 
         if (foundMsiSearch == null) {
@@ -368,9 +368,9 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         knownMsiSearchs += omMsiSearchId -> foundMsiSearch
 
-        foundMsiSearch.getId.intValue
+        foundMsiSearch.getId
       } else {
-        var msiSearchPK: Int = -1
+        var msiSearchPK: Long = -1L
 
         val msiSearch = new MsiSearch()
         msiSearch.setDate(new Timestamp(search.date.getTime))
@@ -382,7 +382,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         // TODO handle serializedProperties
 
-        msiSearch.setSubmittedQueriesCount(Integer.valueOf(search.submittedQueriesCount))
+        msiSearch.setSubmittedQueriesCount(search.submittedQueriesCount)
         msiSearch.setTitle(search.title)
         msiSearch.setUserEmail(search.userEmail)
         msiSearch.setUserName(search.userName)
@@ -391,7 +391,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         val peaklist = search.peakList
         val omPeaklistId = peaklist.id
 
-        if (omPeaklistId <= 0) {
+        if (omPeaklistId <= 0L) {
           this.getOrBuildPeaklistWriter(storerContext).insertPeaklist(peaklist, storerContext)
         }
 
@@ -409,10 +409,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         logger.trace("MsiSearch {" + omMsiSearchId + "} persisted")
 
-        val obj = msiSearch.getId // Try to retrieve persisted Primary Key (after FLUSH)
+        val generatedPK = msiSearch.getId // Try to retrieve persisted Primary Key (after FLUSH)
 
-        if ((obj != null) && (obj.intValue > 0)) {
-          msiSearchPK = obj.intValue
+        if (generatedPK > 0L) {
+          msiSearchPK =generatedPK
 
           search.id = msiSearchPK
 
@@ -431,7 +431,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
   /**
    * @param msiSearchId Id of MsiSearch, can accept "In memory" OM Id or Msi MsiSearch Primary key.
    */
-  private def retrieveStoredMsiSearch(storerContext: StorerContext, msiSearchId: Int): MsiSearch = {
+  private def retrieveStoredMsiSearch(storerContext: StorerContext, msiSearchId: Long): MsiSearch = {
     val knownMsiSearches = storerContext.getEntityCache(classOf[MsiSearch])
 
     val knownMsiSearch = knownMsiSearches.get(msiSearchId)
@@ -526,7 +526,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
   /**
    * @param peaklistId Id of PeakList, can accept "In memory" OM Id or Msi PeakList Primary key.
    */
-  private def retrieveStoredPeaklist(storerContext: StorerContext, peaklistId: Int): MsiPeaklist = {
+  private def retrieveStoredPeaklist(storerContext: StorerContext, peaklistId: Long): MsiPeaklist = {
     val knownPeaklists = storerContext.getEntityCache(classOf[MsiPeaklist])
 
     val knownPeaklist = knownPeaklists.get(peaklistId)
@@ -568,7 +568,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     var msiPeaklistSoftware: MsiPeaklistSoftware = null
 
-    if (omPeakListSoftwareId > 0) {
+    if (omPeakListSoftwareId > 0L) {
       msiPeaklistSoftware = msiEm.find(classOf[MsiPeaklistSoftware], omPeakListSoftwareId)
     }
 
@@ -576,7 +576,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       msiPeaklistSoftware = msiPeaklistSoftwareRepo.findPeaklistSoftForNameAndVersion(msiEm, peaklistSoftware.name, peaklistSoftware.version)
 
       if (msiPeaklistSoftware != null) {
-        peaklistSoftware.id = msiPeaklistSoftware.getId.intValue // Update OM entity with persisted Primary key
+        peaklistSoftware.id = msiPeaklistSoftware.getId // Update OM entity with persisted Primary key
       }
 
     }
@@ -592,7 +592,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         msiEm.persist(msiPeaklistSoftware)
         logger.trace("Msi PeaklistSoftware #" + udsPeaklistSoftware.getId + " persisted")
 
-        peaklistSoftware.id = udsPeaklistSoftware.getId.intValue // Update OM entity with persisted Primary key        
+        peaklistSoftware.id = udsPeaklistSoftware.getId // Update OM entity with persisted Primary key        
       }
 
     }
@@ -621,11 +621,11 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     val searchSettings = search.searchSettings
     val omSearchSettingsId = searchSettings.id
 
-    if (omSearchSettingsId > 0) {
+    if (omSearchSettingsId > 0L) {
       msiEm.getReference(classOf[MsiSearchSetting], omSearchSettingsId) // Must exist in Msi Db if OM Id > 0
     } else {
       val msiSearchSetting = new MsiSearchSetting()
-      msiSearchSetting.setIsDecoy(java.lang.Boolean.valueOf(searchSettings.isDecoy))
+      msiSearchSetting.setIsDecoy(searchSettings.isDecoy)
       msiSearchSetting.setMaxMissedCleavages(Integer.valueOf(searchSettings.maxMissedCleavages))
       msiSearchSetting.setPeptideChargeStates(searchSettings.ms1ChargeStates)
       msiSearchSetting.setPeptideMassErrorTolerance(searchSettings.ms1ErrorTol)
@@ -650,10 +650,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       msiEm.persist(msiSearchSetting)
       logger.trace("Msi SearchSetting {" + omSearchSettingsId + "} persisted")
 
-      val obj = msiSearchSetting.getId // Try to retrieve persisted Primary Key
+      val generatedPK = msiSearchSetting.getId // Try to retrieve persisted Primary Key
 
-      if ((obj != null) && (obj.intValue > 0)) {
-        searchSettings.id = obj.intValue
+      if (generatedPK > 0L) {
+        searchSettings.id = generatedPK
       } else {
         logger.warn("Cannot retrieve Primary Key of SearchSettings " + omSearchSettingsId)
       }
@@ -661,7 +661,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       /* Task done after persisting msiSearchSetting */
       for (seqDatabase <- searchSettings.seqDatabases) {
         val msiSearchSettingsSeqDatabaseMap = new MsiSearchSettingsSeqDatabaseMap()
-        msiSearchSettingsSeqDatabaseMap.setSearchedSequencesCount(Integer.valueOf(search.searchedSequencesCount))
+        msiSearchSettingsSeqDatabaseMap.setSearchedSequencesCount(search.searchedSequencesCount)
 
         // TODO handle serializedProperties
 
@@ -712,7 +712,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     var msiInstrumentConfig: MsiInstrumentConfig = null
 
-    if (instrumentConfig.id > 0) {
+    if (instrumentConfig.id > 0L) {
       msiInstrumentConfig = msiEm.find(classOf[MsiInstrumentConfig], instrumentConfig.id)
     }
 
@@ -804,7 +804,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     } else {
       var msiSeqDatabase: MsiSeqDatabase = null
 
-      if (omSeqDatabaseId > 0) {
+      if (omSeqDatabaseId > 0L) {
         /* Try to load from Msi Db by Id */
         msiSeqDatabase = msiEm.find(classOf[MsiSeqDatabase], omSeqDatabaseId)
       }
@@ -851,10 +851,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
       knownSeqDatabases += omSeqDatabaseId -> msiSeqDatabase
 
-      val obj = msiSeqDatabase.getId // Try to retrieve persisted Primary Key
+      val generatedPK = msiSeqDatabase.getId // Try to retrieve persisted Primary Key
 
-      if ((obj != null) && (obj.intValue > 0)) {
-        val msiSeqDatabasePK = obj.intValue
+      if (generatedPK > 0L) {
+        val msiSeqDatabasePK = generatedPK
 
         seqDatabase.id = msiSeqDatabasePK
 
@@ -893,7 +893,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     } else {
       var msiPtmSpecificity: MsiPtmSpecificity = null
 
-      if (ptmDefinition.id > 0) {
+      if (ptmDefinition.id > 0L) {
         /* Try to load from Msi Db by Id */
         msiPtmSpecificity = msiEm.find(classOf[MsiPtmSpecificity], ptmDefinition.id)
       }
@@ -949,13 +949,13 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     }
 
     /**
-     * Build a Java List<Integer> from a Scala Collection[Int].
+     * Build a Java List<Long> from a Scala Collection[Long].
      */
-    def buildIdsList(omIds: Traversable[Int]): java.util.List[java.lang.Integer] = {
-      val javaIds = new java.util.ArrayList[java.lang.Integer](omIds.size)
+    def buildIdsList(omIds: Traversable[Long]): java.util.List[java.lang.Long] = {
+      val javaIds = new java.util.ArrayList[java.lang.Long](omIds.size)
 
       for (omId <- omIds) {
-        javaIds.add(Integer.valueOf(omId))
+        javaIds.add(java.lang.Long.valueOf(omId))
       }
 
       javaIds
@@ -967,7 +967,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     /* These are mutable Collections : found and created Peptides are removed by the algo */
     val remainingPeptides = mutable.Map.empty[PeptideIdent, Peptide]
-    val remainingOmPeptidesIds = mutable.Set.empty[Int] // Keep OM Peptides whose Id > 0
+    val remainingOmPeptidesIds = mutable.Set.empty[Long] // Keep OM Peptides whose Id > 0
 
     for (peptide <- peptides) {
       val peptIdent = new PeptideIdent(peptide.sequence, peptide.ptmString)
@@ -977,7 +977,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         val omPeptideId = peptide.id
 
-        if (omPeptideId > 0) {
+        if (omPeptideId > 0L) {
           remainingOmPeptidesIds += omPeptideId
         }
 
@@ -994,7 +994,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       if ((foundMsiPeptides != null) && !foundMsiPeptides.isEmpty) {
 
         for (msiPeptide <- foundMsiPeptides) {
-          val peptideId = msiPeptide.getId.intValue
+          val peptideId = msiPeptide.getId
           val peptIdent = new PeptideIdent(msiPeptide.getSequence, msiPeptide.getPtmString)
 
           msiPeptides += peptIdent -> msiPeptide
@@ -1065,7 +1065,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         val omPeptide = remainingPeptides.remove(peptIdent)
         if (omPeptide.isDefined) {
           /* PS transaction is committed by persistPsPeptides() : Primary Keys of persisted PS Peptide must be OK here */
-          omPeptide.get.id = psPeptide.getId.intValue // Update OM entity with persisted Primary key
+          omPeptide.get.id = psPeptide.getId // Update OM entity with persisted Primary key
         }
 
       } // End loop for each createdPsPeptide => create in Msi
@@ -1192,42 +1192,42 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       knownMsiPeptideMatch.get
     } else {
 
-      if (omPeptideMatchId > 0) {
+      if (omPeptideMatchId > 0L) {
         throw new UnsupportedOperationException("Updating existing PeptideMatch #" + omPeptideMatchId + " is not supported")
       } else {
         val msiPeptideMatch = new MsiPeptideMatch()
-        msiPeptideMatch.setDeltaMoz(peptideMatch.deltaMoz)
+        msiPeptideMatch.setDeltaMoz(java.lang.Float.valueOf(peptideMatch.deltaMoz))
         msiPeptideMatch.setFragmentMatchCount(Integer.valueOf(peptideMatch.fragmentMatchesCount))
-        msiPeptideMatch.setIsDecoy(java.lang.Boolean.valueOf(peptideMatch.isDecoy))
-        msiPeptideMatch.setMissedCleavage(Integer.valueOf(peptideMatch.missedCleavage))
+        msiPeptideMatch.setIsDecoy(peptideMatch.isDecoy)
+        msiPeptideMatch.setMissedCleavage(peptideMatch.missedCleavage)
 
         val msiPeptide = storerContext.msiPeptides.get(new PeptideIdent(peptideMatch.peptide.sequence, peptideMatch.peptide.ptmString))
 
-        val msiPeptideId: Int =
+        val msiPeptideId: Long =
           if (msiPeptide.isDefined) {
-            msiPeptide.get.getId.intValue
+            msiPeptide.get.getId
           } else {
-            -1
+            -1L
           }
 
-        if (msiPeptideId <= 0) {
+        if (msiPeptideId <= 0L) {
           throw new IllegalArgumentException("Unknown MSIdb Peptide Id: " + msiPeptideId)
         } else {
-          msiPeptideMatch.setPeptideId(Integer.valueOf(msiPeptideId))
+          msiPeptideMatch.setPeptideId(msiPeptideId)
         }
 
         msiPeptideMatch.setRank(Integer.valueOf(peptideMatch.rank))
 
         msiPeptideMatch.setResultSet(msiResultSet) // msiResultSet must be in persistence context
 
-        msiPeptideMatch.setScore(peptideMatch.score)
+        msiPeptideMatch.setScore(java.lang.Float.valueOf(peptideMatch.score))
 
         val msiScoringId = scoringRepo.getScoringIdForType(msiEm, peptideMatch.scoreType)
 
         if (msiScoringId == null) {
           throw new IllegalArgumentException("Scoring [" + peptideMatch.scoreType + "] NOT found in MSIdb")
         } else {
-          msiPeptideMatch.setScoringId(msiScoringId)
+          msiPeptideMatch.setScoringId(msiScoringId.longValue)
         }
 
         val peptideMatchProperties = peptideMatch.properties
@@ -1256,7 +1256,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
           knownMsiBestChild.get
         } else {
 
-          if (bestOmPeptideMatchId > 0) {
+          if (bestOmPeptideMatchId > 0L) {
             val foundBestChild = msiEm.getReference(classOf[MsiPeptideMatch], bestOmPeptideMatchId) // Must exist in Msi Db if OM Id > 0
 
             knownPeptideMatches += bestOmPeptideMatchId -> foundBestChild
@@ -1286,10 +1286,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         logger.trace("Msi PeptideMatch {" + omPeptideMatchId + "} persisted")
 
-        val obj = msiPeptideMatch.getId // Try to retrieve persisted Primary Key
+        val generatedPK = msiPeptideMatch.getId // Try to retrieve persisted Primary Key
 
-        if ((obj != null) && (obj.intValue > 0)) {
-          val msiPeptideMatchPK = obj.intValue
+        if (generatedPK > 0L) {
+          val msiPeptideMatchPK = generatedPK
 
           peptideMatch.id = msiPeptideMatchPK
 
@@ -1333,7 +1333,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       knownMsiMsQuery.get
     } else {
 
-      if (omMsQueryId > 0) {
+      if (omMsQueryId > 0L) {
         val foundMsiMsQuery = msiEm.getReference(classOf[MsiMsQuery], omMsQueryId) // Must exist in Msi Db if OM Id > 0
 
         if (msiSearch != null) {
@@ -1345,8 +1345,8 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         foundMsiMsQuery
       } else {
         val msiMsQuery = new MsiMsQuery()
-        msiMsQuery.setCharge(Integer.valueOf(msQuery.charge))
-        msiMsQuery.setInitialId(Integer.valueOf(msQuery.initialId))
+        msiMsQuery.setCharge(msQuery.charge)
+        msiMsQuery.setInitialId(msQuery.initialId)
         msiMsQuery.setMoz(msQuery.moz)
 
         if (msiSearch == null) {
@@ -1363,7 +1363,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         if (msQuery.isInstanceOf[Ms2Query]) {
           val ms2Query = msQuery.asInstanceOf[Ms2Query]
 
-          var omSpectrumId: Int = ms2Query.spectrumId
+          var omSpectrumId: Long = ms2Query.spectrumId
 
           /* Try to load Spectrum.id from knownSpectrumIdByTitle */
           val spectrumIdByTitle = storerContext.spectrumIdByTitle
@@ -1377,7 +1377,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
           }
 
           // TODO Spectrums should be persisted before RsStorer (with PeakList entity)
-          if (omSpectrumId > 0) {
+          if (omSpectrumId > 0L) {
             val msiSpectrum = msiEm.find(classOf[MsiSpectrum], omSpectrumId)
 
             if (msiSpectrum == null) {
@@ -1405,10 +1405,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         logger.trace("Msi MsQuery {" + omMsQueryId + "} persisted")
 
-        val obj = msiMsQuery.getId // Try to retrieve persisted Primary Key
+        val generatedPK = msiMsQuery.getId // Try to retrieve persisted Primary Key
 
-        if ((obj != null) && (obj.intValue > 0)) {
-          val msiMsQueryPK = obj.intValue
+        if (generatedPK > 0L) {
+          val msiMsQueryPK = generatedPK
 
           msQuery.id = msiMsQueryPK
 
@@ -1442,7 +1442,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     val omProteinMatchId = proteinMatch.id
 
-    if (omProteinMatchId > 0) {
+    if (omProteinMatchId > 0L) {
       throw new UnsupportedOperationException("Updating existing ProteinMatch #" + omProteinMatchId + " is not supported")
     }
 
@@ -1458,11 +1458,11 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     val omProteinId = proteinMatch.getProteinId
 
-    if (omProteinId > 0) {
+    if (omProteinId > 0L) {
 
       val msiBioSequence = loadOrCreateBioSequence(storerContext, omProteinId)
       if (msiBioSequence != null) {
-        msiProteinMatch.setBioSequenceId(msiBioSequence.getId)
+        msiProteinMatch.setBioSequenceId(java.lang.Long.valueOf(msiBioSequence.getId))
       }
 
     } else {
@@ -1476,14 +1476,14 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     }
 
-    msiProteinMatch.setIsLastBioSequence(java.lang.Boolean.valueOf(proteinMatch.isLastBioSequence))
+    msiProteinMatch.setIsLastBioSequence(proteinMatch.isLastBioSequence)
     msiProteinMatch.setCoverage(proteinMatch.coverage)
     msiProteinMatch.setDescription(proteinMatch.description)
     msiProteinMatch.setGeneName(proteinMatch.geneName)
-    msiProteinMatch.setIsDecoy(java.lang.Boolean.valueOf(proteinMatch.isDecoy))
+    msiProteinMatch.setIsDecoy(proteinMatch.isDecoy)
 
     /* PeptideCount fields are handled by HQL query after Msi SequenceMatches creation */
-    msiProteinMatch.setPeptideCount(Integer.valueOf(-1))
+    msiProteinMatch.setPeptideCount(-1)
 
     msiProteinMatch.setPeptideMatchCount(Integer.valueOf(proteinMatch.peptideMatchesCount))
     msiProteinMatch.setResultSet(msiResultSet) // msiResultSet must be in persistence context
@@ -1497,7 +1497,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       if (msiScoringId == null) {
         throw new IllegalArgumentException("Scoring [" + scoreType + "] NOT found in Msi Db")
       } else {
-        msiProteinMatch.setScoringId(msiScoringId)
+        msiProteinMatch.setScoringId(msiScoringId.longValue)
       }
 
     }
@@ -1506,17 +1506,17 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     val omTaxonId = proteinMatch.taxonId
 
-    if (omTaxonId != 0) {
-      msiProteinMatch.setTaxonId(Integer.valueOf(omTaxonId))
+    if (omTaxonId != 0L) {
+      msiProteinMatch.setTaxonId(java.lang.Long.valueOf(omTaxonId))
     }
 
     msiEm.persist(msiProteinMatch)
     logger.trace("Msi ProteinMatch {" + omProteinMatchId + "} persisted")
 
-    val obj = msiProteinMatch.getId // Try to retrieve persisted Primary Key
+    val generatedPK = msiProteinMatch.getId // Try to retrieve persisted Primary Key
 
-    if ((obj != null) && (obj.intValue > 0)) {
-      proteinMatch.id = obj.intValue
+    if (generatedPK > 0L) {
+      proteinMatch.id = generatedPK
     } else {
       logger.warn("Cannot retrieve Primary Key of ProteinMatch " + omProteinMatchId)
     }
@@ -1529,11 +1529,11 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    *
    * @param proteinId BioSequence (Protein) Primary key, must be > 0 and denote on existing BioSequence entity in Pdi Db.
    */
-  def loadOrCreateBioSequence(storerContext: StorerContext, proteinId: Int): MsiBioSequence = {
+  def loadOrCreateBioSequence(storerContext: StorerContext, proteinId: Long): MsiBioSequence = {
 
     checkStorerContext(storerContext)
 
-    if (proteinId <= 0) {
+    if (proteinId <= 0L) {
       throw new IllegalArgumentException("Invalid proteinId")
     }
 
@@ -1582,8 +1582,8 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    */
   def createSequenceMatch(storerContext: StorerContext,
                           sequenceMatch: SequenceMatch,
-                          msiProteinMatchId: Int,
-                          msiResultSetId: Int): MsiSequenceMatch = {
+                          msiProteinMatchId: Long,
+                          msiResultSetId: Long): MsiSequenceMatch = {
 
     checkStorerContext(storerContext)
 
@@ -1591,21 +1591,21 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       throw new IllegalArgumentException("SequenceMatch is null")
     }
 
-    if (msiProteinMatchId <= 0) {
+    if (msiProteinMatchId <= 0L) {
       throw new IllegalArgumentException("Invalid Msi ProteinMatch Id")
     }
 
-    if (msiResultSetId <= 0) {
+    if (msiResultSetId <= 0L) {
       throw new IllegalArgumentException("Invalid Msi ResultSet Id")
     }
 
     /**
      * Retrieves Msi Peptide entity Primary key from given OM Id or Peptide object.
      */
-    def retrieveMsiPeptideId(peptideId: Int, optionalPeptide: Option[Peptide]): Int = {
-      var msiPeptideId: Int = -1
+    def retrieveMsiPeptideId(peptideId: Long, optionalPeptide: Option[Peptide]): Long = {
+      var msiPeptideId: Long = -1L
 
-      if (peptideId > 0) {
+      if (peptideId > 0L) {
         msiPeptideId = peptideId
       } else {
 
@@ -1616,7 +1616,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
           val knownMsiPeptide = storerContext.msiPeptides.get(peptideIdent)
 
           if (knownMsiPeptide.isDefined) {
-            msiPeptideId = knownMsiPeptide.get.getId.intValue
+            msiPeptideId = knownMsiPeptide.get.getId
           }
 
         }
@@ -1629,10 +1629,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     /**
      * Retrieves Msi PeptideMatch entity Primary key from given OM Id.
      */
-    def retrieveMsiPeptideMatchId(peptideMatchId: Int): Int = {
-      var msiPeptideMatchId: Int = -1
+    def retrieveMsiPeptideMatchId(peptideMatchId: Long): Long = {
+      var msiPeptideMatchId: Long = -1L
 
-      if (peptideMatchId > 0) {
+      if (peptideMatchId > 0L) {
         msiPeptideMatchId = peptideMatchId
       } else {
         val knownPeptideMatches = storerContext.getEntityCache(classOf[MsiPeptideMatch])
@@ -1640,7 +1640,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         val knownMsiPeptideMatch = knownPeptideMatches.get(peptideMatchId)
 
         if (knownMsiPeptideMatch.isDefined) {
-          msiPeptideMatchId = knownMsiPeptideMatch.get.getId.intValue
+          msiPeptideMatchId = knownMsiPeptideMatch.get.getId
         }
 
       }
@@ -1649,19 +1649,19 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     }
 
     val msiSequenceMatchPK = new SequenceMatchPK()
-    msiSequenceMatchPK.setProteinMatchId(Integer.valueOf(msiProteinMatchId))
+    msiSequenceMatchPK.setProteinMatchId(msiProteinMatchId)
 
     /* Retrieve Peptide Id from Msi */
     val msiPeptideId = retrieveMsiPeptideId(sequenceMatch.getPeptideId, sequenceMatch.peptide)
 
-    if (msiPeptideId > 0) {
-      msiSequenceMatchPK.setPeptideId(Integer.valueOf(msiPeptideId))
+    if (msiPeptideId > 0L) {
+      msiSequenceMatchPK.setPeptideId(msiPeptideId)
     } else {
       throw new IllegalArgumentException("Unknown MSIdb Peptide Id: " + msiPeptideId)
     }
 
-    msiSequenceMatchPK.setStart(Integer.valueOf(sequenceMatch.start))
-    msiSequenceMatchPK.setStop(Integer.valueOf(sequenceMatch.end))
+    msiSequenceMatchPK.setStart(sequenceMatch.start)
+    msiSequenceMatchPK.setStop(sequenceMatch.end)
 
     val msiSequenceMatch = new MsiSequenceMatch()
     msiSequenceMatch.setId(msiSequenceMatchPK)
@@ -1669,16 +1669,16 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     /* Retrieve best PeptideMatch Id from Msi */
     val msiPeptideMatchId = retrieveMsiPeptideMatchId(sequenceMatch.getBestPeptideMatchId)
 
-    if (msiPeptideMatchId > 0) {
-      msiSequenceMatch.setBestPeptideMatchId(Integer.valueOf(msiPeptideMatchId))
+    if (msiPeptideMatchId > 0L) {
+      msiSequenceMatch.setBestPeptideMatchId(msiPeptideMatchId)
     } else {
       throw new IllegalArgumentException("Unknown MSIdb best PeptideMatch Id: " + msiPeptideMatchId)
     }
 
-    msiSequenceMatch.setIsDecoy(java.lang.Boolean.valueOf(sequenceMatch.isDecoy))
+    msiSequenceMatch.setIsDecoy(sequenceMatch.isDecoy)
     msiSequenceMatch.setResidueAfter(StringUtils.convertCharResidueToString(sequenceMatch.residueAfter))
     msiSequenceMatch.setResidueBefore(StringUtils.convertCharResidueToString(sequenceMatch.residueBefore))
-    msiSequenceMatch.setResultSetId(Integer.valueOf(msiResultSetId))
+    msiSequenceMatch.setResultSetId(msiResultSetId)
 
     // TODO handle serializedProperties
 
@@ -1711,7 +1711,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     assert(msiSearchSetting != null, "MsiSearchSetting is null")
 
     val msiUsedPtm = new MsiUsedPtm()
-    msiUsedPtm.setIsFixed(java.lang.Boolean.valueOf(isFixed))
+    msiUsedPtm.setIsFixed(isFixed)
     msiUsedPtm.setShortName(ptmDefinition.names.shortName)
     // TODO UsedPtm.type field should be removed from Msi Db schema
 
@@ -1749,7 +1749,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     var psPtmSpecificity: PsPtmSpecificity = null
 
-    if (omSpecificityId > 0) {
+    if (omSpecificityId > 0L) {
       psPtmSpecificity = psEm.getReference(classOf[PsPtmSpecificity], omSpecificityId) // Must exist in Ps Db if OM Id > 0
     }
 
@@ -1765,7 +1765,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       val psPeptidePtm = new PsPeptidePtm()
       psPeptidePtm.setAverageMass(locatedPtm.averageMass)
       psPeptidePtm.setMonoMass(locatedPtm.monoMass)
-      psPeptidePtm.setSeqPosition(Integer.valueOf(locatedPtm.seqPosition))
+      psPeptidePtm.setSeqPosition(locatedPtm.seqPosition)
 
       // TODO handle AtomLabel
 
@@ -1779,19 +1779,19 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
   }
 
   private def bindProteinMatchSeqDatabaseMap(storerContext: StorerContext,
-                                             msiProteinMatchId: Int,
-                                             seqDatabaseId: Int,
+                                             msiProteinMatchId: Long,
+                                             seqDatabaseId: Long,
                                              msiResultSet: MsiResultSet) {
 
     checkStorerContext(storerContext)
 
-    assert(msiProteinMatchId > 0, "Invalid Msi ProteinMatch Id")
+    assert(msiProteinMatchId > 0L, "Invalid Msi ProteinMatch Id")
 
     assert(msiResultSet != null, "MsiResultSet is null")
 
     val msiEm = storerContext.getMSIDbConnectionContext.getEntityManager
 
-    def retrieveMsiSeqDatabase(seqDatabseId: Int): MsiSeqDatabase = {
+    def retrieveMsiSeqDatabase(seqDatabseId: Long): MsiSeqDatabase = {
 
       val knownSeqDatabases = storerContext.getEntityCache(classOf[MsiSeqDatabase])
       val knownMsiSeqDatabase = knownSeqDatabases.get(seqDatabseId)
@@ -1800,7 +1800,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         knownMsiSeqDatabase.get
       } else {
 
-        if (seqDatabseId > 0) {
+        if (seqDatabseId > 0L) {
           val foundMsiSeqDatabase = msiEm.find(classOf[MsiSeqDatabase], seqDatabseId)
 
           if (foundMsiSeqDatabase != null) {
@@ -1822,7 +1822,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       logger.warn("Unknown Msi SeqDatabase Id: " + seqDatabaseId)
     } else {
       val proteinMatchSeqDatabaseMapPK = new ProteinMatchSeqDatabaseMapPK()
-      proteinMatchSeqDatabaseMapPK.setProteinMatchId(Integer.valueOf(msiProteinMatchId))
+      proteinMatchSeqDatabaseMapPK.setProteinMatchId(msiProteinMatchId)
       proteinMatchSeqDatabaseMapPK.setSeqDatabaseId(msiSeqDatabase.getId)
 
       val msiProteinMatchSeqDatabase = new MsiProteinMatchSeqDatabaseMap()

@@ -24,6 +24,7 @@ import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.repository.util.PostgresUtils
 import fr.proline.util.sql.encodeRecordForPgCopy
+import fr.proline.util.primitives._
 
 private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
@@ -174,7 +175,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       
       // Retrieve generated peptide match ids
       val pepMatchIdByKey = msiEzDBC.select( pepMatchUniqueFKsQuery, rsId) { r =>
-          (r.nextInt + "%" + r.nextInt -> r.nextInt)
+          (toLong(r.nextAny) + "%" + toLong(r.nextAny) -> toLong(r.nextAny))
         } toMap
              
         
@@ -288,7 +289,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   
       // Retrieve generated protein match ids
       val protMatchIdByAc = msiEzDBC.select( protMatchUniqueFKQuery, rsId) { r =>
-        (r.nextString -> r.nextInt)
+        (r.nextString -> toLong(r.nextAny))
       } toMap
   
       // Iterate over protein matches to update them

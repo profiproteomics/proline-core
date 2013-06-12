@@ -20,7 +20,7 @@ class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptid
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 
-  def getPeptidesAsOptions(peptideIds: Seq[Int]): Array[Option[Peptide]] = {
+  def getPeptidesAsOptions(peptideIds: Seq[Long]): Array[Option[Peptide]] = {
     var foundOMPepBuilder = Array.newBuilder[Option[Peptide]]
     peptideIds foreach (id => {
       val psPep = psDbCtx.getEntityManager.find(classOf[fr.proline.core.orm.ps.Peptide], id);
@@ -32,7 +32,7 @@ class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptid
     return foundOMPepBuilder.result()
   }
 
-  def getPeptides(peptideIds: Seq[Int]): Array[Peptide] = {
+  def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
     this.getPeptidesAsOptions(peptideIds).filter(_ != None).map(_.get)
   }
 

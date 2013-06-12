@@ -35,7 +35,7 @@ class OMComparatorUtilTest extends DatabaseTestCase {
     val psEm = emf.createEntityManager
 
     try {
-      val pepPtm: PeptidePtm = psEm.find(classOf[PeptidePtm], 1)
+      val pepPtm: PeptidePtm = psEm.find(classOf[PeptidePtm], java.lang.Long.valueOf(1L))
 
       val ptmEvi = new PtmEvidence(
         ionType = IonTypes.Precursor,

@@ -25,7 +25,7 @@ class SQLResultSummaryProvider(
 
   val RSMCols = MsiDbResultSummaryTable.columns
 
-  def getResultSummaries(rsmIds: Seq[Int], loadResultSet: Boolean): Array[ResultSummary] = {
+  def getResultSummaries(rsmIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
 
     import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
@@ -50,12 +50,12 @@ class SQLResultSummaryProvider(
       val rsms = msiEzDBC.select(rsmQuery) { r =>
     
         // Retrieve some vars
-        val rsmId: Int = toInt(r.getAnyVal(RSMCols.ID))
+        val rsmId: Long = toLong(r.getAny(RSMCols.ID))
         val rsmPepSets = inMemPepSetProvider.getResultSummaryPeptideSets(rsmId)
         val rsmPepInsts = rsmPepSets.flatMap(_.getPeptideInstances).distinct
         val rsmProtSets = protSetsByRsmId.getOrElse(rsmId, Array.empty[ProteinSet])
     
-        val decoyRsmId = r.getIntOrElse(RSMCols.DECOY_RESULT_SUMMARY_ID, 0)
+        val decoyRsmId = r.getLongOrElse(RSMCols.DECOY_RESULT_SUMMARY_ID, 0L)
         //val decoyRsmId = if( decoyRsmIdField != null ) decoyRsmIdField.asInstanceOf[Int] else 0
         
         val isQuantified = r.getBooleanOrElse(RSMCols.IS_QUANTIFIED,false)
@@ -64,7 +64,7 @@ class SQLResultSummaryProvider(
         val propertiesAsJSON = r.getString(RSMCols.SERIALIZED_PROPERTIES)
         val properties = if (propertiesAsJSON != null) Some(parse[ResultSummaryProperties](propertiesAsJSON)) else None
         
-        val rsId = r.getInt(RSMCols.RESULT_SET_ID)
+        val rsId = toLong(r.getAny(RSMCols.RESULT_SET_ID))
         
         var rsAsOpt = Option.empty[ResultSet]
         if (loadResultSet) {
@@ -105,13 +105,13 @@ class SQLResultSummaryProvider(
 
   }
 
-  def getResultSummariesAsOptions(rsmIds: Seq[Int], loadResultSet: Boolean): Array[Option[ResultSummary]] = {
+  def getResultSummariesAsOptions(rsmIds: Seq[Long], loadResultSet: Boolean): Array[Option[ResultSummary]] = {
     val rsms = this.getResultSummaries(rsmIds, loadResultSet)
     val rsmById = rsms.map { rsm => rsm.id -> rsm } toMap;
     rsmIds.map { rsmById.get(_) } toArray
   }
 
-  def getResultSetsResultSummaries(rsIds: Seq[Int], loadResultSet: Boolean): Array[ResultSummary] = {
+  def getResultSetsResultSummaries(rsIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
     throw new Exception("NYI")
     null
   }

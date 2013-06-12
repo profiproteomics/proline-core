@@ -21,7 +21,7 @@ public final class TaxonRepository {
      *            <code>Collection</code> of Taxon Ids to retrieve (must not be <code>null</code>).
      * @return List of found Taxons (can be empty if none found).
      */
-    public static List<Taxon> findTaxonsForIds(final EntityManager pdiEm, final Collection<Integer> ids) {
+    public static List<Taxon> findTaxonsForIds(final EntityManager pdiEm, final Collection<Long> ids) {
 
 	JPAUtils.checkEntityManager(pdiEm);
 

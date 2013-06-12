@@ -1,75 +1,83 @@
 package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
-import javax.persistence.*;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the quant_label database table.
  * 
  */
 @Entity
-@Table(name="quant_label")
+@Table(name = "quant_label")
 public class QuantitationLabel implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	private String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    private String name;
 
-	private String type;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//bi-directional many-to-one association to QuantMethod
+    private String type;
+
+    // bi-directional many-to-one association to QuantMethod
     @ManyToOne
-	@JoinColumn(name="quant_method_id")
-	private QuantitationMethod method;
+    @JoinColumn(name = "quant_method_id")
+    private QuantitationMethod method;
 
     public QuantitationLabel() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getName() {
+	return this.name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public String getType() {
-		return this.type;
-	}
+    public String getType() {
+	return this.type;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public void setType(String type) {
+	this.type = type;
+    }
 
-	public QuantitationMethod getMethod() {
-		return this.method;
-	}
+    public QuantitationMethod getMethod() {
+	return this.method;
+    }
 
-	public void setMethod(QuantitationMethod method) {
-		this.method = method;
-	}
-	
+    public void setMethod(QuantitationMethod method) {
+	this.method = method;
+    }
+
 }

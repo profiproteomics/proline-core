@@ -72,7 +72,7 @@ object FragmentIonType extends InMemoryIdGen {
 }
 case class FragmentIonType private (
   
-  var id: Int = FragmentIonType.generateNewId(),
+  var id: Long = FragmentIonType.generateNewId(),
   
   // Required fields
   val ionSeries: FragmentIonSeries.Value,

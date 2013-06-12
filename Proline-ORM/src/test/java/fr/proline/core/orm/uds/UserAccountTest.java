@@ -1,7 +1,5 @@
 package fr.proline.core.orm.uds;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.*;
 
 import java.util.List;
@@ -33,12 +31,10 @@ public class UserAccountTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	//"/fr/proline/core/orm/uds/Project_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/uds-db_init_dataset.xml",
-		"/dbunit/datasets/uds/Project_Dataset.xml"
-	};
-	
+	// "/fr/proline/core/orm/uds/Project_Dataset.xml"
+	String[] datasets = new String[] { "/dbunit/datasets/uds-db_init_dataset.xml",
+		"/dbunit/datasets/uds/Project_Dataset.xml" };
+
 	loadCompositeDataSet(datasets);
     }
 
@@ -80,9 +76,9 @@ public class UserAccountTest extends DatabaseTestCase {
 		    "Select e from UserAccount e where e.login = :login", UserAccount.class);
 	    query.setParameter("login", "joe");
 	    UserAccount account = query.getSingleResult();
-	    assertThat(account, notNullValue());
+	    assertNotNull(account);
 	    List<Project> ownedProjects = ProjectRepository.findOwnedProjects(udsEm, account.getId());
-	    assertThat(ownedProjects.size(), is(1));
+	    assertEquals(ownedProjects.size(), 1);
 	} finally {
 
 	    if (udsEm != null) {
@@ -104,7 +100,7 @@ public class UserAccountTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    UserAccount user = udsEm.find(UserAccount.class, 2);
+	    UserAccount user = udsEm.find(UserAccount.class, Long.valueOf(2L));
 	    TypedQuery<UserAccount> query = udsEm.createQuery("select u from UserAccount u order by u.id",
 		    UserAccount.class);
 	    List<UserAccount> users = query.getResultList();

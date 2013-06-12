@@ -6,6 +6,8 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -25,10 +27,10 @@ import javax.persistence.Table;
 
 	@NamedQuery(name = "findPdiBioSequencesForCrcs", query = "select distinct bs from fr.proline.core.orm.pdi.BioSequence bs"
 		+ " left join fetch bs.proteinIdentifiers" + " where upper(bs.crc64) in :crcs"),
-		
-	@NamedQuery(name = "findPdiBioSequenceForAccAndSeqDB", query = "select  bs from fr.proline.core.orm.pdi.BioSequence bs, fr.proline.core.orm.pdi.ProteinIdentifier pi, " +
-			       " fr.proline.core.orm.pdi.SequenceDbEntry se, fr.proline.core.orm.pdi.SequenceDbInstance si, fr.proline.core.orm.pdi.DbEntryProteinIdentifierMap dbepi " +
-						 " where dbepi.proteinIdentifier = pi  and  dbepi.dbEntry = se and se.sequenceDbInstance = si and se.bioSequence = bs and pi.value = :acc and si.id = :seqDbInstId ")
+
+	@NamedQuery(name = "findPdiBioSequenceForAccAndSeqDB", query = "select  bs from fr.proline.core.orm.pdi.BioSequence bs, fr.proline.core.orm.pdi.ProteinIdentifier pi, "
+		+ " fr.proline.core.orm.pdi.SequenceDbEntry se, fr.proline.core.orm.pdi.SequenceDbInstance si, fr.proline.core.orm.pdi.DbEntryProteinIdentifierMap dbepi "
+		+ " where dbepi.proteinIdentifier = pi  and  dbepi.dbEntry = se and se.sequenceDbInstance = si and se.bioSequence = bs and pi.value = :acc and si.id = :seqDbInstId ")
 
 })
 @Table(name = "bio_sequence")
@@ -38,9 +40,10 @@ public class BioSequence implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
-    private String alphabet;
+    @Enumerated(EnumType.STRING)
+    private Alphabet alphabet;
 
     private String crc64;
 
@@ -62,20 +65,20 @@ public class BioSequence implements Serializable {
     public BioSequence() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public String getAlphabet() {
-	return this.alphabet;
+    public Alphabet getAlphabet() {
+	return alphabet;
     }
 
-    public void setAlphabet(String alphabet) {
-	this.alphabet = alphabet;
+    public void setAlphabet(final Alphabet pAlphabet) {
+	alphabet = pAlphabet;
     }
 
     public String getCrc64() {
@@ -151,8 +154,8 @@ public class BioSequence implements Serializable {
     }
 
     public void removeProteinIdentifier(final ProteinIdentifier protIdentifier) {
-	final Set<ProteinIdentifier> protIdentifiers = getProteinIdentifiers();
 
+	final Set<ProteinIdentifier> protIdentifiers = getProteinIdentifiers();
 	if (protIdentifiers != null) {
 	    protIdentifiers.remove(protIdentifier);
 	}

@@ -6,7 +6,7 @@ import fr.proline.core.om.storer.lcms.IMapAlnSetStorer
 
 class JPAMapAlnSetStorer( lcmsDbCtx: DatabaseConnectionContext ) extends IMapAlnSetStorer {
   
-  def storeMapAlnSets( mapAlnSets: Seq[MapAlignmentSet], mapSetId: Int, alnRefMapId: Int ): Unit = {
+  def storeMapAlnSets( mapAlnSets: Seq[MapAlignmentSet], mapSetId: Long, alnRefMapId: Long): Unit = {
     throw new Exception("not yet implemented")
     
 

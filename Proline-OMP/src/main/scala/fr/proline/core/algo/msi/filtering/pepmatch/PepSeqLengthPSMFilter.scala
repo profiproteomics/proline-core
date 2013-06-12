@@ -4,6 +4,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import scala.collection.Seq
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.filtering._
+import fr.proline.util.primitives._
 
 class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFilter {
   
@@ -40,7 +41,7 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
   def getThresholdValue(): AnyVal = minSeqLength
   
   def setThresholdValue( currentVal: AnyVal ){
-    minSeqLength = currentVal.asInstanceOf[Int]
+    minSeqLength = toInt(currentVal)
   }
    
   def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {

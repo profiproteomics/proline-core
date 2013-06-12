@@ -6,8 +6,6 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
@@ -20,6 +18,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "raw_file")
 public class RawFile implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -34,10 +33,10 @@ public class RawFile implements Serializable {
     private String extension;
 
     @Column(name = "instrument_id")
-    private Integer instrumentId;
+    private long instrumentId;
 
     @Column(name = "owner_id")
-    private Integer ownerId;
+    private long ownerId;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -59,11 +58,23 @@ public class RawFile implements Serializable {
     }
 
     public Timestamp getCreationTimestamp() {
-	return this.creationTimestamp;
+	Timestamp result = null;
+
+	if (creationTimestamp != null) {
+	    result = (Timestamp) creationTimestamp.clone();
+	}
+
+	return result;
     }
 
-    public void setCreationTimestamp(Timestamp creationTimestamp) {
-	this.creationTimestamp = creationTimestamp;
+    public void setCreationTimestamp(final Timestamp pCreationTimestamp) {
+
+	if (pCreationTimestamp == null) {
+	    creationTimestamp = null;
+	} else {
+	    creationTimestamp = (Timestamp) pCreationTimestamp.clone();
+	}
+
     }
 
     public String getDirectory() {
@@ -82,20 +93,20 @@ public class RawFile implements Serializable {
 	this.extension = extension;
     }
 
-    public Integer getInstrumentId() {
-	return this.instrumentId;
+    public long getInstrumentId() {
+	return instrumentId;
     }
 
-    public void setInstrumentId(Integer instrumentId) {
-	this.instrumentId = instrumentId;
+    public void setInstrumentId(final long pInstrumentId) {
+	instrumentId = pInstrumentId;
     }
 
-    public Integer getOwnerId() {
-	return this.ownerId;
+    public long getOwnerId() {
+	return ownerId;
     }
 
-    public void setOwnerId(Integer ownerId) {
-	this.ownerId = ownerId;
+    public void setOwnerId(final long pOwnerId) {
+	ownerId = pOwnerId;
     }
 
     public String getSerializedProperties() {

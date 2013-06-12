@@ -228,7 +228,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     protSetFilterRule: IOptimizableProteinSetFilter,
     targetProtSets: Array[ProteinSet],
     decoyProtSets: Array[ProteinSet],
-    protSetValStatusMap: Map[Int,Boolean],
+    protSetValStatusMap: Map[Long,Boolean],
     computeRocPointFn: () => ValidationResult
     ): Option[ValidationResults] = {
     

@@ -5,11 +5,11 @@ import fr.proline.core.om.model.msi.MSISearch
 
 trait IMSISearchProvider {
 
-  def getMSISearchesAsOptions( msiSearchIds: Seq[Int] ): Array[Option[MSISearch]]
+  def getMSISearchesAsOptions( msiSearchIds: Seq[Long] ): Array[Option[MSISearch]]
   
-  def getMSISearches( msiSearchIds: Seq[Int] ): Array[MSISearch]
+  def getMSISearches( msiSearchIds: Seq[Long] ): Array[MSISearch]
   
-  def getMSISearch( msiSearchId:Int ): Option[MSISearch] = { getMSISearchesAsOptions( Array(msiSearchId) )(0) }
+  def getMSISearch( msiSearchId:Long ): Option[MSISearch] = { getMSISearchesAsOptions( Array(msiSearchId) )(0) }
  
   
 }

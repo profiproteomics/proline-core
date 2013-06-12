@@ -19,11 +19,12 @@ import fr.proline.util.StringUtils;
 @Entity(name = "fr.proline.core.orm.msi.PtmSpecificity")
 @Table(name = "ptm_specificity")
 public class PtmSpecificity implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     // Msi PtmSpecificity Id are not generated (taken from Ps PtmSpecificity entity)
-    private Integer id;
+    private long id;
 
     private String location;
 
@@ -53,25 +54,26 @@ public class PtmSpecificity implements Serializable {
 	setId(psPtmSpecificity.getId());
 	setLocation(psPtmSpecificity.getLocation());
 
-	final String resid = psPtmSpecificity.getResidue();
+	final String psPtmSpecificityResidu = psPtmSpecificity.getResidue();
 
-	if (StringUtils.isEmpty(resid)) {
+	if (StringUtils.isEmpty(psPtmSpecificityResidu)) {
 	    setResidue(null);
 	} else {
-	    setResidue(resid);
+	    setResidue(psPtmSpecificityResidu);
 	}
 
+	// TODO set SerializedProperties when fields is available in PS PtmSpecificity
     }
 
     public PtmSpecificity() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getLocation() {
@@ -102,31 +104,31 @@ public class PtmSpecificity implements Serializable {
 	return this.usedPtms;
     }
 
-    public void setUsedPtms(final Set<UsedPtm> usedPtms) {
-	this.usedPtms = usedPtms;
+    public void setUsedPtms(final Set<UsedPtm> pUsedPtms) {
+	usedPtms = pUsedPtms;
     }
 
     public void addUsedPtm(final UsedPtm usedPtm) {
 
 	if (usedPtm != null) {
-	    Set<UsedPtm> ptms = getUsedPtms();
+	    Set<UsedPtm> localUsedPtms = getUsedPtms();
 
-	    if (ptms == null) {
-		ptms = new HashSet<UsedPtm>();
+	    if (localUsedPtms == null) {
+		localUsedPtms = new HashSet<UsedPtm>();
 
-		setUsedPtms(ptms);
+		setUsedPtms(localUsedPtms);
 	    }
 
-	    ptms.add(usedPtm);
+	    localUsedPtms.add(usedPtm);
 	}
 
     }
 
     public void removeUsedPtms(final UsedPtm usedPtm) {
-	final Set<UsedPtm> ptms = getUsedPtms();
 
-	if (ptms != null) {
-	    ptms.remove(usedPtm);
+	final Set<UsedPtm> localUsedPtms = getUsedPtms();
+	if (localUsedPtms != null) {
+	    localUsedPtms.remove(usedPtm);
 	}
 
     }

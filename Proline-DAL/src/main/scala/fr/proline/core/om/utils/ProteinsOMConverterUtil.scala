@@ -15,8 +15,8 @@ import fr.proline.core.om.model.msi.Protein
  */ 
 class ProteinsOMConverterUtil ( useCachedObject: Boolean = true ){  
   
-  val seqDatabaseCache = new HashMap[Int, fr.proline.core.om.model.msi.SeqDatabase]
-  val proteinCache = new HashMap[Int, fr.proline.core.om.model.msi.Protein]
+  val seqDatabaseCache = new HashMap[Long, fr.proline.core.om.model.msi.SeqDatabase]
+  val proteinCache = new HashMap[Long, fr.proline.core.om.model.msi.Protein]
   
   type PdiBioSequence = fr.proline.core.orm.pdi.BioSequence
   
@@ -66,7 +66,7 @@ class ProteinsOMConverterUtil ( useCachedObject: Boolean = true ){
 	      					mass = pdiBioSequence.getMass,
 	      					pi = pdiBioSequence.getPi,
 	      					crc64 = pdiBioSequence.getCrc64,
-	      					alphabet = pdiBioSequence.getAlphabet.trim()
+	      					alphabet = pdiBioSequence.getAlphabet.name
 	      )
 
 	  

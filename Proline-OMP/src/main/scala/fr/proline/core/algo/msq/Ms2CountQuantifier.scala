@@ -17,9 +17,9 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
                                   ): Array[MasterQuantPeptide] = {
     
     // Map some values
-    val rsIdByRsmId = new HashMap[Int,Int]
-    val rsmById = new HashMap[Int,ResultSummary]
-    val pepInstIdByRsIdAndPepId = new HashMap[(Int,Int),Int]
+    val rsIdByRsmId = new HashMap[Long,Long]
+    val rsmById = new HashMap[Long,ResultSummary]
+    val pepInstIdByRsIdAndPepId = new HashMap[(Long,Long),Long]
     
     for( rsm <- resultSummaries ) {
       val rsId = rsm.getResultSetId
@@ -37,7 +37,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
                      } toMap
     
     // Retrieve all peptide matches
-    val peptideMatchById = new HashMap[Int,PeptideMatch]()
+    val peptideMatchById = new HashMap[Long,PeptideMatch]()
     for( resultSummary <- resultSummaries ) {
       
       val resultSetAsOpt = resultSummary.resultSet
@@ -79,22 +79,22 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
       val childPepMatchesByCharge = childPeptideMatches.groupBy { _.msQuery.charge }
       
       val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]
-      val quantPepIonsByQcId = new HashMap[Int,ArrayBuffer[QuantPeptideIon]]
+      val quantPepIonsByQcId = new HashMap[Long,ArrayBuffer[QuantPeptideIon]]
       
       for( (charge,childPepMatchGroup) <- childPepMatchesByCharge ) {
         
         val childPepMatchesByRsId = childPepMatchGroup.groupBy { _.resultSetId }        
-        val quantPepIonByQcId = new HashMap[Int,QuantPeptideIon]
+        val quantPepIonByQcId = new HashMap[Long,QuantPeptideIon]
         var bestPepMatchScore = 0f
         var bestPepMatch: PeptideMatch = null
         var bestQCAbundance = 0.0
-        var bestQCId = 0
+        var bestQCId: Long = 0L
         
         for( (rsId,rsPepMatches) <- childPepMatchesByRsId ) {
           
           var bestRsPepMatchScore = 0f
           var bestRsPepMatch: PeptideMatch = null
-          val msQueryIds = new ArrayBuffer[Int]
+          val msQueryIds = new ArrayBuffer[Long]
           
           // Iterate over peptide matches to retrieve the best peptide match for this result set
           for( pepMatch <- rsPepMatches ) {
@@ -165,7 +165,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
       
       }
       
-      val quantPepByQcId = new HashMap[Int,QuantPeptide]
+      val quantPepByQcId = new HashMap[Long,QuantPeptide]
       for( (qcId,quantPepIons) <- quantPepIonsByQcId ) {
         
         // Sum the number of MS2
@@ -218,9 +218,9 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
     for( mergedProtSet <- mergedRSM.proteinSets ) {
       val mergedPepSet = mergedProtSet.peptideSet
       
-      val selectedMQPepIds = new ArrayBuffer[Int]
+      val selectedMQPepIds = new ArrayBuffer[Long]
 
-      val ms2CountSumByQcId = new HashMap[Int,Int]
+      val ms2CountSumByQcId = new HashMap[Long,Int]
       for( mergedPepInst <- mergedPepSet.getPeptideInstances ) {
         val mqp = mqPepByPepInstId( mergedPepInst.id )
         if( mqp.selectionLevel >= 2 ) selectedMQPepIds += mqp.id
@@ -231,7 +231,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
         }
       }
       
-      val quantProteinSetByQcId = new HashMap[Int,QuantProteinSet]
+      val quantProteinSetByQcId = new HashMap[Long,QuantProteinSet]
       for( (qcId,ms2CountSum) <- ms2CountSumByQcId ) {
         quantProteinSetByQcId(qcId) = new QuantProteinSet(
                                             rawAbundance = ms2CountSum,

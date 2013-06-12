@@ -15,7 +15,7 @@ object MSISearch extends InMemoryIdGen
 case class MSISearch (
           
   //Required fields
-  var id: Int,
+  var id: Long,
   val resultFileName: String,
   val submittedQueriesCount: Int,
   var searchSettings: SearchSettings,
@@ -47,7 +47,7 @@ object SearchSettings extends InMemoryIdGen
 case class SearchSettings(
     
   // Required fields
-  var id: Int,
+  var id: Long,
   val softwareName: String,
   val softwareVersion: String,
   val taxonomy: String,
@@ -103,7 +103,7 @@ object Enzyme extends InMemoryIdGen
 case class Enzyme(
     
   // Required fields
-  var id: Int,
+  var id: Long,
   val name: String,
   val cleavageRegexp: Option[String] = None,
   val isIndependant: Boolean = false,
@@ -133,7 +133,7 @@ object SeqDatabase extends InMemoryIdGen
 case class SeqDatabase(
     
   // Required fields
-  var id: Int,
+  var id: Long,
   val name: String,
   val filePath: String,
   val sequencesCount: Int,

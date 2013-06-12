@@ -1,10 +1,8 @@
 package fr.proline.core.orm.msi;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.CoreMatchers.*;
+
 import static org.junit.Assert.*;
-import static org.junit.matchers.JUnitMatchers.hasItems;
 
 import java.util.Collection;
 import java.util.List;
@@ -12,7 +10,6 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,35 +33,31 @@ public class ResultsetTest extends DatabaseTestCase {
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	
-	//"/fr/proline/core/orm/msi/Resultset_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/msi-db_init_dataset.xml",
-		"/dbunit/datasets/msi/Resultset_Dataset.xml"
-	};
+
+	// "/fr/proline/core/orm/msi/Resultset_Dataset.xml"
+	String[] datasets = new String[] { "/dbunit/datasets/msi-db_init_dataset.xml",
+		"/dbunit/datasets/msi/Resultset_Dataset.xml" };
 
 	loadCompositeDataSet(datasets);
     }
 
     @Test
-    public void readMsiSearch() {
+    public void readMsISearch() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, 1);
-	    assertThat(msiSearch, CoreMatchers.notNullValue());
-	    assertThat(msiSearch.getPeaklist().getId(), is(1));
-	    Enzyme enzyme = msiEm.find(Enzyme.class, 1);
+	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(1L));
+	    assertNotNull(msiSearch);
+	    assertEquals(msiSearch.getPeaklist().getId(), 1L);
+	    Enzyme enzyme = msiEm.find(Enzyme.class, Long.valueOf(1L));
 	    assertThat(msiSearch.getSearchSetting().getEnzymes(), hasItems(enzyme));
 	    msiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps();
-	    assertThat(msiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps().size(), is(1));
+	    assertEquals(msiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps().size(), 1);
 	    SearchSettingsSeqDatabaseMap map = msiSearch.getSearchSetting()
 		    .getSearchSettingsSeqDatabaseMaps().iterator().next();
-	    assertThat(map.getSeqDatabase().getName(), is("Swissprot"));
-	    assertEquals(msiSearch.getSearchSetting().getInstrumentConfig().getId(), msiSearch
-		    .getSearchSetting().getInstrumentConfigId());
+	    assertEquals(map.getSeqDatabase().getName(), "Swissprot");
 	} finally {
 
 	    if (msiEm != null) {
@@ -86,12 +79,12 @@ public class ResultsetTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    ResultSet rs = msiEm.find(ResultSet.class, 1);
-	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, 1);
-	    assertThat(rs, CoreMatchers.notNullValue());
-	    assertThat(rs.getMsiSearch(), sameInstance(msiSearch));
-	    assertThat(rs.getChildren().isEmpty(), is(true));
-	    assertThat(rs.getDecoyResultSet(), CoreMatchers.nullValue());
+	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(1L));
+	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(1L));
+	    assertNotNull(rs);
+	    assertSame(rs.getMsiSearch(), msiSearch);
+	    assertTrue(rs.getChildren().isEmpty());
+	    assertNull(rs.getDecoyResultSet());
 	} finally {
 
 	    if (msiEm != null) {
@@ -113,12 +106,12 @@ public class ResultsetTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    ResultSet rs = msiEm.find(ResultSet.class, 2);
-	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, 1);
-	    assertThat(rs, CoreMatchers.notNullValue());
-	    assertThat(rs.getMsiSearch(), is(msiSearch));
-	    assertThat(rs.getChildren().isEmpty(), is(true));
-	    assertThat(rs.getDecoyResultSet(), CoreMatchers.notNullValue());
+	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
+	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(1L));
+	    assertNotNull(rs);
+	    assertEquals(rs.getMsiSearch(), msiSearch);
+	    assertTrue(rs.getChildren().isEmpty());
+	    assertNotNull(rs.getDecoyResultSet());
 	} finally {
 
 	    if (msiEm != null) {
@@ -140,13 +133,13 @@ public class ResultsetTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    ResultSet rs = msiEm.find(ResultSet.class, 3);
-	    assertThat(rs, CoreMatchers.notNullValue());
-	    assertThat(rs.getMsiSearch(), CoreMatchers.nullValue());
-	    assertThat(rs.getChildren().isEmpty(), is(false));
-	    assertThat(rs.getChildren().size(), is(2));
-	    ResultSet rs1 = msiEm.find(ResultSet.class, 1);
-	    ResultSet rs2 = msiEm.find(ResultSet.class, 2);
+	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(3L));
+	    assertNotNull(rs);
+	    assertNull(rs.getMsiSearch());
+	    assertFalse(rs.getChildren().isEmpty());
+	    assertEquals(rs.getChildren().size(), 2);
+	    ResultSet rs1 = msiEm.find(ResultSet.class, Long.valueOf(1L));
+	    ResultSet rs2 = msiEm.find(ResultSet.class, Long.valueOf(2L));
 	    assertThat(rs.getChildren(), hasItems(rs1, rs2));
 	    assertThat(rs.getChildren(), not(hasItems(rs)));
 	} finally {
@@ -170,9 +163,9 @@ public class ResultsetTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    MsmsSearch msmsSearch = msiEm.find(MsmsSearch.class, 1);
-	    assertThat(msmsSearch, CoreMatchers.notNullValue());
-	    Enzyme enzyme = msiEm.find(Enzyme.class, 1);
+	    MsmsSearch msmsSearch = msiEm.find(MsmsSearch.class, Long.valueOf(1L));
+	    assertNotNull(msmsSearch);
+	    Enzyme enzyme = msiEm.find(Enzyme.class, Long.valueOf(1L));
 	    assertThat(msmsSearch.getEnzymes(), hasItems(enzyme));
 	    assertEquals(msmsSearch.getFragmentMassErrorTolerance(), 0.8, MathUtils.EPSILON_LOW_PRECISION);
 	} finally {
@@ -196,10 +189,10 @@ public class ResultsetTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    ResultSet rs = msiEm.find(ResultSet.class, 2);
+	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
 	    Collection<PeptideMatch> matches = PeptideMatchRepository.findPeptideMatchByResultSet(msiEm,
 		    rs.getId());
-	    assertThat(matches.size(), is(4));
+	    assertEquals(matches.size(), 4);
 	} finally {
 
 	    if (msiEm != null) {
@@ -221,13 +214,13 @@ public class ResultsetTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    PeptideMatch match = msiEm.find(PeptideMatch.class, 1);
-	    assertThat(match.getBestPeptideMatch(), CoreMatchers.nullValue());
-	    assertThat(match.getChildren().isEmpty(), is(true));
+	    PeptideMatch match = msiEm.find(PeptideMatch.class, Long.valueOf(1L));
+	    assertNull(match.getBestPeptideMatch());
+	    assertTrue(match.getChildren().isEmpty());
 	    MsQuery query = match.getMsQuery();
-	    assertThat(query, CoreMatchers.notNullValue());
-	    assertThat(query.getCharge(), is(match.getCharge()));
-	    assertThat(query.getSpectrum(), CoreMatchers.notNullValue());
+	    assertNotNull(query);
+	    assertEquals(query.getCharge(), match.getCharge());
+	    assertNotNull(query.getSpectrum());
 	} finally {
 
 	    if (msiEm != null) {
@@ -248,10 +241,10 @@ public class ResultsetTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    PeptideMatch match = msiEm.find(PeptideMatch.class, 1);
-	    Peptide peptide = msiEm.find(Peptide.class, match.getPeptideId());
-	    assertThat(peptide, CoreMatchers.notNullValue());
-	    assertThat(peptide.getSequence(), is("VLQAELK"));
+	    PeptideMatch match = msiEm.find(PeptideMatch.class, Long.valueOf(1L));
+	    Peptide peptide = msiEm.find(Peptide.class, Long.valueOf(match.getPeptideId()));
+	    assertNotNull(peptide);
+	    assertEquals(peptide.getSequence(), "VLQAELK");
 
 	    List<PeptideMatch> matches = PeptideMatchRepository.findPeptideMatchByPeptide(msiEm,
 		    match.getPeptideId());

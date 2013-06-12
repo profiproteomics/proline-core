@@ -40,12 +40,12 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
   }*/
 
   /** Returns a map */
-  lazy val ptmDefinitionById: Map[Int, PtmDefinition] = {
+  lazy val ptmDefinitionById: Map[Long, PtmDefinition] = {
     
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
       var ptmColNames: Seq[String] = null
-      val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Int, Map[String, Any]]
+      val ptmMapBuilder = scala.collection.immutable.Map.newBuilder[Long, Map[String, Any]]
   
       // Load PTM records
       psEzDBC.selectAndProcess("SELECT * FROM ptm") { r =>
@@ -54,7 +54,7 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
   
         // Build the PTM record
         val ptmRecord = ptmColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
-        val ptmId: Int = toInt(ptmRecord("id"))
+        val ptmId: Long = toLong(ptmRecord("id"))
         ptmMapBuilder += (ptmId -> ptmRecord)
   
       }
@@ -83,10 +83,10 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
       }
   
       // Group PTM evidences by PTM id
-      val ptmEvidRecordsByPtmId = ptmEvidRecords.groupBy(_.get("ptm_id").get.asInstanceOf[Int])
+      val ptmEvidRecordsByPtmId = ptmEvidRecords.groupBy(v => toLong(v.get("ptm_id").get))
   
       var ptmSpecifColNames: Seq[String] = null
-      val ptmDefMapBuilder = scala.collection.immutable.Map.newBuilder[Int, PtmDefinition]
+      val ptmDefMapBuilder = scala.collection.immutable.Map.newBuilder[Long, PtmDefinition]
   
       // Load PTM specificity records
       psEzDBC.selectAndProcess("SELECT * FROM ptm_specificity") { r =>
@@ -97,7 +97,7 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
         val ptmSpecifRecord = ptmSpecifColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
   
         // Retrieve corresponding PTM
-        val ptmId = ptmSpecifRecord("ptm_id").asInstanceOf[Int]
+        val ptmId = toLong(ptmSpecifRecord("ptm_id"))
         val ptmRecord = ptmRecordById(ptmId)
   
         // Retrieve corresponding PTM evidences
@@ -124,7 +124,7 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
     this.ptmDefinitionById.values.map { p => (p.names.shortName, p.residue, PtmLocation.withName(p.location)) -> p } toMap
   }
 
-  lazy val ptmIdByName: Map[String, Int] = {
+  lazy val ptmIdByName: Map[String, Long] = {
     this.ptmDefinitionById.values.map { p => p.names.shortName -> p.id } toMap
   }
 
@@ -151,12 +151,12 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
     
   }*/
 
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
     val ptmDefById = this.ptmDefinitionById
     ptmDefIds.map { ptmDefById.get(_) } toArray
   }
 
-  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
     this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_ != None).map(_.get)
   }
 
@@ -164,7 +164,7 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
     this.ptmDefByNameAndLocation.get(ptmShortName, ptmResidue, ptmLocation)
   }
 
-  def getPtmId(shortName: String): Option[Int] = {
+  def getPtmId(shortName: String): Option[Long] = {
     this.ptmIdByName.get(shortName)
   }
 

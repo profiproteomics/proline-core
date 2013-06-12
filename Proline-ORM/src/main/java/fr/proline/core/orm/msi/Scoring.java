@@ -17,11 +17,12 @@ import javax.persistence.NamedQuery;
 @NamedQuery(name = "findScoringForScoreType", query = "select s from fr.proline.core.orm.msi.Scoring s"
 	+ " where concat(concat(s.searchEngine, \':\'), s.name) = :scoreType")
 public class Scoring implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     private String description;
 
@@ -36,12 +37,12 @@ public class Scoring implements Serializable {
     public Scoring() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getDescription() {

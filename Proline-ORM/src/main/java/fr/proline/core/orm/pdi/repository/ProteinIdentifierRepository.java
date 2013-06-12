@@ -15,7 +15,7 @@ public final class ProteinIdentifierRepository {
     }
 
     public static ProteinIdentifier findProteinByValueAndTaxon(final EntityManager pdiEm, final String value,
-	    final int taxid) {
+	    final long taxonId) {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
@@ -24,7 +24,7 @@ public final class ProteinIdentifierRepository {
 	final TypedQuery<ProteinIdentifier> query = pdiEm.createNamedQuery("findProteinByValueAndTaxon",
 		ProteinIdentifier.class);
 	query.setParameter("value", value);
-	query.setParameter("taxid", taxid);
+	query.setParameter("taxid", Long.valueOf(taxonId));
 
 	final List<ProteinIdentifier> proteinIdentifiers = query.getResultList();
 

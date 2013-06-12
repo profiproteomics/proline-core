@@ -2,9 +2,8 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import org.hamcrest.CoreMatchers
-import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertThat
-import org.junit.Assert.assertTrue
+import org.junit.Assert._
+
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -55,7 +54,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getMultiplePeptides() = {
-    val ids = new ArrayBuffer[Int]
+    val ids = new ArrayBuffer[Long]
     ids += 0
     ids += 1
     ids += 4
@@ -68,7 +67,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
       val peps: Array[Option[Peptide]] = ormPepProvider.getPeptidesAsOptions(ids)
       assertThat(peps, CoreMatchers.notNullValue())
       assertThat(peps.length, CoreMatchers.equalTo(3))
-      assertThat(peps.apply(2).get.id, CoreMatchers.equalTo(4))
+      assertEquals(peps.apply(2).get.id, 4L)
       assertThat(peps(2).get.calculatedMass, CoreMatchers.equalTo(810.405807))
     } finally {
         psDb.close()
@@ -87,7 +86,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
       assertThat(pep, CoreMatchers.notNullValue())
       assertNotSame(pep, None);
 
-      assertThat(pep.get.id, CoreMatchers.equalTo(6))
+      assertEquals(pep.get.id, 6L)
       assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
       assertThat(pep.get.ptms(0).definition.names.shortName, CoreMatchers.equalTo("Acetyl"))
       assertTrue(pep.get.ptms(0).isNTerm)

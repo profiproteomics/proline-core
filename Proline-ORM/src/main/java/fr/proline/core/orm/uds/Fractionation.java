@@ -27,6 +27,7 @@ import javax.persistence.Table;
 })
 @Table(name="fractionation")
 public class Fractionation implements Serializable {
+    
     private static final long serialVersionUID = 1L;
     
     public enum FractionationType {
@@ -35,18 +36,18 @@ public class Fractionation implements Serializable {
 
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "type")
     @Enumerated(value = EnumType.STRING)    
     private FractionationType type;
     
-    public Integer getId() {
+    public long getId() {
         return id;
     }
     
-    public void setId(Integer id) {
-        this.id = id;
+    public void setId(final long pId) {
+        id = pId;
     }
 
     public FractionationType getType() {

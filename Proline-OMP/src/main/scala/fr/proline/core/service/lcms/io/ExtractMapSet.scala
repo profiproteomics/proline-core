@@ -80,8 +80,8 @@ class ExtractMapSet(
     if( !wasInTransaction ) lcmsDbCtx.beginTransaction()
     
     // --- Extract run maps ---
-    val lcmsRunByRunMapId = new collection.mutable.HashMap[Int,LcMsRun]
-    val mzDbFileByRunMapId = new collection.mutable.HashMap[Int,File]
+    val lcmsRunByRunMapId = new collection.mutable.HashMap[Long,LcMsRun]
+    val mzDbFileByRunMapId = new collection.mutable.HashMap[Long,File]
     val runMaps = new ArrayBuffer[RunMap]
     for( val lcmsRun <- lcMsRuns ) {
       
@@ -113,7 +113,7 @@ class ExtractMapSet(
     val tmpMapSetId = MapSet.generateNewId()
     val mapCount = runMaps.length
     var mapNumber = 0
-    var alnRefMapId = 0
+    var alnRefMapId: Long = 0L
     val processedMaps = new Array[ProcessedMap](runMaps.length)
     
     for( runMap <- runMaps ) {
@@ -339,7 +339,7 @@ class ExtractMapSet(
   
   private def _extractRunMapUsingMasterMap(
     mzDbFile: File,
-    mzDbMapId: Int,
+    mzDbMapId: Long,
     lcmsRun: LcMsRun,
     mapSet: MapSet
   ): RunMap = {
@@ -433,7 +433,7 @@ class ExtractMapSet(
     )
   }
   
-  private def _mzDbFeatureToLcMsFeature( mzDbFt: MzDbFeature, lcmsMapId: Int, scanSeq: LcMsScanSequence ): LcMsFeature = {
+  private def _mzDbFeatureToLcMsFeature( mzDbFt: MzDbFeature, lcmsMapId: Long, scanSeq: LcMsScanSequence ): LcMsFeature = {
     
     // Convert isotopic patterns
     /*val ips = mzDbFt.getIsotopicPatterns.map { mzDbIp =>

@@ -1,7 +1,9 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * The primary key class for the peptide_set_peptide_instance_item database table.
@@ -9,50 +11,54 @@ import javax.persistence.*;
  */
 @Embeddable
 public class PeptideInstancePeptideMatchMapPK implements Serializable {
-	//default serial version id, required for serializable classes.
-	private static final long serialVersionUID = 1L;
 
-  @Column(name="peptide_instance_id")
-  private Integer peptideInstanceId;
-  
-	@Column(name="peptide_match_id")
-	private Integer peptideMatchId;
+    // default serial version id, required for serializable classes.
+    private static final long serialVersionUID = 1L;
+
+    @Column(name = "peptide_instance_id")
+    private long peptideInstanceId;
+
+    @Column(name = "peptide_match_id")
+    private long peptideMatchId;
 
     public PeptideInstancePeptideMatchMapPK() {
     }
-	public Integer getPeptideInstanceId() {
-		return this.peptideInstanceId;
-	}
-	public void setPeptideInstanceId(Integer peptideInstanceId) {
-		this.peptideInstanceId = peptideInstanceId;
-	}
-  public Integer getPeptideMatchId() {
-    return this.peptideMatchId;
-  }
-  public void setPeptideMatchId(Integer peptideSetId) {
-    this.peptideMatchId = peptideSetId;
-  }
 
-	public boolean equals(Object other) {
-		if (this == other) {
-			return true;
-		}
-		if (!(other instanceof PeptideInstancePeptideMatchMapPK)) {
-			return false;
-		}
-		PeptideInstancePeptideMatchMapPK castOther = (PeptideInstancePeptideMatchMapPK) other;
-		return 
-			this.peptideMatchId.equals(castOther.peptideMatchId)
-			&& this.peptideInstanceId.equals(castOther.peptideInstanceId);
+    public long getPeptideInstanceId() {
+	return peptideInstanceId;
+    }
 
+    public void setPeptideInstanceId(final long pPeptideInstanceId) {
+	peptideInstanceId = pPeptideInstanceId;
     }
-    
-	public int hashCode() {
-		final int prime = 31;
-		int hash = 17;
-		hash = hash * prime + this.peptideInstanceId.hashCode();
-		hash = hash * prime + this.peptideMatchId.hashCode();		
-		
-		return hash;
+
+    public long getPeptideMatchId() {
+	return peptideMatchId;
     }
+
+    public void setPeptideMatchId(final long pPeptideSetId) {
+	peptideMatchId = pPeptideSetId;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	boolean result = false;
+
+	if (obj == this) {
+	    result = true;
+	} else if (obj instanceof PeptideInstancePeptideMatchMapPK) {
+	    final PeptideInstancePeptideMatchMapPK otherPK = (PeptideInstancePeptideMatchMapPK) obj;
+
+	    result = ((getPeptideInstanceId() == otherPK.getPeptideInstanceId()) && (getPeptideMatchId() == getPeptideMatchId()));
+	}
+
+	return result;
+    }
+
+    @Override
+    public int hashCode() {
+	return (Long.valueOf(getPeptideInstanceId()).hashCode() ^ Long.valueOf(getPeptideMatchId())
+		.hashCode());
+    }
+
 }

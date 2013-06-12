@@ -12,7 +12,7 @@ trait IRsWriter extends Logging {
    * Protein and peptides referenced by the result set will be created as well
    * if necessary.
    */
-  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Int]
+  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Long]
   def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit
 
   def fetchProteinIdentifiers(accessions: Seq[String]): Array[Any] // TODO: use JPA

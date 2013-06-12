@@ -10,6 +10,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.lcms.LcmsDbMapAlignmentTable
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IMapAlignmentSetProvider
+import fr.proline.util.primitives._
 
 class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) extends IMapAlignmentSetProvider {
   
@@ -36,7 +37,7 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) ext
     ()
   }
   
-  def getMapAlignmentSets( mapSetId: Int ): Array[MapAlignmentSet] = {
+  def getMapAlignmentSets( mapSetId: Long ): Array[MapAlignmentSet] = {
     
     // Load processed map features
     val mapAlns = DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
@@ -70,8 +71,8 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) ext
     val deltaTimeList = mapAlnRecord.getString(MapAlnCols.DELTA_TIME_LIST).split(" ") map { _.toFloat }
     
     new MapAlignment(
-      refMapId = mapAlnRecord.getInt(MapAlnCols.FROM_MAP_ID),
-      targetMapId = mapAlnRecord.getInt(MapAlnCols.TO_MAP_ID),
+      refMapId = toLong(mapAlnRecord.getAny(MapAlnCols.FROM_MAP_ID)),
+      targetMapId = toLong(mapAlnRecord.getAny(MapAlnCols.TO_MAP_ID)),
       massRange = (massStart,massEnd),
       timeList = timeList,
       deltaTimeList = deltaTimeList

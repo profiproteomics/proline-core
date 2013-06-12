@@ -12,23 +12,23 @@ public final class ProteinSetRepositorty {
     }
 
     public static PeptideInstance findPeptideInstanceForPepMatch(final EntityManager msiEm,
-	    final int pepMatchID) {
+	    final long pepMatchID) {
 
 	JPAUtils.checkEntityManager(msiEm);
 
 	TypedQuery<PeptideInstance> query = msiEm.createNamedQuery("findPepInstByPepMatch",
 		PeptideInstance.class);
-	query.setParameter("pmID", pepMatchID);
+	query.setParameter("pmID", Long.valueOf(pepMatchID));
 	return query.getSingleResult();
     }
 
-    public static PeptideInstance findPeptideInstanceForPeptide(final EntityManager msiEm, final int pepID) {
+    public static PeptideInstance findPeptideInstanceForPeptide(final EntityManager msiEm, final long pepID) {
 
 	JPAUtils.checkEntityManager(msiEm);
 
 	TypedQuery<PeptideInstance> query = msiEm.createNamedQuery("findPepInstForPeptideId",
 		PeptideInstance.class);
-	query.setParameter("pepID", pepID);
+	query.setParameter("pepID", Long.valueOf(pepID));
 	return query.getSingleResult();
     }
 

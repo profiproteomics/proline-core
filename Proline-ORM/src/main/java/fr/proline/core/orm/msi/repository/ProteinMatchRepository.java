@@ -49,13 +49,13 @@ public final class ProteinMatchRepository {
      * @return List of ProteinMatches (can be empty).
      */
     public static List<ProteinMatch> findProteinMatchesForResultSetId(final EntityManager msiEm,
-	    final int resultSetId) {
+	    final long resultSetId) {
 
 	JPAUtils.checkEntityManager(msiEm);
 
-	final TypedQuery<ProteinMatch> query = msiEm.createNamedQuery(
-		"findProteinMatchesForResultSetId", ProteinMatch.class);
-	query.setParameter("resultSetId", resultSetId);
+	final TypedQuery<ProteinMatch> query = msiEm.createNamedQuery("findProteinMatchesForResultSetId",
+		ProteinMatch.class);
+	query.setParameter("resultSetId", Long.valueOf(resultSetId));
 
 	return query.getResultList();
     }

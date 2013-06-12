@@ -1,8 +1,5 @@
 package fr.proline.core.orm.msi;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.*;
 
 import java.util.Set;
@@ -10,7 +7,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,14 +28,11 @@ public class SearchSettingsTest extends DatabaseTestCase {
     @Before
     public void setUp() throws Exception {
 	initDatabase();
-	
-	//"/fr/proline/core/orm/msi/Resultset_Dataset.xml",
-	//"/fr/proline/core/orm/msi/MsiSearch_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/msi-db_init_dataset.xml",
-		"/dbunit/datasets/msi/Resultset_Dataset.xml",
-		"/dbunit/datasets/msi/MsiSearch_Dataset.xml"
-	};
+
+	// "/fr/proline/core/orm/msi/Resultset_Dataset.xml",
+	// "/fr/proline/core/orm/msi/MsiSearch_Dataset.xml"
+	String[] datasets = new String[] { "/dbunit/datasets/msi-db_init_dataset.xml",
+		"/dbunit/datasets/msi/Resultset_Dataset.xml", "/dbunit/datasets/msi/MsiSearch_Dataset.xml" };
 
 	loadCompositeDataSet(datasets);
     }
@@ -51,20 +44,18 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, 1);
-	    assertThat(msiSearch, CoreMatchers.notNullValue());
-	    assertThat(msiSearch.getPeaklist().getId(), is(1));
+	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(1L));
+	    assertNotNull(msiSearch);
+	    assertEquals(msiSearch.getPeaklist().getId(), 1L);
 	    Set<SearchSettingsSeqDatabaseMap> mappedDbs = msiSearch.getSearchSetting()
 		    .getSearchSettingsSeqDatabaseMaps();
-	    assertThat(mappedDbs.size(), is(1));
+	    assertEquals(mappedDbs.size(), 1);
 	    SearchSettingsSeqDatabaseMap map = msiSearch.getSearchSetting()
 		    .getSearchSettingsSeqDatabaseMaps().iterator().next();
-	    assertThat(map.getSeqDatabase().getName(), is("Swissprot"));
-	    assertEquals(msiSearch.getSearchSetting().getInstrumentConfig().getId(), msiSearch
-		    .getSearchSetting().getInstrumentConfigId());
+	    assertEquals(map.getSeqDatabase().getName(), "Swissprot");
 
-	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, 2);
-	    assertThat(secondMsiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps().size(), is(0));
+	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(2L));
+	    assertEquals(secondMsiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps().size(), 0);
 	} finally {
 
 	    if (msiEm != null) {
@@ -86,9 +77,9 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, 2);
+	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(2L));
 
-	    SeqDatabase database = msiEm.find(SeqDatabase.class, 1);
+	    SeqDatabase database = msiEm.find(SeqDatabase.class, Long.valueOf(1L));
 
 	    SearchSettingsSeqDatabaseMap map = new SearchSettingsSeqDatabaseMap();
 	    map.setSearchSetting(secondMsiSearch.getSearchSetting());
@@ -103,14 +94,14 @@ public class SearchSettingsTest extends DatabaseTestCase {
 
 	    msiEm.clear();
 
-	    MsiSearch secondMsiSearch2 = msiEm.find(MsiSearch.class, 2);
-	    assertThat(secondMsiSearch, not(sameInstance(secondMsiSearch2)));
+	    MsiSearch secondMsiSearch2 = msiEm.find(MsiSearch.class, Long.valueOf(2L));
+	    assertNotSame(secondMsiSearch, secondMsiSearch2);
 	    Set<SearchSettingsSeqDatabaseMap> mappedDbs = secondMsiSearch2.getSearchSetting()
 		    .getSearchSettingsSeqDatabaseMaps();
-	    assertThat(mappedDbs.size(), is(1));
+	    assertEquals(mappedDbs.size(), 1);
 	    SearchSettingsSeqDatabaseMap readedMap = secondMsiSearch.getSearchSetting()
 		    .getSearchSettingsSeqDatabaseMaps().iterator().next();
-	    assertThat(readedMap.getSeqDatabase().getName(), is("Swissprot"));
+	    assertEquals(readedMap.getSeqDatabase().getName(), "Swissprot");
 	} finally {
 
 	    if (msiEm != null) {

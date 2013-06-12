@@ -5,16 +5,16 @@ import fr.proline.core.om.model.lcms.ILcMsMap
 
 trait ILcMsMapProvider {
   
-  def getLcMsMaps( mapIds: Seq[Int] ): Seq[ILcMsMap]
-  def getFeatures( mapIds: Seq[Int] ): Array[Feature]
+  def getLcMsMaps( mapIds: Seq[Long] ): Seq[ILcMsMap]
+  def getFeatures( mapIds: Seq[Long] ): Array[Feature]
 
   /** Returns a map of overlapping feature ids keyed by feature id */
-  def getOverlappingFtIdsByFtId( runMapIds: Seq[Int] ): Map[Int,Array[Int]]
+  def getOverlappingFtIdsByFtId( runMapIds: Seq[Long] ): Map[Long,Array[Long]]
   
   /** Returns a map of overlapping feature keyed by its id */
-  def getOverlappingFeatureById( mapIds: Seq[Int],
-                                 scanInitialIdById: Map[Int,Int],
-                                 ms2EventIdsByFtId: Map[Int,Array[Int]] 
-                               ): Map[Int,Feature]
+  def getOverlappingFeatureById( mapIds: Seq[Long],
+                                 scanInitialIdById: Map[Long,Int],
+                                 ms2EventIdsByFtId: Map[Long,Array[Long]] 
+                               ): Map[Long,Feature]
 
 }

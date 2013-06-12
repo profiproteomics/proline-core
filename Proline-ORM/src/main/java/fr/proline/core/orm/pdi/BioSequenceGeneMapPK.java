@@ -1,7 +1,9 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * The primary key class for the bio_sequence_gene_map database table.
@@ -9,50 +11,53 @@ import javax.persistence.*;
  */
 @Embeddable
 public class BioSequenceGeneMapPK implements Serializable {
-	//default serial version id, required for serializable classes.
-	private static final long serialVersionUID = 1L;
 
-	@Column(name="bio_sequence_id")
-	private Integer bioSequenceId;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="gene_id")
-	private Integer geneId;
+    @Column(name = "bio_sequence_id")
+    private long bioSequenceId;
+
+    @Column(name = "gene_id")
+    private long geneId;
 
     public BioSequenceGeneMapPK() {
     }
-	public Integer getBioSequenceId() {
-		return this.bioSequenceId;
-	}
-	public void setBioSequenceId(Integer bioSequenceId) {
-		this.bioSequenceId = bioSequenceId;
-	}
-	public Integer getGeneId() {
-		return this.geneId;
-	}
-	public void setGeneId(Integer geneId) {
-		this.geneId = geneId;
+
+    public long getBioSequenceId() {
+	return bioSequenceId;
+    }
+
+    public void setBioSequenceId(final long pBioSequenceId) {
+	bioSequenceId = pBioSequenceId;
+    }
+
+    public long getGeneId() {
+	return geneId;
+    }
+
+    public void setGeneId(final long pGeneId) {
+	geneId = pGeneId;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	boolean result = false;
+
+	if (obj == this) {
+	    result = true;
+	} else if (obj instanceof BioSequenceGeneMapPK) {
+	    final BioSequenceGeneMapPK otherPK = (BioSequenceGeneMapPK) obj;
+
+	    result = ((getBioSequenceId() == otherPK.getBioSequenceId()) && (getGeneId() == otherPK
+		    .getGeneId()));
 	}
 
-	public boolean equals(Object other) {
-		if (this == other) {
-			return true;
-		}
-		if (!(other instanceof BioSequenceGeneMapPK)) {
-			return false;
-		}
-		BioSequenceGeneMapPK castOther = (BioSequenceGeneMapPK)other;
-		return 
-			this.bioSequenceId.equals(castOther.bioSequenceId)
-			&& this.geneId.equals(castOther.geneId);
+	return result;
+    }
 
+    @Override
+    public int hashCode() {
+	return (Long.valueOf(getBioSequenceId()).hashCode() ^ Long.valueOf(getGeneId()).hashCode());
     }
-    
-	public int hashCode() {
-		final int prime = 31;
-		int hash = 17;
-		hash = hash * prime + this.bioSequenceId.hashCode();
-		hash = hash * prime + this.geneId.hashCode();
-		
-		return hash;
-    }
+
 }

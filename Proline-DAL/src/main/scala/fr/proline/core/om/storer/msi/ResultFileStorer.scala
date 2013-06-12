@@ -30,7 +30,7 @@ object ResultFileStorer extends Logging {
     acDecoyRegex: Option[util.matching.Regex] = None,
     saveSpectrumMatch: Boolean = false,
     rsSplitter: Option[IResultSetSplitter] = None
-  ): Int = {
+  ): Long = {
 
     val start = System.currentTimeMillis()
     logger.info("Storing ResultFile " + resultFile.fileLocation.getName())

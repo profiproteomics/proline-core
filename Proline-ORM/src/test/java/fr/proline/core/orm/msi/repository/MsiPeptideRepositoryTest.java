@@ -1,10 +1,8 @@
 package fr.proline.core.orm.msi.repository;
 
-import static junit.framework.Assert.*;
+import static org.junit.Assert.*;
 
-import java.io.File;
 import java.io.InputStream;
-import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -108,8 +106,8 @@ public class MsiPeptideRepositoryTest {
 	ReplacementDataSet dataSet = null;
 
 	try {
-		//dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileURL(), false, true));
-	    dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileIS(),false));
+	    // dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileURL(), false, true));
+	    dataSet = new ReplacementDataSet(new FlatXmlDataSet(getTestFileIS(), false));
 
 	    LOG.debug("START addReplacementSubstring");
 	    dataSet.addReplacementSubstring("NaN", "0.0");
@@ -146,7 +144,7 @@ public class MsiPeptideRepositoryTest {
 
     private static InputStream getTestFileIS() {
 
-    	InputStream result = null;
+	InputStream result = null;
 
 	try {
 	    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -154,7 +152,6 @@ public class MsiPeptideRepositoryTest {
 	    result = cl.getResourceAsStream(MSI_SEARCH_DATASET_LOCATION);
 
 	    LOG.debug("MsiSearch Dataset location [{}]", MSI_SEARCH_DATASET_LOCATION);
-
 	} catch (Exception ex) {
 	    LOG.error("Error retieving MsiSearch Dataset location", ex);
 	}
@@ -166,9 +163,11 @@ public class MsiPeptideRepositoryTest {
     public void testFindThousandsPeptidesForIds() {
 	LOG.debug("START testFindThousandsPeptidesForIds");
 
-	ArrayList<Integer> ids = new ArrayList<Integer>();
-	for (int i = 0; i <= 2000; i++)
-	    ids.add(i);
+	final List<Long> ids = new ArrayList<Long>();
+
+	for (long i = 0; i <= 2000L; ++i) {
+	    ids.add(Long.valueOf(i));
+	}
 
 	LOG.debug("CALL ");
 	final EntityManagerFactory emf = m_connector.getEntityManagerFactory();

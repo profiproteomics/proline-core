@@ -18,7 +18,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
   val RunCols = LcmsDbRunTable.columns
   val ScanCols = LcmsDbScanTable.columns
   
-  def getScanSequences( runIds: Seq[Int] ): Array[LcMsScanSequence] = {
+  def getScanSequences( runIds: Seq[Long] ): Array[LcMsScanSequence] = {
     
     val scans = this.getScans( runIds )
     // Group scans by run id
@@ -38,7 +38,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
       
       ezDBC.selectAndProcess( runQuery ) { runRecord =>
         
-        val runScans = scansByRunId(runRecord.getInt(RunCols.ID))
+        val runScans = scansByRunId(toLong(runRecord.getAny(RunCols.ID)))
         
         // Build the scan sequence
         scanSeqs(scanSeqIdx) = buildScanSequence(runRecord, runScans )
@@ -54,7 +54,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
   def buildScanSequence( runRecord: ResultSetRow, scans: Array[LcMsScan] ): LcMsScanSequence = {
     
     new LcMsScanSequence(
-      id = toInt(runRecord.getAnyVal(RunCols.ID)),
+      id = toLong(runRecord.getAny(RunCols.ID)),
       rawFileName = runRecord.getString(RunCols.RAW_FILE_NAME),
       minIntensity = runRecord.getDoubleOrElse(RunCols.MIN_INTENSITY,Double.NaN),
       maxIntensity = runRecord.getDoubleOrElse(RunCols.MAX_INTENSITY,Double.NaN),
@@ -64,7 +64,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
     )
   }
   
-  def getScans( runIds: Seq[Int] ): Array[LcMsScan] = {
+  def getScans( runIds: Seq[Long] ): Array[LcMsScan] = {
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC => 
       
@@ -94,7 +94,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
     val precursorCharge = scanRecord.getIntOption(ScanCols.PRECURSOR_CHARGE)
     
     new LcMsScan(
-      id = toInt(scanRecord.getAnyVal(ScanCols.ID)),
+      id = toLong(scanRecord.getAny(ScanCols.ID)),
       initialId = scanRecord.getInt(ScanCols.INITIAL_ID),
       cycle = scanRecord.getInt(ScanCols.CYCLE),
       time = toFloat(scanRecord.getDouble(ScanCols.TIME)),
@@ -102,7 +102,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
       tic = scanRecord.getDouble(ScanCols.TIC),
       basePeakMoz = scanRecord.getDouble(ScanCols.BASE_PEAK_MOZ),
       basePeakIntensity = scanRecord.getDouble(ScanCols.BASE_PEAK_INTENSITY),
-      runId = scanRecord.getInt(ScanCols.RUN_ID),
+      runId = toLong(scanRecord.getAny(ScanCols.RUN_ID)),
       precursorMoz = precursorMoz,
       precursorCharge = precursorCharge
     )

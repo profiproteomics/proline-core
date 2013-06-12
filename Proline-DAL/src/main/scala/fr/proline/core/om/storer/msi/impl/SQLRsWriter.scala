@@ -19,6 +19,7 @@ import fr.proline.core.dal.tables.msi.MsiDbPeptideTable
 import fr.proline.core.dal.tables.msi.MsiDbBioSequenceTable
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
+import fr.proline.util.primitives._
 
 private[core] object SQLRsWriter extends AbstractSQLRsWriter
 
@@ -26,9 +27,9 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   val objTreeInsertQuery = MsiDbObjectTreeTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID) )
 
-  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Int] = {
+  def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Long] = {
     
-    val peptideMapBuilder = scala.collection.immutable.Map.newBuilder[String, Int]
+    val peptideMapBuilder = scala.collection.immutable.Map.newBuilder[String, Long]
 
     DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
@@ -43,7 +44,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
         
         msiEzDBC.selectAndProcess(sqlQuery) { r =>
   
-          val pepId = r.nextInt
+          val pepId = toLong(r.nextAny)
           val pepSeq = r.nextString
           var ptmString = r.nextStringOrElse("")
   
@@ -162,13 +163,13 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
             peptideMatch.properties.map(generate(_)),
             peptideMatch.peptide.id,
             msQuery.id,
-            if (bestChildId == 0) Option.empty[Int] else Some(bestChildId),
+            if (bestChildId == 0) Option.empty[Long] else Some(bestChildId),
             scoringId,
             rsId
           )
   
           // Update peptide match id
-          peptideMatch.id = stmt.generatedInt
+          peptideMatch.id = stmt.generatedLong
         }
       }
   
@@ -197,7 +198,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     
     DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
 
-      val spectrumMatchKeyById = new HashMap[Int,Pair[Int,Int]]()
+      val spectrumMatchKeyById = new HashMap[Long,Pair[Int,Int]]()
       
       // Store spectrum matches
       msiEzDBC.executePrepared(objTreeInsertQuery, true ) { stmt =>
@@ -210,7 +211,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
             schemaName
           )
           
-          spectrumMatchKeyById += stmt.generatedInt -> Pair(spectrumMatch.msQueryInitialId,spectrumMatch.peptideMatchRank)
+          spectrumMatchKeyById += stmt.generatedLong -> Pair(spectrumMatch.msQueryInitialId,spectrumMatch.peptideMatchRank)
           
           spectrumCount += 1
         })
@@ -273,14 +274,14 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
             proteinMatch.isDecoy,
             proteinMatch.isLastBioSequence,
             proteinMatch.properties.map(generate(_)),
-            if (proteinMatch.taxonId > 0) Some(proteinMatch.taxonId) else Option.empty[Int],
-            if (proteinMatch.getProteinId > 0) Some(proteinMatch.getProteinId) else Option.empty[Int],
+            if (proteinMatch.taxonId > 0) Some(proteinMatch.taxonId) else Option.empty[Long],
+            if (proteinMatch.getProteinId > 0) Some(proteinMatch.getProteinId) else Option.empty[Long],
             scoringId.get,
             rsId
           )
   
           // Update protein match id
-          proteinMatch.id = stmt.generatedInt
+          proteinMatch.id = stmt.generatedLong
         }
       }
   

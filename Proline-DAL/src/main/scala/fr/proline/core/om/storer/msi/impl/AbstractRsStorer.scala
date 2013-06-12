@@ -18,7 +18,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
    * Create and persist ResultSet in repository, using storerContext for context and mapping information.
    * This method has to be implemented in concrete ResultSet storers.
    */
-  protected def createResultSet(resultSet: ResultSet, context: StorerContext): Int
+  protected def createResultSet(resultSet: ResultSet, context: StorerContext): Long
   
   /**
    * Store specified ResultSet in persistence repository, using storerContext for context and mapping information.
@@ -26,7 +26,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
    * 
    * Transaction are not managed by this method, should be done by user.
    */
-  final def storeResultSet(resultSet: ResultSet, storerContext: StorerContext): Int = {
+  final def storeResultSet(resultSet: ResultSet, storerContext: StorerContext): Long = {
     this._storeResultSet(resultSet, None, None, storerContext)    
   }
 
@@ -38,7 +38,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
    * 
    * TODO: move to ResultFileStorer ???
    */
-  final def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], storerContext: StorerContext): Int = {
+  final def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], storerContext: StorerContext): Long = {
 
     require(resultSet.isNative, "only native result sets can be saved using this method")
     require(msQueries != null, "msQueries must not be null")
@@ -62,7 +62,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
     msQueriesOpt: Option[Seq[MsQuery]],
     resultFileOpt: Option[IResultFile],
     storerContext: StorerContext
-  ): Int = {
+  ): Long = {
     
     require(resultSet != null, "resultSet must not be null")
     require(storerContext != null, "storerContext must not be null")
@@ -109,7 +109,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
   }  
 
   // TODO: remove me ???
-  def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Int): Int = {
+  def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Long): Long = {
 
     if (resultSet == null) {
       throw new IllegalArgumentException("ResultSet is null")
@@ -119,7 +119,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
       throw new IllegalArgumentException("DbManager is null")
     }
 
-    var msiResultSetId: Int = -1
+    var msiResultSetId: Long = -1L
     var storerContext: StorerContext = null // For JPA use
     var msiTransaction: EntityTransaction = null
     var msiTransacOk: Boolean = false

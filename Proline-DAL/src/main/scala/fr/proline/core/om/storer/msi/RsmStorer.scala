@@ -69,11 +69,11 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
           new java.util.Date(),          
           false,
           rsm.properties.map(generate(_)),
-          if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else Option.empty[Int],
+          if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else Option.empty[Long],
           rsm.getResultSetId
         )
         
-        rsm.id = stmt.generatedInt
+        rsm.id = stmt.generatedLong
       }
     })
   }

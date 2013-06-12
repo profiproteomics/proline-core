@@ -1,8 +1,12 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 /**
  * The persistent class for the spectrum database table.
@@ -10,207 +14,208 @@ import javax.persistence.*;
  */
 @Entity
 public class Spectrum implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="first_cycle")
-	private Integer firstCycle;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name="first_scan")
-	private Integer firstScan;
+    @Column(name = "first_cycle")
+    private Integer firstCycle;
 
-	@Column(name="first_time")
-	private Float firstTime;
+    @Column(name = "first_scan")
+    private Integer firstScan;
 
-	@Column(name="instrument_config_id")
-	private Integer instrumentConfigId;
+    @Column(name = "first_time")
+    private Float firstTime;
 
-	@Column(name="intensity_list")
-	private byte[] intensityList;
+    @Column(name = "instrument_config_id")
+    private long instrumentConfigId;
 
-	@Column(name="is_summed")
-	private Boolean isSummed;
+    @Column(name = "intensity_list")
+    private byte[] intensityList;
 
-	@Column(name="last_cycle")
-	private Integer lastCycle;
+    @Column(name = "is_summed")
+    private Boolean isSummed;
 
-	@Column(name="last_scan")
-	private Integer lastScan;
+    @Column(name = "last_cycle")
+    private Integer lastCycle;
 
-	@Column(name="last_time")
-	private Float lastTime;
+    @Column(name = "last_scan")
+    private Integer lastScan;
 
-	@Column(name="moz_list")
-	private byte[] mozList;
+    @Column(name = "last_time")
+    private Float lastTime;
 
-	@Column(name="peak_count")
-	private Integer peakCount;
+    @Column(name = "moz_list")
+    private byte[] mozList;
 
-	@Column(name="peaklist_id")
-	private Integer peaklistId;
+    @Column(name = "peak_count")
+    private int peakCount;
 
-	@Column(name="precursor_charge")
-	private Integer precursorCharge;
+    @Column(name = "peaklist_id")
+    private long peaklistId;
 
-	@Column(name="precursor_intensity")
-	private Float precursorIntensity;
+    @Column(name = "precursor_charge")
+    private Integer precursorCharge;
 
-	@Column(name="precursor_moz")
-	private Double precursorMoz;
+    @Column(name = "precursor_intensity")
+    private Float precursorIntensity;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "precursor_moz")
+    private Double precursorMoz;
 
-	private String title;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
+
+    private String title;
 
     public Spectrum() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public Integer getFirstCycle() {
-		return this.firstCycle;
-	}
+    public Integer getFirstCycle() {
+	return this.firstCycle;
+    }
 
-	public void setFirstCycle(Integer firstCycle) {
-		this.firstCycle = firstCycle;
-	}
+    public void setFirstCycle(Integer firstCycle) {
+	this.firstCycle = firstCycle;
+    }
 
-	public Integer getFirstScan() {
-		return this.firstScan;
-	}
+    public Integer getFirstScan() {
+	return this.firstScan;
+    }
 
-	public void setFirstScan(Integer firstScan) {
-		this.firstScan = firstScan;
-	}
+    public void setFirstScan(Integer firstScan) {
+	this.firstScan = firstScan;
+    }
 
-	public float getFirstTime() {
-		return this.firstTime;
-	}
+    public Float getFirstTime() {
+	return firstTime;
+    }
 
-	public void setFirstTime(float firstTime) {
-		this.firstTime = firstTime;
-	}
+    public void setFirstTime(final Float pFirstTime) {
+	firstTime = pFirstTime;
+    }
 
-	public Integer getInstrumentConfigId() {
-		return this.instrumentConfigId;
-	}
+    public long getInstrumentConfigId() {
+	return instrumentConfigId;
+    }
 
-	public void setInstrumentConfigId(Integer instrumentConfigId) {
-		this.instrumentConfigId = instrumentConfigId;
-	}
+    public void setInstrumentConfigId(final long pInstrumentConfigId) {
+	instrumentConfigId = pInstrumentConfigId;
+    }
 
-	public byte[] getIntensityList() {
-		return this.intensityList;
-	}
+    public byte[] getIntensityList() {
+	return this.intensityList;
+    }
 
-	public void setIntensityList(byte[] intensityList) {
-		this.intensityList = intensityList;
-	}
+    public void setIntensityList(byte[] intensityList) {
+	this.intensityList = intensityList;
+    }
 
-	public Boolean getIsSummed() {
-		return this.isSummed;
-	}
+    public Boolean getIsSummed() {
+	return this.isSummed;
+    }
 
-	public void setIsSummed(Boolean isSummed) {
-		this.isSummed = isSummed;
-	}
+    public void setIsSummed(Boolean isSummed) {
+	this.isSummed = isSummed;
+    }
 
-	public Integer getLastCycle() {
-		return this.lastCycle;
-	}
+    public Integer getLastCycle() {
+	return this.lastCycle;
+    }
 
-	public void setLastCycle(Integer lastCycle) {
-		this.lastCycle = lastCycle;
-	}
+    public void setLastCycle(Integer lastCycle) {
+	this.lastCycle = lastCycle;
+    }
 
-	public Integer getLastScan() {
-		return this.lastScan;
-	}
+    public Integer getLastScan() {
+	return this.lastScan;
+    }
 
-	public void setLastScan(Integer lastScan) {
-		this.lastScan = lastScan;
-	}
+    public void setLastScan(Integer lastScan) {
+	this.lastScan = lastScan;
+    }
 
-	public float getLastTime() {
-		return this.lastTime;
-	}
+    public Float getLastTime() {
+	return lastTime;
+    }
 
-	public void setLastTime(float lastTime) {
-		this.lastTime = lastTime;
-	}
+    public void setLastTime(final Float pLastTime) {
+	lastTime = pLastTime;
+    }
 
-	public byte[] getMozList() {
-		return this.mozList;
-	}
+    public byte[] getMozList() {
+	return this.mozList;
+    }
 
-	public void setMozList(byte[] mozList) {
-		this.mozList = mozList;
-	}
+    public void setMozList(byte[] mozList) {
+	this.mozList = mozList;
+    }
 
-	public Integer getPeakCount() {
-		return this.peakCount;
-	}
+    public int getPeakCount() {
+	return peakCount;
+    }
 
-	public void setPeakCount(Integer peakCount) {
-		this.peakCount = peakCount;
-	}
+    public void setPeakCount(final int pPeakCount) {
+	peakCount = pPeakCount;
+    }
 
-	public Integer getPeaklistId() {
-		return this.peaklistId;
-	}
+    public long getPeaklistId() {
+	return peaklistId;
+    }
 
-	public void setPeaklistId(Integer peaklistId) {
-		this.peaklistId = peaklistId;
-	}
+    public void setPeaklistId(final long pPeaklistId) {
+	peaklistId = pPeaklistId;
+    }
 
-	public Integer getPrecursorCharge() {
-		return this.precursorCharge;
-	}
+    public Integer getPrecursorCharge() {
+	return this.precursorCharge;
+    }
 
-	public void setPrecursorCharge(Integer precursorCharge) {
-		this.precursorCharge = precursorCharge;
-	}
+    public void setPrecursorCharge(Integer precursorCharge) {
+	this.precursorCharge = precursorCharge;
+    }
 
-	public Float getPrecursorIntensity() {
-		return this.precursorIntensity;
-	}
+    public Float getPrecursorIntensity() {
+	return this.precursorIntensity;
+    }
 
-	public void setPrecursorIntensity(Float precursorIntensity) {
-		this.precursorIntensity = precursorIntensity;
-	}
+    public void setPrecursorIntensity(Float precursorIntensity) {
+	this.precursorIntensity = precursorIntensity;
+    }
 
-	public double getPrecursorMoz() {
-		return this.precursorMoz;
-	}
+    public Double getPrecursorMoz() {
+	return precursorMoz;
+    }
 
-	public void setPrecursorMoz(double precursorMoz) {
-		this.precursorMoz = precursorMoz;
-	}
+    public void setPrecursorMoz(final Double pPrecursorMoz) {
+	precursorMoz = pPrecursorMoz;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public String getTitle() {
-		return this.title;
-	}
+    public String getTitle() {
+	return this.title;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public void setTitle(String title) {
+	this.title = title;
+    }
 
 }

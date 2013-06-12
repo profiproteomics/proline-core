@@ -37,7 +37,7 @@ class ResultFileImporter(
   saveSpectrumMatch: Boolean = false
 ) extends IService with Logging {
   
-  private var targetResultSetId = 0
+  private var targetResultSetId: Long = 0L
 
   override protected def beforeInterruption = {
     // Release database connections

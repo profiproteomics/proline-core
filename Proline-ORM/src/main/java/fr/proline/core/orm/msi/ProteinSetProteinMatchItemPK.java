@@ -1,7 +1,9 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * The primary key class for the protein_set_protein_match_item database table.
@@ -9,50 +11,54 @@ import javax.persistence.*;
  */
 @Embeddable
 public class ProteinSetProteinMatchItemPK implements Serializable {
-	//default serial version id, required for serializable classes.
-	private static final long serialVersionUID = 1L;
 
-	@Column(name="protein_set_id")
-	private Integer proteinSetId;
+    // default serial version id, required for serializable classes.
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="protein_match_id")
-	private Integer proteinMatchId;
+    @Column(name = "protein_set_id")
+    private long proteinSetId;
+
+    @Column(name = "protein_match_id")
+    private long proteinMatchId;
 
     public ProteinSetProteinMatchItemPK() {
     }
-	public Integer getProteinSetId() {
-		return this.proteinSetId;
-	}
-	public void setProteinSetId(Integer proteinSetId) {
-		this.proteinSetId = proteinSetId;
-	}
-	public Integer getProteinMatchId() {
-		return this.proteinMatchId;
-	}
-	public void setProteinMatchId(Integer proteinMatchId) {
-		this.proteinMatchId = proteinMatchId;
+
+    public long getProteinSetId() {
+	return proteinSetId;
+    }
+
+    public void setProteinSetId(final long pProteinSetId) {
+	proteinSetId = pProteinSetId;
+    }
+
+    public long getProteinMatchId() {
+	return proteinMatchId;
+    }
+
+    public void setProteinMatchId(final long pProteinMatchId) {
+	proteinMatchId = pProteinMatchId;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	boolean result = false;
+
+	if (obj == this) {
+	    result = true;
+	} else if (obj instanceof ProteinSetProteinMatchItemPK) {
+	    final ProteinSetProteinMatchItemPK otherPK = (ProteinSetProteinMatchItemPK) obj;
+
+	    result = ((getProteinSetId() == otherPK.getProteinSetId()) && (getProteinMatchId() == otherPK
+		    .getProteinMatchId()));
 	}
 
-	public boolean equals(Object other) {
-		if (this == other) {
-			return true;
-		}
-		if (!(other instanceof ProteinSetProteinMatchItemPK)) {
-			return false;
-		}
-		ProteinSetProteinMatchItemPK castOther = (ProteinSetProteinMatchItemPK)other;
-		return 
-			this.proteinSetId.equals(castOther.proteinSetId)
-			&& this.proteinMatchId.equals(castOther.proteinMatchId);
+	return result;
 
     }
-    
-	public int hashCode() {
-		final int prime = 31;
-		int hash = 17;
-		hash = hash * prime + this.proteinSetId.hashCode();
-		hash = hash * prime + this.proteinMatchId.hashCode();
-		
-		return hash;
+
+    public int hashCode() {
+	return (Long.valueOf(getProteinSetId()).hashCode() ^ Long.valueOf(getProteinMatchId()).hashCode());
     }
+
 }

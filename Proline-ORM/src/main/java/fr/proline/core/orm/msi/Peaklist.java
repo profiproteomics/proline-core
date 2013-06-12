@@ -1,10 +1,17 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
-
 import java.util.Set;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 /**
  * The persistent class for the peaklist database table.
@@ -12,110 +19,111 @@ import java.util.Set;
  */
 @Entity
 public class Peaklist implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="ms_level")
-	private Integer msLevel;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	private String path;
+    @Column(name = "ms_level")
+    private int msLevel;
 
-	@Column(name="raw_file_name")
-	private String rawFileName;
+    private String path;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "raw_file_name")
+    private String rawFileName;
 
-	@Column(name="spectrum_data_compression")
-	private String spectrumDataCompression;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	private String type;
+    @Column(name = "spectrum_data_compression")
+    private String spectrumDataCompression;
 
-	//uni-directional many-to-one association to PeaklistSoftware
+    private String type;
+
+    // uni-directional many-to-one association to PeaklistSoftware
     @ManyToOne
-	@JoinColumn(name="peaklist_software_id")
-	private PeaklistSoftware peaklistSoftware;
+    @JoinColumn(name = "peaklist_software_id")
+    private PeaklistSoftware peaklistSoftware;
 
- 	@OneToMany
- 	@JoinTable(name = "peaklist_relation", joinColumns = @JoinColumn(name = "parent_peaklist_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "child_peaklist_id", referencedColumnName = "id"))
-	private Set<Peaklist> children;
+    @OneToMany
+    @JoinTable(name = "peaklist_relation", joinColumns = @JoinColumn(name = "parent_peaklist_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "child_peaklist_id", referencedColumnName = "id"))
+    private Set<Peaklist> children;
 
     public Peaklist() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public Integer getMsLevel() {
-		return this.msLevel;
-	}
+    public int getMsLevel() {
+	return msLevel;
+    }
 
-	public void setMsLevel(Integer msLevel) {
-		this.msLevel = msLevel;
-	}
+    public void setMsLevel(final int pMsLevel) {
+	msLevel = pMsLevel;
+    }
 
-	public String getPath() {
-		return this.path;
-	}
+    public String getPath() {
+	return this.path;
+    }
 
-	public void setPath(String path) {
-		this.path = path;
-	}
+    public void setPath(String path) {
+	this.path = path;
+    }
 
-	public String getRawFileName() {
-		return this.rawFileName;
-	}
+    public String getRawFileName() {
+	return this.rawFileName;
+    }
 
-	public void setRawFileName(String rawFileName) {
-		this.rawFileName = rawFileName;
-	}
+    public void setRawFileName(String rawFileName) {
+	this.rawFileName = rawFileName;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public String getSpectrumDataCompression() {
-		return this.spectrumDataCompression;
-	}
+    public String getSpectrumDataCompression() {
+	return this.spectrumDataCompression;
+    }
 
-	public void setSpectrumDataCompression(String spectrumDataCompression) {
-		this.spectrumDataCompression = spectrumDataCompression;
-	}
+    public void setSpectrumDataCompression(String spectrumDataCompression) {
+	this.spectrumDataCompression = spectrumDataCompression;
+    }
 
-	public String getType() {
-		return this.type;
-	}
+    public String getType() {
+	return this.type;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public void setType(String type) {
+	this.type = type;
+    }
 
-	public PeaklistSoftware getPeaklistSoftware() {
-		return this.peaklistSoftware;
-	}
+    public PeaklistSoftware getPeaklistSoftware() {
+	return this.peaklistSoftware;
+    }
 
-	public void setPeaklistSoftware(PeaklistSoftware peaklistSoftware) {
-		this.peaklistSoftware = peaklistSoftware;
-	}
-	
-	public Set<Peaklist> getChildren() {
-		return this.children;
-	}
+    public void setPeaklistSoftware(PeaklistSoftware peaklistSoftware) {
+	this.peaklistSoftware = peaklistSoftware;
+    }
 
-	public void setChildren(Set<Peaklist> children) {
-		this.children = children;
-	}
-	
+    public Set<Peaklist> getChildren() {
+	return this.children;
+    }
+
+    public void setChildren(Set<Peaklist> children) {
+	this.children = children;
+    }
+
 }

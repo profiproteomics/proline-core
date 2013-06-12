@@ -47,6 +47,7 @@ import fr.proline.core.orm.msi.{
 }
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
+import fr.proline.util.primitives._
 
 
 abstract class AbstractMasterQuantChannelQuantifier extends Logging {
@@ -72,7 +73,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     val identRsmId = udsQuantChannel.getIdentResultSummaryId
     require(identRsmId != 0, "the quant_channel with id='" + qcId + "' is not assocciated with an identification result summary")
 
-    identRsmId.intValue
+    identRsmId
 
   } toSeq
 
@@ -84,7 +85,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
       val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
         List(t.ID,t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN("~ rsmIds.mkString(",") ~")"
       )
-      msiEzDBC.select(sqlQuery) { r => r.nextInt -> r.nextInt } toMap
+      msiEzDBC.select(sqlQuery) { r => toLong(r.nextAny) -> toLong(r.nextAny) } toMap
     })
   }
 
@@ -108,7 +109,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   protected val msiDbHelper = new MsiDbHelper(msiDbCtx)
 
   protected val seqLengthByProtId = {
-    val tmpIdentProteinIdSet = new collection.mutable.HashSet[Int]()
+    val tmpIdentProteinIdSet = new collection.mutable.HashSet[Long]()
 
     for (identRSM <- identResultSummaries) {
       // Retrieve protein ids
@@ -212,9 +213,9 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   }
 
   // Define some vars
-  protected val masterPepInstByPepId = new HashMap[Int, PeptideInstance]
-  protected val msiMasterPepInstById = new HashMap[Int, MsiPeptideInstance]
-  protected val msiMasterProtSetById = new HashMap[Int, MsiProteinSet]
+  protected val masterPepInstByPepId = new HashMap[Long, PeptideInstance]
+  protected val msiMasterPepInstById = new HashMap[Long, MsiPeptideInstance]
+  protected val msiMasterProtSetById = new HashMap[Long, MsiProteinSet]
 
   protected def storeMasterQuantResultSummary(masterRSM: ResultSummary,
                                               msiQuantRSM: MsiResultSummary,
@@ -236,7 +237,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     this.logger.info("storing master quant peptide instances...")
 
     // Define some vars
-    val masterQuantPepMatchIdByTmpPepMatchId = new HashMap[Int, Int]
+    val masterQuantPepMatchIdByTmpPepMatchId = new HashMap[Long, Long]
 
     for (masterPepInstance <- masterPepInstances) {
 
@@ -349,8 +350,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     this.logger.info("storing quantified peptide sets...")
     for (masterPeptideSet <- masterPeptideSets) {
       
-      val masterProtMatchIdByTmpId = new HashMap[Int,Int]
-      val masterProtMatchTmpIdById = new HashMap[Int,Int]
+      val masterProtMatchIdByTmpId = new HashMap[Long,Long]
+      val masterProtMatchTmpIdById = new HashMap[Long,Long]
       
       // Store master protein matches
       val msiMasterProtMatches = masterPeptideSet.proteinMatchIds.map { protMatchId =>
@@ -379,7 +380,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
         // Map new protein match id by TMP id
         masterProtMatchIdByTmpId += masterProtMatch.id -> masterProtMatchId
         // Map protein match TMP id by the new id
-        masterProtMatchTmpIdById += masterProtMatchId.toInt -> masterProtMatch.id
+        masterProtMatchTmpIdById += masterProtMatchId -> masterProtMatch.id
 
         // Update master protein match id
         masterProtMatch.id = masterProtMatchId
@@ -520,7 +521,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
           // Link master protein match to master peptide matches using master sequence matches
           val masterProtMatch = masterProtMatchByTmpId( masterProtMatchTmpIdById(masterProtMatchId) )
           val seqMatches = masterProtMatch.sequenceMatches
-          val mappedMasterPepMatchesIdSet = new HashSet[Int]
+          val mappedMasterPepMatchesIdSet = new HashSet[Long]
 
           for (seqMatch <- seqMatches) {
 

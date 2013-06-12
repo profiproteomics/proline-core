@@ -25,7 +25,7 @@ class SQLRunProvider(
   val RawFileCols = UdsDbRawFileTable.columns
   val RunCols = UdsDbRunTable.columns
   
-  def getRuns( runIds: Seq[Int] ): Array[LcMsRun] = {
+  def getRuns( runIds: Seq[Long] ): Array[LcMsRun] = {
     
     val scanSeqByIdAsOpt = if( scanSeqProvider.isEmpty ) None
     else {
@@ -47,7 +47,7 @@ class SQLRunProvider(
       
       ezDBC.selectAndProcess( runQuery ) { runRecord =>
         
-        val runScanSeq = scanSeqByIdAsOpt.map( _(runRecord.getInt(RunCols.ID)) )
+        val runScanSeq = scanSeqByIdAsOpt.map( _(toLong(runRecord.getAny(RunCols.ID))) )
         
         // Build the run
         runs(runIdx) = this.buildRun(runRecord, runScanSeq)
@@ -67,7 +67,7 @@ class SQLRunProvider(
     // TODO: parse properties
     // TODO: cache already loaded instruments
     val instrument = new Instrument(
-      id = toInt( runRecord.getAnyVal(InstCols.ID.toAliasedString) ),
+      id = toLong( runRecord.getAny(InstCols.ID.toAliasedString) ),
       name = runRecord.getString(InstCols.NAME.toAliasedString),
       source = runRecord.getString(InstCols.SOURCE)
     )
@@ -89,7 +89,7 @@ class SQLRunProvider(
     //val runPropsStr = runRecord.getStringOption(UdsDbRawFileTable.name + "_"+RunCols.SERIALIZED_PROPERTIES)
   
     new LcMsRun(
-      id = toInt(runRecord.getAnyVal(RunCols.ID.toAliasedString)),
+      id = toLong(runRecord.getAny(RunCols.ID.toAliasedString)),
       number = runRecord.getInt(RunCols.NUMBER),
       runStart = toFloat( runRecord.getDouble(RunCols.RUN_START) ),
       runStop = toFloat( runRecord.getDouble(RunCols.RUN_STOP) ),

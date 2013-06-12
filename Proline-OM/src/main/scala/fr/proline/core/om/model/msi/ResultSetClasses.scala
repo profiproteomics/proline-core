@@ -24,15 +24,15 @@ case class ResultSet (
                    // Immutable optional fields
                    
                    // Mutable optional fields
-                   var id: Int = 0,
+                   var id: Long = 0,
                    var name: String = null,
                    var description: String = null,
                    var isQuantified: Boolean = false,
                    
-                   protected var msiSearchId: Int = 0,
+                   protected var msiSearchId: Long = 0,
                    var msiSearch: Option[MSISearch] = None,
                   
-                   protected var decoyResultSetId: Int = 0,
+                   protected var decoyResultSetId: Long = 0,
                    @transient var decoyResultSet: Option[ResultSet] = None,
                    
                    var properties: Option[ResultSetProperties] = None
@@ -44,11 +44,11 @@ case class ResultSet (
   require( msiSearch != null, "MSI search can't be null => provide None instead" )
   require( decoyResultSet != null, "decoy result set can't be null => provide None instead" )
   
-  def getMSISearchId: Int = { if(msiSearch.isDefined) msiSearch.get.id else msiSearchId }
+  def getMSISearchId: Long = { if(msiSearch.isDefined) msiSearch.get.id else msiSearchId }
   
-  def getDecoyResultSetId: Int = { if(decoyResultSet.isDefined) decoyResultSet.get.id else decoyResultSetId }
+  def getDecoyResultSetId: Long = { if(decoyResultSet.isDefined) decoyResultSet.get.id else decoyResultSetId }
   
-  def peptideById: Map[Int, Peptide] = {
+  def peptideById: Map[Long, Peptide] = {
     
     val tmpPeptideById = Map() ++ peptides.map { pep => ( pep.id -> pep ) }      
     if( tmpPeptideById.size != peptides.length ) 
@@ -58,7 +58,7 @@ case class ResultSet (
 
   }
   
-  def peptideMatchById: Map[Int, PeptideMatch] = {
+  def peptideMatchById: Map[Long, PeptideMatch] = {
     
     val tmpPeptideMatchById = Map() ++ peptideMatches.map { pepMatch => ( pepMatch.id -> pepMatch ) }      
     if( tmpPeptideMatchById.size != peptideMatches.length ) 
@@ -68,7 +68,7 @@ case class ResultSet (
 
   }
   
-  def proteinMatchById: Map[Int, ProteinMatch] = {
+  def proteinMatchById: Map[Long, ProteinMatch] = {
     
     val tmpProtMatchById = Map() ++ proteinMatches.map { protMatch => ( protMatch.id -> protMatch ) }      
     if( tmpProtMatchById.size != proteinMatches.length ) 
@@ -139,15 +139,15 @@ case class ResultSummary (
                    // Immutable optional fields
                    
                    // Mutable optional fields
-                   var id: Int = 0,
+                   var id: Long = 0,
                    var description: String = null,
                    var isQuantified: Boolean = false,
                    val modificationTimestamp: java.util.Date = new java.util.Date,
                    
-                   protected var resultSetId: Int = 0,
+                   protected var resultSetId: Long = 0,
                    @transient var resultSet: Option[ResultSet] = None,
                    
-                   var decoyResultSummaryId: Int = 0,
+                   var decoyResultSummaryId: Long = 0,
                    @transient var decoyResultSummary: Option[ResultSummary] = null,
                    
                    var properties: Option[ResultSummaryProperties] = None
@@ -157,11 +157,11 @@ case class ResultSummary (
   // Requirements
   require( peptideInstances != null && proteinSets != null )
   
-  def getResultSetId : Int = { if(resultSet != None) resultSet.get.id else resultSetId }
+  def getResultSetId : Long = { if(resultSet != None) resultSet.get.id else resultSetId }
   
-  def getDecoyResultSummaryId : Int = { if(decoyResultSummary != null && decoyResultSummary != None) decoyResultSummary.get.id else decoyResultSummaryId }
+  def getDecoyResultSummaryId : Long = { if(decoyResultSummary != null && decoyResultSummary != None) decoyResultSummary.get.id else decoyResultSummaryId }
    
-  def peptideInstanceById: Map[Int, PeptideInstance] = {
+  def peptideInstanceById: Map[Long, PeptideInstance] = {
     
     val tmpPepInstById = Map() ++ peptideInstances.map { pepInst => ( pepInst.id -> pepInst ) }      
     if( tmpPepInstById.size != peptideInstances.length ) 
@@ -171,7 +171,7 @@ case class ResultSummary (
 
   }
   
-  def proteinSetById: Map[Int, ProteinSet] = {
+  def proteinSetById: Map[Long, ProteinSet] = {
     
     val tmpProtSetById = Map() ++ proteinSets.map { protSet => ( protSet.id -> protSet ) }      
     if( tmpProtSetById.size != proteinSets.length ) 
@@ -181,7 +181,7 @@ case class ResultSummary (
 
   }
   
-  def getBestValidatedPepMatchesByPepSetId(): Map[Int,Array[PeptideMatch]] = {
+  def getBestValidatedPepMatchesByPepSetId(): Map[Long,Array[PeptideMatch]] = {
     
     require( this.resultSet.isDefined, "a result set should be linked to the result summary first")
     
@@ -196,11 +196,11 @@ case class ResultSummary (
     val peptideMatchById = Map() ++ rsPepMatches.map( pm => pm.id -> pm )
     val proteinMatchById = resultSet.proteinMatchById
     
-    val bestPepMatchesByPepSetIdBuilder = collection.immutable.HashMap.newBuilder[Int,Array[PeptideMatch]]
+    val bestPepMatchesByPepSetIdBuilder = collection.immutable.HashMap.newBuilder[Long,Array[PeptideMatch]]
     for( peptideSet <- this.peptideSets ) {
       
       // Create a hash which will remove possible redundancy (same peptide located at different positions on the protein sequence) 
-      val bestPepMatchByMsQueryId = new HashMap[Int,PeptideMatch]
+      val bestPepMatchByMsQueryId = new HashMap[Long,PeptideMatch]
       
       // Iterate over sequence matches of the protein set to find the best peptide matches
       for( val pepSetItem <- peptideSet.items ) {
@@ -234,7 +234,7 @@ case class ResultSummary (
     
   }
   
-  def getBestPepMatchesByProtSetId(): Map[Int,Array[PeptideMatch]] = {
+  def getBestPepMatchesByProtSetId(): Map[Long,Array[PeptideMatch]] = {
     
     require( this.resultSet.isDefined, "a result set should be linked to the result summary first")
     
@@ -244,11 +244,11 @@ case class ResultSummary (
     val peptideMatchMap = resultSet.peptideMatchById
     val proteinMatchMap = resultSet.proteinMatchById 
     
-    val bestPepMatchesByProtSetIdBuilder = collection.immutable.HashMap.newBuilder[Int,Array[PeptideMatch]]
+    val bestPepMatchesByProtSetIdBuilder = collection.immutable.HashMap.newBuilder[Long,Array[PeptideMatch]]
     for( proteinSet <- this.proteinSets ) {
       
       // Create a hash which will remove possible redundancy (same peptide located at different positions on the protein sequence) 
-      val bestPepMatchByMsQueryId = new HashMap[Int,PeptideMatch]
+      val bestPepMatchByMsQueryId = new HashMap[Long,PeptideMatch]
       
       // Iterate over sequence matches of the protein set to find the best peptide matches
       for( val proteinMatchId <- proteinSet.getProteinMatchIds ) {
@@ -276,14 +276,14 @@ case class ResultSummary (
     
   }
   
-  def getAllPeptideMatchesByPeptideSetId(): Map[Int,Array[PeptideMatch]] = {
+  def getAllPeptideMatchesByPeptideSetId(): Map[Long,Array[PeptideMatch]] = {
     
     val peptideMatchMap = this.resultSet.get.peptideMatchById
     
-    val peptideMatchesByPepSetId = Map.newBuilder[Int,Array[PeptideMatch]]
+    val peptideMatchesByPepSetId = Map.newBuilder[Long,Array[PeptideMatch]]
     for( peptideSet <- this.peptideSets ) {
       
-      val pepMatchesByMsQueryId = new HashMap[Int,ArrayBuffer[PeptideMatch]]
+      val pepMatchesByMsQueryId = new HashMap[Long,ArrayBuffer[PeptideMatch]]
       
       // Iterate over peptide instances of the peptide set
       val peptideInstances = peptideSet.getPeptideInstances    

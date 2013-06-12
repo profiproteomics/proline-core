@@ -4,11 +4,11 @@ import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 
 trait IMasterQuantPeptideIonProvider {
   
-  def getMasterQuantPeptideIonsAsOptions( mqPepIonIds: Seq[Int] ): Array[Option[MasterQuantPeptideIon]]
+  def getMasterQuantPeptideIonsAsOptions( mqPepIonIds: Seq[Long] ): Array[Option[MasterQuantPeptideIon]]
   
-  def getMasterQuantPeptideIons( mqPepIonIds: Seq[Int] ): Array[MasterQuantPeptideIon]
+  def getMasterQuantPeptideIons( mqPepIonIds: Seq[Long] ): Array[MasterQuantPeptideIon]
   
-  def getQuantResultSummariesMQPeptideIons( quantRsmIds: Seq[Int] ): Array[MasterQuantPeptideIon]
+  def getQuantResultSummariesMQPeptideIons( quantRsmIds: Seq[Long] ): Array[MasterQuantPeptideIon]
   
   
   def getMasterQuantPeptideIon( mqPepIonId: Int ): Option[MasterQuantPeptideIon] = {

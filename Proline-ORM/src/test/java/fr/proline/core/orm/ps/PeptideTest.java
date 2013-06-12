@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -38,12 +39,10 @@ public class PeptideTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	//"/fr/proline/core/orm/ps/Unimod_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/ps-db_init_dataset.xml",
-		"/dbunit/datasets/ps/Peptides_Dataset.xml"
-	};
-	
+	// "/fr/proline/core/orm/ps/Unimod_Dataset.xml"
+	String[] datasets = new String[] { "/dbunit/datasets/ps-db_init_dataset.xml",
+		"/dbunit/datasets/ps/Peptides_Dataset.xml" };
+
 	loadCompositeDataSet(datasets);
     }
 
@@ -58,14 +57,21 @@ public class PeptideTest extends DatabaseTestCase {
 
 	    assertNotNull(peps);
 	    assertEquals(2, peps.size());
+
 	    boolean foundPepWOPtm = false;
 	    boolean foundPepWithPtm = false;
-	    for (Peptide pep : peps) {
-		if (pep.getPtms() == null || pep.getPtms().isEmpty())
+
+	    for (final Peptide pep : peps) {
+		final Set<PeptidePtm> ptms = pep.getPtms();
+
+		if ((ptms == null) || ptms.isEmpty()) {
 		    foundPepWOPtm = true;
-		else
+		} else {
 		    foundPepWithPtm = true;
+		}
+
 	    }
+
 	    assertTrue(foundPepWithPtm);
 	    assertTrue(foundPepWOPtm);
 	} finally {
@@ -97,7 +103,7 @@ public class PeptideTest extends DatabaseTestCase {
 	retrievePeptideForIds(BIG_PEPTIDE_COUNT);
     }
 
-    private void retrievePeptideForIds(final int nIds) {
+    private void retrievePeptideForIds(final long nIds) {
 	assert (nIds > 0) : "retrievePeptideForIds() invalid nIds";
 
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
@@ -108,9 +114,9 @@ public class PeptideTest extends DatabaseTestCase {
 	    int retrievedPeptides = 0;
 
 	    /* Build a 0..nIds Set */
-	    final List<Integer> ids = new ArrayList<Integer>(nIds);
-	    for (int i = 0; i < nIds; ++i) {
-		ids.add(Integer.valueOf(i));
+	    final List<Long> ids = new ArrayList<Long>((int) nIds);
+	    for (long i = 0; i < nIds; ++i) {
+		ids.add(Long.valueOf(i));
 	    }
 
 	    final List<Peptide> peptides = PsPeptideRepository.findPeptidesForIds(psEm, ids);

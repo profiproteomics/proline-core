@@ -11,12 +11,12 @@ import fr.proline.util.primitives._
     
 class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) extends IInstrumentConfigProvider {
   
-  def getInstrumentConfigsAsOptions( instConfigIds: Seq[Int] ): Array[Option[InstrumentConfig]] = {
+  def getInstrumentConfigsAsOptions( instConfigIds: Seq[Long] ): Array[Option[InstrumentConfig]] = {
     val instConfigById = Map() ++ this.getInstrumentConfigs(instConfigIds).map( ic => ic.id -> ic )
     instConfigIds.toArray.map( instConfigById.get(_) )
   }
   
-  def getInstrumentConfigs( instConfigIds: Seq[Int] ): Array[InstrumentConfig] = {
+  def getInstrumentConfigs( instConfigIds: Seq[Long] ): Array[InstrumentConfig] = {
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
       
@@ -28,14 +28,14 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
       // Load the instrument configuration record
       udsEzDBC.select( sqlQuery ) { r =>
 
-        val instrument = new Instrument(id = toInt(r.nextAnyVal), name = r, source = r)
+        val instrument = new Instrument(id = toLong(r.nextAny), name = r, source = r)
         for (instPropStr <- r.nextStringOption) {
           if (StringUtils.isEmpty(instPropStr) == false)
             instrument.properties = Some(parse[InstrumentProperties](instPropStr))
         }
 
         val instrumentConfig = new InstrumentConfig(
-          id = toInt(r.nextAnyVal),
+          id = toLong(r.nextAny),
           name = r.nextString,
           instrument = instrument,
           ms1Analyzer = r.nextString,

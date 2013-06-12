@@ -24,19 +24,19 @@ public class Enzyme implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "cleavage_regexp")
     private String cleavageRegexp;
 
     @Column(name = "is_independant")
-    private Boolean isIndependant;
+    private boolean isIndependant;
 
     @Column(name = "is_semi_specific")
-    private Boolean isSemiSpecific;
+    private boolean isSemiSpecific;
 
     private String name;
-    
+
     @Column(name = "serialized_properties")
     private String serializedProperties;
 
@@ -47,12 +47,12 @@ public class Enzyme implements Serializable {
     public Enzyme() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getCleavageRegexp() {
@@ -63,20 +63,20 @@ public class Enzyme implements Serializable {
 	this.cleavageRegexp = cleavageRegexp;
     }
 
-    public Boolean getIsIndependant() {
-	return this.isIndependant;
+    public boolean getIsIndependant() {
+	return isIndependant;
     }
 
-    public void setIsIndependant(Boolean isIndependant) {
-	this.isIndependant = isIndependant;
+    public void setIsIndependant(final boolean pIsIndependant) {
+	isIndependant = pIsIndependant;
     }
 
-    public Boolean getIsSemiSpecific() {
-	return this.isSemiSpecific;
+    public boolean getIsSemiSpecific() {
+	return isSemiSpecific;
     }
 
-    public void setIsSemiSpecific(Boolean isSemiSpecific) {
-	this.isSemiSpecific = isSemiSpecific;
+    public void setIsSemiSpecific(final boolean pIsSemiSpecific) {
+	isSemiSpecific = pIsSemiSpecific;
     }
 
     public String getName() {
@@ -86,7 +86,7 @@ public class Enzyme implements Serializable {
     public void setName(String name) {
 	this.name = name;
     }
-    
+
     public String getSerializedProperties() {
 	return this.serializedProperties;
     }

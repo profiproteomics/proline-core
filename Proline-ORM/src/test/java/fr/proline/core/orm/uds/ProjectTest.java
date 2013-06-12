@@ -1,8 +1,5 @@
 package fr.proline.core.orm.uds;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.*;
 
 import java.util.List;
@@ -11,7 +8,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,9 +49,9 @@ public class ProjectTest extends DatabaseTestCase {
 		    "Select e from UserAccount e where e.login = :login", UserAccount.class);
 	    query.setParameter("login", "joe");
 	    UserAccount account = query.getSingleResult();
-	    assertThat(account, CoreMatchers.notNullValue());
+	    assertNotNull(account);
 	    List<Project> ownedProjects = ProjectRepository.findOwnedProjects(udsEm, account.getId());
-	    assertThat(ownedProjects.size(), is(1));
+	    assertEquals(ownedProjects.size(), 1);
 	} finally {
 
 	    if (udsEm != null) {
@@ -77,10 +73,10 @@ public class ProjectTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    Project project = udsEm.find(Project.class, 1);
-	    assertThat(project, notNullValue());
-	    assertThat(project.getOwner().getLogin(), equalTo("joe"));
-	    assertThat(project.getMembers().size(), is(2));
+	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
+	    assertNotNull(project);
+	    assertEquals(project.getOwner().getLogin(), "joe");
+	    assertEquals(project.getMembers().size(), 2);
 	} finally {
 
 	    if (udsEm != null) {
@@ -102,20 +98,20 @@ public class ProjectTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    Project project = udsEm.find(Project.class, 1);
-	    UserAccount jim = udsEm.find(UserAccount.class, 3);
+	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
+	    UserAccount jim = udsEm.find(UserAccount.class, Long.valueOf(3L));
 	    project.addMember(jim);
-	    assertThat(project.getMembers().size(), is(3));
+	    assertEquals(project.getMembers().size(), 3);
 	    udsEm.getTransaction().begin();
 	    udsEm.persist(project);
 	    udsEm.getTransaction().commit();
 	    udsEm.clear();
-	    Project rProject = udsEm.find(Project.class, 1);
-	    assertTrue(project != rProject);
-	    assertThat(rProject.getMembers().size(), is(3));
-	    jim = udsEm.find(UserAccount.class, 3);
+	    Project rProject = udsEm.find(Project.class, Long.valueOf(1L));
+	    assertNotSame(project, rProject);
+	    assertEquals(rProject.getMembers().size(), 3);
+	    jim = udsEm.find(UserAccount.class, Long.valueOf(3L));
 	    List<Project> projects = ProjectRepository.findProjects(udsEm, jim.getId());
-	    assertThat(projects.size(), is(1));
+	    assertEquals(projects.size(), 1);
 	} finally {
 
 	    if (udsEm != null) {
@@ -137,18 +133,18 @@ public class ProjectTest extends DatabaseTestCase {
 	final EntityManager udsEm = emf.createEntityManager();
 
 	try {
-	    UserAccount owner = udsEm.find(UserAccount.class, 2);
+	    UserAccount owner = udsEm.find(UserAccount.class, Long.valueOf(2L));
 	    Project project = new Project(owner);
 	    project.setName("Test Project");
 	    project.setDescription("This is a second project");
 	    udsEm.getTransaction().begin();
 	    udsEm.persist(project);
 	    udsEm.getTransaction().commit();
-	    Project rProject = udsEm.find(Project.class, 2);
-	    assertThat(rProject, equalTo(project));
+	    Project rProject = udsEm.find(Project.class, Long.valueOf(2L));
+	    assertEquals(rProject, project);
 	    assertTrue(rProject.getMembers().contains(owner));
 
-	    final List<Integer> projectIds = ProjectRepository.findAllProjectIds(udsEm);
+	    final List<Long> projectIds = ProjectRepository.findAllProjectIds(udsEm);
 	    assertTrue("Project Ids List", (projectIds != null) && !projectIds.isEmpty());
 
 	    LOG.debug("Total count of Projects: " + projectIds.size());

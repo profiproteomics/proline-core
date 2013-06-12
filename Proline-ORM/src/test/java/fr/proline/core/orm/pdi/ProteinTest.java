@@ -1,7 +1,5 @@
 package fr.proline.core.orm.pdi;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
@@ -29,7 +27,7 @@ public class ProteinTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	//"/fr/proline/core/orm/pdi/Proteins_Dataset.xml"
+	// "/fr/proline/core/orm/pdi/Proteins_Dataset.xml"
 	loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml");
     }
 
@@ -40,11 +38,11 @@ public class ProteinTest extends DatabaseTestCase {
 	final EntityManager pdiEm = emf.createEntityManager();
 
 	try {
-	    ProteinIdentifier protein = pdiEm.find(ProteinIdentifier.class, 341);
-	    assertThat(protein, notNullValue());
-	    assertThat(protein.getIsAcNumber(), is(false));
-	    assertThat(protein.getTaxon().getScientificName(), is("Pseudomonas sp."));
-	    assertThat(protein.getValue(), is("1A1D_PSESP"));
+	    ProteinIdentifier protein = pdiEm.find(ProteinIdentifier.class, Long.valueOf(341L));
+	    assertNotNull(protein);
+	    assertFalse(protein.getIsAcNumber());
+	    assertEquals(protein.getTaxon().getScientificName(), "Pseudomonas sp.");
+	    assertEquals(protein.getValue(), "1A1D_PSESP");
 	} finally {
 
 	    if (pdiEm != null) {
@@ -66,10 +64,10 @@ public class ProteinTest extends DatabaseTestCase {
 	final EntityManager pdiEm = emf.createEntityManager();
 
 	try {
-	    BioSequence bioSeq = pdiEm.find(BioSequence.class, 171);
-	    assertThat(bioSeq, notNullValue());
-	    assertThat(bioSeq.getLength(), is(338));
-	    assertThat(bioSeq.getProteinIdentifiers().size(), is(4));
+	    BioSequence bioSeq = pdiEm.find(BioSequence.class, Long.valueOf(171L));
+	    assertNotNull(bioSeq);
+	    assertEquals(bioSeq.getLength(), Integer.valueOf(338));
+	    assertEquals(bioSeq.getProteinIdentifiers().size(), 4);
 	} finally {
 
 	    if (pdiEm != null) {

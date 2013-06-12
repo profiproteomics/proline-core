@@ -11,13 +11,13 @@ trait IMsQueryProvider {
   
   //def getMsQueries( msQueryIds: Seq[Int] ): Array[MsQuery]
   
-  def getMsiSearchesMsQueries( msiSearchIds: Seq[Int] ): Array[MsQuery]
+  def getMsiSearchesMsQueries( msiSearchIds: Seq[Long] ): Array[MsQuery]
   
   //def getMsQuery( initialQueryId: Int, msiSearchId: Int ) : Option[MsQuery]
   
   //def getMsQuery( msQueryId: Int ): Option[MsQuery] = { getMsQueriesAsOptions( Array(msQueryId) )(0) }
   
-  def getMsiSearchMsQueries( msiSearchId: Int ): Array[MsQuery] = {
+  def getMsiSearchMsQueries( msiSearchId: Long ): Array[MsQuery] = {
     getMsiSearchesMsQueries( Array(msiSearchId) )
   }
   

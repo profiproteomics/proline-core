@@ -34,7 +34,7 @@ object PtmDefinitionBuilder {
                                    composition = ptmEvidenceRecord("composition").asInstanceOf[String],
                                    monoMass = ptmEvidenceRecord("mono_mass").asInstanceOf[Double],
                                    averageMass = ptmEvidenceRecord("average_mass").asInstanceOf[Double],
-                                   isRequired = ptmEvidenceRecord.getOrElse("is_required",false).asInstanceOf[Boolean]
+                                   isRequired = toBoolean(ptmEvidenceRecord.getOrElse("is_required",false))
                                  )
 
       ptmEvArray(i) = ptmEv
@@ -43,15 +43,15 @@ object PtmDefinitionBuilder {
     val residueStr = ptmSpecifRecord("residue").asInstanceOf[String];
     val resChar = if( residueStr != null ) residueStr.charAt(0) else '\0'
       
-    var ptmDefId: Int =0 
+    var ptmDefId: Long = 0 
     if(ptmSpecifRecord.contains("id"))
-      ptmDefId = toInt(ptmSpecifRecord("id"))
+      ptmDefId = toLong(ptmSpecifRecord("id"))
     else
       ptmDefId =PtmDefinition.generateNewId
       
     return new PtmDefinition(
                           id = ptmDefId,
-                          ptmId = toInt(ptmRecord("id")),
+                          ptmId = toLong(ptmRecord("id")),
                           location = ptmSpecifRecord("location").asInstanceOf[String],
                           residue = resChar,
                           classification = ptmClassification,

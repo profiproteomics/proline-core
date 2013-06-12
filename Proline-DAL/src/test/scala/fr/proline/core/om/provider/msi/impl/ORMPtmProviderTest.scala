@@ -30,7 +30,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
   @Test
   def getPtmSpecificities() = {
-    val ids = new ArrayBuffer[Int]
+    val ids = new ArrayBuffer[Long]
     ids += 2 //
     ids += 11
     ids += 1287
@@ -61,7 +61,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
   @Test
   def getPtmSpecificitiesWithNonExistant() = {
-    val ids = new ArrayBuffer[Int]
+    val ids = new ArrayBuffer[Long]
     ids += 2
     ids += 9879
 
@@ -83,7 +83,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
   @Test
   def getPtmSpecificitiesWithNonExistant2() = {
-    val ids = new ArrayBuffer[Int]
+    val ids = new ArrayBuffer[Long]
     ids += 9879
     ids += 2
 
@@ -153,7 +153,7 @@ class ORMPtmProviderTest extends DatabaseTestCase {
 
       assertThat(ptmDef, CoreMatchers.notNullValue())
       assertNotSame(ptmDef, None);
-      assertThat(ptmDef.get.id, CoreMatchers.equalTo(883))
+      assertEquals(ptmDef.get.id,883L)
     } finally {
       psDb.close()
     }

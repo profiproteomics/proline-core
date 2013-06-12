@@ -31,7 +31,7 @@ public class PeaklistSoftware implements Serializable {
 
     @Id
     // MSI PeaklistSoftware Id are not generated (taken from Uds PeaklistSoftware entity)
-    private Integer id;
+    private long id;
 
     private String name;
 
@@ -59,24 +59,31 @@ public class PeaklistSoftware implements Serializable {
 
 	setId(udsPeakListSoftware.getId());
 	setName(udsPeakListSoftware.getName());
-	setSerializedProperties(udsPeakListSoftware.getSerializedProperties());
 
-	final String vers = udsPeakListSoftware.getVersion();
+	final String udsPeakListSoftwareProps = udsPeakListSoftware.getSerializedProperties();
 
-	if (StringUtils.isEmpty(vers)) {
+	if (StringUtils.isEmpty(udsPeakListSoftwareProps)) {
+	    setSerializedProperties(null);
+	} else {
+	    setSerializedProperties(udsPeakListSoftwareProps);
+	}
+
+	final String udsPeakListSoftwareVersion = udsPeakListSoftware.getVersion();
+
+	if (StringUtils.isEmpty(udsPeakListSoftwareVersion)) {
 	    setVersion(null);
 	} else {
-	    setVersion(vers);
+	    setVersion(udsPeakListSoftwareVersion);
 	}
 
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getName() {

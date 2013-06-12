@@ -23,7 +23,7 @@ public class MsiPeptideTest extends DatabaseTestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(MsiPeptideTest.class);
 
-    private static final int PEPTIDE_COUNT = 10;
+    private static final long PEPTIDE_COUNT = 10L;
 
     @Override
     public ProlineDatabaseType getProlineDatabaseType() {
@@ -54,9 +54,9 @@ public class MsiPeptideTest extends DatabaseTestCase {
 		msiTransaction1.begin();
 		msiTransacOk = false;
 
-		for (int i = 0; i < PEPTIDE_COUNT; ++i) {
+		for (long i = 0; i < PEPTIDE_COUNT; ++i) {
 		    final Peptide msiPeptide = new Peptide();
-		    msiPeptide.setId(Integer.valueOf(i));
+		    msiPeptide.setId(i);
 		    msiPeptide.setSequence("Pept #" + i);
 		    msiPeptide.setCalculatedMass(i);
 
@@ -88,9 +88,10 @@ public class MsiPeptideTest extends DatabaseTestCase {
 		msiTransaction2.begin();
 		msiTransacOk = false;
 
-		final List<Integer> ids = new ArrayList<Integer>();
-		for (int i = 0; i < PEPTIDE_COUNT; ++i) {
-		    ids.add(Integer.valueOf(i));
+		final List<Long> ids = new ArrayList<Long>();
+
+		for (long i = 0; i < PEPTIDE_COUNT; ++i) {
+		    ids.add(Long.valueOf(i));
 		}
 
 		final List<Peptide> peptides = MsiPeptideRepository.findPeptidesForIds(msiEm, ids);

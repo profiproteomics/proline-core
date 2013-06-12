@@ -14,7 +14,7 @@ class ORMPeptideInstanceProvider( val msiDbCtx: DatabaseConnectionContext, val p
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 
-  def getPeptideInstancesAsOptions(pepInstIds: Seq[Int]): Array[Option[PeptideInstance]] = {
+  def getPeptideInstancesAsOptions(pepInstIds: Seq[Long]): Array[Option[PeptideInstance]] = {
 
     var foundPepInstBuilder = Array.newBuilder[Option[PeptideInstance]]
     pepInstIds foreach (id => {
@@ -27,10 +27,10 @@ class ORMPeptideInstanceProvider( val msiDbCtx: DatabaseConnectionContext, val p
     return foundPepInstBuilder.result()
   }
 
-  def getPeptideInstances(pepInstIds: Seq[Int] ): Array[PeptideInstance] = {
+  def getPeptideInstances(pepInstIds: Seq[Long] ): Array[PeptideInstance] = {
     this.getPeptideInstancesAsOptions(pepInstIds).filter(_ != None).map(_.get)
   }
 
-  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Int] ): Array[PeptideInstance] = { throw new Exception("NYI") }
+  def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Long] ): Array[PeptideInstance] = { throw new Exception("NYI") }
 
 }

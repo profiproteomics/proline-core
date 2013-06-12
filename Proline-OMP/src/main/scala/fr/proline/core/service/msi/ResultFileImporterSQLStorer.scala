@@ -63,7 +63,7 @@ class ResultFileImporterSQLStorer(
   //val wasMsiConnectionOpened = storerContext.isMsiDbConnectionOpened
   //val wasPsConnectionOpened = storerContext.isPsConnectionOpened
 
-  private var targetResultSetId = 0
+  private var targetResultSetId: Long = 0L
 
   override protected def beforeInterruption = {
     // Release database connections

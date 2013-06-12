@@ -29,7 +29,7 @@ class SQLPeptideInstanceProvider(
   val PepInstCols = MsiDbPeptideInstanceTable.columns
   val PepMatchMappingCols = MsiDbPeptideInstancePeptideMatchMapTable.columns
   
-  def getPeptideInstancesAsOptions(pepInstIds: Seq[Int]): Array[Option[PeptideInstance]] = {
+  def getPeptideInstancesAsOptions(pepInstIds: Seq[Long]): Array[Option[PeptideInstance]] = {
 
     val pepInsts = this.getPeptideInstances(pepInstIds)
     val pepInstById = pepInsts.map { p => p.id -> p } toMap
@@ -37,7 +37,7 @@ class SQLPeptideInstanceProvider(
     pepInstIds.map { pepInstById.get(_) } toArray
   }
 
-  def getPeptideInstances(pepInstIds: Seq[Int]): Array[PeptideInstance] = {
+  def getPeptideInstances(pepInstIds: Seq[Long]): Array[PeptideInstance] = {
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
       
@@ -57,7 +57,7 @@ class SQLPeptideInstanceProvider(
     })
   }
 
-  def getResultSummariesPeptideInstances(rsmIds: Seq[Int]): Array[PeptideInstance] = {
+  def getResultSummariesPeptideInstances(rsmIds: Seq[Long]): Array[PeptideInstance] = {
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
       
@@ -83,7 +83,7 @@ class SQLPeptideInstanceProvider(
   ): Array[PeptideInstance] = {
     
     // Load peptides
-    val uniqPepIds = pepInstRecords.map { _(PepInstCols.PEPTIDE_ID).asInstanceOf[Int] } distinct
+    val uniqPepIds = pepInstRecords.map { v => toLong(v(PepInstCols.PEPTIDE_ID)) } distinct
     val peptides = this.peptideProvider.getPeptides(uniqPepIds)
 
     // Map peptides by their id
@@ -91,7 +91,7 @@ class SQLPeptideInstanceProvider(
 
     // Group peptide matches mapping by peptide instance id
     val pepMatchesMappingsByPepInstId = pepInstPepMatchMapRecords.groupBy {
-      _(PepMatchMappingCols.PEPTIDE_INSTANCE_ID).asInstanceOf[Int]
+      v => toLong(v(PepMatchMappingCols.PEPTIDE_INSTANCE_ID))
     }
 
     // Build peptide instances
@@ -103,17 +103,17 @@ class SQLPeptideInstanceProvider(
       val pepInstRecord = pepInstRecords(pepInstIdx)
 
       // Retrieve the corresponding peptide
-      val pepId: Int = toInt(pepInstRecord(PepInstCols.PEPTIDE_ID))
+      val pepId: Long = toLong(pepInstRecord(PepInstCols.PEPTIDE_ID))
       require(peptideById.contains(pepId), "undefined peptide with id ='" + pepId + "'")
       val peptide = peptideById(pepId)
 
       // Retrieve peptide match ids and properties
-      val pepInstId: Int = toInt(pepInstRecord(PepInstCols.ID))
-      val pepMatchIds = new ArrayBuffer[Int]()
-      val pepMatchPropertyMapBuilder = Map.newBuilder[Int, PeptideMatchResultSummaryProperties]
+      val pepInstId: Long = toLong(pepInstRecord(PepInstCols.ID))
+      val pepMatchIds = new ArrayBuffer[Long]()
+      val pepMatchPropertyMapBuilder = Map.newBuilder[Long, PeptideMatchResultSummaryProperties]
 
       pepMatchesMappingsByPepInstId(pepInstId).foreach { pepMatchMapping =>
-        val pepMatchId = pepMatchMapping(PepMatchMappingCols.PEPTIDE_MATCH_ID).asInstanceOf[Int]
+        val pepMatchId = toLong(pepMatchMapping(PepMatchMappingCols.PEPTIDE_MATCH_ID))
         pepMatchIds += pepMatchId
 
         val propertiesAsJSON = pepMatchMapping(PepMatchMappingCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
@@ -135,9 +135,9 @@ class SQLPeptideInstanceProvider(
         selectionLevel = pepInstRecord(PepInstCols.SELECTION_LEVEL).asInstanceOf[Int],
         elutionTime = Option(pepInstRecord(PepInstCols.ELUTION_TIME)).map( toFloat(_) ).getOrElse(0f),
         peptideMatchIds = pepMatchIds.toArray,
-        bestPeptideMatchId = pepInstRecord(PepInstCols.BEST_PEPTIDE_MATCH_ID).asInstanceOf[Int],
-        unmodifiedPeptideId = pepInstRecord(PepInstCols.UNMODIFIED_PEPTIDE_ID).asInstanceOf[Int],
-        resultSummaryId = pepInstRecord(PepInstCols.RESULT_SUMMARY_ID).asInstanceOf[Int],
+        bestPeptideMatchId = toLong(pepInstRecord(PepInstCols.BEST_PEPTIDE_MATCH_ID)),
+        unmodifiedPeptideId = toLong(pepInstRecord(PepInstCols.UNMODIFIED_PEPTIDE_ID)),
+        resultSummaryId = toLong(pepInstRecord(PepInstCols.RESULT_SUMMARY_ID)),
         properties = Option(propertiesAsJSON).map(parse[PeptideInstanceProperties](_)),
         peptideMatchPropertiesById = pepMatchPropertyMapBuilder.result()
       )

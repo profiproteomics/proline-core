@@ -29,7 +29,7 @@ public class Ptm implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
-    private Integer id;
+    private long id;
 
     @Column(name = "full_name")
     private String fullName;
@@ -40,8 +40,9 @@ public class Ptm implements Serializable {
     @Column(name = "short_name")
     private String shortName;
 
+    /* Unimod record_id is optional and of type : xs:long */
     @Column(name = "unimod_id")
-    private Integer unimodId;
+    private Long unimodId;
 
     // bi-directional many-to-one association to PtmEvidence
     @OneToMany(mappedBy = "ptm", cascade = { PERSIST, REMOVE })
@@ -54,12 +55,12 @@ public class Ptm implements Serializable {
     public Ptm() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getFullName() {
@@ -86,16 +87,16 @@ public class Ptm implements Serializable {
 	this.shortName = shortName;
     }
 
-    public Integer getUnimodId() {
-	return this.unimodId;
+    public Long getUnimodId() {
+	return unimodId;
     }
 
-    public void setUnimodId(Integer unimodId) {
-	this.unimodId = unimodId;
+    public void setUnimodId(final Long pUnimodId) {
+	unimodId = pUnimodId;
     }
 
-    public void setEvidences(final Set<PtmEvidence> evids) {
-	evidences = evids;
+    public void setEvidences(final Set<PtmEvidence> pEvidences) {
+	evidences = pEvidences;
     }
 
     public Set<PtmEvidence> getEvidences() {
@@ -105,24 +106,24 @@ public class Ptm implements Serializable {
     public void addEvidence(final PtmEvidence evidence) {
 
 	if (evidence != null) {
-	    Set<PtmEvidence> evids = getEvidences();
+	    Set<PtmEvidence> localEvidences = getEvidences();
 
-	    if (evids == null) {
-		evids = new HashSet<PtmEvidence>();
+	    if (localEvidences == null) {
+		localEvidences = new HashSet<PtmEvidence>();
 
-		setEvidences(evids);
+		setEvidences(localEvidences);
 	    }
 
-	    evids.add(evidence);
+	    localEvidences.add(evidence);
 	}
 
     }
 
     public void removeEvidence(final PtmEvidence evidence) {
 
-	final Set<PtmEvidence> evids = getEvidences();
-	if (evids != null) {
-	    evids.remove(evidence);
+	final Set<PtmEvidence> localEvidences = getEvidences();
+	if (localEvidences != null) {
+	    localEvidences.remove(evidence);
 	}
 
     }
@@ -138,24 +139,24 @@ public class Ptm implements Serializable {
     public void addSpecificity(final PtmSpecificity specificity) {
 
 	if (specificity != null) {
-	    Set<PtmSpecificity> specs = getSpecificities();
+	    Set<PtmSpecificity> localSpecificities = getSpecificities();
 
-	    if (specs == null) {
-		specs = new HashSet<PtmSpecificity>();
+	    if (localSpecificities == null) {
+		localSpecificities = new HashSet<PtmSpecificity>();
 
-		setSpecificities(specs);
+		setSpecificities(localSpecificities);
 	    }
 
-	    specs.add(specificity);
+	    localSpecificities.add(specificity);
 	}
 
     }
 
     public void removeSpecificity(final PtmSpecificity specificity) {
 
-	final Set<PtmSpecificity> specs = getSpecificities();
-	if (specs != null) {
-	    specs.remove(specificity);
+	final Set<PtmSpecificity> localSpecificities = getSpecificities();
+	if (localSpecificities != null) {
+	    localSpecificities.remove(specificity);
 	}
 
     }

@@ -24,7 +24,7 @@ object ContextFactory extends Logging {
    *            <code>Connection</code>.
    * @return A new instance of ExecutionContext
    */
-  def buildExecutionContext(dsFactory: IDataStoreConnectorFactory, projectId: Int, useJPA: Boolean): IExecutionContext = {
+  def buildExecutionContext(dsFactory: IDataStoreConnectorFactory, projectId: Long, useJPA: Boolean): IExecutionContext = {
     val currentThread = Thread.currentThread
 
     if (!currentThread.isInstanceOf[ThreadLogger]) {
@@ -128,7 +128,7 @@ object BuildExecutionContext extends Logging {
    *            <code>Connection</code>.
    * @return A new instance of ExecutionContext
    */
-  def apply(dsFactory: IDataStoreConnectorFactory, projectId: Int, useJPA: Boolean): IExecutionContext = {
+  def apply(dsFactory: IDataStoreConnectorFactory, projectId: Long, useJPA: Boolean): IExecutionContext = {
     ContextFactory.buildExecutionContext(dsFactory, projectId, useJPA)
   }
 

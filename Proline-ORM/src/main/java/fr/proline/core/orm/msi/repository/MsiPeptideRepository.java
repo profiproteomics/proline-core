@@ -38,7 +38,7 @@ public final class MsiPeptideRepository {
      *            <code>Collection</code> of Peptide Ids to retrieve (must not be <code>null</code>).
      * @return List of found Peptides (can be empty if none found).
      */
-    public static List<Peptide> findPeptidesForIds(final EntityManager msiEm, final Collection<Integer> ids) {
+    public static List<Peptide> findPeptidesForIds(final EntityManager msiEm, final Collection<Long> ids) {
 
 	JPAUtils.checkEntityManager(msiEm);
 

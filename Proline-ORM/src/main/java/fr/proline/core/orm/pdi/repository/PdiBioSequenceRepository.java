@@ -87,7 +87,7 @@ public final class PdiBioSequenceRepository {
     }
 
     public static BioSequence findBioSequencePerAccessionAndSeqDB(final EntityManager pdiEm,
-	    final String accession, final int seqDbInstanceId) {
+	    final String accession, final long seqDbInstanceId) {
 
 	JPAUtils.checkEntityManager(pdiEm);
 
@@ -95,7 +95,7 @@ public final class PdiBioSequenceRepository {
 
 	final TypedQuery<BioSequence> query = pdiEm.createNamedQuery("findPdiBioSequenceForAccAndSeqDB",
 		BioSequence.class);
-	query.setParameter("acc", accession).setParameter("seqDbInstId", seqDbInstanceId);
+	query.setParameter("acc", accession).setParameter("seqDbInstId", Long.valueOf(seqDbInstanceId));
 
 	final List<BioSequence> bioSequences = query.getResultList();
 

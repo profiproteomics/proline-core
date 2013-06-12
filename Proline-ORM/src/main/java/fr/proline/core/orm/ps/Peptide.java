@@ -41,7 +41,7 @@ public class Peptide implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
-    private Integer id;
+    private long id;
 
     @Column(name = "calculated_mass")
     private double calculatedMass;
@@ -66,12 +66,12 @@ public class Peptide implements Serializable {
     public Peptide() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public double getCalculatedMass() {

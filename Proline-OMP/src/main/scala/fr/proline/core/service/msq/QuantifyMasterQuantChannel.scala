@@ -9,7 +9,7 @@ import fr.proline.repository.IDataStoreConnectorFactory
 
 class QuantifyMasterQuantChannel(
   executionContext: IExecutionContext,
-  masterQuantChannelID: Int,
+  masterQuantChannelID: Long,
   quantConfig: AnyRef
 ) extends IService {
   

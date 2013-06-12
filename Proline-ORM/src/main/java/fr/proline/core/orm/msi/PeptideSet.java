@@ -1,173 +1,178 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
-
 import java.util.Set;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 /**
  * The persistent class for the peptide_set database table.
  * 
  */
 @Entity
-@Table(name="peptide_set")
+@Table(name = "peptide_set")
 public class PeptideSet implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="is_subset")
-	private Boolean isSubset;
-	
-	private float score;
-	
-	//uni-directional many-to-one association to Scoring
-	@ManyToOne
-	@JoinColumn(name="scoring_id")
-	private Scoring scoring;
-	
-	@Column(name="peptide_count")
-	private Integer peptideCount;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name="peptide_match_count")
-	private Integer peptideMatchCount;
+    @Column(name = "is_subset")
+    private Boolean isSubset;
 
-	@Column(name="result_summary_id")
-	private Integer resultSummaryId;
+    private float score;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
-
-	//bi-directional many-to-one association to ProteinSet
+    // uni-directional many-to-one association to Scoring
     @ManyToOne
-	@JoinColumn(name="protein_set_id")
-	private ProteinSet proteinSet;
+    @JoinColumn(name = "scoring_id")
+    private Scoring scoring;
 
-	//bi-directional many-to-one association to PeptideSetPeptideInstanceItem
-	@OneToMany(mappedBy="peptideSet")
-	private Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems;
+    @Column(name = "peptide_count")
+    private Integer peptideCount;
 
-	//uni-directional many-to-many association to ProteinMatch
+    @Column(name = "peptide_match_count")
+    private Integer peptideMatchCount;
+
+    @Column(name = "result_summary_id")
+    private long resultSummaryId;
+
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
+
+    // bi-directional many-to-one association to ProteinSet
+    @ManyToOne
+    @JoinColumn(name = "protein_set_id")
+    private ProteinSet proteinSet;
+
+    // bi-directional many-to-one association to PeptideSetPeptideInstanceItem
+    @OneToMany(mappedBy = "peptideSet")
+    private Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems;
+
+    // uni-directional many-to-many association to ProteinMatch
     @ManyToMany
-	@JoinTable(
-		name="peptide_set_protein_match_map"
-		, joinColumns={
-			@JoinColumn(name="peptide_set_id")
-			}
-		, inverseJoinColumns={
-			@JoinColumn(name="protein_match_id")
-			}
-		)
-	private Set<ProteinMatch> proteinMatches;
+    @JoinTable(name = "peptide_set_protein_match_map", joinColumns = { @JoinColumn(name = "peptide_set_id") }, inverseJoinColumns = { @JoinColumn(name = "protein_match_id") })
+    private Set<ProteinMatch> proteinMatches;
 
     // Transient Variables not saved in database
- 	@Transient private PeptideInstance[] peptideInstances = null;
-    
-    
+    @Transient
+    private PeptideInstance[] peptideInstances = null;
+
     public PeptideSet() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public Boolean getIsSubset() {
-		return this.isSubset;
-	}
+    public Boolean getIsSubset() {
+	return this.isSubset;
+    }
 
-	public void setIsSubset(Boolean isSubset) {
-		this.isSubset = isSubset;
-	}
+    public void setIsSubset(Boolean isSubset) {
+	this.isSubset = isSubset;
+    }
 
-	public Integer getPeptideCount() {
-		return this.peptideCount;
-	}
+    public Integer getPeptideCount() {
+	return this.peptideCount;
+    }
 
-	public void setPeptideCount(Integer peptideCount) {
-		this.peptideCount = peptideCount;
-	}
+    public void setPeptideCount(Integer peptideCount) {
+	this.peptideCount = peptideCount;
+    }
 
-	public Integer getPeptideMatchCount() {
-		return this.peptideMatchCount;
-	}
+    public Integer getPeptideMatchCount() {
+	return this.peptideMatchCount;
+    }
 
-	public void setPeptideMatchCount(Integer peptideMatchCount) {
-		this.peptideMatchCount = peptideMatchCount;
-	}
+    public void setPeptideMatchCount(Integer peptideMatchCount) {
+	this.peptideMatchCount = peptideMatchCount;
+    }
 
-	public Integer getResultSummaryId() {
-		return this.resultSummaryId;
-	}
+    public long getResultSummaryId() {
+	return resultSummaryId;
+    }
 
-	public void setResultSummaryId(Integer resultSummaryId) {
-		this.resultSummaryId = resultSummaryId;
-	}
-	
-	public float getScore() {
-		return this.score;
-	}
+    public void setResultSummaryId(final long pResultSummaryId) {
+	resultSummaryId = pResultSummaryId;
+    }
 
-	public void setScore(float score) {
-		this.score = score;
-	}
-	
-	public Scoring getScoring() {
-		return this.scoring;
-	}
+    public float getScore() {
+	return this.score;
+    }
 
-	public void setScoring(Scoring scoring) {
-		this.scoring = scoring;
-	}
+    public void setScore(float score) {
+	this.score = score;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public Scoring getScoring() {
+	return this.scoring;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setScoring(Scoring scoring) {
+	this.scoring = scoring;
+    }
 
-	public ProteinSet getProteinSet() {
-		return this.proteinSet;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setProteinSet(ProteinSet proteinSet) {
-		this.proteinSet = proteinSet;
-	}
-	
-	public Set<PeptideSetPeptideInstanceItem> getPeptideSetPeptideInstanceItems() {
-		return this.peptideSetPeptideInstanceItems;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public void setPeptideSetPeptideInstanceItems(Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems) {
-		this.peptideSetPeptideInstanceItems = peptideSetPeptideInstanceItems;
-	}
-	
-	public Set<ProteinMatch> getProteinMatches() {
-		return this.proteinMatches;
-	}
+    public ProteinSet getProteinSet() {
+	return this.proteinSet;
+    }
 
-	public void setProteinMatches(Set<ProteinMatch> proteinMatches) {
-		this.proteinMatches = proteinMatches;
-	}
-	
-	/**
-	 * Get of Transient peptideInstances, Must be set by the user first.
-	 * @return
-	 */
-	public PeptideInstance[] getTransientPeptideInstances() {
-		return peptideInstances;
-	}
+    public void setProteinSet(ProteinSet proteinSet) {
+	this.proteinSet = proteinSet;
+    }
 
-	public void setTransientPeptideInstances(PeptideInstance[] peptideInstances) {
-		this.peptideInstances = peptideInstances;
-	}
-	
+    public Set<PeptideSetPeptideInstanceItem> getPeptideSetPeptideInstanceItems() {
+	return this.peptideSetPeptideInstanceItems;
+    }
+
+    public void setPeptideSetPeptideInstanceItems(
+	    Set<PeptideSetPeptideInstanceItem> peptideSetPeptideInstanceItems) {
+	this.peptideSetPeptideInstanceItems = peptideSetPeptideInstanceItems;
+    }
+
+    public Set<ProteinMatch> getProteinMatches() {
+	return this.proteinMatches;
+    }
+
+    public void setProteinMatches(Set<ProteinMatch> proteinMatches) {
+	this.proteinMatches = proteinMatches;
+    }
+
+    /**
+     * Get of Transient peptideInstances, Must be set by the user first.
+     * 
+     * @return
+     */
+    public PeptideInstance[] getTransientPeptideInstances() {
+	return peptideInstances;
+    }
+
+    public void setTransientPeptideInstances(PeptideInstance[] peptideInstances) {
+	this.peptideInstances = peptideInstances;
+    }
+
 }

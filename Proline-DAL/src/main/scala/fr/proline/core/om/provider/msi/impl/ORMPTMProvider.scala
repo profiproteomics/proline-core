@@ -18,7 +18,7 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
 
   val converter = new PeptidesOMConverterUtil(true)
 
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
 
     var foundPtmDefBuilder = Array.newBuilder[Option[PtmDefinition]]
 
@@ -47,7 +47,7 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
     foundPtmDefBuilder.result
   }
 
-  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
     this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_ != None).map(_.get)
   }
 
@@ -69,7 +69,7 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
 
   }
 
-  def getPtmId(shortName: String): Option[Int] = {
+  def getPtmId(shortName: String): Option[Long] = {
 
     try {
       val foundPtm = psDbCtx.getEntityManager.createQuery("FROM Ptm ptm WHERE ptm.shortName = :shortName", classOf[fr.proline.core.orm.ps.Ptm]).setParameter("shortName", shortName).getSingleResult

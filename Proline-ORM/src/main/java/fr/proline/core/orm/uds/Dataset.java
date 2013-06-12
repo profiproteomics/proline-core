@@ -54,7 +54,7 @@ public class Dataset implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "creation_timestamp")
     private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
@@ -62,7 +62,7 @@ public class Dataset implements Serializable {
     private String description;
 
     @Column(name = "children_count")
-    private Integer childrenCount;
+    private int childrenCount;
 
     private String keywords;
 
@@ -74,7 +74,7 @@ public class Dataset implements Serializable {
     @Enumerated(value = EnumType.STRING)
     private DatasetType type;
 
-    private Integer number;
+    private int number;
 
     @ManyToOne
     @JoinColumn(name = "fractionation_id")
@@ -102,10 +102,10 @@ public class Dataset implements Serializable {
     private List<Dataset> children;
 
     @Column(name = "result_set_id")
-    private Integer resultSetId;
+    private Long resultSetId;
 
     @Column(name = "result_summary_id")
-    private Integer resultSummaryId;
+    private Long resultSummaryId;
 
     // bi-directional many-to-one association to BiologicalSample
     @OneToMany(mappedBy = "dataset")
@@ -147,28 +147,39 @@ public class Dataset implements Serializable {
 	this.project = project;
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public Integer getChildrenCount() {
-	return this.childrenCount;
+    public int getChildrenCount() {
+	return childrenCount;
     }
 
-    public void setChildrenCount(Integer childrenCount) {
-	this.childrenCount = childrenCount;
+    public void setChildrenCount(final int pChildrenCount) {
+	childrenCount = pChildrenCount;
     }
 
     public Timestamp getCreationTimestamp() {
-	return this.creationTimestamp;
+	Timestamp result = null;
+
+	if (creationTimestamp != null) { // Should not be null
+	    result = (Timestamp) creationTimestamp.clone();
+	}
+
+	return result;
     }
 
-    public void setCreationTimestamp(Timestamp creationTimestamp) {
-	this.creationTimestamp = creationTimestamp;
+    public void setCreationTimestamp(final Timestamp pCreationTimestamp) {
+
+	if (pCreationTimestamp == null) {
+	    throw new IllegalArgumentException("PCreationTimestamp is null");
+	}
+
+	creationTimestamp = (Timestamp) pCreationTimestamp.clone();
     }
 
     public String getDescription() {
@@ -195,20 +206,20 @@ public class Dataset implements Serializable {
 	this.parentDataset = parentDataset;
     }
 
-    public Integer getResultSetId() {
+    public Long getResultSetId() {
 	return resultSetId;
     }
 
-    public void setResultSetId(Integer resultSetId) {
-	this.resultSetId = resultSetId;
+    public void setResultSetId(final Long pResultSetId) {
+	resultSetId = pResultSetId;
     }
 
-    public Integer getResultSummaryId() {
+    public Long getResultSummaryId() {
 	return resultSummaryId;
     }
 
-    public void setResultSummaryId(Integer resultSummaryId) {
-	this.resultSummaryId = resultSummaryId;
+    public void setResultSummaryId(final Long pResultSummaryId) {
+	resultSummaryId = pResultSummaryId;
     }
 
     public String getKeywords() {
@@ -235,12 +246,12 @@ public class Dataset implements Serializable {
 	this.name = name;
     }
 
-    public Integer getNumber() {
-	return this.number;
+    public int getNumber() {
+	return number;
     }
 
-    public void setNumber(Integer number) {
-	this.number = number;
+    public void setNumber(final int pNumber) {
+	number = pNumber;
     }
 
     public Project getProject() {
@@ -330,54 +341,53 @@ public class Dataset implements Serializable {
     public void setChildren(final List<Dataset> children) {
 	this.children = children;
     }
-    
+
     public void addChild(Dataset child) {
-    	List<Dataset> childrenList = getChildren();
-    	if (childrenList == null) {
-    		childrenList = new ArrayList<Dataset>(1);
-    		setChildren(childrenList);
-    	}
-    	childrenList.add(child);
-    	child.setNumber(childrenCount);
-    	childrenCount++;
-    	child.setParentDataset(this);
+	List<Dataset> childrenList = getChildren();
+	if (childrenList == null) {
+	    childrenList = new ArrayList<Dataset>(1);
+	    setChildren(childrenList);
+	}
+	childrenList.add(child);
+	child.setNumber(childrenCount);
+	childrenCount++;
+	child.setParentDataset(this);
     }
-    
+
     public void insertChild(Dataset child, int index) {
-    	List<Dataset> childrenList = getChildren();
-    	if (childrenList == null) {
-    		childrenList = new ArrayList<Dataset>(1);
-    		setChildren(childrenList);
-    	}
-    	childrenList.add(index, child);
-    	child.setNumber(index);
-    	childrenCount++;
-    	for (int i=index+1;i<childrenList.size();i++) {
-    		childrenList.get(i).setNumber(i);
-    	}
-    	child.setParentDataset(this);
+	List<Dataset> childrenList = getChildren();
+	if (childrenList == null) {
+	    childrenList = new ArrayList<Dataset>(1);
+	    setChildren(childrenList);
+	}
+	childrenList.add(index, child);
+	child.setNumber(index);
+	childrenCount++;
+
+	for (int i = index + 1; i < childrenList.size(); i++) {
+	    childrenList.get(i).setNumber(i);
+	}
+	child.setParentDataset(this);
     }
-    
+
     public void replaceAllChildren(List<Dataset> newChildren) {
-    	List<Dataset> childrenList = getChildren();
-    	if (childrenList != null) {
-			Iterator<Dataset> it = childrenList.iterator();
-			while (it.hasNext()) {
-				Dataset child = it.next();
-				child.setParentDataset(null);
-				child.setNumber(0);
-			}
-			childrenList.clear();
-			childrenCount = 0;
-    	}
-    	Iterator<Dataset> it = newChildren.iterator();
-    	while (it.hasNext()) {
-    		Dataset newChild = it.next();
-    		addChild(newChild);
-    	}
+	List<Dataset> childrenList = getChildren();
+	if (childrenList != null) {
+	    Iterator<Dataset> it = childrenList.iterator();
+	    while (it.hasNext()) {
+		Dataset child = it.next();
+		child.setParentDataset(null);
+		child.setNumber(0);
+	    }
+	    childrenList.clear();
+	    childrenCount = 0;
+	}
+	Iterator<Dataset> it = newChildren.iterator();
+	while (it.hasNext()) {
+	    Dataset newChild = it.next();
+	    addChild(newChild);
+	}
     }
-    
-    
 
     public Set<IdentificationDataset> getIdentificationDataset() {
 	Set<IdentificationDataset> idfDS = new HashSet<IdentificationDataset>();

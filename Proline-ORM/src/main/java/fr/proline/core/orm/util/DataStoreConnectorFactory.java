@@ -35,8 +35,8 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
     private IDatabaseConnector m_pdiDbConnector;
     private IDatabaseConnector m_psDbConnector;
 
-    private final Map<Integer, IDatabaseConnector> m_msiDbConnectors = new HashMap<Integer, IDatabaseConnector>();
-    private final Map<Integer, IDatabaseConnector> m_lcMsDbConnectors = new HashMap<Integer, IDatabaseConnector>();
+    private final Map<Long, IDatabaseConnector> m_msiDbConnectors = new HashMap<Long, IDatabaseConnector>();
+    private final Map<Long, IDatabaseConnector> m_lcMsDbConnectors = new HashMap<Long, IDatabaseConnector>();
 
     /* Constructors */
     protected DataStoreConnectorFactory() {
@@ -224,13 +224,13 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
     }
 
     @Override
-    public IDatabaseConnector getMsiDbConnector(final int projectId) {
+    public IDatabaseConnector getMsiDbConnector(final long projectId) {
 	IDatabaseConnector msiDbConnector = null;
 
 	synchronized (m_managerLock) {
 	    checkInitialization();
 
-	    final Integer key = Integer.valueOf(projectId);
+	    final Long key = Long.valueOf(projectId);
 
 	    msiDbConnector = m_msiDbConnectors.get(key);
 
@@ -249,13 +249,13 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
     }
 
     @Override
-    public IDatabaseConnector getLcMsDbConnector(final int projectId) {
+    public IDatabaseConnector getLcMsDbConnector(final long projectId) {
 	IDatabaseConnector lcMsDbConnector = null;
 
 	synchronized (m_managerLock) {
 	    checkInitialization();
 
-	    final Integer key = Integer.valueOf(projectId);
+	    final Long key = Long.valueOf(projectId);
 
 	    lcMsDbConnector = m_lcMsDbConnectors.get(key);
 
@@ -351,7 +351,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
     }
 
     private IDatabaseConnector createProjectDatabaseConnector(final ProlineDatabaseType prolineDbType,
-	    final int projectId) {
+	    final long projectId) {
 	IDatabaseConnector connector = null;
 
 	final IDatabaseConnector udsDbConnector = getUdsDbConnector();
@@ -361,7 +361,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	EntityManager udsEm = udsEMF.createEntityManager();
 
 	try {
-	    final Project project = udsEm.find(Project.class, projectId);
+	    final Project project = udsEm.find(Project.class, Long.valueOf(projectId));
 
 	    if (project == null) {
 		throw new IllegalArgumentException("Project #" + projectId + " NOT found in UDS Db");

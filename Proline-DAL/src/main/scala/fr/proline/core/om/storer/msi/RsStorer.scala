@@ -46,7 +46,7 @@ trait IRsStorer extends Logging {
    * @return ID of stored ResultSet
    * @exception  Exception if an error occur while saving data
    */
-  def storeResultSet(resultSet: ResultSet, context: StorerContext): Int
+  def storeResultSet(resultSet: ResultSet, context: StorerContext): Long
 
   /**
    * Store, in persistence repository, specified ResultSet and associated data.
@@ -60,7 +60,7 @@ trait IRsStorer extends Logging {
    * @exception Exception if an error occur while saving data
    */
   // TODO: retrieve msQueries from IResultFile and remove msQueries param ???
-  def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], context: StorerContext): Int
+  def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], context: StorerContext): Long
   
   /*
   /**
@@ -98,7 +98,7 @@ trait IRsStorer extends Logging {
    *
    *  @return Int : Id of created MsiSearch
    */
-  def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Int
+  def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Long
 
   /**
    * Store specified queries in repository and associated them with specified MSISearch.
@@ -113,7 +113,7 @@ trait IRsStorer extends Logging {
    * @return StorerContext with updated references
    *
    */
-  def storeMsQueries(msiSearchID: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext
+  def storeMsQueries(msiSearchID: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext
 
 }
 

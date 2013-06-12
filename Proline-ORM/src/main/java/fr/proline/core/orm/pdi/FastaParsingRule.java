@@ -19,11 +19,12 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "fasta_parsing_rule")
 public class FastaParsingRule implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "db_type")
     private String dbType;
@@ -53,12 +54,12 @@ public class FastaParsingRule implements Serializable {
     public FastaParsingRule() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getDbType() {

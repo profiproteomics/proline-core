@@ -96,11 +96,11 @@ object PeptideMatchFiltering {
     pepMatches.foreach(_.isValidated = true)
   }
 
-  def getPepMatchValidationStatusMap(pepMatches: Seq[PeptideMatch]): Map[Int, Boolean] = {
+  def getPepMatchValidationStatusMap(pepMatches: Seq[PeptideMatch]): Map[Long, Boolean] = {
     Map() ++ pepMatches.map(pm => pm.id -> pm.isValidated)
   }
 
-  def restorePepMatchValidationStatus(pepMatches: Seq[PeptideMatch], pepMatchValStatusMap: Map[Int, Boolean]) {
+  def restorePepMatchValidationStatus(pepMatches: Seq[PeptideMatch], pepMatchValStatusMap: Map[Long, Boolean]) {
     pepMatches.foreach { pm => pm.isValidated = pepMatchValStatusMap(pm.id) }
   }
 }
@@ -153,11 +153,11 @@ object ProteinSetFiltering {
     protSets.foreach(_.isValidated = true)
   }
 
-  def getProtSetValidationStatusMap(protSets: Seq[ProteinSet]): Map[Int, Boolean] = {
+  def getProtSetValidationStatusMap(protSets: Seq[ProteinSet]): Map[Long, Boolean] = {
     Map() ++ protSets.map(ps => ps.id -> ps.isValidated)
   }
 
-  def restoreProtSetValidationStatus(protSets: Seq[ProteinSet], protSetValStatusMap: Map[Int, Boolean]) {
+  def restoreProtSetValidationStatus(protSets: Seq[ProteinSet], protSetValStatusMap: Map[Long, Boolean]) {
     protSets.foreach { ps => ps.isValidated = protSetValStatusMap(ps.id) }
   }
 

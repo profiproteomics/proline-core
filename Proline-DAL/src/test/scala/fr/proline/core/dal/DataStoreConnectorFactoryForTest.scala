@@ -84,14 +84,14 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
   /**
    * Return the same MSI Db for all projectId.
    */
-  override def getMsiDbConnector(projectId: Int) = {
+  override def getMsiDbConnector(projectId: Long) = {
     msiDb
   }
 
   /**
    * Return the same LCMS Db for all projectId.
    */
-  override def getLcMsDbConnector(projectId: Int) = {
+  override def getLcMsDbConnector(projectId: Long) = {
     lcMsDb
   }
 

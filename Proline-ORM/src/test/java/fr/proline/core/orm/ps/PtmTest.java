@@ -1,9 +1,5 @@
 package fr.proline.core.orm.ps;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.*;
 
 import java.util.Set;
@@ -35,12 +31,10 @@ public class PtmTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	//"/fr/proline/core/orm/ps/Unimod_Dataset.xml"
-	String[] datasets = new String[]{
-		"/dbunit/datasets/ps-db_init_dataset.xml",
-		"/dbunit/datasets/ps/Peptides_Dataset.xml"
-	};
-	
+	// "/fr/proline/core/orm/ps/Unimod_Dataset.xml"
+	String[] datasets = new String[] { "/dbunit/datasets/ps-db_init_dataset.xml",
+		"/dbunit/datasets/ps/Peptides_Dataset.xml" };
+
 	loadCompositeDataSet(datasets);
     }
 
@@ -53,14 +47,14 @@ public class PtmTest extends DatabaseTestCase {
 	try {
 	    TypedQuery<Ptm> query = psEm.createQuery(
 		    "Select ptm from Ptm ptm where ptm.unimodId = :unimod_id", Ptm.class);
-	    query.setParameter("unimod_id", 21);
+	    query.setParameter("unimod_id", Long.valueOf(21));
 	    Ptm ptm = query.getSingleResult();
-	    assertThat(ptm.getFullName(), equalTo("Phosphorylation"));
+	    assertEquals(ptm.getFullName(), "Phosphorylation");
 	    Set<PtmEvidence> evidences = ptm.getEvidences();
-	    assertThat(evidences.size(), is(5));
+	    assertEquals(evidences.size(), 5);
 
 	    Set<PtmSpecificity> specificities = ptm.getSpecificities();
-	    assertThat(specificities.size(), is(8));
+	    assertEquals(specificities.size(), 8);
 	} finally {
 
 	    if (psEm != null) {
@@ -83,15 +77,15 @@ public class PtmTest extends DatabaseTestCase {
 
 	try {
 	    Ptm phosPtm = PsPtmRepository.findPtmForName(psEm, "Phospho");
-	    assertThat(phosPtm, notNullValue());
-	    assertThat(phosPtm.getShortName(), equalTo("Phospho"));
-	    assertThat(phosPtm.getFullName(), equalTo("Phosphorylation"));
+	    assertNotNull(phosPtm);
+	    assertEquals(phosPtm.getShortName(), "Phospho");
+	    assertEquals(phosPtm.getFullName(), "Phosphorylation");
 	    Ptm phosPtm2 = PsPtmRepository.findPtmForName(psEm, "PHosPHo");
-	    assertThat(phosPtm2, notNullValue());
-	    assertThat(phosPtm2, sameInstance(phosPtm));
+	    assertNotNull(phosPtm2);
+	    assertSame(phosPtm2, phosPtm);
 	    Ptm phosPtm3 = PsPtmRepository.findPtmForName(psEm, "PHosPHorylation");
-	    assertThat(phosPtm3, notNullValue());
-	    assertThat(phosPtm3, sameInstance(phosPtm));
+	    assertNotNull(phosPtm3);
+	    assertSame(phosPtm3, phosPtm);
 	} finally {
 
 	    if (psEm != null) {

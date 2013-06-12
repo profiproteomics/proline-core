@@ -1,7 +1,9 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * The primary key class for the bio_sequence_gene_map database table.
@@ -9,38 +11,54 @@ import javax.persistence.*;
  */
 @Embeddable
 public class DbEntryProteinIdentifierMapPK implements Serializable {
-	//default serial version id, required for serializable classes.
-	private static final long serialVersionUID = 1L;
 
-	@Column(name="seq_db_entry_id")
-	private Integer sequenceDbEntryId;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="protein_identifier_id")
-	private Integer proteinIdentifierId;
+    @Column(name = "seq_db_entry_id")
+    private long sequenceDbEntryId;
+
+    @Column(name = "protein_identifier_id")
+    private long proteinIdentifierId;
 
     public DbEntryProteinIdentifierMapPK() {
     }
-    
-	public boolean equals(Object other) {
-		if (this == other) {
-			return true;
-		}
-		if (!(other instanceof DbEntryProteinIdentifierMapPK)) {
-			return false;
-		}
-		DbEntryProteinIdentifierMapPK castOther = (DbEntryProteinIdentifierMapPK)other;
-		return 
-			this.sequenceDbEntryId.equals(castOther.sequenceDbEntryId)
-			&& this.proteinIdentifierId.equals(castOther.proteinIdentifierId);
 
+    void setSequenceDbEntryId(final long pSequenceDbEntryId) {
+	sequenceDbEntryId = pSequenceDbEntryId;
     }
-    
-	public int hashCode() {
-		final int prime = 31;
-		int hash = 17;
-		hash = hash * prime + this.sequenceDbEntryId.hashCode();
-		hash = hash * prime + this.proteinIdentifierId.hashCode();
-		
-		return hash;
+
+    public long getSequenceDbEntryId() {
+	return sequenceDbEntryId;
     }
+
+    void setProteinIdentifierId(final long pProteinIdentifierId) {
+	proteinIdentifierId = pProteinIdentifierId;
+    }
+
+    public long getProteinIdentifierId() {
+	return proteinIdentifierId;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+	boolean result = false;
+
+	if (obj == this) {
+	    result = true;
+	} else if (obj instanceof DbEntryProteinIdentifierMapPK) {
+	    final DbEntryProteinIdentifierMapPK otherPK = (DbEntryProteinIdentifierMapPK) obj;
+
+	    result = ((getSequenceDbEntryId() == otherPK.getSequenceDbEntryId()) && (getProteinIdentifierId() == otherPK
+		    .getSequenceDbEntryId()));
+	}
+
+	return result;
+    }
+
+    @Override
+    public int hashCode() {
+	return (Long.valueOf(getSequenceDbEntryId()).hashCode() ^ Long.valueOf(getProteinIdentifierId())
+		.hashCode());
+    }
+
 }

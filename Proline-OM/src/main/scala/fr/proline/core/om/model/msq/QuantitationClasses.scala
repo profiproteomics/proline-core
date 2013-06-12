@@ -12,7 +12,7 @@ trait Item {
 }
 
 trait QuantComponent {
-  val quantChannelId: Int
+  val quantChannelId: Long
   val rawAbundance: Float
   var abundance: Float
   var selectionLevel: Int
@@ -28,7 +28,7 @@ trait LcmsQuantComponent extends QuantComponent {
 }
 
 trait MasterQuantComponent extends Item {
-  def id: Int
+  def id: Long
   //var quantComponentMap: Map[Int,QuantComponent] // QuantComponent mapped by quantChannelId
 }
 
@@ -40,7 +40,7 @@ trait MasterLcmsQuantComponent extends MasterQuantComponent {
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class QuantReporterIon( val quantChannelId: Int,
+case class QuantReporterIon( val quantChannelId: Long,
                              val moz: Double,
                              val rawAbundance: Float,
                              var abundance: Float,                             
@@ -52,9 +52,9 @@ object MasterQuantReporterIon extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class MasterQuantReporterIon( var id: Int,
-                                   var msQueryId: Int,
-                                   var spectrumId: Int,
+case class MasterQuantReporterIon( var id: Long,
+                                   var msQueryId: Long,
+                                   var spectrumId: Long,
                                    var scanNumber: Int,
                                    var quantReporterIonMap: Map[Int,QuantReporterIon],
                                    var selectionLevel: Int,
@@ -88,13 +88,13 @@ case class QuantPeptideIon(  val rawAbundance: Float,
                              var predictedElutionTime: Option[Float] = None,
                              var predictedScanNumber: Option[Int] = None,
                              
-                             val quantChannelId: Int,
-                             val peptideId: Option[Int] = None,
-                             val peptideInstanceId: Option[Int] = None,
-                             val msQueryIds: Option[Array[Int]] = None,
-                             val lcmsFeatureId: Int, // TODO set as Option[Int] = None
-                             val lcmsMasterFeatureId: Option[Int] = None,
-                             val unmodifiedPeptideIonId: Option[Int] = None,
+                             val quantChannelId: Long,
+                             val peptideId: Option[Long] = None,
+                             val peptideInstanceId: Option[Long] = None,
+                             val msQueryIds: Option[Array[Long]] = None,
+                             val lcmsFeatureId: Long, // TODO set as Option[Int] = None
+                             val lcmsMasterFeatureId: Option[Long] = None,
+                             val unmodifiedPeptideIonId: Option[Long] = None,
                              
                              var selectionLevel: Int = 2
 
@@ -106,7 +106,7 @@ object MasterQuantPeptideIon extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class MasterQuantPeptideIon(  var id: Int,
+case class MasterQuantPeptideIon(  var id: Long,
                                    
                                    val unlabeledMoz: Double,
                                    val charge: Int,
@@ -115,15 +115,15 @@ case class MasterQuantPeptideIon(  var id: Int,
                                    val calculatedMoz: Option[Double] = None,
                                                   
                                    var selectionLevel: Int,
-                                   var masterQuantPeptideId: Int, // is a master quant component id id DB
-                                   var resultSummaryId: Int,
+                                   var masterQuantPeptideId: Long, // is a master quant component id id DB
+                                   var resultSummaryId: Long,
 
-                                   var peptideInstanceId: Option[Int] = None,
-                                   var bestPeptideMatchId: Option[Int] = None,
-                                   var lcmsFeatureId: Option[Int] = None, // TODO: rename to lcmsMasterFeatureId or remove ?
-                                   var unmodifiedPeptideIonId: Option[Int] = None,
+                                   var peptideInstanceId: Option[Long] = None,
+                                   var bestPeptideMatchId: Option[Long] = None,
+                                   var lcmsFeatureId: Option[Long] = None, // TODO: rename to lcmsMasterFeatureId or remove ?
+                                   var unmodifiedPeptideIonId: Option[Long] = None,
                                    
-                                   var quantPeptideIonMap: Map[Int,QuantPeptideIon],
+                                   var quantPeptideIonMap: Map[Long, QuantPeptideIon],
                                    var properties: Option[MasterQuantPeptideIonProperties] = None,
                                    //var bestQuantPeptideIon: QuantPeptideIon,
                                    var masterQuantReporterIons: Array[MasterQuantReporterIon] = null
@@ -158,9 +158,9 @@ case class QuantPeptide( val rawAbundance: Float,
                          val peptideMatchesCount: Int,
                          var selectionLevel: Int,
                          
-                         val quantChannelId: Int,
-                         val peptideId: Option[Int] = None,
-                         val peptideInstanceId: Option[Int] = None
+                         val quantChannelId: Long,
+                         val peptideId: Option[Long] = None,
+                         val peptideInstanceId: Option[Long] = None
 
                        ) extends QuantComponent {
   
@@ -169,13 +169,13 @@ case class QuantPeptide( val rawAbundance: Float,
 object MasterQuantPeptide extends InMemoryIdGen
 
 @JsonSnakeCase
-case class MasterQuantPeptide( var id: Int, // important: master quant component id
+case class MasterQuantPeptide( var id: Long, // important: master quant component id
                                val peptideInstance: Option[PeptideInstance], // without label in the context of isotopic labeling
-                               var quantPeptideMap: Map[Int,QuantPeptide], // QuantPeptide by quant channel id
+                               var quantPeptideMap: Map[Long,QuantPeptide], // QuantPeptide by quant channel id
                                var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
                                
                                var selectionLevel: Int,
-                               var resultSummaryId: Int,
+                               var resultSummaryId: Long,
                                var properties: Option[MasterQuantPeptideProperties] = None
                                
                              ) extends MasterQuantComponent {
@@ -183,9 +183,9 @@ case class MasterQuantPeptide( var id: Int, // important: master quant component
   //private lazy val _id = MasterQuantPeptide.generateNewId
   
   //def id(): Int = if( this.peptideInstance != None ) this.peptideInstance.get.id else this._id // TODO: replace by true MQC id
-  def getPeptideId: Option[Int] = if( this.peptideInstance != None ) Some(this.peptideInstance.get.peptide.id) else None
+  def getPeptideId: Option[Long] = if( this.peptideInstance != None ) Some(this.peptideInstance.get.peptide.id) else None
   
-  def getMasterQuantProteinSetIds(): Option[Array[Int]] = {
+  def getMasterQuantProteinSetIds(): Option[Array[Long]] = {
     if( this.properties != None ) this.properties.get.getMasterQuantProteinSetIds()
     else None
   }
@@ -213,16 +213,16 @@ case class MasterQuantPeptide( var id: Int, // important: master quant component
     this.quantPeptideMap.values.reduce { (a,b) => if( a.abundance > b.abundance ) a else b }
   }
   
-  def getQuantPeptideAbundance( quantChannelId: Int ): Float = {
+  def getQuantPeptideAbundance( quantChannelId: Long ): Float = {
     val quantPeptide = this.quantPeptideMap.get(quantChannelId)
     if( quantPeptide == None ) Float.NaN else quantPeptide.get.abundance
   }
   
-  def getDefinedAbundancesForQuantChannels( quantChannelIds: Array[Int] ): Array[Float] = {    
+  def getDefinedAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {    
     quantChannelIds map { quantChannelId => getQuantPeptideAbundance(quantChannelId) } filter { ! _.isNaN }
   }
    
-  def calcMeanAbundanceForQuantChannels( quantChannelIds: Array[Int] ): Float = {
+  def calcMeanAbundanceForQuantChannels( quantChannelIds: Array[Long] ): Float = {
     
     val values = this.getDefinedAbundancesForQuantChannels( quantChannelIds )
     val nbValues = values.length
@@ -235,7 +235,7 @@ case class MasterQuantPeptide( var id: Int, // important: master quant component
     mean
   }
 
-  def calcRatio( numQuantChannelIds: Array[Int], denomQuantChannelIds: Array[Int] ): Float = {
+  def calcRatio( numQuantChannelIds: Array[Long], denomQuantChannelIds: Array[Long] ): Float = {
 
     val quantPepMap = this.quantPeptideMap
     
@@ -256,7 +256,7 @@ case class QuantProteinSet (
   val rawAbundance: Float,
   var abundance: Float,
   val peptideMatchesCount: Int,
-  val quantChannelId: Int,
+  val quantChannelId: Long,
   var selectionLevel: Int
  ) extends QuantComponent
 
@@ -264,7 +264,7 @@ case class QuantProteinSet (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSet(  val proteinSet: ProteinSet,
-                                   var quantProteinSetMap: Map[Int,QuantProteinSet], // QuantProteinSet by quant channel id
+                                   var quantProteinSetMap: Map[Long,QuantProteinSet], // QuantProteinSet by quant channel id
                                    var masterQuantPeptides: Array[MasterQuantPeptide] = null,
                                    
                                    var selectionLevel: Int,

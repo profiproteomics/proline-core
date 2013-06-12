@@ -4,8 +4,8 @@ import fr.proline.core.om.model.lcms.LcMsScanSequence
 
 trait IScanSequenceProvider {
   
-  def getScanSequences( runIds: Seq[Int] ): Array[LcMsScanSequence]
+  def getScanSequences( runIds: Seq[Long] ): Array[LcMsScanSequence]
   
-  def getScanSequence( runId: Int ): LcMsScanSequence = this.getScanSequences( Seq(runId) )(0)
+  def getScanSequence( runId: Long ): LcMsScanSequence = this.getScanSequences( Seq(runId) )(0)
 
 }

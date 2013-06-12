@@ -31,22 +31,18 @@ public class SequenceDbConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public enum Alphabet {
-	AA, DNA
-    };
-
     public enum Format {
 	SWISS, GENEBANK, GFF
     };
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     private String name;
 
     @Column(name = "is_native")
-    private Boolean isNative;
+    private boolean isNative;
 
     @Enumerated(EnumType.STRING)
     private Alphabet alphabet;
@@ -67,12 +63,12 @@ public class SequenceDbConfig implements Serializable {
     @OneToMany(mappedBy = "sequenceDbConfig")
     private Set<SequenceDbInstance> sequenceDbInstances;
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public Alphabet getAlphabet() {
@@ -115,12 +111,12 @@ public class SequenceDbConfig implements Serializable {
 	this.name = name;
     }
 
-    public Boolean getIsNative() {
-	return this.isNative;
+    public boolean getIsNative() {
+	return isNative;
     }
 
-    public void setIsNative(Boolean isNative) {
-	this.isNative = isNative;
+    public void setIsNative(final boolean pIsNative) {
+	isNative = pIsNative;
     }
 
     public void setSequenceDbInstances(final Set<SequenceDbInstance> seqDbInstances) {

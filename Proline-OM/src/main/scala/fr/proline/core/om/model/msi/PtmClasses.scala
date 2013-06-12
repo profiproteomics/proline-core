@@ -25,7 +25,7 @@ case class UnimodEntry( // Required fields
                    val specificities: Array[Any],
                    
                    // Immutable optional fields
-                   val unimodId: Int = 0, 
+                   val unimodId: Long = 0, 
                    val ptmEvidences: Array[PtmEvidence] = null
                    )
   extends PtmNames( shortName, fullName ) {
@@ -81,8 +81,8 @@ case class PtmSpecificity( // Required fields
                       // Immutable optional fields
                       val residue: Char = '\0',
                       val classification: String = null,
-                      val id: Int = 0,
-                      val ptmId : Int = 0 ) {
+                      val id: Long = 0,
+                      val ptmId : Long = 0 ) {
   
   // Requirements
   require( StringUtils.isNotEmpty( location ) )  
@@ -94,7 +94,7 @@ object PtmDefinition extends InMemoryIdGen
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PtmDefinition( // Required fields
-                     override val id: Int,
+                     override val id: Long,
                      override val location: String,
                      val names: PtmNames,
                      val ptmEvidences: Array[PtmEvidence],
@@ -102,7 +102,7 @@ case class PtmDefinition( // Required fields
                      // Immutable optional fields
                      override val residue: Char = '\0',
                      override val classification: String = null,
-                     override val ptmId: Int = 0
+                     override val ptmId: Long = 0
                      )
   extends PtmSpecificity( location, residue, classification, id, ptmId ) {
   

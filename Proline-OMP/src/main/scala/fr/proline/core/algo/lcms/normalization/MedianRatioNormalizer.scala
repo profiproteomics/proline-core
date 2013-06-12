@@ -6,7 +6,7 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
   import fr.proline.core.om.model.lcms._
   import fr.proline.util.math.median
   
-  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float] = {
+  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Long,Float] = {
     
     val masterMap = mapSet.masterMap
     require( masterMap != null, "the map_set #"+ mapSet.id +" must have a master map")
@@ -22,7 +22,7 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
     val nonRefMapIds = mapIdsAsList filter { _ != refMapId }
     
     // Compute ratios of feature intensities between each map and the reference map
-    val intensityRatiosByMapId = new java.util.HashMap[Int,ArrayBuffer[Float]]
+    val intensityRatiosByMapId = new java.util.HashMap[Long,ArrayBuffer[Float]]
     for( mapId <- nonRefMapIds ) intensityRatiosByMapId.put( mapId, new ArrayBuffer[Float](0) )
     
     for( masterFt <- masterMapFeatures ) {
@@ -43,7 +43,7 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
     }
     
     // Compute normalization factors as median intensity ratio for each map
-    val nfByByMapIdBuilder = scala.collection.immutable.Map.newBuilder[Int,Float]
+    val nfByByMapIdBuilder = scala.collection.immutable.Map.newBuilder[Long,Float]
     nfByByMapIdBuilder += ( refMapId -> 1 )
     
     for( mapId <- nonRefMapIds ) {

@@ -42,7 +42,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
   
   }
   
-  protected def insertProcessedMap( ezDBC: EasyDBC, processedMap: ProcessedMap ): Int = {
+  protected def insertProcessedMap( ezDBC: EasyDBC, processedMap: ProcessedMap ): Long = {
     
     // Insert map data
     val newMapId = this.insertMap( ezDBC, processedMap, processedMap.modificationTimestamp )

@@ -27,13 +27,13 @@ public class ProteinIdentifier implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "is_ac_number")
-    private Boolean isAcNumber;
+    private boolean isAcNumber;
 
     @Column(name = "is_active")
-    private Boolean isActive;
+    private boolean isActive;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -58,28 +58,28 @@ public class ProteinIdentifier implements Serializable {
     public ProteinIdentifier() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public Boolean getIsAcNumber() {
-	return this.isAcNumber;
+    public boolean getIsAcNumber() {
+	return isAcNumber;
     }
 
-    public void setIsAcNumber(Boolean isAcNumber) {
-	this.isAcNumber = isAcNumber;
+    public void setIsAcNumber(final boolean pIsAcNumber) {
+	isAcNumber = pIsAcNumber;
     }
 
-    public Boolean getIsActive() {
-	return this.isActive;
+    public boolean getIsActive() {
+	return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-	this.isActive = isActive;
+    public void setIsActive(final boolean pIsActive) {
+	isActive = pIsActive;
     }
 
     public String getSerializedProperties() {

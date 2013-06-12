@@ -26,7 +26,7 @@ object ResultSetMerger {
 
   def apply(
     execContext: IExecutionContext,
-    resultSetIds: Seq[Int]): ResultSetMerger = {
+    resultSetIds: Seq[Long]): ResultSetMerger = {
 
     val rsProvider = getResultSetProvider(execContext)
     val resultSets = new ArrayBuffer[ResultSet](resultSetIds.size)
@@ -63,7 +63,7 @@ class ResultSetMerger(
   resultSets: Seq[ResultSet]) extends IService with Logging {
 
   var mergedResultSet: ResultSet = null
-  def mergedResultSetId = if(mergedResultSet != null) mergedResultSet.id else 0
+  def mergedResultSetId = if(mergedResultSet != null) mergedResultSet.id else 0L
   
   // Merge result sets
   private val rsMergerAlgo = new ResultSetMergerAlgo()
@@ -98,13 +98,13 @@ class ResultSetMerger(
         val allResultSets = resultSets ++ decoyResultSets
 
         // Retrieve protein ids
-        val proteinIdSet = new HashSet[Int]
+        val proteinIdSet = new HashSet[Long]
         for (rs <- allResultSets) {
           val proteinMatches = rs.proteinMatches
 
           for (proteinMatch <- proteinMatches) {
             val proteinId = proteinMatch.getProteinId
-            if (proteinId != 0) proteinIdSet += proteinId
+            if (proteinId != 0L) proteinIdSet += proteinId
           }
         }
 
@@ -165,7 +165,7 @@ class ResultSetMerger(
   
   private def _mergeResultSets(
     resultSets: Seq[ResultSet],
-    seqLengthByProtId: Map[Int,Int]
+    seqLengthByProtId: Map[Long,Int]
   ): ResultSet = {
     
     logger.info("merging result sets...")

@@ -11,13 +11,13 @@ import  fr.proline.core.algo.msi.scoring.IPeptideSetScoreUpdater
 
 class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends Logging {
 
-  def mergeResultSummaries( resultSummaries: Seq[ResultSummary], seqLengthByProtId: Map[Int,Int] ): ResultSummary = {
+  def mergeResultSummaries( resultSummaries: Seq[ResultSummary], seqLengthByProtId: Map[Long,Int] ): ResultSummary = {
     
     // Define some vars
     //val msiSearchIds = new ArrayBuffer[Int]()
     val allValidPeptideMatches = new ArrayBuffer[PeptideMatch]()
     val proteinMatchesByKey = new HashMap[String,ArrayBuffer[ProteinMatch]]()
-    val peptideById = new HashMap[Int,Peptide]()
+    val peptideById = new HashMap[Long,Peptide]()
     
     // Iterate over result summaries
     for( resultSummary <- resultSummaries ) {
@@ -35,7 +35,7 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
       //if( resultSet.isNative ) msiSearchIds += resultSet.getMSISearchId
       
       // Retrieve the ID of valid peptide matches (having a corresponding peptide instance)
-      val validPepMatchIdSetBuilder = Set.newBuilder[Int]
+      val validPepMatchIdSetBuilder = Set.newBuilder[Long]
       for( proteinSet <- proteinSets ) {
         if( proteinSet.isValidated ) {
           val peptideInstances = proteinSet.peptideSet.getPeptideInstances
@@ -81,8 +81,8 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
     
     // Re-map the non-redundant list of peptides to peptide matches
     // Peptide matches related to the same peptide will use the same object
-    val validPeptideById = new HashMap[Int,Peptide]()
-    val validPepMatchesByPepId = new HashMap[Int,ArrayBuffer[PeptideMatch]]()
+    val validPeptideById = new HashMap[Long,Peptide]()
+    val validPepMatchesByPepId = new HashMap[Long,ArrayBuffer[PeptideMatch]]()
     val scoreTypeSet = new HashSet[String]()
     
     for( peptideMatch <- allValidPeptideMatches ) {
@@ -120,8 +120,8 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
       if( firstDescribedProtMatch == null ) firstDescribedProtMatch = protMatchGroup(0)
       
       // Retrieve all sequence matches of this protein match group
-      val seqMatchByPepId = new HashMap[Int,SequenceMatch]()
-      val seqDbIdSetBuilder = Set.newBuilder[Int]
+      val seqMatchByPepId = new HashMap[Long,SequenceMatch]()
+      val seqDbIdSetBuilder = Set.newBuilder[Long]
       
       for( proteinMatch <- protMatchGroup ) {
         proteinMatch.sequenceMatches.foreach { s => seqMatchByPepId(s.getPeptideId) = s }

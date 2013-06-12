@@ -40,7 +40,7 @@
   <table id="TAB8" populated="true" UUID="252b7f4c-8b61-4868-9b16-e9857743d0ad" name="quant_channel" objectType="TABLE" physicalName="quant_channel" >
    <remarks>A quant channel represents all quantified peptides from a single replicate of a single fraction of a biological sample.</remarks>
    <folder id="FOLTAB81" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL9" populated="true" UUID="fa2c78db-94db-408c-bbcd-8f16f189f185" autoIncrement="true" autoIncrementSequenceName="quant_channel_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL9" populated="true" UUID="fa2c78db-94db-408c-bbcd-8f16f189f185" autoIncrement="true" autoIncrementSequenceName="quant_channel_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL10" populated="true" UUID="10d966b9-7d82-4d2d-9733-f3ad39c4701c" autoIncrement="false" autoIncrementSequenceName="quant_channel_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -50,34 +50,34 @@
      <remarks>A name for this quant channel as defined by the user.</remarks>
     </column>
     <column id="COL12" populated="true" UUID="6fba1128-7113-4386-a700-9032e9fa4964" autoIncrement="false" autoIncrementSequenceName="quant_channel_context_key_seq" defaultValue="" name="context_key" nullable="0" physicalName="context_key" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
-     <remarks>A string which serves as a unique key for the quant channel in the context of a given quantitation. It is obtained by the concatenation of 
+     <remarks>A string which serves as a unique key for the quant channel in the context of a given quantitation. It is obtained by the concatenation of
 biological_sample.number and sample_analysis.number (separated by a dot character).</remarks>
     </column>
     <column id="COL13" populated="true" UUID="fe3af527-fd09-409f-a796-dd79958f0b57" autoIncrement="false" autoIncrementSequenceName="quant_channel_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL14" populated="true" UUID="df14c97c-d310-4335-8d17-fe285a4306f5" autoIncrement="false" autoIncrementSequenceName="quant_channel_lcms_map_id_seq" defaultValue="" name="lcms_map_id" nullable="1" physicalName="lcms_map_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL14" populated="true" UUID="df14c97c-d310-4335-8d17-fe285a4306f5" autoIncrement="false" autoIncrementSequenceName="quant_channel_lcms_map_id_seq" defaultValue="" name="lcms_map_id" nullable="1" physicalName="lcms_map_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The optional corresponding LC-MS map in the LCMSdb of the same project.</remarks>
     </column>
-    <column id="COL15" populated="true" UUID="98b47a1e-5fc0-4955-af82-ba61f9512e7a" autoIncrement="false" autoIncrementSequenceName="quant_channel_ident_result_summary_id_seq" defaultValue="" name="ident_result_summary_id" nullable="0" physicalName="ident_result_summary_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL15" populated="true" UUID="98b47a1e-5fc0-4955-af82-ba61f9512e7a" autoIncrement="false" autoIncrementSequenceName="quant_channel_ident_result_summary_id_seq" defaultValue="" name="ident_result_summary_id" nullable="0" physicalName="ident_result_summary_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The corresponding identification summary in the MSIdb of the same project.</remarks>
     </column>
-    <column id="COL16" populated="true" UUID="0c155980-f20c-4ac0-9b1d-a199ccd44a0d" autoIncrement="false" autoIncrementSequenceName="quant_channel_run_id_seq" defaultValue="" name="run_id" nullable="1" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL16" populated="true" UUID="0c155980-f20c-4ac0-9b1d-a199ccd44a0d" autoIncrement="false" autoIncrementSequenceName="quant_channel_run_id_seq" defaultValue="" name="run_id" nullable="1" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The run this quant channel refers to.</remarks>
     </column>
-    <column id="COL17" populated="true" UUID="f8ed30f0-f07a-40ba-b65d-e9a2fa3c3123" autoIncrement="false" autoIncrementSequenceName="quant_channel_quant_label_id_seq" defaultValue="" name="quant_label_id" nullable="1" physicalName="quant_label_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL17" populated="true" UUID="f8ed30f0-f07a-40ba-b65d-e9a2fa3c3123" autoIncrement="false" autoIncrementSequenceName="quant_channel_quant_label_id_seq" defaultValue="" name="quant_label_id" nullable="1" physicalName="quant_label_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The optional label used in the quantiation process.</remarks>
     </column>
-    <column id="COL18" populated="true" UUID="169e3b63-db5f-4167-9fe5-4b955e315c38" autoIncrement="false" autoIncrementSequenceName="quant_channel_sample_analysis_id_seq" defaultValue="" name="sample_analysis_id" nullable="0" physicalName="sample_analysis_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL18" populated="true" UUID="169e3b63-db5f-4167-9fe5-4b955e315c38" autoIncrement="false" autoIncrementSequenceName="quant_channel_sample_analysis_id_seq" defaultValue="" name="sample_analysis_id" nullable="0" physicalName="sample_analysis_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The sample analysis corresponding to this quant channel.</remarks>
     </column>
-    <column id="COL19" populated="true" UUID="83431e46-3a5a-4cec-baf1-e1c8e88a631e" autoIncrement="false" autoIncrementSequenceName="quant_channel_biological_sample_id_seq" defaultValue="" name="biological_sample_id" nullable="0" physicalName="biological_sample_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL19" populated="true" UUID="83431e46-3a5a-4cec-baf1-e1c8e88a631e" autoIncrement="false" autoIncrementSequenceName="quant_channel_biological_sample_id_seq" defaultValue="" name="biological_sample_id" nullable="0" physicalName="biological_sample_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The biological sample corresponding to this quant channel.</remarks>
     </column>
-    <column id="COL20" populated="true" UUID="d1177d13-4937-4f37-89ac-d82bb7bb3294" autoIncrement="false" autoIncrementSequenceName="quant_channel_master_quant_channel_id_seq" defaultValue="" name="master_quant_channel_id" nullable="0" physicalName="master_quant_channel_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL20" populated="true" UUID="d1177d13-4937-4f37-89ac-d82bb7bb3294" autoIncrement="false" autoIncrementSequenceName="quant_channel_master_quant_channel_id_seq" defaultValue="" name="master_quant_channel_id" nullable="0" physicalName="master_quant_channel_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The master quant channel this quant channel belongs to.</remarks>
     </column>
-    <column id="COL21" populated="true" UUID="da5de7f5-8942-4d5f-94db-24497d1f361c" autoIncrement="false" autoIncrementSequenceName="quant_channel_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL21" populated="true" UUID="da5de7f5-8942-4d5f-94db-24497d1f361c" autoIncrement="false" autoIncrementSequenceName="quant_channel_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The quantitation this quant channel belongs to.</remarks>
     </column>
     </folder>
@@ -131,7 +131,7 @@ i.e. for document table a schema property may be the document file extension (.t
   <table id="TAB36" populated="true" UUID="498b262d-5634-4df6-af2b-7c5e1e34793e" name="object_tree" objectType="TABLE" physicalName="object_tree" >
    <remarks></remarks>
    <folder id="FOLTAB361" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL37" populated="true" UUID="a98f94a7-549e-451a-b4de-15c1648da589" autoIncrement="true" autoIncrementSequenceName="object_tree_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL37" populated="true" UUID="a98f94a7-549e-451a-b4de-15c1648da589" autoIncrement="true" autoIncrementSequenceName="object_tree_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL38" populated="true" UUID="e759bdf5-c2fb-4526-88e6-8835ff5f8eca" autoIncrement="false" autoIncrementSequenceName="object_tree_serialized_data_seq" defaultValue="" name="serialized_data" nullable="0" physicalName="serialized_data" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
@@ -155,11 +155,11 @@ i.e. for document table a schema property may be the document file extension (.t
    </folder>
   </table>
   <table id="TAB43" populated="true" UUID="0243e718-6a62-425d-8cfe-8b1f049f29e5" name="external_db" objectType="TABLE" physicalName="external_db" >
-   <remarks>Contains connexion properties for databases associated with projects. 
+   <remarks>Contains connexion properties for databases associated with projects.
 Databases allowing multiple instances are necessarily associated with projects.
 Singleton databases (PDIdb, PSdb, ePims, ...) are also define through this table without any specific association to any projects.</remarks>
    <folder id="FOLTAB431" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL44" populated="true" UUID="9e04a132-ffcc-4174-b7b9-5fce228073a3" autoIncrement="true" autoIncrementSequenceName="external_db_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL44" populated="true" UUID="9e04a132-ffcc-4174-b7b9-5fce228073a3" autoIncrement="true" autoIncrementSequenceName="external_db_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL45" populated="true" UUID="11d68c2a-c602-40b4-af07-78f6bb3c2d28" autoIncrement="false" autoIncrementSequenceName="external_db_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="500" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -210,7 +210,7 @@ Note: it could store the driver name and other connection properties needed by t
   <table id="TAB57" populated="true" UUID="43ba90ec-ec72-4eb5-9c97-ec9dcbbe2ca5" name="biological_group" objectType="TABLE" physicalName="biological_group" >
    <remarks>A group of related biological samples. A biological group is a generic concept that can be used to represents physiological conditions, pool or sample preparation conditions.</remarks>
    <folder id="FOLTAB571" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL58" populated="true" UUID="667ab4b8-4df4-4ee3-b0fe-d7045af5fa5f" autoIncrement="true" autoIncrementSequenceName="biological_group_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL58" populated="true" UUID="667ab4b8-4df4-4ee3-b0fe-d7045af5fa5f" autoIncrement="true" autoIncrementSequenceName="biological_group_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL59" populated="true" UUID="cbb54181-6899-4318-82fe-7c03eccb8d92" autoIncrement="false" autoIncrementSequenceName="biological_group_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -222,7 +222,7 @@ Note: it could store the driver name and other connection properties needed by t
     <column id="COL61" populated="true" UUID="ec7aa74a-2372-4330-a139-0590a94c414e" autoIncrement="false" autoIncrementSequenceName="biological_group_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL62" populated="true" UUID="2db272f9-8f9c-4413-8213-0cb57597c533" autoIncrement="false" autoIncrementSequenceName="biological_group_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL62" populated="true" UUID="2db272f9-8f9c-4413-8213-0cb57597c533" autoIncrement="false" autoIncrementSequenceName="biological_group_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The quantitation this biologicial group is related to.</remarks>
     </column>
     </folder>
@@ -239,7 +239,7 @@ Note: it could store the driver name and other connection properties needed by t
   <table id="TAB65" populated="true" UUID="3f7ec3c0-24e9-4a6f-865a-749f43e7b068" name="group_setup" objectType="TABLE" physicalName="group_setup" >
    <remarks>A group setup is a user defined entity allowing to define the way biological groups are compared.</remarks>
    <folder id="FOLTAB651" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL66" populated="true" UUID="c6f47988-0276-4ae9-b43f-9d6c7d0d1da2" autoIncrement="true" autoIncrementSequenceName="group_setup_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL66" populated="true" UUID="c6f47988-0276-4ae9-b43f-9d6c7d0d1da2" autoIncrement="true" autoIncrementSequenceName="group_setup_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL67" populated="true" UUID="ea7b824c-0ab7-4ca4-ac4f-d268ce4100cd" autoIncrement="false" autoIncrementSequenceName="group_setup_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -248,7 +248,7 @@ Note: it could store the driver name and other connection properties needed by t
     <column id="COL68" populated="true" UUID="27706c2b-967a-47c5-8f3e-9e32fd60082e" autoIncrement="false" autoIncrementSequenceName="group_setup_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL69" populated="true" UUID="7bd079cc-420c-42cb-ad20-14e58de621f2" autoIncrement="false" autoIncrementSequenceName="group_setup_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL69" populated="true" UUID="7bd079cc-420c-42cb-ad20-14e58de621f2" autoIncrement="false" autoIncrementSequenceName="group_setup_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The quantitation this group setup is related to.</remarks>
     </column>
     </folder>
@@ -265,7 +265,7 @@ Note: it could store the driver name and other connection properties needed by t
   <table id="TAB72" populated="true" UUID="5a2f5ed1-58e1-446e-bbda-2fb6226368ac" name="biological_sample" objectType="TABLE" physicalName="biological_sample" >
    <remarks>A biological sample under study.</remarks>
    <folder id="FOLTAB721" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL73" populated="true" UUID="b4f05fb0-08b2-4a1f-9223-3adf8f23fa5d" autoIncrement="true" autoIncrementSequenceName="biological_sample_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL73" populated="true" UUID="b4f05fb0-08b2-4a1f-9223-3adf8f23fa5d" autoIncrement="true" autoIncrementSequenceName="biological_sample_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL74" populated="true" UUID="a6ddb954-1cfd-421c-bb67-9968fc21b953" autoIncrement="false" autoIncrementSequenceName="biological_sample_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -277,7 +277,7 @@ Note: it could store the driver name and other connection properties needed by t
     <column id="COL76" populated="true" UUID="4245b2c4-2ad5-4f62-a335-b8ca9fbc65fb" autoIncrement="false" autoIncrementSequenceName="biological_sample_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL77" populated="true" UUID="ff5f7f70-8ef8-44b9-87b5-0e2fbf3fa705" autoIncrement="false" autoIncrementSequenceName="biological_sample_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL77" populated="true" UUID="ff5f7f70-8ef8-44b9-87b5-0e2fbf3fa705" autoIncrement="false" autoIncrementSequenceName="biological_sample_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The quantitation this biologicial sample is related to.</remarks>
     </column>
     </folder>
@@ -294,10 +294,10 @@ Note: it could store the driver name and other connection properties needed by t
   <table id="TAB80" populated="true" UUID="76356c17-33f3-428e-8221-536baab143ad" name="biological_group_biological_sample_item" objectType="TABLE" physicalName="biological_group_biological_sample_item" >
    <remarks>The list of biological samples associated with this biological group.</remarks>
    <folder id="FOLTAB801" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL81" populated="true" UUID="aeabbaf0-bf4c-4e6a-a5eb-1e3acfd4e61b" autoIncrement="false" autoIncrementSequenceName="sample_group_sample_group_group_id_seq" defaultValue="" name="biological_group_id" nullable="0" physicalName="biological_group_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL81" populated="true" UUID="aeabbaf0-bf4c-4e6a-a5eb-1e3acfd4e61b" autoIncrement="false" autoIncrementSequenceName="sample_group_sample_group_group_id_seq" defaultValue="" name="biological_group_id" nullable="0" physicalName="biological_group_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL82" populated="true" UUID="a92048bb-409c-4e01-83f5-6c94461e0900" autoIncrement="false" autoIncrementSequenceName="biological_sample_biological_sample_condition_id_seq" defaultValue="" name="biological_sample_id" nullable="0" physicalName="biological_sample_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL82" populated="true" UUID="a92048bb-409c-4e01-83f5-6c94461e0900" autoIncrement="false" autoIncrementSequenceName="biological_sample_biological_sample_condition_id_seq" defaultValue="" name="biological_sample_id" nullable="0" physicalName="biological_sample_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -315,7 +315,7 @@ Note: it could store the driver name and other connection properties needed by t
   <table id="TAB86" populated="true" UUID="4a103a35-d8a2-42de-bd98-48924f515d58" name="quant_method" objectType="TABLE" physicalName="quant_method" >
    <remarks>An enumeration of available quantitative methods.</remarks>
    <folder id="FOLTAB861" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL87" populated="true" UUID="42419552-2dbc-4ffd-b102-11c3ab86ede9" autoIncrement="true" autoIncrementSequenceName="quant_method_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL87" populated="true" UUID="42419552-2dbc-4ffd-b102-11c3ab86ede9" autoIncrement="true" autoIncrementSequenceName="quant_method_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL88" populated="true" UUID="278baacf-ad54-4e8e-a393-1a158912d59c" autoIncrement="false" autoIncrementSequenceName="quant_method_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -351,19 +351,19 @@ spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
   <table id="TAB96" populated="true" UUID="8c1d37b2-b7c7-4246-ad64-cac53e71676d" name="ratio_definition" objectType="TABLE" physicalName="ratio_definition" >
    <remarks>The definition of a quantitative ratio. A quantitative ratio is calculated from two biological groups that are considered as the numerator and denominator of the ratio formula.</remarks>
    <folder id="FOLTAB961" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL97" populated="true" UUID="d508bad4-0231-441a-89ea-f37b6dcdfdd3" autoIncrement="true" autoIncrementSequenceName="ratio_definition_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL97" populated="true" UUID="d508bad4-0231-441a-89ea-f37b6dcdfdd3" autoIncrement="true" autoIncrementSequenceName="ratio_definition_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL98" populated="true" UUID="10af73df-5771-42d0-a7b1-85e05ae0ff29" autoIncrement="false" autoIncrementSequenceName="ratio_definition_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>The ratio definition number which is unique for a given group setup. Allows representation of sequence of ratios.</remarks>
     </column>
-    <column id="COL99" populated="true" UUID="020b6995-5a98-40e1-b70a-8396f80ed79e" autoIncrement="false" autoIncrementSequenceName="ratio_definition_numerator_id_seq" defaultValue="" name="numerator_id" nullable="0" physicalName="numerator_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL99" populated="true" UUID="020b6995-5a98-40e1-b70a-8396f80ed79e" autoIncrement="false" autoIncrementSequenceName="ratio_definition_numerator_id_seq" defaultValue="" name="numerator_id" nullable="0" physicalName="numerator_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The biological group whose the abundances are used as numerator in the ratio computation.</remarks>
     </column>
-    <column id="COL100" populated="true" UUID="38b155df-9dd4-4008-a5c4-c8b4834eb76b" autoIncrement="false" autoIncrementSequenceName="ratio_definition_denominator_id_seq" defaultValue="" name="denominator_id" nullable="0" physicalName="denominator_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL100" populated="true" UUID="38b155df-9dd4-4008-a5c4-c8b4834eb76b" autoIncrement="false" autoIncrementSequenceName="ratio_definition_denominator_id_seq" defaultValue="" name="denominator_id" nullable="0" physicalName="denominator_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The biological group whose the abundances are used as denominator in the ratio computation.</remarks>
     </column>
-    <column id="COL101" populated="true" UUID="5f0c364f-db2b-4138-b54f-771a773c1287" autoIncrement="false" autoIncrementSequenceName="ratio_definition_group_setup_id_seq" defaultValue="" name="group_setup_id" nullable="0" physicalName="group_setup_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL101" populated="true" UUID="5f0c364f-db2b-4138-b54f-771a773c1287" autoIncrement="false" autoIncrementSequenceName="ratio_definition_group_setup_id_seq" defaultValue="" name="group_setup_id" nullable="0" physicalName="group_setup_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The group setup this ratio definition belongs to.</remarks>
     </column>
     </folder>
@@ -380,7 +380,7 @@ spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
   <table id="TAB104" populated="true" UUID="01996a17-03a7-44bf-9d3b-3e229c717ca1" name="master_quant_channel" objectType="TABLE" physicalName="master_quant_channel" >
    <remarks>A master quant channel is a consensus over multiple quant channels (merged results). In the context of LC-MS analysis it may correspond to the master map of a given map set.</remarks>
    <folder id="FOLTAB1041" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL105" populated="true" UUID="8f0a4322-1872-4573-bd80-f32ed866f07a" autoIncrement="true" autoIncrementSequenceName="master_quant_channel_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL105" populated="true" UUID="8f0a4322-1872-4573-bd80-f32ed866f07a" autoIncrement="true" autoIncrementSequenceName="master_quant_channel_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL106" populated="true" UUID="151bfcf8-09cd-4f39-a731-7a25ff5947b9" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -392,13 +392,13 @@ spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
     <column id="COL108" populated="true" UUID="c38346e8-75ac-4c43-a5d8-b4967e46dc35" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL109" populated="true" UUID="7e49a7d4-cfde-4eb4-b3e5-7333f3364beb" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_lcms_map_set_id_seq" defaultValue="" name="lcms_map_set_id" nullable="1" physicalName="lcms_map_set_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL109" populated="true" UUID="7e49a7d4-cfde-4eb4-b3e5-7333f3364beb" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_lcms_map_set_id_seq" defaultValue="" name="lcms_map_set_id" nullable="1" physicalName="lcms_map_set_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The corresponding LC-MS map set in the context of quantitations based on LC-MS feature extraction.</remarks>
     </column>
-    <column id="COL110" populated="true" UUID="6ef86f52-0302-4f19-a815-7158e206e0e0" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_quant_result_summary_id_seq" defaultValue="" name="quant_result_summary_id" nullable="1" physicalName="quant_result_summary_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL110" populated="true" UUID="6ef86f52-0302-4f19-a815-7158e206e0e0" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_quant_result_summary_id_seq" defaultValue="" name="quant_result_summary_id" nullable="1" physicalName="quant_result_summary_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The corresponding quant result summary which stores the data of this master quant channel.</remarks>
     </column>
-    <column id="COL111" populated="true" UUID="3a287512-7915-41b7-8c31-ae81c00e5c91" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL111" populated="true" UUID="3a287512-7915-41b7-8c31-ae81c00e5c91" autoIncrement="false" autoIncrementSequenceName="master_quant_channel_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The quantitation this master quant channel belongs to.</remarks>
     </column>
     </folder>
@@ -415,13 +415,13 @@ spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
   <table id="TAB114" populated="true" UUID="2d7631a4-8296-46e8-80b9-c056d2dd4cec" name="run_identification" objectType="TABLE" physicalName="run_identification" >
    <remarks>Defines the run that corresponds to the identification of a set of MS/MS spectra.</remarks>
    <folder id="FOLTAB1141" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL115" populated="true" UUID="97199a23-77d1-437b-83fa-1d230674b9a3" autoIncrement="false" autoIncrementSequenceName="run_identification_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL115" populated="true" UUID="97199a23-77d1-437b-83fa-1d230674b9a3" autoIncrement="false" autoIncrementSequenceName="run_identification_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL116" populated="true" UUID="ad661145-de68-4d45-baac-42fcd35cab2b" autoIncrement="false" autoIncrementSequenceName="run_identification_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL117" populated="true" UUID="dd7ff3c1-6274-4f5c-b666-9604d4de1b85" autoIncrement="false" autoIncrementSequenceName="run_identification_run_id_seq" defaultValue="" name="run_id" nullable="1" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL117" populated="true" UUID="dd7ff3c1-6274-4f5c-b666-9604d4de1b85" autoIncrement="false" autoIncrementSequenceName="run_identification_run_id_seq" defaultValue="" name="run_id" nullable="1" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The run this identification refers to.</remarks>
     </column>
     <column id="COL118" populated="true" UUID="8295bbad-1076-4515-b15e-4808d50c1ceb" autoIncrement="false" autoIncrementSequenceName="run_identification_raw_file_name_seq" defaultValue="" name="raw_file_name" nullable="1" physicalName="raw_file_name" precision="250" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -441,7 +441,7 @@ spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
   <table id="TAB121" populated="true" UUID="e1f3f120-d06b-4cfe-96f0-0d1173e7badb" name="project" objectType="TABLE" physicalName="project" >
    <remarks>A project contains multiple experiments relative to the same study or topic. Files associated with a project are stored in the repository in &quot;/root/project_${project_id}&quot;.</remarks>
    <folder id="FOLTAB1211" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL122" populated="true" UUID="2dce9619-c6d5-4e73-b86e-92f90eddf3e3" autoIncrement="true" autoIncrementSequenceName="project_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL122" populated="true" UUID="2dce9619-c6d5-4e73-b86e-92f90eddf3e3" autoIncrement="true" autoIncrementSequenceName="project_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL123" populated="true" UUID="5d4fcf50-b4b2-450c-bcc6-6031d9b67af4" autoIncrement="false" autoIncrementSequenceName="project_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="250" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -456,7 +456,7 @@ spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
     <column id="COL126" populated="true" UUID="8f653124-69d2-404c-9da5-1f1712138318" autoIncrement="false" autoIncrementSequenceName="project_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL127" populated="true" UUID="39f6d406-6e8b-4b10-86d7-475968824641" autoIncrement="false" autoIncrementSequenceName="project_owner_id_seq" defaultValue="" name="owner_id" nullable="0" physicalName="owner_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL127" populated="true" UUID="39f6d406-6e8b-4b10-86d7-475968824641" autoIncrement="false" autoIncrementSequenceName="project_owner_id_seq" defaultValue="" name="owner_id" nullable="0" physicalName="owner_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The owner of this project. The owner is also a member of the project and then is represented in &quot;project_user_account_map&quot;.</remarks>
     </column>
     </folder>
@@ -474,7 +474,7 @@ spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
    <remarks>User account information.
 UNIQUE(login)</remarks>
    <folder id="FOLTAB1301" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL131" populated="true" UUID="8ed03ce8-3059-44ef-b858-d385d0b80df9" autoIncrement="true" autoIncrementSequenceName="user_account_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL131" populated="true" UUID="8ed03ce8-3059-44ef-b858-d385d0b80df9" autoIncrement="true" autoIncrementSequenceName="user_account_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL132" populated="true" UUID="a80b5236-bc1a-4547-a3bb-ef13ae2fc8d6" autoIncrement="false" autoIncrementSequenceName="user_account_login_seq" defaultValue="" name="login" nullable="0" physicalName="login" precision="50" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -506,7 +506,7 @@ MANUAL, AUTO.</remarks>
   <table id="TAB139" populated="true" UUID="df543db2-1757-4b3a-8fcd-bf459c68e56b" name="document" objectType="TABLE" physicalName="document" >
    <remarks>A virtual document stored on the database. The content of the document is stored in the &apos;&apos;object_tree&apos;&apos; associated with the document.</remarks>
    <folder id="FOLTAB1391" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL140" populated="true" UUID="9f1f8545-071e-4e97-b79a-0ed32de14ae3" autoIncrement="true" autoIncrementSequenceName="document_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL140" populated="true" UUID="9f1f8545-071e-4e97-b79a-0ed32de14ae3" autoIncrement="true" autoIncrementSequenceName="document_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL141" populated="true" UUID="d49623d6-45e0-499a-9cab-645866dcfd0e" autoIncrement="false" autoIncrementSequenceName="document_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="250" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -533,13 +533,13 @@ MANUAL, AUTO.</remarks>
     <column id="COL148" populated="true" UUID="bc0150a2-a311-49ae-b43a-29346461fed1" autoIncrement="false" autoIncrementSequenceName="document_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL149" populated="true" UUID="ce352605-4744-4deb-a082-760dc463ffcf" autoIncrement="false" autoIncrementSequenceName="document_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL149" populated="true" UUID="ce352605-4744-4deb-a082-760dc463ffcf" autoIncrement="false" autoIncrementSequenceName="document_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The object tree that corresponds to the document content.</remarks>
     </column>
-    <column id="COL150" populated="true" UUID="d3c3f5fe-cca8-45cd-99d3-64f20a150086" autoIncrement="false" autoIncrementSequenceName="document_virtual_folder_id_seq" defaultValue="" name="virtual_folder_id" nullable="0" physicalName="virtual_folder_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL150" populated="true" UUID="d3c3f5fe-cca8-45cd-99d3-64f20a150086" autoIncrement="false" autoIncrementSequenceName="document_virtual_folder_id_seq" defaultValue="" name="virtual_folder_id" nullable="0" physicalName="virtual_folder_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The folder this document belongs to.</remarks>
     </column>
-    <column id="COL151" populated="true" UUID="a9ecce3f-42b6-4d66-8f7a-f962f8400c00" autoIncrement="false" autoIncrementSequenceName="document_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL151" populated="true" UUID="a9ecce3f-42b6-4d66-8f7a-f962f8400c00" autoIncrement="false" autoIncrementSequenceName="document_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The project this document belongs to.</remarks>
     </column>
     <column id="COL152" populated="true" UUID="35fae07b-60b1-45b4-97d8-cb44dde6e662" autoIncrement="false" autoIncrementSequenceName="document_schema_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="schema_name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -559,7 +559,7 @@ MANUAL, AUTO.</remarks>
   <table id="TAB155" populated="true" UUID="8894694d-fcc4-4864-a84b-e71ab7717fff" name="sample_analysis" objectType="TABLE" physicalName="sample_analysis" >
    <remarks>Represents each analytical replicates of the associated biological sample. analytical replicates does not necessarily means MS run since labelled samples are analysed in MS in a unique run.</remarks>
    <folder id="FOLTAB1551" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL156" populated="true" UUID="65a8a53e-30de-4bf2-96a9-c3c9b8b992ad" autoIncrement="true" autoIncrementSequenceName="sample_analysis_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL156" populated="true" UUID="65a8a53e-30de-4bf2-96a9-c3c9b8b992ad" autoIncrement="true" autoIncrementSequenceName="sample_analysis_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL157" populated="true" UUID="b22bc7ae-589b-4fb8-83d0-74f3225809c7" autoIncrement="false" autoIncrementSequenceName="sample_analysis_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -568,7 +568,7 @@ MANUAL, AUTO.</remarks>
     <column id="COL158" populated="true" UUID="aa0e399d-1f94-473b-a8a5-8bbd49b121cd" autoIncrement="false" autoIncrementSequenceName="sample_analysis_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL159" populated="true" UUID="eb69e0c0-2463-462e-b559-c5657bd49495" autoIncrement="false" autoIncrementSequenceName="sample_analysis_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL159" populated="true" UUID="eb69e0c0-2463-462e-b559-c5657bd49495" autoIncrement="false" autoIncrementSequenceName="sample_analysis_quantitation_id_seq" defaultValue="" name="quantitation_id" nullable="0" physicalName="quantitation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The quantitation this sample analysis is related to.</remarks>
     </column>
     </folder>
@@ -585,10 +585,10 @@ MANUAL, AUTO.</remarks>
   <table id="TAB162" populated="true" UUID="24c4cf40-ef0a-4b59-80fa-1773865a0ab1" name="project_user_account_map" objectType="TABLE" physicalName="project_user_account_map" >
    <remarks>The mapping between project and user_account records.</remarks>
    <folder id="FOLTAB1621" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL163" populated="true" UUID="ef7c429f-39b1-4cd0-b168-2a398e96c32e" autoIncrement="false" autoIncrementSequenceName="project_user_account_map_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL163" populated="true" UUID="ef7c429f-39b1-4cd0-b168-2a398e96c32e" autoIncrement="false" autoIncrementSequenceName="project_user_account_map_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL164" populated="true" UUID="13caaa11-2ca9-44d4-a1c5-04e9996bae09" autoIncrement="false" autoIncrementSequenceName="project_user_account_map_user_account_id_seq" defaultValue="" name="user_account_id" nullable="0" physicalName="user_account_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL164" populated="true" UUID="13caaa11-2ca9-44d4-a1c5-04e9996bae09" autoIncrement="false" autoIncrementSequenceName="project_user_account_map_user_account_id_seq" defaultValue="" name="user_account_id" nullable="0" physicalName="user_account_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL165" populated="true" UUID="7a3fff24-2372-4f28-85a1-51da153c95f7" autoIncrement="false" autoIncrementSequenceName="project_user_account_map_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
@@ -609,7 +609,7 @@ MANUAL, AUTO.</remarks>
   <table id="TAB169" populated="true" UUID="88f952bc-2596-4a94-b2fc-31e2ae57d0f8" name="quant_label" objectType="TABLE" physicalName="quant_label" >
    <remarks>An enumeration of existing quantitation labels.</remarks>
    <folder id="FOLTAB1691" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL170" populated="true" UUID="53a70530-a602-4a61-bcd3-16e92bd3edf9" autoIncrement="true" autoIncrementSequenceName="quant_label_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL170" populated="true" UUID="53a70530-a602-4a61-bcd3-16e92bd3edf9" autoIncrement="true" autoIncrementSequenceName="quant_label_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL171" populated="true" UUID="1709c417-d6da-4186-8308-e55443ebeca1" autoIncrement="false" autoIncrementSequenceName="quant_label_type_seq" defaultValue="" name="type" nullable="0" physicalName="type" precision="16" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -626,7 +626,7 @@ For instance
     <column id="COL173" populated="true" UUID="ec0d0c30-67ba-4348-9acd-542c53b35af8" autoIncrement="false" autoIncrementSequenceName="quant_label_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL174" populated="true" UUID="636ff59d-1f78-468e-9687-3b87dd6abce3" autoIncrement="false" autoIncrementSequenceName="quant_label_quant_method_id_seq" defaultValue="" name="quant_method_id" nullable="0" physicalName="quant_method_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL174" populated="true" UUID="636ff59d-1f78-468e-9687-3b87dd6abce3" autoIncrement="false" autoIncrementSequenceName="quant_label_quant_method_id_seq" defaultValue="" name="quant_method_id" nullable="0" physicalName="quant_method_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The quantitative method this label refers to.</remarks>
     </column>
     </folder>
@@ -643,7 +643,7 @@ For instance
   <table id="TAB177" populated="true" UUID="e5b35c4b-9433-43bb-b035-0a4cd2593728" name="virtual_folder" objectType="TABLE" physicalName="virtual_folder" >
    <remarks>A virtual folder organize documents in the database. This documents are virtual documents created only in the database.</remarks>
    <folder id="FOLTAB1771" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL178" populated="true" UUID="ad1c96f3-1a3b-4040-8f04-82ff8625040d" autoIncrement="true" autoIncrementSequenceName="virtual_folder_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL178" populated="true" UUID="ad1c96f3-1a3b-4040-8f04-82ff8625040d" autoIncrement="true" autoIncrementSequenceName="virtual_folder_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL179" populated="true" UUID="a4974133-6c93-43e4-925b-b93a6574daec" autoIncrement="false" autoIncrementSequenceName="virtual_folder_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="250" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -655,10 +655,10 @@ For instance
     <column id="COL181" populated="true" UUID="06c20f60-275d-4d89-8c14-5a2c78f46c78" autoIncrement="false" autoIncrementSequenceName="virtual_folder_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL182" populated="true" UUID="0a20567c-2eef-4b5f-bd6f-a045b12f3bc6" autoIncrement="false" autoIncrementSequenceName="virtual_folder_parent_virtual_folder_id_seq" defaultValue="" name="parent_virtual_folder_id" nullable="1" physicalName="parent_virtual_folder_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL182" populated="true" UUID="0a20567c-2eef-4b5f-bd6f-a045b12f3bc6" autoIncrement="false" autoIncrementSequenceName="virtual_folder_parent_virtual_folder_id_seq" defaultValue="" name="parent_virtual_folder_id" nullable="1" physicalName="parent_virtual_folder_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The parent folder. Null if this folder is rooted in the project folder.</remarks>
     </column>
-    <column id="COL183" populated="true" UUID="b7c31d6f-d5e6-4b00-ae4b-f08198abfb72" autoIncrement="false" autoIncrementSequenceName="virtual_folder_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL183" populated="true" UUID="b7c31d6f-d5e6-4b00-ae4b-f08198abfb72" autoIncrement="false" autoIncrementSequenceName="virtual_folder_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The project this virtual folder is related to.</remarks>
     </column>
     </folder>
@@ -675,7 +675,7 @@ For instance
   <table id="TAB186" populated="true" UUID="7a07cc4f-71b9-4029-8b86-11097bdb46bd" name="instrument_config" objectType="TABLE" physicalName="instrument_config" >
    <remarks>This table stores the description of a mass spectrometer configuration.</remarks>
    <folder id="FOLTAB1861" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL187" populated="true" UUID="f1b810f8-5c0f-425b-9103-af6032461f17" autoIncrement="true" autoIncrementSequenceName="instrument_config_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL187" populated="true" UUID="f1b810f8-5c0f-425b-9103-af6032461f17" autoIncrement="true" autoIncrementSequenceName="instrument_config_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL188" populated="true" UUID="a6fe0a39-f875-4636-8d73-538aaa9e275e" autoIncrement="false" autoIncrementSequenceName="instrument_config_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -694,7 +694,7 @@ Valid values for this field are:
     <column id="COL191" populated="true" UUID="99f374f3-ca47-42eb-9ccd-206164dfa7bc" autoIncrement="false" autoIncrementSequenceName="instrument_config_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL192" populated="true" UUID="7793c0ae-6dc2-46ee-b02e-0a9f24ef1460" autoIncrement="false" autoIncrementSequenceName="instrument_config_instrument_id_seq" defaultValue="" name="instrument_id" nullable="0" physicalName="instrument_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL192" populated="true" UUID="7793c0ae-6dc2-46ee-b02e-0a9f24ef1460" autoIncrement="false" autoIncrementSequenceName="instrument_config_instrument_id_seq" defaultValue="" name="instrument_id" nullable="0" physicalName="instrument_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The instrument this configuration refers to.</remarks>
     </column>
     <column id="COL193" populated="true" UUID="389cc74a-16d2-48f5-8963-d81ff49975eb" autoIncrement="false" autoIncrementSequenceName="instrument_config_activation_type_seq" defaultValue="" name="activation_type" nullable="0" physicalName="activation_type" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -717,7 +717,7 @@ Valid values for this field are:
   <table id="TAB198" populated="true" UUID="cde32dee-634e-4207-b475-874f3b4dd394" name="instrument" objectType="TABLE" physicalName="instrument" >
    <remarks>This table lists the user mass spectrometers.</remarks>
    <folder id="FOLTAB1981" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL199" populated="true" UUID="2ac7d8eb-19c7-4108-9ebf-62e92fae9bc7" autoIncrement="true" autoIncrementSequenceName="instrument_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL199" populated="true" UUID="2ac7d8eb-19c7-4108-9ebf-62e92fae9bc7" autoIncrement="true" autoIncrementSequenceName="instrument_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL200" populated="true" UUID="8c1194f3-b42d-45a2-903c-ddf1195fabb5" autoIncrement="false" autoIncrementSequenceName="instrument_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -766,10 +766,10 @@ ESI, MALDI.</remarks>
   <table id="TAB212" populated="true" UUID="fc26ad2d-f108-44b9-bb24-202075fb0921" name="instrument_config_fragmentation_rule_map" objectType="TABLE" physicalName="instrument_config_fragmentation_rule_map" >
    <remarks>The set of fragmentation rules associated with this instrument configuration.</remarks>
    <folder id="FOLTAB2121" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL213" populated="true" UUID="38085eae-0980-4284-8177-90f5077a6c1d" autoIncrement="false" autoIncrementSequenceName="instrument_config_fragmentation_rule_map_instrument_config_id_seq" defaultValue="" name="instrument_config_id" nullable="0" physicalName="instrument_config_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL213" populated="true" UUID="38085eae-0980-4284-8177-90f5077a6c1d" autoIncrement="false" autoIncrementSequenceName="instrument_config_fragmentation_rule_map_instrument_config_id_seq" defaultValue="" name="instrument_config_id" nullable="0" physicalName="instrument_config_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL214" populated="true" UUID="66c97f80-1cb6-4bcc-817c-4e294dbb1050" autoIncrement="false" autoIncrementSequenceName="instrument_config_fragmentation_rule_map_fragmentation_rule_id_seq" defaultValue="" name="fragmentation_rule_id" nullable="0" physicalName="fragmentation_rule_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL214" populated="true" UUID="66c97f80-1cb6-4bcc-817c-4e294dbb1050" autoIncrement="false" autoIncrementSequenceName="instrument_config_fragmentation_rule_map_fragmentation_rule_id_seq" defaultValue="" name="fragmentation_rule_id" nullable="0" physicalName="fragmentation_rule_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -787,7 +787,7 @@ ESI, MALDI.</remarks>
   <table id="TAB218" populated="true" UUID="e437a16a-8a34-43a2-8503-8c193cc6fd50" name="fragmentation_rule" objectType="TABLE" physicalName="fragmentation_rule" >
    <remarks>The fragmentation rules help to describe the behavior of a given instrument used in a given configuration. Each rule describes fragment ion series that can be observed on an instrument and that are used by the search engine to generate theoretical spectra in order to score experimental spectra.</remarks>
    <folder id="FOLTAB2181" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL219" populated="true" UUID="383bf9bc-4249-49d0-ac8e-2aaa32f61b28" autoIncrement="true" autoIncrementSequenceName="fragmentation_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL219" populated="true" UUID="383bf9bc-4249-49d0-ac8e-2aaa32f61b28" autoIncrement="true" autoIncrementSequenceName="fragmentation_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL220" populated="true" UUID="038957c0-ea99-4994-873a-8aff601b73af" autoIncrement="false" autoIncrementSequenceName="fragmentation_rule_description_seq" defaultValue="" name="description" nullable="1" physicalName="description" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -840,10 +840,10 @@ significant, highest_scoring.</remarks>
     <column id="COL226" populated="true" UUID="d7978ed4-49e0-4c09-91a8-3c2b16a8cd7b" autoIncrement="false" autoIncrementSequenceName="fragmentation_rule_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL227" populated="true" UUID="519ae140-3901-471e-a936-0e59cb3166e5" autoIncrement="false" autoIncrementSequenceName="fragmentation_rule_fragment_series_id_seq" defaultValue="" name="fragment_series_id" nullable="1" physicalName="fragment_series_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL227" populated="true" UUID="519ae140-3901-471e-a936-0e59cb3166e5" autoIncrement="false" autoIncrementSequenceName="fragmentation_rule_fragment_series_id_seq" defaultValue="" name="fragment_series_id" nullable="1" physicalName="fragment_series_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The corresponding and specific ion series.</remarks>
     </column>
-    <column id="COL228" populated="true" UUID="302ba90c-d1f3-4411-b37a-2464aa2eb5b4" autoIncrement="false" autoIncrementSequenceName="fragmentation_rule_required_series_id_seq" defaultValue="" name="required_series_id" nullable="1" physicalName="required_series_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL228" populated="true" UUID="302ba90c-d1f3-4411-b37a-2464aa2eb5b4" autoIncrement="false" autoIncrementSequenceName="fragmentation_rule_required_series_id_seq" defaultValue="" name="required_series_id" nullable="1" physicalName="required_series_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The ion series familly (a, b, c, x, y, z) required to be observed for this fragmentation rule.</remarks>
     </column>
     </folder>
@@ -860,7 +860,7 @@ significant, highest_scoring.</remarks>
   <table id="TAB231" populated="true" UUID="f1af8494-6bc5-431d-980f-f5703d548fa9" name="fragmentation_series" objectType="TABLE" physicalName="fragmentation_series" >
    <remarks>The types of fragment ion series that can be observed in an MS/MS spectrum.</remarks>
    <folder id="FOLTAB2311" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL232" populated="true" UUID="631198d5-0b38-4914-845f-3bc2d83de9b1" autoIncrement="true" autoIncrementSequenceName="fragmentation_series_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL232" populated="true" UUID="631198d5-0b38-4914-845f-3bc2d83de9b1" autoIncrement="true" autoIncrementSequenceName="fragmentation_series_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL233" populated="true" UUID="37d4709f-a397-4e47-9311-a861cc8703a5" autoIncrement="false" autoIncrementSequenceName="fragmentation_series_name_seq" defaultValue="" name="name" nullable="1" physicalName="name" precision="9" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -889,7 +889,7 @@ Valid values for this field are: H2O, NH3, H3PO4.</remarks>
    <remarks>The enumeration of the different enzymes that could be used.
 TODO: add serialized_properties</remarks>
    <folder id="FOLTAB2381" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL239" populated="true" UUID="1f933008-6e8c-4b20-9a54-774246e94c7d" autoIncrement="true" autoIncrementSequenceName="enzyme_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL239" populated="true" UUID="1f933008-6e8c-4b20-9a54-774246e94c7d" autoIncrement="true" autoIncrementSequenceName="enzyme_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL240" populated="true" UUID="f60dcb90-ac03-4e9d-bd2b-e7365a62a951" autoIncrement="false" autoIncrementSequenceName="enzyme_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -925,7 +925,7 @@ If true, any given peptide need only conform to the cleavage specificity at one 
   <table id="TAB249" populated="true" UUID="5b3acc3f-a259-4a99-b11a-a66ed8c1aaeb" name="enzyme_cleavage" objectType="TABLE" physicalName="enzyme_cleavage" >
    <remarks></remarks>
    <folder id="FOLTAB2491" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL250" populated="true" UUID="82312c2d-c03e-4aca-b65a-850c49cb6dcd" autoIncrement="true" autoIncrementSequenceName="enzyme_cleavage_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL250" populated="true" UUID="82312c2d-c03e-4aca-b65a-850c49cb6dcd" autoIncrement="true" autoIncrementSequenceName="enzyme_cleavage_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL251" populated="true" UUID="c6c2fe77-64e4-4eb4-bb84-5f7c3bccc859" autoIncrement="false" autoIncrementSequenceName="enzyme_cleavage_site_seq" defaultValue="" name="site" nullable="0" physicalName="site" precision="6" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -939,7 +939,7 @@ N-term, C-term.</remarks>
     <column id="COL253" populated="true" UUID="830c8eb5-ef22-468a-b56e-9948310f338c" autoIncrement="false" autoIncrementSequenceName="enzyme_cleavage_restrictive_residues_seq" defaultValue="" name="restrictive_residues" nullable="1" physicalName="restrictive_residues" precision="20" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>A string which main contains one or more residue symbols restricting enzyme cleavage.</remarks>
     </column>
-    <column id="COL254" populated="true" UUID="24828bf2-a426-4d1b-af20-8992c1707a3a" autoIncrement="false" autoIncrementSequenceName="enzyme_enzyme_id_seq_1" defaultValue="" name="enzyme_id" nullable="0" physicalName="enzyme_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL254" populated="true" UUID="24828bf2-a426-4d1b-af20-8992c1707a3a" autoIncrement="false" autoIncrementSequenceName="enzyme_enzyme_id_seq_1" defaultValue="" name="enzyme_id" nullable="0" physicalName="enzyme_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The enzyme this cleavage corresponds to.</remarks>
     </column>
     </folder>
@@ -956,7 +956,7 @@ N-term, C-term.</remarks>
   <table id="TAB257" populated="true" UUID="79aeb8b5-a8fb-4bd5-b1ef-44ea84ecc1c6" name="spec_title_parsing_rule" objectType="TABLE" physicalName="spec_title_parsing_rule" >
    <remarks>Describe rules used to parse the content of the MS2 spectrum title.</remarks>
    <folder id="FOLTAB2571" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL258" populated="true" UUID="8971a841-1d93-44dd-a5f6-f32f00ec740a" autoIncrement="true" autoIncrementSequenceName="spec_title_parsing_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL258" populated="true" UUID="8971a841-1d93-44dd-a5f6-f32f00ec740a" autoIncrement="true" autoIncrementSequenceName="spec_title_parsing_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL259" populated="true" UUID="f1eef982-a109-4177-a1b0-2c46bbb00343" autoIncrement="false" autoIncrementSequenceName="spec_title_parsing_rule_raw_file_name_seq" defaultValue="" name="raw_file_name" nullable="1" physicalName="raw_file_name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -998,10 +998,10 @@ TODO: remove this field ?</remarks>
   <table id="TAB269" populated="true" UUID="1a458ca2-6cc6-4fb1-9336-dda54c5f80dd" name="project_db_map" objectType="TABLE" physicalName="project_db_map" >
    <remarks>The mapping between project and external_db records.</remarks>
    <folder id="FOLTAB2691" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL270" populated="true" UUID="93fa1d1d-2402-4757-9d97-783fb8d1c059" autoIncrement="false" autoIncrementSequenceName="project_db_map_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL270" populated="true" UUID="93fa1d1d-2402-4757-9d97-783fb8d1c059" autoIncrement="false" autoIncrementSequenceName="project_db_map_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL271" populated="true" UUID="77e489c8-1d5d-44d7-8293-db833e48e129" autoIncrement="false" autoIncrementSequenceName="project_db_map_external_db_id_seq" defaultValue="" name="external_db_id" nullable="0" physicalName="external_db_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL271" populated="true" UUID="77e489c8-1d5d-44d7-8293-db833e48e129" autoIncrement="false" autoIncrementSequenceName="project_db_map_external_db_id_seq" defaultValue="" name="external_db_id" nullable="0" physicalName="external_db_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -1019,7 +1019,7 @@ TODO: remove this field ?</remarks>
   <table id="TAB275" populated="true" UUID="5e9c187c-36d9-4e04-abc0-baa97633f757" name="protein_match_decoy_rule" objectType="TABLE" physicalName="protein_match_decoy_rule" >
    <remarks>Stores rules that can be used to determine if a protein_match is decoy or not. If the accession number of the protein_match contains the tag (ac_decoy_tag) it is considered as &quot;decoy&quot;.</remarks>
    <folder id="FOLTAB2751" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL276" populated="true" UUID="f3148092-6865-4e02-bdca-aa06a571c272" autoIncrement="true" autoIncrementSequenceName="protein_match_decoy_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL276" populated="true" UUID="f3148092-6865-4e02-bdca-aa06a571c272" autoIncrement="true" autoIncrementSequenceName="protein_match_decoy_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL277" populated="true" UUID="39db1718-a7d2-4239-a2c2-3b3f68f07d5d" autoIncrement="false" autoIncrementSequenceName="protein_match_decoy_rule_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -1042,7 +1042,7 @@ TODO: remove this field ?</remarks>
   <table id="TAB281" populated="true" UUID="21dc1499-8492-4e7f-8e1a-b225b7f29857" name="run" objectType="TABLE" physicalName="run" >
    <remarks>Stores information about a mass spectrometer acquisition also called &quot;run&quot;.</remarks>
    <folder id="FOLTAB2811" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL282" populated="true" UUID="6095c680-6d1d-498f-b2fd-02da43f2f01e" autoIncrement="true" autoIncrementSequenceName="run_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL282" populated="true" UUID="6095c680-6d1d-498f-b2fd-02da43f2f01e" autoIncrement="true" autoIncrementSequenceName="run_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL283" populated="true" UUID="72fe3549-096e-4672-af81-e5f6afe10e4f" autoIncrement="false" autoIncrementSequenceName="run_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -1103,10 +1103,10 @@ It should not contain an extension and be unique across all the database.</remar
     <column id="COL299" populated="true" UUID="c63c36e6-32c7-45fb-ae06-5b0a6db18e0a" autoIncrement="false" autoIncrementSequenceName="raw_file_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL300" populated="true" UUID="a3308632-fead-489c-b44a-c6c6fc7d3a4c" autoIncrement="false" autoIncrementSequenceName="raw_file_instrument_id_seq" defaultValue="" name="instrument_id" nullable="0" physicalName="instrument_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL300" populated="true" UUID="a3308632-fead-489c-b44a-c6c6fc7d3a4c" autoIncrement="false" autoIncrementSequenceName="raw_file_instrument_id_seq" defaultValue="" name="instrument_id" nullable="0" physicalName="instrument_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The instrument that has performed the raw file acquisition.</remarks>
     </column>
-    <column id="COL301" populated="true" UUID="11ea8b27-d2bc-4cab-b198-efe53a746bcf" autoIncrement="false" autoIncrementSequenceName="raw_file_owner_id_seq" defaultValue="" name="owner_id" nullable="0" physicalName="owner_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL301" populated="true" UUID="11ea8b27-d2bc-4cab-b198-efe53a746bcf" autoIncrement="false" autoIncrementSequenceName="raw_file_owner_id_seq" defaultValue="" name="owner_id" nullable="0" physicalName="owner_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The owner of this raw file. The owner may have  permissions higher than other user accounts.</remarks>
     </column>
     </folder>
@@ -1123,7 +1123,7 @@ It should not contain an extension and be unique across all the database.</remar
   <table id="TAB304" populated="true" UUID="8230d4e8-e041-4d13-9b1e-1a55631fd70f" name="peaklist_software" objectType="TABLE" physicalName="peaklist_software" >
    <remarks>Describes software that can be used to generate MS/MS peaklists.</remarks>
    <folder id="FOLTAB3041" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL305" populated="true" UUID="0eec1b38-cd97-4fc2-8163-e3cea9f180f3" autoIncrement="true" autoIncrementSequenceName="peaklist_software_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL305" populated="true" UUID="0eec1b38-cd97-4fc2-8163-e3cea9f180f3" autoIncrement="true" autoIncrementSequenceName="peaklist_software_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL306" populated="true" UUID="6e8f281c-59a5-4aaa-a482-79e72c1b0130" autoIncrement="false" autoIncrementSequenceName="peaklist_software_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -1135,7 +1135,7 @@ It should not contain an extension and be unique across all the database.</remar
     <column id="COL308" populated="true" UUID="ebfcab1d-9048-4bd1-82b6-0473c6161ff7" autoIncrement="false" autoIncrementSequenceName="peaklist_software_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL309" populated="true" UUID="1bda6d85-66a6-4fe2-b1c0-eed1eff2d831" autoIncrement="false" autoIncrementSequenceName="peaklist_software_spec_title_parsing_rule_id_seq" defaultValue="" name="spec_title_parsing_rule_id" nullable="0" physicalName="spec_title_parsing_rule_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL309" populated="true" UUID="1bda6d85-66a6-4fe2-b1c0-eed1eff2d831" autoIncrement="false" autoIncrementSequenceName="peaklist_software_spec_title_parsing_rule_id_seq" defaultValue="" name="spec_title_parsing_rule_id" nullable="0" physicalName="spec_title_parsing_rule_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The rule used to parse spectra title in the peaklists generated by this software.</remarks>
     </column>
     </folder>
@@ -1152,7 +1152,7 @@ It should not contain an extension and be unique across all the database.</remar
   <table id="TAB312" populated="true" UUID="7ecffd08-7bd5-44e1-b318-164fc160c479" name="data_set" objectType="TABLE" physicalName="data_set" >
    <remarks>A data_set is an abstract entity which can describe identification and quantitative data or an aggregation of such data_sets (see type column for more information). Each data_set provides references to the corresponding result_set/result_summary in the MSIdb of the related project.</remarks>
    <folder id="FOLTAB3121" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL313" populated="true" UUID="52af16e0-d368-4760-95fb-df5df301e3f9" autoIncrement="true" autoIncrementSequenceName="data_set_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL313" populated="true" UUID="52af16e0-d368-4760-95fb-df5df301e3f9" autoIncrement="true" autoIncrementSequenceName="data_set_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL314" populated="true" UUID="fe1a424e-5519-4958-9365-63e08601249e" autoIncrement="false" autoIncrementSequenceName="data_set_number_seq" defaultValue="" name="number" nullable="0" physicalName="number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -1184,25 +1184,25 @@ IDENTIFICATION, QUANTITATION, AGGREGATE, TRASH.</remarks>
     <column id="COL322" populated="true" UUID="16329018-fbc3-4893-9f1d-475ebc94da3a" autoIncrement="false" autoIncrementSequenceName="data_set_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL323" populated="true" UUID="13ad686b-b932-47a2-87d5-537ca0667272" autoIncrement="false" autoIncrementSequenceName="data_set_result_set_id_seq" defaultValue="" name="result_set_id" nullable="1" physicalName="result_set_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL323" populated="true" UUID="13ad686b-b932-47a2-87d5-537ca0667272" autoIncrement="false" autoIncrementSequenceName="data_set_result_set_id_seq" defaultValue="" name="result_set_id" nullable="1" physicalName="result_set_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The corresponding result_set in the MSIdb of the same project.</remarks>
     </column>
-    <column id="COL324" populated="true" UUID="e4903f4a-6eb9-45b8-b963-8b1fff3a6afb" autoIncrement="false" autoIncrementSequenceName="data_set_result_summary_id_seq" defaultValue="" name="result_summary_id" nullable="1" physicalName="result_summary_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL324" populated="true" UUID="e4903f4a-6eb9-45b8-b963-8b1fff3a6afb" autoIncrement="false" autoIncrementSequenceName="data_set_result_summary_id_seq" defaultValue="" name="result_summary_id" nullable="1" physicalName="result_summary_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The corresponding result_summary in the MSIdb of the same project.</remarks>
     </column>
-    <column id="COL325" populated="true" UUID="ab4e217a-db14-43c1-8b59-feb4c7af1d7c" autoIncrement="false" autoIncrementSequenceName="data_set_aggregation_id_seq" defaultValue="" name="aggregation_id" nullable="1" physicalName="aggregation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL325" populated="true" UUID="ab4e217a-db14-43c1-8b59-feb4c7af1d7c" autoIncrement="false" autoIncrementSequenceName="data_set_aggregation_id_seq" defaultValue="" name="aggregation_id" nullable="1" physicalName="aggregation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>Defines the child nature of AGGREGATION data_sets.</remarks>
     </column>
-    <column id="COL326" populated="true" UUID="3d6e944a-9242-4fd7-ade6-3bb6dd095a51" autoIncrement="false" autoIncrementSequenceName="data_set_fractionation_id_seq" defaultValue="" name="fractionation_id" nullable="1" physicalName="fractionation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL326" populated="true" UUID="3d6e944a-9242-4fd7-ade6-3bb6dd095a51" autoIncrement="false" autoIncrementSequenceName="data_set_fractionation_id_seq" defaultValue="" name="fractionation_id" nullable="1" physicalName="fractionation_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>If the data_set is associated with a fractionatin step, this field allows to define its type.</remarks>
     </column>
-    <column id="COL327" populated="true" UUID="4f8b494a-286e-48ed-bfd2-c71d03c96d65" autoIncrement="false" autoIncrementSequenceName="data_set_quant_method_id_seq" defaultValue="" name="quant_method_id" nullable="1" physicalName="quant_method_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL327" populated="true" UUID="4f8b494a-286e-48ed-bfd2-c71d03c96d65" autoIncrement="false" autoIncrementSequenceName="data_set_quant_method_id_seq" defaultValue="" name="quant_method_id" nullable="1" physicalName="quant_method_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>An optional quantitative method associated with data_sets of QUANTITATION type.</remarks>
     </column>
-    <column id="COL328" populated="true" UUID="b51d00d7-b07a-44a6-83ef-9c2b25e5c33a" autoIncrement="false" autoIncrementSequenceName="data_set_parent_dataset_id_seq" defaultValue="" name="parent_dataset_id" nullable="1" physicalName="parent_dataset_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL328" populated="true" UUID="b51d00d7-b07a-44a6-83ef-9c2b25e5c33a" autoIncrement="false" autoIncrementSequenceName="data_set_parent_dataset_id_seq" defaultValue="" name="parent_dataset_id" nullable="1" physicalName="parent_dataset_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>An optional parent data_set which has to be of AGGREGATION type.</remarks>
     </column>
-    <column id="COL329" populated="true" UUID="5df19c4e-5ae8-4064-8024-61f3ba749e04" autoIncrement="false" autoIncrementSequenceName="data_set_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL329" populated="true" UUID="5df19c4e-5ae8-4064-8024-61f3ba749e04" autoIncrement="false" autoIncrementSequenceName="data_set_project_id_seq" defaultValue="" name="project_id" nullable="0" physicalName="project_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The project this data_set belongs to.</remarks>
     </column>
     </folder>
@@ -1219,7 +1219,7 @@ IDENTIFICATION, QUANTITATION, AGGREGATE, TRASH.</remarks>
   <table id="TAB332" populated="true" UUID="5e7a532c-a192-466e-b85a-5adc16347f94" name="fractionation" objectType="TABLE" physicalName="fractionation" >
    <remarks>The enumeration of the different fractionation type that could be used to describe an AGGREGATE data_set corresponding to fractionation step.</remarks>
    <folder id="FOLTAB3321" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL333" populated="true" UUID="3182ae25-40b4-4bca-87c7-f1ccf85a1d06" autoIncrement="true" autoIncrementSequenceName="fractionation_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL333" populated="true" UUID="3182ae25-40b4-4bca-87c7-f1ccf85a1d06" autoIncrement="true" autoIncrementSequenceName="fractionation_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL334" populated="true" UUID="4eea31e3-c228-4866-acf1-2b0d73ce5dc8" autoIncrement="false" autoIncrementSequenceName="fractionation_type_seq" defaultValue="" name="type" nullable="0" physicalName="type" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -1243,7 +1243,7 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
   <table id="TAB339" populated="true" UUID="751a17e6-2ebe-4bc6-b691-cf47a1c1df23" name="aggregation" objectType="TABLE" physicalName="aggregation" >
    <remarks>The enumeration of the different child natures that could be used to describe a given AGGREGATE data_set.</remarks>
    <folder id="FOLTAB3391" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL340" populated="true" UUID="c318a031-122a-4293-b15a-6af2b6cf3d59" autoIncrement="true" autoIncrementSequenceName="aggregation_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL340" populated="true" UUID="c318a031-122a-4293-b15a-6af2b6cf3d59" autoIncrement="true" autoIncrementSequenceName="aggregation_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL341" populated="true" UUID="e2a3764b-e17d-4ecb-8079-bc7458309215" autoIncrement="false" autoIncrementSequenceName="aggregation_child_nature_seq" defaultValue="" name="child_nature" nullable="0" physicalName="child_nature" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -1266,10 +1266,10 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
   <table id="TAB346" populated="true" UUID="f7f143ea-c564-4816-927b-c569fbcf7d86" name="biological_sample_sample_analysis_map" objectType="TABLE" physicalName="biological_sample_sample_analysis_map" >
    <remarks>The list of sample analyses performed for this biological sample.</remarks>
    <folder id="FOLTAB3461" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL347" populated="true" UUID="9513a152-cec6-494b-850f-bbffbdc946a4" autoIncrement="false" autoIncrementSequenceName="biological_sample_sample_analysis_map_biological_sample_id_seq" defaultValue="" name="biological_sample_id" nullable="0" physicalName="biological_sample_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL347" populated="true" UUID="9513a152-cec6-494b-850f-bbffbdc946a4" autoIncrement="false" autoIncrementSequenceName="biological_sample_sample_analysis_map_biological_sample_id_seq" defaultValue="" name="biological_sample_id" nullable="0" physicalName="biological_sample_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL348" populated="true" UUID="beb67e63-cc10-4f25-878a-4e856b3c413b" autoIncrement="false" autoIncrementSequenceName="biological_sample_sample_analysis_map_sample_analysis_id_seq" defaultValue="" name="sample_analysis_id" nullable="0" physicalName="sample_analysis_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL348" populated="true" UUID="beb67e63-cc10-4f25-878a-4e856b3c413b" autoIncrement="false" autoIncrementSequenceName="biological_sample_sample_analysis_map_sample_analysis_id_seq" defaultValue="" name="sample_analysis_id" nullable="0" physicalName="sample_analysis_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -1287,10 +1287,10 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
   <table id="TAB352" populated="true" UUID="2ffeb926-046a-4c44-b9ba-78465e64e673" name="group_setup_biological_group_map" objectType="TABLE" physicalName="group_setup_biological_group_map" >
    <remarks>The list of biological groups associated with this group setup.</remarks>
    <folder id="FOLTAB3521" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL353" populated="true" UUID="cbbc2409-bed8-4165-af5f-3d4b8496da0c" autoIncrement="false" autoIncrementSequenceName="group_setup_biological_group_map_group_setup_id_seq" defaultValue="" name="group_setup_id" nullable="0" physicalName="group_setup_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL353" populated="true" UUID="cbbc2409-bed8-4165-af5f-3d4b8496da0c" autoIncrement="false" autoIncrementSequenceName="group_setup_biological_group_map_group_setup_id_seq" defaultValue="" name="group_setup_id" nullable="0" physicalName="group_setup_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL354" populated="true" UUID="33110e62-1022-463e-ad55-af6b61fdfb21" autoIncrement="false" autoIncrementSequenceName="group_setup_biological_group_map_biological_group_id_seq" defaultValue="" name="biological_group_id" nullable="0" physicalName="biological_group_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL354" populated="true" UUID="33110e62-1022-463e-ad55-af6b61fdfb21" autoIncrement="false" autoIncrementSequenceName="group_setup_biological_group_map_biological_group_id_seq" defaultValue="" name="biological_group_id" nullable="0" physicalName="biological_group_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>

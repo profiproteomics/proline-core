@@ -33,7 +33,7 @@ public class PeaklistSoftware implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     private String name;
 
@@ -50,12 +50,12 @@ public class PeaklistSoftware implements Serializable {
     public PeaklistSoftware() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getName() {

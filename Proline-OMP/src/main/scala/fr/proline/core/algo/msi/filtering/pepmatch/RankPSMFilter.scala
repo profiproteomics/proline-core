@@ -5,16 +5,16 @@ import scala.collection.Seq
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
-
+import fr.proline.util.primitives._
 object RankPSMFilter {
   
   val scoreTol = 0.1f
   
-  def getPeptideMatchesRankMap( pepMatches: Seq[PeptideMatch] ): Map[Int,Int] = {
+  def getPeptideMatchesRankMap( pepMatches: Seq[PeptideMatch] ): Map[Long,Int] = {
     pepMatches.map( pm => pm.id -> pm.rank ).toMap
   }
   
-  def restorePeptideMatchesRank( pepMatches: Seq[PeptideMatch], pepMatchRankMap: Map[Int,Int] ): Unit = {
+  def restorePeptideMatchesRank( pepMatches: Seq[PeptideMatch], pepMatchRankMap: Map[Long,Int] ): Unit = {
     pepMatches.foreach( pm => pm.rank = pepMatchRankMap(pm.id) )
   }
   
@@ -163,7 +163,7 @@ class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter 
   def getThresholdValue(): AnyVal = pepMatchMaxRank
   
   def setThresholdValue( currentVal : AnyVal ) {
-    pepMatchMaxRank = currentVal.asInstanceOf[Int]
+    pepMatchMaxRank = toInt(currentVal)
   }
 
 }

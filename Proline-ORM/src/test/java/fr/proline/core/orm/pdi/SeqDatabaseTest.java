@@ -1,13 +1,10 @@
 package fr.proline.core.orm.pdi;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +28,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
 
-	//"/fr/proline/core/orm/pdi/Proteins_Dataset.xml"
+	// "/fr/proline/core/orm/pdi/Proteins_Dataset.xml"
 	loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml");
     }
 
@@ -44,8 +41,8 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	try {
 	    SequenceDbInstance seqDB = PdiSeqDatabaseRepository.findSeqDbInstanceWithNameAndFile(pdiEm,
 		    "sprot", "H:/Sequences/uniprot/knowledgebase2011_06/uniprot_sprot.fasta");
-	    assertThat(seqDB, notNullValue());
-	    assertThat(seqDB.getSequenceCount(), is(4));
+	    assertNotNull(seqDB);
+	    assertEquals(seqDB.getSequenceCount(), Integer.valueOf(4));
 	} finally {
 
 	    if (pdiEm != null) {
@@ -69,7 +66,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	try {
 	    SequenceDbInstance seqDB = PdiSeqDatabaseRepository.findSeqDbInstanceWithNameAndFile(pdiEm,
 		    "Sprot_2011_06", "/path/to/myDB.fasta");
-	    assertThat(seqDB, CoreMatchers.nullValue());
+	    assertNull(seqDB);
 	} finally {
 
 	    if (pdiEm != null) {
@@ -91,9 +88,9 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	final EntityManager pdiEm = emf.createEntityManager();
 
 	try {
-	    SequenceDbInstance seqDB = pdiEm.find(SequenceDbInstance.class, 33);
-	    assertThat(seqDB, notNullValue());
-	    assertThat(seqDB.getSequenceCount(), is(4));
+	    SequenceDbInstance seqDB = pdiEm.find(SequenceDbInstance.class, Long.valueOf(33L));
+	    assertNotNull(seqDB);
+	    assertEquals(seqDB.getSequenceCount(), Integer.valueOf(4));
 	} finally {
 
 	    if (pdiEm != null) {

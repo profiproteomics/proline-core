@@ -30,11 +30,12 @@ import javax.persistence.Transient;
 	@NamedQuery(name = "findProjectsByOwner", query = "Select p from Project p where p.owner.id=:id"),
 	@NamedQuery(name = "findAllProjectIds", query = "select p.id from fr.proline.core.orm.uds.Project p order by p.id") })
 public class Project implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "creation_timestamp")
     private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
@@ -77,24 +78,34 @@ public class Project implements Serializable {
     }
 
     public Project(UserAccount owner) {
-	this.owner = owner;
 	setOwner(owner);
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public Timestamp getCreationTimestamp() {
-	return this.creationTimestamp;
+	Timestamp result = null;
+
+	if (creationTimestamp != null) { // Should not be null
+	    result = (Timestamp) creationTimestamp.clone();
+	}
+
+	return result;
     }
 
-    public void setCreationTimestamp(Timestamp creationTimestamp) {
-	this.creationTimestamp = creationTimestamp;
+    public void setCreationTimestamp(final Timestamp pCreationTimestamp) {
+
+	if (pCreationTimestamp == null) {
+	    throw new IllegalArgumentException("PCreationTimestamp is null");
+	}
+
+	creationTimestamp = (Timestamp) pCreationTimestamp.clone();
     }
 
     public String getDescription() {
@@ -179,8 +190,12 @@ public class Project implements Serializable {
 	this.folders = folders;
     }
 
+    void setMembers(final Set<UserAccount> pMembers) {
+	members = pMembers;
+    }
+
     public Set<UserAccount> getMembers() {
-	return this.members;
+	return members;
     }
 
     public void addMember(final UserAccount member) {
@@ -206,10 +221,6 @@ public class Project implements Serializable {
 	    localMembers.remove(member);
 	}
 
-    }
-
-    protected void setMembers(Set<UserAccount> members) {
-	this.members = members;
     }
 
     public TransientData getTransientData() {

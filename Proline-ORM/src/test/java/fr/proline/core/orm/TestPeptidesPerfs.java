@@ -146,7 +146,7 @@ public class TestPeptidesPerfs {
 
 		start = System.nanoTime();
 		for (int i = 0; i < PEPTIDES_COUNT; ++i) {
-		    final Integer key = Integer.valueOf(RANDOM_GENERATOR.nextInt(PEPTIDES_COUNT) + 1);
+		    final Long key = Long.valueOf(RANDOM_GENERATOR.nextInt(PEPTIDES_COUNT) + 1);
 
 		    final fr.proline.core.orm.msi.Peptide msiPeptide = msiEm.find(
 			    fr.proline.core.orm.msi.Peptide.class, key);
@@ -176,7 +176,7 @@ public class TestPeptidesPerfs {
 
 		start = System.nanoTime();
 		for (int i = 0; i < PEPTIDES_COUNT; ++i) {
-		    final Integer key = Integer.valueOf(RANDOM_GENERATOR.nextInt(PEPTIDES_COUNT) + 1);
+		    final Long key = Long.valueOf(RANDOM_GENERATOR.nextInt(PEPTIDES_COUNT) + 1);
 
 		    final Peptide psPeptide = psEm.find(Peptide.class, key);
 

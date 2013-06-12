@@ -14,13 +14,13 @@ trait ILcmsMapFileParser {
   
   def getRunMap( filePath: String, lcmsRun: LcMsScanSequence, extraParams: ExtraParameters ) : Option[RunMap]
   
-  def getMs2Events(lcmsScanSeq: LcMsScanSequence, idx:Int) : Array[Int] = {
+  def getMs2Events(lcmsScanSeq: LcMsScanSequence, idx: Int) : Array[Long] = {
     /**
      * from the id of the ms2 scan taken at the apex, find all consecutive ms2
      * assume scans ordering same when the were acquired 
      */
-    var ms2IdEvents = new ArrayBuffer[Int]
-    var idxTmp = idx - 1
+    var ms2IdEvents = new ArrayBuffer[Long]
+    var idxTmp: Int = idx - 1
       while (lcmsScanSeq.scans(idxTmp).msLevel == 2) {
         ms2IdEvents += lcmsScanSeq.scans(idxTmp).initialId
         idxTmp -= 1

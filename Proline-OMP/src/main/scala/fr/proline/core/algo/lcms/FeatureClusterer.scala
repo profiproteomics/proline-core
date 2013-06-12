@@ -154,7 +154,7 @@ object FeatureClusterer extends Logging {
     }
 
     // Check if single features don't contain duplicated objects
-    val tmpIdHash = new java.util.HashMap[Int, Int]
+    val tmpIdHash = new java.util.HashMap[Long, Long]
     for (ft <- singleFeatures) {
       if (tmpIdHash containsKey ft.id) throw new Exception("duplicated feature detected")
       tmpIdHash.put(ft.id, 1)
@@ -176,14 +176,14 @@ object FeatureClusterer extends Logging {
       val elutionTime = this.computeClusterTime(totalFtGroupAsList, timeComputationMethod)
 
       // Set some vars
-      val ms2EventIdSetBuilder = scala.collection.immutable.Set.newBuilder[Int]
+      val ms2EventIdSetBuilder = scala.collection.immutable.Set.newBuilder[Long]
       for (ft <- totalFtGroup) {
         val ms2EventIds = ft.relations.ms2EventIds
         if (ms2EventIds != null) {
           for (ms2EventId <- ms2EventIds) ms2EventIdSetBuilder += ms2EventId
         }
       }
-      val ms2EventIds = ms2EventIdSetBuilder.result().toArray[Int]
+      val ms2EventIds = ms2EventIdSetBuilder.result().toArray[Long]
       val ms2Count = ms2EventIds.length
       val mostIntenseFt = this.findMostIntenseFeature(totalFtGroup.toList)
       val charge = mostIntenseFt.charge
@@ -265,7 +265,7 @@ object FeatureClusterer extends Logging {
 
   private def splitFtGroupByTime(ftGroup: Seq[Feature],
                                  timeTol: Float,
-                                 scanById: Map[Int, LcMsScan]): ArrayBuffer[ArrayBuffer[Feature]] = {
+                                 scanById: Map[Long, LcMsScan]): ArrayBuffer[ArrayBuffer[Feature]] = {
 
     // Sort features by first scan time
     val nbFts = ftGroup.length
@@ -275,7 +275,7 @@ object FeatureClusterer extends Logging {
     var curFtIdx = 0
     val ftsGroupedByTime = new ArrayBuffer[ArrayBuffer[Feature]](1)
     var ftGroupIdx = 0
-    val ftGroupIdxByAssignedFtId = new java.util.HashMap[Int, Int]
+    val ftGroupIdxByAssignedFtId = new java.util.HashMap[Long, Long]
 
     // Clusterize features by time
     for (putativeFirstCft <- ftsSortedByTime) {

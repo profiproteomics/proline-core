@@ -18,9 +18,9 @@ trait IMapSetNormalizer {
   }
   
   /** Required method for classes consuming the trait */
-  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Int,Float]
+  protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Long,Float]
   
-  protected def determineReferenceMapId( mapIds: List[Int], intensityByMapId: Map[Int,Double] ): Int = {
+  protected def determineReferenceMapId( mapIds: List[Long], intensityByMapId: Map[Long,Double] ): Long = {
     
     // Compute ref map as the map with the median of intensity sum or intensity median
     val mapIdsSortedByIntensity = mapIds.sort { (a,b) => intensityByMapId(a) < intensityByMapId(b) } 
@@ -31,7 +31,7 @@ trait IMapSetNormalizer {
   
   }
   
-  protected def calcNormalizationFactorByMapId( mapIds: List[Int], intensityByMapId: Map[Int,Double] ): Map[Int,Float] = {
+  protected def calcNormalizationFactorByMapId( mapIds: List[Long], intensityByMapId: Map[Long,Double] ): Map[Long,Float] = {
     
     val refMapId = this.determineReferenceMapId( mapIds, intensityByMapId )
     val refMapIntensity = intensityByMapId(refMapId)

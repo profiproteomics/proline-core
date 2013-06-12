@@ -51,15 +51,15 @@ public final class MsiSeqDatabaseRepository {
 	return result;
     }
 
-    public static List<Integer> findSeqDatabaseIdsForProteinMatch(final EntityManager msiEm,
-	    final int proteinMatchId) {
+    public static List<Long> findSeqDatabaseIdsForProteinMatch(final EntityManager msiEm,
+	    final long proteinMatchId) {
 
 	JPAUtils.checkEntityManager(msiEm);
 
-	final TypedQuery<Integer> query = msiEm.createQuery(
+	final TypedQuery<Long> query = msiEm.createQuery(
 		"select map.id.seqDatabaseId from fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap map"
-			+ " where map.id.proteinMatchId = :proteinMatchId", Integer.class);
-	query.setParameter("proteinMatchId", Integer.valueOf(proteinMatchId));
+			+ " where map.id.proteinMatchId = :proteinMatchId", Long.class);
+	query.setParameter("proteinMatchId", Long.valueOf(proteinMatchId));
 
 	return query.getResultList();
     }

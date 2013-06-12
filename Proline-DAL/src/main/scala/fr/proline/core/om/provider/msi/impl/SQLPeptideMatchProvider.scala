@@ -13,6 +13,7 @@ import fr.proline.core.om.provider.msi.IPeptideMatchProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.util.sql.StringOrBoolAsBool.string2boolean
 import fr.proline.core.dal.tables.msi.MsiDbPeptideInstancePeptideMatchMapTable
+import fr.proline.util.primitives._
 
 class SQLPeptideMatchProvider(
   val msiSqlCtx: DatabaseConnectionContext,
@@ -31,7 +32,7 @@ class SQLPeptideMatchProvider(
   // Retrieve score type map
   val scoreTypeById = msiDbHelper.getScoringTypeById
 
-  def getPeptideMatches(pepMatchIds: Seq[Int]): Array[PeptideMatch] = {
+  def getPeptideMatches(pepMatchIds: Seq[Long]): Array[PeptideMatch] = {
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
     
@@ -41,13 +42,13 @@ class SQLPeptideMatchProvider(
       )
       val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
       
-      val rsIds = pmRecords.map { _(PepMatchCols.RESULT_SET_ID).asInstanceOf[Int] }.distinct
+      val rsIds = pmRecords.map { v => toLong(v(PepMatchCols.RESULT_SET_ID)) }.distinct
       this._buildPeptideMatches(rsIds, pmRecords)
     
     })
   }
 
-  def getPeptideMatchesAsOptions(pepMatchIds: Seq[Int]): Array[Option[PeptideMatch]] = {
+  def getPeptideMatchesAsOptions(pepMatchIds: Seq[Long]): Array[Option[PeptideMatch]] = {
 
     val pepMatches = this.getPeptideMatches(pepMatchIds)
     val pepMatchById = pepMatches.map { pepMatch => pepMatch.id -> pepMatch } toMap
@@ -55,7 +56,7 @@ class SQLPeptideMatchProvider(
     pepMatchIds.map { pepMatchById.get(_) } toArray
   }
 
-  def getResultSetsPeptideMatches(rsIds: Seq[Int]): Array[PeptideMatch] = {
+  def getResultSetsPeptideMatches(rsIds: Seq[Long]): Array[PeptideMatch] = {
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
     
@@ -70,7 +71,7 @@ class SQLPeptideMatchProvider(
 
   }
 
-  def getResultSummariesPeptideMatches(rsmIds: Seq[Int]): Array[PeptideMatch] = {
+  def getResultSummariesPeptideMatches(rsmIds: Seq[Long]): Array[PeptideMatch] = {
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
   
@@ -84,20 +85,20 @@ class SQLPeptideMatchProvider(
       
       val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
       
-      val rsIds = pmRecords.map(_("result_set_id").asInstanceOf[Int]).distinct
+      val rsIds = pmRecords.map( v => toLong(v("result_set_id"))).distinct
       this._buildPeptideMatches(rsIds, pmRecords)
     
     })
 
   }
 
-  private def _buildPeptideMatches(rsIds: Seq[Int], pmRecords: Seq[Map[String, Any]]): Array[PeptideMatch] = {
+  private def _buildPeptideMatches(rsIds: Seq[Long], pmRecords: Seq[Map[String, Any]]): Array[PeptideMatch] = {
 
     import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Load peptides
-    val uniqPepIds = pmRecords map { _(PepMatchCols.PEPTIDE_ID).asInstanceOf[Int] } distinct
+    val uniqPepIds = pmRecords map { v => toLong(v(PepMatchCols.PEPTIDE_ID)) } distinct
     val peptides = this.peptideProvider.getPeptides(uniqPepIds)
 
     // Map peptides by their id
@@ -117,23 +118,23 @@ class SQLPeptideMatchProvider(
       val pepMatchRecord = pmRecords(pepMatchIdx)
 
       // Retrieve the corresponding peptide
-      val pepId = pepMatchRecord(PepMatchCols.PEPTIDE_ID).asInstanceOf[Int]
+      val pepId = toLong(pepMatchRecord(PepMatchCols.PEPTIDE_ID))
       if (!peptideById.contains(pepId)) {
         throw new Exception("undefined peptide with id ='" + pepId + "' ")
       }
       val peptide = peptideById(pepId)
 
       // Retrieve the corresponding MS query
-      val msQuery = msQueryById(pepMatchRecord(PepMatchCols.MS_QUERY_ID).asInstanceOf[Int])
+      val msQuery = msQueryById(toLong(pepMatchRecord(PepMatchCols.MS_QUERY_ID)))
 
       // Retrieve some vars
-      val scoreType = scoreTypeById(pepMatchRecord(PepMatchCols.SCORING_ID).asInstanceOf[Int])
+      val scoreType = scoreTypeById(toLong(pepMatchRecord(PepMatchCols.SCORING_ID)))
 
       // Decode JSON properties
       val propertiesAsJSON = pepMatchRecord(PepMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
       val properties = if (propertiesAsJSON != null) Some(parse[PeptideMatchProperties](propertiesAsJSON)) else None
 
-      val pepMatch = new PeptideMatch(id = toInt(pepMatchRecord(PepMatchCols.ID)),
+      val pepMatch = new PeptideMatch(id = toLong(pepMatchRecord(PepMatchCols.ID)),
         rank = pepMatchRecord(PepMatchCols.RANK).asInstanceOf[Int],
         score = toFloat(pepMatchRecord(PepMatchCols.SCORE)),
         scoreType = scoreType,
@@ -143,7 +144,7 @@ class SQLPeptideMatchProvider(
         missedCleavage = pepMatchRecord(PepMatchCols.MISSED_CLEAVAGE).asInstanceOf[Int],
         fragmentMatchesCount = pepMatchRecord(PepMatchCols.FRAGMENT_MATCH_COUNT).asInstanceOf[Int],
         msQuery = msQuery,
-        resultSetId = pepMatchRecord(PepMatchCols.RESULT_SET_ID).asInstanceOf[Int],
+        resultSetId = toLong(pepMatchRecord(PepMatchCols.RESULT_SET_ID)),
         properties = properties
       )
 

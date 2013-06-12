@@ -1,7 +1,13 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the seq_db_release database table.
@@ -10,52 +16,53 @@ import javax.persistence.*;
 @Entity
 @Table(name = "seq_db_release")
 public class SequenceDbRelease implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	private String date;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name = "serialized_properties")
-	private String serializedProperties;
+    private String date;
 
-	private String version;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	public SequenceDbRelease() {
-	}
+    private String version;
 
-	public Integer getId() {
-		return this.id;
-	}
+    public SequenceDbRelease() {
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public long getId() {
+	return this.id;
+    }
 
-	public String getDate() {
-		return this.date;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public void setDate(String date) {
-		this.date = date;
-	}
+    public String getDate() {
+	return this.date;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public void setDate(String date) {
+	this.date = date;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public String getVersion() {
-		return this.version;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    public String getVersion() {
+	return this.version;
+    }
+
+    public void setVersion(String version) {
+	this.version = version;
+    }
 
 }

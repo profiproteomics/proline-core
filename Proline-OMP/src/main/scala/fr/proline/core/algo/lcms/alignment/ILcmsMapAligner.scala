@@ -12,7 +12,7 @@ case class AlignmentParams(
   maxIterations: Int = 3
 )
 
-case class AlignmentResult( alnRefMapId: Int, mapAlnSets: Array[MapAlignmentSet] )
+case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 
 trait ILcmsMapAligner {
   
@@ -36,7 +36,7 @@ trait ILcmsMapAligner {
     ftMapping
     
     // two possibilities: keep nearest mass match or exclude matching conflicts (more than one match)
-    val landmarksByMassIdx = new HashMap[Int,ArrayBuffer[Landmark]]
+    val landmarksByMassIdx = new HashMap[Long,ArrayBuffer[Landmark]]
     
     for( (map1FtId, matchingFeatures) <- ftMapping ) {
       // method 2: exclude conflicts

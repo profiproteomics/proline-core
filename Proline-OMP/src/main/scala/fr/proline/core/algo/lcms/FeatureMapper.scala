@@ -11,7 +11,7 @@ object FeatureMapper {
   def computePairwiseFtMapping ( map1Features: Array[Feature],
                                  map2Features: Array[Feature],
                                  methodParams: FeatureMappingParams,
-                                 isChargeTolerant: Boolean = false ): Map[Int,Array[Feature]]=  {
+                                 isChargeTolerant: Boolean = false ): Map[Long,Array[Feature]]=  {
     
     val mozTol = methodParams.mozTol
     val mozTolUnit = methodParams.mozTolUnit
@@ -33,7 +33,8 @@ object FeatureMapper {
       chargeStates = List( 0 )
     }
     
-    val ftMapping = new collection.mutable.HashMap[Int,ArrayBuffer[Feature]] // ft1Id => Array(ft2) 
+    val ftMapping = new collection.mutable.HashMap[Long,ArrayBuffer[Feature]] // ft1Id => Array(ft2) 
+
     for( chargeState <- chargeStates ) {
 
       if( map1FtsByCharge.contains(chargeState) && map2FtsByCharge.contains(chargeState) ) {

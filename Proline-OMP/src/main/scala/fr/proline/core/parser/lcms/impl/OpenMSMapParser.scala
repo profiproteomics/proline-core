@@ -10,6 +10,7 @@ import scala.collection.immutable.HashMap
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.parser.lcms.ExtraParameters
+import fr.proline.util.primitives._
 
 object OpenMSMapParser {
   val targetLabel = "feature"
@@ -44,7 +45,7 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       val scanMs1 = lcmsScanSeq.getScanAtTime(elutionTime, 1)
       val scanMs2 = lcmsScanSeq.getScanAtTime(elutionTime, 2)
 
-      var idxTmp = scanMs2.id + 1
+      var idxTmp: Int = toInt(scanMs2.id + 1) // WARN Array index must be Int
       while (lcmsScanSeq.scans(idxTmp).msLevel == 2) {
         idxTmp += 1
       }

@@ -9,15 +9,15 @@ class InMemoryPeptideSetProvider( peptideSets: Seq[PeptideSet] ) extends IPeptid
   lazy val peptideSetById = Map() ++ peptideSets.map { p => p.id -> p }
   lazy val peptideSetsByRsmId = peptideSets.groupBy( _.resultSummaryId )
 
-  def getPeptideSetsAsOptions( pepSetIds: Seq[Int] ): Array[Option[PeptideSet]] = {
+  def getPeptideSetsAsOptions( pepSetIds: Seq[Long] ): Array[Option[PeptideSet]] = {
     pepSetIds.map { this.peptideSetById.get(_) } toArray
   }
   
-  def getPeptideSets( pepSetIds: Seq[Int] ): Array[PeptideSet] = {
+  def getPeptideSets( pepSetIds: Seq[Long] ): Array[PeptideSet] = {
     this.getPeptideSetsAsOptions( pepSetIds ).filter( _ != None ).map( _.get )
   }
   
-  def getResultSummariesPeptideSets( rsmIds: Seq[Int] ): Array[PeptideSet] = {
+  def getResultSummariesPeptideSets( rsmIds: Seq[Long] ): Array[PeptideSet] = {
     rsmIds.flatMap { i => this.peptideSetsByRsmId.getOrElse( i, Seq.empty[PeptideSet] ) } toArray
   }
   

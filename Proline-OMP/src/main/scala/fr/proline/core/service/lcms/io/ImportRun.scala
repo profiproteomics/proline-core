@@ -33,7 +33,7 @@ object ImportScanSequence { // extends String2FileConverter
       val precCharge = if( StringUtils.isEmpty(precChargeStr) == false ) Some(precChargeStr.toInt) else None
       
       new LcMsScan(
-        value("id").toInt,
+        value("id").toLong,
         value("initial_id").toInt,
         value("cycle").toInt,
         value("time").toFloat,
@@ -41,7 +41,7 @@ object ImportScanSequence { // extends String2FileConverter
         value("tic").toDouble,
         value("base_peak_moz").toDouble,
         value("base_peak_intensity").toDouble,
-        value("run_id").toInt,
+        value("run_id").toLong,
         precMoz,
         precCharge
       )

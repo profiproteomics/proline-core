@@ -14,7 +14,7 @@ trait IPTMProvider {
    *  @param ptmDefIds: Sequence of ids of PtmDefinitions to search for
    *  @return Array of Option[PtmDefinition] corresponding to found PtmDefinitions
    */
-  def getPtmDefinitionsAsOptions( ptmDefIds: Seq[Int] ): Array[Option[PtmDefinition]]
+  def getPtmDefinitionsAsOptions( ptmDefIds: Seq[Long] ): Array[Option[PtmDefinition]]
   
   /**
    *  Get PtmDefinitions with specified Ids.
@@ -22,7 +22,7 @@ trait IPTMProvider {
    *  @param ptmDefIds: Sequence of ids of PtmDefinitions to search for
    *  @return Array of PtmDefinition corresponding to found PtmDefinitions
    */
-  def getPtmDefinitions( ptmDefIds: Seq[Int] ): Array[PtmDefinition]
+  def getPtmDefinitions( ptmDefIds: Seq[Long] ): Array[PtmDefinition]
   
   /**
    *  Get PtmDefinition (wrapped in Option) with specified Id.
@@ -31,7 +31,7 @@ trait IPTMProvider {
    *  @param ptmDefID: id of PtmDefinition to search for
    *  @return Option[PtmDefinition] corresponding to found PtmDefinition
    */
-  def getPtmDefinition( ptmDefID: Int ): Option[PtmDefinition] = { getPtmDefinitionsAsOptions( Array(ptmDefID) )(0) }
+  def getPtmDefinition( ptmDefID: Long ): Option[PtmDefinition] = { getPtmDefinitionsAsOptions( Array(ptmDefID) )(0) }
     
   /**
    * Search for a PtmDefinition with specified features
@@ -45,6 +45,6 @@ trait IPTMProvider {
   /**
    * Get the PtmNames id for specified ShortName
    */
-  def getPtmId( shortName: String ): Option[Int]
+  def getPtmId( shortName: String ): Option[Long]
   
 }

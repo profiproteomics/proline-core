@@ -8,11 +8,12 @@ import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitlePar
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.regex.RegexUtils._
+import fr.proline.util.primitives._
 
 class UpdateSpectraParams( dbManager: IDataStoreConnectorFactory,
-                           projectId: Int,
-                           peaklistId: Int,
-                           specTitleRuleId: Int
+                           projectId: Long,
+                           peaklistId: Long,
+                           specTitleRuleId: Long
                           ) extends IService with Logging {
   
   def runService(): Boolean = {
@@ -52,7 +53,7 @@ class UpdateSpectraParams( dbManager: IDataStoreConnectorFactory,
     
     ezDBC.selectAndProcess( sqlQuery ) { r =>
       
-      val spectrumId = r.nextInt
+      val spectrumId = toLong(r.nextAny)
       val spectrumTitle = r.nextString
       
       // Extract attributes from spectrum title

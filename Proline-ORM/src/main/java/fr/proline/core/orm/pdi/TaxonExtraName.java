@@ -1,81 +1,90 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
 
 /**
  * The persistent class for the taxon_extra_name database table.
  * 
  */
 @Entity
-@Table(name="taxon_extra_name")
+@Table(name = "taxon_extra_name")
 public class TaxonExtraName implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="class")
-	private String class_;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "class")
+    private String clazz;
 
-	private String value;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//bi-directional many-to-one association to Taxon
+    private String value;
+
+    // bi-directional many-to-one association to Taxon
     @ManyToOne
-	private Taxon taxon;
+    private Taxon taxon;
 
     public TaxonExtraName() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public String getClass_() {
-		return this.class_;
-	}
+    public String getClazz() {
+	return clazz;
+    }
 
-	public void setClass_(String class_) {
-		this.class_ = class_;
-	}
+    public void setClazz(final String pClass) {
+	clazz = pClass;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public String getValue() {
-		return this.value;
-	}
+    public String getValue() {
+	return this.value;
+    }
 
-	public void setValue(String value) {
-		this.value = value;
-	}
+    public void setValue(String value) {
+	this.value = value;
+    }
 
-	public Taxon getTaxon() {
-		return this.taxon;
-	}
+    public Taxon getTaxon() {
+	return this.taxon;
+    }
 
-	public void setTaxon(Taxon taxon) {
-		this.taxon = taxon;
-	}
-	
-	@Override
-	public String toString() {
-		return new ToStringBuilder(this).append("extra name", value).append("class", class_).toString();
-	}
+    public void setTaxon(Taxon taxon) {
+	this.taxon = taxon;
+    }
+
+    @Override
+    public String toString() {
+	return new ToStringBuilder(this).append("extra name", getValue()).append("class", getClazz())
+		.toString();
+    }
+
 }

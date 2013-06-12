@@ -35,10 +35,10 @@ public class Gene implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     @Column(name = "is_active")
-    private Boolean isActive;
+    private boolean isActive;
 
     private String name;
 
@@ -62,20 +62,20 @@ public class Gene implements Serializable {
     public Gene() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public Boolean getIsActive() {
-	return this.isActive;
+    public boolean getIsActive() {
+	return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-	this.isActive = isActive;
+    public void setIsActive(final boolean pIsActive) {
+	isActive = pIsActive;
     }
 
     public String getName() {

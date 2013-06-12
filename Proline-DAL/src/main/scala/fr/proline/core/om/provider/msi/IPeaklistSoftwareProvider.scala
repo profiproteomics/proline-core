@@ -8,11 +8,11 @@ import fr.proline.core.om.model.msi.PeaklistSoftware
  */
 trait IPeaklistSoftwareProvider {
   
-  def getPeaklistSoftwareListAsOptions( pklSoftIds: Seq[Int] ): Array[Option[PeaklistSoftware]]
+  def getPeaklistSoftwareListAsOptions( pklSoftIds: Seq[Long] ): Array[Option[PeaklistSoftware]]
   
-  def getPeaklistSoftwareList( pklSoftIds: Seq[Int] ): Array[PeaklistSoftware]
+  def getPeaklistSoftwareList( pklSoftIds: Seq[Long] ): Array[PeaklistSoftware]
   
-  def getPeaklistSoftware( pklSoftId: Int ): Option[PeaklistSoftware] = { getPeaklistSoftwareListAsOptions( Seq(pklSoftId) )(0) }
+  def getPeaklistSoftware( pklSoftId: Long ): Option[PeaklistSoftware] = { getPeaklistSoftwareListAsOptions( Seq(pklSoftId) )(0) }
   
   def getPeaklistSoftware( softName: String, softVersion: String ): Option[PeaklistSoftware]
   

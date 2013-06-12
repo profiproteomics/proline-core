@@ -28,6 +28,7 @@ import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.service.lcms.io.ILcMsQuantConfig
 import fr.proline.core.service.lcms.io.IMsQuantConfig
+import fr.proline.util.primitives._
 
 trait ILabelFreeQuantConfig extends ILcMsQuantConfig
 
@@ -68,17 +69,17 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     val peaklistIdColName = MsiDbSpectrumTable.columns.PEAKLIST_ID
 
     // Map spectrum id by scan number and result set id
-    val spectrumIdMap = HashMap[Int, HashMap[Int, Int]]()
+    val spectrumIdMap = HashMap[Long, HashMap[Long, Long]]()
 
     for (spectrumHeader <- this.ms2SpectrumHeaders) {
 
       require(spectrumHeader(firstScanColName) != null,"a scan id must be defined for each MS2 spectrum")
 
-      val identRsId = identRsIdByPeaklistId(spectrumHeader(peaklistIdColName).asInstanceOf[Int])
+      val identRsId = toLong(identRsIdByPeaklistId(toLong(spectrumHeader(peaklistIdColName))))
       val scanNumber = spectrumHeader(firstScanColName).asInstanceOf[Int]
-      val spectrumId = spectrumHeader("id").asInstanceOf[Int]
+      val spectrumId = toLong(spectrumHeader("id"))
 
-      spectrumIdMap.getOrElseUpdate(identRsId, new HashMap[Int, Int])(scanNumber) = spectrumId
+      spectrumIdMap.getOrElseUpdate(identRsId, new HashMap[Long, Long])(scanNumber) = spectrumId
     }
 
     spectrumIdMap.toMap
@@ -88,7 +89,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
   lazy val lcmsRunIds = {    
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
-      lcmsEzDBC.selectInts( new SelectQueryBuilder1(LcmsDbRunMapTable).mkSelectQuery( (t,c) =>
+      lcmsEzDBC.selectLongs( new SelectQueryBuilder1(LcmsDbRunMapTable).mkSelectQuery( (t,c) =>
         List(t.RUN_ID) -> "WHERE "~ t.ID ~" IN("~ lcmsMapSet.getRunMapIds.mkString(",") ~")"
       ) )
     })
@@ -115,7 +116,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   lazy val ms2ScanNumbersByFtId = {
 
     /*val ms2ScanNumberById = ms2ScanHeaderRecords.map { r =>
-      r("id").asInstanceOf[Int] -> r("initial_id").asInstanceOf[Int]
+      toLong(r("id")) -> r("initial_id").asInstanceOf[Int]
     } toMap*/
     val ms2ScanNumberById = Map() ++ lcmsScans.map( s => s.id -> s.initialId )
 
@@ -123,7 +124,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     val runMapIds = lcmsMapSet.getRunMapIds
 
     this.logger.info("loading MS2 scans/features map...")
-    val ms2ScanNumbersByFtId = new HashMap[Int, ArrayBuffer[Int]]
+    val ms2ScanNumbersByFtId = new HashMap[Long, ArrayBuffer[Int]]
 
     DoJDBCWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
       
@@ -131,7 +132,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
         List(t.FEATURE_ID,t.MS2_EVENT_ID) -> "WHERE "~ t.RUN_MAP_ID ~" IN("~ runMapIds.mkString(",") ~")"
       )
       lcmsEzDBC.selectAndProcess(sqlQuery) { r =>
-        val (featureId, ms2ScanId) = (r.nextInt, r.nextInt)
+        val (featureId, ms2ScanId) = (toLong(r.nextAny), toLong(r.nextAny))
         val ms2ScanNumber = ms2ScanNumberById(ms2ScanId)
         ms2ScanNumbersByFtId.getOrElseUpdate(featureId, new ArrayBuffer[Int]) += ms2ScanNumber
       }

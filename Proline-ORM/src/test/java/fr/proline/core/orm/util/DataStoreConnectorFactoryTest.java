@@ -27,7 +27,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataStoreConnectorFactoryTest.class);
 
-    private int m_projectId;
+    private long m_projectId;
 
     @Override
     public ProlineDatabaseType getProlineDatabaseType() {
@@ -66,7 +66,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 	    pdiDb.setDbUser("sa");
 	    pdiDb.setDbPassword("");
 	    pdiDb.setDbVersion("0.1");
-	    pdiDb.setIsBusy(Boolean.FALSE);
+	    pdiDb.setIsBusy(false);
 
 	    udsEm.persist(pdiDb);
 
@@ -78,7 +78,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 	    psDb.setDbUser("sa");
 	    psDb.setDbPassword("");
 	    psDb.setDbVersion("0.1");
-	    psDb.setIsBusy(Boolean.FALSE);
+	    psDb.setIsBusy(false);
 
 	    udsEm.persist(psDb);
 
@@ -103,7 +103,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 	    msiDb.setDbUser("sa");
 	    msiDb.setDbPassword("");
 	    msiDb.setDbVersion("0.1");
-	    msiDb.setIsBusy(Boolean.FALSE);
+	    msiDb.setIsBusy(false);
 
 	    msiDb.addProject(project);
 	    project.addExternalDatabase(msiDb); // Reverse association
@@ -118,7 +118,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 	    lcMsDb.setDbUser("sa");
 	    lcMsDb.setDbPassword("");
 	    lcMsDb.setDbVersion("0.1");
-	    lcMsDb.setIsBusy(Boolean.FALSE);
+	    lcMsDb.setIsBusy(false);
 
 	    lcMsDb.addProject(project);
 	    project.addExternalDatabase(lcMsDb); // Reverse association
@@ -128,7 +128,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 	    transac.commit();
 	    transacOk = true;
 
-	    m_projectId = project.getId().intValue();
+	    m_projectId = project.getId();
 	} finally {
 
 	    if ((transac != null) & !transacOk) {

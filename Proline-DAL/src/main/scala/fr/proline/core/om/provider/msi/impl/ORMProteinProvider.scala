@@ -21,7 +21,7 @@ class ORMProteinProvider(val pdiDbCtx: DatabaseConnectionContext) extends IProte
 
   val converter = new ProteinsOMConverterUtil(true)
 
-  def getProteinsAsOptions(protIds: Seq[Int]): Array[Option[Protein]] = {
+  def getProteinsAsOptions(protIds: Seq[Long]): Array[Option[Protein]] = {
 
     var foundOMProtBuilder = Array.newBuilder[Option[Protein]]
     val pdiBioSeqs = pdiDbCtx.getEntityManager.createQuery("FROM fr.proline.core.orm.pdi.BioSequence bioSeq WHERE id IN (:ids)",

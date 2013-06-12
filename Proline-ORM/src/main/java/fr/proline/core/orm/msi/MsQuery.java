@@ -16,7 +16,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-
 /**
  * The persistent class for the ms_query database table.
  * 
@@ -24,16 +23,17 @@ import javax.persistence.Transient;
 @Entity
 @Table(name = "ms_query")
 public class MsQuery implements Serializable, Comparable<MsQuery> {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
-    private Integer charge;
+    private int charge;
 
     @Column(name = "initial_id")
-    private Integer initialId;
+    private int initialId;
 
     private double moz;
 
@@ -52,34 +52,35 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
     @OneToMany(mappedBy = "msQuery")
     private Set<PeptideMatch> peptideMatches;
 
- // Transient Variable not saved in database
-  	@Transient private boolean isSpectrumSet = false;
-    
+    // Transient Variable not saved in database
+    @Transient
+    private boolean isSpectrumSet = false;
+
     public MsQuery() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public Integer getCharge() {
-	return this.charge;
+    public int getCharge() {
+	return charge;
     }
 
-    public void setCharge(Integer charge) {
-	this.charge = charge;
+    public void setCharge(final int pCharge) {
+	charge = pCharge;
     }
 
-    public Integer getInitialId() {
-	return this.initialId;
+    public int getInitialId() {
+	return initialId;
     }
 
-    public void setInitialId(Integer initialId) {
-	this.initialId = initialId;
+    public void setInitialId(final int pInitialId) {
+	initialId = pInitialId;
     }
 
     public double getMoz() {
@@ -118,31 +119,31 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
 	return this.peptideMatches;
     }
 
-    public void setPeptideMatches(Set<PeptideMatch> peptideMatches) {
-	this.peptideMatches = peptideMatches;
+    public void setPeptideMatches(final Set<PeptideMatch> pPeptideMatches) {
+	peptideMatches = pPeptideMatches;
     }
 
     public void addPeptideMatch(final PeptideMatch peptideMatch) {
 
 	if (peptideMatch != null) {
-	    Set<PeptideMatch> peptMatches = getPeptideMatches();
+	    Set<PeptideMatch> localPeptideMatches = getPeptideMatches();
 
-	    if (peptMatches == null) {
-		peptMatches = new HashSet<PeptideMatch>();
+	    if (localPeptideMatches == null) {
+		localPeptideMatches = new HashSet<PeptideMatch>();
 
-		setPeptideMatches(peptMatches);
+		setPeptideMatches(localPeptideMatches);
 	    }
 
-	    peptMatches.add(peptideMatch);
+	    localPeptideMatches.add(peptideMatch);
 	}
 
     }
 
     public void removePeptideMatch(final PeptideMatch peptideMatch) {
 
-	final Set<PeptideMatch> peptMatches = getPeptideMatches();
-	if (peptMatches != null) {
-	    peptMatches.remove(peptideMatch);
+	final Set<PeptideMatch> localPeptideMatches = getPeptideMatches();
+	if (localPeptideMatches != null) {
+	    localPeptideMatches.remove(peptideMatch);
 	}
 
     }
@@ -154,21 +155,21 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
      * @return
      */
     @Override
-    public int compareTo(MsQuery q) {
-    	return getInitialId().compareTo(q.getInitialId());
+    public int compareTo(final MsQuery otherQuery) {
+	return Integer.compare(getInitialId(), otherQuery.getInitialId());
     }
-    
-    
-    public boolean getTransientIsSpectrumSet() {
-		return isSpectrumSet;
-	}
 
-	public void setTransientIsSpectrumSet(boolean isSpectrumSet) {
-		this.isSpectrumSet = isSpectrumSet;
-	}
-    
-	@Override
-	public String toString() {
-		return Integer.toString(initialId);
-	} 
+    public boolean getTransientIsSpectrumSet() {
+	return isSpectrumSet;
+    }
+
+    public void setTransientIsSpectrumSet(boolean isSpectrumSet) {
+	this.isSpectrumSet = isSpectrumSet;
+    }
+
+    @Override
+    public String toString() {
+	return Integer.toString(getInitialId());
+    }
+
 }

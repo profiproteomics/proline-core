@@ -11,11 +11,11 @@ import fr.proline.util.primitives._
     
 class SQLInstrumentProvider(val udsDbCtx: DatabaseConnectionContext) extends IInstrumentProvider {
   
-  def getInstrumentsAsOptions( instrumentIds: Seq[Int] ): Array[Option[Instrument]] = {
+  def getInstrumentsAsOptions( instrumentIds: Seq[Long] ): Array[Option[Instrument]] = {
     null
   }
   
-  def getInstruments( instrumentIds: Seq[Int] ): Array[Instrument] = {
+  def getInstruments( instrumentIds: Seq[Long] ): Array[Instrument] = {
     null
     
   }

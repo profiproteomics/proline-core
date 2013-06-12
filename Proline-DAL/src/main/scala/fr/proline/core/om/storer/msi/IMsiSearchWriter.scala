@@ -9,7 +9,7 @@ import fr.proline.core.om.storer.msi.impl.StorerContext
 
 trait IMsiSearchWriter {
 
-  def insertMsiSearch(msiSearch: MSISearch, context: StorerContext): Int
+  def insertMsiSearch(msiSearch: MSISearch, context: StorerContext): Long
 
   /**
    * Insert definition of InstrumentConfig (which should exist in uds) in current MSI db if not already defined
@@ -30,7 +30,7 @@ trait IMsiSearchWriter {
    * @return StorerContext with updated references
    *
    */
-  def insertMsQueries(msiSearchId: Int, msQueries: Seq[MsQuery], context: StorerContext): StorerContext
+  def insertMsQueries(msiSearchId: Long, msQueries: Seq[MsQuery], context: StorerContext): StorerContext
 }
 
 /** A factory object for implementations of the IMsiSearchStorer trait */

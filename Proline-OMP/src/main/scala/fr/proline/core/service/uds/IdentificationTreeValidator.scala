@@ -22,7 +22,7 @@ import javax.persistence.EntityManager
 class IdentificationTreeValidator(
   dsFactory: IDataStoreConnectorFactory,
   execJpaContext: IExecutionContext,
-  identTreeId: Int,
+  identTreeId: Long,
   mergeResultSets: Boolean,
   useTdCompetition: Boolean,
   pepMatchFilters: Option[Seq[IPeptideMatchFilter]] = None,
@@ -57,7 +57,7 @@ class IdentificationTreeValidator(
     val udsIdentDatasets = udsIdentTreeDS.getIdentificationDatasets()
 
     // Retrieve target result sets ids
-    val targetRsIds: Array[Int] = udsIdentDatasets.map(_.getResultSetId.intValue).toArray
+    val targetRsIds: Array[Long] = udsIdentDatasets.map(_.getResultSetId.longValue).toArray
     this.logger.debug("rs ids count = " + targetRsIds.length)
     this.logger.debug("first RS id = " + targetRsIds(0))
 
@@ -78,7 +78,7 @@ class IdentificationTreeValidator(
     val decoyRsById = decoyRsList.map(drs => drs.id -> drs).toMap
 
     // Link decoy RS to target RS and map RSM by RS id
-    val rsmByRsId = new HashMap[Int, ResultSummary]
+    val rsmByRsId = new HashMap[Long, ResultSummary]
     for (targetRS <- targetRsList) {
       targetRS.decoyResultSet = decoyRsById.get(targetRS.getDecoyResultSetId)
 
@@ -107,7 +107,7 @@ class IdentificationTreeValidator(
   /**
    * Loads result sets using SQL execution context.
    */
-  private def _loadResultSets(projectId: Int, rsIds: Seq[Int]): Array[ResultSet] = {
+  private def _loadResultSets(projectId: Long, rsIds: Seq[Long]): Array[ResultSet] = {
 
     val execSqlContext = BuildExecutionContext(dsFactory, projectId, false)
     val udsDbCtx = execSqlContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext]
@@ -172,7 +172,7 @@ class IdentificationTreeValidator(
   /**
    * Validates dataset tree recursively from leaves to root
    */
-  private def _validateDatasetTree(udsEM: EntityManager, udsDatasets: List[UdsDataset], rsmByRsId: HashMap[Int, ResultSummary]) {
+  private def _validateDatasetTree(udsEM: EntityManager, udsDatasets: List[UdsDataset], rsmByRsId: HashMap[Long, ResultSummary]) {
     if (udsDatasets.length == 1 && udsDatasets(0).getParentDataset == null) return
 
     this.logger.warn("validating tree node with " + udsDatasets.length + " dataset(s)")
@@ -187,7 +187,7 @@ class IdentificationTreeValidator(
 
     // Define some vars
     val newUdsParentDatasets = new ArrayBuffer[UdsDataset]
-    val newRsmByRsId = new HashMap[Int, ResultSummary]
+    val newRsmByRsId = new HashMap[Long, ResultSummary]
 
     // Iterate over each group of result summaries to merge them
     for ((udsParentDs, rsms) <- rsmsByUdsParentDs) {

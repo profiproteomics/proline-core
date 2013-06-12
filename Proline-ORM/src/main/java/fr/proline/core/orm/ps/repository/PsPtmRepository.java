@@ -56,14 +56,14 @@ public final class PsPtmRepository {
 	return result;
     }
 
-    public static PtmEvidence findPtmEvidenceByPtmAndType(final EntityManager psEm, final int ptmId,
+    public static PtmEvidence findPtmEvidenceByPtmAndType(final EntityManager psEm, final long ptmId,
 	    final Type type) {
 
 	JPAUtils.checkEntityManager(psEm);
 
 	TypedQuery<PtmEvidence> query = psEm.createNamedQuery("findPtmEvidenceByPtmAndType",
 		PtmEvidence.class);
-	query.setParameter("ptm_id", ptmId);
+	query.setParameter("ptm_id", Long.valueOf(ptmId));
 	query.setParameter("type", type.name());
 	return query.getSingleResult();
     }

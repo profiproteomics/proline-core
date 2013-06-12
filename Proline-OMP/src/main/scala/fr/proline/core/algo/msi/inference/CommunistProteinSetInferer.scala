@@ -6,6 +6,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.context.IExecutionContext
+import fr.proline.util.primitives._
 
 class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
 
@@ -22,8 +23,8 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
     // Define some vars
     val resultSummaryId = ResultSummary.generateNewId()
     val peptideInstances = new ArrayBuffer[PeptideInstance](peptideMatchesByPepId.size)
-    val peptideInstanceById = new HashMap[Int,PeptideInstance]()
-    val pepInstanceByPepId = new HashMap[Int,PeptideInstance]()
+    val peptideInstanceById = new HashMap[Long,PeptideInstance]()
+    val pepInstanceByPepId = new HashMap[Long,PeptideInstance]()
     
     // Build peptide instances and map them
     for( (peptideId, pepMatchGroup) <- (peptideMatchesByPepId) ) {
@@ -63,14 +64,14 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
     }
     
     // Map peptide instance ids by protein match id
-    val peptideIdByProtMatchIdBuilder = collection.immutable.Map.newBuilder[Int,Set[Int]]
-    val proteinCountByPepId = new HashMap[Int,Int]()
+    val peptideIdByProtMatchIdBuilder = collection.immutable.Map.newBuilder[Long,Set[Long]]
+    val proteinCountByPepId = new HashMap[Long,Int]()
     
     for( protMatch <- proteinMatches ) {
       val seqMatches = protMatch.sequenceMatches
       
       // Retrieve only validated peptide matches (i.e. present in peptide matches)
-      val nrPepIdSet = new HashSet[Int]()
+      val nrPepIdSet = new HashSet[Long]()
       for( seqMatch <- seqMatches ) {        
         val pepId = seqMatch.getPeptideId
         if (pepInstanceByPepId.contains(pepId)) {
@@ -92,13 +93,13 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
     
     // Clusterize peptides
     val peptideIdByProtMatchId = peptideIdByProtMatchIdBuilder.result()
-    val clusters = SetClusterer.clusterizeMappedSets[Int,Int]( peptideIdByProtMatchId )
+    val clusters = SetClusterer.clusterizeMappedSets[Long,Long]( peptideIdByProtMatchId )
     
     // Define some vars
     val proteinSets = new ArrayBuffer[ProteinSet]
     val peptideSets = new ArrayBuffer[PeptideSet]
-    val proteinSetCountByPepInstanceId = new HashMap[Int,Int]
-    val peptideSetIdByClusterId = new HashMap[Int,Int]
+    val proteinSetCountByPepInstanceId = new HashMap[Long,Int]
+    val peptideSetIdByClusterId = new HashMap[Long,Long]
     
     // Generate id for each cluster and map it by the provided cluster id
     for( cluster <- clusters ) {
@@ -119,7 +120,7 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
       val clusterPepIds = peptideIdByProtMatchId( clusterProtMatchIds(0) )
       
       // Retrieve peptide instances corresponding to this set
-      val samesetPeptideInstanceIds = new ArrayBuffer[Int]
+      val samesetPeptideInstanceIds = new ArrayBuffer[Long]
       for( nrPepKey <- clusterPepIds ) {
         val tmpPepInstanceIds = pepInstanceByPepId(nrPepKey).id
         samesetPeptideInstanceIds += tmpPepInstanceIds
@@ -152,11 +153,11 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
       }
       
       // Build peptide set
-      val buildPeptideSet = new Function[Int,PeptideSet] {
-        def apply( proteinSetId: Int ): PeptideSet = {
+      val buildPeptideSet = new Function[Long,PeptideSet] {
+        def apply( proteinSetId: Long ): PeptideSet = {
           
-          var strictSubsetIds: Array[Int] = null
-          var subsumableSubsetIds: Array[Int] = null
+          var strictSubsetIds: Array[Long] = null
+          var subsumableSubsetIds: Array[Long] = null
           if( cluster.strictSubsetsIds != None ) {
             strictSubsetIds = cluster.strictSubsetsIds.get.map { peptideSetIdByClusterId(_) } toArray
           }

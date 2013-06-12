@@ -4,10 +4,10 @@ import fr.proline.core.om.model.msi.InstrumentConfig
 
 trait IInstrumentConfigProvider {
 
-  def getInstrumentConfigsAsOptions( instConfigIds: Seq[Int] ): Array[Option[InstrumentConfig]]
+  def getInstrumentConfigsAsOptions( instConfigIds: Seq[Long] ): Array[Option[InstrumentConfig]]
   
-  def getInstrumentConfigs( instConfigIds: Seq[Int] ): Array[InstrumentConfig]
+  def getInstrumentConfigs( instConfigIds: Seq[Long] ): Array[InstrumentConfig]
   
-  def getInstrumentConfig( instConfigId: Int ): Option[InstrumentConfig] = { getInstrumentConfigsAsOptions( Seq(instConfigId) )(0) }
+  def getInstrumentConfig( instConfigId: Long ): Option[InstrumentConfig] = { getInstrumentConfigsAsOptions( Seq(instConfigId) )(0) }
   
 }

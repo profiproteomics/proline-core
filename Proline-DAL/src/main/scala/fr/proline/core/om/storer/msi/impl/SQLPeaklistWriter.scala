@@ -26,7 +26,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
   //protected val doubleFormatter = newDecimalFormat("#.######")
   //protected val floatFormatter = newDecimalFormat("#.##")
   
-  def insertPeaklist(peaklist: Peaklist, context: StorerContext): Int = {
+  def insertPeaklist(peaklist: Peaklist, context: StorerContext): Long = {
 
     require(peaklist != null, "peaklist is null")
 
@@ -47,7 +47,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
           Option(peaklist.peaklistSoftware).map(_.id)
         )
 
-        peaklist.id = stmt.generatedInt
+        peaklist.id = stmt.generatedLong
       }
 
     },true)
@@ -55,7 +55,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
     peaklist.id
   }
 
-  def insertSpectra(peaklistId: Int, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
+  def insertSpectra(peaklistId: Long, peaklistContainer: IPeaklistContainer, context: StorerContext): StorerContext = {
     
     logger.info("storing spectra...")
 
@@ -66,7 +66,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
       }
 
       // Insert corresponding spectra
-      val spectrumIdByTitle = collection.immutable.Map.newBuilder[String, Int]
+      val spectrumIdByTitle = collection.immutable.Map.newBuilder[String, Long]
       
       msiEzDBC.executePrepared(spectrumInsertQuery) { stmt =>
         peaklistContainer.eachSpectrum { spectrum =>
@@ -83,7 +83,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
     context
   }
 
-  private def _insertSpectrum(stmt: PreparedStatementWrapper, spectrum: Spectrum, peaklistId: Int): Unit = {
+  private def _insertSpectrum(stmt: PreparedStatementWrapper, spectrum: Spectrum, peaklistId: Long): Unit = {
 
     // Define some vars
     val precursorIntensity = if (!spectrum.precursorIntensity.isNaN) Some(spectrum.precursorIntensity) else Option.empty[Float]
@@ -122,7 +122,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
       spectrum.instrumentConfigId
     )
 
-    spectrum.id = stmt.generatedInt
+    spectrum.id = stmt.generatedLong
 
   }
 

@@ -40,7 +40,7 @@ class OMConverterUtilTest extends DatabaseTestCase {
     val psEm = emf.createEntityManager
 
     try {
-      val ormPep: fr.proline.core.orm.ps.Peptide = psEm.find(classOf[fr.proline.core.orm.ps.Peptide], 4)
+      val ormPep: fr.proline.core.orm.ps.Peptide = psEm.find(classOf[fr.proline.core.orm.ps.Peptide], java.lang.Long.valueOf(4L))
       val omPep: fr.proline.core.om.model.msi.Peptide = converter.convertPeptidePsORM2OM(ormPep)
       assertNotNull(omPep);
       assertEquals(omPep.calculatedMass, ormPep.getCalculatedMass(), 0.01d)

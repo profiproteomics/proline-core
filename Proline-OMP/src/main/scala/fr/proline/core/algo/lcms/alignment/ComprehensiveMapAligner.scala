@@ -45,7 +45,7 @@ class ComprehensiveMapAligner extends ILcmsMapAligner {
     
     if( lcmsMaps.length <= 2 ) return lcmsMaps(0)
     
-    val mapAlnSetsByMapId = new java.util.HashMap[Int,ArrayBuffer[MapAlignmentSet]]
+    val mapAlnSetsByMapId = new java.util.HashMap[Long,ArrayBuffer[MapAlignmentSet]]
     for( mapAlnSet <- mapAlnSets ) {
       for( mapId <- Array( mapAlnSet.refMapId, mapAlnSet.targetMapId) ) {
         if( !mapAlnSetsByMapId.containsKey(mapId) ) {

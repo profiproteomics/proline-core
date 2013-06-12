@@ -17,9 +17,9 @@ import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.algo.msi.validation.IPeptideMatchValidator
 
 class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
-                               projectId: Int,
-                               identificationId: Int,
-                               rsmIds: Seq[Int],
+                               projectId: Long,
+                               identificationId: Long,
+                               rsmIds: Seq[Long],
                                mergeResultSets: Boolean,
                                pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
                                pepMatchValidator: Option[IPeptideMatchValidator] = None,
@@ -64,7 +64,7 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
     val rsIdByRsmId = msiDbHelper.getResultSetIdByResultSummaryId( rsmIds )
     val rsmIdByRsId = for( (rsId, rsmId) <- rsIdByRsmId ) yield (rsmId, rsId)
     
-    var identInstanceRsmId = 0
+    var identInstanceRsmId: Long = 0L
     //if( udsIdfFractions.size() > 1 ) {
     if( rsmIds.length > 1 ) {
       

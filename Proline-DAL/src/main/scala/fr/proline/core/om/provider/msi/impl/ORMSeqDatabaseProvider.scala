@@ -17,7 +17,7 @@ class ORMSeqDatabaseProvider( val pdiDbCtx: DatabaseConnectionContext ) extends 
 
   val converter = new ProteinsOMConverterUtil()
 
-  def getSeqDatabasesAsOptions(seqDBIds: Seq[Int]): Array[Option[SeqDatabase]] = {
+  def getSeqDatabasesAsOptions(seqDBIds: Seq[Long]): Array[Option[SeqDatabase]] = {
 
     var foundSeqDBBuilder = Array.newBuilder[Option[SeqDatabase]]
 
@@ -46,7 +46,7 @@ class ORMSeqDatabaseProvider( val pdiDbCtx: DatabaseConnectionContext ) extends 
     foundSeqDBBuilder.result
   }
 
-  def getSeqDatabases(seqDBIds: Seq[Int]): Array[SeqDatabase] = {
+  def getSeqDatabases(seqDBIds: Seq[Long]): Array[SeqDatabase] = {
     throw new Exception("NYI")
   }
 

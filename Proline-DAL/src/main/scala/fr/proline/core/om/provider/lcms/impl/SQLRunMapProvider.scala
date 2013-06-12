@@ -11,6 +11,7 @@ import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IRunMapProvider
 import fr.proline.util.sql._
+import fr.proline.util.primitives._
 
 class SQLRunMapProvider(
   val lcmsDbCtx: DatabaseConnectionContext,
@@ -24,10 +25,10 @@ class SQLRunMapProvider(
   protected val peakelFittingModelById = lcmsDbHelper.getPeakelFittingModelById()
 
   /** Returns a list of LC-MS maps corresponding to a given list of run map ids */
-  def getLcMsMaps(mapIds: Seq[Int]): Seq[ILcMsMap] = this.getRunMaps(mapIds)
+  def getLcMsMaps(mapIds: Seq[Long]): Seq[ILcMsMap] = this.getRunMaps(mapIds)
 
   /** Returns a list of run maps corresponding to a given list of run map ids */
-  def getRunMaps(runMapIds: Seq[Int]): Array[RunMap] = {
+  def getRunMaps(runMapIds: Seq[Long]): Array[RunMap] = {
 
     val features = this.getFeatures(runMapIds)
     // Group features by map id
@@ -47,10 +48,10 @@ class SQLRunMapProvider(
       // Load processed map features
       ezDBC.selectAndProcess(runMapQuery) { r =>
 
-        val mapId = r.getInt(LcMsMapCols.ID)
-        val featureScoringId = r.getInt(LcMsMapCols.FEATURE_SCORING_ID)
-        val peakPickingSoftwareId = r.getInt(RunMapCols.PEAK_PICKING_SOFTWARE_ID)
-        val peakelFittingModelId = r.getInt(RunMapCols.PEAKEL_FITTING_MODEL_ID)
+        val mapId = toLong(r.getAny(LcMsMapCols.ID))
+        val featureScoringId = toLong(r.getAny(LcMsMapCols.FEATURE_SCORING_ID))
+        val peakPickingSoftwareId = toLong(r.getAny(RunMapCols.PEAK_PICKING_SOFTWARE_ID))
+        val peakelFittingModelId = toLong(r.getAny(RunMapCols.PEAKEL_FITTING_MODEL_ID))
 
         val mapFeatures = featuresByMapId(mapId)
         val featureScoring = featureScoringById.get(featureScoringId)
@@ -65,7 +66,7 @@ class SQLRunMapProvider(
           isProcessed = false,
           creationTimestamp = r.getTimestamp(LcMsMapCols.CREATION_TIMESTAMP),
           features = features,
-          runId = r.getInt(RunMapCols.RUN_ID),
+          runId = toLong(r.getAny(RunMapCols.RUN_ID)),
           peakPickingSoftware = peakPickingSoftware,          
           featureScoring = featureScoring,
           peakelFittingModel = peakelFittingModel
@@ -79,7 +80,7 @@ class SQLRunMapProvider(
   }
 
   /** Returns a list of features corresponding to a given list of run map ids */
-  def getFeatures(mapIds: Seq[Int]): Array[Feature] = {
+  def getFeatures(mapIds: Seq[Long]): Array[Feature] = {
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -93,7 +94,7 @@ class SQLRunMapProvider(
       val runIdsQuery = new SelectQueryBuilder1(LcmsDbRunMapTable).mkSelectQuery( (t1, c1) =>
         List(t1.RUN_ID) -> "WHERE " ~ t1.ID ~ " IN(" ~ mapIdsStr ~ ") "
       )
-      val runIds = ezDBC.selectInts( runIdsQuery )
+      val runIds = ezDBC.selectLongs( runIdsQuery )
       
       // Load mapping between scan ids and scan initial ids
       val scanInitialIdById = lcmsDbHelper.getScanInitialIdById(runIds)
@@ -107,7 +108,7 @@ class SQLRunMapProvider(
       // Retrieve mapping between overlapping features
       val olpFtIdsByFtId = getOverlappingFtIdsByFtId(mapIds)
 
-      var olpFeatureById: Map[Int, Feature] = null
+      var olpFeatureById: Map[Long, Feature] = null
       if (olpFtIdsByFtId.size > 0) {
         olpFeatureById = getOverlappingFeatureById(mapIds, scanInitialIdById, ms2EventIdsByFtId)
       }
@@ -115,7 +116,7 @@ class SQLRunMapProvider(
       val ftBuffer = new ArrayBuffer[Feature]
 
       this.eachFeatureRecord(mapIds, ftRecord => {
-        val ftId = ftRecord.getInt(FtCols.ID)
+        val ftId = toLong(ftRecord.getAny(FtCols.ID))
 
         // Try to retrieve overlapping features
         var olpFeatures: Array[Feature] = null

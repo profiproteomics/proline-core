@@ -22,15 +22,16 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "biological_sample")
 public class BiologicalSample implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private long id;
 
     private String name;
 
-    private Integer number;
+    private int number;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -53,12 +54,12 @@ public class BiologicalSample implements Serializable {
     public BiologicalSample() {
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
     public String getName() {
@@ -69,12 +70,12 @@ public class BiologicalSample implements Serializable {
 	this.name = name;
     }
 
-    public Integer getNumber() {
-	return this.number;
+    public int getNumber() {
+	return number;
     }
 
-    public void setNumber(Integer number) {
-	this.number = number;
+    public void setNumber(final int pNumber) {
+	number = pNumber;
     }
 
     public String getSerializedProperties() {

@@ -4,8 +4,14 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import org.apache.commons.lang3.StringUtils;
+
+import fr.proline.core.orm.pdi.Alphabet;
 
 /**
  * The persistent class for the bio_sequence database table.
@@ -18,13 +24,14 @@ public class BioSequence implements Serializable {
 
     @Id
     // MSI BioSequence Id are not generated (taken from Pdi BioSequence entity)
-    private Integer id;
+    private long id;
 
-    private String alphabet;
+    @Enumerated(EnumType.STRING)
+    private Alphabet alphabet;
 
     private String crc64;
 
-    private Integer length;
+    private int length;
 
     private double mass;
 
@@ -55,27 +62,44 @@ public class BioSequence implements Serializable {
 	setId(pdiBioSequence.getId());
 	setAlphabet(pdiBioSequence.getAlphabet());
 	setCrc64(pdiBioSequence.getCrc64());
-	setLength(pdiBioSequence.getLength());
+
+	// FIXME LMN inconsistent nullable field "length"
+	final Integer pdiBioSequenceLength = pdiBioSequence.getLength();
+
+	if (pdiBioSequenceLength == null) {
+	    setLength(-1);
+	} else {
+	    setLength(pdiBioSequenceLength.intValue());
+	}
+
 	setMass(pdiBioSequence.getMass());
 	setPi(pdiBioSequence.getPi());
 	setSequence(pdiBioSequence.getSequence());
-	setSerializedProperties(pdiBioSequence.getSerializedProperties());
+
+	final String pdiBioSequenceProps = pdiBioSequence.getSerializedProperties();
+
+	if (StringUtils.isEmpty(pdiBioSequenceProps)) {
+	    setSequence(null);
+	} else {
+	    setSerializedProperties(pdiBioSequenceProps);
+	}
+
     }
 
-    public Integer getId() {
-	return this.id;
+    public long getId() {
+	return id;
     }
 
-    public void setId(Integer id) {
-	this.id = id;
+    public void setId(final long pId) {
+	id = pId;
     }
 
-    public String getAlphabet() {
-	return this.alphabet;
+    public Alphabet getAlphabet() {
+	return alphabet;
     }
 
-    public void setAlphabet(String alphabet) {
-	this.alphabet = alphabet;
+    public void setAlphabet(final Alphabet pAlphabet) {
+	alphabet = pAlphabet;
     }
 
     public String getCrc64() {
@@ -86,12 +110,12 @@ public class BioSequence implements Serializable {
 	this.crc64 = crc64;
     }
 
-    public Integer getLength() {
-	return this.length;
+    public int getLength() {
+	return length;
     }
 
-    public void setLength(Integer length) {
-	this.length = length;
+    public void setLength(final int pLength) {
+	length = pLength;
     }
 
     public double getMass() {

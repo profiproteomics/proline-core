@@ -13,7 +13,7 @@
   <table id="TAB1" populated="true" UUID="323d9396-1c95-4700-bbdf-bd231e3ddff7" name="bio_sequence" objectType="TABLE" physicalName="bio_sequence" >
    <remarks>Like Uniparc, it  is a non-redundant protein sequence archive, containing both active and dead sequences, and it is species-merged since sequences are handled just as strings - all sequences 100% identical over the whole length of the sequence between species are merged. A sequence that exists in many copies in different databases is represented as a single entry which allows to identify the same protein from different sources. UNIQUE(alphabet,mass,crc64)</remarks>
    <folder id="FOLTAB11" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL2" populated="true" UUID="5b265885-5dfd-4272-8a40-f0370b9b8f71" autoIncrement="true" autoIncrementSequenceName="bio_sequence_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL2" populated="true" UUID="5b265885-5dfd-4272-8a40-f0370b9b8f71" autoIncrement="true" autoIncrementSequenceName="bio_sequence_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL3" populated="true" UUID="ba375686-794f-459f-8ddb-c8964595860c" autoIncrement="false" autoIncrementSequenceName="bio_sequence_alphabet_seq" defaultValue="" name="alphabet" nullable="0" physicalName="alphabet" precision="3" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -56,7 +56,7 @@
   <table id="TAB16" populated="true" UUID="1fbad6dc-5a0f-4ab1-830a-2a9a77a0e902" name="protein_identifier" objectType="TABLE" physicalName="protein_identifier" >
    <remarks>An entry in a protein database identified by an accession number. UNIQUE( value, taxon_id )</remarks>
    <folder id="FOLTAB161" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL17" populated="true" UUID="cb5ab1eb-aadc-4eb1-b33f-a2180d44dc22" autoIncrement="true" autoIncrementSequenceName="protein_identifier_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="2" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL17" populated="true" UUID="cb5ab1eb-aadc-4eb1-b33f-a2180d44dc22" autoIncrement="true" autoIncrementSequenceName="protein_identifier_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="2" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL18" populated="true" UUID="8612c060-bee7-4320-aab0-da82e22b874c" autoIncrement="false" autoIncrementSequenceName="protein_identifier_value_seq" defaultValue="" name="value" nullable="0" physicalName="value" precision="30" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -71,13 +71,13 @@
     <column id="COL21" populated="true" UUID="dccd94fb-7906-4729-a587-8bbaa9993374" autoIncrement="false" autoIncrementSequenceName="protein_identifier_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL22" populated="true" UUID="95177f28-a59f-4771-9571-95ef4f0f0f0d" autoIncrement="false" autoIncrementSequenceName="protein_identifier_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL22" populated="true" UUID="95177f28-a59f-4771-9571-95ef4f0f0f0d" autoIncrement="false" autoIncrementSequenceName="protein_identifier_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL23" populated="true" UUID="3aa85805-af35-4605-afd9-41303da71dc8" autoIncrement="false" autoIncrementSequenceName="protein_identifier_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL23" populated="true" UUID="3aa85805-af35-4605-afd9-41303da71dc8" autoIncrement="false" autoIncrementSequenceName="protein_identifier_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The NCBI taxon id</remarks>
     </column>
-    <column id="COL24" populated="true" UUID="710eff50-bf04-495d-b4a0-efb9d4f99b06" autoIncrement="false" autoIncrementSequenceName="protein_identifier_seq_db_config_id_seq" defaultValue="" name="seq_db_config_id" nullable="0" physicalName="seq_db_config_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL24" populated="true" UUID="710eff50-bf04-495d-b4a0-efb9d4f99b06" autoIncrement="false" autoIncrementSequenceName="protein_identifier_seq_db_config_id_seq" defaultValue="" name="seq_db_config_id" nullable="0" physicalName="seq_db_config_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -104,7 +104,7 @@
   <table id="TAB34" populated="true" UUID="48a3b5e7-e956-4bee-bdbe-f324606add45" name="taxon" objectType="TABLE" physicalName="taxon" >
    <remarks>Describes the NCBI taxononmy.</remarks>
    <folder id="FOLTAB341" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL35" populated="true" UUID="1cd8efc2-4243-42df-89a7-62cbc12c08fc" autoIncrement="false" autoIncrementSequenceName="taxon_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL35" populated="true" UUID="1cd8efc2-4243-42df-89a7-62cbc12c08fc" autoIncrement="false" autoIncrementSequenceName="taxon_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The NCBI taxon id</remarks>
     </column>
     <column id="COL36" populated="true" UUID="b61aada7-dccb-49bc-8665-6a9793fb0fcc" autoIncrement="false" autoIncrementSequenceName="taxon_scientific_name_seq" defaultValue="" name="scientific_name" nullable="0" physicalName="scientific_name" precision="512" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -119,7 +119,7 @@
     <column id="COL39" populated="true" UUID="9c6ed704-defc-4d29-b0f6-7d828f87ffff" autoIncrement="false" autoIncrementSequenceName="taxon_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL40" populated="true" UUID="ca63414f-e026-4819-9c1f-84ce82130b84" autoIncrement="false" autoIncrementSequenceName="taxon_parent_taxon_id_seq" defaultValue="" name="parent_taxon_id" nullable="0" physicalName="parent_taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL40" populated="true" UUID="ca63414f-e026-4819-9c1f-84ce82130b84" autoIncrement="false" autoIncrementSequenceName="taxon_parent_taxon_id_seq" defaultValue="" name="parent_taxon_id" nullable="0" physicalName="parent_taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -136,7 +136,7 @@
   <table id="TAB43" populated="true" UUID="ace1e835-52a0-4d88-96d0-28a2f88ac904" name="seq_db_instance" objectType="TABLE" physicalName="seq_db_instance" >
    <remarks></remarks>
    <folder id="FOLTAB431" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL44" populated="true" UUID="6bdd5c8f-28a4-4110-85c1-22d0f083cd5d" autoIncrement="true" autoIncrementSequenceName="seq_db_instance_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="2" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL44" populated="true" UUID="6bdd5c8f-28a4-4110-85c1-22d0f083cd5d" autoIncrement="true" autoIncrementSequenceName="seq_db_instance_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="2" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL45" populated="true" UUID="0c432b7f-c961-4637-8948-f020280a159c" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_fasta_file_path_seq" defaultValue="" name="fasta_file_path" nullable="0" physicalName="fasta_file_path" precision="500" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -166,10 +166,10 @@
     <column id="COL53" populated="true" UUID="a8abeadd-f3ed-4f7d-9dae-1fa4aac4fcb9" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL54" populated="true" UUID="fb8c93b2-d983-409c-94e5-2c12410a057b" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_seq_db_release_seq_db_release_id_seq" defaultValue="" name="seq_db_release_id" nullable="1" physicalName="seq_db_release_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL54" populated="true" UUID="fb8c93b2-d983-409c-94e5-2c12410a057b" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_seq_db_release_seq_db_release_id_seq" defaultValue="" name="seq_db_release_id" nullable="1" physicalName="seq_db_release_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>database release information are created whenever possible, but some dabase don&apos;t have any structured release naming convention.</remarks>
     </column>
-    <column id="COL55" populated="true" UUID="95cb68a9-ad5f-4d3a-b24f-6807d692e8d2" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_seq_db_config_id_seq" defaultValue="" name="seq_db_config_id" nullable="0" physicalName="seq_db_config_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL55" populated="true" UUID="95cb68a9-ad5f-4d3a-b24f-6807d692e8d2" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_seq_db_config_id_seq" defaultValue="" name="seq_db_config_id" nullable="0" physicalName="seq_db_config_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -186,7 +186,7 @@
   <table id="TAB58" populated="true" UUID="9204ccfa-e5b8-480e-b4a8-1b41d02493f1" name="seq_db_entry" objectType="TABLE" physicalName="seq_db_entry" >
    <remarks>Note: only inactive entries should kept is the previous instance when updated a sequence database to a newset release.</remarks>
    <folder id="FOLTAB581" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL59" populated="true" UUID="438b63ee-3576-4b12-8ac7-d08c6ef73c20" autoIncrement="true" autoIncrementSequenceName="seq_db_entry_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL59" populated="true" UUID="438b63ee-3576-4b12-8ac7-d08c6ef73c20" autoIncrement="true" autoIncrementSequenceName="seq_db_entry_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL60" populated="true" UUID="5ff96230-aba8-46cb-99f5-ea2f7d3e1b17" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_identifier_seq" defaultValue="" name="identifier" nullable="0" physicalName="identifier" precision="50" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -210,16 +210,16 @@
     <column id="COL66" populated="true" UUID="80bb017e-1bdb-41c6-99fa-9b36f67f091a" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL67" populated="true" UUID="def149f9-826e-4aca-a432-581168da49fd" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_bio_sequence_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL67" populated="true" UUID="def149f9-826e-4aca-a432-581168da49fd" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_bio_sequence_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL68" populated="true" UUID="3db21885-3718-4647-a327-0432ab14b7d9" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL68" populated="true" UUID="3db21885-3718-4647-a327-0432ab14b7d9" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The NCBI taxon id</remarks>
     </column>
-    <column id="COL69" populated="true" UUID="031330c6-9a06-4abb-9158-a79a5adbe4da" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_seq_db_instance_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL69" populated="true" UUID="031330c6-9a06-4abb-9158-a79a5adbe4da" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_seq_db_instance_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL70" populated="true" UUID="7cd5e1b9-7a95-48cc-848c-bc4ad295fd5e" autoIncrement="false" autoIncrementSequenceName="seq_db_config_id_seq" defaultValue="" name="seq_db_config_id" nullable="0" physicalName="seq_db_config_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL70" populated="true" UUID="7cd5e1b9-7a95-48cc-848c-bc4ad295fd5e" autoIncrement="false" autoIncrementSequenceName="seq_db_config_id_seq" defaultValue="" name="seq_db_config_id" nullable="0" physicalName="seq_db_config_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -254,7 +254,7 @@
   <table id="TAB85" populated="true" UUID="9d9be855-f25d-442d-8222-aef32ee234c5" name="seq_db_config" objectType="TABLE" physicalName="seq_db_config" >
    <remarks></remarks>
    <folder id="FOLTAB851" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL86" populated="true" UUID="870bdd15-5601-48e6-aa3e-1201002bace2" autoIncrement="true" autoIncrementSequenceName="seq_db_config_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL86" populated="true" UUID="870bdd15-5601-48e6-aa3e-1201002bace2" autoIncrement="true" autoIncrementSequenceName="seq_db_config_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL87" populated="true" UUID="a84ef9e3-19bc-4252-a508-5ca539196963" autoIncrement="false" autoIncrementSequenceName="seq_db_config_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -269,7 +269,7 @@
     <column id="COL90" populated="true" UUID="98eb2ec5-5f16-498e-b735-57651a7636f2" autoIncrement="false" autoIncrementSequenceName="seq_db_config_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL91" populated="true" UUID="8a7231d6-b79b-42e0-9a5b-31b06ca54ba2" autoIncrement="false" autoIncrementSequenceName="seq_db_config_fasta_parsing_rule_id_seq" defaultValue="" name="fasta_parsing_rule_id" nullable="0" physicalName="fasta_parsing_rule_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL91" populated="true" UUID="8a7231d6-b79b-42e0-9a5b-31b06ca54ba2" autoIncrement="false" autoIncrementSequenceName="seq_db_config_fasta_parsing_rule_id_seq" defaultValue="" name="fasta_parsing_rule_id" nullable="0" physicalName="fasta_parsing_rule_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL92" populated="true" UUID="f6735623-54ec-4a41-85f7-0f1dffed0507" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_is_native_seq" defaultValue="" name="is_native" nullable="0" physicalName="is_native" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
@@ -289,7 +289,7 @@
   <table id="TAB95" populated="true" UUID="9daf8aea-7836-4155-b51e-6d16dc049737" name="fasta_parsing_rule" objectType="TABLE" physicalName="fasta_parsing_rule" >
    <remarks></remarks>
    <folder id="FOLTAB951" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL96" populated="true" UUID="86ee80be-938b-4d1d-824c-cfffc626ba23" autoIncrement="true" autoIncrementSequenceName="fasta_parsing_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL96" populated="true" UUID="86ee80be-938b-4d1d-824c-cfffc626ba23" autoIncrement="true" autoIncrementSequenceName="fasta_parsing_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL97" populated="true" UUID="5b1fcf36-96d7-4d32-860e-20526d1c11ed" autoIncrement="false" autoIncrementSequenceName="fasta_parsing_rule_db_type_seq" defaultValue="" name="db_type" nullable="1" physicalName="db_type" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -327,7 +327,7 @@
   <table id="TAB106" populated="true" UUID="19ce3b9b-7a97-4cfa-844e-b05a8e3aa6a4" name="seq_db_release" objectType="TABLE" physicalName="seq_db_release" >
    <remarks></remarks>
    <folder id="FOLTAB1061" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL107" populated="true" UUID="670c3f10-bce3-4d67-88c4-4baf24204b9a" autoIncrement="true" autoIncrementSequenceName="seq_db_release_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="2" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL107" populated="true" UUID="670c3f10-bce3-4d67-88c4-4baf24204b9a" autoIncrement="true" autoIncrementSequenceName="seq_db_release_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="2" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL108" populated="true" UUID="2851d297-ea36-44f4-85ce-825165657cfe" autoIncrement="false" autoIncrementSequenceName="seq_db_release_date_seq" defaultValue="" name="date" nullable="0" physicalName="date" precision="50" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -353,7 +353,7 @@
   <table id="TAB113" populated="true" UUID="16e94296-caeb-4941-add4-5870c2f5a243" name="fasta_file_entry_index" objectType="TABLE" physicalName="fasta_file_entry_index" >
    <remarks></remarks>
    <folder id="FOLTAB1131" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL114" populated="true" UUID="e6703027-57a2-4c92-b46d-78cad95e5197" autoIncrement="true" autoIncrementSequenceName="fasta_file_entry_index_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL114" populated="true" UUID="e6703027-57a2-4c92-b46d-78cad95e5197" autoIncrement="true" autoIncrementSequenceName="fasta_file_entry_index_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL115" populated="true" UUID="3b0c6f52-9ef2-4c27-a91b-a0e4845d4b6b" autoIncrement="false" autoIncrementSequenceName="fasta_file_entry_index_block_start_seq" defaultValue="" name="block_start" nullable="0" physicalName="block_start" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
@@ -365,13 +365,13 @@
     <column id="COL117" populated="true" UUID="fcf11541-6e78-44fe-ba48-8bf924c8f695" autoIncrement="false" autoIncrementSequenceName="fasta_file_entry_index_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL118" populated="true" UUID="1927e538-7699-4c15-8fbd-212f05353df4" autoIncrement="false" autoIncrementSequenceName="fasta_file_entry_index_bio_sequence_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL118" populated="true" UUID="1927e538-7699-4c15-8fbd-212f05353df4" autoIncrement="false" autoIncrementSequenceName="fasta_file_entry_index_bio_sequence_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>May be used to specify a sequence variant of the main seq db entry.</remarks>
     </column>
-    <column id="COL119" populated="true" UUID="0647728b-cb0d-45f6-8f49-5791b0be1f50" autoIncrement="false" autoIncrementSequenceName="fasta_file_entry_index_seq_db_entry_seq_db_entry_id_seq" defaultValue="" name="seq_db_entry_id" nullable="0" physicalName="seq_db_entry_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL119" populated="true" UUID="0647728b-cb0d-45f6-8f49-5791b0be1f50" autoIncrement="false" autoIncrementSequenceName="fasta_file_entry_index_seq_db_entry_seq_db_entry_id_seq" defaultValue="" name="seq_db_entry_id" nullable="0" physicalName="seq_db_entry_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL120" populated="true" UUID="390f6d85-dba5-49dd-ad8d-aca76f25b3ff" autoIncrement="false" autoIncrementSequenceName="fasta_file_entry_index_seq_db_instance_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL120" populated="true" UUID="390f6d85-dba5-49dd-ad8d-aca76f25b3ff" autoIncrement="false" autoIncrementSequenceName="fasta_file_entry_index_seq_db_instance_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -397,7 +397,7 @@
   <table id="TAB129" populated="true" UUID="89f1c516-1ffd-4f9d-bb87-778c34077c90" name="taxon_extra_name" objectType="TABLE" physicalName="taxon_extra_name" >
    <remarks></remarks>
    <folder id="FOLTAB1291" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL130" populated="true" UUID="d3a9d554-3ecc-4890-a2ac-54e6c5e621ea" autoIncrement="true" autoIncrementSequenceName="taxon_extra_name_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL130" populated="true" UUID="d3a9d554-3ecc-4890-a2ac-54e6c5e621ea" autoIncrement="true" autoIncrementSequenceName="taxon_extra_name_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL131" populated="true" UUID="bac9a593-b9ec-4947-bb22-94a67b06ac1b" autoIncrement="false" autoIncrementSequenceName="taxon_extra_name_class_seq" defaultValue="" name="class" nullable="0" physicalName="class" precision="256" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -409,7 +409,7 @@
     <column id="COL133" populated="true" UUID="a4171553-fb6a-4350-8373-453fc4819e37" autoIncrement="false" autoIncrementSequenceName="taxon_extra_name_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL134" populated="true" UUID="5b473cf8-16c6-4494-919a-915bdebd0f4e" autoIncrement="false" autoIncrementSequenceName="taxon_extra_name_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL134" populated="true" UUID="5b473cf8-16c6-4494-919a-915bdebd0f4e" autoIncrement="false" autoIncrementSequenceName="taxon_extra_name_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The NCBI taxon id</remarks>
     </column>
     </folder>
@@ -426,7 +426,7 @@
   <table id="TAB137" populated="true" UUID="eb737cbc-6b85-4a6d-907c-78f04006ef7b" name="gene" objectType="TABLE" physicalName="gene" >
    <remarks>UNIQUE(name, taxon_id)</remarks>
    <folder id="FOLTAB1371" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL138" populated="true" UUID="de7db6ab-4a64-4e92-b5f8-43cb1adc5329" autoIncrement="true" autoIncrementSequenceName="gene_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL138" populated="true" UUID="de7db6ab-4a64-4e92-b5f8-43cb1adc5329" autoIncrement="true" autoIncrementSequenceName="gene_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL139" populated="true" UUID="2161f33f-db98-4dc8-a9f9-b970c65b8c90" autoIncrement="false" autoIncrementSequenceName="gene_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -445,7 +445,7 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
     <column id="COL143" populated="true" UUID="eaab8a2c-c302-4310-83f0-b35d26f35cf3" autoIncrement="false" autoIncrementSequenceName="gene_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL144" populated="true" UUID="87f5f3fa-f0d6-4635-8617-03e3dba187d6" autoIncrement="false" autoIncrementSequenceName="gene_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL144" populated="true" UUID="87f5f3fa-f0d6-4635-8617-03e3dba187d6" autoIncrement="false" autoIncrementSequenceName="gene_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The NCBI taxon id</remarks>
     </column>
     </folder>
@@ -469,13 +469,13 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
   <table id="TAB152" populated="true" UUID="4812de2e-05d2-4a72-807d-c1ec04e7d6e8" name="seq_db_entry_protein_identifier_map" objectType="TABLE" physicalName="seq_db_entry_protein_identifier_map" >
    <remarks>Note: the same protein identifier shouldn&apos;t be find in multiple instancesof the same seq database.</remarks>
    <folder id="FOLTAB1521" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL153" populated="true" UUID="dbf7eb5f-ebca-449d-895c-423b96d5ff7b" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_protein_identifier_mapseq_db_entry_id_seq" defaultValue="" name="seq_db_entry_id" nullable="0" physicalName="seq_db_entry_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL153" populated="true" UUID="dbf7eb5f-ebca-449d-895c-423b96d5ff7b" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_protein_identifier_mapseq_db_entry_id_seq" defaultValue="" name="seq_db_entry_id" nullable="0" physicalName="seq_db_entry_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL154" populated="true" UUID="97513ff5-ab2e-4726-8a4f-19ce61646e12" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_protein_identifier_map_protein_identifier_id_seq" defaultValue="" name="protein_identifier_id" nullable="0" physicalName="protein_identifier_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL154" populated="true" UUID="97513ff5-ab2e-4726-8a4f-19ce61646e12" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_protein_identifier_map_protein_identifier_id_seq" defaultValue="" name="protein_identifier_id" nullable="0" physicalName="protein_identifier_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL155" populated="true" UUID="a10722e1-3eaf-4d49-a875-24e91160902b" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_protein_identifier_map_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL155" populated="true" UUID="a10722e1-3eaf-4d49-a875-24e91160902b" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_protein_identifier_map_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -496,13 +496,13 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
   <table id="TAB161" populated="true" UUID="4765e69f-4491-42e2-9efa-f8176dd398a7" name="seq_db_entry_gene_map" objectType="TABLE" physicalName="seq_db_entry_gene_map" >
    <remarks></remarks>
    <folder id="FOLTAB1611" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL162" populated="true" UUID="a50bc3e5-7fd3-4077-853e-e282aa97aa15" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_gene_map_seq_db_entry_seq_db_entry_id_seq" defaultValue="" name="seq_db_entry_id" nullable="0" physicalName="seq_db_entry_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL162" populated="true" UUID="a50bc3e5-7fd3-4077-853e-e282aa97aa15" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_gene_map_seq_db_entry_seq_db_entry_id_seq" defaultValue="" name="seq_db_entry_id" nullable="0" physicalName="seq_db_entry_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL163" populated="true" UUID="87466c5b-6fda-464b-941d-b46843e5c123" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_gene_map_gene_identifier_id_seq" defaultValue="" name="gene_id" nullable="0" physicalName="gene_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL163" populated="true" UUID="87466c5b-6fda-464b-941d-b46843e5c123" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_gene_map_gene_identifier_id_seq" defaultValue="" name="gene_id" nullable="0" physicalName="gene_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL164" populated="true" UUID="02b24e55-ce83-4c5d-8dea-83500e8baea8" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_gene_map_seq_db_instance_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL164" populated="true" UUID="02b24e55-ce83-4c5d-8dea-83500e8baea8" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_gene_map_seq_db_instance_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -520,7 +520,7 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
   <table id="TAB168" populated="true" UUID="c4239b01-e331-41d2-8270-d5a379faee79" name="chromosome_location" objectType="TABLE" physicalName="chromosome_location" >
    <remarks>paralogues, isoformes This table is deleted for active genes before each update. It contains the last known information about gene chromosome location.</remarks>
    <folder id="FOLTAB1681" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL169" populated="true" UUID="91ad8046-f16a-46f4-b561-e89b39139521" autoIncrement="true" autoIncrementSequenceName="chromosome_location_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL169" populated="true" UUID="91ad8046-f16a-46f4-b561-e89b39139521" autoIncrement="true" autoIncrementSequenceName="chromosome_location_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL170" populated="true" UUID="dd6469fc-a61b-4967-a332-68553fc912b7" autoIncrement="false" autoIncrementSequenceName="chromosome_location_chromosome_identifier_seq" defaultValue="" name="chromosome_identifier" nullable="0" physicalName="chromosome_identifier" precision="10" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -532,10 +532,10 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
     <column id="COL172" populated="true" UUID="2d90c18c-2c85-4980-b463-6ea11c1e9c9f" autoIncrement="false" autoIncrementSequenceName="chromosome_location_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>TODO: put in schema exon, intron, strand</remarks>
     </column>
-    <column id="COL173" populated="true" UUID="4d765ea5-b3da-43e1-9fba-21909845623d" autoIncrement="false" autoIncrementSequenceName="chromosome_location_gene_identifier_id_seq" defaultValue="" name="gene_id" nullable="0" physicalName="gene_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL173" populated="true" UUID="4d765ea5-b3da-43e1-9fba-21909845623d" autoIncrement="false" autoIncrementSequenceName="chromosome_location_gene_identifier_id_seq" defaultValue="" name="gene_id" nullable="0" physicalName="gene_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL174" populated="true" UUID="2e654958-674e-49ec-aa88-540eaa4503d1" autoIncrement="false" autoIncrementSequenceName="chromosome_location_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL174" populated="true" UUID="2e654958-674e-49ec-aa88-540eaa4503d1" autoIncrement="false" autoIncrementSequenceName="chromosome_location_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The NCBI taxon id</remarks>
     </column>
     </folder>
@@ -555,10 +555,10 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
   <table id="TAB179" populated="true" UUID="4833dba3-8327-4a8f-8816-1363b712f7d0" name="bio_sequence_relation" objectType="TABLE" physicalName="bio_sequence_relation" >
    <remarks></remarks>
    <folder id="FOLTAB1791" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL180" populated="true" UUID="fdf2e221-2f7b-4e89-8f56-7f22c20a987e" autoIncrement="false" autoIncrementSequenceName="bio_sequence_relation_na_sequence_id_seq" defaultValue="" name="na_sequence_id" nullable="0" physicalName="na_sequence_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL180" populated="true" UUID="fdf2e221-2f7b-4e89-8f56-7f22c20a987e" autoIncrement="false" autoIncrementSequenceName="bio_sequence_relation_na_sequence_id_seq" defaultValue="" name="na_sequence_id" nullable="0" physicalName="na_sequence_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL181" populated="true" UUID="1491fef5-905f-4b9e-a02e-4ec49a9c8e5a" autoIncrement="false" autoIncrementSequenceName="bio_sequence_relation_aa_sequence_id_seq" defaultValue="" name="aa_sequence_id" nullable="0" physicalName="aa_sequence_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL181" populated="true" UUID="1491fef5-905f-4b9e-a02e-4ec49a9c8e5a" autoIncrement="false" autoIncrementSequenceName="bio_sequence_relation_aa_sequence_id_seq" defaultValue="" name="aa_sequence_id" nullable="0" physicalName="aa_sequence_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL182" populated="true" UUID="90ff304b-fd21-433b-9065-adc98b2c2780" autoIncrement="false" autoIncrementSequenceName="bio_sequence_relation_frame_number_seq" defaultValue="" name="frame_number" nullable="0" physicalName="frame_number" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -579,16 +579,16 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
   <table id="TAB186" populated="true" UUID="7338bb53-9059-4a1d-af7b-b1a7b95b5e8b" name="bio_sequence_gene_map" objectType="TABLE" physicalName="bio_sequence_gene_map" >
    <remarks></remarks>
    <folder id="FOLTAB1861" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL187" populated="true" UUID="49ec4e1d-e8cf-4ee5-80c8-2e487ddeebae" autoIncrement="false" autoIncrementSequenceName="bio_sequence_gene_map_bio_sequence_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL187" populated="true" UUID="49ec4e1d-e8cf-4ee5-80c8-2e487ddeebae" autoIncrement="false" autoIncrementSequenceName="bio_sequence_gene_map_bio_sequence_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL188" populated="true" UUID="b62aa445-5e80-4be7-9147-97f78e0b0f1d" autoIncrement="false" autoIncrementSequenceName="bio_sequence_gene_map_gene_gene_id_seq" defaultValue="" name="gene_id" nullable="0" physicalName="gene_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL188" populated="true" UUID="b62aa445-5e80-4be7-9147-97f78e0b0f1d" autoIncrement="false" autoIncrementSequenceName="bio_sequence_gene_map_gene_gene_id_seq" defaultValue="" name="gene_id" nullable="0" physicalName="gene_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL189" populated="true" UUID="cfad5cdf-753d-485f-8778-80dc276ea53e" autoIncrement="false" autoIncrementSequenceName="bio_sequence_gene_map_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL190" populated="true" UUID="f56556fd-4239-4a9f-a566-41ece3ce2811" autoIncrement="false" autoIncrementSequenceName="bio_sequence_gene_map_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL190" populated="true" UUID="f56556fd-4239-4a9f-a566-41ece3ce2811" autoIncrement="false" autoIncrementSequenceName="bio_sequence_gene_map_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The NCBI taxon id</remarks>
     </column>
     </folder>
@@ -609,7 +609,7 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
   <table id="TAB196" populated="true" UUID="9fa68830-b259-4d9c-b230-02c548664ef3" name="bio_sequence_annotation" objectType="TABLE" physicalName="bio_sequence_annotation" >
    <remarks></remarks>
    <folder id="FOLTAB1961" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL197" populated="true" UUID="7b8b0867-e559-4aaa-ae37-33921664628a" autoIncrement="true" autoIncrementSequenceName="bio_sequence_annotation_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL197" populated="true" UUID="7b8b0867-e559-4aaa-ae37-33921664628a" autoIncrement="true" autoIncrementSequenceName="bio_sequence_annotation_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL198" populated="true" UUID="6c879b0c-d512-470c-a42a-17bfc767648a" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_version_seq" defaultValue="" name="version" nullable="0" physicalName="version" precision="50" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -618,13 +618,13 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
     <column id="COL199" populated="true" UUID="44cbc10e-0524-476b-9998-ab7c27c57346" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL200" populated="true" UUID="95906a7b-18de-4ac1-94d7-7213d4a66802" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_bio_sequence_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL200" populated="true" UUID="95906a7b-18de-4ac1-94d7-7213d4a66802" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_bio_sequence_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL201" populated="true" UUID="80535df7-d379-4873-918e-2aacccbda9f4" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL201" populated="true" UUID="80535df7-d379-4873-918e-2aacccbda9f4" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_taxon_taxon_id_seq" defaultValue="" name="taxon_id" nullable="0" physicalName="taxon_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks>The NCBI taxon id</remarks>
     </column>
-    <column id="COL202" populated="true" UUID="a5dfb85f-29f0-4380-be63-8e7a3e9edd0d" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL202" populated="true" UUID="a5dfb85f-29f0-4380-be63-8e7a3e9edd0d" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL203" populated="true" UUID="7a43fdc2-0e11-4dc1-8d67-d17fa80c805f" autoIncrement="false" autoIncrementSequenceName="bio_sequence_annotation_schema_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="schema_name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -644,7 +644,7 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
   <table id="TAB206" populated="true" UUID="94f86d92-424f-498c-ac4b-9273b2a55064" name="object_tree" objectType="TABLE" physicalName="object_tree" >
    <remarks></remarks>
    <folder id="FOLTAB2061" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL207" populated="true" UUID="a26cd0ec-c083-466c-b5ae-cb11a586303f" autoIncrement="true" autoIncrementSequenceName="object_tree_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL207" populated="true" UUID="a26cd0ec-c083-466c-b5ae-cb11a586303f" autoIncrement="true" autoIncrementSequenceName="object_tree_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL208" populated="true" UUID="a5b20434-6cca-4746-a046-aed45337e5a2" autoIncrement="false" autoIncrementSequenceName="object_tree_serialized_data_seq" defaultValue="" name="serialized_data" nullable="0" physicalName="serialized_data" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
@@ -702,10 +702,10 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
   <table id="TAB222" populated="true" UUID="7561bed9-2a79-46cf-82f7-6705877840c7" name="seq_db_entry_object_tree_map" objectType="TABLE" physicalName="seq_db_entry_object_tree_map" >
    <remarks></remarks>
    <folder id="FOLTAB2221" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL223" populated="true" UUID="83431d30-4688-4db7-9ce7-7587a03371c7" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_object_tree_mapseq_db_entry_seq_db_entry_id_seq" defaultValue="" name="seq_db_entry_id" nullable="0" physicalName="seq_db_entry_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL223" populated="true" UUID="83431d30-4688-4db7-9ce7-7587a03371c7" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_object_tree_mapseq_db_entry_seq_db_entry_id_seq" defaultValue="" name="seq_db_entry_id" nullable="0" physicalName="seq_db_entry_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL224" populated="true" UUID="53d18e45-a83f-4321-aeaa-f584c451911a" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_object_tree_map_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL224" populated="true" UUID="53d18e45-a83f-4321-aeaa-f584c451911a" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_object_tree_map_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL225" populated="true" UUID="416f20fa-b30b-4719-80c7-8b547919fa3f" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_object_tree_map_schema_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="schema_name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >

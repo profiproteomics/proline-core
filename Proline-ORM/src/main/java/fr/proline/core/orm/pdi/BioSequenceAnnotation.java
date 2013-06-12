@@ -1,99 +1,107 @@
 package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
-import javax.persistence.*;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the bio_sequence_annotation database table.
  * 
  */
 @Entity
-@Table(name="bio_sequence_annotation")
+@Table(name = "bio_sequence_annotation")
 public class BioSequenceAnnotation implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="object_tree_id")
-	private Integer objectTreeId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
 
-	@Column(name="schema_name")
-	private String schemaName;
+    @Column(name = "object_tree_id")
+    private long objectTreeId;
 
-	@Column(name="serialized_properties")
-	private String serializedProperties;
+    @Column(name = "schema_name")
+    private String schemaName;
 
-	private String version;
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
-	//uni-directional many-to-one association to BioSequence
+    private String version;
+
+    // uni-directional many-to-one association to BioSequence
     @ManyToOne
-	@JoinColumn(name="bio_sequence_id")
-	private BioSequence bioSequence;
+    @JoinColumn(name = "bio_sequence_id")
+    private BioSequence bioSequence;
 
-	//uni-directional many-to-one association to Taxon
+    // uni-directional many-to-one association to Taxon
     @ManyToOne
-	private Taxon taxon;
+    private Taxon taxon;
 
     public BioSequenceAnnotation() {
     }
 
-	public Integer getId() {
-		return this.id;
-	}
+    public long getId() {
+	return id;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setId(final long pId) {
+	id = pId;
+    }
 
-	public Integer getObjectTreeId() {
-		return this.objectTreeId;
-	}
+    public long getObjectTreeId() {
+	return objectTreeId;
+    }
 
-	public void setObjectTreeId(Integer objectTreeId) {
-		this.objectTreeId = objectTreeId;
-	}
+    public void setObjectTreeId(final long pObjectTreeId) {
+	objectTreeId = pObjectTreeId;
+    }
 
-	public String getSchemaName() {
-		return this.schemaName;
-	}
+    public String getSchemaName() {
+	return this.schemaName;
+    }
 
-	public void setSchemaName(String schemaName) {
-		this.schemaName = schemaName;
-	}
+    public void setSchemaName(String schemaName) {
+	this.schemaName = schemaName;
+    }
 
-	public String getSerializedProperties() {
-		return this.serializedProperties;
-	}
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
 
-	public void setSerializedProperties(String serializedProperties) {
-		this.serializedProperties = serializedProperties;
-	}
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
+    }
 
-	public String getVersion() {
-		return this.version;
-	}
+    public String getVersion() {
+	return this.version;
+    }
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    public void setVersion(String version) {
+	this.version = version;
+    }
 
-	public BioSequence getBioSequence() {
-		return this.bioSequence;
-	}
+    public BioSequence getBioSequence() {
+	return this.bioSequence;
+    }
 
-	public void setBioSequence(BioSequence bioSequence) {
-		this.bioSequence = bioSequence;
-	}
-	
-	public Taxon getTaxon() {
-		return this.taxon;
-	}
+    public void setBioSequence(BioSequence bioSequence) {
+	this.bioSequence = bioSequence;
+    }
 
-	public void setTaxon(Taxon taxon) {
-		this.taxon = taxon;
-	}
-	
+    public Taxon getTaxon() {
+	return this.taxon;
+    }
+
+    public void setTaxon(Taxon taxon) {
+	this.taxon = taxon;
+    }
+
 }

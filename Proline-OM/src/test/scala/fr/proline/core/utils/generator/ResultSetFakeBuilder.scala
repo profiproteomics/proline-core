@@ -8,6 +8,7 @@ import fr.proline.core.om.model.msi._
 import scala.collection.mutable.Buffer
 import java.util.Date
 import java.text.SimpleDateFormat
+import fr.proline.util.primitives._
 
 /**
  * Utility class to generate a fake ResultSet
@@ -38,24 +39,24 @@ class ResultSetFakeBuilder(
 
   val MAX_MISSED_CLEAVAGES: Int = 4
   val MIN_MISSED_CLEAVAGES: Int = 1
-  val RESULT_SET_ID: Int = ResultSet.generateNewId
+  val RESULT_SET_ID: Long = ResultSet.generateNewId
 
   //PeptideMatch 
   var allPepMatches = ListBuffer[PeptideMatch]()
-  private var tmpPepMatchById = collection.mutable.Map[Int, PeptideMatch]()
-  private var peptideIdByPeptideMatchId = Map[Int, Int]() // ++ allPepMatches.map { pepMatchInst => pepMatchInst.id -> pepMatchInst.peptide.id}    
-  private var peptideMatchIdByPeptideId = Map[Int, Iterable[Int]]() //peptideIdByPeptideMatchId groupBy {_._2} map {case (key,value) => (key, value.unzip._1)}
+  private var tmpPepMatchById = collection.mutable.Map[Long, PeptideMatch]()
+  private var peptideIdByPeptideMatchId = Map[Long, Long]() // ++ allPepMatches.map { pepMatchInst => pepMatchInst.id -> pepMatchInst.peptide.id}    
+  private var peptideMatchIdByPeptideId = Map[Long, Iterable[Long]]() //peptideIdByPeptideMatchId groupBy {_._2} map {case (key,value) => (key, value.unzip._1)}
 
   //ProteinMatch 
   var allProtMatches = ListBuffer[ProteinMatch]()
-  private var tmpProtMatchById = collection.mutable.Map[Int, ProteinMatch]()
+  private var tmpProtMatchById = collection.mutable.Map[Long, ProteinMatch]()
 
   //Protein 
   var allProts = ListBuffer[Protein]()
 
   //Peptide 
   var allPeps = ListBuffer[Peptide]()
-  private var tmpPepById = collection.mutable.Map[Int, Peptide]()
+  private var tmpPepById = collection.mutable.Map[Long, Peptide]()
   var allPepsByProtSeq = collection.mutable.Map[String, List[Peptide]]() //Peptides for Protein sequence  
 
   private val avgNbPepPerGroup: Int = pepNb / proNb
@@ -170,8 +171,8 @@ class ResultSetFakeBuilder(
    *
    * Update allPepMatches & allPepsByProtSeq collections
    */
-  private def createPepAndCoForProtMatchId(pepIdList: List[Int], proMatchId: Int,
-                                           missCleavage: Int, RSId: Int): ProteinMatch = {
+  private def createPepAndCoForProtMatchId(pepIdList: List[Long], proMatchId: Long,
+                                           missCleavage: Int, RSId: Long): ProteinMatch = {
 
     var proMatch = tmpProtMatchById(proMatchId)
 
@@ -210,7 +211,7 @@ class ResultSetFakeBuilder(
    * Create a new missed cleaved Peptide from a Peptide list & PeptideMatch
    * Update allPepMatches collection
    */
-  private def createPeptideAndPeptideMatch(pepSequence: String, missCleavage: Int, RSId: Int): Peptide = {
+  private def createPeptideAndPeptideMatch(pepSequence: String, missCleavage: Int, RSId: Long): Peptide = {
 
     val builtPep = new Peptide(id = Peptide.generateNewId, sequence = pepSequence,
       ptms = null, calculatedMass = Peptide.calcMass(pepSequence))
@@ -221,11 +222,11 @@ class ResultSetFakeBuilder(
     builtPep
   }
 
-  private def createPepMatch(pep: Peptide, missCleavage: Int, RSId: Int): PeptideMatch = {
+  private def createPepMatch(pep: Peptide, missCleavage: Int, RSId: Long): PeptideMatch = {
     val charge: Int = Randomator.pepCharge
-    val queryID: Int = Ms2Query.generateNewId
+    val queryID: Long = Ms2Query.generateNewId
 
-    val msq: Ms2Query = new Ms2Query(id = queryID, initialId = queryID,
+    val msq: Ms2Query = new Ms2Query(id = queryID, initialId = toInt(queryID),
       moz = getIonMzFromNeutralMass(neutralMass = pep.calculatedMass, charge = charge),
       charge = charge, spectrumTitle = "generated spectrum " + queryID)
     val builtPM: PeptideMatch = new PeptideMatch(id = PeptideMatch.generateNewId, rank = 1,
@@ -317,7 +318,7 @@ class ResultSetFakeBuilder(
 
     //For each ProteinMatch, get peptides without missed cleavages
     //and keep only ProteinMatch having enough peptides to create new ones w missed cleavages
-    val peptideIdByProteinMatchId: Map[Int, List[Int]] = Map() ++ allProtMatches.map(proMatchInst => proMatchInst.id -> (proMatchInst.sequenceMatches.map(_.getPeptideId).toList))
+    val peptideIdByProteinMatchId: Map[Long, List[Long]] = Map() ++ allProtMatches.map(proMatchInst => proMatchInst.id -> (proMatchInst.sequenceMatches.map(_.getPeptideId).toList))
     var eligiblePeptidesForProteinMatchId = peptideIdByProteinMatchId.filterNot(p => peptideIdNoMissCleav.contains(p._2))
 
     //Suppress entries having size list < (missCleavageNb + 1)   
@@ -331,7 +332,7 @@ class ResultSetFakeBuilder(
     logger.info("Adding " + pepNb + " new peptides (to " + allPeps.size + " existing peptides) with " + missCleavageNb + " missed cleavage(s)")
 
     //Store keys in a buffer to be able to access a key from a random index
-    var keyBuffer: Buffer[Int] = eligiblePeptidesForProteinMatchId.flatMap(e => List(e._1)).toBuffer
+    var keyBuffer: Buffer[Long] = eligiblePeptidesForProteinMatchId.flatMap(e => List(e._1)).toBuffer
 
     var currPepNb: Int = 0
     while (currPepNb < pepNb) {

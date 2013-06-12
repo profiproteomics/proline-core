@@ -14,7 +14,7 @@ import fr.proline.util.misc.InMemoryIdGen
 trait MsQuery {
   
   // Required fields
-  var id: Int
+  var id: Long
   val initialId: Int
   val moz: Double
   val charge: Int
@@ -63,7 +63,7 @@ case class MsQueryDbSearchProperties(
 @JsonInclude( Include.NON_NULL )
 case class Ms1Query (
   // Required fields
-  var id: Int,
+  var id: Long,
   val initialId: Int,
   val moz: Double,
   val charge: Int,
@@ -100,14 +100,14 @@ object Ms2Query extends InMemoryIdGen {
 @JsonInclude( Include.NON_NULL )
 case class Ms2Query(
   // Required fields
-  var id: Int,
+  var id: Long,
   val initialId: Int,
   val moz: Double,
   val charge: Int,
   val spectrumTitle: String,
                   
   // Mutable optional fields
-  var spectrumId: Int = 0,                 
+  var spectrumId: Long = 0,                 
   var properties: Option[MsQueryProperties] = None
  
 ) extends MsQuery {

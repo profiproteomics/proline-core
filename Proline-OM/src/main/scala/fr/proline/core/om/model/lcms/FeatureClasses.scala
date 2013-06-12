@@ -21,7 +21,7 @@ class Peak (
 class IsotopicPattern (
     
   // Required fields
-  //var id: Int,
+  //var id: Long,
   val moz: Double,
   val intensity: Float,
   val charge: Int,
@@ -42,34 +42,33 @@ case class IsotopicPatternProperties
 
 object Compound extends InMemoryIdGen
 case class Compound(
-  var id: Int,
+  var id: Long,
   var identifier: String // maybe a peptide sequence and its ptm_string or a chemical formula
 )
 
 object Feature extends InMemoryIdGen
 
 case class FeatureRelations(
-  @transient var compound: Option[Compound] = None,
-  
-  val ms2EventIds: Array[Int],
+  @transient var compound: Option[Compound] = None,  
+  val ms2EventIds: Array[Long],
   val firstScanInitialId: Int,
   val lastScanInitialId: Int,
   val apexScanInitialId: Int,
-  var firstScanId: Int = 0,
-  var lastScanId: Int = 0,
-  var apexScanId: Int = 0,
-  var bestChildId: Int = 0,
-  var bestChildMapId: Int = 0,
-  var theoreticalFeatureId: Int = 0,
-  var compoundId: Int = 0,
-  var mapLayerId: Int = 0,
-  var mapId: Int = 0
+  var firstScanId: Long = 0L,
+  var lastScanId: Long = 0L,
+  var apexScanId: Long = 0L,
+  var bestChildId: Long = 0L,
+  var bestChildMapId: Long = 0L,
+  var theoreticalFeatureId: Long = 0L,
+  var compoundId: Long = 0L,
+  var mapLayerId: Long = 0L,
+  var mapId: Long = 0L
 )
 
 case class Feature (
   
   // Required fields
-  var id: Int,
+  var id: Long,
   val moz: Double,
   var intensity: Float,
   val charge: Int,
@@ -213,15 +212,15 @@ case class FeatureProperties (
 case class TheoreticalFeature (
     
   // Required fields
-  var id: Int,
+  var id: Long,
   val moz: Double,
   val charge: Int,
   val elutionTime: Float,
   val origin: String,
   
   // Mutable optional fields
-  var mapLayerId: Int = 0,
-  var mapId: Int = 0,
+  var mapLayerId: Long = 0L,
+  var mapId: Long = 0L,
   
   var properties: Option[TheoreticalFeatureProperties] = None
   
