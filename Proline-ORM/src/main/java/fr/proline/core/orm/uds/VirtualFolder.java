@@ -53,7 +53,7 @@ public class VirtualFolder implements Serializable {
 
     public VirtualFolder() {
     }
-
+    
     public long getId() {
 	return id;
     }
