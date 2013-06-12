@@ -232,7 +232,7 @@ public class ProteinMatch implements Serializable {
     public static class TransientData implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private HashMap<Integer, PeptideSet> peptideSetMap = null;
+	private HashMap<Long, PeptideSet> peptideSetMap = null;
 	private fr.proline.core.orm.msi.BioSequence bioSequenceMSI = null;
 	private fr.proline.core.orm.pdi.BioSequence bioSequencePDI = null; // bioSequence is not always
 									   // available in MSI, in this case,
@@ -242,20 +242,20 @@ public class ProteinMatch implements Serializable {
 	protected TransientData() {
 	}
 
-	public PeptideSet getPeptideSet(Integer resultSummaryId) {
+	public PeptideSet getPeptideSet(Long resultSummaryId) {
 	    if (peptideSetMap == null) {
 		return null;
 	    }
 	    return peptideSetMap.get(resultSummaryId);
 	}
 
-	public Set<Integer> getRecordedRsmId() {
+	public Set<Long> getRecordedRsmId() {
 	    return peptideSetMap.keySet();
 	}
 
-	public void setPeptideSet(Integer resultSummaryId, PeptideSet peptideSet) {
+	public void setPeptideSet(Long resultSummaryId, PeptideSet peptideSet) {
 	    if (peptideSetMap == null) {
-		peptideSetMap = new HashMap<Integer, PeptideSet>();
+		peptideSetMap = new HashMap<Long, PeptideSet>();
 	    }
 	    peptideSetMap.put(resultSummaryId, peptideSet);
 	}
