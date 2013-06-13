@@ -52,7 +52,7 @@ public class SearchSetting implements Serializable {
     private String peptideChargeStates;
 
     @Column(name = "peptide_mass_error_tolerance")
-    private double peptideMassErrorTolerance;
+    private Double peptideMassErrorTolerance;
 
     @Column(name = "peptide_mass_error_tolerance_unit")
     private String peptideMassErrorToleranceUnit;
@@ -123,12 +123,12 @@ public class SearchSetting implements Serializable {
 	this.peptideChargeStates = peptideChargeStates;
     }
 
-    public double getPeptideMassErrorTolerance() {
-	return this.peptideMassErrorTolerance;
+    public Double getPeptideMassErrorTolerance() {
+	return peptideMassErrorTolerance;
     }
 
-    public void setPeptideMassErrorTolerance(double peptideMassErrorTolerance) {
-	this.peptideMassErrorTolerance = peptideMassErrorTolerance;
+    public void setPeptideMassErrorTolerance(final Double pPeptideMassErrorTolerance) {
+	peptideMassErrorTolerance = pPeptideMassErrorTolerance;
     }
 
     public String getPeptideMassErrorToleranceUnit() {

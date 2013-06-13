@@ -219,8 +219,8 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
             peptMatch, msiResultSet, storedMsiSearch)
         }
 
-        logger.info(resultSet.peptideMatches.length +" PeptideMatches have been stored")
-        
+        logger.info(resultSet.peptideMatches.length + " PeptideMatches have been stored")
+
         /* Fill proteinMatchSeqDatabases and proteinMatchSequenceMatches Maps for postponed handling
          * (after flushing of Msi EntityManager) */
         val proteinMatchSeqDatabases = mutable.Map.empty[MsiProteinMatch, Array[Long]]
@@ -243,8 +243,8 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         } // End loop for each proteinMatch
 
-        logger.info(resultSet.proteinMatches.length +" ProteinMatches have been stored")
-        
+        logger.info(resultSet.proteinMatches.length + " ProteinMatches have been stored")
+
         // TODO handle ResultSet.children    Uniquement pour le grouping ?
 
         msiEm.flush() // FLUSH to handle ProteinMatchSeqDatabaseMap and proteinMatchSequenceMatches and retrieve Msi ResultSet Id
@@ -276,7 +276,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
           /* Handle proteinMatchSequenceMatches after having persisted MsiProteinMatches, MsiPeptideMatches and current MsiResultSet */
           var sequenceMatchCount = 0
-          
+
           for (pMSMEntry <- proteinMatchSequenceMatches) {
             val msiProteinMatch = pMSMEntry._1
             val msiProteinMatchId = msiProteinMatch.getId
@@ -285,7 +285,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
             for (sequenceMatch <- pMSMEntry._2) {
               val msiSequenceMatch = createSequenceMatch(storerContext, sequenceMatch, msiProteinMatchId, msiResultSetPK)
-              sequenceMatchCount+=1
+              sequenceMatchCount += 1
               peptideIds += msiSequenceMatch.getId.getPeptideId
             } // End loop for each sequenceMatch
 
@@ -294,10 +294,9 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
           } // End loop for each Msi ProteinMatch
 
           logger.info(sequenceMatchCount + " SequenceMatches have been stored")
-          
+
         } // End if (proteinMatchSequenceMatches is not empty)
 
-        
         msiResultSetPK
       } // End if (omResultSetId <= 0)
 
@@ -412,7 +411,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         val generatedPK = msiSearch.getId // Try to retrieve persisted Primary Key (after FLUSH)
 
         if (generatedPK > 0L) {
-          msiSearchPK =generatedPK
+          msiSearchPK = generatedPK
 
           search.id = msiSearchPK
 
@@ -628,7 +627,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       msiSearchSetting.setIsDecoy(searchSettings.isDecoy)
       msiSearchSetting.setMaxMissedCleavages(Integer.valueOf(searchSettings.maxMissedCleavages))
       msiSearchSetting.setPeptideChargeStates(searchSettings.ms1ChargeStates)
-      msiSearchSetting.setPeptideMassErrorTolerance(searchSettings.ms1ErrorTol)
+      msiSearchSetting.setPeptideMassErrorTolerance(java.lang.Double.valueOf(searchSettings.ms1ErrorTol))
       msiSearchSetting.setPeptideMassErrorToleranceUnit(searchSettings.ms1ErrorTolUnit)
       msiSearchSetting.setQuantitation(searchSettings.quantitation)
 
@@ -1072,8 +1071,8 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     } // End if (remainingPeptides is not empty)
 
-    logger.info(msiPeptides.size +" new Peptides stored in the MSIdb")
-    
+    logger.info(msiPeptides.size + " new Peptides stored in the MSIdb")
+
     if (!remainingPeptides.isEmpty) {
       logger.error("There are " + remainingPeptides.size + " unknown Peptides in ResultSet")
     } // End if (remainingPeptides is not empty)
@@ -1487,7 +1486,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
     msiProteinMatch.setPeptideMatchCount(Integer.valueOf(proteinMatch.peptideMatchesCount))
     msiProteinMatch.setResultSet(msiResultSet) // msiResultSet must be in persistence context
-    msiProteinMatch.setScore(proteinMatch.score)
+    msiProteinMatch.setScore(java.lang.Float.valueOf(proteinMatch.score))
 
     val scoreType = proteinMatch.scoreType
 

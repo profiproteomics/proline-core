@@ -32,7 +32,7 @@ public class ConsensusSpectrum implements Serializable {
     private boolean isArtificial;
 
     @Column(name = "normalized_elution_time")
-    private float normalizedElutionTime;
+    private Float normalizedElutionTime;
 
     @ManyToOne
     @JoinColumn(name = "peptide_id")
@@ -78,12 +78,12 @@ public class ConsensusSpectrum implements Serializable {
 	isArtificial = pIsArtificial;
     }
 
-    public float getNormalizedElutionTime() {
-	return this.normalizedElutionTime;
+    public Float getNormalizedElutionTime() {
+	return normalizedElutionTime;
     }
 
-    public void setNormalizedElutionTime(float normalizedElutionTime) {
-	this.normalizedElutionTime = normalizedElutionTime;
+    public void setNormalizedElutionTime(final Float pNormalizedElutionTime) {
+	normalizedElutionTime = pNormalizedElutionTime;
     }
 
     public Peptide getPeptide() {
