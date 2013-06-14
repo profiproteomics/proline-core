@@ -59,7 +59,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       logger.info("creating temporary table '" + tmpPeptideTableName + "'...")
   
       val stmt = msiCon.createStatement();
-      stmt.executeUpdate("CREATE TEMP TABLE " + tmpPeptideTableName + " (LIKE peptide)")
+      stmt.executeUpdate("CREATE TEMP TABLE " + tmpPeptideTableName + " (LIKE peptide) ON COMMIT DROP")
   
       // Bulk insert of peptides
       logger.info("BULK insert of peptides")
@@ -120,7 +120,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       logger.info("creating temporary table '" + tmpPepMatchTableName + "'...")
   
       val stmt = msiCon.createStatement();
-      stmt.executeUpdate("CREATE TEMP TABLE " + tmpPepMatchTableName + " (LIKE peptide_match)")
+      stmt.executeUpdate("CREATE TEMP TABLE " + tmpPepMatchTableName + " (LIKE peptide_match) ON COMMIT DROP")
   
       // Bulk insert of peptide matches
       logger.info("BULK insert of peptide matches")
@@ -236,7 +236,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       logger.info("creating temporary table '" + tmpProtMatchTableName + "'...")
   
       val stmt = msiCon.createStatement()
-      stmt.executeUpdate("CREATE TEMP TABLE " + tmpProtMatchTableName + " (LIKE protein_match)")
+      stmt.executeUpdate("CREATE TEMP TABLE " + tmpProtMatchTableName + " (LIKE protein_match) ON COMMIT DROP")
   
       // Bulk insert of protein matches
       logger.info("BULK insert of protein matches")
@@ -319,7 +319,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       logger.info("creating temporary table '" + tmpSeqMatchTableName + "'...")
   
       val stmt = msiCon.createStatement()
-      stmt.executeUpdate("CREATE TEMP TABLE " + tmpSeqMatchTableName + " (LIKE sequence_match)")
+      stmt.executeUpdate("CREATE TEMP TABLE " + tmpSeqMatchTableName + " (LIKE sequence_match) ON COMMIT DROP")
       
       // Bulk insert of sequence matches
       logger.info("BULK insert of sequence matches")

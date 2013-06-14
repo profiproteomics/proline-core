@@ -38,7 +38,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with Logging {
       logger.info("creating temporary table '" + tmpMsQueryTableName + "'...")
 
       val stmt = con.createStatement()
-      stmt.executeUpdate("CREATE TEMP TABLE " + tmpMsQueryTableName + " (LIKE ms_query)")
+      stmt.executeUpdate("CREATE TEMP TABLE " + tmpMsQueryTableName + " (LIKE ms_query) ON COMMIT DROP")
 
       // Bulk insert of MS queries
       logger.info("BULK insert of MS queries")
