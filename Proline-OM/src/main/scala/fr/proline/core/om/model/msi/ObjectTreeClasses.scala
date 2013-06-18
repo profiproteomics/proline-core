@@ -41,7 +41,7 @@ case class FragmentMatch (
   
   private def _parseLabelIfNotDone() {
     if( _ionSeries == null ) {
-      val FullLabelRegex = """(\w+)\((\d+)\)(\w*)""".r      
+      val FullLabelRegex = """(\w+)\((\d+)\)([\w\+]*)""".r      
       val FullLabelRegex(ionSeries, aaPositionStr, chargeStr) = label
       
       this._ionSeries = ionSeries
