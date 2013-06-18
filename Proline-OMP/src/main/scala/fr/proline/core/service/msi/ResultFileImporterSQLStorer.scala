@@ -31,8 +31,8 @@ class ResultFileImporterSQLStorer(
   executionContext: IExecutionContext,
   resultIdentFile: File,
   fileType: String,
-  instrumentConfigId: Int,
-  peaklistSoftwareId: Int,
+  instrumentConfigId: Long,
+  peaklistSoftwareId: Long,
   importerProperties: Map[String, Any],
   acDecoyRegex: Option[util.matching.Regex] = None,
   saveSpectrumMatch: Boolean = false) extends IService with Logging {
@@ -111,7 +111,7 @@ class ResultFileImporterSQLStorer(
     if( resultFile.peaklistSoftware.isEmpty ) {
 
       val peaklistSoftware = _getOrCreatePeaklistSoftware(peaklistSoftwareId)
-      if (peaklistSoftware.id < 0) peaklistSoftware.id = peaklistSoftwareId
+      if (peaklistSoftware.id < 0L) peaklistSoftware.id = peaklistSoftwareId
       
       resultFile.peaklistSoftware = Some(peaklistSoftware)
     }
@@ -161,7 +161,7 @@ class ResultFileImporterSQLStorer(
     serviceResultOK
   }
 
-  private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Int): PeaklistSoftware = {
+  private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Long): PeaklistSoftware = {
     
     val msiDbCtx = this.executionContext.getMSIDbConnectionContext
     val msiPklSoftProvider = new SQLPeaklistSoftwareProvider(msiDbCtx)
@@ -195,7 +195,7 @@ class ResultFileImporterSQLStorer(
 
   }
 
-  private def _getInstrumentConfig(instrumentConfigId: Int): InstrumentConfig = {
+  private def _getInstrumentConfig(instrumentConfigId: Long): InstrumentConfig = {
 
     val instConfigProvider = new SQLInstrumentConfigProvider(executionContext.getUDSDbConnectionContext)
     instConfigProvider.getInstrumentConfig(instrumentConfigId).get

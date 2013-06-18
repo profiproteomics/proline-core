@@ -14,7 +14,7 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
   val datasetQB = new SelectQueryBuilder1(UdsDbDataSetTable)
   
   @throws( classOf[NoSuchElementException] )
-  def getLastProjectIdentificationNumber( projectId: Int): Int = {
+  def getLastProjectIdentificationNumber( projectId: Long): Int = {
     
     DoJDBCReturningWork.withEzDBC( udsDbCtx, { ezDBC =>
       
@@ -36,11 +36,11 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
 
   }
   
-  def getDatasetProjectId( dsId: Int): Int = {
+  def getDatasetProjectId( dsId: Long): Long = {
     
     DoJDBCReturningWork.withEzDBC( udsDbCtx, { ezDBC =>
       
-      ezDBC.selectInt( datasetQB.mkSelectQuery( (t,cols) => 
+      ezDBC.selectLong( datasetQB.mkSelectQuery( (t,cols) => 
         List(t.PROJECT_ID) -> "WHERE "~ t.ID ~ "="~ dsId
       ) )
     
