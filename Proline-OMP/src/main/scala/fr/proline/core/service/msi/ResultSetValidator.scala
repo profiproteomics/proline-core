@@ -28,7 +28,7 @@ object ResultSetValidator {
 
   def apply(
     execContext: IExecutionContext,
-    targetRsId: Int,
+    targetRsId: Long,
     tdAnalyzer: Option[ITargetDecoyAnalyzer] = None,
     pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
     pepMatchValidator: Option[IPeptideMatchValidator] = None,

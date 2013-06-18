@@ -9,7 +9,7 @@ import fr.proline.repository.IDataStoreConnectorFactory
 
 class QuantifyMasterQuantChannel(
   executionContext: IExecutionContext,
-  masterQuantChannelID: Long,
+  masterQuantChannelId: Long,
   quantConfig: AnyRef
 ) extends IService {
   
@@ -18,14 +18,14 @@ class QuantifyMasterQuantChannel(
   // Secondary constructor
   def this(
     dsFactory: IDataStoreConnectorFactory,
-    projectId: Int,
-    masterQuantChannelID: Int,
+    projectId: Long,
+    masterQuantChannelId: Long,
     quantConfig: AnyRef
   ) {
     this(
       ContextFactory.buildExecutionContext(dsFactory, projectId, true), // Force JPA context
-      masterQuantChannelID: Int,
-      quantConfig: AnyRef
+      masterQuantChannelId,
+      quantConfig
     )
     _hasInitiatedExecContext = true
   }
@@ -36,7 +36,7 @@ class QuantifyMasterQuantChannel(
     val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
     
     // Retrieve the quantitation fraction
-    val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelID)    
+    val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)    
     require( udsMasterQuantChannel != null,
              "undefined master quant channel with id=" + udsMasterQuantChannel )
     

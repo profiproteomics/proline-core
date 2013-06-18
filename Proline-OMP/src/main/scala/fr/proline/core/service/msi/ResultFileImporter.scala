@@ -30,8 +30,8 @@ class ResultFileImporter(
   executionContext: IExecutionContext,
   resultIdentFile: File,
   fileType: String,
-  instrumentConfigId: Int,
-  peaklistSoftwareId: Int,
+  instrumentConfigId: Long,
+  peaklistSoftwareId: Long,
   importerProperties: Map[String, Any],
   acDecoyRegex: Option[util.matching.Regex] = None,
   saveSpectrumMatch: Boolean = false
@@ -157,7 +157,7 @@ class ResultFileImporter(
     msiTransacOk
   }
   
-  private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Int): PeaklistSoftware = {
+  private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Long): PeaklistSoftware = {
     
     val msiDbCtx = this.executionContext.getMSIDbConnectionContext
     val msiPklSoftProvider = new SQLPeaklistSoftwareProvider(msiDbCtx)

@@ -39,7 +39,7 @@ case class mzPeak(
 @JsonInclude(Include.NON_NULL)
 case class mzIsotopicPattern(
 
-  @BeanProperty var scanId: Int = 0,
+  @BeanProperty var scanId: Int = 0, // TODO LMN Long or initialId int
   @BeanProperty var mz: Double = Double.NaN,
   @BeanProperty var intensity: Float = Float.NaN,
   @BeanProperty var charge: Int = 0,

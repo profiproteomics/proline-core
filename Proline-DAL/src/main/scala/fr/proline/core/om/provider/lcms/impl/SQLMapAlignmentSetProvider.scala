@@ -16,7 +16,7 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) ext
   
   val MapAlnCols = LcmsDbMapAlignmentTable.columns
   
-  def getMapAlignmentSet( fromMapId: Int,toMapId: Int): Unit = {
+  def getMapAlignmentSet( fromMapId: Long,toMapId: Long): Unit = {
     // TODO: implement this loader
 /*
 ##############################################################################

@@ -31,7 +31,7 @@ class MapAlignmentSetLoader( val sqlExec: SQLQueryExecution ) {
     ()
   }
   
-  def getMapAlignmentSets( mapSetId: Int ): Array[MapAlignmentSet] = {
+  def getMapAlignmentSets( mapSetId: Long ): Array[MapAlignmentSet] = {
     
     var colNames: Seq[String] = null
     

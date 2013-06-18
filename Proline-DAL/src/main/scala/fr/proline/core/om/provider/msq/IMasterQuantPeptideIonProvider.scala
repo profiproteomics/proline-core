@@ -11,11 +11,11 @@ trait IMasterQuantPeptideIonProvider {
   def getQuantResultSummariesMQPeptideIons( quantRsmIds: Seq[Long] ): Array[MasterQuantPeptideIon]
   
   
-  def getMasterQuantPeptideIon( mqPepIonId: Int ): Option[MasterQuantPeptideIon] = {
+  def getMasterQuantPeptideIon( mqPepIonId: Long ): Option[MasterQuantPeptideIon] = {
     getMasterQuantPeptideIonsAsOptions( Array(mqPepIonId) )(0)
   }
   
-  def getQuantResultSummaryMQPeptideIons( quantRsmId: Int ): Array[MasterQuantPeptideIon] = {
+  def getQuantResultSummaryMQPeptideIons( quantRsmId: Long ): Array[MasterQuantPeptideIon] = {
     getQuantResultSummariesMQPeptideIons( Array(quantRsmId) )
   }
 }

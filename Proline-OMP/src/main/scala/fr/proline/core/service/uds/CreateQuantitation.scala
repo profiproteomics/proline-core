@@ -316,7 +316,7 @@ case class BiologicalGroup(
 @JsonSnakeCase
 case class QuantChannel(
   val sampleNumber: Int,
-  val identResultSummaryId: Int,
+  val identResultSummaryId: Long,
   val lcmsMapId: Option[Long] = None,
   val runId: Option[Long] = None,
   val quantLabelId: Option[Long] = None
