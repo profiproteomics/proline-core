@@ -7,7 +7,7 @@ import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi._
 import fr.proline.util.StringUtils.{isEmpty => isEmptyStr}
 
-object ResultSetMerger {
+object ResultSetMerger extends Logging {
   
   def mergePeptideMatches( peptideMatches: Seq[PeptideMatch],
                            proteinMatches: Seq[ProteinMatch], rsID: Long ):
@@ -16,7 +16,7 @@ object ResultSetMerger {
     // TODO: check if this code can be abstracted (shared with ResultSummaryMerger)
     // Group peptide matches by peptide id
     val pepMatchByPepId = peptideMatches.groupBy { _.peptide.id }
-    
+   
     // Merge peptide matches
     val parentPepMatchIdByPepId = new HashMap[Long,Long]()
     val scoreTypeSet = new HashSet[String]()
@@ -88,6 +88,7 @@ class ResultSetMerger extends Logging {
     val proteinMatchesByKey = new HashMap[String,ArrayBuffer[ProteinMatch]]
     val peptideById = new HashMap[Long,Peptide]
     var allRSDecoy = true 
+
     for( resultSet <- resultSets ) {
       allRSDecoy = allRSDecoy && resultSet.isDecoy
       // Retrieve some vars
@@ -118,7 +119,7 @@ class ResultSetMerger extends Logging {
       // Merge peptides by id
       for( p <- peptides ) peptideById( p.id ) = p
       
-    }
+    } //end RSet loop
     
     // Re-map the non-redundant list of peptides to peptide matches
     // Peptide matches related to the same peptide will use the same object
