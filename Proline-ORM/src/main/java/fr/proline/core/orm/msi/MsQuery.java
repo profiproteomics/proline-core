@@ -156,7 +156,7 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
      */
     @Override
     public int compareTo(final MsQuery otherQuery) {
-	return Integer.compare(getInitialId(), otherQuery.getInitialId());
+   	 return Integer.valueOf(getInitialId()).compareTo(Integer.valueOf(otherQuery.getInitialId()));
     }
 
     public boolean getTransientIsSpectrumSet() {
