@@ -70,16 +70,17 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
   }
 
   override def getResultSet(resultSetId: Long): Option[ResultSet] = {
+    val start = System.currentTimeMillis()
     val msiEM = msiDbCtx.getEntityManager
-
     JPAUtils.checkEntityManager(msiEM)
-
     val msiResultSet = msiEM.find(classOf[MsiResultSet], resultSetId)
 
     if (msiResultSet == null) {
       None
     } else {
-      Some(buildResultSet(msiResultSet))
+      val rs = buildResultSet(msiResultSet)
+      logger.info("ResultSet #" + msiResultSet.getId + " ["+rs.proteinMatches.length+" PMs, "+rs.peptides.size+" Pes, "+rs.peptideMatches.size+" PeMs] loaded in "+(System.currentTimeMillis()-start)+" ms")
+      Some(rs)
     }
 
   }
@@ -209,8 +210,6 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       )
 
       knownResultSets += msiResultSetId -> resultSet
-
-      logger.info("ResultSet #" + msiResultSetId + " loaded")
 
       resultSet
     }

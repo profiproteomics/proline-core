@@ -60,6 +60,7 @@ trait SQLResultSetLoader extends Logging {
 
       val resultSets = msiEzDBC.select(rsQuery) { r =>
 
+        val start = System.currentTimeMillis()
         // Retrieve some vars
         val rsId: Long = toLong(r.getAny(RSCols.ID))
         /*if( !protMatchesByRsId.contains(rsId) ) {
@@ -125,7 +126,7 @@ trait SQLResultSetLoader extends Logging {
           buff.toString
         }
 
-        new ResultSet(
+        val rs = new ResultSet(
           id = rsId,
           name = r.getString(RSCols.NAME),
           description = r.getString(RSCols.DESCRIPTION),
@@ -138,6 +139,8 @@ trait SQLResultSetLoader extends Logging {
           decoyResultSetId = decoyRsId,
           properties = properties
         )
+        logger.info("ResultSet #" + rsId + " ["+rs.proteinMatches.length+" PrMs, "+rs.peptides.size+" Pes, "+rs.peptideMatches.size+" PeMs] loaded in "+(System.currentTimeMillis()-start)+" ms")
+	     rs
       }
 
       resultSets.toArray
