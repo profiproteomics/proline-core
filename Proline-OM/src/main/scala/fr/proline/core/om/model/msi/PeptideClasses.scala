@@ -375,7 +375,7 @@ case class PeptideMatch ( // Required fields
                      var isValidated: Boolean = true, // only defined in the model
                      var resultSetId: Long = 0,
                      
-                     protected var childrenIds: Array[Long] = null,
+                     var childrenIds: Array[Long] = null,
                      @transient var children: Option[Array[PeptideMatch]] = null,
                      
                      protected var bestChildId: Long = 0,
