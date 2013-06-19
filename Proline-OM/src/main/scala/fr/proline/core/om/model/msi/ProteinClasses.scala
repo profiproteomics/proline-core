@@ -102,7 +102,7 @@ object ProteinMatch extends InMemoryIdGen
 case class ProteinMatch ( 
                    // Required fields                    
                    val accession: String,
-                   val description: String,
+                   var description: String,
                    
                    // Immutable optional fields
                    val isDecoy: Boolean = false,
