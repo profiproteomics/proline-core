@@ -222,12 +222,12 @@ class IdentificationTreeValidator(
       val decoyRsList = for (rs <- targetRsList; if rs.decoyResultSet.isDefined) yield rs.decoyResultSet.get
 
       // Merge result set
-      val targetRsMerger = new ResultSetMerger(execJpaContext, targetRsList)
+      val targetRsMerger = new ResultSetMerger(execJpaContext, None, Some(targetRsList))
       targetRsMerger.runService()
       val mergedTargetRs = targetRsMerger.mergedResultSet
 
       if (decoyRsList.length > 0) {
-        val decoyRsMerger = new ResultSetMerger(execJpaContext, decoyRsList)
+        val decoyRsMerger = new ResultSetMerger(execJpaContext, None, Some(decoyRsList))
         decoyRsMerger.runService()
         mergedTargetRs.decoyResultSet = Some(decoyRsMerger.mergedResultSet)
       }

@@ -90,13 +90,13 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
         val( targetRsList, decoyRsList ) = rsProvider.getResultSets( rsIds ).partition { _.isDecoy == false }
         
         // Merge result set
-        val targetRsMerger = new ResultSetMerger( execSqlContext, targetRsList )
+        val targetRsMerger = new ResultSetMerger( execSqlContext, None, Some(targetRsList) )
         targetRsMerger.runService()
         val mergedTargetRs = targetRsMerger.mergedResultSet
         
         var mergedDecoyRs = Option.empty[ResultSet]
         if( nbDecoyRs > 0 ) {
-          val decoyRsMerger = new ResultSetMerger( execSqlContext, decoyRsList )
+          val decoyRsMerger = new ResultSetMerger( execSqlContext, None, Some(decoyRsList) )
           decoyRsMerger.runService()
           mergedDecoyRs = Some(decoyRsMerger.mergedResultSet)
         }
