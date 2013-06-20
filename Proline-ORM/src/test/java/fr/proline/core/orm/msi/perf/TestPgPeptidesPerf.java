@@ -26,9 +26,11 @@ import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.PostgresUtils;
 
 @Ignore
-public class TestPgPeptidesPerf {
+public final class TestPgPeptidesPerf {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestPgPeptidesPerf.class);
+
+    private static final boolean DO_INSERT = true;
 
     private static final int PEPTIDES_COUNT = 100000;
 
@@ -38,9 +40,15 @@ public class TestPgPeptidesPerf {
 
     private static final long VACUUM_THRESHOLD = 60 * 1000L; // 1 minute
 
+    private static final int LIMIT = 4000000;
+
     private static final int LINE_LENGTH = 256;
 
     private static final int BUFFER_SIZE = 2048;
+
+    /* Private constructor (Utility class) */
+    private TestPgPeptidesPerf() {
+    }
 
     /**
      * @param args
@@ -63,32 +71,34 @@ public class TestPgPeptidesPerf {
 
 	    generator.setInitialPeptideId(currentMaxPeptideId + 1);
 
+	    loadKnownSequences(generator, con);
+
 	    for (int outer = 0; outer < PEPTIDES_COUNT; ++outer) {
 		LOG.info("> > > Pass {}", outer);
 
-		/*
-		 * Build peptides
-		 */
-		LOG.debug("Building {} random Peptides", PEPTIDES_COUNT);
+		if (DO_INSERT) {
+		    /* Build and insert random Peptides */
+		    LOG.debug("Building {} random Peptides", PEPTIDES_COUNT);
 
-		long start = System.currentTimeMillis();
+		    long start = System.currentTimeMillis();
 
-		final List<Peptide> peptides = new ArrayList<Peptide>(PEPTIDES_COUNT);
+		    final List<Peptide> peptides = new ArrayList<Peptide>(PEPTIDES_COUNT);
 
-		for (int i = 0; i < PEPTIDES_COUNT; ++i) {
-		    peptides.add(generator.createPeptide());
+		    for (int i = 0; i < PEPTIDES_COUNT; ++i) {
+			peptides.add(generator.createPeptide());
+		    }
+
+		    long end = System.currentTimeMillis();
+
+		    LOG.info("{} random Peptides built in {} ms", PEPTIDES_COUNT, end - start);
+
+		    con.setAutoCommit(false);
+
+		    insertWithCopy(peptides, con);
+
+		    con.commit();
+		    LOG.info("Insert committed");
 		}
-
-		long end = System.currentTimeMillis();
-
-		LOG.info("{} random Peptides built in {} ms", PEPTIDES_COUNT, end - start);
-
-		con.setAutoCommit(false);
-
-		insertWithCopy(peptides, con);
-
-		con.commit();
-		LOG.info("Insert committed");
 
 		runInQuery(generator, con);
 	    }
@@ -101,7 +111,6 @@ public class TestPgPeptidesPerf {
 		try {
 		    con.close();
 		} catch (SQLException exClose) {
-		    // TODO Auto-generated catch block
 		    LOG.error("Error closing SQL Connection", exClose);
 		}
 	    }
@@ -132,6 +141,32 @@ public class TestPgPeptidesPerf {
 	stmQuery.close();
 
 	return result;
+    }
+
+    private static void loadKnownSequences(final PeptideGenerator generator, final Connection con)
+	    throws SQLException {
+	LOG.debug("Retrieving {} first distinct sequences", LIMIT);
+	final long start = System.currentTimeMillis();
+
+	final Statement stmQuery = con.createStatement();
+
+	final ResultSet rs = stmQuery.executeQuery("SELECT DISTINCT sequence FROM peptide LIMIT " + LIMIT);
+
+	int sequencesCount = 0;
+
+	while (rs.next()) {
+	    final String sequence = rs.getString(1);
+	    generator.addSequence(sequence);
+
+	    ++sequencesCount;
+	}
+
+	rs.close();
+
+	stmQuery.close();
+
+	final long end = System.currentTimeMillis();
+	LOG.info("{} sequences retrieved from MSI Peptide table in {} ms", sequencesCount, end - start);
     }
 
     private static long getPeptideCount(final Connection con) throws SQLException {
@@ -194,12 +229,11 @@ public class TestPgPeptidesPerf {
 		totalUpdateCount);
     }
 
-    private static void insertWithCopy(final List<Peptide> peptides, final Connection con)
-	    throws SQLException {
-	/* Insert peptides with temp table */
+    private static void insertWithCopy(final List<Peptide> peptides, final Connection con) throws Exception {
+	/* Insert peptides with TEMP Table */
 	final int n = peptides.size();
 
-	LOG.debug("Inserting {} random Peptides with Copy into temp table", n);
+	LOG.debug("Inserting {} random Peptides with COPY into TEMP Table", n);
 
 	long start = System.currentTimeMillis();
 	final long begin = start;
@@ -213,17 +247,17 @@ public class TestPgPeptidesPerf {
 	if (createResult) {
 	    final ResultSet rs = stmCreate.getResultSet();
 
-	    LOG.debug("Temp table creation ResultSet :" + LINE_SEPARATOR + formatRS(rs));
+	    LOG.debug("TEMP Table creation ResultSet :" + LINE_SEPARATOR + formatRS(rs));
 
 	    rs.close();
 	} else {
-	    LOG.debug("Temp table creation UpdateCount: {}", stmCreate.getUpdateCount());
+	    LOG.debug("TEMP Table creation UpdateCount: {}", stmCreate.getUpdateCount());
 	}
 
 	stmCreate.close();
 
 	long end = System.currentTimeMillis();
-	LOG.info("{} table created in {} ms, starting bulk copy", tempTableName, end - start);
+	LOG.info("{} Table created in {} ms, starting bulk COPY", tempTableName, end - start);
 
 	start = System.currentTimeMillis();
 
@@ -231,13 +265,15 @@ public class TestPgPeptidesPerf {
 	final CopyIn copyIn = copyManager.copyIn("COPY " + tempTableName
 		+ " (id, \"sequence\", ptm_string, calculated_mass) FROM STDIN");
 
+	int tempTableLength = 0;
+
 	for (int i = 0; i < n; ++i) {
 	    final Peptide pept = peptides.get(i);
 
 	    final StringBuilder buff = new StringBuilder(LINE_LENGTH);
 
 	    buff.append(pept.getId());
-	    buff.append('\t');
+	    buff.append('\t'); // Default DELIMITER
 
 	    buff.append(pept.getSequence());
 	    buff.append('\t');
@@ -245,7 +281,7 @@ public class TestPgPeptidesPerf {
 	    final String ptmString = pept.getPtmString();
 
 	    if (ptmString == null) {
-		buff.append("\\N");
+		buff.append("\\N"); // Default NULL
 	    } else {
 		buff.append(ptmString);
 	    }
@@ -253,18 +289,23 @@ public class TestPgPeptidesPerf {
 	    buff.append('\t');
 
 	    buff.append(pept.getCalculatedMass());
-	    buff.append('\n');
+	    buff.append('\n'); // Default Unix-style newline
 
-	    /* WARN : Use plateform encoding here */
-	    final byte[] line = buff.toString().getBytes();
+	    /* PostgreSQL default UTF-8, all Java chars can be converted into UTF-8 byte stream */
+	    final byte[] rawLine = buff.toString().getBytes("UTF-8");
 
-	    copyIn.writeToCopy(line, 0, line.length);
+	    final int lineLength = rawLine.length;
+
+	    tempTableLength += lineLength;
+
+	    copyIn.writeToCopy(rawLine, 0, lineLength);
 	}
 
 	final long copyUpdateCount = copyIn.endCopy();
 
 	end = System.currentTimeMillis();
-	LOG.info("{} rows copied in {} ms, inserting into real Peptide table", copyUpdateCount, end - start);
+	LOG.info("{} rows copied in {} ms, TEMP Table length: {} bytes, inserting into real Peptide Table",
+		copyUpdateCount, end - start, tempTableLength);
 
 	start = System.currentTimeMillis();
 
@@ -355,7 +396,7 @@ public class TestPgPeptidesPerf {
 
 	    String sequence = null;
 
-	    if (((i % 2) == 0) && (sequenceIterator.hasNext())) {
+	    if (((i % 2) == 0) && sequenceIterator.hasNext()) {
 		sequence = sequenceIterator.next(); // Real existing sequence
 	    } else {
 		sequence = generator.getRandomString(); // Fake sequence

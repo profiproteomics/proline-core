@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Ignore;
 
 import fr.proline.core.orm.msi.Peptide;
+import fr.proline.util.StringUtils;
 
 @Ignore
 public class PeptideGenerator {
@@ -24,8 +25,8 @@ public class PeptideGenerator {
 
     private static final int CHAR_RANGE = 'Z' - 'A' + 1;
 
-    /* Nothing is thread-safe in this class : use PeptideGenerator localy */
-    private final Random m_randomGenerator = new Random(); // Single threaded static
+    /* WARN Nothing is thread-safe in this class : use PeptideGenerator localy */
+    private final Random m_randomGenerator = new Random();
 
     private final AtomicLong m_peptideId = new AtomicLong(1L);
 
@@ -35,6 +36,15 @@ public class PeptideGenerator {
 
     public void setInitialPeptideId(final long peptideId) {
 	m_peptideId.set(peptideId);
+    }
+
+    public boolean addSequence(final String sequence) {
+
+	if (StringUtils.isEmpty(sequence)) {
+	    throw new IllegalArgumentException("Invalid sequence");
+	}
+
+	return m_knownSequences.add(sequence);
     }
 
     public Peptide createPeptide() {
