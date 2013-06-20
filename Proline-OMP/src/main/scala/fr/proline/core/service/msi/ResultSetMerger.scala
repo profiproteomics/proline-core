@@ -125,13 +125,19 @@ class ResultSetMerger(
 
     var decoyRSIds = new ArrayBuffer[Long]
 
-    val targetMergerAlgo = new ResultSetAdditioner(ResultSet.generateNewId, false, Some(seqLengthByProtId))
+    var targetMergerAlgo = new ResultSetAdditioner(ResultSet.generateNewId, false, Some(seqLengthByProtId))
     for (rsId <- resultSetIds) {
-      val resultSet = _loadResultSet(rsId, execCtx)
+      var resultSet = _loadResultSet(rsId, execCtx)
       decoyRSIds += resultSet.getDecoyResultSetId
       targetMergerAlgo.addResultSet(resultSet)
+      resultSet = null
+      System.gc()
+      logger.info("Additioner state : "+ targetMergerAlgo.mergedProteinMatches.size +" ProMs, "+targetMergerAlgo.peptideById.size+" Peps,"+targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length+" SeqMs")
     }
 
+    mergedResultSet = targetMergerAlgo.toResultSet    
+    targetMergerAlgo = null
+    
     var decoyMergerAlgo: ResultSetAdditioner = null
 
     if (decoyRSIds.length > 0) {
@@ -143,7 +149,7 @@ class ResultSetMerger(
       }
     }
 
-    mergedResultSet = targetMergerAlgo.toResultSet
+    
 
     DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
 

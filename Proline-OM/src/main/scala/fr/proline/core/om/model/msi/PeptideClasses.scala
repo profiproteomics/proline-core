@@ -306,7 +306,7 @@ case class Peptide ( // Required fields
   }
   
   // Requirements
-  require( isNotEmpty( sequence ) && calculatedMass >= 0 )
+  require( calculatedMass >= 0 )
   
   /** Returns a string representing the peptide PTMs */
   lazy val readablePtmString : String = {

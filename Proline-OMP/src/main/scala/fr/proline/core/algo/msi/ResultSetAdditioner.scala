@@ -85,11 +85,11 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
     }
   }
   
-  def createPeptideMatchFrom(id:Option[Long] = None, peptideMatch: PeptideMatch): PeptideMatch = {
+  def createPeptideMatchFrom(id:Option[Long] = None, peptideMatch: PeptideMatch, peptide:Peptide): PeptideMatch = {
     val newPepMatchId = id.getOrElse(PeptideMatch.generateNewId())
     val childrenIds = new Array[Long](1)
     childrenIds(0) = peptideMatch.id
-    peptideMatch.copy(id = newPepMatchId, childrenIds = childrenIds, resultSetId = resultSetId)
+    peptideMatch.copy(id = newPepMatchId, childrenIds = childrenIds, resultSetId = resultSetId, peptide = peptide)
   }
   
   def addResultSet(rs:ResultSet) {
@@ -102,7 +102,7 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
         if(AdditionMode.Aggregate.equals(mode)) {
           if (mergedpeptideMatches(0).score < peptideMatch.score) {
             //update mergedpeptideMatches(0) properties
-	        var newPeptideMatch = createPeptideMatchFrom(id = Some(mergedpeptideMatches(0).id), peptideMatch = peptideMatch)
+	        var newPeptideMatch = createPeptideMatchFrom(id = Some(mergedpeptideMatches(0).id), peptideMatch = peptideMatch, peptide = peptideById(peptideMatch.peptide.id))
 	        // update children Ids, TODO and bestchild
 	        newPeptideMatch.childrenIds ++:= mergedpeptideMatches(0).childrenIds
 	        //register new PeptideMatch
@@ -114,17 +114,17 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
             mergedpeptideMatches(0).childrenIds +:= peptideMatch.id
           }
         } else {
-	        val newPeptideMatch = createPeptideMatchFrom(peptideMatch = peptideMatch)
+	        val newPeptideMatch = createPeptideMatchFrom(peptideMatch = peptideMatch, peptide = peptideById(peptideMatch.peptide.id))
 	        mergedpeptideMatches += newPeptideMatch
 	        val matches = pepMatchesByPepId.get(peptideMatch.peptide.id).get
 	        matches += newPeptideMatch
         }
       } else {
         
-        val peptide = peptideMatch.peptide
+        val peptide = _copy(peptideMatch.peptide)
         peptideById+= ( peptide.id -> peptide)
         // creates new PeptideMatch and add it to peptideMatches
-        val newPeptideMatch = createPeptideMatchFrom(peptideMatch = peptideMatch)
+        val newPeptideMatch = createPeptideMatchFrom(peptideMatch = peptideMatch, peptide = peptide)
         pepMatchesByPepId.getOrElseUpdate(peptide.id, new ArrayBuffer[PeptideMatch](1) ) += newPeptideMatch
         mergedPeptideMatches += (newPeptideMatch.id -> newPeptideMatch)
       }
@@ -157,6 +157,10 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
       logger.info("ResultSet #"+rs.id+" merged/added in "+(System.currentTimeMillis()-start)+" ms")
   }
   
+  
+  def _copy(peptide:Peptide):Peptide = {
+    new Peptide(id = peptide.id, sequence = null, ptmString = null, ptms = null, calculatedMass = peptide.calculatedMass)
+  }
   
   def toResultSet() : ResultSet = {
 	 val start = System.currentTimeMillis()
