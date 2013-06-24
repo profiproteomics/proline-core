@@ -4,10 +4,13 @@ import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.ConnectionMode;
 import fr.proline.repository.DatabaseConnectorFactory;
@@ -16,6 +19,8 @@ import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
 
 public class ExternalDbTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ExternalDbTest.class);
 
     @Test
     public void testH2Mem() throws Exception {
@@ -41,8 +46,10 @@ public class ExternalDbTest {
 	    assertEquals("sa", metaData.getUserName().toLowerCase());
 	} finally {
 
-	    if (con != null) {
+	    try {
 		con.close();
+	    } catch (SQLException exClose) {
+		LOG.error("Error closing SQL Connection", exClose);
 	    }
 
 	}
@@ -73,8 +80,10 @@ public class ExternalDbTest {
 	    assertEquals("sa", metaData.getUserName().toLowerCase());
 	} finally {
 
-	    if (con != null) {
+	    try {
 		con.close();
+	    } catch (SQLException exClose) {
+		LOG.error("Error closing SQL Connection", exClose);
 	    }
 
 	}
@@ -101,8 +110,10 @@ public class ExternalDbTest {
 	    assertEquals("jdbc:sqlite::memory:", metaData.getURL());
 	} finally {
 
-	    if (con != null) {
+	    try {
 		con.close();
+	    } catch (SQLException exClose) {
+		LOG.error("Error closing SQL Connection", exClose);
 	    }
 
 	}
@@ -130,8 +141,10 @@ public class ExternalDbTest {
 	    assertEquals("jdbc:sqlite:./target/pdi.sqlite", metaData.getURL());
 	} finally {
 
-	    if (con != null) {
+	    try {
 		con.close();
+	    } catch (SQLException exClose) {
+		LOG.error("Error closing SQL Connection", exClose);
 	    }
 
 	}
