@@ -69,6 +69,7 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(3 + 1, rsu.peptideSets.length)
     // 1 = because the added prot is a superset
     assertEquals(1, rsu.proteinSets.length)
+    assertEquals("ProteinMatches related to ProteinSet should contain sameset and subset", 4 , rsu.proteinSets(0).getProteinMatchIds.length )
   }
 
   /**

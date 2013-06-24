@@ -129,6 +129,8 @@ object SetClusterer {
                 sameset.strictSubsetsIds = Some( new ArrayBuffer[Long](1) )
               }
               sameset.strictSubsetsIds.get += unspeSamesetId
+              //VD Add subset cluster's protMatchIds to overset cluster 
+              sameset.samesetsKeys ++= unspeSameset.samesetsKeys
               unspeSameset.oversetId = Some(sameset.id)
             }
           }
