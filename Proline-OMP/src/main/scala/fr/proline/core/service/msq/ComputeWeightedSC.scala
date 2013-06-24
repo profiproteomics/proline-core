@@ -14,6 +14,9 @@ import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.repository.util.JDBCWork
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.model.msi.ResultSet
 import scala.collection.mutable.MapBuilder
 
 class WeightedSCCalculatorWId (
@@ -24,8 +27,7 @@ class WeightedSCCalculatorWId (
 ) extends IService with Logging{ 
 
  var fullService : WeightedSCCalculator = null
- 
- def wscByProtMatchAccessionByRSM : Map[Long, Map[String, Float]] = if(fullService!= null) {fullService.wscByProtMatchAccessionByRSM} else Map.empty[Long, Map[String, Float]] 
+ def wscByProtMatchAccessionByRSM : Map[Long, Map[String, SpectralCountsStruct]] = if(fullService!= null) {fullService.wscByProtMatchAccessionByRSM} else Map.empty[Long, Map[String, SpectralCountsStruct]] 
     
  def runService(): Boolean = { 
     require(rsmIdsToCalculate!=null && referenceRSMId != 0 &&  rsmIdsToCalculate.length > 0)
@@ -75,8 +77,13 @@ class WeightedSCCalculator (
 
   override protected def  beforeInterruption  = {  }
 
-  var _wscByProtMatchAccessionByRSM : scala.collection.mutable.Map[Long, Map[String, Float]] = scala.collection.mutable.Map.empty[Long, Map[String, Float]] 
-  def wscByProtMatchAccessionByRSM : Map[Long, Map[String, Float]] = {_wscByProtMatchAccessionByRSM.toMap }
+  var _wscByProtMatchAccessionByRSM : scala.collection.mutable.Map[Long, Map[String, SpectralCountsStruct]] = scala.collection.mutable.Map.empty[Long, Map[String, SpectralCountsStruct]] 
+  
+  /** 
+   *  Spectral Count Result 
+   *  {RSM ID -> { ProteinMatchAccession -> (Basic SC; Specific SC, Weighted SC)} }  
+   */
+  def wscByProtMatchAccessionByRSM : Map[Long, Map[String, SpectralCountsStruct]] = {_wscByProtMatchAccessionByRSM.toMap }
   
   def runService(): Boolean = { 
 
@@ -87,7 +94,7 @@ class WeightedSCCalculator (
 	 rsmToCalculate.foreach(rsm => {
 	   
 	   //Store result in Map (ProtMatch Accession -> Weight Spectral Count)
-	    var wscByProtMatchAccession : scala.collection.mutable.Map[String, Float] = scala.collection.mutable.Map[String, Float]()
+	    var wscByProtMatchAccession : scala.collection.mutable.Map[String, SpectralCountsStruct] = scala.collection.mutable.Map[String, SpectralCountsStruct]()
 	    
 		 //--- Update RSM SpectralCount
 	    PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm, execContext)
@@ -109,17 +116,26 @@ class WeightedSCCalculator (
 	        	 peptideSetForPM = nextEntry._1
 	       }
 	       
-	      var protWSC : Float = 0.0f // ProteinMatch Spectral Count
+	      // ProteinMatch Spectral Count
+	      var protWSC : Float = 0.0f 
+	      var protSSC : Float = 0.0f 
+	      var protBSC : Float = 0.0f
 	       if( peptideSetForPM!=null){	         
 	         //Go through peptides and compute SC
 	    	 peptideSetForPM.getPeptideInstances.foreach(pepInst =>{
-	    	   protWSC += (pepInst.totalLeavesMatchCount * currentProteinSetWeightStruct.weightByPeptideId.get(pepInst.peptideId).get)
+	    	   protBSC += pepInst.totalLeavesMatchCount
+	    	   val weight =  currentProteinSetWeightStruct.weightByPeptideId.get(pepInst.peptideId).get
+	    	   
+	    	   if(weight == 1) //VDS FIXME : OK if we use weight on specificity... Maybe this information (specific or not) should be saved in  ProteinPepsWeightStruct
+	    		   protSSC += pepInst.totalLeavesMatchCount
+	    		   
+	    	   protWSC += (pepInst.totalLeavesMatchCount *weight)
 	    	 })
 	       } else{ //Protein not identified in current RSM
 	         protWSC = Float.NaN
 	       }
 	      
-	      wscByProtMatchAccession +=currentProteinSetWeightStruct.typicalPMAcc -> protWSC
+	      wscByProtMatchAccession +=currentProteinSetWeightStruct.typicalPMAcc -> new SpectralCountsStruct(protBSC, protSSC, protWSC)
 
 	    }) // End go through  proteinSetWeightStructsById
 	    
@@ -127,12 +143,61 @@ class WeightedSCCalculator (
 	     
 	 }) //End go through RSMs
 	 
-    false
+	 generateJSONOutput(_wscByProtMatchAccessionByRSM.result.toMap)
+    true
      
   }
   
+   private def generateJSONOutput( resultMap:Map[Int, Map[String, SpectralCountsStruct]]) : String = {
+       "ToDO"
+   }
+  
    private def createProtMatchesAccByPeptideSet(rsm: ResultSummary) : Map[PeptideSet, Seq[String]] = {
-     Map.empty[PeptideSet, Seq[String]]
+      
+     val rs =   if(rsm.resultSet.isDefined){ rsm.resultSet.get } else { loadRS(rsm.getResultSetId)   }
+     val protMById= rs.proteinMatchById
+     val result = scala.collection.mutable.Map.empty[PeptideSet, Seq[String]] 
+     
+     rsm.proteinSets.foreach( protSet =>{
+    	 val protMatchIdByPepSet : Map[PeptideSet, Array[Int]] = protSet.getAllProteinMatchesIdByPeptideSet
+    	 
+    	 //Go through
+    	 protMatchIdByPepSet.foreach(entry=>{
+    	   val strSeq : Seq[String] = result.getOrElseUpdate(entry._1, Seq.empty[String])
+    	   entry._2.foreach(pmId =>{ //For each ProtMatchID
+    	     val pmAcc = protMById.get(pmId).get.accession
+    	     if(!strSeq.contains(pmAcc)){
+    	       val seqBuilder = Seq.newBuilder[String]
+    	       seqBuilder ++= strSeq
+    	       seqBuilder += pmAcc    	     
+    	       result.put(entry._1,seqBuilder.result)
+    	     }
+    	     
+    	   })
+    	 })
+     })
+     
+     result.toMap
+   }
+   
+   private def loadRS( rsID: Int) : ResultSet = {
+     
+	  /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Provider service use */
+      val providerContext = if (execContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
+        execContext.asInstanceOf[ProviderDecoratedExecutionContext]
+      } else {
+        new ProviderDecoratedExecutionContext(execContext)
+      }
+ 
+      val rsProvider :IResultSetProvider=  providerContext.getProvider(classOf[IResultSetProvider])
+	  val resultRS = rsProvider.getResultSet(rsID)
+      if(resultRS.isDefined){
+        resultRS.get
+      } else{
+        logger.warn(" !!! Unable to get search result with id "+rsID)
+        null
+      }        
+     
    }
    
   /**
@@ -231,6 +296,8 @@ class WeightedSCCalculator (
   }
   
 }
+
+case class SpectralCountsStruct( val basicSC : Float, val specificSC : Float, val weightedSC : Float)
 
 case class ProteinPepsWeightStruct(
 			val proteinSet: ProteinSet, 
