@@ -148,7 +148,7 @@ class WeightedSCCalculator (
      
   }
   
-   private def generateJSONOutput( resultMap:Map[Int, Map[String, SpectralCountsStruct]]) : String = {
+   private def generateJSONOutput( resultMap:Map[Long, Map[String, SpectralCountsStruct]]) : String = {
        "ToDO"
    }
   
@@ -159,7 +159,7 @@ class WeightedSCCalculator (
      val result = scala.collection.mutable.Map.empty[PeptideSet, Seq[String]] 
      
      rsm.proteinSets.foreach( protSet =>{
-    	 val protMatchIdByPepSet : Map[PeptideSet, Array[Int]] = protSet.getAllProteinMatchesIdByPeptideSet
+    	 val protMatchIdByPepSet : Map[PeptideSet, Array[Long]] = protSet.getAllProteinMatchesIdByPeptideSet
     	 
     	 //Go through
     	 protMatchIdByPepSet.foreach(entry=>{
@@ -180,7 +180,7 @@ class WeightedSCCalculator (
      result.toMap
    }
    
-   private def loadRS( rsID: Int) : ResultSet = {
+   private def loadRS( rsID: Long) : ResultSet = {
      
 	  /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Provider service use */
       val providerContext = if (execContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
