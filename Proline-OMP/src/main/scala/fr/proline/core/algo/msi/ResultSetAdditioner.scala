@@ -11,6 +11,32 @@ object AdditionMode extends Enumeration {
     val Aggregate, Union = Value
 }
 
+trait IResultSetSelector {
+  
+  def getPeptideMatches(rs:ResultSet) : Iterable[PeptideMatch] 
+  
+  def getProteinMatches(rs:ResultSet) : Iterable[ProteinMatch] 
+  
+  def getSequenceMatches(proteinMatch:ProteinMatch) : Iterable[SequenceMatch] 
+ 
+}
+
+object ResultSetSelector extends IResultSetSelector {
+    
+   def getPeptideMatches(rs:ResultSet) : Iterable[PeptideMatch] = {
+    rs.peptideMatches
+  }
+  
+  def getProteinMatches(rs:ResultSet) : Iterable[ProteinMatch] = {
+    rs.proteinMatches
+  }
+  
+  def getSequenceMatches(proteinMatch:ProteinMatch) : Iterable[SequenceMatch] = {
+	 proteinMatch.sequenceMatches
+  }
+
+}
+
 class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, seqLengthByProtId: Option[Map[Long,Int]] = None) extends Logging {
   
   var mode = AdditionMode.Aggregate
@@ -23,14 +49,14 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
   val mergedProteinMatches = new ArrayBuffer[ProteinMatch]
   val distinctTdModes = new HashSet[String]
   
-  def createProteinMatchFrom(proteinMatch: ProteinMatch) : ProteinMatch = {
+  def createProteinMatchFrom(proteinMatch: ProteinMatch, selector:IResultSetSelector) : ProteinMatch = {
       // Retrieve all sequence matches of this protein match group
       val seqMatchByPepId = new HashMap[Long,SequenceMatch]
       val seqDatabaseIdSet = new HashSet[Long]
       
       val seqMatches = new ArrayBuffer[SequenceMatch]()
       
-      for( seqMatch <- proteinMatch.sequenceMatches )  { 
+      for( seqMatch <- selector.getSequenceMatches(proteinMatch))  { 
           val newSeqMatch = seqMatch.copy( resultSetId = resultSetId )
           seqMatches += newSeqMatch          
         }
@@ -68,11 +94,11 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
       newProteinMatch    
   }
 
-  def updateProteinMatch(updated:ProteinMatch, from:ProteinMatch) {
+  def updateProteinMatch(updated:ProteinMatch, from:ProteinMatch, selector:IResultSetSelector) {
     if (isEmpty(updated.description) && ! isEmpty(from.description))  updated.description = from.description
     // Iterate over sequenceMatches and verify peptide.ids
     val seqMatchesPeptideIds = updated.sequenceMatches.map{ _.getPeptideId }
-    for (seqMatch <- from.sequenceMatches) {
+    for (seqMatch <- selector.getSequenceMatches(from)) {
       if (!seqMatchesPeptideIds.contains(seqMatch.getPeptideId)) {
         //creates new sequenceMatch for the proteinMatch
         val newSeqMatch = seqMatch.copy( resultSetId = resultSetId )
@@ -81,7 +107,10 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
     }
     // update seq_database_map
     if (from.seqDatabaseIds != null) {
-      updated.seqDatabaseIds ++= from.seqDatabaseIds
+   	 val seqDatabaseIdSet = new HashSet[Long]
+   	 seqDatabaseIdSet ++= updated.seqDatabaseIds
+   	 seqDatabaseIdSet ++= from.seqDatabaseIds
+   	 updated.seqDatabaseIds = seqDatabaseIdSet.toArray
     }
   }
   
@@ -92,11 +121,11 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
     peptideMatch.copy(id = newPepMatchId, childrenIds = childrenIds, resultSetId = resultSetId, peptide = peptide)
   }
   
-  def addResultSet(rs:ResultSet) {
+  def addResultSet(rs:ResultSet, selector:IResultSetSelector = ResultSetSelector) {
   
     logger.info("Start adding ResultSet #"+rs.id)
     val start = System.currentTimeMillis()
-    for( peptideMatch <- rs.peptideMatches) {
+    for( peptideMatch <- selector.getPeptideMatches(rs)) {
       if (pepMatchesByPepId.contains(peptideMatch.peptide.id))  {
         val mergedpeptideMatches = pepMatchesByPepId(peptideMatch.peptide.id)
         if(AdditionMode.Aggregate.equals(mode)) {
@@ -132,7 +161,7 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
     }
     
     // Iterate over protein matches to merge them by a unique key
-      for( proteinMatch <- rs.proteinMatches ) {
+      for( proteinMatch <- selector.getProteinMatches(rs) ) {
         var protMatchKey = ""
         if( proteinMatch.getProteinId != 0 ) {
           // Build key using protein id and taxon id if they are defined
@@ -143,10 +172,10 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
         }
         if (proteinMatchesByKey.contains(protMatchKey)) {
           // update sequence_matches (matching new peptide ?), update seq_database_ids
-      	  updateProteinMatch(proteinMatchesByKey.get(protMatchKey).get, proteinMatch)
+      	  updateProteinMatch(proteinMatchesByKey.get(protMatchKey).get, proteinMatch, selector)
         } else {
           // new proteinMatch : creates sequenceMatches and new proteinMatch
-          val newProteinMatch = createProteinMatchFrom(proteinMatch)
+          val newProteinMatch = createProteinMatchFrom(proteinMatch, selector)
           proteinMatchesByKey += (protMatchKey -> newProteinMatch)
           mergedProteinMatches += newProteinMatch
         }
@@ -157,7 +186,7 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
       logger.info("ResultSet #"+rs.id+" merged/added in "+(System.currentTimeMillis()-start)+" ms")
   }
   
-  
+ 
   def _copy(peptide:Peptide):Peptide = {
     new Peptide(id = peptide.id, sequence = null, ptmString = null, ptms = null, calculatedMass = peptide.calculatedMass)
   }
@@ -180,6 +209,7 @@ class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, s
         pepMatches.sortWith(_.score > _.score)
       }
     }
+    
     for (proteinMatch <- mergedProteinMatches) {
       for (seqMatch <- proteinMatch.sequenceMatches) {
         seqMatch.bestPeptideMatchId = pepMatchesByPepId(seqMatch.getPeptideId)(0).id

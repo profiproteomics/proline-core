@@ -24,10 +24,13 @@ import org.junit.After
 import org.junit.Before
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
+import fr.proline.core.algo.msi.validation.pepmatch.BasicPepMatchValidator
+import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
 
 
 @Test
-class ResultSetAdditionerTest2 extends AbstractMultipleDBTestCase with Logging {
+class ResultSummaryAdditionerTest extends AbstractMultipleDBTestCase with Logging {
   
   // Define the interface to be implemented
   val driverType = DriverType.H2
@@ -84,9 +87,12 @@ class ResultSetAdditionerTest2 extends AbstractMultipleDBTestCase with Logging {
     
 
   	@Test
-	def addOneRS() = {
+	def addOneNonFilteredRSM() = {
+  	  var ppsi = new CommunistProteinSetInferer()
+  	  var rsm = ppsi.computeResultSummary(resultSet = readRS)
 	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
-	  rsAddAlgo.addResultSet(readRS)
+  	  val selector = new ResultSummarySelector(rsm)
+	  rsAddAlgo.addResultSet(readRS, selector)
 	  val rs2 = rsAddAlgo.toResultSet()
 	  assert(rs2 != null)
 	  assert(readRS != rs2)
@@ -94,6 +100,65 @@ class ResultSetAdditionerTest2 extends AbstractMultipleDBTestCase with Logging {
 	  assertEquals(peptides.length, readRS.peptides.length)
 	  assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
 	  assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
+	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
+	  assertEquals(1, ids.length)
+	  assertEquals(-99, ids(0))
+	  
+	  val storerContext = new StorerContext(executionContext)
+	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+     val rsId = rsStorer.storeResultSet(rs2, storerContext)
+  }
+  	
+  	@Test
+	def addOneFilteredRSM() = {
+  	  var ppsi = new CommunistProteinSetInferer()
+  	  val pepMatches = readRS.peptideMatches  	  
+     // Simulate rank filtering
+     pepMatches.filter( _.rank > 1 ).foreach( _.isValidated = false )
+     logger.info("Validated PepMatches "+readRS.peptideMatches.count( _.isValidated ))
+  	  var rsm = ppsi.computeResultSummary(resultSet = readRS)
+  	  
+  	  //Test rsm 
+  	  
+  	  val matches = rsm.peptideInstances.map(_.peptideMatches).flatten
+  	  assertEquals(matches.length, matches.filter(_.isValidated).length)
+  	  assertEquals(matches.length, matches.filter(_.rank <=1).length)
+  	  
+	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
+  	  val selector = new ResultSummarySelector(rsm)
+	  rsAddAlgo.addResultSet(readRS, selector)
+	  val rs2 = rsAddAlgo.toResultSet()
+	  
+	  val pepMatchesCount = readRS.peptideMatches.filter{ _.rank <= 1  }.map(_.peptide.id).distinct.length
+	  assert(rs2 != null)
+	  assert(readRS != rs2)
+	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
+	  assertEquals(peptides.length, rs2.peptideMatches.map(_.peptide.id).distinct.length)
+	  assertEquals(pepMatchesCount , peptides.length)
+	  assert(readRS.proteinMatches.map(_.sequenceMatches).length > rs2.proteinMatches.map(_.sequenceMatches).length)
+	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
+	  assertEquals(1, ids.length)
+	  assertEquals(-99, ids(0))
+	  
+	  val storerContext = new StorerContext(executionContext)
+	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+     val rsId = rsStorer.storeResultSet(rs2, storerContext)
+  }
+  	 	
+  @Test
+  def addOneNonFilteredRSMTwice() = {
+  	  var ppsi = new CommunistProteinSetInferer()
+  	  var rsm = ppsi.computeResultSummary(resultSet = readRS)
+	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
+	  rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
+	  rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
+	  val rs2 = rsAddAlgo.toResultSet()
+	  assert(rs2 != null)
+	  assert(readRS != rs2)
+	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
+	  assertEquals(readRS.peptides.length, peptides.length)
+	  assertEquals(readRS.peptideMatches.map(_.peptide.id).distinct.length, peptides.length)
+	  assertEquals(readRS.proteinMatches.map(_.sequenceMatches).length, rs2.proteinMatches.map(_.sequenceMatches).length)
 	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
 	  assertEquals(1, ids.length)
 	  assertEquals(-99, ids(0))
@@ -103,26 +168,6 @@ class ResultSetAdditionerTest2 extends AbstractMultipleDBTestCase with Logging {
      val rsId = rsStorer.storeResultSet(rs2, storerContext)
   }
   
-  	@Test
-	def addOneRSTwice() = {
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
-	  rsAddAlgo.addResultSet(readRS)
-	  rsAddAlgo.addResultSet(readRS)
-	  val rs2 = rsAddAlgo.toResultSet()
-	  assert(rs2 != null)
-	  assert(readRS != rs2)
-	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
-	  assertEquals(peptides.length, readRS.peptides.length)
-	  assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
-	  assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
-	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
-	  assertEquals(1, ids.length)
-	  assertEquals(-99, ids(0))
-	  
-	  val storerContext = new StorerContext(executionContext)
-	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-     val rsId = rsStorer.storeResultSet(rs2, storerContext)
-  }
   
   def buildSQLContext() = {
     val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]

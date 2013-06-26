@@ -72,12 +72,12 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
       // Merge peptides by id
       peptides.foreach { p => peptideById( p.id ) = p }
     
-    }
+    } //end of RSM loop
     
     require(allValidPeptideMatches.length > 0, "can't merge result summaries without any validated peptide match")
     
     // Retrieve non-redundant list of peptides
-    val nrPeptides = peptideById.values
+    //val nrPeptides = peptideById.values
     
     // Re-map the non-redundant list of peptides to peptide matches
     // Peptide matches related to the same peptide will use the same object
@@ -188,7 +188,7 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
                                   scoreType = firstDescribedProtMatch.scoreType
                                  )
       
-    }
+    } // end of proteinMatchesByKey loop
     
     // Create a non redundant list of MSI search ids
     //val nrMsiSearchIds = msiSearchIds.distinct
