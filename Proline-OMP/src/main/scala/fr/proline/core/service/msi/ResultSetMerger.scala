@@ -37,9 +37,9 @@ object ResultSetMerger {
     if (execContext.isJPA) {
       new ORMResultSetProvider(execContext.getMSIDbConnectionContext, execContext.getPSDbConnectionContext, execContext.getUDSDbConnectionContext)
     } else {
-      new SQLResultSetProvider(execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
-        execContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext],
-        execContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext])
+      new SQLResultSetProvider(execContext.getMSIDbConnectionContext,
+        execContext.getPSDbConnectionContext,
+        execContext.getUDSDbConnectionContext)
     }
 
   }
@@ -119,53 +119,71 @@ class ResultSetMerger(
   }
 
   private def _mergeFromResultsSetIds(resultSetIds: Seq[Long], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext, execCtx: IExecutionContext) {
+    val msiDbHelper = new MsiDbHelper(msiDbCtx)
 
-    var seqLengthByProtId = _buildSeqLength(resultSetIds, msiDbCtx)
-    >>>
+    val decoyRSIds = msiDbHelper.getDecoyRsIds(resultSetIds)
 
-    var decoyRSIds = new ArrayBuffer[Long]
+    val nTargetRS = resultSetIds.length
+    val nDecoyRS = decoyRSIds.length
 
-    var targetMergerAlgo = new ResultSetAdditioner(ResultSet.generateNewId, false, Some(seqLengthByProtId))
-    for (rsId <- resultSetIds) {
-      var resultSet = _loadResultSet(rsId, execCtx)
-      decoyRSIds += resultSet.getDecoyResultSetId
-      targetMergerAlgo.addResultSet(resultSet)
-      resultSet = null
-      System.gc()
-      logger.info("Additioner state : "+ targetMergerAlgo.mergedProteinMatches.size +" ProMs, "+targetMergerAlgo.peptideById.size+" Peps,"+targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length+" SeqMs")
+    if (nDecoyRS != nTargetRS) {
+      logger.warn("Inconsistent number of TARGET ResultSets: " + nTargetRS + " number of DECOY ResultSets: " + nDecoyRS)
     }
 
-    mergedResultSet = targetMergerAlgo.toResultSet    
-    targetMergerAlgo = null
-    
-    var decoyMergerAlgo: ResultSetAdditioner = null
+    var mergedDecoyRSId: Long = -1
 
     if (decoyRSIds.length > 0) {
-      seqLengthByProtId = _buildSeqLength(decoyRSIds, msiDbCtx)
-      decoyMergerAlgo = new ResultSetAdditioner(ResultSet.generateNewId, true, Some(seqLengthByProtId))
+      var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, msiDbCtx)
+
+      var decoyMergerAlgo: ResultSetAdditioner = new ResultSetAdditioner(ResultSet.generateNewId, true, Some(seqLengthByProtId))
+
       for (rsId <- decoyRSIds) {
         val resultSet = _loadResultSet(rsId, execCtx)
         decoyMergerAlgo.addResultSet(resultSet)
       }
+
+      var decoyRS: ResultSet = decoyMergerAlgo.toResultSet
+
+      decoyMergerAlgo = null // Eligible for Garbage collection      
+      seqLengthByProtId = null
+
+      DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+        /* Store merged decoy result set */
+        _storeMergedResultSet(storerContext, msiEzDBC, decoyRS, decoyRSIds)
+      }, true) // end of JDBC work
+
+      mergedDecoyRSId = decoyRS.id
+
+      logger.debug("Merged DECOY ResultSet Id: " + mergedDecoyRSId)
+
+      decoyRS = null // Eligible for Garbage collection
     }
 
-    
+    var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, msiDbCtx)
+
+    var targetMergerAlgo: ResultSetAdditioner = new ResultSetAdditioner(ResultSet.generateNewId, false, Some(seqLengthByProtId))
+
+    for (rsId <- resultSetIds) {
+      val resultSet = _loadResultSet(rsId, execCtx)
+      targetMergerAlgo.addResultSet(resultSet)
+      logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
+    }
+
+    mergedResultSet = targetMergerAlgo.toResultSet
+
+    targetMergerAlgo = null // Eligible for Garbage collection
+    seqLengthByProtId = null
+
+    if (mergedDecoyRSId > 0) {
+      mergedResultSet.setDecoyResultSetId(mergedDecoyRSId)
+    }
 
     DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
-
-      // Merge decoy result sets if they are defined
-      if (decoyRSIds.length > 0) {
-        val decoyRS = decoyMergerAlgo.toResultSet
-        this._storeMergedResultSet(storerContext, msiEzDBC, decoyRS, decoyRSIds)
-        // Then store merged decoy result set
-        mergedResultSet.decoyResultSet = Some(decoyRS)
-      }
-
-      // Store merged target result set
-      this._storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, resultSetIds)
-
+      /* Store merged target result set */
+      _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, resultSetIds)
     }, true) // end of JDBC work
 
+    logger.debug("Merged TARGET ResultSet Id: " + mergedResultSet.id)
   }
 
   private def _mergeFromResultsSets(resultSets: Seq[ResultSet], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext) {
@@ -206,11 +224,7 @@ class ResultSetMerger(
   }
 
   private def _loadResultSet(rsId: Long, execCtx: IExecutionContext): ResultSet = {
-    val udsSQLCtx = execCtx.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext]
-    val psSQLCtx = execCtx.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext]
-    val msiSQLCtx = execCtx.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext]
-
-    val rsProvider = new SQLResultSetProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
+    val rsProvider = new SQLResultSetProvider(execCtx.getMSIDbConnectionContext, execCtx.getPSDbConnectionContext, execCtx.getUDSDbConnectionContext)
 
     // Load target result set
     val targetRsOpt = rsProvider.getResultSet(rsId)
