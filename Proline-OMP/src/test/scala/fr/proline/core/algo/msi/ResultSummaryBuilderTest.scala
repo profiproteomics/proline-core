@@ -90,7 +90,7 @@ class ResultSummaryAdditionerTest extends AbstractMultipleDBTestCase with Loggin
 	def addOneNonFilteredRSM() = {
   	  var ppsi = new CommunistProteinSetInferer()
   	  var rsm = ppsi.computeResultSummary(resultSet = readRS)
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
   	  val selector = new ResultSummarySelector(rsm)
 	  rsAddAlgo.addResultSet(readRS, selector)
 	  val rs2 = rsAddAlgo.toResultSet()
@@ -124,7 +124,7 @@ class ResultSummaryAdditionerTest extends AbstractMultipleDBTestCase with Loggin
   	  assertEquals(matches.length, matches.filter(_.isValidated).length)
   	  assertEquals(matches.length, matches.filter(_.rank <=1).length)
   	  
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
   	  val selector = new ResultSummarySelector(rsm)
 	  rsAddAlgo.addResultSet(readRS, selector)
 	  val rs2 = rsAddAlgo.toResultSet()
@@ -149,7 +149,7 @@ class ResultSummaryAdditionerTest extends AbstractMultipleDBTestCase with Loggin
   def addOneNonFilteredRSMTwice() = {
   	  var ppsi = new CommunistProteinSetInferer()
   	  var rsm = ppsi.computeResultSummary(resultSet = readRS)
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
 	  rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
 	  rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
 	  val rs2 = rsAddAlgo.toResultSet()
