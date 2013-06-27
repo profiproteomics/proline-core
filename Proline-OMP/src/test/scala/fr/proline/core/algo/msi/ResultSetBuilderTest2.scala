@@ -27,7 +27,7 @@ import fr.proline.core.om.storer.msi.impl.StorerContext
 
 
 @Test
-class ResultSetAdditionerTest2 extends AbstractMultipleDBTestCase with Logging {
+class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
   
   // Define the interface to be implemented
   val driverType = DriverType.H2
@@ -85,7 +85,7 @@ class ResultSetAdditionerTest2 extends AbstractMultipleDBTestCase with Logging {
 
   	@Test
 	def addOneRS() = {
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
 	  rsAddAlgo.addResultSet(readRS)
 	  val rs2 = rsAddAlgo.toResultSet()
 	  assert(rs2 != null)
@@ -105,7 +105,7 @@ class ResultSetAdditionerTest2 extends AbstractMultipleDBTestCase with Logging {
   
   	@Test
 	def addOneRSTwice() = {
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = -99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
 	  rsAddAlgo.addResultSet(readRS)
 	  rsAddAlgo.addResultSet(readRS)
 	  val rs2 = rsAddAlgo.toResultSet()

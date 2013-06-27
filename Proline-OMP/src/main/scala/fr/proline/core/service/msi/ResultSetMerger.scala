@@ -19,13 +19,13 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
-import fr.proline.core.algo.msi.ResultSetAdditioner
+import fr.proline.core.algo.msi.ResultSetBuilder
 import fr.proline.core.dal.DoJDBCReturningWork
 
 object ResultSetMerger {
 
-  def _loadResultSet(rsId: Long, storerContext: StorerContext): ResultSet = {
-    val rsProvider = getResultSetProvider(storerContext)
+  def _loadResultSet(rsId: Long, execContext: IExecutionContext): ResultSet = {
+    val rsProvider = getResultSetProvider(execContext)
     val rs = rsProvider.getResultSet(rsId)
     if (rs.isEmpty) throw new IllegalArgumentException("Unknown ResultSet Id: " + rsId)
     rs.get
@@ -135,10 +135,10 @@ class ResultSetMerger(
     if (decoyRSIds.length > 0) {
       var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, msiDbCtx)
 
-      var decoyMergerAlgo: ResultSetAdditioner = new ResultSetAdditioner(ResultSet.generateNewId, true, Some(seqLengthByProtId))
+      var decoyMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
 
       for (rsId <- decoyRSIds) {
-        val resultSet = _loadResultSet(rsId, execCtx)
+        val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)
         decoyMergerAlgo.addResultSet(resultSet)
       }
 
@@ -161,10 +161,10 @@ class ResultSetMerger(
 
     var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, msiDbCtx)
 
-    var targetMergerAlgo: ResultSetAdditioner = new ResultSetAdditioner(ResultSet.generateNewId, false, Some(seqLengthByProtId))
+    var targetMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, false, Some(seqLengthByProtId))
 
     for (rsId <- resultSetIds) {
-      val resultSet = _loadResultSet(rsId, execCtx)
+      val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)
       targetMergerAlgo.addResultSet(resultSet)
       logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
     }
@@ -221,17 +221,6 @@ class ResultSetMerger(
 
     }, true) // end of JDBC work
 
-  }
-
-  private def _loadResultSet(rsId: Long, execCtx: IExecutionContext): ResultSet = {
-    val rsProvider = new SQLResultSetProvider(execCtx.getMSIDbConnectionContext, execCtx.getPSDbConnectionContext, execCtx.getUDSDbConnectionContext)
-
-    // Load target result set
-    val targetRsOpt = rsProvider.getResultSet(rsId)
-    if (targetRsOpt == None)
-      throw new Exception("can't load result set with id = " + rsId)
-
-    targetRsOpt.get
   }
 
   private def _mergeResultSets(

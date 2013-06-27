@@ -37,7 +37,7 @@ object ResultSetSelector extends IResultSetSelector {
 
 }
 
-class ResultSetAdditioner(val resultSetId: Long, val isDecoy: Boolean = false, seqLengthByProtId: Option[Map[Long,Int]] = None) extends Logging {
+class ResultSetBuilder(val resultSetId: Long, val isDecoy: Boolean = false, seqLengthByProtId: Option[Map[Long,Int]] = None) extends Logging {
   
   var mode = AdditionMode.Aggregate
   

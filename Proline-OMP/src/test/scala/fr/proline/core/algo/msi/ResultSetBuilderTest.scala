@@ -30,7 +30,7 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 	@Test
 	def addOneRS() = {
 	  val rs1 = new ResultSetFakeBuilder(pepNb = 800, proNb = 100).toResultSet()
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = 99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99)
 	  rsAddAlgo.addResultSet(rs1)
 	  val rs2 = rsAddAlgo.toResultSet()
 	  assert(rs2 != null)
@@ -47,7 +47,7 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 		@Test
 	def addOneRSTwice() = {
 	  val rs1 = new ResultSetFakeBuilder(pepNb = 800, proNb = 100).toResultSet()
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = 99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99)
 	  rsAddAlgo.addResultSet(rs1)
 	  rsAddAlgo.addResultSet(rs1)
 	  val rs = rsAddAlgo.toResultSet()
@@ -66,7 +66,7 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 	def addTwoRS() = {
 	  val rs1 = new ResultSetFakeBuilder(pepNb = 800, proNb = 100).toResultSet()
 	  val rs2 = new ResultSetFakeBuilder(pepNb = 200, proNb = 10).toResultSet()
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = 99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99)
 	  rsAddAlgo.addResultSet(rs1)
 	  rsAddAlgo.addResultSet(rs2)	  
 	  val rs = rsAddAlgo.toResultSet()
@@ -89,7 +89,7 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 	  val rsfb = new ResultSetFakeBuilder(pepNb = 800, proNb = 100)
 	  rsfb.addDuplicatedPeptideMatches(50)
 	  val rs1 = rsfb.toResultSet()
-	  val rsAddAlgo = new ResultSetAdditioner(resultSetId = 99)
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99)
 	  rsAddAlgo.addResultSet(rs1)
 	  val rs2 = rsAddAlgo.toResultSet()
 	  assert(rs2 != null)
