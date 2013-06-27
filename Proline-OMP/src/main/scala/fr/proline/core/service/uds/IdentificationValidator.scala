@@ -27,20 +27,6 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                //targetDecoyMode: Option[TargetDecoyModes.Mode]
                                ) extends IService with Logging {
   
-  /*private val udsDbConnector = dbManager.getUdsDbConnector
-  
-  private val udsDbCtx = ContextFactory.buildDbConnectionContext(udsDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
-  private val udsDbHelper = new UdsDbHelper( udsDbCtx )
-  private val projectId = udsDbHelper.getDatasetProjectId(identificationId)
-  
-  private val psDbConnector = dbManager.getPsDbConnector
-  private val psDbCtx = ContextFactory.buildDbConnectionContext(psDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context  
-  
-  private val msiDbConnector = dbManager.getMsiDbConnector(projectId)
-  private val msiDbCtx = ContextFactory.buildDbConnectionContext(msiDbConnector, false).asInstanceOf[SQLConnectionContext] // SQL Context
-  
-  private val execSqlContext = new BasicExecutionContext(udsDbCtx,null,psDbCtx,msiDbCtx,null)
-  */
   
   private val execSqlContext = BuildExecutionContext( dbManager, projectId, false )
   private val udsDbCtx = execSqlContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext]
@@ -129,7 +115,7 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
         val resultSummaries = new SQLResultSummaryProvider( msiDbCtx, psDbCtx,  udsDbCtx ).getResultSummaries( rsmIds, true )
         
         // Merge result summaries
-        val rsmMerger = new ResultSummaryMerger( execCtx = execSqlContext, resultSummaries )
+        val rsmMerger = new ResultSummaryMerger( execCtx = execSqlContext, None, Some(resultSummaries) )
         rsmMerger.runService()
         
         identInstanceRsmId = rsmMerger.mergedResultSummary.id

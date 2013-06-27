@@ -7,20 +7,43 @@ import com.weiglewilczek.slf4s.Logging
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context._
-import fr.proline.core.algo.msi.{ResultSummaryMerger => RsmMergerAlgo}
-import fr.proline.core.algo.msi.scoring.{PepSetScoring,PeptideSetScoreUpdater}
+import fr.proline.core.algo.msi.{ ResultSummaryMerger => RsmMergerAlgo }
+import fr.proline.core.algo.msi.scoring.{ PepSetScoring, PeptideSetScoreUpdater }
 import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.core.om.storer.msi.{RsStorer,RsmStorer}
+import fr.proline.core.om.storer.msi.{ RsStorer, RsmStorer }
 import fr.proline.repository.DriverType
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.om.provider.msi.IResultSummaryProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+
+object ResultSummaryMerger {
+
+  def _loadResultSummary(rsmId: Long, storerContext: StorerContext): ResultSummary = {
+    val rsmProvider = getResultSummaryProvider(storerContext)
+    val rsm = rsmProvider.getResultSummary(rsmId, true)
+    if (rsm.isEmpty) throw new IllegalArgumentException("Unknown ResultSummary Id: " + rsmId)
+    rsm.get
+  }
+
+  // TODO Retrieve a ResultSetProvider from a decorated ExecutionContext ?
+  private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
+
+    new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
+      execContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext],
+      execContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext])
+
+  }
+}
 
 class ResultSummaryMerger(
   execCtx: IExecutionContext,
-  resultSummaries: Seq[ResultSummary]
-) extends IService with Logging {
+  resultSummaryIds: Option[Seq[Long]],
+  resultSummaries: Option[Seq[ResultSummary]]) extends IService with Logging {
 
   var mergedResultSummary: ResultSummary = null
 
@@ -40,39 +63,22 @@ class ResultSummaryMerger(
     try {
       storerContext = new StorerContext(execCtx)
       msiDbCtx = storerContext.getMSIDbConnectionContext
-      
+
       // Check if a transaction is already initiated
       val wasInTransaction = msiDbCtx.isInTransaction()
       if (!wasInTransaction) msiDbCtx.beginTransaction()
-      
-      DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
 
-        // Retrieve protein ids
-        val proteinIdSet = new HashSet[Long]
-        for (rsm <- resultSummaries) {
+      DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
 
-          val resultSetAsOpt = rsm.resultSet
-          require(resultSetAsOpt != None, "the result summary must contain a result set")
-
-          for (proteinMatch <- resultSetAsOpt.get.proteinMatches) {
-            val proteinId = proteinMatch.getProteinId
-            if (proteinId != 0L) proteinIdSet += proteinId
+        val tmpMergedResultSummary = {
+          if (resultSummaries.isDefined) {
+            logger.info("Start merge from existing ResultSets")
+            _mergeFromResultsSummaries(resultSummaries.get, storerContext, msiDbCtx)
+          } else {
+            logger.info("Start merge from ResultSet Ids")
+            _mergeFromResultsSummaryIds(resultSummaryIds.get, storerContext, msiDbCtx, execCtx)
           }
         }
-
-        // Retrieve sequence length mapped by the corresponding protein id
-        val seqLengthByProtId = new MsiDbHelper(msiDbCtx).getSeqLengthByBioSeqId(proteinIdSet)
-        >>>
-
-        // Merge result summaries
-        // FIXME: check that all peptide sets have the same score type
-        val peptideSetScoring = PepSetScoring.withName( resultSummaries(0).peptideSets(0).scoreType )
-        val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring)
-        val rsmMerger = new RsmMergerAlgo(pepSetScoreUpdater)
-
-        logger.info("merging result summaries...")
-        val tmpMergedResultSummary = rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
-        >>>
 
         val proteinSets = tmpMergedResultSummary.proteinSets
         logger.info("nb protein sets:" + tmpMergedResultSummary.proteinSets.length)
@@ -90,12 +96,12 @@ class ResultSummaryMerger(
         val protMatchByTmpId = mergedResultSet.proteinMatches.map { p => p.id -> p } toMap
 
         logger.info("store result set...")
-        
+
         //val rsStorer = new JPARsStorer()
         //storerContext = new StorerContext(udsDb, pdiDb, psDb, msiDb)
         //rsStorer.storeResultSet(mergedResultSet, storerContext)
-        val rsStorer = RsStorer( msiDbCtx )
-        rsStorer.storeResultSet( mergedResultSet, storerContext )
+        val rsStorer = RsStorer(msiDbCtx)
+        rsStorer.storeResultSet(mergedResultSet, storerContext)
 
         //msiDbCtx.getEntityManager.flush() // Flush before returning to SQL msiEzDBC
 
@@ -103,7 +109,7 @@ class ResultSummaryMerger(
 
         // Link parent result set to its child result sets
         val parentRsId = mergedResultSet.id
-        val rsIds = resultSummaries.map { _.getResultSetId } distinct
+        val rsIds = if (resultSummaries.isDefined) resultSummaries.get.map { _.getResultSetId }.distinct else { resultSummaryIds.get }
 
         // Insert result set relation between parent and its children
         val rsRelationInsertQuery = MsiDbResultSetRelationTable.mkInsertQuery()
@@ -153,7 +159,7 @@ class ResultSummaryMerger(
 
         // Store result summary
         logger.info("store result summary...")
-        RsmStorer(execCtx.getMSIDbConnectionContext).storeResultSummary(tmpMergedResultSummary,execCtx)
+        RsmStorer(execCtx.getMSIDbConnectionContext).storeResultSummary(tmpMergedResultSummary, execCtx)
         >>>
 
         mergedResultSummary = tmpMergedResultSummary
@@ -163,7 +169,7 @@ class ResultSummaryMerger(
       if (!wasInTransaction) msiDbCtx.commitTransaction()
 
       msiTransacOk = true
-      
+
     } finally {
 
       if (msiDbCtx.isInTransaction() && !msiTransacOk) {
@@ -172,7 +178,7 @@ class ResultSummaryMerger(
         try {
           // Rollback is not useful for SQLite and has locking issue
           // http://www.sqlite.org/lang_transaction.html
-          if( msiDbCtx.getDriverType() != DriverType.SQLITE )
+          if (msiDbCtx.getDriverType() != DriverType.SQLITE)
             msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
@@ -189,4 +195,35 @@ class ResultSummaryMerger(
     true
   }
 
+  private def _mergeFromResultsSummaries(resultSummaries: Seq[ResultSummary], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext): ResultSummary = {
+    // Retrieve protein ids
+    val proteinIdSet = new HashSet[Long]
+    for (rsm <- resultSummaries) {
+
+      val resultSetAsOpt = rsm.resultSet
+      require(resultSetAsOpt != None, "the result summary must contain a result set")
+
+      for (proteinMatch <- resultSetAsOpt.get.proteinMatches) {
+        val proteinId = proteinMatch.getProteinId
+        if (proteinId != 0L) proteinIdSet += proteinId
+      }
+    }
+
+    // Retrieve sequence length mapped by the corresponding protein id
+    val seqLengthByProtId = new MsiDbHelper(msiDbCtx).getSeqLengthByBioSeqId(proteinIdSet)
+    >>>
+
+    // Merge result summaries
+    // FIXME: check that all peptide sets have the same score type
+    val peptideSetScoring = PepSetScoring.withName(resultSummaries(0).peptideSets(0).scoreType)
+    val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring)
+    val rsmMerger = new RsmMergerAlgo(pepSetScoreUpdater)
+
+    logger.info("merging result summaries...")
+    rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
+  }
+
+  private def _mergeFromResultsSummaryIds(resultSummaruIds: Seq[Long], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext, execCtx: IExecutionContext): ResultSummary = {
+    null
+  }
 }

@@ -258,7 +258,7 @@ class IdentificationTreeValidator(
     } else {
 
       // Merge result summaries
-      val rsmMerger = new ResultSummaryMerger(execCtx = execJpaContext, resultSummaries = rsms)
+      val rsmMerger = new ResultSummaryMerger(execCtx = execJpaContext, None, resultSummaries = Some(rsms))
       rsmMerger.runService()
 
       // TODO: merge decoy rsms
