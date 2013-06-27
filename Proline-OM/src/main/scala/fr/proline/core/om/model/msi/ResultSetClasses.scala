@@ -45,7 +45,7 @@ case class ResultSet(
   def getMSISearchId: Long = { if (msiSearch.isDefined) msiSearch.get.id else msiSearchId }
 
   def setDecoyResultSetId(decoyRSId: Long) {
-    require(decoyResultSet.isEmpty || decoyResultSet.get.id == decoyRSId, "Inconsistent decoyRSId")
+    require(decoyResultSet.isEmpty || (decoyResultSet.get.id == decoyRSId), "Inconsistent decoyRSId")
 
     decoyResultSetId = decoyRSId
   }
