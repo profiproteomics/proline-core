@@ -205,7 +205,7 @@ case class ProcessedMap(
     
     val featuresWithoutClusters = new ArrayBuffer[Feature]( features.length )
     
-    for( val ft <- features ) {
+    for(ft <- features ) {
       if( !ft.isCluster ) { featuresWithoutClusters += ft }
       else { featuresWithoutClusters ++= ft.subFeatures }
     }

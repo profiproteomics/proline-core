@@ -17,7 +17,7 @@ object Fragmentation {
     
     // Create a map of theoretical fragments
     val ionTypes = new ArrayBuffer[FragmentIonType](ionSeriesNames.length)   
-    for( val ionSeriesName <- ionSeriesNames ) {
+    for(ionSeriesName <- ionSeriesNames ) {
       // Create new fragment ion type
       ionTypes += new FragmentIonType( ionSeriesName )
     }

@@ -45,7 +45,7 @@ object Peptide extends InMemoryIdGen with Logging {
     // No location constraint (location=Anywhere)
     else {
       var seqPos = 1
-      for( val residue <- residues ) {
+      for(residue <- residues ) {
         if( searchedResidue == residue || residue == 'X' )  {
           tmpLocatedPtms += buildLocatedPtm( ptmDefinition, seqPos, precursorDelta )
         }
@@ -59,7 +59,7 @@ object Peptide extends InMemoryIdGen with Logging {
     if( positionConstraints != None ) {
       val filteredLocatedPtms = new ArrayBuffer[LocatedPtm]
       
-      for( val tmpLocatedPtm <- tmpLocatedPtms ) {
+      for(tmpLocatedPtm <- tmpLocatedPtms ) {
         
         val seqPos = tmpLocatedPtm.seqPosition
         val posConstraint = seqPos match {
@@ -103,7 +103,7 @@ object Peptide extends InMemoryIdGen with Logging {
     }
     
     // Sort located PTMs
-    val sortedLocatedPtms = locatedPtms.sort { (a,b) => a.seqPosition <= b.seqPosition }
+    val sortedLocatedPtms = locatedPtms.sortWith { (a,b) => a.seqPosition <= b.seqPosition }
     
     // Define data structure which will contain located PTM strings mapped by sequence position
     val locatedPtmStringBySeqPos = new mutable.HashMap[Int,ArrayBuffer[String]]()
@@ -126,18 +126,18 @@ object Peptide extends InMemoryIdGen with Logging {
       val atomModStrings = new ArrayBuffer[String]
       
       // Sort atom symbols by ascendant order
-      val sortedAtomSymbols = atomModBySymbol.keys.toList.sort { (a,b) => a < b }
+      val sortedAtomSymbols = atomModBySymbol.keys.toList.sortWith { (a,b) => a < b }
       
       // Iterate over atom symbols
-      for( val atomSymbol <- sortedAtomSymbols ) {
+      for(atomSymbol <- sortedAtomSymbols ) {
         
         val atomMod = atomModBySymbol(atomSymbol)
         
         // Sort atom symbols by ascendant order
-        val sortedAtomIsotopes = atomMod.keys.toList.sort { (a,b) => a < b }
+        val sortedAtomIsotopes = atomMod.keys.toList.sortWith { (a,b) => a < b }
         
         // Iterate over atom isotopes
-        for( val atomIsotope <- sortedAtomIsotopes ) {
+        for(atomIsotope <- sortedAtomIsotopes ) {
           
           val isotopePrefix = if( atomIsotope == 0 ) "" else atomIsotope.toString
           val atomModIsotopeComposition = atomMod(atomIsotope)
@@ -176,11 +176,11 @@ object Peptide extends InMemoryIdGen with Logging {
     
     // Sort PTMs and merge them into a unique string
     var ptmString = ""
-    for( val seqPos <- putativeSeqPositions ) {
+    for(seqPos <- putativeSeqPositions ) {
       val locatedPtmStrings = locatedPtmStringBySeqPos.get(seqPos)
       if( locatedPtmStrings != None ) {
         ptmString += locatedPtmStrings.get.toList
-                                      .sort { (a,b) => a < b }
+                                      .sortWith { (a,b) => a < b }
                                       .map { ptmStr => seqPos + "[" + ptmStr + "]" }
                                       .mkString("")
       }
@@ -207,7 +207,7 @@ object Peptide extends InMemoryIdGen with Logging {
     val atomMods = composition.split(" ")
     val atomCompositionBySymbol = new mutable.HashMap[String,mutable.HashMap[Int,PtmIsotopeComposition]]()
     
-    for( val atomMod <- atomMods ) {
+    for(atomMod <- atomMods ) {
       var( atomSymbol, nbAtoms, atomIsotope, sign ) = ("",0,0,"")
       
       val m = Pattern.compile("""^(\d*)(\w+)(\((-){0,1}(.+)\)){0,1}""").matcher(atomMod)

@@ -18,7 +18,7 @@ object Protein extends InMemoryIdGen{
     // Map sequence positions
     val seqIndexSet = new java.util.HashSet[Int]()
     for( seqPosition <- seqPositions ) {
-      for( val seqIdx <- seqPosition._1 to seqPosition._2 ) {
+      for(seqIdx <- seqPosition._1 to seqPosition._2 ) {
         seqIndexSet.add(seqIdx)
       }
     }
