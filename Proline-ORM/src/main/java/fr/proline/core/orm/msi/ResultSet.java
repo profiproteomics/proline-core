@@ -259,46 +259,57 @@ public class ResultSet implements Serializable {
      * 
      * @author JM235353
      */
-    public static class TransientData implements Serializable {
-	private static final long serialVersionUID = 1L;
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
 
-	private PeptideMatch[] peptideMatches;
+		private PeptideMatch[] peptideMatches;
+		private ProteinMatch[] proteinMatches;
 
-	private Integer peptideMatchesCount = null;
+		private Integer peptideMatchesCount = null;
 
-	private Integer proteinMatchesCount = null;
+		private Integer proteinMatchesCount = null;
 
-	private Integer msQueriesCount = null;
+		private Integer msQueriesCount = null;
 
-	public PeptideMatch[] getPeptideMatches() {
-	    return peptideMatches;
+		public PeptideMatch[] getPeptideMatches() {
+			return peptideMatches;
+		}
+
+		public void setPeptideMatches(PeptideMatch[] peptideMatches) {
+			this.peptideMatches = peptideMatches;
+			peptideMatchesCount = Integer.valueOf(peptideMatches.length);
+		}
+		
+		public ProteinMatch[] getProteinMatches() {
+			return proteinMatches;
+		}
+
+		public void setProteinMatches(ProteinMatch[] proteinMatches) {
+			this.proteinMatches = proteinMatches;
+			proteinMatchesCount = Integer.valueOf(proteinMatches.length);
+		}
+
+
+		public Integer getPeptideMatchesCount() {
+			return peptideMatchesCount;
+		}
+
+		public void setPeptideMatchesCount(Integer peptideMatchesCount) {
+			this.peptideMatchesCount = peptideMatchesCount;
+		}
+
+		public Integer getProteinMatchesCount() {
+			return proteinMatchesCount;
+		}
+
+		public void setProteinMatchesCount(Integer proteinMatchesCount) {
+			this.proteinMatchesCount = proteinMatchesCount;
+		}
+
+		public Integer getMSQueriesCount() {
+			return msQueriesCount;
+		}
+
 	}
-
-	public void setPeptideMatches(PeptideMatch[] peptideMatches) {
-	    this.peptideMatches = peptideMatches;
-	    peptideMatchesCount = Integer.valueOf(peptideMatches.length);
-	}
-
-	public Integer getPeptideMatchesCount() {
-	    return peptideMatchesCount;
-	}
-
-	public void setPeptideMatchesCount(Integer peptideMatchesCount) {
-	    this.peptideMatchesCount = peptideMatchesCount;
-	}
-
-	public Integer getProteinMatchesCount() {
-	    return proteinMatchesCount;
-	}
-
-	public void setProteinMatchesCount(Integer proteinMatchesCount) {
-	    this.proteinMatchesCount = proteinMatchesCount;
-	}
-
-	public Integer getMSQueriesCount() {
-	    return msQueriesCount;
-	}
-
-    }
 
 }
