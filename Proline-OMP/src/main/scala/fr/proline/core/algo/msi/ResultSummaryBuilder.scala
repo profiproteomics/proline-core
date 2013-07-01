@@ -15,7 +15,7 @@ class ResultSummaryBuilder(val resultSetId: Long, pepSetScoreUpdater: IPeptideSe
   
   def addResultSummary(rsm:ResultSummary) {
     
-    logger.info("Start adding ResultSet #"+rsm.id)
+    logger.info("Start adding ResultSummary #"+rsm.id)
     val start = System.currentTimeMillis()
     val selector = new ResultSummarySelector(rsm)
     rsBuilder.addResultSet(rsm.resultSet.get, selector)
