@@ -616,7 +616,19 @@ case class PeptideSet ( // Required fields
 //      tmpItemByPepInstanceId
 //  
 //    }
-
+ override def hashCode = {
+   if(proteinMatchIds != null && proteinMatchIds.size>0) id.hashCode +  proteinMatchIds.hashCode() else id.hashCode
+ }
+ 
+ override def toString() : String = {
+   val toStrBulider= new StringBuilder(id.toString)
+   var firstPepIt = true
+   items.foreach(it=>{
+     if(!firstPepIt){ toStrBulider.append(",") } else { firstPepIt = false}     
+     toStrBulider.append(it.peptideInstance.peptide.sequence)
+   })
+   toStrBulider.result
+ }
 }
 
 @JsonSnakeCase

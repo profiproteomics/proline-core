@@ -192,12 +192,12 @@ case class ProteinSet (
    */
   @throws(classOf[IllegalAccessException])
   def getAllProteinMatchesIdByPeptideSet :  Map[PeptideSet,Array[Long]]   = {
-    if(peptideSet.hasStrictSubset && (!peptideSet.strictSubsets.isDefined) )
+    if(peptideSet.hasStrictSubset && (peptideSet.strictSubsets == null || !peptideSet.strictSubsets.isDefined) )
       throw new IllegalAccessException("PeptideSets not accessible")
     
     val resultMapBuilder = Map.newBuilder[PeptideSet,Array[Long]]
     
-    resultMapBuilder += peptideSet -> getProteinMatchIds
+    resultMapBuilder += peptideSet -> peptideSet.proteinMatchIds
     if(peptideSet.hasStrictSubset) {
        peptideSet.strictSubsets.get.foreach(pepSet => {
          resultMapBuilder += pepSet -> pepSet.proteinMatchIds
@@ -205,7 +205,20 @@ case class ProteinSet (
      }
     resultMapBuilder.result
   }
-
+  
+ override def hashCode = {
+   id.hashCode 
+ }
+ 
+ override def toString() : String = {
+   val toStrBulider= new StringBuilder(id.toString)
+   if(typicalProteinMatch != null && typicalProteinMatch.isDefined)
+     toStrBulider.append(typicalProteinMatch.get.accession)
+   else     
+     toStrBulider.append(" typicalProteinMatch ID : ").append(typicalProteinMatchId)
+   toStrBulider.result
+ }
+ 
 }
 
 @JsonSnakeCase
