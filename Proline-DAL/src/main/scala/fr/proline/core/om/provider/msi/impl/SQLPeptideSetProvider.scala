@@ -227,7 +227,7 @@ class SQLPeptideSetProvider(
         scoreType = scoreTypeById(toLong(pepSetRecord(PepSetCols.SCORING_ID))),
         peptideMatchesCount = pepSetRecord(PepSetCols.PEPTIDE_MATCH_COUNT).asInstanceOf[Int],
         proteinMatchIds = protMatchIds,
-        proteinSetId = toLong(pepSetRecord.getOrElse(PepSetCols.PROTEIN_SET_ID, 0L)),
+        proteinSetId = if(pepSetRecord(PepSetCols.PROTEIN_SET_ID) == null) 0L else  toLong(pepSetRecord(PepSetCols.PROTEIN_SET_ID)),
         strictSubsetIds = strictSubsetIdsBuilder.result(),
         subsumableSubsetIds = subsumableSubsetIdsBuilder.result(),
         resultSummaryId = toLong(pepSetRecord(PepSetCols.RESULT_SUMMARY_ID)),

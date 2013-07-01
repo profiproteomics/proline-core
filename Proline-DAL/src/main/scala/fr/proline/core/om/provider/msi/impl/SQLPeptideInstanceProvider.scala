@@ -2,6 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import com.codahale.jerkson.Json.parse
+import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -20,7 +21,7 @@ import fr.proline.util.primitives._
 class SQLPeptideInstanceProvider(
   val msiSqlCtx: DatabaseConnectionContext,
   var peptideProvider: IPeptideProvider
-) extends IPeptideInstanceProvider {
+) extends IPeptideInstanceProvider  with Logging {
   
   def this(msiSqlCtx: DatabaseConnectionContext, psSqlCtx: DatabaseConnectionContext) = {
     this(msiSqlCtx, new SQLPeptideProvider(psSqlCtx) )
@@ -136,7 +137,7 @@ class SQLPeptideInstanceProvider(
         elutionTime = Option(pepInstRecord(PepInstCols.ELUTION_TIME)).map( toFloat(_) ).getOrElse(0f),
         peptideMatchIds = pepMatchIds.toArray,
         bestPeptideMatchId = toLong(pepInstRecord(PepInstCols.BEST_PEPTIDE_MATCH_ID)),
-        unmodifiedPeptideId = toLong(pepInstRecord(PepInstCols.UNMODIFIED_PEPTIDE_ID)),
+        unmodifiedPeptideId = if(pepInstRecord(PepInstCols.UNMODIFIED_PEPTIDE_ID) != null) toLong(pepInstRecord(PepInstCols.UNMODIFIED_PEPTIDE_ID)) else 0l,
         resultSummaryId = toLong(pepInstRecord(PepInstCols.RESULT_SUMMARY_ID)),
         properties = Option(propertiesAsJSON).map(parse[PeptideInstanceProperties](_)),
         peptideMatchPropertiesById = pepMatchPropertyMapBuilder.result()
