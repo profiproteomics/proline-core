@@ -20,11 +20,12 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.algo.msi.ResultSummaryBuilder
 
 object ResultSummaryMerger {
 
-  def _loadResultSummary(rsmId: Long, storerContext: StorerContext): ResultSummary = {
-    val rsmProvider = getResultSummaryProvider(storerContext)
+  def _loadResultSummary(rsmId: Long, execContext: IExecutionContext): ResultSummary = {
+    val rsmProvider = getResultSummaryProvider(execContext)
     val rsm = rsmProvider.getResultSummary(rsmId, true)
     if (rsm.isEmpty) throw new IllegalArgumentException("Unknown ResultSummary Id: " + rsmId)
     rsm.get
@@ -223,7 +224,40 @@ class ResultSummaryMerger(
     rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
   }
 
-  private def _mergeFromResultsSummaryIds(resultSummaruIds: Seq[Long], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext, execCtx: IExecutionContext): ResultSummary = {
-    null
+  private def _mergeFromResultsSummaryIds(resultSummaryIds: Seq[Long], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext, execCtx: IExecutionContext): ResultSummary = {
+    val seqLengthByProtId = _buildSeqLength(resultSummaryIds, msiDbCtx)
+    >>>
+    // Merge result summaries
+    // FIXME: check that all peptide sets have the same score type
+    val msiDbHelper = new MsiDbHelper(msiDbCtx)
+    val scorings = msiDbHelper.getScoringByResultSummaryIds(resultSummaryIds)
+    val peptideSetScoring = PepSetScoring.withName( scorings(0) )
+    val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring)
+    val rsmBuilder = new ResultSummaryBuilder(ResultSummary.generateNewId(), pepSetScoreUpdater, Some(seqLengthByProtId))
+
+    logger.info("merging result summaries...")
+    for (rsmId <- resultSummaryIds) {
+        val resultSummary = ResultSummaryMerger._loadResultSummary(rsmId, execCtx)
+        rsmBuilder.addResultSummary(resultSummary)
+      }
+    
+    rsmBuilder.toResultSummary()
+  }
+  
+  private def _buildSeqLength(resultSummaryIds: Seq[Long], msiDbCtx: DatabaseConnectionContext): Map[Long, Int] = {
+    val msiDbHelper = new MsiDbHelper(msiDbCtx)
+    
+    val resultSetIds = msiDbHelper.getResultSetIdByResultSummaryId(resultSummaryIds)
+    
+    // Retrieve protein ids
+    val proteinIdSet = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.selectLongs(
+        "SELECT DISTINCT bio_sequence_id FROM protein_match " +
+          "WHERE bio_sequence_id is not null " +
+          "AND result_set_id IN (" + resultSetIds.values.mkString(",") + ") ")
+    })
+
+    // Retrieve sequence length mapped by the corresponding protein id
+    msiDbHelper.getSeqLengthByBioSeqId(proteinIdSet)
   }
 }
