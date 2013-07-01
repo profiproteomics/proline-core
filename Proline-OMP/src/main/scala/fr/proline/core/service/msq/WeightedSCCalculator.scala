@@ -18,6 +18,9 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.model.msi.ResultSet
 import scala.collection.mutable.MapBuilder
+import fr.proline.core.om.provider.msi.impl.SQLPeptideSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideInstanceProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 
 class WeightedSCCalculatorWId (
 	execContext: IExecutionContext,
@@ -77,13 +80,16 @@ class WeightedSCCalculator (
 
   override protected def  beforeInterruption  = {  }
 
-  var _wscByProtMatchAccessionByRSM : scala.collection.mutable.Map[Long, Map[String, SpectralCountsStruct]] = scala.collection.mutable.Map.empty[Long, Map[String, SpectralCountsStruct]] 
+  private var _wscByProtMatchAccessionByRSM : scala.collection.mutable.Map[Long, Map[String, SpectralCountsStruct]] = scala.collection.mutable.Map.empty[Long, Map[String, SpectralCountsStruct]] 
+  private var _resultAsJSON : String = null
   
   /** 
    *  Spectral Count Result 
    *  {RSM ID -> { ProteinMatchAccession -> (Basic SC; Specific SC, Weighted SC)} }  
    */
   def wscByProtMatchAccessionByRSM : Map[Long, Map[String, SpectralCountsStruct]] = {_wscByProtMatchAccessionByRSM.toMap }
+  
+  def getResultAsJSON() =  {_resultAsJSON}
   
   def runService(): Boolean = { 
 
@@ -143,39 +149,127 @@ class WeightedSCCalculator (
 	     
 	 }) //End go through RSMs
 	 
-	 generateJSONOutput(_wscByProtMatchAccessionByRSM.result.toMap)
+	_resultAsJSON = generateJSONOutput(_wscByProtMatchAccessionByRSM.result.toMap)
+	val printDebug = generateCSVOutput(_wscByProtMatchAccessionByRSM.result.toMap)
+	logger.debug(printDebug)
     true
      
   }
+
+       
+     /*
+      *   "name" : "SpectralCountResult",
+  		   "type" : "array",   "items" :  {
+               "rsm_id" : {"required" : "true","type" : "number"    },
+	            "proteins_spectral_counts": { "required" : "true", "type" : "array", 
+	                   "items" : { "name" : protein_spectral_count", "properties" : {
+	                    	"protein_accession" : {"required" : "true","type" : "string"},
+							"bsc": {"required" : "true","type" : "number" },
+							"ssc": { "required" : "true", "type" : "number" },
+							"wsc": { "required" : "true", "type" : "number" }			
+							}
+						}
+    			}
+  			}
+      */
+   private def generateJSONOutput( spectralCountsByProtMatchAccessionByRSM:Map[Long, Map[String, SpectralCountsStruct]]) : String = {     
+     val jsonBuilder : StringBuilder = new StringBuilder(" \"{")
+     jsonBuilder.append(SpectralCountsProperties.rootPropName).append(":{[")
+     
+     var firstOcc = true
+     //-- Go through each RSM Results
+     spectralCountsByProtMatchAccessionByRSM.foreach(mapEntry =>{
+    	 if(!firstOcc){  jsonBuilder.append(",") } else { firstOcc = false }
+       
+    	 jsonBuilder.append("{").append(SpectralCountsProperties.rsmIDPropName).append(":").append(mapEntry._1).append(",") //save current RSM Id
+        
+        // -- Save prots SC for current RSM          	
+    	var firstOccPAC = true
+        jsonBuilder.append(SpectralCountsProperties.protSCsListPropName).append(":[")   
+        
+        mapEntry._2.foreach(protSCsList =>{
+        	if(!firstOccPAC){  jsonBuilder.append(",") } else { firstOccPAC = false }
+        	val protAC = protSCsList._1
+			val protSCs = protSCsList._2
+			jsonBuilder.append("{").append(SpectralCountsProperties.protACPropName).append("=").append(protAC).append(",")
+			jsonBuilder.append(SpectralCountsProperties.bscPropName).append("=").append(protSCs.basicSC).append(",")
+			jsonBuilder.append(SpectralCountsProperties.sscPropName).append("=").append(protSCs.specificSC).append(",")
+			jsonBuilder.append(SpectralCountsProperties.wscPropName).append("=").append(protSCs.weightedSC).append("}")
+        })
+
+        jsonBuilder.append("]") //End protAC list for current RSM
+        jsonBuilder.append("}") //End current RSM properties
+     }) 
   
-   private def generateJSONOutput( resultMap:Map[Long, Map[String, SpectralCountsStruct]]) : String = {
-       "ToDO"
+     jsonBuilder.append("]}}\"") //End SpectralCountResult array properties
+     jsonBuilder.result
+     
+   }
+   
+  private def generateCSVOutput( spectralCountsByProtMatchAccessionByRSM:Map[Long, Map[String, SpectralCountsStruct]]) : String = {     
+     val jsonBuilder : StringBuilder = new StringBuilder("START OUTPUT \n")
+     jsonBuilder.append(SpectralCountsProperties.rootPropName).append("\n")
+     
+     var firstOcc = true
+     //-- Go through each RSM Results
+     spectralCountsByProtMatchAccessionByRSM.foreach(mapEntry =>{
+    	jsonBuilder.append(SpectralCountsProperties.rsmIDPropName).append("\t").append(mapEntry._1).append("\n")
+        jsonBuilder.append(SpectralCountsProperties.protACPropName).append("\t").append(SpectralCountsProperties.bscPropName).append("\t").append(SpectralCountsProperties.sscPropName).append("\t").append(SpectralCountsProperties.wscPropName).append("\n")
+        // -- Save prots SC for current RSM          	
+    	
+        mapEntry._2.foreach(protSCsList =>{        
+        	val protAC = protSCsList._1
+			val protSCs = protSCsList._2
+			jsonBuilder.append(protAC).append("\t")
+			jsonBuilder.append(protSCs.basicSC).append("\t")
+			jsonBuilder.append(protSCs.specificSC).append("\t")
+			jsonBuilder.append(protSCs.weightedSC).append("\n")
+        })
+
+        jsonBuilder.append("\n\n") //End protAC list for current RSM
+     }) 
+  
+     jsonBuilder.append("END OUTPUT \n") //End SpectralCountResult array properties
+     jsonBuilder.result
+     
    }
   
-   private def createProtMatchesAccByPeptideSet(rsm: ResultSummary) : Map[PeptideSet, Seq[String]] = {
-      
-     val rs =   if(rsm.resultSet.isDefined){ rsm.resultSet.get } else { loadRS(rsm.getResultSetId)   }
-     val protMById= rs.proteinMatchById
-     val result = scala.collection.mutable.Map.empty[PeptideSet, Seq[String]] 
+  private def createProtMatchesAccByPeptideSet(rsm: ResultSummary) : Map[PeptideSet, Seq[String]] = {
+	  val rs =   if(rsm.resultSet.isDefined){ rsm.resultSet.get } else { loadRS(rsm.getResultSetId)   }
+	  val protMById= rs.proteinMatchById
+	  val result = scala.collection.mutable.Map[PeptideSet, Seq[String]]()      
+     
+     var protMatchIdByPepSet : Map[PeptideSet, Array[Long]] = null
      
      rsm.proteinSets.foreach( protSet =>{
-    	 val protMatchIdByPepSet : Map[PeptideSet, Array[Long]] = protSet.getAllProteinMatchesIdByPeptideSet
-    	 
-    	 //Go through
-    	 protMatchIdByPepSet.foreach(entry=>{
-    	   val strSeq : Seq[String] = result.getOrElseUpdate(entry._1, Seq.empty[String])
-    	   entry._2.foreach(pmId =>{ //For each ProtMatchID
+       
+        try {
+    	 protMatchIdByPepSet = protSet.getAllProteinMatchesIdByPeptideSet
+        } catch {
+          case e:IllegalAccessException =>{
+            logger.debug(" Unable to get ProteinMatches from ProtSet. Try using connection")
+            protMatchIdByPepSet = getProtMatchesIdByPeptideSet(protSet.peptideSet, execContext)
+          } 
+        }
+        
+        //Go through Map : PeptideSet => Array[ProteinMatchId]  
+        protMatchIdByPepSet.foreach( nEntry=>{
+		   val nPepSet = nEntry._1
+    	   var strSeq : Seq[String] = result.getOrElseUpdate(nEntry._1, Seq.empty[String])
+    	   
+    	   nEntry._2.foreach(pmId =>{ //For each ProtMatchID
     	     val pmAcc = protMById.get(pmId).get.accession
     	     if(!strSeq.contains(pmAcc)){
     	       val seqBuilder = Seq.newBuilder[String]
     	       seqBuilder ++= strSeq
-    	       seqBuilder += pmAcc    	     
-    	       result.put(entry._1,seqBuilder.result)
+    	       seqBuilder += pmAcc  
+    	       strSeq = seqBuilder.result
+    	       result.put(nEntry._1,strSeq)
     	     }
     	     
     	   })
-    	 })
-     })
+    	 }) // End Go through Map : PeptideSet => Array[ProteinMatchId]  
+     }) //End go through ProteinSets
      
      result.toMap
    }
@@ -200,6 +294,30 @@ class WeightedSCCalculator (
      
    }
    
+    def getProtMatchesIdByPeptideSet (rootPepSet : PeptideSet, execContext : IExecutionContext) :   Map[PeptideSet,Array[Long]] = {
+	  val resultMapBuilder = Map.newBuilder[PeptideSet,Array[Long]]
+	  resultMapBuilder += rootPepSet -> rootPepSet.proteinMatchIds
+	  	  
+	  if(rootPepSet.hasStrictSubset) { //Get PeptideSet strictSubsets
+		  var pepSets : ArrayBuffer[PeptideSet] = new ArrayBuffer[PeptideSet]()
+		  
+		  if(rootPepSet.strictSubsets == null || !rootPepSet.strictSubsets.isDefined){ //Read from ConnectionContext		    
+		    val pepInstProv = new SQLPeptideInstanceProvider(msiSqlCtx =execContext.getMSIDbConnectionContext() ,peptideProvider=new SQLPeptideProvider(psDbCtx = execContext.getPSDbConnectionContext())  )
+		    val pepSetProvider = new SQLPeptideSetProvider(msiDbCtx = execContext.getMSIDbConnectionContext() , peptideInstanceProvider = pepInstProv)
+		    pepSets ++= pepSetProvider.getPeptideSets(rootPepSet.strictSubsetIds)
+		  } else {
+			  pepSets ++= rootPepSet.strictSubsets.get
+		  }
+		  
+		  pepSets.foreach(pepSet => { //recursively get PeptideSets subsets...  
+			  resultMapBuilder ++= getProtMatchesIdByPeptideSet( pepSet, execContext)
+		  })        
+	  }      
+     
+	  resultMapBuilder.result   
+ }	
+ 
+    
   /**
    * Create a Map of ProteinPepsWeightStruct by ProteinSet Id.
    * For each referenceRSM's ProteinSet create a ProteinPepsWeightStruct which contains
@@ -224,7 +342,7 @@ class WeightedSCCalculator (
       
       //-- Get Typical Protein Match Accession 
       var pmAccession : String = null
-      if(protSet.typicalProteinMatch.isDefined){
+      if(protSet.typicalProteinMatch!=null && protSet.typicalProteinMatch.isDefined){
     	  pmAccession = protSet.typicalProteinMatch.get.accession 
       } else {    	  
     	  val jdbcWork = new JDBCWork() {
@@ -289,7 +407,8 @@ class WeightedSCCalculator (
 				  protSetIdByPep.get(pepId).get.foreach( protSetId =>{
 					  sumNbrSpecificPeptides += proteinWeightStructByProtSetId.get(protSetId).get.nbrPepSpecific
 				  })
-				  currentProteinWeightStruct.weightByPeptideId(pepId) = currentProteinWeightStruct.nbrPepSpecific / sumNbrSpecificPeptides
+				  logger.debug("Set Weight for "+currentProteinWeightStruct.typicalPMAcc+" pep "+pepId +" => "+(currentProteinWeightStruct.nbrPepSpecific / sumNbrSpecificPeptides) +" OR "+(currentProteinWeightStruct.nbrPepSpecific.toFloat / sumNbrSpecificPeptides.toFloat))
+				  currentProteinWeightStruct.weightByPeptideId.put(pepId, (currentProteinWeightStruct.nbrPepSpecific.toFloat / sumNbrSpecificPeptides.toFloat))
 			  }
 		  }) //End go through ProteinSet Peptides
 	  })// End go through  ProteinSet (ProteinPepsWeightStruct)      
@@ -305,3 +424,13 @@ case class ProteinPepsWeightStruct(
 			val nbrPepSpecific: Int, 
 			val weightByPeptideId: scala.collection.mutable.Map[Long, Float] = null)
 
+object SpectralCountsProperties {
+    final val rootPropName : String = "\"SpectralCountResult\""
+    final val rsmIDPropName : String = "\"rsm_id\""
+    final val protSCsListPropName : String = "\"proteins_spectral_counts\""
+    final val protACPropName : String = "\"protein_accession\""
+    final val bscPropName : String = "\"bsc\""
+    final val sscPropName : String = "\"ssc\""
+    final val wscPropName : String = "\"wsc\""
+           
+}
