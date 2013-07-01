@@ -210,6 +210,15 @@ method get_search_engine( Int $target_result_set_id! ) {
     })
   }
 
+  def getScoringByResultSummaryIds(resultSummaryId: Seq[Long]): Seq[String] = {
+	DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.select("select scoring.search_engine, scoring.name " + 
+      		"from scoring, peptide_set " + 
+      		"where peptide_set.scoring_id = scoring.id AND peptide_set.result_summary_id IN (" +resultSummaryId.mkString(",") + ")" + 
+      		"group by scoring.search_engine, scoring.name") { r => r.nextString+":"+r.nextString }
+    })
+  }
+  
   def getSeqLengthByBioSeqId(bioSeqIds: Iterable[Long]): Map[Long, Int] = {
 
     val seqLengthByProtIdBuilder = Map.newBuilder[Long, Int]
