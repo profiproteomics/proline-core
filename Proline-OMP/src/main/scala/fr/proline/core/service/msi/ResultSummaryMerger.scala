@@ -129,6 +129,8 @@ class ResultSummaryMerger(
           val newPepMatchIds = new ArrayBuffer[Long](pepInstance.getPeptideMatchIds.length)
           val newPepMatchPropsById = new HashMap[Long, PeptideMatchResultSummaryProperties]
 
+          pepInstance.bestPeptideMatchId = mergedPepMatchByTmpId(pepInstance.bestPeptideMatchId).id
+          
           for (oldPepMatchId <- oldPepMatchIds) {
             val newPepMatchId = mergedPepMatchByTmpId(oldPepMatchId).id
             newPepMatchIds += newPepMatchId
