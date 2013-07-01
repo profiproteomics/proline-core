@@ -6,6 +6,7 @@ import util.control.Breaks._
 case class SetCluster[K,V]( id: Long,
                             samesetsValues: Set[V],
                             var samesetsKeys: ArrayBuffer[K] = new ArrayBuffer[K](1),
+                            var subsetsKeys: ArrayBuffer[K] = new ArrayBuffer[K](1),
                             var isSubset: Boolean,
                             var strictSubsetsIds: Option[ArrayBuffer[Long]] = None,
                             var subsumableSubsetsIds: Option[ArrayBuffer[Long]] = None, 
@@ -130,8 +131,8 @@ object SetClusterer {
               }
               sameset.strictSubsetsIds.get += unspeSamesetId
               //VD Add subset cluster's protMatchIds to overset cluster 
-              sameset.samesetsKeys ++= unspeSameset.samesetsKeys
-              sameset.samesetsKeys = sameset.samesetsKeys.distinct // remove any duplicate
+              sameset.subsetsKeys ++= unspeSameset.samesetsKeys
+              sameset.subsetsKeys = sameset.subsetsKeys.distinct // remove any duplicate
               unspeSameset.oversetId = Some(sameset.id)
             }
           }
