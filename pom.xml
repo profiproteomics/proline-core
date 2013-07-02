@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Proline-Core</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.1.1</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -26,7 +26,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.1.1-SNAPSHOT</core.version>
+    <core.version>0.1.1</core.version>
   </properties>
 
   <dependencyManagement>
@@ -36,7 +36,7 @@
       <dependency>
         <groupId>fr.proline.util</groupId>
         <artifactId>ProFI-Commons-Scala</artifactId>
-        <version>0.0.5-SNAPSHOT</version>
+        <version>0.0.5</version>
       </dependency>
 
       <!-- "Proline" modules -->
@@ -73,7 +73,7 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.0.3</version>
+      <version>0.0.4</version>
     </dependency>
 
     <!-- JUnit tests -->
