@@ -237,6 +237,8 @@ public class ProteinMatch implements Serializable {
 	private fr.proline.core.orm.pdi.BioSequence bioSequencePDI = null; // bioSequence is not always
 									   // available in MSI, in this case,
 									   // we look for it in PDI
+	private boolean noBioSequenceFound = false;
+	
 	private ProteinSet[] proteinSetArray = null;
 
 	protected TransientData() {
@@ -274,6 +276,14 @@ public class ProteinMatch implements Serializable {
 
 	public void setBioSequencePDI(fr.proline.core.orm.pdi.BioSequence bioSequence) {
 	    this.bioSequencePDI = bioSequence;
+	}
+	
+	public boolean getNoBioSequenceFound() {
+	    return noBioSequenceFound;
+	}
+
+	public void setNoBioSequenceFound(boolean noBioSequenceFound) {
+	    this.noBioSequenceFound = noBioSequenceFound;
 	}
 
 	public ProteinSet[] getProteinSetArray() {
