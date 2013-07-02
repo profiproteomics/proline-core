@@ -30,7 +30,9 @@ class WeightedSCCalculatorWId (
 ) extends IService with Logging{ 
 
  var fullService : WeightedSCCalculator = null
- def wscByProtMatchAccessionByRSM : Map[Long, Map[String, SpectralCountsStruct]] = if(fullService!= null) {fullService.wscByProtMatchAccessionByRSM} else Map.empty[Long, Map[String, SpectralCountsStruct]] 
+ def wscByProtMatchAccessionByRSM : Map[Long, Map[String, SpectralCountsStruct]] = if(fullService!= null) {fullService.wscByProtMatchAccessionByRSM} else Map.empty[Long, Map[String, SpectralCountsStruct]]
+ def getResultAsJSON() =  { if(fullService!= null) {fullService.getResultAsJSON} else "" }
+  
     
  def runService(): Boolean = { 
     require(rsmIdsToCalculate!=null && referenceRSMId != 0 &&  rsmIdsToCalculate.length > 0)
@@ -60,7 +62,7 @@ class WeightedSCCalculatorWId (
     
   }
 
-  // TODO Retrieve a ResultSetProvider from a decorated ExecutionContext ?
+  // TODO ? Retrieve a ResultSetProvider from a decorated ExecutionContext ?
   private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
 
     new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
@@ -94,7 +96,7 @@ class WeightedSCCalculator (
   def runService(): Boolean = { 
 
 	  // -- Create ProteinPepsWeightStruct from reference RSM
-	 val proteinSetWeightStructsById = createProteinPepsWeightStructs()
+	 val proteinSetWeightStructsById = createProteinPepsWeightStructs(true)
     
 	 // Compute SpectralCount for each RSM
 	 rsmToCalculate.foreach(rsm => {
@@ -132,7 +134,7 @@ class WeightedSCCalculator (
 	    	   protBSC += pepInst.totalLeavesMatchCount
 	    	   val weight =  currentProteinSetWeightStruct.weightByPeptideId.get(pepInst.peptideId).get
 	    	   
-	    	   if(weight == 1) //VDS FIXME : OK if we use weight on specificity... Maybe this information (specific or not) should be saved in  ProteinPepsWeightStruct
+	    	   if(weight == 1) //FIXME VDS : OK if we use weight on specificity... Maybe this information (specific or not) should be saved in  ProteinPepsWeightStruct
 	    		   protSSC += pepInst.totalLeavesMatchCount
 	    		   
 	    	   protWSC += (pepInst.totalLeavesMatchCount *weight)
@@ -323,11 +325,13 @@ class WeightedSCCalculator (
    * For each referenceRSM's ProteinSet create a ProteinPepsWeightStruct which contains
    *  - the ProteinSet
    *  - the typicalProteinMatch Accession
+   *  And if referenceRSM is also reference for peptide specificity :
    *  - the number of specific peptides
    *  - the list of peptides identifying the ProteinSet with their weight 
+   *  @param referenceForPeptides specifiy if referenceRSM is also reference for peptide specificity
    */
   
-  private def createProteinPepsWeightStructs() : Map[Long,ProteinPepsWeightStruct] = {
+  private def createProteinPepsWeightStructs(referenceForPeptides : Boolean) : Map[Long,ProteinPepsWeightStruct] = {
 
     //ProteinPepsWeightStruct for each RSM ProteinSet referenced by ProteinSet id  
     val proteinPepsWeightStructsByProtSetId = Map.newBuilder[Long,ProteinPepsWeightStruct]
@@ -362,23 +366,26 @@ class WeightedSCCalculator (
       } //END TypicalProteinMatch not defined
      
       //-- Get peptide specific count and create Map : peptide => List ProtSet.Id identified by peptide
-      var nbrPepSpecif : Int =0      
-      protSet.peptideSet.getPeptideInstances.foreach(pepI =>{
-    	  val proSetIds = protSetIdByPepId.getOrElseUpdate(pepI.peptideId, new ArrayBuffer[Long])
-    	  proSetIds += protSet.id
-    	  if (pepI.validatedProteinSetsCount == 1) {
-    	    nbrPepSpecif +=1 
-    	  }
-    	  weightByPepId += pepI.peptideId -> 0.0f
-      })
+      var nbrPepSpecif : Int =0     
+      if(referenceForPeptides){
+	      protSet.peptideSet.getPeptideInstances.foreach(pepI =>{
+	    	  val proSetIds = protSetIdByPepId.getOrElseUpdate(pepI.peptideId, new ArrayBuffer[Long])
+	    	  proSetIds += protSet.id
+	    	  if (pepI.validatedProteinSetsCount == 1) {
+	    	    nbrPepSpecif +=1 
+	    	  }
+	    	  weightByPepId += pepI.peptideId -> 0.0f
+	      })
+      }
 
       proteinPepsWeightStructsByProtSetId += protSet.id -> new ProteinPepsWeightStruct(proteinSet = protSet,typicalPMAcc=pmAccession,nbrPepSpecific=nbrPepSpecif, weightByPeptideId = weightByPepId )
       
     }) // End ProteinPepsWeightStruct initialization 
     
     val resultStruct : Map[Long,ProteinPepsWeightStruct]= proteinPepsWeightStructsByProtSetId.result
-    //**** Compute Peptides Weight
-   computePeptideWeight(resultStruct,protSetIdByPepId)
+    
+    //**** Compute Peptides Weight if referenceRSM also used for peptide
+   if(referenceForPeptides) computePeptideWeight(resultStruct,protSetIdByPepId)
         
     resultStruct 
   }
@@ -390,7 +397,8 @@ class WeightedSCCalculator (
    *  If peptide is a specific  ProteinSet, the corresponding weight will be 1
    *  Else if peptide is shared between multiple ProteinSets the weight = # specific pep of ProtSet / Sum ( #specific pep of all ProtSet identified by this pep)
    *  
-   *      
+   *  @param  proteinWeightStructByProtSetId Map ProteinPepsWeightStruct by ProteinSetId in peptode reference RSM. ProteinPepsWeightStruct should be updated
+   *  @param  protSetIdByPep For each Peptide (id) references list of ProteinSet (Id) identified by this peptide
    */
   def computePeptideWeight(proteinWeightStructByProtSetId : Map[Long,ProteinPepsWeightStruct], protSetIdByPep: HashMap[Long,ArrayBuffer[Long]]) : Unit = {
     
