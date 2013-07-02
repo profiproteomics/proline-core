@@ -153,7 +153,9 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
       if(resultRS.isDefined){
         leavesRsBuilder += resultRS.get
       } else{
-        logger.warn(" !!! Unable to get leave search result with id "+rsID)
+        val msg = " !!! Unable to get leave search result with id "+rsID
+        logger.warn(msg)
+        throw new Exception(msg)
       }        
     })
     
