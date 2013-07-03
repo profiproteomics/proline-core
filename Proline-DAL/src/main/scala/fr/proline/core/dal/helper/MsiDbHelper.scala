@@ -43,7 +43,8 @@ method get_target_decoy_result_sets( Int $target_result_set_id! ) {
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
       ezDBC.selectLongs(
         "SELECT decoy_result_set_id FROM result_set WHERE id in " +
-          targetResultSetIds.mkString("(", ", ", ")"))
+          targetResultSetIds.mkString("(", ", ", ")") +
+          " AND decoy_result_set_id IS NOT NULL")
     })
 
   }
