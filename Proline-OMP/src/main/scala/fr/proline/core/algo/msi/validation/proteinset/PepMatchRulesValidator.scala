@@ -14,7 +14,8 @@ class PepMatchRulesValidator(
   val pepMatchFilterRule2: IOptimizablePeptideMatchFilter
 ) extends AbstractPepMatchRulesValidator with Logging {
   
-  val expectedFdr: Option[Float] = None
+  val expectedFdr = Option.empty[Float]
+  var targetDecoyMode = Option.empty[TargetDecoyModes.Value]
   
   def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
     

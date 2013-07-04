@@ -12,7 +12,8 @@ import fr.proline.core.algo.msi.filtering._
 class PepMatchRulesValidatorWithFDROptimization(
   val pepMatchFilterRule1: IOptimizablePeptideMatchFilter,
   val pepMatchFilterRule2: IOptimizablePeptideMatchFilter, 
-  val expectedFdr: Option[Float] = None
+  val expectedFdr: Option[Float],
+  var targetDecoyMode: Option[TargetDecoyModes.Value]
   ) extends AbstractPepMatchRulesValidator with Logging {
   
   // Change threshold value of filters if a value has been provided

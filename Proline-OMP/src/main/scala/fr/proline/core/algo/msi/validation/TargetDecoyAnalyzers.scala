@@ -277,7 +277,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
         // Initialize the ROC point
         if (curRocPoint == null) {
           // Apply filter on target and decoy peptide matches
-          validationFilter.filterPeptideMatches(allPepMatches, true, false)
+          validationFilter.filterPeptideMatches(filteredPepMatches, true, false)
           curRocPoint = this.calcTDStatistics(pmJointMap)
         }
 

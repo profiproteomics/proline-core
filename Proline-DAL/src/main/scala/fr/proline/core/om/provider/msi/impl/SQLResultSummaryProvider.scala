@@ -3,8 +3,9 @@ package fr.proline.core.om.provider.msi.impl
 import com.codahale.jerkson.Json.parse
 
 import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
-import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder2
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.ProteinSet
@@ -41,8 +42,8 @@ class SQLResultSummaryProvider(
     val protSetsByRsmId = protSets.groupBy(_.resultSummaryId)
 
     // Execute SQL query to load result sets
-    val rsmQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.ID ~" IN("~ rsmIds.mkString(",") ~")"
+    val rsmQuery = new SelectQueryBuilder2(MsiDbResultSummaryTable,MsiDbResultSetTable).mkSelectQuery( (t1,c1,t2,c2) =>
+      List(t1.*,t2.TYPE) -> "WHERE "~ t1.ID ~" IN("~ rsmIds.mkString(",") ~") AND "~ t1.RESULT_SET_ID ~"="~ t2.ID
     )
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>      
@@ -57,6 +58,12 @@ class SQLResultSummaryProvider(
     
         val decoyRsmId = r.getLongOrElse(RSMCols.DECOY_RESULT_SUMMARY_ID, 0L)
         //val decoyRsmId = if( decoyRsmIdField != null ) decoyRsmIdField.asInstanceOf[Int] else 0
+        
+        // Check if the result sumamry corresponds to a decoy result set
+        val rsType = r.getString(MsiDbResultSetTable.columns.TYPE)
+        val isDecoy = rsType matches "DECOY.+"
+        // FIXME: remove this fix (protein_set table doesn't have a is_decoy column)
+        rsmProtSets.foreach( _.isDecoy = isDecoy )
         
         val isQuantified = r.getBooleanOrElse(RSMCols.IS_QUANTIFIED,false)
         

@@ -141,6 +141,7 @@ class SQLProteinSetProvider(
       
       val protSet = new ProteinSet(
         id = protSetId,
+        isDecoy = false, // FIXME: add to MSIdb and set this value here instead of in the ResultSummaryProvider
         peptideSet = pepSet,
         hasPeptideSubset = pepSet.hasSubset,
         isValidated = protSetRecord(ProtSetCols.IS_VALIDATED),

@@ -98,6 +98,7 @@ case class ResultSet(
   }
 
   // TMP workaround for result sets which have this value defined at the search settings level
+  @deprecated("use ResultSetProperties.targetDecoyMode instead","0.1.0")
   def getTargetDecoyMode(): Option[String] = {
 
     // Try to retrieve the parameter form SearchSettings first

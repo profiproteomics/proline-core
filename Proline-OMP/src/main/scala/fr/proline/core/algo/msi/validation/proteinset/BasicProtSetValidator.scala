@@ -17,7 +17,8 @@ import fr.proline.core.algo.msi.filtering._
  */
 class BasicProtSetValidator( val protSetFilter: IProteinSetFilter ) extends IProteinSetValidator with Logging {
   
-  val expectedFdr: Option[Float] = None
+  val expectedFdr = Option.empty[Float]
+  var targetDecoyMode = Option.empty[TargetDecoyModes.Value]
   
   def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
     

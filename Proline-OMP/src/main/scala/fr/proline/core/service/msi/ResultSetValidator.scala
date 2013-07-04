@@ -320,6 +320,11 @@ class ResultSetValidator(
 
       logger.debug("Run protein set validator: " + protSetValidator.get.toFilterDescriptor.parameter)
 
+      // Update the target/decoy mode of the protein set validator for this RSM
+      val tdModeStr = targetRsm.resultSet.get.properties.get.targetDecoyMode.get
+      val tdMode = TargetDecoyModes.withName(tdModeStr)
+      protSetValidator.get.targetDecoyMode = Some(tdMode)
+      
       finalValidationResult = protSetValidator.get.validateProteinSets(targetRsm).finalResult
       
       filterDescriptors += protSetValidator.get.toFilterDescriptor

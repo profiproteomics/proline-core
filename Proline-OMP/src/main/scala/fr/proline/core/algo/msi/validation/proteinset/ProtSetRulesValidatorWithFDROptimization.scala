@@ -17,7 +17,8 @@ import fr.proline.core.algo.msi.filtering.proteinset.ScoreProtSetFilter
 class ProtSetRulesValidatorWithFDROptimization(
   val protSetFilterRule1: IOptimizableProteinSetFilter,
   val protSetFilterRule2: IOptimizableProteinSetFilter,
-  val expectedFdr: Option[Float] = None
+  val expectedFdr: Option[Float],
+  var targetDecoyMode: Option[TargetDecoyModes.Value]
 ) extends IProteinSetValidator with Logging {
   
   val someExpectedFdr = expectedFdr.get
@@ -161,7 +162,7 @@ class ProtSetRulesValidatorWithFDROptimization(
     ValidationResults( expectedRocPoint, Some(rocPoints) )
   }
   
-  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
+  def validateProteinSetsV2( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
     require( decoyRsm.isDefined, "a decoy result summary must be provided")
     
     // Retrieve some vars
@@ -197,19 +198,21 @@ class ProtSetRulesValidatorWithFDROptimization(
       singlePepTargetProtSets,
       singlePepDecoyProtSets,
       protSetValStatusMap,
-      // But compute ROC points on all protein sets !
-      () => this.computeValidationResult(targetProtSets, Some(decoyProtSets))
+      () => this.computeValidationResult(singlePepTargetProtSets, Some(singlePepDecoyProtSets))
     )
     
-    require( rule1ValResults.isDefined, "can't optimize FDR using protein set rules (ROC curve is empty)" )
-    
-    // --- Set validation rules probability thresholds using the previously obtained expected ROC point ---
-    protSetFilterRule1.setThresholdValue(
-      rule1ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
-    )
-    
-    // Validate protein sets identified with a single peptide 
-    protSetFilterRule1.filterProteinSets(singlePepProtSets,true,true)
+    if( rule1ValResults.isDefined ) {
+      // --- Set validation rules probability thresholds using the previously obtained expected ROC point ---
+      protSetFilterRule1.setThresholdValue(
+        rule1ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
+      )
+      
+      // Validate protein sets identified with a single peptide 
+      protSetFilterRule1.filterProteinSets(singlePepProtSets,true,true)
+    } else {
+      // Else invalid all single peptide protein sets
+      singlePepProtSets.foreach(_.isValidated = false)
+    }
     
     if( rule2ValResults.isDefined ) {
       protSetFilterRule2.setThresholdValue(
@@ -218,13 +221,168 @@ class ProtSetRulesValidatorWithFDROptimization(
       
       // Validate protein sets identified with multiple peptides
       protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)
+    } else {
+      // Else invalid all multi peptides protein sets
+      multiPepProtSets.foreach(_.isValidated = false)
     }
     
     // Return validation results
-    rule1ValResults.get
+    ValidationResults( this.computeValidationResult(targetProtSets, Some(decoyProtSets)) )
+  }
+  
+  def validateProteinSets( targetRsm: ResultSummary, decoyRsm: Option[ResultSummary] ): ValidationResults = {
+    require( decoyRsm.isDefined, "a decoy result summary must be provided")
+    
+    // Retrieve previously filtered protein sets
+    val targetProtSets = targetRsm.proteinSets.filter(_.isValidated == true)
+    val decoyProtSets = decoyRsm.get.proteinSets.filter(_.isValidated == true)
+    val allProtSets = targetProtSets ++ decoyProtSets
+    val protSetValStatusMap = ProteinSetFiltering.getProtSetValidationStatusMap(allProtSets)
+    
+    // Partition protein sets by considering the number of identified peptides
+    val(singlePepTargetProtSets,multiPepTargetProtSets) = targetProtSets.partition(_.peptideSet.items.length == 1)
+    val(singlePepDecoyProtSets,multiPepDecoyProtSets) = decoyProtSets.partition(_.peptideSet.items.length == 1)
+    
+    // --- Rule2: Multiple peptides protein sets validation ---
+    val multiPepProtSets = multiPepTargetProtSets ++ multiPepDecoyProtSets
+
+    this.logger.debug( "Running multiple peptides Protein Sets validation..." )
+    val rule2ValResults = this._validateProteinSets(
+      protSetFilterRule2,
+      multiPepTargetProtSets,
+      multiPepDecoyProtSets,
+      protSetValStatusMap,
+      // Compute ROC points on multi peptides protein sets only
+      () => this.computeValidationResult(multiPepTargetProtSets, Some(multiPepDecoyProtSets))
+    )
+    
+    // Aplly filter for rule 2 if we have validation results
+    if( rule2ValResults.isDefined ) {
+      protSetFilterRule2.setThresholdValue(
+        rule2ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
+      )
+      
+      // Validate protein sets identified with multiple peptides
+      protSetFilterRule2.filterProteinSets(multiPepProtSets,true,true)      
+    } else {
+      // Else invalid all multi peptides protein sets
+      multiPepProtSets.foreach(_.isValidated = false)
+    }
+    
+    // --- Rule1: Remaining protein sets validation ---
+    val remainingTargetProtSets = singlePepTargetProtSets ++ multiPepTargetProtSets.filter(_.isValidated == false)
+    val remainingDecoyProtSets = singlePepDecoyProtSets ++ multiPepDecoyProtSets.filter(_.isValidated == false)
+    val remainingProtSets = remainingTargetProtSets ++ remainingDecoyProtSets
+    
+    this.logger.debug( "Running single peptides Protein Sets validation..." )
+    val rule1ValResults = this._validateProteinSets(
+      // Filter single peptides protein sets
+      protSetFilterRule1,
+      remainingTargetProtSets,
+      remainingDecoyProtSets,
+      protSetValStatusMap,
+      () => this.computeValidationResult(remainingTargetProtSets, Some(remainingDecoyProtSets))
+    )
+    
+    // Apply filter for rule 1 if we have validation results
+    if( rule1ValResults.isDefined ) {
+      // --- Set validation rules probability thresholds using the previously obtained expected ROC point ---
+      protSetFilterRule1.setThresholdValue(
+        rule1ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
+      )
+      
+      // Validate protein sets identified with a single peptide 
+      protSetFilterRule1.filterProteinSets(remainingProtSets,true,true)
+    } else {
+      // Else invalid all single peptide protein sets
+      remainingProtSets.foreach(_.isValidated = false)
+    }
+       
+    // Return validation results
+    ValidationResults( this.computeValidationResult(targetProtSets, Some(decoyProtSets)) )
+  }
+  
+  private def _validateProteinSets(
+    protSetFilterRule: IOptimizableProteinSetFilter,
+    targetProtSets: Array[ProteinSet],
+    decoyProtSets: Array[ProteinSet],
+    protSetValStatusMap: Map[Long,Boolean],
+    computeRocPointFn: () => ValidationResult
+    ): Option[ValidationResults] = {
+    
+    // Retrieve filtered protein sets
+    val filteredProtSets = (targetProtSets ++ decoyProtSets).filter(_.isValidated)
+    
+    // Sort all Protein Sets from the best to the worst according to the validation filter
+    // Note: the two rules are equivalent for sorting
+    val sortedProtSets = protSetFilterRule.sortProteinSets(filteredProtSets).toArray
+    
+    // Define some vars
+    var curRocPoint: ValidationResult = null
+    val rocPoints = new ArrayBuffer[ValidationResult]
+    
+    // Iterate over sorted decoy Protein Sets => each one is taken as a new threshold (breaks if FDR is greater than 50%)
+    breakable {
+      for( curProtSet <- sortedProtSets ) {
+        
+        // Retrieve next filter threshold from this decoy protein set
+        var thresholdValue = protSetFilterRule.getProteinSetValueForFiltering(curProtSet)
+        
+        // Increase just a little bit the threshold for decoy protein sets in order to improve sensitivity
+        if( curProtSet.isDecoy ) protSetFilterRule.setThresholdValue(protSetFilterRule.getNextValue(thresholdValue))
+        else protSetFilterRule.setThresholdValue(thresholdValue)
+        
+        this.logger.debug( "Protein set threshold: " + protSetFilterRule.getThresholdValue )
+        
+        // Initialize the ROC point with highest threshold
+        if( curRocPoint == null ) {
+          // Apply the validation filter
+          protSetFilterRule.filterProteinSets(filteredProtSets,true,false)
+          curRocPoint = computeRocPointFn()
+        }
+        
+        // Log validation result
+        this.logger.debug( curRocPoint.targetMatchesCount + " target protein sets" )
+        this.logger.debug( curRocPoint.decoyMatchesCount.get + " decoy protein sets" )
+        this.logger.debug( "Current protein sets FDR = " + curRocPoint.fdr )
+        
+        if( curRocPoint.fdr.isDefined ) {
+          // Update ROC point properties
+          curRocPoint.addProperties( protSetFilterRule.getFilterProperties )     
+          
+          // Add ROC point to the list if FDR is defined and current protein set is a decoy
+          rocPoints += curRocPoint
+        }
+        
+        curRocPoint = this.updateValidationResult(curRocPoint,curProtSet.isDecoy)
+      
+        if ( curRocPoint.fdr.isDefined && curRocPoint.fdr.get > MAX_FDR ) break
+      }
+    }    
+    
+    // Reset validation status
+    ProteinSetFiltering.restoreProtSetValidationStatus(filteredProtSets, protSetValStatusMap)
+    
+    if( rocPoints.length == 0 ) None
+    else {
+      
+      // Search for the ROC point which has the closest FDR to the expected one
+      val nearestRocPoint = rocPoints.reduceLeft { (a, b) =>
+        if ( (a.fdr.get - someExpectedFdr).abs < (b.fdr.get - someExpectedFdr).abs ) a else b
+      }
+      
+      // Search the "best" ROC point for this FDR
+      val bestRocPoint = rocPoints
+        .filter( _.fdr.get == nearestRocPoint.fdr.get )
+        .sortWith((a,b) => a.targetMatchesCount > b.targetMatchesCount )
+        .head
+      
+      Some( ValidationResults( finalResult = bestRocPoint, computedResults = Some(rocPoints) ) )
+    }
+
   }
  
-  private def _validateProteinSets(
+  private def _validateProteinSetsV2(
     protSetFilterRule: IOptimizableProteinSetFilter,
     targetProtSets: Array[ProteinSet],
     decoyProtSets: Array[ProteinSet],

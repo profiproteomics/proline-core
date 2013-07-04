@@ -176,7 +176,8 @@ object BuildProteinSetValidator {
     validationMethod: ProtSetValidationMethods.Value,
     validationFilterParam: String,
     thresholds: Option[Map[String,AnyVal]] = None,
-    expectedFdrOpt: Option[Float] = None
+    expectedFdrOpt: Option[Float] = None,
+    targetDecoyModeOpt: Option[TargetDecoyModes.Value] = None
   ): IProteinSetValidator = {
     
     validationMethod match {
@@ -203,7 +204,7 @@ object BuildProteinSetValidator {
           val filter1 = BuildOptimizablePeptideMatchFilter(validationFilterParam)
           val filter2 = BuildOptimizablePeptideMatchFilter(validationFilterParam)
         
-          new PepMatchRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt)
+          new PepMatchRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt,targetDecoyModeOpt)
         }
       }
       case ProtSetValidationMethods.PROTEIN_SET_RULES => {
@@ -215,8 +216,8 @@ object BuildProteinSetValidator {
           val threshold2 = thresholds.get(ValidationThresholdKeys.RULE_2_THRESHOLD_VALUE)
           
           // Build the filters
-          val filter1 = BuildOptimizableProteinSetFilter(validationFilterParam,threshold1)
-          val filter2 = BuildOptimizableProteinSetFilter(validationFilterParam,threshold2)
+          val filter1 = BuildProteinSetFilter(validationFilterParam,threshold1)
+          val filter2 = BuildProteinSetFilter(validationFilterParam,threshold2)
         
           new ProtSetRulesValidator(filter1,filter2)
         } else {
@@ -225,7 +226,7 @@ object BuildProteinSetValidator {
           val filter1 = BuildOptimizableProteinSetFilter(validationFilterParam)
           val filter2 = BuildOptimizableProteinSetFilter(validationFilterParam)
           
-          new ProtSetRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt)
+          new ProtSetRulesValidatorWithFDROptimization(filter1,filter2,expectedFdrOpt,targetDecoyModeOpt)
         }
       }
     }
@@ -261,6 +262,7 @@ trait IPeptideMatchValidator {
 trait IProteinSetValidator {
   
   val expectedFdr: Option[Float]
+  var targetDecoyMode: Option[TargetDecoyModes.Value]
   
   // TODO: add validator description and properties to IProteinSetValidator
   def toFilterDescriptor(): FilterDescriptor = {
@@ -292,22 +294,51 @@ trait IProteinSetValidator {
     // Count validated target protein sets
     val targetValidProtSetsCount = targetProtSets.count( _.isValidated )
     
-    val( fdr, decoyValidProtSetsCount) = if( decoyProtSets.isDefined ) {
+    // Count validated decoy protein sets
+    val decoyValidProtSetsCount = decoyProtSets.map( _.count( _.isValidated ) )
       
-      // Count validated decoy protein sets
-      val decoyValidProtSetsCount = decoyProtSets.get.count( _.isValidated )
+    this.computeValidationResult(targetValidProtSetsCount, decoyValidProtSetsCount)
+  }
+  
+  protected def computeValidationResult(targetProtSetsCount: Int, decoyProtSetsCount: Option[Int]): ValidationResult = {
+    
+    val fdr = if (targetProtSetsCount == 0 || decoyProtSetsCount.isEmpty || targetDecoyMode.isEmpty ) Float.NaN
+    else {
       
       // Compute FDR => TODO: switch on TargetDecoyMode
-      val fdr = (100 * decoyValidProtSetsCount).toFloat / targetValidProtSetsCount
+      //val fdr = (100 * decoyProtSetsCount.get).toFloat / targetProtSetsCount
       
-      (Some(fdr),Some(decoyValidProtSetsCount))
-    } else (None,None)
-    
+      targetDecoyMode.get match {
+        case TargetDecoyModes.CONCATENATED => TargetDecoyComputer.calcCdFDR(targetProtSetsCount, decoyProtSetsCount.get)
+        case TargetDecoyModes.SEPARATED    => TargetDecoyComputer.calcSdFDR(targetProtSetsCount, decoyProtSetsCount.get)
+        case _                             => throw new Exception("unsupported target decoy mode: " + targetDecoyMode)
+      }
+    }
+
     ValidationResult(
-      targetMatchesCount = targetValidProtSetsCount,
-      decoyMatchesCount = decoyValidProtSetsCount,
-      fdr = fdr
+      targetMatchesCount = targetProtSetsCount,
+      decoyMatchesCount = decoyProtSetsCount,
+      fdr = if (fdr.isNaN) None else Some(fdr)
     )
+    
+  }
+  
+  
+  /**
+   * Increases the counts of the provided validation result.
+   * @param currentValResult The current validation result.
+   * @param increaseDecoy A boolean which specifies if target or decoy count has to be increased.
+   * @return A new ValidationResult with updated counts.
+   */
+  protected def updateValidationResult( currentValResult: ValidationResult, increaseDecoy: Boolean ): ValidationResult = {
+    
+    // Retrieve old counts
+    var( targetMatchesCount, decoyMatchesCount ) = (currentValResult.targetMatchesCount,currentValResult.decoyMatchesCount.get)
+    
+    if( increaseDecoy ) decoyMatchesCount += 1
+    else targetMatchesCount += 1
+    
+    this.computeValidationResult(targetMatchesCount, Some(decoyMatchesCount) )
   }
  
 }

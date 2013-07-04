@@ -164,6 +164,8 @@ object ResultSetValidatorF136482Test extends AbstractResultSetValidator with Log
 
 class ResultSetValidatorF136482Test extends Logging {
   
+  protected val DEBUG_TESTS = true
+  
   @Test
   def testScoreValidation() = {
 
@@ -477,41 +479,48 @@ class ResultSetValidatorF136482Test extends Logging {
     logger.debug(" All Decoy ProtSet (even not validated)  " + allDecProtSet.length + " <>  removed Decoy ProtSet " + removedDecProtSet2.length)
     //    Assert.assertEquals("allTarProtSet length", 4, allTarProtSet.length) //VDS DEBUG Pour test final, threshold 2... 
     //    Assert.assertEquals("allDecProtSet length", 1, allDecProtSet.length)
-    removedTarProtSet2.foreach(protSet => {
-      //DEBUG ONLY 
-      logger.debug("---- Removed Protein Set ------ ")
-      val firstPrtMatch = rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
-      println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
-      protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
-        println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
+    
+    if( DEBUG_TESTS ) {
+      removedTarProtSet2.foreach(protSet => {
+    
+        //DEBUG ONLY 
+        logger.debug("---- Removed Protein Set ------ ")
+        val firstPrtMatch = rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
+        println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
+        protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
+          println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
+        })
+        logger.debug(" Removed Protein Set - unique pep # " + protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length)
+        //        Assert.assertTrue("Protein Set more than 1 unique pep", protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length >= 2 )
       })
-      logger.debug(" Removed Protein Set - unique pep # " + protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length)
-      //        Assert.assertTrue("Protein Set more than 1 unique pep", protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length >= 2 )
-    })
+    }
 
-    validatedTarProtSet.foreach(protSet => {
-      //DEBUG ONLY 
-      logger.debug("---- validatedTarProtSet  ------ ")
-      val firstPrtMatch = rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
-      println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
-      protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
-        println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
+    if( DEBUG_TESTS ) {
+      
+      validatedTarProtSet.foreach(protSet => {
+        //DEBUG ONLY 
+        logger.debug("---- validatedTarProtSet  ------ ")
+        val firstPrtMatch = rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
+        println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
+        protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
+          println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
+        })
+        logger.debug(" Protein Set - unique pep # " + protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length)
+        //        Assert.assertTrue("Protein Set more than 1 unique pep", protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length >= 2 )
       })
-      logger.debug(" Protein Set - unique pep # " + protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length)
-      //        Assert.assertTrue("Protein Set more than 1 unique pep", protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length >= 2 )
-    })
-
-    validatedDecProtSet.foreach(protSet => {
-      //DEBUG ONLY 
-      logger.debug("---- validatedDecProtSet  ------ ")
-      val firstPrtMatch = rsValidation.validatedDecoyRsm.get.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
-      println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
-      protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
-        println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
+  
+      validatedDecProtSet.foreach(protSet => {
+        //DEBUG ONLY 
+        logger.debug("---- validatedDecProtSet  ------ ")
+        val firstPrtMatch = rsValidation.validatedDecoyRsm.get.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
+        println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
+        protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
+          println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
+        })
+        logger.debug(" Protein Set - unique pep # " + protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length)
+        //        Assert.assertTrue("Protein Set more than 1 unique pep", protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length >= 2 )
       })
-      logger.debug(" Protein Set - unique pep # " + protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length)
-      //        Assert.assertTrue("Protein Set more than 1 unique pep", protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length >= 2 )
-    })
+    }
   }
 
   @Test
@@ -569,7 +578,9 @@ class ResultSetValidatorF136482Test extends Logging {
       //protSetScoreUpdater = Some(new MascotProteinSetScoreUpdater(-20f)),
       protSetFilterRule1 = new ScoreProtSetFilter,
       protSetFilterRule2 = new ScoreProtSetFilter,
-      expectedFdr = Some(1.0f))
+      expectedFdr = Some(1.0f),
+      targetDecoyMode = Some(TargetDecoyModes.CONCATENATED)
+    )
 
     logger.info("ResultSetValidator testProtSetFDRValidation Create service")
     val rsValidation = new ResultSetValidator(
@@ -599,10 +610,11 @@ class ResultSetValidatorF136482Test extends Logging {
   @Test
   def testPepMatchAndProtSetFDRValidation() = {
 
+    val tdMode = TargetDecoyModes.CONCATENATED
     val firstRankFilter = new RankPSMFilter(1)
     val pepMatchValFilter = new ScorePSMFilter()
     //val testTDAnalyzer = Some(new CompetitionBasedTDAnalyzer(pepMatchValFilter))
-    val testTDAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
+    val testTDAnalyzer = Some(new BasicTDAnalyzer(tdMode))
 
     // Create peptide match validator
     val pepMatchValidator = new TDPepMatchValidatorWithFDROptimization(
@@ -616,7 +628,9 @@ class ResultSetValidatorF136482Test extends Logging {
       //protSetScoreUpdater = Some(new MascotProteinSetScoreUpdater(-20f)),
       protSetFilterRule1 = new ScoreProtSetFilter,
       protSetFilterRule2 = new ScoreProtSetFilter,
-      expectedFdr = Some(1.0f))
+      expectedFdr = Some(1.0f),
+      targetDecoyMode = Some(tdMode)
+      )
 
     logger.info("ResultSetValidator testPepMatchAndProtSetFDRValidation Create service")
     val rsValidation = new ResultSetValidator(

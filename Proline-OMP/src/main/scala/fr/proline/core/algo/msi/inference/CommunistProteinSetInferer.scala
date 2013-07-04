@@ -190,6 +190,7 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
         val pmIds =  peptideSet.proteinMatchIds ++ cluster.subsetsKeys
         val proteinSet = new ProteinSet(
                                   id = proteinSetId,
+                                  isDecoy = resultSet.isDecoy,
                                   peptideSet = peptideSet,
                                   hasPeptideSubset = peptideSet.hasSubset,
                                   typicalProteinMatchId = peptideSet.proteinMatchIds(0),
