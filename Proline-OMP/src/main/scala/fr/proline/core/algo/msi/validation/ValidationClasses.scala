@@ -259,15 +259,14 @@ trait IPeptideMatchValidator {
  
 }
 
-trait IProteinSetValidator {
+trait IProteinSetValidator extends IFilterConfig {
   
   val expectedFdr: Option[Float]
   var targetDecoyMode: Option[TargetDecoyModes.Value]
-  
-  // TODO: add validator description and properties to IProteinSetValidator
-  def toFilterDescriptor(): FilterDescriptor = {
+
+  /*def toFilterDescriptor(): FilterDescriptor = {
     new FilterDescriptor( "protein set validator", None, Some( Map("expected_fdr"-> this.expectedFdr) ) )
-  }
+  }*/
   
   /**
    * Validates protein sets.

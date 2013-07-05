@@ -18,6 +18,11 @@ class ProtSetRulesValidator(
   val protSetFilterRule1: IProteinSetFilter,
   val protSetFilterRule2: IProteinSetFilter
 ) extends IProteinSetValidator with Logging {
+  require( protSetFilterRule1.filterParameter == protSetFilterRule2.filterParameter )
+  
+  def filterParameter = protSetFilterRule1.filterParameter
+  def filterDescription = protSetFilterRule1.filterDescription
+  def getFilterProperties = protSetFilterRule1.getFilterProperties ++ protSetFilterRule2.getFilterProperties
   
   val expectedFdr = Option.empty[Float]
   var targetDecoyMode = Option.empty[TargetDecoyModes.Value]

@@ -20,16 +20,14 @@ class ProtSetRulesValidatorWithFDROptimization(
   val expectedFdr: Option[Float],
   var targetDecoyMode: Option[TargetDecoyModes.Value]
 ) extends IProteinSetValidator with Logging {
+  require( protSetFilterRule1.filterParameter == protSetFilterRule2.filterParameter )
   
+  def filterParameter = protSetFilterRule1.filterParameter
+  def filterDescription = protSetFilterRule1.filterDescription
+  def getFilterProperties = protSetFilterRule1.getFilterProperties ++ protSetFilterRule2.getFilterProperties
+  
+  val MAX_FDR = 50f
   val someExpectedFdr = expectedFdr.get
-  
-  private val MAX_FDR = 50f
-  
-  // Change threshold value of filters if a value has been provided
-  /*if( initialThresholdValue.isDefined ) {
-    protSetFilterRule1.setThresholdValue(initialThresholdValue.get)
-    protSetFilterRule2.setThresholdValue(initialThresholdValue.get)
-  }*/
   
   // The initial threshold value must correspond to the one used for peptide match validation
   val thresholdStartValue = protSetFilterRule1.getThresholdStartValue

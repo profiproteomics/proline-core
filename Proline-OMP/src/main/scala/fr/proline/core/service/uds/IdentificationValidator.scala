@@ -16,6 +16,7 @@ import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.algo.msi.validation.IPeptideMatchValidator
 
+@deprecated("0.1.1","use IdentificationTreeValidator instead")
 class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
                                projectId: Long,
                                identificationId: Long,

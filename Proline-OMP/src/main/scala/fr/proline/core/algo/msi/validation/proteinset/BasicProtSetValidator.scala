@@ -15,7 +15,11 @@ import fr.proline.core.algo.msi.filtering._
  * and calculating a FDR using : 100 *  # valid decoy ProteinSet / # valid target ProteinSet
  * 
  */
-class BasicProtSetValidator( val protSetFilter: IProteinSetFilter ) extends IProteinSetValidator with Logging {
+class BasicProtSetValidator( val validationFilter: IProteinSetFilter ) extends IProteinSetValidator with Logging {
+  
+  def filterParameter = validationFilter.filterParameter
+  def filterDescription = validationFilter.filterDescription
+  def getFilterProperties = validationFilter.getFilterProperties
   
   val expectedFdr = Option.empty[Float]
   var targetDecoyMode = Option.empty[TargetDecoyModes.Value]
@@ -28,13 +32,13 @@ class BasicProtSetValidator( val protSetFilter: IProteinSetFilter ) extends IPro
     val allProtSets = targetProtSets ++ decoyProtSets.getOrElse(Array())
     
     // Filter protein sets
-    protSetFilter.filterProteinSets( allProtSets, true, true )
+    validationFilter.filterProteinSets( allProtSets, true, true )
     
     // Compute validation result
     val valResult = this.computeValidationResult(targetRsm, decoyRsm)
     
     // Update validation result properties
-    valResult.addProperties( protSetFilter.getFilterProperties )
+    valResult.addProperties( validationFilter.getFilterProperties )
     
     // Return validation results
     ValidationResults( valResult )

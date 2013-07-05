@@ -13,6 +13,11 @@ class PepMatchRulesValidator(
   val pepMatchFilterRule1: IOptimizablePeptideMatchFilter,
   val pepMatchFilterRule2: IOptimizablePeptideMatchFilter
 ) extends AbstractPepMatchRulesValidator with Logging {
+  require( pepMatchFilterRule1.filterParameter == pepMatchFilterRule2.filterParameter )
+  
+  def filterParameter = pepMatchFilterRule1.filterParameter
+  def filterDescription = pepMatchFilterRule1.filterDescription
+  def getFilterProperties = pepMatchFilterRule1.getFilterProperties ++ pepMatchFilterRule2.getFilterProperties
   
   val expectedFdr = Option.empty[Float]
   var targetDecoyMode = Option.empty[TargetDecoyModes.Value]

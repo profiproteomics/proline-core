@@ -33,10 +33,10 @@ object ProtSetFilterParams extends Enumeration {
   val SPECIFIC_PEP = Value("SPECIFIC_PEP")
 }
 
-trait IFilter {
-
-  val filterParameter: String
-  val filterDescription: String
+trait IFilterConfig {
+  
+  def filterParameter: String
+  def filterDescription: String
 
   /**
    * Return all properties that will be usefull to know wich kind iof filter have been applied
@@ -48,6 +48,12 @@ trait IFilter {
   def toFilterDescriptor(): FilterDescriptor = {
     new FilterDescriptor(filterParameter, Some(filterDescription), Some(getFilterProperties))
   }
+}
+
+trait IFilter extends IFilterConfig {
+  
+  val filterParameter: String
+  val filterDescription: String
 
   /**
    * Returns the Threshold value that has been set.

@@ -15,12 +15,11 @@ class PepMatchRulesValidatorWithFDROptimization(
   val expectedFdr: Option[Float],
   var targetDecoyMode: Option[TargetDecoyModes.Value]
   ) extends AbstractPepMatchRulesValidator with Logging {
+  require( pepMatchFilterRule1.filterParameter == pepMatchFilterRule2.filterParameter )
   
-  // Change threshold value of filters if a value has been provided
-  /*if( initialThresholdValue.isDefined ) {
-    pepMatchFilterRule1.setThresholdValue(initialThresholdValue.get)
-    pepMatchFilterRule2.setThresholdValue(initialThresholdValue.get)
-  }*/
+  def filterParameter = pepMatchFilterRule1.filterParameter
+  def filterDescription = pepMatchFilterRule1.filterDescription
+  def getFilterProperties = pepMatchFilterRule1.getFilterProperties ++ pepMatchFilterRule2.getFilterProperties
   
   // The initial threshold value must correspond to the one used for peptide match validation
   val initialThresholdValueAsDouble = pepMatchFilterRule1.getThresholdValueAsDouble
