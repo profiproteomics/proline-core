@@ -24,7 +24,12 @@ class ProtSetRulesValidatorWithFDROptimization(
   
   def filterParameter = protSetFilterRule1.filterParameter
   def filterDescription = protSetFilterRule1.filterDescription
-  def getFilterProperties = protSetFilterRule1.getFilterProperties ++ protSetFilterRule2.getFilterProperties
+  def getFilterProperties = {
+    Map(
+      ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE -> protSetFilterRule1.getThresholdValue,
+      ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE -> protSetFilterRule2.getThresholdValue
+    )
+  }
   
   val MAX_FDR = 50f
   val someExpectedFdr = expectedFdr.get

@@ -22,7 +22,12 @@ class ProtSetRulesValidator(
   
   def filterParameter = protSetFilterRule1.filterParameter
   def filterDescription = protSetFilterRule1.filterDescription
-  def getFilterProperties = protSetFilterRule1.getFilterProperties ++ protSetFilterRule2.getFilterProperties
+  def getFilterProperties = {
+    Map(
+      ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE -> protSetFilterRule1.getThresholdValue,
+      ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE -> protSetFilterRule2.getThresholdValue
+    )
+  }
   
   val expectedFdr = Option.empty[Float]
   var targetDecoyMode = Option.empty[TargetDecoyModes.Value]
@@ -47,12 +52,12 @@ class ProtSetRulesValidator(
     val valResult = this.computeValidationResult(targetRsm, decoyRsm)
     
     // Update validation result properties
-    valResult.addProperties(
+    /*valResult.addProperties(
       Map(
         ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE -> protSetFilterRule1.getThresholdValue,
         ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE -> protSetFilterRule2.getThresholdValue
       )
-    )
+    )*/
     
     // Return validation results
     ValidationResults( valResult )

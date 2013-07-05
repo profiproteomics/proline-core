@@ -19,7 +19,12 @@ class PepMatchRulesValidatorWithFDROptimization(
   
   def filterParameter = pepMatchFilterRule1.filterParameter
   def filterDescription = pepMatchFilterRule1.filterDescription
-  def getFilterProperties = pepMatchFilterRule1.getFilterProperties ++ pepMatchFilterRule2.getFilterProperties
+  def getFilterProperties = {
+    Map(
+      ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE -> pepMatchFilterRule1.getThresholdValue,
+      ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE -> pepMatchFilterRule2.getThresholdValue
+    )
+  }
   
   // The initial threshold value must correspond to the one used for peptide match validation
   val initialThresholdValueAsDouble = pepMatchFilterRule1.getThresholdValueAsDouble
