@@ -120,8 +120,12 @@ class ResultSetMerger(
 
   private def _mergeFromResultsSetIds(resultSetIds: Seq[Long], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext, execCtx: IExecutionContext) {
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
+    
+    logger.debug("TARGET ResultSet Ids : " + resultSetIds.mkString(" | "))
 
     val decoyRSIds = msiDbHelper.getDecoyRsIds(resultSetIds)
+    
+    logger.debug("DECOY ResultSet Ids : " + decoyRSIds.mkString(" | "))
 
     val nTargetRS = resultSetIds.length
     val nDecoyRS = decoyRSIds.length
@@ -130,7 +134,7 @@ class ResultSetMerger(
       logger.warn("Inconsistent number of TARGET ResultSets: " + nTargetRS + " number of DECOY ResultSets: " + nDecoyRS)
     }
 
-    var mergedDecoyRSId: Long = -1
+    var mergedDecoyRSId: Long = -1L
 
     if (decoyRSIds.length > 0) {
       var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, msiDbCtx)
@@ -174,7 +178,7 @@ class ResultSetMerger(
     targetMergerAlgo = null // Eligible for Garbage collection
     seqLengthByProtId = null
 
-    if (mergedDecoyRSId > 0) {
+    if (mergedDecoyRSId > 0L) {
       mergedResultSet.setDecoyResultSetId(mergedDecoyRSId)
     }
 

@@ -355,7 +355,7 @@ public class DatabaseConnectionContext {
 
 		JPAUtils.checkEntityManager(contextEntityMananger);
 
-		LOG.debug("Executing JDBCWork on JPA EntityManager, flushEntityManager: {}",
+		LOG.trace("Executing JDBCWork on JPA EntityManager, flushEntityManager: {}",
 			flushEntityManager);
 
 		if (flushEntityManager) {
@@ -379,7 +379,7 @@ public class DatabaseConnectionContext {
 
 		JPAUtils.doWork(contextEntityMananger, contextWork);
 	    } else {
-		LOG.debug("Executing JDBCWork on raw JDBC Connection");
+		LOG.trace("Executing JDBCWork on raw JDBC Connection");
 
 		work.execute(contextConnection);
 	    }
@@ -426,7 +426,7 @@ public class DatabaseConnectionContext {
 
 		JPAUtils.checkEntityManager(contextEntityMananger);
 
-		LOG.debug("Executing JDBCReturningWork on JPA EntityManager, flushEntityManager: {}",
+		LOG.trace("Executing JDBCReturningWork on JPA EntityManager, flushEntityManager: {}",
 			flushEntityManager);
 
 		if (flushEntityManager) {
@@ -453,7 +453,7 @@ public class DatabaseConnectionContext {
 
 		result = JPAUtils.doReturningWork(contextEntityMananger, contextReturningWork);
 	    } else {
-		LOG.debug("Executing JDBCReturningWork on raw JDBC Connection");
+		LOG.trace("Executing JDBCReturningWork on raw JDBC Connection");
 
 		result = returningWork.execute(contextConnection);
 	    }
