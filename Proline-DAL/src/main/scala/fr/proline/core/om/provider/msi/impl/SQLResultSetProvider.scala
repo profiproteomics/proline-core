@@ -58,11 +58,15 @@ trait SQLResultSetLoader extends Logging {
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
 
+      val start = System.currentTimeMillis()
+      
+      
       val resultSets = msiEzDBC.select(rsQuery) { r =>
 
-        val start = System.currentTimeMillis()
         // Retrieve some vars
         val rsId: Long = toLong(r.getAny(RSCols.ID))
+        logger.info("Start loading ResultSet #"+rsId)
+
         /*if( !protMatchesByRsId.contains(rsId) ) {
           throw new Exception("this result set doesn't have any protein match and can't be loaded")
         }*/
@@ -88,7 +92,7 @@ trait SQLResultSetLoader extends Logging {
         val propertiesAsJSON = r.getString(RSCols.SERIALIZED_PROPERTIES)
         val properties = if (propertiesAsJSON != null) Some(parse[ResultSetProperties](propertiesAsJSON)) else None
 
-        logger.debug {
+        
           val nPeptides = if (rsPeptides == null) {
             0
           } else {
@@ -118,13 +122,13 @@ trait SQLResultSetLoader extends Logging {
 
           buff.append(" ResultSet #").append(rsId)
 
-          buff.append(" with ")
+          buff.append(" [")
           buff.append(nPeptides).append(" Peptides, ")
           buff.append(nPeptMatches).append(" PeptideMatches, ")
-          buff.append(nProtMatches).append(" ProteinMatches")
+          buff.append(nProtMatches).append(" ProteinMatches] ")
 
           buff.toString
-        }
+       
 
         val rs = new ResultSet(
           id = rsId,
@@ -139,7 +143,7 @@ trait SQLResultSetLoader extends Logging {
           decoyResultSetId = decoyRsId,
           properties = properties
         )
-        logger.info("ResultSet #" + rsId + " ["+rs.proteinMatches.length+" PrMs, "+rs.peptides.size+" Pes, "+rs.peptideMatches.size+" PeMs] loaded in "+(System.currentTimeMillis()-start)+" ms")
+        logger.info(buff.toString+ " loaded in "+(System.currentTimeMillis()-start)+" ms")
 	     rs
       }
 
