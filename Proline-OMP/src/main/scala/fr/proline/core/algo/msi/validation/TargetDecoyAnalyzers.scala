@@ -2,13 +2,12 @@ package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks._
-
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.algo.msi.filtering.{ IOptimizablePeptideMatchFilter, IPeptideMatchSorter, PeptideMatchFiltering }
 import fr.proline.core.om.model.msi.{ PeptideMatch, ResultSet }
+import fr.proline.core.algo.msi.filtering.pepmatch.MascotPValuePSMFilter
 
 object BuildTDAnalyzer extends Logging {
 
@@ -81,6 +80,9 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
 
   private val MAX_FDR = 50f
 
+  //FIXME VDS : Use this algo for MascotPValuePSMFilter... 
+  // Revert change : get threshold start Value from  getThresholdStartValue instead of Initialize filterThreshold to the worst decoy value
+  
   def performROCAnalysisV1(
     targetPepMatches: Seq[PeptideMatch],
     decoyPepMatches: Seq[PeptideMatch],
@@ -93,16 +95,8 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
     // Build the peptide match joint map
     val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches, Some(decoyPepMatches))
     logger.debug("ROCAnalysisV1 PeptideMatches joint Map size: " + pmJointMap.size)
-
-    // Sort decoy PSMs from the best to the worst according to the validation filter
-    val sortedDecoyPepMatches = validationFilter.sortPeptideMatches(decoyPepMatches)
-
-    // Retrieve the worst decoy peptide match
-    val worstDecoyPepMatch = sortedDecoyPepMatches.last
-
-    // Initialize filterThreshold to the worst decoy value
-    var filterThreshold = validationFilter.getPeptideMatchValueForFiltering(worstDecoyPepMatch)
-    //var filterThreshold = validationFilter.getThresholdStartValue
+    
+    var filterThreshold = validationFilter.getThresholdStartValue
 
     logger.debug("ROCAnalysisV1 entering FDR loop with initial filterThreshold: " + filterThreshold + " ...")
 
@@ -235,6 +229,12 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
     decoyPepMatches: Seq[PeptideMatch],
     validationFilter: IOptimizablePeptideMatchFilter): Array[ValidationResult] = {
 
+    //FIXME VDS: Use performROCAnalysisV1 algo for MascotPValuePSMFilter... If this FDR optimization on PValue seems to be interesting, implemet better 
+    // fix ! 
+    if(validationFilter.isInstanceOf[MascotPValuePSMFilter]){
+      return performROCAnalysisV1(targetPepMatches, decoyPepMatches, validationFilter)
+    } 
+    
     // Build the peptide match joint map
     val pmJointMap = TargetDecoyComputer.buildPeptideMatchJointMap(targetPepMatches, Some(decoyPepMatches))
     logger.debug("ROCAnalysis0 PeptideMatches joint Map size: " + pmJointMap.size)

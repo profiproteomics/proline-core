@@ -861,7 +861,7 @@ class ResultSetValidatorF068213Test extends Logging {
 	  val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap(pi => pi.peptideMatches)
 
 	  //VD : Fails du to none sortable MascotPValueFilter
-//	  Assert.assertEquals(996, allTarPepMatc.length + allDecPepMatc.length) 
+	  Assert.assertEquals(996, allTarPepMatc.length + allDecPepMatc.length) 
 	  logger.debug(" allTarPepMatc "+allTarPepMatc.length +" allDecPepMatc "+ allDecPepMatc.length)
     
 	  Assert.assertTrue(tRSM.properties.isDefined)
@@ -877,9 +877,9 @@ class ResultSetValidatorF068213Test extends Logging {
 
 	  val pepValResults = rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get
    //VD : Fails du to none sortable MascotPValueFilter
-//	  Assert.assertEquals(allTarPepMatc.length, pepValResults.getTargetMatchesCount)
-//	  Assert.assertEquals(allDecPepMatc.length, pepValResults.getDecoyMatchesCount.get)
-     
+	  Assert.assertEquals(allTarPepMatc.length, pepValResults.getTargetMatchesCount)
+	  Assert.assertEquals(allDecPepMatc.length, pepValResults.getDecoyMatchesCount.get)
+      logger.debug(" -------------------- FDR = "+pepValResults.getFdr)
   }
     
   @Test
@@ -897,7 +897,7 @@ class ResultSetValidatorF068213Test extends Logging {
       protSetFilters = None,
       storeResultSummary = false
     )
-
+ 
     val result = rsValidation.runService
     Assert.assertTrue(result)
     logger.info(" End Run ResultSetValidator Service with Identity Threshold Filter, in Test ")
@@ -941,6 +941,7 @@ class ResultSetValidatorF068213Test extends Logging {
     Assert.assertEquals(3, pepValResults.getDecoyMatchesCount.get) //IRMa 3
     Assert.assertEquals(993, allTarPepMatc.length) 
     Assert.assertEquals(3, allDecPepMatc.length) 
+    logger.debug(" -------------------- FDR = "+pepValResults.getFdr)
     
   }
 

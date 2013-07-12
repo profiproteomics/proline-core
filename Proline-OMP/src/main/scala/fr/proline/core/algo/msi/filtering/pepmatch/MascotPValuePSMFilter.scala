@@ -17,9 +17,9 @@ import fr.proline.core.algo.msi.validation.MascotIonsScoreThresholds
 
 // TODO: use MascotThresholdTypes enumeration value instead of useHomologyThreshold
 // TODO: usefilterPeptideMatchesDBO
-class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold: Boolean = false, var pValueStartValue: Float = 0.05f) extends IOptimizablePeptideMatchFilter with Logging {
+class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold: Boolean = false, var pValueStartValue: Float = 0.5f) extends IOptimizablePeptideMatchFilter with Logging {
 
-  var pValuethresholdIncreaseValue: Float = 0.001f
+  var pValuethresholdIncreaseValue: Float = 0.01f
   val filterParameter = if (useHomologyThreshold) PepMatchFilterParams.SCORE_HT_PVALUE.toString else PepMatchFilterParams.SCORE_IT_PVALUE.toString
 
   val filterDescription = if (useHomologyThreshold) "peptide match Mascot homology thresholds filter using p-value" else "peptide match identity threshold filter using p-value"
@@ -149,7 +149,7 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
     props.toMap
   }
 
-  def getNextValue(currentVal: AnyVal) = toFloat(currentVal) + pValuethresholdIncreaseValue
+  def getNextValue(currentVal: AnyVal) = toFloat(currentVal) - pValuethresholdIncreaseValue
 
   def getThresholdStartValue(): AnyVal = pValueStartValue
 
