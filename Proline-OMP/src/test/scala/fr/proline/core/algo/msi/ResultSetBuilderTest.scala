@@ -84,7 +84,7 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 	  }
   }
 	
-		@Test
+	@Test
 	def addOneModifiedRS() = {
 	  val rsfb = new ResultSetFakeBuilder(pepNb = 800, proNb = 100)
 	  rsfb.addDuplicatedPeptideMatches(50)
@@ -105,4 +105,26 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 	  assertEquals(1, ids.length)
   }
 
+	@Test
+	def addOneModifiedRSWithUnionMode() = {
+	  val rsfb = new ResultSetFakeBuilder(pepNb = 800, proNb = 100)
+	  rsfb.addDuplicatedPeptideMatches(50)
+	  val rs1 = rsfb.toResultSet()
+	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99, mode = AdditionMode.Union)
+	  rsAddAlgo.addResultSet(rs1)
+	  val rs2 = rsAddAlgo.toResultSet()
+	  assert(rs2 != null)
+	  assert(rs1 != rs2)
+	  assertEquals(850,rs2.peptideMatches.length)
+	  assertEquals(100,rs2.proteinMatches.length)
+	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.peptide.get.id)
+	  assertEquals(800, peptides.length)
+	  var ids = rs2.peptideMatches.map(_.resultSetId).distinct
+	  assertEquals(1, ids.length)
+	  assertEquals(99, ids(0))
+	  ids = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.resultSetId).distinct
+	  assertEquals(1, ids.length)
+  }
+
+		
 }
