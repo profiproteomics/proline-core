@@ -177,7 +177,7 @@ class ResultSetValidator(
     this._validateProteinSets(targetRsm, rsmValProperties)
 
     val took = curTimeInSecs() - startTime
-    this.logger.info("validation took " + took + " seconds")
+    this.logger.info("Validation service took " + took + " seconds")
 
     if (storeResultSummary) {
 
@@ -200,7 +200,7 @@ class ResultSetValidator(
       // Commit transaction if it was initiated locally
       if (!wasInTransaction) msiDbContext.commitTransaction()
 
-      this.logger.info("result summary successfully stored !")
+      this.logger.info("ResultSummary successfully stored !")
     }
 
     // Update the service results
