@@ -22,7 +22,11 @@ object MascotValidationHelper extends Logging {
   def calcEvalue(ionsScore: Float, identityThreshold: Float, probability: Double = 0.05): Double = {
     probability * pow(10, (identityThreshold - ionsScore) / 10)
   }
-
+  
+  def calcProbability(identityThreshold: Float, candidatePeptidesCount: Double): Double = {    
+    (candidatePeptidesCount /  pow(10, identityThreshold / 10)) * 0.05
+  }
+  
   def calcCandidatePeptidesCount(identityThreshold: Float, probability: Double = 0.05): Float = {
     (probability / 0.05) * pow(10, identityThreshold / 10)
   }

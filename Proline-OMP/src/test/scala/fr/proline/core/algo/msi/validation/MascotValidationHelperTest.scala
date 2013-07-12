@@ -6,6 +6,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.utils.generator.ResultSetFakeBuilder
+import org.junit.Assert
 
 @Test
 class MascotValidationHelperTest extends JUnitSuite with Logging {
@@ -37,6 +38,15 @@ class MascotValidationHelperTest extends JUnitSuite with Logging {
 	  assert(Math.abs(ht - 20.20307) < 0.001)
      
 	 }
+	 
+	 @Test
+	def calcPValue() = {
+	  var pVal = MascotValidationHelper.calcProbability(16.720978f, 47)
+	  Assert.assertEquals(0.05f, pVal,0.000001f)
+	  pVal = MascotValidationHelper.calcProbability(23.7106f, 47)
+	   Assert.assertEquals(0.01, pVal,0.001f)
+	}
+
 
 }
 
