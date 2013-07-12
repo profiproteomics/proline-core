@@ -25,9 +25,35 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
   val filterDescription = if (useHomologyThreshold) "peptide match Mascot homology thresholds filter using p-value" else "peptide match identity threshold filter using p-value"
 
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal = {
-    val thresholds = MascotValidationHelper.calcPeptideMatchThresholds(pepMatch, pValue)    
-    if (useHomologyThreshold) thresholds.homologyThreshold
-    thresholds.identityThreshold
+    if (!pepMatch.msQuery.properties.isDefined  ) {
+    	logger.warn(" Filtering error, UNABLE TO CALCULATE P VALUE  (No msQuery.properties) for peptide " + pepMatch.id+" Use pValue = 0.05 ")
+    	return 0.05
+    }
+    
+    var pVal = 0.05
+    var useTargetProp = !pepMatch.isDecoy
+    
+    if(!useTargetProp)  {
+       if(! pepMatch.msQuery.properties.get.getDecoyDbSearch.isDefined ) {
+		  logger.warn(" Filtering error,  UNABLE TO CALCULATE P VALUE  (No Decoy Search properties) for peptide  " + pepMatch.id+" Use associated target search properties if exist. ")
+		  useTargetProp = true
+		  
+       } else {
+		  val dRSCandPSM = pepMatch.msQuery.properties.get.getDecoyDbSearch.get.getCandidatePeptidesCount
+		  pVal = MascotValidationHelper.calcProbability(pepMatch.score, dRSCandPSM)
+	  }
+    }
+    
+    if(useTargetProp)  {
+    	if(! pepMatch.msQuery.properties.get.getTargetDbSearch.isDefined ) {
+    		logger.warn("Filtering error, UNABLE TO CALCULATE P VALUE  (No Target Search properties ) for peptide  " + pepMatch.id+" Use pValue = 0.05 ")    		
+    	} else {
+		  val tRSCandPSM = pepMatch.msQuery.properties.get.getTargetDbSearch.get.getCandidatePeptidesCount
+		  pVal = MascotValidationHelper.calcProbability(pepMatch.score, tRSCandPSM)
+    	}
+    }
+		  
+    pVal
   }
 
   def isPeptideMatchValid(pepMatch: PeptideMatch): Boolean = {
