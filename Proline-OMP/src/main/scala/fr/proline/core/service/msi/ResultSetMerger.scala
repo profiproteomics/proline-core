@@ -80,10 +80,10 @@ class ResultSetMerger(
 
       if (resultSets.isDefined) {
         logger.info("Start merge from existing ResultSets")
-        _mergeFromResultsSets(resultSets.get, storerContext, msiDbCtx)
+        _mergeFromResultsSets(resultSets.get, storerContext)
       } else {
         logger.info("Start merge from ResultSet Ids")
-        _mergeFromResultsSetIds(resultSetIds.get, storerContext, msiDbCtx, execCtx)
+        _mergeFromResultsSetIds(resultSetIds.get, storerContext)
       }
 
       // Commit transaction if it was initiated locally
@@ -118,8 +118,8 @@ class ResultSetMerger(
     true
   }
 
-  private def _mergeFromResultsSetIds(resultSetIds: Seq[Long], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext, execCtx: IExecutionContext) {
-    val msiDbHelper = new MsiDbHelper(msiDbCtx)
+  private def _mergeFromResultsSetIds(resultSetIds: Seq[Long], storerContext: StorerContext) {
+    val msiDbHelper = new MsiDbHelper(storerContext.getMSIDbConnectionContext)
     
     logger.debug("TARGET ResultSet Ids : " + resultSetIds.mkString(" | "))
 
@@ -137,7 +137,7 @@ class ResultSetMerger(
     var mergedDecoyRSId: Long = -1L
 
     if (decoyRSIds.length > 0) {
-      var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, msiDbCtx)
+      var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, storerContext.getMSIDbConnectionContext)
 
       var decoyMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
 
@@ -151,7 +151,7 @@ class ResultSetMerger(
       decoyMergerAlgo = null // Eligible for Garbage collection      
       seqLengthByProtId = null
 
-      DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+      DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
         /* Store merged decoy result set */
         _storeMergedResultSet(storerContext, msiEzDBC, decoyRS, decoyRSIds)
       }, true) // end of JDBC work
@@ -163,7 +163,7 @@ class ResultSetMerger(
       decoyRS = null // Eligible for Garbage collection
     }
 
-    var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, msiDbCtx)
+    var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, storerContext.getMSIDbConnectionContext)
 
     var targetMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, false, Some(seqLengthByProtId))
 
@@ -182,7 +182,7 @@ class ResultSetMerger(
       mergedResultSet.setDecoyResultSetId(mergedDecoyRSId)
     }
 
-    DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
       /* Store merged target result set */
       _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, resultSetIds)
     }, true) // end of JDBC work
@@ -190,14 +190,14 @@ class ResultSetMerger(
     logger.debug("Merged TARGET ResultSet Id: " + mergedResultSet.id)
   }
 
-  private def _mergeFromResultsSets(resultSets: Seq[ResultSet], storerContext: StorerContext, msiDbCtx: DatabaseConnectionContext) {
+  private def _mergeFromResultsSets(resultSets: Seq[ResultSet], storerContext: StorerContext) {
     val decoyResultSets = for (
       rs <- resultSets if ((rs.decoyResultSet != null) && rs.decoyResultSet.isDefined)
     ) yield rs.decoyResultSet.get
 
     val allResultSets = resultSets ++ decoyResultSets
 
-    val seqLengthByProtId = _buildSeqLength(allResultSets.map { _.id }, msiDbCtx)
+    val seqLengthByProtId = _buildSeqLength(allResultSets.map { _.id }, storerContext.getMSIDbConnectionContext)
     >>>
 
     // Merge target result sets
@@ -209,7 +209,7 @@ class ResultSetMerger(
       else None
     }
 
-    DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
 
       // Merge decoy result sets if they are defined
       if (decoyResultSets.length > 0) {
