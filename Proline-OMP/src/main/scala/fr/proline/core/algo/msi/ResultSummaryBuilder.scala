@@ -9,9 +9,9 @@ import fr.proline.core.algo.msi.scoring.IPeptideSetScoreUpdater
 
   
 
-class ResultSummaryBuilder(val resultSetId: Long, pepSetScoreUpdater: IPeptideSetScoreUpdater, seqLengthByProtId: Option[Map[Long,Int]] = None) extends Logging {
+class ResultSummaryBuilder(val resultSetId: Long, val isDecoy:Boolean, pepSetScoreUpdater: IPeptideSetScoreUpdater, seqLengthByProtId: Option[Map[Long,Int]] = None) extends Logging {
   
-  val rsBuilder = new ResultSetBuilder(resultSetId = resultSetId)
+  val rsBuilder = new ResultSetBuilder(resultSetId, isDecoy, seqLengthByProtId)
   
   def addResultSummary(rsm:ResultSummary) {
     
