@@ -59,13 +59,12 @@ trait SQLResultSetLoader extends Logging {
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
 
       val start = System.currentTimeMillis()
-      
-      
+
       val resultSets = msiEzDBC.select(rsQuery) { r =>
 
         // Retrieve some vars
         val rsId: Long = toLong(r.getAny(RSCols.ID))
-        logger.info("Start loading ResultSet #"+rsId)
+        logger.info("Start loading ResultSet #" + rsId)
 
         /*if( !protMatchesByRsId.contains(rsId) ) {
           throw new Exception("this result set doesn't have any protein match and can't be loaded")
@@ -77,6 +76,7 @@ trait SQLResultSetLoader extends Logging {
         val rsType = r.getString(RSCols.TYPE)
         val isDecoy = rsType matches "DECOY_.*"
         val isNative = rsType matches ".*SEARCH"
+        val isQuantified = rsType matches "QUANTITATION"
         val decoyRsId = r.getLongOrElse(RSCols.DECOY_RESULT_SET_ID, 0L)
 
         val rsMsiSearchId = if (isNative) {
@@ -92,44 +92,6 @@ trait SQLResultSetLoader extends Logging {
         val propertiesAsJSON = r.getString(RSCols.SERIALIZED_PROPERTIES)
         val properties = if (propertiesAsJSON != null) Some(parse[ResultSetProperties](propertiesAsJSON)) else None
 
-        
-          val nPeptides = if (rsPeptides == null) {
-            0
-          } else {
-            rsPeptides.length
-          }
-
-          val nPeptMatches = if (rsPepMatches == null) {
-            0
-          } else {
-            rsPepMatches.length
-          }
-
-          val nProtMatches = if (rsProtMatches == null) {
-            0
-          } else {
-            rsProtMatches.length
-          }
-
-          val buff = new StringBuilder()
-          buff.append("Loading")
-
-          if (isDecoy) {
-            buff.append(" Decoy")
-          } else {
-            buff.append(" Target")
-          }
-
-          buff.append(" ResultSet #").append(rsId)
-
-          buff.append(" [")
-          buff.append(nPeptides).append(" Peptides, ")
-          buff.append(nPeptMatches).append(" PeptideMatches, ")
-          buff.append(nProtMatches).append(" ProteinMatches] ")
-
-          buff.toString
-       
-
         val rs = new ResultSet(
           id = rsId,
           name = r.getString(RSCols.NAME),
@@ -139,12 +101,31 @@ trait SQLResultSetLoader extends Logging {
           proteinMatches = rsProtMatches,
           isDecoy = isDecoy,
           isNative = isNative,
+          isQuantified = isQuantified,
           msiSearch = Some(msiSearch),
           decoyResultSetId = decoyRsId,
           properties = properties
         )
-        logger.info(buff.toString+ " loaded in "+(System.currentTimeMillis()-start)+" ms")
-	     rs
+
+        val nPeptides = if (rsPeptides == null) 0 else rsPeptides.length
+        val nPeptMatches = if (rsPepMatches == null) 0 else rsPepMatches.length
+        val nProtMatches = if (rsProtMatches == null) 0 else rsProtMatches.length
+
+        val buff = new StringBuilder()
+        buff.append("Loading")
+
+        if (isDecoy) buff.append(" Decoy") else buff.append(" Target")
+
+        buff.append(" ResultSet #").append(rsId)
+
+        buff.append(" [")
+        buff.append(nPeptides).append(" Peptides, ")
+        buff.append(nPeptMatches).append(" PeptideMatches, ")
+        buff.append(nProtMatches).append(" ProteinMatches] ")
+
+        logger.info(buff.toString + " loaded in " + (System.currentTimeMillis() - start) + " ms")
+
+        rs
       }
 
       resultSets.toArray
