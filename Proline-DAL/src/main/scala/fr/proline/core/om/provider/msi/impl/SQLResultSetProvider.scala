@@ -75,8 +75,8 @@ trait SQLResultSetLoader extends Logging {
         val rsPepMatches = pepMatchesByRsId.getOrElse(rsId, Array.empty[PeptideMatch])
         val rsPeptides = rsPepMatches map { _.peptide } distinct
         val rsType = r.getString(RSCols.TYPE)
-        val isDecoy = rsType matches "DECOY_SEARCH"
-        val isNative = rsType matches "SEARCH"
+        val isDecoy = rsType matches "DECOY_.*"
+        val isNative = rsType matches ".*SEARCH"
         val decoyRsId = r.getLongOrElse(RSCols.DECOY_RESULT_SET_ID, 0L)
 
         val rsMsiSearchId = if (isNative) {
