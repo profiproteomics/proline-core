@@ -48,15 +48,7 @@ class LandmarkRangeSmoother extends IAlnSmoother {
     this.eachSlidingWindow( nbLandmarks, smoothingWindowSize, smoothingWindowOverlap, processWindowFn )
     
     // Instantiate a new map alignment
-    val newMapAln = new MapAlignment (
-                          refMapId = mapAln.refMapId,
-                          targetMapId = mapAln.targetMapId,
-                          massRange = mapAln.massRange,
-                          timeList = newTimeList.toArray,
-                          deltaTimeList = newDeltaTimeList.toArray
-                        )
-    
-    newMapAln
+    mapAln.copy( timeList = newTimeList.toArray, deltaTimeList = newDeltaTimeList.toArray )
     
   }
 

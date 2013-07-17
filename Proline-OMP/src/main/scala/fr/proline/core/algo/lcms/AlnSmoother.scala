@@ -2,6 +2,7 @@ package fr.proline.core.algo.lcms
 
 object AlnSmoothing extends Enumeration {
   val LANDMARK_RANGE = Value("LANDMARK_RANGE")
+  val LOESS = Value("LOESS")
   val TIME_WINDOW = Value("TIME_WINDOW")
 }
 
@@ -19,6 +20,7 @@ object AlnSmoother {
     
     smoothingMethod match {
       case AlnSmoothing.LANDMARK_RANGE => new LandmarkRangeSmoother()
+      case AlnSmoothing.LOESS => new LoessSmoother()
       case AlnSmoothing.TIME_WINDOW => new TimeWindowSmoother()
     }
   }

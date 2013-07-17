@@ -51,15 +51,7 @@ class TimeWindowSmoother extends IAlnSmoother {
     this.eachSlidingWindow( totalTime, smoothingTimeInterval, smoothingWindowOverlap, processWindowFn )
   
     // Instantiate a new map alignment
-    val newMapAln = new MapAlignment (
-      refMapId = mapAln.refMapId,
-      targetMapId = mapAln.targetMapId,
-      massRange = mapAln.massRange,
-      timeList = newTimeList.toArray,
-      deltaTimeList = newDeltaTimeList.toArray
-    )
-    
-    newMapAln
+    mapAln.copy( timeList = newTimeList.toArray, deltaTimeList = newDeltaTimeList.toArray )
   }
 
 }
