@@ -30,7 +30,7 @@ class TimeWindowSmoother extends IAlnSmoother {
         var landmarkIdx = landmarksSortedByTime.indexWhere(_.time >= minVal)
         
         val landmarkGroup = new ArrayBuffer[Landmark](0)
-        while( landmarkIdx < nbLandmarks && landmarksSortedByTime(landmarkIdx).time <= maxVal ) {
+        while( landmarkIdx < nbLandmarks && landmarksSortedByTime(landmarkIdx).time < maxVal ) {
           
           landmarkGroup += landmarksSortedByTime(landmarkIdx)
           
@@ -38,7 +38,7 @@ class TimeWindowSmoother extends IAlnSmoother {
         }
       
         // If the landmark group is filled enough
-        if( landmarkGroup.length > minWindowLandmarks ) {
+        if( landmarkGroup.length >= minWindowLandmarks ) {
         
           val medianLm = computeMedianLandmark( landmarkGroup )
           newTimeList += medianLm.time

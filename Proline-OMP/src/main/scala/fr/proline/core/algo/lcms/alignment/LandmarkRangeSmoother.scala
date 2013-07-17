@@ -13,7 +13,7 @@ class LandmarkRangeSmoother extends IAlnSmoother {
     // Create an array of landmarks
     val landmarks = mapAln.getLandmarks
     val nbLandmarks = landmarks.length
-    val landmarksSortedByTime = landmarks.toList.sort { (a,b) => a.time <= b.time } 
+    val landmarksSortedByTime = landmarks.toList.sortBy( _.time )
     
     val( newTimeList, newDeltaTimeList) = ( new ArrayBuffer[Float](0), new ArrayBuffer[Float](0) )
     

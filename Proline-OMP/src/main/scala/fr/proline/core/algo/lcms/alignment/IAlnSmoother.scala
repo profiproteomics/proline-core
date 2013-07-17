@@ -31,7 +31,7 @@ trait IAlnSmoother {
   }
   
   protected def eachSlidingWindow( dataSetSize: Float, windowSize: Int, windowOverlap: Int, onEachWindow: Function2[Float,Float,Unit] ): Unit = {
-    require( windowOverlap > 0 && windowOverlap < 100 )
+    require( windowOverlap >= 0 && windowOverlap < 100 )
     
     val stepSize = windowSize * ((100-windowOverlap).toFloat/100)
     val nbIntervals = (dataSetSize/stepSize).toInt
