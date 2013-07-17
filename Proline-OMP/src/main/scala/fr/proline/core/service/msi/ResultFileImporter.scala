@@ -54,6 +54,7 @@ class ResultFileImporter(
     logger.info("Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
     
     val msiDbCtx = executionContext.getMSIDbConnectionContext
+    var storerContext: StorerContext = null
     val rsStorer = RsStorer(msiDbCtx)
     var msiTransacOk: Boolean = false
     
@@ -65,14 +66,9 @@ class ResultFileImporter(
       
       // Get Right ResultFile provider
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
-      require(rfProvider != None, "No ResultFileProvider for specified identification file format")
-      
-      /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Parser service use */
-      val parserContext = if (executionContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
-        executionContext.asInstanceOf[ProviderDecoratedExecutionContext]
-      } else {
-        new ProviderDecoratedExecutionContext(executionContext)
-      }
+      require(rfProvider != None, "No ResultFileProvider for specified identification file format")      
+
+      val parserContext =  ProviderDecoratedExecutionContext(executionContext) // Use Object factory
   
       // Open the result file
       val resultFile = rfProvider.get.getResultFile(resultIdentFile, importerProperties, parserContext)
@@ -94,12 +90,7 @@ class ResultFileImporter(
       }
       >>>
       
-      /* Wrap ExecutionContext in StorerContext for RSStorer service use */
-      val storerContext = if (executionContext.isInstanceOf[StorerContext]) {
-        executionContext.asInstanceOf[StorerContext]
-      } else {
-        new StorerContext(executionContext)
-      }
+      storerContext =  StorerContext(executionContext) // Use Object factory
       
       val tdMode = if (resultFile.hasDecoyResultSet) {
         // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
@@ -126,9 +117,12 @@ class ResultFileImporter(
       // Commit transaction if it was initiated locally
       if (!wasInTransaction) msiDbCtx.commitTransaction()
       
-      msiTransacOk = true
-      
+      msiTransacOk = true      
     } finally {
+      
+      if (storerContext != null) {
+        storerContext.clear()
+      }
 
       if (msiDbCtx.isInTransaction() && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")

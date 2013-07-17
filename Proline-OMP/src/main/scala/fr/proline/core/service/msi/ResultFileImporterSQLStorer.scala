@@ -91,13 +91,8 @@ class ResultFileImporterSQLStorer(
     val rfProviderOpt = ResultFileProviderRegistry.get(fileType)
     require(rfProviderOpt != None, "No ResultFileProvider for specified identification file format")
 
-    // Open the result file
-    /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Parser service use */
-    val parserContext = if (executionContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
-      executionContext.asInstanceOf[ProviderDecoratedExecutionContext]
-    } else {
-      new ProviderDecoratedExecutionContext(executionContext)
-    }
+    // Open the result file    
+    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     val resultFile = rfProviderOpt.get.getResultFile(resultIdentFile, importerProperties, parserContext)
     >>>
@@ -122,12 +117,7 @@ class ResultFileImporterSQLStorer(
     val rsStorer: IRsStorer = RsStorer(executionContext.getMSIDbConnectionContext)
     //val rsStorer = new SQLRsStorer(new SQLiteRsWriter, new SQLPeaklistWriter) 
 
-    /* Wrap ExecutionContext in StorerContext for RSStorer service use */
-    val storerContext = if (executionContext.isInstanceOf[StorerContext]) {
-      executionContext.asInstanceOf[StorerContext]
-    } else {
-      new StorerContext(executionContext)
-    }
+    val storerContext = StorerContext(executionContext) // Use Object factory
 
     val tdMode = if (resultFile.hasDecoyResultSet) {
       // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
@@ -150,6 +140,8 @@ class ResultFileImporterSQLStorer(
     )
 
     >>>
+      
+    storerContext.clear()
 
     if (!wasInTransaction) msiDbCtx.commitTransaction
     logger.debug("End of result file importer service")

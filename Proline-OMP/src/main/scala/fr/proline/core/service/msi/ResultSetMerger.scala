@@ -69,9 +69,8 @@ class ResultSetMerger(
     var msiDbCtx: DatabaseConnectionContext = null
     var msiTransacOk: Boolean = false
 
-    try {
-      //storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
-      storerContext = new StorerContext(execCtx)
+    try {      
+      storerContext = StorerContext(execCtx) // Use Object factory
       msiDbCtx = storerContext.getMSIDbConnectionContext
 
       // Check if a transaction is already initiated
@@ -92,6 +91,10 @@ class ResultSetMerger(
       msiTransacOk = true
 
     } finally {
+      
+      if (storerContext != null) {
+        storerContext.clear()
+      }
 
       if (msiDbCtx.isInTransaction() && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
@@ -106,10 +109,6 @@ class ResultSetMerger(
         }
 
       }
-
-      /*if (storerContext != null) {
-        storerContext.closeAll()
-      }*/
 
     }
 

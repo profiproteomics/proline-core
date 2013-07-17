@@ -98,7 +98,7 @@ class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
 	  assertEquals(1, ids.length)
 	  assertEquals(-99, ids(0))
 	  
-	  val storerContext = new StorerContext(executionContext)
+	  val storerContext = StorerContext(executionContext) // Use Object factory
 	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
      val rsId = rsStorer.storeResultSet(rs2, storerContext)
   }
@@ -119,7 +119,7 @@ class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
 	  assertEquals(1, ids.length)
 	  assertEquals(-99, ids(0))
 	  
-	  val storerContext = new StorerContext(executionContext)
+	  val storerContext = StorerContext(executionContext) // Use Object factory
 	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
      val rsId = rsStorer.storeResultSet(rs2, storerContext)
   }
@@ -130,7 +130,7 @@ class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
     val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
     val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false).asInstanceOf[SQLConnectionContext]
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
-    val parserContext = new ProviderDecoratedExecutionContext(executionContext)
+    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))

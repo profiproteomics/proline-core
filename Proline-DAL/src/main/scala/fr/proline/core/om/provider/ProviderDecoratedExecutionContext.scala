@@ -9,7 +9,8 @@ import fr.proline.context.IExecutionContext
  * ExecutionContext with a map of context Providers (can be used in Mascot / OMSSA parsers).
  * Default factory for Providers is fr.proline.core.om.provider.ProviderFactory .
  */
-class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionContext, providerFactory: IProviderFactory = ProviderFactory) extends DecoratedExecutionContext(wrappedExecutionContext) {
+class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionContext, providerFactory: IProviderFactory = ProviderFactory)
+  extends DecoratedExecutionContext(wrappedExecutionContext) {
 
   private val m_providers = mutable.Map.empty[Class[_], AnyRef]
 
@@ -47,6 +48,28 @@ class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionConte
       newProviderInstance
     }
 
+  }
+
+}
+
+object ProviderDecoratedExecutionContext {
+
+  def apply(wrappedEC: IExecutionContext): ProviderDecoratedExecutionContext = {
+    require(wrappedEC != null, "WrappedEC is null")
+
+    var result: ProviderDecoratedExecutionContext = wrappedEC match {
+      case context: ProviderDecoratedExecutionContext => context
+
+      case context: DecoratedExecutionContext => context.find(classOf[ProviderDecoratedExecutionContext])
+
+      case _ => null
+    }
+
+    if (result == null) {
+      result = new ProviderDecoratedExecutionContext(wrappedEC)
+    }
+
+    result
   }
 
 }

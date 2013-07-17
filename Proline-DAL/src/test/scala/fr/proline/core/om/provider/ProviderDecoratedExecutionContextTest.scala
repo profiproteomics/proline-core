@@ -25,7 +25,7 @@ class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase w
   def test() {
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
 
-    val parserContext = new ProviderDecoratedExecutionContext(executionContext)
+    val parserContext = ProviderDecoratedExecutionContext(executionContext)  // Use Object factory
 
     val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
 

@@ -16,8 +16,8 @@ public class DecoratedExecutionContext implements IExecutionContext {
 	}
 
 	if (wrappedExecutionContext instanceof DecoratedExecutionContext) {
-	    LOG.info(String.format("Wrapping a [%s] into a [%s]", wrappedExecutionContext.getClass()
-		    .getName(), getClass().getName()));
+	    LOG.info("Wrapping a [{}] into a [{}]", wrappedExecutionContext.getClass().getName(), getClass()
+		    .getName());
 	}
 
 	m_wrappedExecutionContext = wrappedExecutionContext;
@@ -25,6 +25,44 @@ public class DecoratedExecutionContext implements IExecutionContext {
 
     public IExecutionContext unwrap() {
 	return m_wrappedExecutionContext;
+    }
+
+    /**
+     * Recursively finds a wrapped <em>ExecutionContext</em> of given <code>contextClassifier</code> type.
+     * 
+     * @param contextClassifier
+     *            <em>ExecutionContext</em> type, must not be <code>null</code>
+     * @return Wrapped <em>ExecutionContext</em> or <code>null</code> if not found in this
+     *         <code>DecoratedExecutionContext</code> hierarchy.
+     */
+    public <T extends IExecutionContext> T find(final Class<? extends T> contextClassifier) {
+
+	if (contextClassifier == null) {
+	    throw new IllegalArgumentException("Type is null");
+	}
+
+	T result = null;
+
+	if (contextClassifier.isInstance(this)) {
+	    result = contextClassifier.cast(this);
+	} else {
+	    IExecutionContext wrappedEC = unwrap();
+
+	    recurseFind: do {
+
+		if (contextClassifier.isInstance(wrappedEC)) {
+		    result = contextClassifier.cast(wrappedEC);
+		} else if (wrappedEC instanceof DecoratedExecutionContext) {
+		    wrappedEC = ((DecoratedExecutionContext) wrappedEC).unwrap();
+		} else {
+		    break recurseFind; // Not found
+		}
+
+	    } while (result == null);
+
+	}
+
+	return result;
     }
 
     @Override

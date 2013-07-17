@@ -133,14 +133,8 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
 
 
   
-  private def getLeavesRS(rsm: ResultSummary, execContext: IExecutionContext): Seq[ResultSet] = {
-
-	  /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Provider service use */
-      val providerContext = if (execContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
-        execContext.asInstanceOf[ProviderDecoratedExecutionContext]
-      } else {
-        new ProviderDecoratedExecutionContext(execContext)
-      }
+  private def getLeavesRS(rsm: ResultSummary, execContext: IExecutionContext): Seq[ResultSet] = {	  
+    val providerContext = ProviderDecoratedExecutionContext(execContext) // Use Object factory
       
       
     var leavesRsIds : Seq[Long] = getLeafChildsID(rsm.getResultSetId, providerContext)

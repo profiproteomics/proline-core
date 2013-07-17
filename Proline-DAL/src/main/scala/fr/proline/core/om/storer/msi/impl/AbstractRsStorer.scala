@@ -125,7 +125,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
     var msiTransacOk: Boolean = false
 
     try {
-      storerContext = new StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true))
+      storerContext = StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true)) // Use Object factory
 
       val msiDb = storerContext.getMSIDbConnectionContext
       val msiEm = msiDb.getEntityManager()
@@ -144,6 +144,10 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
       msiTransaction.commit()
       msiTransacOk = true
     } finally {
+      
+      if (storerContext != null) {
+        storerContext.clear()
+      }
 
       if ((msiTransaction != null) && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")

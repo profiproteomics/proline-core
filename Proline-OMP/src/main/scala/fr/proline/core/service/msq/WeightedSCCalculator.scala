@@ -276,14 +276,8 @@ class WeightedSCCalculator (
      result.toMap
    }
    
-   private def loadRS( rsID: Long) : ResultSet = {
-     
-	  /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Provider service use */
-      val providerContext = if (execContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
-        execContext.asInstanceOf[ProviderDecoratedExecutionContext]
-      } else {
-        new ProviderDecoratedExecutionContext(execContext)
-      }
+   private def loadRS( rsID: Long) : ResultSet = {    
+      val providerContext = ProviderDecoratedExecutionContext(execContext) // Use Object factory
  
       val rsProvider :IResultSetProvider=  providerContext.getProvider(classOf[IResultSetProvider])
 	  val resultRS = rsProvider.getResultSet(rsID)

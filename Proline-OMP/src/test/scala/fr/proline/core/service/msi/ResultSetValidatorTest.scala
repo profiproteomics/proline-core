@@ -79,7 +79,7 @@ abstract class AbstractResultSetValidator extends AbstractMultipleDBTestCase wit
 
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 
-    val parserContext = new ProviderDecoratedExecutionContext(executionContext)
+    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))

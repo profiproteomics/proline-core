@@ -78,6 +78,7 @@ class ResultFileImporterJPAStorer(
     
     val udsDbCtx = executionContext.getUDSDbConnectionContext
     val msiDbCtx = executionContext.getMSIDbConnectionContext
+    var storerContext: StorerContext = null
     var msiTransacOk: Boolean = false
 
     try {
@@ -92,13 +93,8 @@ class ResultFileImporterJPAStorer(
   
       // Open the result file
   
-      /* Wrap ExecutionContext in ProviderDecoratedExecutionContext for Parser service use */
-      val parserContext = if (executionContext.isInstanceOf[ProviderDecoratedExecutionContext]) {
-        executionContext.asInstanceOf[ProviderDecoratedExecutionContext]
-      } else {
-        new ProviderDecoratedExecutionContext(executionContext)
-      }
-  
+      val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+
       val resultFile = rfProvider.get.getResultFile(resultIdentFile, importerProperties, parserContext)
       >>>
       
@@ -122,13 +118,8 @@ class ResultFileImporterJPAStorer(
       // Instantiate RsStorer   
       val rsStorer: IRsStorer = new JPARsStorer() //<> SQLStorer
 
-      /* Wrap ExecutionContext in StorerContext for RSStorer service use */
-      val storerContext = if (executionContext.isInstanceOf[StorerContext]) {
-        executionContext.asInstanceOf[StorerContext]
-      } else {
-        new StorerContext(executionContext)
-      }
-      
+      storerContext = StorerContext(executionContext) // Use Object factory
+
       val tdMode = if (resultFile.hasDecoyResultSet) {
         // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
         Some(TargetDecoyModes.SEPARATED.toString)
@@ -157,6 +148,10 @@ class ResultFileImporterJPAStorer(
       msiTransacOk = true
       
     } finally {
+      
+      if (storerContext != null) {
+        storerContext.clear()
+      }
 
       if (msiDbCtx.isInTransaction() && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")

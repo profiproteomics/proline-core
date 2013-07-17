@@ -4,7 +4,7 @@ import scala.collection.mutable
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.context.{DecoratedExecutionContext, IExecutionContext}
+import fr.proline.context.{ DecoratedExecutionContext, IExecutionContext }
 import fr.proline.core.om.utils.PeptideIdent
 
 /**
@@ -30,8 +30,6 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
   var seqDbIdByTmpId: Map[Long, Long] = null // TODO To be integrated to idCaches
 
   private val m_entityCaches = mutable.Map.empty[Class[_], mutable.Map[Long, _]]
-
-  // private val m_idCaches = mutable.Map.empty[Class[_], mutable.Map[Int, Int]]
 
   /**
    * Retrieved and created Msi Peptide entities.
@@ -68,33 +66,55 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
 
   }
 
-  //  /**
-  //   * Retrieves the current persisted Id for a given OM temp Id.
-  //   * These are global caches (for entities shared by ResultSets: Decoy, children...)
-  //   * within the current DatabaseConnectionContext.
-  //   * Caches associate OM Id (can be "In memory" < 0) -> Entity Id (Primary key) once persisted.
-  //   *
-  //   * @param classifier Class of relevant OM entity obtained with Scala {{{classOf[]}}} operator.
-  //   * @return current cache for given Msi entity.
-  //   */
-  //  private def getIdCache[T](classifier: Class[T]): mutable.Map[Int, Int] = {
-  //
-  //    require(classifier != null, "Classifier is null")
-  //
-  //    val knownCache = m_idCaches.get(classifier)
-  //
-  //    if (knownCache.isDefined) {
-  //      knownCache.get
-  //    } else {
-  //      logger.debug("Creating ID context cache for " + classifier)
-  //
-  //      val newCache = mutable.Map.empty[Int, Int]
-  //
-  //      m_idCaches += classifier -> newCache
-  //
-  //      newCache
-  //    }
-  //
-  //  }
+  override def closeAll() {
+
+    try {
+      clear()
+    } finally {
+      super.closeAll()
+    }
+
+  }
+
+  /**
+   * Clears all caches of this {{{StorerContext}}}.
+   */
+  def clear() {
+    spectrumIdByTitle = null
+
+    seqDbIdByTmpId = null
+
+    msiPeptides.clear()
+
+    for (map <- m_entityCaches.values) {
+      map.clear()
+    }
+
+    m_entityCaches.clear()
+  }
+
+}
+
+object StorerContext {
+
+  def apply(wrappedEC: IExecutionContext): StorerContext = {
+    require(wrappedEC != null, "WrappedEC is null")
+
+    var result: StorerContext = wrappedEC match {
+      case context: StorerContext             => context
+
+      case context: DecoratedExecutionContext => context.find(classOf[StorerContext])
+
+      case _                                  => null
+    }
+
+    if (result == null) {
+      result = new StorerContext(wrappedEC)
+    } else {
+      result.clear() // Clear Context caches
+    }
+
+    result
+  }
 
 }

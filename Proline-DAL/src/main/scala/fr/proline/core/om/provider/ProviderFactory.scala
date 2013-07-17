@@ -141,28 +141,28 @@ object ProviderFactory extends IProviderFactory with Logging {
     result
   }
 
-   def getResultSetProviderInstance(executionContext: IExecutionContext): IResultSetProvider = {
+  def getResultSetProviderInstance(executionContext: IExecutionContext): IResultSetProvider = {
     var result: IResultSetProvider = getDefaultProviderInstance(classOf[IResultSetProvider])
 
     if (result == null) {
-      val msiDb = executionContext.getMSIDbConnectionContext()
-      val psDb =  executionContext.getPSDbConnectionContext()
-      val pdiDb = executionContext.getPDIDbConnectionContext()
+      val msiDb = executionContext.getMSIDbConnectionContext
+      val psDb = executionContext.getPSDbConnectionContext
+      val pdiDb = executionContext.getPDIDbConnectionContext
 
-      if (( msiDb != null )&&  msiDb.isJPA) {
-        logger.debug("Creating a default ORMResultSetProvider in current executionContext")
+      if (msiDb != null) {
 
-        result = new ORMResultSetProvider(msiDb,psDb,pdiDb)
-        
-      } else if (( msiDb != null ) &&  !msiDb.isJPA) {
-        
-        logger.debug("Creating a default SQLResultSetProvider in current executionContext")
+        if (msiDb.isJPA) {
+          logger.debug("Creating a default ORMResultSetProvider in current executionContext")
 
-        result = new SQLResultSetProvider(msiDb,psDb,pdiDb)
-      }
+          result = new ORMResultSetProvider(msiDb, psDb, pdiDb)
+        } else {
+          logger.debug("Creating a default SQLResultSetProvider in current executionContext")
 
-      if (result == null) {
-        logger.warn("No IResultSetProvider implementing instance found !!")
+          result = new SQLResultSetProvider(msiDb, psDb, pdiDb)
+        }
+
+      } else {
+        logger.warn("MSIDbConnectionContex is null : No IResultSetProvider implementing instance can be created")
       }
 
     } else {
@@ -171,7 +171,7 @@ object ProviderFactory extends IProviderFactory with Logging {
 
     result
   }
-   
+
   def getPTMProviderInstance(executionContext: IExecutionContext): IPTMProvider = {
     var result: IPTMProvider = getDefaultProviderInstance(classOf[IPTMProvider])
 
