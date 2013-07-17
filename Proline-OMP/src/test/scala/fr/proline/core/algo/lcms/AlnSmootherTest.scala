@@ -8,12 +8,11 @@ import org.scalatest.matchers.MustMatchers
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.lcms.MapAlignment
 import fr.proline.core.algo.lcms.alignment.AlnSmoothingParams
-import fr.proline.core.om.model.lcms.MapAlignment
-import fr.proline.core.om.model.lcms.MapAlignment
 
 class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
   
   val landmarkRangeSmoother = AlnSmoother(AlnSmoothing.LANDMARK_RANGE.toString)
+  val loessSmoother = AlnSmoother(AlnSmoothing.LOESS.toString)
   val timeWindowSmoother = AlnSmoother(AlnSmoothing.TIME_WINDOW.toString)
   
   val timeList = Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20).map(_.toFloat)
@@ -103,6 +102,18 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
     newMapAln.timeList(0) must equal (1)
     newMapAln.timeList.length must equal (40)
     newMapAln.deltaTimeList(39) must be ( 0.913f plusOrMinus 1e-3f )
+    
+  }
+  
+  @Test
+  def smoothWithLoess() {
+    
+    val newMapAln = loessSmoother.smoothMapAlignment(mapAlignment, null)
+    
+    // Test requirements
+    newMapAln.timeList(0) must equal (1)
+    newMapAln.timeList.length must equal (20)
+    newMapAln.deltaTimeList(19) must be ( 0.752f plusOrMinus 1e-3f )
     
   }
   
