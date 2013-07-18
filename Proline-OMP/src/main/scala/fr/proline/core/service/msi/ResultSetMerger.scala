@@ -143,12 +143,20 @@ class ResultSetMerger(
     var mergedDecoyRSId: Long = -1L
 
     if (nDecoyRS > 0) {
+      val distinctRSIds = scala.collection.mutable.Set.empty[Long]
+
       var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, storerContext.getMSIDbConnectionContext)
 
       var decoyMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
 
       for (rsId <- decoyRSIds) {
         val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)
+
+        val rsPK = resultSet.id
+        if (rsPK > 0L) {
+          distinctRSIds += rsPK
+        }
+
         decoyMergerAlgo.addResultSet(resultSet)
       }
 
@@ -159,7 +167,7 @@ class ResultSetMerger(
 
       DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
         /* Store merged decoy result set */
-        _storeMergedResultSet(storerContext, msiEzDBC, decoyRS, decoyRSIds)
+        _storeMergedResultSet(storerContext, msiEzDBC, decoyRS, distinctRSIds.toSet)
       }, true) // end of JDBC work
 
       mergedDecoyRSId = decoyRS.id
@@ -169,12 +177,20 @@ class ResultSetMerger(
       decoyRS = null // Eligible for Garbage collection
     }
 
+    val distinctRSIds = scala.collection.mutable.Set.empty[Long]
+
     var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, storerContext.getMSIDbConnectionContext)
 
     var targetMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, false, Some(seqLengthByProtId))
 
     for (rsId <- resultSetIds) {
       val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)
+
+      val rsPK = resultSet.id
+      if (rsPK > 0L) {
+        distinctRSIds += rsPK
+      }
+
       targetMergerAlgo.addResultSet(resultSet)
       logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
     }
@@ -190,7 +206,7 @@ class ResultSetMerger(
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
       /* Store merged target result set */
-      _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, resultSetIds)
+      _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, distinctRSIds.toSet)
     }, true) // end of JDBC work
 
     logger.debug("Merged TARGET ResultSet Id: " + mergedResultSet.id)
@@ -222,13 +238,13 @@ class ResultSetMerger(
       if (decoyResultSets.length > 0) {
         val rsIds = resultSets
 
-        _storeMergedResultSet(storerContext, msiEzDBC, decoyRS.get, decoyResultSets.map { _.id } distinct)
+        _storeMergedResultSet(storerContext, msiEzDBC, decoyRS.get, decoyResultSets.map { _.id } toSet)
         // Then store merged decoy result set
         mergedResultSet.decoyResultSet = Some(decoyRS.get)
       }
 
       // Store merged target result set
-      _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, resultSets.map { _.id } distinct)
+      _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, resultSets.map { _.id } toSet)
 
     }, true) // end of JDBC work
 
@@ -253,7 +269,7 @@ class ResultSetMerger(
     storerContext: StorerContext,
     msiEzDBC: EasyDBC,
     resultSet: ResultSet,
-    childrenRSIds: Seq[Long]) {
+    childrenRSIds: Set[Long]) {
 
     logger.debug("Storing merged ResultSet ...")
 
@@ -262,15 +278,20 @@ class ResultSetMerger(
 
     >>>
 
-    // Link parent result set to its child result sets
-    val parentRsId = resultSet.id
+    if (!childrenRSIds.isEmpty) {
+      // Link parent result set to its child result sets
+      val parentRSId = resultSet.id
+      
+      logger.debug("Linking children ResultSets to parent #" + parentRSId)
 
-    // Insert result set relation between parent and its children
-    val rsRelationInsertQuery = MsiDbResultSetRelationTable.mkInsertQuery()
-    msiEzDBC.executePrepared(rsRelationInsertQuery) { stmt =>
-      for (childRsId <- childrenRSIds) stmt.executeWith(parentRsId, childRsId)
+      // Insert result set relation between parent and its children
+      val rsRelationInsertQuery = MsiDbResultSetRelationTable.mkInsertQuery()
+      msiEzDBC.executePrepared(rsRelationInsertQuery) { stmt =>
+        for (childRsId <- childrenRSIds) stmt.executeWith(parentRSId, childRsId)
+      }
+
+      >>>
     }
-    >>>
 
   }
 
