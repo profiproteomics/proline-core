@@ -253,15 +253,11 @@ case class MapAlignment(
     
   }
   
+  /*
   @deprecated("0.0.9","can't compute reference time using a time list of the reference map")
   def calcReferenceElutionTime( elutionTime: Float ): Float = {
     // Delta = aln_map - ref_map
     elutionTime - this.calcDeltaTime(elutionTime)
-  }
-  
-  /*def calcFromMapElutionTime( toMapTime: Float ): Float = {    
-    // Delta = aln_map - ref_map
-    elutionTime - this.calcDeltaTime(toMapTime)
   }*/
   
   /**
@@ -359,6 +355,7 @@ case class MapAlignmentSet(
   // Requirements
   require( mapAlignments != null )
   
+  /*
   @deprecated("0.0.9","can't compute reference time using a time list of the reference map")
   def calcReferenceElutionTime( elutionTime: Float, mass: Double ): Float = {
 
@@ -369,7 +366,7 @@ case class MapAlignmentSet(
     
     // Convert aligned map elution time into reference map one
     mapAln.get.calcReferenceElutionTime( elutionTime )
-  }
+  }*/
   
   /**
    * Converts an elution time using the time list of the reference map (refMap)

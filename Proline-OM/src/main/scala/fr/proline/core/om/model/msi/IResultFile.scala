@@ -8,8 +8,8 @@ trait IPeaklistContainer {
 
 trait IResultFile extends IPeaklistContainer {
   
-  val fileLocation: File  
-  val importProperties: Map[String, Any]  
+  val fileLocation: File
+  val importProperties: Map[String, Any]
   
   val msLevel: Int
   val msiSearch: MSISearch
