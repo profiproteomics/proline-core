@@ -34,8 +34,8 @@ class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends 
     
     DoJDBCReturningWork.withEzDBC(dbCtx, { udsEzDBC =>
       udsEzDBC.selectHeadOption(
-        "SELECT * FROM peaklist_software WHERE name= ? and version= ? ", softName, softVersion)(r =>
-          new PeaklistSoftware(id = r, name = r, version = r)
+        "SELECT * FROM peaklist_software WHERE name = ? and version = ? ", softName, softVersion)(r =>
+          new PeaklistSoftware(id = toLong(r.nextAny), name = r.nextString, version = r.nextStringOrElse(""))
         )
     })
   }

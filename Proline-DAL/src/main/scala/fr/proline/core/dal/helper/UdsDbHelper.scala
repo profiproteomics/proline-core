@@ -1,10 +1,12 @@
 package fr.proline.core.dal.helper
 
+import scala.util.matching.Regex
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
+import fr.proline.core.dal.tables.uds.UdsDbProteinMatchDecoyRuleTable
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import scala.collection.mutable.HashMap
 import fr.proline.util.primitives._
@@ -12,6 +14,7 @@ import fr.proline.util.primitives._
 class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
   
   val datasetQB = new SelectQueryBuilder1(UdsDbDataSetTable)
+  val decoyRuleTable = UdsDbProteinMatchDecoyRuleTable
   
   @throws( classOf[NoSuchElementException] )
   def getLastProjectIdentificationNumber( projectId: Long): Int = {
@@ -128,6 +131,18 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
         " AND "~ t.TYPE ~"= '"~ DatasetType.IDENTIFICATION ~ "'"
       ) ) { r =>
         toLong(r.nextAny) -> toLong(r.nextAny)
+      } toMap
+    
+    })
+
+  }
+  
+  def getProteinMatchDecoyRegexById(): Map[Long, Regex] = {
+    
+    DoJDBCReturningWork.withEzDBC( udsDbCtx, { ezDBC =>
+      
+      ezDBC.select( "SELECT * FROM " + decoyRuleTable.name ) { r =>
+        toLong(r.nextAny) -> new Regex(r.nextString)
       } toMap
     
     })
