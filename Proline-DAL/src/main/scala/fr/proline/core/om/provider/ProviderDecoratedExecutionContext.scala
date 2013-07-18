@@ -15,10 +15,7 @@ class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionConte
   private val m_providers = mutable.Map.empty[Class[_], AnyRef]
 
   def putProvider[T <: AnyRef](providerClassifier: Class[T], providerInstance: T): Option[T] = {
-
-    if (providerClassifier == null) {
-      throw new IllegalArgumentException("ProviderClassifier is null")
-    }
+    require (providerClassifier != null, "ProviderClassifier is null")
 
     val oldProvider = m_providers.put(providerClassifier, providerInstance)
 
@@ -31,11 +28,8 @@ class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionConte
   }
 
   def getProvider[T <: AnyRef](providerClassifier: Class[T]): T = {
-
-    if (providerClassifier == null) {
-      throw new IllegalArgumentException("ProviderClassifier is null")
-    }
-
+    require (providerClassifier != null, "ProviderClassifier is null")
+    
     val currentProviderOpt = m_providers.get(providerClassifier)
 
     if (currentProviderOpt.isDefined) {
