@@ -127,11 +127,7 @@ class ResultFileImporter(
       if (msiDbCtx.isInTransaction() && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
 
-        try {
-          // Rollback is not useful for SQLite and has locking issue
-          // http://www.sqlite.org/lang_transaction.html
-          // TODO: put this check in DatabaseConnectionContext ???
-          if (msiDbCtx.getDriverType() != DriverType.SQLITE)
+        try {          
             msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)

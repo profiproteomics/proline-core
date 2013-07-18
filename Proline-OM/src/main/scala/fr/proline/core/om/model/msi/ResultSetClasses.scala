@@ -150,7 +150,7 @@ case class ResultSummary(
   protected var resultSetId: Long = 0,
   @transient var resultSet: Option[ResultSet] = None,
 
-  var decoyResultSummaryId: Long = 0,
+  private var decoyResultSummaryId: Long = 0,
   @transient var decoyResultSummary: Option[ResultSummary] = null,
 
   var properties: Option[ResultSummaryProperties] = None) {
@@ -160,6 +160,13 @@ case class ResultSummary(
 
   def getResultSetId: Long = { if (resultSet != None) resultSet.get.id else resultSetId }
 
+  
+   def setDecoyResultSummaryId(decoyRSMId: Long) {
+    require((decoyResultSummary == null) || decoyResultSummary.isEmpty || (decoyResultSummary.get.id == decoyRSMId), "Inconsistent decoyRSId")
+
+    decoyResultSummaryId = decoyRSMId
+  }
+  
   def getDecoyResultSummaryId: Long = { if (decoyResultSummary != null && decoyResultSummary != None) decoyResultSummary.get.id else decoyResultSummaryId }
 
   def peptideInstanceById: Map[Long, PeptideInstance] = {

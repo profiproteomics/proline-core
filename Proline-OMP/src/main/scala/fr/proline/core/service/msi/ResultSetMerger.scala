@@ -26,8 +26,12 @@ object ResultSetMerger {
 
   def _loadResultSet(rsId: Long, execContext: IExecutionContext): ResultSet = {
     val rsProvider = getResultSetProvider(execContext)
+
     val rs = rsProvider.getResultSet(rsId)
-    if (rs.isEmpty) throw new IllegalArgumentException("Unknown ResultSet Id: " + rsId)
+    if (rs.isEmpty) {
+      throw new IllegalArgumentException("Unknown ResultSet Id: " + rsId)
+    }
+
     rs.get
   }
 
@@ -43,6 +47,7 @@ object ResultSetMerger {
     }
 
   }
+
 }
 
 class ResultSetMerger(
@@ -51,14 +56,15 @@ class ResultSetMerger(
   resultSets: Option[Seq[ResultSet]]) extends IService with Logging {
 
   var mergedResultSet: ResultSet = null
-  def mergedResultSetId = if (mergedResultSet != null) mergedResultSet.id else 0L
+
+  def mergedResultSetId = if (mergedResultSet == null) 0L else mergedResultSet.id
 
   // Merge result sets
   private val rsMergerAlgo = new ResultSetMergerAlgo()
 
   override protected def beforeInterruption = {
     // Release database connections
-    this.logger.info("releasing database connections before service interruption...")
+    logger.info("Do NOTHING")
     //this.msiDb.closeConnection()
 
   }
@@ -69,13 +75,16 @@ class ResultSetMerger(
     var msiDbCtx: DatabaseConnectionContext = null
     var msiTransacOk: Boolean = false
 
-    try {      
+    try {
       storerContext = StorerContext(execCtx) // Use Object factory
       msiDbCtx = storerContext.getMSIDbConnectionContext
 
       // Check if a transaction is already initiated
-      val wasInTransaction = msiDbCtx.isInTransaction()
-      if (!wasInTransaction) msiDbCtx.beginTransaction()
+      val wasInTransaction = msiDbCtx.isInTransaction
+
+      if (!wasInTransaction) {
+        msiDbCtx.beginTransaction()
+      }
 
       if (resultSets.isDefined) {
         logger.info("Start merge from existing ResultSets")
@@ -86,24 +95,22 @@ class ResultSetMerger(
       }
 
       // Commit transaction if it was initiated locally
-      if (!wasInTransaction) msiDbCtx.commitTransaction()
+      if (!wasInTransaction) {
+        msiDbCtx.commitTransaction()
+      }
 
       msiTransacOk = true
-
     } finally {
-      
+
       if (storerContext != null) {
         storerContext.clear()
       }
 
-      if (msiDbCtx.isInTransaction() && !msiTransacOk) {
+      if (msiDbCtx.isInTransaction && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
 
         try {
-          // Rollback is not useful for SQLite and has locking issue
-          // http://www.sqlite.org/lang_transaction.html
-          if (msiDbCtx.getDriverType() != DriverType.SQLITE)
-            msiDbCtx.rollbackTransaction()
+          msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
         }
@@ -112,18 +119,18 @@ class ResultSetMerger(
 
     }
 
-    this.beforeInterruption()
+    beforeInterruption()
 
     true
   }
 
   private def _mergeFromResultsSetIds(resultSetIds: Seq[Long], storerContext: StorerContext) {
     val msiDbHelper = new MsiDbHelper(storerContext.getMSIDbConnectionContext)
-    
+
     logger.debug("TARGET ResultSet Ids : " + resultSetIds.mkString(" | "))
 
     val decoyRSIds = msiDbHelper.getDecoyRsIds(resultSetIds)
-    
+
     logger.debug("DECOY ResultSet Ids : " + decoyRSIds.mkString(" | "))
 
     val nTargetRS = resultSetIds.length
@@ -135,7 +142,7 @@ class ResultSetMerger(
 
     var mergedDecoyRSId: Long = -1L
 
-    if (decoyRSIds.length > 0) {
+    if (nDecoyRS > 0) {
       var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, storerContext.getMSIDbConnectionContext)
 
       var decoyMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
@@ -190,6 +197,7 @@ class ResultSetMerger(
   }
 
   private def _mergeFromResultsSets(resultSets: Seq[ResultSet], storerContext: StorerContext) {
+
     val decoyResultSets = for (
       rs <- resultSets if ((rs.decoyResultSet != null) && rs.decoyResultSet.isDefined)
     ) yield rs.decoyResultSet.get
@@ -200,12 +208,12 @@ class ResultSetMerger(
     >>>
 
     // Merge target result sets
-    mergedResultSet = this._mergeResultSets(resultSets, seqLengthByProtId)
+    mergedResultSet = _mergeResultSets(resultSets, seqLengthByProtId)
 
-    val decoyRS: Option[ResultSet] = {
-      if (decoyResultSets.length > 0)
-        Some(this._mergeResultSets(decoyResultSets, seqLengthByProtId))
-      else None
+    val decoyRS: Option[ResultSet] = if (decoyResultSets.length > 0) {
+      Some(_mergeResultSets(decoyResultSets, seqLengthByProtId))
+    } else {
+      None
     }
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
@@ -214,13 +222,13 @@ class ResultSetMerger(
       if (decoyResultSets.length > 0) {
         val rsIds = resultSets
 
-        this._storeMergedResultSet(storerContext, msiEzDBC, decoyRS.get, decoyResultSets.map { _.id } distinct)
+        _storeMergedResultSet(storerContext, msiEzDBC, decoyRS.get, decoyResultSets.map { _.id } distinct)
         // Then store merged decoy result set
         mergedResultSet.decoyResultSet = Some(decoyRS.get)
       }
 
       // Store merged target result set
-      this._storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, resultSets.map { _.id } distinct)
+      _storeMergedResultSet(storerContext, msiEzDBC, mergedResultSet, resultSets.map { _.id } distinct)
 
     }, true) // end of JDBC work
 
@@ -247,7 +255,7 @@ class ResultSetMerger(
     resultSet: ResultSet,
     childrenRSIds: Seq[Long]) {
 
-    logger.info("storing merged result set...")
+    logger.debug("Storing merged ResultSet ...")
 
     val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
     rsStorer.storeResultSet(resultSet, storerContext)

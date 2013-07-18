@@ -26,19 +26,23 @@ object ResultSummaryMerger {
 
   def _loadResultSummary(rsmId: Long, execContext: IExecutionContext): ResultSummary = {
     val rsmProvider = getResultSummaryProvider(execContext)
+
     val rsm = rsmProvider.getResultSummary(rsmId, true)
-    if (rsm.isEmpty) throw new IllegalArgumentException("Unknown ResultSummary Id: " + rsmId)
+    if (rsm.isEmpty) {
+      throw new IllegalArgumentException("Unknown ResultSummary Id: " + rsmId)
+    }
+
     rsm.get
   }
 
   // TODO Retrieve a ResultSetProvider from a decorated ExecutionContext ?
   private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
 
-    new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
-      execContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext],
-      execContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext])
-
+    new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext,
+      execContext.getPSDbConnectionContext,
+      execContext.getUDSDbConnectionContext)
   }
+
 }
 
 class ResultSummaryMerger(
@@ -56,8 +60,7 @@ class ResultSummaryMerger(
   }
 
   def runService(): Boolean = {
-
-    var storerContext: StorerContext = null // For JPA use
+    var storerContext: StorerContext = null
     var msiDbCtx: DatabaseConnectionContext = null
     var msiTransacOk: Boolean = false
 
@@ -65,46 +68,43 @@ class ResultSummaryMerger(
       storerContext = StorerContext(execCtx)
       msiDbCtx = storerContext.getMSIDbConnectionContext
 
-      // Check if a transaction is already initiated
-      val wasInTransaction = msiDbCtx.isInTransaction()
-      if (!wasInTransaction) msiDbCtx.beginTransaction()
+      /* Check if a transaction is already initiated */
+      val wasInTransaction = msiDbCtx.isInTransaction
 
-      val tmpMergedResultSummary = {
-        if (resultSummaries.isDefined) {
-          logger.info("Start merge from existing ResultSets")
-          _mergeFromResultsSummaries(resultSummaries.get, storerContext)
-        } else {
-          logger.info("Start merge from ResultSet Ids")
-          _mergeFromResultsSummaryIds(resultSummaryIds.get, storerContext)
-        }
+      if (!wasInTransaction) {
+        msiDbCtx.beginTransaction()
       }
 
-      //      _storeResultSummary(tmpMergedResultSummary, storerContext, msiEzDBC)
+      mergedResultSummary = if (resultSummaries.isDefined) {
+        logger.info("Start merge from existing ResultSummaries")
+        _mergeFromResultsSummaries(resultSummaries.get, storerContext)
+      } else {
+        logger.info("Start merge from ResultSummary Ids")
+        _mergeFromResultsSummaryIds(resultSummaryIds.get, storerContext)
+      }
 
-      // Commit transaction if it was initiated locally
-      if (!wasInTransaction) msiDbCtx.commitTransaction()
+      /* Commit transaction if it was initiated locally */
+      if (!wasInTransaction) {
+        msiDbCtx.commitTransaction()
+      }
 
       msiTransacOk = true
-
     } finally {
-      
+
       if (storerContext != null) {
         storerContext.clear()
       }
 
-      if (msiDbCtx.isInTransaction() && !msiTransacOk) {
+      if (msiDbCtx.isInTransaction && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
 
         try {
-          // Rollback is not useful for SQLite and has locking issue
-          // http://www.sqlite.org/lang_transaction.html
-          if (msiDbCtx.getDriverType() != DriverType.SQLITE)
-            msiDbCtx.rollbackTransaction()
+          msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
         }
 
-      }      
+      }
 
     }
 
@@ -113,13 +113,20 @@ class ResultSummaryMerger(
 
   private def _mergeFromResultsSummaries(resultSummaries: Seq[ResultSummary], storerContext: StorerContext): ResultSummary = {
 
-    val decoyResultSummaries = new ArrayBuffer[ResultSummary]  
-      for(rsm <- resultSummaries ) {
-      if (rsm.decoyResultSummary.isDefined) {
-        decoyResultSummaries += rsm.decoyResultSummary.get
+    val decoyResultSummaries = new ArrayBuffer[ResultSummary]
+    for (rsm <- resultSummaries) {
+      val optionalDecoyRSM = rsm.decoyResultSummary
+      if (optionalDecoyRSM.isDefined) {
+        decoyResultSummaries += optionalDecoyRSM.get
       } else {
-        if (rsm.decoyResultSummaryId > 0L) decoyResultSummaries += ResultSummaryMerger._loadResultSummary(rsm.decoyResultSummaryId, storerContext)
+
+        val decoyRSMId = rsm.getDecoyResultSummaryId
+        if (decoyRSMId > 0L) {
+          decoyResultSummaries += ResultSummaryMerger._loadResultSummary(decoyRSMId, storerContext)
+        }
+
       }
+
     }
 
     // Merge result summaries
@@ -128,57 +135,78 @@ class ResultSummaryMerger(
     val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring)
     val rsmMerger = new RsmMergerAlgo(pepSetScoreUpdater)
 
+    var mergedDecoyRSMId: Long = -1L
     var mergedDecoyRSId: Long = -1L
+
     if (decoyResultSummaries.length > 0) {
 
       // Retrieve protein ids
       val proteinIdSet = new HashSet[Long]
       for (rsm <- decoyResultSummaries) {
 
-        val resultSetAsOpt = rsm.resultSet
-        require(resultSetAsOpt != None, "the result summary must contain a result set")
+        val optionalRS = rsm.resultSet
+        require(optionalRS.isDefined, "ResultSummary must contain a valid ResultSet")
 
-        for (proteinMatch <- resultSetAsOpt.get.proteinMatches) {
+        for (proteinMatch <- optionalRS.get.proteinMatches) {
+
           val proteinId = proteinMatch.getProteinId
-          if (proteinId != 0L) proteinIdSet += proteinId
+          if (proteinId != 0L) {
+            proteinIdSet += proteinId
+          }
+
         }
+
       }
 
       // Retrieve sequence length mapped by the corresponding protein id
       val seqLengthByProtId = new MsiDbHelper(storerContext.getMSIDbConnectionContext).getSeqLengthByBioSeqId(proteinIdSet)
-      logger.info("Merging DECOY Result Summaries...")
-      val tmpMergedResultSummary = rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
-      logger.info("Storing DECOY result summary...")
-      var decoyRsm = _storeResultSummary(tmpMergedResultSummary, storerContext)
-      mergedDecoyRSId = decoyRsm.getResultSetId
+      logger.debug("Merging DECOY ResultSummaries ...")
+      val mergedDecoyRSM = rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
+
+      logger.debug("Storing DECOY ResultSummary ...")
+      _storeResultSummary(mergedDecoyRSM, storerContext)
+      mergedDecoyRSMId = mergedDecoyRSM.id
+      mergedDecoyRSId = mergedDecoyRSM.getResultSetId
     }
 
     // Retrieve protein ids
     val proteinIdSet = new HashSet[Long]
     for (rsm <- resultSummaries) {
 
-      val resultSetAsOpt = rsm.resultSet
-      require(resultSetAsOpt != None, "the result summary must contain a result set")
+      val optionalRS = rsm.resultSet
+      require(optionalRS.isDefined, "ResultSummary must contain a valid ResultSet")
 
-      for (proteinMatch <- resultSetAsOpt.get.proteinMatches) {
+      for (proteinMatch <- optionalRS.get.proteinMatches) {
+
         val proteinId = proteinMatch.getProteinId
-        if (proteinId != 0L) proteinIdSet += proteinId
+        if (proteinId != 0L) {
+          proteinIdSet += proteinId
+        }
+
       }
+
     }
 
     // Retrieve sequence length mapped by the corresponding protein id
     val seqLengthByProtId = new MsiDbHelper(storerContext.getMSIDbConnectionContext).getSeqLengthByBioSeqId(proteinIdSet)
     >>>
 
-    logger.info("Merging TARGET Result Summaries...")
-    val tmpMergedResultSummary = rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
-     if (mergedDecoyRSId > 0L) {
-      tmpMergedResultSummary.resultSet.get.setDecoyResultSetId(mergedDecoyRSId)
+    logger.info("Merging TARGET ResultSummaries ...")
+    val mergedTargetRSM = rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
+
+    /* Set Ids of decoy RSM and RS */
+    if (mergedDecoyRSMId > 0L) {
+      mergedTargetRSM.setDecoyResultSummaryId(mergedDecoyRSMId)
     }
 
-    logger.info("Storing TARGET result summary...")
-    _storeResultSummary(tmpMergedResultSummary, storerContext)
+    if (mergedDecoyRSId > 0L) {
+      mergedTargetRSM.resultSet.get.setDecoyResultSetId(mergedDecoyRSId)
+    }
 
+    logger.info("Storing TARGET ResultSummary ...")
+    _storeResultSummary(mergedTargetRSM, storerContext)
+
+    mergedTargetRSM
   }
 
   private def _mergeFromResultsSummaryIds(resultSummaryIds: Seq[Long], storerContext: StorerContext): ResultSummary = {
@@ -191,56 +219,74 @@ class ResultSummaryMerger(
     val peptideSetScoring = PepSetScoring.withName(scorings(0))
     val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring)
 
-    logger.debug("TARGET ResultSummaries Ids : " + resultSummaryIds.mkString(" | "))
-    val decoyRSummaryIds = msiDbHelper.getDecoyRsmIds(resultSummaryIds)
-    logger.debug("DECOY ResultSet Ids : " + decoyRSummaryIds.mkString(" | "))
+    logger.debug("TARGET ResultSummary Ids : " + resultSummaryIds.mkString(" | "))
+    val decoyRSMIds = msiDbHelper.getDecoyRsmIds(resultSummaryIds)
+    logger.debug("DECOY ResultSummary Ids : " + decoyRSMIds.mkString(" | "))
 
-    val nTargetRS = resultSummaryIds.length
-    val nDecoyRS = decoyRSummaryIds.length
+    val nTargetRSM = resultSummaryIds.length
+    val nDecoyRSM = decoyRSMIds.length
 
-    if (nDecoyRS != nTargetRS) {
-      logger.warn("Inconsistent number of TARGET ResultSets: " + nTargetRS + " number of DECOY ResultSets: " + nDecoyRS)
+    if (nDecoyRSM != nTargetRSM) {
+      logger.warn("Inconsistent number of TARGET ResultSummaries: " + nTargetRSM + " number of DECOY ResultSummaries: " + nDecoyRSM)
     }
 
+    var mergedDecoyRSMId: Long = -1L
     var mergedDecoyRSId: Long = -1L
 
-    if (decoyRSummaryIds.length > 0) {
-      val decoyRsmBuilder = new ResultSummaryBuilder(ResultSummary.generateNewId(), true, pepSetScoreUpdater, Some(seqLengthByProtId))
-      logger.info("Merging DECOY result summaries...")
+    if (nDecoyRSM > 0) {
+      var decoyRsmBuilder = new ResultSummaryBuilder(ResultSummary.generateNewId(), true, pepSetScoreUpdater, Some(seqLengthByProtId))
+
+      logger.debug("Merging DECOY ResultSummaries ...")
       for (rsmId <- resultSummaryIds) {
         val resultSummary = ResultSummaryMerger._loadResultSummary(rsmId, execCtx)
         decoyRsmBuilder.addResultSummary(resultSummary)
       }
 
-      var decoyRsm = decoyRsmBuilder.toResultSummary()
-      logger.info("Storing DECOY result summary...")
-      _storeResultSummary(decoyRsm, storerContext)
-      mergedDecoyRSId = decoyRsm.getResultSetId
-      decoyRsm = null
+      var mergedDecoyRSM = decoyRsmBuilder.toResultSummary
+
+      decoyRsmBuilder = null // Eligible for Garbage collection
+
+      logger.debug("Storing DECOY ResultSummary ...")
+      _storeResultSummary(mergedDecoyRSM, storerContext)
+
+      mergedDecoyRSMId = mergedDecoyRSM.id
+      mergedDecoyRSId = mergedDecoyRSM.getResultSetId
+
+      mergedDecoyRSM = null // Eligible for Garbage collection
     }
 
-    val rsmBuilder = new ResultSummaryBuilder(ResultSummary.generateNewId(), false, pepSetScoreUpdater, Some(seqLengthByProtId))
-    logger.info("Merging TARGET result summaries...")
+    var rsmBuilder = new ResultSummaryBuilder(ResultSummary.generateNewId(), false, pepSetScoreUpdater, Some(seqLengthByProtId))
+
+    logger.debug("Merging TARGET ResultSummaries ...")
     for (rsmId <- resultSummaryIds) {
       val resultSummary = ResultSummaryMerger._loadResultSummary(rsmId, execCtx)
       rsmBuilder.addResultSummary(resultSummary)
     }
 
-    val targetRsm = rsmBuilder.toResultSummary()
-    if (mergedDecoyRSId > 0L) {
-      targetRsm.resultSet.get.setDecoyResultSetId(mergedDecoyRSId)
+    val mergedTargetRSM = rsmBuilder.toResultSummary
+
+    rsmBuilder = null // Eligible for Garbage collection
+
+    if (mergedDecoyRSMId > 0L) {
+      mergedTargetRSM.setDecoyResultSummaryId(mergedDecoyRSMId)
     }
 
-    logger.info("Storing TARGET result summary...")
-    _storeResultSummary(targetRsm, storerContext)
+    if (mergedDecoyRSId > 0L) {
+      mergedTargetRSM.resultSet.get.setDecoyResultSetId(mergedDecoyRSId)
+    }
+
+    logger.debug("Storing TARGET ResultSummary ...")
+    _storeResultSummary(mergedTargetRSM, storerContext)
+
+    mergedTargetRSM
   }
 
-  private def _storeResultSummary(tmpMergedResultSummary: ResultSummary, storerContext: StorerContext): ResultSummary = {
+  private def _storeResultSummary(tmpMergedResultSummary: ResultSummary, storerContext: StorerContext) {
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
 
       val proteinSets = tmpMergedResultSummary.proteinSets
-      logger.info("nb protein sets:" + tmpMergedResultSummary.proteinSets.length)
+      logger.debug("Nb ProteinSets:" + tmpMergedResultSummary.proteinSets.length)
 
       // Validate all protein sets
       proteinSets.foreach { _.isValidated = true }
@@ -254,7 +300,7 @@ class ResultSummaryMerger(
       val mergedPepMatchByTmpId = mergedResultSet.peptideMatches.map { p => p.id -> p } toMap
       val protMatchByTmpId = mergedResultSet.proteinMatches.map { p => p.id -> p } toMap
 
-      logger.info("Store result set...")
+      logger.debug("Storing ResultSet ...")
 
       //val rsStorer = new JPARsStorer()
       //storerContext = new StorerContext(udsDb, pdiDb, psDb, msiDb)
@@ -266,15 +312,15 @@ class ResultSummaryMerger(
 
       >>>
 
-      // Link parent result set to its child result sets
-      val parentRsId = mergedResultSet.id
-      val rsIds = if (resultSummaries.isDefined) resultSummaries.get.map { _.getResultSetId }.distinct else { resultSummaryIds.get }
-
-      // Insert result set relation between parent and its children
-      val rsRelationInsertQuery = MsiDbResultSetRelationTable.mkInsertQuery()
-      msiEzDBC.executePrepared(rsRelationInsertQuery) { stmt =>
-        for (childRsId <- rsIds) stmt.executeWith(parentRsId, childRsId)
-      }
+      // Do not link RS but RSM when merging ReultSummaries
+      //      val parentRsId = mergedResultSet.id
+      //      val rsIds = if (resultSummaries.isDefined) resultSummaries.get.map { _.getResultSetId }.distinct else { resultSummaryIds.get }
+      //
+      //      // Insert result set relation between parent and its children
+      //      val rsRelationInsertQuery = MsiDbResultSetRelationTable.mkInsertQuery()
+      //      msiEzDBC.executePrepared(rsRelationInsertQuery) { stmt =>
+      //        for (childRsId <- rsIds) stmt.executeWith(parentRsId, childRsId)
+      //      }
       >>>
 
       // Update peptide match ids referenced in peptide instances
@@ -296,12 +342,14 @@ class ResultSummaryMerger(
           if (oldPepMatchPropsById != null) {
             newPepMatchPropsById += newPepMatchId -> oldPepMatchPropsById(oldPepMatchId)
           }
+
         }
 
         pepInstance.peptideMatchIds = newPepMatchIds.toArray
 
-        if (oldPepMatchPropsById != null)
+        if (oldPepMatchPropsById != null) {
           pepInstance.peptideMatchPropertiesById = newPepMatchPropsById.toMap
+        }
 
       }
 
@@ -324,7 +372,6 @@ class ResultSummaryMerger(
     }, true)
     >>>
 
-    tmpMergedResultSummary
   }
 
   private def _buildSeqLength(resultSummaryIds: Seq[Long], msiDbCtx: DatabaseConnectionContext): Map[Long, Int] = {
@@ -343,4 +390,5 @@ class ResultSummaryMerger(
     // Retrieve sequence length mapped by the corresponding protein id
     msiDbHelper.getSeqLengthByBioSeqId(proteinIdSet)
   }
+
 }

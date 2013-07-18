@@ -213,8 +213,8 @@ public class DatabaseConnectionContext {
 	    if (isJPA()) {
 		getEntityManager().getTransaction().begin();
 	    } else {
-		// TODO: handle transaction isolation levels
-		// this.getConnection().setTransactionIsolation( this.txIsolationLevel.id )
+		// TODO handle transaction isolation levels
+		// getConnection().setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE)
 		getConnection().setAutoCommit(false);
 	    }
 
@@ -270,7 +270,15 @@ public class DatabaseConnectionContext {
 	    if (isJPA()) {
 		getEntityManager().getTransaction().rollback();
 	    } else {
-		getConnection().rollback();
+
+		if (getDriverType() == DriverType.SQLITE) {
+		    // FIXME Rollback is not useful for SQLite and has locking issue
+		    // http://www.sqlite.org/lang_transaction.html
+		    LOG.warn("Rollbacking Transaction with SQLITE DataBase does NOTHING");
+		} else {
+		    getConnection().rollback();
+		}
+
 	    }
 
 	} // End of synchronized block on m_contextLock
