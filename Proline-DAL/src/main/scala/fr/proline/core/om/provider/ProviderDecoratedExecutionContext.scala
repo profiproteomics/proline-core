@@ -46,7 +46,6 @@ object ProviderDecoratedExecutionContext {
     require(wrappedEC != null, "WrappedEC is null")
 
     var result: ProviderDecoratedExecutionContext = wrappedEC match {
-
       case context: ProviderDecoratedExecutionContext => context
 
       case context: DecoratedExecutionContext => context.find(classOf[ProviderDecoratedExecutionContext])
