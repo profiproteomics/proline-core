@@ -15,15 +15,15 @@ class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionConte
   private val m_providers = mutable.Map.empty[Class[_], AnyRef]
 
   def putProvider[T <: AnyRef](providerClassifier: Class[T], providerInstance: T): Option[T] = {
-    require (providerClassifier != null, "ProviderClassifier is null")
+    require(providerClassifier != null, "ProviderClassifier is null")
 
     val oldProvider = m_providers.put(providerClassifier, providerInstance)
     oldProvider.map(_.asInstanceOf[T]) // Must be a T
   }
 
   def getProvider[T <: AnyRef](providerClassifier: Class[T]): T = {
-    require (providerClassifier != null, "ProviderClassifier is null")
-    
+    require(providerClassifier != null, "ProviderClassifier is null")
+
     val currentProviderOpt = m_providers.get(providerClassifier)
 
     if (currentProviderOpt.isDefined) {
@@ -45,13 +45,21 @@ object ProviderDecoratedExecutionContext {
   def apply(wrappedEC: IExecutionContext): ProviderDecoratedExecutionContext = {
     require(wrappedEC != null, "WrappedEC is null")
 
-    wrappedEC match {
+    var result: ProviderDecoratedExecutionContext = wrappedEC match {
+
       case context: ProviderDecoratedExecutionContext => context
 
       case context: DecoratedExecutionContext => context.find(classOf[ProviderDecoratedExecutionContext])
+      // This one can return null also if wrappedEC does not contain any ProviderDecoratedExecutionContext
 
-      case _ => new ProviderDecoratedExecutionContext(wrappedEC)
+      case _ => null
     }
+
+    if (result == null) {
+      result = new ProviderDecoratedExecutionContext(wrappedEC)
+    }
+
+    result
 
   }
 
