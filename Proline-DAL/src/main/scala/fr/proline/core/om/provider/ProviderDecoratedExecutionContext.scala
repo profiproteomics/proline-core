@@ -18,13 +18,7 @@ class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionConte
     require (providerClassifier != null, "ProviderClassifier is null")
 
     val oldProvider = m_providers.put(providerClassifier, providerInstance)
-
-    if (oldProvider.isDefined) {
-      Option(oldProvider.get.asInstanceOf[T]) // Must be a T
-    } else {
-      None
-    }
-
+    oldProvider.map(_.asInstanceOf[T]) // Must be a T
   }
 
   def getProvider[T <: AnyRef](providerClassifier: Class[T]): T = {
@@ -51,19 +45,14 @@ object ProviderDecoratedExecutionContext {
   def apply(wrappedEC: IExecutionContext): ProviderDecoratedExecutionContext = {
     require(wrappedEC != null, "WrappedEC is null")
 
-    var result: ProviderDecoratedExecutionContext = wrappedEC match {
+    wrappedEC match {
       case context: ProviderDecoratedExecutionContext => context
 
       case context: DecoratedExecutionContext => context.find(classOf[ProviderDecoratedExecutionContext])
 
-      case _ => null
+      case _ => new ProviderDecoratedExecutionContext(wrappedEC)
     }
 
-    if (result == null) {
-      result = new ProviderDecoratedExecutionContext(wrappedEC)
-    }
-
-    result
   }
 
 }
