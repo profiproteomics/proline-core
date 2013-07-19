@@ -152,19 +152,18 @@ class ResultFileImporter(
     
     val msiDbCtx = this.executionContext.getMSIDbConnectionContext
     val msiPklSoftProvider = new MsiSQLPklSoftProvider(msiDbCtx)
+    val udsPklSoftProvider = new UdsSQLPklSoftProvider(this.executionContext.getUDSDbConnectionContext)
+    
+    val udsPklSoftOpt = udsPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
+    require(udsPklSoftOpt.isDefined,"can't find a peaklist software for id = " + peaklistSoftwareId)
 
     // Try to retrieve peaklist software from the MSidb
-    var pklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
-    if (pklSoftOpt.isEmpty) {
+    var msiPklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
+    if (msiPklSoftOpt.isEmpty) {
       
-      val udsPklSoftProvider = new UdsSQLPklSoftProvider(this.executionContext.getUDSDbConnectionContext)
-
-      // If it doesn't exist => retrieve from the UDSdb
-      pklSoftOpt = udsPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
-      require(pklSoftOpt.isDefined,"can't find a peaklist software for id = " + peaklistSoftwareId)
+      // If it doesn't exist => retrieve from the UDSdb      
+      val pklSoft = udsPklSoftOpt.get
       
-      val pklSoft = pklSoftOpt.get
-
       // Then insert it in the current MSIdb
       DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
         val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery
@@ -178,7 +177,7 @@ class ResultFileImporter(
       })
     }
 
-    pklSoftOpt.get
+    udsPklSoftOpt.get
 
   }
 
