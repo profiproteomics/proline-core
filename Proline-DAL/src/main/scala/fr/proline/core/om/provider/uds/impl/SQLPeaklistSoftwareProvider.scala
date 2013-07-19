@@ -28,7 +28,7 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) exten
 
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
 
-      ezDBC.select("SELECT id, name, version FROM peaklist_software WHERE id IN(" + pklSoftIds.mkString(",") +")") { r =>
+      ezDBC.select("SELECT * FROM peaklist_software WHERE id IN(" + pklSoftIds.mkString(",") +")") { r =>
         _buildNewPeaklistSoftware( r, specRuleById )
       } toArray
       
