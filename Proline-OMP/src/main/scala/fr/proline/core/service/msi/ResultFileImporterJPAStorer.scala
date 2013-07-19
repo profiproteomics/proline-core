@@ -19,7 +19,8 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.impl.SQLInstrumentConfigProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeaklistSoftwareProvider
+import fr.proline.core.om.provider.msi.impl.{ SQLPeaklistSoftwareProvider => MsiSQLPklSoftProvider }
+import fr.proline.core.om.provider.uds.impl.{ SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider }
 import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.storer.msi.ResultFileStorer
 import fr.proline.core.om.storer.msi.impl.JPARsStorer
@@ -178,13 +179,13 @@ class ResultFileImporterJPAStorer(
   private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Long): PeaklistSoftware = {
     
     val msiDbCtx = this.executionContext.getMSIDbConnectionContext
-    val msiPklSoftProvider = new SQLPeaklistSoftwareProvider(msiDbCtx)
+    val msiPklSoftProvider = new MsiSQLPklSoftProvider(msiDbCtx)
 
     // Try to retrieve peaklist software from the MSidb
     var pklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
     if (pklSoftOpt.isEmpty) {
       
-      val udsPklSoftProvider = new SQLPeaklistSoftwareProvider(this.executionContext.getUDSDbConnectionContext)
+      val udsPklSoftProvider = new UdsSQLPklSoftProvider(this.executionContext.getUDSDbConnectionContext)
 
       // If it doesn't exist => retrieve from the UDSdb
       pklSoftOpt = udsPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
