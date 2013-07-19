@@ -9,7 +9,7 @@ import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
 import fr.proline.core.om.model.msi.SpectrumTitleFields
 
 @RunWith(classOf[JUnitRunner])
-class SpectrumTitleTest extends FunSpec with GivenWhenThen with ShouldMatchers {
+class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
   
   object SoftNames extends Enumeration {
     val EXTRACT_MSN = Value("extract_msn.exe")
