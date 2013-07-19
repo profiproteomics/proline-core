@@ -90,10 +90,12 @@ object SpectrumTitleFields extends Enumeration {
   val LAST_TIME = Value("LAST_TIME")
 }
 
+object SpectrumTitleParsingRule extends InMemoryIdGen
+
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class SpectrumTitleParsingRule(
-  val id: Long,
+case class SpectrumTitleParsingRule (
+  val id: Long = SpectrumTitleParsingRule.generateNewId(),
   val rawFileNameRegex: Option[String] = None,
   val firstCycleRegex: Option[String] = None,
   val lastCycleRegex: Option[String] = None,
