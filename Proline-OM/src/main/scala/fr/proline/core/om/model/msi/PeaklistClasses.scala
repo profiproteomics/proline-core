@@ -1,5 +1,6 @@
 package fr.proline.core.om.model.msi
 
+import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -93,13 +94,13 @@ object SpectrumTitleFields extends Enumeration {
 @JsonInclude( Include.NON_NULL )
 case class SpectrumTitleParsingRule(
   val id: Long,
-  val rawFileNameRegex: Option[String],
-  val firstCycleRegex: Option[String],
-  val lastCycleRegex: Option[String],
-  val firstScanRegex: Option[String],
-  val lastScanRegex: Option[String],
-  val firstTimeRegex: Option[String],
-  val lastTimeRegex: Option[String]
+  val rawFileNameRegex: Option[String] = None,
+  val firstCycleRegex: Option[String] = None,
+  val lastCycleRegex: Option[String] = None,
+  val firstScanRegex: Option[String] = None,
+  val lastScanRegex: Option[String] = None,
+  val firstTimeRegex: Option[String] = None,
+  val lastTimeRegex: Option[String] = None
 ) {
   
   def getFieldNames() = SpectrumTitleFields.values.toArray.map(_.toString())
@@ -116,6 +117,34 @@ case class SpectrumTitleParsingRule(
     lastTimeRegex.map( rx => tmpMap += SpectrumTitleFields.LAST_TIME -> rx )
     
     tmpMap.result
+  }
+  
+  def parseTitle(title: String): Map[SpectrumTitleFields.Value,String] = {
+    
+    import fr.proline.util.regex.RegexUtils._
+    
+    // Parse all spectrum title fields defined in the specTitleParsingRule
+    val specTitleFieldMap = new HashMap[SpectrumTitleFields.Value,String]
+    
+    for( (fieldName, fieldRegex) <- this.regexByFieldName ) {
+      
+      fieldRegex.split("""\|\|""").foreach { atomicFieldRegex =>
+        
+        if( specTitleFieldMap.contains(fieldName) == false ) {
+          val fieldNameAsStr = fieldName.toString
+          
+          // Try to capture the corresponding regex group
+          val matches = title =# (atomicFieldRegex,fieldNameAsStr)
+          
+          if( matches.isDefined) {
+            specTitleFieldMap += fieldName -> matches.get.group(fieldNameAsStr)
+          }
+        }
+      }
+    }
+    
+    Map() ++ specTitleFieldMap
+    
   }
   
 }
