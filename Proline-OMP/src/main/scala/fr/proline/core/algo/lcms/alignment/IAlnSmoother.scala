@@ -1,6 +1,6 @@
 package fr.proline.core.algo.lcms.alignment
 
-case class AlnSmoothingParams( windowSize: Int, windowOverlap: Int, minWindowLandmarks: Int = 0 )
+import fr.proline.core.algo.lcms.AlnSmoothingParams
 
 trait IAlnSmoother {
   

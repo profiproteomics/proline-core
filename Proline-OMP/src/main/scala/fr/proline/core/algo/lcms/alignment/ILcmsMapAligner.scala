@@ -1,16 +1,9 @@
 package fr.proline.core.algo.lcms.alignment
 
 import scala.collection.mutable.HashMap
+import fr.proline.core.algo.lcms.AlignmentParams
 import fr.proline.core.algo.lcms.FeatureMappingParams
 import fr.proline.core.om.model.lcms._
-  
-case class AlignmentParams(
-  massInterval: Int,
-  smoothingMethodName: String,
-  smoothingParams: AlnSmoothingParams,
-  ftMappingParams: FeatureMappingParams,
-  maxIterations: Int = 3
-)
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 

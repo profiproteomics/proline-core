@@ -4,11 +4,10 @@ import javax.persistence.EntityManager
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.algo.lcms._
 import fr.proline.core.algo.msq.IQuantifierAlgo
 import fr.proline.core.algo.msq.LabelFreeFeatureQuantifier
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -26,11 +25,7 @@ import fr.proline.core.om.model.msq.QuantPeptide
 import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
-import fr.proline.core.service.lcms.io.ILcMsQuantConfig
-import fr.proline.core.service.lcms.io.IMsQuantConfig
 import fr.proline.util.primitives._
-
-trait ILabelFreeQuantConfig extends ILcMsQuantConfig
 
 abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
   
@@ -146,7 +141,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       lcmsMapSet = lcmsMapSet,
       spectrumIdMap = spectrumIdMap,
       ms2ScanNumbersByFtId = ms2ScanNumbersByFtId,
-      mozTolInPPM = quantConfig.mozTolPPM
+      mozTolInPPM = quantConfig.extractionParams.mozTolPPM
     )
   }
 

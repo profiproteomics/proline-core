@@ -2,14 +2,6 @@ package fr.proline.core.algo.lcms
 
 import com.weiglewilczek.slf4s.Logging
 
-case class ClusteringParams(
-  mozTol: Double,
-  mozTolUnit: String,
-  timeTol: Float,
-  intensityComputation: String,
-  timeComputation: String
-)
-
 object ClusterIntensityComputation extends Enumeration {
   val MOST_INTENSE = Value("MOST_INTENSE")
   val SUM = Value("SUM")

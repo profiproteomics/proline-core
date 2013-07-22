@@ -7,7 +7,6 @@ import org.scalatest.junit.JUnitSuite
 import org.scalatest.matchers.MustMatchers
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.lcms.MapAlignment
-import fr.proline.core.algo.lcms.alignment.AlnSmoothingParams
 
 class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
   

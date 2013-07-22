@@ -1,6 +1,7 @@
 package fr.proline.core.algo.lcms.alignment
 
 import com.weiglewilczek.slf4s.Logging
+import fr.proline.core.algo.lcms.AlignmentParams
 
 class IterativeMapAligner extends ILcmsMapAligner with Logging {
 

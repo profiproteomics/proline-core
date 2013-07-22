@@ -1,5 +1,7 @@
 package fr.proline.core.algo.lcms.alignment
 
+import fr.proline.core.algo.lcms.AlnSmoothingParams
+
 class TimeWindowSmoother extends IAlnSmoother {
 
   import fr.proline.core.om.model.lcms._

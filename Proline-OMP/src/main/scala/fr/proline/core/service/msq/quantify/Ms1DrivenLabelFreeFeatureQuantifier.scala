@@ -4,10 +4,7 @@ import java.io.File
 import javax.persistence.EntityManager
 
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.lcms.ClusteringParams
-import fr.proline.core.algo.lcms.FeatureMappingParams
-import fr.proline.core.algo.lcms.alignment.AlignmentParams
-import fr.proline.core.service.lcms.io.IMsQuantConfig
+import fr.proline.core.algo.lcms._
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory

@@ -8,25 +8,13 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.algo.lcms.FeatureMappingParams
-import fr.proline.core.algo.lcms.alignment.AlignmentParams
+import fr.proline.core.algo.lcms.LabelFreeQuantConfig
 import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 import fr.proline.repository.IDataStoreConnectorFactory
-
-case class LabelFreeQuantConfig(
-  mapSetName: String,
-  lcMsRuns: Seq[LcMsRun],
-  mozTolPPM: Float,
-  clusteringParams: ClusteringParams,
-  alnMethodName: String,
-  alnParams: AlignmentParams,
-  ftFilter: fr.proline.core.algo.lcms.filtering.Filter,
-  ftMappingParams: FeatureMappingParams,
-  normalizationMethod: Option[String]
-) extends ILabelFreeQuantConfig
 
 class Ms2DrivenLabelFreeFeatureQuantifier(
   val executionContext: IExecutionContext,

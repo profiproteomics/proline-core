@@ -1,7 +1,5 @@
 package fr.proline.core.algo.lcms
 
-case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Float )
-
 object FeatureMapper {
   
   import scala.collection.mutable.ArrayBuffer

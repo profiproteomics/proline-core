@@ -68,7 +68,7 @@ object QuantMethodType extends Enumeration {
 object MasterQuantChannelQuantifier {
   
   import javax.persistence.EntityManager
-  import fr.proline.core.service.msq.impl._
+  import fr.proline.core.algo.lcms.LabelFreeQuantConfig
   
   def apply(
     executionContext: IExecutionContext,

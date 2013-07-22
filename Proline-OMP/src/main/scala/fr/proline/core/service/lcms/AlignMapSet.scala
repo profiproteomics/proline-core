@@ -4,7 +4,7 @@ import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
-import fr.proline.core.algo.lcms.alignment.AlignmentParams
+import fr.proline.core.algo.lcms.AlignmentParams
 import fr.proline.core.algo.lcms.LcmsMapAligner
 import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.storer.lcms.MapAlnSetStorer

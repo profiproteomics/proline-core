@@ -10,7 +10,6 @@ import fr.profi.mzdb.model.{ Feature => MzDbFeature }
 import fr.profi.mzdb.model.PutativeFeature
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
-import fr.proline.core.algo.lcms.alignment.AlignmentParams
 import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.om.model.lcms.{ Feature => LcMsFeature, IsotopicPattern => LcMsIsotopicPattern }
 import fr.proline.core.om.model.lcms._
@@ -25,21 +24,6 @@ import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
 import fr.proline.core.service.lcms.CreateMasterMap
 
-trait IMsQuantConfig {
-  val mozTolPPM: Float
-}
-
-trait ILcMsQuantConfig extends IMsQuantConfig {
-  val mapSetName: String
-  val lcMsRuns: Seq[LcMsRun]
-  val clusteringParams: ClusteringParams
-  val alnMethodName: String
-  val alnParams: AlignmentParams
-  val ftFilter: fr.proline.core.algo.lcms.filtering.Filter
-  val ftMappingParams: FeatureMappingParams
-  val normalizationMethod: Option[String]
-}
-
 /**
  * @author David Bouyssie
  *
@@ -52,7 +36,7 @@ class ExtractMapSet(
   // Define some vars
   protected val mapSetName = quantConfig.mapSetName
   protected val lcMsRuns = quantConfig.lcMsRuns
-  protected val mozTolPPM = quantConfig.mozTolPPM
+  protected val mozTolPPM = quantConfig.extractionParams.mozTolPPM
   protected val clusteringParams = quantConfig.clusteringParams
   protected val alnMethodName = quantConfig.alnMethodName
   protected val alnParams = quantConfig.alnParams

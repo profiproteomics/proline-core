@@ -49,7 +49,6 @@ import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.primitives._
 
-
 abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
   // Required fields

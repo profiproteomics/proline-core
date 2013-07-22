@@ -1,5 +1,7 @@
 package fr.proline.core.algo.lcms.alignment
 
+import fr.proline.core.algo.lcms.AlignmentParams
+
 class ComprehensiveMapAligner extends ILcmsMapAligner {
 
   import scala.collection.mutable.ArrayBuffer  
