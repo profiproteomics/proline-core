@@ -1,6 +1,9 @@
 package fr.proline.core.algo.lcms
 
 import fr.proline.core.om.model.lcms.LcMsRun
+import com.codahale.jerkson.JsonSnakeCase
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonInclude.Include
 
 trait IMsQuantConfig {
   val extractionParams: ExtractionParams
@@ -50,6 +53,8 @@ case class ExtractionParams( mozTolPPM: Float )
 
 case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Float ) extends IMzTolerant
 
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
 case class LabelFreeQuantConfig(
   mapSetName: String,
   lcMsRuns: Seq[LcMsRun],
