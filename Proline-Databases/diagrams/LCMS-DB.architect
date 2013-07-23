@@ -891,7 +891,7 @@
     <column id="COL276" populated="true" UUID="171bcce3-a292-417d-90bf-455d258cebfd" autoIncrement="false" autoIncrementSequenceName="native_map_description_seq" defaultValue="" name="description" nullable="1" physicalName="description" precision="10000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
-    <column id="COL277" populated="true" UUID="7ba9d6ab-01f0-4cdd-815a-f9d5b5758d36" autoIncrement="false" autoIncrementSequenceName="map_type_seq" defaultValue="" name="type" nullable="0" physicalName="is_native" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL277" populated="true" UUID="7ba9d6ab-01f0-4cdd-815a-f9d5b5758d36" autoIncrement="false" autoIncrementSequenceName="map_type_seq" defaultValue="" name="type" nullable="0" physicalName="type" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>0 =&gt; run_map 1 =&gt; processed_map</remarks>
     </column>
     <column id="COL278" populated="true" UUID="038356c9-1bef-44ea-afac-eb458138cd7b" autoIncrement="false" autoIncrementSequenceName="native_map_creation_timestamp_seq" defaultValue="" name="creation_timestamp" nullable="0" physicalName="creation_timestamp" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="93" userDefinedTypeUUID="6497d8de-0e00-40d6-a42e-e2adca83be64" >
@@ -1222,7 +1222,7 @@
  <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="true"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8408964152537147" viewportX="0" viewportY="141" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8408964152537147" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="1759" y="1038" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB20" x="912" y="939" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB47" x="1073" y="764" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
