@@ -33,10 +33,13 @@ class ExtractMapSet(
   val quantConfig: ILcMsQuantConfig  
 ) extends ILcMsService with Logging {
   
+  // Do some requirements
+  require( quantConfig.extractionParams.mozTolUnit matches "(?i)PPM" )
+  
   // Define some vars
   protected val mapSetName = quantConfig.mapSetName
   protected val lcMsRuns = quantConfig.lcMsRuns
-  protected val mozTolPPM = quantConfig.extractionParams.mozTolPPM
+  protected val mozTolPPM = quantConfig.extractionParams.mozTol.toFloat
   protected val clusteringParams = quantConfig.clusteringParams
   protected val alnMethodName = quantConfig.alnMethodName
   protected val alnParams = quantConfig.alnParams

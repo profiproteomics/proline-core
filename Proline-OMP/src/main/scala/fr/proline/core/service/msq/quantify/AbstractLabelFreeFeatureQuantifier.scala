@@ -141,7 +141,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       lcmsMapSet = lcmsMapSet,
       spectrumIdMap = spectrumIdMap,
       ms2ScanNumbersByFtId = ms2ScanNumbersByFtId,
-      mozTolInPPM = quantConfig.extractionParams.mozTolPPM
+      mozTolInPPM = quantConfig.extractionParams.mozTol.toFloat
     )
   }
 

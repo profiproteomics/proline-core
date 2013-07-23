@@ -31,6 +31,8 @@ trait IMzTolerant {
   }
 }
 
+@JsonSnakeCase
+@JsonInclude(Include.NON_NULL)
 case class AlignmentParams(
   massInterval: Int,
   smoothingMethodName: String,
@@ -39,8 +41,12 @@ case class AlignmentParams(
   maxIterations: Int = 3
 )
 
+@JsonSnakeCase
+@JsonInclude(Include.NON_NULL)
 case class AlnSmoothingParams( windowSize: Int, windowOverlap: Int, minWindowLandmarks: Int = 0 )
 
+@JsonSnakeCase
+@JsonInclude(Include.NON_NULL)
 case class ClusteringParams(
   mozTol: Double,
   mozTolUnit: String,
@@ -49,8 +55,12 @@ case class ClusteringParams(
   timeComputation: String
 ) extends IMzTolerant
 
-case class ExtractionParams( mozTolPPM: Float )
+@JsonSnakeCase
+@JsonInclude(Include.NON_NULL)
+case class ExtractionParams( mozTol: Double, mozTolUnit: String ) extends IMzTolerant
 
+@JsonSnakeCase
+@JsonInclude(Include.NON_NULL)
 case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Float ) extends IMzTolerant
 
 @JsonSnakeCase
