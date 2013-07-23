@@ -14,15 +14,15 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
   // TODO: update proline admin config files
   object SoftNames extends Enumeration {
     val EXTRACT_MSN = Value("extract_msn.exe")
-    val DATA_ANALYSIS_4_0 = Value("Data Analysis 4.0") // added
-    val DATA_ANALYSIS_4_1 = Value("Data Analysis 4.1") // added
+    val DATA_ANALYSIS_4_0 = Value("Data Analysis 4.0") // regex added
+    val DATA_ANALYSIS_4_1 = Value("Data Analysis 4.1") // regex added
     val MASCOT_DLL = Value("mascot.dll")
-    val MASCOT_DISTILLER = Value("Mascot Distiller")
+    val MASCOT_DISTILLER = Value("Mascot Distiller") // regex modified
     val MAX_QUANT = Value("MaxQuant")
     val PROTEOME_DISCOVER = Value("Proteome Discoverer")
     val PROTEO_WIZARD_2_0 = Value("ProteoWizard 2.0")
     val PROTEO_WIZARD_2_1 = Value("ProteoWizard 2.1")
-    val SPECTRUM_MILL = Value("Spectrum Mill") // renamed
+    val SPECTRUM_MILL = Value("Spectrum Mill") // rule renamed
   }
   
   case class SpectrumTitleSpecif(
@@ -35,7 +35,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
   val titleSpecifs = List(
     SpectrumTitleSpecif(
       SoftNames.EXTRACT_MSN,
-      "the raw file name and the scans",
+      "the raw file name and one scan number",
       "101811RML4SILAC6DaHCD.3864.3864.3.dta", 
       Map(
         SpectrumTitleFields.RAW_FILE_NAME -> "101811RML4SILAC6DaHCD",
@@ -45,7 +45,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     ),
     SpectrumTitleSpecif(
       SoftNames.DATA_ANALYSIS_4_0,
-      "the retention times",
+      "one retention time",
       "Cmpd 1063, +MSn(705.8878), 24.12 min", 
       Map(
         SpectrumTitleFields.FIRST_TIME -> "24.12",
@@ -54,7 +54,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     ),
     SpectrumTitleSpecif(
       SoftNames.DATA_ANALYSIS_4_1,
-      "the retention times and the scans",
+      "one retention time and one scan number",
       "Cmpd 19, +MS2(417.0491), 7.7-10.4eV, 4.1 min #576", 
       Map(
         SpectrumTitleFields.FIRST_TIME -> "4.1",
@@ -65,7 +65,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     ),
     SpectrumTitleSpecif(
       SoftNames.MASCOT_DLL,
-      "the raw file name, the cycles and the retention times",
+      "the raw file name, one cycle and one retention time",
       "File: QSAG051130001.wiff, Sample: bandeA1 (sample number 1), Elution: 92.3 min, Period: 1, Cycle(s): 2040 (Experiment 2)", 
       Map(
         SpectrumTitleFields.RAW_FILE_NAME -> "QSAG051130001.wiff",
@@ -76,8 +76,32 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
       )
     ),
     SpectrumTitleSpecif(
+      SoftNames.MASCOT_DISTILLER,
+      "the raw file name, one cycle and one retention time",
+      """"9272: Scan 13104 (rt=30.2521) [D:\MSData\All\Qex1_000949.raw]""", 
+      Map(
+        SpectrumTitleFields.RAW_FILE_NAME -> """D:\MSData\All\Qex1_000949.raw""",
+        SpectrumTitleFields.FIRST_CYCLE -> "13104",
+        SpectrumTitleFields.LAST_CYCLE -> "13104",
+        SpectrumTitleFields.FIRST_TIME -> "30.2521",
+        SpectrumTitleFields.LAST_TIME -> "30.2521"
+      )
+    ),
+    SpectrumTitleSpecif(
+      SoftNames.MASCOT_DISTILLER,
+      "the raw file name, the cycles and the retention times",
+      """"134: Sum of 3 scans in range 723 (rt=19.5118) to 733 (rt=19.6302) [\\DSV_D01\CPManip\analyses\AMT_Process12\CAJU1269.RAW]""", 
+      Map(
+        SpectrumTitleFields.RAW_FILE_NAME -> """\\DSV_D01\CPManip\analyses\AMT_Process12\CAJU1269.RAW""",
+        SpectrumTitleFields.FIRST_CYCLE -> "723",
+        SpectrumTitleFields.LAST_CYCLE -> "733",
+        SpectrumTitleFields.FIRST_TIME -> "19.5118",
+        SpectrumTitleFields.LAST_TIME -> "19.6302"
+      )
+    ),
+    SpectrumTitleSpecif(
       SoftNames.PROTEOME_DISCOVER,
-      "the scans",
+      "one scan number",
       "Spectrum1524 scans:2000,",
       Map(
         SpectrumTitleFields.FIRST_SCAN -> "2000",
@@ -86,7 +110,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     ),
     SpectrumTitleSpecif(
       SoftNames.SPECTRUM_MILL,
-      "the retention times",
+      "one retention time",
       "Cmpd 1063, +MSn(705.8878), 24.12 min", 
       Map(
         SpectrumTitleFields.FIRST_TIME -> "24.12",
@@ -118,12 +142,19 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
       firstTimeRegex   = Some("""Elution: (.+?) to .+? min||.+Elution: (.+?) min"""), // modified
       lastTimeRegex    = Some("""Elution: .+? to (.+?) min||.+Elution: (.+?) min""") // modified
     ),
-    SoftNames.MASCOT_DISTILLER -> SpectrumTitleParsingRule(
+    /*SoftNames.MASCOT_DISTILLER -> SpectrumTitleParsingRule(
       rawFileNameRegex = Some("""\[(.+?)\]"""),
       firstCycleRegex  = Some("""(\d+?) \(rt="""),
       lastCycleRegex   = Some("""- \d+: Scan (\d+?) \(rt="""),
       firstTimeRegex   = Some("""\(rt=(\d+?\.\d+?)\)"""),
       lastTimeRegex    = Some("""-.+Scan \d+ \(rt=(\d+\.\d+)""")
+    ),*/
+    SoftNames.MASCOT_DISTILLER -> SpectrumTitleParsingRule(
+      rawFileNameRegex = Some("""\[(.+?)\]"""),
+      firstCycleRegex  = Some("""in range (\d+) \(rt=||Scan (\d+) \(rt="""),
+      lastCycleRegex   = Some("""\) to (\d+) \(rt=||Scan (\d+) \(rt="""),
+      firstTimeRegex   = Some("""in range \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)"""),
+      lastTimeRegex    = Some("""\) to \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)""")
     ),
     SoftNames.MAX_QUANT -> SpectrumTitleParsingRule(
       rawFileNameRegex = Some("""^RawFile: (.+?) FinneganScanNumber:"""),
