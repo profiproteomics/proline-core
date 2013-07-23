@@ -149,14 +149,14 @@ class ResultSetMerger(
       var decoyMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
 
       for (decoyRSId <- decoyRSIds) {
-        val resultSet = ResultSetMerger._loadResultSet(decoyRSId, execCtx)
+        val decoyRS = ResultSetMerger._loadResultSet(decoyRSId, execCtx)
 
-        val rsPK = resultSet.id
+        val rsPK = decoyRS.id
         if (rsPK > 0L) {
           distinctRSIds += rsPK
         }
 
-        decoyMergerAlgo.addResultSet(resultSet)
+        decoyMergerAlgo.addResultSet(decoyRS)
       }
 
       var decoyRS: ResultSet = decoyMergerAlgo.toResultSet
@@ -225,18 +225,16 @@ class ResultSetMerger(
     // Merge target result sets
     mergedResultSet = _mergeResultSets(resultSets, seqLengthByProtId)
 
-    val decoyRS: Option[ResultSet] = if (decoyResultSets.length > 0) {
-      Some(_mergeResultSets(decoyResultSets, seqLengthByProtId))
+    val decoyRS: Option[ResultSet] = if (decoyResultSets.isEmpty) {
+      None      
     } else {
-      None
+      Some(_mergeResultSets(decoyResultSets, seqLengthByProtId))
     }
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
 
       // Merge decoy result sets if they are defined
-      if (decoyResultSets.length > 0) {
-        val rsIds = resultSets
-
+      if (!decoyResultSets.isEmpty) {
         _storeMergedResultSet(storerContext, msiEzDBC, decoyRS.get, decoyResultSets.map { _.id } toSet)
         // Then store merged decoy result set
         mergedResultSet.decoyResultSet = Some(decoyRS.get)

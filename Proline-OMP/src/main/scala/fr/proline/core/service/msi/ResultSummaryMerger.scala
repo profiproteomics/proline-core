@@ -141,16 +141,16 @@ class ResultSummaryMerger(
     var mergedDecoyRSMId: Long = -1L
     var mergedDecoyRSId: Long = -1L
 
-    if (decoyResultSummaries.length > 0) {
+    if (!decoyResultSummaries.isEmpty) {
       val distinctRSMIds = scala.collection.mutable.Set.empty[Long]
 
       // Retrieve protein ids
       val proteinIdSet = new HashSet[Long]
       for (decoyRSM <- decoyResultSummaries) {
 
-        val rsmId = decoyRSM.id
-        if (rsmId > 0L) {
-          distinctRSMIds += rsmId
+        val rsmPK = decoyRSM.id
+        if (rsmPK > 0L) {
+          distinctRSMIds += rsmPK
         }
 
         val optionalRS = decoyRSM.resultSet
@@ -185,9 +185,9 @@ class ResultSummaryMerger(
 
     for (rsm <- resultSummaries) {
 
-      val rsmId = rsm.id
-      if (rsmId > 0L) {
-        distinctRSMIds += rsmId
+      val rsmPK = rsm.id
+      if (rsmPK > 0L) {
+        distinctRSMIds += rsmPK
       }
 
       val optionalRS = rsm.resultSet
