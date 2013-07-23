@@ -403,7 +403,7 @@ class ResultSetFakeBuilder(
     logger.info("Adding " + nbPeps + " new peptides (to " + allPeps.size + " existing peptides) with " + nbMissedCleavages + " missed cleavage(s)")
 
     // Store keys in a buffer to be able to access a key from a random index
-    var keyBuffer = eligiblePepIdsByProtMatchId.keys.toBuffer
+    val keyBuffer = eligiblePepIdsByProtMatchId.keys.toBuffer
 
     var currPepNb: Int = 0
     while (currPepNb < nbPeps) {
@@ -414,7 +414,7 @@ class ResultSetFakeBuilder(
 
       // Take the (missCleavageNb+1)first peptides to create the new missed cleaved peptide & Co
       val pepIdArray = eligiblePepIdsByProtMatchId(currRandomProMatchKey).take(nbMissedCleavages + 1)
-      var builtProtMatch: ProteinMatch = _addCompositePeptideToProteinMatch(
+      val builtProtMatch: ProteinMatch = _addCompositePeptideToProteinMatch(
         pepIds = pepIdArray,
         protMatchId = currRandomProMatchKey,
         missedCleavage = nbMissedCleavages,
