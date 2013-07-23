@@ -10,118 +10,118 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
 
   @Test
   def simpleResultSet() = {
-    val proNb: Int = 2
-    val pepNb: Int = 10
+    val nbProts: Int = 2
+    val nbPeps: Int = 10
 
-    val rsb = new ResultSetFakeBuilder(pepNb = pepNb, proNb = proNb)
-    val rs: ResultSet = rsb.toResultSet()
+    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+    val rs = rsb.toResultSet()
 
     assert(rs != null)
-    assert(rsb.allPeps.size == pepNb)
-    assert(rsb.allProts.size == proNb)
-    assert(rsb.allPepMatches.size == pepNb)
+    assert(rsb.allPeps.size == nbPeps)
+    assert(rsb.allProts.size == nbProts)
+    assert(rsb.allPepMatches.size == nbPeps)
 
 //    rsb.printForDebug  
   }
 
   @Test
   def sharedPepResultSet() = {
-    val proNb: Int = 2
-    val pepNb: Int = 4
+    val nbProts: Int = 2
+    val nbPeps: Int = 4
 
     val rsb = new ResultSetFakeBuilder(
-      pepNb = pepNb, proNb = proNb)
+      nbPeps = nbPeps, nbProts = nbProts)
     rsb.addSharedPeptide(rsb.allProtMatches)
     val rs: ResultSet = rsb.toResultSet()
 
     assert(rs != null)
-    assert(rsb.allPeps.size == pepNb + 1)
-    assert(rsb.allProts.size == proNb)
-    assert(rsb.allPepMatches.size == pepNb + 1)
+    assert(rsb.allPeps.size == nbPeps + 1)
+    assert(rsb.allProts.size == nbProts)
+    assert(rsb.allPepMatches.size == nbPeps + 1)
 
     //		rsb.printForDebug  
   }
 
   @Test
   def sharedPepFromNewProtResultSet() = {
-    val proNb: Int = 2
-    val pepNb: Int = 4
+    val nbProts: Int = 2
+    val nbPeps: Int = 4
 
-    val rsb = new ResultSetFakeBuilder(pepNb = pepNb, proNb = proNb)
+    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
     rsb.createNewProteinMatchFromPeptides(rsb.allPeps)
     
     val rs: ResultSet = rsb.toResultSet()
 
     assert(rs != null)
-    assert(rsb.allPeps.size == pepNb)
-    assert(rsb.allProts.size == proNb +1)
-    assert(rsb.allPepMatches.size == pepNb)
+    assert(rsb.allPeps.size == nbPeps)
+    assert(rsb.allProts.size == nbProts +1)
+    assert(rsb.allPepMatches.size == nbPeps)
 
     rsb.printForDebug  
   }
 
   @Test
   def withSimpleMissCleavage() = {
-    val proNb: Int = 2
-    val pepNb: Int = 20
+    val nbProts: Int = 2
+    val nbPeps: Int = 20
 
     val pepWMissCleavagesNb: Int = 5
     val missCleavage: Int = 2
 
-    val rsb = new ResultSetFakeBuilder(pepNb = pepNb, proNb = proNb)
-      .addNewPeptidesWithMissCleavage(pepNb = pepWMissCleavagesNb, missCleavageNb = missCleavage)
+    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+      .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavagesNb, nbMissedCleavages = missCleavage)
     val rs: ResultSet = rsb.toResultSet()
 
     //		rsb.printForDebug
 
     assert(rs != null)
-    assert(rsb.allPeps.size == pepNb + pepWMissCleavagesNb)
-    assert(rsb.allProts.size == proNb)
+    assert(rsb.allPeps.size == nbPeps + pepWMissCleavagesNb)
+    assert(rsb.allProts.size == nbProts)
   }
 
   @Test
   def withMultiMissCleavage() = {
-    val proNb: Int = 2
-    val pepNb: Int = 20
+    val nbProts: Int = 2
+    val nbPeps: Int = 20
 
     val pepWMissCleavages2Nb: Int = 5
     val pepWMissCleavages3Nb: Int = 2
     val missCleavage2: Int = 2
     val missCleavage3: Int = 3
 
-    val rsb = new ResultSetFakeBuilder(pepNb = pepNb, proNb = proNb)
-      .addNewPeptidesWithMissCleavage(pepNb = pepWMissCleavages2Nb, missCleavageNb = missCleavage2)
-      .addNewPeptidesWithMissCleavage(pepNb = pepWMissCleavages3Nb, missCleavageNb = missCleavage3)
+    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+      .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavages2Nb, nbMissedCleavages = missCleavage2)
+      .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavages3Nb, nbMissedCleavages = missCleavage3)
     val rs: ResultSet = rsb.toResultSet()
 
     //		rsb.printForDebug
 
     assert(rs != null)
-    assert(rsb.allPeps.size == pepNb + pepWMissCleavages2Nb + pepWMissCleavages3Nb)
-    assert(rsb.allProts.size == proNb)
+    assert(rsb.allPeps.size == nbPeps + pepWMissCleavages2Nb + pepWMissCleavages3Nb)
+    assert(rsb.allProts.size == nbProts)
   }
 
   @Test
   def withDuplicatedPeptides() = {
-    val proNb: Int = 4
-    val pepNb: Int = 20
+    val nbProts: Int = 4
+    val nbPeps: Int = 20
     val duplic1Nb: Int = 5
     val duplic2Nb: Int = 10
 
-    val rsb = new ResultSetFakeBuilder(pepNb = pepNb, proNb = proNb)
+    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
       .addDuplicatedPeptideMatches(duplic1Nb)
       .addDuplicatedPeptideMatches(duplic2Nb)
 
     val rs: ResultSet = rsb.toResultSet
-    assert(rs.peptideMatches.size == pepNb + duplic1Nb + duplic2Nb)
+    assert(rs.peptideMatches.size == nbPeps + duplic1Nb + duplic2Nb)
 
     //  	  rsb.printForDebug  	  
   }
 
   @Test
   def withAll() = {
-    val proNb: Int = 4
-    val pepNb: Int = 20
+    val nbProts: Int = 4
+    val nbPeps: Int = 20
 
     //MissCleavages
     val missCleavage2: Int = 2
@@ -132,34 +132,34 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
     //Duplicated PeptideMatch
     val duplicNb: Int = 5
 
-    val rsb = new ResultSetFakeBuilder(pepNb = pepNb, proNb = proNb)
-      .addNewPeptidesWithMissCleavage(pepNb = pepWMissCleavages2Nb, missCleavageNb = missCleavage2)
-      .addNewPeptidesWithMissCleavage(pepNb = pepWMissCleavages3Nb, missCleavageNb = missCleavage3)
+    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+      .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavages2Nb, nbMissedCleavages = missCleavage2)
+      .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavages3Nb, nbMissedCleavages = missCleavage3)
       .addDuplicatedPeptideMatches(duplicNb)
 
     val rs: ResultSet = rsb.toResultSet
 
     //  	  rsb.printForDebug  	
 
-    assert(rsb.allPepMatches.size == pepNb + pepWMissCleavages2Nb + pepWMissCleavages3Nb + duplicNb)
-    assert(rsb.allPeps.size == pepNb + pepWMissCleavages2Nb + pepWMissCleavages3Nb)
+    assert(rsb.allPepMatches.size == nbPeps + pepWMissCleavages2Nb + pepWMissCleavages3Nb + duplicNb)
+    assert(rsb.allPeps.size == nbPeps + pepWMissCleavages2Nb + pepWMissCleavages3Nb)
 
   }
 
   //  	@Test
   //  	def bigData() = {
-  //  	  val proNb:Int = 1000
-  //	  val pepNb:Int = 5000		
-  //	  val deltaPepNb:Int = 3
+  //  	  val nbProts:Int = 1000
+  //	  val nbPeps:Int = 5000		
+  //	  val deltanbPeps:Int = 3
   //	  val duplic1Nb:Int = 5
   //	  val duplic2Nb:Int = 10
   //	  
-  //  	  val rsb = new ResultSetFakeBuilder(pepNb=pepNb, proNb=proNb, deltaPepNb=deltaPepNb)
+  //  	  val rsb = new ResultSetFakeBuilder(nbPeps=nbPeps, nbProts=nbProts, deltanbPeps=deltanbPeps)
   //  	   		.addDuplicatedPeptides(duplic1Nb)
   //  	   		.addDuplicatedPeptides(duplic2Nb)
   //  	   		
   //  	  val rs:ResultSet = rsb.toResultSet
-  //  	  assert(rs.peptideMatches.size == pepNb+duplic1Nb+duplic2Nb)
+  //  	  assert(rs.peptideMatches.size == nbPeps+duplic1Nb+duplic2Nb)
   //  	  
   //  	  //rsb.printForDebug  	  
   //  	}

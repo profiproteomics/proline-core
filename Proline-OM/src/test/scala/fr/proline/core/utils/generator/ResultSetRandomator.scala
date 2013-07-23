@@ -5,9 +5,10 @@ import fr.proline.util.random._
 
 object ResultSetRandomator {
   
-  val accessionChars: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  val commonAA: String = "ANDCEQGHILMFPSTWYV" //Common amino acid residues (peptide sequence)
-  val trypsicAA: String = "RK" //trypsic amino acid
+  val accessionChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  val commonAA = "ANDCEQGHILMFPSTWYV" //Common amino acid residues (peptide sequence)
+  val trypsicAA = "RK" //trypsic amino acid
+  val trypsicRegex = (trypsicAA.toArray.mkString("|") ).r
 
   // Sequence size  
   val minSeqSize: Int = 8
