@@ -148,8 +148,8 @@ class ResultSetMerger(
 
       var decoyMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
 
-      for (rsId <- decoyRSIds) {
-        val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)
+      for (decoyRSId <- decoyRSIds) {
+        val resultSet = ResultSetMerger._loadResultSet(decoyRSId, execCtx)
 
         val rsPK = resultSet.id
         if (rsPK > 0L) {

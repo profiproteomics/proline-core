@@ -115,8 +115,10 @@ class ResultSummaryMerger(
   private def _mergeFromResultsSummaries(resultSummaries: Seq[ResultSummary], storerContext: StorerContext): ResultSummary = {
 
     val decoyResultSummaries = new ArrayBuffer[ResultSummary]
+
     for (rsm <- resultSummaries) {
       val optionalDecoyRSM = rsm.decoyResultSummary
+
       if (optionalDecoyRSM.isDefined) {
         decoyResultSummaries += optionalDecoyRSM.get
       } else {
@@ -144,14 +146,14 @@ class ResultSummaryMerger(
 
       // Retrieve protein ids
       val proteinIdSet = new HashSet[Long]
-      for (rsm <- decoyResultSummaries) {
+      for (decoyRSM <- decoyResultSummaries) {
 
-        val rsmId = rsm.id
+        val rsmId = decoyRSM.id
         if (rsmId > 0L) {
           distinctRSMIds += rsmId
         }
 
-        val optionalRS = rsm.resultSet
+        val optionalRS = decoyRSM.resultSet
         require(optionalRS.isDefined, "ResultSummary must contain a valid ResultSet")
 
         for (proteinMatch <- optionalRS.get.proteinMatches) {
@@ -254,15 +256,15 @@ class ResultSummaryMerger(
       var decoyRsmBuilder = new ResultSummaryBuilder(ResultSummary.generateNewId(), true, pepSetScoreUpdater, Some(seqLengthByProtId))
 
       logger.debug("Merging DECOY ResultSummaries ...")
-      for (rsmId <- resultSummaryIds) {
-        val resultSummary = ResultSummaryMerger._loadResultSummary(rsmId, execCtx)
+      for (decoyRSMId <- decoyRSMIds) {
+        val decoyRSM = ResultSummaryMerger._loadResultSummary(decoyRSMId, execCtx)
 
-        val rsmPK = resultSummary.id
+        val rsmPK = decoyRSM.id
         if (rsmPK > 0L) {
           distinctRSMIds += rsmPK
         }
 
-        decoyRsmBuilder.addResultSummary(resultSummary)
+        decoyRsmBuilder.addResultSummary(decoyRSM)
       }
 
       var mergedDecoyRSM = decoyRsmBuilder.toResultSummary
