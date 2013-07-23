@@ -27,7 +27,7 @@ import fr.proline.core.om.storer.msi.impl.JPARsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 
-@deprecated("0.1.0","use ResultFileImporter instead")
+@deprecated("0.1.0", "use ResultFileImporter instead")
 class ResultFileImporterJPAStorer(
   executionContext: IExecutionContext,
   resultIdentFile: File,
@@ -36,8 +36,7 @@ class ResultFileImporterJPAStorer(
   peaklistSoftwareId: Long,
   importerProperties: Map[String, Any],
   acDecoyRegex: Option[util.matching.Regex] = None,
-  saveSpectrumMatch: Boolean = false
-  ) extends IService with Logging {
+  saveSpectrumMatch: Boolean = false) extends IService with Logging {
 
   private var _hasInitiatedStorerContext: Boolean = false
 
@@ -71,51 +70,55 @@ class ResultFileImporterJPAStorer(
   def getTargetResultSetId = targetResultSetId
 
   def runService(): Boolean = {
-    
+
     // Check that a file is provided
     require(resultIdentFile != null, "ResultFileImporter service: No file specified.")
 
     logger.info("Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
-    
+
+    var storerContext: StorerContext = null
     val udsDbCtx = executionContext.getUDSDbConnectionContext
     val msiDbCtx = executionContext.getMSIDbConnectionContext
-    var storerContext: StorerContext = null
+    var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
 
     try {
-      
-      // Check if a transaction is already initiated
-      val wasInTransaction = msiDbCtx.isInTransaction()
-      if (!wasInTransaction) msiDbCtx.beginTransaction()
-      
+
+      // Check if a transaction is already initiated    
+      if (!msiDbCtx.isInTransaction) {
+        msiDbCtx.beginTransaction()
+        localMSITransaction = true
+        msiTransacOk = false
+      }
+
       // Get Right ResultFile provider
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
       require(rfProvider != None, "No ResultFileProvider for specified identification file format")
-  
+
       // Open the result file
-  
+
       val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
       val resultFile = rfProvider.get.getResultFile(resultIdentFile, importerProperties, parserContext)
       >>>
-      
+
       // --- Configure result file before parsing ---
-      
+
       // Retrieve the instrument configuration
-      resultFile.instrumentConfig = Some( this._getInstrumentConfig(instrumentConfigId, udsDbCtx) )
-      
+      resultFile.instrumentConfig = Some(this._getInstrumentConfig(instrumentConfigId, udsDbCtx))
+
       // Retrieve the peaklist software if needed
-      if( resultFile.peaklistSoftware.isEmpty ) {
-  
+      if (resultFile.peaklistSoftware.isEmpty) {
+
         val peaklistSoftware = _getOrCreatePeaklistSoftware(peaklistSoftwareId)
         if (peaklistSoftware.id < 0) peaklistSoftware.id = peaklistSoftwareId
-        
+
         resultFile.peaklistSoftware = Some(peaklistSoftware)
       }
       >>>
-      
+
       logger.debug("Starting JPA RSStorer work")
-      
+
       // Instantiate RsStorer   
       val rsStorer: IRsStorer = new JPARsStorer() //<> SQLStorer
 
@@ -128,7 +131,7 @@ class ResultFileImporterJPAStorer(
         Some(TargetDecoyModes.CONCATENATED.toString)
       } else
         None
-      
+
       // Call the result file storer
       this.targetResultSetId = ResultFileStorer.storeResultFile(
         storerContext,
@@ -138,27 +141,28 @@ class ResultFileImporterJPAStorer(
         tdMode,
         acDecoyRegex,
         saveSpectrumMatch,
-        if( acDecoyRegex != None ) Some(TargetDecoyResultSetSplitter) else None        
+        if (acDecoyRegex != None) Some(TargetDecoyResultSetSplitter) else None
       )
 
       >>>
 
       // Commit transaction if it was initiated locally
-      if (!wasInTransaction) msiDbCtx.commitTransaction()
-      
+      if (localMSITransaction) {
+        msiDbCtx.commitTransaction()
+      }
+
       msiTransacOk = true
-      
     } finally {
-      
+
       if (storerContext != null) {
         storerContext.clear()
       }
 
-      if (msiDbCtx.isInTransaction() && !msiTransacOk) {
+      if (localMSITransaction && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
 
-        try {         
-            msiDbCtx.rollbackTransaction()
+        try {
+          msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
         }
@@ -175,22 +179,22 @@ class ResultFileImporterJPAStorer(
 
     msiTransacOk
   }
-  
+
   private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Long): PeaklistSoftware = {
-    
+
     val msiDbCtx = this.executionContext.getMSIDbConnectionContext
     val msiPklSoftProvider = new MsiSQLPklSoftProvider(msiDbCtx)
 
     // Try to retrieve peaklist software from the MSidb
     var pklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
     if (pklSoftOpt.isEmpty) {
-      
+
       val udsPklSoftProvider = new UdsSQLPklSoftProvider(this.executionContext.getUDSDbConnectionContext)
 
       // If it doesn't exist => retrieve from the UDSdb
       pklSoftOpt = udsPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
-      require(pklSoftOpt.isDefined,"can't find a peaklist software for id = " + peaklistSoftwareId)
-      
+      require(pklSoftOpt.isDefined, "can't find a peaklist software for id = " + peaklistSoftwareId)
+
       val pklSoft = pklSoftOpt.get
 
       // Then insert it in the current MSIdb
@@ -207,14 +211,12 @@ class ResultFileImporterJPAStorer(
     }
 
     pklSoftOpt.get
-
   }
-  
+
   private def _getInstrumentConfig(instrumentConfigId: Long, udsDbContext: DatabaseConnectionContext): InstrumentConfig = {
-
     val instConfigProvider = new SQLInstrumentConfigProvider(executionContext.getUDSDbConnectionContext)
-    instConfigProvider.getInstrumentConfig(instrumentConfigId).get   
 
+    instConfigProvider.getInstrumentConfig(instrumentConfigId).get
   }
 
 }

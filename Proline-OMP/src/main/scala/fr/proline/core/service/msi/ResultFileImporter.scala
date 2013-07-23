@@ -35,9 +35,8 @@ class ResultFileImporter(
   peaklistSoftwareId: Long,
   importerProperties: Map[String, Any],
   acDecoyRegex: Option[util.matching.Regex] = None,
-  saveSpectrumMatch: Boolean = false
-) extends IService with Logging {
-  
+  saveSpectrumMatch: Boolean = false) extends IService with Logging {
+
   private var targetResultSetId: Long = 0L
 
   override protected def beforeInterruption = {
@@ -48,51 +47,55 @@ class ResultFileImporter(
   def getTargetResultSetId = targetResultSetId
 
   def runService(): Boolean = {
-    
+
     // Check that a file is provided
     require(resultIdentFile != null, "ResultFileImporter service: No file specified.")
 
     logger.info("Run service " + fileType + " ResultFileImporter on " + resultIdentFile.getAbsoluteFile())
-    
+
     val msiDbCtx = executionContext.getMSIDbConnectionContext
     var storerContext: StorerContext = null
     val rsStorer = RsStorer(msiDbCtx)
+    var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
-    
+
     try {
-      
+
       // Check if a transaction is already initiated
-      val wasInTransaction = msiDbCtx.isInTransaction()
-      if (!wasInTransaction) msiDbCtx.beginTransaction()
-      
+      if (!msiDbCtx.isInTransaction) {
+        msiDbCtx.beginTransaction()
+        localMSITransaction = true
+        msiTransacOk = false
+      }
+
       // Get Right ResultFile provider
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
-      require(rfProvider != None, "No ResultFileProvider for specified identification file format")      
+      require(rfProvider != None, "No ResultFileProvider for specified identification file format")
 
-      val parserContext =  ProviderDecoratedExecutionContext(executionContext) // Use Object factory
-  
+      val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+
       // Open the result file
       val resultFile = rfProvider.get.getResultFile(resultIdentFile, importerProperties, parserContext)
       >>>
-      
+
       // --- Configure result file before parsing ---
-      
+
       // Retrieve the instrument configuration
       val instConfigProvider = new SQLInstrumentConfigProvider(executionContext.getUDSDbConnectionContext)
       resultFile.instrumentConfig = instConfigProvider.getInstrumentConfig(instrumentConfigId)
-      
+
       // Retrieve the peaklist software if needed
-      if( resultFile.peaklistSoftware.isEmpty ) {
-  
+      if (resultFile.peaklistSoftware.isEmpty) {
+
         val peaklistSoftware = _getOrCreatePeaklistSoftware(peaklistSoftwareId)
         if (peaklistSoftware.id < 0) peaklistSoftware.id = peaklistSoftwareId
-        
+
         resultFile.peaklistSoftware = Some(peaklistSoftware)
       }
       >>>
-      
-      storerContext =  StorerContext(executionContext) // Use Object factory
-      
+
+      storerContext = StorerContext(executionContext) // Use Object factory
+
       val tdMode = if (resultFile.hasDecoyResultSet) {
         // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
         Some(TargetDecoyModes.SEPARATED.toString)
@@ -100,7 +103,7 @@ class ResultFileImporter(
         Some(TargetDecoyModes.CONCATENATED.toString)
       } else
         None
-      
+
       // Call the result file storer
       this.targetResultSetId = ResultFileStorer.storeResultFile(
         storerContext,
@@ -110,26 +113,28 @@ class ResultFileImporter(
         tdMode,
         acDecoyRegex,
         saveSpectrumMatch,
-        if( acDecoyRegex != None ) Some(TargetDecoyResultSetSplitter) else None
+        if (acDecoyRegex != None) Some(TargetDecoyResultSetSplitter) else None
       )
 
       >>>
 
       // Commit transaction if it was initiated locally
-      if (!wasInTransaction) msiDbCtx.commitTransaction()
-      
-      msiTransacOk = true      
+      if (localMSITransaction) {
+        msiDbCtx.commitTransaction()
+      }
+
+      msiTransacOk = true
     } finally {
-      
+
       if (storerContext != null) {
         storerContext.clear()
       }
 
-      if (msiDbCtx.isInTransaction() && !msiTransacOk) {
+      if (localMSITransaction && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
 
-        try {          
-            msiDbCtx.rollbackTransaction()
+        try {
+          msiDbCtx.rollbackTransaction()
         } catch {
           case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
         }
@@ -142,28 +147,28 @@ class ResultFileImporter(
     }
 
     this.beforeInterruption()
-    
+
     logger.debug("End of result file importer service")
 
     msiTransacOk
   }
-  
+
   private def _getOrCreatePeaklistSoftware(peaklistSoftwareId: Long): PeaklistSoftware = {
-    
+
     val msiDbCtx = this.executionContext.getMSIDbConnectionContext
     val msiPklSoftProvider = new MsiSQLPklSoftProvider(msiDbCtx)
     val udsPklSoftProvider = new UdsSQLPklSoftProvider(this.executionContext.getUDSDbConnectionContext)
-    
+
     val udsPklSoftOpt = udsPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
-    require(udsPklSoftOpt.isDefined,"can't find a peaklist software for id = " + peaklistSoftwareId)
+    require(udsPklSoftOpt.isDefined, "can't find a peaklist software for id = " + peaklistSoftwareId)
 
     // Try to retrieve peaklist software from the MSidb
     var msiPklSoftOpt = msiPklSoftProvider.getPeaklistSoftware(peaklistSoftwareId)
     if (msiPklSoftOpt.isEmpty) {
-      
+
       // If it doesn't exist => retrieve from the UDSdb      
       val pklSoft = udsPklSoftOpt.get
-      
+
       // Then insert it in the current MSIdb
       DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
         val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery
@@ -178,7 +183,6 @@ class ResultFileImporter(
     }
 
     udsPklSoftOpt.get
-
   }
 
 }

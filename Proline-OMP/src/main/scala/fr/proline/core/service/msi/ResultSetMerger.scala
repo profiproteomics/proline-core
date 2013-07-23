@@ -28,9 +28,7 @@ object ResultSetMerger {
     val rsProvider = getResultSetProvider(execContext)
 
     val rs = rsProvider.getResultSet(rsId)
-    if (rs.isEmpty) {
-      throw new IllegalArgumentException("Unknown ResultSet Id: " + rsId)
-    }
+    require(rs.isDefined, "Unknown ResultSet Id: " + rsId)
 
     rs.get
   }
@@ -73,6 +71,7 @@ class ResultSetMerger(
 
     var storerContext: StorerContext = null // For JPA use
     var msiDbCtx: DatabaseConnectionContext = null
+    var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
 
     try {
@@ -80,10 +79,10 @@ class ResultSetMerger(
       msiDbCtx = storerContext.getMSIDbConnectionContext
 
       // Check if a transaction is already initiated
-      val wasInTransaction = msiDbCtx.isInTransaction
-
-      if (!wasInTransaction) {
+      if (!msiDbCtx.isInTransaction) {
         msiDbCtx.beginTransaction()
+        localMSITransaction = true
+        msiTransacOk = false
       }
 
       if (resultSets.isDefined) {
@@ -95,7 +94,7 @@ class ResultSetMerger(
       }
 
       // Commit transaction if it was initiated locally
-      if (!wasInTransaction) {
+      if (localMSITransaction) {
         msiDbCtx.commitTransaction()
       }
 
@@ -106,7 +105,7 @@ class ResultSetMerger(
         storerContext.clear()
       }
 
-      if (msiDbCtx.isInTransaction && !msiTransacOk) {
+      if (localMSITransaction && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
 
         try {
@@ -121,7 +120,7 @@ class ResultSetMerger(
 
     beforeInterruption()
 
-    true
+    msiTransacOk
   }
 
   private def _mergeFromResultsSetIds(resultSetIds: Seq[Long], storerContext: StorerContext) {
@@ -281,7 +280,7 @@ class ResultSetMerger(
     if (!childrenRSIds.isEmpty) {
       // Link parent result set to its child result sets
       val parentRSId = resultSet.id
-      
+
       logger.debug("Linking children ResultSets to parent #" + parentRSId)
 
       // Insert result set relation between parent and its children

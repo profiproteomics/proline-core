@@ -30,9 +30,7 @@ object ResultSummaryMerger {
     val rsmProvider = getResultSummaryProvider(execContext)
 
     val rsm = rsmProvider.getResultSummary(rsmId, true)
-    if (rsm.isEmpty) {
-      throw new IllegalArgumentException("Unknown ResultSummary Id: " + rsmId)
-    }
+    require(rsm.isDefined, "Unknown ResultSummary Id: " + rsmId)
 
     rsm.get
   }
@@ -56,7 +54,7 @@ class ResultSummaryMerger(
 
   override protected def beforeInterruption = {
     // Release database connections
-    this.logger.info("releasing database connections before service interruption...")
+    logger.info("Do NOTHING")
     //this.msiDb.closeConnection()
 
   }
@@ -64,6 +62,7 @@ class ResultSummaryMerger(
   def runService(): Boolean = {
     var storerContext: StorerContext = null
     var msiDbCtx: DatabaseConnectionContext = null
+    var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
 
     try {
@@ -71,10 +70,10 @@ class ResultSummaryMerger(
       msiDbCtx = storerContext.getMSIDbConnectionContext
 
       /* Check if a transaction is already initiated */
-      val wasInTransaction = msiDbCtx.isInTransaction
-
-      if (!wasInTransaction) {
+      if (!msiDbCtx.isInTransaction) {
         msiDbCtx.beginTransaction()
+        localMSITransaction = true
+        msiTransacOk = false
       }
 
       mergedResultSummary = if (resultSummaries.isDefined) {
@@ -86,7 +85,7 @@ class ResultSummaryMerger(
       }
 
       /* Commit transaction if it was initiated locally */
-      if (!wasInTransaction) {
+      if (localMSITransaction) {
         msiDbCtx.commitTransaction()
       }
 
@@ -97,7 +96,7 @@ class ResultSummaryMerger(
         storerContext.clear()
       }
 
-      if (msiDbCtx.isInTransaction && !msiTransacOk) {
+      if (localMSITransaction && !msiTransacOk) {
         logger.info("Rollbacking MSI Db Transaction")
 
         try {
@@ -110,7 +109,7 @@ class ResultSummaryMerger(
 
     }
 
-    true
+    msiTransacOk
   }
 
   private def _mergeFromResultsSummaries(resultSummaries: Seq[ResultSummary], storerContext: StorerContext): ResultSummary = {
