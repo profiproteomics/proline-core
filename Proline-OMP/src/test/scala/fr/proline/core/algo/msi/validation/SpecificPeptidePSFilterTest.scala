@@ -26,7 +26,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    */
   @Test
   def simpleCheckWithGenData() = {
-    var rs: ResultSet = new ResultSetFakeBuilder(pepNb = 10, proNb = 2).toResultSet()
+    var rs: ResultSet = new ResultSetFakeBuilder(nbPeps = 10, nbProts = 2).toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
     assert(rsu != null)
     assertEquals(2, rsu.peptideSets.length)
@@ -41,7 +41,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    */
   @Test
   def largerGenData() = {
-    var rs: ResultSet = new ResultSetFakeBuilder(pepNb = 10000, proNb = 5000).toResultSet()
+    var rs: ResultSet = new ResultSetFakeBuilder(nbPeps = 10000, nbProts = 5000).toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
     assert(rsu != null)
     assertEquals(5000, rsu.peptideSets.length)
@@ -60,7 +60,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    */
   @Test
   def simpleCheckWithGenData4() = {
-    val rsb = new ResultSetFakeBuilder(pepNb = 6, proNb = 3)
+    val rsb = new ResultSetFakeBuilder(nbPeps = 6, nbProts = 3)
     var sharedPeptides2 = ListBuffer[Peptide]()
     for ((proSeq, peptides) <- rsb.allPepsByProtSeq) {
       sharedPeptides2 += peptides(0)
@@ -94,7 +94,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    */
   @Test
   def simpleCheckWithGenData5() = {
-    val rsb = new ResultSetFakeBuilder(pepNb = 6, proNb = 3)
+    val rsb = new ResultSetFakeBuilder(nbPeps = 6, nbProts = 3)
     var sharedPeptides = ListBuffer[Peptide]()
 
     sharedPeptides += rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide
@@ -145,7 +145,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
 
   @Test
   def simpleCheckWithGenData6() = {
-    val rsb = new ResultSetFakeBuilder(pepNb = 2, proNb = 2)
+    val rsb = new ResultSetFakeBuilder(nbPeps = 2, nbProts = 2)
     var sharedPeptides = ListBuffer[Peptide]()
 
     sharedPeptides += rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide
@@ -184,7 +184,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    */
   @Test
   def simpleCheckWithGenData7() = {
-    val rsb = new ResultSetFakeBuilder(pepNb = 4, proNb = 2)
+    val rsb = new ResultSetFakeBuilder(nbPeps = 4, nbProts = 2)
 
     rsb.createNewProteinMatchFromPeptides(Seq(rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide))
     rsb.createNewProteinMatchFromPeptides(Seq(rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide))

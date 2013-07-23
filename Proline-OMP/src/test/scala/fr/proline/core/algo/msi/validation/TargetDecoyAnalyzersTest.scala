@@ -20,8 +20,8 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with Logging {
 
   @Before
   def setUp() = {
-    rs = new ResultSetFakeBuilder(pepNb = 4, proNb = 2).toResultSet()
-    rsDecoy = new ResultSetFakeBuilder(pepNb = 4, proNb = 2).toResultSet()
+    rs = new ResultSetFakeBuilder(nbPeps = 4, nbProts = 2).toResultSet()
+    rsDecoy = new ResultSetFakeBuilder(nbPeps = 4, nbProts = 2).toResultSet()
     rs.decoyResultSet = Some(rsDecoy)
   }
 

@@ -13,7 +13,7 @@ class ResultSetMergerTest extends JUnitSuite with Logging {
 	  	
 	@Test
 	def mergeOneRS() = {
-	  val rs1 = new ResultSetFakeBuilder(pepNb = 800, proNb = 100).toResultSet()
+	  val rs1 = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100).toResultSet()
 	  val rsMergerAlgo = new ResultSetMerger()
 	  val rs2 = rsMergerAlgo.mergeResultSets(Seq(rs1))
 	  assert(rs2 != null)
@@ -29,7 +29,7 @@ class ResultSetMergerTest extends JUnitSuite with Logging {
 
 		@Test
 	def mergeOneRSTwice() = {
-	  val rs1 = new ResultSetFakeBuilder(pepNb = 800, proNb = 100).toResultSet()
+	  val rs1 = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100).toResultSet()
 	  val rsMergerAlgo = new ResultSetMerger()
 	  val rs2 = rsMergerAlgo.mergeResultSets(Seq(rs1, rs1))
 	  assert(rs2 != null)
@@ -44,8 +44,8 @@ class ResultSetMergerTest extends JUnitSuite with Logging {
 
 	@Test
 	def mergeTwoRS() = {
-	  val rs1 = new ResultSetFakeBuilder(pepNb = 800, proNb = 100).toResultSet()
-	  val rs2 = new ResultSetFakeBuilder(pepNb = 200, proNb = 10).toResultSet()
+	  val rs1 = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100).toResultSet()
+	  val rs2 = new ResultSetFakeBuilder(nbPeps = 200, nbProts = 10).toResultSet()
 	  val rsMergerAlgo = new ResultSetMerger()
 	  val rs = rsMergerAlgo.mergeResultSets(Seq(rs1, rs2))
 	  assert(rs != null)
@@ -55,7 +55,7 @@ class ResultSetMergerTest extends JUnitSuite with Logging {
 	
 			@Test
 	def addOneModifiedRS() = {
-	  val rsfb = new ResultSetFakeBuilder(pepNb = 800, proNb = 100)
+	  val rsfb = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100)
 	  rsfb.addDuplicatedPeptideMatches(50)
 	  val rs1 = rsfb.toResultSet()
 	  val rsMergerAlgo = new ResultSetMerger()
