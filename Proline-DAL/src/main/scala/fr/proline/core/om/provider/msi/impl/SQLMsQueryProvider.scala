@@ -23,6 +23,7 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
   val MsQueryCols = MsiDbMsQueryTable.columns
 
   def getMsiSearchesMsQueries(msiSearchIds: Seq[Long]): Array[MsQuery] = {
+    if( msiSearchIds == null || msiSearchIds.length == 0 ) return Array.empty[MsQuery]
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
       

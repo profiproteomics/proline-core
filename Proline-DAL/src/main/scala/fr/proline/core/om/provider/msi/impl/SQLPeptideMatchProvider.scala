@@ -125,7 +125,7 @@ class SQLPeptideMatchProvider(
       val peptide = peptideById(pepId)
 
       // Retrieve the corresponding MS query
-      val msQuery = msQueryById(toLong(pepMatchRecord(PepMatchCols.MS_QUERY_ID)))
+      val msQueryOpt = msQueryById.get(toLong(pepMatchRecord(PepMatchCols.MS_QUERY_ID)))
 
       // Retrieve some vars
       val scoreType = scoreTypeById(toLong(pepMatchRecord(PepMatchCols.SCORING_ID)))
@@ -134,7 +134,8 @@ class SQLPeptideMatchProvider(
       val propertiesAsJSON = pepMatchRecord(PepMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
       val properties = if (propertiesAsJSON != null) Some(parse[PeptideMatchProperties](propertiesAsJSON)) else None
 
-      val pepMatch = new PeptideMatch(id = toLong(pepMatchRecord(PepMatchCols.ID)),
+      val pepMatch = new PeptideMatch(
+        id = toLong(pepMatchRecord(PepMatchCols.ID)),
         rank = pepMatchRecord(PepMatchCols.RANK).asInstanceOf[Int],
         score = toFloat(pepMatchRecord(PepMatchCols.SCORE)),
         scoreType = scoreType,
@@ -143,7 +144,7 @@ class SQLPeptideMatchProvider(
         peptide = peptide,
         missedCleavage = pepMatchRecord(PepMatchCols.MISSED_CLEAVAGE).asInstanceOf[Int],
         fragmentMatchesCount = pepMatchRecord(PepMatchCols.FRAGMENT_MATCH_COUNT).asInstanceOf[Int],
-        msQuery = msQuery,
+        msQuery = msQueryOpt.getOrElse(null),
         resultSetId = toLong(pepMatchRecord(PepMatchCols.RESULT_SET_ID)),
         properties = properties
       )
