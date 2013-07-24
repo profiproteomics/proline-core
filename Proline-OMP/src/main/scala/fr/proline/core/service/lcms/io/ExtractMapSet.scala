@@ -17,8 +17,6 @@ import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
 import fr.proline.core.om.storer.lcms.RunMapStorer
-import fr.proline.core.om.storer.lcms.MapAlnSetStorer
-import fr.proline.core.om.storer.lcms.MasterMapStorer
 import fr.proline.core.service.lcms.ILcMsService
 import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
@@ -210,7 +208,7 @@ class ExtractMapSet(
     else {
       
       val mzDb = new MzDbReader( mzDbFile, true )
-      val newScanSeqId = LcMsScanSequence.generateNewId()
+      //val newScanSeqId = LcMsScanSequence.generateNewId()
       
       /*val rawFile = new RawFile(
         id = runId,
@@ -236,7 +234,7 @@ class ExtractMapSet(
           tic = mzDbScan.getTIC,
           basePeakMoz = mzDbScan.getBasePeakMz,
           basePeakIntensity = mzDbScan.getBasePeakIntensity,
-          runId = newScanSeqId,
+          runId = lcmsRun.id,
           precursorMoz = if( precMz > 0 ) Some(precMz) else None,
           precursorCharge = if( precCharge > 0 ) Some(precCharge) else None
         )
@@ -246,7 +244,7 @@ class ExtractMapSet(
       val ms2ScansCount = scans.count(_.msLevel == 2)
       
       val scanSeq = new LcMsScanSequence(
-        id = newScanSeqId,
+        id = lcmsRun.id,
         rawFileName = rawFileName,
         minIntensity = 0., // TODO: compute this value ???
         maxIntensity = 0., // TODO: compute this value ???
