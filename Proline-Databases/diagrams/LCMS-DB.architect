@@ -11,7 +11,7 @@
  </source-databases>
  <target-database id="ppdb" dbcs-ref="DS0">
   <table id="TAB1" populated="true" UUID="b29be342-0488-4d48-8a96-45f88744def3" name="scan" objectType="TABLE" physicalName="scan" >
-   <remarks>add polarity ???</remarks>
+   <remarks>TODO: add polarity ???</remarks>
    <folder id="FOLTAB11" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL2" populated="true" UUID="3967b3b8-4445-4b73-86ce-b8bb85feeeb0" autoIncrement="true" autoIncrementSequenceName="scan_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
@@ -46,7 +46,7 @@
     <column id="COL12" populated="true" UUID="dcbde042-42f1-498f-a138-d84755d59c18" autoIncrement="false" autoIncrementSequenceName="scan_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
-    <column id="COL13" populated="true" UUID="0bcd969e-4be4-47ba-b738-2ba55fa247f6" autoIncrement="false" autoIncrementSequenceName="run_run_run_id_seq" defaultValue="" name="run_id" nullable="0" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL13" populated="true" UUID="0bcd969e-4be4-47ba-b738-2ba55fa247f6" autoIncrement="false" autoIncrementSequenceName="scan_run_id_seq" defaultValue="" name="run_id" nullable="0" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -613,10 +613,10 @@
   <table id="TAB191" populated="true" UUID="9e2a3e13-e7a1-476c-8c91-4f04a73fc4e9" name="processed_map_moz_calibration" objectType="TABLE" physicalName="processed_map_moz_calibration" >
    <remarks>Defines the moz alignment between a map (from) and another map (to) in function of time.</remarks>
    <folder id="FOLTAB1911" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL192" populated="true" UUID="8a8a3419-7649-46c8-9178-5b5d59ebc3cf" autoIncrement="false" autoIncrementSequenceName="map_processed_map_processed_map_id_seq" defaultValue="" name="processed_map_id" nullable="0" physicalName="processed_map_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL192" populated="true" UUID="8a8a3419-7649-46c8-9178-5b5d59ebc3cf" autoIncrement="false" autoIncrementSequenceName="processed_map_moz_calibration_processed_map_id_seq" defaultValue="" name="processed_map_id" nullable="0" physicalName="processed_map_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL193" populated="true" UUID="f0e6a725-4586-46c5-ab60-c7de4087419f" autoIncrement="false" autoIncrementSequenceName="scan_scan_scan_id_seq" defaultValue="" name="scan_id" nullable="0" physicalName="scan_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL193" populated="true" UUID="f0e6a725-4586-46c5-ab60-c7de4087419f" autoIncrement="false" autoIncrementSequenceName="processed_map_moz_calibration_scan_id_seq" defaultValue="" name="scan_id" nullable="0" physicalName="scan_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL194" populated="true" UUID="b1dd8edd-d30e-4390-93a9-295f47f959a6" autoIncrement="false" autoIncrementSequenceName="map_alignment_time_list_seq" defaultValue="" name="moz_list" nullable="0" physicalName="moz_list" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
@@ -634,7 +634,7 @@
     <folder id="FOLTAB1912" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
     <folder id="FOLTAB1914" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX197" populated="true" UUID="8f033cea-698f-44ef-8c90-48757aa1d2cc" clustered="false" name="processed_map_alignment_pk" physicalName="processed_map_alignment_pk" primaryKeyIndex="true" unique="true" >
+    <index id="IDX197" populated="true" UUID="8f033cea-698f-44ef-8c90-48757aa1d2cc" clustered="false" name="processed_map_moz_calibration_pk" physicalName="processed_map_alignment_pk" primaryKeyIndex="true" unique="true" >
      <index-column id="IDC198" populated="true" UUID="23462c60-f757-475a-8789-25e69dda01b6" ascendingOrDescending="UNSPECIFIED" column-ref="COL192" name="processed_map_id" physicalName="processed_map_id" />
      <index-column id="IDC199" populated="true" UUID="dc9ff91b-c28c-4ee7-a78e-7d834deef546" ascendingOrDescending="UNSPECIFIED" column-ref="COL193" name="scan_id" physicalName="scan_id" />
     </index>
@@ -1255,8 +1255,8 @@
   <table-pane table-ref="TAB312" x="990" y="645" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-link relationship-ref="REL353" pkConnection="0.44502617801047123" fkConnection="0.4482758620689655" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL379" pkConnection="0.8267716535433071" fkConnection="0.22807017543859648" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="129"/>
-  <table-link relationship-ref="REL331" pkConnection="0.7894736842105263" fkConnection="0.09205020920502092" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
-  <table-link relationship-ref="REL333" pkConnection="0.8903508771929824" fkConnection="0.19665271966527198" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
+  <table-link relationship-ref="REL331" pkConnection="0.8248847926267281" fkConnection="0.09205020920502092" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
+  <table-link relationship-ref="REL333" pkConnection="0.9262672811059908" fkConnection="0.19665271966527198" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL351" pkConnection="0.5483870967741935" fkConnection="0.36298932384341637" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
   <table-link relationship-ref="REL321" pkConnection="0.6751269035532995" fkConnection="0.780564263322884" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL323" pkConnection="0.7817258883248731" fkConnection="0.8526645768025078" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
@@ -1267,7 +1267,7 @@
   <table-link relationship-ref="REL325" pkConnection="0.515695067264574" fkConnection="0.7974683544303798" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL327" pkConnection="0.1210762331838565" fkConnection="0.6208333333333333" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
   <table-link relationship-ref="REL355" pkConnection="0.8142076502732241" fkConnection="0.20625" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
-  <table-link relationship-ref="REL415" pkConnection="0.4375" fkConnection="0.5047169811320755" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
+  <table-link relationship-ref="REL415" pkConnection="0.4074074074074074" fkConnection="0.5047169811320755" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL337" pkConnection="0.2313167259786477" fkConnection="0.20416666666666666" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="65"/>
   <table-link relationship-ref="REL339" pkConnection="0.15302491103202848" fkConnection="0.11666666666666667" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="65"/>
   <table-link relationship-ref="REL407" pkConnection="0.39473684210526316" fkConnection="0.3625" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
@@ -1276,7 +1276,7 @@
   <table-link relationship-ref="REL385" pkConnection="0.40404040404040403" fkConnection="0.7789473684210526" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
   <table-link relationship-ref="REL387" pkConnection="0.4084507042253521" fkConnection="0.24705882352941178" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
   <table-link relationship-ref="REL431" pkConnection="0.19248826291079812" fkConnection="0.10037174721189591" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
-  <table-link relationship-ref="REL419" pkConnection="0.5576208178438662" fkConnection="0.4375" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
+  <table-link relationship-ref="REL419" pkConnection="0.5648535564853556" fkConnection="0.4375" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL417" pkConnection="0.6842105263157895" fkConnection="0.10550458715596331" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="129"/>
   <table-link relationship-ref="REL427" pkConnection="0.6212765957446809" fkConnection="0.13986013986013987" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
   <table-link relationship-ref="REL361" pkConnection="0.4439252336448598" fkConnection="0.4605263157894737" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
@@ -1297,18 +1297,18 @@
   <table-link relationship-ref="REL425" pkConnection="0.05660377358490566" fkConnection="0.36" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="130"/>
   <table-link relationship-ref="REL381" pkConnection="0.5118110236220472" fkConnection="0.47555555555555556" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="130"/>
   <table-link relationship-ref="REL411" pkConnection="0.25196850393700787" fkConnection="0.3924731182795699" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="129"/>
-  <table-link relationship-ref="REL397" pkConnection="0.4015748031496063" fkConnection="0.6" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
+  <table-link relationship-ref="REL397" pkConnection="0.44881889763779526" fkConnection="0.6" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
   <table-link relationship-ref="REL413" pkConnection="0.5104895104895105" fkConnection="0.4225352112676056" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL391" pkConnection="0.15510204081632653" fkConnection="0.2693877551020408" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL433" pkConnection="0.8581560283687943" fkConnection="0.4430379746835443" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL393" pkConnection="0.49387755102040815" fkConnection="0.5387755102040817" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL343" pkConnection="0.7711598746081505" fkConnection="0.4810126582278481" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL395" pkConnection="0.39183673469387753" fkConnection="0.35918367346938773" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
-  <table-link relationship-ref="REL399" pkConnection="0.6792452830188679" fkConnection="0.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
+  <table-link relationship-ref="REL399" pkConnection="0.6792452830188679" fkConnection="0.34177215189873417" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
   <table-link relationship-ref="REL401" pkConnection="0.2830188679245283" fkConnection="0.4050632911392405" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="40"/>
   <table-link relationship-ref="REL403" pkConnection="0.6367924528301887" fkConnection="0.4050632911392405" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="40"/>
-  <table-link relationship-ref="REL345" pkConnection="0.4298245614035088" fkConnection="0.07984790874524715" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
-  <table-link relationship-ref="REL347" pkConnection="0.5350877192982456" fkConnection="0.18631178707224336" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
+  <table-link relationship-ref="REL345" pkConnection="0.4298245614035088" fkConnection="0.06086956521739131" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
+  <table-link relationship-ref="REL347" pkConnection="0.5576036866359447" fkConnection="0.18631178707224336" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL421" pkConnection="0.8830645161290323" fkConnection="0.6763485477178424" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL349" pkConnection="0.4555160142348754" fkConnection="0.7161290322580646" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
  </play-pen>
