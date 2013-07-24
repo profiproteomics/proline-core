@@ -8,7 +8,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.filtering.IPeptideMatchSorter
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.utils.generator.ResultSetFakeBuilder
+import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import fr.proline.core.om.model.msi.SearchSettingsProperties
 import org.junit.Before
 
@@ -20,8 +20,8 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with Logging {
 
   @Before
   def setUp() = {
-    rs = new ResultSetFakeBuilder(nbPeps = 4, nbProts = 2).toResultSet()
-    rsDecoy = new ResultSetFakeBuilder(nbPeps = 4, nbProts = 2).toResultSet()
+    rs = new ResultSetFakeGenerator(nbPeps = 4, nbProts = 2).toResultSet()
+    rsDecoy = new ResultSetFakeGenerator(nbPeps = 4, nbProts = 2).toResultSet()
     rs.decoyResultSet = Some(rsDecoy)
   }
 

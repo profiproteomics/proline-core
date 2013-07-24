@@ -6,7 +6,7 @@ import org.scalatest.junit.JUnitSuite
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.utils.generator.ResultSetFakeBuilder
+import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import org.junit.BeforeClass
 import org.junit.AfterClass
@@ -25,11 +25,11 @@ import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 
 @Test
-class ResultSetAdditionerTest extends JUnitSuite with Logging {
+class ResultSetBuilderTest extends JUnitSuite with Logging {
 	  	
 	@Test
 	def addOneRS() = {
-	  val rs1 = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100).toResultSet()
+	  val rs1 = new ResultSetFakeGenerator(nbPeps = 800, nbProts = 100).toResultSet()
 	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99)
 	  rsAddAlgo.addResultSet(rs1)
 	  val rs2 = rsAddAlgo.toResultSet()
@@ -46,7 +46,7 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 	
 		@Test
 	def addOneRSTwice() = {
-	  val rs1 = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100).toResultSet()
+	  val rs1 = new ResultSetFakeGenerator(nbPeps = 800, nbProts = 100).toResultSet()
 	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99)
 	  rsAddAlgo.addResultSet(rs1)
 	  rsAddAlgo.addResultSet(rs1)
@@ -64,8 +64,8 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 
 	@Test
 	def addTwoRS() = {
-	  val rs1 = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100).toResultSet()
-	  val rs2 = new ResultSetFakeBuilder(nbPeps = 200, nbProts = 10).toResultSet()
+	  val rs1 = new ResultSetFakeGenerator(nbPeps = 800, nbProts = 100).toResultSet()
+	  val rs2 = new ResultSetFakeGenerator(nbPeps = 200, nbProts = 10).toResultSet()
 	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99)
 	  rsAddAlgo.addResultSet(rs1)
 	  rsAddAlgo.addResultSet(rs2)	  
@@ -86,7 +86,7 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 	
 	@Test
 	def addOneModifiedRS() = {
-	  val rsfb = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100)
+	  val rsfb = new ResultSetFakeGenerator(nbPeps = 800, nbProts = 100)
 	  rsfb.addDuplicatedPeptideMatches(50)
 	  val rs1 = rsfb.toResultSet()
 	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99)
@@ -107,7 +107,7 @@ class ResultSetAdditionerTest extends JUnitSuite with Logging {
 
 	@Test
 	def addOneModifiedRSWithUnionMode() = {
-	  val rsfb = new ResultSetFakeBuilder(nbPeps = 800, nbProts = 100)
+	  val rsfb = new ResultSetFakeGenerator(nbPeps = 800, nbProts = 100)
 	  rsfb.addDuplicatedPeptideMatches(50)
 	  val rs1 = rsfb.toResultSet()
 	  val rsAddAlgo = new ResultSetBuilder(resultSetId = 99, mode = AdditionMode.Union)
