@@ -266,7 +266,7 @@
     <column id="COL85" populated="true" UUID="78382b63-6e92-4096-bfd9-f9f7396f2065" autoIncrement="false" autoIncrementSequenceName="map_set_content_is_master_seq" defaultValue="" name="is_master" nullable="0" physicalName="is_master" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
      <remarks>A master map links all aligned MS1 features together in a given map set (using the feature_cluster table).</remarks>
     </column>
-    <column id="COL86" populated="true" UUID="85699e0d-e7e0-4cc8-96fe-baeeabcf1379" autoIncrement="false" autoIncrementSequenceName="map_set_content_is_aln_reference_seq" defaultValue="" name="is_aln_reference" nullable="0" physicalName="is_reference" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
+    <column id="COL86" populated="true" UUID="85699e0d-e7e0-4cc8-96fe-baeeabcf1379" autoIncrement="false" autoIncrementSequenceName="map_set_content_is_aln_reference_seq" defaultValue="" name="is_aln_reference" nullable="0" physicalName="is_aln_reference" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
      <remarks>Describes the reference map used for elution time alignment.</remarks>
     </column>
     <column id="COL87" populated="true" UUID="30d30d75-c406-4e58-a088-bf050895da6c" autoIncrement="false" autoIncrementSequenceName="processed_map_is_locked_seq" defaultValue="" name="is_locked" nullable="1" physicalName="is_locked" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
@@ -458,7 +458,7 @@
     <column id="COL143" populated="true" UUID="81bef187-f3aa-41b4-9615-7950242feead" autoIncrement="false" autoIncrementSequenceName="object_tree_schema_version_seq" defaultValue="" name="version" nullable="0" physicalName="version" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
-    <column id="COL144" populated="true" UUID="5b691339-190a-4bbc-bf89-bb7d91451ba5" autoIncrement="false" autoIncrementSequenceName="property_schema_seq" defaultValue="" name="schema" nullable="0" physicalName="document" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL144" populated="true" UUID="5b691339-190a-4bbc-bf89-bb7d91451ba5" autoIncrement="false" autoIncrementSequenceName="property_schema_seq" defaultValue="" name="schema" nullable="0" physicalName="schema" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>The document describing the schema used for the serialization of the object_tree.</remarks>
     </column>
     <column id="COL145" populated="true" UUID="647ef527-f572-4270-aee2-4b9d0d59e405" autoIncrement="false" autoIncrementSequenceName="object_tree_schema_description_seq" defaultValue="" name="description" nullable="1" physicalName="description" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
@@ -525,7 +525,7 @@
     <column id="COL162" populated="true" UUID="57cc6d47-e0dd-4f52-9df7-7bb168ae0893" autoIncrement="false" autoIncrementSequenceName="map_master_map_id_seq" defaultValue="" name="master_map_id" nullable="1" physicalName="master_map_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL163" populated="true" UUID="c2711e29-2a33-4b49-9168-c5177d25da57" autoIncrement="false" autoIncrementSequenceName="map_processed_map_id_seq" defaultValue="" name="aln_reference_map_id" nullable="1" physicalName="reference_map_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL163" populated="true" UUID="c2711e29-2a33-4b49-9168-c5177d25da57" autoIncrement="false" autoIncrementSequenceName="map_processed_map_id_seq" defaultValue="" name="aln_reference_map_id" nullable="1" physicalName="aln_reference_map_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -583,16 +583,16 @@
     </index>
    </folder>
   </table>
-  <table id="TAB182" populated="true" UUID="d18ccecc-c5a3-440a-b17a-2c1023f7f6c2" name="feature_ms2_event" objectType="TABLE" physicalName="feature_ms2_scan" >
+  <table id="TAB182" populated="true" UUID="d18ccecc-c5a3-440a-b17a-2c1023f7f6c2" name="feature_ms2_event" objectType="TABLE" physicalName="feature_ms2_event" >
    <remarks></remarks>
    <folder id="FOLTAB1821" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL183" populated="true" UUID="27191e0d-3e78-4183-bca1-84857e95edd3" autoIncrement="false" autoIncrementSequenceName="feature_feature_feature_id_seq" defaultValue="" name="feature_id" nullable="0" physicalName="feature_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL183" populated="true" UUID="27191e0d-3e78-4183-bca1-84857e95edd3" autoIncrement="false" autoIncrementSequenceName="feature_ms2_event_feature_id_seq" defaultValue="" name="feature_id" nullable="0" physicalName="feature_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL184" populated="true" UUID="2738881a-15df-4ff7-9631-badc78bb5796" autoIncrement="false" autoIncrementSequenceName="scan_ms2_event_id_seq" defaultValue="" name="ms2_event_id" nullable="0" physicalName="ms2_scan_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL184" populated="true" UUID="2738881a-15df-4ff7-9631-badc78bb5796" autoIncrement="false" autoIncrementSequenceName="scan_ms2_event_id_seq" defaultValue="" name="ms2_event_id" nullable="0" physicalName="ms2_event_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL185" populated="true" UUID="9d710107-5568-432d-9732-59899b44c139" autoIncrement="false" autoIncrementSequenceName="map_run_map_id_seq" defaultValue="" name="run_map_id" nullable="0" physicalName="run_map_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL185" populated="true" UUID="9d710107-5568-432d-9732-59899b44c139" autoIncrement="false" autoIncrementSequenceName="feature_ms2_event_run_map_id_seq" defaultValue="" name="run_map_id" nullable="0" physicalName="run_map_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -603,7 +603,7 @@
     <folder id="FOLTAB1824" populated="true" name="Indices" physicalName="Indices" type="4">
     <index id="IDX186" populated="true" UUID="880eaf0b-9819-4750-afbb-aa828b340ab5" clustered="false" name="feature_ms2_event_pk" physicalName="feature_ms2_event_pk" primaryKeyIndex="true" unique="true" >
      <index-column id="IDC187" populated="true" UUID="6b1c3d74-3940-4124-b92a-96fe060ee8f5" ascendingOrDescending="UNSPECIFIED" column-ref="COL183" name="feature_id" physicalName="feature_id" />
-     <index-column id="IDC188" populated="true" UUID="25f36a68-4bc3-4bc3-8a8d-80a164dd66aa" ascendingOrDescending="UNSPECIFIED" column-ref="COL184" name="ms2_event_id" physicalName="ms2_scan_id" />
+     <index-column id="IDC188" populated="true" UUID="25f36a68-4bc3-4bc3-8a8d-80a164dd66aa" ascendingOrDescending="UNSPECIFIED" column-ref="COL184" name="ms2_event_id" physicalName="ms2_event_id" />
     </index>
     <index id="IDX189" populated="true" UUID="7b509926-6aef-4ce0-849b-ccc6d400716e" clustered="true" name="feature_ms2_event_run_map_idx" physicalName="feature_ms2_event_run_map_idx" primaryKeyIndex="false" unique="false" >
      <index-column id="IDC190" populated="true" UUID="b8cc2d0f-9361-4f6b-a729-f24d037b0b25" ascendingOrDescending="UNSPECIFIED" column-ref="COL185" name="run_map_id" physicalName="run_map_id" />
@@ -952,7 +952,7 @@
     <column id="COL293" populated="true" UUID="bf88902d-96c3-4f29-9fa1-7b7190f0e879" autoIncrement="false" autoIncrementSequenceName="map_set_object_tree_mapping_object_tree_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL294" populated="true" UUID="eafe9c78-9bf5-417e-8a57-284e936ca3ee" autoIncrement="false" autoIncrementSequenceName="map_set_object_tree_mapping_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL294" populated="true" UUID="eafe9c78-9bf5-417e-8a57-284e936ca3ee" autoIncrement="false" autoIncrementSequenceName="map_set_object_tree_mapping_schema_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="schema_name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
     </folder>
@@ -976,7 +976,7 @@
     <column id="COL300" populated="true" UUID="1d7b734d-7375-436b-8cfe-7c85b0ed9d95" autoIncrement="false" autoIncrementSequenceName="map_object_tree_mapping_object_tree_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL301" populated="true" UUID="c823f09f-2814-4fbc-88d4-908512e27900" autoIncrement="false" autoIncrementSequenceName="map_object_tree_mapping_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL301" populated="true" UUID="c823f09f-2814-4fbc-88d4-908512e27900" autoIncrement="false" autoIncrementSequenceName="map_object_tree_mapping_schema_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="schema_name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
     </folder>
@@ -1000,7 +1000,7 @@
     <column id="COL307" populated="true" UUID="c3cef444-572c-46cd-9fbd-fdf43ed84847" autoIncrement="false" autoIncrementSequenceName="feature_object_tree_mapping_object_tree_object_tree_id_seq" defaultValue="" name="object_tree_id" nullable="0" physicalName="object_tree_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL308" populated="true" UUID="460fec53-cdbb-4a02-98c0-8c2023f006ec" autoIncrement="false" autoIncrementSequenceName="feature_object_tree_mapping_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL308" populated="true" UUID="460fec53-cdbb-4a02-98c0-8c2023f006ec" autoIncrement="false" autoIncrementSequenceName="feature_object_tree_mapping_schema_name_seq" defaultValue="" name="schema_name" nullable="0" physicalName="schema_name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
     </folder>
@@ -1222,7 +1222,7 @@
  <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="true"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8408964152537147" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8408964152537147" viewportX="0" viewportY="141" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="1759" y="1038" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB20" x="912" y="939" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB47" x="1073" y="764" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
