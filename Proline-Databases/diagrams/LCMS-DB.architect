@@ -634,7 +634,7 @@
     <folder id="FOLTAB1912" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
     <folder id="FOLTAB1914" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX197" populated="true" UUID="8f033cea-698f-44ef-8c90-48757aa1d2cc" clustered="false" name="processed_map_moz_calibration_pk" physicalName="processed_map_alignment_pk" primaryKeyIndex="true" unique="true" >
+    <index id="IDX197" populated="true" UUID="8f033cea-698f-44ef-8c90-48757aa1d2cc" clustered="false" name="processed_map_moz_calibration_pk" physicalName="processed_map_moz_calibration_pk" primaryKeyIndex="true" unique="true" >
      <index-column id="IDC198" populated="true" UUID="23462c60-f757-475a-8789-25e69dda01b6" ascendingOrDescending="UNSPECIFIED" column-ref="COL192" name="processed_map_id" physicalName="processed_map_id" />
      <index-column id="IDC199" populated="true" UUID="dc9ff91b-c28c-4ee7-a78e-7d834deef546" ascendingOrDescending="UNSPECIFIED" column-ref="COL193" name="scan_id" physicalName="scan_id" />
     </index>
@@ -1219,7 +1219,7 @@
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
  <play-pen zoom="0.8408964152537147" viewportX="47" viewportY="141" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
