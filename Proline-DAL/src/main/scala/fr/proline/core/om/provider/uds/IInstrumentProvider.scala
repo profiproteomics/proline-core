@@ -1,4 +1,4 @@
-package fr.proline.core.om.provider.msi
+package fr.proline.core.om.provider.uds
 
 import fr.proline.core.om.model.msi.Instrument
 
