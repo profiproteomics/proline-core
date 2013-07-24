@@ -1,4 +1,4 @@
-package fr.proline.core.utils.generator
+package fr.proline.core.util.generator.msi
 
 import scala.util.Random
 import fr.proline.util.random._

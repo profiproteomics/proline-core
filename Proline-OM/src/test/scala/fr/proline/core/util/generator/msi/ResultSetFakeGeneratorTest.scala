@@ -1,4 +1,4 @@
-package fr.proline.core.utils.generator;
+package fr.proline.core.util.generator.msi
 
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
@@ -6,14 +6,14 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi.ResultSet
 
 @Test
-class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
+class ResultSetFakeGeneratorTest extends JUnitSuite with Logging {
 
   @Test
   def simpleResultSet() = {
     val nbProts: Int = 2
     val nbPeps: Int = 10
 
-    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+    val rsb = new ResultSetFakeGenerator(nbPeps = nbPeps, nbProts = nbProts)
     val rs = rsb.toResultSet()
 
     assert(rs != null)
@@ -29,7 +29,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
     val nbProts: Int = 2
     val nbPeps: Int = 4
 
-    val rsb = new ResultSetFakeBuilder(
+    val rsb = new ResultSetFakeGenerator(
       nbPeps = nbPeps, nbProts = nbProts)
     rsb.addSharedPeptide(rsb.allProtMatches)
     val rs: ResultSet = rsb.toResultSet()
@@ -47,7 +47,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
     val nbProts: Int = 2
     val nbPeps: Int = 4
 
-    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+    val rsb = new ResultSetFakeGenerator(nbPeps = nbPeps, nbProts = nbProts)
     rsb.createNewProteinMatchFromPeptides(rsb.allPeps)
     
     val rs: ResultSet = rsb.toResultSet()
@@ -68,7 +68,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
     val pepWMissCleavagesNb: Int = 5
     val missCleavage: Int = 2
 
-    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+    val rsb = new ResultSetFakeGenerator(nbPeps = nbPeps, nbProts = nbProts)
       .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavagesNb, nbMissedCleavages = missCleavage)
     val rs: ResultSet = rsb.toResultSet()
 
@@ -89,7 +89,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
     val missCleavage2: Int = 2
     val missCleavage3: Int = 3
 
-    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+    val rsb = new ResultSetFakeGenerator(nbPeps = nbPeps, nbProts = nbProts)
       .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavages2Nb, nbMissedCleavages = missCleavage2)
       .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavages3Nb, nbMissedCleavages = missCleavage3)
     val rs: ResultSet = rsb.toResultSet()
@@ -108,7 +108,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
     val duplic1Nb: Int = 5
     val duplic2Nb: Int = 10
 
-    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+    val rsb = new ResultSetFakeGenerator(nbPeps = nbPeps, nbProts = nbProts)
       .addDuplicatedPeptideMatches(duplic1Nb)
       .addDuplicatedPeptideMatches(duplic2Nb)
 
@@ -132,7 +132,7 @@ class ResultSetFakeBuilderTest extends JUnitSuite with Logging {
     //Duplicated PeptideMatch
     val duplicNb: Int = 5
 
-    val rsb = new ResultSetFakeBuilder(nbPeps = nbPeps, nbProts = nbProts)
+    val rsb = new ResultSetFakeGenerator(nbPeps = nbPeps, nbProts = nbProts)
       .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavages2Nb, nbMissedCleavages = missCleavage2)
       .addNewPeptidesWithMissedCleavage(nbPeps = pepWMissCleavages3Nb, nbMissedCleavages = missCleavage3)
       .addDuplicatedPeptideMatches(duplicNb)

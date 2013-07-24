@@ -1,4 +1,4 @@
-package fr.proline.core.utils.generator
+package fr.proline.core.util.generator.msi
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -31,10 +31,10 @@ import fr.proline.util.ms.massToMoz
  * @param maxPepSeqLength Maximum length for peptide sequence
  *
  */
-class ResultSetFakeBuilder(
-  nbPeps: Int,
-  nbProts: Int,
-  minPepSeqLength: Int = 8,
+class ResultSetFakeGenerator(
+  nbPeps: Int, 
+  nbProts: Int, 
+  minPepSeqLength: Int = 8, 
   maxPepSeqLength: Int = 20
 ) extends AnyRef with Logging {
 
@@ -293,7 +293,7 @@ class ResultSetFakeBuilder(
    * @param nbDuplicatedPeps the number duplicated peptide matches
    * @return the ResultSetFakeBuilder
    */
-  def addDuplicatedPeptideMatches(nbDuplicatedPeps: Int): ResultSetFakeBuilder = {
+  def addDuplicatedPeptideMatches(nbDuplicatedPeps: Int): ResultSetFakeGenerator = {
 
     val pepMatchCount: Int = allPepMatches.length + nbDuplicatedPeps
 
@@ -330,7 +330,7 @@ class ResultSetFakeBuilder(
 
     logger.info(nbDuplicatedPeps + " duplicated PeptideMatch added")
     
-    this
+    ResultSetFakeGenerator.this
   }
 
   /**
@@ -345,7 +345,7 @@ class ResultSetFakeBuilder(
    * @param nbMissedCleavages the number of missed cleavages
    * @return the ResultSetFakeBuilder
    */
-  def addNewPeptidesWithMissedCleavage(nbPeps: Int, nbMissedCleavages: Int): ResultSetFakeBuilder = {
+  def addNewPeptidesWithMissedCleavage(nbPeps: Int, nbMissedCleavages: Int): ResultSetFakeGenerator = {
     require(
       nbMissedCleavages <= MAX_MISSED_CLEAVAGES && nbMissedCleavages >= MIN_MISSED_CLEAVAGES,
       "Number of missed cleavage must be >=" + MIN_MISSED_CLEAVAGES + " and <=" + MAX_MISSED_CLEAVAGES
@@ -440,7 +440,7 @@ class ResultSetFakeBuilder(
 
     _updatePeptideMaps()
 
-    this
+    ResultSetFakeGenerator.this
   }
 
   /**
@@ -449,7 +449,7 @@ class ResultSetFakeBuilder(
    * @param protMatches the protein matches
    * @return the ResultSetFakeBuilder
    */
-  def addSharedPeptide(protMatches: Seq[ProteinMatch]): ResultSetFakeBuilder = {
+  def addSharedPeptide(protMatches: Seq[ProteinMatch]): ResultSetFakeGenerator = {
     
     // Generate a peptide sequence until we have a new one
     var currPepSeq = ""
@@ -519,7 +519,7 @@ class ResultSetFakeBuilder(
     }
 
     
-    this
+    ResultSetFakeGenerator.this
   }
 
   /**
@@ -528,7 +528,7 @@ class ResultSetFakeBuilder(
    * @param peptides the peptides
    * @return the ResultSetFakeBuilder
    */
-  def createNewProteinMatchFromPeptides(peptides: Seq[Peptide]): ResultSetFakeBuilder = {
+  def createNewProteinMatchFromPeptides(peptides: Seq[Peptide]): ResultSetFakeGenerator = {
     require(peptides!= null && peptides.length > 0,"at least one peptide must be provided")
     
     val newProtMatchId = ProteinMatch.generateNewId
@@ -597,7 +597,7 @@ class ResultSetFakeBuilder(
     allPepsByProtSeq += (currProtSeq -> (new ArrayBuffer(peptides.length) ++ peptides) )
     tmpProtMatchById += newProtMatch.id -> newProtMatch
 
-    this
+    ResultSetFakeGenerator.this
   }
 
   /**
