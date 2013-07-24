@@ -43,7 +43,7 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
       val flattenedFeatures = new ArrayBuffer[Feature](runMap.features.length)
 
       // Insert features
-      ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery, true) { featureInsertStmt =>
+      ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { featureInsertStmt =>
 
         // Loop over features to import them        
         for (ft <- runMap.features) {
@@ -134,11 +134,10 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
     val lcmsMapType = if (lcmsMap.isProcessed) 1 else 0
     
     var newMapId:Long = 0L
-    ezDBC.executePrepared(LcmsDbMapTable.mkInsertQuery, true) { statement =>
+    ezDBC.executePrepared(LcmsDbMapTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { statement =>
       val mapDesc = if (lcmsMap.description == null) None else Some(lcmsMap.description)
 
       statement.executeWith(
-        Option.empty[Int],
         lcmsMap.name,
         mapDesc,
         lcmsMapType,
@@ -164,7 +163,6 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
     val mapLayerId = if (ftRelations.mapLayerId == 0) None else Some(ftRelations.mapLayerId)
     
     stmt.executeWith(
-      Option.empty[Int],
       ft.moz,
       ft.intensity,
       ft.charge,

@@ -18,9 +18,10 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
       var runId: Long = 0L
-      ezDBC.executePrepared(LcmsDbRunTable.mkInsertQuery,true) { statement =>
+      ezDBC.executePrepared(LcmsDbRunTable.mkInsertQuery(), true) { statement =>
+        
         statement.executeWith(
-          Option.empty[Int],
+          scanSeq.id,
           scanSeq.rawFileName,
           scanSeq.minIntensity,
           scanSeq.maxIntensity,
@@ -32,10 +33,9 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
         runId = statement.generatedLong
       }
   
-      ezDBC.executePrepared(LcmsDbScanTable.mkInsertQuery,true) { statement =>
+      ezDBC.executePrepared(LcmsDbScanTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { statement =>
         scanSeq.scans.foreach { scan =>
           statement.executeWith(
-            Option.empty[Int],
             scan.initialId,
             scan.cycle,
             scan.time,

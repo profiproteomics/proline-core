@@ -36,7 +36,7 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
       this.linkProcessedMapToRunMaps( ezDBC, masterMap )
       
       // Insert features
-      ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery, true) { featureInsertStmt =>
+      ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { featureInsertStmt =>
       
         // Update master feature map id and insert master features in the feature table
         for( mft <- masterMap.features ) {

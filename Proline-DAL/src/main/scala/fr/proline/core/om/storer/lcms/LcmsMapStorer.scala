@@ -25,14 +25,18 @@ trait IRunStorer {
 
 /** A factory object for implementations of the IRunMapStorer trait */
 object RunMapStorer {
+  
   def apply( lcmsDbCtx: DatabaseConnectionContext ): IRunMapStorer = {
-    if( lcmsDbCtx.isJPA ) new JPARunMapStorer(lcmsDbCtx)
+    
+    new SQLRunMapStorer(lcmsDbCtx)
+    
+    /*if( lcmsDbCtx.isJPA ) new JPARunMapStorer(lcmsDbCtx)
     else {
       lcmsDbCtx.getDriverType match {
         //case DriverType.POSTGRESQL => new PgRunMapStorer(lcmsDbCtx)
         case _ => new SQLRunMapStorer(lcmsDbCtx)
       }
-    }
+    }*/
     
   }
 }
@@ -51,13 +55,15 @@ trait IProcessedMapStorer {
 object ProcessedMapStorer {
   
   def apply( lcmsDbCtx: DatabaseConnectionContext ): IProcessedMapStorer = {
+    new SQLProcessedMapStorer(lcmsDbCtx)
+    /*
     if( lcmsDbCtx.isJPA ) new JPAProcessedMapStorer(lcmsDbCtx)
     else {
       lcmsDbCtx.getDriverType match {
         //case DriverType.POSTGRESQL => new PgProcessedMapStorer(lcmsDbCtx)
         case _ => new SQLProcessedMapStorer(lcmsDbCtx)
       }
-    }
+    }*/
   }
 }
 
@@ -73,13 +79,15 @@ trait IMasterMapStorer {
 object MasterMapStorer {
   
   def apply( lcmsDbCtx: DatabaseConnectionContext ): IMasterMapStorer = {
-    if( lcmsDbCtx.isJPA ) new JPAMasterMapStorer(lcmsDbCtx)
+    new SQLMasterMapStorer(lcmsDbCtx)
+    /*if( lcmsDbCtx.isJPA ) new JPAMasterMapStorer(lcmsDbCtx)
     else {
       lcmsDbCtx.getDriverType match {
         //case DriverType.POSTGRESQL => new PgMasterMapStorer(lcmsDbCtx)
         case _ => new SQLMasterMapStorer(lcmsDbCtx)
       }
-    }
+    }*/
+    
   }
   
 }

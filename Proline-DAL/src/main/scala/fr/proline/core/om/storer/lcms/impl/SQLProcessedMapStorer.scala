@@ -108,7 +108,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
     
       // Insert features
-      ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery, true) { featureInsertStmt =>
+      ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { featureInsertStmt =>
       
         // Store feature clusters 
         features.withFilter( _.isCluster ).foreach { clusterFt =>
