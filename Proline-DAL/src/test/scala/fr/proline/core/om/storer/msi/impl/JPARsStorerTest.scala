@@ -12,7 +12,7 @@ import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.core.utils.generator.ResultSetFakeBuilder
+import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import fr.proline.repository.DriverType
 import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION
 import fr.proline.util.MathUtils.EPSILON_LOW_PRECISION
@@ -120,9 +120,9 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       logger.info("Creating a new fake Result Set")
 
       var start = System.nanoTime
-      val rsb = new ResultSetFakeBuilder(10, 2)
+      val rsGen = new ResultSetFakeGenerator(10, 2)
 
-      val resultSet = rsb.toResultSet()
+      val resultSet = rsGen.toResultSet()
 
       // FIXME 1: find a way to communicate with a UDSdb fake      
       resultSet.msiSearch.get.peakList.peaklistSoftware.id = 1
