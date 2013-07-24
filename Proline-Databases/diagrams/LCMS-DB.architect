@@ -853,19 +853,19 @@
     </index>
    </folder>
   </table>
-  <table id="TAB266" populated="true" UUID="49a11533-95c3-4eb5-a4da-aef09a5d0d2c" name="run_map" objectType="TABLE" physicalName="native_map" >
+  <table id="TAB266" populated="true" UUID="49a11533-95c3-4eb5-a4da-aef09a5d0d2c" name="run_map" objectType="TABLE" physicalName="run_map" >
    <remarks></remarks>
    <folder id="FOLTAB2661" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL267" populated="true" UUID="18b2093f-b11f-4854-8442-30cda584c252" autoIncrement="false" autoIncrementSequenceName="run_map_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL268" populated="true" UUID="7c44de18-00f7-43e5-aa2d-6b4d0667649f" autoIncrement="false" autoIncrementSequenceName="run_run_run_id_seq" defaultValue="" name="run_id" nullable="0" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL268" populated="true" UUID="7c44de18-00f7-43e5-aa2d-6b4d0667649f" autoIncrement="false" autoIncrementSequenceName="run_map_run_id_seq" defaultValue="" name="run_id" nullable="0" physicalName="run_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL269" populated="true" UUID="844e8679-a261-4c6c-a55c-28b0739609eb" autoIncrement="false" autoIncrementSequenceName="peak_picking_software_peak_picking_software_id_seq" defaultValue="" name="peak_picking_software_id" nullable="0" physicalName="peak_picking_software_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL269" populated="true" UUID="844e8679-a261-4c6c-a55c-28b0739609eb" autoIncrement="false" autoIncrementSequenceName="run_map_peak_picking_software_id_seq" defaultValue="" name="peak_picking_software_id" nullable="0" physicalName="peak_picking_software_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL270" populated="true" UUID="2248ffaf-2eeb-46d2-abe4-95b0938a7268" autoIncrement="false" autoIncrementSequenceName="feature_model_fm_peakel_fitting_model_id_seq" defaultValue="" name="peakel_fitting_model_id" nullable="1" physicalName="peakel_fitting_model_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL270" populated="true" UUID="2248ffaf-2eeb-46d2-abe4-95b0938a7268" autoIncrement="false" autoIncrementSequenceName="run_map_peakel_fitting_model_id_seq" defaultValue="" name="peakel_fitting_model_id" nullable="1" physicalName="peakel_fitting_model_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
