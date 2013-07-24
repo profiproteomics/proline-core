@@ -5,7 +5,6 @@ import org.scalatest.junit.JUnitSuite
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.utils.generator.ResultSetFakeBuilder
 import org.junit.Assert
 
 @Test

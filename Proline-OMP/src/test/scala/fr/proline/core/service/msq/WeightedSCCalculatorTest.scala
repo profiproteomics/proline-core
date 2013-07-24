@@ -1,29 +1,23 @@
 package fr.proline.core.service.msq
 
-import org.junit.Test
-import org.junit.Assert._
-import org.scalatest.junit.JUnitSuite
-import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.utils.generator.ResultSetFakeBuilder
-import scala.collection.mutable.ListBuffer
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.ProteinMatch
-import org.junit.Before
-import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.repository.DriverType
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.context.BasicExecutionContext
 import org.junit.After
-import fr.proline.core.service.msi.ResultSetValidator
+import org.junit.Assert._
+import org.junit.Before
+import org.junit.Test
+
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.BasicExecutionContext
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.repository.DriverType
 
 @Test
 class WeightedSCCalculatorTest extends AbstractMultipleDBTestCase with Logging {
