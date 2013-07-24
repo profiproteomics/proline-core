@@ -12,19 +12,19 @@ CREATE TABLE map (
                 id IDENTITY NOT NULL,
                 name VARCHAR(1000) NOT NULL,
                 description VARCHAR(10000),
-                is_native INTEGER NOT NULL,
+                type INTEGER NOT NULL,
                 creation_timestamp TIMESTAMP NOT NULL,
                 modification_timestamp TIMESTAMP NOT NULL,
                 serialized_properties LONGVARCHAR,
-                feature_scoring_id INTEGER NOT NULL,
+                feature_scoring_id BIGINT NOT NULL,
                 CONSTRAINT map_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN map.is_native IS '0 => run_map 1 => processed_map';
+COMMENT ON COLUMN map.type IS '0 => run_map 1 => processed_map';
 
 
 CREATE TABLE cache (
                 scope VARCHAR(250) NOT NULL,
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 format VARCHAR(50) NOT NULL,
                 byte_order INTEGER NOT NULL,
                 data LONGVARBINARY NOT NULL,
@@ -37,7 +37,7 @@ COMMENT ON COLUMN cache.scope IS 'e.g. scope=map.features id=1 (map id)';
 
 
 CREATE TABLE instrument (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 source VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
@@ -49,13 +49,13 @@ CREATE TABLE object_tree_schema (
                 name VARCHAR(1000) NOT NULL,
                 type VARCHAR(10) NOT NULL,
                 version VARCHAR(100) NOT NULL,
-                document LONGVARCHAR NOT NULL,
+                schema LONGVARCHAR NOT NULL,
                 description VARCHAR(1000),
                 serialized_properties LONGVARCHAR,
                 CONSTRAINT object_tree_schema_pk PRIMARY KEY (name)
 );
 COMMENT ON COLUMN object_tree_schema.type IS 'XSD or JSON';
-COMMENT ON COLUMN object_tree_schema.document IS 'The document describing the schema used for the serialization of the object_tree.';
+COMMENT ON COLUMN object_tree_schema.schema IS 'The document describing the schema used for the serialization of the object_tree.';
 
 
 CREATE TABLE object_tree (
@@ -70,10 +70,10 @@ COMMENT ON COLUMN object_tree.serialized_properties IS 'May be used to store the
 
 
 CREATE TABLE map_object_tree_mapping (
-                id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
-                name VARCHAR(1000) NOT NULL,
-                CONSTRAINT map_object_tree_mapping_pk PRIMARY KEY (id, object_tree_id)
+                map_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
+                schema_name VARCHAR(1000) NOT NULL,
+                CONSTRAINT map_object_tree_mapping_pk PRIMARY KEY (map_id, object_tree_id)
 );
 
 
@@ -96,19 +96,23 @@ CREATE TABLE peak_picking_software (
 
 
 CREATE TABLE processed_map (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 number INTEGER NOT NULL,
                 normalization_factor REAL,
                 is_master BOOLEAN NOT NULL,
-                is_reference BOOLEAN NOT NULL,
+                is_aln_reference BOOLEAN NOT NULL,
                 is_locked BOOLEAN,
-                map_set_id INTEGER NOT NULL,
+                map_set_id BIGINT NOT NULL,
                 CONSTRAINT processed_map_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN processed_map.is_master IS 'A master map links all aligned MS1 features together in a given map set (using the feature_cluster table).';
-COMMENT ON COLUMN processed_map.is_reference IS 'Describes the reference map used for elution time alignment.';
+COMMENT ON COLUMN processed_map.is_aln_reference IS 'Describes the reference map used for elution time alignment.';
 COMMENT ON COLUMN processed_map.is_locked IS 'A locked map can''t be used in a new workflow step.';
 
+
+CREATE INDEX processed_map_map_set_idx
+ ON processed_map
+ ( map_set_id );
 
 CREATE TABLE map_set (
                 id IDENTITY NOT NULL,
@@ -116,30 +120,30 @@ CREATE TABLE map_set (
                 map_count INTEGER NOT NULL,
                 creation_timestamp TIMESTAMP NOT NULL,
                 serialized_properties LONGVARCHAR,
-                master_map_id INTEGER NOT NULL,
-                reference_map_id INTEGER NOT NULL,
+                master_map_id BIGINT,
+                aln_reference_map_id BIGINT,
                 CONSTRAINT map_set_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE map_set IS 'Associated maps must be locked.';
 
 
 CREATE TABLE map_set_object_tree_mapping (
-                map_set_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
-                name VARCHAR(1000) NOT NULL,
+                map_set_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
+                schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT map_set_object_tree_mapping_pk PRIMARY KEY (map_set_id, object_tree_id)
 );
 
 
 CREATE TABLE map_alignment (
-                from_map_id INTEGER NOT NULL,
-                to_map_id INTEGER NOT NULL,
+                from_map_id BIGINT NOT NULL,
+                to_map_id BIGINT NOT NULL,
                 mass_start REAL NOT NULL,
                 mass_end REAL NOT NULL,
                 time_list LONGVARCHAR NOT NULL,
                 delta_time_list LONGVARCHAR NOT NULL,
                 serialized_properties LONGVARCHAR,
-                map_set_id INTEGER NOT NULL,
+                map_set_id BIGINT NOT NULL,
                 CONSTRAINT map_alignment_pk PRIMARY KEY (from_map_id, to_map_id, mass_start, mass_end)
 );
 COMMENT ON TABLE map_alignment IS 'Defines the elution time alignment between a map (from) and another map (to).';
@@ -147,19 +151,31 @@ COMMENT ON COLUMN map_alignment.time_list IS 'A list of  values separated by spa
 COMMENT ON COLUMN map_alignment.delta_time_list IS 'A list of delta times separated by spaces. delta_time = to_map.time - from_map.time => to_map.time = from_map.time + delta';
 
 
+CREATE INDEX map_alignment_map_set_idx
+ ON map_alignment
+ ( map_set_id );
+
 CREATE TABLE map_layer (
                 id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
                 name VARCHAR(250),
                 serialized_properties LONGVARCHAR,
-                processed_map_id INTEGER NOT NULL,
-                map_set_id INTEGER NOT NULL,
+                processed_map_id BIGINT NOT NULL,
+                map_set_id BIGINT NOT NULL,
                 CONSTRAINT map_layer_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE map_layer IS 'Minimum information for labeling strategies';
 COMMENT ON COLUMN map_layer.number IS 'Each conditon must be numbered (from 1 to n) for each associated map.';
 COMMENT ON COLUMN map_layer.name IS 'An optional name which describes this condition';
 
+
+CREATE INDEX map_layer_processed_map_idx
+ ON map_layer
+ ( processed_map_id );
+
+CREATE INDEX map_layer_map_set_idx
+ ON map_layer
+ ( map_set_id );
 
 CREATE TABLE theoretical_feature (
                 id IDENTITY NOT NULL,
@@ -168,8 +184,8 @@ CREATE TABLE theoretical_feature (
                 elution_time REAL NOT NULL,
                 source_type VARCHAR(50) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                map_layer_id INTEGER NOT NULL,
-                map_id INTEGER NOT NULL,
+                map_layer_id BIGINT,
+                map_id BIGINT NOT NULL,
                 CONSTRAINT theoretical_feature_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE theoretical_feature IS 'Theoretical features retrieved from an identification database or a feature cross-assignment.';
@@ -177,31 +193,35 @@ COMMENT ON COLUMN theoretical_feature.elution_time IS 'Time in seconds';
 COMMENT ON COLUMN theoretical_feature.source_type IS 'AMT, CROSS-ASSIGNMENT';
 
 
+CREATE INDEX theoretical_feature_map_idx
+ ON theoretical_feature
+ ( map_id );
+
 CREATE TABLE run (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 raw_file_name VARCHAR(250) NOT NULL,
                 min_intensity DOUBLE,
                 max_intensity DOUBLE,
                 ms1_scan_count INTEGER NOT NULL,
                 ms2_scan_count INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
-                instrument_id INTEGER NOT NULL,
+                instrument_id BIGINT NOT NULL,
                 CONSTRAINT run_pk PRIMARY KEY (id)
 );
 
 
-CREATE TABLE native_map (
-                id INTEGER NOT NULL,
-                run_id INTEGER NOT NULL,
-                peak_picking_software_id INTEGER NOT NULL,
-                peakel_fitting_model_id INTEGER NOT NULL,
+CREATE TABLE run_map (
+                id BIGINT NOT NULL,
+                run_id BIGINT NOT NULL,
+                peak_picking_software_id BIGINT NOT NULL,
+                peakel_fitting_model_id BIGINT,
                 CONSTRAINT run_map_pk PRIMARY KEY (id)
 );
 
 
 CREATE TABLE processed_map_run_map_mapping (
-                processed_map_id INTEGER NOT NULL,
-                run_map_id INTEGER NOT NULL,
+                processed_map_id BIGINT NOT NULL,
+                run_map_id BIGINT NOT NULL,
                 CONSTRAINT processed_map_run_map_mapping_pk PRIMARY KEY (processed_map_id, run_map_id)
 );
 
@@ -212,7 +232,7 @@ CREATE TABLE ms_picture (
                 moz_resolution REAL NOT NULL,
                 time_resolution REAL NOT NULL,
                 serialized_properties LONGVARCHAR,
-                run_id INTEGER NOT NULL,
+                run_id BIGINT NOT NULL,
                 CONSTRAINT ms_picture_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN ms_picture.z_index IS '0 -1 -2....';
@@ -230,7 +250,7 @@ CREATE TABLE tile (
                 height INTEGER NOT NULL,
                 intensities LONGVARBINARY NOT NULL,
                 serialized_properties LONGVARCHAR,
-                ms_picture_id INTEGER NOT NULL,
+                ms_picture_id BIGINT NOT NULL,
                 CONSTRAINT tile_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN tile.width IS 'pixel width';
@@ -250,20 +270,28 @@ CREATE TABLE scan (
                 precursor_moz DOUBLE,
                 precursor_charge INTEGER,
                 serialized_properties LONGVARCHAR,
-                run_id INTEGER NOT NULL,
+                run_id BIGINT NOT NULL,
                 CONSTRAINT scan_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE scan IS 'add polarity ???';
+COMMENT ON TABLE scan IS 'TODO: add polarity ???';
 COMMENT ON COLUMN scan.time IS 'Scan time in seconds';
 
 
+CREATE INDEX scan_run_idx
+ ON scan
+ ( run_id );
+
+CREATE INDEX scan_precursor_moz_idx
+ ON scan
+ ( precursor_moz );
+
 CREATE TABLE processed_map_moz_calibration (
-                processed_map_id INTEGER NOT NULL,
-                scan_id INTEGER NOT NULL,
+                processed_map_id BIGINT NOT NULL,
+                scan_id BIGINT NOT NULL,
                 moz_list LONGVARCHAR NOT NULL,
                 delta_moz_list LONGVARCHAR NOT NULL,
                 serialized_properties LONGVARCHAR,
-                CONSTRAINT processed_map_alignment_pk PRIMARY KEY (processed_map_id, scan_id)
+                CONSTRAINT processed_map_moz_calibration_pk PRIMARY KEY (processed_map_id, scan_id)
 );
 COMMENT ON TABLE processed_map_moz_calibration IS 'Defines the moz alignment between a map (from) and another map (to) in function of time.';
 COMMENT ON COLUMN processed_map_moz_calibration.moz_list IS 'A list of  values separated by spaces.';
@@ -282,13 +310,13 @@ CREATE TABLE feature (
                 is_cluster BOOLEAN NOT NULL,
                 is_overlapping BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
-                first_scan_id INTEGER NOT NULL,
-                last_scan_id INTEGER NOT NULL,
-                apex_scan_id INTEGER NOT NULL,
-                theoretical_feature_id INTEGER NOT NULL,
-                compound_id INTEGER NOT NULL,
-                map_layer_id INTEGER NOT NULL,
-                map_id INTEGER NOT NULL,
+                first_scan_id BIGINT NOT NULL,
+                last_scan_id BIGINT NOT NULL,
+                apex_scan_id BIGINT NOT NULL,
+                theoretical_feature_id BIGINT,
+                compound_id BIGINT,
+                map_layer_id BIGINT,
+                map_id BIGINT NOT NULL,
                 CONSTRAINT feature_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN feature.moz IS 'A m/z value associated to the feature. May be determined as the median/mean of the isotopic pattern m/z. May also be the m/z of the apex.';
@@ -297,6 +325,14 @@ COMMENT ON COLUMN feature.quality_score IS 'A score reflecting the quality of th
 COMMENT ON COLUMN feature.map_id IS 'May correspond to a native map or a processed map (i.e. feature clusters, master features).';
 
 
+CREATE INDEX feature_map_idx
+ ON feature
+ ( map_id );
+
+CREATE INDEX feature_moz_time_charge_idx
+ ON feature
+ ( moz, elution_time, charge );
+
 CREATE TABLE compound (
                 id IDENTITY NOT NULL,
                 experimental_mass DOUBLE NOT NULL,
@@ -304,33 +340,41 @@ CREATE TABLE compound (
                 elution_time REAL NOT NULL,
                 formula VARCHAR(1000),
                 serialized_properties LONGVARCHAR,
-                feature_id INTEGER NOT NULL,
-                map_layer_id INTEGER NOT NULL,
-                map_id INTEGER NOT NULL,
+                best_feature_id BIGINT NOT NULL,
+                map_layer_id BIGINT,
+                map_id BIGINT NOT NULL,
                 CONSTRAINT compound_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE compound IS 'Describes molecules that are or may be (theoretical) in the map.';
 
 
+CREATE INDEX compound_map_idx
+ ON compound
+ ( map_id );
+
 CREATE TABLE feature_overlap_mapping (
-                overlapped_feature_id INTEGER NOT NULL,
-                overlapping_feature_id INTEGER NOT NULL,
-                map_id INTEGER NOT NULL,
+                overlapped_feature_id BIGINT NOT NULL,
+                overlapping_feature_id BIGINT NOT NULL,
+                map_id BIGINT NOT NULL,
                 CONSTRAINT feature_overlap_mapping_pk PRIMARY KEY (overlapped_feature_id, overlapping_feature_id)
 );
 
 
+CREATE INDEX feature_overlap_mapping_map_idx
+ ON feature_overlap_mapping
+ ( map_id );
+
 CREATE TABLE feature_object_tree_mapping (
-                feature_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
-                name VARCHAR(1000) NOT NULL,
+                feature_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
+                schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT feature_object_tree_mapping_pk PRIMARY KEY (feature_id, object_tree_id)
 );
 
 
 CREATE TABLE processed_map_feature_item (
-                processed_map_id INTEGER NOT NULL,
-                feature_id INTEGER NOT NULL,
+                processed_map_id BIGINT NOT NULL,
+                feature_id BIGINT NOT NULL,
                 calibrated_moz DOUBLE NOT NULL,
                 normalized_intensity REAL NOT NULL,
                 corrected_elution_time REAL NOT NULL,
@@ -343,31 +387,43 @@ COMMENT ON COLUMN processed_map_feature_item.is_clusterized IS 'True if this fea
 
 
 CREATE TABLE master_feature_item (
-                master_feature_id INTEGER NOT NULL,
-                child_feature_id INTEGER NOT NULL,
+                master_feature_id BIGINT NOT NULL,
+                child_feature_id BIGINT NOT NULL,
                 is_best_child BOOLEAN NOT NULL,
-                master_map_id INTEGER NOT NULL,
+                master_map_id BIGINT NOT NULL,
                 CONSTRAINT master_feature_item_pk PRIMARY KEY (master_feature_id, child_feature_id)
 );
 COMMENT ON COLUMN master_feature_item.is_best_child IS 'The best child is the feature of reference for the master feature. Scan ids of the master features should be identical to the scan ids of the best child feature.';
 
 
-CREATE TABLE feature_ms2_scan (
-                feature_id INTEGER NOT NULL,
-                ms2_scan_id INTEGER NOT NULL,
-                run_map_id INTEGER NOT NULL,
-                CONSTRAINT feature_ms2_event_pk PRIMARY KEY (feature_id, ms2_scan_id)
+CREATE INDEX master_feature_item_master_map_idx
+ ON master_feature_item
+ ( master_map_id );
+
+CREATE TABLE feature_ms2_event (
+                feature_id BIGINT NOT NULL,
+                ms2_event_id BIGINT NOT NULL,
+                run_map_id BIGINT NOT NULL,
+                CONSTRAINT feature_ms2_event_pk PRIMARY KEY (feature_id, ms2_event_id)
 );
 
 
+CREATE INDEX feature_ms2_event_run_map_idx
+ ON feature_ms2_event
+ ( run_map_id );
+
 CREATE TABLE feature_cluster_item (
-                cluster_feature_id INTEGER NOT NULL,
-                sub_feature_id INTEGER NOT NULL,
-                processed_map_id INTEGER NOT NULL,
+                cluster_feature_id BIGINT NOT NULL,
+                sub_feature_id BIGINT NOT NULL,
+                processed_map_id BIGINT NOT NULL,
                 CONSTRAINT feature_cluster_item_pk PRIMARY KEY (cluster_feature_id, sub_feature_id)
 );
 COMMENT ON TABLE feature_cluster_item IS 'clustering over the same map or across several maps (merge)';
 
+
+CREATE INDEX feature_cluster_item_processed_map_idx
+ ON feature_cluster_item
+ ( processed_map_id );
 
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
@@ -401,14 +457,14 @@ REFERENCES map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
-ALTER TABLE native_map ADD CONSTRAINT map_native_map_fk
+ALTER TABLE run_map ADD CONSTRAINT map_native_map_fk
 FOREIGN KEY (id)
 REFERENCES map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
 ALTER TABLE map_object_tree_mapping ADD CONSTRAINT map_map_object_tree_map_fk
-FOREIGN KEY (id)
+FOREIGN KEY (map_id)
 REFERENCES map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
@@ -433,7 +489,7 @@ ON UPDATE NO ACTION;
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
 ALTER TABLE feature_object_tree_mapping ADD CONSTRAINT object_tree_schema_feature_object_tree_map_fk
-FOREIGN KEY (name)
+FOREIGN KEY (schema_name)
 REFERENCES object_tree_schema (name)
 ON UPDATE NO ACTION;
 
@@ -441,7 +497,7 @@ ON UPDATE NO ACTION;
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
 ALTER TABLE map_set_object_tree_mapping ADD CONSTRAINT object_tree_schema_map_set_object_tree_map_fk
-FOREIGN KEY (name)
+FOREIGN KEY (schema_name)
 REFERENCES object_tree_schema (name)
 ON UPDATE NO ACTION;
 
@@ -449,7 +505,7 @@ ON UPDATE NO ACTION;
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
 ALTER TABLE map_object_tree_mapping ADD CONSTRAINT object_tree_schema_map_object_tree_map_fk
-FOREIGN KEY (name)
+FOREIGN KEY (schema_name)
 REFERENCES object_tree_schema (name)
 ON UPDATE NO ACTION;
 
@@ -474,7 +530,7 @@ ON UPDATE NO ACTION;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
-ALTER TABLE native_map ADD CONSTRAINT feature_fitting_model_native_map_fk
+ALTER TABLE run_map ADD CONSTRAINT feature_fitting_model_native_map_fk
 FOREIGN KEY (peakel_fitting_model_id)
 REFERENCES peakel_fitting_model (id)
 ON UPDATE NO ACTION;
@@ -482,7 +538,7 @@ ON UPDATE NO ACTION;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
-ALTER TABLE native_map ADD CONSTRAINT peak_picking_software_native_map_fk
+ALTER TABLE run_map ADD CONSTRAINT peak_picking_software_native_map_fk
 FOREIGN KEY (peak_picking_software_id)
 REFERENCES peak_picking_software (id)
 ON UPDATE NO ACTION;
@@ -503,7 +559,7 @@ ON UPDATE NO ACTION;
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
 ALTER TABLE map_set ADD CONSTRAINT reference_map_map_set_fk
-FOREIGN KEY (reference_map_id)
+FOREIGN KEY (aln_reference_map_id)
 REFERENCES processed_map (id)
 ON UPDATE NO ACTION;
 
@@ -614,14 +670,14 @@ ON UPDATE NO ACTION;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
-ALTER TABLE native_map ADD CONSTRAINT run_native_map_fk
+ALTER TABLE run_map ADD CONSTRAINT run_native_map_fk
 FOREIGN KEY (run_id)
 REFERENCES run (id)
 ON UPDATE NO ACTION;
 
-ALTER TABLE feature_ms2_scan ADD CONSTRAINT native_map_feature_ms2_scan_fk
+ALTER TABLE feature_ms2_event ADD CONSTRAINT native_map_feature_ms2_scan_fk
 FOREIGN KEY (run_map_id)
-REFERENCES native_map (id)
+REFERENCES run_map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
@@ -630,12 +686,12 @@ Warning: H2 Database does not support this relationship's delete action (RESTRIC
 */
 ALTER TABLE processed_map_run_map_mapping ADD CONSTRAINT native_map_processed_map_native_map_fk
 FOREIGN KEY (run_map_id)
-REFERENCES native_map (id)
+REFERENCES run_map (id)
 ON UPDATE NO ACTION;
 
 ALTER TABLE feature_overlap_mapping ADD CONSTRAINT native_map_feature_overlap_map_fk
 FOREIGN KEY (map_id)
-REFERENCES native_map (id)
+REFERENCES run_map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
@@ -660,8 +716,8 @@ ON UPDATE NO ACTION;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
-ALTER TABLE feature_ms2_scan ADD CONSTRAINT scan_feature_ms2_event_fk
-FOREIGN KEY (ms2_scan_id)
+ALTER TABLE feature_ms2_event ADD CONSTRAINT scan_feature_ms2_event_fk
+FOREIGN KEY (ms2_event_id)
 REFERENCES scan (id)
 ON UPDATE NO ACTION;
 
@@ -693,7 +749,7 @@ REFERENCES feature (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-ALTER TABLE feature_ms2_scan ADD CONSTRAINT feature_feature_ms2_event_fk
+ALTER TABLE feature_ms2_event ADD CONSTRAINT feature_feature_ms2_event_fk
 FOREIGN KEY (feature_id)
 REFERENCES feature (id)
 ON DELETE NO ACTION
@@ -736,7 +792,7 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
 ALTER TABLE compound ADD CONSTRAINT feature_compound_fk
-FOREIGN KEY (feature_id)
+FOREIGN KEY (best_feature_id)
 REFERENCES feature (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
