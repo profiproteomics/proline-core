@@ -65,12 +65,11 @@ class WeightedSCCalculatorWId (
   // TODO ? Retrieve a ResultSetProvider from a decorated ExecutionContext ?
   private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
 
-    new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
-      execContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext],
-      execContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext])
+    new SQLResultSummaryProvider(msiDbCtx = execContext.getMSIDbConnectionContext,
+      psDbCtx = execContext.getPSDbConnectionContext,
+      udsDbCtx = execContext.getUDSDbConnectionContext)
 
   }
-
 }
 
 class WeightedSCCalculator (
@@ -409,8 +408,11 @@ class WeightedSCCalculator (
 				  protSetIdByPep.get(pepId).get.foreach( protSetId =>{
 					  sumNbrSpecificPeptides += proteinWeightStructByProtSetId.get(protSetId).get.nbrPepSpecific
 				  })
-				  logger.debug("Set Weight for "+currentProteinWeightStruct.typicalPMAcc+" pep "+pepId +" => "+(currentProteinWeightStruct.nbrPepSpecific / sumNbrSpecificPeptides) +" OR "+(currentProteinWeightStruct.nbrPepSpecific.toFloat / sumNbrSpecificPeptides.toFloat))
-				  currentProteinWeightStruct.weightByPeptideId.put(pepId, (currentProteinWeightStruct.nbrPepSpecific.toFloat / sumNbrSpecificPeptides.toFloat))
+				  
+				  if(sumNbrSpecificPeptides>0)
+					  currentProteinWeightStruct.weightByPeptideId.put(pepId, (currentProteinWeightStruct.nbrPepSpecific.toFloat / sumNbrSpecificPeptides.toFloat))
+				  else
+				    currentProteinWeightStruct.weightByPeptideId.put(pepId, 0)
 			  }
 		  }) //End go through ProteinSet Peptides
 	  })// End go through  ProteinSet (ProteinPepsWeightStruct)      
