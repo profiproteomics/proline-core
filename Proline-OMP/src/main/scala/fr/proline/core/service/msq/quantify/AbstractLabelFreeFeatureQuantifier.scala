@@ -195,8 +195,11 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
     // Iterate over master quant protein sets to store them
     for (mqProtSet <- mqProtSets) {
-      val msiMasterProtSet = this.msiMasterProtSetById(mqProtSet.proteinSet.id)
-      this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSet, msiQuantRSM)
+      val msiMasterProtSetOpt = this.msiMasterProtSetById.get(mqProtSet.proteinSet.id)
+      // FIXME: msiMasterProtSetOpt should be always defined
+      if( msiMasterProtSetOpt.isDefined ) {
+        this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetOpt.get, msiQuantRSM)
+      }
     }
 
     // Commit ORM transaction
