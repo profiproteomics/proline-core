@@ -46,7 +46,7 @@ trait SQLResultSetLoader extends Logging {
     val msiSearchIds = msiSearchIdsByRsId.flatMap(_._2).toArray.distinct
 
     var msiSearchById = Map.empty[Long, fr.proline.core.om.model.msi.MSISearch]
-    if (udsDbCtx != null) {
+    if (udsDbCtx != null && msiSearchIds != null && !msiSearchIds.isEmpty) {
       val msiSearches = new SQLMsiSearchProvider(udsDbCtx, msiDbCtx, psDbCtx).getMSISearches(msiSearchIds)
       msiSearchById = Map() ++ msiSearches.map(ms => ms.id -> ms)
     }
