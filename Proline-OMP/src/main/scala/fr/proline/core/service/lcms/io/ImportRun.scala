@@ -6,6 +6,7 @@ import scala.io.Source._
 
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.LcMsScan
 import fr.proline.core.om.model.lcms.LcMsScanSequence
 import fr.proline.core.om.model.lcms.PeakPickingSoftware
@@ -71,14 +72,13 @@ object ImportScanSequence { // extends String2FileConverter
     maxIntensity: Double = 0.0): LcMsScanSequence = {
 
     LcMsScanSequence(
-      id = LcMsScanSequence.generateNewId(),
+      runId = LcMsRun.generateNewId,
       rawFileName = rawFile.name,
-      //instrumentName = rawfile.instrument.name,
       minIntensity = 0.,
       maxIntensity = 0.,
       ms1ScansCount = ms1Count,
       ms2ScansCount = ms2Count,
-      instrumentId = rawFile.instrument.map( _.id ),
+      instrument = rawFile.instrument,
       scans = scans.toArray
     )
   }

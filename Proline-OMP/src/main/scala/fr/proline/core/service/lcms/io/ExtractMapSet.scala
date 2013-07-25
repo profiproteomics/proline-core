@@ -15,8 +15,9 @@ import fr.proline.core.om.model.lcms.{ Feature => LcMsFeature, IsotopicPattern =
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
-import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
+import fr.proline.core.om.storer.lcms.MapAlnSetStorer
 import fr.proline.core.om.storer.lcms.RunMapStorer
+import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
 import fr.proline.core.service.lcms.ILcMsService
 import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
@@ -138,7 +139,7 @@ class ExtractMapSet(
     }*/
     
     // Update MapSet attributes
-    mapSet.alnReferenceMapId = alnResult.alnRefMapId
+    mapSet.setAlnReferenceMapId(alnResult.alnRefMapId)
     mapSet.mapAlnSets = alnResult.mapAlnSets
     
     // --- Build a temporary Master Map ---
@@ -169,22 +170,33 @@ class ExtractMapSet(
     // --- Create the corresponding map set ---
     val x2MapSet = CreateMapSet( lcmsDbCtx, mapSetName, x2RunMaps, clusteringParams )
     
-    // --- Align the map set and store the alignment ---
-    AlignMapSet(
+    // --- Align the map set for extraction #2 ---
+    /*AlignMapSet(
       lcmsDbCtx = lcmsDbCtx,
       mapSet = x2MapSet, 
       alnMethodName = alnMethodName,
       alnParams = alnParams
-    )
+    )*/
+    
+    val x2ChildMapsWithoutClustersX2 = x2MapSet.childMaps.map { _.copyWithoutClusters }
+    val x2AlnResult = mapAligner.computeMapAlignments( x2ChildMapsWithoutClustersX2, alnParams )
+    
+    // Update the maps the map set alignment sets
+    x2MapSet.setAlnReferenceMapId(x2AlnResult.alnRefMapId)
+    x2MapSet.mapAlnSets = x2AlnResult.mapAlnSets
     
     // --- Create and store the master map and the associated processed maps ---
     CreateMasterMap(
       lcmsDbCtx = lcmsDbCtx,
-      mapSet = x2MapSet, 
+      mapSet = x2MapSet,
       masterFtFilter = masterFtFilter,
       ftMappingParams = ftMappingParams,
       normalizationMethod = normalizationMethod
     )
+    
+    // --- Store the alignment after having stored the map set ---
+    val alnStorer = MapAlnSetStorer( lcmsDbCtx )
+    alnStorer.storeMapAlnSets( x2AlnResult.mapAlnSets, x2MapSet.id, x2AlnResult.alnRefMapId )
     
     // Commit transaction if it was initiated locally
     if( !wasInTransaction ) lcmsDbCtx.commitTransaction()
@@ -244,13 +256,13 @@ class ExtractMapSet(
       val ms2ScansCount = scans.count(_.msLevel == 2)
       
       val scanSeq = new LcMsScanSequence(
-        id = lcmsRun.id,
+        runId = lcmsRun.id,
         rawFileName = rawFileName,
         minIntensity = 0., // TODO: compute this value ???
         maxIntensity = 0., // TODO: compute this value ???
         ms1ScansCount = ms1ScansCount,
         ms2ScansCount = ms2ScansCount,
-        instrumentId = lcmsRun.rawFile.instrument.map(_.id),
+        instrument = lcmsRun.rawFile.instrument,
         scans = scans
       )
       

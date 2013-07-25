@@ -52,7 +52,7 @@ class CreateMapSet(
     val scanSeqProvider = new SQLScanSequenceProvider( lcmsDbCtx )
     val runIds = runMaps.map { _.runId }
     val runs = scanSeqProvider.getScanSequences( runIds )
-    val runById = runs.map { run => run.id -> run } toMap
+    val runById = runs.map { run => run.runId -> run } toMap
     
     // Check if a transaction is already initiated
     val wasInTransaction = lcmsDbCtx.isInTransaction()

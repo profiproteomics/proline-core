@@ -114,18 +114,25 @@ class CreateMasterMap(
     
     // Store the processed maps
     logger.info("saving the processed maps...")
+    val mapIdByTmpMapId = new collection.mutable.HashMap[Long,Long]
     DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
       
       // Instantiate a processed map storer
       val processedMapStorer = ProcessedMapStorer( lcmsDbCtx )
       
       for( processedMap <- mapSet.childMaps ) {
+        
+        val tmpMapId = processedMap.id
+        
         // Store the map
         processedMapStorer.storeProcessedMap( processedMap )
         
+        // Remember the mapping between temporary map id and persisted map id
+        mapIdByTmpMapId += tmpMapId -> processedMap.id
+        
         // Update map set alignment reference map
         if( processedMap.isAlnReference ) {
-          ezDBC.execute( "UPDATE map_set SET al_reference_map_id = "+ processedMap.id +" WHERE id = " + mapSet.id )
+          ezDBC.execute( "UPDATE map_set SET aln_reference_map_id = "+ processedMap.id +" WHERE id = " + mapSet.id )
         }
       }
       
@@ -134,6 +141,9 @@ class CreateMasterMap(
     logger.info("saving the master map...")
     val masterMapStorer = MasterMapStorer(lcmsDbCtx)
     masterMapStorer.storeMasterMap(mapSet.masterMap)
+    
+    // Update map ids in map alignments
+    mapSet.alnReferenceMapId = mapIdByTmpMapId(mapSet.alnReferenceMapId)
     
     // Commit transaction if it was initiated locally
     if (!wasInTransaction) lcmsDbCtx.commitTransaction()

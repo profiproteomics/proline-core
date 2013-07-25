@@ -88,16 +88,20 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       features += feature
     }
 
-    val runMap = new RunMap(id = lcmsScanSeq.id,
+    val runMap = new RunMap(
+      id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,
-      runId = lcmsScanSeq.id,
-      peakPickingSoftware = new PeakPickingSoftware(1,
+      runId = lcmsScanSeq.runId,
+      peakPickingSoftware = new PeakPickingSoftware(
+        1,
         "OpenMS",
         "unknown",
-        "unknown"))
+        "unknown"
+      )
+    )
 
     Some(runMap)
   }

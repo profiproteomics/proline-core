@@ -168,16 +168,20 @@ class mzTSVParser extends ILcmsMapFileParser {
 
     lineIterator.map(s => treatOneLine(columnNames.zip((s.split(mzTSVParser.sepChar))) toMap))
 
-    val runMap = new RunMap(id = lcmsScanSeq.id,
+    val runMap = new RunMap(
+      id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,
-      runId = lcmsScanSeq.id,
-      peakPickingSoftware = new PeakPickingSoftware(1,
+      runId = lcmsScanSeq.runId,
+      peakPickingSoftware = new PeakPickingSoftware(
+        1,
         "MzDbAccess",
         "0.1",
-        "unknown"))
+        "unknown"
+      )
+    )
 
     Some(runMap)
   }
