@@ -6,7 +6,7 @@ import fr.profi.jdbc.easy._
 import fr.profi.jdbc.StatementWrapper
 
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.{DoJDBCWork,DoJDBCReturningWork}
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureTable
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureClusterItemTable
 import fr.proline.core.dal.tables.lcms.LcmsDbMapTable
@@ -19,18 +19,17 @@ import fr.proline.core.om.storer.lcms.IProcessedMapStorer
 
 class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRunMapStorer(lcmsDbCtx) with IProcessedMapStorer {
   
-  def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = true ): Unit = {
-    
+  def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = true ): Unit = {    
+      
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
-      // Insert processed map
-      val newProcessedMapId = this.insertProcessedMap( ezDBC, processedMap )
-      
-      // Update processed map id
-      processedMap.id = newProcessedMapId
-      
-      // Link the processed map to the corresponding run maps
-      this.linkProcessedMapToRunMaps( ezDBC, processedMap )
+      if( processedMap.id < 0 ) {
+        // Insert the processed map if not already done
+        this._insertProcessedMap( ezDBC, processedMap )
+      } else {
+        // Else update mutable fields
+        this._updateProcessedMap( ezDBC, processedMap )
+      }
       
       // Insert processed map feature items
       this.insertProcessedMapFeatureItems( ezDBC, processedMap )
@@ -42,7 +41,13 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
   
   }
   
-  protected def insertProcessedMap( ezDBC: EasyDBC, processedMap: ProcessedMap ): Long = {
+  def insertProcessedMap( processedMap: ProcessedMap ): Long = {    
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+      this._insertProcessedMap(ezDBC,processedMap)
+    })
+  }
+  
+  protected def _insertProcessedMap( ezDBC: EasyDBC, processedMap: ProcessedMap ): Long = {
     
     // Insert map data
     val newMapId = this.insertMap( ezDBC, processedMap, processedMap.modificationTimestamp )
@@ -60,7 +65,31 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
       )
     }
     
+    // Update processed map id
+    processedMap.id = newMapId
+    
+    // Link the processed map to the corresponding run maps
+    this.linkProcessedMapToRunMaps( ezDBC, processedMap )
+    
     newMapId
+ 
+  }
+  
+  protected def _updateProcessedMap( ezDBC: EasyDBC, processedMap: ProcessedMap ): Unit = {
+    
+    // TODO: implement a mkUpdateQuery
+    val updateSQLquery = "UPDATE "+ LcmsDbProcessedMapTable.name +
+    " SET normalization_factor=?, is_aln_reference=?, is_locked=?"
+    
+    // Insert processed map data
+    ezDBC.executePrepared(updateSQLquery) { statement => 
+      statement.executeWith(
+        processedMap.normalizationFactor,
+        processedMap.isAlnReference,
+        processedMap.isLocked
+      )
+    }
+ 
   }
   
   protected def linkProcessedMapToRunMaps( ezDBC: EasyDBC, processedMap: ProcessedMap ): Unit = {

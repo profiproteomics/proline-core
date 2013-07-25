@@ -24,16 +24,13 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
     
       // Insert the master map in the processed_map and map tables
-      val newMasterMapId = this.insertProcessedMap( ezDBC, masterMap )
+      val newMasterMapId = this._insertProcessedMap( ezDBC, masterMap )
       
       // Update the master map id
       masterMap.id = newMasterMapId
       
       // Update master map id of the map set in the database
       ezDBC.execute( "UPDATE map_set SET master_map_id = " + newMasterMapId + " WHERE id = " + mapSetId )
-      
-      // Link the master map to the corresponding run maps
-      this.linkProcessedMapToRunMaps( ezDBC, masterMap )
       
       // Insert features
       ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { featureInsertStmt =>

@@ -46,6 +46,7 @@ trait IProcessedMapStorer {
   import fr.proline.core.om.model.lcms.ProcessedMap
   import fr.proline.core.om.model.lcms.Feature
   
+  def insertProcessedMap( processedMap: ProcessedMap ): Long
   def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = false ): Unit
   def storeFeatureClusters( features: Seq[Feature] ): Unit
   
