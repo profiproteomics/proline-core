@@ -21,6 +21,9 @@ import scala.collection.mutable.MapBuilder
 import fr.proline.core.om.provider.msi.impl.SQLPeptideSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.msi.IResultFileProvider
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 
 class WeightedSCCalculatorWId (
 	execContext: IExecutionContext,
@@ -38,6 +41,7 @@ class WeightedSCCalculatorWId (
     require(rsmIdsToCalculate!=null && referenceRSMId != 0 &&  rsmIdsToCalculate.length > 0)
     
     val rsmProvider = getResultSummaryProvider(execContext)
+    val rsProvider = getResultSetProvider(execContext)
     val referenceRSMOpt : Option[ResultSummary] = rsmProvider.getResultSummary(referenceRSMId,true)
     if (referenceRSMOpt.isEmpty) {
     	throw new IllegalArgumentException("Unknown ResultSummary Id: " + referenceRSMId)
@@ -49,6 +53,11 @@ class WeightedSCCalculatorWId (
        if (nextRSMOpt.isEmpty) {
     	throw new IllegalArgumentException("Unknown ResultSummary Id: " + rsmId)
        }
+      val nextRSOpt = rsProvider.getResultSet(nextRSMOpt.get.getResultSetId)
+      if (nextRSOpt.isEmpty) {
+    	throw new IllegalArgumentException("Unknown ResultSet "+nextRSMOpt.get.getResultSetId+" associated to resultSummary Id: " + rsmId)
+       }
+      nextRSMOpt.get.resultSet = nextRSOpt
       rsmToCalculateBuilder  += nextRSMOpt.get
     })
     
@@ -69,6 +78,21 @@ class WeightedSCCalculatorWId (
       psDbCtx = execContext.getPSDbConnectionContext,
       udsDbCtx = execContext.getUDSDbConnectionContext)
 
+  }
+  
+    // TODO ? Retrieve a ResultSetProvider from a decorated ExecutionContext ?
+  private def getResultSetProvider(execContext: IExecutionContext): IResultSetProvider = {
+
+    if(execContext.isJPA()){
+      return new ORMResultSetProvider(msiDbCtx = execContext.getMSIDbConnectionContext,
+    		  psDbCtx = execContext.getPSDbConnectionContext,
+    		  pdiDbCtx = execContext.getPDIDbConnectionContext())
+    }else{
+       return  new SQLResultSetProvider(msiDbCtx = execContext.getMSIDbConnectionContext,
+    		   psDbCtx = execContext.getPSDbConnectionContext,
+    		   udsDbCtx = execContext.getUDSDbConnectionContext)
+    }
+     
   }
 }
 
