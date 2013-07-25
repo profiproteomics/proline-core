@@ -139,12 +139,12 @@ case class RunMap(
   require( peakPickingSoftware != null, "a pick peaking software must be provided" )
   require( features.count(_.correctedElutionTime.isDefined) == 0, "can't use processed map features as run map features" )
   
-  def toProcessedMap( id: Long, number: Int, mapSetId: Long, features: Array[Feature] = this.features ) = {
+  def toProcessedMap( number: Int, mapSetId: Long, features: Array[Feature] = this.features ) = {
     
     val curTime = new Date()
     
     ProcessedMap(
-      id = id,
+      id = ProcessedMap.generateNewId,
       number = number,
       name = name,
       description = description,
@@ -155,7 +155,7 @@ case class RunMap(
       isAlnReference = false,
       features = features,
       featureScoring = featureScoring,
-      runMapIds = Array( id ),
+      runMapIds = Array( this.id ),
       runId = Some(runId),
       mapSetId = mapSetId
     )
@@ -434,18 +434,22 @@ case class MapSet(
     val allMapAlnSets = mapAlnSets ++ mapAlnSets.map(_.getReversedAlnSet)
     Map() ++ allMapAlnSets.map( alnSet => (alnSet.refMapId,alnSet.targetMapId) -> alnSet )    
   }
-
+  
   def getChildMapIds() = childMaps map { _.id }
 
   def getRunMapIds(): Array[Long] = {
   
     val runMapIds = new ArrayBuffer[Long](childMaps.length)
     for( childMap <- childMaps ) {
-      if( !childMap.isProcessed ) { runMapIds += childMap.id }
+      if( childMap.isProcessed == false ) { runMapIds += childMap.id }
       else { runMapIds ++= childMap.runMapIds }
     }
     
     runMapIds.toArray
+  }
+  
+  def getProcessedMapIdByRunMapId = {
+    (for( childMap <- childMaps; if childMap.isProcessed; runMapId <- childMap.runMapIds ) yield runMapId -> childMap.id).toMap
   }
 
   def getNormalizationFactorByMapId: Map[Long,Float] = { 

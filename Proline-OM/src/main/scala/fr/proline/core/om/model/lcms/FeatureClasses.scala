@@ -109,6 +109,12 @@ case class Feature (
   def getCalibratedMozOrMoz = calibratedMoz.getOrElse(moz)
   def getNormalizedIntensityOrIntensity = normalizedIntensity.getOrElse(intensity)
   
+  def getRunMapIds(): Array[Long] = {
+    if( this.isMaster ) children.flatMap( _.getRunMapIds ).distinct
+    else if ( this.isCluster ) Array(this.subFeatures(0).relations.mapId)
+    else Array(this.relations.mapId)
+  }
+  
   def toRunMapFeature(): Feature = {
     require( isCluster == false, "can't convert a cluster feature into a run map feature" )
     require( isMaster == false, "can't convert a master feature into a run map feature" )
