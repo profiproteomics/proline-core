@@ -33,6 +33,8 @@ case class RawFileProperties(
   @BeanProperty var mzdbFilePath: String
 )
 
+object LcMsRun extends InMemoryIdGen
+
 case class LcMsRun(
   
   // Required fields
@@ -60,7 +62,7 @@ case class LcMsRun(
 case class LcMsRunProperties
 
 
-object LcMsScanSequence extends InMemoryIdGen {
+object LcMsScanSequence {
   var timeIndexWidth = 10
   def calcTimeIndex( time: Double ): Int = (time/timeIndexWidth).toInt
 }
@@ -68,7 +70,7 @@ object LcMsScanSequence extends InMemoryIdGen {
 case class LcMsScanSequence(
   
   // Required fields
-  val id: Long,
+  val runId: Long, // MUST be the run id
   
   val rawFileName: String,
   val minIntensity: Double,
@@ -76,7 +78,7 @@ case class LcMsScanSequence(
   val ms1ScansCount: Int,
   val ms2ScansCount: Int,
   val scans: Array[LcMsScan],
-  var instrumentId: Option[Long] = None,
+  var instrument: Option[Instrument] = None,
   
   // Mutable optional fields
   var properties: Option[LcMsScanSequenceProperties] = None

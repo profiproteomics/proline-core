@@ -457,6 +457,12 @@ case class MapSet(
     else childMaps find { _.id == alnReferenceMapId }
   }
   
+  def setAlnReferenceMapId( alnRefMapId: Long ) = {
+    this.alnReferenceMapId = alnReferenceMapId
+    val alnRefMap = this.getAlnReferenceMap.get
+    alnRefMap.isAlnReference = true
+  }
+  
   def convertElutionTime( time: Float, refMapId: Long, targetMapId: Long, mass: Option[Double] = None): Float = {
     require( mapAlnSets != null, "can't convert elution time without map alignments" )
     
