@@ -1,29 +1,36 @@
 package fr.proline.core.algo.msi
 
+import org.junit.After
 import org.junit.Assert._
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import org.junit.BeforeClass
-import org.junit.AfterClass
-import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.repository.DriverType
-import fr.proline.context.BasicExecutionContext
-import fr.proline.core.om.model.msi.ResultSet
-import com.weiglewilczek.slf4s.Logging
+import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.BasicExecutionContext
+import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
+import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
+import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
+import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import org.junit.After
-import org.junit.Before
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.repository.DriverType
 
 
 @Test
@@ -139,6 +146,50 @@ class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
 
     (parserContext, rsProvider)
   }
+  
+  	@Test
+	def mergeTwiceRSAndValidate() = {
+  	   val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
+  	   rsAddAlgo.addResultSet(readRS)
+  	   rsAddAlgo.addResultSet(readRS)
+  	   val rs2 = rsAddAlgo.toResultSet()
+  	   assert(rs2 != null)
+  	   assert(readRS != rs2)
+  	   val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
+  	   assertEquals(peptides.length, readRS.peptides.length)
+  	     	   
+  	   val ids = rs2.peptideMatches.map(_.resultSetId).distinct
+  	   assertEquals(1, ids.length)
+  	   assertEquals(-99, ids(0))
+	  
+  	   val storerContext = StorerContext(executionContext) // Use Object factory
+  	   val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+  	   val rsId = rsStorer.storeResultSet(rs2, storerContext) 
+	  
+    
+	  val rsValidation = new ResultSetValidator(
+		  execContext = executionContext,
+		  targetRs = rs2,
+		  tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
+		  pepMatchPreFilters = Some(Seq(new ScorePSMFilter(scoreThreshold =  22.0f))),
+		  pepMatchValidator = None,
+		  protSetFilters = None,
+		  storeResultSummary = true)
+
+  	   val result = rsValidation.runService
+  	   Assert.assertTrue("ResultSet validation result", result)
+  	   logger.info(" End Run ResultSetValidator Service with Score Filter, in Test ")
+
+  	   val tRSM = rsValidation.validatedTargetRsm  	   
+  	   logger.info(" rsValidation.validatedTargetRsm "+tRSM.id)
+  	   Assert.assertNotNull(tRSM)
+ 	  
+  	  val provider: SQLResultSummaryProvider = new SQLResultSummaryProvider(executionContext.getMSIDbConnectionContext(),
+  			  executionContext.getPSDbConnectionContext(), executionContext.getUDSDbConnectionContext()) 
+	  val resdRSM =  provider.getResultSummary(tRSM.id, false)
+	  Assert.assertNotNull(tRSM)
+ 	  
+  	}
 
 
 }
