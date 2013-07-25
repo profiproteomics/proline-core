@@ -14,6 +14,7 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.util.sql.StringOrBoolAsBool.string2boolean
 import fr.proline.core.dal.tables.msi.MsiDbPeptideInstancePeptideMatchMapTable
 import fr.proline.util.primitives._
+import fr.proline.core.om.model.msi.MsQuery
 
 class SQLPeptideMatchProvider(
   val msiSqlCtx: DatabaseConnectionContext,
@@ -103,10 +104,22 @@ class SQLPeptideMatchProvider(
 
     // Map peptides by their id
     val peptideById = Map() ++ peptides.map { pep => (pep.id -> pep) }
-
+    
+    var msQueries :  Array[MsQuery] = null
+     val msQProvider = new SQLMsQueryProvider(msiSqlCtx)
+    
     // Load MS queries
     val msiSearchIds = msiDbHelper.getResultSetsMsiSearchIds(rsIds)
-    val msQueries = new SQLMsQueryProvider(msiSqlCtx).getMsiSearchesMsQueries(msiSearchIds)
+    if(msiSearchIds != null && ! msiSearchIds.isEmpty)  { 
+    	msQueries= msQProvider.getMsiSearchesMsQueries(msiSearchIds) 
+       
+    } else {      
+    	val uniqMsQueriesIds  = pmRecords map { v => toLong(v(PepMatchCols.MS_QUERY_ID)) } distinct
+    	
+    	// Previous empty line needed ^^     	
+    	msQueries= msQProvider.getMsQueries(uniqMsQueriesIds) 
+    }
+    
     val msQueryById = Map() ++ msQueries.map { msq => (msq.id -> msq) }
 
     // Load peptide matches

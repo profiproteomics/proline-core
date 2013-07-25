@@ -9,7 +9,7 @@ trait IMsQueryProvider {
   
   //def getMsQueriesAsOptions( msQueryIds: Seq[Int] ): Array[Option[MsQuery]]
   
-  //def getMsQueries( msQueryIds: Seq[Int] ): Array[MsQuery]
+  def getMsQueries( msQueryIds: Seq[Long] ): Array[MsQuery]
   
   def getMsiSearchesMsQueries( msiSearchIds: Seq[Long] ): Array[MsQuery]
   
