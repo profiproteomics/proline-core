@@ -107,6 +107,25 @@ class WeightedSCCalculatorTest extends AbstractMultipleDBTestCase with Logging {
   }
 
   
+     
+  /**
+   * P1 = (pep1, pep2, pep3, pep4, pep5, pep6,)
+   * P2 = (pep5, pep7, pep8, pep9, pep10)
+   */
+  @Test
+  def oneRSMIdSimpleSC() = {
+	  //  Validate RS to generate RSM
+    
+    var validator = new ResultSetValidator(execContext = executionContext, targetRs= readRS ) 
+    validator.runService
+    val rsm = validator.validatedTargetRsm
+    
+    var wsCalculator = new WeightedSCCalculatorWId(execContext = executionContext, referenceRSMId=rsm.id, rsmIdsToCalculate=Seq(rsm.id))
+    val serviceRes = wsCalculator.runService
+    assertTrue(serviceRes)
+//    logger.debug("  wsCalculator RESULT  "+wsCalculator.getResultAsJSON)
+   
+  }
 
 }
 
