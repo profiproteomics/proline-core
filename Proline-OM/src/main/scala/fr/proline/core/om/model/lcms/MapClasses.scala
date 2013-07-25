@@ -420,7 +420,7 @@ case class MapSet(
   
   // Mutable optional fields
   var masterMap: ProcessedMap = null,
-  var alnReferenceMapId: Long = 0,
+  protected var alnReferenceMapId: Long = 0,
   var mapAlnSets: Array[MapAlignmentSet] = null,
   
   var properties: Option[MapSetProperties] = None
@@ -452,15 +452,20 @@ case class MapSet(
     childMaps.map( childMap => ( childMap.id -> childMap.normalizationFactor ) ).toMap
   }
   
-  def getAlnReferenceMap(): Option[ProcessedMap] = {      
+  def getAlnReferenceMap(): Option[ProcessedMap] = {
     if( alnReferenceMapId == 0 ) None
     else childMaps find { _.id == alnReferenceMapId }
   }
   
+  def getAlnReferenceMapId = alnReferenceMapId
+  
   def setAlnReferenceMapId( alnRefMapId: Long ) = {
-    this.alnReferenceMapId = alnReferenceMapId
-    val alnRefMap = this.getAlnReferenceMap.get
-    alnRefMap.isAlnReference = true
+    this.alnReferenceMapId = alnRefMapId
+    
+    val alnRefMapOpt = this.getAlnReferenceMap
+    require(alnRefMapOpt.isDefined,"unkown map with id="+alnRefMapId)
+    
+    alnRefMapOpt.get.isAlnReference = true
   }
   
   def convertElutionTime( time: Float, refMapId: Long, targetMapId: Long, mass: Option[Double] = None): Float = {

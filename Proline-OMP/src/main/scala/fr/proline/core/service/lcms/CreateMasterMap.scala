@@ -45,7 +45,7 @@ class CreateMasterMap(
   def runService(): Boolean = {
 
     // Retrieve reference map id and check if alignment has been performed
-    val alnRefMapId = mapSet.alnReferenceMapId
+    val alnRefMapId = mapSet.getAlnReferenceMapId
     if (alnRefMapId == 0) {
       throw new Exception("the alignment of LCMS maps must be performed first")
     }
@@ -143,7 +143,13 @@ class CreateMasterMap(
     masterMapStorer.storeMasterMap(mapSet.masterMap)
     
     // Update map ids in map alignments
-    mapSet.alnReferenceMapId = mapIdByTmpMapId(mapSet.alnReferenceMapId)
+    mapSet.setAlnReferenceMapId( mapIdByTmpMapId(mapSet.getAlnReferenceMapId) )
+    mapSet.mapAlnSets = mapSet.mapAlnSets.map { mapAlnSet =>
+      mapAlnSet.copy(
+        refMapId = mapIdByTmpMapId(mapAlnSet.refMapId),
+        targetMapId = mapIdByTmpMapId(mapAlnSet.targetMapId)
+      )
+    }
     
     // Commit transaction if it was initiated locally
     if (!wasInTransaction) lcmsDbCtx.commitTransaction()

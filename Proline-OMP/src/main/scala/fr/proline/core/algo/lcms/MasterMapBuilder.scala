@@ -171,9 +171,9 @@ object MasterMapBuilder {
         throw new Exception( "a map id must be defined for each child feature (m/z=" + childFt.moz +")")
       }    
       
-      if( childMapId != mapSet.alnReferenceMapId ) {
+      if( childMapId != mapSet.getAlnReferenceMapId ) {
         // Calculate corrected elution time using the elution time alignment
-        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.alnReferenceMapId)
+        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.getAlnReferenceMapId)
         childFt.correctedElutionTime = Some(correctedTime)
       }
 

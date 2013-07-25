@@ -42,7 +42,7 @@ class AlignMapSet(
     if( !wasInTransaction ) lcmsDbCtx.beginTransaction()
     
     // Check if reference map already exists: if so delete alignments
-    val existingAlnRefMapId = mapSet.alnReferenceMapId
+    val existingAlnRefMapId = mapSet.getAlnReferenceMapId
     if( existingAlnRefMapId > 0 ) {
       
       DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
@@ -70,7 +70,7 @@ class AlignMapSet(
     if( !wasInTransaction ) lcmsDbCtx.commitTransaction()
     
     // Update the maps the map set alignment sets
-    mapSet.alnReferenceMapId = alnResult.alnRefMapId
+    mapSet.setAlnReferenceMapId( alnResult.alnRefMapId )
     mapSet.mapAlnSets = alnResult.mapAlnSets
     
     true
