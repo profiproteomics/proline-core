@@ -30,7 +30,7 @@ class SQLRunProvider(
     val scanSeqByIdAsOpt = if( scanSeqProvider.isEmpty ) None
     else {
       val scanSeqs = scanSeqProvider.get.getScanSequences(runIds)
-      Some( Map() ++ scanSeqs.map( scanSeq => scanSeq.id -> scanSeq ) )
+      Some( Map() ++ scanSeqs.map( scanSeq => scanSeq.runId -> scanSeq ) )
     }
     
     val runs = new Array[LcMsRun](runIds.length)
