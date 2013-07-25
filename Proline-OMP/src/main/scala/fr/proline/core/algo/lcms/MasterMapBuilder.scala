@@ -6,17 +6,18 @@ import filtering._
 
 object MasterMapBuilder {
   
+  private var _processedMapIdByRunMapId = Map.empty[Long,Long]
+  
   def buildMasterMap( mapSet: MapSet, masterFtFilter: Filter, ftMappingParams: FeatureMappingParams ): ProcessedMap = {
     
     // Check that map set maps have been aligned
-    if( mapSet.getAlnReferenceMap == None ) {
-      throw new Exception("can't build a master map with unaligned maps")
-    }
+    require( mapSet.getAlnReferenceMap.isDefined,"can't build a master map with unaligned maps")
     
     // TODO: check filter name (must be intensity or relative_intensity)
     
     // Retrieve some vars
-    val childMaps = mapSet.childMaps  
+    val childMaps = mapSet.childMaps
+    val processedMapIdByRunMapId = mapSet.getProcessedMapIdByRunMapId
     val alnRefMap = mapSet.getAlnReferenceMap.get
     val alnRefMapId = alnRefMap.id
     val mapAlnSets = mapSet.mapAlnSets
@@ -52,7 +53,7 @@ object MasterMapBuilder {
           //val mapAlnSet = refMapAlnSetByMapId(childMap.id)
           
           // Feed the master map with the filtered features
-          this.feedMasterMapFeatures(masterFts, highIntensityFts, mapSet, ftMappingParams, true )
+          this._feedMasterMapFeatures(masterFts, highIntensityFts, mapSet, processedMapIdByRunMapId, ftMappingParams, true )
         }
       }
       
@@ -95,12 +96,12 @@ object MasterMapBuilder {
         
         // Assign these poor quality features to existing master features
         // but don't make them master features if they can't be assigned
-        this.feedMasterMapFeatures(masterFts,lowIntensityFts,mapSet,ftMappingParams, false )        
+        this._feedMasterMapFeatures(masterFts,lowIntensityFts,mapSet,processedMapIdByRunMapId,ftMappingParams, false )        
       }
       
       // Try to map single features to existing master features with charge error tolerance
       //print "map alone features to existing master features with charge error tolerance\n"
-      masterFts = this.mergeMasterFeaturesWithChargeTol(mapSet, masterFts, ftMappingParams)
+      masterFts = this._mergeMasterFeaturesWithChargeTol(mapSet, masterFts, ftMappingParams)
     }
     
     val curTime = new java.util.Date()
@@ -159,21 +160,27 @@ object MasterMapBuilder {
     
   }
   
-  private def feedMasterMapFeatures( masterMapFeatures: ArrayBuffer[Feature], childMapFeatures: Array[Feature], 
-                                     mapSet: MapSet, ftMappingParams: FeatureMappingParams,
-                                     addNonMatchingFeatures: Boolean ): Unit = {
+  private def _feedMasterMapFeatures(
+     masterMapFeatures: ArrayBuffer[Feature],
+     childMapFeatures: Array[Feature], 
+     mapSet: MapSet,
+     processedMapIdByRunMapId: Map[Long,Long],
+     ftMappingParams: FeatureMappingParams,
+     addNonMatchingFeatures: Boolean 
+   ): Unit = {
     
     // Iterate over all child map features in order to correct their elution time
     for( val childFt <- childMapFeatures ) {
       
       val childMapId = childFt.relations.mapId
-      if( childMapId == 0 ) {
-        throw new Exception( "a map id must be defined for each child feature (m/z=" + childFt.moz +")")
-      }    
+      require( childMapId != 0, "a map id must be defined for each child feature (m/z=" + childFt.moz +")")
       
-      if( childMapId != mapSet.getAlnReferenceMapId ) {
+      val childProcessedMapId = if( childFt.isCluster ) childMapId
+      else processedMapIdByRunMapId(childMapId)
+      
+      if( childProcessedMapId != mapSet.getAlnReferenceMapId ) {
         // Calculate corrected elution time using the elution time alignment
-        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.getAlnReferenceMapId)
+        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childProcessedMapId, mapSet.getAlnReferenceMapId)
         childFt.correctedElutionTime = Some(correctedTime)
       }
 
@@ -254,19 +261,22 @@ object MasterMapBuilder {
     
   }
 
-  private def mergeMasterFeaturesWithChargeTol( mapSet: MapSet, masterFeatures: ArrayBuffer[Feature], 
-                                                ftMappingParams: FeatureMappingParams ): ArrayBuffer[Feature] = {
+  private def _mergeMasterFeaturesWithChargeTol(
+    mapSet: MapSet,
+    masterFeatures: ArrayBuffer[Feature], 
+    ftMappingParams: FeatureMappingParams
+  ): ArrayBuffer[Feature] = {
     
     // Retrieve master map and number of maps
-    val mapIds = mapSet.childMaps.map { _.id }
-    val nbMaps = mapIds.length
+    val runMapIds = mapSet.getRunMapIds
+    val nbMaps = runMapIds.length
     
     // Build a hash map of unfulfilled master features and another one for single features
     val notFullMftsByMapId = new java.util.HashMap[Long,ArrayBuffer[Feature]]
     val singleFeaturesByMapId = new java.util.HashMap[Long,ArrayBuffer[Feature]]
     
     // Initialize the hash maps
-    for( mapId <- mapIds ) {
+    for( mapId <- runMapIds ) {
       notFullMftsByMapId.put( mapId, new ArrayBuffer[Feature](0) )
       singleFeaturesByMapId.put( mapId, new ArrayBuffer[Feature](0) )
     }
@@ -274,17 +284,20 @@ object MasterMapBuilder {
     for( masterFt <- masterFeatures ) {
       
       // Determine the number of matched maps
-      val matchedMapIdSet = masterFt.children.map( _.relations.mapId ).toSet.toArray
+      val matchedMapIdSet = masterFt.getRunMapIds.toSet
       val nbMatchedMaps = matchedMapIdSet.size
       
       // If master feature contains a single feature
       if( masterFt.children.length == 1 ) {
-        singleFeaturesByMapId.get( matchedMapIdSet(0) ) += masterFt
+        val runMapId = matchedMapIdSet.first
+        //println("runmap id set="+matchedMapIdSet.mkString(","))
+        //println("runmap id list ="+ runMapIds.mkString(","))
+        singleFeaturesByMapId.get( runMapId ) += masterFt
       }
       // If master feature is not fulfilled
       else if( nbMatchedMaps < nbMaps ) {
         
-        val unmatchedMapIds = mapIds filter { ! matchedMapIdSet.contains(_) } 
+        val unmatchedMapIds = runMapIds filter { ! matchedMapIdSet.contains(_) } 
         
         for( mapId <- unmatchedMapIds ) {
           notFullMftsByMapId.get(mapId) += masterFt

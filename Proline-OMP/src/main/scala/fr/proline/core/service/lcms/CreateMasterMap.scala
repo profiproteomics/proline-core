@@ -9,6 +9,7 @@ import fr.proline.core.algo.lcms._
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl._
+import fr.proline.core.om.storer.lcms.MapAlnSetStorer
 import fr.proline.core.om.storer.lcms.MasterMapStorer
 import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.core.service.lcms._
@@ -19,12 +20,23 @@ object CreateMasterMap {
   def apply(
     lcmsDbCtx: DatabaseConnectionContext,
     mapSet: MapSet,
+    alnMethodName: String,
+    alnParams: AlignmentParams,
     masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
     ftMappingParams: FeatureMappingParams,
     normalizationMethod: Option[String]
   ): ProcessedMap = {
 
-    val masterMapCreator = new CreateMasterMap(lcmsDbCtx, mapSet, masterFtFilter, ftMappingParams, normalizationMethod)
+    val masterMapCreator = new CreateMasterMap(
+      lcmsDbCtx,
+      mapSet,
+      alnMethodName: String,
+      alnParams: AlignmentParams,
+      masterFtFilter,
+      ftMappingParams,
+      normalizationMethod
+    )
+    
     masterMapCreator.runService()
     masterMapCreator.createdMasterMap
 
@@ -35,6 +47,8 @@ object CreateMasterMap {
 class CreateMasterMap(
   val lcmsDbCtx: DatabaseConnectionContext,
   mapSet: MapSet,
+  alnMethodName: String,
+  alnParams: AlignmentParams,
   masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
   ftMappingParams: FeatureMappingParams,
   normalizationMethod: Option[String]
@@ -43,16 +57,31 @@ class CreateMasterMap(
   var createdMasterMap: ProcessedMap = null
 
   def runService(): Boolean = {
+    
+    // TODO: call the AlnMapSet service instead
+    
+    // --- Perform the LC-MS maps alignment ---
+    val mapAligner = LcmsMapAligner( methodName = alnMethodName )
+    val childMapsWithoutClusters = mapSet.childMaps.map { _.copyWithoutClusters }
+    val alnResult = mapAligner.computeMapAlignments( childMapsWithoutClusters, alnParams )
+    
+    // Update the maps the map set alignment sets
+    val alnRefMapId = alnResult.alnRefMapId
+    require( alnRefMapId > 0, "processed maps must have been persisted first")
+    mapSet.setAlnReferenceMapId(alnRefMapId)
+    mapSet.mapAlnSets = alnResult.mapAlnSets
 
     // Retrieve reference map id and check if alignment has been performed
-    val alnRefMapId = mapSet.getAlnReferenceMapId
-    if (alnRefMapId == 0) {
-      throw new Exception("the alignment of LCMS maps must be performed first")
-    }
+    //val alnRefMapId = mapSet.getAlnReferenceMapId
+    //require(alnRefMapId != 0, "the alignment of LCMS maps must be performed first")
 
     // Check if a transaction is already initiated
     val wasInTransaction = lcmsDbCtx.isInTransaction()
     if (!wasInTransaction) lcmsDbCtx.beginTransaction()
+    
+    // --- Store the alignments ---
+    val alnStorer = MapAlnSetStorer( lcmsDbCtx )
+    alnStorer.storeMapAlnSets( mapSet.mapAlnSets, mapSet.id, alnRefMapId )
 
     // Delete current master map if it exists
     if (mapSet.masterMap != null) {
@@ -112,9 +141,10 @@ class CreateMasterMap(
 
     }
     
-    // Store the processed maps
-    logger.info("saving the processed maps...")
-    val mapIdByTmpMapId = new collection.mutable.HashMap[Long,Long]
+    // --- Store the processed maps --- 
+    logger.info("saving the processed maps content...")
+    //val mapIdByTmpMapId = new collection.mutable.HashMap[Long,Long]
+    
     DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
       
       // Instantiate a processed map storer
@@ -122,16 +152,17 @@ class CreateMasterMap(
       
       for( processedMap <- mapSet.childMaps ) {
         
-        val tmpMapId = processedMap.id
+        //val tmpMapId = processedMap.id
         
         // Store the map
         processedMapStorer.storeProcessedMap( processedMap )
         
         // Remember the mapping between temporary map id and persisted map id
-        mapIdByTmpMapId += tmpMapId -> processedMap.id
+        //mapIdByTmpMapId += tmpMapId -> processedMap.id
         
         // Update map set alignment reference map
         if( processedMap.isAlnReference ) {
+          logger.info("Set map set alignement reference map to id=" + processedMap.id)
           ezDBC.execute( "UPDATE map_set SET aln_reference_map_id = "+ processedMap.id +" WHERE id = " + mapSet.id )
         }
       }
@@ -143,13 +174,24 @@ class CreateMasterMap(
     masterMapStorer.storeMasterMap(mapSet.masterMap)
     
     // Update map ids in map alignments
-    mapSet.setAlnReferenceMapId( mapIdByTmpMapId(mapSet.getAlnReferenceMapId) )
+    /*mapSet.setAlnReferenceMapId( mapIdByTmpMapId(mapSet.getAlnReferenceMapId) )
     mapSet.mapAlnSets = mapSet.mapAlnSets.map { mapAlnSet =>
+      val mapAlns = mapAlnSet.mapAlignments.map { mapAln =>
+        mapAln.copy( 
+          refMapId = mapIdByTmpMapId(mapAlnSet.refMapId),
+          targetMapId = mapIdByTmpMapId(mapAlnSet.targetMapId)
+        )
+      }
       mapAlnSet.copy(
         refMapId = mapIdByTmpMapId(mapAlnSet.refMapId),
-        targetMapId = mapIdByTmpMapId(mapAlnSet.targetMapId)
+        targetMapId = mapIdByTmpMapId(mapAlnSet.targetMapId),
+        mapAlignments = mapAlns
       )
     }
+    
+    mapSet.mapAlnSets.foreach { mapAlnSet => 
+      println( "refmap id=%d, target map id = %d".format( mapAlnSet.refMapId, mapAlnSet.targetMapId ) )
+    }*/
     
     // Commit transaction if it was initiated locally
     if (!wasInTransaction) lcmsDbCtx.commitTransaction()

@@ -10,6 +10,7 @@ import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.lcms.LcmsDbMapSetTable
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
+import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.core.service.lcms._
 import fr.proline.repository.IDatabaseConnector
 
@@ -79,11 +80,18 @@ class CreateMapSet(
       // Iterate over run maps to convert them in processed maps and store them
       var mapNumber = 0
       
+      // Instantiate a processed map storer
+      val processedMapStorer = ProcessedMapStorer( lcmsDbCtx )
+      
+      logger.info("saving the processed maps...")
       for( runMap <- runMaps ) {
         mapNumber += 1
         
         // Convert to processed map
-        var processedMap = runMap.toProcessedMap( id = runMap.id, number = mapNumber, mapSetId = newMapSetId )
+        var processedMap = runMap.toProcessedMap( number = mapNumber, mapSetId = newMapSetId )
+        
+        // Insert the processed map
+        processedMapStorer.insertProcessedMap( processedMap )
         
         // Clean the map
         val run = runById( runMap.runId )

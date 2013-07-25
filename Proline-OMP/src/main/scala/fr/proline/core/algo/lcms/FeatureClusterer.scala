@@ -244,7 +244,6 @@ object FeatureClusterer extends Logging {
     } else {
       // Create new processed map from existing run map
       newLcmsMap = lcmsMap.asInstanceOf[RunMap].toProcessedMap(
-        id = ProcessedMap.generateNewId(),
         number = 0,
         mapSetId = 0,
         features = clusterizedFeatures
