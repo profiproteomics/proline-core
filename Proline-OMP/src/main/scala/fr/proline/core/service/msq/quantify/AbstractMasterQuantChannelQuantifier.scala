@@ -368,7 +368,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
         msiMasterProtMatch.setIsDecoy(masterProtMatch.isDecoy)
         msiMasterProtMatch.setIsLastBioSequence(masterProtMatch.isLastBioSequence)
         msiMasterProtMatch.setTaxonId(masterProtMatch.taxonId)
-        msiMasterProtMatch.setBioSequenceId(masterProtMatch.getProteinId)
+        if( masterProtMatch.getProteinId > 0 ) msiMasterProtMatch.setBioSequenceId(masterProtMatch.getProteinId)
         // FIXME: retrieve the right scoring id
         msiMasterProtMatch.setScoringId(3)
         msiMasterProtMatch.setResultSet(msiQuantRS)
