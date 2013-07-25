@@ -51,6 +51,7 @@ object ProlineEzDBC extends Logging {
       this.logger.debug("Setting SQLite DB cache to 100Mo and temp_store to MEMORY" )
       ezDBC.execute("PRAGMA cache_size=100000;")
       ezDBC.execute("PRAGMA temp_store=MEMORY;")
+      ezDBC.execute("PRAGMA foreign_keys=ON;")
     }
     
     ezDBC 
