@@ -86,8 +86,12 @@ case class MapMozCalibration(
 @JsonInclude( Include.NON_NULL )
 case class MapMozCalibrationProperties
 
-trait ILcMsMap {
-            
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class LcMsMapProperties
+
+abstract class ILcMsMap {
+  
   // Required fields
   //val id: Long,
   val name: String
@@ -105,10 +109,6 @@ trait ILcMsMap {
   require( creationTimestamp != null && features != null )
 
 }
-
-@JsonSnakeCase
-@JsonInclude( Include.NON_NULL )
-case class LcMsMapProperties
 
 object RunMap extends InMemoryIdGen
 
@@ -230,7 +230,7 @@ case class MapAlignment(
   // Required fields
   val refMapId: Long,
   val targetMapId: Long,
-  val massRange: Tuple2[Double,Double],
+  val massRange: Tuple2[Float,Float],
   val timeList: Array[Float],
   val deltaTimeList: Array[Float],
 
@@ -522,3 +522,5 @@ case class MapSet(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MapSetProperties
+
+

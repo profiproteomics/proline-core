@@ -26,7 +26,7 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
     new MapAlignment(
       refMapId = 1L,
       targetMapId = 2L,
-      massRange = Pair(0.,10000.),
+      massRange = Pair(0,10000),
       timeList = timeList ++ timeList ++ timeList,
       deltaTimeList = reducedDeltaTimeList ++ deltaTimeList ++ increasedDeltaTimeList
     )

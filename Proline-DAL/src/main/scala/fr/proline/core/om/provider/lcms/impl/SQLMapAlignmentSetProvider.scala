@@ -65,8 +65,8 @@ class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) ext
   
   def buildMapAlignment( mapAlnRecord: ResultSetRow ): MapAlignment = {
     
-    val massStart = mapAlnRecord.getDouble(MapAlnCols.MASS_START)
-    val massEnd = mapAlnRecord.getDouble(MapAlnCols.MASS_END)
+    val massStart = mapAlnRecord.getFloat(MapAlnCols.MASS_START)
+    val massEnd = mapAlnRecord.getFloat(MapAlnCols.MASS_END)
     val timeList = mapAlnRecord.getString(MapAlnCols.TIME_LIST).split(" ") map { _.toFloat }
     val deltaTimeList = mapAlnRecord.getString(MapAlnCols.DELTA_TIME_LIST).split(" ") map { _.toFloat }
     
