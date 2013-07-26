@@ -8,7 +8,7 @@ import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, ResultSetProperties, SearchSettings, SearchSettingsProperties, SeqDatabase, SequenceMatch }
-import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.{IResultSetProvider,ResultSetFilter}
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.ResultSet.Type
 import fr.proline.core.orm.msi.repository.{ MsiSeqDatabaseRepository => seqDatabaseRepo, PeptideMatchRepository => peptideMatchRepo, ProteinMatchRepository => proteinMatchRepo, ScoringRepository => scoringRepo, SequenceMatchRepository => sequenceMatchRepo }
@@ -44,7 +44,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
   /* OM Entity caches */
   private val entityCaches = mutable.Map.empty[Class[_], mutable.Map[Long, _]]
 
-  def getResultSetsAsOptions(resultSetIds: Seq[Long]): Array[Option[ResultSet]] = {
+  def getResultSetsAsOptions(resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[Option[ResultSet]] = {
     val resultSets = Array.newBuilder[Option[ResultSet]]
 
     for (resultSetId <- resultSetIds) {
@@ -54,7 +54,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     resultSets.result
   }
 
-  def getResultSets(resultSetIds: Seq[Long]): Array[ResultSet] = {
+  def getResultSets(resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[ResultSet] = {
     val resultSets = Array.newBuilder[ResultSet]
 
     for (resultSetId <- resultSetIds) {
@@ -69,7 +69,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     resultSets.result
   }
 
-  override def getResultSet(resultSetId: Long): Option[ResultSet] = {
+  override def getResultSet(resultSetId: Long, resultSetFilter: Option[ResultSetFilter] = None): Option[ResultSet] = {
     val start = System.currentTimeMillis()
     val msiEM = msiDbCtx.getEntityManager
     JPAUtils.checkEntityManager(msiEM)

@@ -44,7 +44,8 @@ abstract class AbstractResultSetValidator extends AbstractMultipleDBTestCase wit
   }
   
   private def _loadRS(): ResultSet = {
-    val rs = rsProvider.getResultSet(targetRSId).get    
+    val rsFilter = ResultSetFilter( maxPeptideMatchRank = 10 )
+    val rs = rsProvider.getResultSet(targetRSId,Some(rsFilter)).get
     // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
     if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
     rs
@@ -65,7 +66,7 @@ abstract class AbstractResultSetValidator extends AbstractMultipleDBTestCase wit
 
     logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
 
-    val (execContext, rsProv) = buildJPAContext() //SQLContext()
+    val (execContext, rsProv) = buildSQLContext() //buildJPAContext()
     executionContext = execContext
     rsProvider = rsProv
     readRS = this._loadRS()

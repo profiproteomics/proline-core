@@ -11,7 +11,7 @@ import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.om.model.msi.{ ProteinMatch, PeptideMatch, ResultSet, ResultSetProperties }
-import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.{IResultSetProvider,PeptideMatchFilter,ResultSetFilter}
 
 trait SQLResultSetLoader extends Logging {
 
@@ -143,11 +143,13 @@ class SQLResultSetProvider(
 
   val pdiDbCtx = null
 
-  def getResultSets(rsIds: Seq[Long]): Array[ResultSet] = {
+  def getResultSets(rsIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[ResultSet] = {
+    
+    val pepMatchFilter = resultSetFilter.map( rsf => new PeptideMatchFilter( maxRank = rsf.maxPeptideMatchRank ) )
 
     // Load peptide matches
     val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
-    val pepMatches = pepMatchProvider.getResultSetsPeptideMatches(rsIds)
+    val pepMatches = pepMatchProvider.getResultSetsPeptideMatches(rsIds,pepMatchFilter)
 
     // Load protein matches
     val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
@@ -157,9 +159,9 @@ class SQLResultSetProvider(
 
   }
 
-  def getResultSetsAsOptions(resultSetIds: Seq[Long]): Array[Option[ResultSet]] = {
+  def getResultSetsAsOptions(resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[Option[ResultSet]] = {
 
-    val resultSets = this.getResultSets(resultSetIds)
+    val resultSets = this.getResultSets(resultSetIds,resultSetFilter)
     val resultSetById = resultSets.map { rs => rs.id -> rs } toMap
 
     resultSetIds.map { resultSetById.get(_) } toArray

@@ -9,9 +9,8 @@ import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.PeptideMatchProperties
-import fr.proline.core.om.provider.msi.IPeptideMatchProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.util.sql.StringOrBoolAsBool.string2boolean
+import fr.proline.core.om.provider.msi.{IPeptideProvider,IPeptideMatchProvider,PeptideMatchFilter}
+import fr.proline.util.sql.StringOrBoolAsBool._
 import fr.proline.core.dal.tables.msi.MsiDbPeptideInstancePeptideMatchMapTable
 import fr.proline.util.primitives._
 import fr.proline.core.om.model.msi.MsQuery
@@ -43,7 +42,7 @@ class SQLPeptideMatchProvider(
       )
       val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
       
-      val rsIds = pmRecords.map { v => toLong(v(PepMatchCols.RESULT_SET_ID)) }.distinct
+      val rsIds = pmRecords.map { pm => toLong(pm(PepMatchCols.RESULT_SET_ID)) }.distinct
       this._buildPeptideMatches(rsIds, pmRecords)
     
     })
@@ -57,13 +56,16 @@ class SQLPeptideMatchProvider(
     pepMatchIds.map { pepMatchById.get(_) } toArray
   }
 
-  def getResultSetsPeptideMatches(rsIds: Seq[Long]): Array[PeptideMatch] = {
+  def getResultSetsPeptideMatches(rsIds: Seq[Long], pepMatchFilter: Option[PeptideMatchFilter] = None): Array[PeptideMatch] = {
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+      
+      val sqlPepMatchFilter = pepMatchFilter.map( _pepMatchFilterToSQLCondition(_) ).getOrElse("")
     
       val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIds.mkString(",") ~")"
+        List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIds.mkString(",") ~")"~ sqlPepMatchFilter
       )
+      
       val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
   
       this._buildPeptideMatches(rsIds, pmRecords)
@@ -75,6 +77,8 @@ class SQLPeptideMatchProvider(
   def getResultSummariesPeptideMatches(rsmIds: Seq[Long]): Array[PeptideMatch] = {
     
     DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+      
+      //val sqlPepMatchFilter = pepMatchFilter.map( _pepMatchFilterToSQLCondition(_) ).getOrElse("")
   
       val sqb2 = new SelectQueryBuilder2(MsiDbPeptideMatchTable, MsiDbPeptideInstancePeptideMatchMapTable)
       
@@ -86,17 +90,20 @@ class SQLPeptideMatchProvider(
       
       val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
       
-      val rsIds = pmRecords.map( v => toLong(v("result_set_id"))).distinct
+      val rsIds = pmRecords.map( pm => toLong(pm(PepMatchCols.RESULT_SET_ID)) ).distinct
       this._buildPeptideMatches(rsIds, pmRecords)
     
     })
 
   }
+  
+  private def _pepMatchFilterToSQLCondition(pepMatchFilter: PeptideMatchFilter): String = {
+    " AND " + PepMatchCols.RANK + " <= " + pepMatchFilter.maxRank
+  }
 
   private def _buildPeptideMatches(rsIds: Seq[Long], pmRecords: Seq[Map[String, Any]]): Array[PeptideMatch] = {
 
     import fr.proline.util.primitives._
-    import fr.proline.util.sql.StringOrBoolAsBool._
 
     // Load peptides
     val uniqPepIds = pmRecords map { v => toLong(v(PepMatchCols.PEPTIDE_ID)) } distinct
