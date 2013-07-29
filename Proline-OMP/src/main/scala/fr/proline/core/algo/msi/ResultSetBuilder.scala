@@ -177,10 +177,10 @@ class ResultSetBuilder(val resultSetId: Long, val isDecoy: Boolean = false, seqL
         proteinMatchesByKey += (protMatchKey -> newProteinMatch)
         mergedProteinMatches += newProteinMatch
       }
-
+      
     }
 
-    distinctTdModes += rs.getTargetDecoyMode.getOrElse("")
+     distinctTdModes += ( if(rs.properties.isDefined) {rs.properties.get.targetDecoyMode.getOrElse("")}  else "")
     logger.info("ResultSet #" + rs.id + " merged/added in " + (System.currentTimeMillis() - start) + " ms")
   }
 
