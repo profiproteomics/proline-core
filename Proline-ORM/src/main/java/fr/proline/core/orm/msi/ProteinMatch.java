@@ -241,9 +241,20 @@ public class ProteinMatch implements Serializable {
 	
 	private ProteinSet[] proteinSetArray = null;
 
+	private PeptideMatch[] peptideMatches;
+	
 	protected TransientData() {
 	}
 
+	public PeptideMatch[] getPeptideMatches() {
+		return peptideMatches;
+	}
+
+	public void setPeptideMatches(PeptideMatch[] peptideMatches) {
+		this.peptideMatches = peptideMatches;
+	}
+	
+	
 	public PeptideSet getPeptideSet(Long resultSummaryId) {
 	    if (peptideSetMap == null) {
 		return null;
