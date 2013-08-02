@@ -81,11 +81,10 @@ class SpectralCountAlgoTest extends AbstractMultipleDBTestCase with Logging {
   def testUpdatePepInstance() = {
 	  PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(readRSM, executionContext)
 	  readRSM.peptideInstances.foreach(pepI=> {
-	    logger.debug(" TEST PeptI totalLeavesMatchCount : "+pepI.peptide.sequence+" : "+pepI.id+" => "+pepI.totalLeavesMatchCount)
-	    if(pepI.id != 34979 && pepI.id !=37217 && pepI.id != 37760)
-	    	assertTrue(pepI.totalLeavesMatchCount>0)
-	    else
-	      logger.warn("Validated Peptide Match for peptide Instance "+34979+" was not treated !!!! See ")
+	    if(pepI.totalLeavesMatchCount == -1)
+	    	logger.warn("Validated Peptide Match for peptide Instance "+pepI.id+" was not treated !!!! See issue #7984")
+	     else
+	    	 assertTrue(pepI.totalLeavesMatchCount>0)
 	  })
 	  
   }
