@@ -17,6 +17,7 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
+import fr.proline.core.om.model.msi.PeptideInstance
 //import scala.collection.JavaConverters.asJavaCollectionConverter
 
 trait IPepInstanceSpectralCountUpdater {
@@ -104,17 +105,22 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
     var spectralCountByPepId = new HashMap[Long, Int]()
     val startTime = System.currentTimeMillis()
 
-    val validPeptideMatchesB = Seq.newBuilder[PeptideMatch]
-    rsm.getAllPeptideMatchesByPeptideSetId.values.foreach(a => { validPeptideMatchesB ++= a })
-    val validPeptideMatches: Seq[PeptideMatch] = validPeptideMatchesB.result
-
+logger.info(" Start update peptide instance SC for RSM with ID "+rsm.id)
     spectralCountByPepId = getRSMSpectralCountByPepId(rsm, rsm.id, rsm.peptideInstances.map(_.peptideId),  execContext)
 
 
     val endTime = System.currentTimeMillis()
-    logger.debug(" Needed Time to calculate " + validPeptideMatches.length + " = " + (endTime - startTime) + " ms")
+    logger.debug(" Needed Time to calculate SC for " +spectralCountByPepId.size+" =  " + (endTime - startTime) + " ms")
 
-    val tmpPepInstByPepId = Map() ++ rsm.peptideInstances.map { pepInst => (pepInst.peptideId -> pepInst) }
+//    val tmpPepInstByPepId = Map() ++ rsm.peptideInstances.map { pepInst => (pepInst.peptideId -> pepInst) }
+    
+    val tmpPepInstByPepIdBuilder = Map.newBuilder[Long,PeptideInstance]
+    rsm.peptideInstances.foreach(pepInst => { 
+    	tmpPepInstByPepIdBuilder += pepInst.peptideId -> pepInst 
+      })
+      
+  	val tmpPepInstByPepId = tmpPepInstByPepIdBuilder.result
+    
     spectralCountByPepId.foreach(pepSc => {
       if (tmpPepInstByPepId.get(pepSc._1).isDefined) {
         tmpPepInstByPepId.get(pepSc._1).get.totalLeavesMatchCount = pepSc._2
@@ -129,16 +135,20 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
 
     //***** RSM is leave : COUNT Valid PSM
     if (getIsLeaveRSM(rsmID, execContext)) {
+      logger.debug(" RSM "+rsmID+" is leave RSM ")
       var rsm: ResultSummary = null
       if (rootRSM.id == rsmID)
        rsm = rootRSM
       else {
+        logger.debug("Need to read RSM "+rsmID)
         val rsmOp = getResultSummaryProvider(execContext).getResultSummary(rsmID, true)
         if (rsmOp.isEmpty)
           throw new IllegalArgumentException("Unable to read resultaSummay with specified ID " + rsmID)
         rsm = rsmOp.get
       }
-
+      
+      logger.info(" Calculate SC for RSM "+rsmID)
+      
       //VDS comment :Could get info from PeptideInstance.peptideMatches.filter on isValidated... but should be sure
       // PeptideInstance.peptideMatches != null ...
       val validPeptideMatchesB = Seq.newBuilder[PeptideMatch]
@@ -156,12 +166,12 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
       return scByPepID
 
     } else {
-
+      logger.debug(" RSM "+rsmID+" is NOT leave RSM ")
       val childIDsOpt = getRSMChildsID(rsmID, execContext)
 
       // ***** RSM is result of a Merge of ResultSet : count Leave RS "valid" PSM 
       if (childIDsOpt.isEmpty) {
-
+	  	logger.debug(" RSM "+rsmID+" is in RS hierarchy. Get leave RS  ")
         // Use RS hierarchy : If next level is merge RS, suppose all hierarchy is a RS merge          
         //	Get leaves RS
         val leavesRSs = getLeavesRS(rsmID, execContext)
@@ -171,6 +181,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
         if (rootRSM.id == rsmID)
           rootRSM
         else {
+            logger.debug("Need to read RSM "+rsmID)
           val rsmOp = getResultSummaryProvider(execContext).getResultSummary(rsmID, true)
           if (rsmOp.isEmpty)
             throw new IllegalArgumentException("Unable to read resultaSummay with specified ID " + rsmID)
@@ -180,6 +191,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
         //Get filters used for RSM root of RS Merge
         val appliedPSMFilters = ResultSummaryFilterBuilder.buildPeptideMatchFilters(rsm)
 
+        logger.info(" Calculate SC for leave RS ")
         // Get PepID->SC for each RS
         leavesRSs.foreach(rs => {
           val rsPepInstSC: HashMap[Long, Int] = countValidPSMInResultSet(rs, appliedPSMFilters)
@@ -195,6 +207,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
 
         // ***** RSM is result of a Merge of ResultSummary : continue to go into hierarchy : child RSM could be RS merge result  
       } else {
+        logger.debug(" RSM "+rsmID+" is in RSM hierarchy. Go through RSM")
         //Use RSMs hierarchy.  rsm peptide Instance SC = sum child peptide Instance SC
         childIDsOpt.get.foreach(childID => {
           val childSCByPepID = getRSMSpectralCountByPepId(rootRSM, childID, pepID, execContext)
