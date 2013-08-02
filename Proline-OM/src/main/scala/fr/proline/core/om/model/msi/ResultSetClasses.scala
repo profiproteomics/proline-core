@@ -3,11 +3,11 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
-
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
+import com.weiglewilczek.slf4s.Logging
 
 object ResultSet extends InMemoryIdGen
 
@@ -153,7 +153,7 @@ case class ResultSummary(
   private var decoyResultSummaryId: Long = 0,
   @transient var decoyResultSummary: Option[ResultSummary] = null,
 
-  var properties: Option[ResultSummaryProperties] = None) {
+  var properties: Option[ResultSummaryProperties] = None) extends Logging  {
 
   // Requirements
   require(peptideInstances != null && proteinSets != null)
@@ -287,7 +287,10 @@ case class ResultSummary(
   def getAllPeptideMatchesByPeptideSetId(): Map[Long, Array[PeptideMatch]] = {
 
     val peptideMatchMap = this.resultSet.get.peptideMatchById
-
+//    logger.debug(" test peptideMatch ID 18710 18709 "+peptideMatchMap.get(18710)+" ; " +peptideMatchMap.get(18709)) 
+//
+//    var PM1OK = false
+//    var PM2OK = false
     val peptideMatchesByPepSetId = Map.newBuilder[Long, Array[PeptideMatch]]
     for (peptideSet <- this.peptideSets) {
 
@@ -295,11 +298,16 @@ case class ResultSummary(
 
       // Iterate over peptide instances of the peptide set
       val peptideInstances = peptideSet.getPeptideInstances
-      for (peptideInstance <- peptideInstances; peptideMatchId <- peptideInstance.peptideMatchIds) {
+      for (peptideInstance <- peptideInstances; peptideMatchId <- peptideInstance.getPeptideMatchIds) {
+//        PM1OK = peptideMatchId.equals(18710)
+//        PM2OK = peptideMatchId.equals(18709)
         val pepMatch = peptideMatchMap(peptideMatchId)
         val msqPepMatches = pepMatchesByMsQueryId.getOrElseUpdate(pepMatch.msQueryId, new ArrayBuffer[PeptideMatch])
         msqPepMatches += pepMatch
       }
+      
+//      if(PM1OK || PM2OK)
+//    	  logger.debug(" FOUND  peptideMatch ID 18710 18709 in PepSetr "+PM1OK+" ; "+PM2OK+" In pepSet "+peptideSet.id)
 
       // Take arbitrary the first isobaric peptide if we have multiple ones for a given MS query
       // FIXME: find an other solution
