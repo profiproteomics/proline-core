@@ -1,0 +1,335 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dataset>
+  <activation type="CID"/>
+  <activation type="ECD"/>
+  <activation type="ETD"/>
+  <activation type="HCD"/>
+  <activation type="PSD"/>
+  <admin_infos model_version="0.1" db_creation_date="2013-08-02 07:27:15.403" configuration="{}"/>
+  <aggregation id="1" child_nature="SAMPLE_ANALYSIS"/>
+  <aggregation id="2" child_nature="QUANTITATION_FRACTION"/>
+  <aggregation id="3" child_nature="BIOLOGICAL_SAMPLE"/>
+  <aggregation id="4" child_nature="BIOLOGICAL_GROUP"/>
+  <aggregation id="5" child_nature="OTHER"/>
+  <fractionation id="1" type="PROTEIN"/>
+  <fractionation id="2" type="PEPTIDE"/>
+  <fractionation id="3" type="OTHER"/>
+  <fractionation id="4" type="NONE"/>
+  <user_account id="1" login="dupierris" creation_mode="manual"/>
+  <project id="1" name="DBUnit Test" description="Test dbUnit " creation_timestamp="2013-08-02 07:49:48.352" owner_id="1"/>
+  <quant_method id="1" name="label free based on the extraction of feature abundance" type="label_free" abundance_unit="feature_intensity"/>
+  <quant_method id="2" name="label free based on spectral counting" type="label_free" abundance_unit="spectral_counts"/>
+  <quant_method id="3" name="iTRAQ 4plex" type="isobaric_tag" abundance_unit="reporter_ion_intensity"/>
+  <quant_method id="4" name="iTRAQ 8plex" type="isobaric_tag" abundance_unit="reporter_ion_intensity"/>
+  <quant_method id="5" name="TMT 6plex" type="isobaric_tag" abundance_unit="reporter_ion_intensity"/>
+  <data_set id="1" number="1" name="TRASH" type="TRASH" creation_timestamp="2013-08-02 07:49:48.367" children_count="0" project_id="1"/>
+  <data_set id="2" number="0" name="Trash" type="TRASH" creation_timestamp="2013-08-02 07:49:57.697" children_count="0" aggregation_id="5" project_id="1"/>
+  <data_set id="3" number="0" name="F070804" type="IDENTIFICATION" creation_timestamp="2013-08-02 07:54:31.24" children_count="0" result_set_id="2" result_summary_id="2" parent_dataset_id="5" project_id="1"/>
+  <data_set id="4" number="1" name="F070805" type="IDENTIFICATION" creation_timestamp="2013-08-02 07:54:41.247" children_count="0" result_set_id="4" result_summary_id="4" parent_dataset_id="5" project_id="1"/>
+  <data_set id="5" number="4" name="Niveau1_rsm" type="AGGREGATE" creation_timestamp="2013-08-02 07:59:32.465" children_count="2" result_set_id="8" result_summary_id="8" aggregation_id="3" project_id="1"/>
+  <data_set id="6" number="2" name="Niveau1_rs" type="AGGREGATE" creation_timestamp="2013-08-02 08:00:00.202" children_count="2" result_set_id="6" result_summary_id="6" aggregation_id="3" project_id="1"/>
+  <data_set id="7" number="0" name="F070804" type="IDENTIFICATION" creation_timestamp="2013-08-02 08:00:10.673" children_count="0" result_set_id="2" parent_dataset_id="6" project_id="1"/>
+  <data_set id="8" number="1" name="F070805" type="IDENTIFICATION" creation_timestamp="2013-08-02 08:00:10.699" children_count="0" result_set_id="4" parent_dataset_id="6" project_id="1"/>
+  <biological_group/>
+  <biological_sample/>
+  <biological_group_biological_sample_item/>
+  <sample_analysis/>
+  <biological_sample_sample_analysis_map/>
+  <object_tree_schema/>
+  <object_tree/>
+  <virtual_folder/>
+  <document/>
+  <enzyme id="1" name="CNBr+Trypsin" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="2" name="Chymotrypsin" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="3" name="Formic_acid" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="4" name="Lys-N" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="5" name="Trypsin" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="6" name="TrypsinMSIPI/P" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="7" name="V8-DE" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="8" name="Arg-C" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="9" name="Asp-N_ambic" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="10" name="None" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="11" name="TrypsinMSIPI" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="12" name="TrypChymo" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="13" name="Lys-C" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="14" name="semiTrypsin" is_independant="false" is_semi_specific="true"/>
+  <enzyme id="15" name="CNBr" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="16" name="thermolysin" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="17" name="Asp-N" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="18" name="Lys-C/P" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="19" name="LysC+AspN" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="20" name="PepsinA" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="21" name="Trypsin/P" is_independant="false" is_semi_specific="false"/>
+  <enzyme id="22" name="V8-E" is_independant="false" is_semi_specific="false"/>
+  <enzyme_cleavage id="1" site="C-term" residues="M" enzyme_id="1"/>
+  <enzyme_cleavage id="2" site="C-term" residues="KR" restrictive_residues="P" enzyme_id="1"/>
+  <enzyme_cleavage id="3" site="C-term" residues="FYWL" restrictive_residues="P" enzyme_id="2"/>
+  <enzyme_cleavage id="4" site="C-term" residues="D" enzyme_id="3"/>
+  <enzyme_cleavage id="5" site="N-term" residues="D" enzyme_id="3"/>
+  <enzyme_cleavage id="6" site="N-term" residues="K" enzyme_id="4"/>
+  <enzyme_cleavage id="7" site="C-term" residues="KR" restrictive_residues="P" enzyme_id="5"/>
+  <enzyme_cleavage id="8" site="C-term" residues="KRJ" enzyme_id="6"/>
+  <enzyme_cleavage id="9" site="N-term" residues="J" enzyme_id="6"/>
+  <enzyme_cleavage id="10" site="C-term" residues="BDEZ" restrictive_residues="P" enzyme_id="7"/>
+  <enzyme_cleavage id="11" site="C-term" residues="R" restrictive_residues="P" enzyme_id="8"/>
+  <enzyme_cleavage id="12" site="N-term" residues="DE" enzyme_id="9"/>
+  <enzyme_cleavage id="13" site="C-term" residues="KR" restrictive_residues="P" enzyme_id="10"/>
+  <enzyme_cleavage id="14" site="C-term" residues="KR" restrictive_residues="P" enzyme_id="11"/>
+  <enzyme_cleavage id="15" site="C-term" residues="J" enzyme_id="11"/>
+  <enzyme_cleavage id="16" site="N-term" residues="J" enzyme_id="11"/>
+  <enzyme_cleavage id="17" site="C-term" residues="FYWLKR" restrictive_residues="P" enzyme_id="12"/>
+  <enzyme_cleavage id="18" site="C-term" residues="K" restrictive_residues="P" enzyme_id="13"/>
+  <enzyme_cleavage id="19" site="C-term" residues="KR" restrictive_residues="P" enzyme_id="14"/>
+  <enzyme_cleavage id="20" site="C-term" residues="M" enzyme_id="15"/>
+  <enzyme_cleavage id="21" site="N-term" residues="ILFVMA" restrictive_residues="DE" enzyme_id="16"/>
+  <enzyme_cleavage id="22" site="N-term" residues="DB" enzyme_id="17"/>
+  <enzyme_cleavage id="23" site="C-term" residues="K" enzyme_id="18"/>
+  <enzyme_cleavage id="24" site="C-term" residues="K" restrictive_residues="P" enzyme_id="19"/>
+  <enzyme_cleavage id="25" site="N-term" residues="DB" enzyme_id="19"/>
+  <enzyme_cleavage id="26" site="C-term" residues="FL" enzyme_id="20"/>
+  <enzyme_cleavage id="27" site="C-term" residues="KR" enzyme_id="21"/>
+  <enzyme_cleavage id="28" site="C-term" residues="EZ" restrictive_residues="P" enzyme_id="22"/>
+  <external_db id="1" name="ps_vds2_db" connection_mode="HOST" username="proline" password="proline" host="gre037784" port="5432" type="PS" version="no.version" is_busy="false" serialized_properties="{&quot;driver_type&quot;:&quot;POSTGRESQL&quot;}"/>
+  <external_db id="2" name="pdi_vds2_db" connection_mode="HOST" username="proline" password="proline" host="gre037784" port="5432" type="PDI" version="no.version" is_busy="false" serialized_properties="{&quot;driver_type&quot;:&quot;POSTGRESQL&quot;}"/>
+  <external_db id="3" name="msi_vds2_db_project_1" connection_mode="HOST" username="proline" password="proline" host="gre037784" port="5432" type="MSI" version="no.version" is_busy="false" serialized_properties="{&quot;driver_type&quot;:&quot;POSTGRESQL&quot;}"/>
+  <external_db id="4" name="lcms_vds2_db_project_1" connection_mode="HOST" username="proline" password="proline" host="gre037784" port="5432" type="LCMS" version="no.version" is_busy="false" serialized_properties="{&quot;driver_type&quot;:&quot;POSTGRESQL&quot;}"/>
+  <fragmentation_series id="1" name="a"/>
+  <fragmentation_series id="2" name="a-NH3" neutral_loss="NH3"/>
+  <fragmentation_series id="3" name="a-H2O" neutral_loss="H2O"/>
+  <fragmentation_series id="4" name="b"/>
+  <fragmentation_series id="5" name="b-NH3" neutral_loss="NH3"/>
+  <fragmentation_series id="6" name="b-H2O" neutral_loss="H2O"/>
+  <fragmentation_series id="7" name="c"/>
+  <fragmentation_series id="8" name="d"/>
+  <fragmentation_series id="9" name="v"/>
+  <fragmentation_series id="10" name="w"/>
+  <fragmentation_series id="11" name="x"/>
+  <fragmentation_series id="12" name="y"/>
+  <fragmentation_series id="13" name="y-NH3" neutral_loss="NH3"/>
+  <fragmentation_series id="14" name="y-H2O" neutral_loss="H2O"/>
+  <fragmentation_series id="15" name="z"/>
+  <fragmentation_series id="16" name="z+1"/>
+  <fragmentation_series id="17" name="z+2"/>
+  <fragmentation_series id="18" name="ya"/>
+  <fragmentation_series id="19" name="yb"/>
+  <fragmentation_series id="20" name="immonium"/>
+  <fragmentation_rule id="1" description="singly charged" fragment_charge="1"/>
+  <fragmentation_rule id="2" description="doubly charged if precursor 2+ or higher (not internal or immonium)" precursor_min_charge="2" fragment_charge="2"/>
+  <fragmentation_rule id="3" description="doubly charged if precursor 3+ or higher (not internal or immonium)" precursor_min_charge="3" fragment_charge="2"/>
+  <fragmentation_rule id="4" description="immonium" fragment_series_id="20"/>
+  <fragmentation_rule id="5" description="a series" fragment_series_id="1"/>
+  <fragmentation_rule id="6" description="a - NH3 if a significant and fragment includes RKNQ" fragment_residue_constraint="RKNQ" required_series_quality_level="significant" fragment_series_id="2" required_series_id="1"/>
+  <fragmentation_rule id="7" description="a - H2O if a significant and fragment includes STED" fragment_residue_constraint="STED" required_series_quality_level="significant" fragment_series_id="3" required_series_id="1"/>
+  <fragmentation_rule id="8" description="b series" fragment_series_id="4"/>
+  <fragmentation_rule id="9" description="b - NH3 if b significant and fragment includes RKNQ" fragment_residue_constraint="RKNQ" required_series_quality_level="significant" fragment_series_id="5" required_series_id="4"/>
+  <fragmentation_rule id="10" description="b - H2O if b significant and fragment includes STED" fragment_residue_constraint="STED" required_series_quality_level="significant" fragment_series_id="6" required_series_id="4"/>
+  <fragmentation_rule id="11" description="c series" fragment_series_id="7"/>
+  <fragmentation_rule id="12" description="x series" fragment_series_id="11"/>
+  <fragmentation_rule id="13" description="y series" fragment_series_id="12"/>
+  <fragmentation_rule id="14" description="y - NH3 if y significant and fragment includes RKNQ" fragment_residue_constraint="RKNQ" required_series_quality_level="significant" fragment_series_id="13" required_series_id="12"/>
+  <fragmentation_rule id="15" description="y - H2O if y significant and fragment includes STED" fragment_residue_constraint="STED" required_series_quality_level="significant" fragment_series_id="14" required_series_id="12"/>
+  <fragmentation_rule id="16" description="z series" fragment_series_id="15"/>
+  <fragmentation_rule id="17" description="internal yb &lt; 700 Da" fragment_max_moz="700.0" fragment_series_id="19"/>
+  <fragmentation_rule id="18" description="internal ya &lt; 700 Da" fragment_max_moz="700.0" fragment_series_id="18"/>
+  <fragmentation_rule id="19" description="y or y++ must be significant" required_series_quality_level="significant" required_series_id="12"/>
+  <fragmentation_rule id="20" description="y or y++ must be highest scoring series" required_series_quality_level="highest_scoring" required_series_id="12"/>
+  <fragmentation_rule id="21" description="z+1 series" fragment_series_id="16"/>
+  <fragmentation_rule id="22" description="d and d&apos; series" fragment_series_id="8"/>
+  <fragmentation_rule id="23" description="v series" fragment_series_id="9"/>
+  <fragmentation_rule id="24" description="w and w&apos; series" fragment_series_id="10"/>
+  <fragmentation_rule id="25" description="z+2 series" fragment_series_id="17"/>
+  <group_setup/>
+  <group_setup_biological_group_map/>
+  <instrument id="1" name="ESI-QUAD-TOF" source="ESI"/>
+  <instrument id="2" name="MALDI-TOF-PSD" source="MALDI"/>
+  <instrument id="3" name="ESI-TRAP" source="ESI"/>
+  <instrument id="4" name="ESI-QUAD" source="ESI"/>
+  <instrument id="5" name="ESI-FTICR" source="ESI"/>
+  <instrument id="6" name="MALDI-TOF-TOF" source="MALDI"/>
+  <instrument id="7" name="ESI-4SECTOR" source="ESI"/>
+  <instrument id="8" name="FTMS-ECD" source="ESI"/>
+  <instrument id="9" name="ETD-TRAP" source="ESI"/>
+  <instrument id="10" name="MALDI-QUAD-TOF" source="MALDI"/>
+  <instrument id="11" name="MALDI-QIT-TOF" source="MALDI"/>
+  <instrument id="12" name="MALDI-ISD" source="MALDI"/>
+  <instrument id="13" name="LTQ-ORBITRAP XL" source="nESI"/>
+  <instrument id="14" name="LTQ-ORBITRAP VELOS" source="nESI"/>
+  <instrument id="15" name="LTQ-ORBITRAP VELOS ETD" source="nESI"/>
+  <instrument id="16" name="Q EXACTIVE" source="nESI"/>
+  <instrument_config id="1" name="ESI-QUAD-TOF (A1=QUAD F=CID A2=QUAD)" ms1_analyzer="QUAD" msn_analyzer="QUAD" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="1" activation_type="CID"/>
+  <instrument_config id="2" name="MALDI-TOF-PSD (A1=TOF F=PSD A2=TOF)" ms1_analyzer="TOF" msn_analyzer="TOF" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="2" activation_type="PSD"/>
+  <instrument_config id="3" name="ESI-TRAP (A1=TRAP F=CID A2=TRAP)" ms1_analyzer="TRAP" msn_analyzer="TRAP" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="3" activation_type="CID"/>
+  <instrument_config id="4" name="ESI-QUAD (A1=QUAD F=CID A2=QUAD)" ms1_analyzer="QUAD" msn_analyzer="QUAD" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="4" activation_type="CID"/>
+  <instrument_config id="5" name="ESI-FTICR (A1=FTICR F=CID A2=FTICR)" ms1_analyzer="FTICR" msn_analyzer="FTICR" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="5" activation_type="CID"/>
+  <instrument_config id="6" name="MALDI-TOF-TOF (A1=TOF F=CID A2=TOF)" ms1_analyzer="TOF" msn_analyzer="TOF" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="6" activation_type="CID"/>
+  <instrument_config id="7" name="ESI-4SECTOR (A1=4SECTOR F=CID A2=4SECTOR)" ms1_analyzer="4SECTOR" msn_analyzer="4SECTOR" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="7" activation_type="CID"/>
+  <instrument_config id="8" name="FTMS-ECD (A1=FTMS F=ECD A2=FTMS)" ms1_analyzer="FTMS" msn_analyzer="FTMS" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="8" activation_type="ECD"/>
+  <instrument_config id="9" name="ETD-TRAP (A1=TRAP F=ETD A2=TRAP)" ms1_analyzer="TRAP" msn_analyzer="TRAP" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="9" activation_type="ETD"/>
+  <instrument_config id="10" name="MALDI-QUAD-TOF (A1=QUAD F=CID A2=QUAD)" ms1_analyzer="QUAD" msn_analyzer="QUAD" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="10" activation_type="CID"/>
+  <instrument_config id="11" name="MALDI-QIT-TOF (A1=QIT F=CID A2=QIT)" ms1_analyzer="QIT" msn_analyzer="QIT" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="11" activation_type="CID"/>
+  <instrument_config id="12" name="MALDI-ISD (A1=ISD F=CID A2=ISD)" ms1_analyzer="ISD" msn_analyzer="ISD" serialized_properties="{&quot;is_hidden&quot;:true}" instrument_id="12" activation_type="CID"/>
+  <instrument_config id="13" name="LTQ-ORBITRAP XL (A1=FTMS F=CID A2=TRAP)" ms1_analyzer="FTMS" msn_analyzer="TRAP" serialized_properties="{&quot;is_hidden&quot;:false}" instrument_id="13" activation_type="CID"/>
+  <instrument_config id="14" name="LTQ-ORBITRAP XL (A1=FTMS F=HCD A2=FTMS)" ms1_analyzer="FTMS" msn_analyzer="FTMS" serialized_properties="{&quot;is_hidden&quot;:false}" instrument_id="13" activation_type="HCD"/>
+  <instrument_config id="15" name="LTQ-ORBITRAP VELOS (A1=FTMS F=CID A2=TRAP)" ms1_analyzer="FTMS" msn_analyzer="TRAP" serialized_properties="{&quot;is_hidden&quot;:false}" instrument_id="14" activation_type="CID"/>
+  <instrument_config id="16" name="LTQ-ORBITRAP VELOS (A1=FTMS F=HCD A2=FTMS)" ms1_analyzer="FTMS" msn_analyzer="FTMS" serialized_properties="{&quot;is_hidden&quot;:false}" instrument_id="14" activation_type="HCD"/>
+  <instrument_config id="17" name="LTQ-ORBITRAP VELOS ETD (A1=FTMS F=CID A2=TRAP)" ms1_analyzer="FTMS" msn_analyzer="TRAP" serialized_properties="{&quot;is_hidden&quot;:false}" instrument_id="15" activation_type="CID"/>
+  <instrument_config id="18" name="LTQ-ORBITRAP VELOS ETD (A1=FTMS F=HCD A2=FTMS)" ms1_analyzer="FTMS" msn_analyzer="FTMS" serialized_properties="{&quot;is_hidden&quot;:false}" instrument_id="15" activation_type="HCD"/>
+  <instrument_config id="19" name="LTQ-ORBITRAP VELOS ETD (A1=FTMS F=ETD A2=FTMS)" ms1_analyzer="FTMS" msn_analyzer="FTMS" serialized_properties="{&quot;is_hidden&quot;:false}" instrument_id="15" activation_type="ETD"/>
+  <instrument_config id="20" name="Q EXACTIVE (A1=FTMS F=HCD A2=FTMS)" ms1_analyzer="FTMS" msn_analyzer="FTMS" serialized_properties="{&quot;is_hidden&quot;:false}" instrument_id="16" activation_type="HCD"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="1" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="1" fragmentation_rule_id="2"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="1" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="1" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="1" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="1" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="1" fragmentation_rule_id="14"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="1" fragmentation_rule_id="15"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="4"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="5"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="6"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="7"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="2" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="3" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="3" fragmentation_rule_id="2"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="3" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="3" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="3" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="3" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="3" fragmentation_rule_id="14"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="3" fragmentation_rule_id="15"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="4" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="4" fragmentation_rule_id="2"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="4" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="4" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="4" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="4" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="4" fragmentation_rule_id="14"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="4" fragmentation_rule_id="15"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="5" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="5" fragmentation_rule_id="2"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="5" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="5" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="5" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="5" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="5" fragmentation_rule_id="14"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="5" fragmentation_rule_id="15"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="4"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="5"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="6"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="7"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="14"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="15"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="17"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="18"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="22"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="23"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="6" fragmentation_rule_id="24"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="2"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="4"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="5"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="16"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="17"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="7" fragmentation_rule_id="18"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="8" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="8" fragmentation_rule_id="2"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="8" fragmentation_rule_id="11"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="8" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="8" fragmentation_rule_id="21"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="8" fragmentation_rule_id="25"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="9" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="9" fragmentation_rule_id="2"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="9" fragmentation_rule_id="11"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="9" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="9" fragmentation_rule_id="21"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="9" fragmentation_rule_id="25"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="2"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="4"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="14"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="15"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="17"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="10" fragmentation_rule_id="18"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="4"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="5"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="6"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="7"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="8"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="9"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="10"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="14"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="15"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="17"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="11" fragmentation_rule_id="18"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="12" fragmentation_rule_id="1"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="12" fragmentation_rule_id="5"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="12" fragmentation_rule_id="11"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="12" fragmentation_rule_id="13"/>
+  <instrument_config_fragmentation_rule_map instrument_config_id="12" fragmentation_rule_id="25"/>
+  <master_quant_channel/>
+  <spec_title_parsing_rule id="1" raw_file_name="(.+)\.\d+\.\d+\.\d+\.dta" first_scan=".+\.(\d+)\.\d+\.\d+\.dta" last_scan=".+\.\d+\.(\d+)\.\d+\.dta" name="extract_msn.exe"/>
+  <spec_title_parsing_rule id="2" raw_file_name="^File: (.+?)," first_cycle="Cycle\(s\): (\d+) \(Experiment \d+\)|Cycle\(s\): (\d+), \d+" last_cycle="Cycle\(s\): (\d+) \(Experiment \d+\)|Cycle\(s\): \d+, (\d+)" first_time="Elution: (.+?) to .+? min|Elution: (.+?) min" last_time="Elution: .+? to (.+?) min|Elution: (.+?) min" name="mascot.dll"/>
+  <spec_title_parsing_rule id="3" raw_file_name="\[(.+?)\]" first_cycle="(\d+?) \(rt=" last_cycle="- \d+: Scan (\d+?) \(rt=" first_time="\(rt=(\d+?\.\d+?)\)" last_time="-.+Scan \d+ \(rt=(\d+\.\d+)" name="Mascot Distiller"/>
+  <spec_title_parsing_rule id="4" raw_file_name="^RawFile: (.+?) FinneganScanNumber:" first_scan="FinneganScanNumber: (\d+)" last_scan="FinneganScanNumber: (\d+)" name="MaxQuant"/>
+  <spec_title_parsing_rule id="5" first_scan="Spectrum\d+\s+scans:(\d+?)," last_scan="Spectrum\d+\s+scans:(\d+?)," name="Proteome Discoverer"/>
+  <spec_title_parsing_rule id="6" first_scan="scan=(\d+)" last_scan="scan=(\d+)" name="ProteoWizard 2.0"/>
+  <spec_title_parsing_rule id="7" raw_file_name="(.+)\.\d+\.\d+\.\d+$" first_scan=".+\.(\d+)\.\d+\.\d+$" last_scan=".+\.\d+\.(\d+)\.\d+$" name="ProteoWizard 2.1"/>
+  <spec_title_parsing_rule id="8" first_time="Cmpd.+MSn.+, (\d+\.\d+) min" last_time="Cmpd.+MSn.+, (\d+\.\d+) min" name="Spectrum Mill/Bruker"/>
+  <peaklist_software id="1" name="extract_msn.exe" spec_title_parsing_rule_id="1"/>
+  <peaklist_software id="2" name="mascot.dll" spec_title_parsing_rule_id="2"/>
+  <peaklist_software id="3" name="Mascot Distiller" spec_title_parsing_rule_id="3"/>
+  <peaklist_software id="4" name="MaxQuant" spec_title_parsing_rule_id="4"/>
+  <peaklist_software id="5" name="Proteome Discoverer" spec_title_parsing_rule_id="5"/>
+  <peaklist_software id="6" name="ProteoWizard" version="2.0" spec_title_parsing_rule_id="6"/>
+  <peaklist_software id="7" name="ProteoWizard" version="2.1" spec_title_parsing_rule_id="7"/>
+  <peaklist_software id="8" name="Spectrum Mill/Bruker" spec_title_parsing_rule_id="8"/>
+  <project_db_map project_id="1" external_db_id="3"/>
+  <project_db_map project_id="1" external_db_id="4"/>
+  <project_user_account_map project_id="1" user_account_id="1"/>
+  <protein_match_decoy_rule/>
+  <quant_label id="1" type="isobaric_tag" name="114" serialized_properties="{ &quot;reporter_mz&quot;: 114.110679 }" quant_method_id="3"/>
+  <quant_label id="2" type="isobaric_tag" name="115" serialized_properties="{ &quot;reporter_mz&quot;: 115.107714 }" quant_method_id="3"/>
+  <quant_label id="3" type="isobaric_tag" name="116" serialized_properties="{ &quot;reporter_mz&quot;: 116.111069 }" quant_method_id="3"/>
+  <quant_label id="4" type="isobaric_tag" name="117" serialized_properties="{ &quot;reporter_mz&quot;: 117.114424 }" quant_method_id="3"/>
+  <quant_label id="5" type="isobaric_tag" name="113" serialized_properties="{ &quot;reporter_mz&quot;: 113.107324 }" quant_method_id="4"/>
+  <quant_label id="6" type="isobaric_tag" name="114" serialized_properties="{ &quot;reporter_mz&quot;: 114.110679 }" quant_method_id="4"/>
+  <quant_label id="7" type="isobaric_tag" name="115" serialized_properties="{ &quot;reporter_mz&quot;: 115.107714 }" quant_method_id="4"/>
+  <quant_label id="8" type="isobaric_tag" name="116" serialized_properties="{ &quot;reporter_mz&quot;: 116.111069 }" quant_method_id="4"/>
+  <quant_label id="9" type="isobaric_tag" name="117" serialized_properties="{ &quot;reporter_mz&quot;: 117.114424 }" quant_method_id="4"/>
+  <quant_label id="10" type="isobaric_tag" name="118" serialized_properties="{ &quot;reporter_mz&quot;: 118.111459 }" quant_method_id="4"/>
+  <quant_label id="11" type="isobaric_tag" name="119" serialized_properties="{ &quot;reporter_mz&quot;: 119.114814 }" quant_method_id="4"/>
+  <quant_label id="12" type="isobaric_tag" name="121" serialized_properties="{ &quot;reporter_mz&quot;: 121.121523 }" quant_method_id="4"/>
+  <quant_label id="13" type="isobaric_tag" name="126" serialized_properties="{ &quot;reporter_mz&quot;: 126.127726 }" quant_method_id="5"/>
+  <quant_label id="14" type="isobaric_tag" name="127" serialized_properties="{ &quot;reporter_mz&quot;: 127.131080 }" quant_method_id="5"/>
+  <quant_label id="15" type="isobaric_tag" name="128" serialized_properties="{ &quot;reporter_mz&quot;: 128.134435 }" quant_method_id="5"/>
+  <quant_label id="16" type="isobaric_tag" name="129" serialized_properties="{ &quot;reporter_mz&quot;: 129.137790 }" quant_method_id="5"/>
+  <quant_label id="17" type="isobaric_tag" name="130" serialized_properties="{ &quot;reporter_mz&quot;: 130.141145 }" quant_method_id="5"/>
+  <quant_label id="18" type="isobaric_tag" name="131" serialized_properties="{ &quot;reporter_mz&quot;: 131.138180 }" quant_method_id="5"/>
+  <raw_file/>
+  <run/>
+  <quant_channel/>
+  <ratio_definition/>
+  <run_identification id="3"/>
+  <run_identification id="4"/>
+  <run_identification id="7"/>
+  <run_identification id="8"/>
+</dataset>
