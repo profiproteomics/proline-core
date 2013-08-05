@@ -262,6 +262,9 @@ public class ResultSet implements Serializable {
 	public static class TransientData implements Serializable {
 		private static final long serialVersionUID = 1L;
 
+		
+		private long[] peptideMatchIds;
+		
 		private PeptideMatch[] peptideMatches;
 		private ProteinMatch[] proteinMatches;
 
@@ -271,6 +274,16 @@ public class ResultSet implements Serializable {
 
 		private Integer msQueriesCount = null;
 
+		public long[] getPeptideMatchIds() {
+			return peptideMatchIds;
+		}
+
+		public void setPeptideMatchIds(long[] peptideMatchIds) {
+			this.peptideMatchIds = peptideMatchIds;
+		}
+		
+		
+		
 		public PeptideMatch[] getPeptideMatches() {
 			return peptideMatches;
 		}
