@@ -42,6 +42,7 @@ class WeightedSCCalculatorWId (
     
     val rsmProvider = getResultSummaryProvider(execContext)
     val rsProvider = getResultSetProvider(execContext)
+    logger.debug(" Read Ref RSM "+referenceRSMId)
     val referenceRSMOpt : Option[ResultSummary] = rsmProvider.getResultSummary(referenceRSMId,true)
     if (referenceRSMOpt.isEmpty) {
     	throw new IllegalArgumentException("Unknown ResultSummary Id: " + referenceRSMId)
@@ -49,6 +50,7 @@ class WeightedSCCalculatorWId (
 
     val rsmToCalculateBuilder = Seq.newBuilder[ResultSummary]
     rsmIdsToCalculate.foreach(rsmId => {
+      logger.debug(" Read 1 rsmIdsToCalculate RSM "+rsmId)
       val nextRSMOpt = rsmProvider.getResultSummary(rsmId,true)
        if (nextRSMOpt.isEmpty) {
     	throw new IllegalArgumentException("Unknown ResultSummary Id: " + rsmId)
@@ -127,8 +129,10 @@ class WeightedSCCalculator (
 	   //Store result in Map (ProtMatch Accession -> Weight Spectral Count)
 	    var wscByProtMatchAccession : scala.collection.mutable.Map[String, SpectralCountsStruct] = scala.collection.mutable.Map[String, SpectralCountsStruct]()
 	    
-		 //--- Update RSM SpectralCount
-	    PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm, execContext)
+		 //--- Update RSM SpectralCount if necessary
+	    //TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information ! Should be wrong see issue #7984
+	    if(rsm.peptideInstances(0).totalLeavesMatchCount <0) 
+	    	PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm, execContext)
 
 	    //--- Get RSM Protein Match information 	     
 	    // map   list of ProtMatch accession by PeptideSet
