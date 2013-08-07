@@ -252,7 +252,9 @@ public class ResultSummary implements Serializable {
 
 	public void setProteinSetArray(ProteinSet[] proteinSetArray) {
 	    this.proteinSetArray = proteinSetArray;
-	    numberOfProteinSets = Integer.valueOf(proteinSetArray.length);
+	    if (proteinSetArray!=null) {
+	    	numberOfProteinSets = Integer.valueOf(proteinSetArray.length);
+	    }
 	}
 
 	public Integer getNumberOfProteinSet() {
@@ -277,7 +279,6 @@ public class ResultSummary implements Serializable {
 
 	public void setPeptideMatches(PeptideMatch[] peptideMatches) {
 	    this.peptideMatches = peptideMatches;
-	    // peptideMatchesCount = peptideMatches.length;
 	}
 
     }
