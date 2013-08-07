@@ -290,7 +290,9 @@ public class ResultSet implements Serializable {
 
 		public void setPeptideMatches(PeptideMatch[] peptideMatches) {
 			this.peptideMatches = peptideMatches;
-			peptideMatchesCount = Integer.valueOf(peptideMatches.length);
+			if (peptideMatches != null) {
+				peptideMatchesCount = Integer.valueOf(peptideMatches.length);
+			}
 		}
 		
 		public ProteinMatch[] getProteinMatches() {
@@ -299,7 +301,9 @@ public class ResultSet implements Serializable {
 
 		public void setProteinMatches(ProteinMatch[] proteinMatches) {
 			this.proteinMatches = proteinMatches;
-			proteinMatchesCount = Integer.valueOf(proteinMatches.length);
+			if (proteinMatches != null) {
+				proteinMatchesCount = Integer.valueOf(proteinMatches.length);
+			}
 		}
 
 
