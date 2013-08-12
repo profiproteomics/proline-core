@@ -31,7 +31,9 @@ class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionConte
     } else {
       val newProviderInstance = providerFactory.getProviderInstance(providerClassifier, this)
 
-      putProvider(providerClassifier, newProviderInstance)
+      if (newProviderInstance != null) {
+        putProvider(providerClassifier, newProviderInstance)
+      }
 
       newProviderInstance
     }
@@ -59,7 +61,6 @@ object ProviderDecoratedExecutionContext {
     }
 
     result
-
   }
 
 }
