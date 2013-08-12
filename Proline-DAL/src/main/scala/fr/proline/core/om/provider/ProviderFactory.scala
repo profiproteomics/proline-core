@@ -72,10 +72,10 @@ object ProviderFactory extends IProviderFactory with Logging {
         result = new ORMPeptideProvider(psDb)
       }
 
-      if (result == null) {
-        logger.warn("No IPeptideProvider implementing instance found !!")
-      }
+    }
 
+    if (result == null) {
+      logger.warn("No IPeptideProvider implementing instance found !!")
     } else {
       logger.debug("PeptideProvider implementation : " + result.getClass.getName)
     }
@@ -107,10 +107,10 @@ object ProviderFactory extends IProviderFactory with Logging {
         result = new ORMProteinProvider(pdiDb)
       }
 
-      if (result == null) {
-        logger.warn("No IProteinProvider implementing instance found !!")
-      }
+    }
 
+    if (result == null) {
+      logger.warn("No IProteinProvider implementing instance found !!")
     } else {
       logger.debug("ProteinProvider implementation : " + result.getClass.getName)
     }
@@ -130,10 +130,10 @@ object ProviderFactory extends IProviderFactory with Logging {
         result = new ORMSeqDatabaseProvider(pdiDb)
       }
 
-      if (result == null) {
-        logger.warn("No ISeqDatabaseProvider implementing instance found !!")
-      }
+    }
 
+    if (result == null) {
+      logger.warn("No ISeqDatabaseProvider implementing instance found !!")
     } else {
       logger.debug("SeqDatabaseProvider implementation : " + result.getClass.getName)
     }
@@ -166,7 +166,9 @@ object ProviderFactory extends IProviderFactory with Logging {
         logger.warn("MSIDbConnectionContex is null : No IResultSetProvider implementing instance can be created")
       }
 
-    } else {
+    }
+
+    if (result != null) {
       logger.debug("ResultSetProvider implementation : " + result.getClass.getName)
     }
 
@@ -185,10 +187,10 @@ object ProviderFactory extends IProviderFactory with Logging {
         result = new ORMPTMProvider(psDb)
       }
 
-      if (result == null) {
-        logger.warn("No IPTMProvider implementing instance found !!")
-      }
+    }
 
+    if (result == null) {
+      logger.warn("No IPTMProvider implementing instance found !!")
     } else {
       logger.debug("PTMProvider implementation : " + result.getClass.getName)
     }
