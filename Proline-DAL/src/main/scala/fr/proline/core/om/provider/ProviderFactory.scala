@@ -147,18 +147,19 @@ object ProviderFactory extends IProviderFactory with Logging {
     if (result == null) {
       val msiDb = executionContext.getMSIDbConnectionContext
       val psDb = executionContext.getPSDbConnectionContext
-      val pdiDb = executionContext.getPDIDbConnectionContext
 
       if (msiDb != null) {
 
         if (msiDb.isJPA) {
           logger.debug("Creating a default ORMResultSetProvider in current executionContext")
 
-          result = new ORMResultSetProvider(msiDb, psDb, pdiDb)
+          /* ORMResultSetProvider(msiDbCtx, psDbCtx, pdiDbCtx) */
+          result = new ORMResultSetProvider(msiDb, psDb, executionContext.getPDIDbConnectionContext)
         } else {
           logger.debug("Creating a default SQLResultSetProvider in current executionContext")
 
-          result = new SQLResultSetProvider(msiDb, psDb, pdiDb)
+          /* SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx) */
+          result = new SQLResultSetProvider(msiDb, psDb, executionContext.getUDSDbConnectionContext)
         }
 
       } else {
