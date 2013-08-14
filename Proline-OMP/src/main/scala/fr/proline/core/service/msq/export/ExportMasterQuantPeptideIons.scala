@@ -14,11 +14,11 @@ import fr.proline.context.IExecutionContext
 
 class ExportMasterQuantPeptideIons(
   execCtx: IExecutionContext,
-  quantRsmId: Long,
+  masterQuantChannelId: Long,
   outputFile: File
-) extends ExportMasterQuantPeptides(execCtx,quantRsmId,outputFile) {
+) extends ExportMasterQuantPeptides(execCtx,masterQuantChannelId,outputFile) {
   
-  val mqPepIonHeaders = "charge master_elution_time master_feature_id".split(" ")  
+  val mqPepIonHeaders = "charge master_elution_time master_feature_id".split(" ")
   val qPepIonHeaders = "moz elution_time correct_elution_time duration raw_abundance ms2_count feature_id".split(" ")
   
   // Create some mappings

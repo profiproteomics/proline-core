@@ -277,7 +277,7 @@ case class MasterQuantProteinSet(  val proteinSet: ProteinSet,
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class QuantResultSummary( 
+case class QuantResultSummary( val quantChannelIds: Array[Long],
                                var masterQuantProteinSets: Array[MasterQuantProteinSet],
                                var masterQuantPeptides: Array[MasterQuantPeptide],
                                var masterQuantPeptideIons: Array[MasterQuantPeptideIon],

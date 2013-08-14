@@ -8,19 +8,23 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import fr.proline.api.service.IService
+import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet}
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.context.IExecutionContext
 
-
-class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Long, outputFile: File ) extends IService {
+class ExportMasterQuantPeptides( execCtx: IExecutionContext, masterQuantChannelId: Long, outputFile: File ) extends IService {
   
   val locale = java.util.Locale.ENGLISH
+  val udsDbHelper = new UdsDbHelper(execCtx.getUDSDbConnectionContext())
 
   val proSetHeaders = "AC description".split(" ")
   val pepHeaders = "sequence".split(" ")
   val mqPepHeaders = "quant_peptide_id selection_level".split(" ")  
   val qPepHeaders = "raw_abundance".split(" ")
+  
+  val quantRsmId = udsDbHelper.getMasterQuantChannelQuantRsmId( masterQuantChannelId )
+  val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
 
   val quantRSM = {
     val quantRsmProvider = new SQLQuantResultSummaryProvider(
@@ -28,11 +32,8 @@ class ExportMasterQuantPeptides( execCtx: IExecutionContext, quantRsmId: Long, o
       execCtx.getPSDbConnectionContext,
       execCtx.getUDSDbConnectionContext
     )
-    quantRsmProvider.getQuantResultSummary(quantRsmId, true).get
+    quantRsmProvider.getQuantResultSummary(quantRsmId.get, qcIds, true).get
   }
-  
-  // FIXME: retrieve from quantRSM 
-  val qcIds = Array(1,2)
   
   // Create some mappings   
   val protSetByPepInst = Map()++ quantRSM.resultSummary.proteinSets.flatMap( protSet => protSet.peptideSet.getPeptideInstances.map( pi => pi.id -> protSet ) )

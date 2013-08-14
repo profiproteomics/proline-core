@@ -38,14 +38,14 @@ class SQLQuantResultSummaryProvider(
   val LabelFreeQuantPeptidesSchema = "object_tree.label_free_quant_peptides"
   val QuantProteinSetSchema = "object_tree.quant_protein_sets"
 
-  def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
-    val rsms = this.getQuantResultSummaries(quantRsmIds, loadResultSet)
+  def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
+    val rsms = this.getQuantResultSummaries(quantRsmIds, quantChannelIds, loadResultSet)
     val rsmById = rsms.map { rsm => rsm.id -> rsm } toMap;
     quantRsmIds.map { rsmById.get(_) } toArray
   }
   
   // TODO: find a way to handle master quant reporter ions
-  def getQuantResultSummaries( quantRsmIds: Seq[Long], loadResultSet: Boolean ): Array[QuantResultSummary] = {
+  def getQuantResultSummaries( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[QuantResultSummary] = {
     
     val rsms = this.getResultSummaries(quantRsmIds, loadResultSet)
     
@@ -90,8 +90,10 @@ class SQLQuantResultSummaryProvider(
     val mqPepsByRsmId = mqPeps.groupBy( _.resultSummaryId )
     val mqProtSetsByRsmId = mqProtSets.groupBy( _.proteinSet.resultSummaryId )
 
-    rsms.map { rsm =>      
+    rsms.map { rsm =>
+      
       new QuantResultSummary(
+        quantChannelIds = quantChannelIds.toArray,
         masterQuantProteinSets = mqProtSetsByRsmId(rsm.id),
         masterQuantPeptides = mqPepsByRsmId(rsm.id),
         masterQuantPeptideIons = mqPepIonsByRsmId(rsm.id),

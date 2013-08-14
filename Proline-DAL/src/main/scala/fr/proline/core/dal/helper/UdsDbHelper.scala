@@ -7,6 +7,8 @@ import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
 import fr.proline.core.dal.tables.uds.UdsDbProteinMatchDecoyRuleTable
+import fr.proline.core.dal.tables.uds.UdsDbMasterQuantChannelTable
+import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import scala.collection.mutable.HashMap
 import fr.proline.util.primitives._
@@ -147,6 +149,36 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
     
     })
 
+  }
+  
+  def getMasterQuantChannelQuantRsmId( masterQuantChannelId: Long ): Option[Long] = {
+    
+    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+      val queryBuilder = new SelectQueryBuilder1(UdsDbMasterQuantChannelTable)
+      val query = queryBuilder.mkSelectQuery(
+        (t1,c1) => List(t1.QUANT_RESULT_SUMMARY_ID) -> 
+        " WHERE "~ t1.ID ~" = "~ masterQuantChannelId
+      )
+      
+      ezDBC.selectHeadOption(query) { _.nextLong }
+      
+    })
+    
+  }
+  
+  def getQuantChannelIds( masterQuantChannelId: Long ): Array[Long] = {
+    
+    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+      val quantChannelQueryBuilder = new SelectQueryBuilder1(UdsDbQuantChannelTable)
+      val quantChannelQuery = quantChannelQueryBuilder.mkSelectQuery(
+        (t1,c1) => List(t1.ID) -> 
+        " WHERE "~ t1.MASTER_QUANT_CHANNEL_ID ~" = "~ masterQuantChannelId ~
+        " ORDER BY "~ t1.NUMBER
+      )
+      
+      ezDBC.selectLongs(quantChannelQuery)
+    })
+    
   }
   
 }
