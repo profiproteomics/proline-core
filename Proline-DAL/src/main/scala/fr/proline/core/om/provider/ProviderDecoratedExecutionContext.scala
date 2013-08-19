@@ -6,8 +6,9 @@ import fr.proline.context.DecoratedExecutionContext
 import fr.proline.context.IExecutionContext
 
 /**
- * ExecutionContext with a map of context Providers (can be used in Mascot / OMSSA parsers).
- * Default factory for Providers is fr.proline.core.om.provider.ProviderFactory .
+ * ExecutionContext with a map of entity Providers (can be used in Mascot / OMSSA parsers).
+ * Default factory for Providers is [[fr.proline.core.om.provider.ProviderFactory]] .
+ * Objects of this class are NOT thread-safe (must be confined in thread context).
  */
 class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionContext, providerFactory: IProviderFactory = ProviderFactory)
   extends DecoratedExecutionContext(wrappedExecutionContext) {
@@ -44,6 +45,9 @@ class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionConte
 
 object ProviderDecoratedExecutionContext {
 
+  /**
+   * Creates a [[ProviderDecoratedExecutionContext]] from given [[IExecutionContext]], possibly reusing current ProviderContext.
+   */
   def apply(wrappedEC: IExecutionContext): ProviderDecoratedExecutionContext = {
     require(wrappedEC != null, "WrappedEC is null")
 
@@ -58,6 +62,8 @@ object ProviderDecoratedExecutionContext {
 
     if (result == null) {
       result = new ProviderDecoratedExecutionContext(wrappedEC)
+    } else {
+      result.clearContext() // Clear Context caches
     }
 
     result

@@ -127,7 +127,7 @@ class ResultFileImporter(
     } finally {
 
       if (storerContext != null) {
-        storerContext.clear()
+        storerContext.clearContext()
       }
 
       if (localMSITransaction && !msiTransacOk) {

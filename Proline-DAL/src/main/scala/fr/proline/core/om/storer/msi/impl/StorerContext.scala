@@ -9,10 +9,7 @@ import fr.proline.core.om.utils.PeptideIdent
 
 /**
  * RsStorer context container. Contains current ResultSet (and DecoyRS) "persistence context".
- * Objects of this class are NOT thread-safe.
- *
- * @param spectrumIdByTitle already persisted Msi Spectrum Ids retrievable by {{{Spectrum.title}}} string.
- * The map can be {{{null}}}
+ * Objects of this class are NOT thread-safe (must be confined in thread context).
  */
 class StorerContext(wrappedExecutionContext: IExecutionContext)
   extends DecoratedExecutionContext(wrappedExecutionContext) with Logging {
@@ -25,6 +22,10 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
   require(getPSDbConnectionContext != null, "PS Db Context Db Context is null")
   require(getMSIDbConnectionContext != null, "MSI Db Context is null")
 
+  /**
+   * Already persisted Msi Spectrum Ids retrievable by {{{Spectrum.title}}} string.
+   * The map can be {{{null}}}.
+   */
   var spectrumIdByTitle: Map[String, Long] = null
 
   var seqDbIdByTmpId: Map[Long, Long] = null // TODO To be integrated to idCaches
@@ -39,15 +40,14 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
   /**
    * Retrieves the current cache for a given Msi entity.
    * These are global caches (for entities shared by ResultSets: Decoy, children...)
-   * within the current persistence context (Msi {{{EntityManager}}} session and transaction).
-   * Caches associate OM Id (can be "In memory" < 0) -> ORM loaded or persisted entity from context {{{EntityManager}}}.
+   * within the current persistence context (Msi [[EntityManager]] session and transaction).
+   * Caches associate OM Id (can be "In memory" < 0) -> ORM loaded or persisted entity from context [[EntityManager]].
    * MsiSeqDatabase cache can contain {{{null}}} values if SeqDatabase not found in Pdi Db.
    *
    * @param classifier Class of relevant Msi entity obtained with Scala {{{classOf[]}}} operator.
    * @return current cache for given Msi entity.
    */
   def getEntityCache[T](classifier: Class[T]): mutable.Map[Long, T] = {
-
     require(classifier != null, "Classifier is null")
 
     val knownCache = m_entityCaches.get(classifier)
@@ -66,31 +66,28 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
 
   }
 
-  override def closeAll() {
+  /**
+   * Clears all caches of this [[StorerContext]].
+   */
+  override def clearContext() {
 
     try {
-      clear()
+      /* Specific StorerContext clean-up : clears collection and caches */
+      msiPeptides.clear()
+
+      for (map <- m_entityCaches.values) {
+        map.clear()
+      }
+
+      m_entityCaches.clear()
+
+      seqDbIdByTmpId = null
+
+      spectrumIdByTitle = null
     } finally {
-      super.closeAll()
+      super.clearContext()
     }
 
-  }
-
-  /**
-   * Clears all caches of this {{{StorerContext}}}.
-   */
-  def clear() {
-    spectrumIdByTitle = null
-
-    seqDbIdByTmpId = null
-
-    msiPeptides.clear()
-
-    for (map <- m_entityCaches.values) {
-      map.clear()
-    }
-
-    m_entityCaches.clear()
   }
 
 }
@@ -111,7 +108,7 @@ object StorerContext {
     if (result == null) {
       result = new StorerContext(wrappedEC)
     } else {
-      result.clear() // Clear Context caches
+      result.clearContext() // Clear Context caches
     }
 
     result

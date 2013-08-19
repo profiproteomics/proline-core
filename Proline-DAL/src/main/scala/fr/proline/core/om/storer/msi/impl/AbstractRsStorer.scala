@@ -13,29 +13,29 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
   //var localPlWriter: IPeaklistWriter = plWriter
 
   type MsiResultSet = fr.proline.core.orm.msi.ResultSet
-  
+
   /**
    * Create and persist ResultSet in repository, using storerContext for context and mapping information.
    * This method has to be implemented in concrete ResultSet storers.
    */
   protected def createResultSet(resultSet: ResultSet, context: StorerContext): Long
-  
+
   /**
    * Store specified ResultSet in persistence repository, using storerContext for context and mapping information.
    * This default implementation of IRsStorer will call private method _storeResultSetmethod without specifying spectra or MsQueries
-   * 
+   *
    * Transaction are not managed by this method, should be done by user.
    */
   final def storeResultSet(resultSet: ResultSet, storerContext: StorerContext): Long = {
-    this._storeResultSet(resultSet, None, None, storerContext)    
+    this._storeResultSet(resultSet, None, None, storerContext)
   }
 
   /**
    * Store specified ResultSet in persistence repository, using storerContext for context and mapping information.
    * Some checks are performed then the private method _storeResultSet is executed to save the ResultSet.
-   * 
+   *
    * Transaction are not managed by this method, should be done by user.
-   * 
+   *
    * TODO: move to ResultFileStorer ???
    */
   final def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], storerContext: StorerContext): Long = {
@@ -44,29 +44,28 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
     require(msQueries != null, "msQueries must not be null")
     //require(resultFile != null, "resultFile must not be null")
     require(resultSet.msiSearch.isDefined, "MSISearch must be defined")
-    
+
     this._storeResultSet(resultSet, Some(msQueries), None, storerContext)
   }
 
   /**
    * This method will first save spectra and queries related data specified by peakListContainer and msQueries.
    * This will be done using IRsStorer storePeaklist, storeMsiSearch, storeMsQueries and storeSpectra methods.
-   * 
+   *
    * Then the implementation of the abstract createResultSet method will be executed to save other data.
-   * 
+   *
    * TODO: use other writers : peptideMatch / ProteinMatch
    *
    */
-   final private def _storeResultSet(
+  final private def _storeResultSet(
     resultSet: ResultSet,
     msQueriesOpt: Option[Seq[MsQuery]],
     resultFileOpt: Option[IResultFile],
-    storerContext: StorerContext
-  ): Long = {
-    
+    storerContext: StorerContext): Long = {
+
     require(resultSet != null, "resultSet must not be null")
     require(storerContext != null, "storerContext must not be null")
-    
+
     val omResultSetId = resultSet.id
 
     if (omResultSetId > 0) {
@@ -74,39 +73,39 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
     }
 
     val start = System.currentTimeMillis()
-    
-    logger.info("Storing ResultSet id(temp)=" + omResultSetId + ", name=" + resultSet.name) 
-    
+
+    logger.info("Storing ResultSet id(temp)=" + omResultSetId + ", name=" + resultSet.name)
+
     // Save Spectra and Queries information (MSISearch should be defined)
-    for( msiSearch <- resultSet.msiSearch ) {
+    for (msiSearch <- resultSet.msiSearch) {
 
       // FIXME: it should be only called in the ResultFile storer
-      if( msiSearch.peakList.id < 0 ) {
-      
+      if (msiSearch.peakList.id < 0) {
+
         // Create a PeakListWriter if none was specified
         val pklWriter = this.getOrBuildPeaklistWriter(storerContext)
-        
+
         // Insert the Peaklist information
         msiSearch.peakList.id = pklWriter.insertPeaklist(msiSearch.peakList, storerContext)
       }
-      
+
       // Insert the MSI search  and retrieve its new id
       logger.info("Storing MSI search...")
       val msiSearchId = this.storeMsiSearch(msiSearch, storerContext)
-      
+
       // Insert MS queries if they are provided
-      for( msQueries <- msQueriesOpt if !msQueries.isEmpty ) {
+      for (msQueries <- msQueriesOpt if !msQueries.isEmpty) {
         this.storeMsQueries(msiSearchId, msQueries, storerContext)
       }
     }
 
     resultSet.id = createResultSet(resultSet, storerContext)
 
-    logger.info("ResultSet id(temp)=" + omResultSetId + " stored with id=" + resultSet.id+" in "+(System.currentTimeMillis - start)/1000.0+" s")
-    
+    logger.info("ResultSet id(temp)=" + omResultSetId + " stored with id=" + resultSet.id + " in " + (System.currentTimeMillis - start) / 1000.0 + " s")
+
     resultSet.id
-    
-  }  
+
+  }
 
   // TODO: remove me ???
   def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Long): Long = {
@@ -144,9 +143,9 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
       msiTransaction.commit()
       msiTransacOk = true
     } finally {
-      
+
       if (storerContext != null) {
-        storerContext.clear()
+        storerContext.clearContext()
       }
 
       if ((msiTransaction != null) && !msiTransacOk) {
@@ -185,7 +184,5 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
   final def storePeaklist(peaklist: Peaklist, context: StorerContext): Int = {
     localPlWriter.insertPeaklist(peaklist, context)
   }*/
-
-
 
 }

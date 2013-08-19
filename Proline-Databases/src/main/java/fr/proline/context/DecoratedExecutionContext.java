@@ -38,7 +38,7 @@ public class DecoratedExecutionContext implements IExecutionContext {
     public <T extends IExecutionContext> T find(final Class<? extends T> contextClassifier) {
 
 	if (contextClassifier == null) {
-	    throw new IllegalArgumentException("Type is null");
+	    throw new IllegalArgumentException("ContextClassifier is null");
 	}
 
 	T result = null;
@@ -48,14 +48,14 @@ public class DecoratedExecutionContext implements IExecutionContext {
 	} else {
 	    IExecutionContext wrappedEC = unwrap();
 
-	    recurseFind: do {
+	    do {
 
 		if (contextClassifier.isInstance(wrappedEC)) {
 		    result = contextClassifier.cast(wrappedEC);
 		} else if (wrappedEC instanceof DecoratedExecutionContext) {
 		    wrappedEC = ((DecoratedExecutionContext) wrappedEC).unwrap();
 		} else {
-		    break recurseFind; // Not found
+		    break; // Not found, will return null
 		}
 
 	    } while (result == null);
@@ -65,39 +65,48 @@ public class DecoratedExecutionContext implements IExecutionContext {
 	return result;
     }
 
-    @Override
     public DatabaseConnectionContext getUDSDbConnectionContext() {
 	return m_wrappedExecutionContext.getUDSDbConnectionContext();
     }
 
-    @Override
     public DatabaseConnectionContext getPDIDbConnectionContext() {
 	return m_wrappedExecutionContext.getPDIDbConnectionContext();
     }
 
-    @Override
     public DatabaseConnectionContext getPSDbConnectionContext() {
 	return m_wrappedExecutionContext.getPSDbConnectionContext();
     }
 
-    @Override
     public DatabaseConnectionContext getMSIDbConnectionContext() {
 	return m_wrappedExecutionContext.getMSIDbConnectionContext();
     }
 
-    @Override
     public DatabaseConnectionContext getLCMSDbConnectionContext() {
 	return m_wrappedExecutionContext.getLCMSDbConnectionContext();
     }
 
-    @Override
     public boolean isJPA() {
 	return m_wrappedExecutionContext.isJPA();
     }
 
-    @Override
+    /**
+     * Clears this DecoratedContext and closes all included <code>DatabaseConnectionContext</code>.
+     */
     public void closeAll() {
-	m_wrappedExecutionContext.closeAll();
+
+	try {
+	    clearContext();
+	} finally {
+	    m_wrappedExecutionContext.closeAll();
+	}
+
+    }
+
+    /**
+     * Cleans-up this DecoratedContext (clear provider and storer entity caches to release memory).
+     */
+    public void clearContext() {
+	/* Does nothing by default */
     }
 
 }

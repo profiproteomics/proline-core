@@ -93,7 +93,7 @@ class ResultSummaryMerger(
     } finally {
 
       if (storerContext != null) {
-        storerContext.clear()
+        storerContext.clearContext()
       }
 
       if (localMSITransaction && !msiTransacOk) {
