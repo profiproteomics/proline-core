@@ -304,8 +304,12 @@ case class MapAlignment(
       val( x1, y1 ) = ( timeList(timeIndex-1), deltaTimeList(timeIndex-1) )
       val( x2, y2) = ( timeList(timeIndex) , deltaTimeList(timeIndex) )
       
-      val ( a, b ) = calcLineParams( x1, y1, x2, y2 )
-      deltaTime = (a * elutionTime + b).toFloat;
+      if( x1 == x2 ) deltaTime = (y1 + y2)/2
+      else {
+        val ( a, b ) = calcLineParams( x1, y1, x2, y2 )
+        deltaTime = (a * elutionTime + b).toFloat
+      }
+
     }
     
     deltaTime    
