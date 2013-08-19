@@ -94,6 +94,9 @@ class StorerContext(wrappedExecutionContext: IExecutionContext)
 
 object StorerContext {
 
+  /**
+   * Creates a [[StorerContext]] instance from given [[IExecutionContext]], possibly reusing current [[StorerContext]].
+   */
   def apply(wrappedEC: IExecutionContext): StorerContext = {
     require(wrappedEC != null, "WrappedEC is null")
 
