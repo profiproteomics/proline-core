@@ -52,10 +52,14 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
     @OneToMany(mappedBy = "msQuery")
     private Set<PeptideMatch> peptideMatches;
 
-    // Transient Variable not saved in database
+    // Transient Variables not saved in database
     @Transient
     private boolean isSpectrumSet = false;
-
+    
+    @Transient
+    private Float precursorIntensity =null;
+    
+    
     public MsQuery() {
     }
 
@@ -167,6 +171,14 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
 	this.isSpectrumSet = isSpectrumSet;
     }
 
+    public Float getTransientPrecursorIntensity() {
+    	return precursorIntensity;
+    }
+    
+    public void setTransientPrecursorIntensity(Float precursorIntensity) {
+    	this.precursorIntensity = precursorIntensity;
+    }
+    
     @Override
     public String toString() {
 	return Integer.toString(getInitialId());
