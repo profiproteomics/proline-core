@@ -264,9 +264,7 @@ public class ResultSet implements Serializable {
 
 		
 		private long[] peptideMatchIds;
-		
-		private Object[] memPeptideMatches; //JPM.TEST
-		
+
 		private PeptideMatch[] peptideMatches;
 		private ProteinMatch[] proteinMatches;
 
@@ -283,16 +281,7 @@ public class ResultSet implements Serializable {
 		public void setPeptideMatchIds(long[] peptideMatchIds) {
 			this.peptideMatchIds = peptideMatchIds;
 		}
-		
-		
-		
-		public Object[] getMemPeptideMatches() { //JPM.TEST
-			return memPeptideMatches;
-		}
 
-		public void setMemPeptideMatches(Object[] memPeptideMatches) { //JPM.TEST
-			this.memPeptideMatches = memPeptideMatches;
-		}
 		
 		public PeptideMatch[] getPeptideMatches() {
 			return peptideMatches;
