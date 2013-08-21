@@ -13,7 +13,7 @@
   <name>${project.artifactId}</name>
 
   <properties>
-    <version.path>src/main/scala/fr/proline/core/service</version.path>
+    <version.path>${basedir}/src/main/scala/fr/proline/core/service</version.path>
   </properties>
 
   <dependencies>
