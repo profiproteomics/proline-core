@@ -12,6 +12,10 @@
 
   <name>${project.artifactId}</name>
 
+  <properties>
+    <version.path>src/main/scala/fr/proline/core/service</version.path>
+  </properties>
+
   <dependencies>
 
     <!-- "Proline" modules -->
@@ -89,6 +93,36 @@
 
     <!-- Build Scala sources -->
     <plugins>
+
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+              <goals>
+                <goal>replace</goal>
+              </goals>
+           </execution>
+         </executions>
+
+         <configuration>
+           <file>${version.path}/Version.scala.template</file>
+           <outputFile>${version.path}/Version.scala</outputFile>
+           <replacements>
+             <replacement>
+               <token>@moduleName@</token>
+               <value>${project.artifactId}</value>
+             </replacement>
+             <replacement>
+               <token>@version@</token>
+               <value>${project.version}_${maven.build.timestamp}</value>
+             </replacement>
+           </replacements>
+         </configuration>
+
+      </plugin>
 
       <plugin>
         <groupId>org.scala-tools</groupId>
