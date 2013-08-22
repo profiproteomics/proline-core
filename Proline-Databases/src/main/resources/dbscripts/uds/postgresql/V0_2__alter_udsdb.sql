@@ -28,7 +28,7 @@ ALTER TABLE public.data_set RENAME COLUMN fraction_count TO children_count;
 COMMENT ON TABLE public.quant_label IS 'TODO: rename to quantitative_labels or quant_labels ? (same semantic than quantitation_method ???)';
 
 COMMENT ON TABLE public.instrument IS 'The identification of a Mass Spectrometer. Properties (name,source) must be unique.';
-COMMENT ON TABLE public.project IS 'A project contains multiple experiments relative to the same study or topic. Files associated to a project are stored in the repository in ''''/root/project_${project_id}''''.';
+COMMENT ON TABLE public.project IS 'A project contains multiple experiments relative to the same study or topic. Files associated to a project are stored in the repository in ''''/root/project_@{project_id}''''.';
 COMMENT ON TABLE public.fragmentation_rule IS 'Each instrument can have one or more of  fragment ion / rules. This rules describes ion fragment series that can be observed on an instrument and that are used by serach engine to generate theoritical spectrum and for scoring spectrum_peptide match';
 
 ALTER TABLE public.fragmentation_rule RENAME COLUMN theoretical_fragment_id TO fragment_series_id;

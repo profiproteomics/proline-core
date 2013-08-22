@@ -243,7 +243,7 @@ CREATE TABLE public.project (
                 owner_id INTEGER NOT NULL,
                 CONSTRAINT project_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.project IS 'A project contains multiple experiments relative to the same study or topic. Files associated to a project are stored in the repository in ''''/root/project_${project_id}''''.';
+COMMENT ON TABLE public.project IS 'A project contains multiple experiments relative to the same study or topic. Files associated to a project are stored in the repository in ''''/root/project_@{project_id}''''.';
 COMMENT ON COLUMN public.project.name IS 'The name of the project as provided by the user.';
 COMMENT ON COLUMN public.project.description IS 'The description of the project as provided by the user.';
 COMMENT ON COLUMN public.project.creation_timestamp IS 'The timestamp corresponding to the creation date of the project.';
