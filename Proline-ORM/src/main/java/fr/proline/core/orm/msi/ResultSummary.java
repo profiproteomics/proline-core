@@ -281,6 +281,30 @@ public class ResultSummary implements Serializable {
 	    this.peptideMatches = peptideMatches;
 	}
 
+	
+	// JPM.TEST
+	private Object[] SproteinSetArray = null;
+	public Object[] getSProteinSetArray() {
+	    return SproteinSetArray;
+	}
+
+	public void setSProteinSetArray(Object[] proteinSetArray) {
+	    SproteinSetArray = proteinSetArray;
+	    if (SproteinSetArray!=null) {
+	    	numberOfProteinSets = Integer.valueOf(SproteinSetArray.length);
+	    }
+	}
+	
+	private Object[] SpeptideMatches;
+	public Object[] getSPeptideMatches() {
+	    return SpeptideMatches;
+	}
+
+	public void setSPeptideMatches(Object[] peptideMatches) {
+	    SpeptideMatches = peptideMatches;
+	}
+	
+	
     }
 
 }

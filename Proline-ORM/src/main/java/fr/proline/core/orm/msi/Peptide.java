@@ -183,6 +183,18 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	    this.peptidePtmMap = peptidePtmMap;
 	}
 
+	
+	//JPM.TEST
+	 ArrayList<Object> SproteinSetArray = null;
+	public ArrayList<Object> getSProteinSetArray() {
+	    return SproteinSetArray;
+	}
+
+	public void setSProteinSetArray(ArrayList<Object> proteinSetArray) {
+		SproteinSetArray = proteinSetArray;
+	}
+	
+	
     }
 
     /**

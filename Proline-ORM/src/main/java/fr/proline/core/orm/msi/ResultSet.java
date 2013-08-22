@@ -326,6 +326,32 @@ public class ResultSet implements Serializable {
 		public Integer getMSQueriesCount() {
 			return msQueriesCount;
 		}
+		
+		//JPM.TEST
+		
+		private Object[] SpeptideMatches;
+		public Object[] getSPeptideMatches() {
+			return SpeptideMatches;
+		}
+
+		public void setSPeptideMatches(Object[] peptideMatches) {
+			SpeptideMatches = peptideMatches;
+			if (peptideMatches != null) {
+				peptideMatchesCount = Integer.valueOf(peptideMatches.length);
+			}
+		}
+		
+		private Object[] SproteinMatches;
+		public Object[] getSProteinMatches() {
+			return SproteinMatches;
+		}
+
+		public void setSProteinMatches(Object[] proteinMatches) {
+			SproteinMatches = proteinMatches;
+			if (proteinMatches != null) {
+				proteinMatchesCount = Integer.valueOf(proteinMatches.length);
+			}
+		}
 
 	}
 

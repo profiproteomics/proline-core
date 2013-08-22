@@ -291,6 +291,27 @@ public class PeptideInstance implements Serializable {
 	public void setBestPeptideMatch(PeptideMatch bestPeptideMatch) {
 	    this.bestPeptideMatch = bestPeptideMatch;
 	}
+	
+	// JPM.TEST
+	private Object[] SproteinSetArray = null;
+	public Object[] getSProteinSetArray() {
+	    return SproteinSetArray;
+	}
+
+	public void setSProteinSetArray(Object[] proteinSetArray) {
+	    SproteinSetArray = proteinSetArray;
+	}
+	
+	private Object SbestPeptideMatch = null;
+	public Object getBestSPeptideMatch() {
+	    return SbestPeptideMatch;
+	}
+
+	public void setBestSPeptideMatch(Object bestPeptideMatch) {
+		SbestPeptideMatch = bestPeptideMatch;
+	}
+	
+	
     }
 
 }
