@@ -84,7 +84,7 @@ public class DPeptideMatch {
         return m_msQuery;
     }  
     
-    public boolean iDMsQuerySet() {
+    public boolean isMsQuerySet() {
         return m_msQuerySet;
     }
     
