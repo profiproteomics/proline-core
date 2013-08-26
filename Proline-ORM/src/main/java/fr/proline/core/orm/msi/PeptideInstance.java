@@ -16,6 +16,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import fr.proline.core.orm.msi.dto.*;
+
 /**
  * The persistent class for the peptide_instance database table.
  * 
@@ -293,22 +295,22 @@ public class PeptideInstance implements Serializable {
 	}
 	
 	// JPM.TEST
-	private Object[] SproteinSetArray = null;
-	public Object[] getSProteinSetArray() {
-	    return SproteinSetArray;
+	private DProteinSet[] dproteinSetArray = null;
+	public DProteinSet[] getDProteinSetArray() {
+	    return dproteinSetArray;
 	}
 
-	public void setSProteinSetArray(Object[] proteinSetArray) {
-	    SproteinSetArray = proteinSetArray;
+	public void setDProteinSetArray(DProteinSet[] proteinSetArray) {
+	    dproteinSetArray = proteinSetArray;
 	}
 	
-	private Object SbestPeptideMatch = null;
-	public Object getBestSPeptideMatch() {
-	    return SbestPeptideMatch;
+	private DPeptideMatch dbestPeptideMatch = null;
+	public DPeptideMatch getBestDPeptideMatch() {
+	    return dbestPeptideMatch;
 	}
 
-	public void setBestSPeptideMatch(Object bestPeptideMatch) {
-		SbestPeptideMatch = bestPeptideMatch;
+	public void setBestDPeptideMatch(DPeptideMatch bestPeptideMatch) {
+		dbestPeptideMatch = bestPeptideMatch;
 	}
 	
 	

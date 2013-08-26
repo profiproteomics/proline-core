@@ -28,6 +28,8 @@ import javax.persistence.Transient;
 import fr.proline.core.orm.util.JsonSerializer;
 import fr.proline.util.StringUtils;
 
+import fr.proline.core.orm.msi.dto.*;
+
 /**
  * The persistent class for the result_set database table.
  * 
@@ -329,25 +331,25 @@ public class ResultSet implements Serializable {
 		
 		//JPM.TEST
 		
-		private Object[] SpeptideMatches;
-		public Object[] getSPeptideMatches() {
-			return SpeptideMatches;
+		private DPeptideMatch[] dpeptideMatches;
+		public DPeptideMatch[] getDPeptideMatches() {
+			return dpeptideMatches;
 		}
 
-		public void setSPeptideMatches(Object[] peptideMatches) {
-			SpeptideMatches = peptideMatches;
+		public void setDPeptideMatches(DPeptideMatch[] peptideMatches) {
+			dpeptideMatches = peptideMatches;
 			if (peptideMatches != null) {
 				peptideMatchesCount = Integer.valueOf(peptideMatches.length);
 			}
 		}
 		
-		private Object[] SproteinMatches;
-		public Object[] getSProteinMatches() {
-			return SproteinMatches;
+		private DProteinMatch[] dproteinMatches;
+		public DProteinMatch[] getDProteinMatches() {
+			return dproteinMatches;
 		}
 
-		public void setSProteinMatches(Object[] proteinMatches) {
-			SproteinMatches = proteinMatches;
+		public void setDProteinMatches(DProteinMatch[] proteinMatches) {
+			dproteinMatches = proteinMatches;
 			if (proteinMatches != null) {
 				proteinMatchesCount = Integer.valueOf(proteinMatches.length);
 			}

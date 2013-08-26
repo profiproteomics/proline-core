@@ -25,6 +25,8 @@ import fr.proline.core.orm.uds.Dataset;
 import fr.proline.core.orm.util.JsonSerializer;
 import fr.proline.util.StringUtils;
 
+import fr.proline.core.orm.msi.dto.*;
+
 /**
  * The persistent class for the result_summary database table.
  * 
@@ -283,25 +285,25 @@ public class ResultSummary implements Serializable {
 
 	
 	// JPM.TEST
-	private Object[] SproteinSetArray = null;
-	public Object[] getSProteinSetArray() {
-	    return SproteinSetArray;
+	private DProteinSet[] dproteinSetArray = null;
+	public DProteinSet[] getDProteinSetArray() {
+	    return dproteinSetArray;
 	}
 
-	public void setSProteinSetArray(Object[] proteinSetArray) {
-	    SproteinSetArray = proteinSetArray;
-	    if (SproteinSetArray!=null) {
-	    	numberOfProteinSets = Integer.valueOf(SproteinSetArray.length);
+	public void setDProteinSetArray(DProteinSet[] proteinSetArray) {
+		dproteinSetArray = proteinSetArray;
+	    if (dproteinSetArray!=null) {
+	    	numberOfProteinSets = Integer.valueOf(dproteinSetArray.length);
 	    }
 	}
 	
-	private Object[] SpeptideMatches;
-	public Object[] getSPeptideMatches() {
-	    return SpeptideMatches;
+	private DPeptideMatch[] dpeptideMatches;
+	public DPeptideMatch[] getDPeptideMatches() {
+	    return dpeptideMatches;
 	}
 
-	public void setSPeptideMatches(Object[] peptideMatches) {
-	    SpeptideMatches = peptideMatches;
+	public void setDPeptideMatches(DPeptideMatch[] peptideMatches) {
+	    dpeptideMatches = peptideMatches;
 	}
 	
 	
