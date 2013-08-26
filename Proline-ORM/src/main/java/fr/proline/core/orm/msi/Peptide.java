@@ -14,6 +14,8 @@ import javax.persistence.Transient;
 import fr.proline.core.orm.ps.PeptidePtm;
 import fr.proline.util.StringUtils;
 
+import fr.proline.core.orm.msi.dto.*;
+
 /**
  * The persistent class for the peptide database table.
  * 
@@ -185,13 +187,13 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 
 	
 	//JPM.TEST
-	 ArrayList<Object> SproteinSetArray = null;
-	public ArrayList<Object> getSProteinSetArray() {
-	    return SproteinSetArray;
+	ArrayList<DProteinSet> dproteinSetArray = null;
+	public ArrayList<DProteinSet> getDProteinSetArray() {
+	    return dproteinSetArray;
 	}
 
-	public void setSProteinSetArray(ArrayList<Object> proteinSetArray) {
-		SproteinSetArray = proteinSetArray;
+	public void setDProteinSetArray(ArrayList<DProteinSet> proteinSetArray) {
+		dproteinSetArray = proteinSetArray;
 	}
 	
 	
