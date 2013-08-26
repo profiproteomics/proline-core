@@ -46,6 +46,7 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
 
     // uni-directional many-to-one association to Spectrum
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "spectrum_id")
     private Spectrum spectrum;
 
     // bi-directional many-to-one association to PeptideMatch
