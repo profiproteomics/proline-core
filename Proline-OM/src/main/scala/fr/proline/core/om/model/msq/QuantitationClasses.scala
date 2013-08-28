@@ -186,7 +186,7 @@ case class MasterQuantPeptide( var id: Long, // important: master quant componen
   def getPeptideId: Option[Long] = if( this.peptideInstance != None ) Some(this.peptideInstance.get.peptide.id) else None
   
   def getMasterQuantProteinSetIds(): Option[Array[Long]] = {
-    if( this.properties != None ) this.properties.get.getMasterQuantProteinSetIds()
+    if( this.properties != None ) this.properties.get.getMqProtSetIds()
     else None
   }
   
@@ -215,7 +215,32 @@ case class MasterQuantPeptide( var id: Long, // important: master quant componen
   
   def getQuantPeptideAbundance( quantChannelId: Long ): Float = {
     val quantPeptide = this.quantPeptideMap.get(quantChannelId)
-    if( quantPeptide == None ) Float.NaN else quantPeptide.get.abundance
+    if( quantPeptide.isEmpty ) Float.NaN else quantPeptide.get.abundance
+  }
+  
+  def getAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {   
+    quantChannelIds.map( getQuantPeptideAbundance(_) )
+  }
+  
+  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+    
+    for( (ab, qcId) <- abundances.zip( quantChannelIds ) ) {
+      if( this.quantPeptideMap.contains(qcId) ) {
+        this.quantPeptideMap(qcId).abundance = ab
+      } else {
+        this.quantPeptideMap = this.quantPeptideMap + (
+          qcId -> QuantPeptide(
+            rawAbundance = Float.NaN,
+            abundance = ab,
+            elutionTime = Float.NaN,
+            peptideMatchesCount = 0,
+            selectionLevel = 2,
+            quantChannelId = qcId
+          )
+        )
+      }
+    }
+    
   }
   
   def getDefinedAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {    
@@ -263,30 +288,64 @@ case class QuantProteinSet (
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class MasterQuantProteinSet(  val proteinSet: ProteinSet,
-                                   var quantProteinSetMap: Map[Long,QuantProteinSet], // QuantProteinSet by quant channel id
-                                   var masterQuantPeptides: Array[MasterQuantPeptide] = null,
-                                   
-                                   var selectionLevel: Int,
-                                   var properties: Option[MasterQuantProteinSetProperties] = None
-
-                               ) extends MasterQuantComponent {
+case class MasterQuantProteinSet(
+  val proteinSet: ProteinSet,
+  var quantProteinSetMap: Map[Long,QuantProteinSet], // QuantProteinSet by quant channel id
+  var masterQuantPeptides: Array[MasterQuantPeptide] = null,
+     
+  var selectionLevel: Int,
+  var properties: Option[MasterQuantProteinSetProperties] = None
+     
+) extends MasterQuantComponent {
   
   def id() = this.proteinSet.id
-}
+  
+  def getBestProfile( groupSetupNumber: Int ): Option[MasterQuantProteinSetProfile] = {
+    if( properties.isEmpty ) return None
+    
+    val props = this.properties.get
+    if( props.getMqProtSetProfilesByGroupSetupNumber.isEmpty ) return None
+    
+    val profilesOpt = props.getMqProtSetProfilesByGroupSetupNumber.get.get(groupSetupNumber)
+    if( profilesOpt.isEmpty ) return None
+    
+    val profiles = profilesOpt.get
+    
+    var( bestAbundance, bestProfile: MasterQuantProteinSetProfile ) = ( 0f, null )
+      
+    for (profile <- profiles ) {
+      
+      var bestProfileAbundance = 0f
+      for( ratioOpt <- profile.ratios ; ratio <- ratioOpt ) {
+        if( ratio.numerator > bestProfileAbundance ) bestProfileAbundance = ratio.numerator
+        if( ratio.denominator > bestProfileAbundance ) bestProfileAbundance = ratio.numerator
+      }
+      
+      if( bestProfileAbundance > bestAbundance ) {
+        bestAbundance = bestProfileAbundance
+        bestProfile = profile
+      }
+      
+    }
+    
+    Option(bestProfile)
+  }
+  
+} 
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
-case class QuantResultSummary( val quantChannelIds: Array[Long],
-                               var masterQuantProteinSets: Array[MasterQuantProteinSet],
-                               var masterQuantPeptides: Array[MasterQuantPeptide],
-                               var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
-                               
-                               //var experimentalDesign
-                               
-                               var resultSummary: ResultSummary
-                               
-                               )  {
+case class QuantResultSummary(
+  val quantChannelIds: Array[Long],
+  var masterQuantProteinSets: Array[MasterQuantProteinSet],
+  var masterQuantPeptides: Array[MasterQuantPeptide],
+  var masterQuantPeptideIons: Array[MasterQuantPeptideIon],
+ 
+  //var experimentalDesign
+ 
+  var resultSummary: ResultSummary
+ 
+) {
   require(masterQuantProteinSets != null, "masterQuantProteinSets must be provided")
   require(masterQuantPeptides != null, "masterQuantPeptides must be provided")
   require(masterQuantPeptideIons != null, "masterQuantPeptideIons must be provided")
