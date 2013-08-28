@@ -11,8 +11,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.util.misc.InMemoryIdGen
-import fr.proline.util.misc.InMemoryIdGen
-
 
 case class FeatureScoring(
     
@@ -242,6 +240,8 @@ case class MapAlignment(
   // Requirements
   require( massRange != null && timeList != null && deltaTimeList != null )
   
+  lazy val deltaTimeVersusTime = timeList.zip(deltaTimeList)
+  
   def getLandmarks(): Array[Landmark] = {
     
     var landmarks = new ArrayBuffer[Landmark](timeList.length)
@@ -274,16 +274,13 @@ case class MapAlignment(
   
   protected def calcDeltaTime( elutionTime: Float ): Float = {
     
-    var timeIndex = timeList.indexWhere( _ >= elutionTime )
-    if( timeIndex == -1 ) {
-      //this.logger.debug("undefined time index for elution time " + elutionTime)
-      timeIndex = deltaTimeList.length - 1
-    }
-      
-    this._calcDeltaTime( timeIndex, elutionTime )
+    import fr.proline.util.math.linearInterpolation
+    
+    linearInterpolation(elutionTime, deltaTimeVersusTime)
+    //this._calcDeltaTime( timeIndex, elutionTime )
   }
   
-  private def _calcDeltaTime( timeIndex: Int, elutionTime: Float ) = {
+  /*private def _calcDeltaTime( timeIndex: Int, elutionTime: Float ) = {
     require( timeIndex >= -1 && timeIndex < deltaTimeList.length, "time index is out of range" )
     
     import fr.proline.util.math.calcLineParams
@@ -313,7 +310,7 @@ case class MapAlignment(
     }
     
     deltaTime    
-  }
+  }*/
  
   def getReversedAlignment(): MapAlignment = {
     
