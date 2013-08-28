@@ -19,16 +19,14 @@ import fr.proline.core.dal.tables.lcms.LcmsDbRunMapTable
 import fr.proline.core.dal.tables.lcms.LcmsDbScanTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.om.model.lcms.MapSet
-import fr.proline.core.om.model.msq.MasterQuantPeptide
-import fr.proline.core.om.model.msq.MasterQuantPeptideIon
-import fr.proline.core.om.model.msq.QuantPeptide
-import fr.proline.core.om.model.msq.QuantPeptideIon
+import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.util.primitives._
 
 abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
   
+  val experimentalDesign: ExperimentalDesign
   val quantConfig: ILabelFreeQuantConfig
   val lcmsMapSet: MapSet
 
@@ -138,10 +136,12 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
   val quantifierAlgo: IQuantifierAlgo = {
     new LabelFreeFeatureQuantifier(
+      expDesign = experimentalDesign,
       lcmsMapSet = lcmsMapSet,
       spectrumIdMap = spectrumIdMap,
       ms2ScanNumbersByFtId = ms2ScanNumbersByFtId,
-      mozTolInPPM = quantConfig.extractionParams.mozTol.toFloat
+      mozTolInPPM = quantConfig.extractionParams.mozTol.toFloat,
+      statTestsAlpha = 0.01f // TODO: retrieve from quantConfig
     )
   }
 

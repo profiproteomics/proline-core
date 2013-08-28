@@ -3,13 +3,9 @@ package fr.proline.core.service.msq.quantify
 import javax.persistence.EntityManager
 import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.Ms2CountQuantifier
-import fr.proline.core.om.model.msq.MasterQuantPeptide
-import fr.proline.core.om.model.msq.MasterQuantPeptideIon
-import fr.proline.core.om.model.msq.QuantPeptide
-import fr.proline.core.om.model.msq.QuantPeptideIon
+import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
@@ -20,6 +16,7 @@ import fr.proline.repository.IDataStoreConnectorFactory
  */
 class SpectralCountQuantifier(
   val executionContext: IExecutionContext,
+  val experimentalDesign: ExperimentalDesign,
   val udsMasterQuantChannel: MasterQuantitationChannel
   ) extends AbstractMasterQuantChannelQuantifier with Logging {
   

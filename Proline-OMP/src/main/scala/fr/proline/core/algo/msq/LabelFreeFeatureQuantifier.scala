@@ -5,7 +5,6 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import collection.JavaConversions.{ collectionAsScalaIterable, setAsJavaSet }
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.lcms.{MapSet,Feature}
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -19,10 +18,12 @@ import fr.proline.util.ms._
  *
  */
 class LabelFreeFeatureQuantifier(
+  expDesign: ExperimentalDesign,
   lcmsMapSet: MapSet,
   spectrumIdMap: Map[Long,HashMap[Long,Long]],
   ms2ScanNumbersByFtId : Map[Long,Seq[Int]],
-  mozTolInPPM: Float
+  mozTolInPPM: Float,
+  statTestsAlpha: Float = 0.01f
 ) extends IQuantifierAlgo with Logging {
   
   def computeMasterQuantPeptides(
@@ -285,6 +286,15 @@ class LabelFreeFeatureQuantifier(
       
       masterQuantPeptides += newMasterQuantPeptide(quantPepIonMapByFt, None)
     }
+    
+    // Compute the statistical analysis of abundance profiles
+    val profilizer = new Profilizer(
+      expDesign = expDesign,
+      groupSetupNumber = 1, // TODO: retrieve from params
+      masterQCNumber = udsMasterQuantChannel.getNumber
+    )
+    
+    profilizer.computeMasterQuantPeptideProfiles(masterQuantPeptides, statTestsAlpha)
 
     masterQuantPeptides.toArray
   }

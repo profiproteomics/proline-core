@@ -5,14 +5,12 @@ import java.util.HashSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.HashMap
 
-import com.codahale.jerkson.JsonSnakeCase
-
 import fr.proline.api.service.IService
+import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.{
   BiologicalGroup => UdsBiologicalGroup,
   BiologicalSample => UdsBiologicalSample,
-  Dataset => UdsDataset }
-import fr.proline.core.orm.uds.{
+  Dataset => UdsDataset,
   GroupSetup => UdsGroupSetup,
   MasterQuantitationChannel => UdsMasterQuantitationChannel,
   Project => UdsProject,
@@ -33,7 +31,8 @@ class CreateQuantitation(
   description: String,
   projectId: Long,
   methodId: Long,
-  experimentalDesign: ExperimentalDesign) extends IService {
+  experimentalDesign: ExperimentalDesign
+) extends IService {
 
   private var _udsQuantitation: UdsDataset = null
   def getUdsQuantitation() = _udsQuantitation
@@ -259,76 +258,3 @@ class CreateQuantitation(
   }
 
 }
-
-/**
- * @param biologicalSamples
- * @param groupSetups
- * @param masterQuantChannels
- */
-@JsonSnakeCase
-case class ExperimentalDesign(
-  val biologicalSamples: Array[BiologicalSample],
-  val groupSetups: Array[GroupSetup],
-  val masterQuantChannels: Array[MasterQuantChannel])
-
-/**
- * @param name
- */
-@JsonSnakeCase
-case class BiologicalSample(
-  val name: String)
-
-/**
- * @param name
- * @param ratioDefinitions
- * @param biologicalGroups
- */
-@JsonSnakeCase
-case class GroupSetup(
-  val name: String,
-  val ratioDefinitions: Array[RatioDefinition],
-  val biologicalGroups: Array[BiologicalGroup])
-
-/**
- * @param numeratorGroupNumber
- * @param denominatorGroupNumber
- */
-@JsonSnakeCase
-case class RatioDefinition(
-  val numeratorGroupNumber: Int,
-  val denominatorGroupNumber: Int)
-
-/**
- * @param name
- * @param sampleNumbers
- */
-@JsonSnakeCase
-case class BiologicalGroup(
-  val name: String,
-  val sampleNumbers: Array[Int])
-
-/**
- * @param sampleNumber
- * @param identResultSummaryId
- * @param lcmsMapId
- * @param quantLabelId
- */
-@JsonSnakeCase
-case class QuantChannel(
-  val sampleNumber: Int,
-  val identResultSummaryId: Long,
-  val lcmsMapId: Option[Long] = None,
-  val runId: Option[Long] = None,
-  val quantLabelId: Option[Long] = None
-)
-
-/**
- * @param name
- * @param lcmsMapSetId
- * @param quantChannels
- */
-@JsonSnakeCase
-case class MasterQuantChannel(
-  val name: Option[String] = None,
-  val lcmsMapSetId: Option[Long] = None,
-  val quantChannels: Array[QuantChannel])

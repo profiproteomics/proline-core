@@ -3,12 +3,14 @@ package fr.proline.core.service.msq
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.msq.quantify._
 import fr.proline.repository.IDataStoreConnectorFactory
 
 class QuantifyMasterQuantChannel(
   executionContext: IExecutionContext,
+  experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
   quantConfig: AnyRef
 ) extends IService {
@@ -19,11 +21,13 @@ class QuantifyMasterQuantChannel(
   def this(
     dsFactory: IDataStoreConnectorFactory,
     projectId: Long,
+    experimentalDesign: ExperimentalDesign,
     masterQuantChannelId: Long,
     quantConfig: AnyRef
   ) {
     this(
       ContextFactory.buildExecutionContext(dsFactory, projectId, true), // Force JPA context
+      experimentalDesign,
       masterQuantChannelId,
       quantConfig
     )
@@ -40,7 +44,7 @@ class QuantifyMasterQuantChannel(
     require( udsMasterQuantChannel != null,
              "undefined master quant channel with id=" + udsMasterQuantChannel )
     
-    MasterQuantChannelQuantifier( executionContext, udsMasterQuantChannel, quantConfig ).quantify()
+    MasterQuantChannelQuantifier( executionContext, experimentalDesign, udsMasterQuantChannel, quantConfig ).quantify()
     
     // Close execution context if initiated locally
     if( this._hasInitiatedExecContext )
@@ -70,8 +74,9 @@ object MasterQuantChannelQuantifier {
   import javax.persistence.EntityManager
   import fr.proline.core.algo.lcms.LabelFreeQuantConfig
   
-  def apply(
+  def apply(    
     executionContext: IExecutionContext,
+    experimentalDesign: ExperimentalDesign,
     udsMasterQuantChannel: MasterQuantitationChannel,
     quantConfig: AnyRef
   ): AbstractMasterQuantChannelQuantifier = {
@@ -95,6 +100,7 @@ object MasterQuantChannelQuantifier {
       if( abundanceUnit == AbundanceUnit.FEATURE_INTENSITY.toString() ) {
         masterQuantChannelQuantifier = new Ms2DrivenLabelFreeFeatureQuantifier(
           executionContext = executionContext,
+          experimentalDesign = experimentalDesign,
           udsMasterQuantChannel = udsMasterQuantChannel,
           quantConfig.asInstanceOf[LabelFreeQuantConfig]
         )
@@ -102,6 +108,7 @@ object MasterQuantChannelQuantifier {
       else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString() ) {
         masterQuantChannelQuantifier = new SpectralCountQuantifier(
           executionContext = executionContext,
+          experimentalDesign = experimentalDesign,
           udsMasterQuantChannel = udsMasterQuantChannel
         )
       }
