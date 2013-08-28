@@ -310,25 +310,38 @@ case class MasterQuantProteinSet(
     if( profilesOpt.isEmpty ) return None
     
     val profiles = profilesOpt.get
+    if( profiles.length == 0 ) return None
     
-    var( bestAbundance, bestProfile: MasterQuantProteinSetProfile ) = ( 0f, null )
-      
-    for (profile <- profiles ) {
-      
-      var bestProfileAbundance = 0f
-      for( ratioOpt <- profile.ratios ; ratio <- ratioOpt ) {
-        if( ratio.numerator > bestProfileAbundance ) bestProfileAbundance = ratio.numerator
-        if( ratio.denominator > bestProfileAbundance ) bestProfileAbundance = ratio.numerator
-      }
-      
-      if( bestProfileAbundance > bestAbundance ) {
-        bestAbundance = bestProfileAbundance
-        bestProfile = profile
-      }
-      
+    val profilesSortedByPepCount = profiles.sortWith { (a,b) => a.mqPeptideIds.length > b.mqPeptideIds.length }
+    
+    val bestProfile = if( profilesSortedByPepCount.length == 1 ) {
+      // Single profile => it's easy
+      profilesSortedByPepCount(0)
     }
-    
-    Option(bestProfile)
+    // If one winner
+    else if ( profilesSortedByPepCount(0).mqPeptideIds.length > profilesSortedByPepCount(1).mqPeptideIds.length ) {
+      profilesSortedByPepCount(0)
+    // Else no winner => conflict resolution based on abundance
+    } else {
+      
+      def profileMaxAbundance( profile: MasterQuantProteinSetProfile ): Float = {
+        
+        var maxProfileAbundance = 0f        
+        for( ratioOpt <- profile.ratios ; ratio <- ratioOpt ) {
+          if( ratio.numerator > maxProfileAbundance ) maxProfileAbundance = ratio.numerator
+          if( ratio.denominator > maxProfileAbundance ) maxProfileAbundance = ratio.denominator
+        }
+        
+        maxProfileAbundance
+      }
+      
+      if( profileMaxAbundance(profilesSortedByPepCount(0)) > profileMaxAbundance(profilesSortedByPepCount(1)) )
+        profilesSortedByPepCount(0)
+      else
+        profilesSortedByPepCount(1)
+    }
+
+    Some(bestProfile)
   }
   
 } 

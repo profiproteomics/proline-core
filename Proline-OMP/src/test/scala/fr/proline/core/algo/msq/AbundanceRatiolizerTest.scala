@@ -96,7 +96,7 @@ class AbundanceRatiolizerTest {
     //import scala.runtime.ScalaRunTime.stringOf
     //println( stringOf(relativeVariationModel.noiseDistribution) )
     
-    AbundanceRatiolizer.updateRatioStates(normalizedRatios, absoluteNoiseModel, relativeVariationModel, 0.01f)
+    AbundanceRatiolizer.updateRatioStates(normalizedRatios, relativeVariationModel, Some(absoluteNoiseModel) , 0.01f)
     
     val ratiosSortedByTPValue = normalizedRatios.sortBy( _.tTestPValue.getOrElse(1.) )
     

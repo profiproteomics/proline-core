@@ -40,7 +40,7 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
     
     // Check we have enough replicates
     // TODO: is this needed ? (because of the correction to be applied)
-    require( statSummary1.getN > 2 && statSummary2.getN > 2 )
+    require( statSummary1.getN > 2 && statSummary2.getN > 2, "not enough replicates for T statistics" )
 
     // Compute the T-Test using corrected variances from error model
     CommonsStatHelper.tTestComputer.tTest(

@@ -40,7 +40,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     val normalizedMatrix = AbundanceNormalizer.normalizeAbundances(abundanceMatrix)
     
     // --- Estimate the noise model ---    
-    val ratiosByMasterQuantPeptide = Map() ++ masterQuantPeptides.map( _ -> new ArrayBuffer[Option[ComputedRatio]] )
+    val ratiosByMQPepId = Map() ++ masterQuantPeptides.map( _.id -> new ArrayBuffer[Option[ComputedRatio]] )
+    val mqPepById = Map() ++ masterQuantPeptides.map( mqPep => mqPep.id -> mqPep )
     
     // Iterate over the ratio definitions
     for ( ratioDef <- groupSetup.ratioDefinitions ) {
@@ -56,18 +57,19 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         val computedRatio = ComputedRatio(
           numerator = ratio.numeratorMean.toFloat,
           denominator = ratio.denominatorMean.toFloat,
-          state = ratio.state.map(_.id)
+          state = ratio.state.map(_.id).getOrElse(0)
         )
         
-        ratiosByMasterQuantPeptide(masterQuantPep) += Some(computedRatio)
+        ratiosByMQPepId(masterQuantPep.id) += Some(computedRatio)
       }
     
     }
     
     
     // Update the profiles using the obtained results
-    for ( (mqPep,ratios) <- ratiosByMasterQuantPeptide ) {
+    for ( (mqPepId,ratios) <- ratiosByMQPepId ) {
 
+      val mqPep = mqPepById(mqPepId)
       val mqPepProps = mqPep.properties.getOrElse( new MasterQuantPeptideProperties() )
       
       val quantProfile = new MasterQuantPeptideProfile( ratios = ratios.toArray )
@@ -102,7 +104,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber )
         
         for( mqPepProfile <- mqPepProfileOpt ) {
-          val profileSlopes = mqPepProfile.ratios.map( _.map( _.state.getOrElse(0) ).get )
+          val profileSlopes = mqPepProfile.ratios.map( _.map( _.state ).get )
           val profileAsStr = _stringifyProfile( profileSlopes )
           
           mqPepsByProfileAsStr.getOrElseUpdate(profileAsStr, new ArrayBuffer[MasterQuantPeptide] ) += mqPep
@@ -151,7 +153,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         val computedRatio = ComputedRatio(
           numerator = ratio.numeratorMean.toFloat,
           denominator = ratio.denominatorMean.toFloat,
-          state = ratio.state.map(_.id)
+          state = ratio.state.map(_.id).getOrElse(0)
         )
         
         val rowIndex = ratio.entityId.toInt
@@ -232,8 +234,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
           if( qcIndices.length > 1 ) {
             val sampleAbundances = qcIndices.map(normalizedRow).map(_.toDouble)
             val sampleStatSummary = CommonsStatHelper.calcStatSummary(sampleAbundances)
+            val abundance = sampleStatSummary.getMean.toFloat
             
-            absoluteErrors += AbsoluteErrorObservation( sampleStatSummary.getMean.toFloat, sampleStatSummary.getStandardDeviation.toFloat )
+            if( abundance.isNaN == false && abundance > 0 )
+              absoluteErrors += AbsoluteErrorObservation( abundance, sampleStatSummary.getStandardDeviation.toFloat )
           }
         }
       } else {
@@ -241,8 +245,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         val numeratorMeanAbundance = _meanAbundance( _getSamplesMeanAbundance( normalizedRow, numeratorSampleNumbers ) )
         val denominatorMeanAbundance = _meanAbundance( _getSamplesMeanAbundance( normalizedRow, denominatorSampleNumbers ) )
         
-        if( denominatorMeanAbundance.isNaN == false && denominatorMeanAbundance > 0 ) {
-          val maxAbundance = math.max(numeratorMeanAbundance,denominatorMeanAbundance)
+        val maxAbundance = math.max(numeratorMeanAbundance,denominatorMeanAbundance)
+        
+        if( maxAbundance.isNaN == false && maxAbundance > 0 ) {          
           relativeErrors += RelativeErrorObservation( maxAbundance, numeratorMeanAbundance/denominatorMeanAbundance)
         }
         
@@ -270,26 +275,25 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         }
       }
       
-      val filledMatrix = Array.ofDim[Float](normalizedMatrix.length,quantChannels.length)
+      val tmpFilledMatrix = Array.ofDim[Float](normalizedMatrix.length,quantChannels.length)
       
       for( (sampleNum,sampleMatrixBuffer) <- matrixBySampleNum ) {
         
-        val qcIds = qcIndicesBySampleNum(sampleNum)
+        val qcIndices = qcIndicesBySampleNum(sampleNum)
         val inferredSampleMatrix = MissingAbundancesInferer.inferAbundances(sampleMatrixBuffer.toArray, absoluteNoiseModel)
         
         var filledMatrixRow = 0
         inferredSampleMatrix.foreach { inferredAbundances =>
           
-          inferredAbundances.zip(qcIds).foreach { case (abundance,colIdx) =>
-            filledMatrix(filledMatrixRow)(colIdx) = abundance
-          }
+          inferredAbundances.zip(qcIndices).foreach { case (abundance,colIdx) =>
+            tmpFilledMatrix(filledMatrixRow)(colIdx) = abundance
+          }          
           
           filledMatrixRow += 1
         }
-
       }
       
-      filledMatrix
+      tmpFilledMatrix
       
     } else {
       // TODO: find what to do if when insufficient technical replicates
@@ -300,11 +304,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     // --- Determine the significant abundance changes ---
     
     // Create a new buffer for ratios to be computed
-    val ratiosBuffer = new ArrayBuffer[AverageAbundanceRatio](normalizedMatrix.length)
+    val ratiosBuffer = new ArrayBuffer[AverageAbundanceRatio](filledMatrix.length)
     
     // Compute the error models
-    val absoluteVariationsBuffer = new ArrayBuffer[AbsoluteErrorObservation](normalizedMatrix.length) // for n sample replicates
-    val relativeVariationsBuffer = new ArrayBuffer[RelativeErrorObservation](normalizedMatrix.length) // for 1 sample replicate
+    val absoluteVariationsBuffer = new ArrayBuffer[AbsoluteErrorObservation](filledMatrix.length) // for n sample replicates
+    val relativeVariationsBuffer = new ArrayBuffer[RelativeErrorObservation](filledMatrix.length) // for 1 sample replicate
     
     var rowIdx = 0
     filledMatrix.foreach { fullRow =>
@@ -314,7 +318,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       
       // Compute numerator and denominator abundances
       val numeratorMeanAbundances = _getSamplesMeanAbundance( fullRow, numeratorSampleNumbers )
-      val denominatorMeanAbundances = _getSamplesMeanAbundance( fullRow, numeratorSampleNumbers )
+      val denominatorMeanAbundances = _getSamplesMeanAbundance( fullRow, denominatorSampleNumbers )
       
       // Compute numerator and denominator statistical summaries
       val numeratorSummary = CommonsStatHelper.calcStatSummary(numeratorMeanAbundances.map(_.toDouble))
@@ -324,19 +328,16 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       val ratio = new AverageAbundanceRatio( rowIdx, numeratorSummary, denominatorSummary )
       ratiosBuffer += ratio
       
-      // Check if we have enough biological sample replicates
-      if( minSamplesCountPerGroup > 2 ) {
-        
+      // Update the relative error model
+      if( ratio.ratioValue.isDefined && ratio.ratioValue.get > 0 ) {
+        relativeVariationsBuffer += RelativeErrorObservation( ratio.maxAbundance.toFloat, ratio.ratioValue.get )
+      }
+      
+      // Check if we have enough biological sample replicates to udpate the absolute variations model
+      if( minSamplesCountPerGroup > 2 ) {        
         // We can then make absolute statistical validation at the biological sample level
         absoluteVariationsBuffer += AbsoluteErrorObservation( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
         absoluteVariationsBuffer += AbsoluteErrorObservation( denominatorSummary.getMean.toFloat, denominatorSummary.getStandardDeviation.toFloat )
-        
-      } else {
-        
-        // We can only use the relative error model
-        if( ratio.ratioValue.isDefined ) {
-          relativeVariationsBuffer += RelativeErrorObservation( ratio.maxAbundance.toFloat, ratio.ratioValue.get )
-        }
       }
 
       rowIdx += 1
@@ -345,9 +346,17 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     val relativeVariationModel = ErrorModelComputer.computeRelativeErrorModel(relativeVariationsBuffer,nbins=Some(5))
     
     // Update the variation state of ratios
-    AbundanceRatiolizer.updateRatioStates(ratiosBuffer, absoluteNoiseModel, relativeVariationModel, statTestsAlpha)
+    if( minSamplesCountPerGroup > 2 ) { 
+      val absoluteVariationModel = ErrorModelComputer.computeAbsoluteErrorModel(absoluteVariationsBuffer,nbins=Some(5))
+      AbundanceRatiolizer.updateRatioStates(ratiosBuffer, relativeVariationModel, Some(absoluteVariationModel), statTestsAlpha)
+    }
+    else if( minQCsCountPerSample > 2 ) {
+      AbundanceRatiolizer.updateRatioStates(ratiosBuffer, relativeVariationModel, Some(absoluteNoiseModel), statTestsAlpha)
+    } else {
+      AbundanceRatiolizer.updateRatioStates(ratiosBuffer, relativeVariationModel, None, statTestsAlpha)
+    }
     
-    (normalizedMatrix,ratiosBuffer)
+    (filledMatrix,ratiosBuffer)
   }
   
   private def _meanAbundance(abundances: Array[Float]): Float = {

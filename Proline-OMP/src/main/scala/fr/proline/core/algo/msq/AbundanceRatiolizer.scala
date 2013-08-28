@@ -54,8 +54,8 @@ object AbundanceRatiolizer {
   
   def updateRatioStates(
     ratios: Seq[AverageAbundanceRatio],
-    absoluteNoiseModel: AbsoluteErrorModel,
     relativeVariationModel: RelativeErrorModel,
+    absoluteNoiseModel: Option[AbsoluteErrorModel],    
     pValueThreshold: Float
   ) {
     
@@ -91,8 +91,9 @@ object AbundanceRatiolizer {
           }
         }*/
         
-        val tTestPValue = absoluteNoiseModel.tTest(ratio.numeratorSummary,ratio.denominatorSummary)
-        ratio.tTestPValue = Some( tTestPValue )
+        if( ratio.numeratorSummary.getN > 2 && ratio.denominatorSummary.getN > 2 ) {
+          ratio.tTestPValue = absoluteNoiseModel.map( _.tTest(ratio.numeratorSummary,ratio.denominatorSummary) )
+        }
         
         // Apply the variation model
         val zTestPValue = relativeVariationModel.zTest(ratio.maxAbundance.toFloat, ratio.foldValue.get)
@@ -100,7 +101,7 @@ object AbundanceRatiolizer {
         //println( "z-test=" + foldChangePValue )
         
         // Check the pValue
-        if( tTestPValue <= pValueThreshold && zTestPValue <= pValueThreshold ) {
+        if( ratio.tTestPValue.getOrElse(0.) <= pValueThreshold && zTestPValue <= pValueThreshold ) {
           if( ratio.numeratorMean > ratio.denominatorMean ) ratio.state = Some(AbundanceRatioState.OverAbundant)
           else ratio.state = Some(AbundanceRatioState.UnderAbundant)
         } else {

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 case class ComputedRatio (
   @BeanProperty var numerator: Float,
   @BeanProperty var denominator: Float,
-  @BeanProperty var state: Option[Int] = None// -1 means under-abundant, 0 means invariant and +1 means over-abundant
+  @BeanProperty var state: Int = 0// -1 means under-abundant, 0 means invariant and +1 means over-abundant
 ) {
   @transient lazy val ratioValue = if( denominator > 0 && denominator.isNaN == false ) numerator/denominator else Float.NaN
 }
