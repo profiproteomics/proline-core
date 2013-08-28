@@ -306,6 +306,15 @@ public class ResultSummary implements Serializable {
 	    dpeptideMatches = peptideMatches;
 	}
 	
+	private long[] dpeptideMatchesId;
+	public long[] getDPeptideMatchesId() {
+	    return dpeptideMatchesId;
+	}
+
+	public void setDPeptideMatchesId(long[] peptideMatchesId) {
+		dpeptideMatchesId = peptideMatchesId;
+	}
+	
 	
     }
 

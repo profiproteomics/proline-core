@@ -354,6 +354,15 @@ public class ResultSet implements Serializable {
 				proteinMatchesCount = Integer.valueOf(proteinMatches.length);
 			}
 		}
+		
+		private long[] dpeptideMatchesId;
+		public long[] getDPeptideMatchesId() {
+			return dpeptideMatchesId;
+		}
+
+		public void setDPeptideMatchesId(long[] peptideMatchesId) {
+			dpeptideMatchesId = peptideMatchesId;
+		}
 
 	}
 

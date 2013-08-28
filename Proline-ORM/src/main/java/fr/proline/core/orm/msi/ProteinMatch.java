@@ -297,6 +297,7 @@ public class ProteinMatch implements Serializable {
 	    this.noBioSequenceFound = noBioSequenceFound;
 	}
 
+	// no longer used
 	public ProteinSet[] getProteinSetArray() {
 	    return proteinSetArray;
 	}

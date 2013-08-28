@@ -18,6 +18,7 @@ public class DProteinMatch {
     private HashMap<Long, PeptideSet> peptideSetMap = null;
     
     private DPeptideMatch[] m_peptideMatches;
+    private long[] m_peptideMatchesId;
     //private ProteinSet[] m_proteinSetArray = null;
     
     public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, Long bioSequenceId) {
@@ -101,6 +102,16 @@ public class DProteinMatch {
     public void setPeptideMatches(DPeptideMatch[] peptideMatches) {
         m_peptideMatches = peptideMatches;
     }
+    
+    public long[] getPeptideMatchesId() {
+        return m_peptideMatchesId;
+    }
+
+    public void setPeptideMatchesId(long[] peptideMatchesId) {
+        m_peptideMatchesId = peptideMatchesId;
+    }
+    
+    
     
     public PeptideSet getPeptideSet(Long resultSummaryId) {
         if (peptideSetMap == null) {
