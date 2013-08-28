@@ -8,30 +8,24 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import fr.proline.api.service.IService
-import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.context.IExecutionContext
 
 class ExportMasterQuantPeptideIons(
-  execCtx: IExecutionContext,
-  masterQuantChannelId: Long,
-  outputFile: File
+  override val execCtx: IExecutionContext,
+  override val masterQuantChannelId: Long,
+  override val outputFile: File
 ) extends ExportMasterQuantPeptides(execCtx,masterQuantChannelId,outputFile) {
   
-  val mqPepIonHeaders = "charge master_elution_time master_feature_id".split(" ")
-  val qPepIonHeaders = "moz elution_time correct_elution_time duration raw_abundance ms2_count feature_id".split(" ")
+  protected val mqPepIonHeaders = "charge master_elution_time master_feature_id".split(" ")
+  protected val qPepIonHeaders = "moz elution_time correct_elution_time duration raw_abundance ms2_count feature_id".split(" ")
   
   // Create some mappings
-  val mqPepById = Map() ++ quantRSM.masterQuantPeptides.map( mqPep => mqPep.id -> mqPep ) 
+  protected val mqPepById = Map() ++ quantRSM.masterQuantPeptides.map( mqPep => mqPep.id -> mqPep ) 
 
-  override def runService() = {
+  override protected def writeRows( fileWriter: PrintWriter ) {
     
     // TODO: stringify peptide instance data
-    
-    // Create a file writer and print the header
-    val fileWriter = new PrintWriter(new FileOutputStream(outputFile))
-    fileWriter.println(mkRowHeader(qcIds.length))
-    fileWriter.flush()
     
     // Iterate over master quant peptides to export them
     quantRSM.masterQuantPeptideIons.foreach { mqPepIon =>
@@ -79,12 +73,9 @@ class ExportMasterQuantPeptideIons(
 
     }
 
-    fileWriter.close()
-    
-    true
   }
   
-  override def mkRowHeader( quantChannelCount: Int ): String = {
+  override protected def mkRowHeader( quantChannelCount: Int ): String = {
     val rowHeaders = new ArrayBuffer[String] + super.mkRowHeader(quantChannelCount) ++ mqPepIonHeaders
     for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qPepIonHeaders.map(_+"_"+i) )
     rowHeaders.mkString("\t")
