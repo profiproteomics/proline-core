@@ -72,12 +72,12 @@ class ErrorModelComputerTest {
       AbsoluteErrorObservation( 1e9f, 1e9f * 0.03f )
     )
     
-    val errorModel = ErrorModelComputer.computeAbsoluteErrorModel(errorObservations)
+    val errorModel = ErrorModelComputer.computeAbsoluteErrorModel(errorObservations,nbins = Some(5))
     
     val s1 = CommonsStatHelper.buildStatSummary(1e5f, 0, 4)
-    val s2 = CommonsStatHelper.buildStatSummary(2e5f, 0, 4)
+    val s2 = CommonsStatHelper.buildStatSummary(3e5f, 0, 4)
     
-    assertEquals(0.08, errorModel.tTest( s1, s2 ), 0.01)
+    assertEquals(0.01, errorModel.tTest( s1, s2 ), 0.01)
     /*import scala.runtime.ScalaRunTime.stringOf
     println( stringOf(errorModel.errorDistribution) )*/
   }
@@ -113,8 +113,8 @@ class ErrorModelComputerTest {
     )
     
 
-    val errorModel = ErrorModelComputer.computeRelativeErrorModel(errorObservations)
-    assertEquals(0.008, errorModel.zTest(1e5f, 1/3f ), 0.001)
+    val errorModel = ErrorModelComputer.computeRelativeErrorModel(errorObservations, nbins = Some(5))
+    assertEquals(0.015, errorModel.zTest(1e5f, 1/3f ), 0.001)
     
    /* import scala.runtime.ScalaRunTime.stringOf    
     println( stringOf(errorModel.errorDistribution) )
