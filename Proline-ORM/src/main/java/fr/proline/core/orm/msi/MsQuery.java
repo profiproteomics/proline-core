@@ -22,7 +22,7 @@ import javax.persistence.Transient;
  */
 @Entity
 @Table(name = "ms_query")
-public class MsQuery implements Serializable, Comparable<MsQuery> {
+public class MsQuery implements Serializable /*, Comparable<MsQuery>*/ {
 
     private static final long serialVersionUID = 1L;
 
@@ -54,11 +54,11 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
     private Set<PeptideMatch> peptideMatches;
 
     // Transient Variables not saved in database
-    @Transient
-    private boolean isSpectrumSet = false;
+    //@Transient
+    //private boolean isSpectrumSet = false;
     
-    @Transient
-    private Float precursorIntensity =null;
+    //@Transient
+    //private Float precursorIntensity =null;
     
     
     public MsQuery() {
@@ -159,7 +159,7 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
      * @param p
      * @return
      */
-    @Override
+    /*@Override
     public int compareTo(final MsQuery otherQuery) {
    	 return Integer.valueOf(getInitialId()).compareTo(Integer.valueOf(otherQuery.getInitialId()));
     }
@@ -183,6 +183,6 @@ public class MsQuery implements Serializable, Comparable<MsQuery> {
     @Override
     public String toString() {
 	return Integer.toString(getInitialId());
-    }
+    }*/
 
 }

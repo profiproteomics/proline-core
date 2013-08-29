@@ -267,8 +267,8 @@ public class ResultSet implements Serializable {
 		
 		private long[] peptideMatchIds;
 
-		private PeptideMatch[] peptideMatches;
-		private ProteinMatch[] proteinMatches;
+		/*private PeptideMatch[] peptideMatches;
+		private ProteinMatch[] proteinMatches;*/
 
 		private Integer peptideMatchesCount = null;
 
@@ -285,7 +285,7 @@ public class ResultSet implements Serializable {
 		}
 
 		
-		public PeptideMatch[] getPeptideMatches() {
+		/*public PeptideMatch[] getPeptideMatches() {
 			return peptideMatches;
 		}
 
@@ -294,10 +294,10 @@ public class ResultSet implements Serializable {
 			if (peptideMatches != null) {
 				peptideMatchesCount = Integer.valueOf(peptideMatches.length);
 			}
-		}
+		}*/
 		
 		
-		public ProteinMatch[] getProteinMatches() {
+		/*public ProteinMatch[] getProteinMatches() {
 			return proteinMatches;
 		}
 
@@ -306,7 +306,7 @@ public class ResultSet implements Serializable {
 			if (proteinMatches != null) {
 				proteinMatchesCount = Integer.valueOf(proteinMatches.length);
 			}
-		}
+		}*/
 
 
 		public Integer getPeptideMatchesCount() {

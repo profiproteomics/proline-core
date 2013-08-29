@@ -68,8 +68,8 @@ public class ProteinSet implements Serializable {
     private Map<String, Long> objectTreeIdByName;
 
     // Transient data not saved in database
-    @Transient
-    private TransientData transientData = null;
+    //@Transient
+    //private TransientData transientData = null;
 
     public ProteinSet() {
     }
@@ -180,19 +180,19 @@ public class ProteinSet implements Serializable {
 	return result;
     }
 
-    public TransientData getTransientData() {
+    /*public TransientData getTransientData() {
 	if (transientData == null) {
 	    transientData = new TransientData();
 	}
 	return transientData;
-    }
+    }*/
 
     /**
      * Transient Data which will be not saved in database Used by the Proline Studio IHM
      * 
      * @author JM235353
      */
-    public static class TransientData implements Serializable {
+    /*public static class TransientData implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private ProteinMatch typicalProteinMatch = null;
@@ -262,6 +262,6 @@ public class ProteinSet implements Serializable {
 	    this.subSetCount = subSetCount;
 	}
 
-    }
+    }*/
 
 }

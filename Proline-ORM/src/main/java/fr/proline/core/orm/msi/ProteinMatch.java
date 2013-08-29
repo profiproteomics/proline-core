@@ -83,8 +83,8 @@ public class ProteinMatch implements Serializable {
     private Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems;
 
     // Transient Variables not saved in database
-    @Transient
-    private TransientData transientData = null;
+    //@Transient
+    //private TransientData transientData = null;
 
     public ProteinMatch() {
     }
@@ -217,19 +217,19 @@ public class ProteinMatch implements Serializable {
 	isLastBioSequence = pIsLastBioSequence;
     }
 
-    public TransientData getTransientData() {
+    /*public TransientData getTransientData() {
 	if (transientData == null) {
 	    transientData = new TransientData();
 	}
 	return transientData;
-    }
+    }*/
 
     /**
      * Transient Data which will be not saved in database Used by the Proline Studio IHM
      * 
      * @author JM235353
      */
-    public static class TransientData implements Serializable {
+    /*public static class TransientData implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private HashMap<Long, PeptideSet> peptideSetMap = null;
@@ -306,6 +306,6 @@ public class ProteinMatch implements Serializable {
 	    this.proteinSetArray = proteinSetArray;
 	}
 
-    }
+    }*/
 
 }

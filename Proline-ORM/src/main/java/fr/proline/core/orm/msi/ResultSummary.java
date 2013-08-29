@@ -231,8 +231,8 @@ public class ResultSummary implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private PeptideInstance[] peptideInstanceArray = null;
-	private ProteinSet[] proteinSetArray = null;
-	private PeptideMatch[] peptideMatches;
+	//private ProteinSet[] proteinSetArray = null;
+	//private PeptideMatch[] peptideMatches;
 
 	private Dataset dataSet = null;
 	private Integer numberOfProteinSets = null;
@@ -248,7 +248,7 @@ public class ResultSummary implements Serializable {
 	    this.peptideInstanceArray = peptideInstanceArray;
 	}
 
-	public ProteinSet[] getProteinSetArray() {
+	/*public ProteinSet[] getProteinSetArray() {
 	    return proteinSetArray;
 	}
 
@@ -257,7 +257,7 @@ public class ResultSummary implements Serializable {
 	    if (proteinSetArray!=null) {
 	    	numberOfProteinSets = Integer.valueOf(proteinSetArray.length);
 	    }
-	}
+	}*/
 
 	public Integer getNumberOfProteinSet() {
 	    return numberOfProteinSets;
@@ -275,13 +275,13 @@ public class ResultSummary implements Serializable {
 	    this.dataSet = dataSet;
 	}
 
-	public PeptideMatch[] getPeptideMatches() {
+	/*public PeptideMatch[] getPeptideMatches() {
 	    return peptideMatches;
 	}
 
 	public void setPeptideMatches(PeptideMatch[] peptideMatches) {
 	    this.peptideMatches = peptideMatches;
-	}
+	}*/
 
 	
 	// JPM.TEST
