@@ -154,8 +154,9 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	private static final long serialVersionUID = 1L;
 
 	private SequenceMatch sequenceMatch = null;
-	private ArrayList<ProteinSet> proteinSetArray = null; // Protein Groups where the peptide has been
-							      // found
+
+	private ArrayList<DProteinSet> proteinSetArray = null;
+	
 	private HashMap<Integer, PeptidePtm> peptidePtmMap = null;
 
 	protected TransientData() {
@@ -169,13 +170,6 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	    this.sequenceMatch = sequenceMatch;
 	}
 
-	public ArrayList<ProteinSet> getProteinSetArray() {
-	    return proteinSetArray;
-	}
-
-	public void setProteinSetArray(ArrayList<ProteinSet> proteinSetArray) {
-	    this.proteinSetArray = proteinSetArray;
-	}
 
 	public HashMap<Integer, PeptidePtm> getPeptidePtmMap() {
 	    return peptidePtmMap;
@@ -186,14 +180,12 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	}
 
 	
-	//JPM.TEST
-	ArrayList<DProteinSet> dproteinSetArray = null;
-	public ArrayList<DProteinSet> getDProteinSetArray() {
-	    return dproteinSetArray;
+	public ArrayList<DProteinSet> getProteinSetArray() {
+	    return proteinSetArray;
 	}
 
-	public void setDProteinSetArray(ArrayList<DProteinSet> proteinSetArray) {
-		dproteinSetArray = proteinSetArray;
+	public void setProteinSetArray(ArrayList<DProteinSet> proteinSetArray) {
+		this.proteinSetArray = proteinSetArray;
 	}
 	
 	

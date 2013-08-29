@@ -98,10 +98,6 @@ public class PeptideInstance implements Serializable {
      * public PeptideInstance() { }
      */
 
-    // Transient Variable not saved in database
-    @Transient
-    private PeptideMatch bestPeptideMatch = null; // JPM.DEPRECATED : will remove it
-
     // Transient Variables not saved in database
     @Transient
     private TransientData transientData = null;
@@ -243,19 +239,7 @@ public class PeptideInstance implements Serializable {
      * peptidesMatches; }
      */
 
-    /**
-     * Get of Transient peptideSet, Must be set by the user first.
-     * 
-     * @return
-     */
-    public PeptideMatch getTransientBestPeptideMatch() { // JPM.DEPRECATED : will remove it
-	return bestPeptideMatch;
-    }
 
-    public void setTransientBestPeptideMatch(PeptideMatch bestPeptideMatch) { // JPM.DEPRECATED : will remove
-									      // it
-	this.bestPeptideMatch = bestPeptideMatch;
-    }
 
     public TransientData getTransientData() {
 	if (transientData == null) {
@@ -272,45 +256,27 @@ public class PeptideInstance implements Serializable {
     public static class TransientData implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private ProteinSet[] proteinSetArray = null;
-	private PeptideMatch bestPeptideMatch = null;
+	private DPeptideMatch bestPeptideMatch = null;
 
+	private DProteinSet[] proteinSetArray = null;
+	
 	protected TransientData() {
 	}
 
-	public ProteinSet[] getProteinSetArray() {
+	public DProteinSet[] getProteinSetArray() {
 	    return proteinSetArray;
 	}
 
-	public void setProteinSetArray(ProteinSet[] proteinSetArray) {
+	public void setProteinSetArray(DProteinSet[] proteinSetArray) {
 	    this.proteinSetArray = proteinSetArray;
 	}
 
-	public PeptideMatch getBestPeptideMatch() {
+	public DPeptideMatch getBestPeptideMatch() {
 	    return bestPeptideMatch;
 	}
 
-	public void setBestPeptideMatch(PeptideMatch bestPeptideMatch) {
-	    this.bestPeptideMatch = bestPeptideMatch;
-	}
-	
-	// JPM.TEST
-	private DProteinSet[] dproteinSetArray = null;
-	public DProteinSet[] getDProteinSetArray() {
-	    return dproteinSetArray;
-	}
-
-	public void setDProteinSetArray(DProteinSet[] proteinSetArray) {
-	    dproteinSetArray = proteinSetArray;
-	}
-	
-	private DPeptideMatch dbestPeptideMatch = null;
-	public DPeptideMatch getBestDPeptideMatch() {
-	    return dbestPeptideMatch;
-	}
-
-	public void setBestDPeptideMatch(DPeptideMatch bestPeptideMatch) {
-		dbestPeptideMatch = bestPeptideMatch;
+	public void setBestPeptideMatch(DPeptideMatch bestPeptideMatch) {
+		this.bestPeptideMatch = bestPeptideMatch;
 	}
 	
 	

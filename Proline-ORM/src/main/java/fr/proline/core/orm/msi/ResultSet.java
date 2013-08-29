@@ -87,8 +87,6 @@ public class ResultSet implements Serializable {
     @Transient
     private TransientData transientData = null;
     @Transient
-    private PeptideMatch[] peptideMatches = null; // JPM.TODO : remove it
-    @Transient
     private Map<String, Object> serializedPropertiesMap;
 
     public ResultSet() {
@@ -222,19 +220,7 @@ public class ResultSet implements Serializable {
 	return result;
     }
 
-    /**
-     * Get of Transient peptideMatches, Must be set beforehand.
-     * 
-     * @return
-     */
-    // JPM.TODO : remove two next methodes
-    public PeptideMatch[] getTransientPeptideMatches() {
-	return peptideMatches;
-    }
 
-    public void setTransientPeptideMatches(PeptideMatch[] peptideMatches) {
-	this.peptideMatches = peptideMatches;
-    }
 
     public TransientData getTransientData() {
 	if (transientData == null) {
@@ -267,9 +253,10 @@ public class ResultSet implements Serializable {
 		
 		private long[] peptideMatchIds;
 
-		/*private PeptideMatch[] peptideMatches;
-		private ProteinMatch[] proteinMatches;*/
-
+		private DPeptideMatch[] peptideMatches = null;
+		
+		private DProteinMatch[] proteinMatches = null;
+		
 		private Integer peptideMatchesCount = null;
 
 		private Integer proteinMatchesCount = null;
@@ -283,30 +270,6 @@ public class ResultSet implements Serializable {
 		public void setPeptideMatchIds(long[] peptideMatchIds) {
 			this.peptideMatchIds = peptideMatchIds;
 		}
-
-		
-		/*public PeptideMatch[] getPeptideMatches() {
-			return peptideMatches;
-		}
-
-		public void setPeptideMatches(PeptideMatch[] peptideMatches) {
-			this.peptideMatches = peptideMatches;
-			if (peptideMatches != null) {
-				peptideMatchesCount = Integer.valueOf(peptideMatches.length);
-			}
-		}*/
-		
-		
-		/*public ProteinMatch[] getProteinMatches() {
-			return proteinMatches;
-		}
-
-		public void setProteinMatches(ProteinMatch[] proteinMatches) {
-			this.proteinMatches = proteinMatches;
-			if (proteinMatches != null) {
-				proteinMatchesCount = Integer.valueOf(proteinMatches.length);
-			}
-		}*/
 
 
 		public Integer getPeptideMatchesCount() {
@@ -328,28 +291,24 @@ public class ResultSet implements Serializable {
 		public Integer getMSQueriesCount() {
 			return msQueriesCount;
 		}
-		
-		//JPM.TEST
-		
-		private DPeptideMatch[] dpeptideMatches;
-		public DPeptideMatch[] getDPeptideMatches() {
-			return dpeptideMatches;
+
+		public DPeptideMatch[] getPeptideMatches() {
+			return peptideMatches;
 		}
 
-		public void setDPeptideMatches(DPeptideMatch[] peptideMatches) {
-			dpeptideMatches = peptideMatches;
+		public void setPeptideMatches(DPeptideMatch[] peptideMatches) {
+			this.peptideMatches = peptideMatches;
 			if (peptideMatches != null) {
 				peptideMatchesCount = Integer.valueOf(peptideMatches.length);
 			}
 		}
-		
-		private DProteinMatch[] dproteinMatches;
-		public DProteinMatch[] getDProteinMatches() {
-			return dproteinMatches;
+
+		public DProteinMatch[] getProteinMatches() {
+			return proteinMatches;
 		}
 
-		public void setDProteinMatches(DProteinMatch[] proteinMatches) {
-			dproteinMatches = proteinMatches;
+		public void setProteinMatches(DProteinMatch[] proteinMatches) {
+			this.proteinMatches = proteinMatches;
 			if (proteinMatches != null) {
 				proteinMatchesCount = Integer.valueOf(proteinMatches.length);
 			}

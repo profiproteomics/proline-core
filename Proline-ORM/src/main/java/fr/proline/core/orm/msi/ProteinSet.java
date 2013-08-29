@@ -67,10 +67,6 @@ public class ProteinSet implements Serializable {
     @CollectionTable(name = "protein_set_object_tree_map", joinColumns = @JoinColumn(name = "protein_set_id", referencedColumnName = "id"))
     private Map<String, Long> objectTreeIdByName;
 
-    // Transient data not saved in database
-    //@Transient
-    //private TransientData transientData = null;
-
     public ProteinSet() {
     }
 
@@ -180,88 +176,5 @@ public class ProteinSet implements Serializable {
 	return result;
     }
 
-    /*public TransientData getTransientData() {
-	if (transientData == null) {
-	    transientData = new TransientData();
-	}
-	return transientData;
-    }*/
-
-    /**
-     * Transient Data which will be not saved in database Used by the Proline Studio IHM
-     * 
-     * @author JM235353
-     */
-    /*public static class TransientData implements Serializable {
-	private static final long serialVersionUID = 1L;
-
-	private ProteinMatch typicalProteinMatch = null;
-	private ProteinMatch[] sameSet = null; // loaded later than sameSetCount
-	private ProteinMatch[] subSet = null; // loaded later than subSetCount
-	private Integer spectralCount = null;
-	private Integer specificSpectralCount = null;
-	private Integer sameSetCount = null;
-	private Integer subSetCount = null;
-
-	protected TransientData() {
-	}
-
-	public ProteinMatch getTypicalProteinMatch() {
-	    return typicalProteinMatch;
-	}
-
-	public void setTypicalProteinMatch(ProteinMatch p) {
-	    typicalProteinMatch = p;
-	}
-
-	public ProteinMatch[] getSameSet() {
-	    return sameSet;
-	}
-
-	public void setSameSet(ProteinMatch[] sameSet) {
-	    this.sameSet = sameSet;
-	}
-
-	public ProteinMatch[] getSubSet() {
-	    return subSet;
-	}
-
-	public void setSubSet(ProteinMatch[] subSet) {
-	    this.subSet = subSet;
-	}
-
-	public Integer getSpectralCount() {
-	    return spectralCount;
-	}
-
-	public void setSpectralCount(Integer spectralCount) {
-	    this.spectralCount = spectralCount;
-	}
-
-	public Integer getSpecificSpectralCount() {
-	    return specificSpectralCount;
-	}
-
-	public void setSpecificSpectralCount(Integer specificSpectralCount) {
-	    this.specificSpectralCount = specificSpectralCount;
-	}
-
-	public Integer getSameSetCount() {
-	    return sameSetCount;
-	}
-
-	public void setSameSetCount(Integer sameSetCount) {
-	    this.sameSetCount = sameSetCount;
-	}
-
-	public Integer getSubSetCount() {
-	    return subSetCount;
-	}
-
-	public void setSubSetCount(Integer subSetCount) {
-	    this.subSetCount = subSetCount;
-	}
-
-    }*/
 
 }

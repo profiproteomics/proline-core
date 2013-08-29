@@ -15,7 +15,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 /**
  * The persistent class for the protein_match database table.
@@ -82,9 +81,6 @@ public class ProteinMatch implements Serializable {
     @OneToMany(mappedBy = "proteinMatch")
     private Set<ProteinSetProteinMatchItem> proteinSetProteinMatchItems;
 
-    // Transient Variables not saved in database
-    //@Transient
-    //private TransientData transientData = null;
 
     public ProteinMatch() {
     }
@@ -216,96 +212,5 @@ public class ProteinMatch implements Serializable {
     public void setIsLastBioSequence(final boolean pIsLastBioSequence) {
 	isLastBioSequence = pIsLastBioSequence;
     }
-
-    /*public TransientData getTransientData() {
-	if (transientData == null) {
-	    transientData = new TransientData();
-	}
-	return transientData;
-    }*/
-
-    /**
-     * Transient Data which will be not saved in database Used by the Proline Studio IHM
-     * 
-     * @author JM235353
-     */
-    /*public static class TransientData implements Serializable {
-	private static final long serialVersionUID = 1L;
-
-	private HashMap<Long, PeptideSet> peptideSetMap = null;
-	private fr.proline.core.orm.msi.BioSequence bioSequenceMSI = null;
-	private fr.proline.core.orm.pdi.BioSequence bioSequencePDI = null; // bioSequence is not always
-									   // available in MSI, in this case,
-									   // we look for it in PDI
-	private boolean noBioSequenceFound = false;
-	
-	private ProteinSet[] proteinSetArray = null;
-
-	private PeptideMatch[] peptideMatches;
-	
-	protected TransientData() {
-	}
-
-	public PeptideMatch[] getPeptideMatches() {
-		return peptideMatches;
-	}
-
-	public void setPeptideMatches(PeptideMatch[] peptideMatches) {
-		this.peptideMatches = peptideMatches;
-	}
-	
-	
-	public PeptideSet getPeptideSet(Long resultSummaryId) {
-	    if (peptideSetMap == null) {
-		return null;
-	    }
-	    return peptideSetMap.get(resultSummaryId);
-	}
-
-	public Set<Long> getRecordedRsmId() {
-	    return peptideSetMap.keySet();
-	}
-
-	public void setPeptideSet(Long resultSummaryId, PeptideSet peptideSet) {
-	    if (peptideSetMap == null) {
-		peptideSetMap = new HashMap<Long, PeptideSet>();
-	    }
-	    peptideSetMap.put(resultSummaryId, peptideSet);
-	}
-
-	public fr.proline.core.orm.msi.BioSequence getBioSequenceMSI() {
-	    return bioSequenceMSI;
-	}
-
-	public void setBioSequenceMSI(fr.proline.core.orm.msi.BioSequence bioSequence) {
-	    this.bioSequenceMSI = bioSequence;
-	}
-
-	public fr.proline.core.orm.pdi.BioSequence getBioSequencePDI() {
-	    return bioSequencePDI;
-	}
-
-	public void setBioSequencePDI(fr.proline.core.orm.pdi.BioSequence bioSequence) {
-	    this.bioSequencePDI = bioSequence;
-	}
-	
-	public boolean getNoBioSequenceFound() {
-	    return noBioSequenceFound;
-	}
-
-	public void setNoBioSequenceFound(boolean noBioSequenceFound) {
-	    this.noBioSequenceFound = noBioSequenceFound;
-	}
-
-	// no longer used
-	public ProteinSet[] getProteinSetArray() {
-	    return proteinSetArray;
-	}
-
-	public void setProteinSetArray(ProteinSet[] proteinSetArray) {
-	    this.proteinSetArray = proteinSetArray;
-	}
-
-    }*/
 
 }

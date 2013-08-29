@@ -21,7 +21,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import fr.proline.util.StringUtils;
 
@@ -97,10 +96,6 @@ public class PeptideMatch implements Serializable {
     @Column(name = "object_tree_id")
     @CollectionTable(name = "peptide_match_object_tree_map", joinColumns = @JoinColumn(name = "peptide_match_id", referencedColumnName = "id"))
     private Map<String, Long> objectTreeIdByName;
-
-    // Transient Variable not saved in database
-    /*@Transient
-    private TransientData transientData = null;*/
 
     public PeptideMatch() {
     }
@@ -269,61 +264,5 @@ public class PeptideMatch implements Serializable {
 	return result;
     }
 
-    /*public TransientData getTransientData() {
-	if (transientData == null) {
-	    transientData = new TransientData();
-	}
-	return transientData;
-    }*/
-
-    /**
-     * Transient Data which will be not saved in database Used by the Proline Studio IHM
-     * 
-     * @author JM235353
-     */
-    /*public static class TransientData implements Serializable {
-	private static final long serialVersionUID = 1L;
-
-	private Peptide peptide = null;
-	private boolean isMsQuerySet = false;
-	private ProteinMatch[] proteinMatchArray = null;
-	private String m_proteinSetStringList = null;
-
-	protected TransientData() {
-	}
-
-	public Peptide getPeptide() {
-	    return peptide;
-	}
-
-	public void setPeptide(Peptide peptide) {
-	    this.peptide = peptide;
-	}
-
-	public boolean getIsMsQuerySet() {
-	    return isMsQuerySet;
-	}
-
-	public void setIsMsQuerySet(boolean isMsQuerySet) {
-	    this.isMsQuerySet = isMsQuerySet;
-	}
-
-	public ProteinMatch[] getProteinMatches() {
-	    return proteinMatchArray;
-	}
-
-	public void setProteinMatches(ProteinMatch[] proteinMatchArray) {
-	    this.proteinMatchArray = proteinMatchArray;
-	}
-
-	public void setProteinSetStringList(String s) {
-	    m_proteinSetStringList = s;
-	}
-
-	public String getProteinSetStringList() {
-	    return m_proteinSetStringList;
-	}
-
-    }*/
 
 }

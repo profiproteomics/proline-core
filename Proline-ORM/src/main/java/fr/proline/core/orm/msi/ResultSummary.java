@@ -231,9 +231,11 @@ public class ResultSummary implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private PeptideInstance[] peptideInstanceArray = null;
-	//private ProteinSet[] proteinSetArray = null;
-	//private PeptideMatch[] peptideMatches;
 
+	private long[] peptideMatchesId;
+	private DPeptideMatch[] peptideMatches;
+	private DProteinSet[] proteinSetArray = null;
+	
 	private Dataset dataSet = null;
 	private Integer numberOfProteinSets = null;
 
@@ -247,17 +249,6 @@ public class ResultSummary implements Serializable {
 	public void setPeptideInstanceArray(PeptideInstance[] peptideInstanceArray) {
 	    this.peptideInstanceArray = peptideInstanceArray;
 	}
-
-	/*public ProteinSet[] getProteinSetArray() {
-	    return proteinSetArray;
-	}
-
-	public void setProteinSetArray(ProteinSet[] proteinSetArray) {
-	    this.proteinSetArray = proteinSetArray;
-	    if (proteinSetArray!=null) {
-	    	numberOfProteinSets = Integer.valueOf(proteinSetArray.length);
-	    }
-	}*/
 
 	public Integer getNumberOfProteinSet() {
 	    return numberOfProteinSets;
@@ -275,44 +266,33 @@ public class ResultSummary implements Serializable {
 	    this.dataSet = dataSet;
 	}
 
-	/*public PeptideMatch[] getPeptideMatches() {
+	
+	public DProteinSet[] getProteinSetArray() {
+	    return proteinSetArray;
+	}
+
+	public void setProteinSetArray(DProteinSet[] proteinSetArray) {
+		this.proteinSetArray = proteinSetArray;
+	    if (proteinSetArray!=null) {
+	    	numberOfProteinSets = Integer.valueOf(proteinSetArray.length);
+	    }
+	}
+
+	public DPeptideMatch[] getPeptideMatches() {
 	    return peptideMatches;
 	}
 
-	public void setPeptideMatches(PeptideMatch[] peptideMatches) {
+	public void setPeptideMatches(DPeptideMatch[] peptideMatches) {
 	    this.peptideMatches = peptideMatches;
-	}*/
-
-	
-	// JPM.TEST
-	private DProteinSet[] dproteinSetArray = null;
-	public DProteinSet[] getDProteinSetArray() {
-	    return dproteinSetArray;
-	}
-
-	public void setDProteinSetArray(DProteinSet[] proteinSetArray) {
-		dproteinSetArray = proteinSetArray;
-	    if (dproteinSetArray!=null) {
-	    	numberOfProteinSets = Integer.valueOf(dproteinSetArray.length);
-	    }
 	}
 	
-	private DPeptideMatch[] dpeptideMatches;
-	public DPeptideMatch[] getDPeptideMatches() {
-	    return dpeptideMatches;
-	}
-
-	public void setDPeptideMatches(DPeptideMatch[] peptideMatches) {
-	    dpeptideMatches = peptideMatches;
-	}
 	
-	private long[] dpeptideMatchesId;
-	public long[] getDPeptideMatchesId() {
-	    return dpeptideMatchesId;
+	public long[] getPeptideMatchesId() {
+	    return peptideMatchesId;
 	}
 
-	public void setDPeptideMatchesId(long[] peptideMatchesId) {
-		dpeptideMatchesId = peptideMatchesId;
+	public void setPeptideMatchesId(long[] peptideMatchesId) {
+		this.peptideMatchesId = peptideMatchesId;
 	}
 	
 	

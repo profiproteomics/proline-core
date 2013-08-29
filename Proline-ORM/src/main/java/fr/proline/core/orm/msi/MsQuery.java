@@ -22,7 +22,7 @@ import javax.persistence.Transient;
  */
 @Entity
 @Table(name = "ms_query")
-public class MsQuery implements Serializable /*, Comparable<MsQuery>*/ {
+public class MsQuery implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -53,13 +53,6 @@ public class MsQuery implements Serializable /*, Comparable<MsQuery>*/ {
     @OneToMany(mappedBy = "msQuery")
     private Set<PeptideMatch> peptideMatches;
 
-    // Transient Variables not saved in database
-    //@Transient
-    //private boolean isSpectrumSet = false;
-    
-    //@Transient
-    //private Float precursorIntensity =null;
-    
     
     public MsQuery() {
     }
@@ -153,36 +146,5 @@ public class MsQuery implements Serializable /*, Comparable<MsQuery>*/ {
 
     }
 
-    /**
-     * Method for Comparable interface. Compare Peptides according to their sequence
-     * 
-     * @param p
-     * @return
-     */
-    /*@Override
-    public int compareTo(final MsQuery otherQuery) {
-   	 return Integer.valueOf(getInitialId()).compareTo(Integer.valueOf(otherQuery.getInitialId()));
-    }
-
-    public boolean getTransientIsSpectrumSet() {
-	return isSpectrumSet;
-    }
-
-    public void setTransientIsSpectrumSet(boolean isSpectrumSet) {
-	this.isSpectrumSet = isSpectrumSet;
-    }
-
-    public Float getTransientPrecursorIntensity() {
-    	return precursorIntensity;
-    }
-    
-    public void setTransientPrecursorIntensity(Float precursorIntensity) {
-    	this.precursorIntensity = precursorIntensity;
-    }
-    
-    @Override
-    public String toString() {
-	return Integer.toString(getInitialId());
-    }*/
 
 }
