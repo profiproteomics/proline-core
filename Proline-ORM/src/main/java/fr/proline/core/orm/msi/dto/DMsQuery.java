@@ -63,4 +63,9 @@ public class DMsQuery implements Comparable<DMsQuery> {
     public int compareTo(final DMsQuery otherQuery) {
         return Integer.valueOf(getInitialId()).compareTo(Integer.valueOf(otherQuery.getInitialId()));
     }
+    
+    @Override
+    public String toString() {
+	    return Integer.toString(getInitialId());
+    }
 }
