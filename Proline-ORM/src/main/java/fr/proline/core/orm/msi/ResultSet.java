@@ -355,14 +355,7 @@ public class ResultSet implements Serializable {
 			}
 		}
 		
-		private long[] dpeptideMatchesId;
-		public long[] getDPeptideMatchesId() {
-			return dpeptideMatchesId;
-		}
 
-		public void setDPeptideMatchesId(long[] peptideMatchesId) {
-			dpeptideMatchesId = peptideMatchesId;
-		}
 
 	}
 
