@@ -166,7 +166,7 @@ case class ProteinSet (
                  @transient var proteinMatches: Option[Array[ProteinMatch]] = null,
                  
                  protected var typicalProteinMatchId: Long = 0,
-                 @transient var typicalProteinMatch: Option[ProteinMatch] = null,
+                 @transient protected var typicalProteinMatch: Option[ProteinMatch] = null,
                  
                  var isValidated: Boolean = true,
                  var selectionLevel: Int = 2,
@@ -175,11 +175,26 @@ case class ProteinSet (
                  var proteinMatchPropertiesById: Map[Long, ProteinMatchResultSummaryProperties ] = null
                  
                  ) {
-  
+
   lazy val peptideSetId = peptideSet.id
   
   // Requirements
   require( proteinMatchIds != null || proteinMatches != null )
+  
+
+    
+  def setTypicalProteinMatch(newTypicalPM : ProteinMatch) :Unit = {
+	  require(newTypicalPM != null ,"A typical ProteinMatch should be defined !")
+	  if(proteinMatches!= null && proteinMatches.isDefined) 
+		  require(proteinMatches.get.contains(newTypicalPM) ,"Typical ProteinMatch should belong to this ProteinSet !")
+	  else
+		  require(proteinMatchIds.contains(newTypicalPM.id) ,"Typical ProteinMatch should belong to this ProteinSet !")
+		  	  
+	  typicalProteinMatchId = newTypicalPM.id
+	  typicalProteinMatch = Some(newTypicalPM)
+  }
+  
+  def getTypicalProteinMatch() :Option[ProteinMatch]={typicalProteinMatch}
   
   def getProteinMatchIds : Array[Long] = { if(proteinMatches != null && proteinMatches != None) proteinMatches.get.map(_.id)  else proteinMatchIds  }
 

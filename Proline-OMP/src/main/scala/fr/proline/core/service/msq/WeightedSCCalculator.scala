@@ -367,8 +367,8 @@ class WeightedSCCalculator (
       
       //-- Get Typical Protein Match Accession 
       var pmAccession : String = null
-      if(protSet.typicalProteinMatch!=null && protSet.typicalProteinMatch.isDefined){
-    	  pmAccession = protSet.typicalProteinMatch.get.accession 
+      if(protSet.getTypicalProteinMatch!=null && protSet.getTypicalProteinMatch.isDefined){
+    	  pmAccession = protSet.getTypicalProteinMatch.get.accession 
       } else {    	  
     	  val jdbcWork = new JDBCWork() {
         	  override def execute(con: Connection) {
