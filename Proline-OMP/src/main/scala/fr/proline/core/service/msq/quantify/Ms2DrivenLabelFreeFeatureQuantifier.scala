@@ -12,7 +12,7 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.service.lcms.io.ExtractMapSet2
+import fr.proline.core.service.lcms.io.ExtractMapSet
 import fr.proline.repository.IDataStoreConnectorFactory
 
 class Ms2DrivenLabelFreeFeatureQuantifier(
