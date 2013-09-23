@@ -9,8 +9,6 @@ import scala.collection.mutable.HashMap
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.model.msq.MasterQuantProteinSetProfile
-import fr.proline.core.algo.msq.Profilizer
-import fr.proline.core.orm.uds.MasterQuantitationChannel
 
 class ExportMasterQuantProtSetProfiles(
   val execCtx: IExecutionContext,
@@ -31,13 +29,13 @@ class ExportMasterQuantProtSetProfiles(
   
   def writeRows( fileWriter: PrintWriter ) {
     
+    // Compute the prot set profiles using the profilizer
+    import fr.proline.core.algo.msq.Profilizer
+    import fr.proline.core.orm.uds.MasterQuantitationChannel
     val udsEM = execCtx.getUDSDbConnectionContext().getEntityManager()
     val udsMQC = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)
-    
-    // Compute the prot set profiles using the profilizer
     val profilizer = new Profilizer( expDesign, 1, udsMQC.getNumber() )
-    
-    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, 0.01f)
+    /*profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, 0.01f)*/
     profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, 0.01f)
         
     // Iterate over master quant peptides to export them
@@ -71,7 +69,7 @@ class ExportMasterQuantProtSetProfiles(
         // Iterate over all profiles to eacport them
         for( props <- mqProtSet.properties;
              profileByGSNum <- props.getMqProtSetProfilesByGroupSetupNumber;
-             profiles <- profileByGSNum.get(groupSetupNumber);
+             profiles <- profileByGSNum.get(groupSetupNumber.toString);
              profile <- profiles
            ) {
           exportProfile( profile )

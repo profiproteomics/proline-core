@@ -84,6 +84,7 @@ case class QuantPeptideIon(  val rawAbundance: Float,
                              val scanNumber: Int,
                              
                              var peptideMatchesCount: Int,
+                             var ms2MatchingFrequency: Option[Float], // TODO: remove the Option
                              var bestPeptideMatchScore: Option[Float] = None,
                              var predictedElutionTime: Option[Float] = None,
                              var predictedScanNumber: Option[Int] = None,
@@ -92,13 +93,19 @@ case class QuantPeptideIon(  val rawAbundance: Float,
                              val peptideId: Option[Long] = None,
                              val peptideInstanceId: Option[Long] = None,
                              val msQueryIds: Option[Array[Long]] = None,
-                             val lcmsFeatureId: Long, // TODO set as Option[Int] = None
+                             val lcmsFeatureId: Long, // TODO: set as Option[Long] = None
                              val lcmsMasterFeatureId: Option[Long] = None,
                              val unmodifiedPeptideIonId: Option[Long] = None,
                              
                              var selectionLevel: Int = 2
 
                            ) extends LcmsQuantComponent {
+  
+  // Check some requirements
+  if( ms2MatchingFrequency.isDefined ) {
+    val freq = ms2MatchingFrequency.get
+    require( freq >= 0f && freq <= 1f, "MS2 matching frequency must be a number between 0 and 1, but not " + freq )
+  }
   
 }
 
@@ -306,12 +313,24 @@ case class MasterQuantProteinSet(
     val props = this.properties.get
     if( props.getMqProtSetProfilesByGroupSetupNumber.isEmpty ) return None
     
-    val profilesOpt = props.getMqProtSetProfilesByGroupSetupNumber.get.get(groupSetupNumber)
+    val profilesOpt = props.getMqProtSetProfilesByGroupSetupNumber.get.get(groupSetupNumber.toString)
     if( profilesOpt.isEmpty ) return None
     
-    val profiles = profilesOpt.get
+    var profiles = profilesOpt.get
     if( profiles.length == 0 ) return None
     
+    // Check if we have a poor number of peptides
+    // TODO: use properties.get.getSelectedMasterQuantPeptideIds.get instead when it is correctly stored
+    if ( masterQuantPeptides.length < 5 ) {
+      
+      // Keep only profiles with highest number of defined ratios
+      def countDefinedRatios(profile: MasterQuantProteinSetProfile) = profile.getRatios.count( _.map(_.ratioValue.isNaN == false).getOrElse(false) )
+      
+      val maxDefinedRatios = profiles.map(countDefinedRatios(_)).max
+      profiles = profiles.filter( countDefinedRatios(_) == maxDefinedRatios )     
+    }
+
+    // Sort profiles by the number of MQ peptides
     val profilesSortedByPepCount = profiles.sortWith { (a,b) => a.mqPeptideIds.length > b.mqPeptideIds.length }
     
     val bestProfile = if( profilesSortedByPepCount.length == 1 ) {

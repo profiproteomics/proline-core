@@ -95,7 +95,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
   protected def linkProcessedMapToRunMaps( ezDBC: EasyDBC, processedMap: ProcessedMap ): Unit = {
     
     ezDBC.executePrepared(LcmsDbProcessedMapRunMapMappingTable.mkInsertQuery) { statement => 
-      processedMap.runMapIds.foreach { runMapId =>
+      processedMap.getRunMapIds.foreach { runMapId =>
         statement.executeWith( processedMap.id, runMapId )
       }
     }
@@ -111,14 +111,14 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
       processedMap.features.foreach { feature =>
         
         // Update feature map id
-        feature.relations.mapId = processedMapId
+        feature.relations.processedMapId = processedMapId
         
         if( feature.isCluster ) {
 
           // Store cluster sub-features
           for( subFt <- feature.subFeatures ) {
             // Update sub-feature map id
-            subFt.relations.mapId = processedMapId
+            subFt.relations.processedMapId = processedMapId
             // Store the processed feature
             _insertProcessedMapFtItemUsingWrappedStatement( subFt, statement )
           }
@@ -164,7 +164,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
         features.withFilter( _.isCluster ).foreach { clusterFt =>
           for( subFt <- clusterFt.subFeatures ) {
             //subFtIds += subFt.id
-            statement.executeWith( clusterFt.id, subFt.id, clusterFt.relations.mapId )
+            statement.executeWith( clusterFt.id, subFt.id, clusterFt.relations.processedMapId )
           }
         }
       }
@@ -183,12 +183,12 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
   private def _insertProcessedMapFtItemUsingWrappedStatement( ft: Feature, statement: StatementWrapper ): Unit = {
     
     require( ft.id > 0, "features must be persisted first")
-    require( ft.relations.mapId > 0, "features must belong to a persisted map")
+    require( ft.relations.processedMapId > 0, "features must belong to a persisted processed map")
     
     // TODO: store properties
     
     statement.executeWith(
-      ft.relations.mapId,
+      ft.relations.processedMapId,
       ft.id,
       ft.getCalibratedMozOrMoz,
       ft.getNormalizedIntensityOrIntensity,

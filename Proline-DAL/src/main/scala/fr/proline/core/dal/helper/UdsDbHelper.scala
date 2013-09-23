@@ -154,14 +154,12 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
   def getMasterQuantChannelQuantRsmId( masterQuantChannelId: Long ): Option[Long] = {
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
-      val queryBuilder = new SelectQueryBuilder1(UdsDbMasterQuantChannelTable)
-      val query = queryBuilder.mkSelectQuery(
+      val sqlQuery = new SelectQueryBuilder1(UdsDbMasterQuantChannelTable).mkSelectQuery(
         (t1,c1) => List(t1.QUANT_RESULT_SUMMARY_ID) -> 
         " WHERE "~ t1.ID ~" = "~ masterQuantChannelId
       )
       
-      ezDBC.selectHeadOption(query) { _.nextLong }
-      
+      ezDBC.selectHeadOption(sqlQuery) { _.nextLong }
     })
     
   }
@@ -169,14 +167,26 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
   def getQuantChannelIds( masterQuantChannelId: Long ): Array[Long] = {
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
-      val quantChannelQueryBuilder = new SelectQueryBuilder1(UdsDbQuantChannelTable)
-      val quantChannelQuery = quantChannelQueryBuilder.mkSelectQuery(
+      val quantChannelQuery = new SelectQueryBuilder1(UdsDbQuantChannelTable).mkSelectQuery(
         (t1,c1) => List(t1.ID) -> 
         " WHERE "~ t1.MASTER_QUANT_CHANNEL_ID ~" = "~ masterQuantChannelId ~
         " ORDER BY "~ t1.NUMBER
       )
       
       ezDBC.selectLongs(quantChannelQuery)
+    })
+    
+  }
+  
+  def getQuantitationId( masterQuantChannelId: Long ): Option[Long] = {
+    
+    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+      val sqlQuery = new SelectQueryBuilder1(UdsDbMasterQuantChannelTable).mkSelectQuery(
+        (t1,c1) => List(t1.QUANTITATION_ID) -> 
+        " WHERE "~ t1.ID ~" = "~ masterQuantChannelId
+      )
+      
+      ezDBC.selectHeadOption(sqlQuery) { _.nextLong }
     })
     
   }

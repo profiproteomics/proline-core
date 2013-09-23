@@ -126,6 +126,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
             correctedElutionTime = 0,
             scanNumber = 0,
             peptideMatchesCount = pepMatchesCount,
+            ms2MatchingFrequency = Some(1f),
             bestPeptideMatchScore = Some(bestRsPepMatchScore),
             quantChannelId = qcId,
             peptideId = Some(bestRsPepMatch.peptideId),

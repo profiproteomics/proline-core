@@ -41,7 +41,7 @@ class ClusterizeMapFeatures(val lcmsDbCtx: DatabaseConnectionContext, lcmsMap: P
     // Make some requirements
     require(lcmsMap.isProcessed, "the map must be a processed map")
 
-    val runMapIds = lcmsMap.runMapIds
+    val runMapIds = lcmsMap.getRunMapIds
     require(runMapIds.length == 1, "the processed map must correspond to a unique run map")
 
     // Check if a transaction is already initiated

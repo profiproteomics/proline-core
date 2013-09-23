@@ -47,11 +47,11 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
 
         // Loop over features to import them        
         for (ft <- runMap.features) {
-          ft.relations.mapId = newRunMapId
-  
+          ft.relations.runMapId = newRunMapId
+          
           val newFtId = this.insertFeatureUsingPreparedStatement(ft, featureInsertStmt)
           ft.id = newFtId
-  
+          
           flattenedFeatures += ft
   
           // Import overlapping features
@@ -161,6 +161,8 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
     val theoFtId = if (ftRelations.theoreticalFeatureId == 0) None else Some(ftRelations.theoreticalFeatureId)
     val compoundId = if (ftRelations.compoundId == 0) None else Some(ftRelations.compoundId)
     val mapLayerId = if (ftRelations.mapLayerId == 0) None else Some(ftRelations.mapLayerId)
+    val mapId = ft.getSourceMapId
+    require( mapId > 0, "the feature must be associated with a persisted LC-MS Map" )
     
     stmt.executeWith(
       ft.moz,
@@ -179,7 +181,7 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
       theoFtId,
       compoundId,
       mapLayerId,
-      ftRelations.mapId
+      mapId
     )
 
     stmt.generatedLong

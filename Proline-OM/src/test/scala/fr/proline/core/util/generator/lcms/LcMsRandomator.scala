@@ -50,7 +50,7 @@ object LcMsRandomator {
   }
   
   def randomDuration(minDuration: Float, maxDuration: Float, stdDev: Float ): Float = {
-    randomGaussian(minDuration.toDouble, maxDuration.toDouble, stdDev.toDouble ).toFloat   
+    randomGaussian(minDuration.toDouble, maxDuration.toDouble, stdDev.toDouble ).toFloat 
   }
   
   /*def scaleDurationStdDev(stdDevRef: Float, intensityRatio: Float): Float = {
@@ -58,11 +58,26 @@ object LcMsRandomator {
   }*/
  
   def fluctuateValue( value: Float, error: Float ): Float = {
+    require( error >= 0 )
+    
     value + (Random.nextGaussian.toFloat * error)
   }
   
   def fluctuateValue( value: Double, error: Double ): Double = {
-    value + (Random.nextGaussian.toFloat * error)
+    require( error >= 0 )
+    
+    value + (Random.nextGaussian * error)
+  }
+  
+  def fluctuateValue( value: Float, error: Float, maxError: Float ): Float = {
+    fluctuateValue( value.toDouble, error.toDouble, maxError.toDouble ).toFloat 
+  }
+  
+  def fluctuateValue( value: Double, error: Double, maxError: Double ): Double = {
+    require( error >= 0 )
+    require( maxError >= 0 )
+    
+    randomGaussian( value - maxError/2, value + maxError/2, error ) 
   }
   //def randomFeature(): Feature = null
   

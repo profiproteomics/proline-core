@@ -3,6 +3,8 @@ package fr.proline.core.service.lcms.io
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
 import com.weiglewilczek.slf4s.Logging
+
+import fr.profi.jdbc.easy._
 import fr.profi.mzdb.MzDbFeatureExtractor
 import fr.profi.mzdb.MzDbReader
 import fr.profi.mzdb.io.reader.RunSliceDataProvider
@@ -11,10 +13,13 @@ import fr.profi.mzdb.model.PutativeFeature
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
 import fr.proline.core.dal.helper.LcmsDbHelper
+import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.om.model.lcms.{ Feature => LcMsFeature, IsotopicPattern => LcMsIsotopicPattern }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
+import fr.proline.core.om.storer.lcms.MasterMapStorer
+import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.core.om.storer.lcms.RunMapStorer
 import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
 import fr.proline.core.service.lcms.ILcMsService
@@ -52,7 +57,7 @@ class ExtractMapSet(
   protected val pps = new PeakPickingSoftware(
     id = 1,
     name = "Proline",
-    version = "0.0.9",
+    version = "0.1.1",
     algorithm = "ExtractMapSet"
   )
   
@@ -68,6 +73,7 @@ class ExtractMapSet(
     val lcmsRunByRunMapId = new collection.mutable.HashMap[Long,LcMsRun]
     val mzDbFileByRunMapId = new collection.mutable.HashMap[Long,File]
     val runMaps = new ArrayBuffer[RunMap]
+    
     for( val lcmsRun <- lcMsRuns ) {
       
       val mzDbFilePath = lcmsRun.rawFile.properties.get.getMzdbFilePath
@@ -100,6 +106,7 @@ class ExtractMapSet(
     var mapNumber = 0
     var alnRefMapId: Long = 0L
     val processedMaps = new Array[ProcessedMap](runMaps.length)
+    val processedMapByRunMapId = new collection.mutable.HashMap[Long,ProcessedMap]
     
     for( runMap <- runMaps ) {
       mapNumber += 1
@@ -114,6 +121,7 @@ class ExtractMapSet(
       }
       
       processedMaps(mapNumber-1) = processedMap
+      processedMapByRunMapId += runMap.id -> processedMap
     }
     
     val mapSet = new MapSet(
@@ -124,7 +132,7 @@ class ExtractMapSet(
       alnReferenceMapId = alnRefMapId
     )
     
-    // TODO: perform the feature clustering ???
+    // TODO: clean maps and perform the feature clustering ???
     val childMapsWithoutClusters = mapSet.childMaps
     
     // --- Perform the LC-MS maps alignment ---
@@ -153,9 +161,20 @@ class ExtractMapSet(
     
     // --- Extract LC-MS missing features in all raw files ---
     val x2RunMaps = new ArrayBuffer[RunMap]
-    for( (mzDbMapId,mzDbFile) <- mzDbFileByRunMapId ) {      
-      val lcmsRun = lcmsRunByRunMapId(mzDbMapId)
-      x2RunMaps += this._extractRunMapUsingMasterMap(mzDbFile,mzDbMapId,lcmsRun,mapSet)
+    val x2ProcessedMaps = new ArrayBuffer[ProcessedMap]
+    for( runMap <- runMaps ) {
+      val runMapId = runMap.id
+      val mzDbFile = mzDbFileByRunMapId(runMapId)
+      val lcmsRun = lcmsRunByRunMapId(runMapId)
+      val processedMap = processedMapByRunMapId(runMapId)
+      val newLcmsFeatures = this._extractMissingFeatures(mzDbFile,lcmsRun,runMap,processedMap,mapSet)      
+      
+      // Create a new run map with the extracted missing features
+      val x2RunMap = runMap.copy( features = runMap.features ++ newLcmsFeatures )
+      x2RunMaps += x2RunMap
+      
+      // Create a processed map for this runMap
+      x2ProcessedMaps += processedMap.copy( features = processedMap.features ++ newLcmsFeatures, runMapIdentifiers = Array(x2RunMap) )
     }
     
     // Instantiate a run map storer
@@ -167,10 +186,61 @@ class ExtractMapSet(
     }
     
     // --- Create the corresponding map set ---
-    val x2MapSet = CreateMapSet( lcmsDbCtx, mapSetName, x2RunMaps, clusteringParams )    
+    val x2MapSet = CreateMapSet( lcmsDbCtx, mapSetName, x2ProcessedMaps )
+    
+    // Attach the computed master map to the newly created map set
+    x2MapSet.masterMap = mapSet.masterMap
+    x2MapSet.masterMap.mapSetId = x2MapSet.id
+    x2MapSet.masterMap.runMapIdentifiers = x2RunMaps
+    
+    // --- Update and store the map alignment using processed maps with persisted ids ---
+    AlignMapSet(lcmsDbCtx, x2MapSet,alnMethodName, alnParams)
+    
+    val x2AlnResult = mapAligner.computeMapAlignments( x2ProcessedMaps, alnParams )
+    
+    // --- Normalize the processed maps ---
+    if (normalizationMethod != None && mapSet.childMaps.length > 1) {
+
+      // Instantiate a Cmd for map set normalization
+      logger.info("normalizing maps...")
+      
+      // Updates the normalized intensities
+      MapSetNormalizer(normalizationMethod.get).normalizeFeaturesIntensity(mapSet)
+
+      // Update master map feature intensity
+      logger.info("updating master map feature data...")
+      x2MapSet.masterMap = x2MapSet.masterMap.copy(features = MasterMapBuilder.rebuildMftsUsingBestChild(x2MapSet.masterMap.features))
+    }
+    
+    // --- Store the processed maps features ---
+    
+    // Instantiate a processed map storer
+    val processedMapStorer = ProcessedMapStorer( lcmsDbCtx )
+    
+    DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+      for( processedMap <- x2MapSet.childMaps ) {
+        
+        // Store the map
+        processedMapStorer.storeProcessedMap( processedMap )
+        
+        // Remember the mapping between temporary map id and persisted map id
+        //mapIdByTmpMapId += tmpMapId -> processedMap.id
+        
+        // Update map set alignment reference map
+        if( processedMap.isAlnReference ) {
+          logger.info("Set map set alignement reference map to id=" + processedMap.id)
+          ezDBC.execute( "UPDATE map_set SET aln_reference_map_id = "+ processedMap.id +" WHERE id = " + mapSet.id )
+        }
+      }
+    })
+    
+    // --- Store the master map ---
+    logger.info("saving the master map...")
+    val masterMapStorer = MasterMapStorer(lcmsDbCtx)
+    masterMapStorer.storeMasterMap(x2MapSet.masterMap)
     
     // --- Create and store the master map, the associated processed maps and their alignments ---
-    CreateMasterMap(
+    /*CreateMasterMap(
       lcmsDbCtx = lcmsDbCtx,
       mapSet = x2MapSet,
       alnMethodName = alnMethodName,
@@ -178,10 +248,12 @@ class ExtractMapSet(
       masterFtFilter = masterFtFilter,
       ftMappingParams = ftMappingParams,
       normalizationMethod = normalizationMethod
-    )
+    )*/
     
     // Commit transaction if it was initiated locally
     if( !wasInTransaction ) lcmsDbCtx.commitTransaction()
+    
+    println(x2MapSet.masterMap.features.length)
     
     this.extractedMapSet = x2MapSet
     
@@ -193,7 +265,7 @@ class ExtractMapSet(
     val mzDbFileDir = mzDbFile.getParent()
     val mzDbFileName = mzDbFile.getName()
     // FIXME: it should be retrieved from the mzDB file meta-data
-    val rawFileName = mzDbFileName.take(1 + mzDbFileName.lastIndexOf("."))
+    val rawFileName = mzDbFileName.take(mzDbFileName.lastIndexOf("."))
     
     // Check if a LC-MS run already exists
     val scanSeqId = lcmsDbHelper.getScanSequenceIdForRawFileName(rawFileName)
@@ -299,9 +371,11 @@ class ExtractMapSet(
     val runMapId = RunMap.generateNewId()
     
     // Convert mzDB features into LC-MS DB features
-    val lcmsFeatures = new Array[LcMsFeature](mzDbFts.length)
-    for( ftIdx <- 0 until mzDbFts.length ) {
-      lcmsFeatures(ftIdx) = this._mzDbFeatureToLcMsFeature(mzDbFts(ftIdx),runMapId,lcmsRun.scanSequence.get)
+    val lcmsFeatures = new ArrayBuffer[LcMsFeature](mzDbFts.length)
+    for( mzDbFt <- mzDbFts ) {
+      if( mzDbFt.area > 0 ) {
+        lcmsFeatures += this._mzDbFeatureToLcMsFeature(mzDbFt,runMapId,lcmsRun.scanSequence.get)
+      }
     }
     
     // Create a new Run Map
@@ -310,24 +384,29 @@ class ExtractMapSet(
       name = lcmsRun.rawFile.name,
       isProcessed = false,
       creationTimestamp = new java.util.Date,
-      features = lcmsFeatures,
+      features = lcmsFeatures.toArray,
       runId = lcmsRun.id,
       peakPickingSoftware = pps
     )
   }
   
-  private def _extractRunMapUsingMasterMap(
+  private def _extractMissingFeatures(
     mzDbFile: File,
-    mzDbMapId: Long,
     lcmsRun: LcMsRun,
+    runMap: RunMap,
+    processedMap: ProcessedMap,
     mapSet: MapSet
-  ): RunMap = {
+  ): Seq[Feature] = {
     
+    val runMapId = runMap.id
+    val procMapId = processedMap.id
     val masterMap = mapSet.masterMap
 
     val mzDb = new MzDbReader( mzDbFile, true )
-    var mzDbFts: Seq[MzDbFeature] = null
-    val lcmsFeatures = new ArrayBuffer[LcMsFeature](masterMap.features.length)
+    var mzDbFts = Seq.empty[MzDbFeature]
+    val mftsWithMissingChild = new ArrayBuffer[Feature]
+    val missingFtIdByMftId = new collection.mutable.HashMap[Long,Int]()
+    val pfs = new ArrayBuffer[PutativeFeature]()
     
     try {
       
@@ -335,46 +414,37 @@ class ExtractMapSet(
       
       //val scanHeaders = mzDb.getScanHeaders()
       //val ms2ScanHeaders = scanHeaders.filter(_.getMsLevel() == 2 )
-      val pfs = new ArrayBuffer[PutativeFeature]()
       
       this.logger.info("building putative features list using master features...")
 
       for( mft <- masterMap.features ) {
         
-        val childFtOpt = mft.children.find( _.relations.mapId == mzDbMapId )
-        if( childFtOpt.isDefined ) {
-          // Very important because otherwise it could corrupt the corrected elution time
-          lcmsFeatures += childFtOpt.get.toRunMapFeature
+        // Check for master features having a missing child for this processed map
+        val childFtOpt = mft.children.find( _.relations.processedMapId == processedMap.id )
+        if( childFtOpt.isEmpty ) {
+          mftsWithMissingChild += mft
           
-          /*
-          pfs += new PutativeFeature(
-            id = PutativeFeature.generateNewId,
-            mz = childFt.moz,
-            charge = childFt.charge,
-            scanId = childFt.relations.apexScanId,
-            evidenceMsLevel = 2
-          )*/
-        }
-        else {
-          val bestChildMapId = mft.relations.bestChildMapId
-          val bestChild = mft.children.find( _.relations.mapId == bestChildMapId ).get
+          val bestChildProcMapId = mft.relations.bestChildProcessedMapId
+          val bestChild = mft.children.find( _.relations.processedMapId == bestChildProcMapId ).get
+          
           //val childMapAlnSet = revRefMapAlnSetByMapId(bestChildMapId)
           //val predictedTime = childMapAlnSet.calcReferenceElutionTime(mft.elutionTime, mft.mass)
-          
-          
-          var predictedTime = mapSet.convertElutionTime(mft.elutionTime, bestChildMapId, mzDbMapId)
+          var predictedTime = mapSet.convertElutionTime(bestChild.elutionTime, bestChildProcMapId, procMapId)
           //println( "ftTime="+ mft.elutionTime +" and predicted time (in "+mzDbMapId+")="+predictedTime)
           
           // Fix negative predicted times
           if( predictedTime <= 0 ) predictedTime = 1f
           
+          val missingFtId = PutativeFeature.generateNewId
+          missingFtIdByMftId += ( mft.id -> missingFtId )
+          
           val pf = new PutativeFeature(
-            id = PutativeFeature.generateNewId,
+            id = missingFtId,
             mz = mft.moz,
             charge = mft.charge,
             elutionTime = predictedTime,
             evidenceMsLevel = 2
-          )            
+          )
           pf.isPredicted = true
           
           pfs += pf
@@ -393,26 +463,35 @@ class ExtractMapSet(
       mzDb.close()
     }
     
-    val runMapId = RunMap.generateNewId()
+    val mzDbFtById = Map() ++ mzDbFts.map( ft => ft.id ->ft )   
     
     // Convert mzDB features into LC-MS DB features    
-    for( mzDbFt <- mzDbFts ) {
-      lcmsFeatures += this._mzDbFeatureToLcMsFeature(mzDbFt,runMapId,lcmsRun.scanSequence.get)
+    val newLcmsFeatures = new ArrayBuffer[LcMsFeature](missingFtIdByMftId.size)
+    for( mftWithMissingChild <- mftsWithMissingChild;
+         mzDbFt <- mzDbFtById.get(missingFtIdByMftId( mftWithMissingChild.id ))
+         if mzDbFt.area > 0
+       ) {
+      
+      // Convert the extracted feature into a LC-MS feature
+      val newLcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt,runMapId,lcmsRun.scanSequence.get)
+      
+      // TODO: decide if we set or not this value (it may help for distinction with other features)
+      newLcmsFt.correctedElutionTime = Some(mftWithMissingChild.elutionTime)
+      
+      // Update the processed map id of the new feature
+      newLcmsFt.relations.processedMapId = processedMap.id
+      
+      // Add missing child feature to the master feature
+      mftWithMissingChild.children ++= Array(newLcmsFt)
+      
+      // Add new LC-MS feature to the Run Map
+      newLcmsFeatures += newLcmsFt
     }
     
-    // Create a new Run Map
-    new RunMap(
-      id = runMapId,
-      name = lcmsRun.rawFile.name,
-      isProcessed = false,
-      creationTimestamp = new java.util.Date,
-      features = lcmsFeatures.toArray.distinct, // Some FTs may be in multiple master FTs
-      runId = lcmsRun.id,
-      peakPickingSoftware = pps
-    )
+    newLcmsFeatures
   }
   
-  private def _mzDbFeatureToLcMsFeature( mzDbFt: MzDbFeature, lcmsMapId: Long, scanSeq: LcMsScanSequence ): LcMsFeature = {
+  private def _mzDbFeatureToLcMsFeature( mzDbFt: MzDbFeature, runMapId: Long, scanSeq: LcMsScanSequence ): LcMsFeature = {
     
     // Convert isotopic patterns
     /*val ips = mzDbFt.getIsotopicPatterns.map { mzDbIp =>
@@ -466,7 +545,7 @@ class ExtractMapSet(
          firstScanId = firstLcMsScanId,
          lastScanId = lastLcMsScanId,
          apexScanId = apexLcMsScanId,
-         mapId = lcmsMapId
+         runMapId = runMapId
        )
     )
   }

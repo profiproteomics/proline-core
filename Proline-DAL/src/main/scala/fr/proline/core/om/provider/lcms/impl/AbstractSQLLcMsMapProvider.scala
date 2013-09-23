@@ -126,7 +126,8 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     normalizedIntensity: Option[Float] = None,
     correctedElutionTime: Option[Float] = None,
     isClusterized: Boolean = false,
-    selectionLevel: Int = 2
+    selectionLevel: Int = 2,
+    processedMapId: Long = 0L
   ): Feature = {
 
     val ftId: Long = toLong(ftRecord.getAny(FtCols.ID))
@@ -135,6 +136,8 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     val apexScanId = toLong(ftRecord.getAny(FtCols.APEX_SCAN_ID))
     val ms2EventIds = ms2EventIdsByFtId.getOrElse(ftId,null)
     val duration = scanById(lastScanId).time - scanById(firstScanId).time
+    val mapId = toLong(ftRecord.getAny(FtCols.MAP_ID))
+    val runMapId = if( mapId == processedMapId ) 0L else mapId
     
     new Feature(
        id = ftId,
@@ -168,7 +171,8 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
          theoreticalFeatureId = ftRecord.getLongOrElse(FtCols.THEORETICAL_FEATURE_ID, 0L),
          compoundId = ftRecord.getLongOrElse(FtCols.COMPOUND_ID, 0L),
          mapLayerId = ftRecord.getLongOrElse(FtCols.MAP_LAYER_ID, 0L),
-         mapId = toLong(ftRecord.getAny(FtCols.MAP_ID))
+         runMapId = runMapId,
+         processedMapId = processedMapId
        )
      )
     

@@ -77,8 +77,7 @@ class LabelFreeFeatureQuantifier(
     // Retrieve some vars 
     val masterMap = lcmsMapSet.masterMap
 
-    // Try to find peptide instances which could correspond to detected features
-    val pepInstIdSetByFtId = new HashMap[Long, HashSet[Long]]
+    // --- Map master feature by their id and by child feature id ---
     val masterFtByFtId = new HashMap[Long, Feature]
     val masterFtById = new HashMap[Long, Feature]
     
@@ -90,50 +89,6 @@ class LabelFreeFeatureQuantifier(
       val ftChildren = masterFt.children
       for (ftChild <- ftChildren) {
         masterFtByFtId(ftChild.id) = masterFt
-
-        val childMapId = ftChild.relations.mapId
-
-        // Check if we have a result set for this map (this map may be in the map_set but not used)
-        if (identRsIdByLcmsMapId.contains(childMapId)) {
-
-          val identRsId = identRsIdByLcmsMapId(childMapId)
-          val specIdByScanNum = spectrumIdMap(identRsId)
-
-          // Retrieve MS2 scan numbers which are related to this feature
-          val tmpFtIds = if (ftChild.isCluster) ftChild.subFeatures.map { _.id } else Array(ftChild.id)
-          val ms2ScanNumbers = tmpFtIds.flatMap { i => ms2ScanNumbersByFtId.getOrElse(i, ArrayBuffer.empty[Int]) }
-
-          // Stop if no MS2 available
-          if (ms2ScanNumbers.length > 0) {
-
-            // Retrieve corresponding MS2 spectra ids and remove existing redundancy
-            val specIdSet = ms2ScanNumbers.filter(specIdByScanNum.contains(_))
-              .map(n => specIdByScanNum(n) )
-              .toSet
-
-            // Retrieve corresponding peptide matches if they exist
-            for (spectrumId <- specIdSet) {
-              if (identPepMatchBySpectrumId.contains(spectrumId)) {
-                val identPepMatch = identPepMatchBySpectrumId(spectrumId)
-
-                // Check that peptide match charge is the same than the feature one
-                val msQuery = identPepMatch.msQuery
-                if (ftChild.charge == msQuery.charge) {
-
-                  // TMP FIX FOR MOZ TOLERANCE OF FEATURE/MS2 SPECTRUM
-                  // Note: it should not be necessary to check the delta m/z
-                  val deltaMoz = math.abs(ftChild.moz - msQuery.moz)
-                  val pepMozTolInDalton = calcMozTolInDalton(ftChild.moz, mozTolInPPM, "ppm")
-
-                  if (deltaMoz <= pepMozTolInDalton) {
-                    val pepInstanceId = identPepInstIdByPepMatchId(identPepMatch.id)
-                    pepInstIdSetByFtId.getOrElseUpdate(ftChild.id, new HashSet[Long]) += pepInstanceId
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     }
     
@@ -150,43 +105,76 @@ class LabelFreeFeatureQuantifier(
     for (udsQuantChannel <- udsQuantChannels) {
 
       // Retrieve some vars
-      val (udsQuantChannelId,identRsmId,lcmsMapId) = (
+      val (udsQuantChannelId,identRsmId,childMapId) = (
         udsQuantChannel.getId,
         udsQuantChannel.getIdentResultSummaryId,
         udsQuantChannel.getLcmsMapId
       )
-      val lcmsMap = lcmsMapById(lcmsMapId)
-      val normFactor = normFactorByMapId(lcmsMapId)
+      val lcmsMap = lcmsMapById(childMapId)
+      val normFactor = normFactorByMapId(childMapId)      
+      
+      // Retrieve mapping between spectrum id and spectrum number
+      val identRsId = identRsIdByLcmsMapId(lcmsMap.id)
+      val specIdByScanNum = spectrumIdMap(identRsId)
 
       // Iterate over LC-MS features
       for (feature <- lcmsMap.features ) {
         
         // Map this feature by its id
         ftById(feature.id) = feature
-        
-        val masterFt = masterFtByFtId.get(feature.id)
-        
-        // Try to retrieve matching peptide instances
-        var matchingPepInstsAsOpts = Array(Option.empty[PeptideInstance])
           
-        // Check if we have found some peptide instances for this LCMS feature
-        if (pepInstIdSetByFtId.contains(feature.id) == true) {
-          val tmpMatchingPepInstsAsOpts = pepInstIdSetByFtId(feature.id).toArray
-            // Retrieve peptide instance
-            .map( i => identPepInstById(i) )
-            // Note: if the peptide instance is not included in the merged RSM, it may be associated to an invalidated protein set
-            .filter( pi => masterPepInstByPepId.contains(pi.peptide.id) )
-            .map(Option(_))
-          
-          if (tmpMatchingPepInstsAsOpts.length > 0) matchingPepInstsAsOpts = tmpMatchingPepInstsAsOpts
+        // Retrieve corresponding spectrum ids
+        val ftSpecIds = _getSpectrumIdsOfFeature(feature,specIdByScanNum)
+        
+        // --- Try to find peptide instances which could correspond to this detected feature ---
+        val pepInstIdSet = new HashSet[Long]
+        
+        // Stop if no MS2 available
+        if( ftSpecIds.length > 0 ) {
+        
+          // Retrieve corresponding peptide matches if they exist
+          for (spectrumId <- ftSpecIds) {
+            if (identPepMatchBySpectrumId.contains(spectrumId)) {
+              val identPepMatch = identPepMatchBySpectrumId(spectrumId)
+
+              // Check that peptide match charge is the same than the feature one
+              val msQuery = identPepMatch.msQuery
+              if (feature.charge == msQuery.charge) {
+
+                // TMP FIX FOR MOZ TOLERANCE OF FEATURE/MS2 SPECTRUM
+                // Note: it should not be necessary to check the delta m/z
+                val deltaMoz = math.abs(feature.moz - msQuery.moz)
+                val pepMozTolInDalton = calcMozTolInDalton(feature.moz, mozTolInPPM, "ppm")
+
+                if (deltaMoz <= pepMozTolInDalton) {
+                  val pepInstanceId = identPepInstIdByPepMatchId(identPepMatch.id)
+                  pepInstIdSet += pepInstanceId
+                }
+              }
+            }
+          }
         }
         
+        // Try to retrieve matching peptide instances
+        // Note: this is important to initialize the Array with a None element when no peptide instance is found
+        val matchingPepInstsAsOpts = if( pepInstIdSet.size == 0 ) Array(Option.empty[PeptideInstance])
+        else pepInstIdSet.toArray
+          // Retrieve peptide instance
+          .map( i => identPepInstById(i) )
+          // Note: if the peptide instance is not included in the merged RSM, it may be associated to an invalidated protein set
+          .filter( pi => masterPepInstByPepId.contains(pi.peptide.id) )
+          .map(Option(_))
+        
+        // Check if we have found multiple peptide instances for this LCMS feature
         if( matchingPepInstsAsOpts.length > 1 ) {
           this.logger.trace("peptide ion identification conflict")
         }
         
+        // Retrieve some vars
+        val masterFt = masterFtByFtId.get(feature.id)
         val ftIntensity = feature.intensity
 
+        // Iterate over matching peptide instances or None matching if not match
         for (matchingPepInstAsOpt <- matchingPepInstsAsOpts) {
 
           var (peptideId, pepInstId) = (Option.empty[Long], Option.empty[Long])
@@ -201,22 +189,35 @@ class LabelFreeFeatureQuantifier(
             val pepMatches = pepInst.getPeptideMatchIds.map { identPepMatchById(_) }
             //pepMatchesCount = pepMatches.length
             
-            // TODO: use filter these ids using feature.relations.ms2EventIds instead
-            msQueryIds = Some(pepMatches.map { _.msQuery.id })
+            // Select peptide matches which are co-eluting with the detected feature
+            msQueryIds = Some( pepMatches
+              .map( _.getMs2Query )
+              .withFilter( query => ftSpecIds.contains(query.spectrumId) )
+              .map(_.id)
+              .distinct
+            )
             
             bestPepMatchScore = Some(pepMatches.reduce((a, b) => if (a.score > b.score) a else b).score)
           }
-
+          
+          /*if( ftSpecIds.length != feature.ms2Count ) {
+            println("nb specs="+ftSpecIds.length+" MS2 count="+feature.ms2Count)
+          }*/
+          
+          val pepMatchesCount = msQueryIds.map(_.length).getOrElse(0)
+          val ms2MatchingFrequency = if( ftSpecIds.length > 0 ) Some( pepMatchesCount.toFloat / ftSpecIds.length ) else None
+          
           // Create a quant peptide ion corresponding the this LCMS feature
           val quantPeptideIon = new QuantPeptideIon(
             rawAbundance = ftIntensity,
-            abundance = ftIntensity * normFactor,// TODO: getNormalizedIntensity
+            abundance = ftIntensity * normFactor,// TODO: call feature.getNormalizedIntensity
             moz = feature.moz,
             elutionTime = feature.elutionTime,
             duration = feature.duration,
             correctedElutionTime = feature.getCorrectedElutionTimeOrElutionTime,
             scanNumber = feature.relations.apexScanInitialId,
-            peptideMatchesCount = feature.ms2Count,
+            peptideMatchesCount = pepMatchesCount,//feature.ms2Count,
+            ms2MatchingFrequency = ms2MatchingFrequency,
             bestPeptideMatchScore = bestPepMatchScore,
             quantChannelId = udsQuantChannelId,
             peptideId = peptideId,
@@ -299,6 +300,24 @@ class LabelFreeFeatureQuantifier(
     masterQuantPeptides.toArray
   }
   
+  private def _getSpectrumIdsOfFeature( ft: Feature, specIdByScanNum: HashMap[Long,Long] ): Array[Long] = {
+    
+    val childMapId = ft.relations.processedMapId
+    
+    // Retrieve MS2 scan numbers which are related to this feature
+    val tmpFtIds = if (ft.isCluster) ft.subFeatures.map { _.id } else Array(ft.id)
+    val ms2ScanNumbers = tmpFtIds.flatMap( i => ms2ScanNumbersByFtId.getOrElse(i, ArrayBuffer.empty[Int]) ).distinct
+
+    // Stop if no MS2 available
+    val specIds = if (ms2ScanNumbers.length == 0) Array.empty[Long]
+    else {
+      // Retrieve corresponding MS2 spectra ids and remove existing redundancy
+      ms2ScanNumbers.filter(specIdByScanNum.contains(_)).map(n => specIdByScanNum(n) )
+    }
+    
+    specIds
+  }
+  
   private def newMasterQuantPeptide(
     quantPepIonMapByFt: HashMap[Feature,Map[Long,QuantPeptideIon]],
     masterPepInstAsOpt: Option[PeptideInstance]
@@ -371,13 +390,17 @@ class LabelFreeFeatureQuantifier(
     for( mergedProtSet <- mergedRSM.proteinSets ) {
       
       val selectedMQPepIds = new ArrayBuffer[Long]
+      val mqPeps = new ArrayBuffer[MasterQuantPeptide]
       val abundanceSumByQcId = new HashMap[Long,Float]
       val pepMatchesCountByQcId = new HashMap[Long,Int]
+      
       
       for( mergedPepInst <- mergedProtSet.peptideSet.getPeptideInstances ) {
         // If the peptide has been quantified
         if( mqPepByPepInstId.contains(mergedPepInst.id) ) {
           val mqp = mqPepByPepInstId( mergedPepInst.id )
+          mqPeps += mqp
+          
           if( mqp.selectionLevel >= 2 ) selectedMQPepIds += mqp.id
           
           for( (qcId,quantPep) <- mqp.quantPeptideMap ) {
@@ -407,14 +430,24 @@ class LabelFreeFeatureQuantifier(
       val mqProteinSet = new MasterQuantProteinSet(
         proteinSet = mergedProtSet,
         quantProteinSetMap = quantProteinSetByQcId.toMap,
+        masterQuantPeptides = mqPeps.toArray,
         selectionLevel = 2,
         properties = Some(mqProtSetProps)
       )
       
       mqProtSets += mqProteinSet
     }
+                                              
+    // Compute the statistical analysis of abundance profiles
+    val profilizer = new Profilizer(
+      expDesign = expDesign,
+      groupSetupNumber = 1, // TODO: retrieve from params
+      masterQCNumber = udsMasterQuantChannel.getNumber
+    )
+    
+    profilizer.computeMasterQuantProtSetProfiles(mqProtSets, statTestsAlpha)
     
     mqProtSets.toArray
- }
+  }
  
 }

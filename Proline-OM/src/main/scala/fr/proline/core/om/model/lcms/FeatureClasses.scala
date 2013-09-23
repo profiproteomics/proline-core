@@ -58,11 +58,12 @@ case class FeatureRelations(
   var lastScanId: Long = 0L,
   var apexScanId: Long = 0L,
   var bestChildId: Long = 0L,
-  var bestChildMapId: Long = 0L,
+  var bestChildProcessedMapId: Long = 0L,
   var theoreticalFeatureId: Long = 0L,
   var compoundId: Long = 0L,
   var mapLayerId: Long = 0L,
-  var mapId: Long = 0L
+  var runMapId: Long = 0L,
+  var processedMapId: Long = 0L
 )
 
 case class Feature (
@@ -109,10 +110,14 @@ case class Feature (
   def getCalibratedMozOrMoz = calibratedMoz.getOrElse(moz)
   def getNormalizedIntensityOrIntensity = normalizedIntensity.getOrElse(intensity)
   
+  def getSourceMapId: Long = {
+    if( this.isCluster || this.isMaster ) this.relations.processedMapId else this.relations.runMapId
+  }
+  
   def getRunMapIds(): Array[Long] = {
     if( this.isMaster ) children.flatMap( _.getRunMapIds ).distinct
-    else if ( this.isCluster ) Array(this.subFeatures(0).relations.mapId)
-    else Array(this.relations.mapId)
+    else if ( this.isCluster ) Array(this.subFeatures(0).relations.runMapId)
+    else Array(this.relations.runMapId)
   }
   
   def toRunMapFeature(): Feature = {
@@ -153,7 +158,7 @@ case class Feature (
         lastScanId = ftRelations.lastScanId,
         apexScanId = ftRelations.apexScanId,
         bestChildId = ftRelations.bestChildId,
-        bestChildMapId = ftRelations.mapId,
+        bestChildProcessedMapId = ftRelations.processedMapId,
         ms2EventIds = null
         ),
       isotopicPatterns = null,

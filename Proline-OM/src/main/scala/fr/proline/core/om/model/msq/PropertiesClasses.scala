@@ -12,7 +12,7 @@ case class ComputedRatio (
   @BeanProperty var denominator: Float,
   @BeanProperty var state: Int = 0// -1 means under-abundant, 0 means invariant and +1 means over-abundant
 ) {
-  @transient lazy val ratioValue = if( denominator > 0 && denominator.isNaN == false ) numerator/denominator else Float.NaN
+  @transient lazy val ratioValue = if( numerator > 0 && denominator > 0 ) numerator/denominator else Float.NaN
 }
 
 @JsonSnakeCase
@@ -52,7 +52,7 @@ case class MasterQuantPeptideIonProperties (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideProfile (
-  @BeanProperty var ratios: Array[Option[ComputedRatio]]
+  @BeanProperty var ratios: List[Option[ComputedRatio]]
   //@BeanProperty var mqProtSetProfileIds: Option[Array[Long]] = None
 )
 
@@ -60,7 +60,7 @@ case class MasterQuantPeptideProfile (
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideProperties (
   @BeanProperty var mqProtSetIds: Option[Array[Long]] = None,
-  @BeanProperty var mqPepProfileByGroupSetupNumber: Option[Map[Int,MasterQuantPeptideProfile]] = None
+  @BeanProperty var mqPepProfileByGroupSetupNumber: Option[Map[String,MasterQuantPeptideProfile]] = None
 )
 
 @JsonSnakeCase
@@ -68,14 +68,14 @@ case class MasterQuantPeptideProperties (
 case class MasterQuantProteinSetProfile (
   //@BeanProperty var id: Long,
   @BeanProperty var abundances: Array[Float],
-  @BeanProperty var ratios: Array[Option[ComputedRatio]],
+  @BeanProperty var ratios: List[Option[ComputedRatio]],
   @BeanProperty var mqPeptideIds: Array[Long]
 )
  
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSetProperties (
-  @BeanProperty var mqProtSetProfilesByGroupSetupNumber: Option[Map[Int,Array[MasterQuantProteinSetProfile]]] = None,
+  @BeanProperty var mqProtSetProfilesByGroupSetupNumber: Option[Map[String,Array[MasterQuantProteinSetProfile]]] = None,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
   @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
   @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None

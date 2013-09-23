@@ -29,8 +29,10 @@ object FeatureClusterer extends Logging {
 
   def clusterizeFeatures(lcmsMap: ILcMsMap, scans: Seq[LcMsScan], params: ClusteringParams): ProcessedMap = {
 
-    val lcmsMapId = if (lcmsMap.isProcessed) lcmsMap.asInstanceOf[ProcessedMap].id
-    else lcmsMap.asInstanceOf[RunMap].id
+    val( runMapId, procMapId ) = lcmsMap match {
+      case procMap: ProcessedMap => (0L,procMap.id)
+      case runMap: RunMap => (runMap.id,0L)
+    }
 
     // Retrieve parameters
     val mozTol = params.mozTol
@@ -216,7 +218,8 @@ object FeatureClusterer extends Logging {
           lastScanInitialId = lastScanInitialId,
           apexScanInitialId = apexScanInitialId,
           ms2EventIds = ms2EventIds,
-          mapId = lcmsMapId
+          runMapId = runMapId,
+          processedMapId = procMapId
         )
 
       )

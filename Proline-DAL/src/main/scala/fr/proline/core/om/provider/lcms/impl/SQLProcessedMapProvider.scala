@@ -32,7 +32,7 @@ class SQLProcessedMapProvider(
     val runMapIdsByProcessedMapId = getRunMapIdsByProcessedMapId( processedMapIds )
     val features = this.getFeatures( processedMapIds )
     // Group features by map id
-    val featuresByMapId = features.groupBy(_.relations.mapId)
+    val featuresByMapId = features.groupBy(_.relations.processedMapId)
     
     val processedMaps = new Array[ProcessedMap](processedMapIds.length)
     var lcmsMapIdx = 0
@@ -48,13 +48,13 @@ class SQLProcessedMapProvider(
       // Load processed map features
       ezDBC.selectAndProcess( procMapQuery ) { r =>
         
-        val mapId = toLong(r.getAny(LcMsMapCols.ID))
-        val mapFeatures = featuresByMapId( mapId )
+        val processedMapId = toLong(r.getAny(LcMsMapCols.ID))
+        val mapFeatures = featuresByMapId( processedMapId )
         val featureScoring = featureScoringById.get(toLong(r.getAny(LcMsMapCols.FEATURE_SCORING_ID)))
         
         // Build the map
         processedMaps(lcmsMapIdx) = new ProcessedMap(
-          id = mapId,
+          id = processedMapId,
           name = r.getString(LcMsMapCols.NAME),
           isProcessed = true,
           creationTimestamp = r.getTimestamp(LcMsMapCols.CREATION_TIMESTAMP),
@@ -64,7 +64,7 @@ class SQLProcessedMapProvider(
           isMaster = r.getBoolean(ProcMapCols.IS_MASTER),
           isAlnReference = r.getBoolean(ProcMapCols.IS_ALN_REFERENCE),
           mapSetId = toLong(r.getAny(ProcMapCols.MAP_SET_ID)),
-          runMapIds = runMapIdsByProcessedMapId(mapId),
+          runMapIdentifiers = runMapIdsByProcessedMapId(processedMapId).map(Identifier(_)),
           description = r.getString(LcMsMapCols.DESCRIPTION),
           featureScoring = featureScoring,
           isLocked = r.getBooleanOrElse(ProcMapCols.IS_LOCKED,false),
@@ -188,7 +188,8 @@ class SQLProcessedMapProvider(
           processedFtRecord.getDoubleOption(ProcFtCols.NORMALIZED_INTENSITY).map( _.toFloat ),
           processedFtRecord.getDoubleOption(ProcFtCols.CORRECTED_ELUTION_TIME).map( _.toFloat ),
           processedFtRecord.getBoolean(ProcFtCols.IS_CLUSTERIZED),
-          processedFtRecord.getIntOrElse(ProcFtCols.SELECTION_LEVEL,2)
+          processedFtRecord.getIntOrElse(ProcFtCols.SELECTION_LEVEL,2),
+          toLong( processedFtRecord.getAny(ProcFtCols.PROCESSED_MAP_ID) )
         )
                                                 
         //var subFeatures: Array[Feature] = null

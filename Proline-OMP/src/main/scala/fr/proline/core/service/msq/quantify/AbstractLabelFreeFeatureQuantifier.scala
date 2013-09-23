@@ -115,7 +115,9 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
     val lcmsMapSet = this.lcmsMapSet
     val runMapIds = lcmsMapSet.getRunMapIds
-
+    val transientRunMapIdsCount = runMapIds.count( _ <= 0 )
+    require( transientRunMapIdsCount == 0, "LC-MS map set must contain persisted run map ids" )
+    
     this.logger.info("loading MS2 scans/features map...")
     val ms2ScanNumbersByFtId = new HashMap[Long, ArrayBuffer[Int]]
 
@@ -124,6 +126,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       val sqlQuery = new SelectQueryBuilder1(LcmsDbFeatureMs2EventTable).mkSelectQuery( (t,c) =>
         List(t.FEATURE_ID,t.MS2_EVENT_ID) -> "WHERE "~ t.RUN_MAP_ID ~" IN("~ runMapIds.mkString(",") ~")"
       )
+      
       lcmsEzDBC.selectAndProcess(sqlQuery) { r =>
         val (featureId, ms2ScanId) = (toLong(r.nextAny), toLong(r.nextAny))
         val ms2ScanNumber = ms2ScanNumberById(ms2ScanId)

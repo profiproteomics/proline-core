@@ -72,9 +72,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       val mqPep = mqPepById(mqPepId)
       val mqPepProps = mqPep.properties.getOrElse( new MasterQuantPeptideProperties() )
       
-      val quantProfile = new MasterQuantPeptideProfile( ratios = ratios.toArray )
+      val quantProfile = new MasterQuantPeptideProfile( ratios = ratios.toList )
       mqPepProps.setMqPepProfileByGroupSetupNumber(
-        Some( mqPepProps.getMqPepProfileByGroupSetupNumber.getOrElse( Map() ) + ( groupSetupNumber -> quantProfile ) )
+        Some( mqPepProps.getMqPepProfileByGroupSetupNumber.getOrElse( Map() ) + ( groupSetupNumber.toString -> quantProfile ) )
       )
       
       mqPep.properties = Some(mqPepProps)
@@ -101,7 +101,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       val mqPepsByProfileAsStr = new HashMap[String,ArrayBuffer[MasterQuantPeptide]]()
       
       masterQuantProtSet.masterQuantPeptides.foreach { mqPep =>
-        val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber )
+        val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber.toString )
         
         for( mqPepProfile <- mqPepProfileOpt ) {
           val profileSlopes = mqPepProfile.ratios.map( _.map( _.state ).get )
@@ -176,7 +176,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       
       val quantProfile = new MasterQuantProteinSetProfile(
         abundances = abundances,
-        ratios = ratios.toArray,
+        ratios = ratios.toList,
         mqPeptideIds = mqPeptideIds
       )
       
@@ -189,7 +189,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber.getOrElse( Map() )
       
       mqProtSetProps.setMqProtSetProfilesByGroupSetupNumber(
-        Some( mqProtSetProfileMap + ( groupSetupNumber -> mqProfiles.toArray ) )
+        Some( mqProtSetProfileMap + ( groupSetupNumber.toString -> mqProfiles.toArray ) )
       )
       
       mqProtSet.properties = Some(mqProtSetProps)
@@ -287,7 +287,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
           
           inferredAbundances.zip(qcIndices).foreach { case (abundance,colIdx) =>
             tmpFilledMatrix(filledMatrixRow)(colIdx) = abundance
-          }          
+          }
           
           filledMatrixRow += 1
         }
@@ -297,9 +297,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       
     } else {
       // TODO: find what to do if when insufficient technical replicates
+      this.logger.warn("insufficient number of analysis replicates => can't infer missing values")
       normalizedMatrix
     }
-    
     
     // --- Determine the significant abundance changes ---
     

@@ -88,7 +88,9 @@ class RunMapFakeGenerator (
         val ftDuration = LcMsRandomator.randomDuration(FT_DURATION_RANGE._1,FT_DURATION_RANGE._2,FT_DURATION_STDDEV)
         val( firstTime, lastTime ) = ( ftTime - ftDuration/2, ftTime + ftDuration/2)
         val firstScanIdx = ms1Scans.findIndexOf( _.time > firstTime )
-        val lastScanIdx = ms1Scans.findIndexOf( _.time > lastTime )
+        var lastScanIdx = ms1Scans.findIndexOf( _.time > lastTime )
+        if( lastScanIdx == -1 ) lastScanIdx = ms1Scans.length - 1
+        
         val firstScan = ms1Scans(firstScanIdx)
         val lastScan = ms1Scans(lastScanIdx)
         val ms1Count = 1 + lastScanIdx - firstScanIdx
@@ -115,7 +117,7 @@ class RunMapFakeGenerator (
             firstScanId = firstScan.id,
             lastScanId = lastScan.id,
             apexScanId = randomScan.id,
-            mapId = runMapId
+            runMapId = runMapId
           )
         )
         

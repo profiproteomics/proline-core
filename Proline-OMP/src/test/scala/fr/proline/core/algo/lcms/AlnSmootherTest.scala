@@ -6,7 +6,7 @@ import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 import org.scalatest.matchers.MustMatchers
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.lcms.MapAlignment
+import fr.proline.core.om.model.lcms._
 
 class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
   
@@ -17,32 +17,38 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
   val timeList = Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20).map(_.toFloat)
   val deltaTimeList = timeList.map( math.sin(_).toFloat )
   
-  var mapAlignment: MapAlignment = {
+  val landmarks: Seq[Landmark] = {
     
     val reducedDeltaTimeList = deltaTimeList.map( _ * 0.9f )
     val increasedDeltaTimeList = deltaTimeList.map( _ * 1.1f )
     
-    // Note: we force the production of an unsorted alignment in order to check if it is still handled correctly
-    new MapAlignment(
+    // Note: we force the production of an unsorted landmarks in order to check if it is still handled correctly
+    val fullTimeList = timeList ++ timeList ++ timeList
+    val fullDeltaTimeList = reducedDeltaTimeList ++ deltaTimeList ++ increasedDeltaTimeList
+    
+    fullTimeList.zip(fullDeltaTimeList).map { case (time,delta) =>
+      Landmark(time,delta)
+    }
+    /*new MapAlignment(
       refMapId = 1L,
       targetMapId = 2L,
       massRange = Pair(0,10000),
       timeList = timeList ++ timeList ++ timeList,
       deltaTimeList = reducedDeltaTimeList ++ deltaTimeList ++ increasedDeltaTimeList
-    )
+    )*/
     
   }
   
   @Test
   def compareSmoothings() {
     
-    val landmarkRangeSmoothingParams = new AlnSmoothingParams( windowSize = 3, windowOverlap = 0 )
+    val lmRangeSmoothingParams = new AlnSmoothingParams( windowSize = 3, windowOverlap = 0 )
     val timeWindowSmoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 0, minWindowLandmarks = 3 )
     
-    val landmarkRangeMapAln = landmarkRangeSmoother.smoothMapAlignment(mapAlignment, landmarkRangeSmoothingParams)
-    val timeWindowMapAln = timeWindowSmoother.smoothMapAlignment(mapAlignment, timeWindowSmoothingParams)
+    val lmRangeMapLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, lmRangeSmoothingParams)
+    val timeWindowMaplandmarks = timeWindowSmoother.smoothLandmarks(landmarks, timeWindowSmoothingParams)
     
-    landmarkRangeMapAln.deltaTimeList must equal (timeWindowMapAln.deltaTimeList)
+    lmRangeMapLandmarks must equal (timeWindowMaplandmarks)
   }
   
   @Test
@@ -50,13 +56,13 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
     
     val smoothingParams = new AlnSmoothingParams( windowSize = 3, windowOverlap = 0 )
     
-    val newMapAln = landmarkRangeSmoother.smoothMapAlignment(mapAlignment, smoothingParams)
+    val newLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, smoothingParams)
     
     // Test requirements
-    newMapAln.timeList(0) must equal (1)
-    newMapAln.timeList.length must equal (20)
-    newMapAln.deltaTimeList(0) must be ( 0.841f plusOrMinus 1e-3f )
-    newMapAln.deltaTimeList must equal (deltaTimeList)
+    newLandmarks.length must equal (20)
+    newLandmarks(0).time must equal (1)    
+    newLandmarks(0).deltaTime must be ( 0.841f plusOrMinus 1e-3f )
+    newLandmarks.map(_.deltaTime).toArray must equal (deltaTimeList)
     
     ()
   }
@@ -66,12 +72,12 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
     
     val smoothingParams = new AlnSmoothingParams( windowSize = 3, windowOverlap = 50 )
     
-    val newMapAln = landmarkRangeSmoother.smoothMapAlignment(mapAlignment, smoothingParams)
+    val newLandmarks = landmarkRangeSmoother.smoothLandmarks(landmarks, smoothingParams)
     
     // Test requirements
-    newMapAln.timeList(0) must equal (1)
-    newMapAln.timeList.length must equal (39)
-    newMapAln.deltaTimeList(38) must be ( 0.913f plusOrMinus 1e-3f )
+    newLandmarks.length must equal (39)
+    newLandmarks(0).time must equal (1)
+    newLandmarks(38).deltaTime must be ( 0.913f plusOrMinus 1e-3f )
     
     ()
   }
@@ -81,13 +87,13 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
     
     val smoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 0, minWindowLandmarks = 3 )
     
-    val newMapAln = timeWindowSmoother.smoothMapAlignment(mapAlignment, smoothingParams)
+    val newLandmarks = timeWindowSmoother.smoothLandmarks(landmarks, smoothingParams)
     
     // Test requirements
-    newMapAln.timeList(0) must equal (1)
-    newMapAln.timeList.length must equal (20)
-    newMapAln.deltaTimeList(0) must be ( 0.841f plusOrMinus 1e-3f )
-    newMapAln.deltaTimeList must equal (deltaTimeList)
+    newLandmarks.length must equal (20)
+    newLandmarks(0).time must equal (1)
+    newLandmarks(0).deltaTime must be ( 0.841f plusOrMinus 1e-3f )
+    newLandmarks.map(_.deltaTime).toArray must equal (deltaTimeList)
   }
   
   @Test
@@ -95,24 +101,24 @@ class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
     
     val smoothingParams = new AlnSmoothingParams( windowSize = 1, windowOverlap = 50, minWindowLandmarks = 3 )
     
-    val newMapAln = timeWindowSmoother.smoothMapAlignment(mapAlignment, smoothingParams)
+    val newLandmarks = timeWindowSmoother.smoothLandmarks(landmarks, smoothingParams)
     
     // Test requirements
-    newMapAln.timeList(0) must equal (1)
-    newMapAln.timeList.length must equal (40)
-    newMapAln.deltaTimeList(39) must be ( 0.913f plusOrMinus 1e-3f )
+    newLandmarks.length must equal (40)
+    newLandmarks(0).time must equal (1)
+    newLandmarks(39).deltaTime must be ( 0.913f plusOrMinus 1e-3f )
     
   }
   
   @Test
   def smoothWithLoess() {
     
-    val newMapAln = loessSmoother.smoothMapAlignment(mapAlignment, null)
+    val newLandmarks = loessSmoother.smoothLandmarks(landmarks, null)
     
     // Test requirements
-    newMapAln.timeList(0) must equal (1)
-    newMapAln.timeList.length must equal (20)
-    newMapAln.deltaTimeList(19) must be ( 0.752f plusOrMinus 1e-3f )
+    newLandmarks.length must equal (20)
+    newLandmarks(0).time must equal (1)    
+    newLandmarks(19).deltaTime must be ( 0.752f plusOrMinus 1e-3f )
     
   }
   

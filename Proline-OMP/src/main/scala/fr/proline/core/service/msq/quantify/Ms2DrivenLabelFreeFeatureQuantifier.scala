@@ -12,7 +12,7 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.core.service.lcms.io.ExtractMapSet
+import fr.proline.core.service.lcms.io.ExtractMapSet2
 import fr.proline.repository.IDataStoreConnectorFactory
 
 class Ms2DrivenLabelFreeFeatureQuantifier(
@@ -24,6 +24,10 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
   
   // Extract the LC-MS map set
   lazy val lcmsMapSet: MapSet = {
+    
+    // TODO: provide the ident RSM to the ExtractMapSet algo
+    //val identResultSummaries = this.identResultSummaries
+    
     val mapSetExtractor = new ExtractMapSet(this.lcmsDbCtx,quantConfig)
     mapSetExtractor.run()
     mapSetExtractor.extractedMapSet

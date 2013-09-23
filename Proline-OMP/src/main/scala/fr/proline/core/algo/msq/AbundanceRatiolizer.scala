@@ -28,20 +28,18 @@ case class AverageAbundanceRatio(
   lazy val maxAbundance = math.max(numeratorMean,denominatorMean)
   
   lazy val ratioValue: Option[Float] = {
-    if( denominatorMean > 0 ) Some( (numeratorMean / denominatorMean).toFloat )
+    if( numeratorMean > 0 && denominatorMean > 0 ) Some( (numeratorMean / denominatorMean).toFloat )
     else None
   }
   
   lazy val foldValue: Option[Float] = {
     
-    if( numeratorMean > denominatorMean ) {
-      if( denominatorMean > 0 ) Some( (numeratorMean / denominatorMean).toFloat )
-      else None
-    }
-    else {
-      if( numeratorMean > 0 ) Some( (denominatorMean / numeratorMean).toFloat )
-      else None
-    }
+    if( numeratorMean > 0 && denominatorMean > 0 ) {
+      if( numeratorMean > denominatorMean )
+        Some( (numeratorMean / denominatorMean).toFloat )
+      else
+        Some( (denominatorMean / numeratorMean).toFloat )
+    } else None
     
   }
   

@@ -19,11 +19,11 @@ object CreateMapSet {
   def apply(
     lcmsDbCtx: DatabaseConnectionContext,
     mapSetName: String,
-    runMaps: Seq[RunMap], 
-    clusteringParams: ClusteringParams
+    processedMaps: Seq[ProcessedMap]
+    //clusteringParams: ClusteringParams
   ): MapSet = {
     
-    val mapSetCreator = new CreateMapSet( lcmsDbCtx, mapSetName, runMaps, clusteringParams  )
+    val mapSetCreator = new CreateMapSet( lcmsDbCtx, mapSetName, processedMaps  )
     mapSetCreator.runService()
     mapSetCreator.createdMapSet
     
@@ -34,8 +34,9 @@ object CreateMapSet {
 class CreateMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
   mapSetName: String,
-  runMaps: Seq[RunMap],
-  clusteringParams: ClusteringParams
+  processedMaps: Seq[ProcessedMap]
+  //runMaps: Seq[RunMap],
+  //clusteringParams: ClusteringParams
 ) extends ILcMsService {
 
   var createdMapSet: MapSet = null
@@ -43,17 +44,17 @@ class CreateMapSet(
   def runService(): Boolean = {
     
     // Define some vars
-    val mapCount = runMaps.length
+    val mapCount = processedMaps.length
     val curTime = new java.util.Date()
     
-    val pps = runMaps(0).peakPickingSoftware
+    //val pps = runMaps(0).peakPickingSoftware
     //die "can't filter data which are ! produced by mzDBaccess" if pps.name ne 'mzDBaccess' and this.hasFeatureFilters
     
     // Load runs
-    val scanSeqProvider = new SQLScanSequenceProvider( lcmsDbCtx )
-    val runIds = runMaps.map { _.runId }
-    val runs = scanSeqProvider.getScanSequences( runIds )
-    val runById = runs.map { run => run.runId -> run } toMap
+    //val scanSeqProvider = new SQLScanSequenceProvider( lcmsDbCtx )
+    //val runIds = runMaps.map { _.runId }
+    //val runs = scanSeqProvider.getScanSequences( runIds )
+    //val runById = runs.map { run => run.runId -> run } toMap
     
     // Check if a transaction is already initiated
     val wasInTransaction = lcmsDbCtx.isInTransaction()
@@ -63,8 +64,7 @@ class CreateMapSet(
     
     // Define some vars
     var newMapSetId: Long = 0L
-    var alnRefMapId: Long = 0L
-    val processedMaps = new ArrayBuffer[ProcessedMap]
+    //val processedMaps = new ArrayBuffer[ProcessedMap]
     
     DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
       
@@ -84,22 +84,25 @@ class CreateMapSet(
       val processedMapStorer = ProcessedMapStorer( lcmsDbCtx )
       
       logger.info("saving the processed maps...")
-      for( runMap <- runMaps ) {
+      for( processedMap <- processedMaps ) {
         mapNumber += 1
         
         // Convert to processed map
-        var processedMap = runMap.toProcessedMap( number = mapNumber, mapSetId = newMapSetId )
+        //var processedMap = runMap.toProcessedMap( number = mapNumber, mapSetId = newMapSetId )
+        
+        // Update the map set id of the processed map
+        processedMap.mapSetId = newMapSetId
         
         // Insert the processed map
         processedMapStorer.insertProcessedMap( processedMap )
         
         // Clean the map
-        val run = runById( runMap.runId )
-        processedMap = CleanMaps( lcmsDbCtx, processedMap, run.scans, Some(clusteringParams) )
+        //val run = runById( runMap.runId )
+        //processedMap = CleanMaps( lcmsDbCtx, processedMap, run.scans, Some(clusteringParams) )
         
         // Set first map as default alignment reference
         if( mapCount == 1 ) processedMap.isAlnReference = true
-        processedMaps += processedMap
+        //processedMaps += processedMap
         
       }
       

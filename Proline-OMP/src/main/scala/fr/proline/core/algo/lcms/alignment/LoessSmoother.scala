@@ -8,10 +8,9 @@ import fr.proline.core.algo.lcms.AlnSmoothingParams
 class LoessSmoother extends IAlnSmoother {
   
   // TODO: smoothingParams are ignored here, maybe we should change the API
-  def smoothMapAlignment( mapAln: MapAlignment, smoothingParams: AlnSmoothingParams ): MapAlignment = {
+  def smoothLandmarks( landmarks: Seq[Landmark], smoothingParams: AlnSmoothingParams ): Seq[Landmark] = {
     
     // Create an array of landmarks
-    val landmarks = mapAln.getLandmarks
     val filteredLandmarks = landmarks.groupBy(_.time).map { lmg => computeMedianLandmark(lmg._2) } toArray
     val landmarksSortedByTime = filteredLandmarks.sortBy(_.time)
     
@@ -26,13 +25,12 @@ class LoessSmoother extends IAlnSmoother {
     val smoothedYVals = new LoessInterpolator().smooth(xVals.toArray, yVals.toArray)    
     
     // Fill buffers with smoothed values    
-    val( newTimeList, newDeltaTimeList ) = (new ArrayBuffer[Float],new ArrayBuffer[Float])
-    xVals.zip(smoothedYVals).foreach { xy =>
-      newTimeList += xy._1.toFloat
-      newDeltaTimeList += xy._2.toFloat
+    val newLandmarks = xVals.zip(smoothedYVals).map { xy =>
+      Landmark(xy._1.toFloat,xy._2.toFloat)
     }
     
-    mapAln.copy( timeList = newTimeList.toArray, deltaTimeList = newDeltaTimeList.toArray )
+    //mapAln.copy( timeList = newTimeList.toArray, deltaTimeList = newDeltaTimeList.toArray )
+    newLandmarks
   }
 
 }

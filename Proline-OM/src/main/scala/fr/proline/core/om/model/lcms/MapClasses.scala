@@ -110,6 +110,12 @@ abstract class ILcMsMap {
 
 object RunMap extends InMemoryIdGen
 
+// TODO:  move in Scala Commons ???
+trait IEntityIdentifier {
+  def id: Long
+}
+case class Identifier( var id: Long ) extends IEntityIdentifier
+
 case class RunMap(
             
   // Required fields
@@ -131,18 +137,24 @@ case class RunMap(
   // Mutable optional fields
   var properties: Option[LcMsMapProperties] = None
   
-) extends ILcMsMap {
+) extends ILcMsMap with IEntityIdentifier {
   
   // Requirements
   require( peakPickingSoftware != null, "a pick peaking software must be provided" )
-  require( features.count(_.correctedElutionTime.isDefined) == 0, "can't use processed map features as run map features" )
+  //require( features.count(_.correctedElutionTime.isDefined) == 0, "can't use processed map features as run map features" )
   
   def toProcessedMap( number: Int, mapSetId: Long, features: Array[Feature] = this.features ) = {
     
+    val procMapId = ProcessedMap.generateNewId
     val curTime = new Date()
     
+    // Update the processed map id of each feature
+    features.foreach { ft =>
+      ft.relations.processedMapId = procMapId
+    }
+    
     ProcessedMap(
-      id = ProcessedMap.generateNewId,
+      id = procMapId,
       number = number,
       name = name,
       description = description,
@@ -153,7 +165,7 @@ case class RunMap(
       isAlnReference = false,
       features = features,
       featureScoring = featureScoring,
-      runMapIds = Array( this.id ),
+      runMapIdentifiers = List( this ),
       runId = Some(runId),
       mapSetId = mapSetId
     )
@@ -178,8 +190,9 @@ case class ProcessedMap(
   val isMaster: Boolean,
   var isAlnReference: Boolean,
   
-  val mapSetId: Long,
-  var runMapIds: Array[Long], // Many values only for a master map
+  var mapSetId: Long,
+  //@transient val runMaps: Array[RunMap], // Many values only for a master map
+  @transient var runMapIdentifiers: Seq[IEntityIdentifier],
   
   // Immutable optional fields
   val description: String = "",
@@ -197,7 +210,19 @@ case class ProcessedMap(
   
   // Requirements
   require( modificationTimestamp != null )
-  if( !isMaster ) require( runMapIds.length == 1 )
+  if( !isMaster ) require( runMapIdentifiers.length == 1 )
+  
+  def getRunMapIds(): Seq[Long] = runMapIdentifiers.map(_.id)
+  
+  // TODO: note this is a way to generalize to MSI OM
+  def getRunMaps(): Seq[Option[RunMap]] = {
+    runMapIdentifiers.map { runMapIdentifier =>
+      runMapIdentifier match {
+        case runMap: RunMap => Some(runMap)
+        case _ => None
+      }
+    }
+  }
   
   def copyWithoutClusters(): ProcessedMap = {
     
@@ -239,13 +264,34 @@ case class MapAlignment(
   
   // Requirements
   require( massRange != null && timeList != null && deltaTimeList != null )
+  this._checkSlopes()
   
+  // Define some lazy vals
   lazy val deltaTimeVersusTime = timeList.zip(deltaTimeList)
+  
+  private def _checkSlopes(): Unit = {
+    
+    deltaTimeVersusTime.sliding(2).foreach { lmPair =>
+      require(lmPair(1)._1 > lmPair(0)._1,"MapAlignment must contain only strictly increasing time values")
+      
+      val targetTime1 = lmPair(0)._1 + lmPair(0)._2
+      val targetTime2 = lmPair(1)._1 + lmPair(1)._2
+      //val delaTimeDiff = lmPair(1)._2 - lmPair(0)._2
+      
+      //val slope = delaTimeDiff / timeDiff
+      //if( slope >= 1 ) println(lmPair(0)._1 + " "+lmPair(0)._2)
+      //if( slope >= 1 ) println(lmPair(1)._1 + " "+lmPair(1)._2)
+      require(targetTime2 > targetTime1,"MapAlignment must contain only strictly increasing (time + delta time) values")
+      
+    }
+    
+    ()
+  }
   
   def getLandmarks(): Array[Landmark] = {
     
     var landmarks = new ArrayBuffer[Landmark](timeList.length)
-    (timeList, deltaTimeList).zipped foreach { (time, deltaTime) =>
+    deltaTimeVersusTime.foreach { case (time, deltaTime) =>
       landmarks += Landmark( time , deltaTime )
     }
     
@@ -276,11 +322,18 @@ case class MapAlignment(
     
     import fr.proline.util.math.linearInterpolation
     
-    linearInterpolation(elutionTime, deltaTimeVersusTime)
-    //this._calcDeltaTime( timeIndex, elutionTime )
+    linearInterpolation(elutionTime, deltaTimeVersusTime, false)
+    
+    /*var index = deltaTimeVersusTime.indexWhere( _._1 >= elutionTime )
+    if( index == -1  ) {
+      index = if( elutionTime < deltaTimeVersusTime.head._1 ) 0 else deltaTimeVersusTime.length - 1
+    }
+    
+    this._calcDeltaTime( index, elutionTime )*/
   }
   
-  /*private def _calcDeltaTime( timeIndex: Int, elutionTime: Float ) = {
+  /*
+  private def _calcDeltaTime( timeIndex: Int, elutionTime: Float ) = {
     require( timeIndex >= -1 && timeIndex < deltaTimeList.length, "time index is out of range" )
     
     import fr.proline.util.math.calcLineParams
@@ -304,6 +357,7 @@ case class MapAlignment(
       if( x1 == x2 ) deltaTime = (y1 + y2)/2
       else {
         val ( a, b ) = calcLineParams( x1, y1, x2, y2 )
+        //println("a="+a +" b="+ b + "y="+ (a * elutionTime + b).toFloat )
         deltaTime = (a * elutionTime + b).toFloat
       }
 
@@ -325,13 +379,33 @@ case class MapAlignment(
       revDeltaTimeList(i) = -deltaTime
     }
     
-    MapAlignment(
+    val tmpAln = MapAlignment(
       refMapId = targetMapId,
       targetMapId = refMapId,
       massRange = massRange,
       timeList = revTimeList,
       deltaTimeList = revDeltaTimeList             
     )
+    
+    tmpAln
+    /*val landmarks = tmpAln.getLandmarks
+    
+    // Keep only correctly ordered landmarks (time greater than previous one)
+    val filteredLandmarks = new ArrayBuffer[Landmark]
+    var curTime = 0f
+    landmarks.foreach { lm =>
+      if( lm.time > curTime ) {
+        curTime = lm.time
+        filteredLandmarks += lm
+      }
+    }
+    
+    if( filteredLandmarks.length < landmarks.length ) {
+      tmpAln.copy(
+        timeList = filteredLandmarks.map( _.time ).toArray,
+        deltaTimeList = filteredLandmarks.map( _.deltaTime ).toArray
+      )
+    } else tmpAln*/
     
   }
   
@@ -443,14 +517,14 @@ case class MapSet(
     val runMapIds = new ArrayBuffer[Long](childMaps.length)
     for( childMap <- childMaps ) {
       if( childMap.isProcessed == false ) { runMapIds += childMap.id }
-      else { runMapIds ++= childMap.runMapIds }
+      else { runMapIds ++= childMap.getRunMapIds }
     }
     
     runMapIds.toArray
   }
   
   def getProcessedMapIdByRunMapId = {
-    (for( childMap <- childMaps; if childMap.isProcessed; runMapId <- childMap.runMapIds ) yield runMapId -> childMap.id).toMap
+    (for( childMap <- childMaps; if childMap.isProcessed; runMapId <- childMap.getRunMapIds ) yield runMapId -> childMap.id).toMap
   }
 
   def getNormalizationFactorByMapId: Map[Long,Float] = { 

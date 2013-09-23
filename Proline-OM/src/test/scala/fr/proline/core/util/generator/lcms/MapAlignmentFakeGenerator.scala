@@ -1,5 +1,6 @@
 package fr.proline.core.util.generator.lcms
 
+import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.MapAlignment
 
@@ -31,19 +32,37 @@ object Distortions {
 
 
 class MapAlignmentFakeGenerator(
-  distortion: Array[Float] => Array[Float]
+  distortion: Array[Float] => Array[Float],
+  amplitude: Float = 1f
   ) {
   
   def generateMapAlignment( timeList: Array[Float], refMapId: Long, targetMapId: Long, massRange: Pair[Float,Float] ): MapAlignment = {
     
-    val deltaTimeList = distortion( timeList )
+    val deltaTimeList = distortion( timeList ).map( _ * amplitude )
+    
+    val fixedTimeList = new ArrayBuffer[Float](timeList.length)
+    val fixedDeltaTimeList = new ArrayBuffer[Float](deltaTimeList.length)
+    
+    var prevX = 0f
+    var prevY = 0f
+    timeList.zip(deltaTimeList).foreach { case(x,y) =>
+      val xySum = x + y
+      val prevXYSum = prevX + prevY
+      if( x > prevX && xySum > prevXYSum ) {
+        fixedTimeList += x
+        fixedDeltaTimeList += y
+        //println( x +"\t"+ y)
+        prevX = x
+        prevY = y
+      }
+    }
     
     new MapAlignment(
       refMapId = refMapId,
       targetMapId = targetMapId,
       massRange = massRange,
-      timeList = timeList,
-      deltaTimeList = deltaTimeList
+      timeList = fixedTimeList.toArray,
+      deltaTimeList = fixedDeltaTimeList.toArray
     )
   }
     

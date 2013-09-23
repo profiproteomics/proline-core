@@ -32,7 +32,7 @@ class SQLRunMapProvider(
 
     val features = this.getFeatures(runMapIds)
     // Group features by map id
-    val featuresByMapId = features.groupBy(_.relations.mapId)
+    val featuresByMapId = features.groupBy(_.relations.runMapId)
 
     val runMaps = new Array[RunMap](runMapIds.length)
     var lcmsMapIdx = 0

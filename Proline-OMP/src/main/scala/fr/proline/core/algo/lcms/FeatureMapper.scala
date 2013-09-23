@@ -16,19 +16,19 @@ object FeatureMapper {
     val timeTol = methodParams.timeTol
     
     // Group features by charge
-    var map1FtsByCharge: Map[Int,Array[Feature]] = null // TODO map1FtsByCharge
-    var map2FtsByCharge: Map[Int,Array[Feature]] = null
-    var chargeStates: List[Int] = null
+    var map1FtsByCharge = Map.empty[Int,Array[Feature]]
+    var map2FtsByCharge = Map.empty[Int,Array[Feature]]
+    var chargeStates = Array.empty[Int]
     
-    if( ! isChargeTolerant ) {
+    if( isChargeTolerant == false ) {
       map1FtsByCharge = map1Features.groupBy( _.charge )
       map2FtsByCharge = map2Features.groupBy( _.charge )
-      chargeStates = (map1FtsByCharge.keys.toArray ++ map2FtsByCharge.keys).toList.distinct
+      chargeStates = (map1FtsByCharge.keys.toArray ++ map2FtsByCharge.keys).distinct
     } else {
       // Use a zero charge to marge all charge states
       map1FtsByCharge = Map( 0 -> map1Features )
       map2FtsByCharge = Map( 0 -> map2Features ) 
-      chargeStates = List( 0 )
+      chargeStates = Array( 0 )
     }
     
     val ftMapping = new collection.mutable.HashMap[Long,ArrayBuffer[Feature]] // ft1Id => Array(ft2) 

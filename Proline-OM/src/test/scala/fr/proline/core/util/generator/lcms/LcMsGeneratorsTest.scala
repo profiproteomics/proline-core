@@ -7,15 +7,14 @@ import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.om.model.lcms.RawFile
 
-@Test
-class LcMsRunFakeGeneratorTest extends JUnitSuite with Logging {
+object LcMsRunGeneratorsTest {
   
-  private final val MIN_MOZ = 300
-  private final val MAX_MOZ = 2000
-  private final val MAX_RUN_TIME = 120 * 60
-  private final val MAX_FT_TIME = MAX_RUN_TIME
-  private final val MAX_MS1_INTENSITY = 10e9.toInt
-  private final val MAX_MS2_INTENSITY = 1000
+  final val MIN_MOZ = 300
+  final val MAX_MOZ = 2000
+  final val MAX_RUN_TIME = 120 * 60
+  final val MAX_FT_TIME = MAX_RUN_TIME
+  final val MAX_MS1_INTENSITY = 10e9.toInt
+  final val MAX_MS2_INTENSITY = 1000
   
   val landmarks = Array( (1,10e7),(300,10e7),(400,10e9),(2000,10e9),(3000,10e8),(4000,10e7),(6000,10e8),(7200,10e6) )
   val relLandmarks = landmarks.map( lm => lm._1.toFloat -> (lm._2/10e9).toFloat )
@@ -30,18 +29,23 @@ class LcMsRunFakeGeneratorTest extends JUnitSuite with Logging {
     ms1RelativeLandmarks = relLandmarks
   )
   
-  @Test
+}
+
+@Test
+class LcMsRunGeneratorsTest extends JUnitSuite with Logging {
+  
+  //@Test
   def testRunMapGenerator() {
     
     val runMapGenerator = new RunMapFakeGenerator(
       nbFeatures = 10,
-      minMoz = MIN_MOZ,
-      maxMoz = MAX_MOZ,
+      minMoz = LcMsRunGeneratorsTest.MIN_MOZ,
+      maxMoz = LcMsRunGeneratorsTest.MAX_MOZ,
       minTime = 0,
-      maxTime = MAX_FT_TIME
+      maxTime = LcMsRunGeneratorsTest.MAX_FT_TIME
     )
     
-    val runMap = runMapGenerator.generateRunMap( lcmsRunGenerator.generateLcMsRun )
+    val runMap = runMapGenerator.generateRunMap( LcMsRunGeneratorsTest.lcmsRunGenerator.generateLcMsRun )
     assert( runMap.features.length === 10 )
 
     /*runMap.features.foreach { ft =>
@@ -57,29 +61,26 @@ class LcMsRunFakeGeneratorTest extends JUnitSuite with Logging {
   @Test
   def testMapSetGenerator() {
     
-    val nbMaps = 2
-    val nbFeatures = 1000
+    val nbMaps = 3
+    val nbFeatures = 10
     
     val runMapGenerator = new RunMapFakeGenerator(
       nbFeatures = nbFeatures,
-      minMoz = MIN_MOZ,
-      maxMoz = MAX_MOZ,
+      minMoz = LcMsRunGeneratorsTest.MIN_MOZ,
+      maxMoz = LcMsRunGeneratorsTest.MAX_MOZ,
       minTime = 0,
-      maxTime = MAX_FT_TIME
+      maxTime = LcMsRunGeneratorsTest.MAX_FT_TIME
     )
     
-    val lcmsRun = lcmsRunGenerator.generateLcMsRun()
+    val lcmsRun = LcMsRunGeneratorsTest.lcmsRunGenerator.generateLcMsRun()
     val runMap = runMapGenerator.generateRunMap( lcmsRun )
     
-    val alnFakeGen = new MapAlignmentFakeGenerator( distortion = Distortions.SINE_DISTORTION() )
+    val alnFakeGen = new MapAlignmentFakeGenerator( distortion = Distortions.SINE_DISTORTION(), amplitude = 1f )
     val mapSetFakeGen = new LcMsMapSetFakeGenerator( nbMaps = nbMaps, alnFakeGenerator = alnFakeGen )
     
     val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, runMap)
     assert( mapSet.childMaps.length === nbMaps )
   }
-  
-  
-  
-  
+
 
 }

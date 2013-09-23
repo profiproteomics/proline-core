@@ -52,8 +52,25 @@ trait ILcmsMapAligner {
     for( (massRangeIdx,landmarks) <- landmarksByMassIdx ){
       
       val landmarksSortedByTime = landmarks.sortBy( _.time )
-      val timeList = landmarksSortedByTime.map { _.time }
-      val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }
+      val smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnParams.smoothingParams )
+      /*val timeList = landmarksSortedByTime.map { _.time }
+      val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }*/
+      
+      val( timeList, deltaTimeList ) = ( new ArrayBuffer[Float](smoothedLandmarks.length), new ArrayBuffer[Float](smoothedLandmarks.length) )
+      var prevTimePlusDelta = smoothedLandmarks(0).time + smoothedLandmarks(0).deltaTime - 1
+      var prevTime = -1f
+      smoothedLandmarks.sortBy( _.time ).foreach { lm =>
+        
+        val timePlusDelta = lm.time + lm.deltaTime
+        
+        // Filter time+delta values which are not greater than the previous one
+        if( lm.time > prevTime && timePlusDelta > prevTimePlusDelta ) {
+          timeList += lm.time
+          deltaTimeList += lm.deltaTime
+          prevTime = lm.time
+          prevTimePlusDelta = timePlusDelta          
+        }
+      }
       
       val mapAlignment = new MapAlignment(
         refMapId = map1.id,
@@ -63,7 +80,7 @@ trait ILcmsMapAligner {
         deltaTimeList = deltaTimeList.toArray
       )
       
-      ftAlignments += alnSmoother.smoothMapAlignment( mapAlignment, alnParams.smoothingParams )
+      ftAlignments += mapAlignment //alnSmoother.smoothMapAlignment( landmarksSortedByTime, alnParams.smoothingParams )
       
     }
     

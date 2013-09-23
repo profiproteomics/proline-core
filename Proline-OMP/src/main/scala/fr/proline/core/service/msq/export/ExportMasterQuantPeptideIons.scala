@@ -8,17 +8,19 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import fr.proline.api.service.IService
+import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.context.IExecutionContext
 
 class ExportMasterQuantPeptideIons(
   override val execCtx: IExecutionContext,
   override val masterQuantChannelId: Long,
-  override val outputFile: File
-) extends ExportMasterQuantPeptides(execCtx,masterQuantChannelId,outputFile) {
+  override val outputFile: File,
+  override val expDesign: ExperimentalDesign
+) extends ExportMasterQuantPeptides(execCtx,masterQuantChannelId,outputFile,expDesign) {
   
   protected val mqPepIonHeaders = "charge master_elution_time master_feature_id".split(" ")
-  protected val qPepIonHeaders = "moz elution_time correct_elution_time duration raw_abundance ms2_count feature_id".split(" ")
+  protected val qPepIonHeaders = "moz elution_time correct_elution_time duration raw_abundance ms2_count ms2_matching_freq feature_id".split(" ")
   
   // Create some mappings
   protected val mqPepById = Map() ++ quantRSM.masterQuantPeptides.map( mqPep => mqPep.id -> mqPep ) 
@@ -43,6 +45,11 @@ class ExportMasterQuantPeptideIons(
       
       row ++= mqPepCellsById(mqPep.id)
       
+      // Append ratios
+      val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber.toString)
+      val ratios = mqPepProfile.getRatios.map(_.map(_.getState.toString).getOrElse("") )      
+      row ++= ratios
+      
       // Append master quant peptide ion data
       row ++= Array(mqPepIon.charge,mqPepIon.elutionTime,mqPepIon.lcmsFeatureId.getOrElse(""))
       
@@ -56,6 +63,7 @@ class ExportMasterQuantPeptideIons(
           qPepIon.duration,
           qPepIon.rawAbundance,
           qPepIon.peptideMatchesCount,
+          qPepIon.ms2MatchingFrequency.getOrElse(0),
           qPepIon.lcmsFeatureId
         )
         

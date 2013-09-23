@@ -1,6 +1,7 @@
 package fr.proline.core.algo.lcms
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashSet
 import fr.proline.core.om.model.lcms._
 import filtering._
 
@@ -49,39 +50,10 @@ object MasterMapBuilder {
           // Retrieve the features above the provided threshold
           val highIntensityFts = childMap.features filter { _.selectionLevel >= 2 }
           
-          // Retrieve the alignment between the reference map and the current map
-          //val mapAlnSet = refMapAlnSetByMapId(childMap.id)
-          
           // Feed the master map with the filtered features
           this._feedMasterMapFeatures(masterFts, highIntensityFts, mapSet, processedMapIdByRunMapId, ftMappingParams, true )
         }
       }
-      
-      // Create an alignment fake from reference map to reference map
-      /*val alnRefMapNbFeatures = alnRefMap.features.length
-      var refMapTimeList = new ArrayBuffer[Float](alnRefMapNbFeatures)
-      val refMapDeltaTimeList = new ArrayBuffer[Float](alnRefMapNbFeatures)
-      
-      for( val refMapFt <- alnRefMap.features ) {
-        refMapTimeList += refMapFt.elutionTime
-        refMapDeltaTimeList += 0
-      }
-      val sortedRefMapTimeList = refMapTimeList.toList.sort { (a,b) => a < b } toArray
-      
-      val refMapFakeAln = new MapAlignment(
-        refMapId = alnRefMapId,
-        targetMapId = alnRefMapId,
-        massRange = (0,100000),
-        timeList = sortedRefMapTimeList,
-        deltaTimeList = refMapDeltaTimeList.toArray
-      )
-      val refMapFakeAlnSet = new MapAlignmentSet(
-        refMapId = alnRefMapId,
-        targetMapId = alnRefMapId,
-        mapAlignments = Array(refMapFakeAln)
-       )
-      refMapAlnSetByMapId = refMapAlnSets ++ Array(refMapFakeAlnSet) map { alnSet => alnSet.toMapId -> alnSet }  toMap
-      */
       
       //print "feed master map with low quality features\n"
         
@@ -91,38 +63,36 @@ object MasterMapBuilder {
         // Retrieve the features under the provided threshold        
         val lowIntensityFts = childMap.features filter { _.selectionLevel < 2 }
         
-        // Retrieve the alignement between the reference map and the current map
-        //val mapAlnSet = refMapAlnSetByMapId(childMap.id)
-        
-        // Assign these poor quality features to existing master features
-        // but don't make them master features if they can't be assigned
-        this._feedMasterMapFeatures(masterFts,lowIntensityFts,mapSet,processedMapIdByRunMapId,ftMappingParams, false )        
+        if( lowIntensityFts.length > 0 ) {
+          // Assign these poor quality features to existing master features
+          // but don't make them master features if they can't be assigned
+          this._feedMasterMapFeatures(masterFts,lowIntensityFts,mapSet,processedMapIdByRunMapId,ftMappingParams, false )  
+        }
+              
       }
       
       // Try to map single features to existing master features with charge error tolerance
-      //print "map alone features to existing master features with charge error tolerance\n"
-      masterFts = this._mergeMasterFeaturesWithChargeTol(mapSet, masterFts, ftMappingParams)
+      // print "map alone features to existing master features with charge error tolerance\n"
+      // Note this has been disabled in Proline because we expect the charge states to be correctly computed
+      //masterFts = this._mergeMasterFeaturesWithChargeTol(mapSet, masterFts, ftMappingParams)
     }
     
     val curTime = new java.util.Date()
     
     // Create the master map with master features
     val masterMap = ProcessedMap(
-                          id = ProcessedMap.generateNewId(),
-                          number = 0,
-                          name = alnRefMap.name,
-                          features = this.rebuildMftsUsingBestChild( masterFts ),
-                          isMaster = true,
-                          isAlnReference = false,
-                          isProcessed = true,
-                          creationTimestamp = curTime,
-                          modificationTimestamp = curTime,
-                          mapSetId = mapSet.id,
-                          runMapIds = mapSet.getRunMapIds()
-                        )
-    
-    // Set map set master map
-    //mapSet.masterMap = masterMap
+      id = ProcessedMap.generateNewId(),
+      number = 0,
+      name = alnRefMap.name,
+      features = this.rebuildMftsUsingBestChild( masterFts ),
+      isMaster = true,
+      isAlnReference = false,
+      isProcessed = true,
+      creationTimestamp = curTime,
+      modificationTimestamp = curTime,
+      mapSetId = mapSet.id,
+      runMapIdentifiers = mapSet.getRunMapIds().map(Identifier(_))
+    )
     
     masterMap
   }
@@ -172,8 +142,8 @@ object MasterMapBuilder {
     // Iterate over all child map features in order to correct their elution time
     for( val childFt <- childMapFeatures ) {
       
-      val childMapId = childFt.relations.mapId
-      require( childMapId != 0, "a map id must be defined for each child feature (m/z=" + childFt.moz +")")
+      val childMapId = childFt.relations.processedMapId
+      require( childMapId != 0, "a processed map id must be defined for each child feature (m/z=" + childFt.moz +")")
       
       val childProcessedMapId = if( childFt.isCluster ) childMapId
       else processedMapIdByRunMapId(childMapId)
@@ -193,71 +163,97 @@ object MasterMapBuilder {
       childMapFeatures,
       ftMappingParams
     )
+    val revFtMapping = FeatureMapper.computePairwiseFtMapping(
+      childMapFeatures,
+      masterMapFeatures.toArray,
+      ftMappingParams
+    )
    
     val masterMapFtById = masterMapFeatures.map { ft => ft.id -> ft } toMap
     
     // Retrieve nearest matching children (considering elution time) and their id
-    val matchingFtIdSet = new scala.collection.mutable.HashSet[Long]()
+    val matchingFtIdSet = new HashSet[Long]()
     
     for( val(masterMapFtId, matchingChildFeatures) <- ftMapping ) {
       
       val masterMapFt = masterMapFtById(masterMapFtId)
-      val mftTime = masterMapFt.elutionTime
-      val nearestChildFt = matchingChildFeatures.reduceLeft { (a,b) =>
-        if( math.abs(a.getCorrectedElutionTimeOrElutionTime - mftTime) < math.abs(b.getCorrectedElutionTimeOrElutionTime - mftTime) ) a else b
+      
+      var newChildFeatures = Array.empty[Feature]
+      if( matchingChildFeatures.length == 1 ) newChildFeatures = matchingChildFeatures
+      else {        
+        val mftTime = masterMapFt.elutionTime
+        
+        val unambiguousMatchingFts = matchingChildFeatures.filter( ft => revFtMapping(ft.id).length == 1 )
+        if( unambiguousMatchingFts.length == 1 ) newChildFeatures = unambiguousMatchingFts
+        else {
+          
+          val ambiguousMatchingFts = if( unambiguousMatchingFts.length == 0 ) matchingChildFeatures else unambiguousMatchingFts
+          newChildFeatures = ambiguousMatchingFts
+          
+          //val exclusivelyMatchingChildFts = matchingChildFeatures.filter( ft => matchingFtIdSet.contains(ft.id) )
+          /*nearestChildFt = ambiguousMatchingFts.reduceLeft { (a,b) =>
+            if( math.abs(a.getCorrectedElutionTimeOrElutionTime - mftTime) < math.abs(b.getCorrectedElutionTimeOrElutionTime - mftTime) ) a else b
+          }*/
+        }
       }
       
-      matchingFtIdSet += nearestChildFt.id
+      matchingFtIdSet ++= newChildFeatures.map(_.id)
       
-      // Append nearest child to the current list of master feature children
-      masterMapFt.children ++= Array(nearestChildFt)
+      // Append matching children to the current list of master feature children
+      masterMapFt.children ++= newChildFeatures
       
     }
     
-    if( addNonMatchingFeatures ) {
-      
-      // Retrieve child map features which weren't aligned with master map
-      val nonMatchingChildFts = childMapFeatures filter { ft => ! matchingFtIdSet.contains( ft.id ) }
-      
-      // Set the corrected elution time using the elution time alignment
-      /*nonMatchingChildFts.foreach { childFt =>
-        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childFt.relations.mapId, mapSet.alnReferenceMapId)
-        childFt.correctedElutionTime = Some(correctedTime)
-      }*/
-      
-      // Convert child features into master features
-      val newMasterFeatures = nonMatchingChildFts.map { _.toMasterFeature() }
-      
-      //val newMasterFeatures = new ArrayBuffer[Feature](nonMatchingChildFts.length)
-      /*for( nonMatchingChildFt <- nonMatchingChildFts ) {
-        newMasterFeatures += new Feature (
-                                  id = Feature.generateNewId,
-                                  moz = nonMatchingChildFt.moz,
-                                  intensity = nonMatchingChildFt.intensity,
-                                  charge = nonMatchingChildFt.charge,
-                                  elutionTime = nonMatchingChildFt.correctedElutionTime,
-                                  qualityScore = nonMatchingChildFt.qualityScore,
-                                  ms1Count = nonMatchingChildFt.ms1Count,
-                                  ms2Count = nonMatchingChildFt.ms2Count,
-                                  isOverlapping = false,
-                                  firstScanId = nonMatchingChildFt.firstScanId,
-                                  lastScanId = nonMatchingChildFt.lastScanId,
-                                  apexScanId = nonMatchingChildFt.apexScanId,
-                                  firstScanInitialId = nonMatchingChildFt.firstScanInitialId,
-                                  lastScanInitialId = nonMatchingChildFt.lastScanInitialId,
-                                  apexScanInitialId = nonMatchingChildFt.apexScanInitialId,
-                                  ms2EventIds = null,
-                                  isotopicPatterns = null,
-                                  overlappingFeatures = null,
-                                  children = Array(nonMatchingChildFt)
-                                )
-        
-      }*/
-      
-      // Add non-matching child features to the master map
-      masterMapFeatures ++= newMasterFeatures
+    if( addNonMatchingFeatures ) _addNonMatchingFeatures(masterMapFeatures,childMapFeatures,matchingFtIdSet)
     
-    }
+  }
+  
+  private def _addNonMatchingFeatures(
+     masterMapFeatures: ArrayBuffer[Feature],
+     childMapFeatures: Array[Feature],
+     matchingFtIdSet: HashSet[Long]
+  ): ArrayBuffer[Feature] = {
+      
+    // Retrieve child map features which weren't aligned with master map
+    val nonMatchingChildFts = childMapFeatures filter { ft => ! matchingFtIdSet.contains( ft.id ) }
+    
+    // Set the corrected elution time using the elution time alignment
+    /*nonMatchingChildFts.foreach { childFt =>
+      val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childFt.relations.mapId, mapSet.alnReferenceMapId)
+      childFt.correctedElutionTime = Some(correctedTime)
+    }*/
+    
+    // Convert child features into master features
+    val newMasterFeatures = nonMatchingChildFts.map { _.toMasterFeature() }
+    
+    //val newMasterFeatures = new ArrayBuffer[Feature](nonMatchingChildFts.length)
+    /*for( nonMatchingChildFt <- nonMatchingChildFts ) {
+      newMasterFeatures += new Feature (
+                                id = Feature.generateNewId,
+                                moz = nonMatchingChildFt.moz,
+                                intensity = nonMatchingChildFt.intensity,
+                                charge = nonMatchingChildFt.charge,
+                                elutionTime = nonMatchingChildFt.correctedElutionTime,
+                                qualityScore = nonMatchingChildFt.qualityScore,
+                                ms1Count = nonMatchingChildFt.ms1Count,
+                                ms2Count = nonMatchingChildFt.ms2Count,
+                                isOverlapping = false,
+                                firstScanId = nonMatchingChildFt.firstScanId,
+                                lastScanId = nonMatchingChildFt.lastScanId,
+                                apexScanId = nonMatchingChildFt.apexScanId,
+                                firstScanInitialId = nonMatchingChildFt.firstScanInitialId,
+                                lastScanInitialId = nonMatchingChildFt.lastScanInitialId,
+                                apexScanInitialId = nonMatchingChildFt.apexScanInitialId,
+                                ms2EventIds = null,
+                                isotopicPatterns = null,
+                                overlappingFeatures = null,
+                                children = Array(nonMatchingChildFt)
+                              )
+      
+    }*/
+    
+    // Add non-matching child features to the master map
+    masterMapFeatures ++= newMasterFeatures
     
   }
 
