@@ -145,12 +145,12 @@ object MasterMapBuilder {
       val childMapId = childFt.relations.processedMapId
       require( childMapId != 0, "a processed map id must be defined for each child feature (m/z=" + childFt.moz +")")
       
-      val childProcessedMapId = if( childFt.isCluster ) childMapId
-      else processedMapIdByRunMapId(childMapId)
+      //val childProcessedMapId = if( childFt.isCluster ) childMapId
+      //else processedMapIdByRunMapId(childFt.relations.runMapId)
       
-      if( childProcessedMapId != mapSet.getAlnReferenceMapId ) {
+      if( childMapId != mapSet.getAlnReferenceMapId ) {
         // Calculate corrected elution time using the elution time alignment
-        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childProcessedMapId, mapSet.getAlnReferenceMapId)
+        val correctedTime = mapSet.convertElutionTime(childFt.elutionTime, childMapId, mapSet.getAlnReferenceMapId)
         childFt.correctedElutionTime = Some(correctedTime)
       }
 

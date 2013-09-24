@@ -47,7 +47,8 @@ class MasterMapBuilderTest extends JUnitSuite  with Logging {
     
     
     assertEquals(nbFeatures, masterMap.features.length)
-    println( masterMap.features.length )
+    //println( masterMap.features.length )
+    
     masterMap.features.foreach { mft =>
       //val allTimes = mft.children.map( _.getCorrectedElutionTimeOrElutionTime )
       //val allmoz = mft.children.map( _.moz )
