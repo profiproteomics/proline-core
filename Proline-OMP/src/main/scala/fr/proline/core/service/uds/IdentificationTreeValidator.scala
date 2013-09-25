@@ -7,6 +7,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.api.service.IService
 import fr.proline.context.{ IExecutionContext, DatabaseConnectionContext, BasicExecutionContext }
 import fr.proline.core.algo.msi.filtering._
+import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal.helper.{ MsiDbHelper, UdsDbHelper }
 import fr.proline.core.dal.{ SQLConnectionContext, ContextFactory }
@@ -19,6 +20,7 @@ import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.om.model.msi.ResultSummary
 import javax.persistence.EntityManager
 
+
 class IdentificationTreeValidator(
   dsFactory: IDataStoreConnectorFactory,
   execJpaContext: IExecutionContext,
@@ -27,8 +29,10 @@ class IdentificationTreeValidator(
   useTdCompetition: Boolean,
   pepMatchFilters: Option[Seq[IPeptideMatchFilter]] = None,
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
+  peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
-  protSetValidator: Option[IProteinSetValidator] = None) extends IService with Logging {
+  protSetValidator: Option[IProteinSetValidator] = None
+) extends IService with Logging {
   // TODO: uncomment this require when LCMS ORM is implemented
   //require( execJpaContext.isJPA, "a JPA execution context is needed" )  
 
@@ -248,6 +252,7 @@ class IdentificationTreeValidator(
         pepMatchValidator = pepMatchValidator,
         protSetFilters = protSetFilters,
         protSetValidator = protSetValidator,
+        peptideSetScoring = peptideSetScoring,
         storeResultSummary = true
       )
 
