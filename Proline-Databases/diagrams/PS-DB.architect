@@ -110,89 +110,95 @@ MUST BE UNIQUE.</remarks>
     <index id="IDX26" populated="true" UUID="1ee595bd-be86-45da-906f-988879c3bcdb" clustered="false" index-type="BTREE" name="ptm_pk" physicalName="ptm_pk" primaryKeyIndex="true" unique="true" >
      <index-column id="IDC27" populated="true" UUID="3993b9ee-0e1c-41b6-854c-19b427ffbba0" ascendingOrDescending="UNSPECIFIED" column-ref="COL21" name="id" physicalName="id" />
     </index>
+    <index id="IDX28" populated="true" UUID="99e53189-0ce6-4622-994e-9d220fac33e4" clustered="false" name="ptm_full_name_idx" physicalName="ptm_full_name_idx" primaryKeyIndex="false" unique="true" >
+     <index-column id="IDC29" populated="true" UUID="e495b2aa-fb57-4080-bfec-75e1f4da1a4d" ascendingOrDescending="UNSPECIFIED" column-ref="COL23" name="full_name" physicalName="full_name" />
+    </index>
+    <index id="IDX30" populated="true" UUID="8350d189-57bf-4d16-800d-b04a0db7e5fb" clustered="false" name="ptm_short_name_idx" physicalName="ptm_short_name_idx" primaryKeyIndex="false" unique="true" >
+     <index-column id="IDC31" populated="true" UUID="2f5acbc9-c046-445e-80dd-6961dc331fc5" ascendingOrDescending="UNSPECIFIED" column-ref="COL24" name="short_name" physicalName="short_name" />
+    </index>
    </folder>
   </table>
-  <table id="TAB28" populated="true" UUID="5649a98b-6076-47fd-9a6d-a109de0bc9f9" name="peptide" objectType="TABLE" physicalName="peptide" >
+  <table id="TAB32" populated="true" UUID="5649a98b-6076-47fd-9a6d-a109de0bc9f9" name="peptide" objectType="TABLE" physicalName="peptide" >
    <remarks>A peptide is an amino acid (AA) sequence with given PTMs. A peptide has a unique pair of sequence/PTM string.</remarks>
-   <folder id="FOLTAB281" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL29" populated="true" UUID="e12ef0c4-abe9-4d06-a702-aebed5f49906" autoIncrement="true" autoIncrementSequenceName="peptide_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+   <folder id="FOLTAB321" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL33" populated="true" UUID="e12ef0c4-abe9-4d06-a702-aebed5f49906" autoIncrement="true" autoIncrementSequenceName="peptide_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL30" populated="true" UUID="4cae2bb4-d521-40b1-8f6f-14215a741909" autoIncrement="false" autoIncrementSequenceName="peptide_sequence_seq" defaultValue="" name="sequence" nullable="0" physicalName="sequence" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL34" populated="true" UUID="4cae2bb4-d521-40b1-8f6f-14215a741909" autoIncrement="false" autoIncrementSequenceName="peptide_sequence_seq" defaultValue="" name="sequence" nullable="0" physicalName="sequence" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>The AA sequence of this peptide.</remarks>
     </column>
-    <column id="COL31" populated="true" UUID="719969a0-8b28-4f24-ad42-0c37dd56d6eb" autoIncrement="false" autoIncrementSequenceName="peptide_ptm_string_seq" defaultValue="" name="ptm_string" nullable="1" physicalName="ptm_string" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL35" populated="true" UUID="719969a0-8b28-4f24-ad42-0c37dd56d6eb" autoIncrement="false" autoIncrementSequenceName="peptide_ptm_string_seq" defaultValue="" name="ptm_string" nullable="1" physicalName="ptm_string" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A string that describes the ptm structure.
 EX: given the sequence MENHIR having the PTMs oxidation (M) and SILAC label (R) the unique corresponding PTM string is &quot;1[O]7[C(-9) 13C(9)]&quot;.
 Each PTM is described by its delta composition. The prefix number gives the position of ptm on the peptide. The atomic number MUST be explicited for non natural isotope only (EX: 15N) . The number of added (or removed) atoms MUST be specified ONLY if more than one atom is concerned. Must be also defined for atom labeling (EX: N(-1) 15N).</remarks>
     </column>
-    <column id="COL32" populated="true" UUID="978db8f6-4122-49e0-8cf3-330ceb3a74f2" autoIncrement="false" autoIncrementSequenceName="peptide_calculated_mass_seq" defaultValue="" name="calculated_mass" nullable="0" physicalName="calculated_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
+    <column id="COL36" populated="true" UUID="978db8f6-4122-49e0-8cf3-330ceb3a74f2" autoIncrement="false" autoIncrementSequenceName="peptide_calculated_mass_seq" defaultValue="" name="calculated_mass" nullable="0" physicalName="calculated_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
      <remarks>The theoretical mass of the peptide.</remarks>
     </column>
-    <column id="COL33" populated="true" UUID="0861bdd7-797d-45f5-8524-0d9698e2808b" autoIncrement="false" autoIncrementSequenceName="peptide_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL37" populated="true" UUID="0861bdd7-797d-45f5-8524-0d9698e2808b" autoIncrement="false" autoIncrementSequenceName="peptide_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL34" populated="true" UUID="d0805565-bcf3-405a-b952-daf996494cb2" autoIncrement="false" autoIncrementSequenceName="peptide_atom_label_id_seq" defaultValue="" name="atom_label_id" nullable="1" physicalName="atom_label_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL38" populated="true" UUID="d0805565-bcf3-405a-b952-daf996494cb2" autoIncrement="false" autoIncrementSequenceName="peptide_atom_label_id_seq" defaultValue="" name="atom_label_id" nullable="1" physicalName="atom_label_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
-    <folder id="FOLTAB283" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    <folder id="FOLTAB323" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
-    <folder id="FOLTAB282" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    <folder id="FOLTAB322" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
-    <folder id="FOLTAB284" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX35" populated="true" UUID="a1428611-419f-400a-9d16-e81691edff9a" clustered="false" name="peptide_pk" physicalName="peptide_pk" primaryKeyIndex="true" unique="true" >
-     <index-column id="IDC36" populated="true" UUID="2f046e30-e993-4aaa-8037-af824cd34878" ascendingOrDescending="UNSPECIFIED" column-ref="COL29" name="id" physicalName="id" />
+    <folder id="FOLTAB324" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX39" populated="true" UUID="a1428611-419f-400a-9d16-e81691edff9a" clustered="false" name="peptide_pk" physicalName="peptide_pk" primaryKeyIndex="true" unique="true" >
+     <index-column id="IDC40" populated="true" UUID="2f046e30-e993-4aaa-8037-af824cd34878" ascendingOrDescending="UNSPECIFIED" column-ref="COL33" name="id" physicalName="id" />
     </index>
-    <index id="IDX37" populated="true" UUID="7334ef3f-1f09-4bec-a70c-f3ae5d4c7ed3" clustered="false" name="peptide_sequence_ptm_idx" physicalName="peptide_sequence_ptm_idx" primaryKeyIndex="false" unique="true" >
-     <index-column id="IDC38" populated="true" UUID="8f2f83f8-8d94-4a6a-a307-ee5bb0eeea19" ascendingOrDescending="UNSPECIFIED" column-ref="COL30" name="sequence" physicalName="sequence" />
-     <index-column id="IDC39" populated="true" UUID="1ee51b72-30a3-4bc8-828a-ed3ca53347e6" ascendingOrDescending="UNSPECIFIED" column-ref="COL31" name="ptm_string" physicalName="ptm_string" />
+    <index id="IDX41" populated="true" UUID="7334ef3f-1f09-4bec-a70c-f3ae5d4c7ed3" clustered="false" name="peptide_sequence_ptm_idx" physicalName="peptide_sequence_ptm_idx" primaryKeyIndex="false" unique="true" >
+     <index-column id="IDC42" populated="true" UUID="8f2f83f8-8d94-4a6a-a307-ee5bb0eeea19" ascendingOrDescending="UNSPECIFIED" column-ref="COL34" name="sequence" physicalName="sequence" />
+     <index-column id="IDC43" populated="true" UUID="1ee51b72-30a3-4bc8-828a-ed3ca53347e6" ascendingOrDescending="UNSPECIFIED" column-ref="COL35" name="ptm_string" physicalName="ptm_string" />
     </index>
-    <index id="IDX40" populated="true" UUID="9e5ddaa9-77db-4add-b500-ac1bc3b7045c" clustered="false" name="peptide_mass_idx" physicalName="peptide_mass_idx" primaryKeyIndex="false" unique="false" >
-     <index-column id="IDC41" populated="true" UUID="f0b3fccf-c7cb-4dcf-9693-caad9e3fd90f" ascendingOrDescending="UNSPECIFIED" column-ref="COL32" name="calculated_mass" physicalName="calculated_mass" />
+    <index id="IDX44" populated="true" UUID="9e5ddaa9-77db-4add-b500-ac1bc3b7045c" clustered="false" name="peptide_mass_idx" physicalName="peptide_mass_idx" primaryKeyIndex="false" unique="false" >
+     <index-column id="IDC45" populated="true" UUID="f0b3fccf-c7cb-4dcf-9693-caad9e3fd90f" ascendingOrDescending="UNSPECIFIED" column-ref="COL36" name="calculated_mass" physicalName="calculated_mass" />
     </index>
    </folder>
   </table>
-  <table id="TAB42" populated="true" UUID="88965330-8418-4a86-a0d8-f523bfb09722" name="atom_label" objectType="TABLE" physicalName="atom_label" >
+  <table id="TAB46" populated="true" UUID="88965330-8418-4a86-a0d8-f523bfb09722" name="atom_label" objectType="TABLE" physicalName="atom_label" >
    <remarks>Enables the description of 14N/15N and 16O/18O labeling.</remarks>
-   <folder id="FOLTAB421" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL43" populated="true" UUID="d6ec5af2-4aeb-49d3-858a-189de346d431" autoIncrement="true" autoIncrementSequenceName="atom_label_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+   <folder id="FOLTAB461" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL47" populated="true" UUID="d6ec5af2-4aeb-49d3-858a-189de346d431" autoIncrement="true" autoIncrementSequenceName="atom_label_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL44" populated="true" UUID="060d6490-ef45-4b74-ac73-6f3410dc8f6d" autoIncrement="false" autoIncrementSequenceName="atom_label_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL48" populated="true" UUID="060d6490-ef45-4b74-ac73-6f3410dc8f6d" autoIncrement="false" autoIncrementSequenceName="atom_label_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The name of the label. EX: 15N</remarks>
     </column>
-    <column id="COL45" populated="true" UUID="f5500b38-706a-410d-ae6f-ac7a524aad78" autoIncrement="false" autoIncrementSequenceName="atom_label_symbol_seq" defaultValue="" name="symbol" nullable="0" physicalName="symbol" precision="2" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL49" populated="true" UUID="f5500b38-706a-410d-ae6f-ac7a524aad78" autoIncrement="false" autoIncrementSequenceName="atom_label_symbol_seq" defaultValue="" name="symbol" nullable="0" physicalName="symbol" precision="2" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The symbol of the atom. EX: N</remarks>
     </column>
-    <column id="COL46" populated="true" UUID="c247ffda-05df-4772-aa89-ebd9fdd6664b" autoIncrement="false" autoIncrementSequenceName="atom_label_mono_mass_seq" defaultValue="" name="mono_mass" nullable="0" physicalName="mono_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
+    <column id="COL50" populated="true" UUID="c247ffda-05df-4772-aa89-ebd9fdd6664b" autoIncrement="false" autoIncrementSequenceName="atom_label_mono_mass_seq" defaultValue="" name="mono_mass" nullable="0" physicalName="mono_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
      <remarks>The monoisotopic mass of the corresponding isotope.</remarks>
     </column>
-    <column id="COL47" populated="true" UUID="3c0ee8ac-4fe2-4769-8c3c-e52f54e1751b" autoIncrement="false" autoIncrementSequenceName="atom_label_average_mass_seq" defaultValue="" name="average_mass" nullable="0" physicalName="average_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
+    <column id="COL51" populated="true" UUID="3c0ee8ac-4fe2-4769-8c3c-e52f54e1751b" autoIncrement="false" autoIncrementSequenceName="atom_label_average_mass_seq" defaultValue="" name="average_mass" nullable="0" physicalName="average_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
      <remarks>The average mass of the corresponding isotope.</remarks>
     </column>
-    <column id="COL48" populated="true" UUID="b2ff6340-33b3-4052-8ce7-406e5841fd55" autoIncrement="false" autoIncrementSequenceName="atom_label_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL52" populated="true" UUID="b2ff6340-33b3-4052-8ce7-406e5841fd55" autoIncrement="false" autoIncrementSequenceName="atom_label_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
     </folder>
-    <folder id="FOLTAB423" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    <folder id="FOLTAB463" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
-    <folder id="FOLTAB422" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    <folder id="FOLTAB462" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
-    <folder id="FOLTAB424" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX49" populated="true" UUID="f408ff9e-4073-44fa-8e74-778e639f7e86" clustered="false" name="atom_label_pk" physicalName="atom_label_pk" primaryKeyIndex="true" unique="true" >
-     <index-column id="IDC50" populated="true" UUID="ca1f8681-5112-4281-ba8a-52785fa88e83" ascendingOrDescending="UNSPECIFIED" column-ref="COL43" name="id" physicalName="id" />
+    <folder id="FOLTAB464" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX53" populated="true" UUID="f408ff9e-4073-44fa-8e74-778e639f7e86" clustered="false" name="atom_label_pk" physicalName="atom_label_pk" primaryKeyIndex="true" unique="true" >
+     <index-column id="IDC54" populated="true" UUID="ca1f8681-5112-4281-ba8a-52785fa88e83" ascendingOrDescending="UNSPECIFIED" column-ref="COL47" name="id" physicalName="id" />
     </index>
    </folder>
   </table>
-  <table id="TAB51" populated="true" UUID="fffc2590-6647-4a27-bb29-03eece50f3b8" name="ptm_evidence" objectType="TABLE" physicalName="ptm_evidence" >
+  <table id="TAB55" populated="true" UUID="fffc2590-6647-4a27-bb29-03eece50f3b8" name="ptm_evidence" objectType="TABLE" physicalName="ptm_evidence" >
    <remarks>Ptm associated ions/delta. Only one &quot;Precursor&quot; delta type MUST be defined for each ptm.
 A PTM evidence can be linked to a PTM OR a PTM specificity.</remarks>
-   <folder id="FOLTAB511" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL52" populated="true" UUID="de1245c6-06f6-495b-a8a6-67fee6321eef" autoIncrement="true" autoIncrementSequenceName="ptm_evidence_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+   <folder id="FOLTAB551" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL56" populated="true" UUID="de1245c6-06f6-495b-a8a6-67fee6321eef" autoIncrement="true" autoIncrementSequenceName="ptm_evidence_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL53" populated="true" UUID="52081c9b-3ed2-471b-a61c-afb8eeb84fd6" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_type_seq" defaultValue="" name="type" nullable="0" physicalName="type" precision="14" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL57" populated="true" UUID="52081c9b-3ed2-471b-a61c-afb8eeb84fd6" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_type_seq" defaultValue="" name="type" nullable="0" physicalName="type" precision="14" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The type of the PTM evidence.
 
 Allowed types are:
@@ -201,82 +207,82 @@ Allowed types are:
 - NeutralLoss =&gt; fragment ion neutral loss
 - PepNeutralLoss =&gt; precursor ion neutral loss</remarks>
     </column>
-    <column id="COL54" populated="true" UUID="1f40834c-0eb4-402f-abdc-37f8c9891769" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_is_required_seq" defaultValue="" name="is_required" nullable="0" physicalName="is_required" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
+    <column id="COL58" populated="true" UUID="1f40834c-0eb4-402f-abdc-37f8c9891769" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_is_required_seq" defaultValue="" name="is_required" nullable="0" physicalName="is_required" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
      <remarks>Specify if the presence of this PTM evidence is required for the peptide identification/scoring.
 True for &quot;Precursor&quot; PTM evidence, for &quot;Scoring Neutral Loss&quot; (flag=false in unmod.xml) and for &quot;Required Peptide Neutral Loss&quot; (required=true in unimod.xml).
 For more information see mascot Neutral Loss definition and unimod.xsd</remarks>
     </column>
-    <column id="COL55" populated="true" UUID="fe81ad82-db79-4897-863b-cbbf0bfc5dd9" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_composition_seq" defaultValue="" name="composition" nullable="0" physicalName="composition" precision="50" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL59" populated="true" UUID="fe81ad82-db79-4897-863b-cbbf0bfc5dd9" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_composition_seq" defaultValue="" name="composition" nullable="0" physicalName="composition" precision="50" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The chemical composition of the modification as a delta between the modified and unmodified residue or terminus. The formula is displayed and entered as &apos;atoms&apos;, optionally followed by a number in parentheses. The atom terms are separated by spaces, and order is not important. For example, if the modification removes an H and adds a CH3 group, the Composition would be shown as H(2) C. Atoms can be either elements or molecular sub-units. The number may be negative and, if there is no number, 1 is assumed. Hence, H(2) C is the same as H(2) C(1).</remarks>
     </column>
-    <column id="COL56" populated="true" UUID="7019fa48-b3db-454e-b058-85dd262a805b" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_mono_mass_seq" defaultValue="" name="mono_mass" nullable="0" physicalName="mono_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
+    <column id="COL60" populated="true" UUID="7019fa48-b3db-454e-b058-85dd262a805b" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_mono_mass_seq" defaultValue="" name="mono_mass" nullable="0" physicalName="mono_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
      <remarks>The monoisotopic mass associated to the PTM evidence entity.</remarks>
     </column>
-    <column id="COL57" populated="true" UUID="f127b3f8-65bd-43ea-8762-2168397e7195" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_average_mass_seq" defaultValue="" name="average_mass" nullable="0" physicalName="average_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
+    <column id="COL61" populated="true" UUID="f127b3f8-65bd-43ea-8762-2168397e7195" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_average_mass_seq" defaultValue="" name="average_mass" nullable="0" physicalName="average_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
      <remarks>The average mass associated to the PTM evidence entity.</remarks>
     </column>
-    <column id="COL58" populated="true" UUID="f89d63c7-c825-4155-a2ba-8884c54def36" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL62" populated="true" UUID="f89d63c7-c825-4155-a2ba-8884c54def36" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL59" populated="true" UUID="3a606d04-7a9f-4627-90b9-1967820fd466" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_specificity_id_seq" defaultValue="" name="specificity_id" nullable="1" physicalName="specificity_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL63" populated="true" UUID="3a606d04-7a9f-4627-90b9-1967820fd466" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_specificity_id_seq" defaultValue="" name="specificity_id" nullable="1" physicalName="specificity_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL60" populated="true" UUID="b69267a4-114d-4d14-b47b-44217361251e" autoIncrement="false" defaultValue="" name="ptm_id" nullable="1" physicalName="ptm_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL64" populated="true" UUID="b69267a4-114d-4d14-b47b-44217361251e" autoIncrement="false" defaultValue="" name="ptm_id" nullable="1" physicalName="ptm_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
-    <folder id="FOLTAB513" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    <folder id="FOLTAB553" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
-    <folder id="FOLTAB512" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    <folder id="FOLTAB552" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
-    <folder id="FOLTAB514" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX61" populated="true" UUID="2eb8836f-50e3-4c3c-91bb-0893f223454c" clustered="false" name="ptm_evidence_pk" physicalName="ptm_evidence_pk" primaryKeyIndex="true" unique="true" >
-     <index-column id="IDC62" populated="true" UUID="271e6baf-0c73-4221-92f6-5a96b7877421" ascendingOrDescending="UNSPECIFIED" column-ref="COL52" name="id" physicalName="id" />
+    <folder id="FOLTAB554" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX65" populated="true" UUID="2eb8836f-50e3-4c3c-91bb-0893f223454c" clustered="false" name="ptm_evidence_pk" physicalName="ptm_evidence_pk" primaryKeyIndex="true" unique="true" >
+     <index-column id="IDC66" populated="true" UUID="271e6baf-0c73-4221-92f6-5a96b7877421" ascendingOrDescending="UNSPECIFIED" column-ref="COL56" name="id" physicalName="id" />
     </index>
    </folder>
   </table>
-  <table id="TAB63" populated="true" UUID="dbcd4b61-029d-498a-a9c5-f52388a2499b" name="ptm_specificity" objectType="TABLE" physicalName="ptm_specificity" >
+  <table id="TAB67" populated="true" UUID="dbcd4b61-029d-498a-a9c5-f52388a2499b" name="ptm_specificity" objectType="TABLE" physicalName="ptm_specificity" >
    <remarks>Describes the specificities of the ptm definitions.</remarks>
-   <folder id="FOLTAB631" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL64" populated="true" UUID="e171097f-7c92-44b1-b23d-5caed17c0ee6" autoIncrement="true" autoIncrementSequenceName="ptm_specificity_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+   <folder id="FOLTAB671" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL68" populated="true" UUID="e171097f-7c92-44b1-b23d-5caed17c0ee6" autoIncrement="true" autoIncrementSequenceName="ptm_specificity_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL65" populated="true" UUID="55192958-a401-413f-b082-8f97dadc8e4b" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_location_seq" defaultValue="" name="location" nullable="0" physicalName="location" precision="14" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL69" populated="true" UUID="55192958-a401-413f-b082-8f97dadc8e4b" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_location_seq" defaultValue="" name="location" nullable="0" physicalName="location" precision="14" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The location of the PTM relative to a peptide/protein sequence.
 Allowed values are: Anywhere, Any N-term, Any C-term, Protein N-term, Protein C-term.
 Choose &quot;Anywhere&quot; if the modification applies to a residue independent of its position, (e.g. oxidation of methionine). Choose &quot;Any N-term&quot; or &quot;Any C-term&quot; if the modification applies to a residue only when it is at a peptide terminus, (e.g. conversion of methionine to homoserine). Choose &quot;Protein N-term&quot; or &quot;Protein C-term&quot; if the modification only applies to the original terminus of the intact protein, not new peptide termini created by digestion, (e.g. post-translational acetylation of the protein amino terminus).</remarks>
     </column>
-    <column id="COL66" populated="true" UUID="a7e83ac7-2e68-4de2-b105-1b322f17adfd" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_residue_seq" defaultValue="" name="residue" nullable="1" physicalName="residue" precision="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="1" userDefinedTypeUUID="67ddc63f-5541-4dd1-9236-632d9d155e80" >
+    <column id="COL70" populated="true" UUID="a7e83ac7-2e68-4de2-b105-1b322f17adfd" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_residue_seq" defaultValue="" name="residue" nullable="1" physicalName="residue" precision="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="1" userDefinedTypeUUID="67ddc63f-5541-4dd1-9236-632d9d155e80" >
      <remarks>The symbol of the specific residue for this PTM (Unimod &quot;site&quot; xml attribute).
 Null if Unimod &quot;site&quot; xml attribute is &quot;C-term&quot; or &quot;N-term&quot;.</remarks>
     </column>
-    <column id="COL67" populated="true" UUID="3c757957-7a02-49d5-8cfc-f020aa0de82d" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL71" populated="true" UUID="3c757957-7a02-49d5-8cfc-f020aa0de82d" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL68" populated="true" UUID="18fcb013-a595-455a-ad89-f538bed60a31" autoIncrement="false" defaultValue="" name="ptm_id" nullable="0" physicalName="ptm_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL72" populated="true" UUID="18fcb013-a595-455a-ad89-f538bed60a31" autoIncrement="false" defaultValue="" name="ptm_id" nullable="0" physicalName="ptm_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL69" populated="true" UUID="38b3a96d-c0e5-4c96-b026-c5643d0b7ed6" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_classification_id_seq" defaultValue="" name="classification_id" nullable="0" physicalName="classification_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL73" populated="true" UUID="38b3a96d-c0e5-4c96-b026-c5643d0b7ed6" autoIncrement="false" autoIncrementSequenceName="ptm_specificity_classification_id_seq" defaultValue="" name="classification_id" nullable="0" physicalName="classification_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
-    <folder id="FOLTAB633" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    <folder id="FOLTAB673" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
-    <folder id="FOLTAB632" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    <folder id="FOLTAB672" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
-    <folder id="FOLTAB634" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX70" populated="true" UUID="1923a2c6-80ea-45b5-8321-f27de584f369" clustered="false" name="ptm_specificity_pk" physicalName="ptm_specificity_pk" primaryKeyIndex="true" unique="true" >
-     <index-column id="IDC71" populated="true" UUID="db6af4e6-6d38-49d2-aa6b-a775b448aed9" ascendingOrDescending="UNSPECIFIED" column-ref="COL64" name="id" physicalName="id" />
+    <folder id="FOLTAB674" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX74" populated="true" UUID="1923a2c6-80ea-45b5-8321-f27de584f369" clustered="false" name="ptm_specificity_pk" physicalName="ptm_specificity_pk" primaryKeyIndex="true" unique="true" >
+     <index-column id="IDC75" populated="true" UUID="db6af4e6-6d38-49d2-aa6b-a775b448aed9" ascendingOrDescending="UNSPECIFIED" column-ref="COL68" name="id" physicalName="id" />
     </index>
    </folder>
   </table>
-  <table id="TAB72" populated="true" UUID="eca9da02-c11b-400d-a87b-e7543eb3555e" name="ptm_classification" objectType="TABLE" physicalName="ptm_classification" >
+  <table id="TAB76" populated="true" UUID="eca9da02-c11b-400d-a87b-e7543eb3555e" name="ptm_classification" objectType="TABLE" physicalName="ptm_classification" >
    <remarks>A controlled list of PTM categories.</remarks>
-   <folder id="FOLTAB721" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL73" populated="true" UUID="d7b756a8-d8f8-45e7-aaa7-522a87d056cb" autoIncrement="true" autoIncrementSequenceName="ptm_classification_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+   <folder id="FOLTAB761" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL77" populated="true" UUID="d7b756a8-d8f8-45e7-aaa7-522a87d056cb" autoIncrement="true" autoIncrementSequenceName="ptm_classification_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL74" populated="true" UUID="cec76815-a4ab-45ee-a2da-cadf2c21e8a2" autoIncrement="false" autoIncrementSequenceName="ptm_classification_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL78" populated="true" UUID="cec76815-a4ab-45ee-a2da-cadf2c21e8a2" autoIncrement="false" autoIncrementSequenceName="ptm_classification_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The name of the PTM classification.
 Allowed values are:
 Post-translational
@@ -295,63 +301,63 @@ Other
 AA substitution</remarks>
     </column>
     </folder>
-    <folder id="FOLTAB723" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    <folder id="FOLTAB763" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
-    <folder id="FOLTAB722" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    <folder id="FOLTAB762" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
-    <folder id="FOLTAB724" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX75" populated="true" UUID="45fe876d-c60a-498b-910f-dbb0f995ea9b" clustered="false" name="ptm_classification_pk" physicalName="ptm_classification_pk" primaryKeyIndex="true" unique="true" >
-     <index-column id="IDC76" populated="true" UUID="84975ce3-315c-46a5-a333-ed8499214c08" ascendingOrDescending="UNSPECIFIED" column-ref="COL73" name="id" physicalName="id" />
+    <folder id="FOLTAB764" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX79" populated="true" UUID="45fe876d-c60a-498b-910f-dbb0f995ea9b" clustered="false" name="ptm_classification_pk" physicalName="ptm_classification_pk" primaryKeyIndex="true" unique="true" >
+     <index-column id="IDC80" populated="true" UUID="84975ce3-315c-46a5-a333-ed8499214c08" ascendingOrDescending="UNSPECIFIED" column-ref="COL77" name="id" physicalName="id" />
     </index>
    </folder>
   </table>
-  <table id="TAB77" populated="true" UUID="4ac6f6e9-fcd7-4c97-bfb7-90cd74f9d412" name="peptide_ptm_insert_status" objectType="TABLE" physicalName="peptide_ptm_insert_status" >
+  <table id="TAB81" populated="true" UUID="4ac6f6e9-fcd7-4c97-bfb7-90cd74f9d412" name="peptide_ptm_insert_status" objectType="TABLE" physicalName="peptide_ptm_insert_status" >
    <remarks>Used to specify if the peptide_ptm records corresponding to a given peptide have been correctly inserted.  Modified peptides without link to peptide_ptm must be considered as boggus and should be manually removed from the database. The discussed information is usefull to track inconsistent peptides records and thus maintain the database integrity.</remarks>
-   <folder id="FOLTAB771" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL78" populated="true" UUID="b6f258e8-9474-4e10-9362-05e34523f5a5" autoIncrement="false" autoIncrementSequenceName="peptide_peptide_id_seq" defaultValue="" name="peptide_id" nullable="0" physicalName="peptide_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+   <folder id="FOLTAB811" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL82" populated="true" UUID="b6f258e8-9474-4e10-9362-05e34523f5a5" autoIncrement="false" autoIncrementSequenceName="peptide_peptide_id_seq" defaultValue="" name="peptide_id" nullable="0" physicalName="peptide_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL79" populated="true" UUID="d05e3e46-38e7-47e9-97ee-14da20e165c3" autoIncrement="false" autoIncrementSequenceName="peptide_ptm_insert_status_is_ok_seq" defaultValue="" name="is_ok" nullable="0" physicalName="is_ok" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
+    <column id="COL83" populated="true" UUID="d05e3e46-38e7-47e9-97ee-14da20e165c3" autoIncrement="false" autoIncrementSequenceName="peptide_ptm_insert_status_is_ok_seq" defaultValue="" name="is_ok" nullable="0" physicalName="is_ok" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
      <remarks>A boolean value wich tells us if the peptide PTMs have been correctly stored in the database.</remarks>
     </column>
     </folder>
-    <folder id="FOLTAB773" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    <folder id="FOLTAB813" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
-    <folder id="FOLTAB772" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    <folder id="FOLTAB812" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
-    <folder id="FOLTAB774" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX80" populated="true" UUID="714acd38-e463-49d6-bef9-6c153fecb218" clustered="false" name="peptide_ptm_insert_status_pk" physicalName="peptide_ptm_insert_status_pk" primaryKeyIndex="true" unique="false" >
-     <index-column id="IDC81" populated="true" UUID="0d7cb67d-9399-4bbb-911f-b6ce6e73e462" ascendingOrDescending="UNSPECIFIED" column-ref="COL78" name="peptide_id" physicalName="peptide_id" />
+    <folder id="FOLTAB814" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX84" populated="true" UUID="714acd38-e463-49d6-bef9-6c153fecb218" clustered="false" name="peptide_ptm_insert_status_pk" physicalName="peptide_ptm_insert_status_pk" primaryKeyIndex="true" unique="false" >
+     <index-column id="IDC85" populated="true" UUID="0d7cb67d-9399-4bbb-911f-b6ce6e73e462" ascendingOrDescending="UNSPECIFIED" column-ref="COL82" name="peptide_id" physicalName="peptide_id" />
     </index>
    </folder>
   </table>
   <relationships>
-   <relationship id="REL82" populated="true" UUID="c1cb87a1-cb69-4ed1-96a7-54b6d0253379" deferrability="7" deleteRule="0" fk-table-ref="TAB51" fkCardinality="7" identifying="false" name="ptm_ptm_ion_fk" physicalName="ptm_ptm_ion_fk" pk-table-ref="TAB20" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP83" populated="true" UUID="9dbf7067-65b9-49cb-9851-bf495f133a9b" fk-column-ref="COL60" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL21" />
+   <relationship id="REL86" populated="true" UUID="c1cb87a1-cb69-4ed1-96a7-54b6d0253379" deferrability="7" deleteRule="0" fk-table-ref="TAB55" fkCardinality="7" identifying="false" name="ptm_ptm_ion_fk" physicalName="ptm_ptm_ion_fk" pk-table-ref="TAB20" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP87" populated="true" UUID="9dbf7067-65b9-49cb-9851-bf495f133a9b" fk-column-ref="COL64" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL21" />
    </relationship>
-   <relationship id="REL84" populated="true" UUID="27d51add-56c7-4c66-9a1d-e03056378f83" deferrability="7" deleteRule="0" fk-table-ref="TAB63" fkCardinality="7" identifying="false" name="ptm_ptm_specificity_fk" physicalName="ptm_ptm_specificity_fk" pk-table-ref="TAB20" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP85" populated="true" UUID="1082ef57-af0e-4627-b130-25fbec2c38f5" fk-column-ref="COL68" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL21" />
+   <relationship id="REL88" populated="true" UUID="27d51add-56c7-4c66-9a1d-e03056378f83" deferrability="7" deleteRule="0" fk-table-ref="TAB67" fkCardinality="7" identifying="false" name="ptm_ptm_specificity_fk" physicalName="ptm_ptm_specificity_fk" pk-table-ref="TAB20" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP89" populated="true" UUID="1082ef57-af0e-4627-b130-25fbec2c38f5" fk-column-ref="COL72" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL21" />
    </relationship>
-   <relationship id="REL86" populated="true" UUID="a7b18d3d-0e3d-45e5-96f0-219d8b0ba102" deferrability="7" deleteRule="0" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="peptide_peptide_ptm_fk" physicalName="peptide_peptide_ptm_fk" pk-table-ref="TAB28" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP87" populated="true" UUID="f9e08cbb-eafd-4603-b333-0c3bbe6902b1" fk-column-ref="COL13" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL29" />
+   <relationship id="REL90" populated="true" UUID="a7b18d3d-0e3d-45e5-96f0-219d8b0ba102" deferrability="7" deleteRule="0" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="peptide_peptide_ptm_fk" physicalName="peptide_peptide_ptm_fk" pk-table-ref="TAB32" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP91" populated="true" UUID="f9e08cbb-eafd-4603-b333-0c3bbe6902b1" fk-column-ref="COL13" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL33" />
    </relationship>
-   <relationship id="REL88" populated="true" UUID="a5553d74-17e5-44ba-8c22-5c1ebe4d482d" deferrability="7" deleteRule="0" fk-table-ref="TAB77" fkCardinality="3" identifying="true" name="peptide_peptide_ptm_insert_status_fk" physicalName="peptide_peptide_ptm_insert_status_fk" pk-table-ref="TAB28" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP89" populated="true" UUID="9cb3906d-5bad-41a8-8d20-b1dec7277afb" fk-column-ref="COL78" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL29" />
+   <relationship id="REL92" populated="true" UUID="a5553d74-17e5-44ba-8c22-5c1ebe4d482d" deferrability="7" deleteRule="0" fk-table-ref="TAB81" fkCardinality="3" identifying="true" name="peptide_peptide_ptm_insert_status_fk" physicalName="peptide_peptide_ptm_insert_status_fk" pk-table-ref="TAB32" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP93" populated="true" UUID="9cb3906d-5bad-41a8-8d20-b1dec7277afb" fk-column-ref="COL82" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL33" />
    </relationship>
-   <relationship id="REL90" populated="true" UUID="0747fff2-f7d8-49a5-b2b6-10bd8970989b" deferrability="7" deleteRule="1" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="atom_label_peptide_ptm_fk" physicalName="atom_label_peptide_ptm_fk" pk-table-ref="TAB42" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP91" populated="true" UUID="1c1b6063-ea26-4265-bc5b-d2208452f51a" fk-column-ref="COL15" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL43" />
+   <relationship id="REL94" populated="true" UUID="0747fff2-f7d8-49a5-b2b6-10bd8970989b" deferrability="7" deleteRule="1" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="atom_label_peptide_ptm_fk" physicalName="atom_label_peptide_ptm_fk" pk-table-ref="TAB46" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP95" populated="true" UUID="1c1b6063-ea26-4265-bc5b-d2208452f51a" fk-column-ref="COL15" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL47" />
    </relationship>
-   <relationship id="REL92" populated="true" UUID="d9309fa7-c18d-494e-9349-e0e858fefa87" deferrability="7" deleteRule="1" fk-table-ref="TAB28" fkCardinality="7" identifying="false" name="atom_label_peptide_fk" physicalName="atom_label_peptide_fk" pk-table-ref="TAB42" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP93" populated="true" UUID="6a27a77a-9fb2-4782-b678-e12be3b69ef3" fk-column-ref="COL34" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL43" />
+   <relationship id="REL96" populated="true" UUID="d9309fa7-c18d-494e-9349-e0e858fefa87" deferrability="7" deleteRule="1" fk-table-ref="TAB32" fkCardinality="7" identifying="false" name="atom_label_peptide_fk" physicalName="atom_label_peptide_fk" pk-table-ref="TAB46" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP97" populated="true" UUID="6a27a77a-9fb2-4782-b678-e12be3b69ef3" fk-column-ref="COL38" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL47" />
    </relationship>
-   <relationship id="REL94" populated="true" UUID="fa284fbc-0c60-46f4-93f8-d23302184271" deferrability="7" deleteRule="1" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="ptm_specificity_peptide_ptm_fk" physicalName="ptm_specificity_peptide_ptm_fk" pk-table-ref="TAB63" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP95" populated="true" UUID="483f6a41-af51-4d03-b70f-07a4ef1126f0" fk-column-ref="COL14" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL64" />
+   <relationship id="REL98" populated="true" UUID="fa284fbc-0c60-46f4-93f8-d23302184271" deferrability="7" deleteRule="1" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="ptm_specificity_peptide_ptm_fk" physicalName="ptm_specificity_peptide_ptm_fk" pk-table-ref="TAB67" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP99" populated="true" UUID="483f6a41-af51-4d03-b70f-07a4ef1126f0" fk-column-ref="COL14" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL68" />
    </relationship>
-   <relationship id="REL96" populated="true" UUID="b503c896-0f35-40f9-89af-1beef4fcd589" deferrability="7" deleteRule="1" fk-table-ref="TAB51" fkCardinality="3" identifying="false" name="ptm_specificity_ptm_evidence_fk" physicalName="ptm_specificity_ptm_evidence_fk" pk-table-ref="TAB63" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP97" populated="true" UUID="fd54b7c9-3cbb-425b-b305-fbc2726de4bd" fk-column-ref="COL59" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL64" />
+   <relationship id="REL100" populated="true" UUID="b503c896-0f35-40f9-89af-1beef4fcd589" deferrability="7" deleteRule="1" fk-table-ref="TAB55" fkCardinality="3" identifying="false" name="ptm_specificity_ptm_evidence_fk" physicalName="ptm_specificity_ptm_evidence_fk" pk-table-ref="TAB67" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP101" populated="true" UUID="fd54b7c9-3cbb-425b-b305-fbc2726de4bd" fk-column-ref="COL63" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL68" />
    </relationship>
-   <relationship id="REL98" populated="true" UUID="8732b0c4-ccd9-4e2c-ac0e-24c0641cae88" deferrability="7" deleteRule="1" fk-table-ref="TAB63" fkCardinality="7" identifying="false" name="ptm_classification_ptm_specificity_fk" physicalName="ptm_classification_ptm_specificity_fk" pk-table-ref="TAB72" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP99" populated="true" UUID="fce2c56a-6998-42fc-812a-b70a02d27237" fk-column-ref="COL69" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL73" />
+   <relationship id="REL102" populated="true" UUID="8732b0c4-ccd9-4e2c-ac0e-24c0641cae88" deferrability="7" deleteRule="1" fk-table-ref="TAB67" fkCardinality="7" identifying="false" name="ptm_classification_ptm_specificity_fk" physicalName="ptm_classification_ptm_specificity_fk" pk-table-ref="TAB76" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP103" populated="true" UUID="fce2c56a-6998-42fc-812a-b70a02d27237" fk-column-ref="COL73" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL77" />
    </relationship>
   </relationships>
  </target-database>
@@ -362,21 +368,21 @@ AA substitution</remarks>
   <table-pane table-ref="TAB1" x="61" y="38" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB7" x="260" y="264" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB20" x="602" y="26" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB28" x="555" y="394" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB42" x="20" y="230" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB51" x="358" y="20" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB63" x="562" y="213" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB72" x="145" y="140" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB77" x="307" y="470" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-link relationship-ref="REL98" pkConnection="0.8106995884773662" fkConnection="0.31496062992125984" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
-  <table-link relationship-ref="REL82" pkConnection="0.38738738738738737" fkConnection="0.27672955974842767" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL86" pkConnection="0.10236220472440945" fkConnection="0.89937106918239" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL90" pkConnection="0.3858267716535433" fkConnection="0.09448818897637795" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
-  <table-link relationship-ref="REL92" pkConnection="0.45555555555555555" fkConnection="0.4015748031496063" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
-  <table-link relationship-ref="REL84" pkConnection="0.36419753086419754" fkConnection="0.5351351351351351" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
-  <table-link relationship-ref="REL94" pkConnection="0.7387387387387387" fkConnection="0.2641509433962264" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL88" pkConnection="0.7559055118110236" fkConnection="0.31746031746031744" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL96" pkConnection="0.1981981981981982" fkConnection="0.49246231155778897" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
+  <table-pane table-ref="TAB32" x="555" y="394" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB46" x="20" y="230" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB55" x="358" y="20" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB67" x="562" y="213" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB76" x="145" y="140" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB81" x="307" y="470" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-link relationship-ref="REL102" pkConnection="0.8106995884773662" fkConnection="0.31496062992125984" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
+  <table-link relationship-ref="REL86" pkConnection="0.38738738738738737" fkConnection="0.27672955974842767" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL90" pkConnection="0.10236220472440945" fkConnection="0.89937106918239" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL94" pkConnection="0.3858267716535433" fkConnection="0.09448818897637795" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
+  <table-link relationship-ref="REL96" pkConnection="0.45555555555555555" fkConnection="0.4015748031496063" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
+  <table-link relationship-ref="REL88" pkConnection="0.36419753086419754" fkConnection="0.5351351351351351" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
+  <table-link relationship-ref="REL98" pkConnection="0.7387387387387387" fkConnection="0.2641509433962264" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL92" pkConnection="0.7559055118110236" fkConnection="0.31746031746031744" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL100" pkConnection="0.1981981981981982" fkConnection="0.49246231155778897" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
  </play-pen>
  <critic-manager>
   <critic-grouping platformType="Generic" enabled="true">
