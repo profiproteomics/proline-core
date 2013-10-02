@@ -314,55 +314,58 @@ AA substitution</remarks>
     <index id="IDX83" populated="true" UUID="45fe876d-c60a-498b-910f-dbb0f995ea9b" clustered="false" name="ptm_classification_pk" physicalName="ptm_classification_pk" primaryKeyIndex="true" unique="true" >
      <index-column id="IDC84" populated="true" UUID="84975ce3-315c-46a5-a333-ed8499214c08" ascendingOrDescending="UNSPECIFIED" column-ref="COL81" name="id" physicalName="id" />
     </index>
+    <index id="IDX85" populated="true" UUID="ba75349a-63ce-4844-88ee-2b66d8c388d1" clustered="false" name="ptm_classification_idx" physicalName="ptm_classification_idx" primaryKeyIndex="false" unique="true" >
+     <index-column id="IDC86" populated="true" UUID="d59d9f24-83a3-4eac-9ea9-299e39edcf74" ascendingOrDescending="UNSPECIFIED" column-ref="COL82" name="name" physicalName="name" />
+    </index>
    </folder>
   </table>
-  <table id="TAB85" populated="true" UUID="4ac6f6e9-fcd7-4c97-bfb7-90cd74f9d412" name="peptide_ptm_insert_status" objectType="TABLE" physicalName="peptide_ptm_insert_status" >
+  <table id="TAB87" populated="true" UUID="4ac6f6e9-fcd7-4c97-bfb7-90cd74f9d412" name="peptide_ptm_insert_status" objectType="TABLE" physicalName="peptide_ptm_insert_status" >
    <remarks>Used to specify if the peptide_ptm records corresponding to a given peptide have been correctly inserted.  Modified peptides without link to peptide_ptm must be considered as boggus and should be manually removed from the database. The discussed information is usefull to track inconsistent peptides records and thus maintain the database integrity.</remarks>
-   <folder id="FOLTAB851" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL86" populated="true" UUID="b6f258e8-9474-4e10-9362-05e34523f5a5" autoIncrement="false" autoIncrementSequenceName="peptide_peptide_id_seq" defaultValue="" name="peptide_id" nullable="0" physicalName="peptide_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+   <folder id="FOLTAB871" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL88" populated="true" UUID="b6f258e8-9474-4e10-9362-05e34523f5a5" autoIncrement="false" autoIncrementSequenceName="peptide_peptide_id_seq" defaultValue="" name="peptide_id" nullable="0" physicalName="peptide_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL87" populated="true" UUID="d05e3e46-38e7-47e9-97ee-14da20e165c3" autoIncrement="false" autoIncrementSequenceName="peptide_ptm_insert_status_is_ok_seq" defaultValue="" name="is_ok" nullable="0" physicalName="is_ok" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
+    <column id="COL89" populated="true" UUID="d05e3e46-38e7-47e9-97ee-14da20e165c3" autoIncrement="false" autoIncrementSequenceName="peptide_ptm_insert_status_is_ok_seq" defaultValue="" name="is_ok" nullable="0" physicalName="is_ok" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
      <remarks>A boolean value wich tells us if the peptide PTMs have been correctly stored in the database.</remarks>
     </column>
     </folder>
-    <folder id="FOLTAB853" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    <folder id="FOLTAB873" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
-    <folder id="FOLTAB852" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    <folder id="FOLTAB872" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
-    <folder id="FOLTAB854" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX88" populated="true" UUID="714acd38-e463-49d6-bef9-6c153fecb218" clustered="false" name="peptide_ptm_insert_status_pk" physicalName="peptide_ptm_insert_status_pk" primaryKeyIndex="true" unique="false" >
-     <index-column id="IDC89" populated="true" UUID="0d7cb67d-9399-4bbb-911f-b6ce6e73e462" ascendingOrDescending="UNSPECIFIED" column-ref="COL86" name="peptide_id" physicalName="peptide_id" />
+    <folder id="FOLTAB874" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX90" populated="true" UUID="714acd38-e463-49d6-bef9-6c153fecb218" clustered="false" name="peptide_ptm_insert_status_pk" physicalName="peptide_ptm_insert_status_pk" primaryKeyIndex="true" unique="false" >
+     <index-column id="IDC91" populated="true" UUID="0d7cb67d-9399-4bbb-911f-b6ce6e73e462" ascendingOrDescending="UNSPECIFIED" column-ref="COL88" name="peptide_id" physicalName="peptide_id" />
     </index>
    </folder>
   </table>
   <relationships>
-   <relationship id="REL90" populated="true" UUID="c1cb87a1-cb69-4ed1-96a7-54b6d0253379" deferrability="7" deleteRule="0" fk-table-ref="TAB55" fkCardinality="7" identifying="false" name="ptm_ptm_ion_fk" physicalName="ptm_ptm_ion_fk" pk-table-ref="TAB20" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP91" populated="true" UUID="9dbf7067-65b9-49cb-9851-bf495f133a9b" fk-column-ref="COL64" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL21" />
+   <relationship id="REL92" populated="true" UUID="c1cb87a1-cb69-4ed1-96a7-54b6d0253379" deferrability="7" deleteRule="0" fk-table-ref="TAB55" fkCardinality="7" identifying="false" name="ptm_ptm_ion_fk" physicalName="ptm_ptm_ion_fk" pk-table-ref="TAB20" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP93" populated="true" UUID="9dbf7067-65b9-49cb-9851-bf495f133a9b" fk-column-ref="COL64" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL21" />
    </relationship>
-   <relationship id="REL92" populated="true" UUID="27d51add-56c7-4c66-9a1d-e03056378f83" deferrability="7" deleteRule="0" fk-table-ref="TAB67" fkCardinality="7" identifying="false" name="ptm_ptm_specificity_fk" physicalName="ptm_ptm_specificity_fk" pk-table-ref="TAB20" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP93" populated="true" UUID="1082ef57-af0e-4627-b130-25fbec2c38f5" fk-column-ref="COL72" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL21" />
+   <relationship id="REL94" populated="true" UUID="27d51add-56c7-4c66-9a1d-e03056378f83" deferrability="7" deleteRule="0" fk-table-ref="TAB67" fkCardinality="7" identifying="false" name="ptm_ptm_specificity_fk" physicalName="ptm_ptm_specificity_fk" pk-table-ref="TAB20" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP95" populated="true" UUID="1082ef57-af0e-4627-b130-25fbec2c38f5" fk-column-ref="COL72" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL21" />
    </relationship>
-   <relationship id="REL94" populated="true" UUID="a7b18d3d-0e3d-45e5-96f0-219d8b0ba102" deferrability="7" deleteRule="0" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="peptide_peptide_ptm_fk" physicalName="peptide_peptide_ptm_fk" pk-table-ref="TAB32" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP95" populated="true" UUID="f9e08cbb-eafd-4603-b333-0c3bbe6902b1" fk-column-ref="COL13" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL33" />
+   <relationship id="REL96" populated="true" UUID="a7b18d3d-0e3d-45e5-96f0-219d8b0ba102" deferrability="7" deleteRule="0" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="peptide_peptide_ptm_fk" physicalName="peptide_peptide_ptm_fk" pk-table-ref="TAB32" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP97" populated="true" UUID="f9e08cbb-eafd-4603-b333-0c3bbe6902b1" fk-column-ref="COL13" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL33" />
    </relationship>
-   <relationship id="REL96" populated="true" UUID="a5553d74-17e5-44ba-8c22-5c1ebe4d482d" deferrability="7" deleteRule="0" fk-table-ref="TAB85" fkCardinality="3" identifying="true" name="peptide_peptide_ptm_insert_status_fk" physicalName="peptide_peptide_ptm_insert_status_fk" pk-table-ref="TAB32" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP97" populated="true" UUID="9cb3906d-5bad-41a8-8d20-b1dec7277afb" fk-column-ref="COL86" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL33" />
+   <relationship id="REL98" populated="true" UUID="a5553d74-17e5-44ba-8c22-5c1ebe4d482d" deferrability="7" deleteRule="0" fk-table-ref="TAB87" fkCardinality="3" identifying="true" name="peptide_peptide_ptm_insert_status_fk" physicalName="peptide_peptide_ptm_insert_status_fk" pk-table-ref="TAB32" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP99" populated="true" UUID="9cb3906d-5bad-41a8-8d20-b1dec7277afb" fk-column-ref="COL88" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL33" />
    </relationship>
-   <relationship id="REL98" populated="true" UUID="0747fff2-f7d8-49a5-b2b6-10bd8970989b" deferrability="7" deleteRule="1" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="atom_label_peptide_ptm_fk" physicalName="atom_label_peptide_ptm_fk" pk-table-ref="TAB46" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP99" populated="true" UUID="1c1b6063-ea26-4265-bc5b-d2208452f51a" fk-column-ref="COL15" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL47" />
+   <relationship id="REL100" populated="true" UUID="0747fff2-f7d8-49a5-b2b6-10bd8970989b" deferrability="7" deleteRule="1" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="atom_label_peptide_ptm_fk" physicalName="atom_label_peptide_ptm_fk" pk-table-ref="TAB46" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP101" populated="true" UUID="1c1b6063-ea26-4265-bc5b-d2208452f51a" fk-column-ref="COL15" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL47" />
    </relationship>
-   <relationship id="REL100" populated="true" UUID="d9309fa7-c18d-494e-9349-e0e858fefa87" deferrability="7" deleteRule="1" fk-table-ref="TAB32" fkCardinality="7" identifying="false" name="atom_label_peptide_fk" physicalName="atom_label_peptide_fk" pk-table-ref="TAB46" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP101" populated="true" UUID="6a27a77a-9fb2-4782-b678-e12be3b69ef3" fk-column-ref="COL38" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL47" />
+   <relationship id="REL102" populated="true" UUID="d9309fa7-c18d-494e-9349-e0e858fefa87" deferrability="7" deleteRule="1" fk-table-ref="TAB32" fkCardinality="7" identifying="false" name="atom_label_peptide_fk" physicalName="atom_label_peptide_fk" pk-table-ref="TAB46" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP103" populated="true" UUID="6a27a77a-9fb2-4782-b678-e12be3b69ef3" fk-column-ref="COL38" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL47" />
    </relationship>
-   <relationship id="REL102" populated="true" UUID="fa284fbc-0c60-46f4-93f8-d23302184271" deferrability="7" deleteRule="1" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="ptm_specificity_peptide_ptm_fk" physicalName="ptm_specificity_peptide_ptm_fk" pk-table-ref="TAB67" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP103" populated="true" UUID="483f6a41-af51-4d03-b70f-07a4ef1126f0" fk-column-ref="COL14" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL68" />
+   <relationship id="REL104" populated="true" UUID="fa284fbc-0c60-46f4-93f8-d23302184271" deferrability="7" deleteRule="1" fk-table-ref="TAB7" fkCardinality="7" identifying="false" name="ptm_specificity_peptide_ptm_fk" physicalName="ptm_specificity_peptide_ptm_fk" pk-table-ref="TAB67" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP105" populated="true" UUID="483f6a41-af51-4d03-b70f-07a4ef1126f0" fk-column-ref="COL14" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL68" />
    </relationship>
-   <relationship id="REL104" populated="true" UUID="b503c896-0f35-40f9-89af-1beef4fcd589" deferrability="7" deleteRule="1" fk-table-ref="TAB55" fkCardinality="3" identifying="false" name="ptm_specificity_ptm_evidence_fk" physicalName="ptm_specificity_ptm_evidence_fk" pk-table-ref="TAB67" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP105" populated="true" UUID="fd54b7c9-3cbb-425b-b305-fbc2726de4bd" fk-column-ref="COL63" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL68" />
+   <relationship id="REL106" populated="true" UUID="b503c896-0f35-40f9-89af-1beef4fcd589" deferrability="7" deleteRule="1" fk-table-ref="TAB55" fkCardinality="3" identifying="false" name="ptm_specificity_ptm_evidence_fk" physicalName="ptm_specificity_ptm_evidence_fk" pk-table-ref="TAB67" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP107" populated="true" UUID="fd54b7c9-3cbb-425b-b305-fbc2726de4bd" fk-column-ref="COL63" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL68" />
    </relationship>
-   <relationship id="REL106" populated="true" UUID="8732b0c4-ccd9-4e2c-ac0e-24c0641cae88" deferrability="7" deleteRule="1" fk-table-ref="TAB67" fkCardinality="7" identifying="false" name="ptm_classification_ptm_specificity_fk" physicalName="ptm_classification_ptm_specificity_fk" pk-table-ref="TAB80" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP107" populated="true" UUID="fce2c56a-6998-42fc-812a-b70a02d27237" fk-column-ref="COL73" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL81" />
+   <relationship id="REL108" populated="true" UUID="8732b0c4-ccd9-4e2c-ac0e-24c0641cae88" deferrability="7" deleteRule="1" fk-table-ref="TAB67" fkCardinality="7" identifying="false" name="ptm_classification_ptm_specificity_fk" physicalName="ptm_classification_ptm_specificity_fk" pk-table-ref="TAB80" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP109" populated="true" UUID="fce2c56a-6998-42fc-812a-b70a02d27237" fk-column-ref="COL73" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL81" />
    </relationship>
   </relationships>
  </target-database>
@@ -377,17 +380,17 @@ AA substitution</remarks>
   <table-pane table-ref="TAB46" x="20" y="233" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB55" x="327" y="20" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB67" x="562" y="216" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB80" x="145" y="143" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB85" x="307" y="473" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-link relationship-ref="REL106" pkConnection="0.8106995884773662" fkConnection="0.31496062992125984" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
-  <table-link relationship-ref="REL90" pkConnection="0.38738738738738737" fkConnection="0.27672955974842767" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL94" pkConnection="0.10236220472440945" fkConnection="0.89937106918239" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL98" pkConnection="0.3858267716535433" fkConnection="0.09448818897637795" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
-  <table-link relationship-ref="REL100" pkConnection="0.45555555555555555" fkConnection="0.4015748031496063" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
-  <table-link relationship-ref="REL92" pkConnection="0.46568627450980393" fkConnection="0.4519774011299435" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
-  <table-link relationship-ref="REL102" pkConnection="0.7387387387387387" fkConnection="0.2641509433962264" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL96" pkConnection="0.7559055118110236" fkConnection="0.31746031746031744" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL104" pkConnection="0.1981981981981982" fkConnection="0.49246231155778897" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
+  <table-pane table-ref="TAB80" x="116" y="143" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB87" x="307" y="473" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-link relationship-ref="REL108" pkConnection="0.8106995884773662" fkConnection="0.31496062992125984" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
+  <table-link relationship-ref="REL92" pkConnection="0.38738738738738737" fkConnection="0.27672955974842767" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL96" pkConnection="0.10236220472440945" fkConnection="0.89937106918239" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL100" pkConnection="0.3858267716535433" fkConnection="0.09448818897637795" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
+  <table-link relationship-ref="REL102" pkConnection="0.45555555555555555" fkConnection="0.4015748031496063" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="36"/>
+  <table-link relationship-ref="REL94" pkConnection="0.46568627450980393" fkConnection="0.4519774011299435" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
+  <table-link relationship-ref="REL104" pkConnection="0.7387387387387387" fkConnection="0.2641509433962264" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL98" pkConnection="0.7559055118110236" fkConnection="0.31746031746031744" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL106" pkConnection="0.1981981981981982" fkConnection="0.49246231155778897" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
  </play-pen>
  <critic-manager>
   <critic-grouping platformType="Generic" enabled="true">
