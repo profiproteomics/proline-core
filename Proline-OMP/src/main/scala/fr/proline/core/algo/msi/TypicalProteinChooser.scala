@@ -1,44 +1,63 @@
 package fr.proline.core.algo.msi
 
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.ProteinSet
+import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
+import fr.proline.context.IExecutionContext
 import fr.proline.util.regex.RegexUtils._
+import fr.proline.core.orm.msi.ProteinMatch
+import com.weiglewilczek.slf4s.Logging
+import javax.persistence.EntityManager
 
-class TypicalProteinChooser () {
+class TypicalProteinChooser () extends Logging {
 
-  def changeTypical(rsm: ResultSummary, ruleToApply : TypicalProteinChooserRule, applyToHierarchy : Boolean){
-        
-    rsm.proteinSets.foreach(protSet => {
-    	if( protSet.getTypicalProteinMatch.isEmpty)
-    		throw new Exception("Unable to acess tp proteinMatches ")
+  private var modifiedProteinSets : Seq[fr.proline.core.orm.msi.ProteinSet] = null
+  
+  def changeTypical(rsmId: Long, ruleToApply : TypicalProteinChooserRule, msiEM : EntityManager){
+   
+	logger.info(" Load data for Typical Protein Chooser")
+    val ormProtSetRSM = msiEM.createQuery("FROM fr.proline.core.orm.msi.ProteinSet protSet WHERE resultSummary.id = :rsmId", 
+    		  	classOf[fr.proline.core.orm.msi.ProteinSet]).setParameter("rsmId",rsmId).getResultList().toList
+    
+    		  	
+    var modifiedProtSet = Seq.newBuilder[fr.proline.core.orm.msi.ProteinSet]
+    ormProtSetRSM.foreach(protSet => {
       
-    	var currentTypical = protSet.getTypicalProteinMatch.get      
-    	var newTypical = currentTypical
+    	val associatedProtMatchesById  = protSet.getProteinSetProteinMatchItems().map(pspmi => { pspmi.getProteinMatch().getId() -> pspmi.getProteinMatch()}).toMap
+    	var currentTypical =associatedProtMatchesById(protSet.getProteinMatchId())
+    	val nbrPepCountSameSet = currentTypical.getPeptideCount()
     	
-    	val protMatchesList = if(protSet.proteinMatches.isEmpty) throw new Exception("Unable to acess tp proteinMatches ") else protSet.proteinMatches.get
-    	val sameSetPMIds =  protSet.peptideSet.proteinMatchIds
+    	var newTypical = currentTypical
+    	    	
     	breakable {
-    		protMatchesList.foreach(protMatch => {
-    		  if(sameSetPMIds.contains(protMatch.id)){
-    		    val valueToTest : String = if(ruleToApply.applyToAcc) protMatch.accession else protMatch.description
+    	  val typValueToTest : String = if(ruleToApply.applyToAcc) currentTypical.getAccession() else currentTypical.getDescription()
+    	  if( typValueToTest =~ ruleToApply.rulePattern){
+			break
+		   }
+    		associatedProtMatchesById.foreach(entry  => {
+    		  if(entry._2.getPeptideCount().equals(nbrPepCountSameSet)){    		  
+    		    val valueToTest : String = if(ruleToApply.applyToAcc) entry._2.getAccession() else entry._2.getDescription()
     			if( valueToTest =~ ruleToApply.rulePattern){
-    				newTypical = protMatch
+    				newTypical = entry._2
     				break
     			}
     		  }
     		})
     	}
     	
-    	//New typical to save !
+    	//New typical to save ! 
 		if(!newTypical.equals(currentTypical)){
-		  protSet.setTypicalProteinMatch (newTypical)		  
+		  protSet.setProteinMatchId(newTypical.getId())		
+		  modifiedProtSet += protSet
 		}
     })
-   
+    
+    modifiedProteinSets = modifiedProtSet.result
+    logger.info("Changed "+modifiedProteinSets.size+" typical proteins ")
+
   }
+  
+  def getChangedProteinSets = {modifiedProteinSets}
   
   
 }
