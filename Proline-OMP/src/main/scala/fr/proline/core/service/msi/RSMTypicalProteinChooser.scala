@@ -18,69 +18,28 @@ class RSMTypicalProteinChooser (
   resultSummaryId: Long,  
   ruleToApply : TypicalProteinChooserRule) extends IService with Logging {
 
-  require(execCtx.isJPA())
+  require(execCtx.isJPA(), " Invalid connexion type for this service ")
+  require(resultSummaryId != null , " No ResultSummary specified ")
   
   def runService(): Boolean = {
-    logger.info("Load data for Typical Protein Chooser")
     
-
-    val rsmProvider = getResultSummaryProvider(execCtx)
-    val rsProvider = getResultSetProvider(execCtx)
-    val targetRsmOp = rsmProvider.getResultSummary(resultSummaryId, false) // Bug in link between RSM-RS
-    if (targetRsmOp.isEmpty)
-      throw new Exception("Unable to access IdentificationResult ")
-    val targetRsm = targetRsmOp.get
-    val targetRsOp = rsProvider.getResultSet(targetRsm.getResultSetId)
-    if (targetRsOp.isEmpty)
-      throw new Exception("Unable to access assciated SearchResult ")
-    val targetRs = targetRsOp.get
-
-    targetRsm.resultSet = targetRsOp
-
-    //Load proteinMatches in all ProteinSet !!	
-    val pmByIds = targetRs.proteinMatchById
-    targetRsm.proteinSets.foreach(protSet => {
-      var protSetProtMatches = Array.newBuilder[ProteinMatch]
-      protSet.getProteinMatchIds.foreach(id => {
-        protSetProtMatches += pmByIds(id)
-      })
-      protSet.proteinMatches = Some(protSetProtMatches.result)
-      protSet.setTypicalProteinMatch(pmByIds(protSet.getTypicalProteinMatchId))
-    })
-
+	  val msiDbContext = execCtx.getMSIDbConnectionContext()    	
+	msiDbContext.beginTransaction()
+	val msiEM = execCtx.getMSIDbConnectionContext().getEntityManager()
+	
     logger.info("Run Typical Protein Chooser")
     
     val typicalChooser = new TypicalProteinChooser()	
-	typicalChooser.changeTypical(targetRsm,ruleToApply,false)
+	typicalChooser.changeTypical(resultSummaryId,ruleToApply, msiEM)
 	
-	
-	val msiDbContext = execCtx.getMSIDbConnectionContext()
-	// Check if a transaction is already initiated
-	val wasInTransaction = msiDbContext.isInTransaction()
-	if (!wasInTransaction) msiDbContext.beginTransaction()
-      
-	val msiEm =msiDbContext.getEntityManager
-	msiEm.merge(targetRsm)
+	logger.info(" Save data for Typical Protein Chooser")
+    	
+	val changedPS = typicalChooser.getChangedProteinSets
+	changedPS.foreach( msiEM.merge(_))
 	
 	// Commit transaction if it was initiated locally
-	if (!wasInTransaction) msiDbContext.commitTransaction()
-
-    false
+    msiDbContext.commitTransaction()
+	true
   }
   
-  private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
-  	new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext(), execContext.getPSDbConnectionContext, execContext.getUDSDbConnectionContext)
-  }
-  
-  private def getResultSetProvider(execContext: IExecutionContext): IResultSetProvider = {
-
-    if (execContext.isJPA) {
-      new ORMResultSetProvider(execContext.getMSIDbConnectionContext, execContext.getPSDbConnectionContext, execContext.getUDSDbConnectionContext)
-    } else {
-      new SQLResultSetProvider(execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
-        execContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext],
-        execContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext])
-    }
-
-  }
 }
