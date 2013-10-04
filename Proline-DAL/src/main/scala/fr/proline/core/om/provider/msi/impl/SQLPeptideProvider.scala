@@ -1,6 +1,5 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.weiglewilczek.slf4s.Logging
@@ -8,15 +7,25 @@ import fr.profi.jdbc.easy.string2Formattable
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.ps.PsDbPeptidePtmTable
+import fr.proline.core.dal.tables.ps.PsDbPeptideTable
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.util.StringUtils
-import fr.proline.core.dal.tables.ps.PsDbPeptidePtmTable
-import fr.proline.core.dal.tables.ps.PsDbPeptideTable
-import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.util.primitives._
+import fr.proline.util.StringUtils
+
+object SQLPeptideProvider {
+  
+  // Create a static HashMap to cache loaded peptides
+  // TODO: use cache for other queries than getPeptides(peptideIds)
+  // TODO: implement cache at context level
+  private val _peptideCache = new HashMap[Long,Peptide]
+  
+}
+
 
 class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvider(psDbCtx) with IPeptideProvider with Logging {
 
@@ -96,7 +105,10 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
   def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
     if (peptideIds.length == 0) return Array.empty[Peptide]
     
-    DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
+    val( cachedPepIds, uncachedPepIds ) = peptideIds.partition( SQLPeptideProvider._peptideCache.contains(_) )
+    val cachedPeps = cachedPepIds.map(SQLPeptideProvider._peptideCache(_))
+    
+    cachedPeps.toArray ++ DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
       val maxNbIters = psEzDBC.getInExpressionCountLimit
       
@@ -104,9 +116,9 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
       var pepColNames: Seq[String] = null
       val pepRecords = new ArrayBuffer[Map[String, Any]](0)
       var modifiedPepIdSet = new scala.collection.mutable.HashSet[Long]
-  
+      
       // Iterate over groups of peptide ids
-      peptideIds.grouped(maxNbIters).foreach(tmpPepIds => {
+      uncachedPepIds.grouped(maxNbIters).foreach(tmpPepIds => {
         
         val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
           List(t.*) -> "WHERE "~ t.ID ~" IN("~ tmpPepIds.mkString(",") ~")"
@@ -205,7 +217,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
   ): Array[Peptide] = {
 
     // Iterate over peptide records to convert them into peptide objects
-    var peptides = new ArrayBuffer[Peptide](pepRecords.length)
+    val peptides = new ArrayBuffer[Peptide](pepRecords.length)
 
     for (pepRecord <- pepRecords) {
 
@@ -214,14 +226,21 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
       val locatedPtms = locatedPtmsByPepId.getOrElse(pepId, Array.empty[LocatedPtm])
 
       // Build peptide object
-      val peptide = new Peptide(id = pepId,
+      val peptide = new Peptide(
+        id = pepId,
         sequence = sequence,
         ptmString = pepRecord("ptm_string").asInstanceOf[String],
         ptms = locatedPtms,
-        calculatedMass = pepRecord("calculated_mass").asInstanceOf[Double])
+        calculatedMass = pepRecord("calculated_mass").asInstanceOf[Double]
+      )
+      
+      // Cache this new built peptide
+      SQLPeptideProvider._peptideCache += peptide.id -> peptide
+      
       peptides += peptide
-
     }
+    
+    
 
     peptides.toArray
 

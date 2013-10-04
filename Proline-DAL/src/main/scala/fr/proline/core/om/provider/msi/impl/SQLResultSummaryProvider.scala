@@ -31,6 +31,9 @@ class SQLResultSummaryProvider(
     import fr.proline.util.primitives._
     import fr.proline.util.sql.StringOrBoolAsBool._
 
+    val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
+    val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
+    
     // Load peptide sets
     val pepSetProvider = new SQLPeptideSetProvider(msiDbCtx, psDbCtx)
     val pepSets = pepSetProvider.getResultSummariesPeptideSets(rsmIds)
@@ -48,6 +51,7 @@ class SQLResultSummaryProvider(
 
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>      
     
+      // TODO: load all result sets at once to avoid duplicated entities and for a faster loading
       val rsms = msiEzDBC.select(rsmQuery) { r =>
     
         // Retrieve some vars
@@ -59,7 +63,7 @@ class SQLResultSummaryProvider(
         val decoyRsmId = r.getLongOrElse(RSMCols.DECOY_RESULT_SUMMARY_ID, 0L)
         //val decoyRsmId = if( decoyRsmIdField != null ) decoyRsmIdField.asInstanceOf[Int] else 0
         
-        // Check if the result sumamry corresponds to a decoy result set
+        // Check if the result summary corresponds to a decoy result set
         val rsType = r.getString(MsiDbResultSetTable.columns.TYPE)
         val isDecoy = rsType matches "DECOY.+"
         // FIXME: remove this fix (protein_set table doesn't have a is_decoy column)
@@ -75,9 +79,6 @@ class SQLResultSummaryProvider(
         
         var rsAsOpt = Option.empty[ResultSet]
         if (loadResultSet) {
-    
-          val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
-          val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
     
           val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches(rsmId)
           val protMatches = protMatchProvider.getResultSummariesProteinMatches(Array(rsmId))
