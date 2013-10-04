@@ -63,8 +63,8 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
      *    // Check the PTM composition is available (it is required to search for PTM Precursor evidences)
      *    2.1 IF the PTM composition is not defined -> throw EXCEPTION
      *    2.2 ELSE
-     *        2.1 IF a PTM exists with the same Precursor delta (composition matching) -> throw EXCEPTION
-     *        2.2 ELSE (no PTM for this Precursor delta in the database) -> SAVE new PTM and UPDATE the provided PtmDefinition id
+     *        2.2.1 IF a PTM exists with the same Precursor delta (composition matching) -> throw EXCEPTION
+     *        2.2.2 ELSE (no PTM for this Precursor delta in the database) -> SAVE new PTM and UPDATE the provided PtmDefinition id
      *
      * Note: PTM classification ambiguities are ignored
      *
