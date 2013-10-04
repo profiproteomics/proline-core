@@ -58,7 +58,7 @@ class LcMsRunFakeGenerator(
     
     
     LcMsRun(
-      id = LcMsRun.generateNewId,
+      id = runId,
       number = 1,
       runStart = 0,
       runStop = scanSeq.scans.last.time,
