@@ -34,9 +34,10 @@ object MissingAbundancesInferer {
       val nbDefValues = defAbundances.length
       
       // Compute the mean abundance for these defined abundances
-      val meanAbundance = if( nbDefValues == 0 ) lb
+      /*val meanAbundance = if( nbDefValues == 0 ) lb
       else if( nbDefValues == 1 && defAbundances(0) > q3 ) lb
-      else defAbundances.sum / nbDefValues
+      else defAbundances.sum / nbDefValues*/
+      val meanAbundance = lb
       
       // Retrieve the standard deviation corresponding to this abundance level
       val stdDev = errorModel.getStdevForAbundance(meanAbundance)

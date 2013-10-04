@@ -4,7 +4,7 @@ import fr.profi.jdbc.easy._
 
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.algo.lcms.FeatureClusterer
+import fr.proline.core.algo.lcms.ClusterizeFeatures
 import fr.proline.core.algo.lcms.ClusteringParams
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -72,7 +72,7 @@ class ClusterizeMapFeatures(val lcmsDbCtx: DatabaseConnectionContext, lcmsMap: P
       val lcmsMapWithoutClusters = lcmsMap.copyWithoutClusters()
   
       // Perform the feature clustering
-      val lcmsMapWithClusters = FeatureClusterer.clusterizeFeatures(lcmsMapWithoutClusters, scans, params)
+      val lcmsMapWithClusters = ClusterizeFeatures(lcmsMapWithoutClusters, scans, params)
   
       // Retrieve feature cluster ids if they exist
       val existingFtClusterIdsQuery = new SelectQueryBuilder1(LcmsDbFeatureClusterItemTable).mkSelectQuery( (t,c) =>

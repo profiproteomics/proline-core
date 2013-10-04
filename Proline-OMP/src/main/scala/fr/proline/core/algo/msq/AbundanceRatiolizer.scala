@@ -95,7 +95,7 @@ object AbundanceRatiolizer {
         
         // Apply the variation model
         val zTestPValue = relativeVariationModel.zTest(ratio.maxAbundance.toFloat, ratio.foldValue.get)
-        ratio.zTestPValue = Some( zTestPValue )
+        ratio.zTestPValue = if( zTestPValue.isNaN ) None else Some( zTestPValue )
         //println( "z-test=" + foldChangePValue )
         
         // Check the pValue

@@ -6,18 +6,18 @@ object FeatureMapper {
   import fr.proline.core.om.model.lcms._
   import fr.proline.util.ms.calcMozTolInDalton
   
-  def computePairwiseFtMapping ( map1Features: Array[Feature],
-                                 map2Features: Array[Feature],
+  def computePairwiseFtMapping ( map1Features: Seq[Feature],
+                                 map2Features: Seq[Feature],
                                  methodParams: FeatureMappingParams,
-                                 isChargeTolerant: Boolean = false ): Map[Long,Array[Feature]]=  {
+                                 isChargeTolerant: Boolean = false ): Map[Long,Seq[Feature]]=  {
     
     val mozTol = methodParams.mozTol
     val mozTolUnit = methodParams.mozTolUnit
     val timeTol = methodParams.timeTol
     
     // Group features by charge
-    var map1FtsByCharge = Map.empty[Int,Array[Feature]]
-    var map2FtsByCharge = Map.empty[Int,Array[Feature]]
+    var map1FtsByCharge = Map.empty[Int,Seq[Feature]]
+    var map2FtsByCharge = Map.empty[Int,Seq[Feature]]
     var chargeStates = Array.empty[Int]
     
     if( isChargeTolerant == false ) {
@@ -94,7 +94,7 @@ object FeatureMapper {
       }
     }
     
-    Map() ++ ftMapping.map { case (a,b) => a -> b.toArray }
+    ftMapping.toMap
   }
 
 }

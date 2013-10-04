@@ -1,6 +1,11 @@
 package fr.proline.core.algo.lcms
 
 import com.weiglewilczek.slf4s.Logging
+import scala.collection.mutable.ArrayBuffer
+import fr.proline.core.om.model.lcms._
+import fr.proline.util.ms._
+import fr.proline.util.math.getMedianObject
+
 
 object ClusterIntensityComputation extends Enumeration {
   val MOST_INTENSE = Value("MOST_INTENSE")
@@ -12,12 +17,20 @@ object ClusterTimeComputation extends Enumeration {
   val MEDIAN = Value("MEDIAN")
 }
 
-object FeatureClusterer extends Logging {
+object ClusterizeFeatures extends Logging {
+  
+  def apply(lcmsMap: ILcMsMap, scans: Seq[LcMsScan], params: ClusteringParams): ProcessedMap = {    
+    val ftClusterer = new FeatureClusterer(lcmsMap,scans,params)
+    ftClusterer.clusterizeFeatures()
+  }
 
-  import scala.collection.mutable.ArrayBuffer
-  import fr.proline.core.om.model.lcms._
-  import fr.proline.util.ms._
-  import fr.proline.util.math.getMedianObject
+}
+
+class FeatureClusterer(
+  lcmsMap: ILcMsMap,
+  scans: Seq[LcMsScan],
+  params: ClusteringParams
+) extends Logging {
 
   private val ftMozSortingFunc = new Function2[Feature, Feature, Boolean] {
     def apply(a: Feature, b: Feature): Boolean = if (a.moz < b.moz) true else false
@@ -26,33 +39,34 @@ object FeatureClusterer extends Logging {
   private val ftTimeSortingFunc = new Function2[Feature, Feature, Boolean] {
     def apply(a: Feature, b: Feature): Boolean = if (a.elutionTime < b.elutionTime) true else false
   }
-
-  def clusterizeFeatures(lcmsMap: ILcMsMap, scans: Seq[LcMsScan], params: ClusteringParams): ProcessedMap = {
-
-    val( runMapId, procMapId ) = lcmsMap match {
-      case procMap: ProcessedMap => (0L,procMap.id)
-      case runMap: RunMap => (runMap.id,0L)
-    }
-
-    // Retrieve parameters
-    val mozTol = params.mozTol
-    val mozTolUnit = params.mozTolUnit
-    val timeTol = params.timeTol
+  
+  private val( runMapId, procMapId ) = lcmsMap match {
+    case procMap: ProcessedMap => (0L,procMap.id)
+    case runMap: RunMap => (runMap.id,0L)
+  }
+  
+  // Retrieve parameters
+  private val mozTol = params.mozTol
+  private val mozTolUnit = params.mozTolUnit
+  private val timeTol = params.timeTol
+  
+  private val intensityComputationMethod = try {
+    ClusterIntensityComputation.withName( params.intensityComputation.toUpperCase() )
+  } catch {
+    case _ => throw new Exception("the cluster intensity computation method '" + params.intensityComputation + "' is not implemented")
+  }
     
-    val intensityComputationMethod = try {
-      ClusterIntensityComputation.withName( params.intensityComputation.toUpperCase() )
-    } catch {
-      case _ => throw new Exception("the cluster intensity computation method '" + params.intensityComputation + "' is not implemented")
-    }
-    
-    val timeComputationMethod = try {
-      ClusterTimeComputation.withName( params.timeComputation.toUpperCase() )
-    } catch {
-      case _ => throw new Exception("the cluster time computation method '" + params.timeComputation + "' is not implemented")
-    }
+  private val timeComputationMethod = try {
+    ClusterTimeComputation.withName( params.timeComputation.toUpperCase() )
+  } catch {
+    case _ => throw new Exception("the cluster time computation method '" + params.timeComputation + "' is not implemented")
+  }
 
-    // Retrieve some vars
-    val scanById = scans map { scan => (scan.id -> scan) } toMap
+  // Retrieve some vars
+  private val scanById = scans map { scan => (scan.id -> scan) } toMap
+
+  def clusterizeFeatures(): ProcessedMap = {
+
     val features = lcmsMap.features
 
     val featuresByCharge = features.groupBy(_.charge)
@@ -73,7 +87,7 @@ object FeatureClusterer extends Logging {
       var ftsSortedByMoz = sameChargeFeatures.sortBy( _.moz )
 
       // Set some vars
-      var prevFt = ftsSortedByMoz(0)
+      var prevFt = ftsSortedByMoz.head
       val ftsGroupedByMoz = new ArrayBuffer[ArrayBuffer[Feature]](1)
       ftsGroupedByMoz += ArrayBuffer(prevFt)
       var ftGroupIdx = 0
@@ -87,7 +101,7 @@ object FeatureClusterer extends Logging {
         // Compute m/z tolerance in Dalton
         val mozTolInDalton = calcMozTolInDalton(ftMoz, mozTol, mozTolUnit)
         if (math.abs(ftMoz - prevFt.moz) > mozTolInDalton) {
-          // Append new group of features because current m/z is to far from the previous one
+          // Append new group of features because current m/z is too far from the previous one
           ftGroupIdx += 1
           ftsGroupedByMoz += new ArrayBuffer[Feature](1)
         }
@@ -103,10 +117,9 @@ object FeatureClusterer extends Logging {
       val sameChargeFtGroups = new ArrayBuffer[ArrayBuffer[Feature]]
       for (ftGroup <- ftsGroupedByMoz) {
         if (ftGroup.length == 1) {
-          singleFeatures += ftGroup(0)
+          singleFeatures += ftGroup.head
         } else {
-
-          val tmpFtsGroupedByTime = this.splitFtGroupByTime(ftGroup, timeTol, scanById)
+          val tmpFtsGroupedByTime = this._splitFtGroupByTime(ftGroup)
 
           // Iterate over features grouped by time dimension
           for (tmpFtGroup <- tmpFtsGroupedByTime) {
@@ -120,9 +133,8 @@ object FeatureClusterer extends Logging {
 
       // Filtering same charge ft groups to remove m/z conflicts
       for (ftGroup <- sameChargeFtGroups) {
-
-        val mozTolInDalton = calcMozTolInDalton(ftGroup(0).moz, mozTol, mozTolUnit)
-        val mozSplitFtGroups = this.splitFtGroupByMoz(ftGroup, mozTolInDalton)
+        val mozTolInDalton = calcMozTolInDalton(ftGroup.head.moz, mozTol, mozTolUnit)
+        val mozSplitFtGroups = this._splitFtGroupByMoz(ftGroup, mozTolInDalton)
 
         for (mozSplitFtGroup <- mozSplitFtGroups) {
 
@@ -130,21 +142,21 @@ object FeatureClusterer extends Logging {
           if (mozSplitFtGroup.length >= 2) {
 
             // Split again by time
-            val timeSplitFtGroups = this.splitFtGroupByTime(mozSplitFtGroup, timeTol, scanById)
+            val timeSplitFtGroups = this._splitFtGroupByTime(mozSplitFtGroup)
 
             for (tmpFtGroup <- timeSplitFtGroups) {
               // If we retrieve only one feature in the group
-              if (tmpFtGroup.length == 1) { singleFeatures += tmpFtGroup(0) }
+              if (tmpFtGroup.length == 1) { singleFeatures += tmpFtGroup.head }
               // Else => more than one feature in the group
               else { totalFtGroups += tmpFtGroup }
             }
 
             // Else put aside alone feature
-          } else { singleFeatures += mozSplitFtGroup(0) }
+          } else { singleFeatures += mozSplitFtGroup.head }
         }
       }
 
-      println("number of detected feature clusters: " + totalFtGroups.length)
+      this.logger.info("number of detected feature clusters: " + totalFtGroups.length)
     }
 
     // Check if single features don't contain duplicated objects
@@ -157,86 +169,16 @@ object FeatureClusterer extends Logging {
     // Convert total ft groups into feature clusters
     val ftClusters = new ArrayBuffer[Feature]
     for (totalFtGroup <- totalFtGroups) {
-
-      // Set all features of the group to a clusterized status
-      totalFtGroup.foreach { _.isClusterized = true }
-
-      // Compute some vars for the feature cluster
-      val totalFtGroupAsList = totalFtGroup.toList
-      val medianFt = getMedianObject(totalFtGroupAsList, this.ftMozSortingFunc)
-      val moz = medianFt.moz
-
-      val intensity = this.computeClusterIntensity(totalFtGroupAsList, intensityComputationMethod)
-      val elutionTime = this.computeClusterTime(totalFtGroupAsList, timeComputationMethod)
-
-      // Set some vars
-      val ms2EventIdSetBuilder = scala.collection.immutable.Set.newBuilder[Long]
-      for (ft <- totalFtGroup) {
-        val ms2EventIds = ft.relations.ms2EventIds
-        if (ms2EventIds != null) {
-          for (ms2EventId <- ms2EventIds) ms2EventIdSetBuilder += ms2EventId
-        }
-      }
-      val ms2EventIds = ms2EventIdSetBuilder.result().toArray[Long]
-      val ms2Count = ms2EventIds.length
-      val mostIntenseFt = this.findMostIntenseFeature(totalFtGroup.toList)
-      val charge = mostIntenseFt.charge
-      val qualityScore = mostIntenseFt.qualityScore
-      //val apexIp = mostIntenseFt.apex
-      val apexScanId = mostIntenseFt.relations.apexScanId
-      val apexScanInitialId = mostIntenseFt.relations.apexScanInitialId
-      val nbSubFts = totalFtGroup.length
-
-      // Determine first ft scan and last ft scan
-      val subftsSortedByAscTime = totalFtGroupAsList.sort { (a, b) => a.elutionTime < b.elutionTime }
-      val (firstSubft, lastSubft) = (subftsSortedByAscTime(0), subftsSortedByAscTime(nbSubFts - 1))
-      val (firstScanId, firstScanInitialId) = (firstSubft.relations.firstScanId, firstSubft.relations.firstScanInitialId)
-      val (lastScanId, lastScanInitialId) = (lastSubft.relations.lastScanId, lastSubft.relations.lastScanInitialId)
-      val( firstScan, lastScan ) = (scanById(firstScanId),scanById(lastScanId))
-      val ms1Count = 1 + lastScan.cycle - firstScan.cycle
-      val duration = lastScan.time - firstScan.time
-
-      val ftCluster = new Feature(
-        id = Feature.generateNewId,
-        moz = moz,
-        charge = charge,
-        intensity = intensity,
-        elutionTime = elutionTime,
-        duration = duration,
-        ms1Count = ms1Count,
-        ms2Count = ms2Count,
-        subFeatures = subftsSortedByAscTime.toArray,
-        isotopicPatterns = None,
-        isOverlapping = false,
-        overlappingFeatures = null,
-        qualityScore = qualityScore,
-        relations = new FeatureRelations(
-          firstScanId = firstScanId,
-          lastScanId = lastScanId,
-          apexScanId = apexScanId,
-          firstScanInitialId = firstScanInitialId,
-          lastScanInitialId = lastScanInitialId,
-          apexScanInitialId = apexScanInitialId,
-          ms2EventIds = ms2EventIds,
-          runMapId = runMapId,
-          processedMapId = procMapId
-        )
-
-      )
-      //ftCluster.apex(apexIp) if defined apexIp
-
-      ftClusters += ftCluster
-
+      ftClusters += this.buildFeatureCluster(totalFtGroup)
     }
 
     // Add feature clusters to clusterized_features
     val clusterizedFeatures = (singleFeatures ++ ftClusters).toArray
 
-    var newLcmsMap: ProcessedMap = null
-    if (lcmsMap.isProcessed) {
+    val newLcmsMap = if (lcmsMap.isProcessed) {
 
       // Create new processed map from existing processed map
-      newLcmsMap = lcmsMap.asInstanceOf[ProcessedMap].copy(
+      lcmsMap.asInstanceOf[ProcessedMap].copy(
         id = ProcessedMap.generateNewId(),
         creationTimestamp = new java.util.Date(),
         modificationTimestamp = new java.util.Date(),
@@ -246,7 +188,7 @@ object FeatureClusterer extends Logging {
 
     } else {
       // Create new processed map from existing run map
-      newLcmsMap = lcmsMap.asInstanceOf[RunMap].toProcessedMap(
+      lcmsMap.asInstanceOf[RunMap].toProcessedMap(
         number = 0,
         mapSetId = 0,
         features = clusterizedFeatures
@@ -254,50 +196,120 @@ object FeatureClusterer extends Logging {
     }
 
     newLcmsMap
+  }
+  
+  def buildFeatureCluster(ftGroup: Seq[Feature]): Feature = {
+    
+    // Set all features of the group to a clusterized status
+    ftGroup.foreach { _.isClusterized = true }
 
+    // Compute some vars for the feature cluster
+    val totalFtGroupAsList = ftGroup.toList
+    val medianFt = getMedianObject(totalFtGroupAsList, this.ftMozSortingFunc)
+    val moz = medianFt.moz
+    
+    val intensity = this._computeClusterIntensity(totalFtGroupAsList, intensityComputationMethod)
+    val elutionTime = this._computeClusterTime(totalFtGroupAsList, timeComputationMethod)
+    
+    // Set some vars
+    val ms2EventIdSetBuilder = scala.collection.immutable.Set.newBuilder[Long]
+    for (ft <- ftGroup) {
+      val ms2EventIds = ft.relations.ms2EventIds
+      if (ms2EventIds != null) {
+        for (ms2EventId <- ms2EventIds) ms2EventIdSetBuilder += ms2EventId
+      }
+    }
+    val ms2EventIds = ms2EventIdSetBuilder.result().toArray[Long]
+    val ms2Count = ms2EventIds.length
+    val mostIntenseFt = this._findMostIntenseFeature(ftGroup.toList)
+    val charge = mostIntenseFt.charge
+    val qualityScore = mostIntenseFt.qualityScore
+    //val apexIp = mostIntenseFt.apex
+    val apexScanId = mostIntenseFt.relations.apexScanId
+    val apexScanInitialId = mostIntenseFt.relations.apexScanInitialId
+    val nbSubFts = ftGroup.length
+
+    // Determine first ft scan and last ft scan
+    val subftsSortedByAscTime = totalFtGroupAsList.sort { (a, b) => a.elutionTime < b.elutionTime }
+    val (firstSubft, lastSubft) = (subftsSortedByAscTime.head, subftsSortedByAscTime.last)
+    val (firstScanId, firstScanInitialId) = (firstSubft.relations.firstScanId, firstSubft.relations.firstScanInitialId)
+    val (lastScanId, lastScanInitialId) = (lastSubft.relations.lastScanId, lastSubft.relations.lastScanInitialId)
+    val( firstScan, lastScan ) = (scanById(firstScanId),scanById(lastScanId))
+    val ms1Count = 1 + lastScan.cycle - firstScan.cycle
+    val duration = lastScan.time - firstScan.time
+
+    val ftCluster = new Feature(
+      id = Feature.generateNewId,
+      moz = moz,
+      charge = charge,
+      intensity = intensity,
+      elutionTime = elutionTime,
+      duration = duration,
+      ms1Count = ms1Count,
+      ms2Count = ms2Count,
+      subFeatures = subftsSortedByAscTime.toArray,
+      isotopicPatterns = None,
+      isOverlapping = false,
+      overlappingFeatures = null,
+      qualityScore = qualityScore,
+      relations = new FeatureRelations(
+        firstScanId = firstScanId,
+        lastScanId = lastScanId,
+        apexScanId = apexScanId,
+        firstScanInitialId = firstScanInitialId,
+        lastScanInitialId = lastScanInitialId,
+        apexScanInitialId = apexScanInitialId,
+        ms2EventIds = ms2EventIds,
+        runMapId = runMapId,
+        processedMapId = procMapId
+      )
+
+    )
+    //ftCluster.apex(apexIp) if defined apexIp
+    
+    ftCluster
   }
 
-  private def splitFtGroupByTime(ftGroup: Seq[Feature],
-                                 timeTol: Float,
-                                 scanById: Map[Long, LcMsScan]): ArrayBuffer[ArrayBuffer[Feature]] = {
+  private def _splitFtGroupByTime(ftGroup: Seq[Feature]): ArrayBuffer[ArrayBuffer[Feature]] = {
 
     // Sort features by first scan time
     val nbFts = ftGroup.length
-    val ftsSortedByTime = ftGroup.toList.sortBy( ft => scanById(ft.relations.firstScanId).time )
+    val ftsSortedByTime = ftGroup.sortBy( ft => scanById(ft.relations.firstScanId).time )
     
     // Set some vars
-    var curFtIdx = 0
     val ftsGroupedByTime = new ArrayBuffer[ArrayBuffer[Feature]](1)
-    var ftGroupIdx = 0
-    val ftGroupIdxByAssignedFtId = new java.util.HashMap[Long, Long]
+    val ftGroupIdxByAssignedFtId = new collection.mutable.HashMap[Long, Long]
+    var( curFtIdx, ftGroupIdx ) = (0,0)
 
     // Clusterize features by time
     for (putativeFirstCft <- ftsSortedByTime) {
       curFtIdx += 1
 
       // Skip feature if it has been already assigned to a group
-      if (!ftGroupIdxByAssignedFtId.containsKey(putativeFirstCft.id)) {
+      if ( ftGroupIdxByAssignedFtId.contains(putativeFirstCft.id) == false ) {
         ftsGroupedByTime += ArrayBuffer(putativeFirstCft)
-        ftGroupIdxByAssignedFtId.put(putativeFirstCft.id, ftGroupIdx)
-
-        val clusterFirstTime = scanById(putativeFirstCft.relations.firstScanId).time
+        ftGroupIdxByAssignedFtId += (putativeFirstCft.id -> ftGroupIdx)
+        
+        //val clusterFirstTime = scanById(putativeFirstCft.relations.firstScanId).time
         val clusterLastTime = scanById(putativeFirstCft.relations.lastScanId).time
-        var (minTime, maxTime) = (clusterFirstTime - timeTol, clusterLastTime + timeTol)
-
+        //var (minTime, maxTime) = (clusterFirstTime - timeTol, clusterLastTime + timeTol)
+        var maxTime = clusterLastTime + timeTol
+        
         // Search for other cluster features
         var reachedFarthestFeature = false
         for (tmpFtIdx <- curFtIdx until nbFts) {
-          if (!reachedFarthestFeature) {
+          // TODO: use break instead of if statement
+          if (reachedFarthestFeature == false) {
             val tmpFt = ftsSortedByTime(tmpFtIdx)
 
             // Skip feature if it has been already assigned to a group
-            if (!ftGroupIdxByAssignedFtId.containsKey(tmpFt.id)) {
+            if ( ftGroupIdxByAssignedFtId.contains(tmpFt.id) == false ) {
 
               val tmpFtFirstTime = scanById(tmpFt.relations.firstScanId).time
               if (tmpFtFirstTime <= maxTime) {
                 ftsGroupedByTime(ftGroupIdx) += tmpFt
                 maxTime = scanById(tmpFt.relations.lastScanId).time + timeTol
-                ftGroupIdxByAssignedFtId.put(tmpFt.id, ftGroupIdx)
+                ftGroupIdxByAssignedFtId += (tmpFt.id -> ftGroupIdx)
               } else {
                 reachedFarthestFeature = true
               }
@@ -314,22 +326,21 @@ object FeatureClusterer extends Logging {
 
   }
 
-  private def splitFtGroupByMoz(ftGroup: Seq[Feature], mozTol: Double): ArrayBuffer[Seq[Feature]] = {
+  private def _splitFtGroupByMoz(ftGroup: Seq[Feature], mozTolInDalton: Double): ArrayBuffer[Seq[Feature]] = {
 
     val nbFeatures = ftGroup.length
-    if (nbFeatures == 0) return null
+    if (nbFeatures == 0) return ArrayBuffer.empty[Seq[Feature]]
 
     // Sort features by m/z
-    val sortedFts = ftGroup.toList.sortBy( _.moz )
+    val sortedFts = ftGroup.sortBy( _.moz )
 
     // Check if first ft moz is too far from last ft moz
-    val firstFt = sortedFts(0)
-    val lastFt = sortedFts(nbFeatures - 1)
-
+    val firstFt = sortedFts.head
+    val lastFt = sortedFts.last
     var ftsGroupedByMz = new ArrayBuffer[Seq[Feature]]
-
+    
     // If there is only one feature in the group or if the features are close in m/z
-    if (nbFeatures == 1 || math.abs(firstFt.moz - lastFt.moz) < mozTol) {
+    if (nbFeatures == 1 || math.abs(firstFt.moz - lastFt.moz) < mozTolInDalton) {
       // Keep the input feature group as is
       ftsGroupedByMz = ArrayBuffer(ftGroup)
       // Else split feature group into new groups
@@ -356,7 +367,7 @@ object FeatureClusterer extends Logging {
       // Check if we need to split the group again (recursive method call)
       val nbOtherFts = tmpOtherFts.length
       if (nbOtherFts > 1) {
-        val otherFtGroups = this.splitFtGroupByMoz(tmpOtherFts, mozTol)
+        val otherFtGroups = this._splitFtGroupByMoz(tmpOtherFts, mozTolInDalton)
         ftsGroupedByMz ++= otherFtGroups
       } else if (nbOtherFts == 1) { ftsGroupedByMz += tmpOtherFts }
     }
@@ -364,10 +375,10 @@ object FeatureClusterer extends Logging {
     return ftsGroupedByMz
   }
 
-  private def findMostIntenseFeature(features: List[Feature]): Feature = {
+  private def _findMostIntenseFeature(features: List[Feature]): Feature = {
 
     val sortedFeatures = features.sortWith { (a, b) => a.intensity > b.intensity }
-    sortedFeatures(0)
+    sortedFeatures.head
 
     // Group features by intensity
     /*val ftByIntensity = features map { ft => (ft.intensity -> ft) }
@@ -380,18 +391,18 @@ object FeatureClusterer extends Logging {
 
   }
 
-  private def computeClusterTime(features: List[Feature], method: ClusterTimeComputation.Value ): Float = {    
+  private def _computeClusterTime(features: List[Feature], method: ClusterTimeComputation.Value ): Float = {    
     method match {
       case ClusterTimeComputation.MEDIAN => getMedianObject(features, ftTimeSortingFunc).elutionTime
-      case ClusterTimeComputation.MOST_INTENSE => this.findMostIntenseFeature(features).elutionTime
+      case ClusterTimeComputation.MOST_INTENSE => this._findMostIntenseFeature(features).elutionTime
     }
 
   }
 
-  private def computeClusterIntensity(features: List[Feature], method: ClusterIntensityComputation.Value ): Float = {
+  private def _computeClusterIntensity(features: List[Feature], method: ClusterIntensityComputation.Value ): Float = {
     method match {
       case ClusterIntensityComputation.SUM => features.foldLeft(0f) { (r,c) => r + c.intensity }
-      case ClusterIntensityComputation.MOST_INTENSE => this.findMostIntenseFeature(features).intensity
+      case ClusterIntensityComputation.MOST_INTENSE => this._findMostIntenseFeature(features).intensity
     }
     
   }

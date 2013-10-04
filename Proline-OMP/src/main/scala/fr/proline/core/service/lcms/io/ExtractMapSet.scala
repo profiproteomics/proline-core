@@ -2,6 +2,7 @@ package fr.proline.core.service.lcms.io
 
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 import com.weiglewilczek.slf4s.Logging
 
 import fr.profi.jdbc.easy._
@@ -16,7 +17,7 @@ import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.om.model.lcms.{ Feature => LcMsFeature, IsotopicPattern => LcMsIsotopicPattern }
 import fr.proline.core.om.model.lcms._
-import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.om.model.msi.{Instrument,Peptide}
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.om.storer.lcms.MasterMapStorer
 import fr.proline.core.om.storer.lcms.ProcessedMapStorer
@@ -33,7 +34,8 @@ import fr.proline.core.service.lcms.CreateMasterMap
  */
 class ExtractMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
-  val quantConfig: ILcMsQuantConfig  
+  val quantConfig: ILcMsQuantConfig,
+  val peptideByRunIdAndScanNumber: Option[Map[Long,HashMap[Int,Peptide]]] = None // sequence data may or may not be provided
 ) extends ILcMsService with Logging {
   
   // Do some requirements
@@ -69,12 +71,17 @@ class ExtractMapSet(
     val wasInTransaction = lcmsDbCtx.isInTransaction()
     if( !wasInTransaction ) lcmsDbCtx.beginTransaction()
     
-    // --- Extract run maps ---
+    // --- Extract run maps and convert them to processed maps ---
     val lcmsRunByRunMapId = new collection.mutable.HashMap[Long,LcMsRun]
     val mzDbFileByRunMapId = new collection.mutable.HashMap[Long,File]
-    val runMaps = new ArrayBuffer[RunMap]
+    val mapCount = lcMsRuns.length
+    val processedMaps = new Array[ProcessedMap](mapCount)
+    //val processedMapByRunMapId = new collection.mutable.HashMap[Long,ProcessedMap]
+    val tmpMapSetId = MapSet.generateNewId()    
+    var mapIdx = 0
+    var alnRefMapId: Long = 0L
     
-    for( val lcmsRun <- lcMsRuns ) {
+    for( lcmsRun <- lcMsRuns ) {
       
       val mzDbFilePath = lcmsRun.rawFile.properties.get.getMzdbFilePath
       val mzDbFile = new File(mzDbFilePath)
@@ -92,27 +99,14 @@ class ExtractMapSet(
       
       // Extract LC-MS map from the mzDB file
       val runMap = this._extractRunMapUsingMs2Events(lcmsRun,mzDbFile)
-      runMaps += runMap
+      //runMap.toTsvFile("D:/proline/data/test/quanti/debug/run_map_"+ (-runMap.id) +".tsv")
       
+      // Update some mappings
       lcmsRunByRunMapId += runMap.id -> lcmsRun
       mzDbFileByRunMapId += runMap.id -> mzDbFile
     
-    }
-    //sys.exit()
-    
-    // --- Create an in-memory map set ---
-    val tmpMapSetId = MapSet.generateNewId()
-    val mapCount = runMaps.length
-    var mapNumber = 0
-    var alnRefMapId: Long = 0L
-    val processedMaps = new Array[ProcessedMap](runMaps.length)
-    val processedMapByRunMapId = new collection.mutable.HashMap[Long,ProcessedMap]
-    
-    for( runMap <- runMaps ) {
-      mapNumber += 1
-      
       // Convert to processed map
-      val processedMap = runMap.toProcessedMap( number = mapNumber, mapSetId = tmpMapSetId )
+      val processedMap = runMap.toProcessedMap( number = mapIdx + 1, mapSetId = tmpMapSetId )
       
       // Set first map as default alignment reference
       if( mapCount == 1 ) {
@@ -120,11 +114,23 @@ class ExtractMapSet(
         alnRefMapId = processedMap.id
       }
       
-      processedMaps(mapNumber-1) = processedMap
-      processedMapByRunMapId += runMap.id -> processedMap
+      // Perform the feature clustering
+      // TODO: use the clean maps service ???
+      val scans = lcmsRun.scanSequence.get.scans
+      val clusterizedMap = ClusterizeFeatures( processedMap, scans, clusteringParams )
+      //clusterizedMap.toTsvFile("D:/proline/data/test/quanti/debug/clusterized_map_"+ (-clusterizedMap.id) +".tsv")
+      
+      // Set clusterized map id as the id of the provided map
+      clusterizedMap.id = processedMap.id
+      
+      processedMaps(mapIdx) = clusterizedMap
+      //processedMapByRunMapId += runMap.id -> processedMap
+      
+      mapIdx += 1
     }
     
-    val mapSet = new MapSet(
+    // --- Create an in-memory map set ---
+    var mapSet = new MapSet(
       id = tmpMapSetId,
       name = "",
       creationTimestamp = new java.util.Date,
@@ -132,12 +138,10 @@ class ExtractMapSet(
       alnReferenceMapId = alnRefMapId
     )
     
-    // TODO: clean maps and perform the feature clustering ???
-    val childMapsWithoutClusters = mapSet.childMaps
-    
     // --- Perform the LC-MS maps alignment ---
+    // TODO: do we need to remove the clusters for the alignment ???
     val mapAligner = LcmsMapAligner( methodName = alnMethodName )
-    val alnResult = mapAligner.computeMapAlignments( childMapsWithoutClusters, alnParams )
+    val alnResult = mapAligner.computeMapAlignments( mapSet.childMaps, alnParams )
     
     /*for( as <- alnResult.mapAlnSets; a <- as.mapAlignments  ) {
       println("map aln from "+as.refMapId+" to " +as.targetMapId)
@@ -150,7 +154,14 @@ class ExtractMapSet(
     mapSet.mapAlnSets = alnResult.mapAlnSets
     
     // --- Build a temporary Master Map ---
-    mapSet.masterMap = MasterMapBuilder.buildMasterMap(mapSet, masterFtFilter, ftMappingParams)
+    mapSet.masterMap = BuildMasterMap(
+      mapSet,
+      lcMsRuns.map(_.scanSequence.get),
+      masterFtFilter,
+      ftMappingParams,
+      clusteringParams
+    )
+    //mapSet.toTsvFile("D:/proline/data/test/quanti/debug/master_map_"+ (-mapSet.masterMap.id) +".tsv")
     
     // --- Retrieve the map alignements ---
     /*val refMapAlnSetByMapId = mapSet.getRefMapAlnSetByMapId.get
@@ -159,15 +170,47 @@ class ExtractMapSet(
       revAlnSet.refMapId -> revAlnSet
     }*/
     
+    // --- Re-build master map if peptide sequences have been provided ---
+    for( pepMap <- peptideByRunIdAndScanNumber ) {
+      
+      // Map peptides by scan id and scan sequence by run id
+      val peptideByScanId = Map.newBuilder[Long,Peptide]
+      val scanSeqByRunId = new HashMap[Long,LcMsScanSequence]
+      
+      for( lcmsRun <- lcMsRuns ) {
+        val scanSeq = lcmsRun.scanSequence.get
+        scanSeqByRunId += lcmsRun.id -> scanSeq
+        
+        for( lcmsScan <- scanSeq.scans ) {
+          for( peptide <- pepMap(lcmsRun.id).get(lcmsScan.initialId) ) {
+            peptideByScanId += lcmsScan.id -> peptide
+          }
+        }
+      }
+      
+      // Instantiate a feature clusterer for each child map
+      // TODO: provide this mapping to the master map builder ???
+      val ftClustererByMapId = Map() ++ mapSet.childMaps.map { childMap =>
+        val scanSeq = scanSeqByRunId(childMap.runId.get)
+        childMap.id -> new FeatureClusterer(childMap,scanSeq.scans,clusteringParams)
+      }
+      
+      this._rebuildMasterMapUsingPeptides(mapSet,peptideByScanId.result,ftClustererByMapId)
+      //mapSet.toTsvFile("D:/proline/data/test/quanti/debug/master_map_with_peps_"+ (-mapSet.masterMap.id) +".tsv")
+    }
+    
+    // Re-build child maps in order to be sure they contain master feature children (including clusters)
+    mapSet = mapSet.rebuildChildMaps()
+    
     // --- Extract LC-MS missing features in all raw files ---
     val x2RunMaps = new ArrayBuffer[RunMap]
     val x2ProcessedMaps = new ArrayBuffer[ProcessedMap]
-    for( runMap <- runMaps ) {
+    for( processedMap <- mapSet.childMaps ) {
+      val runMap = processedMap.getRunMaps().first.get
       val runMapId = runMap.id
       val mzDbFile = mzDbFileByRunMapId(runMapId)
       val lcmsRun = lcmsRunByRunMapId(runMapId)
-      val processedMap = processedMapByRunMapId(runMapId)
-      val newLcmsFeatures = this._extractMissingFeatures(mzDbFile,lcmsRun,runMap,processedMap,mapSet)      
+      val newLcmsFeatures = this._extractMissingFeatures(mzDbFile,lcmsRun,processedMap,mapSet)      
       
       // Create a new run map with the extracted missing features
       val x2RunMap = runMap.copy( features = runMap.features ++ newLcmsFeatures )
@@ -176,9 +219,10 @@ class ExtractMapSet(
       // Create a processed map for this runMap
       x2ProcessedMaps += processedMap.copy( features = processedMap.features ++ newLcmsFeatures, runMapIdentifiers = Array(x2RunMap) )
     }
+    //mapSet.toTsvFile("D:/proline/data/test/quanti/debug/master_map_no_missing_"+ (-mapSet.masterMap.id) +".tsv")
     
     // Instantiate a run map storer
-    val runMapStorer = RunMapStorer( lcmsDbCtx ) 
+    val runMapStorer = RunMapStorer( lcmsDbCtx )
     
     // --- Store the run maps ---
     for( x2RunMap <- x2RunMaps ) {
@@ -201,15 +245,15 @@ class ExtractMapSet(
     // --- Normalize the processed maps ---
     if (normalizationMethod != None && mapSet.childMaps.length > 1) {
 
-      // Instantiate a Cmd for map set normalization
+      // Instantiate a service for map set normalization
       logger.info("normalizing maps...")
       
       // Updates the normalized intensities
       MapSetNormalizer(normalizationMethod.get).normalizeFeaturesIntensity(mapSet)
 
-      // Update master map feature intensity
-      logger.info("updating master map feature data...")
-      x2MapSet.masterMap = x2MapSet.masterMap.copy(features = MasterMapBuilder.rebuildMftsUsingBestChild(x2MapSet.masterMap.features))
+      // Re-build master map features using best child
+      logger.info("re-build master map features using best child...")
+      x2MapSet.rebuildMasterFeaturesUsingBestChild()
     }
     
     // --- Store the processed maps features ---
@@ -223,14 +267,13 @@ class ExtractMapSet(
         // Store the map
         processedMapStorer.storeProcessedMap( processedMap )
         
-        // Remember the mapping between temporary map id and persisted map id
-        //mapIdByTmpMapId += tmpMapId -> processedMap.id
-        
         // Update map set alignment reference map
-        if( processedMap.isAlnReference ) {
+        // Note this now done by the processed map storer
+        /*if( processedMap.isAlnReference ) {
           logger.info("Set map set alignement reference map to id=" + processedMap.id)
           ezDBC.execute( "UPDATE map_set SET aln_reference_map_id = "+ processedMap.id +" WHERE id = " + mapSet.id )
-        }
+        }*/
+        
       }
     })
     
@@ -253,7 +296,7 @@ class ExtractMapSet(
     // Commit transaction if it was initiated locally
     if( !wasInTransaction ) lcmsDbCtx.commitTransaction()
     
-    println(x2MapSet.masterMap.features.length)
+    logger.info(x2MapSet.masterMap.features.length +" master features have been extracted")
     
     this.extractedMapSet = x2MapSet
     
@@ -373,8 +416,11 @@ class ExtractMapSet(
     // Convert mzDB features into LC-MS DB features
     val lcmsFeatures = new ArrayBuffer[LcMsFeature](mzDbFts.length)
     for( mzDbFt <- mzDbFts ) {
-      if( mzDbFt.area > 0 ) {
-        lcmsFeatures += this._mzDbFeatureToLcMsFeature(mzDbFt,runMapId,lcmsRun.scanSequence.get)
+      // Keep only features with defined area and at least two data points
+      if( mzDbFt.area > 0 && mzDbFt.scanHeaders.length > 1 ) {
+        val lcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt,runMapId,lcmsRun.scanSequence.get)
+        //if( lcmsFt.duration == 0 ) error( ""+scala.runtime.ScalaRunTime.stringOf(mzDbFt.scanHeaders) )
+        lcmsFeatures += lcmsFt
       }
     }
     
@@ -393,14 +439,14 @@ class ExtractMapSet(
   private def _extractMissingFeatures(
     mzDbFile: File,
     lcmsRun: LcMsRun,
-    runMap: RunMap,
     processedMap: ProcessedMap,
     mapSet: MapSet
   ): Seq[Feature] = {
     
-    val runMapId = runMap.id
     val procMapId = processedMap.id
+    val runMapId = processedMap.getRunMapIds().first    
     val masterMap = mapSet.masterMap
+    val nbMaps = mapSet.childMaps.length
 
     val mzDb = new MzDbReader( mzDbFile, true )
     var mzDbFts = Seq.empty[MzDbFeature]
@@ -418,6 +464,7 @@ class ExtractMapSet(
       this.logger.info("building putative features list using master features...")
 
       for( mft <- masterMap.features ) {
+        require( mft.children.length <= nbMaps, "master feature contains more child features than maps")
         
         // Check for master features having a missing child for this processed map
         val childFtOpt = mft.children.find( _.relations.processedMapId == processedMap.id )
@@ -435,6 +482,7 @@ class ExtractMapSet(
           // Fix negative predicted times
           if( predictedTime <= 0 ) predictedTime = 1f
           
+          // Warning: we can have multiple missing features for a given MFT
           val missingFtId = PutativeFeature.generateNewId
           missingFtIdByMftId += ( mft.id -> missingFtId )
           
@@ -469,8 +517,10 @@ class ExtractMapSet(
     val newLcmsFeatures = new ArrayBuffer[LcMsFeature](missingFtIdByMftId.size)
     for( mftWithMissingChild <- mftsWithMissingChild;
          mzDbFt <- mzDbFtById.get(missingFtIdByMftId( mftWithMissingChild.id ))
-         if mzDbFt.area > 0
+         if mzDbFt.area > 0 && mzDbFt.scanHeaders.length > 1
        ) {
+      
+      // FIXME: why do we extract features with 0 duration ???
       
       // Convert the extracted feature into a LC-MS feature
       val newLcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt,runMapId,lcmsRun.scanSequence.get)
@@ -489,6 +539,129 @@ class ExtractMapSet(
     }
     
     newLcmsFeatures
+  }
+  
+  // TODO: apply this before and after filling missing values ???
+  // Note: in this method we will break master features if they are matching multiple peptides
+  // Howver we do not group existing master features
+  private def _rebuildMasterMapUsingPeptides(
+    mapSet: MapSet,
+    peptideByScanId: Map[Long,Peptide],
+    clustererByMapId: Map[Long,FeatureClusterer]
+  ): Unit = {
+    this.logger.info("re-building master map using peptide identities...")
+    
+    val alnRefMapId = mapSet.getAlnReferenceMapId
+    val masterFeatures = mapSet.masterMap.features
+    val newMasterFeatures = new ArrayBuffer[Feature](masterFeatures.length)
+    
+    // Iterate over all map set master features
+    for( mft <- masterFeatures ) {
+      
+      // --- Find peptides matching child sub features ---
+      val featuresByPepId = new HashMap[Long,ArrayBuffer[Feature]]
+      val pepIdsByFeature = new HashMap[Feature,ArrayBuffer[Long]]
+      val unidentifiedFtSet = new collection.mutable.HashSet[Feature]
+      
+      // Decompose clusters if they exist and map them by peptide identification
+      mft.eachChildSubFeature { subFt =>
+        val ftRelations = subFt.relations
+        val peptideIds = ftRelations.ms2EventIds.map( peptideByScanId.get(_) ).withFilter(_.isDefined).map(_.get.id).distinct
+        
+        if( peptideIds.isEmpty ) unidentifiedFtSet += subFt
+        else {
+          for( pepId <- peptideIds ) {
+            featuresByPepId.getOrElseUpdate(pepId, new ArrayBuffer[Feature]) += subFt
+            pepIdsByFeature.getOrElseUpdate(subFt, new ArrayBuffer[Long]) += pepId
+          }
+        }
+      }
+      
+      // --- Solve identification conflicts ---
+      
+      // If no identified feature in this master
+      if( featuresByPepId.isEmpty ) {
+        // We keep the existing master feature as is
+        newMasterFeatures += mft
+      }
+      // If all child features match the same peptide
+      else if( featuresByPepId.size == 1 ) {
+        // We tag this master feature with the peptide ID
+        mft.relations.peptideId = featuresByPepId.first._1 
+        // And we keep the existing master feature
+        newMasterFeatures += mft
+      } else {
+        // Else we create a master feature for each matching peptide        
+        for( (pepId, features) <- featuresByPepId ) {
+          
+          val newMftFeatures = features ++ unidentifiedFtSet
+          val ftsByMapId = newMftFeatures.groupBy( _.relations.processedMapId )
+          val clusterizedFeatures = new ArrayBuffer[Feature]
+          
+          // Check if these features are assigned to a single peptide
+          newMftFeatures.foreach { ft =>
+            if( pepIdsByFeature.get(ft).map( _.length ).getOrElse(0) > 1 ) {
+              // Flag this feature as a conflicting one
+              ft.selectionLevel = 1
+            }
+          }
+          
+          // Iterate over features grouped by maps
+          for( (mapId,fts) <- ftsByMapId ) {
+            // If we have a single feature for this map => we keep it as is
+            if( fts.length == 1 ) clusterizedFeatures += fts.first
+            // Else we clusterize the multiple detected features
+            else {
+              
+              // Partition identified and unidentified features
+              val( identifiedFts, unidentifiedFts ) = fts.partition( unidentifiedFtSet.contains(_) == false )
+              
+              // If we don't have at least one identified feature
+              val ftCluster = if( identifiedFts.isEmpty ) {
+                // Clusterize unidentified features
+                clustererByMapId(mapId).buildFeatureCluster(unidentifiedFts)
+              } else {
+                // Else clusterize identified features
+                val tmpFtCluster = clustererByMapId(mapId).buildFeatureCluster(identifiedFts)
+                
+                if( unidentifiedFts.isEmpty == false ) {
+                  // Append unidentified features to the cluster
+                  tmpFtCluster.subFeatures ++= unidentifiedFts
+                  // Flag this cluster as a conflicting feature
+                  tmpFtCluster.selectionLevel = 1
+                }
+                
+                tmpFtCluster
+              }
+              
+              // Append cluster to the master features list
+              clusterizedFeatures += ftCluster
+            }
+          }
+          
+          val refFtOpt = clusterizedFeatures.find( _.relations.processedMapId == alnRefMapId )
+          val refFt = refFtOpt.getOrElse(clusterizedFeatures.first)
+          val newMft = refFt.toMasterFeature( children = clusterizedFeatures.toArray )
+          
+          // We tag this new master feature with the peptide ID
+          newMft.relations.peptideId = pepId
+          
+          newMasterFeatures += newMft
+        }
+      }
+    }
+    
+    // TODO: find where duplicated mft are introduced
+    /*val mftByPep = newMasterFeatures.groupBy(_.relations.peptideId)
+    for( (pid,mftbs) <- mftByPep) {
+      println("pid="+pid)
+      println("mftbs="+mftbs.length)
+    }
+    error("")*/
+
+    mapSet.masterMap = mapSet.masterMap.copy( features = newMasterFeatures.toArray )
+    
+    ()
   }
   
   private def _mzDbFeatureToLcMsFeature( mzDbFt: MzDbFeature, runMapId: Long, scanSeq: LcMsScanSequence ): LcMsFeature = {
@@ -515,9 +688,8 @@ class ExtractMapSet(
     val apexLcMsScanId = lcmsScanIdByInitialId(apexScanInitialId)
     val ms2EventIds = mzDbFt.getMs2ScanIds.map( lcmsScanIdByInitialId(_) )
     
-    
     new LcMsFeature(
-       id = mzDbFt.id,
+       id = LcMsFeature.generateNewId,
        moz = mzDbFt.mz,
        intensity = mzDbFt.area,
        charge = mzDbFt.charge,

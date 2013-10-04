@@ -20,20 +20,24 @@ object CreateMasterMap {
   def apply(
     lcmsDbCtx: DatabaseConnectionContext,
     mapSet: MapSet,
+    scanSeqs: Seq[LcMsScanSequence],
     alnMethodName: String,
     alnParams: AlignmentParams,
     masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
     ftMappingParams: FeatureMappingParams,
+    ftClusteringParams: ClusteringParams,
     normalizationMethod: Option[String]
   ): ProcessedMap = {
 
     val masterMapCreator = new CreateMasterMap(
       lcmsDbCtx,
       mapSet,
-      alnMethodName: String,
-      alnParams: AlignmentParams,
+      scanSeqs,
+      alnMethodName,
+      alnParams,
       masterFtFilter,
       ftMappingParams,
+      ftClusteringParams,
       normalizationMethod
     )
     
@@ -47,10 +51,12 @@ object CreateMasterMap {
 class CreateMasterMap(
   val lcmsDbCtx: DatabaseConnectionContext,
   mapSet: MapSet,
+  scanSeqs: Seq[LcMsScanSequence],
   alnMethodName: String,
   alnParams: AlignmentParams,
   masterFtFilter: fr.proline.core.algo.lcms.filtering.Filter,
   ftMappingParams: FeatureMappingParams,
+  ftClusteringParams: ClusteringParams,
   normalizationMethod: Option[String]
 ) extends ILcMsService {
 
@@ -122,7 +128,7 @@ class CreateMasterMap(
 
     // Build the master map
     logger.info("building master map...")
-    val newMasterMap = MasterMapBuilder.buildMasterMap(mapSet, masterFtFilter, ftMappingParams)
+    val newMasterMap = BuildMasterMap(mapSet, scanSeqs, masterFtFilter, ftMappingParams,ftClusteringParams)
 
     // Update map set
     mapSet.masterMap = newMasterMap
@@ -137,7 +143,7 @@ class CreateMasterMap(
 
       // Update master map feature intensity
       logger.info("updating master map feature data...")
-      mapSet.masterMap = newMasterMap.copy(features = MasterMapBuilder.rebuildMftsUsingBestChild(newMasterMap.features))
+      mapSet.rebuildMasterFeaturesUsingBestChild()
 
     }
     

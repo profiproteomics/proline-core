@@ -5,7 +5,7 @@ import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.algo.lcms.ClusteringParams
-import fr.proline.core.algo.lcms.FeatureClusterer
+import fr.proline.core.algo.lcms.ClusterizeFeatures
 import fr.proline.repository.IDatabaseConnector
 
 object CleanMaps {
@@ -67,7 +67,7 @@ class CleanMaps(
       //print "clusterize features\n" if this.verbose
       
       // Perform the feature clustering
-      val clusterizedMap = FeatureClusterer.clusterizeFeatures( lcmsMap, scans, clusteringParams.get )
+      val clusterizedMap = ClusterizeFeatures( lcmsMap, scans, clusteringParams.get )
       
       // Set clusterized map id as the id of the provided map
       clusterizedMap.id = lcmsMap.id

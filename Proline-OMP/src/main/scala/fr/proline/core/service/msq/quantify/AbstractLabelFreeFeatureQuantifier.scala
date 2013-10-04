@@ -56,13 +56,13 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
   }
 
-  val spectrumIdMap = {
+  val spectrumIdByRsIdAndScanNumber = {
 
     val firstScanColName = MsiDbSpectrumTable.columns.FIRST_SCAN
     val peaklistIdColName = MsiDbSpectrumTable.columns.PEAKLIST_ID
 
     // Map spectrum id by scan number and result set id
-    val spectrumIdMap = HashMap[Long, HashMap[Long, Long]]()
+    val spectrumIdMap = HashMap[Long, HashMap[Int, Long]]()
 
     for (spectrumHeader <- this.ms2SpectrumHeaders) {
 
@@ -72,10 +72,30 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       val scanNumber = spectrumHeader(firstScanColName).asInstanceOf[Int]
       val spectrumId = toLong(spectrumHeader("id"))
 
-      spectrumIdMap.getOrElseUpdate(identRsId, new HashMap[Long, Long])(scanNumber) = spectrumId
+      spectrumIdMap.getOrElseUpdate(identRsId, new HashMap[Int, Long])(scanNumber) = spectrumId
     }
 
     spectrumIdMap.toMap
+  }
+  
+  val scanNumberBySpectrumId = {
+
+    val firstScanColName = MsiDbSpectrumTable.columns.FIRST_SCAN
+    val peaklistIdColName = MsiDbSpectrumTable.columns.PEAKLIST_ID
+
+    // Map spectrum id by scan number and result set id
+    val scanNumberBySpectrumId = Map.newBuilder[Long, Int]
+
+    for (spectrumHeader <- this.ms2SpectrumHeaders) {
+      require(spectrumHeader(firstScanColName) != null,"a scan id must be defined for each MS2 spectrum")
+
+      val scanNumber = spectrumHeader(firstScanColName).asInstanceOf[Int]
+      val spectrumId = toLong(spectrumHeader("id"))
+      
+      scanNumberBySpectrumId += spectrumId -> scanNumber
+    }
+
+    scanNumberBySpectrumId.result
   }
   
   //val lcmsMapIds = lcmsMapSet.getChildMapIds
@@ -87,8 +107,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       ) )
     })
   }
-
-  // TODO: load the scan sequence instead
+  
   lazy val lcmsScans = {
     this.logger.info("loading MS2 scan headers...")
     
@@ -141,7 +160,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     new LabelFreeFeatureQuantifier(
       expDesign = experimentalDesign,
       lcmsMapSet = lcmsMapSet,
-      spectrumIdMap = spectrumIdMap,
+      spectrumIdByRsIdAndScanNumber = spectrumIdByRsIdAndScanNumber,
       ms2ScanNumbersByFtId = ms2ScanNumbersByFtId,
       mozTolInPPM = quantConfig.extractionParams.mozTol.toFloat,
       statTestsAlpha = 0.01f // TODO: retrieve from quantConfig

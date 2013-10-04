@@ -7,6 +7,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import fr.proline.context.IExecutionContext
+import fr.proline.core.om.model.msq.ComputedRatio
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.model.msq.MasterQuantProteinSetProfile
 
@@ -22,6 +23,7 @@ class ExportMasterQuantProtSetProfiles(
   val groupSetupNumber = 1
   
   val mqProtSetProfileHeaders = "peptides_count".split(" ")
+  val mqProtSetStatHeaders = "ratio t-test_pvalue z-test_pvalue".split(" ")
   val qProtSetProfileHeaders = "abundance".split(" ")
   val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
 
@@ -35,14 +37,14 @@ class ExportMasterQuantProtSetProfiles(
     val udsEM = execCtx.getUDSDbConnectionContext().getEntityManager()
     val udsMQC = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)
     val profilizer = new Profilizer( expDesign, 1, udsMQC.getNumber() )
-    /*profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, 0.01f)*/
+    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, 0.01f)
     profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, 0.01f)
-        
+    
     // Iterate over master quant peptides to export them
     quantRSM.masterQuantProteinSets.foreach { mqProtSet =>
       
       def exportProfile( profile: MasterQuantProteinSetProfile ) {
-  
+        
         val row = new ArrayBuffer[Any]
         
         // Append protein set data
@@ -54,28 +56,31 @@ class ExportMasterQuantProtSetProfiles(
         // Add abundances
         row ++= profile.abundances.map( a => if( a.isNaN ) "" else a.toString )
         
-        // Add ratios
-        row ++= profile.ratios.map(_.map(_.state.toString).getOrElse("") )
+        // Add some statistics
+        def getRatioStats(r: ComputedRatio) = Array(r.state, r.getTTestPValue.getOrElse(""), r.getZTestPValue.getOrElse(""))
+        val stats = profile.ratios.flatMap(_.map( getRatioStats(_).map(_.toString) ).getOrElse(Array.fill(3)("")) )
+        row ++= stats
         
         fileWriter.println(row.mkString("\t"))
         fileWriter.flush()
       }
         
-      if( exportBestProfile ) {
-        val bestProfile = mqProtSet.getBestProfile(groupSetupNumber)
-        if( bestProfile.isDefined ) exportProfile( bestProfile.get )
-      } else {
-        
-        // Iterate over all profiles to eacport them
-        for( props <- mqProtSet.properties;
-             profileByGSNum <- props.getMqProtSetProfilesByGroupSetupNumber;
-             profiles <- profileByGSNum.get(groupSetupNumber.toString);
-             profile <- profiles
-           ) {
-          exportProfile( profile )
+      if( mqProtSet.proteinSet.isValidated ) {
+        if( exportBestProfile ) {
+          val bestProfile = mqProtSet.getBestProfile(groupSetupNumber)
+          if( bestProfile.isDefined ) exportProfile( bestProfile.get )
+        } else {
+          
+          // Iterate over all profiles to eacport them
+          for( props <- mqProtSet.properties;
+               profileByGSNum <- props.getMqProtSetProfilesByGroupSetupNumber;
+               profiles <- profileByGSNum.get(groupSetupNumber.toString);
+               profile <- profiles
+             ) {
+            exportProfile( profile )
+          }
         }
       }
-
     }
 
   }
@@ -83,7 +88,7 @@ class ExportMasterQuantProtSetProfiles(
   def mkRowHeader( quantChannelCount: Int ): String = {
     val rowHeaders = new ArrayBuffer[String] ++ protSetHeaders ++ mqProtSetProfileHeaders
     for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qProtSetProfileHeaders.map(_+"_"+i) )
-    for( r <- ratioDefs ) rowHeaders += ("ratio_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber)
+    for( r <- ratioDefs ) rowHeaders ++= mqProtSetStatHeaders.map( _ + ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber) )
     rowHeaders.mkString("\t")
   }
   

@@ -1,5 +1,6 @@
 package fr.proline.core.om.model.msq
 
+import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -10,7 +11,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include
 case class ComputedRatio (
   @BeanProperty var numerator: Float,
   @BeanProperty var denominator: Float,
-  @BeanProperty var state: Int = 0// -1 means under-abundant, 0 means invariant and +1 means over-abundant
+  @BeanProperty var state: Int = 0,// -1 means under-abundant, 0 means invariant and +1 means over-abundant
+  @BeanProperty var tTestPValue: Option[Double] = None,
+  @BeanProperty var zTestPValue: Option[Double] = None
 ) {
   @transient lazy val ratioValue = if( numerator > 0 && denominator > 0 ) numerator/denominator else Float.NaN
 }
@@ -60,7 +63,7 @@ case class MasterQuantPeptideProfile (
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideProperties (
   @BeanProperty var mqProtSetIds: Option[Array[Long]] = None,
-  @BeanProperty var mqPepProfileByGroupSetupNumber: Option[Map[String,MasterQuantPeptideProfile]] = None
+  @BeanProperty var mqPepProfileByGroupSetupNumber: Option[HashMap[String,MasterQuantPeptideProfile]] = None
 )
 
 @JsonSnakeCase
@@ -75,7 +78,7 @@ case class MasterQuantProteinSetProfile (
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSetProperties (
-  @BeanProperty var mqProtSetProfilesByGroupSetupNumber: Option[Map[String,Array[MasterQuantProteinSetProfile]]] = None,
+  @BeanProperty var mqProtSetProfilesByGroupSetupNumber: Option[HashMap[String,Array[MasterQuantProteinSetProfile]]] = None,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
   @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
   @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None

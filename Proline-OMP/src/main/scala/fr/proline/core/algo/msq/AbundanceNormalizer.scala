@@ -66,7 +66,11 @@ object AbundanceNormalizer {
       val ratios = new ArrayBuffer[Float](abundanceRow.length-1)
 
       for ( i <- 1 until abundanceRow.length ) {
-        ratios += ( if( abundanceRow(i).isNaN || abundanceRow(i) == 0f ) Float.NaN else abundanceRef / abundanceRow(i) )
+        if( abundanceRef.isNaN || abundanceRef == 0f ) ratios += Float.NaN
+        else {
+          val ab = abundanceRow(i)
+          ratios += ( if( ab.isNaN || ab == 0f ) Float.NaN else abundanceRef / ab )
+        }
       }
       
       ratios.toArray

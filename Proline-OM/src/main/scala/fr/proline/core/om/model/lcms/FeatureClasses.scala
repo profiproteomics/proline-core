@@ -1,5 +1,6 @@
 package fr.proline.core.om.model.lcms
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
 import com.codahale.jerkson.JsonSnakeCase
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
 
+// TODO: remove and use mzdb model instead
 class Peak (
     
   // Required fields
@@ -18,6 +20,7 @@ class Peak (
 )
 
 //object IsotopicPattern extends InMemoryIdGen
+// TODO: remove and use mzdb model instead
 class IsotopicPattern (
     
   // Required fields
@@ -46,6 +49,41 @@ case class Compound(
   var identifier: String // maybe a peptide sequence and its ptm_string or a chemical formula
 )
 
+class LcMsDataPoint (    
+  // Required fields
+  val moz: Double,
+  val time: Float,
+  val scanId: Long
+)
+
+// The peakel shape should store 5 LcMsDataPoints (at q0,q1,q2,q3,q4),
+// the quartiles being estimated approximatively (we want experimental data points)
+class PeakelShape (
+  // Required fields
+  val area: Float,  
+  val dataPoints: Array[LcMsDataPoint],
+  val overlappingPeakel: Option[Array[PeakelShape]] = None,
+  
+  // Mutable optional fields
+  var fitScore: Option[Float] = None,
+  var properties: Option[PeakelShapeProperties] = None
+) {
+  
+  def q0(): LcMsDataPoint = dataPoints(0)
+  def q1(): LcMsDataPoint = dataPoints(1)
+  def q2(): LcMsDataPoint = dataPoints(2)
+  def q3(): LcMsDataPoint = dataPoints(3)
+  def q4(): LcMsDataPoint = dataPoints(4)
+  
+  def apex(): LcMsDataPoint = dataPoints(2)
+  def firstScanId: Long = dataPoints(0).scanId
+  def lastScanId: Long = dataPoints(4).scanId  
+}
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeakelShapeProperties
+
 object Feature extends InMemoryIdGen
 
 case class FeatureRelations(
@@ -63,7 +101,9 @@ case class FeatureRelations(
   var compoundId: Long = 0L,
   var mapLayerId: Long = 0L,
   var runMapId: Long = 0L,
-  var processedMapId: Long = 0L
+  var processedMapId: Long = 0L,
+  
+  @transient var peptideId: Long = 0L
 )
 
 case class Feature (
@@ -82,6 +122,7 @@ case class Feature (
   
   val isotopicPatterns: Option[Array[IsotopicPattern]],
   val relations: FeatureRelations,
+  // TODO: create a masterRelations to avoid the loss of value with the use of rebuildMasterFeaturesUsingBestChild ?
   
   // Mutable optional fields
   var children: Array[Feature] = null,
@@ -120,6 +161,21 @@ case class Feature (
     else Array(this.relations.runMapId)
   }
   
+  def eachSubFeatureOrThisFeature( onEachSubFt: (Feature) => Unit ) {
+    if( this.isCluster ) {
+      for( subFt <- this.subFeatures ) onEachSubFt( subFt )
+    }
+    else onEachSubFt( this )
+  }
+  
+  def eachChildSubFeature( onEachSubFt: (Feature) => Unit ) {
+    require( this.isMaster, "can't iterate over children of a non maser feature" )
+    
+    for( childFt <- this.children ) {
+      childFt.eachSubFeatureOrThisFeature( onEachSubFt )
+    }
+  }
+  
   def toRunMapFeature(): Feature = {
     require( isCluster == false, "can't convert a cluster feature into a run map feature" )
     require( isMaster == false, "can't convert a master feature into a run map feature" )
@@ -132,11 +188,11 @@ case class Feature (
     )
   }
   
-  def toMasterFeature(): Feature = {
+  def toMasterFeature( id: Long = Feature.generateNewId(), children: Array[Feature] = Array(this) ): Feature = {
     val ftRelations = this.relations
     
     new Feature (
-      id = Feature.generateNewId(),
+      id = id,
       moz = this.moz,
       intensity = this.intensity,
       charge = this.charge,
@@ -163,50 +219,9 @@ case class Feature (
         ),
       isotopicPatterns = null,
       overlappingFeatures = null,
-      children = Array(this)
+      children = children
     )
   }
-  
-  /*
-  def isOverlapping(f: Feature, ppm : Double, lcmsRun:LcmsRun): Boolean = {
-    
-    /**
-     * function to test if one feature is overlapping
-     * 
-     */
-    //doing nothing if matching occurs
-    this match {
-      case f => return false
-    }
-    
-    val mozTolerance =  math.max(moz, f.moz) * ppm / 1e6
-    
-    if (math.abs(moz - f.moz) > mozTolerance) {
-      return false
-    }
-    
-    var minTime = lcmsRun.scanById(this.relations.firstScanId).time 
-    var maxTime = lcmsRun.scanById(relations.lastScanId).time
-    var fminTime = lcmsRun.scanById(f.relations.firstScanId).time
-    var fmaxTime = lcmsRun.scanById(f.relations.lastScanId).time
-    
-    if (maxTime > fminTime && minTime < fmaxTime)  {
-      // intersection add stuff in overlapping feature isotopicPattern or new feature ?
-      if (f.moz > moz) {
-    	 if (!overlappingFeatures.contains(f)) {
-    	  overlappingFeatures :+ f
-    	  f.isClusterized = true
-    	 }
-      }else  {
-        if (! f.overlappingFeatures.contains(this)) {
-        	f.overlappingFeatures :+ this
-        	this.isClusterized = true
-        }
-      }
-      return true
-    }
-    false
-  }*/
   
 }
 
@@ -219,6 +234,30 @@ case class FeatureProperties (
   @BeanProperty var overlapFactor: Option[Float] = None
 )
 
+class MasterFeatureBuilder(
+  var id: Long = Feature.generateNewId,
+  var bestFeature: Feature,
+  val children: ArrayBuffer[Feature]
+) {
+  require(children.length > 0,"children array must not be empty")
+  
+  def this( bestFeature: Feature, nbMaps: Int ) {
+    this( Feature.generateNewId, bestFeature, ArrayBuffer.fill(1)(bestFeature) )
+  }
+  
+  def toMasterFeature( id: Long = this.id ): Feature = {
+    bestFeature.toMasterFeature( id = id, children = children.toArray )
+  }
+  
+  def eachSubFeature( onEachSubFt: (Feature) => Unit ) {
+    for( childFt <- this.children ) {
+      if( childFt.isCluster ) {
+        for( subFt <- childFt.subFeatures ) onEachSubFt( subFt )
+      } else onEachSubFt( childFt )
+    }
+  }
+  
+}
 
 case class TheoreticalFeature (
     

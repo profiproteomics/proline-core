@@ -31,6 +31,10 @@ trait IMzTolerant {
   }
 }
 
+trait IMzTimeTolerant extends IMzTolerant {
+  val timeTol: Float
+}
+
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class AlignmentParams(
@@ -53,7 +57,13 @@ case class ClusteringParams(
   timeTol: Float,
   intensityComputation: String,
   timeComputation: String
-) extends IMzTolerant
+) extends IMzTimeTolerant {
+  
+  def this( mzTimeTol: IMzTimeTolerant, intensityComputation: String,timeComputation: String) = {
+    this(mzTimeTol.mozTol,mzTimeTol.mozTolUnit,mzTimeTol.timeTol,intensityComputation,timeComputation)
+  }
+  
+}
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
@@ -61,7 +71,7 @@ case class ExtractionParams( mozTol: Double, mozTolUnit: String ) extends IMzTol
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
-case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Float ) extends IMzTolerant
+case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Float ) extends IMzTimeTolerant
 
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )

@@ -105,6 +105,29 @@ abstract class ILcMsMap {
   var properties: Option[LcMsMapProperties]
   
   require( creationTimestamp != null && features != null )
+  
+  // Debug purpose
+  def toTsvFile( filePath: String ) {
+    import java.io.FileOutputStream
+    import java.io.PrintWriter
+    val file = new java.io.File(filePath)
+    val writer = new PrintWriter(file)
+    
+    val header = "feature_id mass moz charge is_cluster elution_time correct_elution_time duration raw_abundance ms2_count"
+    writer.println(header.replaceAll(" ", "\t"))
+    
+    for( ft <- features ) {
+      val row: List[Any] = List(
+        ft.id,ft.mass,ft.moz,ft.charge.toString,ft.isCluster,
+        ft.elutionTime,ft.correctedElutionTime,ft.duration,
+        ft.intensity,ft.ms2Count.toString
+      )
+      writer.println( row.mkString("\t"))
+      writer.flush()
+    }
+    
+    writer.close()
+  }
 
 }
 
@@ -183,6 +206,7 @@ case class ProcessedMap(
   val name: String,
   val isProcessed: Boolean,
   val creationTimestamp: Date,
+  // TODO: another model may be to separate features from feature clusters (it may avoid some array copy)
   val features: Array[Feature],
   
   val number: Int,
@@ -568,6 +592,116 @@ case class MapSet(
       mapAlnSet.calcTargetMapElutionTime(refMapTime, mass)
     }
 
+  }
+  
+  def rebuildMasterFeaturesUsingBestChild() {
+    val nbMasterFeatures = this.masterMap.features.length
+    if( nbMasterFeatures == 0 ) return ()
+    
+    val newMasterFeatures = new ArrayBuffer[Feature](nbMasterFeatures)
+    for( val mft <- this.masterMap.features ) {
+      
+      val mftChildren = mft.children
+      
+      // Memorize the peptide id
+      val peptideId = mft.relations.peptideId
+      
+      // Retrieve the highest feature child    
+      val highestFtChild = mftChildren.reduceLeft { (a,b) => 
+        if( a.getNormalizedIntensityOrIntensity > b.getNormalizedIntensityOrIntensity ) a else b
+      }
+      
+      // Re-build the master feature using this best child
+      val newMft = highestFtChild.toMasterFeature( id = mft.id, children = mft.children )
+      
+      // Restore the peptide id
+      newMft.relations.peptideId = peptideId
+      
+      // Append this master of the list of master features
+      newMasterFeatures += newMft
+    }
+    
+    this.masterMap = this.masterMap.copy(features = newMasterFeatures.toArray)
+  }
+  
+  def rebuildChildMaps(): MapSet = {
+    
+    val masterFeatures = this.masterMap.features
+    
+    // --- Update the map set processed maps ---
+    val ftsByChildMapId = new HashMap[Long,ArrayBuffer[Feature]]
+    val childMapById = new HashMap[Long,ProcessedMap]
+    
+    for( childMap <- childMaps ) {
+      childMapById += childMap.id -> childMap
+      ftsByChildMapId += childMap.id -> new ArrayBuffer(masterFeatures.length)
+    }
+    
+    // Group master features children by child map id
+    for( mft <- masterFeatures; childFt <- mft.children ) {
+      ftsByChildMapId(childFt.relations.processedMapId) += childFt
+    }
+    
+    // Re-build the processed maps
+    val newChildMaps = new ArrayBuffer[ProcessedMap]
+    for( (childMapId,features) <- ftsByChildMapId ) {
+      
+      features.foreach { ft =>
+        ft.eachSubFeatureOrThisFeature { subFt =>
+          require(subFt.relations.processedMapId == childMapId)
+        }
+      }
+      
+      val childMap = childMapById(childMapId)
+      newChildMaps += childMap.copy( features = features.distinct.toArray )
+    }
+    
+    this.copy( childMaps = newChildMaps.toArray )
+  }
+  
+  // Debug purpose
+  def toTsvFile( filePath: String ) {
+    import java.io.FileOutputStream
+    import java.io.PrintWriter
+    val file = new java.io.File(filePath)
+    val writer = new PrintWriter(file)
+    
+    val masterMapHeader = "master_feature_id mass charge elution_time peptide_id"
+    val childMapHeader = "feature_id moz is_cluster elution_time correct_elution_time duration raw_abundance ms2_count"
+    writer.print(masterMapHeader.replaceAll(" ", "\t"))
+    for( childMap <- childMaps ) {
+      writer.print("\t"+childMapHeader.replaceAll(" ", "\t"))
+    }
+    writer.println()
+    
+    val childMapIds = this.getChildMapIds
+    
+    for( mft <- masterMap.features ) {
+      
+      val mftCells: List[Any] = List(
+        mft.id,mft.mass,mft.charge,
+        mft.elutionTime,mft.relations.peptideId
+      )
+      writer.print( mftCells.mkString("\t"))
+      
+      val childFtByMapId = Map() ++ mft.children.map( ft => ft.relations.processedMapId -> ft )
+      for( childMapId <- childMapIds ) {
+        val ftOpt = childFtByMapId.get(childMapId)
+        if( ftOpt.isDefined ) {
+          val ft = ftOpt.get
+          val ftCells: List[Any] = List(
+            ft.id,ft.moz,ft.isCluster,
+            ft.elutionTime,ft.correctedElutionTime,ft.duration,
+            ft.intensity,ft.ms2Count.toString
+          )
+          writer.print( "\t"+ ftCells.mkString("\t") )
+        } else writer.print( "\t"+ Array.fill(8)("").mkString("\t") )
+      }
+      writer.println()
+      writer.flush()
+    }
+    
+    writer.close()
   }
   
   /*

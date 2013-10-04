@@ -2,6 +2,7 @@ package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import org.apache.commons.math.stat.descriptive.StatisticalSummary
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.om.model.msq._
 
@@ -34,7 +35,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
   def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], statTestsAlpha: Float = 0.01f ) {
     
     // --- Compute the abundance matrix ---
-    val abundanceMatrix = masterQuantPeptides.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
+    val abundanceMatrix = masterQuantPeptides.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
     
     // --- Normalize the abundance matrix ---
     val normalizedMatrix = AbundanceNormalizer.normalizeAbundances(abundanceMatrix)
@@ -57,7 +58,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         val computedRatio = ComputedRatio(
           numerator = ratio.numeratorMean.toFloat,
           denominator = ratio.denominatorMean.toFloat,
-          state = ratio.state.map(_.id).getOrElse(0)
+          state = ratio.state.map(_.id).getOrElse(0),
+          tTestPValue = ratio.tTestPValue,
+          zTestPValue = ratio.zTestPValue
         )
         
         ratiosByMQPepId(masterQuantPep.id) += Some(computedRatio)
@@ -73,9 +76,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       val mqPepProps = mqPep.properties.getOrElse( new MasterQuantPeptideProperties() )
       
       val quantProfile = new MasterQuantPeptideProfile( ratios = ratios.toList )
-      mqPepProps.setMqPepProfileByGroupSetupNumber(
-        Some( mqPepProps.getMqPepProfileByGroupSetupNumber.getOrElse( Map() ) + ( groupSetupNumber.toString -> quantProfile ) )
-      )
+      val mqPeptProfileMap = mqPepProps.getMqPepProfileByGroupSetupNumber.getOrElse( HashMap() )
+      mqPeptProfileMap += ( groupSetupNumber.toString -> quantProfile )
+      mqPepProps.setMqPepProfileByGroupSetupNumber( Some(mqPeptProfileMap) )
       
       mqPep.properties = Some(mqPepProps)
     }
@@ -92,36 +95,47 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       //abundanceMatrixIndex: Int
     )
     
-    val abundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)
+    // --- Clusterize MQ peptides profiles and compute corresponding abundance matrix ---
     val profilesClusters = new ArrayBuffer[MQPepProfilesCluster](masterQuantProtSets.length)
+    val abundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)    
     
     for( masterQuantProtSet <- masterQuantProtSets ) {
       
-      // Clusterize MasterQuantPeptides according tyo their profile
+      // Clusterize MasterQuantPeptides according to their profile
       val mqPepsByProfileAsStr = new HashMap[String,ArrayBuffer[MasterQuantPeptide]]()
       
       masterQuantProtSet.masterQuantPeptides.foreach { mqPep =>
-        val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber.toString )
-        
-        for( mqPepProfile <- mqPepProfileOpt ) {
-          val profileSlopes = mqPepProfile.ratios.map( _.map( _.state ).get )
-          val profileAsStr = _stringifyProfile( profileSlopes )
+        // TODO: allows to configure the desired specificity level
+        if( mqPep.peptideInstance.get.isProteinSetSpecific ) {
+          val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber.toString )
           
-          mqPepsByProfileAsStr.getOrElseUpdate(profileAsStr, new ArrayBuffer[MasterQuantPeptide] ) += mqPep
+          for( mqPepProfile <- mqPepProfileOpt ) {
+            val profileSlopes = mqPepProfile.ratios.map( _.map( _.state ).get )
+            val profileAsStr = _stringifyProfile( profileSlopes )
+            
+            mqPepsByProfileAsStr.getOrElseUpdate(profileAsStr, new ArrayBuffer[MasterQuantPeptide] ) += mqPep
+          }
         }
-        
       }
       
       // Build master quant protein set profiles
       for( (profileAsStr,mqPeps) <- mqPepsByProfileAsStr ) {
         
         val abundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
+        /*for (row <- abundanceMatrix ) {
+          val nbDefs = row.count(ab => ab.isNaN == false && ab > 0)
+          if( nbDefs < 6 ) println(mqPeps(0).peptideInstance.get.peptide.sequence)
+        }*/
+        
         val summarizedAbundances = abundanceMatrix.transpose.map( _meanAbundance( _ ) )
         
         profilesClusters += MQPepProfilesCluster(
           mqProtSet = masterQuantProtSet,
           mqPeps = mqPeps
         )
+        
+        /*val nbDefs = summarizedAbundances.count(ab => ab.isNaN == false && ab > 0)
+        if( nbDefs < 6 ) println(masterQuantProtSet.proteinSet.getTypicalProteinMatch.get.accession)*/
         
         abundanceMatrixBuffer += summarizedAbundances
       }
@@ -130,7 +144,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     // --- Normalize the abundance matrix ---
     val normalizedMatrix = AbundanceNormalizer.normalizeAbundances(abundanceMatrixBuffer.toArray)
     
-    // Create an map which will store the abundances corresponding to each profile cluster
+    // --- Map normalized abundances by the corresponding profile cluster ---
     val abundancesByProfileClusterBuilder = Map.newBuilder[MQPepProfilesCluster,Array[Float]]
     abundancesByProfileClusterBuilder.sizeHint(normalizedMatrix.length)
     
@@ -140,7 +154,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     }
     val abundancesByProfileCluster = abundancesByProfileClusterBuilder.result
     
-    // Create an map which will store the ratios corresponding to each profile cluster
+    // --- Compute the ratios corresponding to each profile cluster ---
+    
+    // Create a map which will store the ratios corresponding to each profile cluster
     val ratiosByProfileCluster = Map() ++ profilesClusters.map( _ -> new ArrayBuffer[Option[ComputedRatio]] )
     
     // Iterate over the ratio definitions
@@ -153,7 +169,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         val computedRatio = ComputedRatio(
           numerator = ratio.numeratorMean.toFloat,
           denominator = ratio.denominatorMean.toFloat,
-          state = ratio.state.map(_.id).getOrElse(0)
+          state = ratio.state.map(_.id).getOrElse(0),
+          tTestPValue = ratio.tTestPValue,
+          zTestPValue = ratio.zTestPValue
         )
         
         val rowIndex = ratio.entityId.toInt
@@ -186,11 +204,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     // Update Master Quant protein sets properties
     for( (mqProtSet,mqProfiles) <- mqProfilesByProtSet ) {
       val mqProtSetProps = mqProtSet.properties.getOrElse( new MasterQuantProteinSetProperties() )      
-      val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber.getOrElse( Map() )
+      val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber.getOrElse( HashMap() )
       
-      mqProtSetProps.setMqProtSetProfilesByGroupSetupNumber(
-        Some( mqProtSetProfileMap + ( groupSetupNumber.toString -> mqProfiles.toArray ) )
-      )
+      mqProtSetProfileMap += (groupSetupNumber.toString -> mqProfiles.toArray)
+      mqProtSetProps.setMqProtSetProfilesByGroupSetupNumber( Some(mqProtSetProfileMap) )
       
       mqProtSet.properties = Some(mqProtSetProps)
     }
@@ -214,6 +231,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       sampleNum -> quantChannelsBySampleNumber(sampleNum).map( qc => qcIdxById(qc.id) )
     }
     
+    def _getSamplesAbundances(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
+      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
+      qcIndices.flatMap( i => i.map( abundances(_) ) )
+    }
     def _getSamplesMeanAbundance(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
       val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
       qcIndices.map { i => _meanAbundance( i.map( abundances(_) ) ) }
@@ -269,8 +290,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       val matrixBySampleNum = Map() ++ allSampleNumbers.map( _ -> new ArrayBuffer[Array[Float]] )
       
       // Extract abundance matrices for each biological sample
-      normalizedMatrix.foreach { normalizedRow =>        
-        allSampleNumbers.foreach { sampleNum =>            
+      normalizedMatrix.foreach { normalizedRow =>
+        allSampleNumbers.foreach { sampleNum =>
           matrixBySampleNum(sampleNum) += qcIndicesBySampleNum(sampleNum).map(normalizedRow(_))
         }
       }
@@ -311,18 +332,35 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     val relativeVariationsBuffer = new ArrayBuffer[RelativeErrorObservation](filledMatrix.length) // for 1 sample replicate
     
     var rowIdx = 0
-    filledMatrix.foreach { fullRow =>
+    filledMatrix.foreach { filledRow =>
       
-      // Retrieve the entity ID
-      //val masterQuantPepId = masterQuantPeptides(rowIdx).id
+      var numeratorSummary: StatisticalSummary = null
+      var denominatorSummary: StatisticalSummary = null
       
-      // Compute numerator and denominator abundances
-      val numeratorMeanAbundances = _getSamplesMeanAbundance( fullRow, numeratorSampleNumbers )
-      val denominatorMeanAbundances = _getSamplesMeanAbundance( fullRow, denominatorSampleNumbers )
+      // Check if we have enough biological sample replicates to compute statistics at this level
+      if( minSamplesCountPerGroup > 2 ) {
       
-      // Compute numerator and denominator statistical summaries
-      val numeratorSummary = CommonsStatHelper.calcStatSummary(numeratorMeanAbundances.map(_.toDouble))
-      val denominatorSummary = CommonsStatHelper.calcStatSummary(denominatorMeanAbundances.map(_.toDouble))
+        // Retrieve the entity ID
+        //val masterQuantPepId = masterQuantPeptides(rowIdx).id
+        
+        // Compute numerator and denominator abundances
+        val numeratorMeanAbundances = _getSamplesMeanAbundance( filledRow, numeratorSampleNumbers )
+        val denominatorMeanAbundances = _getSamplesMeanAbundance( filledRow, denominatorSampleNumbers )
+        
+        // Compute numerator and denominator statistical summaries
+        numeratorSummary = CommonsStatHelper.calcStatSummary(numeratorMeanAbundances.map(_.toDouble))
+        denominatorSummary = CommonsStatHelper.calcStatSummary(denominatorMeanAbundances.map(_.toDouble))        
+     
+        // We can then make absolute statistical validation at the biological sample level
+        absoluteVariationsBuffer += AbsoluteErrorObservation( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
+        absoluteVariationsBuffer += AbsoluteErrorObservation( denominatorSummary.getMean.toFloat, denominatorSummary.getStandardDeviation.toFloat )
+      }
+      // Else we merge biological sample data and compute statistics at a lower level
+      else {        
+        // Compute numerator and denominator statistical summaries
+        numeratorSummary = CommonsStatHelper.calcStatSummary( _getSamplesAbundances( filledRow, numeratorSampleNumbers ).map(_.toDouble) )
+        denominatorSummary = CommonsStatHelper.calcStatSummary( _getSamplesAbundances( filledRow, denominatorSampleNumbers ).map(_.toDouble) )  
+      }
       
       // Compute the ratio for this row
       val ratio = new AverageAbundanceRatio( rowIdx, numeratorSummary, denominatorSummary )
@@ -331,13 +369,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       // Update the relative error model
       if( ratio.ratioValue.isDefined && ratio.ratioValue.get > 0 ) {
         relativeVariationsBuffer += RelativeErrorObservation( ratio.maxAbundance.toFloat, ratio.ratioValue.get )
-      }
-      
-      // Check if we have enough biological sample replicates to udpate the absolute variations model
-      if( minSamplesCountPerGroup > 2 ) {        
-        // We can then make absolute statistical validation at the biological sample level
-        absoluteVariationsBuffer += AbsoluteErrorObservation( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
-        absoluteVariationsBuffer += AbsoluteErrorObservation( denominatorSummary.getMean.toFloat, denominatorSummary.getStandardDeviation.toFloat )
       }
 
       rowIdx += 1
