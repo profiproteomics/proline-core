@@ -55,6 +55,41 @@ public final class PsPtmRepository {
 
 	return result;
     }
+    
+    /**
+     * Retrieves a <code>Ptm</code> entity from Ps Db by given name (matched ignoring case with <code>shortName</code> ).
+     * 
+     * @param shortName <code>shortName</code> of the <code>Ptm</code> entity, must not be empty.
+     * @return Ptm entity or <code>null</code> if not found.
+     */
+    // TODO: merge code with the findPtmForName method
+    public static Ptm findPtmForShortName(final EntityManager psEm, final String shortName) {
+
+	JPAUtils.checkEntityManager(psEm);
+
+	if (StringUtils.isEmpty(shortName)) {
+	    throw new IllegalArgumentException("Invalid short name");
+	}
+
+	Ptm result = null;
+
+	final TypedQuery<Ptm> query = psEm.createNamedQuery("findPsPtmForShortName", Ptm.class);
+	query.setParameter("name", shortName.toUpperCase());
+
+	final List<Ptm> ptms = query.getResultList();
+
+	if ((ptms != null) && !ptms.isEmpty()) {
+
+	    if (ptms.size() == 1) {
+		result = ptms.get(0);
+	    } else {
+		throw new NonUniqueResultException("There are more than one Ptm for given short name");
+	    }
+
+	}
+
+	return result;
+    }
 
     public static PtmEvidence findPtmEvidenceByPtmAndType(final EntityManager psEm, final long ptmId,
 	    final Type type) {

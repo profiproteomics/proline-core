@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 
@@ -20,8 +21,12 @@ import javax.persistence.OneToMany;
  * 
  */
 @Entity
-@NamedQuery(name = "findPsPtmForName", query = "select p from fr.proline.core.orm.ps.Ptm p"
-	+ " where (upper(p.shortName) = :name) or (upper(p.fullName) = :name)")
+@NamedQueries({
+	@NamedQuery(name = "findPsPtmForName", query = "select p from fr.proline.core.orm.ps.Ptm p"
+		+ " where (upper(p.shortName) = :name) or (upper(p.fullName) = :name)"),
+	@NamedQuery(name = "findPsPtmForShortName", query = "select p from fr.proline.core.orm.ps.Ptm p"
+		+ " where (upper(p.shortName) = :name)")
+})
 public class Ptm implements Serializable {
 
     private static final long serialVersionUID = 1L;
