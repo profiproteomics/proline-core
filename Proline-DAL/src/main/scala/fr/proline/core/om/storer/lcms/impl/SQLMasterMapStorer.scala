@@ -22,7 +22,7 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
     }
     
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
-    
+      
       // Insert the master map in the processed_map and map tables
       val newMasterMapId = this._insertProcessedMap( ezDBC, masterMap )
       
@@ -34,7 +34,7 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
       
       // Insert features
       ezDBC.executePrepared(LcmsDbFeatureTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { featureInsertStmt =>
-      
+        
         // Update master feature map id and insert master features in the feature table
         for( mft <- masterMap.features ) {
           mft.relations.processedMapId = newMasterMapId

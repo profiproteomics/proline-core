@@ -1,6 +1,7 @@
 package fr.proline.core.om.storer.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
+import com.weiglewilczek.slf4s.Logging
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.StatementWrapper
@@ -17,7 +18,7 @@ import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.ProcessedMap
 import fr.proline.core.om.storer.lcms.IProcessedMapStorer
 
-class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRunMapStorer(lcmsDbCtx) with IProcessedMapStorer {
+class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRunMapStorer(lcmsDbCtx) with IProcessedMapStorer with Logging {
   
   def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = true ): Unit = {    
       
@@ -77,9 +78,11 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
   
   protected def _updateProcessedMap( ezDBC: EasyDBC, processedMap: ProcessedMap ): Unit = {
     
+    this.logger.info("updating processed map #"+processedMap.id)
+    
     // TODO: implement a mkUpdateQuery
     val updateSQLquery = "UPDATE "+ LcmsDbProcessedMapTable.name +
-    " SET normalization_factor=?, is_aln_reference=?, is_locked=?"
+    " SET normalization_factor=?, is_aln_reference=?, is_locked=? WHERE id =" + processedMap.id
     
     // Insert processed map data
     ezDBC.executePrepared(updateSQLquery) { statement => 
@@ -105,27 +108,40 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
   protected def insertProcessedMapFeatureItems(ezDBC: EasyDBC, processedMap: ProcessedMap ): Unit = {
     
     val processedMapId = processedMap.id
+    require( processedMapId > 0, "the processed map must have been persisted first")
+    
+    this.logger.info("storing features for processed map #"+processedMapId)
+    
+    // Create a HashSet which avoids to store the same feature multiple times
+    val storedFtIdSet = new collection.mutable.HashSet[Long]
     
     // Attach features to the processed map
     ezDBC.executePrepared(LcmsDbProcessedMapFeatureItemTable.mkInsertQuery) { statement => 
       processedMap.features.foreach { feature =>
-        
-        // Update feature map id
-        feature.relations.processedMapId = processedMapId
-        
-        if( feature.isCluster ) {
-
-          // Store cluster sub-features
-          for( subFt <- feature.subFeatures ) {
-            // Update sub-feature map id
-            subFt.relations.processedMapId = processedMapId
-            // Store the processed feature
-            _insertProcessedMapFtItemUsingWrappedStatement( subFt, statement )
+        if( storedFtIdSet.contains(feature.id) == false ) {
+          
+          // Update feature map id
+          feature.relations.processedMapId = processedMapId
+          
+          if( feature.isCluster ) {
+            
+            // Store cluster sub-features which have not been already stored
+            for( subFt <- feature.subFeatures if storedFtIdSet.contains(subFt.id) == false ) {
+              // Update sub-feature map id
+              subFt.relations.processedMapId = processedMapId
+              // Store the processed feature
+              _insertProcessedMapFtItemUsingWrappedStatement( subFt, statement )
+              // Memorize this feature has been stored
+              storedFtIdSet += subFt.id
+            }
           }
-        }
-        else {
-          // Store the processed feature
-          _insertProcessedMapFtItemUsingWrappedStatement( feature, statement )
+          else {
+            // Store the processed feature
+            _insertProcessedMapFtItemUsingWrappedStatement( feature, statement )
+          }
+          
+          // Memorize this feature has been stored
+          storedFtIdSet += feature.id
         }
       }
     }
