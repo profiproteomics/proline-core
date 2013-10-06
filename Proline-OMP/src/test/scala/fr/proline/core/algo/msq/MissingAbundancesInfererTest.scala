@@ -55,9 +55,10 @@ class MissingAbundancesInfererTest {
     assertEquals( 30, inferedMatrix.flatten.count( v => v.isNaN == false && v > 0f ) )
     
     val cvMatrix = inferedMatrix.map( row => 100f * math.sqrt( StatUtils.variance(row.map(_.toDouble)) ) / ( row.sum / row.length ) )
+    
     assertTrue( cvMatrix(0) > 100f )
-    assertTrue( cvMatrix(1) < 10f )
-    assertTrue( cvMatrix(2) < 10f )
+    assertTrue( cvMatrix(1) < 100f )
+    assertTrue( cvMatrix.last < 20f )
     
   }
 
