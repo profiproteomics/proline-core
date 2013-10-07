@@ -35,7 +35,7 @@ trait ILcmsMapAligner {
       // method 2: exclude conflicts
       if( matchingFeatures.length == 1 ) {
         val map1Ft = map1FtById(map1FtId)
-        val deltaTime = matchingFeatures(0).elutionTime - map1Ft.elutionTime      
+        val deltaTime = matchingFeatures(0).elutionTime - map1Ft.elutionTime
         val massRangePos = ( map1Ft.mass / massInterval ).toInt
         
         landmarksByMassIdx.getOrElseUpdate(massRangePos,new ArrayBuffer[Landmark]) += Landmark( map1Ft.elutionTime, deltaTime)
@@ -49,7 +49,7 @@ trait ILcmsMapAligner {
     // Compute feature alignments
     val ftAlignments = new ArrayBuffer[MapAlignment](0)
    
-    for( (massRangeIdx,landmarks) <- landmarksByMassIdx ){
+    for( (massRangeIdx,landmarks) <- landmarksByMassIdx if landmarks.isEmpty == false ) {
       
       val landmarksSortedByTime = landmarks.sortBy( _.time )
       val smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnParams.smoothingParams )
@@ -68,7 +68,7 @@ trait ILcmsMapAligner {
           timeList += lm.time
           deltaTimeList += lm.deltaTime
           prevTime = lm.time
-          prevTimePlusDelta = timePlusDelta          
+          prevTimePlusDelta = timePlusDelta
         }
       }
       
