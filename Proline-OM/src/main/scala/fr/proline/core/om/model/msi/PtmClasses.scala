@@ -13,8 +13,12 @@ object PtmNames extends InMemoryIdGen
 case class PtmNames(val shortName: String, val fullName: String) {
 
   // Requirements
-  require(StringUtils.isNotEmpty(shortName))
+  require(!StringUtils.isEmpty(shortName))
 
+  def sameAs(that: Any) = that match {
+    case o : PtmNames => o.shortName==shortName && o.fullName==fullName
+    case _ => false
+  }
 }
 
 @JsonSnakeCase
@@ -63,6 +67,11 @@ case class PtmEvidence(
 
   def ionType_(newIonType: IonTypes.IonType) = { newIonType }
 
+   def sameAs(that: Any) = that match {
+    case o : PtmEvidence => o.ionType==ionType && o.composition==composition && o.monoMass == monoMass && o.averageMass == averageMass && o.isRequired == isRequired
+    case _ => false
+  }
+  
 }
 
 object PtmLocation extends Enumeration {
@@ -99,8 +108,13 @@ case class PtmSpecificity(
 ) extends IPtmSpecificity {
 
   // Requirements
-  require(StringUtils.isNotEmpty(location))
+  require(!StringUtils.isEmpty(location))
 
+  def sameAs(that: Any) = that match {
+    case o : PtmSpecificity => o.location==location && o.residue==residue && o.classification == classification && o.ptmId == ptmId
+    case _ => false
+  }
+  
 }
 
 object PtmDefinition extends InMemoryIdGen
@@ -135,8 +149,19 @@ case class PtmDefinition(
   @transient lazy val pepNeutralLosses = ptmEvidences.find( ev => ev.ionType == IonTypes.PepNeutralLoss )
   @transient lazy val artefacts = ptmEvidences.find( ev => ev.ionType == IonTypes.Artefact )
   
-  def isCompositionDefined = StringUtils.isNotEmpty(precursorDelta.composition)
+  def isCompositionDefined = !StringUtils.isEmpty(precursorDelta.composition)
   
+  def sameAs(that: Any) = that match {
+    case o : PtmDefinition => { 
+      var sameEvidences = ptmEvidences.length == o.ptmEvidences.length
+      for (e <- ptmEvidences) {
+        sameEvidences = sameEvidences && o.ptmEvidences.exists(_.sameAs(e))
+      }
+      (sameEvidences && o.location==location && o.names.sameAs(names) && 
+         o.residue==residue && o.classification == classification && o.ptmId == ptmId && o.unimodId == unimodId)
+    }
+    case _ => false
+  }
 }
 
 @JsonSnakeCase
@@ -155,7 +180,7 @@ case class LocatedPtm(
 ) {
 
   // Requirements
-  require(definition != null && seqPosition >= -1 && monoMass > 0 && averageMass > 0 && StringUtils.isNotEmpty(composition))
+  require(definition != null && seqPosition >= -1 && monoMass > 0 && averageMass > 0 && !StringUtils.isEmpty(composition))
   if (isNTerm) require(seqPosition == 0)
   if (isCTerm) require(seqPosition == -1)
 

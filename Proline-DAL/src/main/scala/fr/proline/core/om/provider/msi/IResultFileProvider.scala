@@ -3,16 +3,26 @@ package fr.proline.core.om.provider.msi
 import java.io.File
 import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.model.msi.PtmDefinition
 //import fr.proline.core.om.provider.msi.impl.ResultFileProviderContext
+
+trait IResultFileVerifier {
+   // returns PtmDefinitions referenced by the specified file
+   def getPtmDefinitions(fileLocation: File): Seq[PtmDefinition]
+   // can be used to verify that the provider handle this kind of file (ex: MSMS search, error tolerant search, n15 search, PMF, ...)  
+   def isValid(fileLocation: File) : Boolean
+}
 
 trait IResultFileProvider {
   
   val fileType: String
   def getResultFile( fileLocation: File, importProperties: Map[String, Any],
       parserContext: ProviderDecoratedExecutionContext): IResultFile
+  def getResultFileVerifier : IResultFileVerifier
   val resultFileProperties : Map[String, Class[_]]
-
+  
 }
+
 
 object ResultFileProviderRegistry {
   
