@@ -119,7 +119,8 @@ case class ResultSet(
 @JsonInclude(Include.NON_NULL)
 case class ResultSetProperties(
   @BeanProperty var targetDecoyMode: Option[String] = None,
-  @BeanProperty var mascotImportProperties: Option[MascotImportProperties] = None)
+  @BeanProperty var mascotImportProperties: Option[MascotImportProperties] = None,
+  @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None)
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
@@ -128,7 +129,12 @@ case class MascotImportProperties(
   @BeanProperty var subsetsThreshold: Option[Float] = None,
   @BeanProperty var proteinsPvalueCutoff: Option[Float] = None)
 
-object ResultSummary extends InMemoryIdGen
+@JsonSnakeCase
+@JsonInclude(Include.NON_NULL)
+case class OmssaImportProperties(
+  @BeanProperty var rawSettings: Option[Map[String, String]] = None)
+
+  object ResultSummary extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)

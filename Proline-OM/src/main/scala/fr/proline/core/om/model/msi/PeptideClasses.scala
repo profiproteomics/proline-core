@@ -409,7 +409,8 @@ case class PeptideMatch ( // Required fields
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchProperties (
-  @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None
+  @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None,
+  @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None
 )
 
 @JsonSnakeCase
@@ -419,6 +420,12 @@ case class PeptideMatchMascotProperties (
   @BeanProperty var readableVarMods: Option[String] = None,
   @BeanProperty var varModsPositions: Option[String] = None,
   @BeanProperty var ambiguityString: Option[String] = None
+)
+
+@JsonSnakeCase
+@JsonInclude( Include.NON_NULL )
+case class PeptideMatchOmssaProperties (
+  @BeanProperty var pValue: Double
 )
 
 @JsonSnakeCase
