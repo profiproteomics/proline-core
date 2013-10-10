@@ -9,6 +9,8 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.TypedQuery;
 
 import org.junit.After;
 import org.junit.Before;
@@ -17,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
+import fr.proline.core.orm.msi.repository.PeptideReadablePtmStringRepository;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.utils.DatabaseTestCase;
 import fr.proline.util.MathUtils;
@@ -113,6 +116,71 @@ public class ResultsetTest extends DatabaseTestCase {
 	    assertTrue(rs.getChildren().isEmpty());
 	    assertNotNull(rs.getDecoyResultSet());
 	} finally {
+
+	    if (msiEm != null) {
+		try {
+		    msiEm.close();
+		} catch (Exception exClose) {
+		    LOG.error("Error closing MSI EntityManager", exClose);
+		}
+	    }
+
+	}
+
+    }
+
+    @Test
+    public void checkReadablePtmString() {
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
+
+	final EntityManager msiEm = emf.createEntityManager();
+
+	EntityTransaction transac = null;
+	boolean transacOK = false;
+
+	try {
+	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
+	    assertNotNull(rs);
+
+	    List<PeptideMatch> pms = PeptideMatchRepository.findPeptideMatchByResultSet(msiEm, rs.getId());
+	    assertTrue("Loaded PeptideMatches from ResultSet #2", (pms != null) && !pms.isEmpty());
+
+	    PeptideMatch firstPm = pms.get(0);
+
+	    Peptide firstPeptide = msiEm.find(Peptide.class, Long.valueOf(firstPm.getPeptideId()));
+	    assertNotNull("First Peptide of ResultSet #2", firstPeptide);
+
+	    /* Save a new PeptideReadablePtmString */
+	    transac = msiEm.getTransaction();
+	    transac.begin();
+	    transacOK = false;
+
+	    PeptideReadablePtmString prps = new PeptideReadablePtmString();
+	    prps.setReadablePtmString("Toto");
+	    prps.setPeptide(firstPeptide);
+	    prps.setResultSet(rs);
+
+	    msiEm.persist(prps);
+
+	    transac.commit();
+	    transacOK = true;
+
+	    PeptideReadablePtmString loadedPtmString = PeptideReadablePtmStringRepository
+		    .findReadablePtmStrForPeptideAndResultSet(msiEm, firstPeptide.getId(), rs.getId());
+	    assertNotNull("Re-loaded PeptideReadablePtmString", loadedPtmString);
+	    assertEquals("Readable PTM string", "Toto", loadedPtmString.getReadablePtmString());
+	} finally {
+
+	    if ((transac != null) && !transacOK) {
+		LOG.warn("Rollbacking MSI DB EntityTransaction");
+
+		try {
+		    transac.rollback();
+		} catch (Exception ex) {
+		    LOG.error("Error rollbacking MSI Db EntityTransaction", ex);
+		}
+
+	    }
 
 	    if (msiEm != null) {
 		try {

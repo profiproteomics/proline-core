@@ -82,6 +82,7 @@
     <class>fr.proline.core.orm.msi.PeptideInstancePeptideMatchMapPK</class>
     <class>fr.proline.core.orm.msi.PeptideMatchRelation</class>
     <class>fr.proline.core.orm.msi.PeptideMatchRelationPK</class>
+    <class>fr.proline.core.orm.msi.PeptideReadablePtmString</class>
     <class>fr.proline.core.orm.msi.PeptideSet</class>
     <class>fr.proline.core.orm.msi.PeptideSetPeptideInstanceItem</class>
     <class>fr.proline.core.orm.msi.PeptideSetPeptideInstanceItemPK</class>
