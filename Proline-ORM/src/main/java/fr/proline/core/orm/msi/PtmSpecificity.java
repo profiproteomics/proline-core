@@ -28,7 +28,7 @@ public class PtmSpecificity implements Serializable {
 
     private String location;
 
-    private String residue;
+    private Character residue;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -53,14 +53,7 @@ public class PtmSpecificity implements Serializable {
 
 	setId(psPtmSpecificity.getId());
 	setLocation(psPtmSpecificity.getLocation());
-
-	final String psPtmSpecificityResidu = psPtmSpecificity.getResidue();
-
-	if (StringUtils.isEmpty(psPtmSpecificityResidu)) {
-	    setResidue(null);
-	} else {
-	    setResidue(psPtmSpecificityResidu);
-	}
+	psPtmSpecificity.getResidue();
 
 	// TODO set SerializedProperties when fields is available in PS PtmSpecificity
     }
@@ -84,12 +77,12 @@ public class PtmSpecificity implements Serializable {
 	this.location = location;
     }
 
-    public String getResidue() {
-	return this.residue;
+    public Character getResidue() {
+	return residue;
     }
 
-    public void setResidue(String residue) {
-	this.residue = residue;
+    public void setResidue(final Character pResidue) {
+	residue = pResidue;
     }
 
     public String getSerializedProperties() {

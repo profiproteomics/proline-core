@@ -43,7 +43,7 @@ public class PtmSpecificity implements Serializable {
 
     private String location;
 
-    private String residue;
+    private Character residue;
 
     // bi-directional many-to-one association to Ptm
     @ManyToOne
@@ -77,12 +77,12 @@ public class PtmSpecificity implements Serializable {
 	this.location = location;
     }
 
-    public String getResidue() {
-	return this.residue;
+    public Character getResidue() {
+	return residue;
     }
 
-    public void setResidue(String residue) {
-	this.residue = residue;
+    public void setResidue(final Character pResidue) {
+	residue = pResidue;
     }
 
     public Ptm getPtm() {

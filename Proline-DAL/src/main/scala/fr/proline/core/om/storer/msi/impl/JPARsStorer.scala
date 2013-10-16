@@ -20,6 +20,8 @@ import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => psPeptideRepo,
 import fr.proline.core.orm.uds.repository.{ UdsEnzymeRepository => udsEnzymeRepo, UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo, UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo }
 import fr.proline.util.StringUtils
 
+import fr.proline.core.utils.ResidueUtils._
+
 /**
  * JPA implementation of ResultSet storer.
  *
@@ -900,7 +902,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       if (msiPtmSpecificity == null) {
         /* Try to load from Ps Db by name, location and residue */
         val psPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(storerContext.getPSDbConnectionContext.getEntityManager, ptmDefinition.names.shortName, ptmDefinition.location,
-          StringUtils.convertCharResidueToString(ptmDefinition.residue))
+          scalaCharToCharacter(ptmDefinition.residue))
 
         if (psPtmSpecificity == null) {
           logger.warn("PtmSpecificity [" + ptmDefinition.names.shortName + "] NOT found in PSdb")
@@ -1675,8 +1677,8 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     }
 
     msiSequenceMatch.setIsDecoy(sequenceMatch.isDecoy)
-    msiSequenceMatch.setResidueAfter(StringUtils.convertCharResidueToString(sequenceMatch.residueAfter))
-    msiSequenceMatch.setResidueBefore(StringUtils.convertCharResidueToString(sequenceMatch.residueBefore))
+    msiSequenceMatch.setResidueAfter(scalaCharToCharacter(sequenceMatch.residueAfter))
+    msiSequenceMatch.setResidueBefore(scalaCharToCharacter(sequenceMatch.residueBefore))
     msiSequenceMatch.setResultSetId(msiResultSetId)
 
     // TODO handle serializedProperties
@@ -1755,7 +1757,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     if (psPtmSpecificity == null) {
       /* Try to load from Ps Db by name, location and residue */
       psPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psEm, ptmDefinition.names.shortName, ptmDefinition.location,
-        StringUtils.convertCharResidueToString(ptmDefinition.residue))
+        scalaCharToCharacter(ptmDefinition.residue))
     }
 
     if (psPtmSpecificity == null) {

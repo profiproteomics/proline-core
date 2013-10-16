@@ -20,6 +20,8 @@ import javax.persistence.Persistence
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.core.orm.util.DataStoreConnectorFactory
 
+import fr.proline.core.utils.ResidueUtils._
+
 /**
  * Provides method to convert Peptides and PTM objects from ORM to OM.
  * If specified in constructor, created objects will be stored in map( referenced by their ID) to be retrieve later if necessary.
@@ -393,14 +395,13 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       ptmEvidences += precursorEvidence
     }
 
-    // Create OM PtmDefinition from ORM PtmSpecificity
-    val residue = if (psPtmSpecificity.getResidue() != null) psPtmSpecificity.getResidue().charAt(0) else '\0'
+    // Create OM PtmDefinition from ORM PtmSpecificity    
     val ptmDef = new PtmDefinition(
       id = psPtmSpecificity.getId(),
       location = psPtmSpecificity.getLocation(),
       names = ptmNames,
       ptmEvidences = ptmEvidences.toArray,
-      residue = residue,
+      residue = characterToScalaChar(psPtmSpecificity.getResidue),
       classification = psPtmSpecificity.getClassification().getName(),
       ptmId = psPtmSpecificity.getPtm().getId())
     if (useCachedObject)

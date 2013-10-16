@@ -14,6 +14,8 @@ import fr.proline.core.orm.ps.{ Ptm, PtmSpecificity }
 import fr.proline.core.orm.ps.repository.{ PsPtmRepository => psPtmRepo }
 import javax.persistence.PersistenceException
 
+import fr.proline.core.utils.ResidueUtils._
+
 class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider with Logging {
 
   val converter = new PeptidesOMConverterUtil(true)
@@ -52,14 +54,7 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
   }
 
   def getPtmDefinition(ptmName: String, ptmResidu: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
-
-    var ptmResiduStr: String = null
-
-    if (ptmResidu != '\0') {
-      ptmResiduStr = "" + ptmResidu
-    }
-
-    val foundPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, ptmResiduStr)
+    val foundPtmSpecificity = psPtmRepo.findPtmSpecificityForNameLocResidu(psDbCtx.getEntityManager, ptmName, ptmLocation.toString, scalaCharToCharacter(ptmResidu))
 
     if (foundPtmSpecificity == null) {
       None

@@ -17,6 +17,8 @@ import fr.proline.core.orm.ps.{
 }
 import fr.proline.util.{ MathUtils, StringUtils }
 
+import fr.proline.core.utils.ResidueUtils._
+
 /**
  * @author David Bouyssie
  *
@@ -185,7 +187,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
       
       val psPtmSpecificity = new PsPtmSpecificity()
       psPtmSpecificity.setLocation(ptmDef.location)
-      psPtmSpecificity.setResidue(ptmDef.residue.toString)
+      psPtmSpecificity.setResidue(scalaCharToCharacter(ptmDef.residue))
       psPtmSpecificity.setClassification( psPtmClassif )
       psPtmSpecificity.setPtm(psPtm)
       

@@ -55,11 +55,13 @@ public final class PsPtmRepository {
 
 	return result;
     }
-    
+
     /**
-     * Retrieves a <code>Ptm</code> entity from Ps Db by given name (matched ignoring case with <code>shortName</code> ).
+     * Retrieves a <code>Ptm</code> entity from Ps Db by given name (matched ignoring case with
+     * <code>shortName</code> ).
      * 
-     * @param shortName <code>shortName</code> of the <code>Ptm</code> entity, must not be empty.
+     * @param shortName
+     *            <code>shortName</code> of the <code>Ptm</code> entity, must not be empty.
      * @return Ptm entity or <code>null</code> if not found.
      */
     // TODO: merge code with the findPtmForName method
@@ -116,7 +118,7 @@ public final class PsPtmRepository {
      * @return PtmSpecificity entity or <code>null</code> if not found.
      */
     public static PtmSpecificity findPtmSpecificityForNameLocResidu(final EntityManager psEm,
-	    final String ptmShortName, final String location, final String residue) {
+	    final String ptmShortName, final String location, final Character residue) {
 
 	JPAUtils.checkEntityManager(psEm);
 
@@ -132,13 +134,11 @@ public final class PsPtmRepository {
 
 	TypedQuery<PtmSpecificity> query = null;
 
-	if (residue == null) { // Assume NULL <> "" (empty)
+	if (residue == null) {
 	    query = psEm.createNamedQuery("findPsPtmSpecForNameAndLoc", PtmSpecificity.class);
-
 	} else {
 	    query = psEm.createNamedQuery("findPsPtmSpecForNameLocResidue", PtmSpecificity.class);
-
-	    query.setParameter("residue", String.valueOf(residue));
+	    query.setParameter("residue", residue);
 	}
 
 	query.setParameter("location", location.toUpperCase());

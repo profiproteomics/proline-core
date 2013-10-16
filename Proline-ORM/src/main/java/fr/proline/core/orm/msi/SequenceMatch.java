@@ -27,10 +27,10 @@ public class SequenceMatch implements Serializable {
     private boolean isDecoy;
 
     @Column(name = "residue_after")
-    private String residueAfter;
+    private Character residueAfter;
 
     @Column(name = "residue_before")
-    private String residueBefore;
+    private Character residueBefore;
 
     @Column(name = "result_set_id")
     private long resultSetId;
@@ -65,20 +65,20 @@ public class SequenceMatch implements Serializable {
 	isDecoy = pIsDecoy;
     }
 
-    public String getResidueAfter() {
-	return this.residueAfter;
+    public Character getResidueAfter() {
+	return residueAfter;
     }
 
-    public void setResidueAfter(String residueAfter) {
-	this.residueAfter = residueAfter;
+    public void setResidueAfter(final Character pResidueAfter) {
+	residueAfter = pResidueAfter;
     }
 
-    public String getResidueBefore() {
-	return this.residueBefore;
+    public Character getResidueBefore() {
+	return residueBefore;
     }
 
-    public void setResidueBefore(String residueBefore) {
-	this.residueBefore = residueBefore;
+    public void setResidueBefore(final Character pResidueBefore) {
+	residueBefore = pResidueBefore;
     }
 
     public long getResultSetId() {

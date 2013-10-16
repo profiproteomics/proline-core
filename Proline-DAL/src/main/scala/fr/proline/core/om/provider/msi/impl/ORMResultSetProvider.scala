@@ -16,6 +16,8 @@ import fr.proline.repository.util.JPAUtils
 import fr.proline.util.StringUtils
 import javax.persistence.EntityManager
 
+import fr.proline.core.utils.ResidueUtils._
+
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,
                            val pdiDbCtx: DatabaseConnectionContext) extends IResultSetProvider with Logging {
@@ -556,7 +558,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       msiPtmSpecificity.getLocation,
       names,
       new Array[PtmEvidence](0), // TODO handle ptmEvidences
-      StringUtils.convertStringResidueToChar(msiPtmSpecificity.getResidue),
+      characterToScalaChar(msiPtmSpecificity.getResidue),
       null, // TODO handle classification
       0 // TODO handle PTM Id (Ps PTM)
     )
@@ -613,8 +615,8 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
     new SequenceMatch(msiSequenceMatchId.getStart,
       msiSequenceMatchId.getStop,
-      StringUtils.convertStringResidueToChar(msiSequenceMatch.getResidueBefore),
-      StringUtils.convertStringResidueToChar(msiSequenceMatch.getResidueAfter),
+      characterToScalaChar(msiSequenceMatch.getResidueBefore),
+      characterToScalaChar(msiSequenceMatch.getResidueAfter),
       msiSequenceMatch.getIsDecoy,
       msiSequenceMatch.getResultSetId,
       peptide.id,

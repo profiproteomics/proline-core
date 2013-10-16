@@ -49,6 +49,8 @@ import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.primitives._
 
+import fr.proline.core.utils.ResidueUtils._
+
 abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
   // Required fields
@@ -542,8 +544,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
                 val msiMasterSeqMatch = new MsiSequenceMatch()
                 msiMasterSeqMatch.setId(msiMasterSeqMatchPK)
-                msiMasterSeqMatch.setResidueBefore(seqMatch.residueBefore.toString) // TODO: change ORM mapping to Char
-                msiMasterSeqMatch.setResidueBefore(seqMatch.residueAfter.toString) // TODO: change ORM mapping to Char
+                msiMasterSeqMatch.setResidueBefore(scalaCharToCharacter(seqMatch.residueBefore))
+                msiMasterSeqMatch.setResidueBefore(scalaCharToCharacter(seqMatch.residueAfter))
                 msiMasterSeqMatch.setIsDecoy(false)
                 msiMasterSeqMatch.setBestPeptideMatchId(masterPepMatchId)
                 msiMasterSeqMatch.setResultSetId(quantRsId)
