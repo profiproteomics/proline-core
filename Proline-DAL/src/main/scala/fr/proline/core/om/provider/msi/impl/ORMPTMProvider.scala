@@ -65,25 +65,12 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
   }
 
   def getPtmId(shortName: String): Option[Long] = {
+    val foundPtm = psPtmRepo.findPtmForShortName(psDbCtx.getEntityManager, shortName)
 
-    try {
-      val foundPtm = psDbCtx.getEntityManager.createQuery("FROM Ptm ptm WHERE ptm.shortName = :shortName", classOf[fr.proline.core.orm.ps.Ptm]).setParameter("shortName", shortName).getSingleResult
-
-      if (foundPtm == null) {
-        None
-      } else {
-        Some(foundPtm.getId)
-      }
-
-    } catch {
-
-      case pEx: PersistenceException => {
-        /* No full stacktrace here : just a Warning message */
-        logger.warn("Error while retrieving Ptm [" + shortName + "]  " + pEx)
-
-        None
-      }
-
+    if (foundPtm == null) {
+      None
+    } else {
+      Some(foundPtm.getId)
     }
 
   }
