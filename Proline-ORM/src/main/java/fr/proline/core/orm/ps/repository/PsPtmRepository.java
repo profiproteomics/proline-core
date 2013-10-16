@@ -98,11 +98,31 @@ public final class PsPtmRepository {
 
 	JPAUtils.checkEntityManager(psEm);
 
-	TypedQuery<PtmEvidence> query = psEm.createNamedQuery("findPtmEvidenceByPtmAndType",
+	if (type == null) {
+	    throw new IllegalArgumentException("Type is null");
+	}
+
+	PtmEvidence result = null;
+
+	final TypedQuery<PtmEvidence> query = psEm.createNamedQuery("findPtmEvidenceByPtmAndType",
 		PtmEvidence.class);
 	query.setParameter("ptm_id", Long.valueOf(ptmId));
-	query.setParameter("type", type.name());
-	return query.getSingleResult();
+	query.setParameter("type", type);
+
+	final List<PtmEvidence> ptmEvids = query.getResultList();
+
+	if ((ptmEvids != null) && !ptmEvids.isEmpty()) {
+
+	    if (ptmEvids.size() == 1) {
+		result = ptmEvids.get(0);
+	    } else {
+		throw new NonUniqueResultException(
+			"There are more than one PtmEvidence for given ptmId and type");
+	    }
+
+	}
+
+	return result;
     }
 
     /**
