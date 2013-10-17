@@ -40,7 +40,7 @@ public final class TestPgPeptidesPerf {
 
     private static final long VACUUM_THRESHOLD = 60 * 1000L; // 1 minute
 
-    private static final int LIMIT = 4000000;
+    private static final int LIMIT = 5000000;
 
     private static final int LINE_LENGTH = 256;
 

@@ -57,6 +57,7 @@ public final class DatasetRepository {
 	TypedQuery<Dataset> query = udsEm.createNamedQuery("findDatasetByNameAndProject", Dataset.class);
 	query.setParameter("id", Long.valueOf(projectId));
 	query.setParameter("name", name);
+	// WARN Throws NoResultException if there is no result
 	return query.getSingleResult();
     }
 
@@ -68,6 +69,7 @@ public final class DatasetRepository {
 	TypedQuery<Dataset> query = udsEm.createNamedQuery("findRootDatasetByNameAndProject", Dataset.class);
 	query.setParameter("id", Long.valueOf(projectId));
 	query.setParameter("name", name);
+	// WARN Throws NoResultException if there is no result
 	return query.getSingleResult();
     }
 

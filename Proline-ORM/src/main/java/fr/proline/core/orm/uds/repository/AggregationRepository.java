@@ -18,7 +18,7 @@ public final class AggregationRepository {
     
     final TypedQuery<Aggregation> query = udsEm.createNamedQuery("findAggregationByType", Aggregation.class);
     query.setParameter("child_nature", childNature);
-    
+    // WARN Throws NoResultException if there is no result
     return query.getSingleResult();
   }
   

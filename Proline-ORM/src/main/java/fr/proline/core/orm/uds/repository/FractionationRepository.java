@@ -18,7 +18,7 @@ public final class FractionationRepository {
     
     final TypedQuery<Fractionation> query = udsEm.createNamedQuery("findFractionationByType", Fractionation.class);
     query.setParameter("type", fractionationType);
-    
+    // WARN Throws NoResultException if there is no result
     return query.getSingleResult();
   }
   

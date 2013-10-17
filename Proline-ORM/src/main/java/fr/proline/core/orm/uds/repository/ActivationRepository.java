@@ -18,7 +18,7 @@ public final class ActivationRepository {
     
     final TypedQuery<Activation> query = udsEm.createNamedQuery("findActivationByType", Activation.class);
     query.setParameter("type", activationType);
-    
+    // WARN Throws NoResultException if there is no result
     return query.getSingleResult();
   }
   

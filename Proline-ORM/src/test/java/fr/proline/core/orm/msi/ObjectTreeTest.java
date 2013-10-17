@@ -44,7 +44,7 @@ public class ObjectTreeTest extends DatabaseTestCase {
 	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(3L));
 	    assertEquals(rs.getObjectTreeIdByName().size(), 2);
 	    assertEquals(rs.getObjectTreeIdByName().get("filters_history"), Long.valueOf(1L));
-	    assertEquals(rs.getObjectTreeIdByName().get("grouping_history"), Long.valueOf(2));
+	    assertEquals(rs.getObjectTreeIdByName().get("grouping_history"), Long.valueOf(2L));
 	} finally {
 
 	    if (msiEm != null) {
@@ -76,7 +76,7 @@ public class ObjectTreeTest extends DatabaseTestCase {
 	    msiEm.clear();
 	    rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
 	    assertEquals(rs.getObjectTreeIdByName().size(), 1);
-	    assertEquals(rs.getObjectTreeIdByName().get("filters_history"), Long.valueOf(1));
+	    assertEquals(rs.getObjectTreeIdByName().get("filters_history"), Long.valueOf(1L));
 	} finally {
 
 	    if (msiEm != null) {

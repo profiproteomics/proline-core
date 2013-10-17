@@ -19,6 +19,7 @@ public final class ProteinSetRepositorty {
 	TypedQuery<PeptideInstance> query = msiEm.createNamedQuery("findPepInstByPepMatch",
 		PeptideInstance.class);
 	query.setParameter("pmID", Long.valueOf(pepMatchID));
+	// WARN Throws NoResultException if there is no result
 	return query.getSingleResult();
     }
 
@@ -29,6 +30,7 @@ public final class ProteinSetRepositorty {
 	TypedQuery<PeptideInstance> query = msiEm.createNamedQuery("findPepInstForPeptideId",
 		PeptideInstance.class);
 	query.setParameter("pepID", Long.valueOf(pepID));
+	// WARN Throws NoResultException if there is no result
 	return query.getSingleResult();
     }
 

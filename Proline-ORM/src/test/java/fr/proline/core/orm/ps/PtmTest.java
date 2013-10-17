@@ -47,7 +47,7 @@ public class PtmTest extends DatabaseTestCase {
 	try {
 	    TypedQuery<Ptm> query = psEm.createQuery(
 		    "Select ptm from Ptm ptm where ptm.unimodId = :unimod_id", Ptm.class);
-	    query.setParameter("unimod_id", Long.valueOf(21));
+	    query.setParameter("unimod_id", Long.valueOf(21L));
 	    Ptm ptm = query.getSingleResult();
 	    assertEquals(ptm.getFullName(), "Phosphorylation");
 	    Set<PtmEvidence> evidences = ptm.getEvidences();
