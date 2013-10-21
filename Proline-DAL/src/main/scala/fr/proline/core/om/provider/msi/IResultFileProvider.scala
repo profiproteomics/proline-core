@@ -8,9 +8,9 @@ import fr.proline.core.om.model.msi.PtmDefinition
 
 trait IResultFileVerifier {
    // returns PtmDefinitions referenced by the specified file
-   def getPtmDefinitions(fileLocation: File): Seq[PtmDefinition]
+   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition]
    // can be used to verify that the provider handle this kind of file (ex: MSMS search, error tolerant search, n15 search, PMF, ...)  
-   def isValid(fileLocation: File) : Boolean
+   def isValid(fileLocation: File, importProperties: Map[String, Any]) : Boolean
 }
 
 trait IResultFileProvider {

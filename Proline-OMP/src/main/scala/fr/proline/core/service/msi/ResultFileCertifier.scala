@@ -10,7 +10,9 @@ import fr.proline.core.om.model.msi.PtmDefinition
 
 class ResultFileCertifier(
   executionContext: IExecutionContext,
-  resultIdentFilesByFormat: Map[String, Array[File]]) extends IService with Logging {
+  resultIdentFilesByFormat: Map[String, Array[File]],
+  importProperties: Map[String, Any]
+  ) extends IService with Logging {
 
   override protected def beforeInterruption = {
     // Release database connections
@@ -30,7 +32,8 @@ class ResultFileCertifier(
       var ptms = Set.empty[PtmDefinition]
 
       for (file <- files) {
-        val ptmDefs = verifier.getPtmDefinitions(file)
+        verifier.isValid(file, importProperties)
+        val ptmDefs = verifier.getPtmDefinitions(file, importProperties)
         for (p <- ptmDefs) {
           if (!ptms.exists(_.sameAs(p))) ptms += p
         }
