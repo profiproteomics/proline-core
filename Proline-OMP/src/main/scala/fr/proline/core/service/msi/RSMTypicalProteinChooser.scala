@@ -18,8 +18,8 @@ class RSMTypicalProteinChooser (
   resultSummaryId: Long,  
   ruleToApply : TypicalProteinChooserRule) extends IService with Logging {
 
-  require(execCtx.isJPA(), " Invalid connexion type for this service ")
-  require(resultSummaryId != null , " No ResultSummary specified ")
+  require(execCtx.isJPA(), "Invalid connexion type for this service")
+  require(resultSummaryId > 0L , "Invalid  ResultSummary Id specified")
   
   def runService(): Boolean = {
     
