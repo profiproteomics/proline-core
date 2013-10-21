@@ -440,7 +440,7 @@ spectral_counting, reporter_ion, feature, xic (mrm), mixed.</remarks>
    </folder>
   </table>
   <table id="TAB121" populated="true" UUID="e1f3f120-d06b-4cfe-96f0-0d1173e7badb" name="project" objectType="TABLE" physicalName="project" >
-   <remarks>A project contains multiple experiments relative to the same study or topic. Files associated with a project are stored in the repository in &quot;/root/project_${project_id}&quot;.</remarks>
+   <remarks>A project contains multiple experiments relative to the same study or topic. Files associated with a project are stored in the repository in &quot;/root/project_@{project_id}&quot;.</remarks>
    <folder id="FOLTAB1211" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL122" populated="true" UUID="2dce9619-c6d5-4e73-b86e-92f90eddf3e3" autoIncrement="true" autoIncrementSequenceName="project_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
