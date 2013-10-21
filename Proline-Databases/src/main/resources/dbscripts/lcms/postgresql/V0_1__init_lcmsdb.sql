@@ -246,6 +246,7 @@ CREATE TABLE public.run (
                 instrument_id BIGINT NOT NULL,
                 CONSTRAINT run_pk PRIMARY KEY (id)
 );
+COMMENT ON TABLE public.run IS 'TODO: rename to scan_sequence ?';
 
 
 CREATE TABLE public.run_map (
@@ -532,14 +533,14 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_map ADD CONSTRAINT map_native_map_fk
+ALTER TABLE public.run_map ADD CONSTRAINT map_run_map_fk
 FOREIGN KEY (id)
 REFERENCES public.map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT map_map_object_tree_map_fk
+ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT map_map_object_tree_mapping_fk
 FOREIGN KEY (map_id)
 REFERENCES public.map (id)
 ON DELETE CASCADE
@@ -560,56 +561,56 @@ ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT object_tree_schema_feature_object_tree_map_fk
+ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT object_tree_schema_feature_object_tree_mapping_fk
 FOREIGN KEY (schema_name)
 REFERENCES public.object_tree_schema (name)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT object_tree_schema_map_set_object_tree_map_fk
+ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT object_tree_schema_map_set_object_tree_mapping_fk
 FOREIGN KEY (schema_name)
 REFERENCES public.object_tree_schema (name)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT object_tree_schema_map_object_tree_map_fk
+ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT object_tree_schema_map_object_tree_mapping_fk
 FOREIGN KEY (schema_name)
 REFERENCES public.object_tree_schema (name)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT object_tree_map_set_object_tree_map_fk
+ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT object_tree_map_set_object_tree_mapping_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES public.object_tree (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT object_tree_map_object_tree_map_fk
+ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT object_tree_map_object_tree_mapping_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES public.object_tree (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT object_tree_feature_object_tree_map_fk
+ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT object_tree_feature_object_tree_mapping_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES public.object_tree (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_map ADD CONSTRAINT feature_fitting_model_native_map_fk
+ALTER TABLE public.run_map ADD CONSTRAINT feature_fitting_model_run_map_fk
 FOREIGN KEY (peakel_fitting_model_id)
 REFERENCES public.peakel_fitting_model (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_map ADD CONSTRAINT peak_picking_software_native_map_fk
+ALTER TABLE public.run_map ADD CONSTRAINT peak_picking_software_run_map_fk
 FOREIGN KEY (peak_picking_software_id)
 REFERENCES public.peak_picking_software (id)
 ON DELETE RESTRICT
@@ -630,7 +631,7 @@ ON DELETE SET NULL
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.map_set ADD CONSTRAINT reference_map_map_set_fk
+ALTER TABLE public.map_set ADD CONSTRAINT aln_reference_map_map_set_fk
 FOREIGN KEY (aln_reference_map_id)
 REFERENCES public.processed_map (id)
 ON DELETE RESTRICT
@@ -651,7 +652,7 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.map_layer ADD CONSTRAINT processed_map_experimental_condition_fk
+ALTER TABLE public.map_layer ADD CONSTRAINT processed_map_map_layer_fk
 FOREIGN KEY (processed_map_id)
 REFERENCES public.processed_map (id)
 ON DELETE NO ACTION
@@ -679,7 +680,7 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.processed_map_run_map_mapping ADD CONSTRAINT processed_map_processed_map_native_map_fk
+ALTER TABLE public.processed_map_run_map_mapping ADD CONSTRAINT processed_map_processed_map_run_map_mapping_fk
 FOREIGN KEY (processed_map_id)
 REFERENCES public.processed_map (id)
 ON DELETE CASCADE
@@ -707,14 +708,14 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT map_set_map_set_object_tree_map_fk
+ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT map_set_map_set_object_tree_mapping_fk
 FOREIGN KEY (map_set_id)
 REFERENCES public.map_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature ADD CONSTRAINT experimental_condition_feature_fk
+ALTER TABLE public.feature ADD CONSTRAINT map_layer_feature_fk
 FOREIGN KEY (map_layer_id)
 REFERENCES public.map_layer (id)
 ON DELETE NO ACTION
@@ -728,7 +729,7 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.theoretical_feature ADD CONSTRAINT experimental_condition_theoretical_feature_fk
+ALTER TABLE public.theoretical_feature ADD CONSTRAINT map_layer_theoretical_feature_fk
 FOREIGN KEY (map_layer_id)
 REFERENCES public.map_layer (id)
 ON DELETE NO ACTION
@@ -756,28 +757,28 @@ ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_map ADD CONSTRAINT run_native_map_fk
+ALTER TABLE public.run_map ADD CONSTRAINT run_run_map_fk
 FOREIGN KEY (run_id)
 REFERENCES public.run (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_ms2_event ADD CONSTRAINT native_map_feature_ms2_scan_fk
+ALTER TABLE public.feature_ms2_event ADD CONSTRAINT run_map_feature_ms2_scan_fk
 FOREIGN KEY (run_map_id)
 REFERENCES public.run_map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.processed_map_run_map_mapping ADD CONSTRAINT native_map_processed_map_native_map_fk
+ALTER TABLE public.processed_map_run_map_mapping ADD CONSTRAINT run_map_processed_map_run_map_mapping_fk
 FOREIGN KEY (run_map_id)
 REFERENCES public.run_map (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT native_map_feature_overlap_map_fk
+ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT run_map_feature_overlap_mapping_fk
 FOREIGN KEY (map_id)
 REFERENCES public.run_map (id)
 ON DELETE CASCADE
@@ -812,7 +813,7 @@ ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.processed_map_moz_calibration ADD CONSTRAINT scan_map_alignment_fk
+ALTER TABLE public.processed_map_moz_calibration ADD CONSTRAINT scan_processed_map_moz_calibration_fk
 FOREIGN KEY (scan_id)
 REFERENCES public.scan (id)
 ON DELETE RESTRICT
@@ -868,28 +869,28 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT feature_feature_object_tree_map_fk
+ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT feature_feature_object_tree_mapping_fk
 FOREIGN KEY (feature_id)
 REFERENCES public.feature (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT feature_feature_overlap_map_1_fk
+ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT overlapping_feature_feature_overlap_mappping_fk
 FOREIGN KEY (overlapping_feature_id)
 REFERENCES public.feature (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT feature_feature_overlap_map_2_fk
+ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT overlapped_feature_feature_overlap_mappping_fk
 FOREIGN KEY (overlapped_feature_id)
 REFERENCES public.feature (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.compound ADD CONSTRAINT feature_compound_fk
+ALTER TABLE public.compound ADD CONSTRAINT best_feature_compound_fk
 FOREIGN KEY (best_feature_id)
 REFERENCES public.feature (id)
 ON DELETE NO ACTION

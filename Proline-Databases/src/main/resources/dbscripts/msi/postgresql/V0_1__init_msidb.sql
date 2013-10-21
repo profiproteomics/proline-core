@@ -2,7 +2,7 @@
 CREATE SEQUENCE public.scoring_id_seq;
 
 CREATE TABLE public.scoring (
-                id INTEGER NOT NULL DEFAULT nextval('public.scoring_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.scoring_id_seq'),
                 search_engine VARCHAR(100) NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 description VARCHAR(1000),
@@ -18,7 +18,7 @@ ALTER SEQUENCE public.scoring_id_seq OWNED BY public.scoring.id;
 
 CREATE TABLE public.cache (
                 scope VARCHAR(250) NOT NULL,
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 format VARCHAR(50) NOT NULL,
                 byte_order INTEGER NOT NULL,
                 data BYTEA NOT NULL,
@@ -36,7 +36,7 @@ CREATE INDEX cache_scope_idx
  ( scope );
 
 CREATE TABLE public.peaklist_software (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 version VARCHAR(100),
                 serialized_properties TEXT,
@@ -48,7 +48,7 @@ COMMENT ON COLUMN public.peaklist_software.serialized_properties IS 'A JSON stri
 
 
 CREATE TABLE public.instrument_config (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 ms1_analyzer VARCHAR(100) NOT NULL,
                 msn_analyzer VARCHAR(100),
@@ -62,7 +62,7 @@ COMMENT ON COLUMN public.instrument_config.name IS 'MUST BE UNIQUE';
 CREATE SEQUENCE public.seq_database_id_seq;
 
 CREATE TABLE public.seq_database (
-                id INTEGER NOT NULL DEFAULT nextval('public.seq_database_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.seq_database_id_seq'),
                 name VARCHAR(100) NOT NULL,
                 fasta_file_path VARCHAR(500) NOT NULL,
                 version VARCHAR(100),
@@ -82,7 +82,7 @@ COMMENT ON COLUMN public.seq_database.sequence_count IS 'The number of sequences
 ALTER SEQUENCE public.seq_database_id_seq OWNED BY public.seq_database.id;
 
 CREATE TABLE public.ptm_specificity (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 location VARCHAR(14) NOT NULL,
                 residue CHAR(1),
                 serialized_properties TEXT,
@@ -94,7 +94,7 @@ COMMENT ON COLUMN public.ptm_specificity.residue IS 'The symbol of the specific 
 
 
 CREATE TABLE public.peptide (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 sequence TEXT NOT NULL,
                 ptm_string TEXT,
                 calculated_mass DOUBLE PRECISION NOT NULL,
@@ -109,9 +109,9 @@ COMMENT ON COLUMN public.peptide.calculated_mass IS 'The theoretical mass of the
 COMMENT ON COLUMN public.peptide.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-CREATE INDEX peptide_seq_idx
+CREATE UNIQUE INDEX peptide_seq_ptm_idx
  ON public.peptide
- ( sequence );
+ ( sequence, ptm_string );
 
 CREATE INDEX peptide_mass_idx
  ON public.peptide
@@ -120,7 +120,7 @@ CREATE INDEX peptide_mass_idx
 CREATE SEQUENCE public.search_settings_id_seq;
 
 CREATE TABLE public.search_settings (
-                id INTEGER NOT NULL DEFAULT nextval('public.search_settings_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.search_settings_id_seq'),
                 software_name VARCHAR(1000),
                 software_version VARCHAR(1000),
                 taxonomy VARCHAR(1000),
@@ -131,7 +131,7 @@ CREATE TABLE public.search_settings (
                 quantitation VARCHAR(100),
                 is_decoy BOOLEAN NOT NULL,
                 serialized_properties TEXT,
-                instrument_config_id INTEGER NOT NULL,
+                instrument_config_id BIGINT NOT NULL,
                 CONSTRAINT search_settings_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.search_settings IS 'The settings used in a given MSI search';
@@ -141,8 +141,8 @@ COMMENT ON COLUMN public.search_settings.serialized_properties IS 'A JSON string
 ALTER SEQUENCE public.search_settings_id_seq OWNED BY public.search_settings.id;
 
 CREATE TABLE public.search_settings_seq_database_map (
-                search_settings_id INTEGER NOT NULL,
-                seq_database_id INTEGER NOT NULL,
+                search_settings_id BIGINT NOT NULL,
+                seq_database_id BIGINT NOT NULL,
                 searched_sequences_count INTEGER NOT NULL,
                 serialized_properties TEXT,
                 CONSTRAINT search_settings_seq_database_map_pk PRIMARY KEY (search_settings_id, seq_database_id)
@@ -150,8 +150,8 @@ CREATE TABLE public.search_settings_seq_database_map (
 
 
 CREATE TABLE public.bio_sequence (
-                id INTEGER NOT NULL,
-                alphabet CHAR(3) NOT NULL,
+                id BIGINT NOT NULL,
+                alphabet VARCHAR(3) NOT NULL,
                 sequence TEXT NOT NULL,
                 length INTEGER NOT NULL,
                 mass DOUBLE PRECISION NOT NULL,
@@ -176,33 +176,37 @@ CREATE INDEX bio_sequence_crc_idx
 
 CREATE TABLE public.object_tree_schema (
                 name VARCHAR(1000) NOT NULL,
-                type VARCHAR(10) NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                is_binary_mode BOOLEAN NOT NULL,
                 version VARCHAR(100) NOT NULL,
                 schema TEXT NOT NULL,
                 description VARCHAR(1000),
                 serialized_properties TEXT,
                 CONSTRAINT object_tree_schema_pk PRIMARY KEY (name)
 );
-COMMENT ON COLUMN public.object_tree_schema.type IS 'XSD or JSON';
+COMMENT ON COLUMN public.object_tree_schema.type IS 'XSD or JSON or MessagePack';
+COMMENT ON COLUMN public.object_tree_schema.is_binary_mode IS 'Specifies if mode of the data encoding which could be binary based or string based (XML or JSON). If binary mode is used the data must be stored in the blob_data field, else in the clob_data field.';
 COMMENT ON COLUMN public.object_tree_schema.schema IS 'The document describing the schema used for the serialization of the object_tree.';
 
 
 CREATE SEQUENCE public.object_tree_id_seq;
 
 CREATE TABLE public.object_tree (
-                id INTEGER NOT NULL DEFAULT nextval('public.object_tree_id_seq'),
-                serialized_data TEXT NOT NULL,
+                id BIGINT NOT NULL DEFAULT nextval('public.object_tree_id_seq'),
+                blob_data BYTEA,
+                clob_data TEXT,
                 serialized_properties TEXT,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT object_tree_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.object_tree.serialized_data IS 'A object tree serialized in a string using a given format (XML or JSON).';
+COMMENT ON COLUMN public.object_tree.blob_data IS 'An object tree serialized as bytes using a given binary serialization framework.';
+COMMENT ON COLUMN public.object_tree.clob_data IS 'An object tree serialized in a string of a given format (XML or JSON).';
 
 
 ALTER SEQUENCE public.object_tree_id_seq OWNED BY public.object_tree.id;
 
 CREATE TABLE public.msms_search (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 fragment_charge_states VARCHAR(100),
                 fragment_mass_error_tolerance DOUBLE PRECISION NOT NULL,
                 fragment_mass_error_tolerance_unit VARCHAR(3) NOT NULL,
@@ -212,7 +216,7 @@ COMMENT ON TABLE public.msms_search IS 'rename to ms2_search_settings ?';
 
 
 CREATE TABLE public.ion_search (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 max_protein_mass DOUBLE PRECISION,
                 min_protein_mass DOUBLE PRECISION,
                 protein_pi REAL,
@@ -224,14 +228,14 @@ COMMENT ON TABLE public.ion_search IS 'rename to pmf_search_settings ?';
 CREATE SEQUENCE public.peaklist_id_seq;
 
 CREATE TABLE public.peaklist (
-                id INTEGER NOT NULL DEFAULT nextval('public.peaklist_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.peaklist_id_seq'),
                 type VARCHAR(100),
                 path VARCHAR(1000),
                 raw_file_name VARCHAR(250),
                 ms_level INTEGER NOT NULL,
                 spectrum_data_compression VARCHAR(20) NOT NULL,
                 serialized_properties TEXT,
-                peaklist_software_id INTEGER NOT NULL,
+                peaklist_software_id BIGINT NOT NULL,
                 CONSTRAINT peaklist_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.peaklist IS 'A peaklist can be a merge of several peaklists';
@@ -245,8 +249,8 @@ COMMENT ON COLUMN public.peaklist.serialized_properties IS 'A JSON string which 
 ALTER SEQUENCE public.peaklist_id_seq OWNED BY public.peaklist.id;
 
 CREATE TABLE public.peaklist_relation (
-                parent_peaklist_id INTEGER NOT NULL,
-                child_peaklist_id INTEGER NOT NULL,
+                parent_peaklist_id BIGINT NOT NULL,
+                child_peaklist_id BIGINT NOT NULL,
                 CONSTRAINT peaklist_relation_pk PRIMARY KEY (parent_peaklist_id, child_peaklist_id)
 );
 
@@ -254,7 +258,7 @@ CREATE TABLE public.peaklist_relation (
 CREATE SEQUENCE public.spectrum_id_seq;
 
 CREATE TABLE public.spectrum (
-                id INTEGER NOT NULL DEFAULT nextval('public.spectrum_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.spectrum_id_seq'),
                 title VARCHAR(1024) NOT NULL,
                 precursor_moz DOUBLE PRECISION,
                 precursor_intensity REAL,
@@ -270,8 +274,8 @@ CREATE TABLE public.spectrum (
                 intensity_list BYTEA,
                 peak_count INTEGER NOT NULL,
                 serialized_properties TEXT,
-                peaklist_id INTEGER NOT NULL,
-                instrument_config_id INTEGER NOT NULL,
+                peaklist_id BIGINT NOT NULL,
+                instrument_config_id BIGINT NOT NULL,
                 CONSTRAINT spectrum_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.spectrum IS 'The fragmentation spectrum submitted to the search engine. It can be a merge of multiple ms2 spectra. Time and scan values correspond then to the first and the last spectrum of the merge. In PMF studies only precursor attributes are used.';
@@ -295,15 +299,15 @@ CLUSTER spectrum_pkl_idx ON spectrum;
 CREATE SEQUENCE public.consensus_spectrum_id_seq;
 
 CREATE TABLE public.consensus_spectrum (
-                id INTEGER NOT NULL DEFAULT nextval('public.consensus_spectrum_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.consensus_spectrum_id_seq'),
                 precursor_charge INTEGER NOT NULL,
                 precursor_calculated_moz DOUBLE PRECISION NOT NULL,
                 normalized_elution_time REAL,
                 is_artificial BOOLEAN NOT NULL,
                 creation_mode VARCHAR(10) NOT NULL,
                 serialized_properties TEXT,
-                spectrum_id INTEGER NOT NULL,
-                peptide_id INTEGER NOT NULL,
+                spectrum_id BIGINT NOT NULL,
+                peptide_id BIGINT NOT NULL,
                 CONSTRAINT consensus_spectrum_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.consensus_spectrum.precursor_calculated_moz IS 'may be usefull for a library search engine';
@@ -315,32 +319,32 @@ COMMENT ON COLUMN public.consensus_spectrum.serialized_properties IS 'A JSON str
 ALTER SEQUENCE public.consensus_spectrum_id_seq OWNED BY public.consensus_spectrum.id;
 
 CREATE TABLE public.used_ptm (
-                search_settings_id INTEGER NOT NULL,
-                ptm_specificity_id INTEGER NOT NULL,
+                search_settings_id BIGINT NOT NULL,
+                ptm_specificity_id BIGINT NOT NULL,
                 short_name VARCHAR(100) NOT NULL,
                 is_fixed BOOLEAN NOT NULL,
-                type VARCHAR(50),
                 CONSTRAINT used_ptm_pk PRIMARY KEY (search_settings_id, ptm_specificity_id)
 );
-COMMENT ON COLUMN public.used_ptm.type IS 'TODO: remove ???';
 
 
 CREATE TABLE public.enzyme (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 cleavage_regexp VARCHAR(50),
                 is_independant BOOLEAN NOT NULL,
                 is_semi_specific BOOLEAN NOT NULL,
+                serialized_properties TEXT,
                 CONSTRAINT enzyme_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.enzyme.id IS 'IDs are generated using the UDSdb.';
 COMMENT ON COLUMN public.enzyme.name IS 'MUST BE UNIQUE';
 COMMENT ON COLUMN public.enzyme.cleavage_regexp IS 'The regular expression used to find cleavage site';
+COMMENT ON COLUMN public.enzyme.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
 CREATE TABLE public.used_enzyme (
-                search_settings_id INTEGER NOT NULL,
-                enzyme_id INTEGER NOT NULL,
+                search_settings_id BIGINT NOT NULL,
+                enzyme_id BIGINT NOT NULL,
                 CONSTRAINT used_enzyme_pk PRIMARY KEY (search_settings_id, enzyme_id)
 );
 
@@ -348,7 +352,7 @@ CREATE TABLE public.used_enzyme (
 CREATE SEQUENCE public.msi_search_id_seq;
 
 CREATE TABLE public.msi_search (
-                id INTEGER NOT NULL DEFAULT nextval('public.msi_search_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.msi_search_id_seq'),
                 title VARCHAR(1000),
                 date TIMESTAMP,
                 result_file_name VARCHAR(256) NOT NULL,
@@ -360,8 +364,8 @@ CREATE TABLE public.msi_search (
                 submitted_queries_count INTEGER NOT NULL,
                 searched_sequences_count INTEGER,
                 serialized_properties TEXT,
-                search_settings_id INTEGER NOT NULL,
-                peaklist_id INTEGER NOT NULL,
+                search_settings_id BIGINT NOT NULL,
+                peaklist_id BIGINT NOT NULL,
                 CONSTRAINT msi_search_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.msi_search IS 'An identification search performed with a search engine such as Mascot. Contains  the description of the identification search.';
@@ -377,8 +381,8 @@ COMMENT ON COLUMN public.msi_search.serialized_properties IS 'A JSON string whic
 ALTER SEQUENCE public.msi_search_id_seq OWNED BY public.msi_search.id;
 
 CREATE TABLE public.msi_search_object_tree_map (
-                msi_search_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
+                msi_search_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT msi_search_object_tree_map_pk PRIMARY KEY (msi_search_id, object_tree_id)
 );
@@ -388,13 +392,13 @@ COMMENT ON TABLE public.msi_search_object_tree_map IS 'UNIQUE(msi_search_id, sch
 CREATE SEQUENCE public.ms_query_id_seq;
 
 CREATE TABLE public.ms_query (
-                id INTEGER NOT NULL DEFAULT nextval('public.ms_query_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.ms_query_id_seq'),
                 initial_id INTEGER NOT NULL,
                 charge INTEGER NOT NULL,
                 moz DOUBLE PRECISION NOT NULL,
                 serialized_properties TEXT,
-                spectrum_id INTEGER,
-                msi_search_id INTEGER NOT NULL,
+                spectrum_id BIGINT,
+                msi_search_id BIGINT NOT NULL,
                 CONSTRAINT ms_query_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.ms_query IS 'One of the queries submitted to the search engine. A query represents a spectrum contained in the submitted peaklist. Search engines such as MASCOT usually identify each spectrum with it''s own id and generates a description from some properties of the original spectrum. This table is where these id and description are stored.';
@@ -413,46 +417,68 @@ CLUSTER ms_query_search_idx ON ms_query;
 CREATE SEQUENCE public.result_set_id_seq;
 
 CREATE TABLE public.result_set (
-                id INTEGER NOT NULL DEFAULT nextval('public.result_set_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.result_set_id_seq'),
                 name VARCHAR(1000),
                 description VARCHAR(10000),
                 type VARCHAR(50) NOT NULL,
+                creation_log TEXT,
                 modification_timestamp TIMESTAMP NOT NULL,
                 serialized_properties TEXT,
-                decoy_result_set_id INTEGER,
-                msi_search_id INTEGER,
+                decoy_result_set_id BIGINT,
+                msi_search_id BIGINT,
                 CONSTRAINT result_set_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.result_set IS 'A result_set may correspond to results coming from a single result file (one msi_search ) or from multiple result files (result set can be organized hierarchically). The table result_set_relation is used to define the hierarchy between a grouped  result_set and its children. Peptide matches, sequences matches and protein matches are associated to a result set. The type of result_set defines if it corresponds to a native data file or to a result_set created by the user (i.e. result grouping, quantitation...).';
 COMMENT ON COLUMN public.result_set.name IS 'The name of the result set';
 COMMENT ON COLUMN public.result_set.description IS 'The description of the content';
 COMMENT ON COLUMN public.result_set.type IS 'SEARCH for result set representing a unique search, DECOY_SEARCH for result set representing a unique decoy search or USER for user defined result set.';
+COMMENT ON COLUMN public.result_set.creation_log IS 'The creation log can be used to store some user relevant information related to the creation of the result set.';
 COMMENT ON COLUMN public.result_set.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
 ALTER SEQUENCE public.result_set_id_seq OWNED BY public.result_set.id;
 
+CREATE SEQUENCE public.peptide_readable_ptm_string_id_seq;
+
+CREATE TABLE public.peptide_readable_ptm_string (
+                id BIGINT NOT NULL DEFAULT nextval('public.peptide_readable_ptm_string_id_seq'),
+                readable_ptm_string VARCHAR NOT NULL,
+                peptide_id BIGINT NOT NULL,
+                result_set_id BIGINT NOT NULL,
+                CONSTRAINT id PRIMARY KEY (id)
+);
+COMMENT ON COLUMN public.peptide_readable_ptm_string.readable_ptm_string IS 'Human-readable PTM string.';
+
+
+ALTER SEQUENCE public.peptide_readable_ptm_string_id_seq OWNED BY public.peptide_readable_ptm_string.id;
+
+CREATE UNIQUE INDEX peptide_id_result_set_id_idx
+ ON public.peptide_readable_ptm_string
+ ( peptide_id, result_set_id );
+
 CREATE SEQUENCE public.result_summary_id_seq;
 
 CREATE TABLE public.result_summary (
-                id INTEGER NOT NULL DEFAULT nextval('public.result_summary_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.result_summary_id_seq'),
                 description VARCHAR(10000),
+                creation_log TEXT,
                 modification_timestamp TIMESTAMP NOT NULL,
                 is_quantified BOOLEAN,
                 serialized_properties TEXT,
-                decoy_result_summary_id INTEGER,
-                result_set_id INTEGER NOT NULL,
+                decoy_result_summary_id BIGINT,
+                result_set_id BIGINT NOT NULL,
                 CONSTRAINT result_summary_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.result_summary.description IS 'A user description for this result summary.';
+COMMENT ON COLUMN public.result_summary.creation_log IS 'The creation log can be used to store some user relevant information related to the creation of the result summary.';
 COMMENT ON COLUMN public.result_summary.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
 ALTER SEQUENCE public.result_summary_id_seq OWNED BY public.result_summary.id;
 
 CREATE TABLE public.result_summary_object_tree_map (
-                result_summary_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
+                result_summary_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT result_summary_object_tree_map_pk PRIMARY KEY (result_summary_id, object_tree_id)
 );
@@ -460,8 +486,8 @@ COMMENT ON TABLE public.result_summary_object_tree_map IS 'UNIQUE(result_summary
 
 
 CREATE TABLE public.result_summary_relation (
-                parent_result_summary_id INTEGER NOT NULL,
-                child_result_summary_id INTEGER NOT NULL,
+                parent_result_summary_id BIGINT NOT NULL,
+                child_result_summary_id BIGINT NOT NULL,
                 CONSTRAINT result_summary_relation_pk PRIMARY KEY (parent_result_summary_id, child_result_summary_id)
 );
 
@@ -469,12 +495,12 @@ CREATE TABLE public.result_summary_relation (
 CREATE SEQUENCE public.master_quant_component_id_seq;
 
 CREATE TABLE public.master_quant_component (
-                id INTEGER NOT NULL DEFAULT nextval('public.master_quant_component_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.master_quant_component_id_seq'),
                 selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
-                object_tree_id INTEGER NOT NULL,
+                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                result_summary_id INTEGER NOT NULL,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT master_quant_component_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.master_quant_component IS 'A master group of quantitation components. Can be related to many items (ms_query, peptide_ion, protein_set) which could be quantified.';
@@ -492,15 +518,15 @@ CREATE INDEX master_quant_component_rsm_idx
 CLUSTER master_quant_component_rsm_idx ON master_quant_component;
 
 CREATE TABLE public.result_set_relation (
-                parent_result_set_id INTEGER NOT NULL,
-                child_result_set_id INTEGER NOT NULL,
+                parent_result_set_id BIGINT NOT NULL,
+                child_result_set_id BIGINT NOT NULL,
                 CONSTRAINT result_set_relation_pk PRIMARY KEY (parent_result_set_id, child_result_set_id)
 );
 
 
 CREATE TABLE public.result_set_object_tree_map (
-                result_set_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
+                result_set_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT result_set_object_tree_map_pk PRIMARY KEY (result_set_id, object_tree_id)
 );
@@ -510,7 +536,7 @@ COMMENT ON TABLE public.result_set_object_tree_map IS 'UNIQUE(result_set_id, sch
 CREATE SEQUENCE public.protein_match_id_seq;
 
 CREATE TABLE public.protein_match (
-                id INTEGER NOT NULL DEFAULT nextval('public.protein_match_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.protein_match_id_seq'),
                 accession VARCHAR(100) NOT NULL,
                 description VARCHAR(10000),
                 gene_name VARCHAR(100),
@@ -521,10 +547,10 @@ CREATE TABLE public.protein_match (
                 is_decoy BOOLEAN NOT NULL,
                 is_last_bio_sequence BOOLEAN NOT NULL,
                 serialized_properties TEXT,
-                taxon_id INTEGER,
-                bio_sequence_id INTEGER,
-                scoring_id INTEGER NOT NULL,
-                result_set_id INTEGER NOT NULL,
+                taxon_id BIGINT,
+                bio_sequence_id BIGINT,
+                scoring_id BIGINT NOT NULL,
+                result_set_id BIGINT NOT NULL,
                 CONSTRAINT protein_match_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.protein_match IS 'A protein sequence which has been matched by one or more peptide matches.
@@ -558,9 +584,9 @@ CREATE INDEX protein_match_rs_idx
 CLUSTER protein_match_rs_idx ON protein_match;
 
 CREATE TABLE public.protein_match_seq_database_map (
-                protein_match_id INTEGER NOT NULL,
-                seq_database_id INTEGER NOT NULL,
-                result_set_id INTEGER NOT NULL,
+                protein_match_id BIGINT NOT NULL,
+                seq_database_id BIGINT NOT NULL,
+                result_set_id BIGINT NOT NULL,
                 CONSTRAINT protein_match_seq_database_map_pk PRIMARY KEY (protein_match_id, seq_database_id)
 );
 
@@ -574,20 +600,22 @@ CLUSTER prot_match_seq_db_map_rs_idx ON protein_match_seq_database_map;
 CREATE SEQUENCE public.protein_set_id_seq;
 
 CREATE TABLE public.protein_set (
-                id INTEGER NOT NULL DEFAULT nextval('public.protein_set_id_seq'),
-                score REAL,
+                id BIGINT NOT NULL DEFAULT nextval('public.protein_set_id_seq'),
                 is_validated BOOLEAN NOT NULL,
                 selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
-                typical_protein_match_id INTEGER NOT NULL,
-                scoring_id INTEGER NOT NULL,
-                master_quant_component_id INTEGER,
-                result_summary_id INTEGER NOT NULL,
+                typical_protein_match_id BIGINT NOT NULL,
+                master_quant_component_id BIGINT,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT protein_set_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.protein_set IS 'Identifies a set of one or more proteins. Enable : - the annotation of this set of proteins, - the grouping of multiple protein sets. A protein set can be defined as a cluster of other protein sets0 In this case it is not linked to a peptide_set but must have mappings to protein_matches.';
 COMMENT ON COLUMN public.protein_set.is_validated IS 'The validation status of the protein set.';
-COMMENT ON COLUMN public.protein_set.selection_level IS 'An integer coding for the selection of this protein set:  0 = manual deselection 1 = automatic deselection 2 = automatic selection 4 = manual selection';
+COMMENT ON COLUMN public.protein_set.selection_level IS 'An integer coding for the selection of this protein set:
+0 = manual deselection
+1 = automatic deselection
+2 = automatic selection
+3 = manual selection';
 COMMENT ON COLUMN public.protein_set.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.protein_set.typical_protein_match_id IS 'Specifies the id of the protein match which is the most typical (i.e. representative) of the protein set.';
 COMMENT ON COLUMN public.protein_set.result_summary_id IS 'Used for indexation by result summary';
@@ -601,31 +629,9 @@ CREATE INDEX protein_set_rsm_idx
 
 CLUSTER protein_set_rsm_idx ON protein_set;
 
-CREATE SEQUENCE public.protein_set_cluster_id_seq;
-
-CREATE TABLE public.protein_set_cluster (
-                id INTEGER NOT NULL DEFAULT nextval('public.protein_set_cluster_id_seq'),
-                serialized_properties TEXT,
-                best_protein_set_id INTEGER NOT NULL,
-                result_summary_id INTEGER NOT NULL,
-                CONSTRAINT protein_set_cluster_pk PRIMARY KEY (id)
-);
-COMMENT ON TABLE public.protein_set_cluster IS 'TODO: is this really needed ? It maybe only needed in a document.protein_list context';
-
-
-ALTER SEQUENCE public.protein_set_cluster_id_seq OWNED BY public.protein_set_cluster.id;
-
-CREATE TABLE public.protein_set_cluster_item (
-                protein_set_cluster_id INTEGER NOT NULL,
-                protein_set_id INTEGER NOT NULL,
-                result_summary_id INTEGER NOT NULL,
-                CONSTRAINT protein_set_cluster_item_pk PRIMARY KEY (protein_set_cluster_id, protein_set_id)
-);
-
-
 CREATE TABLE public.protein_set_object_tree_map (
-                protein_set_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
+                protein_set_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT protein_set_object_tree_map_pk PRIMARY KEY (protein_set_id, object_tree_id)
 );
@@ -633,10 +639,10 @@ COMMENT ON TABLE public.protein_set_object_tree_map IS 'UNIQUE(protein_set_id, s
 
 
 CREATE TABLE public.protein_set_protein_match_item (
-                protein_set_id INTEGER NOT NULL,
-                protein_match_id INTEGER NOT NULL,
+                protein_set_id BIGINT NOT NULL,
+                protein_match_id BIGINT NOT NULL,
                 serialized_properties TEXT,
-                result_summary_id INTEGER NOT NULL,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT protein_set_protein_match_item_pk PRIMARY KEY (protein_set_id, protein_match_id)
 );
 COMMENT ON TABLE public.protein_set_protein_match_item IS 'Explicits the relations between protein matches and protein sets.';
@@ -650,16 +656,16 @@ CREATE INDEX prot_set_prot_match_item_rsm_idx
 
 CLUSTER prot_set_prot_match_item_rsm_idx ON protein_set_protein_match_item;
 
-CREATE SEQUENCE public.peptide_set_id_seq;
-
 CREATE TABLE public.peptide_set (
-                id INTEGER NOT NULL DEFAULT nextval('public.peptide_set_id_seq'),
+                id BIGINT NOT NULL,
                 is_subset BOOLEAN,
+                score REAL NOT NULL,
                 peptide_count INTEGER,
                 peptide_match_count INTEGER,
                 serialized_properties TEXT,
-                protein_set_id INTEGER,
-                result_summary_id INTEGER NOT NULL,
+                protein_set_id BIGINT,
+                scoring_id BIGINT NOT NULL,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT peptide_set_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.peptide_set IS 'Identifies a set of peptides belonging to one or more proteins.';
@@ -670,8 +676,6 @@ COMMENT ON COLUMN public.peptide_set.serialized_properties IS 'A JSON string whi
 COMMENT ON COLUMN public.peptide_set.result_summary_id IS 'Used for indexation by result summary';
 
 
-ALTER SEQUENCE public.peptide_set_id_seq OWNED BY public.peptide_set.id;
-
 CREATE INDEX peptide_set_rsm_idx
  ON public.peptide_set
  ( result_summary_id ASC );
@@ -679,9 +683,9 @@ CREATE INDEX peptide_set_rsm_idx
 CLUSTER peptide_set_rsm_idx ON peptide_set;
 
 CREATE TABLE public.peptide_set_protein_match_map (
-                peptide_set_id INTEGER NOT NULL,
-                protein_match_id INTEGER NOT NULL,
-                result_summary_id INTEGER NOT NULL,
+                peptide_set_id BIGINT NOT NULL,
+                protein_match_id BIGINT NOT NULL,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT peptide_set_protein_match_map_pk PRIMARY KEY (peptide_set_id, protein_match_id)
 );
 COMMENT ON TABLE public.peptide_set_protein_match_map IS 'Explicits the relations between protein sequence matches and peptide sets.';
@@ -695,10 +699,10 @@ CREATE INDEX pep_set_prot_match_map_rsm_idx
 CLUSTER pep_set_prot_match_map_rsm_idx ON peptide_set_protein_match_map;
 
 CREATE TABLE public.peptide_set_relation (
-                peptide_overset_id INTEGER NOT NULL,
-                peptide_subset_id INTEGER NOT NULL,
+                peptide_overset_id BIGINT NOT NULL,
+                peptide_subset_id BIGINT NOT NULL,
                 is_strict_subset BOOLEAN NOT NULL,
-                result_summary_id INTEGER NOT NULL,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT peptide_set_relation_pk PRIMARY KEY (peptide_overset_id, peptide_subset_id)
 );
 COMMENT ON TABLE public.peptide_set_relation IS 'Defines the relation between a peptide overset and a peptide subset.';
@@ -715,7 +719,7 @@ CLUSTER peptide_set_relation_rsm_idx ON peptide_set_relation;
 CREATE SEQUENCE public.peptide_match_id_seq;
 
 CREATE TABLE public.peptide_match (
-                id INTEGER NOT NULL DEFAULT nextval('public.peptide_match_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.peptide_match_id_seq'),
                 charge INTEGER NOT NULL,
                 experimental_moz DOUBLE PRECISION NOT NULL,
                 score REAL,
@@ -725,11 +729,11 @@ CREATE TABLE public.peptide_match (
                 fragment_match_count INTEGER,
                 is_decoy BOOLEAN NOT NULL,
                 serialized_properties TEXT,
-                peptide_id INTEGER NOT NULL,
-                ms_query_id INTEGER NOT NULL,
-                best_child_id INTEGER,
-                scoring_id INTEGER NOT NULL,
-                result_set_id INTEGER NOT NULL,
+                peptide_id BIGINT NOT NULL,
+                ms_query_id BIGINT NOT NULL,
+                best_child_id BIGINT,
+                scoring_id BIGINT NOT NULL,
+                result_set_id BIGINT NOT NULL,
                 CONSTRAINT peptide_match_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.peptide_match IS 'A peptide match is an amino acid (AA) sequence identified from a MS query. A peptide match can be an AA sequence that potentially match a fragmentation spectrum (called observed peptide match, cause they are experimentally "observed" through their fragmentation spectrum) or a group of observed peptide matches sharing the same caracteristics. In this later case, the observed peptide matches are called child peptide matches. Note: this constraint should be added => UNIQUE(peptide_id, ms_query_id, result_set_id)';
@@ -763,29 +767,35 @@ CLUSTER peptide_match_rs_idx ON peptide_match;
 CREATE SEQUENCE public.peptide_instance_id_seq;
 
 CREATE TABLE public.peptide_instance (
-                id INTEGER NOT NULL DEFAULT nextval('public.peptide_instance_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.peptide_instance_id_seq'),
                 peptide_match_count INTEGER NOT NULL,
                 protein_match_count INTEGER NOT NULL,
                 protein_set_count INTEGER NOT NULL,
-                total_leaves_match_count INTEGER NOT NULL,
+                validated_protein_set_count INTEGER NOT NULL,
+                total_leaves_match_count INTEGER DEFAULT 0 NOT NULL,
                 selection_level INTEGER NOT NULL,
                 elution_time REAL,
                 serialized_properties TEXT,
-                best_peptide_match_id INTEGER NOT NULL,
-                peptide_id INTEGER NOT NULL,
-                unmodified_peptide_id INTEGER,
-                master_quant_component_id INTEGER,
-                result_summary_id INTEGER NOT NULL,
+                best_peptide_match_id BIGINT NOT NULL,
+                peptide_id BIGINT NOT NULL,
+                unmodified_peptide_id BIGINT,
+                master_quant_component_id BIGINT,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT peptide_instance_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.peptide_instance IS 'Table to list all the distinct peptide_match. A peptide instance can be considered as a unique peptide identification related to a given result set.';
 COMMENT ON COLUMN public.peptide_instance.peptide_match_count IS 'The number of peptide matches related to the same peptide instance.';
 COMMENT ON COLUMN public.peptide_instance.protein_match_count IS 'The number of protein matches containaning an AA sequence corresponding to this peptide instance. Note: a peptide could be considered as proteotypic if this number equals 1.';
 COMMENT ON COLUMN public.peptide_instance.protein_set_count IS 'The number of protein sets related to this peptide instance.';
-COMMENT ON COLUMN public.peptide_instance.total_leaves_match_count IS 'The number of leave peptide matches related to this peptide instance. This value correspond is Spectral Count';
-COMMENT ON COLUMN public.peptide_instance.selection_level IS 'An integer coding for the selection of this peptide instance : 0 = manual deselection 1 = automatic deselection 2 = automatic selection 4 = manual selection';
+COMMENT ON COLUMN public.peptide_instance.validated_protein_set_count IS 'The number of validated protein sets related to this peptide instance.';
+COMMENT ON COLUMN public.peptide_instance.total_leaves_match_count IS 'The total number of leaves peptide matches related to this peptide instance. This value correspond to Spectral Count.';
+COMMENT ON COLUMN public.peptide_instance.selection_level IS 'An integer coding for the selection of this peptide instance :
+0 = manual deselection
+1 = automatic deselection
+2 = automatic selection
+3 = manual selection';
 COMMENT ON COLUMN public.peptide_instance.elution_time IS 'A value representing an elution time property of the peptide instance. Elution time is expressed is seconds.';
-COMMENT ON COLUMN public.peptide_instance.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details). TODO: store is_proteotypic';
+COMMENT ON COLUMN public.peptide_instance.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.peptide_instance.result_summary_id IS 'Used for indexation by result summary';
 
 
@@ -798,16 +808,20 @@ CREATE INDEX peptide_instance_rsm_idx
 CLUSTER peptide_instance_rsm_idx ON peptide_instance;
 
 CREATE TABLE public.peptide_set_peptide_instance_item (
-                peptide_set_id INTEGER NOT NULL,
-                peptide_instance_id INTEGER NOT NULL,
+                peptide_set_id BIGINT NOT NULL,
+                peptide_instance_id BIGINT NOT NULL,
                 is_best_peptide_set BOOLEAN,
-                selection_level INTEGER,
+                selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
-                result_summary_id INTEGER NOT NULL,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT peptide_set_peptide_instance_item_pk PRIMARY KEY (peptide_set_id, peptide_instance_id)
 );
 COMMENT ON TABLE public.peptide_set_peptide_instance_item IS 'Defines the list of peptide instances belonging to a given peptide set.';
-COMMENT ON COLUMN public.peptide_set_peptide_instance_item.selection_level IS 'TODO: NOT NULL ?';
+COMMENT ON COLUMN public.peptide_set_peptide_instance_item.selection_level IS 'An integer coding for the selection of this peptide instance in the context of this peptide set:
+0 = manual deselection
+1 = automatic deselection
+2 = automatic selection
+3 = manual selection';
 COMMENT ON COLUMN public.peptide_set_peptide_instance_item.result_summary_id IS 'Used for indexation by result summary';
 
 
@@ -820,26 +834,27 @@ CLUSTER pep_set_pep_inst_item_rsm_idx ON peptide_set_peptide_instance_item;
 CREATE SEQUENCE public.master_quant_peptide_ion_id_seq;
 
 CREATE TABLE public.master_quant_peptide_ion (
-                id INTEGER NOT NULL DEFAULT nextval('public.master_quant_peptide_ion_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.master_quant_peptide_ion_id_seq'),
                 charge INTEGER,
                 moz DOUBLE PRECISION NOT NULL,
                 elution_time REAL NOT NULL,
                 scan_number INTEGER,
                 serialized_properties TEXT,
-                lcms_feature_id INTEGER,
-                peptide_id INTEGER,
-                peptide_instance_id INTEGER,
-                master_quant_component_id INTEGER NOT NULL,
-                best_peptide_match_id INTEGER,
-                unmodified_peptide_ion_id INTEGER,
-                result_summary_id INTEGER NOT NULL,
+                lcms_feature_id BIGINT,
+                peptide_id BIGINT,
+                peptide_instance_id BIGINT,
+                master_quant_peptide_id BIGINT NOT NULL,
+                master_quant_component_id BIGINT NOT NULL,
+                best_peptide_match_id BIGINT,
+                unmodified_peptide_ion_id BIGINT,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT master_quant_peptide_ion_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.master_quant_peptide_ion IS 'A master quant peptide ion corresponds to an ionized peptide produced by the mass spectrometer and quantified in several quantitation channels. Its characteristics (charge, m/z, elution time) could be retrieved using LCMS analysis. The observed abundance is described by the related quanti_component. The table can also be considered as a link between peptide and quantification components.  If a peptide ion can be related to a peptide match, the peptide_instance_id and peptide_id have to be defined.';
 COMMENT ON COLUMN public.master_quant_peptide_ion.charge IS 'The charge of the quantified item (example : 2+, 3+, etc...)';
 COMMENT ON COLUMN public.master_quant_peptide_ion.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.master_quant_peptide_ion.lcms_feature_id IS 'A link to a lcms feature in an lcms database';
-COMMENT ON COLUMN public.master_quant_peptide_ion.peptide_instance_id IS 'Raccourci pour savoir si le peptide ï¿½ ï¿½tï¿½ identifiï¿½ (=si non null)';
+COMMENT ON COLUMN public.master_quant_peptide_ion.peptide_instance_id IS 'Raccourci pour savoir si le peptide à été identifié (=si non null)';
 COMMENT ON COLUMN public.master_quant_peptide_ion.result_summary_id IS 'Used for indexation by result summary';
 
 
@@ -858,12 +873,12 @@ CLUSTER master_quant_peptide_ion_rsm_idx ON master_quant_peptide_ion;
 CREATE SEQUENCE public.master_quant_reporter_ion_id_seq;
 
 CREATE TABLE public.master_quant_reporter_ion (
-                id INTEGER NOT NULL DEFAULT nextval('public.master_quant_reporter_ion_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.master_quant_reporter_ion_id_seq'),
                 serialized_properties TEXT,
-                master_quant_component_id INTEGER NOT NULL,
-                ms_query_id INTEGER NOT NULL,
-                master_quant_peptide_ion_id INTEGER NOT NULL,
-                result_summary_id INTEGER NOT NULL,
+                master_quant_component_id BIGINT NOT NULL,
+                ms_query_id BIGINT NOT NULL,
+                master_quant_peptide_ion_id BIGINT NOT NULL,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT master_quant_reporter_ion_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.master_quant_reporter_ion.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
@@ -878,8 +893,8 @@ CREATE INDEX master_quant_reporter_ion_rsm_idx
 CLUSTER master_quant_reporter_ion_rsm_idx ON master_quant_reporter_ion;
 
 CREATE TABLE public.peptide_match_object_tree_map (
-                peptide_match_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
+                peptide_match_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT peptide_match_object_tree_map_pk PRIMARY KEY (peptide_match_id, object_tree_id)
 );
@@ -887,13 +902,13 @@ COMMENT ON TABLE public.peptide_match_object_tree_map IS 'UNIQUE(peptide_match_i
 
 
 CREATE TABLE public.peptide_instance_peptide_match_map (
-                peptide_instance_id INTEGER NOT NULL,
-                peptide_match_id INTEGER NOT NULL,
+                peptide_instance_id BIGINT NOT NULL,
+                peptide_match_id BIGINT NOT NULL,
                 serialized_properties TEXT,
-                result_summary_id INTEGER NOT NULL,
+                result_summary_id BIGINT NOT NULL,
                 CONSTRAINT peptide_instance_peptide_match_map_pk PRIMARY KEY (peptide_instance_id, peptide_match_id)
 );
-COMMENT ON COLUMN public.peptide_instance_peptide_match_map.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details). TODO: store delta score';
+COMMENT ON COLUMN public.peptide_instance_peptide_match_map.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.peptide_instance_peptide_match_map.result_summary_id IS 'Used for indexation by result summary';
 
 
@@ -904,9 +919,9 @@ CREATE INDEX pep_inst_pep_match_map_rsm_idx
 CLUSTER pep_inst_pep_match_map_rsm_idx ON peptide_instance_peptide_match_map;
 
 CREATE TABLE public.peptide_match_relation (
-                parent_peptide_match_id INTEGER NOT NULL,
-                child_peptide_match_id INTEGER NOT NULL,
-                parent_result_set_id INTEGER NOT NULL,
+                parent_peptide_match_id BIGINT NOT NULL,
+                child_peptide_match_id BIGINT NOT NULL,
+                parent_result_set_id BIGINT NOT NULL,
                 CONSTRAINT peptide_match_relation_pk PRIMARY KEY (parent_peptide_match_id, child_peptide_match_id)
 );
 COMMENT ON TABLE public.peptide_match_relation IS 'Parent-child relationship between peptide matches. See peptide match description.';
@@ -919,16 +934,16 @@ CREATE INDEX peptide_match_relation_rs_idx
 CLUSTER peptide_match_relation_rs_idx ON peptide_match_relation;
 
 CREATE TABLE public.sequence_match (
-                protein_match_id INTEGER NOT NULL,
-                peptide_id INTEGER NOT NULL,
+                protein_match_id BIGINT NOT NULL,
+                peptide_id BIGINT NOT NULL,
                 start INTEGER NOT NULL,
                 stop INTEGER NOT NULL,
                 residue_before CHAR(1),
                 residue_after CHAR(1),
                 is_decoy BOOLEAN NOT NULL,
                 serialized_properties TEXT,
-                best_peptide_match_id INTEGER NOT NULL,
-                result_set_id INTEGER NOT NULL,
+                best_peptide_match_id BIGINT NOT NULL,
+                result_set_id BIGINT NOT NULL,
                 CONSTRAINT sequence_match_pk PRIMARY KEY (protein_match_id, peptide_id, start, stop)
 );
 COMMENT ON TABLE public.sequence_match IS 'A peptide sequence which matches a protein sequence. Note: start and stop are included in the PK in order to handle repeated peptide sequences in a given protein sequence.';
@@ -962,13 +977,6 @@ CREATE TABLE public.admin_infos (
 COMMENT ON TABLE public.admin_infos IS 'Give information about the current database model';
 
 
-ALTER TABLE public.protein_set ADD CONSTRAINT scoring_protein_set_fk
-FOREIGN KEY (scoring_id)
-REFERENCES public.scoring (id)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
 ALTER TABLE public.protein_match ADD CONSTRAINT scoring_protein_match_fk
 FOREIGN KEY (scoring_id)
 REFERENCES public.scoring (id)
@@ -977,6 +985,13 @@ ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.peptide_match ADD CONSTRAINT scoring_peptide_match_fk
+FOREIGN KEY (scoring_id)
+REFERENCES public.scoring (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.peptide_set ADD CONSTRAINT scoring_peptide_set_fk
 FOREIGN KEY (scoring_id)
 REFERENCES public.scoring (id)
 ON DELETE NO ACTION
@@ -1062,6 +1077,13 @@ NOT DEFERRABLE;
 
 ALTER TABLE public.peptide_instance ADD CONSTRAINT peptide_peptide_instance_fk1
 FOREIGN KEY (unmodified_peptide_id)
+REFERENCES public.peptide (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.peptide_readable_ptm_string ADD CONSTRAINT peptide_peptide_readable_ptm_string_fk
+FOREIGN KEY (peptide_id)
 REFERENCES public.peptide (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
@@ -1361,6 +1383,13 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
+ALTER TABLE public.peptide_readable_ptm_string ADD CONSTRAINT result_set_peptide_readable_ptm_string_fk
+FOREIGN KEY (result_set_id)
+REFERENCES public.result_set (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
 ALTER TABLE public.peptide_set ADD CONSTRAINT result_summary_peptide_set_fk
 FOREIGN KEY (result_summary_id)
 REFERENCES public.result_summary (id)
@@ -1459,20 +1488,6 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.protein_set_cluster_item ADD CONSTRAINT result_summary_protein_cluster_item_fk
-FOREIGN KEY (result_summary_id)
-REFERENCES public.result_summary (id)
-ON DELETE CASCADE
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.protein_set_cluster ADD CONSTRAINT result_summary_protein_set_cluster_fk
-FOREIGN KEY (result_summary_id)
-REFERENCES public.result_summary (id)
-ON DELETE CASCADE
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
 ALTER TABLE public.master_quant_reporter_ion ADD CONSTRAINT result_summary_master_quant_reporter_ion_fk
 FOREIGN KEY (result_summary_id)
 REFERENCES public.result_summary (id)
@@ -1480,7 +1495,7 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT quanti_component_peptide_ion_fk
+ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT master_quant_component_master_quant_peptide_ion_fk
 FOREIGN KEY (master_quant_component_id)
 REFERENCES public.master_quant_component (id)
 ON DELETE NO ACTION
@@ -1503,6 +1518,13 @@ NOT DEFERRABLE;
 
 ALTER TABLE public.master_quant_reporter_ion ADD CONSTRAINT master_quant_component_master_quant_reporter_ion_fk
 FOREIGN KEY (master_quant_component_id)
+REFERENCES public.master_quant_component (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT master_quant_peptide_master_quant_peptide_ion_fk
+FOREIGN KEY (master_quant_peptide_id)
 REFERENCES public.master_quant_component (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
@@ -1561,27 +1583,6 @@ ALTER TABLE public.protein_set_object_tree_map ADD CONSTRAINT protein_set_protei
 FOREIGN KEY (protein_set_id)
 REFERENCES public.protein_set (id)
 ON DELETE CASCADE
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.protein_set_cluster_item ADD CONSTRAINT protein_set_protein_cluster_item_fk
-FOREIGN KEY (protein_set_id)
-REFERENCES public.protein_set (id)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.protein_set_cluster ADD CONSTRAINT protein_set_protein_set_cluster_fk
-FOREIGN KEY (best_protein_set_id)
-REFERENCES public.protein_set (id)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.protein_set_cluster_item ADD CONSTRAINT protein_set_cluster_protein_set_cluster_item_fk
-FOREIGN KEY (protein_set_cluster_id)
-REFERENCES public.protein_set_cluster (id)
-ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 

@@ -219,7 +219,7 @@
     <column id="COL69" populated="true" UUID="031330c6-9a06-4abb-9158-a79a5adbe4da" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_seq_db_instance_seq_db_instance_id_seq" defaultValue="" name="seq_db_instance_id" nullable="0" physicalName="seq_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL70" populated="true" UUID="7cd5e1b9-7a95-48cc-848c-bc4ad295fd5e" autoIncrement="false" autoIncrementSequenceName="seq_db_config_id_seq" defaultValue="" name="seq_db_config_id" nullable="0" physicalName="seq_db_config_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL70" populated="true" UUID="7cd5e1b9-7a95-48cc-848c-bc4ad295fd5e" autoIncrement="false" autoIncrementSequenceName="seq_db_entry_seq_db_config_id_seq" defaultValue="" name="seq_db_config_id" nullable="0" physicalName="seq_db_config_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -866,7 +866,7 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  ddlGenerator="ca.sqlpower.architect.ddl.PostgresDDLGenerator"  outputFormatAsString="SQL"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="E:\eclipse\workspace\proline-core-v2\Proline-Databases\diagrams\PDI-DB.architect"  />

@@ -58,11 +58,12 @@ CREATE TABLE public.seq_db_config (
                 alphabet VARCHAR(3) NOT NULL,
                 ref_entry_format VARCHAR(10) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                fasta_parsing_rule_id INTEGER NOT NULL,
+                fasta_parsing_rule_id BIGINT NOT NULL,
                 is_native BOOLEAN NOT NULL,
                 CONSTRAINT seq_db_config_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.seq_db_config.name IS 'Some native databases must be named using the following convention : ipi, sprot, trembl, ncbi';
+COMMENT ON COLUMN public.seq_db_config.alphabet IS 'Java enum SequenceDbConfig.Alphabet {AA, DNA }';
 COMMENT ON COLUMN public.seq_db_config.ref_entry_format IS 'swiss/genebank/gff TODO: add support for gff format';
 COMMENT ON COLUMN public.seq_db_config.is_native IS 'A native DB is a public DB which is neither a subset of database neither a database with additionnal or modified sequences (i.e. decoy sequences).';
 
@@ -75,11 +76,11 @@ CREATE TABLE public.seq_db_instance (
                 is_deleted BOOLEAN NOT NULL,
                 revision INTEGER NOT NULL,
                 creation_timestamp TIMESTAMP NOT NULL,
-                sequence_count INTEGER NOT NULL,
+                sequence_count INTEGER,
                 residue_count INTEGER,
                 serialized_properties LONGVARCHAR,
-                seq_db_release_id INTEGER,
-                seq_db_config_id INTEGER NOT NULL,
+                seq_db_release_id BIGINT,
+                seq_db_config_id BIGINT NOT NULL,
                 CONSTRAINT seq_db_instance_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.seq_db_instance.revision IS 'The revision number is incremented each time a new instance of a specified seq_db_config is created.';
@@ -87,14 +88,15 @@ COMMENT ON COLUMN public.seq_db_instance.seq_db_release_id IS 'database release 
 
 
 CREATE TABLE public.taxon (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 scientific_name VARCHAR(512) NOT NULL,
                 rank VARCHAR(30) NOT NULL,
+                is_active BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
-                parent_taxon_id INTEGER NOT NULL,
+                parent_taxon_id BIGINT NOT NULL,
                 CONSTRAINT taxon_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.taxon IS 'Describes the NCBI taxononmy. TODO: add a is_active column';
+COMMENT ON TABLE public.taxon IS 'Describes the NCBI taxononmy.';
 COMMENT ON COLUMN public.taxon.id IS 'The NCBI taxon id';
 COMMENT ON COLUMN public.taxon.scientific_name IS 'From NCBI: Every node in the database is required to have exactly one "scientific name".';
 
@@ -102,26 +104,35 @@ COMMENT ON COLUMN public.taxon.scientific_name IS 'From NCBI: Every node in the 
 CREATE TABLE public.gene (
                 id IDENTITY NOT NULL,
                 name VARCHAR(100) NOT NULL,
+                name_type VARCHAR(20) NOT NULL,
                 synonyms LONGVARCHAR,
-                orf_names LONGVARCHAR,
                 is_active BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
-                taxon_id INTEGER NOT NULL,
+                taxon_id BIGINT NOT NULL,
                 CONSTRAINT gene_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.gene IS 'UNIQUE(name, taxon_id)';
+COMMENT ON COLUMN public.gene.name_type IS 'The type of the name and synonyms for this gene.
+Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.';
 COMMENT ON COLUMN public.gene.synonyms IS 'A list of synonyms separated by spaces';
-COMMENT ON COLUMN public.gene.orf_names IS 'A list of orf names separated by spaces';
 COMMENT ON COLUMN public.gene.taxon_id IS 'The NCBI taxon id';
 
+
+CREATE UNIQUE INDEX public.gene_name_taxon_idx
+ ON public.gene
+ ( name, taxon_id );
+
+CREATE INDEX public.gene_taxon_idx
+ ON public.gene
+ ( taxon_id );
 
 CREATE TABLE public.chromosome_location (
                 id IDENTITY NOT NULL,
                 chromosome_identifier VARCHAR(10) NOT NULL,
                 location VARCHAR(250),
                 serialized_properties LONGVARCHAR,
-                gene_id INTEGER NOT NULL,
-                taxon_id INTEGER NOT NULL,
+                gene_id BIGINT NOT NULL,
+                taxon_id BIGINT NOT NULL,
                 CONSTRAINT chromosome_location_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.chromosome_location IS 'paralogues, isoformes This table is deleted for active genes before each update. It contains the last known information about gene chromosome location.';
@@ -129,12 +140,16 @@ COMMENT ON COLUMN public.chromosome_location.serialized_properties IS 'TODO: put
 COMMENT ON COLUMN public.chromosome_location.taxon_id IS 'The NCBI taxon id';
 
 
+CREATE INDEX public.chromosome_location_taxon_idx
+ ON public.chromosome_location
+ ( taxon_id );
+
 CREATE TABLE public.taxon_extra_name (
                 id IDENTITY NOT NULL,
                 class VARCHAR(256) NOT NULL,
                 value VARCHAR(512) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                taxon_id INTEGER NOT NULL,
+                taxon_id BIGINT NOT NULL,
                 CONSTRAINT taxon_extra_name_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.taxon_extra_name.taxon_id IS 'The NCBI taxon id';
@@ -142,10 +157,10 @@ COMMENT ON COLUMN public.taxon_extra_name.taxon_id IS 'The NCBI taxon id';
 
 CREATE TABLE public.bio_sequence (
                 id IDENTITY NOT NULL,
-                alphabet CHAR(3) NOT NULL,
+                alphabet VARCHAR(3) NOT NULL,
                 sequence LONGVARCHAR NOT NULL,
                 length INTEGER,
-                mass DOUBLE NOT NULL,
+                mass INTEGER NOT NULL,
                 pi REAL,
                 crc64 VARCHAR(32) NOT NULL,
                 serialized_properties LONGVARCHAR,
@@ -155,18 +170,22 @@ COMMENT ON TABLE public.bio_sequence IS 'Like Uniparc, it  is a non-redundant pr
 COMMENT ON COLUMN public.bio_sequence.alphabet IS 'dna, rna or aa';
 COMMENT ON COLUMN public.bio_sequence.sequence IS 'The sequence of the protein. It can contains amino acids or nucleic acids depending on the used alphabet.';
 COMMENT ON COLUMN public.bio_sequence.length IS 'The length of the sequence.';
-COMMENT ON COLUMN public.bio_sequence.mass IS 'The molecular mass of the protein or of the nucleic acid strand.';
+COMMENT ON COLUMN public.bio_sequence.mass IS 'The approximated molecular mass of the protein or of the nucleic acid strand.';
 COMMENT ON COLUMN public.bio_sequence.pi IS 'The isoelectric point of the protein. Only for protein sequences (alphabet=aa).';
 COMMENT ON COLUMN public.bio_sequence.crc64 IS 'The numerical signature of the protein sequence';
 
+
+CREATE UNIQUE INDEX public.bio_sequence_crc_alphabet_mass_idx
+ ON public.bio_sequence
+ ( crc64, alphabet, mass );
 
 CREATE TABLE public.bio_sequence_annotation (
                 id IDENTITY NOT NULL,
                 version VARCHAR(50) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                bio_sequence_id INTEGER NOT NULL,
-                taxon_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
+                bio_sequence_id BIGINT NOT NULL,
+                taxon_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT bio_sequence_annotation_pk PRIMARY KEY (id)
 );
@@ -174,18 +193,22 @@ COMMENT ON COLUMN public.bio_sequence_annotation.taxon_id IS 'The NCBI taxon id'
 
 
 CREATE TABLE public.bio_sequence_gene_map (
-                bio_sequence_id INTEGER NOT NULL,
-                gene_id INTEGER NOT NULL,
+                bio_sequence_id BIGINT NOT NULL,
+                gene_id BIGINT NOT NULL,
                 serialized_properties LONGVARCHAR,
-                taxon_id INTEGER NOT NULL,
+                taxon_id BIGINT NOT NULL,
                 CONSTRAINT bio_sequence_gene_map_pk PRIMARY KEY (bio_sequence_id, gene_id)
 );
 COMMENT ON COLUMN public.bio_sequence_gene_map.taxon_id IS 'The NCBI taxon id';
 
 
+CREATE INDEX public.bio_sequence_gene_map_gene_id_idx
+ ON public.bio_sequence_gene_map
+ ( gene_id );
+
 CREATE TABLE public.bio_sequence_relation (
-                na_sequence_id INTEGER NOT NULL,
-                aa_sequence_id INTEGER NOT NULL,
+                na_sequence_id BIGINT NOT NULL,
+                aa_sequence_id BIGINT NOT NULL,
                 frame_number INTEGER NOT NULL,
                 CONSTRAINT bio_sequence_relation_pk PRIMARY KEY (na_sequence_id, aa_sequence_id)
 );
@@ -198,15 +221,27 @@ CREATE TABLE public.protein_identifier (
                 is_ac_number BOOLEAN NOT NULL,
                 is_active BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
-                bio_sequence_id INTEGER NOT NULL,
-                taxon_id INTEGER NOT NULL,
-                seq_db_config_id INTEGER NOT NULL,
+                bio_sequence_id BIGINT NOT NULL,
+                taxon_id BIGINT NOT NULL,
+                seq_db_config_id BIGINT NOT NULL,
                 CONSTRAINT protein_identifier_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.protein_identifier IS 'An entry in a protein database identified by an accession number. UNIQUE( value, taxon_id )';
 COMMENT ON COLUMN public.protein_identifier.is_ac_number IS 'true for accession numbers if the value corresponds to entry ID (ALB_HUMAN for instance) then this BOOLEAN will be false';
 COMMENT ON COLUMN public.protein_identifier.taxon_id IS 'The NCBI taxon id';
 
+
+CREATE INDEX public.protein_identifier_bio_sequence_id_idx
+ ON public.protein_identifier
+ ( bio_sequence_id );
+
+CREATE INDEX public.protein_identifier_seq_db_config_idx
+ ON public.protein_identifier
+ ( seq_db_config_id );
+
+CREATE UNIQUE INDEX public.protein_identifier_value_taxon_idx
+ ON public.protein_identifier
+ ( value, taxon_id );
 
 CREATE TABLE public.seq_db_entry (
                 id IDENTITY NOT NULL,
@@ -217,10 +252,10 @@ CREATE TABLE public.seq_db_entry (
                 ref_file_block_length INTEGER,
                 is_active BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
-                bio_sequence_id INTEGER NOT NULL,
-                taxon_id INTEGER NOT NULL,
-                seq_db_instance_id INTEGER NOT NULL,
-                seq_db_config_id INTEGER NOT NULL,
+                bio_sequence_id BIGINT NOT NULL,
+                taxon_id BIGINT NOT NULL,
+                seq_db_instance_id BIGINT NOT NULL,
+                seq_db_config_id BIGINT NOT NULL,
                 CONSTRAINT seq_db_entry_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.seq_db_entry IS 'Note: only inactive entries should kept is the previous instance when updated a sequence database to a newset release.';
@@ -230,43 +265,83 @@ COMMENT ON COLUMN public.seq_db_entry.ref_file_block_length IS 'May be NULL if n
 COMMENT ON COLUMN public.seq_db_entry.taxon_id IS 'The NCBI taxon id';
 
 
+CREATE INDEX public.seq_db_entry_identifier_idx
+ ON public.seq_db_entry
+ ( identifier );
+
+CREATE INDEX public.seq_db_entry_is_active_idx
+ ON public.seq_db_entry
+ ( is_active );
+
+CREATE INDEX public.seq_db_entry_bio_sequence_idx
+ ON public.seq_db_entry
+ ( bio_sequence_id );
+
+CREATE INDEX public.seq_db_entry_taxon_idx
+ ON public.seq_db_entry
+ ( taxon_id );
+
+CREATE INDEX public.seq_db_entry_seq_db_config_idx
+ ON public.seq_db_entry
+ ( seq_db_config_id );
+
+CREATE INDEX public.seq_db_entry_seq_db_instance_idx
+ ON public.seq_db_entry
+ ( seq_db_instance_id );
+
 CREATE TABLE public.fasta_file_entry_index (
                 id IDENTITY NOT NULL,
                 block_start BIGINT NOT NULL,
                 block_length INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
-                bio_sequence_id INTEGER NOT NULL,
-                seq_db_entry_id INTEGER NOT NULL,
-                seq_db_instance_id INTEGER NOT NULL,
+                bio_sequence_id BIGINT NOT NULL,
+                seq_db_entry_id BIGINT NOT NULL,
+                seq_db_instance_id BIGINT NOT NULL,
                 CONSTRAINT fasta_file_entry_index_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.fasta_file_entry_index.bio_sequence_id IS 'May be used to specify a sequence variant of the main seq db entry.';
 
 
+CREATE INDEX public.fasta_file_entry_index_bio_sequence_idx
+ ON public.fasta_file_entry_index
+ ( bio_sequence_id );
+
+CREATE INDEX public.fasta_file_entry_index_seq_db_entry_idx
+ ON public.fasta_file_entry_index
+ ( seq_db_entry_id );
+
+CREATE INDEX public.fasta_file_entry_index_seq_db_instance_idx
+ ON public.fasta_file_entry_index
+ ( seq_db_instance_id );
+
 CREATE TABLE public.seq_db_entry_object_tree_map (
-                seq_db_entry_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
+                seq_db_entry_id BIGINT NOT NULL,
+                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT seq_db_entry_object_tree_map_pk PRIMARY KEY (seq_db_entry_id, object_tree_id)
 );
 
 
 CREATE TABLE public.seq_db_entry_gene_map (
-                seq_db_entry_id INTEGER NOT NULL,
-                gene_id INTEGER NOT NULL,
-                seq_db_instance_id INTEGER NOT NULL,
+                seq_db_entry_id BIGINT NOT NULL,
+                gene_id BIGINT NOT NULL,
+                seq_db_instance_id BIGINT NOT NULL,
                 CONSTRAINT seq_db_entry_gene_map_pk PRIMARY KEY (seq_db_entry_id, gene_id)
 );
 
 
 CREATE TABLE public.seq_db_entry_protein_identifier_map (
-                seq_db_entry_id INTEGER NOT NULL,
-                protein_identifier_id INTEGER NOT NULL,
-                seq_db_instance_id INTEGER NOT NULL,
+                seq_db_entry_id BIGINT NOT NULL,
+                protein_identifier_id BIGINT NOT NULL,
+                seq_db_instance_id BIGINT NOT NULL,
                 CONSTRAINT seq_db_entry_protein_identifier_map_pk PRIMARY KEY (seq_db_entry_id, protein_identifier_id)
 );
 COMMENT ON TABLE public.seq_db_entry_protein_identifier_map IS 'Note: the same protein identifier shouldn''t be find in multiple instancesof the same seq database.';
 
+
+CREATE INDEX public.seq_db_entry_protein_identifier_map_prot_identifier_idx
+ ON public.seq_db_entry_protein_identifier_map
+ ( protein_identifier_id );
 
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
@@ -523,40 +598,3 @@ FOREIGN KEY (seq_db_entry_id)
 REFERENCES public.seq_db_entry (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
-
-
-CREATE UNIQUE INDEX bio_sequence_crc_alphabet_mass_idx ON bio_sequence (crc64,alphabet,mass);
-
-CREATE INDEX protein_identifier_bio_sequence_id_idx ON protein_identifier (bio_sequence_id);
-
-CREATE INDEX protein_identifier_seq_db_config_idx ON protein_identifier (seq_db_config_id);
-
-CREATE UNIQUE INDEX protein_identifier_value_taxon_idx ON protein_identifier (value,taxon_id);
-
-CREATE INDEX seq_db_entry_identifier_idx ON seq_db_entry (identifier);
-
-CREATE INDEX seq_db_entry_is_active_idx ON seq_db_entry (is_active);
-
-CREATE INDEX seq_db_entry_bio_sequence_idx ON seq_db_entry (bio_sequence_id);
-
-CREATE INDEX seq_db_entry_taxon_idx ON seq_db_entry (taxon_id);
-
-CREATE INDEX seq_db_entry_seq_db_config_idx ON seq_db_entry (seq_db_config_id);
-
-CREATE INDEX seq_db_entry_seq_db_instance_idx ON seq_db_entry (seq_db_instance_id);
-
-CREATE INDEX fasta_file_entry_index_bio_sequence_idx ON fasta_file_entry_index (bio_sequence_id);
-
-CREATE INDEX fasta_file_entry_index_seq_db_entry_idx ON fasta_file_entry_index (seq_db_entry_id);
-
-CREATE INDEX fasta_file_entry_index_seq_db_instance_idx ON fasta_file_entry_index (seq_db_instance_id);
-
-CREATE UNIQUE INDEX gene_name_taxon_idx ON gene (name,taxon_id);
-
-CREATE INDEX gene_taxon_idx ON gene (taxon_id);
-
-CREATE INDEX seq_db_entry_protein_identifier_map_prot_identifier_idx ON seq_db_entry_protein_identifier_map (protein_identifier_id);
-
-CREATE INDEX chromosome_location_taxon_idx ON chromosome_location (taxon_id);
-
-CREATE INDEX bio_sequence_gene_map_gene_id_idx ON bio_sequence_gene_map (gene_id);

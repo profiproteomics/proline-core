@@ -4,7 +4,8 @@ CREATE TABLE public.aggregation (
                 child_nature VARCHAR NOT NULL,
                 CONSTRAINT aggregation_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.aggregation.child_nature IS 'Describes the nature of the corresponding level of aggregation. Valid values are: SAMPLE_ANALYSIS, QUANTITATION_FRACTION, BIOLOGICAL_SAMPLE, BIOLOGICAL_GROUP, OTHER.';
+COMMENT ON TABLE public.aggregation IS 'The enumeration of the different child natures that could be used to describe a given AGGREGATE data_set.';
+COMMENT ON COLUMN public.aggregation.child_nature IS 'Describes the nature of the corresponding level of aggregation. Valid values are: SAMPLE_FRACTION, SAMPLE_ANALYSIS, BIOLOGICAL_SAMPLE, BIOLOGICAL_GROUP, OTHER.';
 
 
 CREATE UNIQUE INDEX public.aggregation_child_nature_idx
@@ -16,7 +17,9 @@ CREATE TABLE public.fractionation (
                 type VARCHAR NOT NULL,
                 CONSTRAINT fractionation_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.fractionation.type IS 'Describes the type of the separation used for the analysis of the sample. Valid values are: PROTEIN, PEPTIDE, OTHER, NONE.';
+COMMENT ON TABLE public.fractionation IS 'The enumeration of the different fractionation type that could be used to describe an AGGREGATE data_set corresponding to fractionation step.';
+COMMENT ON COLUMN public.fractionation.type IS 'Describes the type of the separation used for the analysis of the sample.
+Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.';
 
 
 CREATE UNIQUE INDEX public.fractionation_type_idx
@@ -31,7 +34,7 @@ CREATE TABLE public.protein_match_decoy_rule (
 );
 COMMENT ON TABLE public.protein_match_decoy_rule IS 'Stores rules that can be used to determine if a protein_match is decoy or not. If the accession number of the protein_match contains the tag (ac_decoy_tag) it is considered as "decoy".';
 COMMENT ON COLUMN public.protein_match_decoy_rule.name IS 'The name of the rule.';
-COMMENT ON COLUMN public.protein_match_decoy_rule.ac_decoy_tag IS 'A string which is used to make the distinction between decoy and target protein matches. This string is only added to the accesion number of decoy protein matches.';
+COMMENT ON COLUMN public.protein_match_decoy_rule.ac_decoy_tag IS 'A string that is used to make the distinction between decoy and target protein matches. This string is only added to the accesion number of decoy protein matches.';
 
 
 CREATE TABLE public.spec_title_parsing_rule (
@@ -46,7 +49,16 @@ CREATE TABLE public.spec_title_parsing_rule (
                 name VARCHAR(100) NOT NULL,
                 CONSTRAINT spec_title_parsing_rule_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.spec_title_parsing_rule IS 'Describe rules used to parse the content of the MS2 spectrum description. Note: using the attribute names of  the spectrum table enables an easier implementation.';
+COMMENT ON TABLE public.spec_title_parsing_rule IS 'Describe rules used to parse the content of the MS2 spectrum title.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.raw_file_name IS 'A regular expression matching the raw file name.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.first_cycle IS 'A regular expression matching the first cycle.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.last_cycle IS 'A regular expression matching the last cycle.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.first_scan IS 'A regular expression matching the first scan.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.last_scan IS 'A regular expression matching the last scan.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.first_time IS 'A regular expression matching the first time.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.last_time IS 'A regular expression matching the last time.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.name IS 'The name of the rule.
+TODO: remove this field ?';
 
 
 CREATE TABLE public.peaklist_software (
@@ -54,11 +66,14 @@ CREATE TABLE public.peaklist_software (
                 name VARCHAR(100) NOT NULL,
                 version VARCHAR(100),
                 serialized_properties LONGVARCHAR,
-                spec_title_parsing_rule_id INTEGER NOT NULL,
+                spec_title_parsing_rule_id BIGINT NOT NULL,
                 CONSTRAINT peaklist_software_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.peaklist_software.name IS 'The name of the software used to generate the peaklist. Examples: extract_msn, Mascot Distiller, mascot.dll';
+COMMENT ON TABLE public.peaklist_software IS 'Describes software that can be used to generate MS/MS peaklists.';
+COMMENT ON COLUMN public.peaklist_software.name IS 'The name of the software used to generate the peaklist. Examples: extract_msn, Mascot Distiller, mascot.dll.';
+COMMENT ON COLUMN public.peaklist_software.version IS 'The version number of the software.';
 COMMENT ON COLUMN public.peaklist_software.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.peaklist_software.spec_title_parsing_rule_id IS 'The rule used to parse spectra title in the peaklists generated by this software.';
 
 
 CREATE TABLE public.enzyme (
@@ -67,22 +82,37 @@ CREATE TABLE public.enzyme (
                 cleavage_regexp VARCHAR(50),
                 is_independant BOOLEAN NOT NULL,
                 is_semi_specific BOOLEAN NOT NULL,
+                serialized_properties LONGVARCHAR,
                 CONSTRAINT enzyme_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.enzyme.name IS 'MUST BE UNIQUE';
-COMMENT ON COLUMN public.enzyme.cleavage_regexp IS 'The regular expression used to find cleavage site';
+COMMENT ON TABLE public.enzyme IS 'The enumeration of the different enzymes that could be used.
+TODO: add serialized_properties';
+COMMENT ON COLUMN public.enzyme.name IS 'The unique name of the enzyme.';
+COMMENT ON COLUMN public.enzyme.cleavage_regexp IS 'The regular expression used to find the cleavage site.';
+COMMENT ON COLUMN public.enzyme.is_independant IS 'Specifies the independence of the enzyme cleavages. If false and if there are multiple cleavages, these are combined, as if multiple enzymes had been applied simultaneously or serially to a single sample aliquot. If true, the cleavages are treated as if independent digests had been performed on separate sample aliquots and the resulting peptide mixtures combined.';
+COMMENT ON COLUMN public.enzyme.is_semi_specific IS 'Specifies the specificity of the enzyme.
+If true, any given peptide need only conform to the cleavage specificity at one end.';
+COMMENT ON COLUMN public.enzyme.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+CREATE UNIQUE INDEX public.enzyme_name_idx
+ ON public.enzyme
+ ( name );
 
 CREATE TABLE public.enzyme_cleavage (
                 id IDENTITY NOT NULL,
                 site VARCHAR(6) NOT NULL,
                 residues VARCHAR(20) NOT NULL,
                 restrictive_residues VARCHAR(20),
-                enzyme_id INTEGER NOT NULL,
+                enzyme_id BIGINT NOT NULL,
                 CONSTRAINT enzyme_cleavage_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.enzyme_cleavage.site IS 'Must be N-term or C-term (cleave before or after the residue)';
-COMMENT ON COLUMN public.enzyme_cleavage.restrictive_residues IS 'A string which main contains one or more symbols of amino acids restricting enzyme cleavage.';
+COMMENT ON COLUMN public.enzyme_cleavage.site IS 'This indicates whether cleavage occurs on the C terminal or N terminal side of the residues.
+Valid values for this field are:
+N-term, C-term.';
+COMMENT ON COLUMN public.enzyme_cleavage.residues IS 'A list of one letter code residues at which cleavage occurs.';
+COMMENT ON COLUMN public.enzyme_cleavage.restrictive_residues IS 'A string which main contains one or more residue symbols restricting enzyme cleavage.';
+COMMENT ON COLUMN public.enzyme_cleavage.enzyme_id IS 'The enzyme this cleavage corresponds to.';
 
 
 CREATE TABLE public.fragmentation_series (
@@ -93,8 +123,10 @@ CREATE TABLE public.fragmentation_series (
                 CONSTRAINT fragmentation_series_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.fragmentation_series IS 'The types of fragment ion series that can be observed in an MS/MS spectrum.';
-COMMENT ON COLUMN public.fragmentation_series.name IS 'Must be one of : a b c d v w x y z z+1 z+2 ya yb immonium precursor';
-COMMENT ON COLUMN public.fragmentation_series.neutral_loss IS 'must be one of H2O, NH3, H3PO4';
+COMMENT ON COLUMN public.fragmentation_series.name IS 'The conventional name of this fragmentation series.
+Valid values for this field are: a b c d v w x y z z+1 z+2 ya yb immonium precursor';
+COMMENT ON COLUMN public.fragmentation_series.neutral_loss IS 'The optional neutral loss associated with this fragmentation series.
+Valid values for this field are: H2O, NH3, H3PO4.';
 COMMENT ON COLUMN public.fragmentation_series.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
@@ -107,44 +139,48 @@ CREATE TABLE public.fragmentation_rule (
                 fragment_residue_constraint VARCHAR(20),
                 required_series_quality_level VARCHAR(15),
                 serialized_properties LONGVARCHAR,
-                theoretical_fragment_id INTEGER,
-                required_series_id INTEGER,
+                fragment_series_id BIGINT,
+                required_series_id BIGINT,
                 CONSTRAINT fragmentation_rule_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.fragmentation_rule IS 'Each instrument can have one or more of  fragment ion / rules. This rules describes ion fragment series that can be observed on an instrument and that are used by serach engine to generate theoritical spectrum and for scoring spectrum_peptide match';
-COMMENT ON COLUMN public.fragmentation_rule.description IS 'Encoded fragmentation rule description. 
-|code|description|comments|
-| 1 | singly charged ||
-| 2 | doubly charged if precursor 2+ or higher | (not internal or immonium) |
-| 3 | doubly charged if precursor 3+ or higher | (not internal or immonium) |
-| 4 | immonium ||
-| 5 | a series ||
-| 6 | a - NH3 if a significant and fragment includes RKNQ ||
-| 7 | a - H2O if a significant and fragment includes STED ||
-| 8 | b series ||
-| 9 | b - NH3 if b significant and fragment includes RKNQ ||
-| 10 | b - H2O if b significant and fragment includes STED ||
-| 11 | c series ||
-| 12 | x series ||
-| 13 | y series ||
-| 14 | y - NH3 if y significant and fragment includes RKNQ ||
-| 15 | y - H2O if y significant and fragment includes STED ||
-| 16 | z series ||
-| 17 | internal yb < 700 Da ||
-| 18 | internal ya < 700 Da ||
-| 19 | y or y++ must be significant ||
-| 20 | y or y++ must be highest scoring series ||
-| 21 | z+1 series ||
-| 22 | d and d'' series ||
-| 23 | v series ||
-| 24 | w and w'' series ||
-| 25 | z+2 series ||';
-COMMENT ON COLUMN public.fragmentation_rule.precursor_min_charge IS 'The minimum charge of the precursor required to observe this fragment type. Optional';
-COMMENT ON COLUMN public.fragmentation_rule.fragment_charge IS 'The fragment charge state.';
-COMMENT ON COLUMN public.fragmentation_rule.fragment_residue_constraint IS 'The fragment must contain one of the residues described here. exemple : y-NH3 series can be observed only if fragment includes RKNQ or y-H2O only if fragment includes STED. Optional';
-COMMENT ON COLUMN public.fragmentation_rule.required_series_quality_level IS ':?: significant or highest_scoring';
+COMMENT ON TABLE public.fragmentation_rule IS 'The fragmentation rules help to describe the behavior of a given instrument used in a given configuration. Each rule describes fragment ion series that can be observed on an instrument and that are used by the search engine to generate theoretical spectra in order to score experimental spectra.';
+COMMENT ON COLUMN public.fragmentation_rule.description IS 'A description for this fragmentation rule.
+Here is a list of Mascot fragmenration rules descriptions:
+singly charged
+doubly charged if precursor 2+ or higher
+doubly charged if precursor 3+ or higher
+immonium
+a series
+a - NH3 if a significant and fragment includes RKNQ
+a - H2O if a significant and fragment includes STED
+b series
+b - NH3 if b significant and fragment includes RKNQ
+b - H2O if b significant and fragment includes STED
+c series
+x series
+y series
+y - NH3 if y significant and fragment includes RKNQ
+y - H2O if y significant and fragment includes STED
+z series
+internal yb < 700 Da
+internal ya < 700 Da
+y or y++ must be significant
+y or y++ must be highest scoring series
+z+1 series
+d and d'' series
+v series
+w and w'' series
+z+2 series';
+COMMENT ON COLUMN public.fragmentation_rule.precursor_min_charge IS 'The minimum charge of the precursor required to observe this fragment type.';
+COMMENT ON COLUMN public.fragmentation_rule.fragment_charge IS 'The fragment ion charge state.';
+COMMENT ON COLUMN public.fragmentation_rule.fragment_max_moz IS 'The maximum observable fragment m/z.';
+COMMENT ON COLUMN public.fragmentation_rule.fragment_residue_constraint IS 'A list of residues the fragment ion must contain in order to be considered. This list is encoded by a string containing consecutive residue symbols.
+Example: y-NH3 series can be observed only if fragment includes RKNQ or y-H2O only if fragment includes STED.';
+COMMENT ON COLUMN public.fragmentation_rule.required_series_quality_level IS 'Indicates the quality level required to consider to corresponding ion series.
+Valid values for this field are:
+significant, highest_scoring.';
 COMMENT ON COLUMN public.fragmentation_rule.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
-COMMENT ON COLUMN public.fragmentation_rule.theoretical_fragment_id IS 'The corresponding and specific ion series.';
+COMMENT ON COLUMN public.fragmentation_rule.fragment_series_id IS 'The corresponding and specific ion series.';
 COMMENT ON COLUMN public.fragmentation_rule.required_series_id IS 'The ion series familly (a, b, c, x, y, z) required to be observed for this fragmentation rule.';
 
 
@@ -163,9 +199,17 @@ CREATE TABLE public.instrument (
                 serialized_properties LONGVARCHAR,
                 CONSTRAINT instrument_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.instrument IS 'The identification of a Mass Spectrometer. Properties (name,source) must be unique.';
+COMMENT ON TABLE public.instrument IS 'This table lists the user mass spectrometers.';
+COMMENT ON COLUMN public.instrument.name IS 'The instrument name.';
+COMMENT ON COLUMN public.instrument.source IS 'The name of the instrument source.
+Valid values for this field are:
+ESI, MALDI.';
 COMMENT ON COLUMN public.instrument.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+CREATE UNIQUE INDEX public.instrument_idx
+ ON public.instrument
+ ( name, source );
 
 CREATE TABLE public.instrument_config (
                 id IDENTITY NOT NULL,
@@ -173,21 +217,33 @@ CREATE TABLE public.instrument_config (
                 ms1_analyzer VARCHAR(100) NOT NULL,
                 msn_analyzer VARCHAR(100),
                 serialized_properties LONGVARCHAR,
-                instrument_id INTEGER NOT NULL,
+                instrument_id BIGINT NOT NULL,
                 activation_type VARCHAR(100) NOT NULL,
                 CONSTRAINT instrument_config_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.instrument_config IS 'The description of a mass spectrometer instrument configuration.';
-COMMENT ON COLUMN public.instrument_config.name IS 'MUST BE UNIQUE';
+COMMENT ON TABLE public.instrument_config IS 'This table stores the description of a mass spectrometer configuration.';
+COMMENT ON COLUMN public.instrument_config.name IS 'The name of instrument configuration.';
+COMMENT ON COLUMN public.instrument_config.ms1_analyzer IS 'The name of the MS analyzer used in this configuration.
+Valid values for this field are:
+4SECTOR, FTICR, FTMS, ISD, QIT, QUAD, TOF, TRAP.';
+COMMENT ON COLUMN public.instrument_config.msn_analyzer IS 'The name of the MSn analyzer used in this configuration.
+Valid values for this field are:
+4SECTOR, FTICR, FTMS, ISD, QIT, QUAD, TOF, TRAP.';
 COMMENT ON COLUMN public.instrument_config.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.instrument_config.instrument_id IS 'The instrument this configuration refers to.';
+COMMENT ON COLUMN public.instrument_config.activation_type IS 'The activation type corresponding to this instrument configuration.';
 
+
+CREATE UNIQUE INDEX public.instrument_config_name_idx
+ ON public.instrument_config
+ ( name );
 
 CREATE TABLE public.instrument_config_fragmentation_rule_map (
-                instrument_config_id INTEGER NOT NULL,
-                fragmentation_rule_id INTEGER NOT NULL,
+                instrument_config_id BIGINT NOT NULL,
+                fragmentation_rule_id BIGINT NOT NULL,
                 CONSTRAINT instrument_config_fragmentation_rule_map_pk PRIMARY KEY (instrument_config_id, fragmentation_rule_id)
 );
-COMMENT ON TABLE public.instrument_config_fragmentation_rule_map IS 'The set of fragmentation rules associated with this instrument configuration';
+COMMENT ON TABLE public.instrument_config_fragmentation_rule_map IS 'The set of fragmentation rules associated with this instrument configuration.';
 
 
 CREATE TABLE public.user_account (
@@ -200,9 +256,16 @@ CREATE TABLE public.user_account (
 COMMENT ON TABLE public.user_account IS 'User account information.
 UNIQUE(login)';
 COMMENT ON COLUMN public.user_account.login IS 'User login. The login must be unique within the database.';
-COMMENT ON COLUMN public.user_account.creation_mode IS 'manual creation (from the interface) or automatic creation (LDAP import).';
+COMMENT ON COLUMN public.user_account.creation_mode IS 'The mode used to create the account. It may be a
+manual creation (from the application) or an automatic creation (i.e. LDAP import).
+Valid values for this field are:
+MANUAL, AUTO.';
 COMMENT ON COLUMN public.user_account.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+CREATE UNIQUE INDEX public.user_account_login_idx
+ ON public.user_account
+ ( login );
 
 CREATE TABLE public.raw_file (
                 name VARCHAR(250) NOT NULL,
@@ -210,10 +273,19 @@ CREATE TABLE public.raw_file (
                 directory VARCHAR(500),
                 creation_timestamp TIMESTAMP,
                 serialized_properties LONGVARCHAR,
-                instrument_id INTEGER NOT NULL,
-                owner_id INTEGER NOT NULL,
+                instrument_id BIGINT NOT NULL,
+                owner_id BIGINT NOT NULL,
                 CONSTRAINT raw_file_pk PRIMARY KEY (name)
 );
+COMMENT ON TABLE public.raw_file IS 'Stores information about raw files that will be analyzed by Proline.';
+COMMENT ON COLUMN public.raw_file.name IS 'The name of the raw file which serves as its identifier.
+It should not contain an extension and be unique across all the database.';
+COMMENT ON COLUMN public.raw_file.extension IS 'The raw file extension.';
+COMMENT ON COLUMN public.raw_file.directory IS 'The path of the directory that contains the raw file.';
+COMMENT ON COLUMN public.raw_file.creation_timestamp IS 'The timestamp corresponding to the creation date of the raw file.';
+COMMENT ON COLUMN public.raw_file.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.raw_file.instrument_id IS 'The instrument that has performed the raw file acquisition.';
+COMMENT ON COLUMN public.raw_file.owner_id IS 'The owner of this raw file. The owner may have  permissions higher than other user accounts.';
 
 
 CREATE TABLE public.run (
@@ -229,9 +301,17 @@ CREATE TABLE public.run (
                 raw_file_name VARCHAR(250) NOT NULL,
                 CONSTRAINT run_pk PRIMARY KEY (id)
 );
+COMMENT ON TABLE public.run IS 'Stores information about a mass spectrometer acquisition also called "run".';
 COMMENT ON COLUMN public.run.number IS 'The run number inside a given raw file.
 Default is one because in the main case a raw file contains a single run.';
+COMMENT ON COLUMN public.run.run_start IS 'The sarting time of the run in seconds.';
+COMMENT ON COLUMN public.run.run_stop IS 'The ending time of the run in seconds.';
+COMMENT ON COLUMN public.run.duration IS 'The duration of the run in seconds.';
+COMMENT ON COLUMN public.run.lc_method IS 'The optional name of the Liquid Chromatography method which may have been used.';
+COMMENT ON COLUMN public.run.ms_method IS 'The name of the Mass Spectrometry method which have been used.';
+COMMENT ON COLUMN public.run.analyst IS 'The name of the analyst which launched the acquisition.';
 COMMENT ON COLUMN public.run.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.run.raw_file_name IS 'The raw file this acquisition belongs to.';
 
 
 CREATE TABLE public.project (
@@ -240,15 +320,15 @@ CREATE TABLE public.project (
                 description VARCHAR(1000),
                 creation_timestamp TIMESTAMP NOT NULL,
                 serialized_properties LONGVARCHAR,
-                owner_id INTEGER NOT NULL,
+                owner_id BIGINT NOT NULL,
                 CONSTRAINT project_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.project IS 'A project contains multiple experiments relative to the same study or topic. Files associated to a project are stored in the repository in ''''/root/project_@{project_id}''''.';
+COMMENT ON TABLE public.project IS 'A project contains multiple experiments relative to the same study or topic. Files associated with a project are stored in the repository in "/root/project_${project_id}".';
 COMMENT ON COLUMN public.project.name IS 'The name of the project as provided by the user.';
 COMMENT ON COLUMN public.project.description IS 'The description of the project as provided by the user.';
 COMMENT ON COLUMN public.project.creation_timestamp IS 'The timestamp corresponding to the creation date of the project.';
 COMMENT ON COLUMN public.project.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
-COMMENT ON COLUMN public.project.owner_id IS 'The owner of this project. The owner is also a member of the project and then is represented in ''''project_user_account_map''''';
+COMMENT ON COLUMN public.project.owner_id IS 'The owner of this project. The owner is also a member of the project and then is represented in "project_user_account_map".';
 
 
 CREATE TABLE public.virtual_folder (
@@ -256,8 +336,8 @@ CREATE TABLE public.virtual_folder (
                 name VARCHAR(250) NOT NULL,
                 path VARCHAR(500),
                 serialized_properties LONGVARCHAR,
-                parent_virtual_folder_id INTEGER,
-                project_id INTEGER NOT NULL,
+                parent_virtual_folder_id BIGINT,
+                project_id BIGINT NOT NULL,
                 CONSTRAINT virtual_folder_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.virtual_folder IS 'A virtual folder organize documents in the database. This documents are virtual documents created only in the database.';
@@ -265,15 +345,16 @@ COMMENT ON COLUMN public.virtual_folder.name IS 'The folder name.';
 COMMENT ON COLUMN public.virtual_folder.path IS 'NOT YET USED : the path to this folder. This path can be created from the parent relationship.';
 COMMENT ON COLUMN public.virtual_folder.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.virtual_folder.parent_virtual_folder_id IS 'The parent folder. Null if this folder is rooted in the project folder.';
+COMMENT ON COLUMN public.virtual_folder.project_id IS 'The project this virtual folder is related to.';
 
 
 CREATE TABLE public.project_user_account_map (
-                project_id INTEGER NOT NULL,
-                user_account_id INTEGER NOT NULL,
+                project_id BIGINT NOT NULL,
+                user_account_id BIGINT NOT NULL,
                 serialized_properties LONGVARCHAR,
                 CONSTRAINT project_user_account_map_pk PRIMARY KEY (project_id, user_account_id)
 );
-COMMENT ON TABLE public.project_user_account_map IS 'Mappinng table between user_account and project table';
+COMMENT ON TABLE public.project_user_account_map IS 'The mapping between project and user_account records.';
 COMMENT ON COLUMN public.project_user_account_map.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
@@ -285,11 +366,20 @@ CREATE TABLE public.quant_method (
                 serialized_properties LONGVARCHAR,
                 CONSTRAINT quant_method_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.quant_method IS 'The quantificatin method description.';
-COMMENT ON COLUMN public.quant_method.type IS 'isobaric_labeling, residue_labeling, atom_labeling, label_free, spectral_counting';
-COMMENT ON COLUMN public.quant_method.abundance_unit IS 'spectral_counting, reporter_ion,  feature, xic (mrm), mixed';
+COMMENT ON TABLE public.quant_method IS 'An enumeration of available quantitative methods.';
+COMMENT ON COLUMN public.quant_method.name IS 'A unique name for this quantitative method as defined by the system.';
+COMMENT ON COLUMN public.quant_method.type IS 'Indicates the type of the molecular labeling which may have been used for quantitation.
+Valid values for this field are:
+isobaric_labeling, residue_labeling, atom_labeling, label_free.';
+COMMENT ON COLUMN public.quant_method.abundance_unit IS 'The unit corresponding to the measured abundance.
+Valid values for this field are:
+spectral_counting, reporter_ion, feature, xic (mrm), mixed.';
 COMMENT ON COLUMN public.quant_method.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
+
+CREATE UNIQUE INDEX public.quant_method_name_idx
+ ON public.quant_method
+ ( name );
 
 CREATE TABLE public.data_set (
                 id IDENTITY NOT NULL,
@@ -300,42 +390,62 @@ CREATE TABLE public.data_set (
                 keywords VARCHAR,
                 creation_timestamp TIMESTAMP NOT NULL,
                 modification_log LONGVARCHAR,
-                fraction_count INTEGER DEFAULT 0 NOT NULL,
+                children_count INTEGER DEFAULT 0 NOT NULL,
                 serialized_properties LONGVARCHAR,
-                result_set_id INTEGER,
-                result_summary_id INTEGER,
-                aggregation_id INTEGER,
-                fractionation_id INTEGER,
-                quant_method_id INTEGER,
-                parent_dataset_id INTEGER,
-                project_id INTEGER NOT NULL,
+                result_set_id BIGINT,
+                result_summary_id BIGINT,
+                aggregation_id BIGINT,
+                fractionation_id BIGINT,
+                quant_method_id BIGINT,
+                parent_dataset_id BIGINT,
+                project_id BIGINT NOT NULL,
                 CONSTRAINT data_set_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.data_set.name IS 'Could be the sample name.';
-COMMENT ON COLUMN public.data_set.type IS 'Valid values are:
-IDENTIFICATION, QUANTITATION, AGGREGATE.';
+COMMENT ON TABLE public.data_set IS 'A data_set is an abstract entity which can describe identification and quantitative data or an aggregation of such data_sets (see type column for more information). Each data_set provides references to the corresponding result_set/result_summary in the MSIdb of the related project.';
+COMMENT ON COLUMN public.data_set.number IS 'The data_set number which is unique for the children of a given parent data_set.';
+COMMENT ON COLUMN public.data_set.name IS 'The name of the data_set as defined by the user.';
+COMMENT ON COLUMN public.data_set.description IS 'The description of the data_set as defined by the user.';
+COMMENT ON COLUMN public.data_set.type IS 'There are two concrete types which can only be defined for the leaves of data_set tree: IDENTIFICATION and QUANTITATION. Each node of the data_set tree has to be typed as AGGREGATE.
+Valid values are for this field are:
+IDENTIFICATION, QUANTITATION, AGGREGATE, TRASH.';
+COMMENT ON COLUMN public.data_set.keywords IS 'A list of comma separated keywords that are provided by the user in order to tag the data_sets. These keywords can be used at the application level to search/filter data_sets. For instance one can set a keyword as the sub-project name of the related project, and then retrieve quickly all the data_sets corresponding to this sub-project.';
+COMMENT ON COLUMN public.data_set.creation_timestamp IS 'The timestamp corresponding to the creation date of the data_set.';
+COMMENT ON COLUMN public.data_set.modification_log IS 'This field can be used to store an history/log of the changes/processings performed on this data_set. Such changes could be validation algorithms, filters, manual user selection...';
+COMMENT ON COLUMN public.data_set.children_count IS 'The number of fractions associated with this data_set.';
+COMMENT ON COLUMN public.data_set.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.data_set.result_set_id IS 'The corresponding result_set in the MSIdb of the same project.';
+COMMENT ON COLUMN public.data_set.result_summary_id IS 'The corresponding result_summary in the MSIdb of the same project.';
+COMMENT ON COLUMN public.data_set.aggregation_id IS 'Defines the child nature of AGGREGATION data_sets.';
+COMMENT ON COLUMN public.data_set.fractionation_id IS 'If the data_set is associated with a fractionatin step, this field allows to define its type.';
+COMMENT ON COLUMN public.data_set.quant_method_id IS 'An optional quantitative method associated with data_sets of QUANTITATION type.';
+COMMENT ON COLUMN public.data_set.parent_dataset_id IS 'An optional parent data_set which has to be of AGGREGATION type.';
+COMMENT ON COLUMN public.data_set.project_id IS 'The project this data_set belongs to.';
 
 
 CREATE TABLE public.run_identification (
-                id INTEGER NOT NULL,
+                id BIGINT NOT NULL,
                 serialized_properties LONGVARCHAR,
-                run_id INTEGER,
+                run_id BIGINT,
                 raw_file_name VARCHAR(250),
                 CONSTRAINT run_identification_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.run_identification IS 'The identification of a run.';
+COMMENT ON TABLE public.run_identification IS 'Defines the run that corresponds to the identification of a set of MS/MS spectra.';
+COMMENT ON COLUMN public.run_identification.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.run_identification.run_id IS 'The run this identification refers to.';
+COMMENT ON COLUMN public.run_identification.raw_file_name IS 'The raw file whose the peaklist has been generated from.';
 
 
 CREATE TABLE public.sample_analysis (
                 id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
-                quantitation_id INTEGER NOT NULL,
+                quantitation_id BIGINT NOT NULL,
                 CONSTRAINT sample_analysis_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.sample_analysis IS 'Represents each analytical replicates of the associated biological sample. analytical replicates does not necessarily means MS run since labelled samples are analysed in MS in a unique run.';
-COMMENT ON COLUMN public.sample_analysis.number IS 'Number of the technological replicate.';
+COMMENT ON COLUMN public.sample_analysis.number IS 'The sample analysis number which is unique for a given quantitation.';
 COMMENT ON COLUMN public.sample_analysis.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.sample_analysis.quantitation_id IS 'The quantitation this sample analysis is related to.';
 
 
 CREATE TABLE public.master_quant_channel (
@@ -343,13 +453,18 @@ CREATE TABLE public.master_quant_channel (
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                lcms_map_set_id INTEGER,
-                quant_result_summary_id INTEGER,
-                quantitation_id INTEGER NOT NULL,
+                lcms_map_set_id BIGINT,
+                quant_result_summary_id BIGINT,
+                quantitation_id BIGINT NOT NULL,
                 CONSTRAINT master_quant_channel_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.master_quant_channel IS 'Store the quantitation profiles and ratios. May correspond to a quantitation overview (one unique fraction).';
+COMMENT ON TABLE public.master_quant_channel IS 'A master quant channel is a consensus over multiple quant channels (merged results). In the context of LC-MS analysis it may correspond to the master map of a given map set.';
+COMMENT ON COLUMN public.master_quant_channel.number IS 'The master quant channel number which is unique for a given quantitation.';
+COMMENT ON COLUMN public.master_quant_channel.name IS 'A name for this master quant channel as defined by the user.';
 COMMENT ON COLUMN public.master_quant_channel.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.master_quant_channel.lcms_map_set_id IS 'The corresponding LC-MS map set in the context of quantitations based on LC-MS feature extraction.';
+COMMENT ON COLUMN public.master_quant_channel.quant_result_summary_id IS 'The corresponding quant result summary which stores the data of this master quant channel.';
+COMMENT ON COLUMN public.master_quant_channel.quantitation_id IS 'The quantitation this master quant channel belongs to.';
 
 
 CREATE TABLE public.quant_label (
@@ -357,13 +472,19 @@ CREATE TABLE public.quant_label (
                 type VARCHAR(16) NOT NULL,
                 name VARCHAR(10) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                quant_method_id INTEGER NOT NULL,
+                quant_method_id BIGINT NOT NULL,
                 CONSTRAINT quant_label_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.quant_label IS 'TODO: rename to quantitative_labels or quant_labels ? (same semantic than quantitation_method ???)';
-COMMENT ON COLUMN public.quant_label.type IS 'isobaric residue_isotopic atom_isotopic';
-COMMENT ON COLUMN public.quant_label.name IS 'isobaric => 114/115/116/117 isotopic => light/heavy';
+COMMENT ON TABLE public.quant_label IS 'An enumeration of existing quantitation labels.';
+COMMENT ON COLUMN public.quant_label.type IS 'The type of the label.
+Valid values for this field are:
+isobaric, residue_isotopic, atom_isotopic.';
+COMMENT ON COLUMN public.quant_label.name IS 'A name identifying the label.
+For instance
+- isobaric labels => 114/115/116/117
+- isotopic labels => ICAT_C12/ICAT_C13';
 COMMENT ON COLUMN public.quant_label.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.quant_label.quant_method_id IS 'The quantitative method this label refers to.';
 
 
 CREATE TABLE public.biological_sample (
@@ -371,28 +492,36 @@ CREATE TABLE public.biological_sample (
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                quantitation_id INTEGER NOT NULL,
+                quantitation_id BIGINT NOT NULL,
                 CONSTRAINT biological_sample_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.biological_sample IS 'A biological sample under study.';
+COMMENT ON COLUMN public.biological_sample.number IS 'The biological sample number which is unique for a given quantitation.';
+COMMENT ON COLUMN public.biological_sample.name IS 'A name for this biological sample as defined by the user.';
 COMMENT ON COLUMN public.biological_sample.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.biological_sample.quantitation_id IS 'The quantitation this biologicial sample is related to.';
 
 
 CREATE TABLE public.biological_sample_sample_analysis_map (
-                biological_sample_id INTEGER NOT NULL,
-                sample_analysis_id INTEGER NOT NULL,
+                biological_sample_id BIGINT NOT NULL,
+                sample_analysis_id BIGINT NOT NULL,
                 CONSTRAINT biological_sample_sample_analysis_map_pk PRIMARY KEY (biological_sample_id, sample_analysis_id)
 );
+COMMENT ON TABLE public.biological_sample_sample_analysis_map IS 'The list of sample analyses performed for this biological sample.';
 
 
 CREATE TABLE public.group_setup (
                 id IDENTITY NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                quantitation_id INTEGER NOT NULL,
+                quantitation_id BIGINT NOT NULL,
                 CONSTRAINT group_setup_pk PRIMARY KEY (id)
 );
+COMMENT ON TABLE public.group_setup IS 'A group setup is a user defined entity allowing to define the way biological groups are compared.
+TODO: add number column';
+COMMENT ON COLUMN public.group_setup.name IS 'A name for this group setup as defined by the user.';
 COMMENT ON COLUMN public.group_setup.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.group_setup.quantitation_id IS 'The quantitation this group setup is related to.';
 
 
 CREATE TABLE public.biological_group (
@@ -400,36 +529,45 @@ CREATE TABLE public.biological_group (
                 number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
+                quantitation_id BIGINT NOT NULL,
                 CONSTRAINT biological_group_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.biological_group IS 'A group of related biological sample. A group is a generic concept that can be used to represents physiological conditions, pool or sample preparation conditions.';
+COMMENT ON TABLE public.biological_group IS 'A group of related biological samples. A biological group is a generic concept that can be used to represents physiological conditions, pool or sample preparation conditions.';
+COMMENT ON COLUMN public.biological_group.number IS 'The biological group number which is unique for a given quantitation.';
+COMMENT ON COLUMN public.biological_group.name IS 'A name for this biological group as defined by the user.';
 COMMENT ON COLUMN public.biological_group.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.biological_group.quantitation_id IS 'The quantitation this biologicial group is related to.';
 
 
 CREATE TABLE public.group_setup_biological_group_map (
-                group_setup_id INTEGER NOT NULL,
-                biological_group_id INTEGER NOT NULL,
+                group_setup_id BIGINT NOT NULL,
+                biological_group_id BIGINT NOT NULL,
                 CONSTRAINT group_setup_biological_group_map_pk PRIMARY KEY (group_setup_id, biological_group_id)
 );
+COMMENT ON TABLE public.group_setup_biological_group_map IS 'The list of biological groups associated with this group setup.';
 
 
 CREATE TABLE public.ratio_definition (
                 id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
-                numerator_id INTEGER NOT NULL,
-                denominator_id INTEGER NOT NULL,
-                group_setup_id INTEGER NOT NULL,
+                numerator_id BIGINT NOT NULL,
+                denominator_id BIGINT NOT NULL,
+                group_setup_id BIGINT NOT NULL,
                 CONSTRAINT ratio_definition_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.ratio_definition IS 'The definition of a quantitative ratio. A quantitative ratio is calculated from two biological groups that are considered as the numerator and denominator of the ratio formula.';
-COMMENT ON COLUMN public.ratio_definition.number IS 'Allows representation of sequence of ratios.';
+COMMENT ON COLUMN public.ratio_definition.number IS 'The ratio definition number which is unique for a given group setup. Allows representation of sequence of ratios.';
+COMMENT ON COLUMN public.ratio_definition.numerator_id IS 'The biological group whose the abundances are used as numerator in the ratio computation.';
+COMMENT ON COLUMN public.ratio_definition.denominator_id IS 'The biological group whose the abundances are used as denominator in the ratio computation.';
+COMMENT ON COLUMN public.ratio_definition.group_setup_id IS 'The group setup this ratio definition belongs to.';
 
 
 CREATE TABLE public.biological_group_biological_sample_item (
-                biological_group_id INTEGER NOT NULL,
-                biological_sample_id INTEGER NOT NULL,
+                biological_group_id BIGINT NOT NULL,
+                biological_sample_id BIGINT NOT NULL,
                 CONSTRAINT biological_group_biological_sample_item_pk PRIMARY KEY (biological_group_id, biological_sample_id)
 );
+COMMENT ON TABLE public.biological_group_biological_sample_item IS 'The list of biological samples associated with this biological group.';
 
 
 CREATE TABLE public.external_db (
@@ -446,28 +584,31 @@ CREATE TABLE public.external_db (
                 serialized_properties LONGVARCHAR,
                 CONSTRAINT external_db_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.external_db IS 'Contains connexion properties for databases associated to projects. 
-Databases allowing multiple instances are necessarily associated to projects.
-Singleton databases (PDIdb, PSdb, ePims, ...) are also define through this table without any specific association to any projects';
+COMMENT ON TABLE public.external_db IS 'Contains connexion properties for databases associated with projects.
+Databases allowing multiple instances are necessarily associated with projects.
+Singleton databases (PDIdb, PSdb, ePims, ...) are also define through this table without any specific association to any projects.';
 COMMENT ON COLUMN public.external_db.name IS 'The name of the database on the DBMS server.
 Could be the path/name of the database in case of embedded file DB engine (H2 / sqlite...)';
 COMMENT ON COLUMN public.external_db.connection_mode IS 'Specify type of connection used for this DB. Possible values: HOST, MEMORY or FILE';
 COMMENT ON COLUMN public.external_db.username IS 'The user name to use for database connection.';
 COMMENT ON COLUMN public.external_db.password IS 'The password to use for database connection.';
 COMMENT ON COLUMN public.external_db.host IS 'The hostname of the DBMS server.';
-COMMENT ON COLUMN public.external_db.port IS 'The hostname of the DBMS server.';
-COMMENT ON COLUMN public.external_db.type IS 'Type of database schema. Allowed values : msi, lcms, ps, pdi...';
-COMMENT ON COLUMN public.external_db.version IS 'Indicates the schema version of the referenced db. For instance, it could correspond to admin_infos.model_version of an MSIdb';
-COMMENT ON COLUMN public.external_db.is_busy IS 'Informs about the busy status of the corresponding external DB. If set to true then it tells that the external DB is busy and should not be used at the moment. Could be usefull if the external DB is implemented using an embedded technology like SQLite.';
-COMMENT ON COLUMN public.external_db.serialized_properties IS 'Could store the driver name and other connection properties needed by the driver.';
+COMMENT ON COLUMN public.external_db.port IS 'The port number of the DBMS server.';
+COMMENT ON COLUMN public.external_db.type IS 'Type of database schema.
+Valid values for this field are:
+MSI, LCMS, PDI, PS.';
+COMMENT ON COLUMN public.external_db.version IS 'Indicates the schema version of the referenced db. For instance, it could correspond to admin_infos.model_version of an MSIdb.';
+COMMENT ON COLUMN public.external_db.is_busy IS 'Informs about the busy status of the corresponding external DB. If set to true then it tells that the external DB is busy and should not be used at the moment. Could be useful if the external DB is implemented using an embedded technology like SQLite.';
+COMMENT ON COLUMN public.external_db.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).
+Note: it could store the driver name and other connection properties needed by the driver.';
 
 
 CREATE TABLE public.project_db_map (
-                project_id INTEGER NOT NULL,
-                external_db_id INTEGER NOT NULL,
+                project_id BIGINT NOT NULL,
+                external_db_id BIGINT NOT NULL,
                 CONSTRAINT project_db_map_pk PRIMARY KEY (project_id, external_db_id)
 );
-COMMENT ON TABLE public.project_db_map IS 'Mapping table between the project and external_db tables.';
+COMMENT ON TABLE public.project_db_map IS 'The mapping between project and external_db records.';
 
 
 CREATE TABLE public.object_tree_schema (
@@ -503,41 +644,62 @@ CREATE TABLE public.document (
                 creation_log LONGVARCHAR,
                 modification_log LONGVARCHAR,
                 serialized_properties LONGVARCHAR,
-                object_tree_id INTEGER NOT NULL,
-                virtual_folder_id INTEGER NOT NULL,
-                project_id INTEGER NOT NULL,
+                object_tree_id BIGINT NOT NULL,
+                virtual_folder_id BIGINT NOT NULL,
+                project_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT document_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.document IS 'A virtual document stored on the database. The content of the document is stored in the ''''object_tree'''' associated with the document.';
-COMMENT ON COLUMN public.document.creation_log IS 'A description provided by the system relative to the operation which as generated the document';
+COMMENT ON COLUMN public.document.name IS 'The name of the document.';
+COMMENT ON COLUMN public.document.description IS 'The optional description of the document.';
+COMMENT ON COLUMN public.document.keywords IS 'A list of comma separated keywords that are provided by the user in order to tag the document.';
+COMMENT ON COLUMN public.document.creation_timestamp IS 'The timestamp corresponding to the creation date of the document.';
+COMMENT ON COLUMN public.document.modification_timestamp IS 'The timestamp corresponding to the modification date of the document.';
+COMMENT ON COLUMN public.document.creation_log IS 'A description provided by the system relative to the operation that generated the document.';
 COMMENT ON COLUMN public.document.modification_log IS 'A description relative to the processings applied to the docuement after its ceation.';
 COMMENT ON COLUMN public.document.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.document.object_tree_id IS 'The object tree that corresponds to the document content.';
+COMMENT ON COLUMN public.document.virtual_folder_id IS 'The folder this document belongs to.';
+COMMENT ON COLUMN public.document.project_id IS 'The project this document belongs to.';
+COMMENT ON COLUMN public.document.schema_name IS 'The name of the schema describing the content of this document. It may be displayed to the user as the document name extension.';
 
 
 CREATE TABLE public.quant_channel (
                 id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
-                name VARCHAR(100) NOT NULL,
+                name VARCHAR(100),
                 context_key VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
-                lcms_map_id INTEGER,
-                ident_result_summary_id INTEGER NOT NULL,
-                quant_result_summary_id INTEGER,
-                run_id INTEGER,
-                quant_label_id INTEGER,
-                sample_analysis_id INTEGER NOT NULL,
-                biological_sample_id INTEGER NOT NULL,
-                master_quant_channel_id INTEGER NOT NULL,
-                dataset_id INTEGER NOT NULL,
+                lcms_map_id BIGINT,
+                ident_result_summary_id BIGINT NOT NULL,
+                run_id BIGINT,
+                quant_label_id BIGINT,
+                sample_analysis_id BIGINT NOT NULL,
+                biological_sample_id BIGINT NOT NULL,
+                master_quant_channel_id BIGINT NOT NULL,
+                quantitation_id BIGINT NOT NULL,
                 CONSTRAINT quant_channel_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.quant_channel IS 'A quanti channel represents all quantified peptides from a single replicate of a single fraction of a biological sample. UNIQUE(context_key, quantitation_fraction_id).';
-COMMENT ON COLUMN public.quant_channel.name IS 'TODO: allows NULL ?';
-COMMENT ON COLUMN public.quant_channel.context_key IS 'string representation of sample_number.replicate_number. This string is obtained by the concatenation of 
-biological_sample.number and sample_analysis_replicate.number';
+COMMENT ON TABLE public.quant_channel IS 'A quant channel represents all quantified peptides from a single replicate of a single fraction of a biological sample.';
+COMMENT ON COLUMN public.quant_channel.number IS 'The quant channel number which is unique for a given master quant channel.';
+COMMENT ON COLUMN public.quant_channel.name IS 'A name for this quant channel as defined by the user.';
+COMMENT ON COLUMN public.quant_channel.context_key IS 'A string which serves as a unique key for the quant channel in the context of a given quantitation. It is obtained by the concatenation of
+biological_sample.number and sample_analysis.number (separated by a dot character).';
 COMMENT ON COLUMN public.quant_channel.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.quant_channel.lcms_map_id IS 'The optional corresponding LC-MS map in the LCMSdb of the same project.';
+COMMENT ON COLUMN public.quant_channel.ident_result_summary_id IS 'The corresponding identification summary in the MSIdb of the same project.';
+COMMENT ON COLUMN public.quant_channel.run_id IS 'The run this quant channel refers to.';
+COMMENT ON COLUMN public.quant_channel.quant_label_id IS 'The optional label used in the quantiation process.';
+COMMENT ON COLUMN public.quant_channel.sample_analysis_id IS 'The sample analysis corresponding to this quant channel.';
+COMMENT ON COLUMN public.quant_channel.biological_sample_id IS 'The biological sample corresponding to this quant channel.';
+COMMENT ON COLUMN public.quant_channel.master_quant_channel_id IS 'The master quant channel this quant channel belongs to.';
+COMMENT ON COLUMN public.quant_channel.quantitation_id IS 'The quantitation this quant channel belongs to.';
 
+
+CREATE UNIQUE INDEX public.quant_channel_context_idx
+ ON public.quant_channel
+ ( context_key, quantitation_id );
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(50) NOT NULL,
@@ -548,6 +710,8 @@ CREATE TABLE public.admin_infos (
 );
 COMMENT ON TABLE public.admin_infos IS 'This table gives information about the current database model.';
 COMMENT ON COLUMN public.admin_infos.model_version IS 'The version number of the database schema.';
+COMMENT ON COLUMN public.admin_infos.db_creation_date IS 'The creation date of the database.';
+COMMENT ON COLUMN public.admin_infos.model_update_date IS 'The modification date of the database schema.';
 COMMENT ON COLUMN public.admin_infos.configuration IS 'The configuration properties. configuration contains :
   * absolute root path for shared documents, organized by projects';
 
@@ -579,7 +743,7 @@ ON UPDATE NO ACTION;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
-ALTER TABLE public.fragmentation_rule ADD CONSTRAINT fragmentation_series_fragmentation_rule_fk
+ALTER TABLE public.fragmentation_rule ADD CONSTRAINT required_series_fragmentation_rule_fk
 FOREIGN KEY (required_series_id)
 REFERENCES public.fragmentation_series (id)
 ON UPDATE NO ACTION;
@@ -587,8 +751,8 @@ ON UPDATE NO ACTION;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
-ALTER TABLE public.fragmentation_rule ADD CONSTRAINT fragmentation_series_fragmentation_rule_fk1
-FOREIGN KEY (theoretical_fragment_id)
+ALTER TABLE public.fragmentation_rule ADD CONSTRAINT fragmentation_series_fragmentation_rule_fk
+FOREIGN KEY (fragment_series_id)
 REFERENCES public.fragmentation_series (id)
 ON UPDATE NO ACTION;
 
@@ -741,7 +905,7 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
 ALTER TABLE public.quant_channel ADD CONSTRAINT dataset_quant_channel_fk
-FOREIGN KEY (dataset_id)
+FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
@@ -766,6 +930,12 @@ ON UPDATE NO ACTION;
 
 ALTER TABLE public.data_set ADD CONSTRAINT dataset_dataset_fk
 FOREIGN KEY (parent_dataset_id)
+REFERENCES public.data_set (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
+ALTER TABLE public.biological_group ADD CONSTRAINT data_set_biological_group_fk
+FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;

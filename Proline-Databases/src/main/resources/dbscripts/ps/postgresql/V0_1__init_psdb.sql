@@ -2,7 +2,7 @@
 CREATE SEQUENCE public.ptm_classification_id_seq;
 
 CREATE TABLE public.ptm_classification (
-                id INTEGER NOT NULL DEFAULT nextval('public.ptm_classification_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.ptm_classification_id_seq'),
                 name VARCHAR(1000) NOT NULL,
                 CONSTRAINT ptm_classification_pk PRIMARY KEY (id)
 );
@@ -27,12 +27,16 @@ AA substitution';
 
 ALTER SEQUENCE public.ptm_classification_id_seq OWNED BY public.ptm_classification.id;
 
+CREATE UNIQUE INDEX ptm_classification_idx
+ ON public.ptm_classification
+ ( name );
+
 CREATE SEQUENCE public.atom_label_id_seq;
 
 CREATE TABLE public.atom_label (
-                id INTEGER NOT NULL DEFAULT nextval('public.atom_label_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.atom_label_id_seq'),
                 name VARCHAR(100) NOT NULL,
-                symbol CHAR(2) NOT NULL,
+                symbol VARCHAR(2) NOT NULL,
                 mono_mass DOUBLE PRECISION NOT NULL,
                 average_mass DOUBLE PRECISION NOT NULL,
                 serialized_properties TEXT,
@@ -51,12 +55,12 @@ ALTER SEQUENCE public.atom_label_id_seq OWNED BY public.atom_label.id;
 CREATE SEQUENCE public.peptide_id_seq;
 
 CREATE TABLE public.peptide (
-                id INTEGER NOT NULL DEFAULT nextval('public.peptide_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.peptide_id_seq'),
                 sequence TEXT NOT NULL,
                 ptm_string TEXT,
                 calculated_mass DOUBLE PRECISION NOT NULL,
                 serialized_properties TEXT,
-                atom_label_id INTEGER,
+                atom_label_id BIGINT,
                 CONSTRAINT peptide_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.peptide IS 'A peptide is an amino acid (AA) sequence with given PTMs. A peptide has a unique pair of sequence/PTM string.';
@@ -70,8 +74,16 @@ COMMENT ON COLUMN public.peptide.serialized_properties IS 'A JSON string which s
 
 ALTER SEQUENCE public.peptide_id_seq OWNED BY public.peptide.id;
 
+CREATE UNIQUE INDEX peptide_sequence_ptm_idx
+ ON public.peptide
+ ( sequence, ptm_string );
+
+CREATE INDEX peptide_mass_idx
+ ON public.peptide
+ ( calculated_mass );
+
 CREATE TABLE public.peptide_ptm_insert_status (
-                peptide_id INTEGER NOT NULL,
+                peptide_id BIGINT NOT NULL,
                 is_ok BOOLEAN NOT NULL,
                 CONSTRAINT peptide_ptm_insert_status_pk PRIMARY KEY (peptide_id)
 );
@@ -82,8 +94,8 @@ COMMENT ON COLUMN public.peptide_ptm_insert_status.is_ok IS 'A boolean value wic
 CREATE SEQUENCE public.ptm_id_seq;
 
 CREATE TABLE public.ptm (
-                id INTEGER NOT NULL DEFAULT nextval('public.ptm_id_seq'),
-                unimod_id INTEGER,
+                id BIGINT NOT NULL DEFAULT nextval('public.ptm_id_seq'),
+                unimod_id BIGINT,
                 full_name VARCHAR(1000),
                 short_name VARCHAR(100) NOT NULL,
                 serialized_properties TEXT,
@@ -96,46 +108,59 @@ COMMENT ON COLUMN public.ptm.unimod_id IS 'The unimod record_id.';
 COMMENT ON COLUMN public.ptm.full_name IS 'A description of the PTM.
 MUST BE UNIQUE.';
 COMMENT ON COLUMN public.ptm.short_name IS 'Descriptive, one word name, suitable for use in software applications.
-This name must not include the specificity. For example, Carboxymethyl is the short name, not Carboxymethyl-Cys or Carboxymethyl (C). 
+This name must not include the specificity. For example, Carboxymethyl is the short name, not Carboxymethyl-Cys or Carboxymethyl (C).
 MUST BE UNIQUE.';
 COMMENT ON COLUMN public.ptm.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
 ALTER SEQUENCE public.ptm_id_seq OWNED BY public.ptm.id;
 
+CREATE UNIQUE INDEX ptm_full_name_idx
+ ON public.ptm
+ ( full_name );
+
+CREATE UNIQUE INDEX ptm_short_name_idx
+ ON public.ptm
+ ( short_name );
+
 CREATE SEQUENCE public.ptm_specificity_id_seq;
 
 CREATE TABLE public.ptm_specificity (
-                id INTEGER NOT NULL DEFAULT nextval('public.ptm_specificity_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.ptm_specificity_id_seq'),
                 location VARCHAR(14) NOT NULL,
                 residue CHAR(1),
                 serialized_properties TEXT,
-                ptm_id INTEGER NOT NULL,
-                classification_id INTEGER NOT NULL,
+                ptm_id BIGINT NOT NULL,
+                classification_id BIGINT NOT NULL,
                 CONSTRAINT ptm_specificity_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.ptm_specificity IS 'Describes the specificities of the ptm definitions.';
 COMMENT ON COLUMN public.ptm_specificity.location IS 'The location of the PTM relative to a peptide/protein sequence.
 Allowed values are: Anywhere, Any N-term, Any C-term, Protein N-term, Protein C-term.
 Choose "Anywhere" if the modification applies to a residue independent of its position, (e.g. oxidation of methionine). Choose "Any N-term" or "Any C-term" if the modification applies to a residue only when it is at a peptide terminus, (e.g. conversion of methionine to homoserine). Choose "Protein N-term" or "Protein C-term" if the modification only applies to the original terminus of the intact protein, not new peptide termini created by digestion, (e.g. post-translational acetylation of the protein amino terminus).';
-COMMENT ON COLUMN public.ptm_specificity.residue IS 'The symbol of the specific residue for this PTM.';
+COMMENT ON COLUMN public.ptm_specificity.residue IS 'The symbol of the specific residue for this PTM (Unimod "site" xml attribute).
+Null if Unimod "site" xml attribute is "C-term" or "N-term".';
 COMMENT ON COLUMN public.ptm_specificity.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
 ALTER SEQUENCE public.ptm_specificity_id_seq OWNED BY public.ptm_specificity.id;
 
+CREATE UNIQUE INDEX ptm_specificity_idx
+ ON public.ptm_specificity
+ ( location, residue, ptm_id );
+
 CREATE SEQUENCE public.ptm_evidence_id_seq;
 
 CREATE TABLE public.ptm_evidence (
-                id INTEGER NOT NULL DEFAULT nextval('public.ptm_evidence_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.ptm_evidence_id_seq'),
                 type VARCHAR(14) NOT NULL,
                 is_required BOOLEAN NOT NULL,
                 composition VARCHAR(50) NOT NULL,
                 mono_mass DOUBLE PRECISION NOT NULL,
                 average_mass DOUBLE PRECISION NOT NULL,
                 serialized_properties TEXT,
-                specificity_id INTEGER,
-                ptm_id INTEGER,
+                specificity_id BIGINT,
+                ptm_id BIGINT,
                 CONSTRAINT ptm_evidence_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.ptm_evidence IS 'Ptm associated ions/delta. Only one "Precursor" delta type MUST be defined for each ptm.
@@ -161,14 +186,14 @@ ALTER SEQUENCE public.ptm_evidence_id_seq OWNED BY public.ptm_evidence.id;
 CREATE SEQUENCE public.peptide_ptm_id_seq;
 
 CREATE TABLE public.peptide_ptm (
-                id INTEGER NOT NULL DEFAULT nextval('public.peptide_ptm_id_seq'),
+                id BIGINT NOT NULL DEFAULT nextval('public.peptide_ptm_id_seq'),
                 seq_position INTEGER NOT NULL,
                 mono_mass DOUBLE PRECISION,
                 average_mass DOUBLE PRECISION,
                 serialized_properties TEXT,
-                peptide_id INTEGER NOT NULL,
-                ptm_specificity_id INTEGER NOT NULL,
-                atom_label_id INTEGER,
+                peptide_id BIGINT NOT NULL,
+                ptm_specificity_id BIGINT NOT NULL,
+                atom_label_id BIGINT,
                 CONSTRAINT peptide_ptm_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.peptide_ptm IS 'Describes the PTM''s associated to a given peptide';
@@ -183,6 +208,10 @@ COMMENT ON COLUMN public.peptide_ptm.serialized_properties IS 'A JSON string whi
 
 
 ALTER SEQUENCE public.peptide_ptm_id_seq OWNED BY public.peptide_ptm.id;
+
+CREATE INDEX peptide_ptm_peptide_idx
+ ON public.peptide_ptm
+ ( peptide_id );
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
@@ -258,9 +287,3 @@ REFERENCES public.ptm_specificity (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
-
-CREATE UNIQUE INDEX peptide_sequence_ptm_idx ON peptide (sequence,ptm_string);
-
-CREATE INDEX peptide_mass_idx ON peptide (calculated_mass);
-
-CREATE INDEX peptide_ptm_peptide_idx ON peptide_ptm (peptide_id);
