@@ -583,7 +583,7 @@ CREATE INDEX public.prot_set_prot_match_item_rsm_idx
  ( result_summary_id ASC );
 
 CREATE TABLE public.peptide_set (
-                id BIGINT NOT NULL,
+                id IDENTITY NOT NULL,
                 is_subset BOOLEAN,
                 score REAL NOT NULL,
                 peptide_count INTEGER,

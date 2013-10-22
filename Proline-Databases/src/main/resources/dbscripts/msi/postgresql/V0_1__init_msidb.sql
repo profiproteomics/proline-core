@@ -656,8 +656,10 @@ CREATE INDEX prot_set_prot_match_item_rsm_idx
 
 CLUSTER prot_set_prot_match_item_rsm_idx ON protein_set_protein_match_item;
 
+CREATE SEQUENCE public.peptide_set_id_seq;
+
 CREATE TABLE public.peptide_set (
-                id BIGINT NOT NULL,
+                id BIGINT NOT NULL DEFAULT nextval('public.peptide_set_id_seq'),
                 is_subset BOOLEAN,
                 score REAL NOT NULL,
                 peptide_count INTEGER,
@@ -675,6 +677,8 @@ COMMENT ON COLUMN public.peptide_set.peptide_match_count IS 'The number of pepti
 COMMENT ON COLUMN public.peptide_set.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.peptide_set.result_summary_id IS 'Used for indexation by result summary';
 
+
+ALTER SEQUENCE public.peptide_set_id_seq OWNED BY public.peptide_set.id;
 
 CREATE INDEX peptide_set_rsm_idx
  ON public.peptide_set
