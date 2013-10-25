@@ -1,14 +1,18 @@
 package fr.proline.core.service.msq.quantify
 
-import javax.persistence.EntityManager
 import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.Ms2CountQuantifier
+import fr.proline.core.algo.msq.SpectralCountConfig
+import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq._
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.repository.IDataStoreConnectorFactory
+import javax.persistence.EntityManager
 
 /**
  * @author David Bouyssie
@@ -16,8 +20,9 @@ import fr.proline.repository.IDataStoreConnectorFactory
  */
 class SpectralCountQuantifier(
   val executionContext: IExecutionContext,
-  val experimentalDesign: ExperimentalDesign,
-  val udsMasterQuantChannel: MasterQuantitationChannel
+//  val experimentalDesign: ExperimentalDesign,
+  val udsMasterQuantChannel: MasterQuantitationChannel,
+  val scConfig : SpectralCountConfig
   ) extends AbstractMasterQuantChannelQuantifier with Logging {
   
   def quantifyMasterChannel(): Unit = {
@@ -118,5 +123,18 @@ class SpectralCountQuantifier(
     
     msiMQPepIonObjectTree
   }
-  
+    
+   protected def getMergedResultSummary(msiDbCtx : DatabaseConnectionContext) : ResultSummary = {
+     if(scConfig.parentRSMId.isEmpty)
+		 createMergedResultSummary(msiDbCtx)
+	 else {
+	   this.logger.debug( "Read Merged RSM with ID "+ scConfig.parentRSMId.get)
+	   
+	   // Instantiate a RSM provider
+	   val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx=psDbCtx,udsDbCtx = null)
+	   rsmProvider.getResultSummary(scConfig.parentRSMId.get, true).get
+	 }
+	    
+   }
+
 }
