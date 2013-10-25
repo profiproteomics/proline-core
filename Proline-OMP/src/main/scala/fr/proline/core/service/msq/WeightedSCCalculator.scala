@@ -41,7 +41,7 @@ class WeightedSCCalculatorWId (
     require(rsmIdsToCalculate!=null && referenceRSMId != 0 &&  rsmIdsToCalculate.length > 0)
     
     val rsmProvider = getResultSummaryProvider(execContext)
-    val rsProvider = getResultSetProvider(execContext)
+//    val rsProvider = getResultSetProvider(execContext)
     logger.debug(" Read Ref RSM "+referenceRSMId)
     val referenceRSMOpt : Option[ResultSummary] = rsmProvider.getResultSummary(referenceRSMId,true)
     if (referenceRSMOpt.isEmpty) {
@@ -55,11 +55,11 @@ class WeightedSCCalculatorWId (
        if (nextRSMOpt.isEmpty) {
     	throw new IllegalArgumentException("Unknown ResultSummary Id: " + rsmId)
        }
-      val nextRSOpt = rsProvider.getResultSet(nextRSMOpt.get.getResultSetId)
-      if (nextRSOpt.isEmpty) {
-    	throw new IllegalArgumentException("Unknown ResultSet "+nextRSMOpt.get.getResultSetId+" associated to resultSummary Id: " + rsmId)
-       }
-      nextRSMOpt.get.resultSet = nextRSOpt
+//      val nextRSOpt = rsProvider.getResultSet(nextRSMOpt.get.getResultSetId)
+//      if (nextRSOpt.isEmpty) {
+//    	throw new IllegalArgumentException("Unknown ResultSet "+nextRSMOpt.get.getResultSetId+" associated to resultSummary Id: " + rsmId)
+//       }
+//      nextRSMOpt.get.resultSet = nextRSOpt
       rsmToCalculateBuilder  += nextRSMOpt.get
     })
     
@@ -418,7 +418,7 @@ class WeightedSCCalculator (
    *  If peptide is a specific  ProteinSet, the corresponding weight will be 1
    *  Else if peptide is shared between multiple ProteinSets the weight = # specific pep of ProtSet / Sum ( #specific pep of all ProtSet identified by this pep)
    *  
-   *  @param  proteinWeightStructByProtSetId Map ProteinPepsWeightStruct by ProteinSetId in peptode reference RSM. ProteinPepsWeightStruct should be updated
+   *  @param  proteinWeightStructByProtSetId Map ProteinPepsWeightStruct by ProteinSetId in peptide reference RSM. ProteinPepsWeightStruct should be updated
    *  @param  protSetIdByPep For each Peptide (id) references list of ProteinSet (Id) identified by this peptide
    */
   def computePeptideWeight(proteinWeightStructByProtSetId : Map[Long,ProteinPepsWeightStruct], protSetIdByPep: HashMap[Long,ArrayBuffer[Long]]) : Unit = {
