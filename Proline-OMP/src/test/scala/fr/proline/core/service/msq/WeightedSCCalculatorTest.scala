@@ -97,7 +97,7 @@ class WeightedSCCalculatorTest extends AbstractMultipleDBTestCase with Logging {
     assertNotNull(rsmOp)
     assertTrue(rsmOp.isDefined)
     val readRSM = rsmOp.get
-    readRSM.resultSet = Some(readRS)
+//    readRSM.resultSet = Some(readRS)
     assertEquals(rsm.id,rsmOp.get.id)
     var wsCalculator = new WeightedSCCalculator(execContext = executionContext, referenceRSM=rsmOp.get, rsmToCalculate=Seq(rsmOp.get))
     val serviceRes = wsCalculator.runService
