@@ -7,6 +7,7 @@ import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.msq.quantify._
 import fr.proline.repository.IDataStoreConnectorFactory
+import fr.proline.core.algo.msq.SpectralCountConfig
 
 class QuantifyMasterQuantChannel(
   executionContext: IExecutionContext,
@@ -108,8 +109,9 @@ object MasterQuantChannelQuantifier {
       else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString() ) {
         masterQuantChannelQuantifier = new SpectralCountQuantifier(
           executionContext = executionContext,
-          experimentalDesign = experimentalDesign,
-          udsMasterQuantChannel = udsMasterQuantChannel
+//          experimentalDesign = experimentalDesign,
+          udsMasterQuantChannel = udsMasterQuantChannel,
+          scConfig = quantConfig.asInstanceOf[SpectralCountConfig]
         )
       }
     }
