@@ -77,10 +77,7 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
       new SelectQueryBuilder2(MsiDbProteinMatchTable,MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t1,c1,t2,c2) => 
         List(t1.*) ->
         "WHERE "~ t2.RESULT_SUMMARY_ID ~" IN("~ rsmIdsAsStr ~") "~
-        "AND "~ t1.ID ~"="~ t2.PROTEIN_MATCH_ID ~
-        // tries to fix redundant protein matches
-        // TODO: check if it is possible to have a given protein match in multiple peptide sets
-        " GROUP BY "~ t2.PROTEIN_MATCH_ID
+        "AND "~ t1.ID ~"="~ t2.PROTEIN_MATCH_ID
       )
     }
     
