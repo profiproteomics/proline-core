@@ -22,6 +22,7 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
+import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.util.primitives._
 
 abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
@@ -265,5 +266,9 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
     msiMQCObjectTree
   }
+  
+   protected def getMergedResultSummary(msiDbCtx : DatabaseConnectionContext) : ResultSummary = {
+		 createMergedResultSummary(msiDbCtx)
+   }
 
 }

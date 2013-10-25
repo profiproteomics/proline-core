@@ -59,11 +59,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
   // Instantiated fields
   protected val udsEm = executionContext.getUDSDbConnectionContext.getEntityManager
-  //protected val projectId = udsMasterQuantChannel.getDataset.getProject.getId
-  //protected val msiDbConnector = dsConnectorFactory.getMsiDbConnector(projectId)
   protected val msiDbCtx = executionContext.getMSIDbConnectionContext
   protected val msiEm = msiDbCtx.getEntityManager
-  //protected val psDbConnector = dsConnectorFactory.getPsDbConnector
   protected val psDbCtx = executionContext.getPSDbConnectionContext
 
   protected val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
@@ -107,33 +104,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     rsmProvider.getResultSummaries(rsmIds, true)
   }
 
-  protected val msiDbHelper = new MsiDbHelper(msiDbCtx)
-
-  protected val seqLengthByProtId = {
-    val tmpIdentProteinIdSet = new collection.mutable.HashSet[Long]()
-
-    for (identRSM <- identResultSummaries) {
-      // Retrieve protein ids
-      val rs = identRSM.resultSet.get
-      rs.proteinMatches.foreach { p => if (p.getProteinId != 0) tmpIdentProteinIdSet += p.getProteinId }
-    }
-
-    // Retrieve sequence length mapped by the corresponding protein id
-    this.msiDbHelper.getSeqLengthByBioSeqId(tmpIdentProteinIdSet.toList)
-  }
-
-  protected val mergedResultSummary = {
-    
-    // FIXME: check that all peptide sets have the same scoring
-    val pepSetScoring = PepSetScoring.withName( this.identResultSummaries(0).peptideSets(0).scoreType )
-    val pepSetScoreUpdater = PeptideSetScoreUpdater(pepSetScoring)
-    
-    // Merge result summaries
-    val resultSummaryMerger = new ResultSummaryMerger(pepSetScoreUpdater)
-    this.logger.info("merging result summaries...")
-    resultSummaryMerger.mergeResultSummaries(this.identResultSummaries, this.seqLengthByProtId)
-  }
-
+  protected val mergedResultSummary = getMergedResultSummary(msiDbCtx : DatabaseConnectionContext)
+   
   protected lazy val curSQLTime = new java.sql.Timestamp(new java.util.Date().getTime)
 
   private var _quantified = false
@@ -164,6 +136,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   protected def quantifyMasterChannel(): Unit
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree
   protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree
+  protected def getMergedResultSummary(msiDbCtx : DatabaseConnectionContext): ResultSummary
   //protected def buildMasterQuantProteinSetObjectTree( mqProtSet: MasterQuantProteinSet ): MsiObjectTree
 
   // TODO: load the schema
@@ -184,7 +157,6 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     msiQuantResultSet.setName("")
     msiQuantResultSet.setType(MsiResultSet.Type.QUANTITATION)
     msiQuantResultSet.setModificationTimestamp(curSQLTime)
-    //msiEm.persist(msiQuantResultSet)
 
     // Link this quantitative result set to the ident target MSI searches
     /*val rdbIdentMsiSearches = this.msiIdentResultSets.map { _.getMsiSearch() }
@@ -675,5 +647,29 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
     msiMQProtSetObjectTree
   }
+  
+  protected def createMergedResultSummary(msiDbCtx : DatabaseConnectionContext) : ResultSummary = {
+		  val msiDbHelper = new MsiDbHelper(msiDbCtx)
+		  val tmpIdentProteinIdSet = new collection.mutable.HashSet[Long]()
+		  
+		  for (identRSM <- identResultSummaries) {
+			  // 	Retrieve protein ids
+			  val rs = identRSM.resultSet.get
+			  rs.proteinMatches.foreach { p => if (p.getProteinId != 0) tmpIdentProteinIdSet += p.getProteinId }
+		  }
+
+		  // Retrieve sequence length mapped by the corresponding protein id
+		  val seqLengthByProtId = msiDbHelper.getSeqLengthByBioSeqId(tmpIdentProteinIdSet.toList)
+   
+		  // FIXME: check that all peptide sets have the same scoring
+		  val pepSetScoring = PepSetScoring.withName( this.identResultSummaries(0).peptideSets(0).scoreType )
+		  val pepSetScoreUpdater = PeptideSetScoreUpdater(pepSetScoring)
+    
+		  // Merge result summaries
+		  val resultSummaryMerger = new ResultSummaryMerger(pepSetScoreUpdater)
+		  this.logger.info("merging result summaries...")
+		  resultSummaryMerger.mergeResultSummaries(identResultSummaries, seqLengthByProtId)
+
+   }
 
 }
