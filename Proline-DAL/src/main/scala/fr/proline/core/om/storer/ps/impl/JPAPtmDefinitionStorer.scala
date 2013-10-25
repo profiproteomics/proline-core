@@ -64,9 +64,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
      * 2. IF the PTM short name doesn't exist in the database
      *    // Check the PTM composition is available (it is required to search for PTM Precursor evidences)
      *    2.1 IF the PTM composition is not defined -> throw EXCEPTION
-     *    2.2 ELSE
-     *        2.2.1 IF a PTM exists with the same Precursor delta (composition matching) -> throw EXCEPTION
-     *        2.2.2 ELSE (no PTM for this Precursor delta in the database) -> SAVE new PTM and UPDATE the provided PtmDefinition id
+     *    2.2 ELSE (no PTM for this Precursor delta in the database) -> SAVE new PTM and UPDATE the provided PtmDefinition id
      *
      * Note: PTM classification ambiguities are ignored
      *
@@ -132,34 +130,35 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             throw new IllegalArgumentException("the PTM composition must be defined for insertion in the database")
           } else {
             
+            /*
             // IF a PTM exists with the same Precursor evidence (composition matching)
             if( findPtmEvidencesByComposition(ptmDef.precursorDelta.composition).length > 0 ) {
               throw new IllegalArgumentException("a PTM evidence with the same composition already exists")
             }
             // ELSE (no PTM for this Precursor evidence in the database) -> SAVE new PTM
-            else {
-              
-              // Build and persist the precursor delta
-              val ptmPrecDelta = ptmDef.precursorDelta
-              val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)              
-              psEM.persist(psPtmPrecDelta)
-              
-              // Build and persist a new PTM
-              val psPtm = new PsPtm()
-              psPtm.setShortName(ptmDef.names.shortName)
-              psPtm.setFullName(ptmDef.names.fullName)
-              psPtm.setEvidences( asJavaSet(Set(psPtmPrecDelta)) )
-              psPtm.setUnimodId(ptmDef.unimodId)
-              psEM.persist(psPtm)
-              
-              // Build and persist the PTM specificity
-              val psPtmSpecif = convertPtmDefinitionToPSPtmSpecificity(ptmDef,psPtm)
-              psEM.persist(psPtmSpecif)
-              
-              // Increase the number of inserted PTM definitions
-              insertedPtmDefs += 1
-            }
-          }          
+            else {*/
+            
+            // Build and persist the precursor delta
+            val ptmPrecDelta = ptmDef.precursorDelta
+            val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)              
+            psEM.persist(psPtmPrecDelta)
+            
+            // Build and persist a new PTM
+            val psPtm = new PsPtm()
+            psPtm.setShortName(ptmDef.names.shortName)
+            psPtm.setFullName(ptmDef.names.fullName)
+            psPtm.setEvidences( asJavaSet(Set(psPtmPrecDelta)) )
+            psPtm.setUnimodId(ptmDef.unimodId)
+            psEM.persist(psPtm)
+            
+            // Build and persist the PTM specificity
+            val psPtmSpecif = convertPtmDefinitionToPSPtmSpecificity(ptmDef,psPtm)
+            psEM.persist(psPtmSpecif)
+            
+            // Increase the number of inserted PTM definitions
+            insertedPtmDefs += 1
+            //}
+          }
         }
       }
 
