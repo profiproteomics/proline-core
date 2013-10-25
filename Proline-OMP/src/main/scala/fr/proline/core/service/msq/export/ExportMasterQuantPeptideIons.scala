@@ -46,9 +46,8 @@ class ExportMasterQuantPeptideIons(
       row ++= mqPepCellsById(mqPep.id)
       
       // Append ratios
-      val mqPepProfileByGroupSetupNumOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber
-      if( mqPepProfileByGroupSetupNumOpt.isDefined ) {
-        val mqPepProfile = mqPepProfileByGroupSetupNumOpt.get(groupSetupNumber.toString)
+      if( mqPep.properties.isDefined && mqPep.properties.get.getMqPepProfileByGroupSetupNumber.isDefined ) {
+        val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber.toString)
         val ratios = mqPepProfile.getRatios.map(_.map(_.getState.toString).getOrElse("") )      
         row ++= ratios
       } else {
