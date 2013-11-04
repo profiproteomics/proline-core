@@ -95,7 +95,7 @@ object ContextFactory extends Logging {
     } else {
 
       try {
-        new SQLConnectionContext(dbConnector.getDataSource.getConnection, dbConnector.getDriverType)
+        new SQLConnectionContext(dbConnector.getDataSource.getConnection, dbConnector.getProlineDatabaseType, dbConnector.getDriverType)
       } catch {
 
         case sqlEx: SQLException => {

@@ -10,11 +10,11 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
+import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.JDBCReturningWork;
 import fr.proline.repository.util.JDBCWork;
 import fr.proline.repository.util.JPAUtils;
 
-// TODO: Auto-generated Javadoc
 /**
  * DatabaseContext contains a JPA EntityManager and/or a SQL JDBC Connection.
  * <p>
@@ -25,24 +25,20 @@ import fr.proline.repository.util.JPAUtils;
  */
 public class DatabaseConnectionContext {
 
-    /** The Constant LOG. */
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseConnectionContext.class);
 
-    /** The m_entity manager. */
     private final EntityManager m_entityManager;
 
-    /** The m_driver type. */
+    private final ProlineDatabaseType m_prolineDatabaseType;
+
     private final DriverType m_driverType;
 
-    /** The m_context lock. */
     private final Object m_contextLock = new Object();
 
     /* All mutable fields are @GuardedBy("m_contextLock") */
 
-    /** The m_connection. */
     private Connection m_connection;
 
-    /** The m_closed. */
     private boolean m_closed;
 
     /**
@@ -53,8 +49,9 @@ public class DatabaseConnectionContext {
      * @param driverType
      *            Database DriverType (H2, PostgreSQL, SQLLite).
      */
-    public DatabaseConnectionContext(final EntityManager entityManager, final DriverType driverType) {
-	this(entityManager, null, driverType);
+    public DatabaseConnectionContext(final EntityManager entityManager,
+	    final ProlineDatabaseType prolineDatabaseType, final DriverType driverType) {
+	this(entityManager, null, prolineDatabaseType, driverType);
     }
 
     /**
@@ -64,7 +61,8 @@ public class DatabaseConnectionContext {
      *            Connector to target DataBase.
      */
     public DatabaseConnectionContext(final IDatabaseConnector dbConnector) {
-	this(dbConnector.getEntityManagerFactory().createEntityManager(), dbConnector.getDriverType());
+	this(dbConnector.getEntityManagerFactory().createEntityManager(), dbConnector
+		.getProlineDatabaseType(), dbConnector.getDriverType());
     }
 
     /**
@@ -75,8 +73,9 @@ public class DatabaseConnectionContext {
      * @param driverType
      *            Database DriverType (H2, PostgreSQL, SQLLite).
      */
-    public DatabaseConnectionContext(final Connection connection, final DriverType driverType) {
-	this(null, connection, driverType);
+    public DatabaseConnectionContext(final Connection connection,
+	    final ProlineDatabaseType prolineDatabaseType, final DriverType driverType) {
+	this(null, connection, prolineDatabaseType, driverType);
     }
 
     /**
@@ -90,13 +89,15 @@ public class DatabaseConnectionContext {
      *            the driver type
      */
     protected DatabaseConnectionContext(final EntityManager entityManager, final Connection connection,
-	    final DriverType driverType) {
+	    final ProlineDatabaseType prolineDatabaseType, final DriverType driverType) {
 
 	if ((entityManager == null) && (connection == null)) {
 	    throw new IllegalArgumentException("EntityManager and Connection are both null");
 	}
 
 	m_entityManager = entityManager;
+
+	m_prolineDatabaseType = prolineDatabaseType;
 
 	m_driverType = driverType;
 
@@ -107,9 +108,9 @@ public class DatabaseConnectionContext {
     }
 
     /**
-     * Retrieves current Database DriverType.
+     * Retrieves current EntityManager.
      * 
-     * @return current Database DriverType or <code>null</code> if not set.
+     * @return current EntityManager ; if <code>null</code>, Database is SQL JDBC driven.
      */
     public EntityManager getEntityManager() {
 
@@ -131,9 +132,18 @@ public class DatabaseConnectionContext {
     }
 
     /**
-     * Retrieves current EntityManager.
+     * Retrieves current ProlineDatabaseType (UDS, PDI, PS, MSI...).
      * 
-     * @return current EntityManager ; if <code>null</code>, Database is SQL JDBC driven.
+     * @return current ProlineDatabaseType or <code>null</code> if not set.
+     */
+    public ProlineDatabaseType getProlineDatabaseType() {
+	return m_prolineDatabaseType;
+    }
+
+    /**
+     * Retrieves current Database DriverType (PostgreSQL, h2, SQLite...).
+     * 
+     * @return current Database DriverType or <code>null</code> if not set.
      */
     public DriverType getDriverType() {
 	return m_driverType;
