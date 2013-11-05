@@ -91,7 +91,7 @@ biological_sample.number and sample_analysis.number (separated by a dot characte
     </index>
     <index id="IDX24" populated="true" UUID="3974849a-2510-4a84-80af-b5d2dd9809b4" clustered="false" name="quant_channel_context_idx" physicalName="quant_channel_context_idx" primaryKeyIndex="false" unique="true" >
      <index-column id="IDC25" populated="true" UUID="99ca7456-32ce-4ad8-a224-1ae3d74a5a5c" ascendingOrDescending="UNSPECIFIED" column-ref="COL12" name="context_key" physicalName="context_key" />
-     <index-column id="IDC26" populated="true" UUID="5e45ecfa-eae3-4884-8391-ec06a8b66007" ascendingOrDescending="UNSPECIFIED" column-ref="COL21" name="quantitation_id" physicalName="quantitation_id" />
+     <index-column id="IDC26" populated="true" UUID="ee927d91-7cb8-4781-8466-b5ecc0e2b22e" ascendingOrDescending="UNSPECIFIED" column-ref="COL20" name="master_quant_channel_id" physicalName="master_quant_channel_id" />
     </index>
    </folder>
   </table>
@@ -1472,7 +1472,7 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8367503291570026" viewportX="641" viewportY="440" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8367503291570026" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="157" y="71" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB8" x="1052" y="187" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB27" x="883" y="689" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
@@ -1482,7 +1482,7 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
   <table-pane table-ref="TAB65" x="1489" y="923" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB72" x="1621" y="589" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB80" x="1678" y="741" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB86" x="1374" y="185" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB86" x="1344" y="190" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB96" x="1759" y="962" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB104" x="1253" y="561" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB114" x="320" y="774" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
@@ -1520,7 +1520,7 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
   <table-link relationship-ref="REL388" pkConnection="0.12322274881516587" fkConnection="0.908" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL392" pkConnection="0.48031496062992124" fkConnection="0.3399014778325123" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="65"/>
   <table-link relationship-ref="REL402" pkConnection="0.43157894736842106" fkConnection="0.5566502463054187" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="129"/>
-  <table-link relationship-ref="REL384" pkConnection="0.2185792349726776" fkConnection="0.8511627906976744" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
+  <table-link relationship-ref="REL384" pkConnection="0.33513513513513515" fkConnection="0.8511627906976744" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL368" pkConnection="0.29842931937172773" fkConnection="0.36036036036036034" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="20"/>
   <table-link relationship-ref="REL370" pkConnection="0.5078534031413613" fkConnection="0.6936936936936937" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="20"/>
   <table-link relationship-ref="REL358" pkConnection="0.2598870056497175" fkConnection="0.8722466960352423" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
@@ -1559,7 +1559,7 @@ Valid values for this field are: PROTEIN, PEPTIDE, OTHER, NONE.</remarks>
   <table-link relationship-ref="REL460" pkConnection="0.4022346368715084" fkConnection="0.5339805825242718" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL382" pkConnection="0.16489361702127658" fkConnection="0.5690376569037657" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL408" pkConnection="0.5957446808510638" fkConnection="0.22844827586206898" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
-  <table-link relationship-ref="REL386" pkConnection="0.0972972972972973" fkConnection="0.8846153846153846" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
+  <table-link relationship-ref="REL386" pkConnection="0.20540540540540542" fkConnection="0.8846153846153846" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL376" pkConnection="0.53" fkConnection="0.3404255319148936" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="40"/>
   <table-link relationship-ref="REL372" pkConnection="0.32432432432432434" fkConnection="0.5714285714285714" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL436" pkConnection="0.7702702702702703" fkConnection="0.5529411764705883" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="40"/>
