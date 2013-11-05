@@ -381,7 +381,7 @@ CREATE TABLE virtual_folder (
                 FOREIGN KEY (project_id) REFERENCES project (id)
 );
 
-CREATE UNIQUE INDEX quant_channel_context_idx ON quant_channel (context_key,quantitation_id);
+CREATE UNIQUE INDEX quant_channel_context_idx ON quant_channel (context_key,master_quant_channel_id);
 
 CREATE UNIQUE INDEX quant_method_name_idx ON quant_method (name);
 

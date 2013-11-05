@@ -699,7 +699,7 @@ COMMENT ON COLUMN public.quant_channel.quantitation_id IS 'The quantitation this
 
 CREATE UNIQUE INDEX public.quant_channel_context_idx
  ON public.quant_channel
- ( context_key, quantitation_id );
+ ( context_key, master_quant_channel_id );
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(50) NOT NULL,

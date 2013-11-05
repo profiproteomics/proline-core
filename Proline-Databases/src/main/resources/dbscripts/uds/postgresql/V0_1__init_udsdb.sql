@@ -811,7 +811,7 @@ ALTER SEQUENCE public.quant_channel_id_seq OWNED BY public.quant_channel.id;
 
 CREATE UNIQUE INDEX quant_channel_context_idx
  ON public.quant_channel
- ( context_key, quantitation_id );
+ ( context_key, master_quant_channel_id );
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(50) NOT NULL,
