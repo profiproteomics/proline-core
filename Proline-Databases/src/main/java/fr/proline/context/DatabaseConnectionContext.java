@@ -199,7 +199,7 @@ public class DatabaseConnectionContext {
 
 	} // End of synchronized block on m_contextLock
 
-	LOG.debug("IsInTransaction in Context: {}", result);
+	LOG.debug("IsInTransaction from DatabaseConnectionContext: {}", result);
 
 	return result;
     }
@@ -218,7 +218,7 @@ public class DatabaseConnectionContext {
 		throw new IllegalStateException("Context ALREADY closed");
 	    }
 
-	    LOG.debug("Begin Transaction in Context");
+	    LOG.debug("Begin Transaction from DatabaseConnectionContext");
 
 	    if (isJPA()) {
 		getEntityManager().getTransaction().begin();
@@ -246,7 +246,7 @@ public class DatabaseConnectionContext {
 		throw new IllegalStateException("Context ALREADY closed");
 	    }
 
-	    LOG.debug("Commit Transaction in Context");
+	    LOG.debug("Commit Transaction from DatabaseConnectionContext");
 
 	    if (isJPA()) {
 		getEntityManager().getTransaction().commit();
@@ -275,7 +275,7 @@ public class DatabaseConnectionContext {
 		throw new IllegalStateException("Context ALREADY closed");
 	    }
 
-	    LOG.debug("Rollback Transaction in Context");
+	    LOG.debug("Rollback Transaction from DatabaseConnectionContext");
 
 	    if (isJPA()) {
 		getEntityManager().getTransaction().rollback();
@@ -309,7 +309,7 @@ public class DatabaseConnectionContext {
 		    try {
 			m_connection.close();
 		    } catch (SQLException exClose) {
-			LOG.error("Error closing DatabaseContext SQL Connection", exClose);
+			LOG.error("Error closing DatabaseConnectionContext SQL Connection", exClose);
 		    }
 		}
 
