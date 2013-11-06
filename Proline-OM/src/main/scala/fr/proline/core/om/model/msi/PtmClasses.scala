@@ -162,6 +162,16 @@ case class PtmDefinition(
     }
     case _ => false
   }
+  
+  /**
+   * Convert the PTM definition into a readable string (using the Mascot convention).
+   */
+  def toReadableString = {
+    val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
+    val resAsStr = if( residue != '\0' ) residue.toString else ""
+    val locWithRes = Seq( loc, resAsStr ).filter( StringUtils.isNotEmpty(_) ).mkString(" ")    
+    "%s (%s)".format(this.names.shortName,locWithRes)
+  }
 }
 
 @JsonSnakeCase
