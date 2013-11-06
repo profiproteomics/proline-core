@@ -64,10 +64,9 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
      * 2. IF the PTM short name doesn't exist in the database
      *    // Check the PTM composition is available (it is required to search for PTM Precursor evidences)
      *    2.1 IF the PTM composition is not defined -> throw EXCEPTION
-     *    2.2 ELSE (no PTM for this Precursor delta in the database) -> SAVE new PTM and UPDATE the provided PtmDefinition id
+     *    2.2 ELSE SAVE new PTM and UPDATE the provided PtmDefinition id (PTM classification ambiguities are ignored here)
      *
-     * Note: PTM classification ambiguities are ignored
-     *
+     * TODO: create custom Exception classes ???
      */
     def insertPtmDefinitions(ptmDefs: Seq[PtmDefinition]): Int = {
       require(ptmDefs != null, "ptmDefs must not be null")
@@ -87,20 +86,21 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
 
           // Retrieve the Precursor delta of the found PTM
           val psPtmPrecDelta = psPtm.getEvidences().toList.find(_.getType() == PsPtmEvidencePrecursorType).get
-
+          
           // Compare PS PTM evidence with found PTM evidence
           val precursorDelta = ptmDef.precursorDelta
           val ptmComposition = precursorDelta.composition
           if (nearlyEqual(psPtmPrecDelta.getMonoMass, precursorDelta.monoMass) == false ||
               nearlyEqual(psPtmPrecDelta.getAverageMass, precursorDelta.averageMass) == false ||
-            (StringUtils.isEmpty(ptmComposition) == false && ptmComposition != ptmComposition)) {
+              precursorDelta.composition != psPtmPrecDelta.getComposition ) { // StringUtils.isEmpty(ptmComposition) == false &&
             throw new IllegalArgumentException("the provided PTM %s exists in the PSdb with different evidence properties".format(ptmShortName))
           }
 
           // Try to retrieve the PTM specificity matching the provided PTM definition
           val psPtmSpecifs = psPtm.getSpecificities().toList
+          
           val psMatchingPtmSpecifOpt = psPtmSpecifs.find { psPtmSpecif =>
-            psPtmSpecif.getLocation == ptmDef.location && psPtmSpecif.getResidue == ptmDef.residue
+            psPtmSpecif.getLocation == ptmDef.location && characterToScalaChar(psPtmSpecif.getResidue) == ptmDef.residue
           }
 
           // IF the PTM Precursor delta is identical but the specificity is new
@@ -130,14 +130,6 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             throw new IllegalArgumentException("the PTM composition must be defined for insertion in the database")
           } else {
             
-            /*
-            // IF a PTM exists with the same Precursor evidence (composition matching)
-            if( findPtmEvidencesByComposition(ptmDef.precursorDelta.composition).length > 0 ) {
-              throw new IllegalArgumentException("a PTM evidence with the same composition already exists")
-            }
-            // ELSE (no PTM for this Precursor evidence in the database) -> SAVE new PTM
-            else {*/
-            
             // Build and persist the precursor delta
             val ptmPrecDelta = ptmDef.precursorDelta
             val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)              
@@ -155,9 +147,11 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             val psPtmSpecif = convertPtmDefinitionToPSPtmSpecificity(ptmDef,psPtm)
             psEM.persist(psPtmSpecif)
             
+            // Update the provided PtmDefinition id
+            ptmDef.id = psPtmSpecif.getId()
+            
             // Increase the number of inserted PTM definitions
             insertedPtmDefs += 1
-            //}
           }
         }
       }
@@ -205,13 +199,6 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
       val query = psEM.createQuery("FROM fr.proline.core.orm.ps.PtmEvidence WHERE composition = :composition",classOf[PsPtmEvidence])
       query.setParameter("composition", composition).getResultList().toList
     }
-    
-    // TODO: put in a repository
-    /*protected def findPtmEvidencesByComposition() {
-        /*  msiEm.createQuery("FROM fr.proline.core.orm.msi.ResultSet WHERE id IN (:ids)",
-      classOf[fr.proline.core.orm.msi.ResultSet])
-      .setParameter("ids", identRsIds).getResultList().toList*/
-    }*/
 
     protected def nearlyEqual(a: Double, b: Double): Boolean = {
       (a - b).abs < MathUtils.EPSILON_HIGH_PRECISION
