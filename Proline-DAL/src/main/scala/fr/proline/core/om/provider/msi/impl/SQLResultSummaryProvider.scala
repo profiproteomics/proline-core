@@ -83,16 +83,16 @@ class SQLResultSummaryProvider(
           val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches(rsmId)
           val protMatches = protMatchProvider.getResultSummariesProteinMatches(Array(rsmId))
           
+          // TODO: remove these two commented and obsolete workarounds when all tests are ok
+          
           // tries to fix redundant protein matches
-          // TODO: check if it is possible to have a given protein match in multiple peptide sets
-          val distinctProtMatches = protMatches.groupBy( _.id ).map( _._2.head )
+          //val distinctProtMatches = protMatches.groupBy( _.id ).map( _._2.head )
           
           // Remove objects which are not linked to result summary
-          // TODO: remove when the provider is fully implemented
-          val protMatchIdSet = rsmPepSets.flatMap(_.proteinMatchIds) toSet
-          val rsmProtMatches = distinctProtMatches.filter( p => protMatchIdSet.contains(p.id) ).toArray
+          //val protMatchIdSet = rsmPepSets.flatMap(_.proteinMatchIds) toSet
+          //val rsmProtMatches = distinctProtMatches.filter( p => protMatchIdSet.contains(p.id) ).toArray
           
-          rsAsOpt = Some(this.getResultSet(rsId, pepMatches, rsmProtMatches))
+          rsAsOpt = Some(this.getResultSet(rsId, pepMatches, protMatches))
         }
     
         new ResultSummary(
