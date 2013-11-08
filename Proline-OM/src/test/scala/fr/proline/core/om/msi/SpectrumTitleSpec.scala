@@ -11,19 +11,18 @@ import fr.proline.core.om.model.msi.SpectrumTitleFields
 @RunWith(classOf[JUnitRunner])
 class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
   
-  // TODO: update proline admin config files
   object SoftNames extends Enumeration {
     val EXTRACT_MSN = Value("extract_msn.exe")
-    val DATA_ANALYSIS_4_0 = Value("Data Analysis 4.0") // regex added
-    val DATA_ANALYSIS_4_1 = Value("Data Analysis 4.1") // regex added
+    val DATA_ANALYSIS_4_0 = Value("Data Analysis 4.0")
+    val DATA_ANALYSIS_4_1 = Value("Data Analysis 4.1")
     val MASCOT_DLL = Value("mascot.dll")
-    val MASCOT_DISTILLER = Value("Mascot Distiller") // regex modified
+    val MASCOT_DISTILLER = Value("Mascot Distiller")
     val MAX_QUANT = Value("MaxQuant")
     val PROTEOME_DISCOVER = Value("Proteome Discoverer")
     val PROTEO_WIZARD_2_0 = Value("ProteoWizard 2.0")
     val PROTEO_WIZARD_2_1 = Value("ProteoWizard 2.1")
     val PROTEO_WIZARD_3_0 = Value("ProteoWizard 3.0")
-    val SPECTRUM_MILL = Value("Spectrum Mill") // rule renamed
+    val SPECTRUM_MILL = Value("Spectrum Mill")
   }
   
   case class SpectrumTitleSpecif(
