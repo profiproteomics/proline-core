@@ -22,6 +22,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     val PROTEOME_DISCOVER = Value("Proteome Discoverer")
     val PROTEO_WIZARD_2_0 = Value("ProteoWizard 2.0")
     val PROTEO_WIZARD_2_1 = Value("ProteoWizard 2.1")
+    val PROTEO_WIZARD_3_0 = Value("ProteoWizard 3.0")
     val SPECTRUM_MILL = Value("Spectrum Mill") // rule renamed
   }
   
@@ -109,6 +110,16 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
       )
     ),
     SpectrumTitleSpecif(
+      SoftNames.PROTEO_WIZARD_3_0,
+      "the raw file name and one scan number",
+      """QEAJS131018_18.7211.7211.2 File:"QEAJS131018_18.raw", NativeID:"controllerType=0 controllerNumber=1 scan=7211"""",
+      Map(
+        SpectrumTitleFields.RAW_FILE_NAME -> "QEAJS131018_18.raw",
+        SpectrumTitleFields.FIRST_SCAN -> "7211",
+        SpectrumTitleFields.LAST_SCAN -> "7211"
+      )
+    ),
+    SpectrumTitleSpecif(
       SoftNames.SPECTRUM_MILL,
       "one retention time",
       "Cmpd 1063, +MSn(705.8878), 24.12 min", 
@@ -173,6 +184,11 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
       rawFileNameRegex = Some("""(.+)\.\d+\.\d+\.\d+$"""),
       firstScanRegex   = Some(""".+\.(\d+)\.\d+\.\d+$"""),
       lastScanRegex    = Some(""".+\.\d+\.(\d+)\.\d+$""")
+    ),
+    SoftNames.PROTEO_WIZARD_3_0 -> SpectrumTitleParsingRule(
+      rawFileNameRegex = Some("""File:"(.+?)","""),
+      firstScanRegex   = Some("""scan=(\d+)"""),
+      lastScanRegex    = Some("""scan=(\d+)""")
     ),
     SoftNames.SPECTRUM_MILL -> SpectrumTitleParsingRule(
       firstTimeRegex = Some("""Cmpd.+MSn.+, (\d+\.\d+) min"""),
