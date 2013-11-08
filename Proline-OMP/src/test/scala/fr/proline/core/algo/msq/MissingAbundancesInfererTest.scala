@@ -58,7 +58,7 @@ class MissingAbundancesInfererTest {
     
     assertTrue( cvMatrix(0) > 100f )
     assertTrue( cvMatrix(1) < 100f )
-    assertTrue( cvMatrix.last < 20f )
+    assertTrue( cvMatrix.last < 50f )
     
   }
 
