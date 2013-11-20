@@ -126,13 +126,13 @@ class LabelFreeFeatureQuantifier(
       }
       
       // Compute the statistical analysis of abundance profiles
-      val profilizer = new Profilizer(
+      /*val profilizer = new Profilizer(
         expDesign = expDesign,
         groupSetupNumber = 1, // TODO: retrieve from params
         masterQCNumber = udsMasterQuantChannel.getNumber
       )
       
-      profilizer.computeMasterQuantPeptideProfiles(masterQuantPeptides, statTestsAlpha)
+      profilizer.computeMasterQuantPeptideProfiles(masterQuantPeptides, statTestsAlpha)*/
       
       masterQuantPeptides.toArray
     }
@@ -380,15 +380,15 @@ class LabelFreeFeatureQuantifier(
       
       mqProtSets += mqProteinSet
     }
-                                              
+    
     // Compute the statistical analysis of abundance profiles
-    val profilizer = new Profilizer(
+    /*val profilizer = new Profilizer(
       expDesign = expDesign,
       groupSetupNumber = 1, // TODO: retrieve from params
       masterQCNumber = udsMasterQuantChannel.getNumber
     )
     
-    profilizer.computeMasterQuantProtSetProfiles(mqProtSets, statTestsAlpha)
+    profilizer.computeMasterQuantProtSetProfiles(mqProtSets, statTestsAlpha)*/
     
     mqProtSets.toArray
   }
