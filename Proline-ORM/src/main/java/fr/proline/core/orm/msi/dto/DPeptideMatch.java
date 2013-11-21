@@ -8,6 +8,7 @@ import fr.proline.core.orm.msi.Peptide;
  */
 public class DPeptideMatch {
     private long m_id;
+    private Integer m_rank;
     private int m_charge;
     private Float m_deltaMoz;
     private double m_experimentalMoz;
@@ -24,8 +25,9 @@ public class DPeptideMatch {
     
 
     
-    public DPeptideMatch(long id, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId) {
+    public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId) {
         m_id = id;
+        m_rank = rank;
         m_charge = charge;
         m_deltaMoz = deltaMoz;
         m_experimentalMoz = experimentalMoz;
@@ -53,6 +55,10 @@ public class DPeptideMatch {
     
     public Float getScore() {
         return m_score;
+    }
+    
+    public Integer getRank() {
+    	return m_rank;
     }
     
     public int getCharge() {
