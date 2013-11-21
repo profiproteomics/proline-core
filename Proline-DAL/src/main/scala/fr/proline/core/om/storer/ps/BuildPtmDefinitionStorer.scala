@@ -20,13 +20,7 @@ trait IPtmDefinitionStorer {
 object BuildPtmDefinitionStorer {
   
   def apply( psDbContext: DatabaseConnectionContext ): IPtmDefinitionStorer = {
-    
     JPAPtmDefinitionStorer
-    /*psDbContext.isJPA match {
-      case true => new RsmStorer( new SQLRsmStorer() )
-      case false => new RsmStorer( new SQLRsmStorer() )
-    }*/
-    
   }
 
 }
