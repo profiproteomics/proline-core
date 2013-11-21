@@ -45,7 +45,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
 
     // Define some vars
     val psEM = execCtx.getPSDbConnectionContext().getEntityManager()
-    
+
     // Retrieve the list of existing PTM classifications
     val allPtmClassifs = psEM.createQuery("SELECT e FROM fr.proline.core.orm.ps.PtmClassification e",classOf[PsPtmClassification]).getResultList().toList
     val psPtmClassifByUpperName = Map() ++ allPtmClassifs.map( classif => classif.getName.toUpperCase() -> classif )
@@ -105,9 +105,14 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
 
           // IF the PTM Precursor delta is identical but the specificity is new
           if (psMatchingPtmSpecifOpt.isEmpty) {
-
+         	 
+            if (ptmDef.residue != '\0')
+            	logger.info("Insert new Specifity at location ("+ptmDef.residue+") for Ptm "+ptmShortName)
+            else 
+            	logger.info("Insert new Specifity at location ("+ptmDef.location+") for Ptm "+ptmShortName)
             // Save a new specificity
             val psPtmSpecificity = convertPtmDefinitionToPSPtmSpecificity(ptmDef,psPtm)
+            psPtm.addSpecificity(psPtmSpecificity)
             psEM.persist( psPtmSpecificity )
             
             // Update the provided PtmDefinition id
@@ -130,6 +135,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             throw new IllegalArgumentException("the PTM composition must be defined for insertion in the database")
           } else {
             
+            logger.info("Insert new Ptm "+ptmShortName)
             // Build and persist the precursor delta
             val ptmPrecDelta = ptmDef.precursorDelta
             val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)              
