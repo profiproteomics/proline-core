@@ -134,7 +134,7 @@ class SQLProteinSetProvider(
           protMatchPropertiesById += protMatchId -> parse[ProteinMatchResultSummaryProperties](propertiesAsJSON)
         }
       }
-
+      
       // Decode JSON properties
       val propertiesAsJSON = protSetRecord(ProtSetCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
       val properties = if (propertiesAsJSON != null) Some(parse[ProteinSetProperties](propertiesAsJSON)) else None
@@ -148,6 +148,7 @@ class SQLProteinSetProvider(
         selectionLevel = protSetRecord(ProtSetCols.SELECTION_LEVEL).asInstanceOf[Int],
         proteinMatchIds = protMatchIdsBuilder.result(),
         typicalProteinMatchId = toLong(protSetRecord(ProtSetCols.TYPICAL_PROTEIN_MATCH_ID)),
+        masterQuantComponentId = protSetRecord.get(ProtSetCols.MASTER_QUANT_COMPONENT_ID).map( toLong(_) ).getOrElse(0L),
         resultSummaryId = toLong(protSetRecord(ProtSetCols.RESULT_SUMMARY_ID)),
         properties = properties,
         proteinMatchPropertiesById = protMatchPropertiesById.result

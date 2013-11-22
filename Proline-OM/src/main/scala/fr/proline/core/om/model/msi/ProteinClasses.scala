@@ -168,6 +168,8 @@ case class ProteinSet (
                  protected var typicalProteinMatchId: Long = 0,
                  @transient protected var typicalProteinMatch: Option[ProteinMatch] = null,
                  
+                 var masterQuantComponentId: Long = 0,
+                 
                  var isValidated: Boolean = true,
                  var selectionLevel: Int = 2,
 

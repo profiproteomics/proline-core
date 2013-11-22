@@ -319,6 +319,8 @@ case class MasterQuantProteinSet(
   
   def id() = this.proteinSet.id
   
+  def getMasterQuantComponentId() =  this.proteinSet.masterQuantComponentId
+  
   def getBestProfile( groupSetupNumber: Int ): Option[MasterQuantProteinSetProfile] = {
     if( properties.isEmpty ) return None
     
