@@ -45,7 +45,7 @@ class IterativeMapAligner extends ILcmsMapAligner with Logging {
       return AlignmentResult(newAlnRefMap.id, mapAlnSets.toArray)
     } else {
 
-      // Compute the map alignements again using the new reference map
+      // Compute the map alignments again using the new reference map
       return this.findBestMapAlignments(lcmsMaps, newAlnRefMap, alnParams, iterationNum + 1)
     }
 
@@ -57,8 +57,11 @@ class IterativeMapAligner extends ILcmsMapAligner with Logging {
     //print "computing feature alignments...\n"
 
     // Iterate over maps to compute alignments with the random or new reference map
-    lcmsMaps filter { _.id != alnRefMap.id } map { this.computePairwiseAlnSet(alnRefMap, _, alnParams) }
-
+    lcmsMaps
+      .withFilter { _.id != alnRefMap.id }
+      .map { this.computePairwiseAlnSet(alnRefMap, _, alnParams) }
+      .withFilter { _.isDefined }
+      .map { _.get }
   }
 
   def determineAlnReferenceMap(lcmsMaps: Seq[ProcessedMap],

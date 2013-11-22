@@ -504,6 +504,7 @@ class ExtractMapSet(
       val rsdProv = new RunSliceDataProvider( mzDb.getRunSliceIterator(1) )
       
       // Extract features
+      // TODO: add minNbCycles param
       mzDbFts = mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)
 
     }
@@ -517,7 +518,7 @@ class ExtractMapSet(
     val newLcmsFeatures = new ArrayBuffer[LcMsFeature](missingFtIdByMftId.size)
     for( mftWithMissingChild <- mftsWithMissingChild;
          mzDbFt <- mzDbFtById.get(missingFtIdByMftId( mftWithMissingChild.id ))
-         if mzDbFt.area > 0 && mzDbFt.scanHeaders.length > 1
+         if mzDbFt.area > 0 && mzDbFt.scanHeaders.length >= 5
        ) {
       
       // FIXME: why do we extract features with 0 duration ???

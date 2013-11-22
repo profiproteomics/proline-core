@@ -1,13 +1,14 @@
 package fr.proline.core.algo.lcms.alignment
 
 import scala.collection.mutable.HashMap
+import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.algo.lcms.AlignmentParams
 import fr.proline.core.algo.lcms.FeatureMappingParams
 import fr.proline.core.om.model.lcms._
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 
-trait ILcmsMapAligner {
+trait ILcmsMapAligner extends Logging {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.algo.lcms.AlnSmoother
@@ -16,7 +17,7 @@ trait ILcmsMapAligner {
   def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult
   def determineAlnReferenceMap(lcmsMaps: Seq[ProcessedMap], mapAlnSets: Seq[MapAlignmentSet], currentRefMap: ProcessedMap): ProcessedMap
   
-  def computePairwiseAlnSet( map1: ProcessedMap, map2: ProcessedMap, alnParams: AlignmentParams ): MapAlignmentSet = {
+  def computePairwiseAlnSet( map1: ProcessedMap, map2: ProcessedMap, alnParams: AlignmentParams ): Option[MapAlignmentSet] = {
     
     val massInterval = alnParams.massInterval
     //val timeInterval = alnParams.timeInterval
@@ -84,11 +85,17 @@ trait ILcmsMapAligner {
       
     }
     
-     new MapAlignmentSet(
-       refMapId = map1.id,
-       targetMapId = map2.id,
-       mapAlignments = ftAlignments.toArray
-     )
+    if( ftAlignments.isEmpty ) {
+      this.logger.warn("can't compute map alignment set between map #"+ map1.id +" and map#"+ map2.id)
+      None
+    }
+    else Some(
+      new MapAlignmentSet(
+        refMapId = map1.id,
+        targetMapId = map2.id,
+        mapAlignments = ftAlignments.toArray
+      )
+    )
     
   }
 

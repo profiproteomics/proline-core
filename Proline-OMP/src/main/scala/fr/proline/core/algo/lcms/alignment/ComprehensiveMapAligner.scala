@@ -4,7 +4,8 @@ import fr.proline.core.algo.lcms.AlignmentParams
 
 class ComprehensiveMapAligner extends ILcmsMapAligner {
 
-  import scala.collection.mutable.ArrayBuffer  
+  import scala.collection.mutable.ArrayBuffer
+  import scala.collection.mutable.HashMap
   import fr.proline.util.math.combinations
   import fr.proline.core.om.model.lcms._
   
@@ -31,9 +32,8 @@ class ComprehensiveMapAligner extends ILcmsMapAligner {
 
       val( map1, map2 ) = ( mapById(mapIdPair(0)), mapById(mapIdPair(1)) )
       
-      val mapAlnSet = this.computePairwiseAlnSet( map1, map2, alnParams )
-      mapAlnSets += mapAlnSet
-      
+      val mapAlnSetOpt = this.computePairwiseAlnSet( map1, map2, alnParams )
+      for ( mapAlnSet <- mapAlnSetOpt ) mapAlnSets += mapAlnSet
     }
     
     val refMap = this.determineAlnReferenceMap( lcmsMaps, mapAlnSets )
@@ -47,26 +47,21 @@ class ComprehensiveMapAligner extends ILcmsMapAligner {
     
     if( lcmsMaps.length <= 2 ) return lcmsMaps(0)
     
-    val mapAlnSetsByMapId = new java.util.HashMap[Long,ArrayBuffer[MapAlignmentSet]]
+    val mapAlnSetsByMapId = new HashMap[Long,ArrayBuffer[MapAlignmentSet]]
     for( mapAlnSet <- mapAlnSets ) {
-      for( mapId <- Array( mapAlnSet.refMapId, mapAlnSet.targetMapId) ) {
-        if( !mapAlnSetsByMapId.containsKey(mapId) ) {
-          mapAlnSetsByMapId.put(mapId, new ArrayBuffer[MapAlignmentSet](0))
-        }
-      }
-      mapAlnSetsByMapId.get( mapAlnSet.refMapId ) += mapAlnSet
-      mapAlnSetsByMapId.get( mapAlnSet.targetMapId ) += mapAlnSet
+      mapAlnSetsByMapId.getOrElseUpdate( mapAlnSet.refMapId, new ArrayBuffer[MapAlignmentSet](0) ) += mapAlnSet
+      mapAlnSetsByMapId.getOrElseUpdate( mapAlnSet.targetMapId, new ArrayBuffer[MapAlignmentSet](0) ) += mapAlnSet
     }
     
     var refMap: ProcessedMap = null
     var refMapDistance = Double.NaN
     
     for( tmpRefMap <- lcmsMaps ) {
-      val mapAlnSets = mapAlnSetsByMapId.get(tmpRefMap.id)
+      val mapAlnSetsOpt = mapAlnSetsByMapId.get(tmpRefMap.id)
       
       var distance = 0.0 // mean of absolute delta times
       var nbLandmarks = 0
-      for( mapAlnSet <- mapAlnSets ) {
+      for( mapAlnSets <- mapAlnSetsOpt ; mapAlnSet <- mapAlnSets ) {
         for( mapAln <- mapAlnSet.mapAlignments ) {
           val deltaTimeList = mapAln.deltaTimeList.toList
           distance += deltaTimeList.reduceLeft( (a:Float, b:Float) => math.abs(a) + math.abs(b) )
