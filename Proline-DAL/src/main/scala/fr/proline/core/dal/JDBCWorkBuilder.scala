@@ -4,6 +4,7 @@ import java.sql.Connection
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.dal.context._
 import fr.proline.repository.DriverType
 import fr.proline.repository.util.JDBCReturningWork
 import fr.proline.repository.util.JDBCWork
@@ -12,7 +13,7 @@ object BuildJDBCWork {
   
   def withConnection( jdbcWorkFunction: Connection => Unit ): JDBCWork = {
     new JDBCWork() {
-      override def execute(con: Connection) {        
+      override def execute(con: Connection) {
         jdbcWorkFunction(con)
       }
     }
@@ -37,6 +38,10 @@ object DoJDBCWork {
   def withEzDBC( dbCtx: DatabaseConnectionContext, jdbcWorkFunction: EasyDBC => Unit, flushEM: Boolean = false ): Unit = {
     dbCtx.doWork(BuildJDBCWork.withEzDBC(dbCtx.getDriverType, jdbcWorkFunction),flushEM)
   }
+  
+  def tryTransactionWithEzDBC( dbCtx: DatabaseConnectionContext, jdbcWorkFunction: EasyDBC => Unit, flushEM: Boolean = false ): Unit = {
+    dbCtx.tryInTransaction(this.withEzDBC(dbCtx,jdbcWorkFunction,flushEM))
+  }
 
 }
 
@@ -44,7 +49,7 @@ object BuildJDBCReturningWork {
   
   def withConnection[T]( jdbcWorkFunction: Connection => T ): JDBCReturningWork[T] = {
     new JDBCReturningWork[T]() {
-      override def execute(con: Connection): T =  {        
+      override def execute(con: Connection): T =  {
         jdbcWorkFunction(con)
       }
     }
