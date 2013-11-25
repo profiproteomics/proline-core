@@ -79,8 +79,8 @@ class QuantProfilesComputer(
     
     DoJDBCWork.tryTransactionWithEzDBC(executionContext.getMSIDbConnectionContext, { ezDBC =>
       
-      ezDBC.executePrepared("UPDATE master_quant_component SET serialized_properties = ? WHERE id = ?") { stmt =>  
-          
+      ezDBC.executeInBatch("UPDATE master_quant_component SET serialized_properties = ? WHERE id = ?") { stmt =>
+        
         // Update MasterQuantPeptides properties
         for( mqPep <- quantRSM.masterQuantPeptides ) {
           stmt.executeWith( Json.generate(mqPep.properties), mqPep.id )
