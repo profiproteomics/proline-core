@@ -76,11 +76,8 @@ class QuantProfilesComputer(
     
     // 5. Update MasterQuantPeptides and MasterQuantProtSets properties
     val msiDbCtx = executionContext.getMSIDbConnectionContext()
-    val wasInTx = msiDbCtx.isInTransaction()
     
-    if( wasInTx == false ) msiDbCtx.beginTransaction()
-    
-    DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
+    DoJDBCWork.tryTransactionWithEzDBC(executionContext.getMSIDbConnectionContext, { ezDBC =>
       
       ezDBC.executePrepared("UPDATE master_quant_component SET serialized_properties = ? WHERE id = ?") { stmt =>  
           
@@ -96,8 +93,6 @@ class QuantProfilesComputer(
       }
       
     })
-    
-    if( wasInTx == false ) msiDbCtx.commitTransaction()
     
     // Close execution context if initiated locally
     if( this._hasInitiatedExecContext ) executionContext.closeAll()
