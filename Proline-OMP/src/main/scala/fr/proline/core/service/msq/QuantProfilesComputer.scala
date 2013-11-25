@@ -13,7 +13,7 @@ import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 
-class ComputeQuantProfiles(
+class QuantProfilesComputer(
   executionContext: IExecutionContext,
   experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
