@@ -4,6 +4,7 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.context._
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitleParsingRule }
 import fr.proline.util.regex.RegexUtils._
@@ -29,7 +30,6 @@ class SpectraParamsUpdater(
     
     // Retrieve udsEM and msiDbCtx
     val udsEM = execCtx.getUDSDbConnectionContext().getEntityManager()
-    val msiDbCtx = execCtx.getMSIDbConnectionContext()
     
     // Retrieve the specTitleParsingRule
     val udsSpecTitleParsingRule = udsEM.find(classOf[UdsSpectrumTitleParsingRule], specTitleRuleId) 
@@ -53,60 +53,39 @@ class SpectraParamsUpdater(
       )
     } get
     
-    // Check if a transaction is already initiated
-    val wasInTx = msiDbCtx.isInTransaction()
-    var msiTxOk: Boolean = false
-
-    try {
+    // Do JDBC work in a managed transaction (rolled back if necessary)
+    DoJDBCWork.tryTransactionWithEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
+      val sqlQuery = "SELECT id, title FROM spectrum WHERE peaklist_id = " + peaklistId
+      this.logger.debug("executing SQL query: \""+sqlQuery+"\"")
       
-      if( wasInTx == false ) msiDbCtx.beginTransaction()
-    
-      DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
-        val sqlQuery = "SELECT id, title FROM spectrum WHERE peaklist_id = " + peaklistId
-        this.logger.debug("executing SQL query: \""+sqlQuery+"\"")
+      ezDBC.selectAndProcess( sqlQuery ) { r =>
         
-        ezDBC.selectAndProcess( sqlQuery ) { r =>
-          
-          val spectrumId = toLong(r.nextAny)
-          val spectrumTitle = r.nextString
-          
-          // Extract attributes from spectrum title
-          val extractedAttrs = new collection.mutable.HashMap[String,String]
-          for( specAttr <- spectrumAttributes ) {
-            val parsingRule = parsingRuleBySpecAttr(specAttr)
-            if( parsingRule != null ) {
-              val parsingRuleMatch = spectrumTitle =# parsingRule
-              if( parsingRuleMatch != None ) {
-                extractedAttrs(specAttr) = parsingRuleMatch.get.group(1)
-              }
+        val spectrumId = toLong(r.nextAny)
+        val spectrumTitle = r.nextString
+        
+        // Extract attributes from spectrum title
+        val extractedAttrs = new collection.mutable.HashMap[String,String]
+        for( specAttr <- spectrumAttributes ) {
+          val parsingRule = parsingRuleBySpecAttr(specAttr)
+          if( parsingRule != null ) {
+            val parsingRuleMatch = spectrumTitle =# parsingRule
+            if( parsingRuleMatch != None ) {
+              extractedAttrs(specAttr) = parsingRuleMatch.get.group(1)
             }
           }
-          
-          // Update spectrum if attributes have been extracted
-          if( extractedAttrs.size > 0 ) {
-            val attrsToUpdate = extractedAttrs.map { case (k,v) => k + "=" + v }
-            ezDBC.execute( "UPDATE spectrum SET " + attrsToUpdate.mkString(",") + " WHERE id = " + spectrumId )
-            updatedSpectraCount += 1
-          }
-          
-          ()
         }
-      
-      })
-      
-      // Commit transaction if it was initiated locally
-      if( !wasInTx ) msiDbCtx.commitTransaction()
-    
-    } finally {
-      if (wasInTx == false && msiTxOk == false) {
-        // TODO: put this (and the whole TxManagement) in a dedicated trait (it is used many times)
-        try {
-          msiDbCtx.rollbackTransaction()
-        } catch {
-          case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
+        
+        // Update spectrum if attributes have been extracted
+        if( extractedAttrs.size > 0 ) {
+          val attrsToUpdate = extractedAttrs.map { case (k,v) => k + "=" + v }
+          ezDBC.execute( "UPDATE spectrum SET " + attrsToUpdate.mkString(",") + " WHERE id = " + spectrumId )
+          updatedSpectraCount += 1
         }
+        
+        ()
       }
-    }
+    
+    })
 
     true
   }
