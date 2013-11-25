@@ -9,8 +9,7 @@ import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitlePar
 import fr.proline.util.regex.RegexUtils._
 import fr.proline.util.primitives._
 
-// TODO: rename to SpectraParamsUpdater
-class UpdateSpectraParams(
+class SpectraParamsUpdater(
   execCtx: IExecutionContext,
   projectId: Long,
   peaklistId: Long,
