@@ -7,6 +7,7 @@ import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
 import fr.proline.core.om.model.msi.PtmDefinition
+import scala.collection.mutable.ArrayBuffer
 
 class ResultFileCertifier(
   executionContext: IExecutionContext,
