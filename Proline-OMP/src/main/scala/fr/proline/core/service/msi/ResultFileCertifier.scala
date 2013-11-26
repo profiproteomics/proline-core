@@ -7,6 +7,7 @@ import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
 import fr.proline.core.om.model.msi.PtmDefinition
+import scala.collection.mutable.ArrayBuffer
 
 class ResultFileCertifier(
   executionContext: IExecutionContext,
@@ -29,8 +30,8 @@ class ResultFileCertifier(
       val storer = BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
 
       val verifier = rfProvider.get.getResultFileVerifier
-      var ptms = Set.empty[PtmDefinition]
-
+      val ptms = new ArrayBuffer[PtmDefinition]
+      
       for (file <- files) {
         verifier.isValid(file, importProperties)
         val ptmDefs = verifier.getPtmDefinitions(file, importProperties)
@@ -38,7 +39,7 @@ class ResultFileCertifier(
           if (!ptms.exists(_.sameAs(p))) ptms += p
         }
       }
-      storer.storePtmDefinitions(ptms.toSeq, executionContext)
+      storer.storePtmDefinitions(ptms, executionContext)
     }
 
     true
