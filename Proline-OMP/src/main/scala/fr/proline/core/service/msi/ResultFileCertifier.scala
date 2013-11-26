@@ -7,7 +7,6 @@ import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer
 import fr.proline.core.om.model.msi.PtmDefinition
-import scala.collection.mutable.ArrayBuffer
 
 class ResultFileCertifier(
   executionContext: IExecutionContext,
@@ -22,27 +21,43 @@ class ResultFileCertifier(
 
   def runService(): Boolean = {
 
+    var result = true
     for ((fileType, files) <- resultIdentFilesByFormat) {
       // Get Right ResultFile provider
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
-      require(rfProvider != None, "No ResultFileProvider for specified identification file format")
+      require(rfProvider != None, "No ResultFileProvider for specified identification file format "+fileType)
 
       val storer = BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
 
       val verifier = rfProvider.get.getResultFileVerifier
       val ptms = new ArrayBuffer[PtmDefinition]
-      
+
       for (file <- files) {
-        verifier.isValid(file, importProperties)
+        verifier.isValid(file, importProperties)  // TODO : Use returned value !
         val ptmDefs = verifier.getPtmDefinitions(file, importProperties)
         for (p <- ptmDefs) {
           if (!ptms.exists(_.sameAs(p))) ptms += p
         }
       }
-      storer.storePtmDefinitions(ptms, executionContext)
+      
+      val psCtxt = executionContext.getPSDbConnectionContext()      
+      var transactionOK = false
+      
+      try {
+    	  psCtxt.beginTransaction()
+    	  storer.storePtmDefinitions(ptms, executionContext)
+    	  psCtxt.commitTransaction()
+    	  transactionOK = true
+      } finally {
+    	  if (!transactionOK) {
+    	      result = false
+    		  logger.info("Rollbacking PS Db Transaction")
+    		  psCtxt.rollbackTransaction()
+    	  }
+      }
     }
 
-    true
+    result
   }
 
 }
