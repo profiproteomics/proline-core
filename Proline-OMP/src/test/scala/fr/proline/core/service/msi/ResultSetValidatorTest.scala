@@ -647,7 +647,7 @@ class ResultSetValidatorF136482Test extends Logging {
       protSetFilters = None,
       protSetValidator = Some(protSetValidator),
       inferenceMethod = Some(InferenceMethods.parsimonious),
-      peptideSetScoring = Some(PepSetScoring.MASCOT_PEPTIDE_SET_SCORE),
+      peptideSetScoring = Some(PepSetScoring.MASCOT_MODIFIED_MUDPIT_SCORE),
       storeResultSummary = false
     )
 

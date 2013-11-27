@@ -5,7 +5,7 @@ import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.util.primitives._
 import fr.proline.core.om.model.msi.PeptideMatch
 
-class MascotPeptideSetScoreUpdater() extends IPeptideSetScoreUpdater {
+class MascotModifiedMudpitScoreUpdater extends IPeptideSetScoreUpdater {
 
   def updateScoreOfPeptideSets(rsm: ResultSummary, params: Any*) {
 
@@ -20,7 +20,7 @@ class MascotPeptideSetScoreUpdater() extends IPeptideSetScoreUpdater {
 
       val pepSetScore = MascotValidationHelper.sumPeptideMatchesScoreOffsets(bestPepMatches, scoreThresholdOffset)
       peptideSet.score = pepSetScore
-      peptideSet.scoreType = PepSetScoring.MASCOT_PEPTIDE_SET_SCORE.toString
+      peptideSet.scoreType = PepSetScoring.MASCOT_MODIFIED_MUDPIT_SCORE.toString
     }
     
     ()
