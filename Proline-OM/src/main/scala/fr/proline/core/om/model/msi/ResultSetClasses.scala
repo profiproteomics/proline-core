@@ -97,19 +97,8 @@ case class ResultSet(
 
   }
 
-  // TMP workaround for result sets which have this value defined at the search settings level
-  @deprecated("use ResultSetProperties.targetDecoyMode instead","0.1.0")
   def getTargetDecoyMode(): Option[String] = {
-
-    // Try to retrieve the parameter form SearchSettings first
-    val msiSearchOpt = this.msiSearch
-    val ssTDMode = if (msiSearchOpt.isDefined && msiSearchOpt.get.searchSettings.properties.isDefined) {
-      msiSearchOpt.get.searchSettings.properties.get.getTargetDecoyMode
-    } else None
-
-    // If not defined in search settings => try to retrieve it from result set properties
-    if (ssTDMode.isDefined) ssTDMode
-    else if (this.properties.isDefined) this.properties.get.getTargetDecoyMode
+    if (this.properties.isDefined) this.properties.get.getTargetDecoyMode
     else None
   }
 
@@ -120,21 +109,24 @@ case class ResultSet(
 case class ResultSetProperties(
   @BeanProperty var targetDecoyMode: Option[String] = None,
   @BeanProperty var mascotImportProperties: Option[MascotImportProperties] = None,
-  @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None)
+  @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None
+)
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class MascotImportProperties(
   @BeanProperty var ionsScoreCutoff: Option[Float] = None, // it's ions score not ion score
   @BeanProperty var subsetsThreshold: Option[Float] = None,
-  @BeanProperty var proteinsPvalueCutoff: Option[Float] = None)
+  @BeanProperty var proteinsPvalueCutoff: Option[Float] = None
+)
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class OmssaImportProperties(
-  @BeanProperty var rawSettings: Option[Map[String, String]] = None)
+  @BeanProperty var rawSettings: Option[Map[String, String]] = None
+)
 
-  object ResultSummary extends InMemoryIdGen
+object ResultSummary extends InMemoryIdGen
 
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
@@ -143,7 +135,7 @@ case class ResultSummary(
   val peptideInstances: Array[PeptideInstance],
   val peptideSets: Array[PeptideSet],
   val proteinSets: Array[ProteinSet],
-  //val isDecoy: Boolean,                   
+  //val isDecoy: Boolean,
 
   // Immutable optional fields
 
