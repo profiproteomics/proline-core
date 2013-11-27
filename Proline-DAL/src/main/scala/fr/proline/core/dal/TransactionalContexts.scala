@@ -8,18 +8,21 @@ import fr.proline.context.DatabaseConnectionContext
 package object context {
   
   abstract class AbstractTransactionalContext extends Logging {
-
+    
+    // TODO: decide to keep or not the returned Boolean value (it should not be returned in case of Exception)
+    
     /**
      * Try to execute some code inside JDBC transactions.
      * Exceptions are not caught but transactions are always rolled back if they were not committed.
      * 
      * @param enabledTxByDbCtx Enabled transaction mapped by the corresponding database context.
      * @param txWork The code to be executed inside the transactions.
+     * @return a Boolean value indicating the success of the transactions.
      */
     protected def tryInTransactions(
       enabledTxByDbCtx: Map[DatabaseConnectionContext,Boolean],
       txWork: => Unit
-    ) {
+    ): Boolean = {
       
       // Map local transactions by database contexts
       val isLocalTxByDbCtx = enabledTxByDbCtx.map { case (dbCtx,txEnabled) =>
@@ -58,7 +61,8 @@ package object context {
         }
       }
       
-      ()
+      // Check the number of local transactions equals the number of committed transactions
+      isLocalTxByDbCtx.values.count(_ == true) == isTxCommitedByDbCtx.values.count(_ == true)
     }
     
   }
@@ -70,10 +74,10 @@ package object context {
      * Exceptions are not caught but transactions are always rolled back if they were not committed.
      * 
      * @param txWork The code to be executed inside the transactions.
+     * @return a Boolean value indicating the success of the transaction.
      */
-    def tryInTransaction( txWork: => Unit ) {
+    def tryInTransaction( txWork: => Unit ): Boolean = {
       this.tryInTransactions( Map( dbCtx -> true ), txWork)
-      ()
     }
   }
   implicit def dbCtxToTxDbCtx(dbCtx: DatabaseConnectionContext) = new TransactionalDbConnectionContext(dbCtx)
@@ -90,6 +94,7 @@ package object context {
      * @param msiTx Enable MSIdb transaction.
      * @param lcmsTx Enable LCMSdb transaction.
      * @param txWork The code to be executed inside the transactions.
+     * @return a Boolean value indicating the success of the transactions.
      */
     def tryInTransactions(
       udsTx: Boolean = false,
@@ -98,7 +103,7 @@ package object context {
       msiTx: Boolean = false,
       lcmsTx: Boolean = false,
       txWork: => Unit
-    ) {
+    ): Boolean = {
       
       // Map enabled transaction by database contexts
       val enabledTxByDbCtx = Map(
@@ -110,8 +115,6 @@ package object context {
       )
       
       this.tryInTransactions(enabledTxByDbCtx, txWork)
-      
-      ()
     }
   }  
   implicit def execCtxToTxExecCtx(execCtx: IExecutionContext) = new TransactionalExecutionContext(execCtx)

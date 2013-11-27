@@ -44,7 +44,8 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
     require(execCtx.isJPA, "execCtx must be in JPA mode")
 
     // Define some vars
-    val psEM = execCtx.getPSDbConnectionContext().getEntityManager()
+    val psDbCtx = execCtx.getPSDbConnectionContext()
+    val psEM = psDbCtx.getEntityManager()
 
     // Retrieve the list of existing PTM classifications
     val allPtmClassifs = psEM.createQuery("SELECT e FROM fr.proline.core.orm.ps.PtmClassification e",classOf[PsPtmClassification]).getResultList().toList
@@ -78,12 +79,12 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
         
         val ptmShortName = ptmDef.names.shortName
 
-        // Try to retrieve a PTM with the same short name
+        // Try to retrieve a PTM with the same short name and cache it if it exists
         val psPtm = PsPtmRepository.findPtmForShortName(psEM, ptmShortName)
 
         // IF the PTM short name already exists in the database
         if (psPtm != null) {
-
+          
           // Retrieve the Precursor delta of the found PTM
           val psPtmPrecDelta = psPtm.getEvidences().toList.find(_.getType() == PsPtmEvidencePrecursorType).get
           
@@ -97,7 +98,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
           }
 
           // Try to retrieve the PTM specificity matching the provided PTM definition
-          val psPtmSpecifs = psPtm.getSpecificities().toList
+          val psPtmSpecifs = Option(psPtm.getSpecificities()).map(_.toSeq).getOrElse(Seq())
           
           val psMatchingPtmSpecifOpt = psPtmSpecifs.find { psPtmSpecif =>
             psPtmSpecif.getLocation == ptmDef.location && characterToScalaChar(psPtmSpecif.getResidue) == ptmDef.residue
@@ -106,10 +107,9 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
           // IF the PTM Precursor delta is identical but the specificity is new
           if (psMatchingPtmSpecifOpt.isEmpty) {
          	 
-            if (ptmDef.residue != '\0')
-            	logger.info("Insert new Specifity at location ("+ptmDef.residue+") for Ptm "+ptmShortName)
-            else 
-            	logger.info("Insert new Specifity at location ("+ptmDef.location+") for Ptm "+ptmShortName)
+            val ptmSpecifLocation = if (ptmDef.residue != '\0') ptmDef.residue else ptmDef.location            
+            logger.info("Insert new PTM Specifity at location ("+ptmSpecifLocation+") for PTM "+ptmShortName)
+            
             // Save a new specificity
             val psPtmSpecificity = convertPtmDefinitionToPSPtmSpecificity(ptmDef,psPtm)
             psPtm.addSpecificity(psPtmSpecificity)
@@ -160,13 +160,17 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             insertedPtmDefs += 1
           }
         }
+        
+        // Synchronize the entity manager with the PSdb if we are inside a transaction
+        if( psDbCtx.isInTransaction() ) psEM.flush()
       }
 
       insertedPtmDefs
     }
 
-    protected def convertPtmEvidenceToPSPtmEvidence(ptmEvidence: PtmEvidence): PsPtmEvidence = {
+    protected def convertPtmEvidenceToPSPtmEvidence(ptmEvidence: PtmEvidence): PsPtmEvidence = {      
       
+      this.logger.info("Creating PTM evidence of type="+ptmEvidence.ionType.toString()+" and mass="+ptmEvidence.monoMass)
       val psPtmEvidence = new PsPtmEvidence()
       psPtmEvidence.setType( PsPtmEvidence.Type.valueOf(ptmEvidence.ionType.toString()) )
       psPtmEvidence.setIsRequired(ptmEvidence.isRequired)
