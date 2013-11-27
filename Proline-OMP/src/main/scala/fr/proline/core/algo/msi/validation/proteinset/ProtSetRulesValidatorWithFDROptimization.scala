@@ -284,7 +284,8 @@ class ProtSetRulesValidatorWithFDROptimization(
       remainingTargetProtSets,
       remainingDecoyProtSets,
       protSetValStatusMap,
-      () => this.computeValidationResult(remainingTargetProtSets, Some(remainingDecoyProtSets))
+      // Note: we compute the FDR using all protein sets in order to not under-estimate this value at the end of the procedure
+      () => this.computeValidationResult(targetProtSets, Some(decoyProtSets))
     )
     
     // Apply filter for rule 1 if we have validation results
