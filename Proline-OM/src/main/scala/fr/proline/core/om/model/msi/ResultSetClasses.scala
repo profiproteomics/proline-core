@@ -107,7 +107,7 @@ case class ResultSet(
 @JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class ResultSetProperties(
-  @BeanProperty var targetDecoyMode: Option[String] = None,
+  @BeanProperty var targetDecoyMode: Option[String] = None, // CONCATENATED | SEPARATED
   @BeanProperty var mascotImportProperties: Option[MascotImportProperties] = None,
   @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None
 )

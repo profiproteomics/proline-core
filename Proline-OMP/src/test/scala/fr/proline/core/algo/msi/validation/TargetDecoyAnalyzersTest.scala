@@ -9,7 +9,7 @@ import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.filtering.IPeptideMatchSorter
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
-import fr.proline.core.om.model.msi.SearchSettingsProperties
+import fr.proline.core.om.model.msi.ResultSetProperties
 import org.junit.Before
 
 @Test
@@ -27,9 +27,9 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with Logging {
 
   @Test
   def getCorrectBasicTDAnalyzer() = {
-    val prop = new SearchSettingsProperties()
+    val prop = new ResultSetProperties()
     prop.targetDecoyMode = Some("CONCATENATED")
-    rs.msiSearch.get.searchSettings.properties = Some(prop)
+    rs.properties = Some(prop)
 
     val tdAnalyzer = BuildTDAnalyzer(false, rs, None)
     assertNotNull(tdAnalyzer)
@@ -45,9 +45,9 @@ class TargetDecoyAnalyzersTest extends JUnitSuite with Logging {
 
   @Test
   def getCorrectBasicTDAnalyzerWSorter() = {
-    val prop = new SearchSettingsProperties()
-    prop.targetDecoyMode = Some("CONCATENATED")
-    rs.msiSearch.get.searchSettings.properties = Some(prop)
+    val prop = new ResultSetProperties()
+    prop.targetDecoyMode = Some("SEPARATED")
+    rs.properties = Some(prop)
 
     val sorter: IPeptideMatchSorter = new ScorePSMFilter()
     val tdAnalyzer = BuildTDAnalyzer(false, rs, Some(sorter))
