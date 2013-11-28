@@ -25,6 +25,12 @@ public class DDataset {
     private ResultSummary m_resultSummary = null;
     private ResultSet m_resultSet = null;
     
+    
+    //JPM.TEST
+    public DDataset(long id) {
+        m_id = id;
+    }
+    
     public DDataset(long id, Project project, String name, DatasetType type, int childrenCount, Long resultSetId, Long resultSummaryId, int number, Aggregation aggregation) {
         m_id = id;
         m_project = project;
