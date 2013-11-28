@@ -22,6 +22,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import fr.proline.core.orm.uds.Dataset;
+import fr.proline.core.orm.uds.dto.DDataset;
 import fr.proline.core.orm.util.JsonSerializer;
 import fr.proline.util.StringUtils;
 
@@ -237,6 +238,8 @@ public class ResultSummary implements Serializable {
 	private DProteinSet[] proteinSetArray = null;
 	
 	private Dataset dataSet = null;
+	private DDataset dDataset = null;
+	
 	private Integer numberOfProteinSets = null;
 
 	protected TransientData() {
@@ -264,6 +267,14 @@ public class ResultSummary implements Serializable {
 
 	public void setDataSet(Dataset dataSet) {
 	    this.dataSet = dataSet;
+	}
+	
+	public DDataset getDDataset() {
+	    return dDataset;
+	}
+
+	public void setDDataset(DDataset dataset) {
+	    this.dDataset = dataset;
 	}
 
 	
