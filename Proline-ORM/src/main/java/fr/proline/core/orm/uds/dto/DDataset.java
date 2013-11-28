@@ -53,6 +53,10 @@ public class DDataset {
         return m_name;
     }
     
+    public void setName(String name) {
+        m_name = name;
+    }
+    
     public int getChildrenCount() {
         return m_childrenCount;
     }
