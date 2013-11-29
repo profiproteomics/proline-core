@@ -24,14 +24,9 @@ public class DDataset {
     
     private ResultSummary m_resultSummary = null;
     private ResultSet m_resultSet = null;
+
     
-    
-    //JPM.TEST
-    public DDataset(long id) {
-        m_id = id;
-    }
-    
-    public DDataset(long id, Project project, String name, DatasetType type, int childrenCount, Long resultSetId, Long resultSummaryId, int number, Aggregation aggregation) {
+    public DDataset(long id, Project project, String name, DatasetType type, int childrenCount, Long resultSetId, Long resultSummaryId, int number) {
         m_id = id;
         m_project = project;
         m_name = name;
@@ -40,7 +35,7 @@ public class DDataset {
         m_resultSetId = resultSetId;
         m_resultSummaryId = resultSummaryId;
         m_number = number;
-        m_aggregation = aggregation;
+        m_aggregation = null;
     }
     
     public long getId() {
@@ -94,6 +89,10 @@ public class DDataset {
     
     public Aggregation getAggregation() {
         return m_aggregation;
+    }
+    
+    public void setAggregation(Aggregation aggregation) {
+        m_aggregation = aggregation;
     }
     
     public ResultSummary getResultSummary() {
