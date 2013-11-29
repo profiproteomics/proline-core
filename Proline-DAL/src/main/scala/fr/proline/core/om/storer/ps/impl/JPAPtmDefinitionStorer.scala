@@ -149,6 +149,9 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             psPtm.setUnimodId(ptmDef.unimodId)
             psEM.persist(psPtm)
             
+            psPtmPrecDelta.setPtm(psPtm)
+            psEM.merge(psPtmPrecDelta)
+            
             // Build and persist the PTM specificity
             val psPtmSpecif = convertPtmDefinitionToPSPtmSpecificity(ptmDef,psPtm)
             psEM.persist(psPtmSpecif)
@@ -177,7 +180,6 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
       psPtmEvidence.setComposition(ptmEvidence.composition)
       psPtmEvidence.setMonoMass(ptmEvidence.monoMass)
       psPtmEvidence.setAverageMass(ptmEvidence.averageMass)
-      
       psPtmEvidence
     }
     
@@ -196,7 +198,12 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
       
       // Retrieve evidences belongings to the PTM specificity
       val specificityEvidences = ptmDef.ptmEvidences.filter( ev => ev.ionType != IonTypes.Precursor )
-      val psSpecificityEvidences = specificityEvidences.map( convertPtmEvidenceToPSPtmEvidence(_) )
+      val psSpecificityEvidences = specificityEvidences.map( ptmSpecif => {
+        val convertedEvidence = convertPtmEvidenceToPSPtmEvidence(ptmSpecif)
+        convertedEvidence.setPtm(psPtm)
+        convertedEvidence.setSpecificity(psPtmSpecificity)
+        convertedEvidence
+      })
       psPtmSpecificity.setEvidences( asJavaSet(psSpecificityEvidences.toSet) )
       
       psPtmSpecificity
