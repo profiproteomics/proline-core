@@ -10,7 +10,6 @@ import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import org.junit.BeforeClass
 import org.junit.AfterClass
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.dal.ContextFactory

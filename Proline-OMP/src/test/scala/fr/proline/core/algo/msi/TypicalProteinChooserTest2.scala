@@ -8,7 +8,6 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.IResultSummaryProvider

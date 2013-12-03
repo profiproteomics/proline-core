@@ -7,7 +7,6 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.ResultSummary

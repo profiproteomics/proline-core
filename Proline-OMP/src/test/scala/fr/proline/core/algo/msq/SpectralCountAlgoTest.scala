@@ -9,7 +9,6 @@ import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
 import fr.proline.core.dal.ContextFactory
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
@@ -65,10 +64,10 @@ class SpectralCountAlgoTest extends AbstractMultipleDBTestCase with Logging {
   }
 
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false).asInstanceOf[SQLConnectionContext]
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 
     val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)

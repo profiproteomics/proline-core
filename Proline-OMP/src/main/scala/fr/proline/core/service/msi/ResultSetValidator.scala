@@ -74,9 +74,11 @@ object ResultSetValidator {
     if (execContext.isJPA) {
       new ORMResultSetProvider(execContext.getMSIDbConnectionContext, execContext.getPSDbConnectionContext, execContext.getUDSDbConnectionContext)
     } else {
-      new SQLResultSetProvider(execContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext],
-        execContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext],
-        execContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext])
+      new SQLResultSetProvider(
+        execContext.getMSIDbConnectionContext,
+        execContext.getPSDbConnectionContext,
+        execContext.getUDSDbConnectionContext
+      )
     }
 
   }

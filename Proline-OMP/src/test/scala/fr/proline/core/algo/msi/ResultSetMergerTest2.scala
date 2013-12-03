@@ -4,7 +4,6 @@ import org.junit.Assert._
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import org.junit.BeforeClass
 import org.junit.AfterClass
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.dal.ContextFactory
@@ -100,10 +99,10 @@ class ResultSetMergerTest2 extends AbstractMultipleDBTestCase with Logging {
   
   
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false).asInstanceOf[SQLConnectionContext]
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 

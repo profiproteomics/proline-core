@@ -6,7 +6,7 @@ import fr.proline.api.service.IService
 import fr.proline.context.{IExecutionContext, DatabaseConnectionContext, BasicExecutionContext}
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.{SQLConnectionContext, ContextFactory}
+import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider, SQLResultSummaryProvider}
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
@@ -30,9 +30,9 @@ class IdentificationValidator( dbManager: IDataStoreConnectorFactory,
   
   
   private val execSqlContext = BuildExecutionContext( dbManager, projectId, false )
-  private val udsDbCtx = execSqlContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext]
-  private val psDbCtx = execSqlContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext]
-  private val msiDbCtx = execSqlContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext]
+  private val udsDbCtx = execSqlContext.getUDSDbConnectionContext
+  private val psDbCtx = execSqlContext.getPSDbConnectionContext
+  private val msiDbCtx = execSqlContext.getMSIDbConnectionContext
   private val msiDbHelper = new MsiDbHelper( msiDbCtx )
   
   override def beforeInterruption = {

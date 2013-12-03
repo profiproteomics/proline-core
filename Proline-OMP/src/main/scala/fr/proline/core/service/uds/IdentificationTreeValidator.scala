@@ -10,7 +10,7 @@ import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal.helper.{ MsiDbHelper, UdsDbHelper }
-import fr.proline.core.dal.{ SQLConnectionContext, ContextFactory }
+import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{ SQLResultSetProvider, SQLResultSummaryProvider }
 import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
@@ -114,10 +114,10 @@ class IdentificationTreeValidator(
   private def _loadResultSets(projectId: Long, rsIds: Seq[Long]): Array[ResultSet] = {
 
     val execSqlContext = BuildExecutionContext(dsFactory, projectId, false)
-    val udsDbCtx = execSqlContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext]
+    val udsDbCtx = execSqlContext.getUDSDbConnectionContext
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
-    val psDbCtx = execSqlContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = execSqlContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext]
+    val psDbCtx = execSqlContext.getPSDbConnectionContext
+    val msiDbCtx = execSqlContext.getMSIDbConnectionContext
 
     // Instantiate a RS loader
     val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)

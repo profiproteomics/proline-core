@@ -15,7 +15,7 @@ import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithF
 import fr.proline.core.algo.msi.validation.{ BasicTDAnalyzer, _ }
 import fr.proline.core.algo.msi.InferenceMethods
 import fr.proline.core.algo.msi.scoring.PepSetScoring
-import fr.proline.core.dal.{ ContextFactory, SQLConnectionContext }
+import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.{ ResultSet, PeptideMatch, FilterDescriptor }
 import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.provider.msi._
@@ -73,10 +73,10 @@ abstract class AbstractResultSetValidator extends AbstractMultipleDBTestCase wit
   }
 
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false).asInstanceOf[SQLConnectionContext]
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
 
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 

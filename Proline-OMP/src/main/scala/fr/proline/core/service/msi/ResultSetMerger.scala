@@ -9,7 +9,6 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.{ ResultSetMerger => ResultSetMergerAlgo }
 import fr.proline.core.dal.DoJDBCWork
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
 import fr.proline.core.om.model.msi.ResultSet

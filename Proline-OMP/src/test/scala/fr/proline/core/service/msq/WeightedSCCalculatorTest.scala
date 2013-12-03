@@ -10,7 +10,6 @@ import com.weiglewilczek.slf4s.Logging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
@@ -67,10 +66,10 @@ class WeightedSCCalculatorTest extends AbstractMultipleDBTestCase with Logging {
   }
   
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false).asInstanceOf[SQLConnectionContext]
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 
     val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)

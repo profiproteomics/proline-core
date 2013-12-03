@@ -15,7 +15,6 @@ import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.ContextFactory
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -132,10 +131,10 @@ class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
   }
   
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false).asInstanceOf[SQLConnectionContext]
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
