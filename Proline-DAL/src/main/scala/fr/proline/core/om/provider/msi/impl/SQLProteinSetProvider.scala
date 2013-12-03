@@ -148,7 +148,7 @@ class SQLProteinSetProvider(
         selectionLevel = protSetRecord(ProtSetCols.SELECTION_LEVEL).asInstanceOf[Int],
         proteinMatchIds = protMatchIdsBuilder.result(),
         typicalProteinMatchId = toLong(protSetRecord(ProtSetCols.TYPICAL_PROTEIN_MATCH_ID)),
-        masterQuantComponentId = 0L, // FIXME: protSetRecord.get(ProtSetCols.MASTER_QUANT_COMPONENT_ID).map( toLong(_) ).getOrElse(0L),
+        masterQuantComponentId = Option(protSetRecord(ProtSetCols.MASTER_QUANT_COMPONENT_ID)).map( toLong(_) ).getOrElse(0L),
         resultSummaryId = toLong(protSetRecord(ProtSetCols.RESULT_SUMMARY_ID)),
         properties = properties,
         proteinMatchPropertiesById = protMatchPropertiesById.result

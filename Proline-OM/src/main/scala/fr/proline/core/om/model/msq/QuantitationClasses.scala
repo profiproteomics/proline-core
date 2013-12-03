@@ -319,7 +319,11 @@ case class MasterQuantProteinSet(
   
   def id() = this.proteinSet.id
   
-  def getMasterQuantComponentId() =  this.proteinSet.masterQuantComponentId
+  def getMasterQuantComponentId() = {
+    val mqcId = this.proteinSet.masterQuantComponentId
+    require( mqcId != 0, "masterQuantComponentId is not defined" )
+    mqcId
+  }
   
   def getBestProfile( groupSetupNumber: Int ): Option[MasterQuantProteinSetProfile] = {
     if( properties.isEmpty ) return None
