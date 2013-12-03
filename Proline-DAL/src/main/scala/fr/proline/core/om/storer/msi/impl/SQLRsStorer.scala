@@ -142,18 +142,11 @@ class SQLRsStorer(
       import fr.proline.core.om.storer.ps.PeptideStorer
 
       val psDbCtx = context.getPSDbConnectionContext
-
-      /* Create a specific SQL Context if needed */
-      val psSQLDbCtx = if (psDbCtx.isInstanceOf[SQLConnectionContext]) {
-        psDbCtx.asInstanceOf[SQLConnectionContext]
-      } else {
-        new SQLConnectionContext(psDbCtx)
-      }
-
+      
       // Define some vars
       val newMsiPepSeqs = newMsiPeptides.map { _.sequence }
       val newMsiPepKeySet = newMsiPeptides.map { _.uniqueKey } toSet
-      val psPeptideProvider = new SQLPeptideProvider(psSQLDbCtx)
+      val psPeptideProvider = new SQLPeptideProvider(psDbCtx)
       
       // Retrieve peptide sequences already existing in the PsDb
       val peptidesForSeqsInPsDb = psPeptideProvider.getPeptidesForSequences(newMsiPepSeqs)

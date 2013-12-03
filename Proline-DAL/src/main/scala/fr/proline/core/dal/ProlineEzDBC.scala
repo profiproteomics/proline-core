@@ -63,23 +63,4 @@ object ProlineEzDBC extends Logging {
   }
   
 }
-  
-@deprecated( "Use ProlineEzDBC instead", "0.0.3.2" )
-class SQLQueryHelper( val connection: Connection, val driverType: DriverType ) extends Logging {
-  
-  def this( dbConnector: IDatabaseConnector ) {
-    this( dbConnector.getDataSource.getConnection, dbConnector.getDriverType )
-    this.logger.debug("opening database connection (database type =" + dbConnector.getProlineDatabaseType.name() +")" )
-  }
-  
-  val dialect = ProlineEzDBC.getDriverDialect(driverType)
-  val txIsolationLevel = ProlineEzDBC.getDriverTxIsolationLevel(driverType)
-  
-  lazy val ezDBC = EasyDBC( connection, dialect, txIsolationLevel )
-  
-  def closeConnection() = {
-    this.connection.close()
-  }
-
-}
 

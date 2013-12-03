@@ -31,48 +31,28 @@ object ContextFactory extends Logging {
       currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.name))
     }
 
-    var udsDb: DatabaseConnectionContext = null
-
     val udsDbConnector = dsFactory.getUdsDbConnector
-
-    if (udsDbConnector != null) {
-      udsDb = buildDbConnectionContext(udsDbConnector, useJPA)
-    }
-
-    var pdiDb: DatabaseConnectionContext = null
+    val udsDbCtx = if (udsDbConnector == null) null
+    else buildDbConnectionContext(udsDbConnector, useJPA)
 
     val pdiDbConnector = dsFactory.getPdiDbConnector
-
-    if (pdiDbConnector != null) {
-      pdiDb = buildDbConnectionContext(pdiDbConnector, useJPA)
-    }
-
-    var psDb: DatabaseConnectionContext = null
-
+    val pdiDbCtx = if (pdiDbConnector == null) null
+    else buildDbConnectionContext(pdiDbConnector, useJPA)
+    
     val psDbConnector = dsFactory.getPsDbConnector
-
-    if (psDbConnector != null) {
-      psDb = buildDbConnectionContext(psDbConnector, useJPA)
-    }
+    val psDbCtx = if (psDbConnector == null) null
+    else buildDbConnectionContext(psDbConnector, useJPA)
 
     /* Project specific Dbs */
-    var msiDb: DatabaseConnectionContext = null;
-
     val msiDbConnector = dsFactory.getMsiDbConnector(projectId)
-
-    if (msiDbConnector != null) {
-      msiDb = buildDbConnectionContext(msiDbConnector, useJPA)
-    }
-
-    var lcMsDb: DatabaseConnectionContext = null;
-
+    val msiDbCtx = if (msiDbConnector == null) null
+    else buildDbConnectionContext(msiDbConnector, useJPA)
+    
     val lcMsDbConnector = dsFactory.getLcMsDbConnector(projectId)
+    val lcMsDbCtx = if (lcMsDbConnector == null) null
+    else buildDbConnectionContext(lcMsDbConnector, useJPA)
 
-    if (lcMsDbConnector != null) {
-      lcMsDb = buildDbConnectionContext(lcMsDbConnector, useJPA)
-    }
-
-    new BasicExecutionContext(udsDb, pdiDb, psDb, msiDb, lcMsDb)
+    new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, lcMsDbCtx)
   }
 
   /**
@@ -95,7 +75,7 @@ object ContextFactory extends Logging {
     } else {
 
       try {
-        new SQLConnectionContext(dbConnector.getDataSource.getConnection, dbConnector.getProlineDatabaseType, dbConnector.getDriverType)
+        new DatabaseConnectionContext(dbConnector.getDataSource.getConnection, dbConnector.getProlineDatabaseType, dbConnector.getDriverType)
       } catch {
 
         case sqlEx: SQLException => {
@@ -144,7 +124,7 @@ object BuildDbConnectionContext extends Logging {
    *
    * @return A new instance of <code>DatabaseConnectionContext</code> or <code>SQLConnectionContext</code> for SQL
    */
-  def apply[CtxType <: DatabaseConnectionContext](dbConnector: IDatabaseConnector)(implicit m: Manifest[CtxType]): CtxType = {
+  /*def apply[CtxType <: DatabaseConnectionContext](dbConnector: IDatabaseConnector)(implicit m: Manifest[CtxType]): CtxType = {
 
     val useJPA = if (m.erasure == classOf[SQLConnectionContext]) false
     else true
@@ -152,7 +132,7 @@ object BuildDbConnectionContext extends Logging {
     this.logger.info("creation of execution context " + (if (useJPA) "using JPA mode" else "using SQL mode "))
 
     this.apply(dbConnector, useJPA).asInstanceOf[CtxType]
-  }
+  }*/
 
   /**
    * Creates a <code>DatabaseConnectionContext</code> from given DatabaseConnector.

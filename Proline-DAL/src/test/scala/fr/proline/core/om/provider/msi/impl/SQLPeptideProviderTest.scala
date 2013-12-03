@@ -9,7 +9,6 @@ import org.junit.Before
 import org.junit.Test
 
 import fr.proline.core.dal.ContextFactory
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
@@ -37,7 +36,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getSinglePeptide() = {
-    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false)
 
     try {
 
@@ -61,7 +60,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     ids += 1
     ids += 4
 
-    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false)
 
     try {
 
@@ -81,7 +80,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideWithNTermPTM() = {
-    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false)
 
     try {
       val sqlPepProvider = new SQLPeptideProvider(psDb)
@@ -103,7 +102,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideOnSeqAndNoPtms() = {
-    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false)
 
     try {
       val sqlPepProvider = new SQLPeptideProvider(psDb)
@@ -122,7 +121,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @Test
   def getPeptideOnSeqAndPtms() = {
-    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false).asInstanceOf[SQLConnectionContext]
+    val psDb = ContextFactory.buildDbConnectionContext(getConnector, false)
 
     try {
       val sqlPepProvider = new SQLPeptideProvider(psDb)
