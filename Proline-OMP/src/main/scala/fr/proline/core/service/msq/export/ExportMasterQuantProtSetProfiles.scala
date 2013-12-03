@@ -27,18 +27,7 @@ class ExportMasterQuantProtSetProfiles(
   val qProtSetProfileHeaders = "abundance".split(" ")
   val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
 
-  // TODO: process then export the table of prot set profiles using the profilizer
-  
   def writeRows( fileWriter: PrintWriter ) {
-    
-    // Compute the prot set profiles using the profilizer
-    import fr.proline.core.algo.msq.Profilizer
-    import fr.proline.core.orm.uds.MasterQuantitationChannel
-    val udsEM = execCtx.getUDSDbConnectionContext().getEntityManager()
-    val udsMQC = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)
-    val profilizer = new Profilizer( expDesign, 1, udsMQC.getNumber() )
-    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, 0.01f)
-    profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, 0.01f)
     
     // Iterate over master quant peptides to export them
     quantRSM.masterQuantProteinSets.foreach { mqProtSet =>
