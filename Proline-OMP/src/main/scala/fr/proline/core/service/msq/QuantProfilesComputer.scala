@@ -17,7 +17,8 @@ class QuantProfilesComputer(
   executionContext: IExecutionContext,
   experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
-  statTestsAlpha: Float = 0.01f
+  peptideStatTestsAlpha: Float = 0.01f,
+  proteinStatTestsAlpha: Float = 0.01f
 ) extends IService {
   
   private var _hasInitiatedExecContext: Boolean = false
@@ -69,10 +70,10 @@ class QuantProfilesComputer(
     )
     
     // 3. Compute MasterQuantPeptides profiles
-    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, statTestsAlpha)    
+    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, peptideStatTestsAlpha)
     
     // 4. Compute MasterQuantProtSets profiles
-    profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, statTestsAlpha)
+    profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, proteinStatTestsAlpha)
     
     // 5. Update MasterQuantPeptides and MasterQuantProtSets properties
     val msiDbCtx = executionContext.getMSIDbConnectionContext()
