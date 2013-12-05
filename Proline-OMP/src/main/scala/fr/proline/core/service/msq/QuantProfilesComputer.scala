@@ -22,6 +22,8 @@ class QuantProfilesComputer(
   proteinStatTestsAlpha: Float = 0.01f
 ) extends IService with Logging {
   
+  require( executionContext.isJPA,"invalid type of executionContext, JPA type is required")
+  
   private var _hasInitiatedExecContext: Boolean = false
 
   // Secondary constructor
