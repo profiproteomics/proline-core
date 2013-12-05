@@ -9,14 +9,14 @@ class MascotModifiedMudpitScoreUpdater extends IPeptideSetScoreUpdater {
 
   def updateScoreOfPeptideSets(rsm: ResultSummary, params: Any*) {
 
-    val bestPepMatchesByProtSetId = rsm.getBestValidatedPepMatchesByPepSetId()
+    val bestPepMatchesByPepSetId = rsm.getBestValidatedPepMatchesByPepSetId()
 
     val scoreThresholdOffset = if (params != null && params.length > 0) toFloat(params(0)) else 0f
 
     for (peptideSet <- rsm.peptideSets) {
 
-      val proteinSetId = peptideSet.id
-      val bestPepMatches = bestPepMatchesByProtSetId(proteinSetId)
+      val peptideSetId = peptideSet.id
+      val bestPepMatches = bestPepMatchesByPepSetId(peptideSetId)
 
       val pepSetScore = MascotValidationHelper.sumPeptideMatchesScoreOffsets(bestPepMatches, scoreThresholdOffset)
       peptideSet.score = pepSetScore
