@@ -159,6 +159,8 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	
 	private HashMap<Integer, PeptidePtm> peptidePtmMap = null;
 
+	private PeptideReadablePtmString peptideReadablePtmString = null;
+	
 	protected TransientData() {
 	}
 
@@ -178,7 +180,16 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	public void setPeptidePtmMap(HashMap<Integer, PeptidePtm> peptidePtmMap) {
 	    this.peptidePtmMap = peptidePtmMap;
 	}
+	
+	
+	public PeptideReadablePtmString getPeptideReadablePtmString() {
+	    return peptideReadablePtmString;
+	}
 
+	public void setPeptideReadablePtmString(PeptideReadablePtmString peptideReadablePtmString) {
+		this.peptideReadablePtmString = peptideReadablePtmString;
+	}
+	
 	
 	public ArrayList<DProteinSet> getProteinSetArray() {
 	    return proteinSetArray;
