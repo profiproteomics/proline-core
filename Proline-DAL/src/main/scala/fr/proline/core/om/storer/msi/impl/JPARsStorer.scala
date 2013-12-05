@@ -1,13 +1,10 @@
 package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Timestamp
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
-
 import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi.{ InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.utils.PeptideIdent
@@ -19,8 +16,8 @@ import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => pdiSeqDa
 import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => psPeptideRepo, PsPtmRepository => psPtmRepo }
 import fr.proline.core.orm.uds.repository.{ UdsEnzymeRepository => udsEnzymeRepo, UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo, UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo }
 import fr.proline.util.StringUtils
-
 import fr.proline.core.utils.ResidueUtils._
+import fr.proline.core.orm.msi.PeptideReadablePtmString
 
 /**
  * JPA implementation of ResultSet storer.
@@ -214,7 +211,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         logger.trace("ResultSet {" + omResultSetId + "} persisted in MSI")
 
         /* Peptides & PeptideMatches */
-        retrievePeptides(storerContext, resultSet.peptides)
+        retrievePeptides(storerContext, msiResultSet, resultSet.peptides)
 
         for (peptMatch <- resultSet.peptideMatches) {
           createPeptideMatch(storerContext,
@@ -940,14 +937,14 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
    * @param msiPeptides Mutable Map will contain fetched and created Msi Peptide entities accessed by PeptideIdent(sequence, ptmString). Map must not be {{{null}}}.
    * The map can contain already fetched Peptides in current Msi transaction.
    */
-  def retrievePeptides(storerContext: StorerContext,
+  def retrievePeptides(storerContext: StorerContext, msiResultSet: MsiResultSet,
                        peptides: Array[Peptide]) {
 
     checkStorerContext(storerContext)
 
-    if (peptides == null) {
-      throw new IllegalArgumentException("Peptides array is null")
-    }
+    require(msiResultSet != null, "MsiResultSet is null")
+
+    require(peptides != null, "Peptides array is null")
 
     /**
      * Build a Java List<Long> from a Scala Collection[Long].
@@ -1074,6 +1071,30 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     } // End if (remainingPeptides is not empty)
 
     logger.info(msiPeptides.size + " new Peptides stored in the MSIdb")
+
+    /* Create PeptideReadablePtmString entities */
+    for (peptide <- peptides) {
+
+      if (!StringUtils.isEmpty(peptide.readablePtmString)) {
+        val peptIdent = new PeptideIdent(peptide.sequence, peptide.ptmString)
+
+        val optionalMsiPeptide = msiPeptides.get(peptIdent)
+
+        if (optionalMsiPeptide.isEmpty) {
+          logger.warn("Unable to retrieve Peptide [" + peptIdent + "] from cache")
+        } else {
+          val readablePtmStringEntity = new PeptideReadablePtmString()
+          readablePtmStringEntity.setPeptide(optionalMsiPeptide.get)
+          readablePtmStringEntity.setResultSet(msiResultSet)
+          readablePtmStringEntity.setReadablePtmString(peptide.readablePtmString)
+
+          msiEm.persist(readablePtmStringEntity)
+          logger.trace("PeptideReadablePtmString [" + peptide.readablePtmString + "] persisted")
+        }
+
+      }
+
+    }
 
     if (!remainingPeptides.isEmpty) {
       logger.error("There are " + remainingPeptides.size + " unknown Peptides in ResultSet")
