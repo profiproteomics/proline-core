@@ -1,6 +1,7 @@
 package fr.proline.core.service.msq
 
 import com.codahale.jerkson.Json
+import com.weiglewilczek.slf4s.Logging
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
@@ -19,7 +20,7 @@ class QuantProfilesComputer(
   masterQuantChannelId: Long,
   peptideStatTestsAlpha: Float = 0.01f,
   proteinStatTestsAlpha: Float = 0.01f
-) extends IService {
+) extends IService with Logging {
   
   private var _hasInitiatedExecContext: Boolean = false
 
@@ -39,6 +40,8 @@ class QuantProfilesComputer(
   }
   
   def runService() = {
+
+    this.logger.info("Running service QuantProfilesComputer.")
     
     // Get entity manager
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
@@ -52,7 +55,7 @@ class QuantProfilesComputer(
     // FIXME: check the quantitation method first
     
     val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId()
-    val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)    
+    val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
     
     // 1. Load the Quant RSM
     val quantRsmProvider = new SQLQuantResultSummaryProvider(
@@ -78,14 +81,18 @@ class QuantProfilesComputer(
     // 5. Update MasterQuantPeptides and MasterQuantProtSets properties
     val msiDbCtx = executionContext.getMSIDbConnectionContext()
     
-    DoJDBCWork.tryTransactionWithEzDBC(executionContext.getMSIDbConnectionContext, { ezDBC =>
+    DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx, { ezDBC =>
       
-      ezDBC.executeInBatch("UPDATE master_quant_component SET serialized_properties = ? WHERE id = ?") { stmt =>
+      ezDBC.executePrepared("UPDATE master_quant_component SET serialized_properties = ? WHERE id = ?") { stmt =>
+
+        this.logger.info("Updating MasterQuantPeptides properties...")
         
         // Update MasterQuantPeptides properties
         for( mqPep <- quantRSM.masterQuantPeptides ) {
           stmt.executeWith( Json.generate(mqPep.properties), mqPep.id )
         }
+
+        this.logger.info("Updating MasterQuantPeptides properties...")
         
         // Update MasterQuantProtSets properties
         for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
@@ -97,6 +104,8 @@ class QuantProfilesComputer(
     
     // Close execution context if initiated locally
     if( this._hasInitiatedExecContext ) executionContext.closeAll()
+
+    this.logger.info("Exiting QuantProfilesComputer service.")
     
     true
   }
