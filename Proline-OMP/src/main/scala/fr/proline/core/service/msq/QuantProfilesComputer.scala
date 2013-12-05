@@ -92,7 +92,7 @@ class QuantProfilesComputer(
           stmt.executeWith( Json.generate(mqPep.properties), mqPep.id )
         }
 
-        this.logger.info("Updating MasterQuantPeptides properties...")
+        this.logger.info("Updating MasterQuantProtSets properties...")
         
         // Update MasterQuantProtSets properties
         for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
