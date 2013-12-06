@@ -160,9 +160,7 @@ class SQLQuantResultSummaryProvider(
         " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID ~
         " AND "~ t3.SCHEMA_NAME ~" = '"~ QuantProteinSetSchema ~"'"
       )
-      
-      // TODO: parse properties
-      
+         
       msiEzDBC.select(mqProtSetCompQuery) { r =>
   
         val mqProtSetId: Long = toLong(r.getAny(MQCompCols.ID))
@@ -181,7 +179,7 @@ class SQLQuantResultSummaryProvider(
            quantProteinSetMap = quantProtSetMap, // QuantProteinSet by quant channel id
            masterQuantPeptides = mqPeptides,
            selectionLevel = protSet.selectionLevel,
-           properties = None
+           properties = r.getStringOption(MQCompCols.SERIALIZED_PROPERTIES).map(parse[MasterQuantProteinSetProperties](_))
          )
         
       } toArray
