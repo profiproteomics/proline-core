@@ -429,6 +429,15 @@ CREATE TABLE result_set_relation (
                 PRIMARY KEY (parent_result_set_id, child_result_set_id)
 );
 
+CREATE TABLE peptide_readable_ptm_string (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    readable_ptm_string VARCHAR NOT NULL,
+    peptide_id BIGINT NOT NULL,
+    result_set_id BIGINT NOT NULL,
+    FOREIGN KEY (peptide_id) REFERENCES peptide (id),
+    FOREIGN KEY (result_set_id) REFERENCES result_set (id)
+);
+
 CREATE TABLE result_summary (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 description TEXT(10000),
