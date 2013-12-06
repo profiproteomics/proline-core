@@ -444,6 +444,21 @@ object MsiDbPeptideMatchRelationTable extends MsiDbPeptideMatchRelationTable {
   val columns = MsiDbPeptideMatchRelationColumns
 }
 
+object MsiDbPeptideReadablePtmStringColumns extends ColumnEnumeration {
+  val $tableName = MsiDbPeptideReadablePtmStringTable.name
+  val ID = Column("id")
+  val READABLE_PTM_STRING = Column("readable_ptm_string")
+  val PEPTIDE_ID = Column("peptide_id")
+  val RESULT_SET_ID = Column("result_set_id")
+}
+
+abstract class MsiDbPeptideReadablePtmStringTable extends TableDefinition[MsiDbPeptideReadablePtmStringColumns.type]
+
+object MsiDbPeptideReadablePtmStringTable extends MsiDbPeptideReadablePtmStringTable {
+  val name = "peptide_readable_ptm_string"
+  val columns = MsiDbPeptideReadablePtmStringColumns
+}
+
 object MsiDbPeptideSetColumns extends ColumnEnumeration {
   val $tableName = MsiDbPeptideSetTable.name
   val ID = Column("id")
