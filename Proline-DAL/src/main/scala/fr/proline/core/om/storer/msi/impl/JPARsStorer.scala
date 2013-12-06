@@ -931,11 +931,9 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
   /**
    * Retrieves Peptides from Msi Db or persists new Peptide entities into Msi Db from existing or '''created''' Ps Db entities.
    *
-   * @param msiEm Msi EntityManager must have a valid transaction started.
-   * @param psEm A transaction may be started on psEm to persist new Peptides in Ps Db.
+   * @param storerContext Storer ExecutionContext containing EntityManagers for MSI and PS Dbs and entity caches.
+   * @param msiResultSet MSI persisted entity.
    * @param peptides Array of Peptide objects to fetch, must not be {{{null}}}.
-   * @param msiPeptides Mutable Map will contain fetched and created Msi Peptide entities accessed by PeptideIdent(sequence, ptmString). Map must not be {{{null}}}.
-   * The map can contain already fetched Peptides in current Msi transaction.
    */
   def retrievePeptides(storerContext: StorerContext, msiResultSet: MsiResultSet,
                        peptides: Array[Peptide]) {
@@ -1084,8 +1082,8 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
           logger.warn("Unable to retrieve Peptide [" + peptIdent + "] from cache")
         } else {
           val readablePtmStringEntity = new PeptideReadablePtmString()
-          readablePtmStringEntity.setPeptide(optionalMsiPeptide.get)
-          readablePtmStringEntity.setResultSet(msiResultSet)
+          readablePtmStringEntity.setPeptide(optionalMsiPeptide.get) // MSI Peptide must be in persistence context
+          readablePtmStringEntity.setResultSet(msiResultSet) // MSI ResultSet must be in persistence context
           readablePtmStringEntity.setReadablePtmString(peptide.readablePtmString)
 
           msiEm.persist(readablePtmStringEntity)
