@@ -120,12 +120,15 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       // Bulk insert of readable ptm strings
       logger.info("BULK insert of readable ptm strings")
       
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpReadblePtmTableName + " ( " + readablePtmTableCols + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpReadblePtmTableName + " ( id, " + readablePtmTableCols + " ) FROM STDIN")
       
       // Iterate over peptides
+      var ptmIdFake = 0
       for (peptide <- rs.peptides) {
+        ptmIdFake -= 1
         
         val readablePtmValues = List(
+          ptmIdFake,
           peptide.readablePtmString,
           peptide.id,
           rsId
