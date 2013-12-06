@@ -14,13 +14,14 @@ trait IRsWriter extends Logging {
    */
   def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Long]
   def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit
-
+  
   def fetchProteinIdentifiers(accessions: Seq[String]): Array[Any] // TODO: use JPA
 
   def fetchExistingProteins(protCRCs: Seq[String]): Array[Protein]
   def insertNewProteins(proteins: Seq[Protein], proteinBySequence: HashMap[String,Protein], msiDbCtx: DatabaseConnectionContext): Array[Protein]
 
-  def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
+  def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
+  def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int  
   def insertRsSpectrumMatches(rs: ResultSet, rf: IResultFile, msiDbCtx: DatabaseConnectionContext): Int
   def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
   def insertRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int

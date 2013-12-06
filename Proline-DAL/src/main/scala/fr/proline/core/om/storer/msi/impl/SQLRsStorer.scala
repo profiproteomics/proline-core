@@ -196,7 +196,11 @@ class SQLRsStorer(
       if( peptide.id < 0 ) print(".")
       //peptide.id = this.peptideByUniqueKey( peptide.uniqueKey ).id
     }*/
-
+    
+    // Store readable PTM strings
+    val ptmCount = this.rsWriter.insertRsReadablePtmStrings(resultSet, msiDb)
+    logger.info(ptmCount + " readable PTMs have been stored !")
+    
     // Retrieve peptide matches
     val peptideMatches = resultSet.peptideMatches
     val peptideMatchByTmpId = peptideMatches.map { pepMatch => pepMatch.id -> pepMatch } toMap

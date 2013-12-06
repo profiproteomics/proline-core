@@ -1,11 +1,12 @@
 package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IResultFile }
 import fr.proline.core.om.storer.msi.impl._
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
-import fr.proline.context.DatabaseConnectionContext
+import fr.proline.repository.ProlineDatabaseType
 
 trait IRsStorer extends Logging {
 
@@ -130,6 +131,11 @@ object RsStorer {
   }
   
   def apply( msiDbCtx: DatabaseConnectionContext, plWriter: Option[IPeaklistWriter] ): IRsStorer = {
+    
+    require(
+      msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI,
+      "Invalid DatabaseConnectionContext: a MSIb one must be provided"
+    )
     
     if( msiDbCtx.isJPA() ) {
       new JPARsStorer( plWriter )

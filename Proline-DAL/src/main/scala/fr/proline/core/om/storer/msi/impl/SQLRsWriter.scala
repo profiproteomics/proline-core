@@ -2,9 +2,7 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import com.codahale.jerkson.Json.generate
-
 import fr.profi.jdbc.easy._
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables._
@@ -20,6 +18,7 @@ import fr.proline.core.dal.tables.msi.MsiDbBioSequenceTable
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
 import fr.proline.util.primitives._
+import fr.proline.core.dal.tables.msi.MsiDbPeptideReadablePtmStringTable
 
 private[core] object SQLRsWriter extends AbstractSQLRsWriter
 
@@ -122,6 +121,32 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
     newProteins.toArray
 
+  }
+  
+  def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
+    
+    // Define some vars
+    val rsId = rs.id
+    var count = 0
+    
+    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+      
+      val ptmStringInsertQuery = MsiDbPeptideReadablePtmStringTable.mkInsertQuery{ (c,colsList) => 
+        colsList.filter( _ != c.ID)
+      }
+      
+      msiEzDBC.executePrepared( ptmStringInsertQuery ) { stmt =>
+        for (peptide <- rs.peptides) {
+          count += stmt.executeWith(
+            peptide.readablePtmString,
+            peptide.id,
+            rsId
+          )
+        }
+      }
+    })
+
+    count
   }
 
   def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
