@@ -16,9 +16,10 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbPeptideTable
 import fr.proline.core.dal.tables.msi.MsiDbBioSequenceTable
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
-import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
-import fr.proline.util.primitives._
 import fr.proline.core.dal.tables.msi.MsiDbPeptideReadablePtmStringTable
+import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
+import fr.proline.util.StringUtils
+import fr.proline.util.primitives._
 
 private[core] object SQLRsWriter extends AbstractSQLRsWriter
 
@@ -136,7 +137,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       }
       
       msiEzDBC.executePrepared( ptmStringInsertQuery ) { stmt =>
-        for (peptide <- rs.peptides) {
+        for ( peptide <- rs.peptides; if StringUtils.isNotEmpty(peptide.readablePtmString) ) {
           count += stmt.executeWith(
             peptide.readablePtmString,
             peptide.id,

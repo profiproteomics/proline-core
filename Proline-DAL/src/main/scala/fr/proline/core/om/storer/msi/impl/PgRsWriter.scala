@@ -15,6 +15,7 @@ import fr.proline.core.dal.tables.msi.{
   MsiDbPeptideTable,
   MsiDbPeptideMatchTable,
   MsiDbPeptideMatchRelationTable,
+  MsiDbPeptideReadablePtmStringTable,
   MsiDbProteinMatchTable,
   MsiDbSequenceMatchTable
 }
@@ -22,8 +23,8 @@ import fr.proline.core.om.storer.msi.IRsStorer
 import fr.proline.core.om.model.msi._
 import fr.proline.repository.util.PostgresUtils
 import fr.proline.util.sql.encodeRecordForPgCopy
+import fr.proline.util.StringUtils
 import fr.proline.util.primitives._
-import fr.proline.core.dal.tables.msi.MsiDbPeptideReadablePtmStringTable
 
 private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
@@ -124,7 +125,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       
       // Iterate over peptides
       var ptmIdFake = 0
-      for (peptide <- rs.peptides) {
+      for (peptide <- rs.peptides; if StringUtils.isNotEmpty(peptide.readablePtmString)) {
         ptmIdFake -= 1
         
         val readablePtmValues = List(
