@@ -119,7 +119,7 @@ class ResultSummaryMerger(
     for (rsm <- resultSummaries) {
       val optionalDecoyRSM = rsm.decoyResultSummary
 
-      if (optionalDecoyRSM.isDefined) {
+      if (optionalDecoyRSM != null && optionalDecoyRSM.isDefined) {
         decoyResultSummaries += optionalDecoyRSM.get
       } else {
 
