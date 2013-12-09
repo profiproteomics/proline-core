@@ -16,7 +16,6 @@ import fr.proline.util.primitives._
 class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
   
   val datasetQB = new SelectQueryBuilder1(UdsDbDataSetTable)
-  val decoyRuleTable = UdsDbProteinMatchDecoyRuleTable
   
   @throws( classOf[NoSuchElementException] )
   def getLastProjectIdentificationNumber( projectId: Long): Int = {
@@ -143,7 +142,11 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
     
     DoJDBCReturningWork.withEzDBC( udsDbCtx, { ezDBC =>
       
-      ezDBC.select( "SELECT * FROM " + decoyRuleTable.name ) { r =>
+      val sqlQuery = new SelectQueryBuilder1(UdsDbProteinMatchDecoyRuleTable).mkSelectQuery(
+        (t1,c1) => List(t1.ID,t1.AC_DECOY_TAG) -> ""
+      )
+      
+      ezDBC.select( sqlQuery ) { r =>
         toLong(r.nextAny) -> new Regex(r.nextString)
       } toMap
     
