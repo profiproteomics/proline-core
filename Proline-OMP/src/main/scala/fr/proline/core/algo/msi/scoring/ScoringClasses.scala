@@ -5,7 +5,7 @@ import fr.proline.core.om.model.msi.ResultSummary
 object PepSetScoring extends Enumeration {  
   val MASCOT_STANDARD_SCORE = Value("mascot:standard score")
   val MASCOT_MUDPIT_SCORE = Value("mascot:mudpit score")
-  val MASCOT_MODIFIED_MUDPIT_SCORE = Value("mascot:peptide set score")
+  val MASCOT_MODIFIED_MUDPIT_SCORE = Value("mascot:modified mudpit score")
 }
 
 trait IPeptideSetScoreUpdater {
@@ -13,7 +13,6 @@ trait IPeptideSetScoreUpdater {
   def updateScoreOfPeptideSets( rsm: ResultSummary, params:Any* ): Unit
   
 }
-
 
 object PeptideSetScoreUpdater {
   
