@@ -294,6 +294,10 @@ class SQLRsStorer(
     val msiDb = context.getMSIDbConnectionContext
 
     //resultSet.updateRsIdOfAllObjects() ////// is it still needed ?
+    
+    // Store readable PTM strings
+    val ptmCount = this.rsWriter.insertRsReadablePtmStrings(resultSet, msiDb)
+    logger.info(ptmCount + " readable PTMs have been stored !")
 
     // Retrieve peptide matches
     val peptideMatches = resultSet.peptideMatches
