@@ -34,41 +34,48 @@
       <version>1.7</version>
     </dependency>
 
-    <!-- Gson: Java to Json conversion -->
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.1</version>
-    </dependency>
-
+    <!-- Serialization -->
     <dependency>
       <groupId>com.codahale</groupId>
       <artifactId>jerkson_2.9.1</artifactId>
+      <!-- Version and exclusions inherited from ProFI-Pom -->
+    </dependency>
+    
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-scala_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    
+    <dependency>
+      <groupId>com.lambdaworks</groupId>
+      <artifactId>jacks_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
     <dependency>
       <groupId>org.msgpack</groupId>
-      <artifactId>msgpack-scala_2.9.1</artifactId>
-      <version>0.6.7</version>
+      <artifactId>msgpack-scala_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
     <!-- Test -->
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>specs_2.9.1</artifactId>
+      <artifactId>specs_${scala.version}</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_2.9.1</artifactId>
+      <artifactId>scalatest_${scala.version}</artifactId>
       <scope>test</scope>
     </dependency>
 
