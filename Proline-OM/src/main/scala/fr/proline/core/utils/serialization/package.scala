@@ -1,28 +1,22 @@
 package fr.proline.core.utils
 
+import fr.profi.util.serialization.CustomDoubleJacksonSerializer
+
 package object serialization {
   
-  import com.fasterxml.jackson.core.json.JsonWriteContext
-  import com.fasterxml.jackson.core.JsonGenerator
-  import com.fasterxml.jackson.core.Version
-  import com.fasterxml.jackson.databind.jsontype.TypeSerializer
-  import com.fasterxml.jackson.databind.module.SimpleModule
-  import com.fasterxml.jackson.databind.ser.std.ArraySerializerBase
-  import com.fasterxml.jackson.databind.ser.std.NonTypedScalarSerializerBase
-  import com.fasterxml.jackson.databind.ser.ContainerSerializer
-  import com.fasterxml.jackson.databind.`type`.TypeFactory
-  import com.fasterxml.jackson.databind.JsonSerializer
-  import com.fasterxml.jackson.databind.JavaType
-  import com.fasterxml.jackson.databind.JsonNode
-  import com.fasterxml.jackson.databind.SerializerProvider  
+  object ProlineJson extends com.codahale.jerkson.Json with CustomDoubleJacksonSerializer {
+    def getObjectMapper = this.mapper
+  }
   
+
+  /*
   object ProlineJson extends com.codahale.jerkson.Json {
     val module = new SimpleModule("ProlineJson", Version.unknownVersion())
     module.addSerializer(classOf[java.lang.Double], new CustomDoubleSerializer)
     module.addSerializer(classOf[Array[Double]], new CustomArrayOfDoubleSerializer)
     mapper.registerModule(module)
   }
-  
+   
   object CustomDoubleSerializer {
     
     import java.text.{DecimalFormat,DecimalFormatSymbols}
@@ -97,36 +91,6 @@ package object serialization {
       val node = createSchemaNode("array", true)
       node.put("items", createSchemaNode("number"))
       node
-    }
-    
-  }
-
-  /*import org.apache.avro.specific.SpecificRecordBase
-  import com.google.gson._
-  
-  trait SerializerProducer[A <: org.apache.avro.specific.SpecificRecordBase] {
-    
-    def toSerializer(): A
-    def toJson(): String = {
-      val gson = new Gson()
-      gson.toJson( this.toSerializer )
-    }
-    
-  }
-  
-  private class CharSequenceDeserializer extends JsonDeserializer[java.lang.CharSequence] {
-    def deserialize( json: JsonElement, typeOfT: java.lang.reflect.Type, context: JsonDeserializationContext ): java.lang.CharSequence = {
-      json.getAsString()
-    }
-  }
-  
-  trait SerializerConsumer[A <: org.apache.avro.specific.SpecificRecordBase, B] {
-    
-    def fromSerializer( serializer: A ): B
-    def fromJson( jsonString: String )(implicit m : Manifest[A]) : B = {    
-      val gson = new GsonBuilder().registerTypeAdapter(classOf[java.lang.CharSequence], new CharSequenceDeserializer() ).create();
-      val jsonSerializer = gson.fromJson(jsonString, m.erasure.newInstance.asInstanceOf[A].getClass() )
-      this.fromSerializer( jsonSerializer )
     }
     
   }*/

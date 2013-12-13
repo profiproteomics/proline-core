@@ -8,6 +8,7 @@ import scala.reflect.BeanProperty
 import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.weiglewilczek.slf4s.Logging
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.proline.util.misc.InMemoryIdGen
@@ -256,14 +257,14 @@ object Peptide extends InMemoryIdGen with Logging {
     
     // FIXME: find another way to deal with ambiguous residues
     import fr.proline.util.regex.RegexUtils._
-    
-    if( sequence ~~ "(?i)[BXZ]" ) mass = 0.0
+
+    if (sequence ~~ "(?i)[BXZ]") mass = 0.0
     else {
-	  val massCalcObject = new MassCalc(SymbolPropertyTable.MONO_MASS, false)
-	  massCalcObject.setSymbolModification('U', 150.95363)
+      val massCalcObject = new MassCalc(SymbolPropertyTable.MONO_MASS, false)
+      massCalcObject.setSymbolModification('U', 150.95363)
       mass = try {
-//        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
-		massCalcObject.getMass(ProteinTools.createProtein(sequence))
+        //        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
+        massCalcObject.getMass(ProteinTools.createProtein(sequence))
       } catch {
         case e: Exception => Double.NaN
       }
@@ -282,15 +283,15 @@ object Peptide extends InMemoryIdGen with Logging {
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Peptide ( // Required fields
-                var id: Long,
-                val sequence: String,
-                val ptmString: String,
-                @transient val ptms: Array[LocatedPtm],
-                val calculatedMass: Double,
-                
-                // Mutable optional fields
-                var properties: Option[PeptideProperties] = None
-                ) {
+  var id: Long,
+  val sequence: String,
+  val ptmString: String,
+  @transient val ptms: Array[LocatedPtm],
+  val calculatedMass: Double,
+  
+  // Mutable optional fields
+  var properties: Option[PeptideProperties] = None
+) {
   
   // Define secondary constructors
   def this( id: Long, sequence: String, ptms: Array[LocatedPtm], calculatedMass: Double ) = {
@@ -309,33 +310,33 @@ case class Peptide ( // Required fields
   require( calculatedMass >= 0 )
   
   /** Returns a string representing the peptide PTMs */
-  lazy val readablePtmString : String = {
+  @JsonProperty lazy val readablePtmString : String = {
     
     var tmpReadablePtmString : String = null
-    if( ptms != null ) {
-      
+    if (ptms != null) {
+  
       val ptmStringBuf = new ListBuffer[String]
-      
-      for( ptm <- ptms ) {
-        
+  
+      for (ptm <- ptms) {
+  
         val ptmDef = ptm.definition
         val shortName = ptmDef.names.shortName
-        
-        var ptmConstraint : String = ""
-        if( ptm.isNTerm ) { ptmConstraint = "NTerm" }
-        else if( ptm.isCTerm ) { ptmConstraint = "CTerm" }
+  
+        var ptmConstraint: String = ""
+        if (ptm.isNTerm) { ptmConstraint = "NTerm" }
+        else if (ptm.isCTerm) { ptmConstraint = "CTerm" }
         else { ptmConstraint = "" + ptmDef.residue + ptm.seqPosition }
-        
+  
         val ptmString = "%s (%s)".format(shortName, ptmConstraint)
         ptmStringBuf += ptmString
       }
-      
+  
       tmpReadablePtmString = ptmStringBuf.mkString("; ")
-
+  
     }
-    
+
     tmpReadablePtmString
-    
+
   }
   
   /** Returns a string that can be used as a unique key for this peptide */
@@ -357,35 +358,35 @@ object PeptideMatch extends InMemoryIdGen
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatch ( // Required fields
-                     var id: Long, 
-                     var rank: Int,
-                     val score: Float,
-                     val scoreType: String,
-                     val deltaMoz: Float,
-                     val isDecoy: Boolean,
-                     @transient val peptide: Peptide,
-                     
-                     // Immutable optional fields
-                     val missedCleavage: Int = 0,
-                     val fragmentMatchesCount: Int = 0,
-                     
-                     @transient val msQuery: MsQuery = null, // TODO: require ?
-                     
-                     // Mutable optional fields
-                     var isValidated: Boolean = true, // only defined in the model
-                     var resultSetId: Long = 0,
-                     
-                     var childrenIds: Array[Long] = null,
-                     @transient var children: Option[Array[PeptideMatch]] = null,
-                     
-                     protected var bestChildId: Long = 0,
-                     @transient var bestChild : Option[PeptideMatch] = null,
-                     
-                     var properties: Option[PeptideMatchProperties] = None,
-                     
-                     @transient var validationProperties : Option[PeptideMatchResultSummaryProperties] = None
-                     
-                     ) {
+  var id: Long, 
+  var rank: Int,
+  val score: Float,
+  val scoreType: String,
+  val deltaMoz: Float,
+  val isDecoy: Boolean,
+  @transient val peptide: Peptide,
+  
+  // Immutable optional fields
+  val missedCleavage: Int = 0,
+  val fragmentMatchesCount: Int = 0,
+  
+  @transient val msQuery: MsQuery = null, // TODO: require ?
+  
+  // Mutable optional fields
+  var isValidated: Boolean = true, // only defined in the model
+  var resultSetId: Long = 0,
+  
+  var childrenIds: Array[Long] = null,
+  @transient var children: Option[Array[PeptideMatch]] = null,
+  
+  protected var bestChildId: Long = 0,
+  @transient var bestChild : Option[PeptideMatch] = null,
+  
+  var properties: Option[PeptideMatchProperties] = None,
+  
+  @transient var validationProperties : Option[PeptideMatchResultSummaryProperties] = None
+  
+) {
   
   // Requirements
   require( rank > 0 )
@@ -393,8 +394,8 @@ case class PeptideMatch ( // Required fields
   require( peptide != null )
   
   // Define lazy fields (mainly used for serialization purpose)
-  lazy val msQueryId = this.msQuery.id
-  lazy val peptideId = this.peptide.id
+  @JsonProperty lazy val msQueryId = this.msQuery.id
+  @JsonProperty lazy val peptideId = this.peptide.id
   
   // Related objects ID getters 
   def getChildrenIds : Array[Long] = { if(children != null && children != None) children.get.map(_.id) else childrenIds  }
@@ -440,42 +441,42 @@ object PeptideInstance extends InMemoryIdGen
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideInstance ( // Required fields
-                        var id: Long,
-                        @transient val peptide: Peptide,
+  var id: Long,
+  @transient val peptide: Peptide,
 
-                        // Immutable optional fields
-                        var peptideMatchIds: Array[Long] = null, //One of these 2 values should be specified                        
-                        @transient val peptideMatches: Array[PeptideMatch] = null,
-                        
-                        val children: Array[PeptideInstance] = null,
-                        
-                        protected val unmodifiedPeptideId: Long = 0,
-   
-                        @transient val unmodifiedPeptide: Option[Peptide] = null,
-                        
-                        // Mutable optional fields
-                        var proteinMatchesCount: Int = 0,
-                        var proteinSetsCount: Int = 0,
-                        var validatedProteinSetsCount: Int = 0,
-                        var totalLeavesMatchCount: Int = 0,
-                        var selectionLevel: Int = 2,
-                        var elutionTime: Float = 0,
-                        
-                        @transient var peptideSets: Array[PeptideSet] = null,
-                        var bestPeptideMatchId: Long = 0,
-                        var resultSummaryId: Long = 0,
-                        
-                        var properties: Option[PeptideInstanceProperties] = None,
-                        var peptideMatchPropertiesById: Map[Long, PeptideMatchResultSummaryProperties ] = null
-                        
-                        ) {
+  // Immutable optional fields
+  var peptideMatchIds: Array[Long] = null, //One of these 2 values should be specified                        
+  @transient val peptideMatches: Array[PeptideMatch] = null,
+  
+  val children: Array[PeptideInstance] = null,
+  
+  protected val unmodifiedPeptideId: Long = 0,
+  
+  @transient val unmodifiedPeptide: Option[Peptide] = null,
+  
+  // Mutable optional fields
+  var proteinMatchesCount: Int = 0,
+  var proteinSetsCount: Int = 0,
+  var validatedProteinSetsCount: Int = 0,
+  var totalLeavesMatchCount: Int = 0,
+  var selectionLevel: Int = 2,
+  var elutionTime: Float = 0,
+  
+  @transient var peptideSets: Array[PeptideSet] = null,
+  var bestPeptideMatchId: Long = 0,
+  var resultSummaryId: Long = 0,
+  
+  var properties: Option[PeptideInstanceProperties] = None,
+  var peptideMatchPropertiesById: Map[Long, PeptideMatchResultSummaryProperties ] = null
+  
+  ) {
   
   // Requirements
   require( peptide != null )
   require( (peptideMatchIds != null || peptideMatches !=null) )
   
-  lazy val peptideId = peptide.id
-  lazy val peptideMatchesCount = getPeptideMatchIds.length
+  @JsonProperty lazy val peptideId = peptide.id
+  @JsonProperty lazy val peptideMatchesCount = getPeptideMatchIds.length
   
   // Related objects ID getters
   def getPeptideMatchIds : Array[Long] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds }
@@ -507,25 +508,25 @@ case class PeptideInstanceProperties(
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideSetItem (
-                   // Required fields                                  
-                   var selectionLevel: Int,
-                   @transient val peptideInstance: PeptideInstance,
-                   
-                   // Immutable optional fields
-                   protected val peptideSetId: Long = 0,
-                   @transient val peptideSet: Option[PeptideSet] = null,
-                   
-                   // Mutable optional fields
-                   var isBestPeptideSet: Option[Boolean] = None,
-                   var resultSummaryId: Long = 0,
-                   
-                   var properties: Option[PeptideSetItemProperties] = None
-                   ) {
+  // Required fields
+  var selectionLevel: Int,
+  @transient val peptideInstance: PeptideInstance,
   
-  lazy val peptideInstanceId = peptideInstance.id
+  // Immutable optional fields
+  protected val peptideSetId: Long = 0,
+  @transient val peptideSet: Option[PeptideSet] = null,
+  
+  // Mutable optional fields
+  var isBestPeptideSet: Option[Boolean] = None,
+  var resultSummaryId: Long = 0,
+  
+  var properties: Option[PeptideSetItemProperties] = None
+) {
+  
+  @JsonProperty lazy val peptideInstanceId = peptideInstance.id
   
   def getPeptideSetId : Long = { if(peptideSet != null && peptideSet != None) peptideSet.get.id else peptideSetId }
-   
+  
 }
 
 @JsonSnakeCase
@@ -537,28 +538,28 @@ object PeptideSet extends InMemoryIdGen
 @JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideSet ( // Required fields
-                   var id: Long,
-                   var items: Array[PeptideSetItem],
-                   val isSubset: Boolean,
-                   val peptideMatchesCount: Int,
-                   var proteinMatchIds: Array[Long],
-                   
-                   // Mutable optional fields
-                   protected val proteinSetId: Long = 0,
-                   @transient var proteinSet: Option[ProteinSet] = null,
-                   
-                   var resultSummaryId: Long = 0,
-                   var score: Float = 0,
-                   var scoreType: String = null,
-                   
-                   var strictSubsetIds: Array[Long] = null,
-                   var strictSubsets: Option[Array[PeptideSet]] = null,
-                   
-                   var subsumableSubsetIds: Array[Long] = null,
-                   var subsumableSubsets: Option[Array[PeptideSet]] = null,
-                   
-                   var properties: Option[PeptideSetProperties] = None
-                   ) {
+  var id: Long,
+  var items: Array[PeptideSetItem],
+  val isSubset: Boolean,
+  val peptideMatchesCount: Int,
+  var proteinMatchIds: Array[Long],
+  
+  // Mutable optional fields
+  protected val proteinSetId: Long = 0,
+  @transient var proteinSet: Option[ProteinSet] = null,
+  
+  var resultSummaryId: Long = 0,
+  var score: Float = 0,
+  var scoreType: String = null,
+  
+  var strictSubsetIds: Array[Long] = null,
+  var strictSubsets: Option[Array[PeptideSet]] = null,
+  
+  var subsumableSubsetIds: Array[Long] = null,
+  var subsumableSubsets: Option[Array[PeptideSet]] = null,
+  
+  var properties: Option[PeptideSetProperties] = None
+) {
   
   // Requirements
   require( items != null )
@@ -598,44 +599,19 @@ case class PeptideSet ( // Required fields
   
   def hasSubset : Boolean = { if( hasStrictSubset || hasSubsumableSubset ) true else false }
   
-//    def getItemByPepInstanceId: Map[Int, PeptideSetItem] = {
-//      
-//      val tmpItemByPepInstanceId = Map() ++ items.map { item => ( item.getPeptideInstanceId -> item ) }
-//      
-//      // Alternatives syntax :
-//      // Two traversals
-//      // val itemByPepInstanceId1 = items.map( item => (item.peptideInstanceId, item) ).toMap
-//      
-//      // Two traversals
-//      //val itemByPepInstanceId2 = Map( items.map( {item => (item.peptideInstanceId, item)} ) : _* )
-//      
-//      // One traversal but mutable Map
-//      //var itemByPepInstanceId3 = new collection.mutable.HashMap[Int, PeptideSetItem]
-//      //items foreach { item => itemByPepInstanceId2 put( item.peptideInstanceId, item ) }
-//      
-//      // One traversal but more verbose
-//      //val mapBuilder = scala.collection.immutable.Map.newBuilder[Int,PeptideSetItem]
-//      //for( item <- items ) { mapBuilder += ( item.peptideInstanceId -> item ) }
-//      //itemByPepInstanceId4 = mapBuilder.result()
-//      
-//      if( tmpItemByPepInstanceId.size != items.length ) throw new Exception( "duplicated peptide instance id in the list of peptide set items" )
-//
-//      tmpItemByPepInstanceId
-//  
-//    }
- override def hashCode = {
-   if(proteinMatchIds != null && proteinMatchIds.size>0) id.hashCode +  proteinMatchIds.hashCode() else id.hashCode
- }
- 
- override def toString() : String = {
-   val toStrBulider= new StringBuilder(id.toString)
-   var firstPepIt = true
-   items.foreach(it=>{
-     if(!firstPepIt){ toStrBulider.append(",") } else { firstPepIt = false}     
-     toStrBulider.append(it.peptideInstance.peptide.sequence)
-   })
-   toStrBulider.result
- }
+  override def hashCode = {
+    if(proteinMatchIds != null && proteinMatchIds.size>0) id.hashCode +  proteinMatchIds.hashCode() else id.hashCode
+  }
+
+  override def toString(): String = {
+    val toStrBulider = new StringBuilder(id.toString)
+    var firstPepIt = true
+    items.foreach(it => {
+      if (!firstPepIt) { toStrBulider.append(",") } else { firstPepIt = false }
+      toStrBulider.append(it.peptideInstance.peptide.sequence)
+    })
+    toStrBulider.result
+  }
 }
 
 @JsonSnakeCase

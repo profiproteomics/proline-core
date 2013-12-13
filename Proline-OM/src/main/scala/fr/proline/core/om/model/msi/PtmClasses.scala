@@ -57,7 +57,7 @@ case class PtmEvidence(
   val ionType: IonTypes.IonType,
   var composition: String,
   val monoMass: Double,
-  val averageMass: Double,
+  val averageMass: Double, // TODO: set to Float ?
 
   // Immutable optional fields
   val isRequired: Boolean = false
@@ -180,9 +180,9 @@ case class LocatedPtm(
   // Required fields
   val definition: PtmDefinition,
   val seqPosition: Int,
-  val monoMass: Double,
-  val averageMass: Double,
-  val composition: String,
+  val monoMass: Double,    // TODO: retrieve from PtmDefinition ???
+  val averageMass: Double, // TODO: retrieve from PtmDefinition ???
+  val composition: String, // TODO: retrieve from PtmDefinition ???
 
   // Immutable optional fields
   val isNTerm: Boolean = false,

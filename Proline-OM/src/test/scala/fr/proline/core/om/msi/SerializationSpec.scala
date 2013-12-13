@@ -84,12 +84,8 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     isDecoy = false,
     peptide = peptide,
     msQuery = ms2Query,
-    childrenIds = Array(-1L)              
+    childrenIds = Array(-1L)
   )
-  // Force lazy evaluations (should be fixed in the OM)
-  // FIXME: remove lazy evaluation in OM then add right annotations
-  pepMatch.peptideId
-  pepMatch.msQueryId
   
   val protMatch = ProteinMatch(
     id = -1L,
@@ -156,9 +152,10 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     )
   )
   
-  /*for( jsonSpecif <- jsonSpecifs ) {
+  for( jsonSpecif <- jsonSpecifs ) {
     println( Json.generate(jsonSpecif.objectData) )
-  }*/
+    println( ProfiJson.serialize(jsonSpecif.objectData) )
+  }
   
   // Iterate over each sperialization specification
   for( jsonSpecif <- jsonSpecifs; if 1 == 1 ) {
