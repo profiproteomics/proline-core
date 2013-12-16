@@ -2,13 +2,10 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
-
-import org.apache.commons.lang3.StringUtils
-
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
-
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import fr.proline.util.misc.InMemoryIdGen
+import fr.proline.util.StringUtils
 
 trait MsQuery {
   
@@ -42,21 +39,17 @@ trait MsQuery {
 
 }
 
-@JsonInclude( Include.NON_NULL )
 case class MsQueryProperties(
   @BeanProperty var targetDbSearch: Option[MsQueryDbSearchProperties] = None,
   @BeanProperty var decoyDbSearch: Option[MsQueryDbSearchProperties] = None
 )
 
-@JsonInclude( Include.NON_NULL )
 case class MsQueryDbSearchProperties(
   @BeanProperty var candidatePeptidesCount: Int,
   @BeanProperty var mascotIdentityThreshold: Option[Float] = None,
   @BeanProperty var mascotHomologyThreshold: Option[Float] = None
 )
 
-
-@JsonInclude( Include.NON_NULL )
 case class Ms1Query (
   // Required fields
   var id: Long,
@@ -68,12 +61,12 @@ case class Ms1Query (
   var properties: Option[MsQueryProperties] = None
 
 ) extends MsQuery {
-    
+  
   // Requirements
   require( moz > 0 )
   
   val msLevel = 1
-    
+  
 }
 
 object Ms2Query extends InMemoryIdGen {
@@ -90,9 +83,20 @@ object Ms2Query extends InMemoryIdGen {
                 )
   }*/
   
+  // Needed for Jacks deserializer
+  @JsonCreator
+  def createFromJSON(
+    @JsonProperty("id") id: Long,
+    @JsonProperty("initial_id") initialId: Int,
+    @JsonProperty("moz") moz: Double,
+    @JsonProperty("charge") charge: Int,
+    @JsonProperty("spectrum_title") spectrumTitle: String,
+    @JsonProperty("spectrum_id") spectrumId: Long = 0,
+    @JsonProperty("properties") properties: Option[MsQueryProperties] = None
+  ): Ms2Query = Ms2Query(id,initialId,moz,charge,spectrumTitle,spectrumId,properties)
+  
 }
 
-@JsonInclude( Include.NON_NULL )
 case class Ms2Query(
   // Required fields
   var id: Long,
@@ -100,15 +104,15 @@ case class Ms2Query(
   val moz: Double,
   val charge: Int,
   val spectrumTitle: String,
-                  
+  
   // Mutable optional fields
-  var spectrumId: Long = 0,                 
+  var spectrumId: Long = 0,
   var properties: Option[MsQueryProperties] = None
  
 ) extends MsQuery {
   
   // Requirements
-  require( StringUtils.isNotEmpty( spectrumTitle )  )
+  require( StringUtils.isNotEmpty( spectrumTitle ) )
   
   val msLevel = 2
   
