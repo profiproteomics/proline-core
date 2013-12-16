@@ -1,8 +1,7 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import com.codahale.jerkson.Json.generate
-
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCWork
@@ -34,7 +33,7 @@ class SQLRunStorer(
           run.maxIntensity,
           run.ms1ScansCount,
           run.ms2ScansCount,
-          run.properties.map( generate(_) ),
+          run.properties.map( ProfiJson.serialize(_) ),
           run.rawFile.instrument.map( _.id )
         )
         runId = statement.generatedInt
@@ -53,7 +52,7 @@ class SQLRunStorer(
             scan.basePeakIntensity,
             scan.precursorMoz,
             scan.precursorCharge,
-            scan.properties.map( generate(_) ),
+            scan.properties.map( ProfiJson.serialize(_) ),
             runId
           )
         }

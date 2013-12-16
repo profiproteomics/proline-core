@@ -4,9 +4,9 @@ import java.sql.Connection
 import org.postgresql.copy.CopyIn
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -101,7 +101,7 @@ object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with Logging {
       msQuery.initialId,
       msQuery.charge,
       msQuery.moz,
-      msQuery.properties.map(generate(_)),
+      msQuery.properties.map(ProfiJson.serialize(_)),
       spectrumId,
       msiSearchId
     )

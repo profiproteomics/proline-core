@@ -5,7 +5,6 @@ import scala.reflect.BeanProperty
 
 import org.apache.commons.lang3.StringUtils
 
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 
@@ -43,14 +42,12 @@ trait MsQuery {
 
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MsQueryProperties(
   @BeanProperty var targetDbSearch: Option[MsQueryDbSearchProperties] = None,
   @BeanProperty var decoyDbSearch: Option[MsQueryDbSearchProperties] = None
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MsQueryDbSearchProperties(
   @BeanProperty var candidatePeptidesCount: Int,
@@ -59,7 +56,6 @@ case class MsQueryDbSearchProperties(
 )
 
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Ms1Query (
   // Required fields
@@ -96,7 +92,6 @@ object Ms2Query extends InMemoryIdGen {
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Ms2Query(
   // Required fields

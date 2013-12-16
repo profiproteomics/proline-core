@@ -1,8 +1,8 @@
 package fr.proline.core.service.msq
 
-import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.Profilizer
@@ -91,14 +91,14 @@ class QuantProfilesComputer(
         
         // Update MasterQuantPeptides properties
         for( mqPep <- quantRSM.masterQuantPeptides ) {
-          stmt.executeWith( Json.generate(mqPep.properties), mqPep.id )
+          stmt.executeWith( ProfiJson.serialize(mqPep.properties), mqPep.id )
         }
 
         this.logger.info("Updating MasterQuantProtSets properties...")
         
         // Update MasterQuantProtSets properties
         for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
-           stmt.executeWith( Json.generate(mqProtSet.properties), mqProtSet.getMasterQuantComponentId() )
+           stmt.executeWith( ProfiJson.serialize(mqProtSet.properties), mqProtSet.getMasterQuantComponentId() )
         }
       }
       

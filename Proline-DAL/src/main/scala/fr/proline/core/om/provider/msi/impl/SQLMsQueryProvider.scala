@@ -1,8 +1,9 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-import com.codahale.jerkson.Json.parse
+
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -65,7 +66,7 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
         val spectrumId = toLong(r.getAny(MsQueryCols.SPECTRUM_ID))
   
         // Decode JSON properties
-        val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(parse[MsQueryProperties](_))
+        val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MsQueryProperties](_))
         val msQueryId = toLong(r.getAny(MsQueryCols.ID))
   
         // Build the MS query object
@@ -127,7 +128,7 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
         val spectrumId = toLong(r.getAny(MsQueryCols.SPECTRUM_ID))
   
         // Decode JSON properties
-        val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(parse[MsQueryProperties](_))
+        val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MsQueryProperties](_))
         val msQueryId = toLong(r.getAny(MsQueryCols.ID))
   
         // Build the MS query object

@@ -1,7 +1,6 @@
 package fr.proline.core.om.model.msi
 
 import scala.reflect.BeanProperty
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
@@ -30,7 +29,6 @@ case class Instrument(
       
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class InstrumentProperties
 
@@ -44,7 +42,6 @@ object InstrumentConfig extends InMemoryIdGen {
   }
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class InstrumentConfig(
                    // Required fields
@@ -68,7 +65,6 @@ case class InstrumentConfig(
       
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class InstrumentConfigProperties ( 
   @BeanProperty val isHidden: Boolean

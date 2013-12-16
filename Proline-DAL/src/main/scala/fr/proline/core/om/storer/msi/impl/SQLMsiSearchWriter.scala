@@ -2,11 +2,11 @@ package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
 
-import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal._
 import fr.proline.util.sql._
@@ -94,7 +94,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
       msQuery.initialId,
       msQuery.charge,
       msQuery.moz,
-      msQuery.properties.map(generate(_)),
+      msQuery.properties.map(ProfiJson.serialize(_)),
       spectrumId,
       msiSearchId
     )
@@ -176,7 +176,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
         searchSettings.ms1ErrorTolUnit,
         searchSettings.quantitation,
         searchSettings.isDecoy,
-        searchSettings.properties.map(generate(_)),
+        searchSettings.properties.map(ProfiJson.serialize(_)),
         searchSettings.instrumentConfig.id
       )
 
@@ -236,7 +236,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
           searchSettings.id,
           seqDb.id,
           seqDb.sequencesCount,
-          seqDb.searchProperties.map(generate(_))
+          seqDb.searchProperties.map(ProfiJson.serialize(_))
         )
       }
     }
@@ -257,7 +257,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
           enzyme.cleavageRegexp,
           enzyme.isIndependant,
           enzyme.isSemiSpecific,
-          enzyme.properties.map( generate(_) )
+          enzyme.properties.map( ProfiJson.serialize(_) )
         )
       }
     }

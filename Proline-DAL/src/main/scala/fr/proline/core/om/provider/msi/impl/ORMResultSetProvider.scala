@@ -3,9 +3,9 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.JavaConversions.{ asScalaBuffer, asScalaSet }
 import scala.collection.mutable
 
-import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
 
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, ResultSetProperties, SearchSettings, SearchSettingsProperties, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.provider.msi.{IResultSetProvider,ResultSetFilter}
@@ -192,7 +192,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       val resultSetProperties: Option[ResultSetProperties] = if (StringUtils.isEmpty(serializedProperties)) {
         None
       } else {
-        Some(Json.parse[ResultSetProperties](serializedProperties))
+        Some(ProfiJson.deserialize[ResultSetProperties](serializedProperties))
       }
 
       val resultSet = new ResultSet(peptides,
@@ -247,7 +247,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       val peptideMatchProperties: Option[PeptideMatchProperties] = if (StringUtils.isEmpty(serializedProperties)) {
         None
       } else {
-        Some(Json.parse[PeptideMatchProperties](serializedProperties))
+        Some(ProfiJson.deserialize[PeptideMatchProperties](serializedProperties))
       }
 
       val peptideMatch = new PeptideMatch(msiPeptideMatchId,
@@ -329,7 +329,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         val msQueryProperties: Option[MsQueryProperties] = if (StringUtils.isEmpty(serializedProperties)) {
           None
         } else {
-          Some(Json.parse[MsQueryProperties](serializedProperties))
+          Some(ProfiJson.deserialize[MsQueryProperties](serializedProperties))
         }
 
         val msQuery = new Ms2Query(msiMsQueryId,
@@ -524,7 +524,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     val searchSettingsProperties: Option[SearchSettingsProperties] = if (StringUtils.isEmpty(serializedProperties)) {
       None
     } else {
-      Some(Json.parse[SearchSettingsProperties](serializedProperties))
+      Some(ProfiJson.deserialize[SearchSettingsProperties](serializedProperties))
     }
 
     new SearchSettings(msiSearchSetting.getId,

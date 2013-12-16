@@ -1,10 +1,10 @@
 package fr.proline.core.om.storer.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
-import com.codahale.jerkson.Json.generate
 
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCWork
@@ -143,7 +143,7 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
         lcmsMapType,
         lcmsMap.creationTimestamp,
         modificationTimestamp,
-        lcmsMap.properties.map( generate(_) ),
+        lcmsMap.properties.map( ProfiJson.serialize(_) ),
         ftScoringId
       )
 
@@ -174,7 +174,7 @@ class SQLRunMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRunMapStore
       ft.ms2Count,
       ft.isCluster,
       ft.isOverlapping,
-      ft.properties.map(generate(_)),
+      ft.properties.map(ProfiJson.serialize(_)),
       ftRelations.firstScanId,
       ftRelations.lastScanId,
       ftRelations.apexScanId,

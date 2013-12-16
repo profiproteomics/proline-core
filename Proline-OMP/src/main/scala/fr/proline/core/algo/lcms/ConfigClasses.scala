@@ -1,7 +1,6 @@
 package fr.proline.core.algo.lcms
 
 import fr.proline.core.om.model.lcms.LcMsRun
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 
@@ -35,7 +34,6 @@ trait IMzTimeTolerant extends IMzTolerant {
   val timeTol: Float
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class AlignmentParams(
   massInterval: Int,
@@ -45,11 +43,9 @@ case class AlignmentParams(
   maxIterations: Int = 3
 )
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class AlnSmoothingParams( windowSize: Int, windowOverlap: Int, minWindowLandmarks: Int = 0 )
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class ClusteringParams(
   mozTol: Double,
@@ -65,15 +61,12 @@ case class ClusteringParams(
   
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class ExtractionParams( mozTol: Double, mozTolUnit: String ) extends IMzTolerant
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Float ) extends IMzTimeTolerant
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class LabelFreeQuantConfig(
   mapSetName: String,

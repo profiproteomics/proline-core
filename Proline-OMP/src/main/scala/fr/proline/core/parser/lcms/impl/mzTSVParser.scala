@@ -6,10 +6,9 @@ import fr.proline.core.om.model.lcms.RunMap
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.BeanProperty
 
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
-import com.codahale.jerkson.Json.parse
+import fr.profi.util.serialization.ProfiJson
 
 import fr.proline.core.parser.lcms.{ ILcmsMapFileParser, ExtraParameters }
 import fr.proline.core.om.model.lcms._
@@ -19,7 +18,6 @@ import fr.proline.core.om.model.lcms._
  */
 
 //define some case class to read json encoded properties and not pollute model
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class mzPeak(
   @BeanProperty var moz: Double,
@@ -35,7 +33,6 @@ case class mzPeak(
   }
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class mzIsotopicPattern(
 
@@ -56,7 +53,6 @@ case class mzIsotopicPattern(
   }
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class mzFeature(
 
@@ -132,7 +128,7 @@ class mzTSVParser extends ILcmsMapFileParser {
 
       //properties
       val peakelsCount = Some(data("peakels_count").toInt)
-      val peakelsRatios = if (data("peakels_ratios") != "") Some(parse[Array[Float]](data("peakels_ratio"))) else None
+      val peakelsRatios = if (data("peakels_ratios") != "") Some(ProfiJson.deserialize[Array[Float]](data("peakels_ratio"))) else None
       val overlapCorrelation = Some(data("overlap_correlation").toFloat)
       val overlapFactor = Some(data("overlap_factor").toFloat)
 
@@ -150,8 +146,8 @@ class mzTSVParser extends ILcmsMapFileParser {
         ms1Count = ms1Count,
         ms2Count = ms2Count,
         isOverlapping = isOverlapping,
-        isotopicPatterns = Some(parse[Array[mzIsotopicPattern]](isotopicPatterns).map(ip => ip.toIsotopicPattern)),
-        overlappingFeatures = Array[Feature](parse[mzFeature](overlappingFeatures).toFeature(lcmsScanSeq, featureId, ms2EventIds)),
+        isotopicPatterns = Some(ProfiJson.deserialize[Array[mzIsotopicPattern]](isotopicPatterns).map(ip => ip.toIsotopicPattern)),
+        overlappingFeatures = Array[Feature](ProfiJson.deserialize[mzFeature](overlappingFeatures).toFeature(lcmsScanSeq, featureId, ms2EventIds)),
         relations = FeatureRelations(
           ms2EventIds = ms2EventIds,
           firstScanInitialId = lcmsScanSeq.scanById.get(firstScanId).get.initialId,

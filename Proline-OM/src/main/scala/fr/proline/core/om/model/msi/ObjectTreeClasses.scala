@@ -1,7 +1,6 @@
 package fr.proline.core.om.model.msi
 
 import scala.reflect.BeanProperty
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import org.msgpack.annotation.Message
@@ -17,7 +16,6 @@ import org.msgpack.annotation.Message
 * @param neutralLossMass 
 * @param theoreticalFragmentId 
 **/
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 @Message
 case class FragmentMatch (  
@@ -67,7 +65,6 @@ object FragmentMatchType extends Enumeration {
 * @param fragmentationTable 
 * @param fragmentMatches 
 **/
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 @Message
 case class SpectrumMatch (
@@ -80,7 +77,6 @@ case class SpectrumMatch (
   def this() = this(0,0,Array.empty[TheoreticalFragmentSeries],Array.empty[FragmentMatch])
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 @Message
 case class TheoreticalFragmentSeries (

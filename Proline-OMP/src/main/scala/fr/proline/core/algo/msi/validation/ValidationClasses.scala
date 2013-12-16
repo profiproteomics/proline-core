@@ -1,7 +1,6 @@
 package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.HashMap
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.core.algo.msi.filtering.pepmatch._
@@ -41,7 +40,6 @@ object ValidationPropertyKeys extends ValidationSharedKeys {
   final val ROC_CURVE_ID = "roc_curve_id"
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ValidationResult( targetMatchesCount: Int,
                              decoyMatchesCount: Option[Int] = None,
@@ -55,7 +53,6 @@ case class ValidationResult( targetMatchesCount: Int,
   }
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ValidationResults( finalResult: ValidationResult, computedResults: Option[Seq[ValidationResult]] = None )
 

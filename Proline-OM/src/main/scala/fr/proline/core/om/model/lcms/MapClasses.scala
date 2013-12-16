@@ -5,7 +5,6 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.BeanProperty
 
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.weiglewilczek.slf4s.Logging
@@ -24,7 +23,6 @@ case class FeatureScoring(
   
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class FeatureScoringProperties
 
@@ -43,7 +41,6 @@ case class PeakPickingSoftware(
 
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeakPickingSoftwareProperties
 
@@ -58,7 +55,6 @@ case class PeakelFittingModel(
   
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeakelFittingModelProperties
 
@@ -80,11 +76,9 @@ case class MapMozCalibration(
   require( mozList != null && deltaMozList != null )
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MapMozCalibrationProperties
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class LcMsMapProperties
 
@@ -435,7 +429,6 @@ case class MapAlignment(
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MapAlignmentProperties
 
@@ -503,7 +496,6 @@ case class MapAlignmentSet(
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MapAlignmentSetProperties
 
@@ -728,7 +720,6 @@ case class MapSet(
 
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MapSetProperties
 

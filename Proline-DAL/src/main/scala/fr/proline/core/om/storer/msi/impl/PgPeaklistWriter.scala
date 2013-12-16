@@ -2,9 +2,9 @@ package fr.proline.core.om.storer.msi.impl
 
 import org.postgresql.core.Utils
 
-import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
 
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
@@ -79,7 +79,7 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
           """\\x""" + Utils.toHexString(doublesToBytes(spectrum.mozList.get)), // Snappy.compress(
           """\\x""" + Utils.toHexString(floatsToBytes(spectrum.intensityList.get)), // Snappy.compress(
           spectrum.peaksCount,
-          spectrum.properties.map(Json.generate(_)),
+          spectrum.properties.map(ProfiJson.serialize(_)),
           peaklistId,
           spectrum.instrumentConfigId
         )

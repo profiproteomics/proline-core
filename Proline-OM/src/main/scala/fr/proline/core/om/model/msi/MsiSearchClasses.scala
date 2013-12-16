@@ -2,7 +2,6 @@ package fr.proline.core.om.model.msi
  
 import java.util.Date
 import scala.reflect.BeanProperty
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 
@@ -10,7 +9,6 @@ import fr.proline.util.misc.InMemoryIdGen
   
 object MSISearch extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MSISearch (
           
@@ -35,14 +33,12 @@ case class MSISearch (
   var properties: Option[MSISearchProperties] = None
 )
         
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MSISearchProperties
 
 
 object SearchSettings extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SearchSettings(
     
@@ -72,13 +68,11 @@ case class SearchSettings(
   
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SearchSettingsProperties(
   //@BeanProperty var targetDecoyMode: Option[String] = None // CONCATENATED | SEPARATED
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MSMSSearchSettings(
   // MS/MS search settings
@@ -87,7 +81,6 @@ case class MSMSSearchSettings(
   val ms2ErrorTolUnit: String
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PMFSearchSettings(  
   // PMF search settings
@@ -98,7 +91,6 @@ case class PMFSearchSettings(
 
 object Enzyme extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Enzyme(
     
@@ -117,7 +109,6 @@ case class Enzyme(
   }
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class EnzymeProperties(
   @BeanProperty var ctermGain: Option[String] = None,
@@ -128,7 +119,6 @@ case class EnzymeProperties(
 
 object SeqDatabase extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SeqDatabase(
     
@@ -150,11 +140,9 @@ case class SeqDatabase(
    
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SeqDatabaseProperties
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SeqDatabaseSearchProperties
 

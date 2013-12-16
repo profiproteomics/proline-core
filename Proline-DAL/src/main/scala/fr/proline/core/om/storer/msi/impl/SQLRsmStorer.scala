@@ -1,9 +1,10 @@
 package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.HashMap
-import com.codahale.jerkson.Json.generate
+
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -34,7 +35,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             pepInstance.totalLeavesMatchCount,
             pepInstance.selectionLevel,
             pepInstance.elutionTime,
-            pepInstance.properties.map(generate(_)),
+            pepInstance.properties.map(ProfiJson.serialize(_)),
             pepInstance.bestPeptideMatchId,
             pepId,
             if( unmodPepId > 0 ) Some(unmodPepId) else Option.empty[Long],
@@ -79,7 +80,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           val pepMatchRsmPropsById = pepInst.peptideMatchPropertiesById       
          
           pepInst.getPeptideMatchIds.foreach { pepMatchId =>
-            val pepMatchPropsAsJSON = if( pepMatchRsmPropsById != null ) Some(generate( pepMatchRsmPropsById(pepMatchId) )) else None
+            val pepMatchPropsAsJSON = if( pepMatchRsmPropsById != null ) Some(ProfiJson.serialize( pepMatchRsmPropsById(pepMatchId) )) else None
            
             // Insert peptide match mapping
             stmt.executeWith(
@@ -128,7 +129,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             peptideSet.score,
             peptideSet.items.length,
             peptideSet.peptideMatchesCount,
-            peptideSet.properties.map(generate(_)),
+            peptideSet.properties.map(ProfiJson.serialize(_)),
             if( protSetId > 0 ) Some(protSetId) else Option.empty[Long],
             pepSetScoringId,
             rsmId
@@ -162,7 +163,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
               peptideSetItem.peptideInstance.id,
               peptideSetItem.isBestPeptideSet,
               peptideSetItem.selectionLevel,
-              peptideSetItem.properties.map(generate(_)),
+              peptideSetItem.properties.map(ProfiJson.serialize(_)),
               rsmId
             )
             
@@ -255,7 +256,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           stmt.executeWith(
             proteinSet.isValidated,
             proteinSet.selectionLevel,
-            proteinSet.properties.map(generate(_)),
+            proteinSet.properties.map(ProfiJson.serialize(_)),
             typicalProtMatchId,
             rsmId
           )
@@ -277,7 +278,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           
           protSet.getProteinMatchIds.foreach { protMatchId =>
             
-            val protMatchPropsAsJSON = if( protMatchRsmPropsById != null ) Some(generate( protMatchRsmPropsById(protMatchId) )) else None
+            val protMatchPropsAsJSON = if( protMatchRsmPropsById != null ) Some(ProfiJson.serialize( protMatchRsmPropsById(protMatchId) )) else None
           
             // Insert protein match mapping
             stmt.executeWith(

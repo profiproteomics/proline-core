@@ -2,10 +2,10 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.codahale.jerkson.Json.generate
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -77,7 +77,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
           peptide.sequence,
           ptmString,
           peptide.calculatedMass,
-          peptide.properties.map(generate(_))
+          peptide.properties.map(ProfiJson.serialize(_))
         )
   
         // Store peptide
@@ -201,7 +201,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
           peptideMatch.missedCleavage,
           peptideMatch.fragmentMatchesCount,
           peptideMatch.isDecoy,
-          peptideMatch.properties.map(generate(_)),
+          peptideMatch.properties.map(ProfiJson.serialize(_)),
           peptideMatch.peptide.id,
           msQuery.id,
           if (bestChildId == 0) None else Some(bestChildId),
@@ -301,7 +301,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
         val scoreType = proteinMatch.scoreType  
         val scoringId = scoringIdByType.get(scoreType)
         require(scoringId != None,"can't find a scoring id for the score type '" + scoreType + "'")
-        //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) generate(peptideMatch.properties.get) else ""
+        //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) ProfiJson.serialize(peptideMatch.properties.get) else ""
   
         val proteinId = proteinMatch.getProteinId
         
@@ -317,7 +317,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
           proteinMatch.peptideMatchesCount,
           proteinMatch.isDecoy,
           proteinMatch.isLastBioSequence,
-          proteinMatch.properties.map(generate(_)),
+          proteinMatch.properties.map(ProfiJson.serialize(_)),
           proteinMatch.taxonId,
           if (proteinId > 0) Some(proteinId) else None,
           scoringId.get,
@@ -393,7 +393,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
             seqMatch.residueBefore.toString(),
             seqMatch.residueAfter.toString(),
             isDecoy,
-            seqMatch.properties.map(generate(_)),
+            seqMatch.properties.map(ProfiJson.serialize(_)),
             seqMatch.getBestPeptideMatchId,
             rsId
           )

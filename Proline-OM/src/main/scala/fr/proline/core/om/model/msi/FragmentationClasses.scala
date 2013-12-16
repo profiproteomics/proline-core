@@ -2,7 +2,6 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.ArrayBuffer
 
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 
@@ -100,7 +99,6 @@ case class FragmentIonType private (
   }
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class FragmentIonTypeProperties
   
@@ -112,7 +110,6 @@ trait FragmentationRule {
   require( description != null )
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class FragmentationRuleProperties
   

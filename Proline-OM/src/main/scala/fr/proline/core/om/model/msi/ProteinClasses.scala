@@ -3,7 +3,6 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
 
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -59,7 +58,6 @@ object Protein extends InMemoryIdGen {
 
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Protein (
   // Required fields
@@ -89,14 +87,12 @@ case class Protein (
 
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ProteinProperties
 
 
 object ProteinMatch extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ProteinMatch (
     
@@ -141,14 +137,12 @@ case class ProteinMatch (
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ProteinMatchProperties
 
  
 object ProteinSet extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ProteinSet ( 
   // Required fields
@@ -239,15 +233,12 @@ case class ProteinSet (
  
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ProteinSetProperties
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class ProteinMatchResultSummaryProperties
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SequenceMatch (
   // Required fields
@@ -280,7 +271,6 @@ case class SequenceMatch (
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SequenceMatchProperties
 

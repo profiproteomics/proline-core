@@ -1,8 +1,8 @@
 package fr.proline.core.service.msq.quantify
 
-import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
 
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.Ms2CountQuantifier
@@ -101,7 +101,7 @@ class SpectralCountQuantifier(
     // Store the object tree
     val msiMQPepObjectTree = new MsiObjectTree()
     msiMQPepObjectTree.setSchema( spectralCountingPeptidesSchema )
-    msiMQPepObjectTree.setClobData( generate[Array[QuantPeptide]](quantPeptides) )   
+    msiMQPepObjectTree.setClobData( ProfiJson.serialize(quantPeptides) )   
     
     msiMQPepObjectTree
   }
@@ -119,7 +119,7 @@ class SpectralCountQuantifier(
     // Store the object tree
     val msiMQPepIonObjectTree = new MsiObjectTree()
     msiMQPepIonObjectTree.setSchema( spectralCountingQuantPepIonsSchema )
-    msiMQPepIonObjectTree.setClobData( generate[Array[QuantPeptideIon]](quantPeptideIons) )          
+    msiMQPepIonObjectTree.setClobData( ProfiJson.serialize(quantPeptideIons) )
     
     msiMQPepIonObjectTree
   }

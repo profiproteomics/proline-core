@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.util.serialization.ProfiJson
+import fr.proline.util.misc.MapIfNotNull
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi._
@@ -194,10 +194,10 @@ class SQLPeptideSetProvider(
         val pepInstId = toLong(pepSetItemRecord(PepSetItemCols.PEPTIDE_INSTANCE_ID))
         val pepInst = pepInstById(pepInstId)
         val isBestPepSetField = pepSetItemRecord(PepSetItemCols.IS_BEST_PEPTIDE_SET)
-        val isBestPepSet: Option[Boolean] = if (isBestPepSetField != null) Some(isBestPepSetField) else None
+        val isBestPepSet: Option[Boolean] = Option(isBestPepSetField)
         val propertiesAsJSON = pepSetItemRecord(PepSetItemCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-        val properties = if (propertiesAsJSON != null) Some(parse[PeptideSetItemProperties](propertiesAsJSON)) else None
-      
+        val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[PeptideSetItemProperties](_) }
+        
         val pepSetItem = new PeptideSetItem(
           selectionLevel = pepSetItemRecord(PepSetItemCols.SELECTION_LEVEL).asInstanceOf[Int],
           peptideInstance = pepInst,
@@ -217,7 +217,7 @@ class SQLPeptideSetProvider(
 
       // Decode JSON properties
       val propertiesAsJSON = pepSetRecord(PepSetCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-      val properties = if (propertiesAsJSON != null) Some(parse[PeptideSetProperties](propertiesAsJSON)) else None
+      val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[PeptideSetProperties](_) }
       
       val pepSet = new PeptideSet(
         id = pepSetId,

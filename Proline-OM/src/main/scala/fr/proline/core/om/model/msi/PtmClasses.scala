@@ -1,6 +1,5 @@
 package fr.proline.core.om.model.msi
 
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
@@ -8,7 +7,6 @@ import fr.proline.util.StringUtils
 
 object PtmNames extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class PtmNames(val shortName: String, val fullName: String) {
 
@@ -21,7 +19,6 @@ case class PtmNames(val shortName: String, val fullName: String) {
   }
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class UnimodEntry(
   // Required fields
@@ -49,7 +46,6 @@ object IonTypes extends Enumeration {
   val PepNeutralLoss = Value("PepNeutralLoss")
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class PtmEvidence(
     
@@ -93,7 +89,6 @@ trait IPtmSpecificity {
   val ptmId: Long
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class PtmSpecificity(
     
@@ -119,7 +114,6 @@ case class PtmSpecificity(
 
 object PtmDefinition extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class PtmDefinition(
   
@@ -174,7 +168,6 @@ case class PtmDefinition(
   }
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class LocatedPtm(
   // Required fields

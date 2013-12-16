@@ -2,9 +2,9 @@ package fr.proline.core.om.provider.msq.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.codahale.jerkson.Json.parse
 
 import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -124,7 +124,7 @@ class SQLQuantResultSummaryProvider(
         val mqPepId: Long = toLong(r.getAny(MQCompCols.ID))
         val pepInst = pepInstByMQPepId.get(mqPepId)
         val mqPepIons = mqPepIonsByMQPepId(mqPepId)
-        val quantPeptides = parse[Array[QuantPeptide]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
+        val quantPeptides = ProfiJson.deserialize[Array[QuantPeptide]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
         val quantPeptideMap = Map() ++ (for( qp <- quantPeptides if qp != null ) yield qp.quantChannelId -> qp)
         
         // Build the master quant peptide ion
@@ -135,7 +135,7 @@ class SQLQuantResultSummaryProvider(
           masterQuantPeptideIons = mqPepIons,
           selectionLevel = r.getInt(MQCompCols.SELECTION_LEVEL),
           resultSummaryId = toLong(r.getAny(MQCompCols.RESULT_SUMMARY_ID)),
-          properties = r.getStringOption(MQCompCols.SERIALIZED_PROPERTIES).map(parse[MasterQuantPeptideProperties](_))
+          properties = r.getStringOption(MQCompCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantPeptideProperties](_))
         )
         
       } toArray
@@ -165,7 +165,7 @@ class SQLQuantResultSummaryProvider(
   
         val mqProtSetId: Long = toLong(r.getAny(MQCompCols.ID))
         val protSet = protSetById(mqProtSetId)
-        val quantProtSets = parse[Array[QuantProteinSet]](r.getString(ObjectTreeCols.CLOB_DATA))
+        val quantProtSets = ProfiJson.deserialize[Array[QuantProteinSet]](r.getString(ObjectTreeCols.CLOB_DATA))
         val quantProtSetMap = Map() ++ (for( qps <- quantProtSets if qps != null ) yield qps.quantChannelId -> qps)
         
         // Retrieve master quant peptides corresponding to this protein set
@@ -179,7 +179,7 @@ class SQLQuantResultSummaryProvider(
            quantProteinSetMap = quantProtSetMap, // QuantProteinSet by quant channel id
            masterQuantPeptides = mqPeptides,
            selectionLevel = protSet.selectionLevel,
-           properties = r.getStringOption(MQCompCols.SERIALIZED_PROPERTIES).map(parse[MasterQuantProteinSetProperties](_))
+           properties = r.getStringOption(MQCompCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantProteinSetProperties](_))
          )
         
       } toArray

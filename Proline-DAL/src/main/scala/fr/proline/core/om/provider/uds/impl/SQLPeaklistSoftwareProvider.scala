@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.uds.impl
 
 import scala.util.matching.Regex
-import com.codahale.jerkson.Json.parse
 import fr.profi.jdbc.easy._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork

@@ -1,7 +1,6 @@
 package fr.proline.core.orm.uds
 
-import com.codahale.jerkson.Json.parse
-import com.codahale.jerkson.Json.generate
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.uds.ExternalDbProperties
 import fr.proline.repository.DriverType
 
@@ -10,7 +9,7 @@ object ExternalDbPropertiesSerializer {
   def deserialize( extDb: ExternalDb ) {
     
     // Parse properties
-    val extDbProps = parse[ExternalDbProperties]( extDb.getSerializedProperties() )
+    val extDbProps = ProfiJson.deserialize[ExternalDbProperties]( extDb.getSerializedProperties() )
     
     // Populate properties
     val driverType = extDbProps.getDriverType.get
@@ -26,7 +25,7 @@ object ExternalDbPropertiesSerializer {
       extDbProps.setDriverType( Some(extDb.getDriverType.toString) )
       
       // Generate JSON string
-      extDb.setSerializedProperties( generate( extDbProps ) )
+      extDb.setSerializedProperties( ProfiJson.serialize( extDbProps ) )
     }
 
   }

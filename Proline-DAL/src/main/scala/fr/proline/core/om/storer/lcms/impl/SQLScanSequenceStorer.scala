@@ -1,7 +1,7 @@
 package fr.proline.core.om.storer.lcms.impl
 
-import com.codahale.jerkson.Json
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.lcms.{ LcmsDbInstrumentTable, LcmsDbRunTable, LcmsDbScanTable }
@@ -32,7 +32,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
           instrument.id,
           instrument.name,
           instrument.source,
-          instrument.properties.map(Json.generate(_))
+          instrument.properties.map( ProfiJson.serialize(_) )
         )
 
       }
@@ -48,7 +48,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
           scanSeq.maxIntensity,
           scanSeq.ms1ScansCount,
           scanSeq.ms2ScansCount,
-          scanSeq.properties.map( Json.generate(_) ),
+          scanSeq.properties.map( ProfiJson.serialize(_) ),
           scanSeq.instrument.get.id
         )
         runId = statement.generatedLong
@@ -67,7 +67,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
             scan.basePeakIntensity,
             scan.precursorMoz,
             scan.precursorCharge,
-            scan.properties.map( Json.generate(_) ),
+            scan.properties.map( ProfiJson.serialize(_) ),
             runId
           )
           

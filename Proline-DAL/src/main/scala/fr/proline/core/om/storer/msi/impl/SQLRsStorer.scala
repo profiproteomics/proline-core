@@ -3,10 +3,10 @@ package fr.proline.core.om.storer.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
 
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
@@ -97,7 +97,7 @@ class SQLRsStorer(
           rsType.toString,
           Option.empty[String],
           new java.util.Date,
-          resultSet.properties.map( Json.generate(_) ),
+          resultSet.properties.map( ProfiJson.serialize(_) ),
           decoyRsId,
           msiSearchId
         )

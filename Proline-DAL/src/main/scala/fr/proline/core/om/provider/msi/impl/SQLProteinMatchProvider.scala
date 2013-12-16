@@ -2,9 +2,9 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
-import com.codahale.jerkson.Json.parse
 
 import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -114,7 +114,7 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
   
             // Decode JSON properties
             val propertiesAsJSON = seqMatchRecord(SeqMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-            val properties = if (propertiesAsJSON != null) Some(parse[SequenceMatchProperties](propertiesAsJSON)) else None
+            val properties = if (propertiesAsJSON != null) Some(ProfiJson.deserialize[SequenceMatchProperties](propertiesAsJSON)) else None
   
             // Build sequence match
             val seqMatch = new SequenceMatch(
@@ -146,7 +146,7 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
   
         // Decode JSON properties
         val propertiesAsJSON = protMatchRecord(ProtMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-        val properties = if (propertiesAsJSON != null) Some(parse[ProteinMatchProperties](propertiesAsJSON)) else None
+        val properties = if (propertiesAsJSON != null) Some(ProfiJson.deserialize[ProteinMatchProperties](propertiesAsJSON)) else None
   
         val description = protMatchRecord(ProtMatchCols.DESCRIPTION)
   

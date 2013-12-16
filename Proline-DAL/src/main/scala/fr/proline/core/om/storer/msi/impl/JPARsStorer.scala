@@ -3,8 +3,8 @@ package fr.proline.core.om.storer.msi.impl
 import java.sql.Timestamp
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
-import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.{ InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.utils.PeptideIdent
@@ -155,7 +155,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         val resultSetProperties = resultSet.properties
         if (resultSetProperties.isDefined) {
-          msiResultSet.setSerializedProperties(Json.generate(resultSetProperties.get))
+          msiResultSet.setSerializedProperties(ProfiJson.serialize(resultSetProperties.get))
         }
 
         msiResultSet.setType(parseType(resultSet))
@@ -632,7 +632,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
       val searchSettingProperties = searchSettings.properties
       if (searchSettingProperties.isDefined) {
-        msiSearchSetting.setSerializedProperties(Json.generate(searchSettingProperties.get))
+        msiSearchSetting.setSerializedProperties(ProfiJson.serialize(searchSettingProperties.get))
       }
 
       msiSearchSetting.setSoftwareName(searchSettings.softwareName)
@@ -1252,7 +1252,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         val peptideMatchProperties = peptideMatch.properties
         if (peptideMatchProperties.isDefined) {
-          msiPeptideMatch.setSerializedProperties(Json.generate(peptideMatchProperties.get))
+          msiPeptideMatch.setSerializedProperties(ProfiJson.serialize(peptideMatchProperties.get))
         }
 
         if (peptideMatch.msQuery == null) {
@@ -1377,7 +1377,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         val msQueryProperties = msQuery.properties
         if (msQueryProperties.isDefined) {
-          msiMsQuery.setSerializedProperties(Json.generate(msQueryProperties.get))
+          msiMsQuery.setSerializedProperties(ProfiJson.serialize(msQueryProperties.get))
         }
 
         if (msQuery.isInstanceOf[Ms2Query]) {

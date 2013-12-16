@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.uds.impl
 
-import com.codahale.jerkson.Json
+import fr.profi.util.serialization.ProfiJson
+import fr.proline.util.misc.MapIfNotNull
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -38,7 +39,7 @@ class SQLInstrumentProvider(val dbCtx: DatabaseConnectionContext) extends IInstr
         
         for (instPropStr <- r.nextStringOption) {
           if (StringUtils.isEmpty(instPropStr) == false)
-            instrument.properties = Some(Json.parse[InstrumentProperties](instPropStr))
+            instrument.properties = Some(ProfiJson.deserialize[InstrumentProperties](instPropStr))
         }
 
         instrument

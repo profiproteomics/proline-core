@@ -1,9 +1,10 @@
 package fr.proline.core.om.storer.ps
 
 import com.weiglewilczek.slf4s.Logging
-import com.codahale.jerkson.Json.generate
+
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.ps.{PsDbPeptideTable,PsDbPeptidePtmTable}
 import fr.proline.core.om.model.msi.LocatedPtm
@@ -47,7 +48,7 @@ class PeptideStorer extends Logging {
       peptide.sequence,
       Option(peptide.ptmString),
       peptide.calculatedMass,
-      peptide.properties.map(generate(_)),
+      peptide.properties.map(ProfiJson.serialize(_)),
       Option(null)
     )
 

@@ -1,9 +1,10 @@
 package fr.proline.core.om.provider.lcms.impl
 
 import scala.collection.mutable.{ArrayBuffer,HashMap}
-import com.codahale.jerkson.Json.parse
+
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.util.sql.StringOrBoolAsBool._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -159,7 +160,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
        correctedElutionTime = correctedElutionTime,
        isClusterized = isClusterized,
        selectionLevel = selectionLevel,
-       properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES).map( parse[FeatureProperties](_) ),
+       properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[FeatureProperties](_) ),
        relations = new FeatureRelations(
          firstScanInitialId = scanInitialIdById(firstScanId),
          lastScanInitialId = scanInitialIdById(lastScanId),

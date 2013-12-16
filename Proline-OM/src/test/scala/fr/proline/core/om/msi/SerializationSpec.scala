@@ -6,7 +6,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.GivenWhenThen
 import org.scalatest.FunSpec
 import org.scalatest.matchers.ShouldMatchers
-import com.codahale.jerkson.Json
+//import com.codahale.jerkson.Json
 import fr.proline.core.om.model.msi._
 import fr.profi.util.serialization.ProfiJson
 
@@ -110,7 +110,8 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     
     SerializationSpecif(
       "A Ms2Query object with defined properties",
-      jerksonDeserializer = Some( jsonData => Json.parse[Ms2Query](jsonData) ),
+      //jerksonDeserializer = Some( jsonData => Json.parse[Ms2Query](jsonData) ),
+      jerksonDeserializer = None,
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[Ms2Query](jsonData) ),
       ms2Query,
       """{"id":-1,"initial_id":1,"moz":333.33,"charge":3,"spectrum_title":"scan id=2","spectrum_id":1,"""+
@@ -119,6 +120,7 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     ),
     SerializationSpecif(
       "A Peptide object without properties",
+      //jerksonDeserializer = None,
       jerksonDeserializer = None,
       profiDeserializer = None,
       peptide,
@@ -134,7 +136,8 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     ),
     SerializationSpecif(
       "A PeptideMatchProperties object",
-      jerksonDeserializer = Some( jsonData => Json.parse[PeptideMatchProperties](jsonData) ),
+      //jerksonDeserializer = Some( jsonData => Json.parse[PeptideMatchProperties](jsonData) ),
+      jerksonDeserializer = None,
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[PeptideMatchProperties](jsonData) ),
       pepMatchProperties,
       """{"mascot_properties":{"expectation_value":0.001,"readable_var_mods":"Oxidation (M)"}},"ms_query_id":-1,"peptide_id":-1}"""
@@ -152,17 +155,17 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     )
   )
   
-  for( jsonSpecif <- jsonSpecifs ) {
+  /*for( jsonSpecif <- jsonSpecifs ) {
     println( Json.generate(jsonSpecif.objectData) )
     println( ProfiJson.serialize(jsonSpecif.objectData) )
-  }
+  }*/
   
   // Iterate over each sperialization specification
   for( jsonSpecif <- jsonSpecifs; if 1 == 1 ) {
     
     describe(jsonSpecif.description) {
       
-      it("should be correctly serialized to JSON with Jerkson") {
+      /*it("should be correctly serialized to JSON with Jerkson") {
         
         Given("the object data")
         val objectData = jsonSpecif.objectData
@@ -173,7 +176,7 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
         
         Then("it should match the Map obtained from the expected JSON string")
         jsonAsMap should equal (Json.parse[Map[String,Any]](jsonSpecif.jsonData))         
-      }
+      }*/
       
       if( jsonSpecif.jerksonDeserializer.isDefined ) {
         it("should be correctly deserialized from JSON with Jerkson") {

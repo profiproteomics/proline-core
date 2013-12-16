@@ -2,11 +2,11 @@ package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
 
-import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
 
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
@@ -43,7 +43,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
           peaklist.rawFileName,
           peaklist.msLevel,
           compressionAlgo,
-          peaklist.properties.map(generate(_)),
+          peaklist.properties.map(ProfiJson.serialize(_)),
           Option(peaklist.peaklistSoftware).map(_.id)
         )
 
@@ -117,7 +117,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
       doublesToBytes(spectrum.mozList.get), // Snappy.compress(
       floatsToBytes(spectrum.intensityList.get), // Snappy.compress(
       spectrum.peaksCount,
-      spectrum.properties.map(generate(_)),
+      spectrum.properties.map(ProfiJson.serialize(_)),
       peaklistId,
       spectrum.instrumentConfigId
     )

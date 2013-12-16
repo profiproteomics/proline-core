@@ -3,7 +3,6 @@ package fr.proline.core.om.model.lcms
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
@@ -39,7 +38,6 @@ class IsotopicPattern (
   
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class IsotopicPatternProperties
 
@@ -80,7 +78,6 @@ class PeakelShape (
   def lastScanId: Long = dataPoints(4).scanId  
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeakelShapeProperties
 
@@ -225,7 +222,6 @@ case class Feature (
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class FeatureProperties (
   @BeanProperty var peakelsCount: Option[Int] = None,
@@ -276,6 +272,5 @@ case class TheoreticalFeature (
   
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class TheoreticalFeatureProperties

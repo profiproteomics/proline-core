@@ -1,9 +1,9 @@
 package fr.proline.core.om.provider.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
-import com.codahale.jerkson.Json
 
 import fr.profi.jdbc.ResultSetRow
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -82,7 +82,7 @@ class SQLRunProvider(
       directory = runRecord.getStringOption(RawFileCols.DIRECTORY),
       creationTimestamp = runRecord.getDateOption(RawFileCols.CREATION_TIMESTAMP),
       instrument = Some(instrument),
-      properties = rawFilePropsStr.map( Json.parse[RawFileProperties](_) )
+      properties = rawFilePropsStr.map( ProfiJson.deserialize[RawFileProperties](_) )
     )
     
     // TODO: parse properties

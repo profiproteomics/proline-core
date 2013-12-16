@@ -1,14 +1,11 @@
 package fr.proline.core.utils
 
-import fr.profi.util.serialization.CustomDoubleJacksonSerializer
+import fr.profi.util.serialization._
 
 package object serialization {
   
-  object ProlineJson extends com.codahale.jerkson.Json with CustomDoubleJacksonSerializer {
-    def getObjectMapper = this.mapper
-  }
+  object ProlineJson extends ProfiJson with CustomDoubleJacksonSerializer
   
-
   /*
   object ProlineJson extends com.codahale.jerkson.Json {
     val module = new SimpleModule("ProlineJson", Version.unknownVersion())

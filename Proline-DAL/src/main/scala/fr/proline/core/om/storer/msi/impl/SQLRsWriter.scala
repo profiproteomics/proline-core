@@ -2,8 +2,10 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.codahale.jerkson.Json.generate
+
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
+import fr.profi.util.serialization.CustomDoubleJacksonSerializer
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -26,6 +28,7 @@ private[core] object SQLRsWriter extends AbstractSQLRsWriter
 abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   val objTreeInsertQuery = MsiDbObjectTreeTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID) )
+  object CustomSerializer extends ProfiJson with CustomDoubleJacksonSerializer
 
   def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Long] = {
     
@@ -73,7 +76,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
               peptide.sequence,
               Option(peptide.ptmString),
               peptide.calculatedMass,
-              peptide.properties.map(generate(_))
+              peptide.properties.map(ProfiJson.serialize(_))
             )
   
           }
@@ -110,7 +113,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
               protein.mass,
               protein.pi,
               protein.crc64,
-              protein.properties.map(generate(_))
+              protein.properties.map(ProfiJson.serialize(_))
             )
   
             newProteins += protein
@@ -186,7 +189,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
             peptideMatch.missedCleavage,
             peptideMatch.fragmentMatchesCount,
             peptideMatch.isDecoy,
-            peptideMatch.properties.map(generate(_)),
+            peptideMatch.properties.map(ProfiJson.serialize(_)),
             peptideMatch.peptide.id,
             msQuery.id,
             if (bestChildId == 0) Option.empty[Long] else Some(bestChildId),
@@ -232,7 +235,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
           stmt.executeWith(
             Option(null),//ScalaMessagePack.write(spectrumMatch),
-            ProlineJson.generate(spectrumMatch),
+            CustomSerializer.serialize(spectrumMatch),
             Option.empty[String],
             schemaName
           )
@@ -299,7 +302,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
             proteinMatch.peptideMatchesCount,
             proteinMatch.isDecoy,
             proteinMatch.isLastBioSequence,
-            proteinMatch.properties.map(generate(_)),
+            proteinMatch.properties.map(ProfiJson.serialize(_)),
             if (proteinMatch.taxonId > 0) Some(proteinMatch.taxonId) else Option.empty[Long],
             if (proteinMatch.getProteinId > 0) Some(proteinMatch.getProteinId) else Option.empty[Long],
             scoringId.get,
@@ -353,7 +356,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
               seqMatch.residueBefore.toString,
               seqMatch.residueAfter.toString,
               seqMatch.isDecoy,
-              seqMatch.properties.map(generate(_)),
+              seqMatch.properties.map(ProfiJson.serialize(_)),
               seqMatch.getBestPeptideMatchId,
               rsId
             )

@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.codahale.jerkson.Json.parse
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.om.model.msi.{Instrument,InstrumentConfig,InstrumentProperties,InstrumentConfigProperties}
@@ -31,7 +31,7 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
         val instrument = new Instrument(id = toLong(r.nextAny), name = r, source = r)
         for (instPropStr <- r.nextStringOption) {
           if (StringUtils.isEmpty(instPropStr) == false)
-            instrument.properties = Some(parse[InstrumentProperties](instPropStr))
+            instrument.properties = Some(ProfiJson.deserialize[InstrumentProperties](instPropStr))
         }
 
         val instrumentConfig = new InstrumentConfig(
@@ -44,7 +44,7 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
         )
         for (instConfPropStr <- r.nextStringOption) {
           if (StringUtils.isEmpty(instConfPropStr) == false)
-            instrumentConfig.properties = Some(parse[InstrumentConfigProperties](instConfPropStr))
+            instrumentConfig.properties = Some(ProfiJson.deserialize[InstrumentConfigProperties](instConfPropStr))
         }
 
         instrumentConfig

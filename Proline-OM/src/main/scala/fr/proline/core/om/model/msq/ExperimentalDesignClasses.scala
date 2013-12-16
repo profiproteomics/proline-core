@@ -1,13 +1,11 @@
 package fr.proline.core.om.model.msq
 
-import com.codahale.jerkson.JsonSnakeCase
 
 /**
  * @param biologicalSamples
  * @param groupSetups
  * @param masterQuantChannels
  */
-@JsonSnakeCase
 case class ExperimentalDesign(
   val biologicalSamples: Array[BiologicalSample],
   val groupSetups: Array[GroupSetup],
@@ -33,7 +31,6 @@ case class ExperimentalDesign(
  * @param number
  * @param name
  */
-@JsonSnakeCase
 case class BiologicalSample(
   var id: Long = 0,
   val number: Int,
@@ -47,7 +44,6 @@ case class BiologicalSample(
  * @param ratioDefinitions
  * @param biologicalGroups
  */
-@JsonSnakeCase
 case class GroupSetup(
   var id: Long = 0,
   val number: Int,
@@ -62,7 +58,6 @@ case class GroupSetup(
  * @param numeratorGroupNumber
  * @param denominatorGroupNumber
  */
-@JsonSnakeCase
 case class RatioDefinition(
   var id: Long = 0,
   val number: Int,
@@ -76,7 +71,6 @@ case class RatioDefinition(
  * @param name
  * @param sampleNumbers
  */
-@JsonSnakeCase
 case class BiologicalGroup(
   var id: Long = 0,
   val number: Int,
@@ -93,7 +87,6 @@ case class BiologicalGroup(
  * @param runId
  * @param quantLabelId
  */
-@JsonSnakeCase
 case class QuantChannel(
   var id: Long = 0,
   val number: Int,
@@ -111,7 +104,6 @@ case class QuantChannel(
  * @param lcmsMapSetId
  * @param quantChannels
  */
-@JsonSnakeCase
 case class MasterQuantChannel(
   var id: Long = 0,
   val number: Int,

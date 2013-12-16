@@ -1,6 +1,5 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.codahale.jerkson.Json.parse
 import fr.profi.jdbc.easy._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork

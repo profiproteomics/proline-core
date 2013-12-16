@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.msq.impl
 
-import com.codahale.jerkson.Json.parse
-
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -52,7 +51,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
       msiEzDBC.select(mqPepIonQuery) { r =>
   
         val mqPepIonId: Long = toLong(r.getAny(MQPepIonCols.ID))
-        val quantPepIons = parse[Array[QuantPeptideIon]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
+        val quantPepIons = ProfiJson.deserialize[Array[QuantPeptideIon]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
         val quantPepIonMap = Map() ++ (for( qpi <- quantPepIons if qpi != null ) yield qpi.quantChannelId -> qpi)
         
         // Build the master quant peptide ion
@@ -70,7 +69,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
           lcmsFeatureId = r.getLongOption(MQPepIonCols.LCMS_FEATURE_ID),
           unmodifiedPeptideIonId = r.getLongOption(MQPepIonCols.UNMODIFIED_PEPTIDE_ION_ID),
           quantPeptideIonMap = quantPepIonMap,
-          properties = r.getStringOption(MQPepIonCols.SERIALIZED_PROPERTIES).map(parse[MasterQuantPeptideIonProperties](_))
+          properties = r.getStringOption(MQPepIonCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantPeptideIonProperties](_))
         )
         
       } toArray

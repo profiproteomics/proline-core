@@ -1,9 +1,9 @@
 package fr.proline.core.om.storer.msi
 
 import com.weiglewilczek.slf4s.Logging
-import com.codahale.jerkson.Json.generate
 
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal._
@@ -68,7 +68,7 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
           Option.empty[String],
           new java.util.Date(),          
           false,
-          rsm.properties.map(generate(_)),
+          rsm.properties.map(ProfiJson.serialize(_)),
           if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else Option.empty[Long],
           rsm.getResultSetId
         )

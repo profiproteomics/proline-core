@@ -1,7 +1,6 @@
 package fr.proline.core.om.model.msq
 
 import scala.collection.mutable.ArrayBuffer
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
@@ -38,7 +37,6 @@ trait MasterLcmsQuantComponent extends MasterQuantComponent {
   val elutionTime: Float
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class QuantReporterIon(
   val quantChannelId: Long,
@@ -50,7 +48,6 @@ case class QuantReporterIon(
 
 object MasterQuantReporterIon extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantReporterIon(
   var id: Long,
@@ -74,7 +71,6 @@ case class MasterQuantReporterIon(
 }
 
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class QuantPeptideIon(  
   val rawAbundance: Float,
@@ -113,7 +109,6 @@ case class QuantPeptideIon(
 
 object MasterQuantPeptideIon extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideIon(
   var id: Long,
@@ -160,7 +155,6 @@ case class MasterQuantPeptideIon(
 }
 
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class QuantPeptide(
   val rawAbundance: Float,
@@ -177,7 +171,6 @@ case class QuantPeptide(
 
 object MasterQuantPeptide extends InMemoryIdGen
 
-@JsonSnakeCase
 case class MasterQuantPeptide(
   var id: Long, // important: master quant component id
   val peptideInstance: Option[PeptideInstance], // without label in the context of isotopic labeling
@@ -294,7 +287,6 @@ case class MasterQuantPeptide(
 
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class QuantProteinSet (
   val rawAbundance: Float,
@@ -305,7 +297,6 @@ case class QuantProteinSet (
  ) extends QuantComponent
 
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSet(
   val proteinSet: ProteinSet,
@@ -383,7 +374,6 @@ case class MasterQuantProteinSet(
   
 } 
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class QuantResultSummary(
   val quantChannelIds: Array[Long],

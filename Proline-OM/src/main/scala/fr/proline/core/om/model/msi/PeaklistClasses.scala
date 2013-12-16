@@ -2,14 +2,12 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
 
 object Peaklist extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Peaklist(
   var id: Long,
@@ -23,7 +21,6 @@ case class Peaklist(
   var properties: Option[PeaklistProperties] = None
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeaklistProperties (
   @BeanProperty var spectrumDataCompressionLevel: Option[Int] = None,
@@ -34,7 +31,6 @@ case class PeaklistProperties (
 
 object PeaklistSoftware extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeaklistSoftware(
   var id: Long,
@@ -45,14 +41,12 @@ case class PeaklistSoftware(
   var properties: Option[PeaklistSoftwareProperties] = None
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeaklistSoftwareProperties
 
 
 object Spectrum extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Spectrum (
   var id: Long,
@@ -76,7 +70,6 @@ case class Spectrum (
   var properties: Option[SpectrumProperties] = None
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SpectrumProperties
 
@@ -92,7 +85,6 @@ object SpectrumTitleFields extends Enumeration {
 
 object SpectrumTitleParsingRule extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class SpectrumTitleParsingRule (
   val id: Long = SpectrumTitleParsingRule.generateNewId(),

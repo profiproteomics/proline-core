@@ -1,8 +1,8 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.codahale.jerkson.Json.parse
-
 import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.util.serialization.ProfiJson
+import fr.proline.util.misc.MapIfNotNull
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.{ MsiDbProteinSetTable, MsiDbProteinSetProteinMatchItemTable, MsiDbPeptideSetTable }
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -131,13 +131,13 @@ class SQLProteinSetProvider(
         
         val propertiesAsJSON = protSetItem(ProtSetItemCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
         if (propertiesAsJSON != null) {
-          protMatchPropertiesById += protMatchId -> parse[ProteinMatchResultSummaryProperties](propertiesAsJSON)
+          protMatchPropertiesById += protMatchId -> ProfiJson.deserialize[ProteinMatchResultSummaryProperties](propertiesAsJSON)
         }
       }
       
       // Decode JSON properties
       val propertiesAsJSON = protSetRecord(ProtSetCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-      val properties = if (propertiesAsJSON != null) Some(parse[ProteinSetProperties](propertiesAsJSON)) else None
+      val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[ProteinSetProperties](_) }
       
       val protSet = new ProteinSet(
         id = protSetId,

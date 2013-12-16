@@ -3,8 +3,9 @@ package fr.proline.core.om.provider.msi.impl
 import com.weiglewilczek.slf4s.Logging
 
 import scala.collection.mutable.ArrayBuffer
-import com.codahale.jerkson.Json.parse
 
+import fr.profi.util.serialization.ProfiJson
+import fr.proline.util.misc.MapIfNotNull
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
@@ -90,7 +91,7 @@ trait SQLResultSetLoader extends Logging {
 
         // Decode JSON properties
         val propertiesAsJSON = r.getString(RSCols.SERIALIZED_PROPERTIES)
-        val properties = if (propertiesAsJSON != null) Some(parse[ResultSetProperties](propertiesAsJSON)) else None
+        val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[ResultSetProperties](_) }
 
         val rs = new ResultSet(
           id = rsId,

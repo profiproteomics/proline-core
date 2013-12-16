@@ -5,7 +5,6 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
 
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -280,7 +279,6 @@ object Peptide extends InMemoryIdGen with Logging {
 
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class Peptide ( // Required fields
   var id: Long,
@@ -349,13 +347,11 @@ case class Peptide ( // Required fields
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideProperties
 
 object PeptideMatch extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatch ( // Required fields
   var id: Long, 
@@ -407,14 +403,12 @@ case class PeptideMatch ( // Required fields
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchProperties (
   @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None,
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchMascotProperties (
   @BeanProperty var expectationValue: Double,
@@ -423,13 +417,11 @@ case class PeptideMatchMascotProperties (
   @BeanProperty var ambiguityString: Option[String] = None
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchOmssaProperties (
   @BeanProperty var pValue: Double
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideMatchResultSummaryProperties (
   @BeanProperty var mascotScoreOffset: Option[Float] = None,
@@ -438,7 +430,6 @@ case class PeptideMatchResultSummaryProperties (
  
 object PeptideInstance extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideInstance ( // Required fields
   var id: Long,
@@ -499,13 +490,11 @@ case class PeptideInstance ( // Required fields
 
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideInstanceProperties(
   //@BeanProperty var bestPeptideMatchId: Option[Int] = None
 )
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideSetItem (
   // Required fields
@@ -529,13 +518,11 @@ case class PeptideSetItem (
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideSetItemProperties
 
 object PeptideSet extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideSet ( // Required fields
   var id: Long,
@@ -614,7 +601,6 @@ case class PeptideSet ( // Required fields
   }
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class PeptideSetProperties
 

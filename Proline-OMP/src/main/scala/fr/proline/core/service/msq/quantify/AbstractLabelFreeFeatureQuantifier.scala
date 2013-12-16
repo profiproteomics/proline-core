@@ -4,8 +4,8 @@ import javax.persistence.EntityManager
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
 import fr.proline.core.algo.msq.IQuantifierAlgo
@@ -245,7 +245,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     // Store the object tree
     val msiMQPepObjectTree = new MsiObjectTree()
     msiMQPepObjectTree.setSchema(labelFreeQuantPeptidesSchema)
-    msiMQPepObjectTree.setClobData(generate[Array[QuantPeptide]](quantPeptides))
+    msiMQPepObjectTree.setClobData(ProfiJson.serialize(quantPeptides))
 
     msiMQPepObjectTree
   }
@@ -262,7 +262,8 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     // Store the object tree
     val msiMQCObjectTree = new MsiObjectTree()
     msiMQCObjectTree.setSchema(labelFreeQuantPeptideIonsSchema)
-    msiMQCObjectTree.setClobData(generate[Array[QuantPeptideIon]](quantPepIons))
+    //msiMQCObjectTree.setClobData(generate[Array[QuantPeptideIon]](quantPepIons))
+    msiMQCObjectTree.setClobData(ProfiJson.serialize(quantPepIons))
 
     msiMQCObjectTree
   }

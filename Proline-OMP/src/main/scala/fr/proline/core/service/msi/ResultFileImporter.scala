@@ -2,10 +2,10 @@ package fr.proline.core.service.msi
 
 import java.io.File
 
-import com.codahale.jerkson.Json
 import com.weiglewilczek.slf4s.Logging
 
 import fr.profi.jdbc.easy._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -177,7 +177,7 @@ class ResultFileImporter(
           pklSoft.id,
           pklSoft.name,
           pklSoft.version,
-          pklSoft.properties.map(Json.generate(_))
+          pklSoft.properties.map(ProfiJson.serialize(_))
         )
       })
     }

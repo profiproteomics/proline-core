@@ -2,7 +2,6 @@ package fr.proline.core.algo.msi.validation
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks._
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.algo.msi.filtering.{ IOptimizablePeptideMatchFilter, IPeptideMatchSorter, PeptideMatchFiltering }

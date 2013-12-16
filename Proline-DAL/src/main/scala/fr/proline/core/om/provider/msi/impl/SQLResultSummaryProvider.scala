@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.codahale.jerkson.Json.parse
-
+import fr.profi.util.serialization.ProfiJson
+import fr.proline.util.misc.MapIfNotNull
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
@@ -73,7 +73,7 @@ class SQLResultSummaryProvider(
         
         // Decode JSON properties
         val propertiesAsJSON = r.getString(RSMCols.SERIALIZED_PROPERTIES)
-        val properties = if (propertiesAsJSON != null) Some(parse[ResultSummaryProperties](propertiesAsJSON)) else None
+        val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[ResultSummaryProperties](_) }
         
         val rsId = toLong(r.getAny(RSMCols.RESULT_SET_ID))
         

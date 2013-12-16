@@ -1,6 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.codahale.jerkson.Json.parse
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -152,7 +152,7 @@ class SQLPeptideMatchProvider(
 
       // Decode JSON properties
       val propertiesAsJSON = pepMatchRecord(PepMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-      val properties = if (propertiesAsJSON != null) Some(parse[PeptideMatchProperties](propertiesAsJSON)) else None
+      val properties = if (propertiesAsJSON != null) Some(ProfiJson.deserialize[PeptideMatchProperties](propertiesAsJSON)) else None
 
       val pepMatch = new PeptideMatch(
         id = toLong(pepMatchRecord(PepMatchCols.ID)),

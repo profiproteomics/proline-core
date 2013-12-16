@@ -4,7 +4,6 @@ import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.BeanProperty
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
@@ -27,7 +26,6 @@ case class RawFile(
   require( instrument != null )
 }
             
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class RawFileProperties(
   @BeanProperty var mzdbFilePath: String
@@ -57,7 +55,6 @@ case class LcMsRun(
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class LcMsRunProperties
 
@@ -160,7 +157,6 @@ case class LcMsScanSequence(
   
 }
 
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class LcMsScanSequenceProperties
 
@@ -188,6 +184,5 @@ case class LcMsScan(
 
 )
             
-@JsonSnakeCase
 @JsonInclude( Include.NON_NULL )
 case class LcMsScanProperties

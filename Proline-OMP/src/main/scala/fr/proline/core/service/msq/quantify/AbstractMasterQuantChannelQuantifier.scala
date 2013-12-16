@@ -6,9 +6,9 @@ import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
-import com.codahale.jerkson.Json.generate
 import com.weiglewilczek.slf4s.Logging
 
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.ResultSummaryMerger
@@ -248,7 +248,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
       msiMasterPepMatch.setMsQuery(msiMSQFake)
 
       msiMasterPepMatch.setResultSet(msiQuantRS)
-      bestParentPepMatch.properties.map( props => msiMasterPepMatch.setSerializedProperties(generate(props)) )
+      bestParentPepMatch.properties.map( props => msiMasterPepMatch.setSerializedProperties(ProfiJson.serialize(props)) )
 
       // Save master peptide match
       msiEm.persist(msiMasterPepMatch)
@@ -543,7 +543,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     // Store master quant component for this master quant peptide
     val msiMQC = new MsiMasterQuantComponent()
     msiMQC.setSelectionLevel(mqPep.selectionLevel)
-    if (mqPep.properties != None) msiMQC.setSerializedProperties(generate(mqPep.properties))
+    if (mqPep.properties != None) msiMQC.setSerializedProperties(ProfiJson.serialize(mqPep.properties))
     msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
     msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
     msiMQC.setResultSummary(msiRSM)
@@ -578,7 +578,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     val msiMQC = new MsiMasterQuantComponent()
     msiMQC.setSelectionLevel(mqPepIon.selectionLevel)
     // TODO: decide what to store in the master quant component properties
-    //if( mqPepIon.properties != None ) msiMQC.setSerializedProperties( generate(mqPepIon.properties) )
+    //if( mqPepIon.properties != None ) msiMQC.setSerializedProperties( ProfiJson.serialize(mqPepIon.properties) )
     msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
     msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
     msiMQC.setResultSummary(msiRSM)
@@ -594,7 +594,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
     msiMQPepIon.setResultSummary(msiRSM)
 
-    if (mqPepIon.properties != None) msiMQPepIon.setSerializedProperties(generate(mqPepIon.properties))
+    if (mqPepIon.properties != None) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))
     if (mqPep.peptideInstance != None) {
       msiMQPepIon.setPeptideInstanceId(mqPep.peptideInstance.get.id)
       msiMQPepIon.setPeptideId(mqPep.getPeptideId.get)
@@ -620,7 +620,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     // Store master quant component
     val msiMQC = new MsiMasterQuantComponent()
     msiMQC.setSelectionLevel(mqProtSet.selectionLevel)
-    if (mqProtSet.properties != None) msiMQC.setSerializedProperties(generate(mqProtSet.properties))
+    if (mqProtSet.properties != None) msiMQC.setSerializedProperties(ProfiJson.serialize(mqProtSet.properties))
     msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
     msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
     msiMQC.setResultSummary(msiRSM)
@@ -643,7 +643,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     // Store the object tree
     val msiMQProtSetObjectTree = new MsiObjectTree()
     msiMQProtSetObjectTree.setSchema(quantProteinSetsSchema)
-    msiMQProtSetObjectTree.setClobData(generate[Array[QuantProteinSet]](quantProtSets))
+    //msiMQProtSetObjectTree.setClobData(generate[Array[QuantProteinSet]](quantProtSets))
+    msiMQProtSetObjectTree.setClobData(ProfiJson.serialize(quantProtSets))
 
     msiMQProtSetObjectTree
   }

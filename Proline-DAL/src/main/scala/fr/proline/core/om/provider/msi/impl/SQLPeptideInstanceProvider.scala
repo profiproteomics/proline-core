@@ -1,9 +1,9 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-import com.codahale.jerkson.Json.parse
 import com.weiglewilczek.slf4s.Logging
 
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -119,7 +119,7 @@ class SQLPeptideInstanceProvider(
 
         val propertiesAsJSON = pepMatchMapping(PepMatchMappingCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
         if (propertiesAsJSON != null) {
-          pepMatchPropertyMapBuilder += pepMatchId -> parse[PeptideMatchResultSummaryProperties](propertiesAsJSON)
+          pepMatchPropertyMapBuilder += pepMatchId -> ProfiJson.deserialize[PeptideMatchResultSummaryProperties](propertiesAsJSON)
         }
       }
 
@@ -139,7 +139,7 @@ class SQLPeptideInstanceProvider(
         bestPeptideMatchId = toLong(pepInstRecord(PepInstCols.BEST_PEPTIDE_MATCH_ID)),
         unmodifiedPeptideId = if(pepInstRecord(PepInstCols.UNMODIFIED_PEPTIDE_ID) != null) toLong(pepInstRecord(PepInstCols.UNMODIFIED_PEPTIDE_ID)) else 0l,
         resultSummaryId = toLong(pepInstRecord(PepInstCols.RESULT_SUMMARY_ID)),
-        properties = Option(propertiesAsJSON).map(parse[PeptideInstanceProperties](_)),
+        properties = Option(propertiesAsJSON).map(ProfiJson.deserialize[PeptideInstanceProperties](_)),
         peptideMatchPropertiesById = pepMatchPropertyMapBuilder.result()
       )
 

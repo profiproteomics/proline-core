@@ -3,7 +3,6 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
-import com.codahale.jerkson.JsonSnakeCase
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
@@ -11,7 +10,6 @@ import com.weiglewilczek.slf4s.Logging
 
 object ResultSet extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class ResultSet(
   // Required fields
@@ -104,7 +102,6 @@ case class ResultSet(
 
 }
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class ResultSetProperties(
   @BeanProperty var targetDecoyMode: Option[String] = None, // CONCATENATED | SEPARATED
@@ -112,7 +109,6 @@ case class ResultSetProperties(
   @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None
 )
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class MascotImportProperties(
   @BeanProperty var ionsScoreCutoff: Option[Float] = None, // it's ions score not ion score
@@ -120,7 +116,6 @@ case class MascotImportProperties(
   @BeanProperty var proteinsPvalueCutoff: Option[Float] = None
 )
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class OmssaImportProperties(
   @BeanProperty var rawSettings: Option[Map[String, String]] = None
@@ -128,7 +123,6 @@ case class OmssaImportProperties(
 
 object ResultSummary extends InMemoryIdGen
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class ResultSummary(
   // Required fields
@@ -321,18 +315,15 @@ case class ResultSummary(
 }
 
 // TODO: change privacy to protected => allows access only to getters/setters
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class ResultSummaryProperties(
   @BeanProperty var validationProperties: Option[RsmValidationProperties] = None)
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class RsmValidationProperties(
   @BeanProperty var params: RsmValidationParamsProperties,
   @BeanProperty var results: RsmValidationResultsProperties)
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class RsmValidationParamsProperties(
   @BeanProperty var peptideExpectedFdr: Option[Float] = None,
@@ -340,13 +331,11 @@ case class RsmValidationParamsProperties(
   @BeanProperty var proteinExpectedFdr: Option[Float] = None,
   @BeanProperty var proteinFilters: Option[Array[FilterDescriptor]] = None)
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class RsmValidationResultsProperties(
   @BeanProperty var peptideResults: Option[RsmValidationResultProperties] = None,
   @BeanProperty var proteinResults: Option[RsmValidationResultProperties] = None)
 
-@JsonSnakeCase
 @JsonInclude(Include.NON_NULL)
 case class RsmValidationResultProperties(
   // TODO: expectedRocPoint and RocPoints model

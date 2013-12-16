@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.codahale.jerkson.Json.parse
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2,SelectQueryBuilder4}
@@ -54,7 +54,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
         peaklistIdByMsiSearchId += (msiSearchId -> toLong(r.getAny(msiSearchCols.PEAKLIST_ID)))
         
         val propsOpt = r.getStringOption(msiSearchCols.SERIALIZED_PROPERTIES).map( propStr =>
-          parse[MSISearchProperties](propStr)
+          ProfiJson.deserialize[MSISearchProperties](propStr)
         )
   
         new MSISearch(
@@ -116,7 +116,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
         pklSoftIdByPklId += (pklId -> toLong(r.getAny(peaklistCols.PEAKLIST_SOFTWARE_ID)))
         
         val propsOpt = r.getStringOption(peaklistCols.SERIALIZED_PROPERTIES).map( propStr =>
-          parse[PeaklistProperties](propStr)
+          ProfiJson.deserialize[PeaklistProperties](propStr)
         )
         
         new Peaklist(
@@ -155,7 +155,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
           id = toLong(r.getAny(pklSoftCols.ID)),
           name = r.getString(pklSoftCols.NAME),
           version = r.getString(pklSoftCols.VERSION),
-          properties = r.getStringOption(pklSoftCols.SERIALIZED_PROPERTIES).map( parse[PeaklistSoftwareProperties](_) )
+          properties = r.getStringOption(pklSoftCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[PeaklistSoftwareProperties](_) )
         )
       } toArray
     
@@ -223,7 +223,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
           instrumentConfig = null,
           msmsSearchSettings = msmsSettingsById.get(ssId),
           pmfSearchSettings = pmfSettingsById.get(ssId),
-          properties = r.getStringOption(ssCols.SERIALIZED_PROPERTIES).map( parse[SearchSettingsProperties](_) )
+          properties = r.getStringOption(ssCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[SearchSettingsProperties](_) )
         )
       }
   
@@ -311,7 +311,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
           sequencesCount = r.getIntOrElse(seqDbCols.SEQUENCE_COUNT, 0),
           releaseDate = r.getDate(seqDbCols.RELEASE_DATE),
           version = r.getStringOrElse(seqDbCols.FASTA_FILE_PATH, ""),
-          properties = r.getStringOption(seqDbCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseProperties](_))
+          properties = r.getStringOption(seqDbCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[SeqDatabaseProperties](_))
         )
       } toArray
     
@@ -341,8 +341,8 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
           releaseDate = r.getDate(seqDbCols.RELEASE_DATE),
           version = r.getStringOrElse(seqDbCols.FASTA_FILE_PATH, ""),
           searchedSequencesCount = r.getInt(ssSeqDbMapCols.SEARCHED_SEQUENCES_COUNT),
-          properties = r.getStringOption(seqDbTblName+"_"+seqDbCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseProperties](_)),
-          searchProperties = r.getStringOption(ssSeqDbMapTblName+"_"+ssSeqDbMapCols.SERIALIZED_PROPERTIES).map(parse[SeqDatabaseSearchProperties](_))
+          properties = r.getStringOption(seqDbTblName+"_"+seqDbCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[SeqDatabaseProperties](_)),
+          searchProperties = r.getStringOption(ssSeqDbMapTblName+"_"+ssSeqDbMapCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[SeqDatabaseSearchProperties](_))
         )
       } toArray
       
@@ -364,7 +364,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
           cleavageRegexp = r.getStringOption(enzCols.CLEAVAGE_REGEXP),
           isIndependant = r.getBooleanOrElse(enzCols.IS_INDEPENDANT, false),
           isSemiSpecific = r.getBooleanOrElse(enzCols.IS_SEMI_SPECIFIC, false),
-          properties = r.getStringOption(enzCols.SERIALIZED_PROPERTIES).map( parse[EnzymeProperties](_))
+          properties = r.getStringOption(enzCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[EnzymeProperties](_))
         )
       } toArray
     
@@ -394,7 +394,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
           ms1Analyzer = r.getString(instConfigCols.MS1_ANALYZER),
           msnAnalyzer = r.getString(instConfigCols.MSN_ANALYZER),
           activationType = r.getString(instConfigCols.ACTIVATION_TYPE),
-          properties = r.getStringOption(instConfigCols.SERIALIZED_PROPERTIES).map(parse[InstrumentConfigProperties](_))
+          properties = r.getStringOption(instConfigCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[InstrumentConfigProperties](_))
         )
       }
   
@@ -424,7 +424,7 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
           id = toLong(r.getAny(instCols.ID)),
           name = r.getString(instCols.NAME),
           source = r.getStringOrElse(instCols.SOURCE, null),
-          properties = r.getStringOption(instCols.SERIALIZED_PROPERTIES).map(parse[InstrumentProperties](_))
+          properties = r.getStringOption(instCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[InstrumentProperties](_))
         )
       } toArray
     
