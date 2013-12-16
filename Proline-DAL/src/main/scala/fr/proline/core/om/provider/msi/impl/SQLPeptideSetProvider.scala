@@ -194,7 +194,7 @@ class SQLPeptideSetProvider(
         val pepInstId = toLong(pepSetItemRecord(PepSetItemCols.PEPTIDE_INSTANCE_ID))
         val pepInst = pepInstById(pepInstId)
         val isBestPepSetField = pepSetItemRecord(PepSetItemCols.IS_BEST_PEPTIDE_SET)
-        val isBestPepSet: Option[Boolean] = Option(isBestPepSetField)
+        val isBestPepSet: Option[Boolean] = if (isBestPepSetField != null) Some(isBestPepSetField) else None
         val propertiesAsJSON = pepSetItemRecord(PepSetItemCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
         val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[PeptideSetItemProperties](_) }
         
