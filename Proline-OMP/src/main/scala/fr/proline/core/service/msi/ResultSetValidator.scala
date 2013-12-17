@@ -34,7 +34,7 @@ object ResultSetValidator {
     pepMatchValidator: Option[IPeptideMatchValidator] = None,
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
     protSetValidator: Option[IProteinSetValidator] = None,
-    inferenceMethod: Option[InferenceMethods.InferenceMethods] = Some(InferenceMethods.communist),
+    inferenceMethod: Option[InferenceMethods.Value] = Some(InferenceMethods.communist),
     peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
     storeResultSummary: Boolean = true
   ): ResultSetValidator = {
@@ -102,7 +102,7 @@ class ResultSetValidator(
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   protSetValidator: Option[IProteinSetValidator] = None,
-  inferenceMethod: Option[InferenceMethods.InferenceMethods] = Some(InferenceMethods.communist),
+  inferenceMethod: Option[InferenceMethods.Value] = Some(InferenceMethods.communist),
   peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
   storeResultSummary: Boolean = true
 ) extends IService with Logging {
