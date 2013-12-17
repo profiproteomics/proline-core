@@ -149,10 +149,10 @@ class ProtSetRulesValidatorWithFDROptimization(
     if( expectedRocPoint == null ) expectedRocPoint = valResult
     
     // Set validation rules probability thresholds using the previously obtained expected ROC point
-    if(expectedRocPoint.properties.isDefined){
-	val rocPointProps = expectedRocPoint.properties.get
-	protSetFilterRule1.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
-	protSetFilterRule2.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
+    if(expectedRocPoint.properties.isDefined) {
+      val rocPointProps = expectedRocPoint.properties.get
+      protSetFilterRule1.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_1_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
+      protSetFilterRule2.setThresholdValue( rocPointProps(ValidationPropertyKeys.RULE_2_THRESHOLD_VALUE).asInstanceOf[AnyVal] )
     }
     
     // Validate protein sets identified with a single peptide 
@@ -352,7 +352,7 @@ class ProtSetRulesValidatorWithFDROptimization(
         
         if( curRocPoint.fdr.isDefined ) {
           // Update ROC point properties
-          curRocPoint.addProperties( protSetFilterRule.getFilterProperties )     
+          curRocPoint.addProperties( protSetFilterRule.getFilterProperties )
           
           // Add ROC point to the list if FDR is defined and current protein set is a decoy
           rocPoints += curRocPoint
@@ -362,7 +362,7 @@ class ProtSetRulesValidatorWithFDROptimization(
       
         if ( curRocPoint.fdr.isDefined && curRocPoint.fdr.get > MAX_FDR ) break
       }
-    }    
+    }
     
     // Reset validation status
     ProteinSetFiltering.restoreProtSetValidationStatus(filteredProtSets, protSetValStatusMap)
@@ -374,10 +374,11 @@ class ProtSetRulesValidatorWithFDROptimization(
       val nearestRocPoint = rocPoints.reduceLeft { (a, b) =>
         if ( (a.fdr.get - someExpectedFdr).abs < (b.fdr.get - someExpectedFdr).abs ) a else b
       }
+      val nearestFdr = nearestRocPoint.fdr.get
       
       // Search the "best" ROC point for this FDR
       val bestRocPoint = rocPoints
-        .filter( _.fdr.get == nearestRocPoint.fdr.get )
+        .filter( rp => (rp.fdr.get - nearestFdr).abs <= nearestFdr * 0.05 ) // allows 5% of tolerance
         .sortWith((a,b) => a.targetMatchesCount > b.targetMatchesCount )
         .head
       
