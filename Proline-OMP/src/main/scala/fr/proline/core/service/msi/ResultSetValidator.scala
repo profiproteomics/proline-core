@@ -136,30 +136,29 @@ class ResultSetValidator(
     val appliedPSMFilters = this._validatePeptideMatches(targetRs, rsmValProperties)
     >>>
 
-    
     // --- Compute RSM from validated PSMs ---
 
     // Instantiate a protein set inferer
     val protSetInferer = ProteinSetInferer(inferenceMethod.get)
 
     //-- createRSM
-    def createRSM(currentRS: Option[ResultSet]) : Option[ResultSummary] = {
-       if (currentRS.isDefined) {
+    def createRSM(currentRS: Option[ResultSet]): Option[ResultSummary] = {
+      if (currentRS.isDefined) {
 
-    	   // Create new result set with validated peptide matches and compute result summary
-           val rsm = protSetInferer.computeResultSummary(currentRS.get)
+        // Create new result set with validated peptide matches and compute result summary
+        val rsm = protSetInferer.computeResultSummary(currentRS.get)
 
-           // Update score of protein sets
-           val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring.get)
-           this.logger.debug("updating score of peptide sets using " + peptideSetScoring.get.toString)
-           pepSetScoreUpdater.updateScoreOfPeptideSets(rsm)
+        // Update score of protein sets
+        val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring.get)
+        this.logger.debug("updating score of peptide sets using " + peptideSetScoring.get.toString)
+        pepSetScoreUpdater.updateScoreOfPeptideSets(rsm)
 
-           Some(rsm)
-       } else {
-           Option.empty[ResultSummary]
+        Some(rsm)
+      } else {
+        Option.empty[ResultSummary]
       }
     }
-      
+
     // Build result summary for each individual result set
     val targetRsm = createRSM(Some(targetRs)).get
     val decoyRsmOpt = createRSM(if (targetRs.decoyResultSet != null) targetRs.decoyResultSet else None)
@@ -213,12 +212,12 @@ class ResultSetValidator(
 
     true
   }
-  
+
   /**
    * Validate PSM using filters specified in service and PSM validator specified is service.
    * PeptideMatches are set as isValidated or not by each filter and a FDR is calculated after each filter.
-   * 
-   * All applied IPeptideMatchFilter are returned 
+   *
+   * All applied IPeptideMatchFilter are returned
    */
   private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): Seq[IPeptideMatchFilter] = {
 
@@ -229,10 +228,10 @@ class ResultSetValidator(
     // Execute all peptide matches pre filters
     if (pepMatchPreFilters != None) {
       pepMatchPreFilters.get.foreach { psmFilter =>
-        
+
         finalValidationResult = new BasicPepMatchValidator(psmFilter, tdAnalyzer).validatePeptideMatches(targetRs).finalResult
         logger.debug(
-          "After Filter " + psmFilter.filterDescription + 
+          "After Filter " + psmFilter.filterDescription +
           " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
         )
         appliedFilters += psmFilter
@@ -245,7 +244,7 @@ class ResultSetValidator(
     for (somePepMatchValidator <- pepMatchValidator) {
 
       val validationFilter = somePepMatchValidator.validationFilter
-      logger.debug("Run peptide match validator: " + validationFilter.filterParameter )
+      logger.debug("Run peptide match validator: " + validationFilter.filterParameter)
 
       // Apply Filter
       val valResults = somePepMatchValidator.validatePeptideMatches(targetRs)
@@ -262,7 +261,7 @@ class ResultSetValidator(
     rsmValProperties.getParams.setPeptideFilters(Some(filterDescriptors.toArray))
 
     // Save final PSM Filtering result
-    val pepValResults = if( finalValidationResult != null ) {
+    val pepValResults = if (finalValidationResult != null) {
       RsmValidationResultProperties(
         targetMatchesCount = finalValidationResult.targetMatchesCount,
         decoyMatchesCount = finalValidationResult.decoyMatchesCount,
@@ -271,22 +270,21 @@ class ResultSetValidator(
     } else {
 
       // If finalValidationResult => count validated PSMs
-      val targetMatchesCount = targetRs.peptideMatches.count( _.isValidated )
-      val decoyMatchesCount = if( targetRs.decoyResultSet.isEmpty ) None
-      else Some(targetRs.decoyResultSet.get.peptideMatches.count( _.isValidated ))
+      val targetMatchesCount = targetRs.peptideMatches.count(_.isValidated)
+      val decoyMatchesCount = if (targetRs.decoyResultSet.isEmpty) None
+      else Some(targetRs.decoyResultSet.get.peptideMatches.count(_.isValidated))
 
       RsmValidationResultProperties(
         targetMatchesCount = targetMatchesCount,
         decoyMatchesCount = decoyMatchesCount
       )
     }
-    
+
     // Update PSM validation result of the ResultSummary
     rsmValProperties.getResults.setPeptideResults(Some(pepValResults))
-    
+
     appliedFilters.result
   }
-
 
   private def _validateProteinSets(targetRsm: ResultSummary, rsmValProperties: RsmValidationProperties): Unit = {
     if (protSetFilters.isEmpty && protSetValidator.isEmpty) return ()
@@ -305,8 +303,8 @@ class ResultSetValidator(
 
         logger.debug(
           "After Filter " + protSetFilter.filterDescription +
-          " Nbr protein set target validated = " + finalValidationResult.targetMatchesCount +
-          " <> " + targetRsm.proteinSets.filter(_.isValidated).length
+            " Nbr protein set target validated = " + finalValidationResult.targetMatchesCount +
+            " <> " + targetRsm.proteinSets.filter(_.isValidated).length
         )
 
         // Store Validation Params obtained after filtering
@@ -326,25 +324,25 @@ class ResultSetValidator(
       val tdModeStr = targetRsm.resultSet.get.properties.get.targetDecoyMode.get
       val tdMode = TargetDecoyModes.withName(tdModeStr)
       protSetValidator.get.targetDecoyMode = Some(tdMode)
-      
+
       finalValidationResult = protSetValidator.get.validateProteinSets(targetRsm).finalResult
-      
+
       filterDescriptors += protSetValidator.get.toFilterDescriptor
     }
-    
+
     // Save Protein Set Filters properties
     val expectedFdr = if (protSetValidator.isDefined) protSetValidator.get.expectedFdr else None
     rsmValProperties.getParams.setProteinExpectedFdr(expectedFdr)
     rsmValProperties.getParams.setProteinFilters(Some(filterDescriptors.toArray))
-    
+
     // Save final Protein Set Filtering result
     val protSetValResults = if (finalValidationResult == null) {
       logger.debug("Final Validation Result is NULL")
-      
+
       val targetMatchesCount = targetRsm.proteinSets.count(_.isValidated)
       val decoyMatchesCount = if (targetRsm.decoyResultSummary == null || targetRsm.decoyResultSummary.isEmpty) None
       else Some(targetRsm.decoyResultSummary.get.proteinSets.count(_.isValidated))
-      
+
       RsmValidationResultProperties(
         targetMatchesCount = targetMatchesCount,
         decoyMatchesCount = decoyMatchesCount
@@ -356,13 +354,13 @@ class ResultSetValidator(
         fdr = finalValidationResult.fdr
       )
     }
-    
+
     // Update Protein Set validation result of the ResultSummary
     rsmValProperties.getResults.setProteinResults(Some(protSetValResults))
-    
+
     logger.debug("Final target protein sets count = " + protSetValResults.targetMatchesCount)
 
-    if ( protSetValResults.decoyMatchesCount.isDefined)
+    if (protSetValResults.decoyMatchesCount.isDefined)
       logger.debug("Final decoy protein sets count = " + protSetValResults.decoyMatchesCount.get)
 
     if (protSetValResults.fdr.isDefined)
