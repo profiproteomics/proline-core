@@ -225,6 +225,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     val numeratorSampleNumbers = sampleNumbersByGroupNumber(ratioDef.numeratorGroupNumber)
     val denominatorSampleNumbers = sampleNumbersByGroupNumber(ratioDef.denominatorGroupNumber)
     val allSampleNumbers = numeratorSampleNumbers ++ denominatorSampleNumbers
+    require( numeratorSampleNumbers != null && numeratorSampleNumbers.isEmpty == false, "numeratorSampleNumbers must be defined" )
+    require( denominatorSampleNumbers != null && denominatorSampleNumbers.isEmpty == false, "denominatorSampleNumbers must be defined" )
     
     // Map quant channel indices by the sample number
     val qcIndicesBySampleNum = Map() ++ ( allSampleNumbers ).map { sampleNum =>
@@ -251,15 +253,14 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         // Iterate over each sample in order to build the absolute error model using existing sample analysis replicates
         for( sampleNum <- allSampleNumbers ) {
           val qcIndices = qcIndicesBySampleNum(sampleNum)
+          require( qcIndices != null && qcIndices.length > 2, "qcIndices must be defined" )
           
-          if( qcIndices.length > 1 ) {
-            val sampleAbundances = qcIndices.map(normalizedRow).map(_.toDouble)
-            val sampleStatSummary = CommonsStatHelper.calcStatSummary(sampleAbundances)
-            val abundance = sampleStatSummary.getMean.toFloat
-            
-            if( abundance.isNaN == false && abundance > 0 )
-              absoluteErrors += AbsoluteErrorObservation( abundance, sampleStatSummary.getStandardDeviation.toFloat )
-          }
+          val sampleAbundances = qcIndices.map(normalizedRow).map(_.toDouble)
+          val sampleStatSummary = CommonsStatHelper.calcStatSummary(sampleAbundances)
+          val abundance = sampleStatSummary.getMean.toFloat
+          
+          if( abundance.isNaN == false && abundance > 0 )
+            absoluteErrors += AbsoluteErrorObservation( abundance, sampleStatSummary.getStandardDeviation.toFloat )
         }
       } else {
         
