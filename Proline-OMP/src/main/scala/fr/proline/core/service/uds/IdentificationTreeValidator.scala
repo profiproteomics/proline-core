@@ -165,7 +165,8 @@ class IdentificationTreeValidator(
       pepMatchPreFilters = pepMatchFilters,
       pepMatchValidator = pepMatchValidator,
       protSetFilters = protSetFilters,
-      protSetValidator = protSetValidator
+      protSetValidator = protSetValidator,
+      peptideSetScoring = peptideSetScoring
     )
 
     rsValidator.run()
