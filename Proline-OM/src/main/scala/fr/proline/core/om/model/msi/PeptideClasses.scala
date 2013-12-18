@@ -5,11 +5,10 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.weiglewilczek.slf4s.Logging
-import org.apache.commons.lang3.StringUtils.isNotEmpty
+import fr.proline.util.StringUtils.isNotEmpty
 import fr.proline.util.misc.InMemoryIdGen
 
 object Peptide extends InMemoryIdGen with Logging {
@@ -279,7 +278,6 @@ object Peptide extends InMemoryIdGen with Logging {
 
 }
 
-@JsonInclude( Include.NON_NULL )
 case class Peptide ( // Required fields
   var id: Long,
   val sequence: String,
@@ -347,12 +345,10 @@ case class Peptide ( // Required fields
   
 }
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideProperties
 
 object PeptideMatch extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideMatch ( // Required fields
   var id: Long, 
   var rank: Int,
@@ -403,13 +399,11 @@ case class PeptideMatch ( // Required fields
   
 }
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideMatchProperties (
   @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None,
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None
 )
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideMatchMascotProperties (
   @BeanProperty var expectationValue: Double,
   @BeanProperty var readableVarMods: Option[String] = None,
@@ -417,20 +411,18 @@ case class PeptideMatchMascotProperties (
   @BeanProperty var ambiguityString: Option[String] = None
 )
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideMatchOmssaProperties (
   @BeanProperty var pValue: Double
 )
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideMatchResultSummaryProperties (
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var mascotScoreOffset: Option[Float] = None,
   @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
 )
  
 object PeptideInstance extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideInstance ( // Required fields
   var id: Long,
   @transient val peptide: Peptide,
@@ -490,12 +482,10 @@ case class PeptideInstance ( // Required fields
 
 }
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideInstanceProperties(
   //@BeanProperty var bestPeptideMatchId: Option[Int] = None
 )
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideSetItem (
   // Required fields
   var selectionLevel: Int,
@@ -518,12 +508,10 @@ case class PeptideSetItem (
   
 }
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideSetItemProperties
 
 object PeptideSet extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideSet ( // Required fields
   var id: Long,
   var items: Array[PeptideSetItem],
@@ -601,6 +589,5 @@ case class PeptideSet ( // Required fields
   }
 }
 
-@JsonInclude( Include.NON_NULL )
 case class PeptideSetProperties
 

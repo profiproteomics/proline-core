@@ -2,14 +2,12 @@ package fr.proline.core.om.model.msi
  
 import java.util.Date
 import scala.reflect.BeanProperty
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 import fr.proline.util.misc.InMemoryIdGen
   
 object MSISearch extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class MSISearch (
           
   //Required fields
@@ -33,13 +31,11 @@ case class MSISearch (
   var properties: Option[MSISearchProperties] = None
 )
         
-@JsonInclude( Include.NON_NULL )
 case class MSISearchProperties
 
 
 object SearchSettings extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class SearchSettings(
     
   // Required fields
@@ -68,12 +64,8 @@ case class SearchSettings(
   
 )
 
-@JsonInclude( Include.NON_NULL )
-case class SearchSettingsProperties(
-  //@BeanProperty var targetDecoyMode: Option[String] = None // CONCATENATED | SEPARATED
-)
+case class SearchSettingsProperties
 
-@JsonInclude( Include.NON_NULL )
 case class MSMSSearchSettings(
   // MS/MS search settings
   val ms2ChargeStates: String,
@@ -81,7 +73,6 @@ case class MSMSSearchSettings(
   val ms2ErrorTolUnit: String
 )
 
-@JsonInclude( Include.NON_NULL )
 case class PMFSearchSettings(  
   // PMF search settings
   val maxProteinMass: Option[Double] = None,
@@ -91,7 +82,6 @@ case class PMFSearchSettings(
 
 object Enzyme extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class Enzyme(
     
   // Required fields
@@ -109,17 +99,15 @@ case class Enzyme(
   }
 }
 
-@JsonInclude( Include.NON_NULL )
 case class EnzymeProperties(
   @BeanProperty var ctermGain: Option[String] = None,
   @BeanProperty var ntermGain: Option[String] = None,
   @BeanProperty var minDistance: Option[Int] = None,
-  @BeanProperty var maxMissedCleavages: Option[Int] = None  
+  @BeanProperty var maxMissedCleavages: Option[Int] = None
 )
 
 object SeqDatabase extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class SeqDatabase(
     
   // Required fields
@@ -140,9 +128,7 @@ case class SeqDatabase(
    
 )
 
-@JsonInclude( Include.NON_NULL )
 case class SeqDatabaseProperties
 
-@JsonInclude( Include.NON_NULL )
 case class SeqDatabaseSearchProperties
 

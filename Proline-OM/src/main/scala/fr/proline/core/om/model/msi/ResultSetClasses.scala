@@ -3,14 +3,12 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.util.misc.InMemoryIdGen
 import com.weiglewilczek.slf4s.Logging
 
 object ResultSet extends InMemoryIdGen
 
-@JsonInclude(Include.NON_NULL)
 case class ResultSet(
   // Required fields
   val peptides: Array[Peptide],
@@ -102,28 +100,29 @@ case class ResultSet(
 
 }
 
-@JsonInclude(Include.NON_NULL)
 case class ResultSetProperties(
   @BeanProperty var targetDecoyMode: Option[String] = None, // CONCATENATED | SEPARATED
   @BeanProperty var mascotImportProperties: Option[MascotImportProperties] = None,
   @BeanProperty var omssaImportProperties: Option[OmssaImportProperties] = None
 )
 
-@JsonInclude(Include.NON_NULL)
 case class MascotImportProperties(
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var ionsScoreCutoff: Option[Float] = None, // it's ions score not ion score
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var subsetsThreshold: Option[Float] = None,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var proteinsPvalueCutoff: Option[Float] = None
 )
 
-@JsonInclude(Include.NON_NULL)
 case class OmssaImportProperties(
   @BeanProperty var rawSettings: Option[Map[String, String]] = None
 )
 
 object ResultSummary extends InMemoryIdGen
 
-@JsonInclude(Include.NON_NULL)
 case class ResultSummary(
   // Required fields
   val peptideInstances: Array[PeptideInstance],
@@ -315,32 +314,38 @@ case class ResultSummary(
 }
 
 // TODO: change privacy to protected => allows access only to getters/setters
-@JsonInclude(Include.NON_NULL)
 case class ResultSummaryProperties(
-  @BeanProperty var validationProperties: Option[RsmValidationProperties] = None)
+  @BeanProperty var validationProperties: Option[RsmValidationProperties] = None
+)
 
-@JsonInclude(Include.NON_NULL)
 case class RsmValidationProperties(
   @BeanProperty var params: RsmValidationParamsProperties,
-  @BeanProperty var results: RsmValidationResultsProperties)
+  @BeanProperty var results: RsmValidationResultsProperties
+)
 
-@JsonInclude(Include.NON_NULL)
 case class RsmValidationParamsProperties(
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var peptideExpectedFdr: Option[Float] = None,
+  
   @BeanProperty var peptideFilters: Option[Array[FilterDescriptor]] = None,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var proteinExpectedFdr: Option[Float] = None,
-  @BeanProperty var proteinFilters: Option[Array[FilterDescriptor]] = None)
+  
+  @BeanProperty var proteinFilters: Option[Array[FilterDescriptor]] = None
+)
 
-@JsonInclude(Include.NON_NULL)
 case class RsmValidationResultsProperties(
   @BeanProperty var peptideResults: Option[RsmValidationResultProperties] = None,
-  @BeanProperty var proteinResults: Option[RsmValidationResultProperties] = None)
+  @BeanProperty var proteinResults: Option[RsmValidationResultProperties] = None
+)
 
-@JsonInclude(Include.NON_NULL)
 case class RsmValidationResultProperties(
   // TODO: expectedRocPoint and RocPoints model
   @BeanProperty var targetMatchesCount: Int,
   @BeanProperty var decoyMatchesCount: Option[Int] = None,
-  @BeanProperty var fdr: Option[Float] = None)
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
+  @BeanProperty var fdr: Option[Float] = None
+)
 
 

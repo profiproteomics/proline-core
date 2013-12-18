@@ -1,5 +1,6 @@
 package fr.proline.core.om.model.msq
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 /**
  * @param biologicalSamples
@@ -92,8 +93,11 @@ case class QuantChannel(
   val number: Int,
   val sampleNumber: Int,
   val identResultSummaryId: Long,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val lcmsMapId: Option[Long] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val runId: Option[Long] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val quantLabelId: Option[Long] = None
 )
 
@@ -108,6 +112,7 @@ case class MasterQuantChannel(
   var id: Long = 0,
   val number: Int,
   val name: Option[String] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val lcmsMapSetId: Option[Long] = None,
   val quantChannels: Array[QuantChannel]
 )

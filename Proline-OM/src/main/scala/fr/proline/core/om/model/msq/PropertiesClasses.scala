@@ -2,10 +2,8 @@ package fr.proline.core.om.model.msq
 
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
-@JsonInclude( Include.NON_NULL )
 case class ComputedRatio (
   @BeanProperty var numerator: Float,
   @BeanProperty var denominator: Float,
@@ -16,7 +14,6 @@ case class ComputedRatio (
   @transient lazy val ratioValue = if( numerator > 0 && denominator > 0 ) numerator/denominator else Float.NaN
 }
 
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantReporterIonProperties (
   //@BeanProperty var quantReporterIons: Array[QuantReporterIonProperties]
 )
@@ -42,24 +39,22 @@ case class QuantPeptideIonProperties (
   @BeanProperty var lcmsFeatureId: Long
 ) extends QuantComponent*/
 
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideIonProperties (
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   @BeanProperty var bestQuantChannelId: Option[Long] = None
 )
 
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideProfile (
   @BeanProperty var ratios: List[Option[ComputedRatio]]
   //@BeanProperty var mqProtSetProfileIds: Option[Array[Long]] = None
 )
 
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideProperties (
+  @JsonDeserialize(contentAs = classOf[Array[java.lang.Long]])
   @BeanProperty var mqProtSetIds: Option[Array[Long]] = None,
   @BeanProperty var mqPepProfileByGroupSetupNumber: Option[HashMap[String,MasterQuantPeptideProfile]] = None
 )
 
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSetProfile (
   //@BeanProperty var id: Long,
   @BeanProperty var abundances: Array[Float],
@@ -67,10 +62,11 @@ case class MasterQuantProteinSetProfile (
   @BeanProperty var mqPeptideIds: Array[Long]
 )
  
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSetProperties (
   @BeanProperty var mqProtSetProfilesByGroupSetupNumber: Option[HashMap[String,Array[MasterQuantProteinSetProfile]]] = None,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
+  @JsonDeserialize(contentAs = classOf[Array[java.lang.Long]] )
   @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
+  @JsonDeserialize(contentAs = classOf[Array[java.lang.Long]] )
   @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None
 )

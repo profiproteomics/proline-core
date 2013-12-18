@@ -3,8 +3,7 @@ package fr.proline.core.om.model.lcms
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.util.misc.InMemoryIdGen
 
 // TODO: remove and use mzdb model instead
@@ -38,7 +37,6 @@ class IsotopicPattern (
   
 )
 
-@JsonInclude( Include.NON_NULL )
 case class IsotopicPatternProperties
 
 object Compound extends InMemoryIdGen
@@ -78,7 +76,6 @@ class PeakelShape (
   def lastScanId: Long = dataPoints(4).scanId  
 }
 
-@JsonInclude( Include.NON_NULL )
 case class PeakelShapeProperties
 
 object Feature extends InMemoryIdGen
@@ -222,11 +219,16 @@ case class Feature (
   
 }
 
-@JsonInclude( Include.NON_NULL )
-case class FeatureProperties (
+case class FeatureProperties (  
   @BeanProperty var peakelsCount: Option[Int] = None,
+  
+  @JsonDeserialize(contentAs = classOf[Array[java.lang.Float]] )
   @BeanProperty var peakelsRatios: Option[Array[Float]] = None,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var overlapCorrelation: Option[Float] = None,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var overlapFactor: Option[Float] = None
 )
 
@@ -272,5 +274,4 @@ case class TheoreticalFeature (
   
 )
 
-@JsonInclude( Include.NON_NULL )
 case class TheoreticalFeatureProperties

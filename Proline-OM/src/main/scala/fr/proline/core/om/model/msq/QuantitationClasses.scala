@@ -1,8 +1,7 @@
 package fr.proline.core.om.model.msq
 
 import scala.collection.mutable.ArrayBuffer
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.util.misc.InMemoryIdGen
 import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet,ResultSummary}
 
@@ -37,7 +36,6 @@ trait MasterLcmsQuantComponent extends MasterQuantComponent {
   val elutionTime: Float
 }
 
-@JsonInclude( Include.NON_NULL )
 case class QuantReporterIon(
   val quantChannelId: Long,
   val moz: Double,
@@ -48,7 +46,6 @@ case class QuantReporterIon(
 
 object MasterQuantReporterIon extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantReporterIon(
   var id: Long,
   var msQueryId: Long,
@@ -71,7 +68,6 @@ case class MasterQuantReporterIon(
 }
 
 
-@JsonInclude( Include.NON_NULL )
 case class QuantPeptideIon(  
   val rawAbundance: Float,
   var abundance: Float,
@@ -81,18 +77,26 @@ case class QuantPeptideIon(
   val correctedElutionTime: Float,
   val scanNumber: Int,
   
-  var peptideMatchesCount: Int,
+  var peptideMatchesCount: Int,  
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   var ms2MatchingFrequency: Option[Float], // TODO: remove the Option
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   var bestPeptideMatchScore: Option[Float] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   var predictedElutionTime: Option[Float] = None,
   var predictedScanNumber: Option[Int] = None,
   
   val quantChannelId: Long,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val peptideId: Option[Long] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val peptideInstanceId: Option[Long] = None,
+  @JsonDeserialize(contentAs = classOf[Array[java.lang.Long]] )
   val msQueryIds: Option[Array[Long]] = None,
   val lcmsFeatureId: Long, // TODO: set as Option[Long] = None
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val lcmsMasterFeatureId: Option[Long] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val unmodifiedPeptideIonId: Option[Long] = None,
   
   var selectionLevel: Int = 2
@@ -109,7 +113,6 @@ case class QuantPeptideIon(
 
 object MasterQuantPeptideIon extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantPeptideIon(
   var id: Long,
                                    
@@ -155,7 +158,6 @@ case class MasterQuantPeptideIon(
 }
 
 
-@JsonInclude( Include.NON_NULL )
 case class QuantPeptide(
   val rawAbundance: Float,
   var abundance: Float,
@@ -164,7 +166,9 @@ case class QuantPeptide(
   var selectionLevel: Int,
   
   val quantChannelId: Long,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val peptideId: Option[Long] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val peptideInstanceId: Option[Long] = None
 
 ) extends QuantComponent
@@ -287,7 +291,6 @@ case class MasterQuantPeptide(
 
 }
 
-@JsonInclude( Include.NON_NULL )
 case class QuantProteinSet (
   val rawAbundance: Float,
   var abundance: Float,
@@ -297,7 +300,6 @@ case class QuantProteinSet (
  ) extends QuantComponent
 
 
-@JsonInclude( Include.NON_NULL )
 case class MasterQuantProteinSet(
   val proteinSet: ProteinSet,
   var quantProteinSetMap: Map[Long,QuantProteinSet], // QuantProteinSet by quant channel id
@@ -374,7 +376,6 @@ case class MasterQuantProteinSet(
   
 } 
 
-@JsonInclude( Include.NON_NULL )
 case class QuantResultSummary(
   val quantChannelIds: Array[Long],
   var masterQuantProteinSets: Array[MasterQuantProteinSet],

@@ -4,6 +4,7 @@ import scala.collection.mutable.HashMap
 import scala.reflect.BeanProperty
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.util.misc.InMemoryIdGen
 import fr.proline.util.StringUtils
 
@@ -46,7 +47,11 @@ case class MsQueryProperties(
 
 case class MsQueryDbSearchProperties(
   @BeanProperty var candidatePeptidesCount: Int,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var mascotIdentityThreshold: Option[Float] = None,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var mascotHomologyThreshold: Option[Float] = None
 )
 

@@ -32,8 +32,8 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
       MsQueryProperties(
         targetDbSearch = Some( MsQueryDbSearchProperties(
           candidatePeptidesCount = 100,
-          mascotIdentityThreshold = Some(25),
-          mascotHomologyThreshold = Some(20)
+          mascotIdentityThreshold = Some(25.001f),
+          mascotHomologyThreshold = Some(20.002f)
         ))
       )
     )
@@ -111,12 +111,13 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     SerializationSpecif(
       "A Ms2Query object with defined properties",
       //jerksonDeserializer = Some( jsonData => Json.parse[Ms2Query](jsonData) ),
+      //jerksonDeserializer = Some( jsonData => ProfiJson.deserializeWithJacks[Ms2Query](jsonData) ),
       jerksonDeserializer = None,
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[Ms2Query](jsonData) ),
       ms2Query,
       """{"id":-1,"initial_id":1,"moz":333.33,"charge":3,"spectrum_title":"scan id=2","spectrum_id":1,"""+
-      """"properties":{"target_db_search":{"candidate_peptides_count":100,"mascot_identity_threshold":25.0,"""+
-      """"mascot_homology_threshold":20.0}},"ms_level":2}"""
+      """"properties":{"target_db_search":{"candidate_peptides_count":100,"mascot_identity_threshold":25.001,"""+
+      """"mascot_homology_threshold":20.002}},"ms_level":2}"""
     ),
     SerializationSpecif(
       "A Peptide object without properties",
