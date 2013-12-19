@@ -1,25 +1,98 @@
 package fr.proline.core.om.msi
 
 import org.junit.runner.RunWith
-import org.scalatest.junit.AssertionsForJUnit
+//import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.GivenWhenThen
 import org.scalatest.FunSpec
 import org.scalatest.matchers.ShouldMatchers
-//import com.codahale.jerkson.Json
+
 import fr.proline.core.om.model.msi._
 import fr.profi.util.serialization.ProfiJson
 
-@RunWith(classOf[JUnitRunner])
-class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
+case class SerializationSpecif(
+  description: String,
+  jerksonDeserializer: Option[String => AnyRef],
+  profiDeserializer: Option[String => AnyRef],
+  objectData: AnyRef,
+  jsonData: String
+)
+
+abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
+
+  def checkJsonSpecifs( jsonSpecifs: List[SerializationSpecif] ) {
+    
+    for( jsonSpecif <- jsonSpecifs ) {
+      //println( Json.generate(jsonSpecif.objectData) )
+      println( ProfiJson.serialize(jsonSpecif.objectData) )
+    }
   
-  case class SerializationSpecif(
-    description: String,
-    jerksonDeserializer: Option[String => AnyRef],
-    profiDeserializer: Option[String => AnyRef],
-    objectData: AnyRef,
-    jsonData: String
-  )
+    // Iterate over each sperialization specification
+    for( jsonSpecif <- jsonSpecifs ) {
+      
+      describe(jsonSpecif.description) {
+        
+        /*it("should be correctly serialized to JSON with Jerkson") {
+          
+          Given("the object data")
+          val objectData = jsonSpecif.objectData
+          
+          When("serializing to JSON and parsing it as a Map[String,Any]")
+          val jsonString = Json.generate(objectData)
+          val jsonAsMap = Json.parse[Map[String,Any]](jsonString)
+          
+          Then("it should match the Map obtained from the expected JSON string")
+          jsonAsMap should equal (Json.parse[Map[String,Any]](jsonSpecif.jsonData))         
+        }*/
+        
+        /*if( jsonSpecif.jerksonDeserializer.isDefined ) {
+          it("should be correctly deserialized from JSON with Jerkson") {
+            
+            Given("the JSON data")
+            val jsonData = jsonSpecif.jsonData
+            
+            When("deserializing from JSON")
+            val objectData = jsonSpecif.jerksonDeserializer.get(jsonData)
+            
+            Then("the obtained object should match the serialized one")
+            objectData should equal (jsonSpecif.objectData)
+          }
+        }*/
+        
+        it("should be correctly serialized to JSON with the ProFI serializer") {
+          
+          Given("the object data")
+          val objectData = jsonSpecif.objectData
+          
+          When("serializing to JSON and parsing it as a Map[String,Any]")
+          val jsonString = ProfiJson.serialize(objectData)
+          val jsonAsMap = ProfiJson.deserialize[Map[String,Any]](jsonString)
+          
+          Then("it should match the Map obtained from the expected JSON string")
+          jsonAsMap should equal ( ProfiJson.deserialize[Map[String,Any]](jsonSpecif.jsonData) )         
+        }
+        
+        if( jsonSpecif.profiDeserializer.isDefined ) {
+          it("should be correctly deserialized from JSON with the ProFI deserializer") {
+            
+            Given("the JSON data")
+            val jsonData = jsonSpecif.jsonData
+            
+            When("deserializing from JSON")
+            val objectData = jsonSpecif.profiDeserializer.get(jsonData)
+            
+            Then("the obtained object should match the serialized one")
+            objectData should equal (jsonSpecif.objectData)
+          }
+        }
+      }
+    }
+  }
+
+}
+
+@RunWith(classOf[JUnitRunner])
+class SerializationSpec extends AbstractSerializationSpec {
   
   val ms2Query = Ms2Query(
     id = -1,
@@ -156,70 +229,6 @@ class SerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
     )
   )
   
-  /*for( jsonSpecif <- jsonSpecifs ) {
-    println( Json.generate(jsonSpecif.objectData) )
-    println( ProfiJson.serialize(jsonSpecif.objectData) )
-  }*/
-  
-  // Iterate over each sperialization specification
-  for( jsonSpecif <- jsonSpecifs; if 1 == 1 ) {
-    
-    describe(jsonSpecif.description) {
-      
-      /*it("should be correctly serialized to JSON with Jerkson") {
-        
-        Given("the object data")
-        val objectData = jsonSpecif.objectData
-        
-        When("serializing to JSON and parsing it as a Map[String,Any]")
-        val jsonString = Json.generate(objectData)
-        val jsonAsMap = Json.parse[Map[String,Any]](jsonString)
-        
-        Then("it should match the Map obtained from the expected JSON string")
-        jsonAsMap should equal (Json.parse[Map[String,Any]](jsonSpecif.jsonData))         
-      }*/
-      
-      if( jsonSpecif.jerksonDeserializer.isDefined ) {
-        it("should be correctly deserialized from JSON with Jerkson") {
-          
-          Given("the JSON data")
-          val jsonData = jsonSpecif.jsonData
-          
-          When("deserializing from JSON")
-          val objectData = jsonSpecif.jerksonDeserializer.get(jsonData)
-          
-          Then("the obtained object should match the serialized one")
-          objectData should equal (jsonSpecif.objectData)
-        }
-      }
-      
-      it("should be correctly serialized to JSON with the ProFI serializer") {
-        
-        Given("the object data")
-        val objectData = jsonSpecif.objectData
-        
-        When("serializing to JSON and parsing it as a Map[String,Any]")
-        val jsonString = ProfiJson.serialize(objectData)
-        val jsonAsMap = ProfiJson.deserialize[Map[String,Any]](jsonString)
-        
-        Then("it should match the Map obtained from the expected JSON string")
-        jsonAsMap should equal ( ProfiJson.deserialize[Map[String,Any]](jsonSpecif.jsonData) )         
-      }
-      
-      if( jsonSpecif.profiDeserializer.isDefined ) {
-        it("should be correctly deserialized from JSON with the ProFI deserializer") {
-          
-          Given("the JSON data")
-          val jsonData = jsonSpecif.jsonData
-          
-          When("deserializing from JSON")
-          val objectData = jsonSpecif.profiDeserializer.get(jsonData)
-          
-          Then("the obtained object should match the serialized one")
-          objectData should equal (jsonSpecif.objectData)
-        }
-      }
-    }
-  }
+  this.checkJsonSpecifs( jsonSpecifs )
   
 }

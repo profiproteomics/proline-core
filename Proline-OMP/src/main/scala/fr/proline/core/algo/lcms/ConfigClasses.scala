@@ -1,8 +1,8 @@
 package fr.proline.core.algo.lcms
 
 import fr.proline.core.om.model.lcms.LcMsRun
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 
 trait IMsQuantConfig {
   val extractionParams: ExtractionParams
@@ -34,7 +34,6 @@ trait IMzTimeTolerant extends IMzTolerant {
   val timeTol: Float
 }
 
-@JsonInclude(Include.NON_NULL)
 case class AlignmentParams(
   massInterval: Int,
   smoothingMethodName: String,
@@ -43,10 +42,8 @@ case class AlignmentParams(
   maxIterations: Int = 3
 )
 
-@JsonInclude(Include.NON_NULL)
 case class AlnSmoothingParams( windowSize: Int, windowOverlap: Int, minWindowLandmarks: Int = 0 )
 
-@JsonInclude(Include.NON_NULL)
 case class ClusteringParams(
   mozTol: Double,
   mozTolUnit: String,
@@ -55,19 +52,28 @@ case class ClusteringParams(
   timeComputation: String
 ) extends IMzTimeTolerant {
   
+  // TODO: remove me when the Jackson Scala Module will use the primary constructor by default
+  @JsonCreator
+  def this( props: Map[String,AnyRef] ) = {
+    this(
+      props("moz_tol").asInstanceOf[Double],
+      props("moz_tol_unit").asInstanceOf[String],
+      props("time_tol").asInstanceOf[Double].toFloat,
+      props("intensity_computation").asInstanceOf[String],
+      props("time_computation").asInstanceOf[String]
+    )
+  }
+  
   def this( mzTimeTol: IMzTimeTolerant, intensityComputation: String,timeComputation: String) = {
     this(mzTimeTol.mozTol,mzTimeTol.mozTolUnit,mzTimeTol.timeTol,intensityComputation,timeComputation)
   }
   
 }
 
-@JsonInclude(Include.NON_NULL)
 case class ExtractionParams( mozTol: Double, mozTolUnit: String ) extends IMzTolerant
 
-@JsonInclude(Include.NON_NULL)
 case class FeatureMappingParams( mozTol: Double, mozTolUnit: String, timeTol: Float ) extends IMzTimeTolerant
 
-@JsonInclude( Include.NON_NULL )
 case class LabelFreeQuantConfig(
   mapSetName: String,
   lcMsRuns: Seq[LcMsRun],
