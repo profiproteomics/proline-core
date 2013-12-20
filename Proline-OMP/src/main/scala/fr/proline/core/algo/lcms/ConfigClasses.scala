@@ -52,18 +52,6 @@ case class ClusteringParams(
   timeComputation: String
 ) extends IMzTimeTolerant {
   
-  // TODO: remove me when the Jackson Scala Module will use the primary constructor by default
-  @JsonCreator
-  def this( props: Map[String,AnyRef] ) = {
-    this(
-      props("moz_tol").asInstanceOf[Double],
-      props("moz_tol_unit").asInstanceOf[String],
-      props("time_tol").asInstanceOf[Double].toFloat,
-      props("intensity_computation").asInstanceOf[String],
-      props("time_computation").asInstanceOf[String]
-    )
-  }
-  
   def this( mzTimeTol: IMzTimeTolerant, intensityComputation: String,timeComputation: String) = {
     this(mzTimeTol.mozTol,mzTimeTol.mozTolUnit,mzTimeTol.timeTol,intensityComputation,timeComputation)
   }
