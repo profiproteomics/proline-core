@@ -3,6 +3,7 @@ package fr.proline.core.orm.uds;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -42,7 +43,7 @@ public class MasterQuantitationChannel implements Serializable {
     private String serializedProperties;
 
     // bi-directional many-to-one association to QuantChannel
-    @OneToMany(mappedBy = "masterQuantitationChannel")
+    @OneToMany(mappedBy = "masterQuantitationChannel", cascade=CascadeType.ALL)
     @OrderBy("number")
     private List<QuantitationChannel> quantitationChannels;
 
