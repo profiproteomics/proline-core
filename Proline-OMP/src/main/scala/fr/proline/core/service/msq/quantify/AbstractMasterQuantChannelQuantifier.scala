@@ -140,14 +140,16 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   //protected def buildMasterQuantProteinSetObjectTree( mqProtSet: MasterQuantProteinSet ): MsiObjectTree
 
   // TODO: load the schema
-  protected def loadObjectTreeSchema(schemaName: String): fr.proline.core.orm.msi.ObjectTreeSchema = {
-    val schemaFake = new fr.proline.core.orm.msi.ObjectTreeSchema()
-    schemaFake.setName(schemaName)
-    schemaFake.setType("JSON")
-    schemaFake.setVersion("0.1")
-    schemaFake.setSchema("")
-
-    schemaFake
+  protected def loadOrCreateObjectTreeSchema(schemaName: String): fr.proline.core.orm.msi.ObjectTreeSchema = {
+    var objTreeSchema : fr.proline.core.orm.msi.ObjectTreeSchema=  msiEm.find(classOf[fr.proline.core.orm.msi.ObjectTreeSchema], schemaName)
+    if(objTreeSchema == null) {
+	    objTreeSchema = new fr.proline.core.orm.msi.ObjectTreeSchema()
+	    objTreeSchema.setName(schemaName)
+	    objTreeSchema.setType("JSON")
+	    objTreeSchema.setVersion("0.1")
+	    objTreeSchema.setSchema("")
+    }
+    objTreeSchema
   }
 
   protected def storeMsiQuantResultSet(msiIdentResultSets: List[MsiResultSet]): MsiResultSet = {
@@ -300,14 +302,17 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
       msiEm.persist(msiPepInstMatch)
 
       // Map this quant peptide match to identified child peptide matches
-      for (childPepMatchId <- bestParentPepMatch.getChildrenIds) {
-
-        val msiPepMatchRelation = new MsiPeptideMatchRelation()
-        msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
-        // FIXME: allows to set the child peptide match id
-        msiPepMatchRelation.setChildPeptideMatch(msiMasterPepMatch) // childPepMatchId
-        // FIXME: rename to setParentResultSet
-        msiPepMatchRelation.setParentResultSetId(msiQuantRS)
+      //FIXME No children specified Yet !? 
+      if(bestParentPepMatch.getChildrenIds !=null){
+	      for (childPepMatchId <- bestParentPepMatch.getChildrenIds) {
+	
+	        val msiPepMatchRelation = new MsiPeptideMatchRelation()
+	        msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
+	        // FIXME: allows to set the child peptide match id
+	        msiPepMatchRelation.setChildPeptideMatch(msiMasterPepMatch) // childPepMatchId
+	        // FIXME: rename to setParentResultSet
+	        msiPepMatchRelation.setParentResultSetId(msiQuantRS)
+	      }
       }
     }
 
@@ -632,7 +637,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val quantProteinSetsSchema = {
-    this.loadObjectTreeSchema("object_tree.quant_protein_sets")
+    this.loadOrCreateObjectTreeSchema("object_tree.quant_protein_sets")
   }
 
   protected def buildMasterQuantProteinSetObjectTree(mqProtSet: MasterQuantProteinSet): MsiObjectTree = {
