@@ -2,6 +2,7 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -68,7 +69,7 @@ public class QuantitationChannel implements Serializable {
     private MasterQuantitationChannel masterQuantitationChannel;
 
     // bi-directional many-to-one association to SampleAnalysis
-    @ManyToOne
+    @ManyToOne(cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REFRESH})
     @JoinColumn(name = "sample_analysis_id")
     private SampleAnalysis sampleAnalysis;
 
