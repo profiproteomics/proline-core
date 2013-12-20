@@ -107,9 +107,8 @@ object MasterQuantChannelQuantifier {
         )
       }
       else if( abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString() ) {
-        masterQuantChannelQuantifier = new SpectralCountQuantifier(
+        masterQuantChannelQuantifier = new WeightedSpectralCountQuantifier(
           executionContext = executionContext,
-//          experimentalDesign = experimentalDesign,
           udsMasterQuantChannel = udsMasterQuantChannel,
           scConfig = quantConfig.asInstanceOf[SpectralCountConfig]
         )
