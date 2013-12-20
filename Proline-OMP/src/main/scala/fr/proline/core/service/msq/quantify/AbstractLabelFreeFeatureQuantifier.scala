@@ -234,7 +234,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   }
 
   protected lazy val labelFreeQuantPeptidesSchema = {
-    this.loadObjectTreeSchema("object_tree.label_free_quant_peptides")
+    this.loadOrCreateObjectTreeSchema("object_tree.label_free_quant_peptides")
   }
 
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree = {
@@ -251,7 +251,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   }
 
   protected lazy val labelFreeQuantPeptideIonsSchema = {
-    this.loadObjectTreeSchema("object_tree.label_free_quant_peptide_ions")
+    this.loadOrCreateObjectTreeSchema("object_tree.label_free_quant_peptide_ions")
   }
 
   protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree = {
