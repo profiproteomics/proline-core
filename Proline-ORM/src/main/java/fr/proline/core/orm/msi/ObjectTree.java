@@ -2,6 +2,7 @@ package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,7 +35,7 @@ public class ObjectTree implements Serializable {
     @Column(name = "serialized_properties")
     private String serializedProperties;
 
-    @ManyToOne
+    @ManyToOne(cascade=CascadeType.PERSIST)
     @JoinColumn(name = "schema_name")
     // @MapsId("schemaName")
     private ObjectTreeSchema schema;
