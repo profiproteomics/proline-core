@@ -32,6 +32,11 @@ trait IPepInstanceSpectralCountUpdater {
    * In case of RSM (RSM.Y) issued from a mergeRSM service, the following computation will be done :
    *  - Get the leave RSM and compute SC (  basic SC = valid PSM count)
    *  - update RSM.Y peptide instance SC using the sum of leave RSM peptide instance SC
+   *  
+   *  @param rsm ResultSummary to calculate SC for
+   *  @param execContext ExecutionContext to use for getting
+   *  
+   *  NO persistence is DONE !!
    */
   def updatePepInstanceSC(rsm: ResultSummary, execContext: IExecutionContext): Unit
 
@@ -99,15 +104,15 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
    * In case of RSM (RSM.Y) issued from a mergeRSM service, the following computation will be done :
    *  - Get the leave RSM and compute SC (  basic SC = valid PSM count)
    *  - update RSM.Y peptide instance SC using the sum of leave RSM peptide instance SC
+   *  
+   *  
    */
   def updatePepInstanceSC(rsm: ResultSummary, execContext: IExecutionContext): Unit = {
-
-    var spectralCountByPepId = new HashMap[Long, Int]()
+  
     val startTime = System.currentTimeMillis()
-
-logger.info(" Start update peptide instance SC for RSM with ID "+rsm.id)
-    spectralCountByPepId = getRSMSpectralCountByPepId(rsm, rsm.id, rsm.peptideInstances.map(_.peptideId),  execContext)
-
+	logger.info(" Start update peptide instance SC for RSM with ID "+rsm.id)
+	
+    val spectralCountByPepId :HashMap[Long, Int] = getRSMSpectralCountByPepId(rsm, rsm.id, rsm.peptideInstances.map(_.peptideId),  execContext)
 
     val endTime = System.currentTimeMillis()
     logger.debug(" Needed Time to calculate SC for " +spectralCountByPepId.size+" =  " + (endTime - startTime) + " ms")
@@ -120,7 +125,7 @@ logger.info(" Start update peptide instance SC for RSM with ID "+rsm.id)
       })
       
   	val tmpPepInstByPepId = tmpPepInstByPepIdBuilder.result
-    
+    logger.debug("Got "+spectralCountByPepId.size+" SC for peptides. RSM contains "+tmpPepInstByPepId.size+" peptide instance " )
     spectralCountByPepId.foreach(pepSc => {
       if (tmpPepInstByPepId.get(pepSc._1).isDefined) {
         tmpPepInstByPepId.get(pepSc._1).get.totalLeavesMatchCount = pepSc._2
@@ -128,6 +133,7 @@ logger.info(" Start update peptide instance SC for RSM with ID "+rsm.id)
         throw new Exception("PeptideInstance associated to validated PeptideMatch not found for peptide id=" + pepSc._1)
       }
     })
+    
   }
 
   private def getRSMSpectralCountByPepId(rootRSM: ResultSummary, rsmID: Long, pepID: Seq[Long], execContext: IExecutionContext): HashMap[Long, Int] = {
