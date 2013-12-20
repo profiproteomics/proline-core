@@ -90,7 +90,7 @@ class SpectralCountQuantifier(
   
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingPeptidesSchema = {
-    this.loadObjectTreeSchema("object_tree.spectral_counting_peptides")
+    this.loadOrCreateObjectTreeSchema("object_tree.spectral_counting_peptides")
   }
   
   protected def buildMasterQuantPeptideObjectTree( mqPep: MasterQuantPeptide ): MsiObjectTree = {
@@ -108,7 +108,7 @@ class SpectralCountQuantifier(
   
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingQuantPepIonsSchema = {
-    this.loadObjectTreeSchema("object_tree.spectral_counting_quant_peptide_ions")
+    this.loadOrCreateObjectTreeSchema("object_tree.spectral_counting_quant_peptide_ions")
   }
   
   protected def buildMasterQuantPeptideIonObjectTree( mqPepIon: MasterQuantPeptideIon ): MsiObjectTree = {
