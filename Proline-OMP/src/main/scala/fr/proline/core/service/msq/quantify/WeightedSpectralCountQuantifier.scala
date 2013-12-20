@@ -55,8 +55,16 @@ class WeightedSpectralCountQuantifier(
 
     // Update quant result summary id of the master quant channel
     udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
+    
     udsEm.persist(udsMasterQuantChannel)
-
+    udsEm.flush()
+    
+    logger.debug(" UDS MasterQCh "+udsMasterQuantChannel.getName()+" ; "+udsMasterQuantChannel.getId())
+    for(qCh <- udsMasterQuantChannel.getQuantitationChannels()){
+      logger.debug(" UDS MasterQCh /QCh"+qCh.getId())  
+    }
+    
+    
     // Store master quant result summary
     this.storeMasterQuantResultSummary(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
 
@@ -71,7 +79,7 @@ class WeightedSpectralCountQuantifier(
       proteinSetWeightStructsById
     )
 
-    this.logger.info("storing master peptide quant data...")
+    this.logger.info("storing "+mqPeptides.size+" master peptide quant data...")
 
     // Iterate over master quant peptides to store corresponding spectral counts
     for (mqPeptide <- mqPeptides) {
@@ -83,7 +91,7 @@ class WeightedSpectralCountQuantifier(
       this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(msiMasterPepInst))
     }
 
-    this.logger.info("storing master proteins set quant data...")
+    this.logger.info("storing "+mqProtSets.size+" master proteins set quant data...")
     //    
     //    // Compute master quant protein sets
     //    val mqProtSets = Ms2CountQuantifier.computeMasterQuantProteinSets(
@@ -190,7 +198,7 @@ class WeightedSpectralCountQuantifier(
 
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingPeptidesSchema = {
-    this.loadObjectTreeSchema("object_tree.spectral_counting_peptides")
+    this.loadOrCreateObjectTreeSchema("object_tree.spectral_counting_peptides")
   }
 
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree = {
@@ -208,7 +216,7 @@ class WeightedSpectralCountQuantifier(
 
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingQuantPepIonsSchema = {
-    this.loadObjectTreeSchema("object_tree.spectral_counting_quant_peptide_ions")
+    this.loadOrCreateObjectTreeSchema("object_tree.spectral_counting_quant_peptide_ions")
   }
 
   protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree = {
@@ -272,29 +280,28 @@ class WeightedSpectralCountQuantifier(
 
       val qcId = qcIdByRsId(rsm.getResultSetId)
 
-      //Store partial result in Maps (PepInstanceID-> [QuantPepIon] ) and (ProtMatch Accession -> QuantProteinSet)
-      //	    var qPepIonByPepInstID : scala.collection.mutable.Map[Long, Array[QuantPeptideIon]] = scala.collection.mutable.Map[Long, Array[QuantPeptideIon]]()
-      val quantPepByPepID: scala.collection.mutable.Map[Long, QuantPeptide] = scala.collection.mutable.Map[Long, QuantPeptide]()
+       val quantPepByPepID: scala.collection.mutable.Map[Long, QuantPeptide] = scala.collection.mutable.Map[Long, QuantPeptide]()
 
-      // List of created QuantPeptideIon mapped to unique key : PepInstanceID:Charge
-      //	    val qPepIons = new HashMap[String,QuantPeptideIon]()
 
       //--- Update RSM SpectralCount if necessary
       // TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information ! Should be wrong see issue #7984
-      if (rsm.peptideInstances(0).totalLeavesMatchCount < 0)
+      if (rsm.peptideInstances(0).totalLeavesMatchCount < 0) {
         PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm, executionContext)
+        rsm.peptideInstances.foreach(pepI =>{
+        	val ormPepInst  = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
+        	ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
+        	this.msiEm.merge(ormPepInst)
+        })
+      }
 
       //--- Get RSM Peptide Match/Protein Match information 	     
       // map   list of ProtMatch accession by PeptideSet
       val pepSetByPMAccList: Map[PeptideSet, Seq[String]] = createProtMatchesAccByPeptideSet(rsm)
-      // map   list of Peptide  by PeptideSet Id
-      //	    val pepMatchByPepSetId = rsm.getAllPeptideMatchesByPeptideSetId	   
 
       //--- Calculate SCs for each Ref RSM ProtSet
       protSetWeightStructsByProtSetId.foreach(entry => {
 
-        val currentProteinSetWeightStruct = entry._2
-        //	       val refProtSetId = entry._1
+	    val currentProteinSetWeightStruct = entry._2
 
         //Get PeptideSet containing protein in current RSM if exist
         var peptideSetForPM: PeptideSet = null
@@ -305,31 +312,12 @@ class WeightedSpectralCountQuantifier(
             peptideSetForPM = nextEntry._1
         }
 
-        //	       val spectralCountByPepIonKey = new HashMap[String,SpectralCountsStruct]
-
         // ProteinMatch Spectral Count
         var protWSC: Float = 0.0f
         var protSSC: Float = 0.0f
         var protBSC: Int = 0
 
         if (peptideSetForPM != null) { //  Ref RSM current typical found
-
-          //	        val pepMatchs =  pepMatchByPepSetId(peptideSetForPM.id)
-          //	        //Go through PepMatches 
-          //	        
-          //	        pepMatchs.foreach(pepMatch =>{
-          //	          // Assume msQuery defined ! 
-          //	          val keyMap :String = pepMatch.id+":"+pepMatch.msQuery.charge
-          //	          if(qPepIons.contains(keyMap)) {
-          //	            //already found in previous proteinSet ! Just get Info for QuantProtSet
-          //	            val qPepIon :QuantPeptideIon  = qPepIons(keyMap)
-          //	          } else {
-          //	             //Test if associated Pepmatch (same pepInt / Charge) already found
-          //	            if(spectralCountByPepIonKey.contains(keyMap)){
-          //	               val prevValues : SpectralCountsStruct = spectralCountByPepIonKey(keyMap)
-          //	               val newValues= new SpectralCountsStruct(prevValues.basicSC+1,prevValues.specificSC,0)
-          //	            }
-          //	          }
 
           //Go through peptides instances,  compute SC and create QuantPeptide
           peptideSetForPM.getPeptideInstances.foreach(pepInst => {
@@ -353,6 +341,7 @@ class WeightedSpectralCountQuantifier(
               )
               //Update rsm specific map
               quantPepByPepID.put(pepInst.peptideId, qp)
+              
               //Update complete Map to be used for MasterQuantPeptide creation
               forMasterQPepByPepId.getOrElseUpdate(pepInst.peptideId, new HashMap[Long, QuantPeptide]()).put(qcId, qp)
 
@@ -373,12 +362,13 @@ class WeightedSpectralCountQuantifier(
             selectionLevel = 2
           )
 
-          //Update complete Map to be used for MasterQuantProteinSet creation
+          //Update complete Map to be used for MasterQuantProtei	nSet creation
           forMasterQProtSetByProtSet.getOrElseUpdate(currentProteinSetWeightStruct.proteinSet, new HashMap[Long, QuantProteinSet]()).put(qcId, quantProteinSet)
 
         } //End Protein identified in current RSM
-
-        //	      }) //End go through PepMatches of PepSet containing RefRSM current typical
+        else {
+          logger.debug("Protein "+currentProteinSetWeightStruct.typicalPMAcc+" Not identified in RSM id="+rsm.id)
+        }
 
       }) // End go through  proteinSetWeightStructsById
 
@@ -404,7 +394,7 @@ class WeightedSpectralCountQuantifier(
       )
     })
 
-    return null
+    return (mqPeptides.toArray,mqProtSets.toArray)
   }
 
   private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[String]] = {
@@ -426,22 +416,9 @@ class WeightedSpectralCountQuantifier(
 
 }
 
-//case class SpectralCountsStruct( val basicSC : Float, val specificSC : Float, val weightedSC : Float)
-
 case class ProteinPepsWeightStruct(
   val proteinSet: ProteinSet,
   val typicalPMAcc: String,
   val nbrPepSpecific: Int,
   val weightByPeptideId: scala.collection.mutable.Map[Long, Float] = null
 )
-
-//object SpectralCountsProperties {
-//    final val rootPropName : String = "\"SpectralCountResult\""
-//    final val rsmIDPropName : String = "\"rsm_id\""
-//    final val protSCsListPropName : String = "\"proteins_spectral_counts\""
-//    final val protACPropName : String = "\"protein_accession\""
-//    final val bscPropName : String = "\"bsc\""
-//    final val sscPropName : String = "\"ssc\""
-//    final val wscPropName : String = "\"wsc\""
-//           
-//}
