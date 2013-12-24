@@ -10,7 +10,6 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import javax.persistence.TypedQuery;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
 import fr.proline.core.orm.msi.repository.PeptideReadablePtmStringRepository;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 import fr.proline.util.MathUtils;
 
 public class ResultsetTest extends DatabaseTestCase {
@@ -154,8 +153,13 @@ public class ResultsetTest extends DatabaseTestCase {
 	    transac = msiEm.getTransaction();
 	    transac.begin();
 	    transacOK = false;
-
+	    
+	    PeptideReadablePtmStringPK prpsPK = new PeptideReadablePtmStringPK();
+	    prpsPK.setPeptideId(firstPeptide.getId());
+	    prpsPK.setResultSetId(rs.getId());
+	    
 	    PeptideReadablePtmString prps = new PeptideReadablePtmString();
+	    prps.setId(prpsPK);
 	    prps.setReadablePtmString("Toto");
 	    prps.setPeptide(firstPeptide);
 	    prps.setResultSet(rs);

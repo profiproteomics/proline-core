@@ -30,6 +30,8 @@ public class GroupSetup implements Serializable {
     private long id;
 
     private String name;
+    
+    private int number;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -66,6 +68,14 @@ public class GroupSetup implements Serializable {
 
     public void setName(String name) {
 	this.name = name;
+    }
+    
+    public int getNumber() {
+	return number;
+    }
+
+    public void setNumber(final int pNumber) {
+	number = pNumber;
     }
 
     public String getSerializedProperties() {

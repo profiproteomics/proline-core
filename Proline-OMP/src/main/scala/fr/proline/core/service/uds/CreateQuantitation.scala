@@ -95,10 +95,13 @@ class CreateQuantitation(
     }
 
     // Store group setups
+    var groupSetupNumber = 0
     for (groupSetup <- groupSetups) {
+      groupSetupNumber += 1
 
       // Save group setup
       val udsGroupSetup = new UdsGroupSetup()
+      udsGroupSetup.setNumber(groupSetupNumber)
       udsGroupSetup.setName(groupSetup.name)
       udsGroupSetup.setQuantitationDataset(udsQuantitation)
       udsEM.persist(udsGroupSetup)
@@ -177,7 +180,7 @@ class CreateQuantitation(
       udsQf.setName(masterQuantChannel.name.getOrElse(""))
       udsQf.setDataset(udsQuantitation)
 
-      if (masterQuantChannel.lcmsMapSetId != None) {
+      if (masterQuantChannel.lcmsMapSetId.isDefined) {
         udsQf.setLcmsMapSetId(masterQuantChannel.lcmsMapSetId.get)
       }
 
@@ -233,7 +236,7 @@ class CreateQuantitation(
         }
 
         // TODO: check method type
-        if (quantChannel.lcmsMapId != None) {
+        if (quantChannel.lcmsMapId.isDefined) {
           udsQuantChannel.setLcmsMapId(quantChannel.lcmsMapId.get)
         } else if (quantChannel.quantLabelId.isDefined) {
           val udsQuantLabel = udsEM.find(classOf[UdsQuantLabel], quantChannel.quantLabelId.get)

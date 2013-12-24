@@ -121,7 +121,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           require( peptideSet.scoreType != null, "a score type must be specified for this peptide set" )
           
           val pepSetScoringId = scoringIdByType.get( peptideSet.scoreType )
-          require( pepSetScoringId != None, "can't find a scoring id for the score type '"+peptideSet.scoreType+"'" )
+          require( pepSetScoringId.isDefined, "can't find a scoring id for the score type '"+peptideSet.scoreType+"'" )
           
           // Insert peptide set
           stmt.executeWith(
@@ -138,7 +138,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           val peptideSetId = stmt.generatedLong
           peptideSetIdByTmpId(peptideSet.id) = peptideSetId
           
-          // Update protein set id
+          // Update peptide set id
           peptideSet.id = peptideSetId
           peptideSet.resultSummaryId = rsmId
           
@@ -156,12 +156,13 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             
             // Update peptide instance id
             //pepSetItem._setPeptideInstanceId( pepInstanceIdMap(pepSetItem.peptideInstanceId) )
+            val isBestPeptideSet: Boolean = peptideSetItem.isBestPeptideSet.getOrElse(false)
             
             // Insert peptide set item
             stmt.executeWith(
               peptideSet.id,
               peptideSetItem.peptideInstance.id,
-              peptideSetItem.isBestPeptideSet,
+              isBestPeptideSet,
               peptideSetItem.selectionLevel,
               peptideSetItem.properties.map(ProfiJson.serialize(_)),
               rsmId
@@ -199,18 +200,18 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
         
       // Store hierarchical relations between peptide sets
       msiEzDBC.executePrepared( MsiDbPeptideSetRelationTable.mkInsertQuery ) { stmt =>
-        for( peptideSet <- rsm.peptideSets ) {        
+        for( peptideSet <- rsm.peptideSets ) {
           
           // Update and store peptide set relation of type strict subsets
           if( peptideSet.hasStrictSubset ) {
             //peptideSet.getStrictSubsetIds.foreach( i => print(i+";") )
-            peptideSet.strictSubsetIds = peptideSet.getStrictSubsetIds.map { peptideSetIdByTmpId(_) } // key not found
+            peptideSet.strictSubsetIds = peptideSet.strictSubsetIds.map { peptideSetIdByTmpId(_) } // key not found
             peptideSet.strictSubsetIds.foreach { storePeptideSetRelation( stmt, peptideSet, _, true ) }
           }
           
           // Update and store peptide set relation of type subsumable subset
           if( peptideSet.hasSubsumableSubset ) {
-            peptideSet.subsumableSubsetIds = peptideSet.getSubsumableSubsetIds.map { peptideSetIdByTmpId(_) }
+            peptideSet.subsumableSubsetIds = peptideSet.subsumableSubsetIds.map { peptideSetIdByTmpId(_) }
             peptideSet.subsumableSubsetIds.foreach { storePeptideSetRelation( stmt, peptideSet, _, false ) }
           }
         }
@@ -231,7 +232,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
                              }
     val msiDbCtx = execCtx.getMSIDbConnectionContext
     
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>      
+    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
     
       // Insert protein sets
       msiEzDBC.executePrepared( protSetInsertQuery, true ) { stmt =>
@@ -254,6 +255,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           
           // Insert protein set
           stmt.executeWith(
+            proteinSet.isDecoy,
             proteinSet.isValidated,
             proteinSet.selectionLevel,
             proteinSet.properties.map(ProfiJson.serialize(_)),
@@ -276,14 +278,15 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           
           val protMatchRsmPropsById = protSet.proteinMatchPropertiesById
           
-          protSet.getProteinMatchIds.foreach { protMatchId =>
+          for( (peptideSet,protMatchIds) <- protSet.getAllProteinMatchesIdByPeptideSet; protMatchId <- protMatchIds ) {
             
             val protMatchPropsAsJSON = if( protMatchRsmPropsById != null ) Some(ProfiJson.serialize( protMatchRsmPropsById(protMatchId) )) else None
-          
+            
             // Insert protein match mapping
             stmt.executeWith(
               protSet.id,
               protMatchId,
+              peptideSet.isSubset,
               protMatchPropsAsJSON,
               rsmId
             )

@@ -94,7 +94,7 @@ case class FragmentIonType private (
   
   override def toString():String = {
     this.ionSeries.toString
-    //if( neutralLoss != None ) ionSeries + "-" + neutralLoss.get   
+    //if( neutralLoss.isDefined ) ionSeries + "-" + neutralLoss.get   
     //else ionSeries.toString
   }
 }

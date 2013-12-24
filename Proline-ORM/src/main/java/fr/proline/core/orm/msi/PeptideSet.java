@@ -31,7 +31,7 @@ public class PeptideSet implements Serializable {
     private long id;
 
     @Column(name = "is_subset")
-    private Boolean isSubset;
+    private boolean isSubset;
 
     private float score;
 
@@ -81,11 +81,11 @@ public class PeptideSet implements Serializable {
 	id = pId;
     }
 
-    public Boolean getIsSubset() {
+    public boolean getIsSubset() {
 	return this.isSubset;
     }
 
-    public void setIsSubset(Boolean isSubset) {
+    public void setIsSubset(boolean isSubset) {
 	this.isSubset = isSubset;
     }
 

@@ -30,7 +30,7 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
     for( (peptideId, pepMatchGroup) <- (peptideMatchesByPepId) ) {
       
       val pepMatchIds = pepMatchGroup.map( _.id )
-      /*val peptideMatchPropertiesById = pepMatchGroup.filter { _.properties != None }
+      /*val peptideMatchPropertiesById = pepMatchGroup.filter { _.properties.isDefined }
                                                     .map { pepMatch => pepMatch.id -> pepMatch.properties.get } toMap*/
       
       // Build peptide instance
@@ -158,10 +158,10 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
           
           var strictSubsetIds: Array[Long] = null
           var subsumableSubsetIds: Array[Long] = null
-          if( cluster.strictSubsetsIds != None ) {
+          if( cluster.strictSubsetsIds.isDefined ) {
             strictSubsetIds = cluster.strictSubsetsIds.get.map { peptideSetIdByClusterId(_) } toArray
           }
-          if( cluster.subsumableSubsetsIds != None ) {
+          if( cluster.subsumableSubsetsIds.isDefined ) {
             subsumableSubsetIds = cluster.subsumableSubsetsIds.get.map { peptideSetIdByClusterId(_) } toArray
           }
           
@@ -206,6 +206,18 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
       
       // Add peptide set to the list
       peptideSets += peptideSet
+    }
+    
+    // Populate strictSubsets and subsumableSubsets
+    // TODO: do the same in the Parsimonious algo or merge the 2 algos into a single one
+    val peptideSetById = Map() ++ peptideSets.map( ps => ps.id -> ps )
+    for( peptideSet <- peptideSets ) {
+      if( peptideSet.hasStrictSubset ) {
+        peptideSet.strictSubsets = Some( peptideSet.strictSubsetIds.map( peptideSetById(_) ) )
+      }
+      if( peptideSet.hasSubsumableSubset ) {
+        peptideSet.subsumableSubsets = Some( peptideSet.subsumableSubsetIds.map( peptideSetById(_) ) )
+      }
     }
     
     // Update peptide instance counts

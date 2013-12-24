@@ -65,10 +65,6 @@ class SQLResultSummaryProvider(
         
         // Check if the result summary corresponds to a decoy result set
         val rsType = r.getString(MsiDbResultSetTable.columns.TYPE)
-        val isDecoy = rsType matches "DECOY.+"
-        // FIXME: remove this fix (protein_set table doesn't have a is_decoy column)
-        rsmProtSets.foreach( _.isDecoy = isDecoy )
-        
         val isQuantified = r.getBooleanOrElse(RSMCols.IS_QUANTIFIED,false)
         
         // Decode JSON properties

@@ -23,7 +23,7 @@ import fr.proline.core.orm.uds.Instrument;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.JDBCReturningWork;
 import fr.proline.repository.util.JPAUtils;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 public class JPAUtilsTest extends DatabaseTestCase {
 

@@ -145,7 +145,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       //peptideMatchIds = pepMatchIds,
       peptideMatches = pepMatches,
       children = pepInstChildren,
-      //unmodifiedPeptideId = if( unmodifiedPep == None ) 0 else unmodifiedPep.id,
+      //unmodifiedPeptideId = if( unmodifiedPep.isEmpty ) 0 else unmodifiedPep.id,
       unmodifiedPeptide = unmodifiedPep,
       proteinMatchesCount = msiPepInst.getProteinMatchCount(),
       proteinSetsCount = msiPepInst.getProteinSetCount(),

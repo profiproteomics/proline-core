@@ -133,7 +133,7 @@ class CreateMasterMap(
     // Update map set
     mapSet.masterMap = newMasterMap
     
-    if (normalizationMethod != None && mapSet.childMaps.length > 1) {
+    if (normalizationMethod.isDefined && mapSet.childMaps.length > 1) {
 
       // Instantiate a Cmd for map set normalization
       logger.info("normalizing maps...")

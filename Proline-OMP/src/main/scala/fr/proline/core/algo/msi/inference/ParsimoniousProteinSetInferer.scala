@@ -32,7 +32,7 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
     for( (peptideId, pepMatchGroup) <- (peptideMatchesByPepId) ) {
       
       val pepMatchIds = pepMatchGroup.map( _.id )
-      /*val peptideMatchPropertiesById = pepMatchGroup.filter { _.properties != None }
+      /*val peptideMatchPropertiesById = pepMatchGroup.filter { _.properties.isDefined }
                                                     .map { pepMatch => pepMatch.id -> pepMatch.properties.get } toMap*/
       
       // Build peptide instance
@@ -176,10 +176,10 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
           
           var strictSubsetIds: Array[Long] = null
           var subsumableSubsetIds: Array[Long] = null
-          if( cluster.strictSubsetsIds != None ) {
+          if( cluster.strictSubsetsIds.isDefined ) {
             strictSubsetIds = cluster.strictSubsetsIds.get.map { peptideSetIdByClusterId(_) } toArray
           }
-          if( cluster.subsumableSubsetsIds != None ) {
+          if( cluster.subsumableSubsetsIds.isDefined ) {
             subsumableSubsetIds = cluster.subsumableSubsetsIds.get.map { peptideSetIdByClusterId(_) } toArray
           }
           

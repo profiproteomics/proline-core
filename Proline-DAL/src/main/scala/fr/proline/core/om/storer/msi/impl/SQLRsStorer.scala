@@ -116,11 +116,11 @@ class SQLRsStorer(
     val msiDb = context.getMSIDbConnectionContext
 
     /*val rsPeptides = resultSet.peptides
-    if( rsPeptides.find( _.id < 0 ) != None )
+    if( rsPeptides.find( _.id < 0 ).isDefined )
       throw new Exception("result set peptides must first be persisted")    
     
     val rsProteins = resultSet.getProteins.getOrElse( new Array[Protein](0) )
-    if( rsProteins.find( _.id < 0 ) != None )
+    if( rsProteins.find( _.id < 0 ).isDefined )
       throw new Exception("result set proteins must first be persisted")*/
 
     // Retrieve the list of existing peptides in the current MSIdb

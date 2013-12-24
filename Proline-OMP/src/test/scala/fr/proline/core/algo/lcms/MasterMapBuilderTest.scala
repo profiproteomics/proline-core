@@ -18,7 +18,7 @@ class MasterMapBuilderTest extends JUnitSuite  with Logging {
     val nbMaps = 3
     val nbFeatures = 1000
     
-    val runMapGenerator = new RunMapFakeGenerator(
+    val rawMapGenerator = new RawMapFakeGenerator(
       nbFeatures = nbFeatures,
       minMoz = LcMsRunGeneratorsTest.MIN_MOZ,
       maxMoz = LcMsRunGeneratorsTest.MAX_MOZ,
@@ -27,7 +27,7 @@ class MasterMapBuilderTest extends JUnitSuite  with Logging {
     )
     
     val lcmsRun = LcMsRunGeneratorsTest.lcmsRunGenerator.generateLcMsRun()
-    val runMap = runMapGenerator.generateRunMap( lcmsRun )
+    val rawMap = rawMapGenerator.generateRawMap( lcmsRun )
     
     val alnFakeGen = new MapAlignmentFakeGenerator( distortion = Distortions.SINE_DISTORTION(), amplitude = 30f )
     val mapSetFakeGen = new LcMsMapSetFakeGenerator(
@@ -38,7 +38,7 @@ class MasterMapBuilderTest extends JUnitSuite  with Logging {
     )
     
     // Generate a new map set
-    val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, runMap)
+    val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, rawMap)
     
     // Build the corresponding master map
     val ftMappingParams = FeatureMappingParams(mozTol=10., mozTolUnit= "PPM", timeTol=20f )  

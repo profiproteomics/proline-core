@@ -125,7 +125,7 @@ abstract class ILcMsMap {
 
 }
 
-object RunMap extends InMemoryIdGen
+object RawMap extends InMemoryIdGen
 
 // TODO:  move in Scala Commons ???
 trait IEntityIdentifier {
@@ -133,7 +133,7 @@ trait IEntityIdentifier {
 }
 case class Identifier( var id: Long ) extends IEntityIdentifier
 
-case class RunMap(
+case class RawMap(
             
   // Required fields
   var id: Long,
@@ -182,7 +182,7 @@ case class RunMap(
       isAlnReference = false,
       features = features,
       featureScoring = featureScoring,
-      runMapIdentifiers = List( this ),
+      rawMapIdentifiers = List( this ),
       runId = Some(runId),
       mapSetId = mapSetId
     )
@@ -209,8 +209,8 @@ case class ProcessedMap(
   var isAlnReference: Boolean,
   
   var mapSetId: Long,
-  //@transient val runMaps: Array[RunMap], // Many values only for a master map
-  @transient var runMapIdentifiers: Seq[IEntityIdentifier],
+  //@transient val rawMaps: Array[RawMap], // Many values only for a master map
+  @transient var rawMapIdentifiers: Seq[IEntityIdentifier],
   
   // Immutable optional fields
   val description: String = "",
@@ -228,15 +228,15 @@ case class ProcessedMap(
   
   // Requirements
   require( modificationTimestamp != null )
-  if( !isMaster ) require( runMapIdentifiers.length == 1 )
+  if( !isMaster ) require( rawMapIdentifiers.length == 1 )
   
-  def getRunMapIds(): Seq[Long] = runMapIdentifiers.map(_.id)
+  def getRawMapIds(): Seq[Long] = rawMapIdentifiers.map(_.id)
   
   // TODO: note this is a way to generalize to MSI OM
-  def getRunMaps(): Seq[Option[RunMap]] = {
-    runMapIdentifiers.map { runMapIdentifier =>
-      runMapIdentifier match {
-        case runMap: RunMap => Some(runMap)
+  def getRawMaps(): Seq[Option[RawMap]] = {
+    rawMapIdentifiers.map { rawMapIdentifier =>
+      rawMapIdentifier match {
+        case rawMap: RawMap => Some(rawMap)
         case _ => None
       }
     }
@@ -454,7 +454,7 @@ case class MapAlignmentSet(
     // Select right map alignment
     var mapAln = mapAlignments find { x => mass >= x.massRange._1 && mass < x.massRange._2 }
     // Small workaround for masses greater than the biggest map alignment
-    if( mapAln == None ) { mapAln = Some(mapAlignments.last) }
+    if( mapAln.isEmpty ) { mapAln = Some(mapAlignments.last) }
     
     // Convert aligned map elution time into reference map one
     mapAln.get.calcReferenceElutionTime( elutionTime )
@@ -528,22 +528,22 @@ case class MapSet(
   
   def getChildMapIds() = childMaps map { _.id }
 
-  def getRunMapIds(): Array[Long] = {
+  def getRawMapIds(): Array[Long] = {
   
-    val runMapIds = new ArrayBuffer[Long](childMaps.length)
+    val rawMapIds = new ArrayBuffer[Long](childMaps.length)
     for( childMap <- childMaps ) {
-      if( childMap.isProcessed == false ) { runMapIds += childMap.id }
-      else { runMapIds ++= childMap.getRunMapIds }
+      if( childMap.isProcessed == false ) { rawMapIds += childMap.id }
+      else { rawMapIds ++= childMap.getRawMapIds }
     }
     
-    runMapIds.toArray
+    rawMapIds.toArray
   }
   
-  def getProcessedMapIdByRunMapId = {
-    (for( childMap <- childMaps; if childMap.isProcessed; runMapId <- childMap.getRunMapIds ) yield runMapId -> childMap.id).toMap
+  def getProcessedMapIdByRawMapId = {
+    (for( childMap <- childMaps; if childMap.isProcessed; rawMapId <- childMap.getRawMapIds ) yield rawMapId -> childMap.id).toMap
   }
 
-  def getNormalizationFactorByMapId: Map[Long,Float] = { 
+  def getNormalizationFactorByMapId: Map[Long,Float] = {
     childMaps.map( childMap => ( childMap.id -> childMap.normalizationFactor ) ).toMap
   }
   

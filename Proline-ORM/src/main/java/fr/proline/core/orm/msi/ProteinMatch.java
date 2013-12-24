@@ -60,7 +60,7 @@ public class ProteinMatch implements Serializable {
     private int peptideCount;
 
     @Column(name = "peptide_match_count")
-    private Integer peptideMatchCount;
+    private int peptideMatchCount;
 
     @ManyToOne
     @JoinColumn(name = "result_set_id")
@@ -149,11 +149,11 @@ public class ProteinMatch implements Serializable {
 	peptideCount = pPeptideCount;
     }
 
-    public Integer getPeptideMatchCount() {
+    public int getPeptideMatchCount() {
 	return this.peptideMatchCount;
     }
 
-    public void setPeptideMatchCount(Integer peptideMatchCount) {
+    public void setPeptideMatchCount(int peptideMatchCount) {
 	this.peptideMatchCount = peptideMatchCount;
     }
 

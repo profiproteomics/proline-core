@@ -5,7 +5,7 @@ import fr.proline.core.om.model.lcms.Feature
 import fr.proline.util.random._
 
 /**
- * Utility object containing helper functions for the generation a faked RunMap.
+ * Utility object containing helper functions for the generation a faked RawMap.
  */
 object LcMsRandomator {
  

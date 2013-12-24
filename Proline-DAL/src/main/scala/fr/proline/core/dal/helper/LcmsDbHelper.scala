@@ -123,14 +123,14 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
   }
   
 
-  def getMs2EventIdsByFtId( runMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+  def getMs2EventIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
       val featureMs2EventsByFtId = new java.util.HashMap[Long,ArrayBuffer[Long]]
       ezDBC.selectAndProcess( 
           "SELECT feature_id, ms2_event_id FROM feature_ms2_event " + 
-          "WHERE run_map_id IN (" + runMapIds.mkString(",") + ")" ) { r =>
+          "WHERE run_map_id IN (" + rawMapIds.mkString(",") + ")" ) { r =>
             
           val( featureId, ms2EventId ) = (toLong(r.nextAny), toLong(r.nextAny))
           if( !featureMs2EventsByFtId.containsKey(featureId) ) {

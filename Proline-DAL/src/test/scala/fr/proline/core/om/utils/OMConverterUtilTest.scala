@@ -1,11 +1,11 @@
 package fr.proline.core.om.utils
 
 import org.junit.Before
-import fr.proline.repository.utils.DatabaseTestCase
+import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.repository.util.JPAUtils
 import org.junit.After
 import org.junit.Assert._
-import fr.proline.repository.utils.DatabaseUtils
+import fr.proline.repository.util.DatabaseUtils
 import fr.proline.core.orm.ps.PeptidePtm
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.LocatedPtm

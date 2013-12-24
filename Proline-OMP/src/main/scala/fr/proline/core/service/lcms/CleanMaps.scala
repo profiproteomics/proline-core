@@ -62,7 +62,7 @@ class CleanMaps(
     }*/
     
     // Clusterize features if requested
-    if( clusteringParams != None ) {
+    if( clusteringParams.isDefined ) {
       
       //print "clusterize features\n" if this.verbose
       

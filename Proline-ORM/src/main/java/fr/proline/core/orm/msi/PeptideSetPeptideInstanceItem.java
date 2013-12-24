@@ -24,7 +24,7 @@ public class PeptideSetPeptideInstanceItem implements Serializable {
     private PeptideSetPeptideInstanceItemPK id;
 
     @Column(name = "is_best_peptide_set")
-    private Boolean isBestPeptideSet;
+    private boolean isBestPeptideSet = false;
 
     @ManyToOne
     @JoinColumn(name = "result_summary_id")
@@ -59,11 +59,11 @@ public class PeptideSetPeptideInstanceItem implements Serializable {
 	this.id = id;
     }
 
-    public Boolean getIsBestPeptideSet() {
+    public boolean getIsBestPeptideSet() {
 	return this.isBestPeptideSet;
     }
 
-    public void setIsBestPeptideSet(Boolean isBestPeptideSet) {
+    public void setIsBestPeptideSet(boolean isBestPeptideSet) {
 	this.isBestPeptideSet = isBestPeptideSet;
     }
 

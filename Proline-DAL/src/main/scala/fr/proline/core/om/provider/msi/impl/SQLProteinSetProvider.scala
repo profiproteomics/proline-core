@@ -126,13 +126,18 @@ class SQLProteinSetProvider(
 
       protSetItemRecordsByProtSetId(protSetId).foreach { protSetItem =>
         
-        val protMatchId = toLong(protSetItem(ProtSetItemCols.PROTEIN_MATCH_ID))
-        protMatchIdsBuilder += protMatchId
-        
-        val propertiesAsJSON = protSetItem(ProtSetItemCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-        if (propertiesAsJSON != null) {
-          protMatchPropertiesById += protMatchId -> ProfiJson.deserialize[ProteinMatchResultSummaryProperties](propertiesAsJSON)
+        // Link only protein matches which do not belong to a subset
+        val isInSubset: Boolean = protSetItem(ProtSetItemCols.IS_IN_SUBSET)
+        if ( isInSubset == false ) {
+          val protMatchId = toLong(protSetItem(ProtSetItemCols.PROTEIN_MATCH_ID))
+          protMatchIdsBuilder += protMatchId
+
+          val propertiesAsJSON = protSetItem(ProtSetItemCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
+          if (propertiesAsJSON != null) {
+            protMatchPropertiesById += protMatchId -> ProfiJson.deserialize[ProteinMatchResultSummaryProperties](propertiesAsJSON)
+          }
         }
+        
       }
       
       // Decode JSON properties
@@ -141,7 +146,7 @@ class SQLProteinSetProvider(
       
       val protSet = new ProteinSet(
         id = protSetId,
-        isDecoy = false, // FIXME: add to MSIdb and set this value here instead of in the ResultSummaryProvider
+        isDecoy = protSetRecord(ProtSetCols.IS_DECOY),
         peptideSet = pepSet,
         hasPeptideSubset = pepSet.hasSubset,
         isValidated = protSetRecord(ProtSetCols.IS_VALIDATED),

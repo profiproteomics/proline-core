@@ -14,7 +14,7 @@ object MaxQuantMapParser {
 
 class MaxQuantMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
 
     def toStandardName(s: String): String = {
       //to put in ILcmsMapFileParser maybe
@@ -97,7 +97,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
 
     lines.map(s => processLine(s))
 
-    val runMap = new RunMap(
+    val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
@@ -112,7 +112,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
       )
     )
 
-    Some(runMap)
+    Some(rawMap)
   }
 
 }

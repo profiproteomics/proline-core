@@ -59,7 +59,7 @@ object ResultSetMerger extends Logging {
         
         val pepId = seqMatch.getPeptideId
         val parentPepMatchId = parentPepMatchIdByPepId.get(pepId)
-        if( parentPepMatchId != None ) {
+        if( parentPepMatchId.isDefined ) {
           
           // Build new sequence match corresponding to the merged peptide match
           val parentSeqMatch = seqMatch.copy( bestPeptideMatchId = parentPepMatchId.get, resultSetId = rsID )
@@ -165,7 +165,7 @@ class ResultSetMerger extends Logging {
         
         // Check if peptides matches corresponding to this sequence match are loaded in the result set
         // Note that peptide matches with a rank greater than 1 may not be loaded
-        if( tmpPeptideMatches != None ) {
+        if( tmpPeptideMatches.isDefined ) {
           
           var bestPepMatchScore = 0f
           var bestPepMatch: PeptideMatch = null
@@ -197,7 +197,7 @@ class ResultSetMerger extends Logging {
       var coverage = 0f
       if( proteinId != 0 && seqLengthByProtId.isDefined) {
         val seqLength = seqLengthByProtId.get.get(proteinId)
-        if( seqLength == None ) {
+        if( seqLength.isEmpty ) {
           throw new Exception( "can't find a sequence length for the protein with id='"+proteinId+"'" )
         }
         

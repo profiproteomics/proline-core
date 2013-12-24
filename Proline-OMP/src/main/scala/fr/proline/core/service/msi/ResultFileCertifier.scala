@@ -30,7 +30,7 @@ class ResultFileCertifier(
     for ((fileType, files) <- resultIdentFilesByFormat) {
       // Get Right ResultFile provider
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
-      require(rfProvider != None, "No ResultFileProvider for specified identification file format "+fileType)
+      require(rfProvider.isDefined, "No ResultFileProvider for specified identification file format "+fileType)
 
       val storer = BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
 

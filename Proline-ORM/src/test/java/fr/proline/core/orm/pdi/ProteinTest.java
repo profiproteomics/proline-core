@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 public class ProteinTest extends DatabaseTestCase {
 
@@ -66,7 +66,7 @@ public class ProteinTest extends DatabaseTestCase {
 	try {
 	    BioSequence bioSeq = pdiEm.find(BioSequence.class, Long.valueOf(171L));
 	    assertNotNull(bioSeq);
-	    assertEquals(bioSeq.getLength(), Integer.valueOf(338));
+	    assertEquals(bioSeq.getLength(), 338);
 	    assertEquals(bioSeq.getProteinIdentifiers().size(), 4);
 	} finally {
 

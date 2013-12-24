@@ -34,7 +34,7 @@ class MedianRatioNormalizer extends IMapSetNormalizer {
         for( mapId <- nonRefMapIds ) {
           
           val childFt = childFtByMapId.get( mapId )
-          if( childFt != None && childFt.get.intensity > 0 ) {
+          if( childFt.isDefined && childFt.get.intensity > 0 ) {
             val intRatio = refChildFt.intensity / childFt.get.intensity
             intensityRatiosByMapId.get(mapId) += intRatio.toFloat
           }

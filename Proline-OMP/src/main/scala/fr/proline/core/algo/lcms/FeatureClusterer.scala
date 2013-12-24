@@ -40,9 +40,9 @@ class FeatureClusterer(
     def apply(a: Feature, b: Feature): Boolean = if (a.elutionTime < b.elutionTime) true else false
   }
   
-  private val( runMapId, procMapId ) = lcmsMap match {
+  private val( rawMapId, procMapId ) = lcmsMap match {
     case procMap: ProcessedMap => (0L,procMap.id)
-    case runMap: RunMap => (runMap.id,0L)
+    case rawMapId: RawMap => (rawMapId.id,0L)
   }
   
   // Retrieve parameters
@@ -188,7 +188,7 @@ class FeatureClusterer(
 
     } else {
       // Create new processed map from existing run map
-      lcmsMap.asInstanceOf[RunMap].toProcessedMap(
+      lcmsMap.asInstanceOf[RawMap].toProcessedMap(
         number = 0,
         mapSetId = 0,
         features = clusterizedFeatures
@@ -260,7 +260,7 @@ class FeatureClusterer(
         lastScanInitialId = lastScanInitialId,
         apexScanInitialId = apexScanInitialId,
         ms2EventIds = ms2EventIds,
-        runMapId = runMapId,
+        rawMapId = rawMapId,
         processedMapId = procMapId
       )
 

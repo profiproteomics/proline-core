@@ -15,14 +15,14 @@ class LcMsMapSetFakeGenerator(
   // Note: the same LcMsRun is used to build all child maps
   // This imply that all feature are related to the same LcMsRun
   // The scan time values have thus to be modified according to the MapAlignmentSet by a further algorithm
-  def generateMapSet( lcmsRun: LcMsRun, runMap: RunMap ): MapSet = {
+  def generateMapSet( lcmsRun: LcMsRun, rawMap: RawMap ): MapSet = {
     
     val mapSetId = MapSet.generateNewId
     
     val processedMaps = new ArrayBuffer[ProcessedMap](nbMaps)
     for( mapNumber <- 1 to nbMaps ) {
-      val clonedRunMap = _cloneRunMap(runMap)
-      processedMaps += clonedRunMap.toProcessedMap(mapNumber, mapSetId, clonedRunMap.features)
+      val clonedRawMap = _cloneRawMap(rawMap)
+      processedMaps += clonedRawMap.toProcessedMap(mapNumber, mapSetId, clonedRawMap.features)
     }
     
     val refMapId = processedMaps(0).id
@@ -73,15 +73,15 @@ class LcMsMapSetFakeGenerator(
     )
   }
   
-  private def _cloneRunMap( runMap: RunMap ): RunMap = {
-    val newRunMapId = RunMap.generateNewId
+  private def _cloneRawMap( rawMap: RawMap ): RawMap = {
+    val newRawMapId = RawMap.generateNewId
     
-    val features = runMap.features.map { ft => 
-      val ftRelations = ft.relations.copy( runMapId = newRunMapId )
+    val features = rawMap.features.map { ft => 
+      val ftRelations = ft.relations.copy( rawMapId = newRawMapId )
       ft.copy( id = Feature.generateNewId, relations = ftRelations )
     }
     
-    runMap.copy( id = newRunMapId, creationTimestamp = new java.util.Date, features = features)
+    rawMap.copy( id = newRawMapId, creationTimestamp = new java.util.Date, features = features)
   }
   
 }

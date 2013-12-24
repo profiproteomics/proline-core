@@ -8,7 +8,10 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.{ InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.core.om.utils.PeptideIdent
-import fr.proline.core.orm.msi.{ MsiSearch, ProteinMatchSeqDatabaseMapPK }
+import fr.proline.core.orm.msi.MsiSearch
+import fr.proline.core.orm.msi.PeptideReadablePtmString
+import fr.proline.core.orm.msi.PeptideReadablePtmStringPK
+import fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMapPK
 import fr.proline.core.orm.msi.ResultSet.Type
 import fr.proline.core.orm.msi.SequenceMatchPK
 import fr.proline.core.orm.msi.repository.{ MsiEnzymeRepository => msiEnzymeRepo, MsiInstrumentConfigRepository => msiInstrumentConfigRepo, MsiPeaklistSoftwareRepository => msiPeaklistSoftwareRepo, MsiPeptideRepository => msiPeptideRepo, MsiSeqDatabaseRepository => msiSeqDatabaseRepo, ScoringRepository => scoringRepo }
@@ -17,7 +20,7 @@ import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => psPeptideRepo,
 import fr.proline.core.orm.uds.repository.{ UdsEnzymeRepository => udsEnzymeRepo, UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo, UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo }
 import fr.proline.util.StringUtils
 import fr.proline.core.utils.ResidueUtils._
-import fr.proline.core.orm.msi.PeptideReadablePtmString
+
 
 /**
  * JPA implementation of ResultSet storer.
@@ -1081,8 +1084,14 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         if (optionalMsiPeptide.isEmpty) {
           logger.warn("Unable to retrieve Peptide [" + peptIdent + "] from cache")
         } else {
+          val msiPeptide = optionalMsiPeptide.get
+          val readablePtmStringEntityPK = new PeptideReadablePtmStringPK()
+          readablePtmStringEntityPK.setPeptideId(msiPeptide.getId)
+          readablePtmStringEntityPK.setResultSetId(msiResultSet.getId)
+          
           val readablePtmStringEntity = new PeptideReadablePtmString()
-          readablePtmStringEntity.setPeptide(optionalMsiPeptide.get) // MSI Peptide must be in persistence context
+          readablePtmStringEntity.setId(readablePtmStringEntityPK)
+          readablePtmStringEntity.setPeptide(msiPeptide) // MSI Peptide must be in persistence context
           readablePtmStringEntity.setResultSet(msiResultSet) // MSI ResultSet must be in persistence context
           readablePtmStringEntity.setReadablePtmString(peptide.readablePtmString)
 

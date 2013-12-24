@@ -55,7 +55,7 @@ public class SequenceDbInstance implements Serializable {
     private Integer residueCount;
 
     @Column(name = "sequence_count")
-    private Integer sequenceCount;
+    private int sequenceCount;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -140,11 +140,11 @@ public class SequenceDbInstance implements Serializable {
 	this.residueCount = residueCount;
     }
 
-    public Integer getSequenceCount() {
+    public int getSequenceCount() {
 	return this.sequenceCount;
     }
 
-    public void setSequenceCount(Integer sequenceCount) {
+    public void setSequenceCount(int sequenceCount) {
 	this.sequenceCount = sequenceCount;
     }
 

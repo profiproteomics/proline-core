@@ -68,7 +68,7 @@ class ResultSetBuilder(val resultSetId: Long, val isDecoy: Boolean = false, seqL
     var coverage = 0f
     if (proteinId != 0 && seqLengthByProtId.isDefined) {
       val seqLength = seqLengthByProtId.get.get(proteinId)
-      if (seqLength == None) {
+      if (seqLength.isEmpty) {
         throw new Exception("can't find a sequence length for the protein with id='" + proteinId + "'")
       }
 

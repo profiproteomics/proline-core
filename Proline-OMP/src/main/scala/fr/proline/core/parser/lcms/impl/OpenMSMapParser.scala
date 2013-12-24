@@ -23,7 +23,7 @@ object OpenMSMapParser {
 
 class OpenMSMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
     val node = XML.load(io.Source.fromFile(filePath).getLines.toString)
 
     val nodeSequence = node \ OpenMSMapParser.targetLabel
@@ -88,7 +88,7 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       features += feature
     }
 
-    val runMap = new RunMap(
+    val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
@@ -103,7 +103,7 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       )
     )
 
-    Some(runMap)
+    Some(rawMap)
   }
 
 }

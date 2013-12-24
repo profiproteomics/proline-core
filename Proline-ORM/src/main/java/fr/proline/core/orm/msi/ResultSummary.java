@@ -47,7 +47,7 @@ public class ResultSummary implements Serializable {
     private String description;
 
     @Column(name = "is_quantified")
-    private Boolean isQuantified;
+    private boolean isQuantified = false;
 
     @Column(name = "modification_timestamp")
     private Timestamp modificationTimestamp;
@@ -108,11 +108,11 @@ public class ResultSummary implements Serializable {
 	this.description = description;
     }
 
-    public Boolean getIsQuantified() {
+    public boolean getIsQuantified() {
 	return this.isQuantified;
     }
 
-    public void setIsQuantified(Boolean isQuantified) {
+    public void setIsQuantified(boolean isQuantified) {
 	this.isQuantified = isQuantified;
     }
 

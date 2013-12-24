@@ -12,7 +12,7 @@ import fr.proline.core.parser.lcms.ExtraParameters
 
 class SuperHirnMapParser extends ILcmsMapFileParser {
   
-  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
     val node = XML.load(io.Source.fromFile(filePath).getLines.toString)
 
     val features = ArrayBuffer[Feature]()
@@ -62,7 +62,7 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
       features += feature
 
     }
-    val runMap = new RunMap(
+    val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
@@ -77,7 +77,7 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
       )
     )
 
-    Some(runMap)
+    Some(rawMap)
 
   }
 

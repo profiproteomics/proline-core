@@ -55,7 +55,7 @@ object Peptide extends InMemoryIdGen with Logging {
     var locatedPtms: Array[LocatedPtm] = null
     
     // Check if position constraints are provided
-    if( positionConstraints != None ) {
+    if( positionConstraints.isDefined ) {
       val filteredLocatedPtms = new ArrayBuffer[LocatedPtm]
       
       for(tmpLocatedPtm <- tmpLocatedPtms ) {
@@ -177,7 +177,7 @@ object Peptide extends InMemoryIdGen with Logging {
     var ptmString = ""
     for(seqPos <- putativeSeqPositions ) {
       val locatedPtmStrings = locatedPtmStringBySeqPos.get(seqPos)
-      if( locatedPtmStrings != None ) {
+      if( locatedPtmStrings.isDefined ) {
         ptmString += locatedPtmStrings.get.toList
                                       .sortWith { (a,b) => a < b }
                                       .map { ptmStr => seqPos + "[" + ptmStr + "]" }
@@ -390,9 +390,9 @@ case class PeptideMatch ( // Required fields
   @JsonProperty lazy val peptideId = this.peptide.id
   
   // Related objects ID getters 
-  def getChildrenIds : Array[Long] = { if(children != null && children != None) children.get.map(_.id) else childrenIds  }
+  def getChildrenIds : Array[Long] = { if(children != null && children.isDefined) children.get.map(_.id) else childrenIds  }
   
-  def getBestChildId : Long = { if(bestChild != null && bestChild != None ) bestChild.get.id else bestChildId }     
+  def getBestChildId : Long = { if(bestChild != null && bestChild.isDefined ) bestChild.get.id else bestChildId }     
   
   /** Returns a MS2 query object. */
   def getMs2Query: Ms2Query = { if(msQuery != null) msQuery.asInstanceOf[Ms2Query] else null }
@@ -464,7 +464,7 @@ case class PeptideInstance ( // Required fields
   // Related objects ID getters
   def getPeptideMatchIds : Array[Long] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds }
   
-  def getUnmodifiedPeptideId : Long = { if(unmodifiedPeptide != null && unmodifiedPeptide != None) unmodifiedPeptide.get.id else unmodifiedPeptideId }
+  def getUnmodifiedPeptideId : Long = { if(unmodifiedPeptide != null && unmodifiedPeptide.isDefined) unmodifiedPeptide.get.id else unmodifiedPeptideId }
   
   def getPeptideMatchProperties( peptideMatchId: Long ): Option[PeptideMatchResultSummaryProperties] = {
     if( peptideMatchPropertiesById != null ) { peptideMatchPropertiesById.get(peptideMatchId) }
@@ -504,7 +504,7 @@ case class PeptideSetItem (
   
   @JsonProperty lazy val peptideInstanceId = peptideInstance.id
   
-  def getPeptideSetId : Long = { if(peptideSet != null && peptideSet != None) peptideSet.get.id else peptideSetId }
+  def getPeptideSetId : Long = { if(peptideSet != null && peptideSet.isDefined) peptideSet.get.id else peptideSetId }
   
 }
 
@@ -541,11 +541,11 @@ case class PeptideSet ( // Required fields
   require( peptideMatchesCount >= items.length )
   
   // Related objects ID getters
-  def getProteinSetId: Long = { if(proteinSet != null && proteinSet != None) proteinSet.get.id else proteinSetId }
+  def getProteinSetId: Long = { if(proteinSet != null && proteinSet.isDefined) proteinSet.get.id else proteinSetId }
   
-  def getStrictSubsetIds: Array[Long] = { if(strictSubsets != null && strictSubsets != None) strictSubsets.get.map(_.id)  else strictSubsetIds  }
+  def getStrictSubsetIds: Array[Long] = { if(strictSubsets != null && strictSubsets.isDefined) strictSubsets.get.map(_.id)  else strictSubsetIds  }
     
-  def getSubsumableSubsetIds: Array[Long] = { if(subsumableSubsets != null && subsumableSubsets != None) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
+  def getSubsumableSubsetIds: Array[Long] = { if(subsumableSubsets != null && subsumableSubsets.isDefined) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
   
   def getPeptideInstances: Array[PeptideInstance] = { items.map( _.peptideInstance ) }
   
@@ -564,12 +564,12 @@ case class PeptideSet ( // Required fields
   
   def hasStrictSubset: Boolean = { 
     if( (strictSubsetIds != null && strictSubsetIds.length > 0 ) || 
-        (strictSubsets != null && strictSubsets != None) ) true else false
+        (strictSubsets != null && strictSubsets.isDefined) ) true else false
   }
   
   def hasSubsumableSubset: Boolean = { 
     if( (subsumableSubsetIds != null && subsumableSubsetIds.length > 0 ) || 
-        (subsumableSubsets != null && subsumableSubsets != None) ) true else false
+        (subsumableSubsets != null && subsumableSubsets.isDefined) ) true else false
   }
   
   def hasSubset : Boolean = { if( hasStrictSubset || hasSubsumableSubset ) true else false }

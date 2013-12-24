@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.uds.repository.ProjectRepository;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 public class ProjectTest extends DatabaseTestCase {
 

@@ -17,7 +17,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import fr.proline.util.StringUtils;
 
@@ -33,6 +32,9 @@ public class ProteinSet implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
+    
+    @Column(name = "is_decoy")
+    private boolean isDecoy;
 
     @Column(name = "is_validated")
     private boolean isValidated;
@@ -76,6 +78,14 @@ public class ProteinSet implements Serializable {
 
     public void setId(final long pId) {
 	id = pId;
+    }
+    
+    public boolean getIsDecoy() {
+	return isDecoy;
+    }
+
+    public void setIsDecoy(final boolean pIsDecoy) {
+	isDecoy = pIsDecoy;
     }
 
     public boolean getIsValidated() {

@@ -60,13 +60,13 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
           unlabeledMoz = r.getDouble(MQPepIonCols.MOZ),
           charge = r.getInt(MQPepIonCols.CHARGE),
           elutionTime = toFloat(r.getAny(MQPepIonCols.ELUTION_TIME)),
-          peptideMatchesCount = 0,//r.getInt(MQPepIonCols.p), // TODO: add to MSIdb
+          peptideMatchesCount = r.getInt(MQPepIonCols.PEPTIDE_MATCH_COUNT),
           selectionLevel = r.getInt(MQComponentTable.columns.SELECTION_LEVEL),
           masterQuantPeptideId = toLong(r.getAny(MQPepIonCols.MASTER_QUANT_PEPTIDE_ID)),
           resultSummaryId = toLong(r.getAny(MQPepIonCols.RESULT_SUMMARY_ID)),
           peptideInstanceId = r.getLongOption(MQPepIonCols.PEPTIDE_INSTANCE_ID),
           bestPeptideMatchId = r.getLongOption(MQPepIonCols.BEST_PEPTIDE_MATCH_ID),
-          lcmsFeatureId = r.getLongOption(MQPepIonCols.LCMS_FEATURE_ID),
+          lcmsMasterFeatureId = r.getLongOption(MQPepIonCols.LCMS_MASTER_FEATURE_ID),
           unmodifiedPeptideIonId = r.getLongOption(MQPepIonCols.UNMODIFIED_PEPTIDE_ION_ID),
           quantPeptideIonMap = quantPepIonMap,
           properties = r.getStringOption(MQPepIonCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantPeptideIonProperties](_))

@@ -10,8 +10,8 @@ CREATE TABLE bio_sequence (
                 alphabet TEXT(3) NOT NULL,
                 sequence TEXT NOT NULL,
                 length INTEGER NOT NULL,
-                mass REAL NOT NULL,
-                pi REAL NOT NULL,
+                mass INTEGER NOT NULL,
+                pi REAL,
                 crc64 TEXT(32) NOT NULL,
                 serialized_properties TEXT,
                 PRIMARY KEY (id)
@@ -84,12 +84,13 @@ CREATE TABLE master_quant_component (
 
 CREATE TABLE master_quant_peptide_ion (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                charge INTEGER,
+                charge INTEGER NOT NULL,
                 moz REAL NOT NULL,
                 elution_time REAL NOT NULL,
                 scan_number INTEGER,
+                peptide_match_count INTEGER NOT NULL,
                 serialized_properties TEXT,
-                lcms_feature_id INTEGER,
+                lcms_master_feature_id INTEGER,
                 peptide_id INTEGER,
                 peptide_instance_id INTEGER,
                 master_quant_peptide_id INTEGER NOT NULL,
@@ -291,9 +292,18 @@ CREATE TABLE peptide_match_relation (
                 FOREIGN KEY (parent_result_set_id) REFERENCES result_set (id)
 );
 
+CREATE TABLE peptide_readable_ptm_string (
+                peptide_id INTEGER NOT NULL,
+                result_set_id INTEGER NOT NULL,
+                readable_ptm_string TEXT NOT NULL,
+                FOREIGN KEY (peptide_id) REFERENCES peptide (id),
+                FOREIGN KEY (result_set_id) REFERENCES result_set (id),
+                PRIMARY KEY (peptide_id, result_set_id)
+);
+
 CREATE TABLE peptide_set (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                is_subset TEXT,
+                is_subset TEXT NOT NULL,
                 score REAL NOT NULL,
                 peptide_count INTEGER,
                 peptide_match_count INTEGER,
@@ -309,7 +319,7 @@ CREATE TABLE peptide_set (
 CREATE TABLE peptide_set_peptide_instance_item (
                 peptide_set_id INTEGER NOT NULL,
                 peptide_instance_id INTEGER NOT NULL,
-                is_best_peptide_set TEXT,
+                is_best_peptide_set TEXT NOT NULL,
                 selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
                 result_summary_id INTEGER NOT NULL,
@@ -342,7 +352,7 @@ CREATE TABLE protein_match (
                 score REAL,
                 coverage REAL NOT NULL,
                 peptide_count INTEGER NOT NULL,
-                peptide_match_count INTEGER,
+                peptide_match_count INTEGER NOT NULL,
                 is_decoy TEXT NOT NULL,
                 is_last_bio_sequence TEXT NOT NULL,
                 serialized_properties TEXT,
@@ -365,6 +375,7 @@ CREATE TABLE protein_match_seq_database_map (
 
 CREATE TABLE protein_set (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                is_decoy TEXT NOT NULL,
                 is_validated TEXT NOT NULL,
                 selection_level INTEGER NOT NULL,
                 serialized_properties TEXT,
@@ -387,6 +398,7 @@ CREATE TABLE protein_set_object_tree_map (
 CREATE TABLE protein_set_protein_match_item (
                 protein_set_id INTEGER NOT NULL,
                 protein_match_id INTEGER NOT NULL,
+                is_in_subset TEXT NOT NULL,
                 serialized_properties TEXT,
                 result_summary_id INTEGER NOT NULL,
                 PRIMARY KEY (protein_set_id, protein_match_id),
@@ -429,21 +441,12 @@ CREATE TABLE result_set_relation (
                 PRIMARY KEY (parent_result_set_id, child_result_set_id)
 );
 
-CREATE TABLE peptide_readable_ptm_string (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    readable_ptm_string VARCHAR NOT NULL,
-    peptide_id BIGINT NOT NULL,
-    result_set_id BIGINT NOT NULL,
-    FOREIGN KEY (peptide_id) REFERENCES peptide (id),
-    FOREIGN KEY (result_set_id) REFERENCES result_set (id)
-);
-
 CREATE TABLE result_summary (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 description TEXT(10000),
                 creation_log TEXT,
                 modification_timestamp TEXT NOT NULL,
-                is_quantified TEXT,
+                is_quantified TEXT NOT NULL,
                 serialized_properties TEXT,
                 decoy_result_summary_id INTEGER,
                 result_set_id INTEGER NOT NULL,
@@ -560,6 +563,10 @@ CREATE TABLE used_ptm (
                 PRIMARY KEY (search_settings_id, ptm_specificity_id)
 );
 
+CREATE UNIQUE INDEX result_set_object_tree_map_idx ON result_set_object_tree_map (result_set_id,schema_name);
+
+CREATE UNIQUE INDEX enzyme_name_idx ON enzyme (name);
+
 CREATE INDEX sequence_match_pep_idx ON sequence_match (peptide_id);
 
 CREATE INDEX sequence_match_prot_match_idx ON sequence_match (protein_match_id);
@@ -569,8 +576,6 @@ CREATE INDEX sequence_match_rs_idx ON sequence_match (result_set_id ASC);
 CREATE INDEX peptide_match_relation_rs_idx ON peptide_match_relation (parent_result_set_id ASC);
 
 CREATE INDEX peptide_set_rsm_idx ON peptide_set (result_summary_id ASC);
-
-CREATE INDEX bio_sequence_crc_idx ON bio_sequence (crc64);
 
 CREATE INDEX protein_set_rsm_idx ON protein_set (result_summary_id ASC);
 
@@ -594,7 +599,13 @@ CREATE INDEX peptide_match_peptide_idx ON peptide_match (peptide_id);
 
 CREATE INDEX peptide_match_rs_idx ON peptide_match (result_set_id ASC);
 
+CREATE UNIQUE INDEX seq_database_fasta_file_path_idx ON seq_database (fasta_file_path);
+
+CREATE UNIQUE INDEX instrument_config_name_idx ON instrument_config (name);
+
 CREATE INDEX peptide_set_relation_rsm_idx ON peptide_set_relation (result_summary_id ASC);
+
+CREATE UNIQUE INDEX peaklist_software_idx ON peaklist_software (name,version);
 
 CREATE INDEX cache_scope_idx ON cache (scope);
 
@@ -608,13 +619,23 @@ CREATE INDEX master_quant_peptide_ion_rsm_idx ON master_quant_peptide_ion (resul
 
 CREATE INDEX pep_set_pep_inst_item_rsm_idx ON peptide_set_peptide_instance_item (result_summary_id ASC);
 
+CREATE UNIQUE INDEX result_summary_object_tree_map_idx ON result_summary_object_tree_map (result_summary_id,schema_name);
+
 CREATE INDEX prot_set_prot_match_item_rsm_idx ON protein_set_protein_match_item (result_summary_id ASC);
 
 CREATE INDEX pep_inst_pep_match_map_rsm_idx ON peptide_instance_peptide_match_map (result_summary_id ASC);
 
 CREATE INDEX pep_set_prot_match_map_rsm_idx ON peptide_set_protein_match_map (result_summary_id ASC);
 
+CREATE UNIQUE INDEX protein_set_object_tree_map_idx ON protein_set_object_tree_map (protein_set_id,schema_name);
+
 CREATE INDEX prot_match_seq_db_map_rs_idx ON protein_match_seq_database_map (result_set_id ASC);
 
+CREATE UNIQUE INDEX peptide_match_object_tree_map_idx ON peptide_match_object_tree_map (peptide_match_id,schema_name);
+
+CREATE UNIQUE INDEX scoring_idx ON scoring (search_engine,name);
+
 CREATE INDEX master_quant_reporter_ion_rsm_idx ON master_quant_reporter_ion (result_summary_id ASC);
+
+CREATE INDEX peptide_readable_ptm_string_rs_idx ON peptide_readable_ptm_string (result_set_id);
 

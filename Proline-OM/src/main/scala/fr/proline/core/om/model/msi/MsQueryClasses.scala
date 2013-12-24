@@ -31,7 +31,7 @@ trait MsQuery {
     msqSerializer.setMoz( this.moz )
     msqSerializer.setCharge( this.charge )
     msqSerializer.setMsLevel( this.msLevel )
-    if( this.properties != None ) {
+    if( this.properties.isDefined ) {
       msqSerializer.setProperties( this.properties.get )
     }
     

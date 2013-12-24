@@ -4,7 +4,7 @@ import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCWork
-import fr.proline.core.dal.tables.lcms.{ LcmsDbInstrumentTable, LcmsDbRunTable, LcmsDbScanTable }
+import fr.proline.core.dal.tables.lcms.{ LcmsDbInstrumentTable, LcmsDbScanTable, LcmsDbScanSequenceTable }
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.lcms.LcMsScanSequence
 import fr.proline.core.om.provider.uds.impl.SQLInstrumentProvider
@@ -39,7 +39,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
       
       // Store the run corresponding to this scan sequence
       var runId: Long = 0L
-      lcmsEzDBC.executePrepared(LcmsDbRunTable.mkInsertQuery(), true) { statement =>
+      lcmsEzDBC.executePrepared(LcmsDbScanSequenceTable.mkInsertQuery(), true) { statement =>
         
         statement.executeWith(
           scanSeq.runId,

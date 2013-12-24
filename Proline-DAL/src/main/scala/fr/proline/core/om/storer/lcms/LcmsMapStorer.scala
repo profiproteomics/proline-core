@@ -7,9 +7,9 @@ import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.storer.lcms.impl._
 import fr.proline.repository.DriverType
 
-trait IRunMapStorer {
+trait IRawMapStorer {
   
-  def storeRunMap( runMap: RunMap, storePeaks: Boolean = false ): Unit
+  def storeRawMap( rawMap: RawMap, storePeaks: Boolean = false ): Unit
   
 }
 
@@ -24,11 +24,11 @@ trait IRunStorer {
 }
 
 /** A factory object for implementations of the IRunMapStorer trait */
-object RunMapStorer {
+object RawMapStorer {
   
-  def apply( lcmsDbCtx: DatabaseConnectionContext ): IRunMapStorer = {
+  def apply( lcmsDbCtx: DatabaseConnectionContext ): IRawMapStorer = {
     
-    new SQLRunMapStorer(lcmsDbCtx)
+    new SQLRawMapStorer(lcmsDbCtx)
     
     /*if( lcmsDbCtx.isJPA ) new JPARunMapStorer(lcmsDbCtx)
     else {

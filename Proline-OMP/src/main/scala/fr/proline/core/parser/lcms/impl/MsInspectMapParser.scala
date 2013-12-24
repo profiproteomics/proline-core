@@ -7,7 +7,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.om.model.lcms.LcMsScanSequence
-import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.model.lcms.RawMap
 import fr.proline.core.om.model.lcms.{ Feature, IsotopicPattern, FeatureRelations, Peak, PeakPickingSoftware }
 import fr.proline.core.parser.lcms.ExtraParameters
 
@@ -17,7 +17,7 @@ object MsInspectMapParser {
 
 class MsInspectMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
     val linesIterator = io.Source.fromFile(filePath).getLines()
 
     var line = if (linesIterator.hasNext) linesIterator.next else return None
@@ -78,7 +78,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
 
       features += feature
     }
-    val runMap = new RunMap(
+    val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
@@ -93,7 +93,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
       )
     )
 
-    Some(runMap)
+    Some(rawMap)
   }
 
 }

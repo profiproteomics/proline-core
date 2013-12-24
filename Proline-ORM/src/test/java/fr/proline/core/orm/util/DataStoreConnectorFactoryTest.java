@@ -21,7 +21,7 @@ import fr.proline.core.orm.uds.UserAccount;
 import fr.proline.repository.ConnectionMode;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 

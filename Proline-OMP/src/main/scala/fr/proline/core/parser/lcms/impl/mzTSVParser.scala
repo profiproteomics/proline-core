@@ -1,7 +1,7 @@
 package fr.proline.core.parser.lcms.impl
 
 import java.util.Date
-import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.model.lcms.RawMap
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.BeanProperty
@@ -75,8 +75,8 @@ case class mzFeature(
   @BeanProperty var isotopicPatterns: Option[Array[mzIsotopicPattern]] = None) {
 
   def toFeature(lcmsScanSeq: LcMsScanSequence, id: Long, ms2Events: Array[Long]): Feature = {
-
-    return Feature(id = id,
+    Feature(
+      id = id,
       moz = moz,
       intensity = area,
       charge = charge,
@@ -85,14 +85,16 @@ case class mzFeature(
       qualityScore = qualityScore,
       ms1Count = ms1Count,
       ms2Count = ms2Count,
-      isOverlapping = if (overlappingFeature != None) true else false,
-      isotopicPatterns = if (isotopicPatterns != None) Some(Array[IsotopicPattern](apexIp.toIsotopicPattern) ++ isotopicPatterns.get.map(ip => ip.toIsotopicPattern)) else Some(Array[IsotopicPattern](apexIp.toIsotopicPattern)),
-      overlappingFeatures = if (overlappingFeature.get != None) Array[Feature](overlappingFeature.get.toFeature(lcmsScanSeq, id, ms2Events)) else Array[Feature](),
-      relations = FeatureRelations(ms2EventIds = ms2Events,
+      isOverlapping = if (overlappingFeature.isDefined) true else false,
+      isotopicPatterns = if (isotopicPatterns.isDefined) Some(Array[IsotopicPattern](apexIp.toIsotopicPattern) ++ isotopicPatterns.get.map(ip => ip.toIsotopicPattern)) else Some(Array[IsotopicPattern](apexIp.toIsotopicPattern)),
+      overlappingFeatures = if (overlappingFeature.isDefined) Array[Feature](overlappingFeature.get.toFeature(lcmsScanSeq, id, ms2Events)) else Array[Feature](),
+      relations = FeatureRelations(
+        ms2EventIds = ms2Events,
         firstScanInitialId = lcmsScanSeq.scanById.get(firstScan).get.initialId,
         lastScanInitialId = lcmsScanSeq.scanById.get(lastScan).get.initialId,
-        apexScanInitialId = lcmsScanSeq.scanById.get(apexScan).get.initialId))
-
+        apexScanInitialId = lcmsScanSeq.scanById.get(apexScan).get.initialId
+      )
+    )
   }
 }
 
@@ -102,7 +104,7 @@ object mzTSVParser {
 
 class mzTSVParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
 
     val lineIterator = io.Source.fromFile(filePath).getLines()
     val columnNames = lineIterator.next.stripLineEnd.split(mzTSVParser.sepChar)
@@ -164,7 +166,7 @@ class mzTSVParser extends ILcmsMapFileParser {
 
     lineIterator.map(s => treatOneLine(columnNames.zip((s.split(mzTSVParser.sepChar))) toMap))
 
-    val runMap = new RunMap(
+    val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
@@ -179,7 +181,7 @@ class mzTSVParser extends ILcmsMapFileParser {
       )
     )
 
-    Some(runMap)
+    Some(rawMap)
   }
 
 }

@@ -33,9 +33,9 @@ public class BioSequence implements Serializable {
 
     private int length;
 
-    private double mass;
+    private int mass;
 
-    private float pi;
+    private Float pi;
 
     private String sequence;
 
@@ -122,15 +122,15 @@ public class BioSequence implements Serializable {
 	return this.mass;
     }
 
-    public void setMass(double mass) {
+    public void setMass(int mass) {
 	this.mass = mass;
     }
 
-    public float getPi() {
+    public Float getPi() {
 	return this.pi;
     }
 
-    public void setPi(float pi) {
+    public void setPi(Float pi) {
 	this.pi = pi;
     }
 

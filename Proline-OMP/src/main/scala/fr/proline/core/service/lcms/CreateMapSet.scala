@@ -35,7 +35,7 @@ class CreateMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
   mapSetName: String,
   processedMaps: Seq[ProcessedMap]
-  //runMaps: Seq[RunMap],
+  //rawMaps: Seq[RawMap],
   //clusteringParams: ClusteringParams
 ) extends ILcMsService {
 
@@ -47,12 +47,12 @@ class CreateMapSet(
     val mapCount = processedMaps.length
     val curTime = new java.util.Date()
     
-    //val pps = runMaps(0).peakPickingSoftware
+    //val pps = rawMaps(0).peakPickingSoftware
     //die "can't filter data which are ! produced by mzDBaccess" if pps.name ne 'mzDBaccess' and this.hasFeatureFilters
     
     // Load runs
     //val scanSeqProvider = new SQLScanSequenceProvider( lcmsDbCtx )
-    //val runIds = runMaps.map { _.runId }
+    //val runIds = rawMaps.map { _.runId }
     //val runs = scanSeqProvider.getScanSequences( runIds )
     //val runById = runs.map { run => run.runId -> run } toMap
     
@@ -88,7 +88,7 @@ class CreateMapSet(
         mapNumber += 1
         
         // Convert to processed map
-        //var processedMap = runMap.toProcessedMap( number = mapNumber, mapSetId = newMapSetId )
+        //var processedMap = rawMap.toProcessedMap( number = mapNumber, mapSetId = newMapSetId )
         
         // Update the map set id of the processed map
         processedMap.mapSetId = newMapSetId
@@ -97,7 +97,7 @@ class CreateMapSet(
         processedMapStorer.insertProcessedMap( processedMap )
         
         // Clean the map
-        //val run = runById( runMap.runId )
+        //val run = runById( rawMap.runId )
         //processedMap = CleanMaps( lcmsDbCtx, processedMap, run.scans, Some(clusteringParams) )
         
         // Set first map as default alignment reference

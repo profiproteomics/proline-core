@@ -7,7 +7,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.lcms.{ LcmsDbRunTable, LcmsDbScanTable }
+import fr.proline.core.dal.tables.lcms.{ LcmsDbScanSequenceTable, LcmsDbScanTable }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IScanSequenceProvider
 import fr.proline.util.sql._
@@ -15,7 +15,7 @@ import fr.proline.util.primitives._
 
 class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends IScanSequenceProvider {
   
-  val RunCols = LcmsDbRunTable.columns
+  val ScanSeqCols = LcmsDbScanSequenceTable.columns
   val ScanCols = LcmsDbScanTable.columns
   
   def getScanSequences( runIds: Seq[Long] ): Array[LcMsScanSequence] = {
@@ -32,13 +32,13 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
     // Load runs
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
-      val runQuery = new SelectQueryBuilder1(LcmsDbRunTable).mkSelectQuery( (t,c) =>
+      val runQuery = new SelectQueryBuilder1(LcmsDbScanSequenceTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.ID ~" IN("~ runIds.mkString(",") ~") "
       )
       
       ezDBC.selectAndProcess( runQuery ) { runRecord =>
         
-        val runScans = scansByRunId(toLong(runRecord.getAny(RunCols.ID)))
+        val runScans = scansByRunId(toLong(runRecord.getAny(ScanSeqCols.ID)))
         
         // Build the scan sequence
         scanSeqs(scanSeqIdx) = buildScanSequence(runRecord, runScans )
@@ -54,12 +54,12 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
   def buildScanSequence( runRecord: ResultSetRow, scans: Array[LcMsScan] ): LcMsScanSequence = {
     
     new LcMsScanSequence(
-      runId = toLong(runRecord.getAny(RunCols.ID)),
-      rawFileName = runRecord.getString(RunCols.RAW_FILE_NAME),
-      minIntensity = runRecord.getDoubleOrElse(RunCols.MIN_INTENSITY,Double.NaN),
-      maxIntensity = runRecord.getDoubleOrElse(RunCols.MAX_INTENSITY,Double.NaN),
-      ms1ScansCount = runRecord.getIntOrElse(RunCols.MS1_SCAN_COUNT,0),
-      ms2ScansCount = runRecord.getIntOrElse(RunCols.MS2_SCAN_COUNT,0),
+      runId = toLong(runRecord.getAny(ScanSeqCols.ID)),
+      rawFileName = runRecord.getString(ScanSeqCols.RAW_FILE_NAME),
+      minIntensity = runRecord.getDoubleOrElse(ScanSeqCols.MIN_INTENSITY,Double.NaN),
+      maxIntensity = runRecord.getDoubleOrElse(ScanSeqCols.MAX_INTENSITY,Double.NaN),
+      ms1ScansCount = runRecord.getIntOrElse(ScanSeqCols.MS1_SCAN_COUNT,0),
+      ms2ScansCount = runRecord.getIntOrElse(ScanSeqCols.MS2_SCAN_COUNT,0),
       scans = scans
     )
   }
@@ -76,7 +76,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
       val scans = new Array[LcMsScan](nbScans)
       
       val runQuery = new SelectQueryBuilder1(LcmsDbScanTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.RUN_ID ~" IN("~ runIdsStr ~") "
+        List(t.*) -> "WHERE "~ t.SCAN_SEQUENCE_ID ~" IN("~ runIdsStr ~") "
       )
       
       ezDBC.selectAndProcess( runQuery ) { scanRecord =>
@@ -102,7 +102,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
       tic = scanRecord.getDouble(ScanCols.TIC),
       basePeakMoz = scanRecord.getDouble(ScanCols.BASE_PEAK_MOZ),
       basePeakIntensity = scanRecord.getDouble(ScanCols.BASE_PEAK_INTENSITY),
-      runId = toLong(scanRecord.getAny(ScanCols.RUN_ID)),
+      runId = toLong(scanRecord.getAny(ScanCols.SCAN_SEQUENCE_ID)),
       precursorMoz = precursorMoz,
       precursorCharge = precursorCharge
     )

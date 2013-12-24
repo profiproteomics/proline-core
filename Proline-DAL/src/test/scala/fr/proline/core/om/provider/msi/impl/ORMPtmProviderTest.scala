@@ -10,7 +10,7 @@ import org.junit.Test
 
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
-import fr.proline.repository.utils.DatabaseTestCase
+import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.context.DatabaseConnectionContext
 

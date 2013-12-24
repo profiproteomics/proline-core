@@ -62,7 +62,7 @@ trait CanBuildSelectQuery extends Logging {
     }
     
     var query = "SELECT "+ aliasedColsAsStrList.mkString(",") +" FROM "+ tblsAsStrList.mkString(",")
-    if( clauses != None ) query += " " + clauses.get
+    if( clauses.isDefined ) query += " " + clauses.get
     
     query
   }

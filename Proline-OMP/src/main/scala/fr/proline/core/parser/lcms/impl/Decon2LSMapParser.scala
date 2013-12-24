@@ -9,7 +9,7 @@ import scala.collection.mutable.{ ArrayBuffer, Set }
 import fr.proline.core.parser.lcms.{ ILcmsMapFileParser, ExtraParameters }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.model.lcms.Peak
-import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.model.lcms.RawMap
 import fr.proline.core.om.model.lcms.Feature
 
 case class Decon2LSParams(
@@ -30,7 +30,7 @@ object Decon2LSMapParser {
 
 class Decon2LSMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters) = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters) = {
 
     ////// Retrieve some vars from extra hash params
     val params = extraParams.asInstanceOf[Decon2LSParams]
@@ -161,7 +161,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
           breakable {
             for (curCycleNum <- cycleNumOfRef + 1 to lastCycleNum) {
               var ipId = extractIsotopicPattern(curCycleNum, ipPicker)
-              if (ipId == None) break
+              if (ipId.isEmpty) break
             }
           }
 
@@ -171,7 +171,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
           breakable {
             for (curCycleNum <- cycleNumOfRef - 1 to firstCycleNum) {
               var ipId = extractIsotopicPattern(curCycleNum, ipPicker_2)
-              if (ipId == None) break
+              if (ipId.isEmpty) break
             }
           }
 
@@ -209,7 +209,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
         }
       }
     }
-    val runMap = new RunMap(
+    val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
@@ -224,7 +224,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
       )
     )
 
-    Some(runMap)
+    Some(rawMap)
 
   }
 

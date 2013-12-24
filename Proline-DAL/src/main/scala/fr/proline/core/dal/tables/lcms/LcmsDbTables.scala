@@ -213,7 +213,7 @@ object LcmsDbMapLayerTable extends LcmsDbMapLayerTable {
 
 object LcmsDbMapObjectTreeMappingColumns extends ColumnEnumeration {
   val $tableName = LcmsDbMapObjectTreeMappingTable.name
-  val ID = Column("id")
+  val MAP_ID = Column("map_id")
   val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
 }
@@ -404,51 +404,32 @@ object LcmsDbProcessedMapMozCalibrationTable extends LcmsDbProcessedMapMozCalibr
   val columns = LcmsDbProcessedMapMozCalibrationColumns
 }
 
-object LcmsDbProcessedMapRunMapMappingColumns extends ColumnEnumeration {
-  val $tableName = LcmsDbProcessedMapRunMapMappingTable.name
+object LcmsDbProcessedMapRawMapMappingColumns extends ColumnEnumeration {
+  val $tableName = LcmsDbProcessedMapRawMapMappingTable.name
   val PROCESSED_MAP_ID = Column("processed_map_id")
-  val RUN_MAP_ID = Column("run_map_id")
+  val RAW_MAP_ID = Column("raw_map_id")
 }
 
-abstract class LcmsDbProcessedMapRunMapMappingTable extends TableDefinition[LcmsDbProcessedMapRunMapMappingColumns.type]
+abstract class LcmsDbProcessedMapRawMapMappingTable extends TableDefinition[LcmsDbProcessedMapRawMapMappingColumns.type]
 
-object LcmsDbProcessedMapRunMapMappingTable extends LcmsDbProcessedMapRunMapMappingTable {
-  val name = "processed_map_run_map_mapping"
-  val columns = LcmsDbProcessedMapRunMapMappingColumns
+object LcmsDbProcessedMapRawMapMappingTable extends LcmsDbProcessedMapRawMapMappingTable {
+  val name = "processed_map_raw_map_mapping"
+  val columns = LcmsDbProcessedMapRawMapMappingColumns
 }
 
-object LcmsDbRunColumns extends ColumnEnumeration {
-  val $tableName = LcmsDbRunTable.name
+object LcmsDbRawMapColumns extends ColumnEnumeration {
+  val $tableName = LcmsDbRawMapTable.name
   val ID = Column("id")
-  val RAW_FILE_NAME = Column("raw_file_name")
-  val MIN_INTENSITY = Column("min_intensity")
-  val MAX_INTENSITY = Column("max_intensity")
-  val MS1_SCAN_COUNT = Column("ms1_scan_count")
-  val MS2_SCAN_COUNT = Column("ms2_scan_count")
-  val SERIALIZED_PROPERTIES = Column("serialized_properties")
-  val INSTRUMENT_ID = Column("instrument_id")
-}
-
-abstract class LcmsDbRunTable extends TableDefinition[LcmsDbRunColumns.type]
-
-object LcmsDbRunTable extends LcmsDbRunTable {
-  val name = "run"
-  val columns = LcmsDbRunColumns
-}
-
-object LcmsDbRunMapColumns extends ColumnEnumeration {
-  val $tableName = LcmsDbRunMapTable.name
-  val ID = Column("id")
-  val RUN_ID = Column("run_id")
+  val SCAN_SEQUENCE_ID = Column("scan_sequence_id")
   val PEAK_PICKING_SOFTWARE_ID = Column("peak_picking_software_id")
   val PEAKEL_FITTING_MODEL_ID = Column("peakel_fitting_model_id")
 }
 
-abstract class LcmsDbRunMapTable extends TableDefinition[LcmsDbRunMapColumns.type]
+abstract class LcmsDbRawMapTable extends TableDefinition[LcmsDbRawMapColumns.type]
 
-object LcmsDbRunMapTable extends LcmsDbRunMapTable {
-  val name = "run_map"
-  val columns = LcmsDbRunMapColumns
+object LcmsDbRawMapTable extends LcmsDbRawMapTable {
+  val name = "raw_map"
+  val columns = LcmsDbRawMapColumns
 }
 
 object LcmsDbScanColumns extends ColumnEnumeration {
@@ -464,7 +445,7 @@ object LcmsDbScanColumns extends ColumnEnumeration {
   val PRECURSOR_MOZ = Column("precursor_moz")
   val PRECURSOR_CHARGE = Column("precursor_charge")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
-  val RUN_ID = Column("run_id")
+  val SCAN_SEQUENCE_ID = Column("scan_sequence_id")
 }
 
 abstract class LcmsDbScanTable extends TableDefinition[LcmsDbScanColumns.type]
@@ -472,6 +453,25 @@ abstract class LcmsDbScanTable extends TableDefinition[LcmsDbScanColumns.type]
 object LcmsDbScanTable extends LcmsDbScanTable {
   val name = "scan"
   val columns = LcmsDbScanColumns
+}
+
+object LcmsDbScanSequenceColumns extends ColumnEnumeration {
+  val $tableName = LcmsDbScanSequenceTable.name
+  val ID = Column("id")
+  val RAW_FILE_NAME = Column("raw_file_name")
+  val MIN_INTENSITY = Column("min_intensity")
+  val MAX_INTENSITY = Column("max_intensity")
+  val MS1_SCAN_COUNT = Column("ms1_scan_count")
+  val MS2_SCAN_COUNT = Column("ms2_scan_count")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val INSTRUMENT_ID = Column("instrument_id")
+}
+
+abstract class LcmsDbScanSequenceTable extends TableDefinition[LcmsDbScanSequenceColumns.type]
+
+object LcmsDbScanSequenceTable extends LcmsDbScanSequenceTable {
+  val name = "scan_sequence"
+  val columns = LcmsDbScanSequenceColumns
 }
 
 object LcmsDbTheoreticalFeatureColumns extends ColumnEnumeration {

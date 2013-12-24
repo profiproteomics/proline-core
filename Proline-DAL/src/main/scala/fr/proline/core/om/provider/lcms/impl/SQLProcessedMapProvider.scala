@@ -8,7 +8,7 @@ import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{ SelectQueryBuilder1, SelectQueryBuilder2 }
 import fr.proline.core.dal.tables.lcms.{ LcmsDbFeatureTable, LcmsDbProcessedMapFeatureItemTable, LcmsDbFeatureClusterItemTable }
-import fr.proline.core.dal.tables.lcms.{ LcmsDbMapTable, LcmsDbProcessedMapTable, LcmsDbProcessedMapRunMapMappingTable, LcmsDbRunMapTable }
+import fr.proline.core.dal.tables.lcms.{ LcmsDbMapTable, LcmsDbProcessedMapTable, LcmsDbProcessedMapRawMapMappingTable, LcmsDbRawMapTable }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IProcessedMapProvider
 import fr.proline.util.primitives._
@@ -29,7 +29,7 @@ class SQLProcessedMapProvider(
   /** Returns a list of features corresponding to a given list of processed map ids */
   def getProcessedMaps( processedMapIds: Seq[Long] ): Array[ProcessedMap] = {
     
-    val runMapIdsByProcessedMapId = getRunMapIdsByProcessedMapId( processedMapIds )
+    val rawMapIdsByProcessedMapId = getRawMapIdsByProcessedMapId( processedMapIds )
     val features = this.getFeatures( processedMapIds )
     // Group features by map id
     val featuresByMapId = features.groupBy(_.relations.processedMapId)
@@ -64,7 +64,7 @@ class SQLProcessedMapProvider(
           isMaster = r.getBoolean(ProcMapCols.IS_MASTER),
           isAlnReference = r.getBoolean(ProcMapCols.IS_ALN_REFERENCE),
           mapSetId = toLong(r.getAny(ProcMapCols.MAP_SET_ID)),
-          runMapIdentifiers = runMapIdsByProcessedMapId(processedMapId).map(Identifier(_)),
+          rawMapIdentifiers = rawMapIdsByProcessedMapId(processedMapId).map(Identifier(_)),
           description = r.getString(LcMsMapCols.DESCRIPTION),
           featureScoring = featureScoring,
           isLocked = r.getBooleanOrElse(ProcMapCols.IS_LOCKED,false),
@@ -83,20 +83,20 @@ class SQLProcessedMapProvider(
     
   }
   
-  def getRunMapIdsByProcessedMapId( processedMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+  def getRawMapIdsByProcessedMapId( processedMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     
-    val runMapIdBufferByProcessedMapId = new HashMap[Long,ArrayBuffer[Long]]
+    val rawMapIdBufferByProcessedMapId = new HashMap[Long,ArrayBuffer[Long]]
     
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
-      val mapMappingQuery = new SelectQueryBuilder1(LcmsDbProcessedMapRunMapMappingTable).mkSelectQuery( (t,c) =>
+      val mapMappingQuery = new SelectQueryBuilder1(LcmsDbProcessedMapRawMapMappingTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.PROCESSED_MAP_ID ~" IN("~ processedMapIds.mkString(",") ~") "
       )
       
       ezDBC.selectAndProcess( mapMappingQuery ) { r =>
         
-        val( processedMapId, runMapId ) = (toLong(r.nextAny), toLong(r.nextAny))
-        runMapIdBufferByProcessedMapId.getOrElseUpdate(processedMapId, new ArrayBuffer[Long](1) ) += runMapId
+        val( processedMapId, rawMapId ) = (toLong(r.nextAny), toLong(r.nextAny))
+        rawMapIdBufferByProcessedMapId.getOrElseUpdate(processedMapId, new ArrayBuffer[Long](1) ) += rawMapId
         
       }
       
@@ -104,14 +104,14 @@ class SQLProcessedMapProvider(
     
     // Convert the HashMap into an immutable Map
     val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]
-    for( processedMapId <- runMapIdBufferByProcessedMapId.keys ) {
-      mapBuilder += ( processedMapId -> runMapIdBufferByProcessedMapId(processedMapId).toArray[Long] )
+    for( processedMapId <- rawMapIdBufferByProcessedMapId.keys ) {
+      mapBuilder += ( processedMapId -> rawMapIdBufferByProcessedMapId(processedMapId).toArray[Long] )
     }
     mapBuilder.result()
   }
   
   def getProcessedMapRunMapIds( processedMapId: Long ): Array[Long] = {    
-    getRunMapIdsByProcessedMapId( Array(processedMapId) )(processedMapId)
+    getRawMapIdsByProcessedMapId( Array(processedMapId) )(processedMapId)
   }
 
   /** Returns a list of features corresponding to a given list of processed map ids */
@@ -126,16 +126,16 @@ class SQLProcessedMapProvider(
       }
       
       // --- Load run ids and run map ids
-      var( runMapIds, runIds ) = ( new ArrayBuffer[Long](nbMaps), new ArrayBuffer[Long](nbMaps) )
+      var( rawMapIds, runIds ) = ( new ArrayBuffer[Long](nbMaps), new ArrayBuffer[Long](nbMaps) )
       
-      val sqlQuery = new SelectQueryBuilder2(LcmsDbRunMapTable, LcmsDbProcessedMapRunMapMappingTable).mkSelectQuery( (t1,c1,t2,c2) =>
-        List(t1.ID,t1.RUN_ID) ->
+      val sqlQuery = new SelectQueryBuilder2(LcmsDbRawMapTable, LcmsDbProcessedMapRawMapMappingTable).mkSelectQuery( (t1,c1,t2,c2) =>
+        List(t1.ID,t1.SCAN_SEQUENCE_ID) ->
           "WHERE " ~ t2.PROCESSED_MAP_ID ~ " IN(" ~ processedMapIds.mkString(",") ~ ") " ~
-          "AND " ~ t1.ID ~ "=" ~ t2.RUN_MAP_ID
+          "AND " ~ t1.ID ~ "=" ~ t2.RAW_MAP_ID
       )
       
       ezDBC.selectAndProcess( sqlQuery ) { r => 
-        runMapIds += toLong(r.nextAny)
+        rawMapIds += toLong(r.nextAny)
         runIds += toLong(r.nextAny)
         ()
       }
@@ -144,17 +144,17 @@ class SQLProcessedMapProvider(
       val scanInitialIdById = lcmsDbHelper.getScanInitialIdById( runIds )
       
       // Retrieve mapping between features and MS2 scans
-      val ms2EventIdsByFtId = lcmsDbHelper.getMs2EventIdsByFtId( runMapIds )
+      val ms2EventIdsByFtId = lcmsDbHelper.getMs2EventIdsByFtId( rawMapIds )
       
       // TODO: load isotopic patterns if needed
       //val ipsByFtId = if( loadPeaks ) getIsotopicPatternsByFtId( mapIds ) else null
       
       // Retrieve mapping between overlapping features
-      val olpFtIdsByFtId = getOverlappingFtIdsByFtId( runMapIds )
+      val olpFtIdsByFtId = getOverlappingFtIdsByFtId( rawMapIds )
       
       var olpFeatureById: Map[Long,Feature] = null
       if( olpFtIdsByFtId.size > 0 ) {
-        olpFeatureById = getOverlappingFeatureById( runMapIds, scanInitialIdById, ms2EventIdsByFtId )
+        olpFeatureById = getOverlappingFeatureById( rawMapIds, scanInitialIdById, ms2EventIdsByFtId )
       }
       
       // Retrieve mapping between cluster and sub-features

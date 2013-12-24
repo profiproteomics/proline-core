@@ -259,6 +259,7 @@ object UdsDbFragmentationSeriesTable extends UdsDbFragmentationSeriesTable {
 object UdsDbGroupSetupColumns extends ColumnEnumeration {
   val $tableName = UdsDbGroupSetupTable.name
   val ID = Column("id")
+  val NUMBER = Column("number")
   val NAME = Column("name")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val QUANTITATION_ID = Column("quantitation_id")
@@ -463,7 +464,6 @@ object UdsDbQuantChannelColumns extends ColumnEnumeration {
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val LCMS_MAP_ID = Column("lcms_map_id")
   val IDENT_RESULT_SUMMARY_ID = Column("ident_result_summary_id")
-
   val RUN_ID = Column("run_id")
   val QUANT_LABEL_ID = Column("quant_label_id")
   val SAMPLE_ANALYSIS_ID = Column("sample_analysis_id")
@@ -543,6 +543,20 @@ abstract class UdsDbRawFileTable extends TableDefinition[UdsDbRawFileColumns.typ
 object UdsDbRawFileTable extends UdsDbRawFileTable {
   val name = "raw_file"
   val columns = UdsDbRawFileColumns
+}
+
+object UdsDbRawFileProjectMapColumns extends ColumnEnumeration {
+  val $tableName = UdsDbRawFileProjectMapTable.name
+  val RAW_FILE_NAME = Column("raw_file_name")
+  val PROJECT_ID = Column("project_id")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
+}
+
+abstract class UdsDbRawFileProjectMapTable extends TableDefinition[UdsDbRawFileProjectMapColumns.type]
+
+object UdsDbRawFileProjectMapTable extends UdsDbRawFileProjectMapTable {
+  val name = "raw_file_project_map"
+  val columns = UdsDbRawFileProjectMapColumns
 }
 
 object UdsDbRunColumns extends ColumnEnumeration {
@@ -647,5 +661,4 @@ object UdsDbVirtualFolderTable extends UdsDbVirtualFolderTable {
   val name = "virtual_folder"
   val columns = UdsDbVirtualFolderColumns
 }
-
 

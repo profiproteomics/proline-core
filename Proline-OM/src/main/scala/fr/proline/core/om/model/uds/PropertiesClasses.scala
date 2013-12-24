@@ -14,7 +14,7 @@ case class ExternalDbProperties(
   // Small hack
   // TODO: replace by @BeanProperty
   def getDriverType(): Option[String] = {
-    if( driverType != None ) driverType
+    if( driverType.isDefined ) driverType
 	else jdbcDriverClassName
   }
   

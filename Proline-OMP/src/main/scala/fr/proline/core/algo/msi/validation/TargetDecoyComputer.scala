@@ -32,13 +32,13 @@ object TargetDecoyComputer {
       
       // Remove peptide match duplicates (same score and same rank but different peptides = see Mascot pretty rank )
       var targetPepMatch: PeptideMatch = null
-      if( targetPepMatches != None ) {
+      if( targetPepMatches.isDefined ) {
         targetPepMatch = targetPepMatches.get.toList.sort( (a,b) => a.score > b.score ).head
       }
       
       // Remove peptide match duplicates (same score and same rank but different peptides = see Mascot pretty rank )
       var decoyPepMatch: PeptideMatch = null
-      if( decoyPepMatches != None ) {
+      if( decoyPepMatches.isDefined ) {
         decoyPepMatch = decoyPepMatches.get.toList.sort( (a,b) => a.score > b.score ).head
       }
       

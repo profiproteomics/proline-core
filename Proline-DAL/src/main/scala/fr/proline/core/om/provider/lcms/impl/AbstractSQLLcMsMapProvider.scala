@@ -34,14 +34,14 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   private def _boolToStr(ezDBC: EasyDBC, bool: Boolean) = ezDBC.dialect.booleanFormatter.formatBoolean(bool)
   
   /** Returns a map of overlapping feature ids keyed by feature id */
-  def getOverlappingFtIdsByFtId( runMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+  def getOverlappingFtIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
       
       val olpFtIdsByFtId = new HashMap[Long,ArrayBuffer[Long]]
       val olpIdMapQuery = new SelectQueryBuilder1(LcmsDbFeatureOverlapMappingTable).mkSelectQuery( (t,c) =>
         List(t.OVERLAPPED_FEATURE_ID,t.OVERLAPPING_FEATURE_ID) ->
-        "WHERE "~ t.MAP_ID ~" IN("~ runMapIds.mkString(",") ~") "
+        "WHERE "~ t.MAP_ID ~" IN("~ rawMapIds.mkString(",") ~") "
       )
       
       ezDBC.selectAndProcess( olpIdMapQuery ) { r =>
@@ -138,7 +138,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     val ms2EventIds = ms2EventIdsByFtId.getOrElse(ftId,null)
     val duration = scanById(lastScanId).time - scanById(firstScanId).time
     val mapId = toLong(ftRecord.getAny(FtCols.MAP_ID))
-    val runMapId = if( mapId == processedMapId ) 0L else mapId
+    val rawMapId = if( mapId == processedMapId ) 0L else mapId
     
     new Feature(
        id = ftId,
@@ -172,7 +172,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
          theoreticalFeatureId = ftRecord.getLongOrElse(FtCols.THEORETICAL_FEATURE_ID, 0L),
          compoundId = ftRecord.getLongOrElse(FtCols.COMPOUND_ID, 0L),
          mapLayerId = ftRecord.getLongOrElse(FtCols.MAP_LAYER_ID, 0L),
-         runMapId = runMapId,
+         rawMapId = rawMapId,
          processedMapId = processedMapId
        )
      )

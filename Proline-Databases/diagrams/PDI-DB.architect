@@ -22,7 +22,7 @@
     <column id="COL4" populated="true" UUID="cb9b17db-ecd9-4c95-9190-10ee6525d1d9" autoIncrement="false" defaultValue="" name="sequence" nullable="0" physicalName="sequence" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>The sequence of the protein. It can contains amino acids or nucleic acids depending on the used alphabet.</remarks>
     </column>
-    <column id="COL5" populated="true" UUID="4751e68b-01e8-4db9-bff6-ec9b566bc64b" autoIncrement="false" defaultValue="" name="length" nullable="1" physicalName="length" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL5" populated="true" UUID="4751e68b-01e8-4db9-bff6-ec9b566bc64b" autoIncrement="false" defaultValue="" name="length" nullable="0" physicalName="length" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>The length of the sequence.</remarks>
     </column>
     <column id="COL6" populated="true" UUID="351e8cfa-9ab6-405a-b055-d0c0bb4fa09f" autoIncrement="false" defaultValue="" name="mass" nullable="0" physicalName="mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -32,7 +32,7 @@
      <remarks>The isoelectric point of the protein. Only for protein sequences (alphabet=aa).</remarks>
     </column>
     <column id="COL8" populated="true" UUID="c179c516-c5d4-4f78-85c0-ff8430c10452" autoIncrement="false" defaultValue="" name="crc64" nullable="0" physicalName="crc64" precision="32" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
-     <remarks>The numerical signature of the protein sequence</remarks>
+     <remarks>A numerical signature of the protein sequence built by a CRC64 algorithm.</remarks>
     </column>
     <column id="COL9" populated="true" UUID="47b85eda-59fe-4b88-b160-cf01404cd6b3" autoIncrement="false" autoIncrementSequenceName="bio_sequence_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
@@ -157,7 +157,7 @@
     <column id="COL50" populated="true" UUID="47c680b5-de34-4188-b852-00b488a9f1a9" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_creation_timestamp_seq" defaultValue="" name="creation_timestamp" nullable="0" physicalName="creation_timestamp" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="93" userDefinedTypeUUID="6497d8de-0e00-40d6-a42e-e2adca83be64" >
      <remarks></remarks>
     </column>
-    <column id="COL51" populated="true" UUID="150da38a-bc79-47f7-8b94-3020a1c1b07a" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_sequence_count_seq" defaultValue="" name="sequence_count" nullable="1" physicalName="sequence_count" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL51" populated="true" UUID="150da38a-bc79-47f7-8b94-3020a1c1b07a" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_sequence_count_seq" defaultValue="" name="sequence_count" nullable="0" physicalName="sequence_count" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
     <column id="COL52" populated="true" UUID="8c2aafd5-d935-4f62-95e2-a7558cf40c85" autoIncrement="false" autoIncrementSequenceName="seq_db_instance_residue_count_seq" defaultValue="" name="residue_count" nullable="1" physicalName="residue_count" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -866,7 +866,7 @@ Allowed values for this field are: GENE, ORDERED_LOCUS, ORF.</remarks>
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  ddlGenerator="ca.sqlpower.architect.ddl.PostgresDDLGenerator"  outputFormatAsString="SQL"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="E:\eclipse\workspace\proline-core-v2\Proline-Databases\diagrams\PDI-DB.architect"  />

@@ -69,7 +69,7 @@ class SpectraParamsUpdater(
           val parsingRule = parsingRuleBySpecAttr(specAttr)
           if( parsingRule != null ) {
             val parsingRuleMatch = spectrumTitle =# parsingRule
-            if( parsingRuleMatch != None ) {
+            if( parsingRuleMatch.isDefined ) {
               extractedAttrs(specAttr) = parsingRuleMatch.get.group(1)
             }
           }

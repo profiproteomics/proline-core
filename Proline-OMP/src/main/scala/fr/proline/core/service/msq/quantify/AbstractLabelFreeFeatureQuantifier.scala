@@ -15,7 +15,7 @@ import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureMs2EventTable
-import fr.proline.core.dal.tables.lcms.LcmsDbRunMapTable
+import fr.proline.core.dal.tables.lcms.LcmsDbRawMapTable
 import fr.proline.core.dal.tables.lcms.LcmsDbScanTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.om.model.lcms.MapSet
@@ -103,8 +103,8 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
   lazy val lcmsRunIds = {    
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
-      lcmsEzDBC.selectLongs( new SelectQueryBuilder1(LcmsDbRunMapTable).mkSelectQuery( (t,c) =>
-        List(t.RUN_ID) -> "WHERE "~ t.ID ~" IN("~ lcmsMapSet.getRunMapIds.mkString(",") ~")"
+      lcmsEzDBC.selectLongs( new SelectQueryBuilder1(LcmsDbRawMapTable).mkSelectQuery( (t,c) =>
+        List(t.SCAN_SEQUENCE_ID) -> "WHERE "~ t.ID ~" IN("~ lcmsMapSet.getRawMapIds.mkString(",") ~")"
       ) )
     })
   }
@@ -134,9 +134,9 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     val ms2ScanNumberById = Map() ++ lcmsScans.map( s => s.id -> s.initialId )
 
     val lcmsMapSet = this.lcmsMapSet
-    val runMapIds = lcmsMapSet.getRunMapIds
-    val transientRunMapIdsCount = runMapIds.count( _ <= 0 )
-    require( transientRunMapIdsCount == 0, "LC-MS map set must contain persisted run map ids" )
+    val rawMapIds = lcmsMapSet.getRawMapIds
+    val transientRawMapIdsCount = rawMapIds.count( _ <= 0 )
+    require( transientRawMapIdsCount == 0, "LC-MS map set must contain persisted run map ids" )
     
     this.logger.info("loading MS2 scans/features map...")
     val ms2ScanNumbersByFtId = new HashMap[Long, ArrayBuffer[Int]]
@@ -144,7 +144,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     DoJDBCWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
       
       val sqlQuery = new SelectQueryBuilder1(LcmsDbFeatureMs2EventTable).mkSelectQuery( (t,c) =>
-        List(t.FEATURE_ID,t.MS2_EVENT_ID) -> "WHERE "~ t.RUN_MAP_ID ~" IN("~ runMapIds.mkString(",") ~")"
+        List(t.FEATURE_ID,t.MS2_EVENT_ID) -> "WHERE "~ t.RUN_MAP_ID ~" IN("~ rawMapIds.mkString(",") ~")"
       )
       
       lcmsEzDBC.selectAndProcess(sqlQuery) { r =>

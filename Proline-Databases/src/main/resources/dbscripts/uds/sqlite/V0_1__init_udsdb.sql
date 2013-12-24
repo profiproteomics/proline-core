@@ -152,6 +152,7 @@ CREATE TABLE fragmentation_series (
 
 CREATE TABLE group_setup (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                number INTEGER NOT NULL,
                 name TEXT(100) NOT NULL,
                 serialized_properties TEXT,
                 quantitation_id INTEGER NOT NULL,
@@ -319,6 +320,13 @@ CREATE TABLE raw_file (
                 FOREIGN KEY (owner_id) REFERENCES user_account (id)
 );
 
+CREATE TABLE raw_file_project_map (
+                raw_file_name TEXT(250) NOT NULL,
+                project_id INTEGER NOT NULL,
+                serialized_properties TEXT,
+                PRIMARY KEY (raw_file_name, project_id)
+);
+
 CREATE TABLE run (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
@@ -381,9 +389,21 @@ CREATE TABLE virtual_folder (
                 FOREIGN KEY (project_id) REFERENCES project (id)
 );
 
-CREATE UNIQUE INDEX quant_channel_context_idx ON quant_channel (context_key,master_quant_channel_id);
+CREATE UNIQUE INDEX quant_channel_context_idx ON quant_channel (master_quant_channel_id,context_key,quant_label_id);
+
+CREATE UNIQUE INDEX quant_channel_number_idx ON quant_channel (master_quant_channel_id,number);
+
+CREATE UNIQUE INDEX biological_group_number_idx ON biological_group (quantitation_id,number);
+
+CREATE UNIQUE INDEX group_setup_number_idx ON group_setup (quantitation_id,number);
+
+CREATE UNIQUE INDEX biological_sample_number_idx ON biological_sample (quantitation_id,number);
 
 CREATE UNIQUE INDEX quant_method_name_idx ON quant_method (name);
+
+CREATE UNIQUE INDEX ratio_definition_number_idx ON ratio_definition (group_setup_id,number);
+
+CREATE UNIQUE INDEX master_quant_channel_number_idx ON master_quant_channel (quantitation_id,number);
 
 CREATE UNIQUE INDEX user_account_login_idx ON user_account (login);
 

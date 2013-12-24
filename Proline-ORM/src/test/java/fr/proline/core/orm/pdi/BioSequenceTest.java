@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.repository.PdiBioSequenceRepository;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 public class BioSequenceTest extends DatabaseTestCase {
 
@@ -45,7 +45,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 	try {
 	    BioSequence bioSeq = pdiEm.find(BioSequence.class, Long.valueOf(171L));
 	    assertNotNull(bioSeq);
-	    assertEquals(bioSeq.getLength(), Integer.valueOf(338));
+	    assertEquals(bioSeq.getLength(), 338);
 	    assertEquals(bioSeq.getProteinIdentifiers().size(), 4);
 	} finally {
 
@@ -118,7 +118,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 	    BioSequence seq = PdiBioSequenceRepository.findBioSequencePerAccessionAndSeqDB(pdiEm, "Q6WN28",
 		    33);
 	    assertNotNull(seq);
-	    assertEquals(seq.getLength(), Integer.valueOf(146));
+	    assertEquals(seq.getLength(), 146);
 	} finally {
 
 	    if (pdiEm != null) {

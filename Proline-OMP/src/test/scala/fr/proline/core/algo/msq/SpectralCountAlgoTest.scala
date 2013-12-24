@@ -22,8 +22,8 @@ import org.junit.Test
 class SpectralCountAlgoTest extends AbstractMultipleDBTestCase with Logging {
   // Define the interface to be implemented
   val driverType = DriverType.H2
-  val fileName = "Merged_RSM_Test"
-  val targetRSMId: Long = 8
+  val fileName = "STR_F063442_F122817_MergedRSMs"
+  val targetRSMId: Long = 33
 
   var executionContext: IExecutionContext = null
   var rsmProvider: IResultSummaryProvider = null
@@ -51,12 +51,12 @@ class SpectralCountAlgoTest extends AbstractMultipleDBTestCase with Logging {
   }
 
   private def _loadRSM(): ResultSummary = {
-    val rsm = rsmProvider.getResultSummary(targetRSMId,true).get
+    val rsm = rsmProvider.getResultSummary(targetRSMId, true).get
     // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
-//    if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
-	rsm
+    //    if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
+    rsm
   }
-  
+
   @After
   override def tearDown() {
     if (executionContext != null) executionContext.closeAll()
@@ -75,17 +75,16 @@ class SpectralCountAlgoTest extends AbstractMultipleDBTestCase with Logging {
     (executionContext, rsmProvider)
   }
 
-  
   @Test
   def testUpdatePepInstance() = {
-	  PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(readRSM, executionContext)
-	  readRSM.peptideInstances.foreach(pepI=> {
-	    if(pepI.totalLeavesMatchCount == -1)
-	    	logger.warn("Validated Peptide Match for peptide Instance "+pepI.id+" was not treated !!!! See issue #7984")
-	     else
-	    	 assertTrue(pepI.totalLeavesMatchCount>0)
-	  })
-	  
+    PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(readRSM, executionContext)
+    readRSM.peptideInstances.foreach(pepI => {
+      if (pepI.totalLeavesMatchCount == -1)
+        logger.warn("Validated Peptide Match for peptide Instance " + pepI.id + " was not treated !!!! See issue #7984")
+      else
+        assertTrue(pepI.totalLeavesMatchCount > 0)
+    })
+
   }
 
 }

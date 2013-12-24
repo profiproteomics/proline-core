@@ -14,8 +14,8 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.repository.util.JPAUtils
-import fr.proline.repository.utils.DatabaseUtils
-import fr.proline.repository.utils.DatabaseTestCase
+import fr.proline.repository.util.DatabaseUtils
+import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.context.DatabaseConnectionContext
 

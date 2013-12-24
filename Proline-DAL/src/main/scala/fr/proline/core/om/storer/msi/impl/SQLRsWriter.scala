@@ -135,16 +135,14 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     
     DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
-      val ptmStringInsertQuery = MsiDbPeptideReadablePtmStringTable.mkInsertQuery{ (c,colsList) => 
-        colsList.filter( _ != c.ID)
-      }
+      val ptmStringInsertQuery = MsiDbPeptideReadablePtmStringTable.mkInsertQuery
       
       msiEzDBC.executePrepared( ptmStringInsertQuery ) { stmt =>
         for ( peptide <- rs.peptides; if StringUtils.isNotEmpty(peptide.readablePtmString) ) {
           count += stmt.executeWith(
-            peptide.readablePtmString,
             peptide.id,
-            rsId
+            rsId,
+            peptide.readablePtmString
           )
         }
       }
@@ -175,7 +173,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
           
           val scoreType = peptideMatch.scoreType
           val scoringId = scoringIdByType.get(scoreType)
-          require(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
+          require(scoringId.isDefined, "can't find a scoring id for the score type '" + scoreType + "'")
   
           val msQuery = peptideMatch.msQuery
           val bestChildId = peptideMatch.getBestChildId
@@ -205,7 +203,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       // Link peptide matches to their children
       msiEzDBC.executePrepared(MsiDbPeaklistRelationTable.mkInsertQuery()) { stmt =>
         for (peptideMatch <- peptideMatches)
-          if (peptideMatch.children != null && peptideMatch.children != None)
+          if (peptideMatch.children != null && peptideMatch.children.isDefined)
             for (pepMatchChild <- peptideMatch.children.get)
               stmt.executeWith(peptideMatch.id, pepMatchChild.id, rsId)
       }
@@ -290,7 +288,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
           val scoreType = proteinMatch.scoreType
           val scoringId = scoringIdByType.get(scoreType)
-          require(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
+          require(scoringId.isDefined, "can't find a scoring id for the score type '" + scoreType + "'")
           
           stmt.executeWith(
             proteinMatch.accession,

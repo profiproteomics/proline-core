@@ -186,7 +186,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
     val ssId = searchSettings.id
     
     // If PMF search => insert PMF settings
-    if( searchSettings.pmfSearchSettings != None ) {
+    if( searchSettings.pmfSearchSettings.isDefined ) {
       
       val pmfSettings = searchSettings.pmfSearchSettings.get
 
@@ -200,7 +200,7 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
       }
     }
     // Else if MS/MS search => insert MS/MS settings
-    else if ( searchSettings.msmsSearchSettings != None ) {
+    else if ( searchSettings.msmsSearchSettings.isDefined ) {
       
       val msmsSettings = searchSettings.msmsSearchSettings.get
       

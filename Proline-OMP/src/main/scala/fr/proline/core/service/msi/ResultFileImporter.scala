@@ -70,7 +70,7 @@ class ResultFileImporter(
 
       // Get Right ResultFile provider
       val rfProvider: Option[IResultFileProvider] = ResultFileProviderRegistry.get(fileType)
-      require(rfProvider != None, "No ResultFileProvider for specified identification file format")
+      require(rfProvider.isDefined, "No ResultFileProvider for specified identification file format")
 
       val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
@@ -99,7 +99,7 @@ class ResultFileImporter(
       val tdMode = if (resultFile.hasDecoyResultSet) {
         // FIXME: We assume separated searches, but do we need to set this information at the parsing step ???
         Some(TargetDecoyModes.SEPARATED.toString)
-      } else if (acDecoyRegex != None) {
+      } else if (acDecoyRegex.isDefined) {
         Some(TargetDecoyModes.CONCATENATED.toString)
       } else
         None
@@ -113,7 +113,7 @@ class ResultFileImporter(
         tdMode,
         acDecoyRegex,
         saveSpectrumMatch,
-        if (acDecoyRegex != None) Some(TargetDecoyResultSetSplitter) else None
+        if (acDecoyRegex.isDefined) Some(TargetDecoyResultSetSplitter) else None
       )
 
       >>>

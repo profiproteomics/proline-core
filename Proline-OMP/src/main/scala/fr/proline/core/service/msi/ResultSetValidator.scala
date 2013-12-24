@@ -190,7 +190,7 @@ class ResultSetValidator(
       val rsmStorer = RsmStorer(msiDbContext)
 
       // Store decoy result summary
-      if (decoyRsmOpt != None) {
+      if (decoyRsmOpt.isDefined) {
         rsmStorer.storeResultSummary(decoyRsmOpt.get, execContext)
       }
 
@@ -226,7 +226,7 @@ class ResultSetValidator(
     var finalValidationResult: ValidationResult = null
 
     // Execute all peptide matches pre filters
-    if (pepMatchPreFilters != None) {
+    if (pepMatchPreFilters.isDefined) {
       pepMatchPreFilters.get.foreach { psmFilter =>
 
         finalValidationResult = new BasicPepMatchValidator(psmFilter, tdAnalyzer).validatePeptideMatches(targetRs).finalResult
@@ -293,7 +293,7 @@ class ResultSetValidator(
     var finalValidationResult: ValidationResult = null
 
     // Execute all protein set filters
-    if (protSetFilters != None) {
+    if (protSetFilters.isDefined) {
       protSetFilters.get.foreach { protSetFilter =>
 
         // Apply filter

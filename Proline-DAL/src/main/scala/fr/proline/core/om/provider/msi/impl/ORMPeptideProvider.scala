@@ -33,7 +33,7 @@ class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptid
   }
 
   def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
-    this.getPeptidesAsOptions(peptideIds).filter(_ != None).map(_.get)
+    this.getPeptidesAsOptions(peptideIds).filter(_.isDefined).map(_.get)
   }
 
   def getPeptide(peptideSeq: String, pepPtms: Array[LocatedPtm]): Option[Peptide] = {

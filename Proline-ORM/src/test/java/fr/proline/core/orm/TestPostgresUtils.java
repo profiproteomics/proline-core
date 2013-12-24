@@ -17,7 +17,7 @@ import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.JDBCWork;
 import fr.proline.repository.util.JPAUtils;
 import fr.proline.repository.util.PostgresUtils;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 /**
  * Manual test (must use a PosgreSQL server configured in "pg_ps.properties" file).

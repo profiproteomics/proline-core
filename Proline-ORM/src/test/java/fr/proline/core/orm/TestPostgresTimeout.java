@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 /**
  * Manual test (must use a PosgreSQL server configured in "pg_ps.properties" file).

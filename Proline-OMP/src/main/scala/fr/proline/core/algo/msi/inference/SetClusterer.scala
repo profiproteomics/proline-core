@@ -1,17 +1,19 @@
 package fr.proline.core.algo.msi.inference
 
 import collection.mutable.ArrayBuffer
+import collection.mutable.HashSet
 import util.control.Breaks._
 
-case class SetCluster[K,V]( id: Long,
-                            samesetsValues: Set[V],
-                            var samesetsKeys: ArrayBuffer[K] = new ArrayBuffer[K](1),
-                            var subsetsKeys: ArrayBuffer[K] = new ArrayBuffer[K](1),
-                            var isSubset: Boolean,
-                            var strictSubsetsIds: Option[ArrayBuffer[Long]] = None,
-                            var subsumableSubsetsIds: Option[ArrayBuffer[Long]] = None, 
-                            var oversetId: Option[Long] = None
-                           )
+case class SetCluster[K,V](
+  id: Long,
+  samesetsValues: Set[V],
+  samesetsKeys: ArrayBuffer[K] = new ArrayBuffer[K](1),
+  subsetsKeys: HashSet[K] = new HashSet[K](),
+  var isSubset: Boolean,
+  var strictSubsetsIds: Option[ArrayBuffer[Long]] = None,
+  var subsumableSubsetsIds: Option[ArrayBuffer[Long]] = None, 
+  var oversetId: Option[Long] = None
+)
 
 object SetClusterer {
   
@@ -45,7 +47,7 @@ object SetClusterer {
                                                               keysByValue,
                                                               values,
                                                               new collection.mutable.HashSet[V] )
-        if( keySet != None ) {
+        if( keySet.isDefined ) {
           keySets += keySet.get
           keySet.get.foreach { key => assignedKeys += key }
         }
@@ -126,13 +128,12 @@ object SetClusterer {
           
             if( isSubsetOf(unspeSamesetValues,samesetValues) ) {
               unspeSameset.isSubset = true
-              if( sameset.strictSubsetsIds == None ) {
+              if( sameset.strictSubsetsIds.isEmpty ) {
                 sameset.strictSubsetsIds = Some( new ArrayBuffer[Long](1) )
               }
               sameset.strictSubsetsIds.get += unspeSamesetId
               //VD Add subset cluster's protMatchIds to overset cluster 
               sameset.subsetsKeys ++= unspeSameset.samesetsKeys
-              sameset.subsetsKeys = sameset.subsetsKeys.distinct // remove any duplicate
               unspeSameset.oversetId = Some(sameset.id)
             }
           }
@@ -174,7 +175,7 @@ object SetClusterer {
             // Link subsumable set to strict oversets
             for( val oversetClusterId <- oversetClusterIdSet ) {
               val oversetCluster = samesetById(oversetClusterId)
-              if( oversetCluster.subsumableSubsetsIds == None ) {
+              if( oversetCluster.subsumableSubsetsIds.isEmpty ) {
                 oversetCluster.subsumableSubsetsIds = Some( new ArrayBuffer[Long] )
               }
               oversetCluster.subsumableSubsetsIds.get += clusterId
@@ -207,7 +208,7 @@ object SetClusterer {
         
         // Retrieve keys having this value
         val keysForThisValue = keysByValue.get(value)
-        if( keysForThisValue == None ) {
+        if( keysForThisValue.isEmpty ) {
           throw new Exception("undefined keys for value '"+ value +"'")
         }
         
@@ -220,7 +221,7 @@ object SetClusterer {
             val relatedValues = valuesByKey(key)
             val relatedKeys = this.getAllKeysHavingRelatedValues( valuesByKey, keysByValue, relatedValues, searchedValues)
             
-            if( relatedKeys != None ) {
+            if( relatedKeys.isDefined ) {
               // Update the list of keys having related values
               relatedKeys.get.foreach( key => clusterizedKeys += key )
             }

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.uds.repository.UdsInstrumentConfigurationRepository;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
 

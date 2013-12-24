@@ -94,7 +94,7 @@ case class FeatureRelations(
   var theoreticalFeatureId: Long = 0L,
   var compoundId: Long = 0L,
   var mapLayerId: Long = 0L,
-  var runMapId: Long = 0L,
+  var rawMapId: Long = 0L,
   var processedMapId: Long = 0L,
   
   @transient var peptideId: Long = 0L
@@ -146,13 +146,13 @@ case class Feature (
   def getNormalizedIntensityOrIntensity = normalizedIntensity.getOrElse(intensity)
   
   def getSourceMapId: Long = {
-    if( this.isCluster || this.isMaster ) this.relations.processedMapId else this.relations.runMapId
+    if( this.isCluster || this.isMaster ) this.relations.processedMapId else this.relations.rawMapId
   }
   
-  def getRunMapIds(): Array[Long] = {
-    if( this.isMaster ) children.flatMap( _.getRunMapIds ).distinct
-    else if ( this.isCluster ) Array(this.subFeatures(0).relations.runMapId)
-    else Array(this.relations.runMapId)
+  def getRawMapIds(): Array[Long] = {
+    if( this.isMaster ) children.flatMap( _.getRawMapIds ).distinct
+    else if ( this.isCluster ) Array(this.subFeatures(0).relations.rawMapId)
+    else Array(this.relations.rawMapId)
   }
   
   def eachSubFeatureOrThisFeature( onEachSubFt: (Feature) => Unit ) {
@@ -170,7 +170,7 @@ case class Feature (
     }
   }
   
-  def toRunMapFeature(): Feature = {
+  def toRawMapFeature(): Feature = {
     require( isCluster == false, "can't convert a cluster feature into a run map feature" )
     require( isMaster == false, "can't convert a master feature into a run map feature" )
     

@@ -55,7 +55,7 @@ class ExportMasterQuantPeptideIons(
       }
       
       // Append master quant peptide ion data
-      row ++= Array(mqPepIon.charge,mqPepIon.elutionTime,mqPepIon.lcmsFeatureId.getOrElse(""))
+      row ++= Array(mqPepIon.charge,mqPepIon.elutionTime,mqPepIon.lcmsMasterFeatureId.getOrElse(""))
       
       // Append quant peptide data for each condition
       val qPepIonCellsByQcId = new HashMap[Long,Seq[Any]]

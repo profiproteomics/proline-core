@@ -14,7 +14,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
   
   val nbFeatures = 1
   
-  val runMapGenerator = new RunMapFakeGenerator(
+  val rawMapGenerator = new RawMapFakeGenerator(
     nbFeatures = nbFeatures,
     minMoz = LcMsRunGeneratorsTest.MIN_MOZ,
     maxMoz = LcMsRunGeneratorsTest.MAX_MOZ,
@@ -23,7 +23,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
   )
   
   val lcmsRun = LcMsRunGeneratorsTest.lcmsRunGenerator.generateLcMsRun()
-  val runMap = runMapGenerator.generateRunMap( lcmsRun )
+  val rawMap = rawMapGenerator.generateRawMap( lcmsRun )
     
   // TODO: try other kind of parameters
   val ftMappingParams = FeatureMappingParams(mozTol=5., mozTolUnit= "PPM", timeTol=5f )  
@@ -39,16 +39,16 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     var ftIdSeq = 0
     def newFtId = { ftIdSeq -= 1; ftIdSeq }
     
-    val runMapFt = runMap.features.first
+    val rawMapFt = rawMap.features.first
     val procMapFts = new ArrayBuffer[Feature]
     
     // Unique feature
-    procMapFts += runMapFt.copy( id = newFtId, moz = 100., elutionTime = 100f, relations = runMapFt.relations.copy() )
+    procMapFts += rawMapFt.copy( id = newFtId, moz = 100., elutionTime = 100f, relations = rawMapFt.relations.copy() )
     
     // Five identical features
     val( moz5, time5 ) = (200.,500f)
     for ( i <- 1 to 5) {
-      procMapFts += runMapFt.copy( id = newFtId, moz = moz5, elutionTime = time5, relations = runMapFt.relations.copy() )
+      procMapFts += rawMapFt.copy( id = newFtId, moz = moz5, elutionTime = time5, relations = rawMapFt.relations.copy() )
     }
     
     // Ten features with increasing m/z
@@ -56,7 +56,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     val onePPMDelta = mzRefMZ10 / 1000000
     
     for( i <- 1 to 10 ) {
-      procMapFts += runMapFt.copy( id = newFtId, moz = mzRefMZ10, elutionTime = timeRefMZ10, relations = runMapFt.relations.copy() )
+      procMapFts += rawMapFt.copy( id = newFtId, moz = mzRefMZ10, elutionTime = timeRefMZ10, relations = rawMapFt.relations.copy() )
       mzRefMZ10 += onePPMDelta
     }
     
@@ -65,7 +65,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     
     // Ten other features with increasing m/z after a shift larger then m/z tolerance
     for( i <- 1 to 10 ) {
-      procMapFts += runMapFt.copy( id = newFtId, moz = mzRefMZ10, elutionTime = timeRefMZ10, relations = runMapFt.relations.copy() )
+      procMapFts += rawMapFt.copy( id = newFtId, moz = mzRefMZ10, elutionTime = timeRefMZ10, relations = rawMapFt.relations.copy() )
       mzRefMZ10 += onePPMDelta
     }
     
@@ -74,7 +74,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     val oneSec = 1
     
     for( i <- 1 to 10 ) {
-      procMapFts += runMapFt.copy( id = newFtId, moz = mzRefRT10, elutionTime = timeRefRT10, relations = runMapFt.relations.copy() )
+      procMapFts += rawMapFt.copy( id = newFtId, moz = mzRefRT10, elutionTime = timeRefRT10, relations = rawMapFt.relations.copy() )
       timeRefRT10 += oneSec
     }
     
@@ -83,7 +83,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     
     // Ten other features with increasing time after a shift larger then time tolerance
     for( i <- 1 to 10 ) {
-      procMapFts += runMapFt.copy( id = newFtId, moz = mzRefRT10, elutionTime = timeRefRT10, relations = runMapFt.relations.copy() )
+      procMapFts += rawMapFt.copy( id = newFtId, moz = mzRefRT10, elutionTime = timeRefRT10, relations = rawMapFt.relations.copy() )
       timeRefRT10 += oneSec
     }
     
@@ -107,12 +107,12 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     val lastScan2 = scans(0).copy( id = LcMsScan.generateNewId, time = 2055f )
     newScans ++=  Array(firstScan1,lastScan1,firstScan2,lastScan2)
     
-    val ft1Relations = runMapFt.relations.copy( firstScanId = firstScan1.id, lastScanId = lastScan1.id )
-    val ft2Relations = runMapFt.relations.copy( firstScanId = firstScan2.id, lastScanId = lastScan2.id )
-    procMapFts += runMapFt.copy( id = newFtId, moz = 500.000, elutionTime = 2000f, relations = ft1Relations )
-    procMapFts += runMapFt.copy( id = newFtId, moz = 500.001, elutionTime = 2052f, relations = ft2Relations )
+    val ft1Relations = rawMapFt.relations.copy( firstScanId = firstScan1.id, lastScanId = lastScan1.id )
+    val ft2Relations = rawMapFt.relations.copy( firstScanId = firstScan2.id, lastScanId = lastScan2.id )
+    procMapFts += rawMapFt.copy( id = newFtId, moz = 500.000, elutionTime = 2000f, relations = ft1Relations )
+    procMapFts += rawMapFt.copy( id = newFtId, moz = 500.001, elutionTime = 2052f, relations = ft2Relations )
     
-    val processedMap = runMap.toProcessedMap(1, -1, procMapFts.toArray)
+    val processedMap = rawMap.toProcessedMap(1, -1, procMapFts.toArray)
     val newProcMap = ClusterizeFeatures(processedMap,newScans,ftClusteringParams)
     
     // We expect 7 features after the clustering

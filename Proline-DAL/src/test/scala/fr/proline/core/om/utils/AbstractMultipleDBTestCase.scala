@@ -4,7 +4,7 @@ import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.core.dal.DataStoreConnectorFactoryForTest
 import fr.proline.repository.{ DriverType, ProlineDatabaseType }
-import fr.proline.repository.utils.DatabaseTestCase
+import fr.proline.repository.util.DatabaseTestCase
 
 class AbstractMultipleDBTestCase extends Logging {
 

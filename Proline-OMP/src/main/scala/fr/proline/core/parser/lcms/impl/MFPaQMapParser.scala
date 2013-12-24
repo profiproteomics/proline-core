@@ -19,7 +19,7 @@ object MFPaQMapParser {
 
 class MFPaQMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
     val lines = io.Source.fromFile(filePath).getLines
     val columnNames = lines.next.stripLineEnd.split(MFPaQMapParser.sepChar).slice(1, MFPaQMapParser.nbColumns + 1)
 
@@ -78,7 +78,7 @@ class MFPaQMapParser extends ILcmsMapFileParser {
 
     } //end while
 
-    val runMap = new RunMap(
+    val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
@@ -93,7 +93,7 @@ class MFPaQMapParser extends ILcmsMapFileParser {
       )
     )
 
-    Some(runMap)
+    Some(rawMap)
   }
 
 }

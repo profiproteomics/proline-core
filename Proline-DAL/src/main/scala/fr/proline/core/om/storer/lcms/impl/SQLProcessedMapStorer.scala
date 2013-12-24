@@ -13,12 +13,12 @@ import fr.proline.core.dal.tables.lcms.LcmsDbFeatureClusterItemTable
 import fr.proline.core.dal.tables.lcms.LcmsDbMapTable
 import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapTable
 import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapFeatureItemTable
-import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapRunMapMappingTable
+import fr.proline.core.dal.tables.lcms.LcmsDbProcessedMapRawMapMappingTable
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.ProcessedMap
 import fr.proline.core.om.storer.lcms.IProcessedMapStorer
 
-class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRunMapStorer(lcmsDbCtx) with IProcessedMapStorer with Logging {
+class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRawMapStorer(lcmsDbCtx) with IProcessedMapStorer with Logging {
   
   def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = true ): Unit = {    
       
@@ -97,9 +97,9 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRun
   
   protected def linkProcessedMapToRunMaps( ezDBC: EasyDBC, processedMap: ProcessedMap ): Unit = {
     
-    ezDBC.executePrepared(LcmsDbProcessedMapRunMapMappingTable.mkInsertQuery) { statement => 
-      processedMap.getRunMapIds.foreach { runMapId =>
-        statement.executeWith( processedMap.id, runMapId )
+    ezDBC.executePrepared(LcmsDbProcessedMapRawMapMappingTable.mkInsertQuery) { statement => 
+      processedMap.getRawMapIds.foreach { rawMapId =>
+        statement.executeWith( processedMap.id, rawMapId )
       }
     }
     

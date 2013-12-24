@@ -23,7 +23,7 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
     for( resultSummary <- resultSummaries ) {
       
       val resultSetAsOpt = resultSummary.resultSet
-      require( resultSetAsOpt != None, "the result summary must contain a result set" )
+      require( resultSetAsOpt.isDefined, "the result summary must contain a result set" )
       
       val resultSet = resultSetAsOpt.get
       

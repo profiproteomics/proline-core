@@ -115,20 +115,20 @@ object MasterQuantPeptideIon extends InMemoryIdGen
 
 case class MasterQuantPeptideIon(
   var id: Long,
-                                   
+  
   val unlabeledMoz: Double,
   val charge: Int,
   val elutionTime: Float,
-  val peptideMatchesCount: Int, // TODO: add to MSIdb model
+  val peptideMatchesCount: Int,
   val calculatedMoz: Option[Double] = None,
   
   var selectionLevel: Int,
-  var masterQuantPeptideId: Long, // is a master quant component id id DB
+  var masterQuantPeptideId: Long, // is a master quant component id in MSIdb
   var resultSummaryId: Long,
 
   var peptideInstanceId: Option[Long] = None,
   var bestPeptideMatchId: Option[Long] = None,
-  var lcmsFeatureId: Option[Long] = None, // TODO: rename to lcmsMasterFeatureId or remove ?
+  var lcmsMasterFeatureId: Option[Long] = None,
   var unmodifiedPeptideIonId: Option[Long] = None,
    
   var quantPeptideIonMap: Map[Long, QuantPeptideIon],
@@ -144,10 +144,10 @@ case class MasterQuantPeptideIon(
   //this.quantComponentMap.map { entry => ( entry._1 -> entry._2 ) }
   
   def getBestQuantPeptideIon: Option[QuantPeptideIon] = {
-    if( this.properties == None ) return None
+    if( this.properties.isEmpty ) return None
     
     val bestQuantChannelId = this.properties.get.getBestQuantChannelId
-    if( bestQuantChannelId == None ) None
+    if( bestQuantChannelId.isEmpty ) None
     else this.quantPeptideIonMap.get( bestQuantChannelId.get )
   }
   
@@ -189,11 +189,11 @@ case class MasterQuantPeptide(
   
   //private lazy val _id = MasterQuantPeptide.generateNewId
   
-  //def id(): Int = if( this.peptideInstance != None ) this.peptideInstance.get.id else this._id // TODO: replace by true MQC id
-  def getPeptideId: Option[Long] = if( this.peptideInstance != None ) Some(this.peptideInstance.get.peptide.id) else None
+  //def id(): Int = if( this.peptideInstance.isDefined ) this.peptideInstance.get.id else this._id // TODO: replace by true MQC id
+  def getPeptideId: Option[Long] = if( this.peptideInstance.isDefined ) Some(this.peptideInstance.get.peptide.id) else None
   
   def getMasterQuantProteinSetIds(): Option[Array[Long]] = {
-    if( this.properties != None ) this.properties.get.getMqProtSetIds()
+    if( this.properties.isDefined ) this.properties.get.getMqProtSetIds()
     else None
   }
   
@@ -207,7 +207,7 @@ case class MasterQuantPeptide(
   }
   
   def isProteinMatchSpecific: Option[Boolean] = {
-    if( this.peptideInstance == None ) return None
+    if( this.peptideInstance.isEmpty ) return None
     
     val proteinMatchesCount = this.peptideInstance.get.proteinMatchesCount
     if( proteinMatchesCount == 0 ) return None

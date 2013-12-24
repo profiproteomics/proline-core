@@ -18,7 +18,7 @@ class FeatureMapperTest extends JUnitSuite with MustMatchers with Logging {
     val nbMaps = 2
     val nbFeatures = 100
     
-    val runMapGenerator = new RunMapFakeGenerator(
+    val rawMapGenerator = new RawMapFakeGenerator(
       nbFeatures = nbFeatures,
       minMoz = LcMsRunGeneratorsTest.MIN_MOZ,
       maxMoz = LcMsRunGeneratorsTest.MAX_MOZ,
@@ -27,7 +27,7 @@ class FeatureMapperTest extends JUnitSuite with MustMatchers with Logging {
     )
     
     val lcmsRun = LcMsRunGeneratorsTest.lcmsRunGenerator.generateLcMsRun()
-    val runMap = runMapGenerator.generateRunMap( lcmsRun )
+    val rawMap = rawMapGenerator.generateRawMap( lcmsRun )
     
     val alnFakeGen = new MapAlignmentFakeGenerator( distortion = Distortions.SINE_DISTORTION(), amplitude = 30f )
     val mapSetFakeGen = new LcMsMapSetFakeGenerator(
@@ -37,7 +37,7 @@ class FeatureMapperTest extends JUnitSuite with MustMatchers with Logging {
       timeError = 5f
     )
     
-    val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, runMap)
+    val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, rawMap)
     assert( mapSet.childMaps.length === nbMaps )
     
     val childMaps = mapSet.childMaps

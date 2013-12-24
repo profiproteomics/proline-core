@@ -1,7 +1,7 @@
 package fr.proline.core.parser.lcms
 
 import fr.proline.core.parser.lcms.impl._
-import fr.proline.core.om.model.lcms.RunMap
+import fr.proline.core.om.model.lcms.RawMap
 import scala.collection.mutable.ArrayBuffer
 
 trait ExtraParameters {}
@@ -12,7 +12,7 @@ trait ILcmsMapFileParser {
   import fr.proline.core.om.model.lcms.LcMsScanSequence
   
   
-  def getRunMap( filePath: String, lcmsRun: LcMsScanSequence, extraParams: ExtraParameters ) : Option[RunMap]
+  def getRawMap( filePath: String, lcmsRun: LcMsScanSequence, extraParams: ExtraParameters ) : Option[RawMap]
   
   def getMs2Events(lcmsScanSeq: LcMsScanSequence, idx: Int) : Array[Long] = {
     /**

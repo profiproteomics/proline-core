@@ -378,7 +378,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
       if (masterPeptideSet.isSubset == false) {
 
         val masterProteinSetOpt = masterProtSetByTmpId.get(masterPeptideSet.getProteinSetId)
-        assert(masterProteinSetOpt != None, "missing protein set with id=" + masterPeptideSet.getProteinSetId)
+        assert(masterProteinSetOpt.isDefined, "missing protein set with id=" + masterPeptideSet.getProteinSetId)
         
         //////// Check if the protein set has at least a peptide instance with a relevant quantitation
         //val isProteinSetQuantitationRelevant = 0
@@ -548,7 +548,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     // Store master quant component for this master quant peptide
     val msiMQC = new MsiMasterQuantComponent()
     msiMQC.setSelectionLevel(mqPep.selectionLevel)
-    if (mqPep.properties != None) msiMQC.setSerializedProperties(ProfiJson.serialize(mqPep.properties))
+    if (mqPep.properties.isDefined) msiMQC.setSerializedProperties(ProfiJson.serialize(mqPep.properties))
     msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
     msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
     msiMQC.setResultSummary(msiRSM)
@@ -559,7 +559,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     mqPep.id = msiMQC.getId
 
     // If this master quant peptide has been identified by a master peptide instance
-    if (msiMasterPepInstAsOpt != None) {
+    if (msiMasterPepInstAsOpt.isDefined) {
       // Link master peptide instance to the corresponding master quant component
       msiMasterPepInstAsOpt.get.setMasterQuantComponentId(msiMQC.getId)
       this.msiEm.persist(msiMasterPepInstAsOpt.get)
@@ -583,7 +583,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     val msiMQC = new MsiMasterQuantComponent()
     msiMQC.setSelectionLevel(mqPepIon.selectionLevel)
     // TODO: decide what to store in the master quant component properties
-    //if( mqPepIon.properties != None ) msiMQC.setSerializedProperties( ProfiJson.serialize(mqPepIon.properties) )
+    //if( mqPepIon.properties.isDefined ) msiMQC.setSerializedProperties( ProfiJson.serialize(mqPepIon.properties) )
     msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
     msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
     msiMQC.setResultSummary(msiRSM)
@@ -595,18 +595,19 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     msiMQPepIon.setCharge(mqPepIon.charge)
     msiMQPepIon.setMoz(mqPepIon.unlabeledMoz)
     msiMQPepIon.setElutionTime(mqPepIon.elutionTime)
+    msiMQPepIon.setPeptideMatchCount(mqPepIon.peptideMatchesCount)
     msiMQPepIon.setMasterQuantComponent(msiMQC)
     msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
     msiMQPepIon.setResultSummary(msiRSM)
 
-    if (mqPepIon.properties != None) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))
-    if (mqPep.peptideInstance != None) {
+    if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))
+    if (mqPep.peptideInstance.isDefined) {
       msiMQPepIon.setPeptideInstanceId(mqPep.peptideInstance.get.id)
       msiMQPepIon.setPeptideId(mqPep.getPeptideId.get)
     }
-    if (mqPepIon.lcmsFeatureId != None) msiMQPepIon.setLcmsFeatureId(mqPepIon.lcmsFeatureId.get)
-    if (mqPepIon.bestPeptideMatchId != None) msiMQPepIon.setBestPeptideMatchId(mqPepIon.bestPeptideMatchId.get)
-    if (mqPepIon.unmodifiedPeptideIonId != None) msiMQPepIon.setUnmodifiedPeptideIonId(mqPepIon.unmodifiedPeptideIonId.get)
+    if (mqPepIon.lcmsMasterFeatureId.isDefined) msiMQPepIon.setLcmsMasterFeatureId(mqPepIon.lcmsMasterFeatureId.get)
+    if (mqPepIon.bestPeptideMatchId.isDefined) msiMQPepIon.setBestPeptideMatchId(mqPepIon.bestPeptideMatchId.get)
+    if (mqPepIon.unmodifiedPeptideIonId.isDefined) msiMQPepIon.setUnmodifiedPeptideIonId(mqPepIon.unmodifiedPeptideIonId.get)
 
     this.msiEm.persist(msiMQPepIon)
     
@@ -625,7 +626,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     // Store master quant component
     val msiMQC = new MsiMasterQuantComponent()
     msiMQC.setSelectionLevel(mqProtSet.selectionLevel)
-    if (mqProtSet.properties != None) msiMQC.setSerializedProperties(ProfiJson.serialize(mqProtSet.properties))
+    if (mqProtSet.properties.isDefined) msiMQC.setSerializedProperties(ProfiJson.serialize(mqProtSet.properties))
     msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
     msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
     msiMQC.setResultSummary(msiRSM)

@@ -31,21 +31,19 @@ import fr.proline.core.om.utils.AbstractMultipleDBTestCase
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.repository.DriverType
 
-
 @Test
 class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
-  
+
   // Define the interface to be implemented
   val driverType = DriverType.H2
   val fileName = "STR_F122817_Mascot_v2.3"
   val targetRSId = 1
   val decoyRSId = Option.empty[Int]
-  
-  var executionContext: IExecutionContext = null  
+
+  var executionContext: IExecutionContext = null
   var rsProvider: IResultSetProvider = null
   protected var readRS: ResultSet = null
-  
-  
+
   @Before
   @throws(classOf[Exception])
   def setUp() = {
@@ -55,9 +53,9 @@ class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
 
     //Load Data
     pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/ps-db.xml")
-    msiDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/msi-db.xml")
-    udsDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/uds-db.xml")
+    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")
+    msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
+    udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
 
     logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
 
@@ -66,70 +64,68 @@ class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
     rsProvider = rsProv
     readRS = this._loadRS()
   }
-  
-   
+
   private def _loadRS(): ResultSet = {
-    val rs = rsProvider.getResultSet(targetRSId).get    
+    val rs = rsProvider.getResultSet(targetRSId).get
     // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
     if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
     rs
   }
 
-    def buildJPAContext() = {
+  def buildJPAContext() = {
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
 
     (executionContext, rsProvider)
   }
-  
+
   @After
   override def tearDown() {
     if (executionContext != null) executionContext.closeAll()
     super.tearDown()
   }
-    
 
-  	@Test
-	def addOneRS() = {
-	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
-	  rsAddAlgo.addResultSet(readRS)
-	  val rs2 = rsAddAlgo.toResultSet()
-	  assert(rs2 != null)
-	  assert(readRS != rs2)
-	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
-	  assertEquals(peptides.length, readRS.peptides.length)
-	  assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
-	  assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
-	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
-	  assertEquals(1, ids.length)
-	  assertEquals(-99, ids(0))
-	  
-	  val storerContext = StorerContext(executionContext) // Use Object factory
-	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-     val rsId = rsStorer.storeResultSet(rs2, storerContext)
+  @Test
+  def addOneRS() = {
+    val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
+    rsAddAlgo.addResultSet(readRS)
+    val rs2 = rsAddAlgo.toResultSet()
+    assert(rs2 != null)
+    assert(readRS != rs2)
+    val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
+    assertEquals(peptides.length, readRS.peptides.length)
+    assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
+    assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
+    val ids = rs2.peptideMatches.map(_.resultSetId).distinct
+    assertEquals(1, ids.length)
+    assertEquals(-99, ids(0))
+
+    val storerContext = StorerContext(executionContext) // Use Object factory
+    val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+    val rsId = rsStorer.storeResultSet(rs2, storerContext)
   }
-  
-  	@Test
-	def addOneRSTwice() = {
-	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
-	  rsAddAlgo.addResultSet(readRS)
-	  rsAddAlgo.addResultSet(readRS)
-	  val rs2 = rsAddAlgo.toResultSet()
-	  assert(rs2 != null)
-	  assert(readRS != rs2)
-	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
-	  assertEquals(peptides.length, readRS.peptides.length)
-	  assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
-	  assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
-	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
-	  assertEquals(1, ids.length)
-	  assertEquals(-99, ids(0))
-	  
-	  val storerContext = StorerContext(executionContext) // Use Object factory
-	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-     val rsId = rsStorer.storeResultSet(rs2, storerContext)
+
+  @Test
+  def addOneRSTwice() = {
+    val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
+    rsAddAlgo.addResultSet(readRS)
+    rsAddAlgo.addResultSet(readRS)
+    val rs2 = rsAddAlgo.toResultSet()
+    assert(rs2 != null)
+    assert(readRS != rs2)
+    val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
+    assertEquals(peptides.length, readRS.peptides.length)
+    assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
+    assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
+    val ids = rs2.peptideMatches.map(_.resultSetId).distinct
+    assertEquals(1, ids.length)
+    assertEquals(-99, ids(0))
+
+    val storerContext = StorerContext(executionContext) // Use Object factory
+    val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+    val rsId = rsStorer.storeResultSet(rs2, storerContext)
   }
-  
+
   def buildSQLContext() = {
     val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
@@ -145,51 +141,53 @@ class ResultSetBuilderTest2 extends AbstractMultipleDBTestCase with Logging {
 
     (parserContext, rsProvider)
   }
-  
-  	@Test
-	def mergeTwiceRSAndValidate() = {
-  	   val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
-  	   rsAddAlgo.addResultSet(readRS)
-  	   rsAddAlgo.addResultSet(readRS)
-  	   val rs2 = rsAddAlgo.toResultSet()
-  	   assert(rs2 != null)
-  	   assert(readRS != rs2)
-  	   val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
-  	   assertEquals(peptides.length, readRS.peptides.length)
-  	     	   
-  	   val ids = rs2.peptideMatches.map(_.resultSetId).distinct
-  	   assertEquals(1, ids.length)
-  	   assertEquals(-99, ids(0))
-	  
-  	   val storerContext = StorerContext(executionContext) // Use Object factory
-  	   val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-  	   val rsId = rsStorer.storeResultSet(rs2, storerContext) 
-	  
-    
-	  val rsValidation = new ResultSetValidator(
-		  execContext = executionContext,
-		  targetRs = rs2,
-		  tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
-		  pepMatchPreFilters = Some(Seq(new ScorePSMFilter(scoreThreshold =  22.0f))),
-		  pepMatchValidator = None,
-		  protSetFilters = None,
-		  storeResultSummary = true)
 
-  	   val result = rsValidation.runService
-  	   Assert.assertTrue("ResultSet validation result", result)
-  	   logger.info(" End Run ResultSetValidator Service with Score Filter, in Test ")
+  @Test
+  def mergeTwiceRSAndValidate() = {
+    val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
+    rsAddAlgo.addResultSet(readRS)
+    rsAddAlgo.addResultSet(readRS)
+    val rs2 = rsAddAlgo.toResultSet()
+    assert(rs2 != null)
+    assert(readRS != rs2)
+    val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
+    assertEquals(peptides.length, readRS.peptides.length)
 
-  	   val tRSM = rsValidation.validatedTargetRsm  	   
-  	   logger.info(" rsValidation.validatedTargetRsm "+tRSM.id)
-  	   Assert.assertNotNull(tRSM)
- 	  
-  	  val provider: SQLResultSummaryProvider = new SQLResultSummaryProvider(executionContext.getMSIDbConnectionContext(),
-  			  executionContext.getPSDbConnectionContext(), executionContext.getUDSDbConnectionContext()) 
-	  val resdRSM =  provider.getResultSummary(tRSM.id, false)
-	  Assert.assertNotNull(tRSM)
- 	  
-  	}
+    val ids = rs2.peptideMatches.map(_.resultSetId).distinct
+    assertEquals(1, ids.length)
+    assertEquals(-99, ids(0))
 
+    val storerContext = StorerContext(executionContext) // Use Object factory
+    val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+    val rsId = rsStorer.storeResultSet(rs2, storerContext)
+
+    val rsValidation = new ResultSetValidator(
+      execContext = executionContext,
+      targetRs = rs2,
+      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
+      pepMatchPreFilters = Some(Seq(new ScorePSMFilter(scoreThreshold = 22.0f))),
+      pepMatchValidator = None,
+      protSetFilters = None,
+      storeResultSummary = true
+    )
+
+    val result = rsValidation.runService
+    Assert.assertTrue("ResultSet validation result", result)
+    logger.info(" End Run ResultSetValidator Service with Score Filter, in Test ")
+
+    val tRSM = rsValidation.validatedTargetRsm
+    logger.info(" rsValidation.validatedTargetRsm " + tRSM.id)
+    Assert.assertNotNull(tRSM)
+
+    val provider: SQLResultSummaryProvider = new SQLResultSummaryProvider(
+      executionContext.getMSIDbConnectionContext(),
+      executionContext.getPSDbConnectionContext(),
+      executionContext.getUDSDbConnectionContext()
+    )
+    val resdRSM = provider.getResultSummary(tRSM.id, false)
+    Assert.assertNotNull(tRSM)
+
+  }
 
 }
 

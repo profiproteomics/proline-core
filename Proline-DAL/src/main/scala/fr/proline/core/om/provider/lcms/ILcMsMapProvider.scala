@@ -9,7 +9,7 @@ trait ILcMsMapProvider {
   def getFeatures( mapIds: Seq[Long] ): Array[Feature]
 
   /** Returns a map of overlapping feature ids keyed by feature id */
-  def getOverlappingFtIdsByFtId( runMapIds: Seq[Long] ): Map[Long,Array[Long]]
+  def getOverlappingFtIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]]
   
   /** Returns a map of overlapping feature keyed by its id */
   def getOverlappingFeatureById( mapIds: Seq[Long],

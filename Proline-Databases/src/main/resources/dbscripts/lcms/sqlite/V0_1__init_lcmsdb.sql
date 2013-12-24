@@ -66,7 +66,7 @@ CREATE TABLE feature_ms2_event (
                 ms2_event_id INTEGER NOT NULL,
                 run_map_id INTEGER NOT NULL,
                 PRIMARY KEY (feature_id, ms2_event_id),
-                FOREIGN KEY (run_map_id) REFERENCES run_map (id)
+                FOREIGN KEY (run_map_id) REFERENCES raw_map (id)
 );
 
 CREATE TABLE feature_object_tree_mapping (
@@ -82,7 +82,7 @@ CREATE TABLE feature_overlap_mapping (
                 overlapping_feature_id INTEGER NOT NULL,
                 map_id INTEGER NOT NULL,
                 PRIMARY KEY (overlapped_feature_id, overlapping_feature_id),
-                FOREIGN KEY (map_id) REFERENCES run_map (id)
+                FOREIGN KEY (map_id) REFERENCES raw_map (id)
 );
 
 CREATE TABLE feature_scoring (
@@ -137,10 +137,10 @@ CREATE TABLE map_layer (
 );
 
 CREATE TABLE map_object_tree_mapping (
-                id INTEGER NOT NULL,
+                map_id INTEGER NOT NULL,
                 object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (id, object_tree_id),
+                PRIMARY KEY (map_id, object_tree_id),
                 FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
 );
 
@@ -180,7 +180,7 @@ CREATE TABLE ms_picture (
                 time_resolution REAL NOT NULL,
                 serialized_properties TEXT,
                 run_id INTEGER NOT NULL,
-                FOREIGN KEY (run_id) REFERENCES run (id)
+                FOREIGN KEY (run_id) REFERENCES scan_sequence (id)
 );
 
 CREATE TABLE object_tree (
@@ -248,32 +248,19 @@ CREATE TABLE processed_map_moz_calibration (
                 PRIMARY KEY (processed_map_id, scan_id)
 );
 
-CREATE TABLE processed_map_run_map_mapping (
+CREATE TABLE processed_map_raw_map_mapping (
                 processed_map_id INTEGER NOT NULL,
-                run_map_id INTEGER NOT NULL,
-                PRIMARY KEY (processed_map_id, run_map_id)
+                raw_map_id INTEGER NOT NULL,
+                PRIMARY KEY (processed_map_id, raw_map_id)
 );
 
-CREATE TABLE run (
+CREATE TABLE raw_map (
                 id INTEGER NOT NULL,
-                raw_file_name TEXT(250) NOT NULL,
-                min_intensity REAL,
-                max_intensity REAL,
-                ms1_scan_count INTEGER NOT NULL,
-                ms2_scan_count INTEGER NOT NULL,
-                serialized_properties TEXT,
-                instrument_id INTEGER NOT NULL,
-                PRIMARY KEY (id),
-                FOREIGN KEY (instrument_id) REFERENCES instrument (id)
-);
-
-CREATE TABLE run_map (
-                id INTEGER NOT NULL,
-                run_id INTEGER NOT NULL,
+                scan_sequence_id INTEGER NOT NULL,
                 peak_picking_software_id INTEGER NOT NULL,
                 peakel_fitting_model_id INTEGER,
                 PRIMARY KEY (id),
-                FOREIGN KEY (run_id) REFERENCES run (id),
+                FOREIGN KEY (scan_sequence_id) REFERENCES scan_sequence (id),
                 FOREIGN KEY (peak_picking_software_id) REFERENCES peak_picking_software (id),
                 FOREIGN KEY (peakel_fitting_model_id) REFERENCES peakel_fitting_model (id)
 );
@@ -290,8 +277,21 @@ CREATE TABLE scan (
                 precursor_moz REAL,
                 precursor_charge INTEGER,
                 serialized_properties TEXT,
-                run_id INTEGER NOT NULL,
-                FOREIGN KEY (run_id) REFERENCES run (id)
+                scan_sequence_id INTEGER NOT NULL,
+                FOREIGN KEY (scan_sequence_id) REFERENCES scan_sequence (id)
+);
+
+CREATE TABLE scan_sequence (
+                id INTEGER NOT NULL,
+                raw_file_name TEXT(250) NOT NULL,
+                min_intensity REAL,
+                max_intensity REAL,
+                ms1_scan_count INTEGER NOT NULL,
+                ms2_scan_count INTEGER NOT NULL,
+                serialized_properties TEXT,
+                instrument_id INTEGER NOT NULL,
+                PRIMARY KEY (id),
+                FOREIGN KEY (instrument_id) REFERENCES instrument (id)
 );
 
 CREATE TABLE theoretical_feature (
@@ -323,7 +323,7 @@ CREATE TABLE tile (
                 FOREIGN KEY (ms_picture_id) REFERENCES ms_picture (id)
 );
 
-CREATE INDEX scan_run_idx ON scan (run_id);
+CREATE INDEX scan_scan_sequence_idx ON scan (scan_sequence_id);
 
 CREATE INDEX scan_precursor_moz_idx ON scan (precursor_moz);
 
@@ -348,6 +348,12 @@ CREATE INDEX map_alignment_map_set_idx ON map_alignment (map_set_id);
 CREATE INDEX feature_ms2_event_run_map_idx ON feature_ms2_event (run_map_id);
 
 CREATE INDEX master_feature_item_master_map_idx ON master_feature_item (master_map_id);
+
+CREATE UNIQUE INDEX map_set_object_tree_mapping_idx ON map_set_object_tree_mapping (map_set_id,schema_name);
+
+CREATE UNIQUE INDEX map_object_tree_mapping_idx ON map_object_tree_mapping (map_id,schema_name);
+
+CREATE UNIQUE INDEX feature_object_tree_mapping_idx ON feature_object_tree_mapping (feature_id,schema_name);
 
 CREATE INDEX feature_overlap_mapping_map_idx ON feature_overlap_mapping (map_id);
 

@@ -10,7 +10,7 @@ import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{ SelectQueryBuilder1 }
 import fr.proline.core.dal.tables.lcms.LcmsDbFeatureClusterItemTable
-import fr.proline.core.dal.tables.lcms.LcmsDbRunMapTable
+import fr.proline.core.dal.tables.lcms.LcmsDbRawMapTable
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.om.storer.lcms.ProcessedMapStorer
@@ -41,8 +41,8 @@ class ClusterizeMapFeatures(val lcmsDbCtx: DatabaseConnectionContext, lcmsMap: P
     // Make some requirements
     require(lcmsMap.isProcessed, "the map must be a processed map")
 
-    val runMapIds = lcmsMap.getRunMapIds
-    require(runMapIds.length == 1, "the processed map must correspond to a unique run map")
+    val rawMapIds = lcmsMap.getRawMapIds
+    require(rawMapIds.length == 1, "the processed map must correspond to a unique run map")
 
     // Check if a transaction is already initiated
     val wasInTransaction = lcmsDbCtx.isInTransaction()
@@ -50,21 +50,21 @@ class ClusterizeMapFeatures(val lcmsDbCtx: DatabaseConnectionContext, lcmsMap: P
 
     // Define some vars
     val processedMapId = lcmsMap.id
-    val runMapId = runMapIds(0)
+    val rawMapId = rawMapIds(0)
     
     DoJDBCWork.withEzDBC( lcmsDbCtx, { ezDBC =>
       
       val inExprLimit = ezDBC.getInExpressionCountLimit
       
       // Retrieve run id corresponding to run map id
-      val runMapRunIdQuery = new SelectQueryBuilder1(LcmsDbRunMapTable).mkSelectQuery( (t,c) =>
-        List(t.RUN_ID) -> "WHERE "~ t.ID ~" = "~ runMapId
+      val rawMapScanSeqIdQuery = new SelectQueryBuilder1(LcmsDbRawMapTable).mkSelectQuery( (t,c) =>
+        List(t.SCAN_SEQUENCE_ID) -> "WHERE "~ t.ID ~" = "~ rawMapId
       )
-      val runId = ezDBC.selectInt(runMapRunIdQuery)
+      val scanSeqId = ezDBC.selectInt(rawMapScanSeqIdQuery)
       
       // Retrieve corresponding scans
       val scanSeqProvider = new SQLScanSequenceProvider(lcmsDbCtx)
-      val scans = scanSeqProvider.getScans(Array(runId))
+      val scans = scanSeqProvider.getScans(Array(scanSeqId))
 
       logger.info("clusterizing features...")
       

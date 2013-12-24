@@ -1,23 +1,28 @@
 package fr.proline.core.algo.msi
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import com.weiglewilczek.slf4s.Logging
+import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.om.model.msi.ProteinMatch
+import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.provider.msi.IResultSummaryProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.core.orm.msi.ProteinSet
 import fr.proline.repository.DriverType
-import fr.proline.core.service.msi.RSMTypicalProteinChooser
+import fr.proline.core.om.provider.msi.IResultSetProvider
 
 class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging {
-  // Define the interface to be implemented
+
+  // Define some vars
   val driverType = DriverType.H2
-  val fileName = "Merged_RSM_Test"
-  val targetRSMId: Long = 2
+  val fileName = "STR_F063442_F122817_MergedRSMs"
+  val targetRSMId: Long = 33
 
   var executionContext: IExecutionContext = null
 
@@ -39,50 +44,32 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
     val execContext = buildJPAContext()
     executionContext = execContext
   }
-  
+
   @After
   override def tearDown() {
     if (executionContext != null) executionContext.closeAll()
     super.tearDown()
   }
 
-  
   def buildJPAContext() = {
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     executionContext
   }
-  
+
   @Test
   def testChangeTypicalProt() = {
 
-	//Verify which proteinSets should be modified by algo
-	var nbrTremblTPM:Int = 964    // # proteinSet with Trembl typical protein match
-	var nbrTremblShouldChange : Int = 951 // # proteinSet with Trembl typical protein match but which have "sp" proteinmatch in their sameset 
-	
-    
-	val ruleDesc = new TypicalProteinChooserRule(ruleName="Sp chooser", applyToAcc=false,rulePattern="^sp.*" )
-	val typicalChooserService = new RSMTypicalProteinChooser(executionContext,targetRSMId,ruleDesc)
-	typicalChooserService.runService
-//  	typicalChooser.changeTypical(targetRSMId,ruleDesc,executionContext.getMSIDbConnectionContext().getEntityManager())
-  	
-  	val nbrChangedTyp = typicalChooserService.getChangedProteinSetsCount
+    // Check which proteinSets should be modified by algo
+    var nbrTremblShouldChange: Int = 4 // # proteinSet with an accession number containing 6 letters (AC instead of ID) 
+
+    val typicalChooser = new TypicalProteinChooser()
+    val ruleDesc = new TypicalProteinChooserRule(ruleName = "Sprot AC preferred", applyToAcc = true, rulePattern = "\\w{6,6}")
+    typicalChooser.changeTypical(targetRSMId, ruleDesc, executionContext.getMSIDbConnectionContext().getEntityManager())
+
+    val nbrChangedTyp = typicalChooser.getChangedProteinSets.size
 
     Assert.assertEquals(nbrTremblShouldChange, nbrChangedTyp)
-	
-    val msiEM = executionContext.getMSIDbConnectionContext().getEntityManager()
-    msiEM.clear()
-    val ormProtSetRSM = msiEM.createQuery("FROM fr.proline.core.orm.msi.ProteinSet protSet WHERE resultSummary.id = :rsmId", 
-    		  	classOf[fr.proline.core.orm.msi.ProteinSet]).setParameter("rsmId",targetRSMId).getResultList().toList
-    var nbrTblTypicalPS = 0		  	
-    ormProtSetRSM.foreach(ps =>{
-    	val typicalPSPMI  = ps.getProteinSetProteinMatchItems().filter(pspmi => { pspmi.getProteinMatch().getId() == ps.getProteinMatchId()}).toSeq
-    	var currentTypicalDesc =typicalPSPMI(0).getProteinMatch().getDescription()
-    	if(currentTypicalDesc.startsWith("tr"))
-    	  nbrTblTypicalPS+=1
-    })
-  
-      Assert.assertEquals(nbrTblTypicalPS, nbrTremblTPM-nbrTremblShouldChange)
+
   }
-  
-  
+
 }

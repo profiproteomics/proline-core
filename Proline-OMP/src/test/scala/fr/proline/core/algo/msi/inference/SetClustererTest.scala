@@ -26,7 +26,7 @@ class SetClustererTest extends JUnitSuite {
 
     assertEquals(inputSet, cluster.samesetsValues)
     assert(!cluster.isSubset)
-    assert(cluster.oversetId == None)
+    assert(cluster.oversetId.isEmpty)
   }
 
   @Test
@@ -40,7 +40,7 @@ class SetClustererTest extends JUnitSuite {
 
     val overset = clusters.filter(_.samesetsValues == setsById(1))(0)
     assert(!overset.isSubset)
-    assert(overset.strictSubsetsIds != None)
+    assert(overset.strictSubsetsIds.isDefined)
 
     val subset = clusters.filter(_.samesetsValues == setsById(2))(0)
     assert(subset.isSubset === true)
@@ -61,10 +61,10 @@ class SetClustererTest extends JUnitSuite {
     assertEquals(2, oversets.length)
 
     for (overset <- oversets) {
-      assert(overset.strictSubsetsIds == None)
+      assert(overset.strictSubsetsIds.isEmpty)
     }
     for (overset <- oversets) {
-      assert(overset.subsumableSubsetsIds != None)
+      assert(overset.subsumableSubsetsIds.isDefined)
     }
 
     val subsumableSubsets = clusters.filter(_.isSubset == true)
@@ -87,11 +87,11 @@ class SetClustererTest extends JUnitSuite {
     assertEquals(3, oversets.length)
 
     for (overset <- oversets) {
-      assert(overset.strictSubsetsIds == None)
+      assert(overset.strictSubsetsIds.isEmpty)
     }
 
     for (overset <- oversets) {
-      assert(overset.subsumableSubsetsIds != None)
+      assert(overset.subsumableSubsetsIds.isDefined)
     }
 
     val subsumableSubsets = clusters.filter(_.isSubset == true)
@@ -114,11 +114,11 @@ class SetClustererTest extends JUnitSuite {
     assertEquals(3, oversets.length)
 
     for (overset <- oversets) {
-      assert(overset.strictSubsetsIds == None)
+      assert(overset.strictSubsetsIds.isEmpty)
     }
 
     for (overset <- oversets) {
-      assert(overset.subsumableSubsetsIds != None)
+      assert(overset.subsumableSubsetsIds.isDefined)
     }
 
     val subsumableSubsets = clusters.filter(_.isSubset == true)
@@ -182,7 +182,7 @@ class SetClustererTest extends JUnitSuite {
     assertEquals(4, oversets.length)
 
     for (overset <- oversets) {
-      assert(overset.strictSubsetsIds == None)
+      assert(overset.strictSubsetsIds.isEmpty)
     }
     
     val subsumableSubsets = clusters.filter(_.isSubset == true)

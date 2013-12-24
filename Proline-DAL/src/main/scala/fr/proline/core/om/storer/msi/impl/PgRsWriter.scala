@@ -31,7 +31,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   // val bulkCopyManager = new CopyManager( msiDb1.ezDBC.connection.asInstanceOf[BaseConnection] )
 
   private val peptideTableCols = MsiDbPeptideTable.columnsAsStrList.mkString(",")
-  private val readablePtmTableCols = MsiDbPeptideReadablePtmStringTable.columnsAsStrList.filter(_ != "id").mkString(",")
+  private val readablePtmTableCols = MsiDbPeptideReadablePtmStringTable.columnsAsStrList.mkString(",")
   private val pepMatchTableCols = MsiDbPeptideMatchTable.columnsAsStrList.filter(_ != "id").mkString(",")
   private val pepMatchRelTableCols = MsiDbPeptideMatchRelationTable.columnsAsStrList.mkString(",")
   private val protMatchTableCols = MsiDbProteinMatchTable.columnsAsStrList.filter(_ != "id").mkString(",")
@@ -121,36 +121,34 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       // Bulk insert of readable ptm strings
       logger.info("BULK insert of readable ptm strings")
       
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpReadblePtmTableName + " ( id, " + readablePtmTableCols + " ) FROM STDIN")
+      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpReadblePtmTableName + " ( " + readablePtmTableCols + " ) FROM STDIN")
       
       // Iterate over peptides
-      var ptmIdFake = 0
       for (peptide <- rs.peptides; if StringUtils.isNotEmpty(peptide.readablePtmString)) {
-        ptmIdFake -= 1
         
-        val readablePtmValues = List(
-          ptmIdFake,
-          peptide.readablePtmString,
+        val readablePtmValues = List(          
           peptide.id,
-          rsId
+          rsId,
+          peptide.readablePtmString
         )
         
         // Store readable PTM string
         val readablePtmBytes = encodeRecordForPgCopy(readablePtmValues)
         pgBulkLoader.writeToCopy(readablePtmBytes, 0, readablePtmBytes.length)
       }
-  
+
       // End of BULK copy
       val nbInsertedRecords = pgBulkLoader.endCopy()
       
       // Move TMP table content to MAIN table
       logger.info("move TMP table " + tmpReadblePtmTableName + " into MAIN peptide_readable_ptm_string table")
       stmt.executeUpdate("INSERT into peptide_readable_ptm_string (" + readablePtmTableCols + ") " +
-        "SELECT " + readablePtmTableCols + " FROM " + tmpReadblePtmTableName)
+        "SELECT " + readablePtmTableCols + " FROM " + tmpReadblePtmTableName
+      )
       
       nbInsertedRecords.toInt
       
-    }, true )
+    } )
   }
 
   override def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
@@ -185,7 +183,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
         
         val scoreType = peptideMatch.scoreType  
         val scoringId = scoringIdByType.get(scoreType)
-        require(scoringId != None, "can't find a scoring id for the score type '" + scoreType + "'")
+        require(scoringId.isDefined, "can't find a scoring id for the score type '" + scoreType + "'")
         
         val msQuery = peptideMatch.msQuery
         val bestChildId = peptideMatch.getBestChildId
@@ -247,7 +245,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
     // Iterate over peptide matches to store them
     for (peptideMatch <- peptideMatches) {
-      if (peptideMatch.children != null && peptideMatch.children != None) {
+      if (peptideMatch.children != null && peptideMatch.children.isDefined) {
         for (pepMatchChild <- peptideMatch.children.get) {
 
           // Build a row containing peptide_match_relation values
@@ -300,8 +298,8 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   
         val scoreType = proteinMatch.scoreType  
         val scoringId = scoringIdByType.get(scoreType)
-        require(scoringId != None,"can't find a scoring id for the score type '" + scoreType + "'")
-        //val pepMatchPropsAsJSON = if( peptideMatch.properties != None ) ProfiJson.serialize(peptideMatch.properties.get) else ""
+        require(scoringId.isDefined,"can't find a scoring id for the score type '" + scoreType + "'")
+        //val pepMatchPropsAsJSON = if( peptideMatch.properties.isDefined ) ProfiJson.serialize(peptideMatch.properties.get) else ""
   
         val proteinId = proteinMatch.getProteinId
         

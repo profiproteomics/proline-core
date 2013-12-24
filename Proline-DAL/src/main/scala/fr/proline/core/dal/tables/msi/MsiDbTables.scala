@@ -146,8 +146,9 @@ object MsiDbMasterQuantPeptideIonColumns extends ColumnEnumeration {
   val MOZ = Column("moz")
   val ELUTION_TIME = Column("elution_time")
   val SCAN_NUMBER = Column("scan_number")
+  val PEPTIDE_MATCH_COUNT = Column("peptide_match_count")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
-  val LCMS_FEATURE_ID = Column("lcms_feature_id")
+  val LCMS_MASTER_FEATURE_ID = Column("lcms_master_feature_id")
   val PEPTIDE_ID = Column("peptide_id")
   val PEPTIDE_INSTANCE_ID = Column("peptide_instance_id")
   val MASTER_QUANT_PEPTIDE_ID = Column("master_quant_peptide_id")
@@ -446,10 +447,9 @@ object MsiDbPeptideMatchRelationTable extends MsiDbPeptideMatchRelationTable {
 
 object MsiDbPeptideReadablePtmStringColumns extends ColumnEnumeration {
   val $tableName = MsiDbPeptideReadablePtmStringTable.name
-  val ID = Column("id")
-  val READABLE_PTM_STRING = Column("readable_ptm_string")
   val PEPTIDE_ID = Column("peptide_id")
   val RESULT_SET_ID = Column("result_set_id")
+  val READABLE_PTM_STRING = Column("readable_ptm_string")
 }
 
 abstract class MsiDbPeptideReadablePtmStringTable extends TableDefinition[MsiDbPeptideReadablePtmStringColumns.type]
@@ -568,6 +568,7 @@ object MsiDbProteinMatchSeqDatabaseMapTable extends MsiDbProteinMatchSeqDatabase
 object MsiDbProteinSetColumns extends ColumnEnumeration {
   val $tableName = MsiDbProteinSetTable.name
   val ID = Column("id")
+  val IS_DECOY = Column("is_decoy")
   val IS_VALIDATED = Column("is_validated")
   val SELECTION_LEVEL = Column("selection_level")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
@@ -601,6 +602,7 @@ object MsiDbProteinSetProteinMatchItemColumns extends ColumnEnumeration {
   val $tableName = MsiDbProteinSetProteinMatchItemTable.name
   val PROTEIN_SET_ID = Column("protein_set_id")
   val PROTEIN_MATCH_ID = Column("protein_match_id")
+  val IS_IN_SUBSET = Column("is_in_subset")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val RESULT_SUMMARY_ID = Column("result_summary_id")
 }
@@ -869,6 +871,4 @@ object MsiDbUsedPtmTable extends MsiDbUsedPtmTable {
   val name = "used_ptm"
   val columns = MsiDbUsedPtmColumns
 }
-
-
 

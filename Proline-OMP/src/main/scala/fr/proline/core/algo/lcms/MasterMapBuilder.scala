@@ -46,7 +46,7 @@ class MasterMapBuilder(
   // Retrieve some vars
   private val childMaps = mapSet.childMaps
   private val nbMaps = childMaps.length
-  //private val processedMapIdByRunMapId = mapSet.getProcessedMapIdByRunMapId
+  //private val processedMapIdByRawMapId = mapSet.getProcessedMapIdByRawMapId
   private val alnRefMap = mapSet.getAlnReferenceMap.get
   private val alnRefMapId = alnRefMap.id
   //private val mapAlnSets = mapSet.mapAlnSets
@@ -123,7 +123,7 @@ class MasterMapBuilder(
       creationTimestamp = curTime,
       modificationTimestamp = curTime,
       mapSetId = mapSet.id,
-      runMapIdentifiers = mapSet.getRunMapIds().map(Identifier(_))
+      rawMapIdentifiers = mapSet.getRawMapIds().map(Identifier(_))
     )
     
     masterMap
@@ -166,7 +166,7 @@ class MasterMapBuilder(
       require( childMapId != 0, "a processed map id must be defined for each child feature (m/z=" + childFt.moz +")")
       
       //val childProcessedMapId = if( childFt.isCluster ) childMapId
-      //else processedMapIdByRunMapId(childFt.relations.runMapId)
+      //else processedMapIdByRawMapId(childFt.relations.rawMapId)
       
       if( childMapId != mapSet.getAlnReferenceMapId ) {
         // Calculate corrected elution time using the elution time alignment
@@ -267,15 +267,15 @@ class MasterMapBuilder(
   ): ArrayBuffer[MasterFeatureBuilder] = {
     
     // Retrieve master map and number of maps
-    val runMapIds = mapSet.getRunMapIds
-    val nbMaps = runMapIds.length
+    val rawMapIds = mapSet.getRawMapIds
+    val nbMaps = rawMapIds.length
     
     // Build a hash map of unfulfilled master features and another one for single features
     val notFullMftsByMapId = new HashMap[Long,ArrayBuffer[MasterFeatureBuilder]]
     val singleChildMftsByMapId = new HashMap[Long,ArrayBuffer[MasterFeatureBuilder]]
     
     // Initialize the hash maps
-    for( mapId <- runMapIds ) {
+    for( mapId <- rawMapIds ) {
       notFullMftsByMapId.put( mapId, new ArrayBuffer[MasterFeatureBuilder](0) )
       singleChildMftsByMapId.put( mapId, new ArrayBuffer[MasterFeatureBuilder](0) )
     }
@@ -283,20 +283,20 @@ class MasterMapBuilder(
     for( mftBuilder <- mftBuilders ) {
       
       // Determine the number of matched maps
-      val matchedMapIdSet = mftBuilder.bestFeature.getRunMapIds.toSet
+      val matchedMapIdSet = mftBuilder.bestFeature.getRawMapIds.toSet
       val nbMatchedMaps = matchedMapIdSet.size
       
       // If master feature contains a single feature
       if( mftBuilder.children.length == 1 ) {
-        val runMapId = matchedMapIdSet.head
+        val rawMapId = matchedMapIdSet.head
         //println("runmap id set="+matchedMapIdSet.mkString(","))
-        //println("runmap id list ="+ runMapIds.mkString(","))
-        singleChildMftsByMapId( runMapId ) += mftBuilder
+        //println("runmap id list ="+ rawMapIds.mkString(","))
+        singleChildMftsByMapId( rawMapId ) += mftBuilder
       }
       // If master feature is not fulfilled
       else if( nbMatchedMaps < nbMaps ) {
         
-        val unmatchedMapIds = runMapIds filter { ! matchedMapIdSet.contains(_) } 
+        val unmatchedMapIds = rawMapIds filter { ! matchedMapIdSet.contains(_) } 
         
         for( mapId <- unmatchedMapIds ) {
           notFullMftsByMapId(mapId) += mftBuilder

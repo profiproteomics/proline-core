@@ -68,7 +68,7 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
     }
 
     // --- Execute SQL query to load protein match records ---
-    val protMatchQuery = if( rsmIds == None ) {
+    val protMatchQuery = if( rsmIds.isEmpty ) {
       new SelectQueryBuilder1(MsiDbProteinMatchTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
       )

@@ -86,7 +86,7 @@ trait TableDefinition[A  <: ColumnEnumeration] {
   
   private def _makeSelectQuery( colsAsStrList: List[String], tblsAsStrList: List[String], whereClause: Option[String] = None ): String = {
     var query = "SELECT "+ colsAsStrList.mkString(",")+" FROM "+ tblsAsStrList.mkString(",")
-    if( whereClause != None ) query += " WHERE " + whereClause.get
+    if( whereClause.isDefined ) query += " WHERE " + whereClause.get
     query
   }
 

@@ -28,7 +28,7 @@ class ORMPeptideInstanceProvider( val msiDbCtx: DatabaseConnectionContext, val p
   }
 
   def getPeptideInstances(pepInstIds: Seq[Long] ): Array[PeptideInstance] = {
-    this.getPeptideInstancesAsOptions(pepInstIds).filter(_ != None).map(_.get)
+    this.getPeptideInstancesAsOptions(pepInstIds).filter(_.isDefined).map(_.get)
   }
 
   def getResultSummariesPeptideInstances(resultSummaryIds: Seq[Long] ): Array[PeptideInstance] = { throw new Exception("NYI") }

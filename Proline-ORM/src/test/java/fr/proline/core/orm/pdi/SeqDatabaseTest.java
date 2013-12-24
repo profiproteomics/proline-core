@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.pdi.repository.PdiSeqDatabaseRepository;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 
 public class SeqDatabaseTest extends DatabaseTestCase {
 
@@ -42,7 +42,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	    SequenceDbInstance seqDB = PdiSeqDatabaseRepository.findSeqDbInstanceWithNameAndFile(pdiEm,
 		    "sprot", "H:/Sequences/uniprot/knowledgebase2011_06/uniprot_sprot.fasta");
 	    assertNotNull(seqDB);
-	    assertEquals(seqDB.getSequenceCount(), Integer.valueOf(4));
+	    assertEquals(seqDB.getSequenceCount(), 4);
 	} finally {
 
 	    if (pdiEm != null) {
@@ -90,7 +90,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	try {
 	    SequenceDbInstance seqDB = pdiEm.find(SequenceDbInstance.class, Long.valueOf(33L));
 	    assertNotNull(seqDB);
-	    assertEquals(seqDB.getSequenceCount(), Integer.valueOf(4));
+	    assertEquals(seqDB.getSequenceCount(), 4);
 	} finally {
 
 	    if (pdiEm != null) {

@@ -86,7 +86,7 @@ case class ResultSet(
 
     val proteins = new ArrayBuffer[Protein](0)
     for (protMatch <- proteinMatches)
-      if (protMatch.protein != None) proteins += protMatch.protein.get
+      if (protMatch.protein.isDefined) proteins += protMatch.protein.get
 
     if (proteins.length == 0) None
     else Some(proteins.toArray)
@@ -149,7 +149,7 @@ case class ResultSummary(
   // Requirements
   require(peptideInstances != null && proteinSets != null)
 
-  def getResultSetId: Long = { if (resultSet != None) resultSet.get.id else resultSetId }
+  def getResultSetId: Long = { if (resultSet.isDefined) resultSet.get.id else resultSetId }
 
   
    def setDecoyResultSummaryId(decoyRSMId: Long) {
@@ -158,7 +158,7 @@ case class ResultSummary(
     decoyResultSummaryId = decoyRSMId
   }
   
-  def getDecoyResultSummaryId: Long = { if (decoyResultSummary != null && decoyResultSummary != None) decoyResultSummary.get.id else decoyResultSummaryId }
+  def getDecoyResultSummaryId: Long = { if (decoyResultSummary != null && decoyResultSummary.isDefined) decoyResultSummary.get.id else decoyResultSummaryId }
 
   def peptideInstanceById: Map[Long, PeptideInstance] = {
 
@@ -259,7 +259,7 @@ case class ResultSummary(
           val bestPeptideMatch = peptideMatchMap.get(seqMatch.getBestPeptideMatchId)
 
           // If the peptide is not in the map (its score may be too low)
-          if (bestPeptideMatch != None) {
+          if (bestPeptideMatch.isDefined) {
             bestPepMatchByMsQueryId += (bestPeptideMatch.get.msQuery.id -> bestPeptideMatch.get)
           }
         }

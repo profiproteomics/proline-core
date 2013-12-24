@@ -66,7 +66,7 @@ class IdentificationTreeValidator(
     this.logger.debug("first RS id = " + targetRsIds(0))
 
     // Retrieve decoy RS ids if they exists
-    val decoyRsIdsAsOpts = targetRsIds.map { msiDbHelper.getDecoyRsId(_) } filter { _ != None }
+    val decoyRsIdsAsOpts = targetRsIds.map { msiDbHelper.getDecoyRsId(_) } filter { _.isDefined }
 
     // Check that if we have decoy data we have the same number of target and decoy result sets
     val (nbTargetRs, nbDecoyRs) = (targetRsIds.length, decoyRsIdsAsOpts.length)

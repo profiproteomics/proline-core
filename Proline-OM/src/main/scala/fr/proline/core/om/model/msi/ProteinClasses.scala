@@ -133,7 +133,7 @@ case class ProteinMatch (
     else sequenceMatches.map( _.getPeptideId ).distinct.length
   }
 
-  def getProteinId: Long = { if(protein != null && protein != None) protein.get.id else proteinId }
+  def getProteinId: Long = { if(protein != null && protein.isDefined) protein.get.id else proteinId }
   
 }
 
@@ -156,6 +156,7 @@ case class ProteinSet (
   var id: Long = 0,
   var resultSummaryId: Long = 0,
   
+  // Must be only proteinMatchIds which are not in a subset
   var proteinMatchIds: Array[Long] = null, //One of these 2 values should be specified
   @transient var proteinMatches: Option[Array[ProteinMatch]] = null,
   
@@ -192,9 +193,9 @@ case class ProteinSet (
   
   def getTypicalProteinMatch: Option[ProteinMatch] = typicalProteinMatch
   
-  def getProteinMatchIds: Array[Long] = { if(proteinMatches != null && proteinMatches != None) proteinMatches.get.map(_.id)  else proteinMatchIds  }
+  def getProteinMatchIds: Array[Long] = { if(proteinMatches != null && proteinMatches.isDefined) proteinMatches.get.map(_.id)  else proteinMatchIds  }
 
-  def getTypicalProteinMatchId: Long = { if(typicalProteinMatch != null && typicalProteinMatch != None) typicalProteinMatch.get.id else typicalProteinMatchId }
+  def getTypicalProteinMatchId: Long = { if(typicalProteinMatch != null && typicalProteinMatch.isDefined) typicalProteinMatch.get.id else typicalProteinMatchId }
    
   /**
    * Return a list of all ProteinMatch ids, identified as same set or sub set of this ProteinSet, 
@@ -203,33 +204,44 @@ case class ProteinSet (
    *	
    */
   @throws(classOf[IllegalAccessException])
-  def getAllProteinMatchesIdByPeptideSet: Map[PeptideSet,Array[Long]] = {
-    if(peptideSet.hasStrictSubset && (peptideSet.strictSubsets == null || !peptideSet.strictSubsets.isDefined) )
-      throw new IllegalAccessException("PeptideSets not accessible")
+  def getAllProteinMatchesIdByPeptideSet: Map[PeptideSet, Array[Long]] = {
     
-    val resultMapBuilder = Map.newBuilder[PeptideSet,Array[Long]]
+    if (peptideSet.hasStrictSubset && (peptideSet.strictSubsets == null || !peptideSet.strictSubsets.isDefined))
+      throw new IllegalAccessException("Strict subsets not accessible")
     
+    if (peptideSet.hasSubsumableSubset && (peptideSet.subsumableSubsets == null || !peptideSet.subsumableSubsets.isDefined))
+      throw new IllegalAccessException("Subsumable subsets not accessible")
+    
+    val resultMapBuilder = Map.newBuilder[PeptideSet, Array[Long]]
+
     resultMapBuilder += peptideSet -> peptideSet.proteinMatchIds
-    if(peptideSet.hasStrictSubset) {
-       peptideSet.strictSubsets.get.foreach(pepSet => {
-         resultMapBuilder += pepSet -> pepSet.proteinMatchIds
-       })       
-     }
+    
+    if (peptideSet.hasStrictSubset) {
+      peptideSet.strictSubsets.get.foreach(pepSet => {
+        resultMapBuilder += pepSet -> pepSet.proteinMatchIds
+      })
+    }
+    if (peptideSet.hasSubsumableSubset) {
+      peptideSet.subsumableSubsets.get.foreach(pepSet => {
+        resultMapBuilder += pepSet -> pepSet.proteinMatchIds
+      })
+    }
+    
     resultMapBuilder.result
   }
-  
- override def hashCode = {
-   id.hashCode 
- }
- 
- override def toString(): String = {
-   val toStrBulider= new StringBuilder(id.toString)
-   if(typicalProteinMatch != null && typicalProteinMatch.isDefined)
-     toStrBulider.append(typicalProteinMatch.get.accession)
-   else     
-     toStrBulider.append(" typicalProteinMatch ID : ").append(typicalProteinMatchId)
-   toStrBulider.result
- }
+
+  override def hashCode = {
+    id.hashCode
+  }
+
+  override def toString(): String = {
+    val toStrBulider = new StringBuilder(id.toString)
+    if (typicalProteinMatch != null && typicalProteinMatch.isDefined)
+      toStrBulider.append(typicalProteinMatch.get.accession)
+    else
+      toStrBulider.append(" typicalProteinMatch ID : ").append(typicalProteinMatchId)
+    toStrBulider.result
+  }
  
 }
 
@@ -265,9 +277,9 @@ case class SequenceMatch (
   require( start > 0 , "peptide sequence position must be striclty positive" )
   require( end > start , "peptide end position must be greater than start position" )
   
-  def getPeptideId: Long = { if(peptide != null && peptide != None) peptide.get.id else peptideId }
+  def getPeptideId: Long = { if(peptide != null && peptide.isDefined) peptide.get.id else peptideId }
 
-  def getBestPeptideMatchId: Long = { if(bestPeptideMatch != null && bestPeptideMatch != None) bestPeptideMatch.get.id else bestPeptideMatchId }
+  def getBestPeptideMatchId: Long = { if(bestPeptideMatch != null && bestPeptideMatch.isDefined) bestPeptideMatch.get.id else bestPeptideMatchId }
   
 }
 

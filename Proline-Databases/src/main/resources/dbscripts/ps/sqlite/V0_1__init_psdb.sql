@@ -27,8 +27,8 @@ CREATE TABLE peptide (
 CREATE TABLE peptide_ptm (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 seq_position INTEGER NOT NULL,
-                mono_mass REAL,
-                average_mass REAL,
+                mono_mass REAL NOT NULL,
+                average_mass REAL NOT NULL,
                 serialized_properties TEXT,
                 peptide_id INTEGER NOT NULL,
                 ptm_specificity_id INTEGER NOT NULL,
@@ -41,8 +41,7 @@ CREATE TABLE peptide_ptm (
 CREATE TABLE peptide_ptm_insert_status (
                 peptide_id INTEGER NOT NULL,
                 is_ok TEXT NOT NULL,
-                PRIMARY KEY (peptide_id),
-                FOREIGN KEY (peptide_id) REFERENCES peptide (id)
+                PRIMARY KEY (peptide_id)
 );
 
 CREATE TABLE ptm (
@@ -85,7 +84,15 @@ CREATE TABLE ptm_specificity (
 
 CREATE INDEX peptide_ptm_peptide_idx ON peptide_ptm (peptide_id);
 
+CREATE UNIQUE INDEX ptm_full_name_idx ON ptm (full_name);
+
+CREATE UNIQUE INDEX ptm_short_name_idx ON ptm (short_name);
+
 CREATE UNIQUE INDEX peptide_sequence_ptm_idx ON peptide (sequence,ptm_string);
 
 CREATE INDEX peptide_mass_idx ON peptide (calculated_mass);
+
+CREATE UNIQUE INDEX ptm_specificity_idx ON ptm_specificity (location,residue,ptm_id);
+
+CREATE UNIQUE INDEX ptm_classification_idx ON ptm_classification (name);
 

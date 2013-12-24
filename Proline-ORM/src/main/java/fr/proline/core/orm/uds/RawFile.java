@@ -2,11 +2,14 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
@@ -45,6 +48,10 @@ public class RawFile implements Serializable {
     @OneToMany(mappedBy = "rawFile")
     @OrderBy("number")
     private List<Run> runs;
+    
+    // bi-directional many-to-many association to Project
+    @ManyToMany(mappedBy = "rawFiles")
+    private Set<Project> projects;
 
     public RawFile() {
     }
@@ -124,5 +131,41 @@ public class RawFile implements Serializable {
     public void setRuns(final List<Run> runs) {
 	this.runs = runs;
     }
+    
+    // STOLEN FROM ExternalDb
+    // TODO: create an abstract class with the same methods ???
+    public void setProjects(final Set<Project> pProjects) {
+	projects = pProjects;
+    }
+
+    public Set<Project> getProjects() {
+	return this.projects;
+    }
+
+    public void addProject(final Project project) {
+
+	if (project != null) {
+	    Set<Project> localProjects = getProjects();
+
+	    if (localProjects == null) {
+		localProjects = new HashSet<Project>();
+
+		setProjects(localProjects);
+	    }
+
+	    localProjects.add(project);
+	}
+
+    }
+
+    public void removeProject(final Project project) {
+	final Set<Project> localProjects = getProjects();
+
+	if (localProjects != null) {
+	    localProjects.remove(project);
+	}
+
+    }
+    // END OF STOLEN FROM ExternalDb
 
 }

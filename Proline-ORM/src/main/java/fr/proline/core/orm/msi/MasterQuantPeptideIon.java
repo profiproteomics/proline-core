@@ -28,7 +28,7 @@ public class MasterQuantPeptideIon implements Serializable {
     private long id;
 
     @Column(name = "charge")
-    private Integer charge;
+    private int charge;
 
     @Column(name = "moz")
     private double moz;
@@ -38,12 +38,15 @@ public class MasterQuantPeptideIon implements Serializable {
 
     @Column(name = "scan_number")
     private Integer scanNumber;
+    
+    @Column(name = "peptide_match_count")
+    private int peptideMatchCount;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
 
-    @Column(name = "lcms_feature_id")
-    private Long lcmsFeatureId;
+    @Column(name = "lcms_master_feature_id")
+    private Long lcmsMasterFeatureId;
 
     @Column(name = "master_quant_peptide_id")
     private long masterQuantPeptideId;
@@ -82,11 +85,11 @@ public class MasterQuantPeptideIon implements Serializable {
 	id = pId;
     }
 
-    public Integer getCharge() {
+    public int getCharge() {
 	return charge;
     }
 
-    public void setCharge(Integer charge) {
+    public void setCharge(int charge) {
 	this.charge = charge;
     }
 
@@ -113,6 +116,14 @@ public class MasterQuantPeptideIon implements Serializable {
     public void setScanNumber(Integer scanNumber) {
 	this.scanNumber = scanNumber;
     }
+    
+    public int getPeptideMatchCount() {
+  return peptideMatchCount;
+    }
+
+    public void setPeptideMatchCount(final int pPeptideMatchCount) {
+  peptideMatchCount = pPeptideMatchCount;
+    }
 
     public String getSerializedProperties() {
 	return serializedProperties;
@@ -122,12 +133,12 @@ public class MasterQuantPeptideIon implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
-    public Long getLcmsFeatureId() {
-	return lcmsFeatureId;
+    public Long getLcmsMasterFeatureId() {
+	return lcmsMasterFeatureId;
     }
 
-    public void setLcmsFeatureId(final Long pLcmsFeatureId) {
-	lcmsFeatureId = pLcmsFeatureId;
+    public void setLcmsMasterFeatureId(final Long pLcmsMasterFeatureId) {
+	lcmsMasterFeatureId = pLcmsMasterFeatureId;
     }
 
     public long getMasterQuantPeptideId() {

@@ -43,7 +43,8 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
       val bioSampleQueryBuilder = new SelectQueryBuilder2(UdsDbBiologicalSampleTable,UdsDbBiologicalGroupBiologicalSampleItemTable)
       val bioSampleQuery = bioSampleQueryBuilder.mkSelectQuery( (t1,c1,t2,c2) => List(t1.*,t2.BIOLOGICAL_GROUP_ID) ->  
         " WHERE "~ t1.QUANTITATION_ID ~" = "~ quantitationId ~
-        " AND "~ t1.ID ~" = "~ t2.BIOLOGICAL_SAMPLE_ID
+        " AND "~ t1.ID ~" = "~ t2.BIOLOGICAL_SAMPLE_ID ~
+        " ORDER BY "~ t1.NUMBER
       )
       
       val sampleIdsByGroupId = new HashMap[Long,HashSet[Long]]
@@ -113,7 +114,8 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
       val bioGroupQueryBuilder = new SelectQueryBuilder2(UdsDbBiologicalGroupTable,UdsDbGroupSetupBiologicalGroupMapTable)
       val bioGroupQuery = bioGroupQueryBuilder.mkSelectQuery( (t1,c1,t2,c2) => List(t1.*,t2.GROUP_SETUP_ID) -> 
         " WHERE "~ t1.QUANTITATION_ID ~" = "~ quantitationId ~
-        " AND "~ t1.ID ~" = "~ t2.BIOLOGICAL_GROUP_ID
+        " AND "~ t1.ID ~" = "~ t2.BIOLOGICAL_GROUP_ID ~
+        " ORDER BY "~ t1.NUMBER
       )
       
       val bioGroupsByGroupSetupId = new HashMap[Long,HashSet[Long]]
@@ -138,7 +140,8 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
       val ratioDefQueryBuilder = new SelectQueryBuilder2(UdsDbRatioDefinitionTable,UdsDbGroupSetupTable)
       val ratioDefQuery = ratioDefQueryBuilder.mkSelectQuery( (t1,c1,t2,c2) => List(t1.*) ->  
         " WHERE "~ t2.QUANTITATION_ID ~" = "~ quantitationId ~
-        " AND "~ t1.GROUP_SETUP_ID ~" = "~ t2.ID
+        " AND "~ t1.GROUP_SETUP_ID ~" = "~ t2.ID ~
+        " ORDER BY "~ t1.NUMBER
       )
       
       val ratioDefsByGSId = new HashMap[Long,ArrayBuffer[RatioDefinition]]
@@ -161,19 +164,18 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
       // Retrieve group setups
       val groupSetupQueryBuilder = new SelectQueryBuilder1(UdsDbGroupSetupTable)
       val groupSetupQuery = groupSetupQueryBuilder.mkSelectQuery( (t1,c1) => List(t1.*) ->  
-        " WHERE "~ t1.QUANTITATION_ID ~" = "~ quantitationId
+        " WHERE "~ t1.QUANTITATION_ID ~" = "~ quantitationId ~
+        " ORDER BY "~ t1.NUMBER
       )
       
-      var gsNumber = 0
       val groupSetups = udsEzDBC.select(groupSetupQuery) { r =>
-        gsNumber += 1
 
         val groupSetupId = toLong( r.getAny(GroupSetupCols.ID) )
         val bioGroups = bioGroupsByGroupSetupId( groupSetupId ).toArray.map( bioGroupById(_) ).sortBy(_.number)
         
         GroupSetup(
           id = groupSetupId,
-          number = gsNumber,
+          number = r.getInt(GroupSetupCols.NUMBER),
           name = r.getString(GroupSetupCols.NAME),
           ratioDefinitions = ratioDefsByGSId( groupSetupId ).toArray.sortBy(_.number),
           biologicalGroups = bioGroups

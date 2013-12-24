@@ -89,6 +89,10 @@ CREATE TABLE public.map_object_tree_mapping (
 );
 
 
+CREATE UNIQUE INDEX map_object_tree_mapping_idx
+ ON public.map_object_tree_mapping
+ ( map_id, schema_name );
+
 CREATE SEQUENCE public.peakel_fitting_model_id_seq;
 
 CREATE TABLE public.peakel_fitting_model (
@@ -160,6 +164,10 @@ CREATE TABLE public.map_set_object_tree_mapping (
                 CONSTRAINT map_set_object_tree_mapping_pk PRIMARY KEY (map_set_id, object_tree_id)
 );
 
+
+CREATE UNIQUE INDEX map_set_object_tree_mapping_idx
+ ON public.map_set_object_tree_mapping
+ ( map_set_id, schema_name );
 
 CREATE TABLE public.map_alignment (
                 from_map_id BIGINT NOT NULL,
@@ -235,7 +243,7 @@ CREATE INDEX theoretical_feature_map_idx
 
 CLUSTER theoretical_feature_map_idx ON theoretical_feature;
 
-CREATE TABLE public.run (
+CREATE TABLE public.scan_sequence (
                 id BIGINT NOT NULL,
                 raw_file_name VARCHAR(250) NOT NULL,
                 min_intensity DOUBLE PRECISION,
@@ -244,24 +252,23 @@ CREATE TABLE public.run (
                 ms2_scan_count INTEGER NOT NULL,
                 serialized_properties TEXT,
                 instrument_id BIGINT NOT NULL,
-                CONSTRAINT run_pk PRIMARY KEY (id)
+                CONSTRAINT scan_sequence_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.run IS 'TODO: rename to scan_sequence ?';
 
 
-CREATE TABLE public.run_map (
+CREATE TABLE public.raw_map (
                 id BIGINT NOT NULL,
-                run_id BIGINT NOT NULL,
+                scan_sequence_id BIGINT NOT NULL,
                 peak_picking_software_id BIGINT NOT NULL,
                 peakel_fitting_model_id BIGINT,
-                CONSTRAINT run_map_pk PRIMARY KEY (id)
+                CONSTRAINT raw_map_pk PRIMARY KEY (id)
 );
 
 
-CREATE TABLE public.processed_map_run_map_mapping (
+CREATE TABLE public.processed_map_raw_map_mapping (
                 processed_map_id BIGINT NOT NULL,
-                run_map_id BIGINT NOT NULL,
-                CONSTRAINT processed_map_run_map_mapping_pk PRIMARY KEY (processed_map_id, run_map_id)
+                raw_map_id BIGINT NOT NULL,
+                CONSTRAINT processed_map_raw_map_mapping_pk PRIMARY KEY (processed_map_id, raw_map_id)
 );
 
 
@@ -319,7 +326,7 @@ CREATE TABLE public.scan (
                 precursor_moz DOUBLE PRECISION,
                 precursor_charge INTEGER,
                 serialized_properties TEXT,
-                run_id BIGINT NOT NULL,
+                scan_sequence_id BIGINT NOT NULL,
                 CONSTRAINT scan_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.scan IS 'TODO: add polarity ???';
@@ -328,11 +335,11 @@ COMMENT ON COLUMN public.scan.time IS 'Scan time in seconds';
 
 ALTER SEQUENCE public.scan_id_seq OWNED BY public.scan.id;
 
-CREATE INDEX scan_run_idx
+CREATE INDEX scan_scan_sequence_idx
  ON public.scan
- ( run_id );
+ ( scan_sequence_id );
 
-CLUSTER scan_run_idx ON scan;
+CLUSTER scan_scan_sequence_idx ON scan;
 
 CREATE INDEX scan_precursor_moz_idx
  ON public.scan
@@ -439,6 +446,10 @@ CREATE TABLE public.feature_object_tree_mapping (
 );
 
 
+CREATE UNIQUE INDEX feature_object_tree_mapping_idx
+ ON public.feature_object_tree_mapping
+ ( feature_id, schema_name );
+
 CREATE TABLE public.processed_map_feature_item (
                 processed_map_id BIGINT NOT NULL,
                 feature_id BIGINT NOT NULL,
@@ -533,7 +544,7 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_map ADD CONSTRAINT map_run_map_fk
+ALTER TABLE public.raw_map ADD CONSTRAINT map_raw_map_fk
 FOREIGN KEY (id)
 REFERENCES public.map (id)
 ON DELETE CASCADE
@@ -547,7 +558,7 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run ADD CONSTRAINT instrument_run_fk
+ALTER TABLE public.scan_sequence ADD CONSTRAINT instrument_scan_sequence_fk
 FOREIGN KEY (instrument_id)
 REFERENCES public.instrument (id)
 ON DELETE RESTRICT
@@ -603,14 +614,14 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_map ADD CONSTRAINT feature_fitting_model_run_map_fk
+ALTER TABLE public.raw_map ADD CONSTRAINT feature_fitting_model_raw_map_fk
 FOREIGN KEY (peakel_fitting_model_id)
 REFERENCES public.peakel_fitting_model (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_map ADD CONSTRAINT peak_picking_software_run_map_fk
+ALTER TABLE public.raw_map ADD CONSTRAINT peak_picking_software_raw_map_fk
 FOREIGN KEY (peak_picking_software_id)
 REFERENCES public.peak_picking_software (id)
 ON DELETE RESTRICT
@@ -680,7 +691,7 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.processed_map_run_map_mapping ADD CONSTRAINT processed_map_processed_map_run_map_mapping_fk
+ALTER TABLE public.processed_map_raw_map_mapping ADD CONSTRAINT processed_map_processed_map_run_map_mapping_fk
 FOREIGN KEY (processed_map_id)
 REFERENCES public.processed_map (id)
 ON DELETE CASCADE
@@ -743,44 +754,44 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.scan ADD CONSTRAINT run_scan_fk
-FOREIGN KEY (run_id)
-REFERENCES public.run (id)
+ALTER TABLE public.scan ADD CONSTRAINT scan_sequence_scan_fk
+FOREIGN KEY (scan_sequence_id)
+REFERENCES public.scan_sequence (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.ms_picture ADD CONSTRAINT run_ms_picture_fk
+ALTER TABLE public.ms_picture ADD CONSTRAINT scan_sequence_ms_picture_fk
 FOREIGN KEY (run_id)
-REFERENCES public.run (id)
+REFERENCES public.scan_sequence (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_map ADD CONSTRAINT run_run_map_fk
-FOREIGN KEY (run_id)
-REFERENCES public.run (id)
+ALTER TABLE public.raw_map ADD CONSTRAINT scan_sequence_raw_map_fk
+FOREIGN KEY (scan_sequence_id)
+REFERENCES public.scan_sequence (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_ms2_event ADD CONSTRAINT run_map_feature_ms2_scan_fk
+ALTER TABLE public.feature_ms2_event ADD CONSTRAINT raw_map_feature_ms2_event_fk
 FOREIGN KEY (run_map_id)
-REFERENCES public.run_map (id)
+REFERENCES public.raw_map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.processed_map_run_map_mapping ADD CONSTRAINT run_map_processed_map_run_map_mapping_fk
-FOREIGN KEY (run_map_id)
-REFERENCES public.run_map (id)
+ALTER TABLE public.processed_map_raw_map_mapping ADD CONSTRAINT raw_map_processed_map_raw_map_mapping_fk
+FOREIGN KEY (raw_map_id)
+REFERENCES public.raw_map (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT run_map_feature_overlap_mapping_fk
+ALTER TABLE public.feature_overlap_mapping ADD CONSTRAINT raw_map_feature_overlap_mapping_fk
 FOREIGN KEY (map_id)
-REFERENCES public.run_map (id)
+REFERENCES public.raw_map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;

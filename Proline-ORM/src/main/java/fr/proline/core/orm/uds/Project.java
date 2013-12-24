@@ -69,6 +69,11 @@ public class Project implements Serializable {
     @JoinColumn(name = "id")
     @JoinTable(name = "project_user_account_map", inverseJoinColumns = @JoinColumn(name = "user_account_id", referencedColumnName = "id"), joinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id"))
     private Set<UserAccount> members;
+    
+    // bi-directional many-to-many association to RawFile
+    @ManyToMany
+    @JoinTable(name = "raw_file_project_map", joinColumns = { @JoinColumn(name = "project_id") }, inverseJoinColumns = { @JoinColumn(name = "raw_file_name") })
+    private Set<RawFile> rawFiles;
 
     // Transient Variables not saved in database
     @Transient
@@ -219,6 +224,39 @@ public class Project implements Serializable {
 
 	if (localMembers != null) {
 	    localMembers.remove(member);
+	}
+
+    }
+    
+    public void setRawFiles(final Set<RawFile> rawFiles) {
+	this.rawFiles = rawFiles;
+    }
+
+    public Set<RawFile> getRawFiles() {
+	return this.rawFiles;
+    }
+
+    public void addRawFile(final RawFile rawFile) {
+
+	if (rawFile != null) {
+	    Set<RawFile> rawFiles = getRawFiles();
+
+	    if (rawFiles == null) {
+	    	rawFiles = new HashSet<RawFile>();
+
+	    	setRawFiles(rawFiles);
+	    }
+
+	    rawFiles.add(rawFile);
+	}
+
+    }
+
+    public void removeRawFile(final RawFile rawFile) {
+	final Set<RawFile> rawFiles = getRawFiles();
+
+	if (rawFiles != null) {
+		rawFiles.remove(rawFile);
 	}
 
     }

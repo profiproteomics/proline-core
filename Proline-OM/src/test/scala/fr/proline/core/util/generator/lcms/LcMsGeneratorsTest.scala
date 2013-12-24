@@ -35,9 +35,9 @@ object LcMsRunGeneratorsTest {
 class LcMsRunGeneratorsTest extends JUnitSuite with Logging {
   
   //@Test
-  def testRunMapGenerator() {
+  def testRawMapGenerator() {
     
-    val runMapGenerator = new RunMapFakeGenerator(
+    val rawMapGenerator = new RawMapFakeGenerator(
       nbFeatures = 10,
       minMoz = LcMsRunGeneratorsTest.MIN_MOZ,
       maxMoz = LcMsRunGeneratorsTest.MAX_MOZ,
@@ -45,10 +45,10 @@ class LcMsRunGeneratorsTest extends JUnitSuite with Logging {
       maxTime = LcMsRunGeneratorsTest.MAX_FT_TIME
     )
     
-    val runMap = runMapGenerator.generateRunMap( LcMsRunGeneratorsTest.lcmsRunGenerator.generateLcMsRun )
-    assert( runMap.features.length === 10 )
+    val rawMap = rawMapGenerator.generateRawMap( LcMsRunGeneratorsTest.lcmsRunGenerator.generateLcMsRun )
+    assert( rawMap.features.length === 10 )
 
-    /*runMap.features.foreach { ft =>
+    /*rawMap.features.foreach { ft =>
       println( "id=%d moz=%.6f intensity=%.0f charge=%d time=%.1f duration=%.0f ms1Count=%d ms2Count=%d".format(
         ft.id, ft.moz, ft.intensity, ft.charge, ft.elutionTime, ft.duration, ft.ms1Count, ft.ms2Count
       ))
@@ -64,7 +64,7 @@ class LcMsRunGeneratorsTest extends JUnitSuite with Logging {
     val nbMaps = 3
     val nbFeatures = 10
     
-    val runMapGenerator = new RunMapFakeGenerator(
+    val rawMapGenerator = new RawMapFakeGenerator(
       nbFeatures = nbFeatures,
       minMoz = LcMsRunGeneratorsTest.MIN_MOZ,
       maxMoz = LcMsRunGeneratorsTest.MAX_MOZ,
@@ -73,12 +73,12 @@ class LcMsRunGeneratorsTest extends JUnitSuite with Logging {
     )
     
     val lcmsRun = LcMsRunGeneratorsTest.lcmsRunGenerator.generateLcMsRun()
-    val runMap = runMapGenerator.generateRunMap( lcmsRun )
+    val rawMap = rawMapGenerator.generateRawMap( lcmsRun )
     
     val alnFakeGen = new MapAlignmentFakeGenerator( distortion = Distortions.SINE_DISTORTION(), amplitude = 1f )
     val mapSetFakeGen = new LcMsMapSetFakeGenerator( nbMaps = nbMaps, alnFakeGenerator = alnFakeGen )
     
-    val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, runMap)
+    val mapSet = mapSetFakeGen.generateMapSet(lcmsRun, rawMap)
     assert( mapSet.childMaps.length === nbMaps )
   }
 

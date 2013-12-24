@@ -38,13 +38,13 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
     psDBTestCase.loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
     udsDBTestCase.loadDataSet("/fr/proline/core/om/uds/UDS_Simple_Dataset.xml")
     pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
-    */    
-    msiDBTestCase.loadCompositeDataSet(Array("/dbunit/datasets/msi-db_init_dataset.xml","/fr/proline/core/om/msi/Init_Dataset.xml"))
+    */
+    msiDBTestCase.loadCompositeDataSet(Array("/dbunit/datasets/msi-db_init_dataset.xml", "/fr/proline/core/om/msi/Init_Dataset.xml"))
     psDBTestCase.loadDataSet("/dbunit/datasets/ps-db_init_dataset.xml")
-    udsDBTestCase.loadCompositeDataSet(Array("/dbunit/datasets/uds-db_init_dataset.xml","/fr/proline/core/om/uds/UDS_Simple_Dataset.xml"))
+    udsDBTestCase.loadCompositeDataSet(Array("/dbunit/datasets/uds-db_init_dataset.xml", "/fr/proline/core/om/uds/UDS_Simple_Dataset.xml"))
     pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
 
-    logger.info("Dbs succesfully initialized")
+    logger.info("Dbs successfully initialized")
   }
 
   /**
@@ -127,7 +127,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
       // FIXME 1: find a way to communicate with a UDSdb fake      
       resultSet.msiSearch.get.peakList.peaklistSoftware.id = 1
       resultSet.msiSearch.get.peakList.id = 1
-      
+
       var stop = System.nanoTime
 
       logger.info("ResultSet creation time: " + ((stop - start) / milliToNanos))
@@ -169,7 +169,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
       val msiDb = new DatabaseConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(projectIdForTest))
 
-      val provider = new ORMResultSetProvider(msiDb,psDb,pdiDb)
+      val provider = new ORMResultSetProvider(msiDb, psDb, pdiDb)
 
       val loadedResultSet = provider.getResultSet(resultSetId)
 

@@ -16,7 +16,7 @@ import fr.proline.core.orm.msi.repository.MsiPeptideRepository;
 import fr.proline.core.orm.ps.Peptide;
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.utils.DatabaseTestCase;
+import fr.proline.repository.util.DatabaseTestCase;
 import fr.proline.util.StringUtils;
 
 @Ignore

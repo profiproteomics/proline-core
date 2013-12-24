@@ -188,8 +188,8 @@ CREATE SEQUENCE public.peptide_ptm_id_seq;
 CREATE TABLE public.peptide_ptm (
                 id BIGINT NOT NULL DEFAULT nextval('public.peptide_ptm_id_seq'),
                 seq_position INTEGER NOT NULL,
-                mono_mass DOUBLE PRECISION,
-                average_mass DOUBLE PRECISION,
+                mono_mass DOUBLE PRECISION NOT NULL,
+                average_mass DOUBLE PRECISION NOT NULL,
                 serialized_properties TEXT,
                 peptide_id BIGINT NOT NULL,
                 ptm_specificity_id BIGINT NOT NULL,

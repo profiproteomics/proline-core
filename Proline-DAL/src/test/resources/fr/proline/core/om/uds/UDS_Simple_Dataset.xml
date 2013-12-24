@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE dataset SYSTEM "../../../../../uds-dataset.dtd">
+<!DOCTYPE dataset SYSTEM "uds-dataset.dtd"> 
 <dataset>
 	<USER_ACCOUNT ID="1" LOGIN="joe" CREATION_MODE="auto"/>
 	<USER_ACCOUNT ID="2" LOGIN="jack" CREATION_MODE="auto"/>

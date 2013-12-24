@@ -253,7 +253,7 @@ class LabelFreeFeatureQuantifier(
         resultSummaryId = mergedRsmId,
         peptideInstanceId = masterPepInstAsOpt.map(_.id),
         bestPeptideMatchId = None, // TODO: compute using charge states
-        lcmsFeatureId = Some(masterFt.id),
+        lcmsMasterFeatureId = Some(masterFt.id),
         selectionLevel = masterFt.selectionLevel,
         quantPeptideIonMap = qPepIonByQcId
       )

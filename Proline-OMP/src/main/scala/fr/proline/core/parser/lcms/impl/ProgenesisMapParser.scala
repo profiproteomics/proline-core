@@ -22,7 +22,7 @@ object ProgenesisMapParser {
 
 class ProgenesisMapParser extends ILcmsMapFileParser {
 
-  def getRunMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RunMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
     val lines = io.Source.fromFile(filePath).getLines();
 
     //skip the first 2 lines
@@ -88,7 +88,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       features += feature
     }
 
-    val runMap = new RunMap(
+    val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
       name = lcmsScanSeq.rawFileName,
       isProcessed = false,
@@ -103,10 +103,10 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       )
     )
 
-    Some(runMap)
+    Some(rawMap)
   }
 
-  def getAllRunMap(filePath: String, lcmsScanSeqs: Array[LcMsScanSequence]) {
+  def getAllRawMap(filePath: String, lcmsScanSeqs: Array[LcMsScanSequence]) {
     val lines = io.Source.fromFile(filePath).getLines();
 
     //skip the first 2 lines
@@ -121,21 +121,21 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     if (sampleNames.length != lcmsScanSeqs.length)
       throw new Exception("Errors too much or less lcmsRun provided")
 
-    //order mapping namefile runMaps
-    var nameFileRunMap = new HashMap[String, LcMsScanSequence]
+    //order mapping namefile rawMaps
+    var nameFileRawMap = new HashMap[String, LcMsScanSequence]
 
     for (namefile <- sampleNames)
       breakable {
         for (lcmsScanSeq <- lcmsScanSeqs) {
           if (lcmsScanSeq.rawFileName.contains(namefile)) {
-            nameFileRunMap += (namefile -> lcmsScanSeq)
+            nameFileRawMap += (namefile -> lcmsScanSeq)
             break
           }
         }
       }
 
-    var runmaps = new ArrayBuffer[Option[RunMap]]
-    nameFileRunMap.par.foreach(key => (runmaps += getRunMap(key._1, key._2, ProgenesisExtraParams())))
+    var runmaps = new ArrayBuffer[Option[RawMap]]
+    nameFileRawMap.par.foreach(key => (runmaps += getRawMap(key._1, key._2, ProgenesisExtraParams())))
 
   }
 
