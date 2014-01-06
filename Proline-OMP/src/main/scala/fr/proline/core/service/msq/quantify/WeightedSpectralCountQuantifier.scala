@@ -41,9 +41,8 @@ class WeightedSpectralCountQuantifier(
   def quantifyMasterChannel(): Unit = {
 
     // Begin new ORM transaction
-    // TODO: handle transactions at db context level
-    msiEm.getTransaction().begin()
-    udsEm.getTransaction().begin()
+    msiDbCtx.beginTransaction()
+    udsDbCtx.beginTransaction()
 
     // Store the master quant result set
     val msiQuantResultSet = this.storeMsiQuantResultSet(msiIdentResultSets)
@@ -59,10 +58,10 @@ class WeightedSpectralCountQuantifier(
     udsEm.persist(udsMasterQuantChannel)
     udsEm.flush()
     
-    logger.debug(" UDS MasterQCh "+udsMasterQuantChannel.getName()+" ; "+udsMasterQuantChannel.getId())
-    for(qCh <- udsMasterQuantChannel.getQuantitationChannels()){
-      logger.debug(" UDS MasterQCh /QCh"+qCh.getId())  
-    }
+//    logger.debug(" UDS MasterQCh "+udsMasterQuantChannel.getName()+" ; "+udsMasterQuantChannel.getId()+" -  QRSMID "+udsMasterQuantChannel.getQuantResultSummaryId())
+//    for(qCh <- udsMasterQuantChannel.getQuantitationChannels()){
+//      logger.debug(" UDS MasterQCh /QCh"+qCh.getId())  
+//    }
     
     
     // Store master quant result summary
@@ -78,7 +77,7 @@ class WeightedSpectralCountQuantifier(
       this.identResultSummaries,
       proteinSetWeightStructsById
     )
-
+   
     this.logger.info("storing "+mqPeptides.size+" master peptide quant data...")
 
     // Iterate over master quant peptides to store corresponding spectral counts
@@ -92,14 +91,6 @@ class WeightedSpectralCountQuantifier(
     }
 
     this.logger.info("storing "+mqProtSets.size+" master proteins set quant data...")
-    //    
-    //    // Compute master quant protein sets
-    //    val mqProtSets = Ms2CountQuantifier.computeMasterQuantProteinSets(
-    //                        udsMasterQuantChannel,
-    //                        mqPeptides,
-    //                        this.mergedResultSummary,
-    //                        this.identResultSummaries
-    //                      )
 
     // Iterate over master quant protein sets to store corresponding spectral counts
     for (mqProtSet <- mqProtSets) {
@@ -108,8 +99,8 @@ class WeightedSpectralCountQuantifier(
     }
 
     // Commit ORM transaction
-    msiEm.getTransaction().commit()
-    udsEm.getTransaction().commit()
+    msiDbCtx.commitTransaction()
+    udsDbCtx.commitTransaction()
 
   }
 
@@ -290,8 +281,8 @@ class WeightedSpectralCountQuantifier(
         rsm.peptideInstances.foreach(pepI =>{
         	val ormPepInst  = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
         	ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
-        	this.msiEm.merge(ormPepInst)
         })
+
       }
 
       //--- Get RSM Peptide Match/Protein Match information 	     
@@ -382,7 +373,7 @@ class WeightedSpectralCountQuantifier(
         quantPeptideMap = entry._2.toMap,
         masterQuantPeptideIons = Array.empty[MasterQuantPeptideIon],
         selectionLevel = 2,
-        resultSummaryId = 0 //??? Pourquoi ne pas passer le RSM de quanti a la methode pour avoir l info ? 	       
+        resultSummaryId = udsMasterQuantChannel.getQuantResultSummaryId()
       )
     })
 

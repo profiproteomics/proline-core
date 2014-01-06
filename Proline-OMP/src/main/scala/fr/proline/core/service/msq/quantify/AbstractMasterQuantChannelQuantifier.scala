@@ -58,14 +58,15 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   val udsMasterQuantChannel: MasterQuantitationChannel
 
   // Instantiated fields
-  protected val udsEm = executionContext.getUDSDbConnectionContext.getEntityManager
+  protected val udsDbCtx = executionContext.getUDSDbConnectionContext
+  protected val udsEm = udsDbCtx.getEntityManager
   protected val msiDbCtx = executionContext.getMSIDbConnectionContext
   protected val msiEm = msiDbCtx.getEntityManager
   protected val psDbCtx = executionContext.getPSDbConnectionContext
 
   protected val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
-  protected val quantChannelIds = udsQuantChannels.map { _.getId } toArray
-
+  protected lazy val quantChannelIds = udsQuantChannels.map { _.getId } toArray
+  
   protected val rsmIds = udsQuantChannels.map { udsQuantChannel =>
     val qcId = udsQuantChannel.getId()
     val identRsmId = udsQuantChannel.getIdentResultSummaryId
