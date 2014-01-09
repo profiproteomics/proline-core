@@ -13,7 +13,7 @@
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
-  <description>Multi Modules Projects containing all modules for Object Model, and data bases managment, and data access</description>
+  <description>Multi Modules Projects containing all modules for Object Model, data bases managment, data access and some data processing</description>
 
   <!-- "Proline" sub-modules -->
   <modules>
