@@ -131,7 +131,7 @@ class WeightedSCQuantifierTest extends AbstractMultipleDBTestCase with Logging {
     qCh2.setSampleReplicate(splAnalysis2)
     qCh2.setBiologicalSample(bioSpl1)
     bioSpl1.setQuantitationChannels(qChs)
-    splAnalysis1.setQuantitationChannels(qChs)
+    splAnalysis1.setQuantitationChannels(qChs)// a verifier vds
 
     //Create link between MasterQuantitationChannel  & QuantitationChannels
     mqCh.setQuantitationChannels(qChs)
