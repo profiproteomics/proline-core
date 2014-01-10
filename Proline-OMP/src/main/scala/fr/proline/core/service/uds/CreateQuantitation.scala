@@ -48,10 +48,10 @@ class CreateQuantitation(
     val masterQuantChannels = experimentalDesign.masterQuantChannels
 
     val udsProject = udsEM.find(classOf[UdsProject], projectId)
-    require(udsProject != null, "undefined project with id=" + udsProject)
+    require(udsProject != null, "undefined project with id=" + projectId)
 
     val udsQuantMethod = udsEM.find(classOf[UdsQuantMethod], methodId)
-    require(udsQuantMethod != null, "undefined method with id=" + udsQuantMethod)
+    require(udsQuantMethod != null, "undefined method with id=" + methodId)
 
     // Retrieve existing quantitations for this project
     // TODO: add JPA method getQuantitations to the project entity
