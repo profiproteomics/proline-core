@@ -157,12 +157,10 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
       
       //VDS comment :Could get info from PeptideInstance.peptideMatches.filter on isValidated... but should be sure
       // PeptideInstance.peptideMatches != null ...
-      val validPeptideMatchesB = Seq.newBuilder[PeptideMatch]
-      rsm.getAllPeptideMatchesByPeptideSetId.values.foreach(a => { validPeptideMatchesB ++= a })
-      val validPeptideMatches: Seq[PeptideMatch] = validPeptideMatchesB.result
+      val validePepMatchesSet = rsm.getAllPeptideMatchesByPeptideSetId.flatMap(_._2).toSet
 
       // Peptide Instance SC = PepMatch Count
-      for (psm <- validPeptideMatches) {
+      for (psm <- validePepMatchesSet) {
         if (pepID.contains(psm.peptideId)) {
           var pepSC = scByPepID.getOrElse(psm.peptideId, 0)
           pepSC += 1
