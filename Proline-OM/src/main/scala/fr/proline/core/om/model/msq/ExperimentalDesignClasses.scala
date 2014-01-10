@@ -27,6 +27,21 @@ case class ExperimentalDesign(
   
 }
 
+
+/**
+ * @param biologicalSamples
+ * @param biologicalGroups
+ * @param masterQuantChannels
+ */
+case class ExperimentalDesign2(
+  val biologicalSamples: Array[BiologicalSample],
+  val biologicalGroups: Array[BiologicalGroup],
+  val masterQuantChannels: Array[MasterQuantChannel]
+) {
+   
+  
+}
+
 /**
  * @param id
  * @param number
