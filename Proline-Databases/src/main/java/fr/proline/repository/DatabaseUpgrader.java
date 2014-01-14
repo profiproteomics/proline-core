@@ -348,9 +348,9 @@ public final class DatabaseUpgrader {
 	InputStream scriptIS = cl.getResourceAsStream(scriptLocation);
 
 	if (scriptIS == null) {
-	    LOG.warn("Cannot found [" + scriptLocation + "] resource");
+	    LOG.warn("Cannot found [{}]", scriptLocation);
 	} else {
-	    LOG.debug("Initializing SQLite Db from [" + scriptLocation + ']');
+	    LOG.debug("Initializing SQLite Db from [{}]", scriptLocation);
 
 	    try {
 		SQLUtils.executeSQLScript(con, scriptIS);

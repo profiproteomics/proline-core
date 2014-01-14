@@ -76,8 +76,12 @@ public class MsiPeptideRepositoryTest {
 	    final JDBCWork jdbcWork = new JDBCWork() {
 
 		public void execute(final Connection connection) throws SQLException {
-		    LOG.debug("Post-init EntityManager Connection : {}  {}", connection,
-			    DatabaseTestCase.formatTableNames(connection));
+
+		    if (LOG.isDebugEnabled()) {
+			LOG.debug("Post-init EntityManager Connection : {}  {}", connection,
+				DatabaseTestCase.formatTableNames(connection));
+		    }
+
 		}
 
 	    };

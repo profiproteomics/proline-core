@@ -247,11 +247,17 @@ public final class TestPgPeptidesPerf {
 	if (createResult) {
 	    final ResultSet rs = stmCreate.getResultSet();
 
-	    LOG.debug("TEMP Table creation ResultSet :" + LINE_SEPARATOR + formatRS(rs));
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("TEMP Table creation ResultSet :" + LINE_SEPARATOR + formatRS(rs));
+	    }
 
 	    rs.close();
 	} else {
-	    LOG.debug("TEMP Table creation UpdateCount: {}", stmCreate.getUpdateCount());
+
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("TEMP Table creation UpdateCount: {}", stmCreate.getUpdateCount());
+	    }
+
 	}
 
 	stmCreate.close();
@@ -423,17 +429,23 @@ public final class TestPgPeptidesPerf {
 	if (vacuumResult) {
 	    final ResultSet rs = stmVacuum.getResultSet();
 
-	    LOG.debug("Vacuum ResultSet :" + LINE_SEPARATOR + formatRS(rs));
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("Vacuum ResultSet :" + LINE_SEPARATOR + formatRS(rs));
+	    }
 
 	    rs.close();
 	} else {
-	    LOG.debug("Vacuum UpdateCount: {}", stmVacuum.getUpdateCount());
+
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("Vacuum UpdateCount: {}", stmVacuum.getUpdateCount());
+	    }
+
 	}
 
 	stmVacuum.close();
 
 	final long end = System.currentTimeMillis();
-	LOG.debug("Vacuum analyze run in {} ms", end - start);
+	LOG.info("Vacuum analyze run in {} ms", end - start);
     }
 
     private static String formatRS(final ResultSet rs) throws SQLException {

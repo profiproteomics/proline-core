@@ -147,7 +147,10 @@ public class ProjectTest extends DatabaseTestCase {
 	    final List<Long> projectIds = ProjectRepository.findAllProjectIds(udsEm);
 	    assertTrue("Project Ids List", (projectIds != null) && !projectIds.isEmpty());
 
-	    LOG.debug("Total count of Projects: " + projectIds.size());
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("Total count of Projects: " + projectIds.size());
+	    }
+
 	} finally {
 
 	    if (udsEm != null) {
