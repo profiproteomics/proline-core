@@ -48,7 +48,7 @@ public final class JPARepositoryUtils {
 	}
 
 	if ((paramValues == null) || paramValues.isEmpty()) {
-	    throw new IllegalArgumentException("Invalid paramName");
+	    throw new IllegalArgumentException("Invalid paramValues collection");
 	}
 
 	final List<R> result = new ArrayList<R>();
@@ -63,7 +63,9 @@ public final class JPARepositoryUtils {
 	    final List<P> paramsValuesSubList = paramValuesList.subList(batch * MAX_BATCH_SIZE,
 		    Math.min((batch + 1) * MAX_BATCH_SIZE, totalNParamValues));
 
-	    LOG.trace("In Query parameters sub-List size : {}", paramsValuesSubList.size());
+	    if (LOG.isTraceEnabled()) {
+		LOG.trace("In Query parameters sub-List size : {}", paramsValuesSubList.size());
+	    }
 
 	    query.setParameter(paramName, paramsValuesSubList);
 

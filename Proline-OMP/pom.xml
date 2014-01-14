@@ -151,7 +151,7 @@
              </replacement>
              <replacement>
                <token>@version@</token>
-               <value>${project.version}_${maven.build.timestamp}</value>
+               <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
              </replacement>
            </replacements>
          </configuration>
