@@ -46,13 +46,13 @@ class CreateSCQuantitation(
     val udsProject = udsEM.find(classOf[UdsProject], projectId)
     require(udsProject != null, "undefined project with id=" + udsProject)
 
-    val udsQuantMethod = udsEM.find(classOf[UdsQuantMethod], 2) //TODO FIXME VDS ATTENTION EN DURE !! 
+    val udsQuantMethod = udsEM.find(classOf[UdsQuantMethod], 2l) //TODO FIXME VDS ATTENTION EN DURE !! 
     require(udsQuantMethod != null, "undefined method with id=" + 2)
 
     // Retrieve existing quantitations for this project
     var previousQuantNum = 0
     try {
-    	val lastQuantNbr : Int = udsEM.createNativeQuery("Select number from data_set where project_id = " + projectId, classOf[Int]).getSingleResult().asInstanceOf[Int]
+    	val lastQuantNbr : java.lang.Integer = udsEM.createNativeQuery("Select  max(number) from data_set where project_id = :pid and type = 'QUANTITATION' ", classOf[java.lang.Integer]).setParameter("pid", projectId).getSingleResult().asInstanceOf[java.lang.Integer]
     	previousQuantNum = lastQuantNbr
     } catch {
     	case e: NoResultException=>  previousQuantNum=0
