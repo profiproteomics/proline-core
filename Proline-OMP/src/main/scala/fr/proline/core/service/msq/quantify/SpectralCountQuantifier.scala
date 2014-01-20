@@ -137,4 +137,7 @@ class SpectralCountQuantifier(
 	    
    }
 
+      def getResultAsJSON(): String = {
+     return "Not Yet Implemented"
+   }
 }
