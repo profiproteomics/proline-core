@@ -271,5 +271,9 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
    protected def getMergedResultSummary(msiDbCtx : DatabaseConnectionContext) : ResultSummary = {
 		 createMergedResultSummary(msiDbCtx)
    }
+   
+   def getResultAsJSON(): String = {
+     return "Not Yet Implemented"
+   }
 
 }

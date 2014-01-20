@@ -138,6 +138,9 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree
   protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree
   protected def getMergedResultSummary(msiDbCtx : DatabaseConnectionContext): ResultSummary
+  def getResultAsJSON(): String
+  
+  
   //protected def buildMasterQuantProteinSetObjectTree( mqProtSet: MasterQuantProteinSet ): MsiObjectTree
 
   // TODO: load the schema
