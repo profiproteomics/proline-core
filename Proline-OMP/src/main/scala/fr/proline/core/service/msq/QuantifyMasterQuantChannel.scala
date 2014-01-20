@@ -17,7 +17,8 @@ class QuantifyMasterQuantChannel(
 ) extends IService {
   
   private var _hasInitiatedExecContext: Boolean = false
-
+  private var _usedMasterQuantChannelQuantifier : AbstractMasterQuantChannelQuantifier = null
+  
   // Secondary constructor
   def this(
     dsFactory: IDataStoreConnectorFactory,
@@ -35,6 +36,7 @@ class QuantifyMasterQuantChannel(
     _hasInitiatedExecContext = true
   }
   
+  
   def runService() = {
     
     // Get entity manager
@@ -45,7 +47,8 @@ class QuantifyMasterQuantChannel(
     require( udsMasterQuantChannel != null,
              "undefined master quant channel with id=" + udsMasterQuantChannel )
     
-    MasterQuantChannelQuantifier( executionContext, experimentalDesign, udsMasterQuantChannel, quantConfig ).quantify()
+   _usedMasterQuantChannelQuantifier=  MasterQuantChannelQuantifier( executionContext, experimentalDesign, udsMasterQuantChannel, quantConfig )
+   _usedMasterQuantChannelQuantifier.quantify()
     
     // Close execution context if initiated locally
     if( this._hasInitiatedExecContext )
@@ -53,6 +56,10 @@ class QuantifyMasterQuantChannel(
     
     true
   }
+  
+  def getResultAsJSONString(): String = {
+    _usedMasterQuantChannelQuantifier.getResultAsJSON()
+  } 
 
 }
 
