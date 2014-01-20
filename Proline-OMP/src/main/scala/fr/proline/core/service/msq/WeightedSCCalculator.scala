@@ -23,11 +23,16 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.service.msq.quantify.SpectralCountsJSONProperties
+import fr.proline.core.service.msq.quantify.ProteinSetPeptidesDescription
+import fr.proline.core.service.msq.quantify.SpectralCountsJSONProperties
+import fr.proline.core.service.msq.quantify.SpectralCountsStruct
+
 
 class WeightedSCCalculatorWId (
 	execContext: IExecutionContext,
 	referenceRSMId: Long,
-	rsmIdsToCalculate : Seq[Long]
+	rsmIdsToCalculate : Seq[Long] 
   
 ) extends IService with Logging{ 
 
@@ -202,27 +207,27 @@ class WeightedSCCalculator (
       */
    private def generateJSONOutput( spectralCountsByProtMatchAccessionByRSM:Map[Long, Map[String, SpectralCountsStruct]]) : String = {     
      val jsonBuilder : StringBuilder = new StringBuilder(" \"{")
-     jsonBuilder.append(SpectralCountsProperties.rootPropName).append(":{[")
+     jsonBuilder.append(SpectralCountsJSONProperties.rootPropName).append(":{[")
      
      var firstOcc = true
      //-- Go through each RSM Results
      spectralCountsByProtMatchAccessionByRSM.foreach(mapEntry =>{
     	 if(!firstOcc){  jsonBuilder.append(",") } else { firstOcc = false }
        
-    	 jsonBuilder.append("{").append(SpectralCountsProperties.rsmIDPropName).append(":").append(mapEntry._1).append(",") //save current RSM Id
+    	 jsonBuilder.append("{").append(SpectralCountsJSONProperties.rsmIDPropName).append(":").append(mapEntry._1).append(",") //save current RSM Id
         
         // -- Save prots SC for current RSM          	
     	var firstOccPAC = true
-        jsonBuilder.append(SpectralCountsProperties.protSCsListPropName).append(":[")   
+        jsonBuilder.append(SpectralCountsJSONProperties.protSCsListPropName).append(":[")   
         
         mapEntry._2.foreach(protSCsList =>{
         	if(!firstOccPAC){  jsonBuilder.append(",") } else { firstOccPAC = false }
         	val protAC = protSCsList._1
 			val protSCs = protSCsList._2
-			jsonBuilder.append("{").append(SpectralCountsProperties.protACPropName).append("=").append(protAC).append(",")
-			jsonBuilder.append(SpectralCountsProperties.bscPropName).append("=").append(protSCs.basicSC).append(",")
-			jsonBuilder.append(SpectralCountsProperties.sscPropName).append("=").append(protSCs.specificSC).append(",")
-			jsonBuilder.append(SpectralCountsProperties.wscPropName).append("=").append(protSCs.weightedSC).append("}")
+			jsonBuilder.append("{").append(SpectralCountsJSONProperties.protACPropName).append("=").append(protAC).append(",")
+			jsonBuilder.append(SpectralCountsJSONProperties.bscPropName).append("=").append(protSCs.basicSC).append(",")
+			jsonBuilder.append(SpectralCountsJSONProperties.sscPropName).append("=").append(protSCs.specificSC).append(",")
+			jsonBuilder.append(SpectralCountsJSONProperties.wscPropName).append("=").append(protSCs.weightedSC).append("}")
         })
 
         jsonBuilder.append("]") //End protAC list for current RSM
@@ -236,13 +241,13 @@ class WeightedSCCalculator (
    
   private def generateCSVOutput( spectralCountsByProtMatchAccessionByRSM:Map[Long, Map[String, SpectralCountsStruct]]) : String = {     
      val jsonBuilder : StringBuilder = new StringBuilder("START OUTPUT \n")
-     jsonBuilder.append(SpectralCountsProperties.rootPropName).append("\n")
+     jsonBuilder.append(SpectralCountsJSONProperties.rootPropName).append("\n")
      
      var firstOcc = true
      //-- Go through each RSM Results
      spectralCountsByProtMatchAccessionByRSM.foreach(mapEntry =>{
-    	jsonBuilder.append(SpectralCountsProperties.rsmIDPropName).append("\t").append(mapEntry._1).append("\n")
-        jsonBuilder.append(SpectralCountsProperties.protACPropName).append("\t").append(SpectralCountsProperties.bscPropName).append("\t").append(SpectralCountsProperties.sscPropName).append("\t").append(SpectralCountsProperties.wscPropName).append("\n")
+    	jsonBuilder.append(SpectralCountsJSONProperties.rsmIDPropName).append("\t").append(mapEntry._1).append("\n")
+        jsonBuilder.append(SpectralCountsJSONProperties.protACPropName).append("\t").append(SpectralCountsJSONProperties.bscPropName).append("\t").append(SpectralCountsJSONProperties.sscPropName).append("\t").append(SpectralCountsJSONProperties.wscPropName).append("\n")
         // -- Save prots SC for current RSM          	
     	
         mapEntry._2.foreach(protSCsList =>{        
@@ -351,10 +356,10 @@ class WeightedSCCalculator (
    *  @param referenceForPeptides specifiy if referenceRSM is also reference for peptide specificity
    */
   
-  private def createProteinPepsWeightStructs(referenceForPeptides : Boolean) : Map[Long,ProteinPepsWeightStruct] = {
+  private def createProteinPepsWeightStructs(referenceForPeptides : Boolean) : Map[Long,ProteinSetPeptidesDescription] = {
 
     //ProteinPepsWeightStruct for each RSM ProteinSet referenced by ProteinSet id  
-    val proteinPepsWeightStructsByProtSetId = Map.newBuilder[Long,ProteinPepsWeightStruct]
+    val proteinPepsWeightStructsByProtSetId = Map.newBuilder[Long,ProteinSetPeptidesDescription]
     
     // Map each peptide to the list of identified ProteinSet id 
     val protSetIdByPepId = new HashMap[Long, ArrayBuffer[Long]]()
@@ -398,11 +403,11 @@ class WeightedSCCalculator (
 	      })
       }
 
-      proteinPepsWeightStructsByProtSetId += protSet.id -> new ProteinPepsWeightStruct(proteinSet = protSet,typicalPMAcc=pmAccession,nbrPepSpecific=nbrPepSpecif, weightByPeptideId = weightByPepId )
+      proteinPepsWeightStructsByProtSetId += protSet.id -> new ProteinSetPeptidesDescription(proteinSet = protSet,typicalPMAcc=pmAccession,nbrPepSpecific=nbrPepSpecif, weightByPeptideId = weightByPepId )
       
     }) // End ProteinPepsWeightStruct initialization 
     
-    val resultStruct : Map[Long,ProteinPepsWeightStruct]= proteinPepsWeightStructsByProtSetId.result
+    val resultStruct : Map[Long,ProteinSetPeptidesDescription]= proteinPepsWeightStructsByProtSetId.result
     
     //**** Compute Peptides Weight if referenceRSM also used for peptide
    if(referenceForPeptides) computePeptideWeight(resultStruct,protSetIdByPepId)
@@ -420,7 +425,7 @@ class WeightedSCCalculator (
    *  @param  proteinWeightStructByProtSetId Map ProteinPepsWeightStruct by ProteinSetId in peptide reference RSM. ProteinPepsWeightStruct should be updated
    *  @param  protSetIdByPep For each Peptide (id) references list of ProteinSet (Id) identified by this peptide
    */
-  def computePeptideWeight(proteinWeightStructByProtSetId : Map[Long,ProteinPepsWeightStruct], protSetIdByPep: HashMap[Long,ArrayBuffer[Long]]) : Unit = {
+  def computePeptideWeight(proteinWeightStructByProtSetId : Map[Long,ProteinSetPeptidesDescription], protSetIdByPep: HashMap[Long,ArrayBuffer[Long]]) : Unit = {
     
 	  proteinWeightStructByProtSetId.foreach( entry =>{
 		  val currentProteinWeightStruct =  entry._2
@@ -447,21 +452,6 @@ class WeightedSCCalculator (
   
 }
 
-case class SpectralCountsStruct( val basicSC : Float, val specificSC : Float, val weightedSC : Float)
 
-case class ProteinPepsWeightStruct(
-			val proteinSet: ProteinSet, 
-			val typicalPMAcc: String, 
-			val nbrPepSpecific: Int, 
-			val weightByPeptideId: scala.collection.mutable.Map[Long, Float] = null)
 
-object SpectralCountsProperties {
-    final val rootPropName : String = "\"SpectralCountResult\""
-    final val rsmIDPropName : String = "\"rsm_id\""
-    final val protSCsListPropName : String = "\"proteins_spectral_counts\""
-    final val protACPropName : String = "\"protein_accession\""
-    final val bscPropName : String = "\"bsc\""
-    final val sscPropName : String = "\"ssc\""
-    final val wscPropName : String = "\"wsc\""
-           
-}
+
