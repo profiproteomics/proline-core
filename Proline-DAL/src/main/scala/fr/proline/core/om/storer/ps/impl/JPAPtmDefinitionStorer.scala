@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.ps.impl
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConversions.asJavaSet
 import fr.proline.context.IExecutionContext

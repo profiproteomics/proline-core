@@ -6,8 +6,8 @@ import java.util.Date
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.weiglewilczek.slf4s.Logging
+//import com.fasterxml.jackson.annotation.JsonInclude
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.msi._
 import fr.proline.util.primitives._
@@ -179,7 +179,7 @@ class ResultSetFakeGenerator(
     allPepsByProtSeq(protSeq) += builtPepMatch.peptide
     
     // Add peptide id to the tmpProtMatchIdsByPepId Map
-    tmpProtMatchIdsByPepId += builtPepMatch.peptide.id -> (new ArrayBuffer(1) + protMatch.id)
+    tmpProtMatchIdsByPepId += builtPepMatch.peptide.id -> (new ArrayBuffer(1) += protMatch.id)
 
     // Create new SequenceMatch, add it to existing ProteinMatch sequence matches
     // Retrieve SequenceMatch corresponding to the pepIdArray    
@@ -195,7 +195,7 @@ class ResultSetFakeGenerator(
       bestPeptideMatch = Some(builtPepMatch),
       resultSetId = RSId
     )
-    protMatch.sequenceMatches = (protMatch.sequenceMatches.toBuffer + newSM).toArray
+    protMatch.sequenceMatches = (protMatch.sequenceMatches.toBuffer += newSM).toArray
     
     protMatch.peptideMatchesCount += 1    
     
@@ -512,7 +512,7 @@ class ResultSetFakeGenerator(
       )
 
       // Add newly created sequence match
-      protMatch.sequenceMatches = (protMatch.sequenceMatches.toBuffer + newSM).toArray
+      protMatch.sequenceMatches = (protMatch.sequenceMatches.toBuffer += newSM).toArray
       
       protMatch.peptideMatchesCount += 1
     }

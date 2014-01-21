@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import collection.JavaConversions.{ collectionAsScalaIterable, setAsJavaSet }
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.lcms.{MapSet,Feature}
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.PeptideMatch

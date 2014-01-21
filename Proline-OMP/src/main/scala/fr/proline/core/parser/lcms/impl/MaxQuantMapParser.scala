@@ -23,7 +23,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
       s
     }
 
-    val shortFileName = toStandardName(lcmsScanSeq.rawFileName).split("/").last.split(".").first
+    val shortFileName = toStandardName(lcmsScanSeq.rawFileName).split("/").last.split(".").head
 
     val lines = io.Source.fromFile(filePath).getLines
 

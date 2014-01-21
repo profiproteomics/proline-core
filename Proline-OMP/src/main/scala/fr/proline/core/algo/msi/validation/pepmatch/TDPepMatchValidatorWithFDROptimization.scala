@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi.validation.pepmatch
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._

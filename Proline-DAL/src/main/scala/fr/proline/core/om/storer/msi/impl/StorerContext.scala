@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.{ DecoratedExecutionContext, IExecutionContext }
 import fr.proline.core.om.utils.PeptideIdent

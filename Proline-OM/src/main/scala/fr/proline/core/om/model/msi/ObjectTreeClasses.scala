@@ -1,9 +1,9 @@
 package fr.proline.core.om.model.msi
 
-import scala.reflect.BeanProperty
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
-import org.msgpack.annotation.Message
+import scala.beans.BeanProperty
+//import com.fasterxml.jackson.annotation.JsonInclude
+//import com.fasterxml.jackson.annotation.JsonInclude.Include
+//import org.msgpack.annotation.Message
 
 /** 
 * @param label 
@@ -16,8 +16,8 @@ import org.msgpack.annotation.Message
 * @param neutralLossMass 
 * @param theoreticalFragmentId 
 **/
-@JsonInclude( Include.NON_NULL )
-@Message
+//@JsonInclude( Include.NON_NULL )
+//@Message
 case class FragmentMatch (  
   var label: String,
   //val ionSeries: String,
@@ -65,8 +65,8 @@ object FragmentMatchType extends Enumeration {
 * @param fragmentationTable 
 * @param fragmentMatches 
 **/
-@JsonInclude( Include.NON_NULL )
-@Message
+//@JsonInclude( Include.NON_NULL )
+//@Message
 case class SpectrumMatch (
   @transient val msQueryInitialId: Int,
   @transient val peptideMatchRank: Int,
@@ -77,8 +77,8 @@ case class SpectrumMatch (
   def this() = this(0,0,Array.empty[TheoreticalFragmentSeries],Array.empty[FragmentMatch])
 }
 
-@JsonInclude( Include.NON_NULL )
-@Message
+//@JsonInclude( Include.NON_NULL )
+//@Message
 case class TheoreticalFragmentSeries (
   var fragSeries: String, // begins by an ionSeries name and may be followed by a "++" for doubly charge state
   var masses: Array[Double]

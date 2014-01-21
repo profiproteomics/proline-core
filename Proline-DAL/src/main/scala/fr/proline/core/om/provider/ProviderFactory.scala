@@ -1,6 +1,6 @@
 package fr.proline.core.om.provider
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.{ ORMSeqDatabaseProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
 import fr.proline.core.om.provider.msi.{ IProteinProvider, IPeptideProvider, IPTMProvider }

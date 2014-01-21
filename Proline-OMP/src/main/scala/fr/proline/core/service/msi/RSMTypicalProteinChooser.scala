@@ -1,6 +1,6 @@
 package fr.proline.core.service.msi
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext

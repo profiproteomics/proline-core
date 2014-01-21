@@ -6,7 +6,7 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalatest.junit.JUnitSuite
 import org.scalatest.matchers.MustMatchers
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.util.generator.lcms._
 
@@ -39,7 +39,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     var ftIdSeq = 0
     def newFtId = { ftIdSeq -= 1; ftIdSeq }
     
-    val rawMapFt = rawMap.features.first
+    val rawMapFt = rawMap.features.head
     val procMapFts = new ArrayBuffer[Feature]
     
     // Unique feature

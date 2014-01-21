@@ -112,7 +112,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
 
           ////// Sort cycle nums to retrieve cycle num range
           val sortedCycleNums = sameFtIpByCycleNum.keysIterator.toSeq.sortBy(x => x)
-          val firstCycleNum = sortedCycleNums.first
+          val firstCycleNum = sortedCycleNums.head
           val lastCycleNum = sortedCycleNums.last
 
           var sameFtIps = ArrayBuffer[IsotopicPattern](ips) //not sur to add ips cause we will found it in our array
@@ -198,7 +198,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
               isotopicPatterns = Some(sameFtIps.toArray),
               overlappingFeatures = null,
               relations = FeatureRelations(ms2EventIds = null,
-                firstScanInitialId = sameFtIps.first.scanInitialId,
+                firstScanInitialId = sameFtIps.head.scanInitialId,
                 lastScanInitialId = sameFtIps.last.scanInitialId,
                 apexScanInitialId = apex.scanInitialId)
               )
@@ -232,7 +232,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
     if (data.size == 0) {
       return 0f
     }
-    val orderedKeys = data.keysIterator.toList.sort(_ < _)
+    val orderedKeys = data.keysIterator.toList.sorted
     var xa = 0f
     var ya = 0f
     var i = 0

@@ -148,12 +148,10 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
       sepChar = "/"
     }
 
-    val f = filename.split(sepChar).last.split(".").first
-    for (s <- sampleNames)
-      if (s.matches(f))
-        return (true, f)
+    val f = filename.split(sepChar).last.split(".").head
+    for (s <- sampleNames; if (s.matches(f)) ) return (true, f)        
+    
     (false, f)
-
   }
 
 }

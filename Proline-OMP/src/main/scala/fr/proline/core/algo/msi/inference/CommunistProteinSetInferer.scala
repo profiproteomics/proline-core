@@ -4,7 +4,7 @@ import fr.proline.core.om.model.msi._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.IExecutionContext
 import fr.proline.util.primitives._
 

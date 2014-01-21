@@ -135,7 +135,7 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
 
       val pep: Option[Peptide] = ormPepProvider.getPeptide(SEQ_TO_FOUND, ptmsBuilder.result());
       assertThat(pep, CoreMatchers.notNullValue());
-      assertNotSame(pep, None$.MODULE$);
+      assertNotSame(pep, None);
       assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1));
       assertThat(pep.get.ptms(0).seqPosition, CoreMatchers.equalTo(3));
     } finally {

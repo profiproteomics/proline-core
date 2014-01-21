@@ -4,7 +4,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.Seq
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{ PeptideMatch }
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
 import scala.collection.script.Reset
 import fr.proline.core.om.model.msi.MsQueryProperties

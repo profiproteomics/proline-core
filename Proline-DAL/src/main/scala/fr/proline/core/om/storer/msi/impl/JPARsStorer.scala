@@ -3,7 +3,7 @@ package fr.proline.core.om.storer.msi.impl
 import java.sql.Timestamp
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.{ InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.storer.msi.IPeaklistWriter

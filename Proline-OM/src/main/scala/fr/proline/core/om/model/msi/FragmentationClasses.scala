@@ -2,8 +2,8 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.ArrayBuffer
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+//import com.fasterxml.jackson.annotation.JsonInclude
+//import com.fasterxml.jackson.annotation.JsonInclude.Include
 
 import fr.proline.util.misc.InMemoryIdGen
   
@@ -99,7 +99,7 @@ case class FragmentIonType private (
   }
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class FragmentIonTypeProperties
   
 trait FragmentationRule {
@@ -110,7 +110,7 @@ trait FragmentationRule {
   require( description != null )
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class FragmentationRuleProperties
   
 case class ChargeConstraint(

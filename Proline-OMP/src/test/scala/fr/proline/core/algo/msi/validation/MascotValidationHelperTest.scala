@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi.validation
 
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import org.junit.Assert

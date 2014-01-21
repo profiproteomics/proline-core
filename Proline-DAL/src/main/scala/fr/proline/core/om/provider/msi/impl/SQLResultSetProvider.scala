@@ -1,6 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import scala.collection.mutable.ArrayBuffer
 

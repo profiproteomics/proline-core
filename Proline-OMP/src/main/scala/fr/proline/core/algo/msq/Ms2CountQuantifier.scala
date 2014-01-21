@@ -2,7 +2,7 @@ package fr.proline.core.algo.msq
 
 import collection.mutable.ArrayBuffer
 import collection.JavaConversions.iterableAsScalaIterable
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.{MsQuery,PeptideMatch,ResultSummary}
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.MasterQuantitationChannel 

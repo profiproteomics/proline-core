@@ -28,7 +28,9 @@ class LcMsMapSetFakeGenerator(
     val refMapId = processedMaps(0).id
     var timeList = lcmsRun.scanSequence.get.scans.withFilter( _.msLevel == 1).map( _.time )
     
-    val fixedProcessedMaps = new ArrayBuffer[ProcessedMap](processedMaps.length) + processedMaps.head
+    val fixedProcessedMaps = new ArrayBuffer[ProcessedMap](processedMaps.length)
+    fixedProcessedMaps += processedMaps.head
+    
     val mapAlnSets = processedMaps.tail.map { processedMap =>
       val mapAln = alnFakeGenerator.generateMapAlignment(timeList, refMapId, processedMap.id, Pair(0,20000) )
       

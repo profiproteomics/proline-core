@@ -5,7 +5,7 @@ import collection.mutable.HashMap
 import collection.mutable.HashSet
 
 import org.apache.commons.lang3.StringUtils.{isNotEmpty => isStrNotEmpty}
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi._
 import  fr.proline.core.algo.msi.scoring.IPeptideSetScoreUpdater
 

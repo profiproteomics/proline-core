@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper

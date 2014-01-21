@@ -3,7 +3,7 @@ package fr.proline.core.algo.msi.filtering.proteinset
 import scala.collection.Seq
 import scala.collection.mutable.HashMap
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IProteinSetFilter, ProtSetFilterParams, ProteinSetFiltering}
 import fr.proline.core.om.model.msi.ProteinSet

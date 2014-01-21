@@ -88,7 +88,7 @@ class ExportMasterQuantPeptideIons(
   }
   
   override protected def mkRowHeader( quantChannelCount: Int ): String = {
-    val rowHeaders = new ArrayBuffer[String] + super.mkRowHeader(quantChannelCount) ++ mqPepIonHeaders
+    val rowHeaders = new ArrayBuffer[String]() += super.mkRowHeader(quantChannelCount) + mqPepIonHeaders    
     for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qPepIonHeaders.map(_+"_"+i) )
     rowHeaders.mkString("\t")
   }

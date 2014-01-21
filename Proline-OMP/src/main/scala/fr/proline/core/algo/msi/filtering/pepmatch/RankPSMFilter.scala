@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi.filtering.pepmatch
 
 import scala.collection.mutable.HashMap
 import scala.collection.Seq
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.util.primitives._

@@ -2,15 +2,11 @@ package fr.proline.core.om.builder
 
 import org.junit.Assert._
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
-
-import com.fasterxml.jackson.annotation.JsonInclude
 
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 
-@Test
-class PeptideBuilderTest extends JUnitSuite {
+class PeptideBuilderTest {
 
   @Test
   def testBuildMultiplePeptideIDs() = {

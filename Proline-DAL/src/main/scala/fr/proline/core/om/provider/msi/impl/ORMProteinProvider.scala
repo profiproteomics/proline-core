@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.JavaConversions.{ collectionAsScalaIterable, seqAsJavaList }
 import scala.collection.Seq
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ Protein, SeqDatabase }

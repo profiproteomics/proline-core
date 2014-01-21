@@ -4,7 +4,7 @@ import java.sql.Connection
 import org.postgresql.copy.CopyIn
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable

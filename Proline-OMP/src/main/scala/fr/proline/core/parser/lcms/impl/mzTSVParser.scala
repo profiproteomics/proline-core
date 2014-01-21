@@ -4,7 +4,7 @@ import java.util.Date
 import fr.proline.core.om.model.lcms.RawMap
 
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include

@@ -17,10 +17,11 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
     </dependency>
-
+    
     <dependency>
-      <groupId>com.weiglewilczek.slf4s</groupId>
-      <artifactId>slf4s_2.9.1</artifactId>
+      <groupId>com.typesafe</groupId>
+      <artifactId>scalalogging-slf4j_2.10</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala.version} --> 
     </dependency>
 
     <dependency>
@@ -41,23 +42,23 @@
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
     
-    <dependency>
+    <!--<dependency>
       <groupId>com.lambdaworks</groupId>
       <artifactId>jacks_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
+       Version inherited from ProFI-Pom
+    </dependency>-->
 
-    <dependency>
+    <!--<dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack-scala_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
+      Version inherited from ProFI-Pom
+    </dependency> -->
 
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
+      <!-- Version inherited from parent POM -->
     </dependency>
 
     <!-- Test -->
@@ -93,8 +94,9 @@
 
       <!-- Build Scala sources -->
       <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
       </plugin>
 
     </plugins>

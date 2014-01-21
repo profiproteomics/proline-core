@@ -3,11 +3,11 @@ package fr.proline.core.om.model.lcms
 import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
-import com.weiglewilczek.slf4s.Logging
+//import com.fasterxml.jackson.annotation.JsonInclude
+//import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.util.misc.InMemoryIdGen
 
@@ -23,7 +23,7 @@ case class FeatureScoring(
   
 )
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class FeatureScoringProperties
 
 object PeakPickingSoftware extends InMemoryIdGen
@@ -41,7 +41,7 @@ case class PeakPickingSoftware(
 
 )
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class PeakPickingSoftwareProperties
 
 case class PeakelFittingModel( 
@@ -55,7 +55,7 @@ case class PeakelFittingModel(
   
 )
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class PeakelFittingModelProperties
 
 case class MapMozCalibration( 
@@ -76,10 +76,10 @@ case class MapMozCalibration(
   require( mozList != null && deltaMozList != null )
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class MapMozCalibrationProperties
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class LcMsMapProperties
 
 abstract class ILcMsMap {
@@ -429,7 +429,7 @@ case class MapAlignment(
   
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class MapAlignmentProperties
 
 case class MapAlignmentSet(
@@ -496,7 +496,7 @@ case class MapAlignmentSet(
   
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class MapAlignmentSetProperties
 
 object MapSet extends InMemoryIdGen
@@ -591,7 +591,7 @@ case class MapSet(
     if( nbMasterFeatures == 0 ) return ()
     
     val newMasterFeatures = new ArrayBuffer[Feature](nbMasterFeatures)
-    for( val mft <- this.masterMap.features ) {
+    for( mft <- this.masterMap.features ) {
       
       val mftChildren = mft.children
       
@@ -720,7 +720,7 @@ case class MapSet(
 
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class MapSetProperties
 
 

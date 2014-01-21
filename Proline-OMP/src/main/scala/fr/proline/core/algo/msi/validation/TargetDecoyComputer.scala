@@ -33,13 +33,13 @@ object TargetDecoyComputer {
       // Remove peptide match duplicates (same score and same rank but different peptides = see Mascot pretty rank )
       var targetPepMatch: PeptideMatch = null
       if( targetPepMatches.isDefined ) {
-        targetPepMatch = targetPepMatches.get.toList.sort( (a,b) => a.score > b.score ).head
+        targetPepMatch = targetPepMatches.get.toList.sortWith( (a,b) => a.score > b.score ).head
       }
       
       // Remove peptide match duplicates (same score and same rank but different peptides = see Mascot pretty rank )
       var decoyPepMatch: PeptideMatch = null
       if( decoyPepMatches.isDefined ) {
-        decoyPepMatch = decoyPepMatches.get.toList.sort( (a,b) => a.score > b.score ).head
+        decoyPepMatch = decoyPepMatches.get.toList.sortWith( (a,b) => a.score > b.score ).head
       }
       
       jointTable += Pair(targetPepMatch,decoyPepMatch)
@@ -80,7 +80,7 @@ object TargetDecoyComputer {
     val competitionCounts = Map( TARGET_KEY -> TDCompetitionCounts(),
                                  DECOY_KEY -> TDCompetitionCounts() )
     
-    for( val scores <- scoreJointTable ) {
+    for( scores <- scoreJointTable ) {
       
       val( targetScore, decoyScore ) = ( scores._1, scores._2 )
       var compet: TDCompetitionResult = null

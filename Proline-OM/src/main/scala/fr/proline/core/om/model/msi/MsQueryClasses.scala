@@ -1,7 +1,7 @@
 package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize

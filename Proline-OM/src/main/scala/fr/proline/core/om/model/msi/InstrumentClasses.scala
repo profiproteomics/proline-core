@@ -1,8 +1,8 @@
 package fr.proline.core.om.model.msi
 
-import scala.reflect.BeanProperty
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+import scala.beans.BeanProperty
+//import com.fasterxml.jackson.annotation.JsonInclude
+//import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
 
 @deprecated("use ORM ActivationType enumeration instead","0.0.7")
@@ -29,7 +29,7 @@ case class Instrument(
       
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class InstrumentProperties
 
 
@@ -42,7 +42,7 @@ object InstrumentConfig extends InMemoryIdGen {
   }
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class InstrumentConfig(
                    // Required fields
                    val id: Long,
@@ -65,7 +65,7 @@ case class InstrumentConfig(
       
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class InstrumentConfigProperties ( 
   @BeanProperty val isHidden: Boolean
 )

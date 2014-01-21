@@ -23,29 +23,33 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-OM</artifactId>
+      <!-- Version inherited from parent POM -->
     </dependency>
 
     <!-- Unused dependency : fr.proline:Proline-DAL:jar:0.0.2-SNAPSHOT:compile -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-DAL</artifactId>
-    </dependency>
-
-    <!-- Direct dependencies -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.weiglewilczek.slf4s</groupId>
-      <artifactId>slf4s_2.9.1</artifactId>
+      <!-- Version inherited from parent POM -->
     </dependency>
 
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>mzdb-processing</artifactId>
-      <version>0.0.2-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+      <version>0.0.2.a-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    </dependency>
+
+    <!-- Scala -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala.version} -->
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>scalalogging-slf4j_2.10</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala.version} -->
     </dependency>
 
     <!-- Test -->
@@ -131,7 +135,7 @@
       <plugin>
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>replacer</artifactId>
-
+ 
         <executions>
           <execution>
             <phase>generate-sources</phase>
@@ -160,8 +164,9 @@
 
       <!-- Build Scala sources -->
       <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
       </plugin>
 
     </plugins>

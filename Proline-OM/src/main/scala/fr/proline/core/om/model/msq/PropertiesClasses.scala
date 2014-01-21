@@ -1,7 +1,7 @@
 package fr.proline.core.om.model.msq
 
 import scala.collection.mutable.HashMap
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 case class ComputedRatio (

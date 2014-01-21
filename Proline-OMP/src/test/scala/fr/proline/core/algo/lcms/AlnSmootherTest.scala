@@ -5,7 +5,7 @@ import org.junit.Before
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 import org.scalatest.matchers.MustMatchers
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.lcms._
 
 class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {

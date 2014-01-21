@@ -3,7 +3,7 @@ package fr.proline.core.util.generator.lcms
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks._
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.lcms._
 import fr.proline.util.random._
@@ -87,8 +87,8 @@ class RawMapFakeGenerator (
         
         val ftDuration = LcMsRandomator.randomDuration(FT_DURATION_RANGE._1,FT_DURATION_RANGE._2,FT_DURATION_STDDEV)
         val( firstTime, lastTime ) = ( ftTime - ftDuration/2, ftTime + ftDuration/2)
-        val firstScanIdx = ms1Scans.findIndexOf( _.time > firstTime )
-        var lastScanIdx = ms1Scans.findIndexOf( _.time > lastTime )
+        val firstScanIdx = ms1Scans.indexWhere( _.time > firstTime )
+        var lastScanIdx = ms1Scans.indexWhere( _.time > lastTime )
         if( lastScanIdx == -1 ) lastScanIdx = ms1Scans.length - 1
         
         val firstScan = ms1Scans(firstScanIdx)

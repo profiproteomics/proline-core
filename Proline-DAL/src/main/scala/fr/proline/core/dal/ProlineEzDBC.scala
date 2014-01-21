@@ -2,7 +2,7 @@ package fr.proline.core.dal
 
 import java.sql.Connection
 import org.joda.time.format.DateTimeFormat
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.jdbc.AbstractSQLDialect
 import fr.profi.jdbc.AsShortStringBooleanFormatter
 import fr.profi.jdbc.DefaultSQLDialect

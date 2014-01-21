@@ -1,7 +1,7 @@
 package fr.proline.core.dal
 
 import java.sql.SQLException
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -27,8 +27,8 @@ object ContextFactory extends Logging {
   def buildExecutionContext(dsFactory: IDataStoreConnectorFactory, projectId: Long, useJPA: Boolean): IExecutionContext = {
     val currentThread = Thread.currentThread
 
-    if (!currentThread.isInstanceOf[ThreadLogger]) {
-      currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.name))
+    if (!currentThread.getUncaughtExceptionHandler.isInstanceOf[ThreadLogger]) {
+      currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName()))
     }
 
     val udsDbConnector = dsFactory.getUdsDbConnector

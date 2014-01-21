@@ -1,6 +1,6 @@
 package fr.proline.core.om.model.pdi
 
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 case class SeqDbEntryProperties (

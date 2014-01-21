@@ -2,7 +2,7 @@ package fr.proline.core.util.generator.msi
 
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.ResultSet
 
 @Test

@@ -1,7 +1,7 @@
 package fr.proline.core.om.model.msi
  
 import java.util.Date
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 import fr.proline.util.misc.InMemoryIdGen

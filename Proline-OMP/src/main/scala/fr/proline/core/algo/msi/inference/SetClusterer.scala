@@ -173,7 +173,7 @@ object SetClusterer {
             cluster.isSubset = true
             
             // Link subsumable set to strict oversets
-            for( val oversetClusterId <- oversetClusterIdSet ) {
+            for( oversetClusterId <- oversetClusterIdSet ) {
               val oversetCluster = samesetById(oversetClusterId)
               if( oversetCluster.subsumableSubsetsIds.isEmpty ) {
                 oversetCluster.subsumableSubsetsIds = Some( new ArrayBuffer[Long] )
@@ -244,17 +244,17 @@ object SetClusterer {
   }
     
   private def stringifySortedIntList( values: List[Int] ): String = {
-    val sortedValues = values.sort { (a,b) => a < b }
+    val sortedValues = values.sortWith { (a,b) => a < b }
     sortedValues.map { _.toString } mkString("&")
   }
   
   private def stringifySortedLongList( values: List[Long] ): String = {
-    val sortedValues = values.sort { (a,b) => a < b }
+    val sortedValues = values.sortWith { (a,b) => a < b }
     sortedValues.map { _.toString } mkString("&")
   }
   
   private def stringifySortedStringList( values: List[String] ): String = {
-    val sortedValues = values.sort { (a,b) => a < b }
+    val sortedValues = values.sortWith { (a,b) => a < b }
     sortedValues.map { _.toString } mkString("&")
   }
   

@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
 import scala.collection.Seq
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import javax.persistence.EntityManager
 import fr.proline.core.om.model.msi.SeqDatabase
 import fr.proline.core.om.model.msi.PtmDefinition

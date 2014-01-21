@@ -1,7 +1,7 @@
 package fr.proline.core.om.storer.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.StatementWrapper

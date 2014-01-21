@@ -1,6 +1,6 @@
 package fr.proline.core.service.msq.quantify
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext

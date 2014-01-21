@@ -1,6 +1,6 @@
 package fr.proline.core.dal
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.repository.DatabaseUpgrader
 import fr.proline.repository.IDataStoreConnectorFactory

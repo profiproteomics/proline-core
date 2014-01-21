@@ -1,14 +1,19 @@
 package fr.proline.core.om.model.msi
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+//import com.fasterxml.jackson.annotation.JsonInclude
+//import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
 import fr.proline.util.StringUtils
 
 object PtmNames extends InMemoryIdGen
 
-@JsonInclude(Include.NON_NULL)
-case class PtmNames(val shortName: String, val fullName: String) {
+trait PtmNamesContainer {
+  val shortName: String
+  val fullName: String
+}
+
+//@JsonInclude(Include.NON_NULL)
+case class PtmNames(val shortName: String, val fullName: String) extends PtmNamesContainer {
 
   // Requirements
   require(!StringUtils.isEmpty(shortName))
@@ -19,7 +24,7 @@ case class PtmNames(val shortName: String, val fullName: String) {
   }
 }
 
-@JsonInclude(Include.NON_NULL)
+//@JsonInclude(Include.NON_NULL)
 case class UnimodEntry(
   // Required fields
   override val shortName: String,
@@ -30,7 +35,7 @@ case class UnimodEntry(
   val unimodId: Long = 0,
   val ptmEvidences: Array[PtmEvidence] = null
   
-) extends PtmNames(shortName, fullName) {
+) extends PtmNamesContainer {
 
   // Requirements
   require(specificities != null)
@@ -46,7 +51,7 @@ object IonTypes extends Enumeration {
   val PepNeutralLoss = Value("PepNeutralLoss")
 }
 
-@JsonInclude(Include.NON_NULL)
+//@JsonInclude(Include.NON_NULL)
 case class PtmEvidence(
     
   // Required fields
@@ -89,7 +94,7 @@ trait IPtmSpecificity {
   val ptmId: Long
 }
 
-@JsonInclude(Include.NON_NULL)
+//@JsonInclude(Include.NON_NULL)
 case class PtmSpecificity(
     
   // Required fields
@@ -114,7 +119,7 @@ case class PtmSpecificity(
 
 object PtmDefinition extends InMemoryIdGen
 
-@JsonInclude(Include.NON_NULL)
+//@JsonInclude(Include.NON_NULL)
 case class PtmDefinition(
   
   // Required fields
@@ -168,7 +173,7 @@ case class PtmDefinition(
   }
 }
 
-@JsonInclude(Include.NON_NULL)
+//@JsonInclude(Include.NON_NULL)
 case class LocatedPtm(
   // Required fields
   val definition: PtmDefinition,

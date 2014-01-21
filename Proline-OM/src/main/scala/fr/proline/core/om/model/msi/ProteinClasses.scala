@@ -1,10 +1,10 @@
 package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+//import com.fasterxml.jackson.annotation.JsonInclude
+//import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.annotation.JsonProperty
 
 import org.apache.commons.lang3.StringUtils.isNotEmpty
@@ -58,7 +58,7 @@ object Protein extends InMemoryIdGen {
 
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class Protein (
   // Required fields
   val id: Long,
@@ -87,13 +87,13 @@ case class Protein (
 
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class ProteinProperties
 
 
 object ProteinMatch extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class ProteinMatch (
     
   // Required fields
@@ -137,13 +137,13 @@ case class ProteinMatch (
   
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class ProteinMatchProperties
 
  
 object ProteinSet extends InMemoryIdGen
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class ProteinSet ( 
   // Required fields
   @transient val peptideSet: PeptideSet,
@@ -245,13 +245,13 @@ case class ProteinSet (
  
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class ProteinSetProperties
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class ProteinMatchResultSummaryProperties
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class SequenceMatch (
   // Required fields
   val start: Int,
@@ -283,7 +283,7 @@ case class SequenceMatch (
   
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class SequenceMatchProperties
 
 

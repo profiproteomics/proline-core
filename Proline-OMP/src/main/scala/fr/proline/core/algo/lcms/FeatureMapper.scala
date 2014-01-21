@@ -68,7 +68,7 @@ object FeatureMapper {
           // Retrieve putative features of map2 which match the current map1 feature (same m/z range)
           val moz1AsInt = map1FtMoz.toInt
           val sameMozRangeMap2Fts = new ArrayBuffer[Feature](0)
-          for( val mozIndex <- moz1AsInt-1 to moz1AsInt+1 ) {
+          for( mozIndex <- moz1AsInt-1 to moz1AsInt+1 ) {
             if( map2FtsGroupedByMoz contains mozIndex ) {
               sameMozRangeMap2Fts ++= map2FtsGroupedByMoz(mozIndex) 
             }

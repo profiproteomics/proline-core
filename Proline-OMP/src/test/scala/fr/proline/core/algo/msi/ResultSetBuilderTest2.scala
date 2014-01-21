@@ -1,17 +1,16 @@
 package fr.proline.core.algo.msi
 
 import org.junit.After
-import org.junit.Assert._
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
-import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.ContextFactory
@@ -27,7 +26,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.repository.DriverType
 

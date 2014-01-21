@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import scala.math.sqrt
 import scala.util.control.Breaks._
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ProteinSet

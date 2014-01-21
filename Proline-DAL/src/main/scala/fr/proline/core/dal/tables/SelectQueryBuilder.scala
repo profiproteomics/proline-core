@@ -1,6 +1,6 @@
 package fr.proline.core.dal.tables
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.dal.tables.{ColumnEnumeration => ColEnum}
 
 trait CanBuildSelectQuery extends Logging {

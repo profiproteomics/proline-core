@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.msi
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.IResultSetSplitter
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.IResultFile

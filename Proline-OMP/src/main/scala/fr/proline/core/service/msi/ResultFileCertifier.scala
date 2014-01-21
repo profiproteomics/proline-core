@@ -2,7 +2,7 @@ package fr.proline.core.service.msi
 
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.context._

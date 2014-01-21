@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.jdbc.easy.string2Formattable
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.tables.SelectQueryBuilder._

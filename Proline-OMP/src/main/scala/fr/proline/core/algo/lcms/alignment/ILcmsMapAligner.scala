@@ -1,7 +1,7 @@
 package fr.proline.core.algo.lcms.alignment
 
 import scala.collection.mutable.HashMap
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.lcms.AlignmentParams
 import fr.proline.core.algo.lcms.FeatureMappingParams
 import fr.proline.core.om.model.lcms._

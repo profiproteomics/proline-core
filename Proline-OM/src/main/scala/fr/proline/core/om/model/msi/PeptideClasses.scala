@@ -3,11 +3,11 @@ package fr.proline.core.om.model.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.util.StringUtils.isNotEmpty
 import fr.proline.util.misc.InMemoryIdGen
 

@@ -3,7 +3,7 @@ package fr.proline.core.service.lcms.io
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.profi.jdbc.easy._
 import fr.profi.mzdb.MzDbFeatureExtractor
@@ -206,7 +206,7 @@ class ExtractMapSet(
     val x2RawMaps = new ArrayBuffer[RawMap]
     val x2ProcessedMaps = new ArrayBuffer[ProcessedMap]
     for( processedMap <- mapSet.childMaps ) {
-      val rawMap = processedMap.getRawMaps().first.get
+      val rawMap = processedMap.getRawMaps().head.get
       val rawMapId = rawMap.id
       val mzDbFile = mzDbFileByRawMapId(rawMapId)
       val lcmsRun = lcmsRunByRawMapId(rawMapId)
@@ -444,7 +444,7 @@ class ExtractMapSet(
   ): Seq[Feature] = {
     
     val procMapId = processedMap.id
-    val rawMapId = processedMap.getRawMapIds().first
+    val rawMapId = processedMap.getRawMapIds().head
     val masterMap = mapSet.masterMap
     val nbMaps = mapSet.childMaps.length
 
@@ -588,7 +588,7 @@ class ExtractMapSet(
       // If all child features match the same peptide
       else if( featuresByPepId.size == 1 ) {
         // We tag this master feature with the peptide ID
-        mft.relations.peptideId = featuresByPepId.first._1 
+        mft.relations.peptideId = featuresByPepId.head._1 
         // And we keep the existing master feature
         newMasterFeatures += mft
       } else {
@@ -610,7 +610,7 @@ class ExtractMapSet(
           // Iterate over features grouped by maps
           for( (mapId,fts) <- ftsByMapId ) {
             // If we have a single feature for this map => we keep it as is
-            if( fts.length == 1 ) clusterizedFeatures += fts.first
+            if( fts.length == 1 ) clusterizedFeatures += fts.head
             // Else we clusterize the multiple detected features
             else {
               
@@ -641,7 +641,7 @@ class ExtractMapSet(
           }
           
           val refFtOpt = clusterizedFeatures.find( _.relations.processedMapId == alnRefMapId )
-          val refFt = refFtOpt.getOrElse(clusterizedFeatures.first)
+          val refFt = refFtOpt.getOrElse(clusterizedFeatures.head)
           val newMft = refFt.toMasterFeature( children = clusterizedFeatures.toArray )
           
           // We tag this new master feature with the peptide ID

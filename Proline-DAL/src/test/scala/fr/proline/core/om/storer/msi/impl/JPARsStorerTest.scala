@@ -5,13 +5,13 @@ import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import fr.proline.repository.DriverType
 import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION

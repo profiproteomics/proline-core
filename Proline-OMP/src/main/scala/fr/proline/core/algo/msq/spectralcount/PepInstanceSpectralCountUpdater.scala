@@ -5,7 +5,7 @@ import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.om.model.msi.ResultSet
 import scala.collection.mutable.HashMap
 import fr.proline.core.om.model.msi.PeptideMatch
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.algo.msi.filtering.ResultSummaryFilterBuilder
 import fr.proline.repository.util.JDBCWork

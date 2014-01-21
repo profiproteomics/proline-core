@@ -1,6 +1,6 @@
 package fr.proline.core.algo.lcms
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.lcms._
 import fr.proline.util.ms._
@@ -230,7 +230,7 @@ class FeatureClusterer(
     val nbSubFts = ftGroup.length
 
     // Determine first ft scan and last ft scan
-    val subftsSortedByAscTime = totalFtGroupAsList.sort { (a, b) => a.elutionTime < b.elutionTime }
+    val subftsSortedByAscTime = totalFtGroupAsList.sortWith { (a, b) => a.elutionTime < b.elutionTime }
     val (firstSubft, lastSubft) = (subftsSortedByAscTime.head, subftsSortedByAscTime.last)
     val (firstScanId, firstScanInitialId) = (firstSubft.relations.firstScanId, firstSubft.relations.firstScanInitialId)
     val (lastScanId, lastScanInitialId) = (lastSubft.relations.lastScanId, lastSubft.relations.lastScanInitialId)

@@ -3,7 +3,7 @@ package fr.proline.core.service.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context._

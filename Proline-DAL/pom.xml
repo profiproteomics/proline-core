@@ -19,6 +19,7 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
+      <!-- Version inherited from parent POM -->
     </dependency>
 
     <!-- "Proline" modules -->
@@ -41,11 +42,14 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
     </dependency>
 
     <dependency>
-      <groupId>com.weiglewilczek.slf4s</groupId>
-      <artifactId>slf4s_2.9.1</artifactId>
+      <groupId>com.typesafe</groupId>
+      <artifactId>scalalogging-slf4j_2.10</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+      <scope>compile</scope>
     </dependency>
 
     <!-- Databases -->
@@ -101,6 +105,7 @@
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
+      <version>1.9.2</version>
       <scope>test</scope>
     </dependency>
 
@@ -145,8 +150,9 @@
 
       <!-- Build Scala sources -->
       <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
       </plugin>
 
     </plugins>

@@ -1,27 +1,12 @@
 package fr.proline.core.algo.msi
 
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.Assert._
 import org.scalatest.junit.JUnitSuite
-import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
+
+import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import org.junit.BeforeClass
-import org.junit.AfterClass
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.repository.DriverType
-import fr.proline.context.BasicExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
 
 @Test
 class ResultSetBuilderTest extends JUnitSuite with Logging {

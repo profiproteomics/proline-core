@@ -4,7 +4,7 @@ import org.junit.Assert._
 import org.junit.Ignore
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.filtering.IPeptideMatchSorter
 import fr.proline.core.om.model.msi.ResultSet

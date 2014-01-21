@@ -2,10 +2,10 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.util.misc.InMemoryIdGen
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 object ResultSet extends InMemoryIdGen
 

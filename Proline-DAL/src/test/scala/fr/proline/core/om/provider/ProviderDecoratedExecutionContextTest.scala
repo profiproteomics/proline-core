@@ -4,10 +4,10 @@ import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideMatchProvider
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 import fr.proline.core.dal.ContextFactory
 

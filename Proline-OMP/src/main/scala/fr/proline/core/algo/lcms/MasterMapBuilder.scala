@@ -3,7 +3,7 @@ package fr.proline.core.algo.lcms
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.HashMap
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.lcms._
 import filtering._
 
@@ -160,7 +160,7 @@ class MasterMapBuilder(
     val ftClusterer = ftClustererByChildMapId(childMapId)
     
     // Iterate over all child map features in order to correct their elution time
-    for( val childFt <- childMapFeatures ) {
+    for( childFt <- childMapFeatures ) {
       
       val childMapId = childFt.relations.processedMapId
       require( childMapId != 0, "a processed map id must be defined for each child feature (m/z=" + childFt.moz +")")
@@ -192,7 +192,7 @@ class MasterMapBuilder(
     // Retrieve nearest matching children (considering elution time) and their id
     val matchingFtIdSet = new HashSet[Long]()
     
-    for( val(mftBestFtId, matchingChildFeatures) <- ftMapping ) {
+    for( (mftBestFtId, matchingChildFeatures) <- ftMapping ) {
       
       val mftBuilder = mftBuilderByBestFtId(mftBestFtId)
       
@@ -329,7 +329,7 @@ class MasterMapBuilder(
         val putativeMatchingMftByBestFtId = Map() ++ putativeMatchingMfts.map { mft => mft.bestFeature.id -> mft }
         
         // Retrieve nearest matching children (considering elution time) and their id
-        for( val(singleChildMftBestFtId, matchingFeatures) <- ftMapping ) {
+        for( (singleChildMftBestFtId, matchingFeatures) <- ftMapping ) {
           
           // TODO: keep this ?
           if( matchingFeatures.length == 1 ) {

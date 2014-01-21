@@ -37,10 +37,14 @@ class OpenMSMapParser extends ILcmsMapFileParser {
       val intensity = (n \ "intensity").text.toFloat
       val charge = (n \ "charge").text.toInt
 
-      var dataPoints = (n \ "convexhull").elements.map(p => new Peak((p \ "hposition").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("moz"))(0).text.toDouble,
-        (p \ "hposition").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("rt"))(0).text.toFloat,
-        Float.NaN,
-        Float.NaN)).toArray
+      var dataPoints = (n \ "convexhull").map( p =>
+        new Peak(
+          (p \ "hposition").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("moz"))(0).text.toDouble,
+          (p \ "hposition").filter(v => (v \ "@dim") == OpenMSMapParser.dimension("rt"))(0).text.toFloat,
+          Float.NaN,
+          Float.NaN
+         )
+      ).toArray
 
       val scanMs1 = lcmsScanSeq.getScanAtTime(elutionTime, 1)
       val scanMs2 = lcmsScanSeq.getScanAtTime(elutionTime, 2)

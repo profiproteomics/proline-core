@@ -151,9 +151,7 @@ package object lzma {
       var n = 0
       while ( { n = input.read(buffer); n != -1 } ) {
         output.write(buffer, 0, n)
-      }
-      
-      output
+      }      
     }
   }
   

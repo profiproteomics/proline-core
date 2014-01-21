@@ -51,7 +51,7 @@ trait IAlnSmoother {
     val stepSize = windowSize * ((100-windowOverlap).toFloat/100)
     val nbIntervals = (dataSetSize/stepSize).toInt
     
-    for( val step <- 0 to nbIntervals ) {
+    for( step <- 0 to nbIntervals ) {
       
       val minVal = step * stepSize
       val maxVal = minVal + windowSize

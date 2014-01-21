@@ -3,9 +3,9 @@ package fr.proline.core.om.model.lcms
 import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.BeanProperty
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonInclude.Include
+import scala.beans.BeanProperty
+//import com.fasterxml.jackson.annotation.JsonInclude
+//import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
 import fr.proline.core.om.model.msi.Instrument
 
@@ -26,7 +26,7 @@ case class RawFile(
   require( instrument != null )
 }
             
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class RawFileProperties(
   @BeanProperty var mzdbFilePath: String
 )
@@ -55,7 +55,7 @@ case class LcMsRun(
   
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class LcMsRunProperties
 
 
@@ -157,7 +157,7 @@ case class LcMsScanSequence(
   
 }
 
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class LcMsScanSequenceProperties
 
 object LcMsScan extends InMemoryIdGen
@@ -184,5 +184,5 @@ case class LcMsScan(
 
 )
             
-@JsonInclude( Include.NON_NULL )
+//@JsonInclude( Include.NON_NULL )
 case class LcMsScanProperties

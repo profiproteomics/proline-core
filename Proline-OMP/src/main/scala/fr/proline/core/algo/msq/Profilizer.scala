@@ -3,7 +3,7 @@ package fr.proline.core.algo.msq
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import org.apache.commons.math.stat.descriptive.StatisticalSummary
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msq._
 
 /**

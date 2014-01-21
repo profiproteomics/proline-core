@@ -6,7 +6,7 @@ import scala.util.control.Breaks.breakable
 import fr.proline.context.IExecutionContext
 import fr.proline.util.regex.RegexUtils._
 import fr.proline.core.orm.msi.ProteinMatch
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import javax.persistence.EntityManager
 
 class TypicalProteinChooser () extends Logging {

@@ -6,7 +6,7 @@ import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext

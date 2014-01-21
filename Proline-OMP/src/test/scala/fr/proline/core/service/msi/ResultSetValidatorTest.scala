@@ -3,7 +3,7 @@ package fr.proline.core.service.msi
 import java.io.File
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 import org.junit.{ After, AfterClass, Assert, Test, Before, BeforeClass, Ignore }
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.util.primitives._
 
 import fr.proline.context.IExecutionContext
@@ -23,7 +23,7 @@ import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.context.BasicExecutionContext
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.om.util.AbstractMultipleDBTestCase
 
 abstract class AbstractResultSetValidator extends AbstractMultipleDBTestCase with Logging {
   
@@ -269,14 +269,14 @@ class ResultSetValidatorF136482Test extends Logging {
     allTarPepMatc.foreach(peptideM => {
       val pepMatches = pepMatchByQuId.get(peptideM.msQueryId).getOrElse(new ArrayBuffer[PeptideMatch]())
       //             println(peptideM.msQueryId+"\t"+peptideM.peptide.sequence+"\t"+peptideM.peptide.ptmString+"\t"+peptideM.score)
-      pepMatches + peptideM
+      pepMatches += peptideM
       Assert.assertTrue(peptideM.isValidated)
       pepMatchByQuId.put(peptideM.msQueryId, pepMatches)
     })
 
     allDecPepMatc.foreach(peptideM => {
       val pepMatches = pepMatchByQuId.get(peptideM.msQueryId).getOrElse(new ArrayBuffer[PeptideMatch]())
-      pepMatches + peptideM
+      pepMatches += peptideM
       //             println(peptideM.msQueryId+"\t"+peptideM.peptide.sequence+"\t"+peptideM.peptide.ptmString)
       Assert.assertTrue(peptideM.isValidated)
       pepMatchByQuId.put(peptideM.msQueryId, pepMatches)

@@ -5,13 +5,13 @@ import org.junit.After
 import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.SpectralCountConfig
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.core.orm.uds.Dataset
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.orm.uds.QuantitationChannel

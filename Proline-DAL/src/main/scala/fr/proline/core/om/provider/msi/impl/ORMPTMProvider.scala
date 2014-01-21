@@ -4,7 +4,7 @@ import scala.Array.canBuildFrom
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters.asJavaCollectionConverter
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ PtmDefinition, PtmLocation }

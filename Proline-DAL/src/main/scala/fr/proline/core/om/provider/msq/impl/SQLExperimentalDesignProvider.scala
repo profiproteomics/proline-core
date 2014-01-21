@@ -157,8 +157,6 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
         )
         
         ratioDefsByGSId.getOrElseUpdate(groupSetupId, new ArrayBuffer[RatioDefinition]) += ratioDef
-        
-        ratioDef
       }
       
       // Retrieve group setups

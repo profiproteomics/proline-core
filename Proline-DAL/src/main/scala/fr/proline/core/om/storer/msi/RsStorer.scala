@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.msi
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IResultFile }
 import fr.proline.core.om.storer.msi.impl._

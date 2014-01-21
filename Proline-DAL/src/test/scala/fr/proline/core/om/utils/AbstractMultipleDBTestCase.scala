@@ -1,6 +1,6 @@
-package fr.proline.core.om.utils
+package fr.proline.core.om.util
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.dal.DataStoreConnectorFactoryForTest
 import fr.proline.repository.{ DriverType, ProlineDatabaseType }

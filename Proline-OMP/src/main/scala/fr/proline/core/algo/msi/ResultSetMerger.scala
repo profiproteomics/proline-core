@@ -1,7 +1,7 @@
 package fr.proline.core.algo.msi
 
 import scala.collection.mutable.{ArrayBuffer,HashMap,HashSet}
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi._

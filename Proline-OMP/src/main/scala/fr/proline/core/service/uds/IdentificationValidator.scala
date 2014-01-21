@@ -1,7 +1,7 @@
 package fr.proline.core.service.uds
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.api.service.IService
 import fr.proline.context.{IExecutionContext, DatabaseConnectionContext, BasicExecutionContext}
 import fr.proline.core.algo.msi.filtering._
