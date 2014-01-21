@@ -10,7 +10,7 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.util.primitives._
-    
+
 class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider {
   
   /*
@@ -103,7 +103,8 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
         // Retrieve corresponding PTM evidences
         val ptmEvidRecords = ptmEvidRecordsByPtmId.get(ptmId).get
   
-        // TODO : load classification
+        // TODO: load classification
+        // TODO: load PTM specif evidences
         val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(
           ptmRecord = ptmRecord,
           ptmSpecifRecord = ptmSpecifRecord,
