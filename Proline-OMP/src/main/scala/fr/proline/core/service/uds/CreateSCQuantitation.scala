@@ -1,7 +1,6 @@
 package fr.proline.core.service.uds
 
 import scala.collection.mutable.HashMap
-
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msq.ExperimentalDesign2
@@ -19,6 +18,8 @@ import fr.proline.core.orm.uds.{
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.proline.util.sql.getTimeAsSQLTimestamp
 import javax.persistence.NoResultException
+import scala.collection.JavaConversions._
+import java.util.ArrayList
 
 class CreateSCQuantitation(
   executionContext: IExecutionContext,
@@ -52,8 +53,9 @@ class CreateSCQuantitation(
     // Retrieve existing quantitations for this project
     var previousQuantNum = 0
     try {
-    	val lastQuantNbr : java.lang.Integer = udsEM.createNativeQuery("Select  max(number) from data_set where project_id = :pid and type = 'QUANTITATION' ", classOf[java.lang.Integer]).setParameter("pid", projectId).getSingleResult().asInstanceOf[java.lang.Integer]
-    	previousQuantNum = lastQuantNbr
+    	val lastQuantNbrObj = udsEM.createNativeQuery("Select  max(number) from data_set where project_id = :pid and type = 'QUANTITATION' ").setParameter("pid", projectId).getSingleResult()
+    	if(lastQuantNbrObj!=null)
+    		previousQuantNum = lastQuantNbrObj.asInstanceOf[Int]
     } catch {
     	case e: NoResultException=>  previousQuantNum=0
     }
@@ -73,8 +75,7 @@ class CreateSCQuantitation(
     udsQuantitation.setChildrenCount(0)
     udsQuantitation.setMethod(udsQuantMethod)
     udsEM.persist(udsQuantitation)
-
-    this._udsQuantitation = udsQuantitation
+    
 
     // Store biological samples
     val udsBioSampleByNum = new HashMap[Int, UdsBiologicalSample]
@@ -90,7 +91,9 @@ class CreateSCQuantitation(
 
       udsBioSampleByNum(bioSampleNum) = udsBioSample
     }
-
+        
+    udsQuantitation.setBiologicalSamples(seqAsJavaList(udsBioSampleByNum.values.toSeq))
+    
     // Store biological group
     val udsBioGroupByNum = new HashMap[Int, UdsBiologicalGroup]
 	var bioGroupNumber = 0
@@ -124,12 +127,14 @@ class CreateSCQuantitation(
         udsBioGroup.setBiologicalSamples(udsBioSampleSet)
         udsEM.persist(udsBioGroup)
 	}
-
+    
 
     // Store fractions
     var fractionNumber = 0
 
     val udsSampleReplicateByKey = new HashMap[String, UdsSampleAnalysis]
+    val udsQuantChannelsList = new ArrayList[UdsQuantChannel]()
+    val udsMasterQuantChannelsList = new ArrayList[UdsMasterQuantitationChannel]()
     for (masterQuantChannel <- masterQuantChannels) {
       fractionNumber += 1
 
@@ -144,7 +149,8 @@ class CreateSCQuantitation(
       }
 
       udsEM.persist(udsQf)
-
+      udsMasterQuantChannelsList.add(udsQf)
+      
       val quantChannels = masterQuantChannel.quantChannels
       var quantChannelNum = 0
 
@@ -201,21 +207,22 @@ class CreateSCQuantitation(
           val udsQuantLabel = udsEM.find(classOf[UdsQuantLabel], quantChannel.quantLabelId.get)
           udsQuantChannel.setLabel(udsQuantLabel)
         }
-
+        
         udsEM.persist(udsQuantChannel)
-
+        udsQuantChannelsList.add(udsQuantChannel)
       }
     }
-
-    //rdbQuantitation.quantitationFractions(quantiFrations)
-    //rdbQuantitation.analyses (analyses)
-
+    
+    udsQuantitation.setSampleReplicates(seqAsJavaList(udsSampleReplicateByKey.values.toSeq))
+    udsQuantitation.setQuantitationChannels(udsQuantChannelsList)
+    udsQuantitation.setMasterQuantitationChannels(udsMasterQuantChannelsList)
+        
     // Commit transaction
     udsEM.getTransaction().commit()
 
     // Close entity manager
-    udsEM.close()
-
+    //udsEM.close()
+    this._udsQuantitation = udsQuantitation
     true
   }
 
