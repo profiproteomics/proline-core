@@ -316,7 +316,7 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
 
   private def compareProteinMatch(src: ProteinMatch, loaded: ProteinMatch) {
 
-    def normalizeId(id: Long) {
+    def normalizeId(id: Long): Long = {
 
       if (id < 0L) {
         0L
