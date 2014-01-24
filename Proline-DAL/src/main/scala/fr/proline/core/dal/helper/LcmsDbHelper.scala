@@ -4,6 +4,9 @@ import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.easy._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{DoJDBCReturningWork,DoJDBCWork}
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2}
+import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.proline.util.primitives._
   
@@ -16,7 +19,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       var colNames: Seq[String] = null
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,FeatureScoring]
       
-      ezDBC.selectAndProcess( "SELECT * FROM feature_scoring" ) { r =>
+      ezDBC.selectAndProcess( LcmsDbFeatureScoringTable.mkSelectQuery() ) { r =>
           
         if( colNames == null ) { colNames = r.columnNames }
         
@@ -46,7 +49,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       var colNames: Seq[String] = null
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,PeakPickingSoftware]
       
-      ezDBC.selectAndProcess( "SELECT * FROM peak_picking_software" ) { r =>
+      ezDBC.selectAndProcess( LcmsDbPeakPickingSoftwareTable.mkSelectQuery() ) { r =>
           
         if( colNames == null ) { colNames = r.columnNames }
         
@@ -77,7 +80,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       var colNames: Seq[String] = null
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,PeakelFittingModel]
       
-      ezDBC.selectAndProcess( "SELECT * FROM peakel_fitting_model" ) { r =>
+      ezDBC.selectAndProcess( LcmsDbPeakelFittingModelTable.mkSelectQuery() ) { r =>
           
         if( colNames == null ) { colNames = r.columnNames }
         
@@ -98,9 +101,14 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     })
   }
   
-  def getScanSequenceIdForRawFileName( rawFileName: String ): Option[Long] = {    
+  def getScanSequenceIdForRawFileName( rawFileName: String ): Option[Long] = { 
+    
+      val scanIdQuery = new SelectQueryBuilder1(LcmsDbScanSequenceTable).mkSelectQuery( (t,c) =>
+        List(t.ID) -> "WHERE "~ t.RAW_FILE_NAME ~ "= ?"
+      ) 
+      
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>    
-      ezDBC.selectHeadOption( "SELECT id FROM run WHERE raw_file_name = ?", rawFileName ) { v => toLong(v.nextAny) }    
+      ezDBC.selectHeadOption( scanIdQuery, rawFileName ) { v => toLong(v.nextAny) }    
     })
   }
 
@@ -110,8 +118,11 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Int]
       
-      ezDBC.selectAndProcess(
-          "SELECT id, initial_id FROM scan WHERE run_id IN (" + runIds.mkString(",") + ")"  ) { r =>
+      val idsQuery = new SelectQueryBuilder1( LcmsDbScanTable ).mkSelectQuery( (t,c) =>
+        List(t.ID, t.INITIAL_ID) -> "WHERE "~ t.SCAN_SEQUENCE_ID ~ "IN (" ~ runIds.mkString(",") ~ ")"
+      )
+      
+      ezDBC.selectAndProcess( idsQuery ) { r =>
           val( scanId, scanInitialId ) = (toLong(r.nextAny), r.nextInt)
           mapBuilder += (scanId -> scanInitialId)
           ()
@@ -126,11 +137,13 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
   def getMs2EventIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
-    
+    	
       val featureMs2EventsByFtId = new java.util.HashMap[Long,ArrayBuffer[Long]]
-      ezDBC.selectAndProcess( 
-          "SELECT feature_id, ms2_event_id FROM feature_ms2_event " + 
-          "WHERE run_map_id IN (" + rawMapIds.mkString(",") + ")" ) { r =>
+      
+      val featureIdAndMs2Query = new SelectQueryBuilder1( LcmsDbFeatureMs2EventTable ).mkSelectQuery((t,c) =>
+        List(t.FEATURE_ID, t.MS2_EVENT_ID) -> "WHERE "~ t.RUN_MAP_ID ~ "IN (" ~ rawMapIds.mkString(",") ~ ")"
+      ) 
+      ezDBC.selectAndProcess( featureIdAndMs2Query ) { r =>
             
           val( featureId, ms2EventId ) = (toLong(r.nextAny), toLong(r.nextAny))
           if( !featureMs2EventsByFtId.containsKey(featureId) ) {
