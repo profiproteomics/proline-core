@@ -162,8 +162,8 @@ COMMENT ON COLUMN public.ptm_evidence.serialized_properties IS 'A JSON string wh
 CREATE TABLE public.peptide_ptm (
                 id IDENTITY NOT NULL,
                 seq_position INTEGER NOT NULL,
-                mono_mass DOUBLE NOT NULL,
-                average_mass DOUBLE NOT NULL,
+                mono_mass DOUBLE,
+                average_mass DOUBLE,
                 serialized_properties LONGVARCHAR,
                 peptide_id BIGINT NOT NULL,
                 ptm_specificity_id BIGINT NOT NULL,

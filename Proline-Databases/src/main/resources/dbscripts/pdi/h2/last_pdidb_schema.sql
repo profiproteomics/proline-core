@@ -76,7 +76,7 @@ CREATE TABLE public.seq_db_instance (
                 is_deleted BOOLEAN NOT NULL,
                 revision INTEGER NOT NULL,
                 creation_timestamp TIMESTAMP NOT NULL,
-                sequence_count INTEGER,
+                sequence_count INTEGER NOT NULL,
                 residue_count INTEGER,
                 serialized_properties LONGVARCHAR,
                 seq_db_release_id BIGINT,
@@ -159,7 +159,7 @@ CREATE TABLE public.bio_sequence (
                 id IDENTITY NOT NULL,
                 alphabet VARCHAR(3) NOT NULL,
                 sequence LONGVARCHAR NOT NULL,
-                length INTEGER,
+                length INTEGER NOT NULL,
                 mass INTEGER NOT NULL,
                 pi REAL,
                 crc64 VARCHAR(32) NOT NULL,
@@ -172,7 +172,7 @@ COMMENT ON COLUMN public.bio_sequence.sequence IS 'The sequence of the protein. 
 COMMENT ON COLUMN public.bio_sequence.length IS 'The length of the sequence.';
 COMMENT ON COLUMN public.bio_sequence.mass IS 'The approximated molecular mass of the protein or of the nucleic acid strand.';
 COMMENT ON COLUMN public.bio_sequence.pi IS 'The isoelectric point of the protein. Only for protein sequences (alphabet=aa).';
-COMMENT ON COLUMN public.bio_sequence.crc64 IS 'The numerical signature of the protein sequence';
+COMMENT ON COLUMN public.bio_sequence.crc64 IS 'A numerical signature of the protein sequence built by a CRC64 algorithm.';
 
 
 CREATE UNIQUE INDEX public.bio_sequence_crc_alphabet_mass_idx

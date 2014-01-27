@@ -107,7 +107,8 @@ CREATE TABLE public.enzyme (
                 serialized_properties TEXT,
                 CONSTRAINT enzyme_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.enzyme IS 'The enumeration of the different enzymes that could be used.';
+COMMENT ON TABLE public.enzyme IS 'The enumeration of the different enzymes that could be used.
+TODO: add serialized_properties';
 COMMENT ON COLUMN public.enzyme.name IS 'The unique name of the enzyme.';
 COMMENT ON COLUMN public.enzyme.cleavage_regexp IS 'The regular expression used to find the cleavage site.';
 COMMENT ON COLUMN public.enzyme.is_independant IS 'Specifies the independence of the enzyme cleavages. If false and if there are multiple cleavages, these are combined, as if multiple enzymes had been applied simultaneously or serially to a single sample aliquot. If true, the cleavages are treated as if independent digests had been performed on separate sample aliquots and the resulting peptide mixtures combined.';
@@ -386,17 +387,6 @@ COMMENT ON COLUMN public.project.owner_id IS 'The owner of this project. The own
 
 ALTER SEQUENCE public.project_id_seq OWNED BY public.project.id;
 
-CREATE TABLE public.raw_file_project_map (
-                raw_file_name VARCHAR(250) NOT NULL,
-                project_id BIGINT NOT NULL,
-                serialized_properties TEXT,
-                CONSTRAINT raw_file_project_map_pk PRIMARY KEY (raw_file_name, project_id)
-);
-COMMENT ON COLUMN public.raw_file_project_map.raw_file_name IS 'The name of the raw file which serves as its identifier.
-It should not contain an extension and be unique across all the database.';
-COMMENT ON COLUMN public.raw_file_project_map.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
-
-
 CREATE SEQUENCE public.virtual_folder_id_seq;
 
 CREATE TABLE public.virtual_folder (
@@ -553,10 +543,6 @@ COMMENT ON COLUMN public.master_quant_channel.quantitation_id IS 'The quantitati
 
 ALTER SEQUENCE public.master_quant_channel_id_seq OWNED BY public.master_quant_channel.id;
 
-CREATE UNIQUE INDEX master_quant_channel_number_idx
- ON public.master_quant_channel
- ( quantitation_id, number );
-
 CREATE SEQUENCE public.quant_label_id_seq;
 
 CREATE TABLE public.quant_label (
@@ -600,10 +586,6 @@ COMMENT ON COLUMN public.biological_sample.quantitation_id IS 'The quantitation 
 
 ALTER SEQUENCE public.biological_sample_id_seq OWNED BY public.biological_sample.id;
 
-CREATE UNIQUE INDEX biological_sample_number_idx
- ON public.biological_sample
- ( quantitation_id, number );
-
 CREATE TABLE public.biological_sample_sample_analysis_map (
                 biological_sample_id BIGINT NOT NULL,
                 sample_analysis_id BIGINT NOT NULL,
@@ -616,7 +598,6 @@ CREATE SEQUENCE public.group_setup_id_seq;
 
 CREATE TABLE public.group_setup (
                 id BIGINT NOT NULL DEFAULT nextval('public.group_setup_id_seq'),
-                number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties TEXT,
                 quantitation_id BIGINT NOT NULL,
@@ -624,17 +605,12 @@ CREATE TABLE public.group_setup (
 );
 COMMENT ON TABLE public.group_setup IS 'A group setup is a user defined entity allowing to define the way biological groups are compared.
 TODO: add number column';
-COMMENT ON COLUMN public.group_setup.number IS 'The group setup number which is unique for a given quantitation.';
 COMMENT ON COLUMN public.group_setup.name IS 'A name for this group setup as defined by the user.';
 COMMENT ON COLUMN public.group_setup.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.group_setup.quantitation_id IS 'The quantitation this group setup is related to.';
 
 
 ALTER SEQUENCE public.group_setup_id_seq OWNED BY public.group_setup.id;
-
-CREATE UNIQUE INDEX group_setup_number_idx
- ON public.group_setup
- ( quantitation_id, number );
 
 CREATE SEQUENCE public.biological_group_id_seq;
 
@@ -654,10 +630,6 @@ COMMENT ON COLUMN public.biological_group.quantitation_id IS 'The quantitation t
 
 
 ALTER SEQUENCE public.biological_group_id_seq OWNED BY public.biological_group.id;
-
-CREATE UNIQUE INDEX biological_group_number_idx
- ON public.biological_group
- ( quantitation_id, number );
 
 CREATE TABLE public.group_setup_biological_group_map (
                 group_setup_id BIGINT NOT NULL,
@@ -685,10 +657,6 @@ COMMENT ON COLUMN public.ratio_definition.group_setup_id IS 'The group setup thi
 
 
 ALTER SEQUENCE public.ratio_definition_id_seq OWNED BY public.ratio_definition.id;
-
-CREATE UNIQUE INDEX ratio_definition_number_idx
- ON public.ratio_definition
- ( group_setup_id, number );
 
 CREATE TABLE public.biological_group_biological_sample_item (
                 biological_group_id BIGINT NOT NULL,
@@ -843,11 +811,7 @@ ALTER SEQUENCE public.quant_channel_id_seq OWNED BY public.quant_channel.id;
 
 CREATE UNIQUE INDEX quant_channel_context_idx
  ON public.quant_channel
- ( context_key, master_quant_channel_id, quant_label_id );
-
-CREATE UNIQUE INDEX quant_channel_number_idx
- ON public.quant_channel
- ( master_quant_channel_id, number );
+ ( context_key, master_quant_channel_id );
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(50) NOT NULL,
@@ -976,13 +940,6 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.raw_file_project_map ADD CONSTRAINT raw_file_raw_file_project_map_fk
-FOREIGN KEY (raw_file_name)
-REFERENCES public.raw_file (name)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
 ALTER TABLE public.run_identification ADD CONSTRAINT run_run_identification_fk
 FOREIGN KEY (run_id)
 REFERENCES public.run (id)
@@ -1026,13 +983,6 @@ ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.data_set ADD CONSTRAINT project_dataset_fk
-FOREIGN KEY (project_id)
-REFERENCES public.project (id)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
-
-ALTER TABLE public.raw_file_project_map ADD CONSTRAINT project_raw_file_project_map_fk
 FOREIGN KEY (project_id)
 REFERENCES public.project (id)
 ON DELETE NO ACTION

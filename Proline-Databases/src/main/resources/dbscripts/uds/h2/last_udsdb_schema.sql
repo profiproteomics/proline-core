@@ -85,8 +85,7 @@ CREATE TABLE public.enzyme (
                 serialized_properties LONGVARCHAR,
                 CONSTRAINT enzyme_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.enzyme IS 'The enumeration of the different enzymes that could be used.
-TODO: add serialized_properties';
+COMMENT ON TABLE public.enzyme IS 'The enumeration of the different enzymes that could be used.';
 COMMENT ON COLUMN public.enzyme.name IS 'The unique name of the enzyme.';
 COMMENT ON COLUMN public.enzyme.cleavage_regexp IS 'The regular expression used to find the cleavage site.';
 COMMENT ON COLUMN public.enzyme.is_independant IS 'Specifies the independence of the enzyme cleavages. If false and if there are multiple cleavages, these are combined, as if multiple enzymes had been applied simultaneously or serially to a single sample aliquot. If true, the cleavages are treated as if independent digests had been performed on separate sample aliquots and the resulting peptide mixtures combined.';
@@ -331,6 +330,17 @@ COMMENT ON COLUMN public.project.serialized_properties IS 'A JSON string which s
 COMMENT ON COLUMN public.project.owner_id IS 'The owner of this project. The owner is also a member of the project and then is represented in "project_user_account_map".';
 
 
+CREATE TABLE public.raw_file_project_map (
+                raw_file_name VARCHAR(250) NOT NULL,
+                project_id BIGINT NOT NULL,
+                serialized_properties LONGVARCHAR,
+                CONSTRAINT raw_file_project_map_pk PRIMARY KEY (raw_file_name, project_id)
+);
+COMMENT ON COLUMN public.raw_file_project_map.raw_file_name IS 'The name of the raw file which serves as its identifier.
+It should not contain an extension and be unique across all the database.';
+COMMENT ON COLUMN public.raw_file_project_map.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+
+
 CREATE TABLE public.virtual_folder (
                 id IDENTITY NOT NULL,
                 name VARCHAR(250) NOT NULL,
@@ -467,6 +477,10 @@ COMMENT ON COLUMN public.master_quant_channel.quant_result_summary_id IS 'The co
 COMMENT ON COLUMN public.master_quant_channel.quantitation_id IS 'The quantitation this master quant channel belongs to.';
 
 
+CREATE UNIQUE INDEX public.master_quant_channel_number_idx
+ ON public.master_quant_channel
+ ( quantitation_id, number );
+
 CREATE TABLE public.quant_label (
                 id IDENTITY NOT NULL,
                 type VARCHAR(16) NOT NULL,
@@ -502,6 +516,10 @@ COMMENT ON COLUMN public.biological_sample.serialized_properties IS 'A JSON stri
 COMMENT ON COLUMN public.biological_sample.quantitation_id IS 'The quantitation this biologicial sample is related to.';
 
 
+CREATE UNIQUE INDEX public.biological_sample_number_idx
+ ON public.biological_sample
+ ( quantitation_id, number );
+
 CREATE TABLE public.biological_sample_sample_analysis_map (
                 biological_sample_id BIGINT NOT NULL,
                 sample_analysis_id BIGINT NOT NULL,
@@ -512,6 +530,7 @@ COMMENT ON TABLE public.biological_sample_sample_analysis_map IS 'The list of sa
 
 CREATE TABLE public.group_setup (
                 id IDENTITY NOT NULL,
+                number INTEGER NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 serialized_properties LONGVARCHAR,
                 quantitation_id BIGINT NOT NULL,
@@ -519,10 +538,15 @@ CREATE TABLE public.group_setup (
 );
 COMMENT ON TABLE public.group_setup IS 'A group setup is a user defined entity allowing to define the way biological groups are compared.
 TODO: add number column';
+COMMENT ON COLUMN public.group_setup.number IS 'The group setup number which is unique for a given quantitation.';
 COMMENT ON COLUMN public.group_setup.name IS 'A name for this group setup as defined by the user.';
 COMMENT ON COLUMN public.group_setup.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.group_setup.quantitation_id IS 'The quantitation this group setup is related to.';
 
+
+CREATE UNIQUE INDEX public.group_setup_number_idx
+ ON public.group_setup
+ ( quantitation_id, number );
 
 CREATE TABLE public.biological_group (
                 id IDENTITY NOT NULL,
@@ -538,6 +562,10 @@ COMMENT ON COLUMN public.biological_group.name IS 'A name for this biological gr
 COMMENT ON COLUMN public.biological_group.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.biological_group.quantitation_id IS 'The quantitation this biologicial group is related to.';
 
+
+CREATE UNIQUE INDEX public.biological_group_number_idx
+ ON public.biological_group
+ ( quantitation_id, number );
 
 CREATE TABLE public.group_setup_biological_group_map (
                 group_setup_id BIGINT NOT NULL,
@@ -561,6 +589,10 @@ COMMENT ON COLUMN public.ratio_definition.numerator_id IS 'The biological group 
 COMMENT ON COLUMN public.ratio_definition.denominator_id IS 'The biological group whose the abundances are used as denominator in the ratio computation.';
 COMMENT ON COLUMN public.ratio_definition.group_setup_id IS 'The group setup this ratio definition belongs to.';
 
+
+CREATE UNIQUE INDEX public.ratio_definition_number_idx
+ ON public.ratio_definition
+ ( group_setup_id, number );
 
 CREATE TABLE public.biological_group_biological_sample_item (
                 biological_group_id BIGINT NOT NULL,
@@ -699,7 +731,11 @@ COMMENT ON COLUMN public.quant_channel.quantitation_id IS 'The quantitation this
 
 CREATE UNIQUE INDEX public.quant_channel_context_idx
  ON public.quant_channel
- ( context_key, master_quant_channel_id );
+ ( context_key, master_quant_channel_id, quant_label_id );
+
+CREATE UNIQUE INDEX public.quant_channel_number_idx
+ ON public.quant_channel
+ ( master_quant_channel_id, number );
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(50) NOT NULL,
@@ -824,6 +860,12 @@ REFERENCES public.raw_file (name)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
+ALTER TABLE public.raw_file_project_map ADD CONSTRAINT raw_file_raw_file_project_map_fk
+FOREIGN KEY (raw_file_name)
+REFERENCES public.raw_file (name)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
 ALTER TABLE public.run_identification ADD CONSTRAINT run_run_identification_fk
 FOREIGN KEY (run_id)
 REFERENCES public.run (id)
@@ -863,6 +905,12 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
 ALTER TABLE public.data_set ADD CONSTRAINT project_dataset_fk
+FOREIGN KEY (project_id)
+REFERENCES public.project (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
+ALTER TABLE public.raw_file_project_map ADD CONSTRAINT project_raw_file_project_map_fk
 FOREIGN KEY (project_id)
 REFERENCES public.project (id)
 ON DELETE NO ACTION

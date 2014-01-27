@@ -1,8 +1,6 @@
 
-CREATE SEQUENCE public.ptm_classification_id_seq;
-
 CREATE TABLE public.ptm_classification (
-                id BIGINT NOT NULL DEFAULT nextval('public.ptm_classification_id_seq'),
+                id IDENTITY NOT NULL,
                 name VARCHAR(1000) NOT NULL,
                 CONSTRAINT ptm_classification_pk PRIMARY KEY (id)
 );
@@ -25,21 +23,17 @@ Other
 AA substitution';
 
 
-ALTER SEQUENCE public.ptm_classification_id_seq OWNED BY public.ptm_classification.id;
-
-CREATE UNIQUE INDEX ptm_classification_idx
+CREATE UNIQUE INDEX public.ptm_classification_idx
  ON public.ptm_classification
  ( name );
 
-CREATE SEQUENCE public.atom_label_id_seq;
-
 CREATE TABLE public.atom_label (
-                id BIGINT NOT NULL DEFAULT nextval('public.atom_label_id_seq'),
+                id IDENTITY NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 symbol VARCHAR(2) NOT NULL,
-                mono_mass DOUBLE PRECISION NOT NULL,
-                average_mass DOUBLE PRECISION NOT NULL,
-                serialized_properties TEXT,
+                mono_mass DOUBLE NOT NULL,
+                average_mass DOUBLE NOT NULL,
+                serialized_properties LONGVARCHAR,
                 CONSTRAINT atom_label_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.atom_label IS 'Enables the description of 14N/15N and 16O/18O labeling.';
@@ -50,16 +44,12 @@ COMMENT ON COLUMN public.atom_label.average_mass IS 'The average mass of the cor
 COMMENT ON COLUMN public.atom_label.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.atom_label_id_seq OWNED BY public.atom_label.id;
-
-CREATE SEQUENCE public.peptide_id_seq;
-
 CREATE TABLE public.peptide (
-                id BIGINT NOT NULL DEFAULT nextval('public.peptide_id_seq'),
-                sequence TEXT NOT NULL,
-                ptm_string TEXT,
-                calculated_mass DOUBLE PRECISION NOT NULL,
-                serialized_properties TEXT,
+                id IDENTITY NOT NULL,
+                sequence LONGVARCHAR NOT NULL,
+                ptm_string LONGVARCHAR,
+                calculated_mass DOUBLE NOT NULL,
+                serialized_properties LONGVARCHAR,
                 atom_label_id BIGINT,
                 CONSTRAINT peptide_pk PRIMARY KEY (id)
 );
@@ -72,13 +62,11 @@ COMMENT ON COLUMN public.peptide.calculated_mass IS 'The theoretical mass of the
 COMMENT ON COLUMN public.peptide.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.peptide_id_seq OWNED BY public.peptide.id;
-
-CREATE UNIQUE INDEX peptide_sequence_ptm_idx
+CREATE UNIQUE INDEX public.peptide_sequence_ptm_idx
  ON public.peptide
  ( sequence, ptm_string );
 
-CREATE INDEX peptide_mass_idx
+CREATE INDEX public.peptide_mass_idx
  ON public.peptide
  ( calculated_mass );
 
@@ -91,14 +79,12 @@ COMMENT ON TABLE public.peptide_ptm_insert_status IS 'Used to specify if the pep
 COMMENT ON COLUMN public.peptide_ptm_insert_status.is_ok IS 'A boolean value wich tells us if the peptide PTMs have been correctly stored in the database.';
 
 
-CREATE SEQUENCE public.ptm_id_seq;
-
 CREATE TABLE public.ptm (
-                id BIGINT NOT NULL DEFAULT nextval('public.ptm_id_seq'),
+                id IDENTITY NOT NULL,
                 unimod_id BIGINT,
                 full_name VARCHAR(1000),
                 short_name VARCHAR(100) NOT NULL,
-                serialized_properties TEXT,
+                serialized_properties LONGVARCHAR,
                 CONSTRAINT ptm_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.ptm IS 'Describes the names of the ptm definitions.
@@ -113,23 +99,19 @@ MUST BE UNIQUE.';
 COMMENT ON COLUMN public.ptm.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.ptm_id_seq OWNED BY public.ptm.id;
-
-CREATE UNIQUE INDEX ptm_full_name_idx
+CREATE UNIQUE INDEX public.ptm_full_name_idx
  ON public.ptm
  ( full_name );
 
-CREATE UNIQUE INDEX ptm_short_name_idx
+CREATE UNIQUE INDEX public.ptm_short_name_idx
  ON public.ptm
  ( short_name );
 
-CREATE SEQUENCE public.ptm_specificity_id_seq;
-
 CREATE TABLE public.ptm_specificity (
-                id BIGINT NOT NULL DEFAULT nextval('public.ptm_specificity_id_seq'),
+                id IDENTITY NOT NULL,
                 location VARCHAR(14) NOT NULL,
                 residue CHAR(1),
-                serialized_properties TEXT,
+                serialized_properties LONGVARCHAR,
                 ptm_id BIGINT NOT NULL,
                 classification_id BIGINT NOT NULL,
                 CONSTRAINT ptm_specificity_pk PRIMARY KEY (id)
@@ -143,22 +125,18 @@ Null if Unimod "site" xml attribute is "C-term" or "N-term".';
 COMMENT ON COLUMN public.ptm_specificity.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.ptm_specificity_id_seq OWNED BY public.ptm_specificity.id;
-
-CREATE UNIQUE INDEX ptm_specificity_idx
+CREATE UNIQUE INDEX public.ptm_specificity_idx
  ON public.ptm_specificity
  ( location, residue, ptm_id );
 
-CREATE SEQUENCE public.ptm_evidence_id_seq;
-
 CREATE TABLE public.ptm_evidence (
-                id BIGINT NOT NULL DEFAULT nextval('public.ptm_evidence_id_seq'),
+                id IDENTITY NOT NULL,
                 type VARCHAR(14) NOT NULL,
                 is_required BOOLEAN NOT NULL,
                 composition VARCHAR(50) NOT NULL,
-                mono_mass DOUBLE PRECISION NOT NULL,
-                average_mass DOUBLE PRECISION NOT NULL,
-                serialized_properties TEXT,
+                mono_mass DOUBLE NOT NULL,
+                average_mass DOUBLE NOT NULL,
+                serialized_properties LONGVARCHAR,
                 specificity_id BIGINT,
                 ptm_id BIGINT,
                 CONSTRAINT ptm_evidence_pk PRIMARY KEY (id)
@@ -181,16 +159,12 @@ COMMENT ON COLUMN public.ptm_evidence.average_mass IS 'The average mass associat
 COMMENT ON COLUMN public.ptm_evidence.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.ptm_evidence_id_seq OWNED BY public.ptm_evidence.id;
-
-CREATE SEQUENCE public.peptide_ptm_id_seq;
-
 CREATE TABLE public.peptide_ptm (
-                id BIGINT NOT NULL DEFAULT nextval('public.peptide_ptm_id_seq'),
+                id IDENTITY NOT NULL,
                 seq_position INTEGER NOT NULL,
-                mono_mass DOUBLE PRECISION,
-                average_mass DOUBLE PRECISION,
-                serialized_properties TEXT,
+                mono_mass DOUBLE NOT NULL,
+                average_mass DOUBLE NOT NULL,
+                serialized_properties LONGVARCHAR,
                 peptide_id BIGINT NOT NULL,
                 ptm_specificity_id BIGINT NOT NULL,
                 atom_label_id BIGINT,
@@ -207,9 +181,7 @@ COMMENT ON COLUMN public.peptide_ptm.average_mass IS 'The average mass of the co
 COMMENT ON COLUMN public.peptide_ptm.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
-ALTER SEQUENCE public.peptide_ptm_id_seq OWNED BY public.peptide_ptm.id;
-
-CREATE INDEX peptide_ptm_peptide_idx
+CREATE INDEX public.peptide_ptm_peptide_idx
  ON public.peptide_ptm
  ( peptide_id );
 
@@ -225,65 +197,66 @@ COMMENT ON COLUMN public.admin_infos.db_creation_date IS 'The date the database 
 COMMENT ON COLUMN public.admin_infos.model_update_date IS 'The date the database model was last updated.';
 
 
+/*
+Warning: H2 Database does not support this relationship's delete action (RESTRICT).
+*/
 ALTER TABLE public.ptm_specificity ADD CONSTRAINT ptm_classification_ptm_specificity_fk
 FOREIGN KEY (classification_id)
 REFERENCES public.ptm_classification (id)
-ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
 
+/*
+Warning: H2 Database does not support this relationship's delete action (RESTRICT).
+*/
 ALTER TABLE public.peptide_ptm ADD CONSTRAINT atom_label_peptide_ptm_fk
 FOREIGN KEY (atom_label_id)
 REFERENCES public.atom_label (id)
-ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
 
+/*
+Warning: H2 Database does not support this relationship's delete action (RESTRICT).
+*/
 ALTER TABLE public.peptide ADD CONSTRAINT atom_label_peptide_fk
 FOREIGN KEY (atom_label_id)
 REFERENCES public.atom_label (id)
-ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
 
 ALTER TABLE public.peptide_ptm ADD CONSTRAINT peptide_peptide_ptm_fk
 FOREIGN KEY (peptide_id)
 REFERENCES public.peptide (id)
 ON DELETE CASCADE
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
 
 ALTER TABLE public.peptide_ptm_insert_status ADD CONSTRAINT peptide_peptide_ptm_insert_status_fk
 FOREIGN KEY (peptide_id)
 REFERENCES public.peptide (id)
 ON DELETE CASCADE
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
 
 ALTER TABLE public.ptm_evidence ADD CONSTRAINT ptm_ptm_ion_fk
 FOREIGN KEY (ptm_id)
 REFERENCES public.ptm (id)
 ON DELETE CASCADE
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
 
 ALTER TABLE public.ptm_specificity ADD CONSTRAINT ptm_ptm_specificity_fk
 FOREIGN KEY (ptm_id)
 REFERENCES public.ptm (id)
 ON DELETE CASCADE
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
 
+/*
+Warning: H2 Database does not support this relationship's delete action (RESTRICT).
+*/
 ALTER TABLE public.peptide_ptm ADD CONSTRAINT ptm_specificity_peptide_ptm_fk
 FOREIGN KEY (ptm_specificity_id)
 REFERENCES public.ptm_specificity (id)
-ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
 
+/*
+Warning: H2 Database does not support this relationship's delete action (RESTRICT).
+*/
 ALTER TABLE public.ptm_evidence ADD CONSTRAINT ptm_specificity_ptm_evidence_fk
 FOREIGN KEY (specificity_id)
 REFERENCES public.ptm_specificity (id)
-ON DELETE RESTRICT
-ON UPDATE NO ACTION
-NOT DEFERRABLE;
+ON UPDATE NO ACTION;
