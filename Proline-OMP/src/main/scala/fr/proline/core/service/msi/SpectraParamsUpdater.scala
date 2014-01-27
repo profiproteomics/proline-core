@@ -37,7 +37,7 @@ class SpectraParamsUpdater(
     
     // Retrieve spectrum attributes
     val specCols = MsiDbSpectrumTable.columns
-    val spectrumAttributes = MsiDbSpectrumTable.selectColsAsStrList( t =>
+    val spectrumAttributes = MsiDbSpectrumTable.filterColsAsStrList( t =>
       List(t.FIRST_SCAN,t.LAST_SCAN, t.FIRST_CYCLE, t.LAST_CYCLE, t.FIRST_TIME, t.LAST_TIME )
     )
     

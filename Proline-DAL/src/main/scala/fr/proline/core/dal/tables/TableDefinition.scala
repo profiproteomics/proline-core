@@ -53,7 +53,7 @@ trait TableDefinition[A  <: ColumnEnumeration] {
    * @see TableDefinition#selectColumns()
    */
   def mkInsertQuery( f: A => List[A#Column] ): String = {
-    this._makeInsertQuery( this.selectColsAsStrList( f ) )
+    this._makeInsertQuery( this.filterColsAsStrList( f ) )
   }
   
   /**
@@ -65,7 +65,7 @@ trait TableDefinition[A  <: ColumnEnumeration] {
    * @see TableDefinition#selectColumns()
    */
   def mkInsertQuery( f: (A,List[A#Column]) => List[A#Column] ): String = {
-    this._makeInsertQuery( this.selectColsAsStrList( f ) )
+    this._makeInsertQuery( this.filterColsAsStrList( f ) )
   }
   
   /**
@@ -91,22 +91,22 @@ trait TableDefinition[A  <: ColumnEnumeration] {
   }
 
   /**
-   * Select columns as a List of String.
+   * Filter columns as a List of String.
    * 
    * @param f A function which select a list of columns using a column enumeration object
    * @return a List of columns as String objects
    */
-  def selectColsAsStrList( f: A => List[A#Column] ): List[String] = {
+  def filterColsAsStrList( f: A => List[A#Column] ): List[String] = {
     f(this.columns) map { _.toString }
   }
   
   /**
-   * Select columns as a List of String.
+   * Filter columns as a List of String.
    * 
    * @param f A function which select a list of columns using a column enumeration object
    * @return a List of columns as String objects
    */
-  def selectColsAsStrList( f: (A,List[A#Column]) => List[A#Column] ): List[String] = {
+  def filterColsAsStrList( f: (A,List[A#Column]) => List[A#Column] ): List[String] = {
     f( this.columns,this.columnsAsList ) map { _.toString }
   }
   
