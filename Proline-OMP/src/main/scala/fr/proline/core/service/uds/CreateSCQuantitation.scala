@@ -137,7 +137,7 @@ class CreateSCQuantitation(
     val udsMasterQuantChannelsList = new ArrayList[UdsMasterQuantitationChannel]()
     for (masterQuantChannel <- masterQuantChannels) {
       fractionNumber += 1
-
+      val currentMQChQuantChannelsList = new ArrayList[UdsQuantChannel]()
       // Save quantitation fraction
       val udsQf = new UdsMasterQuantitationChannel()
       udsQf.setNumber(fractionNumber)
@@ -149,13 +149,13 @@ class CreateSCQuantitation(
       }
 
       udsEM.persist(udsQf)
-      udsMasterQuantChannelsList.add(udsQf)
-      
+           
       val quantChannels = masterQuantChannel.quantChannels
       var quantChannelNum = 0
 
       // Iterate over each fraction quant channel
       val replicateNumBySampleNum = new HashMap[Int, Int]
+      
       for (quantChannel <- quantChannels) {
         quantChannelNum += 1
         
@@ -194,12 +194,7 @@ class CreateSCQuantitation(
         udsQuantChannel.setBiologicalSample(udsBioSample)
         udsQuantChannel.setMasterQuantitationChannel(udsQf)
         udsQuantChannel.setQuantitationDataset(udsQuantitation)
-//        
-//        if( quantChannel.runId.isDefined ) {
-//          val udsRun = udsEM.find(classOf[UdsRun], quantChannel.runId.get)
-//          udsQuantChannel.setRun(udsRun)
-//        }
-
+        
         // TODO: check method type
         if (quantChannel.lcmsMapId.isDefined) {
           udsQuantChannel.setLcmsMapId(quantChannel.lcmsMapId.get)
@@ -209,8 +204,12 @@ class CreateSCQuantitation(
         }
         
         udsEM.persist(udsQuantChannel)
+        currentMQChQuantChannelsList.add(udsQuantChannel)
         udsQuantChannelsList.add(udsQuantChannel)
       }
+      udsQf.setQuantitationChannels(currentMQChQuantChannelsList)
+      udsMasterQuantChannelsList.add(udsQf)      
+      udsEM.merge(udsQf)
     }
     
     udsQuantitation.setSampleReplicates(seqAsJavaList(udsSampleReplicateByKey.values.toSeq))
