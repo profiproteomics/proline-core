@@ -344,6 +344,10 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       // Iterate over protein matches to update them
       proteinMatches.foreach { protMatch => protMatch.id = protMatchIdByAc(protMatch.accession) }
       
+      // Link protein matches to seq databases
+      // TODO: implement this method with PgCopy
+      this.linkProteinMatchesToSeqDatabases(msiEzDBC,proteinMatches)
+      
       nbInsertedProtMatches.toInt
       
     },true)

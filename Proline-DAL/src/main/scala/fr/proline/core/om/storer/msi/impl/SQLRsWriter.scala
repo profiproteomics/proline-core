@@ -312,18 +312,25 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
         }
       }
   
-      logger.info("ProteinMatches are going to be linked to seq databases...")
-  
-      // Link protein matches to sequence databases
-      msiEzDBC.executePrepared(MsiDbProteinMatchSeqDatabaseMapTable.mkInsertQuery()) { stmt =>
-        for (proteinMatch <- proteinMatches)
-          for (seqDbId <- proteinMatch.seqDatabaseIds)
-            stmt.executeWith(proteinMatch.id, seqDbId, rsId)
-      }
+      // Link protein matches to seq databases
+      this.linkProteinMatchesToSeqDatabases(msiEzDBC,proteinMatches)
   
       proteinMatches.length
     })
 
+  }
+  
+  protected def linkProteinMatchesToSeqDatabases(msiEzDBC: EasyDBC, proteinMatches: Array[ProteinMatch] ) {
+    
+    logger.info("ProteinMatches are going to be linked to seq databases...")
+
+    // Link protein matches to sequence databases
+    msiEzDBC.executePrepared(MsiDbProteinMatchSeqDatabaseMapTable.mkInsertQuery()) { stmt =>
+      for (proteinMatch <- proteinMatches)
+        for (seqDbId <- proteinMatch.seqDatabaseIds)
+          stmt.executeWith(proteinMatch.id, seqDbId, proteinMatch.resultSetId)
+    }
+    
   }
 
   def insertRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
