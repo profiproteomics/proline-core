@@ -1,5 +1,6 @@
 package fr.proline.repository;
 
+import java.io.Closeable;
 import java.util.Map;
 
 import javax.persistence.EntityManagerFactory;
@@ -14,7 +15,7 @@ import javax.sql.DataSource;
  * @author CB205360
  * 
  */
-public interface IDatabaseConnector {
+public interface IDatabaseConnector extends Closeable {
 
     ProlineDatabaseType getProlineDatabaseType();
 

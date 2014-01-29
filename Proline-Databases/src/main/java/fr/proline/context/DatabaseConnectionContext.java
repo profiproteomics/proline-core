@@ -1,5 +1,6 @@
 package fr.proline.context;
 
+import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -23,7 +24,7 @@ import fr.proline.repository.util.JPAUtils;
  * @author LMN
  * 
  */
-public class DatabaseConnectionContext {
+public class DatabaseConnectionContext implements Closeable {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseConnectionContext.class);
 
