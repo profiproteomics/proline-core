@@ -346,7 +346,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       
       // Link protein matches to seq databases
       // TODO: implement this method with PgCopy
-      this.linkProteinMatchesToSeqDatabases(msiEzDBC,proteinMatches)
+      this.linkProteinMatchesToSeqDatabases(rs,msiEzDBC,proteinMatches)
       
       nbInsertedProtMatches.toInt
       
