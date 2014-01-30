@@ -5,7 +5,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.GivenWhenThen
 import org.scalatest.FunSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.Matchers
 
 import fr.proline.core.om.model.msi._
 import fr.profi.util.serialization.ProfiJson
@@ -18,7 +18,7 @@ case class SerializationSpecif(
   jsonData: String
 )
 
-abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
+abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with Matchers {
 
   def checkJsonSpecifs( jsonSpecifs: List[SerializationSpecif] ) {
     

@@ -345,7 +345,7 @@ case class Peptide ( // Required fields
   
 }
 
-case class PeptideProperties
+case class PeptideProperties()
 
 object PeptideMatch extends InMemoryIdGen
 
@@ -508,7 +508,7 @@ case class PeptideSetItem (
   
 }
 
-case class PeptideSetItemProperties
+case class PeptideSetItemProperties()
 
 object PeptideSet extends InMemoryIdGen
 
@@ -589,5 +589,5 @@ case class PeptideSet ( // Required fields
   }
 }
 
-case class PeptideSetProperties
+case class PeptideSetProperties()
 

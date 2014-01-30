@@ -88,7 +88,7 @@ case class Protein (
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class ProteinProperties
+case class ProteinProperties()
 
 
 object ProteinMatch extends InMemoryIdGen
@@ -138,7 +138,7 @@ case class ProteinMatch (
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class ProteinMatchProperties
+case class ProteinMatchProperties()
 
  
 object ProteinSet extends InMemoryIdGen
@@ -246,10 +246,10 @@ case class ProteinSet (
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class ProteinSetProperties
+case class ProteinSetProperties()
 
 //@JsonInclude( Include.NON_NULL )
-case class ProteinMatchResultSummaryProperties
+case class ProteinMatchResultSummaryProperties()
 
 //@JsonInclude( Include.NON_NULL )
 case class SequenceMatch (
@@ -284,6 +284,6 @@ case class SequenceMatch (
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class SequenceMatchProperties
+case class SequenceMatchProperties()
 
 

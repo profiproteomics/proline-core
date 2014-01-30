@@ -56,7 +56,7 @@ case class LcMsRun(
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class LcMsRunProperties
+case class LcMsRunProperties()
 
 
 object LcMsScanSequence {
@@ -158,7 +158,7 @@ case class LcMsScanSequence(
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class LcMsScanSequenceProperties
+case class LcMsScanSequenceProperties()
 
 object LcMsScan extends InMemoryIdGen
 case class LcMsScan(
@@ -185,4 +185,4 @@ case class LcMsScan(
 )
             
 //@JsonInclude( Include.NON_NULL )
-case class LcMsScanProperties
+case class LcMsScanProperties()

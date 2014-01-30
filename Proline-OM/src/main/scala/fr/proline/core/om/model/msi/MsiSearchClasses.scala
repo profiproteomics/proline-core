@@ -31,7 +31,7 @@ case class MSISearch (
   var properties: Option[MSISearchProperties] = None
 )
         
-case class MSISearchProperties
+case class MSISearchProperties()
 
 
 object SearchSettings extends InMemoryIdGen
@@ -64,7 +64,7 @@ case class SearchSettings(
   
 )
 
-case class SearchSettingsProperties
+case class SearchSettingsProperties()
 
 case class MSMSSearchSettings(
   // MS/MS search settings
@@ -128,7 +128,7 @@ case class SeqDatabase(
    
 )
 
-case class SeqDatabaseProperties
+case class SeqDatabaseProperties()
 
-case class SeqDatabaseSearchProperties
+case class SeqDatabaseSearchProperties()
 

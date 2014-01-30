@@ -4,12 +4,12 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.GivenWhenThen
 import org.scalatest.FunSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.Matchers
 import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
 import fr.proline.core.om.model.msi.SpectrumTitleFields
 
 @RunWith(classOf[JUnitRunner])
-class SpectrumTitleSpec extends FunSpec with GivenWhenThen with ShouldMatchers {
+class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
   
   object SoftNames extends Enumeration {
     val EXTRACT_MSN = Value("extract_msn.exe")

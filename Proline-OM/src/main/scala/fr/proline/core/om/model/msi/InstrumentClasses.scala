@@ -30,7 +30,7 @@ case class Instrument(
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class InstrumentProperties
+case class InstrumentProperties()
 
 
 object InstrumentConfig extends InMemoryIdGen {

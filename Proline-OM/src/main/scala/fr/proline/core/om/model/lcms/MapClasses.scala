@@ -24,7 +24,7 @@ case class FeatureScoring(
 )
 
 //@JsonInclude( Include.NON_NULL )
-case class FeatureScoringProperties
+case class FeatureScoringProperties()
 
 object PeakPickingSoftware extends InMemoryIdGen
 
@@ -42,7 +42,7 @@ case class PeakPickingSoftware(
 )
 
 //@JsonInclude( Include.NON_NULL )
-case class PeakPickingSoftwareProperties
+case class PeakPickingSoftwareProperties()
 
 case class PeakelFittingModel( 
     
@@ -56,7 +56,7 @@ case class PeakelFittingModel(
 )
 
 //@JsonInclude( Include.NON_NULL )
-case class PeakelFittingModelProperties
+case class PeakelFittingModelProperties()
 
 case class MapMozCalibration( 
     
@@ -77,10 +77,10 @@ case class MapMozCalibration(
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class MapMozCalibrationProperties
+case class MapMozCalibrationProperties()
 
 //@JsonInclude( Include.NON_NULL )
-case class LcMsMapProperties
+case class LcMsMapProperties()
 
 abstract class ILcMsMap {
   
@@ -430,7 +430,7 @@ case class MapAlignment(
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class MapAlignmentProperties
+case class MapAlignmentProperties()
 
 case class MapAlignmentSet(
     
@@ -497,7 +497,7 @@ case class MapAlignmentSet(
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class MapAlignmentSetProperties
+case class MapAlignmentSetProperties()
 
 object MapSet extends InMemoryIdGen
 
@@ -721,6 +721,6 @@ case class MapSet(
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class MapSetProperties
+case class MapSetProperties()
 
 

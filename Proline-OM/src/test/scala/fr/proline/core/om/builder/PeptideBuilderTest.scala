@@ -19,7 +19,7 @@ class PeptideBuilderTest {
 
   @Test
   def testBuildEmptyPtmPeptide() = {
-    val pep1 = new Peptide(sequence = "STLLIR", ptms = null, calculatedMass = 100.)
+    val pep1 = new Peptide(sequence = "STLLIR", ptms = null, calculatedMass = 100.0)
     assertNotNull(pep1)
   }
 
@@ -46,7 +46,7 @@ class PeptideBuilderTest {
     val ptmLoc = PtmDefinitionBuilder.buildLocatedPtm(ptmDef = ptmDef, seqPos = 1)
     val locatedPtms = new Array[LocatedPtm](1)
     locatedPtms.update(0, ptmLoc)
-    val pep1 = new Peptide( sequence = "STLLIR", ptms = locatedPtms, calculatedMass = 100. )
+    val pep1 = new Peptide( sequence = "STLLIR", ptms = locatedPtms, calculatedMass = 100.0 )
 
     assertNotNull(pep1)
     assertEquals("1[HA]", pep1.ptmString)

@@ -42,7 +42,7 @@ case class PeaklistSoftware(
 )
 
 //@JsonInclude( Include.NON_NULL )
-case class PeaklistSoftwareProperties
+case class PeaklistSoftwareProperties()
 
 
 object Spectrum extends InMemoryIdGen
@@ -71,7 +71,7 @@ case class Spectrum (
 )
 
 //@JsonInclude( Include.NON_NULL )
-case class SpectrumProperties
+case class SpectrumProperties()
 
 object SpectrumTitleFields extends Enumeration {
   val RAW_FILE_NAME = Value("RAW_FILE_NAME")

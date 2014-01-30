@@ -37,7 +37,7 @@ class IsotopicPattern (
   
 )
 
-case class IsotopicPatternProperties
+case class IsotopicPatternProperties()
 
 object Compound extends InMemoryIdGen
 case class Compound(
@@ -76,7 +76,7 @@ class PeakelShape (
   def lastScanId: Long = dataPoints(4).scanId  
 }
 
-case class PeakelShapeProperties
+case class PeakelShapeProperties()
 
 object Feature extends InMemoryIdGen
 
@@ -219,7 +219,8 @@ case class Feature (
   
 }
 
-case class FeatureProperties (  
+case class FeatureProperties (
+  @JsonDeserialize(contentAs = classOf[Array[java.lang.Integer]] )
   @BeanProperty var peakelsCount: Option[Int] = None,
   
   @JsonDeserialize(contentAs = classOf[Array[java.lang.Float]] )
@@ -274,4 +275,4 @@ case class TheoreticalFeature (
   
 )
 
-case class TheoreticalFeatureProperties
+case class TheoreticalFeatureProperties()

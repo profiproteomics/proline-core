@@ -100,7 +100,7 @@ case class FragmentIonType private (
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class FragmentIonTypeProperties
+case class FragmentIonTypeProperties()
   
 trait FragmentationRule {
   // Required fields
@@ -111,7 +111,7 @@ trait FragmentationRule {
 }
 
 //@JsonInclude( Include.NON_NULL )
-case class FragmentationRuleProperties
+case class FragmentationRuleProperties()
   
 case class ChargeConstraint(
   
