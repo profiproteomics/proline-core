@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.ps.impl
 
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConversions.asJavaSet
+import scala.collection.JavaConversions.setAsJavaSet
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.PtmDefinition
@@ -145,7 +145,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             val psPtm = new PsPtm()
             psPtm.setShortName(ptmDef.names.shortName)
             psPtm.setFullName(ptmDef.names.fullName)
-            psPtm.setEvidences( asJavaSet(Set(psPtmPrecDelta)) )
+            psPtm.setEvidences( setAsJavaSet(Set(psPtmPrecDelta)) )
             psPtm.setUnimodId(ptmDef.unimodId)
             psEM.persist(psPtm)
             
@@ -204,7 +204,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
         convertedEvidence.setSpecificity(psPtmSpecificity)
         convertedEvidence
       })
-      psPtmSpecificity.setEvidences( asJavaSet(psSpecificityEvidences.toSet) )
+      psPtmSpecificity.setEvidences( setAsJavaSet(psSpecificityEvidences.toSet) )
       
       psPtmSpecificity
     }
