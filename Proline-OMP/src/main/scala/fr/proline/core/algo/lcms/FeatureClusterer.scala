@@ -53,13 +53,13 @@ class FeatureClusterer(
   private val intensityComputationMethod = try {
     ClusterIntensityComputation.withName( params.intensityComputation.toUpperCase() )
   } catch {
-    case _ => throw new Exception("the cluster intensity computation method '" + params.intensityComputation + "' is not implemented")
+    case _: Throwable => throw new Exception("the cluster intensity computation method '" + params.intensityComputation + "' is not implemented")
   }
     
   private val timeComputationMethod = try {
     ClusterTimeComputation.withName( params.timeComputation.toUpperCase() )
   } catch {
-    case _ => throw new Exception("the cluster time computation method '" + params.timeComputation + "' is not implemented")
+    case _ : Throwable => throw new Exception("the cluster time computation method '" + params.timeComputation + "' is not implemented")
   }
 
   // Retrieve some vars

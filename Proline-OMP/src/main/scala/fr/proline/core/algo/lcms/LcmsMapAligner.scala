@@ -14,7 +14,7 @@ object LcmsMapAligner {
     val alnMethod = try {
       AlnMethod.withName( methodName.toUpperCase() )
     } catch {
-      case _ => throw new Exception("can't find an appropriate lcms map aligner")
+      case _ : Throwable => throw new Exception("can't find an appropriate lcms map aligner")
     }
     
     alnMethod match {

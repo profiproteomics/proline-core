@@ -15,7 +15,7 @@ object AlnSmoother {
     val smoothingMethod = try {
       AlnSmoothing.withName( methodName.toUpperCase() )
     } catch {
-      case _ => throw new Exception("can't find an appropriate alignment smoother")
+      case _ :Throwable => throw new Exception("can't find an appropriate alignment smoother")
     }
     
     smoothingMethod match {

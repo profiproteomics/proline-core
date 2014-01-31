@@ -14,7 +14,7 @@ object FeatureSelector {
     val ftFilterType = try {
       FeatureFilterType.withName( filterType.toUpperCase() )
     } catch {
-      case _ => throw new Exception("can't find an appropriate feature selector")
+      case _: Throwable => throw new Exception("can't find an appropriate feature selector")
     }
   
     ftFilterType match {

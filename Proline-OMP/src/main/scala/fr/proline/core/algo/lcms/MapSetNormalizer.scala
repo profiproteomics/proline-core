@@ -15,7 +15,7 @@ object MapSetNormalizer {
     val normMethod = try {
       NormalizationMethod.withName( methodName.toUpperCase() )
     } catch {
-      case _ => throw new Exception("can't find an appropriate map set normalizer")
+      case _ : Throwable=> throw new Exception("can't find an appropriate map set normalizer")
     }
     
     normMethod match {
