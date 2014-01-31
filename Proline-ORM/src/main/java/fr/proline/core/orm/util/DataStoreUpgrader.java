@@ -48,6 +48,9 @@ public final class DataStoreUpgrader {
 		result = false;
 		LOG.warn("Unable to upgrade UDS Db");
 	    }
+	    else {
+    	LOG.info("UDS Db :"+udsDbMigrationCount+" migration done.");
+	    }
 
 	}
 
@@ -60,7 +63,9 @@ public final class DataStoreUpgrader {
 		result = false;
 		LOG.warn("Unable to upgrade PDI Db");
 	    }
-
+	    else {
+    	LOG.info("PDI Db :"+pdiDbMigrationCount+" migration done.");
+	    }
 	}
 
 	/* Upgrade PS Db */
@@ -75,6 +80,9 @@ public final class DataStoreUpgrader {
 		result = false;
 		LOG.warn("Unable to upgrade PS Db");
 	    }
+	    else {
+    	LOG.info("PS Db :"+psDbMigrationCount+" migration done.");
+	    }
 
 	}
 
@@ -84,7 +92,7 @@ public final class DataStoreUpgrader {
 
 	    if ((projectIds != null) && !projectIds.isEmpty()) {
 
-		for (final Long projectId : projectIds) {
+		for (final Long projectId : projectIds) { 
 		    LOG.debug("Upgrading databases of Project #{}", projectId);
 
 		    final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId
@@ -100,7 +108,9 @@ public final class DataStoreUpgrader {
 			    result = false;
 			    LOG.warn("Unable to upgrade MSI Db of project #{}", projectId);
 			}
-
+		    else {
+		    	LOG.info("MDI Db for project "+projectId+" : " +msiDbMigrationCount+" migration done.");
+		    }
 		    }
 
 		    final IDatabaseConnector lcMsDbConnector = connectorFactory.getLcMsDbConnector(projectId
