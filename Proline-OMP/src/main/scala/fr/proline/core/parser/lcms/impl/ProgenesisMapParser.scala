@@ -8,7 +8,7 @@ import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.parser.lcms.ExtraParameters
 
-case class ProgenesisExtraParams extends ExtraParameters {
+case class ProgenesisExtraParams() extends ExtraParameters {
   /**
    * actually empty because no parameters needed
    */

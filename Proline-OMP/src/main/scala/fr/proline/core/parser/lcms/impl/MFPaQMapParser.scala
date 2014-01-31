@@ -8,7 +8,7 @@ import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.parser.lcms.ExtraParameters
 
-case class MFPaQMapParams extends ExtraParameters {
+case class MFPaQMapParams() extends ExtraParameters {
   var mapNumber: Int = 1
 }
 
