@@ -21,7 +21,7 @@ object CommonsStatHelper {
     
     val mean = StatUtils.mean(values)
     val variance = StatUtils.variance(values, mean)
-    var ( max, min, sum ) = (Double.MinValue,Double.MaxValue,0.)
+    var ( max, min, sum ) = (Double.MinValue,Double.MaxValue,0.0)
     values.foreach { value =>
       sum += value
       if( value > max ) max = value

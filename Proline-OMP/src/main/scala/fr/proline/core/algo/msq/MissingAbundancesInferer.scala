@@ -9,7 +9,7 @@ object MissingAbundancesInferer {
   val percentileComputer = new Percentile()
 
   protected def isZeroOrNaN( value: Float ) = value.isNaN || value == 0f
-  protected def isZeroOrNaN( value: Double ) = value.isNaN || value == 0.
+  protected def isZeroOrNaN( value: Double ) = value.isNaN || value == 0.0
   
   def inferAbundances( abundanceMatrix: Array[Array[Float]], errorModel: AbsoluteErrorModel ): Array[Array[Float]] = {
     

@@ -7,7 +7,7 @@ case class Filter( val name: String, val operator: String, val value: Double ) {
     try {
       FilterOperator.withName( operator.toUpperCase() )
     } catch {
-      case _ => throw new Exception("invalid operator: " + operator)
+      case _ : Throwable => throw new Exception("invalid operator: " + operator)
     }
   }
 }

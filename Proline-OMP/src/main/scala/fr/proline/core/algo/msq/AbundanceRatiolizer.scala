@@ -99,7 +99,7 @@ object AbundanceRatiolizer {
         //println( "z-test=" + foldChangePValue )
         
         // Check the pValue
-        if( ratio.tTestPValue.getOrElse(0.) <= pValueThreshold && zTestPValue <= pValueThreshold ) {
+        if( ratio.tTestPValue.getOrElse(0.0) <= pValueThreshold && zTestPValue <= pValueThreshold ) {
           if( ratio.numeratorMean > ratio.denominatorMean ) ratio.state = Some(AbundanceRatioState.OverAbundant)
           else ratio.state = Some(AbundanceRatioState.UnderAbundant)
         } else {

@@ -27,7 +27,6 @@ trait ILcmsMapAligner extends Logging {
     
     val map1FtById = map1Features.map { ft => (ft.id -> ft) } toMap
     
-    ftMapping
     
     // two possibilities: keep nearest mass match or exclude matching conflicts (more than one match)
     val landmarksByMassIdx = new HashMap[Long,ArrayBuffer[Landmark]]

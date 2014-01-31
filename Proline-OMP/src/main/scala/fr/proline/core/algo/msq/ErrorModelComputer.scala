@@ -208,7 +208,7 @@ object ErrorModelComputer {
   
   protected def summarizeErrorObsGroup(errorObsGroup: Seq[IErrorObservation] ): Pair[Double,Seq[Double]] = {
     
-    var( abLogSum, errorValues ) = (0.,new ArrayBuffer[Double])
+    var( abLogSum, errorValues ) = (0.0,new ArrayBuffer[Double])
     
     errorObsGroup.foreach { errorObs =>
       if( errorObs.abundance > 0 ) {
