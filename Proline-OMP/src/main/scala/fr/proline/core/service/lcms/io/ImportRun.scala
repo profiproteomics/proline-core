@@ -59,7 +59,7 @@ object ImportScanSequence { // extends String2FileConverter
     val ms1Count = scans.filter(_.msLevel == 1).length
     val ms2Count = scans.length - ms1Count
 
-    this.buildScanSequence(scans, pps, rawFile, ms1Count, ms2Count, 0., 0.0)
+    this.buildScanSequence(scans, pps, rawFile, ms1Count, ms2Count, 0.0, 0.0)
   }
 
   def buildScanSequence(
@@ -74,8 +74,8 @@ object ImportScanSequence { // extends String2FileConverter
     LcMsScanSequence(
       runId = LcMsRun.generateNewId,
       rawFileName = rawFile.name,
-      minIntensity = 0.,
-      maxIntensity = 0.,
+      minIntensity = 0.0,
+      maxIntensity = 0.0,
       ms1ScansCount = ms1Count,
       ms2ScansCount = ms2Count,
       instrument = rawFile.instrument,

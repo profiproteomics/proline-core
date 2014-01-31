@@ -355,8 +355,8 @@ class ExtractMapSet(
       val scanSeq = new LcMsScanSequence(
         runId = lcmsRun.id,
         rawFileName = rawFileName,
-        minIntensity = 0., // TODO: compute this value ???
-        maxIntensity = 0., // TODO: compute this value ???
+        minIntensity = 0.0, // TODO: compute this value ???
+        maxIntensity = 0.0, // TODO: compute this value ???
         ms1ScansCount = ms1ScansCount,
         ms2ScansCount = ms2ScansCount,
         instrument = lcmsRun.rawFile.instrument,
