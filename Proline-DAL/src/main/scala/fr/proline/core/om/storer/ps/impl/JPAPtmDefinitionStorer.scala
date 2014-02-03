@@ -138,7 +138,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             logger.info("Insert new Ptm "+ptmShortName)
             // Build and persist the precursor delta
             val ptmPrecDelta = ptmDef.precursorDelta
-            val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)              
+            val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)
             psEM.persist(psPtmPrecDelta)
             
             // Build and persist a new PTM
@@ -146,7 +146,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             psPtm.setShortName(ptmDef.names.shortName)
             psPtm.setFullName(ptmDef.names.fullName)
             psPtm.setEvidences( setAsJavaSet(Set(psPtmPrecDelta)) )
-            psPtm.setUnimodId(ptmDef.unimodId)
+            if( ptmDef.unimodId > 0 ) psPtm.setUnimodId(ptmDef.unimodId)
             psEM.persist(psPtm)
             
             psPtmPrecDelta.setPtm(psPtm)
@@ -171,7 +171,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
       insertedPtmDefs
     }
 
-    protected def convertPtmEvidenceToPSPtmEvidence(ptmEvidence: PtmEvidence): PsPtmEvidence = {      
+    protected def convertPtmEvidenceToPSPtmEvidence(ptmEvidence: PtmEvidence): PsPtmEvidence = {
       
       this.logger.info("Creating PTM evidence of type="+ptmEvidence.ionType.toString()+" and mass="+ptmEvidence.monoMass)
       val psPtmEvidence = new PsPtmEvidence()
