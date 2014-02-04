@@ -23,11 +23,6 @@ import javax.persistence.Transient;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import fr.proline.core.orm.msi.ResultSummary.TransientData;
-import fr.proline.core.orm.msi.dto.DPeptideMatch;
-import fr.proline.core.orm.msi.dto.DProteinSet;
-import fr.proline.core.orm.uds.Dataset;
-import fr.proline.core.orm.uds.dto.DDataset;
 
 /**
  * The persistent class for the search_settings database table.
