@@ -19,8 +19,15 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import fr.proline.core.orm.msi.ResultSummary.TransientData;
+import fr.proline.core.orm.msi.dto.DPeptideMatch;
+import fr.proline.core.orm.msi.dto.DProteinSet;
+import fr.proline.core.orm.uds.Dataset;
+import fr.proline.core.orm.uds.dto.DDataset;
 
 /**
  * The persistent class for the search_settings database table.
@@ -88,6 +95,10 @@ public class SearchSetting implements Serializable {
     @OneToMany(mappedBy = "searchSetting")
     private Set<UsedPtm> usedPtms;
 
+    // Transient Variables not saved in database
+    @Transient
+    private TransientData transientData = null;
+    
     public SearchSetting() {
     }
 
@@ -295,4 +306,35 @@ public class SearchSetting implements Serializable {
 		.append("mass error", getPeptideMassErrorTolerance()).toString();
     }
 
+    
+	public TransientData getTransientData() {
+		if (transientData == null) {
+			transientData = new TransientData();
+		}
+		return transientData;
+	}
+
+    /**
+     * Transient Data which will be not saved in database Used by the Proline Studio IHM
+     * 
+     * @author JM235353
+     */
+	public static class TransientData implements Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private MsmsSearch msmsSearch = null;
+
+		protected TransientData() {
+		}
+
+		public MsmsSearch getMsmsSearch() {
+			return msmsSearch;
+		}
+
+		public void setMsmsSearch(MsmsSearch msmsSearch) {
+			this.msmsSearch = msmsSearch;
+		}
+
+	}
+    
 }
