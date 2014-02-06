@@ -4,7 +4,7 @@ import fr.profi.util.serialization._
 
 package object serialization {
   
-  object ProlineJson extends ProfiJson with CustomDoubleJacksonSerializer
+  object ProlineJson extends ProfiJsonSerialization with CustomDoubleJacksonSerializer //Serialization
   
   /*
   object ProlineJson extends com.codahale.jerkson.Json {
