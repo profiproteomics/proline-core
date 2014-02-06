@@ -10,20 +10,17 @@ object MissingAbundancesInferer {
   val percentileComputer = new Percentile()
   
   def inferAbundances( abundanceMatrix: Array[Array[Float]], errorModel: AbsoluteErrorModel ): Array[Array[Float]] = {
-    require( abundanceMatrix.length > 10, "at least 10 abundance rows are required for missing abundance inference")
+    //require( abundanceMatrix.length > 10, "at least 10 abundance rows are required for missing abundance inference")
     require( abundanceMatrix.flatten.count( isZeroOrNaN(_) == false ) > 0 ) // only for debug
     
     // Retrieve quartiles from flattened abundance matrix
     val allDefinedAbundances = abundanceMatrix.flatten.withFilter( isZeroOrNaN(_) == false ).map(_.toDouble).sorted
-    //println( s"allDefinedAbundances.length: ${allDefinedAbundances.length}")
     
     val q1 = percentileComputer.evaluate(allDefinedAbundances,25).toFloat
     val q3 = percentileComputer.evaluate(allDefinedAbundances,75).toFloat
-   // println( s"quartiles: ${q1} , ${q3}")
     
     // Convert quartiles into theoretical maximal bounds
     var(lb,ub) = ErrorModelComputer.quartilesToBounds(q1,q3)
-    //println( s"bounds: ${lb} , ${ub}")
     
     // Re-Compute Lower Bound using the first percentile if it is lower than the lowest observed abundance
     if( lb < allDefinedAbundances.head ) lb = {
