@@ -4,8 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
 import fr.profi.jdbc.easy._
-import fr.profi.util.serialization.ProfiJson
-import fr.profi.util.serialization.CustomDoubleJacksonSerializer
+import fr.profi.util.serialization._
 import fr.proline.core.dal._
 import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -28,7 +27,7 @@ private[core] object SQLRsWriter extends AbstractSQLRsWriter
 abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   val objTreeInsertQuery = MsiDbObjectTreeTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID) )
-  object CustomSerializer extends ProfiJson with CustomDoubleJacksonSerializer
+  object CustomSerializer extends ProfiJsonSerialization with CustomDoubleJacksonSerializer
 
   def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Long] = {
     
