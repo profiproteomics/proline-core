@@ -50,7 +50,7 @@ case class MasterQuantPeptideProfile (
 )
 
 case class MasterQuantPeptideProperties (
-  @JsonDeserialize(contentAs = classOf[Array[java.lang.Long]])
+  @JsonDeserialize(contentAs = classOf[Array[Long]])
   @BeanProperty var mqProtSetIds: Option[Array[Long]] = None,
   @BeanProperty var mqPepProfileByGroupSetupNumber: Option[HashMap[String,MasterQuantPeptideProfile]] = None
 )
@@ -63,10 +63,12 @@ case class MasterQuantProteinSetProfile (
 )
  
 case class MasterQuantProteinSetProperties (
-  @BeanProperty var mqProtSetProfilesByGroupSetupNumber: Option[HashMap[String,Array[MasterQuantProteinSetProfile]]] = None,
+  @BeanProperty var mqProtSetProfilesByGroupSetupNumber: Option[HashMap[String, Array[MasterQuantProteinSetProfile]]] = None,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
-  @JsonDeserialize(contentAs = classOf[Array[java.lang.Long]] )
+  
+  @JsonDeserialize(contentAs = classOf[Array[Long]] )
   @BeanProperty var selectedMasterQuantPeptideIds: Option[Array[Long]] = None,
-  @JsonDeserialize(contentAs = classOf[Array[java.lang.Long]] )
+  
+  @JsonDeserialize(contentAs = classOf[Array[Long]] )
   @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None
 )

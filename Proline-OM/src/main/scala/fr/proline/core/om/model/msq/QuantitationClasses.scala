@@ -1,6 +1,6 @@
 package fr.proline.core.om.model.msq
 
-import scala.collection.mutable.ArrayBuffer
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.util.misc.InMemoryIdGen
 import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet,ResultSummary}
@@ -78,24 +78,35 @@ case class QuantPeptideIon(
   val scanNumber: Int,
   
   var peptideMatchesCount: Int,  
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   var ms2MatchingFrequency: Option[Float], // TODO: remove the Option
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   var bestPeptideMatchScore: Option[Float] = None,
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   var predictedElutionTime: Option[Float] = None,
-  var predictedScanNumber: Option[Int] = None,
+  
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
+  var predictedScanNumber: Option[Long] = None,
   
   val quantChannelId: Long,
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val peptideId: Option[Long] = None,
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val peptideInstanceId: Option[Long] = None,
-  @JsonDeserialize(contentAs = classOf[Array[java.lang.Long]] )
+  
+  @JsonDeserialize(contentAs = classOf[ Array[Long] ] )
   val msQueryIds: Option[Array[Long]] = None,
+  
   val lcmsFeatureId: Long, // TODO: set as Option[Long] = None
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val lcmsMasterFeatureId: Option[Long] = None,
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val unmodifiedPeptideIonId: Option[Long] = None,
   
@@ -166,8 +177,10 @@ case class QuantPeptide(
   var selectionLevel: Int,
   
   val quantChannelId: Long,
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val peptideId: Option[Long] = None,
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val peptideInstanceId: Option[Long] = None
 
@@ -193,8 +206,7 @@ case class MasterQuantPeptide(
   def getPeptideId: Option[Long] = if( this.peptideInstance.isDefined ) Some(this.peptideInstance.get.peptide.id) else None
   
   def getMasterQuantProteinSetIds(): Option[Array[Long]] = {
-    if( this.properties.isDefined ) this.properties.get.getMqProtSetIds()
-    else None
+    if( this.properties.isDefined ) this.properties.get.getMqProtSetIds() else None
   }
   
   def isProteinSetSpecific: Option[Boolean] = {
