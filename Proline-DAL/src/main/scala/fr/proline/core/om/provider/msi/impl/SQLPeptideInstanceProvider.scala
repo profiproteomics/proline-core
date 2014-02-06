@@ -3,6 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.slf4j.Logging
 
+import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -48,14 +49,38 @@ class SQLPeptideInstanceProvider(
       )
       val pepInstRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery1)
       
-      val sqlQuery2 = new SelectQueryBuilder1(MsiDbPeptideInstancePeptideMatchMapTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.PEPTIDE_INSTANCE_ID ~" IN("~ pepInstIds.mkString(",") ~")"
-      )
-      val pepInstPepMatchMapRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery2)
-      
-      this._buildPeptideInstances(pepInstRecords, pepInstPepMatchMapRecords)
-      
+      this._getPeptideInstances(msiEzDBC,pepInstIds,pepInstRecords)
     })
+  }
+  
+  // TODO: create an SQL INDEX based on the peptide_id field
+  def getPeptideInstancesByPeptideIds(pepIds: Seq[Long]): Array[PeptideInstance] = {
+    
+    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+      
+      // TODO: use max nb iterations
+      val sqlQuery1 = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.PEPTIDE_ID ~" IN("~ pepIds.mkString(",") ~")"
+      )
+      val pepInstRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery1)
+      val pepInstIds = pepInstRecords.map( _("id").asInstanceOf[Long] )
+      
+      this._getPeptideInstances(msiEzDBC,pepInstIds,pepInstRecords)
+    })
+  }
+  
+  private def _getPeptideInstances(
+    msiEzDBC: EasyDBC,
+    pepInstIds: Seq[Long],
+    pepInstRecords: Array[Map[String,Any]]
+  ): Array[PeptideInstance] = {
+    
+    val sqlQuery2 = new SelectQueryBuilder1(MsiDbPeptideInstancePeptideMatchMapTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.PEPTIDE_INSTANCE_ID ~" IN("~ pepInstIds.mkString(",") ~")"
+    )
+    val pepInstPepMatchMapRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery2)
+    
+    this._buildPeptideInstances(pepInstRecords, pepInstPepMatchMapRecords)
   }
 
   def getResultSummariesPeptideInstances(rsmIds: Seq[Long]): Array[PeptideInstance] = {

@@ -5,12 +5,12 @@ import fr.proline.context.DatabaseConnectionContext
 
 trait IPeptideSetProvider {
   
-  def getPeptideSetsAsOptions( protSetIds: Seq[Long] ): Array[Option[PeptideSet]]
+  def getPeptideSetsAsOptions( pepSetIds: Seq[Long] ): Array[Option[PeptideSet]]
   
-  def getPeptideSets( protSetIds: Seq[Long] ): Array[PeptideSet]
+  def getPeptideSets( pepSetIds: Seq[Long] ): Array[PeptideSet]
   
-  def getPeptideSet( protSetId:Long ): Option[PeptideSet] = {
-    getPeptideSetsAsOptions( Array(protSetId) )(0)
+  def getPeptideSet( pepSetId:Long ): Option[PeptideSet] = {
+    getPeptideSetsAsOptions( Array(pepSetId) )(0)
   }
   
   def getResultSummariesPeptideSets( resultSummaryIds: Seq[Long] ): Array[PeptideSet]
