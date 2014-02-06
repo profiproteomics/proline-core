@@ -18,11 +18,14 @@ object CommonsStatHelper {
   }
   
   def calcStatSummary(values: Array[Double]): StatisticalSummary = {
+    require( values != null, "values is null" )
     
-    val mean = StatUtils.mean(values)
-    val variance = StatUtils.variance(values, mean)
+    val defValues = values.filter( _.isNaN == false )
+    
+    val mean = StatUtils.mean(defValues)
+    val variance = StatUtils.variance(defValues, mean)
     var ( max, min, sum ) = (Double.MinValue,Double.MaxValue,0.0)
-    values.foreach { value =>
+    defValues.foreach { value =>
       sum += value
       if( value > max ) max = value
       if( value < min ) min = value
@@ -30,10 +33,9 @@ object CommonsStatHelper {
     
     new StatisticalSummaryValues(
       mean, 
-      variance, 
-      
-      values length, 
-      max, 
+      variance,
+      defValues.length, 
+      max,
       min,
       sum
     )
