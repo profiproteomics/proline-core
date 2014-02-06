@@ -2,7 +2,9 @@ package fr.proline.core.algo.msq
 
 import fr.proline.util.math.median
 import scala.collection.mutable.ArrayBuffer
+import fr.proline.util.primitives.isZeroOrNaN
 
+// Note: by convention this first column is taken as the reference
 object AbundanceNormalizer {
   
   def normalizeAbundances( abundanceMatrix: Array[Array[Float]] ): Array[Array[Float]] = {
@@ -27,7 +29,11 @@ object AbundanceNormalizer {
     
     // Compute the normalization factors matrix as the median of the ratios
     transposedRatioMatrix.map { ratioColumn =>
-      median( ratioColumn.filter( r => r != Float.NaN && r != 0f ) )
+      val defRatios = ratioColumn.filter( isZeroOrNaN(_) == false )
+      require( defRatios.isEmpty == false, "no defined ratio in this column" )
+      val nf = median( defRatios )
+      require( isZeroOrNaN(nf) == false, "error during normalization factor computation: the median should be defined" )
+      nf
     }
     
   }
@@ -47,8 +53,11 @@ object AbundanceNormalizer {
     abundanceMatrix.map { abundanceRow =>
 
       val normalizedAbundances = new ArrayBuffer[Float](abundanceRow.length)
+      
+      // Add reference (first column) to the normalized abundances
       normalizedAbundances += abundanceRow(0)
 
+      // Apply each NF to each column
       for ( i <- 1 until abundanceRow.length ) {
         val nf = nfs(i-1)
         normalizedAbundances += abundanceRow(i) * nf
@@ -59,21 +68,22 @@ object AbundanceNormalizer {
     
   }
   
-  private def _computeRatios( abundanceMatrix: Array[Array[Float]]): Array[Array[Float]] = {
+  private def _computeRatios( abundanceMatrix: Array[Array[Float]] ): Array[Array[Float]] = {
     
     abundanceMatrix.map { abundanceRow =>
       val abundanceRef = abundanceRow(0)
-      val ratios = new ArrayBuffer[Float](abundanceRow.length-1)
-
+      val ratioRow = new ArrayBuffer[Float](abundanceRow.length-1)
+      val refIsUndef = isZeroOrNaN(abundanceRef)
+      
       for ( i <- 1 until abundanceRow.length ) {
-        if( abundanceRef.isNaN || abundanceRef == 0f ) ratios += Float.NaN
+        if( refIsUndef ) ratioRow += Float.NaN
         else {
           val ab = abundanceRow(i)
-          ratios += ( if( ab.isNaN || ab == 0f ) Float.NaN else abundanceRef / ab )
+          ratioRow += ( if( isZeroOrNaN(ab) ) Float.NaN else abundanceRef / ab )
         }
       }
       
-      ratios.toArray
+      ratioRow.toArray
     }
     
   }
