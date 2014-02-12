@@ -55,6 +55,22 @@ class SQLPeptideMatchProvider(
 
     pepMatchIds.map { pepMatchById.get(_) } toArray
   }
+  
+  def getPeptideMatchesByPeptideIds(peptideIds: Seq[Long]): Array[PeptideMatch] = {
+    
+    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+    
+      // TODO: use max nb iterations
+      val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.PEPTIDE_ID ~" IN("~ peptideIds.mkString(",") ~")"
+      )
+      val pmRecords = msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
+      
+      val rsIds = pmRecords.map { pm => toLong(pm(PepMatchCols.RESULT_SET_ID)) }.distinct
+      this._buildPeptideMatches(rsIds, pmRecords)
+    
+    })
+  }
 
   def getResultSetsPeptideMatches(rsIds: Seq[Long], pepMatchFilter: Option[PeptideMatchFilter] = None): Array[PeptideMatch] = {
     
