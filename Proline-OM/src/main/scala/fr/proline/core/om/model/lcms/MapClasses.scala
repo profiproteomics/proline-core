@@ -289,7 +289,7 @@ case class MapAlignment(
   
   private def _checkSlopes(): Unit = {
     
-    deltaTimeVersusTime.sliding(2).foreach { lmPair =>
+    deltaTimeVersusTime.sliding(2).withFilter(_.length == 2).foreach { lmPair =>
       require(lmPair(1)._1 > lmPair(0)._1,"MapAlignment must contain only strictly increasing time values")
       
       val targetTime1 = lmPair(0)._1 + lmPair(0)._2
