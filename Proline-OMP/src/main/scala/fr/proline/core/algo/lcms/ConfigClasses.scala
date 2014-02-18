@@ -44,19 +44,19 @@ case class AlignmentParams(
 
 case class AlnSmoothingParams( windowSize: Int, windowOverlap: Int, minWindowLandmarks: Int = 0 )
 
+object ClusteringParams {
+  def apply(mzTimeTol: IMzTimeTolerant, intensityComputation: String,timeComputation: String) = {
+    new ClusteringParams(mzTimeTol.mozTol,mzTimeTol.mozTolUnit,mzTimeTol.timeTol,intensityComputation,timeComputation)
+  }
+}
+
 case class ClusteringParams(
   mozTol: Double,
   mozTolUnit: String,
   timeTol: Float,
   intensityComputation: String,
   timeComputation: String
-) extends IMzTimeTolerant {
-  
-  def this( mzTimeTol: IMzTimeTolerant, intensityComputation: String,timeComputation: String) = {
-    this(mzTimeTol.mozTol,mzTimeTol.mozTolUnit,mzTimeTol.timeTol,intensityComputation,timeComputation)
-  }
-  
-}
+) extends IMzTimeTolerant
 
 case class ExtractionParams( mozTol: Double, mozTolUnit: String ) extends IMzTolerant
 
