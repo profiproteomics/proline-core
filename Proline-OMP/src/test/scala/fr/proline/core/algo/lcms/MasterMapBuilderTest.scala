@@ -42,11 +42,13 @@ class MasterMapBuilderTest extends JUnitSuite  with Logging {
     
     // Build the corresponding master map
     val ftMappingParams = FeatureMappingParams(mozTol=10., mozTolUnit= "PPM", timeTol=20f )  
-    val ftClusteringParams = new ClusteringParams(
-      ftMappingParams,
+    val ftClusteringParams = ClusteringParams(ftMappingParams, intensityComputation = "MOST_INTENSE", timeComputation= "MOST_INTENSE")
+      /*
+      mozTol=10., mozTolUnit= "PPM", timeTol=20f,
       intensityComputation = "MOST_INTENSE",
       timeComputation = "MOST_INTENSE"
-    )
+      */
+    
     val masterFtFilter = new Filter( "INTENSITY", "GT", 0. )
     val masterMap = BuildMasterMap(mapSet, Seq(lcmsRun.scanSequence.get), masterFtFilter, ftMappingParams,ftClusteringParams)
     

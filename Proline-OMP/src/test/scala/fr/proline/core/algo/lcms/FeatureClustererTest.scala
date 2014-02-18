@@ -27,11 +27,15 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     
   // TODO: try other kind of parameters
   val ftMappingParams = FeatureMappingParams(mozTol=5., mozTolUnit= "PPM", timeTol=5f )  
-  val ftClusteringParams = new ClusteringParams(
-    ftMappingParams,
+  val ftClusteringParams = ClusteringParams(ftMappingParams, intensityComputation = "MOST_INTENSE", timeComputation= "MOST_INTENSE")
+
+    
+    /*new ClusteringParams(
+    //ftMappingParams,
+    mozTol=5., mozTolUnit= "PPM", timeTol=5f,
     intensityComputation = "MOST_INTENSE",
     timeComputation = "MOST_INTENSE"
-  )
+  )*/
   
   @Test
   def testClusterizeFeatures() {
