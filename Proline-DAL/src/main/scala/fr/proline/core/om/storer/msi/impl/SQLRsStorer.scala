@@ -115,21 +115,26 @@ class SQLRsStorer(
 
     val msiDb = context.getMSIDbConnectionContext
 
-    /*val rsPeptides = resultSet.peptides
-    if( rsPeptides.find( _.id < 0 ).isDefined )
-      throw new Exception("result set peptides must first be persisted")    
-    
-    val rsProteins = resultSet.getProteins.getOrElse( new Array[Protein](0) )
+    val rsPeptides = resultSet.peptides.filter(_.id < 0)
+    val uniquePeptideSequences = rsPeptides.map(pep => { 
+      if (pep.ptmString != null)
+    	pep.sequence + "%" + pep.ptmString
+      else
+    	pep.sequence + "%"
+    })
+    	 
+    /* val rsProteins = resultSet.getProteins.getOrElse( new Array[Protein](0) )
     if( rsProteins.find( _.id < 0 ).isDefined )
       throw new Exception("result set proteins must first be persisted")*/
 
     // Retrieve the list of existing peptides in the current MSIdb
     // TODO: do this using the PSdb
-    val existingMsiPeptidesIdByKey = this.rsWriter.fetchExistingPeptidesIdByUniqueKey(resultSet.getUniquePeptideSequences, msiDb)
+    
+    val existingMsiPeptidesIdByKey = this.rsWriter.fetchExistingPeptidesIdByUniqueKey(uniquePeptideSequences, msiDb)
     logger.info(existingMsiPeptidesIdByKey.size + " existing peptides have been loaded from the MSIdb")
 
     // Retrieve existing peptides and map them by unique key
-    val (peptidesInMsiDb, newMsiPeptides) = resultSet.peptides.partition(pep => existingMsiPeptidesIdByKey.contains(pep.uniqueKey))
+    val (peptidesInMsiDb, newMsiPeptides) = rsPeptides.partition(pep => existingMsiPeptidesIdByKey.contains(pep.uniqueKey))
     for (peptide <- peptidesInMsiDb) {
       peptide.id = existingMsiPeptidesIdByKey(peptide.uniqueKey)
       this.peptideByUniqueKey += (peptide.uniqueKey -> peptide)
