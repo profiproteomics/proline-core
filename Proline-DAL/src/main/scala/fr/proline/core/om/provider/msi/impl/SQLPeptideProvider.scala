@@ -18,14 +18,26 @@ import fr.proline.util.primitives._
 import fr.proline.util.StringUtils
 
 object SQLPeptideProvider {
-  
+
   // Create a static HashMap to cache loaded peptides
   // TODO: use cache for other queries than getPeptides(peptideIds)
   // TODO: implement cache at context level
-  private val _peptideCache = new HashMap[Long,Peptide]
-  
-}
 
+  val INITIAL_CAPACITY = 16 // Default Java Map  initial capacity and load factor
+  val LOAD_FACTOR = 0.75f
+
+  val MAXIMUM_CACHE_SIZE = 100000
+
+  /* Use a Java LinkedHashMap configured as LRU cache (with  access-order) ; @GuardedBy("itself")*/
+  private val _peptideCache = new java.util.LinkedHashMap[Long, Peptide](INITIAL_CAPACITY, LOAD_FACTOR, true) {
+
+    override def removeEldestEntry(eldesEntry: java.util.Map.Entry[Long, Peptide]): Boolean = {
+      return (size > MAXIMUM_CACHE_SIZE);
+    }
+
+  }
+
+}
 
 class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvider(psDbCtx) with IPeptideProvider with Logging {
 
@@ -34,36 +46,36 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
   /** Returns a map of peptide PTMs grouped by the peptide id */
   def getPeptidePtmRecordsByPepId(peptideIds: Seq[Long]): Map[Long, Array[Map[String, Any]]] = {
-    
+
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long, Map[String, Any]]
-  
+
       val maxNbIters = psEzDBC.getInExpressionCountLimit
       var colNames: Seq[String] = null
       val pepPtmRecords = new ArrayBuffer[Map[String, Any]] // TODO: replace by an array
-  
+
       // Iterate over groups of peptide ids
       peptideIds.grouped(maxNbIters).foreach(tmpPepIds => {
-  
+
         // Retrieve peptide PTMs for the current group of peptide ids
-        val pepPtmQuery = new SelectQueryBuilder1(PsDbPeptidePtmTable).mkSelectQuery( (t,c) =>
-          List(t.*) -> "WHERE "~ t.PEPTIDE_ID ~" IN("~ tmpPepIds.mkString(",") ~")"
+        val pepPtmQuery = new SelectQueryBuilder1(PsDbPeptidePtmTable).mkSelectQuery((t, c) =>
+          List(t.*) -> "WHERE " ~ t.PEPTIDE_ID ~ " IN(" ~ tmpPepIds.mkString(",") ~ ")"
         )
-      
+
         psEzDBC.selectAndProcess(pepPtmQuery) { r =>
-  
+
           if (colNames == null) { colNames = r.columnNames }
-  
+
           // Build the peptide PTM record
           val peptidePtmRecord = colNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
           pepPtmRecords += peptidePtmRecord
-  
+
         }
       })
-  
+
       pepPtmRecords.toArray.groupBy(v => toLong(v.get("peptide_id").get))
-      
+
     })
 
   }
@@ -104,48 +116,54 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
   def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
     if (peptideIds.length == 0) return Array.empty[Peptide]
-    
-    val( cachedPepIds, uncachedPepIds ) = peptideIds.partition( SQLPeptideProvider._peptideCache.contains(_) )
-    val cachedPeps = cachedPepIds.map(SQLPeptideProvider._peptideCache(_))
-    
+
+    var uncachedPepIds: Seq[Long] = null
+    var cachedPeps: Seq[Peptide] = null
+
+    SQLPeptideProvider._peptideCache.synchronized {
+      val (cachedPepIds, localUncachedPepIds) = peptideIds.partition(SQLPeptideProvider._peptideCache.containsKey(_))
+      uncachedPepIds = localUncachedPepIds
+      cachedPeps = cachedPepIds.map(SQLPeptideProvider._peptideCache.get(_))
+    } // End of synchronized block on SQLPeptideProvider._peptideCache
+
     cachedPeps.toArray ++ DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
       val maxNbIters = psEzDBC.getInExpressionCountLimit
-      
+
       // Declare some vars
       var pepColNames: Seq[String] = null
       val pepRecords = new ArrayBuffer[Map[String, Any]](0)
       var modifiedPepIdSet = new scala.collection.mutable.HashSet[Long]
-      
+
       // Iterate over groups of peptide ids
       uncachedPepIds.grouped(maxNbIters).foreach(tmpPepIds => {
-        
-        val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
-          List(t.*) -> "WHERE "~ t.ID ~" IN("~ tmpPepIds.mkString(",") ~")"
+
+        val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery((t, c) =>
+          List(t.*) -> "WHERE " ~ t.ID ~ " IN(" ~ tmpPepIds.mkString(",") ~ ")"
         )
-  
+
         // Retrieve peptides for the current group of peptide ids
         psEzDBC.selectAndProcess(pepQuery) { r =>
-  
+
           if (pepColNames == null) { pepColNames = r.columnNames }
-  
+
           // Build the peptide record
           val peptideRecord = pepColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
           pepRecords += peptideRecord
-  
+
           // Map the record by its id    
           if (peptideRecord("ptm_string").asInstanceOf[String] != null) {
             modifiedPepIdSet += toLong(peptideRecord("id"))
           }
-  
+
         }
       })
-  
+
       // Load peptide PTM map corresponding to the modified peptides
       val locatedPtmsByPepId = this.getLocatedPtmsByPepId(modifiedPepIdSet.toArray[Long])
-  
+
       this._buildPeptides(pepRecords, locatedPtmsByPepId)
-    
+
     })
 
   }
@@ -166,55 +184,54 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
   def getPeptidesForSequences(peptideSeqs: Seq[String]): Array[Peptide] = {
 
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
-    
+
       val maxNbIters = psEzDBC.getInExpressionCountLimit
-  
+
       // Declare some vars
       var pepColNames: Seq[String] = null
       val pepRecords = new ArrayBuffer[Map[String, Any]](0)
       var modifiedPepIdSet = new scala.collection.mutable.HashSet[Long]
-  
+
       // Iterate over groups of peptide ids
       peptideSeqs.grouped(maxNbIters).foreach(tmpPepSeqs => {
-  
+
         val quotedSeqs = tmpPepSeqs.map { "'" + _ + "'" }
-        
-        val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
-          List(t.*) -> "WHERE "~ t.SEQUENCE ~" IN("~ quotedSeqs.mkString(",") ~")"
+
+        val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery((t, c) =>
+          List(t.*) -> "WHERE " ~ t.SEQUENCE ~ " IN(" ~ quotedSeqs.mkString(",") ~ ")"
         )
-  
+
         // Retrieve peptide PTMs for the current group of peptide ids
         psEzDBC.selectAndProcess(pepQuery) { r =>
-        
+
           if (pepColNames == null) { pepColNames = r.columnNames }
-  
+
           // Build the peptide PTM record
           val peptideRecord = pepColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
           pepRecords += peptideRecord
-  
+
           // Map the record by its id    
           if (peptideRecord("ptm_string").asInstanceOf[String] != null) {
             modifiedPepIdSet += toLong(peptideRecord("id"))
           }
-  
+
         }
       })
-  
+
       // Load peptide PTM map corresponding to the modified peptides
       val locatedPtmsByPepId = this.getLocatedPtmsByPepId(modifiedPepIdSet.toArray[Long])
-  
+
       val peptides = this._buildPeptides(pepRecords, locatedPtmsByPepId)
-  
+
       peptides
-      
+
     })
-    
+
   }
 
   private def _buildPeptides(
     pepRecords: Seq[Map[String, Any]],
-    locatedPtmsByPepId: Map[Long, Array[LocatedPtm]]
-  ): Array[Peptide] = {
+    locatedPtmsByPepId: Map[Long, Array[LocatedPtm]]): Array[Peptide] = {
 
     // Iterate over peptide records to convert them into peptide objects
     val peptides = new ArrayBuffer[Peptide](pepRecords.length)
@@ -233,100 +250,110 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
         ptms = locatedPtms,
         calculatedMass = pepRecord("calculated_mass").asInstanceOf[Double]
       )
-      
+
       // Cache this new built peptide
-      SQLPeptideProvider._peptideCache += peptide.id -> peptide
-      
+      SQLPeptideProvider._peptideCache.synchronized {
+        SQLPeptideProvider._peptideCache.put(peptide.id, peptide)
+      } // End of synchronized block on SQLPeptideProvider._peptideCache
+
       peptides += peptide
     }
-    
-    
+
+    /* Trace if _peptideCache is full */
+    var cacheSize: Int = -1
+
+    SQLPeptideProvider._peptideCache.synchronized {
+      cacheSize = SQLPeptideProvider._peptideCache.size
+    } // End of synchronized block on SQLPeptideProvider._peptideCache
+
+    if (cacheSize >= SQLPeptideProvider.MAXIMUM_CACHE_SIZE) {
+      logger.info("SQLPeptideProvider._peptideCache is full : " + cacheSize)
+    }
 
     peptides.toArray
-
   }
 
   def getPeptide(peptideSeq: String, pepPtms: Array[LocatedPtm]): Option[Peptide] = {
-    
+
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
       val tmpPep = new Peptide(sequence = peptideSeq, ptms = pepPtms)
-  
+
       val resultPepIds: Seq[Long] = if (StringUtils.isEmpty(tmpPep.ptmString)) {
-        val pepIdQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
-          List(t.ID) -> "WHERE "~ t.SEQUENCE ~" = ? AND "~ t.PTM_STRING ~" IS NULL"
+        val pepIdQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery((t, c) =>
+          List(t.ID) -> "WHERE " ~ t.SEQUENCE ~ " = ? AND " ~ t.PTM_STRING ~ " IS NULL"
         )
-        psEzDBC.select(pepIdQuery,tmpPep.sequence) { v => toLong(v.nextAny) }
+        psEzDBC.select(pepIdQuery, tmpPep.sequence) { v => toLong(v.nextAny) }
       } else {
-        val pepIdQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
-          List(t.ID) -> "WHERE "~ t.SEQUENCE ~" = ? AND "~ t.PTM_STRING ~" = ?"
+        val pepIdQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery((t, c) =>
+          List(t.ID) -> "WHERE " ~ t.SEQUENCE ~ " = ? AND " ~ t.PTM_STRING ~ " = ?"
         )
-        psEzDBC.select(pepIdQuery,tmpPep.sequence, tmpPep.ptmString) { v => toLong(v.nextAny) }
+        psEzDBC.select(pepIdQuery, tmpPep.sequence, tmpPep.ptmString) { v => toLong(v.nextAny) }
       }
-  
+
       if (resultPepIds.length == 0) None
       else {
         tmpPep.id = resultPepIds(0)
         Some(tmpPep)
       }
-      
+
     })
   }
 
   def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]): Array[Option[Peptide]] = {
 
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
-      
+
       val maxNbIters = psEzDBC.getInExpressionCountLimit
-  
+
       // Retrieve peptide sequences and map peptides by their unique key
       val quotedSeqs = new Array[String](peptideSeqsAndPtms.length)
       val pepKeys = new Array[String](peptideSeqsAndPtms.length)
       val peptideByUniqueKey = new HashMap[String, Peptide]()
-  
+
       var pepIdx = 0
       for ((pepSeq, locPtms) <- peptideSeqsAndPtms) {
-  
+
         val peptide = new Peptide(sequence = pepSeq, ptms = locPtms)
         val pepKey = peptide.uniqueKey
         peptideByUniqueKey += (pepKey -> peptide)
-  
+
         quotedSeqs(pepIdx) = psEzDBC.dialect.quoteString(pepSeq)
-  
+
         pepKeys(pepIdx) = pepKey
-  
+
         pepIdx += 1
       }
-  
+
       // Query peptides based on a distinct list of peptide sequences
       // Queries are performed using successive groups of sequences (maximum length is driver dependant)
       quotedSeqs.distinct.grouped(maxNbIters).foreach { tmpQuotedSeqs =>
         this.logger.trace("search for peptides in the database using %d sequences".format(tmpQuotedSeqs.length))
-  
-        val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery( (t,c) =>
-          List(t.ID,t.SEQUENCE,t.PTM_STRING) -> "WHERE "~ t.SEQUENCE ~" IN ("~ tmpQuotedSeqs.mkString(",") ~")"
+
+        val pepQuery = new SelectQueryBuilder1(PsDbPeptideTable).mkSelectQuery((t, c) =>
+          List(t.ID, t.SEQUENCE, t.PTM_STRING) -> "WHERE " ~ t.SEQUENCE ~ " IN (" ~ tmpQuotedSeqs.mkString(",") ~ ")"
         )
-        
+
         psEzDBC.selectAndProcess(pepQuery) { r =>
           val (id, sequence, ptmString) = (toLong(r.nextAny), r.nextString, r.nextStringOrElse(""))
           val uniqueKey = sequence + "%" + ptmString
-  
+
           if (peptideByUniqueKey.contains(uniqueKey)) {
             peptideByUniqueKey(uniqueKey).id = id
           }
         }
       }
-  
+
       val peptidesAsOpt = pepKeys.map { pepKey =>
         val peptide = peptideByUniqueKey(pepKey)
         if (peptide.id > 0) Some(peptide)
         else None
       }
-  
+
       peptidesAsOpt
-      
+
     })
-    
+
   }
 
 }
