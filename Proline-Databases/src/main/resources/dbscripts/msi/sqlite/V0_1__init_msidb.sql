@@ -639,3 +639,4 @@ CREATE INDEX master_quant_reporter_ion_rsm_idx ON master_quant_reporter_ion (res
 
 CREATE INDEX peptide_readable_ptm_string_rs_idx ON peptide_readable_ptm_string (result_set_id);
 
+CREATE INDEX pep_set_pep_inst_item_pep_inst_idx ON peptide_set_peptide_instance_item (peptide_instance_id);
