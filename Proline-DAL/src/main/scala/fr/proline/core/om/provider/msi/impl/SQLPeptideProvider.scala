@@ -17,24 +17,47 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.util.primitives._
 import fr.proline.util.StringUtils
 
-object SQLPeptideProvider {
+object SQLPeptideProvider extends Logging {
 
   // Create a static HashMap to cache loaded peptides
   // TODO: use cache for other queries than getPeptides(peptideIds)
   // TODO: implement cache at context level
 
+  val GIGA = 1024 * 1024 * 1024L
+
   val INITIAL_CAPACITY = 16 // Default Java Map  initial capacity and load factor
   val LOAD_FACTOR = 0.75f
 
-  val MAXIMUM_CACHE_SIZE = 100000
+  val INITIAL_CACHE_SIZE = 100000
+  val MAXIMUM_CACHE_SIZE = 1000000
+  val CACHE_SIZE = calculateCacheSize()
 
-  /* Use a Java LinkedHashMap configured as LRU cache (with  access-order) ; @GuardedBy("itself")*/
+  /* Use a Java LinkedHashMap configured as LRU cache (with access-order) ; @GuardedBy("itself") */
   private val _peptideCache = new java.util.LinkedHashMap[Long, Peptide](INITIAL_CAPACITY, LOAD_FACTOR, true) {
 
-    override def removeEldestEntry(eldesEntry: java.util.Map.Entry[Long, Peptide]): Boolean = {
-      return (size > MAXIMUM_CACHE_SIZE);
+    override def removeEldestEntry(eldest: java.util.Map.Entry[Long, Peptide]): Boolean = {
+      (size > CACHE_SIZE)
     }
 
+  }
+
+  private def calculateCacheSize(): Int = {
+    val maxMemory = Runtime.getRuntime.maxMemory
+
+    val cacheSize = if (maxMemory > (4 * GIGA)) {
+      /* Big cacheSize = 100000 + (100000 for each GiB over 4 GiB) */
+      val extendedMemory = maxMemory - 4 * GIGA
+
+      val nBlock = extendedMemory + (GIGA - 1) / GIGA // rounding up
+
+      (INITIAL_CACHE_SIZE * (nBlock + 1)).asInstanceOf[Int].min(MAXIMUM_CACHE_SIZE)
+    } else {
+      INITIAL_CACHE_SIZE
+    }
+
+    logger.info("SQLPeptideProvider cacheSize : " + cacheSize)
+
+    cacheSize
   }
 
 }
@@ -43,6 +66,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
+  import SQLPeptideProvider._
 
   /** Returns a map of peptide PTMs grouped by the peptide id */
   def getPeptidePtmRecordsByPepId(peptideIds: Seq[Long]): Map[Long, Array[Map[String, Any]]] = {
@@ -120,11 +144,11 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
     var uncachedPepIds: Seq[Long] = null
     var cachedPeps: Seq[Peptide] = null
 
-    SQLPeptideProvider._peptideCache.synchronized {
-      val (cachedPepIds, localUncachedPepIds) = peptideIds.partition(SQLPeptideProvider._peptideCache.containsKey(_))
+    _peptideCache.synchronized {
+      val (cachedPepIds, localUncachedPepIds) = peptideIds.partition(_peptideCache.containsKey(_))
       uncachedPepIds = localUncachedPepIds
-      cachedPeps = cachedPepIds.map(SQLPeptideProvider._peptideCache.get(_))
-    } // End of synchronized block on SQLPeptideProvider._peptideCache
+      cachedPeps = cachedPepIds.map(_peptideCache.get(_))
+    } // End of synchronized block on _peptideCache
 
     cachedPeps.toArray ++ DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
@@ -242,19 +266,30 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
       val sequence = pepRecord("sequence").asInstanceOf[String]
       val locatedPtms = locatedPtmsByPepId.getOrElse(pepId, Array.empty[LocatedPtm])
 
-      // Build peptide object
-      val peptide = new Peptide(
-        id = pepId,
-        sequence = sequence,
-        ptmString = pepRecord("ptm_string").asInstanceOf[String],
-        ptms = locatedPtms,
-        calculatedMass = pepRecord("calculated_mass").asInstanceOf[Double]
-      )
+      var peptide: Peptide = null
 
-      // Cache this new built peptide
-      SQLPeptideProvider._peptideCache.synchronized {
-        SQLPeptideProvider._peptideCache.put(peptide.id, peptide)
-      } // End of synchronized block on SQLPeptideProvider._peptideCache
+      _peptideCache.synchronized {
+
+        /* putIfAbsent holding _peptideCache intrinsec lock */
+        val cachedPeptide = _peptideCache.get(pepId)
+
+        if (cachedPeptide == null) {
+          /* Build new peptide object */
+          peptide = new Peptide(
+            id = pepId,
+            sequence = sequence,
+            ptmString = pepRecord("ptm_string").asInstanceOf[String],
+            ptms = locatedPtms,
+            calculatedMass = pepRecord("calculated_mass").asInstanceOf[Double]
+          )
+
+          /* Cache this new built peptide */
+          _peptideCache.put(pepId, peptide)
+        } else {
+          peptide = cachedPeptide
+        }
+
+      } // End of synchronized block on _peptideCache
 
       peptides += peptide
     }
@@ -262,11 +297,11 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
     /* Trace if _peptideCache is full */
     var cacheSize: Int = -1
 
-    SQLPeptideProvider._peptideCache.synchronized {
-      cacheSize = SQLPeptideProvider._peptideCache.size
-    } // End of synchronized block on SQLPeptideProvider._peptideCache
+    _peptideCache.synchronized {
+      cacheSize = _peptideCache.size
+    } // End of synchronized block on _peptideCache
 
-    if (cacheSize >= SQLPeptideProvider.MAXIMUM_CACHE_SIZE) {
+    if (cacheSize >= CACHE_SIZE) {
       logger.info("SQLPeptideProvider._peptideCache is full : " + cacheSize)
     }
 
