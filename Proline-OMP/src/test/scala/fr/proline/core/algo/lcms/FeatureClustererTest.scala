@@ -26,7 +26,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
   val rawMap = rawMapGenerator.generateRawMap( lcmsRun )
     
   // TODO: try other kind of parameters
-  val ftMappingParams = FeatureMappingParams(mozTol=5., mozTolUnit= "PPM", timeTol=5f )  
+  val ftMappingParams = FeatureMappingParams(mozTol=5.0, mozTolUnit= "PPM", timeTol=5f )  
   val ftClusteringParams = ClusteringParams(ftMappingParams, intensityComputation = "MOST_INTENSE", timeComputation= "MOST_INTENSE")
 
     
@@ -47,16 +47,16 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     val procMapFts = new ArrayBuffer[Feature]
     
     // Unique feature
-    procMapFts += rawMapFt.copy( id = newFtId, moz = 100., elutionTime = 100f, relations = rawMapFt.relations.copy() )
+    procMapFts += rawMapFt.copy( id = newFtId, moz = 100.0, elutionTime = 100f, relations = rawMapFt.relations.copy() )
     
     // Five identical features
-    val( moz5, time5 ) = (200.,500f)
+    val( moz5, time5 ) = (200.0,500f)
     for ( i <- 1 to 5) {
       procMapFts += rawMapFt.copy( id = newFtId, moz = moz5, elutionTime = time5, relations = rawMapFt.relations.copy() )
     }
     
     // Ten features with increasing m/z
-    var( mzRefMZ10, timeRefMZ10 ) = (300.,1000f)
+    var( mzRefMZ10, timeRefMZ10 ) = (300.0,1000f)
     val onePPMDelta = mzRefMZ10 / 1000000
     
     for( i <- 1 to 10 ) {
@@ -74,7 +74,7 @@ class FeatureClustererTest extends JUnitSuite with Logging {
     }
     
     // Ten features with increasing time
-    var( mzRefRT10, timeRefRT10 ) = (400.,1500f)
+    var( mzRefRT10, timeRefRT10 ) = (400.0,1500f)
     val oneSec = 1
     
     for( i <- 1 to 10 ) {

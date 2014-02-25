@@ -16,11 +16,11 @@ class SerializationSpec extends AbstractSerializationSpec {
     mapSetName = "",
     lcMsRuns = null,
     extractionParams = ExtractionParams(  // for extraction and MS2 mapping
-      mozTol = 5.,
+      mozTol = 5.0,
       mozTolUnit = MassTolUnit.PPM.toString
     ),
     clusteringParams = ClusteringParams(
-      mozTol = 5.,
+      mozTol = 5.0,
       mozTolUnit = MassTolUnit.PPM.toString,
       timeTol = 15f, // in seconds
       intensityComputation = ClusterIntensityComputation.MOST_INTENSE.toString,
@@ -36,7 +36,7 @@ class SerializationSpec extends AbstractSerializationSpec {
         minWindowLandmarks = 50
       ),
       ftMappingParams = FeatureMappingParams(
-        mozTol = 5.,
+        mozTol = 5.0,
         mozTolUnit = MassTolUnit.PPM.toString,
         timeTol = 300
       )
@@ -44,10 +44,10 @@ class SerializationSpec extends AbstractSerializationSpec {
     ftFilter = Filter(
       name = FeatureFilterType.INTENSITY.toString,
       operator = FilterOperator.GT.toString,
-      value = 0.
+      value = 0.0
     ),
     ftMappingParams = FeatureMappingParams(
-      mozTol = 5.,
+      mozTol = 5.0,
       mozTolUnit = MassTolUnit.PPM.toString,
       timeTol = 30f
     ),
