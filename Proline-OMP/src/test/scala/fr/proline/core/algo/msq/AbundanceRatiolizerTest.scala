@@ -98,10 +98,10 @@ class AbundanceRatiolizerTest {
     
     AbundanceRatiolizer.updateRatioStates(normalizedRatios, relativeVariationModel, Some(absoluteNoiseModel) , 0.01f)
     
-    val ratiosSortedByTPValue = normalizedRatios.sortBy( _.tTestPValue.getOrElse(1.) )
+    val ratiosSortedByTPValue = normalizedRatios.sortBy( _.tTestPValue.getOrElse(1.0) )
     
-    assertEquals( 286, ratiosSortedByTPValue.count( _.tTestPValue.getOrElse(1.) <= 0.01 ) )
-    assertEquals( 204, ratiosSortedByTPValue.count( _.zTestPValue.getOrElse(1.) <= 0.01 ) )
+    assertEquals( 286, ratiosSortedByTPValue.count( _.tTestPValue.getOrElse(1.0) <= 0.01 ) )
+    assertEquals( 204, ratiosSortedByTPValue.count( _.zTestPValue.getOrElse(1.0) <= 0.01 ) )
     assertEquals( 35, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.OverAbundant ) )
     assertEquals( 42, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.UnderAbundant ) )
     
