@@ -116,12 +116,7 @@ class SQLRsStorer(
     val msiDb = context.getMSIDbConnectionContext
 
     val rsPeptides = resultSet.peptides.filter(_.id < 0)
-    val uniquePeptideSequences = rsPeptides.map(pep => { 
-      if (pep.ptmString != null)
-    	pep.sequence + "%" + pep.ptmString
-      else
-    	pep.sequence + "%"
-    })
+    val uniquePeptideSequences = rsPeptides.map(pep => {  	pep.sequence   }) distinct
     	 
     /* val rsProteins = resultSet.getProteins.getOrElse( new Array[Protein](0) )
     if( rsProteins.find( _.id < 0 ).isDefined )
