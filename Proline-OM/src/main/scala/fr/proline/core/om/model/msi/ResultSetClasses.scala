@@ -278,39 +278,27 @@ case class ResultSummary(
   def getAllPeptideMatchesByPeptideSetId(): Map[Long, Array[PeptideMatch]] = {
 
     val peptideMatchMap = this.resultSet.get.peptideMatchById
-//    logger.debug(" test peptideMatch ID 18710 18709 "+peptideMatchMap.get(18710)+" ; " +peptideMatchMap.get(18709)) 
-//
-//    var PM1OK = false
-//    var PM2OK = false
+
     val peptideMatchesByPepSetId = Map.newBuilder[Long, Array[PeptideMatch]]
     for (peptideSet <- this.peptideSets) {
 
-      val pepMatchesByMsQueryId = new HashMap[Long, ArrayBuffer[PeptideMatch]]
+      val pepMatches = new ArrayBuffer[PeptideMatch]
 
       // Iterate over peptide instances of the peptide set
       val peptideInstances = peptideSet.getPeptideInstances
       for (peptideInstance <- peptideInstances; peptideMatchId <- peptideInstance.getPeptideMatchIds) {
-//        PM1OK = peptideMatchId.equals(18710)
-//        PM2OK = peptideMatchId.equals(18709)
         val pepMatch = peptideMatchMap(peptideMatchId)
-        val msqPepMatches = pepMatchesByMsQueryId.getOrElseUpdate(pepMatch.msQueryId, new ArrayBuffer[PeptideMatch])
-        msqPepMatches += pepMatch
+        pepMatches += pepMatch
       }
       
-//      if(PM1OK || PM2OK)
-//    	  logger.debug(" FOUND  peptideMatch ID 18710 18709 in PepSetr "+PM1OK+" ; "+PM2OK+" In pepSet "+peptideSet.id)
-
-      // Take arbitrary the first isobaric peptide if we have multiple ones for a given MS query
-      // FIXME: find an other solution
-      val pepSetPeptideMatches = pepMatchesByMsQueryId.values.map { _(0) }
-      peptideMatchesByPepSetId += peptideSet.id -> pepSetPeptideMatches.toArray
+      peptideMatchesByPepSetId += peptideSet.id -> pepMatches.toArray
 
     }
 
     peptideMatchesByPepSetId.result
 
   }
-
+  
 }
 
 // TODO: change privacy to protected => allows access only to getters/setters
