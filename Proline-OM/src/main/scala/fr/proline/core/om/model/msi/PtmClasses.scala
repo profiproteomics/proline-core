@@ -1,7 +1,5 @@
 package fr.proline.core.om.model.msi
 
-//import com.fasterxml.jackson.annotation.JsonInclude
-//import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.proline.util.misc.InMemoryIdGen
 import fr.proline.util.StringUtils
 
@@ -12,11 +10,10 @@ trait PtmNamesContainer {
   val fullName: String
 }
 
-//@JsonInclude(Include.NON_NULL)
 case class PtmNames(val shortName: String, val fullName: String) extends PtmNamesContainer {
 
   // Requirements
-  require(!StringUtils.isEmpty(shortName))
+  require(!StringUtils.isEmpty(shortName),"shortName is empty")
 
   def sameAs(that: Any) = that match {
     case o : PtmNames => o.shortName==shortName && o.fullName==fullName
@@ -24,8 +21,8 @@ case class PtmNames(val shortName: String, val fullName: String) extends PtmName
   }
 }
 
-//@JsonInclude(Include.NON_NULL)
 case class UnimodEntry(
+    
   // Required fields
   override val shortName: String,
   override val fullName: String,
@@ -38,7 +35,7 @@ case class UnimodEntry(
 ) extends PtmNamesContainer {
 
   // Requirements
-  require(specificities != null)
+  require(specificities != null,"specificities is null")
 
 }
 
@@ -51,20 +48,20 @@ object IonTypes extends Enumeration {
   val PepNeutralLoss = Value("PepNeutralLoss")
 }
 
-//@JsonInclude(Include.NON_NULL)
 case class PtmEvidence(
     
   // Required fields
   val ionType: IonTypes.IonType,
   var composition: String,
   val monoMass: Double,
-  val averageMass: Double, // TODO: set to Float ?
+  val averageMass: Double, // TODO: set to Float !
 
   // Immutable optional fields
   val isRequired: Boolean = false
 ) {
   // Requirements
-  require(ionType != null && composition != null)
+  require(ionType != null, "ionType is null")
+  require(composition != null, "composition is null")
 
   def ionType_(newIonType: IonTypes.IonType) = { newIonType }
 
@@ -108,7 +105,7 @@ case class PtmSpecificity(
 ) extends IPtmSpecificity {
 
   // Requirements
-  require(!StringUtils.isEmpty(location))
+  require(!StringUtils.isEmpty(location), "location is empty")
 
   def sameAs(that: Any) = that match {
     case o : PtmSpecificity => o.location==location && o.residue==residue && o.classification == classification && o.ptmId == ptmId
@@ -137,7 +134,8 @@ case class PtmDefinition(
 ) extends IPtmSpecificity {
 
   // Requirements
-  require(names != null && ptmEvidences != null, "names and PTM evidences must not be null")
+  require(names != null,"names is null")
+  require(ptmEvidences != null, "ptmEvidences is null")
 
   // Lazy values
   lazy val precursorDelta: PtmEvidence = {
@@ -168,18 +166,18 @@ case class PtmDefinition(
   def toReadableString = {
     val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
     val resAsStr = if( residue != '\0' ) residue.toString else ""
-    val locWithRes = Seq( loc, resAsStr ).filter( StringUtils.isNotEmpty(_) ).mkString(" ")    
+    val locWithRes = Seq( loc, resAsStr ).filter( StringUtils.isNotEmpty(_) ).mkString(" ")
+    
     "%s (%s)".format(this.names.shortName,locWithRes)
   }
 }
 
-//@JsonInclude(Include.NON_NULL)
 case class LocatedPtm(
   // Required fields
   val definition: PtmDefinition,
   val seqPosition: Int,
   val monoMass: Double,    // TODO: retrieve from PtmDefinition ???
-  val averageMass: Double, // TODO: retrieve from PtmDefinition ???
+  val averageMass: Double, // TODO: retrieve from PtmDefinition ??? TODO: set to Float !
   val composition: String, // TODO: retrieve from PtmDefinition ???
 
   // Immutable optional fields
@@ -188,9 +186,14 @@ case class LocatedPtm(
 ) {
 
   // Requirements
-  require(definition != null && seqPosition >= -1 && monoMass > 0 && averageMass > 0 && !StringUtils.isEmpty(composition))
-  if (isNTerm) require(seqPosition == 0)
-  if (isCTerm) require(seqPosition == -1)
+  require(definition != null, "definition is null")
+  require(seqPosition >= -1 , "invalid seqPosition, it must be an integer >= -1")
+  require(monoMass > 0 , "invalid monoMass, it must be a strictly positive number")
+  require(averageMass > 0 , "invalid averageMass, it must be a strictly positive number")
+  require(StringUtils.isEmpty(composition), "composition is empty")
+  
+  if (isNTerm) require(seqPosition == 0, "invalid seqPosition for a N-term PTM (it must be 0)")
+  if (isCTerm) require(seqPosition == -1, "invalid seqPosition for a C-term PTM (it must be -1)")
 
 }
 
