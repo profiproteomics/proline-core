@@ -22,7 +22,7 @@ case class PtmNames(val shortName: String, val fullName: String) extends PtmName
 }
 
 case class UnimodEntry(
-    
+
   // Required fields
   override val shortName: String,
   override val fullName: String,
@@ -31,7 +31,7 @@ case class UnimodEntry(
   // Immutable optional fields
   val unimodId: Long = 0,
   val ptmEvidences: Array[PtmEvidence] = null
-  
+
 ) extends PtmNamesContainer {
 
   // Requirements
@@ -49,7 +49,7 @@ object IonTypes extends Enumeration {
 }
 
 case class PtmEvidence(
-    
+
   // Required fields
   val ionType: IonTypes.IonType,
   var composition: String,
@@ -69,7 +69,7 @@ case class PtmEvidence(
     case o : PtmEvidence => o.ionType==ionType && o.composition==composition && o.monoMass == monoMass && o.averageMass == averageMass && o.isRequired == isRequired
     case _ => false
   }
-  
+
 }
 
 object PtmLocation extends Enumeration {
@@ -87,13 +87,13 @@ trait IPtmSpecificity {
   def id: Long
   val location: String
   val residue: Char
-  val classification: String  
+  val classification: String
   val ptmId: Long
 }
 
 //@JsonInclude(Include.NON_NULL)
 case class PtmSpecificity(
-    
+
   // Required fields
   val location: String,
 
@@ -111,14 +111,14 @@ case class PtmSpecificity(
     case o : PtmSpecificity => o.location==location && o.residue==residue && o.classification == classification && o.ptmId == ptmId
     case _ => false
   }
-  
+
 }
 
 object PtmDefinition extends InMemoryIdGen
 
 //@JsonInclude(Include.NON_NULL)
 case class PtmDefinition(
-  
+
   // Required fields
   var id: Long,
   val location: String,
@@ -130,7 +130,7 @@ case class PtmDefinition(
   val classification: String = null,
   val ptmId: Long = 0,
   val unimodId: Int = 0
-  
+
 ) extends IPtmSpecificity {
 
   // Requirements
@@ -141,25 +141,25 @@ case class PtmDefinition(
   lazy val precursorDelta: PtmEvidence = {
     ptmEvidences.find( _.ionType == IonTypes.Precursor ).get
   }
-  
+
   @transient lazy val neutralLosses = ptmEvidences.find( _.ionType == IonTypes.NeutralLoss )
   @transient lazy val pepNeutralLosses = ptmEvidences.find( ev => ev.ionType == IonTypes.PepNeutralLoss )
   @transient lazy val artefacts = ptmEvidences.find( ev => ev.ionType == IonTypes.Artefact )
-  
+
   def isCompositionDefined = !StringUtils.isEmpty(precursorDelta.composition)
-  
+
   def sameAs(that: Any) = that match {
-    case o : PtmDefinition => { 
+    case o : PtmDefinition => {
       var sameEvidences = ptmEvidences.length == o.ptmEvidences.length
       for (e <- ptmEvidences) {
         sameEvidences = sameEvidences && o.ptmEvidences.exists(_.sameAs(e))
       }
-      (sameEvidences && o.location==location && o.names.sameAs(names) && 
+      (sameEvidences && o.location==location && o.names.sameAs(names) &&
          o.residue==residue && o.classification == classification && o.ptmId == ptmId && o.unimodId == unimodId)
     }
     case _ => false
   }
-  
+
   /**
    * Convert the PTM definition into a readable string (using the Mascot convention).
    */
@@ -167,7 +167,7 @@ case class PtmDefinition(
     val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
     val resAsStr = if( residue != '\0' ) residue.toString else ""
     val locWithRes = Seq( loc, resAsStr ).filter( StringUtils.isNotEmpty(_) ).mkString(" ")
-    
+
     "%s (%s)".format(this.names.shortName,locWithRes)
   }
 }
@@ -190,8 +190,8 @@ case class LocatedPtm(
   require(seqPosition >= -1 , "invalid seqPosition, it must be an integer >= -1")
   require(monoMass > 0 , "invalid monoMass, it must be a strictly positive number")
   require(averageMass > 0 , "invalid averageMass, it must be a strictly positive number")
-  require(StringUtils.isEmpty(composition), "composition is empty")
-  
+  require(!StringUtils.isEmpty(composition), "composition is empty")
+
   if (isNTerm) require(seqPosition == 0, "invalid seqPosition for a N-term PTM (it must be 0)")
   if (isCTerm) require(seqPosition == -1, "invalid seqPosition for a C-term PTM (it must be -1)")
 
