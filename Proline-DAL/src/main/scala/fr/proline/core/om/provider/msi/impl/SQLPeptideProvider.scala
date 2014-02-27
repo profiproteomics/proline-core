@@ -28,8 +28,12 @@ object SQLPeptideProvider extends Logging {
   val INITIAL_CAPACITY = 16 // Default Java Map  initial capacity and load factor
   val LOAD_FACTOR = 0.75f
 
-  val INITIAL_CACHE_SIZE = 100000
-  val MAXIMUM_CACHE_SIZE = 1000000
+  /* Max distinct Peptides per ResultSet estimated : 137 145 */
+  val INITIAL_CACHE_SIZE = 200000
+  val CACHE_SIZE_INCREMENT = 100000
+  /* Max distinct Peptides per MSI / Project estimated : 3 129 096 */
+  val MAXIMUM_CACHE_SIZE = 4000000
+
   val CACHE_SIZE = calculateCacheSize()
 
   /* Use a Java LinkedHashMap configured as LRU cache (with access-order) ; @GuardedBy("itself") */
@@ -45,12 +49,16 @@ object SQLPeptideProvider extends Logging {
     val maxMemory = Runtime.getRuntime.maxMemory
 
     val cacheSize = if (maxMemory > (4 * GIGA)) {
-      /* Big cacheSize = 100000 + (100000 for each GiB over 4 GiB) */
+      /* Big cacheSize = 200000 + (100000 for each GiB over 4 GiB) */
       val extendedMemory = maxMemory - 4 * GIGA
 
-      val nBlock = extendedMemory + (GIGA - 1) / GIGA // rounding up
+      val nBlocks = (extendedMemory + GIGA - 1) / GIGA // rounding up
 
-      (INITIAL_CACHE_SIZE * (nBlock + 1)).asInstanceOf[Int].min(MAXIMUM_CACHE_SIZE)
+      val bigCacheSize = (INITIAL_CACHE_SIZE + nBlocks * CACHE_SIZE_INCREMENT).asInstanceOf[Int]
+
+      logger.trace("MaxMemory: " + maxMemory + "  NBlocks over 4 Gib : " + nBlocks + "  bigCacheSize: " + bigCacheSize)
+
+      bigCacheSize.min(MAXIMUM_CACHE_SIZE)
     } else {
       INITIAL_CACHE_SIZE
     }
@@ -295,14 +303,14 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
     }
 
     /* Trace if _peptideCache is full */
-    var cacheSize: Int = -1
+    var currentCacheSize: Int = -1
 
     _peptideCache.synchronized {
-      cacheSize = _peptideCache.size
+      currentCacheSize = _peptideCache.size
     } // End of synchronized block on _peptideCache
 
-    if (cacheSize >= CACHE_SIZE) {
-      logger.info("SQLPeptideProvider._peptideCache is full : " + cacheSize)
+    if (currentCacheSize >= CACHE_SIZE) {
+      logger.info("SQLPeptideProvider._peptideCache is full : " + currentCacheSize)
     }
 
     peptides.toArray
