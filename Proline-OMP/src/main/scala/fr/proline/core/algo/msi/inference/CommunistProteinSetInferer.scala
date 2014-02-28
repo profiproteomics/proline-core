@@ -187,7 +187,8 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
       if( ! isSubset || ! cluster.oversetId.isDefined) {
         val proteinSetId = ProteinSet.generateNewId()
         peptideSet = buildPeptideSet( proteinSetId )
-        val pmIds =  peptideSet.proteinMatchIds ++ cluster.subsetsKeys
+        val sameSetPmIds =  peptideSet.proteinMatchIds
+
         val proteinSet = new ProteinSet(
                                   id = proteinSetId,
                                   isDecoy = resultSet.isDecoy,
@@ -195,7 +196,8 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
                                   hasPeptideSubset = peptideSet.hasSubset,
                                   typicalProteinMatchId = peptideSet.proteinMatchIds(0),
                                   typicalProteinMatch = Some(resultSet.proteinMatchById( peptideSet.proteinMatchIds(0))),
-                                  proteinMatchIds = pmIds,                                  
+                                  samesetProteinMatchIds = sameSetPmIds,
+                                  subsetProteinMatchIds = cluster.subsetsKeys.toArray,
                                   resultSummaryId = resultSummaryId
                                 )
         
