@@ -399,14 +399,14 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
         var typicalProtMatchId = masterProteinSet.getTypicalProteinMatchId
         
         if (typicalProtMatchId <= 0) {
-          val typicalProtMatchTmpId = masterProteinSet.proteinMatchIds.reduce { (a, b) =>
+          val typicalProtMatchTmpId = masterProteinSet.samesetProteinMatchIds.reduce { (a, b) =>
             if (masterProtMatchByTmpId(a).coverage > masterProtMatchByTmpId(b).coverage) a else b
           }          
           typicalProtMatchId = masterProtMatchIdByTmpId(typicalProtMatchTmpId)
         }
         
         // Update master protein set protein match ids        
-        masterProteinSet.proteinMatchIds = masterProteinSet.peptideSet.proteinMatchIds
+        masterProteinSet.samesetProteinMatchIds = masterProteinSet.peptideSet.proteinMatchIds
 
         // Store master protein set
         val msiMasterProteinSet = new MsiProteinSet()

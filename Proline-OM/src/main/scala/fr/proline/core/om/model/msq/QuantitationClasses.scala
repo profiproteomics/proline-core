@@ -308,6 +308,10 @@ case class QuantProteinSet (
   var abundance: Float,
   val peptideMatchesCount: Int,
   val quantChannelId: Long,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
+  val proteinSetId: Option[Long] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
+  val proteinMatchId: Option[Long] = None,
   var selectionLevel: Int
  ) extends QuantComponent
 
