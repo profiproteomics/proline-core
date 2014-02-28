@@ -46,7 +46,6 @@ import fr.proline.core.orm.msi.{
   SequenceMatch => MsiSequenceMatch
 }
 
-
 /**
  * @author VDS
  * Merge SpectralCountQuantifier and WeightedSCCalculator
@@ -55,27 +54,25 @@ import fr.proline.core.orm.msi.{
 class WeightedSpectralCountQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
-  val scConfig: SpectralCountConfig
-) extends AbstractMasterQuantChannelQuantifier with Logging {
+  val scConfig: SpectralCountConfig) extends AbstractMasterQuantChannelQuantifier with Logging {
 
-	protected val msiMasterPepInstByMergedPepInstId = new HashMap[Long, MsiPeptideInstance]
-   protected val msiMasterProtSetByMergedProtSetId = new HashMap[Long, MsiProteinSet]
+  protected val msiMasterPepInstByMergedPepInstId = new HashMap[Long, MsiPeptideInstance]
+  protected val msiMasterProtSetByMergedProtSetId = new HashMap[Long, MsiProteinSet]
 
   /**
    *  Spectral Count Result
    *  {RSM ID -> { ProteinMatchAccession -> (Basic SC; Specific SC, Weighted SC)} }
    */
 
-  
-  private var _resultAsJSON : String = null
-   def getResultAsJSON() =  {_resultAsJSON}
-  
+  private var _resultAsJSON: String = null
+  def getResultAsJSON() = { _resultAsJSON }
+
   //  private var _wscByProtMatchAccessionByRSM : scala.collection.mutable.Map[Long, Map[String, SpectralCountsStruct]] = scala.collection.mutable.Map.empty[Long, Map[String, SpectralCountsStruct]]
 
   def quantifyMasterChannel(): Unit = {
 
     logger.info("Starting spectral count quantifier")
-    
+
     // Begin new ORM transaction
     msiDbCtx.beginTransaction()
     udsDbCtx.beginTransaction()
@@ -90,18 +87,17 @@ class WeightedSpectralCountQuantifier(
 
     // Update quant result summary id of the master quant channel
     udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
-    
+
     udsEm.persist(udsMasterQuantChannel)
     udsEm.flush()
-    
-    
+
     // Store master quant result summary
     this.cloneAndStoreMasterQuantRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
 
     // -- Create ProteinPepsWeightStruct from reference RSM
     val proteinSetWeightStructsById = createProteinPepsWeightStructs(true)
 
-    logger.debug("Found : " +proteinSetWeightStructsById.size+" Prot to calculate SC for ")
+    logger.debug("Found : " + proteinSetWeightStructsById.size + " Prot to calculate SC for ")
     // Compute master quant peptides
     // !! Warning : Returned values are linked to Identification RSM (OM Objects) and not to Quantitation RSM (ORM Objects)
     val (mqPeptides, mqProtSets) = computeMasterQuantValues(
@@ -110,35 +106,35 @@ class WeightedSpectralCountQuantifier(
       this.identResultSummaries,
       proteinSetWeightStructsById
     )
-   
-    this.logger.info("storing "+mqPeptides.size+" master peptide quant data...")
+
+    this.logger.info("storing " + mqPeptides.size + " master peptide quant data...")
 
     // Iterate over master quant peptides to store corresponding spectral counts
-    for (mqPeptide <- mqPeptides) {    
+    for (mqPeptide <- mqPeptides) {
       this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(msiMasterPepInstByMergedPepInstId(mqPeptide.peptideInstance.get.id)))
     }
 
-    this.logger.info("storing "+mqProtSets.size+" master proteins set quant data...")
+    this.logger.info("storing " + mqProtSets.size + " master proteins set quant data...")
 
     // Iterate over master quant protein sets to store corresponding spectral counts
-    for (mqProtSet <- mqProtSets) {      
-      
-      val msiProtSet = msiMasterProtSetByMergedProtSetId.getOrElse(mqProtSet.proteinSet.id,null)
-      if(msiProtSet!=null)
-    	  this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetByMergedProtSetId(mqProtSet.proteinSet.id), msiQuantRSM)
-      else 
-        logger.warn(" !! No Master Quant data found for protein set id "+mqProtSet.proteinSet.id+" !! ")
+    for (mqProtSet <- mqProtSets) {
+
+      val msiProtSet = msiMasterProtSetByMergedProtSetId.getOrElse(mqProtSet.proteinSet.id, null)
+      if (msiProtSet != null)
+        this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetByMergedProtSetId(mqProtSet.proteinSet.id), msiQuantRSM)
+      else
+        logger.warn(" !! No Master Quant data found for protein set id " + mqProtSet.proteinSet.id + " !! ")
     }
 
-    _resultAsJSON = createJSonOutputResult(msiQuantRSM, mqProtSets,proteinSetWeightStructsById)
-    
+    _resultAsJSON = createJSonOutputResult(msiQuantRSM, mqProtSets, proteinSetWeightStructsById)
+
     // Commit ORM transaction
     msiDbCtx.commitTransaction()
     udsDbCtx.commitTransaction()
 
   }
-  
- override protected def storeMasterQuantPeptide(
+
+  override protected def storeMasterQuantPeptide(
     mqPep: MasterQuantPeptide,
     msiRSM: MsiResultSummary,
     msiMasterPepInstAsOpt: Option[MsiPeptideInstance]) = {
@@ -154,16 +150,16 @@ class WeightedSpectralCountQuantifier(
     msiMQC.setObjectTreeId(msiMQCObjectTree.getId)
     msiMQC.setSchemaName(msiMQCObjectTree.getSchema.getName)
     msiMQC.setResultSummary(msiRSM)
-    
+
     this.msiEm.persist(msiMQC)
-    
+
     // Update master quant peptide id
     mqPep.id = msiMQC.getId
 
     // Link master peptide instance to the corresponding master quant component
     msiMasterPepInst.setMasterQuantComponentId(msiMQC.getId)
     this.msiEm.persist(msiMasterPepInst)
-    	
+
     for (mqPepIon <- mqPep.masterQuantPeptideIons) {
       this.storeMasterQuantPeptideIon(mqPepIon, mqPep, msiMasterPepInst, msiRSM)
     }
@@ -203,62 +199,66 @@ class WeightedSpectralCountQuantifier(
     msiMQPepIon.setPeptideId(msiMasterPepInst.getPeptideId())
 
     if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))
-    
+
     if (mqPepIon.lcmsMasterFeatureId.isDefined) msiMQPepIon.setLcmsMasterFeatureId(mqPepIon.lcmsMasterFeatureId.get)
     if (mqPepIon.bestPeptideMatchId.isDefined) msiMQPepIon.setBestPeptideMatchId(mqPepIon.bestPeptideMatchId.get)
     if (mqPepIon.unmodifiedPeptideIonId.isDefined) msiMQPepIon.setUnmodifiedPeptideIonId(mqPepIon.unmodifiedPeptideIonId.get)
 
     this.msiEm.persist(msiMQPepIon)
-    
+
     // Update master quant peptide ion id
     mqPepIon.id = msiMQPepIon.getId
   }
-  
-  private def createJSonOutputResult( msiQuantRSM : MsiResultSummary, mqProtSetsVal : Array[MasterQuantProteinSet], proteinSetWeightStructsById:Map[Long, ProteinSetPeptidesDescription] ):String = {
-    
-     val jsonBuilder : StringBuilder = new StringBuilder(" \"{")
-     jsonBuilder.append(SpectralCountsJSONProperties.rootPropName).append(":{[")
-     
-     val rsmIdByQChIdbuilder = Map.newBuilder[Long,Long]  
-     
-     val qChannels = udsMasterQuantChannel.getQuantitationChannels()
-     
-     var firstQChOcc = true
-     qChannels.foreach(nextQCh => {
-    	 val rsmId = nextQCh.getIdentResultSummaryId()
-		 if(!firstQChOcc){  jsonBuilder.append(",") } else { firstQChOcc = false }
-    	 jsonBuilder.append("{").append(SpectralCountsJSONProperties.rsmIDPropName).append(":").append(rsmId).append(",") //save current RSM Id
-    	 
-    	 // -- Save prots SC for current RSM          	
-    	 var firstPACOcc = true
-    	 jsonBuilder.append(SpectralCountsJSONProperties.protSCsListPropName).append(":[")   
 
-    	 mqProtSetsVal.foreach(mqps=>{
-    	  //Go through All ProteinSets and extract only data for current QuantChanel    		 
-    		 val protAC = proteinSetWeightStructsById.get(mqps.proteinSet.id).get.typicalPMAcc    		 
-			 val protQuant = mqps.quantProteinSetMap.get(nextQCh.getId())
+  private def createJSonOutputResult(msiQuantRSM: MsiResultSummary, mqProtSetsVal: Array[MasterQuantProteinSet], proteinSetWeightStructsById: Map[Long, ProteinSetPeptidesDescription]): String = {
 
-			 if(protQuant.isDefined){
-				 if(!firstPACOcc){  jsonBuilder.append(",") } else { firstPACOcc = false }
-    					 
-				 jsonBuilder.append("{").append(SpectralCountsJSONProperties.protACPropName).append("=").append(protAC).append(",")
-				 jsonBuilder.append(SpectralCountsJSONProperties.bscPropName).append("=").append(protQuant.get.peptideMatchesCount).append(",")
-				 jsonBuilder.append(SpectralCountsJSONProperties.sscPropName).append("=").append(protQuant.get.rawAbundance).append(",")
-				 jsonBuilder.append(SpectralCountsJSONProperties.wscPropName).append("=").append(protQuant.get.abundance).append("}")
-			 }
-    	 })
-    	 
-    	 jsonBuilder.append("]") //End protAC list for current RSM
-    	 jsonBuilder.append("}") //End current RSM properties
-     })
-     
-     
-       
-     jsonBuilder.append("]}}\"") //End SpectralCountResult array properties
-     jsonBuilder.result    
-        
+    val jsonBuilder: StringBuilder = new StringBuilder(" \"{")
+    jsonBuilder.append(SpectralCountsJSONProperties.rootPropName).append(":{[")
+
+    val rsmIdByQChIdbuilder = Map.newBuilder[Long, Long]
+
+    val qChannels = udsMasterQuantChannel.getQuantitationChannels()
+
+    var firstQChOcc = true
+    qChannels.foreach(nextQCh => {
+      val rsmId = nextQCh.getIdentResultSummaryId()
+      if (!firstQChOcc) { jsonBuilder.append(",") } else { firstQChOcc = false }
+      jsonBuilder.append("{").append(SpectralCountsJSONProperties.rsmIDPropName).append(":").append(rsmId).append(",") //save current RSM Id
+
+      // -- Save prots SC for current RSM          	
+      var firstPACOcc = true
+      jsonBuilder.append(SpectralCountsJSONProperties.protSCsListPropName).append(":[")
+
+      mqProtSetsVal.foreach(mqps => {
+        //Go through All ProteinSets and extract only data for current QuantChanel    		 
+        val protAC = proteinSetWeightStructsById.get(mqps.proteinSet.id).get.typicalPMAcc
+        val protQuant = mqps.quantProteinSetMap.get(nextQCh.getId())
+
+        if (protQuant.isDefined) {
+          if (!firstPACOcc) { jsonBuilder.append(",") } else { firstPACOcc = false }
+          if (protQuant.get.proteinSetId.isDefined) {
+            val currentIdRSM = this.identResultSummaries.filter(_.id.equals(rsmId))(0)
+            val protSet = currentIdRSM.proteinSetById.get(protQuant.get.proteinSetId.get)
+            
+          }
+          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protACPropName).append("=").append(protAC).append(",")
+          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protMatchId).append("=").append(protQuant.get.proteinMatchId).append(",")
+          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protSetId).append("=").append(protQuant.get.proteinSetId).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.bscPropName).append("=").append(protQuant.get.peptideMatchesCount).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.sscPropName).append("=").append(protQuant.get.rawAbundance).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.wscPropName).append("=").append(protQuant.get.abundance).append("}")
+        }
+      })
+
+      jsonBuilder.append("]") //End protAC list for current RSM
+      jsonBuilder.append("}") //End current RSM properties
+    })
+
+    jsonBuilder.append("]}}\"") //End SpectralCountResult array properties
+    jsonBuilder.result
+
   }
-  
+
   private def createProteinPepsWeightStructs(referenceForPeptides: Boolean): Map[Long, ProteinSetPeptidesDescription] = {
 
     //ProteinPepsWeightStruct for each RSM ProteinSet referenced by ProteinSet id  
@@ -393,25 +393,26 @@ class WeightedSpectralCountQuantifier(
 
   /**
    * Compute BSC and SSC for each peptide instance of each resultsummary and store information in
-   * QuantPeptideIon and MasterQuantPeptide
+   * QuantPeptide and MasterQuantPeptide
    * Compute WSC for each ref RSM typical protein in each rsm and store information in
    * QuantProteinSet and MasterQuantProteinSet
    *
    * @param mergedRSM : RSM de départ et pas celui de quanti ? TODO
    */
   def computeMasterQuantValues(udsMasterQuantChannel: MasterQuantitationChannel,
-                                 mergedRSM: ResultSummary,
-                                 resultSummaries: Seq[ResultSummary],
-                                 protSetWeightStructsByProtSetId: Map[Long, ProteinSetPeptidesDescription]): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
+                               mergedRSM: ResultSummary,
+                               resultSummaries: Seq[ResultSummary],
+                               protSetWeightStructsByProtSetId: Map[Long, ProteinSetPeptidesDescription]): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
 
-    val rsIdByRsmId = resultSummaries.map(rsm => { rsm.id -> rsm.getResultSetId  }).toMap
+    val rsIdByRsmId = resultSummaries.map(rsm => { rsm.id -> rsm.getResultSetId }).toMap
 
     // Map quant channel id by result set id    
     val qcIdByRsId = udsMasterQuantChannel.getQuantitationChannels().map {
-      qc => {
-        rsIdByRsmId(qc.getIdentResultSummaryId()) -> qc.getId
-        
-      }
+      qc =>
+        {
+          rsIdByRsmId(qc.getIdentResultSummaryId()) -> qc.getId
+
+        }
     } toMap
     val refPepInstanceByPepId = mergedRSM.peptideInstances.map(pi => pi.peptideId -> pi).toMap
 
@@ -428,36 +429,42 @@ class WeightedSpectralCountQuantifier(
 
       val qcId = qcIdByRsId(rsm.getResultSetId)
 
-       val quantPepByPepID: scala.collection.mutable.Map[Long, QuantPeptide] = scala.collection.mutable.Map[Long, QuantPeptide]()
-
+      val quantPepByPepID: scala.collection.mutable.Map[Long, QuantPeptide] = scala.collection.mutable.Map[Long, QuantPeptide]()
 
       //--- Update RSM SpectralCount if necessary
       // TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information ! Should be wrong see issue #7984
       if (rsm.peptideInstances(0).totalLeavesMatchCount < 0) {
         PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm, executionContext)
-        rsm.peptideInstances.foreach(pepI =>{
-        	val ormPepInst  = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
-        	ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
+        rsm.peptideInstances.foreach(pepI => {
+          val ormPepInst = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
+          ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
         })
 
       }
 
       //--- Get RSM Peptide Match/Protein Match information 	     
       // map   list of ProtMatch accession by PeptideSet
-      val protMatchesAccListByPepSet: Map[PeptideSet, Seq[String]] = createProtMatchesAccByPeptideSet(rsm)
+      val protMatchesAccListByPepSet: Map[PeptideSet, Seq[Pair[Long, String]]] = createProtMatchesAccByPeptideSet(rsm)
 
       //--- Calculate SCs for each Ref RSM ProtSet
       protSetWeightStructsByProtSetId.foreach(entry => {
 
-	    val currentProteinSetWeightStruct = entry._2
+        val currentProteinSetWeightStruct = entry._2
 
         //Get PeptideSet containing protein in current RSM if exist
         var peptideSetForPM: PeptideSet = null
-        val pepSetIt = protMatchesAccListByPepSet.iterator
-        while (pepSetIt.hasNext && peptideSetForPM == null) {
-          val nextEntry: (PeptideSet, Seq[String]) = pepSetIt.next
-          if (nextEntry._2.contains(currentProteinSetWeightStruct.typicalPMAcc))
-            peptideSetForPM = nextEntry._1
+        var foundPMIDandAcc: Pair[Long, String] = null
+
+        val pepSetByPMIt = protMatchesAccListByPepSet.iterator
+        while (pepSetByPMIt.hasNext && peptideSetForPM == null) {
+          val nextEntry: (PeptideSet, Seq[Pair[Long, String]]) = pepSetByPMIt.next
+          nextEntry._2.foreach(pmIdAndAcc => {
+            if (pmIdAndAcc._2.equals(currentProteinSetWeightStruct.typicalPMAcc)) {
+              peptideSetForPM = nextEntry._1
+              foundPMIDandAcc = pmIdAndAcc
+            }
+
+          })
         }
 
         // ProteinMatch Spectral Count
@@ -465,7 +472,7 @@ class WeightedSpectralCountQuantifier(
         var protSSC: Float = 0.0f
         var protBSC: Int = 0
 
-        if (peptideSetForPM != null) { //  Ref RSM current typical found
+        if (peptideSetForPM != null) { //  Current Typical from Ref RSM found in current RSM
 
           //Go through peptides instances,  compute SC and create QuantPeptide
           peptideSetForPM.getPeptideInstances.foreach(pepInst => {
@@ -489,7 +496,7 @@ class WeightedSpectralCountQuantifier(
               )
               //Update rsm specific map
               quantPepByPepID.put(pepInst.peptideId, qp)
-              
+
               //Update complete Map to be used for MasterQuantPeptide creation
               forMasterQPepByPepId.getOrElseUpdate(pepInst.peptideId, new HashMap[Long, QuantPeptide]()).put(qcId, qp)
 
@@ -506,6 +513,8 @@ class WeightedSpectralCountQuantifier(
             rawAbundance = protSSC,
             abundance = protWSC,
             peptideMatchesCount = protBSC,
+            proteinSetId = Some(peptideSetForPM.getProteinSetId),
+            proteinMatchId = Some(foundPMIDandAcc._1),
             quantChannelId = qcId,
             selectionLevel = 2
           )
@@ -515,7 +524,7 @@ class WeightedSpectralCountQuantifier(
 
         } //End Protein identified in current RSM
         else {
-          logger.debug("Protein "+currentProteinSetWeightStruct.typicalPMAcc+" Not identified in RSM id="+rsm.id)
+          logger.debug("Protein " + currentProteinSetWeightStruct.typicalPMAcc + " Not identified in RSM id=" + rsm.id)
         }
 
       }) // End go through  proteinSetWeightStructsById
@@ -542,31 +551,30 @@ class WeightedSpectralCountQuantifier(
       )
     })
 
-    return (mqPeptides.toArray,mqProtSets.toArray)
+    return (mqPeptides.toArray, mqProtSets.toArray)
   }
 
-  private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[String]] = {
+  private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[Pair[Long, String]]] = {
     val rs = rsm.resultSet.get
     val protMById = rs.proteinMatchById
-    val result = scala.collection.mutable.Map[PeptideSet, Seq[String]]()
+    val result = scala.collection.mutable.Map[PeptideSet, Seq[Pair[Long, String]]]()
 
     rsm.peptideSets.foreach(pepSet => {
-      val seqBuilder = Seq.newBuilder[String]
+      val seqBuilder = Seq.newBuilder[Pair[Long, String]]
       pepSet.proteinMatchIds.foreach(pmId => {
-    	val acc=protMById(pmId).accession
-        seqBuilder += acc
+        val acc = protMById(pmId).accession
+        seqBuilder += new Pair(pmId, acc)
       })
       result.put(pepSet, seqBuilder.result)
     })
 
     result.toMap
   }
-  
-   
+
   // Clone Identification merged RSM and store this new Quantitation RSM 
   protected def cloneAndStoreMasterQuantRSM(mergedRSM: ResultSummary,
-		  msiQuantRSM: MsiResultSummary,
-		  msiQuantRS: MsiResultSet) {
+                                            msiQuantRSM: MsiResultSummary,
+                                            msiQuantRS: MsiResultSet) {
 
     // Retrieve result summary and result set ids
     val quantRsmId = msiQuantRSM.getId
@@ -575,7 +583,7 @@ class WeightedSpectralCountQuantifier(
     // Retrieve peptide instances of the merged result summary
     val mergedPepInstances = mergedRSM.peptideInstances
     val mergedPepMatchById = mergedRSM.resultSet.get.peptideMatchById
-    
+
     // TODO: load scoring from MSIdb
     val msiScoring = new MsiScoring()
     msiScoring.setId(4)
@@ -622,17 +630,16 @@ class WeightedSpectralCountQuantifier(
       msiMasterPepMatch.setMsQuery(msiMSQFake)
 
       msiMasterPepMatch.setResultSet(msiQuantRS)
-      mergedPepMatch.properties.map( props => msiMasterPepMatch.setSerializedProperties(ProfiJson.serialize(props)) )
+      mergedPepMatch.properties.map(props => msiMasterPepMatch.setSerializedProperties(ProfiJson.serialize(props)))
 
       // Save master peptide match
       msiEm.persist(msiMasterPepMatch)
 
       val msiMasterPepMatchId = msiMasterPepMatch.getId
-      
+
       // Map master peptide match id by in memory merged peptide match id
       masterQuantPepMatchIdByMergedPepMatchId(mergedPepMatch.id) = msiMasterPepMatchId
 
-      
       val msiMasterPepInstance = new MsiPeptideInstance()
       msiMasterPepInstance.setPeptideMatchCount(mergedPepInstPepMatchIds.length) // TODO: check that
       msiMasterPepInstance.setProteinMatchCount(mergedPepInstance.proteinMatchesCount)
@@ -650,8 +657,7 @@ class WeightedSpectralCountQuantifier(
       // Map the peptide instance by the peptide id
       masterPepInstByPepId(peptideId) = mergedPepInstance
       msiMasterPepInstByMergedPepInstId(mergedPepInstance.id) = msiMasterPepInstance
-      
-      
+
       // Link the best master peptide match to the quant peptide instance
       val msiPepInstMatchPK = new MsiPepInstPepMatchMapPK()
       msiPepInstMatchPK.setPeptideInstanceId(msiMasterPepInstanceId)
@@ -660,7 +666,7 @@ class WeightedSpectralCountQuantifier(
       val msiPepInstMatch = new MsiPepInstPepMatchMap()
       msiPepInstMatch.setId(msiPepInstMatchPK)
       msiPepInstMatch.setPeptideInstance(msiMasterPepInstance)
-      msiPepInstMatch.setPeptideMatch(msiMasterPepMatch)      
+      msiPepInstMatch.setPeptideMatch(msiMasterPepMatch)
       msiPepInstMatch.setResultSummary(msiQuantRSM)
 
       //msiMasterPepInstance.setPeptidesMatches(Set(msiMasterPepMatch))
@@ -669,36 +675,36 @@ class WeightedSpectralCountQuantifier(
       // Map this quant peptide match to identified child peptide matches
       //FIXME No children specified Yet !? 
       // VDS TODO ? IF IDF hierarcghy <> from Quanti ??
-      if(mergedPepMatch.getChildrenIds !=null){
-	      for (childPepMatchId <- mergedPepMatch.getChildrenIds) {
-	
-	        val msiPepMatchRelation = new MsiPeptideMatchRelation()
-	        msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
-	        
-	        val childPM: fr.proline.core.orm.msi.PeptideMatch =  msiEm.find(classOf[fr.proline.core.orm.msi.PeptideMatch], childPepMatchId)
-	        msiPepMatchRelation.setChildPeptideMatch(childPM)
-	        
-	        // FIXME: rename to setParentResultSet
-	        msiPepMatchRelation.setParentResultSetId(msiQuantRS)
-	      }
+      if (mergedPepMatch.getChildrenIds != null) {
+        for (childPepMatchId <- mergedPepMatch.getChildrenIds) {
+
+          val msiPepMatchRelation = new MsiPeptideMatchRelation()
+          msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
+
+          val childPM: fr.proline.core.orm.msi.PeptideMatch = msiEm.find(classOf[fr.proline.core.orm.msi.PeptideMatch], childPepMatchId)
+          msiPepMatchRelation.setChildPeptideMatch(childPM)
+
+          // FIXME: rename to setParentResultSet
+          msiPepMatchRelation.setParentResultSetId(msiQuantRS)
+        }
       }
     }
 
     // Retrieve some vars
     val mergedPeptideSets = mergedRSM.peptideSets
-//    this.logger.info("number of grouped peptide sets: " + mergedPeptideSets.length)
+    //    this.logger.info("number of grouped peptide sets: " + mergedPeptideSets.length)
     val mergedProteinSets = mergedRSM.proteinSets
-//    this.logger.info("number of grouped protein sets: " + mergedProteinSets.length)
+    //    this.logger.info("number of grouped protein sets: " + mergedProteinSets.length)
     val mergedProtSetById = mergedRSM.proteinSetById
     val mergedProtMatchById = mergedRSM.resultSet.get.proteinMatchById
 
     // Iterate over identified peptide sets to create quantified peptide sets
     this.logger.info("storing quantified peptide sets and protein sets...")
     for (mergedPeptideSet <- mergedPeptideSets) {
-      
-      val msiMasterProtMatchIdByMergedId = new HashMap[Long,Long]
-      val mergedProtMatchIdByMasterId = new HashMap[Long,Long]
-      
+
+      val msiMasterProtMatchIdByMergedId = new HashMap[Long, Long]
+      val mergedProtMatchIdByMasterId = new HashMap[Long, Long]
+
       // Store master protein matches
       val msiMasterProtMatches = mergedPeptideSet.proteinMatchIds.map { protMatchId =>
 
@@ -715,32 +721,30 @@ class WeightedSpectralCountQuantifier(
         msiMasterProtMatch.setIsDecoy(mergedProtMatch.isDecoy)
         msiMasterProtMatch.setIsLastBioSequence(mergedProtMatch.isLastBioSequence)
         msiMasterProtMatch.setTaxonId(mergedProtMatch.taxonId)
-        if( mergedProtMatch.getProteinId > 0 ) msiMasterProtMatch.setBioSequenceId(mergedProtMatch.getProteinId)
+        if (mergedProtMatch.getProteinId > 0) msiMasterProtMatch.setBioSequenceId(mergedProtMatch.getProteinId)
         // FIXME: retrieve the right scoring id from OM scoring type 
         msiMasterProtMatch.setScoringId(3)
         msiMasterProtMatch.setResultSet(msiQuantRS)
         msiEm.persist(msiMasterProtMatch)
 
         val msiMasterProtMatchId = msiMasterProtMatch.getId
-        
+
         // Map new protein match id by Merged protein Match id
         msiMasterProtMatchIdByMergedId += mergedProtMatch.id -> msiMasterProtMatchId
         // Map protein match TMP id by the new id
         mergedProtMatchIdByMasterId += msiMasterProtMatchId -> mergedProtMatch.id
 
-
         // TODO: map protein_match to seq_databases
-        
+
         msiMasterProtMatch
       }
-      
-    
+
       // TODO: find what to do with subsets
       if (mergedPeptideSet.isSubset == false) {
 
         val masterProteinSetOpt = mergedProtSetById.get(mergedPeptideSet.getProteinSetId)
         assert(masterProteinSetOpt.isDefined, "missing protein set with id=" + mergedPeptideSet.getProteinSetId)
-        
+
         //////// Check if the protein set has at least a peptide instance with a relevant quantitation
         //val isProteinSetQuantitationRelevant = 0
         //for( tmpPepInstance <- samesetPeptideInstances ) {
@@ -754,14 +758,13 @@ class WeightedSpectralCountQuantifier(
         // Determine the typical protein match id using the sequence coverage
         val mergedProteinSet = masterProteinSetOpt.get
         var typicalProtMatchId = mergedProteinSet.getTypicalProteinMatchId
-        
+
         if (typicalProtMatchId <= 0) {
-          val typicalProtMatchTmpId = mergedProteinSet.proteinMatchIds.reduce { (a, b) =>
+          val typicalProtMatchTmpId = mergedProteinSet.samesetProteinMatchIds.reduce { (a, b) =>
             if (mergedProtMatchById(a).coverage > mergedProtMatchById(b).coverage) a else b
-          }          
+          }
           typicalProtMatchId = msiMasterProtMatchIdByMergedId(typicalProtMatchTmpId)
         }
-        
 
         // Store master protein set
         val msiMasterProteinSet = new MsiProteinSet()
@@ -811,11 +814,11 @@ class WeightedSpectralCountQuantifier(
 
           msiEm.persist(msiPepSetItem)
         }
-        
-        for( msiMasterProtMatch <- msiMasterProtMatches ) {
-          
+
+        for (msiMasterProtMatch <- msiMasterProtMatches) {
+
           val msiMasterProtMatchId = msiMasterProtMatch.getId
-          
+
           // TODO: Map master protein match to master peptide set => ORM has to be fixed
           /*val msiPepSetProtMatchMap = new MsiPepSetProtMatchMap()
           new Pairs::Msi::RDBO::PeptideSetProteinMatchMap(
@@ -824,7 +827,7 @@ class WeightedSpectralCountQuantifier(
                                   result_summary_id = quantRsmId,
                                   db = msiRdb
                                 ).save*/
- 
+
           // Link master protein match to master protein set
           val msiProtSetProtMatchItemPK = new MsiProtSetProtMatchItemPK()
           msiProtSetProtMatchItemPK.setProteinSetId(msiMasterProteinSet.getId)
@@ -837,12 +840,12 @@ class WeightedSpectralCountQuantifier(
           msiProtSetProtMatchItem.setProteinMatch(msiMasterProtMatch)
           msiProtSetProtMatchItem.setResultSummary(msiQuantRSM)
           msiEm.persist(msiProtSetProtMatchItem)
-          
+
           // Link master protein match to master peptide set
           val msiPepSetProtMatchMapPK = new MsiPepSetProtMatchMapPK()
           msiPepSetProtMatchMapPK.setPeptideSetId(msiMasterPeptideSet.getId)
           msiPepSetProtMatchMapPK.setProteinMatchId(msiMasterProtMatchId)
-          
+
           val msiPepSetProtMatchMap = new MsiPepSetProtMatchMap()
           msiPepSetProtMatchMap.setId(msiPepSetProtMatchMapPK)
           msiPepSetProtMatchMap.setPeptideSet(msiMasterPeptideSet)
@@ -851,7 +854,7 @@ class WeightedSpectralCountQuantifier(
           msiEm.persist(msiPepSetProtMatchMap)
 
           // Link master protein match to master peptide matches using master sequence matches
-          val mergedProtMatch = mergedProtMatchById( mergedProtMatchIdByMasterId(msiMasterProtMatchId) )
+          val mergedProtMatch = mergedProtMatchById(mergedProtMatchIdByMasterId(msiMasterProtMatchId))
           val mergedSeqMatches = mergedProtMatch.sequenceMatches
           val mappedMasterPepMatchesIdSet = new HashSet[Long]
 
@@ -887,7 +890,6 @@ class WeightedSpectralCountQuantifier(
     }
 
   }
-
 
 }
 
