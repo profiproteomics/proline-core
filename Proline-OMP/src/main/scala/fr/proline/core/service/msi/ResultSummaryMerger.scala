@@ -384,8 +384,11 @@ class ResultSummaryMerger(
 
       // Update protein match ids referenced in protein sets
       for (proteinSet <- proteinSets) {
-        val newProtMatchIds = proteinSet.proteinMatchIds.map { protMatchByTmpId(_).id }
-        proteinSet.proteinMatchIds = newProtMatchIds
+        val newSameSetProtMatchIds = proteinSet.getSameSetProteinMatchIds.map { protMatchByTmpId(_).id }
+        proteinSet.samesetProteinMatchIds = newSameSetProtMatchIds
+        val newSubSetProtMatchIds = proteinSet.getSubSetProteinMatchIds.map { protMatchByTmpId(_).id }
+        proteinSet.subsetProteinMatchIds = newSubSetProtMatchIds
+        
       }
 
       // Store result summary
