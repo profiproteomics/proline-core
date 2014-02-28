@@ -47,7 +47,7 @@ trait XQuantRsmExporter extends IService {
     
     val tmpProtSetCellsById = new HashMap[Long,ArrayBuffer[Any]]
     for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
-      val protMatch = protMatchById( mqProtSet.proteinSet.proteinMatchIds(0) )
+      val protMatch = protMatchById( mqProtSet.proteinSet.getSameSetProteinMatchIds(0) )
       val protSetCells = new ArrayBuffer[Any]
       protSetCells += protMatch.accession
       protSetCells += protMatch.description
