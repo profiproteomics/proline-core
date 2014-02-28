@@ -6,16 +6,18 @@ import fr.proline.core.orm.msi.SequenceMatch;
 public class DPeptideInstance {
 
 	private long m_id;
+	private long m_peptideId;
 	private int m_validatedProteinSetCount;
 	private Float m_elutionTime;
 	
 	private DPeptideMatch m_bestPeptideMatch;
 	private SequenceMatch m_sequenceMatch;
 	
-	public DPeptideInstance(long id, int validatedProteinSetCount, Float elutionTime) {
+	public DPeptideInstance(long id, long peptideId, int validatedProteinSetCount, Float elutionTime) {
         m_id = id;
         m_validatedProteinSetCount = validatedProteinSetCount;
         m_elutionTime = elutionTime;
+        m_peptideId = peptideId;
         
         m_bestPeptideMatch = null;
         m_sequenceMatch = null;
@@ -25,6 +27,10 @@ public class DPeptideInstance {
         return m_id;
     }
 
+    public long getPeptideId() {
+    	return m_peptideId;
+    }
+    
     public int getValidatedProteinSetCount() {
         return m_validatedProteinSetCount;
     }
