@@ -488,7 +488,7 @@ class ResultSetValidatorF136482Test extends Logging {
     
         //DEBUG ONLY 
         logger.debug("---- Removed Protein Set ------ ")
-        val firstPrtMatch = rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
+        val firstPrtMatch = rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.getSameSetProteinMatchIds(0))(0)
         println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
         protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
           println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
@@ -503,7 +503,7 @@ class ResultSetValidatorF136482Test extends Logging {
       validatedTarProtSet.foreach(protSet => {
         //DEBUG ONLY 
         logger.debug("---- validatedTarProtSet  ------ ")
-        val firstPrtMatch = rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
+        val firstPrtMatch = rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.samesetProteinMatchIds(0))(0)
         println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
         protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
           println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
@@ -515,7 +515,7 @@ class ResultSetValidatorF136482Test extends Logging {
       validatedDecProtSet.foreach(protSet => {
         //DEBUG ONLY 
         logger.debug("---- validatedDecProtSet  ------ ")
-        val firstPrtMatch = rsValidation.validatedDecoyRsm.get.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
+        val firstPrtMatch = rsValidation.validatedDecoyRsm.get.resultSet.get.proteinMatches.filter(_.id == protSet.samesetProteinMatchIds(0))(0)
         println(firstPrtMatch.accession + "\t" + protSet.peptideSet.peptideMatchesCount + "\t" + protSet.isValidated)
         protSet.peptideSet.getPeptideInstances.foreach(pepIns => {
           println("\t" + "\t" + pepIns.peptide.sequence + "\t" + pepIns.peptide.ptmString + "\t" + pepIns.proteinSetsCount)
