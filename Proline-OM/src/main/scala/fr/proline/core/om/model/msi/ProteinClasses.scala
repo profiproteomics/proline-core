@@ -2,13 +2,10 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
-
-//import com.fasterxml.jackson.annotation.JsonInclude
-//import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.annotation.JsonProperty
-
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.proline.util.misc.InMemoryIdGen
+import scala.collection.mutable.ArrayBuffer
 
 object Protein extends InMemoryIdGen {
 
@@ -157,9 +154,13 @@ case class ProteinSet (
   var resultSummaryId: Long = 0,
   
   // Must be only proteinMatchIds which are not in a subset
-  var proteinMatchIds: Array[Long] = null, //One of these 2 values should be specified
-  @transient var proteinMatches: Option[Array[ProteinMatch]] = null,
-  
+  var samesetProteinMatchIds : Array[Long] = null, //One of these 2 values should be specified. Should be coherent with subsetProteinMatches
+  @transient var samesetProteinMatches: Option[Array[ProteinMatch]] = null,
+
+  // Must be only proteinMatchIds which are in a subset
+  var subsetProteinMatchIds : Array[Long] = null, //One of these 2 values should be specified. Should be coherent with samesetProteinMatches
+  @transient var subsetProteinMatches: Option[Array[ProteinMatch]] = null,
+ 
   protected var typicalProteinMatchId: Long = 0,
   @transient protected var typicalProteinMatch: Option[ProteinMatch] = null,
   
@@ -176,16 +177,16 @@ case class ProteinSet (
   @JsonProperty lazy val peptideSetId = peptideSet.id
   
   // Requirements
-  require( proteinMatchIds != null || proteinMatches != null )
+  require( samesetProteinMatchIds != null  || samesetProteinMatches != null )
 
 
   def setTypicalProteinMatch(newTypicalPM: ProteinMatch): Unit = {
     require(newTypicalPM != null ,"A typical ProteinMatch should be defined !")
     
-    if(proteinMatches!= null && proteinMatches.isDefined) 
-      require(proteinMatches.get.contains(newTypicalPM) ,"Typical ProteinMatch should belong to this ProteinSet !")
+    if(samesetProteinMatches!= null && samesetProteinMatches.isDefined) 
+      require(samesetProteinMatches.get.contains(newTypicalPM) ,"Typical ProteinMatch should belong to this ProteinSet's sameset !")
     else
-      require(proteinMatchIds.contains(newTypicalPM.id) ,"Typical ProteinMatch should belong to this ProteinSet !")
+      require(samesetProteinMatchIds.contains(newTypicalPM.id) ,"Typical ProteinMatch should belong to this ProteinSet's sameset !")
     
     typicalProteinMatchId = newTypicalPM.id
     typicalProteinMatch = Some(newTypicalPM)
@@ -193,8 +194,48 @@ case class ProteinSet (
   
   def getTypicalProteinMatch: Option[ProteinMatch] = typicalProteinMatch
   
-  def getProteinMatchIds: Array[Long] = { if(proteinMatches != null && proteinMatches.isDefined) proteinMatches.get.map(_.id)  else proteinMatchIds  }
-
+  /**
+   * Return all proteinMatchIds sameset and subsets 
+   */
+  def getProteinMatchIds: Array[Long] = {
+	if(samesetProteinMatches != null && samesetProteinMatches.isDefined){
+		val allProtIds = new ArrayBuffer[Long]()
+    	allProtIds ++= samesetProteinMatches.get.map(_.id) 
+    	if(subsetProteinMatches != null && subsetProteinMatches.isDefined)
+    	  allProtIds ++= subsetProteinMatches.get.map(_.id)
+    	allProtIds.toArray  
+	}  else {
+	  samesetProteinMatchIds ++ subsetProteinMatchIds
+	}
+	
+  }
+  
+  /**
+   * Return sameset proteinMatchIds  
+   */
+  def getSameSetProteinMatchIds: Array[Long] = {
+	if(samesetProteinMatches != null && samesetProteinMatches.isDefined){
+		val allProtIds = new ArrayBuffer[Long]()
+    	allProtIds ++= samesetProteinMatches.get.map(_.id) 
+    	allProtIds.toArray  
+	}  else 
+	  samesetProteinMatchIds 
+	
+  } 
+  
+  /**
+   * Return subset proteinMatchIds 
+   */
+  def getSubSetProteinMatchIds: Array[Long] = {
+	if(subsetProteinMatches != null && subsetProteinMatches.isDefined){
+		val allProtIds = new ArrayBuffer[Long]()
+		allProtIds ++= subsetProteinMatches.get.map(_.id)
+    	allProtIds.toArray  
+	}  else {
+	  subsetProteinMatchIds
+	}
+	
+  }
   def getTypicalProteinMatchId: Long = { if(typicalProteinMatch != null && typicalProteinMatch.isDefined) typicalProteinMatch.get.id else typicalProteinMatchId }
    
   /**
