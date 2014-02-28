@@ -248,7 +248,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
               println("searched id="+proteinSet.proteinMatchIds(0))
               println("first id is="+proteinMatchById.keys.head)
             }*/
-            typicalProtMatchId = proteinSet.proteinMatchIds.reduce { (a,b) => 
+            typicalProtMatchId = proteinSet.getSameSetProteinMatchIds.reduce { (a,b) => 
               if( proteinMatchById(a).coverage > proteinMatchById(b).coverage ) a else b
             }
           }
