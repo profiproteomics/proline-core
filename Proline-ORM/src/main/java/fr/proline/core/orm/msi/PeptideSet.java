@@ -16,6 +16,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import fr.proline.core.orm.msi.dto.DPeptideInstance;
+
 /**
  * The persistent class for the peptide_set database table.
  * 
@@ -68,7 +70,9 @@ public class PeptideSet implements Serializable {
 
     // Transient Variables not saved in database
     @Transient
-    private PeptideInstance[] peptideInstances = null;
+    private PeptideInstance[] peptideInstances = null; //JPM.TODO : will be removed
+    @Transient
+    private DPeptideInstance[] dpeptideInstances = null; 
 
     public PeptideSet() {
     }
@@ -168,11 +172,18 @@ public class PeptideSet implements Serializable {
      * @return
      */
     public PeptideInstance[] getTransientPeptideInstances() {
-	return peptideInstances;
+	return peptideInstances;  //JPM.TODO : will be removed
     }
 
     public void setTransientPeptideInstances(PeptideInstance[] peptideInstances) {
-	this.peptideInstances = peptideInstances;
+	this.peptideInstances = peptideInstances;  //JPM.TODO : will be removed
+    }
+    public DPeptideInstance[] getTransientDPeptideInstances() {
+	return dpeptideInstances;
+    }
+
+    public void setTransientDPeptideInstances(DPeptideInstance[] dpeptideInstances) {
+	this.dpeptideInstances = dpeptideInstances;
     }
 
 }
