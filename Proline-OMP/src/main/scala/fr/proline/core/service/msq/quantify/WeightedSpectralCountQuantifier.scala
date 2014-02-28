@@ -235,15 +235,38 @@ class WeightedSpectralCountQuantifier(
         val protQuant = mqps.quantProteinSetMap.get(nextQCh.getId())
 
         if (protQuant.isDefined) {
-          if (!firstPACOcc) { jsonBuilder.append(",") } else { firstPACOcc = false }
+          if (!firstPACOcc) { 
+            jsonBuilder.append(",") 
+          } else {
+            firstPACOcc = false 
+          }
+          
+          var protSetId : Long = -1
+		  var protMatchId: Long = -1
+		  var protMatchStatus : String = null
+		  var protMatchPepNbr = -1
           if (protQuant.get.proteinSetId.isDefined) {
             val currentIdRSM = this.identResultSummaries.filter(_.id.equals(rsmId))(0)
-            val protSet = currentIdRSM.proteinSetById.get(protQuant.get.proteinSetId.get)
-            
+            protSetId=protQuant.get.proteinSetId.get
+            protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)
+            val protSet = currentIdRSM.proteinSetById.get(protQuant.get.proteinSetId.get).get
+            val currentPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protMatchId)    		  
+            protMatchPepNbr = currentPM.getPeptideCount()
+
+            protMatchStatus = if(protSet.getTypicalProteinMatchId.equals( protMatchId)){
+               "Typical"
+            } else {
+                if(protSet.getSameSetProteinMatchIds.contains(protMatchId))
+                  "Sameset"
+                else
+                  "Subset"
+              } 
           }
           jsonBuilder.append("{").append(SpectralCountsJSONProperties.protACPropName).append("=").append(protAC).append(",")
-          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protMatchId).append("=").append(protQuant.get.proteinMatchId).append(",")
-          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protSetId).append("=").append(protQuant.get.proteinSetId).append(",")
+          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protMatchId).append("=").append(protMatchId).append(",")
+          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protSetId).append("=").append(protSetId).append(",")
+          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protMatchStatus).append("=").append(protMatchStatus).append(",")
+          jsonBuilder.append("{").append(SpectralCountsJSONProperties.pepNbr).append("=").append(protMatchPepNbr).append(",")          
           jsonBuilder.append(SpectralCountsJSONProperties.bscPropName).append("=").append(protQuant.get.peptideMatchesCount).append(",")
           jsonBuilder.append(SpectralCountsJSONProperties.sscPropName).append("=").append(protQuant.get.rawAbundance).append(",")
           jsonBuilder.append(SpectralCountsJSONProperties.wscPropName).append("=").append(protQuant.get.abundance).append("}")

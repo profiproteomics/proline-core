@@ -19,7 +19,7 @@ object SpectralCountsJSONProperties {
     final val protACPropName : String = "\"protein_accession\""
     final val protMatchId : String = "\"prot_match_id\""
     final val protSetId : String = "\"prot_set_id\""      
-    final val protSetStatus : String ="\"prot_status\""
+    final val protMatchStatus : String ="\"prot_status\""
     final val pepNbr : String ="\"pep_nbr\""
     final val bscPropName : String = "\"bsc\""
     final val sscPropName : String = "\"ssc\""
