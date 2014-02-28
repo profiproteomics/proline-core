@@ -1,5 +1,7 @@
 package fr.proline.core.orm.msi.dto;
 
+import fr.proline.core.orm.msi.SequenceMatch;
+
 
 public class DPeptideInstance {
 
@@ -8,6 +10,7 @@ public class DPeptideInstance {
 	private Float m_elutionTime;
 	
 	private DPeptideMatch m_bestPeptideMatch;
+	private SequenceMatch m_sequenceMatch;
 	
 	public DPeptideInstance(long id, int validatedProteinSetCount, Float elutionTime) {
         m_id = id;
@@ -15,6 +18,7 @@ public class DPeptideInstance {
         m_elutionTime = elutionTime;
         
         m_bestPeptideMatch = null;
+        m_sequenceMatch = null;
     }
 	
     public long getId() {
@@ -35,5 +39,13 @@ public class DPeptideInstance {
     
     public void setBestPeptideMatch(DPeptideMatch bestPeptideMatch) {
         m_bestPeptideMatch = bestPeptideMatch;
+    }
+    
+    public SequenceMatch getSequenceMatch() {
+    	return m_sequenceMatch;
+    }
+    
+    public void setSequenceMatch(SequenceMatch sequenceMatch) {
+    	m_sequenceMatch = sequenceMatch;
     }
 }
