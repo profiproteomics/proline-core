@@ -1,11 +1,11 @@
 package fr.proline.core.om.model.msi
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.proline.util.misc.InMemoryIdGen
-import scala.collection.mutable.ArrayBuffer
 
 object Protein extends InMemoryIdGen {
 
@@ -55,8 +55,7 @@ object Protein extends InMemoryIdGen {
 
 }
 
-//@JsonInclude( Include.NON_NULL )
-case class Protein (
+case class Protein (    
   // Required fields
   val id: Long,
   val sequence: String,
@@ -84,14 +83,12 @@ case class Protein (
 
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class ProteinProperties()
 
 
 object ProteinMatch extends InMemoryIdGen
 
-//@JsonInclude( Include.NON_NULL )
-case class ProteinMatch (
+case class ProteinMatch(
     
   // Required fields
   val accession: String,
@@ -134,13 +131,11 @@ case class ProteinMatch (
   
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class ProteinMatchProperties()
 
  
 object ProteinSet extends InMemoryIdGen
 
-//@JsonInclude( Include.NON_NULL )
 case class ProteinSet ( 
   // Required fields
   @transient val peptideSet: PeptideSet,
@@ -198,44 +193,30 @@ case class ProteinSet (
    * Return all proteinMatchIds sameset and subsets 
    */
   def getProteinMatchIds: Array[Long] = {
-	if(samesetProteinMatches != null && samesetProteinMatches.isDefined){
-		val allProtIds = new ArrayBuffer[Long]()
-    	allProtIds ++= samesetProteinMatches.get.map(_.id) 
-    	if(subsetProteinMatches != null && subsetProteinMatches.isDefined)
-    	  allProtIds ++= subsetProteinMatches.get.map(_.id)
-    	allProtIds.toArray  
-	}  else {
-	  samesetProteinMatchIds ++ subsetProteinMatchIds
-	}
-	
+	  getSameSetProteinMatchIds ++ getSubSetProteinMatchIds
   }
-  
+
   /**
-   * Return sameset proteinMatchIds  
+   * Return sameset proteinMatchIds
    */
   def getSameSetProteinMatchIds: Array[Long] = {
-	if(samesetProteinMatches != null && samesetProteinMatches.isDefined){
-		val allProtIds = new ArrayBuffer[Long]()
-    	allProtIds ++= samesetProteinMatches.get.map(_.id) 
-    	allProtIds.toArray  
-	}  else 
-	  samesetProteinMatchIds 
-	
-  } 
-  
+    if (samesetProteinMatches != null && samesetProteinMatches.isDefined)
+      samesetProteinMatches.get.map(_.id)
+    else
+      samesetProteinMatchIds
+  }
+
   /**
-   * Return subset proteinMatchIds 
+   * Return subset proteinMatchIds
    */
   def getSubSetProteinMatchIds: Array[Long] = {
-	if(subsetProteinMatches != null && subsetProteinMatches.isDefined){
-		val allProtIds = new ArrayBuffer[Long]()
-		allProtIds ++= subsetProteinMatches.get.map(_.id)
-    	allProtIds.toArray  
-	}  else {
-	  subsetProteinMatchIds
-	}
-	
+    if (subsetProteinMatches != null && subsetProteinMatches.isDefined) {
+      subsetProteinMatches.get.map(_.id)
+    } else {
+      subsetProteinMatchIds
+    }
   }
+  
   def getTypicalProteinMatchId: Long = { if(typicalProteinMatch != null && typicalProteinMatch.isDefined) typicalProteinMatch.get.id else typicalProteinMatchId }
    
   /**
@@ -286,13 +267,10 @@ case class ProteinSet (
  
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class ProteinSetProperties()
 
-//@JsonInclude( Include.NON_NULL )
 case class ProteinMatchResultSummaryProperties()
 
-//@JsonInclude( Include.NON_NULL )
 case class SequenceMatch (
   // Required fields
   val start: Int,
@@ -324,7 +302,6 @@ case class SequenceMatch (
   
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class SequenceMatchProperties()
 
 
