@@ -14,14 +14,15 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.repository.util.JDBCWork;
-import fr.proline.repository.util.JPAUtils;
 
 public abstract class DatabaseTestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseTestCase.class);
 
     private static final int BUFFER_SIZE = 2048;
+
+    private final RuntimeException m_fakeException = new RuntimeException(
+	    "_FakeException_ DatabaseTestCase instance creation");
 
     private final Object m_testCaseLock = new Object();
 
@@ -233,6 +234,18 @@ public abstract class DatabaseTestCase {
     protected void finalize() throws Throwable {
 
 	try {
+	    String dbTypeString = null;
+
+	    final ProlineDatabaseType dbType = getProlineDatabaseType();
+
+	    if (dbType == null) {
+		dbTypeString = "Unknown Db";
+	    } else {
+		dbTypeString = dbType + " Db";
+	    }
+
+	    LOG.warn("Tearing down " + dbTypeString + " TestCase in finalize !", m_fakeException);
+
 	    tearDown();
 	} finally {
 	    super.finalize();

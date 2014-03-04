@@ -8,6 +8,8 @@ import fr.proline.repository.util.DatabaseTestCase
 
 class AbstractMultipleDBTestCase extends Logging {
 
+  private val m_fakeException = new RuntimeException("_FakeException_ AbstractMultipleDBTestCase instance creation")
+
   private val m_testCaseLock = new AnyRef()
 
   /* All mutable fields are @GuardedBy("m_testCaseLock") */
@@ -85,6 +87,8 @@ class AbstractMultipleDBTestCase extends Logging {
   override def finalize() {
 
     try {
+      logger.warn("Tearing down MultipleDBTestCase in finalize !", m_fakeException);
+
       tearDown();
     } finally {
       super.finalize();
@@ -101,10 +105,10 @@ abstract class DatabaseAndDriverTestCase extends DatabaseTestCase {
   protected val propertiesFileDirectory: String = {
 
     driverType match {
-      case DriverType.H2 => "db_settings/h2"
-      case DriverType.SQLITE => "db_settings/sqlite"
+      case DriverType.H2         => "db_settings/h2"
+      case DriverType.SQLITE     => "db_settings/sqlite"
       case DriverType.POSTGRESQL => "db_settings/postgresql"
-      case _ => throw new IllegalArgumentException("Unsupported database driver for testing")
+      case _                     => throw new IllegalArgumentException("Unsupported database driver for testing")
     }
 
   }
