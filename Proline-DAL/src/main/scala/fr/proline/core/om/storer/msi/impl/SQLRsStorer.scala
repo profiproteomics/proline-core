@@ -122,7 +122,7 @@ class SQLRsStorer(
     if( rsProteins.find( _.id < 0 ).isDefined )
       throw new Exception("result set proteins must first be persisted")*/
 
-    // Retrieve the list of existing peptides in the current MSIdb
+    // Retrieve the list of existing peptides, filtered by searched peptides sequences, in the current MSIdb
     // TODO: do this using the PSdb
     
     val existingMsiPeptidesIdByKey = this.rsWriter.fetchExistingPeptidesIdByUniqueKey(uniquePeptideSequences, msiDb)
@@ -130,11 +130,14 @@ class SQLRsStorer(
 
     // Retrieve existing peptides and map them by unique key
     val (peptidesInMsiDb, newMsiPeptides) = rsPeptides.partition(pep => existingMsiPeptidesIdByKey.contains(pep.uniqueKey))
+    var nbrRealMSIPep = 0
     for (peptide <- peptidesInMsiDb) {
       peptide.id = existingMsiPeptidesIdByKey(peptide.uniqueKey)
       this.peptideByUniqueKey += (peptide.uniqueKey -> peptide)
+      nbrRealMSIPep +=1
     }
-
+    logger.debug(nbrRealMSIPep+ " existing peptides in MSIdb related to result file peptide")
+    
     val nbNewMsiPeptides = newMsiPeptides.length
     if (nbNewMsiPeptides > 0) {
 
@@ -160,7 +163,10 @@ class SQLRsStorer(
       val peptidesInPsDb = peptidesForSeqsInPsDb filter { pep => newMsiPepKeySet.contains(pep.uniqueKey) }
   
       logger.info(peptidesInPsDb.length + " existing peptides have been loaded from the PSdb")
-
+      peptidesInPsDb.foreach(pepInPSDb => {
+    	  logger.debug(" **** Next Pep In PS : "+pepInPSDb.id+" => "+pepInPSDb.uniqueKey)  
+      })
+      
       // Store missing PsDb peptides
       psDbCtx.beginTransaction()
       new PeptideStorer().storePeptides(newPsPeptides,psDbCtx)
