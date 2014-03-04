@@ -33,25 +33,10 @@
       <!-- Version inherited from parent POM -->
     </dependency>
 
-    <!-- Explicit dependency of ExtractMapSet on mzdb-access -->
-    <dependency>
-      <groupId>fr.profi</groupId>
-      <artifactId>mzdb-access</artifactId>
-      <version>0.0.1-SNAPSHOT</version> <!-- Snapshot Trunk version -->
-    </dependency>
-
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>mzdb-processing</artifactId>
       <version>0.0.2-SNAPSHOT</version> <!-- Snapshot Trunk version -->
-    </dependency>
-
-    <!-- Old version of Apache Commons Math (current is commons-math3 3.2) needed for
-      org.apache.commons.math.analysis.interpolation.LoessInterpolator used by LoessSmoother -->
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-math</artifactId>
-      <version>2.2</version>
     </dependency>
 
     <!-- Scala -->
@@ -68,14 +53,6 @@
     </dependency>
 
     <!-- Test -->
-    <!--
-    <dependency>
-      <groupId>org.scala-tools.testing</groupId>
-      <artifactId>specs_${scala.version}</artifactId>
-      <scope>test</scope>
-    </dependency>
-    -->
-    
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
@@ -153,7 +130,7 @@
       <plugin>
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>replacer</artifactId>
- 
+
         <executions>
           <execution>
             <phase>generate-sources</phase>

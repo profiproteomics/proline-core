@@ -17,11 +17,11 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>com.typesafe</groupId>
       <artifactId>scalalogging-slf4j_2.10</artifactId>
-      <!-- Version inherited from ProFI-Pom ${scala.version} --> 
+      <!-- Version inherited from ProFI-Pom ${scala.version} -->
     </dependency>
 
     <dependency>
@@ -41,7 +41,7 @@
       <artifactId>jackson-module-scala_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
-    
+
     <!--<dependency>
       <groupId>com.lambdaworks</groupId>
       <artifactId>jacks_${scala.version}</artifactId>
@@ -62,14 +62,6 @@
     </dependency>
 
     <!-- Test -->
-    <!--
-    <dependency>
-      <groupId>org.scala-tools.testing</groupId>
-      <artifactId>specs_${scala.version}</artifactId>
-      <scope>test</scope>
-    </dependency>
-    -->
-
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
