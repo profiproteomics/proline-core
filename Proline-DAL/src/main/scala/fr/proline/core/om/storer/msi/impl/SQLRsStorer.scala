@@ -179,8 +179,15 @@ class SQLRsStorer(
       }
 
       // Update id of new MsiDb peptides
-      for (peptide <- newMsiPeptides) {
+      for (peptide <- newMsiPeptides) {        
+        val oldPeptideId =  peptide.id
+        
         peptide.id = newMsiPepIdByUniqueKey(peptide.uniqueKey)
+        
+        if ((oldPeptideId > 0) && (oldPeptideId != peptide.id)) {
+          logger.debug("Updating MSI peptide "+ oldPeptideId + " -> " + peptide.id)
+        }
+        
         //peptide.id = this.peptideByUniqueKey( peptide.uniqueKey ).id
       }
 
