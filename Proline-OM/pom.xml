@@ -62,11 +62,13 @@
     </dependency>
 
     <!-- Test -->
+    <!--
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
       <artifactId>specs_${scala.version}</artifactId>
       <scope>test</scope>
     </dependency>
+    -->
 
     <dependency>
       <groupId>org.scalatest</groupId>
