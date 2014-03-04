@@ -105,7 +105,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     rsmProvider.getResultSummaries(rsmIds, true)
   }
 
-  protected val mergedResultSummary = getMergedResultSummary(msiDbCtx : DatabaseConnectionContext)
+  protected lazy val mergedResultSummary = getMergedResultSummary(msiDbCtx : DatabaseConnectionContext)
    
   protected lazy val curSQLTime = new java.sql.Timestamp(new java.util.Date().getTime)
 

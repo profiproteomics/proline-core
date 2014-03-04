@@ -4,16 +4,19 @@ import fr.proline.core.om.model.msi.ProteinSet
 
 
 /*** 
- * List properties String used in JSON SC result. The output result should be formatted as 
+ * List properties String used in JSON SC result or in assocated serialized properties. The output result should be formatted as 
  *     
-*	"{"SpectralCountResult":{[
-*	{"rsm_id":<id>,"proteins_spectral_counts":[{"protein_accession"=<protAcc>,"bsc"=<valBSC>,"ssc"=<valSSC>,"wsc"=<valWSC>}]},
-*	{"rsm_id":<id>,"proteins_spectral_counts":[{"protein_accession"=<protAcc>,"bsc"=<valBSC>,"ssc"=<valSSC>,"wsc"=<valWSC>}]}
+*	"{"spectral_count_result":{[
+*	{"rsm_id":<id>,"proteins_spectral_counts":[ { "protein_accession"=<protAcc>, "prot_match_id"=<pmId_idfRSM>, "prot_set_id"=<psId_idfRSM>, "prot_status"=<typical,sameset,subset>,"pep_nbr"=Int,"bsc"=<valBSC>,"ssc"=<valSSC>,"wsc"=<valWSC>}, {...}]},
+*	{"rsm_id":<id>,"proteins_spectral_counts":[ { "protein_accession"=<protAcc>, "prot_match_id"=<pmId_idfRSM>, "prot_set_id"=<psId_idfRSM>, "prot_status"=<typical,sameset,subset>,"pep_nbr"=Int,"bsc"=<valBSC>,"ssc"=<valSSC>,"wsc"=<valWSC>}, {...}]},
 *	 ]}}"
  */
 object SpectralCountsJSONProperties {
   
-    final val rootPropName : String = "\"SpectralCountResult\""
+  /** 
+   * WeightedSC result properties
+   */
+    final val rootPropName : String = "\"spectral_count_result\""
     final val rsmIDPropName : String = "\"rsm_id\""
     final val protSCsListPropName : String = "\"proteins_spectral_counts\""
     final val protACPropName : String = "\"protein_accession\""
@@ -25,6 +28,10 @@ object SpectralCountsJSONProperties {
     final val sscPropName : String = "\"ssc\""
     final val wscPropName : String = "\"wsc\""
            
+  /** 
+   * reference Idf RSM ID properties
+   */
+    final val refIdfRsmID : String = "\"ident_result_summary_id\""
 }
 
 /**

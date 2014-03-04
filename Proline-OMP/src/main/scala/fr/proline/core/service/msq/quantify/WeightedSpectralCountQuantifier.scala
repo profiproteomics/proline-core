@@ -60,9 +60,11 @@ class WeightedSpectralCountQuantifier(
   protected val msiMasterProtSetByMergedProtSetId = new HashMap[Long, MsiProteinSet]
 
   /**
-   *  Spectral Count Result
-   *  {RSM ID -> { ProteinMatchAccession -> (Basic SC; Specific SC, Weighted SC)} }
-   */
+ 	* "{"spectral_count_result":{[ 
+  	* { "rsm_id":Long, "proteins_spectral_counts":[ { "protein_accession"=Acc, "prot_match_id"=Long, "prot_set_id"=Long, "prot_status"=String,"pep_nbr"=Int,"bsc"=Float,"ssc"=Float,"wsc"=Float}, {...} ] },
+  	*	{ "rsm_id"... } 
+  	* ]}}"    
+  	**/
 
   private var _resultAsJSON: String = null
   def getResultAsJSON() = { _resultAsJSON }
@@ -214,8 +216,6 @@ class WeightedSpectralCountQuantifier(
 
     val jsonBuilder: StringBuilder = new StringBuilder(" \"{")
     jsonBuilder.append(SpectralCountsJSONProperties.rootPropName).append(":{[")
-
-    val rsmIdByQChIdbuilder = Map.newBuilder[Long, Long]
 
     val qChannels = udsMasterQuantChannel.getQuantitationChannels()
 
@@ -409,7 +409,10 @@ class WeightedSpectralCountQuantifier(
 
       // Instantiate a RSM provider
       val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = null)
-      rsmProvider.getResultSummary(scConfig.parentRSMId.get, true).get
+      val idfRSM = rsmProvider.getResultSummary(scConfig.parentRSMId.get, true).get
+      
+      udsMasterQuantChannel.setSerializedProperties("{"+SpectralCountsJSONProperties.refIdfRsmID+":"+idfRSM.id+"}")
+      idfRSM
     }
 
   }
