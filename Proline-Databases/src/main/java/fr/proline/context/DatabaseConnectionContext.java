@@ -37,7 +37,6 @@ public class DatabaseConnectionContext implements Closeable {
     private final Object m_contextLock = new Object();
 
     /* All mutable fields are @GuardedBy("m_contextLock") */
-
     private Connection m_connection;
 
     private boolean m_closed;
@@ -200,7 +199,9 @@ public class DatabaseConnectionContext implements Closeable {
 
 	} // End of synchronized block on m_contextLock
 
-	LOG.debug("IsInTransaction from DatabaseConnectionContext: {}", result);
+	if (LOG.isTraceEnabled()) {
+	    LOG.trace("{} isInTransaction : {}", getProlineDatabaseTypeString(), result);
+	}
 
 	return result;
     }
@@ -219,7 +220,10 @@ public class DatabaseConnectionContext implements Closeable {
 		throw new IllegalStateException("Context ALREADY closed");
 	    }
 
-	    LOG.debug("Begin Transaction from DatabaseConnectionContext");
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("{} Begin Transaction from DatabaseConnectionContext",
+			getProlineDatabaseTypeString());
+	    }
 
 	    if (isJPA()) {
 		getEntityManager().getTransaction().begin();
@@ -247,7 +251,10 @@ public class DatabaseConnectionContext implements Closeable {
 		throw new IllegalStateException("Context ALREADY closed");
 	    }
 
-	    LOG.debug("Commit Transaction from DatabaseConnectionContext");
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("{} Commit Transaction from DatabaseConnectionContext",
+			getProlineDatabaseTypeString());
+	    }
 
 	    if (isJPA()) {
 		getEntityManager().getTransaction().commit();
@@ -276,7 +283,10 @@ public class DatabaseConnectionContext implements Closeable {
 		throw new IllegalStateException("Context ALREADY closed");
 	    }
 
-	    LOG.debug("Rollback Transaction from DatabaseConnectionContext");
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("{} Rollback Transaction from DatabaseConnectionContext",
+			getProlineDatabaseTypeString());
+	    }
 
 	    if (isJPA()) {
 		getEntityManager().getTransaction().rollback();
@@ -310,7 +320,8 @@ public class DatabaseConnectionContext implements Closeable {
 		    try {
 			m_connection.close();
 		    } catch (SQLException exClose) {
-			LOG.error("Error closing DatabaseConnectionContext SQL Connection", exClose);
+			LOG.error("Error closing DatabaseConnectionContext SQL Connection for "
+				+ getProlineDatabaseTypeString(), exClose);
 		    }
 		}
 
@@ -318,7 +329,8 @@ public class DatabaseConnectionContext implements Closeable {
 		    try {
 			m_entityManager.close();
 		    } catch (Exception exClose) {
-			LOG.error("Error closing EntityManager Connection", exClose);
+			LOG.error("Error closing DatabaseConnectionContext EntityManager for "
+				+ getProlineDatabaseTypeString(), exClose);
 		    }
 		}
 
@@ -374,8 +386,10 @@ public class DatabaseConnectionContext implements Closeable {
 
 		JPAUtils.checkEntityManager(contextEntityMananger);
 
-		LOG.trace("Executing JDBCWork on JPA EntityManager, flushEntityManager: {}",
-			flushEntityManager);
+		if (LOG.isTraceEnabled()) {
+		    LOG.trace("{} Executing JDBCWork on JPA EntityManager, flushEntityManager: {}",
+			    getProlineDatabaseTypeString(), flushEntityManager);
+		}
 
 		if (flushEntityManager) {
 		    contextEntityMananger.flush();
@@ -398,7 +412,10 @@ public class DatabaseConnectionContext implements Closeable {
 
 		JPAUtils.doWork(contextEntityMananger, contextWork);
 	    } else {
-		LOG.trace("Executing JDBCWork on raw JDBC Connection");
+
+		if (LOG.isTraceEnabled()) {
+		    LOG.trace("{} Executing JDBCWork on raw JDBC Connection", getProlineDatabaseTypeString());
+		}
 
 		work.execute(contextConnection);
 	    }
@@ -445,8 +462,10 @@ public class DatabaseConnectionContext implements Closeable {
 
 		JPAUtils.checkEntityManager(contextEntityMananger);
 
-		LOG.trace("Executing JDBCReturningWork on JPA EntityManager, flushEntityManager: {}",
-			flushEntityManager);
+		if (LOG.isTraceEnabled()) {
+		    LOG.trace("{} Executing JDBCReturningWork on JPA EntityManager, flushEntityManager: {}",
+			    getProlineDatabaseTypeString(), flushEntityManager);
+		}
 
 		if (flushEntityManager) {
 		    contextEntityMananger.flush();
@@ -472,12 +491,30 @@ public class DatabaseConnectionContext implements Closeable {
 
 		result = JPAUtils.doReturningWork(contextEntityMananger, contextReturningWork);
 	    } else {
-		LOG.trace("Executing JDBCReturningWork on raw JDBC Connection");
+
+		if (LOG.isTraceEnabled()) {
+		    LOG.trace("{} Executing JDBCReturningWork on raw JDBC Connection",
+			    getProlineDatabaseTypeString());
+		}
 
 		result = returningWork.execute(contextConnection);
 	    }
 
 	} // End of synchronized block on m_contextLock
+
+	return result;
+    }
+
+    private String getProlineDatabaseTypeString() {
+	String result = null;
+
+	final ProlineDatabaseType dbType = getProlineDatabaseType();
+
+	if (dbType == null) {
+	    result = "Unknown Db";
+	} else {
+	    result = dbType + " Db";
+	}
 
 	return result;
     }
