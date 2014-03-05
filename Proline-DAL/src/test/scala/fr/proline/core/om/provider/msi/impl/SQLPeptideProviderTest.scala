@@ -30,8 +30,10 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
   def setUp() = {
     initDatabase()
 
+    SQLPeptideProvider.clear() // Clear peptide cache between tests
+
     //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-    loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
+    loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml", "/dbunit/datasets/ps/Peptides_Dataset.xml"))
   }
 
   @Test
@@ -43,9 +45,9 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
       val sqlPepProvider = new SQLPeptideProvider(psDb)
 
       val pep: Option[Peptide] = sqlPepProvider.getPeptide(4)
-      assertThat(pep, CoreMatchers.notNullValue());
-      assertNotSame(pep, None);
-      assertThat(pep.get.calculatedMass, CoreMatchers.equalTo(810.405807));
+      assertThat(pep, CoreMatchers.notNullValue())
+      assertNotSame(pep, None)
+      assertThat(pep.get.calculatedMass, CoreMatchers.equalTo(810.405807))
 
     } finally {
       psDb.close
@@ -87,7 +89,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
       val pep: Option[Peptide] = sqlPepProvider.getPeptide(6)
       assertThat(pep, CoreMatchers.notNullValue())
-      assertNotSame(pep, None);
+      assertNotSame(pep, None)
 
       assertEquals(pep.get.id, 6L)
       assertThat(pep.get.ptms.length, CoreMatchers.equalTo(1))
@@ -109,9 +111,9 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
       val ptms = new Array[LocatedPtm](0)
       val pep: Option[Peptide] = sqlPepProvider.getPeptide(SEQ_TO_FOUND, ptms)
-      assertThat(pep, CoreMatchers.notNullValue());
-      assertNotSame(pep, None);
-      assertTrue(pep.get.ptms == null || pep.get.ptms.length == 0);
+      assertThat(pep, CoreMatchers.notNullValue())
+      assertNotSame(pep, None)
+      assertTrue(pep.get.ptms == null || pep.get.ptms.length == 0)
 
     } finally {
       psDb.close
@@ -131,7 +133,7 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
       val ptmEvi: PtmEvidence = new PtmEvidence(IonTypes.Precursor, "", Double.MaxValue, Double.MaxValue, false)
       val ptmEvidences = Array[PtmEvidence](ptmEvi)
 
-      val ptmDef = new PtmDefinition(0, "ANYWHERE", new PtmNames("Oxidation", "Oxidation or Hydroxylation"), ptmEvidences, 'M', null, 0);
+      val ptmDef = new PtmDefinition(0, "ANYWHERE", new PtmNames("Oxidation", "Oxidation or Hydroxylation"), ptmEvidences, 'M', null, 0)
       ptmsBuilder += new LocatedPtm(ptmDef, 3, Double.MaxValue, Double.MaxValue, "O", false, false)
 
       /*val provTest = new fr.proline.core.om.provider.msi.impl.ORMPTMProvider( this.em )
@@ -152,7 +154,13 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
 
   @After
   override def tearDown() = {
-    super.tearDown();
+
+    try {
+      SQLPeptideProvider.clear() // Clear peptide cache between tests
+    } finally {
+      super.tearDown()
+    }
+
   }
 
 }
