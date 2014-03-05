@@ -37,6 +37,7 @@ public class DatabaseConnectionContext implements Closeable {
     private final Object m_contextLock = new Object();
 
     /* All mutable fields are @GuardedBy("m_contextLock") */
+
     private Connection m_connection;
 
     private boolean m_closed;
@@ -128,7 +129,7 @@ public class DatabaseConnectionContext implements Closeable {
      *         this context is pure SQL.
      */
     public boolean isJPA() {
-	return (m_entityManager != null);
+	return (getEntityManager() != null);
     }
 
     /**
