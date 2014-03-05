@@ -1,10 +1,11 @@
 package fr.proline.core.om.util
 
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.core.dal.DataStoreConnectorFactoryForTest
-import fr.proline.repository.{ DriverType, ProlineDatabaseType }
+import fr.proline.repository.DriverType
+import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 
 class AbstractMultipleDBTestCase extends Logging {
 
@@ -28,7 +29,7 @@ class AbstractMultipleDBTestCase extends Logging {
     m_testCaseLock.synchronized {
 
       if (m_toreDown) {
-        throw new IllegalStateException("TestCase ALREADY torn down");
+        throw new IllegalStateException("TestCase ALREADY torn down")
       }
 
       logger.info("Creating UDS, PDI, PS, MSI Database TestCases")
@@ -46,16 +47,37 @@ class AbstractMultipleDBTestCase extends Logging {
       msiDBTestCase.initDatabase()
 
       dsConnectorFactoryForTest = new DataStoreConnectorFactoryForTest(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector, null, false)
+      
+      SQLPeptideProvider.clear() // Clear peptide cache between tests
     } // End of synchronized block on m_testCaseLock
 
   }
 
   def tearDown() = {
+    doTearDown(false)
+  }
+
+  override def finalize() {
+
+    try {
+      doTearDown(true)
+    } finally {
+      super.finalize()
+    }
+
+  }
+
+  /* Private methods */
+  def doTearDown(finalizing: Boolean) = {
 
     m_testCaseLock.synchronized {
 
       if (!m_toreDown) {
         m_toreDown = true
+
+        if (finalizing) {
+          logger.warn("Tearing down MultipleDBTestCase in finalize !", m_fakeException)
+        }
 
         if (msiDBTestCase != null) {
           logger.debug("Closing MSI Db TestCase")
@@ -76,23 +98,13 @@ class AbstractMultipleDBTestCase extends Logging {
           logger.debug("Closing UDS Db TestCase")
           udsDBTestCase.tearDown()
         }
+        
+        SQLPeptideProvider.clear() // Clear peptide cache between tests
 
         logger.info("All Database TestCases closed successfully")
       }
 
     } // End of synchronized block on m_testCaseLock
-
-  }
-
-  override def finalize() {
-
-    try {
-      logger.warn("Tearing down MultipleDBTestCase in finalize !", m_fakeException);
-
-      tearDown();
-    } finally {
-      super.finalize();
-    }
 
   }
 

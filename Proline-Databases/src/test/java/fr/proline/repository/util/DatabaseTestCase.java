@@ -195,11 +195,32 @@ public abstract class DatabaseTestCase {
     }
 
     public void tearDown() {
+	doTearDown(false);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+
+	try {
+	    doTearDown(true);
+	} finally {
+	    super.finalize();
+	}
+
+    }
+
+    /* Private methods */
+    private void doTearDown(final boolean finalizing) {
 
 	synchronized (m_testCaseLock) {
 
 	    if (!m_toreDown) { // Close only once
 		m_toreDown = true;
+
+		if (finalizing) {
+		    LOG.warn("Tearing down " + getProlineDatabaseTypeString() + " TestCase in finalize !",
+			    m_fakeException);
+		}
 
 		/* Close the keep-alive connection and finally the Db Connector */
 		if (m_keepaliveConnection != null) {
@@ -230,27 +251,18 @@ public abstract class DatabaseTestCase {
 
     }
 
-    @Override
-    protected void finalize() throws Throwable {
+    private String getProlineDatabaseTypeString() {
+	String result = null;
 
-	try {
-	    String dbTypeString = null;
+	final ProlineDatabaseType dbType = getProlineDatabaseType();
 
-	    final ProlineDatabaseType dbType = getProlineDatabaseType();
-
-	    if (dbType == null) {
-		dbTypeString = "Unknown Db";
-	    } else {
-		dbTypeString = dbType + " Db";
-	    }
-
-	    LOG.warn("Tearing down " + dbTypeString + " TestCase in finalize !", m_fakeException);
-
-	    tearDown();
-	} finally {
-	    super.finalize();
+	if (dbType == null) {
+	    result = "Unknown Db";
+	} else {
+	    result = dbType + " Db";
 	}
 
+	return result;
     }
 
 }

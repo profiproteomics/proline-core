@@ -45,6 +45,19 @@ object SQLPeptideProvider extends Logging {
 
   }
 
+  /**
+   * Clear (purge all entries) this static cache.
+   */
+  def clear() {
+
+    _peptideCache.synchronized {
+      _peptideCache.clear()
+    }
+
+    logger.info("SQLPeptideProvider cache cleared")
+  }
+
+  /* Private methods */
   private def calculateCacheSize(): Int = {
     val maxMemory = Runtime.getRuntime.maxMemory
 
