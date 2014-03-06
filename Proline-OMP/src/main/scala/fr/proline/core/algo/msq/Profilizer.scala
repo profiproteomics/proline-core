@@ -37,18 +37,15 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
    * Computes MasterQauntPeptide profiles.
    */
   def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], statTestsAlpha: Float = 0.01f ) {    
-    require( masterQuantPeptides.length > 10, "at least 10 peptides are required for profile analysis")
+    require( masterQuantPeptides.length >= 10, "at least 10 peptides are required for profile analysis")
     
     // --- Compute the abundance matrix ---
     val abundanceMatrix = masterQuantPeptides.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
-    require( abundanceMatrix.flatten.count( isZeroOrNaN(_) == false ) > 0 ) // only for debug
     
     // --- Normalize the abundance matrix ---
     val normalizedMatrix = AbundanceNormalizer.normalizeAbundances(abundanceMatrix)
-    require( normalizedMatrix.length > 10, "error during normalization, some peptides were lost...")
-    require( normalizedMatrix.flatten.count( isZeroOrNaN(_) == false ) > 0 ) // only for debug
+    require( normalizedMatrix.length >= 10, "error during normalization, some peptides were lost...")
     //println( s"normalizedMatrix.length: ${normalizedMatrix.length}")
-        
     
     
     // --- Estimate the noise model ---
@@ -97,7 +94,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
   }
   
   def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], statTestsAlpha: Float = 0.01f ) {
-    require( masterQuantProtSets.length > 10, "at least 10 protein sets are required for profile analysis")
+    require( masterQuantProtSets.length >= 10, "at least 10 protein sets are required for profile analysis")
     
     case class MQPepProfilesCluster(
       mqProtSet: MasterQuantProteinSet,
@@ -133,7 +130,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         
         val abundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
         
-        //require(abundanceMatrix.length > 10)
         /*for (row <- abundanceMatrix ) {
           val nbDefs = row.count(ab => ab.isNaN == false && ab > 0)
           if( nbDefs < 6 ) println(mqPeps(0).peptideInstance.get.peptide.sequence)
@@ -232,8 +228,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     normalizedMatrix: Array[Array[Float]],
     statTestsAlpha: Float
   ): Tuple2[Array[Array[Float]],Seq[AverageAbundanceRatio]] = {
-    
-    require( normalizedMatrix.flatten.count( isZeroOrNaN(_) == false ) > 0 ) // only for debug
 
     // Retrieve some vars
     val numeratorSampleNumbers = sampleNumbersByGroupNumber(ratioDef.numeratorGroupNumber)
@@ -313,8 +307,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         qcIndicesBySampleNum(sampleNum).map( println(_) )
       }*/
       
-      require( normalizedMatrix.flatten.count( isZeroOrNaN(_) == false ) > 0 ) // only for debug
-      
       // Extract abundance matrices for each biological sample
       normalizedMatrix.foreach { normalizedRow =>
         //val nbDefsVals = normalizedRow.count(isZeroOrNaN(_) == false)
@@ -381,8 +373,14 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         denominatorSummary = CommonsStatHelper.calcStatSummary(denominatorMeanAbundances.map(_.toDouble))        
      
         // We can then make absolute statistical validation at the biological sample level
-        absoluteVariationsBuffer += AbsoluteErrorObservation( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
-        absoluteVariationsBuffer += AbsoluteErrorObservation( denominatorSummary.getMean.toFloat, denominatorSummary.getStandardDeviation.toFloat )
+        val (numMean, numStdDev) = ( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
+        val (denomMean, denomStdDev) = ( denominatorSummary.getMean.toFloat, denominatorSummary.getStandardDeviation.toFloat )
+        if (numMean.isNaN == false &&  numStdDev.isNaN == false && denomMean.isNaN == false && denomStdDev.isNaN == false) {
+          absoluteVariationsBuffer += AbsoluteErrorObservation( numMean, numStdDev )
+          absoluteVariationsBuffer += AbsoluteErrorObservation( denomMean, denomStdDev )
+        } else {
+          this.logger.error("Stat summary contains NaN mean or NaN standardDeviation")
+        }
       }
       // Else we merge biological sample data and compute statistics at a lower level
       else {        
