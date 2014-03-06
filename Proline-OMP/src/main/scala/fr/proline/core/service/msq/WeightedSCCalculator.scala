@@ -183,8 +183,8 @@ class WeightedSCCalculator (
 	 }) //End go through RSMs
 	 
 	_resultAsJSON = generateJSONOutput(_wscByProtMatchAccessionByRSM.result.toMap)
-	val printDebug = generateCSVOutput(_wscByProtMatchAccessionByRSM.result.toMap)
-	logger.debug(printDebug)
+//	val printDebug = generateCSVOutput(_wscByProtMatchAccessionByRSM.result.toMap)
+//	logger.debug(printDebug)
     true
      
   }
