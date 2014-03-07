@@ -13,6 +13,7 @@ import fr.proline.core.om.model.msq.MasterQuantPeptideIonProperties
 import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.om.provider.msq.IMasterQuantPeptideIonProvider
 import fr.proline.util.primitives._
+import scala.collection.mutable.ArrayBuffer
 
 class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) extends IMasterQuantPeptideIonProvider {
   
@@ -36,6 +37,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
       val quantRsmIdsAsStr = quantRsmIds.mkString(",")
+      val mqPepIons =new ArrayBuffer[MasterQuantPeptideIon]()
       
       // Load master quant peptide ions corresponding to the provided result summary ids
       val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
@@ -48,14 +50,14 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
         " AND "~ t3.SCHEMA_NAME ~" = '"~ LabelFreeQuantPeptideIonsSchema ~"'"
       )
       
-      msiEzDBC.select(mqPepIonQuery) { r =>
+      msiEzDBC.selectAndProcess(mqPepIonQuery) { r =>
   
         val mqPepIonId: Long = toLong(r.getAny(MQPepIonCols.ID))
         val quantPepIons = ProfiJson.deserialize[Array[QuantPeptideIon]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
         val quantPepIonMap = Map() ++ (for( qpi <- quantPepIons if qpi != null ) yield qpi.quantChannelId -> qpi)
         
         // Build the master quant peptide ion
-        new MasterQuantPeptideIon(
+        mqPepIons += new MasterQuantPeptideIon(
           id = mqPepIonId,
           unlabeledMoz = r.getDouble(MQPepIonCols.MOZ),
           charge = r.getInt(MQPepIonCols.CHARGE),
@@ -72,7 +74,8 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
           properties = r.getStringOption(MQPepIonCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantPeptideIonProperties](_))
         )
         
-      } toArray
+      }
+      mqPepIons.toArray
     })
 
   }
