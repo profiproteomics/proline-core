@@ -82,7 +82,6 @@ TODO: convert to REAL (float) ?</remarks>
   </table>
   <table id="TAB20" populated="true" UUID="a5bb1b82-c6fc-467a-b305-e36316617dda" name="ptm" objectType="TABLE" physicalName="ptm" >
    <remarks>Describes the names of the ptm definitions.
-UNIQUE(full_name)
 UNIQUE(short_name)</remarks>
    <folder id="FOLTAB201" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL21" populated="true" UUID="0f8b5cc3-d0af-4a9b-be8f-e9b22496de89" autoIncrement="true" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
@@ -92,8 +91,7 @@ UNIQUE(short_name)</remarks>
      <remarks>The unimod record_id.</remarks>
     </column>
     <column id="COL23" populated="true" UUID="99c58fa8-2725-44b9-a744-b66b9671e36d" autoIncrement="false" autoIncrementSequenceName="ptm_full_name_seq" defaultValue="" name="full_name" nullable="1" physicalName="full_name" precision="1000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
-     <remarks>A description of the PTM.
-MUST BE UNIQUE.</remarks>
+     <remarks>A description of the PTM.</remarks>
     </column>
     <column id="COL24" populated="true" UUID="28ed1282-6abc-4240-adea-708071520af8" autoIncrement="false" autoIncrementSequenceName="ptm_short_name_seq" defaultValue="" name="short_name" nullable="0" physicalName="short_name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>Descriptive, one word name, suitable for use in software applications.
@@ -112,7 +110,7 @@ MUST BE UNIQUE.</remarks>
     <index id="IDX26" populated="true" UUID="1ee595bd-be86-45da-906f-988879c3bcdb" clustered="false" index-type="BTREE" name="ptm_pk" physicalName="ptm_pk" primaryKeyIndex="true" unique="true" >
      <index-column id="IDC27" populated="true" UUID="3993b9ee-0e1c-41b6-854c-19b427ffbba0" ascendingOrDescending="UNSPECIFIED" column-ref="COL21" name="id" physicalName="id" />
     </index>
-    <index id="IDX28" populated="true" UUID="99e53189-0ce6-4622-994e-9d220fac33e4" clustered="false" name="ptm_full_name_idx" physicalName="ptm_full_name_idx" primaryKeyIndex="false" unique="true" >
+    <index id="IDX28" populated="true" UUID="99e53189-0ce6-4622-994e-9d220fac33e4" clustered="false" name="ptm_full_name_idx" physicalName="ptm_full_name_idx" primaryKeyIndex="false" unique="false" >
      <index-column id="IDC29" populated="true" UUID="e495b2aa-fb57-4080-bfec-75e1f4da1a4d" ascendingOrDescending="UNSPECIFIED" column-ref="COL23" name="full_name" physicalName="full_name" />
     </index>
     <index id="IDX30" populated="true" UUID="8350d189-57bf-4d16-800d-b04a0db7e5fb" clustered="false" name="ptm_short_name_idx" physicalName="ptm_short_name_idx" primaryKeyIndex="false" unique="true" >
@@ -373,7 +371,7 @@ AA substitution</remarks>
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
  <play-pen zoom="1.1892071150027224" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
