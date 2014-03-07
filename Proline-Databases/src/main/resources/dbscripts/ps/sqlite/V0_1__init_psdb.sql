@@ -84,7 +84,7 @@ CREATE TABLE ptm_specificity (
 
 CREATE INDEX peptide_ptm_peptide_idx ON peptide_ptm (peptide_id);
 
-CREATE UNIQUE INDEX ptm_full_name_idx ON ptm (full_name);
+CREATE INDEX ptm_full_name_idx ON ptm (full_name);
 
 CREATE UNIQUE INDEX ptm_short_name_idx ON ptm (short_name);
 
