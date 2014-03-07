@@ -35,8 +35,9 @@ class SQLQuantResultSummaryProvider(
   val ObjectTreeCols = ObjectTreeTable.columns
   
   // TODO: create an enumeration
-  val LabelFreeQuantPeptidesSchema = "object_tree.label_free_quant_peptides"
-  val QuantProteinSetSchema = "object_tree.quant_protein_sets"
+  final val labelFreeQuantPeptidesSchema = "object_tree.label_free_quant_peptides"
+  final val spectralCountQuantPeptidesSchema = "object_tree.spectral_counting_peptides"
+  final val quantProteinSetSchema = "object_tree.quant_protein_sets"
 
   def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
     val rsms = this.getQuantResultSummaries(quantRsmIds, quantChannelIds, loadResultSet)
@@ -96,7 +97,7 @@ class SQLQuantResultSummaryProvider(
         quantChannelIds = quantChannelIds.toArray,
         masterQuantProteinSets = mqProtSetsByRsmId(rsm.id),
         masterQuantPeptides = mqPepsByRsmId(rsm.id),
-        masterQuantPeptideIons = mqPepIonsByRsmId(rsm.id),
+        masterQuantPeptideIons =  if(mqPepIonsByRsmId.get(rsm.id).isDefined) mqPepIonsByRsmId(rsm.id) else Array.empty[MasterQuantPeptideIon] ,        
         resultSummary = rsm
       )
     }
@@ -116,14 +117,14 @@ class SQLQuantResultSummaryProvider(
         (t1,c1,t2,c2) => List(t1.ID,t1.SELECTION_LEVEL,t1.RESULT_SUMMARY_ID,t1.SERIALIZED_PROPERTIES,t2.CLOB_DATA) -> 
         " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN("~ quantRsmIds.mkString(",") ~")" ~
         " AND "~ t1.OBJECT_TREE_ID ~" = "~ t2.ID ~
-        " AND "~ t2.SCHEMA_NAME ~" = '"~ LabelFreeQuantPeptidesSchema ~"'"
-      )
-      
+        " AND ( "~ t2.SCHEMA_NAME ~" = '"~ labelFreeQuantPeptidesSchema ~"' OR "~ t2.SCHEMA_NAME ~" = '"~ spectralCountQuantPeptidesSchema ~"') "
+      )       
+       
       msiEzDBC.select(mqPepCompQuery) { r =>
   
         val mqPepId: Long = toLong(r.getAny(MQCompCols.ID))
         val pepInst = pepInstByMQPepId.get(mqPepId)
-        val mqPepIons = mqPepIonsByMQPepId(mqPepId)
+        val mqPepIons : Array[MasterQuantPeptideIon] = if(mqPepIonsByMQPepId.get(mqPepId).isDefined) mqPepIonsByMQPepId(mqPepId) else Array.empty[MasterQuantPeptideIon]
         val quantPeptides = ProfiJson.deserialize[Array[QuantPeptide]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
         val quantPeptideMap = Map() ++ (for( qp <- quantPeptides if qp != null ) yield qp.quantChannelId -> qp)
         
@@ -158,7 +159,7 @@ class SQLQuantResultSummaryProvider(
         " WHERE "~ t2.RESULT_SUMMARY_ID ~" IN("~ quantRsmIds.mkString(",") ~")" ~
         " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
         " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID ~
-        " AND "~ t3.SCHEMA_NAME ~" = '"~ QuantProteinSetSchema ~"'"
+        " AND "~ t3.SCHEMA_NAME ~" = '"~ quantProteinSetSchema ~"'"
       )
          
       msiEzDBC.select(mqProtSetCompQuery) { r =>
