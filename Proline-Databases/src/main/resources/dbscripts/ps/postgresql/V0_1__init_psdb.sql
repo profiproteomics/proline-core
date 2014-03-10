@@ -102,9 +102,11 @@ CREATE TABLE public.ptm (
                 CONSTRAINT ptm_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.ptm IS 'Describes the names of the ptm definitions.
+UNIQUE(full_name)
 UNIQUE(short_name)';
 COMMENT ON COLUMN public.ptm.unimod_id IS 'The unimod record_id.';
-COMMENT ON COLUMN public.ptm.full_name IS 'A description of the PTM.;
+COMMENT ON COLUMN public.ptm.full_name IS 'A description of the PTM.
+MUST BE UNIQUE.';
 COMMENT ON COLUMN public.ptm.short_name IS 'Descriptive, one word name, suitable for use in software applications.
 This name must not include the specificity. For example, Carboxymethyl is the short name, not Carboxymethyl-Cys or Carboxymethyl (C).
 MUST BE UNIQUE.';
@@ -113,7 +115,7 @@ COMMENT ON COLUMN public.ptm.serialized_properties IS 'A JSON string which store
 
 ALTER SEQUENCE public.ptm_id_seq OWNED BY public.ptm.id;
 
-CREATE INDEX ptm_full_name_idx
+CREATE UNIQUE INDEX ptm_full_name_idx
  ON public.ptm
  ( full_name );
 
