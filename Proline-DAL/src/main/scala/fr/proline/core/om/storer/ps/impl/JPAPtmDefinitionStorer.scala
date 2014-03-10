@@ -84,16 +84,31 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
 
         // IF the PTM short name already exists in the database
         if (psPtm != null) {
-          
+           
           // Retrieve the Precursor delta of the found PTM
           val psPtmPrecDelta = psPtm.getEvidences().toList.find(_.getType() == PsPtmEvidencePrecursorType).get
           
           // Compare PS PTM evidence with found PTM evidence
           val precursorDelta = ptmDef.precursorDelta
           val ptmComposition = precursorDelta.composition
+       
+          var compositionPrecursorDelta : Array[String] = precursorDelta.composition.split(" ").sorted
+          var compositionPtmPrecDelta : Array[String] = psPtmPrecDelta.getComposition.split(" ").sorted
+          
+          def mergeArrayofString(ar : Array[String]) : String = {
+		      var mergedString : String = ""
+		      for (el <- ar) {
+		           mergedString = mergedString + el + " "
+		      }
+		      return (mergedString)
+	      }
+          val precursorDeltaCompositionSorted = mergeArrayofString(compositionPrecursorDelta)
+          val psPtmPrecDeltaCompositionSorted = mergeArrayofString(compositionPtmPrecDelta)
+          
+      
           if (nearlyEqual(psPtmPrecDelta.getMonoMass, precursorDelta.monoMass) == false ||
               nearlyEqual(psPtmPrecDelta.getAverageMass, precursorDelta.averageMass) == false ||
-              precursorDelta.composition != psPtmPrecDelta.getComposition ) { // StringUtils.isEmpty(ptmComposition) == false &&
+              precursorDeltaCompositionSorted != psPtmPrecDeltaCompositionSorted ) { // StringUtils.isEmpty(ptmComposition) == false &&
             throw new IllegalArgumentException("the provided PTM %s exists in the PSdb with different evidence properties".format(ptmShortName))
           }
 
@@ -104,6 +119,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             psPtmSpecif.getLocation == ptmDef.location && characterToScalaChar(psPtmSpecif.getResidue) == ptmDef.residue
           }
 
+          
           // IF the PTM Precursor delta is identical but the specificity is new
           if (psMatchingPtmSpecifOpt.isEmpty) {
          	 
@@ -129,7 +145,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
 
         // IF the PTM short name doesn't exist in the database
         } else {
-
+ 
           // IF the PTM evidence is not fulfilled
           if( ptmDef.isCompositionDefined == false ) {
             throw new IllegalArgumentException("the PTM composition must be defined for insertion in the database")
@@ -138,7 +154,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             logger.info("Insert new Ptm "+ptmShortName)
             // Build and persist the precursor delta
             val ptmPrecDelta = ptmDef.precursorDelta
-            val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)
+            val psPtmPrecDelta = convertPtmEvidenceToPSPtmEvidence(ptmPrecDelta)              
             psEM.persist(psPtmPrecDelta)
             
             // Build and persist a new PTM
@@ -146,7 +162,9 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
             psPtm.setShortName(ptmDef.names.shortName)
             psPtm.setFullName(ptmDef.names.fullName)
             psPtm.setEvidences( setAsJavaSet(Set(psPtmPrecDelta)) )
+            
             if( ptmDef.unimodId > 0 ) psPtm.setUnimodId(ptmDef.unimodId)
+               
             psEM.persist(psPtm)
             
             psPtmPrecDelta.setPtm(psPtm)
@@ -171,7 +189,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
       insertedPtmDefs
     }
 
-    protected def convertPtmEvidenceToPSPtmEvidence(ptmEvidence: PtmEvidence): PsPtmEvidence = {
+    protected def convertPtmEvidenceToPSPtmEvidence(ptmEvidence: PtmEvidence): PsPtmEvidence = {      
       
       this.logger.info("Creating PTM evidence of type="+ptmEvidence.ionType.toString()+" and mass="+ptmEvidence.monoMass)
       val psPtmEvidence = new PsPtmEvidence()
