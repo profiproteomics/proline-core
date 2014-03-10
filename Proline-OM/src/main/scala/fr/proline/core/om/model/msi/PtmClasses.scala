@@ -188,8 +188,6 @@ case class LocatedPtm(
   // Requirements
   require(definition != null, "definition is null")
   require(seqPosition >= -1 , "invalid seqPosition, it must be an integer >= -1")
-  require(monoMass > 0 , "invalid monoMass, it must be a strictly positive number")
-  require(averageMass > 0 , "invalid averageMass, it must be a strictly positive number")
   require(!StringUtils.isEmpty(composition), "composition is empty")
 
   if (isNTerm) require(seqPosition == 0, "invalid seqPosition for a N-term PTM (it must be 0)")
