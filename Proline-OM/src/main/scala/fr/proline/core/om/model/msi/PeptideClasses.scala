@@ -318,13 +318,10 @@ case class Peptide ( // Required fields
         val ptmDef = ptm.definition
         val shortName = ptmDef.names.shortName
   
-        var ptmConstraint: String = ""
-        if (ptm.isNTerm) { ptmConstraint = "NTerm" }
-        else if (ptm.isCTerm) { ptmConstraint = "CTerm" }
-        else { ptmConstraint = "" + ptmDef.residue + ptm.seqPosition }
+        val ptmConstraint = if (ptm.isNTerm || ptm.isCTerm) ptmDef.location
+        else "" + ptmDef.residue + ptm.seqPosition
   
-        val ptmString = "%s (%s)".format(shortName, ptmConstraint)
-        ptmStringBuf += ptmString
+        ptmStringBuf += s"${shortName} (${ptmConstraint})"
       }
   
       tmpReadablePtmString = ptmStringBuf.mkString("; ")
