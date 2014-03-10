@@ -77,24 +77,24 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
     ),
     SpectrumTitleSpecif(
       SoftNames.MASCOT_DISTILLER,
-      "the raw file name, one cycle and one retention time",
+      "the raw file name, one scan and one retention time",
       """"9272: Scan 13104 (rt=30.2521) [D:\MSData\All\Qex1_000949.raw]""", 
       Map(
         SpectrumTitleFields.RAW_FILE_NAME -> """D:\MSData\All\Qex1_000949.raw""",
-        SpectrumTitleFields.FIRST_CYCLE -> "13104",
-        SpectrumTitleFields.LAST_CYCLE -> "13104",
+        SpectrumTitleFields.FIRST_SCAN -> "13104",
+        SpectrumTitleFields.LAST_SCAN -> "13104",
         SpectrumTitleFields.FIRST_TIME -> "30.2521",
         SpectrumTitleFields.LAST_TIME -> "30.2521"
       )
     ),
     SpectrumTitleSpecif(
       SoftNames.MASCOT_DISTILLER,
-      "the raw file name, the cycles and the retention times",
+      "the raw file name, the scans and the retention times",
       """"134: Sum of 3 scans in range 723 (rt=19.5118) to 733 (rt=19.6302) [\\DSV_D01\CPManip\analyses\AMT_Process12\CAJU1269.RAW]""", 
       Map(
         SpectrumTitleFields.RAW_FILE_NAME -> """\\DSV_D01\CPManip\analyses\AMT_Process12\CAJU1269.RAW""",
-        SpectrumTitleFields.FIRST_CYCLE -> "723",
-        SpectrumTitleFields.LAST_CYCLE -> "733",
+        SpectrumTitleFields.FIRST_SCAN -> "723",
+        SpectrumTitleFields.LAST_SCAN -> "733",
         SpectrumTitleFields.FIRST_TIME -> "19.5118",
         SpectrumTitleFields.LAST_TIME -> "19.6302"
       )
@@ -161,8 +161,8 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
     ),*/
     SoftNames.MASCOT_DISTILLER -> SpectrumTitleParsingRule(
       rawFileNameRegex = Some("""\[(.+?)\]"""),
-      firstCycleRegex  = Some("""in range (\d+) \(rt=||Scan (\d+) \(rt="""),
-      lastCycleRegex   = Some("""\) to (\d+) \(rt=||Scan (\d+) \(rt="""),
+      firstScanRegex  = Some("""in range (\d+) \(rt=||Scan (\d+) \(rt="""),
+      lastScanRegex   = Some("""\) to (\d+) \(rt=||Scan (\d+) \(rt="""),
       firstTimeRegex   = Some("""in range \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)"""),
       lastTimeRegex    = Some("""\) to \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)""")
     ),
