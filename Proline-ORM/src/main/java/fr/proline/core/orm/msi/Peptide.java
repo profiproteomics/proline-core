@@ -153,7 +153,7 @@ public class Peptide implements Serializable, Comparable<Peptide> {
     public static class TransientData implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private SequenceMatch sequenceMatch = null;
+	private SequenceMatch sequenceMatch = null; //JPM.TODO : to be removed (no longer used by new version of Proline Studio)
 
 	private ArrayList<DProteinSet> proteinSetArray = null;
 	
