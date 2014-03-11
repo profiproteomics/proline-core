@@ -92,18 +92,8 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
           val precursorDelta = ptmDef.precursorDelta
           val ptmComposition = precursorDelta.composition
        
-          var compositionPrecursorDelta : Array[String] = precursorDelta.composition.split(" ").sorted
-          var compositionPtmPrecDelta : Array[String] = psPtmPrecDelta.getComposition.split(" ").sorted
-          
-          def mergeArrayofString(ar : Array[String]) : String = {
-		      var mergedString : String = ""
-		      for (el <- ar) {
-		           mergedString = mergedString + el + " "
-		      }
-		      return (mergedString)
-	      }
-          val precursorDeltaCompositionSorted = mergeArrayofString(compositionPrecursorDelta)
-          val psPtmPrecDeltaCompositionSorted = mergeArrayofString(compositionPtmPrecDelta)
+		  val precursorDeltaCompositionSorted = precursorDelta.composition.split(" ").sorted.mkString(" ")
+		  val psPtmPrecDeltaCompositionSorted = psPtmPrecDelta.getComposition.split(" ").sorted.mkString(" ")
           
       
           if (nearlyEqual(psPtmPrecDelta.getMonoMass, precursorDelta.monoMass) == false ||
