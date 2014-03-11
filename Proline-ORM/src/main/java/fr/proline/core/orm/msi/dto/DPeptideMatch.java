@@ -7,7 +7,7 @@ import fr.proline.core.orm.msi.SequenceMatch;
  *
  * @author JM235353
  */
-public class DPeptideMatch {
+public class DPeptideMatch implements Comparable<DPeptideMatch> {
     private long m_id;
     private Integer m_rank;
     private int m_charge;
@@ -120,6 +120,17 @@ public class DPeptideMatch {
 
     public void setProteinMatches(DProteinMatch[] proteinMatchArray) {
         m_proteinMatchArray = proteinMatchArray;
+    }
+
+	@Override
+    public int compareTo(DPeptideMatch peptideMatch) {
+		if (m_peptide == null) {
+			return 0;
+		}
+		if (peptideMatch.m_peptide == null) {
+			return 0;
+		}
+		return m_peptide.compareTo(peptideMatch.m_peptide);
     }
 
 }
