@@ -11,7 +11,7 @@ public class DPeptideInstance {
 	private Float m_elutionTime;
 	
 	private DPeptideMatch m_bestPeptideMatch;
-	private SequenceMatch m_sequenceMatch;
+	//private SequenceMatch m_sequenceMatch; // JPM.TODO : to be removed
 	
 	public DPeptideInstance(long id, long peptideId, int validatedProteinSetCount, Float elutionTime) {
         m_id = id;
@@ -20,7 +20,7 @@ public class DPeptideInstance {
         m_peptideId = peptideId;
         
         m_bestPeptideMatch = null;
-        m_sequenceMatch = null;
+        //m_sequenceMatch = null;
     }
 	
     public long getId() {
@@ -47,11 +47,11 @@ public class DPeptideInstance {
         m_bestPeptideMatch = bestPeptideMatch;
     }
     
-    public SequenceMatch getSequenceMatch() {
+    /*public SequenceMatch getSequenceMatch() {
     	return m_sequenceMatch;
     }
     
     public void setSequenceMatch(SequenceMatch sequenceMatch) {
     	m_sequenceMatch = sequenceMatch;
-    }
+    }*/
 }
