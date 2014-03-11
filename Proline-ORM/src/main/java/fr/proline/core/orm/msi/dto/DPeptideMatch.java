@@ -1,6 +1,7 @@
 package fr.proline.core.orm.msi.dto;
 
 import fr.proline.core.orm.msi.Peptide;
+import fr.proline.core.orm.msi.SequenceMatch;
 
 /**
  *
@@ -14,11 +15,13 @@ public class DPeptideMatch {
     private double m_experimentalMoz;
     private int m_missedCleavage;
     private Float m_score;
-    private Peptide m_p;
+    private Peptide m_peptide;
     private long m_resultSetId;
     
     private DMsQuery m_msQuery;
     private boolean m_msQuerySet;
+    
+    private SequenceMatch m_sequenceMatch;
     
     private DProteinMatch[] m_proteinMatchArray = null;
     private String m_proteinSetStringList = null;
@@ -35,9 +38,10 @@ public class DPeptideMatch {
         m_score = score;
         m_resultSetId = resultSetId;
         
-        m_p = null;
+        m_peptide = null;
         m_msQuery = null;
         m_msQuerySet = false;
+        m_sequenceMatch = null;
         m_proteinMatchArray = null;
     }
     
@@ -46,11 +50,19 @@ public class DPeptideMatch {
     }
     
     public void setPeptide(Peptide p) {
-        this.m_p = p;
+    	m_peptide = p;
     }
     
     public Peptide getPeptide() {
-        return m_p;
+        return m_peptide;
+    }
+    
+    public void setSequenceMatch(SequenceMatch sequenceMatch) {
+        m_sequenceMatch = sequenceMatch;
+    }
+    
+    public SequenceMatch getSequenceMatch() {
+        return m_sequenceMatch;
     }
     
     public Float getScore() {
