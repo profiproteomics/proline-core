@@ -66,7 +66,7 @@ class WeightedSCQuantifierTest extends AbstractMultipleDBTestCase with Logging {
   def quantifyRSMSC() = {
     //  Validate RS to generate RSM
 
-    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId))
+    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = None)
 
     val udsEm = executionContext.getUDSDbConnectionContext.getEntityManager
     udsEm.getTransaction().begin()

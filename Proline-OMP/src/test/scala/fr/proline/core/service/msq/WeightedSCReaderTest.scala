@@ -70,13 +70,16 @@ class WeightedSCReaderTest extends AbstractMultipleDBTestCase with Logging {
     var wscReader = new WeightedSCResultReader(execCtx = executionContext, datasetId = dsId)
     wscReader.run()
     val result :String  = wscReader.getResultAsJSON
+    val rsmId : Long = wscReader.getIdfRSMReferenceId
     assertNotNull(result)
+    assertNotNull(rsmId)
+    assertNotEquals(-1L,rsmId)
     logger.info(result)
   }
   
   private def computeSC() : Long = {
   
-    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId))
+
 
     val udsEm = executionContext.getUDSDbConnectionContext.getEntityManager
     udsEm.getTransaction().begin()
@@ -161,7 +164,7 @@ class WeightedSCReaderTest extends AbstractMultipleDBTestCase with Logging {
     udsEm.persist(bioSpl1)
 
     udsEm.getTransaction().commit()
-
+    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = Some(qtDS.getId()))
     var wsCalculator = new WeightedSpectralCountQuantifier(executionContext = executionContext, udsMasterQuantChannel = mqCh, scConfig = spCountCfg)
     wsCalculator.quantify
     assertNotNull(mqCh.getQuantResultSummaryId())

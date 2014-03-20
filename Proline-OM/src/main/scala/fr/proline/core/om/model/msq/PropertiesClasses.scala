@@ -72,3 +72,10 @@ case class MasterQuantProteinSetProperties (
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
   @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None
 )
+
+case class MasterQuantChannelProperties (
+    @JsonDeserialize(contentAs = classOf[Long])
+	@BeanProperty var identResultSummaryId: Option[Long],
+	@JsonDeserialize(contentAs = classOf[Long])
+	@BeanProperty var identDatasetId: Option[Long]
+)

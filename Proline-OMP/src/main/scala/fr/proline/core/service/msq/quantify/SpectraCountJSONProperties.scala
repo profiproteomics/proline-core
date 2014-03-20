@@ -28,10 +28,6 @@ object SpectralCountsJSONProperties {
     final val sscPropName : String = "\"ssc\""
     final val wscPropName : String = "\"wsc\""
            
-  /** 
-   * reference Idf RSM ID properties
-   */
-    final val refIdfRsmID : String = "\"ident_result_summary_id\""
 }
 
 /**

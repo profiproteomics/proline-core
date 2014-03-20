@@ -1,18 +1,19 @@
 package fr.proline.core.service.msq.export
 
-import fr.proline.api.service.IService
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.context.IExecutionContext
-import fr.proline.core.orm.uds.Dataset
-import fr.proline.core.service.msq.quantify.SpectralCountsJSONProperties
-import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
-import fr.proline.repository.util.JDBCWork
 import java.sql.Connection
+
 import scala.collection.mutable.ArrayBuffer
+
+import com.typesafe.scalalogging.slf4j.Logging
+
+import fr.profi.util.serialization.ProfiJson
+import fr.proline.api.service.IService
+import fr.proline.context.IExecutionContext
+import fr.proline.core.om.model.msq.MasterQuantChannelProperties
 import fr.proline.core.om.model.msq.QuantResultSummary
-import fr.proline.core.om.model.msq.QuantProteinSet
-import fr.proline.core.om.model.msq.QuantProteinSet
-import scala.collection.mutable.HashMap
+import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
+import fr.proline.core.service.msq.quantify.SpectralCountsJSONProperties
+import fr.proline.repository.util.JDBCWork
 
 class WeightedSCResultReader (
     execCtx: IExecutionContext, 
@@ -31,6 +32,9 @@ class WeightedSCResultReader (
   private var _refRSMId : Long = -1L
   def getIdfRSMReferenceId() = { _refRSMId }
   
+  private var _refDSId : Long = -1L
+  def getIdfDatasetReferenceId() = { _refDSId }
+
   def runService(): Boolean = {
     logger.info("Retrive SpectralCount Result for DataSet "+datasetId)
     
@@ -72,18 +76,23 @@ class WeightedSCResultReader (
           
     require(mqchQuantRSMID != null && mqchQuantRSMID!=0, "undefined quantitation result summary for dataset id=" + datasetId)
 
-    // Read reference RSM idf ID from master quant channel    
+    // Read reference Dataset and RSM idf ID from master quant channel    
     try {
-	   
-	    if(mqcSerializedProp != null){
-	     
-	      val indexStart =  mqcSerializedProp.indexOf(SpectralCountsJSONProperties.refIdfRsmID)
-	      val indexEnd = if( mqcSerializedProp.indexOf(",", indexStart)>=0 )mqcSerializedProp.indexOf(",", indexStart) else mqcSerializedProp.indexOf("}", indexStart)
-	      
-	      _refRSMId = mqcSerializedProp.substring(indexStart+SpectralCountsJSONProperties.refIdfRsmID.length()+1,indexEnd).trim().toLong
-	    }
+	   if(mqcSerializedProp != null){
+	     val mqChProp =  ProfiJson.deserialize[MasterQuantChannelProperties](mqcSerializedProp)
+	     _refRSMId = if(mqChProp.getIdentResultSummaryId.isDefined) mqChProp.getIdentResultSummaryId.get else -1l
+	     _refDSId = if(mqChProp.getIdentDatasetId.isDefined) mqChProp.getIdentDatasetId.get else -1l
+	     logger.info("Retrive SpectralCount Result : _refRSMId "+_refRSMId+" _refDSId "+_refDSId)
+	   }
+	  
     } catch {
-    	case e: Exception=>  _refRSMId = -1l
+    	case e: Exception=> {
+    	  _refRSMId = -1l
+    	  _refDSId = -1l
+    	  logger.error(" Read reference Dataset and RSM Failed "+e)
+    	  e.printStackTrace()
+    	  
+    	}
     }
     
     
