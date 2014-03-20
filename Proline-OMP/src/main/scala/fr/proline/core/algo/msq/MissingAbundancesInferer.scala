@@ -46,7 +46,7 @@ object MissingAbundancesInferer {
       // Estimate the missing abundances
       abundanceRow.map { abundance =>
         if( isZeroOrNaN(abundance) == false ) abundance
-        else randomGaussian(meanAbundance, stdDev).toFloat
+        else randomGaussian(meanAbundance, stdDev).toFloat.max(0)
       }
 
     }
