@@ -26,8 +26,7 @@ trait ILcmsMapAligner extends Logging {
     val ftMapping = FeatureMapper.computePairwiseFtMapping( map1Features, map2Features, alnParams.ftMappingParams )
     
     val map1FtById = map1Features.map { ft => (ft.id -> ft) } toMap
-    
-    
+        
     // two possibilities: keep nearest mass match or exclude matching conflicts (more than one match)
     val landmarksByMassIdx = new HashMap[Long,ArrayBuffer[Landmark]]
     
@@ -52,7 +51,10 @@ trait ILcmsMapAligner extends Logging {
     for( (massRangeIdx,landmarks) <- landmarksByMassIdx if landmarks.isEmpty == false ) {
       
       val landmarksSortedByTime = landmarks.sortBy( _.time )
-      val smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnParams.smoothingParams )
+      var smoothedLandmarks = alnSmoother.smoothLandmarks( landmarksSortedByTime, alnParams.smoothingParams )
+      // FIXME: this should not be empty
+      if( smoothedLandmarks.isEmpty ) smoothedLandmarks = landmarksSortedByTime
+      
       /*val timeList = landmarksSortedByTime.map { _.time }
       val deltaTimeList = landmarksSortedByTime.map { _.deltaTime }*/
       
