@@ -70,7 +70,9 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
       
       val runIdsStr = runIds.mkString(",")    
          
-      val nbScans: Int = ezDBC.selectInt( "SELECT count(id) FROM scan WHERE scan_sequence_id IN (" + runIdsStr + ")" )
+      val nbScans: Int = ezDBC.selectInt(
+        s"SELECT count(id) FROM ${LcmsDbScanTable} WHERE ${ScanCols.SCAN_SEQUENCE_ID} IN (" + runIdsStr + ")"
+      )
       
       // Load scans
       var lcmsScanIdx = 0
