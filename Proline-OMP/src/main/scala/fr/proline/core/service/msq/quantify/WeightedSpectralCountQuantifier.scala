@@ -414,7 +414,7 @@ class WeightedSpectralCountQuantifier(
       val idfRSM = rsmProvider.getResultSummary(scConfig.parentRSMId.get, true).get
       
       
-      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=scConfig.parentRSMId.,identDatasetId= scConfig.parentDSId)
+      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=scConfig.parentRSMId,identDatasetId= scConfig.parentDSId)
       udsMasterQuantChannel.setSerializedProperties(ProfiJson.serialize(mqchProperties)) 
       idfRSM
     }
