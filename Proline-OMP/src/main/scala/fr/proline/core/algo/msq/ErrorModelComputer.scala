@@ -36,18 +36,20 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
     linearInterpolation(abundance,abundanceCVPairs) * abundance
   }
   
-  def tTest( statSummary1: StatisticalSummary, statSummary2: StatisticalSummary ): Double = {
+  def tTest( statSummary1: StatisticalSummary, statSummary2: StatisticalSummary, applyVarianceCorrection: Boolean = true ): Double = {
     
     // Check we have enough replicates
     // TODO: is this needed ? (because of the correction to be applied)
     require( statSummary1.getN > 2 && statSummary2.getN > 2, "not enough replicates for T statistics" )
 
-    // Compute the T-Test using corrected variances from error model
-    CommonsStatHelper.tTestComputer.tTest(
-      _applyErrorCorrectionToStatSummary(statSummary1),
-      _applyErrorCorrectionToStatSummary(statSummary2)
-    )
-    
+    if( applyVarianceCorrection == false ) CommonsStatHelper.tTestComputer.tTest( statSummary1, statSummary2 )
+    else {
+      // Compute the T-Test using corrected variances from error model
+      CommonsStatHelper.tTestComputer.tTest(
+        _applyErrorCorrectionToStatSummary(statSummary1),
+        _applyErrorCorrectionToStatSummary(statSummary2)
+      )
+    }    
   }
   
   private def _applyErrorCorrectionToStatSummary( statSum: StatisticalSummary ): StatisticalSummary = {

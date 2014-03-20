@@ -6,6 +6,7 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.Profilizer
+import fr.proline.core.algo.msq.ProfilizerConfig
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.UdsDbHelper
@@ -18,8 +19,7 @@ class QuantProfilesComputer(
   executionContext: IExecutionContext,
   experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
-  peptideStatTestsAlpha: Float = 0.01f,
-  proteinStatTestsAlpha: Float = 0.01f
+  config: ProfilizerConfig
 ) extends IService with Logging {
   
   require( executionContext.isJPA,"invalid type of executionContext, JPA type is required")
@@ -31,12 +31,14 @@ class QuantProfilesComputer(
     dsFactory: IDataStoreConnectorFactory,
     projectId: Long,
     experimentalDesign: ExperimentalDesign,
-    masterQuantChannelId: Long
+    masterQuantChannelId: Long,
+    config: ProfilizerConfig
   ) {
     this(
       ContextFactory.buildExecutionContext(dsFactory, projectId, true), // Force JPA context
       experimentalDesign,
-      masterQuantChannelId
+      masterQuantChannelId,
+      config
     )
     _hasInitiatedExecContext = true
   }
@@ -75,10 +77,10 @@ class QuantProfilesComputer(
     )
     
     // 3. Compute MasterQuantPeptides profiles
-    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, peptideStatTestsAlpha)
+    profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, config)
     
     // 4. Compute MasterQuantProtSets profiles
-    profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, proteinStatTestsAlpha)
+    profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, config)
     
     // 5. Update MasterQuantPeptides and MasterQuantProtSets properties
     val msiDbCtx = executionContext.getMSIDbConnectionContext()

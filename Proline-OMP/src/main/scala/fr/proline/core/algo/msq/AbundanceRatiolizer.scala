@@ -53,8 +53,11 @@ object AbundanceRatiolizer {
   def updateRatioStates(
     ratios: Seq[AverageAbundanceRatio],
     relativeVariationModel: RelativeErrorModel,
-    absoluteNoiseModel: Option[AbsoluteErrorModel],    
-    pValueThreshold: Float
+    absoluteNoiseModel: Option[AbsoluteErrorModel],
+    pValueThreshold: Float,
+    applyVarianceCorrection: Boolean = true,
+    applyTTest: Boolean = true,
+    applyZTest: Boolean = true
   ) {
     
     ratios.foreach { ratio =>
@@ -89,17 +92,19 @@ object AbundanceRatiolizer {
           }
         }*/
         
-        if( ratio.numeratorSummary.getN > 2 && ratio.denominatorSummary.getN > 2 ) {
-          ratio.tTestPValue = absoluteNoiseModel.map( _.tTest(ratio.numeratorSummary,ratio.denominatorSummary) )
+        if( applyTTest && ratio.numeratorSummary.getN > 2 && ratio.denominatorSummary.getN > 2 ) {
+          ratio.tTestPValue = absoluteNoiseModel.map( _.tTest(ratio.numeratorSummary,ratio.denominatorSummary,applyVarianceCorrection) )
         }
         
         // Apply the variation model
-        val zTestPValue = relativeVariationModel.zTest(ratio.maxAbundance.toFloat, ratio.foldValue.get)
-        ratio.zTestPValue = if( zTestPValue.isNaN ) None else Some( zTestPValue )
-        //println( "z-test=" + foldChangePValue )
+        if( applyZTest == false ) {
+          val zTestPValue = relativeVariationModel.zTest(ratio.maxAbundance.toFloat, ratio.foldValue.get)
+          ratio.zTestPValue = if( zTestPValue.isNaN ) None else Some( zTestPValue )
+          //println( "z-test=" + foldChangePValue )
+        }
         
-        // Check the pValue
-        if( ratio.tTestPValue.getOrElse(0.0) <= pValueThreshold && zTestPValue <= pValueThreshold ) {
+        // Check the pValue of T-Test and Z-Test
+        if( ratio.tTestPValue.getOrElse(0.0) <= pValueThreshold && ratio.zTestPValue.getOrElse(0.0) <= pValueThreshold ) {
           if( ratio.numeratorMean > ratio.denominatorMean ) ratio.state = Some(AbundanceRatioState.OverAbundant)
           else ratio.state = Some(AbundanceRatioState.UnderAbundant)
         } else {
