@@ -46,8 +46,8 @@ class AbundanceRatiolizerTest {
     /*noiseModel.noiseDistribution.foreach { bin =>
       println( bin.abundance +"\t"+bin.stdDev)
     }*/
-     import scala.runtime.ScalaRunTime.stringOf
-    println( stringOf(absoluteNoiseModel.errorDistribution) )
+    //import scala.runtime.ScalaRunTime.stringOf
+    //println( stringOf(absoluteNoiseModel.errorDistribution) )
     
     
     val normalizedRatios = ratiosBuilder.result
