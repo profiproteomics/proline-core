@@ -210,6 +210,7 @@ class WeightedSCResultReader (
 					   if (sqlResultSet2.next){ 
 					     protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
 					   }
+					   pStmt2.close()
 				   }            	         
 				 } // End of jdbcWork anonymous inner class    
 				 execCtx.getMSIDbConnectionContext().doWork(protStatJdbcWork, false)
