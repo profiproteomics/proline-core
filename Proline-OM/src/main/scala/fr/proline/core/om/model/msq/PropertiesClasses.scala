@@ -74,8 +74,8 @@ case class MasterQuantProteinSetProperties (
 )
 
 case class MasterQuantChannelProperties (
-    @JsonDeserialize(contentAs = classOf[Long])
+    @JsonDeserialize(contentAs = classOf[java.lang.Long])
 	@BeanProperty var identResultSummaryId: Option[Long],
-	@JsonDeserialize(contentAs = classOf[Long])
+	@JsonDeserialize(contentAs = classOf[java.lang.Long])
 	@BeanProperty var identDatasetId: Option[Long]
 )
