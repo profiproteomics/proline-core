@@ -21,7 +21,6 @@ import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.util.MathUtils
 import scala.collection.mutable.MapBuilder
 import scala.collection.mutable.HashSet
-
 import fr.proline.core.orm.msi.{
   ObjectTree => MsiObjectTree,
   MasterQuantPeptideIon => MsiMasterQuantPepIon,
@@ -45,6 +44,8 @@ import fr.proline.core.orm.msi.{
   Scoring => MsiScoring,
   SequenceMatch => MsiSequenceMatch
 }
+import fr.proline.repository.util.JDBCWork
+import java.sql.Connection
 
 /**
  * @author VDS
@@ -248,11 +249,9 @@ class WeightedSpectralCountQuantifier(
           if (protQuant.get.proteinSetId.isDefined) {
             val currentIdRSM = this.identResultSummaries.filter(_.id.equals(rsmId))(0)
             protSetId=protQuant.get.proteinSetId.get
-            protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)            
+            protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)      
+            
             val protSet = if(currentIdRSM.proteinSetById.get(protSetId).isDefined) currentIdRSM.proteinSetById.get(protSetId).get else null
-            val currentPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protMatchId)    		  
-            protMatchPepNbr = currentPM.getPeptideCount()
-
             protMatchStatus = if(protSet != null && protSet.getTypicalProteinMatchId.equals( protMatchId)){
                "Typical"
             } else {
@@ -264,6 +263,24 @@ class WeightedSpectralCountQuantifier(
                   "NOT FOUND !"+protSetId
             } 
           }
+          //Read Nbr Pep for Protein
+          val pepNbrQueryJdbcWork = new JDBCWork() {
+				   override def execute(con: Connection) {
+				     					      //---- Read Prot Status
+					   val getPepCount = "SELECT peptide_count from peptide_set_protein_match_map pspmm, peptide_set "+
+					   "WHERE pspmm.protein_match_id = ? and pspmm.result_summary_id = ?  and peptide_set.id = pspmm.peptide_set_id"
+					   val pStmt2 = con.prepareStatement(getPepCount)
+					   pStmt2.setLong(1, protMatchId)	
+					   pStmt2.setLong(2, rsmId)					   
+					   val sqlResultSet2 = pStmt2.executeQuery()
+					   if (sqlResultSet2.next){ 
+					     protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
+					   }
+					   pStmt2.close()
+				   }
+          } // End of jdbcWork anonymous inner class    
+		 executionContext.getMSIDbConnectionContext().doWork(pepNbrQueryJdbcWork, false)
+				   
           jsonBuilder.append("{").append(SpectralCountsJSONProperties.protACPropName).append("=").append(protAC).append(",")
           jsonBuilder.append(SpectralCountsJSONProperties.protMatchId).append("=").append(protMatchId).append(",")
           jsonBuilder.append(SpectralCountsJSONProperties.protSetId).append("=").append(protSetId).append(",")
@@ -283,6 +300,7 @@ class WeightedSpectralCountQuantifier(
     jsonBuilder.result
 
   }
+  
 
   private def createProteinPepsWeightStructs(referenceForPeptides: Boolean): Map[Long, ProteinSetPeptidesDescription] = {
 
