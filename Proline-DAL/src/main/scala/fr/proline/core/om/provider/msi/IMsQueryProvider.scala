@@ -21,4 +21,6 @@ trait IMsQueryProvider {
     getMsiSearchesMsQueries( Array(msiSearchId) )
   }
   
+  def getUnassignedMsQueries( resultSetIds: Seq[Long], msiSearchIds: Seq[Long] ): Array[MsQuery]
+  
 }

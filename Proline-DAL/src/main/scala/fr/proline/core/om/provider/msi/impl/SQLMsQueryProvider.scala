@@ -18,10 +18,51 @@ import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 
 class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQueryProvider {
   
   val MsQueryCols = MsiDbMsQueryTable.columns
+  
+  def getUnassignedMsQueries( resultSetIds: Seq[Long], msiSearchIds: Seq[Long] ): Array[MsQuery] = {
+    if( msiSearchIds == null || msiSearchIds.length == 0 ) return Array.empty[MsQuery]
+    
+    /*
+     * this method searches in table ms_query for tuples NOT related to a peptide_match
+     * there is two approaches to get these tuples:
+     * 1) "NOT_IN" request : SELECT * FROM ms_query WHERE id NOT IN (SELECT ms_query_id FROM peptide_match WHERE ...);
+     * 2) "LEFT_JOIN" request : SELECT * FROM ms_query m LEFT JOIN peptide_match p ON p.ms_query_id=m.id WHERE p.ms_query_id IS NULL AND m.msi_search_id=?;
+     * 
+     * The NOT_IN request is slower than LEFT_JOIN. The mean time on a 10MB Mascot sample file : 395ms against 299ms for the whole method and on the first run(it takes less longer after)
+     * The NOT_IN request can be run using the SelectQueryBuilder
+     * The LEFT_JOIN request is more efficient, because it gets everything in only request. It constructs a joint table of ms_query and peptide_match for all the rows in both tables. If there is
+     * no peptide_matches for a ms_query, the joint table will contain NULL values. The request filters the joint table to keep only rows with NULL values on peptide matches, so that we get all 
+     * the unassigned ms_query (because they do not have any related peptide match)
+     * 
+     * The NOT_IN request will be used for the moment, as it should not impact the performances. If it occurs that it takes too long it should be replaced with the LEFT_JOIN request
+     * 
+     */
+    
+    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+      
+      // first solution with NOT_IN request
+      val msQueryIdsSql = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
+        List(t.MS_QUERY_ID) -> "WHERE "~ t.RESULT_SET_ID ~" IN ("~ resultSetIds.mkString(",") ~")"
+      )
+      val unmatchedMsQueryIdsSql = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery( (t,c) =>
+        List(t.ID) -> "WHERE "~ t.MSI_SEARCH_ID ~" = "~ 1 ~" AND "~ t.ID ~ s" NOT IN (${msQueryIdsSql})"
+      )
+      
+      // second solution: using LEFT_JOIN request 
+      // val unmatchedMsQueryIdsSql = "SELECT ms_query.id FROM ms_query LEFT JOIN peptide_match ON ms_query.id = peptide_match.ms_query_id WHERE peptide_match.ms_query_id IS NULL AND ms_query.msi_search_id IN (" + msiSearchIds.mkString(",") + ")";
+      
+      // use the dedicated method to get full MsQuery objects
+      val msq = msiEzDBC.selectLongs(unmatchedMsQueryIdsSql)
+      getMsQueries(msq)
+
+    }, false)
+
+  }
 
   def getMsiSearchesMsQueries(msiSearchIds: Seq[Long]): Array[MsQuery] = {
     if( msiSearchIds == null || msiSearchIds.length == 0 ) return Array.empty[MsQuery]

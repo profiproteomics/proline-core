@@ -9,6 +9,9 @@ import fr.proline.util.{ StringUtils, PropertiesUtils }
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.IMsQueryProvider
+import fr.proline.core.om.provider.msi.IMsQueryProvider
+import fr.proline.core.om.provider.msi.impl.SQLMsQueryProvider
 
 trait IProviderFactory {
 
@@ -54,6 +57,8 @@ object ProviderFactory extends IProviderFactory with Logging {
       getPTMProviderInstance(executionContext).asInstanceOf[T]
     } else if (providerClassifier == classOf[IResultSetProvider]) {
       getResultSetProviderInstance(executionContext).asInstanceOf[T]
+    } else if (providerClassifier == classOf[IMsQueryProvider]) {
+      getMsQueryProviderInstance(executionContext).asInstanceOf[T]
     } else {
       throw new IllegalArgumentException("ProviderFactory does not support " + providerClassifier)
     }
@@ -218,6 +223,26 @@ object ProviderFactory extends IProviderFactory with Logging {
       } // End if (className is not empty)
 
     } // End if (m_providersProperties is not null)
+
+    result
+  }
+
+  def getMsQueryProviderInstance(executionContext: IExecutionContext): IMsQueryProvider = {
+    var result: IMsQueryProvider = getDefaultProviderInstance(classOf[IMsQueryProvider])
+
+    if (result == null) {
+      val msiDb = executionContext.getMSIDbConnectionContext
+      if ((msiDb != null) && msiDb.isJPA) {
+        logger.debug("Creating a default SQLMsQueryProvider in current executionContext")
+        result = new SQLMsQueryProvider(msiDb)
+      }
+    }
+    
+    if (result == null) {
+      logger.warn("No IMsQueryProvider implementing instance found !!")
+    } else {
+      logger.debug("MsQueryProvider implementation : " + result.getClass.getName)
+    }
 
     result
   }
