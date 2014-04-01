@@ -6,7 +6,7 @@ import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.util.primitives._
 
-class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFilter {
+class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFilter with IPeptideMatchSorter {
   
   val filterParameter = PepMatchFilterParams.PEPTIDE_SEQUENCE_LENGTH.toString
   val filterDescription = "peptide sequence length filter"

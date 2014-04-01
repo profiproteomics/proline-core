@@ -2,7 +2,6 @@ package fr.proline.core.algo.msi.filtering
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import fr.proline.core.algo.msi.validation.BuildPeptideMatchFilter
 import fr.proline.core.om.model.msi.FilterDescriptor
 import fr.proline.core.om.model.msi.PeptideInstance
@@ -11,6 +10,7 @@ import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.util.StringUtils
 import fr.proline.util.primitives.toDouble
+import fr.proline.core.om.model.msi.ResultSet
 
 object FilterPropertyKeys {
   final val THRESHOLD_VALUE = "threshold_value"
@@ -25,6 +25,7 @@ object PepMatchFilterParams extends Enumeration {
   val SCORE = Value("SCORE")
   val SCORE_IT_PVALUE = Value("SCORE_IT_P-VALUE")
   val SCORE_HT_PVALUE = Value("SCORE_HT_P-VALUE")
+  val SINGLE_PSM_PER_QUERY = Value("SINGLE_PSM_PER_QUERY")
 }
 
 object ProtSetFilterParams extends Enumeration {
@@ -120,7 +121,7 @@ trait IPeptideMatchSorter {
   def sortPeptideMatches(pepMatches: Seq[PeptideMatch]): Seq[PeptideMatch]
 }
 
-trait IPeptideMatchFilter extends IFilter with IPeptideMatchSorter {
+trait IPeptideMatchFilter extends IFilter  {
 
   /**
    * Validate each PeptideMatch by setting their isValidated attribute.
@@ -144,7 +145,17 @@ trait IPeptideMatchFilter extends IFilter with IPeptideMatchSorter {
 
 }
 
-trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter {
+/**
+ * Add a constraint on filter specifying that target ResultSet should be specified before 
+ * calling filter method
+ */
+trait IFilterNeedingResultSet {
+  
+  def setTargetRS(targetRS: ResultSet) : Unit
+  
+} 
+
+trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter with IPeptideMatchSorter {
 
   def isPeptideMatchValid(pepMatch: PeptideMatch): Boolean
 
@@ -287,9 +298,15 @@ object ResultSummaryFilterBuilder {
                 } // End if (filterProperties is defined)
 
                 if (optionalThresholdValue.isDefined) {
-                  result += BuildPeptideMatchFilter(filterParameterStr, optionalThresholdValue.get)
+                  val nextFilter =  BuildPeptideMatchFilter(filterParameterStr, optionalThresholdValue.get)
+                  if(nextFilter.isInstanceOf[IFilterNeedingResultSet])
+                	  nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.resultSet.get)
+                  result += nextFilter
                 } else {
-                  result += BuildPeptideMatchFilter(filterParameterStr)
+                  val nextFilter =  BuildPeptideMatchFilter(filterParameterStr)
+                  if(nextFilter.isInstanceOf[IFilterNeedingResultSet])
+                	  nextFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rsm.resultSet.get)
+                  result += nextFilter
                 }
 
               } // End (if filterParameterStr is not empty)

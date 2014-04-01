@@ -98,6 +98,21 @@ case class ResultSet(
     else None
   }
 
+  def getPeptideMatchesByProteinMatch() : Map[ProteinMatch, ArrayBuffer[PeptideMatch]] = {
+    val resultBuilder  = Map.newBuilder[ProteinMatch, ArrayBuffer[PeptideMatch]]
+	val tmpPeptideMatchByPeptideId = peptideMatches.groupBy(_.peptideId)
+    proteinMatches.foreach(protMatch => {
+    	val protMatchPeptMatches = new ArrayBuffer[PeptideMatch]()
+    	if(protMatch.sequenceMatches != null){
+    		protMatch.sequenceMatches.foreach(seqMatch => {
+    			val pepMatchesForCurrent =tmpPeptideMatchByPeptideId.getOrElse(seqMatch.getPeptideId,Array.empty[PeptideMatch])
+    			protMatchPeptMatches ++= pepMatchesForCurrent
+    		}) //end go throudh protMatch SeqMarches 
+    	}
+      resultBuilder += protMatch -> protMatchPeptMatches.distinct
+    }) //End go through ProtMarches
+    resultBuilder.result()
+  } 
 }
 
 case class ResultSetProperties(

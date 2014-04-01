@@ -14,7 +14,7 @@ import fr.proline.core.algo.msi.filtering._
  * A ValidationResult will be created by counting # valid target ProteinSet,  # valid decoy ProteinSet
  * and calculating a FDR using : 100 *  # valid decoy ProteinSet / # valid target ProteinSet
  * 
- */
+ */ 
 class BasicProtSetValidator( val validationFilter: IProteinSetFilter ) extends IProteinSetValidator with Logging {
   
   def filterParameter = validationFilter.filterParameter

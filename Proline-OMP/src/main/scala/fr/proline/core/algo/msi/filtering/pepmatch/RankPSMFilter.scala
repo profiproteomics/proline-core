@@ -52,7 +52,7 @@ object RankPSMFilter {
  * Constructor pepMatchRank specifies rank to consider : all PSM of rank higher than specified one will be excluded 
  * 
  */
-class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter with Logging {
+class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter with IPeptideMatchSorter with Logging {
   
   val filterParameter = PepMatchFilterParams.RANK.toString
   val filterDescription = "peptide match rank filter"

@@ -151,12 +151,22 @@ class IdentificationTreeValidator(
 
   private def _validateResultSet(rs: ResultSet): ResultSummary = {
 
-    val tdAnalyzer = if (pepMatchValidator.isDefined) {
-      BuildTDAnalyzer(useTdCompetition, rs, Some(pepMatchValidator.get.validationFilter))
+    val tdAnalyzer = if (pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter]) {
+      BuildTDAnalyzer(useTdCompetition, rs, Some(pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]))
     } else {
       BuildTDAnalyzer(useTdCompetition, rs, None)
     }
 
+    //Test if there are some IFilterNeedingResultSet in Flilters.
+    if(pepMatchFilters.isDefined){
+      pepMatchFilters.get.foreach(currentFilter=>{
+        if(currentFilter.isInstanceOf[IFilterNeedingResultSet])
+          currentFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rs)
+      })
+    }    
+    if(pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IFilterNeedingResultSet])
+      pepMatchValidator.get.validationFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(rs)
+      
     // Instantiate a result set validator
     val rsValidator = new ResultSetValidator(
       execContext = execJpaContext,
@@ -238,12 +248,23 @@ class IdentificationTreeValidator(
       }
 
       // Build Target/Decoy analyzer
-      val tdAnalyzer = if (pepMatchValidator.isDefined) {
-        BuildTDAnalyzer(useTdCompetition, mergedTargetRs, Some(pepMatchValidator.get.validationFilter))
+      val tdAnalyzer = if (pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter]) {
+        BuildTDAnalyzer(useTdCompetition, mergedTargetRs, Some(pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]))
       } else {
         BuildTDAnalyzer(useTdCompetition, mergedTargetRs, None)
       }
 
+      //Test if there are some IFilterNeedingResultSet in Flilters.
+      if (pepMatchFilters.isDefined) {
+        pepMatchFilters.get.foreach(currentFilter => {
+          if (currentFilter.isInstanceOf[IFilterNeedingResultSet])
+            currentFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(mergedTargetRs)
+        })
+      }
+      if (pepMatchValidator.isDefined && pepMatchValidator.get.validationFilter.isInstanceOf[IFilterNeedingResultSet])
+        pepMatchValidator.get.validationFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(mergedTargetRs)
+
+      
       // Instantiate a result set validator
       val rsValidator = new ResultSetValidator(
         execContext = execJpaContext,
