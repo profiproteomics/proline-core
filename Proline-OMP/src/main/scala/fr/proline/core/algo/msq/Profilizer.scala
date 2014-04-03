@@ -62,8 +62,25 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     //println( s"normalizedMatrix.length: ${normalizedMatrix.length}")
     
     // --- Estimate the noise model ---
-    val ratiosByMQPepId = masterQuantPeptides.map( _.id -> new ArrayBuffer[Option[ComputedRatio]] ) toMap // Map() ++ 
-    val mqPepById = masterQuantPeptides.map( mqPep => mqPep.id -> mqPep ) toMap//Map() ++ masterQuantPeptides.map( mqPep => mqPep.id -> mqPep )
+    
+    // Define some mappings
+    val mqPepById = new HashMap[Long,MasterQuantPeptide]()
+    mqPepById.sizeHint(masterQuantPeptides.length)
+
+    val ratiosByMQPepId = new HashMap[Long,ArrayBuffer[Option[ComputedRatio]]]()
+    ratiosByMQPepId.sizeHint(masterQuantPeptides.length)
+    
+    // Compute these mappings and reset quant profiles
+    for( mqPep <- masterQuantPeptides ) {
+      
+      mqPepById += mqPep.id -> mqPep
+      ratiosByMQPepId += mqPep.id -> new ArrayBuffer[Option[ComputedRatio]]
+      
+      // Reset quant profiles for this masterQuantPeptide
+      for ( mqPepProps <- mqPep.properties ) {
+        mqPepProps.setMqPepProfileByGroupSetupNumber(None)
+      }
+    }
     
     // Iterate over the ratio definitions
     for ( ratioDef <- groupSetup.ratioDefinitions ) {
@@ -120,6 +137,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     val abundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)    
     
     for( masterQuantProtSet <- masterQuantProtSets ) {
+      
+      // Reset quant profiles for this masterQuantProtSet
+      for( masterQuantProtSetProps <- masterQuantProtSet.properties) {
+        masterQuantProtSetProps.setMqProtSetProfilesByGroupSetupNumber(None)
+      }
       
       // Clusterize MasterQuantPeptides according to their profile
       val mqPepsByProfileAsStr = new HashMap[String,ArrayBuffer[MasterQuantPeptide]]()
@@ -316,9 +338,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       ErrorModelComputer.computeRelativeErrorModel(relativeErrors, nbins=Some(5)).toAbsoluteErrorModel
     }
     
+    logger.debug("config.applyMissValInference value: "+ config.applyMissValInference)
+    
     // --- Infer missing abundances ---
     val filledMatrix = if( config.applyMissValInference == false ) normalizedMatrix
     else {
+      logger.info("Inferring missing values...")
+      
       if( minQCsCountPerSample < 3 ) {
         // TODO: find what to do if when insufficient technical replicates
         this.logger.warn("insufficient number of analysis replicates => can't infer missing values")
