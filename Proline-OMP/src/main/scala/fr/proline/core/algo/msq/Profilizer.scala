@@ -9,7 +9,7 @@ import fr.proline.util.primitives.isZeroOrNaN
 
 case class ProfilizerConfig(
   peptideStatTestsAlpha: Float = 0.01f,
-  proteinStatTestsAlpha: Float = 0.01f,  
+  proteinStatTestsAlpha: Float = 0.01f,
   applyNormalization: Boolean = true,
   applyMissValInference: Boolean = true,
   applyVarianceCorrection: Boolean = true,
@@ -441,8 +441,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       errorModels._1,
       errorModels._2,
       statTestsAlpha,
-      config.applyTTest,
-      config.applyZTest
+      applyVarianceCorrection = config.applyVarianceCorrection,
+      applyTTest = config.applyTTest,
+      applyZTest = config.applyZTest
     )
     
     (filledMatrix,ratiosBuffer)
