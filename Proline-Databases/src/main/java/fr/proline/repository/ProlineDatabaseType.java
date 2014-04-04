@@ -5,7 +5,7 @@ import fr.proline.util.StringUtils;
 public enum ProlineDatabaseType {
 
     UDS("udsdb_production"), PDI("pdidb_production"), PS("psdb_production"), MSI("msidb_production"), LCMS(
-	    "lcmsdb_production");
+	    "lcmsdb_production"), SEQ("seqdb_production");
 
     private final String m_puName;
 
