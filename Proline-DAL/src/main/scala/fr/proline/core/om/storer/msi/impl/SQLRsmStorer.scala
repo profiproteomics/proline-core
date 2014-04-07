@@ -39,7 +39,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
 
         	DoJDBCWork.tryTransactionWithEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
 			    val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE id = " + spectrumId
-			    this.logger.debug("executing SQL query: \""+sqlQuery+"\"")
+			    //this.logger.debug("executing SQL query: \""+sqlQuery+"\"")
 			      
 			    ezDBC.selectAndProcess( sqlQuery ) { r =>
 
