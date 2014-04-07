@@ -42,7 +42,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
 			    this.logger.debug("executing SQL query: \""+sqlQuery+"\"")
 			      
 			    ezDBC.selectAndProcess( sqlQuery ) { r =>
-		        
+
 			        val spectrumId = toLong(r.nextAny)
 			        val spectrumTitle = r.nextString
 			        
