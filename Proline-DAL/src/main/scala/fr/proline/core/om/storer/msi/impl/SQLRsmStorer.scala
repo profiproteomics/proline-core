@@ -13,6 +13,7 @@ import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.IRsmStorer
 import fr.proline.context.IExecutionContext
+import fr.proline.util.primitives._
 
 private[msi] class SQLRsmStorer() extends IRsmStorer {
   
@@ -26,6 +27,39 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
       val pepId = pepInstance.peptide.id
       val unmodPepId = pepInstance.getUnmodifiedPeptideId
       
+      
+      // --- AW: #9147 : modify elutionTime to become value from Spectrum table instead of zero
+      //
+      val bestPeptideMatchForThisPeptideInstance = 
+      pepInstance.peptideMatches.filter(pm => pm.id ==pepInstance.bestPeptideMatchId).apply(0)
+
+      if(bestPeptideMatchForThisPeptideInstance != null) {
+         val spectrumId = bestPeptideMatchForThisPeptideInstance.getMs2Query.spectrumId 
+         if (spectrumId > 0) {
+
+        	DoJDBCWork.tryTransactionWithEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
+			    val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE id = " + spectrumId
+			    this.logger.debug("executing SQL query: \""+sqlQuery+"\"")
+			      
+			    ezDBC.selectAndProcess( sqlQuery ) { r =>
+		        
+			        val spectrumId = toLong(r.nextAny)
+			        val spectrumTitle = r.nextString
+			        
+			        val first_time = r.nextAny
+			        if(first_time != null)  {
+			            pepInstance.elutionTime = toFloat(first_time) // modify elution time (retention time)
+			          /*  this.logger.debug("AW: spectrum_id: " + spectrumId + " " 
+			                + spectrumTitle + " ret time:" + first_time 
+			                + ", toFloat:" + toFloat(first_time))*/
+			    	}
+			    }
+			})
+         }
+      }
+      // #9147 --------------------------------------------------------------------
+
+     
       // Insert peptide instance
       stmt.executeWith(
             pepInstance.peptideMatchesCount,
