@@ -49,9 +49,6 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
 			        val first_time = r.nextAny
 			        if(first_time != null)  {
 			            pepInstance.elutionTime = toFloat(first_time) // modify elution time (retention time)
-			          /*  this.logger.debug("AW: spectrum_id: " + spectrumId + " " 
-			                + spectrumTitle + " ret time:" + first_time 
-			                + ", toFloat:" + toFloat(first_time))*/
 			    	}
 			    }
 			})
