@@ -3,15 +3,14 @@ package fr.proline.core.service.msq.export
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.api.service.IService
+import fr.proline.core.om.model.msq.ComputedRatio
 
 trait XQuantRsmExporter extends IService {
   
@@ -28,6 +27,7 @@ trait XQuantRsmExporter extends IService {
   protected val locale = java.util.Locale.ENGLISH  
 
   protected val protSetHeaders = "AC description selection_level".split(" ")
+  protected val statHeaders = "ratio t-test_pvalue z-test_pvalue".split(" ")
   
   protected val quantRsmId = udsDbHelper.getMasterQuantChannelQuantRsmId( masterQuantChannelId )
   protected val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
@@ -76,6 +76,11 @@ trait XQuantRsmExporter extends IService {
   protected def appendProtSetCells(row: ArrayBuffer[Any], protSetOpt: Option[ProteinSet]) {
     if( protSetOpt.isDefined ) row ++= protSetCellsById(protSetOpt.get.id)
     else row ++= Array.fill(protSetHeaders.length)("")
+  }
+  
+  private def _getRatioStats(r: ComputedRatio) = Array(r.getState, r.getTTestPValue.getOrElse(""), r.getZTestPValue.getOrElse(""))
+  protected def stringifyRatiosStats(ratios: List[Option[ComputedRatio]]): List[String] = {
+    ratios.flatMap(_.map( this._getRatioStats(_).map(_.toString) ).getOrElse(Array.fill(3)("")) )
   }
 
 }
