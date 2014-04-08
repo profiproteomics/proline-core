@@ -422,12 +422,14 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         // We can then make absolute statistical validation at the biological sample level
         val (numMean, numStdDev) = ( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
         val (denomMean, denomStdDev) = ( denominatorSummary.getMean.toFloat, denominatorSummary.getStandardDeviation.toFloat )
+        
         if (numMean.isNaN == false &&  numStdDev.isNaN == false && denomMean.isNaN == false && denomStdDev.isNaN == false) {
           absoluteVariationsBuffer += AbsoluteErrorObservation( numMean, numStdDev )
           absoluteVariationsBuffer += AbsoluteErrorObservation( denomMean, denomStdDev )
         } else {
-          this.logger.error("Stat summary contains NaN mean or NaN standardDeviation")
+          this.logger.trace("Stat summary contains NaN mean or NaN standardDeviation")
         }
+        
       }
       // Else we merge biological sample data and compute statistics at a lower level
       else {        
