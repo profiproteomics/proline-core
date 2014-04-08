@@ -26,7 +26,6 @@ class ExportMasterQuantPeptides(
 
   protected val pepHeaders = "sequence".split(" ")
   protected val mqPepHeaders = "quant_peptide_id best_peptide_match_score selection_level".split(" ")  
-  protected val qPepHeaders = "raw_abundance".split(" ")
   protected val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
   
   // Create some mappings
@@ -48,7 +47,7 @@ class ExportMasterQuantPeptides(
       mqPepCells ++= Array(mqPep.id,scoreOpt.getOrElse(""), mqPep.selectionLevel)
       
       // Append quant peptide data for each condition
-      val qPepCellsByQcId = new HashMap[Long,Seq[Any]]
+      /*val qPepCellsByQcId = new HashMap[Long,Seq[Any]]
       for( (qcId, qPep) <- mqPep.quantPeptideMap ) {
         val qPepCells = List(
           qPep.rawAbundance
@@ -61,7 +60,36 @@ class ExportMasterQuantPeptides(
         val qPepCellsOpt = qPepCellsByQcId.get(qcId)
         if( qPepCellsOpt.isDefined ) mqPepCells ++= qPepCellsOpt.get
         else mqPepCells ++= Array.fill(qPepHeaders.length)("")
+      }*/
+      
+      val quantPepMap = mqPep.quantPeptideMap
+      val abundanceBuffer = new ArrayBuffer[Any]
+      val rawAbundanceBuffer = new ArrayBuffer[Any]
+      val psmCountBuffer = new ArrayBuffer[Any]
+      
+      for(qcId <- qcIds) {
+        val qPepOpt = quantPepMap.get(qcId)
+        
+        if( qPepOpt.isDefined ) {
+          val qPep = qPepOpt.get
+          abundanceBuffer += qPep.abundance
+          rawAbundanceBuffer += qPep.rawAbundance
+          psmCountBuffer += qPep.peptideMatchesCount
+        } else {
+          abundanceBuffer += ""
+          rawAbundanceBuffer += ""
+          psmCountBuffer += ""
+        }
       }
+      
+      // Add raw abundances
+      mqPepCells ++= rawAbundanceBuffer
+      
+      // Add abundances
+      mqPepCells ++= abundanceBuffer
+      
+      // Add PSM counts
+      mqPepCells ++= psmCountBuffer
       
       tmpMqPepCellsById += mqPep.id -> mqPepCells
     }
@@ -87,10 +115,10 @@ class ExportMasterQuantPeptides(
       
       row ++= mqPepCellsById(mqPep.id)
       
+      // Add profile statistics
       val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber.toString)
-      val ratios = mqPepProfile.getRatios.map(_.map(_.getState.toString).getOrElse("") )
-      
-      row ++= ratios
+      val stats = this.stringifyRatiosStats(mqPepProfile.getRatios)
+      row ++= stats
       
       fileWriter.println(row.mkString("\t"))
       fileWriter.flush()
@@ -111,8 +139,13 @@ class ExportMasterQuantPeptides(
   
   protected def mkRowHeader( quantChannelCount: Int ): String = {
     val rowHeaders = new ArrayBuffer[String] ++ protSetHeaders ++ pepHeaders ++ mqPepHeaders
-    for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qPepHeaders.map(_+"_"+i) )
-    for( r <- ratioDefs ) rowHeaders += ("ratio_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber)
+    
+    for( i <- 1 to quantChannelCount ) rowHeaders += "raw_abundance_"+i
+    for( i <- 1 to quantChannelCount ) rowHeaders += "abundance_"+i
+    for( i <- 1 to quantChannelCount ) rowHeaders += "psm_count_"+i
+    
+    for( r <- ratioDefs ) rowHeaders ++= statHeaders.map( _ + ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber) )
+    
     rowHeaders.mkString("\t")
   }
 

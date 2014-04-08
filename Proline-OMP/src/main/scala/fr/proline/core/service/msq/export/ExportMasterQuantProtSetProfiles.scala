@@ -23,11 +23,11 @@ class ExportMasterQuantProtSetProfiles(
   val groupSetupNumber = 1
   
   val mqProtSetProfileHeaders = "peptides_count".split(" ")
-  val mqProtSetStatHeaders = "ratio t-test_pvalue z-test_pvalue".split(" ")
-  val qProtSetProfileHeaders = "abundance".split(" ")
   val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
 
   def writeRows( fileWriter: PrintWriter ) {
+    
+    val mqPepById = quantRSM.masterQuantPeptides.map( mqPep => mqPep.id -> mqPep ).toMap
     
     // Iterate over master quant peptides to export them
     quantRSM.masterQuantProteinSets.foreach { mqProtSet =>
@@ -45,9 +45,23 @@ class ExportMasterQuantProtSetProfiles(
         // Add abundances
         row ++= profile.abundances.map( a => if( a.isNaN ) "" else a.toString )
         
+        // Sum the PSM count for each quant channel of this quantitative profile
+        val pepMatchCountByQcId = new HashMap[Long,Int]
+        profile.getMqPeptideIds().foreach { mqPepId =>
+          val mqPep = mqPepById(mqPepId)
+          for( (qcId,qPep) <- mqPep.quantPeptideMap ) {
+            val count = pepMatchCountByQcId.getOrElseUpdate(qcId, 0)
+            pepMatchCountByQcId(qcId) = count + qPep.peptideMatchesCount
+          }
+        }
+        
+        // Add PSM counts to the row
+        for( qcId <- this.qcIds ) {
+          row += pepMatchCountByQcId.getOrElse(qcId, 0)
+        }
+        
         // Add some statistics
-        def getRatioStats(r: ComputedRatio) = Array(r.state, r.getTTestPValue.getOrElse(""), r.getZTestPValue.getOrElse(""))
-        val stats = profile.ratios.flatMap(_.map( getRatioStats(_).map(_.toString) ).getOrElse(Array.fill(3)("")) )
+        val stats = this.stringifyRatiosStats(profile.getRatios)
         row ++= stats
         
         fileWriter.println(row.mkString("\t"))
@@ -76,8 +90,11 @@ class ExportMasterQuantProtSetProfiles(
   
   def mkRowHeader( quantChannelCount: Int ): String = {
     val rowHeaders = new ArrayBuffer[String] ++ protSetHeaders ++ mqProtSetProfileHeaders
-    for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qProtSetProfileHeaders.map(_+"_"+i) )
-    for( r <- ratioDefs ) rowHeaders ++= mqProtSetStatHeaders.map( _ + ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber) )
+    
+    for( i <- 1 to quantChannelCount ) rowHeaders += "abundance_"+i
+    for( i <- 1 to quantChannelCount ) rowHeaders += "psm_count_"+i
+    for( r <- ratioDefs ) rowHeaders ++= statHeaders.map( _ + ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber) )
+    
     rowHeaders.mkString("\t")
   }
   
