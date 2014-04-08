@@ -17,7 +17,7 @@ class ExportMasterQuantProtSetProfiles(
   val outputFile: File,
   val expDesign: ExperimentalDesign,
   val exportBestProfile: Boolean = true
-)  extends XQuantRsmExporter {
+)  extends AbstractQuantRsmExporter {
   
   // TODO: retrieve the right value
   val groupSetupNumber = 1

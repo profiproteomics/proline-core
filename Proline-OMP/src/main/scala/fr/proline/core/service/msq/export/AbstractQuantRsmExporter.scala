@@ -12,7 +12,7 @@ import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.api.service.IService
 import fr.proline.core.om.model.msq.ComputedRatio
 
-trait XQuantRsmExporter extends IService {
+abstract class AbstractQuantRsmExporter extends IService {
   
   // Define the interface
   val execCtx: IExecutionContext

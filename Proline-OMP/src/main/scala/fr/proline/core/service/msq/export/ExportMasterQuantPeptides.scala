@@ -19,7 +19,7 @@ class ExportMasterQuantPeptides(
   val masterQuantChannelId: Long,
   val outputFile: File,
   val expDesign: ExperimentalDesign
-) extends XQuantRsmExporter {
+) extends AbstractQuantRsmExporter {
   
   // TODO: retrieve the right value
   protected val groupSetupNumber = 1
