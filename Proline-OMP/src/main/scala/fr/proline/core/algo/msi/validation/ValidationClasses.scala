@@ -78,7 +78,8 @@ object BuildPeptideMatchFilter {
       case PepMatchFilterParams.SCORE => new ScorePSMFilter()
       case PepMatchFilterParams.SCORE_IT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = false)
       case PepMatchFilterParams.SCORE_HT_PVALUE => new MascotPValuePSMFilter(useHomologyThreshold = true)
-      case PepMatchFilterParams.SINGLE_PSM_PER_QUERY => new SinglePSMPerQuery()      
+      case PepMatchFilterParams.SINGLE_PSM_PER_QUERY => new SinglePSMPerQueryFilter()
+      case PepMatchFilterParams.SINGLE_PSM_PER_RANK=> new SinglePSMPerPrettyRankFilter()
     }
   }
 } 
