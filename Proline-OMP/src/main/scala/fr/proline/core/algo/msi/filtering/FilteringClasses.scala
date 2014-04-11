@@ -26,6 +26,7 @@ object PepMatchFilterParams extends Enumeration {
   val SCORE_IT_PVALUE = Value("SCORE_IT_P-VALUE")
   val SCORE_HT_PVALUE = Value("SCORE_HT_P-VALUE")
   val SINGLE_PSM_PER_QUERY = Value("SINGLE_PSM_PER_QUERY")
+  val SINGLE_PSM_PER_RANK = Value("SINGLE_PSM_PER_RANK")
 }
 
 object ProtSetFilterParams extends Enumeration {
@@ -122,7 +123,9 @@ trait IPeptideMatchSorter {
 }
 
 trait IPeptideMatchFilter extends IFilter  {
-
+ 
+  protected var _postValidation : Boolean = false
+ 
   /**
    * Validate each PeptideMatch by setting their isValidated attribute.
    * Validation criteria will depend on implementation.
@@ -143,6 +146,19 @@ trait IPeptideMatchFilter extends IFilter  {
    */
   def getPeptideMatchValueForFiltering(pepMatch: PeptideMatch): AnyVal
 
+  
+  /**
+   * Specify if the filter should be excuted as a simple PreValidation Filter or after the validation process.
+   * In this last case, the FDR will be impacted !  
+   */
+  def postValidationFilter(): Boolean = {
+    _postValidation
+  }
+  
+  def setAsPostValidationFilter(postValidation: Boolean) {
+    _postValidation = postValidation
+  }
+  
 }
 
 /**
