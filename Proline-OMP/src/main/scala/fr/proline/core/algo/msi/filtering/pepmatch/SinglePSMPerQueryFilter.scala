@@ -33,8 +33,6 @@ class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptid
     //For each query find a unique PSM. Used ruels:
     // - PSM with best score
     // - if equality : PSM which identify ProtMatches with higher number of valid PSMs
-    val startTime = System.currentTimeMillis()
-    logger.debug("Start creating Maps")
     val pepMatchesPerProtMatch: Map[ProteinMatch, ArrayBuffer[PeptideMatch]] =if(targetRSSet.decoyResultSet.isDefined) {targetRSSet.getPeptideMatchesByProteinMatch ++ targetRSSet.decoyResultSet.get.getPeptideMatchesByProteinMatch} else targetRSSet.getPeptideMatchesByProteinMatch
 
     //Create reverse map 
@@ -46,9 +44,6 @@ class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptid
         protArrays += entry._1
       })
     })
-
-    val endTime = System.currentTimeMillis()
-    logger.debug("END creating Maps "+(endTime-startTime))
     
     // Filter query per query
     psmPerQuery.foreach(entry => {
@@ -60,7 +55,7 @@ class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptid
         //Same Score Should found other way to filter
         val equalsPSMs = queryPsms.filter(_.score.equals(queryPsms(0).score))
         
-        logger.debug(" ------  Same Score Should found other way to filter QId "+entry._1+" size "+ equalsPSMs.size+" on "+queryPsms.size)
+//        logger.debug(" ------  Same Score Should found other way to filter QId "+entry._1+" size "+ equalsPSMs.size+" on "+queryPsms.size)
         
         equalsPSMs.foreach(currentPsm => {
           if (bestQueryPsm == null) {
@@ -75,8 +70,8 @@ class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptid
         }) //end go throughall equals psms
 
       } else if (!queryPsms.isEmpty) {
-        if(queryPsms.size > 1)
-        	logger.debug(" ------ Multiple PSM but <> Score QId "+entry._1+" size "+ queryPsms.size)
+//        if(queryPsms.size > 1)
+//        	logger.debug(" ------ Multiple PSM but <> Score QId "+entry._1+" size "+ queryPsms.size)
         //Keep only 1st PSM
         bestQueryPsm = queryPsms(0)
       }

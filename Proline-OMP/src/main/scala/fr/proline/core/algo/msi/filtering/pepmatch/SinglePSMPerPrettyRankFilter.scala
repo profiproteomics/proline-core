@@ -41,8 +41,7 @@ class SinglePSMPerPrettyRankFilter(var targetRSSet: ResultSet = null) extends IP
     //For each query find a unique PSM per rank. Used rules:
     // - PSM with best score
     // - if equality : PSM which identify ProtMatches with higher number of valid PSMs
-    val startTime = System.currentTimeMillis()
-    logger.debug("Start creating Maps")      
+    
     val pepMatchesPerProtMatch: Map[ProteinMatch, ArrayBuffer[PeptideMatch]] = if(targetRSSet.decoyResultSet.isDefined) {targetRSSet.getPeptideMatchesByProteinMatch ++ targetRSSet.decoyResultSet.get.getPeptideMatchesByProteinMatch} else targetRSSet.getPeptideMatchesByProteinMatch
         
     //Create reverse map 
@@ -55,47 +54,33 @@ class SinglePSMPerPrettyRankFilter(var targetRSSet: ResultSet = null) extends IP
       })
     })
 
-    val endTime = System.currentTimeMillis()
-    logger.debug("END creating Maps " + (endTime - startTime))
-
     // Filter query per query
     pepMatchesByMsqId.foreach(entry => {
-      logger.debug("**** Filter MSQuery "+entry._1)
       var psmsByRank = entry._2.groupBy(_.rank);
-       if(entry._1.equals(176394l)){
-         logger.debug("**** psmsByRank  "+psmsByRank.size)
-       } 
          
       // Filter rank per rank
       psmsByRank.foreach(sameRankPSMs => {
         var bestRankPsm: PeptideMatch = null
         //For all PSMs of a specific rank select 1
-        if(entry._1.equals(176394l))  
-        	logger.debug("**** Filter MSQuery - Rank  "+sameRankPSMs._1)
         	
         val currentRankPsms = sameRankPSMs._2
         if (currentRankPsms != null && !currentRankPsms.isEmpty) { // al least one PSM.
 
           if (currentRankPsms.size == 1) { //One PSM... choose it
             bestRankPsm = currentRankPsms(0)
-            logger.debug("**** One PSM... choose it  "+bestRankPsm.peptide.sequence)
+//            logger.debug("**** One PSM... choose it  "+bestRankPsm.peptide.sequence)
           } else { //more than one, choose using protein matches pepMatch count 
             currentRankPsms.foreach(currentPsm => {
               if (bestRankPsm == null) {
                 bestRankPsm = currentPsm
-                logger.debug("**** more than One PSMs... Start with first "+bestRankPsm.peptide.sequence)
+//                logger.debug("**** more than One PSMs... Start with first "+bestRankPsm.peptide.sequence)
               } else {
-                logger.debug("**** more than One PSMs... Is new one best ?? currentPsm exist :  "+protMatchesPerPepMatchId.get(currentPsm.id).isDefined)
-                logger.debug("**** more than One PSMs... Is new one best ?? bestRankPsm exist :  "+protMatchesPerPepMatchId.get(bestRankPsm.id).isDefined)
-                logger.debug("**** more than One PSMs... Is new one best ?? currentPsm size :  "+protMatchesPerPepMatchId.get(currentPsm.id).get.size )
-                logger.debug("**** more than One PSMs... Is new one best ?? bestRankPsm size :  "+ protMatchesPerPepMatchId.get(bestRankPsm.id).get.size)
-                
                 // filter using ProteinMatch nbrPeptideCount.
                 if ( protMatchesPerPepMatchId.get(currentPsm.id).isDefined &&
                 		( protMatchesPerPepMatchId.get(bestRankPsm.id).isEmpty
                 			|| ( getMaxNbrPepForProtMatches(protMatchesPerPepMatchId.get(currentPsm.id).get) > getMaxNbrPepForProtMatches(protMatchesPerPepMatchId.get(bestRankPsm.id).get) ))) {
                   bestRankPsm = currentPsm
-                  logger.debug("**** more than One PSMs... Found new best "+bestRankPsm.peptide.sequence)
+//                  logger.debug("**** more than One PSMs... Found new best "+bestRankPsm.peptide.sequence)
                 }
               }
             }) //end go throughall equals psms
