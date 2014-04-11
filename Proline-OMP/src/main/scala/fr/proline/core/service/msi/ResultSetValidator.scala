@@ -1,28 +1,24 @@
 package fr.proline.core.service.msi
 
-import java.io.File
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ArrayBuilder
-import scala.collection.mutable.HashMap
+
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi._
-import fr.proline.core.om.storer.msi.RsStorer
+
 import fr.proline.api.service.IService
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi._
+import fr.proline.core.algo.msi.InferenceMethods
 import fr.proline.core.algo.msi.filtering._
+import fr.proline.core.algo.msi.scoring._
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.algo.msi.validation.pepmatch.BasicPepMatchValidator
 import fr.proline.core.algo.msi.validation.proteinset.BasicProtSetValidator
-import fr.proline.core.dal._
-import fr.proline.core.om.storer.msi.RsmStorer
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.algo.msi.scoring._
-import fr.proline.core.algo.msi.InferenceMethods
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.storer.msi.RsmStorer
 
 object ResultSetValidator {
 
@@ -226,16 +222,21 @@ class ResultSetValidator(
     var finalValidationResult: ValidationResult = null
 
     // Execute all peptide matches pre filters
+    //VDS TEST: Execute some filter - singlePerQuery- After FDR !
+    val postValidationFilter : ArrayBuffer[IPeptideMatchFilter] = new ArrayBuffer()
+    
     if (pepMatchPreFilters.isDefined) {
       pepMatchPreFilters.get.foreach { psmFilter =>
-
-        finalValidationResult = new BasicPepMatchValidator(psmFilter, tdAnalyzer).validatePeptideMatches(targetRs).finalResult
-        logger.debug(
-          "After Filter " + psmFilter.filterDescription +
-          " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
-        )
-        appliedFilters += psmFilter
-        filterDescriptors += psmFilter.toFilterDescriptor
+  		if(!psmFilter.postValidationFilter){
+	        finalValidationResult = new BasicPepMatchValidator(psmFilter, tdAnalyzer).validatePeptideMatches(targetRs).finalResult
+	        logger.debug(
+	          "After Filter " + psmFilter.filterDescription +
+	          " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
+	        )
+	        appliedFilters += psmFilter
+	        filterDescriptors += psmFilter.toFilterDescriptor
+      	} else
+      	  postValidationFilter += psmFilter
       }
     } //End execute all PSM filters
     >>>
@@ -254,7 +255,18 @@ class ResultSetValidator(
       // Store Validation Params obtained after filtering
       filterDescriptors += validationFilter.toFilterDescriptor
     }
-
+    
+    //VDS: FOR TEST ONLY : EXECUTE some filter - singlePerQuery- After FDR !
+    postValidationFilter.foreach(psmFilter => {
+        finalValidationResult = new BasicPepMatchValidator(psmFilter, tdAnalyzer).validatePeptideMatches(targetRs).finalResult
+        logger.debug(
+          "After Post Validation Filter " + psmFilter.filterDescription +
+          " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
+        )
+        appliedFilters += psmFilter
+        filterDescriptors += psmFilter.toFilterDescriptor
+	})
+    
     // Save PSM Filters properties
     val expectedFdr = if (pepMatchValidator.isDefined) pepMatchValidator.get.expectedFdr else None
     rsmValProperties.getParams.setPeptideExpectedFdr(expectedFdr)
