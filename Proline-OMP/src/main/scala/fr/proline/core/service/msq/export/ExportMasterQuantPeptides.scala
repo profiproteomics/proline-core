@@ -24,7 +24,7 @@ class ExportMasterQuantPeptides(
   // TODO: retrieve the right value
   protected val groupSetupNumber = 1
 
-  protected val pepHeaders = "sequence".split(" ")
+  protected val pepHeaders = "sequence ptms prot_set_count".split(" ")
   protected val mqPepHeaders = "quant_peptide_id best_peptide_match_score selection_level".split(" ")  
   protected val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
   
@@ -128,7 +128,11 @@ class ExportMasterQuantPeptides(
   }
   
   protected def appendPepInstCells(row: ArrayBuffer[Any], pepInstOpt: Option[PeptideInstance]) {
-    if( pepInstOpt.isDefined ) row ++= Array(pepInstOpt.get.peptide.sequence)
+    if( pepInstOpt.isDefined ) {
+      val pepInst = pepInstOpt.get
+      val peptide = pepInst.peptide
+      row ++= Array(peptide.sequence,peptide.readablePtmString,peptide,pepInst.proteinSetsCount)
+    }
     else row ++= Array.fill(pepHeaders.length)("")
   }
   
