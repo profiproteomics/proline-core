@@ -131,7 +131,7 @@ class ExportMasterQuantPeptides(
     if( pepInstOpt.isDefined ) {
       val pepInst = pepInstOpt.get
       val peptide = pepInst.peptide
-      row ++= Array(peptide.sequence,peptide.readablePtmString,peptide,pepInst.proteinSetsCount)
+      row ++= Array(peptide.sequence,peptide.readablePtmString,pepInst.proteinSetsCount)
     }
     else row ++= Array.fill(pepHeaders.length)("")
   }
