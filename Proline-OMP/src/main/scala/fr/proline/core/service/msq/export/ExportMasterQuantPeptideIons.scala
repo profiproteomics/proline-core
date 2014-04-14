@@ -19,7 +19,7 @@ class ExportMasterQuantPeptideIons(
   override val expDesign: ExperimentalDesign
 ) extends ExportMasterQuantPeptides(execCtx,masterQuantChannelId,outputFile,expDesign) {
   
-  protected val mqPepIonHeaders = "charge master_elution_time master_feature_id".split(" ")
+  protected val mqPepIonHeaders = "charge calc_moz master_elution_time master_feature_id".split(" ")
   protected val qPepIonHeaders = "moz elution_time correct_elution_time duration raw_abundance abundance psm_count ms2_matching_freq feature_id".split(" ")
   
   // Create some mappings
@@ -55,7 +55,7 @@ class ExportMasterQuantPeptideIons(
       }
       
       // Append master quant peptide ion data
-      row ++= Array(mqPepIon.charge,mqPepIon.elutionTime,mqPepIon.lcmsMasterFeatureId.getOrElse(""))
+      row ++= Array(mqPepIon.charge,mqPepIon.calculatedMoz, mqPepIon.elutionTime,mqPepIon.lcmsMasterFeatureId.getOrElse(""))
       
       // Append quant peptide data for each condition
       val qPepIonCellsByQcId = new HashMap[Long,Seq[Any]]
@@ -89,10 +89,11 @@ class ExportMasterQuantPeptideIons(
   }
   
   override protected def mkRowHeader( quantChannelCount: Int ): String = {
-    val rowHeaders = new ArrayBuffer[String]() += super.mkRowHeader(quantChannelCount)
-    rowHeaders ++= mqPepIonHeaders
+    val rowHeaders = new ArrayBuffer[String]()
+    rowHeaders ++= super.mkProtSetAndQPepHeaderCols(quantChannelCount) ++ mqPepIonHeaders
     
     for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qPepIonHeaders.map(_+"_"+i) )
+    
     rowHeaders.mkString("\t")
   }
 

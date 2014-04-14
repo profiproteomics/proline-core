@@ -141,13 +141,21 @@ class ExportMasterQuantPeptides(
     appendPepInstCells(row,pepInstOpt)
   }
   
-  protected def mkRowHeader( quantChannelCount: Int ): String = {
+  protected def mkProtSetAndQPepHeaderCols( quantChannelCount: Int ): Seq[String] = {
     val rowHeaders = new ArrayBuffer[String] ++ protSetHeaders ++ pepHeaders ++ mqPepHeaders
     
     for( i <- 1 to quantChannelCount ) rowHeaders += "raw_abundance_"+i
     for( i <- 1 to quantChannelCount ) rowHeaders += "abundance_"+i
     for( i <- 1 to quantChannelCount ) rowHeaders += "psm_count_"+i
     
+    rowHeaders
+  }
+  
+  protected def mkRowHeader( quantChannelCount: Int ): String = {
+    
+    val rowHeaders = new ArrayBuffer[String]()
+    rowHeaders ++= mkProtSetAndQPepHeaderCols( quantChannelCount )
+
     for( r <- ratioDefs ) rowHeaders ++= statHeaders.map( _ + ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber) )
     
     rowHeaders.mkString("\t")
