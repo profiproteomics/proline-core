@@ -25,7 +25,7 @@ class ExportMasterQuantPeptides(
   protected val groupSetupNumber = 1
 
   protected val pepHeaders = "sequence ptms prot_set_count".split(" ")
-  protected val mqPepHeaders = "quant_peptide_id best_peptide_match_score selection_level".split(" ")  
+  protected val mqPepHeaders = "quant_peptide_id best_peptide_match_score elution_time selection_level".split(" ")  
   protected val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
   
   // Create some mappings
@@ -42,9 +42,10 @@ class ExportMasterQuantPeptides(
       
       // TODO: check if this is really the best score
       val scoreOpt = mqPep.peptideInstance.map( pi => pepMatchById(pi.bestPeptideMatchId).score )
+      val bestQPep = mqPep.getBestQuantPeptide
       
       // Append master quant peptide data
-      mqPepCells ++= Array(mqPep.id,scoreOpt.getOrElse(""), mqPep.selectionLevel)
+      mqPepCells ++= Array(mqPep.id,scoreOpt.getOrElse(""), bestQPep.elutionTime, mqPep.selectionLevel)
       
       // Append quant peptide data for each condition
       /*val qPepCellsByQcId = new HashMap[Long,Seq[Any]]
