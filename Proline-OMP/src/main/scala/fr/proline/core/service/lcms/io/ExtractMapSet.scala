@@ -592,7 +592,7 @@ class ExtractMapSet(
         // And we keep the existing master feature
         newMasterFeatures += mft
       } else {
-        // Else we create a master feature for each matching peptide        
+        // Else we create a master feature for each matching peptide
         for( (pepId, features) <- featuresByPepId ) {
           
           val newMftFeatures = features ++ unidentifiedFtSet
@@ -603,7 +603,7 @@ class ExtractMapSet(
           newMftFeatures.foreach { ft =>
             if( pepIdsByFeature.get(ft).map( _.length ).getOrElse(0) > 1 ) {
               // Flag this feature as a conflicting one
-              ft.selectionLevel = 1
+              ft.selectionLevel = 0
             }
           }
           
@@ -629,7 +629,7 @@ class ExtractMapSet(
                   // Append unidentified features to the cluster
                   tmpFtCluster.subFeatures ++= unidentifiedFts
                   // Flag this cluster as a conflicting feature
-                  tmpFtCluster.selectionLevel = 1
+                  tmpFtCluster.selectionLevel = 0
                 }
                 
                 tmpFtCluster

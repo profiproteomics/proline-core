@@ -87,21 +87,65 @@ class QuantProfilesComputer(
     
     DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx, { ezDBC =>
       
-      ezDBC.executePrepared("UPDATE master_quant_component SET serialized_properties = ? WHERE id = ?") { stmt =>
+      // TODO: create an UPDATE query builder
+      val mqComponentUpdateStmt = ezDBC.prepareStatementWrapper(
+        "UPDATE master_quant_component SET selection_level = ?, serialized_properties = ? WHERE id = ?"
+      )
+      
+      val objTreeUpdateStmt = ezDBC.prepareStatementWrapper(
+        "UPDATE object_tree SET clob_data = ? "+
+        "WHERE master_quant_component.object_tree_id = object_tree.id "+
+        "AND master_quant_component.id = ?"
+      )
+      
+      /*val mqProtSetObjTreeUpdateStmt = ezDBC.prepareStatementWrapper(
+        "UPDATE master_quant_component SET selection_level = ?, serialized_properties = ? WHERE id = ?"
+      )*/
 
-        this.logger.info("Updating MasterQuantPeptides properties...")
+      this.logger.info("Updating MasterQuantPeptides...")
+      
+      // Iterate over MasterQuantPeptides 
+      for( mqPep <- quantRSM.masterQuantPeptides ) {
         
-        // Update MasterQuantPeptides properties
-        for( mqPep <- quantRSM.masterQuantPeptides ) {
-          stmt.executeWith( ProfiJson.serialize(mqPep.properties), mqPep.id )
-        }
-
-        this.logger.info("Updating MasterQuantProtSets properties...")
+        // Update MasterQuantPeptides selection level and properties
+        mqComponentUpdateStmt.executeWith(
+          mqPep.selectionLevel,
+          ProfiJson.serialize(mqPep.properties),
+          mqPep.id
+        )
         
-        // Update MasterQuantProtSets properties
-        for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
-           stmt.executeWith( ProfiJson.serialize(mqProtSet.properties), mqProtSet.getMasterQuantComponentId() )
-        }
+        // Retrieve quant peptides sorted by quant channel
+        val quantPeptideMap = mqPep.quantPeptideMap
+        val quantPeptides = qcIds.map { quantPeptideMap.getOrElse(_, null) }
+        
+        // Update MasterQuantPeptides object tree
+        objTreeUpdateStmt.executeWith(
+          ProfiJson.serialize(quantPeptides),
+          mqPep.id
+        )
+      }
+      
+      this.logger.info("Updating MasterQuantProtSets...")
+      
+      // Iterate over MasterQuantProtSets
+      for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
+        
+        // Update MasterQuantProtSets selection level and properties
+        mqComponentUpdateStmt.executeWith(
+          mqProtSet.selectionLevel,
+          ProfiJson.serialize(mqProtSet.properties),
+          mqProtSet.getMasterQuantComponentId()
+        )
+        
+        // Retrieve quant protein sets sorted by quant channel
+        val quantProtSetMap = mqProtSet.quantProteinSetMap
+        val quantProtSets = qcIds.map { quantProtSetMap.getOrElse(_, null) }
+         
+        // Update MasterQuantProtSets object tree
+        objTreeUpdateStmt.executeWith(
+          ProfiJson.serialize(quantProtSets),
+          mqProtSet.id
+        )
       }
       
     })
