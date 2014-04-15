@@ -20,6 +20,7 @@ import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
+import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.util.primitives._
 
 class SQLQuantResultSummaryProvider(
@@ -34,10 +35,9 @@ class SQLQuantResultSummaryProvider(
   val ObjectTreeTable = MsiDbObjectTreeTable
   val ObjectTreeCols = ObjectTreeTable.columns
   
-  // TODO: create an enumeration
-  final val labelFreeQuantPeptidesSchema = "object_tree.label_free_quant_peptides"
-  final val spectralCountQuantPeptidesSchema = "object_tree.spectral_counting_peptides"
-  final val quantProteinSetSchema = "object_tree.quant_protein_sets"
+  final val labelFreeQuantPeptidesSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDES.toString
+  final val spectralCountQuantPeptidesSchema = SchemaName.SPECTRAL_COUNTING_PEPTIDES.toString
+  final val quantProteinSetSchema = SchemaName.QUANT_PROTEIN_SETS.toString
 
   def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
     val rsms = this.getQuantResultSummaries(quantRsmIds, quantChannelIds, loadResultSet)

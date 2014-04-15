@@ -12,6 +12,7 @@ import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 import fr.proline.core.om.model.msq.MasterQuantPeptideIonProperties
 import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.om.provider.msq.IMasterQuantPeptideIonProvider
+import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.util.primitives._
 import scala.collection.mutable.ArrayBuffer
 
@@ -22,7 +23,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val ObjectTreeTable = MsiDbObjectTreeTable
   
-  val LabelFreeQuantPeptideIonsSchema = "object_tree.label_free_quant_peptide_ions"
+  val LabelFreeQuantPeptideIonsSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS.toString
   
   def getMasterQuantPeptideIonsAsOptions( mqPepIonIds: Seq[Long] ): Array[Option[MasterQuantPeptideIon]] = {
     throw new Exception("NYI")
