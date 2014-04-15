@@ -155,7 +155,7 @@ class SQLQuantResultSummaryProvider(
     
       val mqProtSetCompQueryBuilder = new SelectQueryBuilder3(MsiDbProteinSetTable,MQComponentTable,ObjectTreeTable)
       val mqProtSetCompQuery = mqProtSetCompQueryBuilder.mkSelectQuery(
-        (t1,c1,t2,c2,t3,c3) => List(t1.ID,t2.SELECTION_LEVEL,t2.SERIALIZED_PROPERTIES,t3.CLOB_DATA) -> 
+        (t1,c1,t2,c2,t3,c3) => List(t1.ID,t2.ID,t2.SELECTION_LEVEL,t2.SERIALIZED_PROPERTIES,t3.CLOB_DATA) -> 
         " WHERE "~ t2.RESULT_SUMMARY_ID ~" IN("~ quantRsmIds.mkString(",") ~")" ~
         " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
         " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID ~
@@ -164,7 +164,9 @@ class SQLQuantResultSummaryProvider(
          
       msiEzDBC.select(mqProtSetCompQuery) { r =>
   
-        val mqProtSetId: Long = toLong(r.getAny(MQCompCols.ID))
+        val mqProtSetId: Long = toLong(r.getAny(MsiDbProteinSetTable.columns.ID))
+        val mqCompId: Long = toLong(r.getAny(MQCompCols.ID.toAliasedString))
+        
         val protSet = protSetById(mqProtSetId)
         val quantProtSets = ProfiJson.deserialize[Array[QuantProteinSet]](r.getString(ObjectTreeCols.CLOB_DATA))
         val quantProtSetMap = Map() ++ (for( qps <- quantProtSets if qps != null ) yield qps.quantChannelId -> qps)
@@ -176,6 +178,7 @@ class SQLQuantResultSummaryProvider(
           .map( pi => mqPepByPepInstId(pi.id) )
         
         new MasterQuantProteinSet(
+           id = mqCompId,
            proteinSet = protSet,
            quantProteinSetMap = quantProtSetMap, // QuantProteinSet by quant channel id
            masterQuantPeptides = mqPeptides,
