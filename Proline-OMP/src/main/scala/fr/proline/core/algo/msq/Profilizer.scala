@@ -53,18 +53,36 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
   def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: ProfilizerConfig ) {    
     require( masterQuantPeptides.length >= 10, "at least 10 peptides are required for profile analysis")
     
-    // --- Reset quant profiles for each masterQuantPeptide ---
-    for( mqPep <- masterQuantPeptides; mqPepProps <- mqPep.properties ) {
-      mqPepProps.setMqPepProfileByGroupSetupNumber(None)
+    // --- Reset some values ---
+    for( mqPep <- masterQuantPeptides ) {
+      
+      // Reset selection level if not too low
+      // TODO: add a parameter which specify to keep or not previously computed selection levels
+      if( mqPep.selectionLevel >= 1 )
+        mqPep.selectionLevel = 2
+      
+      // Reset quant profiles for this masterQuantPeptide
+      for( mqPepProps <- mqPep.properties)
+        mqPepProps.setMqPepProfileByGroupSetupNumber(None)
+    }
+    
+    // --- Apply protein set specific filter if requested ---
+    if( config.useOnlySpecificPeptides ) {
+      this.discardUnspecificPeptides( masterQuantPeptides )
     }
     
     // --- Apply MC filter if requested ---
-    val mqPepsAfterMCFilter = if( config.discardMissedCleavedPeptides == false ) masterQuantPeptides
-    else this.discardMissedCleavedPeptides(masterQuantPeptides)
+    if( config.discardMissedCleavedPeptides ) {
+      this.discardMissedCleavedPeptides(masterQuantPeptides)
+    }
     
     // --- Apply Oxidation filter if requested ---
-    val mqPepsAfterAllFilters = if( config.discardOxidizedPeptides == false ) mqPepsAfterMCFilter
-    else this.discardOxidizedPeptides(mqPepsAfterMCFilter)
+    if( config.discardOxidizedPeptides ) {
+      this.discardOxidizedPeptides(masterQuantPeptides)
+    }
+    
+    // Keep master quant peptides passing all filters (i.e. have a selection level higher than 1)
+    val mqPepsAfterAllFilters = masterQuantPeptides.filter( _.selectionLevel >= 2 )
     
     // --- Compute the abundance matrix ---
     val abundanceMatrix = mqPepsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
@@ -132,92 +150,95 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     
   }
   
-  protected def discardMissedCleavedPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Seq[MasterQuantPeptide] = {
+  protected def discardUnspecificPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ) {
+    for(
+      mqPep <- masterQuantPeptides;
+      if mqPep.selectionLevel >= 2;
+      pepInst <- mqPep.peptideInstance
+    ) {
+      if( pepInst.isProteinSetSpecific == false )
+        mqPep.selectionLevel = 1
+    }
+  }
+  
+  protected def discardMissedCleavedPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ) {
     
     // FIXME: we assume here that Trypsin has been used => retrieve the right enzyme to apply this filter correctly
     val regex = ".*?[R|K]".r
     val detectedMCSeqParts = new ArrayBuffer[String]()
     
-    val keptMqPeps = masterQuantPeptides.filter { mqPep =>
-      if( mqPep.peptideInstance.isEmpty ) true
-      else {
-        val pepSeq = mqPep.peptideInstance.get.peptide.sequence
+    for( 
+      mqPep <- masterQuantPeptides;
+      if mqPep.selectionLevel >= 2;
+      pepInst <- mqPep.peptideInstance
+    ) {
+      
+      val pepSeq = pepInst.peptide.sequence
+      val seqParts = regex.findAllIn(pepSeq).toArray
+      
+      if( seqParts.length > 1 ) {
         
-        val seqParts = regex.findAllIn(pepSeq).toArray
+        // Append detected missed cleaved sequences in the buffer
+        detectedMCSeqParts ++= seqParts
         
-        if(seqParts.length == 1) true
-        else {
-          // Append detected missed cleaved sequences in the buffer
-          detectedMCSeqParts ++= seqParts
-          
-          // Discard detected missed cleaved peptide
-          mqPep.selectionLevel = 1
-          
-          false
-        }
+        // Discard detected missed cleaved peptide
+        mqPep.selectionLevel = 1
       }
     }
     
     // Convert the detectedSeqsWithMC buffer into a Set
-    val detecteMCSeqSet = detectedMCSeqParts.toSet
+    val detectedMCSeqSet = detectedMCSeqParts.toSet
     
-    // Filter kept master quant peptides again to remove the counterpart of the MC ones      
-    keptMqPeps.filter { mqPep =>
-      if( mqPep.peptideInstance.isEmpty ) true
-      else {
-        val pepSeq = mqPep.peptideInstance.get.peptide.sequence
-        
-        if( detecteMCSeqSet.contains(pepSeq) == false ) true
-        else {
-          mqPep.selectionLevel = 1
-          false
-        }
-      }
-    }
+    // Filter master quant peptides again to remove the counterpart of the MC ones
+    this._discardPeptideSequences( masterQuantPeptides, detectedMCSeqSet )
     
   }
   
-  protected def discardOxidizedPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ): Seq[MasterQuantPeptide] = {
+  protected def discardOxidizedPeptides( masterQuantPeptides: Seq[MasterQuantPeptide] ) {
 
     val pattern = """\[O\]""".r.pattern
     val detectedOxSeqs = new ArrayBuffer[String]()
     
-    val keptMqPeps = masterQuantPeptides.filter { mqPep =>
-      if( mqPep.peptideInstance.isEmpty ) true
-      else {
-        val peptide = mqPep.peptideInstance.get.peptide
-        val ptmString = peptide.ptmString
+    for(
+      mqPep <- masterQuantPeptides;
+      if mqPep.selectionLevel >= 2;
+      pepInst <- mqPep.peptideInstance
+    ) {
+      
+      val peptide = pepInst.peptide
+      val ptmString = peptide.ptmString
+      
+      // Check if the ptmString contains an oxidation
+      // TODO: check if this technique is error prone
+      if( pattern.matcher(ptmString).matches ) {
         
-        if( pattern.matcher(ptmString).matches == false ) true
-        else {
-          // Append detected oxidized sequence in the buffer
-          detectedOxSeqs += peptide.sequence
-          
-          // Discard detected oxidized peptide
-          mqPep.selectionLevel = 1
-          
-          false
-        }
+        // Append detected oxidized sequence in the buffer
+        detectedOxSeqs += peptide.sequence
+        
+        // Discard detected oxidized peptide
+        mqPep.selectionLevel = 1
       }
     }
     
     // Convert the detectedSeqsWithMC buffer into a Set
     val detectedOxSeqSet = detectedOxSeqs.toSet
     
-    // Filter kept master quant peptides again to remove the counterpart of the oxidized ones      
-    keptMqPeps.filter { mqPep =>
-      if( mqPep.peptideInstance.isEmpty ) true
-      else {
-        val pepSeq = mqPep.peptideInstance.get.peptide.sequence
-        
-        if( detectedOxSeqSet.contains(pepSeq) == false ) true
-        else {
-          mqPep.selectionLevel = 1
-          false
-        }
+    // Filter kept master quant peptides again to remove the counterpart of the oxidized ones
+    this._discardPeptideSequences( masterQuantPeptides, detectedOxSeqSet )
+  }
+  
+  private def _discardPeptideSequences( masterQuantPeptides: Seq[MasterQuantPeptide], discardedPepSeqSet: Set[String] ) {
+    
+    for(
+      mqPep <- masterQuantPeptides;
+      if mqPep.selectionLevel >= 2;
+      pepInst <- mqPep.peptideInstance
+    ) {
+      if( discardedPepSeqSet.contains(pepInst.peptide.sequence) ) {
+        mqPep.selectionLevel = 1
       }
     }
-      
+    
   }
   
   def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: ProfilizerConfig ) {
@@ -245,7 +266,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       
       masterQuantProtSet.masterQuantPeptides.foreach { mqPep =>
         
-        if( mqPep.selectionLevel >= 2 && (config.useOnlySpecificPeptides == false || mqPep.peptideInstance.get.isProteinSetSpecific) ) {
+        if( mqPep.selectionLevel >= 2 ) {
           val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber.toString )
           
           for( mqPepProfile <- mqPepProfileOpt ) {
