@@ -371,6 +371,7 @@ class LabelFreeFeatureQuantifier(
       mqProtSetProps.setSelectedMasterQuantPeptideIds( Some(selectedMQPepIds.toArray) )
       
       val mqProteinSet = new MasterQuantProteinSet(
+        id = MasterQuantProteinSet.generateNewId(),
         proteinSet = mergedProtSet,
         quantProteinSetMap = quantProteinSetByQcId.toMap,
         masterQuantPeptides = mqPeps.toArray,

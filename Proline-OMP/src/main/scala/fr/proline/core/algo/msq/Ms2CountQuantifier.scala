@@ -207,11 +207,12 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
     mqPeptides.toArray
   }
   
-  def computeMasterQuantProteinSets(udsMasterQuantChannel: MasterQuantitationChannel,
-                                     masterQuantPeptides: Seq[MasterQuantPeptide],
-                                     mergedRSM: ResultSummary,                                     
-                                     resultSummaries: Seq[ResultSummary]
-                                    ): Array[MasterQuantProteinSet] = {
+  def computeMasterQuantProteinSets(
+    udsMasterQuantChannel: MasterQuantitationChannel,
+    masterQuantPeptides: Seq[MasterQuantPeptide],
+    mergedRSM: ResultSummary,
+    resultSummaries: Seq[ResultSummary]
+  ): Array[MasterQuantProteinSet] = {
     
     val mqPepByPepInstId = masterQuantPeptides.map { mqp => mqp.peptideInstance.get.id -> mqp } toMap
     val mqProtSets = new ArrayBuffer[MasterQuantProteinSet]
@@ -235,23 +236,24 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
       val quantProteinSetByQcId = new HashMap[Long,QuantProteinSet]
       for( (qcId,ms2CountSum) <- ms2CountSumByQcId ) {
         quantProteinSetByQcId(qcId) = new QuantProteinSet(
-                                            rawAbundance = ms2CountSum,
-                                            abundance = ms2CountSum,
-                                            peptideMatchesCount = ms2CountSum,
-                                            quantChannelId = qcId,
-                                            selectionLevel = 2
-                                          )
+          rawAbundance = ms2CountSum,
+          abundance = ms2CountSum,
+          peptideMatchesCount = ms2CountSum,
+          quantChannelId = qcId,
+          selectionLevel = 2
+        )
       }
       
       val mqProtSetProps = new MasterQuantProteinSetProperties()
       mqProtSetProps.setSelectedMasterQuantPeptideIds( Some(selectedMQPepIds.toArray) )
       
       val mqProteinSet = new MasterQuantProteinSet(
-                               proteinSet = mergedProtSet,
-                               quantProteinSetMap = quantProteinSetByQcId.toMap,
-                               selectionLevel = 2,
-                               properties = Some(mqProtSetProps)
-                               )
+        id = MasterQuantProteinSet.generateNewId(),
+        proteinSet = mergedProtSet,
+        quantProteinSetMap = quantProteinSetByQcId.toMap,
+        selectionLevel = 2,
+        properties = Some(mqProtSetProps)
+      )
       mqProtSets += mqProteinSet
     }
     

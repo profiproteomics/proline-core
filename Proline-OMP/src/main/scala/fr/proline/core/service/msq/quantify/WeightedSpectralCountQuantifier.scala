@@ -598,6 +598,7 @@ class WeightedSpectralCountQuantifier(
 
     forMasterQProtSetByProtSet.foreach(entry => {
       mqProtSets += new MasterQuantProteinSet(
+        id = MasterQuantProteinSet.generateNewId(),
         proteinSet = entry._1,
         quantProteinSetMap = entry._2.toMap,
         selectionLevel = 2
