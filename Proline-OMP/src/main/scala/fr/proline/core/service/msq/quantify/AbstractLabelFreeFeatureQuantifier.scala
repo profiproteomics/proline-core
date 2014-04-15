@@ -22,6 +22,7 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
+import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.util.primitives._
 
@@ -234,7 +235,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   }
 
   protected lazy val labelFreeQuantPeptidesSchema = {
-    this.loadOrCreateObjectTreeSchema("object_tree.label_free_quant_peptides")
+    this.loadOrCreateObjectTreeSchema(SchemaName.LABEL_FREE_QUANT_PEPTIDES)
   }
 
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree = {
@@ -251,7 +252,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   }
 
   protected lazy val labelFreeQuantPeptideIonsSchema = {
-    this.loadOrCreateObjectTreeSchema("object_tree.label_free_quant_peptide_ions")
+    this.loadOrCreateObjectTreeSchema(SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS)
   }
 
   protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree = {

@@ -45,6 +45,7 @@ import fr.proline.core.orm.msi.{
   Scoring => MsiScoring,
   SequenceMatch => MsiSequenceMatch
 }
+import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.primitives._
@@ -144,11 +145,11 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   //protected def buildMasterQuantProteinSetObjectTree( mqProtSet: MasterQuantProteinSet ): MsiObjectTree
 
   // TODO: load the schema
-  protected def loadOrCreateObjectTreeSchema(schemaName: String): fr.proline.core.orm.msi.ObjectTreeSchema = {
+  protected def loadOrCreateObjectTreeSchema(schemaName: SchemaName): fr.proline.core.orm.msi.ObjectTreeSchema = {
     var objTreeSchema : fr.proline.core.orm.msi.ObjectTreeSchema=  msiEm.find(classOf[fr.proline.core.orm.msi.ObjectTreeSchema], schemaName)
     if(objTreeSchema == null) {
 	    objTreeSchema = new fr.proline.core.orm.msi.ObjectTreeSchema()
-	    objTreeSchema.setName(schemaName)
+	    objTreeSchema.setName(schemaName.toString)
 	    objTreeSchema.setType("JSON")
 	    objTreeSchema.setVersion("0.1")
 	    objTreeSchema.setSchema("")
@@ -642,7 +643,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val quantProteinSetsSchema = {
-    this.loadOrCreateObjectTreeSchema("object_tree.quant_protein_sets")
+    this.loadOrCreateObjectTreeSchema(SchemaName.QUANT_PROTEIN_SETS)
   }
 
   protected def buildMasterQuantProteinSetObjectTree(mqProtSet: MasterQuantProteinSet): MsiObjectTree = {

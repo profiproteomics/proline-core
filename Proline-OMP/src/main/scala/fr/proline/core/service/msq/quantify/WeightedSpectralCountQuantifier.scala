@@ -44,6 +44,7 @@ import fr.proline.core.orm.msi.{
   Scoring => MsiScoring,
   SequenceMatch => MsiSequenceMatch
 }
+import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.repository.util.JDBCWork
 import java.sql.Connection
 
@@ -387,7 +388,7 @@ class WeightedSpectralCountQuantifier(
 
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingPeptidesSchema = {
-    this.loadOrCreateObjectTreeSchema("object_tree.spectral_counting_peptides")
+    this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_PEPTIDES)
   }
 
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree = {
@@ -405,7 +406,7 @@ class WeightedSpectralCountQuantifier(
 
   // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingQuantPepIonsSchema = {
-    this.loadOrCreateObjectTreeSchema("object_tree.spectral_counting_quant_peptide_ions")
+    this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS)
   }
 
   protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree = {
