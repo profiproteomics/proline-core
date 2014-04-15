@@ -383,10 +383,9 @@ class WeightedSpectralCountQuantifier(
             currentProteinWeightStruct.weightByPeptideId.put(pepId, 0)
         }
       }) //End go through ProteinSet Peptides
-    }) // End go through  ProteinSet (ProteinPepsWeightStruct)      
+    }) // End go through  ProteinSet (ProteinPepsWeightStruct)
   }
 
-  // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingPeptidesSchema = {
     this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_PEPTIDES)
   }
@@ -404,7 +403,6 @@ class WeightedSpectralCountQuantifier(
     msiMQPepObjectTree
   }
 
-  // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingQuantPepIonsSchema = {
     this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS)
   }

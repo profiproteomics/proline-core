@@ -89,7 +89,6 @@ class SpectralCountQuantifier(
     
   }
   
-  // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingPeptidesSchema = {
     this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_PEPTIDES)
   }
@@ -107,7 +106,6 @@ class SpectralCountQuantifier(
     msiMQPepObjectTree
   }
   
-  // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val spectralCountingQuantPepIonsSchema = {
     this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS)
   }

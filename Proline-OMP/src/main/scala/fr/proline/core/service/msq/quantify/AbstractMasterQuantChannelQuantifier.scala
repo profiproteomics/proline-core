@@ -641,7 +641,6 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     msiMasterProtSet.setMasterQuantComponentId(msiMQC.getId)
   }
 
-  // TODO: create enumeration of schema names (in ObjectTreeSchema ORM Entity)
   protected lazy val quantProteinSetsSchema = {
     this.loadOrCreateObjectTreeSchema(SchemaName.QUANT_PROTEIN_SETS)
   }
