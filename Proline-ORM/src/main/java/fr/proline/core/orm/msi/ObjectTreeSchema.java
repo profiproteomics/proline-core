@@ -15,7 +15,27 @@ import javax.persistence.Table;
 @Entity(name="fr.proline.core.orm.msi.ObjectTreeSchema")
 @Table(name="object_tree_schema")
 public class ObjectTreeSchema implements Serializable {
+  
 	private static final long serialVersionUID = 1L;
+	
+    public enum SchemaName {
+    	LABEL_FREE_QUANT_PEPTIDES("object_tree.label_free_quant_peptides"),
+    	LABEL_FREE_QUANT_PEPTIDE_IONS("object_tree.label_free_quant_peptide_ions"),
+    	QUANT_PROTEIN_SETS("object_tree.quant_protein_sets"),
+    	SPECTRAL_COUNTING_PEPTIDES("object_tree.spectral_counting_peptides"),
+    	SPECTRAL_COUNTING_PEPTIDE_IONS("object_tree.spectral_counting_quant_peptide_ions");
+    	
+    	private final String name;
+    	
+	    private SchemaName(final String name) {
+	        this.name = name;
+	    }
+	    
+	    @Override
+	    public String toString() {
+	        return name;
+	    }
+    };
 
 	@Id
 	@Column(name="name")
