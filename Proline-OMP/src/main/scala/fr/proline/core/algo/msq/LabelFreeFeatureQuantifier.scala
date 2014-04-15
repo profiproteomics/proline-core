@@ -191,7 +191,7 @@ class LabelFreeFeatureQuantifier(
           .distinct
         
         if( msQueryIds.isEmpty ) {
-          logger.warn("identified feature can't be mapped with corresponding MS queries")
+          logger.trace("identified feature can't be mapped with corresponding MS queries")
         } else {
           msQueryIdsOpt = Some(msQueryIds)
           val filteredPepMatches = pepMatches.filter( pm => msQueryIds.contains(pm.msQuery.id) )
