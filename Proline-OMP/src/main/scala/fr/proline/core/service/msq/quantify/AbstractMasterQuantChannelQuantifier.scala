@@ -144,16 +144,22 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   
   //protected def buildMasterQuantProteinSetObjectTree( mqProtSet: MasterQuantProteinSet ): MsiObjectTree
 
-  // TODO: load the schema
+
   protected def loadOrCreateObjectTreeSchema(schemaName: SchemaName): fr.proline.core.orm.msi.ObjectTreeSchema = {
-    var objTreeSchema : fr.proline.core.orm.msi.ObjectTreeSchema=  msiEm.find(classOf[fr.proline.core.orm.msi.ObjectTreeSchema], schemaName)
+    val schemaNameAsStr = schemaName.toString
+    var objTreeSchema = msiEm.find(classOf[fr.proline.core.orm.msi.ObjectTreeSchema], schemaNameAsStr)
+    
+    // Create a faked schema if the requested one has not been found
     if(objTreeSchema == null) {
+      this.logger.warn(s"Schema ${schemaNameAsStr} has not been find in the MSIdb")
+      
 	    objTreeSchema = new fr.proline.core.orm.msi.ObjectTreeSchema()
-	    objTreeSchema.setName(schemaName.toString)
+	    objTreeSchema.setName(schemaNameAsStr)
 	    objTreeSchema.setType("JSON")
 	    objTreeSchema.setVersion("0.1")
 	    objTreeSchema.setSchema("")
     }
+    
     objTreeSchema
   }
 
