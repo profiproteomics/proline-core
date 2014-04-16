@@ -104,55 +104,61 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
         val pepInstsWithoutUnmodPepFirst = peptideInstances.toList.sort { (a,b) => 
                                              a.getUnmodifiedPeptideId < b.getUnmodifiedPeptideId }*/
 
-		var firstTimeNullErrHappened : Boolean = false // indicates if 1 or more error of this type occurred
-        DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext(), 
-        { 
-         ezDBC =>
-
-    	 			   
-      	   val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE peaklist_id in (" + peakListIdsString + ")" 
-      	   logger.debug("query: " + sqlQuery)
-		   ezDBC.selectAndProcess( sqlQuery ) 
-		   { 
-      	     r =>
-
-		        val spectrumId = toLong(r.nextAny)
-		        val spectrumTitle = r.nextString
-		        
-		        val first_time = r.nextAny
-		        if(first_time != null)  
-		        {
-		           spectrumIdElutionTimeMap +=  ( spectrumId.toLong ->  first_time.asInstanceOf[Float])
-	          	} 
-		        else
-		    	{
-		    	    if(firstTimeNullErrHappened == false)  
-		    	    {
-		    	      firstTimeNullErrHappened = true
-		    	      logger.info("first time is null for spectrum id: " + spectrumId + " title: " + spectrumTitle 
-		    	           + "\nIt might be that you specified a wrong peaklist software when importing the result file"
-		    	           + "\n or that there is no retention time information provided"
-		    	           + "\nNo more messages shown of that error even if it occurs again (for every Title...)")
-		    	    }
-		    	}
-		    		 
-		    }
-		})
-        
+		if (peakListIds.size >0) {
+			var firstTimeNullErrHappened : Boolean = false // indicates if 1 or more error of this type occurred
+	        DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext(), 
+	        { 
+	         ezDBC =>
+	
+	    	 			   
+	      	   val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE peaklist_id in (" + peakListIdsString + ")" 
+	      	   logger.debug("query: " + sqlQuery)
+			   ezDBC.selectAndProcess( sqlQuery ) 
+			   { 
+	      	     r =>
+	
+			        val spectrumId = toLong(r.nextAny)
+			        val spectrumTitle = r.nextString
+			        
+			        val first_time = r.nextAny
+			        if(first_time != null)  
+			        {
+			           spectrumIdElutionTimeMap +=  ( spectrumId.toLong ->  first_time.asInstanceOf[Float])
+		          	} 
+			        else
+			    	{
+			    	    if(firstTimeNullErrHappened == false)  
+			    	    {
+			    	      firstTimeNullErrHappened = true
+			    	      logger.info("first time is null for spectrum id: " + spectrumId + " title: " + spectrumTitle 
+			    	           + "\nIt might be that you specified a wrong peaklist software when importing the result file"
+			    	           + "\n or that there is no retention time information provided"
+			    	           + "\nNo more messages shown of that error even if it occurs again (for every Title...)")
+			    	    }
+			    	}
+			    		 
+			    }
+			})
+		
 			
-        rsm.peptideInstances.foreach { pepInst => 
-        		
-           val bestPeptideMatchForThisPeptideInstance = 
-               pepInst.peptideMatches.find(pm => pm.id == pepInst.bestPeptideMatchId).get
-	       if(bestPeptideMatchForThisPeptideInstance != null) 
-	       {
-	           val spectrumId = bestPeptideMatchForThisPeptideInstance.getMs2Query.spectrumId
-	           if(spectrumIdElutionTimeMap.contains(spectrumId))
-	           {
-	               pepInst.elutionTime = spectrumIdElutionTimeMap(spectrumId) // modify elution time in peptide instance
-	           }
-	       }
-        }
+	        rsm.peptideInstances.foreach { pepInst => 
+	        		
+	           val bestPeptideMatchForThisPeptideInstance = 
+	               pepInst.peptideMatches.find(pm => pm.id == pepInst.bestPeptideMatchId).get
+		       if(bestPeptideMatchForThisPeptideInstance != null) 
+		       {
+		           val spectrumId = bestPeptideMatchForThisPeptideInstance.getMs2Query.spectrumId
+		           if(spectrumIdElutionTimeMap.contains(spectrumId))
+		           {
+		               pepInst.elutionTime = spectrumIdElutionTimeMap(spectrumId) // modify elution time in peptide instance
+		           }
+		       }
+	        }
+		}
+		else
+		{
+		  // no peaklist id means probably no save spectrum match enabled.
+		}
     }
 	else
     {
