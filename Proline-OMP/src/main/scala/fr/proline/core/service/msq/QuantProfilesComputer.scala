@@ -144,7 +144,7 @@ class QuantProfilesComputer(
         // Update MasterQuantProtSets object tree
         objTreeUpdateStmt.executeWith(
           ProfiJson.serialize(quantProtSets),
-          mqProtSet.id
+          mqProtSet.getMasterQuantComponentId()
         )
       }
       
