@@ -62,8 +62,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         mqPep.selectionLevel = 2
       
       // Reset quant profiles for this masterQuantPeptide
-      for( mqPepProps <- mqPep.properties)
+      for( mqPepProps <- mqPep.properties ) {
         mqPepProps.setMqPepProfileByGroupSetupNumber(None)
+      }
     }
     
     // --- Apply protein set specific filter if requested ---
@@ -82,7 +83,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     }
     
     // Keep master quant peptides passing all filters (i.e. have a selection level higher than 1)
-    val mqPepsAfterAllFilters = masterQuantPeptides.filter( _.selectionLevel >= 2 )
+    val( mqPepsAfterAllFilters, deselectedMqPeps ) = masterQuantPeptides.partition( _.selectionLevel >= 2 )
+    
+    // Reset quant peptide abundance of deselected master quant peptides
+    for( mqPep <- deselectedMqPeps; (qcid,qPep) <- mqPep.quantPeptideMap ) {
+      qPep.abundance = Float.NaN
+    }
     
     // --- Compute the abundance matrix ---
     val abundanceMatrix = mqPepsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray

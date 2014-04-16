@@ -19,7 +19,7 @@ class ExportMasterQuantPeptideIons(
   override val expDesign: ExperimentalDesign
 ) extends ExportMasterQuantPeptides(execCtx,masterQuantChannelId,outputFile,expDesign) {
   
-  protected val mqPepIonHeaders = "charge calc_moz master_elution_time master_feature_id".split(" ")
+  protected val mqPepIonHeaders = "charge master_elution_time master_feature_id".split(" ")
   protected val qPepIonHeaders = "moz elution_time correct_elution_time duration raw_abundance abundance psm_count ms2_matching_freq feature_id".split(" ")
   
   // Create some mappings
@@ -46,16 +46,25 @@ class ExportMasterQuantPeptideIons(
       row ++= mqPepCellsById(mqPep.id)
       
       // Append ratios
-      if( mqPep.properties.isDefined && mqPep.properties.get.getMqPepProfileByGroupSetupNumber.isDefined ) {
+      /*if( mqPep.properties.isDefined && mqPep.properties.get.getMqPepProfileByGroupSetupNumber.isDefined ) {
         val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber.toString)
         val ratios = mqPepProfile.getRatios.map(_.map(_.getState.toString).getOrElse("") )      
         row ++= ratios
       } else {
         row ++= Array.fill(this.ratioDefs.length)("")
+      }*/
+      
+      // Add some statistics
+      if( mqPep.properties.isDefined && mqPep.properties.get.getMqPepProfileByGroupSetupNumber.isDefined ) {
+        val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber.toString)
+        val stats = this.stringifyRatiosStats(mqPepProfile.getRatios)    
+        row ++= stats
+      } else {
+        row ++= Array.fill(this.ratioDefs.length * 3)("")
       }
       
       // Append master quant peptide ion data
-      row ++= Array(mqPepIon.charge,mqPepIon.calculatedMoz, mqPepIon.elutionTime,mqPepIon.lcmsMasterFeatureId.getOrElse(""))
+      row ++= Array(mqPepIon.charge, mqPepIon.elutionTime,mqPepIon.lcmsMasterFeatureId.getOrElse(""))
       
       // Append quant peptide data for each condition
       val qPepIonCellsByQcId = new HashMap[Long,Seq[Any]]
@@ -65,8 +74,8 @@ class ExportMasterQuantPeptideIons(
           qPepIon.elutionTime,
           qPepIon.correctedElutionTime,
           qPepIon.duration,
-          qPepIon.rawAbundance,
-          qPepIon.abundance,
+          if( qPepIon.rawAbundance.isNaN ) "" else qPepIon.rawAbundance,
+          if( qPepIon.abundance.isNaN ) "" else qPepIon.abundance,
           qPepIon.peptideMatchesCount,
           qPepIon.ms2MatchingFrequency.getOrElse(0),
           qPepIon.lcmsFeatureId
@@ -90,7 +99,9 @@ class ExportMasterQuantPeptideIons(
   
   override protected def mkRowHeader( quantChannelCount: Int ): String = {
     val rowHeaders = new ArrayBuffer[String]()
-    rowHeaders ++= super.mkProtSetAndQPepHeaderCols(quantChannelCount) ++ mqPepIonHeaders
+    rowHeaders += super.mkRowHeader(quantChannelCount) 
+    
+    rowHeaders ++= mqPepIonHeaders
     
     for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qPepIonHeaders.map(_+"_"+i) )
     

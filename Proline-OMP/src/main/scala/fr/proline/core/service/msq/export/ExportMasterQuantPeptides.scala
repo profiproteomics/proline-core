@@ -73,8 +73,8 @@ class ExportMasterQuantPeptides(
         
         if( qPepOpt.isDefined ) {
           val qPep = qPepOpt.get
-          abundanceBuffer += qPep.abundance
-          rawAbundanceBuffer += qPep.rawAbundance
+          abundanceBuffer += (if( qPep.abundance.isNaN ) "" else qPep.abundance)
+          rawAbundanceBuffer += (if( qPep.rawAbundance.isNaN ) "" else qPep.rawAbundance)
           psmCountBuffer += qPep.peptideMatchesCount
         } else {
           abundanceBuffer += ""
