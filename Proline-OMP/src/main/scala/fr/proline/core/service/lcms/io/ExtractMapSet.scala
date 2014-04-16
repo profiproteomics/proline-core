@@ -3,13 +3,14 @@ package fr.proline.core.service.lcms.io
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
 import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.profi.jdbc.easy._
 import fr.profi.mzdb.MzDbFeatureExtractor
 import fr.profi.mzdb.MzDbReader
 import fr.profi.mzdb.io.reader.RunSliceDataProvider
-import fr.profi.mzdb.model.{ Feature => MzDbFeature }
+import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peak => MzDbPeak }
 import fr.profi.mzdb.model.PutativeFeature
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
@@ -35,7 +36,8 @@ import fr.proline.core.service.lcms.CreateMasterMap
 class ExtractMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
   val quantConfig: ILcMsQuantConfig,
-  val peptideByRunIdAndScanNumber: Option[Map[Long,HashMap[Int,Peptide]]] = None // sequence data may or may not be provided
+  val peptideByRunIdAndScanNumber: Option[Map[Long,HashMap[Int,Peptide]]] = None, // sequence data may or may not be provided
+  val restrictToIdentifiedPeptides: Boolean = true // TODO: put in quantConfig
 ) extends ILcMsService with Logging {
   
   // Do some requirements
@@ -117,7 +119,8 @@ class ExtractMapSet(
       // Perform the feature clustering
       // TODO: use the clean maps service ???
       val scans = lcmsRun.scanSequence.get.scans
-      val clusterizedMap = ClusterizeFeatures( processedMap, scans, clusteringParams )
+      // Note: feature clustering is disabled here because it is performed in _extractRawMapUsingMs2Events
+      val clusterizedMap = processedMap//ClusterizeFeatures( processedMap, scans, clusteringParams )
       //clusterizedMap.toTsvFile("D:/proline/data/test/quanti/debug/clusterized_map_"+ (-clusterizedMap.id) +".tsv")
       
       // Set clusterized map id as the id of the provided map
@@ -376,10 +379,10 @@ class ExtractMapSet(
   
   private def _extractRawMapUsingMs2Events( lcmsRun: LcMsRun, mzDbFile: File ): RawMap = {
     
+    val peptideByScanNumber = peptideByRunIdAndScanNumber.map( _(lcmsRun.id) ).getOrElse( HashMap.empty[Int,Peptide] )
     val mzDb = new MzDbReader( mzDbFile, true )
-    var mzDbFts: Seq[MzDbFeature] = null
     
-    try {
+    val mzDbFts = try {
       
       val mzdbFtX = new MzDbFeatureExtractor(mzDb,5,5)
       
@@ -391,49 +394,105 @@ class ExtractMapSet(
       this.logger.info("building putative features list from MS2 scan events...")
 
       for( scanH <- ms2ScanHeaders ) {
-        pfs += new PutativeFeature(
-          id = PutativeFeature.generateNewId,
-          mz = scanH.getPrecursorMz,
-          charge =scanH.getPrecursorCharge,
-          scanId = scanH.getId,
-          evidenceMsLevel = 2
-        )
+        
+        if( !restrictToIdentifiedPeptides || peptideByScanNumber.contains(scanH.getInitialId()) ) {
+          pfs += new PutativeFeature(
+            id = PutativeFeature.generateNewId,
+            mz = scanH.getPrecursorMz,
+            charge =scanH.getPrecursorCharge,
+            scanId = scanH.getId,
+            evidenceMsLevel = 2
+          )
+        }
       }
       
       // Instantiates a Run Slice Data provider
       val rsdProv = new RunSliceDataProvider( mzDb.getRunSliceIterator(1) )
       
       // Extract features
-      mzDbFts = mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)      
+      mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)
 
-    }
-    finally {
+    } finally {
       mzDb.close()
     }
     
     val rawMapId = RawMap.generateNewId()
     
-    // Convert mzDB features into LC-MS DB features
-    val lcmsFeatures = new ArrayBuffer[LcMsFeature](mzDbFts.length)
-    for( mzDbFt <- mzDbFts ) {
-      // Keep only features with defined area and at least two data points
-      if( mzDbFt.area > 0 && mzDbFt.scanHeaders.length > 1 ) {
-        val lcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt,rawMapId,lcmsRun.scanSequence.get)
-        //if( lcmsFt.duration == 0 ) error( ""+scala.runtime.ScalaRunTime.stringOf(mzDbFt.scanHeaders) )
-        lcmsFeatures += lcmsFt
-      }
-    }
-    
     // Create a new Run Map
-    new RawMap(
+    val tmpRawMap = new RawMap(
       id = rawMapId,
       name = lcmsRun.rawFile.name,
       isProcessed = false,
       creationTimestamp = new java.util.Date,
-      features = lcmsFeatures.toArray,
+      features = Array(),
       runId = lcmsRun.id,
       peakPickingSoftware = pps
     )
+    
+    val ftClusterer = new FeatureClusterer(
+      lcmsMap = tmpRawMap,
+      scans = lcmsRun.scanSequence.get.scans,
+      params = clusteringParams
+    )
+    
+    // Map features by each of their monoisotopic peakel peaks
+    val mzDbFtsByPeak = new HashMap[MzDbPeak, ArrayBuffer[MzDbFeature]]
+    val ftByPeak = for(
+      mzDbFt <- mzDbFts;
+      peak <- mzDbFt.peakels.head.definedPeaks
+    ) {
+      mzDbFtsByPeak.getOrElseUpdate(peak, new ArrayBuffer[MzDbFeature] ) += mzDbFt
+    }
+    
+    def findFeaturesWithSharedPeaks( mzDbFt: MzDbFeature, mzDbFtSet: HashSet[MzDbFeature] ) {
+      
+      val localMzDbFtSet = new HashSet[MzDbFeature]
+      for( peak <- mzDbFt.peakels.head.definedPeaks ) {
+        localMzDbFtSet ++= mzDbFtsByPeak(peak)
+      }
+      
+      for( mzDbFt <- localMzDbFtSet ) {
+        if( mzDbFtSet.contains(mzDbFt) == false ) {
+          mzDbFtSet += mzDbFt
+          findFeaturesWithSharedPeaks( mzDbFt, mzDbFtSet )
+        }
+      }
+    }
+    
+    // Clusterize features
+    val mzDbFtClusters = new ArrayBuffer[Array[MzDbFeature]](mzDbFts.length)
+    val clusterizedFts = new HashSet[MzDbFeature]()
+    for( mzDbFt <- mzDbFts ) {
+      if( clusterizedFts.contains(mzDbFt) == false ) {
+        val mzDbFtsCluster = new HashSet[MzDbFeature]()
+        findFeaturesWithSharedPeaks(mzDbFt, mzDbFtsCluster)
+        mzDbFtClusters += mzDbFtsCluster.toArray
+        clusterizedFts ++= mzDbFtsCluster
+      }
+    }
+    
+    // Convert mzDB features into LC-MS DB features
+    val lcmsFeatures = new ArrayBuffer[LcMsFeature](mzDbFts.length)
+    
+    for( mzDbFtCluster <- mzDbFtClusters ) {
+      
+      val lcmsFtCluster = new ArrayBuffer[LcMsFeature](mzDbFtCluster.length)
+      for( mzDbFt <- mzDbFtCluster ) {
+        // Keep only features with defined area and at least two data points
+        if( mzDbFt.area > 0 && mzDbFt.scanHeaders.length > 1 ) {
+          val lcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt,rawMapId,lcmsRun.scanSequence.get)
+          //if( lcmsFt.duration == 0 ) error( ""+scala.runtime.ScalaRunTime.stringOf(mzDbFt.scanHeaders) )
+          lcmsFtCluster += lcmsFt
+        }
+      }
+      
+      if( lcmsFtCluster.length == 1 ) lcmsFeatures += lcmsFtCluster.head
+      else {
+        lcmsFeatures += ftClusterer.buildFeatureCluster(lcmsFtCluster)
+      }
+    }
+
+    tmpRawMap.copy( features = lcmsFeatures.toArray )
   }
   
   private def _extractMissingFeatures(
