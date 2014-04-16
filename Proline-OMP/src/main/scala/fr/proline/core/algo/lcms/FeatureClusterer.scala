@@ -200,20 +200,31 @@ class FeatureClusterer(
   
   def buildFeatureCluster(ftGroup: Seq[Feature]): Feature = {
     
+    // Flatten clusters into features if needed
+    val unclusterizedFeatures = new ArrayBuffer[Feature](ftGroup.length)
+    
+    for( ft <- ftGroup ) {
+      if( ft.isCluster ) {
+        unclusterizedFeatures ++= ft.subFeatures
+      } else {
+        unclusterizedFeatures += ft
+      }
+    }
+    
     // Set all features of the group to a clusterized status
-    ftGroup.foreach { _.isClusterized = true }
+    unclusterizedFeatures.foreach { _.isClusterized = true }
 
     // Compute some vars for the feature cluster
-    val totalFtGroupAsList = ftGroup.toList
-    val medianFt = getMedianObject(totalFtGroupAsList, this.ftMozSortingFunc)
+    val unclusterizedFtsAsList = unclusterizedFeatures.toList
+    val medianFt = getMedianObject(unclusterizedFtsAsList, this.ftMozSortingFunc)
     val moz = medianFt.moz
     
-    val intensity = this._computeClusterIntensity(totalFtGroupAsList, intensityComputationMethod)
-    val elutionTime = this._computeClusterTime(totalFtGroupAsList, timeComputationMethod)
+    val intensity = this._computeClusterIntensity(unclusterizedFtsAsList, intensityComputationMethod)
+    val elutionTime = this._computeClusterTime(unclusterizedFtsAsList, timeComputationMethod)
     
     // Set some vars
     val ms2EventIdSetBuilder = scala.collection.immutable.Set.newBuilder[Long]
-    for (ft <- ftGroup) {
+    for (ft <- unclusterizedFeatures) {
       val ms2EventIds = ft.relations.ms2EventIds
       if (ms2EventIds != null) {
         for (ms2EventId <- ms2EventIds) ms2EventIdSetBuilder += ms2EventId
@@ -221,16 +232,16 @@ class FeatureClusterer(
     }
     val ms2EventIds = ms2EventIdSetBuilder.result().toArray[Long]
     val ms2Count = ms2EventIds.length
-    val mostIntenseFt = this._findMostIntenseFeature(ftGroup.toList)
+    val mostIntenseFt = this._findMostIntenseFeature(unclusterizedFtsAsList)
     val charge = mostIntenseFt.charge
     val qualityScore = mostIntenseFt.qualityScore
     //val apexIp = mostIntenseFt.apex
     val apexScanId = mostIntenseFt.relations.apexScanId
     val apexScanInitialId = mostIntenseFt.relations.apexScanInitialId
-    val nbSubFts = ftGroup.length
+    val nbSubFts = unclusterizedFeatures.length
 
     // Determine first ft scan and last ft scan
-    val subftsSortedByAscTime = totalFtGroupAsList.sortWith { (a, b) => a.elutionTime < b.elutionTime }
+    val subftsSortedByAscTime = unclusterizedFeatures.sortWith { (a, b) => a.elutionTime < b.elutionTime }
     val (firstSubft, lastSubft) = (subftsSortedByAscTime.head, subftsSortedByAscTime.last)
     val (firstScanId, firstScanInitialId) = (firstSubft.relations.firstScanId, firstSubft.relations.firstScanInitialId)
     val (lastScanId, lastScanInitialId) = (lastSubft.relations.lastScanId, lastSubft.relations.lastScanInitialId)

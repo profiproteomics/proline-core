@@ -119,8 +119,7 @@ class ExtractMapSet(
       // Perform the feature clustering
       // TODO: use the clean maps service ???
       val scans = lcmsRun.scanSequence.get.scans
-      // Note: feature clustering is disabled here because it is performed in _extractRawMapUsingMs2Events
-      val clusterizedMap = processedMap//ClusterizeFeatures( processedMap, scans, clusteringParams )
+      val clusterizedMap = ClusterizeFeatures( processedMap, scans, clusteringParams )
       //clusterizedMap.toTsvFile("D:/proline/data/test/quanti/debug/clusterized_map_"+ (-clusterizedMap.id) +".tsv")
       
       // Set clusterized map id as the id of the provided map
