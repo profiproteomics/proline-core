@@ -62,8 +62,8 @@ class ProtSetRulesValidatorWithFDROptimization(
       // Retrieve single peptide rule threshold
       val thresholdRule2 = protSetFilterRule2.getThresholdValue
       
-      this.logger.debug( "LOOP 1 (multiple peptides rule)" )
-      this.logger.debug( "multiple peps rule threshold: " + thresholdRule2 )
+      this.logger.trace( "LOOP 1 (multiple peptides rule)" )
+      this.logger.trace( "multiple peps rule threshold: " + thresholdRule2 )
       
       // Validate protein sets identified with multiple peptides
       protSetFilterRule2.filterProteinSets(multiPepProtSets,true,false)
@@ -75,9 +75,9 @@ class ProtSetRulesValidatorWithFDROptimization(
       currentFdr = valResult.fdr.get
       
       // Log validation result
-      this.logger.debug( valResult.targetMatchesCount + " target protein sets" )
-      this.logger.debug( valResult.decoyMatchesCount.get + " decoy protein sets" )
-      this.logger.debug( "Current protein sets FDR = " + currentFdr )
+      this.logger.trace( valResult.targetMatchesCount + " target protein sets" )
+      this.logger.trace( valResult.decoyMatchesCount.get + " decoy protein sets" )
+      this.logger.trace( "Current protein sets FDR = " + currentFdr )
       
       if( currentFdr <= expectedFdr.get ) {
         
@@ -94,8 +94,8 @@ class ProtSetRulesValidatorWithFDROptimization(
           // Retrieve single peptide rule threshold
           val thresholdRule1 = protSetFilterRule1.getThresholdValue
           
-          this.logger.debug( "LOOP 2 (single peptide rule)" )
-          this.logger.debug( "single pep rule threshold: " + thresholdRule1 )
+          this.logger.trace( "LOOP 2 (single peptide rule)" )
+          this.logger.trace( "single pep rule threshold: " + thresholdRule1 )
           
           // Validate protein sets identified with a single peptide 
           protSetFilterRule1.filterProteinSets(singlePepProtSets,true,false)
@@ -107,9 +107,9 @@ class ProtSetRulesValidatorWithFDROptimization(
           currentFdr = rocPoint.fdr.get
           
           // Log validation result
-          this.logger.debug( rocPoint.targetMatchesCount + " target protein sets" )
-          this.logger.debug( rocPoint.decoyMatchesCount.get + " decoy protein sets" )
-          this.logger.debug( "Current protein sets FDR = "+ currentFdr )
+          this.logger.trace( rocPoint.targetMatchesCount + " target protein sets" )
+          this.logger.trace( rocPoint.decoyMatchesCount.get + " decoy protein sets" )
+          this.logger.trace( "Current protein sets FDR = "+ currentFdr )
           
           // Restore protein sets validation status of protein sets identified with multiple peptides
           ProteinSetFiltering.restoreProtSetValidationStatus(singlePepProtSets, protSetValStatusMap)
@@ -336,7 +336,7 @@ class ProtSetRulesValidatorWithFDROptimization(
         if( curProtSet.isDecoy ) protSetFilterRule.setThresholdValue(protSetFilterRule.getNextValue(thresholdValue))
         else protSetFilterRule.setThresholdValue(thresholdValue)
         
-        this.logger.debug( "Protein set threshold: " + protSetFilterRule.getThresholdValue )
+        this.logger.trace( "Protein set threshold: " + protSetFilterRule.getThresholdValue )
         
         // Initialize the ROC point with highest threshold
         if( curRocPoint == null ) {
@@ -346,9 +346,9 @@ class ProtSetRulesValidatorWithFDROptimization(
         }
         
         // Log validation result
-        this.logger.debug( curRocPoint.targetMatchesCount + " target protein sets" )
-        this.logger.debug( curRocPoint.decoyMatchesCount.get + " decoy protein sets" )
-        this.logger.debug( "Current protein sets FDR = " + curRocPoint.fdr )
+        this.logger.trace( curRocPoint.targetMatchesCount + " target protein sets" )
+        this.logger.trace( curRocPoint.decoyMatchesCount.get + " decoy protein sets" )
+        this.logger.trace( "Current protein sets FDR = " + curRocPoint.fdr )
         
         if( curRocPoint.fdr.isDefined ) {
           // Update ROC point properties
@@ -411,7 +411,7 @@ class ProtSetRulesValidatorWithFDROptimization(
         
         // Retrieve next filter threshold from this decoy protein set
         var thresholdValue = protSetFilterRule.getProteinSetValueForFiltering(threshDecoyProtSet)
-        this.logger.debug( "Protein set threshold: " + thresholdValue )
+        this.logger.trace( "Protein set threshold: " + thresholdValue )
         
         // Increase the threshold just a little bit in order to exclude
         // the current decoy Protein Set (should maximize sensitivity),
@@ -431,9 +431,9 @@ class ProtSetRulesValidatorWithFDROptimization(
         val currentFdr = rocPoint.fdr.get
         
         // Log validation result
-        this.logger.debug( rocPoint.targetMatchesCount + " target protein sets" )
-        this.logger.debug( rocPoint.decoyMatchesCount.get + " decoy protein sets" )
-        this.logger.debug( "Current protein sets FDR = " + currentFdr )
+        this.logger.trace( rocPoint.targetMatchesCount + " target protein sets" )
+        this.logger.trace( rocPoint.decoyMatchesCount.get + " decoy protein sets" )
+        this.logger.trace( "Current protein sets FDR = " + currentFdr )
         
         // Add ROC point to the list
         rocPoints += rocPoint
