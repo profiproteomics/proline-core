@@ -164,7 +164,7 @@ class SQLQuantResultSummaryProvider(
          
       msiEzDBC.select(mqProtSetCompQuery) { r =>
   
-        val mqProtSetId: Long = toLong(r.getAny(MsiDbProteinSetTable.columns.ID))
+        val mqProtSetId: Long = toLong(r.getAny(MsiDbProteinSetTable.columns.ID.toAliasedString))
         val mqCompId: Long = toLong(r.getAny(MQCompCols.ID.toAliasedString))
         
         val protSet = protSetById(mqProtSetId)
