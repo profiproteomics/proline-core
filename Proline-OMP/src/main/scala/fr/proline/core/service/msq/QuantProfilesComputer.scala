@@ -105,7 +105,7 @@ class QuantProfilesComputer(
         // Update MasterQuantPeptides selection level and properties
         mqComponentUpdateStmt.executeWith(
           mqPep.selectionLevel,
-          ProfiJson.serialize(mqPep.properties),
+          mqPep.properties.map( props => ProfiJson.serialize(props) ),
           mqPep.id
         )
         
@@ -128,7 +128,7 @@ class QuantProfilesComputer(
         // Update MasterQuantProtSets selection level and properties
         mqComponentUpdateStmt.executeWith(
           mqProtSet.selectionLevel,
-          ProfiJson.serialize(mqProtSet.properties),
+          mqProtSet.properties.map( props => ProfiJson.serialize(props) ),
           mqProtSet.getMasterQuantComponentId()
         )
         
