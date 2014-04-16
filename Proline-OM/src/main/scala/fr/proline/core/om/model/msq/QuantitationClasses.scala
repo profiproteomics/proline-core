@@ -316,10 +316,7 @@ case class QuantProteinSet (
  ) extends QuantComponent
 
 
-object MasterQuantProteinSet extends InMemoryIdGen
- 
 case class MasterQuantProteinSet(
-  var id: Long, // important: master quant component id
   val proteinSet: ProteinSet,
   var quantProteinSetMap: Map[Long,QuantProteinSet], // QuantProteinSet by quant channel id
   var masterQuantPeptides: Array[MasterQuantPeptide] = null,
@@ -328,6 +325,8 @@ case class MasterQuantProteinSet(
   var properties: Option[MasterQuantProteinSetProperties] = None
      
 ) extends MasterQuantComponent {
+  
+  def id() = this.proteinSet.id
   
   def getMasterQuantComponentId() = {
     val mqcId = this.proteinSet.masterQuantComponentId

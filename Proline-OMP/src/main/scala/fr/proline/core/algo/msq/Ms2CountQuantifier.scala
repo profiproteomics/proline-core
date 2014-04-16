@@ -248,7 +248,6 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
       mqProtSetProps.setSelectedMasterQuantPeptideIds( Some(selectedMQPepIds.toArray) )
       
       val mqProteinSet = new MasterQuantProteinSet(
-        id = MasterQuantProteinSet.generateNewId(),
         proteinSet = mergedProtSet,
         quantProteinSetMap = quantProteinSetByQcId.toMap,
         selectionLevel = 2,
