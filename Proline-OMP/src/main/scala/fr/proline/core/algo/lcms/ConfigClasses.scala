@@ -17,6 +17,7 @@ trait ILcMsQuantConfig extends IMsQuantConfig {
   val ftFilter: fr.proline.core.algo.lcms.filtering.Filter
   val ftMappingParams: FeatureMappingParams
   val normalizationMethod: Option[String]
+  val startFromValidatedPeptides: Boolean
 }
 
 trait ILabelFreeQuantConfig extends ILcMsQuantConfig
@@ -71,5 +72,6 @@ case class LabelFreeQuantConfig(
   alnParams: AlignmentParams,
   ftFilter: fr.proline.core.algo.lcms.filtering.Filter,
   ftMappingParams: FeatureMappingParams,
-  normalizationMethod: Option[String]
+  normalizationMethod: Option[String],
+  startFromValidatedPeptides: Boolean = true
 ) extends ILabelFreeQuantConfig

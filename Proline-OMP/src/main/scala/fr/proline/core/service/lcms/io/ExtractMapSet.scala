@@ -36,8 +36,7 @@ import fr.proline.core.service.lcms.CreateMasterMap
 class ExtractMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
   val quantConfig: ILcMsQuantConfig,
-  val peptideByRunIdAndScanNumber: Option[Map[Long,HashMap[Int,Peptide]]] = None, // sequence data may or may not be provided
-  val restrictToIdentifiedPeptides: Boolean = true // TODO: put in quantConfig
+  val peptideByRunIdAndScanNumber: Option[Map[Long,HashMap[Int,Peptide]]] = None // sequence data may or may not be provided
 ) extends ILcMsService with Logging {
   
   // Do some requirements
@@ -378,6 +377,7 @@ class ExtractMapSet(
   
   private def _extractRawMapUsingMs2Events( lcmsRun: LcMsRun, mzDbFile: File ): RawMap = {
     
+    val restrictToIdentifiedPeptides = quantConfig.startFromValidatedPeptides
     val peptideByScanNumber = peptideByRunIdAndScanNumber.map( _(lcmsRun.id) ).getOrElse( HashMap.empty[Int,Peptide] )
     val mzDb = new MzDbReader( mzDbFile, true )
     
