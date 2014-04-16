@@ -93,14 +93,9 @@ class QuantProfilesComputer(
       )
       
       val objTreeUpdateStmt = ezDBC.prepareStatementWrapper(
-        "UPDATE object_tree SET clob_data = ? "+
-        "WHERE master_quant_component.object_tree_id = object_tree.id "+
-        "AND master_quant_component.id = ?"
+        "UPDATE object_tree SET clob_data = ? " +
+        "WHERE object_tree.id IN (SELECT object_tree_id FROM master_quant_component WHERE master_quant_component.id = ?)"
       )
-      
-      /*val mqProtSetObjTreeUpdateStmt = ezDBC.prepareStatementWrapper(
-        "UPDATE master_quant_component SET selection_level = ?, serialized_properties = ? WHERE id = ?"
-      )*/
 
       this.logger.info("Updating MasterQuantPeptides...")
       
