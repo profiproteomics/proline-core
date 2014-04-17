@@ -3,6 +3,7 @@ package fr.proline.core.om.model.msq
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.util.misc.InMemoryIdGen
+import fr.proline.util.primitives.isZeroOrNaN
 import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet,ResultSummary}
 
 trait Item {
@@ -162,8 +163,16 @@ case class MasterQuantPeptideIon(
     else this.quantPeptideIonMap.get( bestQuantChannelId.get )
   }
   
-  def calcAbundanceSum: Float = {
+  def calcAbundanceSum(): Float = {
     quantPeptideIonMap.values.foldLeft(0f)( (s,qp) => s + qp.abundance )
+  }
+  
+  def calcFrequency( qcCount: Int ): Float = {
+    this.countDefinedRawAbundances() / qcCount
+  }
+    
+  def countDefinedRawAbundances(): Int = {
+    quantPeptideIonMap.values.count( qPepIon => isZeroOrNaN(qPepIon.rawAbundance) == false )
   }
   
 }

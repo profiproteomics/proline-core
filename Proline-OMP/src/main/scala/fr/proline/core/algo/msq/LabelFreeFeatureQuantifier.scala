@@ -35,6 +35,7 @@ class LabelFreeFeatureQuantifier(
     // Define some vars
     val mergedRsmId = mergedRSM.id
     val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
+    val qcCount = udsQuantChannels.size()
     
     // Retrieve some LC-MS vars
     val masterMap = lcmsMapSet.masterMap
@@ -277,9 +278,9 @@ class LabelFreeFeatureQuantifier(
       if( filteredMQPepIons.isEmpty ) filteredMQPepIons = mqPepIons
   
       // Keep the MQP with the highest intensity sum
-      // TODO: try to keep the one with highest frequency
       // TODO: allows to sum charge states
-      val bestMQP = filteredMQPepIons.reduceLeft { (a,b) => if( a.calcAbundanceSum > b.calcAbundanceSum ) a else b }
+      //val bestMQP = filteredMQPepIons.maxBy( _.calcAbundanceSum )
+      val bestMQP = filteredMQPepIons.maxBy( _.calcFrequency(qcCount) )
       
       val quantPepByQcId = Map.newBuilder[Long,QuantPeptide]
       for( (qcId,quantPepIon) <- bestMQP.quantPeptideIonMap ) {
