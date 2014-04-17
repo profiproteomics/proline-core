@@ -447,6 +447,7 @@ class ExtractMapSet(
       )
     )
     
+    /*
     // Map features by each of their monoisotopic peakel peaks
     val mzDbFtsByPeak = new HashMap[MzDbPeak, ArrayBuffer[MzDbFeature]]
     val ftByPeak = for(
@@ -515,11 +516,13 @@ class ExtractMapSet(
       else {
         lcmsFeaturesWithClusters += ftClusterer.buildFeatureCluster(lcmsFtCluster)
       }
-    }
+    }*/
+    
+    val lcmsFeaturesWithoutClusters = mzDbFts.map( mzDbFt => this._mzDbFeatureToLcMsFeature(mzDbFt,rawMapId,lcmsRun.scanSequence.get) )
 
     val rawMap = tmpRawMap.copy( features = lcmsFeaturesWithoutClusters.toArray )
     
-    rawMap.toProcessedMap(mapNumber, mapSetId, lcmsFeaturesWithClusters.toArray)
+    rawMap.toProcessedMap(mapNumber, mapSetId)
   }
   
   private def _extractMissingFeatures(
