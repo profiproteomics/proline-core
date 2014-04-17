@@ -4,9 +4,12 @@ import scala.collection.mutable.HashMap
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder2
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.msi._
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.ResultSummary
@@ -23,12 +26,17 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
     
     val rsmId = rsm.id
     //val( pepInstanceIdByPepId, pepInstanceIdMap ) = ( new HashMap[Long,Long], new HashMap[Long,Long] )
+    /*
+    // Sort peptide instances to be sure that pepInstanceIdByPepId is fulfilled by orphan peptides first
+    val peptideInstances = rsm.peptideInstances
+    val pepInstsWithoutUnmodPepFirst = peptideInstances.toList.sort { (a,b) => 
+                                         a.getUnmodifiedPeptideId < b.getUnmodifiedPeptideId }
+    */
     
     val insertPepInstance = ( stmt: PreparedStatementWrapper, pepInstance: PeptideInstance) => {
       
       val pepId = pepInstance.peptide.id
       val unmodPepId = pepInstance.getUnmodifiedPeptideId
-      
     
       // Insert peptide instance
       stmt.executeWith(
@@ -55,148 +63,107 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
     
     logger.debug( "storing peptide instances..." )
     
-    val pepInstInsertQuery = MsiDbPeptideInstanceTable.mkInsertQuery { (c,colsList) => 
-                               colsList.filter( _ != c.ID)
-                             }
-    
+    val pepInstInsertQuery = MsiDbPeptideInstanceTable.mkInsertQuery { (c,colsList) => colsList.filter( _ != c.ID) }
+
     // AW: workaround for issue: #9147 : to allow RT time in RSM/Peptides RT column instead of zero after validation
     ///    get the peaklist ids associated with this single take peptide instance
-    if(rsm.peptideInstances.size > 0) {
-        
-        var peakListIds = new ArrayBuffer[Long]()
-   
-	    val onePepInstance = rsm.peptideInstances.apply(0) // pick up the first peptide instance
-	     // then get its corresponding bestPeptidematch
-	    if(onePepInstance == null) {
-	      logger.debug("AW: pepInstance is NULL!!!")
-	    }
-	  
-        val rsId = rsm.getResultSetId 
-     
-        if (rsId > 0) {
-        	DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
-			 
-        	    // get the list of peaklist_id to later run a query to filter out the right spectrums
-	        	   val sqlQuery = "  select peaklist_id " +
-	        				   "  from result_set RS inner join msi_search MS " +
-	        				   "  on RS.msi_search_id = MS.id " +
-	        				   "  where RS.id = " + rsId.toString
-	        	 
-	               ezDBC.selectAndProcess( sqlQuery ) { r =>
-	               // add peaklist_id to array 
-	               peakListIds.append(toLong(r.nextAny))
-	        	
-	        	}
-	        	
-        	})
-        }
-        else  
-        {
-        	 logger.debug("rsId is null or negative or zero !!!" + rsId)
-        }
-		var peakListIdsString : String =  peakListIds.mkString(", ") 
-		var spectrumIdElutionTimeMap  = collection.mutable.Map[Long, Float] ()
-		
-	
-        /*
-        // Sort peptide instances to be sure that pepInstanceIdByPepId is fulfilled by orphan peptides first
-        val peptideInstances = rsm.peptideInstances
-        val pepInstsWithoutUnmodPepFirst = peptideInstances.toList.sort { (a,b) => 
-                                             a.getUnmodifiedPeptideId < b.getUnmodifiedPeptideId }*/
-
-		if (peakListIds.size >0) {
-			var firstTimeNullErrHappened : Boolean = false // indicates if 1 or more error of this type occurred
-	        DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext(), 
-	        { 
-	         ezDBC =>
-	
-	    	 			   
-	      	   val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE peaklist_id in (" + peakListIdsString + ")" 
-	      	   logger.debug("query: " + sqlQuery)
-			   ezDBC.selectAndProcess( sqlQuery ) 
-			   { 
-	      	     r =>
-	
-			        val spectrumId = toLong(r.nextAny)
-			        val spectrumTitle = r.nextString
-			        
-			        val first_time = r.nextAny
-			        if(first_time != null)  
-			        {
-			           spectrumIdElutionTimeMap +=  ( spectrumId.toLong ->  first_time.asInstanceOf[Float])
-		          	} 
-			        else
-			    	{
-			    	    if(firstTimeNullErrHappened == false)  
-			    	    {
-			    	      firstTimeNullErrHappened = true
-			    	      logger.info("first time is null for spectrum id: " + spectrumId + " title: " + spectrumTitle 
-			    	           + "\nIt might be that you specified a wrong peaklist software when importing the result file"
-			    	           + "\n or that there is no retention time information provided"
-			    	           + "\nNo more messages shown of that error even if it occurs again (for every Title...)")
-			    	    }
-			    	}
-			    		 
-			    }
-			})
-		
-			
-	        rsm.peptideInstances.foreach { pepInst => 
-	        		
-	           val bestPeptideMatchForThisPeptideInstance = 
-	               pepInst.peptideMatches.find(pm => pm.id == pepInst.bestPeptideMatchId).get
-		       if(bestPeptideMatchForThisPeptideInstance != null) 
-		       {
-		           val spectrumId = bestPeptideMatchForThisPeptideInstance.getMs2Query.spectrumId
-		           if(spectrumIdElutionTimeMap.contains(spectrumId))
-		           {
-		               pepInst.elutionTime = spectrumIdElutionTimeMap(spectrumId) // modify elution time in peptide instance
-		           }
-		       }
-	        }
-		}
-		else
-		{
-		  // no peaklist id means probably no save spectrum match enabled.
-		}
-    }
-	else
-    {
-      
-       logger.debug("no peptide instances for this rsm!")
-    }
+    val rsId = rsm.getResultSetId
     
-    DoJDBCWork.withEzDBC( execCtx.getMSIDbConnectionContext, { msiEzDBC =>
-	    // Insert peptide instances
-	    msiEzDBC.executePrepared( pepInstInsertQuery, true ) { stmt =>
+    if ( rsId == 0 ) logger.debug("rsId negative or zero !!!")
+    else if ( rsm.peptideInstances.isEmpty )  {
+      logger.error("no peptide instance for this rsm!")
+    } else {
+
+      val spectrumIdElutionTimeMap = new HashMap[Long, Float]()
+      var firstTimeNullErrHappened: Boolean = false // indicates if 1 or more error of this type occurred
+      
+      DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext(), { ezDBC =>
+
+        /*val peaklistIdSqlQuery = "select peaklist_id " +
+        "  from result_set RS inner join msi_search MS " +
+        "  on RS.msi_search_id = MS.id " +
+        "  where RS.id = " + rsId*/
         
-        rsm.peptideInstances.foreach { pepInst => 
-        		insertPepInstance( stmt, pepInst )
-        }
-	    
-    }
-      
-      // Link peptide instances with peptide matches
-    val pepInstPepMatchMapInsertQuery = MsiDbPeptideInstancePeptideMatchMapTable.mkInsertQuery()
-      
-    msiEzDBC.executePrepared( pepInstPepMatchMapInsertQuery ) { stmt =>
-            
-       rsm.peptideInstances.foreach { pepInst =>
-          val pepMatchRsmPropsById = pepInst.peptideMatchPropertiesById       
-         
-          pepInst.getPeptideMatchIds.foreach { pepMatchId =>
-              val pepMatchPropsAsJSON = if( pepMatchRsmPropsById != null ) Some(ProfiJson.serialize( pepMatchRsmPropsById(pepMatchId) )) else None
-           
-              // Insert peptide match mapping
-              stmt.executeWith(
-	              pepInst.id,
-	              pepMatchId,
-	              pepMatchPropsAsJSON,
-	              rsmId
-              )
+        val peaklistIdSqlQuery = new SelectQueryBuilder2(MsiDbResultSetTable,MsiDbMsiSearchTable).mkSelectQuery( (rsT,rsC,msiT,msiC) =>
+          List(msiT.PEAKLIST_ID) -> "WHERE "~ rsT.MSI_SEARCH_ID ~"="~ msiT.ID ~" AND "~ rsT.ID ~ "="~ rsId
+        )
+        
+        //val sqlQuery = "SELECT id, title, first_time FROM spectrum WHERE peaklist_id in (" + peaklistIdSqlQuery + ")"
+        val sqlQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
+          List(t.ID,t.TITLE,t.FIRST_TIME) -> "WHERE "~ t.PEAKLIST_ID ~" IN("~ peaklistIdSqlQuery ~" )"
+        )
+        logger.debug("SQL query for spectrumIdElutionTimeMap: " + sqlQuery)
+        
+        ezDBC.selectAndProcess(sqlQuery) { r =>
+
+          val spectrumId = toLong(r.nextAny)
+          val spectrumTitle = r.nextString
+
+          val firstTime = r.nextAny
+          if (firstTime != null) {
+            spectrumIdElutionTimeMap += (spectrumId.toLong -> firstTime.asInstanceOf[Float])
+          } else {
+            if (firstTimeNullErrHappened == false) {
+              firstTimeNullErrHappened = true
+              logger.info("first time is null for spectrum id: " + spectrumId + " title: " + spectrumTitle
+                + "\nIt might be that you specified a wrong peaklist software when importing the result file"
+                + "\n or that there is no retention time information provided"
+                + "\nNo more messages shown of that error even if it occurs again (for every Title...)")
+            }
           }
-       }
-     }
+
+        }
+      })
+
+      if (spectrumIdElutionTimeMap.isEmpty) {
+        this.logger.warn("spectrumIdElutionTimeMap is empty: it means probably this result summary comes from a merged result set")
+      } else {
+        rsm.peptideInstances.foreach { pepInst =>
+
+          val bestPepMatchForThisPepInstOpt = pepInst.peptideMatches.find(_.id == pepInst.bestPeptideMatchId)
+          if ( bestPepMatchForThisPepInstOpt.isDefined ) {
+            val spectrumId = bestPepMatchForThisPepInstOpt.get.getMs2Query.spectrumId
+            if (spectrumIdElutionTimeMap.contains(spectrumId)) {
+              pepInst.elutionTime = spectrumIdElutionTimeMap(spectrumId) // modify elution time in peptide instance
+            }
+          }
+        }
+      }
+      
+    }
+
+    DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext, { msiEzDBC =>
+      
+      // Insert peptide instances
+      msiEzDBC.executePrepared(pepInstInsertQuery, true) { stmt =>
+
+        rsm.peptideInstances.foreach { pepInst =>
+          insertPepInstance(stmt, pepInst)
+        }
+
+      }
+
+      // Link peptide instances with peptide matches
+      val pepInstPepMatchMapInsertQuery = MsiDbPeptideInstancePeptideMatchMapTable.mkInsertQuery()
+
+      msiEzDBC.executePrepared(pepInstPepMatchMapInsertQuery) { stmt =>
+
+        rsm.peptideInstances.foreach { pepInst =>
+          val pepMatchRsmPropsById = pepInst.peptideMatchPropertiesById
+
+          pepInst.getPeptideMatchIds.foreach { pepMatchId =>
+            val pepMatchPropsAsJSON = if (pepMatchRsmPropsById != null) Some(ProfiJson.serialize(pepMatchRsmPropsById(pepMatchId))) else None
+
+            // Insert peptide match mapping
+            stmt.executeWith(
+              pepInst.id,
+              pepMatchId,
+              pepMatchPropsAsJSON,
+              rsmId
+            )
+          }
+        }
+      }
     }) // End of JDBC work
     
     rsm.peptideInstances.length
