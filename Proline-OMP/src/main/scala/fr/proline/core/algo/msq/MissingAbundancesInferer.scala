@@ -10,8 +10,7 @@ object MissingAbundancesInferer {
   val percentileComputer = new Percentile()
   
   def inferAbundances( abundanceMatrix: Array[Array[Float]], errorModel: AbsoluteErrorModel ): Array[Array[Float]] = {
-    //require( abundanceMatrix.length > 10, "at least 10 abundance rows are required for missing abundance inference")
-    require( abundanceMatrix.flatten.count( isZeroOrNaN(_) == false ) > 0 ) // only for debug
+    require( abundanceMatrix.length >= 10, "at least 10 abundance rows are required for missing abundance inference")
     
     // Retrieve quartiles from flattened abundance matrix
     val allDefinedAbundances = abundanceMatrix.flatten.withFilter( isZeroOrNaN(_) == false ).map(_.toDouble).sorted

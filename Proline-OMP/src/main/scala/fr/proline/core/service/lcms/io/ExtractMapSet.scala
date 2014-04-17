@@ -5,10 +5,13 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import com.typesafe.scalalogging.slf4j.Logging
+import org.apache.commons.math.stat.descriptive.rank.Percentile
 
 import fr.profi.jdbc.easy._
+import fr.profi.ms.algo.IsotopePatternInterpolator
 import fr.profi.mzdb.MzDbFeatureExtractor
 import fr.profi.mzdb.MzDbReader
+import fr.profi.mzdb.algo.feature.extraction.FeatureExtractorConfig
 import fr.profi.mzdb.io.reader.RunSliceDataProvider
 import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peak => MzDbPeak }
 import fr.profi.mzdb.model.PutativeFeature
@@ -83,7 +86,6 @@ class ExtractMapSet(
     var alnRefMapId: Long = 0L
     
     for( lcmsRun <- lcMsRuns ) {
-      
       val mzDbFilePath = lcmsRun.rawFile.properties.get.getMzdbFilePath
       val mzDbFile = new File(mzDbFilePath)
       require( mzDbFile.exists, "mzdb file can't be found at: "+ mzDbFilePath)
@@ -125,7 +127,9 @@ class ExtractMapSet(
       clusterizedMap.id = processedMap.id
       
       processedMaps(mapIdx) = clusterizedMap
+      
       //processedMapByRawMapId += rawMap.id -> processedMap
+      
       
       mapIdx += 1
     }
@@ -135,7 +139,7 @@ class ExtractMapSet(
       id = tmpMapSetId,
       name = "",
       creationTimestamp = new java.util.Date,
-      childMaps = processedMaps.toArray,
+      childMaps = processedMaps,//.toArray,
       alnReferenceMapId = alnRefMapId
     )
     
@@ -415,6 +419,18 @@ class ExtractMapSet(
       mzDb.close()
     }
     
+    val rmsds = mzDbFts.par.map{f => 
+      val theoAbundances = IsotopePatternInterpolator.getTheoreticalPattern(f.mz, f.charge).abundances
+      val peakelApexIntensities = f.peakels.map(_.getApex().getIntensity)
+      this._calcRmsd(theoAbundances, peakelApexIntensities)
+    }.toArray
+    
+    val percentileComputer = new Percentile()
+    val ipDevQ1 = percentileComputer.evaluate(rmsds, 25)
+    val ipDevQ3 = percentileComputer.evaluate(rmsds, 75)
+    val ipDevIQR = ipDevQ3 - ipDevQ1
+    val ipDevUB = ipDevQ3 + 1.5 * ipDevIQR
+    
     val rawMapId = RawMap.generateNewId()
     
     // Create a new Run Map
@@ -425,13 +441,12 @@ class ExtractMapSet(
       creationTimestamp = new java.util.Date,
       features = Array(),
       runId = lcmsRun.id,
-      peakPickingSoftware = pps
-    )
-    
-    val ftClusterer = new FeatureClusterer(
-      lcmsMap = tmpRawMap,
-      scans = lcmsRun.scanSequence.get.scans,
-      params = clusteringParams
+      peakPickingSoftware = pps,
+      properties = Some(
+        LcMsMapProperties(
+          ipDeviationUpperBound = Some(ipDevUB.toFloat)
+        )
+      )
     )
     
     // Map features by each of their monoisotopic peakel peaks
@@ -445,15 +460,17 @@ class ExtractMapSet(
     
     def findFeaturesWithSharedPeaks( mzDbFt: MzDbFeature, mzDbFtSet: HashSet[MzDbFeature] ) {
       
-      val localMzDbFtSet = new HashSet[MzDbFeature]
+      // Add the current feature the set of already clusterized features
+      mzDbFtSet += mzDbFt
+      
+      val foundMzDbFtSet = new HashSet[MzDbFeature]
       for( peak <- mzDbFt.peakels.head.definedPeaks ) {
-        localMzDbFtSet ++= mzDbFtsByPeak(peak)
+        foundMzDbFtSet ++= mzDbFtsByPeak(peak)
       }
       
-      for( mzDbFt <- localMzDbFtSet ) {
-        if( mzDbFtSet.contains(mzDbFt) == false ) {
-          mzDbFtSet += mzDbFt
-          findFeaturesWithSharedPeaks( mzDbFt, mzDbFtSet )
+      for( foundMzDbFt <- foundMzDbFtSet ) {
+        if( mzDbFtSet.contains(foundMzDbFt) == false ) {          
+          findFeaturesWithSharedPeaks( foundMzDbFt, mzDbFtSet )
         }
       }
     }
@@ -464,11 +481,20 @@ class ExtractMapSet(
     for( mzDbFt <- mzDbFts ) {
       if( clusterizedFts.contains(mzDbFt) == false ) {
         val mzDbFtsCluster = new HashSet[MzDbFeature]()
+        
         findFeaturesWithSharedPeaks(mzDbFt, mzDbFtsCluster)
-        mzDbFtClusters += mzDbFtsCluster.toArray
+        
         clusterizedFts ++= mzDbFtsCluster
+        mzDbFtClusters += mzDbFtsCluster.toArray        
       }
     }
+    
+    // Instantiate a feature clusterer
+    val ftClusterer = new FeatureClusterer(
+      lcmsMap = tmpRawMap,
+      scans = lcmsRun.scanSequence.get.scans,
+      params = clusteringParams
+    )
     
     // Convert mzDB features into LC-MS DB features
     val lcmsFeatures = new ArrayBuffer[LcMsFeature](mzDbFts.length)
@@ -514,7 +540,12 @@ class ExtractMapSet(
     
     try {
       
-      val mzdbFtX = new MzDbFeatureExtractor(mzDb,5,5)
+      val ftXtractConfig = FeatureExtractorConfig(
+         mzTolPPM = this.mozTolPPM,
+         maxIPDeviation = processedMap.properties.flatMap( _.ipDeviationUpperBound )
+      )
+      
+      val mzdbFtX = new MzDbFeatureExtractor(mzDb,5,5,ftXtractConfig)
       
       //val scanHeaders = mzDb.getScanHeaders()
       //val ms2ScanHeaders = scanHeaders.filter(_.getMsLevel() == 2 )
@@ -551,7 +582,11 @@ class ExtractMapSet(
             elutionTime = predictedTime,
             evidenceMsLevel = 2
           )
+          
           pf.isPredicted = true
+          pf.durations = mft.children.map(_.duration)
+          pf.areas = mft.children.map(_.intensity)
+          pf.mozs = mft.children.map(_.moz)
           
           pfs += pf
 
@@ -747,10 +782,12 @@ class ExtractMapSet(
     val apexLcMsScanId = lcmsScanIdByInitialId(apexScanInitialId)
     val ms2EventIds = mzDbFt.getMs2ScanIds.map( lcmsScanIdByInitialId(_) )
     
+    val peakels = mzDbFt.getPeakels()
+    val intensitySumTop2 =  peakels(0).getApex().getIntensity() + peakels(1).getApex().getIntensity()
     new LcMsFeature(
        id = LcMsFeature.generateNewId,
        moz = mzDbFt.mz,
-       intensity = mzDbFt.area,
+       intensity = intensitySumTop2, //mzDbFt.area,
        charge = mzDbFt.charge,
        elutionTime = mzDbFt.elutionTime,
        duration = lastScanH.getElutionTime - firstScanH.getElutionTime,
@@ -779,6 +816,13 @@ class ExtractMapSet(
          rawMapId = rawMapId
        )
     )
+  }
+  
+  private def _calcRmsd(theoInt: Array[Float], obsInt: Array[Float]): Double = {
+    val maxObsInt = obsInt.max
+    val scaledInt = obsInt.map(_ * 100 / maxObsInt)
+    val s = theoInt.zip(scaledInt).foldLeft(0d)( (s, ab) => s + math.pow((ab._1 - ab._2), 2) )
+    math.sqrt(s)
   }
   
 }

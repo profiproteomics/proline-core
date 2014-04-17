@@ -59,7 +59,7 @@ class FeatureClusterer(
   private val timeComputationMethod = try {
     ClusterTimeComputation.withName( params.timeComputation.toUpperCase() )
   } catch {
-    case _ : Throwable => throw new Exception("the cluster time computation method '" + params.timeComputation + "' is not implemented")
+    case _: Throwable => throw new Exception("the cluster time computation method '" + params.timeComputation + "' is not implemented")
   }
 
   // Retrieve some vars
@@ -387,10 +387,8 @@ class FeatureClusterer(
   }
 
   private def _findMostIntenseFeature(features: List[Feature]): Feature = {
-
-    val sortedFeatures = features.sortWith { (a, b) => a.intensity > b.intensity }
-    sortedFeatures.head
-
+    
+    features.maxBy(_.intensity)
     // Group features by intensity
     /*val ftByIntensity = features map { ft => (ft.intensity -> ft) }
     //push(@{ ftByIntensity( _.intensity ) }, _ ) for features

@@ -80,7 +80,7 @@ case class MapMozCalibration(
 case class MapMozCalibrationProperties()
 
 //@JsonInclude( Include.NON_NULL )
-case class LcMsMapProperties()
+case class LcMsMapProperties( @BeanProperty var ipDeviationUpperBound: Option[Float] = None )
 
 abstract class ILcMsMap {
   
@@ -184,7 +184,8 @@ case class RawMap(
       featureScoring = featureScoring,
       rawMapIdentifiers = List( this ),
       runId = Some(runId),
-      mapSetId = mapSetId
+      mapSetId = mapSetId,
+      properties = this.properties
     )
     
   }
