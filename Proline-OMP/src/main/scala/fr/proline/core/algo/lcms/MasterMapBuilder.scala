@@ -55,7 +55,7 @@ class MasterMapBuilder(
   private val scanSeqByRunId = Map() ++ scanSeqs.map( ss => ss.runId -> ss)
   private val ftClustererByChildMapId = Map() ++ mapSet.childMaps.map { childMap =>
     val scanSeq = scanSeqByRunId(childMap.runId.get)    
-    childMap.id -> new FeatureClusterer(childMap,scanSeq.scans,ftClusteringParams)
+    childMap.id -> new FeatureClusterer(childMap, scanSeq.scans, ftClusteringParams)
   }
   
   // TODO: check filter name (must be intensity or relative_intensity)
@@ -399,6 +399,11 @@ class MasterMapBuilder(
           if( features.length == 1 ) {
             mftChildren += features.head
           } else {
+            
+            if( ftClustererByChildMapId.contains(childMapId) == false ) {
+              logger.error("can't find a clusterer for child map with id ="+childMapId)
+            }
+            
             val ftClusterer = ftClustererByChildMapId(childMapId)
             mftChildren += ftClusterer.buildFeatureCluster(features)
           }

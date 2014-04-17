@@ -76,8 +76,8 @@ class ExtractMapSet(
     if( !wasInTransaction ) lcmsDbCtx.beginTransaction()
     
     // --- Extract run maps and convert them to processed maps ---
-    val lcmsRunByRawMapId = new collection.mutable.HashMap[Long,LcMsRun]
-    val mzDbFileByRawMapId = new collection.mutable.HashMap[Long,File]
+    val lcmsRunByProcMapId = new collection.mutable.HashMap[Long,LcMsRun]
+    val mzDbFileByProcMapId = new collection.mutable.HashMap[Long,File]
     val mapCount = lcMsRuns.length
     val processedMaps = new Array[ProcessedMap](mapCount)
     //val processedMapByRawMapId = new collection.mutable.HashMap[Long,ProcessedMap]
@@ -101,15 +101,14 @@ class ExtractMapSet(
       }
       
       // Extract LC-MS map from the mzDB file
-      val rawMap = this._extractRawMapUsingMs2Events(lcmsRun,mzDbFile)
-      //rawMap.toTsvFile("D:/proline/data/test/quanti/debug/run_map_"+ (-rawMap.id) +".tsv")
+      val processedMap = this._extractProcessedMapUsingMs2Events(lcmsRun,mzDbFile, mapIdx + 1, tmpMapSetId)
       
       // Update some mappings
-      lcmsRunByRawMapId += rawMap.id -> lcmsRun
-      mzDbFileByRawMapId += rawMap.id -> mzDbFile
+      lcmsRunByProcMapId += processedMap.id -> lcmsRun
+      mzDbFileByProcMapId += processedMap.id -> mzDbFile
     
       // Convert to processed map
-      val processedMap = rawMap.toProcessedMap( number = mapIdx + 1, mapSetId = tmpMapSetId )
+      //val processedMap = rawMap.toProcessedMap( number = mapIdx + 1, mapSetId = tmpMapSetId )
       
       // Set first map as default alignment reference
       if( mapCount == 1 ) {
@@ -212,9 +211,8 @@ class ExtractMapSet(
     val x2ProcessedMaps = new ArrayBuffer[ProcessedMap]
     for( processedMap <- mapSet.childMaps ) {
       val rawMap = processedMap.getRawMaps().head.get
-      val rawMapId = rawMap.id
-      val mzDbFile = mzDbFileByRawMapId(rawMapId)
-      val lcmsRun = lcmsRunByRawMapId(rawMapId)
+      val mzDbFile = mzDbFileByProcMapId(processedMap.id)
+      val lcmsRun = lcmsRunByProcMapId(processedMap.id)
       val newLcmsFeatures = this._extractMissingFeatures(mzDbFile,lcmsRun,processedMap,mapSet)      
       
       // Create a new run map with the extracted missing features
@@ -379,7 +377,7 @@ class ExtractMapSet(
     
   }
   
-  private def _extractRawMapUsingMs2Events( lcmsRun: LcMsRun, mzDbFile: File ): RawMap = {
+  private def _extractProcessedMapUsingMs2Events( lcmsRun: LcMsRun, mzDbFile: File, mapNumber: Int, mapSetId: Long ): ProcessedMap = {
     
     val restrictToIdentifiedPeptides = quantConfig.startFromValidatedPeptides
     val peptideByScanNumber = peptideByRunIdAndScanNumber.map( _(lcmsRun.id) ).getOrElse( HashMap.empty[Int,Peptide] )
@@ -497,7 +495,8 @@ class ExtractMapSet(
     )
     
     // Convert mzDB features into LC-MS DB features
-    val lcmsFeatures = new ArrayBuffer[LcMsFeature](mzDbFts.length)
+    val lcmsFeaturesWithoutClusters = new ArrayBuffer[LcMsFeature](mzDbFts.length)
+    val lcmsFeaturesWithClusters = new ArrayBuffer[LcMsFeature](mzDbFts.length)    
     
     for( mzDbFtCluster <- mzDbFtClusters ) {
       
@@ -506,18 +505,21 @@ class ExtractMapSet(
         // Keep only features with defined area and at least two data points
         if( mzDbFt.area > 0 && mzDbFt.scanHeaders.length > 1 ) {
           val lcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt,rawMapId,lcmsRun.scanSequence.get)
-          //if( lcmsFt.duration == 0 ) error( ""+scala.runtime.ScalaRunTime.stringOf(mzDbFt.scanHeaders) )
+          
           lcmsFtCluster += lcmsFt
+          lcmsFeaturesWithoutClusters += lcmsFt
         }
       }
       
-      if( lcmsFtCluster.length == 1 ) lcmsFeatures += lcmsFtCluster.head
+      if( lcmsFtCluster.length == 1 ) lcmsFeaturesWithClusters += lcmsFtCluster.head
       else {
-        lcmsFeatures += ftClusterer.buildFeatureCluster(lcmsFtCluster)
+        lcmsFeaturesWithClusters += ftClusterer.buildFeatureCluster(lcmsFtCluster)
       }
     }
 
-    tmpRawMap.copy( features = lcmsFeatures.toArray )
+    val rawMap = tmpRawMap.copy( features = lcmsFeaturesWithoutClusters.toArray )
+    
+    rawMap.toProcessedMap(mapNumber, mapSetId, lcmsFeaturesWithClusters.toArray)
   }
   
   private def _extractMissingFeatures(
