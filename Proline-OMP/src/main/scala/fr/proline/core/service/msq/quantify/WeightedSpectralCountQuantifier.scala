@@ -75,7 +75,7 @@ class WeightedSpectralCountQuantifier(
 
   def quantifyMasterChannel(): Unit = {
 
-    logger.info("Starting spectral count quantifier")
+    logger.info("-- Starting spectral count quantifier")
 
     // Begin new ORM transaction
     msiDbCtx.beginTransaction()
@@ -95,13 +95,19 @@ class WeightedSpectralCountQuantifier(
     udsEm.persist(udsMasterQuantChannel)
     udsEm.flush()
 
+    var start = System.currentTimeMillis()
+    
     // Store master quant result summary
     this.cloneAndStoreMasterQuantRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
-
+    var end = System.currentTimeMillis()
+    logger.debug("-- Clone IDF RSM to Quant RSM : "+(end - start)+" ms")
+    
     // -- Create ProteinPepsWeightStruct from reference RSM
     val proteinSetWeightStructsById = createProteinPepsWeightStructs(true)
+    var end2 = System.currentTimeMillis()
+    logger.debug("-- Create ProteinPepsWeightStruct from reference RSM"+(end2 - end)+" ms. Found "
+        + proteinSetWeightStructsById.size + " Prot to calculate SC for (versus "+mergedResultSummary.proteinSets.length+" in merged RSM")
 
-    logger.debug("Found : " + proteinSetWeightStructsById.size + " Prot to calculate SC for (versus "+mergedResultSummary.proteinSets.length+" in merged RSM")
     // Compute master quant peptides
     // !! Warning : Returned values are linked to Identification RSM (OM Objects) and not to Quantitation RSM (ORM Objects)
     val (mqPeptides, mqProtSets) = computeMasterQuantValues(
@@ -110,14 +116,18 @@ class WeightedSpectralCountQuantifier(
       this.identResultSummaries,
       proteinSetWeightStructsById
     )
-
+    end = System.currentTimeMillis()
+    logger.debug("-- computeMasterQuantValues : "+(end - end2)+" ms")
+    
     this.logger.info("storing " + mqPeptides.size + " master peptide quant data...")
 
     // Iterate over master quant peptides to store corresponding spectral counts
     for (mqPeptide <- mqPeptides) {
       this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, Some(msiMasterPepInstByMergedPepInstId(mqPeptide.peptideInstance.get.id)))
     }
-
+    end2 = System.currentTimeMillis()
+	logger.debug("-- storing master peptide quant data : "+(end2 - end)+" ms")
+	
     this.logger.info("storing " + mqProtSets.size + " master proteins set quant data...")
 
     // Iterate over master quant protein sets to store corresponding spectral counts
@@ -129,9 +139,13 @@ class WeightedSpectralCountQuantifier(
       else
         logger.warn(" !! No Master Quant data found for protein set id " + mqProtSet.proteinSet.id + " !! ")
     }
-
+    end = System.currentTimeMillis()
+	logger.debug("-- storing master proteins quant dat : "+(end - end2)+" ms")
+	
     _resultAsJSON = createJSonOutputResult(msiQuantRSM, mqProtSets, proteinSetWeightStructsById)
-
+    end2 = System.currentTimeMillis()
+	logger.debug("-- createJSonOutputResult : "+(end2 - end)+" ms")
+	
     // Commit ORM transaction
     msiDbCtx.commitTransaction()
     udsDbCtx.commitTransaction()
@@ -451,6 +465,7 @@ class WeightedSpectralCountQuantifier(
                                resultSummaries: Seq[ResultSummary],
                                protSetWeightStructsByProtSetId: Map[Long, ProteinSetPeptidesDescription]): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
 
+    logger.debug("  --- computeMasterQuantValues ")
     val rsIdByRsmId = resultSummaries.map(rsm => { rsm.id -> rsm.getResultSetId }).toMap
 
     // Map quant channel id by result set id    
@@ -473,7 +488,7 @@ class WeightedSpectralCountQuantifier(
 
     // Compute SpectralCount for each RSM
     resultSummaries.foreach(rsm => {
-
+      logger.debug("  --- computeMasterQuantValues fro rsm "+rsm.id)
       val qcId = qcIdByRsId(rsm.getResultSetId)
 
       val quantPepByPepID: scala.collection.mutable.Map[Long, QuantPeptide] = scala.collection.mutable.Map[Long, QuantPeptide]()
@@ -481,6 +496,7 @@ class WeightedSpectralCountQuantifier(
       //--- Update RSM SpectralCount if necessary
       // TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information ! Should be wrong see issue #7984
       if (rsm.peptideInstances(0).totalLeavesMatchCount < 0) {
+        logger.debug("  --- updatePepInstanceSC for rsm "+rsm.id)
         PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm, executionContext)
         rsm.peptideInstances.foreach(pepI => {
           val ormPepInst = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
@@ -491,9 +507,11 @@ class WeightedSpectralCountQuantifier(
 
       //--- Get RSM Peptide Match/Protein Match information 	     
       // map   list of ProtMatch accession by PeptideSet
+      logger.debug("  --- map   list of ProtMatch accession by PeptideSet for rsm "+rsm.id)
       val protMatchesAccListByPepSet: Map[PeptideSet, Seq[Pair[Long, String]]] = createProtMatchesAccByPeptideSet(rsm)
 
       //--- Calculate SCs for each Ref RSM ProtSet
+      logger.debug("  --- Go throufg ProtSets  ")
       protSetWeightStructsByProtSetId.foreach(entry => {
 
         val currentProteinSetWeightStruct = entry._2
@@ -585,6 +603,7 @@ class WeightedSpectralCountQuantifier(
     }) //End go through RSMs 
 
     //Create MasterQuant Object
+    logger.debug("  --- Create MasterQuantPeptide  ")
     forMasterQPepByPepId.foreach(entry => {
       mqPeptides += new MasterQuantPeptide(
         id = MasterQuantPeptide.generateNewId,
@@ -596,6 +615,7 @@ class WeightedSpectralCountQuantifier(
       )
     })
 
+    logger.debug("  --- Create MasterQuantProteinSet  ")
     forMasterQProtSetByProtSet.foreach(entry => {
       mqProtSets += new MasterQuantProteinSet(
         proteinSet = entry._1,
