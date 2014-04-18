@@ -168,7 +168,7 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
           val peptideSet = new PeptideSet(
                                 id = peptideSetId,
                                 items = pepSetItems.toArray,
-                                isSubset = isSubset,
+                                isSubset = (isSubset && cluster.oversetId.isDefined),
                                 peptideMatchesCount = peptideMatchesCount,
                                 proteinMatchIds = clusterProtMatchIds.toArray,
                                 strictSubsetIds = strictSubsetIds,
