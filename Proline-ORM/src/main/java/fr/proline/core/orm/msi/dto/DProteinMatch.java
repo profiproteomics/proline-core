@@ -1,6 +1,5 @@
 package fr.proline.core.orm.msi.dto;
 
-import fr.proline.core.orm.msi.BioSequence;
 import fr.proline.core.orm.msi.PeptideSet;
 import java.util.HashMap;
 
@@ -12,8 +11,8 @@ public class DProteinMatch {
     private int m_peptideCount;
     private long m_resultSetId;
     private String m_description;
-    private Long m_bioSequenceId;
-    private BioSequence m_bioSequence;
+    private DBioSequence m_bioSequence;
+    private boolean m_bioSequenceSet = false;
     
     private HashMap<Long, PeptideSet> peptideSetMap = null;
     
@@ -21,24 +20,22 @@ public class DProteinMatch {
     private long[] m_peptideMatchesId;
     //private ProteinSet[] m_proteinSetArray = null;
     
-    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, Long bioSequenceId) {
+    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description) {
         m_id = id;
         m_accession = accession;
         m_score = score;
         m_peptideCount = peptideCount;
         m_resultSetId = resultSetId;
         m_description = description;
-        m_bioSequenceId = bioSequenceId;
     }
     
-    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, Long bioSequenceId, PeptideSet peptideSet) {
+    public DProteinMatch(long id, String accession,  Float score, int peptideCount, long resultSetId, String description, PeptideSet peptideSet) {
         m_id = id;
         m_accession = accession;
         m_score = score;
         m_peptideCount = peptideCount;
         m_resultSetId = resultSetId;
-         m_description = description;
-        m_bioSequenceId = bioSequenceId;
+        m_description = description;
         
         setPeptideSet(peptideSet.getResultSummaryId(), peptideSet);
     }
@@ -75,24 +72,20 @@ public class DProteinMatch {
         return m_description;
     }
     
-    public Long getBioSequenceId() {
-        return m_bioSequenceId;
-    }
+
     
-    public void setBioSequence(BioSequence bioSequence) {
+    public void setDBioSequence(DBioSequence bioSequence) {
         m_bioSequence = bioSequence;
+        m_bioSequenceSet = true;
     }
     
-    public BioSequence getBioSequence() {
+    public DBioSequence getDBioSequence() {
         return m_bioSequence;
     }
-    
-    public boolean isBiosequenceSet() {
-        if ((m_bioSequence != null) || (m_bioSequenceId == null)) {
-            return true;
-        }
 
-        return false;
+    
+    public boolean isDBiosequenceSet() {
+        return m_bioSequenceSet;
     }
     
     public DPeptideMatch[] getPeptideMatches() {
@@ -128,13 +121,6 @@ public class DProteinMatch {
         }
         peptideSetMap.put(resultSummaryId, peptideSet);
     }
-    
-    /*public ProteinSet[] getProteinSetArray() {
-        return m_proteinSetArray;
-    }
 
-    public void setProteinSetArray(ProteinSet[] proteinSetArray) {
-        m_proteinSetArray = proteinSetArray;
-    }*/
     
 }
