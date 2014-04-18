@@ -24,7 +24,10 @@ class TDPepMatchValidatorWithFDROptimization(
       ValidationResults(ValidationResult(0,None,None))
     } else {
       // Retrieve the nearest ROC point of the expected FDR and associated threshold
-      val expectedRocPoint = rocPoints.reduce { (a, b) => if ((a.fdr.get - expectedFdr.get).abs < (b.fdr.get - expectedFdr.get).abs) a else b }
+      var expectedRocPoint = rocPoints.filter( rocP => {rocP.fdr.isDefined && rocP.fdr.get < expectedFdr.get}).reduce { (a, b) => if ((a.fdr.get - expectedFdr.get).abs < (b.fdr.get - expectedFdr.get).abs) a else b }
+      if(expectedRocPoint == null){
+    	expectedRocPoint = rocPoints.reduce { (a, b) => if ((a.fdr.get - expectedFdr.get).abs < (b.fdr.get - expectedFdr.get).abs) a else b }
+      }
       this.logger.debug("Effective FDR of expected ROC point = " + expectedRocPoint.fdr)
       
       val threshToApply = expectedRocPoint.properties.get(FilterPropertyKeys.THRESHOLD_VALUE)
