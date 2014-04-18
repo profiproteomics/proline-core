@@ -788,11 +788,13 @@ class ExtractMapSet(
     val ms2EventIds = mzDbFt.getMs2ScanIds.map( lcmsScanIdByInitialId(_) )
     
     val peakels = mzDbFt.getPeakels()
-    val intensitySumTop2 =  peakels(0).getApex().getIntensity() + peakels(1).getApex().getIntensity()
+    // TODO: parameterize this value ???
+    val intensitySum2Peakels = peakels.take(2).foldLeft(0f)( (s,p) => s + p.getApex.getIntensity )
+    
     new LcMsFeature(
        id = LcMsFeature.generateNewId,
        moz = mzDbFt.mz,
-       intensity = intensitySumTop2, //mzDbFt.area,
+       intensity = intensitySum2Peakels, //mzDbFt.area,
        charge = mzDbFt.charge,
        elutionTime = mzDbFt.elutionTime,
        duration = lastScanH.getElutionTime - firstScanH.getElutionTime,
