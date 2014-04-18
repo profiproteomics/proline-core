@@ -272,14 +272,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
 
         // Set ROC point validation properties
         validationFilter.setThresholdValue(validationFilter.getPeptideMatchValueForFiltering(curPepMatch))
-
-        // Initialize the ROC point
-        if (curRocPoint == null) {
-          // Apply filter on target and decoy peptide matches
-          validationFilter.filterPeptideMatches(filteredPepMatches, true, false)
-          curRocPoint = this.calcTDStatistics(pmJointMap)
-        }
-
+        
         curRocPoint.addProperties(validationFilter.getFilterProperties)
 
         // Add ROC point to the curve
@@ -290,7 +283,8 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
         logger.trace("New FDR = " + curRocPoint.fdr)
 
         // Breaks if current FDR equals zero
-        if (curRocPoint.fdr.isDefined && curRocPoint.fdr.get > MAX_FDR) break
+        //VDS: Should not break. If more decoy than target at the beginning... break too early ! 
+        // if (curRocPoint.fdr.isDefined && curRocPoint.fdr.get > MAX_FDR) break
 
       }
     }
