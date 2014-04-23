@@ -4,7 +4,7 @@ import fr.proline.util.math.median
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.util.primitives.isZeroOrNaN
 
-// Note: by convention this first column is taken as the reference
+// Note: by convention the first column is taken as the reference
 object AbundanceNormalizer {
   
   def normalizeAbundances( abundanceMatrix: Array[Array[Float]] ): Array[Array[Float]] = {
@@ -29,10 +29,13 @@ object AbundanceNormalizer {
     
     // Compute the normalization factors matrix as the median of the ratios
     transposedRatioMatrix.map { ratioColumn =>
+      
       val defRatios = ratioColumn.filter( isZeroOrNaN(_) == false )
-      require( defRatios.isEmpty == false, "no defined ratio in this column" )
-      val nf = median( defRatios )
+      
+      val nf = if( defRatios.isEmpty ) 1 else median( defRatios )
+      
       require( isZeroOrNaN(nf) == false, "error during normalization factor computation: the median should be defined" )
+      
       nf
     }
     
@@ -71,7 +74,7 @@ object AbundanceNormalizer {
   private def _computeRatios( abundanceMatrix: Array[Array[Float]] ): Array[Array[Float]] = {
     
     abundanceMatrix.map { abundanceRow =>
-      val abundanceRef = abundanceRow(0)
+      val abundanceRef = abundanceRow.head
       val ratioRow = new ArrayBuffer[Float](abundanceRow.length-1)
       val refIsUndef = isZeroOrNaN(abundanceRef)
       
