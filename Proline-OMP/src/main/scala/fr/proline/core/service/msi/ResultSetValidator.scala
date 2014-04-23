@@ -249,11 +249,13 @@ class ResultSetValidator(
 
       // Apply Filter
       val valResults = somePepMatchValidator.validatePeptideMatches(targetRs)
-      finalValidationResult = valResults.finalResult
+      if(valResults.finalResult != null) {
+    	  finalValidationResult = valResults.finalResult
 
-      appliedFilters += validationFilter
-      // Store Validation Params obtained after filtering
-      filterDescriptors += validationFilter.toFilterDescriptor
+		  appliedFilters += validationFilter
+		  // Store Validation Params obtained after filtering
+		  filterDescriptors += validationFilter.toFilterDescriptor
+      } 
     }
     
     //VDS: FOR TEST ONLY : EXECUTE some filter - singlePerQuery- After FDR !
