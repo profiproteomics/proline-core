@@ -104,7 +104,7 @@ class SQLQuantResultSummaryProvider(
 
   }
   
-  protected def getMasterQuantPeptides(
+  def getMasterQuantPeptides(
     quantRsmIds: Seq[Long],
     pepInstByMQPepId: Map[Long,PeptideInstance],
     mqPepIonsByMQPepId: Map[Long,Array[MasterQuantPeptideIon]]
@@ -145,7 +145,7 @@ class SQLQuantResultSummaryProvider(
     
   }
   
-  protected def getMasterQuantProteinSets(
+  def getMasterQuantProteinSets(
     quantRsmIds: Seq[Long],
     protSetById: Map[Long,ProteinSet],
     mqPepByPepInstId: Map[Long,MasterQuantPeptide]
