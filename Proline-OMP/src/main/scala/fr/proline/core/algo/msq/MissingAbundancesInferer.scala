@@ -9,7 +9,11 @@ object MissingAbundancesInferer {
   
   val percentileComputer = new Percentile()
   
-  def inferAbundances( abundanceMatrix: Array[Array[Float]], errorModel: AbsoluteErrorModel ): Array[Array[Float]] = {
+  def inferAbundances(
+    abundanceMatrix: Array[Array[Float]],
+    psmCountMatrix: Array[Array[Int]],
+    errorModel: AbsoluteErrorModel
+  ): Array[Array[Float]] = {
     require( abundanceMatrix.length >= 10, "at least 10 abundance rows are required for missing abundance inference")
     
     // Retrieve quartiles from flattened abundance matrix
@@ -27,17 +31,24 @@ object MissingAbundancesInferer {
       allDefinedAbundances.take( firstPercentileIdx ).sum.toFloat / firstPercentileIdx
     }
     
-    abundanceMatrix.map { abundanceRow =>
+    abundanceMatrix.zip(psmCountMatrix).map { case (abundanceRow,psmCountsRow) =>
+
+      val totalPsmCount = psmCountsRow.sum
       
-      // Retrieve defined abundances
-      val defAbundances = abundanceRow.filter( isZeroOrNaN(_) == false )      
-      val nbDefValues = defAbundances.length
-      
-      // Compute the mean abundance for these defined abundances
-      /*val meanAbundance = if( nbDefValues == 0 ) lb
-      else if( nbDefValues == 1 && defAbundances(0) > q3 ) lb
-      else defAbundances.sum / nbDefValues*/
-      val meanAbundance = lb
+      // Noise is taken as mean abudance if no PSM has been identified
+      val meanAbundance = if( totalPsmCount == 0 ) lb
+      // Else we compute the mean abundance of the defined abundances
+      else {
+        
+        // Retrieve defined abundances
+        val defAbundances = abundanceRow.filter( isZeroOrNaN(_) == false )
+        val nbDefValues = defAbundances.length
+
+        if( nbDefValues == 0 ) lb
+        // TODO: re-enable this condition ?
+        //else if( nbDefValues == 1 && defAbundances(0) > q3 ) lb
+        else defAbundances.sum / nbDefValues
+      }
       
       // Retrieve the standard deviation corresponding to this abundance level
       val stdDev = errorModel.getStdevForAbundance(meanAbundance)
@@ -51,7 +62,5 @@ object MissingAbundancesInferer {
     }
     
   }
-  
-
   
 }

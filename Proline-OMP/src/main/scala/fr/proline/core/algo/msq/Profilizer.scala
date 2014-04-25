@@ -90,6 +90,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       qPep.abundance = Float.NaN
     }
     
+    // --- Compute the PSM count matrix ---
+    val psmCountMatrix = mqPepsAfterAllFilters.map( _.getPepMatchesCountsForQuantChannels(qcIds) ).toArray
+    
     // --- Compute the abundance matrix ---
     val abundanceMatrix = mqPepsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
     
@@ -118,7 +121,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     // Iterate over the ratio definitions
     for ( ratioDef <- groupSetup.ratioDefinitions ) {
       
-      val( filledMatrix, ratios ) = computeRatios( ratioDef, normalizedMatrix, config.peptideStatTestsAlpha, config )
+      val( filledMatrix, ratios ) = computeRatios(
+        ratioDef,
+        normalizedMatrix,
+        psmCountMatrix,
+        config.peptideStatTestsAlpha,
+        config
+      )
  
       for ( ratio <- ratios ) {
         val index = ratio.entityId.toInt
@@ -258,7 +267,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     
     // --- Clusterize MQ peptides profiles and compute corresponding abundance matrix ---
     val profilesClusters = new ArrayBuffer[MQPepProfilesCluster](masterQuantProtSets.length)
-    val abundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)    
+    val abundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)
+    val psmCountMatrixBuffer = new ArrayBuffer[Array[Int]](masterQuantProtSets.length)
     
     for( masterQuantProtSet <- masterQuantProtSets ) {
       
@@ -291,24 +301,18 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
       // Build master quant protein set profiles
       for( (profileAsStr,mqPeps) <- mqPepsByProfileAsStr ) {
         
-        val abundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
-        
-        /*for (row <- abundanceMatrix ) {
-          val nbDefs = row.count(ab => ab.isNaN == false && ab > 0)
-          if( nbDefs < 6 ) println(mqPeps(0).peptideInstance.get.peptide.sequence)
-        }*/
-        
-        val summarizedAbundances = abundanceMatrix.transpose.map( _meanAbundance( _ ) )
-        
         profilesClusters += MQPepProfilesCluster(
           mqProtSet = masterQuantProtSet,
           mqPeps = mqPeps
         )
         
-        /*val nbDefs = summarizedAbundances.count(ab => ab.isNaN == false && ab > 0)
-        if( nbDefs < 6 ) println(masterQuantProtSet.proteinSet.getTypicalProteinMatch.get.accession)*/
+        // Summarize abundances of the current profile cluster
+        val abundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
+        abundanceMatrixBuffer += abundanceMatrix.transpose.map( _meanAbundance( _ ) )
         
-        abundanceMatrixBuffer += summarizedAbundances
+        // Summarize PSM counts of the current profile cluster
+        val psmCountMatrix = mqPeps.map( _.getPepMatchesCountsForQuantChannels(qcIds) ).toArray
+        psmCountMatrixBuffer += psmCountMatrix.transpose.map( _.sum )
       }
     }
     
@@ -334,7 +338,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
     // Iterate over the ratio definitions
     for ( ratioDef <- groupSetup.ratioDefinitions ) {
       
-      val( filledMatrix, ratios ) = computeRatios( ratioDef, normalizedMatrix, config.proteinStatTestsAlpha, config )
+      val( filledMatrix, ratios ) = computeRatios(
+        ratioDef,
+        normalizedMatrix,
+        psmCountMatrixBuffer.toArray,
+        config.proteinStatTestsAlpha,
+        config
+      )
  
       for ( ratio <- ratios ) {
 
@@ -390,6 +400,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
   protected def computeRatios(
     ratioDef: RatioDefinition,
     normalizedMatrix: Array[Array[Float]],
+    psmCountMatrix: Array[Array[Int]],
     statTestsAlpha: Float,
     config: ProfilizerConfig
   ): Tuple2[Array[Array[Float]],Seq[AverageAbundanceRatio]] = {
@@ -475,29 +486,32 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, mast
         normalizedMatrix
       } else {
         
-        val matrixBySampleNum = allSampleNumbers.map( _ -> new ArrayBuffer[Array[Float]] ).toMap      
-        //println( s"normalizedMatrix.length: ${normalizedMatrix.length}" )
-        
-        /*allSampleNumbers.foreach { sampleNum =>
-          qcIndicesBySampleNum(sampleNum).map( println(_) )
-        }*/
-        
         // Extract abundance matrices for each biological sample
+        val abMatrixBySampleNum = allSampleNumbers.map( _ -> new ArrayBuffer[Array[Float]] ).toMap      
         normalizedMatrix.foreach { normalizedRow =>
-          //val nbDefsVals = normalizedRow.count(isZeroOrNaN(_) == false)
-          //if( nbDefsVals > 0 ) println( s"nbDefsVals: ${nbDefsVals}" )
-          
           allSampleNumbers.foreach { sampleNum =>
-            matrixBySampleNum(sampleNum) += qcIndicesBySampleNum(sampleNum).map(normalizedRow(_))
+            abMatrixBySampleNum(sampleNum) += qcIndicesBySampleNum(sampleNum).map(normalizedRow(_))
+          }
+        }
+        
+        // Extract PSM counts for each biological sample
+        val psmCountMatrixBySampleNum = allSampleNumbers.map( _ -> new ArrayBuffer[Array[Int]] ).toMap      
+        psmCountMatrix.foreach { psmCountRow =>
+          allSampleNumbers.foreach { sampleNum =>
+            psmCountMatrixBySampleNum(sampleNum) += qcIndicesBySampleNum(sampleNum).map(psmCountRow(_))
           }
         }
         
         val tmpFilledMatrix = Array.ofDim[Float](normalizedMatrix.length,quantChannels.length)
         
-        for( (sampleNum,sampleMatrixBuffer) <- matrixBySampleNum ) {
+        for( (sampleNum,sampleAbMatrix) <- abMatrixBySampleNum ) {
           
           val qcIndices = qcIndicesBySampleNum(sampleNum)
-          val inferredSampleMatrix = MissingAbundancesInferer.inferAbundances(sampleMatrixBuffer.toArray, absoluteNoiseModel)
+          val samplePsmCountMatrix = psmCountMatrixBySampleNum(sampleNum).toArray
+          
+          val inferredSampleMatrix = MissingAbundancesInferer.inferAbundances(
+            sampleAbMatrix.toArray, samplePsmCountMatrix, absoluteNoiseModel
+          )
           
           var filledMatrixRow = 0
           inferredSampleMatrix.foreach { inferredAbundances =>

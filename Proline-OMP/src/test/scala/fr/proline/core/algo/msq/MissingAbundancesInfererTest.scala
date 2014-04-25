@@ -48,10 +48,13 @@ class MissingAbundancesInfererTest {
     matrixWithMissingValues(8)(2) = 0
     matrixWithMissingValues(9) = Array(Float.NaN,0,Float.NaN)
     
+    // Fill a PSM count matrix
+    val psmCountMatrix = Array.fill(10, 3)(1)
+    
     //import scala.runtime.ScalaRunTime.stringOf
     
     // Infer the missing values
-    val inferedMatrix = MissingAbundancesInferer.inferAbundances(matrixWithMissingValues, errorModel)
+    val inferedMatrix = MissingAbundancesInferer.inferAbundances(matrixWithMissingValues, psmCountMatrix, errorModel)
     assertEquals( 30, inferedMatrix.flatten.count( v => v.isNaN == false && v > 0f ) )
     
     val cvMatrix = inferedMatrix.map( row => 100f * math.sqrt( StatUtils.variance(row.map(_.toDouble)) ) / ( row.sum / row.length ) )

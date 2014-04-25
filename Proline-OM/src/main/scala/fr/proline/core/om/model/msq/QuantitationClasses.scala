@@ -237,8 +237,13 @@ case class MasterQuantPeptide(
     Some(isProteinMatchSpecific)
   }
   
-  def getBestQuantPeptide: QuantPeptide = {    
+  def getBestQuantPeptide: QuantPeptide = {
     this.quantPeptideMap.values.reduce { (a,b) => if( a.abundance > b.abundance ) a else b }
+  }
+  
+  def getQuantPeptidePepMatchesCount( quantChannelId: Long ): Int = {
+    val quantPeptide = this.quantPeptideMap.get(quantChannelId)
+    if( quantPeptide.isEmpty ) 0 else quantPeptide.get.peptideMatchesCount
   }
   
   def getQuantPeptideRawAbundance( quantChannelId: Long ): Float = {
@@ -246,13 +251,17 @@ case class MasterQuantPeptide(
     if( quantPeptide.isEmpty ) Float.NaN else quantPeptide.get.rawAbundance
   }
   
-  def getRawAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {   
-    quantChannelIds.map( getQuantPeptideRawAbundance(_) )
-  }
-  
   def getQuantPeptideAbundance( quantChannelId: Long ): Float = {
     val quantPeptide = this.quantPeptideMap.get(quantChannelId)
     if( quantPeptide.isEmpty ) Float.NaN else quantPeptide.get.abundance
+  }
+  
+  def getPepMatchesCountsForQuantChannels( quantChannelIds: Array[Long] ): Array[Int] = {   
+    quantChannelIds.map( getQuantPeptidePepMatchesCount(_) )
+  }
+  
+  def getRawAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {   
+    quantChannelIds.map( getQuantPeptideRawAbundance(_) )
   }
   
   def getAbundancesForQuantChannels( quantChannelIds: Array[Long] ): Array[Float] = {   
