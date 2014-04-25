@@ -49,7 +49,7 @@ class MissingAbundancesInfererTest {
     matrixWithMissingValues(9) = Array(Float.NaN,0,Float.NaN)
     
     // Fill a PSM count matrix
-    val psmCountMatrix = Array.fill(10, 3)(1)
+    val psmCountMatrix = Array.fill(10, 3)(0)
     
     //import scala.runtime.ScalaRunTime.stringOf
     
