@@ -374,6 +374,7 @@ CREATE TABLE spec_title_parsing_rule (
 CREATE TABLE user_account (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 login TEXT(50) NOT NULL,
+                password_hash TEXT NOT NULL,
                 creation_mode TEXT(10) NOT NULL,
                 serialized_properties TEXT
 );

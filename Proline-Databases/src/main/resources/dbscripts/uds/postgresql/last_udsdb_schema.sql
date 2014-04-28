@@ -294,6 +294,7 @@ CREATE SEQUENCE public.user_account_id_seq;
 CREATE TABLE public.user_account (
                 id BIGINT NOT NULL DEFAULT nextval('public.user_account_id_seq'),
                 login VARCHAR(50) NOT NULL,
+                password_hash VARCHAR NOT NULL,
                 creation_mode VARCHAR(10) NOT NULL,
                 serialized_properties TEXT,
                 CONSTRAINT user_account_pk PRIMARY KEY (id)
@@ -301,6 +302,7 @@ CREATE TABLE public.user_account (
 COMMENT ON TABLE public.user_account IS 'User account information.
 UNIQUE(login)';
 COMMENT ON COLUMN public.user_account.login IS 'User login. The login must be unique within the database.';
+COMMENT ON COLUMN public.user_account.password_hash IS 'hash of user password, using sha-256.';
 COMMENT ON COLUMN public.user_account.creation_mode IS 'The mode used to create the account. It may be a
 manual creation (from the application) or an automatic creation (i.e. LDAP import).
 Valid values for this field are:
