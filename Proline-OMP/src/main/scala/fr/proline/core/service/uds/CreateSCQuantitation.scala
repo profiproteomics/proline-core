@@ -33,7 +33,7 @@ class CreateSCQuantitation(
   private var _udsQuantitation: UdsDataset = null
   def getUdsQuantitation() = _udsQuantitation
 
-  def runService() = {
+  def runService() : Boolean = {
 
     // Create entity manager
     val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
