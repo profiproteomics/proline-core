@@ -37,16 +37,21 @@ object MissingAbundancesInferer {
       
       // Noise is taken as mean abudance if no PSM has been identified
       val meanAbundance = if( totalPsmCount == 0 ) lb
-      // Else we compute the mean abundance of the defined abundances
+      // Else we compute the mean abundance of the defined abundances if freq > 50%
       else {
         
         // Retrieve defined abundances
         val defAbundances = abundanceRow.filter( isZeroOrNaN(_) == false )
         val nbDefValues = defAbundances.length
+        
+        // Compute defined abundances frequency
+        val defAbFreq = nbDefValues / abundanceRow.length
 
-        if( nbDefValues == 0 ) lb
+        // Return estimated noise level if frequency is lower than 50%
+        if( defAbFreq < 0.5 ) lb
         // TODO: re-enable this condition ?
         //else if( nbDefValues == 1 && defAbundances(0) > q3 ) lb
+        // Compute the mean value of the defined abundances
         else defAbundances.sum / nbDefValues
       }
       
