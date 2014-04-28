@@ -1,6 +1,7 @@
 package fr.proline.core.orm.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -84,6 +85,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
 	    /* Create a TEST Project */
 	    final UserAccount projectOwner = new UserAccount();
+	    projectOwner.setPassword("notEncryptedPassword");
 	    projectOwner.setCreationMode("manual");
 	    projectOwner.setLogin("Bob");
 
