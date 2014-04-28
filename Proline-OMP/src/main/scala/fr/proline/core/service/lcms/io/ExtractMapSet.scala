@@ -9,8 +9,7 @@ import org.apache.commons.math.stat.descriptive.rank.Percentile
 
 import fr.profi.jdbc.easy._
 import fr.profi.ms.algo.IsotopePatternInterpolator
-import fr.profi.mzdb.MzDbFeatureExtractor
-import fr.profi.mzdb.MzDbReader
+import fr.profi.mzdb._
 import fr.profi.mzdb.algo.feature.extraction.FeatureExtractorConfig
 import fr.profi.mzdb.io.reader.RunSliceDataProvider
 import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peak => MzDbPeak }
@@ -101,7 +100,7 @@ class ExtractMapSet(
       }
       
       // Extract LC-MS map from the mzDB file
-      val processedMap = this._extractProcessedMapUsingMs2Events(lcmsRun,mzDbFile, mapIdx + 1, tmpMapSetId)
+      val processedMap = this._extractProcessedMap(lcmsRun,mzDbFile, mapIdx + 1, tmpMapSetId)
       
       // Update some mappings
       lcmsRunByProcMapId += processedMap.id -> lcmsRun
@@ -377,45 +376,10 @@ class ExtractMapSet(
     
   }
   
-  private def _extractProcessedMapUsingMs2Events( lcmsRun: LcMsRun, mzDbFile: File, mapNumber: Int, mapSetId: Long ): ProcessedMap = {
+  private def _extractProcessedMap( lcmsRun: LcMsRun, mzDbFile: File, mapNumber: Int, mapSetId: Long ): ProcessedMap = {
     
-    val restrictToIdentifiedPeptides = quantConfig.startFromValidatedPeptides
-    val peptideByScanNumber = peptideByRunIdAndScanNumber.map( _(lcmsRun.id) ).getOrElse( HashMap.empty[Int,Peptide] )
-    val mzDb = new MzDbReader( mzDbFile, true )
-    
-    val mzDbFts = try {
-      
-      val mzdbFtX = new MzDbFeatureExtractor(mzDb,5,5)
-      
-      this.logger.info("retrieve scan headers...")
-      val scanHeaders = mzDb.getScanHeaders()
-      val ms2ScanHeaders = scanHeaders.filter(_.getMsLevel() == 2 )
-      val pfs = new ArrayBuffer[PutativeFeature](ms2ScanHeaders.length)
-      
-      this.logger.info("building putative features list from MS2 scan events...")
-
-      for( scanH <- ms2ScanHeaders ) {
-        
-        if( !restrictToIdentifiedPeptides || peptideByScanNumber.contains(scanH.getInitialId()) ) {
-          pfs += new PutativeFeature(
-            id = PutativeFeature.generateNewId,
-            mz = scanH.getPrecursorMz,
-            charge =scanH.getPrecursorCharge,
-            scanId = scanH.getId,
-            evidenceMsLevel = 2
-          )
-        }
-      }
-      
-      // Instantiates a Run Slice Data provider
-      val rsdProv = new RunSliceDataProvider( mzDb.getRunSliceIterator(1) )
-      
-      // Extract features
-      mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)
-
-    } finally {
-      mzDb.close()
-    }
+    val mzDbFts = if( quantConfig.detectFeatures ) this._detectFeatures(mzDbFile)
+    else this._extractFeaturesUsingMs2Events( mzDbFile, lcmsRun )
     
     val rmsds = mzDbFts.par.map{f => 
       val theoAbundances = IsotopePatternInterpolator.getTheoreticalPattern(f.mz, f.charge).abundances
@@ -523,6 +487,69 @@ class ExtractMapSet(
     val rawMap = tmpRawMap.copy( features = lcmsFeaturesWithoutClusters.toArray )
     
     rawMap.toProcessedMap(mapNumber, mapSetId)
+  }
+  
+  private def _extractFeaturesUsingMs2Events( mzDbFile: File, lcmsRun: LcMsRun ): Array[MzDbFeature] = {
+    
+    val restrictToIdentifiedPeptides = quantConfig.startFromValidatedPeptides
+    val peptideByScanNumber = peptideByRunIdAndScanNumber.map( _(lcmsRun.id) ).getOrElse( HashMap.empty[Int,Peptide] )
+    val mzDb = new MzDbReader( mzDbFile, true )
+    
+    val mzDbFts = try {
+      
+      val mzdbFtX = new MzDbFeatureExtractor(mzDb,5,5)
+      
+      this.logger.info("retrieve scan headers...")
+      val scanHeaders = mzDb.getScanHeaders()
+      val ms2ScanHeaders = scanHeaders.filter(_.getMsLevel() == 2 )
+      val pfs = new ArrayBuffer[PutativeFeature](ms2ScanHeaders.length)
+      
+      this.logger.info("building putative features list from MS2 scan events...")
+
+      for( scanH <- ms2ScanHeaders ) {
+        
+        if( !restrictToIdentifiedPeptides || peptideByScanNumber.contains(scanH.getInitialId()) ) {
+          pfs += new PutativeFeature(
+            id = PutativeFeature.generateNewId,
+            mz = scanH.getPrecursorMz,
+            charge =scanH.getPrecursorCharge,
+            scanId = scanH.getId,
+            evidenceMsLevel = 2
+          )
+        }
+      }
+      
+      // Instantiates a Run Slice Data provider
+      val rsdProv = new RunSliceDataProvider( mzDb.getRunSliceIterator(1) )
+      
+      // Extract features
+      mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)
+
+    } finally {
+      mzDb.close()
+    }
+    
+    mzDbFts.toArray
+  }
+  
+  private def _detectFeatures( mzDbFile: File ): Array[MzDbFeature] = {
+    
+    val mzDb = new MzDbReader( mzDbFile, true )
+    
+    val mzDbFts = try {
+      
+      this.logger.info("detect features in raw MS survey...")
+
+      val mzdbFtDetector = new MzDbFeatureDetector(mzDb, minNbOverlappingIPs = 5)
+      
+      // Extract features
+      mzdbFtDetector.detectFeatures(mozTolPPM)
+
+    } finally {
+      mzDb.close()
+    }
+    
+    mzDbFts
   }
   
   private def _extractMissingFeatures(
