@@ -1,7 +1,12 @@
 package fr.proline.core.orm.uds;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -47,10 +52,22 @@ public class UserAccountTest extends DatabaseTestCase {
 	try {
 	    UserAccount account = new UserAccount();
 	    account.setLogin("bruley");
+	    account.setPassword("bruley");
 	    account.setCreationMode("manual");
+	    
 	    udsEm.getTransaction().begin();
 	    udsEm.persist(account);
+	    
+	    TypedQuery<UserAccount> query = udsEm.createQuery(
+			    "Select e from UserAccount e where e.login = :login", UserAccount.class);
+		    query.setParameter("login", "bruley");
+		    UserAccount account1 = query.getSingleResult();
+		    assertNotNull(account1);
+		    assertNotNull(account1.getPassword());    
+		    
 	    udsEm.getTransaction().commit();
+	    
+	    
 	} finally {
 
 	    if (udsEm != null) {
@@ -77,22 +94,77 @@ public class UserAccountTest extends DatabaseTestCase {
 	    query.setParameter("login", "joe");
 	    UserAccount account = query.getSingleResult();
 	    assertNotNull(account);
+	    assertNotNull(account.getPassword());	    
 	    List<Project> ownedProjects = ProjectRepository.findOwnedProjects(udsEm, account.getId());
 	    assertEquals(ownedProjects.size(), 1);
 	} finally {
 
 	    if (udsEm != null) {
-		try {
-		    udsEm.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing UDS EntityManager", exClose);
-		}
+			try {
+			    udsEm.close();
+			} catch (Exception exClose) {
+			    LOG.error("Error closing UDS EntityManager", exClose);
+			}
 	    }
 
 	}
 
     }
+    
+    @Test
+    public void verifyPassword() {
+	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
+	final EntityManager udsEm = emf.createEntityManager();
+
+	try {
+	    TypedQuery<UserAccount> query = udsEm.createQuery(
+		    "Select e from UserAccount e where e.login = :login", UserAccount.class);
+	    query.setParameter("login", "joe");
+	    UserAccount account = query.getSingleResult();
+	    assertNotNull(account);
+	    assertNotNull(account.getPassword());
+//	    LOG.debug("getPassword  MD5"+getHashFor("myPasswd","SHA-256"));
+	    assertEquals(getHashFor("proline_pswd","SHA-256"), account.getPassword());
+	    List<Project> ownedProjects = ProjectRepository.findOwnedProjects(udsEm, account.getId());
+	    assertEquals(ownedProjects.size(), 1);
+	} finally {
+
+	    if (udsEm != null) {
+			try {
+			    udsEm.close();
+			} catch (Exception exClose) {
+			    LOG.error("Error closing UDS EntityManager", exClose);
+			}
+	    }
+
+	}
+
+    }
+    
+
+  private String getHashFor(String msg, String method){
+	  String digest = null;
+	  try { 
+		  MessageDigest md = MessageDigest.getInstance(method); 
+		  byte[] hash = md.digest(msg.getBytes("UTF-8")); 
+		  
+		  //converting byte array to Hexadecimal String 
+		  StringBuilder sb = new StringBuilder(2*hash.length); 
+		  for(byte b : hash){ 
+			  sb.append(String.format("%02x", b&0xff)); 
+		  } 
+		  digest = sb.toString(); 
+	  } catch (UnsupportedEncodingException ex) { 
+		  LOG.error("error getMd5For", ex); 
+	  } catch (NoSuchAlgorithmException ex) { 
+		  LOG.error("error getMd5For", ex);  
+	  }
+	  
+	  return digest;
+  }
+
+  
     @Test
     public void listAccounts() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();

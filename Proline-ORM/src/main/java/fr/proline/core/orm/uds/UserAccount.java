@@ -28,6 +28,9 @@ public class UserAccount implements Serializable {
     private String creationMode;
 
     private String login;
+    
+    @Column(name = "password_hash")
+    private String hashPassword;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -59,6 +62,14 @@ public class UserAccount implements Serializable {
 	this.login = login;
     }
 
+    public String getPassword() {
+	return this.hashPassword;
+    }
+
+    public void setPassword(String password) {
+	this.hashPassword = password;
+    }
+    
     public String getSerializedProperties() {
 	return this.serializedProperties;
     }
