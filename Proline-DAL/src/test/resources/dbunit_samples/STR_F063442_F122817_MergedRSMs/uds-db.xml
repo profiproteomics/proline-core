@@ -15,7 +15,7 @@
   <FRACTIONATION ID="2" TYPE="PEPTIDE"/>
   <FRACTIONATION ID="3" TYPE="OTHER"/>
   <FRACTIONATION ID="4" TYPE="NONE"/>
-  <USER_ACCOUNT ID="1" LOGIN="david" CREATION_MODE="MANUAL"/>
+  <USER_ACCOUNT ID="1" LOGIN="david" CREATION_MODE="MANUAL" PASSWORD_HASH="993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d"/> <!-- proline_pswd -->
   <PROJECT ID="1" NAME="MergedRSMs" DESCRIPTION="" CREATION_TIMESTAMP="2013-10-28 11:24:34.442" OWNER_ID="1"/>
   <QUANT_METHOD ID="1" NAME="label free based on the extraction of feature abundance" TYPE="label_free" ABUNDANCE_UNIT="feature_intensity"/>
   <QUANT_METHOD ID="2" NAME="label free based on spectral counting" TYPE="label_free" ABUNDANCE_UNIT="spectral_counts"/>

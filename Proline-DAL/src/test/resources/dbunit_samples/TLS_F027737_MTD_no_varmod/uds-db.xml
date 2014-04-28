@@ -16,7 +16,7 @@
   <fractionation id="2" type="PEPTIDE"/>
   <fractionation id="3" type="OTHER"/>
   <fractionation id="4" type="NONE"/>
-  <user_account id="1" login="david" creation_mode="MANUAL"/>
+  <user_account id="1" login="david" creation_mode="MANUAL" PASSWORD_HASH="993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d"/> <!-- proline_pswd -->
   <project id="2" name="test3" description="" creation_timestamp="2013-02-13 13:27:41.28" owner_id="1"/>
   <project id="3" name="alpha release" description="" creation_timestamp="2013-02-27 16:57:59.99" owner_id="1"/>
   <project id="4" name="Shere Kahn" description="test" creation_timestamp="2013-03-01 09:40:44.388" owner_id="1"/>
