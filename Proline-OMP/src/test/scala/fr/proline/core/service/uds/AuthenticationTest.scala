@@ -50,7 +50,7 @@ class AuthenticationTest extends DatabaseTestCase with Logging {
 
   @Test
   def authenticateUser() = {
-	  val service = new AuthenticationUser(udsConnectionCtxt = udsDbCtx,name = "proline_user", hashPassword = "993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d" )
+	  val service = new UserAuthenticator(udsConnectionCtxt = udsDbCtx,name = "proline_user", hashPassword = "993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d" )
       val result = service.runService()
       
       assertTrue(result)

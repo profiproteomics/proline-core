@@ -28,7 +28,7 @@ import java.sql.Connection
 import fr.proline.repository.util.JDBCWork
 import fr.proline.context.DatabaseConnectionContext
 
-class AuthenticationUser(
+class UserAuthenticator(
   udsConnectionCtxt: DatabaseConnectionContext,
   name: String,
   hashPassword: String
