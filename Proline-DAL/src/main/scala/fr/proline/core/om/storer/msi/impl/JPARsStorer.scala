@@ -1273,7 +1273,11 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         msiPeptideMatch.setMsQuery(msiMsQuery) // msiMsQuery must be in persistence context
         msiMsQuery.addPeptideMatch(msiPeptideMatch) // Reverse association
 
-        msiPeptideMatch.setCharge(msiMsQuery.getCharge)
+        var pmCharge = msiMsQuery.getCharge
+        if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getOmssaProperties.isDefined) {
+          pmCharge = peptideMatch.properties.get.getOmssaProperties.get.getCorrectedCharge
+        }
+        msiPeptideMatch.setCharge(pmCharge)
         msiPeptideMatch.setExperimentalMoz(msiMsQuery.getMoz)
 
         /* Check associated best PeptideMatch */

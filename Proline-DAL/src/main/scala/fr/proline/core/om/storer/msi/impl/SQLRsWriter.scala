@@ -176,9 +176,13 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
           val msQuery = peptideMatch.msQuery
           val bestChildId = peptideMatch.getBestChildId
+          var pmCharge = msQuery.charge
+          if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getOmssaProperties.isDefined) {
+            pmCharge = peptideMatch.properties.get.getOmssaProperties.get.getCorrectedCharge
+          }
   
           stmt.executeWith(
-            msQuery.charge,
+            pmCharge,
             msQuery.moz,
             peptideMatch.score,
             peptideMatch.rank,

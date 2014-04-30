@@ -187,11 +187,16 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
         
         val msQuery = peptideMatch.msQuery
         val bestChildId = peptideMatch.getBestChildId
-  
+
+        var pmCharge = msQuery.charge
+        if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getOmssaProperties.isDefined) {
+          pmCharge = peptideMatch.properties.get.getOmssaProperties.get.getCorrectedCharge
+        }
+
         // Build a row containing peptide match values
         val pepMatchValues = List(
           peptideMatch.id,
-          msQuery.charge,
+          pmCharge,
           msQuery.moz,
           peptideMatch.score,
           peptideMatch.rank,
