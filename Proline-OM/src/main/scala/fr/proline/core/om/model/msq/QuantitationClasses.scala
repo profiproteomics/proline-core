@@ -219,12 +219,12 @@ case class MasterQuantPeptide(
   }
   
   def isProteinSetSpecific: Option[Boolean] = {
-    val masterQuantProteinSetIds = this.getMasterQuantProteinSetIds.get
-    if( masterQuantProteinSetIds == null || 
-        masterQuantProteinSetIds.length == 0 ) return None
-        
-    val isProteinSetSpecific = if( masterQuantProteinSetIds.length == 1 ) true else false
-    Some(isProteinSetSpecific)    
+
+    val protSetIdCount = this.getMasterQuantProteinSetIds.map( _.length ).getOrElse(0)
+    if( protSetIdCount == 0 ) return None
+    
+    val isProteinSetSpecific = if( this.getMasterQuantProteinSetIds.get.length == 1 ) true else false
+    Some(isProteinSetSpecific)
   }
   
   def isProteinMatchSpecific: Option[Boolean] = {
@@ -317,6 +317,17 @@ case class MasterQuantPeptide(
     if( denominator.isNaN || denominator == 0  ) return Float.NaN
     
     numerator/denominator
+  }
+  
+  def getRatios( groupSetupNumber: Long ): List[Option[ComputedRatio]] = {
+    this.properties.flatMap { mqPepProps =>
+      val profileByGSNumberOpt = mqPepProps.getMqPepProfileByGroupSetupNumber
+      if( profileByGSNumberOpt.isEmpty ) None
+      else {
+        val mqPepProfile = profileByGSNumberOpt.get(groupSetupNumber.toString)
+        Some( mqPepProfile.getRatios() )
+      }
+    }.getOrElse( List() )
   }
 
 }

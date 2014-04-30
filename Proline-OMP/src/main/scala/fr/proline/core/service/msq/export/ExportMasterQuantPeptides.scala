@@ -117,14 +117,7 @@ class ExportMasterQuantPeptides(
       row ++= mqPepCellsById(mqPep.id)
       
       // Add profile statistics
-      val ratios = mqPep.properties.flatMap { mqPepProps =>
-        val profileByGSNumberOpt = mqPepProps.getMqPepProfileByGroupSetupNumber
-        if( profileByGSNumberOpt.isEmpty ) None
-        else {
-          val mqPepProfile = profileByGSNumberOpt.get(groupSetupNumber.toString)
-          Some( mqPepProfile.getRatios() )
-        }
-      }.getOrElse( List() )
+      val ratios = mqPep.getRatios(groupSetupNumber)
       
       val stats = this.stringifyRatiosStats(ratios)
       row ++= stats
