@@ -2,7 +2,7 @@
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
 
   <persistence-unit name="udsdb_production" transaction-type="RESOURCE_LOCAL">
-    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     <class>fr.proline.core.orm.uds.Document</class>
     <class>fr.proline.core.orm.uds.ExternalDb</class>
     <class>fr.proline.core.orm.uds.Project</class>
@@ -35,7 +35,7 @@
   </persistence-unit>
 
   <persistence-unit name="psdb_production" transaction-type="RESOURCE_LOCAL">
-    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     <class>fr.proline.core.orm.ps.AdminInformation</class>
     <class>fr.proline.core.orm.ps.AtomLabel</class>
     <class>fr.proline.core.orm.ps.Peptide</class>
@@ -48,7 +48,7 @@
   </persistence-unit>
 
   <persistence-unit name="msidb_production" transaction-type="RESOURCE_LOCAL">
-    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     <class>fr.proline.core.orm.msi.AdminInformation</class>
     <class>fr.proline.core.orm.msi.BioSequence</class>
     <class>fr.proline.core.orm.msi.ConsensusSpectrum</class>
@@ -102,7 +102,7 @@
   </persistence-unit>
 
   <persistence-unit name="pdidb_production" transaction-type="RESOURCE_LOCAL">
-    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     <class>fr.proline.core.orm.pdi.BioSequence</class>
     <class>fr.proline.core.orm.pdi.BioSequenceAnnotation</class>
     <class>fr.proline.core.orm.pdi.BioSequenceGeneMap</class>
@@ -125,7 +125,7 @@
   </persistence-unit>
 
   <persistence-unit name="lcmsdb_production" transaction-type="RESOURCE_LOCAL">
-    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
   </persistence-unit>
 
 </persistence>

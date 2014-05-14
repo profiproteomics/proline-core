@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -21,15 +20,13 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.core.orm.uds.Instrument;
 import fr.proline.repository.ProlineDatabaseType;
+import fr.proline.repository.util.DatabaseTestCase;
 import fr.proline.repository.util.JDBCReturningWork;
 import fr.proline.repository.util.JPAUtils;
-import fr.proline.repository.util.DatabaseTestCase;
 
 public class JPAUtilsTest extends DatabaseTestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(JPAUtilsTest.class);
-
-    private static final AtomicBoolean STATISTICS_ENABLED = new AtomicBoolean(false);
 
     @Override
     public ProlineDatabaseType getProlineDatabaseType() {
@@ -44,11 +41,6 @@ public class JPAUtilsTest extends DatabaseTestCase {
     @Test
     public void testUtils() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	if (!STATISTICS_ENABLED.getAndSet(true)) {
-	    /* Check Hibernate statistics only once */
-	    JPAUtils.enableStatistics(emf, "Tests-HibernateStats");
-	}
 
 	final EntityManager udsEm = emf.createEntityManager();
 	EntityTransaction transac = null;
