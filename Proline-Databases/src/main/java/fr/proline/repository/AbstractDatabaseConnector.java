@@ -26,6 +26,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     public static final String HIBERNATE_DIALECT_KEY = "hibernate.dialect";
 
     public static final String PERSISTENCE_VALIDATION_MODE_KEY = "javax.persistence.validation.mode";
+    public static final String HIBERNATE_JMX_ENABLED = "hibernate.jmx.enabled";
     public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
     public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
     public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
@@ -205,6 +206,10 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		 */
 		if (propertiesCopy.get(PERSISTENCE_JDBC_DRIVER_KEY) == null) {
 		    propertiesCopy.put(PERSISTENCE_JDBC_DRIVER_KEY, getDriverType().getJdbcDriver());
+		}
+
+		if (propertiesCopy.get(HIBERNATE_JMX_ENABLED) == null) {
+		    propertiesCopy.put(HIBERNATE_JMX_ENABLED, "true");
 		}
 
 		try {

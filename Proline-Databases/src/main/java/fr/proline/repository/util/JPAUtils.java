@@ -1,21 +1,11 @@
 package fr.proline.repository.util;
 
-import java.lang.management.ManagementFactory;
-import java.util.Hashtable;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.ejb.HibernateEntityManagerFactory;
-import org.hibernate.jmx.StatisticsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import fr.proline.util.StringUtils;
 
 public final class JPAUtils {
 
@@ -25,44 +15,9 @@ public final class JPAUtils {
     private JPAUtils() {
     }
 
+    @Deprecated
     public static void enableStatistics(final EntityManagerFactory emf, final String description) {
-
-	if (!(emf instanceof HibernateEntityManagerFactory)) {
-	    throw new IllegalArgumentException("Invalid emf");
-	}
-
-	if (StringUtils.isEmpty(description)) {
-	    throw new IllegalArgumentException("Invalid description");
-	}
-
-	/* HibernateEntityManagerFactory interface and StatisticsService class are specific to Hibernate ORM */
-	final HibernateEntityManagerFactory hibEMF = (HibernateEntityManagerFactory) emf;
-
-	final SessionFactory hibSF = hibEMF.getSessionFactory();
-	if (hibSF != null) {
-
-	    try {
-		final MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-
-		final StatisticsService stats = new StatisticsService();
-		stats.setSessionFactory(hibSF);
-		stats.setStatisticsEnabled(true); // Must be enabled after SessionFactory association
-
-		final Hashtable<String, String> table = new Hashtable<String, String>();
-		table.put("type", "statistics");
-		table.put("sessionFactory", description);
-
-		final ObjectName objName = new ObjectName(JPAUtils.class.getPackage().getName(), table);
-
-		server.registerMBean(stats, objName);
-
-		LOG.info("New Hibernate statistics MBean {} registered", stats);
-	    } catch (Exception ex) {
-		LOG.error("Error registering Hibernate StatisticsService instance", ex);
-	    }
-
-	} // End if (hibSF is not null)
-
+	LOG.error("org.hibernate.jmx.StatisticsService is no more implemented in Hibernate 4.3.x use \"hibernate.jmx.enabled\" property instead");
     }
 
     /**
