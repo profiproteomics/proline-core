@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -20,9 +18,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
 
 /**
  * The persistent class for the search_settings database table.
@@ -30,7 +26,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(discriminatorType = DiscriminatorType.INTEGER, name = "id")
 @Table(name = "search_settings")
 public class SearchSetting implements Serializable {
 
@@ -296,6 +291,5 @@ public class SearchSetting implements Serializable {
 		.append("miss cleav.", getMaxMissedCleavages())
 		.append("mass error", getPeptideMassErrorTolerance()).toString();
     }
-
 
 }
