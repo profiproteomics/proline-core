@@ -344,7 +344,71 @@ case class Peptide ( // Required fields
 
 case class PeptideProperties()
 
-object PeptideMatch extends InMemoryIdGen
+object PeptideMatch extends InMemoryIdGen with Logging {
+  def countMissedCleavages(sequence: String, residueBefore: Option[Char], residueAfter: Option[Char], enzymes: Array[Enzyme]): Int = {
+    var missedCleavages: Int = 0
+    // only consider first enzyme
+    if(enzymes.size != 1) throw new IllegalArgumentException("Unexpected number of enzymes")
+    if(!enzymes.headOption.isDefined) throw new IllegalArgumentException("Enzyme is not defined")
+    val enzyme = enzymes.head
+    // two different ways to count missed cleavages
+    if(enzyme.isIndependant == false) { // main case : search for missed cleavage corresponding to any cleavage site
+      enzyme.enzymeCleavages.foreach(missedCleavages += countMissedCleavages(sequence, _))
+    } else { // specific case : enzymes must be considered one by one
+      // determine the enzyme cleavage to consider
+      val enzymeCleavages = getEnzymeCleavages(sequence, residueBefore, residueAfter, enzyme)
+      // enzymeCleavages should contain only one item, more than one means ambiguity. In any case return max number of missed cleavages
+      var maxMissedCleavages = 0
+      enzymeCleavages.foreach(ec => {
+        val mc = countMissedCleavages(sequence, ec)
+        if(mc > maxMissedCleavages) maxMissedCleavages = mc
+      })
+      missedCleavages = maxMissedCleavages
+    }
+//    if(missedCleavages > 0) logger.debug("Sequence "+residueBefore.getOrElse("^")+"."+sequence+"."+residueAfter.getOrElse("$")+" has "+missedCleavages+" miscleavages")
+    missedCleavages
+  }
+  private def countMissedCleavages(sequence: String, enzymeCleavage: EnzymeCleavage): Int = {
+    var missedCleavages = new ArrayBuffer[String]()
+    for(i <- 0 to sequence.length() - 1) {
+      if(enzymeCleavage.site == "C-term" && // if it cuts in cterm
+	      enzymeCleavage.residues.contains(sequence.charAt(i)) && // and current aa is a cleavage site
+	      i+1 < sequence.length() && // unless it is the last aa of the sequence
+	      !enzymeCleavage.restrictiveResidues.getOrElse("").contains(sequence.charAt(i+1)) // and unless it is followed by a restrictive residue
+      ) {
+        // then it is a missed cleavage
+        missedCleavages += sequence.charAt(i) + "(" + (i+1) + ")"
+      } else if(enzymeCleavage.site == "N-term" && // if it cuts in nterm 
+          i != 0 && // and current aa is not the first aa of the sequence
+          enzymeCleavage.residues.contains(sequence.charAt(i)) && // and current aa is a cleavage site
+          !enzymeCleavage.restrictiveResidues.getOrElse("").contains(sequence.charAt(i+1)) // and unless it is followed by a restrictive residue
+      ) {
+        // then it is a missed cleavage
+        missedCleavages += sequence.charAt(i) + "(" + (i+1) + ")"
+      }
+    }
+//    logger.debug("Miscleavages : "+missedCleavages.mkString(", "))
+    missedCleavages.size
+  }
+  private def getEnzymeCleavages(sequence: String, residueBefore: Option[Char], residueAfter: Option[Char], enzyme: Enzyme): Array[EnzymeCleavage] = {
+    val enzymeCleavages = new HashMap[EnzymeCleavage, Int]
+    // for each enzyme cleavage, count the number of hints to determine the most probable enzyme cleavage
+    enzyme.enzymeCleavages.foreach(ec => {
+      var nbIndications = 0
+      if(ec.site == "C-term") { // expecting cleavage site in last position (unless peptide is C-term) and in residueBefore (unless peptide is N-term)
+        if(ec.residues.contains(sequence.last)) nbIndications += 1
+        if(residueBefore.isDefined && ec.residues.contains(residueBefore.get)) nbIndications += 1
+      } else { // N-term : expecting cleavage site in first position (unless peptide is N-term) and in residueAfter (unless peptide is C-term)
+        if(ec.residues.contains(sequence.head)) nbIndications += 1
+        if(residueAfter.isDefined && ec.residues.contains(residueAfter.get)) nbIndications += 1
+      }
+      enzymeCleavages.put(ec, nbIndications)
+    })
+    // return only the most probable enzyme cleavage (there may be more than one in case of ambiguity)
+    val maxIndications = enzymeCleavages.maxBy(_._2)._2
+    enzymeCleavages.filter(_._2 == maxIndications).keys.toArray
+  }
+}
 
 case class PeptideMatch ( // Required fields
   var id: Long, 

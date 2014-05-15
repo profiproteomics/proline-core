@@ -15,6 +15,10 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IMSISearchProvider
 import fr.proline.util.primitives._
 import fr.proline.util.sql.StringOrBoolAsBool._
+import fr.proline.core.dal.tables.uds.UdsDbEnzymeColumns
+import fr.proline.core.dal.tables.uds.UdsDbEnzymeTable
+import fr.proline.core.dal.tables.uds.UdsDbEnzymeCleavageColumns
+import fr.proline.core.dal.tables.uds.UdsDbEnzymeCleavageTable
 
 class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlCtx: DatabaseConnectionContext, val psSqlCtx: DatabaseConnectionContext) extends IMSISearchProvider {
 
@@ -29,11 +33,14 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
   protected val msmsSearchCols = MsiDbMsmsSearchColumns
   protected val seqDbCols = MsiDbSeqDatabaseColumns
   protected val ssSeqDbMapCols = MsiDbSearchSettingsSeqDatabaseMapColumns
-  protected val usedEnzCols = MsiDbUsedEnzymeColumns
-  protected val enzCols = MsiDbEnzymeColumns
+//  protected val usedEnzCols = MsiDbUsedEnzymeColumns
+//  protected val enzCols = MsiDbEnzymeColumns
+  protected val usedEnzCols = UdsDbEnzymeColumns
+  protected val enzCols = UdsDbEnzymeColumns
 
   protected val instCols = UdsDbInstrumentColumns
   protected val instConfigCols = UdsDbInstrumentConfigTable.columns
+  protected val enzCleavageCols = UdsDbEnzymeCleavageTable.columns
 
   def getMSISearches(msiSearchIds: Seq[Long]): Array[MSISearch] = {
     
@@ -349,22 +356,69 @@ class SQLMsiSearchProvider(val udsSqlCtx: DatabaseConnectionContext, val msiSqlC
     })
   }
 
-  def getEnzymes(enzymeIds: Seq[Long]): Array[Enzyme] = {
+  def getEnzymesByName(enzymeNames: Seq[String]): Array[Enzyme] = {
     
-    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+      DoJDBCReturningWork.withEzDBC(udsSqlCtx, { udsEzDBC =>
     
-      val enzQuery = new SelectQueryBuilder1(MsiDbEnzymeTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.ID ~" IN("~ enzymeIds.mkString(",") ~")"
+      val quotedEnzymeNames = enzymeNames.map(udsEzDBC.dialect.quoteString(_))
+      val enzQuery = new SelectQueryBuilder1(UdsDbEnzymeTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.NAME ~" IN("~ quotedEnzymeNames.mkString(",") ~")"
       )
       
-      msiEzDBC.select(enzQuery) { r =>
+      udsEzDBC.select(enzQuery) { r =>
+        val enzymeId = toLong(r.getAny(enzCols.ID))
         new Enzyme(
-          id = toLong(r.getAny(enzCols.ID)),
+          id = enzymeId,
           name = r.getString(enzCols.NAME),
+          enzymeCleavages = getEnzymeCleavages(enzymeId),
           cleavageRegexp = r.getStringOption(enzCols.CLEAVAGE_REGEXP),
           isIndependant = r.getBooleanOrElse(enzCols.IS_INDEPENDANT, false),
           isSemiSpecific = r.getBooleanOrElse(enzCols.IS_SEMI_SPECIFIC, false),
           properties = r.getStringOption(enzCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[EnzymeProperties](_))
+        )
+      } toArray
+    
+    })
+    
+  }
+  def getEnzymes(enzymeIds: Seq[Long]): Array[Enzyme] = {
+    
+      DoJDBCReturningWork.withEzDBC(udsSqlCtx, { udsEzDBC =>
+    
+      val enzQuery = new SelectQueryBuilder1(UdsDbEnzymeTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.ID ~" IN("~ enzymeIds.mkString(",") ~")"
+      )
+      
+      udsEzDBC.select(enzQuery) { r =>
+        val enzymeId = toLong(r.getAny(enzCols.ID))
+        new Enzyme(
+          id = enzymeId,
+          name = r.getString(enzCols.NAME),
+          enzymeCleavages = getEnzymeCleavages(enzymeId),
+          cleavageRegexp = r.getStringOption(enzCols.CLEAVAGE_REGEXP),
+          isIndependant = r.getBooleanOrElse(enzCols.IS_INDEPENDANT, false),
+          isSemiSpecific = r.getBooleanOrElse(enzCols.IS_SEMI_SPECIFIC, false),
+          properties = r.getStringOption(enzCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[EnzymeProperties](_))
+        )
+      } toArray
+    
+    })
+  }
+
+  private def getEnzymeCleavages(enzymeId: Long): Array[EnzymeCleavage] = {
+    
+    DoJDBCReturningWork.withEzDBC(udsSqlCtx, { udsEzDBC =>
+    
+      val enzQuery = new SelectQueryBuilder1(UdsDbEnzymeCleavageTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.ENZYME_ID ~" = "~ enzymeId
+      )
+      
+      udsEzDBC.select(enzQuery) { r =>
+        new EnzymeCleavage(
+          id = toLong(r.getAny(enzCleavageCols.ID)),
+          site = r.getString(enzCleavageCols.SITE),
+          residues = r.getString(enzCleavageCols.RESIDUES),
+          restrictiveResidues = r.getStringOption(enzCleavageCols.RESTRICTIVE_RESIDUES)
         )
       } toArray
     
