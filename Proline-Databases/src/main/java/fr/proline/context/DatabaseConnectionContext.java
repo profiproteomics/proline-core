@@ -234,6 +234,16 @@ public class DatabaseConnectionContext implements Closeable {
 		getConnection().setAutoCommit(false);
 	    }
 
+	    if (LOG.isDebugEnabled()) {
+		final Connection contextConnection = getConnection();
+
+		if (contextConnection != null) {
+		    LOG.debug("{} SQL TransactionIsolation \"{}\"", getProlineDatabaseTypeString(),
+			    formatTransactionIsolationLevel(contextConnection.getTransactionIsolation()));
+		}
+
+	    }
+
 	} // End of synchronized block on m_contextLock
 
     }
@@ -515,6 +525,38 @@ public class DatabaseConnectionContext implements Closeable {
 	    result = "Unknown Db";
 	} else {
 	    result = dbType + " Db";
+	}
+
+	return result;
+    }
+
+    private static String formatTransactionIsolationLevel(final int transactionIsolationLevel) {
+	String result = null;
+
+	switch (transactionIsolationLevel) {
+	case Connection.TRANSACTION_NONE:
+	    result = "none";
+	    break;
+
+	case Connection.TRANSACTION_READ_COMMITTED:
+	    result = "read committed";
+	    break;
+
+	case Connection.TRANSACTION_READ_UNCOMMITTED:
+	    result = "read uncommitted";
+	    break;
+
+	case Connection.TRANSACTION_REPEATABLE_READ:
+	    result = "repeatable read";
+	    break;
+
+	case Connection.TRANSACTION_SERIALIZABLE:
+	    result = "serializable";
+	    break;
+
+	default:
+	    result = "?";
+
 	}
 
 	return result;
