@@ -29,7 +29,6 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
     public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
     public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
-    public static final String HIBERNATE_CONNECTION_RELEASE_MODE_KEY = "hibernate.connection.release_mode";
     public static final String HIBERNATE_BYTECODE_OPTIMIZER_KEY = "hibernate.bytecode.use_reflection_optimizer";
 
     public static final int DEFAULT_MAX_POOL_CONNECTIONS = 20;
@@ -395,7 +394,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	}
 
 	if (properties.get(HIBERNATE_FETCH_SIZE_KEY) == null) {
-	    properties.put(HIBERNATE_FETCH_SIZE_KEY, "100");
+	    properties.put(HIBERNATE_FETCH_SIZE_KEY, "1000");
 	}
 
 	if (properties.get(HIBERNATE_BATCH_SIZE_KEY) == null) {
@@ -404,10 +403,6 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	if (properties.get(HIBERNATE_BATCH_VERSIONED_DATA_KEY) == null) {
 	    properties.put(HIBERNATE_BATCH_VERSIONED_DATA_KEY, "true");
-	}
-
-	if (properties.get(HIBERNATE_CONNECTION_RELEASE_MODE_KEY) == null) {
-	    properties.put(HIBERNATE_CONNECTION_RELEASE_MODE_KEY, "on_close");
 	}
 
 	if (properties.get(HIBERNATE_BYTECODE_OPTIMIZER_KEY) == null) {
