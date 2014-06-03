@@ -5,12 +5,15 @@ import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.model.msi.PtmDefinition
 //import fr.proline.core.om.provider.msi.impl.ResultFileProviderContext
+import fr.proline.core.om.model.msi.Enzyme
 
 trait IResultFileVerifier {
    // returns PtmDefinitions referenced by the specified file
    def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition]
    // can be used to verify that the provider handle this kind of file (ex: MSMS search, error tolerant search, n15 search, PMF, ...)  
    def isValid(fileLocation: File, importProperties: Map[String, Any]) : Boolean
+   // returns Enzyme referenced by the specified file
+   def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme]
 }
 
 trait IResultFileProvider {
