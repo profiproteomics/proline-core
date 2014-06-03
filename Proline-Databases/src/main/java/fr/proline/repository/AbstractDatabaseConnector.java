@@ -28,11 +28,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     public static final String PERSISTENCE_VALIDATION_MODE_KEY = "javax.persistence.validation.mode";
 
     public static final String HIBERNATE_POOL_MIN_SIZE = "hibernate.c3p0.minPoolSize";
-
     public static final String HIBERNATE_POOL_MAX_SIZE = "hibernate.c3p0.maxPoolSize";
-
     public static final String HIBERNATE_POOL_MAX_IDLE_TIME = "hibernate.c3p0.maxIdleTime";
-
     public static final String HIBERNATE_POOL_MAX_STATEMENTS_PER_CONNECTION = "hibernate.c3p0.maxStatementsPerConnection";
 
     public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
@@ -40,7 +37,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
     public static final String HIBERNATE_BYTECODE_OPTIMIZER_KEY = "hibernate.bytecode.use_reflection_optimizer";
 
-    public static final int DEFAULT_MAX_POOL_CONNECTIONS = 20;
+    public static final int DEFAULT_MAX_POOL_CONNECTIONS = 20; // TODO increase value for server side
 
     public static final String JDBC_SCHEME = "jdbc";
 
@@ -395,28 +392,33 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	return result;
     }
 
-    private static void optimize(final Map<Object, Object> properties) {
+    private void optimize(final Map<Object, Object> properties) {
 	assert (properties != null) : "optimize() properties is null";
 
 	if (properties.get(PERSISTENCE_VALIDATION_MODE_KEY) == null) {
 	    properties.put(PERSISTENCE_VALIDATION_MODE_KEY, "none");
 	}
 
-	/* Configure c3p0 pool for production environnement */
-	if (properties.get(HIBERNATE_POOL_MIN_SIZE) == null) {
-	    properties.put(HIBERNATE_POOL_MIN_SIZE, "1");
-	}
+	if (getDriverType() == DriverType.POSTGRESQL) {
 
-	if (properties.get(HIBERNATE_POOL_MAX_SIZE) == null) {
-	    properties.put(HIBERNATE_POOL_MAX_SIZE, "20"); // TODO increase for server side
-	}
+	    /* Configure c3p0 pool for production environnement */
 
-	if (properties.get(HIBERNATE_POOL_MAX_IDLE_TIME) == null) {
-	    properties.put(HIBERNATE_POOL_MAX_IDLE_TIME, "60"); // 1 minute
-	}
+	    if (properties.get(HIBERNATE_POOL_MIN_SIZE) == null) {
+		properties.put(HIBERNATE_POOL_MIN_SIZE, "1");
+	    }
 
-	if (properties.get(HIBERNATE_POOL_MAX_STATEMENTS_PER_CONNECTION) == null) {
-	    properties.put(HIBERNATE_POOL_MAX_STATEMENTS_PER_CONNECTION, "30");
+	    if (properties.get(HIBERNATE_POOL_MAX_SIZE) == null) {
+		properties.put(HIBERNATE_POOL_MAX_SIZE, Integer.toString(DEFAULT_MAX_POOL_CONNECTIONS));
+	    }
+
+	    if (properties.get(HIBERNATE_POOL_MAX_IDLE_TIME) == null) {
+		properties.put(HIBERNATE_POOL_MAX_IDLE_TIME, "60"); // 1 minute
+	    }
+
+	    if (properties.get(HIBERNATE_POOL_MAX_STATEMENTS_PER_CONNECTION) == null) {
+		properties.put(HIBERNATE_POOL_MAX_STATEMENTS_PER_CONNECTION, "30");
+	    }
+
 	}
 
 	if (properties.get(HIBERNATE_FETCH_SIZE_KEY) == null) {
