@@ -47,6 +47,13 @@
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
 
+    <!-- c3p0 pool for Hibernate (runtime scope) -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-c3p0</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
     <!-- Databases (Compile-scope to use Drivers DataSource) -->
     <dependency>
       <groupId>postgresql</groupId>
