@@ -168,6 +168,12 @@ case class RawMap(
     // Update the processed map id of each feature
     features.foreach { ft =>
       ft.relations.processedMapId = procMapId
+      
+      if( ft.isCluster ) {
+        ft.subFeatures.foreach { subFt =>
+          subFt.relations.processedMapId = procMapId
+        }
+      }
     }
     
     ProcessedMap(
@@ -341,49 +347,8 @@ case class MapAlignment(
     
     import fr.proline.util.math.linearInterpolation
     
-    linearInterpolation(elutionTime, deltaTimeVersusTime, false)
-    
-    /*var index = deltaTimeVersusTime.indexWhere( _._1 >= elutionTime )
-    if( index == -1  ) {
-      index = if( elutionTime < deltaTimeVersusTime.head._1 ) 0 else deltaTimeVersusTime.length - 1
-    }
-    
-    this._calcDeltaTime( index, elutionTime )*/
+    linearInterpolation(elutionTime, deltaTimeVersusTime, fixOutOfRange = true)
   }
-  
-  /*
-  private def _calcDeltaTime( timeIndex: Int, elutionTime: Float ) = {
-    require( timeIndex >= -1 && timeIndex < deltaTimeList.length, "time index is out of range" )
-    
-    import fr.proline.util.math.calcLineParams
-    
-    var deltaTime: Float = 0
-    
-    // If we are looking left-side of the alignment boundaries
-    // We take the delta time of the first landmark
-    if( timeIndex == 0  ) {
-      deltaTime = deltaTimeList(0)
-    // Else if we are looking right-side of the alignment boundaries
-    // We take the delta time of the last landmark
-    } else if( timeIndex == -1 ) { // || highTimeIndex + 1 > timeList.length
-      deltaTime = deltaTimeList.last
-    // Else we are inside the  alignment boundaries
-    // We compute the linear interpolation
-    } else {
-      val( x1, y1 ) = ( timeList(timeIndex-1), deltaTimeList(timeIndex-1) )
-      val( x2, y2) = ( timeList(timeIndex) , deltaTimeList(timeIndex) )
-      
-      if( x1 == x2 ) deltaTime = (y1 + y2)/2
-      else {
-        val ( a, b ) = calcLineParams( x1, y1, x2, y2 )
-        //println("a="+a +" b="+ b + "y="+ (a * elutionTime + b).toFloat )
-        deltaTime = (a * elutionTime + b).toFloat
-      }
-
-    }
-    
-    deltaTime    
-  }*/
  
   def getReversedAlignment(): MapAlignment = {
     
@@ -446,20 +411,7 @@ case class MapAlignmentSet(
 ) {
   
   // Requirements
-  require( mapAlignments != null )
-  
-  /*
-  @deprecated("0.0.9","can't compute reference time using a time list of the reference map")
-  def calcReferenceElutionTime( elutionTime: Float, mass: Double ): Float = {
-
-    // Select right map alignment
-    var mapAln = mapAlignments find { x => mass >= x.massRange._1 && mass < x.massRange._2 }
-    // Small workaround for masses greater than the biggest map alignment
-    if( mapAln.isEmpty ) { mapAln = Some(mapAlignments.last) }
-    
-    // Convert aligned map elution time into reference map one
-    mapAln.get.calcReferenceElutionTime( elutionTime )
-  }*/
+  require( mapAlignments != null, "mapAlignments is null" )
   
   /**
    * Converts an elution time using the time list of the reference map (refMap)
