@@ -25,10 +25,13 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     
     private DProteinMatch[] m_proteinMatchArray = null;
     private String m_proteinSetStringList = null;
+
+    private Integer m_cdPrettyRank;
+    private Integer m_sdPrettyRank;  
     
 
     
-    public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId) {
+    public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank) {
         m_id = id;
         m_rank = rank;
         m_charge = charge;
@@ -43,6 +46,9 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
         m_msQuerySet = false;
         m_sequenceMatch = null;
         m_proteinMatchArray = null;
+        
+        m_cdPrettyRank = cdPrettyRank;
+        m_sdPrettyRank = sdPrettyRank;
     }
     
     public long getId() {
@@ -71,6 +77,14 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     
     public Integer getRank() {
     	return m_rank;
+    }
+
+    public Integer getCDPrettyRank() {
+    	return m_cdPrettyRank;
+    }
+
+    public Integer getSDPrettyRank() {
+    	return m_sdPrettyRank;
     }
     
     public int getCharge() {

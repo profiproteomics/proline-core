@@ -10,6 +10,7 @@ import fr.proline.core.om.model.msi.ResultSetProperties
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.storer.msi.impl.SQLMsiSearchWriter
 import fr.proline.util.StringUtils
+import fr.proline.core.om.model.msi.PeptideMatch
 
 /**
  * @author David Bouyssie
@@ -69,12 +70,17 @@ object ResultFileStorer extends Logging {
 
     // Load and store decoy result set if it exists
     if (resultFile.hasDecoyResultSet) {
+
+      logger.info("ResultFile has decoy ResultSet")
       
       // Load target result set from result file
       val decoyRs = resultFile.getResultSet(true)
       
       // Link decoy RS to target RS
       targetRs.decoyResultSet = Some(decoyRs)
+
+      // compute pretty ranks for both result sets
+      _setPrettyRanks(targetRs, Some(decoyRs))
       
       // Store target and decoy result sets
       rsStorer.storeResultSet(targetRs, msQueries, storerContext)
@@ -94,12 +100,17 @@ object ResultFileStorer extends Logging {
       
     } // Else if a regex has been passed to detect decoy protein matches        
     else if (acDecoyRegex.isDefined) {
-      
+
+      logger.info("ResultFile contains decoy data, using regex to extract it")
+
       // Then split the result set into a target and a decoy one
       val (tRs, dRs) = rsSplitter.get.split(targetRs, acDecoyRegex.get)
       
       // Link decoy RS to target RS
       tRs.decoyResultSet = Some(dRs)
+
+      // compute pretty ranks for both result sets
+      _setPrettyRanks(tRs, Some(dRs))
       
       // Store target and decoy result sets
       rsStorer.storeResultSet(tRs, msQueries, storerContext)
@@ -132,6 +143,12 @@ object ResultFileStorer extends Logging {
       return tRs.id
     }
     else {
+
+      logger.info("ResultFile is target only")
+
+      // compute pretty ranks for this result set
+      _setPrettyRanks(targetRs, None)
+
       // Store target result set
       rsStorer.storeResultSet(targetRs, msQueries, storerContext)
       
@@ -152,6 +169,65 @@ object ResultFileStorer extends Logging {
    */
   private def _insertInstrumentConfig(instrumCfg: InstrumentConfig, context: StorerContext) = {
     SQLMsiSearchWriter.insertInstrumentConfig(instrumCfg, context)
+  }
+
+  private def _setPrettyRanks(rs: ResultSet, rsd: Option[ResultSet]) {
+    
+    logger.info("Computing pretty ranks")
+    
+    if(rsd.isDefined) {
+      _computePrettyRanks(rs.peptideMatches ++ rsd.get.peptideMatches, separated = false) // cd
+      _computePrettyRanks(rsd.get.peptideMatches, separated = true) // sd
+    } else {
+      // both pretty ranks will be the same then
+      _computePrettyRanks(rs.peptideMatches, separated = false) // cd
+    }
+    _computePrettyRanks(rs.peptideMatches, separated = true) // sd
+  }
+
+  private def _computePrettyRanks(peptideMatches: Array[PeptideMatch], separated: Boolean, scoreTolerance: Float = 0.1f, consecutiveRanks: Boolean = true) {
+    
+    val pepMatchesByMsqId = peptideMatches.groupBy(_.msQueryId)
+    
+    // Iterate over peptide matches of each MS query
+    for( (msqId,pepMatches) <- pepMatchesByMsqId ) {
+      
+      val sortedPepmatches = pepMatches.sortWith( _.score > _.score )
+      
+      /*
+       * for one query, with peptide matches ordered by descending score
+       * sample data (sequence   score   consecutiveRanking   rankingWithGap) : 
+       * KALSCVK   11.26  1   1
+       * NLNLFK    8.34   2   2
+       * NIINFQ    7.23   3   3
+       * NLISSSK   7.23   3   3
+       * LNAVFGK   5.27   4   5
+       * NINFIK    3.91   5   6
+       * NIFNIK    2.83   6   7
+       * NLSSAEK   2.83   6   7
+       * NLSSSLK   2.83   6   7
+       * ARNIFK    2.32   7   10
+       */
+      
+      var rank = 1
+      var refScore = sortedPepmatches(0).score
+      var pmNumber = 1 // use this variable to get ranks with gaps (ie. 1-1-3 instead of 1-1-2)
+      
+      sortedPepmatches.foreach { pm =>
+        // Increase rank if score is too far from reference
+        if( (refScore - pm.score) > scoreTolerance ) {
+          rank = if(consecutiveRanks) rank + 1 else pmNumber
+          refScore = pm.score // update reference score        
+        }
+        if(separated) {
+          pm.sdPrettyRank = rank
+        } else {
+          pm.cdPrettyRank = rank
+        }
+        pmNumber += 1
+      }
+
+    }
   }
 
 }

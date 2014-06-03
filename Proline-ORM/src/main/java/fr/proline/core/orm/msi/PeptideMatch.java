@@ -64,6 +64,12 @@ public class PeptideMatch implements Serializable {
 
     private Integer rank;
 
+    @Column(name = "cd_pretty_rank")
+    private Integer cdPrettyRank;
+
+    @Column(name = "sd_pretty_rank")
+    private Integer sdPrettyRank;
+
     @ManyToOne
     @JoinColumn(name = "result_set_id")
     private ResultSet resultSet;
@@ -170,6 +176,22 @@ public class PeptideMatch implements Serializable {
 
     public void setRank(Integer rank) {
 	this.rank = rank;
+    }
+
+    public Integer getCDPrettyRank() {
+	return this.cdPrettyRank;
+    }
+
+    public void setCDPrettyRank(Integer cdPrettyRank) {
+	this.cdPrettyRank = cdPrettyRank;
+    }
+
+    public Integer getSDPrettyRank() {
+	return this.sdPrettyRank;
+    }
+
+    public void setSDPrettyRank(Integer sdPrettyRank) {
+	this.sdPrettyRank = sdPrettyRank;
     }
 
     public ResultSet getResultSet() {

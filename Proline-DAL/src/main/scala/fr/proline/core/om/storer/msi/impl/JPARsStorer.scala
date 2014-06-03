@@ -1246,6 +1246,10 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         }
 
         msiPeptideMatch.setRank(Integer.valueOf(peptideMatch.rank))
+        
+        msiPeptideMatch.setSDPrettyRank(Integer.valueOf(peptideMatch.sdPrettyRank))
+        
+        msiPeptideMatch.setCDPrettyRank(Integer.valueOf(peptideMatch.cdPrettyRank))
 
         msiPeptideMatch.setResultSet(msiResultSet) // msiResultSet must be in persistence context
 

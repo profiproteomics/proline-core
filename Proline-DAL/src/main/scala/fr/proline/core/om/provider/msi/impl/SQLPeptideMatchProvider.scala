@@ -170,9 +170,15 @@ class SQLPeptideMatchProvider(
       val propertiesAsJSON = pepMatchRecord(PepMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
       val properties = if (propertiesAsJSON != null) Some(ProfiJson.deserialize[PeptideMatchProperties](propertiesAsJSON)) else None
 
+      val cdPrettyRank = pepMatchRecord(PepMatchCols.CD_PRETTY_RANK).asInstanceOf[Int]
+      val sdPrettyRank = pepMatchRecord(PepMatchCols.SD_PRETTY_RANK).asInstanceOf[Int]
+      // use cdPrettyRank as default rank (using this should avoid changing existing code)
+//      val rank = if(cdPrettyRank > 0) cdPrettyRank else pepMatchRecord(PepMatchCols.RANK).asInstanceOf[Int]
+      val rank = pepMatchRecord(PepMatchCols.RANK).asInstanceOf[Int]
+
       val pepMatch = new PeptideMatch(
         id = toLong(pepMatchRecord(PepMatchCols.ID)),
-        rank = pepMatchRecord(PepMatchCols.RANK).asInstanceOf[Int],
+        rank = rank,
         score = toFloat(pepMatchRecord(PepMatchCols.SCORE)),
         scoreType = scoreType,
         deltaMoz = toFloat(pepMatchRecord(PepMatchCols.DELTA_MOZ)),
@@ -182,7 +188,9 @@ class SQLPeptideMatchProvider(
         fragmentMatchesCount = pepMatchRecord(PepMatchCols.FRAGMENT_MATCH_COUNT).asInstanceOf[Int],
         msQuery = msQueryOpt.getOrElse(null),
         resultSetId = toLong(pepMatchRecord(PepMatchCols.RESULT_SET_ID)),
-        properties = properties
+        properties = properties,
+        cdPrettyRank = cdPrettyRank,
+        sdPrettyRank = sdPrettyRank
       )
 
       pepMatches(pepMatchIdx) = pepMatch

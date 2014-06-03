@@ -437,7 +437,10 @@ case class PeptideMatch ( // Required fields
   
   var properties: Option[PeptideMatchProperties] = None,
   
-  @transient var validationProperties : Option[PeptideMatchResultSummaryProperties] = None
+  @transient var validationProperties : Option[PeptideMatchResultSummaryProperties] = None,
+
+  var cdPrettyRank: Int = 0,
+  var sdPrettyRank: Int = 0
   
 ) {
   

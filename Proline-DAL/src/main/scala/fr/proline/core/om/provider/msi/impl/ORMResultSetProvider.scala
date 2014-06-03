@@ -267,7 +267,9 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         bestChildId,
         optionalBestChild,
         peptideMatchProperties,
-        None)
+        None,
+        msiPeptideMatch.getCDPrettyRank.intValue,
+        msiPeptideMatch.getSDPrettyRank.intValue)
 
       knownPeptideMatches += msiPeptideMatchId -> peptideMatch
 

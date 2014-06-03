@@ -269,6 +269,8 @@ CREATE TABLE peptide_match (
                 best_child_id INTEGER,
                 scoring_id INTEGER NOT NULL,
                 result_set_id INTEGER NOT NULL,
+                cd_pretty_rank INTEGER,
+                sd_pretty_rank INTEGER,
                 FOREIGN KEY (peptide_id) REFERENCES peptide (id),
                 FOREIGN KEY (ms_query_id) REFERENCES ms_query (id),
                 FOREIGN KEY (best_child_id) REFERENCES peptide_match (id),

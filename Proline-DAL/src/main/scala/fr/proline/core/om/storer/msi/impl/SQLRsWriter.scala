@@ -195,7 +195,9 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
             msQuery.id,
             if (bestChildId == 0) Option.empty[Long] else Some(bestChildId),
             scoringId,
-            rsId
+            rsId,
+			peptideMatch.cdPrettyRank,
+			peptideMatch.sdPrettyRank
           )
   
           // Update peptide match id
