@@ -116,7 +116,7 @@ class ResultSetBuilder(val resultSetId: Long, val isDecoy: Boolean = false, seqL
     val newPepMatchId = id.getOrElse(PeptideMatch.generateNewId())
     val childrenIds = new Array[Long](1)
     childrenIds(0) = peptideMatch.id
-    peptideMatch.copy(id = newPepMatchId, childrenIds = childrenIds, resultSetId = resultSetId, peptide = peptide)
+    peptideMatch.copy(id = newPepMatchId, childrenIds = childrenIds, resultSetId = resultSetId, peptide = peptide, bestChild = Some(peptideMatch))
   }
 
   def addResultSet(rs: ResultSet, selector: IResultSetSelector = ResultSetSelector) {
@@ -125,20 +125,20 @@ class ResultSetBuilder(val resultSetId: Long, val isDecoy: Boolean = false, seqL
     val start = System.currentTimeMillis()
     for (peptideMatch <- selector.getPeptideMatches(rs)) {
       if (pepMatchesByPepId.contains(peptideMatch.peptide.id)) {
-        val pepMatches = pepMatchesByPepId(peptideMatch.peptide.id)
+        val newPepMatches = pepMatchesByPepId(peptideMatch.peptide.id)
         if (AdditionMode.Aggregate.equals(mode)) {
-          if (pepMatches(0).score < peptideMatch.score) {
+          if (newPepMatches(0).score < peptideMatch.score) {
             //update mergedpeptideMatches(0) properties
-            var newPeptideMatch = createPeptideMatchFrom(id = Some(pepMatches(0).id), peptideMatch = peptideMatch, peptide = peptideById(peptideMatch.peptide.id))
-            // update children Ids, TODO and bestchild
-            newPeptideMatch.childrenIds ++:= pepMatches(0).childrenIds
+            var newPeptideMatch = createPeptideMatchFrom(id = Some(newPepMatches(0).id), peptideMatch = peptideMatch, peptide = peptideById(peptideMatch.peptide.id))
+            // update children Ids
+            newPeptideMatch.childrenIds ++:= newPepMatches(0).childrenIds
             //register new PeptideMatch
             val matches = pepMatchesByPepId.get(peptideMatch.peptide.id).get
             matches(0) = newPeptideMatch
             mergedPeptideMatches += (newPeptideMatch.id -> newPeptideMatch)
           } else {
-            // update children Ids, TODO and bestchild
-            pepMatches(0).childrenIds +:= peptideMatch.id
+            // update children Ids
+            newPepMatches(0).childrenIds +:= peptideMatch.id
           }
         } else { // union mode
           val newPeptideMatch = createPeptideMatchFrom(peptideMatch = peptideMatch, peptide = peptideById(peptideMatch.peptide.id))

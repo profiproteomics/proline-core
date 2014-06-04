@@ -2,25 +2,27 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization._
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal._
+import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.tables.msi.{MsiDbObjectTreeTable,MsiDbPeptideMatchTable,MsiDbProteinMatchTable,MsiDbSequenceMatchTable}
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbBioSequenceTable
+import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
+import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
+import fr.proline.core.dal.tables.msi.MsiDbPeptideReadablePtmStringTable
+import fr.proline.core.dal.tables.msi.MsiDbPeptideTable
+import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
+import fr.proline.core.dal.tables.msi.MsiDbProteinMatchTable
+import fr.proline.core.dal.tables.msi.MsiDbSequenceMatchTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.msi.MsiDbPeptideTable
-import fr.proline.core.dal.tables.msi.MsiDbBioSequenceTable
-import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideReadablePtmStringTable
-import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
 import fr.proline.util.StringUtils
 import fr.proline.util.primitives._
+import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchRelationTable
 
 private[core] object SQLRsWriter extends AbstractSQLRsWriter
 
@@ -206,13 +208,13 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       }
   
       // Link peptide matches to their children
-      msiEzDBC.executePrepared(MsiDbPeaklistRelationTable.mkInsertQuery()) { stmt =>
-        for (peptideMatch <- peptideMatches)
-          if (peptideMatch.children != null && peptideMatch.children.isDefined)
-            for (pepMatchChild <- peptideMatch.children.get)
-              stmt.executeWith(peptideMatch.id, pepMatchChild.id, rsId)
+      msiEzDBC.executePrepared(MsiDbPeptideMatchRelationTable.mkInsertQuery()) { stmt =>
+        for (peptideMatch <- peptideMatches) 
+          if ((peptideMatch.children != null && peptideMatch.children.isDefined) || peptideMatch.childrenIds != null) {
+            for (pepMatchChildId <- peptideMatch.getChildrenIds) 
+              stmt.executeWith(peptideMatch.id, pepMatchChildId, rsId)
+          }
       }
-      
       peptideMatches.length
     })
 

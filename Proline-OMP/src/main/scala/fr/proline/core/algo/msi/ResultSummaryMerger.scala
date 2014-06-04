@@ -13,7 +13,7 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
 
   def mergeResultSummaries( resultSummaries: Seq[ResultSummary], seqLengthByProtId: Map[Long,Int] ): ResultSummary = {
     
-    // Define some vars
+
     //val msiSearchIds = new ArrayBuffer[Int]()
     val allValidPeptideMatches = new ArrayBuffer[PeptideMatch]()
     val proteinMatchesByKey = new HashMap[String,ArrayBuffer[ProteinMatch]]()

@@ -252,13 +252,13 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
     // Iterate over peptide matches to store them
     for (peptideMatch <- peptideMatches) {
-      if (peptideMatch.children != null && peptideMatch.children.isDefined) {
-        for (pepMatchChild <- peptideMatch.children.get) {
+      if ((peptideMatch.children != null && peptideMatch.children.isDefined) || (peptideMatch.childrenIds != null)) {
+        for (pepMatchChildId <- peptideMatch.getChildrenIds) {
 
           // Build a row containing peptide_match_relation values
           val pepMatchRelationValues = List(
             peptideMatch.id,
-            pepMatchChild.id,
+            pepMatchChildId,
             peptideMatch.resultSetId
           )
 
@@ -271,7 +271,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
     // End of BULK copy
     val nbInsertedRecords = pgBulkLoader.endCopy()
-
+    logger.info("BULK insert of {} peptide match relations", nbInsertedRecords.asInstanceOf[AnyRef])
   }
 
   override def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {

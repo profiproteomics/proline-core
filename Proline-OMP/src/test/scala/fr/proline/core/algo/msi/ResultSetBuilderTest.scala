@@ -44,6 +44,10 @@ class ResultSetBuilderTest extends JUnitSuite with Logging {
 	  val ids = rs.peptideMatches.map(_.resultSetId).distinct
 	  assertEquals(1, ids.length)
 	  assertEquals(99, ids(0))
+	  rs.peptideMatches.map(_.childrenIds.size).foreach{ c =>
+	    assertEquals(2, c)
+	  }
+	  
   }
 
 	@Test
