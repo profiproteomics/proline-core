@@ -345,6 +345,7 @@ case class Peptide ( // Required fields
 case class PeptideProperties()
 
 object PeptideMatch extends InMemoryIdGen with Logging {
+  
   def countMissedCleavages(sequence: String, residueBefore: Option[Char], residueAfter: Option[Char], enzymes: Array[Enzyme]): Int = {
     var missedCleavages: Int = 0
     // only consider first enzyme
@@ -368,6 +369,7 @@ object PeptideMatch extends InMemoryIdGen with Logging {
 //    if(missedCleavages > 0) logger.debug("Sequence "+residueBefore.getOrElse("^")+"."+sequence+"."+residueAfter.getOrElse("$")+" has "+missedCleavages+" miscleavages")
     missedCleavages
   }
+  
   private def countMissedCleavages(sequence: String, enzymeCleavage: EnzymeCleavage): Int = {
     var missedCleavages = new ArrayBuffer[String]()
     for(i <- 0 to sequence.length() - 1) {
@@ -390,6 +392,7 @@ object PeptideMatch extends InMemoryIdGen with Logging {
 //    logger.debug("Miscleavages : "+missedCleavages.mkString(", "))
     missedCleavages.size
   }
+  
   private def getEnzymeCleavages(sequence: String, residueBefore: Option[Char], residueAfter: Option[Char], enzyme: Enzyme): Array[EnzymeCleavage] = {
     val enzymeCleavages = new HashMap[EnzymeCleavage, Int]
     // for each enzyme cleavage, count the number of hints to determine the most probable enzyme cleavage
@@ -428,6 +431,8 @@ case class PeptideMatch ( // Required fields
   // Mutable optional fields
   var isValidated: Boolean = true, // only defined in the model
   var resultSetId: Long = 0,
+  var cdPrettyRank: Int = 0,
+  var sdPrettyRank: Int = 0,
   
   var childrenIds: Array[Long] = null,
   @transient var children: Option[Array[PeptideMatch]] = null,
@@ -437,10 +442,7 @@ case class PeptideMatch ( // Required fields
   
   var properties: Option[PeptideMatchProperties] = None,
   
-  @transient var validationProperties : Option[PeptideMatchResultSummaryProperties] = None,
-
-  var cdPrettyRank: Int = 0,
-  var sdPrettyRank: Int = 0
+  @transient var validationProperties : Option[PeptideMatchResultSummaryProperties] = None
   
 ) {
   
@@ -472,7 +474,10 @@ case class PeptideMatchMascotProperties (
   @BeanProperty var expectationValue: Double,
   @BeanProperty var readableVarMods: Option[String] = None,
   @BeanProperty var varModsPositions: Option[String] = None,
-  @BeanProperty var ambiguityString: Option[String] = None
+  @BeanProperty var ambiguityString: Option[String] = None,
+  @BeanProperty var nlString: Option[String] = None,
+  @BeanProperty var usedPeaksCount: Option[Int] = None
+
 )
 
 case class PeptideMatchOmssaProperties (

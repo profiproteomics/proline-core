@@ -188,9 +188,9 @@ class SQLPeptideMatchProvider(
         fragmentMatchesCount = pepMatchRecord(PepMatchCols.FRAGMENT_MATCH_COUNT).asInstanceOf[Int],
         msQuery = msQueryOpt.getOrElse(null),
         resultSetId = toLong(pepMatchRecord(PepMatchCols.RESULT_SET_ID)),
-        properties = properties,
         cdPrettyRank = cdPrettyRank,
-        sdPrettyRank = sdPrettyRank
+        sdPrettyRank = sdPrettyRank,
+        properties = properties
       )
 
       pepMatches(pepMatchIdx) = pepMatch
