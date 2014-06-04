@@ -510,8 +510,10 @@ class WeightedSpectralCountQuantifier(
       logger.debug("  --- map   list of ProtMatch accession by PeptideSet for rsm "+rsm.id)
       val protMatchesAccListByPepSet: Map[PeptideSet, Seq[Pair[Long, String]]] = createProtMatchesAccByPeptideSet(rsm)
 
+      var unidentifiedProteinsInRSM: Int = 0
+       
       //--- Calculate SCs for each Ref RSM ProtSet
-      logger.debug("  --- Go throufg ProtSets  ")
+      logger.debug("  --- Go through ProtSets  ")
       protSetWeightStructsByProtSetId.foreach(entry => {
 
         val currentProteinSetWeightStruct = entry._2
@@ -536,7 +538,7 @@ class WeightedSpectralCountQuantifier(
         var protWSC: Float = 0.0f 
         var protSSC: Float = 0.0f
         var protBSC: Int = 0
-
+        
         if (peptideSetForPM != null) { //  Current Typical from Ref RSM found in current RSM
 
           //Go through peptides instances,  compute SC and create QuantPeptide
@@ -595,10 +597,13 @@ class WeightedSpectralCountQuantifier(
 
         } //End Protein identified in current RSM
         else {
-          logger.debug("Protein " + currentProteinSetWeightStruct.typicalPMAcc + " Not identified in RSM id=" + rsm.id)
+          unidentifiedProteinsInRSM += 1
+          //logger.debug("Protein " + currentProteinSetWeightStruct.typicalPMAcc + " Not identified in RSM id=" + rsm.id)
         }
 
       }) // End go through  proteinSetWeightStructsById
+          
+      logger.debug("Number of Proteins not identified in RSM id=" + rsm.id+" : "+unidentifiedProteinsInRSM)
 
     }) //End go through RSMs 
 
