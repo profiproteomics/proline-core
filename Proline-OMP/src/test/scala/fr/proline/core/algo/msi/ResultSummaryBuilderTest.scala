@@ -27,7 +27,7 @@ import fr.proline.repository.DriverType
 
 
 @Test
-class ResultSummaryAdditionerTest extends AbstractMultipleDBTestCase with Logging {
+class ResultSummaryBuilderTest extends AbstractMultipleDBTestCase with Logging {
   
   // Define the interface to be implemented
   val driverType = DriverType.H2
@@ -103,7 +103,7 @@ class ResultSummaryAdditionerTest extends AbstractMultipleDBTestCase with Loggin
 	  
 	  val storerContext = StorerContext(executionContext) // Use Object factory
 	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-     val rsId = rsStorer.storeResultSet(rs2, storerContext)
+      val rsId = rsStorer.storeResultSet(rs2, storerContext)
   }
   	
   	@Test
@@ -160,9 +160,6 @@ class ResultSummaryAdditionerTest extends AbstractMultipleDBTestCase with Loggin
 	  assertEquals(1, ids.length)
 	  assertEquals(-99, ids(0))
 	  
-	  val storerContext = StorerContext(executionContext) // Use Object factory
-	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-     val rsId = rsStorer.storeResultSet(rs2, storerContext)
   }
   
   
