@@ -101,6 +101,9 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	    properties.put(HIBERNATE_DIALECT_KEY, TableNameSequencePostgresDialect.class.getName());
 	}
 
+	/* Configure c3p0 pool for production environnement */
+	enableC3P0Pool(properties);
+
 	/* Force TCP keepalive on EntityManager connections */
 	if (properties.get(HIBERNATE_CONNECTION_KEEPALIVE_KEY) == null) {
 	    properties.put(HIBERNATE_CONNECTION_KEEPALIVE_KEY, "true");
