@@ -4,14 +4,14 @@ import org.junit._
 import org.junit.Assert._
 import org.junit.runner.RunWith
 import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
-
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.{Enzyme, EnzymeCleavage}
+import com.typesafe.scalalogging.slf4j.Logging
 
 @Test
-class PeptidesTest extends JUnitSuite {
+class PeptidesTest extends JUnitSuite with Logging {
   
   
 	@Test
@@ -82,7 +82,7 @@ class PeptidesTest extends JUnitSuite {
 	  val beforeOpt: Option[Char] = if(items.head == "_") None else Some(items.head.charAt(0))
 	  val afterOpt: Option[Char] = if(items.last == "_") None else Some(items.last.charAt(0))
 	  val mc = PeptideMatch.countMissedCleavages(items(1), beforeOpt, afterOpt, Array(enzyme))
-	  println("ABU "+beforeOpt.getOrElse("^")+"."+items(1)+"."+afterOpt.getOrElse("$")+" => "+mc+"/"+expectedMC+" missed cleavage(s) with "+enzyme.name + "[" + enzyme.enzymeCleavages.map(_.toString).mkString(" ") + " independant="+enzyme.isIndependant + " semiSpecific="+enzyme.isSemiSpecific + "]")
+	  //logger.debug("ABU "+beforeOpt.getOrElse("^")+"."+items(1)+"."+afterOpt.getOrElse("$")+" => "+mc+"/"+expectedMC+" missed cleavage(s) with "+enzyme.name + "[" + enzyme.enzymeCleavages.map(_.toString).mkString(" ") + " independant="+enzyme.isIndependant + " semiSpecific="+enzyme.isSemiSpecific + "]")
 	  mc
 	}
 }
