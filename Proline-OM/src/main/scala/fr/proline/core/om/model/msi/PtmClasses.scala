@@ -142,7 +142,7 @@ case class PtmDefinition(
     ptmEvidences.find( _.ionType == IonTypes.Precursor ).get
   }
 
-  @transient lazy val neutralLosses = ptmEvidences.find( _.ionType == IonTypes.NeutralLoss )
+  @transient lazy val neutralLosses = ptmEvidences.filter( _.ionType == IonTypes.NeutralLoss ).sortBy(_.monoMass)
   @transient lazy val pepNeutralLosses = ptmEvidences.find( ev => ev.ionType == IonTypes.PepNeutralLoss )
   @transient lazy val artefacts = ptmEvidences.find( ev => ev.ionType == IonTypes.Artefact )
 
