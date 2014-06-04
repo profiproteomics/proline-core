@@ -262,14 +262,14 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         buildMsQuery(msiPeptideMatch.getMsQuery),
         true, // isValidated always true when loading from ORM
         resultSetId,
+        msiPeptideMatch.getCDPrettyRank.intValue,
+        msiPeptideMatch.getSDPrettyRank.intValue,
         null, // TODO handle children
         null, // TODO handle children
         bestChildId,
         optionalBestChild,
         peptideMatchProperties,
-        None,
-        msiPeptideMatch.getCDPrettyRank.intValue,
-        msiPeptideMatch.getSDPrettyRank.intValue)
+        None)
 
       knownPeptideMatches += msiPeptideMatchId -> peptideMatch
 
