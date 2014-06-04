@@ -408,8 +408,8 @@ object MsiDbPeptideMatchColumns extends ColumnEnumeration {
   val BEST_CHILD_ID = Column("best_child_id")
   val SCORING_ID = Column("scoring_id")
   val RESULT_SET_ID = Column("result_set_id")
-		  val CD_PRETTY_RANK = Column("cd_pretty_rank")
-		  val SD_PRETTY_RANK = Column("sd_pretty_rank")
+  val CD_PRETTY_RANK = Column("cd_pretty_rank")
+  val SD_PRETTY_RANK = Column("sd_pretty_rank")
 }
 
 abstract class MsiDbPeptideMatchTable extends TableDefinition[MsiDbPeptideMatchColumns.type]
