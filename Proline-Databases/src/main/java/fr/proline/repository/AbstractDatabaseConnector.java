@@ -356,7 +356,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	}
 
 	if (properties.get(HIBERNATE_POOL_MIN_SIZE_KEY) == null) {
-	    properties.put(HIBERNATE_POOL_MIN_SIZE_KEY, "1");
+	    /* minPoolSize = 0 */
+	    properties.put(HIBERNATE_POOL_MIN_SIZE_KEY, "0");
 	}
 
 	if (properties.get(HIBERNATE_POOL_MAX_SIZE_KEY) == null) {
@@ -371,6 +372,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	if (properties.get(HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY) == null) {
 	    properties.put(HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY, "30");
 	}
+
+	/* If JDBC driver does NOT support Connection.isValid() method, override preferredTestQuery */
 
 	if (properties.get(HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY) == null) {
 	    /* Check connection is valid asynchronously at every connection checkin */
