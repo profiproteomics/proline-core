@@ -27,20 +27,22 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
     public static final String PERSISTENCE_VALIDATION_MODE_KEY = "javax.persistence.validation.mode";
 
-    // Renamed !
+    // Hibernate renamed from c3p0.minPoolSize !
     public static final String HIBERNATE_POOL_MIN_SIZE_KEY = "hibernate.c3p0.min_size";
 
-    // Renamed !
+    // Hibernate renamed from c3p0.maxPoolSize !
     public static final String HIBERNATE_POOL_MAX_SIZE_KEY = "hibernate.c3p0.max_size";
 
-    // Renamed !
+    // Hibernate renamed from c3p0.maxIdleTime !
     public static final String HIBERNATE_POOL_MAX_IDLE_TIME_KEY = "hibernate.c3p0.timeout";
 
-    public static final String HIBERNATE_POOL_MAX_STATEMENTS_PER_CONNECTION_KEY = "hibernate.c3p0.maxStatementsPerConnection";
+    public static final String HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY = "hibernate.c3p0.maxStatementsPerConnection";
     public static final String HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY = "hibernate.c3p0.testConnectionOnCheckin";
 
-    // Renamed !
+    // Hibernate renamed from c3p0.idleConnectionTestPeriod !
     public static final String HIBERNATE_POOL_IDLE_CON_TEST_PERIOD_KEY = "hibernate.c3p0.idle_test_period";
+
+    public static final String HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.c3p0.preferredTestQuery";
 
     public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
     public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
@@ -363,12 +365,12 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	}
 
 	if (properties.get(HIBERNATE_POOL_MAX_IDLE_TIME_KEY) == null) {
-	    /* Max idle time of 1 minute as Executors.newCachedThreadPool() returned Pool */
-	    properties.put(HIBERNATE_POOL_MAX_IDLE_TIME_KEY, "60");
+	    /* Max idle time of 14 minutes */
+	    properties.put(HIBERNATE_POOL_MAX_IDLE_TIME_KEY, "840");
 	}
 
-	if (properties.get(HIBERNATE_POOL_MAX_STATEMENTS_PER_CONNECTION_KEY) == null) {
-	    properties.put(HIBERNATE_POOL_MAX_STATEMENTS_PER_CONNECTION_KEY, "30");
+	if (properties.get(HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY) == null) {
+	    properties.put(HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY, "30");
 	}
 
 	if (properties.get(HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY) == null) {

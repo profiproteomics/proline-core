@@ -104,6 +104,17 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	/* Configure c3p0 pool for production environnement */
 	enableC3P0Pool(properties);
 
+	/*
+	 * PostgreSQL JDBC driver version 9.1-901-1.jdbc4 does NOT support Connection.isValid() :
+	 * java.sql.SQLFeatureNotSupportedException: La fonction
+	 * org.postgresql.jdbc4.Jdbc4Connection.isValid(int) n'est pas encore implémentée.
+	 * 
+	 * TODO Remove preferredTestQuery "SELECT 1" trick when PostgreSQL driver support isValid()
+	 */
+	if (properties.get(HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY) == null) {
+	    properties.put(HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY, "SELECT 1");
+	}
+
 	/* Force TCP keepalive on EntityManager connections */
 	if (properties.get(HIBERNATE_CONNECTION_KEEPALIVE_KEY) == null) {
 	    properties.put(HIBERNATE_CONNECTION_KEEPALIVE_KEY, "true");
