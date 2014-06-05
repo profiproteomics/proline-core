@@ -15,7 +15,7 @@
   <dependencies>
 
     <!-- Direct dependencies -->
-    <!-- Logger facade -->
+    <!-- Logger Facade -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -47,10 +47,17 @@
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
 
-    <!-- c3p0 pool for Hibernate (runtime scope) -->
+    <!-- c3p0 Pool for Hibernate (runtime scope) -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-c3p0</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- Latest mchange-commons-java version needed for c3p0 tu use SLF4J Logging Facade -->
+    <dependency>
+      <groupId>com.mchange</groupId>
+      <artifactId>mchange-commons-java</artifactId>
       <scope>runtime</scope>
     </dependency>
 

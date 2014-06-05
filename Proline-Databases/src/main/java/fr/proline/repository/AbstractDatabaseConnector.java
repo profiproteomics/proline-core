@@ -69,7 +69,6 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     private final Object m_connectorLock = new Object();
 
     /* All mutable fields are @GuardedBy("m_connectorLock") */
-
     private Map<Object, Object> m_additionalProperties;
 
     private DataSource m_dataSource;
