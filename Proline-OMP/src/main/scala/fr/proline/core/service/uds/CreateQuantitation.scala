@@ -1,10 +1,8 @@
 package fr.proline.core.service.uds
 
 import java.util.HashSet
-
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.HashMap
-
 import fr.proline.api.service.IService
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.{
@@ -24,6 +22,7 @@ import fr.proline.core.orm.uds.{
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.util.sql.getTimeAsSQLTimestamp
+import com.typesafe.scalalogging.slf4j.Logging
 
 class CreateQuantitation(
   dbManager: IDataStoreConnectorFactory,
@@ -32,7 +31,7 @@ class CreateQuantitation(
   projectId: Long,
   methodId: Long,
   experimentalDesign: ExperimentalDesign
-) extends IService {
+) extends IService with Logging {
 
   private var _udsQuantitation: UdsDataset = null
   def getUdsQuantitation() = _udsQuantitation
@@ -82,26 +81,42 @@ class CreateQuantitation(
     // Store biological samples
     val udsBioSampleByNum = new HashMap[Int, UdsBiologicalSample]
     var bioSampleNum = 0
+    var bioSampleNumFound = false
+    if(biologicalSamples.length>0){
+      if(biologicalSamples(0).number > 0)
+    	  bioSampleNumFound = true
+	  else
+	    logger.warn("Biological Sample Number not specified, use incrementation on iterator !! Hopes it correspond to biological group references. ")
+    }
+      
     for (bioSample <- biologicalSamples) {
       bioSampleNum += 1
 
       val udsBioSample = new UdsBiologicalSample()
-      udsBioSample.setNumber(bioSampleNum)
+      udsBioSample.setNumber(if(bioSampleNumFound) bioSample.number else bioSampleNum)
       udsBioSample.setName(bioSample.name)
       udsBioSample.setDataset(udsQuantitation)
       udsEM.persist(udsBioSample)
 
-      udsBioSampleByNum(bioSampleNum) = udsBioSample
+      udsBioSampleByNum(udsBioSample.getNumber()) = udsBioSample
     }
 
     // Store group setups
     var groupSetupNumber = 0
+    var groupSetupNumberFound = false
+     if(groupSetups.length>0){
+      if(groupSetups(0).number > 0)
+    	  groupSetupNumberFound = true
+	  else
+	    logger.warn("Group number not specified, use incrementation on iterator !! ")
+    }
+    
     for (groupSetup <- groupSetups) {
       groupSetupNumber += 1
 
       // Save group setup
       val udsGroupSetup = new UdsGroupSetup()
-      udsGroupSetup.setNumber(groupSetupNumber)
+      udsGroupSetup.setNumber(if(groupSetupNumberFound)groupSetup.number else groupSetupNumber)
       udsGroupSetup.setName(groupSetup.name)
       udsGroupSetup.setQuantitationDataset(udsQuantitation)
       udsEM.persist(udsGroupSetup)
@@ -116,19 +131,29 @@ class CreateQuantitation(
       // Store biological groups
       val udsBioGroupByNum = new HashMap[Int, UdsBiologicalGroup]
       var bioGroupNumber = 0
+      
+      var bioGroupNumberFound = false
+      if(biologicalGroups.length>0){
+	      if(biologicalGroups(0).number > 0)
+	    	  bioGroupNumberFound = true
+		  else
+		    logger.warn("Biological group number not specified, use incrementation on iterator !! ")
+      }
+    
+      
       for (biologicalGroup <- biologicalGroups) {
         bioGroupNumber += 1
 
         // Store biological group
         val udsBioGroup = new UdsBiologicalGroup()
-        udsBioGroup.setNumber(bioGroupNumber)
+        udsBioGroup.setNumber(if(bioGroupNumberFound) biologicalGroup.number else bioGroupNumber)
         udsBioGroup.setName(biologicalGroup.name)
         udsBioGroup.setGroupSetups(udsGroupSetups)
         udsBioGroup.setQuantitationDataset(udsQuantitation)
         udsEM.persist(udsBioGroup)
 
         // Map the group id by the group number
-        udsBioGroupByNum(bioGroupNumber) = udsBioGroup
+        udsBioGroupByNum(udsBioGroup.getNumber()) = udsBioGroup
 
         // Retrieve the list of biological samples belonging to this biological group
         val sampleNumbers = biologicalGroup.sampleNumbers
@@ -169,14 +194,21 @@ class CreateQuantitation(
 
     // Store fractions
     var fractionNumber = 0
-
+	var fractionNumberFound = false
+	if(masterQuantChannels.length>0){
+		if(masterQuantChannels(0).number > 0)
+			fractionNumberFound = true
+		else
+			logger.warn("Fraction number not specified, use incrementation on iterator !! ")
+	}
+    
     val udsSampleReplicateByKey = new HashMap[String, UdsSampleAnalysis]
     for (masterQuantChannel <- masterQuantChannels) {
       fractionNumber += 1
 
       // Save quantitation fraction
       val udsQf = new UdsMasterQuantitationChannel()
-      udsQf.setNumber(fractionNumber)
+      udsQf.setNumber(if(fractionNumberFound) masterQuantChannel.number else fractionNumber)
       udsQf.setName(masterQuantChannel.name.getOrElse(""))
       udsQf.setDataset(udsQuantitation)
 
@@ -188,7 +220,15 @@ class CreateQuantitation(
 
       val quantChannels = masterQuantChannel.quantChannels
       var quantChannelNum = 0
+      var quantChannelNumFound =false 
+      if(quantChannels.length>0){
+		if(quantChannels(0).number > 0)
+			quantChannelNumFound = true
+		else
+			logger.warn("Quantchannel number not specified, use incrementation on iterator !! ")
+      }
 
+      
       // Iterate over each fraction quant channel
       val replicateNumBySampleNum = new HashMap[Int, Int]
       for (quantChannel <- quantChannels) {
@@ -221,7 +261,7 @@ class CreateQuantitation(
         }
 
         val udsQuantChannel = new UdsQuantChannel()
-        udsQuantChannel.setNumber(quantChannelNum)
+        udsQuantChannel.setNumber(if(quantChannelNumFound) quantChannel.number else quantChannelNum)
         udsQuantChannel.setName("")
         udsQuantChannel.setContextKey(contextKey)
         udsQuantChannel.setIdentResultSummaryId(quantChannel.identResultSummaryId)
