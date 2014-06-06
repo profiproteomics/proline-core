@@ -214,7 +214,7 @@ class SQLRsStorer(
     val proteinMatches = resultSet.proteinMatches
     val acNumbers = proteinMatches map { _.accession }
 
-    logger.info(proteinMatches.length + " ProteinMatches are going to be loaded...")
+    logger.info(proteinMatches.length + " ProteinMatches are going to be stored...")
 
     /*
     // Retrieve protein identifiers from the PDI-DB
