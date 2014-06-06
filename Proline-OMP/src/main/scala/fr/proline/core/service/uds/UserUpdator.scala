@@ -80,10 +80,10 @@ class UserUpdator(
      val jdbcUpdateWork = new JDBCWork() {
       override def execute(con: Connection) {
 
-        val updateUserQuery = "Update user_account set password_hash = ? where password_hash = ? 	"
+        val updateUserQuery = "Update user_account set password_hash = ? where login = ? "
         val pStmt = con.prepareStatement(updateUserQuery)
         pStmt.setString(1, newHashPassword)
-        pStmt.setString(1, oldHashPassword)
+        pStmt.setString(2, name)
         val sqlResult = pStmt.executeUpdate()
         if (sqlResult != 1 ){
            _errorMsg = "Invalid number updated row ("+sqlResult+") !";  
@@ -94,6 +94,7 @@ class UserUpdator(
 
     } // End of jdbcWork anonymous inner class
      
+     udsConnectionCtxt.doWork(jdbcUpdateWork, false)
     if(! _serviceResult)
       return false
     true
