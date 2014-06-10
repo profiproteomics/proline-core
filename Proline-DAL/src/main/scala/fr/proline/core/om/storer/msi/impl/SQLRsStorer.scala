@@ -215,7 +215,7 @@ class SQLRsStorer(
     val acNumbers = proteinMatches map { _.accession }
 
     logger.info(proteinMatches.length + " ProteinMatches are going to be stored...")
-
+ 
     /*
     // Retrieve protein identifiers from the PDI-DB
     // TODO: implementation using JPA !
@@ -272,7 +272,7 @@ class SQLRsStorer(
     print scalar(unknownProteins) ." protein identifiers weren't mapped in the database\n"
     */
 
-    this._updateRsProteinMatches(resultSet, null, null, null, seqDbIdByTmpId)
+    this._updateRsSeqDbProteinMatches(resultSet, null, null, null, seqDbIdByTmpId)
 
     // Store protein matches
     val proteinMatchesCount = this.rsWriter.insertRsProteinMatches(resultSet, msiDb)
@@ -301,10 +301,16 @@ class SQLRsStorer(
     val peptideMatches = resultSet.peptideMatches
     val peptideMatchByTmpId = peptideMatches map { pepMatch => pepMatch.id -> pepMatch } toMap
 
+    // Update RSId of peptide matches
+    this._updateRsPeptideMatches(resultSet)
+
     // Store peptide matches
     val peptideMatchCount = this.rsWriter.insertRsPeptideMatches(resultSet, msiDb)
     logger.info(peptideMatchCount + " peptide matches have been stored !")
 
+    // Update RSId of ProtienMatches
+    this._updateRsProteinMatches(resultSet)
+      
     // Store protein matches
     this.rsWriter.insertRsProteinMatches(resultSet, msiDb)
     logger.info("protein matches have been stored")
@@ -328,7 +334,20 @@ class SQLRsStorer(
 
   }
 
-  private def _updateRsProteinMatches(resultSet: ResultSet,
+  private def _updateRsProteinMatches(resultSet: ResultSet): Unit = {
+
+    // Retrieve some vars
+    val rsId = resultSet.id
+    val proteinMatches = resultSet.proteinMatches
+
+    // Iterate over protein matches
+    for (proteinMatch <- proteinMatches) {
+      proteinMatch.resultSetId = rsId
+
+    }    
+  }
+  
+  private def _updateRsSeqDbProteinMatches(resultSet: ResultSet,
                                       rdbProtBySeq: Map[String, Any],
                                       protIdentsByAc: Map[String, Any],
                                       protNameByTaxonAndId: Map[String, Any],
