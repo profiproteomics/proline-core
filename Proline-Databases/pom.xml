@@ -47,17 +47,18 @@
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
 
-    <!-- c3p0 Pool for Hibernate (runtime scope) -->
+    <!-- C3p0 Pool for Hibernate (runtime scope) -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-c3p0</artifactId>
       <scope>runtime</scope>
     </dependency>
 
-    <!-- Latest mchange-commons-java version needed for c3p0 tu use SLF4J Logging Facade -->
+    <!-- Explicit c3p0 latest version to use mchange-commons-java compatible with SLF4J -->
     <dependency>
       <groupId>com.mchange</groupId>
-      <artifactId>mchange-commons-java</artifactId>
+      <artifactId>c3p0</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
       <scope>runtime</scope>
     </dependency>
 
