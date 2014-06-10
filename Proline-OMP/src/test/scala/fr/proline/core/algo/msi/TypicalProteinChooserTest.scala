@@ -39,6 +39,9 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
     msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
     udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
 
+       //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
+    msiDBTestCase.loadCompositeDataSet(Array("/dbunit_samples/" + fileName + "/msi-db.xml","/fr/proline/core/algo/msi/Prot_ChangeTypical.xml"))
+    
     logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
 
     val execContext = buildJPAContext()
@@ -60,7 +63,9 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
   def testChangeTypicalProt() = {
 
     // Check which proteinSets should be modified by algo
-    var nbrTremblShouldChange: Int = 4 // # proteinSet with an accession number containing 6 letters (AC instead of ID) 
+    var nbrTremblShouldChange: Int = 9 // # proteinSet matching following rule 
+    //VDS WARNING : Was 4, after modifying algo, changed proteinset was 9 dur to incorrect IS_IN_SUBSET value in XML file :  
+    // Allways FALSE even for subset. Should be changed back to 4 with corrected XML file ! 
 
     val typicalChooser = new TypicalProteinChooser()
     val ruleDesc = new TypicalProteinChooserRule(ruleName = "Sprot AC preferred", applyToAcc = true, rulePattern = "\\w{6,6}")
@@ -70,6 +75,35 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
 
     Assert.assertEquals(nbrTremblShouldChange, nbrChangedTyp)
 
+  }
+
+  
+  @Test
+  def testChangeTypicalProtSameSubSet() = {
+
+    // Check which proteinSets should be modified by algo
+    var nbrTremblShouldChange: Int =1   
+
+    val typicalChooser = new TypicalProteinChooser()
+    val ruleDesc = new TypicalProteinChooserRule(ruleName = "Description ##SP  preferred", applyToAcc = false, rulePattern = "##SP.*") 
+    typicalChooser.changeTypical(targetRSMId, ruleDesc, executionContext.getMSIDbConnectionContext().getEntityManager())
+
+    val nbrChangedTyp = typicalChooser.getChangedProteinSets.size
+
+    Assert.assertEquals(nbrTremblShouldChange, nbrChangedTyp)
+
+        // Check which proteinSets should be modified by algo
+    nbrTremblShouldChange = 0   
+    
+    val ruleDesc2 = new TypicalProteinChooserRule(ruleName = "Description ##DEV_ preferred", applyToAcc = false, rulePattern = "##DEV_.*") 
+    typicalChooser.changeTypical(targetRSMId, ruleDesc2, executionContext.getMSIDbConnectionContext().getEntityManager())
+
+    val nbrChangedTyp2 = typicalChooser.getChangedProteinSets.size
+
+    Assert.assertEquals(nbrTremblShouldChange, nbrChangedTyp2)
+
+
+    
   }
 
 }

@@ -23,9 +23,8 @@ class TypicalProteinChooser () extends Logging {
     var modifiedProtSet = Seq.newBuilder[fr.proline.core.orm.msi.ProteinSet]
     ormProtSetRSM.foreach(protSet => {
       
-    	val associatedProtMatchesById  = protSet.getProteinSetProteinMatchItems().map(pspmi => { pspmi.getProteinMatch().getId() -> pspmi.getProteinMatch()}).toMap
-    	var currentTypical =associatedProtMatchesById(protSet.getProteinMatchId())
-    	val nbrPepCountSameSet = currentTypical.getPeptideCount()
+    	val associatedSameSetProtMatchesById  = protSet.getProteinSetProteinMatchItems().filter(!_.getIsInSubset()).map(pspmi => { pspmi.getProteinMatch().getId() -> pspmi.getProteinMatch()}).toMap
+    	var currentTypical =associatedSameSetProtMatchesById(protSet.getProteinMatchId())
     	
     	var newTypical = currentTypical
     	    	
@@ -34,14 +33,12 @@ class TypicalProteinChooser () extends Logging {
     	  if( typValueToTest =~ ruleToApply.rulePattern){
 			break
 		   }
-    		associatedProtMatchesById.foreach(entry  => {
-    		  if(entry._2.getPeptideCount().equals(nbrPepCountSameSet)){    		  
-    		    val valueToTest : String = if(ruleToApply.applyToAcc) entry._2.getAccession() else entry._2.getDescription()
+    		associatedSameSetProtMatchesById.foreach(entry  => {   		  
+    			val valueToTest : String = if(ruleToApply.applyToAcc) entry._2.getAccession() else entry._2.getDescription()
     			if( valueToTest =~ ruleToApply.rulePattern){
     				newTypical = entry._2
     				break
-    			}
-    		  }
+    			}    		  
     		})
     	}
     	
@@ -58,7 +55,6 @@ class TypicalProteinChooser () extends Logging {
   }
   
   def getChangedProteinSets = {modifiedProteinSets}
-  
   
 }
 
