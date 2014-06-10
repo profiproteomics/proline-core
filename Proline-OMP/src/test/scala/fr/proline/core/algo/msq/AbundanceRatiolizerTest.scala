@@ -1,11 +1,14 @@
 package fr.proline.core.algo.msq
 
-import org.junit.Assert._
-import org.junit.Test
+import scala.Array.canBuildFrom
 import scala.io.Source
-import fr.proline.util.math.getMedianObject
 
-@Test
+import org.junit.Assert.assertEquals
+import org.junit.Ignore
+import org.junit.Test
+
+//@Test
+@Ignore
 class AbundanceRatiolizerTest {
   
   @Test
