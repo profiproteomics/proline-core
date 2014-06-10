@@ -221,7 +221,7 @@ case class ProteinSet (
    
   /**
    * Return a list of all ProteinMatch ids, identified as same set or sub set of this ProteinSet, 
-   * referenced by their PeptideSet.
+   * referenced by their PeptideSet. SubsumableSubsets are not taken into account !
    * If PeptideSet are not accessible, a IllegalAccessException will be thrown. 
    *	
    */
@@ -243,11 +243,11 @@ case class ProteinSet (
         resultMapBuilder += pepSet -> pepSet.proteinMatchIds
       })
     }
-    if (peptideSet.hasSubsumableSubset) {
-      peptideSet.subsumableSubsets.get.foreach(pepSet => {
-        resultMapBuilder += pepSet -> pepSet.proteinMatchIds
-      })
-    }
+//    if (peptideSet.hasSubsumableSubset) {
+//      peptideSet.subsumableSubsets.get.foreach(pepSet => {
+//        resultMapBuilder += pepSet -> pepSet.proteinMatchIds
+//      })
+//    }
     
     resultMapBuilder.result
   }
