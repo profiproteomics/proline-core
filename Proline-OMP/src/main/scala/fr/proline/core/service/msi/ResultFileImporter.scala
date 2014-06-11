@@ -1,9 +1,7 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
@@ -26,6 +24,7 @@ import fr.proline.core.om.storer.msi.ResultFileStorer
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
+import fr.proline.core.om.model.msi.IResultFile
 
 class ResultFileImporter(
   executionContext: IExecutionContext,
@@ -59,6 +58,8 @@ class ResultFileImporter(
     var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
 
+    var resultFile: IResultFile = null
+
     try {
 
       // Check if a transaction is already initiated
@@ -75,7 +76,7 @@ class ResultFileImporter(
       val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
       // Open the result file
-      val resultFile = rfProvider.get.getResultFile(resultIdentFile, importerProperties, parserContext)
+      resultFile = rfProvider.get.getResultFile(resultIdentFile, importerProperties, parserContext)
       >>>
 
       // --- Configure result file before parsing ---
@@ -125,6 +126,17 @@ class ResultFileImporter(
 
       msiTransacOk = true
     } finally {
+
+      if (resultFile != null) {
+        logger.debug("Closing ResultFile from ResultFileImporter service")
+
+        try {
+          resultFile.close()
+        } catch {
+          case ex: Exception => logger.error("Error closing resultFile", ex)
+        }
+
+      }
 
       if (storerContext != null) {
         storerContext.clearContext()
