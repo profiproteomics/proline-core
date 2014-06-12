@@ -52,7 +52,7 @@ public class UserAccountTest extends DatabaseTestCase {
 	try {
 	    UserAccount account = new UserAccount();
 	    account.setLogin("bruley");
-	    account.setPassword("bruley");
+	    account.setPasswordHash("bruley");
 	    account.setCreationMode("manual");
 	    
 	    udsEm.getTransaction().begin();
@@ -63,7 +63,7 @@ public class UserAccountTest extends DatabaseTestCase {
 		    query.setParameter("login", "bruley");
 		    UserAccount account1 = query.getSingleResult();
 		    assertNotNull(account1);
-		    assertNotNull(account1.getPassword());    
+		    assertNotNull(account1.getPasswordHash());    
 		    
 	    udsEm.getTransaction().commit();
 	    
@@ -94,7 +94,7 @@ public class UserAccountTest extends DatabaseTestCase {
 	    query.setParameter("login", "joe");
 	    UserAccount account = query.getSingleResult();
 	    assertNotNull(account);
-	    assertNotNull(account.getPassword());	    
+	    assertNotNull(account.getPasswordHash());	    
 	    List<Project> ownedProjects = ProjectRepository.findOwnedProjects(udsEm, account.getId());
 	    assertEquals(ownedProjects.size(), 1);
 	} finally {
@@ -123,9 +123,9 @@ public class UserAccountTest extends DatabaseTestCase {
 	    query.setParameter("login", "joe");
 	    UserAccount account = query.getSingleResult();
 	    assertNotNull(account);
-	    assertNotNull(account.getPassword());
+	    assertNotNull(account.getPasswordHash());
 //	    LOG.debug("getPassword  MD5"+getHashFor("myPasswd","SHA-256"));
-	    assertEquals(getHashFor("proline_pswd","SHA-256"), account.getPassword());
+	    assertEquals(getHashFor("proline_pswd","SHA-256"), account.getPasswordHash());
 	    List<Project> ownedProjects = ProjectRepository.findOwnedProjects(udsEm, account.getId());
 	    assertEquals(ownedProjects.size(), 1);
 	} finally {

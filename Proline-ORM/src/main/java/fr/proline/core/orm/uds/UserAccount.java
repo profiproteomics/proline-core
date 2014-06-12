@@ -30,7 +30,7 @@ public class UserAccount implements Serializable {
     private String login;
     
     @Column(name = "password_hash")
-    private String hashPassword;
+    private String passwordHash;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -62,12 +62,12 @@ public class UserAccount implements Serializable {
 	this.login = login;
     }
 
-    public String getPassword() {
-	return this.hashPassword;
+    public String getPasswordHash() {
+	return this.passwordHash;
     }
 
-    public void setPassword(String password) {
-	this.hashPassword = password;
+    public void setPasswordHash(String passwordHash) {
+	this.passwordHash = passwordHash;
     }
     
     public String getSerializedProperties() {

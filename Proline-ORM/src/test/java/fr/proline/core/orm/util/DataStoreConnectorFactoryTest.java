@@ -85,7 +85,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
 	    /* Create a TEST Project */
 	    final UserAccount projectOwner = new UserAccount();
-	    projectOwner.setPassword("notEncryptedPassword");
+	    projectOwner.setPasswordHash("notEncryptedPassword");
 	    projectOwner.setCreationMode("manual");
 	    projectOwner.setLogin("Bob");
 
