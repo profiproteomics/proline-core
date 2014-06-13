@@ -128,7 +128,6 @@ class ResultFileImporter(
     } finally {
 
       if (resultFile != null) {
-        logger.debug("Closing ResultFile from ResultFileImporter service")
 
         try {
           resultFile.close()
