@@ -309,7 +309,7 @@ public class DatabaseConnectionContext implements Closeable {
 		if (getDriverType() == DriverType.SQLITE) {
 		    // FIXME Rollback is not useful for SQLite and has locking issue
 		    // http://www.sqlite.org/lang_transaction.html
-		    LOG.warn("Rollbacking Transaction with SQLITE DataBase does NOTHING");
+		    LOG.warn("Rollbacking Transaction with SQLITE Database does NOTHING");
 		} else {
 		    getConnection().rollback();
 		}
@@ -324,9 +324,11 @@ public class DatabaseConnectionContext implements Closeable {
      * Closes wrapped SQL JDBC Connection and/or JPA EntityManager.
      */
     public void close() {
+	/* Regular way to close a Db Connection Context */
 	doClose(false);
     }
 
+    // TODO LMN Remove finalize() implementation when all Db Connections are closed correctly in Proline
     @Override
     protected void finalize() throws Throwable {
 
@@ -336,8 +338,7 @@ public class DatabaseConnectionContext implements Closeable {
 		/* It is not the regular way to close a Db Connection Context ! Just the last security */
 		doClose(true);
 	    } catch (Exception ex) {
-		LOG.error("Error closing " + getProlineDatabaseTypeString() + " DatabaseConnectionContext",
-			ex);
+		LOG.error("Error closing " + getProlineDatabaseTypeString() + " Context", ex);
 	    }
 
 	} finally {
@@ -536,7 +537,7 @@ public class DatabaseConnectionContext implements Closeable {
 
 		if (fromFinalize) {
 		    LOG.warn(
-			    "Trying to close ORPHAN {} DatabaseConnectionContext fom finalize\n"
+			    "Trying to close ORPHAN {} Context from finalize\n"
 				    + "Can generate Exceptions if SQL Connection or EntityManager is already closed !",
 			    prolineDbType);
 		}
