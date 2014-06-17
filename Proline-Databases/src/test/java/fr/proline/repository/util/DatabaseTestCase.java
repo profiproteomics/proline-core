@@ -210,15 +210,15 @@ public abstract class DatabaseTestCase {
     }
 
     /* Private methods */
-    private void doTearDown(final boolean finalizing) {
+    private void doTearDown(final boolean fromFinalize) {
 
 	synchronized (m_testCaseLock) {
 
 	    if (!m_toreDown) { // Close only once
 		m_toreDown = true;
 
-		if (finalizing) {
-		    LOG.warn("Tearing down " + getProlineDatabaseTypeString() + " TestCase in finalize !",
+		if (fromFinalize) {
+		    LOG.warn("Tearing down " + getProlineDatabaseTypeString() + " TestCase from finalize !",
 			    m_fakeException);
 		}
 

@@ -47,7 +47,7 @@ class AbstractMultipleDBTestCase extends Logging {
       msiDBTestCase.initDatabase()
 
       dsConnectorFactoryForTest = new DataStoreConnectorFactoryForTest(udsDBTestCase.getConnector, pdiDBTestCase.getConnector, psDBTestCase.getConnector, msiDBTestCase.getConnector, null, false)
-      
+
       SQLPeptideProvider.clear() // Clear peptide cache between tests
     } // End of synchronized block on m_testCaseLock
 
@@ -68,15 +68,15 @@ class AbstractMultipleDBTestCase extends Logging {
   }
 
   /* Private methods */
-  def doTearDown(finalizing: Boolean) = {
+  def doTearDown(fromFinalize: Boolean) = {
 
     m_testCaseLock.synchronized {
 
       if (!m_toreDown) {
         m_toreDown = true
 
-        if (finalizing) {
-          logger.warn("Tearing down MultipleDBTestCase in finalize !", m_fakeException)
+        if (fromFinalize) {
+          logger.warn("Tearing down MultipleDBTestCase from finalize !", m_fakeException)
         }
 
         if (msiDBTestCase != null) {
@@ -98,7 +98,7 @@ class AbstractMultipleDBTestCase extends Logging {
           logger.debug("Closing UDS Db TestCase")
           udsDBTestCase.tearDown()
         }
-        
+
         SQLPeptideProvider.clear() // Clear peptide cache between tests
 
         logger.info("All Database TestCases closed successfully")

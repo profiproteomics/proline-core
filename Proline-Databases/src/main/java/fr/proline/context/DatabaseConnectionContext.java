@@ -189,7 +189,9 @@ public class DatabaseConnectionContext implements Closeable {
 	    }
 
 	    if (isJPA()) {
-		result = getEntityManager().getTransaction().isActive();
+		final EntityTransaction currentTransaction = getEntityManager().getTransaction();
+
+		result = ((currentTransaction != null) && currentTransaction.isActive());
 	    } else {
 		final Connection contextConnection = getConnection();
 
@@ -331,7 +333,8 @@ public class DatabaseConnectionContext implements Closeable {
 	try {
 
 	    try {
-		doClose(true); // Don't try this at home, it's bad...
+		/* It is not the regular way to close a Db Connection Context ! Just the last security */
+		doClose(true);
 	    } catch (Exception ex) {
 		LOG.error("Error closing " + getProlineDatabaseTypeString() + " DatabaseConnectionContext",
 			ex);
@@ -532,8 +535,9 @@ public class DatabaseConnectionContext implements Closeable {
 		final String prolineDbType = getProlineDatabaseTypeString();
 
 		if (fromFinalize) {
-		    LOG.error(
-			    "ORPHAN DatabaseConnectionContext\n\nForce closing {} DatabaseConnectionContext from finalize\n",
+		    LOG.warn(
+			    "Trying to close ORPHAN {} DatabaseConnectionContext fom finalize\n"
+				    + "Can generate Exceptions if SQL Connection or EntityManager is already closed !",
 			    prolineDbType);
 		}
 
@@ -554,7 +558,8 @@ public class DatabaseConnectionContext implements Closeable {
 			final EntityTransaction currentTransaction = m_entityManager.getTransaction();
 
 			if ((currentTransaction != null) && currentTransaction.isActive()) {
-			    LOG.info("{} Rollback EntityTransaction from DatabaseConnectionContext.close()",
+			    LOG.info(
+				    "{} Rollback EntityTransaction from DatabaseConnectionContext.doClose()",
 				    prolineDbType);
 
 			    try {
