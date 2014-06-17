@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -321,33 +322,24 @@ public class DatabaseConnectionContext implements Closeable {
      * Closes wrapped SQL JDBC Connection and/or JPA EntityManager.
      */
     public void close() {
+	doClose(false);
+    }
 
-	synchronized (m_contextLock) {
+    @Override
+    protected void finalize() throws Throwable {
 
-	    if (!m_closed) { // Close only once
-		m_closed = true;
+	try {
 
-		if (m_connection != null) {
-		    try {
-			m_connection.close();
-		    } catch (SQLException exClose) {
-			LOG.error("Error closing DatabaseConnectionContext SQL Connection for "
-				+ getProlineDatabaseTypeString(), exClose);
-		    }
-		}
+	    try {
+		doClose(true); // Don't try this at home, it's bad...
+	    } catch (Exception ex) {
+		LOG.error("Error closing " + getProlineDatabaseTypeString() + " DatabaseConnectionContext",
+			ex);
+	    }
 
-		if (m_entityManager != null) {
-		    try {
-			m_entityManager.close();
-		    } catch (Exception exClose) {
-			LOG.error("Error closing DatabaseConnectionContext EntityManager for "
-				+ getProlineDatabaseTypeString(), exClose);
-		    }
-		}
-
-	    } // End if (context is not already closed)
-
-	} // End of synchronized block on m_contextLock
+	} finally {
+	    super.finalize();
+	}
 
     }
 
@@ -528,6 +520,70 @@ public class DatabaseConnectionContext implements Closeable {
 	}
 
 	return result;
+    }
+
+    private void doClose(final boolean fromFinalize) {
+
+	synchronized (m_contextLock) {
+
+	    if (!m_closed) { // Close only once
+		m_closed = true;
+
+		final String prolineDbType = getProlineDatabaseTypeString();
+
+		if (fromFinalize) {
+		    LOG.error(
+			    "ORPHAN DatabaseConnectionContext\n\nForce closing {} DatabaseConnectionContext from finalize\n",
+			    prolineDbType);
+		}
+
+		if (m_connection != null) {
+		    try {
+			m_connection.close();
+		    } catch (SQLException exClose) {
+			LOG.error("Error closing DatabaseConnectionContext SQL Connection for "
+				+ prolineDbType, exClose);
+		    }
+		} // End if (m_connection is not null)
+
+		if (m_entityManager != null) {
+
+		    /* Paranoiac rollback then close */
+
+		    try {
+			final EntityTransaction currentTransaction = m_entityManager.getTransaction();
+
+			if ((currentTransaction != null) && currentTransaction.isActive()) {
+			    LOG.info("{} Rollback EntityTransaction from DatabaseConnectionContext.close()",
+				    prolineDbType);
+
+			    try {
+				currentTransaction.rollback();
+			    } catch (Exception ex) {
+				LOG.error(
+					"Error rollbacking DatabaseConnectionContext EntityTransaction for "
+						+ prolineDbType, ex);
+			    }
+
+			}
+
+		    } finally {
+
+			try {
+			    m_entityManager.close();
+			} catch (Exception exClose) {
+			    LOG.error("Error closing DatabaseConnectionContext EntityManager for "
+				    + prolineDbType, exClose);
+			}
+
+		    }
+
+		} // End if (m_entityManager is not null)
+
+	    } // End if (context is not already closed)
+
+	} // End of synchronized block on m_contextLock
+
     }
 
     private static String formatTransactionIsolationLevel(final int transactionIsolationLevel) {
