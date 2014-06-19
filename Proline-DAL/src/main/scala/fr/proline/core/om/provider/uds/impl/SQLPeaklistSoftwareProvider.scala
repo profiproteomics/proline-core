@@ -8,7 +8,7 @@ import fr.proline.core.dal.tables.uds.UdsDbPeaklistSoftwareTable
 import fr.proline.core.dal.tables.uds.UdsDbSpecTitleParsingRuleTable    
 import fr.proline.core.om.model.msi.{PeaklistSoftware,SpectrumTitleParsingRule}
 import fr.proline.core.om.provider.uds.IPeaklistSoftwareProvider
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
  
 // TODO: use Select Query builder
 class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) extends IPeaklistSoftwareProvider {

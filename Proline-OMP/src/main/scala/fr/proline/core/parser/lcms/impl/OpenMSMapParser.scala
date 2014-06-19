@@ -10,7 +10,7 @@ import scala.collection.immutable.HashMap
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 import fr.proline.core.parser.lcms.ExtraParameters
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 object OpenMSMapParser {
   val targetLabel = "feature"

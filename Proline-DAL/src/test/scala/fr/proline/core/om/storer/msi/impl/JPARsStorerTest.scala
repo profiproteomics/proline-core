@@ -14,9 +14,9 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import fr.proline.repository.DriverType
-import fr.proline.util.MathUtils.EPSILON_HIGH_PRECISION
-import fr.proline.util.MathUtils.EPSILON_LOW_PRECISION
-import fr.proline.util.StringUtils
+import fr.profi.util.MathUtils.EPSILON_HIGH_PRECISION
+import fr.profi.util.MathUtils.EPSILON_LOW_PRECISION
+import fr.profi.util.StringUtils
 import fr.proline.context.DatabaseConnectionContext
 
 @Test

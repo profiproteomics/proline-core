@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msq.MasterQuantPeptideIonProperties
 import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.om.provider.msq.IMasterQuantPeptideIonProvider
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 import scala.collection.mutable.ArrayBuffer
 
 class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) extends IMasterQuantPeptideIonProvider {

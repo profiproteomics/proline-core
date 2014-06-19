@@ -8,8 +8,8 @@ import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.util.StringUtils
-import fr.proline.util.primitives.toDouble
+import fr.profi.util.StringUtils
+import fr.profi.util.primitives.toDouble
 import fr.proline.core.om.model.msi.ResultSet
 
 object FilterPropertyKeys {

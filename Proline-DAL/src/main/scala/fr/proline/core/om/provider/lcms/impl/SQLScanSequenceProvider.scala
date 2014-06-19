@@ -10,8 +10,8 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.lcms.{ LcmsDbScanSequenceTable, LcmsDbScanTable }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IScanSequenceProvider
-import fr.proline.util.sql._
-import fr.proline.util.primitives._
+import fr.profi.util.sql._
+import fr.profi.util.primitives._
 
 class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends IScanSequenceProvider {
   

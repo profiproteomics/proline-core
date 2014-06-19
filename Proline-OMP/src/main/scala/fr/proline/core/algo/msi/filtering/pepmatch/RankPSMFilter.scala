@@ -5,7 +5,7 @@ import scala.collection.Seq
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 object RankPSMFilter {
   
   val scoreTol = 0.1f

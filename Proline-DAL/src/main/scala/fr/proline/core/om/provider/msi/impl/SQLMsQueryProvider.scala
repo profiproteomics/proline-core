@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.MsQueryProperties
 import fr.proline.core.om.provider.msi.IMsQueryProvider
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable

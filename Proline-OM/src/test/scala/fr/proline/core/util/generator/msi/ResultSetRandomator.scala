@@ -1,7 +1,7 @@
 package fr.proline.core.util.generator.msi
 
 import scala.util.Random
-import fr.proline.util.random._
+import fr.profi.util.random._
 
 object ResultSetRandomator {
   

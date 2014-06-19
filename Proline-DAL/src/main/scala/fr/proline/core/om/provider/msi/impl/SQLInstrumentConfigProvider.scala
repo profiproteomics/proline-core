@@ -6,8 +6,8 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.om.model.msi.{Instrument,InstrumentConfig,InstrumentProperties,InstrumentConfigProperties}
 import fr.proline.core.om.provider.msi.IInstrumentConfigProvider
-import fr.proline.util.StringUtils
-import fr.proline.util.primitives._
+import fr.profi.util.StringUtils
+import fr.profi.util.primitives._
     
 class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) extends IInstrumentConfigProvider {
   

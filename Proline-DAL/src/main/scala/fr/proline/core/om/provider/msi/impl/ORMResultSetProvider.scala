@@ -13,10 +13,10 @@ import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.ResultSet.Type
 import fr.proline.core.orm.msi.repository.{ MsiSeqDatabaseRepository => seqDatabaseRepo, PeptideMatchRepository => peptideMatchRepo, ProteinMatchRepository => proteinMatchRepo, ScoringRepository => scoringRepo, SequenceMatchRepository => sequenceMatchRepo }
 import fr.proline.repository.util.JPAUtils
-import fr.proline.util.StringUtils
+import fr.profi.util.StringUtils
 import javax.persistence.EntityManager
 
-import fr.proline.core.utils.ResidueUtils._
+import fr.proline.core.util.ResidueUtils._
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,

@@ -7,7 +7,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
-import fr.proline.util.ThreadLogger
+import fr.profi.util.ThreadLogger
 
 object ContextFactory extends Logging {
 

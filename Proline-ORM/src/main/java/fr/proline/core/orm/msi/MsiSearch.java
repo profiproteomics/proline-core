@@ -19,7 +19,7 @@ import javax.persistence.Table;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * The persistent class for the msi_search database table.

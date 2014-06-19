@@ -13,7 +13,7 @@ import fr.proline.core.om.model.lcms.PeakPickingSoftware
 import fr.proline.core.om.model.lcms.RawFile
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.storer.lcms.impl.SQLScanSequenceStorer
-import fr.proline.util.StringUtils
+import fr.profi.util.StringUtils
 
 /*trait String2FileConverter {
   implicit def string2File(filename:String) = new File(filename)

@@ -1,6 +1,6 @@
 package fr.proline.core.orm.pdi;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public enum Alphabet {
 

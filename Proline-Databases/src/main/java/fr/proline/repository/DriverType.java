@@ -1,6 +1,6 @@
 package fr.proline.repository;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public enum DriverType {
 

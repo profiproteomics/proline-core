@@ -26,7 +26,7 @@ import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.ConnectionMode;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * The persistent class for the external_db database table.

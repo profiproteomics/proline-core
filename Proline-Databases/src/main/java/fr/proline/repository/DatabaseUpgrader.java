@@ -1,6 +1,6 @@
 package fr.proline.repository;
 
-import static fr.proline.util.StringUtils.LINE_SEPARATOR;
+import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +23,8 @@ import com.googlecode.flyway.core.api.MigrationState;
 import com.googlecode.flyway.core.api.MigrationType;
 import com.googlecode.flyway.core.api.MigrationVersion;
 
-import fr.proline.util.SQLUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.SQLUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * This class contains utilities to upgrade a Database schema with Flyway (H2, POSTGRESQL) or to initialize a
@@ -106,6 +106,14 @@ public final class DatabaseUpgrader {
 		migrationsCount = upgradeSQLiteDb(connector, migrationScriptsLocation);
 	    } else {
 		final Flyway flyway = new Flyway();
+
+		/*// Set SCHEMA_VERSION table name to upper case for H2 driver
+		if (connector.getDriverType() == DriverType.H2) {
+			Properties flywayProps = new Properties();
+			flywayProps.setProperty("flyway.table", "SCHEMA_VERSION");
+			flyway.configure(flywayProps);
+		}
+		*/
 
 		flyway.setLocations(migrationScriptsLocation);
 		flyway.setDataSource(connector.getDataSource());

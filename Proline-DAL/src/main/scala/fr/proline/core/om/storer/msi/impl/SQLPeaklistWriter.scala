@@ -15,7 +15,7 @@ import fr.proline.core.om.model.msi.Peaklist
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.storer.msi.IPeaklistWriter
 import fr.proline.repository.util.JDBCWork
-import fr.proline.util.bytes._
+import fr.profi.util.bytes._
 
 object SQLPeaklistWriter extends AbstractSQLPeaklistWriter
 

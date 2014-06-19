@@ -9,7 +9,7 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSetProperties
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.storer.msi.impl.SQLMsiSearchWriter
-import fr.proline.util.StringUtils
+import fr.profi.util.StringUtils
 import fr.proline.core.om.model.msi.PeptideMatch
 
 /**

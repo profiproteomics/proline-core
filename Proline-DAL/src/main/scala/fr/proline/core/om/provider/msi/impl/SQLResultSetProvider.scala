@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.util.misc.MapIfNotNull
+import fr.profi.util.misc.MapIfNotNull
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
@@ -35,7 +35,7 @@ trait SQLResultSetLoader extends Logging {
     pepMatches: Array[PeptideMatch],
     protMatches: Array[ProteinMatch]): Array[ResultSet] = {
 
-    import fr.proline.util.primitives._
+    import fr.profi.util.primitives._
 
     // Build some maps
     val pepMatchesByRsId = pepMatches.groupBy(_.resultSetId)

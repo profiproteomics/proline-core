@@ -6,7 +6,7 @@ import scala.util.control.Breaks._
 import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.lcms._
-import fr.proline.util.random._
+import fr.profi.util.random._
 
 /**
  * Utility class to generate a faked RawMap.

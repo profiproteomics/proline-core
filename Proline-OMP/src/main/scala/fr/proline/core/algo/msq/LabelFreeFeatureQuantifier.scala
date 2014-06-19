@@ -11,7 +11,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.util.ms._
+import fr.profi.util.ms._
 
 /**
  * @author David Bouyssie

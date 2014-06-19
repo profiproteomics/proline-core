@@ -10,7 +10,7 @@ import javax.persistence.TypedQuery;
 import fr.proline.core.orm.pdi.SequenceDbConfig;
 import fr.proline.core.orm.pdi.SequenceDbInstance;
 import fr.proline.repository.util.JPAUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public final class PdiSeqDatabaseRepository {
 

@@ -7,7 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQuery;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * The persistent class for the enzyme database table.

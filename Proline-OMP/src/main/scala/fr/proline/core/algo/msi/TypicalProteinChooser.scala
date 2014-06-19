@@ -4,7 +4,7 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 import fr.proline.context.IExecutionContext
-import fr.proline.util.regex.RegexUtils._
+import fr.profi.util.regex.RegexUtils._
 import fr.proline.core.orm.msi.ProteinMatch
 import com.typesafe.scalalogging.slf4j.Logging
 import javax.persistence.EntityManager

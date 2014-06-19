@@ -4,7 +4,7 @@ import scala.collection.mutable.{ ArrayBuffer, HashMap, HashSet }
 import fr.proline.core.om.model.msi._
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.util.StringUtils.isEmpty
+import fr.profi.util.StringUtils.isEmpty
 
 object AdditionMode extends Enumeration {
   type AdditionMode = Value

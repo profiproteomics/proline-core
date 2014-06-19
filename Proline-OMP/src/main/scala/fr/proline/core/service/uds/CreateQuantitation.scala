@@ -21,7 +21,7 @@ import fr.proline.core.orm.uds.{
 }
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.util.sql.getTimeAsSQLTimestamp
+import fr.profi.util.sql.getTimeAsSQLTimestamp
 import com.typesafe.scalalogging.slf4j.Logging
 
 class CreateQuantitation(

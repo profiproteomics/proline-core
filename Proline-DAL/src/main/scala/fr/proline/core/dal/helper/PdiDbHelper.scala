@@ -1,7 +1,7 @@
 package fr.proline.core.dal.helper
 
 import fr.profi.jdbc.SQLQueryExecution
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class PdiDbHelper( sqlExec: SQLQueryExecution ) {
   

@@ -15,9 +15,9 @@ import fr.proline.core.orm.ps.{
   PtmEvidence => PsPtmEvidence,
   PtmSpecificity => PsPtmSpecificity
 }
-import fr.proline.util.{ MathUtils, StringUtils }
+import fr.profi.util.{ MathUtils, StringUtils }
 
-import fr.proline.core.utils.ResidueUtils._
+import fr.proline.core.util.ResidueUtils._
 
 /**
  * @author David Bouyssie

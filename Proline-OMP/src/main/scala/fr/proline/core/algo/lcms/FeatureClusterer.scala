@@ -3,8 +3,8 @@ package fr.proline.core.algo.lcms
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.lcms._
-import fr.proline.util.ms._
-import fr.proline.util.math.getMedianObject
+import fr.profi.util.ms._
+import fr.profi.util.math.getMedianObject
 
 
 object ClusterIntensityComputation extends Enumeration {

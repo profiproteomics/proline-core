@@ -22,7 +22,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * The persistent class for the peptide_match database table.

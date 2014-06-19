@@ -4,7 +4,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import scala.collection.Seq
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.filtering._
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFilter with IPeptideMatchSorter {
   

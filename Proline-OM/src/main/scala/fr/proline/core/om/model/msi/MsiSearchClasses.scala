@@ -4,7 +4,7 @@ import java.util.Date
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.misc.InMemoryIdGen
   
 object MSISearch extends InMemoryIdGen
 

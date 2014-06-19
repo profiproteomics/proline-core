@@ -1,4 +1,4 @@
-package fr.proline.core.om.utils
+package fr.proline.core.om.util
 
 import scala.collection.mutable.HashMap
 import fr.proline.core.orm.pdi.SequenceDbInstance

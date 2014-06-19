@@ -14,8 +14,8 @@ import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.util.primitives._
-import fr.proline.util.StringUtils
+import fr.profi.util.primitives._
+import fr.profi.util.StringUtils
 
 object SQLPeptideProvider extends Logging {
 

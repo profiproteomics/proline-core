@@ -2,7 +2,7 @@ package fr.proline.core.util.generator.lcms
 
 import scala.util.Random
 import fr.proline.core.om.model.lcms.Feature
-import fr.proline.util.random._
+import fr.profi.util.random._
 
 /**
  * Utility object containing helper functions for the generation a faked RawMap.

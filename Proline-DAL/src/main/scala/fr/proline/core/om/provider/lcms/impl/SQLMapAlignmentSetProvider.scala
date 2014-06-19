@@ -10,7 +10,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.lcms.LcmsDbMapAlignmentTable
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IMapAlignmentSetProvider
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class SQLMapAlignmentSetProvider( val lcmsDbCtx: DatabaseConnectionContext ) extends IMapAlignmentSetProvider {
   

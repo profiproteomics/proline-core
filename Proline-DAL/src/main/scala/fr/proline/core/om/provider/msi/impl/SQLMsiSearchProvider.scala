@@ -13,8 +13,8 @@ import fr.proline.core.dal.tables.uds.UdsDbInstrumentTable
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IMSISearchProvider
-import fr.proline.util.primitives._
-import fr.proline.util.sql.StringOrBoolAsBool._
+import fr.profi.util.primitives._
+import fr.profi.util.sql.StringOrBoolAsBool._
 import fr.proline.core.dal.tables.uds.UdsDbEnzymeColumns
 import fr.proline.core.dal.tables.uds.UdsDbEnzymeTable
 import fr.proline.core.dal.tables.uds.UdsDbEnzymeCleavageColumns

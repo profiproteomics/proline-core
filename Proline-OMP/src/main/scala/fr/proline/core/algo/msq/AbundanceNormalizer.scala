@@ -1,8 +1,8 @@
 package fr.proline.core.algo.msq
 
-import fr.proline.util.math.median
+import fr.profi.util.math.median
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.util.primitives.isZeroOrNaN
+import fr.profi.util.primitives.isZeroOrNaN
 
 // Note: by convention the first column is taken as the reference
 object AbundanceNormalizer {

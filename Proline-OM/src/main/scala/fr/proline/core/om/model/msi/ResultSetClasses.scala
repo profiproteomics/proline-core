@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.misc.InMemoryIdGen
 import com.typesafe.scalalogging.slf4j.Logging
 
 object ResultSet extends InMemoryIdGen

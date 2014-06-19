@@ -36,7 +36,7 @@
       <dependency>
         <groupId>fr.proline.util</groupId>
         <artifactId>ProFI-Commons-Scala</artifactId>
-        <version>0.0.7</version> <!-- Snapshot Trunk version -->
+        <version>0.0.8-SNAPSHOT</version> <!-- Snapshot Trunk version -->
       </dependency>
 
       <!-- "Proline" modules -->
@@ -73,7 +73,7 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.0.6</version> <!-- Snapshot Trunk version -->
+      <version>0.0.7-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- JUnit tests -->
@@ -96,5 +96,20 @@
     </dependency>
 
   </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.15</version>
+        <configuration>
+          <skipTests>false</skipTests>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
 
 </project>

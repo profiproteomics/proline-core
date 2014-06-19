@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.commons.lang3.StringUtils.isNotEmpty
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.misc.InMemoryIdGen
 
 object Protein extends InMemoryIdGen {
 

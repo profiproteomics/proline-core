@@ -17,8 +17,8 @@ import fr.proline.repository.DriverType;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.util.StringUtils;
-import fr.proline.util.ThreadLogger;
+import fr.profi.util.StringUtils;
+import fr.profi.util.ThreadLogger;
 
 public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 

@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider.uds.impl
 
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.util.misc.MapIfNotNull
+import fr.profi.util.misc.MapIfNotNull
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -10,8 +10,8 @@ import fr.proline.core.dal.tables.uds.UdsDbInstrumentTable
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.msi.InstrumentProperties
 import fr.proline.core.om.provider.uds.IInstrumentProvider
-import fr.proline.util.primitives._
-import fr.proline.util.StringUtils
+import fr.profi.util.primitives._
+import fr.profi.util.StringUtils
     
 class SQLInstrumentProvider(val dbCtx: DatabaseConnectionContext) extends IInstrumentProvider {
   

@@ -11,7 +11,7 @@ import fr.proline.core.orm.pdi.BioSequenceGeneMap;
 import fr.proline.core.orm.pdi.Gene;
 import fr.proline.core.orm.util.JPARepositoryUtils;
 import fr.proline.repository.util.JPAUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public final class GeneRepository {
 

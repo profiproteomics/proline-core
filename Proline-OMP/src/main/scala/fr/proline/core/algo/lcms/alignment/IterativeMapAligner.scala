@@ -6,7 +6,7 @@ import fr.proline.core.algo.lcms.AlignmentParams
 class IterativeMapAligner extends ILcmsMapAligner with Logging {
 
   import fr.proline.core.om.model.lcms._
-  import fr.proline.util.math.getMedianObject
+  import fr.profi.util.math.getMedianObject
 
   def computeMapAlignments(lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams): AlignmentResult = {
 

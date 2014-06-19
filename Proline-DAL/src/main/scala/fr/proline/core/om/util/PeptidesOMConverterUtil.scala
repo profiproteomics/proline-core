@@ -1,4 +1,4 @@
-package fr.proline.core.om.utils
+package fr.proline.core.om.util
 
 import scala.collection.JavaConversions.asScalaSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
@@ -20,7 +20,7 @@ import javax.persistence.Persistence
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.core.orm.util.DataStoreConnectorFactory
 
-import fr.proline.core.utils.ResidueUtils._
+import fr.proline.core.util.ResidueUtils._
 
 /**
  * Provides method to convert Peptides and PTM objects from ORM to OM.

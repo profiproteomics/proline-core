@@ -1,4 +1,4 @@
-package fr.proline.core.utils
+package fr.proline.core.util
 
 /**
  * OM uses Scala char '\0' convention when residue is null (C-Term or N-Term).

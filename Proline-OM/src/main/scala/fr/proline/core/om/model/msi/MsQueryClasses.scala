@@ -5,8 +5,8 @@ import scala.beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import fr.proline.util.misc.InMemoryIdGen
-import fr.proline.util.StringUtils
+import fr.profi.util.misc.InMemoryIdGen
+import fr.profi.util.StringUtils
 
 trait MsQuery {
   

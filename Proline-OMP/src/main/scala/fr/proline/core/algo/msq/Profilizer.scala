@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import org.apache.commons.math.stat.descriptive.StatisticalSummary
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msq._
-import fr.proline.util.primitives.isZeroOrNaN
+import fr.profi.util.primitives.isZeroOrNaN
 
 case class ProfilizerConfig(
   peptideStatTestsAlpha: Float = 0.01f,

@@ -12,7 +12,7 @@ import fr.proline.core.algo.msi.filtering.PepMatchFilterParams
 import fr.proline.core.algo.msi.filtering.IOptimizablePeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 import fr.proline.core.algo.msi.filtering.PeptideMatchFiltering
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 import fr.proline.core.algo.msi.validation.MascotIonsScoreThresholds
 
 // TODO: use MascotThresholdTypes enumeration value instead of useHomologyThreshold

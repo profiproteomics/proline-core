@@ -7,7 +7,7 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.algo.lcms.filtering._
 import fr.proline.core.om.msi.AbstractSerializationSpec
 import fr.proline.core.om.msi.SerializationSpecif
-import fr.proline.util.ms.MassTolUnit
+import fr.profi.util.ms.MassTolUnit
 
 @RunWith(classOf[JUnitRunner])
 class SerializationSpec extends AbstractSerializationSpec {

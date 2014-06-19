@@ -12,7 +12,7 @@ import fr.proline.core.om.model.msi.ProteinMatch
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.filtering.IFilterNeedingResultSet
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.util.MathUtils
+import fr.profi.util.MathUtils
 
 class SinglePSMPerPrettyRankFilter(var targetRSSet: ResultSet = null) extends IPeptideMatchFilter with Logging with IFilterNeedingResultSet {
 

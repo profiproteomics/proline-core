@@ -12,7 +12,7 @@ import org.apache.commons.math.stat.descriptive.StatisticalSummaryValues
 import org.apache.commons.math.stat.inference.TTestImpl
 import org.apache.commons.math.special.Erf
 
-import fr.proline.util.math.linearInterpolation
+import fr.profi.util.math.linearInterpolation
 import fr.profi.util.stat.{Bin,EntityHistogramComputer}
 
 

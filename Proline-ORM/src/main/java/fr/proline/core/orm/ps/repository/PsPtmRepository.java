@@ -12,7 +12,7 @@ import fr.proline.core.orm.ps.PtmEvidence;
 import fr.proline.core.orm.ps.PtmEvidence.Type;
 import fr.proline.core.orm.ps.PtmSpecificity;
 import fr.proline.repository.util.JPAUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public final class PsPtmRepository {
 

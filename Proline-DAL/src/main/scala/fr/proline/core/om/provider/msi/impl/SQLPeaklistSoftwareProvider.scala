@@ -5,7 +5,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.om.model.msi.PeaklistSoftware
 import fr.proline.core.om.provider.msi.IPeaklistSoftwareProvider
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
  
 // TODO: use Select Query builder
 class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends IPeaklistSoftwareProvider {

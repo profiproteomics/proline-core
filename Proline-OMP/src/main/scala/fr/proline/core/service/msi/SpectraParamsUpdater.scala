@@ -7,8 +7,8 @@ import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.context._
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitleParsingRule }
-import fr.proline.util.regex.RegexUtils._
-import fr.proline.util.primitives._
+import fr.profi.util.regex.RegexUtils._
+import fr.profi.util.primitives._
 
 class SpectraParamsUpdater(
   execCtx: IExecutionContext,

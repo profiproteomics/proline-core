@@ -6,7 +6,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.IExecutionContext
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
 

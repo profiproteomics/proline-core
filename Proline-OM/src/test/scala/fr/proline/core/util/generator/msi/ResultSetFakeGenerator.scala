@@ -10,9 +10,9 @@ import scala.collection.mutable.HashSet
 import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.msi._
-import fr.proline.util.primitives._
-import fr.proline.util.random._
-import fr.proline.util.ms.massToMoz
+import fr.profi.util.primitives._
+import fr.profi.util.random._
+import fr.profi.util.ms.massToMoz
 
 /**
  * Utility class to generate a faked ResultSet.

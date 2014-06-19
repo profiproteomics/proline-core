@@ -2,8 +2,8 @@ package fr.proline.core.algo.msq
 
 import org.apache.commons.math.stat.StatUtils
 import org.apache.commons.math.stat.descriptive.rank.Percentile
-import fr.proline.util.primitives.isZeroOrNaN
-import fr.proline.util.random.randomGaussian
+import fr.profi.util.primitives.isZeroOrNaN
+import fr.profi.util.random.randomGaussian
 
 object MissingAbundancesInferer {
   

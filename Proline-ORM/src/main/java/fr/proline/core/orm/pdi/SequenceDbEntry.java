@@ -16,7 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * The persistent class for the seq_db_entry database table.

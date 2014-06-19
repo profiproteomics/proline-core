@@ -5,7 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 //import com.fasterxml.jackson.annotation.JsonInclude
 //import com.fasterxml.jackson.annotation.JsonInclude.Include
 
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.misc.InMemoryIdGen
   
 object Fragmentation {
   

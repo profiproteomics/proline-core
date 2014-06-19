@@ -2,8 +2,8 @@ package fr.proline.core.dal.helper
 
 import scala.collection.mutable.HashMap
 import fr.profi.jdbc.SQLQueryExecution
-import fr.proline.util.primitives._
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
+import fr.profi.util.primitives._
 
 class PsDbHelper( sqlExec: SQLQueryExecution ) {
   

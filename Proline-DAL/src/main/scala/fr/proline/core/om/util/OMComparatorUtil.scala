@@ -1,4 +1,4 @@
-package fr.proline.core.om.utils
+package fr.proline.core.om.util
 
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.orm.ps.PeptidePtm

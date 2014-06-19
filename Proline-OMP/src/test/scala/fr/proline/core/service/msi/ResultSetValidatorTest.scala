@@ -4,7 +4,7 @@ import java.io.File
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 import org.junit.{ After, AfterClass, Assert, Test, Before, BeforeClass, Ignore }
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.pepmatch.{ ScorePSMFilter, RankPSMFilter, _ }

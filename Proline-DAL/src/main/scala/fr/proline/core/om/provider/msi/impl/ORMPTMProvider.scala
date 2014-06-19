@@ -1,6 +1,5 @@
 package fr.proline.core.om.provider.msi.impl
 
-import scala.Array.canBuildFrom
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters.asJavaCollectionConverter
 
@@ -9,12 +8,12 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ PtmDefinition, PtmLocation }
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.utils.PeptidesOMConverterUtil
-import fr.proline.core.orm.ps.{ Ptm, PtmSpecificity }
+import fr.proline.core.om.util.PeptidesOMConverterUtil
+import fr.proline.core.orm.ps.PtmSpecificity
 import fr.proline.core.orm.ps.repository.{ PsPtmRepository => psPtmRepo }
-import javax.persistence.PersistenceException
+import fr.proline.core.util.ResidueUtils._
 
-import fr.proline.core.utils.ResidueUtils._
+import fr.proline.core.util.ResidueUtils._
 
 class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider with Logging {
 

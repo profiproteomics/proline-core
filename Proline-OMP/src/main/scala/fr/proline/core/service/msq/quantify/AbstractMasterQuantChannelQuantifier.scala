@@ -48,9 +48,9 @@ import fr.proline.core.orm.msi.{
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
-import fr.proline.core.utils.ResidueUtils._
+import fr.proline.core.util.ResidueUtils._
 
 abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 

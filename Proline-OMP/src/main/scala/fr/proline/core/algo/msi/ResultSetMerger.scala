@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi._
-import fr.proline.util.StringUtils.{isEmpty => isEmptyStr}
+import fr.profi.util.StringUtils.{isEmpty => isEmptyStr}
 
 object ResultSetMerger extends Logging {
   

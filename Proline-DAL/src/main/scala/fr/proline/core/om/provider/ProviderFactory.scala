@@ -5,7 +5,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.{ ORMSeqDatabaseProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
 import fr.proline.core.om.provider.msi.{ IProteinProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.msi.{ ISeqDatabaseProvider, IPeptideMatchProvider }
-import fr.proline.util.{ StringUtils, PropertiesUtils }
+import fr.profi.util.{ StringUtils, PropertiesUtils }
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider

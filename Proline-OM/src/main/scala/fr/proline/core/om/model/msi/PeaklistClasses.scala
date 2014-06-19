@@ -4,7 +4,7 @@ import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
 //import com.fasterxml.jackson.annotation.JsonInclude
 //import com.fasterxml.jackson.annotation.JsonInclude.Include
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.misc.InMemoryIdGen
 
 object Peaklist extends InMemoryIdGen
 
@@ -115,7 +115,7 @@ case class SpectrumTitleParsingRule (
   
   def parseTitle(title: String): Map[SpectrumTitleFields.Value,String] = {
     
-    import fr.proline.util.regex.RegexUtils._
+    import fr.profi.util.regex.RegexUtils._
     
     // Parse all spectrum title fields defined in the specTitleParsingRule
     val specTitleFieldMap = new HashMap[SpectrumTitleFields.Value,String]

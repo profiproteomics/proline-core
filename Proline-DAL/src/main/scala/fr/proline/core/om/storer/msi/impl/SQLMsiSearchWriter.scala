@@ -9,10 +9,10 @@ import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal._
-import fr.proline.util.sql._
+import fr.profi.util.sql._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi.IMsiSearchWriter
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 object SQLMsiSearchWriter extends AbstractSQLMsiSearchWriter
 

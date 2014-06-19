@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch}
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 object ScorePSMFilter {
   val thresholdIncreaseValue = 0.1f

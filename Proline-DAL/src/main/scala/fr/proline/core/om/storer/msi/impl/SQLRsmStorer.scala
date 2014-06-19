@@ -15,7 +15,7 @@ import fr.proline.core.om.model.msi.PeptideSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.IRsmStorer
 import fr.proline.context.IExecutionContext
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.List
 import scala.collection.mutable.ArrayBuffer

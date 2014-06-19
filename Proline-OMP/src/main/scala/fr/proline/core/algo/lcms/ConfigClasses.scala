@@ -28,7 +28,7 @@ trait IMzTolerant {
   val mozTolUnit: String
   
   def calcMozTolInDalton( moz: Double ): Double = {
-    fr.proline.util.ms.calcMozTolInDalton( moz, mozTol, mozTolUnit )
+    fr.profi.util.ms.calcMozTolInDalton( moz, mozTol, mozTolUnit )
   }
 }
 

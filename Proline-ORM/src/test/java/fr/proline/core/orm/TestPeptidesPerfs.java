@@ -17,7 +17,7 @@ import fr.proline.core.orm.ps.Peptide;
 import fr.proline.core.orm.ps.repository.PsPeptideRepository;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.DatabaseTestCase;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 @Ignore
 public class TestPeptidesPerfs {

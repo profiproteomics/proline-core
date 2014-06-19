@@ -10,8 +10,8 @@ import fr.proline.core.dal.tables.lcms.{ LcmsDbMapTable, LcmsDbRawMapTable }
 import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IRawMapProvider
-import fr.proline.util.sql._
-import fr.proline.util.primitives._
+import fr.profi.util.sql._
+import fr.profi.util.primitives._
 
 class SQLRawMapProvider(
   val lcmsDbCtx: DatabaseConnectionContext,

@@ -9,7 +9,7 @@ import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider {
   

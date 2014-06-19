@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.misc.InMemoryIdGen
 
 // TODO: remove and use mzdb model instead
 class Peak (
@@ -135,7 +135,7 @@ case class Feature (
   // Requirements
   require( elutionTime.isNaN == false, "elution time must be a valid float value" )
 
-  import fr.proline.util.ms.mozToMass
+  import fr.profi.util.ms.mozToMass
   
   lazy val mass = mozToMass( moz, charge )
   def isCluster = if( subFeatures == null ) false else subFeatures.length > 0

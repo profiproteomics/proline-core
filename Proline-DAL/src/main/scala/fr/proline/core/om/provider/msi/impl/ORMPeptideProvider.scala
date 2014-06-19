@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ LocatedPtm, Peptide }
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.utils.PeptidesOMConverterUtil
+import fr.proline.core.om.util.PeptidesOMConverterUtil
 import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => pepRepo }
 
 /**

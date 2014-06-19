@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Ignore;
 
 import fr.proline.core.orm.msi.Peptide;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 @Ignore
 public class PeptideGenerator {

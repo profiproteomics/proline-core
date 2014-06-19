@@ -1,7 +1,7 @@
 package fr.proline.core.om.model.msi
 
-import fr.proline.util.misc.InMemoryIdGen
-import fr.proline.util.StringUtils
+import fr.profi.util.misc.InMemoryIdGen
+import fr.profi.util.StringUtils
 
 object PtmNames extends InMemoryIdGen
 

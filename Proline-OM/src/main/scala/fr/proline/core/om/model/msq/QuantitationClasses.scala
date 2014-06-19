@@ -2,8 +2,8 @@ package fr.proline.core.om.model.msq
 
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import fr.proline.util.misc.InMemoryIdGen
-import fr.proline.util.primitives.isZeroOrNaN
+import fr.profi.util.misc.InMemoryIdGen
+import fr.profi.util.primitives.isZeroOrNaN
 import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet,ResultSummary}
 
 trait Item {

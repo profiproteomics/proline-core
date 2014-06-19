@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.util.misc.MapIfNotNull
+import fr.profi.util.misc.MapIfNotNull
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi._
@@ -15,7 +15,7 @@ import fr.proline.core.om.model.msi.PeptideSetItem
 import fr.proline.core.om.model.msi.PeptideSetItemProperties
 import fr.proline.core.om.model.msi.PeptideSetProperties
 import fr.proline.core.om.provider.msi.{ IPeptideSetProvider, IPeptideInstanceProvider }
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class SQLPeptideSetProvider(
   val msiDbCtx: DatabaseConnectionContext,
@@ -139,8 +139,8 @@ class SQLPeptideSetProvider(
     pepSetProtMatchMapRecords: Seq[Map[String, Any]]
   ): Array[PeptideSet] = {
 
-    import fr.proline.util.primitives._
-    import fr.proline.util.sql.StringOrBoolAsBool._
+    import fr.profi.util.primitives._
+    import fr.profi.util.sql.StringOrBoolAsBool._
 
     // Load peptides
     //val uniqPepSetIds = pepSetRecords map { _(PepSetCols.peptideId).asInstanceOf[Int] } distinct

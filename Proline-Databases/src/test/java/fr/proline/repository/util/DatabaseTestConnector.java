@@ -14,7 +14,7 @@ import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * Implements IDatabaseConnector to add a new feature allowing dbUnit handling (IDatabaseTester for dbUnit).

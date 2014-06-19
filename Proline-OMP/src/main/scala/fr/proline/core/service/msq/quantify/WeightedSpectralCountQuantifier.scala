@@ -1,6 +1,6 @@
 package fr.proline.core.service.msq.quantify
 
-import fr.proline.core.utils.ResidueUtils._
+import fr.proline.core.util.ResidueUtils._
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
@@ -18,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 import collection.JavaConversions.iterableAsScalaIterable
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
 import fr.proline.core.om.model.msi.PeptideSet
-import fr.proline.util.MathUtils
+import fr.profi.util.MathUtils
 import scala.collection.mutable.MapBuilder
 import scala.collection.mutable.HashSet
 import fr.proline.core.orm.msi.{

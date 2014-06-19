@@ -12,7 +12,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
 import fr.proline.core.orm.ps.PeptidePtm;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 import fr.proline.core.orm.msi.dto.*;
 

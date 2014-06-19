@@ -452,7 +452,7 @@ class SQLRsStorer(
   def storeMsiSearch(msiSearch: MSISearch, context: StorerContext): Long = {
     require(msiSearchWriter.isDefined, "A MSI search writer must be provided")
 
-    import fr.proline.util.primitives._
+    import fr.profi.util.primitives._
 
     // Synchronize some related objects with the UDSdb
     DoJDBCWork.withEzDBC(context.getUDSDbConnectionContext, { udsEzDBC =>

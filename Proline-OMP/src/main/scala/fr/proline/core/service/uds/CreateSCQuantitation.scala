@@ -16,7 +16,7 @@ import fr.proline.core.orm.uds.{
   SampleAnalysis => UdsSampleAnalysis
 }
 import fr.proline.core.orm.uds.Dataset.DatasetType
-import fr.proline.util.sql.getTimeAsSQLTimestamp
+import fr.profi.util.sql.getTimeAsSQLTimestamp
 import javax.persistence.NoResultException
 import scala.collection.JavaConversions._
 import java.util.ArrayList

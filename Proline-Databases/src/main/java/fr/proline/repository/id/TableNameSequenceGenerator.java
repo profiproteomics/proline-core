@@ -7,7 +7,7 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.type.Type;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * This class uses one sequence by entity (using PostgreSQL convention for sequence name) instead of global

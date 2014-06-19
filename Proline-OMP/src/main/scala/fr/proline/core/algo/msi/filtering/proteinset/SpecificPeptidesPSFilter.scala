@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IProteinSetFilter, ProtSetFilterParams, ProteinSetFiltering}
 import fr.proline.core.om.model.msi.ProteinSet
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class SpecificPeptidesPSFilter(
   var minNbrPep: Int = 1) extends IProteinSetFilter with Logging {

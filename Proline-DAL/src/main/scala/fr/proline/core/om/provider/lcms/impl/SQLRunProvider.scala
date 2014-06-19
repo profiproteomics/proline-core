@@ -13,8 +13,8 @@ import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IRunProvider
 import fr.proline.core.om.provider.lcms.IScanSequenceProvider
-import fr.proline.util.sql._
-import fr.proline.util.primitives._
+import fr.profi.util.sql._
+import fr.profi.util.primitives._
 
 class SQLRunProvider(
   val udsDbCtx: DatabaseConnectionContext,

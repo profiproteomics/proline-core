@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.{ InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.storer.msi.IPeaklistWriter
-import fr.proline.core.om.utils.PeptideIdent
+import fr.proline.core.om.util.PeptideIdent
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.PeptideReadablePtmString
 import fr.proline.core.orm.msi.PeptideReadablePtmStringPK
@@ -18,8 +18,8 @@ import fr.proline.core.orm.msi.repository.{ MsiEnzymeRepository => msiEnzymeRepo
 import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => pdiSeqDatabaseRepo }
 import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => psPeptideRepo, PsPtmRepository => psPtmRepo }
 import fr.proline.core.orm.uds.repository.{ UdsEnzymeRepository => udsEnzymeRepo, UdsInstrumentConfigurationRepository => udsInstrumentConfigRepo, UdsPeaklistSoftwareRepository => udsPeaklistSoftwareRepo }
-import fr.proline.util.StringUtils
-import fr.proline.core.utils.ResidueUtils._
+import fr.profi.util.StringUtils
+import fr.proline.core.util.ResidueUtils._
 
 
 /**

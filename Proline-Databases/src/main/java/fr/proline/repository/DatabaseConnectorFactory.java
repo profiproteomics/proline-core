@@ -5,8 +5,8 @@ import static fr.proline.repository.AbstractDatabaseConnector.PERSISTENCE_JDBC_U
 
 import java.util.Map;
 
-import fr.proline.util.PropertiesUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.PropertiesUtils;
+import fr.profi.util.StringUtils;
 
 public final class DatabaseConnectorFactory {
 

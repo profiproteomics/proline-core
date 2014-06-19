@@ -9,7 +9,7 @@ import scala.beans.BeanProperty
 //import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.typesafe.scalalogging.slf4j.Logging
 
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.misc.InMemoryIdGen
 
 case class FeatureScoring(
     
@@ -345,7 +345,7 @@ case class MapAlignment(
   
   protected def calcDeltaTime( elutionTime: Float ): Float = {
     
-    import fr.proline.util.math.linearInterpolation
+    import fr.profi.util.math.linearInterpolation
     
     linearInterpolation(elutionTime, deltaTimeVersusTime, fixOutOfRange = true)
   }

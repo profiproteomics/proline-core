@@ -24,7 +24,7 @@ import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
   

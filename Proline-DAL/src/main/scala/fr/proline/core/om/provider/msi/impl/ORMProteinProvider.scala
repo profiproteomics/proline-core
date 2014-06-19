@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ Protein, SeqDatabase }
 import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.utils.ProteinsOMConverterUtil
+import fr.proline.core.om.util.ProteinsOMConverterUtil
 import fr.proline.core.orm.pdi.BioSequence
 import fr.proline.core.orm.pdi.repository.{ PdiBioSequenceRepository => bioSeqRepo }
 

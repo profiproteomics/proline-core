@@ -17,7 +17,7 @@ import fr.proline.core.om.model.msi.PeptideMatchResultSummaryProperties
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class SQLPeptideInstanceProvider(
   val msiSqlCtx: DatabaseConnectionContext,

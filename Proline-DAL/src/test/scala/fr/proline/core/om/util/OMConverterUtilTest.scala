@@ -1,4 +1,4 @@
-package fr.proline.core.om.utils
+package fr.proline.core.om.util
 
 import org.junit.Before
 import fr.proline.repository.util.DatabaseTestCase

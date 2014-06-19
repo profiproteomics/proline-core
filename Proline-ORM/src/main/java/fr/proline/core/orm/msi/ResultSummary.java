@@ -24,7 +24,7 @@ import javax.persistence.Transient;
 import fr.proline.core.orm.uds.Dataset;
 import fr.proline.core.orm.uds.dto.DDataset;
 import fr.proline.core.orm.util.JsonSerializer;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 import fr.proline.core.orm.msi.dto.*;
 

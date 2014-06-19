@@ -63,7 +63,7 @@
       <artifactId>sqlite-jdbc</artifactId>
       <scope>runtime</scope>
     </dependency>
-
+    
     <!-- Used by ProlineEzDBC -->
     <dependency>
       <groupId>joda-time</groupId>
@@ -76,6 +76,20 @@
       <groupId>org.joda</groupId>
       <artifactId>joda-convert</artifactId>
       <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    
+    <!-- Cache -->
+    <!--
+    <dependency>
+      <groupId>org.fusesource.lmdbjni</groupId>
+      <artifactId>lmdbjni-all</artifactId>
+      <version>99-master-SNAPSHOT</version>
+    </dependency>
+    -->
+    <dependency>
+      <groupId>org.iq80.leveldb</groupId>
+      <artifactId>leveldb</artifactId>
+      <version>0.7</version>
     </dependency>
 
     <!-- Compression -->

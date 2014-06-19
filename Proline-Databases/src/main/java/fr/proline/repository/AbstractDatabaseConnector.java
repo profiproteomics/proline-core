@@ -1,6 +1,6 @@
 package fr.proline.repository;
 
-import static fr.proline.util.StringUtils.LINE_SEPARATOR;
+import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,8 +12,8 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.util.PropertiesUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.PropertiesUtils;
+import fr.profi.util.StringUtils;
 
 public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 

@@ -6,7 +6,7 @@ class ComprehensiveMapAligner extends ILcmsMapAligner {
 
   import scala.collection.mutable.ArrayBuffer
   import scala.collection.mutable.HashMap
-  import fr.proline.util.math.combinations
+  import fr.profi.util.math.combinations
   import fr.proline.core.om.model.lcms._
   
   def computeMapAlignments( lcmsMaps: Seq[ProcessedMap], alnParams: AlignmentParams ): AlignmentResult = {

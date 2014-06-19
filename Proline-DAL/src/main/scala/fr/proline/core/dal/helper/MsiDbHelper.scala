@@ -6,7 +6,7 @@ import scala.collection.mutable.HashSet
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCReturningWork, DoJDBCWork }
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 

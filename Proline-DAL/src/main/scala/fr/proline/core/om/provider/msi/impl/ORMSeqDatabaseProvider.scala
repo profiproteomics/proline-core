@@ -1,17 +1,16 @@
 package fr.proline.core.om.provider.msi.impl
 
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import scala.collection.Seq
-import com.typesafe.scalalogging.slf4j.Logging
-import javax.persistence.EntityManager
-import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.utils.PeptidesOMConverterUtil
-import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => seqDBRepo }
-import fr.proline.core.om.utils.ProteinsOMConverterUtil
+import scala.collection.JavaConverters.asJavaCollectionConverter
+
+import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.msi.SeqDatabase
+
+import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
+import fr.proline.core.om.util.ProteinsOMConverterUtil
+import fr.proline.core.orm.pdi.repository.{ PdiSeqDatabaseRepository => seqDBRepo }
 
 class ORMSeqDatabaseProvider( val pdiDbCtx: DatabaseConnectionContext ) extends ISeqDatabaseProvider with Logging {
 

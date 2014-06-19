@@ -10,9 +10,9 @@ import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.PeptideMatchProperties
 import fr.proline.core.om.provider.msi.{IPeptideProvider,IPeptideMatchProvider,PeptideMatchFilter}
-import fr.proline.util.sql.StringOrBoolAsBool._
+import fr.profi.util.sql.StringOrBoolAsBool._
 import fr.proline.core.dal.tables.msi.MsiDbPeptideInstancePeptideMatchMapTable
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 import fr.proline.core.om.model.msi.MsQuery
 
 class SQLPeptideMatchProvider(
@@ -119,7 +119,7 @@ class SQLPeptideMatchProvider(
 
   private def _buildPeptideMatches(rsIds: Seq[Long], pmRecords: Seq[Map[String, Any]]): Array[PeptideMatch] = {
 
-    import fr.proline.util.primitives._
+    import fr.profi.util.primitives._
 
     // Load peptides
     val uniqPepIds = pmRecords map { v => toLong(v(PepMatchCols.PEPTIDE_ID)) } distinct
@@ -128,6 +128,7 @@ class SQLPeptideMatchProvider(
     // Map peptides by their id
     val peptideById = Map() ++ peptides.map { pep => (pep.id -> pep) }
     
+    // TODO: load the msQueries before calling _buildPeptideMatches => it will optimize the loading (full RS vs atomic)
     var msQueries :  Array[MsQuery] = null
      val msQProvider = new SQLMsQueryProvider(msiSqlCtx)
     

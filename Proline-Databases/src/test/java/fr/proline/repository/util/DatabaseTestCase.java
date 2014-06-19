@@ -1,6 +1,6 @@
 package fr.proline.repository.util;
 
-import static fr.proline.util.StringUtils.LINE_SEPARATOR;
+import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
 import java.sql.Connection;
 import java.sql.SQLException;

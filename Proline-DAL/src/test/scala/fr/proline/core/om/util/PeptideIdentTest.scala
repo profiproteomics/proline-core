@@ -1,4 +1,4 @@
-package fr.proline.core.om.utils
+package fr.proline.core.om.util
 
 import org.junit.Assert._
 import org.junit.Test

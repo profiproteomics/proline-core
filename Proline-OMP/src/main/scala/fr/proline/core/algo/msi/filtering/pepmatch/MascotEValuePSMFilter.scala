@@ -5,7 +5,7 @@ import scala.collection.Seq
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch,PeptideMatchResultSummaryProperties}
 import fr.proline.core.algo.msi.filtering._
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter {
   

@@ -4,7 +4,7 @@ object FeatureMapper {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
-  import fr.proline.util.ms.calcMozTolInDalton
+  import fr.profi.util.ms.calcMozTolInDalton
   
   def computePairwiseFtMapping ( map1Features: Seq[Feature],
                                  map2Features: Seq[Feature],

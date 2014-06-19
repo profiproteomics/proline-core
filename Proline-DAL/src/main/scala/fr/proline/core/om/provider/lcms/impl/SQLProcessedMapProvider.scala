@@ -11,8 +11,8 @@ import fr.proline.core.dal.tables.lcms.{ LcmsDbFeatureTable, LcmsDbProcessedMapF
 import fr.proline.core.dal.tables.lcms.{ LcmsDbMapTable, LcmsDbProcessedMapTable, LcmsDbProcessedMapRawMapMappingTable, LcmsDbRawMapTable }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IProcessedMapProvider
-import fr.proline.util.primitives._
-//import fr.proline.util.sql._
+import fr.profi.util.primitives._
+//import fr.profi.util.sql._
   
 class SQLProcessedMapProvider(
   val lcmsDbCtx: DatabaseConnectionContext,

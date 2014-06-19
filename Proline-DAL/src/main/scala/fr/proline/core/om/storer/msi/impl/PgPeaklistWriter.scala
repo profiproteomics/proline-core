@@ -10,9 +10,9 @@ import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.om.model.msi.IPeaklistContainer
 import fr.proline.repository.util.PostgresUtils
-import fr.proline.util.bytes._
-import fr.proline.util.sql._
-import fr.proline.util.primitives._
+import fr.profi.util.bytes._
+import fr.profi.util.sql._
+import fr.profi.util.primitives._
 
 /**
  * @author David Bouyssie

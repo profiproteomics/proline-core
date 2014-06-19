@@ -4,7 +4,7 @@ class MedianIntensityMapNormalizer extends IMapSetNormalizer {
 
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.om.model.lcms._
-  import fr.proline.util.math.median
+  import fr.profi.util.math.median
   
   protected def computeNormalizationFactorByMapId( mapSet: MapSet ): Map[Long,Float] = {
     

@@ -103,8 +103,8 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
      seqMatchQuery: String
    ): Array[ProteinMatch] = {
      
-    import fr.proline.util.primitives.toLong
-    import fr.proline.util.sql.StringOrBoolAsBool._
+    import fr.profi.util.primitives.toLong
+    import fr.profi.util.sql.StringOrBoolAsBool._
     
     // Retrieve score type map
     val scoreTypeById = new MsiDbHelper(msiDbCtx).getScoringTypeById

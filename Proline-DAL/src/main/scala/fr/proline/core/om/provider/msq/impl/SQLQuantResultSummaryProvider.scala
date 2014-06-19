@@ -21,7 +21,7 @@ import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class SQLQuantResultSummaryProvider(
   override val msiDbCtx: DatabaseConnectionContext,

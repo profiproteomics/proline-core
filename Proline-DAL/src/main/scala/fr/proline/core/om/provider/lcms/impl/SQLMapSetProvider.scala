@@ -11,8 +11,8 @@ import fr.proline.core.dal.tables.{ SelectQueryBuilder1 }
 import fr.proline.core.dal.tables.lcms.{ LcmsDbMapSetTable,LcmsDbMasterFeatureItemTable, LcmsDbProcessedMapTable }
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IMapSetProvider
-import fr.proline.util.primitives._
-//import fr.proline.util.sql._
+import fr.profi.util.primitives._
+//import fr.profi.util.sql._
   
 class SQLMapSetProvider(
   val lcmsDbCtx: DatabaseConnectionContext,

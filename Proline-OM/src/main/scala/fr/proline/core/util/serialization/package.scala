@@ -1,4 +1,4 @@
-package fr.proline.core.utils
+package fr.proline.core.util
 
 import fr.profi.util.serialization._
 

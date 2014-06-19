@@ -5,7 +5,7 @@ import scala.collection.mutable
 import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.{ DecoratedExecutionContext, IExecutionContext }
-import fr.proline.core.om.utils.PeptideIdent
+import fr.proline.core.om.util.PeptideIdent
 
 /**
  * RsStorer context container. Contains current ResultSet (and DecoyRS) "persistence context".

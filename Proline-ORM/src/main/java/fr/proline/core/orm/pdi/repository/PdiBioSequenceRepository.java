@@ -1,6 +1,6 @@
 package fr.proline.core.orm.pdi.repository;
 
-import static fr.proline.util.MathUtils.EPSILON_LOW_PRECISION;
+import static fr.profi.util.MathUtils.EPSILON_LOW_PRECISION;
 
 import java.util.Collection;
 import java.util.List;
@@ -12,7 +12,7 @@ import javax.persistence.TypedQuery;
 import fr.proline.core.orm.pdi.BioSequence;
 import fr.proline.core.orm.util.JPARepositoryUtils;
 import fr.proline.repository.util.JPAUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public final class PdiBioSequenceRepository {
 

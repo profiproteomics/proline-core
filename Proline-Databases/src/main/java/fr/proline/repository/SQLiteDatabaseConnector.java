@@ -8,7 +8,7 @@ import javax.sql.DataSource;
 import org.sqlite.SQLiteDataSource;
 
 import fr.proline.repository.dialect.SQLiteDialect;
-import fr.proline.util.PropertiesUtils;
+import fr.profi.util.PropertiesUtils;
 
 public class SQLiteDatabaseConnector extends AbstractDatabaseConnector {
 

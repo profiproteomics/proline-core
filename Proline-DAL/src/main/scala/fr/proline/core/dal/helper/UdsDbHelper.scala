@@ -11,7 +11,7 @@ import fr.proline.core.dal.tables.uds.UdsDbMasterQuantChannelTable
 import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import scala.collection.mutable.HashMap
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
   

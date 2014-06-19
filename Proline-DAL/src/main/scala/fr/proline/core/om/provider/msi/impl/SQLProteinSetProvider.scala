@@ -2,7 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.util.misc.MapIfNotNull
+import fr.profi.util.misc.MapIfNotNull
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.{ MsiDbProteinSetTable, MsiDbProteinSetProteinMatchItemTable, MsiDbPeptideSetTable }
 import fr.proline.core.dal.tables.SelectQueryBuilder1
@@ -10,7 +10,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.om.model.msi.{ PeptideSet, ProteinSet, ProteinSetProperties, ProteinMatchResultSummaryProperties }
 import fr.proline.core.om.provider.msi.{ IPeptideSetProvider, IProteinSetProvider }
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 class SQLProteinSetProvider(
   val msiDbCtx: DatabaseConnectionContext,
@@ -97,8 +97,8 @@ class SQLProteinSetProvider(
     peptideSets: Seq[PeptideSet]
   ): Array[ProteinSet] = {
 
-    import fr.proline.util.primitives._
-    import fr.proline.util.sql.StringOrBoolAsBool._
+    import fr.profi.util.primitives._
+    import fr.profi.util.sql.StringOrBoolAsBool._
 
     // Map peptide set by protein set id
     val pepSetByProtSetId = Map() ++ peptideSets.map { pepSet => pepSet.getProteinSetId -> pepSet }

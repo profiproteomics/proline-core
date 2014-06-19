@@ -1,7 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.util.misc.MapIfNotNull
+import fr.profi.util.misc.MapIfNotNull
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
@@ -28,8 +28,8 @@ class SQLResultSummaryProvider(
 
   def getResultSummaries(rsmIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
 
-    import fr.proline.util.primitives._
-    import fr.proline.util.sql.StringOrBoolAsBool._
+    import fr.profi.util.primitives._
+    import fr.profi.util.sql.StringOrBoolAsBool._
 
     val pepMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, psDbCtx)
     val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)

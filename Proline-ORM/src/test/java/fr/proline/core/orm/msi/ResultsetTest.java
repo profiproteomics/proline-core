@@ -21,7 +21,7 @@ import fr.proline.core.orm.msi.repository.PeptideMatchRepository;
 import fr.proline.core.orm.msi.repository.PeptideReadablePtmStringRepository;
 import fr.proline.repository.ProlineDatabaseType;
 import fr.proline.repository.util.DatabaseTestCase;
-import fr.proline.util.MathUtils;
+import fr.profi.util.MathUtils;
 
 public class ResultsetTest extends DatabaseTestCase {
 

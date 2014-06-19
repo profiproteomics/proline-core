@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi.scoring
 
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 import fr.proline.core.om.model.msi.PeptideMatch
 
 class MascotModifiedMudpitScoreUpdater extends IPeptideSetScoreUpdater {

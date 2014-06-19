@@ -3,8 +3,8 @@ package fr.proline.core.util.generator.lcms
 import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.lcms._
-import fr.proline.util.math.calcLineParams
-import fr.proline.util.random._
+import fr.profi.util.math.calcLineParams
+import fr.profi.util.random._
 
 /**
  * Utility class to generate a faked LcMsRun.

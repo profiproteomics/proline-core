@@ -8,7 +8,7 @@ import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{SelectQueryBuilder1,SelectQueryBuilder2}
 import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
   
 class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
   

@@ -8,8 +8,8 @@ import scala.beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.util.StringUtils.isNotEmpty
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.StringUtils.isNotEmpty
+import fr.profi.util.misc.InMemoryIdGen
 
 object Peptide extends InMemoryIdGen with Logging {
   
@@ -254,7 +254,7 @@ object Peptide extends InMemoryIdGen with Logging {
     var mass : Double = 0
     
     // FIXME: find another way to deal with ambiguous residues
-    import fr.proline.util.regex.RegexUtils._
+    import fr.profi.util.regex.RegexUtils._
 
     if (sequence ~~ "(?i)[BXZ]") mass = 0.0
     else {
@@ -282,7 +282,7 @@ case class Peptide ( // Required fields
   var id: Long,
   val sequence: String,
   val ptmString: String,
-  @transient val ptms: Array[LocatedPtm],
+  val ptms: Array[LocatedPtm],
   val calculatedMass: Double,
   
   // Mutable optional fields

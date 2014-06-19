@@ -6,7 +6,7 @@ import javax.persistence.EntityManager
 import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
 import fr.proline.core.om.model.msi.PeptideInstance
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.utils.PeptidesOMConverterUtil
+import fr.proline.core.om.util.PeptidesOMConverterUtil
 import scala.collection.mutable.ArrayBuilder
 import fr.proline.context.DatabaseConnectionContext
 

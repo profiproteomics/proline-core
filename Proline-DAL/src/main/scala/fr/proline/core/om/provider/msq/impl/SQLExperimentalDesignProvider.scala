@@ -18,7 +18,7 @@ import fr.proline.core.dal.tables.uds.UdsDbMasterQuantChannelTable
 import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
 import fr.proline.core.dal.tables.uds.UdsDbSampleAnalysisTable
 import fr.proline.core.dal.tables.uds.UdsDbRatioDefinitionTable
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet

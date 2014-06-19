@@ -2,7 +2,7 @@ package fr.proline.core.util.generator.lcms
 
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.lcms._
-import fr.proline.util.ms._
+import fr.profi.util.ms._
 
 class LcMsMapSetFakeGenerator(
   nbMaps: Int,

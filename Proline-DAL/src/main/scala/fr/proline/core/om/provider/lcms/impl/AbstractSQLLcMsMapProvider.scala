@@ -5,7 +5,7 @@ import scala.collection.mutable.{ArrayBuffer,HashMap}
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.util.sql.StringOrBoolAsBool._
+import fr.profi.util.sql.StringOrBoolAsBool._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -16,8 +16,8 @@ import fr.proline.core.dal.tables.lcms.LcmsDbMapTable
 import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.ILcMsMapProvider
-import fr.proline.util.sql.StringOrBoolAsBool.string2boolean
-import fr.proline.util.primitives._
+import fr.profi.util.sql.StringOrBoolAsBool.string2boolean
+import fr.profi.util.primitives._
 
 abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   

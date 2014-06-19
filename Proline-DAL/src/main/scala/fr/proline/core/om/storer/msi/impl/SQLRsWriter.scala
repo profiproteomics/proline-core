@@ -20,8 +20,8 @@ import fr.proline.core.dal.tables.msi.MsiDbProteinMatchTable
 import fr.proline.core.dal.tables.msi.MsiDbSequenceMatchTable
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
-import fr.proline.util.StringUtils
-import fr.proline.util.primitives._
+import fr.profi.util.StringUtils
+import fr.profi.util.primitives._
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchRelationTable
 
 private[core] object SQLRsWriter extends AbstractSQLRsWriter
@@ -222,7 +222,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   def insertRsSpectrumMatches(rs: ResultSet, rf: IResultFile, msiDbCtx: DatabaseConnectionContext): Int = {
     
-    import fr.proline.core.utils.serialization.ProlineJson
+    import fr.proline.core.util.serialization.ProlineJson
     //import org.msgpack.ScalaMessagePack
     
     // TODO: create a schema name enumeration

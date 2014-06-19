@@ -3,7 +3,7 @@ package fr.proline.core.om.model.msi
 import scala.beans.BeanProperty
 //import com.fasterxml.jackson.annotation.JsonInclude
 //import com.fasterxml.jackson.annotation.JsonInclude.Include
-import fr.proline.util.misc.InMemoryIdGen
+import fr.profi.util.misc.InMemoryIdGen
 
 @deprecated("use ORM ActivationType enumeration instead","0.0.7")
 object Activation extends Enumeration {

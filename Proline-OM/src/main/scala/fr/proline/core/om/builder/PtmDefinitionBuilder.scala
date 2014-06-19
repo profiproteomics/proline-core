@@ -23,19 +23,20 @@ object PtmDefinitionBuilder {
                           ptmClassification: String
                          ) : PtmDefinition = {
     
-    import fr.proline.util.primitives._
+    import fr.profi.util.primitives._
     
     val ptmEvArray = new Array[PtmEvidence](ptmEvidenceRecords.length)
 
     for (i <- 0 until ptmEvidenceRecords.length ) {
       val ptmEvidenceRecord = ptmEvidenceRecords(i);
             
-      val ptmEv = new PtmEvidence( ionType = IonTypes.withName( ptmEvidenceRecord("type").asInstanceOf[String] ),
-                                   composition = ptmEvidenceRecord("composition").asInstanceOf[String],
-                                   monoMass = ptmEvidenceRecord("mono_mass").asInstanceOf[Double],
-                                   averageMass = ptmEvidenceRecord("average_mass").asInstanceOf[Double],
-                                   isRequired = toBoolean(ptmEvidenceRecord.getOrElse("is_required",false))
-                                 )
+      val ptmEv = new PtmEvidence(
+        ionType = IonTypes.withName( ptmEvidenceRecord("type").asInstanceOf[String] ),
+        composition = ptmEvidenceRecord("composition").asInstanceOf[String],
+        monoMass = ptmEvidenceRecord("mono_mass").asInstanceOf[Double],
+        averageMass = ptmEvidenceRecord("average_mass").asInstanceOf[Double],
+        isRequired = toBoolean(ptmEvidenceRecord.getOrElse("is_required",false))
+      )
 
       ptmEvArray(i) = ptmEv
     }
@@ -47,18 +48,20 @@ object PtmDefinitionBuilder {
     if(ptmSpecifRecord.contains("id"))
       ptmDefId = toLong(ptmSpecifRecord("id"))
     else
-      ptmDefId =PtmDefinition.generateNewId
+      ptmDefId = PtmDefinition.generateNewId
       
     return new PtmDefinition(
-                          id = ptmDefId,
-                          ptmId = toLong(ptmRecord("id")),
-                          location = ptmSpecifRecord("location").asInstanceOf[String],
-                          residue = resChar,
-                          classification = ptmClassification,
-                          names = new PtmNames( shortName = ptmRecord("short_name").asInstanceOf[String],
-                                                fullName = ptmRecord("full_name").asInstanceOf[String] ),
-                          ptmEvidences = ptmEvArray
-                          )
+      id = ptmDefId,
+      ptmId = toLong(ptmRecord("id")),
+      location = ptmSpecifRecord("location").asInstanceOf[String],
+      residue = resChar,
+      classification = ptmClassification,
+      names = new PtmNames(
+        shortName = ptmRecord("short_name").asInstanceOf[String],
+        fullName = ptmRecord("full_name").asInstanceOf[String]
+      ),
+      ptmEvidences = ptmEvArray
+    )
   }
 
   /**
@@ -89,13 +92,15 @@ object PtmDefinitionBuilder {
     
     val precDelta = ptmDef.precursorDelta
     
-    new LocatedPtm(  definition = ptmDef, 
-                     seqPosition = seqPos,
-                     monoMass = precDelta.monoMass,
-                     averageMass = precDelta.averageMass,
-                     composition = precDelta.composition,
-                     isNTerm = isNTerm,
-                     isCTerm = isCTerm )
+    new LocatedPtm(
+      definition = ptmDef, 
+      seqPosition = seqPos,
+      monoMass = precDelta.monoMass,
+      averageMass = precDelta.averageMass,
+      composition = precDelta.composition,
+      isNTerm = isNTerm,
+      isCTerm = isCTerm
+    )
 
   }
 }

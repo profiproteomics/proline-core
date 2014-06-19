@@ -26,7 +26,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import fr.proline.core.orm.util.JsonSerializer;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 import fr.proline.core.orm.msi.dto.*;
 
