@@ -290,7 +290,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
    */
   def convertPeptidePtmPsORM2OM(psPeptidePtm: PsPeptidePtm): LocatedPtm = {
 
-    import fr.proline.util.regex.RegexUtils._
+    import fr.profi.util.regex.RegexUtils._
 
     // Check if object is in cache 
     if (useCachedObject && locatedPTMsCache.contains(psPeptidePtm.getId)) {

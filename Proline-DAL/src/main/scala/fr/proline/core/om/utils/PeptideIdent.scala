@@ -1,6 +1,6 @@
 package fr.proline.core.om.utils
 
-import fr.proline.util.StringUtils
+import fr.profi.util.StringUtils
 
 class PeptideIdent(seq: String, ptmStr: String) {
 
