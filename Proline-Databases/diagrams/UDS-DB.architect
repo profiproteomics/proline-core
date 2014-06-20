@@ -246,8 +246,7 @@ Note: it could store the driver name and other connection properties needed by t
    </folder>
   </table>
   <table id="TAB72" populated="true" UUID="3f7ec3c0-24e9-4a6f-865a-749f43e7b068" name="group_setup" objectType="TABLE" physicalName="group_setup" >
-   <remarks>A group setup is a user defined entity allowing to define the way biological groups are compared.
-TODO: add number column</remarks>
+   <remarks>A group setup is a user defined entity allowing to define the way biological groups are compared.</remarks>
    <folder id="FOLTAB721" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL73" populated="true" UUID="c6f47988-0276-4ae9-b43f-9d6c7d0d1da2" autoIncrement="true" autoIncrementSequenceName="group_setup_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
@@ -1537,7 +1536,7 @@ It should not contain an extension and be unique across all the database.</remar
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8367503291570026" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8367503291570026" viewportX="0" viewportY="338" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="288" y="23" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB8" x="820" y="206" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB31" x="651" y="708" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
