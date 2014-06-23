@@ -21,6 +21,7 @@ public class DDataset {
     private Long m_resultSummaryId;
     private int m_number;
     private Aggregation m_aggregation;
+    private QuantitationMethod m_quantitationMethod;
     
     private ResultSummary m_resultSummary = null;
     private ResultSet m_resultSet = null;
@@ -36,6 +37,7 @@ public class DDataset {
         m_resultSummaryId = resultSummaryId;
         m_number = number;
         m_aggregation = null;
+        m_quantitationMethod = null;
     }
     
     public long getId() {
@@ -94,6 +96,15 @@ public class DDataset {
     public void setAggregation(Aggregation aggregation) {
         m_aggregation = aggregation;
     }
+    
+    public QuantitationMethod getQuantitationMethod() {
+        return m_quantitationMethod;
+    }
+    
+    public void setQuantitationMethod(QuantitationMethod quantitationMethod) {
+        m_quantitationMethod = quantitationMethod;
+    }
+    
     
     public ResultSummary getResultSummary() {
         return m_resultSummary;
