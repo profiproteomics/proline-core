@@ -3,6 +3,7 @@ package fr.proline.core.orm.uds.dto;
 import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.uds.Aggregation;
+import fr.proline.core.orm.uds.QuantitationMethod;
 import fr.proline.core.orm.uds.Dataset.DatasetType;
 import fr.proline.core.orm.uds.Project;
 
