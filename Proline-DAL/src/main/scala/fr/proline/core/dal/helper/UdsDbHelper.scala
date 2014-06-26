@@ -181,6 +181,20 @@ class UdsDbHelper( udsDbCtx: DatabaseConnectionContext ) {
     
   }
   
+  def getMasterQuantChannelIdsForQuantId( quantDatasetId: Long ): Array[Long] = {
+    
+    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+      val quantChannelQuery = new SelectQueryBuilder1(UdsDbMasterQuantChannelTable).mkSelectQuery(
+        (t1,c1) => List(t1.ID) -> 
+        " WHERE "~ t1.QUANTITATION_ID ~" = "~ quantDatasetId ~
+        " ORDER BY "~ t1.NUMBER
+      )
+      
+      ezDBC.selectLongs(quantChannelQuery)
+    })
+    
+  }
+  
   def getQuantitationId( masterQuantChannelId: Long ): Option[Long] = {
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
