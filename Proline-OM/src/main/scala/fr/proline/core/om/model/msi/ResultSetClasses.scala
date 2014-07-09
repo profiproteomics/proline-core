@@ -27,11 +27,13 @@ case class ResultSet(
 
   protected var msiSearchId: Long = 0,
   var msiSearch: Option[MSISearch] = None,
+  var childMsiSearches: Array[MSISearch] = Array(),
 
   protected var decoyResultSetId: Long = 0,
   @transient var decoyResultSet: Option[ResultSet] = None,
 
-  var properties: Option[ResultSetProperties] = None) {
+  var properties: Option[ResultSetProperties] = None
+) {
 
   // Requirements
   require(peptides != null && peptideMatches != null & proteinMatches != null)
