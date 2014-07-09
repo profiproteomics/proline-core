@@ -2,9 +2,7 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.JavaConversions.{ asScalaBuffer, asScalaSet }
 import scala.collection.mutable
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, ResultSetProperties, SearchSettings, SearchSettingsProperties, SeqDatabase, SequenceMatch }
@@ -15,8 +13,8 @@ import fr.proline.core.orm.msi.repository.{ MsiSeqDatabaseRepository => seqDatab
 import fr.proline.repository.util.JPAUtils
 import fr.profi.util.StringUtils
 import javax.persistence.EntityManager
-
 import fr.proline.core.util.ResidueUtils._
+import scala.collection.mutable.ArrayBuffer
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,
@@ -174,6 +172,14 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         msiSearchId = omMsiSearch.id
         optionalMsiSearch = Some(omMsiSearch)
       }
+      
+      val childMsiSearches = new ArrayBuffer[MSISearch]
+      for( childMsiResultSet <- msiResultSet.getChildren ) {
+        childMsiResultSet.getMsiSearch()
+        if (msiMsiSearch != null) {
+          childMsiSearches += buildMsiSearch(msiMsiSearch)
+        }
+      }
 
       /* Decoy RS */
       var decoyRSId: Long = 0L
@@ -206,6 +212,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         isQuantified,
         msiSearchId,
         optionalMsiSearch,
+        childMsiSearches.toArray,
         decoyRSId,
         optionalDecoyRS,
         resultSetProperties

@@ -11,7 +11,7 @@ import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.om.model.msi.{ ProteinMatch, PeptideMatch, ResultSet, ResultSetProperties }
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ IResultSetProvider, PeptideMatchFilter, ResultSetFilter }
 
 trait SQLResultSetLoader extends Logging {
@@ -86,8 +86,12 @@ trait SQLResultSetLoader extends Logging {
           // FIXME: we should attach all MSI searches to the result set ???
           msiSearchIdsByRsId(rsId).head
         } else 0
-
-        val msiSearch = msiSearchById.getOrElse(rsMsiSearchId, null)
+        
+        val msiSearch = msiSearchById.get(rsMsiSearchId)
+        
+        // Assume child MSI searches if more than one MSI search is found
+        val childMsiSearches = if( msiSearchIds.length == 1 ) Array.empty[MSISearch]
+        else msiSearchById.values.toArray.sortBy( _.jobNumber )
 
         // Decode JSON properties
         val propertiesAsJSON = r.getString(RSCols.SERIALIZED_PROPERTIES)
@@ -103,7 +107,8 @@ trait SQLResultSetLoader extends Logging {
           isDecoy = isDecoy,
           isNative = isNative,
           isQuantified = isQuantified,
-          msiSearch = Some(msiSearch),
+          msiSearch = msiSearch,
+          childMsiSearches = childMsiSearches,
           decoyResultSetId = decoyRsId,
           properties = properties
         )
@@ -112,19 +117,18 @@ trait SQLResultSetLoader extends Logging {
         val nPeptMatches = if (rsPepMatches == null) 0 else rsPepMatches.length
         val nProtMatches = if (rsProtMatches == null) 0 else rsProtMatches.length
 
-        val buff = new StringBuilder()
-        buff.append("Loading")
-
+        val buff = new StringBuilder().append("Loading")
         if (isDecoy) buff.append(" Decoy") else buff.append(" Target")
 
-        buff.append(" ResultSet #").append(rsId)
+        buff
+          .append(s" ResultSet #${rsId} ")
+          .append("[")
+          .append(s"${nPeptides} Peptides, ")
+          .append(s"${nPeptMatches} PeptideMatches, ")
+          .append(s"${nProtMatches} ProteinMatches")
+          .append("] ")
 
-        buff.append(" [")
-        buff.append(nPeptides).append(" Peptides, ")
-        buff.append(nPeptMatches).append(" PeptideMatches, ")
-        buff.append(nProtMatches).append(" ProteinMatches] ")
-
-        logger.info(buff.toString + " loaded in " + (System.currentTimeMillis() - start) + " ms")
+        logger.info(s"${buff} loaded in ${ (System.currentTimeMillis() - start) } ms")
 
         rs
       }
