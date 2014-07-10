@@ -140,7 +140,7 @@ case class ProteinSet (
   // Required fields
   @transient val peptideSet: PeptideSet,
   var hasPeptideSubset: Boolean,
-  var isDecoy: Boolean, // TODO: add to MSIdb
+  var isDecoy: Boolean,
   
   // Immutable optional fields
   

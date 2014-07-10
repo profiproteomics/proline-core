@@ -2,8 +2,7 @@ package fr.proline.core.om.model.msi
 
 import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
-//import com.fasterxml.jackson.annotation.JsonInclude
-//import com.fasterxml.jackson.annotation.JsonInclude.Include
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.misc.InMemoryIdGen
 
 object Peaklist extends InMemoryIdGen
@@ -95,7 +94,7 @@ case class SpectrumTitleParsingRule (
   val lastScanRegex: Option[String] = None,
   val firstTimeRegex: Option[String] = None,
   val lastTimeRegex: Option[String] = None
-) {
+) extends Logging {
   
   def getFieldNames() = SpectrumTitleFields.values.toArray.map(_.toString())
   
@@ -128,10 +127,14 @@ case class SpectrumTitleParsingRule (
           val fieldNameAsStr = fieldName.toString
           
           // Try to capture the corresponding regex group
-          val matches = title =# (atomicFieldRegex,fieldNameAsStr)
-          
-          if( matches.isDefined) {
-            specTitleFieldMap += fieldName -> matches.get.group(fieldNameAsStr)
+          try {
+            val matches = title =# (atomicFieldRegex,fieldNameAsStr)
+            
+            if( matches.isDefined) {
+              specTitleFieldMap += fieldName -> matches.get.group(fieldNameAsStr)
+            }
+          } catch {
+            case e: Exception => logger.trace("error during spectrum title parsing")
           }
         }
       }
