@@ -18,6 +18,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
     val MASCOT_DLL = Value("mascot.dll")
     val MASCOT_DISTILLER = Value("Mascot Distiller")
     val MAX_QUANT = Value("MaxQuant")
+    val PROTEIN_PILOT = Value("Protein Pilot")
     val PROTEOME_DISCOVER = Value("Proteome Discoverer")
     val PROTEO_WIZARD_2_0 = Value("ProteoWizard 2.0")
     val PROTEO_WIZARD_2_1 = Value("ProteoWizard 2.1")
@@ -100,6 +101,16 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       )
     ),
     SpectrumTitleSpecif(
+      SoftNames.PROTEIN_PILOT,
+      "the raw file name and one scan number",
+      """Locus:1.1.1.2129.15 File:"20140527UPS25fmol_IDA.wiff""""",
+      Map(
+        SpectrumTitleFields.RAW_FILE_NAME -> "20140527UPS25fmol_IDA.wiff",
+        SpectrumTitleFields.FIRST_SCAN -> "2129",
+        SpectrumTitleFields.LAST_SCAN -> "2129"
+      )
+    ),
+    SpectrumTitleSpecif(
       SoftNames.PROTEOME_DISCOVER,
       "one scan number",
       "Spectrum1524 scans:2000,",
@@ -170,6 +181,11 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       rawFileNameRegex = Some("""^RawFile: (.+?) FinneganScanNumber:"""),
       firstScanRegex   = Some("""FinneganScanNumber: (\d+)"""),
       lastScanRegex    = Some("""FinneganScanNumber: (\d+)""")
+    ),
+    SoftNames.PROTEIN_PILOT -> SpectrumTitleParsingRule(
+      rawFileNameRegex = Some("""File:"(\w+\.wiff)""""),
+      firstScanRegex   = Some("""Locus:\d\.\d\.\d\.(\d+)\.\d+ File:"""),
+      lastScanRegex    = Some("""Locus:\d\.\d\.\d\.(\d+)\.\d+ File:""")
     ),
     SoftNames.PROTEOME_DISCOVER -> SpectrumTitleParsingRule(
       firstScanRegex = Some("""Spectrum\d+\s+scans:(\d+?),"""),
