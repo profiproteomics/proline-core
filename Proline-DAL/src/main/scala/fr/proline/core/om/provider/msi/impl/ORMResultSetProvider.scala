@@ -173,11 +173,18 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         optionalMsiSearch = Some(omMsiSearch)
       }
       
+      /* Child MsiSearches */
       val childMsiSearches = new ArrayBuffer[MSISearch]
-      for( childMsiResultSet <- msiResultSet.getChildren ) {
-        childMsiResultSet.getMsiSearch()
-        if (msiMsiSearch != null) {
-          childMsiSearches += buildMsiSearch(msiMsiSearch)
+      
+      val msiChildResultSets = msiResultSet.getChildren      
+      if( msiChildResultSets != null ) {
+        
+        for( msiChildResultSet <- msiChildResultSets ) {          
+          val msiChildMsiSearch = msiChildResultSet.getMsiSearch()
+          
+          if (msiChildMsiSearch != null) {
+            childMsiSearches += buildMsiSearch(msiChildMsiSearch)
+          }
         }
       }
 
