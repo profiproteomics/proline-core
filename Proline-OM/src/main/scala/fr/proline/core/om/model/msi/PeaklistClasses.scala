@@ -119,6 +119,8 @@ case class SpectrumTitleParsingRule (
     // Parse all spectrum title fields defined in the specTitleParsingRule
     val specTitleFieldMap = new HashMap[SpectrumTitleFields.Value,String]
     
+    var lastThrowable: Throwable = null
+    
     for( (fieldName, fieldRegex) <- this.regexByFieldName ) {
       
       fieldRegex.split("""\|\|""").foreach { atomicFieldRegex =>
@@ -134,10 +136,21 @@ case class SpectrumTitleParsingRule (
               specTitleFieldMap += fieldName -> matches.get.group(fieldNameAsStr)
             }
           } catch {
-            case e: Exception => logger.trace("error during spectrum title parsing")
+            
+            case t: Throwable => {
+              lastThrowable = t
+              logger.trace("Error during spectrum title parsing")
+            }
+            
           }
+          
         }
       }
+    }
+    
+    if (lastThrowable != null ) {
+      /* Log this one as WARN with full Exception stack-trace */
+      logger.warn("Last error while parsing spectrum title", lastThrowable )
     }
     
     Map() ++ specTitleFieldMap
