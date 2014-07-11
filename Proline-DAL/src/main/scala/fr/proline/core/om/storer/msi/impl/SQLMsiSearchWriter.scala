@@ -271,13 +271,13 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
 
     // Insert PTM specificity if it doesn't exist in the MSIdb
     if (count == 0) {
-      val residueAsStr = if(ptmDef.residue == '\0') "" else ptmDef.residue.toString
+      val residueAsOption = if(ptmDef.residue == '\0') Option.empty[String] else Some(ptmDef.residue.toString)
       
       msiEzDBC.executePrepared( MsiDbPtmSpecificityTable.mkInsertQuery ) { stmt =>
         stmt.executeWith(
           ptmDef.id,
           ptmDef.location,
-          residueAsStr,
+          residueAsOption,
           Option.empty[String] // TODO: retrieve properties
         )
       }
