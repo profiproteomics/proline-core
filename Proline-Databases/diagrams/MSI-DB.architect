@@ -884,41 +884,41 @@ UNIQUE( accession, result_set_id )</remarks>
     <column id="COL274" populated="true" UUID="6783791b-8770-4b6c-9e65-0f8c438be971" autoIncrement="false" autoIncrementSequenceName="peptide_match_rank_seq" defaultValue="" name="rank" nullable="1" physicalName="rank" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>It is computed by comparison of the peptide match scores obtained for a given ms_query. The score are sorted in a descending order and peptide and ranked from 1 to n. The highest the score the lowest the rank. Note: Mascot keeps only peptide matches ranking from 1 to 10.</remarks>
     </column>
-    <column id="COL275" populated="true" UUID="41bb442b-e35d-410a-909a-4e772331d632" autoIncrement="false" autoIncrementSequenceName="peptide_match_delta_moz_seq" defaultValue="" name="delta_moz" nullable="1" physicalName="delta_moz" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="7" userDefinedTypeUUID="8fe516a5-9833-4170-9572-50e78bbf221f" >
+    <column id="COL275" populated="true" UUID="a72895ed-0021-4c00-8a9c-8235e7a8541b" autoIncrement="false" autoIncrementSequenceName="peptide_match_cd_pretty_rank_seq" defaultValue="" name="cd_pretty_rank" nullable="1" physicalName="cd_pretty_rank" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks>Pretty rank recalculated when importing a new result_set from a concatenated database. The peptide_matches corresponding to the same query are sorted by decreasing score, peptide_matches with very close scores (less than 0.1) are considered equals and will get the same pretty rank. This pretty rank is calculated with PSMs from both target and decoy result_sets.</remarks>
+    </column>
+    <column id="COL276" populated="true" UUID="ee1474b6-2dbc-4368-bdd3-2b440d332b15" autoIncrement="false" autoIncrementSequenceName="peptide_match_sd_pretty_rank_seq" defaultValue="" name="sd_pretty_rank" nullable="1" physicalName="sd_pretty_rank" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+     <remarks>Pretty rank recalculated when importing a result_set from a separated database. The peptide_matches corresponding to the same query are sorted by decreasing score, peptide_matches with very close scores (less than 0.1) are considered equals and will get the same pretty rank. This pretty rank is calculated with peptide_matches only from target or decoy result_set.</remarks>
+    </column>
+    <column id="COL277" populated="true" UUID="41bb442b-e35d-410a-909a-4e772331d632" autoIncrement="false" autoIncrementSequenceName="peptide_match_delta_moz_seq" defaultValue="" name="delta_moz" nullable="1" physicalName="delta_moz" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="7" userDefinedTypeUUID="8fe516a5-9833-4170-9572-50e78bbf221f" >
      <remarks>It is the m/z difference between the observed m/z and a calculated m/z derived from the peptide calculated mass. Note: delta_moz = exp_moz - calc_moz</remarks>
     </column>
-    <column id="COL276" populated="true" UUID="c2ea02e5-8c91-4a4b-96b5-13f3b8e50c75" autoIncrement="false" autoIncrementSequenceName="peptide_match_missed_cleavage_seq" defaultValue="" name="missed_cleavage" nullable="0" physicalName="missed_cleavage" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL278" populated="true" UUID="c2ea02e5-8c91-4a4b-96b5-13f3b8e50c75" autoIncrement="false" autoIncrementSequenceName="peptide_match_missed_cleavage_seq" defaultValue="" name="missed_cleavage" nullable="0" physicalName="missed_cleavage" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>It is the number of enzyme missed cleavages that are present in the peptide sequence.</remarks>
     </column>
-    <column id="COL277" populated="true" UUID="fd5e5200-f42e-49a1-bd1d-33b3bd4e3be2" autoIncrement="false" autoIncrementSequenceName="peptide_match_fragment_match_count_seq" defaultValue="" name="fragment_match_count" nullable="1" physicalName="fragment_match_count" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL279" populated="true" UUID="fd5e5200-f42e-49a1-bd1d-33b3bd4e3be2" autoIncrement="false" autoIncrementSequenceName="peptide_match_fragment_match_count_seq" defaultValue="" name="fragment_match_count" nullable="1" physicalName="fragment_match_count" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks>The number of observed MS2 fragments that were matched to theoretical fragments of this peptide.</remarks>
     </column>
-    <column id="COL278" populated="true" UUID="705b496e-fa8b-4f75-a878-6fbea8066338" autoIncrement="false" autoIncrementSequenceName="peptide_match_is_decoy_seq" defaultValue="" name="is_decoy" nullable="0" physicalName="is_decoy" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
+    <column id="COL280" populated="true" UUID="705b496e-fa8b-4f75-a878-6fbea8066338" autoIncrement="false" autoIncrementSequenceName="peptide_match_is_decoy_seq" defaultValue="" name="is_decoy" nullable="0" physicalName="is_decoy" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
      <remarks>Specifies if the peptide match is related to a decoy database search.</remarks>
     </column>
-    <column id="COL279" populated="true" UUID="67f9083f-78da-4d43-8b05-a87d422701f3" autoIncrement="false" autoIncrementSequenceName="peptide_match_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL281" populated="true" UUID="67f9083f-78da-4d43-8b05-a87d422701f3" autoIncrement="false" autoIncrementSequenceName="peptide_match_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
     </column>
-    <column id="COL280" populated="true" UUID="6926754d-c9c9-43fd-a9d8-7420370cd52a" autoIncrement="false" autoIncrementSequenceName="peptide_match_peptide_id_seq" defaultValue="" name="peptide_id" nullable="0" physicalName="peptide_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL282" populated="true" UUID="6926754d-c9c9-43fd-a9d8-7420370cd52a" autoIncrement="false" autoIncrementSequenceName="peptide_match_peptide_id_seq" defaultValue="" name="peptide_id" nullable="0" physicalName="peptide_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL281" populated="true" UUID="6df8c4a1-1eda-4323-8718-c2ba1e380401" autoIncrement="false" defaultValue="" name="ms_query_id" nullable="0" physicalName="ms_query_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL283" populated="true" UUID="6df8c4a1-1eda-4323-8718-c2ba1e380401" autoIncrement="false" defaultValue="" name="ms_query_id" nullable="0" physicalName="ms_query_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL282" populated="true" UUID="e287bfb1-e7b9-493b-b796-3917d86accb5" autoIncrement="false" autoIncrementSequenceName="peptide_match_best_child_id_seq" defaultValue="" name="best_child_id" nullable="1" physicalName="best_child_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL284" populated="true" UUID="e287bfb1-e7b9-493b-b796-3917d86accb5" autoIncrement="false" autoIncrementSequenceName="peptide_match_best_child_id_seq" defaultValue="" name="best_child_id" nullable="1" physicalName="best_child_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL283" populated="true" UUID="0d57d077-2634-4756-a547-c2f41a35c479" autoIncrement="false" autoIncrementSequenceName="peptide_match_scoring_id_seq" defaultValue="" name="scoring_id" nullable="0" physicalName="scoring_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL285" populated="true" UUID="0d57d077-2634-4756-a547-c2f41a35c479" autoIncrement="false" autoIncrementSequenceName="peptide_match_scoring_id_seq" defaultValue="" name="scoring_id" nullable="0" physicalName="scoring_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL284" populated="true" UUID="b6ef9f09-0bef-4365-b2f7-14ce20d44ed3" autoIncrement="false" defaultValue="" name="result_set_id" nullable="0" physicalName="result_set_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL286" populated="true" UUID="b6ef9f09-0bef-4365-b2f7-14ce20d44ed3" autoIncrement="false" defaultValue="" name="result_set_id" nullable="0" physicalName="result_set_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
-    </column>
-    <column id="COL285" populated="true" UUID="ee1474b6-2dbc-4368-bdd3-2b440d332b15" autoIncrement="false" autoIncrementSequenceName="peptide_match_sd_pretty_rank_seq" defaultValue="" name="sd_pretty_rank" nullable="1" physicalName="sd_pretty_rank" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
-     <remarks>Pretty rank recalculated when importing a ResultSet from a separated database. The PSMs corresponding to the same query are sorted by decreasing score, PSMs with very close scores (less than 0.1) are considered equals and will get the same pretty rank. This pretty rank is calculated with PSMs only from target or decoy ResultSet.</remarks>
-    </column>
-    <column id="COL286" populated="true" UUID="a72895ed-0021-4c00-8a9c-8235e7a8541b" autoIncrement="false" autoIncrementSequenceName="peptide_match_cd_pretty_rank_seq" defaultValue="" name="cd_pretty_rank" nullable="1" physicalName="cd_pretty_rank" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
-     <remarks>Pretty rank recalculated when importing a new ResultSet from a concatenated database. The PSMs corresponding to the same query are sorted by decreasing score, PSMs with very close scores (less than 0.1) are considered equals and will get the same pretty rank. This pretty rank is calculated with PSMs from both target and decoy ResultSets.</remarks>
     </column>
     </folder>
     <folder id="FOLTAB2693" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
@@ -930,13 +930,13 @@ UNIQUE( accession, result_set_id )</remarks>
      <index-column id="IDC288" populated="true" UUID="211946b6-ee11-4ab0-aa87-c51a2dbf977d" ascendingOrDescending="UNSPECIFIED" column-ref="COL270" name="id" physicalName="id" />
     </index>
     <index id="IDX289" populated="true" UUID="c39f3666-c458-4758-a2ff-4e4fcb3f8496" clustered="false" name="peptide_match_ms_query_idx" physicalName="peptide_match_ms_query_idx" primaryKeyIndex="false" unique="false" >
-     <index-column id="IDC290" populated="true" UUID="392bb1f7-8f9e-4d55-bfac-e09bc4ce737d" ascendingOrDescending="UNSPECIFIED" column-ref="COL281" name="ms_query_id" physicalName="ms_query_id" />
+     <index-column id="IDC290" populated="true" UUID="392bb1f7-8f9e-4d55-bfac-e09bc4ce737d" ascendingOrDescending="UNSPECIFIED" column-ref="COL283" name="ms_query_id" physicalName="ms_query_id" />
     </index>
     <index id="IDX291" populated="true" UUID="2a4fc5e8-7e11-4efb-923e-d18bb4b0a9f9" clustered="false" name="peptide_match_peptide_idx" physicalName="peptide_match_peptide_idx" primaryKeyIndex="false" unique="false" >
-     <index-column id="IDC292" populated="true" UUID="3eaf4440-0a74-4d89-873e-ad78425f9e5a" ascendingOrDescending="UNSPECIFIED" column-ref="COL280" name="peptide_id" physicalName="peptide_id" />
+     <index-column id="IDC292" populated="true" UUID="3eaf4440-0a74-4d89-873e-ad78425f9e5a" ascendingOrDescending="UNSPECIFIED" column-ref="COL282" name="peptide_id" physicalName="peptide_id" />
     </index>
     <index id="IDX293" populated="true" UUID="8effcc33-88f3-4ac9-a131-f9b09f8e8f7c" clustered="true" name="peptide_match_rs_idx" physicalName="peptide_match_rs_idx" primaryKeyIndex="false" unique="false" >
-     <index-column id="IDC294" populated="true" UUID="d7a92e0b-b54f-4480-9fbf-3205871192bd" ascendingOrDescending="ASCENDING" column-ref="COL284" name="result_set_id" physicalName="result_set_id" />
+     <index-column id="IDC294" populated="true" UUID="d7a92e0b-b54f-4480-9fbf-3205871192bd" ascendingOrDescending="ASCENDING" column-ref="COL286" name="result_set_id" physicalName="result_set_id" />
     </index>
    </folder>
   </table>
@@ -1842,7 +1842,7 @@ UNIQUE( accession, result_set_id )</remarks>
   </table>
   <relationships>
    <relationship id="REL583" populated="true" UUID="b336c874-5d0a-4fb3-8041-df381ba30d5c" deferrability="7" deleteRule="0" fk-table-ref="TAB269" fkCardinality="7" identifying="false" name="result_set_peptide_match_fk" physicalName="result_set_peptide_match_fk" pk-table-ref="TAB7" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP584" populated="true" UUID="2fe6f9d6-75ba-4e5a-8520-96c81ee55c2d" fk-column-ref="COL284" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL8" />
+    <column-mapping id="CMP584" populated="true" UUID="2fe6f9d6-75ba-4e5a-8520-96c81ee55c2d" fk-column-ref="COL286" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL8" />
    </relationship>
    <relationship id="REL585" populated="true" UUID="ec99edd7-d910-4dc8-8605-5490423e2312" deferrability="7" deleteRule="0" fk-table-ref="TAB90" fkCardinality="7" identifying="false" name="result_set_sequence_match_fk" physicalName="result_set_sequence_match_fk" pk-table-ref="TAB7" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP586" populated="true" UUID="75cc11d4-05d0-476a-b817-fde8a219ba3e" fk-column-ref="COL100" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL8" />
@@ -1959,7 +1959,7 @@ UNIQUE( accession, result_set_id )</remarks>
     <column-mapping id="CMP660" populated="true" UUID="93840dd6-b997-481f-b7c5-245721adeaef" fk-column-ref="COL534" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL177" />
    </relationship>
    <relationship id="REL661" populated="true" UUID="d7916ddf-ae5b-44a2-8c01-3b528c450467" deferrability="7" deleteRule="1" fk-table-ref="TAB269" fkCardinality="7" identifying="false" name="ms_query_peptide_match_fk" physicalName="ms_query_peptide_match_fk" pk-table-ref="TAB200" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP662" populated="true" UUID="81c3b8e8-a631-4162-8098-29f47218dd29" fk-column-ref="COL281" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL201" />
+    <column-mapping id="CMP662" populated="true" UUID="81c3b8e8-a631-4162-8098-29f47218dd29" fk-column-ref="COL283" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL201" />
    </relationship>
    <relationship id="REL663" populated="true" UUID="398a22cb-843e-4d37-a51a-8089f06fdcf4" deferrability="7" deleteRule="1" fk-table-ref="TAB563" fkCardinality="7" identifying="false" name="ms_query_master_quant_reporter_ion_fk" physicalName="ms_query_master_quant_reporter_ion_fk" pk-table-ref="TAB200" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP664" populated="true" UUID="101de97f-791d-4e05-989c-e350120b919a" fk-column-ref="COL567" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL201" />
@@ -2001,7 +2001,7 @@ UNIQUE( accession, result_set_id )</remarks>
     <column-mapping id="CMP688" populated="true" UUID="5fd268b0-ef3a-48d5-8599-768af68f60f3" fk-column-ref="COL439" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL257" />
    </relationship>
    <relationship id="REL689" populated="true" UUID="97185887-7b2c-40ee-948b-303cfed02586" deferrability="7" deleteRule="1" fk-table-ref="TAB269" fkCardinality="7" identifying="false" name="peptide_peptide_match_fk" physicalName="peptide_peptide_match_fk" pk-table-ref="TAB256" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP690" populated="true" UUID="706debcf-c6c1-4f58-a3f5-61de0fa1614d" fk-column-ref="COL280" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL257" />
+    <column-mapping id="CMP690" populated="true" UUID="706debcf-c6c1-4f58-a3f5-61de0fa1614d" fk-column-ref="COL282" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL257" />
    </relationship>
    <relationship id="REL691" populated="true" UUID="6ce84ef9-13f1-4589-a16b-bb0256f215e8" deferrability="7" deleteRule="3" fk-table-ref="TAB400" fkCardinality="7" identifying="false" name="unmodified_peptide_peptide_instance_fk" physicalName="unmodified_peptide_peptide_instance_fk" pk-table-ref="TAB256" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP692" populated="true" UUID="97b8e104-54c6-4463-a22f-360b5efe78d5" fk-column-ref="COL412" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL257" />
@@ -2019,7 +2019,7 @@ UNIQUE( accession, result_set_id )</remarks>
     <column-mapping id="CMP700" populated="true" UUID="066ab774-d60d-4144-ab68-2583e89749b8" fk-column-ref="COL121" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL270" />
    </relationship>
    <relationship id="REL701" populated="true" UUID="3d1dd5ed-84aa-423c-b9b5-8f32c268e867" deferrability="7" deleteRule="3" fk-table-ref="TAB269" fkCardinality="7" identifying="false" name="peptide_match_peptide_match_fk" physicalName="peptide_match_peptide_match_fk" pk-table-ref="TAB269" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP702" populated="true" UUID="cc4974fd-0697-43c4-9704-a2e3f5b26682" fk-column-ref="COL282" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL270" />
+    <column-mapping id="CMP702" populated="true" UUID="cc4974fd-0697-43c4-9704-a2e3f5b26682" fk-column-ref="COL284" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL270" />
    </relationship>
    <relationship id="REL703" populated="true" UUID="c7e0e298-ed69-4948-a16d-344fbe4bf27a" deferrability="7" deleteRule="1" fk-table-ref="TAB504" fkCardinality="7" identifying="true" name="peptide_match_peptide_instance_peptide_match_map_fk" physicalName="peptide_match_peptide_instance_peptide_match_map_fk" pk-table-ref="TAB269" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP704" populated="true" UUID="f43afa97-456f-4db1-961c-59dfd7a8450c" fk-column-ref="COL506" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL270" />
@@ -2148,7 +2148,7 @@ UNIQUE( accession, result_set_id )</remarks>
     <column-mapping id="CMP786" populated="true" UUID="28155e7e-608a-466d-b070-e74031a459f5" fk-column-ref="COL190" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL553" />
    </relationship>
    <relationship id="REL787" populated="true" UUID="afeba0f7-916e-4b23-9b19-78df6627e118" deferrability="7" deleteRule="3" fk-table-ref="TAB269" fkCardinality="7" identifying="false" name="scoring_peptide_match_fk" physicalName="scoring_peptide_match_fk" pk-table-ref="TAB552" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP788" populated="true" UUID="72be1696-bdec-418a-b707-1ad4edcb1d9f" fk-column-ref="COL283" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL553" />
+    <column-mapping id="CMP788" populated="true" UUID="72be1696-bdec-418a-b707-1ad4edcb1d9f" fk-column-ref="COL285" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL553" />
    </relationship>
    <relationship id="REL789" populated="true" UUID="cc061d2d-094d-410b-b63a-977a8d892d33" deferrability="7" deleteRule="3" fk-table-ref="TAB128" fkCardinality="7" identifying="false" name="scoring_peptide_set_fk" physicalName="scoring_peptide_set_fk" pk-table-ref="TAB552" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP790" populated="true" UUID="b2d80ea4-044b-4be5-87b5-925e3e20f998" fk-column-ref="COL136" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL553" />
@@ -2163,7 +2163,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8465468252641619" viewportX="532" viewportY="484" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8465468252641619" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB533" x="20" y="878" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB1" x="198" y="27" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB7" x="1785" y="893" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
@@ -2187,7 +2187,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <table-pane table-ref="TAB227" x="1609" y="564" bgColor="0xc7d0df" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB250" x="2120" y="24" bgColor="0xe6d794" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB256" x="1219" y="369" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB269" x="936" y="420" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB269" x="935" y="419" bgColor="0xc8dccc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB295" x="1543" y="344" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB307" x="1291" y="204" bgColor="0xc8b7ea" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB314" x="223" y="602" bgColor="0xeec994" fgColor="0x000000" rounded="true" dashed="false"/>
@@ -2233,7 +2233,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <table-link relationship-ref="REL679" pkConnection="0.45454545454545453" fkConnection="0.8067632850241546" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL711" pkConnection="0.37894736842105264" fkConnection="0.4594594594594595" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
   <table-link relationship-ref="REL605" pkConnection="0.4627450980392157" fkConnection="0.23776223776223776" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL661" pkConnection="0.1889763779527559" fkConnection="0.3874538745387454" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL661" pkConnection="0.1889763779527559" fkConnection="0.33993399339933994" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL617" pkConnection="0.5118110236220472" fkConnection="0.5631578947368421" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL619" pkConnection="0.6220472440944882" fkConnection="0.6947368421052632" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL645" pkConnection="0.10943396226415095" fkConnection="0.9090909090909091" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="24"/>
@@ -2256,7 +2256,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <table-link relationship-ref="REL735" pkConnection="0.22761194029850745" fkConnection="0.2145748987854251" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL625" pkConnection="0.7584541062801933" fkConnection="0.8582677165354331" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="24"/>
   <table-link relationship-ref="REL685" pkConnection="0.1" fkConnection="0.1099476439790576" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="20"/>
-  <table-link relationship-ref="REL737" pkConnection="0.615686274509804" fkConnection="0.11297071129707113" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
+  <table-link relationship-ref="REL737" pkConnection="0.6666666666666666" fkConnection="0.16236162361623616" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
   <table-link relationship-ref="REL741" pkConnection="0.45217391304347826" fkConnection="0.43137254901960786" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL687" pkConnection="0.2716049382716049" fkConnection="0.2175732217573222" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="20"/>
   <table-link relationship-ref="REL689" pkConnection="0.6486486486486487" fkConnection="0.07920792079207921" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
@@ -2275,7 +2275,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <table-link relationship-ref="REL647" pkConnection="0.23270440251572327" fkConnection="0.5765765765765766" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL655" pkConnection="0.5793357933579336" fkConnection="0.5058823529411764" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
   <table-link relationship-ref="REL739" pkConnection="0.42474916387959866" fkConnection="0.7354260089686099" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
-  <table-link relationship-ref="REL703" pkConnection="0.40594059405940597" fkConnection="0.631578947368421" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL703" pkConnection="0.35973597359735976" fkConnection="0.631578947368421" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL765" pkConnection="0.1925925925925926" fkConnection="0.8450184501845018" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="24"/>
   <table-link relationship-ref="REL651" pkConnection="0.3118811881188119" fkConnection="0.4678111587982833" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="72"/>
   <table-link relationship-ref="REL627" pkConnection="0.3142857142857143" fkConnection="0.5569620253164557" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
@@ -2308,7 +2308,7 @@ UNIQUE( accession, result_set_id )</remarks>
   <table-link relationship-ref="REL731" pkConnection="0.08421052631578947" fkConnection="0.6490384615384616" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
   <table-link relationship-ref="REL641" pkConnection="0.7692307692307693" fkConnection="0.24519230769230768" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="66"/>
   <table-link relationship-ref="REL691" pkConnection="0.18518518518518517" fkConnection="0.20784313725490197" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="20"/>
-  <table-link relationship-ref="REL709" pkConnection="0.8376383763837638" fkConnection="0.15695067264573992" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL709" pkConnection="0.7458745874587459" fkConnection="0.15695067264573992" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
   <table-link relationship-ref="REL783" pkConnection="0.124" fkConnection="0.4177215189873418" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="24"/>
   <table-link relationship-ref="REL663" pkConnection="0.6408839779005525" fkConnection="0.3942307692307692" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
   <table-link relationship-ref="REL747" pkConnection="0.30708661417322836" fkConnection="0.47368421052631576" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
