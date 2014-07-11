@@ -634,6 +634,7 @@ object UdsDbUserAccountColumns extends ColumnEnumeration {
   val $tableName = UdsDbUserAccountTable.name
   val ID = Column("id")
   val LOGIN = Column("login")
+  val PASSWORD_HASH = Column("password_hash")
   val CREATION_MODE = Column("creation_mode")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
 }
@@ -661,4 +662,50 @@ object UdsDbVirtualFolderTable extends UdsDbVirtualFolderTable {
   val name = "virtual_folder"
   val columns = UdsDbVirtualFolderColumns
 }
+
+object UdsDb {
+  val tables = Array(
+    UdsDbActivationTable,
+    UdsDbAdminInfosTable,
+    UdsDbAggregationTable,
+    UdsDbBiologicalGroupTable,
+    UdsDbBiologicalGroupBiologicalSampleItemTable,
+    UdsDbBiologicalSampleTable,
+    UdsDbBiologicalSampleSampleAnalysisMapTable,
+    UdsDbDataSetTable,
+    UdsDbDocumentTable,
+    UdsDbEnzymeTable,
+    UdsDbEnzymeCleavageTable,
+    UdsDbExternalDbTable,
+    UdsDbFractionationTable,
+    UdsDbFragmentationRuleTable,
+    UdsDbFragmentationSeriesTable,
+    UdsDbGroupSetupTable,
+    UdsDbGroupSetupBiologicalGroupMapTable,
+    UdsDbInstrumentTable,
+    UdsDbInstrumentConfigTable,
+    UdsDbInstrumentConfigFragmentationRuleMapTable,
+    UdsDbMasterQuantChannelTable,
+    UdsDbObjectTreeTable,
+    UdsDbObjectTreeSchemaTable,
+    UdsDbPeaklistSoftwareTable,
+    UdsDbProjectTable,
+    UdsDbProjectDbMapTable,
+    UdsDbProjectUserAccountMapTable,
+    UdsDbProteinMatchDecoyRuleTable,
+    UdsDbQuantChannelTable,
+    UdsDbQuantLabelTable,
+    UdsDbQuantMethodTable,
+    UdsDbRatioDefinitionTable,
+    UdsDbRawFileTable,
+    UdsDbRawFileProjectMapTable,
+    UdsDbRunTable,
+    UdsDbRunIdentificationTable,
+    UdsDbSampleAnalysisTable,
+    UdsDbSpecTitleParsingRuleTable,
+    UdsDbUserAccountTable,
+    UdsDbVirtualFolderTable
+  )
+}
+
 

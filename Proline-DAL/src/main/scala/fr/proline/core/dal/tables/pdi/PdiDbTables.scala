@@ -361,5 +361,30 @@ object PdiDbTaxonExtraNameTable extends PdiDbTaxonExtraNameTable {
   val columns = PdiDbTaxonExtraNameColumns
 }
 
+object PdiDb {
+  val tables = Array(
+    PdiDbAdminInfosTable,
+    PdiDbBioSequenceTable,
+    PdiDbBioSequenceAnnotationTable,
+    PdiDbBioSequenceGeneMapTable,
+    PdiDbBioSequenceRelationTable,
+    PdiDbChromosomeLocationTable,
+    PdiDbFastaFileEntryIndexTable,
+    PdiDbFastaParsingRuleTable,
+    PdiDbGeneTable,
+    PdiDbObjectTreeTable,
+    PdiDbObjectTreeSchemaTable,
+    PdiDbProteinIdentifierTable,
+    PdiDbSeqDbConfigTable,
+    PdiDbSeqDbEntryTable,
+    PdiDbSeqDbEntryGeneMapTable,
+    PdiDbSeqDbEntryObjectTreeMapTable,
+    PdiDbSeqDbEntryProteinIdentifierMapTable,
+    PdiDbSeqDbInstanceTable,
+    PdiDbSeqDbReleaseTable,
+    PdiDbTaxonTable,
+    PdiDbTaxonExtraNameTable
+  )
+}
 
 

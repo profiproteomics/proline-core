@@ -148,3 +148,17 @@ object PsDbPtmSpecificityTable extends PsDbPtmSpecificityTable {
   val columns = PsDbPtmSpecificityColumns
 }
 
+object PsDb {
+  val tables = Array(
+    PsDbAdminInfosTable,
+    PsDbAtomLabelTable,
+    PsDbPeptideTable,
+    PsDbPeptidePtmTable,
+    PsDbPeptidePtmInsertStatusTable,
+    PsDbPtmTable,
+    PsDbPtmClassificationTable,
+    PsDbPtmEvidenceTable,
+    PsDbPtmSpecificityTable
+  )
+}
+

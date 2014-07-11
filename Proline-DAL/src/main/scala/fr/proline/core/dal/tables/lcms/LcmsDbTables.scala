@@ -516,3 +516,39 @@ object LcmsDbTileTable extends LcmsDbTileTable {
   val columns = LcmsDbTileColumns
 }
 
+object LcmsDb {
+  val tables = Array(
+    LcmsDbCacheTable,
+    LcmsDbCompoundTable,
+    LcmsDbFeatureTable,
+    LcmsDbFeatureClusterItemTable,
+    LcmsDbFeatureMs2EventTable,
+    LcmsDbFeatureObjectTreeMappingTable,
+    LcmsDbFeatureOverlapMappingTable,
+    LcmsDbFeatureScoringTable,
+    LcmsDbInstrumentTable,
+    LcmsDbMapTable,
+    LcmsDbMapAlignmentTable,
+    LcmsDbMapLayerTable,
+    LcmsDbMapObjectTreeMappingTable,
+    LcmsDbMapSetTable,
+    LcmsDbMapSetObjectTreeMappingTable,
+    LcmsDbMasterFeatureItemTable,
+    LcmsDbMsPictureTable,
+    LcmsDbObjectTreeTable,
+    LcmsDbObjectTreeSchemaTable,
+    LcmsDbPeakPickingSoftwareTable,
+    LcmsDbPeakelFittingModelTable,
+    LcmsDbProcessedMapTable,
+    LcmsDbProcessedMapFeatureItemTable,
+    LcmsDbProcessedMapMozCalibrationTable,
+    LcmsDbProcessedMapRawMapMappingTable,
+    LcmsDbRawMapTable,
+    LcmsDbScanTable,
+    LcmsDbScanSequenceTable,
+    LcmsDbTheoreticalFeatureTable,
+    LcmsDbTileTable
+  )
+}
+
+

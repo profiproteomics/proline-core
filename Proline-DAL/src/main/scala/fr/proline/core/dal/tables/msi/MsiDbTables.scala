@@ -398,6 +398,8 @@ object MsiDbPeptideMatchColumns extends ColumnEnumeration {
   val EXPERIMENTAL_MOZ = Column("experimental_moz")
   val SCORE = Column("score")
   val RANK = Column("rank")
+  val CD_PRETTY_RANK = Column("cd_pretty_rank")
+  val SD_PRETTY_RANK = Column("sd_pretty_rank")
   val DELTA_MOZ = Column("delta_moz")
   val MISSED_CLEAVAGE = Column("missed_cleavage")
   val FRAGMENT_MATCH_COUNT = Column("fragment_match_count")
@@ -408,8 +410,6 @@ object MsiDbPeptideMatchColumns extends ColumnEnumeration {
   val BEST_CHILD_ID = Column("best_child_id")
   val SCORING_ID = Column("scoring_id")
   val RESULT_SET_ID = Column("result_set_id")
-  val CD_PRETTY_RANK = Column("cd_pretty_rank")
-  val SD_PRETTY_RANK = Column("sd_pretty_rank")
 }
 
 abstract class MsiDbPeptideMatchTable extends TableDefinition[MsiDbPeptideMatchColumns.type]
@@ -873,4 +873,60 @@ object MsiDbUsedPtmTable extends MsiDbUsedPtmTable {
   val name = "used_ptm"
   val columns = MsiDbUsedPtmColumns
 }
+
+object MsiDb {
+  val tables = Array(
+    MsiDbAdminInfosTable,
+    MsiDbBioSequenceTable,
+    MsiDbCacheTable,
+    MsiDbConsensusSpectrumTable,
+    MsiDbEnzymeTable,
+    MsiDbInstrumentConfigTable,
+    MsiDbIonSearchTable,
+    MsiDbMasterQuantComponentTable,
+    MsiDbMasterQuantPeptideIonTable,
+    MsiDbMasterQuantReporterIonTable,
+    MsiDbMsQueryTable,
+    MsiDbMsiSearchTable,
+    MsiDbMsiSearchObjectTreeMapTable,
+    MsiDbMsmsSearchTable,
+    MsiDbObjectTreeTable,
+    MsiDbObjectTreeSchemaTable,
+    MsiDbPeaklistTable,
+    MsiDbPeaklistRelationTable,
+    MsiDbPeaklistSoftwareTable,
+    MsiDbPeptideTable,
+    MsiDbPeptideInstanceTable,
+    MsiDbPeptideInstancePeptideMatchMapTable,
+    MsiDbPeptideMatchTable,
+    MsiDbPeptideMatchObjectTreeMapTable,
+    MsiDbPeptideMatchRelationTable,
+    MsiDbPeptideReadablePtmStringTable,
+    MsiDbPeptideSetTable,
+    MsiDbPeptideSetPeptideInstanceItemTable,
+    MsiDbPeptideSetProteinMatchMapTable,
+    MsiDbPeptideSetRelationTable,
+    MsiDbProteinMatchTable,
+    MsiDbProteinMatchSeqDatabaseMapTable,
+    MsiDbProteinSetTable,
+    MsiDbProteinSetObjectTreeMapTable,
+    MsiDbProteinSetProteinMatchItemTable,
+    MsiDbPtmSpecificityTable,
+    MsiDbResultSetTable,
+    MsiDbResultSetObjectTreeMapTable,
+    MsiDbResultSetRelationTable,
+    MsiDbResultSummaryTable,
+    MsiDbResultSummaryObjectTreeMapTable,
+    MsiDbResultSummaryRelationTable,
+    MsiDbScoringTable,
+    MsiDbSearchSettingsTable,
+    MsiDbSearchSettingsSeqDatabaseMapTable,
+    MsiDbSeqDatabaseTable,
+    MsiDbSequenceMatchTable,
+    MsiDbSpectrumTable,
+    MsiDbUsedEnzymeTable,
+    MsiDbUsedPtmTable
+  )
+}
+
 
