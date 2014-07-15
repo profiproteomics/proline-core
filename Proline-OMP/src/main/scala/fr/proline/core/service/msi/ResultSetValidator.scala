@@ -50,6 +50,7 @@ object ResultSetValidator {
       }
     }
 
+    
     new ResultSetValidator(
       execContext,
       targetRs.get,
@@ -106,9 +107,12 @@ class ResultSetValidator(
   private val msiDbContext = execContext.getMSIDbConnectionContext
   var validatedTargetRsm: ResultSummary = null
   var validatedDecoyRsm: Option[ResultSummary] = null
-
+    
+  //If not specified, specify default one !
+  val finalTDAnalyzer =  if(tdAnalyzer.isEmpty){ BuildTDAnalyzer(false, targetRs, null) } else tdAnalyzer
+    
   // Update the target analyzer of the validators
-  pepMatchValidator.foreach(_.tdAnalyzer = tdAnalyzer)
+  pepMatchValidator.foreach(_.tdAnalyzer = finalTDAnalyzer)
 
   override protected def beforeInterruption = {
   }
@@ -227,8 +231,12 @@ class ResultSetValidator(
     
     if (pepMatchPreFilters.isDefined) {
       pepMatchPreFilters.get.foreach { psmFilter =>
+        
+      	if(psmFilter.isInstanceOf[IFilterNeedingResultSet])
+      		psmFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(targetRs)
+
   		if(!psmFilter.postValidationFilter){
-	        finalValidationResult = new BasicPepMatchValidator(psmFilter, tdAnalyzer).validatePeptideMatches(targetRs).finalResult
+	        finalValidationResult = new BasicPepMatchValidator(psmFilter, finalTDAnalyzer).validatePeptideMatches(targetRs).finalResult
 	        logger.debug(
 	          "After Filter " + psmFilter.filterDescription +
 	          " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
@@ -245,6 +253,10 @@ class ResultSetValidator(
     for (somePepMatchValidator <- pepMatchValidator) {
 
       val validationFilter = somePepMatchValidator.validationFilter
+      
+	  if(validationFilter.isInstanceOf[IFilterNeedingResultSet])
+      		validationFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(targetRs)
+
       logger.debug("Run peptide match validator: " + validationFilter.filterParameter)
 
       // Apply Filter
@@ -260,7 +272,7 @@ class ResultSetValidator(
     
     //VDS: FOR TEST ONLY : EXECUTE some filter - singlePerQuery- After FDR !
     postValidationFilter.foreach(psmFilter => {
-        finalValidationResult = new BasicPepMatchValidator(psmFilter, tdAnalyzer).validatePeptideMatches(targetRs).finalResult
+        finalValidationResult = new BasicPepMatchValidator(psmFilter, finalTDAnalyzer).validatePeptideMatches(targetRs).finalResult
         logger.debug(
           "After Post Validation Filter " + psmFilter.filterDescription +
           " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
