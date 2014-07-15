@@ -49,6 +49,8 @@ use File::Basename qw/fileparse/;
 use String::CamelCase qw/camelize/;
 no warnings;
 
+### Needed to avoid error "could not find ParserDetails.ini in XML/SAX" when XML::SAX is installed
+$XML::Simple::PREFERRED_PARSER = 'XML::Parser';
 
 #my $xmlFile = 'UDS-DB.architect';
 #my $outputFile = 'uds-db_enums.txt';
@@ -86,11 +88,13 @@ sub architect2enums {
   open( FILE, ">", $outputFile  ) or die $!;
   
   my $space = '  ';
+  my @tableDefNames;
   for my $table (@sorted_tables) {
     
     my $tableName = $namespace.camelize($table->name);
     my $tableDefName = $tableName.'Table';
     my $colsDefName = $tableName.'Columns';
+    push(@tableDefNames, $tableDefName);
     
     print FILE  "object $colsDefName extends ColumnEnumeration {\n";
     printf FILE "  val \$tableName = %s.name\n", $tableDefName;
@@ -114,6 +118,18 @@ sub architect2enums {
     printf FILE "  val columns = %s\n}\n\n", $colsDefName;
   
   }
+  
+  print FILE "object $namespace {\n";
+  print FILE "  val tables = Array(\n";
+  
+  print FILE join(",\n",map { "    ". $_ } @tableDefNames);
+  
+  #for my $tableName (@tableNames) {
+  #  printf FILE $tableName.'Table,';
+  #}
+  
+  print FILE "\n  )\n";
+  print FILE "}\n";
   
   close FILE;
 }
