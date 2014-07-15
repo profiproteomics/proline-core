@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.filtering.{ IOptimizablePeptideMatchFilter, IPeptideMatchSorter, PeptideMatchFiltering }
 import fr.proline.core.om.model.msi.{ PeptideMatch, ResultSet }
 import fr.proline.core.algo.msi.filtering.pepmatch.MascotPValuePSMFilter
+import fr.proline.core.om.model.msi.ResultSetProperties
 
 object BuildTDAnalyzer extends Logging {
 
@@ -55,7 +56,21 @@ object BuildTDAnalyzer extends Logging {
     }
 
   }
+  
+  def apply( rsProp:ResultSetProperties): Option[ITargetDecoyAnalyzer] = {
+      
+	  require(rsProp.getTargetDecoyMode.isDefined, "ResultSet has no valid TargetDecoyMode Property")
+      val tdMode = TargetDecoyModes.withName(rsProp.getTargetDecoyMode.get)
 
+      val tdAnalyzer = if (tdMode == TargetDecoyModes.MIXED) {
+        this.logger.warn("Specified target/decoy modes is mixed=> CONCATENATED based TD analyzer has to be used")
+        new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED) // arbitrary
+      } else
+        new BasicTDAnalyzer(tdMode)
+
+      Some(tdAnalyzer)   
+  }
+  
 }
 
 abstract class ITargetDecoyAnalyzer {
