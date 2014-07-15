@@ -68,8 +68,10 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
     // Allways FALSE even for subset. Should be changed back to 4 with corrected XML file ! 
 
     val typicalChooser = new TypicalProteinChooser()
+    
     val ruleDesc = new TypicalProteinChooserRule(ruleName = "Sprot AC preferred", applyToAcc = true, rulePattern = "\\w{6,6}")
-    typicalChooser.changeTypical(targetRSMId, ruleDesc, executionContext.getMSIDbConnectionContext().getEntityManager())
+    val rules =  Seq(ruleDesc)
+    typicalChooser.changeTypical(targetRSMId, rules, executionContext.getMSIDbConnectionContext().getEntityManager())
 
     val nbrChangedTyp = typicalChooser.getChangedProteinSets.size
 
@@ -85,8 +87,9 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
     var nbrTremblShouldChange: Int =1   
 
     val typicalChooser = new TypicalProteinChooser()
-    val ruleDesc = new TypicalProteinChooserRule(ruleName = "Description ##SP  preferred", applyToAcc = false, rulePattern = "##SP.*") 
-    typicalChooser.changeTypical(targetRSMId, ruleDesc, executionContext.getMSIDbConnectionContext().getEntityManager())
+    val ruleDesc = new TypicalProteinChooserRule(ruleName = "Description ##SP  preferred", applyToAcc = false, rulePattern = "##SP.*")
+    val rules =  Seq(ruleDesc)
+    typicalChooser.changeTypical(targetRSMId, rules, executionContext.getMSIDbConnectionContext().getEntityManager())
 
     val nbrChangedTyp = typicalChooser.getChangedProteinSets.size
 
@@ -95,8 +98,9 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
         // Check which proteinSets should be modified by algo
     nbrTremblShouldChange = 0   
     
-    val ruleDesc2 = new TypicalProteinChooserRule(ruleName = "Description ##DEV_ preferred", applyToAcc = false, rulePattern = "##DEV_.*") 
-    typicalChooser.changeTypical(targetRSMId, ruleDesc2, executionContext.getMSIDbConnectionContext().getEntityManager())
+    val ruleDesc2 = new TypicalProteinChooserRule(ruleName = "Description ##DEV_ preferred", applyToAcc = false, rulePattern = "##DEV_.*")
+    val rules2 =  Seq(ruleDesc2)
+    typicalChooser.changeTypical(targetRSMId, rules2, executionContext.getMSIDbConnectionContext().getEntityManager())
 
     val nbrChangedTyp2 = typicalChooser.getChangedProteinSets.size
 

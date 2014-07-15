@@ -10,7 +10,7 @@ import fr.proline.core.algo.msi.TypicalProteinChooserRule
 class RSMTypicalProteinChooser(
   execCtx: IExecutionContext,
   resultSummaryId: Long,
-  ruleToApply: TypicalProteinChooserRule
+  rulesToApplyPrioritized: Seq[TypicalProteinChooserRule]
 ) extends IService with Logging {
 
   require(execCtx.isJPA(), " Invalid connexion type for this service ")
@@ -26,7 +26,7 @@ class RSMTypicalProteinChooser(
     logger.info("Run Typical Protein Chooser")
 
     val typicalChooser = new TypicalProteinChooser()
-    typicalChooser.changeTypical(resultSummaryId, ruleToApply, msiEM)
+    typicalChooser.changeTypical(resultSummaryId, rulesToApplyPrioritized, msiEM)
 
     logger.info("Save data for Typical Protein Chooser")
 
