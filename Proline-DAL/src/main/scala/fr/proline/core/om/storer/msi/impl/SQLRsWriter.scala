@@ -188,6 +188,8 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
             msQuery.moz,
             peptideMatch.score,
             peptideMatch.rank,
+            peptideMatch.cdPrettyRank,
+            peptideMatch.sdPrettyRank,
             peptideMatch.deltaMoz,
             peptideMatch.missedCleavage,
             peptideMatch.fragmentMatchesCount,
@@ -197,9 +199,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
             msQuery.id,
             if (bestChildId == 0) Option.empty[Long] else Some(bestChildId),
             scoringId,
-            rsId,
-			peptideMatch.cdPrettyRank,
-			peptideMatch.sdPrettyRank
+            rsId
           )
   
           // Update peptide match id
