@@ -200,6 +200,8 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
           msQuery.moz,
           peptideMatch.score,
           peptideMatch.rank,
+          peptideMatch.cdPrettyRank,
+          peptideMatch.sdPrettyRank,
           peptideMatch.deltaMoz,
           peptideMatch.missedCleavage,
           peptideMatch.fragmentMatchesCount,
@@ -209,9 +211,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
           msQuery.id,
           if (bestChildId == 0) None else Some(bestChildId),
           scoringId.get,
-          rsId,
-          peptideMatch.cdPrettyRank,
-          peptideMatch.sdPrettyRank
+          rsId
         )
         
        // Store peptide match
