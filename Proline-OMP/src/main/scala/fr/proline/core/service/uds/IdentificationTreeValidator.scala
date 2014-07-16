@@ -11,19 +11,57 @@ import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.dal.helper.{ MsiDbHelper, UdsDbHelper }
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.context._
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.{ SQLResultSetProvider, SQLResultSummaryProvider }
 import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
-import fr.proline.core.service.msi.{ ResultSetValidator, ResultSetMerger, ResultSummaryMerger }
+import fr.proline.core.service.msi.{ ResultSetValidator, ResultSetMerger, ResultSummaryMerger, ValidationConfig }
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.om.model.msi.ResultSummary
 import javax.persistence.EntityManager
 
+// Singleton for Proline-Cortex
+object IdentificationTreeValidator {
+  
+  def validateIdentificationTrees(
+    execContext: IExecutionContext,
+    parentDsIds: Array[Long],
+    mergeResultSets: Boolean,
+    useTdCompetition: Boolean,
+    validationConfig: ValidationConfig
+  ) {
+    
+    execContext.tryInTransactions( udsTx = true, msiTx = true, txWork = {
+      
+      for (parentDsId <- parentDsIds) {
+        
+        // Instantiate an identification validator
+        val idfValidator = new IdentificationTreeValidator(
+          //dsFactory = dsFactory,
+          execContext = execContext,
+          identTreeId = parentDsId,
+          mergeResultSets = mergeResultSets,
+          useTdCompetition = useTdCompetition,
+          pepMatchFilters = validationConfig.pepMatchPreFilters,
+          pepMatchValidator = validationConfig.pepMatchValidator,
+          peptideSetScoring = Some( validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_MODIFIED_MUDPIT_SCORE) ),
+          protSetFilters = validationConfig.protSetFilters,
+          protSetValidator = validationConfig.protSetValidator
+        )
+        
+        idfValidator.run()
+      }
+      
+    }) // end of tryInTransactions
+    
+  }
+  
+}
 
 class IdentificationTreeValidator(
-  dsFactory: IDataStoreConnectorFactory,
-  execJpaContext: IExecutionContext,
+  //dsFactory: IDataStoreConnectorFactory,
+  execContext: IExecutionContext,
   identTreeId: Long,
   mergeResultSets: Boolean,
   useTdCompetition: Boolean,
@@ -34,21 +72,21 @@ class IdentificationTreeValidator(
   protSetValidator: Option[IProteinSetValidator] = None
 ) extends IService with Logging {
   // TODO: uncomment this require when LCMS ORM is implemented
-  //require( execJpaContext.isJPA, "a JPA execution context is needed" )  
+  //require( execContext.isJPA, "a JPA execution context is needed" )  
 
-  private val udsDbCtx = execJpaContext.getUDSDbConnectionContext()
-  private val psDbCtx = execJpaContext.getPSDbConnectionContext()
-  private val msiDbCtx = execJpaContext.getMSIDbConnectionContext()
+  private val udsDbCtx = execContext.getUDSDbConnectionContext()
+  private val psDbCtx = execContext.getPSDbConnectionContext()
+  private val msiDbCtx = execContext.getMSIDbConnectionContext()
   private val msiDbHelper = new MsiDbHelper(msiDbCtx)
 
   // TODO: remove this require when LCMS ORM is implemented
   require(udsDbCtx.isJPA, "a JPA execution context is needed")
 
-  override def beforeInterruption = {
+  /*override def beforeInterruption = {
     // Release database connections
     this.logger.info("releasing database connections before service interruption...")
     execJpaContext.closeAll()
-  }
+  }*/
 
   def runService(): Boolean = {
 
@@ -113,18 +151,18 @@ class IdentificationTreeValidator(
    */
   private def _loadResultSets(projectId: Long, rsIds: Seq[Long]): Array[ResultSet] = {
 
-    val execSqlContext = BuildExecutionContext(dsFactory, projectId, false)
+    /*val execSqlContext = BuildExecutionContext(dsFactory, projectId, false)
     val udsDbCtx = execSqlContext.getUDSDbConnectionContext
     val udsDbHelper = new UdsDbHelper(udsDbCtx)
     val psDbCtx = execSqlContext.getPSDbConnectionContext
-    val msiDbCtx = execSqlContext.getMSIDbConnectionContext
+    val msiDbCtx = execSqlContext.getMSIDbConnectionContext*/
 
     // Instantiate a RS loader
     val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
     this.logger.warn("loading " + rsIds.length + " result sets")
     val resultSets = rsProvider.getResultSets(rsIds)
 
-    execSqlContext.closeAll()
+    //execSqlContext.closeAll()
 
     resultSets
   }
@@ -169,7 +207,7 @@ class IdentificationTreeValidator(
       
     // Instantiate a result set validator
     val rsValidator = new ResultSetValidator(
-      execContext = execJpaContext,
+      execContext = execContext,
       targetRs = rs,
       tdAnalyzer = tdAnalyzer,
       pepMatchPreFilters = pepMatchFilters,
@@ -237,12 +275,12 @@ class IdentificationTreeValidator(
       val decoyRsList = for (rs <- targetRsList; if rs.decoyResultSet.isDefined) yield rs.decoyResultSet.get
 
       // Merge result set
-      val targetRsMerger = new ResultSetMerger(execJpaContext, None, Some(targetRsList))
+      val targetRsMerger = new ResultSetMerger(execContext, None, Some(targetRsList))
       targetRsMerger.runService()
       val mergedTargetRs = targetRsMerger.mergedResultSet
 
       if (decoyRsList.length > 0) {
-        val decoyRsMerger = new ResultSetMerger(execJpaContext, None, Some(decoyRsList))
+        val decoyRsMerger = new ResultSetMerger(execContext, None, Some(decoyRsList))
         decoyRsMerger.runService()
         mergedTargetRs.decoyResultSet = Some(decoyRsMerger.mergedResultSet)
       }
@@ -267,7 +305,7 @@ class IdentificationTreeValidator(
       
       // Instantiate a result set validator
       val rsValidator = new ResultSetValidator(
-        execContext = execJpaContext,
+        execContext = execContext,
         targetRs = mergedTargetRs,
         tdAnalyzer = tdAnalyzer,
         pepMatchPreFilters = pepMatchFilters,
@@ -285,7 +323,7 @@ class IdentificationTreeValidator(
     } else {
 
       // Merge result summaries
-      val rsmMerger = new ResultSummaryMerger(execCtx = execJpaContext, None, resultSummaries = Some(rsms))
+      val rsmMerger = new ResultSummaryMerger(execCtx = execContext, None, resultSummaries = Some(rsms))
       rsmMerger.runService()
 
       // TODO: merge decoy rsms

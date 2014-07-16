@@ -20,6 +20,16 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsmStorer
 
+// TODO: use this config in the constructors
+case class ValidationConfig(
+  var tdAnalyzer: Option[ITargetDecoyAnalyzer] = None,
+  var pepMatchPreFilters: Option[Seq[IPeptideMatchFilter]] = None,
+  var pepMatchValidator: Option[IPeptideMatchValidator] = None,
+  var pepSetScoring: Option[PepSetScoring.Value] = None,
+  var protSetFilters: Option[Seq[IProteinSetFilter]] = None,
+  var protSetValidator: Option[IProteinSetValidator] = None
+)
+
 object ResultSetValidator {
 
   def apply(
