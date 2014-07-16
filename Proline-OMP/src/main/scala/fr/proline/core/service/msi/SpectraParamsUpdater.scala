@@ -10,6 +10,31 @@ import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitlePar
 import fr.profi.util.regex.RegexUtils._
 import fr.profi.util.primitives._
 
+object SpectraParamsUpdater extends Logging {
+  
+  def updateSpectraParams(
+    execCtx: IExecutionContext,
+    projectId: Long,
+    peaklistIds: Array[Long],
+    specTitleRuleId: Long
+  ): Int = {
+    
+    var updatedSpectraCount = 0
+
+    for( peaklistId <- peaklistIds ) {
+      logger.info("Updating spectra params of peaklist with id="+peaklistId+"...")
+      
+      val spectraParamsUpdater = new SpectraParamsUpdater( execCtx, projectId, peaklistId, specTitleRuleId )
+      spectraParamsUpdater.run()
+      
+      updatedSpectraCount += spectraParamsUpdater.updatedSpectraCount
+    }
+
+    updatedSpectraCount
+  }
+  
+}
+
 class SpectraParamsUpdater(
   execCtx: IExecutionContext,
   projectId: Long,
