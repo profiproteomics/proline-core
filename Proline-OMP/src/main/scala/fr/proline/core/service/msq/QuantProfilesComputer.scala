@@ -11,9 +11,37 @@ import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.om.model.msq.ExperimentalDesign
+import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
+
+// Factory for Proline-Cortex
+object QuantProfilesComputer {
+  
+  def apply(
+    executionContext: IExecutionContext,
+    masterQuantChannelId: Long,
+    config: ProfilizerConfig
+  ): QuantProfilesComputer = {
+    
+    val udsDbCtx = executionContext.getUDSDbConnectionContext
+    
+    val udsDbHelper = new UdsDbHelper( udsDbCtx )
+    val quantiId = udsDbHelper.getQuantitationId( masterQuantChannelId ).get
+    
+    val expDesignProvider = new SQLExperimentalDesignProvider(executionContext.getUDSDbConnectionContext)
+    val expDesign = expDesignProvider.getExperimentalDesign(quantiId).get
+    
+    new QuantProfilesComputer(
+      executionContext = executionContext,
+      experimentalDesign = expDesign,
+      masterQuantChannelId = masterQuantChannelId,
+      config = config
+    )
+  }
+  
+}
 
 class QuantProfilesComputer(
   executionContext: IExecutionContext,
