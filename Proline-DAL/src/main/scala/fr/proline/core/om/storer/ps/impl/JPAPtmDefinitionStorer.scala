@@ -96,9 +96,9 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
 		  val psPtmPrecDeltaCompositionSorted = psPtmPrecDelta.getComposition.split(" ").sorted.mkString(" ")
           
       
-          if (nearlyEqual(psPtmPrecDelta.getMonoMass, precursorDelta.monoMass) == false ||
-              nearlyEqual(psPtmPrecDelta.getAverageMass, precursorDelta.averageMass) == false ||
-              precursorDeltaCompositionSorted != psPtmPrecDeltaCompositionSorted ) { // StringUtils.isEmpty(ptmComposition) == false &&
+          if (nearlyEqual(psPtmPrecDelta.getMonoMass, precursorDelta.monoMass, 1E-5) == false ||
+              nearlyEqual(psPtmPrecDelta.getAverageMass, precursorDelta.averageMass, MathUtils.EPSILON_LOW_PRECISION) == false ||
+              precursorDeltaCompositionSorted != psPtmPrecDeltaCompositionSorted ) { 
             throw new IllegalArgumentException("the provided PTM %s exists in the PSdb with different evidence properties".format(ptmShortName))
           }
 
@@ -225,9 +225,10 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
       query.setParameter("composition", composition).getResultList().toList
     }
 
-    protected def nearlyEqual(a: Double, b: Double): Boolean = {
-      (a - b).abs < MathUtils.EPSILON_HIGH_PRECISION
+    protected def nearlyEqual(a: Double, b: Double, epsilon : Double): Boolean = {
+      (a - b).abs < epsilon
     }
+    
 
     /*
      * Here is a more robust solution but not usefull there
