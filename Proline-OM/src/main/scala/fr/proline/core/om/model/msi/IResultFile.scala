@@ -6,7 +6,15 @@ trait IPeaklistContainer {
   def eachSpectrum( onEachSpectrum: Spectrum => Unit ): Unit
 }
 
-trait IResultFile extends IPeaklistContainer {
+trait IRsContainer extends IPeaklistContainer {
+
+  def getResultSet( wantDecoy: Boolean ): ResultSet
+  
+  def eachSpectrumMatch( wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit ): Unit
+
+}
+
+trait IResultFile extends IRsContainer {
   
   val fileLocation: File
   val importProperties: Map[String, Any]
@@ -19,11 +27,7 @@ trait IResultFile extends IPeaklistContainer {
   
   var instrumentConfig: Option[InstrumentConfig] = None
   var peaklistSoftware: Option[PeaklistSoftware] = None
-  
-  def getResultSet( wantDecoy: Boolean ): ResultSet
-  
-  def eachSpectrumMatch( wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit ): Unit
-  
+    
   def close(): Unit // release resources
   
 }

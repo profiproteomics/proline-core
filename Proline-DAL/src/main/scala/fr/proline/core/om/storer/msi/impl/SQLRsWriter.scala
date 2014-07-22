@@ -220,7 +220,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
   }
   
-  def insertRsSpectrumMatches(rs: ResultSet, rf: IResultFile, msiDbCtx: DatabaseConnectionContext): Int = {
+  def insertRsSpectrumMatches(rs: ResultSet, rf: IRsContainer, msiDbCtx: DatabaseConnectionContext): Int = {
     
     import fr.proline.core.util.serialization.ProlineJson
     //import org.msgpack.ScalaMessagePack

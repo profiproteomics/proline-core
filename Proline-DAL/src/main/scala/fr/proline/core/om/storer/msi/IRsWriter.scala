@@ -4,6 +4,7 @@ import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.{ IResultFile, IPeaklistContainer, ResultSet, Protein, Peptide }
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.msi.IRsContainer
 
 trait IRsWriter extends Logging {
 
@@ -22,7 +23,7 @@ trait IRsWriter extends Logging {
 
   def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
   def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int  
-  def insertRsSpectrumMatches(rs: ResultSet, rf: IResultFile, msiDbCtx: DatabaseConnectionContext): Int
+  def insertRsSpectrumMatches(rs: ResultSet, rf: IRsContainer, msiDbCtx: DatabaseConnectionContext): Int
   def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
   def insertRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int
 

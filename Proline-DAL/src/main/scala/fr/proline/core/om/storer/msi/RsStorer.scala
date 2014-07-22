@@ -7,6 +7,7 @@ import fr.proline.core.om.storer.msi.impl._
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.repository.ProlineDatabaseType
+import fr.proline.core.om.model.msi.IRsContainer
 
 trait IRsStorer extends Logging {
 
@@ -32,9 +33,8 @@ trait IRsStorer extends Logging {
    * @param context the context
    * @return the number of inserted spectrum matches
    */
-  def insertSpectrumMatches(resultSet: ResultSet, resultFile: IResultFile, context: StorerContext): Int = {
+  def insertSpectrumMatches(resultSet: ResultSet, resultFile: IRsContainer, context: StorerContext): Int = {
     SQLRsWriter.insertRsSpectrumMatches(resultSet, resultFile, context.getMSIDbConnectionContext)
-//    0
   }
 
   /**
