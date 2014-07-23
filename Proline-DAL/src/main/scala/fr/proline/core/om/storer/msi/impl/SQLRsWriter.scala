@@ -23,8 +23,10 @@ import fr.proline.core.om.storer.msi._
 import fr.profi.util.StringUtils
 import fr.profi.util.primitives._
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchRelationTable
+import fr.proline.core.util.serialization.ProlineJson
 
-private[core] object SQLRsWriter extends AbstractSQLRsWriter
+
+private[proline] object SQLRsWriter extends AbstractSQLRsWriter
 
 abstract class AbstractSQLRsWriter() extends IRsWriter {
   
@@ -220,10 +222,36 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
   }
   
-  def insertRsSpectrumMatches(rs: ResultSet, rf: IRsContainer, msiDbCtx: DatabaseConnectionContext): Int = {
+  def insertSpectrumMatch(peptideMatch: PeptideMatch, spectrumMatch: SpectrumMatch, msiDbCtx: DatabaseConnectionContext): Int = {
     
-    import fr.proline.core.util.serialization.ProlineJson
-    //import org.msgpack.ScalaMessagePack
+    val schemaName = "peptide_match.spectrum_match"
+    var count = 0
+    
+    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+      // Store spectrum matches
+      val spectrumMatchId = msiEzDBC.executePrepared(objTreeInsertQuery, true ) { stmt =>
+          stmt.executeWith(
+            Option(null),
+            CustomSerializer.serialize(spectrumMatch),
+            Option.empty[String],
+            schemaName
+          )
+         stmt.generatedLong 
+      }
+      
+      // Link spectrum matches to peptide matches
+      count = msiEzDBC.executePrepared("INSERT INTO peptide_match_object_tree_map VALUES (?,?,?)" ) { stmt =>
+          stmt.executeWith(
+            peptideMatch.id,
+            spectrumMatchId,
+            schemaName
+          )
+      }
+    })
+	 count 
+  }  
+  
+  def insertRsSpectrumMatches(rs: ResultSet, rf: IRsContainer, msiDbCtx: DatabaseConnectionContext): Int = {
     
     // TODO: create a schema name enumeration
     val schemaName = "peptide_match.spectrum_match"
