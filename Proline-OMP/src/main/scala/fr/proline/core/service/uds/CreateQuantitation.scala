@@ -159,7 +159,7 @@ class CreateQuantitation(
         var bioGroupNumber = 0
         
         var bioGroupNumberFound = false
-        if(biologicalGroups.length>0){
+        if (biologicalGroups.length > 0) {
   	      if(biologicalGroups(0).number > 0)
   	    	  bioGroupNumberFound = true
   		  else
@@ -308,7 +308,9 @@ class CreateQuantitation(
           }
   
           udsEM.persist(udsQuantChannel)
-  
+          
+          // Synchronize the persistence context to the underlying database
+          udsEM.flush()
         }
       }
 
