@@ -26,6 +26,8 @@ import fr.proline.core.orm.uds.{
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.profi.util.sql.getTimeAsSQLTimestamp
+import scala.collection.JavaConversions._
+import java.util.ArrayList
 
 class CreateQuantitation(
   executionContext: IExecutionContext,
@@ -88,9 +90,9 @@ class CreateQuantitation(
     if (existingQuants.length != 0) { previousQuantNum = existingQuants.last.getNumber() }
 
     udsDbCtx.tryInTransaction {
-    
+       
       val mqcCount = masterQuantChannels.length
-  
+       
       // Create new quantitation
       val udsQuantitation = new UdsDataset(udsProject)
       udsQuantitation.setNumber(previousQuantNum + 1)
@@ -137,6 +139,7 @@ class CreateQuantitation(
   	    logger.warn("Group number not specified, use incrementation on iterator !! ")
       }
       
+      val udsAllGroupSetups = new HashSet[UdsGroupSetup]()
       for (groupSetup <- groupSetups) {
         groupSetupNumber += 1
   
@@ -150,7 +153,7 @@ class CreateQuantitation(
         // Create a set of group setups
         val udsGroupSetups = new HashSet[UdsGroupSetup]()
         udsGroupSetups.add(udsGroupSetup)
-  
+        udsAllGroupSetups.add(udsGroupSetup)
         // Retrieve biological groups
         val biologicalGroups = groupSetup.biologicalGroups
   
@@ -228,6 +231,9 @@ class CreateQuantitation(
       }
       
       val udsSampleReplicateByKey = new HashMap[String, UdsSampleAnalysis]
+      val udsQuantChannelsList = new ArrayList[UdsQuantChannel]
+      val udsMasterQuantChannelsList = new ArrayList[UdsMasterQuantitationChannel]
+      
       for (masterQuantChannel <- masterQuantChannels) {
         fractionNumber += 1
   
@@ -242,6 +248,7 @@ class CreateQuantitation(
         }
   
         udsEM.persist(udsQf)
+        udsMasterQuantChannelsList.add(udsQf)
   
         val quantChannels = masterQuantChannel.quantChannels
         var quantChannelNum = 0
@@ -255,6 +262,7 @@ class CreateQuantitation(
         
         // Iterate over each fraction quant channel
         val replicateNumBySampleNum = new HashMap[Int, Int]
+        val udsQuantChannelsForMQCList = new ArrayList[UdsQuantChannel]
         for (quantChannel <- quantChannels) {
           quantChannelNum += 1
           
@@ -296,23 +304,33 @@ class CreateQuantitation(
           
           if( quantChannel.runId.isDefined ) {
             val udsRun = udsEM.find(classOf[UdsRun], quantChannel.runId.get)
+            logger.debug(" Set RUN for UdsQuantChannel contextKey"+contextKey+" run => "+udsRun.getId())
             udsQuantChannel.setRun(udsRun)
           }
   
           // TODO: check method type
-          if (quantChannel.lcmsMapId.isDefined) {
+          if (quantChannel.lcmsMapId.isDefined) {            
             udsQuantChannel.setLcmsMapId(quantChannel.lcmsMapId.get)
+            logger.debug(" Set lcmsMapId for UdsQuantChannel contextKey"+contextKey)
           } else if (quantChannel.quantLabelId.isDefined) {
             val udsQuantLabel = udsEM.find(classOf[UdsQuantLabel], quantChannel.quantLabelId.get)
             udsQuantChannel.setLabel(udsQuantLabel)
+            logger.debug(" Set setLabel for UdsQuantChannel LABEL "+udsQuantLabel)
           }
   
           udsEM.persist(udsQuantChannel)
-          
-          // Synchronize the persistence context to the underlying database
-          udsEM.flush()
+          udsQuantChannelsList.add(udsQuantChannel)
+          udsQuantChannelsForMQCList.add(udsQuantChannel)
         }
+        udsQf.setQuantitationChannels(udsQuantChannelsForMQCList)
       }
+      
+      udsQuantitation.setSampleReplicates(seqAsJavaList(udsSampleReplicateByKey.values.toSeq))
+      udsQuantitation.setBiologicalSamples(udsBioSampleByNum.values.toSeq)
+      udsQuantitation.setGroupSetups(udsAllGroupSetups)
+      udsQuantitation.setQuantitationChannels(udsQuantChannelsList)
+      udsQuantitation.setMasterQuantitationChannels(udsMasterQuantChannelsList)
+        
 
     } // End of tryInTransaction
     
