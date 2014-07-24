@@ -1,6 +1,7 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -17,6 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import fr.proline.core.orm.msi.dto.DPeptideInstance;
+import fr.proline.core.orm.util.JsonSerializer;
 
 /**
  * The persistent class for the peptide_set database table.
@@ -73,7 +75,9 @@ public class PeptideSet implements Serializable {
     private PeptideInstance[] peptideInstances = null; //JPM.TODO : will be removed
     @Transient
     private DPeptideInstance[] dpeptideInstances = null; 
-
+    @Transient
+    private Map<String, Object> serializedPropertiesMap;
+    
     public PeptideSet() {
     }
 
@@ -184,6 +188,18 @@ public class PeptideSet implements Serializable {
 
     public void setTransientDPeptideInstances(DPeptideInstance[] dpeptideInstances) {
 	this.dpeptideInstances = dpeptideInstances;
+    }
+
+    public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+	if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+	    serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(),Map.class);
+	}
+	return serializedPropertiesMap;
+    }
+
+    public void setSerializedPropertiesAsMap(Map<String, Object> serializedPropertiesMap) throws Exception {
+	this.serializedPropertiesMap = serializedPropertiesMap;
+	this.serializedProperties = JsonSerializer.getMapper().writeValueAsString(serializedPropertiesMap);
     }
 
 }
