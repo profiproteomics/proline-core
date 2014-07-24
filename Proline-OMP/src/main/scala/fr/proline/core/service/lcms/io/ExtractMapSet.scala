@@ -6,7 +6,6 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import com.typesafe.scalalogging.slf4j.Logging
 import org.apache.commons.math.stat.descriptive.rank.Percentile
-
 import fr.profi.jdbc.easy._
 import fr.profi.ms.algo.IsotopePatternInterpolator
 import fr.profi.mzdb._
@@ -30,6 +29,8 @@ import fr.proline.core.service.lcms.ILcMsService
 import fr.proline.core.service.lcms.AlignMapSet
 import fr.proline.core.service.lcms.CreateMapSet
 import fr.proline.core.service.lcms.CreateMasterMap
+
+
 
 /**
  * @author David Bouyssie
@@ -78,6 +79,7 @@ class ExtractMapSet(
     val lcmsRunByProcMapId = new collection.mutable.HashMap[Long,LcMsRun]
     val mzDbFileByProcMapId = new collection.mutable.HashMap[Long,File]
     val mapCount = lcMsRuns.length
+    this.logger.debug("mapCount:" + mapCount + ", non null mapCount: " + lcMsRuns.filter(_ != null).length)
     val processedMaps = new Array[ProcessedMap](mapCount)
     //val processedMapByRawMapId = new collection.mutable.HashMap[Long,ProcessedMap]
     val tmpMapSetId = MapSet.generateNewId()    
@@ -85,9 +87,10 @@ class ExtractMapSet(
     var alnRefMapId: Long = 0L
     
     for( lcmsRun <- lcMsRuns ) {
-      val mzDbFilePath = lcmsRun.rawFile.properties.get.getMzdbFilePath
+  
+      val rawPropOpt = lcmsRun.rawFile.properties
+      val mzDbFilePath = rawPropOpt.get.getMzdbFilePath
       val mzDbFile = new File(mzDbFilePath)
-      require( mzDbFile.exists, "mzdb file can't be found at: "+ mzDbFilePath)
       
       //val mzDb = new MzDbReader( mzDbFile, true )
       //val scanH = mzDb.getScanHeaderForTime(1755.0521f, 1)
@@ -144,7 +147,7 @@ class ExtractMapSet(
     // --- Perform the LC-MS maps alignment ---
     // TODO: do we need to remove the clusters for the alignment ???
     val mapAligner = LcmsMapAligner( methodName = alnMethodName )
-    val alnResult = mapAligner.computeMapAlignments( mapSet.childMaps, alnParams )
+    val alnResult = mapAligner.computeMapAlignments( mapSet.childMaps.filter(_ != null), alnParams )
     
     /*for( as <- alnResult.mapAlnSets; a <- as.mapAlignments  ) {
       println("map aln from "+as.refMapId+" to " +as.targetMapId)
@@ -540,10 +543,10 @@ class ExtractMapSet(
       
       this.logger.info("detect features in raw MS survey...")
 
-      val mzdbFtDetector = new MzDbFeatureDetector(mzDb, minNbOverlappingIPs = 5)
+      val mzdbFtDetector = new MzDbFeatureDetector(mzDb, FeatureDetectorConfig(minNbOverlappingIPs=5))
       
       // Extract features
-      mzdbFtDetector.detectFeatures(mozTolPPM)
+      mzdbFtDetector.detectFeatures()
 
     } finally {
       mzDb.close()
