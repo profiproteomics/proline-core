@@ -173,10 +173,10 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     
     // --- TODO: merge following code with SpectralCountQuantifier ---
 
-    //VDS => Transaction should be managed in services
-    // Begin new ORM transaction
-//    msiEm.getTransaction().begin()
-//    udsEm.getTransaction().begin()
+
+   require( udsDbCtx.isInTransaction, "UdsDb connection context must be inside a transaction")
+   require( msiDbCtx.isInTransaction, "MsiDb connection context must be inside a transaction")
+
 
     // Store the master quant result set
     val msiQuantResultSet = this.storeMsiQuantResultSet(msiIdentResultSets)
