@@ -7,7 +7,6 @@ import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.context._
 import fr.proline.core.algo.lcms._
 import fr.proline.core.algo.msq.IQuantifierAlgo
 import fr.proline.core.algo.msq.LabelFreeFeatureQuantifier
@@ -173,60 +172,64 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   protected def quantifyMasterChannel(): Unit = {
     
     // --- TODO: merge following code with SpectralCountQuantifier ---
-    
-    // Begin new ORM transaction
-    executionContext.tryInTransactions( udsTx = true, msiTx = true, txWork = {
-      
-      // Store the master quant result set
-      val msiQuantResultSet = this.storeMsiQuantResultSet(msiIdentResultSets)
-      val quantRsId = msiQuantResultSet.getId()
-  
-      // Create corresponding master quant result summary
-      val msiQuantRSM = this.storeMsiQuantResultSummary(msiQuantResultSet)
-      val quantRsmId = msiQuantRSM.getId
-  
-      // Update quant result summary id of the master quant channel
-      udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
-      udsEm.persist(udsMasterQuantChannel)
-  
-      // Store master quant result summary
-      this.storeMasterQuantResultSummary(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
-  
-      // Compute master quant peptides
-      val mqPeptides = quantifierAlgo.computeMasterQuantPeptides(
-        udsMasterQuantChannel,
-        this.mergedResultSummary,
-        this.identResultSummaries
-      )
-  
-      this.logger.info("storing master peptide quant data...")
-  
-      // Iterate over master quant peptides to store them
-      for (mqPeptide <- mqPeptides) {
-        val msiMasterPepInst = mqPeptide.peptideInstance.map( pi => this.msiMasterPepInstById(pi.id) )
-        this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, msiMasterPepInst)
-      }
-  
-      this.logger.info("storing master proteins set quant data...")
-  
-      // Compute master quant protein sets
-      val mqProtSets = quantifierAlgo.computeMasterQuantProteinSets(
-        udsMasterQuantChannel,
-        mqPeptides,
-        this.mergedResultSummary,
-        this.identResultSummaries
-      )
-  
-      // Iterate over master quant protein sets to store them
-      for (mqProtSet <- mqProtSets) {
-        val msiMasterProtSetOpt = this.msiMasterProtSetById.get(mqProtSet.proteinSet.id)
-        // FIXME: msiMasterProtSetOpt should be always defined
-        if( msiMasterProtSetOpt.isDefined ) {
-          this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetOpt.get, msiQuantRSM)
-        }
-      }
 
-    } ) // Commit ORM transaction
+    //VDS => Transaction should be managed in services
+    // Begin new ORM transaction
+//    msiEm.getTransaction().begin()
+//    udsEm.getTransaction().begin()
+
+    // Store the master quant result set
+    val msiQuantResultSet = this.storeMsiQuantResultSet(msiIdentResultSets)
+    val quantRsId = msiQuantResultSet.getId()
+
+    // Create corresponding master quant result summary
+    val msiQuantRSM = this.storeMsiQuantResultSummary(msiQuantResultSet)
+    val quantRsmId = msiQuantRSM.getId
+
+    // Update quant result summary id of the master quant channel
+    udsMasterQuantChannel.setQuantResultSummaryId(quantRsmId)
+    udsEm.persist(udsMasterQuantChannel)
+
+    // Store master quant result summary
+    this.storeMasterQuantResultSummary(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
+
+    // Compute master quant peptides
+    val mqPeptides = quantifierAlgo.computeMasterQuantPeptides(
+      udsMasterQuantChannel,
+      this.mergedResultSummary,
+      this.identResultSummaries
+    )
+
+    this.logger.info("storing master peptide quant data...")
+
+    // Iterate over master quant peptides to store them
+    for (mqPeptide <- mqPeptides) {
+      val msiMasterPepInst = mqPeptide.peptideInstance.map( pi => this.msiMasterPepInstById(pi.id) )
+      this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, msiMasterPepInst)
+    }
+
+    this.logger.info("storing master proteins set quant data...")
+
+    // Compute master quant protein sets
+    val mqProtSets = quantifierAlgo.computeMasterQuantProteinSets(
+      udsMasterQuantChannel,
+      mqPeptides,
+      this.mergedResultSummary,
+      this.identResultSummaries
+    )
+
+    // Iterate over master quant protein sets to store them
+    for (mqProtSet <- mqProtSets) {
+      val msiMasterProtSetOpt = this.msiMasterProtSetById.get(mqProtSet.proteinSet.id)
+      // FIXME: msiMasterProtSetOpt should be always defined
+      if( msiMasterProtSetOpt.isDefined ) {
+        this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetOpt.get, msiQuantRSM)
+      }
+    }
+
+//    // Commit ORM transaction
+//    msiEm.getTransaction().commit()
+//    udsEm.getTransaction().commit()
 
     ()
 

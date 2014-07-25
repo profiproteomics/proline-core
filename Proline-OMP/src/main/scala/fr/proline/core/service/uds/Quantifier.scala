@@ -69,6 +69,7 @@ class Quantifier(
     
     // Retrieve entity manager
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
+    val msiDbCtx = executionContext.getMSIDbConnectionContext()
     val udsEM = udsDbCtx.getEntityManager()
     val udsQuantitation = udsEM.find( classOf[UdsDataset],quantiCreator.getUdsQuantitation.getId)
     
@@ -86,9 +87,11 @@ class Quantifier(
     // Create a LC-MS run provider
     val lcmsRunProvider = new SQLRunProvider(udsDbCtx,None)
     
+    var msiTransacOk: Boolean = false
+    
     // Isolate future actions in an SQL transaction
-    udsDbCtx.tryInTransaction {
-      
+    val txResult =  executionContext.tryInTransactions(udsTx = true, msiTx = true,  txWork = {
+
       // Quantify each master quant channel
       for( udsMasterQuantChannel <- udsMasterQuantChannels ) {
         
@@ -115,11 +118,11 @@ class Quantifier(
         )
         
         mqcQuantifier.run()
-      }
+      }           
       
-    } // end of tryInTransaction
+    }) // end of tryInTransaction
 
-    true
+    txResult
   }
 
 }
