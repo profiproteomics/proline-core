@@ -561,9 +561,8 @@ case class PeptideSetItem (
   var selectionLevel: Int,
   @transient val peptideInstance: PeptideInstance,
   
-  // Immutable optional fields
-  protected val peptideSetId: Long = 0,
-  @transient val peptideSet: Option[PeptideSet] = null,
+  // Immutable  fields
+  var peptideSetId: Long,
   
   // Mutable optional fields
   var isBestPeptideSet: Option[Boolean] = None,
@@ -574,7 +573,7 @@ case class PeptideSetItem (
   
   @JsonProperty lazy val peptideInstanceId = peptideInstance.id
   
-  def getPeptideSetId : Long = { if(peptideSet != null && peptideSet.isDefined) peptideSet.get.id else peptideSetId }
+//  def getPeptideSetId : Long = { if(peptideSet != null && peptideSet.isDefined) peptideSet.get.id else peptideSetId }
   
 }
 
@@ -584,7 +583,7 @@ object PeptideSet extends InMemoryIdGen
 
 case class PeptideSet ( // Required fields
   var id: Long,
-  var items: Array[PeptideSetItem],
+  val items: Array[PeptideSetItem],
   val isSubset: Boolean,
   val peptideMatchesCount: Int,
   var proteinMatchIds: Array[Long],
@@ -604,11 +603,21 @@ case class PeptideSet ( // Required fields
   var subsumableSubsets: Option[Array[PeptideSet]] = null,
   
   var properties: Option[PeptideSetProperties] = None
+  
 ) {
   
   // Requirements
   require( items != null )
   require( peptideMatchesCount >= items.length )
+  
+  if (!properties.isDefined) {
+    val props = new PeptideSetProperties
+    properties = Some(props)
+  }
+ 
+  if (!properties.get.uniqueSequenceCount.isDefined) {
+	  properties.get.uniqueSequenceCount = Some(items.map(_.peptideInstance.peptide.sequence).toList.distinct.size)
+  }
   
   // Related objects ID getters
   def getProteinSetId: Long = { if(proteinSet != null && proteinSet.isDefined) proteinSet.get.id else proteinSetId }
@@ -620,14 +629,11 @@ case class PeptideSet ( // Required fields
   def getPeptideInstances: Array[PeptideInstance] = { items.map( _.peptideInstance ) }
   
   def getPeptideMatchIds: Array[Long] = {
-      
     val peptideMatchIdSet = new ArrayBuffer[Long]()  
     for (pepSetItem <- items) {
       peptideMatchIdSet ++= pepSetItem.peptideInstance.getPeptideMatchIds
     }
-    
     peptideMatchIdSet.toArray
-
   }
   
   def getPeptideIds: Array[Long] = this.items.map { _.peptideInstance.peptide.id }
@@ -659,5 +665,7 @@ case class PeptideSet ( // Required fields
   }
 }
 
-case class PeptideSetProperties()
+case class PeptideSetProperties(
+      @BeanProperty var uniqueSequenceCount: Option[Int] = None
+)
 

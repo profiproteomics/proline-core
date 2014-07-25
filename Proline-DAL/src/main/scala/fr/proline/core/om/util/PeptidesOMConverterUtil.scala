@@ -204,18 +204,6 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       index += 1
     }
 
-    val pepSet = new PeptideSet(
-      id = msiPepSet.getId(),
-      items = null,
-      isSubset = msiPepSet.getIsSubset(),
-      score = msiPepSet.getScore(),
-      scoreType = msiPepSet.getScoring().getName(),
-      peptideMatchesCount = msiPepSet.getPeptideMatchCount(),
-      proteinMatchIds = protMatchesIds,
-      proteinSetId = msiPepSet.getProteinSet().getId(),
-      resultSummaryId = msiPepSet.getResultSummaryId()
-    )
-
     val msiPepSetItems = msiPepSet.getPeptideSetPeptideInstanceItems()
     val msiPepSetItemIT = msiPepSetItems.iterator()
     val pepSetItems = new Array[PeptideSetItem](msiPepSetItems.size);
@@ -227,14 +215,24 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       val pepSetItem = new PeptideSetItem(
         selectionLevel = msiPepSetItem.getSelectionLevel(),
         peptideInstance = convertPeptideInstanceORM2OM(msiPepSetItem.getPeptideInstance(), loadPepMatches, msiEM),
-        //peptideSetId = msiPepSet.getId(),
-        peptideSet = Some(pepSet),
+        peptideSetId = msiPepSet.getId(),
         isBestPeptideSet = Some(msiPepSetItem.getIsBestPeptideSet()),
         resultSummaryId = msiPepSet.getResultSummaryId())
       pepSetItems(index) = pepSetItem
       index += 1
     }
-    pepSet.items = pepSetItems
+    
+    val pepSet = new PeptideSet(
+      id = msiPepSet.getId(),
+      items = pepSetItems,
+      isSubset = msiPepSet.getIsSubset(),
+      score = msiPepSet.getScore(),
+      scoreType = msiPepSet.getScoring().getName(),
+      peptideMatchesCount = msiPepSet.getPeptideMatchCount(),
+      proteinMatchIds = protMatchesIds,
+      proteinSetId = msiPepSet.getProteinSet().getId(),
+      resultSummaryId = msiPepSet.getResultSummaryId()
+    )
 
     if (useCachedObject) peptideSetsCache += pepSet.id -> pepSet
 

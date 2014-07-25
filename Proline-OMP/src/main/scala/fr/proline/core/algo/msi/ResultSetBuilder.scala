@@ -185,7 +185,7 @@ class ResultSetBuilder(val resultSetId: Long, val isDecoy: Boolean = false, seqL
   }
 
   def _copy(peptide: Peptide): Peptide = {
-    new Peptide(id = peptide.id, sequence = null, ptmString = peptide.ptmString, ptms = peptide.ptms, calculatedMass = peptide.calculatedMass)
+    new Peptide(id = peptide.id, sequence = peptide.sequence, ptmString = peptide.ptmString, ptms = peptide.ptms, calculatedMass = peptide.calculatedMass)
   }
 
   def toResultSet(): ResultSet = {
