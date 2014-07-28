@@ -29,11 +29,19 @@ public class DatabaseConnectionContext implements Closeable {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatabaseConnectionContext.class);
 
+    /*
+     * TODO LMN Remove fakeException generation and finalize() implementation when all Db Connections are
+     * closed correctly in Proline
+     */
+    private static final boolean DEBUG_LEAK = true;
+
     private final EntityManager m_entityManager;
 
     private final ProlineDatabaseType m_prolineDatabaseType;
 
     private final DriverType m_driverType;
+
+    private final Exception m_fakeException;
 
     private final Object m_contextLock = new Object();
 
@@ -95,6 +103,13 @@ public class DatabaseConnectionContext implements Closeable {
 
 	if ((entityManager == null) && (connection == null)) {
 	    throw new IllegalArgumentException("EntityManager and Connection are both null");
+	}
+
+	if (DEBUG_LEAK) {
+	    m_fakeException = new RuntimeException(
+		    "_FakeException_ DatabaseConnectionContext instance creation");
+	} else {
+	    m_fakeException = null;
 	}
 
 	m_entityManager = entityManager;
@@ -334,11 +349,13 @@ public class DatabaseConnectionContext implements Closeable {
 
 	try {
 
-	    try {
-		/* It is not the regular way to close a Db Connection Context ! Just the last security */
-		doClose(true);
-	    } catch (Exception ex) {
-		LOG.error("Error closing " + getProlineDatabaseTypeString() + " Context", ex);
+	    if (DEBUG_LEAK) {
+		try {
+		    /* It is not the regular way to close a Db Connection Context ! Just the last security */
+		    doClose(true);
+		} catch (Exception ex) {
+		    LOG.error("Error closing " + getProlineDatabaseTypeString() + " Context", ex);
+		}
 	    }
 
 	} finally {
@@ -539,7 +556,7 @@ public class DatabaseConnectionContext implements Closeable {
 		    LOG.warn(
 			    "Trying to close ORPHAN {} Context from finalize\n"
 				    + "Can generate Exceptions if SQL Connection or EntityManager is already closed !",
-			    prolineDbType);
+			    prolineDbType, m_fakeException);
 		}
 
 		if (m_connection != null) {
