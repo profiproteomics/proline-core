@@ -593,7 +593,12 @@ public class DatabaseConnectionContext implements Closeable {
 		    } finally {
 
 			try {
-			    m_entityManager.close();
+
+			    /* Check EM open state only on finalize (not on explicit close call) */
+			    if (!fromFinalize || m_entityManager.isOpen()) {
+				m_entityManager.close();
+			    }
+
 			} catch (Exception exClose) {
 			    LOG.error("Error closing DatabaseConnectionContext EntityManager for "
 				    + prolineDbType, exClose);
