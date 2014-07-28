@@ -553,10 +553,8 @@ public class DatabaseConnectionContext implements Closeable {
 		final String prolineDbType = getProlineDatabaseTypeString();
 
 		if (fromFinalize) {
-		    LOG.warn(
-			    "Trying to close ORPHAN {} Context from finalize\n"
-				    + "Can generate Exceptions if SQL Connection or EntityManager is already closed !",
-			    prolineDbType, m_fakeException);
+		    LOG.warn("Trying to close ORPHAN {} Context from finalize", prolineDbType,
+			    m_fakeException);
 		}
 
 		if (m_connection != null) {
