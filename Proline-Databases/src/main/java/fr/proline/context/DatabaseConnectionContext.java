@@ -35,13 +35,13 @@ public class DatabaseConnectionContext implements Closeable {
      */
     private static final boolean DEBUG_LEAK = true;
 
+    private final Exception m_fakeException;
+
     private final EntityManager m_entityManager;
 
     private final ProlineDatabaseType m_prolineDatabaseType;
 
     private final DriverType m_driverType;
-
-    private final Exception m_fakeException;
 
     private final Object m_contextLock = new Object();
 
