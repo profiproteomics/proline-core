@@ -76,8 +76,8 @@ object PtmLocation extends Enumeration {
   type Location = Value
   val PROT_N_TERM = Value("Protein N-term")
   val PROT_C_TERM = Value("Protein C-term")
-  val N_TERM = Value("N-term")
-  val C_TERM = Value("C-term")
+  //val N_TERM = Value("N-term")
+  //val C_TERM = Value("C-term")
   val ANY_N_TERM = Value("Any N-term")
   val ANY_C_TERM = Value("Any C-term")
   val ANYWHERE = Value("Anywhere")
