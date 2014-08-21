@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 import org.scalatest.matchers.MustMatchers
 import fr.proline.context.DatabaseConnectionContext

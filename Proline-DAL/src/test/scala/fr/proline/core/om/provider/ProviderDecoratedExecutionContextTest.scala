@@ -7,7 +7,7 @@ import org.junit.Test
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideMatchProvider
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 import fr.proline.core.dal.ContextFactory
 

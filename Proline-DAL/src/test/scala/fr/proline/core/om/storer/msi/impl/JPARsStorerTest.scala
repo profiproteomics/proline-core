@@ -11,7 +11,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import fr.proline.repository.DriverType
 import fr.profi.util.MathUtils.EPSILON_HIGH_PRECISION
