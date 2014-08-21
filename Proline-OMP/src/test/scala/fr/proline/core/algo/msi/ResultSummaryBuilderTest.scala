@@ -10,6 +10,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
@@ -22,7 +23,6 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 
 

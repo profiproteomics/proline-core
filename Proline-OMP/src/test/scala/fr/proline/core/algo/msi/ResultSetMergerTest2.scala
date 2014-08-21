@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
@@ -18,7 +19,6 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 
 

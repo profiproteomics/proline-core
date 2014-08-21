@@ -8,11 +8,11 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 import org.junit.After
 import org.junit.Before

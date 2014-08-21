@@ -16,6 +16,7 @@ import fr.proline.core.algo.msi.validation.{ BasicTDAnalyzer, _ }
 import fr.proline.core.algo.msi.InferenceMethods
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.om.model.msi.{ ResultSet, PeptideMatch, FilterDescriptor }
 import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.provider.msi._
@@ -23,7 +24,6 @@ import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.context.BasicExecutionContext
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
 
 abstract class AbstractResultSetValidator extends AbstractMultipleDBTestCase with Logging {
   
