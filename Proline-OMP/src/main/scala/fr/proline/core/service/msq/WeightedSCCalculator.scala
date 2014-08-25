@@ -329,7 +329,7 @@ class WeightedSCCalculator (
 		  var pepSets : ArrayBuffer[PeptideSet] = new ArrayBuffer[PeptideSet]()
 		  
 		  if(rootPepSet.strictSubsets == null || !rootPepSet.strictSubsets.isDefined){ //Read from ConnectionContext		    
-		    val pepInstProv = new SQLPeptideInstanceProvider(msiSqlCtx =execContext.getMSIDbConnectionContext() ,peptideProvider=new SQLPeptideProvider(psDbCtx = execContext.getPSDbConnectionContext())  )
+		    val pepInstProv = new SQLPeptideInstanceProvider(msiDbCtx =execContext.getMSIDbConnectionContext() ,peptideProvider=new SQLPeptideProvider(psDbCtx = execContext.getPSDbConnectionContext())  )
 		    val pepSetProvider = new SQLPeptideSetProvider(msiDbCtx = execContext.getMSIDbConnectionContext() , peptideInstanceProvider = pepInstProv)
 		    pepSets ++= pepSetProvider.getPeptideSets(rootPepSet.strictSubsetIds)
 		  } else {
