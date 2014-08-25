@@ -2,10 +2,15 @@ package fr.proline.core.om.builder
 
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.util.primitives._
+import fr.proline.core.dal.tables.ps._
 import fr.proline.core.om.model.msi._
 
-// TODO: move to DAL project in order to be able to use TABLES enumerations
 object PtmDefinitionBuilder {
+  
+  protected val PepPtmCols = PsDbPeptidePtmColumns
+  protected val PtmCols = PsDbPtmColumns
+  protected val PtmEvCols = PsDbPtmEvidenceColumns
+  protected val PtmSpecifCols = PsDbPtmSpecificityColumns
 
   /**
    * 
@@ -29,31 +34,31 @@ object PtmDefinitionBuilder {
       val ptmEvidenceRecord = ptmEvidenceRecords(i)
             
       val ptmEv = new PtmEvidence(
-        ionType = IonTypes.withName( ptmEvidenceRecord.getString("type") ),
-        composition = ptmEvidenceRecord.getString("composition"),
-        monoMass = ptmEvidenceRecord.getDouble("mono_mass"),
-        averageMass = ptmEvidenceRecord.getDouble("average_mass"),
-        isRequired = ptmEvidenceRecord.getBooleanOrElse("is_required",false)
+        ionType = IonTypes.withName( ptmEvidenceRecord.getString(PtmEvCols.TYPE) ),
+        composition = ptmEvidenceRecord.getString(PtmEvCols.COMPOSITION),
+        monoMass = ptmEvidenceRecord.getDouble(PtmEvCols.MONO_MASS),
+        averageMass = ptmEvidenceRecord.getDouble(PtmEvCols.AVERAGE_MASS),
+        isRequired = ptmEvidenceRecord.getBooleanOrElse(PtmEvCols.IS_REQUIRED,false)
       )
 
       ptmEvArray(i) = ptmEv
     }
     
-    val residueStrOpt = ptmSpecifRecord.getStringOption("residue")
+    val residueStrOpt = ptmSpecifRecord.getStringOption(PtmSpecifCols.RESIDUE)
     val resChar = if( residueStrOpt.isDefined && residueStrOpt.get != null ) residueStrOpt.get.charAt(0) else '\0'
     
-    val ptmDefId = ptmSpecifRecord.getLongOrElse("id",PtmDefinition.generateNewId)
+    val ptmDefId = ptmSpecifRecord.getLongOrElse(PtmSpecifCols.ID,PtmDefinition.generateNewId)
     require(ptmDefId != 0, "ptmDefId must be different than zero")
       
     return new PtmDefinition(
       id = ptmDefId,
-      ptmId = ptmRecord.getLong("id"),
-      location = ptmSpecifRecord.getString("location"),
+      ptmId = ptmRecord.getLong(PtmCols.ID),
+      location = ptmSpecifRecord.getString(PtmSpecifCols.LOCATION),
       residue = resChar,
       classification = ptmClassification,
       names = new PtmNames(
-        shortName = ptmRecord.getString("short_name"),
-        fullName = ptmRecord.getString("full_name")
+        shortName = ptmRecord.getString(PtmCols.SHORT_NAME),
+        fullName = ptmRecord.getString(PtmCols.FULL_NAME)
       ),
       ptmEvidences = ptmEvArray
     )
@@ -112,14 +117,14 @@ object PtmDefinitionBuilder {
       for (pepPtmRecord <- pepPtmRecords) {
 
         // Retrieve PTM definition
-        val ptmSpecifId = pepPtmRecord.getLong("ptm_specificity_id")
+        val ptmSpecifId = pepPtmRecord.getLong(PepPtmCols.PTM_SPECIFICITY_ID)
 
         // FIXME: remove this check when peptide_ptm insertion is fixed
         if (ptmSpecifId > 0) {
           val ptmDef = ptmDefinitionById(ptmSpecifId)
 
           // Build located PTM
-          val locatedPtm = PtmDefinitionBuilder.buildLocatedPtm(ptmDef, pepPtmRecord.getInt("seq_position"))
+          val locatedPtm = PtmDefinitionBuilder.buildLocatedPtm(ptmDef, pepPtmRecord.getInt(PepPtmCols.SEQ_POSITION))
           locatedPtms += locatedPtm
         }
 
