@@ -263,8 +263,12 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       } else {
         Some(ProfiJson.deserialize[PeptideMatchProperties](serializedProperties))
       }
+      
+      val cdPrettyRank = msiPeptideMatch.getCDPrettyRank
+      val sdPrettyRank = msiPeptideMatch.getSDPrettyRank
 
-      val peptideMatch = new PeptideMatch(msiPeptideMatchId,
+      val peptideMatch = new PeptideMatch(
+        msiPeptideMatchId,
         msiPeptideMatch.getRank.intValue,
         msiPeptideMatch.getScore.floatValue,
         scoringRepo.getScoreTypeForId(msiEM, msiPeptideMatch.getScoringId),
@@ -276,14 +280,15 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         buildMsQuery(msiPeptideMatch.getMsQuery),
         true, // isValidated always true when loading from ORM
         resultSetId,
-        msiPeptideMatch.getCDPrettyRank.intValue,
-        msiPeptideMatch.getSDPrettyRank.intValue,
+        if( cdPrettyRank != null ) cdPrettyRank.intValue else 0,
+        if( sdPrettyRank != null ) sdPrettyRank.intValue else 0,
         null, // TODO handle children
         null, // TODO handle children
         bestChildId,
         optionalBestChild,
         peptideMatchProperties,
-        None)
+        None
+      )
 
       knownPeptideMatches += msiPeptideMatchId -> peptideMatch
 
