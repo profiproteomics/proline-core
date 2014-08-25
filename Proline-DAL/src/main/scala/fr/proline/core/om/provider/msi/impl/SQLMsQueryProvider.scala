@@ -3,24 +3,20 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.jdbc.easy._
-import fr.profi.util.serialization.ProfiJson
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
-import fr.proline.core.om.model.msi.Ms1Query
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.MsQuery
-import fr.proline.core.om.model.msi.MsQueryProperties
-import fr.proline.core.om.provider.msi.IMsQueryProvider
 import fr.profi.util.primitives._
-import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
-import fr.proline.core.dal.tables.msi.MsiDbPeaklistRelationTable
-import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi._
+import fr.proline.core.om.builder.MsQueryBuilder
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.msi.IMsQueryProvider
+import fr.proline.repository.ProlineDatabaseType
 
-class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQueryProvider {
+class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQueryProvider {
+  
+  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
   val MsQueryCols = MsiDbMsQueryTable.columns
   
@@ -43,7 +39,7 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
      * 
      */
     
-    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
       // first solution with NOT_IN request
       val msQueryIdsSql = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
@@ -67,7 +63,7 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
   def getMsiSearchesMsQueries(msiSearchIds: Seq[Long]): Array[MsQuery] = {
     if( msiSearchIds == null || msiSearchIds.length == 0 ) return Array.empty[MsQuery]
     
-    DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
       val msiSearchIdsAsStr = msiSearchIds.mkString(",")
       val msqQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery( (t,c) =>
@@ -104,33 +100,14 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
       // Load MS queries corresponding to the provided MSI search ids
       val msQueries = msiEzDBC.select(msqQuery) { r =>
         
-        val spectrumId = toLong(r.getAny(MsQueryCols.SPECTRUM_ID))
-  
-        // Decode JSON properties
-        val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MsQueryProperties](_))
-        val msQueryId = toLong(r.getAny(MsQueryCols.ID))
+        val spectrumId = r.getLong(MsQueryCols.SPECTRUM_ID)
   
         // Build the MS query object
         val msQuery = if (spectrumId != 0) { // we can assume it is a MS2 query
           val spectrumTitle = spectrumTitleById(spectrumId)
-          new Ms2Query(
-            id = msQueryId,
-            initialId = r.getInt(MsQueryCols.INITIAL_ID),
-            moz = r.getDouble(MsQueryCols.MOZ),
-            charge = r.getInt(MsQueryCols.CHARGE),
-            spectrumTitle = spectrumTitle,
-            spectrumId = spectrumId,
-            properties = properties
-          )
-  
+          MsQueryBuilder.buildMs2Query(r, spectrumTitleById)  
         } else {
-          new Ms1Query(
-            id = msQueryId,
-            initialId = r.getInt(MsQueryCols.INITIAL_ID),
-            moz = r.getDouble(MsQueryCols.MOZ),
-            charge = r.getInt(MsQueryCols.CHARGE),
-            properties = properties
-          )
+          MsQueryBuilder.buildMs1Query(r)
         }
   
         msQuery
@@ -142,7 +119,8 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
   }
 
   def getMsQueries( msQueryIds: Seq[Long] ): Array[MsQuery] = {
-      DoJDBCReturningWork.withEzDBC(msiSqlCtx, { msiEzDBC =>
+    
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
 
       val msQueriesIdsAsStr = msQueryIds.mkString(",")
       val msqQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery((t, c) =>
@@ -151,7 +129,7 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
 
       val spectrumIdsQuery = new SelectQueryBuilder1(MsiDbMsQueryTable).mkSelectQuery((t, c) =>
         List(t.SPECTRUM_ID) -> "WHERE " ~ t.ID ~ " IN(" ~ msQueriesIdsAsStr ~ ")"
-      )	
+      )
 		
       // Retrieve spectrum ids corresponding to the provided MSI search ids
       val spectrumIds = msiEzDBC.selectLongs(spectrumIdsQuery)
@@ -159,40 +137,21 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
       val specTitleQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
         List(t.ID,t.TITLE) -> "WHERE "~ t.ID ~" IN("~ spectrumIds.mkString(",") ~")"
       )
-  
+      
       // Retrieve parent peaklist ids corresponding to the provided MSI search ids
       val spectrumTitleById = msiEzDBC.select(specTitleQuery) { r => (toLong(r.nextAny), r.nextString) } toMap
-  
+      
       // Load MS queries corresponding to the provided MSI search ids
       val msQueries = msiEzDBC.select(msqQuery) { r =>
         
-        val spectrumId = toLong(r.getAny(MsQueryCols.SPECTRUM_ID))
-  
-        // Decode JSON properties
-        val properties = r.getStringOption(MsQueryCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MsQueryProperties](_))
-        val msQueryId = toLong(r.getAny(MsQueryCols.ID))
-  
+        val spectrumId = r.getLong(MsQueryCols.SPECTRUM_ID)
+        
         // Build the MS query object
         val msQuery = if (spectrumId != 0) { // we can assume it is a MS2 query
           val spectrumTitle = spectrumTitleById(spectrumId)
-          new Ms2Query(
-            id = msQueryId,
-            initialId = r.getInt(MsQueryCols.INITIAL_ID),
-            moz = r.getDouble(MsQueryCols.MOZ),
-            charge = r.getInt(MsQueryCols.CHARGE),
-            spectrumTitle = spectrumTitle,
-            spectrumId = spectrumId,
-            properties = properties
-          )
-  
+          MsQueryBuilder.buildMs2Query(r, spectrumTitleById)  
         } else {
-          new Ms1Query(
-            id = msQueryId,
-            initialId = r.getInt(MsQueryCols.INITIAL_ID),
-            moz = r.getDouble(MsQueryCols.MOZ),
-            charge = r.getInt(MsQueryCols.CHARGE),
-            properties = properties
-          )
+          MsQueryBuilder.buildMs1Query(r)
         }
   
         msQuery
@@ -200,7 +159,7 @@ class SQLMsQueryProvider(val msiSqlCtx: DatabaseConnectionContext) extends IMsQu
   
       msQueries.toArray
                
-      }, false)  
+    }, false) 
      
   }
 }

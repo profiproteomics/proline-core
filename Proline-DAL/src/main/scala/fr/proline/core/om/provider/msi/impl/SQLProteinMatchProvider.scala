@@ -4,7 +4,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 
 import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
+import fr.proline.core.om.builder.ProteinMatchBuilder
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -13,33 +15,26 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.{ ProteinMatch, SequenceMatch,ProteinMatchProperties, SequenceMatchProperties }
 import fr.proline.core.om.provider.msi.IProteinMatchProvider
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.repository.ProlineDatabaseType
 
 class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //extends IProteinMatchProvider
-
-  val ProtMatchCols = MsiDbProteinMatchTable.columns
-  val SeqMatchCols = MsiDbSequenceMatchTable.columns
+  
+  require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
+  
+  // Retrieve score type map
+  val scoreTypeById = new MsiDbHelper(msiDbCtx).getScoringTypeById
   
   def getProteinMatches(protMatchIds: Seq[Long]): Array[ProteinMatch] = {
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
-      val protMatchIdsAsStr = protMatchIds.mkString(",")
+      val protMatchIdArray = protMatchIds.toArray
       
-      // --- Build SQL query to load protein match records ---
-      val protMatchQuery = new SelectQueryBuilder1(MsiDbProteinMatchTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.ID ~" IN("~ protMatchIdsAsStr ~")"
+      ProteinMatchBuilder.buildProteinMatches(
+        SQLProteinMatchProvider.selectProteinMatchRecords(msiEzDBC, protMatchIdArray),
+        SQLProteinMatchProvider.selectProtMatchSeqDbMapRecords(msiEzDBC, protMatchIdArray),
+        SQLProteinMatchProvider.selectAllProtMatchSeqMatchRecords(msiEzDBC, protMatchIdArray),
+        scoreTypeById
       )
-      
-      // --- Build SQL query to load and map sequence database ids of each protein match ---
-      val protMatchDbMapQuery = new SelectQueryBuilder1(MsiDbProteinMatchSeqDatabaseMapTable).mkSelectQuery( (t,c) =>
-        List(t.PROTEIN_MATCH_ID,t.SEQ_DATABASE_ID) -> "WHERE "~ t.PROTEIN_MATCH_ID ~" IN("~ protMatchIdsAsStr ~")"
-      )
-      
-      // --- Build SQL query to load sequence match records ---
-      val seqMatchQuery = new SelectQueryBuilder1(MsiDbSequenceMatchTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.PROTEIN_MATCH_ID ~" IN("~ protMatchIdsAsStr ~")"
-      )
-      
-      this._getProteinMatches(msiEzDBC,protMatchQuery,protMatchDbMapQuery,seqMatchQuery)
     })
   }
   
@@ -65,163 +60,100 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
 
   private def _getProteinMatches(msiEzDBC: EasyDBC, rsIds: Seq[Long], rsmIds: Option[Seq[Long]] = None ): Array[ProteinMatch] = {
     
-    val rsIdsAsStr = rsIds.mkString(",")
-    
     // --- Build SQL query to load protein match records ---
-    val protMatchQuery = if( rsmIds.isEmpty ) {
-      new SelectQueryBuilder1(MsiDbProteinMatchTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
-      )
+    val protMatchSelector = if( rsmIds.isEmpty ) {
+      SQLProteinMatchProvider.selectResultSetProteinMatchRecords(msiEzDBC, rsIds.toArray)
     }
     else {
-      val rsmIdsAsStr = rsmIds.get.mkString(",")
-      // Retrieve only protein matches involved in a result summary
-      new SelectQueryBuilder2(MsiDbProteinMatchTable,MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t1,c1,t2,c2) => 
-        List(t1.*) ->
-        "WHERE "~ t2.RESULT_SUMMARY_ID ~" IN("~ rsmIdsAsStr ~") "~
-        "AND "~ t1.ID ~"="~ t2.PROTEIN_MATCH_ID
-      )
+      SQLProteinMatchProvider.selectResultSummaryProteinMatchRecords(msiEzDBC, rsmIds.get.toArray)
     }
+    
+    val rsIdsAsStr = rsIds.mkString(",")
 
     // --- Build SQL query to load and map sequence database ids of each protein match ---
     val protMatchDbMapQuery = new SelectQueryBuilder1(MsiDbProteinMatchSeqDatabaseMapTable).mkSelectQuery( (t,c) =>
       List(t.PROTEIN_MATCH_ID,t.SEQ_DATABASE_ID) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
-    )    
+    )
 
     // --- Build SQL query to load sequence match records ---
     val seqMatchQuery = new SelectQueryBuilder1(MsiDbSequenceMatchTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
     )
 
-    this._getProteinMatches(msiEzDBC,protMatchQuery,protMatchDbMapQuery,seqMatchQuery)
+    ProteinMatchBuilder.buildProteinMatches(
+      protMatchSelector,
+      msiEzDBC.selectAndProcess(protMatchDbMapQuery),
+      msiEzDBC.selectAllRecords(seqMatchQuery),
+      scoreTypeById
+    )
   }
   
-   private def _getProteinMatches(
-     msiEzDBC: EasyDBC,
-     protMatchQuery: String,
-     protMatchDbMapQuery: String,
-     seqMatchQuery: String
-   ): Array[ProteinMatch] = {
-     
-    import fr.profi.util.primitives.toLong
-    import fr.profi.util.sql.StringOrBoolAsBool._
+}
+
+object SQLProteinMatchProvider {
+  
+  def selectProteinMatchRecords( msiEzDBC: EasyDBC, protMatchIds: Array[Long] ): (IValueContainer => Unit) => Unit = {
     
-    // Retrieve score type map
-    val scoreTypeById = new MsiDbHelper(msiDbCtx).getScoringTypeById
+    val protMatchIdsAsStr = protMatchIds.mkString(",")
+    
+    // --- Build SQL query to load protein match records ---
+    val protMatchQuery = new SelectQueryBuilder1(MsiDbProteinMatchTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ protMatchIdsAsStr ~")"
+    )
+    
+    msiEzDBC.selectAndProcess(protMatchQuery)
+  }
+  
+  def selectResultSetProteinMatchRecords( msiEzDBC: EasyDBC, rsIds: Array[Long] ): (IValueContainer => Unit) => Unit = {
+   
+    val rsIdsAsStr = rsIds.mkString(",")
+   
+    // Retrieve protein matches belonging to some result sets
+    val protMatchQuery = new SelectQueryBuilder1(MsiDbProteinMatchTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
+    )
+    
+    msiEzDBC.selectAndProcess(protMatchQuery)
+  }
+  
+  def selectResultSummaryProteinMatchRecords( msiEzDBC: EasyDBC, rsmIds: Array[Long] ): (IValueContainer => Unit) => Unit = {
+   
+    val rsmIdsAsStr = rsmIds.mkString(",")
+    
+    // Retrieve protein matches belonging to some result summaries
+    val protMatchQuery = new SelectQueryBuilder2(MsiDbProteinMatchTable,MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t1,c1,t2,c2) => 
+      List(t1.*) ->
+      "WHERE "~ t2.RESULT_SUMMARY_ID ~" IN("~ rsmIdsAsStr ~") "~
+      "AND "~ t1.ID ~"="~ t2.PROTEIN_MATCH_ID
+    )
+    
+    msiEzDBC.selectAndProcess(protMatchQuery)
+  }
+  
+  def selectProtMatchSeqDbMapRecords( msiEzDBC: EasyDBC, protMatchIds: Array[Long] ): (IValueContainer => Unit) => Unit = {
+    
+    val protMatchIdsAsStr = protMatchIds.mkString(",")
+    
+    // --- Build SQL query to load and map sequence database ids of each protein match ---
+    val protMatchDbMapQuery = new SelectQueryBuilder1(MsiDbProteinMatchSeqDatabaseMapTable).mkSelectQuery( (t,c) =>
+      List(t.PROTEIN_MATCH_ID,t.SEQ_DATABASE_ID) -> "WHERE "~ t.PROTEIN_MATCH_ID ~" IN("~ protMatchIdsAsStr ~")"
+    )
+    
+    msiEzDBC.selectAndProcess(protMatchDbMapQuery)
+  }
+  
+  def selectAllProtMatchSeqMatchRecords( msiEzDBC: EasyDBC, protMatchIds: Array[Long] ): Array[AnyMap] = {
+    
+    val protMatchIdsAsStr = protMatchIds.mkString(",")
+    
+    // --- Build SQL query to load sequence match records ---
+    val seqMatchQuery = new SelectQueryBuilder1(MsiDbSequenceMatchTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.PROTEIN_MATCH_ID ~" IN("~ protMatchIdsAsStr ~")"
+    )
     
     // --- Execute SQL query to load sequence match records ---
-    val seqMatchRecords = msiEzDBC.selectAllRecordsAsMaps(seqMatchQuery)
-    val seqMatchRecordsByProtMatchId = seqMatchRecords.groupBy(v => toLong(v(SeqMatchCols.PROTEIN_MATCH_ID)))
-
-    // --- Execute SQL query to laod and map sequence database ids of each protein match ---
-    val seqDbIdsByProtMatchId = new collection.mutable.HashMap[Long, ArrayBuffer[Long]]     
-    msiEzDBC.selectAndProcess(protMatchDbMapQuery) { r =>
-      val (proteinMatchId, seqDatabaseId) = (r.nextLong, r.nextLong)
-      seqDbIdsByProtMatchId.getOrElseUpdate(proteinMatchId, new ArrayBuffer[Long](1) ) += seqDatabaseId
-    }
-    
-    //var protMatchColNames: Seq[String] = null
-    var protMatchIdSet = new HashSet[Long]
-    val protMatches = new ArrayBuffer[ProteinMatch]
-    
-    // --- Execute SQL query to load protein match records ---
-    msiEzDBC.selectAndProcess(protMatchQuery) { protMatchRecord =>
-
-      //if (protMatchColNames == null) { protMatchColNames = r.columnNames }
-      //val protMatchRecord = protMatchColNames.map(colName => (colName -> r.nextAnyRefOrElse(null))).toMap
-
-      val protMatchId = protMatchRecord.getLong(ProtMatchCols.ID)
-      
-      // Check this protein match has not been already loaded
-      if( protMatchIdSet.contains(protMatchId) == false ) {
-        protMatchIdSet += protMatchId
-        
-        var seqMatches: Array[SequenceMatch] = null
-        for ( seqMatchRecords <- seqMatchRecordsByProtMatchId.get(protMatchId) ) {
-  
-          val seqMatchesBuffer = new ArrayBuffer[SequenceMatch](seqMatchRecords.length)
-          for (seqMatchRecord <- seqMatchRecords) {
-  
-            // Retrieve sequence match attributes
-            val resBeforeStr = seqMatchRecord(SeqMatchCols.RESIDUE_BEFORE).asInstanceOf[String]
-            val resBeforeChar = if (resBeforeStr != null) resBeforeStr.charAt(0) else '\0'
-  
-            val resAfterStr = seqMatchRecord(SeqMatchCols.RESIDUE_AFTER).asInstanceOf[String]
-            val resAfterChar = if (resAfterStr != null) resAfterStr.charAt(0) else '\0'
-  
-            // Decode JSON properties
-            val propertiesAsJSON = seqMatchRecord(SeqMatchCols.SERIALIZED_PROPERTIES).asInstanceOf[String]
-            val properties = if (propertiesAsJSON != null) Some(ProfiJson.deserialize[SequenceMatchProperties](propertiesAsJSON)) else None
-  
-            // Build sequence match
-            val seqMatch = new SequenceMatch(
-              start = seqMatchRecord(SeqMatchCols.START).asInstanceOf[Int],
-              end = seqMatchRecord(SeqMatchCols.STOP).asInstanceOf[Int],
-              residueBefore = resBeforeChar,
-              residueAfter = resAfterChar,
-              isDecoy = seqMatchRecord(SeqMatchCols.IS_DECOY),
-              peptideId = toLong(seqMatchRecord(SeqMatchCols.PEPTIDE_ID)),
-              bestPeptideMatchId = toLong(seqMatchRecord(SeqMatchCols.BEST_PEPTIDE_MATCH_ID)),
-              resultSetId = toLong(seqMatchRecord(SeqMatchCols.RESULT_SET_ID)),
-              properties = properties
-            )
-  
-            seqMatchesBuffer += seqMatch
-  
-          }
-  
-          seqMatches = seqMatchesBuffer.toArray
-  
-        }
-  
-        // Retrieve sequence database ids
-        val seqDatabaseIds = seqDbIdsByProtMatchId.getOrElse(protMatchId,ArrayBuffer.empty[Long]).toArray
-  
-        // Build protein match object
-        val bioSequenceId = protMatchRecord.getLongOrElse(ProtMatchCols.BIO_SEQUENCE_ID,0L)
-  
-        // Decode JSON properties
-        val propertiesAsJSON = protMatchRecord.getStringOption(ProtMatchCols.SERIALIZED_PROPERTIES)
-        val properties = propertiesAsJSON.map(ProfiJson.deserialize[ProteinMatchProperties](_))
-        
-        val protMatch = new ProteinMatch(
-          id = protMatchId,
-          accession = protMatchRecord.getString(ProtMatchCols.ACCESSION),
-          description = protMatchRecord.getStringOrElse(ProtMatchCols.DESCRIPTION,""),
-          geneName = protMatchRecord.getString(ProtMatchCols.GENE_NAME),
-          sequenceMatches = seqMatches,
-          isDecoy = protMatchRecord.getBoolean(ProtMatchCols.IS_DECOY),
-          isLastBioSequence = protMatchRecord.getBoolean(ProtMatchCols.IS_LAST_BIO_SEQUENCE),
-          seqDatabaseIds = seqDatabaseIds,
-          proteinId = bioSequenceId,
-          resultSetId = protMatchRecord.getLong(ProtMatchCols.RESULT_SET_ID),
-          properties = properties
-        )
-  
-        protMatchRecord.getFloatOption(ProtMatchCols.SCORE).map { score =>
-          protMatch.score = score
-          protMatch.scoreType = scoreTypeById(protMatchRecord.getLong(ProtMatchCols.SCORING_ID))
-        }
-  
-        protMatchRecord.getFloatOption(ProtMatchCols.COVERAGE).map { coverage =>
-          protMatch.coverage = coverage
-        }
-  
-        protMatchRecord.getIntOption(ProtMatchCols.PEPTIDE_MATCH_COUNT).map { pepMatchCount =>
-          protMatch.peptideMatchesCount = pepMatchCount
-        }
-  
-        protMatchRecord.getLongOption(ProtMatchCols.TAXON_ID).map { taxonId =>
-          protMatch.taxonId = taxonId
-        }
-  
-        protMatches += protMatch
-      }
-
-    }
-
-    protMatches.toArray
+    msiEzDBC.selectAllRecords(seqMatchQuery)
   }
-
+  
 }
 

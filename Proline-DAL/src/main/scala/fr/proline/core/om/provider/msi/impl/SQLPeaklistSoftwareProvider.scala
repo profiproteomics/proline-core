@@ -1,13 +1,16 @@
 package fr.proline.core.om.provider.msi.impl
 
 import fr.profi.jdbc.easy._
+import fr.profi.util.primitives._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
+import fr.proline.core.om.builder.PeaklistSoftwareBuilder
 import fr.proline.core.om.model.msi.PeaklistSoftware
 import fr.proline.core.om.provider.msi.IPeaklistSoftwareProvider
-import fr.profi.util.primitives._
- 
-// TODO: use Select Query builder
+
 class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends IPeaklistSoftwareProvider {
   
   def getPeaklistSoftwareListAsOptions( pklSoftIds: Seq[Long] ): Array[Option[PeaklistSoftware]] = {
@@ -15,29 +18,44 @@ class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends 
     pklSoftIds.toArray.map( pklSoftById.get(_) )
   }
   
-  def getPeaklistSoftwareList( pklSoftIds: Seq[Long] ): Array[PeaklistSoftware] = {
-
-    import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareTable
-
-    DoJDBCReturningWork.withEzDBC(dbCtx, { ezDBC =>
-
-      ezDBC.select("SELECT id, name, version FROM peaklist_software WHERE id IN(" + pklSoftIds.mkString(",") +")") { r =>
-        new PeaklistSoftware(id = toLong(r.nextAny), name = r.nextString, version = r.nextStringOrElse(""))
-      } toArray
-      
+  def getPeaklistSoftwareList(pklSoftIds: Seq[Long]): Array[PeaklistSoftware] = {    
+    DoJDBCReturningWork.withEzDBC(dbCtx, { msiEzDBC =>    
+      PeaklistSoftwareBuilder.buildPeaklistSoftwareList( SQLPeaklistSoftwareProvider.selectPklSoftRecords(msiEzDBC,pklSoftIds) )
     })
-
   }
   
   def getPeaklistSoftware( softName: String, softVersion: String ): Option[PeaklistSoftware] = {
     
     DoJDBCReturningWork.withEzDBC(dbCtx, { udsEzDBC =>
-      udsEzDBC.selectHeadOption(
-        "SELECT * FROM peaklist_software WHERE name = ? and version = ? ", softName, softVersion)(r =>
-          new PeaklistSoftware(id = toLong(r.nextAny), name = r.nextString, version = r.nextStringOrElse(""))
-        )
+      SQLPeaklistSoftwareProvider.selectPklSoftRecord(udsEzDBC,softName,softVersion) { r =>
+        PeaklistSoftwareBuilder.buildPeaklistSoftware(r)
+      }
     })
   }
 
 }
+
+object SQLPeaklistSoftwareProvider {
+  
+  def selectPklSoftRecords(ezDBC: EasyDBC, pklSoftIds: Seq[Long]): (IValueContainer => PeaklistSoftware) => Seq[PeaklistSoftware] = {
+    
+    val pklSoftQuery = new SelectQueryBuilder1(MsiDbPeaklistSoftwareTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ pklSoftIds.mkString(",") ~")"
+    )
+
+    ezDBC.select(pklSoftQuery)
+  }
+  
+  def selectPklSoftRecord(ezDBC: EasyDBC, softName: String, softVersion: String): (IValueContainer => PeaklistSoftware) => Option[PeaklistSoftware] = {
+    
+    // "SELECT * FROM peaklist_software WHERE name = ? and version = ? ", softName, softVersion
+    val pklSoftQuery = new SelectQueryBuilder1(MsiDbPeaklistSoftwareTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> "WHERE "~ t.NAME ~ s" = '${softName}' AND " ~ t.VERSION ~ s" = '${softVersion}'"
+    )
+
+    ezDBC.selectHeadOption( pklSoftQuery )
+  }
+  
+}
+
 
