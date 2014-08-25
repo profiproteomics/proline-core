@@ -33,13 +33,8 @@ class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
     super.initDBsDBManagement(DriverType.H2)
 
     //Load Data
-    /*
+    msiDBTestCase.loadDataSet("/dbunit/datasets/msi-db_init_dataset.xml")
     msiDBTestCase.loadDataSet("/fr/proline/core/om/msi/Init_Dataset.xml")
-    psDBTestCase.loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
-    udsDBTestCase.loadDataSet("/fr/proline/core/om/uds/UDS_Simple_Dataset.xml")
-    pdiDBTestCase.loadDataSet("/fr/proline/core/om/pdi/Proteins_Dataset.xml")
-    */
-    msiDBTestCase.loadCompositeDataSet(Array("/dbunit/datasets/msi-db_init_dataset.xml", "/fr/proline/core/om/msi/Init_Dataset.xml"))
     psDBTestCase.loadDataSet("/dbunit/datasets/ps-db_init_dataset.xml")
     udsDBTestCase.loadCompositeDataSet(Array("/dbunit/datasets/uds-db_init_dataset.xml", "/fr/proline/core/om/uds/UDS_Simple_Dataset.xml"))
     pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")

@@ -1,7 +1,6 @@
 package fr.proline.core.dal
 
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.dal.DataStoreConnectorFactoryForTest
 import fr.proline.repository.DriverType
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
