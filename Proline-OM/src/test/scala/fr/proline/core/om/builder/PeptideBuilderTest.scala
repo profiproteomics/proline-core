@@ -5,6 +5,7 @@ import org.junit.Test
 
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
+import fr.profi.util.primitives.AnyMap
 
 class PeptideBuilderTest {
 
@@ -26,23 +27,28 @@ class PeptideBuilderTest {
   @Test
   def testPtmStringGenerated() = {
 
-    var ptmRecord = scala.collection.immutable.Map.newBuilder[String, Any]
+    val ptmRecord = new AnyMap()
     ptmRecord += ("id" -> 1)
     ptmRecord += ("short_name" -> "phospho")
     ptmRecord += ("full_name" -> "phospho")
 
-    var ptmSpecifRecord = scala.collection.immutable.Map.newBuilder[String, Any]
+    val ptmSpecifRecord = new AnyMap()
     ptmSpecifRecord += ("residue" -> "A")
     ptmSpecifRecord += ("location" -> "Anywhere")
 
-    var ptmEvidencePrecursor = scala.collection.immutable.Map.newBuilder[String, Any]
+    val ptmEvidencePrecursor = new AnyMap()
     ptmEvidencePrecursor += ("type" -> "Precursor")
     ptmEvidencePrecursor += ("composition" -> "HA")
     ptmEvidencePrecursor += ("mono_mass" -> 10.0)
     ptmEvidencePrecursor += ("average_mass" -> 10.0)
     ptmEvidencePrecursor += ("is_required" -> true)
 
-    val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(ptmRecord = ptmRecord.result(), ptmSpecifRecord = ptmSpecifRecord.result(), ptmEvidenceRecords = Seq[Map[String, Any]](ptmEvidencePrecursor.result()), ptmClassification = "")
+    val ptmDef = PtmDefinitionBuilder.buildPtmDefinition(
+      ptmRecord = ptmRecord,
+      ptmSpecifRecord = ptmSpecifRecord,
+      ptmEvidenceRecords = Seq(ptmEvidencePrecursor),
+      ptmClassification = ""
+    )
     val ptmLoc = PtmDefinitionBuilder.buildLocatedPtm(ptmDef = ptmDef, seqPos = 1)
     val locatedPtms = new Array[LocatedPtm](1)
     locatedPtms.update(0, ptmLoc)

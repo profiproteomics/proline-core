@@ -1,64 +1,59 @@
 package fr.proline.core.om.builder
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.om.model.msi.PtmNames
-import fr.proline.core.om.model.msi.IonTypes
 
-object PtmDefinitionBuilder {  
+import scala.collection.mutable.ArrayBuffer
+import fr.profi.util.primitives._
+import fr.proline.core.om.model.msi._
+
+// TODO: move to DAL project in order to be able to use TABLES enumerations
+object PtmDefinitionBuilder {
 
   /**
    * 
    * Create a PtmDefinition using corresponding information
    *  - ptmRecord : contains value for ptm properties "id"(Int) for ptm_id, "short_name" (String), "full_name" (String) for Ptm Names  
-   *      !! FIXME : To Confirm If id == 0, ptm is to be created FIXME!!
    *  - ptmSpecifRecord : contains value for ptmDefinition properties "residue" (String), "id" (Int), "location" (String): if id is not specified, a new id will be generated
    *  - ptmEvidenceRecords :List of map:  contains value for properties "type"(String), "composition"(String), "mono_mass"(Double), "average_mass"(Double),"is_required" (Boolean) for each ptmEvidence 
-   *  - ptmClassification : name of classification,
+   *  - ptmClassification : name of classification
    *    
    */
-  def buildPtmDefinition( ptmRecord: Map[String,Any],
-                          ptmSpecifRecord: Map[String,Any],                          
-                          ptmEvidenceRecords: Seq[Map[String,Any]],
-                          ptmClassification: String
-                         ) : PtmDefinition = {
-    
-    import fr.profi.util.primitives._
+  def buildPtmDefinition(
+    ptmRecord: IValueContainer,
+    ptmSpecifRecord: IValueContainer,
+    ptmEvidenceRecords: Seq[IValueContainer],
+    ptmClassification: String
+  ): PtmDefinition = {
     
     val ptmEvArray = new Array[PtmEvidence](ptmEvidenceRecords.length)
 
     for (i <- 0 until ptmEvidenceRecords.length ) {
-      val ptmEvidenceRecord = ptmEvidenceRecords(i);
+      val ptmEvidenceRecord = ptmEvidenceRecords(i)
             
       val ptmEv = new PtmEvidence(
-        ionType = IonTypes.withName( ptmEvidenceRecord("type").asInstanceOf[String] ),
-        composition = ptmEvidenceRecord("composition").asInstanceOf[String],
-        monoMass = ptmEvidenceRecord("mono_mass").asInstanceOf[Double],
-        averageMass = ptmEvidenceRecord("average_mass").asInstanceOf[Double],
-        isRequired = toBoolean(ptmEvidenceRecord.getOrElse("is_required",false))
+        ionType = IonTypes.withName( ptmEvidenceRecord.getString("type") ),
+        composition = ptmEvidenceRecord.getString("composition"),
+        monoMass = ptmEvidenceRecord.getDouble("mono_mass"),
+        averageMass = ptmEvidenceRecord.getDouble("average_mass"),
+        isRequired = ptmEvidenceRecord.getBooleanOrElse("is_required",false)
       )
 
       ptmEvArray(i) = ptmEv
     }
     
-    val residueStr = ptmSpecifRecord("residue").asInstanceOf[String];
-    val resChar = if( residueStr != null ) residueStr.charAt(0) else '\0'
-      
-    var ptmDefId: Long = 0 
-    if(ptmSpecifRecord.contains("id"))
-      ptmDefId = toLong(ptmSpecifRecord("id"))
-    else
-      ptmDefId = PtmDefinition.generateNewId
+    val residueStrOpt = ptmSpecifRecord.getStringOption("residue")
+    val resChar = if( residueStrOpt.isDefined && residueStrOpt.get != null ) residueStrOpt.get.charAt(0) else '\0'
+    
+    val ptmDefId = ptmSpecifRecord.getLongOrElse("id",PtmDefinition.generateNewId)
+    require(ptmDefId != 0, "ptmDefId must be different than zero")
       
     return new PtmDefinition(
       id = ptmDefId,
-      ptmId = toLong(ptmRecord("id")),
-      location = ptmSpecifRecord("location").asInstanceOf[String],
+      ptmId = ptmRecord.getLong("id"),
+      location = ptmSpecifRecord.getString("location"),
       residue = resChar,
       classification = ptmClassification,
       names = new PtmNames(
-        shortName = ptmRecord("short_name").asInstanceOf[String],
-        fullName = ptmRecord("full_name").asInstanceOf[String]
+        shortName = ptmRecord.getString("short_name"),
+        fullName = ptmRecord.getString("full_name")
       ),
       ptmEvidences = ptmEvArray
     )
@@ -103,4 +98,37 @@ object PtmDefinitionBuilder {
     )
 
   }
+  
+  def buildLocatedPtmsGroupedByPepId(
+    pepPtmRecordsByPepId: Map[Long,Seq[IValueContainer]],
+    ptmDefinitionById: Map[Long,PtmDefinition]
+  ): Map[Long, Array[LocatedPtm]] = {
+
+    val locatedPtmMapBuilder = scala.collection.immutable.Map.newBuilder[Long, Array[LocatedPtm]]
+
+    for ( (pepId, pepPtmRecords) <- pepPtmRecordsByPepId ) {
+
+      var locatedPtms = new ArrayBuffer[LocatedPtm]
+      for (pepPtmRecord <- pepPtmRecords) {
+
+        // Retrieve PTM definition
+        val ptmSpecifId = pepPtmRecord.getLong("ptm_specificity_id")
+
+        // FIXME: remove this check when peptide_ptm insertion is fixed
+        if (ptmSpecifId > 0) {
+          val ptmDef = ptmDefinitionById(ptmSpecifId)
+
+          // Build located PTM
+          val locatedPtm = PtmDefinitionBuilder.buildLocatedPtm(ptmDef, pepPtmRecord.getInt("seq_position"))
+          locatedPtms += locatedPtm
+        }
+
+      }
+
+      locatedPtmMapBuilder += (pepId -> locatedPtms.toArray)
+    }
+
+    locatedPtmMapBuilder.result()
+  }
+  
 }
