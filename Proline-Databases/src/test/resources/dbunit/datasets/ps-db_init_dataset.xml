@@ -2,7 +2,6 @@
 <!DOCTYPE dataset SYSTEM "../ps-dataset.dtd"> 
 <dataset>
   <ADMIN_INFOS MODEL_VERSION="0.1" DB_CREATION_DATE="2013-05-02 13:05:10.285"/>
-
   <PTM_CLASSIFICATION ID="1" NAME="Post-translational"/>
   <PTM_CLASSIFICATION ID="2" NAME="Multiple"/>
   <PTM_CLASSIFICATION ID="3" NAME="Chemical derivative"/>
