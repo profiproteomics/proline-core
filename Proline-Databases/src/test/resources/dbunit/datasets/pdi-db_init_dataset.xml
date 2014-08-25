@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dataset>
+  <ADMIN_INFOS/>
+  <BIO_SEQUENCE/>
+  <OBJECT_TREE_SCHEMA/>
+  <OBJECT_TREE/>
+  <TAXON/>
+  <BIO_SEQUENCE_ANNOTATION/>
+  <GENE/>
+  <BIO_SEQUENCE_GENE_MAP/>
+  <BIO_SEQUENCE_RELATION/>
+  <CHROMOSOME_LOCATION/>
+  <SEQ_DB_RELEASE/>
+  <FASTA_PARSING_RULE/>
+  <SEQ_DB_CONFIG/>
+  <SEQ_DB_INSTANCE/>
+  <SEQ_DB_ENTRY/>
+  <FASTA_FILE_ENTRY_INDEX/>
+  <PROTEIN_IDENTIFIER/>
+  <SEQ_DB_ENTRY_GENE_MAP/>
+  <SEQ_DB_ENTRY_OBJECT_TREE_MAP/>
+  <SEQ_DB_ENTRY_PROTEIN_IDENTIFIER_MAP/>
+  <TAXON_EXTRA_NAME/>
+  <schema_version version_rank="1" installed_rank="1" version="0.1" description="init pdidb" type="SQL" script="V0_1__init_pdidb.sql" checksum="-1732252732" installed_by="PROLINE_DB_USER" installed_on="2014-07-23 09:29:20.779" execution_time="70" success="true"/>
+  <schema_version version_rank="2" installed_rank="2" version="0.2" description="core 0.1.3" type="SQL" script="V0_2__core_0.1.3.sql" checksum="543508227" installed_by="PROLINE_DB_USER" installed_on="2014-07-23 09:29:20.8" execution_time="16" success="true"/>
+</dataset>
