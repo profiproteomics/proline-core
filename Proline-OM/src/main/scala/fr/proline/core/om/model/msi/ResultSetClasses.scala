@@ -10,6 +10,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 object ResultSet extends InMemoryIdGen
 
 case class ResultSet(
+  
   // Required fields
   val peptides: Array[Peptide],
   val peptideMatches: Array[PeptideMatch],
@@ -33,12 +34,23 @@ case class ResultSet(
   @transient var decoyResultSet: Option[ResultSet] = None,
 
   var properties: Option[ResultSetProperties] = None
-) {
+) extends Cloneable {
 
   // Requirements
   require(peptides != null && peptideMatches != null & proteinMatches != null)
   require(msiSearch != null, "MSI search can't be null => provide None instead")
   require(decoyResultSet != null, "decoy result set can't be null => provide None instead")
+  
+  // Make a deep clone of the ResultSet
+  override def clone(): ResultSet = {
+    this.copy(
+      peptideMatches = this.peptideMatches.map(_.copy()),
+      // do we need to clone sequence matches ???
+      proteinMatches = this.proteinMatches.map(_.copy()),
+      msiSearch = msiSearch.map(_.copy()),
+      decoyResultSet = this.decoyResultSet.map(_.clone())
+    )
+  }
 
   def getMSISearchId: Long = { if (msiSearch.isDefined) msiSearch.get.id else msiSearchId }
 
@@ -100,19 +112,21 @@ case class ResultSet(
     else None
   }
 
-  def getPeptideMatchesByProteinMatch() : Map[ProteinMatch, ArrayBuffer[PeptideMatch]] = {
-    val resultBuilder  = Map.newBuilder[ProteinMatch, ArrayBuffer[PeptideMatch]]
-	val tmpPeptideMatchByPeptideId = peptideMatches.groupBy(_.peptideId)
-    proteinMatches.foreach(protMatch => {
-    	val protMatchPeptMatches = new ArrayBuffer[PeptideMatch]()
-    	if(protMatch.sequenceMatches != null){
-    		protMatch.sequenceMatches.foreach(seqMatch => {
-    			val pepMatchesForCurrent =tmpPeptideMatchByPeptideId.getOrElse(seqMatch.getPeptideId,Array.empty[PeptideMatch])
-    			protMatchPeptMatches ++= pepMatchesForCurrent
-    		}) //end go throudh protMatch SeqMarches 
-    	}
+  def getPeptideMatchesByProteinMatch(): Map[ProteinMatch, ArrayBuffer[PeptideMatch]] = {
+    val resultBuilder = Map.newBuilder[ProteinMatch, ArrayBuffer[PeptideMatch]]
+    val tmpPeptideMatchByPeptideId = peptideMatches.groupBy(_.peptideId)
+    
+    for( protMatch <- proteinMatches ) {
+      val protMatchPeptMatches = new ArrayBuffer[PeptideMatch]()
+      if (protMatch.sequenceMatches != null) {
+        protMatch.sequenceMatches.foreach(seqMatch => {
+          val pepMatchesForCurrent = tmpPeptideMatchByPeptideId.getOrElse(seqMatch.getPeptideId, Array.empty[PeptideMatch])
+          protMatchPeptMatches ++= pepMatchesForCurrent
+        }) //end go throudh protMatch SeqMarches 
+      }
       resultBuilder += protMatch -> protMatchPeptMatches.distinct
-    }) //End go through ProtMarches
+    } //End go through ProtMarches
+    
     resultBuilder.result()
   } 
 }
