@@ -4,9 +4,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert._
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -21,62 +19,24 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
+import fr.proline.core.dbunit.STR_F122817_Mascot_v2_3
+import fr.proline.core.dbunit.DbUnitInitDataset
+import fr.proline.core.dbunit.DbUnitSampleDataset
 
+object RsMergerFromResultFileTest extends AbstractMascotResultFileTestCase with Logging {
 
-class RsMergerFromResultFileTest extends AbstractMultipleDBTestCase with Logging {
-  
-  // Define the interface to be implemented
   val driverType = DriverType.H2
-  val fileName = "STR_F122817_Mascot_v2.3"
-  val targetRSId = 1
-  val decoyRSId = Option.empty[Int]
+  val dbUnitResultFile = STR_F122817_Mascot_v2_3
+  val targetRSId = 1L
+  val decoyRSId = Option.empty[Long]
   
-  var executionContext: IExecutionContext = null  
-  var rsProvider: IResultSetProvider = null
-  protected var readRS: ResultSet = null
+}
+
+class RsMergerFromResultFileTest extends Logging {
   
+  val executionContext = RsMergerFromResultFileTest.executionContext
+  val readRS = RsMergerFromResultFileTest.getRS
   
-  @Before
-  @throws(classOf[Exception])
-  def setUp() = {
-
-    logger.info("Initializing DBs")
-    super.initDBsDBManagement(driverType)
-
-    //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/ps-db.xml")
-    msiDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/msi-db.xml")
-    udsDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/uds-db.xml")
-
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-
-    val (execContext, rsProv) = buildJPAContext() //SQLContext()
-    executionContext = execContext
-    rsProvider = rsProv
-    readRS = this._loadRS()
-  }
-   
-  private def _loadRS(): ResultSet = {
-    val rs = rsProvider.getResultSet(targetRSId).get
-    // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
-    if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
-    rs
-  }
-
-  def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
-
-    (executionContext, rsProvider)
-  }
-  
-  @After
-  override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
-    super.tearDown()
-  }
-
   // TEST FAIL for STRANGE REASONS
   
   @org.junit.Ignore
