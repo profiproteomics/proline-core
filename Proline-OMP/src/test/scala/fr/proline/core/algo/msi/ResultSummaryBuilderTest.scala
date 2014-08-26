@@ -1,184 +1,97 @@
 package fr.proline.core.algo.msi
 
-import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Test
-
 import com.typesafe.scalalogging.slf4j.Logging
-
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
+import fr.proline.core.dbunit.STR_F122817_Mascot_v2_3
 
+object RsmAdderFromResultFileTest extends AbstractMascotResultFileTestCase with Logging {
 
-@Test
-class ResultSummaryBuilderTest extends AbstractMultipleDBTestCase with Logging {
-  
   // Define the interface to be implemented
   val driverType = DriverType.H2
-  val fileName = "STR_F122817_Mascot_v2.3"
-  val targetRSId = 1
-  val decoyRSId = Option.empty[Int]
+  val dbUnitResultFile = STR_F122817_Mascot_v2_3
+  val targetRSId = 1L
+  val decoyRSId = Option.empty[Long]
   
-  var executionContext: IExecutionContext = null  
-  var rsProvider: IResultSetProvider = null
-  protected var readRS: ResultSet = null
+  val ppsi = new CommunistProteinSetInferer()
+  lazy val rsm = ppsi.computeResultSummary( resultSet = getRS )
   
+}
+
+class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesting {
   
-  @Before
-  @throws(classOf[Exception])
-  def setUp() = {
+  val executionContext = RsmAdderFromResultFileTest.executionContext
+  val readRS = RsmAdderFromResultFileTest.getRS
+  val rsm = RsmAdderFromResultFileTest.rsm
 
-    logger.info("Initializing DBs")
-    super.initDBsDBManagement(driverType)
-
-    //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/ps-db.xml")
-    msiDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/msi-db.xml")
-    udsDBTestCase.loadDataSet("/dbunit_samples/"+fileName+"/uds-db.xml")
-
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-
-    val (execContext, rsProv) = buildSQLContext() //SQLContext()
-    executionContext = execContext
-    rsProvider = rsProv
-    readRS = this._loadRS()
-  }
-  
-   
-  private def _loadRS(): ResultSet = {
-    val rs = rsProvider.getResultSet(targetRSId).get    
-    // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
-    if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
-    rs
-  }
-
-    def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
-
-    (executionContext, rsProvider)
-  }
-  
-  @After
-  override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
-    super.tearDown()
-  }
-    
-
-  	@Test
-	def addOneNonFilteredRSM() = {
-  	  var ppsi = new CommunistProteinSetInferer()
-  	  var rsm = ppsi.computeResultSummary(resultSet = readRS)
-	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
-  	  val selector = new ResultSummarySelector(rsm)
-	  rsAddAlgo.addResultSet(readRS, selector)
-	  val rs2 = rsAddAlgo.toResultSet()
-	  assert(rs2 != null)
-	  assert(readRS != rs2)
-	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
-	  assertEquals(peptides.length, readRS.peptides.length)
-	  assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
-	  assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
-	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
-	  assertEquals(1, ids.length)
-	  assertEquals(-99, ids(0))
-	  
-	  val storerContext = StorerContext(executionContext) // Use Object factory
-	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-      val rsId = rsStorer.storeResultSet(rs2, storerContext)
-  }
-  	
-  	@Test
-	def addOneFilteredRSM() = {
-  	  var ppsi = new CommunistProteinSetInferer()
-  	  val pepMatches = readRS.peptideMatches  	  
-     // Simulate rank filtering
-     pepMatches.filter( _.rank > 1 ).foreach( _.isValidated = false )
-     logger.info("Validated PepMatches "+readRS.peptideMatches.count( _.isValidated ))
-  	  var rsm = ppsi.computeResultSummary(resultSet = readRS)
-  	  
-  	  //Test rsm 
-  	  
-  	  val matches = rsm.peptideInstances.map(_.peptideMatches).flatten
-  	  assertEquals(matches.length, matches.filter(_.isValidated).length)
-  	  assertEquals(matches.length, matches.filter(_.rank <=1).length)
-  	  
-	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
-  	  val selector = new ResultSummarySelector(rsm)
-	  rsAddAlgo.addResultSet(readRS, selector)
-	  val rs2 = rsAddAlgo.toResultSet()
-	  
-	  val pepMatchesCount = readRS.peptideMatches.filter{ _.rank <= 1  }.map(_.peptide.id).distinct.length
-	  assert(rs2 != null)
-	  assert(readRS != rs2)
-	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
-	  assertEquals(peptides.length, rs2.peptideMatches.map(_.peptide.id).distinct.length)
-	  assertEquals(pepMatchesCount , peptides.length)
-	  assert(readRS.proteinMatches.map(_.sequenceMatches).length > rs2.proteinMatches.map(_.sequenceMatches).length)
-	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
-	  assertEquals(1, ids.length)
-	  assertEquals(-99, ids(0))
-	  
-	  val storerContext = StorerContext(executionContext) // Use Object factory
-	  val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-     val rsId = rsStorer.storeResultSet(rs2, storerContext)
-  }
-  	 	
   @Test
-  def addOneNonFilteredRSMTwice() = {
-  	  var ppsi = new CommunistProteinSetInferer()
-  	  var rsm = ppsi.computeResultSummary(resultSet = readRS)
-	  val rsAddAlgo = new ResultSetBuilder(resultSetId = -99)
-	  rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
-	  rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
-	  val rs2 = rsAddAlgo.toResultSet()
-	  assert(rs2 != null)
-	  assert(readRS != rs2)
-	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.getPeptideId).distinct
-	  assertEquals(readRS.peptides.length, peptides.length)
-	  assertEquals(readRS.peptideMatches.map(_.peptide.id).distinct.length, peptides.length)
-	  assertEquals(readRS.proteinMatches.map(_.sequenceMatches).length, rs2.proteinMatches.map(_.sequenceMatches).length)
-	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
-	  assertEquals(1, ids.length)
-	  assertEquals(-99, ids(0))
-	  
-  }
-  
-  
-  def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
-    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+  def addOneNonFilteredRSM() {
+    
+    val rsId = ResultSet.generateNewId()
+    val rsAddAlgo = new ResultSetAdder(resultSetId = rsId)
+    val selector = new ResultSummarySelector(rsm)
+    rsAddAlgo.addResultSet(readRS, selector)
+    
+    val builtRS = rsAddAlgo.toResultSet()
+    
+    checkBuiltResultSet(builtRS)
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
-
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
-
-    (parserContext, rsProvider)
+    storeBuiltResultSet(builtRS)
   }
 
+  @Test
+  def addOneFilteredRSM() {
+
+    val pepMatches = readRS.peptideMatches
+    // Simulate rank filtering
+    pepMatches.filter(_.rank > 1).foreach(_.isValidated = false)
+    logger.info("Validated PepMatches " + readRS.peptideMatches.count(_.isValidated))
+    val rsmAfterFiltering = RsmAdderFromResultFileTest.ppsi.computeResultSummary(resultSet = readRS)
+
+    // Check RSM after filtering
+    val matches = rsmAfterFiltering.peptideInstances.flatMap(_.peptideMatches)
+    assertEquals(matches.length, matches.filter(_.isValidated).length)
+    assertEquals(matches.length, matches.filter(_.rank <= 1).length)
+
+    val rsId = ResultSet.generateNewId()
+    val rsAddAlgo = new ResultSetAdder(resultSetId = rsId)
+    val selector = new ResultSummarySelector(rsmAfterFiltering)
+    rsAddAlgo.addResultSet(readRS, selector)
+    
+    val builtRS = rsAddAlgo.toResultSet()
+    checkBuiltResultSetIsNew( builtRS )
+    
+    val peptides = builtRS.proteinMatches.flatMap(_.sequenceMatches).map(_.getPeptideId).distinct
+    assertEquals(peptides.length, builtRS.peptideMatches.map(_.peptide.id).distinct.length)
+    
+    val pepMatchesCount = readRS.peptideMatches.withFilter( _.rank <= 1 ).map(_.peptide.id).distinct.length
+    assertEquals(pepMatchesCount, peptides.length)
+    assert(readRS.proteinMatches.flatMap(_.sequenceMatches).length > builtRS.proteinMatches.flatMap(_.sequenceMatches).length)
+    
+    checkBuiltPeptideMatchesHaveRightId(builtRS)
+
+    storeBuiltResultSet(builtRS)
+  }
+
+  @Test
+  def addOneNonFilteredRSMTwice() {
+    
+    val rsId = ResultSet.generateNewId()
+    val rsAddAlgo = new ResultSetAdder(resultSetId = rsId)
+    rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
+    rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
+    
+    val builtRS = rsAddAlgo.toResultSet()
+    
+    checkBuiltResultSet(builtRS)
+
+    storeBuiltResultSet(builtRS)
+  }
 
 }
 

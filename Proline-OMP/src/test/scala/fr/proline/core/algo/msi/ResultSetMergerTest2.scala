@@ -3,6 +3,7 @@ package fr.proline.core.algo.msi
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.Assert._
 
 import com.typesafe.scalalogging.slf4j.Logging
 
@@ -22,8 +23,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
 
 
-@Test
-class ResultSetMergerTest2 extends AbstractMultipleDBTestCase with Logging {
+class RsMergerFromResultFileTest extends AbstractMultipleDBTestCase with Logging {
   
   // Define the interface to be implemented
   val driverType = DriverType.H2
@@ -56,16 +56,15 @@ class ResultSetMergerTest2 extends AbstractMultipleDBTestCase with Logging {
     rsProvider = rsProv
     readRS = this._loadRS()
   }
-  
    
   private def _loadRS(): ResultSet = {
-    val rs = rsProvider.getResultSet(targetRSId).get    
+    val rs = rsProvider.getResultSet(targetRSId).get
     // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
     if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
     rs
   }
 
-    def buildJPAContext() = {
+  def buildJPAContext() = {
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
 
@@ -77,42 +76,24 @@ class ResultSetMergerTest2 extends AbstractMultipleDBTestCase with Logging {
     if (executionContext != null) executionContext.closeAll()
     super.tearDown()
   }
-    
-// TEST FAIL for STRANGE REASONS
-  
-//  	@Test
-//	def addOneRS() = {
-//
-//  	  val rsMergerAlgo = new ResultSetMerger()
-//	  val rs2 = rsMergerAlgo.mergeResultSets(Seq(readRS))
-//	  assert(rs2 != null)
-//	  assert(readRS != rs2)
-//	  val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.peptide.get.id).distinct
-//	  assertEquals(peptides.length, readRS.peptides.length)
-//	  assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
-//	  assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
-//	  val ids = rs2.peptideMatches.map(_.resultSetId).distinct
-//	  assertEquals(1, ids.length)
-//	  assertEquals(99, ids(0))
-//  }
-  
-  
-  def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
-    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
+  // TEST FAIL for STRANGE REASONS
+  
+  @org.junit.Ignore
+  def addOneRS() = {
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
-
-    (parserContext, rsProvider)
+    val rsMergerAlgo = new ResultSetMerger()
+    val rs2 = rsMergerAlgo.mergeResultSets(Seq(readRS))
+    assert(rs2 != null)
+    assert(readRS != rs2)
+    val peptides = rs2.proteinMatches.map(_.sequenceMatches).flatten.map(_.peptide.get.id).distinct
+    assertEquals(peptides.length, readRS.peptides.length)
+    assertEquals(peptides.length, readRS.peptideMatches.map(_.peptide.id).distinct.length)
+    assertEquals(rs2.proteinMatches.map(_.sequenceMatches).length, readRS.proteinMatches.map(_.sequenceMatches).length)
+    val ids = rs2.peptideMatches.map(_.resultSetId).distinct
+    assertEquals(1, ids.length)
+    assertEquals(99, ids(0))
   }
-
 
 }
 

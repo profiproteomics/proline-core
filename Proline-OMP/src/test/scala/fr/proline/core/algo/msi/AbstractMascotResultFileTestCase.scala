@@ -2,14 +2,12 @@ package fr.proline.core.algo.msi
 
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import org.junit.Test
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dbunit._
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -25,7 +23,7 @@ abstract class AbstractMascotResultFileTestCase extends AbstractMultipleDBTestCa
 
   // Define the interface to be implemented
   val driverType: DriverType
-  val fileName: String
+  val dbUnitResultFile: DbUnitResultFileLocation
   val targetRSId: Long
   val decoyRSId: Option[Long]
   
@@ -52,10 +50,10 @@ abstract class AbstractMascotResultFileTestCase extends AbstractMultipleDBTestCa
     super.initDBsDBManagement(driverType)
 
     //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")
-    msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
-    udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
+    pdiDBTestCase.loadDataSet(DbUnitSampleDataset.PROTEINS.getResourcePath)
+    psDBTestCase.loadDataSet(DbUnitInitDataset.PS_DB.getResourcePath)
+    msiDBTestCase.loadDataSet(DbUnitInitDataset.MSI_DB.getResourcePath)
+    udsDBTestCase.loadDataSet(DbUnitInitDataset.UDS_DB.getResourcePath)
 
     logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
 
