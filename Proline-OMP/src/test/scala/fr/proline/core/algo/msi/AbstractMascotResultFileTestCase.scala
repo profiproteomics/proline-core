@@ -51,9 +51,9 @@ abstract class AbstractMascotResultFileTestCase extends AbstractMultipleDBTestCa
 
     //Load Data
     pdiDBTestCase.loadDataSet(DbUnitSampleDataset.PROTEINS.getResourcePath)
-    psDBTestCase.loadDataSet(DbUnitInitDataset.PS_DB.getResourcePath)
-    msiDBTestCase.loadDataSet(DbUnitInitDataset.MSI_DB.getResourcePath)
-    udsDBTestCase.loadDataSet(DbUnitInitDataset.UDS_DB.getResourcePath)
+    psDBTestCase.loadDataSet(dbUnitResultFile.psDbDatasetPath)
+    msiDBTestCase.loadDataSet(dbUnitResultFile.msiDbDatasetPath)
+    udsDBTestCase.loadDataSet(dbUnitResultFile.udsDbDatasetPath)
 
     logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
 
