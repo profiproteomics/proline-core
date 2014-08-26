@@ -60,6 +60,7 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
 
   val targetRSMId = TypicalProteinChooserTest.targetRSMId
   val executionContext = TypicalProteinChooserTest.executionContext
+  val msiEM = executionContext.getMSIDbConnectionContext().getEntityManager()
 
   @Test
   def testChangeTypicalProt() = {
@@ -71,9 +72,13 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
 
     val typicalChooser = new TypicalProteinChooser()
 
-    val ruleDesc = new TypicalProteinChooserRule(ruleName = "Sprot AC preferred", applyToAcc = true, rulePattern = "\\w{6,6}")
+    val ruleDesc = new TypicalProteinChooserRule(
+      ruleName = "Sprot AC preferred",
+      applyToAcc = true,
+      rulePattern = "\\w{6,6}"
+    )
     val rules = Seq(ruleDesc)
-    typicalChooser.changeTypical(targetRSMId, rules, executionContext.getMSIDbConnectionContext().getEntityManager())
+    typicalChooser.changeTypical(targetRSMId, rules, msiEM)
 
     val nbrChangedTyp = typicalChooser.getChangedProteinSets.size
 
@@ -88,9 +93,13 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
     var nbrTremblShouldChange: Int = 1
 
     val typicalChooser = new TypicalProteinChooser()
-    val ruleDesc = new TypicalProteinChooserRule(ruleName = "Description ##SP  preferred", applyToAcc = false, rulePattern = "##SP.*")
+    val ruleDesc = new TypicalProteinChooserRule(
+      ruleName = "Description ##SP  preferred",
+      applyToAcc = false,
+      rulePattern = "##SP.*"
+    )
     val rules = Seq(ruleDesc)
-    typicalChooser.changeTypical(targetRSMId, rules, executionContext.getMSIDbConnectionContext().getEntityManager())
+    typicalChooser.changeTypical(targetRSMId, rules, msiEM)
 
     val nbrChangedTyp = typicalChooser.getChangedProteinSets.size
 
@@ -99,9 +108,13 @@ class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging 
     // Check which proteinSets should be modified by algo
     nbrTremblShouldChange = 0
 
-    val ruleDesc2 = new TypicalProteinChooserRule(ruleName = "Description ##DEV_ preferred", applyToAcc = false, rulePattern = "##DEV_.*")
+    val ruleDesc2 = new TypicalProteinChooserRule(
+      ruleName = "Description ##DEV_ preferred",
+      applyToAcc = false,
+      rulePattern = "##DEV_.*"
+    )
     val rules2 = Seq(ruleDesc2)
-    typicalChooser.changeTypical(targetRSMId, rules2, executionContext.getMSIDbConnectionContext().getEntityManager())
+    typicalChooser.changeTypical(targetRSMId, rules2, msiEM)
 
     val nbrChangedTyp2 = typicalChooser.getChangedProteinSets.size
 
