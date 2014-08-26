@@ -20,7 +20,7 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.algo.msi.ResultSummaryBuilder
+import fr.proline.core.algo.msi.ResultSummaryAdder
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
 import scala.collection.mutable.SetBuilder
 
@@ -253,7 +253,7 @@ class ResultSummaryMerger(
     if (nDecoyRSM > 0) {
       val distinctRSMIds = scala.collection.mutable.Set.empty[Long]
 
-      var decoyRsmBuilder = new ResultSummaryBuilder(ResultSummary.generateNewId(), true, pepSetScoreUpdater, Some(seqLengthByProtId))
+      var decoyRsmBuilder = new ResultSummaryAdder(ResultSummary.generateNewId(), true, pepSetScoreUpdater, Some(seqLengthByProtId))
 
       logger.debug("Merging DECOY ResultSummaries ...")
       for (decoyRSMId <- decoyRSMIds) {
@@ -282,7 +282,7 @@ class ResultSummaryMerger(
 
     val distinctRSMIds = scala.collection.mutable.Set.empty[Long]
 
-    var rsmBuilder = new ResultSummaryBuilder(ResultSummary.generateNewId(), false, pepSetScoreUpdater, Some(seqLengthByProtId))
+    var rsmBuilder = new ResultSummaryAdder(ResultSummary.generateNewId(), false, pepSetScoreUpdater, Some(seqLengthByProtId))
 
     logger.debug("Merging TARGET ResultSummaries ...")
     for (rsmId <- resultSummaryIds) {

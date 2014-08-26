@@ -1,13 +1,14 @@
 package fr.proline.core.service.msi
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashSet
 import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.ResultSetAdder
 import fr.proline.core.algo.msi.{ ResultSetMerger => ResultSetMergerAlgo }
+import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.msi.MsiDbResultSetRelationTable
@@ -17,9 +18,6 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.repository.DriverType
-import fr.proline.core.algo.msi.ResultSetBuilder
-import fr.proline.core.dal.DoJDBCReturningWork
 
 object ResultSetMerger {
 
@@ -145,7 +143,7 @@ class ResultSetMerger(
 
       var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, storerContext.getMSIDbConnectionContext)
 
-      var decoyMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
+      var decoyMergerAlgo: ResultSetAdder = new ResultSetAdder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
 
       for (decoyRSId <- decoyRSIds) {
         val decoyRS = ResultSetMerger._loadResultSet(decoyRSId, execCtx)
@@ -179,7 +177,7 @@ class ResultSetMerger(
 
     var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, storerContext.getMSIDbConnectionContext)
 
-    var targetMergerAlgo: ResultSetBuilder = new ResultSetBuilder(ResultSet.generateNewId, false, Some(seqLengthByProtId))
+    var targetMergerAlgo: ResultSetAdder = new ResultSetAdder(ResultSet.generateNewId, false, Some(seqLengthByProtId))
 
     for (rsId <- resultSetIds) {
       val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)

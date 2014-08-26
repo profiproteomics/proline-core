@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi._
 import  fr.proline.core.algo.msi.scoring.IPeptideSetScoreUpdater
 
+@deprecated(message="use the ResultSummaryAdder instead",since="0.1.3")
 class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends Logging {
 
   def mergeResultSummaries( resultSummaries: Seq[ResultSummary], seqLengthByProtId: Map[Long,Int] ): ResultSummary = {

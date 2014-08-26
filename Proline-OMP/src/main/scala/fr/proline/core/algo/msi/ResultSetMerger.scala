@@ -7,6 +7,7 @@ import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi._
 import fr.profi.util.StringUtils.{isEmpty => isEmptyStr}
 
+@deprecated(message="use the ResultSetAdder instead",since="0.1.3")
 object ResultSetMerger extends Logging {
   
   def mergePeptideMatches( peptideMatches: Seq[PeptideMatch],
@@ -76,6 +77,7 @@ object ResultSetMerger extends Logging {
   
 }
 
+@deprecated(message="use the ResultSetAdder instead",since="0.1.3")
 class ResultSetMerger extends Logging {
 
   def mergeResultSets( resultSets: Seq[ResultSet], seqLengthByProtId: Option[Map[Long,Int]] = None ): ResultSet = {
