@@ -68,7 +68,7 @@ case class Ms1Query (
 ) extends MsQuery {
   
   // Requirements
-  require( moz > 0 )
+  require( moz > 0, "MsQuery moz must be positive" )
   
   val msLevel = 1
   
@@ -117,7 +117,7 @@ case class Ms2Query(
 ) extends MsQuery {
   
   // Requirements
-  require( StringUtils.isNotEmpty( spectrumTitle ) )
+  require( StringUtils.isNotEmpty( spectrumTitle ), "spectrum title is empty" )
   
   val msLevel = 2
   
