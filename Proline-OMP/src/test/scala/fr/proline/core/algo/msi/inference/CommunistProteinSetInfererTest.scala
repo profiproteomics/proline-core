@@ -1,21 +1,22 @@
 package fr.proline.core.algo.msi.inference
 
-import org.junit.Test
-import org.junit.Assert._
-import org.scalatest.junit.JUnitSuite
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import scala.collection.mutable.ListBuffer
+
+import org.junit.Assert._
+
+import org.junit.Test
+import org.scalatest.junit.JUnitSuite
+
+import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.ProteinMatch
-import org.junit.Before
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 
-@Test
 class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
 
-  var ppsi = new CommunistProteinSetInferer()
+  val ppsi = new CommunistProteinSetInferer()
 
   /**
    * P1 = (pep1, pep2, pep3,pep4, pep5)
@@ -23,34 +24,34 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
    */
   @Test
   def simpleCheckWithGenData() = {
-    var rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 10, nbProts = 2).toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs )
-    assert(rsu != null)
-    assertEquals(2, rsu.peptideSets.length)
-    assertEquals(2, rsu.proteinSets.length)
+    val rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 10, nbProts = 2).toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(2, rsm.peptideSets.length)
+    assertEquals(2, rsm.proteinSets.length)
   }
 
   /**
-   * 5000 Prot avec 2 pep specifique chacunes
+   * 500 Prot having 2 specific peptides
    */
   @Test
   def largerGenData() = {
-    var rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 10000, nbProts = 5000).toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
-    assert(rsu != null)
-    assertEquals(5000, rsu.peptideSets.length)
-    assertEquals(5000, rsu.proteinSets.length)
+    val rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 1000, nbProts = 500).toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(500, rsm.peptideSets.length)
+    assertEquals(500, rsm.proteinSets.length)
   }
 
   @Test
   def simpleCheckWithGenData2() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 10, nbProts = 2)
     rsb.addSharedPeptide(rsb.allProtMatches)
-    var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
-    assert(rsu != null)
-    assertEquals(2, rsu.peptideSets.length)
-    assertEquals(2, rsu.proteinSets.length)
+    val rs: ResultSet = rsb.toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(2, rsm.peptideSets.length)
+    assertEquals(2, rsm.proteinSets.length)
   }
 
   /**
@@ -63,13 +64,13 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
   def simpleCheckWithGenData3() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
     rsb.createNewProteinMatchFromPeptides(rsb.allPeps)
-    var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
-    assert(rsu != null)
-    assertEquals(3 + 1, rsu.peptideSets.length)
+    val rs: ResultSet = rsb.toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(3 + 1, rsm.peptideSets.length)
     // 1 = because the added prot is a superset
-    assertEquals(1, rsu.proteinSets.length)
-    assertEquals("ProteinMatches related to ProteinSet should contain sameset and subset", 4 , rsu.proteinSets(0).getProteinMatchIds.length )
+    assertEquals(1, rsm.proteinSets.length)
+    assertEquals("ProteinMatches related to ProteinSet should contain sameset and subset", 4, rsm.proteinSets(0).getProteinMatchIds.length)
   }
 
   /**
@@ -81,7 +82,7 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
   @Test
   def simpleCheckWithGenData4() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
-    var sharedPeptides2 = ListBuffer[Peptide]()
+    val sharedPeptides2 = ListBuffer[Peptide]()
     for ((proSeq, peptides) <- rsb.allPepsByProtSeq) {
       sharedPeptides2 += peptides(0)
     }
@@ -90,11 +91,11 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
 
     rsb.printForDebug
 
-    var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
-    assert(rsu != null)
-    assertEquals(4, rsu.peptideSets.length)
-    assertEquals(4, rsu.proteinSets.length)
+    val rs: ResultSet = rsb.toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(4, rsm.peptideSets.length)
+    assertEquals(4, rsm.proteinSets.length)
   }
 
   /**
@@ -110,7 +111,7 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
   @Test
   def simpleCheckWithGenData5() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
-    var sharedPeptides = ListBuffer[Peptide]()
+    val sharedPeptides = ListBuffer[Peptide]()
 
     sharedPeptides += rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide
     sharedPeptides += rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide
@@ -127,11 +128,11 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
 
     //	  rsb.printForDebug  
 
-    var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
-    assert(rsu != null)
-    assertEquals(6, rsu.peptideSets.length)
-    assertEquals(6, rsu.proteinSets.length)
+    val rs: ResultSet = rsb.toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(6, rsm.peptideSets.length)
+    assertEquals(6, rsm.proteinSets.length)
   }
 
   /**
@@ -144,7 +145,7 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
   @Test
   def simpleCheckWithGenData6() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 2, nbProts = 2)
-    var sharedPeptides = ListBuffer[Peptide]()
+    val sharedPeptides = ListBuffer[Peptide]()
 
     sharedPeptides += rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide
     sharedPeptides += rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide
@@ -155,11 +156,11 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
 
     //	  rsb.printForDebug  
 
-    var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
-    assert(rsu != null)
-    assertEquals(3, rsu.peptideSets.length)
-    assertEquals(3, rsu.proteinSets.length)
+    val rs: ResultSet = rsb.toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(3, rsm.peptideSets.length)
+    assertEquals(3, rsm.proteinSets.length)
   }
 
   /**
@@ -178,7 +179,7 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
     rsb.createNewProteinMatchFromPeptides(Seq(rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide))
     rsb.createNewProteinMatchFromPeptides(Seq(rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide))
 
-    var pms = ListBuffer[ProteinMatch]()
+    val pms = ListBuffer[ProteinMatch]()
 
     for (pm <- rsb.allProtMatches) {
       if (pm.sequenceMatches.length == 1) pms += pm
@@ -187,11 +188,11 @@ class CommunistProteinSetInfererTest extends JUnitSuite with Logging {
 
     //    rsb.printForDebug  
 
-    var rs: ResultSet = rsb.toResultSet()
-    var rsu = ppsi.computeResultSummary(resultSet = rs)
-    assert(rsu != null)
-    assertEquals(4, rsu.peptideSets.length)
-    assertEquals(4, rsu.proteinSets.length)
+    val rs: ResultSet = rsb.toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(4, rsm.peptideSets.length)
+    assertEquals(4, rsm.proteinSets.length)
   }
 
 }
