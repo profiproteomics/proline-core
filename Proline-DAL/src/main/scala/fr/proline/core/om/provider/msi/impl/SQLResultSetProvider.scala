@@ -11,6 +11,7 @@ import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.om.builder.ResultSetBuilder
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ IResultSetProvider, PeptideMatchFilter, ResultSetFilter }
 
@@ -24,16 +25,19 @@ trait SQLResultSetLoader extends Logging {
 
   val RSCols = MsiDbResultSetTable.columns
 
-  protected def getResultSet(rsId: Long,
-                             pepMatches: Array[PeptideMatch],
-                             protMatches: Array[ProteinMatch]): ResultSet = {
+  protected def getResultSet(
+    rsId: Long,
+    pepMatches: Array[PeptideMatch],
+    protMatches: Array[ProteinMatch]
+  ): ResultSet = {
     this.getResultSets(Array(rsId), pepMatches, protMatches)(0)
   }
 
   protected def getResultSets(
     rsIds: Seq[Long],
     pepMatches: Array[PeptideMatch],
-    protMatches: Array[ProteinMatch]): Array[ResultSet] = {
+    protMatches: Array[ProteinMatch]
+  ): Array[ResultSet] = {
 
     import fr.profi.util.primitives._
 
@@ -43,8 +47,8 @@ trait SQLResultSetLoader extends Logging {
 
     // Instantiate a MSIdb helper
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
-    val msiSearchIdsByRsId = msiDbHelper.getMsiSearchIdsByParentResultSetId(rsIds)
-    val msiSearchIds = msiSearchIdsByRsId.flatMap(_._2).toArray.distinct
+    val msiSearchIdsByParentRsId = msiDbHelper.getMsiSearchIdsByParentResultSetId(rsIds)
+    val msiSearchIds = msiSearchIdsByParentRsId.flatMap(_._2).toArray.distinct
 
     var msiSearchById = Map.empty[Long, fr.proline.core.om.model.msi.MSISearch]
     if (udsDbCtx != null && msiSearchIds != null && !msiSearchIds.isEmpty) {
@@ -61,64 +65,26 @@ trait SQLResultSetLoader extends Logging {
 
       val start = System.currentTimeMillis()
 
-      val resultSets = msiEzDBC.select(rsQuery) { r =>
+      val resultSets = msiEzDBC.select(rsQuery) { record =>
+        
+        val rsId = record.getLong(RSCols.ID)
 
-        // Retrieve some vars
-        val rsId: Long = toLong(r.getAny(RSCols.ID))
         logger.info("Start loading ResultSet #" + rsId)
-
-        /*if( !protMatchesByRsId.contains(rsId) ) {
-          throw new Exception("this result set doesn't have any protein match and can't be loaded")
-        }*/
-
-        val rsProtMatches = protMatchesByRsId.getOrElse(rsId, Array.empty[ProteinMatch])
-        val rsPepMatches = pepMatchesByRsId.getOrElse(rsId, Array.empty[PeptideMatch])
-        val rsPeptides = rsPepMatches map { _.peptide } distinct
-        val rsType = r.getString(RSCols.TYPE)
-        val isDecoy = rsType matches "DECOY_.*"
-        val isNative = rsType matches ".*SEARCH"
-        val isQuantified = rsType matches "QUANTITATION"
-        val decoyRsId = r.getLongOrElse(RSCols.DECOY_RESULT_SET_ID, 0L)
-
-        val rsMsiSearchId = if (isNative) {
-          r.getLongOrElse(RSCols.MSI_SEARCH_ID, 0L)
-        } else if (msiSearchIdsByRsId.contains(rsId)) {
-          // FIXME: we should attach all MSI searches to the result set ???
-          msiSearchIdsByRsId(rsId).head
-        } else 0
         
-        val msiSearch = msiSearchById.get(rsMsiSearchId)
-        
-        // Assume child MSI searches if more than one MSI search is found
-        val childMsiSearches = if( msiSearchIds.length == 1 ) Array.empty[MSISearch]
-        else msiSearchById.values.toArray.sortBy( _.jobNumber )
-
-        // Decode JSON properties
-        val propertiesAsJSON = r.getString(RSCols.SERIALIZED_PROPERTIES)
-        val properties = MapIfNotNull(propertiesAsJSON) { ProfiJson.deserialize[ResultSetProperties](_) }
-
-        val rs = new ResultSet(
-          id = rsId,
-          name = r.getString(RSCols.NAME),
-          description = r.getString(RSCols.DESCRIPTION),
-          peptides = rsPeptides,
-          peptideMatches = rsPepMatches,
-          proteinMatches = rsProtMatches,
-          isDecoy = isDecoy,
-          isNative = isNative,
-          isQuantified = isQuantified,
-          msiSearch = msiSearch,
-          childMsiSearches = childMsiSearches,
-          decoyResultSetId = decoyRsId,
-          properties = properties
+        val rs = ResultSetBuilder.buildResultSet(
+          record,
+          msiSearchById,
+          msiSearchIdsByParentRsId,
+          protMatchesByRsId,
+          pepMatchesByRsId
         )
 
-        val nPeptides = if (rsPeptides == null) 0 else rsPeptides.length
-        val nPeptMatches = if (rsPepMatches == null) 0 else rsPepMatches.length
-        val nProtMatches = if (rsProtMatches == null) 0 else rsProtMatches.length
+        val nPeptides = if (rs.peptides == null) 0 else rs.peptides.length
+        val nPeptMatches = if (rs.peptideMatches == null) 0 else rs.peptideMatches.length
+        val nProtMatches = if (rs.proteinMatches == null) 0 else rs.proteinMatches.length
 
         val buff = new StringBuilder().append("Loading")
-        if (isDecoy) buff.append(" Decoy") else buff.append(" Target")
+        if (rs.isDecoy) buff.append(" Decoy") else buff.append(" Target")
 
         buff
           .append(s" ResultSet #${rsId} ")
@@ -144,7 +110,8 @@ trait SQLResultSetLoader extends Logging {
 class SQLResultSetProvider(
   val msiDbCtx: DatabaseConnectionContext,
   val psDbCtx: DatabaseConnectionContext,
-  val udsDbCtx: DatabaseConnectionContext) extends SQLResultSetLoader with IResultSetProvider {
+  val udsDbCtx: DatabaseConnectionContext
+) extends SQLResultSetLoader with IResultSetProvider {
 
   def getResultSets(rsIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[ResultSet] = {
 

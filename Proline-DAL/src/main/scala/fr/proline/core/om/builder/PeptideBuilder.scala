@@ -20,7 +20,7 @@ object PeptideBuilder {
     new Peptide(
       id = record.getLong(pepCols.ID),
       sequence = record.getString(pepCols.SEQUENCE),
-      ptmString = record.getString(pepCols.PTM_STRING),
+      ptmString = record.getStringOrElse(pepCols.PTM_STRING,""),
       ptms = locatedPtms.getOrElse(Array.empty[LocatedPtm]),
       calculatedMass = record.getDouble(pepCols.CALCULATED_MASS)
     )

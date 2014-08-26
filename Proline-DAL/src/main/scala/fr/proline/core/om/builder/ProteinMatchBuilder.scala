@@ -95,7 +95,7 @@ object ProteinMatchBuilder extends Logging {
       id = protMatchRecord.getLong(ProtMatchCols.ID),
       accession = protMatchRecord.getString(ProtMatchCols.ACCESSION),
       description = protMatchRecord.getStringOrElse(ProtMatchCols.DESCRIPTION,""),
-      geneName = protMatchRecord.getString(ProtMatchCols.GENE_NAME),
+      geneName = protMatchRecord.getStringOrElse(ProtMatchCols.GENE_NAME,null),
       sequenceMatches = seqMatches,
       isDecoy = protMatchRecord.getBoolean(ProtMatchCols.IS_DECOY),
       isLastBioSequence = protMatchRecord.getBoolean(ProtMatchCols.IS_LAST_BIO_SEQUENCE),
