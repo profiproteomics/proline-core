@@ -8,9 +8,9 @@ package fr.proline.core.dbunit
 sealed abstract class DbUnitResultFileLocation {
   
   def datastoreDirPath: String
-  val udsDbDatasetPath = datastoreDirPath + "/uds-db.xml"
-  val psDbDatasetPath = datastoreDirPath + "/ps-db.xml"
-  val msiDbDatasetPath = datastoreDirPath + "/msi-db.xml"
+  lazy val udsDbDatasetPath = datastoreDirPath + "/uds-db.xml"
+  lazy val psDbDatasetPath = datastoreDirPath + "/ps-db.xml"
+  lazy val msiDbDatasetPath = datastoreDirPath + "/msi-db.xml"
 
 }
 
