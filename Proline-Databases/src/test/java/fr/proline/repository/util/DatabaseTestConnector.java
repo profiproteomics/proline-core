@@ -1,5 +1,6 @@
 package fr.proline.repository.util;
 
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -93,6 +94,13 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 				switch (driverType) {
 				case H2:
 					dataTypeFactory = new H2DataTypeFactory();
+					
+					// ***** WORKAROUND FOR DBUNIT Referential integrity constraint violation ERROR ***** //
+					Statement smt = dbC.getConnection().createStatement();
+					smt.execute("SET REFERENTIAL_INTEGRITY FALSE");
+					smt.close();
+          // ***** WORKAROUND FOR DBUNIT Referential integrity constraint violation ERROR ***** //
+					
 					break;
 				case POSTGRESQL:
 					dataTypeFactory = new PostgresqlDataTypeFactory();
