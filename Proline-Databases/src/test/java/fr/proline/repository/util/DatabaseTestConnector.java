@@ -110,7 +110,7 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 						@SuppressWarnings("rawtypes")
 						@Override
 						public Collection getValidDbProducts() {
-							return Arrays.asList(new String[]{"sqlite"});
+							return Arrays.asList(new String[]{"SQLite"});
 						}
 					};
 					break;
