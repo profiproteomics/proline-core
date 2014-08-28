@@ -2,15 +2,14 @@ package fr.proline.core.algo.msi
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+
 import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.storer.msi.RsStorer
-import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.repository.DriverType
-import fr.proline.core.dbunit.STR_F122817_Mascot_v2_3
 
-object RsmAdderFromResultFileTest extends AbstractMascotResultFileTestCase with Logging {
+//object RsmAdderFromResultFileTest extends AbstractResultSetTestCase with Logging {
+/*object RsmAdderFromResultFileTest extends AbstractDbUnitResultFileTestCase with Logging {
 
   // Define the interface to be implemented
   val driverType = DriverType.H2
@@ -18,16 +17,16 @@ object RsmAdderFromResultFileTest extends AbstractMascotResultFileTestCase with 
   val targetRSId = 1L
   val decoyRSId = Option.empty[Long]
   
-  val ppsi = new CommunistProteinSetInferer()
-  lazy val rsm = ppsi.computeResultSummary( resultSet = getRS )
-  
-}
+}*/
 
 class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesting {
   
-  val executionContext = RsmAdderFromResultFileTest.executionContext
-  val readRS = RsmAdderFromResultFileTest.getRS
-  val rsm = RsmAdderFromResultFileTest.rsm
+  val executionContext = STR_F122817_Mascot_v2_3_TEST_CASE.executionContext
+  require( executionContext != null, "executionContext is null" )
+  val readRS = STR_F122817_Mascot_v2_3_TEST_CASE.getRS
+  
+  val ppsi = new CommunistProteinSetInferer()
+  val rsm = ppsi.computeResultSummary( resultSet = readRS )
 
   @Test
   def addOneNonFilteredRSM() {
@@ -51,7 +50,7 @@ class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesti
     // Simulate rank filtering
     pepMatches.filter(_.rank > 1).foreach(_.isValidated = false)
     logger.info("Validated PepMatches " + readRS.peptideMatches.count(_.isValidated))
-    val rsmAfterFiltering = RsmAdderFromResultFileTest.ppsi.computeResultSummary(resultSet = readRS)
+    val rsmAfterFiltering = this.ppsi.computeResultSummary(resultSet = readRS)
 
     // Check RSM after filtering
     val matches = rsmAfterFiltering.peptideInstances.flatMap(_.peptideMatches)

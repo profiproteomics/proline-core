@@ -2,20 +2,18 @@ package fr.proline.core.algo.msi
 
 import org.junit.Assert._
 import org.junit.Test
+
 import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.storer.msi.RsStorer
-import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.service.msi.ResultSetValidator
-import fr.proline.repository.DriverType
-import fr.proline.core.dbunit.STR_F122817_Mascot_v2_3
 
-object RsAdderFromResultFileTest extends AbstractMascotResultFileTestCase with Logging {
+/*//object RsAdderFromResultFileTest extends AbstractResultSetTestCase with Logging {
+object RsAdderFromResultFileTest extends AbstractDbUnitResultFileTestCase with Logging {
 
   // Define the interface to be implemented
   val driverType = DriverType.H2
@@ -23,12 +21,13 @@ object RsAdderFromResultFileTest extends AbstractMascotResultFileTestCase with L
   val targetRSId = 1L
   val decoyRSId = Option.empty[Long]
   
-}
+}*/
 
 class RsAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesting {
   
-  val executionContext = RsAdderFromResultFileTest.executionContext
-  val readRS = RsAdderFromResultFileTest.getRS
+  val executionContext = STR_F122817_Mascot_v2_3_TEST_CASE.executionContext
+  require( executionContext != null, "executionContext is null" )
+  val readRS = STR_F122817_Mascot_v2_3_TEST_CASE.getRS
   
   @Test
   def addOneRS() {

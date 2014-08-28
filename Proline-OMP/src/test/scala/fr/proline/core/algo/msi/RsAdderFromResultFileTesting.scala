@@ -3,6 +3,7 @@ package fr.proline.core.algo.msi
 import org.junit.Assert.assertEquals
 
 import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.context._
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.core.om.model.msi.ResultSet
@@ -56,9 +57,15 @@ trait RsAdderFromResultStoring {
   val executionContext: IExecutionContext
   
   def storeBuiltResultSet( builtRS: ResultSet ) = {
-    val storerContext = StorerContext(executionContext) // Use Object factory
-    val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
-    rsStorer.storeResultSet(builtRS, storerContext)
+    
+    executionContext.getMSIDbConnectionContext().tryInTransaction {
+      
+      val storerContext = StorerContext(executionContext) // Use Object factory
+      val rsStorer = RsStorer(storerContext.getMSIDbConnectionContext)
+      rsStorer.storeResultSet(builtRS, storerContext)
+      
+    }
+    
   }
   
   
