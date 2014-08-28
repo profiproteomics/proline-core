@@ -2,9 +2,7 @@ package fr.proline.core.algo.msi
 
 import org.junit.AfterClass
 import org.junit.BeforeClass
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -20,34 +18,23 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.provider.msi.IResultSummaryProvider
 
-// TODO: rename the file
-abstract class AbstractResultSetTestCase extends AbstractMultipleDBTestCase with Logging {
+abstract class AbstractResultSummaryTestCase extends AbstractMultipleDBTestCase with Logging {
 
   // Define the interface to be implemented
   val driverType: DriverType
   val dbUnitResultFile: DbUnitResultFileLocation
-  val targetRSId: Long
-  val decoyRSId: Option[Long]
+  val targetRSMId: Long
+  val useJPA: Boolean
   
   var executionContext: IExecutionContext = null
-  var rsProvider: IResultSetProvider = null
-  protected var readRS: ResultSet = null
-  
-  private def _loadRS(): ResultSet = {
-    val rs = rsProvider.getResultSet(targetRSId).get
-    // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
-    if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
-    rs
-  }
-  
-  def getRS(): ResultSet = {
-    this.readRS
-  }
+  var rsmProvider: IResultSummaryProvider = null
 
   @BeforeClass
   @throws(classOf[Exception])
-  def setUp() {
+  def setUp() = {
 
     logger.info("Initializing DBs")
     super.initDBsDBManagement(driverType)
@@ -56,16 +43,17 @@ abstract class AbstractResultSetTestCase extends AbstractMultipleDBTestCase with
     pdiDBTestCase.loadDataSet(DbUnitSampleDataset.PROTEINS.getResourcePath)
     psDBTestCase.loadDataSet(dbUnitResultFile.psDbDatasetPath)
     msiDBTestCase.loadDataSet(dbUnitResultFile.msiDbDatasetPath)
-    udsDBTestCase.loadDataSet(dbUnitResultFile.udsDbDatasetPath)
-
+    udsDBTestCase.loadDataSet(dbUnitResultFile.udsDbDatasetPath)    
+    
     logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-
-    val (execContext, rsProv) = buildSQLContext() //SQLContext()
-    executionContext = execContext
-    rsProvider = rsProv
-    readRS = this._loadRS()
+    
+    val ctxAndProvider = if( useJPA ) buildJPAContext()
+    else buildSQLContext()
+     
+    executionContext = ctxAndProvider._1
+    rsmProvider = ctxAndProvider._2
   }
-  
+
   @AfterClass
   override def tearDown() {
     if (executionContext != null) executionContext.closeAll()
@@ -73,10 +61,15 @@ abstract class AbstractResultSetTestCase extends AbstractMultipleDBTestCase with
   }
 
   def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
+    val execCtx = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    
+    val rsmProvider = new SQLResultSummaryProvider(
+      execCtx.getMSIDbConnectionContext(),
+      execCtx.getPSDbConnectionContext(),
+      execCtx.getUDSDbConnectionContext()
+    )
 
-    (executionContext, rsProvider)
+    (execCtx, rsmProvider)
   }
   
   def buildSQLContext() = {
@@ -84,15 +77,11 @@ abstract class AbstractResultSetTestCase extends AbstractMultipleDBTestCase with
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
     val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
     val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
-    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+    val execCtx = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
+    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
-
-    (parserContext, rsProvider)
+    (execCtx, rsmProvider)
   }
   
 }
