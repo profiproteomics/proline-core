@@ -1,52 +1,32 @@
 package fr.proline.core.algo.msq
 
-import org.junit.After
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
+
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.IExecutionContext
+
+import fr.proline.core.algo.msi.AbstractResultSummaryTestCase
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.provider.msi.IResultSummaryProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.repository.DriverType
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
 
-@Test
-class SpectralCountAlgoTest extends AbstractMultipleDBTestCase with Logging {
-  // Define the interface to be implemented
+object SpectralCountAlgoTest extends AbstractResultSummaryTestCase with Logging {
+
+  // Define some needed values
   val driverType = DriverType.H2
-  val fileName = "STR_F063442_F122817_MergedRSMs"
-  val targetRSMId: Long = 33
+  val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
+  val targetRSMId: Long = 33L
+  val useJPA = true
 
-  var executionContext: IExecutionContext = null
-  var rsmProvider: IResultSummaryProvider = null
   protected var readRSM: ResultSummary = null
 
-  @Before
+  @BeforeClass
   @throws(classOf[Exception])
-  def setUp() = {
+  override def setUp() = {
+    super.setUp()
 
-    logger.info("Initializing DBs")
-    super.initDBsDBManagement(driverType)
-
-    //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")
-    msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
-    udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
-
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
-
-    val (execContext, rsmProv) = buildSQLContext()
-    executionContext = execContext
-    rsmProvider = rsmProv
     readRSM = this._loadRSM()
   }
 
@@ -57,29 +37,20 @@ class SpectralCountAlgoTest extends AbstractMultipleDBTestCase with Logging {
     rsm
   }
 
-  @After
-  override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
-    super.tearDown()
-  }
+  def getRSM() = readRSM
 
-  def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+}
 
-    val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+class SpectralCountAlgoTest extends Logging {
 
-    (executionContext, rsmProvider)
-  }
+  val executionContext = SpectralCountAlgoTest.executionContext
+  val readRSM = SpectralCountAlgoTest.getRSM()
 
   @Test
   def testUpdatePepInstance() = {
     PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(readRSM, executionContext)
     readRSM.peptideInstances.foreach(pepI => {
-        assertTrue(pepI.totalLeavesMatchCount > 0)
+      assertTrue(pepI.totalLeavesMatchCount > 0)
     })
 
   }

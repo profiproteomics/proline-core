@@ -7,18 +7,53 @@ import org.junit.Test
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
 import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.context._
 import fr.proline.repository.DriverType
 import fr.proline.core.om.model.msq.BiologicalGroup
 import fr.proline.core.om.model.msq.BiologicalSample
 import fr.proline.core.om.model.msq.QuantChannel
 import fr.proline.core.om.model.msq.MasterQuantChannel
 import fr.proline.core.om.model.msq.ExperimentalDesign2
+import fr.proline.core.orm.uds.Project
+import fr.proline.core.orm.uds.UserAccount
 
-@Test
-class CreateSCQuantitationTest extends AbstractMultipleDBTestCase with Logging {
+object CreateSCQuantitationTest extends AbstractEmptyDatastoreTestCase with Logging {
+  
+  // Define the required parameters
+  val driverType = DriverType.H2
+  val useJPA = true
+  
+}
 
-  // Define the interface to be implemented
+class CreateSCQuantitationTest extends Logging {
+  
+  val executionContext = CreateSCQuantitationTest.executionContext
+  require( executionContext != null, "executionContext is null")
+  
+  val udsUser = new UserAccount()
+  val udsProject = new Project(udsUser)
+  
+  val udsDbCtx = executionContext.getUDSDbConnectionContext()
+  
+  udsDbCtx.tryInTransaction {
+    
+    val udsEM = udsDbCtx.getEntityManager
+    
+    udsUser.setLogin("proline_user")
+    udsUser.setPasswordHash("993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d")
+    udsUser.setCreationMode("MANUAL")
+    udsEM.persist(udsUser)
+    
+    udsProject.setName("New quantitative project")
+    udsProject.setDescription("Project created for the CreateSCQuantitationTest")
+    udsProject.setCreationTimestamp( new java.sql.Timestamp( new java.util.Date().getTime ) )
+    udsEM.persist(udsProject)
+    
+  }
+
+  /*// Define the interface to be implemented
   val driverType = DriverType.H2
   val fileName = "STR_F063442_F122817_MergedRSMs"
   val targetRSMId: Long = 33
@@ -54,44 +89,54 @@ class CreateSCQuantitationTest extends AbstractMultipleDBTestCase with Logging {
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
 
     executionContext
-  }
+  }*/
 
   @Test
-  def quantifyRSMSC() = {
-    //  Validate RS to generate RSM
-    //Create BiologicalSamples
+  def quantifyRSMSC() {
+
+    // Create BiologicalSamples
     val bioSplsBuilder = Array.newBuilder[BiologicalSample]
-    val bioSpl1 = new BiologicalSample(number=1,name="WSC Test BioSpl")
-    bioSplsBuilder+=bioSpl1
-    
-    val bioSpl2  = new BiologicalSample(number=2,name="WSC Test BioSpl 2")
-    bioSplsBuilder+=bioSpl2
-       
+    val bioSpl1 = new BiologicalSample(number = 1, name = "WSC Test BioSpl")
+    bioSplsBuilder += bioSpl1
+
+    val bioSpl2 = new BiologicalSample(number = 2, name = "WSC Test BioSpl 2")
+    bioSplsBuilder += bioSpl2
+
     val splNbrs = Array.newBuilder[Int]
     splNbrs += 1
     splNbrs += 2
-        
-  	val bioGrpBuilder = Array.newBuilder[BiologicalGroup]
-    val bioGrp1 = new BiologicalGroup(number=1,name="WSC Test BioGrp ",sampleNumbers=splNbrs.result)
-    bioGrpBuilder +=bioGrp1
-    
+
+    val bioGrpBuilder = Array.newBuilder[BiologicalGroup]
+    val bioGrp1 = new BiologicalGroup(number = 1, name = "WSC Test BioGrp ", sampleNumbers = splNbrs.result)
+    bioGrpBuilder += bioGrp1
+
     val masterQChsBuilder = Array.newBuilder[MasterQuantChannel]
-	val qChsBuilder = Array.newBuilder[QuantChannel]
-    
-    val qCh1 = new QuantChannel(number=1,sampleNumber=1, identResultSummaryId=1)
+    val qChsBuilder = Array.newBuilder[QuantChannel]
+
+    val qCh1 = new QuantChannel(number = 1, sampleNumber = 1, identResultSummaryId = 1)
     qChsBuilder += qCh1
-    val qCh2 = new QuantChannel(number=2,sampleNumber=2, identResultSummaryId=2)
+    val qCh2 = new QuantChannel(number = 2, sampleNumber = 2, identResultSummaryId = 2)
     qChsBuilder += qCh2
-    
-    val mqCh1 = new MasterQuantChannel(number=1,name=Some("CreateQttDSTest"), quantChannels=qChsBuilder.result)
+
+    val mqCh1 = new MasterQuantChannel(number = 1, name = Some("CreateQttDSTest"), quantChannels = qChsBuilder.result)
     masterQChsBuilder += mqCh1
-    
-    val expDesi = new ExperimentalDesign2(biologicalSamples =bioSplsBuilder.result,biologicalGroups=bioGrpBuilder.result,masterQuantChannels = masterQChsBuilder.result   )
-    
-    val service = new CreateSCQuantitation(executionContext = executionContext, name="CreateQttDS Test",description="  TEST ", projectId=1,experimentalDesign=expDesi )
-    service.runService() 
+
+    val expDesi = new ExperimentalDesign2(
+      biologicalSamples = bioSplsBuilder.result,
+      biologicalGroups = bioGrpBuilder.result,
+      masterQuantChannels = masterQChsBuilder.result
+    )
+
+    val service = new CreateSCQuantitation(
+      executionContext = executionContext,
+      name = "CreateQttDS Test",
+      description = "  TEST ",
+      projectId = udsProject.getId,
+      experimentalDesign = expDesi
+    )
+    service.runService()
     val udsDS = service.getUdsQuantitation
-    
+
     assertEquals("CreateQttDS Test", udsDS.getName())
     assertEquals(2, udsDS.getBiologicalSamples().size())
     assertEquals(2, udsDS.getSampleReplicates().size())

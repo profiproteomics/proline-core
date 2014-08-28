@@ -12,18 +12,17 @@ import fr.proline.repository.DriverType
 import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
 import fr.proline.core.dbunit.DbUnitSampleDataset
 
-object TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging {
+object TypicalProteinChooserTest extends AbstractResultSummaryTestCase with Logging {
 
   // Define some vars
   val driverType = DriverType.H2
   val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
   val targetRSMId: Long = 33L
-
-  var executionContext: IExecutionContext = null
+  val useJPA = true
 
   @BeforeClass
   @throws(classOf[Exception])
-  def setUp() = {
+  override def setUp() = {
 
     logger.info("Initializing DBs")
     super.initDBsDBManagement(driverType)
@@ -37,26 +36,17 @@ object TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging
         "/fr/proline/core/algo/msi/Prot_ChangeTypical.xml"
       )
     )
-    udsDBTestCase.loadDataSet(dbUnitResultFile.udsDbDatasetPath)    
+    udsDBTestCase.loadDataSet(dbUnitResultFile.udsDbDatasetPath)
     
     logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
     
-    executionContext = buildJPAContext()
-  }
-
-  @AfterClass
-  override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
-    super.tearDown()
-  }
-
-  def buildJPAContext() = {
-    ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val ctxAndProvider = buildJPAContext()
+    executionContext = ctxAndProvider._1 
   }
   
 }
 
-class TypicalProteinChooserTest extends AbstractMultipleDBTestCase with Logging {
+class TypicalProteinChooserTest extends Logging {
 
   val targetRSMId = TypicalProteinChooserTest.targetRSMId
   val executionContext = TypicalProteinChooserTest.executionContext

@@ -1,21 +1,22 @@
 package fr.proline.core.algo.msi.validation
 
-import org.junit.Test
-import org.junit.Assert._
-import org.scalatest.junit.JUnitSuite
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 import scala.collection.mutable.ListBuffer
+
+import org.junit.Assert._
+
+import org.junit.Test
+import org.scalatest.junit.JUnitSuite
+
+import com.typesafe.scalalogging.slf4j.Logging
+
+import fr.proline.core.algo.msi.filtering.proteinset.SpecificPeptidesPSFilter
+import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
+import fr.proline.core.algo.msi.scoring.MascotStandardScoreUpdater
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.ProteinMatch
-import org.junit.Before
-import fr.proline.core.algo.msi.filtering.proteinset.SpecificPeptidesPSFilter
-import fr.proline.core.algo.msi.scoring.MascotStandardScoreUpdater
-import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 
-@Test
 class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
 
   var ppsi = new CommunistProteinSetInferer()
@@ -25,7 +26,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    * P2 = (pep6, pep7, pep8,pep9, pep10)
    */
   @Test
-  def simpleCheckWithGenData() = {
+  def simpleCheckWithGenData() {
     var rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 10, nbProts = 2).toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
     assert(rsu != null)
@@ -37,18 +38,18 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
   }
 
   /**
-   * 5000 Prot avec 2 pep specifique chacunes
+   * 500 Prot having 2 specific peptides
    */
   @Test
-  def largerGenData() = {
-    var rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 10000, nbProts = 5000).toResultSet()
+  def largerGenData() {
+    var rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 1000, nbProts = 500).toResultSet()
     var rsu = ppsi.computeResultSummary(resultSet = rs)
     assert(rsu != null)
-    assertEquals(5000, rsu.peptideSets.length)
-    assertEquals(5000, rsu.proteinSets.length)
+    assertEquals(500, rsu.peptideSets.length)
+    assertEquals(500, rsu.proteinSets.length)
     val filter = new SpecificPeptidesPSFilter(minNbrPep = 1)
     filter.filterProteinSets(protSets = rsu.proteinSets, incrementalValidation = true, traceability = true)
-    assertEquals(5000, rsu.proteinSets.filter(_.isValidated).length)
+    assertEquals(500, rsu.proteinSets.filter(_.isValidated).length)
 
   }
 
@@ -59,7 +60,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    * P4= (pep1, pep3,pep5)
    */
   @Test
-  def simpleCheckWithGenData4() = {
+  def simpleCheckWithGenData4() {
     val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
     var sharedPeptides2 = ListBuffer[Peptide]()
     for ((proSeq, peptides) <- rsb.allPepsByProtSeq) {
@@ -93,7 +94,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    * P5= (pep4,pep6)
    */
   @Test
-  def simpleCheckWithGenData5() = {
+  def simpleCheckWithGenData5() {
     val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
     var sharedPeptides = ListBuffer[Peptide]()
 
@@ -144,7 +145,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    */
 
   @Test
-  def simpleCheckWithGenData6() = {
+  def simpleCheckWithGenData6() {
     val rsb = new ResultSetFakeGenerator(nbPeps = 2, nbProts = 2)
     var sharedPeptides = ListBuffer[Peptide]()
 
@@ -183,7 +184,7 @@ class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
    *
    */
   @Test
-  def simpleCheckWithGenData7() = {
+  def simpleCheckWithGenData7() {
     val rsb = new ResultSetFakeGenerator(nbPeps = 4, nbProts = 2)
 
     rsb.createNewProteinMatchFromPeptides(Seq(rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide))

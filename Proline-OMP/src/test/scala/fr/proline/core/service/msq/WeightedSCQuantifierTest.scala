@@ -1,29 +1,33 @@
 package fr.proline.core.service.msq
 
 import java.util.ArrayList
-import org.junit.After
+
 import org.junit.Assert._
-import org.junit.Before
 import org.junit.Test
+
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.context.IExecutionContext
+
+import fr.proline.core.algo.msi.AbstractResultSummaryTestCase
 import fr.proline.core.algo.msq.SpectralCountConfig
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
+import fr.proline.core.orm.uds.BiologicalSample
 import fr.proline.core.orm.uds.Dataset
 import fr.proline.core.orm.uds.MasterQuantitationChannel
+import fr.proline.core.orm.uds.Project
 import fr.proline.core.orm.uds.QuantitationChannel
+import fr.proline.core.orm.uds.SampleAnalysis
 import fr.proline.core.service.msq.quantify.WeightedSpectralCountQuantifier
 import fr.proline.repository.DriverType
-import fr.proline.core.orm.uds.Project
-import fr.proline.core.orm.uds.SampleAnalysis
-import fr.proline.core.orm.uds.BiologicalSample
 
-@Test
-class WeightedSCQuantifierTest extends AbstractMultipleDBTestCase with Logging {
+object WeightedSCQuantifierTest extends AbstractResultSummaryTestCase with Logging {
 
+  // Define required parameters
+  val driverType = DriverType.H2
+  val dbUnitResultFile = STR_F063442_F122817_MergedRSMs
+  val targetRSMId: Long = 33L
+  val useJPA = true
+
+  /*
   // Define the interface to be implemented
   val driverType = DriverType.H2
   val fileName = "STR_F063442_F122817_MergedRSMs"
@@ -60,11 +64,19 @@ class WeightedSCQuantifierTest extends AbstractMultipleDBTestCase with Logging {
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
 
     executionContext
-  }
+  }*/
+  
+}
+  
+class WeightedSCQuantifierTest extends Logging {
+  
+  val executionContext = WeightedSCQuantifierTest.executionContext
+  require( executionContext != null, "executionContext is null")
+  
+  val targetRSMId = WeightedSCQuantifierTest.targetRSMId
 
   @Test
-  def quantifyRSMSC() = {
-    //  Validate RS to generate RSM
+  def quantifyRSMSC() {
 
     val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = None)
 
