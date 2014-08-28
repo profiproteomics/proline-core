@@ -38,14 +38,14 @@ class DbUnitResultFile(
     psDbDsParser
   )
   
-  val fileLocation: File = null
+  val fileLocation: File = new File("/dev/null")
   val importProperties: Map[String, Any] = Map()
   
   val msLevel: Int = if( msiDbDsParser.msiSearch.searchSettings.pmfSearchSettings.isDefined ) 1 else 2
   val msiSearch: MSISearch = msiDbDsParser.msiSearch
   val msQueryByInitialId: Map[Int,MsQuery] = msiDbDsParser.msQueries.map( msq => msq.initialId -> msq ).toMap
   val hasDecoyResultSet: Boolean = msiDbDsParser.getResultSetRecords().find( _(RSCols.TYPE) == "DECOY_SEARCH" ).isDefined
-  val hasMs2Peaklist: Boolean = ! msiDbDsParser.spectra.isEmpty
+  val hasMs2Peaklist: Boolean = ( msLevel == 2 )
   
   this.instrumentConfig = Option(msiSearch.searchSettings.instrumentConfig)
   this.peaklistSoftware = Option(msiSearch.peakList.peaklistSoftware)
@@ -64,7 +64,7 @@ class DbUnitResultFile(
   }
   
   def eachSpectrum( onEachSpectrum: Spectrum => Unit ) {
-    for( spectrum <- msiDbDsParser.spectra ) {
+    for( spectrum <- msiDbDsParser.getSpectra(this.instrumentConfig.get.id) ) {
       onEachSpectrum(spectrum)
     }
   }
@@ -311,18 +311,23 @@ class MsiDbDatasetParser(
   // Load the dataset as records
   val msiRecordByTableName = DbUnitDatasetParser.parseAndFixDataset( msiDatasetInputStream )
   private val udsRecordByTableName = DbUnitDatasetParser.parseAndFixDataset( udsDatasetInputStream )
-  val scoreTypeById = {
+  val scoreTypeById: Map[Long,String] = {
     val ScoringCols = MsiDbScoringColumns
     val scoringRecords = msiRecordByTableName( MsiDbScoringTable.name )
-    scoringRecords.map( r => r.getLong(ScoringCols.ID) -> r.getString(ScoringCols.NAME) ).toMap
+    
+    scoringRecords.map { r =>
+      val scoreType = r(ScoringCols.SEARCH_ENGINE) + ':' + r(ScoringCols.NAME)
+      r.getLong(ScoringCols.ID) -> scoreType
+    } toMap
   }
   
   val msiSearch = parseMsiSearch()
   val msQueries = parseMsQueries()
   val peptideMatches = parsePeptideMatches()
   val proteinMatches = parseProteinMatches()
-  val spectra = parseSpectra()
   val resultSets = parseResultSets()
+  
+  def getSpectra( instrumentConfigId: Long ) = parseSpectra( instrumentConfigId: Long )
   
   // --- END OF CONSTRUCTOR ---
   
@@ -332,7 +337,7 @@ class MsiDbDatasetParser(
   
   private def parseMsiSearch(): MSISearch = {
 
-    MsiSearchBuilder.buildMsiSearches(
+    val tmpMsiSearch = MsiSearchBuilder.buildMsiSearches(
       msiRecordByTableName( MsiDbMsiSearchTable.name ),
       msiRecordByTableName( MsiDbPeaklistTable.name ).map( p => p.getLong("id") -> p ).toMap,
       msiRecordByTableName( MsiDbPeaklistSoftwareTable.name ).map( p => p.getLong("id") -> p ).toMap,
@@ -351,6 +356,7 @@ class MsiDbDatasetParser(
       psDbDatasetParser
     ).head
     
+    tmpMsiSearch
   }
   
   // Inspired from SQLMsQueryProvider
@@ -415,7 +421,7 @@ class MsiDbDatasetParser(
     
   }
   
-  private def parseSpectra(): Array[Spectrum] = {
+  private def parseSpectra( instrumentConfigId: Long ): Array[Spectrum] = {
     
     import org.apache.commons.codec.binary.Base64
     
@@ -428,6 +434,7 @@ class MsiDbDatasetParser(
       newSpectrumRecord ++= spectrumRecord
       newSpectrumRecord(SpecCols.MOZ_LIST) = Base64.decodeBase64( spectrumRecord(SpecCols.MOZ_LIST) )
       newSpectrumRecord(SpecCols.INTENSITY_LIST) = Base64.decodeBase64( spectrumRecord(SpecCols.INTENSITY_LIST) )
+      newSpectrumRecord(SpecCols.INSTRUMENT_CONFIG_ID) = instrumentConfigId
       
       SpectrumBuilder.buildSpectrum( newSpectrumRecord )
     }
