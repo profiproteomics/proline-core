@@ -48,7 +48,8 @@ case class ResultSet(
       // do we need to clone sequence matches ???
       proteinMatches = this.proteinMatches.map(_.copy()),
       msiSearch = msiSearch.map(_.copy()),
-      decoyResultSet = this.decoyResultSet.map(_.clone())
+      decoyResultSet = this.decoyResultSet.map(_.clone()),
+      properties = this.properties.map( _.copy() )
     )
   }
 
