@@ -14,10 +14,14 @@ import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 
-class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
+abstract class AbstractProteinSetInfererTest extends Logging {
 
-  val ppsi = new ParsimoniousProteinSetInferer()
+  val ppsi: IProteinSetInferer
 
+  /**
+   * P1 = (pep1, pep2, pep3,pep4, pep5)
+   * P2 = (pep6, pep7, pep8,pep9, pep10)
+   */
   @Test
   def simpleCheckWithGenData() = {
     val rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 10, nbProts = 2).toResultSet()
@@ -27,13 +31,16 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(2, rsm.proteinSets.length)
   }
 
+  /**
+   * 500 Prot having 2 specific peptides
+   */
   @Test
   def largerGenData() = {
     val rs: ResultSet = new ResultSetFakeGenerator(nbPeps = 1000, nbProts = 500).toResultSet()
     val rsm = ppsi.computeResultSummary(resultSet = rs)
     assert(rsm != null)
-    assertEquals(5000, rsm.peptideSets.length)
-    assertEquals(5000, rsm.proteinSets.length)
+    assertEquals(500, rsm.peptideSets.length)
+    assertEquals(500, rsm.proteinSets.length)
   }
 
   @Test
@@ -47,6 +54,12 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(2, rsm.proteinSets.length)
   }
 
+  /**
+   * P1 = (pep1, pep2)
+   * P2 = (pep3,pep4)
+   * P3 = ( pep5,pep6)
+   * P4 = (pep1, pep2,pep3,pep4, pep5,pep6)
+   */
   @Test
   def simpleCheckWithGenData3() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
@@ -60,29 +73,16 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals("ProteinMatches related to ProteinSet should contain sameset and subset", 4, rsm.proteinSets(0).getProteinMatchIds.length)
   }
 
-  @Test
-  def simpleCheckWithGenData4() = {
-    val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
-    val sharedPeptides2 = ListBuffer[Peptide]()
-    for ((proSeq, peptides) <- rsb.allPepsByProtSeq) {
-      sharedPeptides2 += peptides(0)
-    }
-
-    rsb.createNewProteinMatchFromPeptides(sharedPeptides2)
-
-    //	  val sharedPeptides = Seq(rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide, 
-    //			  							rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide)			  							
-    //	  rsb.createNewProteinMatchFromPeptides(sharedPeptides)
-
-    //	  rsb.printForDebug  
-
-    val rs: ResultSet = rsb.toResultSet()
-    val rsm = ppsi.computeResultSummary(resultSet = rs)
-    assert(rsm != null)
-    assertEquals(4, rsm.peptideSets.length)
-    assertEquals( /*3+1*/ 3, rsm.proteinSets.length)
-  }
-
+  /**
+   * 5 Prot Matches : aucun pep specifique
+   * P1 = (pep1, pep2)
+   * P2 = (pep3,pep4)
+   * P3 = ( pep5,pep6)
+   *
+   * P4= (pep1, pep3)
+   * P5= (pep2,pep5)
+   * P5= (pep4,pep6)
+   */
   @Test
   def simpleCheckWithGenData5() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
@@ -101,7 +101,7 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     sharedPeptides(1) = rsb.allProtMatches(2).sequenceMatches(1).bestPeptideMatch.get.peptide
     rsb.createNewProteinMatchFromPeptides(sharedPeptides)
 
-    rsb.printForDebug
+    //	  rsb.printForDebug  
 
     val rs: ResultSet = rsb.toResultSet()
     val rsm = ppsi.computeResultSummary(resultSet = rs)
@@ -110,6 +110,13 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(6, rsm.proteinSets.length)
   }
 
+  /**
+   * Triangles Prot Matches : aucun pep specifique
+   * P1 = (pep1, pep3)
+   * P2 = (pep2, pep3)
+   * P3 = (pep1, pep2)
+   *
+   */
   @Test
   def simpleCheckWithGenData6() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 2, nbProts = 2)
@@ -131,6 +138,15 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     assertEquals(3, rsm.proteinSets.length)
   }
 
+  /**
+   * 2 ProtSet wo specific pepMatches
+   * P1 = (pep1, pep2)
+   * P2 = (pep3, pep4)
+   *
+   * P3 = (pep1, pep5)
+   * P4 = (pep3, pep5)
+   *
+   */
   @Test
   def simpleCheckWithGenData7() = {
     val rsb = new ResultSetFakeGenerator(nbPeps = 4, nbProts = 2)
@@ -145,7 +161,7 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
     }
     rsb.addSharedPeptide(pms)
 
-    rsb.printForDebug
+    //    rsb.printForDebug  
 
     val rs: ResultSet = rsb.toResultSet()
     val rsm = ppsi.computeResultSummary(resultSet = rs)
@@ -156,3 +172,62 @@ class ParsimoniousProteinSetInfererTest extends JUnitSuite with Logging {
 
 }
 
+class ParsimoniousProteinSetInfererTest extends AbstractProteinSetInfererTest {
+  
+  val ppsi = new ParsimoniousProteinSetInferer()
+  
+  @Test
+  def simpleCheckWithGenData4() = {
+    val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
+    val sharedPeptides2 = ListBuffer[Peptide]()
+    for ((proSeq, peptides) <- rsb.allPepsByProtSeq) {
+      sharedPeptides2 += peptides(0)
+    }
+
+    rsb.createNewProteinMatchFromPeptides(sharedPeptides2)
+
+    //    val sharedPeptides = Seq(rsb.allProtMatches(0).sequenceMatches(0).bestPeptideMatch.get.peptide, 
+    //                      rsb.allProtMatches(1).sequenceMatches(0).bestPeptideMatch.get.peptide)                      
+    //    rsb.createNewProteinMatchFromPeptides(sharedPeptides)
+
+    //    rsb.printForDebug  
+
+    val rs: ResultSet = rsb.toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(4, rsm.peptideSets.length)
+    assertEquals( /*3+1*/ 3, rsm.proteinSets.length)
+  }
+
+}
+
+class CommunistProteinSetInfererTest extends AbstractProteinSetInfererTest {
+  
+  val ppsi = new CommunistProteinSetInferer()
+
+  /**
+   * P1 = (pep1, pep2)
+   * P2 = (pep3,pep4)
+   * P3 = ( pep5,pep6)
+   * P4= (pep1, pep3,pep5)
+   */
+  @Test
+  def simpleCheckWithGenData4() = {
+    val rsb = new ResultSetFakeGenerator(nbPeps = 6, nbProts = 3)
+    val sharedPeptides2 = ListBuffer[Peptide]()
+    for ((proSeq, peptides) <- rsb.allPepsByProtSeq) {
+      sharedPeptides2 += peptides(0)
+    }
+
+    rsb.createNewProteinMatchFromPeptides(sharedPeptides2)
+
+    rsb.printForDebug
+
+    val rs: ResultSet = rsb.toResultSet()
+    val rsm = ppsi.computeResultSummary(resultSet = rs)
+    assert(rsm != null)
+    assertEquals(4, rsm.peptideSets.length)
+    assertEquals(4, rsm.proteinSets.length)
+  }
+
+}
