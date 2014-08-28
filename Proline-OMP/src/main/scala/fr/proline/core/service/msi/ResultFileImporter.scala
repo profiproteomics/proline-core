@@ -106,7 +106,7 @@ class ResultFileImporter(
         None
 
       // Call the result file storer
-      this.targetResultSetId = ResultFileStorer.storeResultFile(
+      val storedRS = ResultFileStorer.storeResultFile(
         storerContext,
         rsStorer,
         resultFile,
@@ -116,6 +116,7 @@ class ResultFileImporter(
         saveSpectrumMatch,
         if (acDecoyRegex.isDefined) Some(TargetDecoyResultSetSplitter) else None
       )
+      this.targetResultSetId = storedRS.id
 
       >>>
 
