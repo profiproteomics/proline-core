@@ -30,7 +30,8 @@ object ResultFileStorer extends Logging {
     targetDecoyMode: Option[String],
     acDecoyRegex: Option[util.matching.Regex] = None,
     saveSpectrumMatch: Boolean = false,
-    rsSplitter: Option[IResultSetSplitter] = None): Long = {
+    rsSplitter: Option[IResultSetSplitter] = None
+  ): ResultSet = {
 
     val start = System.currentTimeMillis()
     logger.info("Storing ResultFile " + resultFile.fileLocation.getName())
@@ -100,7 +101,7 @@ object ResultFileStorer extends Logging {
       }
 
       logger.info("ResultFile " + resultFile.fileLocation.getName() + " stored in " + (System.currentTimeMillis() - start) / 1000.0 + " s")
-      return targetRs.id
+      return targetRs
 
     } // Else if a regex has been passed to detect decoy protein matches        
     else if (acDecoyRegex.isDefined) {
@@ -147,7 +148,7 @@ object ResultFileStorer extends Logging {
 
       logger.info("ResultFile " + resultFile.fileLocation.getName() + " stored in " + (System.currentTimeMillis() - start) / 1000.0 + " s")
 
-      return tRs.id
+      return tRs
     } else {
 
       logger.info("ResultFile is target only")
@@ -164,7 +165,7 @@ object ResultFileStorer extends Logging {
         rsStorer.insertSpectrumMatches(targetRs, resultFile, storerContext)
       }
 
-      return targetRs.id
+      return targetRs
     }
 
   }
