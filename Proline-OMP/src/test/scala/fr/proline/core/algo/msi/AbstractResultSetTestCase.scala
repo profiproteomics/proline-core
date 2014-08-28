@@ -21,7 +21,6 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
 
-// TODO: rename the file
 abstract class AbstractResultSetTestCase extends AbstractMultipleDBTestCase with Logging {
 
   // Define the interface to be implemented
