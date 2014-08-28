@@ -22,6 +22,10 @@ case object STR_F063442_F122817_MergedRSMs extends DbUnitResultFileLocation {
   val datastoreDirPath = "/dbunit_samples/STR_F063442_F122817_MergedRSMs"
 }
 
+case object STR_F063442_Mascot_v2_2 extends DbUnitResultFileLocation {
+  val datastoreDirPath = "/dbunit_samples/STR_F063442_Mascot_v2.2"
+}
+
 case object STR_F122817_Mascot_v2_3 extends DbUnitResultFileLocation {
   val datastoreDirPath = "/dbunit_samples/STR_F122817_Mascot_v2.3"
 }
