@@ -136,8 +136,26 @@ class ResultSetMerger(
       logger.warn("Inconsistent number of TARGET ResultSets: " + nTargetRS + " number of DECOY ResultSets: " + nDecoyRS)
     }
 
-    var mergedDecoyRSId: Long = -1L
+    val distinctRSIds = scala.collection.mutable.Set.empty[Long]
 
+    var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, storerContext.getMSIDbConnectionContext)
+
+    var targetMergerAlgo: ResultSetAdder = new ResultSetAdder(ResultSet.generateNewId, false, Some(seqLengthByProtId))
+
+    for (rsId <- resultSetIds) {
+      val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)
+
+      val rsPK = resultSet.id
+      if (rsPK > 0L) {
+        distinctRSIds += rsPK
+      }
+
+      targetMergerAlgo.addResultSet(resultSet)
+      logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
+    }
+
+    mergedResultSet = targetMergerAlgo.toResultSet
+    
     if (nDecoyRS > 0) {
       val distinctRSIds = scala.collection.mutable.Set.empty[Long]
 
@@ -166,39 +184,13 @@ class ResultSetMerger(
         _storeMergedResultSet(storerContext, msiEzDBC, decoyRS, distinctRSIds.toSet)
       }, true) // end of JDBC work
 
-      mergedDecoyRSId = decoyRS.id
+      mergedResultSet.decoyResultSet = Some(decoyRS)
 
-      logger.debug("Merged DECOY ResultSet Id: " + mergedDecoyRSId)
-
-      decoyRS = null // Eligible for Garbage collection
+      logger.debug("Merged DECOY ResultSet Id: " + decoyRS.id)
     }
-
-    val distinctRSIds = scala.collection.mutable.Set.empty[Long]
-
-    var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, storerContext.getMSIDbConnectionContext)
-
-    var targetMergerAlgo: ResultSetAdder = new ResultSetAdder(ResultSet.generateNewId, false, Some(seqLengthByProtId))
-
-    for (rsId <- resultSetIds) {
-      val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)
-
-      val rsPK = resultSet.id
-      if (rsPK > 0L) {
-        distinctRSIds += rsPK
-      }
-
-      targetMergerAlgo.addResultSet(resultSet)
-      logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
-    }
-
-    mergedResultSet = targetMergerAlgo.toResultSet
 
     targetMergerAlgo = null // Eligible for Garbage collection
     seqLengthByProtId = null
-
-    if (mergedDecoyRSId > 0L) {
-      mergedResultSet.setDecoyResultSetId(mergedDecoyRSId)
-    }
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
       /* Store merged target result set */
