@@ -24,61 +24,10 @@ abstract class AbstractDbUnitResultFileTestCase extends AbstractEmptyDatastoreTe
   
   @BeforeClass
   @throws(classOf[Exception])
-  override def setUp() = {
+  override def setUp() {
     super.setUp()
-      
-    val resultFile = getResultFile()
-    val rs = getRS()
-    val msiSearch = rs.msiSearch.get
     
-    // FIX the id of peaklistSoftware and instrumentConfig (they are persisted in the UDSdb)
-    msiSearch.peakList.peaklistSoftware.id = - msiSearch.peakList.peaklistSoftware.id
-    
-    val instrumentConfig = msiSearch.searchSettings.instrumentConfig
-    instrumentConfig.instrument = instrumentConfig.instrument.copy( id = - instrumentConfig.instrument.id )
-    msiSearch.searchSettings.instrumentConfig = instrumentConfig.copy( id = - instrumentConfig.id )
-    
-    // Update result file peaklistSoftware and instrumentConfig
-    resultFile.peaklistSoftware = Some(msiSearch.peakList.peaklistSoftware)
-    resultFile.instrumentConfig = Some(msiSearch.searchSettings.instrumentConfig)
-    
-    val msiDbCtx = executionContext.getMSIDbConnectionContext
-    
-    msiDbCtx.beginTransaction()
-    
-    // TODO: do this in the ResultFileStorer
-    DoJDBCWork.withEzDBC(msiDbCtx, { msiEzDBC =>
-      
-      val pklSoft = resultFile.peaklistSoftware.get
-      
-      // Insert peaklist software in the MsiDb
-      val peaklistInsertQuery = MsiDbPeaklistSoftwareTable.mkInsertQuery
-      msiEzDBC.execute(
-        peaklistInsertQuery,
-        pklSoft.id,
-        pklSoft.name,
-        pklSoft.version,
-        pklSoft.properties.map(ProfiJson.serialize(_))
-      )
-    })
-    
-    val storerContext = StorerContext(executionContext) // Use Object factory
-    val rsStorer = RsStorer(msiDbCtx)
-    
-    ResultFileStorer.storeResultFile(
-      storerContext = storerContext,
-      rsStorer = rsStorer,
-      resultFile = resultFile,
-      sqlCompatMode = !executionContext.isJPA, // SQL compat => FIXME: remove me when ResultFileStorer has the same behavior for JPA/SQL
-      targetDecoyMode = rs.getTargetDecoyMode(),
-      acDecoyRegex = None,
-      saveSpectrumMatch = false,
-      rsSplitter = None
-    )
-    
-    msiDbCtx.commitTransaction()
-    
-    executionContext = storerContext
+    DbUnitResultFileUtils.storeDbUnitResultFile( getResultFile(), executionContext )
   }
   
 }
@@ -92,28 +41,21 @@ trait DbUnitResultFileLoading extends Logging {
   val decoyRSId: Option[Long]
   
   protected var readRS: ResultSet = null
-  protected var loadedRF: IResultFile = null
+  protected var loadedRF: DbUnitResultFile = null
   
-  def getRS(): ResultSet = {    
+  def getRS(): ResultSet = {
     this.readRS
   }
   
-  def getResultFile(): IResultFile = {
+  def getResultFile(): DbUnitResultFile = {
     this.loadedRF
   }
 
   @BeforeClass
   protected def loadResultFile() = {
     
-    val classLoader = classOf[fr.proline.repository.util.DatabaseTestCase]
-    
-    // Open streams
-    val msiStream = classLoader.getResourceAsStream( dbUnitResultFile.msiDbDatasetPath )
-    val udsStream = classLoader.getResourceAsStream( dbUnitResultFile.udsDbDatasetPath )
-    val psStream = classLoader.getResourceAsStream( dbUnitResultFile.psDbDatasetPath )  
-    
     // Load the DbUnit result file
-    loadedRF = new DbUnitResultFile(msiStream,udsStream,psStream)
+    loadedRF = DbUnitResultFileUtils.loadDbUnitResultFile(dbUnitResultFile)
 
     logger.info("Result file succesfully loaded !")
 
