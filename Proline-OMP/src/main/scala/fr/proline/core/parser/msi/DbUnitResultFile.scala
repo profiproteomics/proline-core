@@ -77,7 +77,7 @@ object DbUnitDatasetParser {
   
   def parseAndFixDataset( datasetInputStream: InputStream ): Map[String,Seq[StringMap]] = {
     
-    val dataset = parseDbUnitDataset( datasetInputStream, lowerCase = true )
+    val dataset = parseDbUnitDataset( datasetInputStream, lowerCase = true ).toMap
     
     // Change the sign of all IDs into negative values
     reverseRecordsId( dataset )
