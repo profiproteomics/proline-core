@@ -27,6 +27,14 @@ public class DDataset {
     private ResultSummary m_resultSummary = null;
     private ResultSet m_resultSet = null;
 
+    private MergeInformation m_mergeInformation = MergeInformation.MERGE_UNKNOW;
+    
+    public enum MergeInformation {
+    	MERGE_UNKNOW,
+    	NO_MERGE,
+    	MERGE_SEARCH_RESULT,
+    	MERGE_IDENTIFICATION_SUMMARY
+    }
     
     public DDataset(long id, Project project, String name, DatasetType type, int childrenCount, Long resultSetId, Long resultSummaryId, int number) {
         m_id = id;
@@ -121,5 +129,12 @@ public class DDataset {
 
     public void setResultSet(ResultSet resultSet) {
         this.m_resultSet = resultSet;
+    }
+    
+    public MergeInformation getMergeInformation() {
+    	return m_mergeInformation;
+    }
+    public void setMergeInformation(MergeInformation mergeInformation) {
+    	m_mergeInformation = mergeInformation;
     }
 }
