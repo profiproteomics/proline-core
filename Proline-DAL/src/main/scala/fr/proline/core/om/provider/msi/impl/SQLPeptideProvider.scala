@@ -164,8 +164,8 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
           val peptideRecord = row.toAnyMap()
           pepRecords += peptideRecord
 
-          // Map the record by its id    
-          if ( peptideRecord.isDefined(PsDbPeptideColumns.PTM_STRING) ) {
+          // Map the record by its id
+          if(peptideRecord.get(PsDbPeptideColumns.PTM_STRING).isDefined) {
             modifiedPepIdSet += peptideRecord.getLong(PsDbPeptideColumns.ID)
           }
 

@@ -1809,7 +1809,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       psPeptidePtm.setPeptide(psPeptide) // psPeptide must be in persistence context
       psPeptidePtm.setSpecificity(psPtmSpecificity)
 
-      psEm.persist(psPeptide)
+      psEm.persist(psPeptidePtm)
       logger.trace("PSdb PeptidePtm Specificity #" + psPtmSpecificity.getId + " Peptide sequence [" + psPeptide.getSequence + "] persisted")
     }
 
