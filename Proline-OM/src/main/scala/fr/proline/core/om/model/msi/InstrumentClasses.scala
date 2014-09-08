@@ -17,17 +17,14 @@ object Activation extends Enumeration {
 
 object Instrument extends InMemoryIdGen
 case class Instrument(
-                   // Required fields
-                   val id: Long,
-                   val name: String,
-                   
-                   // Immutable optional fields
-                   val source: String = null,
-                   
-                   var properties: Option[InstrumentProperties] = None
-                   ) {
-      
-}
+   // Required fields
+   val id: Long,
+   val name: String,
+   // Immutable optional fields
+   val source: String = null,
+   
+   var properties: Option[InstrumentProperties] = None
+) 
 
 //@JsonInclude( Include.NON_NULL )
 case class InstrumentProperties()

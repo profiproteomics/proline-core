@@ -18,22 +18,22 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
   val ScanSeqCols = LcmsDbScanSequenceTable.columns
   val ScanCols = LcmsDbScanTable.columns
   
-  def getScanSequences( runIds: Seq[Long] ): Array[LcMsScanSequence] = {
+  def getScanSequences( scanSequenceIds: Seq[Long] ): Array[LcMsScanSequence] = {
     
-    val scans = this.getScans( runIds )
+    val scans = this.getScans( scanSequenceIds )
     // Group scans by run id
     val scansByRunId = scans.groupBy(_.runId)
     
     // TODO: load related raw file and instrument (need UDSdb provider ???)
     
-    val scanSeqs = new Array[LcMsScanSequence](runIds.length)
+    val scanSeqs = new Array[LcMsScanSequence](scanSequenceIds.length)
     var scanSeqIdx = 0
     
     // Load runs
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
       val runQuery = new SelectQueryBuilder1(LcmsDbScanSequenceTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.ID ~" IN("~ runIds.mkString(",") ~") "
+        List(t.*) -> "WHERE "~ t.ID ~" IN("~ scanSequenceIds.mkString(",") ~") "
       )
       
       ezDBC.selectAndProcess( runQuery ) { runRecord =>
@@ -64,11 +64,11 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
     )
   }
   
-  def getScans( runIds: Seq[Long] ): Array[LcMsScan] = {
+  def getScans( scanSequenceIds: Seq[Long] ): Array[LcMsScan] = {
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC => 
       
-      val runIdsStr = runIds.mkString(",")    
+      val runIdsStr = scanSequenceIds.mkString(",")    
          
       val nbScans: Int = ezDBC.selectInt(
         s"SELECT count(id) FROM ${LcmsDbScanTable} WHERE ${ScanCols.SCAN_SEQUENCE_ID} IN (" + runIdsStr + ")"
@@ -78,6 +78,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
       var lcmsScanIdx = 0
       val scans = new Array[LcMsScan](nbScans)
       
+      // TODO: order by initial id
       val runQuery = new SelectQueryBuilder1(LcmsDbScanTable).mkSelectQuery( (t,c) =>
         List(t.*) -> "WHERE "~ t.SCAN_SEQUENCE_ID ~" IN("~ runIdsStr ~") "
       )
