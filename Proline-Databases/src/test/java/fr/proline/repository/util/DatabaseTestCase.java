@@ -88,6 +88,12 @@ public abstract class DatabaseTestCase {
 	return DatabaseUpgrader.buildMigrationScriptsLocation(getProlineDatabaseType(), getConnector()
 		.getDriverType());
     }
+    
+    public String getMigrationClassLocation() {
+	return DatabaseUpgrader.buildMigrationClassLocation(getProlineDatabaseType(), getConnector()
+		.getDriverType());
+    }
+
 
     public final DatabaseTestConnector getConnector() {
 
@@ -124,7 +130,7 @@ public abstract class DatabaseTestCase {
     public void initDatabase() throws Exception, ClassNotFoundException {
 	final DatabaseTestConnector connector = getConnector();
 
-	DatabaseUpgrader.upgradeDatabase(connector, getMigrationScriptsLocation());
+	DatabaseUpgrader.upgradeDatabase(connector, getMigrationScriptsLocation(), getMigrationClassLocation());
 
 	if (LOG.isTraceEnabled()) {
 	    /* Print Database Tables */
