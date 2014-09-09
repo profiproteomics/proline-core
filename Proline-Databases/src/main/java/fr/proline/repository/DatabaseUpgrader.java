@@ -71,7 +71,6 @@ public final class DatabaseUpgrader {
 		}
 
 		final StringBuilder buffer = new StringBuilder(BUFFER_SIZE);
-		buffer.append("classpath:");
 		buffer.append(MIGRATION_SCRIPTS_DIR);
 		buffer.append(database.name().toLowerCase()).append('/');
 		buffer.append(driverType.name().toLowerCase());
@@ -92,7 +91,6 @@ public final class DatabaseUpgrader {
 		}
 
 		final StringBuilder buffer = new StringBuilder(BUFFER_SIZE);
-		buffer.append("classpath:");
 		buffer.append(MIGRATION_CLASSPATH);
 		buffer.append(database.name().toLowerCase());
 		String classPath = buffer.toString();
