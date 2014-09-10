@@ -30,7 +30,32 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
   }
   
   def getMasterQuantPeptideIons( mqPepIonIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {
-    throw new Exception("NYI")
+    
+    require( mqPepIonIds != null, "mqPepIonIds is null")
+    
+    if( mqPepIonIds.isEmpty ) return Array()
+    
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+      
+      val mqPepIonIdsAsStr = mqPepIonIds.mkString(",")
+      val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
+      
+      // Load master quant peptide ions corresponding to the provided result summary ids
+      val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
+      val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
+        (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
+        " WHERE "~ t1.ID ~" IN("~ mqPepIonIdsAsStr ~")" ~
+        " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
+        " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
+      )
+      
+      msiEzDBC.selectAndProcess(mqPepIonQuery) { r =>
+        mqPepIons += this._buildMasterQuantPeptideIon( r.toAnyMap() )
+      }
+      
+      mqPepIons.toArray
+    })
+    
   }
 
   def getQuantResultSummariesMQPeptideIons(quantRsmIds: Seq[Long]): Array[MasterQuantPeptideIon] = {
@@ -38,10 +63,11 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
       val quantRsmIdsAsStr = quantRsmIds.mkString(",")
-      val mqPepIons =new ArrayBuffer[MasterQuantPeptideIon]()
+      val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
       
       // Load master quant peptide ions corresponding to the provided result summary ids
       val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
+      // TODO: check if this SQL query could be simplified
       val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
         (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
         " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN("~ quantRsmIdsAsStr ~")" ~
@@ -52,33 +78,38 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
       )
       
       msiEzDBC.selectAndProcess(mqPepIonQuery) { r =>
-  
-        val mqPepIonId: Long = toLong(r.getAny(MQPepIonCols.ID))
-        val quantPepIons = ProfiJson.deserialize[Array[QuantPeptideIon]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
-        val quantPepIonMap = Map() ++ (for( qpi <- quantPepIons if qpi != null ) yield qpi.quantChannelId -> qpi)
-        
-        // Build the master quant peptide ion
-        mqPepIons += new MasterQuantPeptideIon(
-          id = mqPepIonId,
-          unlabeledMoz = r.getDouble(MQPepIonCols.MOZ),
-          charge = r.getInt(MQPepIonCols.CHARGE),
-          elutionTime = toFloat(r.getAny(MQPepIonCols.ELUTION_TIME)),
-          peptideMatchesCount = r.getInt(MQPepIonCols.PEPTIDE_MATCH_COUNT),
-          selectionLevel = r.getInt(MQComponentTable.columns.SELECTION_LEVEL),
-          masterQuantPeptideId = toLong(r.getAny(MQPepIonCols.MASTER_QUANT_PEPTIDE_ID)),
-          resultSummaryId = toLong(r.getAny(MQPepIonCols.RESULT_SUMMARY_ID)),
-          peptideInstanceId = r.getLongOption(MQPepIonCols.PEPTIDE_INSTANCE_ID),
-          bestPeptideMatchId = r.getLongOption(MQPepIonCols.BEST_PEPTIDE_MATCH_ID),
-          lcmsMasterFeatureId = r.getLongOption(MQPepIonCols.LCMS_MASTER_FEATURE_ID),
-          unmodifiedPeptideIonId = r.getLongOption(MQPepIonCols.UNMODIFIED_PEPTIDE_ION_ID),
-          quantPeptideIonMap = quantPepIonMap,
-          properties = r.getStringOption(MQPepIonCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantPeptideIonProperties](_))
-        )
-        
+        mqPepIons += this._buildMasterQuantPeptideIon( r.toAnyMap() )
       }
+      
       mqPepIons.toArray
     })
 
+  }
+  
+  private def _buildMasterQuantPeptideIon( record: AnyMap ): MasterQuantPeptideIon = {
+    
+    val r = record
+    
+    val quantPepIons = ProfiJson.deserialize[Array[QuantPeptideIon]]( r.getString(ObjectTreeTable.columns.CLOB_DATA) )
+    val quantPepIonMap = Map() ++ (for( qpi <- quantPepIons if qpi != null ) yield qpi.quantChannelId -> qpi)
+    
+    // Build the master quant peptide ion
+    new MasterQuantPeptideIon(
+      id = r.getLong(MQPepIonCols.ID),
+      unlabeledMoz = r.getDouble(MQPepIonCols.MOZ),
+      charge = r.getInt(MQPepIonCols.CHARGE),
+      elutionTime = toFloat(r.getAny(MQPepIonCols.ELUTION_TIME)),
+      peptideMatchesCount = r.getInt(MQPepIonCols.PEPTIDE_MATCH_COUNT),
+      selectionLevel = r.getInt(MQComponentTable.columns.SELECTION_LEVEL),
+      masterQuantPeptideId = toLong(r.getAny(MQPepIonCols.MASTER_QUANT_PEPTIDE_ID)),
+      resultSummaryId = toLong(r.getAny(MQPepIonCols.RESULT_SUMMARY_ID)),
+      peptideInstanceId = r.getLongOption(MQPepIonCols.PEPTIDE_INSTANCE_ID),
+      bestPeptideMatchId = r.getLongOption(MQPepIonCols.BEST_PEPTIDE_MATCH_ID),
+      lcmsMasterFeatureId = r.getLongOption(MQPepIonCols.LCMS_MASTER_FEATURE_ID),
+      unmodifiedPeptideIonId = r.getLongOption(MQPepIonCols.UNMODIFIED_PEPTIDE_ION_ID),
+      quantPeptideIonMap = quantPepIonMap,
+      properties = r.getStringOption(MQPepIonCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[MasterQuantPeptideIonProperties](_))
+    )
   }
 
 }
