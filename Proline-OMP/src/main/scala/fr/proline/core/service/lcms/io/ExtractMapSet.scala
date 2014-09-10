@@ -71,6 +71,11 @@ class ExtractMapSet(
   
   def runService(): Boolean = {
     
+    val mapCount = lcMsRuns.length
+    val nonNullLcMsRunCount = lcMsRuns.count(_ != null)
+    this.logger.debug("LC-MS runs count = " + mapCount + " and non-null LC-MS runs count = " + nonNullLcMsRunCount )
+    require( mapCount == nonNullLcMsRunCount, "the quantitation config contains null LC-MS runs")
+    
     // Check if a transaction is already initiated
     val wasInTransaction = lcmsDbCtx.isInTransaction()
     if( !wasInTransaction ) lcmsDbCtx.beginTransaction()
@@ -78,17 +83,16 @@ class ExtractMapSet(
     // --- Extract run maps and convert them to processed maps ---
     val lcmsRunByProcMapId = new collection.mutable.HashMap[Long,LcMsRun]
     val mzDbFileByProcMapId = new collection.mutable.HashMap[Long,File]
-    val mapCount = lcMsRuns.length
-    this.logger.debug("mapCount:" + mapCount + ", non null mapCount: " + lcMsRuns.filter(_ != null).length)
     val processedMaps = new Array[ProcessedMap](mapCount)
-    //val processedMapByRawMapId = new collection.mutable.HashMap[Long,ProcessedMap]
-    val tmpMapSetId = MapSet.generateNewId()    
+
+    val tmpMapSetId = MapSet.generateNewId()
     var mapIdx = 0
     var alnRefMapId: Long = 0L
     
     for( lcmsRun <- lcMsRuns ) {
   
-      val rawPropOpt = lcmsRun.rawFile.properties
+      val rawFile = lcmsRun.rawFile
+      val rawPropOpt = rawFile.properties
       val mzDbFilePath = rawPropOpt.get.getMzdbFilePath
       val mzDbFile = new File(mzDbFilePath)
       

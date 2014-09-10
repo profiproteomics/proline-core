@@ -24,7 +24,7 @@ case class ProfilizerConfig(
 /**
  * Analyze profiles of Master Quant Peptides and Master Quant Protein sets
  */
-class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 0, masterQCNumber: Int = 1 ) extends Logging {
+class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, masterQCNumber: Int = 1 ) extends Logging {
   
   // Retrieve some vars
   private val masterQuantChannels = expDesign.masterQuantChannels
