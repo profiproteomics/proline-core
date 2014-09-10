@@ -16,7 +16,7 @@ import fr.proline.core.om.provider.lcms.IScanSequenceProvider
 import fr.profi.util.sql._
 import fr.profi.util.primitives._
 
-class SQLRawFileProvider2(val udsDbCtx: DatabaseConnectionContext) {
+class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext) {
   
   val RawFileCols = UdsDbRawFileTable.columns
   val InstCols = UdsDbInstrumentTable.columns
@@ -27,8 +27,9 @@ class SQLRawFileProvider2(val udsDbCtx: DatabaseConnectionContext) {
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
       
       val rawFileQuery = new SelectQueryBuilder2(UdsDbRawFileTable, UdsDbInstrumentTable).mkSelectQuery( (t1,c1, t2, c2) =>
-        List(t1.*, t2.*) -> "WHERE "~ t1.NAME ~"= '"~ rawFileName ~"'")
-      println(rawFileQuery)
+        List(t1.*, t2.*) -> "WHERE "~ t1.NAME ~"= '"~ rawFileName ~"'"
+      )
+      
       ezDBC.selectAndProcess( rawFileQuery ) { rawFileRecord =>
         
         val rawFilePropsStr = rawFileRecord.getStringOption(RawFileCols.SERIALIZED_PROPERTIES.toAliasedString)
