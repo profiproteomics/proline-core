@@ -482,7 +482,8 @@ case class PeptideMatchMascotProperties (
 
 case class PeptideMatchOmssaProperties (
   @BeanProperty var pValue: Double,
-  @BeanProperty var correctedCharge: Int
+  @BeanProperty var correctedCharge: Int,
+  @BeanProperty var ionSeries: Array[String] = Array[String]()
 )
 
 case class PeptideMatchResultSummaryProperties (
