@@ -250,11 +250,12 @@ CREATE TABLE public.peaklist_relation (
 
 CREATE TABLE public.spectrum (
                 id IDENTITY NOT NULL,
+                initial_id INTEGER DEFAULT 0 NOT NULL,
                 title VARCHAR(1024) NOT NULL,
                 precursor_moz DOUBLE,
                 precursor_intensity REAL,
                 precursor_charge INTEGER,
-                is_summed BOOLEAN,
+                is_summed BOOLEAN DEFAULT false NOT NULL,
                 first_cycle INTEGER,
                 last_cycle INTEGER,
                 first_scan INTEGER,
@@ -270,11 +271,12 @@ CREATE TABLE public.spectrum (
                 CONSTRAINT spectrum_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.spectrum IS 'The fragmentation spectrum submitted to the search engine. It can be a merge of multiple ms2 spectra. Time and scan values correspond then to the first and the last spectrum of the merge. In PMF studies only precursor attributes are used.';
+COMMENT ON COLUMN public.spectrum.initial_id IS 'An index allowing to retrieve the order of the spectra in the input peaklist.';
 COMMENT ON COLUMN public.spectrum.title IS 'The description associated to this spectrum.';
 COMMENT ON COLUMN public.spectrum.precursor_moz IS 'The parent ion m/z';
 COMMENT ON COLUMN public.spectrum.precursor_intensity IS 'The parent ion intensity (optional)';
 COMMENT ON COLUMN public.spectrum.precursor_charge IS 'The parent ion charge which could be undefined for some spectra.';
-COMMENT ON COLUMN public.spectrum.is_summed IS 'If the column is NULL it means that we don''t know this information.';
+COMMENT ON COLUMN public.spectrum.is_summed IS 'Indicates whether this spectrum is the sum of multiple spectra.';
 COMMENT ON COLUMN public.spectrum.first_time IS 'The chromatographic time at which this spectrum has been acquired.';
 COMMENT ON COLUMN public.spectrum.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
@@ -365,11 +367,10 @@ COMMENT ON COLUMN public.msi_search.serialized_properties IS 'A JSON string whic
 
 CREATE TABLE public.msi_search_object_tree_map (
                 msi_search_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT msi_search_object_tree_map_pk PRIMARY KEY (msi_search_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT msi_search_object_tree_map_pk PRIMARY KEY (msi_search_id, schema_name)
 );
-COMMENT ON TABLE public.msi_search_object_tree_map IS 'UNIQUE(msi_search_id, schema_name)';
 
 
 CREATE TABLE public.ms_query (
@@ -400,6 +401,7 @@ CREATE TABLE public.result_set (
                 modification_timestamp TIMESTAMP NOT NULL,
                 serialized_properties LONGVARCHAR,
                 decoy_result_set_id BIGINT,
+                merged_rsm_id BIGINT,
                 msi_search_id BIGINT,
                 CONSTRAINT result_set_pk PRIMARY KEY (id)
 );
@@ -409,13 +411,14 @@ COMMENT ON COLUMN public.result_set.description IS 'The description of the conte
 COMMENT ON COLUMN public.result_set.type IS 'SEARCH for result set representing a unique search, DECOY_SEARCH for result set representing a unique decoy search or USER for user defined result set.';
 COMMENT ON COLUMN public.result_set.creation_log IS 'The creation log can be used to store some user relevant information related to the creation of the result set.';
 COMMENT ON COLUMN public.result_set.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
+COMMENT ON COLUMN public.result_set.merged_rsm_id IS 'The id of the merged result summary id associated to this result set. This value is only defined when the merge operation has been performed at the result summary level.';
 
 
 CREATE TABLE public.peptide_readable_ptm_string (
                 peptide_id BIGINT NOT NULL,
                 result_set_id BIGINT NOT NULL,
                 readable_ptm_string VARCHAR NOT NULL,
-                CONSTRAINT id PRIMARY KEY (peptide_id, result_set_id)
+                CONSTRAINT peptide_readable_ptm_string_pk PRIMARY KEY (peptide_id, result_set_id)
 );
 COMMENT ON COLUMN public.peptide_readable_ptm_string.readable_ptm_string IS 'Human-readable PTM string.';
 
@@ -442,16 +445,11 @@ COMMENT ON COLUMN public.result_summary.serialized_properties IS 'A JSON string 
 
 CREATE TABLE public.result_summary_object_tree_map (
                 result_summary_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT result_summary_object_tree_map_pk PRIMARY KEY (result_summary_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT result_summary_object_tree_map_pk PRIMARY KEY (result_summary_id, schema_name)
 );
-COMMENT ON TABLE public.result_summary_object_tree_map IS 'UNIQUE(result_summary_id, schema_name)';
 
-
-CREATE UNIQUE INDEX public.result_summary_object_tree_map_idx
- ON public.result_summary_object_tree_map
- ( result_summary_id, schema_name );
 
 CREATE TABLE public.result_summary_relation (
                 parent_result_summary_id BIGINT NOT NULL,
@@ -488,16 +486,11 @@ CREATE TABLE public.result_set_relation (
 
 CREATE TABLE public.result_set_object_tree_map (
                 result_set_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT result_set_object_tree_map_pk PRIMARY KEY (result_set_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT result_set_object_tree_map_pk PRIMARY KEY (result_set_id, schema_name)
 );
-COMMENT ON TABLE public.result_set_object_tree_map IS 'UNIQUE(result_set_id, schema_name)';
 
-
-CREATE UNIQUE INDEX public.result_set_object_tree_map_idx
- ON public.result_set_object_tree_map
- ( result_set_id, schema_name );
 
 CREATE TABLE public.protein_match (
                 id IDENTITY NOT NULL,
@@ -585,16 +578,11 @@ CREATE INDEX public.protein_set_rsm_idx
 
 CREATE TABLE public.protein_set_object_tree_map (
                 protein_set_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT protein_set_object_tree_map_pk PRIMARY KEY (protein_set_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT protein_set_object_tree_map_pk PRIMARY KEY (protein_set_id, schema_name)
 );
-COMMENT ON TABLE public.protein_set_object_tree_map IS 'UNIQUE(protein_set_id, schema_name)';
 
-
-CREATE UNIQUE INDEX public.protein_set_object_tree_map_idx
- ON public.protein_set_object_tree_map
- ( protein_set_id, schema_name );
 
 CREATE TABLE public.protein_set_protein_match_item (
                 protein_set_id BIGINT NOT NULL,
@@ -618,8 +606,8 @@ CREATE TABLE public.peptide_set (
                 id IDENTITY NOT NULL,
                 is_subset BOOLEAN NOT NULL,
                 score REAL NOT NULL,
-                peptide_count INTEGER,
-                peptide_match_count INTEGER,
+                peptide_count INTEGER NOT NULL,
+                peptide_match_count INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
                 protein_set_id BIGINT,
                 scoring_id BIGINT NOT NULL,
@@ -674,6 +662,8 @@ CREATE TABLE public.peptide_match (
                 experimental_moz DOUBLE NOT NULL,
                 score REAL,
                 rank INTEGER,
+                cd_pretty_rank INTEGER,
+                sd_pretty_rank INTEGER,
                 delta_moz REAL,
                 missed_cleavage INTEGER NOT NULL,
                 fragment_match_count INTEGER,
@@ -691,6 +681,8 @@ COMMENT ON COLUMN public.peptide_match.charge IS 'The charge state.';
 COMMENT ON COLUMN public.peptide_match.experimental_moz IS 'The observed m/z. Note: this value is intentionally redundant with the one stored in the ms_query table.';
 COMMENT ON COLUMN public.peptide_match.score IS 'The identification score of the peptide match provided by the search engine.';
 COMMENT ON COLUMN public.peptide_match.rank IS 'It is computed by comparison of the peptide match scores obtained for a given ms_query. The score are sorted in a descending order and peptide and ranked from 1 to n. The highest the score the lowest the rank. Note: Mascot keeps only peptide matches ranking from 1 to 10.';
+COMMENT ON COLUMN public.peptide_match.cd_pretty_rank IS 'Pretty rank recalculated when importing a new result_set from a concatenated database. The peptide_matches corresponding to the same query are sorted by decreasing score, peptide_matches with very close scores (less than 0.1) are considered equals and will get the same pretty rank. This pretty rank is calculated with PSMs from both target and decoy result_sets.';
+COMMENT ON COLUMN public.peptide_match.sd_pretty_rank IS 'Pretty rank recalculated when importing a result_set from a separated database. The peptide_matches corresponding to the same query are sorted by decreasing score, peptide_matches with very close scores (less than 0.1) are considered equals and will get the same pretty rank. This pretty rank is calculated with peptide_matches only from target or decoy result_set.';
 COMMENT ON COLUMN public.peptide_match.delta_moz IS 'It is the m/z difference between the observed m/z and a calculated m/z derived from the peptide calculated mass. Note: delta_moz = exp_moz - calc_moz';
 COMMENT ON COLUMN public.peptide_match.missed_cleavage IS 'It is the number of enzyme missed cleavages that are present in the peptide sequence.';
 COMMENT ON COLUMN public.peptide_match.fragment_match_count IS 'The number of observed MS2 fragments that were matched to theoretical fragments of this peptide.';
@@ -747,6 +739,10 @@ CREATE INDEX public.peptide_instance_rsm_idx
  ON public.peptide_instance
  ( result_summary_id ASC );
 
+CREATE INDEX public.peptide_instance_peptide_idx
+ ON public.peptide_instance
+ ( peptide_id );
+
 CREATE TABLE public.peptide_set_peptide_instance_item (
                 peptide_set_id BIGINT NOT NULL,
                 peptide_instance_id BIGINT NOT NULL,
@@ -768,6 +764,10 @@ COMMENT ON COLUMN public.peptide_set_peptide_instance_item.result_summary_id IS 
 CREATE INDEX public.pep_set_pep_inst_item_rsm_idx
  ON public.peptide_set_peptide_instance_item
  ( result_summary_id ASC );
+
+CREATE INDEX public.pep_set_pep_inst_item_pep_inst_idx
+ ON public.peptide_set_peptide_instance_item
+ ( peptide_instance_id );
 
 CREATE TABLE public.master_quant_peptide_ion (
                 id IDENTITY NOT NULL,
@@ -822,16 +822,11 @@ CREATE INDEX public.master_quant_reporter_ion_rsm_idx
 
 CREATE TABLE public.peptide_match_object_tree_map (
                 peptide_match_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT peptide_match_object_tree_map_pk PRIMARY KEY (peptide_match_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT peptide_match_object_tree_map_pk PRIMARY KEY (peptide_match_id, schema_name)
 );
-COMMENT ON TABLE public.peptide_match_object_tree_map IS 'UNIQUE(peptide_match_id, schema_name) TODO: store fragment matches here';
 
-
-CREATE UNIQUE INDEX public.peptide_match_object_tree_map_idx
- ON public.peptide_match_object_tree_map
- ( peptide_match_id, schema_name );
 
 CREATE TABLE public.peptide_instance_peptide_match_map (
                 peptide_instance_id BIGINT NOT NULL,
@@ -988,7 +983,7 @@ ON UPDATE NO ACTION;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
-ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT peptide_quanti_peptide_ion_fk
+ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT peptide_master_quant_peptide_ion_fk
 FOREIGN KEY (peptide_id)
 REFERENCES public.peptide (id)
 ON UPDATE NO ACTION;
@@ -1076,7 +1071,7 @@ ON UPDATE NO ACTION;
 /*
 Warning: H2 Database does not support this relationship's delete action (RESTRICT).
 */
-ALTER TABLE public.object_tree ADD CONSTRAINT property_definition_property_fk
+ALTER TABLE public.object_tree ADD CONSTRAINT object_tree_schema_object_tree_map_fk
 FOREIGN KEY (schema_name)
 REFERENCES public.object_tree_schema (name)
 ON UPDATE NO ACTION;
@@ -1113,19 +1108,19 @@ FOREIGN KEY (schema_name)
 REFERENCES public.object_tree_schema (name)
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.result_set_object_tree_map ADD CONSTRAINT property_result_set_properties_fk
+ALTER TABLE public.result_set_object_tree_map ADD CONSTRAINT object_tree_result_set_object_tree_map_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES public.object_tree (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.msi_search_object_tree_map ADD CONSTRAINT property_msi_search_properties_fk
+ALTER TABLE public.msi_search_object_tree_map ADD CONSTRAINT object_tree_msi_search_object_tree_map_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES public.object_tree (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.result_summary_object_tree_map ADD CONSTRAINT property_result_summary_property_fk
+ALTER TABLE public.result_summary_object_tree_map ADD CONSTRAINT object_tree_result_summary_object_tree_map_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES public.object_tree (id)
 ON DELETE NO ACTION
@@ -1203,7 +1198,7 @@ REFERENCES public.msi_search (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.msi_search_object_tree_map ADD CONSTRAINT msi_search_msi_search_properties_fk
+ALTER TABLE public.msi_search_object_tree_map ADD CONSTRAINT msi_search_msi_search_object_tree_map_fk
 FOREIGN KEY (msi_search_id)
 REFERENCES public.msi_search (id)
 ON DELETE CASCADE
@@ -1255,7 +1250,7 @@ REFERENCES public.result_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.result_set_object_tree_map ADD CONSTRAINT result_set_result_set_properties_fk
+ALTER TABLE public.result_set_object_tree_map ADD CONSTRAINT result_set_result_set_object_tree_map_fk
 FOREIGN KEY (result_set_id)
 REFERENCES public.result_set (id)
 ON DELETE CASCADE
@@ -1323,13 +1318,13 @@ REFERENCES public.result_summary (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.master_quant_component ADD CONSTRAINT result_summary_quanti_component_fk
+ALTER TABLE public.master_quant_component ADD CONSTRAINT result_summary_master_quant_component_fk
 FOREIGN KEY (result_summary_id)
 REFERENCES public.result_summary (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT result_summary_peptide_ion_fk
+ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT result_summary_master_quant_peptide_ion_fk
 FOREIGN KEY (result_summary_id)
 REFERENCES public.result_summary (id)
 ON DELETE CASCADE
@@ -1355,7 +1350,7 @@ FOREIGN KEY (child_result_summary_id)
 REFERENCES public.result_summary (id)
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.result_summary_object_tree_map ADD CONSTRAINT result_summary_result_summary_property_fk
+ALTER TABLE public.result_summary_object_tree_map ADD CONSTRAINT result_summary_result_summary_object_tree_map_fk
 FOREIGN KEY (result_summary_id)
 REFERENCES public.result_summary (id)
 ON DELETE CASCADE
@@ -1379,7 +1374,7 @@ REFERENCES public.result_summary (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.result_summary ADD CONSTRAINT result_summary_result_summary_fk
+ALTER TABLE public.result_summary ADD CONSTRAINT decoy_result_summary_result_summary_fk
 FOREIGN KEY (decoy_result_summary_id)
 REFERENCES public.result_summary (id)
 ON DELETE CASCADE
@@ -1533,7 +1528,7 @@ REFERENCES public.peptide_match (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT peptide_match_peptide_ion_fk
+ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT peptide_match_master_quant_peptide_ion_fk
 FOREIGN KEY (best_peptide_match_id)
 REFERENCES public.peptide_match (id)
 ON DELETE NO ACTION
@@ -1551,7 +1546,7 @@ REFERENCES public.peptide_instance (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT peptide_instance_peptide_ion_fk
+ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT peptide_instance_master_quant_peptide_ion_fk
 FOREIGN KEY (peptide_instance_id)
 REFERENCES public.peptide_instance (id)
 ON DELETE NO ACTION
@@ -1563,7 +1558,10 @@ REFERENCES public.peptide_instance (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT peptide_ion_peptide_ion_fk
+/*
+Warning: H2 Database does not support this relationship's deferrability policy (INITIALLY_DEFERRED).
+*/
+ALTER TABLE public.master_quant_peptide_ion ADD CONSTRAINT master_quant_peptide_ion_unmodified_peptide_ion_fk
 FOREIGN KEY (unmodified_peptide_ion_id)
 REFERENCES public.master_quant_peptide_ion (id)
 ON DELETE NO ACTION

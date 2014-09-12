@@ -13,7 +13,7 @@ import fr.profi.util.ms.MassTolUnit
 class SerializationSpec extends AbstractSerializationSpec {
   
   val quantConfig = LabelFreeQuantConfig(
-    mapSetName = "",
+    mapSetName = "map set test",
     lcMsRuns = null,
     extractionParams = ExtractionParams(  // for extraction and MS2 mapping
       mozTol = 5.0,
@@ -61,13 +61,14 @@ class SerializationSpec extends AbstractSerializationSpec {
       jerksonDeserializer = None,
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[LabelFreeQuantConfig](jsonData) ),
       quantConfig,
-      """{"map_set_name":"","extraction_params":{"moz_tol":5.0,"moz_tol_unit":"PPM"},"clustering_params":"""+
+      """{"map_set_name":"map set test","extraction_params":{"moz_tol":5.0,"moz_tol_unit":"PPM"},"clustering_params":"""+
       """{"moz_tol":5.0,"moz_tol_unit":"PPM","time_tol":15.0,"intensity_computation":"MOST_INTENSE","""+
       """"time_computation":"MOST_INTENSE"},"aln_method_name":"ITERATIVE","aln_params":{"mass_interval":20000,"""+
       """"smoothing_method_name":"TIME_WINDOW","smoothing_params":{"window_size":60,"window_overlap":20,"""+
       """"min_window_landmarks":50},"ft_mapping_params":{"moz_tol":5.0,"moz_tol_unit":"PPM","time_tol":300.0},"""+
       """"max_iterations":3},"ft_filter":{"name":"INTENSITY","operator":"GT","value":0.0},"ft_mapping_params":"""+
-      """{"moz_tol":5.0,"moz_tol_unit":"PPM","time_tol":30.0},"normalization_method":"MEDIAN_RATIO"}"""
+      """{"moz_tol":5.0,"moz_tol_unit":"PPM","time_tol":30.0},"normalization_method":"MEDIAN_RATIO","""+
+      """"detect_features":false,"start_from_validated_peptides":true}"""
     )
   )
   

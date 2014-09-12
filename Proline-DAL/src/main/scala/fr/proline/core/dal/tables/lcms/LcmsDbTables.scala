@@ -45,9 +45,11 @@ object LcmsDbFeatureColumns extends ColumnEnumeration {
   val $tableName = LcmsDbFeatureTable.name
   val ID = Column("id")
   val MOZ = Column("moz")
-  val INTENSITY = Column("intensity")
   val CHARGE = Column("charge")
   val ELUTION_TIME = Column("elution_time")
+  val APEX_INTENSITY = Column("apex_intensity")
+  val AREA = Column("area")
+  val DURATION = Column("duration")
   val QUALITY_SCORE = Column("quality_score")
   val MS1_COUNT = Column("ms1_count")
   val MS2_COUNT = Column("ms2_count")
@@ -101,8 +103,8 @@ object LcmsDbFeatureMs2EventTable extends LcmsDbFeatureMs2EventTable {
 object LcmsDbFeatureObjectTreeMappingColumns extends ColumnEnumeration {
   val $tableName = LcmsDbFeatureObjectTreeMappingTable.name
   val FEATURE_ID = Column("feature_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class LcmsDbFeatureObjectTreeMappingTable extends TableDefinition[LcmsDbFeatureObjectTreeMappingColumns.type]
@@ -214,8 +216,8 @@ object LcmsDbMapLayerTable extends LcmsDbMapLayerTable {
 object LcmsDbMapObjectTreeMappingColumns extends ColumnEnumeration {
   val $tableName = LcmsDbMapObjectTreeMappingTable.name
   val MAP_ID = Column("map_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class LcmsDbMapObjectTreeMappingTable extends TableDefinition[LcmsDbMapObjectTreeMappingColumns.type]
@@ -246,8 +248,8 @@ object LcmsDbMapSetTable extends LcmsDbMapSetTable {
 object LcmsDbMapSetObjectTreeMappingColumns extends ColumnEnumeration {
   val $tableName = LcmsDbMapSetObjectTreeMappingTable.name
   val MAP_SET_ID = Column("map_set_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class LcmsDbMapSetObjectTreeMappingTable extends TableDefinition[LcmsDbMapSetObjectTreeMappingColumns.type]
@@ -292,7 +294,8 @@ object LcmsDbMsPictureTable extends LcmsDbMsPictureTable {
 object LcmsDbObjectTreeColumns extends ColumnEnumeration {
   val $tableName = LcmsDbObjectTreeTable.name
   val ID = Column("id")
-  val SERIALIZED_DATA = Column("serialized_data")
+  val BLOB_DATA = Column("blob_data")
+  val CLOB_DATA = Column("clob_data")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val SCHEMA_NAME = Column("schema_name")
 }
@@ -308,6 +311,7 @@ object LcmsDbObjectTreeSchemaColumns extends ColumnEnumeration {
   val $tableName = LcmsDbObjectTreeSchemaTable.name
   val NAME = Column("name")
   val TYPE = Column("type")
+  val IS_BINARY_MODE = Column("is_binary_mode")
   val VERSION = Column("version")
   val SCHEMA = Column("schema")
   val DESCRIPTION = Column("description")
@@ -335,6 +339,34 @@ abstract class LcmsDbPeakPickingSoftwareTable extends TableDefinition[LcmsDbPeak
 object LcmsDbPeakPickingSoftwareTable extends LcmsDbPeakPickingSoftwareTable {
   val name = "peak_picking_software"
   val columns = LcmsDbPeakPickingSoftwareColumns
+}
+
+object LcmsDbPeakelColumns extends ColumnEnumeration {
+  val $tableName = LcmsDbPeakelTable.name
+  val ID = Column("id")
+  val INDEX = Column("index")
+  val MOZ = Column("moz")
+  val ELUTION_TIME = Column("elution_time")
+  val APEX_INTENSITY = Column("apex_intensity")
+  val AREA = Column("area")
+  val DURATION = Column("duration")
+  val FWHM = Column("fwhm")
+  val IS_OVERLAPPING = Column("is_overlapping")
+  val PEAKS_COUNT = Column("peaks_count")
+  val PEAKS = Column("peaks")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val FIRST_SCAN_ID = Column("first_scan_id")
+  val LAST_SCAN_ID = Column("last_scan_id")
+  val APEX_SCAN_ID = Column("apex_scan_id")
+  val FEATURE_ID = Column("feature_id")
+  val MAP_ID = Column("map_id")
+}
+
+abstract class LcmsDbPeakelTable extends TableDefinition[LcmsDbPeakelColumns.type]
+
+object LcmsDbPeakelTable extends LcmsDbPeakelTable {
+  val name = "peakel"
+  val columns = LcmsDbPeakelColumns
 }
 
 object LcmsDbPeakelFittingModelColumns extends ColumnEnumeration {
@@ -538,6 +570,7 @@ object LcmsDb {
     LcmsDbObjectTreeTable,
     LcmsDbObjectTreeSchemaTable,
     LcmsDbPeakPickingSoftwareTable,
+    LcmsDbPeakelTable,
     LcmsDbPeakelFittingModelTable,
     LcmsDbProcessedMapTable,
     LcmsDbProcessedMapFeatureItemTable,

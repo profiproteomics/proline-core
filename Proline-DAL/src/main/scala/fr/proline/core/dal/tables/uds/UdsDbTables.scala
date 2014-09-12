@@ -620,7 +620,6 @@ object UdsDbSpecTitleParsingRuleColumns extends ColumnEnumeration {
   val LAST_SCAN = Column("last_scan")
   val FIRST_TIME = Column("first_time")
   val LAST_TIME = Column("last_time")
-  val NAME = Column("name")
 }
 
 abstract class UdsDbSpecTitleParsingRuleTable extends TableDefinition[UdsDbSpecTitleParsingRuleColumns.type]

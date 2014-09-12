@@ -143,7 +143,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     new Feature(
        id = ftId,
        moz = ftRecord.getDouble(FtCols.MOZ),
-       intensity = toFloat(ftRecord.getAny(FtCols.INTENSITY)),
+       intensity = toFloat(ftRecord.getAny(FtCols.APEX_INTENSITY)),
        charge = ftRecord.getInt(FtCols.CHARGE),
        elutionTime = toFloat(ftRecord.getAny(FtCols.ELUTION_TIME)),
        duration = duration,

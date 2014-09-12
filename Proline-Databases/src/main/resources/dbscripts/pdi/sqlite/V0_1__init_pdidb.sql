@@ -96,7 +96,8 @@ CREATE TABLE gene (
 
 CREATE TABLE object_tree (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                serialized_data TEXT NOT NULL,
+                blob_data BLOB,
+                clob_data TEXT,
                 serialized_properties TEXT,
                 schema_name TEXT(1000) NOT NULL,
                 FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
@@ -104,7 +105,8 @@ CREATE TABLE object_tree (
 
 CREATE TABLE object_tree_schema (
                 name TEXT(1000) NOT NULL,
-                type TEXT(10) NOT NULL,
+                type TEXT(50) NOT NULL,
+                is_binary_mode TEXT NOT NULL,
                 version TEXT(100) NOT NULL,
                 schema TEXT NOT NULL,
                 description TEXT(1000),
@@ -166,10 +168,10 @@ CREATE TABLE seq_db_entry_gene_map (
 
 CREATE TABLE seq_db_entry_object_tree_map (
                 seq_db_entry_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (seq_db_entry_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (seq_db_entry_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE seq_db_entry_protein_identifier_map (

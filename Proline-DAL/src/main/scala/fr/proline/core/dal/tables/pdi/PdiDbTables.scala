@@ -159,7 +159,8 @@ object PdiDbGeneTable extends PdiDbGeneTable {
 object PdiDbObjectTreeColumns extends ColumnEnumeration {
   val $tableName = PdiDbObjectTreeTable.name
   val ID = Column("id")
-  val SERIALIZED_DATA = Column("serialized_data")
+  val BLOB_DATA = Column("blob_data")
+  val CLOB_DATA = Column("clob_data")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val SCHEMA_NAME = Column("schema_name")
 }
@@ -175,6 +176,7 @@ object PdiDbObjectTreeSchemaColumns extends ColumnEnumeration {
   val $tableName = PdiDbObjectTreeSchemaTable.name
   val NAME = Column("name")
   val TYPE = Column("type")
+  val IS_BINARY_MODE = Column("is_binary_mode")
   val VERSION = Column("version")
   val SCHEMA = Column("schema")
   val DESCRIPTION = Column("description")
@@ -265,8 +267,8 @@ object PdiDbSeqDbEntryGeneMapTable extends PdiDbSeqDbEntryGeneMapTable {
 object PdiDbSeqDbEntryObjectTreeMapColumns extends ColumnEnumeration {
   val $tableName = PdiDbSeqDbEntryObjectTreeMapTable.name
   val SEQ_DB_ENTRY_ID = Column("seq_db_entry_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class PdiDbSeqDbEntryObjectTreeMapTable extends TableDefinition[PdiDbSeqDbEntryObjectTreeMapColumns.type]

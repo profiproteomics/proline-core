@@ -34,6 +34,7 @@ object ResultSetBuilder {
     val isNative = rsType matches ".*SEARCH"
     val isQuantified = rsType matches "QUANTITATION"
     val decoyRsId = r.getLongOrElse(RSCols.DECOY_RESULT_SET_ID, 0L)
+    val mergedRSMId= r.getLongOrElse(RSCols.MERGED_RSM_ID, 0L)
 
     // Assume child MSI searches if result set is not native
     var( rsMsiSearchId: Long, childMsiSearches: Array[MSISearch] ) = (0L, Array.empty[MSISearch] )
@@ -68,6 +69,7 @@ object ResultSetBuilder {
       msiSearch = msiSearch,
       childMsiSearches = childMsiSearches,
       decoyResultSetId = decoyRsId,
+      mergedResultSummaryId = mergedRSMId,
       properties = properties
     )
 

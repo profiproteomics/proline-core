@@ -20,7 +20,6 @@ CREATE TABLE compound (
                 best_feature_id INTEGER NOT NULL,
                 map_layer_id INTEGER,
                 map_id INTEGER NOT NULL,
-                FOREIGN KEY (best_feature_id) REFERENCES feature (id),
                 FOREIGN KEY (map_layer_id) REFERENCES map_layer (id),
                 FOREIGN KEY (map_id) REFERENCES map (id)
 );
@@ -28,9 +27,11 @@ CREATE TABLE compound (
 CREATE TABLE feature (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 moz REAL NOT NULL,
-                intensity REAL NOT NULL,
                 charge INTEGER NOT NULL,
                 elution_time REAL NOT NULL,
+                apex_intensity REAL NOT NULL,
+                area REAL NOT NULL,
+                duration REAL NOT NULL,
                 quality_score REAL,
                 ms1_count INTEGER NOT NULL,
                 ms2_count INTEGER NOT NULL,
@@ -71,10 +72,10 @@ CREATE TABLE feature_ms2_event (
 
 CREATE TABLE feature_object_tree_mapping (
                 feature_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (feature_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (feature_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE feature_overlap_mapping (
@@ -83,6 +84,16 @@ CREATE TABLE feature_overlap_mapping (
                 map_id INTEGER NOT NULL,
                 PRIMARY KEY (overlapped_feature_id, overlapping_feature_id),
                 FOREIGN KEY (map_id) REFERENCES raw_map (id)
+);
+
+CREATE TABLE feature_peakel_item (
+                feature_id INTEGER NOT NULL,
+                peakel_id INTEGER NOT NULL,
+                index INTEGER NOT NULL,
+                serialized_properties TEXT,
+                map_id INTEGER NOT NULL,
+                PRIMARY KEY (feature_id, peakel_id),
+                FOREIGN KEY (map_id) REFERENCES map (id)
 );
 
 CREATE TABLE feature_scoring (
@@ -128,7 +139,7 @@ CREATE TABLE map_alignment (
 CREATE TABLE map_layer (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 number INTEGER NOT NULL,
-                name TEXT(250),
+                name TEXT(250) NOT NULL,
                 serialized_properties TEXT,
                 processed_map_id INTEGER NOT NULL,
                 map_set_id INTEGER NOT NULL,
@@ -138,10 +149,10 @@ CREATE TABLE map_layer (
 
 CREATE TABLE map_object_tree_mapping (
                 map_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (map_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (map_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE map_set (
@@ -158,10 +169,10 @@ CREATE TABLE map_set (
 
 CREATE TABLE map_set_object_tree_mapping (
                 map_set_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (map_set_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (map_set_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE master_feature_item (
@@ -185,7 +196,8 @@ CREATE TABLE ms_picture (
 
 CREATE TABLE object_tree (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                serialized_data TEXT NOT NULL,
+                blob_data BLOB,
+                clob_data TEXT,
                 serialized_properties TEXT,
                 schema_name TEXT(1000) NOT NULL,
                 FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
@@ -193,7 +205,8 @@ CREATE TABLE object_tree (
 
 CREATE TABLE object_tree_schema (
                 name TEXT(1000) NOT NULL,
-                type TEXT(10) NOT NULL,
+                type TEXT(50) NOT NULL,
+                is_binary_mode TEXT NOT NULL,
                 version TEXT(100) NOT NULL,
                 schema TEXT NOT NULL,
                 description TEXT(1000),
@@ -209,6 +222,28 @@ CREATE TABLE peak_picking_software (
                 serialized_properties TEXT
 );
 
+CREATE TABLE peakel (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                moz REAL NOT NULL,
+                elution_time REAL NOT NULL,
+                apex_intensity REAL NOT NULL,
+                area REAL NOT NULL,
+                duration REAL NOT NULL,
+                fwhm REAL,
+                is_overlapping TEXT NOT NULL,
+                peaks_count INTEGER NOT NULL,
+                peaks BLOB NOT NULL,
+                serialized_properties TEXT,
+                first_scan_id INTEGER NOT NULL,
+                last_scan_id INTEGER NOT NULL,
+                apex_scan_id INTEGER NOT NULL,
+                map_id INTEGER NOT NULL,
+                FOREIGN KEY (first_scan_id) REFERENCES scan (id),
+                FOREIGN KEY (last_scan_id) REFERENCES scan (id),
+                FOREIGN KEY (apex_scan_id) REFERENCES scan (id),
+                FOREIGN KEY (map_id) REFERENCES map (id)
+);
+
 CREATE TABLE peakel_fitting_model (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT(100) NOT NULL,
@@ -218,10 +253,10 @@ CREATE TABLE peakel_fitting_model (
 CREATE TABLE processed_map (
                 id INTEGER NOT NULL,
                 number INTEGER NOT NULL,
-                normalization_factor REAL,
+                normalization_factor REAL NOT NULL,
                 is_master TEXT NOT NULL,
                 is_aln_reference TEXT NOT NULL,
-                is_locked TEXT,
+                is_locked TEXT NOT NULL,
                 map_set_id INTEGER NOT NULL,
                 PRIMARY KEY (id),
                 FOREIGN KEY (map_set_id) REFERENCES map_set (id)
@@ -348,12 +383,6 @@ CREATE INDEX map_alignment_map_set_idx ON map_alignment (map_set_id);
 CREATE INDEX feature_ms2_event_run_map_idx ON feature_ms2_event (run_map_id);
 
 CREATE INDEX master_feature_item_master_map_idx ON master_feature_item (master_map_id);
-
-CREATE UNIQUE INDEX map_set_object_tree_mapping_idx ON map_set_object_tree_mapping (map_set_id,schema_name);
-
-CREATE UNIQUE INDEX map_object_tree_mapping_idx ON map_object_tree_mapping (map_id,schema_name);
-
-CREATE UNIQUE INDEX feature_object_tree_mapping_idx ON feature_object_tree_mapping (feature_id,schema_name);
 
 CREATE INDEX feature_overlap_mapping_map_idx ON feature_overlap_mapping (map_id);
 

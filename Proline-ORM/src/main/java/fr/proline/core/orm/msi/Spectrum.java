@@ -20,6 +20,9 @@ public class Spectrum implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
+    
+    @Column(name = "initial_id")
+    private int initialId;
 
     @Column(name = "first_cycle")
     private Integer firstCycle;
@@ -37,7 +40,7 @@ public class Spectrum implements Serializable {
     private byte[] intensityList;
 
     @Column(name = "is_summed")
-    private Boolean isSummed;
+    private boolean isSummed;
 
     @Column(name = "last_cycle")
     private Integer lastCycle;
@@ -81,6 +84,14 @@ public class Spectrum implements Serializable {
     public void setId(final long pId) {
 	id = pId;
     }
+    
+    public int getInitialId() {
+	return initialId;
+    }
+
+    public void setInitialId(final int pInitialId) {
+	initialId = pInitialId;
+    }
 
     public Integer getFirstCycle() {
 	return this.firstCycle;
@@ -122,11 +133,11 @@ public class Spectrum implements Serializable {
 	this.intensityList = intensityList;
     }
 
-    public Boolean getIsSummed() {
+    public boolean getIsSummed() {
 	return this.isSummed;
     }
 
-    public void setIsSummed(Boolean isSummed) {
+    public void setIsSummed(boolean isSummed) {
 	this.isSummed = isSummed;
     }
 

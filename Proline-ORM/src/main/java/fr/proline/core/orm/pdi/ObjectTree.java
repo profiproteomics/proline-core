@@ -2,6 +2,7 @@ package fr.proline.core.orm.pdi;
 
 import java.io.Serializable;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -25,15 +26,18 @@ public class ObjectTree implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @Column(name = "serialized_data")
-    private String serializedData;
+    @Column(name = "blob_data")
+    private byte[] blobData;
+
+    @Column(name = "clob_data")
+    private String clobData;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
 
-    @ManyToOne
+    @ManyToOne(cascade=CascadeType.PERSIST)
     @JoinColumn(name = "schema_name")
-    private ObjectTreeSchema schemaName;
+    private ObjectTreeSchema schema;
 
     public ObjectTree() {
     }
@@ -46,12 +50,20 @@ public class ObjectTree implements Serializable {
 	id = pId;
     }
 
-    public String getSerializedData() {
-	return serializedData;
+    public byte[] getBlobData() {
+	return this.blobData;
     }
 
-    public void setSerializedData(String serializedData) {
-	this.serializedData = serializedData;
+    public void setBlobData(byte[] blobData) {
+	this.blobData = blobData;
+    }
+
+    public String getClobData() {
+	return clobData;
+    }
+
+    public void setClobData(String clobData) {
+	this.clobData = clobData;
     }
 
     public String getSerializedProperties() {
@@ -62,12 +74,12 @@ public class ObjectTree implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
 
-    public ObjectTreeSchema getSchemaName() {
-	return schemaName;
+    public ObjectTreeSchema getSchema() {
+	return schema;
     }
 
-    public void setSchemaName(ObjectTreeSchema schemaName) {
-	this.schemaName = schemaName;
+    public void setSchema(ObjectTreeSchema schema) {
+	this.schema = schema;
     }
 
 }

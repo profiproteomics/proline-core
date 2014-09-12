@@ -17,10 +17,11 @@ case class ResultSet(
   val proteinMatches: Array[ProteinMatch],
   val isDecoy: Boolean,
   val isNative: Boolean,
-
+  
   // Immutable optional fields
 
   // Mutable optional fields
+  var mergedResultSummaryId : Long = 0L,
   var id: Long = 0,
   var name: String = null,
   var description: String = null,
@@ -54,7 +55,7 @@ case class ResultSet(
   }
 
   def getMSISearchId: Long = { if (msiSearch.isDefined) msiSearch.get.id else msiSearchId }
-
+  
   def setDecoyResultSetId(decoyRSId: Long) {
     require(decoyResultSet.isEmpty || (decoyResultSet.get.id == decoyRSId), "Inconsistent decoyRSId")
 

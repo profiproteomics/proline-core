@@ -7,6 +7,8 @@ import org.scalatest.GivenWhenThen
 import org.scalatest.FunSpec
 import org.scalatest.Matchers
 
+import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.core.om.model.msi._
 import fr.profi.util.serialization.ProfiJson
 
@@ -18,14 +20,13 @@ case class SerializationSpecif(
   jsonData: String
 )
 
-abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with Matchers {
+abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with Matchers with Logging {
 
   def checkJsonSpecifs( jsonSpecifs: List[SerializationSpecif] ) {
     
-    for( jsonSpecif <- jsonSpecifs ) {
-      //println( Json.generate(jsonSpecif.objectData) )
+    /*for( jsonSpecif <- jsonSpecifs ) {
       println( ProfiJson.serialize(jsonSpecif.objectData) )
-    }
+    }*/
   
     // Iterate over each sperialization specification
     for( jsonSpecif <- jsonSpecifs ) {
@@ -68,6 +69,9 @@ abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with
           val jsonString = ProfiJson.serialize(objectData)
           val jsonAsMap = ProfiJson.deserialize[Map[String,Any]](jsonString)
           
+          logger.info("INPUT JSON:\n"+ jsonSpecif.jsonData)
+          logger.info("OUTPUT JSON:\n"+ jsonString)
+          
           Then("it should match the Map obtained from the expected JSON string")
           jsonAsMap should equal ( ProfiJson.deserialize[Map[String,Any]](jsonSpecif.jsonData) )         
         }
@@ -80,6 +84,9 @@ abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with
             
             When("deserializing from JSON")
             val objectData = jsonSpecif.profiDeserializer.get(jsonData)
+            
+            logger.info("INPUT JSON:\n"+ jsonSpecif.jsonData)
+            logger.info("OUTPUT JSON:\n"+ ProfiJson.serialize(jsonSpecif.objectData))
             
             Then("the obtained object should match the serialized one")
             objectData should equal (jsonSpecif.objectData)

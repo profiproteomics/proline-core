@@ -153,10 +153,10 @@ CREATE TABLE msi_search (
 
 CREATE TABLE msi_search_object_tree_map (
                 msi_search_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (msi_search_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (msi_search_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE msms_search (
@@ -280,10 +280,10 @@ CREATE TABLE peptide_match (
 
 CREATE TABLE peptide_match_object_tree_map (
                 peptide_match_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (peptide_match_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (peptide_match_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE peptide_match_relation (
@@ -298,8 +298,6 @@ CREATE TABLE peptide_readable_ptm_string (
                 peptide_id INTEGER NOT NULL,
                 result_set_id INTEGER NOT NULL,
                 readable_ptm_string TEXT NOT NULL,
-                FOREIGN KEY (peptide_id) REFERENCES peptide (id),
-                FOREIGN KEY (result_set_id) REFERENCES result_set (id),
                 PRIMARY KEY (peptide_id, result_set_id)
 );
 
@@ -307,8 +305,8 @@ CREATE TABLE peptide_set (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 is_subset TEXT NOT NULL,
                 score REAL NOT NULL,
-                peptide_count INTEGER,
-                peptide_match_count INTEGER,
+                peptide_count INTEGER NOT NULL,
+                peptide_match_count INTEGER NOT NULL,
                 serialized_properties TEXT,
                 protein_set_id INTEGER,
                 scoring_id INTEGER NOT NULL,
@@ -391,10 +389,10 @@ CREATE TABLE protein_set (
 
 CREATE TABLE protein_set_object_tree_map (
                 protein_set_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (protein_set_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (protein_set_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE protein_set_protein_match_item (
@@ -424,6 +422,7 @@ CREATE TABLE result_set (
                 modification_timestamp TEXT NOT NULL,
                 serialized_properties TEXT,
                 decoy_result_set_id INTEGER,
+                merged_rsm_id INTEGER,
                 msi_search_id INTEGER,
                 FOREIGN KEY (decoy_result_set_id) REFERENCES result_set (id),
                 FOREIGN KEY (msi_search_id) REFERENCES msi_search (id)
@@ -431,10 +430,10 @@ CREATE TABLE result_set (
 
 CREATE TABLE result_set_object_tree_map (
                 result_set_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (result_set_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (result_set_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE result_set_relation (
@@ -458,10 +457,10 @@ CREATE TABLE result_summary (
 
 CREATE TABLE result_summary_object_tree_map (
                 result_summary_id INTEGER NOT NULL,
-                object_tree_id INTEGER NOT NULL,
                 schema_name TEXT(1000) NOT NULL,
-                PRIMARY KEY (result_summary_id, object_tree_id),
-                FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (result_summary_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
 );
 
 CREATE TABLE result_summary_relation (
@@ -530,11 +529,12 @@ CREATE TABLE sequence_match (
 
 CREATE TABLE spectrum (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                initial_id INTEGER NOT NULL,
                 title TEXT(1024) NOT NULL,
                 precursor_moz REAL,
                 precursor_intensity REAL,
                 precursor_charge INTEGER,
-                is_summed TEXT,
+                is_summed TEXT NOT NULL,
                 first_cycle INTEGER,
                 last_cycle INTEGER,
                 first_scan INTEGER,
@@ -564,8 +564,6 @@ CREATE TABLE used_ptm (
                 is_fixed TEXT NOT NULL,
                 PRIMARY KEY (search_settings_id, ptm_specificity_id)
 );
-
-CREATE UNIQUE INDEX result_set_object_tree_map_idx ON result_set_object_tree_map (result_set_id,schema_name);
 
 CREATE UNIQUE INDEX enzyme_name_idx ON enzyme (name);
 
@@ -613,6 +611,8 @@ CREATE INDEX cache_scope_idx ON cache (scope);
 
 CREATE INDEX peptide_instance_rsm_idx ON peptide_instance (result_summary_id ASC);
 
+CREATE INDEX peptide_instance_peptide_idx ON peptide_instance (peptide_id);
+
 CREATE INDEX master_quant_component_rsm_idx ON master_quant_component (result_summary_id ASC);
 
 CREATE INDEX master_quant_peptide_ion_peptide_idx ON master_quant_peptide_ion (peptide_id);
@@ -621,7 +621,7 @@ CREATE INDEX master_quant_peptide_ion_rsm_idx ON master_quant_peptide_ion (resul
 
 CREATE INDEX pep_set_pep_inst_item_rsm_idx ON peptide_set_peptide_instance_item (result_summary_id ASC);
 
-CREATE UNIQUE INDEX result_summary_object_tree_map_idx ON result_summary_object_tree_map (result_summary_id,schema_name);
+CREATE INDEX pep_set_pep_inst_item_pep_inst_idx ON peptide_set_peptide_instance_item (peptide_instance_id);
 
 CREATE INDEX prot_set_prot_match_item_rsm_idx ON protein_set_protein_match_item (result_summary_id ASC);
 
@@ -629,11 +629,7 @@ CREATE INDEX pep_inst_pep_match_map_rsm_idx ON peptide_instance_peptide_match_ma
 
 CREATE INDEX pep_set_prot_match_map_rsm_idx ON peptide_set_protein_match_map (result_summary_id ASC);
 
-CREATE UNIQUE INDEX protein_set_object_tree_map_idx ON protein_set_object_tree_map (protein_set_id,schema_name);
-
 CREATE INDEX prot_match_seq_db_map_rs_idx ON protein_match_seq_database_map (result_set_id ASC);
-
-CREATE UNIQUE INDEX peptide_match_object_tree_map_idx ON peptide_match_object_tree_map (peptide_match_id,schema_name);
 
 CREATE UNIQUE INDEX scoring_idx ON scoring (search_engine,name);
 
@@ -641,4 +637,3 @@ CREATE INDEX master_quant_reporter_ion_rsm_idx ON master_quant_reporter_ion (res
 
 CREATE INDEX peptide_readable_ptm_string_rs_idx ON peptide_readable_ptm_string (result_set_id);
 
-CREATE INDEX pep_set_pep_inst_item_pep_inst_idx ON peptide_set_peptide_instance_item (peptide_instance_id);

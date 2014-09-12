@@ -45,10 +45,10 @@ public class PeptideSet implements Serializable {
     private Scoring scoring;
 
     @Column(name = "peptide_count")
-    private Integer peptideCount;
+    private int peptideCount;
 
     @Column(name = "peptide_match_count")
-    private Integer peptideMatchCount;
+    private int peptideMatchCount;
 
     @Column(name = "result_summary_id")
     private long resultSummaryId;
@@ -97,19 +97,19 @@ public class PeptideSet implements Serializable {
 	this.isSubset = isSubset;
     }
 
-    public Integer getPeptideCount() {
+    public int getPeptideCount() {
 	return this.peptideCount;
     }
 
-    public void setPeptideCount(Integer peptideCount) {
+    public void setPeptideCount(int peptideCount) {
 	this.peptideCount = peptideCount;
     }
 
-    public Integer getPeptideMatchCount() {
+    public int getPeptideMatchCount() {
 	return this.peptideMatchCount;
     }
 
-    public void setPeptideMatchCount(Integer peptideMatchCount) {
+    public void setPeptideMatchCount(int peptideMatchCount) {
 	this.peptideMatchCount = peptideMatchCount;
     }
 
@@ -190,7 +190,8 @@ public class PeptideSet implements Serializable {
 	this.dpeptideInstances = dpeptideInstances;
     }
 
-    public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
 	if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
 	    serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(),Map.class);
 	}

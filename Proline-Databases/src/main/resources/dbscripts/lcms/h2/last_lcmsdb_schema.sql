@@ -31,7 +31,7 @@ CREATE TABLE public.cache (
                 compression VARCHAR(20) NOT NULL,
                 timestamp TIMESTAMP NOT NULL,
                 serialized_properties LONGVARCHAR,
-                CONSTRAINT New_Table_pk PRIMARY KEY (scope, id, format, byte_order)
+                CONSTRAINT cache_pk PRIMARY KEY (scope, id, format, byte_order)
 );
 COMMENT ON COLUMN public.cache.scope IS 'e.g. scope=map.features id=1 (map id)';
 
@@ -47,7 +47,8 @@ CREATE TABLE public.instrument (
 
 CREATE TABLE public.object_tree_schema (
                 name VARCHAR(1000) NOT NULL,
-                type VARCHAR(10) NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                is_binary_mode BOOLEAN NOT NULL,
                 version VARCHAR(100) NOT NULL,
                 schema LONGVARCHAR NOT NULL,
                 description VARCHAR(1000),
@@ -55,31 +56,30 @@ CREATE TABLE public.object_tree_schema (
                 CONSTRAINT object_tree_schema_pk PRIMARY KEY (name)
 );
 COMMENT ON COLUMN public.object_tree_schema.type IS 'XSD or JSON';
+COMMENT ON COLUMN public.object_tree_schema.is_binary_mode IS 'Specifies if mode of the data encoding which could be binary based or string based (XML or JSON). If binary mode is used the data must be stored in the blob_data field, else in the clob_data field.';
 COMMENT ON COLUMN public.object_tree_schema.schema IS 'The document describing the schema used for the serialization of the object_tree.';
 
 
 CREATE TABLE public.object_tree (
                 id IDENTITY NOT NULL,
-                serialized_data LONGVARCHAR NOT NULL,
+                blob_data LONGVARBINARY,
+                clob_data LONGVARCHAR,
                 serialized_properties LONGVARCHAR,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT object_tree_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN public.object_tree.serialized_data IS 'A object tree serialized in a string using a given format (XML or JSON).';
+COMMENT ON COLUMN public.object_tree.blob_data IS 'An object tree serialized as bytes using a given binary serialization framework.';
+COMMENT ON COLUMN public.object_tree.clob_data IS 'An object tree serialized in a string of a given format (XML or JSON).';
 COMMENT ON COLUMN public.object_tree.serialized_properties IS 'May be used to store the creation timestamp and other meta information.';
 
 
 CREATE TABLE public.map_object_tree_mapping (
                 map_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT map_object_tree_mapping_pk PRIMARY KEY (map_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT map_object_tree_mapping_pk PRIMARY KEY (map_id, schema_name)
 );
 
-
-CREATE UNIQUE INDEX public.map_object_tree_mapping_idx
- ON public.map_object_tree_mapping
- ( map_id, schema_name );
 
 CREATE TABLE public.peakel_fitting_model (
                 id IDENTITY NOT NULL,
@@ -102,10 +102,10 @@ CREATE TABLE public.peak_picking_software (
 CREATE TABLE public.processed_map (
                 id BIGINT NOT NULL,
                 number INTEGER NOT NULL,
-                normalization_factor REAL,
+                normalization_factor REAL DEFAULT 1 NOT NULL,
                 is_master BOOLEAN NOT NULL,
                 is_aln_reference BOOLEAN NOT NULL,
-                is_locked BOOLEAN,
+                is_locked BOOLEAN DEFAULT false NOT NULL,
                 map_set_id BIGINT NOT NULL,
                 CONSTRAINT processed_map_pk PRIMARY KEY (id)
 );
@@ -133,15 +133,11 @@ COMMENT ON TABLE public.map_set IS 'Associated maps must be locked.';
 
 CREATE TABLE public.map_set_object_tree_mapping (
                 map_set_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT map_set_object_tree_mapping_pk PRIMARY KEY (map_set_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT map_set_object_tree_mapping_pk PRIMARY KEY (map_set_id, schema_name)
 );
 
-
-CREATE UNIQUE INDEX public.map_set_object_tree_mapping_idx
- ON public.map_set_object_tree_mapping
- ( map_set_id, schema_name );
 
 CREATE TABLE public.map_alignment (
                 from_map_id BIGINT NOT NULL,
@@ -166,7 +162,7 @@ CREATE INDEX public.map_alignment_map_set_idx
 CREATE TABLE public.map_layer (
                 id IDENTITY NOT NULL,
                 number INTEGER NOT NULL,
-                name VARCHAR(250),
+                name VARCHAR(250) NOT NULL,
                 serialized_properties LONGVARCHAR,
                 processed_map_id BIGINT NOT NULL,
                 map_set_id BIGINT NOT NULL,
@@ -216,6 +212,7 @@ CREATE TABLE public.scan_sequence (
                 instrument_id BIGINT NOT NULL,
                 CONSTRAINT scan_sequence_pk PRIMARY KEY (id)
 );
+COMMENT ON COLUMN public.scan_sequence.id IS 'This id is not auto-incremneted => it is the run_id from the UDSdb.';
 
 
 CREATE TABLE public.raw_map (
@@ -266,6 +263,25 @@ COMMENT ON COLUMN public.tile.height IS 'pixel height';
 COMMENT ON COLUMN public.tile.intensities IS 'intensities in binary format';
 
 
+CREATE TABLE public.compound (
+                id IDENTITY NOT NULL,
+                experimental_mass DOUBLE NOT NULL,
+                theoretical_mass DOUBLE,
+                elution_time REAL NOT NULL,
+                formula VARCHAR(1000),
+                serialized_properties LONGVARCHAR,
+                best_feature_id BIGINT NOT NULL,
+                map_layer_id BIGINT,
+                map_id BIGINT NOT NULL,
+                CONSTRAINT compound_pk PRIMARY KEY (id)
+);
+COMMENT ON TABLE public.compound IS 'Describes molecules that are or may be (theoretical) in the map.';
+
+
+CREATE INDEX public.compound_map_idx
+ ON public.compound
+ ( map_id );
+
 CREATE TABLE public.scan (
                 id IDENTITY NOT NULL,
                 initial_id INTEGER NOT NULL,
@@ -293,6 +309,30 @@ CREATE INDEX public.scan_precursor_moz_idx
  ON public.scan
  ( precursor_moz );
 
+CREATE TABLE public.peakel (
+                id IDENTITY NOT NULL,
+                moz DOUBLE NOT NULL,
+                elution_time REAL NOT NULL,
+                apex_intensity REAL NOT NULL,
+                area REAL NOT NULL,
+                duration REAL NOT NULL,
+                fwhm REAL,
+                is_overlapping BOOLEAN NOT NULL,
+                peaks_count INTEGER NOT NULL,
+                peaks LONGVARBINARY NOT NULL,
+                serialized_properties LONGVARCHAR,
+                first_scan_id BIGINT NOT NULL,
+                last_scan_id BIGINT NOT NULL,
+                apex_scan_id BIGINT NOT NULL,
+                map_id BIGINT NOT NULL,
+                CONSTRAINT peakel_pk PRIMARY KEY (id)
+);
+COMMENT ON COLUMN public.peakel.moz IS 'A m/z value associated to the peakel. May be determined as the median/mean of peaks. May also be the m/z of the apex.';
+COMMENT ON COLUMN public.peakel.apex_intensity IS 'Maximum intensity of this peakel. This intensity may also be a normalized value from a value stored in another map.';
+COMMENT ON COLUMN public.peakel.area IS 'Integrated area for this peakel. This area may also be a normalized value from a value stored in another map.';
+COMMENT ON COLUMN public.peakel.duration IS 'The elution duration in seconds of this peakel.';
+
+
 CREATE TABLE public.processed_map_moz_calibration (
                 processed_map_id BIGINT NOT NULL,
                 scan_id BIGINT NOT NULL,
@@ -309,9 +349,11 @@ COMMENT ON COLUMN public.processed_map_moz_calibration.delta_moz_list IS 'A list
 CREATE TABLE public.feature (
                 id IDENTITY NOT NULL,
                 moz DOUBLE NOT NULL,
-                intensity REAL NOT NULL,
                 charge INTEGER NOT NULL,
                 elution_time REAL NOT NULL,
+                apex_intensity REAL NOT NULL,
+                area REAL DEFAULT 0 NOT NULL,
+                duration REAL DEFAULT 0 NOT NULL,
                 quality_score REAL,
                 ms1_count INTEGER NOT NULL,
                 ms2_count INTEGER NOT NULL,
@@ -328,7 +370,9 @@ CREATE TABLE public.feature (
                 CONSTRAINT feature_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN public.feature.moz IS 'A m/z value associated to the feature. May be determined as the median/mean of the isotopic pattern m/z. May also be the m/z of the apex.';
-COMMENT ON COLUMN public.feature.intensity IS 'Computed using the isotopic pattern intensities. The function used to produce this intensity may take only some of the peaks in the isotopic pattern (describe this in the map properties). This intensity may also be a normalized value from a value stored in another map.';
+COMMENT ON COLUMN public.feature.apex_intensity IS 'Maximum intensity of this feature. This intensity may also be a normalized value from a value stored in another map.';
+COMMENT ON COLUMN public.feature.area IS 'Integrated area for this feature. Computed using the isotopic pattern intensities. The function used to produce this value may take only some of the peaks in the isotopic pattern (describe this in the map properties). This area may also be a normalized value from a value stored in another map.';
+COMMENT ON COLUMN public.feature.duration IS 'The elution duration in seconds of this feature.';
 COMMENT ON COLUMN public.feature.quality_score IS 'A score reflecting the quality of the extracted signal for this feature.';
 COMMENT ON COLUMN public.feature.map_id IS 'May correspond to a native map or a processed map (i.e. feature clusters, master features).';
 
@@ -341,24 +385,15 @@ CREATE INDEX public.feature_moz_time_charge_idx
  ON public.feature
  ( moz, elution_time, charge );
 
-CREATE TABLE public.compound (
-                id IDENTITY NOT NULL,
-                experimental_mass DOUBLE NOT NULL,
-                theoretical_mass DOUBLE,
-                elution_time REAL NOT NULL,
-                formula VARCHAR(1000),
+CREATE TABLE public.feature_peakel_item (
+                feature_id BIGINT NOT NULL,
+                peakel_id BIGINT NOT NULL,
+                index INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
-                best_feature_id BIGINT NOT NULL,
-                map_layer_id BIGINT,
                 map_id BIGINT NOT NULL,
-                CONSTRAINT compound_pk PRIMARY KEY (id)
+                CONSTRAINT feature_peakel_item_pk PRIMARY KEY (feature_id, peakel_id)
 );
-COMMENT ON TABLE public.compound IS 'Describes molecules that are or may be (theoretical) in the map.';
 
-
-CREATE INDEX public.compound_map_idx
- ON public.compound
- ( map_id );
 
 CREATE TABLE public.feature_overlap_mapping (
                 overlapped_feature_id BIGINT NOT NULL,
@@ -374,15 +409,11 @@ CREATE INDEX public.feature_overlap_mapping_map_idx
 
 CREATE TABLE public.feature_object_tree_mapping (
                 feature_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT feature_object_tree_mapping_pk PRIMARY KEY (feature_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT feature_object_tree_mapping_pk PRIMARY KEY (feature_id, schema_name)
 );
 
-
-CREATE UNIQUE INDEX public.feature_object_tree_mapping_idx
- ON public.feature_object_tree_mapping
- ( feature_id, schema_name );
 
 CREATE TABLE public.processed_map_feature_item (
                 processed_map_id BIGINT NOT NULL,
@@ -479,6 +510,18 @@ ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT map_map_object_tree_ma
 FOREIGN KEY (map_id)
 REFERENCES public.map (id)
 ON DELETE CASCADE
+ON UPDATE NO ACTION;
+
+ALTER TABLE public.peakel ADD CONSTRAINT map_peakel_fk
+FOREIGN KEY (map_id)
+REFERENCES public.map (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
+ALTER TABLE public.feature_peakel_item ADD CONSTRAINT map_feature_peakel_item_fk
+FOREIGN KEY (map_id)
+REFERENCES public.map (id)
+ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
 /*
@@ -611,7 +654,7 @@ REFERENCES public.processed_map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.processed_map_raw_map_mapping ADD CONSTRAINT processed_map_processed_map_run_map_mapping_fk
+ALTER TABLE public.processed_map_raw_map_mapping ADD CONSTRAINT processed_map_processed_map_raw_map_mapping_fk
 FOREIGN KEY (processed_map_id)
 REFERENCES public.processed_map (id)
 ON DELETE CASCADE
@@ -713,6 +756,12 @@ REFERENCES public.ms_picture (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
+ALTER TABLE public.feature ADD CONSTRAINT compound_feature_fk
+FOREIGN KEY (compound_id)
+REFERENCES public.compound (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
 ALTER TABLE public.feature ADD CONSTRAINT first_scan_feature_fk
 FOREIGN KEY (first_scan_id)
 REFERENCES public.scan (id)
@@ -744,6 +793,30 @@ ON UPDATE NO ACTION;
 ALTER TABLE public.feature ADD CONSTRAINT apex_scan_feature_fk
 FOREIGN KEY (apex_scan_id)
 REFERENCES public.scan (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
+ALTER TABLE public.peakel ADD CONSTRAINT first_scan_peakel_fk
+FOREIGN KEY (first_scan_id)
+REFERENCES public.scan (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
+ALTER TABLE public.peakel ADD CONSTRAINT last_scan_peakel_fk
+FOREIGN KEY (last_scan_id)
+REFERENCES public.scan (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
+ALTER TABLE public.peakel ADD CONSTRAINT apex_scan_peakel_fk
+FOREIGN KEY (apex_scan_id)
+REFERENCES public.scan (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
+ALTER TABLE public.feature_peakel_item ADD CONSTRAINT peakel_feature_peakel_item_fk
+FOREIGN KEY (peakel_id)
+REFERENCES public.peakel (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
@@ -803,14 +876,8 @@ REFERENCES public.feature (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
-ALTER TABLE public.compound ADD CONSTRAINT best_feature_compound_fk
-FOREIGN KEY (best_feature_id)
+ALTER TABLE public.feature_peakel_item ADD CONSTRAINT feature_feature_peakel_item_fk
+FOREIGN KEY (feature_id)
 REFERENCES public.feature (id)
-ON DELETE NO ACTION
-ON UPDATE NO ACTION;
-
-ALTER TABLE public.feature ADD CONSTRAINT compound_feature_fk
-FOREIGN KEY (compound_id)
-REFERENCES public.compound (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;

@@ -206,7 +206,9 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         }
 
         msiResultSet.setDecoyResultSet(msiDecoyRs)
-
+        if(resultSet.mergedResultSummaryId > 0L)
+          msiResultSet.setMergedRsmId(resultSet.mergedResultSummaryId)
+        
         msiEm.persist(msiResultSet)
 
         knownResultSets += omResultSetId -> msiResultSet

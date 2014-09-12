@@ -69,10 +69,15 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
       val spectrumIdByTitle = collection.immutable.Map.newBuilder[String, Long]
       
       msiEzDBC.executePrepared(spectrumInsertQuery) { stmt =>
+        
+        var spectrumIdx = 0
         peaklistContainer.eachSpectrum { spectrum =>
-          this._insertSpectrum(stmt, spectrum, peaklistId)
+          spectrumIdx += 1
+          
+          this._insertSpectrum(stmt, spectrum, peaklistId, spectrumIdx)
           spectrumIdByTitle += (spectrum.title -> spectrum.id)
         }
+        
       }
 
       // TODO: use id cache
@@ -83,7 +88,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
     context
   }
 
-  private def _insertSpectrum(stmt: PreparedStatementWrapper, spectrum: Spectrum, peaklistId: Long): Unit = {
+  private def _insertSpectrum(stmt: PreparedStatementWrapper, spectrum: Spectrum, peaklistId: Long, spectrumIdx: Int): Unit = {
 
     // Define some vars
     val precursorIntensity = if (!spectrum.precursorIntensity.isNaN) Some(spectrum.precursorIntensity) else Option.empty[Float]
@@ -103,6 +108,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
     //val compressedIntList = EasyLzma.compress( intList.getBytes )
 
     stmt.executeWith(
+      spectrumIdx,
       spectrum.title,
       spectrum.precursorMoz,
       precursorIntensity,

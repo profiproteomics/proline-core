@@ -136,14 +136,16 @@ class ResultSetsMergerTest extends Logging {
       val mergedRSId = tRSM.id
 
       localJPAExecutionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
+      val msiEM = localJPAExecutionContext.getMSIDbConnectionContext().getEntityManager()
+      val msiRS  = msiEM.find(classOf[fr.proline.core.orm.msi.ResultSet], mergedRSId)
+      
+      assertTrue("Reloaded Merged ORM ResultSet", msiRS != null)
 
-      val rsProvider = new ORMResultSetProvider(localJPAExecutionContext.getMSIDbConnectionContext, localJPAExecutionContext.getPSDbConnectionContext, localJPAExecutionContext.getPDIDbConnectionContext)
-
-      val optionalMergedRS = rsProvider.getResultSet(mergedRSId)
-      assertTrue("Reloaded Merged ResultSet", (optionalMergedRS != null) && optionalMergedRS.isDefined)
-
-      val optionalMergedDecoyRS = optionalMergedRS.get.decoyResultSet
-      assertTrue("Reloaded Merged DECOY ResultSet", (optionalMergedDecoyRS != null) && optionalMergedDecoyRS.isDefined)
+      val msiDecoyRS = msiRS.getDecoyResultSet()
+      assertTrue("Reloaded Merged DECOY ORM ResultSet", msiDecoyRS != null)
+      
+      assertTrue("Merged ResultSet linked to child", msiRS.getChildren() != null && !msiRS.getChildren().isEmpty())
+      
     } finally {
 
       if (localJPAExecutionContext != null) {

@@ -228,8 +228,8 @@ object MsiDbMsiSearchTable extends MsiDbMsiSearchTable {
 object MsiDbMsiSearchObjectTreeMapColumns extends ColumnEnumeration {
   val $tableName = MsiDbMsiSearchObjectTreeMapTable.name
   val MSI_SEARCH_ID = Column("msi_search_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class MsiDbMsiSearchObjectTreeMapTable extends TableDefinition[MsiDbMsiSearchObjectTreeMapColumns.type]
@@ -422,8 +422,8 @@ object MsiDbPeptideMatchTable extends MsiDbPeptideMatchTable {
 object MsiDbPeptideMatchObjectTreeMapColumns extends ColumnEnumeration {
   val $tableName = MsiDbPeptideMatchObjectTreeMapTable.name
   val PEPTIDE_MATCH_ID = Column("peptide_match_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class MsiDbPeptideMatchObjectTreeMapTable extends TableDefinition[MsiDbPeptideMatchObjectTreeMapColumns.type]
@@ -589,8 +589,8 @@ object MsiDbProteinSetTable extends MsiDbProteinSetTable {
 object MsiDbProteinSetObjectTreeMapColumns extends ColumnEnumeration {
   val $tableName = MsiDbProteinSetObjectTreeMapTable.name
   val PROTEIN_SET_ID = Column("protein_set_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class MsiDbProteinSetObjectTreeMapTable extends TableDefinition[MsiDbProteinSetObjectTreeMapColumns.type]
@@ -641,6 +641,7 @@ object MsiDbResultSetColumns extends ColumnEnumeration {
   val MODIFICATION_TIMESTAMP = Column("modification_timestamp")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val DECOY_RESULT_SET_ID = Column("decoy_result_set_id")
+  val MERGED_RSM_ID = Column("merged_rsm_id")
   val MSI_SEARCH_ID = Column("msi_search_id")
 }
 
@@ -654,8 +655,8 @@ object MsiDbResultSetTable extends MsiDbResultSetTable {
 object MsiDbResultSetObjectTreeMapColumns extends ColumnEnumeration {
   val $tableName = MsiDbResultSetObjectTreeMapTable.name
   val RESULT_SET_ID = Column("result_set_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class MsiDbResultSetObjectTreeMapTable extends TableDefinition[MsiDbResultSetObjectTreeMapColumns.type]
@@ -700,8 +701,8 @@ object MsiDbResultSummaryTable extends MsiDbResultSummaryTable {
 object MsiDbResultSummaryObjectTreeMapColumns extends ColumnEnumeration {
   val $tableName = MsiDbResultSummaryObjectTreeMapTable.name
   val RESULT_SUMMARY_ID = Column("result_summary_id")
-  val OBJECT_TREE_ID = Column("object_tree_id")
   val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
 }
 
 abstract class MsiDbResultSummaryObjectTreeMapTable extends TableDefinition[MsiDbResultSummaryObjectTreeMapColumns.type]
@@ -820,6 +821,7 @@ object MsiDbSequenceMatchTable extends MsiDbSequenceMatchTable {
 object MsiDbSpectrumColumns extends ColumnEnumeration {
   val $tableName = MsiDbSpectrumTable.name
   val ID = Column("id")
+  val INITIAL_ID = Column("initial_id")
   val TITLE = Column("title")
   val PRECURSOR_MOZ = Column("precursor_moz")
   val PRECURSOR_INTENSITY = Column("precursor_intensity")

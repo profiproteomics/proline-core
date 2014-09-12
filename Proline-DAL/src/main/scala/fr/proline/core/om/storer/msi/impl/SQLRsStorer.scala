@@ -84,6 +84,7 @@ class SQLRsStorer(
       //rsType = if (isDecoy) "DECOY_" + rsType else rsType
 
       val decoyRsId = if (resultSet.getDecoyResultSetId > 0) Some(resultSet.getDecoyResultSetId) else None
+      val mergedRSMId = if (resultSet.mergedResultSummaryId > 0L) Some(resultSet.mergedResultSummaryId) else None
       val msiSearchId = resultSet.msiSearch.map(_.id)
 
       // Store RDB result set  
@@ -98,6 +99,8 @@ class SQLRsStorer(
           new java.util.Date,
           resultSet.properties.map(ProfiJson.serialize(_)),
           decoyRsId,
+          // FIXME: retrieve this value from the resultSet object
+          mergedRSMId, // mergedRsmId
           msiSearchId
         )
 

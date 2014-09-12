@@ -188,6 +188,9 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         }
       }
 
+      /* Merged RSM Id*/
+      var mergedRSMId: Long = if(msiResultSet.getMergedRsmId() != null) { msiResultSet.getMergedRsmId()}  else { 0L} 
+      
       /* Decoy RS */
       var decoyRSId: Long = 0L
       var optionalDecoyRS: Option[ResultSet] = None
@@ -213,6 +216,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         proteinMatches,
         isDecoy,
         isNative,
+        mergedRSMId,
         msiResultSetId,
         msiResultSet.getName,
         msiResultSet.getDescription,

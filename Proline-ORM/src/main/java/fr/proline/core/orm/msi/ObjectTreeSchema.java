@@ -18,7 +18,8 @@ public class ObjectTreeSchema implements Serializable {
   
 	private static final long serialVersionUID = 1L;
 	
-    public enum SchemaName {
+    public enum SchemaName {    	
+    	SPECTRUM_MATCH("peptide_match.spectrum_match"),
     	LABEL_FREE_QUANT_PEPTIDES("object_tree.label_free_quant_peptides"),
     	LABEL_FREE_QUANT_PEPTIDE_IONS("object_tree.label_free_quant_peptide_ions"),
     	QUANT_PROTEIN_SETS("object_tree.quant_protein_sets"),
@@ -62,14 +63,6 @@ public class ObjectTreeSchema implements Serializable {
 	public ObjectTreeSchema() {
     }
 	
-	public boolean getIsBinaryMode() {
-		return this.isBinaryMode;
-	}
-
-	public void setIsBinaryMode(boolean isBinaryMode) {
-		this.isBinaryMode = isBinaryMode;
-	}
-
 	public String getName() {
 		return name;
 	}
@@ -92,6 +85,14 @@ public class ObjectTreeSchema implements Serializable {
 
 	public void setVersion(String version) {
 		this.version = version;
+	}
+	
+	public boolean getIsBinaryMode() {
+		return this.isBinaryMode;
+	}
+
+	public void setIsBinaryMode(boolean isBinaryMode) {
+		this.isBinaryMode = isBinaryMode;
 	}
 
 	public String getSchema() {

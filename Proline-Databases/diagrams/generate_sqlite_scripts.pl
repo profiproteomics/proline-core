@@ -85,7 +85,9 @@ no warnings;
 
 my @arch_files = File::Find::Rule->file()
                               ->name( '*.architect' )
+                              ->maxdepth( 1 )
                               ->in( './' );
+
 architect2sqlite($_) for @arch_files;
 
 sub architect2sqlite {

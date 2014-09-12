@@ -10,8 +10,6 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import fr.profi.util.StringUtils;
-
 /**
  * The persistent class for the ptm_specificity database table.
  * 

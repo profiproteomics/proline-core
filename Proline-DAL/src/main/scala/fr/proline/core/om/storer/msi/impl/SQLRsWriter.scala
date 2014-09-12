@@ -2,7 +2,10 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+
 import fr.profi.jdbc.easy._
+import fr.profi.util.StringUtils
+import fr.profi.util.primitives._
 import fr.profi.util.serialization._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal._
@@ -10,20 +13,10 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables._
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.msi.MsiDbBioSequenceTable
-import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideReadablePtmStringTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideTable
-import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
-import fr.proline.core.dal.tables.msi.MsiDbProteinMatchTable
-import fr.proline.core.dal.tables.msi.MsiDbSequenceMatchTable
+import fr.proline.core.dal.tables.msi._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.storer.msi._
-import fr.profi.util.StringUtils
-import fr.profi.util.primitives._
-import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchRelationTable
-import fr.proline.core.util.serialization.ProlineJson
+import fr.proline.core.orm.msi.ObjectTreeSchema
 
 
 private[proline] object SQLRsWriter extends AbstractSQLRsWriter
@@ -253,8 +246,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   def insertRsSpectrumMatches(rs: ResultSet, rf: IRsContainer, msiDbCtx: DatabaseConnectionContext): Int = {
     
-    // TODO: create a schema name enumeration
-    val schemaName = "peptide_match.spectrum_match"
+    val schemaName = ObjectTreeSchema.SchemaName.SPECTRUM_MATCH.toString()
     val pepMatchIdByKey = Map() ++ rs.peptideMatches.map( pm => Pair(pm.msQuery.initialId,pm.rank) -> pm.id )    
     var spectrumCount = 0
     

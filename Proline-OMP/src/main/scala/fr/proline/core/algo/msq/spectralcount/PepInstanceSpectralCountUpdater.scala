@@ -50,9 +50,8 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
 
     val jdbcWork = new JDBCWork() {
       override def execute(con: Connection) {
-
-        val getPMQuery = "SELECT type from result_set WHERE id = ?"
-        val pStmt = con.prepareStatement(getPMQuery)
+        
+        val pStmt = con.prepareStatement("SELECT type from result_set WHERE id = ?")
         pStmt.setLong(1, rsId)
         val sqlResultSet = pStmt.executeQuery()
         if (sqlResultSet.next)
@@ -75,8 +74,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
     val jdbcWork = new JDBCWork() {
 
       override def execute(con: Connection) {
-        val getRSIdQuery = "SELECT result_set_id from result_summary WHERE id = ?"
-        val pStmt = con.prepareStatement(getRSIdQuery)
+        val pStmt = con.prepareStatement("SELECT result_set_id from result_summary WHERE id = ?")
         pStmt.setLong(1, rsmID)
         val sqlResultSet = pStmt.executeQuery()
         if (sqlResultSet.next) {
@@ -117,8 +115,6 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
     val endTime = System.currentTimeMillis()
     logger.debug(" Needed Time to calculate SC for " +spectralCountByPepId.size+" =  " + (endTime - startTime) + " ms")
 
-//    val tmpPepInstByPepId = Map() ++ rsm.peptideInstances.map { pepInst => (pepInst.peptideId -> pepInst) }
-    
     val tmpPepInstByPepIdBuilder = Map.newBuilder[Long,PeptideInstance]
     rsm.peptideInstances.foreach(pepInst => { 
     	tmpPepInstByPepIdBuilder += pepInst.peptideId -> pepInst 
@@ -170,7 +166,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
       return scByPepID
 
     } else {
-      logger.debug(" RSM "+rsmID+" is NOT leave RSM ")
+      
       val childIDsOpt = getRSMChildsID(rsmID, execContext)
 
       // ***** RSM is result of a Merge of ResultSet : count Leave RS "valid" PSM 

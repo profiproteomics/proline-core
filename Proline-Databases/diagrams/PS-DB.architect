@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<architect-project version="1.0" appversion="1.0.6">
+<architect-project version="1.0" appversion="1.0.7">
  <project-name>PS-DB</project-name>
  <print-settings numCopies="1" zoom="1.0" pageNumbersPrinted="true" orientation="1" paperWidth="612.0" paperHeight="792.0" leftBorder="50.0" rightBorder="50.0" topBorder="50.0" bottomBorder="50.0" />
  <project-data-sources>
@@ -50,9 +50,7 @@ Allowed values:
      <remarks>The monoisotopic mass of the corresponding PTM.</remarks>
     </column>
     <column id="COL11" populated="true" UUID="55a10188-1f9b-4a49-99d9-e00e5a237f73" autoIncrement="false" autoIncrementSequenceName="peptide_ptm_average_mass_seq" defaultValue="" name="average_mass" nullable="0" physicalName="average_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
-     <remarks>The average mass of the corresponding PTM.
-
-TODO: convert to REAL (float) ?</remarks>
+     <remarks>The average mass of the corresponding PTM.</remarks>
     </column>
     <column id="COL12" populated="true" UUID="4ab2cd18-cd83-4221-bfa4-e8ea0fc8e59c" autoIncrement="false" autoIncrementSequenceName="peptide_ptm_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
@@ -219,9 +217,7 @@ For more information see mascot Neutral Loss definition and unimod.xsd</remarks>
      <remarks>The monoisotopic mass associated to the PTM evidence entity.</remarks>
     </column>
     <column id="COL61" populated="true" UUID="f127b3f8-65bd-43ea-8762-2168397e7195" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_average_mass_seq" defaultValue="" name="average_mass" nullable="0" physicalName="average_mass" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="8" userDefinedTypeUUID="4fc90970-b2e5-41dd-911c-cc605d87e7a8" >
-     <remarks>The average mass associated to the PTM evidence entity.
-
-TODO: convert to REAL (float) ?</remarks>
+     <remarks>The average mass associated to the PTM evidence entity.</remarks>
     </column>
     <column id="COL62" populated="true" UUID="f89d63c7-c825-4155-a2ba-8884c54def36" autoIncrement="false" autoIncrementSequenceName="ptm_evidence_serialized_properties_seq" defaultValue="" name="serialized_properties" nullable="1" physicalName="serialized_properties" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks>A JSON string which stores optional properties (see corresponding JSON schema for more details).</remarks>
@@ -371,7 +367,7 @@ AA substitution</remarks>
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.PostgresDDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
  <play-pen zoom="1.1892071150027224" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">

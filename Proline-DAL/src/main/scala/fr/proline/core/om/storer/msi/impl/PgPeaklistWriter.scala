@@ -42,8 +42,12 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
       val spectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.filter(_ != "id").mkString(",")
       val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpSpectrumTableName + " ( id, " + spectrumTableCols + " ) FROM STDIN")
       
+      var spectrumIdx = 0
+      
       // Iterate over spectra to store them
       peaklistContainer.eachSpectrum { spectrum =>
+        
+        spectrumIdx += 1
         
         // Define some vars
         val precursorIntensity = if (!spectrum.precursorIntensity.isNaN) Some(spectrum.precursorIntensity) else None
@@ -65,6 +69,7 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
         // Build a row containing spectrum values
         val spectrumValues = List(
           spectrum.id,
+          spectrumIdx,
           escapeStringForPgCopy(spectrum.title),
           spectrum.precursorMoz,
           precursorIntensity,

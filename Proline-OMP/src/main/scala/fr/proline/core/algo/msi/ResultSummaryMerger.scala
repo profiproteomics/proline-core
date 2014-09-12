@@ -220,6 +220,9 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
     val protInferenceAlgo = ProteinSetInferer( InferenceMethods.communist )
     val mergedRsm = protInferenceAlgo.computeResultSummary( mergedResultSet )
     
+    //Update mergedResultSet.mergedResultSummaryId 
+    mergedResultSet.mergedResultSummaryId = mergedRsm.id
+    
     //TODO FIXME VDS: Add algo to go through mergedRsm PeptideInstance and update their totalLeavesMatchCount 
     // totalLeavesMatchCount = Sum totalLeavesMatchCount of each child RSM
     
@@ -236,47 +239,6 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
     mergedRsm
   }
   
-
-  // TODO: create an enumeration of search engines
-  // TODO: use score updaters
-  /*def updateScoresOfProteinSets( rsm: ResultSummary, searchEngine: String) {
-    
-    val allPepMatchesByProtSetId = rsm.getAllPeptideMatchesByProteinSetId
-    val bestPepMatchesByProtSetId = rsm.getBestPepMatchesByProtSetId()
-    
-    if( searchEngine == "mascot" ) {
-      
-      // Require some needed features
-      import fr.proline.core.algo.msi.validation.MascotValidationHelper
-      
-      // Retrieve some vars
-      val proteinSets = rsm.proteinSets
-      val pepMatchMap = rsm.resultSet.get.peptideMatchById
-      
-      // Iterate over protein sets to compute their scores
-      for( proteinSet <- proteinSets ) {
-        
-        val protSetPeptideMatches = allPepMatchesByProtSetId(proteinSet.id)
-        val protSetBestPeptideMatches = bestPepMatchesByProtSetId(proteinSet.id)
-        
-        // Retrieve protein set properties
-        //val protSetProperties = proteinSet.properties.get
-        
-        // Compute standard score
-        //val protSetStandardScore = protSetBestPeptideMatches.foldLeft(0f)( (sum,prot) => sum + prot.score )        
-        //protSetProperties('mascot:standard score') = protSetStandardScore
-        
-        // Compute mudpit score
-        val protSetMudpitScore = MascotValidationHelper.calcMascotMudpitScore( protSetPeptideMatches )
-        //protSetProperties('mascot:mudpit score') = protSetMudpitScore
-        
-        proteinSet.score = protSetMudpitScore
-        proteinSet.scoreType = "mascot:mudpit score"
-        
-      }
-    } else { throw new Exception( "unknown search engine named: searchEngine" ) }
-    
-  }*/
 
 
 }

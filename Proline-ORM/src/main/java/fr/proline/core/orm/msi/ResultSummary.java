@@ -25,7 +25,6 @@ import fr.proline.core.orm.uds.Dataset;
 import fr.proline.core.orm.uds.dto.DDataset;
 import fr.proline.core.orm.util.JsonSerializer;
 import fr.profi.util.StringUtils;
-
 import fr.proline.core.orm.msi.dto.*;
 
 /**
@@ -203,6 +202,7 @@ public class ResultSummary implements Serializable {
 	return result;
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
 	if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
 	    serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(),

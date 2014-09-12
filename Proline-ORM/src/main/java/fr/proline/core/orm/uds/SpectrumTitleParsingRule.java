@@ -44,9 +44,6 @@ public class SpectrumTitleParsingRule implements Serializable {
     @Column(name = "raw_file_name")
     private String rawFileName;
 
-    @Column(name = "name")
-    private String name;
-
     public SpectrumTitleParsingRule() {
     }
 
@@ -112,14 +109,6 @@ public class SpectrumTitleParsingRule implements Serializable {
 
     public void setRawFileName(String rawFileName) {
 	this.rawFileName = rawFileName;
-    }
-
-    public String getName() {
-	return name;
-    }
-
-    public void setName(String name) {
-	this.name = name;
     }
 
 }

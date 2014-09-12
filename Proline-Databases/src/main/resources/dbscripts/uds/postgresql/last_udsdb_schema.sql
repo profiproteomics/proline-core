@@ -60,7 +60,6 @@ CREATE TABLE public.spec_title_parsing_rule (
                 last_scan VARCHAR(100),
                 first_time VARCHAR(100),
                 last_time VARCHAR(100),
-                name VARCHAR(100) NOT NULL,
                 CONSTRAINT spec_title_parsing_rule_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.spec_title_parsing_rule IS 'Describe rules used to parse the content of the MS2 spectrum title.';
@@ -71,8 +70,6 @@ COMMENT ON COLUMN public.spec_title_parsing_rule.first_scan IS 'A regular expres
 COMMENT ON COLUMN public.spec_title_parsing_rule.last_scan IS 'A regular expression matching the last scan.';
 COMMENT ON COLUMN public.spec_title_parsing_rule.first_time IS 'A regular expression matching the first time.';
 COMMENT ON COLUMN public.spec_title_parsing_rule.last_time IS 'A regular expression matching the last time.';
-COMMENT ON COLUMN public.spec_title_parsing_rule.name IS 'The name of the rule.
-TODO: remove this field ?';
 
 
 ALTER SEQUENCE public.spec_title_parsing_rule_id_seq OWNED BY public.spec_title_parsing_rule.id;
@@ -388,6 +385,10 @@ COMMENT ON COLUMN public.project.owner_id IS 'The owner of this project. The own
 
 ALTER SEQUENCE public.project_id_seq OWNED BY public.project.id;
 
+CREATE UNIQUE INDEX project_name_owner_idx
+ ON public.project
+ ( name, owner_id );
+
 CREATE TABLE public.raw_file_project_map (
                 raw_file_name VARCHAR(250) NOT NULL,
                 project_id BIGINT NOT NULL,
@@ -525,7 +526,8 @@ CREATE TABLE public.sample_analysis (
                 CONSTRAINT sample_analysis_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.sample_analysis IS 'Represents each analytical replicates of the associated biological sample. analytical replicates does not necessarily means MS run since labelled samples are analysed in MS in a unique run.';
-COMMENT ON COLUMN public.sample_analysis.number IS 'The sample analysis number which is unique for a given quantitation.';
+COMMENT ON COLUMN public.sample_analysis.number IS 'The sample analysis number which is unique for a given biological sample.
+TODO: move this column to the biological_sample_sample_analysis_map table and check the UNIQUE constraint there';
 COMMENT ON COLUMN public.sample_analysis.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.sample_analysis.quantitation_id IS 'The quantitation this sample analysis is related to.';
 
@@ -624,8 +626,7 @@ CREATE TABLE public.group_setup (
                 quantitation_id BIGINT NOT NULL,
                 CONSTRAINT group_setup_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.group_setup IS 'A group setup is a user defined entity allowing to define the way biological groups are compared.
-TODO: add number column';
+COMMENT ON TABLE public.group_setup IS 'A group setup is a user defined entity allowing to define the way biological groups are compared.';
 COMMENT ON COLUMN public.group_setup.number IS 'The group setup number which is unique for a given quantitation.';
 COMMENT ON COLUMN public.group_setup.name IS 'A name for this group setup as defined by the user.';
 COMMENT ON COLUMN public.group_setup.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
@@ -829,7 +830,7 @@ COMMENT ON TABLE public.quant_channel IS 'A quant channel represents all quantif
 COMMENT ON COLUMN public.quant_channel.number IS 'The quant channel number which is unique for a given master quant channel.';
 COMMENT ON COLUMN public.quant_channel.name IS 'A name for this quant channel as defined by the user.';
 COMMENT ON COLUMN public.quant_channel.context_key IS 'A string which serves as a unique key for the quant channel in the context of a given quantitation. It is obtained by the concatenation of
-biological_sample.number and sample_analysis.number (separated by a dot character).';
+biological_sample.number and sample_analysis.number (separated by a dot character). This field is UNIQUE for a given master_quant_channel and a given quant_label.';
 COMMENT ON COLUMN public.quant_channel.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.quant_channel.lcms_map_id IS 'The optional corresponding LC-MS map in the LCMSdb of the same project.';
 COMMENT ON COLUMN public.quant_channel.ident_result_summary_id IS 'The corresponding identification summary in the MSIdb of the same project.';
@@ -845,7 +846,7 @@ ALTER SEQUENCE public.quant_channel_id_seq OWNED BY public.quant_channel.id;
 
 CREATE UNIQUE INDEX quant_channel_context_idx
  ON public.quant_channel
- ( context_key, master_quant_channel_id, quant_label_id );
+ ( master_quant_channel_id, context_key, quant_label_id );
 
 CREATE UNIQUE INDEX quant_channel_number_idx
  ON public.quant_channel
@@ -869,21 +870,21 @@ COMMENT ON COLUMN public.admin_infos.configuration IS 'The configuration propert
 ALTER TABLE public.data_set ADD CONSTRAINT aggregation_dataset_fk
 FOREIGN KEY (aggregation_id)
 REFERENCES public.aggregation (id)
-ON DELETE NO ACTION
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.data_set ADD CONSTRAINT fractionation_dataset_fk
 FOREIGN KEY (fractionation_id)
 REFERENCES public.fractionation (id)
-ON DELETE NO ACTION
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.peaklist_software ADD CONSTRAINT spec_title_parsing_rule_peaklist_software_fk
 FOREIGN KEY (spec_title_parsing_rule_id)
 REFERENCES public.spec_title_parsing_rule (id)
-ON DELETE NO ACTION
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -974,28 +975,28 @@ NOT DEFERRABLE;
 ALTER TABLE public.run_identification ADD CONSTRAINT raw_file_run_identification_fk
 FOREIGN KEY (raw_file_name)
 REFERENCES public.raw_file (name)
-ON DELETE NO ACTION
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.raw_file_project_map ADD CONSTRAINT raw_file_raw_file_project_map_fk
 FOREIGN KEY (raw_file_name)
 REFERENCES public.raw_file (name)
-ON DELETE NO ACTION
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.run_identification ADD CONSTRAINT run_run_identification_fk
 FOREIGN KEY (run_id)
 REFERENCES public.run (id)
-ON DELETE SET NULL
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.quant_channel ADD CONSTRAINT run_quant_channel_fk
 FOREIGN KEY (run_id)
 REFERENCES public.run (id)
-ON DELETE NO ACTION
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -1009,7 +1010,7 @@ NOT DEFERRABLE;
 ALTER TABLE public.project_user_account_map ADD CONSTRAINT project_project_user_map_fk
 FOREIGN KEY (project_id)
 REFERENCES public.project (id)
-ON DELETE RESTRICT
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -1030,14 +1031,14 @@ NOT DEFERRABLE;
 ALTER TABLE public.data_set ADD CONSTRAINT project_dataset_fk
 FOREIGN KEY (project_id)
 REFERENCES public.project (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.raw_file_project_map ADD CONSTRAINT project_raw_file_project_map_fk
 FOREIGN KEY (project_id)
 REFERENCES public.project (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -1065,63 +1066,63 @@ NOT DEFERRABLE;
 ALTER TABLE public.data_set ADD CONSTRAINT quant_method_dataset_fk
 FOREIGN KEY (quant_method_id)
 REFERENCES public.quant_method (id)
-ON DELETE NO ACTION
+ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.master_quant_channel ADD CONSTRAINT dataset_master_quant_channel_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.group_setup ADD CONSTRAINT dataset_group_setup_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.quant_channel ADD CONSTRAINT dataset_quant_channel_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.biological_sample ADD CONSTRAINT dataset_biological_sample_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.sample_analysis ADD CONSTRAINT dataset_sample_analysis_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.run_identification ADD CONSTRAINT dataset_run_identification_fk
 FOREIGN KEY (id)
 REFERENCES public.data_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.data_set ADD CONSTRAINT dataset_dataset_fk
 FOREIGN KEY (parent_dataset_id)
 REFERENCES public.data_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.biological_group ADD CONSTRAINT data_set_biological_group_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -1135,14 +1136,14 @@ NOT DEFERRABLE;
 ALTER TABLE public.biological_sample_sample_analysis_map ADD CONSTRAINT sample_analysis_biological_sample_sample_analysis_map_fk
 FOREIGN KEY (sample_analysis_id)
 REFERENCES public.sample_analysis (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.quant_channel ADD CONSTRAINT master_quant_channel_quant_channel_fk
 FOREIGN KEY (master_quant_channel_id)
 REFERENCES public.master_quant_channel (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE CASCADE
 NOT DEFERRABLE;
 
@@ -1170,7 +1171,7 @@ NOT DEFERRABLE;
 ALTER TABLE public.biological_sample_sample_analysis_map ADD CONSTRAINT biological_sample_biological_sample_sample_analysis_map_fk
 FOREIGN KEY (biological_sample_id)
 REFERENCES public.biological_sample (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -1184,7 +1185,7 @@ NOT DEFERRABLE;
 ALTER TABLE public.group_setup_biological_group_map ADD CONSTRAINT group_setup_group_setup_biological_group_map_fk
 FOREIGN KEY (group_setup_id)
 REFERENCES public.group_setup (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
@@ -1198,21 +1199,21 @@ NOT DEFERRABLE;
 ALTER TABLE public.ratio_definition ADD CONSTRAINT biological_group_ratio_numerator_fk
 FOREIGN KEY (numerator_id)
 REFERENCES public.biological_group (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.ratio_definition ADD CONSTRAINT biological_group_ratio_denominator_fk
 FOREIGN KEY (denominator_id)
 REFERENCES public.biological_group (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.group_setup_biological_group_map ADD CONSTRAINT biological_group_group_setup_biological_group_map_fk
 FOREIGN KEY (biological_group_id)
 REFERENCES public.biological_group (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 

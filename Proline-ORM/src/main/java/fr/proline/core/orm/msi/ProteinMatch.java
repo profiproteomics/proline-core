@@ -1,7 +1,6 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Set;
 
 import javax.persistence.Column;

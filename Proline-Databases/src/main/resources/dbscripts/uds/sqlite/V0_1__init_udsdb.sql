@@ -367,8 +367,7 @@ CREATE TABLE spec_title_parsing_rule (
                 first_scan TEXT(100),
                 last_scan TEXT(100),
                 first_time TEXT(100),
-                last_time TEXT(100),
-                name TEXT(100) NOT NULL
+                last_time TEXT(100)
 );
 
 CREATE TABLE user_account (
@@ -405,6 +404,8 @@ CREATE UNIQUE INDEX quant_method_name_idx ON quant_method (name);
 CREATE UNIQUE INDEX ratio_definition_number_idx ON ratio_definition (group_setup_id,number);
 
 CREATE UNIQUE INDEX master_quant_channel_number_idx ON master_quant_channel (quantitation_id,number);
+
+CREATE UNIQUE INDEX project_name_owner_idx ON project (name,owner_id);
 
 CREATE UNIQUE INDEX user_account_login_idx ON user_account (login);
 

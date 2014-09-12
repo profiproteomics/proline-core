@@ -57,7 +57,9 @@ $XML::Simple::PREFERRED_PARSER = 'XML::Parser';
 
 my @arch_files = File::Find::Rule->file()
                               ->name( '*.architect' )
+                              ->maxdepth( 1 )
                               ->in( './' );
+
 architect2enums($_) for @arch_files;
 
 sub name2namespace {

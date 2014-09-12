@@ -11,22 +11,27 @@ CREATE TABLE public.admin_infos (
 
 CREATE TABLE public.object_tree_schema (
                 name VARCHAR(1000) NOT NULL,
-                type VARCHAR(10) NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                is_binary_mode VARCHAR NOT NULL,
                 version VARCHAR(100) NOT NULL,
                 schema LONGVARCHAR NOT NULL,
                 description VARCHAR(1000),
                 serialized_properties LONGVARCHAR,
                 CONSTRAINT object_tree_schema_pk PRIMARY KEY (name)
 );
+COMMENT ON COLUMN public.object_tree_schema.is_binary_mode IS 'Specifies if mode of the data encoding which could be binary based or string based (XML or JSON). If binary mode is used the data must be stored in the blob_data field, else in the clob_data field.';
 
 
 CREATE TABLE public.object_tree (
                 id IDENTITY NOT NULL,
-                serialized_data LONGVARCHAR NOT NULL,
+                blob_data LONGVARBINARY,
+                clob_data LONGVARCHAR,
                 serialized_properties LONGVARCHAR,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT object_tree_pk PRIMARY KEY (id)
 );
+COMMENT ON COLUMN public.object_tree.blob_data IS 'An object tree serialized as bytes using a given binary serialization framework.';
+COMMENT ON COLUMN public.object_tree.clob_data IS 'An object tree serialized in a string of a given format (XML or JSON).';
 
 
 CREATE TABLE public.seq_db_release (
@@ -316,9 +321,9 @@ CREATE INDEX public.fasta_file_entry_index_seq_db_instance_idx
 
 CREATE TABLE public.seq_db_entry_object_tree_map (
                 seq_db_entry_id BIGINT NOT NULL,
-                object_tree_id BIGINT NOT NULL,
                 schema_name VARCHAR(1000) NOT NULL,
-                CONSTRAINT seq_db_entry_object_tree_map_pk PRIMARY KEY (seq_db_entry_id, object_tree_id)
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT seq_db_entry_object_tree_map_pk PRIMARY KEY (seq_db_entry_id, schema_name)
 );
 
 

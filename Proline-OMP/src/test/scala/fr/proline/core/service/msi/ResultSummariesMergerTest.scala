@@ -2,9 +2,7 @@ package fr.proline.core.service.msi
 
 import org.junit.Assert._
 import org.junit.Test
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
@@ -17,6 +15,7 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.repository.DriverType
+ 
 
 object ResultSummariesMergerTest extends AbstractEmptyDatastoreTestCase with Logging {
 
@@ -83,34 +82,36 @@ class ResultSummariesMergerTest extends Logging {
 
       logger.debug("Merging two ResultSummaries by Ids...")
 
-      val rsmMergerId = new ResultSummaryMerger(sqlExecutionContext, Some(rsmIds), None)
+      val rsmMerger = new ResultSummaryMerger(sqlExecutionContext, Some(rsmIds), None)
 
-      val resultId = rsmMergerId.runService
-      assertTrue("ResultSummary merger resultId", resultId)
+      val mergerResult = rsmMerger.runService
+      assertTrue("ResultSummary merger result", mergerResult)
       logger.info("End Run ResultSummaryMerger Service, merge two different RSMs by Ids")
 
-      val tMergedRSMId = rsmMergerId.mergedResultSummary
-      assertNotNull("Merged TARGET ResultSummary Id", tMergedRSMId)
+      val tMergedRSM = rsmMerger.mergedResultSummary
+      assertNotNull("Merged TARGET ResultSummary Id", tMergedRSM.id)
 
-      val mergedDecoyRSMId = tMergedRSMId.getDecoyResultSummaryId
+      val mergedDecoyRSMId = tMergedRSM.getDecoyResultSummaryId
       assertTrue("Merged DECOY ResultSummary by Id is present", mergedDecoyRSMId > 0L)
 
       /* Try to reload merged TARGET ResultSet with JPA */
-      val mergedRSId = tMergedRSMId.getResultSetId
+      val mergedRSId = tMergedRSM.getResultSetId
 
       localJPAExecutionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
+      
+      val msiEM = localJPAExecutionContext.getMSIDbConnectionContext().getEntityManager()
+      val msiMergedRS  = msiEM.find(classOf[fr.proline.core.orm.msi.ResultSet], mergedRSId)
+      val msiMergedRSM = msiEM.find(classOf[fr.proline.core.orm.msi.ResultSummary], tMergedRSM.id)
+      
+      assertTrue("Reloaded Merged ResultSummary", msiMergedRSM != null)
+      assertTrue("Merged ResultSummary linked to child", msiMergedRSM.getChildren() != null && !msiMergedRSM.getChildren().isEmpty())
+      
+      assertTrue("Reloaded Merged ResultSet", msiMergedRS != null)
 
-      val rsProvider = new ORMResultSetProvider(
-        localJPAExecutionContext.getMSIDbConnectionContext,
-        localJPAExecutionContext.getPSDbConnectionContext,
-        localJPAExecutionContext.getPDIDbConnectionContext
-      )
-
-      val optionalMergedRS = rsProvider.getResultSet(mergedRSId)
-      assertTrue("Reloaded Merged ResultSet", (optionalMergedRS != null) && optionalMergedRS.isDefined)
-
-      val optionalMergedDecoyRS = optionalMergedRS.get.decoyResultSet
-      assertTrue("Reloaded Merged DECOY ResultSet", (optionalMergedDecoyRS != null) && optionalMergedDecoyRS.isDefined)
+      val msiMergedDecoyRS = msiMergedRS.getDecoyResultSet()
+      assertTrue("Reloaded Merged DECOY ResultSet", msiMergedDecoyRS != null)
+      
+      assertTrue("Merged ResultSet linked to child", msiMergedRS.getChildren() != null && !msiMergedRS.getChildren().isEmpty())
 
     } finally {
 

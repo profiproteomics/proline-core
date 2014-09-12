@@ -27,7 +27,6 @@ import javax.persistence.Transient;
 
 import fr.proline.core.orm.util.JsonSerializer;
 import fr.profi.util.StringUtils;
-
 import fr.proline.core.orm.msi.dto.*;
 
 /**
@@ -69,7 +68,10 @@ public class ResultSet implements Serializable {
     @ManyToOne
     @JoinColumn(name = "decoy_result_set_id")
     private ResultSet decoyResultSet;
-
+    
+    @Column(name = "merged_rsm_id")
+    private Long mergedRsmId;
+    
     @ManyToOne
     @JoinColumn(name = "msi_search_id")
     private MsiSearch msiSearch;
@@ -167,6 +169,14 @@ public class ResultSet implements Serializable {
     public void setDecoyResultSet(ResultSet decoyResultSet) {
 	this.decoyResultSet = decoyResultSet;
     }
+    
+    public Long getMergedRsmId() {
+	return mergedRsmId;
+    }
+
+    public void setMergedRsmId(final Long pMergedRsmId) {
+    mergedRsmId = pMergedRsmId;
+    }
 
     public MsiSearch getMsiSearch() {
 	return this.msiSearch;
@@ -229,6 +239,7 @@ public class ResultSet implements Serializable {
 	return transientData;
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getSerializedPropertiesAsMap() throws Exception {
 	if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
 	    serializedPropertiesMap = JsonSerializer.getMapper().readValue(getSerializedProperties(),
