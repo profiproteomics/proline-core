@@ -71,6 +71,14 @@ CREATE TABLE data_set (
                 FOREIGN KEY (project_id) REFERENCES project (id)
 );
 
+CREATE TABLE data_set_object_tree_map (
+                data_set_id INTEGER NOT NULL,
+                schema_name TEXT(1000) NOT NULL,
+                object_tree_id INTEGER NOT NULL,
+                PRIMARY KEY (data_set_id, schema_name),
+                FOREIGN KEY (object_tree_id) REFERENCES object_tree (id)
+);
+
 CREATE TABLE document (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT(250) NOT NULL,
@@ -203,7 +211,8 @@ CREATE TABLE master_quant_channel (
 
 CREATE TABLE object_tree (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                serialized_data TEXT NOT NULL,
+                blob_data BLOB,
+                clob_data TEXT,
                 serialized_properties TEXT,
                 schema_name TEXT(1000) NOT NULL,
                 FOREIGN KEY (schema_name) REFERENCES object_tree_schema (name)
@@ -211,7 +220,8 @@ CREATE TABLE object_tree (
 
 CREATE TABLE object_tree_schema (
                 name TEXT(1000) NOT NULL,
-                type TEXT(10) NOT NULL,
+                type TEXT(50) NOT NULL,
+                is_binary_mode TEXT NOT NULL,
                 version TEXT(100),
                 schema TEXT NOT NULL,
                 description TEXT(1000),

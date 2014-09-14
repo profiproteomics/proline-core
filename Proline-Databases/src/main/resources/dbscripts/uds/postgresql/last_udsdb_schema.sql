@@ -748,14 +748,16 @@ COMMENT ON TABLE public.project_db_map IS 'The mapping between project and exter
 
 CREATE TABLE public.object_tree_schema (
                 name VARCHAR(1000) NOT NULL,
-                type VARCHAR(10) NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                is_binary_mode BOOLEAN NOT NULL,
                 version VARCHAR(100),
                 schema TEXT NOT NULL,
                 description VARCHAR(1000),
                 serialized_properties TEXT,
                 CONSTRAINT object_tree_schema_pk PRIMARY KEY (name)
 );
-COMMENT ON COLUMN public.object_tree_schema.type IS 'XSD or JSON or TSV (tabulated separated values, in this case schema column contains column header)';
+COMMENT ON COLUMN public.object_tree_schema.type IS 'XSD or JSON or MessagePack TSV or (tabulated separated values, in this case schema column contains column header)';
+COMMENT ON COLUMN public.object_tree_schema.is_binary_mode IS 'Specifies if mode of the data encoding which could be binary based or string based (XML or JSON). If binary mode is used the data must be stored in the blob_data field, else in the clob_data field.';
 COMMENT ON COLUMN public.object_tree_schema.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).
 i.e. for document table a schema property may be the document file extension (.tsv, .protML, .pepML)';
 
@@ -764,14 +766,25 @@ CREATE SEQUENCE public.object_tree_id_seq;
 
 CREATE TABLE public.object_tree (
                 id BIGINT NOT NULL DEFAULT nextval('public.object_tree_id_seq'),
-                serialized_data TEXT NOT NULL,
+                blob_data BYTEA,
+                clob_data TEXT,
                 serialized_properties TEXT,
                 schema_name VARCHAR(1000) NOT NULL,
                 CONSTRAINT object_tree_pk PRIMARY KEY (id)
 );
+COMMENT ON COLUMN public.object_tree.blob_data IS 'An object tree serialized as bytes using a given binary serialization framework.';
+COMMENT ON COLUMN public.object_tree.clob_data IS 'An object tree serialized in a string of a given format (XML or JSON).';
 
 
 ALTER SEQUENCE public.object_tree_id_seq OWNED BY public.object_tree.id;
+
+CREATE TABLE public.data_set_object_tree_map (
+                data_set_id BIGINT NOT NULL,
+                schema_name VARCHAR(1000) NOT NULL,
+                object_tree_id BIGINT NOT NULL,
+                CONSTRAINT data_set_object_tree_map_pk PRIMARY KEY (data_set_id, schema_name)
+);
+
 
 CREATE SEQUENCE public.document_id_seq;
 
@@ -867,14 +880,14 @@ COMMENT ON COLUMN public.admin_infos.configuration IS 'The configuration propert
   * absolute root path for shared documents, organized by projects';
 
 
-ALTER TABLE public.data_set ADD CONSTRAINT aggregation_dataset_fk
+ALTER TABLE public.data_set ADD CONSTRAINT aggregation_data_set_fk
 FOREIGN KEY (aggregation_id)
 REFERENCES public.aggregation (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.data_set ADD CONSTRAINT fractionation_dataset_fk
+ALTER TABLE public.data_set ADD CONSTRAINT fractionation_data_set_fk
 FOREIGN KEY (fractionation_id)
 REFERENCES public.fractionation (id)
 ON DELETE RESTRICT
@@ -1028,7 +1041,7 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.data_set ADD CONSTRAINT project_dataset_fk
+ALTER TABLE public.data_set ADD CONSTRAINT project_data_set_fk
 FOREIGN KEY (project_id)
 REFERENCES public.project (id)
 ON DELETE CASCADE
@@ -1063,56 +1076,56 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.data_set ADD CONSTRAINT quant_method_dataset_fk
+ALTER TABLE public.data_set ADD CONSTRAINT quant_method_data_set_fk
 FOREIGN KEY (quant_method_id)
 REFERENCES public.quant_method (id)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.master_quant_channel ADD CONSTRAINT dataset_master_quant_channel_fk
+ALTER TABLE public.master_quant_channel ADD CONSTRAINT data_set_master_quant_channel_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.group_setup ADD CONSTRAINT dataset_group_setup_fk
+ALTER TABLE public.group_setup ADD CONSTRAINT data_set_group_setup_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.quant_channel ADD CONSTRAINT dataset_quant_channel_fk
+ALTER TABLE public.quant_channel ADD CONSTRAINT data_set_quant_channel_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.biological_sample ADD CONSTRAINT dataset_biological_sample_fk
+ALTER TABLE public.biological_sample ADD CONSTRAINT data_set_biological_sample_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.sample_analysis ADD CONSTRAINT dataset_sample_analysis_fk
+ALTER TABLE public.sample_analysis ADD CONSTRAINT data_set_sample_analysis_fk
 FOREIGN KEY (quantitation_id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.run_identification ADD CONSTRAINT dataset_run_identification_fk
+ALTER TABLE public.run_identification ADD CONSTRAINT data_set_run_identification_fk
 FOREIGN KEY (id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.data_set ADD CONSTRAINT dataset_dataset_fk
+ALTER TABLE public.data_set ADD CONSTRAINT data_set_data_set_fk
 FOREIGN KEY (parent_dataset_id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE
@@ -1121,6 +1134,13 @@ NOT DEFERRABLE;
 
 ALTER TABLE public.biological_group ADD CONSTRAINT data_set_biological_group_fk
 FOREIGN KEY (quantitation_id)
+REFERENCES public.data_set (id)
+ON DELETE CASCADE
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.data_set_object_tree_map ADD CONSTRAINT data_set_data_set_object_tree_map_fk
+FOREIGN KEY (data_set_id)
 REFERENCES public.data_set (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
@@ -1238,9 +1258,23 @@ ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
+ALTER TABLE public.data_set_object_tree_map ADD CONSTRAINT object_tree_schema_data_set_object_tree_map_fk
+FOREIGN KEY (schema_name)
+REFERENCES public.object_tree_schema (name)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
 ALTER TABLE public.document ADD CONSTRAINT object_tree_document_fk
 FOREIGN KEY (object_tree_id)
 REFERENCES public.object_tree (id)
 ON DELETE CASCADE
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE public.data_set_object_tree_map ADD CONSTRAINT object_tree_data_set_object_tree_map_fk
+FOREIGN KEY (object_tree_id)
+REFERENCES public.object_tree (id)
+ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
