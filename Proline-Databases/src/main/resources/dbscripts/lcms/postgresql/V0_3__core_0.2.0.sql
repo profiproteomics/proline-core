@@ -41,11 +41,11 @@ ALTER SEQUENCE public.peakel_id_seq OWNED BY public.peakel.id;
 
 ALTER TABLE public.map_object_tree_mapping DROP CONSTRAINT map_object_tree_mapping_pk;
 
-ALTER TABLE public.map_object_tree_mapping ADD PRIMARY KEY (map_id,schema_name);
+ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT map_object_tree_mapping_pk PRIMARY KEY (map_id,schema_name);
 
 ALTER TABLE public.map_set_object_tree_mapping DROP CONSTRAINT map_set_object_tree_mapping_pk;
 
-ALTER TABLE public.map_set_object_tree_mapping ADD PRIMARY KEY (map_set_id,schema_name);
+ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT map_set_object_tree_mapping_pk PRIMARY KEY (map_set_id,schema_name);
 
 ALTER TABLE public.object_tree RENAME COLUMN serialized_data TO clob_data;
 
@@ -53,7 +53,7 @@ ALTER TABLE public.object_tree ADD COLUMN blob_data BYTEA;
 
 ALTER TABLE public.feature_object_tree_mapping DROP CONSTRAINT feature_object_tree_mapping_pk;
 
-ALTER TABLE public.feature_object_tree_mapping ADD PRIMARY KEY (feature_id,schema_name);
+ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT feature_object_tree_mapping_pk PRIMARY KEY (feature_id,schema_name);
 
 ALTER TABLE ONLY public.map_layer ALTER COLUMN name TYPE VARCHAR(250), ALTER COLUMN name SET NOT NULL;
 
@@ -131,10 +131,10 @@ NOT DEFERRABLE;
 /* ADDITIONAL SQL QUERIES FIXING THE NAME OF FOREIGN KEYS NOT CORRECTLY RENAMED IN PREVIOUS MIGRATIONS */
 
 ALTER TABLE public.cache DROP CONSTRAINT new_table_pk;
-ALTER TABLE public.cache ADD PRIMARY KEY (scope, id, format, byte_order);
+ALTER TABLE public.cache ADD CONSTRAINT cache_pk PRIMARY KEY (scope, id, format, byte_order);
 
 ALTER TABLE public.processed_map_raw_map_mapping DROP CONSTRAINT processed_map_run_map_mapping_pk;
-ALTER TABLE public.processed_map_raw_map_mapping ADD PRIMARY KEY (processed_map_id, raw_map_id);
+ALTER TABLE public.processed_map_raw_map_mapping ADD CONSTRAINT processed_map_run_map_mapping_pk PRIMARY KEY (processed_map_id, raw_map_id);
 
 ALTER INDEX run_map_pk RENAME TO raw_map_pk;
 
