@@ -1,14 +1,4 @@
 
-/* REMOVE DUPLICATED ENTRIES IN object_tree */
-
-DELETE FROM object_tree WHERE id NOT IN (
-  SELECT max(object_tree_id) as distinct_object_tree_id
-  FROM peptide_match_object_tree_map GROUP BY peptide_match_id, schema_name
-);
-
-/* END OF REMOVE DUPLICATED ENTRIES IN object_tree */
-
-
 /* REMOVE DUPLICATED ENTRIES IN peptide_match_object_tree_map */
 
 DELETE FROM peptide_match_object_tree_map WHERE object_tree_id NOT IN (
@@ -17,6 +7,14 @@ DELETE FROM peptide_match_object_tree_map WHERE object_tree_id NOT IN (
 );
 
 /* END OF REMOVE DUPLICATED ENTRIES IN peptide_match_object_tree_map */
+
+/* REMOVE ORPHAN ENTRIES IN object_tree */
+
+DELETE FROM object_tree WHERE schema_name = 'peptide_match.spectrum_match' AND id NOT IN (
+  SELECT object_tree_id FROM peptide_match_object_tree_map
+);
+
+/* END OF REMOVE ORPHAN ENTRIES IN object_tree */
 
 
 /* UPDATE SPECTRUM.IS_SUMMED FIELD */
@@ -27,25 +25,25 @@ UPDATE public.spectrum SET is_summed = false;
 
 ALTER TABLE public.result_summary_object_tree_map DROP CONSTRAINT result_summary_object_tree_map_pk;
 
-ALTER TABLE public.result_summary_object_tree_map ADD PRIMARY KEY (result_summary_id,schema_name);
+ALTER TABLE public.result_summary_object_tree_map ADD CONSTRAINT result_summary_object_tree_map_pk PRIMARY KEY (result_summary_id,schema_name);
 
 ALTER TABLE public.protein_set_object_tree_map DROP CONSTRAINT protein_set_object_tree_map_pk;
 
-ALTER TABLE public.protein_set_object_tree_map ADD PRIMARY KEY (protein_set_id,schema_name);
+ALTER TABLE public.protein_set_object_tree_map ADD CONSTRAINT protein_set_object_tree_map_pk PRIMARY KEY (protein_set_id,schema_name);
 
 ALTER TABLE public.msi_search_object_tree_map DROP CONSTRAINT msi_search_object_tree_map_pk;
 
-ALTER TABLE public.msi_search_object_tree_map ADD PRIMARY KEY (msi_search_id,schema_name);
+ALTER TABLE public.msi_search_object_tree_map ADD CONSTRAINT msi_search_object_tree_map_pk PRIMARY KEY (msi_search_id,schema_name);
 
 ALTER TABLE public.peptide_match_object_tree_map DROP CONSTRAINT peptide_match_object_tree_map_pk;
 
-ALTER TABLE public.peptide_match_object_tree_map ADD PRIMARY KEY (peptide_match_id,schema_name);
+ALTER TABLE public.peptide_match_object_tree_map ADD CONSTRAINT peptide_match_object_tree_map_pk PRIMARY KEY (peptide_match_id,schema_name);
 
 ALTER TABLE public.result_set ADD COLUMN merged_rsm_id BIGINT;
 
 ALTER TABLE public.result_set_object_tree_map DROP CONSTRAINT result_set_object_tree_map_pk;
 
-ALTER TABLE public.result_set_object_tree_map ADD PRIMARY KEY (result_set_id,schema_name);
+ALTER TABLE public.result_set_object_tree_map ADD CONSTRAINT result_set_object_tree_map_pk PRIMARY KEY (result_set_id,schema_name);
 
 ALTER TABLE public.spectrum ADD COLUMN initial_id INTEGER DEFAULT 0 NOT NULL;
 
