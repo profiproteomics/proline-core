@@ -49,7 +49,7 @@ ALTER TABLE public.result_set_object_tree_map ADD PRIMARY KEY (result_set_id,sch
 
 ALTER TABLE public.spectrum ADD COLUMN initial_id INTEGER DEFAULT 0 NOT NULL;
 
-ALTER TABLE ONLY public.spectrum ALTER COLUMN is_summed TYPE BOOLEAN, ALTER COLUMN is_summed SET DEFAULT false, ALTER COLUMN is_summed NOT NULL;
+ALTER TABLE ONLY public.spectrum ALTER COLUMN is_summed TYPE BOOLEAN, ALTER COLUMN is_summed SET DEFAULT false, ALTER COLUMN is_summed SET NOT NULL;
 
 ALTER TABLE ONLY public.peptide_set ALTER COLUMN peptide_match_count TYPE INTEGER, ALTER COLUMN peptide_match_count SET NOT NULL;
 
