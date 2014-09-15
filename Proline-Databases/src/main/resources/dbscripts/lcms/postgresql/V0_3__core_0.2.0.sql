@@ -59,7 +59,7 @@ ALTER TABLE ONLY public.map_layer ALTER COLUMN name TYPE VARCHAR(250), ALTER COL
 
 ALTER TABLE ONLY public.processed_map ALTER COLUMN is_locked TYPE BOOLEAN, ALTER COLUMN is_locked SET DEFAULT false, ALTER COLUMN is_locked SET NOT NULL;
 
-ALTER TABLE ONLY public.processed_map ALTER COLUMN normalization_factor TYPE REAL, ALTER COLUMN is_locked SET DEFAULT 1, ALTER COLUMN normalization_factor SET NOT NULL;
+ALTER TABLE ONLY public.processed_map ALTER COLUMN normalization_factor TYPE REAL, ALTER COLUMN normalization_factor SET DEFAULT 1, ALTER COLUMN normalization_factor SET NOT NULL;
 
 ALTER TABLE public.feature RENAME COLUMN intensity TO apex_intensity;
 
