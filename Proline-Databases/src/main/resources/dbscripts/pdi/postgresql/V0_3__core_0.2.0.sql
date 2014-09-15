@@ -1,7 +1,7 @@
 
 ALTER TABLE public.seq_db_entry_object_tree_map DROP CONSTRAINT seq_db_entry_object_tree_map_pk;
 
-ALTER TABLE public.seq_db_entry_object_tree_map ADD PRIMARY KEY (seq_db_entry_id,schema_name);
+ALTER TABLE public.seq_db_entry_object_tree_map ADD CONSTRAINT seq_db_entry_object_tree_map_pk PRIMARY KEY (seq_db_entry_id,schema_name);
 
 ALTER TABLE public.object_tree_schema ADD COLUMN is_binary_mode VARCHAR NOT NULL;
 
