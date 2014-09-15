@@ -167,9 +167,12 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
     
     stmt.executeWith(
       ft.moz,
-      ft.intensity,
       ft.charge,
       ft.elutionTime,
+      // FIXME: store the area and the apex_intensity separately
+      ft.intensity,
+      ft.intensity,
+      ft.duration,
       qualityScore,
       ft.ms1Count,
       ft.ms2Count,
