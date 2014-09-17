@@ -48,7 +48,7 @@ object LcmsDbFeatureColumns extends ColumnEnumeration {
   val CHARGE = Column("charge")
   val ELUTION_TIME = Column("elution_time")
   val APEX_INTENSITY = Column("apex_intensity")
-  val AREA = Column("area")
+  val INTENSITY = Column("intensity")
   val DURATION = Column("duration")
   val QUALITY_SCORE = Column("quality_score")
   val MS1_COUNT = Column("ms1_count")
@@ -126,6 +126,22 @@ abstract class LcmsDbFeatureOverlapMappingTable extends TableDefinition[LcmsDbFe
 object LcmsDbFeatureOverlapMappingTable extends LcmsDbFeatureOverlapMappingTable {
   val name = "feature_overlap_mapping"
   val columns = LcmsDbFeatureOverlapMappingColumns
+}
+
+object LcmsDbFeaturePeakelItemColumns extends ColumnEnumeration {
+  val $tableName = LcmsDbFeaturePeakelItemTable.name
+  val FEATURE_ID = Column("feature_id")
+  val PEAKEL_ID = Column("peakel_id")
+  val ISOTOPE_INDEX = Column("isotope_index")
+  val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val MAP_ID = Column("map_id")
+}
+
+abstract class LcmsDbFeaturePeakelItemTable extends TableDefinition[LcmsDbFeaturePeakelItemColumns.type]
+
+object LcmsDbFeaturePeakelItemTable extends LcmsDbFeaturePeakelItemTable {
+  val name = "feature_peakel_item"
+  val columns = LcmsDbFeaturePeakelItemColumns
 }
 
 object LcmsDbFeatureScoringColumns extends ColumnEnumeration {
@@ -344,7 +360,6 @@ object LcmsDbPeakPickingSoftwareTable extends LcmsDbPeakPickingSoftwareTable {
 object LcmsDbPeakelColumns extends ColumnEnumeration {
   val $tableName = LcmsDbPeakelTable.name
   val ID = Column("id")
-  val INDEX = Column("index")
   val MOZ = Column("moz")
   val ELUTION_TIME = Column("elution_time")
   val APEX_INTENSITY = Column("apex_intensity")
@@ -352,13 +367,13 @@ object LcmsDbPeakelColumns extends ColumnEnumeration {
   val DURATION = Column("duration")
   val FWHM = Column("fwhm")
   val IS_OVERLAPPING = Column("is_overlapping")
-  val PEAKS_COUNT = Column("peaks_count")
+  val FEATURE_COUNT = Column("feature_count")
+  val PEAK_COUNT = Column("peak_count")
   val PEAKS = Column("peaks")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val FIRST_SCAN_ID = Column("first_scan_id")
   val LAST_SCAN_ID = Column("last_scan_id")
   val APEX_SCAN_ID = Column("apex_scan_id")
-  val FEATURE_ID = Column("feature_id")
   val MAP_ID = Column("map_id")
 }
 
@@ -557,6 +572,7 @@ object LcmsDb {
     LcmsDbFeatureMs2EventTable,
     LcmsDbFeatureObjectTreeMappingTable,
     LcmsDbFeatureOverlapMappingTable,
+    LcmsDbFeaturePeakelItemTable,
     LcmsDbFeatureScoringTable,
     LcmsDbInstrumentTable,
     LcmsDbMapTable,
