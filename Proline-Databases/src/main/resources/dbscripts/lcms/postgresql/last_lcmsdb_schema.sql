@@ -378,7 +378,8 @@ CREATE TABLE public.peakel (
                 duration REAL NOT NULL,
                 fwhm REAL,
                 is_overlapping BOOLEAN NOT NULL,
-                peaks_count INTEGER NOT NULL,
+                feature_count INTEGER NOT NULL,
+                peak_count INTEGER NOT NULL,
                 peaks BYTEA NOT NULL,
                 serialized_properties TEXT,
                 first_scan_id BIGINT NOT NULL,
@@ -416,7 +417,7 @@ CREATE TABLE public.feature (
                 charge INTEGER NOT NULL,
                 elution_time REAL NOT NULL,
                 apex_intensity REAL NOT NULL,
-                area REAL DEFAULT 0 NOT NULL,
+                intensity REAL NOT NULL,
                 duration REAL DEFAULT 0 NOT NULL,
                 quality_score REAL,
                 ms1_count INTEGER NOT NULL,
@@ -435,7 +436,7 @@ CREATE TABLE public.feature (
 );
 COMMENT ON COLUMN public.feature.moz IS 'A m/z value associated to the feature. May be determined as the median/mean of the isotopic pattern m/z. May also be the m/z of the apex.';
 COMMENT ON COLUMN public.feature.apex_intensity IS 'Maximum intensity of this feature. This intensity may also be a normalized value from a value stored in another map.';
-COMMENT ON COLUMN public.feature.area IS 'Integrated area for this feature. Computed using the isotopic pattern intensities. The function used to produce this value may take only some of the peaks in the isotopic pattern (describe this in the map properties). This area may also be a normalized value from a value stored in another map.';
+COMMENT ON COLUMN public.feature.intensity IS 'Integrated intensity for this feature. Computed using the peakels areas or max intensities. The function used to produce this value may take only a limited number of peakels. This intensity may also be a normalized value from a value stored in another map.';
 COMMENT ON COLUMN public.feature.duration IS 'The elution duration in seconds of this feature.';
 COMMENT ON COLUMN public.feature.quality_score IS 'A score reflecting the quality of the extracted signal for this feature.';
 COMMENT ON COLUMN public.feature.map_id IS 'May correspond to a native map or a processed map (i.e. feature clusters, master features).';
@@ -456,7 +457,7 @@ CREATE INDEX feature_moz_time_charge_idx
 CREATE TABLE public.feature_peakel_item (
                 feature_id BIGINT NOT NULL,
                 peakel_id BIGINT NOT NULL,
-                index INTEGER NOT NULL,
+                isotope_index INTEGER NOT NULL,
                 serialized_properties TEXT,
                 map_id BIGINT NOT NULL,
                 CONSTRAINT feature_peakel_item_pk PRIMARY KEY (feature_id, peakel_id)

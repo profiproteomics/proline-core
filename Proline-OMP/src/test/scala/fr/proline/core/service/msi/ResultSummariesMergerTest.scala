@@ -113,6 +113,7 @@ class ResultSummariesMergerTest extends Logging {
       
       assertTrue("Merged ResultSet linked to child", msiMergedRS.getChildren() != null && !msiMergedRS.getChildren().isEmpty())
 
+      assertEquals(msiMergedRS.getMergedRsmId(), msiMergedRSM.getId())
     } finally {
 
       if (localJPAExecutionContext != null) {

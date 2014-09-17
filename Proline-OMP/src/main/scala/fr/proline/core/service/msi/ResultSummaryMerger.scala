@@ -23,6 +23,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.algo.msi.ResultSummaryAdder
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
 import scala.collection.mutable.SetBuilder
+import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 
 object ResultSummaryMerger {
 
@@ -408,6 +409,12 @@ class ResultSummaryMerger(
 
       >>>
 
+      //Store link between RS & RSM ( mergedResultSet.mergedResultSummaryId ) 
+      mergedResultSet.mergedResultSummaryId = tmpMergedResultSummary.id
+
+      val rsUpdateQuery = "UPDATE "+MsiDbResultSetTable.name+" SET "+ MsiDbResultSetTable.columns.MERGED_RSM_ID +" = ? WHERE "+MsiDbResultSetTable.columns.ID +" = ? "
+      msiEzDBC.executePrepared(rsUpdateQuery){stmt => stmt.executeWith(tmpMergedResultSummary.id, mergedResultSet.id)}
+      
       if (!childrenRSMIds.isEmpty) {
         /* Do not link RS but RSM when merging ReultSummaries */
         val parentRSMId = tmpMergedResultSummary.id

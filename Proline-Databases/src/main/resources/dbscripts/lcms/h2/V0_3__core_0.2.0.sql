@@ -20,7 +20,8 @@ CREATE TABLE public.peakel (
                 duration REAL NOT NULL,
                 fwhm REAL,
                 is_overlapping BOOLEAN NOT NULL,
-                peaks_count INTEGER NOT NULL,
+                feature_count INTEGER NOT NULL,
+                peak_count INTEGER NOT NULL,
                 peaks LONGVARBINARY NOT NULL,
                 serialized_properties LONGVARCHAR,
                 first_scan_id BIGINT NOT NULL,
@@ -57,16 +58,14 @@ ALTER TABLE processed_map ALTER COLUMN is_locked BOOLEAN DEFAULT false NOT NULL;
 
 ALTER TABLE processed_map ALTER COLUMN normalization_factor REAL DEFAULT 1 NOT NULL;
 
-ALTER TABLE public.feature ALTER COLUMN intensity RENAME TO apex_intensity;
-
-ALTER TABLE public.feature ADD COLUMN area REAL DEFAULT 0 NOT NULL;
+ALTER TABLE public.feature ADD COLUMN apex_intensity REAL DEFAULT 0 NOT NULL;
 
 ALTER TABLE public.feature ADD COLUMN duration REAL DEFAULT 0 NOT NULL;
 
 CREATE TABLE public.feature_peakel_item (
                 feature_id BIGINT NOT NULL,
                 peakel_id BIGINT NOT NULL,
-                index INTEGER NOT NULL,
+                isotope_index INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
                 map_id BIGINT NOT NULL,
                 CONSTRAINT feature_peakel_item_pk PRIMARY KEY (feature_id, peakel_id)
