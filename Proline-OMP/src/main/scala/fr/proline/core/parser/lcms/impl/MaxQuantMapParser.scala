@@ -5,7 +5,7 @@ import java.util.Date
 import collection.mutable.ArrayBuffer
 
 import fr.proline.core.om.model.lcms._
-import fr.proline.core.parser.lcms.ExtraParameters
+import fr.proline.core.parser.lcms.ILcmsMapParserParameters
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
 
 object MaxQuantMapParser {
@@ -14,7 +14,7 @@ object MaxQuantMapParser {
 
 class MaxQuantMapParser extends ILcmsMapFileParser {
 
-  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ILcmsMapParserParameters): Option[RawMap] = {
 
     def toStandardName(s: String): String = {
       //to put in ILcmsMapFileParser maybe
@@ -53,17 +53,16 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
         val ips = ArrayBuffer[IsotopicPattern]()
         if (intensities.length == 0) {
           val ip = new IsotopicPattern(
-            moz = moz,
+            mz = moz,
             intensity = intensity,
             charge = charge,
-            scanInitialId = apexScan.initialId,
-            overlappingIPs = null
+            scanInitialId = apexScan.initialId
           )
           ips += ip
         } else {
           ips ++ intensities.map { i =>
             new IsotopicPattern(
-              moz = moz,
+              mz = moz,
               intensity = i,
               charge = charge,
               scanInitialId = apexScan.initialId
@@ -72,7 +71,8 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
 
         }
 
-        val feature = Feature(id = Feature.generateNewId(),
+        features += Feature(
+          id = Feature.generateNewId(),
           moz = moz,
           intensity = intensity,
           elutionTime = elutionTime,
@@ -83,14 +83,14 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
           ms2Count = ms2Count,
           isOverlapping = false,
           isotopicPatterns = Some(ips.toArray),
-          overlappingFeatures = null,
           relations = FeatureRelations(
             ms2EventIds = ms2EventIds,
             firstScanInitialId = firstScan.initialId,
             lastScanInitialId = lastScan.initialId,
-            apexScanInitialId = apexScan.initialId))
-        features += feature
-
+            apexScanInitialId = apexScan.initialId
+          )
+        )
+        
       }
 
     } //end function

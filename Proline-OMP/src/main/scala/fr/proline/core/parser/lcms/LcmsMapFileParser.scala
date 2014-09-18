@@ -1,18 +1,14 @@
 package fr.proline.core.parser.lcms
 
 import fr.proline.core.parser.lcms.impl._
-import fr.proline.core.om.model.lcms.RawMap
+import fr.proline.core.om.model.lcms._
 import scala.collection.mutable.ArrayBuffer
 
-trait ExtraParameters {}
-
+trait ILcmsMapParserParameters {}
 
 trait ILcmsMapFileParser {
-  
-  import fr.proline.core.om.model.lcms.LcMsScanSequence
-  
-  
-  def getRawMap( filePath: String, lcmsRun: LcMsScanSequence, extraParams: ExtraParameters ) : Option[RawMap]
+   
+  def getRawMap( filePath: String, lcmsRun: LcMsScanSequence, extraParams: ILcmsMapParserParameters ) : Option[RawMap]
   
   def getMs2Events(lcmsScanSeq: LcMsScanSequence, idx: Int) : Array[Long] = {
     /**
@@ -44,7 +40,7 @@ object LcmsMapFileParser {
     case "MaxQuant" => new MaxQuantMapParser()
     case "MFPaQ" => new MFPaQMapParser()
     case "MsInspect" => new MsInspectMapParser()
-    case "mzTSV" => new mzTSVParser()
+    //case "mzTSV" => new mzTSVParser()
     case "OpenMS" => new OpenMSMapParser()
     case "Progenesis" => new ProgenesisMapParser()
     case _ => throw new Exception("unsupported file format: "+ fileType )

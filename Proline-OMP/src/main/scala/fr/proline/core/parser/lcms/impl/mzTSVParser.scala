@@ -1,5 +1,6 @@
 package fr.proline.core.parser.lcms.impl
 
+/*
 import java.util.Date
 import fr.proline.core.om.model.lcms.RawMap
 
@@ -184,4 +185,4 @@ class mzTSVParser extends ILcmsMapFileParser {
     Some(rawMap)
   }
 
-}
+}*/

@@ -6,9 +6,9 @@ import scala.collection.mutable.ArrayBuffer
 
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.parser.lcms.ILcmsMapFileParser
-import fr.proline.core.parser.lcms.ExtraParameters
+import fr.proline.core.parser.lcms.ILcmsMapParserParameters
 
-case class MFPaQMapParams() extends ExtraParameters {
+case class MFPaQMapParams() extends ILcmsMapParserParameters {
   var mapNumber: Int = 1
 }
 
@@ -19,7 +19,7 @@ object MFPaQMapParser {
 
 class MFPaQMapParser extends ILcmsMapFileParser {
 
-  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ExtraParameters): Option[RawMap] = {
+  def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ILcmsMapParserParameters): Option[RawMap] = {
     val lines = io.Source.fromFile(filePath).getLines
     val columnNames = lines.next.stripLineEnd.split(MFPaQMapParser.sepChar).slice(1, MFPaQMapParser.nbColumns + 1)
 
@@ -47,7 +47,7 @@ class MFPaQMapParser extends ILcmsMapFileParser {
         val apexScan = lcmsScanSeq.getScanAtTime(apexRt, 1)
 
         val ip = new IsotopicPattern(
-          moz = moz,
+          mz = moz,
           intensity = intensity,
           charge = charge,
           scanInitialId = apexScan.initialId
@@ -55,7 +55,8 @@ class MFPaQMapParser extends ILcmsMapFileParser {
 
         val ms2EventIds = getMs2Events(lcmsScanSeq, apexScan.initialId)
 
-        val feature = Feature(id = Feature.generateNewId(),
+        features += Feature(
+          id = Feature.generateNewId(),
           moz = moz,
           intensity = intensity,
           elutionTime = apexRt,
@@ -65,35 +66,36 @@ class MFPaQMapParser extends ILcmsMapFileParser {
           ms1Count = lastScan.cycle - firstScan.cycle + 1,
           ms2Count = ms2EventIds.length,
           isOverlapping = false,
-          isotopicPatterns = Some(Array[IsotopicPattern](ip)),
-          overlappingFeatures = Array[Feature](),
+          isotopicPatterns = Some(Array(ip)),
           relations = FeatureRelations(
             ms2EventIds = ms2EventIds,
             firstScanInitialId = firstScan.initialId,
             lastScanInitialId = lastScan.initialId,
-            apexScanInitialId = apexScan.initialId))
-        features += feature
+            apexScanInitialId = apexScan.initialId
+          )
+        )
       }
       //nothing to do
 
     } //end while
 
-    val rawMap = new RawMap(
-      id = lcmsScanSeq.runId,
-      name = lcmsScanSeq.rawFileName,
-      isProcessed = false,
-      creationTimestamp = new Date(),
-      features = features toArray,
-      runId = lcmsScanSeq.runId,
-      peakPickingSoftware = new PeakPickingSoftware(
-        1,
-        "MFPaQ",
-        "4.5",
-        "unknown"
+    Some(
+      RawMap(
+        id = lcmsScanSeq.runId,
+        name = lcmsScanSeq.rawFileName,
+        isProcessed = false,
+        creationTimestamp = new Date(),
+        features = features toArray,
+        runId = lcmsScanSeq.runId,
+        peakPickingSoftware = new PeakPickingSoftware(
+          1,
+          "MFPaQ",
+          "4.5",
+          "unknown"
+        )
       )
     )
 
-    Some(rawMap)
   }
 
 }
