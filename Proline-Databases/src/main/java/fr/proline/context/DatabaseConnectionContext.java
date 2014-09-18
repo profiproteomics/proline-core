@@ -313,18 +313,17 @@ public class DatabaseConnectionContext implements Closeable {
 	    }
 
 	    if (LOG.isDebugEnabled()) {
-		LOG.debug("{} Rollback Transaction from DatabaseConnectionContext",
-			getProlineDatabaseTypeString());
+		LOG.debug("{} Rollback Transaction from DatabaseConnectionContext", getProlineDatabaseTypeString());
 	    }
 
-	    if (isJPA()) {
-		getEntityManager().getTransaction().rollback();
-	    } else {
-
-		if (getDriverType() == DriverType.SQLITE) {
+	    if (getDriverType() == DriverType.SQLITE) {
 		    // FIXME Rollback is not useful for SQLite and has locking issue
 		    // http://www.sqlite.org/lang_transaction.html
 		    LOG.warn("Rollbacking Transaction with SQLITE Database does NOTHING");
+	    } else {
+
+		if (isJPA()) {
+			getEntityManager().getTransaction().rollback();
 		} else {
 		    getConnection().rollback();
 		}
