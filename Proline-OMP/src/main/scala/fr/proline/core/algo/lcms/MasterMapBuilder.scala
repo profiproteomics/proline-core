@@ -123,7 +123,7 @@ class MasterMapBuilder(
       creationTimestamp = curTime,
       modificationTimestamp = curTime,
       mapSetId = mapSet.id,
-      rawMapIdentifiers = mapSet.getRawMapIds().map(Identifier(_))
+      rawMapReferences = mapSet.getRawMapIds().map(RawMapIdentifier(_))
     )
     
     masterMap
