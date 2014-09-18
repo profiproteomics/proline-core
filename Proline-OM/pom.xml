@@ -4,7 +4,7 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>Proline-OM</artifactId>
@@ -42,23 +42,43 @@
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
-    <!--<dependency>
-      <groupId>com.lambdaworks</groupId>
-      <artifactId>jacks_${scala.version}</artifactId>
-       Version inherited from ProFI-Pom
-    </dependency>-->
-
-    <!--<dependency>
+    <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack-scala_${scala.version}</artifactId>
-      Version inherited from ProFI-Pom
-    </dependency> -->
+      <version>0.6.11</version>
+    </dependency>
 
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
       <!-- Version inherited from parent POM -->
+    </dependency>
+    
+    <!-- mzdb-access (needed only for model classes) -->
+    <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>mzdb-access</artifactId>
+      <version>0.0.2-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <!-- mzdb-processing (needed only for model classes) -->
+    <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>mzdb-processing</artifactId>
+      <version>0.0.3-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Test -->

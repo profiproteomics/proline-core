@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Proline-Core</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -26,7 +26,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.2.0-SNAPSHOT</core.version>
+    <core.version>0.2.1-SNAPSHOT</core.version>
   </properties>
 
   <dependencyManagement>
