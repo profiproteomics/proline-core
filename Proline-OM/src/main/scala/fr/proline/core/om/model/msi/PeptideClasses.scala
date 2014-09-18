@@ -19,8 +19,13 @@ object Peptide extends InMemoryIdGen with Logging {
    *  The results contains a list of putative PTMs that may be present or not on the peptide sequence.
    *  To get a list of truly located PTMs one has to provide a list of position constraints.
    */
-  def getPutativeLocatedPtms ( sequence: String, ptmDefinition: PtmDefinition,
-                               positionConstraints: Option[Array[Boolean]] ): Unit = {
+  def getPutativeLocatedPtms (
+    sequence: String,
+    ptmDefinition: PtmDefinition,
+    positionConstraints: Option[Array[Boolean]]
+  ): Unit = {
+    require( sequence != null, "sequence is null")
+    require( ptmDefinition != null, "ptmDefinition is null")
          
     // Define some vars
     val residues = sequence.toCharArray() //sequence.split("") map { _.charAt(0) }
@@ -78,22 +83,29 @@ object Peptide extends InMemoryIdGen with Logging {
   }
   
   
-  private def buildLocatedPtm( ptmDefinition: PtmDefinition, seqPosition: Int, precursorDelta: PtmEvidence,
-                               isNTerm: Boolean = false, isCTerm: Boolean = false ): LocatedPtm = {
-    new LocatedPtm( definition = ptmDefinition,
-                    seqPosition = seqPosition,
-                    monoMass = precursorDelta.monoMass,
-                    averageMass = precursorDelta.averageMass,
-                    composition = precursorDelta.composition,
-                    isNTerm = isNTerm,
-                    isCTerm = isCTerm
-                  )
+  private def buildLocatedPtm(
+    ptmDefinition: PtmDefinition,
+    seqPosition: Int,
+    precursorDelta: PtmEvidence,
+    isNTerm: Boolean = false,
+    isCTerm: Boolean = false
+  ): LocatedPtm = {
+    new LocatedPtm(
+      definition = ptmDefinition,
+      seqPosition = seqPosition,
+      monoMass = precursorDelta.monoMass,
+      averageMass = precursorDelta.averageMass,
+      composition = precursorDelta.composition,
+      isNTerm = isNTerm,
+      isCTerm = isCTerm
+    )
   }
   
   /** Returns the given list of located PTMs as a string.
    *  Example of PTM string for peptide MENHIR with oxidation (M) and SILAC label (R): 1[O]7[C(-9) 13C(9)] 
    */
   def makePtmString( locatedPtms: List[LocatedPtm] ): String = {
+    require( locatedPtms != null, "locatedPtms is null" )
     
     // Return null if no located PTM
     if( locatedPtms.length == 0 ) {
@@ -239,6 +251,8 @@ object Peptide extends InMemoryIdGen with Logging {
   import org.biojava.bio.symbol._
   
   def calcMass( sequence: String, peptidePtms: Array[LocatedPtm] ): Double = {
+    require( sequence != null, "sequence is null" )
+    require( peptidePtms != null, "peptidePtms is null" )
     
     // Compute peptide sequence mass
     var mass = this.calcMass( sequence )
@@ -251,6 +265,8 @@ object Peptide extends InMemoryIdGen with Logging {
   }
   
   def calcMass( sequence: String ): Double = {
+    require( sequence != null, "sequence is null" )
+    
     var mass : Double = 0
     
     // FIXME: find another way to deal with ambiguous residues
@@ -278,7 +294,9 @@ object Peptide extends InMemoryIdGen with Logging {
 
 }
 
-case class Peptide ( // Required fields
+case class Peptide (
+    
+  // Required fields
   var id: Long,
   val sequence: String,
   val ptmString: String,
@@ -303,6 +321,7 @@ case class Peptide ( // Required fields
   }
   
   // Requirements
+  require( sequence != null, "sequence is null" )
   require( calculatedMass >= 0 )
   
   /** Returns a string representing the peptide PTMs */
@@ -346,55 +365,81 @@ case class PeptideProperties()
 
 object PeptideMatch extends InMemoryIdGen with Logging {
   
-  def countMissedCleavages(sequence: String, residueBefore: Option[Char], residueAfter: Option[Char], enzymes: Array[Enzyme]): Int = {
-    var missedCleavages: Int = 0
-    // only consider first enzyme
-    if(enzymes.size != 1) throw new IllegalArgumentException("Unexpected number of enzymes")
-    if(!enzymes.headOption.isDefined) throw new IllegalArgumentException("Enzyme is not defined")
+  def countMissedCleavages(
+    sequence: String,
+    residueBefore: Option[Char],
+    residueAfter: Option[Char],
+    enzymes: Array[Enzyme]
+  ): Int = {
+    
+    require( sequence != null, "sequence is null" )
+    
+    // Only consider first enzyme
+    require(enzymes.length == 1, "Unexpected number of enzymes")
+    
     val enzyme = enzymes.head
-    // two different ways to count missed cleavages
+    require(enzyme != null, "Enzyme is null")
+    
+    var missedCleavages: Int = 0
+    
+    // Two different ways to count missed cleavages
     if(enzyme.isIndependant == false) { // main case : search for missed cleavage corresponding to any cleavage site
       enzyme.enzymeCleavages.foreach(missedCleavages += countMissedCleavages(sequence, _))
     } else { // specific case : enzymes must be considered one by one
+      
       // determine the enzyme cleavage to consider
       val enzymeCleavages = getEnzymeCleavages(sequence, residueBefore, residueAfter, enzyme)
+      
       // enzymeCleavages should contain only one item, more than one means ambiguity. In any case return max number of missed cleavages
       var maxMissedCleavages = 0
       enzymeCleavages.foreach(ec => {
         val mc = countMissedCleavages(sequence, ec)
         if(mc > maxMissedCleavages) maxMissedCleavages = mc
       })
+      
       missedCleavages = maxMissedCleavages
     }
 //    if(missedCleavages > 0) logger.debug("Sequence "+residueBefore.getOrElse("^")+"."+sequence+"."+residueAfter.getOrElse("$")+" has "+missedCleavages+" miscleavages")
     missedCleavages
   }
-  
+
   private def countMissedCleavages(sequence: String, enzymeCleavage: EnzymeCleavage): Int = {
+    
     var missedCleavages = new ArrayBuffer[String]()
-    for(i <- 0 to sequence.length() - 1) {
-      if(enzymeCleavage.site == "C-term" && // if it cuts in cterm
-	      enzymeCleavage.residues.contains(sequence.charAt(i)) && // and current aa is a cleavage site
-	      i+1 < sequence.length() && // unless it is the last aa of the sequence
-	      !enzymeCleavage.restrictiveResidues.getOrElse("").contains(sequence.charAt(i+1)) // and unless it is followed by a restrictive residue
+    
+    for (i <- 0 to sequence.length() - 1) {
+      if (
+        enzymeCleavage.site == "C-term" && // if it cuts in cterm
+        enzymeCleavage.residues.contains(sequence.charAt(i)) && // and current aa is a cleavage site
+        i + 1 < sequence.length() && // unless it is the last aa of the sequence
+        !enzymeCleavage.restrictiveResidues.getOrElse("").contains(sequence.charAt(i + 1)) // and unless it is followed by a restrictive residue
       ) {
         // then it is a missed cleavage
-        missedCleavages += sequence.charAt(i) + "(" + (i+1) + ")"
-      } else if(enzymeCleavage.site == "N-term" && // if it cuts in nterm 
-          i != 0 && // and current aa is not the first aa of the sequence
-          enzymeCleavage.residues.contains(sequence.charAt(i)) && // and current aa is a cleavage site
-          !enzymeCleavage.restrictiveResidues.getOrElse("").contains(sequence.charAt(i+1)) // and unless it is followed by a restrictive residue
+        missedCleavages += sequence.charAt(i) + "(" + (i + 1) + ")"
+      } else if (
+        enzymeCleavage.site == "N-term" && // if it cuts in nterm 
+        i != 0 && // and current aa is not the first aa of the sequence
+        enzymeCleavage.residues.contains(sequence.charAt(i)) && // and current aa is a cleavage site
+        !enzymeCleavage.restrictiveResidues.getOrElse("").contains(sequence.charAt(i + 1)) // and unless it is followed by a restrictive residue
       ) {
         // then it is a missed cleavage
-        missedCleavages += sequence.charAt(i) + "(" + (i+1) + ")"
+        missedCleavages += sequence.charAt(i) + "(" + (i + 1) + ")"
       }
     }
-//    logger.debug("Miscleavages : "+missedCleavages.mkString(", "))
+    
+    //    logger.debug("Miscleavages : "+missedCleavages.mkString(", "))
     missedCleavages.size
   }
   
-  private def getEnzymeCleavages(sequence: String, residueBefore: Option[Char], residueAfter: Option[Char], enzyme: Enzyme): Array[EnzymeCleavage] = {
+  private def getEnzymeCleavages(
+    sequence: String,
+    residueBefore: Option[Char],
+    residueAfter: Option[Char],
+    enzyme: Enzyme
+  ): Array[EnzymeCleavage] = {
+    
     val enzymeCleavages = new HashMap[EnzymeCleavage, Int]
+    
     // for each enzyme cleavage, count the number of hints to determine the most probable enzyme cleavage
     enzyme.enzymeCleavages.foreach(ec => {
       var nbIndications = 0
@@ -407,14 +452,17 @@ object PeptideMatch extends InMemoryIdGen with Logging {
       }
       enzymeCleavages.put(ec, nbIndications)
     })
+    
     // return only the most probable enzyme cleavage (there may be more than one in case of ambiguity)
     val maxIndications = enzymeCleavages.maxBy(_._2)._2
+    
     enzymeCleavages.filter(_._2 == maxIndications).keys.toArray
   }
+  
 }
 
 case class PeptideMatch ( // Required fields
-  var id: Long, 
+  var id: Long,
   var rank: Int,
   val score: Float,
   val scoreType: String,
@@ -447,9 +495,10 @@ case class PeptideMatch ( // Required fields
 ) {
   
   // Requirements
-  require( rank > 0 )
-  //require( scoreType == "mascot" )
-  require( peptide != null )
+  require( rank > 0, "invalid rank value" )
+  // FIXME: scoreType should note be null !
+  //require( scoreType != null, "scoreType is null")
+  require( peptide != null, "peptide is null" )
   
   // Define lazy fields (mainly used for serialization purpose)
   @JsonProperty lazy val msQueryId = this.msQuery.id
@@ -494,7 +543,9 @@ case class PeptideMatchResultSummaryProperties (
  
 object PeptideInstance extends InMemoryIdGen
 
-case class PeptideInstance ( // Required fields
+case class PeptideInstance(
+  
+  // Required fields
   var id: Long,
   @transient val peptide: Peptide,
 
@@ -526,8 +577,8 @@ case class PeptideInstance ( // Required fields
   ) {
   
   // Requirements
-  require( peptide != null )
-  require( (peptideMatchIds != null || peptideMatches !=null) )
+  require( peptide != null, "peptide is null" )
+  require( (peptideMatchIds != null || peptideMatches !=null), "peptideMatchIds or peptideMatches is null")
   
   @JsonProperty lazy val peptideId = peptide.id
   @JsonProperty lazy val peptideMatchesCount = getPeptideMatchIds.length
@@ -562,7 +613,7 @@ case class PeptideSetItem (
   var selectionLevel: Int,
   @transient val peptideInstance: PeptideInstance,
   
-  // Immutable  fields
+  // Mutable  fields
   var peptideSetId: Long,
   
   // Mutable optional fields
@@ -573,8 +624,6 @@ case class PeptideSetItem (
 ) {
   
   @JsonProperty lazy val peptideInstanceId = peptideInstance.id
-  
-//  def getPeptideSetId : Long = { if(peptideSet != null && peptideSet.isDefined) peptideSet.get.id else peptideSetId }
   
 }
 
@@ -603,21 +652,18 @@ case class PeptideSet ( // Required fields
   var subsumableSubsetIds: Array[Long] = null,
   var subsumableSubsets: Option[Array[PeptideSet]] = null,
   
-  var properties: Option[PeptideSetProperties] = None
+  var properties: Option[PeptideSetProperties] = Some(new PeptideSetProperties())
   
 ) {
   
   // Requirements
-  require( items != null )
-  require( peptideMatchesCount >= items.length )
+  require( items != null, "items is null" )
+  require( peptideMatchesCount >= items.length, "invalid peptideMatchesCount" )
   
-  if (!properties.isDefined) {
-    val props = new PeptideSetProperties
-    properties = Some(props)
-  }
+  if( properties.isDefined == false ) properties = Some(new PeptideSetProperties())
  
   if (!properties.get.uniqueSequenceCount.isDefined) {
-	  properties.get.uniqueSequenceCount = Some(items.map(_.peptideInstance.peptide.sequence).toList.distinct.size)
+    properties.get.uniqueSequenceCount = Some(items.map(_.peptideInstance.peptide.sequence).distinct.length)
   }
   
   // Related objects ID getters
@@ -667,6 +713,6 @@ case class PeptideSet ( // Required fields
 }
 
 case class PeptideSetProperties(
-      @BeanProperty var uniqueSequenceCount: Option[Int] = None
+  @BeanProperty var uniqueSequenceCount: Option[Int] = None
 )
 
