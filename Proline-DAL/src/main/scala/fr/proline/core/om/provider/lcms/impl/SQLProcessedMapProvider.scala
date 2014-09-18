@@ -24,15 +24,21 @@ class SQLProcessedMapProvider(
   val ProcMapCols = LcmsDbProcessedMapTable.columns
   
   /** Returns a list of LC-MS maps corresponding to a given list of processed map ids */
-  def getLcMsMaps(mapIds: Seq[Long]): Seq[ILcMsMap] = this.getProcessedMaps(mapIds)
+  def getLcMsMaps(mapIds: Seq[Long], loadPeakels: Boolean): Seq[ILcMsMap] = this.getProcessedMaps(mapIds)
   
   /** Returns a list of features corresponding to a given list of processed map ids */
-  def getProcessedMaps( processedMapIds: Seq[Long] ): Array[ProcessedMap] = {
+  def getProcessedMaps( processedMapIds: Seq[Long], loadPeakels: Boolean = false ): Array[ProcessedMap] = {
     
+    // Retrieve raw map ids mapped by processes map id
     val rawMapIdsByProcessedMapId = getRawMapIdsByProcessedMapId( processedMapIds )
-    val features = this.getFeatures( processedMapIds )
-    // Group features by map id
-    val featuresByMapId = features.groupBy(_.relations.processedMapId)
+    val rawMapIds = processedMapIds.flatMap( rawMapIdsByProcessedMapId(_) ).distinct
+    
+    // Load features and group them by map id
+    val featuresByMapId = this.getFeatures(processedMapIds).groupBy(_.relations.processedMapId)
+    
+    // If requested load peakels and group them by map id
+    val peakelsByRawMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
+    else this.getPeakels(rawMapIds).groupBy(_.rawMapId)
     
     val processedMaps = new Array[ProcessedMap](processedMapIds.length)
     var lcmsMapIdx = 0
@@ -48,9 +54,11 @@ class SQLProcessedMapProvider(
       // Load processed map features
       ezDBC.selectAndProcess( procMapQuery ) { r =>
         
-        val processedMapId = toLong(r.getAny(LcMsMapCols.ID))
-        val mapFeatures = featuresByMapId( processedMapId )
-        val featureScoring = featureScoringById.get(toLong(r.getAny(LcMsMapCols.FEATURE_SCORING_ID)))
+        val processedMapId = r.getLong(LcMsMapCols.ID)
+        val featureScoring = featureScoringById.get(r.getLong(LcMsMapCols.FEATURE_SCORING_ID))
+        val rawMapIds = rawMapIdsByProcessedMapId(processedMapId)
+        val peakelsOpt = if( loadPeakels == false ) None
+        else Some( rawMapIds.flatMap( rawMapId => peakelsByRawMapId.getOrElse(rawMapId,Array()) ) )
         
         // Build the map
         processedMaps(lcmsMapIdx) = new ProcessedMap(
@@ -58,13 +66,14 @@ class SQLProcessedMapProvider(
           name = r.getString(LcMsMapCols.NAME),
           isProcessed = true,
           creationTimestamp = r.getTimestamp(LcMsMapCols.CREATION_TIMESTAMP),
-          features = features,
+          features = featuresByMapId( processedMapId ),
+          peakels = peakelsOpt,
           number = r.getInt(ProcMapCols.NUMBER),
           modificationTimestamp = r.getTimestamp(LcMsMapCols.MODIFICATION_TIMESTAMP),
           isMaster = r.getBoolean(ProcMapCols.IS_MASTER),
           isAlnReference = r.getBoolean(ProcMapCols.IS_ALN_REFERENCE),
-          mapSetId = toLong(r.getAny(ProcMapCols.MAP_SET_ID)),
-          rawMapIdentifiers = rawMapIdsByProcessedMapId(processedMapId).map(Identifier(_)),
+          mapSetId = r.getLong(ProcMapCols.MAP_SET_ID),
+          rawMapReferences = rawMapIdsByProcessedMapId(processedMapId).map(RawMapIdentifier(_)),
           description = r.getString(LcMsMapCols.DESCRIPTION),
           featureScoring = featureScoring,
           isLocked = r.getBooleanOrElse(ProcMapCols.IS_LOCKED,false),
@@ -146,16 +155,13 @@ class SQLProcessedMapProvider(
       // Retrieve mapping between features and MS2 scans
       val ms2EventIdsByFtId = lcmsDbHelper.getMs2EventIdsByFtId( rawMapIds )
       
-      // TODO: load isotopic patterns if needed
-      //val ipsByFtId = if( loadPeaks ) getIsotopicPatternsByFtId( mapIds ) else null
-      
       // Retrieve mapping between overlapping features
-      val olpFtIdsByFtId = getOverlappingFtIdsByFtId( rawMapIds )
+      val olpFtIdsByFtId = getOverlappingFtIdsByFtId( rawMapIds )      
+      val olpFeatureById = if (olpFtIdsByFtId.isEmpty) Map.empty[Long, Feature]
+      else getOverlappingFeatureById(rawMapIds, scanInitialIdById, ms2EventIdsByFtId)
       
-      var olpFeatureById: Map[Long,Feature] = null
-      if( olpFtIdsByFtId.size > 0 ) {
-        olpFeatureById = getOverlappingFeatureById( rawMapIds, scanInitialIdById, ms2EventIdsByFtId )
-      }
+      // Load peakel items
+      val peakelItemByFtId = this.getPeakelItemsByFeatureId(rawMapIds)
       
       // Retrieve mapping between cluster and sub-features
       val subFtIdsByClusterFtId = getSubFtIdsByClusterFtId( processedMapIds )
@@ -169,21 +175,20 @@ class SQLProcessedMapProvider(
         val ftId = toLong(processedFtRecord.getAny(FtCols.ID))
         
         // Try to retrieve overlapping features
-        var olpFeatures: Array[Feature] = null
-        if( olpFtIdsByFtId contains ftId ) {
-          olpFeatures = olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
-        }
+        val olpFeatures = if (olpFtIdsByFtId.contains(ftId) == false ) null
+        else olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
         
-        // TODO: load isotopic patterns if needed
-        // TODO: parse serialized properties
+        // Retrieve peakel items
+        val peakelItems = peakelItemByFtId(ftId).toArray
+        
         val feature = this.buildFeature(
           processedFtRecord,
           scanInitialIdById,
           ms2EventIdsByFtId,
-          null,
+          peakelItems,
           olpFeatures,
-          null,
-          null,
+          null, // subFeatures
+          null, // children
           processedFtRecord.getDoubleOption(ProcFtCols.CALIBRATED_MOZ),
           processedFtRecord.getDoubleOption(ProcFtCols.NORMALIZED_INTENSITY).map( _.toFloat ),
           processedFtRecord.getDoubleOption(ProcFtCols.CORRECTED_ELUTION_TIME).map( _.toFloat ),
@@ -191,8 +196,7 @@ class SQLProcessedMapProvider(
           processedFtRecord.getIntOrElse(ProcFtCols.SELECTION_LEVEL,2),
           toLong( processedFtRecord.getAny(ProcFtCols.PROCESSED_MAP_ID) )
         )
-                                                
-        //var subFeatures: Array[Feature] = null
+        
         if( feature.isClusterized ) { subFtById.put( ftId, feature ) }
         else { ftBuffer += feature }
         

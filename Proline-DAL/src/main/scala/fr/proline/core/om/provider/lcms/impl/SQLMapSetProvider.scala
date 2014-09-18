@@ -179,7 +179,7 @@ class SQLMapSetProvider(
     
     // Retrieve master map features
     val masterFeatures = masterMap.features
-    masterMap.rawMapIdentifiers = childMaps map { cm => Identifier(cm.getRawMapIds().apply(0)) }
+    masterMap.rawMapReferences = childMaps map { cm => RawMapIdentifier(cm.getRawMapIds().apply(0)) }
     
     // Check if master feature children are already loaded in memory 
     if( masterFeatures(0).children != null ) {

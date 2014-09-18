@@ -4,6 +4,6 @@ import fr.proline.core.om.model.lcms.RawMap
 
 trait IRawMapProvider extends ILcMsMapProvider {
   
-  def getRawMaps(rawMapIds: Seq[Long]): Array[RawMap]
+  def getRawMaps(rawMapIds: Seq[Long], loadPeakels: Boolean = false): Array[RawMap]
 
 }

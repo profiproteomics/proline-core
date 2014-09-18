@@ -8,17 +8,13 @@ import fr.profi.util.serialization.ProfiJson
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCWork
-import fr.proline.core.dal.tables.lcms.LcmsDbFeatureTable
-import fr.proline.core.dal.tables.lcms.LcmsDbFeatureMs2EventTable
-import fr.proline.core.dal.tables.lcms.LcmsDbFeatureOverlapMappingTable
-import fr.proline.core.dal.tables.lcms.LcmsDbMapTable
-import fr.proline.core.dal.tables.lcms.LcmsDbRawMapTable
+import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.storer.lcms.IRawMapStorer
 
 class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStorer {
 
-  def storeRawMap(rawMap: RawMap, storePeaks: Boolean = false): Unit = {
+  def storeRawMap(rawMap: RawMap, storePeakels: Boolean = false): Unit = {
 
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
 
@@ -28,7 +24,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
       // Update run map id
       rawMap.id = newRawMapId
 
-      // Store the related run map   
+      // Store the related run map
       val peakPickingSoftwareId = rawMap.peakPickingSoftware.id
       val peakelFittingModelId = rawMap.peakelFittingModel.map(_.id)
 
@@ -47,6 +43,8 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
 
         // Loop over features to import them        
         for (ft <- rawMap.features) {
+          
+          // Update feature raw map id
           ft.relations.rawMapId = newRawMapId
           
           val newFtId = this.insertFeatureUsingPreparedStatement(ft, featureInsertStmt)
@@ -90,39 +88,63 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
           }
         }
       }
+      
+      // Store peakels if requested
+      if( storePeakels ) {
+        
+        // Insert peakels
+        ezDBC.executePrepared(LcmsDbPeakelTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID)), true) { peakelInsertStmt =>
+          
+          for( peakels <- rawMap.peakels; peakel <- peakels ) {
+            
+            // Update peakel raw map id
+            peakel.rawMapId = newRawMapId
+            
+            val peaksAsBytes = org.msgpack.ScalaMessagePack.write(peakel.peaks)
+            
+            peakelInsertStmt.executeWith(
+              peakel.moz,
+              peakel.elutionTime,
+              peakel.apexIntensity,
+              peakel.area,
+              peakel.duration,
+              peakel.fwhm,
+              peakel.isOverlapping,
+              peakel.featuresCount,
+              peakel.peaks.length,
+              peaksAsBytes,
+              peakel.properties.map( ProfiJson.serialize(_) ),
+              peakel.firstScanId,
+              peakel.lastScanId,
+              peakel.apexScanId,
+              peakel.rawMapId
+            )
+            
+            // Update peakel id
+            peakel.id = peakelInsertStmt.generatedLong
+          }
+          
+        }
+        
+        // Link features to peakels
+        ezDBC.executePrepared(LcmsDbFeaturePeakelItemTable.mkInsertQuery) { statement =>
+          for (
+            ft <- flattenedFeatures;
+            peakelItem <- ft.relations.peakelItems
+          ) {
+            statement.executeWith(
+              ft.id,
+              peakelItem.peakelReference.id,
+              peakelItem.isotopeIndex,
+              peakelItem.properties.map(ProfiJson.serialize(_)),
+              newRawMapId
+            )
+          }
+        }
+        
+      }
 
     })
-
-    /*
-    ////// Import isotopic patterns
-    if( this.storePeaks && ft.hasIsotopicPatterns ) {
-      
-      val ipHashes
-      foreach val ip (@{ft.isotopicPatterns}) {
-        val ipHash = ref(ip) ne 'HASH' ? ip.attributesAsHashref : ip
-        push( ipHashes, ipHash )
-      }
-      
-      ////// Store properties in the MSI-DB
-      val rdbObjectTree = Pairs::Lcms::RDBO::ObjectTree.new(
-                              schema_name     = 'feature.isotopic_patterns',
-                              serialized_data = encode_json( ipHashes ),
-                             )
-      rdbObjectTree.save
-      
-      ////// Attach isotopic patterns to the feature
-      Pairs::Lcms::RDBO::FeatureObjectTreeMap.new(
-                          feature_id = rdbFtId,
-                          object_tree_id = rdbObjectTree.id,
-                          schema_name = 'feature.isotopic_patterns',
-                          db = lcmsRdb
-                        ).save
-                        
-      // TODO store a link using map_object_tree_mapping
-      
-    }
-    
-    */
 
     ()
 
@@ -169,8 +191,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
       ft.moz,
       ft.charge,
       ft.elutionTime,
-      // FIXME: store the area and the apex_intensity separately
-      ft.intensity,
+      ft.apexIntensity,
       ft.intensity,
       ft.duration,
       qualityScore,

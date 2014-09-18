@@ -112,14 +112,14 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
     })
   }
 
-  def getScanInitialIdById( runIds: Seq[Long] ): Map[Long,Int] = {
+  def getScanInitialIdById( scanSeqIds: Seq[Long] ): Map[Long,Int] = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Int]
       
       val idsQuery = new SelectQueryBuilder1( LcmsDbScanTable ).mkSelectQuery( (t,c) =>
-        List(t.ID, t.INITIAL_ID) -> "WHERE "~ t.SCAN_SEQUENCE_ID ~ "IN (" ~ runIds.mkString(",") ~ ")"
+        List(t.ID, t.INITIAL_ID) -> "WHERE "~ t.SCAN_SEQUENCE_ID ~ "IN (" ~ scanSeqIds.mkString(",") ~ ")"
       )
       
       ezDBC.selectAndProcess( idsQuery ) { r =>

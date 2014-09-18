@@ -1,23 +1,20 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import scala.collection.mutable.{ArrayBuffer,HashMap}
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.jdbc.easy.EasyDBC
+import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.util.sql.StringOrBoolAsBool._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.{SelectQueryBuilder1}
-import fr.proline.core.dal.tables.lcms.LcmsDbFeatureTable
-import fr.proline.core.dal.tables.lcms.LcmsDbFeatureOverlapMappingTable
-import fr.proline.core.dal.tables.lcms.LcmsDbMapTable
-import fr.proline.core.dal.helper.LcmsDbHelper
+import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.ILcMsMapProvider
-import fr.profi.util.sql.StringOrBoolAsBool.string2boolean
-import fr.profi.util.primitives._
 
 abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   
@@ -25,8 +22,10 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   protected val scanById = Map() ++ scans.map( s => s.id -> s )
   
   protected val lcmsDbCtx: DatabaseConnectionContext
-  protected val LcMsMapCols = LcmsDbMapTable.columns
-  protected val FtCols = LcmsDbFeatureTable.columns
+  protected val LcMsMapCols = LcmsDbMapColumns
+  protected val FtCols = LcmsDbFeatureColumns
+  protected val PeakelCols = LcmsDbPeakelColumns
+  protected val PeakelItemCols = LcmsDbFeaturePeakelItemColumns
   
   protected val lcmsDbHelper = new LcmsDbHelper(lcmsDbCtx)
   protected val featureScoringById = lcmsDbHelper.getFeatureScoringById()
@@ -54,9 +53,9 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
       for( (ftId,olpFtIds) <- olpFtIdsByFtId ) { 
         mapBuilder += ( ftId -> olpFtIds.toArray )
       }
-      mapBuilder.result()
       
-  })
+      mapBuilder.result()      
+    })
 
   }
   
@@ -91,7 +90,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     })
   }
   
-  def eachFeatureRecord(mapIds: Seq[Long], onEachFt: ResultSetRow => Unit): Unit = {
+  protected def eachFeatureRecord(mapIds: Seq[Long], onEachFt: ResultSetRow => Unit): Unit = {
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
@@ -112,12 +111,12 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   }
   
   /** Builds a feature object */
-  def buildFeature(
-    // Run map feature attributes
+  protected def buildFeature(
+    // Raw map feature attributes
     ftRecord: ResultSetRow,
     scanInitialIdById: Map[Long,Int],
     ms2EventIdsByFtId: Map[Long,Array[Long]],
-    isotopicPatterns: Option[Array[IsotopicPattern]] = None,
+    peakelItems: Array[FeaturePeakelItem] = null,
     overlappingFeatures: Array[Feature] = null,
     
     // Processed map feature attributes
@@ -151,7 +150,6 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
        ms1Count = ftRecord.getInt(FtCols.MS1_COUNT),
        ms2Count = ftRecord.getInt(FtCols.MS2_COUNT),
        isOverlapping = toBoolean(ftRecord.getAny(FtCols.IS_OVERLAPPING)),
-       isotopicPatterns = isotopicPatterns,
        overlappingFeatures = overlappingFeatures,
        children = children,
        subFeatures = subFeatures,
@@ -162,6 +160,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
        selectionLevel = selectionLevel,
        properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[FeatureProperties](_) ),
        relations = new FeatureRelations(
+         peakelItems = peakelItems,
          firstScanInitialId = scanInitialIdById(firstScanId),
          lastScanInitialId = scanInitialIdById(lastScanId),
          apexScanInitialId = scanInitialIdById(apexScanId),
@@ -179,5 +178,92 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     
   }
   
+  def getPeakels(rawMapIds: Seq[Long]): Array[Peakel] = {
+
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+      
+      val mapIdsStr = rawMapIds.mkString(",")
+      
+      // Check that provided map ids correspond to raw maps
+      val nbMaps = ezDBC.selectInt("SELECT count(id) FROM raw_map WHERE id IN (" + mapIdsStr + ")")
+      require(nbMaps == rawMapIds.length, "map ids must correspond to existing run maps")
+      
+      // Build peakels SQL query
+      val peakelQuery = new SelectQueryBuilder1(LcmsDbPeakelTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.MAP_ID ~" IN("~ rawMapIds.mkString(",") ~") "
+      )
+      
+      // Iterate over peakels
+      ezDBC.select( peakelQuery ) { r =>
+        
+        // TODO: use the buildPeakel method from PeakelProvider
+        
+        // Read and deserialize peaks
+        val peaksAsBytes = r.getBytes(PeakelCols.PEAKS)
+        val lcMsPeaks = org.msgpack.ScalaMessagePack.read[Array[LcMsPeak]](peaksAsBytes)
+        
+        // Read and deserialize properties
+        val propsAsJSON = r.getStringOption(PeakelCols.SERIALIZED_PROPERTIES)
+        val propsOpt = propsAsJSON.map( ProfiJson.deserialize[PeakelProperties](_) )
+        
+        Peakel(
+          id = r.getLong(PeakelCols.ID),
+          moz = r.getDouble(PeakelCols.MOZ),
+          elutionTime = toFloat(r.getAny(PeakelCols.ELUTION_TIME)),
+          apexIntensity = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)),
+          area = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)),
+          duration = toFloat(r.getAny(PeakelCols.DURATION)),
+          fwhm = r.getAnyOption(PeakelCols.FWHM).map(toFloat(_)),
+          isOverlapping = toBoolean(r.getAny(PeakelCols.IS_OVERLAPPING)),
+          featuresCount = r.getInt(PeakelCols.FEATURE_COUNT),
+          peaks = lcMsPeaks,
+          firstScanId = r.getLong(PeakelCols.FIRST_SCAN_ID),
+          lastScanId = r.getLong(PeakelCols.LAST_SCAN_ID),
+          apexScanId = r.getLong(PeakelCols.APEX_SCAN_ID),
+          rawMapId = r.getLong(PeakelCols.MAP_ID),
+          properties = propsOpt
+        )
+
+      } toArray
+
+    })
+
+  }
+  
+  protected def getPeakelItemsByFeatureId(rawMapIds: Seq[Long]): Map[Long,Seq[FeaturePeakelItem]] = {
+
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+      
+      val mapIdsStr = rawMapIds.mkString(",")
+      
+      // Build feature peakel items SQL query
+      val peakelItemQuery = new SelectQueryBuilder1(LcmsDbFeaturePeakelItemTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.MAP_ID ~" IN("~ rawMapIds.mkString(",") ~") "
+      )
+      
+      val peakelItemsByFtId = new HashMap[Long,ArrayBuffer[FeaturePeakelItem]]()
+      
+      ezDBC.selectAndProcess( peakelItemQuery ) { r =>
+        
+        // TODO: use the buildFeaturePeakelItem method from PeakelProvider
+        
+        // Read and deserialize properties
+        val propsAsJSON = r.getStringOption(PeakelItemCols.SERIALIZED_PROPERTIES)
+        val propsOpt = propsAsJSON.map( ProfiJson.deserialize[FeaturePeakelItemProperties](_) )
+        
+        val peakelItem = FeaturePeakelItem(
+          peakelReference = PeakelIdentifier( r.getLong(PeakelItemCols.PEAKEL_ID) ),
+          isotopeIndex = r.getInt(PeakelItemCols.ISOTOPE_INDEX),
+          properties = propsOpt
+        )
+        
+        val ftId = r.getLong(PeakelItemCols.FEATURE_ID)
+        peakelItemsByFtId.getOrElseUpdate(ftId, new ArrayBuffer[FeaturePeakelItem]) += peakelItem
+      }
+      
+      peakelItemsByFtId.toMap
+    })
+    
+  }
 
 }

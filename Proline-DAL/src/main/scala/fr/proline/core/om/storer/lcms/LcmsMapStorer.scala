@@ -9,7 +9,7 @@ import fr.proline.repository.DriverType
 
 trait IRawMapStorer {
   
-  def storeRawMap( rawMap: RawMap, storePeaks: Boolean = false ): Unit
+  def storeRawMap( rawMap: RawMap, storePeakels: Boolean = false ): Unit
   
 }
 

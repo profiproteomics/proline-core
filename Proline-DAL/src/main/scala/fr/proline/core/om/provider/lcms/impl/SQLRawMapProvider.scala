@@ -25,20 +25,23 @@ class SQLRawMapProvider(
   protected val peakelFittingModelById = lcmsDbHelper.getPeakelFittingModelById()
 
   /** Returns a list of LC-MS maps corresponding to a given list of raw map ids */
-  def getLcMsMaps(mapIds: Seq[Long]): Seq[ILcMsMap] = this.getRawMaps(mapIds)
+  def getLcMsMaps(mapIds: Seq[Long], loadPeakels: Boolean): Seq[ILcMsMap] = this.getRawMaps(mapIds)
 
   /** Returns a list of run maps corresponding to a given list of raw map ids */
-  def getRawMaps(rawMapIds: Seq[Long]): Array[RawMap] = {
+  def getRawMaps(rawMapIds: Seq[Long], loadPeakels: Boolean = false ): Array[RawMap] = {
 
-    val features = this.getFeatures(rawMapIds)
-    // Group features by map id
-    val featuresByMapId = features.groupBy(_.relations.rawMapId)
-
+    // Load features and group them by map id
+    val featuresByMapId = this.getFeatures(rawMapIds).groupBy(_.relations.rawMapId)
+    
+    // If requested load peakels and group them by map id
+    val peakelsByRawMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
+    else this.getPeakels(rawMapIds).groupBy(_.rawMapId)
+    
     val rawMaps = new Array[RawMap](rawMapIds.length)
     var lcmsMapIdx = 0
 
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
-
+      
       val rawMapQuery = new SelectQueryBuilder2(LcmsDbMapTable, LcmsDbRawMapTable).mkSelectQuery((t1, c1, t2, c2) =>
         List(t1.*, t2.SCAN_SEQUENCE_ID, t2.PEAK_PICKING_SOFTWARE_ID, t2.PEAKEL_FITTING_MODEL_ID) ->
           "WHERE " ~ t2.ID ~ " IN(" ~ rawMapIds.mkString(",") ~ ") " ~
@@ -52,11 +55,13 @@ class SQLRawMapProvider(
         val featureScoringId = toLong(r.getAny(LcMsMapCols.FEATURE_SCORING_ID))
         val peakPickingSoftwareId = toLong(r.getAny(RawMapCols.PEAK_PICKING_SOFTWARE_ID))
         val peakelFittingModelId = toLong(r.getAny(RawMapCols.PEAKEL_FITTING_MODEL_ID))
-
-        val mapFeatures = featuresByMapId(mapId)
+        
         val featureScoring = featureScoringById.get(featureScoringId)
         val peakPickingSoftware = peakPickingSoftwareById(peakPickingSoftwareId)
         val peakelFittingModel = peakelFittingModelById.get(peakelFittingModelId)
+        
+        val peakelsOpt = if( loadPeakels == false ) None
+        else Some( peakelsByRawMapId(mapId) )
 
         // Build the map
         rawMaps(lcmsMapIdx) = new RawMap(
@@ -65,7 +70,8 @@ class SQLRawMapProvider(
           description = r.getStringOrElse(LcMsMapCols.DESCRIPTION, ""),
           isProcessed = false,
           creationTimestamp = r.getTimestamp(LcMsMapCols.CREATION_TIMESTAMP),
-          features = features,
+          features = featuresByMapId(mapId),
+          peakels = peakelsOpt,
           runId = toLong(r.getAny(RawMapCols.SCAN_SEQUENCE_ID)),
           peakPickingSoftware = peakPickingSoftware,
           featureScoring = featureScoring,
@@ -86,32 +92,29 @@ class SQLRawMapProvider(
       
       val mapIdsStr = mapIds.mkString(",")
       
-      // Check that provided map ids correspond to run maps
-      val nbMaps = ezDBC.selectInt("SELECT count(id) FROM run_map WHERE id IN (" + mapIdsStr + ")")
-      if (nbMaps < mapIds.length) throw new Exception("map ids must correspond to existing run maps")
+      // Check that provided map ids correspond to raw maps
+      val nbMaps = ezDBC.selectInt("SELECT count(id) FROM raw_map WHERE id IN (" + mapIdsStr + ")")
+      require(nbMaps == mapIds.length, "map ids must correspond to existing raw maps")
       
-      // Load run ids
-      val runIdsQuery = new SelectQueryBuilder1(LcmsDbRawMapTable).mkSelectQuery( (t1, c1) =>
+      // Load scan sequence ids
+      val scanSeqIdsQuery = new SelectQueryBuilder1(LcmsDbRawMapTable).mkSelectQuery( (t1, c1) =>
         List(t1.SCAN_SEQUENCE_ID) -> "WHERE " ~ t1.ID ~ " IN(" ~ mapIdsStr ~ ") "
       )
-      val runIds = ezDBC.selectLongs( runIdsQuery )
+      val scanSeqIds = ezDBC.selectLongs( scanSeqIdsQuery )
       
       // Load mapping between scan ids and scan initial ids
-      val scanInitialIdById = lcmsDbHelper.getScanInitialIdById(runIds)
+      val scanInitialIdById = lcmsDbHelper.getScanInitialIdById(scanSeqIds)
 
       // Retrieve mapping between features and MS2 scans
       val ms2EventIdsByFtId = lcmsDbHelper.getMs2EventIdsByFtId(mapIds)
-
-      // TODO: load isotopic patterns if needed
-      //val ipsByFtId = if( loadPeaks ) getIsotopicPatternsByFtId( mapIds ) else null
-
+      
       // Retrieve mapping between overlapping features
       val olpFtIdsByFtId = getOverlappingFtIdsByFtId(mapIds)
-
-      var olpFeatureById: Map[Long, Feature] = null
-      if (olpFtIdsByFtId.size > 0) {
-        olpFeatureById = getOverlappingFeatureById(mapIds, scanInitialIdById, ms2EventIdsByFtId)
-      }
+      val olpFeatureById = if (olpFtIdsByFtId.isEmpty) Map.empty[Long, Feature]
+      else getOverlappingFeatureById(mapIds, scanInitialIdById, ms2EventIdsByFtId)
+      
+      // Load peakel items
+      val peakelItemByFtId = this.getPeakelItemsByFeatureId(mapIds)
       
       val ftBuffer = new ArrayBuffer[Feature]
 
@@ -119,13 +122,13 @@ class SQLRawMapProvider(
         val ftId = toLong(ftRecord.getAny(FtCols.ID))
 
         // Try to retrieve overlapping features
-        var olpFeatures: Array[Feature] = null
-        if (olpFtIdsByFtId.contains(ftId)) {
-          olpFeatures = olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
-        }
+        val olpFeatures = if (olpFtIdsByFtId.contains(ftId) == false ) null
+        else olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
         
-        // TODO: load isotopic patterns if needed
-        val feature = buildFeature(ftRecord, scanInitialIdById, ms2EventIdsByFtId, null, olpFeatures)
+        // Retrieve peakel items
+        val peakelItems = peakelItemByFtId(ftId).toArray
+        
+        val feature = buildFeature(ftRecord, scanInitialIdById, ms2EventIdsByFtId, peakelItems, olpFeatures)
 
         ftBuffer += feature
       })
