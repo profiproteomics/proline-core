@@ -1,51 +1,92 @@
 package fr.proline.core.om.model.lcms
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
+import scala.collection.mutable.ArrayBuffer
+import scala.util.control.Breaks._
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import fr.profi.mzdb.model.IsotopicPatternLike
+import fr.profi.mzdb.model.Peak
 import fr.profi.util.misc.InMemoryIdGen
 
-// TODO: remove and use mzdb model instead
-class Peak (
-    
-  // Required fields
-  val moz: Double,
-  val intensity: Float,
-  val leftHwhm: Double,
-  val rightHwhm: Double
-  
-)
+@org.msgpack.annotation.Message
+case class LcMsPeak(
+  // MessagePack requires mutable fields
+  var moz: Double,
+  var elutionTime: Float,
+  var intensity: Float
+) {
+  // Plain constructor needed for MessagePack
+  def this() = this(Double.NaN,Float.NaN,Float.NaN)
+}
 
-//object IsotopicPattern extends InMemoryIdGen
-// TODO: remove and use mzdb model instead
-class IsotopicPattern (
-    
-  // Required fields
-  //var id: Long,
-  val moz: Double,
-  val intensity: Float,
+// TODO: remove and use peakel model instead
+case class IsotopicPattern(
+  val mz: Double,
+  var intensity: Float,
   val charge: Int,
   val scanInitialId: Int,
+  val peaks: Array[Peak] = Array(),
+  val overlappingIPs: Option[Array[IsotopicPatternLike]] = None,
   
-  val peaks: Option[Array[Peak]] = None,
-  val overlappingIPs: Option[Array[IsotopicPattern]] = None,
-  
-  // Mutable optional fields
-  var fitScore: Option[Float] = None,
+  var fittingScore: Option[Float] = None,
   var properties: Option[IsotopicPatternProperties] = None
   
-)
+) extends IsotopicPatternLike
 
 case class IsotopicPatternProperties()
 
-object Compound extends InMemoryIdGen
-case class Compound(
-  var id: Long,
-  var identifier: String // maybe a peptide sequence and its ptm_string or a chemical formula
-)
+object Peakel extends InMemoryIdGen
 
-class LcMsDataPoint (    
+case class Peakel(
+  
+  var id: Long,
+  val moz: Double,
+  val elutionTime: Float,
+  val apexIntensity: Float,
+  val area: Float,
+  val duration: Float,
+  val fwhm: Option[Float],
+  val isOverlapping: Boolean,
+  var featuresCount: Int,
+  val peaks: Array[LcMsPeak],  
+  
+  var firstScanId: Long = 0L,
+  var lastScanId: Long = 0L,
+  var apexScanId: Long = 0L,
+  var rawMapId: Long = 0L,
+  
+  var properties: Option[PeakelProperties] = None
+  
+) extends IEntityReference[Peakel] {
+  
+  // Make some requirements
+  require( peaks != null && peaks.isEmpty == false, "some peaks must be provided" )
+  require( peaks.count( _ == null ) == 0, "all peaks must be defined" )
+  
+}
+
+case class PeakelProperties()
+
+case class PeakelIdentifier( var id: Long ) extends IEntityReference[Peakel]
+
+case class FeaturePeakelItem(
+  var peakelReference: IEntityReference[Peakel],
+  val isotopeIndex: Int,
+  var properties: Option[FeaturePeakelItemProperties] = None
+) {
+  
+  def getPeakel(): Option[Peakel] = {
+    peakelReference match {
+      case peakel: Peakel => Some(peakel)
+      case _ => None
+    }
+  }
+  
+}
+
+case class FeaturePeakelItemProperties()
+
+/*class LcMsDataPoint (
   // Required fields
   val moz: Double,
   val time: Float,
@@ -77,11 +118,56 @@ class PeakelShape (
 }
 
 case class PeakelShapeProperties()
+*/
 
-object Feature extends InMemoryIdGen
+object Feature extends InMemoryIdGen {
+
+  def buildPeakels(ips: Seq[IsotopicPatternLike]): Array[Peakel] = {
+
+    // Determine the maximum number of peaks
+    val maxNbPeaks = ips.map(_.peaks.length).max
+
+    val peakels = new ArrayBuffer[Peakel]()
+
+    breakable {
+      for (peakelIdx <- 0 until maxNbPeaks) {
+        val peakelOpt = this._buildPeakel(ips, peakelIdx)
+
+        if (peakelOpt.isDefined)
+          peakels += peakelOpt.get
+        else
+          break
+      }
+    }
+
+    peakels.toArray
+  }
+
+  protected def _buildPeakel(ips: Seq[IsotopicPatternLike], peakelIdx: Int): Option[Peakel] = {
+
+    val lcMsPeaks = new ArrayBuffer[LcMsPeak]()
+
+    for (ip <- ips) {
+      if (peakelIdx < ip.peaks.length) {
+
+        val peak = ip.peaks(peakelIdx)
+        lcMsPeaks += LcMsPeak(
+          moz = peak.getMz,
+          elutionTime = peak.getLcContext.getElutionTime,
+          intensity = peak.getIntensity
+        )
+      }
+    }
+
+    if (lcMsPeaks.isEmpty) Option.empty[Peakel]
+    else None //Some(new Peakel(peaks.toArray))
+  }
+  
+}
 
 case class FeatureRelations(
-  @transient var compound: Option[Compound] = None,  
+  @transient var peakelItems: Array[FeaturePeakelItem] = null,
+  @transient var compound: Option[Compound] = None,
   val ms2EventIds: Array[Long],
   val firstScanInitialId: Int,
   val lastScanInitialId: Int,
@@ -105,16 +191,18 @@ case class Feature (
   // Required fields
   var id: Long,
   val moz: Double,
-  var intensity: Float,
   val charge: Int,
   val elutionTime: Float,
+  var apexIntensity: Float = 0f, // TODO: remove default value  
+  var intensity: Float,
   val duration: Float,
   val qualityScore: Double,
   var ms1Count: Int,
   var ms2Count: Int,
   val isOverlapping: Boolean,
   
-  val isotopicPatterns: Option[Array[IsotopicPattern]],
+  // TODO: remove this field (produce peakels instead in LC-MS MAP parsers)
+  @transient val isotopicPatterns: Option[Array[IsotopicPatternLike]] = None,
   val relations: FeatureRelations,
   // TODO: create a masterRelations to avoid the loss of value with the use of rebuildMasterFeaturesUsingBestChild ?
   
@@ -211,7 +299,7 @@ case class Feature (
         bestChildProcessedMapId = ftRelations.processedMapId,
         ms2EventIds = null
         ),
-      isotopicPatterns = null,
+      isotopicPatterns = None,
       overlappingFeatures = null,
       children = children
     )
@@ -220,7 +308,10 @@ case class Feature (
 }
 
 case class FeatureProperties (
-  @JsonDeserialize(contentAs = classOf[Array[java.lang.Integer]] )
+  @JsonDeserialize(contentAs = classOf[java.lang.Boolean] )
+  @BeanProperty var isPredicted: Option[Boolean] = None,
+    
+  @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
   @BeanProperty var peakelsCount: Option[Int] = None,
   
   @JsonDeserialize(contentAs = classOf[Array[java.lang.Float]] )
@@ -231,6 +322,13 @@ case class FeatureProperties (
   
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var overlapFactor: Option[Float] = None
+)
+
+object Compound extends InMemoryIdGen
+
+case class Compound(
+  var id: Long,
+  var identifier: String // maybe a peptide sequence and its ptm_string or a chemical formula
 )
 
 class MasterFeatureBuilder(

@@ -115,6 +115,10 @@ case class LcMsScanSequence(
     
     scanIdsIndexBuilder.result()
   }
+  
+  def getScanByInitialId( initialId: Int ): Option[LcMsScan] = {
+    for( scanId <- scanIdByInitialId.get(initialId) ) yield scanById(scanId)
+  }
 
   def getScanAtTime( time: Float, msLevel: Int = 1 ): LcMsScan = {
     if( time < 0 ) { throw new IllegalArgumentException("time must be a positive number" ); }
@@ -124,7 +128,7 @@ case class LcMsScanSequence(
     
     val timeIndex = LcMsScanSequence.calcTimeIndex(time)      
     val scanIdsIndex = scanIdsByTimeIndex      
-    var matchingScanIds = new ArrayBuffer[Long]
+    val matchingScanIds = new ArrayBuffer[Long]
     
     for( index <- timeIndex-1 to timeIndex+1 ) {
       val tmpScanIds = scanIdsIndex(index)
@@ -133,14 +137,13 @@ case class LcMsScanSequence(
     
     // Determine all matching scans and sort them in ascendant order of absolute time distance 
     val myScanById = scanById
-    val matchingScans = matchingScanIds .
-                        map { myScanById(_) } .
-                        filter { s => s.msLevel == msLevel } .
-                        sortWith { (a, b) => math.abs(a.time - time) < math.abs(b.time-time) }
+    val matchingScans = matchingScanIds
+      .map { myScanById(_) }
+      .filter { s => s.msLevel == msLevel }
+      .sortWith { (a, b) => math.abs(a.time - time) < math.abs(b.time-time) }
     
     // Return nearest scan
-    matchingScans(0)           
-
+    matchingScans(0)
   }
   
   def isEmpty() : Boolean = {

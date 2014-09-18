@@ -11,6 +11,12 @@ import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.profi.util.misc.InMemoryIdGen
 
+// TODO:  move in Scala Commons ???
+trait IEntityReference[T] {
+  def id: Long
+}
+case class EntityIdentifier( var id: Long ) extends IEntityReference[Any]
+
 case class FeatureScoring(
     
   // Required fields
@@ -73,203 +79,14 @@ case class MapMozCalibration(
   
 ) {
   // Requirements
-  require( mozList != null && deltaMozList != null )
+  require( mozList != null, "mozList is null" )
+  require( deltaMozList != null, "deltaMozList is null" )
+  
 }
 
 //@JsonInclude( Include.NON_NULL )
 case class MapMozCalibrationProperties()
 
-//@JsonInclude( Include.NON_NULL )
-case class LcMsMapProperties( @BeanProperty var ipDeviationUpperBound: Option[Float] = None )
-
-abstract class ILcMsMap {
-  
-  // Required fields
-  //val id: Long,
-  val name: String
-  val isProcessed: Boolean
-  val creationTimestamp: Date
-  val features: Array[Feature]
-  
-  // Immutable optional fields
-  val description: String
-  val featureScoring: Option[FeatureScoring]
-  
-  // Mutable optional fields
-  var properties: Option[LcMsMapProperties]
-  
-  require( creationTimestamp != null && features != null )
-  
-  // Debug purpose
-  def toTsvFile( filePath: String ) {
-    import java.io.FileOutputStream
-    import java.io.PrintWriter
-    val file = new java.io.File(filePath)
-    val writer = new PrintWriter(file)
-    
-    val header = "feature_id mass moz charge is_cluster elution_time correct_elution_time duration raw_abundance ms2_count"
-    writer.println(header.replaceAll(" ", "\t"))
-    
-    for( ft <- features ) {
-      val row: List[Any] = List(
-        ft.id,ft.mass,ft.moz,ft.charge.toString,ft.isCluster,
-        ft.elutionTime,ft.correctedElutionTime,ft.duration,
-        ft.intensity,ft.ms2Count.toString
-      )
-      writer.println( row.mkString("\t"))
-      writer.flush()
-    }
-    
-    writer.close()
-  }
-
-}
-
-object RawMap extends InMemoryIdGen
-
-// TODO:  move in Scala Commons ???
-trait IEntityIdentifier {
-  def id: Long
-}
-case class Identifier( var id: Long ) extends IEntityIdentifier
-
-case class RawMap(
-            
-  // Required fields
-  var id: Long,
-  val name: String,
-  val isProcessed: Boolean,
-  val creationTimestamp: Date,
-  val features: Array[Feature],
-  
-  var runId: Long,
-  val peakPickingSoftware: PeakPickingSoftware,
-  
-  // Immutable optional fields
-  val description: String = "",
-  val featureScoring: Option[FeatureScoring] = None,
-  
-  val peakelFittingModel: Option[PeakelFittingModel] = None,
-  
-  // Mutable optional fields
-  var properties: Option[LcMsMapProperties] = None
-  
-) extends ILcMsMap with IEntityIdentifier {
-  
-  // Requirements
-  require( peakPickingSoftware != null, "a pick peaking software must be provided" )
-  //require( features.count(_.correctedElutionTime.isDefined) == 0, "can't use processed map features as run map features" )
-  
-  def toProcessedMap( number: Int, mapSetId: Long, features: Array[Feature] = this.features ) = {
-    
-    val procMapId = ProcessedMap.generateNewId
-    val curTime = new Date()
-    
-    // Update the processed map id of each feature
-    features.foreach { ft =>
-      ft.relations.processedMapId = procMapId
-      
-      if( ft.isCluster ) {
-        ft.subFeatures.foreach { subFt =>
-          subFt.relations.processedMapId = procMapId
-        }
-      }
-    }
-    
-    ProcessedMap(
-      id = procMapId,
-      number = number,
-      name = name,
-      description = description,
-      creationTimestamp = curTime,
-      modificationTimestamp = curTime,
-      isProcessed = true,
-      isMaster = false,
-      isAlnReference = false,
-      features = features,
-      featureScoring = featureScoring,
-      rawMapIdentifiers = List( this ),
-      runId = Some(runId),
-      mapSetId = mapSetId,
-      properties = this.properties
-    )
-    
-  }
-  
-}
-
-object ProcessedMap extends InMemoryIdGen
-
-case class ProcessedMap(
-            
-  // Required fields
-  var id: Long,
-  val name: String,
-  val isProcessed: Boolean,
-  val creationTimestamp: Date,
-  // TODO: another model may be to separate features from feature clusters (it may avoid some array copy)
-  val features: Array[Feature],
-  
-  val number: Int,
-  var modificationTimestamp: Date,
-  val isMaster: Boolean,
-  var isAlnReference: Boolean,
-  
-  var mapSetId: Long,
-  //@transient val rawMaps: Array[RawMap], // Many values only for a master map
-  @transient var rawMapIdentifiers: Seq[IEntityIdentifier],
-  
-  // Immutable optional fields
-  val description: String = "",
-  val featureScoring: Option[FeatureScoring] = None,
-  
-  // Mutable optional fields
-  var runId: Option[Long] = None,
-  var isLocked: Boolean = false,
-  var normalizationFactor: Float = 1,
-  var mozCalibrations: Option[Array[MapMozCalibration]] = None, // m/z calibration matrix for the entire run
-  
-  var properties: Option[LcMsMapProperties] = None
-  
-) extends ILcMsMap {
-  
-  // Requirements
-  require( modificationTimestamp != null )
-  if( !isMaster ) require( rawMapIdentifiers.length == 1 )
-  
-  def getRawMapIds(): Seq[Long] = rawMapIdentifiers.map(_.id)
-  
-  // TODO: note this is a way to generalize to MSI OM
-  def getRawMaps(): Seq[Option[RawMap]] = {
-    rawMapIdentifiers.map { rawMapIdentifier =>
-      rawMapIdentifier match {
-        case rawMap: RawMap => Some(rawMap)
-        case _ => None
-      }
-    }
-  }
-  
-  def copyWithoutClusters(): ProcessedMap = {
-    
-    val featuresWithoutClusters = new ArrayBuffer[Feature]( features.length )
-    
-    for(ft <- features ) {
-      if( !ft.isCluster ) { featuresWithoutClusters += ft }
-      else { featuresWithoutClusters ++= ft.subFeatures }
-    }
-    
-    this.copy( features = featuresWithoutClusters.toArray )
-    
-  }
-  
-  def copyWithSelectedFeatures(): ProcessedMap = {
-     
-    val selectedFeatures = features filter { _.selectionLevel >= 2 }
-    this.copy( features = selectedFeatures )
-    
-  }
-  
-}
 
 case class Landmark( time: Float, deltaTime: Float )
 
@@ -288,7 +105,9 @@ case class MapAlignment(
 ) extends Logging {
   
   // Requirements
-  require( massRange != null && timeList != null && deltaTimeList != null )
+  require( massRange != null, "massRange is null" )
+  require( timeList != null, "timeList is null" )
+  require( deltaTimeList != null, "deltaTimeList is null" )
   this._checkSlopes()
   
   // Define some lazy vals
@@ -472,7 +291,8 @@ case class MapSet(
   ) {
   
   // Requirements
-  require( creationTimestamp != null && childMaps != null )
+  require( creationTimestamp != null, "creationTimestamp is null" )
+  require( childMaps != null, "childMaps is null" )
   
   private lazy val _mapAlnSetByMapIdPair: Map[Pair[Long,Long],MapAlignmentSet] = {
     val allMapAlnSets = mapAlnSets ++ mapAlnSets.map(_.getReversedAlnSet)
@@ -593,7 +413,7 @@ case class MapSet(
       
       features.foreach { ft =>
         ft.eachSubFeatureOrThisFeature { subFt =>
-          require(subFt.relations.processedMapId == childMapId)
+          require(subFt.relations.processedMapId == childMapId, "invalid processedMapId")
         }
       }
       
@@ -676,4 +496,194 @@ case class MapSet(
 //@JsonInclude( Include.NON_NULL )
 case class MapSetProperties()
 
+object RawMap extends InMemoryIdGen
 
+case class RawMap(
+            
+  // Required fields
+  var id: Long,
+  val name: String,
+  val isProcessed: Boolean,
+  val creationTimestamp: Date,
+  val features: Array[Feature],
+  var peakels: Option[Array[Peakel]] = None,
+  
+  var runId: Long,
+  val peakPickingSoftware: PeakPickingSoftware,
+  
+  // Immutable optional fields
+  val description: String = "",
+  val featureScoring: Option[FeatureScoring] = None,
+  
+  val peakelFittingModel: Option[PeakelFittingModel] = None,
+  
+  // Mutable optional fields
+  var properties: Option[LcMsMapProperties] = None
+  
+) extends ILcMsMap with IEntityReference[RawMap] {
+  
+  // Requirements
+  require( peakPickingSoftware != null, "a pick peaking software must be provided" )
+  //require( features.count(_.correctedElutionTime.isDefined) == 0, "can't use processed map features as run map features" )
+  
+  def toProcessedMap( number: Int, mapSetId: Long, features: Array[Feature] = this.features ) = {
+    
+    val procMapId = ProcessedMap.generateNewId
+    val curTime = new Date()
+    
+    // Update the processed map id of each feature
+    features.foreach { ft =>
+      ft.relations.processedMapId = procMapId
+      
+      if( ft.isCluster ) {
+        ft.subFeatures.foreach { subFt =>
+          subFt.relations.processedMapId = procMapId
+        }
+      }
+    }
+    
+    ProcessedMap(
+      id = procMapId,
+      number = number,
+      name = name,
+      description = description,
+      creationTimestamp = curTime,
+      modificationTimestamp = curTime,
+      isProcessed = true,
+      isMaster = false,
+      isAlnReference = false,
+      features = features,
+      featureScoring = featureScoring,
+      rawMapReferences = List( this ),
+      runId = Some(runId),
+      mapSetId = mapSetId,
+      properties = this.properties
+    )
+    
+  }
+  
+}
+
+case class RawMapIdentifier( var id: Long ) extends IEntityReference[RawMap]
+
+object ProcessedMap extends InMemoryIdGen
+
+case class ProcessedMap(
+            
+  // Required fields
+  var id: Long,
+  val name: String,
+  val isProcessed: Boolean,
+  val creationTimestamp: Date,
+  // TODO: another model may be to separate features from feature clusters (it may avoid some array copy)
+  val features: Array[Feature],
+  var peakels: Option[Array[Peakel]] = None,
+  
+  val number: Int,
+  var modificationTimestamp: Date,
+  val isMaster: Boolean,
+  var isAlnReference: Boolean,
+  
+  var mapSetId: Long,
+  //@transient val rawMaps: Array[RawMap], // Many values only for a master map
+  @transient var rawMapReferences: Seq[IEntityReference[RawMap]],
+  
+  // Immutable optional fields
+  val description: String = "",
+  val featureScoring: Option[FeatureScoring] = None,
+  
+  // Mutable optional fields
+  var runId: Option[Long] = None,
+  var isLocked: Boolean = false,
+  var normalizationFactor: Float = 1,
+  var mozCalibrations: Option[Array[MapMozCalibration]] = None, // m/z calibration matrix for the entire run
+  
+  var properties: Option[LcMsMapProperties] = None
+  
+) extends ILcMsMap {
+  
+  // Requirements
+  require( modificationTimestamp != null, "modificationTimestamp is null" )
+  if( !isMaster ) require( rawMapReferences.length == 1, "invalid rawMapReferences count" )
+  
+  def getRawMapIds(): Seq[Long] = rawMapReferences.map(_.id)
+  
+  // TODO: note this is a way to generalize to MSI OM
+  def getRawMaps(): Seq[Option[RawMap]] = {
+    rawMapReferences.map { rawMapReference =>
+      rawMapReference match {
+        case rawMap: RawMap => Some(rawMap)
+        case _ => None
+      }
+    }
+  }
+  
+  def copyWithoutClusters(): ProcessedMap = {
+    
+    val featuresWithoutClusters = new ArrayBuffer[Feature]( features.length )
+    
+    for(ft <- features ) {
+      if( !ft.isCluster ) { featuresWithoutClusters += ft }
+      else { featuresWithoutClusters ++= ft.subFeatures }
+    }
+    
+    this.copy( features = featuresWithoutClusters.toArray )
+    
+  }
+  
+  def copyWithSelectedFeatures(): ProcessedMap = {
+     
+    val selectedFeatures = features filter { _.selectionLevel >= 2 }
+    this.copy( features = selectedFeatures )
+    
+  }
+  
+}
+
+//@JsonInclude( Include.NON_NULL )
+case class LcMsMapProperties( @BeanProperty var ipDeviationUpperBound: Option[Float] = None )
+
+abstract class ILcMsMap {
+  
+  // Required fields
+  //val id: Long,
+  val name: String
+  val isProcessed: Boolean
+  val creationTimestamp: Date
+  val features: Array[Feature]
+  var peakels: Option[Array[Peakel]]
+  
+  // Immutable optional fields
+  val description: String
+  val featureScoring: Option[FeatureScoring]
+  
+  // Mutable optional fields
+  var properties: Option[LcMsMapProperties]
+  
+  require( creationTimestamp != null, "creationTimestamp is null" )
+  require( features != null, "features is null" )
+  
+  // Debug purpose
+  def toTsvFile( filePath: String ) {
+    import java.io.FileOutputStream
+    import java.io.PrintWriter
+    val file = new java.io.File(filePath)
+    val writer = new PrintWriter(file)
+    
+    val header = "feature_id mass moz charge is_cluster elution_time correct_elution_time duration raw_abundance ms2_count"
+    writer.println(header.replaceAll(" ", "\t"))
+    
+    for( ft <- features ) {
+      val row: List[Any] = List(
+        ft.id,ft.mass,ft.moz,ft.charge.toString,ft.isCluster,
+        ft.elutionTime,ft.correctedElutionTime,ft.duration,
+        ft.intensity,ft.ms2Count.toString
+      )
+      writer.println( row.mkString("\t"))
+      writer.flush()
+    }
+    
+    writer.close()
+  }
+
+}
