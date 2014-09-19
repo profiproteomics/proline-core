@@ -18,9 +18,6 @@ import fr.proline.core.om.provider.lcms.ILcMsMapProvider
 
 abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   
-  val scans: Array[LcMsScan]
-  protected val scanById = Map() ++ scans.map( s => s.id -> s )
-  
   protected val lcmsDbCtx: DatabaseConnectionContext
   protected val LcMsMapCols = LcmsDbMapColumns
   protected val FtCols = LcmsDbFeatureColumns
@@ -135,8 +132,6 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     val lastScanId = toLong(ftRecord.getAny(FtCols.LAST_SCAN_ID))
     val apexScanId = toLong(ftRecord.getAny(FtCols.APEX_SCAN_ID))
     val ms2EventIds = ms2EventIdsByFtId.getOrElse(ftId,null)
-    // TODO : Retrieve duration from feature table
-    val duration = scanById(lastScanId).time - scanById(firstScanId).time
     val mapId = toLong(ftRecord.getAny(FtCols.MAP_ID))
     val rawMapId = if( mapId == processedMapId ) 0L else mapId
     
@@ -146,7 +141,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
        intensity = toFloat(ftRecord.getAny(FtCols.APEX_INTENSITY)),
        charge = ftRecord.getInt(FtCols.CHARGE),
        elutionTime = toFloat(ftRecord.getAny(FtCols.ELUTION_TIME)),
-       duration = duration,
+       duration = toFloat(ftRecord.getAny(FtCols.DURATION)),
        qualityScore = ftRecord.getDoubleOrElse(FtCols.QUALITY_SCORE,Double.NaN),
        ms1Count = ftRecord.getInt(FtCols.MS1_COUNT),
        ms2Count = ftRecord.getInt(FtCols.MS2_COUNT),

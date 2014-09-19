@@ -16,14 +16,13 @@ import fr.profi.util.primitives._
   
 class SQLMapSetProvider(
   val lcmsDbCtx: DatabaseConnectionContext,
-  val scans: Array[LcMsScan],
   val loadPeaks: Boolean = false
 ) extends IMapSetProvider {
   
   val MapSetCols = LcmsDbMapSetTable.columns
   val MftItemCols = LcmsDbMasterFeatureItemTable.columns
   val mapAlnSetProvider = new SQLMapAlignmentSetProvider( lcmsDbCtx )
-  val processedMapProvider = new SQLProcessedMapProvider( lcmsDbCtx, scans, loadPeaks )
+  val processedMapProvider = new SQLProcessedMapProvider( lcmsDbCtx, loadPeaks )
   
   def getMapSet( mapSetId: Long ): MapSet = {    
     

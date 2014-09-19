@@ -40,7 +40,7 @@ class Ms1DrivenLabelFreeFeatureQuantifier(
     //mapSet = mapSetLoader.getMapSet( mapSetId )
 
     this.logger.info("loading LCMS map set...")
-    val mapSetLoader = new fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider(lcmsDbCtx,lcmsScans)
+    val mapSetLoader = new fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider(lcmsDbCtx)
     mapSetLoader.getMapSet(mapSetId)
 
   }
