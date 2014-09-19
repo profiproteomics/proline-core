@@ -119,7 +119,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Int]
       
       val idsQuery = new SelectQueryBuilder1( LcmsDbScanTable ).mkSelectQuery( (t,c) =>
-        List(t.ID, t.INITIAL_ID) -> "WHERE "~ t.SCAN_SEQUENCE_ID ~ "IN (" ~ scanSeqIds.mkString(",") ~ ")"
+        List(t.ID, t.INITIAL_ID) -> "WHERE "~ t.SCAN_SEQUENCE_ID ~ " IN (" ~ scanSeqIds.mkString(",") ~ ")"
       )
       
       ezDBC.selectAndProcess( idsQuery ) { r =>
@@ -141,7 +141,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       val featureMs2EventsByFtId = new java.util.HashMap[Long,ArrayBuffer[Long]]
       
       val featureIdAndMs2Query = new SelectQueryBuilder1( LcmsDbFeatureMs2EventTable ).mkSelectQuery((t,c) =>
-        List(t.FEATURE_ID, t.MS2_EVENT_ID) -> "WHERE "~ t.RUN_MAP_ID ~ "IN (" ~ rawMapIds.mkString(",") ~ ")"
+        List(t.FEATURE_ID, t.MS2_EVENT_ID) -> "WHERE "~ t.RUN_MAP_ID ~ " IN (" ~ rawMapIds.mkString(",") ~ ")"
       ) 
       ezDBC.selectAndProcess( featureIdAndMs2Query ) { r =>
             
