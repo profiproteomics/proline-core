@@ -135,6 +135,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     val lastScanId = toLong(ftRecord.getAny(FtCols.LAST_SCAN_ID))
     val apexScanId = toLong(ftRecord.getAny(FtCols.APEX_SCAN_ID))
     val ms2EventIds = ms2EventIdsByFtId.getOrElse(ftId,null)
+    // TODO : Retrieve duration from feature table
     val duration = scanById(lastScanId).time - scanById(firstScanId).time
     val mapId = toLong(ftRecord.getAny(FtCols.MAP_ID))
     val rawMapId = if( mapId == processedMapId ) 0L else mapId
