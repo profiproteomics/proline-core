@@ -37,6 +37,7 @@ class SQLMsiSearchProvider(
   protected lazy val ptmProvider = new SQLPTMProvider(psDbCtx)
 
   def getMSISearches(msiSearchIds: Seq[Long]): Array[MSISearch] = {
+    if( msiSearchIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
       
@@ -82,6 +83,7 @@ class SQLMsiSearchProvider(
 
 
   def getSearchSettingsList(searchSettingsIds: Seq[Long]): Array[SearchSettings] = {
+    if( searchSettingsIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
       
@@ -107,6 +109,7 @@ class SQLMsiSearchProvider(
   }
 
   def getSeqDatabases(seqDbIds: Seq[Long]): Array[SeqDatabase] = {
+    if( seqDbIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     
@@ -127,6 +130,7 @@ class SQLMsiSearchProvider(
 
 
   def getEnzymesByName(enzymeNames: Seq[String]): Array[Enzyme] = {
+    if( enzymeNames.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
   
@@ -145,6 +149,7 @@ class SQLMsiSearchProvider(
   }
   
   def getEnzymes(enzymeIds: Seq[Long]): Array[Enzyme] = {
+    if( enzymeIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
       buildEnzymes(

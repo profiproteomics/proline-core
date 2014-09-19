@@ -19,6 +19,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
   val PeakelItemCols = LcmsDbFeaturePeakelItemColumns
   
   def getPeakels( peakelIds: Seq[Long] ): Array[Peakel] = {
+    if( peakelIds.isEmpty ) return Array()
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       

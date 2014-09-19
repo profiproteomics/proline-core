@@ -14,12 +14,16 @@ import fr.proline.core.om.provider.msi.IPeaklistSoftwareProvider
 class SQLPeaklistSoftwareProvider(val dbCtx: DatabaseConnectionContext) extends IPeaklistSoftwareProvider {
   
   def getPeaklistSoftwareListAsOptions( pklSoftIds: Seq[Long] ): Array[Option[PeaklistSoftware]] = {
+    if( pklSoftIds.isEmpty ) return Array()
+    
     val pklSoftById = Map() ++ this.getPeaklistSoftwareList(pklSoftIds).map( ps => ps.id -> ps )
     pklSoftIds.toArray.map( pklSoftById.get(_) )
   }
   
-  def getPeaklistSoftwareList(pklSoftIds: Seq[Long]): Array[PeaklistSoftware] = {    
-    DoJDBCReturningWork.withEzDBC(dbCtx, { msiEzDBC =>    
+  def getPeaklistSoftwareList(pklSoftIds: Seq[Long]): Array[PeaklistSoftware] = {
+    if( pklSoftIds.isEmpty ) return Array()
+    
+    DoJDBCReturningWork.withEzDBC(dbCtx, { msiEzDBC =>
       PeaklistSoftwareBuilder.buildPeaklistSoftwareList( SQLPeaklistSoftwareProvider.selectPklSoftRecords(msiEzDBC,pklSoftIds) )
     })
   }

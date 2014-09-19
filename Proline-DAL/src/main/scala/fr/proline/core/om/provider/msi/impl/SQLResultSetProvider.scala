@@ -114,6 +114,7 @@ class SQLResultSetProvider(
 ) extends SQLResultSetLoader with IResultSetProvider {
 
   def getResultSets(rsIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[ResultSet] = {
+    if (rsIds.isEmpty) return Array()
 
     val pepMatchFilter = resultSetFilter.map(rsf => new PeptideMatchFilter(maxRank = rsf.maxPeptideMatchRank))
 
@@ -130,12 +131,12 @@ class SQLResultSetProvider(
   }
 
   def getResultSetsAsOptions(resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[Option[ResultSet]] = {
-
+    if (resultSetIds.isEmpty) return Array()
+    
     val resultSets = this.getResultSets(resultSetIds, resultSetFilter)
     val resultSetById = resultSets.map { rs => rs.id -> rs } toMap
 
     resultSetIds.map { resultSetById.get(_) } toArray
-
   }
 
 }

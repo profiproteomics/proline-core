@@ -21,7 +21,7 @@ class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQue
   val MsQueryCols = MsiDbMsQueryTable.columns
   
   def getUnassignedMsQueries( resultSetIds: Seq[Long], msiSearchIds: Seq[Long] ): Array[MsQuery] = {
-    if( msiSearchIds == null || msiSearchIds.length == 0 ) return Array.empty[MsQuery]
+    if( msiSearchIds == null || msiSearchIds.isEmpty ) return Array.empty[MsQuery]
     
     /*
      * this method searches in table ms_query for tuples NOT related to a peptide_match
@@ -61,7 +61,7 @@ class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQue
   }
 
   def getMsiSearchesMsQueries(msiSearchIds: Seq[Long]): Array[MsQuery] = {
-    if( msiSearchIds == null || msiSearchIds.length == 0 ) return Array.empty[MsQuery]
+    if( msiSearchIds == null || msiSearchIds.isEmpty ) return Array.empty[MsQuery]
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
@@ -119,6 +119,7 @@ class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQue
   }
 
   def getMsQueries( msQueryIds: Seq[Long] ): Array[MsQuery] = {
+    if( msQueryIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
 

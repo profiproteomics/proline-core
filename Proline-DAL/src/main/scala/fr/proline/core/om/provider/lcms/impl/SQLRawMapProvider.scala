@@ -29,6 +29,7 @@ class SQLRawMapProvider(
 
   /** Returns a list of run maps corresponding to a given list of raw map ids */
   def getRawMaps(rawMapIds: Seq[Long], loadPeakels: Boolean = false ): Array[RawMap] = {
+    if( rawMapIds.isEmpty ) return Array()
 
     // Load features and group them by map id
     val featuresByMapId = this.getFeatures(rawMapIds).groupBy(_.relations.rawMapId)
@@ -87,6 +88,7 @@ class SQLRawMapProvider(
 
   /** Returns a list of features corresponding to a given list of run map ids */
   def getFeatures(mapIds: Seq[Long]): Array[Feature] = {
+    if( mapIds.isEmpty ) return Array()
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       

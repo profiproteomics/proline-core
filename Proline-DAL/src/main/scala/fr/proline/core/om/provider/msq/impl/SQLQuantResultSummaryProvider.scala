@@ -40,6 +40,8 @@ class SQLQuantResultSummaryProvider(
   final val quantProteinSetSchema = SchemaName.QUANT_PROTEIN_SETS.toString
 
   def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
+    if( quantRsmIds.isEmpty ) return Array()
+    
     val rsms = this.getQuantResultSummaries(quantRsmIds, quantChannelIds, loadResultSet)
     val rsmById = rsms.map { rsm => rsm.id -> rsm } toMap;
     quantRsmIds.map { rsmById.get(_) } toArray
@@ -47,6 +49,7 @@ class SQLQuantResultSummaryProvider(
   
   // TODO: find a way to handle master quant reporter ions
   def getQuantResultSummaries( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[QuantResultSummary] = {
+    if( quantRsmIds.isEmpty ) return Array()
     
     val rsms = this.getResultSummaries(quantRsmIds, loadResultSet)
     
@@ -109,6 +112,7 @@ class SQLQuantResultSummaryProvider(
     pepInstByMQPepId: Map[Long,PeptideInstance],
     mqPepIonsByMQPepId: Map[Long,Array[MasterQuantPeptideIon]]
   ): Array[MasterQuantPeptide] = {
+    if( quantRsmIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     
@@ -149,7 +153,8 @@ class SQLQuantResultSummaryProvider(
     quantRsmIds: Seq[Long],
     protSetById: Map[Long,ProteinSet],
     mqPepByPepInstId: Map[Long,MasterQuantPeptide]
-    ): Array[MasterQuantProteinSet] = {
+  ): Array[MasterQuantProteinSet] = {
+    if( quantRsmIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     

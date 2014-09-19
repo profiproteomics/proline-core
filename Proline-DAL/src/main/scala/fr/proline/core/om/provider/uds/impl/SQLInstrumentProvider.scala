@@ -16,11 +16,14 @@ import fr.profi.util.StringUtils
 class SQLInstrumentProvider(val dbCtx: DatabaseConnectionContext) extends IInstrumentProvider {
   
   def getInstrumentsAsOptions( instrumentIds: Seq[Long] ): Array[Option[Instrument]] = {
+    if( instrumentIds.isEmpty ) return Array()
+    
     val instConfigById = Map() ++ this.getInstruments(instrumentIds).map( i => i.id -> i )
     instrumentIds.toArray.map( instConfigById.get(_) )
   }
   
   def getInstruments( instrumentIds: Seq[Long] ): Array[Instrument] = {
+    if( instrumentIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(dbCtx, { udsEzDBC =>
       

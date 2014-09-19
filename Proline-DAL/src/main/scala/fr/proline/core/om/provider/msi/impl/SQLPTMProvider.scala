@@ -92,11 +92,15 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
   }
 
   def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
+    if (ptmDefIds.isEmpty) return Array()
+    
     val ptmDefById = this.ptmDefinitionById
     ptmDefIds.map { ptmDefById.get(_) } toArray
   }
 
   def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
+    if (ptmDefIds.isEmpty) return Array()
+    
     this.getPtmDefinitionsAsOptions(ptmDefIds).filter(_.isDefined).map(_.get)
   }
 
