@@ -26,12 +26,13 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
   val LabelFreeQuantPeptideIonsSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS.toString
   
   def getMasterQuantPeptideIonsAsOptions( mqPepIonIds: Seq[Long] ): Array[Option[MasterQuantPeptideIon]] = {
+    if( mqPepIonIds.isEmpty ) return Array()
     throw new Exception("NYI")
   }
   
-  def getMasterQuantPeptideIons( mqPepIonIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {
-    
+  def getMasterQuantPeptideIons( mqPepIonIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {    
     require( mqPepIonIds != null, "mqPepIonIds is null")
+    if( mqPepIonIds.isEmpty ) return Array()
     
     if( mqPepIonIds.isEmpty ) return Array()
     
@@ -59,6 +60,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
   }
 
   def getQuantResultSummariesMQPeptideIons(quantRsmIds: Seq[Long]): Array[MasterQuantPeptideIon] = {
+    if( quantRsmIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       

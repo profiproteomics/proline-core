@@ -28,6 +28,7 @@ class SQLProcessedMapProvider(
   
   /** Returns a list of features corresponding to a given list of processed map ids */
   def getProcessedMaps( processedMapIds: Seq[Long] ): Array[ProcessedMap] = {
+    if( processedMapIds.isEmpty ) return Array()
     
     val rawMapIdsByProcessedMapId = getRawMapIdsByProcessedMapId( processedMapIds )
     val features = this.getFeatures( processedMapIds )
@@ -84,6 +85,7 @@ class SQLProcessedMapProvider(
   }
   
   def getRawMapIdsByProcessedMapId( processedMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+    if( processedMapIds.isEmpty ) return Map()
     
     val rawMapIdBufferByProcessedMapId = new HashMap[Long,ArrayBuffer[Long]]
     
@@ -116,6 +118,7 @@ class SQLProcessedMapProvider(
 
   /** Returns a list of features corresponding to a given list of processed map ids */
   def getFeatures( processedMapIds: Seq[Long] ): Array[Feature] = {
+    if( processedMapIds.isEmpty ) return Array()
  
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -222,6 +225,7 @@ class SQLProcessedMapProvider(
   }
   
   def eachProcessedFeatureRecord( processedMapIds: Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
+    if( processedMapIds.isEmpty ) return ()
     
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
     
@@ -247,6 +251,7 @@ class SQLProcessedMapProvider(
   
   /** Returns a map of sub features feature keyed by its id */
   def getSubFtIdsByClusterFtId( processedMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+    if( processedMapIds.isEmpty ) return Map()
     
     val subFtIdBufferByClusterFtId = new HashMap[Long,ArrayBuffer[Long]]
     

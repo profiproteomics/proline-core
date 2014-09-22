@@ -27,6 +27,7 @@ class SQLResultSummaryProvider(
   val RSMCols = MsiDbResultSummaryTable.columns
 
   def getResultSummaries(rsmIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
+    if (rsmIds.isEmpty) return Array()
 
     import fr.profi.util.primitives._
     import fr.profi.util.sql.StringOrBoolAsBool._
@@ -114,12 +115,16 @@ class SQLResultSummaryProvider(
   }
 
   def getResultSummariesAsOptions(rsmIds: Seq[Long], loadResultSet: Boolean): Array[Option[ResultSummary]] = {
+    if (rsmIds.isEmpty) return Array()
+    
     val rsms = this.getResultSummaries(rsmIds, loadResultSet)
     val rsmById = rsms.map { rsm => rsm.id -> rsm } toMap;
     rsmIds.map { rsmById.get(_) } toArray
   }
 
   def getResultSetsResultSummaries(rsIds: Seq[Long], loadResultSet: Boolean): Array[ResultSummary] = {
+    if (rsIds.isEmpty) return Array()
+    
     throw new Exception("NYI")
     null
   }

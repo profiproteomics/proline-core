@@ -65,6 +65,7 @@ class SQLRunProvider(
   val RunCols = UdsDbRunTable.columns
   
   def getRuns( runIds: Seq[Long] ): Array[LcMsRun] = {
+    if( runIds.isEmpty ) return Array()
     
     val scanSeqByIdAsOpt = if( scanSeqProvider.isEmpty ) None
     else {

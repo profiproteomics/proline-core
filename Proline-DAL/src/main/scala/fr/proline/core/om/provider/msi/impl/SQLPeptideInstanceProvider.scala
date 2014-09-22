@@ -27,7 +27,8 @@ class SQLPeptideInstanceProvider(
   }
 
   def getPeptideInstancesAsOptions(pepInstIds: Seq[Long]): Array[Option[PeptideInstance]] = {
-
+    if( pepInstIds.isEmpty ) return Array()
+    
     val pepInsts = this.getPeptideInstances(pepInstIds)
     val pepInstById = pepInsts.map { p => p.id -> p } toMap
 
@@ -35,6 +36,7 @@ class SQLPeptideInstanceProvider(
   }
 
   def getPeptideInstances(pepInstIds: Seq[Long]): Array[PeptideInstance] = {
+    if( pepInstIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
@@ -48,8 +50,8 @@ class SQLPeptideInstanceProvider(
     })
   }
   
-  // TODO: create an SQL INDEX based on the peptide_id field
   def getPeptideInstancesByPeptideIds(pepIds: Seq[Long]): Array[PeptideInstance] = {
+    if( pepIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
@@ -79,6 +81,7 @@ class SQLPeptideInstanceProvider(
   }
 
   def getResultSummariesPeptideInstances(rsmIds: Seq[Long]): Array[PeptideInstance] = {
+    if( rsmIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       

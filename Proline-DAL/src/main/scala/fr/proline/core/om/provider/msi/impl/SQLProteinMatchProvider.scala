@@ -25,6 +25,8 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
   val scoreTypeById = new MsiDbHelper(msiDbCtx).getScoringTypeById
   
   def getProteinMatches(protMatchIds: Seq[Long]): Array[ProteinMatch] = {
+    if (protMatchIds.isEmpty) return Array()
+    
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
       val protMatchIdArray = protMatchIds.toArray
@@ -38,13 +40,16 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
     })
   }
   
-  def getResultSetsProteinMatches(rsIds: Seq[Long]): Array[ProteinMatch] = {    
+  def getResultSetsProteinMatches(rsIds: Seq[Long]): Array[ProteinMatch] = {
+    if (rsIds.isEmpty) return Array()
+    
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       this._getProteinMatches(msiEzDBC,rsIds)
     })
   }
   
   def getResultSummariesProteinMatches(rsmIds: Seq[Long]): Array[ProteinMatch] = {
+    if (rsmIds.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       

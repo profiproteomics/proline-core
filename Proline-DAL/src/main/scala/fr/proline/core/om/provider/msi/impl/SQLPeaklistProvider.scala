@@ -19,6 +19,7 @@ class SQLPeaklistProvider(val msiDbCtx: DatabaseConnectionContext) {
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
   def getPeaklists(peaklistIds: Seq[Long]): Array[Peaklist] = {
+    if( peaklistIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
 

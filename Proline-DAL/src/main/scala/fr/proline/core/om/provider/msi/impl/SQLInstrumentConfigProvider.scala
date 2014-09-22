@@ -26,6 +26,7 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
   }
   
   def getInstrumentConfigs(instConfigIds: Seq[Long]): Array[InstrumentConfig] = {
+    if( instConfigIds.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
     
@@ -39,6 +40,8 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
   }
   
   def getInstruments(instIds: Seq[Long]): Array[Instrument] = {
+    if( instIds.isEmpty ) return Array()
+    
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
       InstrumentConfigBuilder.buildInstruments( selectInstrumentRecords(udsEzDBC,instIds) )    
     })
@@ -87,6 +90,7 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
 object SQLInstrumentConfigProvider {
   
   def selectInstConfigRecords(udsEzDBC: EasyDBC, instConfigIds: Seq[Long]): (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig] = {
+    require( instConfigIds.isEmpty == false, "instConfigIds is empty" )
     
     val instConfigQuery = new SelectQueryBuilder1(UdsDbInstrumentConfigTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ instConfigIds.mkString(",") ~")"
@@ -96,6 +100,7 @@ object SQLInstrumentConfigProvider {
   }
   
   def selectInstrumentRecords(udsEzDBC: EasyDBC, instIds: Seq[Long]): (IValueContainer => Instrument) => Seq[Instrument] = {
+    require( instIds.isEmpty == false, "instIds is empty" )
     
     val instQuery = new SelectQueryBuilder1(UdsDbInstrumentTable).mkSelectQuery( (t,c) =>
       List(t.*) -> "WHERE "~ t.ID ~" IN("~ instIds.mkString(",") ~")"

@@ -17,6 +17,8 @@ class SQLSpectrumProvider(val msiDbCtx: DatabaseConnectionContext) extends ISpec
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   
   def getSpectra( spectrumIds: Seq[Long] ): Array[Spectrum] = {
+    if (spectrumIds.isEmpty) return Array()
+    
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     	val spectrumIdsAsStr = spectrumIds.mkString(",")
     	

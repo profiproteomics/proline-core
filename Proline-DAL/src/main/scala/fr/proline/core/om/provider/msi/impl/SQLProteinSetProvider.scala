@@ -24,6 +24,7 @@ class SQLProteinSetProvider(
   }
 
   def getProteinSetsAsOptions(protSetIds: Seq[Long]): Array[Option[ProteinSet]] = {
+    if (protSetIds.isEmpty) return Array()
 
     val protSetById = this.getProteinSets(protSetIds).map { p => p.id -> p } toMap;
     protSetIds.map { protSetById.get(_) } toArray
@@ -31,6 +32,7 @@ class SQLProteinSetProvider(
   }
 
   def getProteinSets(protSetIds: Seq[Long]): Array[ProteinSet] = {
+    if (protSetIds.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     
@@ -51,6 +53,8 @@ class SQLProteinSetProvider(
   }
 
   def getResultSummariesProteinSets(rsmIds: Seq[Long]): Array[ProteinSet] = {
+    if (rsmIds.isEmpty) return Array()
+    
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       ProteinSetBuilder.buildProteinSets(
         this._getRSMsProtSetRecords(msiEzDBC,rsmIds),

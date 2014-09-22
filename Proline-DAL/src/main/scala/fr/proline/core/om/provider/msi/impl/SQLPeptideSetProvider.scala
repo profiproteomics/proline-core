@@ -33,6 +33,7 @@ class SQLPeptideSetProvider(
   val scoreTypeById = msiDbHelper.getScoringTypeById
 
   def getPeptideSetsAsOptions(pepSetIds: Seq[Long]): Array[Option[PeptideSet]] = {
+    if (pepSetIds.isEmpty) return Array()
 
     val pepSets = this.getPeptideSets(pepSetIds)
     val pepSetById = pepSets.map { p => p.id -> p } toMap
@@ -42,6 +43,7 @@ class SQLPeptideSetProvider(
   }
 
   def getPeptideSets(pepSetIds: Seq[Long]): Array[PeptideSet] = {
+    if (pepSetIds.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     
@@ -61,6 +63,7 @@ class SQLPeptideSetProvider(
   }
 
   def getResultSummariesPeptideSets(rsmIds: Seq[Long]): Array[PeptideSet] = {
+    if (rsmIds.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     

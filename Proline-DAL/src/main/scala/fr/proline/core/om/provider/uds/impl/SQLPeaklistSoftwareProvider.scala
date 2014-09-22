@@ -17,11 +17,14 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) exten
   val SpecTitleCols = UdsDbSpecTitleParsingRuleTable.columns
   
   def getPeaklistSoftwareListAsOptions( pklSoftIds: Seq[Long] ): Array[Option[PeaklistSoftware]] = {
+    if( pklSoftIds.isEmpty ) return Array()
+    
     val pklSoftById = Map() ++ this.getPeaklistSoftwareList(pklSoftIds).map( ps => ps.id -> ps )
     pklSoftIds.toArray.map( pklSoftById.get(_) )
   }
   
   def getPeaklistSoftwareList( pklSoftIds: Seq[Long] ): Array[PeaklistSoftware] = {
+    if( pklSoftIds.isEmpty ) return Array()
     
     val specRuleById = _getSpectrumTitleParsingRuleById()
 

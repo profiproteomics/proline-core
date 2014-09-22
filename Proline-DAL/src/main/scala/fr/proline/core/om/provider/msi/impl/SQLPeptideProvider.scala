@@ -100,6 +100,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
   /** Returns a map of peptide PTMs grouped by the peptide id */
   def getPeptidePtmRecordsByPepId(peptideIds: Seq[Long]): Map[Long, Seq[AnyMap]] = {
+    if( peptideIds.isEmpty ) return Map()
 
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
@@ -127,12 +128,12 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
 
   }
 
-  def getLocatedPtmsByPepId(peptideIds: Seq[Long]): Map[Long, Array[LocatedPtm]] = {    
+  def getLocatedPtmsByPepId(peptideIds: Seq[Long]): Map[Long, Array[LocatedPtm]] = {
     PtmDefinitionBuilder.buildLocatedPtmsGroupedByPepId(getPeptidePtmRecordsByPepId(peptideIds),ptmDefinitionById)
   }
 
   def getPeptides(peptideIds: Seq[Long]): Array[Peptide] = {
-    if (peptideIds.length == 0) return Array.empty[Peptide]
+    if (peptideIds.isEmpty) return Array.empty[Peptide]
 
     var uncachedPepIds: Seq[Long] = null
     var cachedPeps: Seq[Peptide] = null
@@ -182,6 +183,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
   }
 
   def getPeptidesAsOptions(peptideIds: Seq[Long]): Array[Option[Peptide]] = {
+    if (peptideIds.isEmpty) return Array()
 
     val peptides = this.getPeptides(peptideIds)
     val pepById = peptides.map { pep => pep.id -> pep } toMap
@@ -195,6 +197,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
   }
 
   def getPeptidesForSequences(peptideSeqs: Seq[String]): Array[Peptide] = {
+    if (peptideSeqs.isEmpty) return Array()
 
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
@@ -314,7 +317,8 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
   }
 
   def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]): Array[Option[Peptide]] = {
-
+    if (peptideSeqsAndPtms.isEmpty) return Array()
+    
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
 
       val maxNbIters = psEzDBC.getInExpressionCountLimit
