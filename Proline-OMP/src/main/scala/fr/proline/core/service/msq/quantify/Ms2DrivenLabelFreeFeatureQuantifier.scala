@@ -61,14 +61,22 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     mapSetExtractor.extractedMapSet
   }
   
+  // Add processings specific to the MS2 driven strategy here
   override protected def quantifyMasterChannel(): Unit = {
     
-    // Add processings specific to the MS2 driven strategy here
+    // Retrieve LC-MS maps ids mapped by the run id
     val lcMsMapIdByRunId = Map() ++ lcmsMapSet.childMaps.map( lcmsMap => lcmsMap.runId.get -> lcmsMap.id )
+    
+    // Update the LC-MS map id of each master quant channel
     val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
     for( udsQuantChannel <- udsQuantChannels) {
       udsQuantChannel.setLcmsMapId( lcMsMapIdByRunId( udsQuantChannel.getRun().getId ) )
+      udsEm.merge(udsQuantChannel)
     }
+    
+    // Update the map set id of the master quant channel
+    udsMasterQuantChannel.setLcmsMapSetId(lcmsMapSet.id)
+    udsEm.merge(udsMasterQuantChannel)
     
     super.quantifyMasterChannel()
   }
