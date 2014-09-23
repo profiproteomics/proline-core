@@ -105,8 +105,8 @@ class WeightedSpectralCountQuantifier(
     // -- Create ProteinPepsWeightStruct from reference RSM
     val proteinSetWeightStructsById = createProteinPepsWeightStructs(true)
     var end2 = System.currentTimeMillis()
-    logger.debug("-- Create ProteinPepsWeightStruct from reference RSM"+(end2 - end)+" ms. Found "
-        + proteinSetWeightStructsById.size + " Prot to calculate SC for (versus "+mergedResultSummary.proteinSets.length+" in merged RSM")
+    logger.debug("-- Create ProteinPepsWeightStruct from reference RSM "+(end2 - end)+" ms. Found "
+        + proteinSetWeightStructsById.size + " Prot to calculate SC for (versus "+mergedResultSummary.proteinSets.length+" in merged RSM)")
 
     // Compute master quant peptides
     // !! Warning : Returned values are linked to Identification RSM (OM Objects) and not to Quantitation RSM (ORM Objects)
@@ -326,7 +326,7 @@ class WeightedSpectralCountQuantifier(
     val protSetIdByPepId = new HashMap[Long, ArrayBuffer[Long]]()
 
     //****  For each ProteinSet, initialize a ProteinPepsWeightStruct and create Maps
-    mergedResultSummary.proteinSets.foreach(protSet => {
+    mergedResultSummary.proteinSets.filter(_.isValidated).foreach(protSet => {
 
       //Map of weight by peptide Id
       val weightByPepId = new HashMap[Long, Float]()
@@ -340,6 +340,7 @@ class WeightedSpectralCountQuantifier(
         pmAccession = typicalPM.getAccession()
 
       }
+
 
       //-- Get peptide specific count and create Map : peptide => List ProtSet.Id identified by peptide
       var nbrPepSpecif: Int = 0
@@ -523,10 +524,12 @@ class WeightedSpectralCountQuantifier(
         var foundPMIDandAcc: Pair[Long, String] = null
 
         val pepSetByPMIt = protMatchesAccListByPepSet.iterator
-        while (pepSetByPMIt.hasNext && peptideSetForPM == null) {
+        while (pepSetByPMIt.hasNext ){ // && peptideSetForPM == null) {
           val nextEntry: (PeptideSet, Seq[Pair[Long, String]]) = pepSetByPMIt.next
           nextEntry._2.foreach(pmIdAndAcc => {
             if (pmIdAndAcc._2.equals(currentProteinSetWeightStruct.typicalPMAcc)) {
+              if(peptideSetForPM != null)
+            	  logger.debug(" --- !!  FOUND AN OTHER MATCH FOR "+currentProteinSetWeightStruct.typicalPMAcc+" => "+peptideSetForPM.isSubset +" and "+ nextEntry._1.id)
               peptideSetForPM = nextEntry._1
               foundPMIDandAcc = pmIdAndAcc
             }
@@ -543,37 +546,40 @@ class WeightedSpectralCountQuantifier(
 
           //Go through peptides instances,  compute SC and create QuantPeptide
           peptideSetForPM.getPeptideInstances.foreach(pepInst => {
+        	  if(currentProteinSetWeightStruct.weightByPeptideId.get(pepInst.peptideId).isEmpty){
+        		  logger.warn("************ NOT FOUND Pep "+pepInst.peptideId+" in Parent but exist in RSM "+pepInst.resultSummaryId)
+        	  } else {
+	            val weight = currentProteinSetWeightStruct.weightByPeptideId.get(pepInst.peptideId).get
+	            val isPepSpecific = Math.abs(weight - 1.0f) < MathUtils.EPSILON_FLOAT
+	            val qPep = if (quantPepByPepID.contains(pepInst.peptideId)) {
+	              quantPepByPepID(pepInst.peptideId)
+	            } else {
+	              //FIXME VDS : OK if we use weight on specificity... Maybe this information (specific or not) should be saved in  ProteinPepsWeightStruct
+	              val ssc = if (isPepSpecific) { pepInst.totalLeavesMatchCount } else { 0 }
+	              val qp = new QuantPeptide(
+	                rawAbundance = ssc,
+	                abundance = ssc,
+	                elutionTime = 0,
+	                peptideMatchesCount = pepInst.totalLeavesMatchCount,
+	                quantChannelId = qcId,
+	                peptideId = Some(pepInst.peptideId),
+	                peptideInstanceId = Some(pepInst.id),
+	                selectionLevel = 2
+	              )
+	              //Update rsm specific map
+	              quantPepByPepID.put(pepInst.peptideId, qp)
+	
+	              //Update complete Map to be used for MasterQuantPeptide creation
+	              forMasterQPepByPepId.getOrElseUpdate(pepInst.peptideId, new HashMap[Long, QuantPeptide]()).put(qcId, qp)
+	
+	              qp
+	            }
 
-            val weight = currentProteinSetWeightStruct.weightByPeptideId.get(pepInst.peptideId).get
-            val isPepSpecific = Math.abs(weight - 1.0f) < MathUtils.EPSILON_FLOAT
-            val qPep = if (quantPepByPepID.contains(pepInst.peptideId)) {
-              quantPepByPepID(pepInst.peptideId)
-            } else {
-              //FIXME VDS : OK if we use weight on specificity... Maybe this information (specific or not) should be saved in  ProteinPepsWeightStruct
-              val ssc = if (isPepSpecific) { pepInst.totalLeavesMatchCount } else { 0 }
-              val qp = new QuantPeptide(
-                rawAbundance = ssc,
-                abundance = ssc,
-                elutionTime = 0,
-                peptideMatchesCount = pepInst.totalLeavesMatchCount,
-                quantChannelId = qcId,
-                peptideId = Some(pepInst.peptideId),
-                peptideInstanceId = Some(pepInst.id),
-                selectionLevel = 2
-              )
-              //Update rsm specific map
-              quantPepByPepID.put(pepInst.peptideId, qp)
-
-              //Update complete Map to be used for MasterQuantPeptide creation
-              forMasterQPepByPepId.getOrElseUpdate(pepInst.peptideId, new HashMap[Long, QuantPeptide]()).put(qcId, qp)
-
-              qp
-            }
-
-            protBSC += qPep.peptideMatchesCount
-            if (isPepSpecific)
-              protSSC += qPep.rawAbundance
-            protWSC += (qPep.peptideMatchesCount.toFloat * weight)
+	            protBSC += qPep.peptideMatchesCount
+	            if (isPepSpecific)
+	              protSSC += qPep.rawAbundance
+	            protWSC += (qPep.peptideMatchesCount.toFloat * weight)
+        	  }
           }) //End go through PeptideInstance of ProtSet's PeptideSet
 
           var protSetId = peptideSetForPM.getProteinSetId
@@ -652,15 +658,43 @@ class WeightedSpectralCountQuantifier(
     val rs = rsm.resultSet.get
     val protMById = rs.proteinMatchById
     val result = scala.collection.mutable.Map[PeptideSet, Seq[Pair[Long, String]]]()
+    val pepSetById =  rsm.peptideSets.map(pepSet => pepSet.id -> pepSet).toMap
+    
+    rsm.proteinSets.filter(_.isValidated).foreach(protSet => {
 
-    rsm.peptideSets.foreach(pepSet => {
+      //Do SameSet PeptideSet
       val seqBuilder = Seq.newBuilder[Pair[Long, String]]
-      pepSet.proteinMatchIds.foreach(pmId => {
-        val acc = protMById(pmId).accession
+      protSet.peptideSet.proteinMatchIds.foreach(pmId => {
+        val acc = protMById(pmId).accession        
         seqBuilder += new Pair(pmId, acc)
       })
-      result.put(pepSet, seqBuilder.result)
+      result.put(protSet.peptideSet, seqBuilder.result)
+      
+      
+      //Do Subset PeptideSet
+      protSet.peptideSet.getStrictSubsetIds.foreach( psId =>{
+        val subPepSet =pepSetById(psId)        
+		val subSeqBuilder = Seq.newBuilder[Pair[Long, String]]
+		subPepSet.proteinMatchIds.foreach(pmId => {
+			val acc = protMById(pmId).accession        
+			subSeqBuilder += new Pair(pmId, acc)
+		})
+		result.put(subPepSet, subSeqBuilder.result)
+      })
+      
     })
+    
+//    rsm.peptideSets.foreach(pepSet => {     
+//      val seqBuilder = Seq.newBuilder[Pair[Long, String]]
+//      pepSet.proteinMatchIds.foreach(pmId => {
+//        val acc = protMById(pmId).accession
+//        if(acc.equals("#C#P04264")){
+//          logger.debug(" ------------ "+acc+" found in pep Set "+pepSet.id+" in RSM "+rsm.id)
+//        }
+//        seqBuilder += new Pair(pmId, acc)
+//      })
+//      result.put(pepSet, seqBuilder.result)
+//    })
 
     result.toMap
   }
