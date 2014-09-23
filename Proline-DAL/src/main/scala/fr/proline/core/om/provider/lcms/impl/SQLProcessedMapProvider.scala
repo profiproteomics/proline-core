@@ -2,6 +2,7 @@ package fr.proline.core.om.provider.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+
 import fr.profi.jdbc.ResultSetRow
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
@@ -12,7 +13,6 @@ import fr.proline.core.dal.tables.lcms.{ LcmsDbMapTable, LcmsDbProcessedMapTable
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.IProcessedMapProvider
 import fr.profi.util.primitives._
-//import fr.profi.util.sql._
   
 class SQLProcessedMapProvider(
   val lcmsDbCtx: DatabaseConnectionContext,
@@ -57,8 +57,8 @@ class SQLProcessedMapProvider(
         val processedMapId = r.getLong(LcMsMapCols.ID)
         val featureScoring = featureScoringById.get(r.getLong(LcMsMapCols.FEATURE_SCORING_ID))
         val rawMapIds = rawMapIdsByProcessedMapId(processedMapId)
-        val peakelsOpt = if( loadPeakels == false ) None
-        else Some( rawMapIds.flatMap( rawMapId => peakelsByRawMapId.getOrElse(rawMapId,Array()) ) )
+        val peakelsOpt = if( loadPeakels == false ) Option.empty[Array[Peakel]]
+        else Some( rawMapIds.flatMap( rawMapId => peakelsByRawMapId.getOrElse(rawMapId,Array.empty[Peakel]) ) )
         
         // Build the map
         processedMaps(lcmsMapIdx) = new ProcessedMap(
@@ -181,7 +181,7 @@ class SQLProcessedMapProvider(
         else olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
         
         // Retrieve peakel items
-        val peakelItems = peakelItemByFtId(ftId).toArray
+        val peakelItems = peakelItemByFtId.getOrElse(ftId,Seq()).toArray
         
         val feature = this.buildFeature(
           processedFtRecord,
@@ -234,7 +234,7 @@ class SQLProcessedMapProvider(
     
       val procFtQuery = new SelectQueryBuilder2(LcmsDbFeatureTable, LcmsDbProcessedMapFeatureItemTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.*,t2.*) ->
-          "WHERE " ~ t2.PROCESSED_MAP_ID ~ " IN(" ~ processedMapIds.mkString(",") ~ ") " ~
+          "WHERE " ~ t2.PROCESSED_MAP_ID ~ " IN (" ~ processedMapIds.mkString(",") ~ ") " ~
           "AND " ~ t1.ID ~ "=" ~ t2.FEATURE_ID
           // "AND is_clusterized = " + BoolToSQLStr(isClusterized,boolStrAsInt)
       )
@@ -262,7 +262,7 @@ class SQLProcessedMapProvider(
       
       val ftClusterRelationQuery = new SelectQueryBuilder1(LcmsDbFeatureClusterItemTable).mkSelectQuery( (t,c) =>
         List(t.CLUSTER_FEATURE_ID,t.SUB_FEATURE_ID) ->
-        "WHERE "~ t.PROCESSED_MAP_ID ~" IN("~ processedMapIds.mkString(",") ~") "
+        "WHERE "~ t.PROCESSED_MAP_ID ~" IN ("~ processedMapIds.mkString(",") ~") "
       )
       
       ezDBC.selectAndProcess( ftClusterRelationQuery ) { r =>

@@ -11,7 +11,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.LcmsDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.{SelectQueryBuilder1}
+import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.provider.lcms.ILcMsMapProvider
@@ -37,7 +37,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
       val olpFtIdsByFtId = new HashMap[Long,ArrayBuffer[Long]]
       val olpIdMapQuery = new SelectQueryBuilder1(LcmsDbFeatureOverlapMappingTable).mkSelectQuery( (t,c) =>
         List(t.OVERLAPPED_FEATURE_ID,t.OVERLAPPING_FEATURE_ID) ->
-        "WHERE "~ t.MAP_ID ~" IN("~ rawMapIds.mkString(",") ~") "
+        "WHERE "~ t.MAP_ID ~" IN ("~ rawMapIds.mkString(",") ~") "
       )
       
       ezDBC.selectAndProcess( olpIdMapQuery ) { r =>
@@ -70,7 +70,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
       // Load overlapping features
       val olpFtQuery = new SelectQueryBuilder1(LcmsDbFeatureTable).mkSelectQuery( (t,c) =>
         List(t.*) ->
-        "WHERE "~ t.MAP_ID ~" IN("~ mapIds.mkString(",") ~") "~
+        "WHERE "~ t.MAP_ID ~" IN ("~ mapIds.mkString(",") ~") "~
         "AND "~ t.IS_OVERLAPPING ~"="~ _boolToStr(ezDBC,true)
       )
       
@@ -94,7 +94,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
       // Iterate over features (is_overlapping = false)
       val ftQuery = new SelectQueryBuilder1(LcmsDbFeatureTable).mkSelectQuery( (t,c) =>
         List(t.*) ->
-        "WHERE "~ t.MAP_ID ~" IN("~ mapIds.mkString(",") ~") "~
+        "WHERE "~ t.MAP_ID ~" IN ("~ mapIds.mkString(",") ~") "~
         "AND "~ t.IS_OVERLAPPING ~"="~ _boolToStr(ezDBC,false)
       )
       
@@ -154,7 +154,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
        correctedElutionTime = correctedElutionTime,
        isClusterized = isClusterized,
        selectionLevel = selectionLevel,
-       properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[FeatureProperties](_) ),
+       properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES.toAliasedString).map( ProfiJson.deserialize[FeatureProperties](_) ),
        relations = new FeatureRelations(
          peakelItems = peakelItems,
          firstScanInitialId = scanInitialIdById(firstScanId),

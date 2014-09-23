@@ -73,8 +73,6 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
   }
   
   def getFeaturePeakelItems( featureIds: Seq[Long] ): Array[FeaturePeakelItem] = {
-    
-    println("checking")
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -87,7 +85,6 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       
       // Iterate over peakels
       val peakelItems = ezDBC.select( peakelItemQuery ) { r =>
-        println("ok")
         
         val peakelItem = this.buildFeaturePeakelItem(r)
         peakelIds += peakelItem.peakelReference.id
