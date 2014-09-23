@@ -35,19 +35,21 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       // Iterate over peptide sequences to retrieve their identifiers
       pepSequences.grouped(msiEzDBC.getInExpressionCountLimit).foreach { tmpPepSeqs =>
         
-        val quotedPepSeqs = tmpPepSeqs map { "'" + _ + "'" }        
-        val sqlQuery = new SelectQueryBuilder1( MsiDbPeptideTable ).mkSelectQuery( (t,c) =>
-          List(t.ID,t.SEQUENCE,t.PTM_STRING) ->
-          "WHERE "~ t.SEQUENCE ~" IN("~ quotedPepSeqs.mkString(",") ~")"
-        )
-        
-        msiEzDBC.selectAndProcess(sqlQuery) { r =>
-  
-          val pepId = toLong(r.nextAny)
-          val pepSeq = r.nextString
-          var ptmString = r.nextStringOrElse("")
-  
-          peptideMapBuilder += (pepSeq + "%" + ptmString -> pepId)
+        if(tmpPepSeqs != null && !tmpPepSeqs.isEmpty) {
+	        val quotedPepSeqs = tmpPepSeqs map { "'" + _ + "'" }        
+	        val sqlQuery = new SelectQueryBuilder1( MsiDbPeptideTable ).mkSelectQuery( (t,c) =>
+	          List(t.ID,t.SEQUENCE,t.PTM_STRING) ->
+	          "WHERE "~ t.SEQUENCE ~" IN("~ quotedPepSeqs.mkString(",") ~")"
+	        )
+	        
+	        msiEzDBC.selectAndProcess(sqlQuery) { r =>
+	  
+	          val pepId = toLong(r.nextAny)
+	          val pepSeq = r.nextString
+	          var ptmString = r.nextStringOrElse("")
+	  
+	          peptideMapBuilder += (pepSeq + "%" + ptmString -> pepId)
+	        }
         }
       }
     })
