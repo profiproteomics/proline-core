@@ -30,17 +30,19 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
 
       // Create TMP table
       val tmpSpectrumTableName = "tmp_spectrum_" + (scala.math.random * 1000000).toInt
-      logger.info("creating temporary table '" + tmpSpectrumTableName + "'...")
+      logger.info(s"creating temporary table '$tmpSpectrumTableName'...")
       
       val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
-
-      msiEzDBC.execute("CREATE TEMP TABLE " + tmpSpectrumTableName + " (LIKE spectrum) ON COMMIT DROP")
+      
+      val allSpectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.mkString(",")
+      msiEzDBC.execute(
+        s"CREATE TEMP TABLE $tmpSpectrumTableName AS (SELECT $allSpectrumTableCols FROM spectrum) ON COMMIT DROP"
+      )
 
       // Bulk insert of spectra
       logger.info("BULK insert of spectra")
-
-      val spectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.filter(_ != "id").mkString(",")
-      val pgBulkLoader = bulkCopyManager.copyIn("COPY " + tmpSpectrumTableName + " ( id, " + spectrumTableCols + " ) FROM STDIN")
+      
+      val pgBulkLoader = bulkCopyManager.copyIn(s"COPY $tmpSpectrumTableName ( $allSpectrumTableCols ) FROM STDIN")
       
       var spectrumIdx = 0
       
@@ -99,15 +101,18 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
       val nbInsertedSpectra = pgBulkLoader.endCopy()
 
       // Move TMP table content to MAIN table
-      logger.info("move TMP table " + tmpSpectrumTableName + " into MAIN spectrum table")
-      msiEzDBC.execute("INSERT into spectrum (" + spectrumTableCols + ") " +
-        "SELECT " + spectrumTableCols + " FROM " + tmpSpectrumTableName)
+      logger.info(s"move TMP table $tmpSpectrumTableName into MAIN spectrum table")
+      
+      val spectrumTableColsWithoutPK = MsiDbSpectrumTable.columnsAsStrList.filter(_ != "id").mkString(",")      
+      msiEzDBC.execute(
+        s"INSERT into spectrum ($spectrumTableColsWithoutPK) " +
+        s"SELECT $spectrumTableColsWithoutPK FROM $tmpSpectrumTableName"
+      )
 
       // Retrieve generated spectrum ids
       val spectrumIdByTitle = msiEzDBC.select(
-        "SELECT title, id FROM spectrum WHERE peaklist_id = " + peaklistId) { r =>
-          (r.nextString -> toLong(r.nextAny))
-        } toMap
+        "SELECT title, id FROM spectrum WHERE peaklist_id = " + peaklistId
+      ) { r => ( r.nextString -> r.nextLong ) } toMap
 
       context.spectrumIdByTitle = spectrumIdByTitle
 
