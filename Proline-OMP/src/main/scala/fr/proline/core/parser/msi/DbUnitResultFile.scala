@@ -353,6 +353,7 @@ class MsiDbDatasetParser(
       udsRecordByTableName( UdsDbEnzymeCleavageTable.name ).map( p => p.getLong("id") -> p ).toMap,
       udsRecordByTableName( UdsDbInstrumentConfigTable.name ).map( p => p.getLong("id") -> p ).toMap,
       udsRecordByTableName( UdsDbInstrumentTable.name ).map( p => p.getLong("id") -> p ).toMap,      
+      udsRecordByTableName( UdsDbFragmentationSeriesTable.name ).map( p => p.getLong("id") -> p ).toMap,
       psDbDatasetParser
     ).head
     

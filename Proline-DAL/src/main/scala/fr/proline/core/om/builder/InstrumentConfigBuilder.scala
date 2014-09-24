@@ -5,6 +5,7 @@ import fr.profi.util.primitives._
 import fr.profi.util.serialization._
 import fr.proline.core.dal.tables.uds._
 import fr.proline.core.om.model.msi._
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * @author David Bouyssie
@@ -14,10 +15,12 @@ object InstrumentConfigBuilder {
   
   protected val instCols = UdsDbInstrumentColumns
   protected val instConfigCols = UdsDbInstrumentConfigColumns
+  protected val fragSerieCols = UdsDbFragmentationSeriesColumns
   
   def buildInstrumentConfigs(
     eachInstConfigRecord: (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig],
-    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] )
+    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),
+    eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] )
   ): Array[InstrumentConfig] = {
     
     val instIdByInstConfigId = new HashMap[Long, Long]
@@ -35,7 +38,16 @@ object InstrumentConfigBuilder {
 
     for (instConfig <- instConfigs)
       instConfig.instrument = instById(instIdByInstConfigId(instConfig.id))
-      
+
+    for (instConfig <- instConfigs) {
+      val fragRules = new ArrayBuffer[FragmentationRule]()
+      eachFragmentationSeriesSelector(Array(instConfig.id)) { r => {
+        val serie = new FragmentIonType(r.getString(fragSerieCols.NAME))
+        fragRules += new FragmentIonRequirement(serie.ionSeries.toString(), serie)
+        serie
+      }}
+      instConfig.fragmentationRules = Some(fragRules.toArray)
+    }
     instConfigs.toArray
   }
   

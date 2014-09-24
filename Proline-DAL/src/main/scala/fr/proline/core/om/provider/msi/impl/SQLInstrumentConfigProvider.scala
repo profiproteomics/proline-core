@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.HashMap
-
 import fr.profi.jdbc.easy._
 import fr.profi.util.primitives._
 import fr.proline.context.DatabaseConnectionContext
@@ -13,6 +12,8 @@ import fr.proline.core.om.builder.InstrumentConfigBuilder
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IInstrumentConfigProvider
 import fr.proline.repository.ProlineDatabaseType
+import fr.proline.core.dal.tables.SelectQueryBuilder3
+import fr.proline.core.orm.uds.FragmentationSeries
 
 class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) extends IInstrumentConfigProvider {
   
@@ -33,7 +34,8 @@ class SQLInstrumentConfigProvider(val udsDbCtx: DatabaseConnectionContext) exten
       val instIdByInstConfigId = new HashMap[Long, Long]
       InstrumentConfigBuilder.buildInstrumentConfigs(
         selectInstConfigRecords(udsEzDBC,instConfigIds),
-        instIds => selectInstrumentRecords(udsEzDBC,instIds)
+        instIds => selectInstrumentRecords(udsEzDBC,instIds),
+        instIds => selectFragmentationSeriesRecords(udsEzDBC,instIds)
       )
       
     })
@@ -107,6 +109,16 @@ object SQLInstrumentConfigProvider {
     )
     
     udsEzDBC.select[Instrument](instQuery)
+  }
+  
+  def selectFragmentationSeriesRecords(udsEzDBC: EasyDBC, instConfigIds: Seq[Long]): (IValueContainer => FragmentIonType) => Seq[FragmentIonType] = {
+    require( instConfigIds.isEmpty == false, "instConfigIds is empty" )
+
+    val fragmentationSeriesQuery = new SelectQueryBuilder3(UdsDbFragmentationSeriesTable, UdsDbInstrumentConfigFragmentationRuleMapTable, UdsDbFragmentationRuleTable).mkSelectQuery( (t1,c1,t2,c2,t3,c3) =>
+      List(t1.*) -> "WHERE "~ t3.FRAGMENT_SERIES_ID ~"="~ t1.ID~" AND "~ t2.FRAGMENTATION_RULE_ID ~"="~ t3.ID~" AND "~ t2.INSTRUMENT_CONFIG_ID ~" IN("~ instConfigIds.mkString(",") ~")"
+    )
+    
+    udsEzDBC.select[FragmentIonType](fragmentationSeriesQuery)
   }
   
 }

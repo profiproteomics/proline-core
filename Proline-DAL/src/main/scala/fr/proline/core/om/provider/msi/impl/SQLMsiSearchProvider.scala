@@ -63,7 +63,8 @@ class SQLMsiSearchProvider(
           enzymeIds => selectAndMapEnzymeRecords(msiEzDBC, enzymeIds),
           enzymeId => selectAndMapEnzymeCleavageRecords(udsEzDBC, enzymeId),
           instConfigIds => selectInstConfigRecords(udsEzDBC, instConfigIds),
-          instIds => selectInstrumentRecords(udsEzDBC, instIds),          
+          instIds => selectInstrumentRecords(udsEzDBC, instIds),
+          instConfigIds => selectFragmentationSeriesRecords(udsEzDBC, instConfigIds),
           ptmProvider
         )
         
@@ -99,6 +100,7 @@ class SQLMsiSearchProvider(
           enzymeId => selectAndMapEnzymeCleavageRecords(udsEzDBC, enzymeId),
           instConfigIds => selectInstConfigRecords(udsEzDBC, instConfigIds),
           instIds => selectInstrumentRecords(udsEzDBC, instIds),
+          instConfigIds => selectFragmentationSeriesRecords(udsEzDBC, instConfigIds),
           searchSettingsId => selectAndMapSearchedSeqDbRecords(msiEzDBC, searchSettingsId),
           ptmProvider
         )

@@ -55,7 +55,8 @@ object MsiSearchBuilder {
     enzymeRecordById: Map[Long,IValueContainer],
     enzymeCleavageRecordsByEnzymeId: Map[Long,IValueContainer],
     instConfigRecordById: Map[Long,IValueContainer],
-    instrumentRecordById: Map[Long,IValueContainer],   
+    instrumentRecordById: Map[Long,IValueContainer],
+    fragmentationSerieById: Map[Long,IValueContainer],
     ptmProvider: IPTMProvider
   ): Array[MSISearch] = {
     
@@ -73,6 +74,7 @@ object MsiSearchBuilder {
       { enzymeId: Long => selectAndMapRecords( Array(enzymeId), enzymeCleavageRecordsByEnzymeId ) },
       { instConfigIds: Array[Long] => selectAndMapRecords( instConfigIds, instConfigRecordById ) },
       { instIds: Array[Long] => selectAndMapRecords( instIds, instrumentRecordById ) },
+      { fragSeriesIds: Array[Long] => selectAndMapRecords( fragSeriesIds, fragmentationSerieById ) },
       ptmProvider
     )
     
@@ -91,7 +93,8 @@ object MsiSearchBuilder {
     eachEnzymeRecordSelector: Array[Long] => ( (IValueContainer => Enzyme) => Seq[Enzyme] ),
     eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] ),
     eachInstConfigRecordSelector: Array[Long] => ( (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig] ),
-    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),    
+    eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),
+    eachFragSeriesRecordSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] ),
     ptmProvider: IPTMProvider
   ): Array[MSISearch] = {
     
@@ -126,6 +129,7 @@ object MsiSearchBuilder {
       eachEnzymeCleavageRecordSelector,
       eachInstConfigRecordSelector,
       eachInstrumentRecordSelector,
+      eachFragSeriesRecordSelector,
       eachSearchedSeqDbRecordSelector,
       ptmProvider
     )
@@ -177,6 +181,7 @@ object MsiSearchBuilder {
     eachEnzymeCleavageRecordSelector: Long => ( (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] ),
     eachInstConfigRecordSelector: Array[Long] => ( (IValueContainer => InstrumentConfig) => Seq[InstrumentConfig] ),
     eachInstrumentRecordSelector: Array[Long] => ( (IValueContainer => Instrument) => Seq[Instrument] ),
+    eachFragmentationSeriesSelector: Array[Long] => ( (IValueContainer => FragmentIonType) => Seq[FragmentIonType] ),
     eachSearchedSeqDbRecordSelector: Long => ( (IValueContainer => SeqDatabase) => Seq[SeqDatabase] ),
     ptmProvider: IPTMProvider
   ): Array[SearchSettings] = {
@@ -246,7 +251,8 @@ object MsiSearchBuilder {
     val ptmSpecById = Map() ++ ptmProvider.getPtmDefinitions(ptmSpecIds.distinct).map(s => s.id -> s)
     val instConfById = Map() ++ InstrumentConfigBuilder.buildInstrumentConfigs(
       eachInstConfigRecordSelector(instConfigIdBySSId.values.toArray.distinct),
-      eachInstrumentRecordSelector
+      eachInstrumentRecordSelector,
+      eachFragmentationSeriesSelector
     ).map(i => i.id -> i)
     
     for (ss <- searchSettingsList) {
