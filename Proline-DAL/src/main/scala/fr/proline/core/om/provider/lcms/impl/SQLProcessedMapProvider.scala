@@ -125,6 +125,8 @@ class SQLProcessedMapProvider(
   }
 
   /** Returns a list of features corresponding to a given list of processed map ids */
+  // TODO: rename to getProcessedMapsFeatures
+  // TODO: move to Feature provider
   def getFeatures( processedMapIds: Seq[Long] ): Array[Feature] = {
     if( processedMapIds.isEmpty ) return Array()
  

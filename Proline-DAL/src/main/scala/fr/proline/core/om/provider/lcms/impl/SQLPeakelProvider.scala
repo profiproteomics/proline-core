@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
-
 import fr.profi.jdbc.ResultSetRow
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
@@ -12,6 +11,7 @@ import fr.proline.core.om.model.lcms._
 import fr.profi.util.sql._
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
+import scala.collection.mutable.HashMap
 
 class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
   
@@ -72,7 +72,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
     
   }
   
-  def getFeaturePeakelItems( featureIds: Seq[Long] ): Array[FeaturePeakelItem] = {
+  def getPeakelItemsByFeatureId( featureIds: Seq[Long], loadPeakels: Boolean = true ): Map[Long,Seq[FeaturePeakelItem]] = {
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -82,26 +82,29 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       )
       
       val peakelIds = new ArrayBuffer[Long](featureIds.length)
+      val peakelItemsByFtId = new HashMap[Long,ArrayBuffer[FeaturePeakelItem]]()
       
       // Iterate over peakels
-      val peakelItems = ezDBC.select( peakelItemQuery ) { r =>
+      ezDBC.selectAndProcess( peakelItemQuery ) { r =>
         
         val peakelItem = this.buildFeaturePeakelItem(r)
         peakelIds += peakelItem.peakelReference.id
-
-        peakelItem
         
-      } toArray
-      
-      // Load peakels and map them bey their id
-      val peakelById = this.getPeakels(peakelIds).map( p => p.id -> p ).toMap
-      
-      // Attach peakels to peakel items
-      for( peakelItem <- peakelItems ) {
-        peakelItem.peakelReference = peakelById(peakelItem.peakelReference.id)
+        val ftId = r.getLong(PeakelItemCols.FEATURE_ID)
+        peakelItemsByFtId.getOrElseUpdate(ftId, new ArrayBuffer[FeaturePeakelItem]) += peakelItem
       }
       
-      peakelItems
+      if( loadPeakels ) {
+        // Load peakels and map them bey their id
+        val peakelById = this.getPeakels(peakelIds).map( p => p.id -> p ).toMap
+        
+        // Attach peakels to peakel items
+        for( (ftId,peakelItems) <- peakelItemsByFtId; peakelItem <- peakelItems ) {
+          peakelItem.peakelReference = peakelById(peakelItem.peakelReference.id)
+        }
+      }
+      
+      peakelItemsByFtId.toMap
     })
 
   }
