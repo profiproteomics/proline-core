@@ -39,13 +39,13 @@ class SQLQuantResultSummaryProvider(
   final val spectralCountQuantPeptidesSchema = SchemaName.SPECTRAL_COUNTING_PEPTIDES.toString
   final val quantProteinSetSchema = SchemaName.QUANT_PROTEIN_SETS.toString
 
-  def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
+  /*def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
     if( quantRsmIds.isEmpty ) return Array()
     
     val rsms = this.getQuantResultSummaries(quantRsmIds, quantChannelIds, loadResultSet)
     val rsmById = rsms.map { rsm => rsm.id -> rsm } toMap;
     quantRsmIds.map { rsmById.get(_) } toArray
-  }
+  }*/
   
   // TODO: find a way to handle master quant reporter ions
   def getQuantResultSummaries( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[QuantResultSummary] = {
@@ -82,7 +82,7 @@ class SQLQuantResultSummaryProvider(
     val mqPepIonsByMQPepId = mqPepIons.groupBy(_.masterQuantPeptideId)
     
     // Load master quant peptides
-    val mqPeps = this.getMasterQuantPeptides( quantRsmIds, pepInstByMQPepId,mqPepIonsByMQPepId )
+    val mqPeps = this.getMasterQuantPeptides( quantRsmIds, pepInstByMQPepId, mqPepIonsByMQPepId )
     
     // Load master quant protein sets
     val protSetById = Map() ++ rsms.flatMap( _.proteinSets.map( ps => ps.id -> ps ) )

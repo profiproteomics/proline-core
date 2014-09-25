@@ -1,6 +1,9 @@
 package fr.proline.core.om.provider.msq.impl
 
+import scala.collection.mutable.ArrayBuffer
+
 import fr.profi.util.serialization.ProfiJson
+import fr.profi.util.primitives._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -12,9 +15,6 @@ import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 import fr.proline.core.om.model.msq.MasterQuantPeptideIonProperties
 import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.core.om.provider.msq.IMasterQuantPeptideIonProvider
-import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.profi.util.primitives._
-import scala.collection.mutable.ArrayBuffer
 
 class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) extends IMasterQuantPeptideIonProvider {
   
@@ -23,63 +23,67 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val ObjectTreeTable = MsiDbObjectTreeTable
   
-  val LabelFreeQuantPeptideIonsSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS.toString
-  
-  def getMasterQuantPeptideIonsAsOptions( mqPepIonIds: Seq[Long] ): Array[Option[MasterQuantPeptideIon]] = {
-    if( mqPepIonIds.isEmpty ) return Array()
-    throw new Exception("NYI")
-  }
+  //val LabelFreeQuantPeptideIonsSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS.toString
   
   def getMasterQuantPeptideIons( mqPepIonIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {    
     require( mqPepIonIds != null, "mqPepIonIds is null")
     if( mqPepIonIds.isEmpty ) return Array()
     
-    if( mqPepIonIds.isEmpty ) return Array()
+    // Load master quant peptide ions corresponding to the provided ids
+    val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
+    val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
+      (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
+      " WHERE "~ t1.ID ~" IN("~ mqPepIonIds.mkString(",") ~")" ~
+      " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
+      " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
+    )
     
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
-      
-      val mqPepIonIdsAsStr = mqPepIonIds.mkString(",")
-      val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
-      
-      // Load master quant peptide ions corresponding to the provided result summary ids
-      val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
-      val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
-        (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
-        " WHERE "~ t1.ID ~" IN("~ mqPepIonIdsAsStr ~")" ~
-        " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
-        " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
-      )
-      
-      msiEzDBC.selectAndProcess(mqPepIonQuery) { r =>
-        mqPepIons += this._buildMasterQuantPeptideIon( r.toAnyMap() )
-      }
-      
-      mqPepIons.toArray
-    })
+    this.loadMasterQuantPeptideIons(mqPepIonQuery)
+  }
+  
+  def getMasterQuantPeptidesMQPeptideIons( mqPepIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {    
+    require( mqPepIds != null, "mqPepIds is null")
+    if( mqPepIds.isEmpty ) return Array()
     
+    // Load master quant peptide ions corresponding to the provided master quant peptide ids
+    val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
+    val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
+      (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
+      " WHERE "~ t1.MASTER_QUANT_PEPTIDE_ID ~" IN("~ mqPepIds.mkString(",") ~")" ~
+      " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
+      " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
+    )
+
+    this.loadMasterQuantPeptideIons(mqPepIonQuery)
   }
 
   def getQuantResultSummariesMQPeptideIons(quantRsmIds: Seq[Long]): Array[MasterQuantPeptideIon] = {
+    require( quantRsmIds != null, "quantRsmIds is null")
     if( quantRsmIds.isEmpty ) return Array()
+    
+    val quantRsmIdsAsStr = quantRsmIds.mkString(",")
+    
+    // Load master quant peptide ions corresponding to the provided result summary ids
+    val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
+    // TODO: check if this SQL query could be simplified
+    val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
+      (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
+      " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN("~ quantRsmIdsAsStr ~")" ~
+      //" AND "~ t2.RESULT_SUMMARY_ID ~" IN("~ quantRsmIdsAsStr ~")" ~
+      " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
+      " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
+      //" AND "~ t3.SCHEMA_NAME ~" = '"~ LabelFreeQuantPeptideIonsSchema ~"'"
+    )
+      
+    this.loadMasterQuantPeptideIons(mqPepIonQuery)
+  }
+  
+  protected def loadMasterQuantPeptideIons(sqlQuery: String): Array[MasterQuantPeptideIon] = {
     
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
-      val quantRsmIdsAsStr = quantRsmIds.mkString(",")
       val mqPepIons = new ArrayBuffer[MasterQuantPeptideIon]()
-      
-      // Load master quant peptide ions corresponding to the provided result summary ids
-      val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
-      // TODO: check if this SQL query could be simplified
-      val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
-        (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
-        " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN("~ quantRsmIdsAsStr ~")" ~
-        " AND "~ t2.RESULT_SUMMARY_ID ~" IN("~ quantRsmIdsAsStr ~")" ~
-        " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
-        " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID ~
-        " AND "~ t3.SCHEMA_NAME ~" = '"~ LabelFreeQuantPeptideIonsSchema ~"'"
-      )
-      
-      msiEzDBC.selectAndProcess(mqPepIonQuery) { r =>
+      msiEzDBC.selectAndProcess(sqlQuery) { r =>
         mqPepIons += this._buildMasterQuantPeptideIon( r.toAnyMap() )
       }
       
