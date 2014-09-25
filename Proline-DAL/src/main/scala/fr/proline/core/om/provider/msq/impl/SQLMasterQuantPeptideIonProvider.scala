@@ -57,6 +57,22 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
     this.loadMasterQuantPeptideIons(mqPepIonQuery)
   }
 
+  def getLcMsMasterFeaturesMQPeptideIons( lcMsMasterFeatureIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {
+    require( lcMsMasterFeatureIds != null, "lcMsMasterFeatureIds is null")
+    if( lcMsMasterFeatureIds.isEmpty ) return Array()
+
+    // Load master quant peptide ions corresponding to the provided LC-MS master feature ids
+    val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
+    val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
+      (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) ->
+        " WHERE "~ t1.LCMS_MASTER_FEATURE_ID ~" IN("~ lcMsMasterFeatureIds.mkString(",") ~")" ~
+        " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
+        " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
+    )
+
+    this.loadMasterQuantPeptideIons(mqPepIonQuery)
+  }
+
   def getQuantResultSummariesMQPeptideIons(quantRsmIds: Seq[Long]): Array[MasterQuantPeptideIon] = {
     require( quantRsmIds != null, "quantRsmIds is null")
     if( quantRsmIds.isEmpty ) return Array()
