@@ -43,10 +43,10 @@ class SQLMasterQuantPeptideProvider(
     val mqPepIons = mqPepIonsProvider.getMasterQuantPeptidesMQPeptideIons(mqPepIds)
     val pepInstIds = mqPepIons.flatMap( mqPepIon => mqPepIon.peptideInstanceId )
     val pepInstById = pepInstProvider.getPeptideInstances(pepInstIds).map( pepInst => pepInst.id -> pepInst ).toMap
-    val pepInstByMQPepId = ( for( 
+    val pepInstByMQPepId = ( for(
       mqPepIon <- mqPepIons;
       pepInstId <- mqPepIon.peptideInstanceId
-    ) yield mqPepIon.id -> pepInstById(pepInstId) ) toMap
+    ) yield mqPepIon.masterQuantPeptideId -> pepInstById(pepInstId) ) toMap
     
     val mqPepIonsByMQPepId = mqPepIons.groupBy( _.masterQuantPeptideId )
     
@@ -84,7 +84,7 @@ class SQLMasterQuantPeptideProvider(
     val pepInstByMQPepId = ( for(
       mqPepIon <- mqPepIons;
       pepInstId <- mqPepIon.peptideInstanceId
-    ) yield mqPepIon.id -> pepInstById(pepInstId) ).toMap
+    ) yield mqPepIon.masterQuantPeptideId -> pepInstById(pepInstId) ).toMap
 
     val mqPepIonsByMQPepId = mqPepIons.groupBy( _.masterQuantPeptideId )
 
