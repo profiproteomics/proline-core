@@ -260,6 +260,7 @@ object Peptide extends InMemoryIdGen with Logging {
     else {
       val massCalcObject = new MassCalc(SymbolPropertyTable.MONO_MASS, false)
       massCalcObject.setSymbolModification('U', 150.95363)
+      massCalcObject.setSymbolModification('O', 255.158295)
       mass = try {
         //        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
         massCalcObject.getMass(ProteinTools.createProtein(sequence))
