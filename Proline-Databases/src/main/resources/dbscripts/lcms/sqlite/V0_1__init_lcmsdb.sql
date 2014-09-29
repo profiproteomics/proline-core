@@ -387,3 +387,7 @@ CREATE INDEX master_feature_item_master_map_idx ON master_feature_item (master_m
 
 CREATE INDEX feature_overlap_mapping_map_idx ON feature_overlap_mapping (map_id);
 
+CREATE INDEX peakel_map_idx ON peakel (map_id);
+
+CREATE INDEX feature_peakel_item_map_idx ON feature_peakel_item (map_id);
+
