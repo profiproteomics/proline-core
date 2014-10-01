@@ -21,9 +21,8 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   protected val lcmsDbCtx: DatabaseConnectionContext
   protected val LcMsMapCols = LcmsDbMapColumns
   protected val FtCols = LcmsDbFeatureColumns
-  protected val PeakelCols = LcmsDbPeakelColumns
-  protected val PeakelItemCols = LcmsDbFeaturePeakelItemColumns
   
+  protected val peakelProvider = new SQLPeakelProvider(lcmsDbCtx)
   protected val lcmsDbHelper = new LcmsDbHelper(lcmsDbCtx)
   protected val featureScoringById = lcmsDbHelper.getFeatureScoringById()
   
@@ -171,94 +170,6 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
          processedMapId = processedMapId
        )
      )
-    
-  }
-  
-  def getPeakels(rawMapIds: Seq[Long]): Array[Peakel] = {
-
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
-      
-      val mapIdsStr = rawMapIds.mkString(",")
-      
-      // Check that provided map ids correspond to raw maps
-      val nbMaps = ezDBC.selectInt("SELECT count(id) FROM raw_map WHERE id IN (" + mapIdsStr + ")")
-      require(nbMaps == rawMapIds.length, "map ids must correspond to existing run maps")
-      
-      // Build peakels SQL query
-      val peakelQuery = new SelectQueryBuilder1(LcmsDbPeakelTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.MAP_ID ~" IN("~ rawMapIds.mkString(",") ~") "
-      )
-      
-      // Iterate over peakels
-      ezDBC.select( peakelQuery ) { r =>
-        
-        // TODO: use the buildPeakel method from PeakelProvider
-        
-        // Read and deserialize peaks
-        val peaksAsBytes = r.getBytes(PeakelCols.PEAKS)
-        val lcMsPeaks = org.msgpack.ScalaMessagePack.read[Array[LcMsPeak]](peaksAsBytes)
-        
-        // Read and deserialize properties
-        val propsAsJSON = r.getStringOption(PeakelCols.SERIALIZED_PROPERTIES)
-        val propsOpt = propsAsJSON.map( ProfiJson.deserialize[PeakelProperties](_) )
-        
-        Peakel(
-          id = r.getLong(PeakelCols.ID),
-          moz = r.getDouble(PeakelCols.MOZ),
-          elutionTime = toFloat(r.getAny(PeakelCols.ELUTION_TIME)),
-          apexIntensity = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)),
-          area = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)),
-          duration = toFloat(r.getAny(PeakelCols.DURATION)),
-          fwhm = r.getAnyOption(PeakelCols.FWHM).map(toFloat(_)),
-          isOverlapping = toBoolean(r.getAny(PeakelCols.IS_OVERLAPPING)),
-          featuresCount = r.getInt(PeakelCols.FEATURE_COUNT),
-          peaks = lcMsPeaks,
-          firstScanId = r.getLong(PeakelCols.FIRST_SCAN_ID),
-          lastScanId = r.getLong(PeakelCols.LAST_SCAN_ID),
-          apexScanId = r.getLong(PeakelCols.APEX_SCAN_ID),
-          rawMapId = r.getLong(PeakelCols.MAP_ID),
-          properties = propsOpt
-        )
-
-      } toArray
-
-    })
-
-  }
-  
-  protected def getPeakelItemsByFeatureId(rawMapIds: Seq[Long]): Map[Long,Seq[FeaturePeakelItem]] = {
-
-    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
-      
-      val mapIdsStr = rawMapIds.mkString(",")
-      
-      // Build feature peakel items SQL query
-      val peakelItemQuery = new SelectQueryBuilder1(LcmsDbFeaturePeakelItemTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.MAP_ID ~" IN("~ rawMapIds.mkString(",") ~") "
-      )
-      
-      val peakelItemsByFtId = new HashMap[Long,ArrayBuffer[FeaturePeakelItem]]()
-      
-      ezDBC.selectAndProcess( peakelItemQuery ) { r =>
-        
-        // TODO: use the buildFeaturePeakelItem method from PeakelProvider
-        
-        // Read and deserialize properties
-        val propsAsJSON = r.getStringOption(PeakelItemCols.SERIALIZED_PROPERTIES)
-        val propsOpt = propsAsJSON.map( ProfiJson.deserialize[FeaturePeakelItemProperties](_) )
-        
-        val peakelItem = FeaturePeakelItem(
-          peakelReference = PeakelIdentifier( r.getLong(PeakelItemCols.PEAKEL_ID) ),
-          isotopeIndex = r.getInt(PeakelItemCols.ISOTOPE_INDEX),
-          properties = propsOpt
-        )
-        
-        val ftId = r.getLong(PeakelItemCols.FEATURE_ID)
-        peakelItemsByFtId.getOrElseUpdate(ftId, new ArrayBuffer[FeaturePeakelItem]) += peakelItem
-      }
-      
-      peakelItemsByFtId.toMap
-    })
     
   }
 

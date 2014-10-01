@@ -118,7 +118,7 @@ class SQLMasterQuantPeptideProvider(
     val mqPepCompQueryBuilder = new SelectQueryBuilder2(MQComponentTable,ObjectTreeTable)
     val mqPepCompQuery = mqPepCompQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2) => List(t1.ID,t1.SELECTION_LEVEL,t1.RESULT_SUMMARY_ID,t1.SERIALIZED_PROPERTIES,t2.CLOB_DATA) -> 
-      " WHERE "~ t1.ID ~" IN("~ mqPepIds.mkString(",") ~")" ~
+      " WHERE "~ t1.ID ~" IN ("~ mqPepIds.mkString(",") ~")" ~
       " AND "~ t1.OBJECT_TREE_ID ~" = "~ t2.ID
       //" AND ( "~ t2.SCHEMA_NAME ~" = '"~ labelFreeQuantPeptidesSchema ~"' OR "~ t2.SCHEMA_NAME ~" = '"~ spectralCountQuantPeptidesSchema ~"') "
     )       
@@ -134,7 +134,7 @@ class SQLMasterQuantPeptideProvider(
     val mqPepCompQueryBuilder = new SelectQueryBuilder2(MQComponentTable,ObjectTreeTable)
     val mqPepCompQuery = mqPepCompQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2) => List(t1.ID,t1.SELECTION_LEVEL,t1.RESULT_SUMMARY_ID,t1.SERIALIZED_PROPERTIES,t2.CLOB_DATA) -> 
-      " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN("~ quantRsmIds.mkString(",") ~")" ~
+      " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN ("~ quantRsmIds.mkString(",") ~")" ~
       " AND "~ t1.OBJECT_TREE_ID ~" = "~ t2.ID
       //" AND ( "~ t2.SCHEMA_NAME ~" = '"~ labelFreeQuantPeptidesSchema ~"' OR "~ t2.SCHEMA_NAME ~" = '"~ spectralCountQuantPeptidesSchema ~"') "
     )       

@@ -23,8 +23,6 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val ObjectTreeTable = MsiDbObjectTreeTable
   
-  //val LabelFreeQuantPeptideIonsSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS.toString
-  
   def getMasterQuantPeptideIons( mqPepIonIds: Seq[Long] ): Array[MasterQuantPeptideIon] = {    
     require( mqPepIonIds != null, "mqPepIonIds is null")
     if( mqPepIonIds.isEmpty ) return Array()
@@ -33,7 +31,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
     val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
     val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
-      " WHERE "~ t1.ID ~" IN("~ mqPepIonIds.mkString(",") ~")" ~
+      " WHERE "~ t1.ID ~" IN ("~ mqPepIonIds.mkString(",") ~")" ~
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
     )
@@ -49,7 +47,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
     val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
     val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
-      " WHERE "~ t1.MASTER_QUANT_PEPTIDE_ID ~" IN("~ mqPepIds.mkString(",") ~")" ~
+      " WHERE "~ t1.MASTER_QUANT_PEPTIDE_ID ~" IN ("~ mqPepIds.mkString(",") ~")" ~
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
     )
@@ -65,7 +63,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
     val mqPepIonQueryBuilder = new SelectQueryBuilder3(MQPepIonTable,MQComponentTable,ObjectTreeTable)
     val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) ->
-        " WHERE "~ t1.LCMS_MASTER_FEATURE_ID ~" IN("~ lcMsMasterFeatureIds.mkString(",") ~")" ~
+        " WHERE "~ t1.LCMS_MASTER_FEATURE_ID ~" IN ("~ lcMsMasterFeatureIds.mkString(",") ~")" ~
         " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
         " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
     )
@@ -84,7 +82,7 @@ class SQLMasterQuantPeptideIonProvider(val msiDbCtx: DatabaseConnectionContext) 
     // TODO: check if this SQL query could be simplified
     val mqPepIonQuery = mqPepIonQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2,t3,c3) => List(t1.*,t2.SELECTION_LEVEL,t3.CLOB_DATA) -> 
-      " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN("~ quantRsmIdsAsStr ~")" ~
+      " WHERE "~ t1.RESULT_SUMMARY_ID ~" IN ("~ quantRsmIdsAsStr ~")" ~
       //" AND "~ t2.RESULT_SUMMARY_ID ~" IN("~ quantRsmIdsAsStr ~")" ~
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID

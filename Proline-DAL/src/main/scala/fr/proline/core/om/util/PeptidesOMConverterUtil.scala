@@ -154,7 +154,9 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       selectionLevel = msiPepInst.getSelectionLevel(),
       elutionTime = msiPepInst.getElutionTime().floatValue(),
       bestPeptideMatchId = msiPepInst.getBestPeptideMatchId(),
-      resultSummaryId = msiPepInst.getResultSummary().getId())
+      masterQuantComponentId = Option( msiPepInst.getMasterQuantComponentId() ).map(_.longValue).getOrElse(0L),
+      resultSummaryId = msiPepInst.getResultSummary().getId()
+    )
     if (useCachedObject) peptideInstancesCache.put(msiPepInst.getId(), convertedPepInst)
 
     //*** Create PeptideSets for current PeptideInstance    

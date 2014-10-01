@@ -38,7 +38,7 @@ class SQLProcessedMapProvider(
     
     // If requested load peakels and group them by map id
     val peakelsByRawMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
-    else this.getPeakels(rawMapIds).groupBy(_.rawMapId)
+    else peakelProvider.getPeakels(rawMapIds).groupBy(_.rawMapId)
     
     val processedMaps = new Array[ProcessedMap](processedMapIds.length)
     var lcmsMapIdx = 0
@@ -139,7 +139,7 @@ class SQLProcessedMapProvider(
       }
       
       // --- Load run ids and run map ids
-      var( rawMapIds, runIds ) = ( new ArrayBuffer[Long](nbMaps), new ArrayBuffer[Long](nbMaps) )
+      val( rawMapIds, runIds ) = ( new ArrayBuffer[Long](nbMaps), new ArrayBuffer[Long](nbMaps) )
       
       val sqlQuery = new SelectQueryBuilder2(LcmsDbRawMapTable, LcmsDbProcessedMapRawMapMappingTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.ID,t1.SCAN_SEQUENCE_ID) ->
@@ -165,7 +165,8 @@ class SQLProcessedMapProvider(
       else getOverlappingFeatureById(rawMapIds, scanInitialIdById, ms2EventIdsByFtId)
       
       // Load peakel items
-      val peakelItemByFtId = this.getPeakelItemsByFeatureId(rawMapIds)
+      val peakelItems = peakelProvider.getRawMapPeakelItems(rawMapIds, loadPeakels = false)
+      val peakelItemsByFtId = peakelItems.groupBy(_.featureReference.id)
       
       // Retrieve mapping between cluster and sub-features
       val subFtIdsByClusterFtId = getSubFtIdsByClusterFtId( processedMapIds )
@@ -183,7 +184,7 @@ class SQLProcessedMapProvider(
         else olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
         
         // Retrieve peakel items
-        val peakelItems = peakelItemByFtId.getOrElse(ftId,Seq()).toArray
+        val peakelItems = peakelItemsByFtId.getOrElse(ftId,Array())
         
         val feature = this.buildFeature(
           processedFtRecord,

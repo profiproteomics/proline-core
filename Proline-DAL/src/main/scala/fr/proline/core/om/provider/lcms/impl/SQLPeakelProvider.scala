@@ -25,17 +25,32 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       
       // Build peakels SQL query
       val peakelQuery = new SelectQueryBuilder1(LcmsDbPeakelTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.ID ~" IN("~ peakelIds.mkString(",") ~") "
+        List(t.*) -> "WHERE "~ t.ID ~" IN ("~ peakelIds.mkString(",") ~")"
       )
       
-      // Iterate over peakels
-      ezDBC.select( peakelQuery ) { r =>
-        
-        this.buildPeakel(r)
- 
+      // Load peakels
+      ezDBC.select( peakelQuery ) { this.buildPeakel(_) } toArray
+    })
 
-      } toArray
+  }
 
+  def getRawMapPeakels(rawMapIds: Seq[Long]): Array[Peakel] = {
+
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+      
+      val mapIdsStr = rawMapIds.mkString(",")
+      
+      // Check that provided map ids correspond to raw maps
+      val nbMaps = ezDBC.selectInt("SELECT count(id) FROM raw_map WHERE id IN (" + mapIdsStr + ")")
+      require(nbMaps == rawMapIds.length, "map ids must correspond to existing run maps")
+      
+      // Build peakels SQL query
+      val peakelQuery = new SelectQueryBuilder1(LcmsDbPeakelTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.MAP_ID ~" IN ("~ rawMapIds.mkString(",") ~")"
+      )
+      
+      // Load peakels
+      ezDBC.select( peakelQuery ) { this.buildPeakel(_) } toArray
     })
 
   }
@@ -72,7 +87,35 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
     
   }
   
-  def getPeakelItemsByFeatureId( featureIds: Seq[Long], loadPeakels: Boolean = true ): Map[Long,Seq[FeaturePeakelItem]] = {
+  def getPeakelItems( peakelIds: Seq[Long], loadPeakels: Boolean = true ): Array[FeaturePeakelItem] = {
+
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+      
+      // Build peakels SQL query
+      val peakelItemQuery = new SelectQueryBuilder1(LcmsDbFeaturePeakelItemTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.PEAKEL_ID ~" IN("~ peakelIds.mkString(",") ~") "
+      )
+      
+      // Load peakel items
+      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) } toArray
+      
+      if( loadPeakels ) {
+        
+        // Load peakels and map them bey their id
+        val peakelById = this.getPeakels(peakelIds).map( p => p.id -> p ).toMap
+        
+        // Attach peakels to peakel items
+        for( peakelItem <- peakelItems ) {
+          peakelItem.peakelReference = peakelById(peakelItem.peakelReference.id)
+        }
+      }
+      
+      peakelItems
+    })
+
+  }
+  
+  def getFeaturePeakelItems( featureIds: Seq[Long], loadPeakels: Boolean = true ): Array[FeaturePeakelItem] = {
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
@@ -81,32 +124,54 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
         List(t.*) -> "WHERE "~ t.FEATURE_ID ~" IN("~ featureIds.mkString(",") ~") "
       )
       
-      val peakelIds = new ArrayBuffer[Long](featureIds.length)
-      val peakelItemsByFtId = new HashMap[Long,ArrayBuffer[FeaturePeakelItem]]()
-      
-      // Iterate over peakels
-      ezDBC.selectAndProcess( peakelItemQuery ) { r =>
-        
-        val peakelItem = this.buildFeaturePeakelItem(r)
-        peakelIds += peakelItem.peakelReference.id
-        
-        val ftId = r.getLong(PeakelItemCols.FEATURE_ID)
-        peakelItemsByFtId.getOrElseUpdate(ftId, new ArrayBuffer[FeaturePeakelItem]) += peakelItem
-      }
+      // Load peakel items
+      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) } toArray
       
       if( loadPeakels ) {
+        
+        val peakelIds = peakelItems.map( _.peakelReference.id )
+        
         // Load peakels and map them bey their id
         val peakelById = this.getPeakels(peakelIds).map( p => p.id -> p ).toMap
         
         // Attach peakels to peakel items
-        for( (ftId,peakelItems) <- peakelItemsByFtId; peakelItem <- peakelItems ) {
+        for( peakelItem <- peakelItems ) {
           peakelItem.peakelReference = peakelById(peakelItem.peakelReference.id)
         }
       }
       
-      peakelItemsByFtId.toMap
+      peakelItems
     })
 
+  }
+  
+  def getRawMapPeakelItems(rawMapIds: Seq[Long], loadPeakels: Boolean = true): Array[FeaturePeakelItem] = {
+
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+      
+      val mapIdsStr = rawMapIds.mkString(",")
+      
+      // Build feature peakel items SQL query
+      val peakelItemQuery = new SelectQueryBuilder1(LcmsDbFeaturePeakelItemTable).mkSelectQuery( (t,c) =>
+        List(t.*) -> "WHERE "~ t.MAP_ID ~" IN ("~ rawMapIds.mkString(",") ~")"
+      )
+      
+      val peakelItems = ezDBC.select( peakelItemQuery ) { this.buildFeaturePeakelItem(_) } toArray
+      
+      if( loadPeakels ) {
+        
+        // Load peakels and map them bey their id
+        val peakelById = this.getRawMapPeakels(rawMapIds).map( p => p.id -> p ).toMap
+        
+        // Attach peakels to peakel items
+        for( peakelItem <- peakelItems ) {
+          peakelItem.peakelReference = peakelById(peakelItem.peakelReference.id)
+        }
+      }
+      
+      peakelItems
+    })
+    
   }
   
   def buildFeaturePeakelItem( itemRecord: ResultSetRow ): FeaturePeakelItem = {
@@ -118,10 +183,11 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
     val propsOpt = propsAsJSON.map( ProfiJson.deserialize[FeaturePeakelItemProperties](_) )
     
     FeaturePeakelItem(
+      featureReference = FeatureIdentifier( r.getLong(PeakelItemCols.FEATURE_ID) ),
       peakelReference = PeakelIdentifier( r.getLong(PeakelItemCols.PEAKEL_ID) ),
       isotopeIndex = r.getInt(PeakelItemCols.ISOTOPE_INDEX),
       properties = propsOpt
-    )    
+    )
   }
 
 }

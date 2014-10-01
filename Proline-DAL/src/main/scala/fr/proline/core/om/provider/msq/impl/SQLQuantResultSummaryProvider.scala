@@ -20,7 +20,6 @@ import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msq.IQuantResultSummaryProvider
-import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.profi.util.primitives._
 
 class SQLQuantResultSummaryProvider(
@@ -29,15 +28,18 @@ class SQLQuantResultSummaryProvider(
   override val udsDbCtx: DatabaseConnectionContext
 ) extends SQLResultSummaryProvider(msiDbCtx,psDbCtx,udsDbCtx) with IQuantResultSummaryProvider {  
   
-  protected val mqPepIonsProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx)
+  protected val mqProtSetProvider = new SQLMasterQuantProteinSetProvider(msiDbCtx, psDbCtx)
+  protected val mqPepProvider = new SQLMasterQuantPeptideProvider(msiDbCtx, psDbCtx)
+  protected val mqPepIonProvider = new SQLMasterQuantPeptideIonProvider(msiDbCtx)
+  
   val MQComponentTable = MsiDbMasterQuantComponentTable
   val MQCompCols = MQComponentTable.columns
   val ObjectTreeTable = MsiDbObjectTreeTable
   val ObjectTreeCols = ObjectTreeTable.columns
   
-  final val labelFreeQuantPeptidesSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDES.toString
+  /*final val labelFreeQuantPeptidesSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDES.toString
   final val spectralCountQuantPeptidesSchema = SchemaName.SPECTRAL_COUNTING_PEPTIDES.toString
-  final val quantProteinSetSchema = SchemaName.QUANT_PROTEIN_SETS.toString
+  final val quantProteinSetSchema = SchemaName.QUANT_PROTEIN_SETS.toString*/
 
   /*def getQuantResultSummariesAsOptions( quantRsmIds: Seq[Long], quantChannelIds: Seq[Long], loadResultSet: Boolean ): Array[Option[QuantResultSummary]] = {
     if( quantRsmIds.isEmpty ) return Array()
@@ -54,7 +56,7 @@ class SQLQuantResultSummaryProvider(
     val rsms = this.getResultSummaries(quantRsmIds, loadResultSet)
     
     // Map peptide instances bey thier id
-    val pepInstById = Map() ++ rsms.flatMap( _.peptideInstances.map( pi => pi.id -> pi ) )
+    /*val pepInstById = Map() ++ rsms.flatMap( _.peptideInstances.map( pi => pi.id -> pi ) )
     
     val pepInstByMQPepId = DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
@@ -73,21 +75,27 @@ class SQLQuantResultSummaryProvider(
       }
       
       pepInstByMqPepIdBuilder.result
-    })
+    })*/
+    
+    val pepInstByMQPepId = ( for( 
+      rsm <- rsms; 
+      pepInst <- rsm.peptideInstances;
+      if pepInst.masterQuantComponentId > 0
+    ) yield pepInst.masterQuantComponentId -> pepInst ).toMap
     
     // Load master quant peptide ions
-    val mqPepIons = mqPepIonsProvider.getQuantResultSummariesMQPeptideIons(quantRsmIds)
+    val mqPepIons = mqPepIonProvider.getQuantResultSummariesMQPeptideIons(quantRsmIds)
     
     // Group master quant peptides ions by the masterQuantPeptideId
     val mqPepIonsByMQPepId = mqPepIons.groupBy(_.masterQuantPeptideId)
     
     // Load master quant peptides
-    val mqPeps = this.getMasterQuantPeptides( quantRsmIds, pepInstByMQPepId, mqPepIonsByMQPepId )
+    val mqPeps = mqPepProvider.getQuantResultSummariesMQPeptides( quantRsmIds, pepInstByMQPepId, mqPepIonsByMQPepId )
     
     // Load master quant protein sets
     val protSetById = Map() ++ rsms.flatMap( _.proteinSets.map( ps => ps.id -> ps ) )
     val mqPepByPepInstId = Map() ++ mqPeps.withFilter(_.peptideInstance.isDefined).map(mqp => mqp.peptideInstance.get.id -> mqp)
-    val mqProtSets = this.getMasterQuantProteinSets(quantRsmIds, protSetById, mqPepByPepInstId)
+    val mqProtSets = mqProtSetProvider.getQuantResultSummariesMQProteinSets(quantRsmIds, protSetById, mqPepByPepInstId)
     
     // Group master quant components by RSM id
     val mqPepIonsByRsmId = mqPepIons.groupBy( _.resultSummaryId )
@@ -107,7 +115,7 @@ class SQLQuantResultSummaryProvider(
 
   }
   
-  def getMasterQuantPeptides(
+  /*def getMasterQuantPeptides(
     quantRsmIds: Seq[Long],
     pepInstByMQPepId: Map[Long,PeptideInstance],
     mqPepIonsByMQPepId: Map[Long,Array[MasterQuantPeptideIon]]
@@ -192,6 +200,6 @@ class SQLQuantResultSummaryProvider(
       
     })
     
-  }
+  }*/
 
 }

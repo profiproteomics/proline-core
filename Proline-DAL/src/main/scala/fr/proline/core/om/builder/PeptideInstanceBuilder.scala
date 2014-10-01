@@ -77,6 +77,7 @@ object PeptideInstanceBuilder {
         peptideMatchIds = pepMatchIds.toArray,
         bestPeptideMatchId = pepInstRecord.getLong(PepInstCols.BEST_PEPTIDE_MATCH_ID),
         unmodifiedPeptideId = pepInstRecord.getLongOrElse(PepInstCols.UNMODIFIED_PEPTIDE_ID, 0L),
+        masterQuantComponentId = pepInstRecord.getLongOrElse(PepInstCols.MASTER_QUANT_COMPONENT_ID, 0L),
         resultSummaryId = pepInstRecord.getLong(PepInstCols.RESULT_SUMMARY_ID),
         properties = propertiesAsJSONOpt.map(ProfiJson.deserialize[PeptideInstanceProperties](_)),
         peptideMatchPropertiesById = pepMatchPropertyMapBuilder.result()

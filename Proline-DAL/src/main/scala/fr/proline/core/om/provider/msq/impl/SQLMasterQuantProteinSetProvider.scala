@@ -40,39 +40,41 @@ class SQLMasterQuantProteinSetProvider(
   val ObjectTreeTable = MsiDbObjectTreeTable
   val ObjectTreeCols = ObjectTreeTable.columns
   
-  /*final val labelFreeQuantPeptidesSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDES.toString
-  final val spectralCountQuantPeptidesSchema = SchemaName.SPECTRAL_COUNTING_PEPTIDES.toString
-  final val quantProteinSetSchema = SchemaName.QUANT_PROTEIN_SETS.toString*/
-  
   def getMasterQuantProteinSets( mqProtSetIds: Seq[Long], loadMQPeptides: Boolean = true ): Array[MasterQuantProteinSet] = {
     if( mqProtSetIds.isEmpty ) return Array()
     
     val protSets = protSetProvider.getProteinSets(mqProtSetIds)
     val protSetById = protSets.map( protSet => protSet.id -> protSet ).toMap
     
-    // Retrieve master quant peptide ids corresponding to peptide instances
-    val pepInstIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.id) )
-    val mqPepIds = if( pepInstIds.isEmpty ) Array.empty[Long]
+    val mqPeps = if( loadMQPeptides == false ) Array.empty[MasterQuantPeptide]
     else {
-      DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
-        val mqPepIdQueryBuilder = new SelectQueryBuilder1(MsiDbPeptideInstanceTable)
-        val mqPepIdSqlQuery = mqPepIdQueryBuilder.mkSelectQuery(
-          (t1,c1) => List(t1.MASTER_QUANT_COMPONENT_ID) -> 
-          " WHERE "~ t1.ID ~" IN ("~ pepInstIds.mkString(",") ~")"
-        )
-        
-        val tmpMqPepIds = new ArrayBuffer[Long]
-        msiEzDBC.selectAndProcess(mqPepIdSqlQuery) { r =>
-          val mqPepIdOpt = r.nextLongOption
-          if (mqPepIdOpt.isDefined) tmpMqPepIds += mqPepIdOpt.get
-        }
-        
-        tmpMqPepIds.toArray
-      })
+      // Retrieve master quant peptide ids corresponding to peptide instances
+      val mqPepIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.masterQuantComponentId) ).filter(_ > 0)
+      
+      /*val pepInstIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.id) )
+      val mqPepIds = if( pepInstIds.isEmpty ) Array.empty[Long]
+      else {
+        DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+          val mqPepIdQueryBuilder = new SelectQueryBuilder1(MsiDbPeptideInstanceTable)
+          val mqPepIdSqlQuery = mqPepIdQueryBuilder.mkSelectQuery(
+            (t1,c1) => List(t1.MASTER_QUANT_COMPONENT_ID) -> 
+            " WHERE "~ t1.ID ~" IN ("~ pepInstIds.mkString(",") ~")"
+          )
+          
+          val tmpMqPepIds = new ArrayBuffer[Long]
+          msiEzDBC.selectAndProcess(mqPepIdSqlQuery) { r =>
+            val mqPepIdOpt = r.nextLongOption
+            if (mqPepIdOpt.isDefined) tmpMqPepIds += mqPepIdOpt.get
+          }
+          
+          tmpMqPepIds.toArray
+        })
+      }*/
+      
+      // Load master quant peptides
+      mqPepProvider.getMasterQuantPeptides(mqPepIds)
     }
     
-    // Load master quant peptides
-    val mqPeps = mqPepProvider.getMasterQuantPeptides(mqPepIds)
     val mqPepByPepInstId = Map() ++ mqPeps.map(mqp => mqp.peptideInstance.get.id -> mqp)
     
     this.getMasterQuantProteinSets(mqProtSetIds, protSetById, mqPepByPepInstId)
@@ -107,7 +109,8 @@ class SQLMasterQuantProteinSetProvider(
     val mqPepByPepInstId = if( loadMQPeptides == false ) Map.empty[Long,MasterQuantPeptide]
     else {
       // Retrieve master quant peptide ids corresponding to peptide instances
-      val pepInstIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.id) )
+      val mqPepIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.masterQuantComponentId) ).filter(_ > 0)
+      /*val pepInstIds = protSets.flatMap( _.peptideSet.getPeptideInstances.map(_.id) )
 
       val mqPepIds = if( pepInstIds.isEmpty ) Array.empty[Long]
       else {
@@ -126,7 +129,7 @@ class SQLMasterQuantProteinSetProvider(
 
           tmpMqPepIds.toArray
         })
-      }
+      }*/
 
       // Load master quant peptides
       val mqPeps = mqPepProvider.getMasterQuantPeptides(mqPepIds)
@@ -164,7 +167,7 @@ class SQLMasterQuantProteinSetProvider(
     val mqProtSetCompQueryBuilder = new SelectQueryBuilder3(MsiDbProteinSetTable,MQComponentTable,ObjectTreeTable)
     val mqProtSetCompQuery = mqProtSetCompQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2,t3,c3) => List(t1.ID,t2.SELECTION_LEVEL,t2.SERIALIZED_PROPERTIES,t3.CLOB_DATA) -> 
-      " WHERE "~ t1.ID ~" IN("~ mqProtSetIds.mkString(",") ~")" ~
+      " WHERE "~ t1.ID ~" IN ("~ mqProtSetIds.mkString(",") ~")" ~
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
       //" AND "~ t3.SCHEMA_NAME ~" = '"~ quantProteinSetSchema ~"'"
@@ -181,7 +184,7 @@ class SQLMasterQuantProteinSetProvider(
     val mqProtSetCompQueryBuilder = new SelectQueryBuilder3(MsiDbProteinSetTable,MQComponentTable,ObjectTreeTable)
     val mqProtSetCompQuery = mqProtSetCompQueryBuilder.mkSelectQuery(
       (t1,c1,t2,c2,t3,c3) => List(t1.ID,t2.SELECTION_LEVEL,t2.SERIALIZED_PROPERTIES,t3.CLOB_DATA) -> 
-      " WHERE "~ t2.RESULT_SUMMARY_ID ~" IN("~ quantRsmIds.mkString(",") ~")" ~
+      " WHERE "~ t2.RESULT_SUMMARY_ID ~" IN ("~ quantRsmIds.mkString(",") ~")" ~
       " AND "~ t1.MASTER_QUANT_COMPONENT_ID ~" = "~ t2.ID ~
       " AND "~ t2.OBJECT_TREE_ID ~" = "~ t3.ID
       //" AND "~ t3.SCHEMA_NAME ~" = '"~ quantProteinSetSchema ~"'"

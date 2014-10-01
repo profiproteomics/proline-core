@@ -41,7 +41,7 @@ class SQLFeatureProvider(
       val processedMapIds = ezDBC.selectLongs( procMapIdsSqlQuery )
 
       // --- Load run ids and run map ids
-      var( rawMapIds, runIds ) = ( new ArrayBuffer[Long](), new ArrayBuffer[Long]() )
+      val( rawMapIds, runIds ) = ( new ArrayBuffer[Long](), new ArrayBuffer[Long]() )
       
       val sqlQuery = new SelectQueryBuilder2(LcmsDbRawMapTable, LcmsDbProcessedMapRawMapMappingTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.ID,t1.SCAN_SEQUENCE_ID) ->
@@ -70,7 +70,8 @@ class SQLFeatureProvider(
 
       // Load peakel items
       //val peakelItemByFtId = this.getPeakelItemsByFeatureId(rawMapIds)
-      val peakelItemByFtId = Map() ++ peakelProvider.getPeakelItemsByFeatureId(featureIds)
+      val peakelItems = peakelProvider.getFeaturePeakelItems(featureIds, loadPeakels = false)
+      val peakelItemsByFtId = peakelItems.groupBy(_.featureReference.id)
       
       // Retrieve mapping between cluster and sub-features
       //val subFtIdsByClusterFtId = getSubFtIdsByClusterFtId( processedMapIds )
@@ -90,8 +91,8 @@ class SQLFeatureProvider(
         */
         
         // Retrieve peakel items
-        val peakelItems = peakelItemByFtId.getOrElse(ftId,Seq()).toArray
-
+        val peakelItems = peakelItemsByFtId.getOrElse(ftId,Array())
+        
         // TODO: factorize code with SQLProcessedMapProvider
         val feature = this.buildFeature(
           processedFtRecord,
@@ -148,7 +149,7 @@ class SQLFeatureProvider(
 
       val procFtQuery = new SelectQueryBuilder2(LcmsDbFeatureTable, LcmsDbProcessedMapFeatureItemTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.*,t2.*) ->
-          "WHERE " ~ t2.FEATURE_ID ~ " IN (" ~ featureIds.mkString(",") ~ ") " ~
+          "WHERE " ~ t1.ID ~ " IN (" ~ featureIds.mkString(",") ~ ") " ~
           "AND " ~ t1.ID ~ "=" ~ t2.FEATURE_ID
         // "AND is_clusterized = " + BoolToSQLStr(isClusterized,boolStrAsInt)
       )
