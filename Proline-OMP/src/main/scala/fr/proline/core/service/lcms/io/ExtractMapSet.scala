@@ -837,6 +837,8 @@ class ExtractMapSet(
     peakelByMzDbPeakel: HashMap[MzDbPeakel,Peakel]
   ): LcMsFeature = {
     
+    val ftId = LcMsFeature.generateNewId
+    
     // Retrieve some vars
     val lcmsScanIdByInitialId = scanSeq.scanIdByInitialId
     val scanHeaders = mzDbFt.scanHeaders
@@ -896,6 +898,7 @@ class ExtractMapSet(
       }
       
       FeaturePeakelItem(
+        featureReference = FeatureIdentifier(ftId),
         peakelReference = lcmsPeakel,
         isotopeIndex = mzDbPeakel.index
       )
@@ -907,7 +910,7 @@ class ExtractMapSet(
     )
     
     new LcMsFeature(
-       id = LcMsFeature.generateNewId,
+       id = ftId,
        moz = mzDbFt.mz,
        apexIntensity = mzDbFt.getBasePeakel().getApex().getIntensity(),
        intensity = intensitySum2Peakels, //mzDbFt.area,
