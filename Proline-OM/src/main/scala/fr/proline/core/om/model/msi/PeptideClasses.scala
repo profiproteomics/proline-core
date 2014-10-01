@@ -569,6 +569,7 @@ case class PeptideInstance(
   
   @transient var peptideSets: Array[PeptideSet] = null,
   var bestPeptideMatchId: Long = 0,
+  var masterQuantComponentId: Long = 0,
   var resultSummaryId: Long = 0,
   
   var properties: Option[PeptideInstanceProperties] = None,

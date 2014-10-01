@@ -70,6 +70,7 @@ case class PeakelProperties()
 case class PeakelIdentifier( var id: Long ) extends IEntityReference[Peakel]
 
 case class FeaturePeakelItem(
+  var featureReference: IEntityReference[Feature],
   var peakelReference: IEntityReference[Peakel],
   val isotopeIndex: Int,
   var properties: Option[FeaturePeakelItemProperties] = None
@@ -218,7 +219,7 @@ case class Feature (
   
   var properties: Option[FeatureProperties] = None
   
-) {
+) extends IEntityReference[Feature] {
   
   // Requirements
   require( elutionTime.isNaN == false, "elution time must be a valid float value" )
@@ -306,6 +307,8 @@ case class Feature (
   }
   
 }
+
+case class FeatureIdentifier( var id: Long ) extends IEntityReference[Feature]
 
 case class FeatureProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Boolean] )
