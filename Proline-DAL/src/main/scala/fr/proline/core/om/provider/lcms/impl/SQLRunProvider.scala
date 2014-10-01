@@ -1,39 +1,49 @@
 package fr.proline.core.om.provider.lcms.impl
 
-import scala.collection.mutable.ArrayBuffer
-
 import fr.profi.jdbc.ResultSetRow
+import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
+import fr.profi.util.StringUtils
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.tables.{SelectQueryBuilder1, SelectQueryBuilder2}
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.{ SelectQueryBuilder3, SelectQueryBuilder2 }
-import fr.proline.core.dal.tables.uds.{ UdsDbInstrumentTable, UdsDbRawFileTable, UdsDbRunTable }
-import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.dal.tables.uds.{UdsDbInstrumentTable, UdsDbRawFileTable, UdsDbRunTable}
 import fr.proline.core.om.model.lcms._
+import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.provider.lcms.IRunProvider
 import fr.proline.core.om.provider.lcms.IScanSequenceProvider
-import fr.profi.util.sql._
-import fr.profi.util.primitives._
 
 class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext) {
   
-  val RawFileCols = UdsDbRawFileTable.columns
-  val InstCols = UdsDbInstrumentTable.columns
+  protected val RawFileCols = UdsDbRawFileTable.columns
+  protected val InstCols = UdsDbInstrumentTable.columns
+  
+  def getRawFile( rawFileName: String): Option[RawFile] = {
+    getRawFiles( Seq(rawFileName) ).headOption
+  }
 
-  def getRawFile( rawFileName: String): RawFile = {
+  def getRawFiles( rawFileNames: Seq[String]): Array[RawFile] = {
     
-    var rawFile: RawFile = null
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
       
       val rawFileQuery = new SelectQueryBuilder2(UdsDbRawFileTable, UdsDbInstrumentTable).mkSelectQuery( (t1,c1, t2, c2) =>
-        List(t1.*, t2.*) -> "WHERE "~ t1.NAME ~"= '"~ rawFileName ~"'"
+        List(t1.*, t2.*) -> 
+          " WHERE "~ t1.NAME ~" IN "~ rawFileNames.mkString("('","','","')") ~
+          " AND "~ t1.INSTRUMENT_ID ~ "="~ t2.ID
       )
       
-      ezDBC.selectAndProcess( rawFileQuery ) { rawFileRecord =>
+      ezDBC.select( rawFileQuery ) { rawFileRecord =>
         
         val rawFilePropsStr = rawFileRecord.getStringOption(RawFileCols.SERIALIZED_PROPERTIES.toAliasedString)
-        rawFile = new RawFile(
+        require( rawFilePropsStr.isDefined && StringUtils.isNotEmpty(rawFilePropsStr.get), "Can't fetch raw file serialized properties")
+        
+        val rawFileProperties = ProfiJson.deserialize[RawFileProperties](rawFilePropsStr.get)
+        require(rawFileProperties != null, "RawFileProperties is null, json : " + rawFilePropsStr.get) 
+        require(rawFileProperties.getMzdbFilePath != null, "Can't fetch mzDbFilePath from rawFileProperties")
+        
+        // TODO: cache already loaded instruments
+        new RawFile(
           name = rawFileRecord.getString(RawFileCols.NAME.toAliasedString),
           extension = rawFileRecord.getString(RawFileCols.EXTENSION),
           directory = rawFileRecord.getStringOption(RawFileCols.DIRECTORY),
@@ -45,14 +55,14 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext) {
               rawFileRecord.getString(InstCols.SOURCE)
             )
           ),
-          properties = rawFilePropsStr.map( ProfiJson.deserialize[RawFileProperties](_))
+          properties = Some(rawFileProperties)
         )
-      }
+        
+      } toArray
     })
     
-    require(rawFile != null, "Rawfile provider fails with name = " + rawFileName)
-    rawFile
   }
+  
 }
 
 class SQLRunProvider(
@@ -60,9 +70,11 @@ class SQLRunProvider(
   val scanSeqProvider: Option[IScanSequenceProvider] = None
 ) extends IRunProvider {
   
-  val InstCols = UdsDbInstrumentTable.columns
-  val RawFileCols = UdsDbRawFileTable.columns
-  val RunCols = UdsDbRunTable.columns
+  protected val rawFileProvider = new SQLRawFileProvider(udsDbCtx)
+  
+  protected val InstCols = UdsDbInstrumentTable.columns
+  protected val RawFileCols = UdsDbRawFileTable.columns
+  protected val RunCols = UdsDbRunTable.columns
   
   def getRuns( runIds: Seq[Long] ): Array[LcMsRun] = {
     if( runIds.isEmpty ) return Array()
@@ -79,18 +91,22 @@ class SQLRunProvider(
     // Load runs
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
       
-      val runQuery = new SelectQueryBuilder3(UdsDbInstrumentTable,UdsDbRawFileTable,UdsDbRunTable).mkSelectQuery( (t1,c1,t2,c2,t3,c3) =>
-        List(t1.*,t2.*,t3.*) ->
-          "WHERE "~ t3.ID ~" IN("~ runIds.mkString(",") ~") "~
-          "AND "~ t1.ID ~"="~ t2.INSTRUMENT_ID ~" AND "~ t2.NAME ~"="~ t3.RAW_FILE_NAME
+      val runQuery = new SelectQueryBuilder1(UdsDbRunTable).mkSelectQuery( (t1,c1) =>
+        List(t1.*) -> "WHERE "~ t1.ID ~" IN ("~ runIds.mkString(",") ~") "
       )
       
-      ezDBC.selectAndProcess( runQuery ) { runRecord =>
+      val runRecords = ezDBC.selectAllRecords(runQuery)
+      val rawFileNames = runRecords.map( _.getString(RunCols.RAW_FILE_NAME) )
+      val rawFiles = rawFileProvider.getRawFiles(rawFileNames)
+      val rawFileByName = rawFiles.map( raw => raw.name -> raw ).toMap
+      
+      for( runRecord <- runRecords ) {
         
+        val rawFile = rawFileByName( runRecord.getString(RunCols.RAW_FILE_NAME) )
         val runScanSeq = scanSeqByIdAsOpt.map( _(toLong(runRecord.getAny(RunCols.ID))) )
         
         // Build the run
-        runs(runIdx) = this.buildRun(runRecord, runScanSeq)
+        runs(runIdx) = this.buildRun(runRecord, rawFile, runScanSeq)
         
         runIdx += 1
       }
@@ -102,37 +118,10 @@ class SQLRunProvider(
   }
   
   
-  def buildRun( runRecord: ResultSetRow, scanSeq: Option[LcMsScanSequence] ): LcMsRun = {
+  def buildRun( runRecord: IValueContainer, rawFile: RawFile, scanSeq: Option[LcMsScanSequence] ): LcMsRun = {
     
-    // TODO: parse properties
-    // TODO: cache already loaded instruments
-    val instrument = new Instrument(
-      id = toLong( runRecord.getAny(InstCols.ID.toAliasedString) ),
-      name = runRecord.getString(InstCols.NAME.toAliasedString),
-      source = runRecord.getString(InstCols.SOURCE)
-    )
-    
-    val rawFilePropsStr = runRecord.getStringOption(RawFileCols.SERIALIZED_PROPERTIES.toAliasedString)
-    require(! rawFilePropsStr.isEmpty && rawFilePropsStr.get != "", "Can not fetch raw file serialized properties")
-    
-    val rawFileProperties =  ProfiJson.deserialize[RawFileProperties](rawFilePropsStr.get)
-    require(rawFileProperties != null, "RawFileProperties is null, json : " + rawFilePropsStr.get) 
-    require(rawFileProperties.getMzdbFilePath != null, "Can not fetch mzDbFilePath from rawFileProperties")
-    
-    // Load the raw file
-    // TODO: create a raw file provider
-    
-    val rawFile = new RawFile(
-      name = runRecord.getString(RawFileCols.NAME.toAliasedString),
-      extension = runRecord.getString(RawFileCols.EXTENSION),
-      directory = runRecord.getStringOption(RawFileCols.DIRECTORY),
-      creationTimestamp = runRecord.getDateOption(RawFileCols.CREATION_TIMESTAMP),
-      instrument = Some(instrument),
-      properties = Some(rawFileProperties) //rawFilePropsStr.map( ProfiJson.deserialize[RawFileProperties](_) )
-    )
-    
-    // TODO: parse properties
-    //val runPropsStr = runRecord.getStringOption(UdsDbRawFileTable.name + "_"+RunCols.SERIALIZED_PROPERTIES)
+    // Parse properties
+    val runPropsStr = runRecord.getStringOption(RunCols.SERIALIZED_PROPERTIES)
   
     new LcMsRun(
       id = toLong(runRecord.getAny(RunCols.ID.toAliasedString)),
@@ -144,7 +133,8 @@ class SQLRunProvider(
       msMethod = runRecord.getStringOption(RunCols.MS_METHOD),
       analyst = runRecord.getStringOption(RunCols.ANALYST),
       rawFile = rawFile,
-      scanSequence = scanSeq
+      scanSequence = scanSeq,
+      properties = runPropsStr.map( ProfiJson.deserialize[LcMsRunProperties](_) )
     )
   }
   
