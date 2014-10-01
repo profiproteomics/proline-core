@@ -176,7 +176,7 @@ class LabelFreeFeatureQuantifier(
       val peptideIdOpt = pepInstOpt.map( _.peptide.id )
       val pepInstIdOpt = pepInstOpt.map( _.id )
       
-      // Retrieve some vars related to identified peptide instance     
+      // Retrieve some vars related to identified peptide instance
       var (msQueryIdsOpt, bestPepMatchScoreOpt) = (Option.empty[Array[Long]], Option.empty[Float])
 
       for ( pepInst <- pepInstOpt ) {
@@ -191,13 +191,18 @@ class LabelFreeFeatureQuantifier(
           .map(_.id)
           .distinct
         
-        if( msQueryIds.isEmpty ) {
+        val filteredPepMatches = if( msQueryIds.isEmpty ) {
           logger.trace("identified feature can't be mapped with corresponding MS queries")
+          pepMatches
         } else {
           msQueryIdsOpt = Some(msQueryIds)
-          val filteredPepMatches = pepMatches.filter( pm => msQueryIds.contains(pm.msQuery.id) )
+          pepMatches.filter( pm => msQueryIds.contains(pm.msQuery.id) )
+        }
+        
+        filteredPepMatches.groupBy(_.msQuery.charge).get(masterFt.charge).map { sameChargePepMatches =>
           bestPepMatchScoreOpt = Some(filteredPepMatches.reduce((a, b) => if (a.score > b.score) a else b).score)
         }
+        
       }
       
       /*if( ftSpecIds.length != feature.ms2Count ) {
@@ -244,16 +249,22 @@ class LabelFreeFeatureQuantifier(
       val qPepIonByQcId = Map() ++ qPepIons.map( qpi => qpi.quantChannelId -> qpi )
       require( qPepIonByQcId.size == qPepIons.length, "duplicated feature detected in quant peptide ions" )
       
+      val pepMatchesCount = if( masterPepInstAsOpt.isEmpty ) 0
+      else {
+        val psmsByCharge = masterPepInstAsOpt.get.getPeptideMatchIds.map(identPepMatchById(_)).groupBy(_.msQuery.charge)
+        psmsByCharge( masterFt.charge ).length
+      }
+      
       new MasterQuantPeptideIon(
         id = MasterQuantPeptideIon.generateNewId(),
         unlabeledMoz = masterFt.moz,
         charge = masterFt.charge,
         elutionTime = masterFt.getCorrectedElutionTimeOrElutionTime,
-        peptideMatchesCount = 0, // TODO: compute using charge states
+        peptideMatchesCount = pepMatchesCount,
         masterQuantPeptideId = 0,
         resultSummaryId = mergedRsmId,
         peptideInstanceId = masterPepInstAsOpt.map(_.id),
-        bestPeptideMatchId = None, // TODO: compute using charge states
+        bestPeptideMatchId = masterPepInstAsOpt.map(_.bestPeptideMatchId),
         lcmsMasterFeatureId = Some(masterFt.id),
         selectionLevel = masterFt.selectionLevel,
         quantPeptideIonMap = qPepIonByQcId
