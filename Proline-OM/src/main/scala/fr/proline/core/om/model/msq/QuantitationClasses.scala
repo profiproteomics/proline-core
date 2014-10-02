@@ -89,9 +89,6 @@ case class QuantPeptideIon(
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   var predictedElutionTime: Option[Float] = None,
   
-  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
-  var predictedScanNumber: Option[Long] = None,
-  
   val quantChannelId: Long,
   
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )

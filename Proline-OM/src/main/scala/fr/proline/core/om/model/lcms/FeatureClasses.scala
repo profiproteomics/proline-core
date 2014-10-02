@@ -311,9 +311,9 @@ case class Feature (
 case class FeatureIdentifier( var id: Long ) extends IEntityReference[Feature]
 
 case class FeatureProperties (
-  @JsonDeserialize(contentAs = classOf[java.lang.Boolean] )
-  @BeanProperty var isPredicted: Option[Boolean] = None,
-    
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
+  @BeanProperty var predictedElutionTime: Option[Float] = None,
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
   @BeanProperty var peakelsCount: Option[Int] = None,
   
