@@ -34,7 +34,7 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
       
       val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
       msiEzDBC.execute(
-        s"CREATE TEMP TABLE $tmpSpectrumTableName AS (LIKE ${MsiDbSpectrumTable.name}) ON COMMIT DROP"
+        s"CREATE TEMP TABLE $tmpSpectrumTableName (LIKE ${MsiDbSpectrumTable.name}) ON COMMIT DROP"
       )
 
       // Bulk insert of spectra
