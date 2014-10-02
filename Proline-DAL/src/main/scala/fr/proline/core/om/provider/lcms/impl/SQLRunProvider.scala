@@ -23,7 +23,8 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext) {
     getRawFiles( Seq(rawFileName) ).headOption
   }
 
-  def getRawFiles( rawFileNames: Seq[String]): Array[RawFile] = {
+  def getRawFiles( rawFileNames: Seq[String] ): Array[RawFile] = {
+    if( rawFileNames.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
       
