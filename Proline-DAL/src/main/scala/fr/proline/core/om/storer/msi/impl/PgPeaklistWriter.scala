@@ -33,15 +33,14 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
       logger.info(s"creating temporary table '$tmpSpectrumTableName'...")
       
       val msiEzDBC = ProlineEzDBC(con, context.getMSIDbConnectionContext.getDriverType)
-      
-      val allSpectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.mkString(",")
       msiEzDBC.execute(
-        s"CREATE TEMP TABLE $tmpSpectrumTableName AS (SELECT $allSpectrumTableCols FROM spectrum) ON COMMIT DROP"
+        s"CREATE TEMP TABLE $tmpSpectrumTableName AS (LIKE ${MsiDbSpectrumTable.name}) ON COMMIT DROP"
       )
 
       // Bulk insert of spectra
       logger.info("BULK insert of spectra")
       
+      val allSpectrumTableCols = MsiDbSpectrumTable.columnsAsStrList.mkString(",")
       val pgBulkLoader = bulkCopyManager.copyIn(s"COPY $tmpSpectrumTableName ( $allSpectrumTableCols ) FROM STDIN")
       
       var spectrumIdx = 0
