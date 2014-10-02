@@ -226,12 +226,14 @@ class LabelFreeFeatureQuantifier(
         peptideMatchesCount = pepMatchesCount,//feature.ms2Count,
         ms2MatchingFrequency = ms2MatchingFrequency,
         bestPeptideMatchScore = bestPepMatchScoreOpt,
+        predictedElutionTime = feature.properties.get.getPredictedElutionTime(),
         quantChannelId = udsQuantChannelId,
         peptideId = peptideIdOpt,
         peptideInstanceId = pepInstIdOpt,
         msQueryIds = msQueryIdsOpt,
         lcmsFeatureId = feature.id,
         lcmsMasterFeatureId = Some(masterFt.id),
+        unmodifiedPeptideIonId = None, // TODO: set this value
         selectionLevel = feature.selectionLevel
       )
       

@@ -641,7 +641,8 @@ class ExtractMapSet(
           // Fix negative predicted times
           if( predictedTime <= 0 ) predictedTime = 1f
           
-          // Warning: we can have multiple missing features for a given MFT
+          // Note: we can have multiple missing features for a given MFT
+          // However we assume there a single missing feature for a given map
           val missingFtId = PutativeFeature.generateNewId
           missingFtIdByMftId += ( mft.id -> missingFtId )
           
@@ -677,9 +678,10 @@ class ExtractMapSet(
       mzDb.close()
     }
     
-    val mzDbFtById = Map() ++ mzDbFts.map( ft => ft.id ->ft )
+    val pfById = Map() ++ pfs.map( pf => pf.id -> pf )
+    val mzDbFtById = Map() ++ mzDbFts.map( ft => ft.id -> ft )
     
-    // Convert mzDB features into LC-MS DB features    
+    // Convert mzDB features into LC-MS DB features
     val newLcmsFeatures = new ArrayBuffer[LcMsFeature](missingFtIdByMftId.size)
     for( mftWithMissingChild <- mftsWithMissingChild;
          mzDbFt <- mzDbFtById.get(missingFtIdByMftId( mftWithMissingChild.id ))
@@ -700,7 +702,12 @@ class ExtractMapSet(
       // Add missing child feature to the master feature
       mftWithMissingChild.children ++= Array(newLcmsFt)
       
-      // Add new LC-MS feature to the Run Map
+      // Add predicted time property
+      val pf = pfById(mzDbFt.id)
+      val predictedTime = pf.elutionTime
+      newLcmsFt.properties.get.setPredictedElutionTime( Some(predictedTime) )
+      
+      // Add new LC-MS feature
       newLcmsFeatures += newLcmsFt
     }
     
@@ -905,7 +912,6 @@ class ExtractMapSet(
     }
     
     val ftProps = FeatureProperties(
-      isPredicted = Some(mzDbFt.isPredicted),
       peakelsCount = Some(peakels.length)
     )
     
