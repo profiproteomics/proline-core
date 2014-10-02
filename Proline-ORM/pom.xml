@@ -4,7 +4,7 @@
   <parent>
     <artifactId>Proline-Core</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.2.0-b2rc1-SNAPSHOT</version>
+    <version>0.2.0</version>
   </parent>
 
   <artifactId>Proline-ORM</artifactId>
