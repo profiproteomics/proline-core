@@ -104,7 +104,7 @@ class SQLRunProvider(
       for( runRecord <- runRecords ) {
         
         val rawFile = rawFileByName( runRecord.getString(RunCols.RAW_FILE_NAME) )
-        val runScanSeq = scanSeqByIdAsOpt.map( _(toLong(runRecord.getAny(RunCols.ID))) )
+        val runScanSeq = scanSeqByIdAsOpt.map( _(runRecord.getLong(RunCols.ID)) )
         
         // Build the run
         runs(runIdx) = this.buildRun(runRecord, rawFile, runScanSeq)
@@ -125,7 +125,7 @@ class SQLRunProvider(
     val runPropsStr = runRecord.getStringOption(RunCols.SERIALIZED_PROPERTIES)
   
     new LcMsRun(
-      id = toLong(runRecord.getAny(RunCols.ID.toAliasedString)),
+      id = runRecord.getLong(RunCols.ID),
       number = runRecord.getInt(RunCols.NUMBER),
       runStart = toFloat( runRecord.getDouble(RunCols.RUN_START) ),
       runStop = toFloat( runRecord.getDouble(RunCols.RUN_STOP) ),
