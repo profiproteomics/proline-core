@@ -716,7 +716,7 @@ class ExtractMapSet(
   
   // TODO: apply this before and after filling missing values ???
   // Note: in this method we will break master features if they are matching multiple peptides
-  // Howver we do not group existing master features
+  // However we do not group existing master features
   private def _rebuildMasterMapUsingPeptides(
     mapSet: MapSet,
     peptideByScanId: Map[Long,Peptide],

@@ -226,7 +226,8 @@ class LabelFreeFeatureQuantifier(
         peptideMatchesCount = pepMatchesCount,//feature.ms2Count,
         ms2MatchingFrequency = ms2MatchingFrequency,
         bestPeptideMatchScore = bestPepMatchScoreOpt,
-        predictedElutionTime = feature.properties.get.getPredictedElutionTime(),
+        // TODO: set feature properties in feature clusters 
+        predictedElutionTime = feature.properties.flatMap(_.getPredictedElutionTime()),
         quantChannelId = udsQuantChannelId,
         peptideId = peptideIdOpt,
         peptideInstanceId = pepInstIdOpt,
@@ -251,11 +252,14 @@ class LabelFreeFeatureQuantifier(
       val qPepIonByQcId = Map() ++ qPepIons.map( qpi => qpi.quantChannelId -> qpi )
       require( qPepIonByQcId.size == qPepIons.length, "duplicated feature detected in quant peptide ions" )
       
-      val pepMatchesCount = if( masterPepInstAsOpt.isEmpty ) 0
+      // FIXME: compute this value
+      val pepMatchesCount = 0
+      /*val pepMatchesCount = if( masterPepInstAsOpt.isEmpty ) 0
       else {
-        val psmsByCharge = masterPepInstAsOpt.get.getPeptideMatchIds.map(identPepMatchById(_)).groupBy(_.msQuery.charge)
+        val psmById = // THIS NEED TO BE COMPUTED FROM MERGED RSM
+        val psmsByCharge = masterPepInstAsOpt.get.getPeptideMatchIds.map( psmById(_) ).groupBy(_.msQuery.charge)
         psmsByCharge( masterFt.charge ).length
-      }
+      }*/
       
       new MasterQuantPeptideIon(
         id = MasterQuantPeptideIon.generateNewId(),
