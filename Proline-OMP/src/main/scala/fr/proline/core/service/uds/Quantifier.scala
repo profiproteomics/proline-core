@@ -53,44 +53,41 @@ class Quantifier(
   }
 
   def runService() = {
-
-    // Store quantitation in the UDSdb
-    val quantiCreator = new CreateQuantitation(
-      executionContext = executionContext,
-      name = name,
-      description = description,
-      projectId = projectId,
-      methodId = methodId,
-      experimentalDesign = experimentalDesign
-    )
-    quantiCreator.runService()
-    
-    this._quantiId = quantiCreator.getUdsQuantitation.getId
-    
-    // Retrieve entity manager
-    val udsDbCtx = executionContext.getUDSDbConnectionContext()
-    val msiDbCtx = executionContext.getMSIDbConnectionContext()
-    val udsEM = udsDbCtx.getEntityManager()
-    val udsQuantitation = udsEM.find( classOf[UdsDataset],quantiCreator.getUdsQuantitation.getId)
-    
-    // Retrieve master quant channels (they should be sorted by their number)
-    val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.toList
-    
-    // Fake missing fields
-    quantConfigAsMap.put("map_set_name", null)
-    quantConfigAsMap.put("lc_ms_runs", null)
-    
-    // Parse the quant configuration
-    // TODO: parse other kinds of configuration (spectal count)
-    val quantConfig = deserialize[LabelFreeQuantConfig](serialize(quantConfigAsMap))
-    
-    // Create a LC-MS run provider
-    val lcmsRunProvider = new SQLRunProvider(udsDbCtx,None)
-    
-    var msiTransacOk: Boolean = false
     
     // Isolate future actions in an SQL transaction
-    val txResult =  executionContext.tryInTransactions(udsTx = true, msiTx = true,  txWork = {
+    val txResult = executionContext.tryInTransactions( udsTx = true, msiTx = true, txWork = {
+
+      // Store quantitation in the UDSdb
+      val quantiCreator = new CreateQuantitation(
+        executionContext = executionContext,
+        name = name,
+        description = description,
+        projectId = projectId,
+        methodId = methodId,
+        experimentalDesign = experimentalDesign
+      )
+      quantiCreator.runService()
+      
+      this._quantiId = quantiCreator.getUdsQuantitation.getId
+      
+      // Retrieve entity manager
+      val udsDbCtx = executionContext.getUDSDbConnectionContext()
+      val udsEM = udsDbCtx.getEntityManager()
+      val udsQuantitation = udsEM.find( classOf[UdsDataset],quantiCreator.getUdsQuantitation.getId)
+      
+      // Retrieve master quant channels (they should be sorted by their number)
+      val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.toList
+      
+      // Fake missing fields
+      quantConfigAsMap.put("map_set_name", null)
+      quantConfigAsMap.put("lc_ms_runs", null)
+      
+      // Parse the quant configuration
+      // TODO: parse other kinds of configuration (spectal count)
+      val quantConfig = deserialize[LabelFreeQuantConfig](serialize(quantConfigAsMap))
+      
+      // Create a LC-MS run provider
+      val lcmsRunProvider = new SQLRunProvider(udsDbCtx,None)
 
       // Quantify each master quant channel
       for( udsMasterQuantChannel <- udsMasterQuantChannels ) {
@@ -118,9 +115,9 @@ class Quantifier(
         )
         
         mqcQuantifier.run()
-      }           
+      }
       
-    }) // end of tryInTransaction
+    }) // end of tryInTransactions
 
     txResult
   }
