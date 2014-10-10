@@ -43,7 +43,8 @@ class WeightedSCResultReader (
     var mqchQuantRSMID : java.lang.Long = null
     var quantChIdsList = new ArrayBuffer[Long]()
     var rsmIdByQChId = Map.newBuilder[Long,Long]
-    
+     
+    logger.debug(" Get UDS Quant information ")    
     val jdbcWork = new JDBCWork() {
       override def execute(con: Connection) {
         val getMQChQuery = "SELECT id, quant_result_summary_id, serialized_properties from master_quant_channel WHERE quantitation_id = ?"
@@ -103,136 +104,145 @@ class WeightedSCResultReader (
       execCtx.getUDSDbConnectionContext
     )
     
+    logger.debug(" Read UDS Quant Data ")
     val quantRSMOpt = quantRsmProvider.getQuantResultSummary(mqchQuantRSMID, quantChIdsList.toArray, true).get
+    
+    logger.debug(" createJSonOutputResult for Quant Data ")
     _resultAsJSON = createJSonOutputResult(quantRSMOpt, rsmIdByQChId.result)
     true
   }
 
-   private def createJSonOutputResult(msiQuantRSM : QuantResultSummary, rsmIdByQChId : Map[Long,Long]): String = {
-          
-     val jsonBuilder: StringBuilder = new StringBuilder(" \"{")
-	 jsonBuilder.append(SpectralCountsJSONProperties.rootPropName).append(":{[")
-	 
-	  var firstQChOcc = true
-	  	 
-	 msiQuantRSM.quantChannelIds.foreach(qtChId =>{ // Go Through each QuantChannel (RSM)
-	   
-		 val rsmId = rsmIdByQChId(qtChId)
-		 if (!firstQChOcc) { jsonBuilder.append(",") } else { firstQChOcc = false }
-		 jsonBuilder.append("{").append(SpectralCountsJSONProperties.rsmIDPropName).append(":").append(rsmId).append(",") //save current RSM Id
-      
-		 // -- Save prots SC for current RSM          	
-		 var firstPACOcc = true
-		 jsonBuilder.append(SpectralCountsJSONProperties.protSCsListPropName).append(":[")
+  private def createJSonOutputResult(msiQuantRSM: QuantResultSummary, rsmIdByQChId: Map[Long, Long]): String = {
 
-		 msiQuantRSM.masterQuantProteinSets.foreach(mqProtSet => {
-		   //Go through All ProteinSets and extract only data for current QuantChanel
-		   
-		   //Get Typical Prot Accession
-		   var typicalAcc : String = null
-		   if( mqProtSet.proteinSet.getTypicalProteinMatch != null && mqProtSet.proteinSet.getTypicalProteinMatch.isDefined) 
-			   typicalAcc = mqProtSet.proteinSet.getTypicalProteinMatch.get.accession		         
-		   if(typicalAcc == null){
-			   // Read it from DBs
-			   val accJdbcWork = new JDBCWork() {
-				   override def execute(con: Connection) {
-					   val getTypAcc = "SELECT accession from protein_match WHERE id = ?"
-					   val pStmt = con.prepareStatement(getTypAcc)	
-					   pStmt.setLong(1, mqProtSet.proteinSet.getTypicalProteinMatchId)
-					   val sqlResultSet = pStmt.executeQuery()
-					   if (sqlResultSet.next){ //Should be One ! 
-						   typicalAcc =  sqlResultSet.getString("accession")
-					   }    		  
-					   pStmt.close()
-				   }            	         
-			   } // End of jdbcWork anonymous inner class    
-			   execCtx.getMSIDbConnectionContext().doWork(accJdbcWork, false)
-		   }
-		   
-		 //Get QuantProteinSet for current ProteinSet in current QuantChannel
-		 val protQuant = mqProtSet.quantProteinSetMap.get(qtChId)
-		 if (protQuant.isDefined) { 
-			 // This prot is quantified un current QuantChannel
-			 if (!firstPACOcc) { 
-				 jsonBuilder.append(",") 
-			 } else {
-				 firstPACOcc = false 
-			 }
-          
-			 //Properties to ge
-			 var protSetId : Long = -1
-			 var protMatchId: Long = -1
-			 var protMatchStatus : String = null
-			 var protMatchPepNbr = -1
-			 if (protQuant.get.proteinSetId.isDefined) {
-				 protSetId=protQuant.get.proteinSetId.get
-				 protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)       
-				 
-				//Read Prot Status and Nbr Peptides from DBs
-			   val protStatJdbcWork = new JDBCWork() {
-				   override def execute(con: Connection) {
-				      //---- Read Prot Status
-					   val getProtStatus = "SELECT is_in_subset from protein_set_protein_match_item	 WHERE protein_match_id = ? AND protein_set_id = ?"
-					   val pStmt = con.prepareStatement(getProtStatus)	
-					   pStmt.setLong(1, protMatchId)
-					   pStmt.setLong(2, protSetId)
-					   val sqlResultSet = pStmt.executeQuery()
-					   if (sqlResultSet.next){ //Should be One ! 
-						   val isInSubset =  sqlResultSet.getBoolean("is_in_subset")
-						   if(isInSubset) {
-						     protMatchStatus = "Subset"
-						   } else {
-							   // Verify if SameSet or Typical 
-							   val getProtTypical = "SELECT typical_protein_match_id from protein_set WHERE id = ?"
-							   val pStmt2 = con.prepareStatement(getProtTypical)	
-							   pStmt2.setLong(1, protSetId)					   
-							   val sqlResultSet2 = pStmt2.executeQuery()
-							   if (sqlResultSet2.next){ 
-							       val protSetTypID = sqlResultSet2.getLong("typical_protein_match_id")
-							       if(protSetTypID.equals(protMatchId) )
-							    	   protMatchStatus = "Typical"
-						    	   else
-						    	     protMatchStatus = "Sameset"
-							   }
-							   pStmt2.close()
-						   }
-					   } else //NO LINK Between ProtSet and ProtMatch : Error !
-						   protMatchStatus ="NOT FOUND !"+protSetId						
-					   pStmt.close()		
-					   
-					      //---- Read Prot Status
-					   val getPepCount = "SELECT peptide_count from peptide_set_protein_match_map pspmm, peptide_set "+
-					   "WHERE pspmm.protein_match_id = ? and pspmm.result_summary_id = ?  and peptide_set.id = pspmm.peptide_set_id"
-					   val pStmt2 = con.prepareStatement(getPepCount)
-					   pStmt2.setLong(1, protMatchId)	
-					   pStmt2.setLong(2, rsmId)					   
-					   val sqlResultSet2 = pStmt2.executeQuery()
-					   if (sqlResultSet2.next){ 
-					     protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
-					   }
-					   pStmt2.close()
-				   }            	         
-				 } // End of jdbcWork anonymous inner class    
-				 execCtx.getMSIDbConnectionContext().doWork(protStatJdbcWork, false)
+    val jsonBuilder: StringBuilder = new StringBuilder(" \"{")
+    jsonBuilder.append(SpectralCountsJSONProperties.rootPropName).append(":{[")
 
-			 } // End protQuant.get.proteinSetId.isDefined
-			 jsonBuilder.append("{").append(SpectralCountsJSONProperties.protACPropName).append("=").append(typicalAcc).append(",")
-			 jsonBuilder.append(SpectralCountsJSONProperties.protMatchId).append("=").append(protMatchId).append(",")
-			 jsonBuilder.append(SpectralCountsJSONProperties.protSetId).append("=").append(protSetId).append(",")
-			 jsonBuilder.append(SpectralCountsJSONProperties.protMatchStatus).append("=").append(protMatchStatus).append(",")
-			 jsonBuilder.append(SpectralCountsJSONProperties.pepNbr).append("=").append(protMatchPepNbr).append(",")          
-			 jsonBuilder.append(SpectralCountsJSONProperties.bscPropName).append("=").append(protQuant.get.peptideMatchesCount).append(",")
-			 jsonBuilder.append(SpectralCountsJSONProperties.sscPropName).append("=").append(protQuant.get.rawAbundance).append(",")
-			 jsonBuilder.append(SpectralCountsJSONProperties.wscPropName).append("=").append(protQuant.get.abundance).append("}")
-		 } //End if Prot quantified in QCh
-		 }) //End Go through All ProteinSets
-		 
-		 jsonBuilder.append("]") //End protAC list for current RSM
-		 jsonBuilder.append("}") //End current RSM properties
-		 
-	 }) //End GoThrough RSMs/QChs
-	 jsonBuilder.append("]}}\"") //End SpectralCountResult array properties
-	 jsonBuilder.result
+    var firstQChOcc = true
 
-   }
+    //------  Go Through each QuantChannel (RSM)
+    msiQuantRSM.quantChannelIds.foreach(qtChId => { 
+
+      val rsmId = rsmIdByQChId(qtChId)
+      if (!firstQChOcc) { jsonBuilder.append(",") } else { firstQChOcc = false }
+      jsonBuilder.append("{").append(SpectralCountsJSONProperties.rsmIDPropName).append(":").append(rsmId).append(",") //save current RSM Id
+
+      // -- Save prots SC for current RSM          	
+      var firstPACOcc = true
+      jsonBuilder.append(SpectralCountsJSONProperties.protSCsListPropName).append(":[")
+
+      //-- Get all proteinSets Typical Accession
+      val typicalAccByProtSetIdBuiler = Map.newBuilder[Long, String]
+      val allTypicalId = msiQuantRSM.masterQuantProteinSets.map(_.proteinSet.getTypicalProteinMatchId)
+      val accJdbcWork = new JDBCWork() {
+        override def execute(con: Connection) {
+          val getTypAcc = "SELECT accession, id from protein_match WHERE id IN (" + allTypicalId.mkString(",") + ")"
+          val stmt = con.createStatement()
+          val sqlResultSet = stmt.executeQuery(getTypAcc)
+          while (sqlResultSet.next) {
+            val typAcc = sqlResultSet.getString("accession")
+            val typId = sqlResultSet.getLong("id")
+            typicalAccByProtSetIdBuiler += typId -> typAcc
+          }
+          stmt.close()
+        }
+      } // End of jdbcWork anonymous inner class    
+      execCtx.getMSIDbConnectionContext().doWork(accJdbcWork, false)
+      val typicalAccByProtSetId = typicalAccByProtSetIdBuiler.result
+
+      val quantProteinSetInfoByProtSetMatchTupleIdBuilder = Map.newBuilder[(Long,Long), (Boolean, Long)]
+      val protMatchPepNbrByProtMatchIdBuilder = Map.newBuilder[Long, Int]      
+      //Read Prot Status and Nbr Peptides from DBs
+        val protStatJdbcWork = new JDBCWork() {
+          override def execute(con: Connection) {
+                //---- Read Prot Status
+
+                val getProtStatus = "SELECT protein_set_id, protein_match_id, is_in_subset, typical_protein_match_id FROM protein_set_protein_match_item, protein_set " +
+                  " WHERE protein_set.id = protein_set_protein_match_item.protein_set_id " +
+                  " AND protein_set_protein_match_item.result_summary_id = ? "
+                val pStmt = con.prepareStatement(getProtStatus)
+                pStmt.setLong(1, rsmId)
+
+                val sqlResultSet = pStmt.executeQuery()
+                while (sqlResultSet.next) {  
+                  val isInSubset = sqlResultSet.getBoolean("is_in_subset")
+                  val protSetTypID = sqlResultSet.getLong("typical_protein_match_id")
+                  val protMatchId = sqlResultSet.getLong("protein_match_id")
+                  val protSetId = sqlResultSet.getLong("protein_set_id")
+                  quantProteinSetInfoByProtSetMatchTupleIdBuilder += (protSetId,protMatchId) -> (isInSubset,protSetTypID)
+                }
+                pStmt.close()
+
+                //---- Read Prot Status
+                val getPepCount = "SELECT peptide_count, protein_match_id FROM peptide_set_protein_match_map pspmm, peptide_set " +
+                  "WHERE  pspmm.result_summary_id = ?  AND peptide_set.id = pspmm.peptide_set_id"
+                val pStmt2 = con.prepareStatement(getPepCount)
+                pStmt2.setLong(1, rsmId)
+                val sqlResultSet2 = pStmt2.executeQuery()
+                while (sqlResultSet2.next) {
+                  val protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
+                  val protMatchId = sqlResultSet2.getLong("protein_match_id")
+                  protMatchPepNbrByProtMatchIdBuilder +=protMatchId-> protMatchPepNbr
+                }
+                pStmt2.close()
+              }
+            } // End of jdbcWork anonymous inner class    
+            execCtx.getMSIDbConnectionContext().doWork(protStatJdbcWork, false)
+            
+            val quantProteinSetInfoByProtSetMatchTupleId = quantProteinSetInfoByProtSetMatchTupleIdBuilder.result
+    		val protMatchPepNbrByProtMatchId =protMatchPepNbrByProtMatchIdBuilder.result
+            
+          //---Go through All ProteinSets and extract only data for current QuantChanel
+      msiQuantRSM.masterQuantProteinSets.foreach(mqProtSet => {
+
+        //Get Typical Prot Accession
+        var typicalAcc: String = typicalAccByProtSetId(mqProtSet.proteinSet.getTypicalProteinMatchId)
+
+        //Get QuantProteinSet for current ProteinSet in current QuantChannel
+        val protQuant = mqProtSet.quantProteinSetMap.get(qtChId)
+        if (protQuant.isDefined) {
+          // This prot is quantified un current QuantChannel
+          if (!firstPACOcc) {
+            jsonBuilder.append(",")
+          } else {
+            firstPACOcc = false
+          }
+
+          //Properties to ge
+          var protSetId: Long = -1
+          var protMatchId: Long = -1
+          var protMatchStatus: String = null
+          var protMatchPepNbr = -1
+          if (protQuant.get.proteinSetId.isDefined) {
+            protSetId = protQuant.get.proteinSetId.get
+            protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)
+            val (isInSubset,protSetTypID) = quantProteinSetInfoByProtSetMatchTupleId.getOrElse((protSetId,protMatchId),(false,-1))
+            if (isInSubset) {
+              protMatchStatus = "Subset"
+            } else if (protSetTypID.equals(protMatchId)) { //is the typical 
+              protMatchStatus = "Typical"
+            } else
+              protMatchStatus = "Sameset"
+
+              protMatchPepNbr = protMatchPepNbrByProtMatchId.getOrElse(protMatchId, -1)
+
+          } // End protQuant.get.proteinSetId.isDefined
+          jsonBuilder.append("{").append(SpectralCountsJSONProperties.protACPropName).append("=").append(typicalAcc).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.protMatchId).append("=").append(protMatchId).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.protSetId).append("=").append(protSetId).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.protMatchStatus).append("=").append(protMatchStatus).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.pepNbr).append("=").append(protMatchPepNbr).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.bscPropName).append("=").append(protQuant.get.peptideMatchesCount).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.sscPropName).append("=").append(protQuant.get.rawAbundance).append(",")
+          jsonBuilder.append(SpectralCountsJSONProperties.wscPropName).append("=").append(protQuant.get.abundance).append("}")
+        } //End if Prot quantified in QCh
+      }) //End Go through All ProteinSets
+
+      jsonBuilder.append("]") //End protAC list for current RSM
+      jsonBuilder.append("}") //End current RSM properties
+
+    }) //End GoThrough RSMs/QChs
+    jsonBuilder.append("]}}\"") //End SpectralCountResult array properties
+    jsonBuilder.result
+
+  }
 }
