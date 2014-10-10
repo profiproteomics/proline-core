@@ -272,17 +272,19 @@ object Peptide extends InMemoryIdGen with Logging {
     // FIXME: find another way to deal with ambiguous residues
     import fr.profi.util.regex.RegexUtils._
 
-    if (sequence ~~ "(?i)[BXZ]") mass = 0.0
-    else {
       val massCalcObject = new MassCalc(SymbolPropertyTable.MONO_MASS, false)
       massCalcObject.setSymbolModification('U', 150.95363)
+      massCalcObject.setSymbolModification('O', 255.158295)
+      massCalcObject.setSymbolModification('B', 114.53494)
+      massCalcObject.setSymbolModification('X', 111.0)
+      massCalcObject.setSymbolModification('Z', 128.55059)
+
       mass = try {
         //        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
         massCalcObject.getMass(ProteinTools.createProtein(sequence))
       } catch {
         case e: Exception => Double.NaN
       }
-    }
     
     if( mass.isNaN() ) {
       throw new Exception("can't compute peptide mass for sequence="+sequence)
