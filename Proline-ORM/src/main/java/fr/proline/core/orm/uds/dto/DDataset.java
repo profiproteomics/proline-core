@@ -1,5 +1,8 @@
 package fr.proline.core.orm.uds.dto;
 
+
+import java.util.List;
+
 import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.uds.Aggregation;
@@ -15,6 +18,7 @@ public class DDataset {
     private long m_id;
     private Project m_project; 
     private String m_name;
+    private String m_description;
     private DatasetType m_type;
    
     private int m_childrenCount;
@@ -28,6 +32,8 @@ public class DDataset {
     private ResultSet m_resultSet = null;
 
     private MergeInformation m_mergeInformation = MergeInformation.MERGE_UNKNOW;
+    
+    private List<DMasterQuantitationChannel> m_masterQuantitationChannels;
     
     public enum MergeInformation {
     	MERGE_UNKNOW,
@@ -67,6 +73,14 @@ public class DDataset {
     
     public void setName(String name) {
         m_name = name;
+    }
+    
+    public String getDescription() {
+    	return m_description;
+    }
+    
+    public void setDescription(String description) {
+    	this.m_description = description;
     }
     
     public int getChildrenCount() {
@@ -136,5 +150,13 @@ public class DDataset {
     }
     public void setMergeInformation(MergeInformation mergeInformation) {
     	m_mergeInformation = mergeInformation;
+    }
+    
+    public List<DMasterQuantitationChannel> getMasterQuantitationChannels() {
+    	return m_masterQuantitationChannels;
+    }
+
+    public void setMasterQuantitationChannels(List<DMasterQuantitationChannel> masterQuantitationChannels) {
+    	this.m_masterQuantitationChannels = masterQuantitationChannels;
     }
 }
