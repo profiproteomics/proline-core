@@ -37,14 +37,14 @@
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>mzdb-access</artifactId>
-      <version>0.0.2-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+      <version>0.0.3-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- mzdb-processing -->
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>mzdb-processing</artifactId>
-      <version>0.0.3-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+      <version>0.0.5-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- Scala -->

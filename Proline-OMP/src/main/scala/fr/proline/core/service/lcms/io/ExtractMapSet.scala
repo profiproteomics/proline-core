@@ -406,12 +406,14 @@ class ExtractMapSet(
   
   private def _extractProcessedMap( lcmsRun: LcMsRun, mzDbFile: File, mapNumber: Int, mapSetId: Long ): ProcessedMap = {
     
-    val mzDbFts = if( quantConfig.detectFeatures ) this._detectFeatures(mzDbFile)
+    // TODO: add max charge in config
+    val maxCharge = 4
+    val mzDbFts = if( quantConfig.detectFeatures ) this._detectFeatures(mzDbFile).filter(_.charge < maxCharge)
     else this._extractFeaturesUsingMs2Events( mzDbFile, lcmsRun )
     
-    val rmsds = mzDbFts.par.map{f => 
-      val theoAbundances = IsotopePatternInterpolator.getTheoreticalPattern(f.mz, f.charge).abundances
-      val peakelApexIntensities = f.peakels.map(_.getApex().getIntensity)
+    val rmsds = mzDbFts.par.map{ mzdbFt =>
+      val theoAbundances = IsotopePatternInterpolator.getTheoreticalPattern(mzdbFt.mz, mzdbFt.charge).abundances
+      val peakelApexIntensities = mzdbFt.getPeakels.map(_.getApexIntensity)
       this._calcRmsd(theoAbundances, peakelApexIntensities)
     }.toArray
     
@@ -685,7 +687,7 @@ class ExtractMapSet(
     val newLcmsFeatures = new ArrayBuffer[LcMsFeature](missingFtIdByMftId.size)
     for( mftWithMissingChild <- mftsWithMissingChild;
          mzDbFt <- mzDbFtById.get(missingFtIdByMftId( mftWithMissingChild.id ))
-         if mzDbFt.area > 0 && mzDbFt.scanHeaders.length >= 5
+         if mzDbFt.area > 0 && mzDbFt.getMs1Count >= 5
        ) {
       
       // FIXME: why do we extract features with 0 duration ???
@@ -848,21 +850,21 @@ class ExtractMapSet(
     
     // Retrieve some vars
     val lcmsScanIdByInitialId = scanSeq.scanIdByInitialId
-    val scanHeaders = mzDbFt.scanHeaders
+    val scanHeaders = mzDbFt.getScanHeaders
     val( ftFirstScanH, ftLastScanH ) = (scanHeaders.head,scanHeaders.last)
     val firstScanInitialId = ftFirstScanH.getInitialId
     val lastScanInitialId = ftLastScanH.getInitialId
-    val apexScanInitialId = mzDbFt.apexScanHeader.getInitialId
+    val apexScanInitialId = mzDbFt.getApexScanHeader.getInitialId
     val firstLcMsScanId = lcmsScanIdByInitialId(firstScanInitialId)
     val lastLcMsScanId = lcmsScanIdByInitialId(lastScanInitialId)
     val apexLcMsScanId = lcmsScanIdByInitialId(apexScanInitialId)
     val ms2EventIds = mzDbFt.getMs2ScanIds.map( lcmsScanIdByInitialId(_) )
     
-    val peakels = mzDbFt.getPeakels()
+    val indexedPeakels = mzDbFt.indexedPeakels
     // TODO: parameterize the computation of this value ???
-    val intensitySum2Peakels = peakels.take(2).foldLeft(0f)( (s,p) => s + p.getApex.getIntensity )
+    val intensitySum2Peakels = indexedPeakels.take(2).foldLeft(0f)( (s,p) => s + p._1.getApexIntensity )
     
-    val lcmsFtPeakelItems = peakels.map { mzDbPeakel =>
+    val lcmsFtPeakelItems = indexedPeakels.map { case (mzDbPeakel,peakelIdx) =>
       
       // Retrieve cached LC-MS peakel if it exists
       val lcmsPeakel = if( peakelByMzDbPeakel.contains(mzDbPeakel) ) {
@@ -876,17 +878,27 @@ class ExtractMapSet(
       // Else build new LC-MS peakel
       else {
         
-        val lcMsPeaks = mzDbPeakel.definedPeaks.map { p => LcMsPeak(p.getMz(),p.getLcContext().getElutionTime(),p.getIntensity()) }
-        val( peakelFirstLcContext, peakelLastLcContext ) = mzDbPeakel.getLcContextRange()
-        val peakelApexLcContext = mzDbPeakel.getApexScanContext()
+        val peakelCursor = mzDbPeakel.getNewCursor()
+        val lcMsPeaks = new Array[LcMsPeak](mzDbPeakel.lcContexts.length)
+        while( peakelCursor.next() ) {
+          lcMsPeaks(peakelCursor.peakIndex) = LcMsPeak(
+            peakelCursor.getMz(),
+            peakelCursor.getElutionTime(),
+            peakelCursor.getIntensity()
+          )
+        }
+        
+        val peakelApexLcContext = mzDbPeakel.getApexLcContext()
+        val peakelFirstLcContext = mzDbPeakel.getFirstLcContext()
+        val peakelLastLcContext = mzDbPeakel.getLastLcContext()        
         
         val newPeakel = Peakel(
           id = Peakel.generateNewId(),
-          moz = mzDbPeakel.mz,
+          moz = mzDbPeakel.getMz,
           elutionTime = mzDbPeakel.getElutionTime(),
-          apexIntensity = mzDbPeakel.getApex().getIntensity(),
+          apexIntensity = mzDbPeakel.getApexIntensity(),
           area = mzDbPeakel.area,
-          duration = mzDbPeakel.duration,
+          duration = mzDbPeakel.calcDuration,
           fwhm = Some( mzDbPeakel.fwhm ),
           isOverlapping = false, // FIXME: determine this value
           featuresCount = 1,
@@ -907,18 +919,18 @@ class ExtractMapSet(
       FeaturePeakelItem(
         featureReference = FeatureIdentifier(ftId),
         peakelReference = lcmsPeakel,
-        isotopeIndex = mzDbPeakel.index
+        isotopeIndex = peakelIdx
       )
     }
     
     val ftProps = FeatureProperties(
-      peakelsCount = Some(peakels.length)
+      peakelsCount = Some(lcmsFtPeakelItems.length)
     )
     
     new LcMsFeature(
        id = ftId,
        moz = mzDbFt.mz,
-       apexIntensity = mzDbFt.getBasePeakel().getApex().getIntensity(),
+       apexIntensity = mzDbFt.getBasePeakel().getApexIntensity(),
        intensity = intensitySum2Peakels, //mzDbFt.area,
        charge = mzDbFt.charge,
        elutionTime = mzDbFt.elutionTime,
