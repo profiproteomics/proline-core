@@ -880,7 +880,9 @@ class ExtractMapSet(
         
         val peakelCursor = mzDbPeakel.getNewCursor()
         val lcMsPeaks = new Array[LcMsPeak](mzDbPeakel.lcContexts.length)
-        while( peakelCursor.next() ) {
+        while( peakelCursor.hasNext() ) {
+          peakelCursor.incrementIndex()
+          
           lcMsPeaks(peakelCursor.peakIndex) = LcMsPeak(
             peakelCursor.getMz(),
             peakelCursor.getElutionTime(),
