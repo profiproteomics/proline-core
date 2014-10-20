@@ -44,7 +44,7 @@ class SuperHirnMapParser extends ILcmsMapFileParser {
         elutionTime = elutionTime,
         duration = 0, // FIXME
         charge = charge,
-        qualityScore = Double.NaN,
+        qualityScore = Float.NaN,
         ms1Count = lastScan.initialId - firstScan.initialId + 1,
         ms2Count = ms2EventIds.length,
         isOverlapping = false,

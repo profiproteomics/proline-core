@@ -202,7 +202,7 @@ class SQLFeatureProvider(
       charge = ftRecord.getInt(FtCols.CHARGE),
       elutionTime = toFloat(ftRecord.getAny(FtCols.ELUTION_TIME)),
       duration = toFloat(ftRecord.getAny(FtCols.DURATION)),
-      qualityScore = ftRecord.getDoubleOrElse(FtCols.QUALITY_SCORE,Double.NaN),
+      qualityScore = ftRecord.getDoubleOrElse(FtCols.QUALITY_SCORE,Double.NaN).toFloat,
       ms1Count = ftRecord.getInt(FtCols.MS1_COUNT),
       ms2Count = ftRecord.getInt(FtCols.MS2_COUNT),
       isOverlapping = toBoolean(ftRecord.getAny(FtCols.IS_OVERLAPPING)),

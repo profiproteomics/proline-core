@@ -197,7 +197,7 @@ case class Feature (
   var apexIntensity: Float = 0f, // TODO: remove default value  
   var intensity: Float,
   val duration: Float,
-  val qualityScore: Double,
+  val qualityScore: Float,
   var ms1Count: Int,
   var ms2Count: Int,
   val isOverlapping: Boolean,

@@ -78,7 +78,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
         charge = rowValueMap("Charge").toInt,
         elutionTime = time,
         duration = 0, // FIXME
-        qualityScore = Double.NaN,
+        qualityScore = Float.NaN,
         ms1Count = lcmsScanSeq.scanById(lastScanInitialId).cycle - scanms1.cycle + 1, //number of ms1
         ms2Count = ms2IdEvents.length, //give the number of ms2
         isOverlapping = false,

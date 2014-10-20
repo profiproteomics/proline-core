@@ -78,7 +78,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
           elutionTime = elutionTime,
           duration = 0, // FIXME
           charge = charge,
-          qualityScore = Double.NaN,
+          qualityScore = Float.NaN,
           ms1Count = lastScan.cycle - firstScan.cycle + 1,
           ms2Count = ms2Count,
           isOverlapping = false,

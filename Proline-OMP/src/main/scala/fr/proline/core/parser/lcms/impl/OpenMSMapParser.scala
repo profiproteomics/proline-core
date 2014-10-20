@@ -81,7 +81,7 @@ class OpenMSMapParser extends ILcmsMapFileParser {
         charge = charge,
         elutionTime = elutionTime,
         duration = 0, // FIXME
-        qualityScore = Double.NaN,
+        qualityScore = Float.NaN,
         ms1Count = math.abs(lcmsScanSeq.getScanAtTime(lastTime, 1).cycle - lcmsScanSeq.getScanAtTime(estimatedBeginTime, 1).cycle) + 1,
         ms2Count = ms2EventIds.length,
         isOverlapping = false,

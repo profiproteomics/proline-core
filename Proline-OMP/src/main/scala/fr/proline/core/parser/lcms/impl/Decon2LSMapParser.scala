@@ -190,7 +190,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
               charge = ip.charge,
               elutionTime = scanOfRef.time,
               duration = 0, // FIXME: compute the elution duration
-              qualityScore = Double.NaN,
+              qualityScore = Float.NaN,
               ms1Count = sameFtIps.length,
               ms2Count = ms2EventIds.length,
               isOverlapping = false,

@@ -340,10 +340,11 @@ class ExtractMapSet(
     // FIXME: it should be retrieved from the mzDB file meta-data
     val rawFileName = mzDbFileName.take(mzDbFileName.lastIndexOf("."))
     
-    // Check if a LC-MS run already exists
-    val scanSeqId = lcmsDbHelper.getScanSequenceIdForRawFileName(rawFileName)
+    // Check if the scan sequence already exists
+    //val scanSeqId = lcmsDbHelper.getScanSequenceIdForRawFileName(rawFileName)
+    val scanSeqOpt = scanSeqProvider.getScanSequence(lcmsRun.id)
     
-    if( scanSeqId.isDefined ) scanSeqProvider.getScanSequence(scanSeqId.get)
+    if( scanSeqOpt.isDefined ) scanSeqOpt.get
     else {
       
       val mzDb = new MzDbReader( mzDbFile, true )
@@ -408,7 +409,7 @@ class ExtractMapSet(
     
     // TODO: add max charge in config
     val maxCharge = 4
-    val mzDbFts = if( quantConfig.detectFeatures ) this._detectFeatures(mzDbFile).filter(_.charge < maxCharge)
+    val mzDbFts = if( quantConfig.detectFeatures ) this._detectFeatures(mzDbFile).filter(ft => ft.charge > 1 && ft.charge <= maxCharge)
     else this._extractFeaturesUsingMs2Events( mzDbFile, lcmsRun )
     
     val rmsds = mzDbFts.par.map{ mzdbFt =>
@@ -579,7 +580,14 @@ class ExtractMapSet(
       
       this.logger.info("detect features in raw MS survey...")
 
-      val mzdbFtDetector = new MzDbFeatureDetector(mzDb, FeatureDetectorConfig(minNbOverlappingIPs=5))
+      val mzdbFtDetector = new MzDbFeatureDetector(
+         mzDb,
+         FeatureDetectorConfig(
+           msLevel = 1,
+           mzTolPPM = mozTolPPM,
+           minNbOverlappingIPs = 5
+         )
+       )
       
       // Extract features
       mzdbFtDetector.detectFeatures()
@@ -880,9 +888,7 @@ class ExtractMapSet(
         
         val peakelCursor = mzDbPeakel.getNewCursor()
         val lcMsPeaks = new Array[LcMsPeak](mzDbPeakel.lcContexts.length)
-        while( peakelCursor.hasNext() ) {
-          peakelCursor.incrementIndex()
-          
+        while( peakelCursor.next() ) {
           lcMsPeaks(peakelCursor.peakIndex) = LcMsPeak(
             peakelCursor.getMz(),
             peakelCursor.getElutionTime(),
@@ -892,7 +898,7 @@ class ExtractMapSet(
         
         val peakelApexLcContext = mzDbPeakel.getApexLcContext()
         val peakelFirstLcContext = mzDbPeakel.getFirstLcContext()
-        val peakelLastLcContext = mzDbPeakel.getLastLcContext()        
+        val peakelLastLcContext = mzDbPeakel.getLastLcContext()
         
         val newPeakel = Peakel(
           id = Peakel.generateNewId(),
@@ -935,9 +941,9 @@ class ExtractMapSet(
        apexIntensity = mzDbFt.getBasePeakel().getApexIntensity(),
        intensity = intensitySum2Peakels, //mzDbFt.area,
        charge = mzDbFt.charge,
-       elutionTime = mzDbFt.elutionTime,
+       elutionTime = mzDbFt.getElutionTime + 0f,
        duration = ftLastScanH.getElutionTime - ftFirstScanH.getElutionTime,
-       qualityScore = mzDbFt.qualityScore,
+       qualityScore = Option(mzDbFt.qualityProperties).map(_.qualityScore).getOrElse(0f),
        ms1Count = mzDbFt.getMs1Count,
        ms2Count = mzDbFt.getMs2Count,
        isOverlapping = false,
