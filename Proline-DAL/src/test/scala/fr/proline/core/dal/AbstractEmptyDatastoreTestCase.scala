@@ -65,4 +65,23 @@ abstract class AbstractEmptyDatastoreTestCase extends AbstractMultipleDBTestCase
     parserContext
   }
   
+   def loadDbUnitResultFiles( datasetLocation: DbUnitResultFileLocation ) = {
+    
+    val classLoader = classOf[fr.proline.repository.util.DatabaseTestCase]
+    
+    // Open streams
+    val msiStream = classLoader.getResourceAsStream( datasetLocation.msiDbDatasetPath )
+    val udsStream = classLoader.getResourceAsStream( datasetLocation.udsDbDatasetPath )
+    val psStream = classLoader.getResourceAsStream( datasetLocation.psDbDatasetPath )
+    
+    psDBTestCase.loadDataSet(psStream)
+    udsDBTestCase.loadDataSet(udsStream)
+    msiDBTestCase.loadDataSet(msiStream)
+    
+    msiStream.close()
+    udsStream.close()
+    psStream.close()
+    
+  }
+
 }
