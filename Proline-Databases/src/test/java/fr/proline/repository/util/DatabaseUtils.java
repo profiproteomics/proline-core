@@ -2,11 +2,12 @@ package fr.proline.repository.util;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
 
-import org.dbunit.IDatabaseTester;
 import org.dbunit.DataSourceDatabaseTester;
+import org.dbunit.IDatabaseTester;
 import org.dbunit.database.DatabaseSequenceFilter;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.CompositeDataSet;
@@ -15,6 +16,7 @@ import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.filter.ITableFilter;
 import org.dbunit.dataset.xml.FlatDtdDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
+import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.util.fileloader.DataFileLoader;
 import org.dbunit.util.fileloader.FlatXmlDataFileLoader;
 import org.slf4j.Logger;
@@ -133,12 +135,21 @@ public final class DatabaseUtils {
 		loadDataSet( connector.getDatabaseTester(), datasetName );
 	}
 
+	public static void loadDataSet(final DatabaseTestConnector connector, final InputStream xmlStream) throws Exception {
+		loadDataSet(connector.getDatabaseTester(), xmlStream);
+	}
+	
 	public static void loadDataSet(final IDatabaseTester databaseTester, final String datasetName)
 			throws Exception {
 
 		final DataFileLoader dataLoader = new FlatXmlDataFileLoader();
 		final IDataSet dataSet = dataLoader.load(datasetName);
-
+		databaseTester.setDataSet(dataSet);
+	}
+	
+	public static void loadDataSet(final IDatabaseTester databaseTester, final InputStream xmlStream) throws Exception {
+		FlatXmlDataSetBuilder builder = new FlatXmlDataSetBuilder();
+		IDataSet dataSet = builder.build(xmlStream);
 		databaseTester.setDataSet(dataSet);
 	}
 	
