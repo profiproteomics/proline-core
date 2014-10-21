@@ -27,8 +27,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
     
     // TODO: load related raw file and instrument (need UDSdb provider ???)
     
-    val scanSeqs = new Array[LcMsScanSequence](scanSequenceIds.length)
-    var scanSeqIdx = 0
+    val scanSeqs = new ArrayBuffer[LcMsScanSequence](scanSequenceIds.length)
     
     // Load runs
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
@@ -42,13 +41,10 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
         val runScans = scansByRunId(toLong(runRecord.getAny(ScanSeqCols.ID)))
         
         // Build the scan sequence
-        scanSeqs(scanSeqIdx) = buildScanSequence(runRecord, runScans )
-        
-        scanSeqIdx += 1
+        scanSeqs += buildScanSequence(runRecord, runScans )
       }
       
-      scanSeqs
-      
+      scanSeqs.toArray
     })
   }
   
