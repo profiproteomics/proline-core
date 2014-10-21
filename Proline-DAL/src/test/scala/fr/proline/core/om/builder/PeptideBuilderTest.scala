@@ -31,6 +31,8 @@ class PeptideBuilderTest {
     ptmRecord += ("id" -> 1)
     ptmRecord += ("short_name" -> "phospho")
     ptmRecord += ("full_name" -> "phospho")
+    ptmRecord += ("unimod_id" -> 1)
+    
 
     val ptmSpecifRecord = new AnyMap()
     ptmSpecifRecord += ("residue" -> "A")
