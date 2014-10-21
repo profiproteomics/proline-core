@@ -53,7 +53,7 @@ object PtmDefinitionBuilder {
     return new PtmDefinition(
       id = ptmDefId,
       ptmId = ptmRecord.getLong(PtmCols.ID),
-      unimodId = ptmRecord.getInt(PtmCols.UNIMOD_ID),
+      unimodId = ptmRecord.getIntOrElse(PtmCols.UNIMOD_ID, 0),
       location = ptmSpecifRecord.getString(PtmSpecifCols.LOCATION),
       residue = resChar,
       classification = ptmClassification,
