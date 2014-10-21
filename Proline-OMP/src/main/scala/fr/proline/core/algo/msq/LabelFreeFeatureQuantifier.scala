@@ -212,12 +212,10 @@ class LabelFreeFeatureQuantifier(
       val pepMatchesCount = msQueryIdsOpt.map(_.length).getOrElse(0)
       val ms2MatchingFrequency = if( ftSpecIds.size > 0 ) Some( pepMatchesCount.toFloat / ftSpecIds.size ) else None
       
-      val ftIntensity = feature.getNormalizedIntensityOrIntensity
-      
       // Create a quant peptide ion corresponding the this LCMS feature
       new QuantPeptideIon(
-        rawAbundance = ftIntensity,
-        abundance = ftIntensity,
+        rawAbundance = feature.intensity,
+        abundance = feature.getNormalizedIntensityOrIntensity,
         moz = feature.moz,
         elutionTime = feature.elutionTime,
         duration = feature.duration,
