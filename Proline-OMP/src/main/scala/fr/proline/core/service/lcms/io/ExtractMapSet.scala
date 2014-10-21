@@ -212,7 +212,6 @@ class ExtractMapSet(
     // Re-build child maps in order to be sure they contain master feature children (including clusters)
     mapSet = mapSet.rebuildChildMaps()
     
-    // Instantiate a raw map storer
     val rawMapStorer = RawMapStorer( lcmsDbCtx )
     
     // --- Extract LC-MS missing features in all raw files ---
@@ -235,7 +234,6 @@ class ExtractMapSet(
       // Append missing peakels
       x2RawMap.peakels = Some( rawMap.peakels.get ++ peakelByMzDbPeakel.values )
       
-      // Store the raw map
       logger.info("storing the raw map...")
       rawMapStorer.storeRawMap(x2RawMap, storePeakels = true)
       
@@ -537,7 +535,11 @@ class ExtractMapSet(
     
     val mzDbFts = try {
       
-      val mzdbFtX = new MzDbFeatureExtractor(mzDb,5,5)
+       val ftXtractConfig = FeatureExtractorConfig(
+         mzTolPPM = this.mozTolPPM
+      )
+      
+      val mzdbFtX = new MzDbFeatureExtractor(mzDb,5,5,ftXtractConfig)
       
       this.logger.info("retrieve scan headers...")
       val scanHeaders = mzDb.getScanHeaders()
