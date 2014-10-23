@@ -141,18 +141,15 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
           
           var bestPepMatchScore = 0f
           var bestPepMatch: PeptideMatch = null
-          var bestSeqMatch: SequenceMatch = null
-          
-          for( validPepMatch <- peptideValidMatches ) {
-            if( validPepMatch.score > bestPepMatchScore ) {              
-              bestPepMatchScore = validPepMatch.score
-              bestPepMatch = validPepMatch
-              bestSeqMatch = seqMatch
-            }
-          }
-          
+		  for( validPepMatch <- peptideValidMatches ) {
+	            if( validPepMatch.score > bestPepMatchScore ) {              
+	              bestPepMatchScore = validPepMatch.score
+	              bestPepMatch = validPepMatch
+	            }
+       	  }
+  
           // Build new sequence match corresponding to the merged peptide match
-          bestSeqMatches += bestSeqMatch.copy(
+          bestSeqMatches += seqMatch.copy(
                               peptide = Some(bestPepMatch.peptide),
                               bestPeptideMatchId = bestPepMatch.id
                               )
