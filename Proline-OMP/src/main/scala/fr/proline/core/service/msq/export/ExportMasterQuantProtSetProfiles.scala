@@ -90,9 +90,10 @@ class ExportMasterQuantProtSetProfiles(
   
   def mkRowHeader( quantChannelCount: Int ): String = {
     val rowHeaders = new ArrayBuffer[String] ++ protSetHeaders ++ mqProtSetProfileHeaders
+           
+    qcIds.foreach{ qcId =>rowHeaders += "abundance_"+nameByQchId(qcId) }    
+    qcIds.foreach{ qcId =>rowHeaders += "psm_count_"+nameByQchId(qcId) }    
     
-    for( i <- 1 to quantChannelCount ) rowHeaders += "abundance_"+i
-    for( i <- 1 to quantChannelCount ) rowHeaders += "psm_count_"+i
     for( r <- ratioDefs ) rowHeaders ++= statHeaders.map( _ + ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber) )
     
     rowHeaders.mkString("\t")

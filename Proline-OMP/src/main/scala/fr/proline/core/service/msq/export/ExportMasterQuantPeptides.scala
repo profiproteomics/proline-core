@@ -24,7 +24,7 @@ class ExportMasterQuantPeptides(
   // TODO: retrieve the right value
   protected val groupSetupNumber = 1
 
-  protected val pepHeaders = "sequence ptms prot_set_count".split(" ")
+  protected val pepHeaders = "sequence ptms prot_set_count calc_mass".split(" ")
   protected val mqPepHeaders = "quant_peptide_id best_peptide_match_score elution_time selection_level".split(" ")  
   protected val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
   
@@ -131,9 +131,11 @@ class ExportMasterQuantPeptides(
   
   protected def appendPepInstCells(row: ArrayBuffer[Any], pepInstOpt: Option[PeptideInstance]) {
     if( pepInstOpt.isDefined ) {
+      
+      //Ajouter le m/z du pepUnst
       val pepInst = pepInstOpt.get
       val peptide = pepInst.peptide
-      row ++= Array(peptide.sequence,peptide.readablePtmString,pepInst.proteinSetsCount)
+      row ++= Array(peptide.sequence,peptide.readablePtmString,pepInst.proteinSetsCount, pepInst.peptide.calculatedMass)
     }
     else row ++= Array.fill(pepHeaders.length)("")
   }
@@ -146,10 +148,10 @@ class ExportMasterQuantPeptides(
   protected def mkProtSetAndQPepHeaderCols( quantChannelCount: Int ): Seq[String] = {
     val rowHeaders = new ArrayBuffer[String] ++ protSetHeaders ++ pepHeaders ++ mqPepHeaders
     
-    for( i <- 1 to quantChannelCount ) rowHeaders += "raw_abundance_"+i
-    for( i <- 1 to quantChannelCount ) rowHeaders += "abundance_"+i
-    for( i <- 1 to quantChannelCount ) rowHeaders += "psm_count_"+i
-    
+    qcIds.foreach{ qcId =>rowHeaders += "raw_abundance_"+nameByQchId(qcId) }    
+    qcIds.foreach{ qcId =>rowHeaders += "abundance_"+nameByQchId(qcId) }    
+    qcIds.foreach{ qcId =>rowHeaders += "psm_count_"+nameByQchId(qcId) }    
+   
     rowHeaders
   }
   

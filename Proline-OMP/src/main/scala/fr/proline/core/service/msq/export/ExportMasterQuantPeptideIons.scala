@@ -103,8 +103,9 @@ class ExportMasterQuantPeptideIons(
     
     rowHeaders ++= mqPepIonHeaders
     
-    for( i <- 1 to quantChannelCount ) rowHeaders ++= ( qPepIonHeaders.map(_+"_"+i) )
     
+    qcIds.foreach{ qcId =>rowHeaders  ++= ( qPepIonHeaders.map(_+"_"+nameByQchId(qcId)) ) }
+     
     rowHeaders.mkString("\t")
   }
 
