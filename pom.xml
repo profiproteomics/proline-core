@@ -36,7 +36,7 @@
       <dependency>
         <groupId>fr.proline.util</groupId>
         <artifactId>ProFI-Commons-Scala</artifactId>
-        <version>0.0.8-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+        <version>0.0.9-SNAPSHOT</version> <!-- Snapshot Trunk version -->
       </dependency>
 
       <!-- "Proline" modules -->
