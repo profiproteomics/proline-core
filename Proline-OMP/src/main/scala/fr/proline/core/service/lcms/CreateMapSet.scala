@@ -14,6 +14,7 @@ import fr.proline.core.om.storer.lcms.ProcessedMapStorer
 import fr.proline.core.service.lcms._
 import fr.proline.repository.IDatabaseConnector
 
+// TODO: rename into StoreMapSet
 object CreateMapSet {
 
   def apply(
@@ -31,6 +32,7 @@ object CreateMapSet {
   
 }
 
+// TODO: rename into StoreMapSet
 class CreateMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
   mapSetName: String,

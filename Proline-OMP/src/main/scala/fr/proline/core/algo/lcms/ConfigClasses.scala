@@ -17,7 +17,9 @@ trait ILcMsQuantConfig extends IMsQuantConfig {
   val ftFilter: fr.proline.core.algo.lcms.filtering.Filter
   val ftMappingParams: FeatureMappingParams
   val normalizationMethod: Option[String]
+  // TODO: use an algorithm enumeration instead of boolean values
   val detectFeatures: Boolean
+  val detectPeakels: Boolean
   val startFromValidatedPeptides: Boolean
 }
 
@@ -74,6 +76,8 @@ case class LabelFreeQuantConfig(
   ftFilter: fr.proline.core.algo.lcms.filtering.Filter,
   ftMappingParams: FeatureMappingParams,
   normalizationMethod: Option[String],
+  // TODO: use an algorithm enumeration instead of boolean values
   detectFeatures: Boolean = false, // false implies feature extraction instead of detection
+  detectPeakels: Boolean = false, // false implies feature extraction instead of detection
   startFromValidatedPeptides: Boolean = true // only checked if detectFeatures is false
 ) extends ILabelFreeQuantConfig

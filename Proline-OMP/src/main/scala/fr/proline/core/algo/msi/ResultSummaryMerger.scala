@@ -137,22 +137,14 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
       for( ( pepId, seqMatch ) <- seqMatchByPepId ) {
         
         if( validPepMatchesByPepId.contains(pepId) ) {
-          val peptideValidMatches = validPepMatchesByPepId(pepId)
+          val validPepMatches = validPepMatchesByPepId(pepId)
+          val bestPepMatch = validPepMatches.maxBy( _.score )
           
-          var bestPepMatchScore = 0f
-          var bestPepMatch: PeptideMatch = null
-		  for( validPepMatch <- peptideValidMatches ) {
-	            if( validPepMatch.score > bestPepMatchScore ) {              
-	              bestPepMatchScore = validPepMatch.score
-	              bestPepMatch = validPepMatch
-	            }
-       	  }
-  
           // Build new sequence match corresponding to the merged peptide match
           bestSeqMatches += seqMatch.copy(
-                              peptide = Some(bestPepMatch.peptide),
-                              bestPeptideMatchId = bestPepMatch.id
-                              )
+            peptide = Some(bestPepMatch.peptide),
+            bestPeptideMatchId = bestPepMatch.id
+          )
         }
       }
       
