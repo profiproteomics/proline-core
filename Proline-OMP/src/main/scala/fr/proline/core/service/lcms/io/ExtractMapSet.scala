@@ -260,6 +260,18 @@ class ExtractMapSet(
       x2MapSet
     }
     
+    // Update processed map id of each feature
+    // FIXME: DBO => why is it necessary now (I mean after the introduction of detectPeakels mode) ???
+    for( x2ProcessedMap <- finalMapSet.childMaps; ft <- x2ProcessedMap.features ) {      
+      ft.relations.processedMapId = x2ProcessedMap.id
+      
+      if( ft.isCluster ) {
+        for( subFt <- ft.subFeatures ) {
+          subFt.relations.processedMapId = x2ProcessedMap.id
+        }
+      }
+    }
+    
     // --- Update and store the map alignment using processed maps with persisted ids ---
     AlignMapSet(lcmsDbCtx, finalMapSet, alnMethodName, alnParams)
     
@@ -268,10 +280,8 @@ class ExtractMapSet(
     // --- Normalize the processed maps ---
     if (normalizationMethod.isDefined && finalMapSet.childMaps.length > 1) {
 
-      // Instantiate a service for map set normalization
-      logger.info("normalizing maps...")
-      
       // Update the normalized intensities
+      logger.info("normalizing maps...")
       MapSetNormalizer(normalizationMethod.get).normalizeFeaturesIntensity(finalMapSet)
 
       // Re-build master map features using best child
@@ -846,18 +856,6 @@ class ExtractMapSet(
     
     // --- Persist the corresponding map set ---
     val x2MapSet = CreateMapSet( lcmsDbCtx, mapSetName, tmpMapSet.childMaps )
-    
-    // Update processed map id of each feature          
-    // FIXME: why is it necesseray here and not in the old way of building the map set ???
-    for( x2ProcessedMap <- tmpMapSet.childMaps; ft <- x2ProcessedMap.features ) {      
-      ft.relations.processedMapId = x2ProcessedMap.id
-      
-      if( ft.isCluster ) {
-        for( subFt <- ft.subFeatures ) {
-          subFt.relations.processedMapId = x2ProcessedMap.id
-        }
-      }
-    }
     
     // Attach the computed master map to the newly created map set
     val tmpMasterMap = tmpMapSet.masterMap
