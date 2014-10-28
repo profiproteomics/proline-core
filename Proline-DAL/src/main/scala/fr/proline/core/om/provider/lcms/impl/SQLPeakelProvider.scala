@@ -75,7 +75,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       apexIntensity = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)),
       area = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)),
       duration = toFloat(r.getAny(PeakelCols.DURATION)),
-      fwhm = r.getAnyOption(PeakelCols.FWHM).map(toFloat(_)),
+      //fwhm = r.getAnyOption(PeakelCols.FWHM).map(toFloat(_)),
       isOverlapping = toBoolean(r.getAny(PeakelCols.IS_OVERLAPPING)),
       featuresCount = r.getInt(PeakelCols.FEATURE_COUNT),
       peaks = lcMsPeaks,

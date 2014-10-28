@@ -8,6 +8,7 @@ import fr.profi.mzdb.model.IsotopicPatternLike
 import fr.profi.mzdb.model.Peak
 import fr.profi.util.misc.InMemoryIdGen
 
+// TODO: remove me and use the mzdb-processing model instead
 @org.msgpack.annotation.Message
 case class LcMsPeak(
   // MessagePack requires mutable fields
@@ -38,17 +39,21 @@ case class IsotopicPatternProperties()
 object Peakel extends InMemoryIdGen
 
 case class Peakel(
-  
   var id: Long,
   val moz: Double,
   val elutionTime: Float,
   val apexIntensity: Float,
   val area: Float,
-  val duration: Float,
-  val fwhm: Option[Float],
+  val duration: Float, // TODO: re-add duration at half maximum ???
+
   val isOverlapping: Boolean,
   var featuresCount: Int,
-  val peaks: Array[LcMsPeak],  
+  val peaks: Array[LcMsPeak],
+  
+  val leftHwhmMean: Option[Float] = None,
+  val leftHwhmCv: Option[Float] = None,
+  val rightHwhmMean: Option[Float] = None,
+  val rightHwhmCv: Option[Float] = None,
   
   var firstScanId: Long = 0L,
   var lastScanId: Long = 0L,
@@ -337,7 +342,8 @@ case class Compound(
 class MasterFeatureBuilder(
   var id: Long = Feature.generateNewId,
   var bestFeature: Feature,
-  val children: ArrayBuffer[Feature]
+  val children: ArrayBuffer[Feature],
+  val peptideId: Long = 0L
 ) {
   require(children.length > 0,"children array must not be empty")
   
@@ -346,7 +352,9 @@ class MasterFeatureBuilder(
   }
   
   def toMasterFeature( id: Long = this.id ): Feature = {
-    bestFeature.toMasterFeature( id = id, children = children.toArray )
+    val mft = bestFeature.toMasterFeature( id = id, children = children.toArray )
+    mft.relations.peptideId = peptideId
+    mft
   }
   
   def eachSubFeature( onEachSubFt: (Feature) => Unit ) {

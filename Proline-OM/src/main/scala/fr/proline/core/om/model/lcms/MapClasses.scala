@@ -338,6 +338,11 @@ case class MapSet(
   
   def convertElutionTime( time: Float, refMapId: Long, targetMapId: Long, mass: Option[Double] = None): Float = {
     require( mapAlnSets != null, "can't convert elution time without map alignments" )
+    require( refMapId != 0, "refMapId must be different than zero")
+    require( targetMapId != 0, "targetMapId must be different than zero")
+    
+    val alnRefMapId = this.alnReferenceMapId
+    require( alnRefMapId != 0, "can't convert elution time without a defined alnRefMapId" )
     
     // If the reference is the target map => returns the provided time
     if( refMapId == targetMapId ) return time
@@ -349,11 +354,11 @@ case class MapSet(
     // Else we need to make to consecutive time conversions
     } else {
       // Convert time into the reference map scale
-      val toRefMapAlnSet = _mapAlnSetByMapIdPair(refMapId -> this.alnReferenceMapId)
+      val toRefMapAlnSet = _mapAlnSetByMapIdPair(refMapId -> alnRefMapId)
       val refMapTime = toRefMapAlnSet.calcTargetMapElutionTime(time, mass)
      
       // Convert reference map time into the target map scale
-      val mapAlnSet = _mapAlnSetByMapIdPair(this.alnReferenceMapId -> targetMapId)
+      val mapAlnSet = _mapAlnSetByMapIdPair(alnRefMapId -> targetMapId)
       mapAlnSet.calcTargetMapElutionTime(refMapTime, mass)
     }
 
@@ -389,6 +394,7 @@ case class MapSet(
     this.masterMap = this.masterMap.copy(features = newMasterFeatures.toArray)
   }
   
+  /** Rebuild child maps using features or feature clusters of the master map **/
   def rebuildChildMaps(): MapSet = {
     
     val masterFeatures = this.masterMap.features
@@ -404,6 +410,7 @@ case class MapSet(
     
     // Group master features children by child map id
     for( mft <- masterFeatures; childFt <- mft.children ) {
+      require( childFt.relations.processedMapId != 0, "processedMapId must be different than zero" )
       ftsByChildMapId(childFt.relations.processedMapId) += childFt
     }
     
@@ -498,6 +505,7 @@ case class MapSetProperties()
 
 object RawMap extends InMemoryIdGen
 
+// TODO: create a RawMapBuilder class with feature array buffer
 case class RawMap(
             
   // Required fields
@@ -568,6 +576,7 @@ case class RawMapIdentifier( var id: Long ) extends IEntityReference[RawMap]
 
 object ProcessedMap extends InMemoryIdGen
 
+// TODO: create a ProcessedMapBuilder class with feature array buffer
 case class ProcessedMap(
             
   // Required fields

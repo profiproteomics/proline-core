@@ -108,7 +108,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
               peakel.apexIntensity,
               peakel.area,
               peakel.duration,
-              peakel.fwhm,
+              0f, // peakel.fwhm,
               peakel.isOverlapping,
               peakel.featuresCount,
               peakel.peaks.length,
