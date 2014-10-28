@@ -30,9 +30,9 @@
     </dependency>
 
     <dependency>
-      <groupId>biojava</groupId>
-      <artifactId>biojava</artifactId>
-      <version>1.7</version>
+      <groupId>org.biojava</groupId>
+      <artifactId>core</artifactId>
+      <version>1.9.1</version> <!-- Latest version checked on 22 october 2014 -->
     </dependency>
 
     <!-- Serialization -->
