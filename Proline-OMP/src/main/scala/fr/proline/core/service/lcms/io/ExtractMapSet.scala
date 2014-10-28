@@ -814,6 +814,7 @@ class ExtractMapSet(
         
         // Append raw map to the array buffer
         x2RawMapByRunId += x2RawMap.runId -> x2RawMap
+        x2RawMaps += x2RawMap
         
       } finally {
         // Release resources
@@ -828,7 +829,7 @@ class ExtractMapSet(
     }
     
     // --- Build a temporary master map ---
-    val alnRefMap = tmpMapSet.getAlnReferenceMap.get        
+    val alnRefMap = tmpMapSet.getAlnReferenceMap.get
     val curTime = new java.util.Date()
     
     tmpMapSet.masterMap = ProcessedMap(
