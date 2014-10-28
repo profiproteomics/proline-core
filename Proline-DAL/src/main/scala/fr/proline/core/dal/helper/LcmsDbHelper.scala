@@ -113,6 +113,8 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
   }
 
   def getScanInitialIdById( scanSeqIds: Seq[Long] ): Map[Long,Int] = {
+    require( scanSeqIds != null, "scanSeqIds is null" )
+    if( scanSeqIds.isEmpty ) return Map()
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     
