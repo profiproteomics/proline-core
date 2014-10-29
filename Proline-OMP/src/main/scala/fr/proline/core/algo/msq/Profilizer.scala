@@ -433,7 +433,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // Iterator over each row of the abundance matrix in order to compute some statistical models
     normalizedMatrix.foreach { normalizedRow =>
 
-      // Compute statistics at technical replicate level if enough replicates
+      // Compute statistics at technical replicate level if enough replicates (at least 3)
       if( minQCsCountPerSample > 2 ) {
         // Iterate over each sample in order to build the absolute error model using existing sample analysis replicates
         for( sampleNum <- allSampleNumbers ) {
@@ -443,11 +443,14 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           val sampleAbundances = qcIndices.map( normalizedRow(_) ).withFilter( isZeroOrNaN(_) == false ).map(_.toDouble)
           //println(sampleAbundances)
           
-          val sampleStatSummary = CommonsStatHelper.calcStatSummary(sampleAbundances)
-          val abundance = sampleStatSummary.getMean.toFloat
-          
-          if( isZeroOrNaN(abundance) == false )
-            absoluteErrors += AbsoluteErrorObservation( abundance, sampleStatSummary.getStandardDeviation.toFloat )
+          // Check we have enough abundances (at least 3)
+          if( sampleAbundances.length > 2 ) {
+            val sampleStatSummary = CommonsStatHelper.calcStatSummary(sampleAbundances)
+            val abundance = sampleStatSummary.getMean.toFloat
+            
+            if( isZeroOrNaN(abundance) == false )
+              absoluteErrors += AbsoluteErrorObservation( abundance, sampleStatSummary.getStandardDeviation.toFloat )
+          }
         }
       // Compute statistics at biological sample level
       } else {
