@@ -13,6 +13,9 @@ import fr.profi.util.misc.InMemoryIdGen
 
 object Peptide extends InMemoryIdGen with Logging {
   
+  // TODO: use this pattern everywhere empty arrays may be created
+  final val EMPTY_PTM_ARRAY = Array.empty[LocatedPtm]
+  
   import scala.collection._
   
   /** Returns a list of LocatedPTM objects for the provided sequence, PTM definition and optional position constraints.
