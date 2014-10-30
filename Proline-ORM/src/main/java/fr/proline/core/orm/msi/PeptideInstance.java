@@ -260,6 +260,9 @@ public class PeptideInstance implements Serializable {
 
 	private DProteinSet[] proteinSetArray = null;
 	
+	private long[] peptideMatchesId;
+	private DPeptideMatch[] peptideMatches;
+	
 	protected TransientData() {
 	}
 
@@ -277,6 +280,23 @@ public class PeptideInstance implements Serializable {
 
 	public void setBestPeptideMatch(DPeptideMatch bestPeptideMatch) {
 		this.bestPeptideMatch = bestPeptideMatch;
+	}
+	
+	public DPeptideMatch[] getPeptideMatches() {
+	    return peptideMatches;
+	}
+
+	public void setPeptideMatches(DPeptideMatch[] peptideMatches) {
+	    this.peptideMatches = peptideMatches;
+	}
+	
+	
+	public long[] getPeptideMatchesId() {
+	    return peptideMatchesId;
+	}
+
+	public void setPeptideMatchesId(long[] peptideMatchesId) {
+		this.peptideMatchesId = peptideMatchesId;
 	}
 	
 	
