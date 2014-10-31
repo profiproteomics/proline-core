@@ -68,8 +68,7 @@ trait SQLResultSetLoader extends Logging {
       val resultSets = msiEzDBC.select(rsQuery) { record =>
         
         val rsId = record.getLong(RSCols.ID)
-
-        logger.info("Start loading ResultSet #" + rsId)
+        logger.info("Start building ResultSet #" + rsId)
         
         val rs = ResultSetBuilder.buildResultSet(
           record,
@@ -83,18 +82,18 @@ trait SQLResultSetLoader extends Logging {
         val nPeptMatches = if (rs.peptideMatches == null) 0 else rs.peptideMatches.length
         val nProtMatches = if (rs.proteinMatches == null) 0 else rs.proteinMatches.length
 
-        val buff = new StringBuilder().append("Loading")
+        val buff = new StringBuilder().append("Built")
         if (rs.isDecoy) buff.append(" Decoy") else buff.append(" Target")
 
         buff
-          .append(s" ResultSet #${rsId} ")
+          .append(s" ResultSet #${rsId} contains")
           .append("[")
           .append(s"${nPeptides} Peptides, ")
           .append(s"${nPeptMatches} PeptideMatches, ")
           .append(s"${nProtMatches} ProteinMatches")
           .append("] ")
 
-        logger.info(s"${buff} loaded in ${ (System.currentTimeMillis() - start) } ms")
+        logger.info(s"${buff} built in ${ (System.currentTimeMillis() - start) } ms")
 
         rs
       }
@@ -115,6 +114,9 @@ class SQLResultSetProvider(
 
   def getResultSets(rsIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[ResultSet] = {
     if (rsIds.isEmpty) return Array()
+    
+    val start = System.currentTimeMillis()
+    logger.info(s"Start loading ${rsIds.length} result set(s)")
 
     val pepMatchFilter = resultSetFilter.map(rsf => new PeptideMatchFilter(maxRank = rsf.maxPeptideMatchRank))
 
@@ -126,8 +128,11 @@ class SQLResultSetProvider(
     val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
     val protMatches = protMatchProvider.getResultSetsProteinMatches(rsIds)
 
-    this.getResultSets(rsIds, pepMatches, protMatches)
+    val resultSets = this.getResultSets(rsIds, pepMatches, protMatches)
+    
+    logger.info(s"${rsIds.length} result sets loaded in ${ (System.currentTimeMillis() - start) } ms")
 
+    resultSets
   }
 
   def getResultSetsAsOptions(resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[Option[ResultSet]] = {
