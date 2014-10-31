@@ -1,25 +1,26 @@
 package fr.proline.core.service.uds
 
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ArrayBuffer
+import javax.persistence.EntityManager
+
 import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
 import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.api.service.IService
-import fr.proline.context.{ IExecutionContext, DatabaseConnectionContext, BasicExecutionContext }
+import fr.proline.context.{IExecutionContext, DatabaseConnectionContext}
+import fr.proline.core.algo.msi._
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.validation._
-import fr.proline.core.dal.helper.{ MsiDbHelper, UdsDbHelper }
-import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dal.context._
+import fr.proline.core.dal.helper.{MsiDbHelper, UdsDbHelper}
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.{ SQLResultSetProvider, SQLResultSummaryProvider }
-import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
-import fr.proline.core.service.msi.{ ResultSetValidator, ResultSetMerger, ResultSummaryMerger, ValidationConfig }
-import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.om.model.msi.ResultSummary
-import javax.persistence.EntityManager
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.orm.uds.{Dataset => UdsDataset}
+import fr.proline.core.service.msi.{ResultSetValidator, ResultSetMerger, ResultSummaryMerger, ValidationConfig}
 
 // Singleton for Proline-Cortex
 object IdentificationTreeValidator {
@@ -104,7 +105,7 @@ class IdentificationTreeValidator(
     this.logger.debug("first RS id = " + targetRsIds(0))
 
     // Retrieve decoy RS ids if they exists
-    val decoyRsIdsAsOpts = targetRsIds.map { msiDbHelper.getDecoyRsId(_) } filter { _.isDefined }
+    /*val decoyRsIdsAsOpts = targetRsIds.map { msiDbHelper.getDecoyRsId(_) } filter { _.isDefined }
 
     // Check that if we have decoy data we have the same number of target and decoy result sets
     val (nbTargetRs, nbDecoyRs) = (targetRsIds.length, decoyRsIdsAsOpts.length)
@@ -112,21 +113,65 @@ class IdentificationTreeValidator(
       throw new Exception("missing decoy result set for one of the provided result sets")
     }
     this.logger.debug("decoy rs ids count = " + nbDecoyRs)
-
+    
     // Load result sets
     val rsIds = targetRsIds ++ decoyRsIdsAsOpts.map { _.get }
     val (targetRsList, decoyRsList) = this._loadResultSets(projectId, rsIds).partition { _.isDecoy == false }
     //val targetRsById = targetRsList.map( drs => drs.id -> drs ).toMap
-    val decoyRsById = decoyRsList.map(drs => drs.id -> drs).toMap
+    val decoyRsById = decoyRsList.map(drs => drs.id -> drs).toMap*/
+    
+    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
 
     // Link decoy RS to target RS and map RSM by RS id
     val rsmByRsId = new HashMap[Long, ResultSummary]
-    for (targetRS <- targetRsList) {
-      targetRS.decoyResultSet = decoyRsById.get(targetRS.getDecoyResultSetId)
-
+    for (targetRsId <- targetRsIds) {
+      val decoyRsIdOpt = msiDbHelper.getDecoyRsId(targetRsId)
+      require( decoyRsIdOpt.isDefined, "decoyrRsIdOpt is not defined" )
+      
+      // TODO: use the maxRank filter here
+      val tdResultSets = rsProvider.getResultSets( Array(targetRsId,decoyRsIdOpt.get) )
+      require( tdResultSets.length == 2, "target/decoy results have not been fetched from MSIdb")
+      
+      // Link decoy RS to target RS
+      val targetRS = tdResultSets.find( _.isDecoy == false ).get
+      targetRS.decoyResultSet = tdResultSets.find( _.isDecoy )
+      
       this.logger.debug("validating target RS")
       val rsm = this._validateResultSet(targetRS)
+      
+      if( mergeResultSets == false ) {
+        
+        this.logger.debug("remove non-validated entities from RS and decoy RS")
 
+        val rs = rsm.resultSet.get
+        val decoyRs = rs.decoyResultSet.get
+        
+        val validatedRs = new ResultSetAdder(
+          rs.id,
+          isDecoy = false,
+          mode = AdditionMode.UNION
+        )
+        .addResultSet(rs, new ResultSummarySelector(rsm))
+        .toResultSet()
+        
+        // Replace the result set by the validated one
+        rsm.resultSet = Some(validatedRs)
+        
+        val validatedDecoyRs = new ResultSetAdder(
+          decoyRs.id,
+          isDecoy = false,
+          mode = AdditionMode.UNION
+        )
+        .addResultSet(decoyRs, new ResultSummarySelector(rsm))
+        .toResultSet()
+        
+        // Set the decoy result set as the validated decoy one
+        validatedRs.decoyResultSet = Some(validatedDecoyRs)
+        
+        // Do the same in the decoy result summary
+        rsm.decoyResultSummary.get.resultSet = Some(validatedDecoyRs)
+      }
+      
       rsmByRsId += targetRS.id -> rsm
     }
 
@@ -145,47 +190,6 @@ class IdentificationTreeValidator(
 
     true
   }
-
-  /**
-   * Loads result sets using SQL execution context.
-   */
-  private def _loadResultSets(projectId: Long, rsIds: Seq[Long]): Array[ResultSet] = {
-
-    /*val execSqlContext = BuildExecutionContext(dsFactory, projectId, false)
-    val udsDbCtx = execSqlContext.getUDSDbConnectionContext
-    val udsDbHelper = new UdsDbHelper(udsDbCtx)
-    val psDbCtx = execSqlContext.getPSDbConnectionContext
-    val msiDbCtx = execSqlContext.getMSIDbConnectionContext*/
-
-    // Instantiate a RS loader
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
-    this.logger.warn("loading " + rsIds.length + " result sets")
-    val resultSets = rsProvider.getResultSets(rsIds)
-
-    //execSqlContext.closeAll()
-
-    resultSets
-  }
-
-  /**
-   * Loads result summaries using SQL execution context.
-   */
-  /*private def _loadResultSummaries( projectId: Int, rsmIds: Seq[Int] ): Array[ResultSummary] = {
-    
-    val execSqlContext = BuildExecutionContext( dsFactory, projectId, false )
-    val udsDbCtx = execSqlContext.getUDSDbConnectionContext.asInstanceOf[SQLConnectionContext]
-    val udsDbHelper = new UdsDbHelper( udsDbCtx )
-    val psDbCtx = execSqlContext.getPSDbConnectionContext.asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = execSqlContext.getMSIDbConnectionContext.asInstanceOf[SQLConnectionContext]
-    
-    // Instantiate a RSM loader
-    val rsmProvider = new SQLResultSummaryProvider( msiDbCtx, psDbCtx, udsDbCtx )
-    val resultSets = rsmProvider.getResultSummaries( rsmIds, true )
-    
-    execSqlContext.closeAll()
-    
-    resultSets
-  }*/
 
   private def _validateResultSet(rs: ResultSet): ResultSummary = {
 
