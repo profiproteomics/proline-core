@@ -10,32 +10,6 @@ object AdditionMode extends Enumeration {
   val AGGREGATE, UNION = Value
 }
 
-trait IResultSetSelector {
-
-  def getPeptideMatches(rs: ResultSet): Iterable[PeptideMatch]
-
-  def getProteinMatches(rs: ResultSet): Iterable[ProteinMatch]
-
-  def getSequenceMatches(proteinMatch: ProteinMatch): Iterable[SequenceMatch]
-
-}
-
-object ResultSetSelector extends IResultSetSelector {
-
-  def getPeptideMatches(rs: ResultSet): Iterable[PeptideMatch] = {
-    rs.peptideMatches
-  }
-
-  def getProteinMatches(rs: ResultSet): Iterable[ProteinMatch] = {
-    rs.proteinMatches
-  }
-
-  def getSequenceMatches(proteinMatch: ProteinMatch): Iterable[SequenceMatch] = {
-    proteinMatch.sequenceMatches
-  }
-
-}
-
 class ResultSetAdder(
   val resultSetId: Long,
   val isDecoy: Boolean = false,
@@ -119,7 +93,7 @@ class ResultSetAdder(
     peptideMatch.copy(id = newPepMatchId, childrenIds = childrenIds, resultSetId = resultSetId, peptide = peptide, bestChild = Some(peptideMatch))
   }
 
-  def addResultSet(rs: ResultSet, selector: IResultSetSelector = ResultSetSelector) {
+  def addResultSet(rs: ResultSet, selector: IResultSetSelector = ResultSetSelector): ResultSetAdder = {
 
     logger.info("Start adding ResultSet #" + rs.id)
     val start = System.currentTimeMillis()
@@ -192,6 +166,8 @@ class ResultSetAdder(
     }
 
     logger.info("ResultSet #" + rs.id + " merged/added in " + (System.currentTimeMillis() - start) + " ms")
+    
+    this
   }
 
   def toResultSet(): ResultSet = {

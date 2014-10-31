@@ -4,6 +4,32 @@ import scala.collection.Iterable
 import scala.collection.mutable.HashSet
 import fr.proline.core.om.model.msi._
 
+trait IResultSetSelector {
+
+  def getPeptideMatches(rs: ResultSet): Iterable[PeptideMatch]
+
+  def getProteinMatches(rs: ResultSet): Iterable[ProteinMatch]
+
+  def getSequenceMatches(proteinMatch: ProteinMatch): Iterable[SequenceMatch]
+
+}
+
+object ResultSetSelector extends IResultSetSelector {
+
+  def getPeptideMatches(rs: ResultSet): Iterable[PeptideMatch] = {
+    rs.peptideMatches
+  }
+
+  def getProteinMatches(rs: ResultSet): Iterable[ProteinMatch] = {
+    rs.proteinMatches
+  }
+
+  def getSequenceMatches(proteinMatch: ProteinMatch): Iterable[SequenceMatch] = {
+    proteinMatch.sequenceMatches
+  }
+
+}
+
 abstract class AbstractResultSetSelector extends IResultSetSelector {
 
   val validPepIdSet: Set[Long]
@@ -70,4 +96,5 @@ class ResultSummarySelector(val rsm: ResultSummary) extends AbstractResultSetSel
   validPepIdSetBuilder = null
   validPepMatchIdSetBuilder = null
   validProtMatchIdSetBuilder = null
+  
 }
