@@ -307,8 +307,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         )
         
         // Summarize abundances of the current profile cluster
+        // TODO: put the method in the config
         val abundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
-        abundanceMatrixBuffer += abundanceMatrix.transpose.map( _meanAbundance( _ ) )
+        abundanceMatrixBuffer += AbundanceSummarizer.summarizeAbundanceMatrix(
+          abundanceMatrix,
+          AbundanceSummarizer.Method.MEAN
+        )
         
         // Summarize PSM counts of the current profile cluster
         val psmCountMatrix = mqPeps.map( _.getPepMatchesCountsForQuantChannels(qcIds) ).toArray
@@ -460,7 +464,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         
         val maxAbundance = math.max(numeratorMeanAbundance,denominatorMeanAbundance)
         
-        if( maxAbundance.isNaN == false && maxAbundance > 0 ) {          
+        if( maxAbundance.isNaN == false && maxAbundance > 0 ) {
           relativeErrors += RelativeErrorObservation( maxAbundance, numeratorMeanAbundance/denominatorMeanAbundance)
         }
       }
@@ -625,4 +629,167 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   
   private def _stringifyProfile( slopes: Seq[Int] ): String = { slopes.mkString(";") }
 
+}
+
+import fr.profi.util.math.median
+
+// TODO: put in its own file
+object AbundanceSummarizer {
+  
+  object Method extends Enumeration {
+    val MEAN = Value("MEAN")
+    val MEAN_OF_TOP3 = Value("MEAN_OF_TOP3")
+    val MEDIAN = Value("MEDIAN")
+    val MEDIAN_PROFILE = Value("MEDIAN_PROFILE")
+    val NORMALIZED_MEDIAN_PROFILE = Value("NORMALIZED_MEDIAN_PROFILE")
+    val SUM = Value("SUM")
+  }
+  
+  def summarizeAbundanceMatrix( abundanceMatrix: Array[Array[Float]], method: Method.Value ): Array[Float] = {
+    
+    method match {
+      case Method.MEAN => summarizeUsingMean(abundanceMatrix)
+      case Method.MEAN_OF_TOP3 => summarizeUsingSum(abundanceMatrix)
+      case Method.MEDIAN => summarizeUsingMedian(abundanceMatrix)
+      case Method.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
+      case Method.NORMALIZED_MEDIAN_PROFILE => summarizeUsingNormalizedMedianProfile(abundanceMatrix)
+      case Method.SUM => summarizeUsingSum(abundanceMatrix)
+    }
+    
+  }
+  
+  def summarizeUsingMean( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
+    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
+    
+    abundanceMatrix.transpose.map( _calcMeanAbundance( _ ) )
+  }
+  
+  def summarizeUsingMeanOfTop3( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
+    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
+    
+    // Sort rows by descending median abundance
+    val sortedMatrix = abundanceMatrix.sortWith( (a,b) => median(a) > median(b) )
+    
+    // Take 3 highest rows
+    val top3Matrix = sortedMatrix.take(3)
+    
+    // Mean the rows
+    summarizeUsingMean(top3Matrix)
+  }
+  
+  def summarizeUsingMedian( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
+    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
+    
+    abundanceMatrix.transpose.map( _calcMedianAbundance( _ ) )
+  }
+  
+  def summarizeUsingMedianProfile( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
+    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
+    
+    // Transpose the matrix
+    val transposedMatrix = abundanceMatrix.transpose
+    
+    // Select columns eligible for ratio computations (discard columns of frequency lower than 0.5)
+    val colObsFreq = transposedMatrix.map( col => col.count( isZeroOrNaN(_) == false ).toFloat / col.length )
+    val colObsFreqWithIdx = colObsFreq.zipWithIndex
+    val eligibleColIndices = colObsFreqWithIdx.withFilter( _._1 >= 0.5 ).map( _._2 )
+    val matrixWithEligibleCols = eligibleColIndices.map( i => transposedMatrix(i) ).transpose
+    
+    // Compute the ratio matrix
+    val ratioMatrix = for( abundanceRow <- matrixWithEligibleCols ) yield {
+      
+      val ratioRow = for ( twoValues <- abundanceRow.sliding(2) ) yield {        
+        val ( a, b ) = (twoValues.head, twoValues.last)        
+        if( isZeroOrNaN(a) || isZeroOrNaN(b) ) Float.NaN else b / a
+      }
+      
+      ratioRow.toArray
+    }
+    
+    // Compute the median of ratios
+    val medianRatios = summarizeUsingMedian(ratioMatrix)
+    
+    // Compute the TOP3 mean abundances
+    val top3MeanAbundances = summarizeUsingMeanOfTop3(matrixWithEligibleCols)
+    
+    // Convert the median ratios into absolute abundances
+    var previousAb = top3MeanAbundances.head
+    val absoluteAbundances = new ArrayBuffer[Float]()
+    absoluteAbundances += previousAb
+    
+    for( medianRatio <- medianRatios ) {
+      val absoluteValue = previousAb * medianRatio
+      absoluteAbundances += absoluteValue
+      previousAb = absoluteValue
+    }
+    
+    // Scale up the absolute abundances
+    val( top3MaxValue, top3MaxIdx ) = top3MeanAbundances.zipWithIndex.maxBy(_._1)
+    val curMaxValue = absoluteAbundances(top3MaxIdx)
+    val scalingFactor = top3MaxValue / curMaxValue
+    val scaledAbundances = absoluteAbundances.map( _ * scalingFactor )
+    
+    // Re-integrate empty cols
+    val nbCols = transposedMatrix.length
+    val eligibleColIndexSet = eligibleColIndices.toSet
+    
+    var j = 0
+    val finalAbundances = for( i <- 0 until nbCols ) yield {
+      if( eligibleColIndexSet.contains(i) == false ) Float.NaN
+      else {
+        val abundance = scaledAbundances(j)
+        j += 1
+        abundance
+      }
+    }
+    
+    finalAbundances.toArray
+  }
+  
+  def summarizeUsingNormalizedMedianProfile( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {    
+    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
+    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
+    
+    val transposedMatrix = abundanceMatrix.transpose
+    val normalizedMatrix = AbundanceNormalizer.normalizeAbundances(transposedMatrix).transpose
+    
+    val medianAbundances = summarizeUsingMedian(normalizedMatrix)
+    
+    // Scale up the mean abundances
+    val top3MeanAbundances = summarizeUsingMeanOfTop3(abundanceMatrix)
+    val( top3MaxValue, top3MaxIdx ) = top3MeanAbundances.zipWithIndex.maxBy(_._1)
+    val curMaxValue = medianAbundances(top3MaxIdx)
+    val scalingFactor = top3MaxValue / curMaxValue
+    val scaledAbundances = medianAbundances.map( _ * scalingFactor )
+    
+    scaledAbundances
+  }
+  
+  def summarizeUsingSum( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
+    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
+    
+    abundanceMatrix.transpose.map( _calcAbundanceSum( _ ) )
+  }
+  
+  // TODO: this method is duplciated in the Profilizer => put in a shared object ???
+  private def _calcMeanAbundance(abundances: Array[Float]): Float = {
+    val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
+    if( defAbundances.length == 0 ) Float.NaN else defAbundances.sum / defAbundances.length
+  }
+  
+  private def _calcMedianAbundance(abundances: Array[Float]): Float = {
+    val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
+    if( defAbundances.length == 0 ) Float.NaN else median(defAbundances)
+  }
+  
+  private def _calcAbundanceSum(abundances: Array[Float]): Float = {
+    val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
+    if( defAbundances.length == 0 ) Float.NaN else defAbundances.sum
+  }
+  
 }
