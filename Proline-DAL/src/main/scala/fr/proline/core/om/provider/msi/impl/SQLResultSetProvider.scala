@@ -130,7 +130,7 @@ class SQLResultSetProvider(
 
     val resultSets = this.getResultSets(rsIds, pepMatches, protMatches)
     
-    logger.info(s"${rsIds.length} result sets loaded in ${ (System.currentTimeMillis() - start) } ms")
+    logger.info(s"${rsIds.length} result sets loaded in ${ (System.currentTimeMillis() - start) / 1000 } s")
 
     resultSets
   }
