@@ -47,6 +47,35 @@ abstract class AbstractResultSetSelector extends IResultSetSelector {
   def getSequenceMatches(proteinMatch: ProteinMatch): Iterable[SequenceMatch] = {
     proteinMatch.sequenceMatches.filter {sm => validPepIdSet.contains(sm.getPeptideId) }
   }
+  
+  def getFilteredResultSet(rs: ResultSet, rsId: Long = ResultSet.generateNewId ): ResultSet = {
+    
+    val filteredProtMatches = this.getProteinMatches(rs).toArray
+    val filteredPepMatches = this.getPeptideMatches(rs).toArray
+    val pepMatchesByPepId = filteredPepMatches.groupBy(_.peptide.id)
+    val filteredPeptides = filteredPepMatches.map(_.peptide).distinct
+    
+    val newProtMatches = for (proteinMatch <- filteredProtMatches) yield {
+      val newSeqMatches = for (seqMatch <- proteinMatch.sequenceMatches) yield {
+        seqMatch.copy(
+          // TODO: do this in the result set adder
+          bestPeptideMatchId = pepMatchesByPepId(seqMatch.getPeptideId).maxBy(_.score).id,
+          resultSetId = rsId
+        )
+      }
+      proteinMatch.copy(
+        sequenceMatches = newSeqMatches,
+        resultSetId = rsId
+      )
+    }
+    
+    rs.copy(
+      id = rsId,
+      peptides = filteredPeptides,
+      peptideMatches = filteredPepMatches,
+      proteinMatches = newProtMatches
+    ) 
+  }
 
 }
 
@@ -70,31 +99,37 @@ class RankSelector(val rs: ResultSet, val rank: Int = 1) extends AbstractResultS
 
 class ResultSummarySelector(val rsm: ResultSummary) extends AbstractResultSetSelector {
 
-  // Retrieve the ID of valid peptide matches (having a corresponding peptide instance)
-  var validPepIdSetBuilder = Set.newBuilder[Long]
-  var validPepMatchIdSetBuilder = Set.newBuilder[Long]
-  var validProtMatchIdSetBuilder = Set.newBuilder[Long]
-  
-  for (proteinSet <- rsm.proteinSets) {
-    if (proteinSet.isValidated) {
-      val peptideSet = proteinSet.peptideSet
-      
-      for (pepInstance <- peptideSet.getPeptideInstances) {
-        validPepIdSetBuilder += pepInstance.peptide.id
-        validPepMatchIdSetBuilder ++= pepInstance.getPeptideMatchIds
+  val( validPepIdSet, validPepMatchIdSet, validProtMatchIdSet ) = {
+    
+    // Build the set of unique valid entities ids
+    val validPepIdSetBuilder = Set.newBuilder[Long]
+    val validPepMatchIdSetBuilder = Set.newBuilder[Long]
+    val validProtMatchIdSetBuilder = Set.newBuilder[Long]
+    
+    // Retrieve the ID of valid peptide matches (having a corresponding peptide instance)
+    for (proteinSet <- rsm.proteinSets) {
+      if (proteinSet.isValidated) {
+        val peptideSet = proteinSet.peptideSet
+        
+        for (pepInstance <- peptideSet.getPeptideInstances) {
+          validPepIdSetBuilder += pepInstance.peptide.id
+          validPepMatchIdSetBuilder ++= pepInstance.getPeptideMatchIds
+        }
+        
+        validProtMatchIdSetBuilder ++= proteinSet.getProteinMatchIds
       }
-      
-      validProtMatchIdSetBuilder ++= proteinSet.getProteinMatchIds
     }
+    
+    (
+      validPepIdSetBuilder.result(),
+      validPepMatchIdSetBuilder.result(),
+      validProtMatchIdSetBuilder.result()
+    )
   }
   
-  // Build the set of unique valid peptide match ids
-  val validPepIdSet = validPepIdSetBuilder.result()
-  val validPepMatchIdSet = validPepMatchIdSetBuilder.result()
-  val validProtMatchIdSet = validProtMatchIdSetBuilder.result()
-  
-  validPepIdSetBuilder = null
-  validPepMatchIdSetBuilder = null
-  validProtMatchIdSetBuilder = null
+  def toResultSet( rsId: Long = ResultSet.generateNewId ): ResultSet = {
+    require( rsm.resultSet.isDefined, "a resultSet must be defined")
+    this.getFilteredResultSet(rsm.resultSet.get, rsId)
+  }
   
 }
