@@ -56,13 +56,18 @@ abstract class AbstractResultSetSelector extends IResultSetSelector {
     val filteredPeptides = filteredPepMatches.map(_.peptide).distinct
     
     val newProtMatches = for (proteinMatch <- filteredProtMatches) yield {
-      val newSeqMatches = for (seqMatch <- proteinMatch.sequenceMatches) yield {
+      
+      val newSeqMatches = for (
+        seqMatch <- proteinMatch.sequenceMatches;
+        if pepMatchesByPepId.contains(seqMatch.getPeptideId)
+      ) yield {
         seqMatch.copy(
-          // TODO: do this in the result set adder
+          // TODO: do the maxBy operation in the result set adder
           bestPeptideMatchId = pepMatchesByPepId(seqMatch.getPeptideId).maxBy(_.score).id,
           resultSetId = rsId
         )
       }
+      
       proteinMatch.copy(
         sequenceMatches = newSeqMatches,
         resultSetId = rsId
