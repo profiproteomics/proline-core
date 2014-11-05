@@ -51,9 +51,10 @@ class CreateSCQuantitation(
     require(udsQuantMethod != null, "undefined method with id=" + 2)
 
     // Retrieve existing quantitations for this project
+    // parent_dataset_id is null added:  to avoid to get the quantitations stored in the trash
     var previousQuantNum = 0
     try {
-    	val lastQuantNbrObj = udsEM.createNativeQuery("Select  max(number) from data_set where project_id = :pid and type = 'QUANTITATION' ").setParameter("pid", projectId).getSingleResult()
+    	val lastQuantNbrObj = udsEM.createNativeQuery("Select  max(number) from data_set where project_id = :pid and type = 'QUANTITATION' and parent_dataset_id is null").setParameter("pid", projectId).getSingleResult()
     	if(lastQuantNbrObj!=null)
     		previousQuantNum = lastQuantNbrObj.asInstanceOf[Int]
     } catch {

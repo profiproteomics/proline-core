@@ -28,6 +28,7 @@ import fr.proline.repository.IDataStoreConnectorFactory
 import fr.profi.util.sql.getTimeAsSQLTimestamp
 import scala.collection.JavaConversions._
 import java.util.ArrayList
+import javax.persistence.NoResultException
 
 class CreateQuantitation(
   executionContext: IExecutionContext,
@@ -83,11 +84,16 @@ class CreateQuantitation(
 
     // Retrieve existing quantitations for this project
     // TODO: add JPA method getQuantitations to the project entity
-    val existingQuants = udsEM.createQuery("FROM fr.proline.core.orm.uds.Dataset WHERE project_id = " + projectId,
-      classOf[fr.proline.core.orm.uds.Dataset]).getResultList().toList
-
+    // parent_dataset_id is null added:  to avoid to get the quantitations stored in the trash
     var previousQuantNum = 0
-    if (existingQuants.length != 0) { previousQuantNum = existingQuants.last.getNumber() }
+    try {
+    	val lastQuantNbrObj = udsEM.createNativeQuery("Select  max(number) from data_set where project_id = :pid and type = 'QUANTITATION' and parent_dataset_id is null").setParameter("pid", projectId).getSingleResult()
+    	if(lastQuantNbrObj!=null)
+    		previousQuantNum = lastQuantNbrObj.asInstanceOf[Int]
+    } catch {
+    	case e: NoResultException=>  previousQuantNum=0
+    }
+    
 
     udsDbCtx.tryInTransaction {
        
