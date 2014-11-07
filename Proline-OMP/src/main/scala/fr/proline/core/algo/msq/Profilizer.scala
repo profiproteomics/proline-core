@@ -171,7 +171,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       if mqPep.selectionLevel >= 2;
       pepInst <- mqPep.peptideInstance
     ) {
-      if( pepInst.isProteinSetSpecific == false )
+      if( pepInst.isValidProteinSetSpecific== false )
         mqPep.selectionLevel = 1
     }
   }
