@@ -32,6 +32,9 @@ public class DMasterQuantProteinSet {
 	private String m_serializedProperties;
     
 	private Long m_quantResultSummaryId;
+	
+	//DProteinSet to provide access to DProteinMatch
+	private DProteinSet m_dProteinSet;
 		
 	// serializedProperties as a map
 	private MasterQuantProteinSetProperties mqProteinSetProperties;
@@ -171,7 +174,13 @@ public class DMasterQuantProteinSet {
 		return mqProtSetProperties;
 	}
 
+	public DProteinSet getProteinSet() {
+		return m_dProteinSet;
+	}
 
+	public void setProteinSet(DProteinSet proteinSet) {
+		this.m_dProteinSet = proteinSet;
+	}
 
 
 }
