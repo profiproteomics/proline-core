@@ -11,6 +11,12 @@ public class DQuantProteinSet {
     Long proteinMatchId = 0l;
     
     
+    // Necessary Construtor for JSON parsing !
+	protected DQuantProteinSet() {
+		super();
+	}
+	
+	
 	public DQuantProteinSet(Float rawAbundance, Float abundance, Integer selectionLevel,
 			Integer peptideMatchesCount, Long quantChannelId) {
 		super();
