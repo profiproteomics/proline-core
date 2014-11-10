@@ -1,6 +1,10 @@
 package fr.proline.core.orm.msi;
 
+
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -12,6 +16,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+
+import fr.proline.core.orm.msi.dto.DMasterQuantProteinSet;
+import fr.proline.core.orm.msi.dto.DQuantPeptideIon;
+import fr.proline.core.orm.msi.dto.DQuantProteinSet;
+import fr.proline.core.orm.util.JsonSerializer;
 
 /**
  * The persistent class for the consensus_spectrum database table.
@@ -22,7 +37,9 @@ import javax.persistence.Table;
 public class MasterQuantPeptideIon implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    
+    private static final Logger LOG = LoggerFactory.getLogger(DMasterQuantProteinSet.class);
+    
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
@@ -63,6 +80,10 @@ public class MasterQuantPeptideIon implements Serializable {
     @Column(name = "unmodified_peptide_ion_id")
     private Long unmodifiedPeptideIonId;
 
+    // Transient Variables not saved in database
+    @Transient
+    private Map<Long, DQuantPeptideIon> quantPeptideIonByQchIds = null;
+    
     @ManyToOne
     @JoinColumn(name = "master_quant_component_id")
     private MasterQuantComponent masterQuantComponent;
@@ -74,9 +95,39 @@ public class MasterQuantPeptideIon implements Serializable {
     @JoinColumn(name = "result_summary_id")
     private ResultSummary resultSummary;
 
+
+    
     public MasterQuantPeptideIon() {
     }
+	
+	public Map<Long, DQuantPeptideIon> getQuantPeptideIonByQchIds() {
+		return quantPeptideIonByQchIds;
+	}
 
+	public void setQuantPeptideIonByQchIds(Map<Long, DQuantPeptideIon> quantPeptideIonByQchIds) {
+		this.quantPeptideIonByQchIds = quantPeptideIonByQchIds;
+	}
+	
+	public Map<Long, DQuantPeptideIon> parseQuantPeptideIonFromProperties(String quantPeptideIonData){
+
+		try {
+			List<DQuantPeptideIon> quantPepIons = JsonSerializer.getMapper().readValue(quantPeptideIonData, new TypeReference<List<DQuantPeptideIon>>() {});
+			
+			quantPeptideIonByQchIds = new HashMap<Long, DQuantPeptideIon>();		
+			for(int i=0;i<quantPepIons.size();i++){
+				DQuantPeptideIon nextQuantPepIon = quantPepIons.get(i);
+				quantPeptideIonByQchIds.put(nextQuantPepIon.getQuantChannelId(),nextQuantPepIon);
+			}
+		 
+					
+		}catch(Exception e) {
+			LOG.warn("Error Parsing DQuantPeptideIon ",e);
+			quantPeptideIonByQchIds = null;
+		}
+		
+		return quantPeptideIonByQchIds;
+	}
+	
     public long getId() {
 	return id;
     }
