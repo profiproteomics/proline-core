@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import fr.proline.core.orm.uds.Dataset;
-import fr.proline.core.orm.uds.QuantitationChannel;
 import fr.proline.core.orm.util.JsonSerializer;
 
 /**
@@ -19,7 +18,7 @@ public class DMasterQuantitationChannel {
 	
 	private Long quantResultSummaryId;
 	
-	private List<QuantitationChannel> quantitationChannels;
+	private List<DQuantitationChannel> quantitationChannels;
 	
 	private Dataset dataset;
 	
@@ -39,7 +38,7 @@ public class DMasterQuantitationChannel {
 
 	public DMasterQuantitationChannel(long m_id, String m_name,
 			Long quantResultSummaryId,
-			List<QuantitationChannel> quantitationChannels, Dataset dataset,
+			List<DQuantitationChannel> quantitationChannels, Dataset dataset,
 			String serializedProperties) {
 		super();
 		this.id = m_id;
@@ -74,12 +73,12 @@ public class DMasterQuantitationChannel {
 		this.quantResultSummaryId = quantResultSummaryId;
 	}
 
-	public List<QuantitationChannel> getQuantitationChannels() {
+	public List<DQuantitationChannel> getQuantitationChannels() {
 		return quantitationChannels;
 	}
 
 	public void setQuantitationChannels(
-			List<QuantitationChannel> quantitationChannels) {
+			List<DQuantitationChannel> quantitationChannels) {
 		this.quantitationChannels = quantitationChannels;
 	}
 
