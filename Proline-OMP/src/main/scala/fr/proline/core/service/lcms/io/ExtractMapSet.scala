@@ -368,7 +368,7 @@ class ExtractMapSet(
     
     if( scanSeqOpt.isDefined ) scanSeqOpt.get
     else {
-      
+    	
       val mzDb = new MzDbReader( mzDbFile, true )
       //val newScanSeqId = LcMsScanSequence.generateNewId()
       
@@ -1236,6 +1236,8 @@ id INTEGER NOT NULL PRIMARY KEY,
   
   private def _extractFeaturesUsingMs2Events( mzDbFile: File, lcmsRun: LcMsRun ): Array[MzDbFeature] = {
     
+    logger.info("Start extracting features from MS2 events from " + mzDbFile.getName)
+    
     val restrictToIdentifiedPeptides = quantConfig.startFromValidatedPeptides
     val peptideByScanNumber = peptideByRunIdAndScanNumber.map( _(lcmsRun.id) ).getOrElse( HashMap.empty[Int,Peptide] )
     val mzDb = new MzDbReader( mzDbFile, true )
@@ -1253,7 +1255,7 @@ id INTEGER NOT NULL PRIMARY KEY,
       val ms2ScanHeaders = scanHeaders.filter(_.getMsLevel() == 2 )
       val pfs = new ArrayBuffer[PutativeFeature](ms2ScanHeaders.length)
       
-      this.logger.info("building putative features list from MS2 scan events...")
+      this.logger.debug("building putative features list from MS2 scan events...")
 
       for( scanH <- ms2ScanHeaders ) {
         
@@ -1278,6 +1280,7 @@ id INTEGER NOT NULL PRIMARY KEY,
       mzDb.close()
     }
     
+    logger.info("Feature extraction done for file " + mzDbFile.getName)
     mzDbFts.toArray
   }
   
@@ -1289,7 +1292,7 @@ id INTEGER NOT NULL PRIMARY KEY,
     
     val mzDbFts = try {
       
-      this.logger.info("detecting features in raw MS survey...")
+      this.logger.info("Start detecting features in raw MS survey from "+mzDbFile.getName)
 
       val mzdbFtDetector = new MzDbFeatureDetector(
         mzDb,
@@ -1341,6 +1344,7 @@ id INTEGER NOT NULL PRIMARY KEY,
       //val scanHeaders = mzDb.getScanHeaders()
       //val ms2ScanHeaders = scanHeaders.filter(_.getMsLevel() == 2 )
       
+      this.logger.info("Start extracting missing Features from "+mzDbFile.getName)
       this.logger.info("building putative features list using master features...")
 
       for( mft <- masterMap.features ) {
@@ -1389,7 +1393,7 @@ id INTEGER NOT NULL PRIMARY KEY,
       
       // Instantiates a Run Slice Data provider
       val rsdProv = new RunSliceDataProvider( mzDb.getRunSliceIterator(1) )
-      
+      this.logger.info("extracting "+missingFtIdByMftId.size+" missing Features from "+mzDbFile.getName)
       // Extract features
       // TODO: add minNbCycles param
       mzDbFts = mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)
