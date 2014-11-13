@@ -1,9 +1,8 @@
 package fr.proline.core.om.model.msi
 
 import scala.beans.BeanProperty
-//import com.fasterxml.jackson.annotation.JsonInclude
-//import com.fasterxml.jackson.annotation.JsonInclude.Include
-//import org.msgpack.annotation.Message
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+
 
 /**
  * @param label
@@ -16,17 +15,14 @@ import scala.beans.BeanProperty
  * @param neutralLossMass
  * @param theoreticalFragmentId
  */
-//@JsonInclude( Include.NON_NULL )
-//@Message
 case class FragmentMatch(
   var label: String,
-  //val ionSeries: String,
-  //val aaPosition: Int,
+  @JsonDeserialize(contentAs = classOf[java.lang.String])
   var `type`: Option[String] = None,
-  //var charge: Int,
   var moz: Double,
   var calculatedMoz: Double,
   var intensity: Float,
+  @JsonDeserialize(contentAs = classOf[java.lang.Double])
   var neutralLossMass: Option[Double] = None) {
 
   // Plain constructor needed for MessagePack
