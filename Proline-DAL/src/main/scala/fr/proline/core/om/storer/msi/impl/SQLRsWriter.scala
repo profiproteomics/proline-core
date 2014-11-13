@@ -24,7 +24,8 @@ private[proline] object SQLRsWriter extends AbstractSQLRsWriter
 abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   val objTreeInsertQuery = MsiDbObjectTreeTable.mkInsertQuery( (t,c) => c.filter(_ != t.ID) )
-  object CustomSerializer extends ProfiJsonSerialization with CustomDoubleJacksonSerializer
+  
+  object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer
 
   def fetchExistingPeptidesIdByUniqueKey(pepSequences: Seq[String], msiDbCtx: DatabaseConnectionContext): Map[String, Long] = {
     
