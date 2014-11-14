@@ -6,6 +6,7 @@ import org.apache.commons.math.stat.descriptive.StatisticalSummary
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msq._
 import fr.profi.util.primitives.isZeroOrNaN
+import org.apache.commons.math.stat.descriptive.moment.Mean
 
 case class ProfilizerConfigV0(
   peptideStatTestsAlpha: Float = 0.01f,
@@ -30,12 +31,12 @@ case class ProfilizerStatConfig (
   applyZTest: Boolean = true  
 )
 
-case class ProfilizerConfig(
-    
+case class ProfilizerConfig(   
   discardMissedCleavedPeptides: Boolean = true,
   discardOxidizedPeptides: Boolean = true,
   useOnlySpecificPeptides: Boolean = true,
   applyProfileClustering: Boolean = true,
+  abundanceSummarizerMethod : String = AbundanceSummarizer.Method.MEAN.toString(),
   peptideStatConfig : ProfilizerStatConfig = new ProfilizerStatConfig(),
   proteinStatConfig : ProfilizerStatConfig = new ProfilizerStatConfig()
 )
@@ -329,7 +330,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         val abundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
         abundanceMatrixBuffer += AbundanceSummarizer.summarizeAbundanceMatrix(
           abundanceMatrix,
-          AbundanceSummarizer.Method.MEAN
+          AbundanceSummarizer.Method.withName(config.abundanceSummarizerMethod)
         )
         
         // Summarize PSM counts of the current profile cluster
