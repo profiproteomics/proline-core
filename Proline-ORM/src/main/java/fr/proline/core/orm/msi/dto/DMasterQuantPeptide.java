@@ -47,6 +47,19 @@ public class DMasterQuantPeptide {
 	
 	
 	
+	public DMasterQuantPeptide(long m_id, 
+			int m_selectionLevel, long m_objectTreeId,
+			String m_serializedProperties, Long m_quantResultSummaryId,
+			MasterQuantPeptideProperties m_mqPeptideProperties) {
+		super();
+		this.m_id = m_id;
+		this.m_selectionLevel = m_selectionLevel;
+		this.m_objectTreeId = m_objectTreeId;
+		this.m_serializedProperties = m_serializedProperties;
+		this.m_quantResultSummaryId = m_quantResultSummaryId;
+		this.m_mqPeptideProperties = m_mqPeptideProperties;
+	}
+
 	public Map<Long, DQuantPeptide> parseQuantPeptideFromProperties(String quantPeptideData){
 
 		try {
