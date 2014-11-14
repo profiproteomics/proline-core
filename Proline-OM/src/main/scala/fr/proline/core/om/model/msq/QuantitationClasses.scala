@@ -416,6 +416,15 @@ case class MasterQuantProteinSet(
     Some(bestProfile)
   }
   
+  def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
+    
+    for( (ab, qcId) <- abundances.zip( quantChannelIds ) ) {
+      if( this.quantProteinSetMap.contains(qcId) ) {
+        this.quantProteinSetMap(qcId).abundance = ab
+      }
+    }   
+  }
+  
 } 
 
 case class QuantResultSummary(
