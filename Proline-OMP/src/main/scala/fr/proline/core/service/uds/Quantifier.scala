@@ -107,6 +107,14 @@ class Quantifier(
           lcMsRuns = runs
         )
         
+        //Update master quant channel properties
+        case class QuantConfig (
+            val labelfreequantConfig : LabelFreeQuantConfig 
+        )
+        val qtConfig = new QuantConfig(masterConfig)
+        udsMasterQuantChannel.setSerializedProperties(serialize(qtConfig))
+        udsEM.merge(udsMasterQuantChannel)
+        
         val mqcQuantifier = new QuantifyMasterQuantChannel(
           executionContext,
           experimentalDesign,
