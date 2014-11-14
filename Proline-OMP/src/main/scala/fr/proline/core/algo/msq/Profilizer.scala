@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msq._
 import fr.profi.util.primitives.isZeroOrNaN
 
-case class ProfilizerConfig(
+case class ProfilizerConfigV0(
   peptideStatTestsAlpha: Float = 0.01f,
   proteinStatTestsAlpha: Float = 0.01f,
   discardMissedCleavedPeptides: Boolean = true,
@@ -19,6 +19,25 @@ case class ProfilizerConfig(
   applyZTest: Boolean = true,
   applyProfileClustering: Boolean = true,
   useOnlySpecificPeptides: Boolean = true
+)
+
+case class ProfilizerStatConfig (
+  statTestsAlpha: Float = 0.01f,
+  applyNormalization: Boolean = true,
+  applyMissValInference: Boolean = true,
+  applyVarianceCorrection: Boolean = true,
+  applyTTest: Boolean = true,
+  applyZTest: Boolean = true  
+)
+
+case class ProfilizerConfig(
+    
+  discardMissedCleavedPeptides: Boolean = true,
+  discardOxidizedPeptides: Boolean = true,
+  useOnlySpecificPeptides: Boolean = true,
+  applyProfileClustering: Boolean = true,
+  peptideStatConfig : ProfilizerStatConfig = new ProfilizerStatConfig(),
+  proteinStatConfig : ProfilizerStatConfig = new ProfilizerStatConfig()
 )
 
 /**
@@ -97,7 +116,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val abundanceMatrix = mqPepsAfterAllFilters.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
     
     // --- Normalize the abundance matrix ---
-    val normalizedMatrix = if( config.applyNormalization == false ) abundanceMatrix
+    val normalizedMatrix = if( config.peptideStatConfig.applyNormalization == false ) abundanceMatrix
     else AbundanceNormalizer.normalizeAbundances(abundanceMatrix)
     
     require( normalizedMatrix.length >= 10, "error during normalization, some peptides were lost...")
@@ -125,8 +144,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         ratioDef,
         normalizedMatrix,
         psmCountMatrix,
-        config.peptideStatTestsAlpha,
-        config
+        config.peptideStatConfig
       )
  
       for ( ratio <- ratios ) {
@@ -138,7 +156,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         val computedRatio = ComputedRatio(
           numerator = ratio.numeratorMean.toFloat,
           denominator = ratio.denominatorMean.toFloat,
-          state = ratio.state.map(_.id).getOrElse(0),
+          state = ratio.state.map(_.id).getOrElse(new Integer(AbundanceRatioState.Invariant.toString())),
           tTestPValue = ratio.tTestPValue,
           zTestPValue = ratio.zTestPValue
         )
@@ -321,7 +339,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }
     
     // --- Normalize the abundance matrix ---
-    val normalizedMatrix = if( config.applyNormalization == false ) abundanceMatrixBuffer.toArray
+    val normalizedMatrix = if( config.proteinStatConfig.applyNormalization == false ) abundanceMatrixBuffer.toArray
     else AbundanceNormalizer.normalizeAbundances(abundanceMatrixBuffer.toArray)
     
     // --- Map normalized abundances by the corresponding profile cluster ---
@@ -346,8 +364,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         ratioDef,
         normalizedMatrix,
         psmCountMatrixBuffer.toArray,
-        config.proteinStatTestsAlpha,
-        config
+        config.proteinStatConfig
       )
  
       for ( ratio <- ratios ) {
@@ -396,6 +413,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       mqProtSetProps.setMqProtSetProfilesByGroupSetupNumber( Some(mqProtSetProfileMap) )
       
       mqProtSet.properties = Some(mqProtSetProps)
+      
+      val bestMQProtSetProfile = mqProtSet.getBestProfile(groupSetupNumber)
+      if(bestMQProtSetProfile.isDefined){
+    	  mqProtSet.setAbundancesForQuantChannels(bestMQProtSetProfile.get.abundances,qcIds)
+      }
+      
     }
     
     ()
@@ -405,8 +428,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     ratioDef: RatioDefinition,
     normalizedMatrix: Array[Array[Float]],
     psmCountMatrix: Array[Array[Int]],
-    statTestsAlpha: Float,
-    config: ProfilizerConfig
+    config: ProfilizerStatConfig
   ): Tuple2[Array[Array[Float]],Seq[AverageAbundanceRatio]] = {
 
     // Retrieve some vars
@@ -613,7 +635,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       ratiosBuffer,
       errorModels._1,
       errorModels._2,
-      statTestsAlpha,
+      config.statTestsAlpha,
       applyVarianceCorrection = config.applyVarianceCorrection,
       applyTTest = config.applyTTest,
       applyZTest = config.applyZTest
