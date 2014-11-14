@@ -171,6 +171,15 @@ class QuantProfilesComputer(
         )
       }
       
+      //Update MasterQuantChannelProperties
+        case class PostProcessingQuantConfig (
+            val profilizerConfig : ProfilizerConfig 
+        )
+        val ppQtConfig = new PostProcessingQuantConfig(config)           
+        var existingProperties = if (udsMasterQuantChannel.getSerializedProperties() == null) "" else udsMasterQuantChannel.getSerializedProperties()
+        udsMasterQuantChannel.setSerializedProperties(existingProperties+ ProfiJson.serialize(ppQtConfig))
+        udsEM.merge(udsMasterQuantChannel)
+      
     })
     
     // Close execution context if initiated locally
