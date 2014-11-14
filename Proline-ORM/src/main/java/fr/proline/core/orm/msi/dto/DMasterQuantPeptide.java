@@ -45,19 +45,20 @@ public class DMasterQuantPeptide {
 	//Associated MasterQuantPeptideIons
 	List<MasterQuantPeptideIon> m_masterQPepIons;
 	
+	//DPeptideInstance to provide access to DPeptideMatch
+	DPeptideInstance m_dPeptideInstance;
+	
 	
 	
 	public DMasterQuantPeptide(long m_id, 
 			int m_selectionLevel, long m_objectTreeId,
-			String m_serializedProperties, Long m_quantResultSummaryId,
-			MasterQuantPeptideProperties m_mqPeptideProperties) {
+			String m_serializedProperties, Long m_quantResultSummaryId) {
 		super();
 		this.m_id = m_id;
 		this.m_selectionLevel = m_selectionLevel;
 		this.m_objectTreeId = m_objectTreeId;
 		this.m_serializedProperties = m_serializedProperties;
 		this.m_quantResultSummaryId = m_quantResultSummaryId;
-		this.m_mqPeptideProperties = m_mqPeptideProperties;
 	}
 
 	public Map<Long, DQuantPeptide> parseQuantPeptideFromProperties(String quantPeptideData){
@@ -161,6 +162,14 @@ public class DMasterQuantPeptide {
 
 	public void setMasterQPepIons(List<MasterQuantPeptideIon> masterQPepIons) {
 		this.m_masterQPepIons = masterQPepIons;
+	}
+
+	public DPeptideInstance getPeptideInstance() {
+		return m_dPeptideInstance;
+	}
+
+	public void setPeptideInstance(DPeptideInstance peptideInstance) {
+		this.m_dPeptideInstance = peptideInstance;
 	}
 	
 }
