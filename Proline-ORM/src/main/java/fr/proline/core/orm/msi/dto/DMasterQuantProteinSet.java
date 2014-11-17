@@ -92,7 +92,9 @@ public class DMasterQuantProteinSet {
 			quantProteinSetByQchIds = new HashMap<Long, DQuantProteinSet>();		
 			for(int i=0;i<quantProtSets.size();i++){
 				DQuantProteinSet nextQuantProtSet = quantProtSets.get(i);
-				quantProteinSetByQchIds.put(nextQuantProtSet.quantChannelId,nextQuantProtSet);
+				if (nextQuantProtSet != null) {
+					quantProteinSetByQchIds.put(nextQuantProtSet.quantChannelId,nextQuantProtSet);
+				}
 			}
 		 
 					

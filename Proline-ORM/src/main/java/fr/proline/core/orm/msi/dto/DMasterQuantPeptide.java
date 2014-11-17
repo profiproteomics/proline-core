@@ -69,7 +69,9 @@ public class DMasterQuantPeptide {
 			m_quantPeptideByQchIds = new HashMap<Long, DQuantPeptide>();		
 			for(int i=0;i<quantPeptides.size();i++){
 				DQuantPeptide nextQuantPeptide = quantPeptides.get(i);
-				m_quantPeptideByQchIds.put(nextQuantPeptide.quantChannelId,nextQuantPeptide);
+				if (nextQuantPeptide != null) {
+					m_quantPeptideByQchIds.put(nextQuantPeptide.quantChannelId,nextQuantPeptide);
+				}
 			}
 		 
 					
