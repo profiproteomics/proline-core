@@ -1,7 +1,13 @@
 package fr.proline.core.service.msq
 
+import scala.Array.canBuildFrom
+
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.profi.jdbc.easy._
+
+import fr.profi.jdbc.easy.int2Formattable
+import fr.profi.jdbc.easy.long2Formattable
+import fr.profi.jdbc.easy.string2Formattable
+import fr.profi.jdbc.easy.stringOption2Formattable
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
@@ -14,7 +20,13 @@ import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.core.orm.uds.MasterQuantitationChannel
+import fr.proline.core.orm.uds.ObjectTree
+import fr.proline.core.orm.uds.ObjectTreeSchema
+import fr.proline.core.orm.uds.ObjectTreeSchema.SchemaName
+import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.repository.IDataStoreConnectorFactory
+import javax.persistence.EntityManager
+
 
 // Factory for Proline-Cortex
 object QuantProfilesComputer {
@@ -171,15 +183,15 @@ class QuantProfilesComputer(
         )
       }
       
-      //Update MasterQuantChannelProperties
-        case class PostProcessingQuantConfig (
-            val profilizerConfig : ProfilizerConfig 
-        )
-        val ppQtConfig = new PostProcessingQuantConfig(config)           
-        var existingProperties = if (udsMasterQuantChannel.getSerializedProperties() == null) "" else udsMasterQuantChannel.getSerializedProperties()
-        udsMasterQuantChannel.setSerializedProperties(existingProperties+ ProfiJson.serialize(ppQtConfig))
-        udsEM.merge(udsMasterQuantChannel)
-      
+      //Save PostProcessingQuantConfig in DataSet ObjectTree         
+	  val postQuantProcessinqObjectTree =  buildDataSetObjectTree(config, udsEM)
+	  udsEM.persist(postQuantProcessinqObjectTree)
+		
+	  // Store ObjectTree component        
+	  val udsQuantitation = udsMasterQuantChannel.getDataset()
+	  udsQuantitation.putObject(SchemaName.POST_QUANT_PROCESSING_CONFIG.toString(), postQuantProcessinqObjectTree.getId())
+	  udsEM.merge(udsQuantitation)
+              
     })
     
     // Close execution context if initiated locally
@@ -190,4 +202,13 @@ class QuantProfilesComputer(
     true
   }
 
+    protected def buildDataSetObjectTree(postQuantProcessingConfig : ProfilizerConfig, udsEM: EntityManager): ObjectTree = {
+    // Store the object tree
+    val quantDSObjectTree = new ObjectTree()
+    quantDSObjectTree.setSchema(ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM,ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.toString()))
+    quantDSObjectTree.setClobData(ProfiJson.serialize(postQuantProcessingConfig))
+
+    quantDSObjectTree
+  }
+    
 }
