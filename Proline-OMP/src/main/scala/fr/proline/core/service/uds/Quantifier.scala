@@ -1,20 +1,27 @@
 package fr.proline.core.service.uds
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConversions.asScalaBuffer
+
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.profi.util.serialization.ProfiJson._
+
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
+import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.lcms.IMsQuantConfig
 import fr.proline.core.algo.lcms.LabelFreeQuantConfig
 import fr.proline.core.dal.ContextFactory
-import fr.proline.core.dal.context._
+import fr.proline.core.dal.context.execCtxToTxExecCtx
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
-import fr.proline.core.orm.uds.{ Dataset => UdsDataset, MasterQuantitationChannel => UdsMasterQuantChannel }
+import fr.proline.core.orm.uds.{Dataset => UdsDataset } 
+import fr.proline.core.orm.uds.ObjectTree
+import fr.proline.core.orm.uds.ObjectTreeSchema
+import fr.proline.core.orm.uds.ObjectTreeSchema.SchemaName
+import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.core.service.msq.QuantifyMasterQuantChannel
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.api.service.IService
+import javax.persistence.EntityManager
+
 
 class Quantifier(
   executionContext: IExecutionContext,
@@ -107,13 +114,13 @@ class Quantifier(
           lcMsRuns = runs
         )
         
-        //Update master quant channel properties
-        case class QuantConfig (
-            val labelfreequantConfig : LabelFreeQuantConfig 
-        )
-        val qtConfig = new QuantConfig(masterConfig)
-        udsMasterQuantChannel.setSerializedProperties(serialize(qtConfig))
-        udsEM.merge(udsMasterQuantChannel)
+        //Save LabelFreeQuantConfig in DataSet ObjectTree 
+        val qtConfigObjectTree =  buildDataSetObjectTree( masterConfig, udsEM)
+        udsEM.persist(qtConfigObjectTree)
+        
+        // Store ObjectTree component        
+        udsQuantitation.putObject(SchemaName.LABEL_FREE_QUANT_CONFIG.toString(), qtConfigObjectTree.getId())
+        udsEM.merge(udsQuantitation)
         
         val mqcQuantifier = new QuantifyMasterQuantChannel(
           executionContext,
@@ -129,5 +136,15 @@ class Quantifier(
 
     txResult
   }
+  
+   protected def buildDataSetObjectTree(quantConfig : LabelFreeQuantConfig, udsEM: EntityManager): ObjectTree = {
+    // Store the object tree
+    val quantDSObjectTree = new ObjectTree()
+    quantDSObjectTree.setSchema(ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM,ObjectTreeSchema.SchemaName.LABEL_FREE_QUANT_CONFIG.toString()))
+    quantDSObjectTree.setClobData(serialize(quantConfig))
+
+    quantDSObjectTree
+  }
+
 
 }
