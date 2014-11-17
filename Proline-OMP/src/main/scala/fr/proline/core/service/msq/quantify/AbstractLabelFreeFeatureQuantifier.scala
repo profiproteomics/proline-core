@@ -25,6 +25,7 @@ import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.profi.util.primitives._
+import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 
 abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
   
@@ -236,7 +237,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   }
 
   protected lazy val labelFreeQuantPeptidesSchema = {
-    this.loadOrCreateObjectTreeSchema(SchemaName.LABEL_FREE_QUANT_PEPTIDES)
+	  ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.LABEL_FREE_QUANT_PEPTIDES.toString())
   }
 
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree = {
@@ -253,7 +254,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   }
 
   protected lazy val labelFreeQuantPeptideIonsSchema = {
-    this.loadOrCreateObjectTreeSchema(SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS)
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.LABEL_FREE_QUANT_PEPTIDE_IONS.toString())
   }
 
   protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree = {
