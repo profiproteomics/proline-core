@@ -1,7 +1,6 @@
 package fr.proline.core.service.msq.quantify
 
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -14,6 +13,7 @@ import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import javax.persistence.EntityManager
+import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 
 /**
  * @author David Bouyssie
@@ -90,7 +90,7 @@ class SpectralCountQuantifier(
   }
   
   protected lazy val spectralCountingPeptidesSchema = {
-    this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_PEPTIDES)
+     ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_PEPTIDES.toString())
   }
   
   protected def buildMasterQuantPeptideObjectTree( mqPep: MasterQuantPeptide ): MsiObjectTree = {
@@ -107,7 +107,7 @@ class SpectralCountQuantifier(
   }
   
   protected lazy val spectralCountingQuantPepIonsSchema = {
-    this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS)
+		  ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS.toString())
   }
   
   protected def buildMasterQuantPeptideIonObjectTree( mqPepIon: MasterQuantPeptideIon ): MsiObjectTree = {

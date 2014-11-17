@@ -47,6 +47,7 @@ import fr.proline.core.orm.msi.{
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.repository.util.JDBCWork
 import java.sql.Connection
+import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 
 /**
  * @author VDS
@@ -413,8 +414,8 @@ class WeightedSpectralCountQuantifier(
     }) // End go through  ProteinSet (ProteinPepsWeightStruct)
   }
 
-  protected lazy val spectralCountingPeptidesSchema = {
-    this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_PEPTIDES)
+  protected lazy val spectralCountingPeptidesSchema = {    
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_PEPTIDES.toString())
   }
 
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree = {
@@ -430,8 +431,8 @@ class WeightedSpectralCountQuantifier(
     msiMQPepObjectTree
   }
 
-  protected lazy val spectralCountingQuantPepIonsSchema = {
-    this.loadOrCreateObjectTreeSchema(SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS)
+  protected lazy val spectralCountingQuantPepIonsSchema = {    
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS.toString())
   }
 
   protected def buildMasterQuantPeptideIonObjectTree(mqPepIon: MasterQuantPeptideIon): MsiObjectTree = {
