@@ -15,6 +15,7 @@ public class ObjectTreeSchema extends AbstractObjectTreeSchema {
 	
     public enum SchemaName {    	
     	LABEL_FREE_QUANT_CONFIG("quantitation.label_free_config"),
+    	POST_QUANT_PROCESSING_CONFIG("quantitation.post_quant_processing_config"),
     	SPECTRAL_COUNTING_QUANT_CONFIG("quantitation.spectral_counting_config");
     	
     	private final String name;

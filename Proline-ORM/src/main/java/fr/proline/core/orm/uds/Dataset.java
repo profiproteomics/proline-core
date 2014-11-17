@@ -4,12 +4,16 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -20,6 +24,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -27,6 +32,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
 
@@ -136,6 +142,14 @@ public class Dataset implements Serializable {
     @OrderBy("number")
     private List<SampleAnalysis> sampleReplicates;
 
+    
+    @ElementCollection
+    @MapKeyColumn(name = "schema_name")
+    @Column(name = "object_tree_id")
+    @CollectionTable(name = "data_set_object_tree_map", joinColumns = @JoinColumn(name = "data_set_id", referencedColumnName = "id"))
+    private Map<String, Long> objectTreeIdByName;
+
+    
     // Transient Variables not saved in database
     @Transient
     private TransientData transientData = null;
@@ -334,6 +348,41 @@ public class Dataset implements Serializable {
 	this.aggregation = aggregation;
     }
 
+    void setObjectTreeIdByName(final Map<String, Long> objectTree) {
+	objectTreeIdByName = objectTree;
+    }
+
+    public Map<String, Long> getObjectTreeIdByName() {
+	return objectTreeIdByName;
+    }
+    
+    public Long putObject(final String schemaName, final Long objectId) {
+    	if (StringUtils.isEmpty(schemaName)) {
+    	    throw new IllegalArgumentException("Invalid schemaName");
+    	}
+
+    	Map<String, Long> localObjectTree = getObjectTreeIdByName();
+
+    	if (localObjectTree == null) {
+    	    localObjectTree = new HashMap<String, Long>();
+
+    	    setObjectTreeIdByName(localObjectTree);
+    	}
+
+    	return localObjectTree.put(schemaName, Long.valueOf(objectId));    
+    }
+
+    public Long removeObject(final String schemaName) {
+		Long result = null;
+	
+		final Map<String, Long> localObjectTree = getObjectTreeIdByName();
+		if (localObjectTree != null) {
+		    result = localObjectTree.remove(schemaName);
+		}
+		return result;
+    }
+
+    
     public List<Dataset> getChildren() {
 	return children;
     }
