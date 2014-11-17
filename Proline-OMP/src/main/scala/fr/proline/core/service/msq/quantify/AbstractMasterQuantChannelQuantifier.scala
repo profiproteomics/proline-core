@@ -5,9 +5,7 @@ import scala.collection.JavaConversions.setAsJavaSet
 import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -49,8 +47,9 @@ import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 import fr.profi.util.primitives._
-
 import fr.proline.core.util.ResidueUtils._
+import fr.proline.core.algo.msi.ResultSummaryAdder
+import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 
 abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
@@ -144,24 +143,6 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   
   //protected def buildMasterQuantProteinSetObjectTree( mqProtSet: MasterQuantProteinSet ): MsiObjectTree
 
-
-  protected def loadOrCreateObjectTreeSchema(schemaName: SchemaName): fr.proline.core.orm.msi.ObjectTreeSchema = {
-    val schemaNameAsStr = schemaName.toString
-    var objTreeSchema = msiEm.find(classOf[fr.proline.core.orm.msi.ObjectTreeSchema], schemaNameAsStr)
-    
-    // Create a faked schema if the requested one has not been found
-    if(objTreeSchema == null) {
-      this.logger.warn(s"Schema ${schemaNameAsStr} has not been find in the MSIdb")
-      
-	    objTreeSchema = new fr.proline.core.orm.msi.ObjectTreeSchema()
-	    objTreeSchema.setName(schemaNameAsStr)
-	    objTreeSchema.setType("JSON")
-	    objTreeSchema.setVersion("0.1")
-	    objTreeSchema.setSchema("")
-    }
-    
-    objTreeSchema
-  }
 
   protected def storeMsiQuantResultSet(msiIdentResultSets: List[MsiResultSet]): MsiResultSet = {
 
@@ -648,7 +629,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   }
 
   protected lazy val quantProteinSetsSchema = {
-    this.loadOrCreateObjectTreeSchema(SchemaName.QUANT_PROTEIN_SETS)
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.QUANT_PROTEIN_SETS.toString())
   }
 
   protected def buildMasterQuantProteinSetObjectTree(mqProtSet: MasterQuantProteinSet): MsiObjectTree = {
@@ -683,6 +664,10 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 		  val pepSetScoreUpdater = PeptideSetScoreUpdater(pepSetScoring)
     
 		  // Merge result summaries
+//         TODO passage avec ResultSummaryAdder		  
+//		  val resultSummaryAdder= new ResultSummaryAdder(pepSetScoreUpdater)
+//		  this.logger.info("merging result summaries...")
+
 		  val resultSummaryMerger = new ResultSummaryMerger(pepSetScoreUpdater)
 		  this.logger.info("merging result summaries...")
 		  resultSummaryMerger.mergeResultSummaries(identResultSummaries, seqLengthByProtId)
