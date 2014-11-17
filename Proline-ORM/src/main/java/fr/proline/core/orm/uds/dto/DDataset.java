@@ -6,6 +6,7 @@ import java.util.List;
 import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.uds.Aggregation;
+import fr.proline.core.orm.uds.ObjectTree;
 import fr.proline.core.orm.uds.QuantitationMethod;
 import fr.proline.core.orm.uds.Dataset.DatasetType;
 import fr.proline.core.orm.uds.Project;
@@ -34,6 +35,7 @@ public class DDataset {
     private MergeInformation m_mergeInformation = MergeInformation.MERGE_UNKNOW;
     
     private List<DMasterQuantitationChannel> m_masterQuantitationChannels;
+    private ObjectTree m_postQuantProcessingConfig;
     
     public enum MergeInformation {
     	MERGE_UNKNOW,
@@ -159,4 +161,13 @@ public class DDataset {
     public void setMasterQuantitationChannels(List<DMasterQuantitationChannel> masterQuantitationChannels) {
     	this.m_masterQuantitationChannels = masterQuantitationChannels;
     }
+
+	public ObjectTree getPostQuantProcessingConfig() {
+		return m_postQuantProcessingConfig;
+	}
+
+	public void setPostQuantProcessingConfig(
+			ObjectTree postQuantProcessingConfig) {
+		this.m_postQuantProcessingConfig = postQuantProcessingConfig;
+	}
 }
