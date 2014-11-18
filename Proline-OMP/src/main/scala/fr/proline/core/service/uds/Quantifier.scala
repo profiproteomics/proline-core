@@ -93,7 +93,7 @@ class Quantifier(
       // TODO: parse other kinds of configuration (spectal count)
       val quantConfig = deserialize[LabelFreeQuantConfig](serialize(quantConfigAsMap))
       
-      val qtConfigObjectTree =  buildDataSetObjectTree( masterConfig, udsEM)
+      val qtConfigObjectTree =  buildDataSetObjectTree( quantConfig, udsEM)
       udsEM.persist(qtConfigObjectTree)
     
 	  // Store LABEL_FREE_QUANT_CONFIG in ObjectTree         
