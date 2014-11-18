@@ -36,6 +36,7 @@ public class DDataset {
     
     private List<DMasterQuantitationChannel> m_masterQuantitationChannels;
     private ObjectTree m_postQuantProcessingConfig;
+    private ObjectTree m_quantProcessingConfig;
     
     public enum MergeInformation {
     	MERGE_UNKNOW,
@@ -169,5 +170,13 @@ public class DDataset {
 	public void setPostQuantProcessingConfig(
 			ObjectTree postQuantProcessingConfig) {
 		this.m_postQuantProcessingConfig = postQuantProcessingConfig;
+	}
+
+	public ObjectTree getQuantProcessingConfig() {
+		return m_quantProcessingConfig;
+	}
+
+	public void setQuantProcessingConfig(ObjectTree quantProcessingConfig) {
+		this.m_quantProcessingConfig = quantProcessingConfig;
 	}
 }
