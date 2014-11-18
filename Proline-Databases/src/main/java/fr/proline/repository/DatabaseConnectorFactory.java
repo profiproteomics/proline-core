@@ -36,6 +36,10 @@ public final class DatabaseConnectorFactory {
 
 	/* URL should be in lower case */
 	final String normalizedDatabaseURL = databaseURL.toLowerCase();
+	
+	// uncomment to see all sql statements
+	//properties.put("hibernate.show_sql", "true");
+
 
 	/* Parametric factory based on normalizedDatabaseURL : add new supported Database protocols here */
 	if (normalizedDatabaseURL.contains(JDBC_SCHEME + ':' + DriverType.POSTGRESQL.getJdbcURLProtocol())) {
