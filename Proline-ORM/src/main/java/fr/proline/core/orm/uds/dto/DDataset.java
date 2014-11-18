@@ -2,6 +2,7 @@ package fr.proline.core.orm.uds.dto;
 
 
 import java.util.List;
+import java.util.Map;
 
 import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
@@ -10,6 +11,7 @@ import fr.proline.core.orm.uds.ObjectTree;
 import fr.proline.core.orm.uds.QuantitationMethod;
 import fr.proline.core.orm.uds.Dataset.DatasetType;
 import fr.proline.core.orm.uds.Project;
+import fr.proline.core.orm.util.JsonSerializer;
 
 /**
  *
@@ -37,6 +39,11 @@ public class DDataset {
     private List<DMasterQuantitationChannel> m_masterQuantitationChannels;
     private ObjectTree m_postQuantProcessingConfig;
     private ObjectTree m_quantProcessingConfig;
+    
+    // postQuantProcessingConfig as a map
+ 	private Map<String, Object> postQuantProcessingConfigMap;
+ 	// quantProcessingConfig as a map
+  	private Map<String, Object> quantProcessingConfigMap;
     
     public enum MergeInformation {
     	MERGE_UNKNOW,
@@ -179,4 +186,20 @@ public class DDataset {
 	public void setQuantProcessingConfig(ObjectTree quantProcessingConfig) {
 		this.m_quantProcessingConfig = quantProcessingConfig;
 	}
+	
+	@SuppressWarnings("unchecked")
+    public Map<String, Object> getPostQuantProcessingConfigAsMap() throws Exception {
+		if ((postQuantProcessingConfigMap == null) && (m_postQuantProcessingConfig != null)) {
+			postQuantProcessingConfigMap = JsonSerializer.getMapper().readValue(getPostQuantProcessingConfig().getClobData(), Map.class);
+    	}
+    	return postQuantProcessingConfigMap;
+    }
+	
+	@SuppressWarnings("unchecked")
+    public Map<String, Object> getQuantProcessingConfigAsMap() throws Exception {
+		if ((quantProcessingConfigMap == null) && (m_quantProcessingConfig != null)) {
+			quantProcessingConfigMap = JsonSerializer.getMapper().readValue(getQuantProcessingConfig().getClobData(), Map.class);
+    	}
+    	return quantProcessingConfigMap;
+    }
 }
