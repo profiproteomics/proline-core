@@ -93,9 +93,16 @@ class Quantifier(
       // TODO: parse other kinds of configuration (spectal count)
       val quantConfig = deserialize[LabelFreeQuantConfig](serialize(quantConfigAsMap))
       
+      val qtConfigObjectTree =  buildDataSetObjectTree( masterConfig, udsEM)
+      udsEM.persist(qtConfigObjectTree)
+    
+	  // Store LABEL_FREE_QUANT_CONFIG in ObjectTree         
+      udsQuantitation.putObject(SchemaName.LABEL_FREE_QUANT_CONFIG.toString(), qtConfigObjectTree.getId())
+      udsEM.merge(udsQuantitation)
+      
       // Create a LC-MS run provider
       val lcmsRunProvider = new SQLRunProvider(udsDbCtx,None)
-
+      
       // Quantify each master quant channel
       for( udsMasterQuantChannel <- udsMasterQuantChannels ) {
         
@@ -114,14 +121,6 @@ class Quantifier(
           lcMsRuns = runs
         )
         
-        //Save LabelFreeQuantConfig in DataSet ObjectTree 
-        val qtConfigObjectTree =  buildDataSetObjectTree( masterConfig, udsEM)
-        udsEM.persist(qtConfigObjectTree)
-        
-        // Store ObjectTree component        
-        udsQuantitation.putObject(SchemaName.LABEL_FREE_QUANT_CONFIG.toString(), qtConfigObjectTree.getId())
-        udsEM.merge(udsQuantitation)
-        
         val mqcQuantifier = new QuantifyMasterQuantChannel(
           executionContext,
           experimentalDesign,
@@ -131,9 +130,10 @@ class Quantifier(
         
         mqcQuantifier.run()
       }
-      
+                        
     }) // end of tryInTransactions
-
+    
+    
     txResult
   }
   
