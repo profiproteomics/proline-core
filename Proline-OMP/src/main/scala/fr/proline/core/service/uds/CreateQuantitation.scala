@@ -2,7 +2,7 @@ package fr.proline.core.service.uds
 
 import java.util.HashSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.mutable.HashMap
+import java.util.HashMap
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
@@ -331,8 +331,8 @@ class CreateQuantitation(
         udsQf.setQuantitationChannels(udsQuantChannelsForMQCList)
       }
       
-      udsQuantitation.setSampleReplicates(seqAsJavaList(udsSampleReplicateByKey.values.toSeq))
-      udsQuantitation.setBiologicalSamples(udsBioSampleByNum.values.toSeq)
+      udsQuantitation.setSampleReplicates(new ArrayList(udsSampleReplicateByKey.values))
+      udsQuantitation.setBiologicalSamples(new ArrayList(udsBioSampleByNum.values))
       udsQuantitation.setGroupSetups(udsAllGroupSetups)
       udsQuantitation.setQuantitationChannels(udsQuantChannelsList)
       udsQuantitation.setMasterQuantitationChannels(udsMasterQuantChannelsList)
