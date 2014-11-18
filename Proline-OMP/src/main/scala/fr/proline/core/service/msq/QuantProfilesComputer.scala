@@ -14,6 +14,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.Profilizer
 import fr.proline.core.algo.msq.ProfilizerConfig
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.context.execCtxToTxExecCtx
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.om.model.msq.ExperimentalDesign
@@ -182,7 +183,9 @@ class QuantProfilesComputer(
           mqProtSet.getMasterQuantComponentId()
         )
       }
-      
+    })
+        
+      udsDbCtx.beginTransaction()
       //Save PostProcessingQuantConfig in DataSet ObjectTree         
 	  val postQuantProcessinqObjectTree =  buildDataSetObjectTree(config, udsEM)
 	  udsEM.persist(postQuantProcessinqObjectTree)
@@ -192,7 +195,7 @@ class QuantProfilesComputer(
 	  udsQuantitation.putObject(SchemaName.POST_QUANT_PROCESSING_CONFIG.toString(), postQuantProcessinqObjectTree.getId())
 	  udsEM.merge(udsQuantitation)
               
-    })
+	  udsDbCtx.commitTransaction()
     
     // Close execution context if initiated locally
     if( this._hasInitiatedExecContext ) executionContext.closeAll()
