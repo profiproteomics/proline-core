@@ -351,6 +351,7 @@ class LabelFreeFeatureQuantifier(
       val selectedMQPepIds = new ArrayBuffer[Long]
       val mqPeps = new ArrayBuffer[MasterQuantPeptide]
       val abundanceSumByQcId = new HashMap[Long,Float]
+      val rawAbundanceSumByQcId = new HashMap[Long,Float]
       val pepMatchesCountByQcId = new HashMap[Long,Int]
       
       
@@ -366,6 +367,9 @@ class LabelFreeFeatureQuantifier(
             abundanceSumByQcId.getOrElseUpdate(qcId,0)
             abundanceSumByQcId(qcId) += quantPep.abundance
             
+            rawAbundanceSumByQcId.getOrElseUpdate(qcId,0)
+            rawAbundanceSumByQcId(qcId) += quantPep.rawAbundance
+
             pepMatchesCountByQcId.getOrElseUpdate(qcId,0)
             pepMatchesCountByQcId(qcId) += quantPep.peptideMatchesCount
           }
@@ -375,7 +379,7 @@ class LabelFreeFeatureQuantifier(
       val quantProteinSetByQcId = new HashMap[Long,QuantProteinSet]
       for( (qcId,abundanceSum) <- abundanceSumByQcId ) {
         quantProteinSetByQcId(qcId) = new QuantProteinSet(
-          rawAbundance = abundanceSum,
+          rawAbundance = rawAbundanceSumByQcId(qcId),
           abundance = abundanceSum,
           peptideMatchesCount = pepMatchesCountByQcId(qcId),
           quantChannelId = qcId,
