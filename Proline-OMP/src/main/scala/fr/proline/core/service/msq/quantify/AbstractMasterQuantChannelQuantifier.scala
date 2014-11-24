@@ -255,6 +255,9 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
       // Update the best parent peptide match id
       bestParentPepMatch.id = masterPepMatchId
       
+      //Retrieve ORM Peptide 
+      val msiPep = this.msiEm.find(classOf[fr.proline.core.orm.msi.Peptide],peptideId)
+      
       val msiMasterPepInstance = new MsiPeptideInstance()
       msiMasterPepInstance.setPeptideMatchCount(masterPepInstPepMatchIds.length) // TODO: check that
       msiMasterPepInstance.setProteinMatchCount(masterPepInstance.proteinMatchesCount)
@@ -262,7 +265,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
       msiMasterPepInstance.setTotalLeavesMatchCount(masterPepInstance.totalLeavesMatchCount)
       msiMasterPepInstance.setValidatedProteinSetCount(masterPepInstance.validatedProteinSetsCount)
       msiMasterPepInstance.setSelectionLevel(2)
-      msiMasterPepInstance.setPeptideId(peptideId)
+      msiMasterPepInstance.setPeptide(msiPep)
       msiMasterPepInstance.setBestPeptideMatchId(masterPepMatchId)
       msiMasterPepInstance.setResultSummary(msiQuantRSM)
       msiEm.persist(msiMasterPepInstance)

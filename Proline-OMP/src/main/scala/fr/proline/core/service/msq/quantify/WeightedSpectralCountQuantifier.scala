@@ -221,7 +221,7 @@ class WeightedSpectralCountQuantifier(
     msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
     msiMQPepIon.setResultSummary(msiRSM)
     msiMQPepIon.setPeptideInstance(msiMasterPepInst)
-    msiMQPepIon.setPeptideId(msiMasterPepInst.getPeptideId())
+    msiMQPepIon.setPeptideId(msiMasterPepInst.getPeptide().getId())
 
     if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))
 
@@ -776,6 +776,9 @@ class WeightedSpectralCountQuantifier(
       // Map master peptide match id by in memory merged peptide match id
       masterQuantPepMatchIdByMergedPepMatchId(mergedPepMatch.id) = msiMasterPepMatchId
 
+      //Retrieve ORM Peptide 
+      val ormPep = this.msiEm.find(classOf[fr.proline.core.orm.msi.Peptide],peptideId)
+      
       val msiMasterPepInstance = new MsiPeptideInstance()
       msiMasterPepInstance.setPeptideMatchCount(mergedPepInstPepMatchIds.length) // TODO: check that
       msiMasterPepInstance.setProteinMatchCount(mergedPepInstance.proteinMatchesCount)
@@ -783,7 +786,7 @@ class WeightedSpectralCountQuantifier(
       msiMasterPepInstance.setTotalLeavesMatchCount(mergedPepInstance.totalLeavesMatchCount)
       msiMasterPepInstance.setValidatedProteinSetCount(mergedPepInstance.validatedProteinSetsCount)
       msiMasterPepInstance.setSelectionLevel(2)
-      msiMasterPepInstance.setPeptideId(peptideId)
+      msiMasterPepInstance.setPeptide(ormPep)
       msiMasterPepInstance.setBestPeptideMatchId(msiMasterPepMatchId)
       msiMasterPepInstance.setResultSummary(msiQuantRSM)
       msiEm.persist(msiMasterPepInstance)
