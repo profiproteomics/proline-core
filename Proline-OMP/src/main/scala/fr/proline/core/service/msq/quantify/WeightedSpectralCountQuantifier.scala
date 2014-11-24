@@ -220,7 +220,7 @@ class WeightedSpectralCountQuantifier(
     msiMQPepIon.setMasterQuantComponent(msiMQC)
     msiMQPepIon.setMasterQuantPeptideId(mqPep.id)
     msiMQPepIon.setResultSummary(msiRSM)
-    msiMQPepIon.setPeptideInstanceId(msiMasterPepInst.getId())
+    msiMQPepIon.setPeptideInstance(msiMasterPepInst)
     msiMQPepIon.setPeptideId(msiMasterPepInst.getPeptideId())
 
     if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))

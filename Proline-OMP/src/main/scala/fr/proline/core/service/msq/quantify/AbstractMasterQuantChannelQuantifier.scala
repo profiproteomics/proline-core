@@ -594,7 +594,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
     if (mqPepIon.properties.isDefined) msiMQPepIon.setSerializedProperties(ProfiJson.serialize(mqPepIon.properties))
     if (mqPep.peptideInstance.isDefined) {
-      msiMQPepIon.setPeptideInstanceId(mqPep.peptideInstance.get.id)
+      val msiPepInst = this.msiEm.find(classOf[MsiPeptideInstance],mqPep.peptideInstance.get.id)
+      msiMQPepIon.setPeptideInstance(msiPepInst)
       msiMQPepIon.setPeptideId(mqPep.getPeptideId.get)
     }
     if (mqPepIon.lcmsMasterFeatureId.isDefined) msiMQPepIon.setLcmsMasterFeatureId(mqPepIon.lcmsMasterFeatureId.get)

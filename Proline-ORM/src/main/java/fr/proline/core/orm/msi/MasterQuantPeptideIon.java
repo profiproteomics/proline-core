@@ -14,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -71,8 +72,9 @@ public class MasterQuantPeptideIon implements Serializable {
     @Column(name = "peptide_id")
     private Long peptideId;
 
-    @Column(name = "peptide_instance_id")
-    private Long peptideInstanceId;
+    @ManyToOne
+    @JoinColumn(name = "peptide_instance_id")
+    private PeptideInstance peptideInstance;   
 
     @Column(name = "best_peptide_match_id")
     private Long bestPeptideMatchId;
@@ -208,12 +210,12 @@ public class MasterQuantPeptideIon implements Serializable {
 	peptideId = pPeptideId;
     }
 
-    public Long getPeptideInstanceId() {
-	return peptideInstanceId;
+    public PeptideInstance getPeptideInstance() {
+	return peptideInstance;
     }
 
-    public void setPeptideInstanceId(final Long pPeptideInstanceId) {
-	peptideInstanceId = pPeptideInstanceId;
+    public void setPeptideInstance(final PeptideInstance pPeptideInstance) {
+	peptideInstance = pPeptideInstance;
     }
 
     public Long getBestPeptideMatchId() {
