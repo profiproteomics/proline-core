@@ -3,7 +3,6 @@ package fr.proline.core.om.provider.msi.impl
 import fr.proline.core.om.provider.msi.IPeptideInstanceProvider
 import scala.collection.Seq
 import javax.persistence.EntityManager
-import fr.proline.core.orm.msi.repository.ProteinSetRepositorty
 import fr.proline.core.om.model.msi.PeptideInstance
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.util.PeptidesOMConverterUtil
