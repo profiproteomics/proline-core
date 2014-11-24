@@ -26,7 +26,7 @@ import fr.proline.core.orm.msi.dto.*;
 @NamedQueries({
 	@NamedQuery(name = "findPepInstByPepMatch", query = "select pi from PeptideInstance pi, IN (pi.peptideInstancePeptideMatchMaps) pm where pm.id.peptideMatchId = :pmID "),
 
-	@NamedQuery(name = "findPepInstForPeptideId", query = "select pi from PeptideInstance pi where pi.peptideId = :pepID ")
+	@NamedQuery(name = "findPepInstForPeptideId", query = "select pi from PeptideInstance pi where pi.peptide.id = :pepID ")
 
 })
 @Table(name = "peptide_instance")
@@ -43,9 +43,6 @@ public class PeptideInstance implements Serializable {
 
     @Column(name = "master_quant_component_id")
     private Long masterQuantComponentId;
-
-    @Column(name = "peptide_id")
-    private long peptideId;
 
     @Column(name = "peptide_match_count")
     private int peptideMatchCount;
@@ -69,6 +66,10 @@ public class PeptideInstance implements Serializable {
     @JoinColumn(name = "result_summary_id")
     private ResultSummary resultSummary;
 
+    @ManyToOne
+    @JoinColumn(name = "peptide_id")
+    private Peptide peptide;   
+    
     @Column(name = "selection_level")
     private int selectionLevel;
 
@@ -126,12 +127,12 @@ public class PeptideInstance implements Serializable {
 	masterQuantComponentId = pMasterQuantComponentId;
     }
 
-    public long getPeptideId() {
-	return peptideId;
+    public Peptide getPeptide() {
+	return peptide;
     }
 
-    public void setPeptideId(final long pPeptideId) {
-	peptideId = pPeptideId;
+    public void setPeptide(final Peptide pPeptide) {
+	peptide = pPeptide;
     }
 
     public int getPeptideMatchCount() {
