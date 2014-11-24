@@ -130,7 +130,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     val emf = psDBConnector.getEntityManagerFactory()
     val em = emf.createEntityManager()
 
-    val psPeptide = em.find(classOf[PsPeptide], msiPepInst.getPeptideId())
+    val psPeptide = em.find(classOf[PsPeptide], msiPepInst.getPeptide().getId())
     val psUnmodifiedPep = em.find(classOf[PsPeptide], msiPepInst.getUnmodifiedPeptideId())
     var unmodifiedPep = if (psUnmodifiedPep == null) None else Some(convertPeptidePsORM2OM(psUnmodifiedPep))
 
