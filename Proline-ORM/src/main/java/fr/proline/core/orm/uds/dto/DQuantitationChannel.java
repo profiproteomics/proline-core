@@ -16,6 +16,11 @@ public class DQuantitationChannel extends QuantitationChannel{
 	 * MsiSearch.resultFileName corresponding to the resultSummary.resultSet
 	 */
 	private String resultFileName ;
+	
+	/**
+	 * raw file Name : peaklist.path
+	 */
+	private String rawFilePath;
     
 	public DQuantitationChannel(QuantitationChannel o) {
 		super();
@@ -40,6 +45,31 @@ public class DQuantitationChannel extends QuantitationChannel{
 
 	public void setResultFileName(String resultFileName) {
 		this.resultFileName = resultFileName;
+	}
+
+	public String getRawFilePath() {
+		return rawFilePath;
+	}
+
+	public void setRawFilePath(String rawFilePath) {
+		this.rawFilePath = rawFilePath;
+	}
+	
+	/**
+	 * returns the rawFileName form the rawFilePath, separated with \
+	 * @return
+	 */
+	public  String getRawFileName() {
+		if (this.rawFilePath == null) {
+			return "";
+		}else {
+			int index = this.rawFilePath.lastIndexOf("\\");
+			if (index == -1 || index == this.rawFilePath.length()-1) {
+				return this.rawFilePath;
+			}else {
+				return this.rawFilePath.substring(index+1);
+			}
+		}
 	}
 
 }
