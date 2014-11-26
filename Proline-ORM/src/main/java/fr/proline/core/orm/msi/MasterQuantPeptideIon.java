@@ -26,7 +26,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import fr.proline.core.orm.msi.dto.DMasterQuantProteinSet;
 import fr.proline.core.orm.msi.dto.DQuantPeptideIon;
-import fr.proline.core.orm.msi.dto.DQuantProteinSet;
 import fr.proline.core.orm.util.JsonSerializer;
 
 /**
@@ -116,14 +115,19 @@ public class MasterQuantPeptideIon implements Serializable {
 			List<DQuantPeptideIon> quantPepIons = JsonSerializer.getMapper().readValue(quantPeptideIonData, new TypeReference<List<DQuantPeptideIon>>() {});
 			
 			quantPeptideIonByQchIds = new HashMap<Long, DQuantPeptideIon>();		
-			for(int i=0;i<quantPepIons.size();i++){
-				DQuantPeptideIon nextQuantPepIon = quantPepIons.get(i);
-				quantPeptideIonByQchIds.put(nextQuantPepIon.getQuantChannelId(),nextQuantPepIon);
+			if (quantPepIons != null) {
+				for(int i=0;i<quantPepIons.size();i++){
+					DQuantPeptideIon nextQuantPepIon = quantPepIons.get(i);
+					if(nextQuantPepIon != null) {
+						quantPeptideIonByQchIds.put(nextQuantPepIon.getQuantChannelId(),nextQuantPepIon);
+					}
+				}
 			}
 		 
 					
 		}catch(Exception e) {
 			LOG.warn("Error Parsing DQuantPeptideIon ",e);
+			LOG.warn("quantPeptideIonData= "+quantPeptideIonData);
 			quantPeptideIonByQchIds = null;
 		}
 		

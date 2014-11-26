@@ -9,6 +9,7 @@ public class DQuantPeptideIon {
 	Float elutionTime;
 	Float duration;
 	Float correctedElutionTime;
+	Float predictedElutionTime;
 	Integer scanNumber;	  
 	
 	Integer peptideMatchesCount;  	  
@@ -174,6 +175,16 @@ public class DQuantPeptideIon {
 		public void setSelectionLevel(Integer selectionLevel) {
 			this.selectionLevel = selectionLevel;
 		}
+
+		public Float getPredictedElutionTime() {
+			return predictedElutionTime;
+		}
+
+		public void setPredictedElutionTime(Float predictedElutionTime) {
+			this.predictedElutionTime = predictedElutionTime;
+		}
+
+		
   		
 
   
