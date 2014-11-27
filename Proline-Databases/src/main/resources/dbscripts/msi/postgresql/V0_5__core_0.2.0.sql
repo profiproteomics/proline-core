@@ -1,18 +1,21 @@
 
 /* REMOVE DUPLICATED ENTRIES IN peptide_match_object_tree_map */
 
-DELETE FROM peptide_match_object_tree_map WHERE object_tree_id NOT IN (
-  SELECT max(object_tree_id) as distinct_object_tree_id
-  FROM peptide_match_object_tree_map GROUP BY peptide_match_id, schema_name
-);
+DELETE FROM peptide_match_object_tree_map 
+WHERE  peptide_match_object_tree_map.peptide_match_id IN 
+		(SELECT  peptide_match_id as pepMId FROM peptide_match_object_tree_map GROUP BY peptide_match_id, schema_name HAVING count(object_tree_id)  > 1)
+AND object_tree_id NOT IN 
+	(SELECT max(object_tree_id) as distinct_object_tree_id from peptide_match_object_tree_map WHERE peptide_match_object_tree_map.peptide_match_id IN 
+		(SELECT  peptide_match_id as pepMId FROM peptide_match_object_tree_map GROUP BY peptide_match_id, schema_name HAVING count(object_tree_id)  > 1)
+	 GROUP BY peptide_match_id, schema_name
+	);
 
 /* END OF REMOVE DUPLICATED ENTRIES IN peptide_match_object_tree_map */
 
 /* REMOVE ORPHAN ENTRIES IN object_tree */
+DELETE FROM object_tree LEFT OUTER JOIN peptide_match_object_tree_map ON object_tree.id = peptide_match_object_tree_map.object_tree_id 
+WHERE object_tree.schema_name = 'peptide_match.spectrum_match' AND peptide_match_object_tree_map.schema_name is null;
 
-DELETE FROM object_tree WHERE schema_name = 'peptide_match.spectrum_match' AND id NOT IN (
-  SELECT object_tree_id FROM peptide_match_object_tree_map
-);
 
 /* END OF REMOVE ORPHAN ENTRIES IN object_tree */
 
