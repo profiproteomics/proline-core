@@ -13,8 +13,8 @@ AND object_tree_id NOT IN
 /* END OF REMOVE DUPLICATED ENTRIES IN peptide_match_object_tree_map */
 
 /* REMOVE ORPHAN ENTRIES IN object_tree */
-DELETE FROM object_tree LEFT OUTER JOIN peptide_match_object_tree_map ON object_tree.id = peptide_match_object_tree_map.object_tree_id 
-WHERE object_tree.schema_name = 'peptide_match.spectrum_match' AND peptide_match_object_tree_map.schema_name is null;
+DELETE  FROM object_tree WHERE object_tree.id IN ( SELECT object_tree.id from object_tree LEFT OUTER JOIN peptide_match_object_tree_map ON object_tree.id = peptide_match_object_tree_map.object_tree_id 
+WHERE object_tree.schema_name = 'peptide_match.spectrum_match' AND peptide_match_object_tree_map.schema_name is null);
 
 
 /* END OF REMOVE ORPHAN ENTRIES IN object_tree */
