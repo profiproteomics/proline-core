@@ -425,7 +425,7 @@ object PeptideMatch extends InMemoryIdGen with Logging {
         enzymeCleavage.site == "N-term" && // if it cuts in nterm 
         i != 0 && // and current aa is not the first aa of the sequence
         enzymeCleavage.residues.contains(sequence.charAt(i)) && // and current aa is a cleavage site
-        !enzymeCleavage.restrictiveResidues.getOrElse("").contains(sequence.charAt(i + 1)) // and unless it is followed by a restrictive residue
+        !(i + 1 < sequence.length() && enzymeCleavage.restrictiveResidues.getOrElse("").contains(sequence.charAt(i + 1))) // and unless it is followed by a restrictive residue
       ) {
         // then it is a missed cleavage
         missedCleavages += sequence.charAt(i) + "(" + (i + 1) + ")"
