@@ -137,6 +137,8 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
   
 
   def getMs2EventIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+    require( rawMapIds != null, "rawMapIds is null" )
+    if( rawMapIds.isEmpty ) return Map()
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
     	

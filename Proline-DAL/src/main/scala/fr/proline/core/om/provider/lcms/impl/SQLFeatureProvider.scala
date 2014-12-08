@@ -1,7 +1,6 @@
 package fr.proline.core.om.provider.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
-
 import fr.profi.jdbc.ResultSetRow
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
@@ -12,8 +11,8 @@ import fr.proline.core.dal.tables.lcms._
 import fr.proline.core.om.model.lcms._
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-
 import fr.proline.core.om.provider.lcms.impl._
+import scala.collection.mutable.HashMap
   
 class SQLFeatureProvider(
   val lcmsDbCtx: DatabaseConnectionContext,
@@ -28,9 +27,9 @@ class SQLFeatureProvider(
 
   /** Returns a list of processed features  */
   // TODO: reduce code redundancy with SQLProcessedMapProvider
-  def getProcessedFeatures( featureIds: Seq[Long] ): Array[Feature] = {
+  def getProcessedFeatures( featureIds: Seq[Long], loadSubFeatures: Boolean = false ): Array[Feature] = {
     if( featureIds.isEmpty ) return Array()
- 
+
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
 
       // --- Load processed map ids ---
@@ -42,22 +41,22 @@ class SQLFeatureProvider(
 
       // --- Load run ids and run map ids
       val( rawMapIds, runIds ) = ( new ArrayBuffer[Long](), new ArrayBuffer[Long]() )
-      
+
       val sqlQuery = new SelectQueryBuilder2(LcmsDbRawMapTable, LcmsDbProcessedMapRawMapMappingTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.ID,t1.SCAN_SEQUENCE_ID) ->
           "WHERE " ~ t2.PROCESSED_MAP_ID ~ " IN(" ~ processedMapIds.mkString(",") ~ ") " ~
-          "AND " ~ t1.ID ~ "=" ~ t2.RAW_MAP_ID
+            "AND " ~ t1.ID ~ "=" ~ t2.RAW_MAP_ID
       )
-      
-      ezDBC.selectAndProcess( sqlQuery ) { r => 
+
+      ezDBC.selectAndProcess( sqlQuery ) { r =>
         rawMapIds += toLong(r.nextAny)
         runIds += toLong(r.nextAny)
         ()
       }
-    
+
       // Load mapping between scan ids and scan initial ids
       val scanInitialIdById = lcmsDbHelper.getScanInitialIdById( runIds )
-      
+
       // Retrieve mapping between features and MS2 scans
       val ms2EventIdsByFtId = lcmsDbHelper.getMs2EventIdsByFtId( rawMapIds )
 
@@ -72,16 +71,17 @@ class SQLFeatureProvider(
       //val peakelItemByFtId = this.getPeakelItemsByFeatureId(rawMapIds)
       val peakelItems = peakelProvider.getFeaturePeakelItems(featureIds, loadPeakels = false)
       val peakelItemsByFtId = peakelItems.groupBy(_.featureReference.id)
-      
+
       // Retrieve mapping between cluster and sub-features
-      //val subFtIdsByClusterFtId = getSubFtIdsByClusterFtId( processedMapIds )
-      
-      val ftBuffer = new ArrayBuffer[Feature]
-      //val subFtById = new java.util.HashMap[Long,Feature]
-      
+      val subFtIdsByClusterFtId =  if(!loadSubFeatures) Map.empty[Long, Array[Long]]
+      else getSubFtIdsByClusterFtId( featureIds )
+
+      val ftBuffer = new ArrayBuffer[Feature]()
+      val subFtById = new java.util.HashMap[Long,Feature]()
+
       // Load processed features
-      this.eachProcessedFeatureRecord(featureIds, processedFtRecord => {
-        
+      this.eachProcessedFeatureRecord(featureIds ++ subFtIdsByClusterFtId.values.flatten, processedFtRecord => {
+
         val ftId = toLong(processedFtRecord.getAny(FtCols.ID))
 
         /*
@@ -89,10 +89,10 @@ class SQLFeatureProvider(
         val olpFeatures = if (olpFtIdsByFtId.contains(ftId) == false ) null
         else olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
         */
-        
+
         // Retrieve peakel items
         val peakelItems = peakelItemsByFtId.getOrElse(ftId,Array())
-        
+
         // TODO: factorize code with SQLProcessedMapProvider
         val feature = this.buildFeature(
           processedFtRecord,
@@ -109,37 +109,68 @@ class SQLFeatureProvider(
           processedFtRecord.getIntOrElse(ProcFtCols.SELECTION_LEVEL,2),
           toLong( processedFtRecord.getAny(ProcFtCols.PROCESSED_MAP_ID) )
         )
-        
-        //if( feature.isClusterized ) { subFtById.put( ftId, feature ) }
-        //else { ftBuffer += feature }
 
-        ftBuffer += feature
-        
+        if( loadSubFeatures && feature.isClusterized ) { subFtById.put( ftId, feature ) }
+        else { ftBuffer += feature }
+
       })
 
-      ftBuffer.toArray
-      
-      // Link sub-features to loaded features
-      /*val ftArray = new Array[Feature]( ftBuffer.length )
-      var ftIndex = 0
-      for( ft <- ftBuffer ) {
-        
-        if( subFtIdsByClusterFtId contains ft.id ) {
-          ft.subFeatures = subFtIdsByClusterFtId(ft.id) map { subFtId => 
-            val subFt = subFtById.get(subFtId)
-            if( subFt == null ) throw new Exception( "can't find a sub-feature with id=" + subFtId )
-            subFt
+      if(!loadSubFeatures) ftBuffer.toArray
+      else {
+        // Link sub-features to loaded features
+        val ftArray = new Array[Feature]( ftBuffer.length )
+        var ftIndex = 0
+        for( ft <- ftBuffer ) {
+
+          if( subFtIdsByClusterFtId.contains( ft.id ) ) {
+            ft.subFeatures = subFtIdsByClusterFtId(ft.id) map { subFtId =>
+              val subFt = subFtById.get(subFtId)
+              if( subFt == null ) throw new Exception( "can't find a sub-feature with id=" + subFtId )
+              subFt
+            }
           }
+
+          ftArray(ftIndex) = ft
+          ftIndex += 1
         }
-        
-        ftArray(ftIndex) = ft      
-        ftIndex += 1
+
+        ftArray
       }
-      
-      ftArray*/
-    
+
     })
-    
+
+  }
+
+  /** Returns a map of sub features feature keyed by its id */
+  // TODO : remove code redundancy with SQLProcessedMapProvider (only the SQL Query changes)
+  def getSubFtIdsByClusterFtId( featureIds: Seq[Long] ): Map[Long,Array[Long]] = {
+    if( featureIds.isEmpty ) return Map()
+
+    val subFtIdBufferByClusterFtId = new HashMap[Long,ArrayBuffer[Long]]
+
+    DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
+
+      val ftClusterRelationQuery = new SelectQueryBuilder1(LcmsDbFeatureClusterItemTable).mkSelectQuery( (t,c) =>
+        List(t.CLUSTER_FEATURE_ID,t.SUB_FEATURE_ID) ->
+          "WHERE "~ t.CLUSTER_FEATURE_ID ~" IN ("~ featureIds.mkString(",") ~") "
+      )
+
+      ezDBC.selectAndProcess( ftClusterRelationQuery ) { r =>
+
+        val( clusterFeatureId, subFeatureId ) = (toLong(r.nextAny), toLong(r.nextAny))
+        subFtIdBufferByClusterFtId.getOrElseUpdate(clusterFeatureId, new ArrayBuffer[Long](1)) += subFeatureId
+
+        ()
+      }
+    })
+
+    // Convert the HashMap into an immutable Map
+    val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Array[Long]]
+    for( clusterFtId <- subFtIdBufferByClusterFtId.keys ) {
+      mapBuilder += ( clusterFtId -> subFtIdBufferByClusterFtId(clusterFtId).toArray[Long] )
+    }
+    mapBuilder.result()
+
   }
 
   def eachProcessedFeatureRecord( featureIds: Seq[Long], onEachFt: ResultSetRow => Unit ): Unit = {
@@ -150,7 +181,7 @@ class SQLFeatureProvider(
       val procFtQuery = new SelectQueryBuilder2(LcmsDbFeatureTable, LcmsDbProcessedMapFeatureItemTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.*,t2.*) ->
           "WHERE " ~ t1.ID ~ " IN (" ~ featureIds.mkString(",") ~ ") " ~
-          "AND " ~ t1.ID ~ "=" ~ t2.FEATURE_ID
+            "AND " ~ t1.ID ~ "=" ~ t2.FEATURE_ID
         // "AND is_clusterized = " + BoolToSQLStr(isClusterized,boolStrAsInt)
       )
 
