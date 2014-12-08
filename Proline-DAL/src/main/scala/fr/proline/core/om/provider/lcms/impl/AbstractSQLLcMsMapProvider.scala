@@ -30,6 +30,8 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   
   /** Returns a map of overlapping feature ids keyed by feature id */
   def getOverlappingFtIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]] = {
+    require( rawMapIds != null, "rawMapIds is null" )
+    if( rawMapIds.isEmpty ) return Map()
     
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
       
@@ -130,7 +132,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
     val firstScanId = toLong(ftRecord.getAny(FtCols.FIRST_SCAN_ID))
     val lastScanId = toLong(ftRecord.getAny(FtCols.LAST_SCAN_ID))
     val apexScanId = toLong(ftRecord.getAny(FtCols.APEX_SCAN_ID))
-    val ms2EventIds = ms2EventIdsByFtId.getOrElse(ftId,null)
+    val ms2EventIds = ms2EventIdsByFtId.getOrElse(ftId,Array())
     val mapId = toLong(ftRecord.getAny(FtCols.MAP_ID))
     val rawMapId = if( mapId == processedMapId ) 0L else mapId
     
@@ -156,9 +158,9 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
        properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES.toAliasedString).map( ProfiJson.deserialize[FeatureProperties](_) ),
        relations = new FeatureRelations(
          peakelItems = peakelItems,
-         firstScanInitialId = scanInitialIdById(firstScanId),
-         lastScanInitialId = scanInitialIdById(lastScanId),
-         apexScanInitialId = scanInitialIdById(apexScanId),
+         firstScanInitialId = scanInitialIdById.getOrElse(firstScanId,0),
+         lastScanInitialId = scanInitialIdById.getOrElse(lastScanId,0),
+         apexScanInitialId = scanInitialIdById.getOrElse(apexScanId,0),
          ms2EventIds = ms2EventIds,
          firstScanId = firstScanId,
          lastScanId = lastScanId,
