@@ -48,6 +48,8 @@ public class DMasterQuantPeptide {
 	//DPeptideInstance to provide access to DPeptideMatch
 	DPeptideInstance m_dPeptideInstance;
 	
+	// Cluster
+	DCluster m_cluster;
 	
 	
 	public DMasterQuantPeptide(long m_id, 
@@ -174,4 +176,12 @@ public class DMasterQuantPeptide {
 		this.m_dPeptideInstance = peptideInstance;
 	}
 	
+	public DCluster getCluster(){
+		return this.m_cluster;
+	}
+	
+	public void setCluster(DCluster cluster){
+		this.m_cluster = cluster;
+	}
 }
+

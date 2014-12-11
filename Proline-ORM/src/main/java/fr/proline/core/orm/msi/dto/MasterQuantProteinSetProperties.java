@@ -40,7 +40,7 @@ public class MasterQuantProteinSetProperties {
 		this.selectedMasterQuantPeptideIonIds = selectedMasterQuantPeptideIonIds;
 	}
 
-static class MasterQuantProteinSetProfile {
+public static class MasterQuantProteinSetProfile {
 		List<Float> abundances;
 		List<ComputedRatio> ratios;
 		List<Long> mqPeptideIds;
