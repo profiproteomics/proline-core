@@ -29,7 +29,7 @@
     <core.version>${project.version}</core.version>
   </properties>
   <scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/mzDB/mzDB-access/trunk</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/trunk</connection>
   </scm>
 	
   <dependencyManagement>
