@@ -67,6 +67,30 @@
         <version>${core.version}</version>
       </dependency>
 
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    
     </dependencies>
   </dependencyManagement>
 

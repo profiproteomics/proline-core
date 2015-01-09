@@ -64,8 +64,7 @@
     <!-- Tests -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
-      <version>${core.version}</version>
+      <artifactId>Proline-Databases</artifactId>    
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
