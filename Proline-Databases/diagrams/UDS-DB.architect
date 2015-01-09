@@ -721,7 +721,8 @@ For instance
      <remarks></remarks>
     </column>
     <column id="COL214" populated="true" UUID="a6fe0a39-f875-4636-8d73-538aaa9e275e" autoIncrement="false" autoIncrementSequenceName="instrument_config_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
-     <remarks>The name of instrument configuration.</remarks>
+     <remarks>The name of instrument configuration.
+TODO: check unique constraint is correctly set in SQL script</remarks>
     </column>
     <column id="COL215" populated="true" UUID="436b19bc-0f65-4a66-9c78-4f02290bae85" autoIncrement="false" autoIncrementSequenceName="instrument_config_ms1_analyzer_seq" defaultValue="" name="ms1_analyzer" nullable="0" physicalName="ms1_analyzer" precision="100" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>The name of the MS analyzer used in this configuration.
@@ -1158,7 +1159,8 @@ It should not contain an extension and be unique across all the database.</remar
    </folder>
   </table>
   <table id="TAB329" populated="true" UUID="8230d4e8-e041-4d13-9b1e-1a55631fd70f" name="peaklist_software" objectType="TABLE" physicalName="peaklist_software" >
-   <remarks>Describes software that can be used to generate MS/MS peaklists.</remarks>
+   <remarks>Describes software that can be used to generate MS/MS peaklists.
+TODO: add UNIQUE( name, version )</remarks>
    <folder id="FOLTAB3291" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL330" populated="true" UUID="0eec1b38-cd97-4fc2-8163-e3cea9f180f3" autoIncrement="true" autoIncrementSequenceName="peaklist_software_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
@@ -1565,7 +1567,7 @@ It should not contain an extension and be unique across all the database.</remar
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <compare-dm-settings  ddlGenerator="ca.sqlpower.architect.ddl.PostgresDDLGenerator"  outputFormatAsString="SQL"  saveFlag="true" >
   <source-stuff   datastoreTypeAsString="FILE"   filePath="E:\eclipse\workspace\proline-core-v2\Proline-Databases\diagrams\v0.1\UDS-DB.architect"  />
@@ -1573,7 +1575,7 @@ It should not contain an extension and be unique across all the database.</remar
   <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  </compare-dm-settings>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
- <play-pen zoom="0.8367503291570025" viewportX="0" viewportY="497" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
+ <play-pen zoom="0.8367503291570025" viewportX="0" viewportY="338" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
   <table-pane table-ref="TAB1" x="288" y="23" bgColor="0xf6bcbc" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB8" x="820" y="206" bgColor="0xbfd6ff" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB31" x="649" y="680" bgColor="0xe4e4b8" fgColor="0x000000" rounded="true" dashed="false"/>
