@@ -46,25 +46,25 @@
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>Proline-OM</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>Proline-Databases</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>Proline-ORM</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
         <groupId>fr.proline</groupId>
         <artifactId>Proline-DAL</artifactId>
-        <version>${core.version}</version>
+        <version>${project.version}</version>
       </dependency>
 
     </dependencies>
