@@ -623,7 +623,7 @@ UNIQUE( accession, result_set_id )</remarks>
      <remarks>The id of the protein sequence which was identified by the search engine.</remarks>
     </column>
     <column id="COL188" populated="true" UUID="ecd258fa-7a72-4f66-8025-6dbe836131af" autoIncrement="false" autoIncrementSequenceName="protein_match_scoring_id_seq" defaultValue="" name="scoring_id" nullable="0" physicalName="scoring_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
-     <remarks></remarks>
+     <remarks>TODO: allows NULL</remarks>
     </column>
     <column id="COL189" populated="true" UUID="d52358fb-4803-40cb-89ff-ee0a84d0116c" autoIncrement="false" defaultValue="" name="result_set_id" nullable="0" physicalName="result_set_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
