@@ -758,7 +758,8 @@ Valid values for this field are:
    </folder>
   </table>
   <table id="TAB224" populated="true" UUID="cde32dee-634e-4207-b475-874f3b4dd394" name="instrument" objectType="TABLE" physicalName="instrument" >
-   <remarks>This table lists the user mass spectrometers.</remarks>
+   <remarks>This table lists the user mass spectrometers.
+TODO: check the UNIQUE constraint is correctly set in SQL script</remarks>
    <folder id="FOLTAB2241" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL225" populated="true" UUID="2ac7d8eb-19c7-4108-9ebf-62e92fae9bc7" autoIncrement="true" autoIncrementSequenceName="instrument_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
