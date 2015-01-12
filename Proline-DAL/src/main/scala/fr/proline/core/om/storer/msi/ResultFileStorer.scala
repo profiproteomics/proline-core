@@ -38,16 +38,16 @@ object ResultFileStorer extends Logging {
 
     // Store the instrument configuration
     this._insertInstrumentConfig(resultFile.instrumentConfig.get, storerContext)
+    
+    // Load target result set from result file
+    val targetRs = resultFile.getResultSet(false)
+
+    checkResultSet(targetRs, false)
 
     // Retrieve MSISearch and related MS queries
     val msiSearch = resultFile.msiSearch
     val msQueryByInitialId = resultFile.msQueryByInitialId
     val msQueries = if (msQueryByInitialId == null) null else msQueryByInitialId.values.toList.sortBy(_.initialId)
-
-    // Load target result set from result file
-    val targetRs = resultFile.getResultSet(false)
-
-    checkResultSet(targetRs, false)
 
     if (StringUtils.isEmpty(targetRs.name)) targetRs.name = msiSearch.title
 
