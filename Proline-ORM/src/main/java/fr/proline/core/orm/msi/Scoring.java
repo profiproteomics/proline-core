@@ -79,7 +79,6 @@ public class Scoring implements Serializable {
 	this.serializedProperties = serializedProperties;
     }
     
-    // TODO: use this enumeration in DevTools instead of the scoring.conf file
     // TODO: change the hibernate definition of the class Scoring to use this enum ???
 	public enum Type {
 
