@@ -345,6 +345,7 @@ class LabelFreeFeatureQuantifier(
     val mqPepByPepInstId = masterQuantPeptides.filter(_.peptideInstance.isDefined)
                                               .map { mqp => mqp.peptideInstance.get.id -> mqp } toMap
     val mqProtSets = new ArrayBuffer[MasterQuantProteinSet]
+    val mqProtSetIdsByMqPep = new HashMap[MasterQuantPeptide,ArrayBuffer[Long]]
     
     for( mergedProtSet <- mergedRSM.proteinSets ) {
       
@@ -354,12 +355,15 @@ class LabelFreeFeatureQuantifier(
       val rawAbundanceSumByQcId = new HashMap[Long,Float]
       val pepMatchesCountByQcId = new HashMap[Long,Int]
       
-      
       for( mergedPepInst <- mergedProtSet.peptideSet.getPeptideInstances ) {
+        
         // If the peptide has been quantified
         if( mqPepByPepInstId.contains(mergedPepInst.id) ) {
+          
           val mqp = mqPepByPepInstId( mergedPepInst.id )
           mqPeps += mqp
+          
+          mqProtSetIdsByMqPep.getOrElseUpdate(mqp, new ArrayBuffer[Long]) += mergedProtSet.id
           
           if( mqp.selectionLevel >= 2 ) selectedMQPepIds += mqp.id
           
@@ -409,6 +413,13 @@ class LabelFreeFeatureQuantifier(
     )
     
     profilizer.computeMasterQuantProtSetProfiles(mqProtSets, statTestsAlpha)*/
+    
+    // Set the mqProtSetIds property here
+    for ( mqPep <- masterQuantPeptides; mqProtSetIds <- mqProtSetIdsByMqPep.get(mqPep) ) {
+      val mqPepProps = mqPep.properties.getOrElse( MasterQuantPeptideProperties() )
+      mqPepProps.setMqProtSetIds( Some(mqProtSetIds.toArray) )
+      mqPep.properties = Some( mqPepProps )
+    }
     
     mqProtSets.toArray
   }
