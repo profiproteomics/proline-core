@@ -648,8 +648,8 @@ class ExtractMapSet(
     
     this.logger.info("building the master map...")
     
-    // Group found features by peptide to build master features
-    for( (peptide,masterFeatureTuples) <- featureTuples.groupBy(_._2) ) {
+    // Group found features by peptide and charge to build master features
+    for( ( (peptide,charge), masterFeatureTuples) <- featureTuples.groupBy { ft => (ft._2,ft._1.charge) } ) {
       
       val masterFtChildren = new ArrayBuffer[Feature](masterFeatureTuples.length)
       val featureTuplesByLcMsRun =  masterFeatureTuples.groupBy(_._3)
