@@ -66,7 +66,8 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
               val ms2Query = msQuery.asInstanceOf[Ms2Query]
               // FIXME: it should not be null
               var spectrumId = Option.empty[Long]
-              if (context.spectrumIdByTitle != null) {
+              val spectrumIdByTitle = context.spectrumIdByTitle
+              if ( spectrumIdByTitle != null && spectrumIdByTitle.contains(ms2Query.spectrumTitle) ) {
                 ms2Query.spectrumId = context.spectrumIdByTitle(ms2Query.spectrumTitle)
                 spectrumId = Some(ms2Query.spectrumId)
               }
