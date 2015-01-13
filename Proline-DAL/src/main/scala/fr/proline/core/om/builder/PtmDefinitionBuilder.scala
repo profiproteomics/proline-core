@@ -70,6 +70,7 @@ object PtmDefinitionBuilder {
    * seqPos == 0 for Nterm and  seqPos == -1 for CTerm
    * 
    */
+  // TODO: move to LocatedPtm companion object (and add alternative constructor to the case class)
   def buildLocatedPtm( ptmDef: PtmDefinition, seqPos: Int ): LocatedPtm = {
     
     var( isNTerm, isCTerm ) = ( false, false )

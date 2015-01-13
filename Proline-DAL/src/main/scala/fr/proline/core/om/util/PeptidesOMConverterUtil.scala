@@ -398,12 +398,13 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
     // Create OM PtmDefinition from ORM PtmSpecificity    
     val ptmDef = new PtmDefinition(
       id = psPtmSpecificity.getId(),
-      location = psPtmSpecificity.getLocation(),
+      location = psPtmSpecificity.getLocation().toString(),
       names = ptmNames,
       ptmEvidences = ptmEvidences.toArray,
       residue = characterToScalaChar(psPtmSpecificity.getResidue),
-      classification = psPtmSpecificity.getClassification().getName(),
-      ptmId = psPtmSpecificity.getPtm().getId())
+      classification = psPtmSpecificity.getClassification().getName().toString(),
+      ptmId = psPtmSpecificity.getPtm().getId()
+    )
     if (useCachedObject)
       ptmDefinitionsCache.put(psPtmSpecificity.getId(), ptmDef);
 
