@@ -72,12 +72,11 @@ case class PtmEvidence(
 
 }
 
+// TODO: use ORM enumeration instead (requires OM -> ORM dependency or to move enums elsewhere)
 object PtmLocation extends Enumeration {
   type Location = Value
   val PROT_N_TERM = Value("Protein N-term")
   val PROT_C_TERM = Value("Protein C-term")
-  //val N_TERM = Value("N-term")
-  //val C_TERM = Value("C-term")
   val ANY_N_TERM = Value("Any N-term")
   val ANY_C_TERM = Value("Any C-term")
   val ANYWHERE = Value("Anywhere")
@@ -172,6 +171,60 @@ case class PtmDefinition(
   }
 }
 
+object LocatedPtm {
+  
+  /**
+   * Create a LocatedPtm using specified PtmDefinition and location on peptide sequence.
+   * seqPos == 0 for Nterm and  seqPos == -1 for CTerm
+   * 
+   */
+  def apply( ptmDef: PtmDefinition, seqPos: Int ): LocatedPtm = {
+    
+    var( isNTerm, isCTerm ) = ( false, false )
+    
+    // N-term locations are: Any N-term or Protein N-term
+    if( ptmDef.location matches ".+N-term$" ) {
+      isNTerm = true
+    }
+    // C-term locations are: Any C-term, Protein C-term
+    else if( ptmDef.location matches ".+C-term$" ) {
+      isCTerm = true
+    }
+    
+    val precDelta = ptmDef.precursorDelta
+    
+    new LocatedPtm(
+      definition = ptmDef, 
+      seqPosition = seqPos,
+      monoMass = precDelta.monoMass,
+      averageMass = precDelta.averageMass,
+      composition = precDelta.composition,
+      isNTerm = isNTerm,
+      isCTerm = isCTerm
+    )
+
+  }
+  
+  def apply(
+    ptmDefinition: PtmDefinition,
+    seqPosition: Int,
+    precursorDelta: PtmEvidence,
+    isNTerm: Boolean = false,
+    isCTerm: Boolean = false
+  ): LocatedPtm = {
+    new LocatedPtm(
+      definition = ptmDefinition,
+      seqPosition = seqPosition,
+      monoMass = precursorDelta.monoMass,
+      averageMass = precursorDelta.averageMass,
+      composition = precursorDelta.composition,
+      isNTerm = isNTerm,
+      isCTerm = isCTerm
+    )
+  }
+  
+}
+
 case class LocatedPtm(
   // Required fields
   val definition: PtmDefinition,
@@ -188,7 +241,7 @@ case class LocatedPtm(
   // Requirements
   require(definition != null, "definition is null")
   require(seqPosition >= -1 , "invalid seqPosition, it must be an integer >= -1")
-  require(!StringUtils.isEmpty(composition), "composition is empty")
+  require(composition != null, "composition is null")
 
   if (isNTerm) require(seqPosition == 0, "invalid seqPosition for a N-term PTM (it must be 0)")
   if (isCTerm) require(seqPosition == -1, "invalid seqPosition for a C-term PTM (it must be -1)")

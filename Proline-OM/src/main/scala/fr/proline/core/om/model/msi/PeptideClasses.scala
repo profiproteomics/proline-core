@@ -40,13 +40,13 @@ object Peptide extends InMemoryIdGen with Logging {
     // N-term locations are: Any N-term or Protein N-term
     if( ptmDefinition.location matches """.+N-term""" ) {
       if( searchedResidue == '\0' || searchedResidue == residues(0) ) {
-        tmpLocatedPtms += buildLocatedPtm( ptmDefinition, 0, precursorDelta, isNTerm = true )
+        tmpLocatedPtms += LocatedPtm( ptmDefinition, 0, precursorDelta, isNTerm = true )
       }
     }
     // C-term locations are: Any C-term, Protein C-term
     else if( ptmDefinition.location matches """.+C-term""" ) {
       if( searchedResidue == '\0' || searchedResidue == residues.last ) {
-        tmpLocatedPtms += buildLocatedPtm( ptmDefinition, -1, precursorDelta, isCTerm = true )
+        tmpLocatedPtms += LocatedPtm( ptmDefinition, -1, precursorDelta, isCTerm = true )
       }
     }
     // No location constraint (location=Anywhere)
@@ -54,7 +54,7 @@ object Peptide extends InMemoryIdGen with Logging {
       var seqPos = 1
       for(residue <- residues ) {
         if( searchedResidue == residue || residue == 'X' )  {
-          tmpLocatedPtms += buildLocatedPtm( ptmDefinition, seqPos, precursorDelta )
+          tmpLocatedPtms += LocatedPtm( ptmDefinition, seqPos, precursorDelta )
         }
         seqPos += 1
       }
@@ -82,26 +82,6 @@ object Peptide extends InMemoryIdGen with Logging {
     else { locatedPtms = tmpLocatedPtms.toArray }
     
     locatedPtms
-    
-  }
-  
-  
-  private def buildLocatedPtm(
-    ptmDefinition: PtmDefinition,
-    seqPosition: Int,
-    precursorDelta: PtmEvidence,
-    isNTerm: Boolean = false,
-    isCTerm: Boolean = false
-  ): LocatedPtm = {
-    new LocatedPtm(
-      definition = ptmDefinition,
-      seqPosition = seqPosition,
-      monoMass = precursorDelta.monoMass,
-      averageMass = precursorDelta.averageMass,
-      composition = precursorDelta.composition,
-      isNTerm = isNTerm,
-      isCTerm = isCTerm
-    )
   }
   
   /** Returns the given list of located PTMs as a string.

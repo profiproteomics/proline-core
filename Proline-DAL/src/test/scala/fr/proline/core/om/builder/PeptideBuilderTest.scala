@@ -51,7 +51,7 @@ class PeptideBuilderTest {
       ptmEvidenceRecords = Seq(ptmEvidencePrecursor),
       ptmClassification = ""
     )
-    val ptmLoc = PtmDefinitionBuilder.buildLocatedPtm(ptmDef = ptmDef, seqPos = 1)
+    val ptmLoc = LocatedPtm(ptmDef = ptmDef, seqPos = 1)
     val locatedPtms = new Array[LocatedPtm](1)
     locatedPtms.update(0, ptmLoc)
     val pep1 = new Peptide( sequence = "STLLIR", ptms = locatedPtms, calculatedMass = 100.0 )

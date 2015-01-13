@@ -64,47 +64,6 @@ object PtmDefinitionBuilder {
       ptmEvidences = ptmEvArray
     )
   }
-
-  /**
-   * Create a LocatedPtm using specified PtmDefinition and location on peptide sequence.
-   * seqPos == 0 for Nterm and  seqPos == -1 for CTerm
-   * 
-   */
-  // TODO: move to LocatedPtm companion object (and add alternative constructor to the case class)
-  def buildLocatedPtm( ptmDef: PtmDefinition, seqPos: Int ): LocatedPtm = {
-    
-    var( isNTerm, isCTerm ) = ( false, false )
-    
-    // N-term locations are: Any N-term or Protein N-term
-    if( ptmDef.location matches ".+N-term$" ) {
-      if( seqPos != 0 ) {
-        throw new IllegalArgumentException( "sequence position must be '0' because it's a N-Term PTM" )
-      }
-      isNTerm = true  
-    }
-    // C-term locations are: Any C-term, Protein C-term
-    else if( ptmDef.location matches ".+C-term$" ) {
-      //my $nb_residues = length($pep_sequence);
-      //die "sequence postion must be '$nb_residues' because it's a C-Term PTM" if $seq_pos != $nb_residues;
-      if( seqPos != -1 ) {
-        throw new IllegalArgumentException( "sequence position must be '-1' because it's a C-Term PTM" )
-      }
-      isCTerm = true
-    }
-    
-    val precDelta = ptmDef.precursorDelta
-    
-    new LocatedPtm(
-      definition = ptmDef, 
-      seqPosition = seqPos,
-      monoMass = precDelta.monoMass,
-      averageMass = precDelta.averageMass,
-      composition = precDelta.composition,
-      isNTerm = isNTerm,
-      isCTerm = isCTerm
-    )
-
-  }
   
   def buildLocatedPtmsGroupedByPepId(
     pepPtmRecordsByPepId: Map[Long,Seq[IValueContainer]],
@@ -126,7 +85,7 @@ object PtmDefinitionBuilder {
           val ptmDef = ptmDefinitionById(ptmSpecifId)
 
           // Build located PTM
-          val locatedPtm = PtmDefinitionBuilder.buildLocatedPtm(ptmDef, pepPtmRecord.getInt(PepPtmCols.SEQ_POSITION))
+          val locatedPtm = LocatedPtm(ptmDef, pepPtmRecord.getInt(PepPtmCols.SEQ_POSITION))
           locatedPtms += locatedPtm
         }
 
