@@ -40,13 +40,13 @@ object Peptide extends InMemoryIdGen with Logging {
     // N-term locations are: Any N-term or Protein N-term
     if( ptmDefinition.location matches """.+N-term""" ) {
       if( searchedResidue == '\0' || searchedResidue == residues(0) ) {
-        tmpLocatedPtms += LocatedPtm( ptmDefinition, 0, precursorDelta, isNTerm = true )
+        tmpLocatedPtms += new LocatedPtm( ptmDefinition, 0, precursorDelta, isNTerm = true )
       }
     }
     // C-term locations are: Any C-term, Protein C-term
     else if( ptmDefinition.location matches """.+C-term""" ) {
       if( searchedResidue == '\0' || searchedResidue == residues.last ) {
-        tmpLocatedPtms += LocatedPtm( ptmDefinition, -1, precursorDelta, isCTerm = true )
+        tmpLocatedPtms += new LocatedPtm( ptmDefinition, -1, precursorDelta, isCTerm = true )
       }
     }
     // No location constraint (location=Anywhere)
@@ -54,7 +54,7 @@ object Peptide extends InMemoryIdGen with Logging {
       var seqPos = 1
       for(residue <- residues ) {
         if( searchedResidue == residue || residue == 'X' )  {
-          tmpLocatedPtms += LocatedPtm( ptmDefinition, seqPos, precursorDelta )
+          tmpLocatedPtms += new LocatedPtm( ptmDefinition, seqPos, precursorDelta )
         }
         seqPos += 1
       }

@@ -205,24 +205,6 @@ object LocatedPtm {
 
   }
   
-  def apply(
-    ptmDefinition: PtmDefinition,
-    seqPosition: Int,
-    precursorDelta: PtmEvidence,
-    isNTerm: Boolean = false,
-    isCTerm: Boolean = false
-  ): LocatedPtm = {
-    new LocatedPtm(
-      definition = ptmDefinition,
-      seqPosition = seqPosition,
-      monoMass = precursorDelta.monoMass,
-      averageMass = precursorDelta.averageMass,
-      composition = precursorDelta.composition,
-      isNTerm = isNTerm,
-      isCTerm = isCTerm
-    )
-  }
-  
 }
 
 case class LocatedPtm(
@@ -237,6 +219,24 @@ case class LocatedPtm(
   val isNTerm: Boolean = false,
   val isCTerm: Boolean = false
 ) {
+  
+  def this(
+    definition: PtmDefinition,
+    seqPosition: Int,
+    precursorDelta: PtmEvidence,
+    isNTerm: Boolean = false,
+    isCTerm: Boolean = false
+  ) = {
+    this(
+      definition = definition,
+      seqPosition = seqPosition,
+      monoMass = precursorDelta.monoMass,
+      averageMass = precursorDelta.averageMass,
+      composition = precursorDelta.composition,
+      isNTerm = isNTerm,
+      isCTerm = isCTerm
+    )
+  }
 
   // Requirements
   require(definition != null, "definition is null")
