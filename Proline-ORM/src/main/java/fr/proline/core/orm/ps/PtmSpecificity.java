@@ -18,6 +18,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import fr.profi.util.StringUtils;
+
 /**
  * The persistent class for the ptm_specificity database table.
  * 
@@ -34,104 +36,130 @@ import javax.persistence.Table;
 @Table(name = "ptm_specificity")
 public class PtmSpecificity implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "id")
+	private long id;
 
-    private String location;
+	private String location;
 
-    private Character residue;
+	private Character residue;
 
-    // bi-directional many-to-one association to Ptm
-    @ManyToOne
-    @JoinColumn(name = "ptm_id")
-    private Ptm ptm;
+	// bi-directional many-to-one association to Ptm
+	@ManyToOne
+	@JoinColumn(name = "ptm_id")
+	private Ptm ptm;
 
-    // uni-directional many-to-one association to PtmClassification
-    @ManyToOne(cascade = PERSIST)
-    @JoinColumn(name = "classification_id")
-    private PtmClassification classification;
+	// uni-directional many-to-one association to PtmClassification
+	@ManyToOne(cascade = PERSIST)
+	@JoinColumn(name = "classification_id")
+	private PtmClassification classification;
 
-    @OneToMany(mappedBy = "specificity", cascade = PERSIST)
-    private Set<PtmEvidence> evidences;
+	@OneToMany(mappedBy = "specificity", cascade = PERSIST)
+	private Set<PtmEvidence> evidences;
 
-    public PtmSpecificity() {
-    }
-
-    public long getId() {
-	return id;
-    }
-
-    public void setId(final long pId) {
-	id = pId;
-    }
-
-    public String getLocation() {
-	return this.location;
-    }
-
-    public void setLocation(String location) {
-	this.location = location;
-    }
-
-    public Character getResidue() {
-	return residue;
-    }
-
-    public void setResidue(final Character pResidue) {
-	residue = pResidue;
-    }
-
-    public Ptm getPtm() {
-	return this.ptm;
-    }
-
-    public void setPtm(Ptm ptm) {
-	this.ptm = ptm;
-    }
-
-    public PtmClassification getClassification() {
-	return this.classification;
-    }
-
-    public void setClassification(PtmClassification classification) {
-	this.classification = classification;
-    }
-
-    public void setEvidences(final Set<PtmEvidence> pEvidences) {
-	evidences = pEvidences;
-    }
-
-    public Set<PtmEvidence> getEvidences() {
-	return evidences;
-    }
-
-    public void addEvidence(final PtmEvidence evidence) {
-
-	if (evidence != null) {
-	    Set<PtmEvidence> localEvidences = getEvidences();
-
-	    if (localEvidences == null) {
-		localEvidences = new HashSet<PtmEvidence>();
-
-		setEvidences(localEvidences);
-	    }
-
-	    localEvidences.add(evidence);
+	public PtmSpecificity() {
 	}
 
-    }
-
-    public void removeEvidence(final PtmEvidence evidence) {
-
-	final Set<PtmEvidence> localEvidences = getEvidences();
-	if (localEvidences != null) {
-	    localEvidences.remove(evidence);
+	public long getId() {
+		return id;
 	}
 
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
+
+	public PtmLocation getLocation() {
+		return PtmLocation.valueOf(this.location);
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+	public void setLocation(PtmLocation location) {
+		this.location = location.toString();
+	}
+
+	public Character getResidue() {
+		return residue;
+	}
+
+	public void setResidue(final Character pResidue) {
+		residue = pResidue;
+	}
+
+	public Ptm getPtm() {
+		return this.ptm;
+	}
+
+	public void setPtm(Ptm ptm) {
+		this.ptm = ptm;
+	}
+
+	public PtmClassification getClassification() {
+		return this.classification;
+	}
+
+	public void setClassification(PtmClassification classification) {
+		this.classification = classification;
+	}
+
+	public void setEvidences(final Set<PtmEvidence> pEvidences) {
+		evidences = pEvidences;
+	}
+
+	public Set<PtmEvidence> getEvidences() {
+		return evidences;
+	}
+
+	public void addEvidence(final PtmEvidence evidence) {
+
+		if (evidence != null) {
+			Set<PtmEvidence> localEvidences = getEvidences();
+
+			if (localEvidences == null) {
+				localEvidences = new HashSet<PtmEvidence>();
+
+				setEvidences(localEvidences);
+			}
+
+			localEvidences.add(evidence);
+		}
+
+	}
+
+	public void removeEvidence(final PtmEvidence evidence) {
+
+		final Set<PtmEvidence> localEvidences = getEvidences();
+		if (localEvidences != null) {
+			localEvidences.remove(evidence);
+		}
+
+	}
+
+	public enum PtmLocation {
+
+		ANYWHERE("Anywhere"),
+		ANY_N_TERM("Any N-term"),
+		ANY_C_TERM("Any C-term"),
+		PROT_N_TERM("Protein N-term"),
+		PROT_C_TERM("Protein C-term");
+
+		private final String m_location;
+
+		private PtmLocation(final String location) {
+			assert (!StringUtils.isEmpty(location)) : "PtmSpecificity.Location() invalid name";
+
+			m_location = location;
+		}
+
+		@Override
+		public String toString() {
+			return m_location;
+		}
+	}
 
 }

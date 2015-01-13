@@ -50,7 +50,7 @@ public class PtmSpecificity implements Serializable {
 	}
 
 	setId(psPtmSpecificity.getId());
-	setLocation(psPtmSpecificity.getLocation());
+	setLocation(psPtmSpecificity.getLocation().toString());
 	psPtmSpecificity.getResidue();
 
 	// TODO set SerializedProperties when fields is available in PS PtmSpecificity
