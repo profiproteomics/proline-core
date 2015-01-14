@@ -1,6 +1,7 @@
 package fr.proline.core.orm.ps;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -42,8 +43,8 @@ public class PtmClassification implements Serializable {
 		id = pId;
 	}
 
-	public PtmClassificationName getName() {
-		return PtmClassificationName.valueOf(this.name);
+	public String getName() {
+		return this.name;
 	}
 
 	public void setName(String name) {
@@ -74,11 +75,24 @@ public class PtmClassification implements Serializable {
 		;
 
 		private final String m_name;
+		private static HashMap<String,PtmClassificationName> ptmClassifNameByName = null;
 
 		private PtmClassificationName(final String name) {
 			assert (!StringUtils.isEmpty(name)) : "Classification.Name() invalid name";
 
 			m_name = name;
+		}
+		
+		public static PtmClassificationName withName(final String name) {
+			if( ptmClassifNameByName == null ) {
+				ptmClassifNameByName = new HashMap<String,PtmClassificationName>();
+				
+				for( PtmClassificationName ptmClassifName : PtmClassificationName.values() ) {
+					ptmClassifNameByName.put(ptmClassifName.toString(), ptmClassifName);
+				}
+			}
+			
+			return ptmClassifNameByName.get(name);
 		}
 		
 		@Override

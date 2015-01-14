@@ -3,6 +3,7 @@ package fr.proline.core.orm.ps;
 import static javax.persistence.CascadeType.PERSIST;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -71,8 +72,8 @@ public class PtmSpecificity implements Serializable {
 		id = pId;
 	}
 
-	public PtmLocation getLocation() {
-		return PtmLocation.valueOf(this.location);
+	public String getLocation() {
+		return this.location;
 	}
 
 	public void setLocation(String location) {
@@ -149,11 +150,24 @@ public class PtmSpecificity implements Serializable {
 		PROT_C_TERM("Protein C-term");
 
 		private final String m_location;
+		private static HashMap<String,PtmLocation> ptmLocationByLocation = null;
 
 		private PtmLocation(final String location) {
-			assert (!StringUtils.isEmpty(location)) : "PtmSpecificity.Location() invalid name";
+			assert (!StringUtils.isEmpty(location)) : "PtmSpecificity.Location() invalid location";
 
 			m_location = location;
+		}
+		
+		public static PtmLocation withName(final String location) {
+			if( ptmLocationByLocation == null ) {
+				ptmLocationByLocation = new HashMap<String,PtmLocation>();
+				
+				for( PtmLocation ptmLoc : PtmLocation.values() ) {
+					ptmLocationByLocation.put(ptmLoc.toString(), ptmLoc);
+				}
+			}
+			
+			return ptmLocationByLocation.get(location);
 		}
 
 		@Override

@@ -49,7 +49,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
 
     // Retrieve the list of existing PTM classifications
     val allPtmClassifs = psEM.createQuery("SELECT e FROM fr.proline.core.orm.ps.PtmClassification e",classOf[PsPtmClassification]).getResultList().toList
-    val psPtmClassifByUpperName = Map() ++ allPtmClassifs.map( classif => classif.getName.toString().toUpperCase() -> classif )
+    val psPtmClassifByUpperName = Map() ++ allPtmClassifs.map( classif => classif.getName.toUpperCase() -> classif )
 
     /**
      * Persists or merges a sequence of PtmDefinition objects into PS Db.

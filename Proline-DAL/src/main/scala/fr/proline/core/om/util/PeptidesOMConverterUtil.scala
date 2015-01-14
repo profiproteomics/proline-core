@@ -395,10 +395,10 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       ptmEvidences += precursorEvidence
     }
 
-    // Create OM PtmDefinition from ORM PtmSpecificity    
+    // Create OM PtmDefinition from ORM PtmSpecificity
     val ptmDef = new PtmDefinition(
       id = psPtmSpecificity.getId(),
-      location = psPtmSpecificity.getLocation().toString(),
+      location = psPtmSpecificity.getLocation(),
       names = ptmNames,
       ptmEvidences = ptmEvidences.toArray,
       residue = characterToScalaChar(psPtmSpecificity.getResidue),
