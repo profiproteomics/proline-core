@@ -101,7 +101,8 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
     }
     
     // Check if all peptide matches have the same type of score
-    require( scoreTypeSet.size == 1, "can't merge peptide matches from different search engines yet" )
+    // FIXME: disabled by DBO for the ABRF study => do we have still need this requirement ???
+    // require( scoreTypeSet.size == 1, "can't merge peptide matches from different search engines yet" )
     
     // Define some vars
     val nrProteinMatches = new ArrayBuffer[ProteinMatch]
