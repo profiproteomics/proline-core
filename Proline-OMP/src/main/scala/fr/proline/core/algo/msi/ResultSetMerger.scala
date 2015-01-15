@@ -46,7 +46,8 @@ object ResultSetMerger extends Logging {
     }
     
     // Check if all peptide matches have the same type of score
-    require( scoreTypeSet.size == 1, "can't merge peptide matches from different search engines yet" )
+    // FIXME: disabled by DBO for the ABRF study => do we have still need this requirement ???
+    //require( scoreTypeSet.size == 1, "can't merge peptide matches from different search engines yet" )
     
     val mergedProteinMatches = new ArrayBuffer[ProteinMatch](proteinMatches.length)
     // Retrieve sequence matches corresponding to best child peptide matches
