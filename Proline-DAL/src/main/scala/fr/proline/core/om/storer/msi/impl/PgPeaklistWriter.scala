@@ -82,8 +82,8 @@ object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
           lastScan,
           firstTime,
           lastTime,
-          """\\x""" + Utils.toHexString(doublesToBytes(spectrum.mozList.get)), // Snappy.compress(
-          """\\x""" + Utils.toHexString(floatsToBytes(spectrum.intensityList.get)), // Snappy.compress(
+          """\\x""" + Utils.toHexString(doublesToBytes(spectrum.mozList.getOrElse(Array()))), // Snappy.compress(
+          """\\x""" + Utils.toHexString(floatsToBytes(spectrum.intensityList.getOrElse(Array()))), // Snappy.compress(
           spectrum.peaksCount,
           spectrum.properties.map(ProfiJson.serialize(_)),
           peaklistId,

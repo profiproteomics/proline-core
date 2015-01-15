@@ -120,8 +120,8 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
       lastScan,
       firstTime,
       lastTime,
-      doublesToBytes(spectrum.mozList.get), // Snappy.compress(
-      floatsToBytes(spectrum.intensityList.get), // Snappy.compress(
+      doublesToBytes(spectrum.mozList.getOrElse(Array())), // Snappy.compress(
+      floatsToBytes(spectrum.intensityList.getOrElse(Array())), // Snappy.compress(
       spectrum.peaksCount,
       spectrum.properties.map(ProfiJson.serialize(_)),
       peaklistId,
