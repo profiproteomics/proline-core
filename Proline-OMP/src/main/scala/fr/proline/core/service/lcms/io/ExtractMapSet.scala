@@ -642,7 +642,7 @@ class ExtractMapSet(
     )
     
     // Define some data structure
-    val mftBuilderByPeptide = new HashMap[Peptide,MasterFeatureBuilder]()
+    val mftBuilderByPeptideAndCharge = new HashMap[(Peptide,Int),MasterFeatureBuilder]()
     val putativeFtsByLcMsRun = new HashMap[LcMsRun,ArrayBuffer[PutativeFeature]]()
     val peptideByPutativeFt = new HashMap[PutativeFeature,Peptide]()
     
@@ -689,7 +689,7 @@ class ExtractMapSet(
         children = masterFtChildren,
         peptideId = peptide.id // attach the peptide id to the master feature
       )
-      mftBuilderByPeptide += peptide -> mftBuilder
+      mftBuilderByPeptideAndCharge += (peptide,charge) -> mftBuilder
       
       // Create a putative feature for each missing one
       for( lcMsRun <- runsWithMissingFt ) {
@@ -787,7 +787,7 @@ class ExtractMapSet(
             
             // Retrieve master feature builder to append this new feature to its children buffer
             val peptide = peptideByPutativeFt(putativeFt)
-            val mftBuilder = mftBuilderByPeptide(peptide)         
+            val mftBuilder = mftBuilderByPeptideAndCharge( (peptide,putativeFt.charge) )         
             mftBuilder.children += newLcmsFeature
           }
         }
@@ -832,11 +832,17 @@ class ExtractMapSet(
     val alnRefMap = tmpMapSet.getAlnReferenceMap.get
     val curTime = new java.util.Date()
     
+    val masterFeatures = mftBuilderByPeptideAndCharge.values.map { mftBuilder =>
+      val mft = mftBuilder.toMasterFeature()
+      require( mft.children.length <= lcMsRuns.length, "master feature contains more child features than maps" )
+      mft
+    } toArray
+    
     tmpMapSet.masterMap = ProcessedMap(
       id = ProcessedMap.generateNewId(),
       number = 0,
       name = alnRefMap.name,
-      features = mftBuilderByPeptide.values.map( _.toMasterFeature() ).toArray,
+      features = masterFeatures,
       isMaster = true,
       isAlnReference = false,
       isProcessed = true,
