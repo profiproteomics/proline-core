@@ -360,7 +360,7 @@ class ExtractMapSet(
     val mzDbFileDir = mzDbFile.getParent()
     val mzDbFileName = mzDbFile.getName()
     // FIXME: it should be retrieved from the mzDB file meta-data
-    val rawFileName = mzDbFileName.take(mzDbFileName.lastIndexOf("."))
+    val rawFileName = mzDbFileName.split(".").head
     
     // Check if the scan sequence already exists
     //val scanSeqId = lcmsDbHelper.getScanSequenceIdForRawFileName(rawFileName)
