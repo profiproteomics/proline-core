@@ -21,6 +21,9 @@ public class DQuantitationChannel extends QuantitationChannel{
 	 * raw file Name : peaklist.path
 	 */
 	private String rawFilePath;
+	
+	// link with the raw map id
+	private Long lcmsRawMapId;
     
 	public DQuantitationChannel(QuantitationChannel o) {
 		super();
@@ -70,6 +73,14 @@ public class DQuantitationChannel extends QuantitationChannel{
 				return this.rawFilePath.substring(index+1);
 			}
 		}
+	}
+
+	public Long getLcmsRawMapId() {
+		return lcmsRawMapId;
+	}
+
+	public void setLcmsRawMapId(Long lcmsRawMapId) {
+		this.lcmsRawMapId = lcmsRawMapId;
 	}
 
 }

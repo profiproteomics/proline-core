@@ -2,7 +2,16 @@ package fr.proline.core.orm.lcms;
 
 import javax.persistence.*;
 
+
+
+import org.msgpack.MessagePack;
+import org.msgpack.annotation.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.Serializable;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -13,6 +22,8 @@ import java.util.List;
 @Entity
 @NamedQuery(name="Peakel.findAll", query="SELECT p FROM Peakel p")
 public class Peakel implements Serializable {
+	private static final Logger LOG = LoggerFactory.getLogger(Peakel.class);
+	
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -68,6 +79,9 @@ public class Peakel implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="last_scan_id")
 	private Scan lastScan;
+	
+	@Transient
+	private List<Peak> peakList;
 
 	public Peakel() {
 	}
@@ -220,6 +234,79 @@ public class Peakel implements Serializable {
 
 	public void setLastScan(Scan lastScan) {
 		this.lastScan = lastScan;
+	}
+	
+	public void setPeakList(List<Peak> peakList) {
+		this.peakList = peakList;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Peak> getPeakList() {
+		if (this.peakList == null) {
+			try {
+				MessagePack msgpack = new MessagePack();
+				List<Peak> pl = (List<Peak>) msgpack.read(this.getPeaks());
+				// the return list is not a Peak list: ArrayValueImpl object instead of Peak
+				this.peakList = new ArrayList<Peak>();
+				for (Iterator iterator = pl.iterator(); iterator.hasNext();) {
+					AbstractList p = (AbstractList) iterator.next();
+					Peak peak = new Peak(new Double(p.get(0).toString()), new Float(p.get(1).toString()), new Float(p.get(2).toString()));
+					this.peakList.add(peak);
+				}
+				
+			} catch (Exception e) {
+				LOG.warn("Error Parsing PeakList ",e);
+				this.peakList = null;
+			} 
+		}
+		return this.peakList;
+	}
+	
+
+	/* peak represented in the peaks BLOB of Peakel*/
+	@Message
+	public class Peak {
+		
+		private Double  moz;
+		private Float elutionTime;
+		private Float intensity;
+		
+		public Peak() {
+			super();
+		}
+
+		public Peak(Double moz, Float elutionTime, Float intensity) {
+			super();
+			this.moz = moz;
+			this.elutionTime = elutionTime;
+			this.intensity = intensity;
+		}
+
+		public Double getMoz() {
+			return moz;
+		}
+
+		public void setMoz(Double moz) {
+			this.moz = moz;
+		}
+
+		public Float getElutionTime() {
+			return elutionTime;
+		}
+
+		public void setElutionTime(Float elutionTime) {
+			this.elutionTime = elutionTime;
+		}
+
+		public Float getIntensity() {
+			return intensity;
+		}
+
+		public void setIntensity(Float intensity) {
+			this.intensity = intensity;
+		}
+		
+		
 	}
 
 }
