@@ -90,8 +90,8 @@ class QuantProfilesComputer(
     
     // Get entity manager
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
-    val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
-    val udsDbHelper = new UdsDbHelper(executionContext.getUDSDbConnectionContext())
+    val udsEM = udsDbCtx.getEntityManager()
+    val udsDbHelper = new UdsDbHelper(udsDbCtx)
     
     // Retrieve the quantitation fraction
     val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)    
