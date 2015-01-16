@@ -12,7 +12,7 @@ import javax.persistence.*;
 @Entity
 @Table(name="processed_map_feature_item")
 @NamedQuery(name="ProcessedMapFeatureItem.findAll", query="SELECT p FROM ProcessedMapFeatureItem p")
-public class ProcessedMapFeatureItem  {
+public class ProcessedMapFeatureItem implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId

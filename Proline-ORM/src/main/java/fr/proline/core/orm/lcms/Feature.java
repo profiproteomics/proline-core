@@ -1,9 +1,8 @@
 package fr.proline.core.orm.lcms;
 
-import java.io.Serializable;
-
 import javax.persistence.*;
 
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -14,7 +13,7 @@ import java.util.List;
  */
 @Entity
 @NamedQuery(name="Feature.findAll", query="SELECT f FROM Feature f")
-public class Feature  {
+public class Feature implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private static DecimalFormat df = new DecimalFormat("#.000");

@@ -1,6 +1,7 @@
 package fr.proline.core.orm.lcms;
 
 import java.io.Serializable;
+
 import javax.persistence.*;
 
 
@@ -11,7 +12,7 @@ import javax.persistence.*;
 @Entity
 @Table(name="feature_cluster_item")
 @NamedQuery(name="FeatureClusterItem.findAll", query="SELECT f FROM FeatureClusterItem f")
-public class FeatureClusterItem  {
+public class FeatureClusterItem implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId

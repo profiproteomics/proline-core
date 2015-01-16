@@ -1,9 +1,8 @@
 package fr.proline.core.orm.lcms;
 
-import java.io.Serializable;
-
 import javax.persistence.*;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -14,7 +13,7 @@ import java.util.List;
  */
 @Entity
 @NamedQuery(name="Map.findAll", query="SELECT m FROM Map m")
-public class Map  {
+public class Map implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id

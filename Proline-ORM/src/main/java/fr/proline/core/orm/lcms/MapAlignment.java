@@ -1,6 +1,7 @@
 package fr.proline.core.orm.lcms;
 
 import java.io.Serializable;
+
 import javax.persistence.*;
 
 
@@ -11,7 +12,7 @@ import javax.persistence.*;
 @Entity
 @Table(name="map_alignment")
 @NamedQuery(name="MapAlignment.findAll", query="SELECT m FROM MapAlignment m")
-public class MapAlignment  {
+public class MapAlignment implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId

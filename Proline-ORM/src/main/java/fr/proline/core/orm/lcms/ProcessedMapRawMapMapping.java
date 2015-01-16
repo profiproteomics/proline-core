@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "processed_map_raw_map_mapping")
 @NamedQuery(name = "ProcessedMapRawMapMapping.findAll", query = "SELECT p FROM ProcessedMapRawMapMapping p")
-public class ProcessedMapRawMapMapping {
+public class ProcessedMapRawMapMapping implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId

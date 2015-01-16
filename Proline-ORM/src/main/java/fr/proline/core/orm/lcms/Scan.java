@@ -1,6 +1,7 @@
 package fr.proline.core.orm.lcms;
 
 import java.io.Serializable;
+
 import javax.persistence.*;
 
 
@@ -10,7 +11,7 @@ import javax.persistence.*;
  */
 @Entity
 @NamedQuery(name="Scan.findAll", query="SELECT s FROM Scan s")
-public class Scan  {
+public class Scan implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id

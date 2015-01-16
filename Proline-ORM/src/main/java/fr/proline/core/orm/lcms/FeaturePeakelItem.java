@@ -12,7 +12,7 @@ import javax.persistence.*;
 @Entity
 @Table(name="feature_peakel_item")
 @NamedQuery(name="FeaturePeakelItem.findAll", query="SELECT f FROM FeaturePeakelItem f")
-public class FeaturePeakelItem  {
+public class FeaturePeakelItem implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId

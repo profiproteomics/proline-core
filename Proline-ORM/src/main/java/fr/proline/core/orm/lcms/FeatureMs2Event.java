@@ -1,5 +1,7 @@
 package fr.proline.core.orm.lcms;
 
+import java.io.Serializable;
+
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -16,7 +18,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name="feature_ms2_event")
 @NamedQuery(name="FeatureMs2Event.findAll", query="SELECT f FROM FeatureMs2Event f")
-public class FeatureMs2Event  {
+public class FeatureMs2Event implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId

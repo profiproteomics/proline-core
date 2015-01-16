@@ -1,7 +1,8 @@
 package fr.proline.core.orm.lcms;
 
-import java.io.Serializable;
 import javax.persistence.*;
+
+import java.io.Serializable;
 import java.util.List;
 
 
@@ -11,7 +12,7 @@ import java.util.List;
  */
 @Entity
 @NamedQuery(name="Peakel.findAll", query="SELECT p FROM Peakel p")
-public class Peakel  {
+public class Peakel implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id

@@ -11,7 +11,7 @@ import javax.persistence.*;
  */
 @Entity(name = "fr.proline.core.orm.lcms.Instrument")
 @NamedQuery(name="Instrument.findAll", query="SELECT i FROM Instrument i")
-public class Instrument  {
+public class Instrument implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
