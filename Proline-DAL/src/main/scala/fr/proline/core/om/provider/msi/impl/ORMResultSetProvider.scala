@@ -15,6 +15,13 @@ import fr.profi.util.StringUtils
 import javax.persistence.EntityManager
 import fr.proline.core.util.ResidueUtils._
 import scala.collection.mutable.ArrayBuffer
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.profi.util.primitives._
+import scala.collection.mutable.HashMap
+
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,
@@ -109,7 +116,8 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     assert(msiResultSet != null, "buildResultSet() msiResultSet is null")
 
     val msiResultSetId = msiResultSet.getId
-
+    logger.trace(" BUILD RS "+msiResultSetId)
+    
     val knownResultSets = getEntityCache(classOf[ResultSet])
 
     val knownResultSet = knownResultSets.get(msiResultSetId)
@@ -135,11 +143,38 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
       /* ProteinMaches */
       val msiProteinMatches = proteinMatchRepo.findProteinMatchesForResultSet(msiEM, msiResultSet)
-
-      val omProteinMatches =
-        for (msiProteinMatch <- msiProteinMatches) yield {
-          buildProteinMatch(msiProteinMatch, msiResultSetId, msiEM)
-        }
+      
+      
+      val seqDatabasesIdsByProtMatchId  = new HashMap[Long, ArrayBuffer[Long]]()
+	  DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
+      
+      	val sqIDProtMatchIDQuery = new SelectQueryBuilder1(MsiDbProteinMatchSeqDatabaseMapTable).mkSelectQuery( (t,c) =>
+      		List(t.PROTEIN_MATCH_ID, t.SEQ_DATABASE_ID) -> "WHERE "~ t.RESULT_SET_ID ~" = "~ msiResultSetId ~" "
+		)
+      
+		msiEzDBC.selectAndProcess(sqIDProtMatchIDQuery){ r =>
+         	val( protMatchId, seqDBId ) = (toLong(r.nextAny), r.nextInt)
+         	val seqDbs  = seqDatabasesIdsByProtMatchId.getOrElseUpdate(protMatchId, new ArrayBuffer[Long]())
+         	seqDbs += seqDBId
+        	seqDatabasesIdsByProtMatchId.put(protMatchId, seqDbs)
+	 	} 
+	 
+	  })
+ 
+	 	  
+	  val msiSequenceMatchesByProtMatchID = new HashMap[Long, ArrayBuffer[MsiSequenceMatch]]()
+      sequenceMatchRepo.findSequenceMatchForResultSet(msiEM, msiResultSetId).foreach(msiSM => {
+         val seqMatches  = msiSequenceMatchesByProtMatchID.getOrElseUpdate(msiSM.getId().getProteinMatchId(), new ArrayBuffer[MsiSequenceMatch]())
+         seqMatches += msiSM
+		  msiSequenceMatchesByProtMatchID.put(msiSM.getId().getProteinMatchId(),seqMatches) 
+      })
+	  
+	  
+      val omProteinMatches = new ArrayBuffer[ProteinMatch]()
+      for (msiProteinMatch <- msiProteinMatches)  {
+         omProteinMatches += buildProteinMatch(msiProteinMatch, msiResultSetId, seqDatabasesIdsByProtMatchId, msiSequenceMatchesByProtMatchID, msiEM)
+      }
+      
 
       val proteinMatches = omProteinMatches.toArray[ProteinMatch]
       logger.trace("Loaded ProteinMatches: " + proteinMatches.size)
@@ -373,8 +408,8 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     }
 
   }
-
-  private def buildProteinMatch(msiProteinMatch: MsiProteinMatch, resultSetId: Long, msiEM: EntityManager): ProteinMatch = {
+  
+  private def buildProteinMatch(msiProteinMatch: MsiProteinMatch, resultSetId: Long,  seqDatabasesIdsByProtMatchId :  HashMap[Long, ArrayBuffer[Long]], msiSequenceMatchesByProtMatchID : HashMap[Long, ArrayBuffer[MsiSequenceMatch]], msiEM: EntityManager): ProteinMatch = {
     assert(msiProteinMatch != null, "buildProteinMatch() msiProteinMatch is null")
 
     def retrieveProtein(proteinId: Long): Protein = {
@@ -429,22 +464,12 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     }
 
     /* SeqDatabase Ids */
-    val seqDatabasesIds = Array.newBuilder[Long]
-
-    val msiSeqDatabaseIds = seqDatabaseRepo.findSeqDatabaseIdsForProteinMatch(msiEM, msiProteinMatchId)
-    if ((msiSeqDatabaseIds != null) && !msiSeqDatabaseIds.isEmpty) {
-
-      for (msiSeqDatabaseId <- msiSeqDatabaseIds) {
-        seqDatabasesIds += msiSeqDatabaseId.longValue
-      }
-
-    }
+	val seqDatabasesIds = if(seqDatabasesIdsByProtMatchId.get(msiProteinMatchId).isEmpty) null else {seqDatabasesIdsByProtMatchId.get(msiProteinMatchId).get.toArray }
 
     /* SequenceMatches */
     val sequenceMatches = Array.newBuilder[SequenceMatch]
-
-    val msiSequenceMatches = sequenceMatchRepo.findSequenceMatchForProteinMatch(msiEM, msiProteinMatchId)
-
+    val msiSequenceMatches = if(msiSequenceMatchesByProtMatchID.get(msiProteinMatchId).isEmpty) null else {msiSequenceMatchesByProtMatchID.get(msiProteinMatchId).get.toArray}
+    
     if ((msiSequenceMatches != null) && !msiSequenceMatches.isEmpty) {
 
       for (msiSequenceMatch <- msiSequenceMatches) {
@@ -452,6 +477,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       }
 
     }
+    
 
     new ProteinMatch(msiProteinMatch.getAccession,
       msiProteinMatch.getDescription,
@@ -462,7 +488,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       resultSetId,
       proteinId,
       optionalProtein,
-      seqDatabasesIds.result,
+      seqDatabasesIds,
       msiProteinMatch.getGeneName,
       msiProteinMatch.getScore.floatValue,
       scoringRepo.getScoreTypeForId(msiEM, msiProteinMatch.getScoringId),
