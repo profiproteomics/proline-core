@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -28,8 +29,11 @@ import fr.profi.util.StringUtils;
  * 
  */
 @Entity
+@NamedQueries({
 @NamedQuery(name = "findMsiSeqDatabaseForNameAndFasta", query = "select sd from fr.proline.core.orm.msi.SeqDatabase sd"
-	+ " where (sd.name = :name) and (sd.fastaFilePath = :fastaFilePath)")
+	+ " where (sd.name = :name) and (sd.fastaFilePath = :fastaFilePath)"),
+@NamedQuery(name = "findMsiSeqDatabaseForResultSet", query = "select sd from fr.proline.core.orm.msi.SeqDatabase sd"
+		+ " where (sd.name = :name) and (sd.fastaFilePath = :fastaFilePath)") })
 @Table(name = "seq_database")
 public class SeqDatabase implements Serializable {
 
