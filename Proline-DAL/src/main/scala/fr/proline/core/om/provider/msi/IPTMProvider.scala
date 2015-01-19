@@ -3,6 +3,10 @@ package fr.proline.core.om.provider.msi
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.context.DatabaseConnectionContext
+import scala.collection.mutable.HashMap
+import fr.proline.core.om.model.msi.PtmEvidence
+import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.model.msi.PtmNames
 
 trait IPTMProvider {
 
@@ -47,4 +51,106 @@ trait IPTMProvider {
    */
   def getPtmId( shortName: String ): Option[Long]
   
+}
+
+/**
+ * Fake Provider, using cache (Name=> PTMDefinition) and creating fake PTM Definition : 
+ * - fullName = ptmName (ptmResidue)
+ * - Post-translational
+ * - PtmEvidence : Precursor, monoMass = averageMass = Double.MaxValue, not required
+ *  
+ */
+object PTMFakeProvider extends IPTMProvider { 
+  
+  val psDbCtx = null
+
+  var ptmDefByName:HashMap[String, PtmDefinition] = new HashMap[String, PtmDefinition]()
+    
+  /**
+   *  Get PtmDefinition with specified ptm (name), residue and location,  if already created using this Provider  
+   * or create a new fake one with classification = Post-translational, a fake Precursor PtmEvidence and specified properties
+   */
+  def getPtmDefinition(ptmName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = { 
+    
+    val fullName = ptmName+" ("+ptmResidue+")"
+    if(ptmDefByName.contains(fullName))
+      return ptmDefByName.get(fullName)  
+      
+    var newPtmDef:PtmDefinition  = null
+    val ptmEvidence = new PtmEvidence( 
+          ionType = IonTypes.Precursor,
+      		composition = "UNVALID",
+      		monoMass = Double.MaxValue,
+      		averageMass = Double.MaxValue,
+      		isRequired = false
+      		)
+    
+    newPtmDef = new PtmDefinition(
+                      id = PtmDefinition.generateNewId(),
+                      ptmId = PtmNames.generateNewId,
+                      location =ptmLocation.toString,
+                      residue = ptmResidue,
+                      classification = "Post-translational",
+                      names = new PtmNames(shortName = ptmName,fullName = fullName),
+                      ptmEvidences = Array(ptmEvidence)
+                    )
+    ptmDefByName += fullName -> newPtmDef 
+    
+    Some(newPtmDef)
+  }
+  
+  /**
+   * Return an empty array
+   */
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
+  	val retArray =  new Array[Option[PtmDefinition]](1)
+  	retArray.update(0, Option.empty[PtmDefinition])	
+  	
+  	retArray
+  }
+  
+  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
+    this.getPtmDefinitionsAsOptions(ptmDefIds).filter( _ != None ).map( _.get )
+  } 
+      
+  /**
+   * Return an Option.empty Long
+   */
+  def getPtmId(shortName: String): Option[Long] = {
+    Option.empty[Long]
+  }
+
+}
+
+
+/**
+ * Return only no value (Option.empty) 
+ */
+object EmptyPTMProvider extends IPTMProvider {
+
+  val psDbCtx = null
+
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
+  	val retArray =  new Array[Option[PtmDefinition]](ptmDefIds.length)
+  	var index = 0
+  	ptmDefIds foreach ( id => {
+  	  retArray.update(index, Option.empty[PtmDefinition])
+  	  index += 1
+  	})
+  	
+  	retArray
+  }
+  
+  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
+    Array.empty[PtmDefinition]
+  }
+ 
+  def getPtmDefinition(ptmName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
+	  Option.empty[PtmDefinition]
+  }
+  
+  def getPtmId(shortName: String): Option[Long] = {
+     Option.empty[Long]
+  }
+ 
 }

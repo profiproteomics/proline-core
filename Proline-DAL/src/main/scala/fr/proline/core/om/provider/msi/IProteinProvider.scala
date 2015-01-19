@@ -2,6 +2,8 @@ package fr.proline.core.om.provider.msi
 import fr.proline.core.om.model.msi.Protein
 import fr.proline.core.om.model.msi.SeqDatabase
 import fr.proline.context.DatabaseConnectionContext
+import scala.collection.mutable.HashMap
+
 
 
 trait IProteinProvider {
@@ -43,4 +45,47 @@ trait IProteinProvider {
    *  @return Option[Protein] corresponding to found Protein
    */
   def getProtein( accession:String, seqDb: SeqDatabase ): Option[Protein]
+}
+
+
+/**
+ * Return only no value (Option.empty) 
+ */
+class ProteinEmptyFakeProvider extends IProteinProvider {
+  
+  val pdiDbCtx = null
+  
+   def getProteinsAsOptions( protIds: Seq[Long] ): Array[Option[Protein]] = {
+   val retArray =  new Array[Option[Protein]](1)
+	retArray.update(0, Option.empty[Protein])	
+	return retArray    
+  }
+ 
+  def getProtein( seq:String): Option[Protein] =  Option.empty[Protein]
+  
+  def getProtein(accession:String, seqDb: SeqDatabase): Option[Protein] =  {
+    return None
+  }
+
+}
+
+/**
+ * Return a Fake Protein :  sequence="AACCCMMM"
+ */
+object ProteinFakeProvider extends ProteinEmptyFakeProvider {
+  
+   
+private var protByAcc:HashMap[String, Protein] = new HashMap[String, Protein]()
+  
+  
+  override def getProtein(accession:String, seqDb: SeqDatabase): Option[Protein] =  {
+    var retVal= protByAcc.get(accession.concat(seqDb.name))
+    if(retVal == None){
+      val p:Protein = new Protein(sequence="AACCCMMM",id = Protein.generateNewId  )
+      protByAcc += accession.concat(seqDb.name) -> p
+      retVal = Some(p)
+    }
+    retVal
+  }
+
 }
