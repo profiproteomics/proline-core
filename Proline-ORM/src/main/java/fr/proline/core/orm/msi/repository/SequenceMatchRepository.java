@@ -33,4 +33,23 @@ public final class SequenceMatchRepository {
 	return query.getResultList();
     }
 
+    /**
+     * Retrieves all  <code>SequenceMatch</code> entities associated to a given resultset
+     * 
+     * @param resultSetId
+     *            ResultSet Id the <code>SequenceMatch</code> belongs to
+     * @return List of associated SequenceMatches, can be empty if none found.
+     */
+    public static List<SequenceMatch> findSequenceMatchForResultSet(final EntityManager msiEm,
+	    final long resultSetId) {
+
+	JPAUtils.checkEntityManager(msiEm);
+
+	final TypedQuery<SequenceMatch> query = msiEm.createQuery(
+		"select sm from fr.proline.core.orm.msi.SequenceMatch sm"
+			+ " where sm.resultSetId = :resultSetId", SequenceMatch.class);
+	query.setParameter("resultSetId", Long.valueOf(resultSetId));
+
+	return query.getResultList();
+    }
 }
