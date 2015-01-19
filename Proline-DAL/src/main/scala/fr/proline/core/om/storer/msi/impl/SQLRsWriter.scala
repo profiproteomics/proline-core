@@ -218,7 +218,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
   def insertSpectrumMatch(peptideMatch: PeptideMatch, spectrumMatch: SpectrumMatch, msiDbCtx: DatabaseConnectionContext): Int = {
     
-    val schemaName = "peptide_match.spectrum_match"
+    val schemaName = ObjectTreeSchema.SchemaName.SPECTRUM_MATCH.toString()
     var count = 0
     
     DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
