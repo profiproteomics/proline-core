@@ -177,7 +177,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
         //Get RSM root of RS Merge : May not be the "final" Root RSM !!!   if RSMs have then be merged ...
         var rsm: ResultSummary = null
         if (rootRSM.id == rsmID)
-          rootRSM
+         rsm = rootRSM
         else {
             logger.trace("Need to read RSM "+rsmID)
           val rsmOp = getResultSummaryProvider(execContext).getResultSummary(rsmID, true)
