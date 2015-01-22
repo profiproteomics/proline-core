@@ -71,7 +71,7 @@ class SQLMsQueryProvider(val msiDbCtx: DatabaseConnectionContext) extends IMsQue
       }
       
       val specTitleQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
-        List(t.ID,t.TITLE) -> "WHERE "~ t.PEAKLIST_ID ~" IN ("~ pklIds.mkString(",") ~")"
+        List(t.ID,t.TITLE) -> "WHERE "~ pklIds.map(id => t.PEAKLIST_ID + "=" + id).mkString(" OR ")
       )
   
       // Retrieve parent peaklist ids corresponding to the provided MSI search ids

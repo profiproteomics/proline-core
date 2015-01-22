@@ -121,7 +121,7 @@ class LcmsDbHelper( lcmsDbCtx: DatabaseConnectionContext ) {
       val mapBuilder = scala.collection.immutable.Map.newBuilder[Long,Int]
       
       val idsQuery = new SelectQueryBuilder1( LcmsDbScanTable ).mkSelectQuery( (t,c) =>
-        List(t.ID, t.INITIAL_ID) -> "WHERE "~ t.SCAN_SEQUENCE_ID ~ " IN (" ~ scanSeqIds.mkString(",") ~ ")"
+        List(t.ID, t.INITIAL_ID) -> "WHERE "~ scanSeqIds.map(id => t.SCAN_SEQUENCE_ID + "=" + id).mkString(" OR ")
       )
       
       ezDBC.selectAndProcess( idsQuery ) { r =>

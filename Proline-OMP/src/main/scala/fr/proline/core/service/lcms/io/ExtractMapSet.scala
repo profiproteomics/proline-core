@@ -503,7 +503,7 @@ class ExtractMapSet(
         )
         
         // Retrieve some mappings
-        val scanHeaderById = mzdbFtDetector.scanHeaderById
+        val ms1ScanHeaderById = mzdbFtDetector.ms1ScanHeaderById
         val ms2ScanHeadersByCycle = mzdbFtDetector.ms2ScanHeadersByCycle
         
         // Launch the peakel detection
@@ -525,7 +525,7 @@ class ExtractMapSet(
           for(
             scanId <- detectedPeakel.scanIds;
             // Retrieve the ScanHeader
-            sh = scanHeaderById(scanId);
+            sh = ms1ScanHeaderById(scanId);
             // Retrieve corresponding MS2 scans for this cycle
             if ms2ScanHeadersByCycle.contains(sh.getCycle);
             ms2Sh <- ms2ScanHeadersByCycle(sh.getCycle);

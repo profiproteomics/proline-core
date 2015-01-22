@@ -214,7 +214,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
       var specCount = 0
 
       DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.selectAndProcess("SELECT id FROM spectrum WHERE peaklist_id IN (" + pklIds.mkString(",") + ")") { r =>
+        ezDBC.selectAndProcess("SELECT id FROM spectrum WHERE " + pklIds.map(id => s"peaklist_id=$id").mkString(" OR ") ) { r =>
           val spectrumId: Long = toLong(r.nextAny)
           specNumById += (spectrumId -> specCount)
           specCount += 1
