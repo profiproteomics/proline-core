@@ -1,55 +1,63 @@
 package fr.proline.core.service.msq.quantify
 
+import scala.Array.canBuildFrom
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConversions.setAsJavaSet
 import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
+
 import com.typesafe.scalalogging.slf4j.Logging
+
+import fr.profi.util.primitives.toLong
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.ResultSummaryAdder
 import fr.proline.core.algo.msi.ResultSummaryMerger
-import fr.proline.core.algo.msi.scoring.{PepSetScoring,PeptideSetScoreUpdater}
+import fr.proline.core.algo.msi.scoring.PepSetScoring
+import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder.any2ClauseAdd
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msq._
+import fr.proline.core.om.model.msq.MasterQuantPeptide
+import fr.proline.core.om.model.msq.MasterQuantPeptideIon
+import fr.proline.core.om.model.msq.MasterQuantProteinSet
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.orm.msi.{
-  MasterQuantPeptideIon => MsiMasterQuantPepIon,
-  MasterQuantComponent => MsiMasterQuantComponent,
-  ObjectTree => MsiObjectTree,
-  PeptideInstance => MsiPeptideInstance,
-  PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap,
-  PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK,
-  PeptideMatch => MsiPeptideMatch,
-  PeptideMatchRelation => MsiPeptideMatchRelation,
-  PeptideSet => MsiPeptideSet,
-  PeptideSetPeptideInstanceItem => MsiPeptideSetItem,
-  PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK,
-  PeptideSetProteinMatchMap => MsiPepSetProtMatchMap,
-  PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK,
-  ProteinSetProteinMatchItem => MsiProtSetProtMatchItem,
-  ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK,
-  ProteinMatch => MsiProteinMatch,
-  ProteinSet => MsiProteinSet,
-  ResultSet => MsiResultSet,
-  ResultSummary => MsiResultSummary,
-  Scoring => MsiScoring,
-  SequenceMatch => MsiSequenceMatch
-}
+import fr.proline.core.orm.msi.{MasterQuantComponent => MsiMasterQuantComponent}
+import fr.proline.core.orm.msi.{MasterQuantPeptideIon => MsiMasterQuantPepIon}
+import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.core.orm.uds.MasterQuantitationChannel
-import fr.proline.repository.IDataStoreConnectorFactory
-import fr.profi.util.primitives._
-import fr.proline.core.util.ResidueUtils._
-import fr.proline.core.algo.msi.ResultSummaryAdder
+import fr.proline.core.orm.msi.Peptide
+import fr.proline.core.orm.msi.{PeptideInstance => MsiPeptideInstance}
+import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMap => MsiPepInstPepMatchMap}
+import fr.proline.core.orm.msi.{PeptideInstancePeptideMatchMapPK => MsiPepInstPepMatchMapPK}
+import fr.proline.core.orm.msi.{PeptideMatch => MsiPeptideMatch}
+import fr.proline.core.orm.msi.{PeptideMatchRelation => MsiPeptideMatchRelation}
+import fr.proline.core.orm.msi.{PeptideMatchRelationPK => MsiPeptideMatchRelationPK}
+import fr.proline.core.orm.msi.{PeptideSet => MsiPeptideSet}
+import fr.proline.core.orm.msi.{PeptideSetPeptideInstanceItem => MsiPeptideSetItem}
+import fr.proline.core.orm.msi.{PeptideSetPeptideInstanceItemPK => MsiPeptideSetItemPK}
+import fr.proline.core.orm.msi.{PeptideSetProteinMatchMap => MsiPepSetProtMatchMap}
+import fr.proline.core.orm.msi.{PeptideSetProteinMatchMapPK => MsiPepSetProtMatchMapPK}
+import fr.proline.core.orm.msi.{ProteinMatch => MsiProteinMatch}
+import fr.proline.core.orm.msi.{ProteinSet => MsiProteinSet}
+import fr.proline.core.orm.msi.{ProteinSetProteinMatchItem => MsiProtSetProtMatchItem}
+import fr.proline.core.orm.msi.{ProteinSetProteinMatchItemPK => MsiProtSetProtMatchItemPK}
+import fr.proline.core.orm.msi.ResultSet
+import fr.proline.core.orm.msi.{ResultSet => MsiResultSet}
+import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
+import fr.proline.core.orm.msi.{Scoring => MsiScoring}
+import fr.proline.core.orm.msi.{SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
+import fr.proline.core.orm.uds.MasterQuantitationChannel
+import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
+
+
 
 abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
@@ -201,7 +209,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     msiScoring.setId(4)
 
     // Iterate over merged peptide instances to create quant peptide instances
-    this.logger.info("storing master quant peptide instances...")
+    this.logger.info("storing master quant peptide instances... ("+masterPepInstances.size+")")
 
     // Define some vars
     val masterQuantPepMatchIdByTmpPepMatchId = new HashMap[Long, Long]
@@ -296,18 +304,21 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
       //msiMasterPepInstance.setPeptidesMatches(Set(msiMasterPepMatch))
       msiEm.persist(msiPepInstMatch)
 
-      // Map this quant peptide match to identified child peptide matches
-      //FIXME No children specified Yet !? 
+      // Map this quant peptide match to identified child peptide matches    
       if(bestParentPepMatch.getChildrenIds !=null){
 	      for (childPepMatchId <- bestParentPepMatch.getChildrenIds) {
-	
-	        val msiPepMatchRelation = new MsiPeptideMatchRelation()
-	        msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
-	        // FIXME: allows to set the child peptide match id
-	        msiPepMatchRelation.setChildPeptideMatch(msiMasterPepMatch) // childPepMatchId
-	        // FIXME: rename to setParentResultSet
-	        msiPepMatchRelation.setParentResultSetId(msiQuantRS)
-	      }
+             val msiPepMatchRelationPK = new MsiPeptideMatchRelationPK()
+             msiPepMatchRelationPK.setChildPeptideMatchId(childPepMatchId)
+             msiPepMatchRelationPK.setParentPeptideMatchId(masterPepMatchId)                 
+
+	    	  val childPM=  msiEm.find(classOf[MsiPeptideMatch], childPepMatchId)
+    		  val msiPepMatchRelation = new MsiPeptideMatchRelation()
+              msiPepMatchRelation.setId(msiPepMatchRelationPK)
+	    	  msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
+	    	  msiPepMatchRelation.setChildPeptideMatch(childPM) 
+	    	  msiPepMatchRelation.setParentResultSetId(msiQuantRS)
+	    	  msiEm.persist(msiPepMatchRelation)
+ 	      }
       }
     }
 
@@ -649,32 +660,43 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
     msiMQProtSetObjectTree
   }
-  
+
+    
   protected def createMergedResultSummary(msiDbCtx : DatabaseConnectionContext) : ResultSummary = {
 		  val msiDbHelper = new MsiDbHelper(msiDbCtx)
 		  val tmpIdentProteinIdSet = new collection.mutable.HashSet[Long]()
 		  
-		  for (identRSM <- identResultSummaries) {
-			  // 	Retrieve protein ids
-			  val rs = identRSM.resultSet.get
-			  rs.proteinMatches.foreach { p => if (p.getProteinId != 0) tmpIdentProteinIdSet += p.getProteinId }
-		  }
+		  //VDS : COMMENT > passage avec ResultSummaryAdder <
+//		  for (identRSM <- identResultSummaries) {
+//			  // 	Retrieve protein ids
+//			  val rs = identRSM.resultSet.get
+//			  rs.proteinMatches.foreach { p => if (p.getProteinId != 0) tmpIdentProteinIdSet += p.getProteinId }
+//		  }
 
 		  // Retrieve sequence length mapped by the corresponding protein id
-		  val seqLengthByProtId = msiDbHelper.getSeqLengthByBioSeqId(tmpIdentProteinIdSet.toList)
+		  //VDS : COMMENT > passage avec ResultSummaryAdder <
+//		  val seqLengthByProtId = msiDbHelper.getSeqLengthByBioSeqId(tmpIdentProteinIdSet.toList)
    
 		  // FIXME: check that all peptide sets have the same scoring
 		  val pepSetScoring = PepSetScoring.withName( this.identResultSummaries(0).peptideSets(0).scoreType )
 		  val pepSetScoreUpdater = PeptideSetScoreUpdater(pepSetScoring)
     
 		  // Merge result summaries
-//         TODO passage avec ResultSummaryAdder		  
-//		  val resultSummaryAdder= new ResultSummaryAdder(pepSetScoreUpdater)
-//		  this.logger.info("merging result summaries...")
-
-		  val resultSummaryMerger = new ResultSummaryMerger(pepSetScoreUpdater)
+		  //	VDS :  > passage avec ResultSummaryAdder <
 		  this.logger.info("merging result summaries...")
-		  resultSummaryMerger.mergeResultSummaries(identResultSummaries, seqLengthByProtId)
+		  var rsmBuilder = new ResultSummaryAdder(ResultSummary.generateNewId(), false, pepSetScoreUpdater, None)
+		  for (identRSM <- identResultSummaries) {
+		    rsmBuilder.addResultSummary(identRSM)
+		  }
+		  
+		  val mergedTargetRSM = rsmBuilder.toResultSummary
+		  rsmBuilder = null // Eligible for Garbage collection
+		  return mergedTargetRSM
+		  
+		  //VDS : COMMENT > passage avec ResultSummaryAdder <
+//		  val resultSummaryMerger = new ResultSummaryMerger(pepSetScoreUpdater)
+//		  this.logger.info("merging result summaries...")
+//		  resultSummaryMerger.mergeResultSummaries(identResultSummaries, seqLengthByProtId)
 
    }
 
