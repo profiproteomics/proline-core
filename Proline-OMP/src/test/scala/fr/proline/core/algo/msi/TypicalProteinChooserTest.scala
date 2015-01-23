@@ -56,9 +56,12 @@ class TypicalProteinChooserTest extends Logging {
   def testChangeTypicalProt() = {
 
     // Check which proteinSets should be modified by algo
-    val nbrTremblShouldChange: Int = 9 // # proteinSet matching following rule 
-    //VDS WARNING : Was 4, after modifying algo, changed proteinset was 9 dur to incorrect IS_IN_SUBSET value in XML file :  
-    // Allways FALSE even for subset. Should be changed back to 4 with corrected XML file ! 
+    val nbrTremblShouldChange: Int = 16 // # proteinSet matching following rule 
+    //VDS WARNING change 2 : Was 9, after modifying algo set to 16 => previous typical was OK considering rule put add alphabetical order restriction ( was P02769 now => A2V9Z4
+    // was P49064 now => P02770, was P54655 now => A5GMX4, was Q89MI0 now => Q07LX8, was Q8GBD4 now => A1JQE6, was Q9QXG2 now => P24386, was Q88X53 now => Q1WU48
+    //VDS WARNING  change 1 : Was 4, after modifying algo, changed proteinset was 9 dur to incorrect IS_IN_SUBSET value in XML file :  
+    // Allways FALSE even for subset. Should be changed back to 4 with corrected XML file !
+    
 
     val typicalChooser = new TypicalProteinChooser()
 
