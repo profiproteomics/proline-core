@@ -8,6 +8,7 @@ import fr.profi.util.regex.RegexUtils._
 import fr.proline.core.orm.msi.ProteinMatch
 import com.typesafe.scalalogging.slf4j.Logging
 import javax.persistence.EntityManager
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * Algo to change the typical protein of all Protein Set for a given ResultSummary.
@@ -38,38 +39,35 @@ class TypicalProteinChooser () extends Logging {
     var modifiedProtSet = Seq.newBuilder[fr.proline.core.orm.msi.ProteinSet]
     ormProtSetRSM.foreach(protSet => {
       
-    	val associatedSameSetProtMatchesById  = protSet.getProteinSetProteinMatchItems().filter(!_.getIsInSubset()).map(pspmi => { pspmi.getProteinMatch().getId() -> pspmi.getProteinMatch()}).toMap
-    	var currentTypical =associatedSameSetProtMatchesById(protSet.getProteinMatchId())
-    	
-    	var newTypical = currentTypical
+        val sameSetProts =  protSet.getProteinSetProteinMatchItems().filter(!_.getIsInSubset()).map(pspmi => { pspmi.getProteinMatch()}).toSeq.sortBy(_.getAccession())
+    	var currentTypical =sameSetProts.filter(_.getId() == protSet.getProteinMatchId())(0) 
+    	    	
     	var foundNewTypical = false
+    	val potentialTypicals = Seq.newBuilder[ProteinMatch]
+    	
     	var ruleIndex =0
     	while (ruleIndex < priorityRulesToApply.length && !foundNewTypical) {
     	  val ruleToApply = priorityRulesToApply(ruleIndex)
     	  ruleIndex +=1
-    	  breakable {
-    		val typicalValueToTest: String = if (ruleToApply.applyToAcc) currentTypical.getAccession() else currentTypical.getDescription()
-			if (typicalValueToTest =~ ruleToApply.rulePattern) {
-			   foundNewTypical = true // Typical respect current constraint
-			   break
-			}
-    		
-    		//Typical doesn't respect current constraint, search in samesets
-          	associatedSameSetProtMatchesById.foreach(entry => {
-            val valueToTest: String = if (ruleToApply.applyToAcc) entry._2.getAccession() else entry._2.getDescription()
+ 		
+    		//Search in in samesets    
+          	sameSetProts.foreach(sameset => {
+            val valueToTest: String = if (ruleToApply.applyToAcc) sameset.getAccession() else sameset.getDescription()
             if (valueToTest =~ ruleToApply.rulePattern) {
-              newTypical = entry._2
+              potentialTypicals += sameset
               foundNewTypical = true // sameset respect current constraint
-              break
             }
-          }) //End go through sameset 
-        }
+          }) //End go through sameset         
       } // end go through rules
     	
-	  //New typical to save ! 
-	  if(!newTypical.equals(currentTypical)){
-	  	protSet.setProteinMatchId(newTypical.getId())		
-	  	modifiedProtSet += protSet
+	  //New typical to save !     
+	  if(foundNewTypical){
+	     val newTypical = potentialTypicals.result.sortBy(_.getAccession()).head
+	     if(!newTypical.equals(currentTypical)){
+	       logger.debug("NEW Typical, was "+currentTypical.getAccession()+" now => "+newTypical.getAccession())
+	    	 protSet.setProteinMatchId(newTypical.getId())		
+	    	 modifiedProtSet += protSet
+	     }
 	  }
     })
     

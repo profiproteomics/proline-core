@@ -188,14 +188,23 @@ class CommunistProteinSetInferer extends IProteinSetInferer with Logging {
         val proteinSetId = ProteinSet.generateNewId()
         peptideSet = buildPeptideSet( proteinSetId )
         val sameSetPmIds =  peptideSet.proteinMatchIds
+       
+        //Choose Typical using arbitrary alphabetical order
+        var typicalProt : ProteinMatch  = null       
+        for( sameSetID <- sameSetPmIds ) {
+    		val samesetProt =resultSet.proteinMatchById( sameSetID)
+    		if(typicalProt == null || typicalProt.accession.compareTo(samesetProt.accession) > 0 ){
+    		  typicalProt = samesetProt    		  
+    		}    		  
+        }
 
         val proteinSet = new ProteinSet(
                                   id = proteinSetId,
                                   isDecoy = resultSet.isDecoy,
                                   peptideSet = peptideSet,
                                   hasPeptideSubset = peptideSet.hasSubset,
-                                  typicalProteinMatchId = peptideSet.proteinMatchIds(0),
-                                  typicalProteinMatch = Some(resultSet.proteinMatchById( peptideSet.proteinMatchIds(0))),
+                                  typicalProteinMatchId = typicalProt.id,
+                                  typicalProteinMatch = Some(typicalProt),
                                   samesetProteinMatchIds = sameSetPmIds,
                                   subsetProteinMatchIds = cluster.subsetsKeys.toArray,
                                   resultSummaryId = resultSummaryId

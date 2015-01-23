@@ -206,13 +206,24 @@ class ParsimoniousProteinSetInferer extends IProteinSetInferer {
         val proteinSetId = ProteinSet.generateNewId()
         peptideSet = buildPeptideSet( proteinSetId )
         val pmIds =  peptideSet.proteinMatchIds 
+
+        //Choose Typical using arbitrary alphabetical order
+        var typicalProt : ProteinMatch  = null       
+        for( sameSetID <- pmIds ) {
+    		val samesetProt =resultSet.proteinMatchById( sameSetID)
+    		if(typicalProt == null || typicalProt.accession.compareTo(samesetProt.accession) > 0 ){
+    		  typicalProt = samesetProt    		  
+    		}    		  
+        }
+
+        
         val proteinSet = new ProteinSet( 
                                   id = proteinSetId,
                                   isDecoy = resultSet.isDecoy,
                                   peptideSet = peptideSet,                                  
                                   hasPeptideSubset = peptideSet.hasSubset,
-                                  typicalProteinMatchId = peptideSet.proteinMatchIds(0),
-                                  typicalProteinMatch = Some(resultSet.proteinMatchById( peptideSet.proteinMatchIds(0))),
+                                  typicalProteinMatchId = typicalProt.id,
+                                  typicalProteinMatch = Some(typicalProt),
                                   samesetProteinMatchIds = pmIds,
                                   subsetProteinMatchIds = cluster.subsetsKeys.toArray,                                
                                   resultSummaryId = resultSummaryId
