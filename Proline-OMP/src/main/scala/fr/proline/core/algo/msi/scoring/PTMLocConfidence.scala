@@ -6,7 +6,7 @@ object PTMLocConfidence {
 
   def computeLocalisationConfidences(peptideMatches:Seq[PeptideMatch]) : Map[PeptideMatch, Float] = {
     val confidences = new HashMap[PeptideMatch, Float]()
-    
+    	//TODO : pourquoi pas de filtre sur les PepMatch a PTM vs sans PTM
     val peptideMatchesByQueryId = peptideMatches.groupBy(_.msQueryId)
     for ((queryId, peptideMatches) <- peptideMatchesByQueryId) {
       val matches = peptideMatches.sortWith( _.score > _.score)
@@ -24,6 +24,7 @@ object PTMLocConfidence {
     var sum = 0.0f
     val s1 = assignments(0).score
     for (peptideMatch <- assignments) {
+	//TODO : pourquoi cette ligne ? 
       _r(12.0f,2.3f,26.2f)
       val v = _r( -s1 , -peptideMatch.score , 0.1f )
       sum += v
