@@ -67,21 +67,18 @@ class SQLFeatureProvider(
       else getOverlappingFeatureById(rawMapIds, scanInitialIdById, ms2EventIdsByFtId)
       */
 
-      // Load peakel items
-      //val peakelItemByFtId = this.getPeakelItemsByFeatureId(rawMapIds)
-      val peakelItems = peakelProvider.getFeaturePeakelItems(featureIds, loadPeakels = false)
-      val peakelItemsByFtId = peakelItems.groupBy(_.featureReference.id)
-
       // Retrieve mapping between cluster and sub-features
       val subFtIdsByClusterFtId =  if(!loadSubFeatures) Map.empty[Long, Array[Long]]
-      else getSubFtIdsByClusterFtId( featureIds )
-
+      else getSubFtIdsByClusterFtId( featureIds )      
+      val subFtIds = subFtIdsByClusterFtId.values.toArray.flatten
+      
+      // Load peakel items
+      val peakelItems = peakelProvider.getFeaturePeakelItems(featureIds ++ subFtIds, loadPeakels = false)
+      val peakelItemsByFtId = peakelItems.groupBy(_.featureReference.id)
+      
       val ftBuffer = new ArrayBuffer[Feature]()
-      val subFtById = new java.util.HashMap[Long,Feature]()
-
-      // Load processed features
-      this.eachProcessedFeatureRecord(featureIds ++ subFtIdsByClusterFtId.values.flatten, processedFtRecord => {
-
+      
+      def buildFeatureFromProcessedFtRecord( processedFtRecord: ResultSetRow): Feature = {
         val ftId = toLong(processedFtRecord.getAny(FtCols.ID))
 
         /*
@@ -94,7 +91,7 @@ class SQLFeatureProvider(
         val peakelItems = peakelItemsByFtId.getOrElse(ftId,Array())
 
         // TODO: factorize code with SQLProcessedMapProvider
-        val feature = this.buildFeature(
+        this.buildFeature(
           processedFtRecord,
           scanInitialIdById,
           ms2EventIdsByFtId,
@@ -109,14 +106,24 @@ class SQLFeatureProvider(
           processedFtRecord.getIntOrElse(ProcFtCols.SELECTION_LEVEL,2),
           toLong( processedFtRecord.getAny(ProcFtCols.PROCESSED_MAP_ID) )
         )
+      }
 
-        if( loadSubFeatures && feature.isClusterized ) { subFtById.put( ftId, feature ) }
-        else { ftBuffer += feature }
-
+      // Load processed features
+      this.eachProcessedFeatureRecord(featureIds, processedFtRecord => {
+        ftBuffer += buildFeatureFromProcessedFtRecord(processedFtRecord)
       })
-
+      
       if(!loadSubFeatures) ftBuffer.toArray
       else {
+        
+        // Load sub-features
+        val subFtById = new java.util.HashMap[Long,Feature]()
+        
+        this.eachProcessedFeatureRecord(subFtIds, processedFtRecord => {
+          val feature = buildFeatureFromProcessedFtRecord(processedFtRecord)
+          subFtById.put( feature.id, feature )
+        })
+        
         // Link sub-features to loaded features
         val ftArray = new Array[Feature]( ftBuffer.length )
         var ftIndex = 0
