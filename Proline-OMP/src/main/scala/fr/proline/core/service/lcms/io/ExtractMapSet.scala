@@ -469,6 +469,7 @@ class ExtractMapSet(
       
       // Open mzDB file
       val mzDbFile = mzDbFileByLcMsRunId(lcMsRun.id)
+      this.logger.info("start extraction peakels from "+mzDbFile.getName());
       val mzDb = new MzDbReader( mzDbFile, true )
       
       // Create TMP file to store orphan peakels which will be deleted after JVM exit
@@ -720,14 +721,13 @@ class ExtractMapSet(
     }
     
     val timeTol = ftMappingParams.timeTol
-    
-    // --- Search for missing features in peakel file ---
-    this.logger.info("searching for missing features to fill the raw maps...")
+
     val x2RawMaps = new ArrayBuffer[RawMap](processedMaps.length)
     val x2RawMapByRunId = new HashMap[Long,RawMap]()
     
+     // --- Search for missing features in peakel file ---
     for( (lcMsRun, putativeFts) <- putativeFtsByLcMsRun ) {
-      
+      this.logger.info("searching for missing features to fill the raw maps...")
       // Re-open peakel SQLite file
       val peakelFile = peakelFileByRun(lcMsRun)
       val peakelFileConn = new SQLiteConnection(peakelFile)
@@ -801,7 +801,7 @@ class ExtractMapSet(
         x2RawMap.peakels = Some( rawMap.peakels.get ++ peakelByMzDbPeakelId.values )
         
         // Store the raw map
-        logger.debug("storing the raw map...")
+        logger.info("storing the raw map...")
         rawMapStorer.storeRawMap(x2RawMap, storePeakels = true)
         
         // Detach peakels from the raw map
@@ -856,9 +856,29 @@ class ExtractMapSet(
     tmpMapSet = tmpMapSet.rebuildChildMaps()
     
     // Link re-built processedMap to corresponding x2RawMap
+    val rawMaps = new ArrayBuffer[RawMap](processedMaps.length)
     for( processedMap <- tmpMapSet.childMaps ) {
       val runId = processedMap.runId.get
-      processedMap.rawMapReferences = Array(x2RawMapByRunId(runId))
+      if (x2RawMapByRunId.contains(runId)) {
+    	  processedMap.rawMapReferences = Array(x2RawMapByRunId(runId))
+    	  rawMaps += x2RawMapByRunId(runId)
+      } else {
+        // store the processedMap since at this stage only x2RawMap have been saved
+        // Store the raw map
+        val rawMap = processedMap.getRawMaps().head.get
+        logger.info("storing the raw map...")
+        rawMapStorer.storeRawMap(rawMap, storePeakels = true)
+        // I dont know why the following steps are necessary ? 
+        // Detach peakels from the raw map
+        rawMap.peakels = None
+        
+        // Detach peakels from features
+        for( ft <- rawMap.features; peakelItem <- ft.relations.peakelItems ) {
+          peakelItem.peakelReference = PeakelIdentifier( peakelItem.peakelReference.id )
+        }
+        
+        rawMaps += rawMap
+      }
     }
     
     // --- Persist the corresponding map set ---
@@ -867,7 +887,7 @@ class ExtractMapSet(
     // Attach the computed master map to the newly created map set
     val tmpMasterMap = tmpMapSet.masterMap
     tmpMasterMap.mapSetId = x2MapSet.id
-    tmpMasterMap.rawMapReferences = x2RawMaps
+    tmpMasterMap.rawMapReferences = rawMaps
     x2MapSet.masterMap = tmpMasterMap
     
     x2MapSet
