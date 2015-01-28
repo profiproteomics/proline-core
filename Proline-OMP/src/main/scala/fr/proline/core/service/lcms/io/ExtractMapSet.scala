@@ -725,102 +725,112 @@ class ExtractMapSet(
     val x2RawMaps = new ArrayBuffer[RawMap](processedMaps.length)
     val x2RawMapByRunId = new HashMap[Long,RawMap]()
     
-     // --- Search for missing features in peakel file ---
-    for( (lcMsRun, putativeFts) <- putativeFtsByLcMsRun ) {
-      this.logger.info("searching for missing features to fill the raw maps...")
-      // Re-open peakel SQLite file
-      val peakelFile = peakelFileByRun(lcMsRun)
-      val peakelFileConn = new SQLiteConnection(peakelFile)
-      peakelFileConn.open(false) // allowCreate = false
+    for( lcMsRun <- lcMsRuns ) {
       
       // Retrieve processed an raw maps
       val processedMap = processedMapByRun(lcMsRun)
       val rawMap = processedMap.getRawMaps().head.get
       
-      // Create a mapping avoiding the creation of duplicated peakels
-      val peakelByMzDbPeakelId = new HashMap[Int,Peakel]()
-      val newLcmsFeatures = new ArrayBuffer[Feature]()
+      // --- Search for missing features in peakel file if any ---
+      val x2RawMap = if( putativeFtsByLcMsRun.contains(lcMsRun) == false ) rawMap
+      else {
         
-      try {
-        for( putativeFt <- putativeFts ) {
-          
-          val charge = putativeFt.charge
-          
-          val putativePeakels = for( isotopeIdx <- 0 to 1 ) yield
-            this._findPeakelIsotope(
-              peakelFileConn,
-              putativeFt.mz,
-              charge,
-              isotopeIdx = isotopeIdx,
-              minTime = putativeFt.elutionTime - timeTol,
-              avgTime = putativeFt.elutionTime,
-              maxTime = putativeFt.elutionTime + timeTol
-            )
-          
-          if( putativePeakels.head.isDefined ) {
-            val featurePeakels = putativePeakels.withFilter(_.isDefined).map(_.get).toArray
+        val putativeFts = putativeFtsByLcMsRun(lcMsRun)
+        val newLcmsFeatures = new ArrayBuffer[Feature]()
+        
+        this.logger.info("searching for missing features to fill the raw maps...")
+        
+        // Re-open peakel SQLite file
+        val peakelFile = peakelFileByRun(lcMsRun)
+        val peakelFileConn = new SQLiteConnection(peakelFile)
+        peakelFileConn.open(false) // allowCreate = false
+        
+        // Create a mapping avoiding the creation of duplicated peakels
+        val peakelByMzDbPeakelId = new HashMap[Int,Peakel]()
+        
+        try {
+          for( putativeFt <- putativeFts ) {
             
-            // TODO: skip feature creation if we have only one isotope ???
-            val mzDbFt = MzDbFeature(
-              id = MzDbFeature.generateNewId,
-              mz = featurePeakels.head.getMz,
-              charge = charge,
-              indexedPeakels = featurePeakels.zipWithIndex,
-              isPredicted = true
-            )
+            val charge = putativeFt.charge
             
-            val newLcmsFeature = this._mzDbFeatureToLcMsFeature(
-              mzDbFt,
-              rawMap.id,
-              lcMsRun.scanSequence.get,
-              peakelByMzDbPeakelId
-            )
+            val putativePeakels = for( isotopeIdx <- 0 to 1 ) yield
+              this._findPeakelIsotope(
+                peakelFileConn,
+                putativeFt.mz,
+                charge,
+                isotopeIdx = isotopeIdx,
+                minTime = putativeFt.elutionTime - timeTol,
+                avgTime = putativeFt.elutionTime,
+                maxTime = putativeFt.elutionTime + timeTol
+              )
             
-            // Set predicted time property
-            newLcmsFeature.properties.get.setPredictedElutionTime( Some(putativeFt.elutionTime) )
-            
-            // Set processed map id
-            newLcmsFeature.relations.processedMapId = processedMap.id
-            
-            // Append newLcmsFt in the buffer to add to it the raw map
-            newLcmsFeatures += newLcmsFeature
-            
-            // Retrieve master feature builder to append this new feature to its children buffer
-            val peptide = peptideByPutativeFt(putativeFt)
-            val mftBuilder = mftBuilderByPeptideAndCharge( (peptide,putativeFt.charge) )         
-            mftBuilder.children += newLcmsFeature
+            if( putativePeakels.head.isDefined ) {
+              val featurePeakels = putativePeakels.withFilter(_.isDefined).map(_.get).toArray
+              
+              // TODO: skip feature creation if we have only one isotope ???
+              val mzDbFt = MzDbFeature(
+                id = MzDbFeature.generateNewId,
+                mz = featurePeakels.head.getMz,
+                charge = charge,
+                indexedPeakels = featurePeakels.zipWithIndex,
+                isPredicted = true
+              )
+              
+              val newLcmsFeature = this._mzDbFeatureToLcMsFeature(
+                mzDbFt,
+                rawMap.id,
+                lcMsRun.scanSequence.get,
+                peakelByMzDbPeakelId
+              )
+              
+              // Set predicted time property
+              newLcmsFeature.properties.get.setPredictedElutionTime( Some(putativeFt.elutionTime) )
+              
+              // Set processed map id
+              newLcmsFeature.relations.processedMapId = processedMap.id
+              
+              // Append newLcmsFt in the buffer to add to it the raw map
+              newLcmsFeatures += newLcmsFeature
+              
+              // Retrieve master feature builder to append this new feature to its children buffer
+              val peptide = peptideByPutativeFt(putativeFt)
+              val mftBuilder = mftBuilderByPeptideAndCharge( (peptide,putativeFt.charge) )         
+              mftBuilder.children += newLcmsFeature
+            }
           }
+          
+          // Create a new raw map by including the retrieved missing features
+          val x2RawMap = rawMap.copy(
+            features = rawMap.features ++ newLcmsFeatures
+          )
+          
+          // Append missing peakels
+          x2RawMap.peakels = Some( rawMap.peakels.get ++ peakelByMzDbPeakelId.values )
+          
+          // Return x2RawMap
+          x2RawMap
+          
+        } finally {
+          // Release resources
+          peakelFileConn.dispose()
         }
-        
-        // Create a new raw map by including the retrieved missing features
-        val x2RawMap = rawMap.copy(
-          features = rawMap.features ++ newLcmsFeatures
-        )
-        
-        // Append missing peakels
-        x2RawMap.peakels = Some( rawMap.peakels.get ++ peakelByMzDbPeakelId.values )
-        
-        // Store the raw map
-        logger.info("storing the raw map...")
-        rawMapStorer.storeRawMap(x2RawMap, storePeakels = true)
-        
-        // Detach peakels from the raw map
-        x2RawMap.peakels = None
-        
-        // Detach peakels from features
-        for( ft <- x2RawMap.features; peakelItem <- ft.relations.peakelItems ) {
-          peakelItem.peakelReference = PeakelIdentifier( peakelItem.peakelReference.id )
-        }
-        
-        // Append raw map to the array buffer
-        x2RawMapByRunId += x2RawMap.runId -> x2RawMap
-        x2RawMaps += x2RawMap
-        
-      } finally {
-        // Release resources
-        peakelFileConn.dispose()
       }
       
+      // Store the raw map
+      logger.info("storing the raw map...")
+      rawMapStorer.storeRawMap(x2RawMap, storePeakels = true)
+      
+      // Detach peakels from the raw map (this should decrease memory footprint)
+      x2RawMap.peakels = None
+      
+      // Detach peakels from features (this should decrease memory footprint)
+      for( ft <- x2RawMap.features; peakelItem <- ft.relations.peakelItems ) {
+        peakelItem.peakelReference = PeakelIdentifier( peakelItem.peakelReference.id )
+      }
+      
+      // Append raw map to the array buffer
+      x2RawMapByRunId += x2RawMap.runId -> x2RawMap
+      x2RawMaps += x2RawMap
     }
 
     // Delete created TMP files (they should be deleted on exit if program fails)
@@ -856,29 +866,9 @@ class ExtractMapSet(
     tmpMapSet = tmpMapSet.rebuildChildMaps()
     
     // Link re-built processedMap to corresponding x2RawMap
-    val rawMaps = new ArrayBuffer[RawMap](processedMaps.length)
     for( processedMap <- tmpMapSet.childMaps ) {
       val runId = processedMap.runId.get
-      if (x2RawMapByRunId.contains(runId)) {
-    	  processedMap.rawMapReferences = Array(x2RawMapByRunId(runId))
-    	  rawMaps += x2RawMapByRunId(runId)
-      } else {
-        // store the processedMap since at this stage only x2RawMap have been saved
-        // Store the raw map
-        val rawMap = processedMap.getRawMaps().head.get
-        logger.info("storing the raw map...")
-        rawMapStorer.storeRawMap(rawMap, storePeakels = true)
-        // I dont know why the following steps are necessary ? 
-        // Detach peakels from the raw map
-        rawMap.peakels = None
-        
-        // Detach peakels from features
-        for( ft <- rawMap.features; peakelItem <- ft.relations.peakelItems ) {
-          peakelItem.peakelReference = PeakelIdentifier( peakelItem.peakelReference.id )
-        }
-        
-        rawMaps += rawMap
-      }
+      processedMap.rawMapReferences = Array(x2RawMapByRunId(runId))
     }
     
     // --- Persist the corresponding map set ---
@@ -887,7 +877,7 @@ class ExtractMapSet(
     // Attach the computed master map to the newly created map set
     val tmpMasterMap = tmpMapSet.masterMap
     tmpMasterMap.mapSetId = x2MapSet.id
-    tmpMasterMap.rawMapReferences = rawMaps
+    tmpMasterMap.rawMapReferences = x2RawMaps
     x2MapSet.masterMap = tmpMasterMap
     
     x2MapSet
