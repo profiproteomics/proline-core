@@ -174,10 +174,8 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     
     // --- TODO: merge following code with SpectralCountQuantifier ---
 
-
-   require( udsDbCtx.isInTransaction, "UdsDb connection context must be inside a transaction")
-   require( msiDbCtx.isInTransaction, "MsiDb connection context must be inside a transaction")
-
+    require( udsDbCtx.isInTransaction, "UdsDb connection context must be inside a transaction")
+    require( msiDbCtx.isInTransaction, "MsiDb connection context must be inside a transaction")
 
     // Store the master quant result set
     val msiQuantResultSet = this.storeMsiQuantResultSet(msiIdentResultSets)
@@ -200,6 +198,14 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       this.mergedResultSummary,
       this.identResultSummaries
     )
+    
+    // Compute master quant protein sets
+    val mqProtSets = quantifierAlgo.computeMasterQuantProteinSets(
+      udsMasterQuantChannel,
+      mqPeptides,
+      this.mergedResultSummary,
+      this.identResultSummaries
+    )
 
     this.logger.info("storing master peptide quant data...")
 
@@ -210,14 +216,6 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     }
 
     this.logger.info("storing master proteins set quant data...")
-
-    // Compute master quant protein sets
-    val mqProtSets = quantifierAlgo.computeMasterQuantProteinSets(
-      udsMasterQuantChannel,
-      mqPeptides,
-      this.mergedResultSummary,
-      this.identResultSummaries
-    )
 
     // Iterate over master quant protein sets to store them
     for (mqProtSet <- mqProtSets) {
