@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -29,9 +30,9 @@
     <core.version>0.3.0-SNAPSHOT</core.version>
   </properties>
   <scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/trunk</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/trunk</connection>
   </scm>
-	
+
   <dependencyManagement>
     <dependencies>
 
@@ -67,30 +68,30 @@
         <version>${core.version}</version>
       </dependency>
 
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>Proline-OM</artifactId>
-      <version>${core.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>Proline-OM</artifactId>
+        <version>${core.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
 
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
-      <version>${core.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>Proline-Databases</artifactId>
+        <version>${core.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
 
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>
-      <version>${core.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    
+      <dependency>
+        <groupId>fr.proline</groupId>
+        <artifactId>Proline-DAL</artifactId>
+        <version>${core.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
@@ -135,24 +136,25 @@
           <skipTests>false</skipTests>
         </configuration>
       </plugin>
-      	  <!--  Maven Release for branches and tags -->
-		<plugin>
-			<artifactId>maven-release-plugin</artifactId>
-			<version>2.5.1</version>
-			<configuration>
-				<providerImplementations>
-					<svn>javasvn</svn>
-				</providerImplementations>
-			</configuration>
-			<dependencies>
-				<dependency>
-					<groupId>com.google.code.maven-scm-provider-svnjava</groupId>
-					<artifactId>maven-scm-provider-svnjava</artifactId>
-					<version>2.1.1</version>
-					<scope>compile</scope>
-				</dependency>
-			</dependencies>
-		</plugin>
+      
+      <!-- Maven Release for branches and tags -->
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <!-- Version inherited from parent POM -->
+        <configuration>
+          <providerImplementations>
+            <svn>javasvn</svn>
+          </providerImplementations>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.google.code.maven-scm-provider-svnjava</groupId>
+            <artifactId>maven-scm-provider-svnjava</artifactId>
+            <version>2.1.1</version>
+            <scope>compile</scope>
+          </dependency>
+        </dependencies>
+      </plugin>
     </plugins>
   </build>
 
