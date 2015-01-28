@@ -2,12 +2,11 @@ package fr.proline.core.orm.lcms;
 
 import javax.persistence.*;
 
-
-
 import org.msgpack.MessagePack;
 import org.msgpack.annotation.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -82,6 +81,9 @@ public class Peakel implements Serializable {
 	
 	@Transient
 	private List<Peak> peakList;
+	
+	@Transient
+	private Integer isotopeIndex;
 
 	public Peakel() {
 	}
@@ -253,7 +255,6 @@ public class Peakel implements Serializable {
 					Peak peak = new Peak(new Double(p.get(0).toString()), new Float(p.get(1).toString()), new Float(p.get(2).toString()));
 					this.peakList.add(peak);
 				}
-				
 			} catch (Exception e) {
 				LOG.warn("Error Parsing PeakList ",e);
 				this.peakList = null;
@@ -262,6 +263,15 @@ public class Peakel implements Serializable {
 		return this.peakList;
 	}
 	
+
+	public Integer getIsotopeIndex() {
+		return isotopeIndex;
+	}
+
+	public void setIsotopeIndex(Integer isotopeIndex) {
+		this.isotopeIndex = isotopeIndex;
+	}
+
 
 	/* peak represented in the peaks BLOB of Peakel*/
 	@Message
