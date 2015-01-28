@@ -18,30 +18,13 @@ case class MasterQuantReporterIonProperties (
   //@BeanProperty var quantReporterIons: Array[QuantReporterIonProperties]
 )
 
-/*
-case class QuantPeptideIonProperties (
-  @BeanProperty val quantChannelId: Long,
-  @BeanProperty val rawAbundance: Float,
-  @BeanProperty var abundance: Float,
-  @BeanProperty var selectionLevel: Int,
-  @BeanProperty var moz: Double,
-  @BeanProperty var elutionTime: Option[Float] = None,
-  @BeanProperty var scanNumber: Option[Int] = None,
-  @BeanProperty var predictedElutionTime: Option[Float] = None,
-  @BeanProperty var predictedScanNumber: Option[Int] = None,
-  @BeanProperty var peptideMatchesCount: Int,
-  @BeanProperty var bestPeptideMatchScore: Option[Float] = None,
-  @BeanProperty var bestPeptideMatchId: Option[Int] = None,
-  @BeanProperty var peptideId: Option[Int] = None,
-  @BeanProperty var unmodifiedPeptideIonId: Option[Int] = None,  
-  @BeanProperty var peptideInstanceId: Option[Int] = None,
-  @BeanProperty var msQueryIds: Array[Int],
-  @BeanProperty var lcmsFeatureId: Long
-) extends QuantComponent*/
-
 case class MasterQuantPeptideIonProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
-  @BeanProperty var bestQuantChannelId: Option[Long] = None
+  @BeanProperty var bestQuantChannelId: Option[Long] = None,
+  
+  // Key = QuantChannel ID ; Value = PeptideMatch ID
+  @JsonDeserialize( keyAs = classOf[java.lang.Long] )
+  var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap()
 )
 
 case class MasterQuantPeptideProfile (

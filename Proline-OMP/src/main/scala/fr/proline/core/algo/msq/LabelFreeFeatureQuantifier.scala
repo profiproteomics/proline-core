@@ -200,7 +200,7 @@ class LabelFreeFeatureQuantifier(
         }
         
         filteredPepMatches.groupBy(_.msQuery.charge).get(masterFt.charge).map { sameChargePepMatches =>
-          bestPepMatchScoreOpt = Some(filteredPepMatches.reduce((a, b) => if (a.score > b.score) a else b).score)
+          bestPepMatchScoreOpt = Some(sameChargePepMatches.reduce((a, b) => if (a.score > b.score) a else b).score)
         }
         
       }
@@ -250,14 +250,27 @@ class LabelFreeFeatureQuantifier(
       val qPepIonByQcId = Map() ++ qPepIons.map( qpi => qpi.quantChannelId -> qpi )
       require( qPepIonByQcId.size == qPepIons.length, "duplicated feature detected in quant peptide ions" )
       
-      // FIXME: compute this value
-      val pepMatchesCount = 0
-      /*val pepMatchesCount = if( masterPepInstAsOpt.isEmpty ) 0
-      else {
-        val psmById = // THIS NEED TO BE COMPUTED FROM MERGED RSM
-        val psmsByCharge = masterPepInstAsOpt.get.getPeptideMatchIds.map( psmById(_) ).groupBy(_.msQuery.charge)
-        psmsByCharge( masterFt.charge ).length
-      }*/
+      // Compute the total number of peptide matches
+      val pepMatchesCount = qPepIons.map( _.peptideMatchesCount ).sum
+      
+      // If a peptide instance id defined for this ion
+      val propsOpt = masterPepInstAsOpt.map { masterPepInst =>
+        
+        // Retrieve the best peptide match id for each quantitative channel
+        val bestPeptideMatchIdMapBuilder = scala.collection.immutable.HashMap.newBuilder[Long,Long]
+        for (identResultSummary <- resultSummaries) {
+          
+          val qcId = qcIdByIdentRsmId(identResultSummary.id)
+          val qcIdentPepInstByPepId = identPepInstByQcIdAndPepId(qcId)
+          val qcIdentPepInst = qcIdentPepInstByPepId(masterPepInst.peptide.id)
+          
+          bestPeptideMatchIdMapBuilder += qcId -> qcIdentPepInst.bestPeptideMatchId
+        }
+        
+        new MasterQuantPeptideIonProperties(
+          bestPeptideMatchIdMap = bestPeptideMatchIdMapBuilder.result()
+        )
+      }
       
       new MasterQuantPeptideIon(
         id = MasterQuantPeptideIon.generateNewId(),
@@ -271,7 +284,8 @@ class LabelFreeFeatureQuantifier(
         bestPeptideMatchId = masterPepInstAsOpt.map(_.bestPeptideMatchId),
         lcmsMasterFeatureId = Some(masterFt.id),
         selectionLevel = masterFt.selectionLevel,
-        quantPeptideIonMap = qPepIonByQcId
+        quantPeptideIonMap = qPepIonByQcId,
+        properties = propsOpt
       )
     }
     

@@ -140,9 +140,8 @@ case class MasterQuantPeptideIon(
   var lcmsMasterFeatureId: Option[Long] = None,
   var unmodifiedPeptideIonId: Option[Long] = None,
    
-  var quantPeptideIonMap: Map[Long, QuantPeptideIon],
+  var quantPeptideIonMap: Map[Long, QuantPeptideIon], // Key = QuantChannel ID ; Value = QuantPeptideIon
   var properties: Option[MasterQuantPeptideIonProperties] = None,
-  //var bestQuantPeptideIon: QuantPeptideIon,
   var masterQuantReporterIons: Array[MasterQuantReporterIon] = null
    
  ) extends MasterLcmsQuantComponent {
