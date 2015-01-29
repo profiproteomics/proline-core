@@ -262,9 +262,11 @@ class LabelFreeFeatureQuantifier(
           
           val qcId = qcIdByIdentRsmId(identResultSummary.id)
           val qcIdentPepInstByPepId = identPepInstByQcIdAndPepId(qcId)
-          val qcIdentPepInst = qcIdentPepInstByPepId(masterPepInst.peptide.id)
           
-          bestPeptideMatchIdMapBuilder += qcId -> qcIdentPepInst.bestPeptideMatchId
+          if( qcIdentPepInstByPepId.contains(masterPepInst.peptide.id) ) {
+            val qcIdentPepInst = qcIdentPepInstByPepId(masterPepInst.peptide.id)            
+            bestPeptideMatchIdMapBuilder += qcId -> qcIdentPepInst.bestPeptideMatchId
+          }
         }
         
         new MasterQuantPeptideIonProperties(
