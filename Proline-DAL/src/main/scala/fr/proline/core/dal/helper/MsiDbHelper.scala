@@ -61,7 +61,25 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
         )
       })
 
-      val childMsiSearchIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      val childMsiSearchIds = _getChildMsiSearchId(rsIds)
+
+      parentMsiSearchIds ++ childMsiSearchIds
+    }
+
+  }
+
+  private def _getChildMsiSearchId(rsIds: Seq[Long]): Array[Long] = {
+
+    val childRSMIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.selectLongs(
+        "SELECT DISTINCT result_set_relation.child_result_set_id  FROM  result_set_relation  " +
+          " WHERE result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") "
+      )
+    })
+
+    if (childRSMIds != null && childRSMIds.length > 0) {
+
+      var childMsiSearchIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
         ezDBC.selectLongs(
           "SELECT DISTINCT msi_search_id FROM result_set, result_set_relation " +
             "WHERE result_set.id = result_set_relation.child_result_set_id " +
@@ -70,10 +88,12 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
         )
       })
 
-      parentMsiSearchIds ++ childMsiSearchIds
-    }
-
+      childMsiSearchIds = childMsiSearchIds ++: _getChildMsiSearchId(childRSMIds)
+      return childMsiSearchIds
+    } else
+      return Array.empty[Long]
   }
+  
 
   def getMsiSearchIdsByParentResultSetId(rsIds: Seq[Long]): Map[Long, Set[Long]] = {
 
