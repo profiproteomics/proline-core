@@ -160,6 +160,8 @@ class SerializationSpec extends AbstractSerializationSpec {
     rank = 1,
     score = 20,
     scoreType = "mascot:ions score",
+    charge = 2,
+    experimentalMz = 555.5f,
     deltaMoz = 0.001f,
     isDecoy = false,
     peptide = peptide,

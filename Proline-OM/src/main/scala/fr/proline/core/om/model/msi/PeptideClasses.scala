@@ -451,6 +451,8 @@ case class PeptideMatch ( // Required fields
   var rank: Int,
   val score: Float,
   val scoreType: String,
+  val charge: Int,
+  val experimentalMz: Float,
   val deltaMoz: Float,
   val isDecoy: Boolean,
   @transient val peptide: Peptide,

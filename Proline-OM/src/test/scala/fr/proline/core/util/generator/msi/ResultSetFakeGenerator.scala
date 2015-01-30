@@ -252,6 +252,8 @@ class ResultSetFakeGenerator(
       rank = 1,
       score = ResultSetRandomator.randomPepMatchScore,
       scoreType = "mascot:standard score",
+      charge = 2,
+      experimentalMz = 555.5f,
       deltaMoz = 0.15f,
       isDecoy = false,
       peptide = pep,

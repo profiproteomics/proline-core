@@ -75,6 +75,8 @@ object PeptideMatchBuilder {
       rank = pepMatchRecord.getInt(PepMatchCols.RANK),
       score = toFloat(pepMatchRecord.getAny(PepMatchCols.SCORE)),
       scoreType = scoreType,
+      charge = pepMatchRecord.getInt(PepMatchCols.CHARGE),
+      experimentalMz = toFloat(pepMatchRecord.getAny(PepMatchCols.EXPERIMENTAL_MOZ)),
       deltaMoz = toFloat( pepMatchRecord.getAny(PepMatchCols.DELTA_MOZ) ),
       isDecoy = pepMatchRecord.getBoolean(PepMatchCols.IS_DECOY),
       peptide = peptide,
