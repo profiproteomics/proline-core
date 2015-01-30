@@ -311,10 +311,25 @@ class LabelFreeFeatureQuantifier(
       // Keep the MQP with the highest intensity sum
       // TODO: allows to sum charge states
       //val bestMQP = filteredMQPepIons.maxBy( _.calcAbundanceSum )
-      val bestMQP = filteredMQPepIons.maxBy( _.calcFrequency(qcCount) )
+//      val bestMQP = filteredMQPepIons.maxBy( _.calcFrequency(qcCount) )
+
+      //** Get first pepIon with max rawAbundance frequency
+      val maxFreqByMQPepIons = filteredMQPepIons.map( mqPI => mqPI -> mqPI.calcFrequency(qcCount)).toMap
+      val maxFreq = maxFreqByMQPepIons.map(_._2).max
+      val potentialBestMQPIons = maxFreqByMQPepIons.filter(_._2.equals(maxFreq)).map(_._1).toSeq
+      
+      val bestMQPIon = if(potentialBestMQPIons.size>0) {
+    	  // More than one MQPepIon with same max frequency. 
+    	  // Get MQPepIon with max identification frequency (qch where at least 1 idf ...)
+    	  val maxIdentFreqByMQPepIons = potentialBestMQPIons.map( mqPI => mqPI -> mqPI.calcIdentFrequency(qcCount)).toMap
+		  val maxIdfFreq = maxIdentFreqByMQPepIons.map(_._2).max
+		  maxIdentFreqByMQPepIons.filter(_._2.equals(maxIdfFreq)).maxBy(_._1.calcAbundanceSum())._1 // Sort on Abundance Sum if still equality 
+      } else {
+    	  potentialBestMQPIons(0)
+      }
       
       val quantPepByQcId = Map.newBuilder[Long,QuantPeptide]
-      for( (qcId,quantPepIon) <- bestMQP.quantPeptideIonMap ) {
+      for( (qcId,quantPepIon) <- bestMQPIon.quantPeptideIonMap ) {
         
         // Build the quant peptide
         val qp = new QuantPeptide(
@@ -334,7 +349,7 @@ class LabelFreeFeatureQuantifier(
         peptideInstance = masterPepInstAsOpt,
         quantPeptideMap = quantPepByQcId.result,
         masterQuantPeptideIons = mqPepIons.toArray,
-        selectionLevel = bestMQP.selectionLevel,
+        selectionLevel = bestMQPIon.selectionLevel,
         resultSummaryId = mergedRsmId
       )
   
