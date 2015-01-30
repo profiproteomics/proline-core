@@ -199,6 +199,15 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       this.identResultSummaries
     )
     
+    this.logger.info("storing master peptide quant data...")
+
+    // Iterate over master quant peptides to store them
+    val msiMqPepById = mqPeptides.map { mqPeptide =>
+      val msiMasterPepInst = mqPeptide.peptideInstance.map( pi => this.msiMasterPepInstById(pi.id) )
+      val msiMqPep = this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, msiMasterPepInst)
+      mqPeptide.id -> msiMqPep
+    } toMap
+    
     // Compute master quant protein sets
     val mqProtSets = quantifierAlgo.computeMasterQuantProteinSets(
       udsMasterQuantChannel,
@@ -207,24 +216,41 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       this.identResultSummaries
     )
 
-    this.logger.info("storing master peptide quant data...")
-
-    // Iterate over master quant peptides to store them
-    for (mqPeptide <- mqPeptides) {
-      val msiMasterPepInst = mqPeptide.peptideInstance.map( pi => this.msiMasterPepInstById(pi.id) )
-      this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, msiMasterPepInst)
-    }
-
     this.logger.info("storing master proteins set quant data...")
 
     // Iterate over master quant protein sets to store them
+    val mqProtSetIdsByMqPep = new HashMap[MasterQuantPeptide,ArrayBuffer[Long]]
+    
     for (mqProtSet <- mqProtSets) {
       val msiMasterProtSetOpt = this.msiMasterProtSetById.get(mqProtSet.proteinSet.id)
       // FIXME: msiMasterProtSetOpt should be always defined
       if( msiMasterProtSetOpt.isDefined ) {
         this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetOpt.get, msiQuantRSM)
       }
+      
+      // Add this protein set ids to the list of protein sets mapped to this peptide
+      for( mqPep <- mqProtSet.masterQuantPeptides ) {
+        mqProtSetIdsByMqPep.getOrElseUpdate(mqPep, new ArrayBuffer[Long]) += mqProtSet.id
+      }
     }
+    
+    // Update the mqProtSetIds property of master quant peptides
+    for ( mqPep <- mqPeptides; mqProtSetIds <- mqProtSetIdsByMqPep.get(mqPep) ) {
+      
+      // Build properties
+      val mqPepProps = mqPep.properties.getOrElse( MasterQuantPeptideProperties() )
+      mqPepProps.setMqProtSetIds( Some(mqProtSetIds.toArray) )
+      
+      // Update the OM
+      mqPep.properties = Some( mqPepProps )
+      
+      // Update the ORM
+      val msiMqPep = msiMqPepById(mqPep.id)
+      msiMqPep.setSerializedProperties( ProfiJson.serialize(mqPepProps) )
+    }
+    
+    // Flush the entity manager to perform the update on the master quant peptides
+    msiEm.flush()
 
 //    // Commit ORM transaction
 //    msiEm.getTransaction().commit()

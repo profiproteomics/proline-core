@@ -162,7 +162,8 @@ class WeightedSpectralCountQuantifier(
   override protected def storeMasterQuantPeptide(
     mqPep: MasterQuantPeptide,
     msiRSM: MsiResultSummary,
-    msiMasterPepInstAsOpt: Option[MsiPeptideInstance]) = {
+    msiMasterPepInstAsOpt: Option[MsiPeptideInstance]
+  ): MsiMasterQuantComponent = {
 
     val msiMasterPepInst = msiMasterPepInstAsOpt.get
     val msiMQCObjectTree = this.buildMasterQuantPeptideObjectTree(mqPep)
@@ -189,13 +190,15 @@ class WeightedSpectralCountQuantifier(
       this.storeMasterQuantPeptideIon(mqPepIon, mqPep, msiMasterPepInst, msiRSM)
     }
 
+    msiMQC
   }
 
   protected def storeMasterQuantPeptideIon(
     mqPepIon: MasterQuantPeptideIon,
     mqPep: MasterQuantPeptide,
     msiMasterPepInst: MsiPeptideInstance,
-    msiRSM: MsiResultSummary) = {
+    msiRSM: MsiResultSummary
+  ): MsiMasterQuantPepIon = {
 
     val msiMQCObjectTree = this.buildMasterQuantPeptideIonObjectTree(mqPepIon)
     this.msiEm.persist(msiMQCObjectTree)
@@ -233,6 +236,8 @@ class WeightedSpectralCountQuantifier(
 
     // Update master quant peptide ion id
     mqPepIon.id = msiMQPepIon.getId
+    
+    msiMQPepIon
   }
 
   private def createJSonOutputResult(msiQuantRSM: MsiResultSummary, mqProtSetsVal: Array[MasterQuantProteinSet], proteinSetWeightStructsById: Map[Long, ProteinSetPeptidesDescription]): String = {
