@@ -334,19 +334,19 @@ class LabelFreeFeatureQuantifier(
       // Group master quant peptide ions by number of peptide matches count
       val mqPepIonsByPepMatchesCount = filteredMQPepIons.groupBy(_.peptideMatchesCount)
       val maxPepMatchesCount = mqPepIonsByPepMatchesCount.keys.max
-      val mqPepIonsWithPepMatchesCount = mqPepIonsByPepMatchesCount(maxPepMatchesCount)
+      val mqPepIonsWithMaxPepMatchesCount = mqPepIonsByPepMatchesCount(maxPepMatchesCount)
 
-      val bestMQPepIon = if (mqPepIonsWithPepMatchesCount.size > 0) {
+      val bestMQPepIon = if (mqPepIonsWithMaxPepMatchesCount.size > 0) {
         // More than one MQPepIon with same max peptide matches count
         // Get MQPepIon with max defined abundances
-        val mqPepIonsByDefAbCount = mqPepIonsWithPepMatchesCount.groupBy(_.countDefinedRawAbundances())
+        val mqPepIonsByDefAbCount = mqPepIonsWithMaxPepMatchesCount.groupBy(_.countDefinedRawAbundances())
         val maxDefAbCount = mqPepIonsByDefAbCount.keys.max
         val mqPepIonsWithMaxDefAbundances = mqPepIonsByDefAbCount(maxDefAbCount)
 
         // Sort on Abundance Sum if still equality
         mqPepIonsWithMaxDefAbundances.maxBy(_.calcAbundanceSum())
       } else {
-        mqPepIonsWithPepMatchesCount.head
+        mqPepIonsWithMaxPepMatchesCount.head
       }
       
       val quantPepByQcId = Map.newBuilder[Long,QuantPeptide]
