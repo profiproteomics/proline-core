@@ -307,29 +307,50 @@ class LabelFreeFeatureQuantifier(
       var filteredMQPepIons = mqPepIons.filter(_.selectionLevel >= 2 )
       // Fall back to input list if none MQ peptide is selected
       if( filteredMQPepIons.isEmpty ) filteredMQPepIons = mqPepIons
-  
-      // Keep the MQP with the highest intensity sum
-      // TODO: allows to sum charge states
-      //val bestMQP = filteredMQPepIons.maxBy( _.calcAbundanceSum )
-//      val bestMQP = filteredMQPepIons.maxBy( _.calcFrequency(qcCount) )
 
-      //** Get first pepIon with max rawAbundance frequency
-      val maxFreqByMQPepIons = filteredMQPepIons.map( mqPI => mqPI -> mqPI.calcFrequency(qcCount)).toMap
-      val maxFreq = maxFreqByMQPepIons.map(_._2).max
-      val potentialBestMQPIons = maxFreqByMQPepIons.filter(_._2.equals(maxFreq)).map(_._1).toSeq
-      
-      val bestMQPIon = if(potentialBestMQPIons.size>0) {
-    	  // More than one MQPepIon with same max frequency. 
-    	  // Get MQPepIon with max identification frequency (qch where at least 1 idf ...)
-    	  val maxIdentFreqByMQPepIons = potentialBestMQPIons.map( mqPI => mqPI -> mqPI.calcIdentFrequency(qcCount)).toMap
-		  val maxIdfFreq = maxIdentFreqByMQPepIons.map(_._2).max
-		  maxIdentFreqByMQPepIons.filter(_._2.equals(maxIdfFreq)).maxBy(_._1.calcAbundanceSum())._1 // Sort on Abundance Sum if still equality 
+      // TODO: allows to sum charge states
+      //val bestMQPepIon = filteredMQPepIons.maxBy( _.calcAbundanceSum )
+      //val bestMQPepIon = filteredMQPepIons.maxBy( _.calcFrequency(qcCount) )
+
+      /*
+      // Group master quant peptide ions by number of defined rawAbundances
+      val mqPepIonsByDefAbCount = filteredMQPepIons.groupBy(_.countDefinedRawAbundances())
+      val maxDefAbCount = mqPepIonsByDefAbCount.keys.max
+      val mqPepIonsWithMaxDefAbundances = mqPepIonsByDefAbCount(maxDefAbCount)
+
+      val bestMQPepIon = if (mqPepIonsWithMaxDefAbundances.size > 0) {
+        // More than one MQPepIon with same max defined abundances
+        // Get MQPepIon with max identification frequency (qch where at least 1 idf ...)
+        val mqPepIonsByIdentCount = mqPepIonsWithMaxDefAbundances.groupBy( _.countIdentifications())
+        val maxIdentCount = mqPepIonsByIdentCount.keys.max
+        val mqPepIonsWithMaxIdentifications = mqPepIonsByIdentCount(maxIdentCount)
+
+        // Sort on Abundance Sum if still equality
+        mqPepIonsWithMaxIdentifications.maxBy(_.calcAbundanceSum())
       } else {
-    	  potentialBestMQPIons(0)
+        mqPepIonsWithMaxDefAbundances.head
+      }*/
+      
+      // Group master quant peptide ions by number of peptide matches count
+      val mqPepIonsByPepMatchesCount = filteredMQPepIons.groupBy(_.peptideMatchesCount)
+      val maxPepMatchesCount = mqPepIonsByPepMatchesCount.keys.max
+      val mqPepIonsWithPepMatchesCount = mqPepIonsByPepMatchesCount(maxPepMatchesCount)
+
+      val bestMQPepIon = if (mqPepIonsWithPepMatchesCount.size > 0) {
+        // More than one MQPepIon with same max peptide matches count
+        // Get MQPepIon with max defined abundances
+        val mqPepIonsByDefAbCount = mqPepIonsWithPepMatchesCount.groupBy(_.countDefinedRawAbundances())
+        val maxDefAbCount = mqPepIonsByDefAbCount.keys.max
+        val mqPepIonsWithMaxDefAbundances = mqPepIonsByDefAbCount(maxDefAbCount)
+
+        // Sort on Abundance Sum if still equality
+        mqPepIonsWithMaxDefAbundances.maxBy(_.calcAbundanceSum())
+      } else {
+        mqPepIonsWithPepMatchesCount.head
       }
       
       val quantPepByQcId = Map.newBuilder[Long,QuantPeptide]
-      for( (qcId,quantPepIon) <- bestMQPIon.quantPeptideIonMap ) {
+      for( (qcId,quantPepIon) <- bestMQPepIon.quantPeptideIonMap ) {
         
         // Build the quant peptide
         val qp = new QuantPeptide(
@@ -349,7 +370,7 @@ class LabelFreeFeatureQuantifier(
         peptideInstance = masterPepInstAsOpt,
         quantPeptideMap = quantPepByQcId.result,
         masterQuantPeptideIons = mqPepIons.toArray,
-        selectionLevel = bestMQPIon.selectionLevel,
+        selectionLevel = bestMQPepIon.selectionLevel,
         resultSummaryId = mergedRsmId
       )
   
