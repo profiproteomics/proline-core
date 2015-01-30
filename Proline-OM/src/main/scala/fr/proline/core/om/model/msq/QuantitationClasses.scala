@@ -166,7 +166,15 @@ case class MasterQuantPeptideIon(
   def calcFrequency( qcCount: Int ): Float = {
     this.countDefinedRawAbundances() / qcCount
   }
-    
+  
+ def calcIdentFrequency( qcCount: Int ): Float = {
+    this.countIdentifications() / qcCount
+  }
+ 
+  def countIdentifications(): Int = {
+    quantPeptideIonMap.values.count( qPepIon => qPepIon.peptideMatchesCount>0)
+  }
+  
   def countDefinedRawAbundances(): Int = {
     quantPeptideIonMap.values.count( qPepIon => isZeroOrNaN(qPepIon.rawAbundance) == false )
   }
