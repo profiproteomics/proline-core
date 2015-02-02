@@ -10,7 +10,7 @@ import fr.proline.core.algo.lcms.FeatureMappingParams
 import fr.proline.core.algo.lcms.LabelFreeQuantConfig
 import fr.proline.core.om.model.lcms.LcMsRun
 import fr.proline.core.om.model.lcms.MapSet
-import fr.proline.core.om.model.msi.{Instrument,Peptide}
+import fr.proline.core.om.model.msi.{Instrument,Peptide,PeptideMatch}
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
@@ -30,9 +30,10 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
   }
   
   // TODO: try to handle PSMs with rank > 1
-  lazy val peptideByRunIdAndScanNumber = {
+  lazy val (peptideByRunIdAndScanNumber, psmByRunIdAndScanNumber) = {
     
     val peptideMap = new collection.mutable.HashMap[Long, HashMap[Int, Peptide]]()
+    val psmMap = new collection.mutable.HashMap[Long, HashMap[Int, PeptideMatch]]()
     
     for( rsm <- this.identResultSummaries ) {
       val runId = runIdByRsmId(rsm.id)
@@ -44,19 +45,22 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
         // FIXME: how to deal with other ranked PSMs ?
         if( valPepMatch.rank == 1 ) {
           val spectrumId = valPepMatch.getMs2Query.spectrumId
+
           val scanNumber = this.scanNumberBySpectrumId(spectrumId)
-          
+          psmMap.getOrElseUpdate(runId, new HashMap[Int, PeptideMatch])(scanNumber) = valPepMatch
           peptideMap.getOrElseUpdate(runId, new HashMap[Int, Peptide])(scanNumber) = valPepMatch.peptide
+        } else {
+          this.logger.debug(s"Peptide ${valPepMatch.peptide.sequence} id=${valPepMatch.peptideId} will be ignored (rank > 1)")
         }
       }
     }
     
-    peptideMap.toMap
+    (peptideMap.toMap, psmMap.toMap)
   }
   
   // Extract the LC-MS map set
   lazy val lcmsMapSet: MapSet = {
-    val mapSetExtractor = new ExtractMapSet(this.lcmsDbCtx,quantConfig, Some(peptideByRunIdAndScanNumber) )
+    val mapSetExtractor = new ExtractMapSet(this.lcmsDbCtx,quantConfig, Some(peptideByRunIdAndScanNumber), Some(psmByRunIdAndScanNumber) )
     mapSetExtractor.run()
     mapSetExtractor.extractedMapSet
   }
