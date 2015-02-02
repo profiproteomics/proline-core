@@ -29,6 +29,7 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     private Integer m_cdPrettyRank;
     private Integer m_sdPrettyRank;  
     
+    private Float m_retentionTime; // Spectrum.firstTime
 
     
     public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank) {
@@ -146,5 +147,15 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 		}
 		return m_peptide.compareTo(peptideMatch.m_peptide);
     }
+
+	public Float getRetentionTime() {
+		return m_retentionTime;
+	}
+
+	public void setRetentionTime(Float retentionTime) {
+		this.m_retentionTime = retentionTime;
+	}
+	
+	
 
 }
