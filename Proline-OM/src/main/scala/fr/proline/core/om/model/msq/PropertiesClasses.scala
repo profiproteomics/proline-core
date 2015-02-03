@@ -23,7 +23,7 @@ case class MasterQuantPeptideIonProperties (
   @BeanProperty var bestQuantChannelId: Option[Long] = None,
   
   // Key = QuantChannel ID ; Value = PeptideMatch ID
-  @JsonDeserialize( keyAs = classOf[java.lang.Long] )
+  @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Long] )
   var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap()
 )
 
@@ -35,8 +35,19 @@ case class MasterQuantPeptideProfile (
 case class MasterQuantPeptideProperties (
   @JsonDeserialize(contentAs = classOf[Array[Long]])
   @BeanProperty var mqProtSetIds: Option[Array[Long]] = None,
-  @BeanProperty var mqPepProfileByGroupSetupNumber: Option[HashMap[String,MasterQuantPeptideProfile]] = None
-)
+  
+  @JsonDeserialize( keyAs = classOf[java.lang.Integer], contentAs = classOf[MasterQuantPeptideProfile] )
+  private var mqPepProfileByGroupSetupNumber: HashMap[Int,MasterQuantPeptideProfile] = null
+) {
+  
+  def getMqPepProfileByGroupSetupNumber(): Option[HashMap[Int,MasterQuantPeptideProfile]] = {
+    Option(mqPepProfileByGroupSetupNumber)
+  }
+  
+  def setMqPepProfileByGroupSetupNumber( mqPepProfileMap: Option[HashMap[Int,MasterQuantPeptideProfile]] ) = {
+    mqPepProfileByGroupSetupNumber = mqPepProfileMap.orNull
+  }
+}
 
 case class MasterQuantProteinSetProfile (
   //@BeanProperty var id: Long,
@@ -46,7 +57,9 @@ case class MasterQuantProteinSetProfile (
 )
  
 case class MasterQuantProteinSetProperties (
-  @BeanProperty var mqProtSetProfilesByGroupSetupNumber: Option[HashMap[String, Array[MasterQuantProteinSetProfile]]] = None,
+  
+  @JsonDeserialize( keyAs = classOf[java.lang.Integer], contentAs = classOf[Array[MasterQuantProteinSetProfile]] )
+  var mqProtSetProfilesByGroupSetupNumber: HashMap[Int, Array[MasterQuantProteinSetProfile]] = null,
   //@BeanProperty var specificSampleId: Option[Long] = None, // defined if the protein has been seen in a single sample
   
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
@@ -54,7 +67,17 @@ case class MasterQuantProteinSetProperties (
   
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
   @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None
-)
+) {
+  
+  def getMqProtSetProfilesByGroupSetupNumber(): Option[HashMap[Int, Array[MasterQuantProteinSetProfile]]] = {
+    Option(mqProtSetProfilesByGroupSetupNumber)
+  }
+  
+  def setMqProtSetProfilesByGroupSetupNumber( mqProtSetProfilesMap: Option[HashMap[Int, Array[MasterQuantProteinSetProfile]]] ) = {
+    mqProtSetProfilesByGroupSetupNumber = mqProtSetProfilesMap.orNull
+  }
+  
+}
 
 case class MasterQuantChannelProperties (
     @JsonDeserialize(contentAs = classOf[java.lang.Long])

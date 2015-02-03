@@ -48,7 +48,7 @@ class ExportMasterQuantPeptideIons(
       // Append ratios
       /*if( mqPep.properties.isDefined && mqPep.properties.get.getMqPepProfileByGroupSetupNumber.isDefined ) {
         val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber.toString)
-        val ratios = mqPepProfile.getRatios.map(_.map(_.getState.toString).getOrElse("") )      
+        val ratios = mqPepProfile.getRatios.map(_.map(_.getState.toString).getOrElse("") )
         row ++= ratios
       } else {
         row ++= Array.fill(this.ratioDefs.length)("")
@@ -56,8 +56,8 @@ class ExportMasterQuantPeptideIons(
       
       // Add some statistics
       if( mqPep.properties.isDefined && mqPep.properties.get.getMqPepProfileByGroupSetupNumber.isDefined ) {
-        val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber.toString)
-        val stats = this.stringifyRatiosStats(mqPepProfile.getRatios)    
+        val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber)
+        val stats = this.stringifyRatiosStats(mqPepProfile.getRatios)
         row ++= stats
       } else {
         row ++= Array.fill(this.ratioDefs.length * 3)("")

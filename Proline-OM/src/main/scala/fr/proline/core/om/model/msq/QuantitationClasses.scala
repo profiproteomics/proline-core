@@ -323,12 +323,12 @@ case class MasterQuantPeptide(
     numerator/denominator
   }
   
-  def getRatios( groupSetupNumber: Long ): List[Option[ComputedRatio]] = {
+  def getRatios( groupSetupNumber: Int ): List[Option[ComputedRatio]] = {
     this.properties.flatMap { mqPepProps =>
       val profileByGSNumberOpt = mqPepProps.getMqPepProfileByGroupSetupNumber
       if( profileByGSNumberOpt.isEmpty ) None
       else {
-        val mqPepProfile = profileByGSNumberOpt.get(groupSetupNumber.toString)
+        val mqPepProfile = profileByGSNumberOpt.get(groupSetupNumber)
         Some( mqPepProfile.getRatios() )
       }
     }.getOrElse( List() )
@@ -373,7 +373,7 @@ case class MasterQuantProteinSet(
     val props = this.properties.get
     if( props.getMqProtSetProfilesByGroupSetupNumber.isEmpty ) return None
     
-    val profilesOpt = props.getMqProtSetProfilesByGroupSetupNumber.get.get(groupSetupNumber.toString)
+    val profilesOpt = props.getMqProtSetProfilesByGroupSetupNumber.get.get(groupSetupNumber)
     if( profilesOpt.isEmpty ) return None
     
     var profiles = profilesOpt.get

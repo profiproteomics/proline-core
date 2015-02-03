@@ -77,7 +77,7 @@ class ExportMasterQuantProtSetProfiles(
           // Iterate over all profiles to eacport them
           for( props <- mqProtSet.properties;
                profileByGSNum <- props.getMqProtSetProfilesByGroupSetupNumber;
-               profiles <- profileByGSNum.get(groupSetupNumber.toString);
+               profiles <- profileByGSNum.get(groupSetupNumber);
                profile <- profiles
              ) {
             exportProfile( profile )

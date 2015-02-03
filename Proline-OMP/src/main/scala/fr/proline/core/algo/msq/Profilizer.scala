@@ -8,6 +8,7 @@ import fr.proline.core.om.model.msq._
 import fr.profi.util.primitives.isZeroOrNaN
 import org.apache.commons.math.stat.descriptive.moment.Mean
 
+// TODO: remove me when the WS v0.1 has been removed
 case class ProfilizerConfigV0(
   peptideStatTestsAlpha: Float = 0.01f,
   proteinStatTestsAlpha: Float = 0.01f,
@@ -37,8 +38,8 @@ case class ProfilizerConfig(
   useOnlySpecificPeptides: Boolean = true,
   applyProfileClustering: Boolean = true,
   abundanceSummarizerMethod : String = AbundanceSummarizer.Method.MEAN.toString(),
-  peptideStatConfig : ProfilizerStatConfig = new ProfilizerStatConfig(),
-  proteinStatConfig : ProfilizerStatConfig = new ProfilizerStatConfig()
+  peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
+  proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig()
 )
 
 /**
@@ -174,7 +175,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       
       val quantProfile = new MasterQuantPeptideProfile( ratios = ratios.toList )
       val mqPeptProfileMap = mqPepProps.getMqPepProfileByGroupSetupNumber.getOrElse( HashMap() )
-      mqPeptProfileMap += ( groupSetupNumber.toString -> quantProfile )
+      mqPeptProfileMap += ( groupSetupNumber -> quantProfile )
       mqPepProps.setMqPepProfileByGroupSetupNumber( Some(mqPeptProfileMap) )
       
       mqPep.properties = Some(mqPepProps)
@@ -302,7 +303,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       masterQuantProtSet.masterQuantPeptides.foreach { mqPep =>
         
         if( mqPep.selectionLevel >= 2 ) {
-          val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber.toString )
+          val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber )
           
           for( mqPepProfile <- mqPepProfileOpt ) {
             
@@ -410,7 +411,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val mqProtSetProps = mqProtSet.properties.getOrElse( new MasterQuantProteinSetProperties() )      
       val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber.getOrElse( HashMap() )
       
-      mqProtSetProfileMap += (groupSetupNumber.toString -> mqProfiles.toArray)
+      mqProtSetProfileMap += (groupSetupNumber -> mqProfiles.toArray)
       mqProtSetProps.setMqProtSetProfilesByGroupSetupNumber( Some(mqProtSetProfileMap) )
       
       mqProtSet.properties = Some(mqProtSetProps)
@@ -799,7 +800,7 @@ object AbundanceSummarizer {
     abundanceMatrix.transpose.map( _calcAbundanceSum( _ ) )
   }
   
-  // TODO: this method is duplciated in the Profilizer => put in a shared object ???
+  // TODO: this method is duplicated in the Profilizer => put in a shared object ???
   private def _calcMeanAbundance(abundances: Array[Float]): Float = {
     val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
     if( defAbundances.length == 0 ) Float.NaN else defAbundances.sum / defAbundances.length
