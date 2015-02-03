@@ -1,18 +1,17 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.ArrayBuffer
-
 import org.hamcrest.CoreMatchers
 import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.context.DatabaseConnectionContext
+import org.junit.Ignore
 
 @Test
 class ORMPtmProviderTest extends DatabaseTestCase {
@@ -28,6 +27,11 @@ class ORMPtmProviderTest extends DatabaseTestCase {
     loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
   }
 
+  override def getPropertiesFileName(): String = {
+	return "db_settings/h2/db_ps.properties";
+  }
+  
+    
   @Test
   def getPtmSpecificities() = {
     val ids = new ArrayBuffer[Long]
