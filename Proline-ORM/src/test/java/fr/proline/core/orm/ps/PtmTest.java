@@ -38,6 +38,11 @@ public class PtmTest extends DatabaseTestCase {
 	loadCompositeDataSet(datasets);
     }
 
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_ps.properties";
+    }
+    
     @Test
     public void readPtm() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();

@@ -37,6 +37,11 @@ public class ProjectTest extends DatabaseTestCase {
 
 	loadCompositeDataSet(datasets);
     }
+    
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_uds.properties";
+    }
 
     @Test
     public void readAccount() {

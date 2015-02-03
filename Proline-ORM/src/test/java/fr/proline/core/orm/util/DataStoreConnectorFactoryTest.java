@@ -154,6 +154,11 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
     }
 
+    @Override 
+    public String getPropertiesFileName(){
+    	return "database.properties";
+    }
+    
     @Test
     public void testDatabaseManager() {
 	final DataStoreConnectorFactory connectorFactory = DataStoreConnectorFactory.getInstance();

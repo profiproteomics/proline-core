@@ -34,6 +34,11 @@ public class UdsInstrumentConfigurationTest extends DatabaseTestCase {
 
 	loadCompositeDataSet(datasets);
     }
+    
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_uds.properties";
+    }
 
     @Test
     public void readInstrumentConfig() {

@@ -39,6 +39,11 @@ public class DatasetTest extends DatabaseTestCase {
 	loadCompositeDataSet(datasets);
     }
 
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_uds.properties";
+    }
+    
     @Test
     public void readDatasets() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();

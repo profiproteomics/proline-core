@@ -43,6 +43,11 @@ public class UserAccountTest extends DatabaseTestCase {
 	loadCompositeDataSet(datasets);
     }
 
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_uds.properties";
+    }
+    
     @Test
     public void writeUserAccount() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
