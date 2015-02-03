@@ -1,7 +1,6 @@
 package fr.proline.core.orm.msi;
 
 import static org.hamcrest.CoreMatchers.*;
-
 import static org.junit.Assert.*;
 
 import java.util.Collection;
@@ -41,6 +40,11 @@ public class ResultsetTest extends DatabaseTestCase {
 		"/dbunit/datasets/msi/Resultset_Dataset.xml" };
 
 	loadCompositeDataSet(datasets);
+    }
+    
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_msi.properties";
     }
 
     @Test
@@ -109,7 +113,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
 	try {
 	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
-	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(1L));
+	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(2L));
 	    assertNotNull(rs);
 	    assertEquals(rs.getMsiSearch(), msiSearch);
 	    assertTrue(rs.getChildren().isEmpty());

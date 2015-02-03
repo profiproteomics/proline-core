@@ -37,6 +37,11 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	loadCompositeDataSet(datasets);
     }
 
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_msi.properties";
+    }
+    
     @Test
     public void readMsiSearches() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
@@ -54,7 +59,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 		    .getSearchSettingsSeqDatabaseMaps().iterator().next();
 	    assertEquals(map.getSeqDatabase().getName(), "Swissprot");
 
-	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(2L));
+	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(3L));
 	    assertEquals(secondMsiSearch.getSearchSetting().getSearchSettingsSeqDatabaseMaps().size(), 0);
 	} finally {
 
@@ -77,7 +82,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 	final EntityManager msiEm = emf.createEntityManager();
 
 	try {
-	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(2L));
+	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(3L));
 
 	    SeqDatabase database = msiEm.find(SeqDatabase.class, Long.valueOf(1L));
 
@@ -94,7 +99,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 
 	    msiEm.clear();
 
-	    MsiSearch secondMsiSearch2 = msiEm.find(MsiSearch.class, Long.valueOf(2L));
+	    MsiSearch secondMsiSearch2 = msiEm.find(MsiSearch.class, Long.valueOf(3L));
 	    assertNotSame(secondMsiSearch, secondMsiSearch2);
 	    Set<SearchSettingsSeqDatabaseMap> mappedDbs = secondMsiSearch2.getSearchSetting()
 		    .getSearchSettingsSeqDatabaseMaps();

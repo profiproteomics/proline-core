@@ -34,6 +34,10 @@ public class ObjectTreeTest extends DatabaseTestCase {
 	loadCompositeDataSet(datasets);
     }
 
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_msi.properties";
+    }
     @Test
     public void readResultSetObjects() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();

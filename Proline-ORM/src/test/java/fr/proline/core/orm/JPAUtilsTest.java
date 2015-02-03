@@ -37,6 +37,11 @@ public class JPAUtilsTest extends DatabaseTestCase {
     public void setUp() throws Exception {
 	initDatabase();
     }
+    
+    @Override 
+    public String getPropertiesFileName(){
+    	return "database.properties";
+    }
 
     @Test
     public void testUtils() {

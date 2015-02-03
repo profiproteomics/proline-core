@@ -31,7 +31,12 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 	// "/fr/proline/core/orm/pdi/Proteins_Dataset.xml"
 	loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml");
     }
-
+    
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_pdi.properties";
+    }
+    
     @Test
     public void findSeqDbPerNameAndFile() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();

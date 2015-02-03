@@ -35,6 +35,11 @@ public class MsiPeptideTest extends DatabaseTestCase {
 	initDatabase();
     }
 
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_msi.properties";
+    }
+    	  
     @Test
     public void testMsiPeptideRepository() {
 	int retrievedPeptides = 0;

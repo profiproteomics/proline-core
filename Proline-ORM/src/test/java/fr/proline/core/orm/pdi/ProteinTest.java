@@ -31,6 +31,11 @@ public class ProteinTest extends DatabaseTestCase {
 	loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml");
     }
 
+    @Override 
+    public String getPropertiesFileName(){
+    	return "db_pdi.properties";
+    }
+    
     @Test
     public void readProtein() {
 	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
