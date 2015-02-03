@@ -45,6 +45,10 @@ class AuthenticationTest extends DatabaseTestCase with Logging {
     
   }
 
+  override def getPropertiesFileName(): String = {
+	return "db_settings/h2/db_uds.properties";
+  }
+  
   @After
   override def tearDown() {
     super.tearDown()

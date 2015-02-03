@@ -41,7 +41,7 @@ class CreateSCQuantitationTest extends Logging {
     
     val udsEM = udsDbCtx.getEntityManager
     
-    udsUser.setLogin("proline_user")
+    udsUser.setLogin("proline_user2")
     udsUser.setPasswordHash("993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d")
     udsUser.setCreationMode("MANUAL")
     udsEM.persist(udsUser)
