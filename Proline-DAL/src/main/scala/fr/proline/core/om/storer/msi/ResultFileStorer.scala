@@ -46,8 +46,7 @@ object ResultFileStorer extends Logging {
 
     // Retrieve MSISearch and related MS queries
     val msiSearch = resultFile.msiSearch
-    val msQueryByInitialId = resultFile.msQueryByInitialId
-    val msQueries = if (msQueryByInitialId == null) null else msQueryByInitialId.values.toList.sortBy(_.initialId)
+    val msQueries = if (resultFile.msQueries == null) null else resultFile.msQueries.sortBy(_.initialId)
 
     if (StringUtils.isEmpty(targetRs.name)) targetRs.name = msiSearch.title
 

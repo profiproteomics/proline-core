@@ -43,7 +43,7 @@ class DbUnitResultFile(
   
   val msLevel: Int = if( msiDbDsParser.msiSearch.searchSettings.pmfSearchSettings.isDefined ) 1 else 2
   val msiSearch: MSISearch = msiDbDsParser.msiSearch
-  val msQueryByInitialId: Map[Int,MsQuery] = msiDbDsParser.msQueries.map( msq => msq.initialId -> msq ).toMap
+  val msQueries: Array[MsQuery] = msiDbDsParser.msQueries
   val hasDecoyResultSet: Boolean = msiDbDsParser.getResultSetRecords().find( _(RSCols.TYPE) == "DECOY_SEARCH" ).isDefined
   val hasMs2Peaklist: Boolean = ( msLevel == 2 )
   
