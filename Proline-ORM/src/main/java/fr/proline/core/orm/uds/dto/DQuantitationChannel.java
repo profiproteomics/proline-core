@@ -24,6 +24,9 @@ public class DQuantitationChannel extends QuantitationChannel{
 	
 	// link with the raw map id
 	private Long lcmsRawMapId;
+	
+	// mzdb file name
+	private String mzdbFileName;
     
 	public DQuantitationChannel(QuantitationChannel o) {
 		super();
@@ -58,6 +61,7 @@ public class DQuantitationChannel extends QuantitationChannel{
 		this.rawFilePath = rawFilePath;
 	}
 	
+
 	/**
 	 * returns the rawFileName form the rawFilePath, separated with \
 	 * @return
@@ -82,5 +86,16 @@ public class DQuantitationChannel extends QuantitationChannel{
 	public void setLcmsRawMapId(Long lcmsRawMapId) {
 		this.lcmsRawMapId = lcmsRawMapId;
 	}
+
+	public String getMzdbFileName() {
+		return mzdbFileName;
+	}
+
+	public void setMzdbFileName(String mzdbFileName) {
+		this.mzdbFileName = mzdbFileName;
+	}
+
+	
+	
 
 }
