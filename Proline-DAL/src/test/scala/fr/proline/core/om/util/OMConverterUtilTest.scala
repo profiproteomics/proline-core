@@ -33,6 +33,10 @@ class OMConverterUtilTest extends DatabaseTestCase {
     converter = new PeptidesOMConverterUtil(true);
   }
 
+    override def getPropertiesFileName(): String = {
+	return "db_settings/h2/db_ps.properties";
+  }
+  
   @Test
   def testConvertPeptides() = {
     val emf = getConnector.getEntityManagerFactory

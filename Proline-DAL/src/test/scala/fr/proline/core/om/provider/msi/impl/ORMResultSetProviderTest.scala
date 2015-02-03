@@ -1,18 +1,19 @@
 package fr.proline.core.om.provider.msi.impl
 
-import org.junit.Test
-import fr.proline.repository.util.DatabaseTestCase
-import org.junit.Before
-import fr.proline.repository.ProlineDatabaseType
-import fr.proline.core.dal.ContextFactory
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.repository.DriverType
-import fr.proline.context.IExecutionContext
-import org.junit.After
-import fr.proline.repository.util.JDBCWork
 import java.sql.Connection
+
+import org.junit.After
 import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
+
+import com.typesafe.scalalogging.slf4j.Logging
+
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.ContextFactory
+import fr.proline.repository.DriverType
+import fr.proline.repository.util.JDBCWork
 
 @Test
 class ORMResultSetProviderTest extends AbstractMultipleDBTestCase with Logging  {
@@ -43,6 +44,7 @@ class ORMResultSetProviderTest extends AbstractMultipleDBTestCase with Logging  
     executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA    
     
   }
+  
   
   @After
   override def tearDown() {

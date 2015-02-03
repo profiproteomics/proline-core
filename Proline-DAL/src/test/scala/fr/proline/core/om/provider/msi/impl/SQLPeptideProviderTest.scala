@@ -36,6 +36,11 @@ class SQLPeptideProviderTest extends DatabaseTestCase {
     loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml", "/dbunit/datasets/ps/Peptides_Dataset.xml"))
   }
 
+    override def getPropertiesFileName(): String = {
+	return "db_settings/h2/db_ps.properties";
+  }
+  
+    
   @Test
   def getSinglePeptide() = {
     val psDb = ContextFactory.buildDbConnectionContext(getConnector, false)

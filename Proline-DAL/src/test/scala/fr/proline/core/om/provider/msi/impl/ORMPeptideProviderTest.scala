@@ -3,7 +3,6 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import org.hamcrest.CoreMatchers
 import org.junit.Assert._
-
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -18,9 +17,11 @@ import fr.proline.repository.util.DatabaseUtils
 import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.context.DatabaseConnectionContext
+import org.junit.Ignore
+import com.typesafe.scalalogging.slf4j.Logging
 
 @Test
-class ORMPeptideProviderTest extends DatabaseTestCase {
+class ORMPeptideProviderTest extends DatabaseTestCase with Logging {
 
   private val SEQ_TO_FOUND: String = "LTGMAFR"
 
@@ -29,12 +30,19 @@ class ORMPeptideProviderTest extends DatabaseTestCase {
   @Before
   @throws(classOf[Exception])
   def setUp() = {
+    logger.info("Initializing PSs")
+    
     initDatabase()
 
-    //loadDataSet("/fr/proline/core/om/ps/Unimod_Dataset.xml")
+//    loadDataSet("/dbunit/datasets/ps-db_init_dataset.xml")
     loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
   }
 
+    
+  override def getPropertiesFileName(): String = {
+	return "db_settings/h2/db_ps.properties";
+  }
+  
   @Test
   def getSinglePeptide() = {
     val psDb = new DatabaseConnectionContext(getConnector)

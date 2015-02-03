@@ -28,6 +28,10 @@ class OMComparatorUtilTest extends DatabaseTestCase {
     loadCompositeDataSet(Array("/dbunit/datasets/ps-db_init_dataset.xml","/dbunit/datasets/ps/Peptides_Dataset.xml"))
   }
 
+    override def getPropertiesFileName(): String = {
+	return "db_settings/h2/db_ps.properties";
+  }
+  
   @Test
   def comparePepPtm() = {
     val emf = getConnector.getEntityManagerFactory

@@ -9,6 +9,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
 import com.typesafe.scalalogging.slf4j.Logging
+import org.junit.Ignore
 
 @Test
 class MsiDbHelperTest extends DatabaseTestCase with Logging {
@@ -25,7 +26,7 @@ class MsiDbHelperTest extends DatabaseTestCase with Logging {
 
     initDatabase()
 
-      loadCompositeDataSet(Array("/dbunit/datasets/msi-db_init_dataset.xml","/dbunit_samples/ResultSetRelation.xml")) //Load Data
+    loadCompositeDataSet(Array("/dbunit/datasets/msi-db_init_dataset.xml","/dbunit/datasets/msi/Resultset_Dataset.xml")) //Load Data
 
 
   }
@@ -34,7 +35,11 @@ class MsiDbHelperTest extends DatabaseTestCase with Logging {
   override def tearDown() {
     super.tearDown()
   }
-
+  
+  override def getPropertiesFileName(): String = {
+	return "db_settings/h2/db_msi.properties";
+    }
+	  
   @Test
   def testGetRSMsiSearchIds2Level() = {
     val msiDbCtxt = new DatabaseConnectionContext(getConnector)
