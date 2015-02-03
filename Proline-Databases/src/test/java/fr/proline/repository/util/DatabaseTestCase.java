@@ -74,11 +74,12 @@ public abstract class DatabaseTestCase {
 	public abstract ProlineDatabaseType getProlineDatabaseType();
 
 	/**
+	 * DatabaseUtils.DEFAULT_DATABASE_PROPERTIES_FILENAME Could be used
 	 * @return Full Path and Name of db properties file in classpath
+	 * 
 	 */
-	public String getPropertiesFileName() {
-		return DatabaseUtils.DEFAULT_DATABASE_PROPERTIES_FILENAME;
-	}
+	public abstract String getPropertiesFileName(); 
+
 
 	/**
 	 * Path to SQL scripts from where DB will be initialized.
@@ -103,7 +104,7 @@ public abstract class DatabaseTestCase {
 
 			if (m_connector == null) {
 				m_connector = new DatabaseTestConnector(getProlineDatabaseType(), getPropertiesFileName());
-
+				LOG.info(" --> Create "+m_connector.getProlineDatabaseType()+" Connection ");
 				if (m_connector.isMemory()) {
 
 					try {
