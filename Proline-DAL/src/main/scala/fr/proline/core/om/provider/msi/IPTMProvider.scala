@@ -44,7 +44,17 @@ trait IPTMProvider {
    * - ptmLocation : Location of the Ptm. Could be one of PtmLocation.Value 
    * 
    */
-  def getPtmDefinition( ptmShortName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition] 
+  def getPtmDefinition( ptmShortName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition]
+  
+   /**
+   * Search for a PtmDefinition with specified features
+   * - ptmMonoMass : Associated PtmEvidences have ptmMonoMass as mono_mass
+   * - ptmMonoMassMargin : Margin beetween input mono_mass and ProlineDB mono_mass values
+   * - ptmResidue : residue on which ptm is applied : could be '\0' if no specific residue
+   * - ptmLocation : Location of the Ptm. Could be one of PtmLocation.Value 
+   * 
+   */
+  def getPtmDefinition( ptmMonoMass: Double, ptmMonoMassMargin: Double, ptmResidue: Char, ptmLocation: PtmLocation.Location ): Option[PtmDefinition]
   
   /**
    * Get the PtmNames id for specified ShortName
@@ -75,6 +85,34 @@ object PTMFakeProvider extends IPTMProvider {
     val fullName = ptmName+" ("+ptmResidue+")"
     if(ptmDefByName.contains(fullName))
       return ptmDefByName.get(fullName)  
+      
+    var newPtmDef:PtmDefinition  = null
+    val ptmEvidence = new PtmEvidence( 
+          ionType = IonTypes.Precursor,
+      		composition = "UNVALID",
+      		monoMass = Double.MaxValue,
+      		averageMass = Double.MaxValue,
+      		isRequired = false
+      		)
+    
+    newPtmDef = new PtmDefinition(
+                      id = PtmDefinition.generateNewId(),
+                      ptmId = PtmNames.generateNewId,
+                      location =ptmLocation.toString,
+                      residue = ptmResidue,
+                      classification = "Post-translational",
+                      names = new PtmNames(shortName = ptmName,fullName = fullName),
+                      ptmEvidences = Array(ptmEvidence)
+                    )
+    ptmDefByName += fullName -> newPtmDef 
+    
+    Some(newPtmDef)
+  }
+  
+  def getPtmDefinition(ptmMonoMass: Double, ptmMonoMassMargin: Double, ptmResidue: Char, ptmLocation: PtmLocation.Location) : Option[PtmDefinition] = {
+
+    val ptmName = "UnknownPtmNamesShortNames"
+    val fullName = ptmName+" ("+ptmResidue+")"
       
     var newPtmDef:PtmDefinition  = null
     val ptmEvidence = new PtmEvidence( 
@@ -147,6 +185,10 @@ object EmptyPTMProvider extends IPTMProvider {
  
   def getPtmDefinition(ptmName: String, ptmResidue: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
 	  Option.empty[PtmDefinition]
+  }
+  
+  def getPtmDefinition(ptmMonoMass: Double, ptmMonoMassMargin: Double, ptmResidue: Char, ptmLocation: PtmLocation.Location) : Option[PtmDefinition] = {
+    Option.empty[PtmDefinition]
   }
   
   def getPtmId(shortName: String): Option[Long] = {

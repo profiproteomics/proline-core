@@ -63,6 +63,21 @@ class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
 
   }
 
+  
+  def getPtmDefinition(ptmMonoMass: Double, ptmMonoMassMargin: Double, ptmResidue: Char, ptmLocation: PtmLocation.Location): Option[PtmDefinition] = {
+//    var ptmToReturn: PtmDefinition = null
+//    this.ptmDefinitionById.values.foreach(ptm => {
+//      ptm.ptmEvidences.foreach(e => {
+//        if (scala.math.abs(ptmMonoMass - e.monoMass) <= ptmMonoMassMargin
+//          && ptm.residue == ptmResidue
+//          && ptm.location == ptmLocation.toString) {
+//          ptmToReturn = ptm
+//        }
+//      })
+//    })
+//    Some(ptmToReturn)
+    None
+  }
   def getPtmId(shortName: String): Option[Long] = {
     val foundPtm = psPtmRepo.findPtmForShortName(psDbCtx.getEntityManager, shortName)
 

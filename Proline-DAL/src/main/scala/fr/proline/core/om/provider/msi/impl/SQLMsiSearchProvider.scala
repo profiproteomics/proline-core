@@ -1,6 +1,7 @@
 package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
@@ -166,6 +167,13 @@ class SQLMsiSearchProvider(
       buildEnzymeCleavages( selectAndMapEnzymeCleavageRecords(udsEzDBC,enzymeId) )
     })
   }
+  
+  def getAllEnzymes(): Array[Enzyme] = {
+    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+      buildEnzymes( selectAndMapAllEnzymeRecords(udsEzDBC), 
+      enzymeId => selectAndMapEnzymeCleavageRecords( udsEzDBC, enzymeId ))
+    })
+  }
 
 }
 
@@ -248,6 +256,15 @@ object SQLMsiSearchProvider {
     )
     
     ezDBC.select(enzQuery)
+  }
+  
+  def selectAndMapAllEnzymeRecords(udsEzDBC: EasyDBC): (IValueContainer => Enzyme) => Seq[Enzyme] = {
+    
+    val enzQuery = new SelectQueryBuilder1(UdsDbEnzymeTable).mkSelectQuery( (t,c) =>
+      List(t.*) -> ""
+    )
+    
+    udsEzDBC.select(enzQuery)
   }
   
   def selectAndMapEnzymeCleavageRecords(udsEzDBC: EasyDBC, enzymeId: Long): (IValueContainer => EnzymeCleavage) => Seq[EnzymeCleavage] = {
