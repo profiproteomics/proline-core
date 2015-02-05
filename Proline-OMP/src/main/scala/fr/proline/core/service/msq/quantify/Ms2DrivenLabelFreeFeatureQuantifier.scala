@@ -50,7 +50,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
           psmMap.getOrElseUpdate(runId, new HashMap[Int, PeptideMatch])(scanNumber) = valPepMatch
           peptideMap.getOrElseUpdate(runId, new HashMap[Int, Peptide])(scanNumber) = valPepMatch.peptide
         } else {
-          this.logger.debug(s"Peptide ${valPepMatch.peptide.sequence} id=${valPepMatch.peptideId} will be ignored (rank > 1)")
+          this.logger.trace(s"Peptide ${valPepMatch.peptide.sequence} id=${valPepMatch.peptideId} will be ignored (rank > 1)")
         }
       }
     }
