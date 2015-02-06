@@ -2,6 +2,7 @@ package fr.proline.core.algo.msi.scoring
 
 import fr.proline.core.om.model.msi.ResultSummary
 
+// TODO: move into OM (near PeptideSet case class)
 object PepSetScoring extends Enumeration {  
   val MASCOT_STANDARD_SCORE = Value("mascot:standard score")
 //  val MASCOT_MUDPIT_SCORE = Value("mascot:mudpit score")
