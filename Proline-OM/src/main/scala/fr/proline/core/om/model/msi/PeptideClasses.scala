@@ -4,12 +4,12 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
-
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.StringUtils.isNotEmpty
 import fr.profi.util.misc.InMemoryIdGen
+import fr.profi.util.ms.massToMoz
 
 object Peptide extends InMemoryIdGen with Logging {
   
@@ -446,14 +446,23 @@ object PeptideMatch extends InMemoryIdGen with Logging {
   
 }
 
+object PeptideMatchScoreType extends Enumeration {
+  
+  val MASCOT_IONS_SCORE = Value("mascot:ions score")
+  val OMSSA_EVALUE = Value("omssa:expect value")
+  val COMET_EVALUE_LOG_SCALED = Value("comet:evalue log scaled")
+  val MSGF_EVALUE_LOG_SCALED = Value("msgf:evalue log scaled")
+  val SEQUEST_EXPECT_LOG_SCALED = Value("sequest:expect log scaled")
+
+}
+
 case class PeptideMatch ( // Required fields
   var id: Long,
   var rank: Int,
   val score: Float,
-  val scoreType: String,
+  val scoreType: PeptideMatchScoreType.Value,
   val charge: Int,
-  val experimentalMz: Float,
-  val deltaMoz: Float,
+  val deltaMoz: Float, // deltaMoz = expMoz - calcMoz
   val isDecoy: Boolean,
   @transient val peptide: Peptide,
   
@@ -469,35 +478,45 @@ case class PeptideMatch ( // Required fields
   var cdPrettyRank: Int = 0,
   var sdPrettyRank: Int = 0,
   
-  var childrenIds: Array[Long] = null,
+  protected val childrenIds: Array[Long] = null,
   @transient var children: Option[Array[PeptideMatch]] = null,
   
-  protected var bestChildId: Long = 0,
-  @transient var bestChild : Option[PeptideMatch] = null,
+  var bestChildId: Long = 0,
   
   var properties: Option[PeptideMatchProperties] = None,
   
-  @transient var validationProperties : Option[PeptideMatchResultSummaryProperties] = None
+  @transient var validationProperties: Option[PeptideMatchResultSummaryProperties] = None
   
 ) {
   
   // Requirements
   require( rank > 0, "invalid rank value" )
-  // FIXME: scoreType should note be null !
-  //require( scoreType != null, "scoreType is null")
+  require( scoreType != null, "scoreType is null")
   require( peptide != null, "peptide is null" )
   
-  // Define lazy fields (mainly used for serialization purpose)
-  @JsonProperty lazy val msQueryId = this.msQuery.id
-  @JsonProperty lazy val peptideId = this.peptide.id
+  // Define proxy defs (mainly used for serialization purpose)
+  @JsonProperty def msQueryId = this.msQuery.id
+  @JsonProperty def peptideId = this.peptide.id
   
-  // Related objects ID getters 
-  def getChildrenIds : Array[Long] = { if(children != null && children.isDefined) children.get.map(_.id) else childrenIds  }
+  // Related objects ID getters
+  def getChildrenIds(): Array[Long] = { if(children != null && children.isDefined) children.get.map(_.id) else childrenIds  }
   
-  def getBestChildId : Long = { if(bestChild != null && bestChild.isDefined ) bestChild.get.id else bestChildId }     
+  def getBestChild(): Option[PeptideMatch] = {
+    if( bestChildId != 0 && children != null && children.isDefined ) {
+      children.get.find( _.id == bestChildId )
+    }
+    else None
+  }
   
   /** Returns a MS2 query object. */
-  def getMs2Query: Ms2Query = { if(msQuery != null) msQuery.asInstanceOf[Ms2Query] else null }
+  def getMs2Query(): Ms2Query = { if(msQuery != null) msQuery.asInstanceOf[Ms2Query] else null }
+  
+  def getExperimentalMoz(): Double = {
+    if( msQuery != null ) msQuery.moz
+    else {
+      deltaMoz + massToMoz( peptide.calculatedMass, charge )
+    }
+  }
   
 }
 

@@ -58,7 +58,6 @@ class SerializationSpec extends AbstractSerializationSpec {
   val jsonSpecifs = List(    
     SerializationSpecif(
       "A LabelFree Quant Config",
-      jerksonDeserializer = None,
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[LabelFreeQuantConfig](jsonData) ),
       quantConfig,
       """{"map_set_name":"map set test","extraction_params":{"moz_tol":5.0,"moz_tol_unit":"PPM"},"clustering_params":"""+

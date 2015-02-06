@@ -2,10 +2,11 @@ package fr.proline.core.om.provider.msi.impl
 
 import scala.collection.JavaConversions.{ asScalaBuffer, asScalaSet }
 import scala.collection.mutable
+import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.msi.{ Enzyme, InstrumentConfig, MSISearch, Ms2Query, MsQuery, MsQueryProperties, Peaklist, PeaklistSoftware, Peptide, PeptideMatch, PeptideMatchProperties, Protein, ProteinMatch, PtmDefinition, PtmEvidence, PtmNames, ResultSet, ResultSetProperties, SearchSettings, SearchSettingsProperties, SeqDatabase, SequenceMatch }
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{IResultSetProvider,ResultSetFilter}
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.orm.msi.ResultSet.Type
@@ -20,8 +21,6 @@ import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbProteinMatchSeqDatabaseMapTable
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.profi.util.primitives._
-import scala.collection.mutable.HashMap
-
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,
@@ -305,14 +304,24 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       
       val cdPrettyRank = msiPeptideMatch.getCDPrettyRank
       val sdPrettyRank = msiPeptideMatch.getSDPrettyRank
+      val scoreTypeAsStr = scoringRepo.getScoreTypeForId(msiEM, msiPeptideMatch.getScoringId)
+      
+      // FIXME: sometimes getScoreTypeForId return null values
+      val scoreType = try {
+        PeptideMatchScoreType.withName( scoreTypeAsStr )
+      } catch {
+        case e: Exception => {
+          logger.error(s"can't convert $scoreTypeAsStr into PeptideMatchScoreType enum value, default to mascot:ions score")
+          PeptideMatchScoreType.MASCOT_IONS_SCORE
+        }
+      }
 
       val peptideMatch = new PeptideMatch(
         msiPeptideMatchId,
         msiPeptideMatch.getRank.intValue,
         msiPeptideMatch.getScore.floatValue,
-        scoringRepo.getScoreTypeForId(msiEM, msiPeptideMatch.getScoringId),
+        scoreType,
         msiPeptideMatch.getCharge(),
-        msiPeptideMatch.getExperimentalMoz.floatValue,
         msiPeptideMatch.getDeltaMoz.floatValue,
         msiPeptideMatch.getIsDecoy,
         retrievePeptide(msiPeptideMatch.getPeptideId),
@@ -324,9 +333,8 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         if( cdPrettyRank != null ) cdPrettyRank.intValue else 0,
         if( sdPrettyRank != null ) sdPrettyRank.intValue else 0,
         null, // TODO handle children
-        null, // TODO handle children
+        optionalBestChild.map( Array(_) ), // TODO handle children (only the best child is loaded now)
         bestChildId,
-        optionalBestChild,
         peptideMatchProperties,
         None
       )

@@ -14,7 +14,6 @@ import fr.profi.util.serialization.ProfiJson
 
 case class SerializationSpecif(
   description: String,
-  jerksonDeserializer: Option[String => AnyRef],
   profiDeserializer: Option[String => AnyRef],
   objectData: AnyRef,
   jsonData: String
@@ -32,33 +31,6 @@ abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with
     for( jsonSpecif <- jsonSpecifs ) {
       
       describe(jsonSpecif.description) {
-        
-        /*it("should be correctly serialized to JSON with Jerkson") {
-          
-          Given("the object data")
-          val objectData = jsonSpecif.objectData
-          
-          When("serializing to JSON and parsing it as a Map[String,Any]")
-          val jsonString = Json.generate(objectData)
-          val jsonAsMap = Json.parse[Map[String,Any]](jsonString)
-          
-          Then("it should match the Map obtained from the expected JSON string")
-          jsonAsMap should equal (Json.parse[Map[String,Any]](jsonSpecif.jsonData))         
-        }*/
-        
-        /*if( jsonSpecif.jerksonDeserializer.isDefined ) {
-          it("should be correctly deserialized from JSON with Jerkson") {
-            
-            Given("the JSON data")
-            val jsonData = jsonSpecif.jsonData
-            
-            When("deserializing from JSON")
-            val objectData = jsonSpecif.jerksonDeserializer.get(jsonData)
-            
-            Then("the obtained object should match the serialized one")
-            objectData should equal (jsonSpecif.objectData)
-          }
-        }*/
         
         it("should be correctly serialized to JSON with the ProFI serializer") {
           
@@ -159,9 +131,8 @@ class SerializationSpec extends AbstractSerializationSpec {
     id = -1,
     rank = 1,
     score = 20,
-    scoreType = "mascot:ions score",
+    scoreType = PeptideMatchScoreType.MASCOT_IONS_SCORE,
     charge = 2,
-    experimentalMz = 555.5f,
     deltaMoz = 0.001f,
     isDecoy = false,
     peptide = peptide,
@@ -192,9 +163,6 @@ class SerializationSpec extends AbstractSerializationSpec {
     
     SerializationSpecif(
       "A Ms2Query object with defined properties",
-      //jerksonDeserializer = Some( jsonData => Json.parse[Ms2Query](jsonData) ),
-      //jerksonDeserializer = Some( jsonData => ProfiJson.deserializeWithJacks[Ms2Query](jsonData) ),
-      jerksonDeserializer = None,
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[Ms2Query](jsonData) ),
       ms2Query,
       """{"id":-1,"initial_id":1,"moz":333.33,"charge":3,"spectrum_title":"scan id=2","spectrum_id":1,"""+
@@ -203,31 +171,25 @@ class SerializationSpec extends AbstractSerializationSpec {
     ),
     SerializationSpecif(
       "A Peptide object without properties",
-      //jerksonDeserializer = None,
-      jerksonDeserializer = None,
       profiDeserializer = None,
       peptide,
       """{"id":-1,"sequence":"MENHIR","ptm_string":"1[O]","calculated_mass":814.3806546000001,"readable_ptm_string":"Oxidation (M1)"}"""
     ),
     SerializationSpecif(
       "A PeptideMatch object without properties",
-      jerksonDeserializer = None,
-      profiDeserializer = None,
+      profiDeserializer = Some( jsonData => ProfiJson.deserialize[PeptideMatch](jsonData) ),
       pepMatch,
-      """{"id":-1,"rank":1,"score":20.0,"score_type":"mascot:ions score","delta_moz":0.001,"is_decoy":false,"missed_cleavage":0,"""+
+      """{"id":-1,"rank":1,"score":20.0,"score_type":"mascot:ions score","charge":2,"delta_moz":0.001,"is_decoy":false,"missed_cleavage":0,"""+
       """"fragment_matches_count":0,"is_validated":true,"result_set_id":0,"children_ids":[-1],"best_child_id":0,"ms_query_id":-1,"peptide_id":-1}"""
     ),
     SerializationSpecif(
       "A PeptideMatchProperties object",
-      //jerksonDeserializer = Some( jsonData => Json.parse[PeptideMatchProperties](jsonData) ),
-      jerksonDeserializer = None,
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[PeptideMatchProperties](jsonData) ),
       pepMatchProperties,
       """{"mascot_properties":{"expectation_value":0.001,"readable_var_mods":"Oxidation (M)"}},"ms_query_id":-1,"peptide_id":-1}"""
     ),
     SerializationSpecif(
       "A ProteinMatch object without properties",
-      jerksonDeserializer = None,
       profiDeserializer = None,
       protMatch,
       """{"accession":"UNKNOWN","description":"unknown protein","is_decoy":false,"is_last_bio_sequence":false,"id":-1,"""+

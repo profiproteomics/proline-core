@@ -534,7 +534,10 @@ class ExtractMapSet(
             if ms2ScanHeadersByCycle.contains(sh.getCycle);
             ms2Sh <- ms2ScanHeadersByCycle(sh.getCycle);
             // Filter on m/z difference between the peakel and the precursor
-            if (psmByScanNumber.contains(ms2Sh.getInitialId()) && math.abs(psmByScanNumber(ms2Sh.getInitialId()).experimentalMz - peakelMz) <= 2.0*mzTolDa );
+            if (
+              psmByScanNumber.contains(ms2Sh.getInitialId()) &&
+              math.abs(psmByScanNumber(ms2Sh.getInitialId()).getExperimentalMoz - peakelMz) <= 2.0 * mzTolDa
+            );
             // Keep only identified MS2 scans
             peptide <- peptideByScanNumber.get(ms2Sh.getInitialId)
           ) {

@@ -36,7 +36,7 @@ class RsAdderFromGeneratorTest extends RsAdderFromGeneratorTesting with Logging 
 	  val builtRS = rsAddAlgo.toResultSet() 
     checkBuiltResultSet(generatedRS,builtRS)
 	  
-	  builtRS.peptideMatches.map(_.childrenIds.size).foreach( assertEquals(1, _) )
+	  builtRS.peptideMatches.map(_.getChildrenIds.size).foreach( assertEquals(1, _) )
   }
 
 	@Test

@@ -89,7 +89,7 @@ class ResultSummaryMerger( pepSetScoreUpdater: IPeptideSetScoreUpdater ) extends
     for( peptideMatch <- allValidPeptideMatches ) {
       
       // Update score type map
-      scoreTypeSet += peptideMatch.scoreType
+      scoreTypeSet += peptideMatch.scoreType.toString
       
       val peptideId = peptideMatch.peptide.id
       val peptide = peptideById(peptideId)

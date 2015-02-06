@@ -182,11 +182,11 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       for (peptideMatch <- peptideMatches) {
         
         val scoreType = peptideMatch.scoreType  
-        val scoringId = scoringIdByType.get(scoreType)
+        val scoringId = scoringIdByType.get(scoreType.toString)
         require(scoringId.isDefined, "can't find a scoring id for the score type '" + scoreType + "'")
         
         val msQuery = peptideMatch.msQuery
-        val bestChildId = peptideMatch.getBestChildId
+        val bestChildId = peptideMatch.bestChildId
 
         var pmCharge = msQuery.charge
         if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getOmssaProperties.isDefined) {
@@ -251,22 +251,22 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
     val pgBulkLoader = bulkCopyManager.copyIn("COPY peptide_match_relation ( " + pepMatchRelTableCols + " ) FROM STDIN")
 
     // Iterate over peptide matches to store them
-    for (peptideMatch <- peptideMatches) {
-      if ((peptideMatch.children != null && peptideMatch.children.isDefined) || (peptideMatch.childrenIds != null)) {
-        for (pepMatchChildId <- peptideMatch.getChildrenIds) {
+    for (
+      peptideMatch <- peptideMatches;
+      pepMatchChildrenIds <- Option(peptideMatch.getChildrenIds);
+      pepMatchChildId <- pepMatchChildrenIds
+    ) {
 
-          // Build a row containing peptide_match_relation values
-          val pepMatchRelationValues = List(
-            peptideMatch.id,
-            pepMatchChildId,
-            peptideMatch.resultSetId
-          )
+      // Build a row containing peptide_match_relation values
+      val pepMatchRelationValues = List(
+        peptideMatch.id,
+        pepMatchChildId,
+        peptideMatch.resultSetId
+      )
 
-          // Store peptide match
-          val pepMatchRelationBytes = encodeRecordForPgCopy(pepMatchRelationValues)
-          pgBulkLoader.writeToCopy(pepMatchRelationBytes, 0, pepMatchRelationBytes.length)
-        }
-      }
+      // Store peptide match
+      val pepMatchRelationBytes = encodeRecordForPgCopy(pepMatchRelationValues)
+      pgBulkLoader.writeToCopy(pepMatchRelationBytes, 0, pepMatchRelationBytes.length)
     }
 
     // End of BULK copy

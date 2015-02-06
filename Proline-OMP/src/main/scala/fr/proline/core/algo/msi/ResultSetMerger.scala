@@ -36,7 +36,7 @@ object ResultSetMerger extends Logging {
       val bestChild = peptideMatchGroup.reduce { (a,b) => if( a.score > b.score ) a else b }
       
       // Update score type map
-      scoreTypeSet += bestChild.scoreType
+      scoreTypeSet += bestChild.scoreType.toString
       
       // Create a peptide match which correspond to the best peptide match of this group
       val parentPepMatch = bestChild.copy( id = newPepMatchId, childrenIds= nrPepMatchChildIds.toArray, resultSetId = rsID )

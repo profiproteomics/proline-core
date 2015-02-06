@@ -31,9 +31,9 @@ import fr.profi.util.ms.massToMoz
  *
  */
 class ResultSetFakeGenerator(
-  nbPeps: Int, 
-  nbProts: Int, 
-  minPepSeqLength: Int = 8, 
+  nbPeps: Int,
+  nbProts: Int,
+  minPepSeqLength: Int = 8,
   maxPepSeqLength: Int = 20
 ) extends AnyRef with Logging {
 
@@ -251,9 +251,8 @@ class ResultSetFakeGenerator(
       id = PeptideMatch.generateNewId,
       rank = 1,
       score = ResultSetRandomator.randomPepMatchScore,
-      scoreType = "mascot:standard score",
+      scoreType = PeptideMatchScoreType.MASCOT_IONS_SCORE,
       charge = 2,
-      experimentalMz = 555.5f,
       deltaMoz = 0.15f,
       isDecoy = false,
       peptide = pep,

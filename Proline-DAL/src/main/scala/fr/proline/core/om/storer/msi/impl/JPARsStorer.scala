@@ -1257,7 +1257,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         msiPeptideMatch.setScore(java.lang.Float.valueOf(peptideMatch.score))
 
-        val msiScoringId = scoringRepo.getScoringIdForType(msiEm, peptideMatch.scoreType)
+        val msiScoringId = scoringRepo.getScoringIdForType(msiEm, peptideMatch.scoreType.toString)
 
         if (msiScoringId == null) {
           throw new IllegalArgumentException("Scoring [" + peptideMatch.scoreType + "] NOT found in MSIdb")
@@ -1287,7 +1287,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         msiPeptideMatch.setExperimentalMoz(msiMsQuery.getMoz)
 
         /* Check associated best PeptideMatch */
-        val bestOmPeptideMatchId = peptideMatch.getBestChildId
+        val bestOmPeptideMatchId = peptideMatch.bestChildId
 
         val knownMsiBestChild = knownPeptideMatches.get(bestOmPeptideMatchId)
 
@@ -1302,9 +1302,9 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
             foundBestChild
           } else {
-            val bestChild = peptideMatch.bestChild
+            val bestChild = peptideMatch.getBestChild()
 
-            if ((bestChild != null) && bestChild.isDefined) {
+            if (bestChild.isDefined) {
               createPeptideMatch(storerContext,
                 bestChild.get, msiResultSet, msiSearch)
             } else {

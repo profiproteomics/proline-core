@@ -169,11 +169,11 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
         for (peptideMatch <- peptideMatches) {
           
           val scoreType = peptideMatch.scoreType
-          val scoringId = scoringIdByType.get(scoreType)
+          val scoringId = scoringIdByType.get(scoreType.toString)
           require(scoringId.isDefined, "can't find a scoring id for the score type '" + scoreType + "'")
   
           val msQuery = peptideMatch.msQuery
-          val bestChildId = peptideMatch.getBestChildId
+          val bestChildId = peptideMatch.bestChildId
           var pmCharge = msQuery.charge
           if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getOmssaProperties.isDefined) {
             pmCharge = peptideMatch.properties.get.getOmssaProperties.get.getCorrectedCharge
@@ -205,11 +205,13 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   
       // Link peptide matches to their children
       msiEzDBC.executePrepared(MsiDbPeptideMatchRelationTable.mkInsertQuery()) { stmt =>
-        for (peptideMatch <- peptideMatches) 
-          if ((peptideMatch.children != null && peptideMatch.children.isDefined) || peptideMatch.childrenIds != null) {
-            for (pepMatchChildId <- peptideMatch.getChildrenIds) 
-              stmt.executeWith(peptideMatch.id, pepMatchChildId, rsId)
-          }
+        for (
+          peptideMatch <- peptideMatches;
+          pepMatchChildrenIds <- Option(peptideMatch.getChildrenIds);
+          pepMatchChildId <- pepMatchChildrenIds
+        ) {
+          stmt.executeWith(peptideMatch.id, pepMatchChildId, rsId)
+        }
       }
       peptideMatches.length
     })
