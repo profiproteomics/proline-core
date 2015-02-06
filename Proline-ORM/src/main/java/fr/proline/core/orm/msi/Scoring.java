@@ -80,6 +80,7 @@ public class Scoring implements Serializable {
     }
     
     // TODO: change the hibernate definition of the class Scoring to use this enum ???
+    // TODO: create a Java projects where we can share enumerations between OM and ORM ???
 	public enum Type {
 
 		MASCOT_IONS_SCORE(
