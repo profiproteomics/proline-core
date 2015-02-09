@@ -5,7 +5,7 @@ import org.junit.Test
 
 import com.typesafe.scalalogging.slf4j.Logging
 
-import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
+import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.om.model.msi.ResultSet
 
 //object RsmAdderFromResultFileTest extends AbstractResultSetTestCase with Logging {
@@ -25,7 +25,7 @@ class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesti
   require( executionContext != null, "executionContext is null" )
   val readRS = STR_F122817_Mascot_v2_3_TEST_CASE.getRS
   
-  val ppsi = new CommunistProteinSetInferer()
+  val ppsi = new ParsimoniousProteinSetInferer()
   val rsm = ppsi.computeResultSummary( resultSet = readRS )
 
   @Test

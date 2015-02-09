@@ -8,7 +8,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi._
 import fr.profi.util.primitives._
 
-class CommunistProteinSetInferer() extends IProteinSetInferer with Logging {
+class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
 
   def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true ): ResultSummary = {
     

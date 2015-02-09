@@ -10,7 +10,7 @@ import org.scalatest.junit.JUnitSuite
 import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.algo.msi.filtering.proteinset.SpecificPeptidesPSFilter
-import fr.proline.core.algo.msi.inference.CommunistProteinSetInferer
+import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.scoring.MascotStandardScoreUpdater
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.ProteinMatch
@@ -19,7 +19,7 @@ import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 
 class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
 
-  var ppsi = new CommunistProteinSetInferer()
+  val ppsi = new ParsimoniousProteinSetInferer()
 
   /**
    * P1 = (pep1, pep2, pep3,pep4, pep5)

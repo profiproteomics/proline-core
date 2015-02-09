@@ -30,8 +30,8 @@ class ResultSummaryAdder(
     val mergedResultSet = rsBuilder.toResultSet()
 
     // Instantiate a protein inference algo and build the merged result summary
-    val protInferenceAlgo = ProteinSetInferer(InferenceMethods.communist)
-    val mergedRsm = protInferenceAlgo.computeResultSummary(mergedResultSet)
+    val protInferenceAlgo = ProteinSetInferer(InferenceMethod.PARSIMONIOUS)
+    val mergedRsm = protInferenceAlgo.computeResultSummary(mergedResultSet, keepSubsummableSubsets = true)
 
     //TODO FIXME VDS: Add algo to go through mergedRsm PeptideInstance and update their totalLeavesMatchCount 
     // totalLeavesMatchCount = Sum totalLeavesMatchCount of each child RSM

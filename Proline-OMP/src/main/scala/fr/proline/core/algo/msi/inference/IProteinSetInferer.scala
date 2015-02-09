@@ -11,6 +11,6 @@ trait IProteinSetInferer {
    * Only validated peptideMatch will be considered while inferring Protein Sets
    *     
    */
-  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true ) : ResultSummary
+  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean ) : ResultSummary
   
 }

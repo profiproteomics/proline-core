@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.profi.util.primitives._
 import fr.proline.core.algo.msi.DbUnitResultFileLoading
-import fr.proline.core.algo.msi.InferenceMethods
+import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.{ IPeptideMatchFilter, FilterPropertyKeys, _ }
 import fr.proline.core.algo.msi.filtering.pepmatch.{ ScorePSMFilter, RankPSMFilter, _ }
 import fr.proline.core.algo.msi.filtering.proteinset.{ ScoreProtSetFilter, SpecificPeptidesPSFilter }
@@ -142,7 +142,7 @@ class ResultSetValidatorF122817Test extends Logging {
       pepMatchPreFilters = Some(pepFilters),
       pepMatchValidator = None,
       protSetFilters = None,
-      inferenceMethod = Some(InferenceMethods.communist), 
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS), 
       storeResultSummary = false
     )
 
@@ -686,7 +686,7 @@ class ResultSetValidatorF136482Test extends Logging {
       pepMatchValidator = Some(pepMatchValidator),
       protSetFilters = None,
       protSetValidator = Some(protSetValidator),
-      inferenceMethod = Some(InferenceMethods.parsimonious),
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
       peptideSetScoring = Some(PepSetScoring.MASCOT_MODIFIED_MUDPIT_SCORE),
       storeResultSummary = false
     )

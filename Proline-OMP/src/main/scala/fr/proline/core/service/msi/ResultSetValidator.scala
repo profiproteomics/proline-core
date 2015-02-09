@@ -8,7 +8,7 @@ import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi._
-import fr.proline.core.algo.msi.InferenceMethods
+import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.scoring._
 import fr.proline.core.algo.msi.validation._
@@ -40,7 +40,7 @@ object ResultSetValidator {
     pepMatchValidator: Option[IPeptideMatchValidator] = None,
     protSetFilters: Option[Seq[IProteinSetFilter]] = None,
     protSetValidator: Option[IProteinSetValidator] = None,
-    inferenceMethod: Option[InferenceMethods.Value] = Some(InferenceMethods.communist),
+    inferenceMethod: Option[InferenceMethod.Value] = Some(InferenceMethod.PARSIMONIOUS),
     peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
     storeResultSummary: Boolean = true
   ): ResultSetValidator = {
@@ -109,7 +109,7 @@ class ResultSetValidator(
   pepMatchValidator: Option[IPeptideMatchValidator] = None,
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   protSetValidator: Option[IProteinSetValidator] = None,
-  inferenceMethod: Option[InferenceMethods.Value] = Some(InferenceMethods.communist),
+  inferenceMethod: Option[InferenceMethod.Value] = Some(InferenceMethod.PARSIMONIOUS),
   peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
   storeResultSummary: Boolean = true
 ) extends IService with Logging {
@@ -156,7 +156,7 @@ class ResultSetValidator(
       if (currentRS.isDefined) {
 
         // Create new result set with validated peptide matches and compute result summary
-        val rsm = protSetInferer.computeResultSummary(currentRS.get)
+        val rsm = protSetInferer.computeResultSummary(currentRS.get, keepSubsummableSubsets = true)
 
         // Update score of protein sets
         val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring.get)
