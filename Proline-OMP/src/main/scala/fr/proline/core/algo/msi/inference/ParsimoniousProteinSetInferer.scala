@@ -11,7 +11,7 @@ import fr.proline.repository.util.JDBCWork;
 
 class ParsimoniousProteinSetInferer extends IProteinSetInferer {
 
-  def computeResultSummary( resultSet: ResultSet): ResultSummary = {
+  def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true ): ResultSummary = {
     
     // Retrieve some vars
     val proteinMatches = resultSet.proteinMatches
