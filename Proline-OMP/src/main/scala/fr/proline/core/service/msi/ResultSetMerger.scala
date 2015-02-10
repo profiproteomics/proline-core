@@ -47,7 +47,8 @@ object ResultSetMerger {
 class ResultSetMerger(
   execCtx: IExecutionContext,
   resultSetIds: Option[Seq[Long]],
-  resultSets: Option[Seq[ResultSet]]) extends IService with Logging {
+  resultSets: Option[Seq[ResultSet]]
+) extends IService with Logging {
 
   var mergedResultSet: ResultSet = null
 
@@ -136,7 +137,12 @@ class ResultSetMerger(
 
     var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, storerContext.getMSIDbConnectionContext)
 
-    var targetMergerAlgo: ResultSetAdder = new ResultSetAdder(ResultSet.generateNewId, false, Some(seqLengthByProtId))
+    var targetMergerAlgo: ResultSetAdder = new ResultSetAdder(
+      resultSetId = ResultSet.generateNewId,
+      isValidatedContent = false,
+      isDecoy = false,
+      seqLengthByProtId = Some(seqLengthByProtId)
+    )
 
     for (rsId <- resultSetIds) {
       val resultSet = ResultSetMerger._loadResultSet(rsId, execCtx)
@@ -157,7 +163,12 @@ class ResultSetMerger(
 
       var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, storerContext.getMSIDbConnectionContext)
 
-      var decoyMergerAlgo: ResultSetAdder = new ResultSetAdder(ResultSet.generateNewId, true, Some(seqLengthByProtId))
+      var decoyMergerAlgo: ResultSetAdder = new ResultSetAdder(
+        resultSetId = ResultSet.generateNewId,
+        isValidatedContent = false,
+        isDecoy = true,
+        seqLengthByProtId = Some(seqLengthByProtId)
+      )
 
       for (decoyRSId <- decoyRSIds) {
         val decoyRS = ResultSetMerger._loadResultSet(decoyRSId, execCtx)
@@ -237,10 +248,16 @@ class ResultSetMerger(
     isDecoy: Boolean,
     seqLengthByProtId: Map[Long, Int]
   ): ResultSet = {
+    
+    // Check that resultSets have FULL content
+    for( resultSet <- resultSets ) {
+      require( resultSet.isValidatedContent == false, "use ResultSummaryMerger if you want to deal with validated result sets")
+    }
 
     logger.info("merging result sets...")
     val tmpMergedResultSet = new ResultSetAdder(
       resultSetId = ResultSet.generateNewId,
+      isValidatedContent = false,
       isDecoy = isDecoy,
       seqLengthByProtId = Some(seqLengthByProtId)
     )

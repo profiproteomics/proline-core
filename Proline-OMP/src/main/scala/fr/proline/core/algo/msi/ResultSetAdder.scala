@@ -14,6 +14,7 @@ object AdditionMode extends Enumeration {
 
 class ResultSetAdder(
   val resultSetId: Long,
+  val isValidatedContent: Boolean = false,
   val isDecoy: Boolean = false,
   seqLengthByProtId: Option[Map[Long, Int]] = None,
   val additionMode: AdditionMode.Value = AdditionMode.AGGREGATE,
@@ -151,10 +152,6 @@ class ResultSetAdder(
     // Group peptide matches by peptide id
     val pepMatchesByPepId = mergedPeptideMatches.groupBy(_.peptide.id)
     
-    println( peptideById.get(2304) )
-    println( peptideById.get(2305) )
-    println( pepMatchesByPepId.get(2305) )
-    
     // Build protein matches
     val mergedProteinMatches = protMatchAdderByKey.values.map { proteinMatchAdder =>
       proteinMatchAdder.toProteinMatch(pepMatchesByPepId, seqLengthByProtId )
@@ -169,6 +166,7 @@ class ResultSetAdder(
       peptides = peptideById.values.toArray,
       isDecoy = isDecoy,
       isSearchResult = false,
+      isValidatedContent = isValidatedContent,
       properties = Some(mergedProperties)
     )
 

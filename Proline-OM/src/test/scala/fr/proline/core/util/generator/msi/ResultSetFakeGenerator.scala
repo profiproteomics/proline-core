@@ -682,7 +682,8 @@ class ResultSetFakeGenerator(
       proteinMatches = allProtMatches.toArray, //Created in constructor
       msiSearch = Some(search),
       isDecoy = false,
-      isSearchResult = true
+      isSearchResult = true,
+      isValidatedContent = false
     )
 
   }

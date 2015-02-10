@@ -12,7 +12,8 @@ class ResultSummaryAdder(
   seqLengthByProtId: Option[Map[Long, Int]] = None
 ) extends Logging {
 
-  val rsAdder = new ResultSetAdder(resultSetId, isDecoy, seqLengthByProtId)
+  val isValidatedContent = true // the method getValidatedResultSet is called in addResultSummary
+  val rsAdder = new ResultSetAdder(resultSetId, isValidatedContent, isDecoy, seqLengthByProtId)
   
   def addResultSummaries(resultSummaries: Iterable[ResultSummary]): ResultSummaryAdder = {
     for( rsm <- resultSummaries ) this.addResultSummary(rsm)
