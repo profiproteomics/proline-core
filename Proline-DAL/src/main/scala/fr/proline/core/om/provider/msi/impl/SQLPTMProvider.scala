@@ -115,7 +115,8 @@ class SQLPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvide
         if (scala.math.abs(ptmMonoMass - e.monoMass) <= ptmMonoMassMargin
           && ptm.residue == ptmResidue
           && ptm.location == ptmLocation.toString) {
-          ptmToReturn = ptm
+//          ptmToReturn = ptm
+          return Some(ptm)
         }
       })
     })
