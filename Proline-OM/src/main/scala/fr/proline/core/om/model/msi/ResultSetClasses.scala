@@ -20,7 +20,7 @@ case class ResultSet(
   val isSearchResult: Boolean,
   // true if only validated entities are loaded, false otherwise
   // TODO: remove the default value
-  val isValidatedContent: Boolean = true,
+  val isValidatedContent: Boolean = false,
   
   // Immutable optional fields
 
