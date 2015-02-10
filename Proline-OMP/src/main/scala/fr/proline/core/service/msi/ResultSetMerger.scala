@@ -7,7 +7,6 @@ import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.ResultSetAdder
-import fr.proline.core.algo.msi.{ ResultSetMerger => ResultSetMergerAlgo }
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -53,9 +52,6 @@ class ResultSetMerger(
   var mergedResultSet: ResultSet = null
 
   def mergedResultSetId = if (mergedResultSet == null) 0L else mergedResultSet.id
-
-  // Merge result sets
-  private val rsMergerAlgo = new ResultSetMergerAlgo()
 
   override protected def beforeInterruption = {
     // Release database connections
@@ -151,7 +147,7 @@ class ResultSetMerger(
       }
 
       targetMergerAlgo.addResultSet(resultSet)
-      logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
+      //logger.info("Additioner state : " + targetMergerAlgo.mergedProteinMatches.size + " ProMs, " + targetMergerAlgo.peptideById.size + " Peps," + targetMergerAlgo.mergedProteinMatches.map(_.sequenceMatches).flatten.length + " SeqMs")
     }
 
     mergedResultSet = targetMergerAlgo.toResultSet
@@ -212,12 +208,12 @@ class ResultSetMerger(
     >>>
 
     // Merge target result sets
-    mergedResultSet = _mergeResultSets(resultSets, seqLengthByProtId)
+    mergedResultSet = _mergeResultSets(resultSets, false, seqLengthByProtId)
 
     val decoyRS: Option[ResultSet] = if (decoyResultSets.isEmpty) {
       None      
     } else {
-      Some(_mergeResultSets(decoyResultSets, seqLengthByProtId))
+      Some(_mergeResultSets(decoyResultSets, true, seqLengthByProtId))
     }
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
@@ -238,10 +234,18 @@ class ResultSetMerger(
 
   private def _mergeResultSets(
     resultSets: Seq[ResultSet],
-    seqLengthByProtId: Map[Long, Int]): ResultSet = {
+    isDecoy: Boolean,
+    seqLengthByProtId: Map[Long, Int]
+  ): ResultSet = {
 
     logger.info("merging result sets...")
-    val tmpMergedResultSet = rsMergerAlgo.mergeResultSets(resultSets, Some(seqLengthByProtId))
+    val tmpMergedResultSet = new ResultSetAdder(
+      resultSetId = ResultSet.generateNewId,
+      isDecoy = isDecoy,
+      seqLengthByProtId = Some(seqLengthByProtId)
+    )
+    .addResultSets(resultSets)
+    .toResultSet()
     >>>
 
     // Map peptide matches and protein matches by their tmp id

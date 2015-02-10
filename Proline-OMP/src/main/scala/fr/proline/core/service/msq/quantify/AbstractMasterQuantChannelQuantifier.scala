@@ -1,6 +1,5 @@
 package fr.proline.core.service.msq.quantify
 
-import scala.Array.canBuildFrom
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConversions.setAsJavaSet
 import scala.collection.JavaConverters.asJavaCollectionConverter
@@ -14,7 +13,6 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.ResultSummaryAdder
-import fr.proline.core.algo.msi.ResultSummaryMerger
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.scoring.PeptideSetScoreUpdater
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -56,8 +54,6 @@ import fr.proline.core.orm.msi.{SequenceMatch => MsiSequenceMatch}
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
-
-
 
 abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 

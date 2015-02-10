@@ -89,7 +89,9 @@ class SQLResultSummaryProvider(
           //val protMatchIdSet = rsmPepSets.flatMap(_.proteinMatchIds) toSet
           //val rsmProtMatches = distinctProtMatches.filter( p => protMatchIdSet.contains(p.id) ).toArray
           
-          rsAsOpt = Some(this.getResultSet(rsId, pepMatches, protMatches))
+          val isValidatedContent = true
+          
+          rsAsOpt = Some(this.getResultSet(rsId, isValidatedContent, pepMatches, protMatches))
         }
     
         new ResultSummary(

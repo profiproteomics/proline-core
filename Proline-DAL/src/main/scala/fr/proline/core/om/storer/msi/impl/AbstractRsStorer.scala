@@ -40,7 +40,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
    */
   final def storeResultSet(resultSet: ResultSet, msQueries: Seq[MsQuery], storerContext: StorerContext): Long = {
 
-    require(resultSet.isNative, "only native result sets can be saved using this method")
+    require(resultSet.isSearchResult, "only search results can be saved using this method")
     require(msQueries != null, "msQueries must not be null")
     //require(resultFile != null, "resultFile must not be null")
     require(resultSet.msiSearch.isDefined, "MSISearch must be defined")

@@ -12,22 +12,28 @@ class ResultSummaryAdder(
   seqLengthByProtId: Option[Map[Long, Int]] = None
 ) extends Logging {
 
-  val rsBuilder = new ResultSetAdder(resultSetId, isDecoy, seqLengthByProtId)
+  val rsAdder = new ResultSetAdder(resultSetId, isDecoy, seqLengthByProtId)
+  
+  def addResultSummaries(resultSummaries: Iterable[ResultSummary]): ResultSummaryAdder = {
+    for( rsm <- resultSummaries ) this.addResultSummary(rsm)
+    this
+  }
 
-  def addResultSummary(rsm: ResultSummary) {
+  def addResultSummary(rsm: ResultSummary): ResultSummaryAdder = {
 
     logger.info("Start adding ResultSummary #" + rsm.id)
     val start = System.currentTimeMillis()
-    val selector = new ResultSummarySelector(rsm)
-    rsBuilder.addResultSet(rsm.resultSet.get, selector)
+    rsAdder.addResultSet(rsm.getValidatedResultSet().get)
 
     logger.info("ResultSummary #" + rsm.id + " merged/added in " + (System.currentTimeMillis() - start) + " ms")
+    
+    this
   }
 
   def toResultSummary(): ResultSummary = {
     val start = System.currentTimeMillis()
 
-    val mergedResultSet = rsBuilder.toResultSet()
+    val mergedResultSet = rsAdder.toResultSet()
 
     // Instantiate a protein inference algo and build the merged result summary
     val protInferenceAlgo = ProteinSetInferer(InferenceMethod.PARSIMONIOUS)

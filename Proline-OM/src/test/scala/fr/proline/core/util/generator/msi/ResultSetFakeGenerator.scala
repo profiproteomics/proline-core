@@ -681,7 +681,8 @@ class ResultSetFakeGenerator(
       peptideMatches = allPepMatches.toArray, //Updated in createPepAndCo
       proteinMatches = allProtMatches.toArray, //Created in constructor
       msiSearch = Some(search),
-      isDecoy = false, isNative = true
+      isDecoy = false,
+      isSearchResult = true
     )
 
   }

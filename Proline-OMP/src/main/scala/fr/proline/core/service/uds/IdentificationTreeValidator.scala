@@ -143,19 +143,19 @@ class IdentificationTreeValidator(
         
         this.logger.debug("remove non-validated entities from RS and decoy RS")
 
-        val validatedRs = new ResultSummarySelector(rsm).toResultSet(rsm.getResultSetId)
+        val validatedRsOpt = rsm.getValidatedResultSet()
         
         // Replace the result set by the validated one
-        rsm.resultSet = Some(validatedRs)
+        rsm.resultSet = validatedRsOpt
         
         val decoyRsm = rsm.decoyResultSummary.get
-        val validatedDecoyRs = new ResultSummarySelector(decoyRsm).toResultSet(decoyRsm.getResultSetId)
+        val validatedDecoyRsOpt = decoyRsm.getValidatedResultSet()
         
         // Set the decoy result set as the validated decoy one
-        validatedRs.decoyResultSet = Some(validatedDecoyRs)
+        validatedRsOpt.get.decoyResultSet = validatedDecoyRsOpt
         
         // Do the same in the decoy result summary
-        decoyRsm.resultSet = Some(validatedDecoyRs)
+        decoyRsm.resultSet = validatedDecoyRsOpt
       }
       
       rsmByRsId += targetRS.id -> rsm

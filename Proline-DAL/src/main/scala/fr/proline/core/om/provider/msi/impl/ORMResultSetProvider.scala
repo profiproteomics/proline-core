@@ -192,6 +192,8 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       } else {
         false
       }
+      
+      val isValidatedContent = false
 
       val isQuantified = (rsType == Type.QUANTITATION)
 
@@ -210,10 +212,10 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       /* Child MsiSearches */
       val childMsiSearches = new ArrayBuffer[MSISearch]
       
-      val msiChildResultSets = msiResultSet.getChildren      
+      val msiChildResultSets = msiResultSet.getChildren
       if( msiChildResultSets != null ) {
         
-        for( msiChildResultSet <- msiChildResultSets ) {          
+        for( msiChildResultSet <- msiChildResultSets ) {
           val msiChildMsiSearch = msiChildResultSet.getMsiSearch()
           
           if (msiChildMsiSearch != null) {
@@ -245,11 +247,13 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
         Some(ProfiJson.deserialize[ResultSetProperties](serializedProperties))
       }
 
-      val resultSet = new ResultSet(peptides,
+      val resultSet = new ResultSet(
+        peptides,
         peptideMatches,
         proteinMatches,
         isDecoy,
         isNative,
+        isValidatedContent,
         mergedRSMId,
         msiResultSetId,
         msiResultSet.getName,

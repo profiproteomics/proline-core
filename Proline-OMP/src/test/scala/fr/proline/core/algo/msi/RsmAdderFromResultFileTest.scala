@@ -8,17 +8,6 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.om.model.msi.ResultSet
 
-//object RsmAdderFromResultFileTest extends AbstractResultSetTestCase with Logging {
-/*object RsmAdderFromResultFileTest extends AbstractDbUnitResultFileTestCase with Logging {
-
-  // Define the interface to be implemented
-  val driverType = DriverType.H2
-  val dbUnitResultFile = STR_F122817_Mascot_v2_3
-  val targetRSId = 1L
-  val decoyRSId = Option.empty[Long]
-  
-}*/
-
 class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesting {
   
   val executionContext = STR_F122817_Mascot_v2_3_TEST_CASE.executionContext
@@ -33,8 +22,7 @@ class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesti
     
     val rsId = ResultSet.generateNewId()
     val rsAddAlgo = new ResultSetAdder(resultSetId = rsId)
-    val selector = new ResultSummarySelector(rsm)
-    rsAddAlgo.addResultSet(readRS, selector)
+    rsAddAlgo.addResultSet(readRS)
     
     val builtRS = rsAddAlgo.toResultSet()
     
@@ -59,8 +47,8 @@ class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesti
 
     val rsId = ResultSet.generateNewId()
     val rsAddAlgo = new ResultSetAdder(resultSetId = rsId)
-    val selector = new ResultSummarySelector(rsmAfterFiltering)
-    rsAddAlgo.addResultSet(readRS, selector)
+    val filteredRS = rsmAfterFiltering.getValidatedResultSet().get
+    rsAddAlgo.addResultSet(filteredRS)
     
     val builtRS = rsAddAlgo.toResultSet()
     checkBuiltResultSetIsNew( builtRS )
@@ -82,8 +70,8 @@ class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesti
     
     val rsId = ResultSet.generateNewId()
     val rsAddAlgo = new ResultSetAdder(resultSetId = rsId)
-    rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
-    rsAddAlgo.addResultSet(readRS, new ResultSummarySelector(rsm))
+    rsAddAlgo.addResultSet(readRS)
+    rsAddAlgo.addResultSet(readRS)
     
     val builtRS = rsAddAlgo.toResultSet()
     

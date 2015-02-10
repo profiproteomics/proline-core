@@ -54,7 +54,7 @@ class TargetDecoySplitterTest extends Logging {
     val targetRS = resultFile.getResultSet(false)
     val decoyRS = resultFile.getResultSet(true)
     
-    val rsAddAlgo = new ResultSetAdder(resultSetId = ResultSet.generateNewId(), mode = AdditionMode.UNION)
+    val rsAddAlgo = new ResultSetAdder(resultSetId = ResultSet.generateNewId(), additionMode = AdditionMode.UNION)
     rsAddAlgo.addResultSet(targetRS)
     rsAddAlgo.addResultSet(decoyRS)
     val jointRS = rsAddAlgo.toResultSet()

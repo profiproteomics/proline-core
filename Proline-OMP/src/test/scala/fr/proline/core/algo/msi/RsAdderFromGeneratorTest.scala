@@ -95,7 +95,7 @@ class RsAdderFromGeneratorTest extends RsAdderFromGeneratorTesting with Logging 
 	  rsfb.addDuplicatedPeptideMatches(nbDuplicatedPepMatches)
 	  val generatedRS = rsfb.toResultSet()
 	  
-	  val rsAddAlgo = new ResultSetAdder(resultSetId = ResultSet.generateNewId(), mode = AdditionMode.UNION)
+	  val rsAddAlgo = new ResultSetAdder(resultSetId = ResultSet.generateNewId(), additionMode = AdditionMode.UNION)
 	  rsAddAlgo.addResultSet(generatedRS)
 	  
 	  val builtRS = rsAddAlgo.toResultSet()	  

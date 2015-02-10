@@ -16,8 +16,9 @@ object ResultSetBuilder {
   
   def buildResultSet(
     record: IValueContainer,
+    isValidatedContent: Boolean,
     msiSearchById: Map[Long,MSISearch],
-    msiSearchIdsByParentRsId: Map[Long,Set[Long]],    
+    msiSearchIdsByParentRsId: Map[Long,Set[Long]],
     protMatchesByRsId: Map[Long,Array[ProteinMatch]],
     pepMatchesByRsId: Map[Long,Array[PeptideMatch]]
   ): ResultSet = {
@@ -31,7 +32,7 @@ object ResultSetBuilder {
     val rsPeptides = rsPepMatches map { _.peptide } distinct
     val rsType = r.getString(RSCols.TYPE)
     val isDecoy = rsType matches "DECOY_.*"
-    val isNative = rsType matches ".*SEARCH"
+    val isSearchResult = rsType matches ".*SEARCH"
     val isQuantified = rsType matches "QUANTITATION"
     val decoyRsId = r.getLongOrElse(RSCols.DECOY_RESULT_SET_ID, 0L)
     val mergedRSMId= r.getLongOrElse(RSCols.MERGED_RSM_ID, 0L)
@@ -39,7 +40,7 @@ object ResultSetBuilder {
     // Assume child MSI searches if result set is not native
     var( rsMsiSearchId: Long, childMsiSearches: Array[MSISearch] ) = (0L, Array.empty[MSISearch] )
     
-    if (isNative) {
+    if (isSearchResult) {
       rsMsiSearchId = r.getLongOrElse(RSCols.MSI_SEARCH_ID, 0L)
       childMsiSearches = Array.empty[MSISearch]
     } else if (msiSearchIdsByParentRsId.contains(rsId)) {
@@ -64,7 +65,8 @@ object ResultSetBuilder {
       peptideMatches = rsPepMatches,
       proteinMatches = rsProtMatches,
       isDecoy = isDecoy,
-      isNative = isNative,
+      isSearchResult = isSearchResult,
+      isValidatedContent = isValidatedContent,
       isQuantified = isQuantified,
       msiSearch = msiSearch,
       childMsiSearches = childMsiSearches,

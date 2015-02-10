@@ -6,7 +6,6 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.{MsQuery,PeptideMatch,ResultSummary}
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.MasterQuantitationChannel 
-import fr.proline.core.algo.msi.ResultSummaryMerger
 import scala.collection.mutable.HashMap
 
 object Ms2CountQuantifier extends IQuantifierAlgo with Logging {

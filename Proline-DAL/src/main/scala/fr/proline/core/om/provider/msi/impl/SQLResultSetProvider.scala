@@ -27,14 +27,16 @@ trait SQLResultSetLoader extends Logging {
 
   protected def getResultSet(
     rsId: Long,
+    isValidatedContent: Boolean,
     pepMatches: Array[PeptideMatch],
     protMatches: Array[ProteinMatch]
   ): ResultSet = {
-    this.getResultSets(Array(rsId), pepMatches, protMatches)(0)
+    this.getResultSets(Array(rsId), isValidatedContent, pepMatches, protMatches)(0)
   }
 
   protected def getResultSets(
     rsIds: Seq[Long],
+    isValidatedContent: Boolean,
     pepMatches: Array[PeptideMatch],
     protMatches: Array[ProteinMatch]
   ): Array[ResultSet] = {
@@ -72,6 +74,7 @@ trait SQLResultSetLoader extends Logging {
         
         val rs = ResultSetBuilder.buildResultSet(
           record,
+          isValidatedContent,
           msiSearchById,
           msiSearchIdsByParentRsId,
           protMatchesByRsId,
@@ -112,7 +115,10 @@ class SQLResultSetProvider(
   val udsDbCtx: DatabaseConnectionContext
 ) extends SQLResultSetLoader with IResultSetProvider {
 
-  def getResultSets(rsIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[ResultSet] = {
+  def getResultSets(
+    rsIds: Seq[Long],
+    resultSetFilter: Option[ResultSetFilter] = None
+  ): Array[ResultSet] = {
     if (rsIds.isEmpty) return Array()
     
     val start = System.currentTimeMillis()
@@ -128,14 +134,17 @@ class SQLResultSetProvider(
     val protMatchProvider = new SQLProteinMatchProvider(msiDbCtx)
     val protMatches = protMatchProvider.getResultSetsProteinMatches(rsIds)
 
-    val resultSets = this.getResultSets(rsIds, pepMatches, protMatches)
+    val resultSets = this.getResultSets(rsIds, false, pepMatches, protMatches)
     
     logger.info(s"${rsIds.length} result sets loaded in ${ (System.currentTimeMillis() - start) / 1000 } s")
 
     resultSets
   }
 
-  def getResultSetsAsOptions(resultSetIds: Seq[Long], resultSetFilter: Option[ResultSetFilter] = None): Array[Option[ResultSet]] = {
+  def getResultSetsAsOptions(
+    resultSetIds: Seq[Long],
+    resultSetFilter: Option[ResultSetFilter] = None
+  ): Array[Option[ResultSet]] = {
     if (resultSetIds.isEmpty) return Array()
     
     val resultSets = this.getResultSets(resultSetIds, resultSetFilter)

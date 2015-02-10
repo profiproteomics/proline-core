@@ -43,26 +43,26 @@ class SQLRsStorer(
 
   private def _createResultSet(resultSet: ResultSet, context: StorerContext): Long = {
     // TODO: retrieve seqDbIdByTmpId in an other way
-    if (resultSet.isNative) this._storeResultSet(resultSet, context.seqDbIdByTmpId, context)
+    if (resultSet.isSearchResult) this._storeResultSet(resultSet, context.seqDbIdByTmpId, context)
     else this._storeResultSet(resultSet, context)
   }
 
-  // Only for native result sets
+  // Only for search results
   private def _storeResultSet(resultSet: ResultSet, seqDbIdByTmpId: Map[Long, Long], context: StorerContext): Long = {
-    require(resultSet.isNative, "too many arguments for a non native result set")
+    require(resultSet.isSearchResult, "a search result must be provided to this method")
 
     this._insertResultSet(resultSet, context)
-    this._storeNativeResultSetObjects(resultSet, seqDbIdByTmpId, context)
+    this._storeSearchResultObjects(resultSet, seqDbIdByTmpId, context)
 
     resultSet.id
   }
 
-  // Only for non native result sets
+  // Only for user result sets
   private def _storeResultSet(resultSet: ResultSet, context: StorerContext): Long = {
-    require(resultSet.isNative == false, "not enough arguments for a native result set")
+    require(resultSet.isSearchResult == false, "this method can't deal with search result")
 
     this._insertResultSet(resultSet, context)
-    this._storeNonNativeResultSetObjects(resultSet, context)
+    this._storeUserResultSetObjects(resultSet, context)
 
     resultSet.id
   }
@@ -78,10 +78,8 @@ class SQLRsStorer(
       val rsName = if (resultSet.name == null) None else Some(resultSet.name)
       val rsDesc = if (resultSet.description == null) None else Some(resultSet.description)
 
-      val rsType = if (resultSet.isNative) if (isDecoy) RSType.DECOY_SEARCH else RSType.SEARCH
+      val rsType = if (resultSet.isSearchResult) if (isDecoy) RSType.DECOY_SEARCH else RSType.SEARCH
       else if (isDecoy) RSType.DECOY_USER else RSType.USER
-      //rsType = if (resultSet.isNative) "SEARCH" else "USER"
-      //rsType = if (isDecoy) "DECOY_" + rsType else rsType
 
       val decoyRsId = if (resultSet.getDecoyResultSetId > 0) Some(resultSet.getDecoyResultSetId) else None
       val mergedRSMId = if (resultSet.mergedResultSummaryId > 0L) Some(resultSet.mergedResultSummaryId) else None
@@ -113,7 +111,7 @@ class SQLRsStorer(
 
   }
 
-  private def _storeNativeResultSetObjects(resultSet: ResultSet, seqDbIdByTmpId: Map[Long, Long], context: StorerContext): Unit = {
+  private def _storeSearchResultObjects(resultSet: ResultSet, seqDbIdByTmpId: Map[Long, Long], context: StorerContext): Unit = {
 
     val msiDb = context.getMSIDbConnectionContext
 
@@ -290,7 +288,7 @@ class SQLRsStorer(
 
   }
 
-  private def _storeNonNativeResultSetObjects(resultSet: ResultSet, context: StorerContext): Unit = {
+  private def _storeUserResultSetObjects(resultSet: ResultSet, context: StorerContext): Unit = {
 
     val msiDb = context.getMSIDbConnectionContext
 

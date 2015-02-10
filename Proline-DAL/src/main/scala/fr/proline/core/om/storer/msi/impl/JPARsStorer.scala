@@ -104,7 +104,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         Type.QUANTITATION
       } else {
 
-        if (resultSet.isNative) {
+        if (resultSet.isSearchResult) {
 
           if (resultSet.isDecoy) {
             Type.DECOY_SEARCH

@@ -7,7 +7,6 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context._
-import fr.proline.core.algo.msi.{ ResultSummaryMerger => RsmMergerAlgo }
 import fr.proline.core.algo.msi.scoring.{ PepSetScoring, PeptideSetScoreUpdater }
 import fr.proline.core.dal._
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -137,7 +136,6 @@ class ResultSummaryMerger(
     // FIXME: check that all peptide sets have the same score type
     val peptideSetScoring = PepSetScoring.withName(resultSummaries(0).peptideSets(0).scoreType)
     val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring)
-    val rsmMerger = new RsmMergerAlgo(pepSetScoreUpdater)
 
     var mergedDecoyRSMId: Long = -1L
     var mergedDecoyRSId: Long = -1L
@@ -175,7 +173,15 @@ class ResultSummaryMerger(
       // Retrieve sequence length mapped by the corresponding protein id
       val seqLengthByProtId = new MsiDbHelper(storerContext.getMSIDbConnectionContext).getSeqLengthByBioSeqId(proteinIdSet)
       logger.debug("Merging DECOY ResultSummaries ...")
-      val mergedDecoyRSM = rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
+      val mergedDecoyRSM = new ResultSummaryAdder(
+        resultSetId = ResultSummary.generateNewId(),
+        isDecoy = true,
+        pepSetScoreUpdater = pepSetScoreUpdater,
+        seqLengthByProtId = Some(seqLengthByProtId)
+      )
+      .addResultSummaries(resultSummaries)
+      .toResultSummary()
+
 
       logger.debug("Storing DECOY ResultSummary ...")
       _storeResultSummary(storerContext, mergedDecoyRSM, distinctRSMIds.toSet, distinctChildRSIdsB.result)
@@ -216,7 +222,14 @@ class ResultSummaryMerger(
     >>>
 
     logger.info("Merging TARGET ResultSummaries ...")
-    val mergedTargetRSM = rsmMerger.mergeResultSummaries(resultSummaries, seqLengthByProtId)
+    val mergedTargetRSM = new ResultSummaryAdder(
+      resultSetId = ResultSummary.generateNewId(),
+      isDecoy = true,
+      pepSetScoreUpdater = pepSetScoreUpdater,
+      seqLengthByProtId = Some(seqLengthByProtId)
+    )
+    .addResultSummaries(resultSummaries)
+    .toResultSummary()
 
     /* Set Ids of decoy RSM and RS */
     if (mergedDecoyRSMId > 0L) {
@@ -262,7 +275,12 @@ class ResultSummaryMerger(
       
       val distinctChildRSIdsB = Seq.newBuilder[Long]
 
-      var decoyRsmBuilder = new ResultSummaryAdder(ResultSummary.generateNewId(), true, pepSetScoreUpdater, Some(seqLengthByProtId))
+      var decoyRsmBuilder = new ResultSummaryAdder(
+        resultSetId = ResultSummary.generateNewId(),
+        isDecoy = true,
+        pepSetScoreUpdater = pepSetScoreUpdater,
+        seqLengthByProtId = Some(seqLengthByProtId)
+      )
 
       logger.debug("Merging DECOY ResultSummaries ...")
       for (decoyRSMId <- decoyRSMIds) {
@@ -291,9 +309,14 @@ class ResultSummaryMerger(
     }
 
     val distinctRSMIds = scala.collection.mutable.Set.empty[Long]
-	val distinctChildRSIdsB =  Seq.newBuilder[Long]
+    val distinctChildRSIdsB =  Seq.newBuilder[Long]
     
-    var rsmBuilder = new ResultSummaryAdder(ResultSummary.generateNewId(), false, pepSetScoreUpdater, Some(seqLengthByProtId))
+    var rsmBuilder = new ResultSummaryAdder(
+      resultSetId = ResultSummary.generateNewId(),
+      isDecoy = false,
+      pepSetScoreUpdater = pepSetScoreUpdater,
+      seqLengthByProtId = Some(seqLengthByProtId)
+    )
 
     logger.debug("Merging TARGET ResultSummaries ...")
     for (rsmId <- resultSummaryIds) {

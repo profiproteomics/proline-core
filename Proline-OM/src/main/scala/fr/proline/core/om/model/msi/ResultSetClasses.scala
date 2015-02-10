@@ -16,7 +16,11 @@ case class ResultSet(
   val peptideMatches: Array[PeptideMatch],
   val proteinMatches: Array[ProteinMatch],
   val isDecoy: Boolean,
-  val isNative: Boolean,
+   // true if the ResultSet correspond to a "search result", false otherwise
+  val isSearchResult: Boolean,
+  // true if only validated entities are loaded, false otherwise
+  // TODO: remove the default value
+  val isValidatedContent: Boolean = true,
   
   // Immutable optional fields
 
@@ -25,7 +29,7 @@ case class ResultSet(
   var id: Long = 0,
   var name: String = null,
   var description: String = null,
-  var isQuantified: Boolean = false,
+  var isQuantified: Boolean = false, // TODO: remove me ???
 
   protected var msiSearchId: Long = 0,
   var msiSearch: Option[MSISearch] = None,
@@ -181,11 +185,19 @@ case class ResultSummary(
 
   // Requirements
   require(peptideInstances != null && proteinSets != null)
+  
+  def getValidatedResultSet(): Option[ResultSet] = {
+    resultSet.map { rs =>
+      if( rs.isValidatedContent ) rs
+      else {
+        new ValidatedResultSetBuilder(this).getValidatedResultSet()
+      }
+    }
+  }
 
   def getResultSetId: Long = { if (resultSet.isDefined) resultSet.get.id else resultSetId }
 
-  
-   def setDecoyResultSummaryId(decoyRSMId: Long) {
+  def setDecoyResultSummaryId(decoyRSMId: Long) {
     require((decoyResultSummary == null) || decoyResultSummary.isEmpty || (decoyResultSummary.get.id == decoyRSMId), "Inconsistent decoyRSId")
 
     decoyResultSummaryId = decoyRSMId
@@ -196,8 +208,7 @@ case class ResultSummary(
   def peptideInstanceById: Map[Long, PeptideInstance] = {
 
     val tmpPepInstById = Map() ++ peptideInstances.map { pepInst => (pepInst.id -> pepInst) }
-    if (tmpPepInstById.size != peptideInstances.length)
-      throw new Exception("duplicated peptide instance id")
+    require(tmpPepInstById.size == peptideInstances.length, "duplicated peptide instance id")
 
     tmpPepInstById
 
@@ -206,11 +217,9 @@ case class ResultSummary(
   def proteinSetById: Map[Long, ProteinSet] = {
 
     val tmpProtSetById = Map() ++ proteinSets.map { protSet => (protSet.id -> protSet) }
-    if (tmpProtSetById.size != proteinSets.length)
-      throw new Exception("duplicated protein set id")
+    require(tmpProtSetById.size == proteinSets.length, "duplicated protein set id")
 
     tmpProtSetById
-
   }
 
   def getBestValidatedPepMatchesByPepSetId(): Map[Long, Array[PeptideMatch]] = {
@@ -369,4 +378,75 @@ case class RsmValidationResultProperties(
   @BeanProperty var fdr: Option[Float] = None
 )
 
+class ValidatedResultSetBuilder( rsm: ResultSummary ) {
+  require( rsm.resultSet.isDefined, "a resultSet must be defined")
+  
+  protected val( validPepIdSet, validPepMatchIdSet, validProtMatchIdSet ) = {
+    
+    // Build the set of unique valid entities ids
+    val validPepIdSetBuilder = Set.newBuilder[Long]
+    val validPepMatchIdSetBuilder = Set.newBuilder[Long]
+    val validProtMatchIdSetBuilder = Set.newBuilder[Long]
+    
+    // Retrieve the ID of valid peptide matches (having a corresponding peptide instance)
+    for (proteinSet <- rsm.proteinSets) {
+      if (proteinSet.isValidated) {
+        val peptideSet = proteinSet.peptideSet
+        
+        for (pepInstance <- peptideSet.getPeptideInstances) {
+          validPepIdSetBuilder += pepInstance.peptide.id
+          validPepMatchIdSetBuilder ++= pepInstance.getPeptideMatchIds
+        }
+        
+        validProtMatchIdSetBuilder ++= proteinSet.getProteinMatchIds
+      }
+    }
+    
+    (
+      validPepIdSetBuilder.result(),
+      validPepMatchIdSetBuilder.result(),
+      validProtMatchIdSetBuilder.result()
+    )
+  }
+
+  protected def getValidatedPeptideMatches(rs: ResultSet): Iterable[PeptideMatch] = {
+    rs.peptideMatches.filter { pm => validPepMatchIdSet.contains(pm.id) }
+  }
+
+  protected def getValidatedProteinMatches(rs: ResultSet): Iterable[ProteinMatch] = {
+    rs.proteinMatches.filter { pm => validProtMatchIdSet.contains(pm.id) }
+  }
+
+  protected def getValidatedSequenceMatches(proteinMatch: ProteinMatch): Iterable[SequenceMatch] = {
+    proteinMatch.sequenceMatches.filter {sm => validPepIdSet.contains(sm.getPeptideId) }
+  }
+  
+  def getValidatedResultSet(): ResultSet = {
+    
+    val rs = rsm.resultSet.get
+    val validatedProtMatches = this.getValidatedProteinMatches(rs).toArray
+    val validatedPepMatches = this.getValidatedPeptideMatches(rs).toArray
+    val pepMatchesByPepId = validatedPepMatches.groupBy(_.peptide.id)
+    val validatedPeptides = validatedPepMatches.map(_.peptide).distinct
+    
+    val validatedProtAndSeqMatches = for (proteinMatch <- validatedProtMatches) yield {
+      
+      val newSeqMatches = for (
+        seqMatch <- proteinMatch.sequenceMatches;
+        if pepMatchesByPepId.contains(seqMatch.getPeptideId)
+      ) yield seqMatch
+      
+      proteinMatch.copy(
+        sequenceMatches = newSeqMatches
+      )
+    }
+    
+    rs.copy(
+      peptides = validatedPeptides,
+      peptideMatches = validatedPepMatches,
+      proteinMatches = validatedProtAndSeqMatches
+    )
+  }
+
+}
 

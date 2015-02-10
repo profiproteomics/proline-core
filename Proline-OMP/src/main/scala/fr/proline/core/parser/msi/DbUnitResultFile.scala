@@ -460,6 +460,7 @@ class MsiDbDatasetParser(
     
     val RSCols = MsiDbResultSetColumns
     val rsRecords = msiRecordByTableName(MsiDbResultSetTable.name).toArray
+    val isValidatedContent = false
     
     // Build some mappings
     val pepMatchesByRsId = this.peptideMatches.groupBy(_.resultSetId)
@@ -469,6 +470,7 @@ class MsiDbDatasetParser(
       
       ResultSetBuilder.buildResultSet(
         rsRecord,
+        isValidatedContent,
         Map( msiSearch.id -> msiSearch ),
         Map(),
         protMatchesByRsId,
