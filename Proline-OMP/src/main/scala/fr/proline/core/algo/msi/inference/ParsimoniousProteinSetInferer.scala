@@ -185,7 +185,7 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
         val typicalProtMatchOpt = Option(typicalProtMatch)
 
         val proteinSet = ProteinSet(
-          id = 1L,
+          id = proteinSetId,
           isDecoy = resultSet.isDecoy,
           peptideSet = newPeptideSet,
           hasPeptideSubset = newPeptideSet.hasSubset,
