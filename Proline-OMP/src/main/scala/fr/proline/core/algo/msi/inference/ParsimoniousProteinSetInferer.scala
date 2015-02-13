@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msi.inference
 
+import scala.collection.immutable.LongMap
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
@@ -14,6 +15,7 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
     
     // Retrieve some vars
     val proteinMatches = resultSet.proteinMatches
+    val proteinMatchById = resultSet.proteinMatchById
     val validatedPeptideMatches = resultSet.peptideMatches.filter( _.isValidated )
     
     // Group peptide matches into peptide instances and map instance by peptide match id
@@ -21,9 +23,10 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
     
     // Define some vars
     val resultSummaryId = ResultSummary.generateNewId()
-    val peptideInstances = new ArrayBuffer[PeptideInstance](peptideMatchesByPepId.size)
-    val peptideInstanceById = new HashMap[Long,PeptideInstance]()
-    val pepInstanceByPepId = new HashMap[Long,PeptideInstance]()
+    val peptideCount = peptideMatchesByPepId.size
+    val peptideInstances = new ArrayBuffer[PeptideInstance](peptideCount)
+    val pepInstanceByIdPairs = new ArrayBuffer[(Long,PeptideInstance)](peptideCount)
+    val pepInstanceByPepIdPairs = new ArrayBuffer[(Long,PeptideInstance)](peptideCount)
     
     // Build peptide instances and map them
     for( (peptideId, pepMatchGroup) <- (peptideMatchesByPepId) ) {
@@ -46,56 +49,72 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
         resultSummaryId = resultSummaryId
       )
       
-      peptideInstanceById += ( peptideInstance.id -> peptideInstance )
-      pepInstanceByPepId += ( peptideInstance.peptide.id -> peptideInstance )
+      pepInstanceByIdPairs += ( peptideInstance.id -> peptideInstance )
+      pepInstanceByPepIdPairs += ( peptideInstance.peptide.id -> peptideInstance )
       peptideInstances += peptideInstance
     }
     
+    // Convert some ArrayBuffers into LongMaps
+    val pepInstanceById = LongMap( pepInstanceByIdPairs: _* )
+    val pepInstanceByPepId = LongMap( pepInstanceByPepIdPairs: _* )
+    
     // Map peptide instance ids by protein match id
-    val peptideIdByProtMatchIdBuilder = collection.immutable.Map.newBuilder[Long,Set[Long]]
+    val peptideIdSetByProtMatchIdPairs = new ArrayBuffer[(Long,Set[Long])](proteinMatches.length)//collection.immutable.Map.newBuilder[Long,Set[Long]]
     val proteinCountByPepId = new HashMap[Long,Int]()
+    peptideInstances.foreach( pepInst => proteinCountByPepId += pepInst.peptideId -> 0 )
     
     for( protMatch <- proteinMatches ) {
       val seqMatches = protMatch.sequenceMatches
       
       // Retrieve only validated peptide matches (i.e. present in peptide matches)
-      val nrPepIdSet = new HashSet[Long]()
+      val protMatchPepIds = new ArrayBuffer[Long](seqMatches.length)
       for( seqMatch <- seqMatches ) {
         val pepId = seqMatch.getPeptideId
         if (pepInstanceByPepId.contains(pepId)) {
-          nrPepIdSet += pepId
+          protMatchPepIds += pepId
         }
       }
       
-      // Increment protein match count for each matching peptide instance
-      nrPepIdSet.foreach( key => {
-        // Initialize counter
-        proteinCountByPepId.getOrElseUpdate(key, 0)
-        // Update counter
-        proteinCountByPepId( key ) += 1
-      } )
+      if (protMatchPepIds.length > 0) {
+        
+        // Remove duplicated peptide ids (one peptide can be located at different positions of the protein sequence
+        val protMatchPepIdSet = protMatchPepIds.toSet
+        
+        // Increment protein match count for each matching peptide instance
+        protMatchPepIdSet.foreach( pepId => {
+          // Update counter
+          proteinCountByPepId( pepId ) += 1
+        } )
       
-      if (nrPepIdSet.size > 0)
-      	peptideIdByProtMatchIdBuilder += (protMatch.id -> nrPepIdSet.toSet)
+        peptideIdSetByProtMatchIdPairs += (protMatch.id -> protMatchPepIdSet)
+      }
     }
     
     // Clusterize peptides
-    val peptideIdByProtMatchId = peptideIdByProtMatchIdBuilder.result()
-    val clusters = SetClusterer.clusterizeMappedSets[Long,Long]( peptideIdByProtMatchId )
+    val peptideIdSetByProtMatchId = LongMap( peptideIdSetByProtMatchIdPairs: _* )
+    val distinctPepIdsByProtMatchId = for( (a,b) <- peptideIdSetByProtMatchId ) yield a -> b.toArray
+    val clusters = SetClusterer.clusterizeMappedSets[Long,Long]( peptideIdSetByProtMatchId )
     
     // Define some vars
-    val proteinSets = new ArrayBuffer[ProteinSet](clusters.length)
-    val peptideSets = new ArrayBuffer[PeptideSet](clusters.length)
-    val proteinSetCountByPepInstanceId = new HashMap[Long,Int]
-    val peptideSetIdByClusterId = new HashMap[Long,Long]
+    val clusterCount = clusters.length
+    val proteinSets = new ArrayBuffer[ProteinSet](clusterCount)
+    val peptideSets = new ArrayBuffer[PeptideSet](clusterCount)
+    val peptideSetIdByClusterIdPairs = new ArrayBuffer[(Long,Long)](clusterCount)
     
     // Generate id for each cluster and map it by the provided cluster id
     for( cluster <- clusters ) {
       // Generate new peptide set id
       val peptideSetId = PeptideSet.generateNewId()
-      peptideSetIdByClusterId += ( cluster.id -> peptideSetId )
+      peptideSetIdByClusterIdPairs += ( cluster.id -> peptideSetId )
     }
-      
+    
+    // Convert ArrayBuffer into LongMap
+    val peptideSetIdByClusterId = LongMap( peptideSetIdByClusterIdPairs: _* )
+    
+    // Create a protein set count for each peptide instance
+    val proteinSetCountByPepInstanceId = new HashMap[Long,Int]()
+    peptideInstances.foreach( pepInst => proteinSetCountByPepInstanceId += (pepInst.id -> 0) )
+    
     // Iterate over protein match clusters to build peptide sets
     for( cluster <- clusters ) {
       
@@ -107,20 +126,14 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
       // Retrieve the protein match ids matching the same set of peptides
       val clusterProtMatchIds = cluster.samesetsKeys
       // Retrieve the corresponding set of peptides
-      val clusterPepIds = peptideIdByProtMatchId( clusterProtMatchIds(0) )
+      val clusterPepIds = distinctPepIdsByProtMatchId( clusterProtMatchIds(0) )
       
       // Retrieve peptide instances corresponding to this set
-      val samesetPeptideInstanceIds = new ArrayBuffer[Long]
-      for( clusterPepId <- clusterPepIds ) {
-        val tmpPepInstanceIds = pepInstanceByPepId(clusterPepId).id
-        samesetPeptideInstanceIds += tmpPepInstanceIds
-      }
-      val samesetPeptideInstances = samesetPeptideInstanceIds.map { peptideInstanceById(_) } 
-                   
+      val samesetPeptideInstances = clusterPepIds.map( pepInstanceByPepId(_) )
+      
       // Build peptide set items
       var peptideMatchesCount = 0
-      val pepSetItems = new ArrayBuffer[PeptideSetItem]
-      for( tmpPepInstance <- samesetPeptideInstances ) {
+      val pepSetItems = for( tmpPepInstance <- samesetPeptideInstances ) yield {
         
         // Increment peptide matches count
         peptideMatchesCount += tmpPepInstance.getPeptideMatchIds.length
@@ -128,13 +141,10 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
         // Increment protein set count for each matching peptide instance
         if( !isSubset ) {
           val id = tmpPepInstance.id
-          // Initialize counter
-          proteinSetCountByPepInstanceId.getOrElseUpdate(id, 0)
-          // Update counter
-          proteinSetCountByPepInstanceId(id) += 1
+          proteinSetCountByPepInstanceId(tmpPepInstance.id) = proteinSetCountByPepInstanceId(id) + 1
         }
         
-        pepSetItems += new PeptideSetItem(
+        new PeptideSetItem(
           peptideInstance = tmpPepInstance,
           peptideSetId = peptideSetId,
           selectionLevel = 2,
@@ -143,67 +153,56 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
         
       }
       
-      // Build peptide set
-      def buildPeptideSet( proteinSetId: Long ): PeptideSet = {
-        val strictSubsetIdsOpt = cluster.strictSubsetsIds.map { strictSubsetsIds =>
-          strictSubsetsIds.map(peptideSetIdByClusterId(_)).toArray
-        }
-        
-        val subsumableSubsetIdsOpt = cluster.subsumableSubsetsIds.map { subsumableSubsetsIds =>
-          subsumableSubsetsIds.map(peptideSetIdByClusterId(_)).toArray
-        }
-        
-        new PeptideSet(
-          id = peptideSetId,
-          items = pepSetItems.toArray,
-          isSubset = isSubset,
-          peptideMatchesCount = peptideMatchesCount,
-          proteinMatchIds = clusterProtMatchIds.toArray,
-          strictSubsetIds = strictSubsetIdsOpt.orNull,
-          subsumableSubsetIds = subsumableSubsetIdsOpt.orNull,
-          proteinSetId = proteinSetId,
-          resultSummaryId = resultSummaryId
-        )
+      // Determine strict and subsumable subsets
+      val strictSubsetIdsOpt = cluster.strictSubsetsIds.map { strictSubsetsIds =>
+        strictSubsetsIds.map(peptideSetIdByClusterId(_)).toArray
       }
       
-      // If peptide set is a subset
-      val peptideSet = if( isSubset ) buildPeptideSet( 0 )
-      // Else we create a new protein set
-      else {
-        val proteinSetId = ProteinSet.generateNewId()
-        val newPeptideSet = buildPeptideSet( proteinSetId )
-        val sameSetPmIds = newPeptideSet.proteinMatchIds
-
-        // Choose Typical using arbitrary alphabetical order
-        var typicalProtMatch: ProteinMatch = null
-        for (sameSetId <- sameSetPmIds) {
-          val samesetProt = resultSet.proteinMatchById(sameSetId)
-          if (typicalProtMatch == null || typicalProtMatch.accession.compareTo(samesetProt.accession) > 0) {
-            typicalProtMatch = samesetProt
-          }
-        }
-        val typicalProtMatchOpt = Option(typicalProtMatch)
-
-        val proteinSet = ProteinSet(
-          id = proteinSetId,
-          isDecoy = resultSet.isDecoy,
-          peptideSet = newPeptideSet,
-          hasPeptideSubset = newPeptideSet.hasSubset,
-          typicalProteinMatchId = typicalProtMatchOpt.map(_.id).getOrElse(0),
-          typicalProteinMatch = typicalProtMatchOpt,
-          samesetProteinMatchIds = sameSetPmIds,
-          subsetProteinMatchIds = cluster.subsetsKeys.toArray,
-          resultSummaryId = resultSummaryId
-        )
-        
-        // Add protein set to the list
-        proteinSets += proteinSet
-        
-        newPeptideSet
+      val subsumableSubsetIdsOpt = cluster.subsumableSubsetsIds.map { subsumableSubsetsIds =>
+        subsumableSubsetsIds.map(peptideSetIdByClusterId(_)).toArray
       }
+      
+      // Compute the proteinSetId
+      val proteinSetId  = if( isSubset ) 0L
+      else ProteinSet.generateNewId()
+      
+      val peptideSet = new PeptideSet(
+        id = peptideSetId,
+        items = pepSetItems.toArray,
+        isSubset = isSubset,
+        peptideMatchesCount = peptideMatchesCount,
+        proteinMatchIds = clusterProtMatchIds.toArray,
+        strictSubsetIds = strictSubsetIdsOpt.orNull,
+        subsumableSubsetIds = subsumableSubsetIdsOpt.orNull,
+        proteinSetId = proteinSetId,
+        resultSummaryId = resultSummaryId
+      )
       
       // Add peptide set to the list
       peptideSets += peptideSet
+      
+      // If peptide set is not a subset we create a new protein set
+      if( isSubset == false ) {
+        
+        val proteinSetId = ProteinSet.generateNewId()
+        val sameSetProtMatchIds = peptideSet.proteinMatchIds
+        
+        // Choose Typical using arbitrary alphabetical order
+        val typicalProtMatch = sameSetProtMatchIds.map( proteinMatchById(_) ).minBy( _.accession )
+
+        // Add protein set to the list
+        proteinSets += ProteinSet(
+          id = proteinSetId,
+          isDecoy = resultSet.isDecoy,
+          peptideSet = peptideSet,
+          hasPeptideSubset = peptideSet.hasSubset,
+          typicalProteinMatchId = typicalProtMatch.id,
+          typicalProteinMatch = Some(typicalProtMatch),
+          samesetProteinMatchIds = sameSetProtMatchIds,
+          subsetProteinMatchIds = cluster.subsetsKeys.toArray,
+          resultSummaryId = resultSummaryId
+        )
+      }
     }
     
     // Populate strictSubsets and subsumableSubsets
@@ -218,7 +217,7 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
     }
     
     // Update peptide instance counts
-    for( pepInstance <- peptideInstanceById.values ) {
+    for( pepInstance <- pepInstanceById.values ) {
       
       // Retrieve some vars
       val proteinMatchCount = proteinCountByPepId( pepInstance.peptide.id )
@@ -229,7 +228,7 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
       pepInstance.proteinSetsCount = proteinSetCount
       pepInstance.validatedProteinSetsCount = proteinSetCount
     }
-        
+    
     // Create result summary
     new ResultSummary(
       id = resultSummaryId,
@@ -237,8 +236,6 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
       peptideSets = peptideSets.toArray,
       proteinSets = proteinSets.toArray,
       resultSet = Some(resultSet)
-      //isDecoy = resultSet.isDecoy,
-      //isNative = resultSet.isNative
     )
     
   }

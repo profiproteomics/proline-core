@@ -7,7 +7,7 @@ import fr.proline.core.om.model.msi._
 
 class ResultSummaryAdder(
   val resultSetId: Long,
-  val isDecoy: Boolean,
+  val isDecoy: Boolean = false,
   pepSetScoreUpdater: IPeptideSetScoreUpdater,
   seqLengthByProtId: Option[Map[Long, Int]] = None
 ) extends Logging {

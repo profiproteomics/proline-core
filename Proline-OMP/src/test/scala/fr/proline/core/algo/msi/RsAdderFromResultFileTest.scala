@@ -1,10 +1,9 @@
 package fr.proline.core.algo.msi
 
 import org.junit.Assert._
+import org.junit.BeforeClass
 import org.junit.Test
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
@@ -23,11 +22,23 @@ object RsAdderFromResultFileTest extends AbstractDbUnitResultFileTestCase with L
   
 }*/
 
+object RsAdderFromResultFileTest extends Logging {
+  
+  var readRS: ResultSet = null
+  
+  @BeforeClass
+  def init() {
+    readRS = STR_F122817_Mascot_v2_3_TEST_CASE.getRS
+  }
+
+}
+
 class RsAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesting {
   
   val executionContext = STR_F122817_Mascot_v2_3_TEST_CASE.executionContext
   require( executionContext != null, "executionContext is null" )
-  val readRS = STR_F122817_Mascot_v2_3_TEST_CASE.getRS
+  
+  val readRS = RsAdderFromResultFileTest.readRS
   
   @Test
   def addOneRS() {
