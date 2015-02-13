@@ -23,9 +23,7 @@ object SetClusterer {
     val keysByValueBuilder = new collection.mutable.HashMap[V,ArrayBuffer[K]]()
     
     for( ( key, values) <- valuesByKey ) {
-      if( values == null ) {
-        throw new Exception("undefined values for key '"+ key +"'")
-      }
+      require( values != null, "undefined values for key '"+ key +"'")
       
       // Iterate over values to fill the reversed map
       for( value <- values ) {        
@@ -38,25 +36,30 @@ object SetClusterer {
     val keysByValue = keysByValueBuilder.toMap
     
     // Search sets of values which share at least one value
-    var keySets = new ArrayBuffer[List[K]]
-    var assignedKeys = new collection.mutable.HashSet[K]
+    val keySets = new ArrayBuffer[List[K]]
+    val assignedKeys = new collection.mutable.HashSet[K]
     
     for( ( key, values) <- valuesByKey ) {
       if( ! assignedKeys.contains(key) ) {
-        val keySet = this.getAllKeysHavingRelatedValues[K,V]( valuesByKey, 
-                                                              keysByValue,
-                                                              values,
-                                                              new collection.mutable.HashSet[V] )
-        if( keySet.isDefined ) {
-          keySets += keySet.get
-          keySet.get.foreach { key => assignedKeys += key }
+        val keySet = new collection.mutable.HashSet[K]
+        this.getAllKeysHavingRelatedValues[K,V](
+          valuesByKey,
+          keysByValue,
+          values,
+          new collection.mutable.HashSet[V],
+          keySet
+        )
+        
+        if( keySet.isEmpty == false ) {
+          keySets += keySet.toList
+          assignedKeys ++= keySet
         }
       }
     }
     
     // Compute clusters of keys inside each key set
     val setClusters = new ArrayBuffer[SetCluster[K,V]]
-    var clusterIdCount = 0
+    var clusterIdCount = 0L
     for( keySet <- keySets ) {
       
       // Group keys which have the same set of values
@@ -69,7 +72,7 @@ object SetClusterer {
         val valuesAsStr = stringifySortedList(values.toList)
         
         if( ! samesetMap.contains(valuesAsStr) ) {
-          clusterIdCount += 1
+          clusterIdCount += 1L
           samesetMap += valuesAsStr -> SetCluster( id = clusterIdCount, isSubset = false, samesetsValues = values ) 
           
           // Update values counters
@@ -83,16 +86,18 @@ object SetClusterer {
         sameset.samesetsKeys += key
       }
       
+      // Retrieve samesets
+      val samesets = samesetMap.values
+      
       // Split samesets based on the specificity of their values
       val unspecificSamesets = new ArrayBuffer[SetCluster[K,V]](0)
-      val samesetById = new collection.mutable.HashMap[Long,SetCluster[K,V]]()
+      val samesetByIdPairs = new ArrayBuffer[(Long,SetCluster[K,V])](samesets.size)
       val oversetIdsByValue = new collection.mutable.HashMap[V,ArrayBuffer[Long]]()
-      
-      val samesets = samesetMap.values
+     
       for( sameset <- samesets ) {
         
         val samesetId = sameset.id
-        samesetById += (samesetId -> sameset )
+        samesetByIdPairs += (samesetId -> sameset )
         
         val values = sameset.samesetsValues
         var hasSpecificValue = false
@@ -116,6 +121,8 @@ object SetClusterer {
         }
       }
       
+      val samesetById = collection.immutable.LongMap( samesetByIdPairs: _* )
+      
       // Search for strict subsets
       for( sameset <- samesets ) {
         val samesetId = sameset.id
@@ -126,6 +133,7 @@ object SetClusterer {
           if( samesetId != unspeSamesetId ) {
             val( samesetValues, unspeSamesetValues ) = ( sameset.samesetsValues, unspeSameset.samesetsValues )
           
+            // Check if unspeSameset is a strict subset of sameset
             if( isSubsetOf(unspeSamesetValues,samesetValues) ) {
               unspeSameset.isSubset = true
               if( sameset.strictSubsetsIds.isEmpty ) {
@@ -189,15 +197,15 @@ object SetClusterer {
     }
     
     setClusters.toArray
-    
   }
   
-  private def getAllKeysHavingRelatedValues[K,V]( valuesByKey: Map[K, Set[V]],
-                                                  keysByValue: Map[V, Seq[K]],
-                                                  valuesToSearch: Set[V],
-                                                  searchedValues: collection.mutable.HashSet[V] ): Option[List[K]] = {
-    
-    var clusterizedKeys = new collection.mutable.HashSet[K]
+  private def getAllKeysHavingRelatedValues[K,V](
+    valuesByKey: Map[K, Set[V]],
+    keysByValue: Map[V, Seq[K]],
+    valuesToSearch: Set[V],
+    searchedValues: collection.mutable.HashSet[V],
+    clusterizedKeys: collection.mutable.HashSet[K]
+  ): Unit = {
     
     // Iterate over values to initialize the search across the reversed map
     for( value <- valuesToSearch ) {
@@ -219,18 +227,17 @@ object SetClusterer {
             
             // Retrieve the values having this key by recursive call to the method
             val relatedValues = valuesByKey(key)
-            val relatedKeys = this.getAllKeysHavingRelatedValues( valuesByKey, keysByValue, relatedValues, searchedValues)
-            
-            if( relatedKeys.isDefined ) {
-              // Update the list of keys having related values
-              relatedKeys.get.foreach( key => clusterizedKeys += key )
-            }
+            this.getAllKeysHavingRelatedValues(
+              valuesByKey,
+              keysByValue,
+              relatedValues,
+              searchedValues,
+              clusterizedKeys
+            )
           }
         }
       }
     }
-    
-    Some( clusterizedKeys.toList )
     
   }
   
@@ -239,7 +246,7 @@ object SetClusterer {
       case int: Int => stringifySortedIntList(values.asInstanceOf[List[Int]])
       case v: Long => stringifySortedLongList(values.asInstanceOf[List[Long]]) // Handle Int and Long Scala primitives
       case str: String => stringifySortedStringList(values.asInstanceOf[List[String]])
-      case _ => throw new Exception("can only sort integers or strings")
+      case _ => throw new Exception("can only sort integers, longs and strings")
     }
   }
     
