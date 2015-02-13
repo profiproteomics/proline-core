@@ -188,7 +188,8 @@ case class FeatureRelations(
   var mapLayerId: Long = 0L,
   var rawMapId: Long = 0L,
   var processedMapId: Long = 0L,
-  
+  var elutionStartTime: Float = 0.0f,
+  var elutionEndTime: Float = 0.0f,
   @transient var peptideId: Long = 0L
 )
 
@@ -303,6 +304,8 @@ case class Feature (
         apexScanId = ftRelations.apexScanId,
         bestChildId = ftRelations.bestChildId,
         bestChildProcessedMapId = ftRelations.processedMapId,
+        elutionStartTime = ftRelations.elutionStartTime,
+        elutionEndTime = ftRelations.elutionEndTime,
         ms2EventIds = null
         ),
       isotopicPatterns = None,
@@ -322,6 +325,9 @@ case class FeatureProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
   @BeanProperty var peakelsCount: Option[Int] = None,
   
+  @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
+  @BeanProperty var basePeakelIndex: Option[Int] = None,
+
   @JsonDeserialize(contentAs = classOf[Array[java.lang.Float]] )
   @BeanProperty var peakelsRatios: Option[Array[Float]] = None,
   
