@@ -68,6 +68,14 @@ case class Peakel(
   require( peaks != null && peaks.isEmpty == false, "some peaks must be provided" )
   require( peaks.count( _ == null ) == 0, "all peaks must be defined" )
   
+  def getElutionStartTime( scanSequence: LcMsScanSequence ): Float = {
+    scanSequence.scanById(this.firstScanId).time
+  }
+  
+  def getElutionStopTime( scanSequence: LcMsScanSequence ): Float = {
+    scanSequence.scanById(this.lastScanId).time
+  }
+  
 }
 
 case class PeakelProperties()
@@ -78,6 +86,7 @@ case class FeaturePeakelItem(
   var featureReference: IEntityReference[Feature],
   var peakelReference: IEntityReference[Peakel],
   val isotopeIndex: Int,
+  val isBasePeakel: Boolean,
   var properties: Option[FeaturePeakelItemProperties] = None
 ) {
   
@@ -188,8 +197,6 @@ case class FeatureRelations(
   var mapLayerId: Long = 0L,
   var rawMapId: Long = 0L,
   var processedMapId: Long = 0L,
-  var elutionStartTime: Float = 0.0f,
-  var elutionEndTime: Float = 0.0f,
   @transient var peptideId: Long = 0L
 )
 
@@ -239,6 +246,20 @@ case class Feature (
   def getCorrectedElutionTimeOrElutionTime = correctedElutionTime.getOrElse(elutionTime)
   def getCalibratedMozOrMoz = calibratedMoz.getOrElse(moz)
   def getNormalizedIntensityOrIntensity = normalizedIntensity.getOrElse(intensity)
+  
+  def getBasePeakel(): Option[Peakel] = {
+    Option(relations.peakelItems)
+      .flatMap( _.find(_.isBasePeakel) )
+      .flatMap( _.getPeakel() )
+  }
+  
+  def getElutionStartTime( scanSequence: LcMsScanSequence ): Float = {
+    scanSequence.scanById(this.relations.firstScanId).time
+  }
+  
+  def getElutionStopTime( scanSequence: LcMsScanSequence ): Float = {
+    scanSequence.scanById(this.relations.lastScanId).time
+  }
   
   def getSourceMapId: Long = {
     if( this.isCluster || this.isMaster ) this.relations.processedMapId else this.relations.rawMapId
@@ -304,10 +325,8 @@ case class Feature (
         apexScanId = ftRelations.apexScanId,
         bestChildId = ftRelations.bestChildId,
         bestChildProcessedMapId = ftRelations.processedMapId,
-        elutionStartTime = ftRelations.elutionStartTime,
-        elutionEndTime = ftRelations.elutionEndTime,
         ms2EventIds = null
-        ),
+      ),
       isotopicPatterns = None,
       overlappingFeatures = null,
       children = children
@@ -322,9 +341,11 @@ case class FeatureProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var predictedElutionTime: Option[Float] = None,
   
+  // TODO: add to feature table
   @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
   @BeanProperty var peakelsCount: Option[Int] = None,
   
+  // TODO: remove and use FeaturePeakelItem.isBasePeakel instead
   @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
   @BeanProperty var basePeakelIndex: Option[Int] = None,
 
