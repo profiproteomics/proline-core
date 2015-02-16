@@ -446,7 +446,8 @@ class ExtractMapSet(
   private def _detectMapSetFromPeakels(
     lcMsRuns: Seq[LcMsRun],
     mzDbFileByLcMsRunId: HashMap[Long, File],
-    mapSetId: Long): MapSet = {
+    mapSetId: Long
+  ): MapSet = {
 
     val intensityComputationMethod = ClusterIntensityComputation.withName(
       clusteringParams.intensityComputation.toUpperCase()
@@ -457,6 +458,7 @@ class ExtractMapSet(
 
     val peakelFileByRun = new HashMap[LcMsRun, File]()
     val processedMapByRun = new HashMap[LcMsRun, ProcessedMap]()
+    val lcmsRunByProcMapId = new HashMap[Long, LcMsRun]
     val processedMaps = new ArrayBuffer[ProcessedMap](lcMsRuns.length)
     val featureTuples = new ArrayBuffer[(Feature, Peptide, LcMsRun)]()
 
@@ -654,6 +656,7 @@ class ExtractMapSet(
         procFt.relations.processedMapId = processedMap.id
       }
 
+      lcmsRunByProcMapId += processedMap.id -> lcMsRun
       processedMapByRun += lcMsRun -> processedMap
       processedMaps += processedMap
     } //end run Loop
@@ -727,30 +730,32 @@ class ExtractMapSet(
       // Create a putative feature for each missing one
       for (lcMsRun <- runsWithMissingFt) {
 
-        val procMap = processedMapByRun(lcMsRun)
+        val currentProcMapId = processedMapByRun(lcMsRun).id
+        val bestFtProcMapId = bestFt.relations.processedMapId
+        val bestFtLcMsRun = lcmsRunByProcMapId(bestFtProcMapId)
 
         var predictedTime = tmpMapSet.convertElutionTime(
           bestFt.elutionTime,
-          bestFt.relations.processedMapId,
-          procMap.id
+          bestFtProcMapId,
+          currentProcMapId
         )
 
         var predictedStartTime = tmpMapSet.convertElutionTime(
-          bestFt.relations.elutionStartTime,
-          bestFt.relations.processedMapId,
-          procMap.id
+          bestFt.getElutionStartTime(bestFtLcMsRun.scanSequence.get),
+          bestFtProcMapId,
+          currentProcMapId
         )
 
-        var predictedEndTime = tmpMapSet.convertElutionTime(
-          bestFt.relations.elutionEndTime,
-          bestFt.relations.processedMapId,
-          procMap.id
+        var predictedStopTime = tmpMapSet.convertElutionTime(
+          bestFt.getElutionStopTime(bestFtLcMsRun.scanSequence.get),
+          bestFtProcMapId,
+          currentProcMapId
         )
 
         // Fix negative predicted times
         if (predictedTime <= 0) predictedTime = 1f
-        if (predictedStartTime <= 0) predictedStartTime = 1f;
-        if (predictedEndTime <= 0) predictedEndTime = 1f;
+        if (predictedStartTime <= 0) predictedStartTime = 1f
+        if (predictedStopTime <= 0) predictedStopTime = 1f
 
         val pf = new PutativeFeature(
           id = PutativeFeature.generateNewId,
@@ -761,7 +766,7 @@ class ExtractMapSet(
         )
         pf.isPredicted = true
         pf.elutionStartTime = predictedStartTime
-        pf.elutionEndTime = predictedEndTime
+        pf.elutionStopTime = predictedStopTime
 
         putativeFtsByLcMsRun.getOrElseUpdate(lcMsRun, new ArrayBuffer[PutativeFeature]) += pf
         peptideByPutativeFt(pf) = peptide
@@ -808,12 +813,12 @@ class ExtractMapSet(
               isotopeIdx = 0,
               minTime = putativeFt.elutionStartTime - timeTol,
               avgTime = putativeFt.elutionTime,
-              maxTime = putativeFt.elutionEndTime + timeTol
+              maxTime = putativeFt.elutionStopTime + timeTol
             )
 
             if (peakel.isDefined) {
 
-              val foundPeakel = _findPeakelIsotope(
+              val secondPeakelOpt = _findPeakelIsotope(
                 peakelFileConn,
                 peakel.get.getMz,
                 charge,
@@ -821,16 +826,25 @@ class ExtractMapSet(
                 minTime = peakel.get.getElutionTimes.head - clusteringParams.timeTol,
                 avgTime = peakel.get.calcWeightedAverageTime,
                 maxTime = peakel.get.getElutionTimes.last + clusteringParams.timeTol,
-                true)
+                true
+              )
 
-              val featurePeakels = if (foundPeakel.isEmpty) {
+              val featurePeakels = if (secondPeakelOpt.isEmpty) {
                 Array(peakel.get)
               } else {
+                
+                // Compute the theoretical isotope pattern
                 val ipPattern = IsotopePatternInterpolator.getTheoreticalPattern(peakel.get.getMz, charge)
-                // +20.0 = accept 20% tolerance on second isotope intensity
-                val ratio = (ipPattern.mzAbundancePairs(1)._2 + 20) / ipPattern.mzAbundancePairs(0)._2
-                if (foundPeakel.get.getApexIntensity <= peakel.get.getApexIntensity * ratio) {
-                  Array(peakel.get, foundPeakel.get)
+                
+                // Compute theoretical ratio between second and first isotopes
+                val theoRatio2_1 = ipPattern.mzAbundancePairs(1)._2 / ipPattern.mzAbundancePairs(0)._2
+                
+                // Compute maximum allowed second isotope intensity (accept 20% tolerance)
+                val maxAllowedIntensity = peakel.get.getApexIntensity * theoRatio2_1 * 1.2                
+                
+                // Check intensity is not greater than defined threshold
+                if (secondPeakelOpt.get.getApexIntensity() <= maxAllowedIntensity) {
+                  Array(peakel.get, secondPeakelOpt.get)
                 } else {
                   logger.debug(s"suspicious intensity: second isotope rejected for ${peakel.get.getMz} ( ${ipPattern.mzAbundancePairs(0)._2}, ${ipPattern.mzAbundancePairs(1)._2} )")
                   Array(peakel.get)
@@ -1094,7 +1108,8 @@ class ExtractMapSet(
     minMz: Double,
     maxMz: Double,
     minTime: Float,
-    maxTime: Float): Array[MzDbPeakel] = {
+    maxTime: Float
+  ): Array[MzDbPeakel] = {
 
     val peakelSqlQuery = "SELECT id, peaks, left_hwhm_mean, left_hwhm_cv, " +
       "right_hwhm_mean, right_hwhm_cv FROM peakel WHERE id IN " +
@@ -1228,7 +1243,7 @@ class ExtractMapSet(
     val rmsds = mzDbFts.par.map { mzdbFt =>
       val theoAbundances = IsotopePatternInterpolator.getTheoreticalPattern(mzdbFt.mz, mzdbFt.charge).abundances
       val peakelApexIntensities = mzdbFt.getPeakels.map(_.getApexIntensity)
-      this._calcRmsd(theoAbundances, peakelApexIntensities)
+      IsotopePatternInterpolator.calcAbundancesRmsd(theoAbundances, peakelApexIntensities)
     }.toArray
 
     val percentileComputer = new Percentile()
@@ -1423,7 +1438,8 @@ class ExtractMapSet(
     lcmsRun: LcMsRun,
     processedMap: ProcessedMap,
     mapSet: MapSet,
-    peakelByMzDbPeakelId: HashMap[Int, Peakel]): Seq[Feature] = {
+    peakelByMzDbPeakelId: HashMap[Int, Peakel]
+  ): Seq[Feature] = {
 
     val procMapId = processedMap.id
     val rawMapId = processedMap.getRawMapIds().head
@@ -1548,7 +1564,8 @@ class ExtractMapSet(
   private def _rebuildMasterMapUsingPeptides(
     mapSet: MapSet,
     peptideByScanId: Map[Long, Peptide],
-    clustererByMapId: Map[Long, FeatureClusterer]): Unit = {
+    clustererByMapId: Map[Long, FeatureClusterer]
+  ): Unit = {
     this.logger.info("re-building master map using peptide identities...")
 
     val alnRefMapId = mapSet.getAlnReferenceMapId
@@ -1667,7 +1684,8 @@ class ExtractMapSet(
     mzDbFt: MzDbFeature,
     rawMapId: Long,
     scanSeq: LcMsScanSequence,
-    peakelByMzDbPeakelId: HashMap[Int, Peakel]): LcMsFeature = {
+    peakelByMzDbPeakelId: HashMap[Int, Peakel]
+  ): LcMsFeature = {
 
     val ftId = LcMsFeature.generateNewId
 
@@ -1682,17 +1700,18 @@ class ExtractMapSet(
     val apexLcMsScanId = lcmsScanIdByInitialId(apexScanInitialId)
     val ms2EventIds = mzDbFt.getMs2ScanIds.map(lcmsScanIdByInitialId(_))
 
+    val mzDbFtBasePeakel = mzDbFt.getBasePeakel
     val indexedPeakels = mzDbFt.indexedPeakels
     // TODO: parameterize the computation of this value ???
     val intensitySum2Peakels = indexedPeakels.take(2).foldLeft(0f)((s, p) => s + p._1.getApexIntensity)
-    val intensities = mzDbFt.getBasePeakel.getIntensityValues
-    val apexPeakelIdx = mzDbFt.getBasePeakel.apexIndex
+    val intensities = mzDbFtBasePeakel.getIntensityValues
+    val apexPeakelIdx = mzDbFtBasePeakel.apexIndex
     val smoothedIntensity = {
       if ((apexPeakelIdx > 1) && (apexPeakelIdx < (intensities.length - 2))) {
         val sum = -3.0 * intensities(apexPeakelIdx - 2) + 12.0 * intensities(apexPeakelIdx - 1) + 17.0 * intensities(apexPeakelIdx) + 12.0 * intensities(apexPeakelIdx + 1) - 3.0 * intensities(apexPeakelIdx + 2)
         sum / 35.0
       } else {
-        mzDbFt.getBasePeakel.getApexIntensity()
+        mzDbFtBasePeakel.getApexIntensity()
       }
     }
 
@@ -1749,7 +1768,8 @@ class ExtractMapSet(
         FeaturePeakelItem(
           featureReference = FeatureIdentifier(ftId),
           peakelReference = lcmsPeakel,
-          isotopeIndex = peakelIdx
+          isotopeIndex = peakelIdx,
+          isBasePeakel = if( peakelIdx == mzDbFt.getBasePeakelIndex ) true else false
         )
     }
 
@@ -1761,8 +1781,8 @@ class ExtractMapSet(
     new LcMsFeature(
       id = ftId,
       moz = mzDbFt.mz,
-      apexIntensity = mzDbFt.getBasePeakel().getApexIntensity(),
-      intensity = mzDbFt.getBasePeakel().getApexIntensity(), // smoothedIntensity.toFloat, //intensitySum2Peakels, //mzDbFt.area,
+      apexIntensity = mzDbFtBasePeakel.getApexIntensity(),
+      intensity = mzDbFtBasePeakel.getApexIntensity(), // smoothedIntensity.toFloat, //intensitySum2Peakels, //mzDbFt.area,
       charge = mzDbFt.charge,
       elutionTime = mzDbFt.getElutionTime,
       duration = mzDbFt.calcDuration(),
@@ -1782,18 +1802,11 @@ class ExtractMapSet(
         firstScanId = firstLcMsScanId,
         lastScanId = lastLcMsScanId,
         apexScanId = apexLcMsScanId,
-        rawMapId = rawMapId,
-        elutionStartTime = mzDbFt.getBasePeakel.elutionTimes.head,
-        elutionEndTime = mzDbFt.getBasePeakel.elutionTimes.last
+        rawMapId = rawMapId
+        //elutionStartTime = mzDbFt.getBasePeakel.elutionTimes.head,
+        //elutionEndTime = mzDbFt.getBasePeakel.elutionTimes.last
       )
     )
-  }
-
-  private def _calcRmsd(theoInt: Array[Float], obsInt: Array[Float]): Double = {
-    val maxObsInt = obsInt.max
-    val scaledInt = obsInt.map(_ * 100 / maxObsInt)
-    val s = theoInt.zip(scaledInt).foldLeft(0d)((s, ab) => s + math.pow((ab._1 - ab._2), 2))
-    math.sqrt(s)
   }
 
 }
