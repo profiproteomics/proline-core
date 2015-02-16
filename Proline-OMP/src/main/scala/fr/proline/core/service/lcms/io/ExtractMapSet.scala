@@ -602,7 +602,7 @@ class ExtractMapSet(
             )
 
             val featurePeakels = if (foundPeakel.isEmpty) {
-              monoIsotopicsFeatures += 1
+              monoIsotopicFeatures += 1
               Array(peakel)
             } else {
               Array(peakel, foundPeakel.get)
