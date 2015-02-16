@@ -2,7 +2,7 @@ package fr.proline.core.algo.msq
 
 import org.junit.Assert._
 import org.junit.Test
-import org.apache.commons.math.stat.StatUtils
+import org.apache.commons.math3.stat.StatUtils
 
 @Test
 class MissingAbundancesInfererTest {
