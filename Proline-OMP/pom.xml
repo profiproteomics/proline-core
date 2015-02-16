@@ -60,6 +60,12 @@
       <!-- Version inherited from ProFI-Pom ${scala.version} -->
     </dependency>
 
+   <!-- Commons TODO: add this depency in ProFI POM ??? -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>3.4.1</version>
+    </dependency>
 
     <!-- Test -->
     <dependency>

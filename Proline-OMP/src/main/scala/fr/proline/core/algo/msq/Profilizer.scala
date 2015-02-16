@@ -2,11 +2,11 @@ package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import org.apache.commons.math.stat.descriptive.StatisticalSummary
 import com.typesafe.scalalogging.slf4j.Logging
+import org.apache.commons.math3.stat.descriptive.moment.Mean
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import fr.proline.core.om.model.msq._
 import fr.profi.util.primitives.isZeroOrNaN
-import org.apache.commons.math.stat.descriptive.moment.Mean
 
 // TODO: remove me when the WS v0.1 has been removed
 case class ProfilizerConfigV0(

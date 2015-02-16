@@ -2,8 +2,8 @@ package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.slf4j.Logging
-import org.apache.commons.math.stat.StatUtils
-import org.apache.commons.math.stat.descriptive.rank.Percentile
+import org.apache.commons.math3.stat.StatUtils
+import org.apache.commons.math3.stat.descriptive.rank.Percentile
 import fr.profi.util.primitives.isZeroOrNaN
 import fr.profi.util.random.randomGaussian
 

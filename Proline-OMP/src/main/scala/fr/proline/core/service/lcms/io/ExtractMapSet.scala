@@ -6,8 +6,8 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import com.almworks.sqlite4java.SQLiteConnection
 import com.typesafe.scalalogging.slf4j.Logging
-import org.apache.commons.math.stat.descriptive.rank.Percentile
-import org.apache.commons.math.stat.descriptive.SummaryStatistics
+import org.apache.commons.math3.stat.descriptive.rank.Percentile
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import fr.profi.chemistry.model.MolecularConstants
 import fr.profi.jdbc.easy._
 import fr.profi.ms.algo.IsotopePatternInterpolator
@@ -509,8 +509,9 @@ class ExtractMapSet(
               FeatureDetectorConfig(
                 msLevel = 1,
                 mzTolPPM = mozTolPPM,
-                minNbOverlappingIPs = 5)
+                minNbOverlappingIPs = 5
               )
+            )
 
             // Launch the peakel detection
             // TODO: create a queue instead of arraybuffer to store the result inside the detector algo ???
@@ -545,8 +546,9 @@ class ExtractMapSet(
         for (detectedPeakel <- detectedPeakels) {
 
           val peakelMz = detectedPeakel.getMz
-          val mzTolDa = MsUtils.ppmToDa(peakelMz, mozTolPPM)
-
+          // TODO: define a specific m/z tolerance for this procedure or fix a low hardcoded value ???
+          val mzTolDa = MsUtils.ppmToDa(peakelMz, quantConfig.ftMappingParams.mozTol)
+          
           // Find identified MS2 scans concurrent with the detected peakel
           for (
             scanId <- detectedPeakel.scanIds;

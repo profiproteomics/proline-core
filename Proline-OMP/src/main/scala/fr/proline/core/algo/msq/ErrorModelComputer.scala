@@ -3,14 +3,13 @@ package fr.proline.core.algo.msq
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{exp,log}
 
-import org.apache.commons.math.MathException
-import org.apache.commons.math.distribution.{CauchyDistributionImpl,NormalDistributionImpl}
-import org.apache.commons.math.stat.descriptive.rank.Percentile
-import org.apache.commons.math.stat.descriptive.moment.GeometricMean
-import org.apache.commons.math.stat.descriptive.StatisticalSummary
-import org.apache.commons.math.stat.descriptive.StatisticalSummaryValues
-import org.apache.commons.math.stat.inference.TTestImpl
-import org.apache.commons.math.special.Erf
+import org.apache.commons.math3.distribution.{CauchyDistribution,NormalDistribution}
+import org.apache.commons.math3.stat.descriptive.rank.Percentile
+import org.apache.commons.math3.stat.descriptive.moment.GeometricMean
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary
+import org.apache.commons.math3.stat.descriptive.StatisticalSummaryValues
+import org.apache.commons.math3.stat.inference.TTest
+import org.apache.commons.math3.special.Erf
 
 import fr.profi.util.math.linearInterpolation
 import fr.profi.util.stat.{Bin,EntityHistogramComputer}
@@ -30,7 +29,7 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
   private val abundanceCVPairs = errorDistribution.map( bin => 
     bin.abundance.toFloat -> bin.stdDev/bin.abundance // compute the CV for each abundance
   )
-  private val tTestComputer = new TTestImpl()
+  private val tTestComputer = new TTest()
   
   def getStdevForAbundance( abundance: Float ): Float = {
     linearInterpolation(abundance,abundanceCVPairs) * abundance
@@ -126,7 +125,7 @@ class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends
     val( logQ1, logQ2, logQ3 ) = ( log(quartiles._1), log(quartiles._2), log(quartiles._3) )
     val logIQR = (logQ3 - logQ1)
     
-    val cauchyDistri = new CauchyDistributionImpl(logQ2, logIQR / 2)
+    val cauchyDistri = new CauchyDistribution(logQ2, logIQR / 2)
     
     val p = cauchyDistri.cumulativeProbability( log(ratio) )
     if( ratio >= 1 ) 1 - p else p
@@ -156,12 +155,15 @@ class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends
     val zScore = ( log(ratio) - logQ2 ) / logSigma
     
     val p = zValueToPvalue(zScore)
-    if( ratio >= 1 ) (1-p)/2 else (1+p)/2 // do we need to divide by 2 ???
+    //if( ratio >= 1 ) (1-p)/2 else (1+p)/2 // was used with Erf ; do we need to divide by 2 ???
+    if( ratio >= 1 ) (1-p) else p
   }
  
-  @throws( classOf[MathException] )
+  private val normalDist = new NormalDistribution(0.0,1)
+  
   protected def zValueToPvalue(zValue: Double): Double = {
-    Erf.erf(zValue / math.sqrt(2.0) )
+    //Erf.erf(zValue / math.sqrt(2.0) )
+    normalDist.cumulativeProbability( zValue )
   }
 
 }

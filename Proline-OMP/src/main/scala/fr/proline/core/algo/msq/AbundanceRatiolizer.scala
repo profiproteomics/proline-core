@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msq
 
-import org.apache.commons.math.stat.descriptive.StatisticalSummary
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 
 object AbundanceRatioState extends Enumeration {
   val OverAbundant = Value(1)

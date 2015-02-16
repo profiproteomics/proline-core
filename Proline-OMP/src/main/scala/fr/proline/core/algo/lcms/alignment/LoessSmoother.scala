@@ -1,9 +1,9 @@
 package fr.proline.core.algo.lcms.alignment
 
-import fr.proline.core.om.model.lcms._
 import scala.collection.mutable.ArrayBuffer
-import org.apache.commons.math.analysis.interpolation.LoessInterpolator
+import org.apache.commons.math3.analysis.interpolation.LoessInterpolator
 import fr.proline.core.algo.lcms.AlnSmoothingParams
+import fr.proline.core.om.model.lcms._
 
 class LoessSmoother extends IAlnSmoother {
   

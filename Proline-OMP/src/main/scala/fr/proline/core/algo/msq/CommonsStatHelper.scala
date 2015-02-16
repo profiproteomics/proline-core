@@ -1,14 +1,14 @@
 package fr.proline.core.algo.msq
 
-import org.apache.commons.math.stat.descriptive.StatisticalSummaryValues
-import org.apache.commons.math.stat.descriptive.StatisticalSummary
-import org.apache.commons.math.stat.StatUtils
-import org.apache.commons.math.stat.inference.TTestImpl
+import org.apache.commons.math3.stat.descriptive.StatisticalSummaryValues
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary
+import org.apache.commons.math3.stat.StatUtils
+import org.apache.commons.math3.stat.inference.TTest
 
 
 object CommonsStatHelper {
   
-  val tTestComputer = new TTestImpl()
+  val tTestComputer = new TTest()
   
   def calcMean( values: Array[Float] ): Float = {
     if( values.length == 0 ) 0
