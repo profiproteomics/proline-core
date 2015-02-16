@@ -190,6 +190,9 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       featureReference = FeatureIdentifier( r.getLong(PeakelItemCols.FEATURE_ID) ),
       peakelReference = PeakelIdentifier( r.getLong(PeakelItemCols.PEAKEL_ID) ),
       isotopeIndex = r.getInt(PeakelItemCols.ISOTOPE_INDEX),
+      // FIXME: this value this should be retrieved from the database
+      // At the moment this information can be retrieved from Feature properties
+      isBasePeakel = false,
       properties = propsOpt
     )
   }
