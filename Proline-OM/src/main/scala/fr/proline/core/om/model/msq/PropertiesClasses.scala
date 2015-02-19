@@ -10,7 +10,7 @@ case class ComputedRatio (
   @BeanProperty var state: Int = 0,// -1 means under-abundant, 0 means invariant and +1 means over-abundant
   @BeanProperty var tTestPValue: Option[Double] = None,
   @BeanProperty var zTestPValue: Option[Double] = None,
-  @BeanProperty var zScore: Option[Double] = None
+  @BeanProperty var zScore: Option[Float] = None
 ) {
   @transient lazy val ratioValue = if( numerator > 0 && denominator > 0 ) numerator/denominator else Float.NaN
 }

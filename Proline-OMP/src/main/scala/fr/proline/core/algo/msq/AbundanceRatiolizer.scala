@@ -45,7 +45,7 @@ case class AverageAbundanceRatio(
   
   var tTestPValue = Option.empty[Double]
   var zTestPValue = Option.empty[Double]
-  var zScore = Option.empty[Double]
+  var zScore = Option.empty[Float]
   var state = Option.empty[AbundanceRatioState.Value]
 }
 
