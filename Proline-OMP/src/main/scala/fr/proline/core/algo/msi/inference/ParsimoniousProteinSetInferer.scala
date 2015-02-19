@@ -15,7 +15,7 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
     
     // Retrieve some vars
     val proteinMatches = resultSet.proteinMatches
-    val proteinMatchById = resultSet.proteinMatchById
+    val proteinMatchById = resultSet.getProteinMatchById
     val validatedPeptideMatches = resultSet.peptideMatches.filter( _.isValidated )
     
     // Group peptide matches into peptide instances and map instance by peptide match id

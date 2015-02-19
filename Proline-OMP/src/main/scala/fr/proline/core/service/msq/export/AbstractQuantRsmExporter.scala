@@ -91,7 +91,7 @@ abstract class AbstractQuantRsmExporter extends IService {
     quantRsmProvider.getQuantResultSummary(quantRsmId.get, qcIds, true).get
   }
   
-  protected val protMatchById = quantRSM.resultSummary.resultSet.get.proteinMatchById
+  protected val protMatchById = quantRSM.resultSummary.resultSet.get.getProteinMatchById
   
   protected val protSetCellsById = {
     

@@ -56,7 +56,7 @@ object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
     
     // Retrieve peptide instances of the merged result summary
     val mergedPepInstances = mergedRSM.peptideInstances
-    val mergedPepMatchById = mergedRSM.resultSet.get.peptideMatchById
+    val mergedPepMatchById = mergedRSM.resultSet.get.getPeptideMatchById
     
     // Iterate over merged peptide instances to create quant peptide instances
     this.logger.info( "create quant peptide instances..." )

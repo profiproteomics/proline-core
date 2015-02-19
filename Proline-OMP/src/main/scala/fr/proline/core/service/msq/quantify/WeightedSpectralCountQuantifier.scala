@@ -276,9 +276,10 @@ class WeightedSpectralCountQuantifier(
           if (protQuant.get.proteinSetId.isDefined) {
             val currentIdRSM = this.identResultSummaries.filter(_.id.equals(rsmId))(0)
             protSetId=protQuant.get.proteinSetId.get
-            protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)      
+            protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)
             
-            val protSet = if(currentIdRSM.proteinSetById.get(protSetId).isDefined) currentIdRSM.proteinSetById.get(protSetId).get else null
+            // FIXME: DBO: DO NOT call getProteinSetById in a loop !
+            val protSet = if(currentIdRSM.getProteinSetById.get(protSetId).isDefined) currentIdRSM.getProteinSetById.get(protSetId).get else null
             protMatchStatus = if(protSet != null && protSet.getTypicalProteinMatchId.equals( protMatchId)){
                "Typical"
             } else {
@@ -672,7 +673,7 @@ class WeightedSpectralCountQuantifier(
               
   private def createProtMatchesAccByPeptideSet(rsm: ResultSummary): Map[PeptideSet, Seq[Pair[Long, String]]] = {
     val rs = rsm.resultSet.get
-    val protMById = rs.proteinMatchById
+    val protMById = rs.getProteinMatchById
     val result = scala.collection.mutable.Map[PeptideSet, Seq[Pair[Long, String]]]()
     val pepSetById =  rsm.peptideSets.map(pepSet => pepSet.id -> pepSet).toMap
     
@@ -723,7 +724,7 @@ class WeightedSpectralCountQuantifier(
 
     // Retrieve peptide instances of the merged result summary
     val mergedPepInstances = mergedRSM.peptideInstances
-    val mergedPepMatchById = mergedRSM.resultSet.get.peptideMatchById
+    val mergedPepMatchById = mergedRSM.resultSet.get.getPeptideMatchById
 
     // TODO: load scoring from MSIdb
     val msiScoring = new MsiScoring()
@@ -839,8 +840,8 @@ class WeightedSpectralCountQuantifier(
 	this.logger.debug("number of grouped peptide sets: " + mergedPeptideSets.length+" sameset "+ mergedPeptideSets.filter(!_.isSubset).length)
     val mergedProteinSets = mergedRSM.proteinSets
     this.logger.debug("number of grouped protein sets: " + mergedProteinSets.length)
-    val mergedProtSetById = mergedRSM.proteinSetById
-    val mergedProtMatchById = mergedRSM.resultSet.get.proteinMatchById
+    val mergedProtSetById = mergedRSM.getProteinSetById
+    val mergedProtMatchById = mergedRSM.resultSet.get.getProteinMatchById
 
     // Iterate over identified peptide sets to create quantified peptide sets
     this.logger.info("storing quantified peptide sets and protein sets...")

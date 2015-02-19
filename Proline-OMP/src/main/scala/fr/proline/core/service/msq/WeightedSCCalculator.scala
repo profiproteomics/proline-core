@@ -269,7 +269,7 @@ class WeightedSCCalculator (
   
   private def createProtMatchesAccByPeptideSet(rsm: ResultSummary) : Map[PeptideSet, Seq[String]] = {
 	  val rs =   if(rsm.resultSet.isDefined){ rsm.resultSet.get } else { loadRS(rsm.getResultSetId)   }
-	  val protMById= rs.proteinMatchById
+	  val protMById= rs.getProteinMatchById
 	  val result = scala.collection.mutable.Map[PeptideSet, Seq[String]]()      
      
      var protMatchIdByPepSet : Map[PeptideSet, Array[Long]] = null

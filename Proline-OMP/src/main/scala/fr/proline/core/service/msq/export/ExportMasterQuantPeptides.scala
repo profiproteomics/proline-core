@@ -29,7 +29,7 @@ class ExportMasterQuantPeptides(
   protected val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
   
   // Create some mappings
-  protected val pepMatchById = Map() ++ quantRSM.resultSummary.resultSet.get.peptideMatchById
+  protected val pepMatchById = Map() ++ quantRSM.resultSummary.resultSet.get.getPeptideMatchById
   protected val protSetByPepInst = Map()++ quantRSM.resultSummary.proteinSets.flatMap( protSet => protSet.peptideSet.getPeptideInstances.map( pi => pi.id -> protSet ) )
   
   protected val mqPepCellsById = {

@@ -296,7 +296,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
   def storeRsmProteinSets( rsm: ResultSummary, execCtx: IExecutionContext ): Int = {
     
     val rsmId = rsm.id
-    val proteinMatchById = rsm.resultSet.get.proteinMatchById
+    val proteinMatchById = rsm.resultSet.get.getProteinMatchById
     
     // Retrieve protein_set column list then remove id and master_quant_component_id columns
     val protSetInsertQuery = MsiDbProteinSetTable.mkInsertQuery { (c,colsList) => 

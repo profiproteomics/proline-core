@@ -38,7 +38,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     for( rsm <- this.identResultSummaries ) {
       val runId = runIdByRsmId(rsm.id)
       val valPepMatchIds = rsm.peptideInstances.flatMap( _.getPeptideMatchIds )
-      val pepMatchById = rsm.resultSet.get.peptideMatchById
+      val pepMatchById = rsm.resultSet.get.getPeptideMatchById
       
       for( valPepMatchId <- valPepMatchIds ) {
         val valPepMatch = pepMatchById(valPepMatchId)

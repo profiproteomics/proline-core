@@ -67,7 +67,7 @@ case class ResultSet(
 
   def getDecoyResultSetId: Long = { if (decoyResultSet.isDefined) decoyResultSet.get.id else decoyResultSetId }
 
-  def peptideById: Map[Long, Peptide] = {
+  def getPeptideById(): Map[Long, Peptide] = {
 
     val tmpPeptideById = Map() ++ peptides.map { pep => (pep.id -> pep) }
     if (tmpPeptideById.size != peptides.length)
@@ -77,7 +77,7 @@ case class ResultSet(
 
   }
 
-  def peptideMatchById: Map[Long, PeptideMatch] = {
+  def getPeptideMatchById(): Map[Long, PeptideMatch] = {
 
     val tmpPeptideMatchById = Map() ++ peptideMatches.map { pepMatch => (pepMatch.id -> pepMatch) }
     if (tmpPeptideMatchById.size != peptideMatches.length)
@@ -87,7 +87,7 @@ case class ResultSet(
 
   }
 
-  def proteinMatchById: Map[Long, ProteinMatch] = {
+  def getProteinMatchById(): Map[Long, ProteinMatch] = {
 
     val tmpProtMatchById = Map() ++ proteinMatches.map { protMatch => (protMatch.id -> protMatch) }
     if (tmpProtMatchById.size != proteinMatches.length)
@@ -177,7 +177,7 @@ case class ResultSummary(
   protected var resultSetId: Long = 0,
   @transient var resultSet: Option[ResultSet] = None,
 
-  private var decoyResultSummaryId: Long = 0,
+  protected var decoyResultSummaryId: Long = 0,
   @transient var decoyResultSummary: Option[ResultSummary] = null,
 
   var properties: Option[ResultSummaryProperties] = None) extends Logging  {
@@ -204,7 +204,7 @@ case class ResultSummary(
   
   def getDecoyResultSummaryId: Long = { if (decoyResultSummary != null && decoyResultSummary.isDefined) decoyResultSummary.get.id else decoyResultSummaryId }
 
-  def peptideInstanceById: Map[Long, PeptideInstance] = {
+  def getPeptideInstanceById: Map[Long, PeptideInstance] = {
 
     val tmpPepInstById = Map() ++ peptideInstances.map { pepInst => (pepInst.id -> pepInst) }
     require(tmpPepInstById.size == peptideInstances.length, "duplicated peptide instance id")
@@ -213,7 +213,7 @@ case class ResultSummary(
 
   }
 
-  def proteinSetById: Map[Long, ProteinSet] = {
+  def getProteinSetById(): Map[Long, ProteinSet] = {
 
     val tmpProtSetById = Map() ++ proteinSets.map { protSet => (protSet.id -> protSet) }
     require(tmpProtSetById.size == proteinSets.length, "duplicated protein set id")
@@ -234,7 +234,7 @@ case class ResultSummary(
     // Retrieve object maps
     val peptideMatchesByPepId = rsPepMatches.groupBy(_.peptide.id)
     val peptideMatchById = Map() ++ rsPepMatches.map(pm => pm.id -> pm)
-    val proteinMatchById = resultSet.proteinMatchById
+    val proteinMatchById = resultSet.getProteinMatchById
 
     val bestPepMatchesByPepSetIdBuilder = collection.immutable.HashMap.newBuilder[Long, Array[PeptideMatch]]
     for (peptideSet <- this.peptideSets) {
@@ -281,8 +281,8 @@ case class ResultSummary(
     val resultSet = this.resultSet.get
 
     // Retrieve object maps
-    val peptideMatchMap = resultSet.peptideMatchById
-    val proteinMatchMap = resultSet.proteinMatchById
+    val peptideMatchMap = resultSet.getPeptideMatchById
+    val proteinMatchMap = resultSet.getProteinMatchById
 
     val bestPepMatchesByProtSetIdBuilder = collection.immutable.HashMap.newBuilder[Long, Array[PeptideMatch]]
     for (proteinSet <- this.proteinSets) {
@@ -318,7 +318,7 @@ case class ResultSummary(
 
   def getAllPeptideMatchesByPeptideSetId(): Map[Long, Array[PeptideMatch]] = {
 
-    val peptideMatchMap = this.resultSet.get.peptideMatchById
+    val peptideMatchMap = this.resultSet.get.getPeptideMatchById
 
     val peptideMatchesByPepSetId = Map.newBuilder[Long, Array[PeptideMatch]]
     for (peptideSet <- this.peptideSets) {

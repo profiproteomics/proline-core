@@ -200,7 +200,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
     // Retrieve peptide instances of the merged result summary
     val masterPepInstances = masterRSM.peptideInstances
-    val masterPepMatchById = masterRSM.resultSet.get.peptideMatchById
+    val masterPepMatchById = masterRSM.resultSet.get.getPeptideMatchById
     
     // TODO: load scoring from MSIdb
     val msiScoring = new MsiScoring()
@@ -325,8 +325,8 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     this.logger.info("number of grouped peptide sets: " + masterPeptideSets.length)
     val masterProteinSets = masterRSM.proteinSets
     this.logger.info("number of grouped protein sets: " + masterProteinSets.length)
-    val masterProtSetByTmpId = masterRSM.proteinSetById
-    val masterProtMatchByTmpId = masterRSM.resultSet.get.proteinMatchById
+    val masterProtSetByTmpId = masterRSM.getProteinSetById
+    val masterProtMatchByTmpId = masterRSM.resultSet.get.getProteinMatchById
 
     // Iterate over identified peptide sets to create quantified peptide sets
     this.logger.info("storing quantified peptide sets...")
