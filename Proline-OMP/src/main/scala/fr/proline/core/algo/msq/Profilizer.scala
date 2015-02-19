@@ -288,6 +288,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     // --- Clusterize MQ peptides profiles and compute corresponding abundance matrix ---
     val profilesClusters = new ArrayBuffer[MQPepProfilesCluster](masterQuantProtSets.length)
+    val rawAbundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)
     val abundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)
     val psmCountMatrixBuffer = new ArrayBuffer[Array[Int]](masterQuantProtSets.length)
     
@@ -327,11 +328,17 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           mqPeps = mqPeps
         )
         
+       // Summarize raw abundances of the current profile cluster
+        val mqPepRawAbundanceMatrix = mqPeps.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
+        rawAbundanceMatrixBuffer += AbundanceSummarizer.summarizeAbundanceMatrix(
+          mqPepRawAbundanceMatrix,
+          AbundanceSummarizer.Method.withName(config.abundanceSummarizerMethod)
+        )
+        
         // Summarize abundances of the current profile cluster
-        // TODO: put the method in the config
-        val abundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
+        val mqPepAbundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
         abundanceMatrixBuffer += AbundanceSummarizer.summarizeAbundanceMatrix(
-          abundanceMatrix,
+          mqPepAbundanceMatrix,
           AbundanceSummarizer.Method.withName(config.abundanceSummarizerMethod)
         )
         
@@ -340,6 +347,17 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         psmCountMatrixBuffer += psmCountMatrix.transpose.map( _.sum )
       }
     }
+    
+    // --- Map raw abundances by the corresponding profile cluster ---
+    val rawAbundancesByProfileClusterBuilder = Map.newBuilder[MQPepProfilesCluster,Array[Float]]
+    rawAbundancesByProfileClusterBuilder.sizeHint(rawAbundanceMatrixBuffer.length)
+    
+    rawAbundanceMatrixBuffer.indices.foreach { rowIndex =>
+      val profileCluster = profilesClusters(rowIndex)
+      rawAbundancesByProfileClusterBuilder += profileCluster -> rawAbundanceMatrixBuffer(rowIndex)
+    }
+    
+    val rawAbundancesByProfileCluster = rawAbundancesByProfileClusterBuilder.result
     
     // --- Normalize the abundance matrix ---
     val normalizedMatrix = if( config.proteinStatConfig.applyNormalization == false ) abundanceMatrixBuffer.toArray
@@ -353,6 +371,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val profileCluster = profilesClusters(rowIndex)
       abundancesByProfileClusterBuilder += profileCluster -> normalizedMatrix(rowIndex)
     }
+    
     val abundancesByProfileCluster = abundancesByProfileClusterBuilder.result
     
     // --- Compute the ratios corresponding to each profile cluster ---
@@ -396,9 +415,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
 
       val mqProtSet = profileCluster.mqProtSet
       val mqPeptideIds = profileCluster.mqPeps.map(_.id).toArray
+      val rawAbundances = rawAbundancesByProfileCluster(profileCluster)
       val abundances = abundancesByProfileCluster(profileCluster)
       
       val quantProfile = new MasterQuantProteinSetProfile(
+        rawAbundances = rawAbundances,
         abundances = abundances,
         ratios = ratios.toList,
         mqPeptideIds = mqPeptideIds

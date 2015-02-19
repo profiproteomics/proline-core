@@ -114,7 +114,9 @@ class ErrorModelComputerTest {
     
 
     val errorModel = ErrorModelComputer.computeRelativeErrorModel(errorObservations, nbins = Some(5))
-    assertEquals(0.015, errorModel.zTest(1e5f, 1/3f ), 0.001)
+    val pValue = 1.0 + errorModel.zTest(1e5f, 1/3f )._2
+    println(pValue)
+    assertEquals(0.03, pValue, 0.001)
     
    /* import scala.runtime.ScalaRunTime.stringOf    
     println( stringOf(errorModel.errorDistribution) )

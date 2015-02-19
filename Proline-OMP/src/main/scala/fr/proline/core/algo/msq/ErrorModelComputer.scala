@@ -155,10 +155,9 @@ class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends
     val zScore = ( log(ratio) - logQ2 ) / logSigma
     
     val p = zValueToPvalue(zScore)
-    //if( ratio >= 1 ) (1-p)/2 else (1+p)/2 // was used with Erf ; do we need to divide by 2 ???
-    val pValue = if( ratio >= 1 ) (1-p) else p
+    if( ratio >= 1 ) (1-p) else (1+p) // do we need to divide by 2 ???
     
-    zScore -> pValue
+    zScore -> p
   }
  
   //private val normalDist = new NormalDistribution(0.0,1)
