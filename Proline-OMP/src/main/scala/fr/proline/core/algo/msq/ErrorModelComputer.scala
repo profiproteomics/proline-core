@@ -145,7 +145,7 @@ class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends
     if( ratio >= 1 ) 1 - p else p
   }*/
   
-  def zTest( abundance: Float, ratio: Float ): Double = {
+  def zTest( abundance: Float, ratio: Float ): (Double,Double) = {
    
     val quartiles = this.getRatioQuartilesForAbundance(abundance)
     val( logQ1, logQ2, logQ3 ) = ( log(quartiles._1), log(quartiles._2), log(quartiles._3) )
@@ -156,14 +156,16 @@ class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends
     
     val p = zValueToPvalue(zScore)
     //if( ratio >= 1 ) (1-p)/2 else (1+p)/2 // was used with Erf ; do we need to divide by 2 ???
-    if( ratio >= 1 ) (1-p) else p
+    val pValue = if( ratio >= 1 ) (1-p) else p
+    
+    zScore -> pValue
   }
  
-  private val normalDist = new NormalDistribution(0.0,1)
+  //private val normalDist = new NormalDistribution(0.0,1)
   
   protected def zValueToPvalue(zValue: Double): Double = {
-    //Erf.erf(zValue / math.sqrt(2.0) )
-    normalDist.cumulativeProbability( zValue )
+    Erf.erf(zValue / math.sqrt(2.0) )
+    //normalDist.cumulativeProbability( zValue )
   }
 
 }

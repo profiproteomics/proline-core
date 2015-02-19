@@ -160,7 +160,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           denominator = ratio.denominatorMean.toFloat,
           state = ratio.state.map(_.id).getOrElse(AbundanceRatioState.Invariant.id),
           tTestPValue = ratio.tTestPValue,
-          zTestPValue = ratio.zTestPValue
+          zTestPValue = ratio.zTestPValue,
+          zScore = ratio.zScore
         )
         
         ratiosByMQPepId(masterQuantPep.id) += Some(computedRatio)

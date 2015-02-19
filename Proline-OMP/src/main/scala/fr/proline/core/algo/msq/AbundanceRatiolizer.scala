@@ -45,6 +45,7 @@ case class AverageAbundanceRatio(
   
   var tTestPValue = Option.empty[Double]
   var zTestPValue = Option.empty[Double]
+  var zScore = Option.empty[Double]
   var state = Option.empty[AbundanceRatioState.Value]
 }
 
@@ -98,7 +99,8 @@ object AbundanceRatiolizer {
         
         // Apply the variation model
         if( applyZTest ) {
-          val zTestPValue = relativeVariationModel.zTest(ratio.maxAbundance.toFloat, ratio.foldValue.get)
+          val( zScore, zTestPValue ) = relativeVariationModel.zTest(ratio.maxAbundance.toFloat, ratio.foldValue.get)
+          ratio.zScore = Some(zScore)
           ratio.zTestPValue = if( zTestPValue.isNaN ) None else Some( zTestPValue )
           //println( "z-test=" + foldChangePValue )
         }
