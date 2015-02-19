@@ -184,7 +184,6 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
       // If peptide set is not a subset we create a new protein set
       if( isSubset == false ) {
         
-        val proteinSetId = ProteinSet.generateNewId()
         val sameSetProtMatchIds = peptideSet.proteinMatchIds
         
         // Choose Typical using arbitrary alphabetical order
