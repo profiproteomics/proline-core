@@ -396,7 +396,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           denominator = ratio.denominatorMean.toFloat,
           state = ratio.state.map(_.id).getOrElse(0),
           tTestPValue = ratio.tTestPValue,
-          zTestPValue = ratio.zTestPValue
+          zTestPValue = ratio.zTestPValue,
+          zScore = ratio.zScore
         )
         
         val rowIndex = ratio.entityId.toInt
