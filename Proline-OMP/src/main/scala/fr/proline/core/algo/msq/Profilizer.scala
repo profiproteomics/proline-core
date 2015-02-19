@@ -158,7 +158,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         val computedRatio = ComputedRatio(
           numerator = ratio.numeratorMean.toFloat,
           denominator = ratio.denominatorMean.toFloat,
-          state = ratio.state.map(_.id).getOrElse(new Integer(AbundanceRatioState.Invariant.toString())),
+          state = ratio.state.map(_.id).getOrElse(AbundanceRatioState.Invariant.id),
           tTestPValue = ratio.tTestPValue,
           zTestPValue = ratio.zTestPValue
         )
