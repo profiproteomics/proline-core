@@ -125,9 +125,10 @@ class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends
     val( logQ1, logQ2, logQ3 ) = ( log(quartiles._1), log(quartiles._2), log(quartiles._3) )
     val logIQR = (logQ3 - logQ1)
     
-    val cauchyDistri = new CauchyDistribution(logQ2, logIQR / 2)
+    //val cauchyDistri = new CauchyDistribution(logQ2, logIQR / 2)
+    val cauchyDistri = new CauchyDistribution(0, logIQR / 2)
     
-    val p = cauchyDistri.cumulativeProbability( log(ratio) )
+    val p = cauchyDistri.cumulativeProbability( log(ratio) - logQ2 )
     if( ratio >= 1 ) 1 - p else p
   }
   
@@ -135,7 +136,7 @@ class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends
   def zTest1( abundance: Float, ratio: Float ): Double = {
    
     val quartiles = this.getRatioQuartilesForAbundance(abundance)
-    val( logQ1, logQ3 ) = log(quartiles._1) -> log(quartiles._2)    
+    val( logQ1, logQ3 ) = log(quartiles._1) -> log(quartiles._2)
     val logIQR = (logQ3 - logQ1)
     val logSigma = logIQR / 1.349
     
@@ -154,19 +155,11 @@ class RelativeErrorModel( val errorDistribution: Seq[RelativeErrorBin] ) extends
     
     val zScore = ( log(ratio) - logQ2 ) / logSigma
     
-    val p = zValueToPvalue(zScore)
-    if( ratio >= 1 ) (1-p) else (1+p) // do we need to divide by 2 ???
+    val pValue = CommonsStatHelper.zValueToPValue(zScore)
     
-    zScore.toFloat -> p
+    zScore.toFloat -> pValue
   }
  
-  //private val normalDist = new NormalDistribution(0.0,1)
-  
-  protected def zValueToPvalue(zValue: Double): Double = {
-    Erf.erf(zValue / math.sqrt(2.0) )
-    //normalDist.cumulativeProbability( zValue )
-  }
-
 }
 
 
@@ -273,19 +266,7 @@ object ErrorModelComputer {
     new RelativeErrorModel( errorDistribution )
   }
   
-  def quartilesToBounds( quartiles: Pair[Float,Float] ): Pair[Float,Float] = {
-    
-    val( q1, q3 ) = quartiles
-    val logQ1 = math.log(q1)
-    val logQ3 = math.log(q3)
-    val logIQR = logQ3 - logQ1
-    val logLB = logQ1 - 1.5 * logIQR
-    val logUB = logQ3 + 1.5 * logIQR
-    val lb = math.exp(logLB).toFloat
-    val ub = math.exp(logUB).toFloat
-    
-    (lb -> ub )
-  } 
+
   
 
   // Assume that values are already sorted

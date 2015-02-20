@@ -14,17 +14,19 @@ case class ProfilizerConfigV0(
   proteinStatTestsAlpha: Float = 0.01f,
   discardMissedCleavedPeptides: Boolean = true,
   discardOxidizedPeptides: Boolean = true,
+  useOnlySpecificPeptides: Boolean = true,
   applyNormalization: Boolean = true,
   applyMissValInference: Boolean = true,
   applyVarianceCorrection: Boolean = true,
   applyTTest: Boolean = true,
   applyZTest: Boolean = true,
-  applyProfileClustering: Boolean = true,
-  useOnlySpecificPeptides: Boolean = true
+  applyProfileClustering: Boolean = true
 )
 
 case class ProfilizerStatConfig (
   statTestsAlpha: Float = 0.01f,
+  minZScore: Float = 0.4f, // ZScore equals ln(ratio) followed by standardisation
+  minPsmCountPerGroup: Int = 2,
   applyNormalization: Boolean = true,
   applyMissValInference: Boolean = true,
   applyVarianceCorrection: Boolean = true,
@@ -476,6 +478,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
       qcIndices.map { i => this._meanAbundance( i.map( abundances(_) ) ) }
     }
+    def _getSamplesPsmCounts(psmCounts: Array[Int], sampleNumbers: Array[Int]): Array[Int] = {
+      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
+      qcIndices.flatMap( i => i.map( psmCounts(_) ) )
+    }
     
     // --- Estimate the noise models ---
     val absoluteErrors = new ArrayBuffer[AbsoluteErrorObservation](normalizedMatrix.length)
@@ -634,8 +640,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         )
       }
       
+      // Retrieve PSM counts
+      val psmCountRow = psmCountMatrix(rowIdx)
+      val numeratorPsmCounts = _getSamplesPsmCounts(psmCountRow, numeratorSampleNumbers)
+      val denominatorPsmCounts = _getSamplesPsmCounts(psmCountRow, denominatorSampleNumbers)
+      
       // Compute the ratio for this row
-      val ratio = new AverageAbundanceRatio( rowIdx, numeratorSummary, denominatorSummary )
+      val ratio = new AverageAbundanceRatio( rowIdx, numeratorSummary, denominatorSummary, numeratorPsmCounts, denominatorPsmCounts )
       ratiosBuffer += ratio
       
       // Update the relative error model
@@ -660,10 +671,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       ratiosBuffer,
       errorModels._1,
       errorModels._2,
-      config.statTestsAlpha,
-      applyVarianceCorrection = config.applyVarianceCorrection,
-      applyTTest = config.applyTTest,
-      applyZTest = config.applyZTest
+      config
     )
     
     (filledMatrix,ratiosBuffer)

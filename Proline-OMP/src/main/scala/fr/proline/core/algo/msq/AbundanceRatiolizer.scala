@@ -11,17 +11,27 @@ object AbundanceRatioState extends Enumeration {
 case class AverageAbundanceRatio(
   val entityId: Long,
   val numeratorSummary: StatisticalSummary,
-  val denominatorSummary: StatisticalSummary
+  val denominatorSummary: StatisticalSummary,
+  val numeratorPsmCounts: Array[Int],
+  val denominatorPsmCounts: Array[Int]
 ) {
   
   def numeratorMean = numeratorSummary.getMean()
   def denominatorMean = denominatorSummary.getMean()
   
-  def this(entityId: Long, numeratorValues: Array[Double], denominatorValues: Array[Double]) {    
+  def this(
+    entityId: Long,
+    numeratorValues: Array[Double],
+    denominatorValues: Array[Double],
+    numeratorPsmCount: Array[Int],
+    denominatorPsmCount: Array[Int]
+  ) {    
     this(
       entityId,
       CommonsStatHelper.calcStatSummary(numeratorValues),
-      CommonsStatHelper.calcStatSummary(denominatorValues)
+      CommonsStatHelper.calcStatSummary(denominatorValues),
+      numeratorPsmCount,
+      denominatorPsmCount
     )
   }
   
@@ -55,18 +65,25 @@ object AbundanceRatiolizer {
     ratios: Seq[AverageAbundanceRatio],
     relativeVariationModel: RelativeErrorModel,
     absoluteNoiseModel: Option[AbsoluteErrorModel],
-    pValueThreshold: Float,
-    applyVarianceCorrection: Boolean = true,
-    applyTTest: Boolean = true,
-    applyZTest: Boolean = true
+    config: ProfilizerStatConfig    
   ) {
     
+    val pValueThreshold = config.statTestsAlpha
+    val minZScore = config.minZScore
+    val minPsmCountPerGroup = config.minPsmCountPerGroup
+    val applyVarianceCorrection = config.applyVarianceCorrection
+    val applyTTest = config.applyTTest
+    val applyZTest = config.applyZTest
+    
+    var i = 0
     ratios.foreach { ratio =>
       
-      val foldValue = ratio.foldValue
-      
-      // If we don't have a fold value
-      if( foldValue.isEmpty ) {
+      // If the total number of PSM per group is too low
+      if( ratio.numeratorPsmCounts.sum < minPsmCountPerGroup && ratio.denominatorPsmCounts.sum < minPsmCountPerGroup ) {
+        ratio.state = None
+      }
+      // Else if we don't have a fold value
+      else if( ratio.foldValue.isEmpty ) {
         if( ratio.numeratorMean > 0 ) ratio.state = Some(AbundanceRatioState.OverAbundant)
         else if ( ratio.denominatorMean > 0 ) ratio.state = Some(AbundanceRatioState.UnderAbundant)
         else ratio.state = None
@@ -98,15 +115,17 @@ object AbundanceRatiolizer {
         }
         
         // Apply the variation model
+        var iZScoreOK = true
         if( applyZTest ) {
           val( zScore, zTestPValue ) = relativeVariationModel.zTest(ratio.maxAbundance.toFloat, ratio.foldValue.get)
+          if( zScore < minZScore ) iZScoreOK = false
           ratio.zScore = Some(zScore)
           ratio.zTestPValue = if( zTestPValue.isNaN ) None else Some( zTestPValue )
           //println( "z-test=" + foldChangePValue )
         }
         
         // Check the pValue of T-Test and Z-Test
-        if( ratio.tTestPValue.getOrElse(0.0) <= pValueThreshold && ratio.zTestPValue.getOrElse(0.0) <= pValueThreshold ) {
+        if( ratio.tTestPValue.getOrElse(0.0) <= pValueThreshold && iZScoreOK ) { // ratio.zTestPValue.getOrElse(0.0) <= pValueThreshold
           if( ratio.numeratorMean > ratio.denominatorMean ) ratio.state = Some(AbundanceRatioState.OverAbundant)
           else ratio.state = Some(AbundanceRatioState.UnderAbundant)
         } else {
@@ -115,6 +134,7 @@ object AbundanceRatiolizer {
         
       }
       
+      i += 1
     }
     
   }

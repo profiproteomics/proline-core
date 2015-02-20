@@ -39,7 +39,7 @@ class AbundanceRatiolizerTest {
       absoluteError += AbsoluteErrorObservation( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
       absoluteError +=  AbsoluteErrorObservation( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
   
-      ratiosBuilder += new AverageAbundanceRatio( rowNumber, numeratorSummary, denominatorSummary )
+      ratiosBuilder += new AverageAbundanceRatio( rowNumber, numeratorSummary, denominatorSummary, Array(1,1,1), Array(1,1,1) )
       
       rowNumber += 1L
     }
@@ -99,7 +99,8 @@ class AbundanceRatiolizerTest {
     //import scala.runtime.ScalaRunTime.stringOf
     //println( stringOf(relativeVariationModel.noiseDistribution) )
     
-    AbundanceRatiolizer.updateRatioStates(normalizedRatios, relativeVariationModel, Some(absoluteNoiseModel) , 0.01f)
+    val config = ProfilizerStatConfig()
+    AbundanceRatiolizer.updateRatioStates(normalizedRatios, relativeVariationModel, Some(absoluteNoiseModel), config)
     
     val ratiosSortedByTPValue = normalizedRatios.sortBy( _.tTestPValue.getOrElse(1.0) )
     

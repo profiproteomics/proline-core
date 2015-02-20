@@ -114,8 +114,17 @@ class ErrorModelComputerTest {
     
 
     val errorModel = ErrorModelComputer.computeRelativeErrorModel(errorObservations, nbins = Some(5))
-    val pValue = 1.0 + errorModel.zTest(1e5f, 1/3f )._2
-    assertEquals(0.03, pValue, 0.001)
+    val( zScore, pValue ) = errorModel.zTest(1e5f, 1/3f )
+    assertEquals(0.015, pValue, 0.001)
+    
+    assertEquals(0.015, CommonsStatHelper.zValueToPValue( zScore ), 0.002)
+    assertEquals(0.015, CommonsStatHelper.calcCumulativeProbability(zScore), 0.001)
+    
+    assertEquals(0.015, CommonsStatHelper.zValueToPValue( - zScore ), 0.002)
+    assertEquals(1-0.015, CommonsStatHelper.calcCumulativeProbability( - zScore ), 0.001)
+    
+    //assertEquals(0.096, errorModel.cauchyTest(1e5f, 1/3f), 0.002)
+    // assertEquals(0.0108, errorModel.cauchyTest(1e5f, 3f), 0.001)
     
    /* import scala.runtime.ScalaRunTime.stringOf    
     println( stringOf(errorModel.errorDistribution) )

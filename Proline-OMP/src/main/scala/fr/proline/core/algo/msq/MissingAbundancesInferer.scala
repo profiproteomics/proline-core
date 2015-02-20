@@ -25,7 +25,7 @@ object MissingAbundancesInferer extends Logging {
     val q3 = percentileComputer.evaluate(allDefinedAbundances,75).toFloat
     
     // Convert quartiles into theoretical maximal bounds
-    var(lb,ub) = ErrorModelComputer.quartilesToBounds(q1,q3)
+    var(lb,ub) = CommonsStatHelper.quartilesToBounds(q1,q3)
     //println("lb:" + lb)
     
     // Re-Compute Lower Bound using the first percentile if it is lower than the lowest observed abundance
