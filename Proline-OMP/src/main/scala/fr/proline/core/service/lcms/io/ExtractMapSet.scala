@@ -43,7 +43,8 @@ class ExtractMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
   val quantConfig: ILcMsQuantConfig,
   val peptideByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, Peptide]]] = None, // sequence data may or may not be provided
-  val psmByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, PeptideMatch]]] = None) extends ILcMsService with Logging {
+  val psmByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, PeptideMatch]]] = None
+) extends ILcMsService with Logging {
 
   // Do some requirements
   require(quantConfig.extractionParams.mozTolUnit matches "(?i)PPM")
@@ -487,8 +488,13 @@ class ExtractMapSet(
 
         val (detectedPeakels, ms1ScanHeaderById, ms2ScanHeadersByCycle) = {
           val existingPeakelFiles = tempDir.listFiles.filter(_.getName.startsWith(s"${lcMsRun.getRawFileName}-"))
-          if (existingPeakelFiles.isEmpty) {
-            this.logger.info("start extraction peakels from " + mzDbFile.getName());
+          
+          if( quantConfig.useLastPeakelDetection == false || existingPeakelFiles.isEmpty ) {
+            
+            // Remove TMP files if they exist
+            existingPeakelFiles.foreach(_.delete())
+            
+            this.logger.info("start peakel detection from " + mzDbFile.getName())
 
             // Create TMP file to store orphan peakels which will be deleted after JVM exit
             val peakelFile = File.createTempFile(s"${lcMsRun.getRawFileName}-", ".sqlite")
