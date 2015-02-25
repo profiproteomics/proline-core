@@ -21,6 +21,7 @@ trait ILcMsQuantConfig extends IMsQuantConfig {
   val detectFeatures: Boolean
   val detectPeakels: Boolean
   val startFromValidatedPeptides: Boolean
+  val useLastPeakelDetection: Boolean = false
 }
 
 trait ILabelFreeQuantConfig extends ILcMsQuantConfig
