@@ -1,9 +1,9 @@
 package fr.proline.core.dal.helper
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCReturningWork, DoJDBCWork }
 import fr.profi.util.primitives._
@@ -19,147 +19,153 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
   }
 
   def getDecoyRsIds(targetResultSetIds: Seq[Long]): Array[Long] = {
+    if ( targetResultSetIds == null || targetResultSetIds.isEmpty )
+      return Array.empty[Long]
 
-    if ((targetResultSetIds == null) || targetResultSetIds.isEmpty) {
-      Array.empty[Long]
-    } else {
-      DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.selectLongs(
-          "SELECT decoy_result_set_id FROM result_set WHERE id in " +
-            targetResultSetIds.mkString("(", ", ", ")") +
-            " AND decoy_result_set_id IS NOT NULL")
-      })
-    }
-
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.selectLongs(
+        "SELECT decoy_result_set_id FROM result_set WHERE id in " +
+        targetResultSetIds.mkString("(", ", ", ")") +
+        " AND decoy_result_set_id IS NOT NULL")
+    })
   }
 
   def getDecoyRsmIds(targetResultSummaryIds: Seq[Long]): Array[Long] = {
+    if ( targetResultSummaryIds == null || targetResultSummaryIds.isEmpty )
+      return Array.empty[Long]
 
-    if ((targetResultSummaryIds == null) || targetResultSummaryIds.isEmpty) {
-      Array.empty[Long]
-    } else {
-      DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.selectLongs(
-          "SELECT decoy_result_summary_id FROM result_summary WHERE id in " +
-            targetResultSummaryIds.mkString("(", ", ", ")") +
-            " AND decoy_result_summary_id IS NOT NULL")
-      })
-    }
-
-  }
-
-  def getResultSetsMsiSearchIds(rsIds: Seq[Long]): Array[Long] = {
-
-    if ((rsIds == null) || rsIds.isEmpty) {
-      Array.empty[Long]
-    } else {
-      val parentMsiSearchIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.selectLongs(
-          "SELECT DISTINCT msi_search_id FROM result_set " +
-            "WHERE id IN (" + rsIds.mkString(",") + ") " +
-            "AND msi_search_id IS NOT NULL"
-        )
-      })
-
-      val childMsiSearchIds = _getChildMsiSearchId(rsIds)
-
-      parentMsiSearchIds ++ childMsiSearchIds
-    }
-
-  }
-
-  private def _getChildMsiSearchId(rsIds: Seq[Long]): Array[Long] = {
-
-    val childRSMIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
       ezDBC.selectLongs(
-        "SELECT DISTINCT result_set_relation.child_result_set_id  FROM  result_set_relation  " +
-          " WHERE result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") "
+        "SELECT decoy_result_summary_id FROM result_summary WHERE id in " +
+        targetResultSummaryIds.mkString("(", ", ", ")") +
+        " AND decoy_result_summary_id IS NOT NULL")
+    })
+  }
+
+  def getResultSetsMsiSearchIds(rsIds: Seq[Long], hierarchicalQuery: Boolean = true ): Array[Long] = {
+
+    if ( rsIds == null || rsIds.isEmpty )
+      return Array.empty[Long]
+
+    val parentMsiSearchIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.selectLongs(
+        "SELECT DISTINCT msi_search_id FROM result_set " +
+        "WHERE id IN (" + rsIds.mkString(",") + ") " +
+        "AND msi_search_id IS NOT NULL"
       )
     })
 
-    if (childRSMIds != null && childRSMIds.length > 0) {
-
-      var childMsiSearchIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.selectLongs(
-          "SELECT DISTINCT msi_search_id FROM result_set, result_set_relation " +
-            "WHERE result_set.id = result_set_relation.child_result_set_id " +
-            "AND result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") " +
-            "AND msi_search_id IS NOT NULL"
-        )
-      })
-
-      childMsiSearchIds = childMsiSearchIds ++: _getChildMsiSearchId(childRSMIds)
-      return childMsiSearchIds
-    } else
-      return Array.empty[Long]
+    // TODO: use getMsiSearchIdsByParentResultSetId instead of _getChildMsiSearchId to reduce code redundancy ???
+    if( hierarchicalQuery ) {
+      val childMsiSearchIds = new ArrayBuffer[Long]
+      _getChildMsiSearchIds(rsIds, childMsiSearchIds)
+      parentMsiSearchIds ++ childMsiSearchIds.distinct
+    } else {
+      parentMsiSearchIds
+    }
   }
-  
+
+  @tailrec
+  private def _getChildMsiSearchIds(rsIds: Seq[Long], childMsiSearchIds: ArrayBuffer[Long]): Unit = {
+    if( rsIds.isEmpty ) return ()
+
+    // TODO: why perform two consecutive queries ???
+    // the second SQL query could retrieve the child_result_set_id
+    /*val childRSIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.selectLongs(
+        "SELECT DISTINCT result_set_relation.child_result_set_id  FROM  result_set_relation  " +
+        " WHERE result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") "
+      )
+    })*/
+
+    val childRsIds = new ArrayBuffer[Long]()
+    DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.selectAndProcess(
+        "SELECT result_set_relation.child_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
+        "WHERE result_set.id = result_set_relation.child_result_set_id " +
+        "AND result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") " +
+        "AND msi_search_id IS NOT NULL"
+      ) { r =>
+        val(childRsId: Long, msiSearchId: Long) = (r.nextLong,r.nextLong)
+        childRsIds += childRsId
+        childMsiSearchIds += msiSearchId
+      }
+    })
+
+    // If we have found child result sets
+    _getChildMsiSearchIds(childRsIds.distinct, childMsiSearchIds)
+  }
 
   def getMsiSearchIdsByParentResultSetId(rsIds: Seq[Long]): Map[Long, Set[Long]] = {
+    if (rsIds == null || rsIds.isEmpty)
+      return Map.empty[Long, Set[Long]]
+    
+    val msiSearchIdsByParentResultSetId = new HashMap[Long, HashSet[Long]]
+    val childRsIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.select(
+        "SELECT id, msi_search_id FROM result_set " +
+        "WHERE id IN (" + rsIds.mkString(",") + ") " +
+        "AND msi_search_id IS NOT NULL"
+      ) { r =>
+          val( childRsId, msiSearchId ) = (r.nextLong, r.nextLong)
+          msiSearchIdsByParentResultSetId.getOrElseUpdate(childRsId, new HashSet[Long]) += msiSearchId         
+          childRsId
+        }
+    })
 
-    if ((rsIds == null) || rsIds.isEmpty) {
-      Map.empty[Long, Set[Long]]
-    } else {
-      val msiSearchIdsByParentResultSetId = new HashMap[Long, HashSet[Long]]
-      DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.selectAndProcess(
-          "SELECT id, msi_search_id FROM result_set " +
-            "WHERE id IN (" + rsIds.mkString(",") + ") " +
-            "AND msi_search_id IS NOT NULL"
-        ) { r =>
-            val id: Long = toLong(r.nextAny)
-            msiSearchIdsByParentResultSetId.getOrElseUpdate(id, new HashSet[Long]) += toLong(r.nextAny)
-          }
-      })
+    _getMsiSearchIdsByParentResultSetId( childRsIds, msiSearchIdsByParentResultSetId )
 
-      DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.selectAndProcess(
-          "SELECT result_set_relation.parent_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
-            "WHERE result_set.id = result_set_relation.child_result_set_id " +
-            "AND result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") " +
-            "AND msi_search_id IS NOT NULL"
-        ) { r =>
-            msiSearchIdsByParentResultSetId.getOrElseUpdate(toLong(r.nextAny), new HashSet[Long]) += toLong(r.nextAny)
-          }
-      })
-
-      Map() ++ msiSearchIdsByParentResultSetId.map(t => (t._1 -> t._2.toSet))
-    }
-
+    Map() ++ msiSearchIdsByParentResultSetId.map(t => (t._1 -> t._2.toSet))
+  }
+  
+  @tailrec
+  private def _getMsiSearchIdsByParentResultSetId(rsIds: Seq[Long], msiSearchIdsByParentResultSetId: HashMap[Long, HashSet[Long]]) {
+    if( rsIds.isEmpty ) return
+    
+    val childRsIds = new ArrayBuffer[Long]()
+    
+    DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.selectAndProcess(
+        "SELECT result_set_relation.parent_result_set_id, result_set_relation.child_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
+        "WHERE result_set.id = result_set_relation.child_result_set_id " +
+        "AND result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") " +
+        "AND msi_search_id IS NOT NULL"
+      ) { r =>
+          val(parentRsId: Long, childRsId: Long, msiSearchId: Long) = (r.nextLong,r.nextLong,r.nextLong)
+          childRsIds += childRsId
+          msiSearchIdsByParentResultSetId.getOrElseUpdate(parentRsId, new HashSet[Long]) += msiSearchId
+        }
+    })
+    
+    _getMsiSearchIdsByParentResultSetId( childRsIds.distinct, msiSearchIdsByParentResultSetId )
   }
 
   def getResultSetIdByResultSummaryId(rsmIds: Seq[Long]): Map[Long, Long] = {
+    if (rsmIds == null || rsmIds.isEmpty)
+      return Map.empty[Long, Long]
 
-    if ((rsmIds == null) || rsmIds.isEmpty) {
-      Map.empty[Long, Long]
-    } else {
-      // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-      DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.select(
-          "SELECT id, result_set_id FROM result_summary " +
-            "WHERE id IN (" + rsmIds.mkString(",") + ")") { r => (toLong(r.nextAny), toLong(r.nextAny)) } toMap
-      })
-    }
-
+    // Retrieve parent peaklist ids corresponding to the provided MSI search ids
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.select(
+        "SELECT id, result_set_id FROM result_summary " +
+        "WHERE id IN (" + rsmIds.mkString(",") + ")") { r => (r.nextLong, r.nextLong) } toMap
+    })
   }
 
   def getMsiSearchesPtmSpecificityIds(msiSearchIds: Seq[Long]): Array[Long] = {
+    if (msiSearchIds == null || msiSearchIds.isEmpty)
+      return Array.empty[Long]
+    
+    // Retrieve parent peaklist ids corresponding to the provided MSI search ids
+    val ptmSpecifIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.select(
+        "SELECT DISTINCT ptm_specificity_id FROM used_ptm, search_settings, msi_search " +
+        "WHERE used_ptm.search_settings_id = search_settings.id " +
+        "AND search_settings.id = msi_search.search_settings_id " +
+        "AND msi_search.id IN (" + msiSearchIds.mkString(",") + ")") { r => r.nextLong }
+    })
 
-    if ((msiSearchIds == null) || msiSearchIds.isEmpty) {
-      Array.empty[Long]
-    } else {
-      // Retrieve parent peaklist ids corresponding to the provided MSI search ids
-      val ptmSpecifIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.select(
-          "SELECT DISTINCT ptm_specificity_id FROM used_ptm, search_settings, msi_search " +
-            "WHERE used_ptm.search_settings_id = search_settings.id " +
-            "AND search_settings.id = msi_search.search_settings_id " +
-            "AND msi_search.id IN (" + msiSearchIds.mkString(",") + ")") { v => toLong(v.nextAny) }
-      })
-
-      ptmSpecifIds.distinct.toArray
-    }
-
+    ptmSpecifIds.distinct.toArray
   }
 
   /** Build score types (search_engine:score_name) and map them by id */
@@ -177,27 +183,26 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
   private def _getScorings(): Seq[ScoringRecord] = {
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
       ezDBC.select("SELECT id, search_engine, name FROM scoring") { r =>
-        ScoringRecord(toLong(r.nextAny), r.nextString, r.nextString)
+        ScoringRecord(r.nextLong, r.nextString, r.nextString)
       }
     })
   }
 
-  def getScoringByResultSummaryIds(resultSummaryId: Seq[Long]): Seq[String] = {
+  def getScoringsByResultSummaryIds(resultSummaryId: Seq[Long]): Seq[String] = {
+    if (resultSummaryId == null || resultSummaryId.isEmpty)
+      return Seq.empty[String]
 
-    if ((resultSummaryId == null) || resultSummaryId.isEmpty) {
-      Seq.empty[String]
-    } else {
-      DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-        ezDBC.select("select scoring.search_engine, scoring.name " +
-          "from scoring, peptide_set " +
-          "where peptide_set.scoring_id = scoring.id AND peptide_set.result_summary_id IN (" + resultSummaryId.mkString(",") + ")" +
-          "group by scoring.search_engine, scoring.name") { r => r.nextString + ":" + r.nextString }
-      })
-    }
-
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+      ezDBC.select("SELECT scoring.search_engine, scoring.name " +
+        "FROM scoring, peptide_set " +
+        "WHERE peptide_set.scoring_id = scoring.id AND peptide_set.result_summary_id IN (" + resultSummaryId.mkString(",") + ")" +
+        "GROUP BY scoring.search_engine, scoring.name") { r => r.nextString + ":" + r.nextString }
+    })
   }
 
   def getSeqLengthByBioSeqId(bioSeqIds: Iterable[Long]): Map[Long, Int] = {
+    if( bioSeqIds == null || bioSeqIds.isEmpty )
+      return Map.empty[Long, Int]
 
     val seqLengthByProtIdBuilder = Map.newBuilder[Long, Int]
 
@@ -205,29 +210,22 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
       val maxNbIters = ezDBC.getInExpressionCountLimit
 
       // Iterate over groups of peptide ids
-      bioSeqIds.grouped(maxNbIters).foreach {
-        tmpBioSeqIds =>
-          {
-
-            if ((tmpBioSeqIds != null) && !tmpBioSeqIds.isEmpty) {
-              // Retrieve peptide PTMs for the current group of peptide ids
-              ezDBC.selectAndProcess("SELECT id, length FROM bio_sequence WHERE id IN (" + tmpBioSeqIds.mkString(",") + ")") { r =>
-                seqLengthByProtIdBuilder += (toLong(r.nextAny) -> r.nextInt)
-              }
-            }
-
+      bioSeqIds.grouped(maxNbIters).foreach { tmpBioSeqIds =>
+        if ((tmpBioSeqIds != null) && !tmpBioSeqIds.isEmpty) {
+          ezDBC.selectAndProcess("SELECT id, length FROM bio_sequence WHERE id IN (" + tmpBioSeqIds.mkString(",") + ")") { r =>
+            seqLengthByProtIdBuilder += (r.nextLong -> r.nextInt)
           }
+        }
       }
     })
 
     seqLengthByProtIdBuilder.result()
-
   }
 
   // TODO: add number field to the table
   def getSpectrumNumberById(pklIds: Seq[Long]): Map[Long, Int] = {
 
-    if ((pklIds == null) || pklIds.isEmpty) {
+    if (pklIds == null || pklIds.isEmpty) {
       Map.empty[Long, Int]
     } else {
       val specNumById = new HashMap[Long, Int]
@@ -235,7 +233,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 
       DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
         ezDBC.selectAndProcess("SELECT id FROM spectrum WHERE " + pklIds.map(id => s"peaklist_id=$id").mkString(" OR ") ) { r =>
-          val spectrumId: Long = toLong(r.nextAny)
+          val spectrumId = r.nextLong
           specNumById += (spectrumId -> specCount)
           specCount += 1
         }
