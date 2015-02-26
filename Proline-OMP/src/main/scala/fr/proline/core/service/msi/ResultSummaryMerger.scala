@@ -252,7 +252,7 @@ class ResultSummaryMerger(
     // Merge result summaries
     // FIXME: check that all peptide sets have the same score type
     val msiDbHelper = new MsiDbHelper(storerContext.getMSIDbConnectionContext)
-    val scorings = msiDbHelper.getScoringByResultSummaryIds(resultSummaryIds)
+    val scorings = msiDbHelper.getScoringsByResultSummaryIds(resultSummaryIds)
     val peptideSetScoring = PepSetScoring.withName(scorings(0))
     val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring)
 
