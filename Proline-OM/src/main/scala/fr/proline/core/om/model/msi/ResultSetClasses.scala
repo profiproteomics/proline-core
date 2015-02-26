@@ -189,7 +189,7 @@ case class ResultSummary(
     resultSet.map { rs =>
       if( rs.isValidatedContent ) rs
       else {
-        new ValidatedResultSetBuilder(this).getValidatedResultSet()
+        ValidatedResultSetBuilder.getValidatedResultSet(this)
       }
     }
   }
@@ -377,54 +377,31 @@ case class RsmValidationResultProperties(
   @BeanProperty var fdr: Option[Float] = None
 )
 
-class ValidatedResultSetBuilder( rsm: ResultSummary ) {
-  require( rsm.resultSet.isDefined, "a resultSet must be defined")
+object ValidatedResultSetBuilder {
   
-  protected val( validPepIdSet, validPepMatchIdSet, validProtMatchIdSet ) = {
-    
-    // Build the set of unique valid entities ids
-    val validPepIdSetBuilder = Set.newBuilder[Long]
-    val validPepMatchIdSetBuilder = Set.newBuilder[Long]
-    val validProtMatchIdSetBuilder = Set.newBuilder[Long]
-    
-    // Retrieve the ID of valid peptide matches (having a corresponding peptide instance)
-    for (proteinSet <- rsm.proteinSets) {
-      if (proteinSet.isValidated) {
-        val peptideSet = proteinSet.peptideSet
-        
-        for (pepInstance <- peptideSet.getPeptideInstances) {
-          validPepIdSetBuilder += pepInstance.peptide.id
-          validPepMatchIdSetBuilder ++= pepInstance.getPeptideMatchIds
-        }
-        
-        validProtMatchIdSetBuilder ++= proteinSet.getProteinMatchIds
-      }
-    }
-    
-    (
-      validPepIdSetBuilder.result(),
-      validPepMatchIdSetBuilder.result(),
-      validProtMatchIdSetBuilder.result()
-    )
-  }
-
-  protected def getValidatedPeptideMatches(rs: ResultSet): Iterable[PeptideMatch] = {
-    rs.peptideMatches.filter { pm => validPepMatchIdSet.contains(pm.id) }
-  }
-
-  protected def getValidatedProteinMatches(rs: ResultSet): Iterable[ProteinMatch] = {
-    rs.proteinMatches.filter { pm => validProtMatchIdSet.contains(pm.id) }
-  }
-
-  protected def getValidatedSequenceMatches(proteinMatch: ProteinMatch): Iterable[SequenceMatch] = {
-    proteinMatch.sequenceMatches.filter {sm => validPepIdSet.contains(sm.getPeptideId) }
-  }
-  
-  def getValidatedResultSet(): ResultSet = {
+  def getValidatedResultSet(rsm: ResultSummary): ResultSet = {
+   require( rsm.resultSet.isDefined, "a resultSet must be defined in the result summary")
     
     val rs = rsm.resultSet.get
-    val validatedProtMatches = this.getValidatedProteinMatches(rs).toArray
-    val validatedPepMatches = this.getValidatedPeptideMatches(rs).toArray
+    val( validatedPeptides, validatedPepMatches, validatedProtAndSeqMatches ) =
+      ValidatedResultSetBuilder.getValidatedMatches(rsm.proteinSets,rs.peptideMatches,rs.proteinMatches)
+   
+    rs.copy(
+      peptides = validatedPeptides,
+      peptideMatches = validatedPepMatches,
+      proteinMatches = validatedProtAndSeqMatches
+    )
+  }
+  
+  def getValidatedMatches(
+    proteinSets: Array[ProteinSet],
+    peptideMatches: Array[PeptideMatch],
+    proteinMatches: Array[ProteinMatch]
+  ): Tuple3[Array[Peptide],Array[PeptideMatch],Array[ProteinMatch]] = {
+
+    val entitySelector = new ValidatedEntitySelector(proteinSets)
+    val validatedProtMatches = entitySelector.getValidatedProteinMatches(proteinMatches).toArray
+    val validatedPepMatches = entitySelector.getValidatedPeptideMatches(peptideMatches).toArray
     val pepMatchesByPepId = validatedPepMatches.groupBy(_.peptide.id)
     val validatedPeptides = validatedPepMatches.map(_.peptide).distinct
     
@@ -440,12 +417,53 @@ class ValidatedResultSetBuilder( rsm: ResultSummary ) {
       )
     }
     
-    rs.copy(
-      peptides = validatedPeptides,
-      peptideMatches = validatedPepMatches,
-      proteinMatches = validatedProtAndSeqMatches
-    )
+    ( validatedPeptides,validatedPepMatches, validatedProtMatches )
   }
-
+  
+  class ValidatedEntitySelector( proteinSets: Array[ProteinSet] ) {
+    
+    protected val( validPepIdSet, validPepMatchIdSet, validProtMatchIdSet ) = {
+    
+      // Build the set of unique valid entities ids
+      val validPepIdSetBuilder = Set.newBuilder[Long]
+      val validPepMatchIdSetBuilder = Set.newBuilder[Long]
+      val validProtMatchIdSetBuilder = Set.newBuilder[Long]
+      
+      // Retrieve the ID of valid peptide matches (having a corresponding peptide instance)
+      for (proteinSet <- proteinSets) {
+        if (proteinSet.isValidated) {
+          val peptideSet = proteinSet.peptideSet
+          
+          for (pepInstance <- peptideSet.getPeptideInstances) {
+            validPepIdSetBuilder += pepInstance.peptide.id
+            validPepMatchIdSetBuilder ++= pepInstance.getPeptideMatchIds
+          }
+          
+          validProtMatchIdSetBuilder ++= proteinSet.getProteinMatchIds
+        }
+      }
+      
+      (
+        validPepIdSetBuilder.result(),
+        validPepMatchIdSetBuilder.result(),
+        validProtMatchIdSetBuilder.result()
+      )
+    }
+  
+    def getValidatedPeptideMatches(peptideMatches: Array[PeptideMatch]): Iterable[PeptideMatch] = {
+      peptideMatches.filter { pm => validPepMatchIdSet.contains(pm.id) }
+    }
+  
+    def getValidatedProteinMatches(proteinMatches: Array[ProteinMatch]): Iterable[ProteinMatch] = {
+      proteinMatches.filter { pm => validProtMatchIdSet.contains(pm.id) }
+    }
+  
+    def getValidatedSequenceMatches(proteinMatch: ProteinMatch): Iterable[SequenceMatch] = {
+      proteinMatch.sequenceMatches.filter {sm => validPepIdSet.contains(sm.getPeptideId) }
+    }
+  }
+  
 }
+
+
 
