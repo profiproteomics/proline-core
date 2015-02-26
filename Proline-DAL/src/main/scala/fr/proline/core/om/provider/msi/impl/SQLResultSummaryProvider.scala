@@ -12,6 +12,7 @@ import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ResultSummaryProperties
+import fr.proline.core.om.model.msi.ValidatedResultSetBuilder
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.context.DatabaseConnectionContext
 
@@ -80,16 +81,8 @@ class SQLResultSummaryProvider(
           val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches(rsmId)
           val protMatches = protMatchProvider.getResultSummariesProteinMatches(Array(rsmId))
           
-          // TODO: remove these two commented and obsolete workarounds when all tests are ok
-          
-          // tries to fix redundant protein matches
-          //val distinctProtMatches = protMatches.groupBy( _.id ).map( _._2.head )
-          
-          // Remove objects which are not linked to result summary
-          //val protMatchIdSet = rsmPepSets.flatMap(_.proteinMatchIds) toSet
-          //val rsmProtMatches = distinctProtMatches.filter( p => protMatchIdSet.contains(p.id) ).toArray
-          
-          val isValidatedContent = true
+          // Note: we set isValidatedContent to false here because we may have loaded matches belonging non-validated protein sets
+          val isValidatedContent = false
           
           rsAsOpt = Some(this.getResultSet(rsId, isValidatedContent, pepMatches, protMatches))
         }
