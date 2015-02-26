@@ -668,43 +668,37 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
     msiMQProtSetObjectTree
   }
 
-    
-  protected def createMergedResultSummary(msiDbCtx : DatabaseConnectionContext) : ResultSummary = {
-		  val msiDbHelper = new MsiDbHelper(msiDbCtx)
-		  val tmpIdentProteinIdSet = new collection.mutable.HashSet[Long]()
-		  
-		  //VDS : COMMENT > passage avec ResultSummaryAdder <
-//		  for (identRSM <- identResultSummaries) {
-//			  // 	Retrieve protein ids
-//			  val rs = identRSM.resultSet.get
-//			  rs.proteinMatches.foreach { p => if (p.getProteinId != 0) tmpIdentProteinIdSet += p.getProteinId }
-//		  }
+  protected def createMergedResultSummary(msiDbCtx: DatabaseConnectionContext): ResultSummary = {
+    val msiDbHelper = new MsiDbHelper(msiDbCtx)
+    val tmpIdentProteinIdSet = new collection.mutable.HashSet[Long]()
 
-		  // Retrieve sequence length mapped by the corresponding protein id
-		  //VDS : COMMENT > passage avec ResultSummaryAdder <
-//		  val seqLengthByProtId = msiDbHelper.getSeqLengthByBioSeqId(tmpIdentProteinIdSet.toList)
-   
-		  // FIXME: check that all peptide sets have the same scoring
-		  val pepSetScoring = PepSetScoring.withName( this.identResultSummaries(0).peptideSets(0).scoreType )
-		  val pepSetScoreUpdater = PeptideSetScoreUpdater(pepSetScoring)
-    
-		  // Merge result summaries
-		  //	VDS :  > passage avec ResultSummaryAdder <
-		  this.logger.info("merging result summaries...")
-		  var rsmBuilder = new ResultSummaryAdder(ResultSummary.generateNewId(), false, pepSetScoreUpdater, None)
-		  for (identRSM <- identResultSummaries) {
-		    rsmBuilder.addResultSummary(identRSM)
-		  }
-		  
-		  val mergedTargetRSM = rsmBuilder.toResultSummary
-		  rsmBuilder = null // Eligible for Garbage collection
-		  return mergedTargetRSM
-		  
-		  //VDS : COMMENT > passage avec ResultSummaryAdder <
-//		  val resultSummaryMerger = new ResultSummaryMerger(pepSetScoreUpdater)
-//		  this.logger.info("merging result summaries...")
-//		  resultSummaryMerger.mergeResultSummaries(identResultSummaries, seqLengthByProtId)
+    for (identRSM <- identResultSummaries) {
+      // 	Retrieve protein ids
+      val rs = identRSM.resultSet.get
+      rs.proteinMatches.foreach { p => if (p.getProteinId != 0) tmpIdentProteinIdSet += p.getProteinId }
+    }
 
-   }
+    // Retrieve sequence length mapped by the corresponding protein id
+    val seqLengthByProtId = msiDbHelper.getSeqLengthByBioSeqId(tmpIdentProteinIdSet.toList)
+
+    // FIXME: check that all peptide sets have the same scoring ???
+    val pepSetScoring = PepSetScoring.withName(this.identResultSummaries(0).peptideSets(0).scoreType)
+    val pepSetScoreUpdater = PeptideSetScoreUpdater(pepSetScoring)
+
+    // Merge result summaries
+    this.logger.info("merging result summaries...")
+    val rsmBuilder = new ResultSummaryAdder(
+      ResultSummary.generateNewId(),
+      false,
+      pepSetScoreUpdater,
+      Some(seqLengthByProtId)
+    )
+
+    for (identRSM <- identResultSummaries) {
+      rsmBuilder.addResultSummary(identRSM)
+    }
+
+    rsmBuilder.toResultSummary
+  }
 
 }
