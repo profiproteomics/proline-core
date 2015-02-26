@@ -43,7 +43,7 @@ class ExtractMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
   val quantConfig: ILcMsQuantConfig,
   val peptideByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, Peptide]]] = None, // sequence data may or may not be provided
-  val psmByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, PeptideMatch]]] = None
+  val peptideMatchByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, PeptideMatch]]] = None
 ) extends ILcMsService with Logging {
 
   // Do some requirements
@@ -545,40 +545,63 @@ class ExtractMapSet(
         // Link peakels to peptides
         this.logger.debug("linking peakels to peptides...")
         val peptideByScanNumber = peptideByRunIdAndScanNumber.map(_(lcMsRun.id)).getOrElse(HashMap.empty[Int, Peptide])
-        val psmByScanNumber = psmByRunIdAndScanNumber.map(_(lcMsRun.id)).getOrElse(HashMap.empty[Int, PeptideMatch])
+        val psmByScanNumber = peptideMatchByRunIdAndScanNumber.map(_(lcMsRun.id)).getOrElse(HashMap.empty[Int, PeptideMatch])
 
-        val peptideMs2ShPairsByPeakel = new HashMap[MzDbPeakel, ArrayBuffer[(Peptide, ScanHeader, Int)]]()
+        val psmTupleByPeakel = new HashMap[MzDbPeakel, ArrayBuffer[(Peptide, ScanHeader, Int)]]()
 
+        val scanSequence = lcMsRun.scanSequence.get
         for (detectedPeakel <- detectedPeakels) {
 
           val peakelMz = detectedPeakel.getMz
           // TODO: define a specific m/z tolerance for this procedure or fix a low hardcoded value ???
-          val mzTolDa = MsUtils.ppmToDa(peakelMz, quantConfig.ftMappingParams.mozTol)
+          val ms2MatchingMzTolDa = MsUtils.ppmToDa(peakelMz, quantConfig.ftMappingParams.mozTol)
+          val( firstTime, lastTime ) = (detectedPeakel.getFirstElutionTime(),detectedPeakel.getLastElutionTime())
+          
+          val minCycle = scanSequence.getScanAtTime(firstTime - clusteringParams.timeTol, 1).cycle
+          val maxCycle = scanSequence.getScanAtTime(lastTime + clusteringParams.timeTol, 1).cycle
+          val peakelPsmTuples = new ArrayBuffer[(Peptide, ScanHeader, Int)]
           
           // Find identified MS2 scans concurrent with the detected peakel
           for (
-            scanId <- detectedPeakel.scanIds;
-            // Retrieve the ScanHeader
-            sh = ms1ScanHeaderById(scanId);
+            cycle <- minCycle to maxCycle;
             // Retrieve corresponding MS2 scans for this cycle
-            if ms2ScanHeadersByCycle.contains(sh.getCycle);
-            ms2Sh <- ms2ScanHeadersByCycle(sh.getCycle);
+            if ms2ScanHeadersByCycle.contains(cycle);
+            ms2Sh <- ms2ScanHeadersByCycle(cycle);
             // Filter on m/z difference between the peakel and the precursor
             if (
               psmByScanNumber.contains(ms2Sh.getInitialId()) &&
-              math.abs(psmByScanNumber(ms2Sh.getInitialId()).getExperimentalMoz - peakelMz) <= mzTolDa
+              math.abs(psmByScanNumber(ms2Sh.getInitialId()).getExperimentalMoz - peakelMz) <= ms2MatchingMzTolDa
             );
             // Keep only identified MS2 scans
             peptide <- peptideByScanNumber.get(ms2Sh.getInitialId)
           ) {
-            peptideMs2ShPairsByPeakel.getOrElseUpdate(detectedPeakel, new ArrayBuffer[(Peptide, ScanHeader, Int)]) += Tuple3(peptide, ms2Sh, psmByScanNumber(ms2Sh.getInitialId()).charge)
+            val charge = psmByScanNumber(ms2Sh.getInitialId()).charge
+            peakelPsmTuples += Tuple3(peptide, ms2Sh, charge)
           }
+          
+          // Search for PSMs co-eluting with the peakel
+          val coelutingPsmTuples = peakelPsmTuples.filter { case (peptide, ms2Sh, charge) =>
+            val time = ms2Sh.getElutionTime()
+            (time >= firstTime && time <= lastTime)
+          }
+          
+          // Check if we have identified co-eluting PSMs
+          if( coelutingPsmTuples.isEmpty == false ) {
+            // Use only these PSMs
+            psmTupleByPeakel += detectedPeakel -> coelutingPsmTuples
+          // Else if have found PSMs near the peakel
+          } else if( peakelPsmTuples.isEmpty == false) {
+            // Use these PSMs
+            psmTupleByPeakel += detectedPeakel -> peakelPsmTuples
+          }
+          
+          //psmTupleByPeakel.getOrElseUpdate(detectedPeakel, new ArrayBuffer[(Peptide, ScanHeader, Int)]) += Tuple3(peptide, ms2Sh, charge)
         }
 
         // Retrieve the list of peakels unmapped with peptides
-        val orphanPeakels = detectedPeakels.filter(pkl => peptideMs2ShPairsByPeakel.contains(pkl) == false)
+        //val orphanPeakels = detectedPeakels.filter(pkl => psmTupleByPeakel.contains(pkl) == false)
         val peptides = peptideByScanNumber.map(_._2).toBuffer.distinct
-        val assignedPeptides = peptideMs2ShPairsByPeakel.flatMap(e => e._2.map(_._1)).toBuffer.distinct
+        val assignedPeptides = psmTupleByPeakel.flatMap(e => e._2.map(_._1)).toBuffer.distinct
         val orphanPeptides = peptides.filter(peptide => assignedPeptides.contains(peptide) == false).toSeq.distinct
 
         this.logger.debug(s"${orphanPeptides.size} non quantified peptides among ${peptides.size}")
@@ -591,11 +614,11 @@ class ExtractMapSet(
         val timeTol = clusteringParams.timeTol
         var monoIsotopicFeatures = 0
 
-        for ((peakel, peptideMs2ShTuple) <- peptideMs2ShPairsByPeakel) {
+        for ((peakel, psmTuple) <- psmTupleByPeakel) {
 
-          val peptideMs2ShPairsGroupedByCharge = peptideMs2ShTuple.groupBy(_._3)
+          val psmTuplesGroupedByCharge = psmTuple.groupBy(_._3)
 
-          for ((charge, sameChargePeptideMs2ShTuple) <- peptideMs2ShPairsGroupedByCharge) {
+          for ((charge, sameChargePsmTuple) <- psmTuplesGroupedByCharge) {
 
             val peakelMz = peakel.getMz
             val elutionTimes = peakel.getElutionTimes
@@ -625,14 +648,14 @@ class ExtractMapSet(
               charge = charge,
               indexedPeakels = featurePeakels.zipWithIndex,
               isPredicted = false,
-              ms2ScanIds = sameChargePeptideMs2ShTuple.map(_._2.getId).toArray
+              ms2ScanIds = sameChargePsmTuple.map(_._2.getId).toArray
             )
 
             // Convert mzDb feature into LC-MS one
             val lcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt, rawMapId, lcMsRun.scanSequence.get, peakelByMzDbPeakelId)
             rawMapFeatures += lcmsFt
 
-            val peptides = peptideMs2ShTuple.map(_._1).distinct
+            val peptides = psmTuple.map(_._1).distinct
             for (peptide <- peptides) {
               featureTuples += Tuple3(lcmsFt, peptide, lcMsRun)
             }
@@ -1401,7 +1424,7 @@ class ExtractMapSet(
       }
 
       // Instantiates a Run Slice Data provider
-      val rsdProv = new RunSliceDataProvider(mzDb.getRunSliceIterator(1))
+      val rsdProv = new RunSliceDataProvider(mzDb.getLcMsRunSliceIterator())
 
       // Extract features
       mzdbFtX.extractFeatures(rsdProv, pfs, mozTolPPM)
@@ -1520,7 +1543,7 @@ class ExtractMapSet(
       }
 
       // Instantiates a Run Slice Data provider
-      val rsdProv = new RunSliceDataProvider(mzDb.getRunSliceIterator(1))
+      val rsdProv = new RunSliceDataProvider(mzDb.getLcMsRunSliceIterator())
       this.logger.info("extracting " + missingFtIdByMftId.size + " missing Features from " + mzDbFile.getName)
       // Extract features
       // TODO: add minNbCycles param
