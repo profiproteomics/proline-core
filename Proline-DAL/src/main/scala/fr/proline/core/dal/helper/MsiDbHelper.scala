@@ -57,7 +57,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
 
     // TODO: use getMsiSearchIdsByParentResultSetId instead of _getChildMsiSearchId to reduce code redundancy ???
     if( hierarchicalQuery ) {
-      val childMsiSearchIds = new ArrayBuffer[Long]
+      val childMsiSearchIds = new ArrayBuffer[Long]()
       _getChildMsiSearchIds(rsIds, childMsiSearchIds)
       parentMsiSearchIds ++ childMsiSearchIds.distinct
     } else {
@@ -69,26 +69,16 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
   private def _getChildMsiSearchIds(rsIds: Seq[Long], childMsiSearchIds: ArrayBuffer[Long]): Unit = {
     if( rsIds.isEmpty ) return ()
 
-    // TODO: why perform two consecutive queries ???
-    // the second SQL query could retrieve the child_result_set_id
-    /*val childRSIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-      ezDBC.selectLongs(
-        "SELECT DISTINCT result_set_relation.child_result_set_id  FROM  result_set_relation  " +
-        " WHERE result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") "
-      )
-    })*/
-
     val childRsIds = new ArrayBuffer[Long]()
     DoJDBCWork.withEzDBC(msiDbCtx, { ezDBC =>
       ezDBC.selectAndProcess(
         "SELECT result_set_relation.child_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
         "WHERE result_set.id = result_set_relation.child_result_set_id " +
-        "AND result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") " +
-        "AND msi_search_id IS NOT NULL"
+        "AND result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") "
       ) { r =>
-        val(childRsId: Long, msiSearchId: Long) = (r.nextLong,r.nextLong)
+        val(childRsId, msiSearchIdOpt) = (r.nextLong,r.nextLongOption)
         childRsIds += childRsId
-        childMsiSearchIds += msiSearchId
+        msiSearchIdOpt.map( childMsiSearchIds += _ )
       }
     })
 
@@ -128,12 +118,14 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
       ezDBC.selectAndProcess(
         "SELECT result_set_relation.parent_result_set_id, result_set_relation.child_result_set_id, result_set.msi_search_id FROM result_set, result_set_relation " +
         "WHERE result_set.id = result_set_relation.child_result_set_id " +
-        "AND result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") " +
-        "AND msi_search_id IS NOT NULL"
+        "AND result_set_relation.parent_result_set_id IN (" + rsIds.mkString(",") + ") "
       ) { r =>
-          val(parentRsId: Long, childRsId: Long, msiSearchId: Long) = (r.nextLong,r.nextLong,r.nextLong)
+          val(parentRsId, childRsId, msiSearchIdOpt) = (r.nextLong,r.nextLong,r.nextLongOption)
           childRsIds += childRsId
-          msiSearchIdsByParentResultSetId.getOrElseUpdate(parentRsId, new HashSet[Long]) += msiSearchId
+          
+          msiSearchIdOpt.map { msiSearchId =>
+            msiSearchIdsByParentResultSetId.getOrElseUpdate(parentRsId, new HashSet[Long]) += msiSearchId
+          }
         }
     })
     
