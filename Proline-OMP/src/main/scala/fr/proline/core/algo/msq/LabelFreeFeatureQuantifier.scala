@@ -339,21 +339,21 @@ class LabelFreeFeatureQuantifier(
       }
       
       val quantPepByQcId = Map.newBuilder[Long,QuantPeptide]
-      for( (qcId,quantPepIon) <- bestMQPepIon.quantPeptideIonMap ) {
-        
+      val peptideIonMap = filteredMQPepIons.flatMap(_.quantPeptideIonMap.map(_._2)).groupBy(_.quantChannelId)
+      for( (qcId,quantPepIons) <- peptideIonMap ) {
         // Build the quant peptide
         val qp = new QuantPeptide(
-          rawAbundance = quantPepIon.rawAbundance,
-          abundance = quantPepIon.abundance,
-          elutionTime = quantPepIon.elutionTime,
-          peptideMatchesCount = quantPepIon.peptideMatchesCount,
+          rawAbundance = quantPepIons.map(_.rawAbundance).sum,
+          abundance = quantPepIons.map(_.abundance).sum,
+          elutionTime = quantPepIons.map(_.elutionTime).sum / quantPepIons.length,
+          peptideMatchesCount = quantPepIons.map(_.peptideMatchesCount).sum,
           quantChannelId = qcId,
           selectionLevel = 2
         )
         
         quantPepByQcId += qcId -> qp
       }
-    
+
       new MasterQuantPeptide(
         id = mqPeptideId,
         peptideInstance = masterPepInstAsOpt,
