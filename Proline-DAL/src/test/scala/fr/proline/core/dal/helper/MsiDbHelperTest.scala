@@ -1,24 +1,28 @@
 package fr.proline.core.dal.helper
 
-import org.junit.After
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
-import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
+
+import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
-import com.typesafe.scalalogging.slf4j.Logging
-import org.junit.Ignore
 
-@Test
-class MsiDbHelperTest extends DatabaseTestCase with Logging {
+object MsiDbHelperTest extends DatabaseTestCase with Logging {
 
   override def getProlineDatabaseType() = ProlineDatabaseType.MSI
 
+  override def getPropertiesFileName(): String = {
+    return "db_settings/h2/db_msi.properties"
+  }
+
   var executionContext: IExecutionContext = null
 
-  @Before
+  @BeforeClass
   @throws(classOf[Exception])
   def setUp() = {
 
@@ -26,43 +30,36 @@ class MsiDbHelperTest extends DatabaseTestCase with Logging {
 
     initDatabase()
 
-    loadCompositeDataSet(Array("/dbunit/datasets/msi-db_init_dataset.xml","/dbunit/datasets/msi/Resultset_Dataset.xml")) //Load Data
-
-
+    loadCompositeDataSet(Array("/dbunit/datasets/msi-db_init_dataset.xml", "/dbunit/datasets/msi/Resultset_Dataset.xml")) //Load Data
   }
 
-  @After
+  @AfterClass
   override def tearDown() {
     super.tearDown()
   }
-  
-  override def getPropertiesFileName(): String = {
-	return "db_settings/h2/db_msi.properties";
-    }
-	  
-  @Test
-  def testGetRSMsiSearchIds2Level() = {
-    val msiDbCtxt = new DatabaseConnectionContext(getConnector)
-    val helper = new MsiDbHelper(msiDbCtxt)
+}
 
-    val rsIdsB = Seq.newBuilder[Long]
-    rsIdsB += 4l
-    val msiIds = helper.getResultSetsMsiSearchIds(rsIdsB.result)
-
-    assertEquals(2, msiIds.length)
-
-  }
+@Test
+class MsiDbHelperTest {
 
   @Test
   def testGetRSMsiSearchIds1Level() = {
-    val msiDbCtxt = new DatabaseConnectionContext(getConnector)
+    val msiDbCtxt = new DatabaseConnectionContext(MsiDbHelperTest.getConnector)
     val helper = new MsiDbHelper(msiDbCtxt)
 
-    val rsIdsB = Seq.newBuilder[Long]
-    rsIdsB += 3l
-    val msiIds = helper.getResultSetsMsiSearchIds(rsIdsB.result)
+    val msiIds = helper.getResultSetsMsiSearchIds(Array(3L))
 
     assertEquals(2, msiIds.length)
+  }
+  
+  @Test
+  def testGetRSMsiSearchIds2Level() = {
+    println("testGetRSMsiSearchIds2Level")
+    val msiDbCtxt = new DatabaseConnectionContext(MsiDbHelperTest.getConnector)
+    val helper = new MsiDbHelper(msiDbCtxt)
 
+    val msiIds = helper.getResultSetsMsiSearchIds(Array(4L))
+
+    assertEquals(2, msiIds.length)
   }
 }
