@@ -417,7 +417,7 @@ object ValidatedResultSetBuilder {
       )
     }
     
-    ( validatedPeptides,validatedPepMatches, validatedProtMatches )
+    ( validatedPeptides, validatedPepMatches, validatedProtAndSeqMatches )
   }
   
   class ValidatedEntitySelector( proteinSets: Array[ProteinSet] ) {
