@@ -10,6 +10,9 @@ public class DQuantPeptide {
 	Float elutionTime;
 	Long peptideId;
 	Long peptideInstanceId;
+	
+	// to display psm count from identification (which is different from the quantification psm count)
+	private Integer identPeptideMatchCount;
     
     // Necessary Construtor for JSON parsing !
 	protected DQuantPeptide() {
@@ -86,6 +89,16 @@ public class DQuantPeptide {
 
 	public void setPeptideInstanceId(Long peptideInstanceId) {
 		this.peptideInstanceId = peptideInstanceId;
+	}
+
+
+	public Integer getIdentPeptideMatchCount() {
+		return identPeptideMatchCount;
+	}
+
+
+	public void setIdentPeptideMatchCount(Integer identPeptideMatchCount) {
+		this.identPeptideMatchCount = identPeptideMatchCount;
 	}
 
 
