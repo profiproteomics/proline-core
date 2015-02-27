@@ -90,30 +90,9 @@ case class LcMsScanSequence(
   lazy val endTime: Float = scans.last.time
   
   lazy val scanIdsByTimeIndex: Map[Int,Array[Long]] = {
-
-    val timeIndexWidth = LcMsScanSequence.timeIndexWidth;
-    
-    import scala.collection.JavaConversions._
-    val scanIdsByTimeIndexHashMap = new java.util.HashMap[Int,ArrayBuffer[Long]]()
-    
-    for( scan <- scans ) {
-      
-      val timeIndex = LcMsScanSequence.calcTimeIndex(scan.time)
-      
-      if( !scanIdsByTimeIndex.containsKey(timeIndex) ) {
-        scanIdsByTimeIndexHashMap.put(timeIndex, new ArrayBuffer[Long](1) )
-      }
-      
-      scanIdsByTimeIndexHashMap.get(timeIndex) += scan.id
+    scans.groupBy( scan => LcMsScanSequence.calcTimeIndex(scan.time) ).map { case (idx,scans) =>
+      idx -> scans.map(_.id)
     }
-    
-    val scanIdsIndexBuilder = scala.collection.immutable.Map.newBuilder[Int,Array[Long]]
-    for( timeIndex <- scanIdsByTimeIndexHashMap.keys ) {
-      val scanIds = scanIdsByTimeIndexHashMap.get(timeIndex)
-      scanIdsIndexBuilder += ( timeIndex -> scanIds.toArray )
-    }
-    
-    scanIdsIndexBuilder.result()
   }
   
   def getScanByInitialId( initialId: Int ): Option[LcMsScan] = {
@@ -121,29 +100,27 @@ case class LcMsScanSequence(
   }
 
   def getScanAtTime( time: Float, msLevel: Int = 1 ): LcMsScan = {
-    if( time < 0 ) { throw new IllegalArgumentException("time must be a positive number" ); }
+    require( time >= 0, "time must be a positive number" )
     
     val runEndTime = endTime
     val safeTime = if( time > runEndTime ) runEndTime else time
     
-    val timeIndex = LcMsScanSequence.calcTimeIndex(time)      
-    val scanIdsIndex = scanIdsByTimeIndex      
-    val matchingScanIds = new ArrayBuffer[Long]
-    
-    for( index <- timeIndex-1 to timeIndex+1 ) {
-      val tmpScanIds = scanIdsIndex(index)
-      if( tmpScanIds != null) matchingScanIds ++= tmpScanIds
-    }
-    
-    // Determine all matching scans and sort them in ascendant order of absolute time distance 
+    val timeIndex = LcMsScanSequence.calcTimeIndex(safeTime)
+    val scanIdsIndex = scanIdsByTimeIndex
     val myScanById = scanById
-    val matchingScans = matchingScanIds
-      .map { myScanById(_) }
-      .filter { s => s.msLevel == msLevel }
-      .sortWith { (a, b) => math.abs(a.time - time) < math.abs(b.time-time) }
     
-    // Return nearest scan
-    matchingScans(0)
+    // Determine all matching scans
+    val matchingScans = for(
+      index <- timeIndex-1 to timeIndex+1;
+      val tmpScanIds = scanIdsIndex(index);
+      if tmpScanIds != null;
+      tmpScanId <- tmpScanIds;
+      val scan = myScanById(tmpScanId);
+      if scan.msLevel == msLevel
+    ) yield scan
+
+    // Return nearest scan from provided time
+    matchingScans.minBy( s => math.abs(s.time - safeTime) )
   }
   
   def isEmpty() : Boolean = {
