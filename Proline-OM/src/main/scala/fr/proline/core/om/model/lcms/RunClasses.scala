@@ -106,15 +106,15 @@ case class LcMsScanSequence(
     val safeTime = if( time > runEndTime ) runEndTime else time
     
     val timeIndex = LcMsScanSequence.calcTimeIndex(safeTime)
-    val scanIdsIndex = scanIdsByTimeIndex
+    val scanIdsByIndex = scanIdsByTimeIndex
     val myScanById = scanById
     
     // Determine all matching scans
     val matchingScans = for(
       index <- timeIndex-1 to timeIndex+1;
-      val tmpScanIds = scanIdsIndex(index);
-      if tmpScanIds != null;
-      tmpScanId <- tmpScanIds;
+      val tmpScanIdsOpt = scanIdsByIndex.get(index);
+      if tmpScanIdsOpt.isDefined && tmpScanIdsOpt.get != null;
+      tmpScanId <- tmpScanIdsOpt.get;
       val scan = myScanById(tmpScanId);
       if scan.msLevel == msLevel
     ) yield scan
