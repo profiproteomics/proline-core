@@ -86,7 +86,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
         lcmsScanIdx += 1
       }
       
-      scans
+      scans.sortBy(_.time)
     })
   }
   

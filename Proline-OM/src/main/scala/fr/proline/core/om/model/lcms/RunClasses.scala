@@ -81,7 +81,14 @@ case class LcMsScanSequence(
   var properties: Option[LcMsScanSequenceProperties] = None
   
 ) {
-  require( scans != null )
+  require( scans != null, "scans is null" )
+  require( isSorted(scans.map(_.time)) == true, "scans must be sorted by time" )
+  
+  // TODO: put in Scala commons ?
+  private def isSorted(values: Array[Float]): Boolean = {
+    for (i <- 1 until values.length) if (values(i) < values(i-1)) return false
+    true
+  }
   
   lazy val scanById = Map() ++ scans.map { scan => ( scan.id -> scan ) }
   
@@ -89,10 +96,8 @@ case class LcMsScanSequence(
   
   lazy val endTime: Float = scans.last.time
   
-  lazy val scanIdsByTimeIndex: Map[Int,Array[Long]] = {
-    scans.groupBy( scan => LcMsScanSequence.calcTimeIndex(scan.time) ).map { case (idx,scans) =>
-      idx -> scans.map(_.id)
-    }
+  lazy val scansByTimeIndex: Map[Int,Array[LcMsScan]] = {
+    scans.groupBy( scan => LcMsScanSequence.calcTimeIndex(scan.time) )
   }
   
   def getScanByInitialId( initialId: Int ): Option[LcMsScan] = {
@@ -100,24 +105,20 @@ case class LcMsScanSequence(
   }
 
   def getScanAtTime( time: Float, msLevel: Int = 1 ): LcMsScan = {
-    require( time >= 0, "time must be a positive number" )
+    //require( time >= 0, s"time must be a positive number ($time)" )
     
-    val runEndTime = endTime
-    val safeTime = if( time > runEndTime ) runEndTime else time
-    
+    val safeTime = math.min( math.max(scans.head.time, time), scans.last.time )
     val timeIndex = LcMsScanSequence.calcTimeIndex(safeTime)
-    val scanIdsByIndex = scanIdsByTimeIndex
-    val myScanById = scanById
+    val scansByIndex = scansByTimeIndex
     
     // Determine all matching scans
     val matchingScans = for(
       index <- timeIndex-1 to timeIndex+1;
-      val tmpScanIdsOpt = scanIdsByIndex.get(index);
-      if tmpScanIdsOpt.isDefined && tmpScanIdsOpt.get != null;
-      tmpScanId <- tmpScanIdsOpt.get;
-      val scan = myScanById(tmpScanId);
-      if scan.msLevel == msLevel
-    ) yield scan
+      tmpScansOpt = scansByIndex.get(index);
+      if tmpScansOpt.isDefined && tmpScansOpt.get != null;
+      tmpScan <- tmpScansOpt.get;
+      if tmpScan.msLevel == msLevel
+    ) yield tmpScan
 
     // Return nearest scan from provided time
     matchingScans.minBy( s => math.abs(s.time - safeTime) )

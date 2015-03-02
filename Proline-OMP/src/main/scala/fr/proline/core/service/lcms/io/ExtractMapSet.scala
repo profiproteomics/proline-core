@@ -662,7 +662,9 @@ class ExtractMapSet(
           }
         }
 
-        logger.info("Number of mono isotopic features (%) =" + (100 * monoIsotopicFeatures / rawMapFeatures.length))
+        if( rawMapFeatures.isEmpty == false ) {
+          logger.info("Number of mono isotopic features (%) =" + (100 * monoIsotopicFeatures / rawMapFeatures.length))
+        }
 
       } finally {
         // Release opened connections
