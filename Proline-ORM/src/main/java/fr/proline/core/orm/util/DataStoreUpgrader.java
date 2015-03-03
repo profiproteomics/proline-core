@@ -92,12 +92,10 @@ public final class DataStoreUpgrader {
 		for (final Long projectId : projectIds) {
 		    LOG.debug("Upgrading databases of Project #{}", projectId);
 
-		    final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId
-			    .longValue());
+		    final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId.longValue());
 
 		    if (msiDbConnector == null) {
-			LOG.warn("DataStoreConnectorFactory has no valid MSI Db connector for Project #{}",
-				projectId);
+			LOG.warn("DataStoreConnectorFactory has no valid MSI Db connector for Project #{}", projectId);
 		    } else {
 			final int msiDbMigrationCount = DatabaseUpgrader.upgradeDatabase(msiDbConnector);
 
@@ -109,9 +107,11 @@ public final class DataStoreUpgrader {
 			}
 		    }
 
-		    final IDatabaseConnector lcMsDbConnector = connectorFactory.getLcMsDbConnector(projectId
-			    .longValue());
-		    if (lcMsDbConnector != null) {
+		    final IDatabaseConnector lcMsDbConnector = connectorFactory.getLcMsDbConnector(projectId.longValue());
+		    
+		    if (lcMsDbConnector == null) {
+			LOG.warn("DataStoreConnectorFactory has no valid LCMS Db connector for Project #{}", projectId);
+		    } else {
 			final int lcMsDbMigrationCount = DatabaseUpgrader.upgradeDatabase(lcMsDbConnector);
 
 			if (lcMsDbMigrationCount < 0) {
