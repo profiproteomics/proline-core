@@ -47,9 +47,8 @@ public final class DataStoreUpgrader {
 	    if (udsDbMigrationCount < 0) {
 		result = false;
 		LOG.warn("Unable to upgrade UDS Db");
-	    }
-	    else {
-    	LOG.info("UDS Db :"+udsDbMigrationCount+" migration done.");
+	    } else {
+		LOG.info("UDS Db :" + udsDbMigrationCount + " migration done.");
 	    }
 
 	}
@@ -62,9 +61,8 @@ public final class DataStoreUpgrader {
 	    if (pdiDbMigrationCount < 0) {
 		result = false;
 		LOG.warn("Unable to upgrade PDI Db");
-	    }
-	    else {
-    	LOG.info("PDI Db :"+pdiDbMigrationCount+" migration done.");
+	    } else {
+		LOG.info("PDI Db :" + pdiDbMigrationCount + " migration done.");
 	    }
 	}
 
@@ -79,9 +77,8 @@ public final class DataStoreUpgrader {
 	    if (psDbMigrationCount < 0) {
 		result = false;
 		LOG.warn("Unable to upgrade PS Db");
-	    }
-	    else {
-    	LOG.info("PS Db :"+psDbMigrationCount+" migration done.");
+	    } else {
+		LOG.info("PS Db :" + psDbMigrationCount + " migration done.");
 	    }
 
 	}
@@ -92,7 +89,7 @@ public final class DataStoreUpgrader {
 
 	    if ((projectIds != null) && !projectIds.isEmpty()) {
 
-		for (final Long projectId : projectIds) { 
+		for (final Long projectId : projectIds) {
 		    LOG.debug("Upgrading databases of Project #{}", projectId);
 
 		    final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId
@@ -107,10 +104,9 @@ public final class DataStoreUpgrader {
 			if (msiDbMigrationCount < 0) {
 			    result = false;
 			    LOG.warn("Unable to upgrade MSI Db of project #{}", projectId);
+			} else {
+			    LOG.info("MSI Db for project " + projectId + " : " + msiDbMigrationCount + " migration done.");
 			}
-		    else {
-		    	LOG.info("MDI Db for project "+projectId+" : " +msiDbMigrationCount+" migration done.");
-		    }
 		    }
 
 		    final IDatabaseConnector lcMsDbConnector = connectorFactory.getLcMsDbConnector(projectId
@@ -121,14 +117,12 @@ public final class DataStoreUpgrader {
 			if (lcMsDbMigrationCount < 0) {
 			    result = false;
 			    LOG.warn("Unable to upgrade LCMS Db of Project #{}", projectId);
+			} else {
+			    LOG.info("LCMS Db for project " + projectId + " : " + lcMsDbMigrationCount + " migration done.");
 			}
-
 		    }
-
 		}
-
 	    }
-
 	}
 
 	return result;
