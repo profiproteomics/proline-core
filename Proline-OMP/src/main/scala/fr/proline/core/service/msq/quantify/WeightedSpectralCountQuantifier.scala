@@ -250,6 +250,9 @@ class WeightedSpectralCountQuantifier(
     var firstQChOcc = true
     qChannels.foreach(nextQCh => {
       val rsmId = nextQCh.getIdentResultSummaryId()
+	  val currentIdRSM = this.identResultSummaries.filter(_.id.equals(rsmId))(0)	
+	  val rsmProtSetById = currentIdRSM.getProteinSetById
+	  
       if (!firstQChOcc) { jsonBuilder.append(",") } else { firstQChOcc = false }
       jsonBuilder.append("{").append(SpectralCountsJSONProperties.rsmIDPropName).append(":").append(rsmId).append(",") //save current RSM Id
 
@@ -274,12 +277,10 @@ class WeightedSpectralCountQuantifier(
 		  var protMatchStatus : String = null
 		  var protMatchPepNbr = -1
           if (protQuant.get.proteinSetId.isDefined) {
-            val currentIdRSM = this.identResultSummaries.filter(_.id.equals(rsmId))(0)
             protSetId=protQuant.get.proteinSetId.get
             protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)
-            
-            // FIXME: DBO: DO NOT call getProteinSetById in a loop !
-            val protSet = if(currentIdRSM.getProteinSetById.get(protSetId).isDefined) currentIdRSM.getProteinSetById.get(protSetId).get else null
+                      
+            val protSet = if(rsmProtSetById.get(protSetId).isDefined) rsmProtSetById.get(protSetId).get else null
             protMatchStatus = if(protSet != null && protSet.getTypicalProteinMatchId.equals( protMatchId)){
                "Typical"
             } else {
@@ -485,16 +486,10 @@ class WeightedSpectralCountQuantifier(
                                resultSummaries: Seq[ResultSummary],
                                protSetWeightStructsByProtSetId: Map[Long, ProteinSetPeptidesDescription]): (Array[MasterQuantPeptide], Array[MasterQuantProteinSet]) = {
     
-    val rsIdByRsmId = resultSummaries.map(rsm => { rsm.id -> rsm.getResultSetId }).toMap
-
-    // Map quant channel id by result set id    
-    val qcIdByRsId = udsMasterQuantChannel.getQuantitationChannels().map {
-      qc =>
-        {
-          rsIdByRsmId(qc.getIdentResultSummaryId()) -> qc.getId
-
-        }
-    } toMap
+    
+    // Map quant channel id by resultSummary id    
+    val qcIdByRsmId =  udsMasterQuantChannel.getQuantitationChannels().map (qc => qc.getIdentResultSummaryId() -> qc.getId ).toMap
+    
     val refPepInstanceByPepId = mergedRSM.peptideInstances.map(pi => pi.peptideId -> pi).toMap
 
     //     val qPepIonsMapsByrsmId = new HashMap[Long,Map[Long, Array[QuantPeptideIon]]]
@@ -508,7 +503,7 @@ class WeightedSpectralCountQuantifier(
     // Compute SpectralCount for each RSM
     resultSummaries.foreach(rsm => {
       logger.debug("  --- computeMasterQuantValues fro rsm "+rsm.id)
-      val qcId = qcIdByRsId(rsm.getResultSetId)
+      val qcId = qcIdByRsmId(rsm.id)
 
       val quantPepByPepID: scala.collection.mutable.Map[Long, QuantPeptide] = scala.collection.mutable.Map[Long, QuantPeptide]()
 
