@@ -2,6 +2,8 @@ package fr.proline.core.orm.lcms;
 
 import javax.persistence.*;
 
+import fr.proline.core.orm.util.JsonSerializer;
+
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.List;
@@ -92,6 +94,10 @@ public class Feature implements Serializable {
 	//bi-directional many-to-one association to FeaturePeakelItem
 	@OneToMany(mappedBy="feature")
 	private List<FeaturePeakelItem> featurePeakelItems;
+	
+	// serializedProperties as a map
+	@Transient
+	private java.util.Map<String, Object> serializedPropertiesMap;
 
 	public Feature() {
 	}
@@ -326,4 +332,32 @@ public class Feature implements Serializable {
 	public String toString() {
 		return new StringBuilder("Feature ").append(id).append(" (").append(df.format(moz)).append(',').append(df.format(elutionTime)).toString();
 	}
+
+	public java.util.Map<String, Object> getSerializedPropertiesMap() {
+		return serializedPropertiesMap;
+	}
+
+	public void setSerializedPropertiesMap(
+			java.util.Map<String, Object> serializedPropertiesMap) {
+		this.serializedPropertiesMap = serializedPropertiesMap;
+	}
+
+	@SuppressWarnings("unchecked")
+	public java.util.Map<String, Object> getSerializedPropertiesAsMap()
+			throws Exception {
+		if ((serializedPropertiesMap == null) && (serializedProperties != null)) {
+			serializedPropertiesMap = JsonSerializer.getMapper().readValue(
+					getSerializedProperties(), java.util.Map.class);
+		}
+		return serializedPropertiesMap;
+	}
+
+	public void setSerializedPropertiesAsMap(
+			java.util.Map<String, Object> serializedPropertiesMap)
+			throws Exception {
+		this.serializedPropertiesMap = serializedPropertiesMap;
+		this.serializedProperties = JsonSerializer.getMapper()
+				.writeValueAsString(serializedPropertiesMap);
+	}
+
 }
