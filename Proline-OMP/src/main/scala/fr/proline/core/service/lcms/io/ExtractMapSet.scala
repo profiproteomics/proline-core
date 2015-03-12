@@ -401,7 +401,7 @@ class ExtractMapSet(
           precursorMoz = if (precMz > 0) Some(precMz) else None,
           precursorCharge = if (precCharge > 0) Some(precCharge) else None
         )
-      }
+      } sortBy(_.time) // FIXME: why scans are not sorted after call to mzDb.getScanHeaders ???
 
       val ms1ScansCount = scans.count(_.msLevel == 1)
       val ms2ScansCount = scans.count(_.msLevel == 2)
