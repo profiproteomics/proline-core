@@ -20,6 +20,10 @@ object MissingAbundancesInferer extends Logging {
     
     // Retrieve quartiles from flattened abundance matrix
     val allDefinedAbundances = abundanceMatrix.flatten.withFilter( isZeroOrNaN(_) == false ).map(_.toDouble).sorted
+    if( allDefinedAbundances.isEmpty ) {
+      logger.warn("no defined abundances in the abundanceMatrix: can't infer missing values")
+      return abundanceMatrix
+    }
     
     val q1 = percentileComputer.evaluate(allDefinedAbundances,25).toFloat
     val q3 = percentileComputer.evaluate(allDefinedAbundances,75).toFloat
@@ -51,7 +55,7 @@ object MissingAbundancesInferer extends Logging {
       // Compute defined abundances frequency
       val defAbFreq = nbDefValues / abundanceRow.length
       
-      // Noise is taken as mean abudance if no PSM has been identified or if no abundance detected
+      // Noise is taken as mean abundance if no PSM has been identified or if no abundance detected
       var newAbundanceRow = abundanceRow
       val meanAbundance = if( totalPsmCount == 0 || nbDefValues == 0 ) {
         
