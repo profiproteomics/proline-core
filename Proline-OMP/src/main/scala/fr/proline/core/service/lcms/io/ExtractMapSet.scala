@@ -18,6 +18,7 @@ import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peak => MzDbPeak, Peakel =>
 import fr.profi.mzdb.model.PutativeFeature
 import fr.profi.mzdb.utils.ms.MsUtils
 import fr.profi.util.ms.massToMoz
+import fr.profi.util.metrics.Metric
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
 import fr.proline.core.dal.helper.LcmsDbHelper
@@ -297,18 +298,9 @@ class ExtractMapSet(
 
     DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       for (processedMap <- finalMapSet.childMaps) {
-
         // Store the map
         logger.info("storing the processed map...")
         processedMapStorer.storeProcessedMap(processedMap)
-
-        // Update map set alignment reference map
-        // Note this now done by the processed map storer
-        /*if( processedMap.isAlnReference ) {
-          logger.info("Set map set alignement reference map to id=" + processedMap.id)
-          ezDBC.execute( "UPDATE map_set SET aln_reference_map_id = "+ processedMap.id +" WHERE id = " + mapSet.id )
-        }*/
-
       }
     })
 
@@ -316,17 +308,6 @@ class ExtractMapSet(
     logger.info("saving the master map...")
     val masterMapStorer = MasterMapStorer(lcmsDbCtx)
     masterMapStorer.storeMasterMap(finalMapSet.masterMap)
-
-    // --- Create and store the master map, the associated processed maps and their alignments ---
-    /*CreateMasterMap(
-      lcmsDbCtx = lcmsDbCtx,
-      mapSet = x2MapSet,
-      alnMethodName = alnMethodName,
-      alnParams = alnParams,
-      masterFtFilter = masterFtFilter,
-      ftMappingParams = ftMappingParams,
-      normalizationMethod = normalizationMethod
-    )*/
 
     // Commit transaction if it was initiated locally
     if (!wasInTransaction) lcmsDbCtx.commitTransaction()
@@ -371,17 +352,6 @@ class ExtractMapSet(
     else {
 
       val mzDb = new MzDbReader(mzDbFile, true)
-      //val newScanSeqId = LcMsScanSequence.generateNewId()
-
-      /*val rawFile = new RawFile(
-        id = runId,
-        name = rawFileName,
-        extension = "", //FIXME: retrieve the extension
-        directory = mzDbFileDir,
-        creationTimestamp = new java.util.Date(), // FIXME: retrieve the creation date
-        instrument = Some(instrument)
-      )*/
-
       val mzDbScans = mzDb.getScanHeaders()
       val scans = mzDbScans.map { mzDbScan =>
 
@@ -428,22 +398,6 @@ class ExtractMapSet(
 
   }
 
-  // Naive and slow search of peakel in m/z and time dimension (too many iterations)
-  // TODO: use MVRTreeMap (H2 builtin) or PRTree (http://www.khelekore.org/prtree/) implementations
-  /*private def _getPeakelsInRange( peakels: Array[MzDbPeakel], minMz: Double, maxMz: Double, minTime: Float, maxTime: Float ): Array[MzDbPeakel] = {
-      
-    val matchingPeakels = new ArrayBuffer[MzDbPeakel]()
-    for( peakel <- peakels ) {
-      val peakelMz = peakel.getMz
-      val peakelTime = peakel.getElutionTime
-      if( peakelMz >= minMz && peakelMz <= maxMz && peakelTime >= minTime && peakelTime <= maxTime ) {
-        matchingPeakels += peakel
-      }
-    }
-
-    matchingPeakels.toArray
-  }*/
-
   private def _detectMapSetFromPeakels(
     lcMsRuns: Seq[LcMsRun],
     mzDbFileByLcMsRunId: HashMap[Long, File],
@@ -464,7 +418,9 @@ class ExtractMapSet(
     val featureTuples = new ArrayBuffer[(Feature, Peptide, LcMsRun)]()
 
     val tempDir = new File(System.getProperty("java.io.tmpdir"))
-
+    val peakelByMzDbPeakelIdByRun = new HashMap[Long, HashMap[Int, Peakel]]()
+    val metricsByRunId = new HashMap[Long, Metric]()
+    
     var mapNumber = 0
     for (lcMsRun <- lcMsRuns) {
       mapNumber += 1
@@ -479,7 +435,11 @@ class ExtractMapSet(
 
       // Create a mapping avoiding the creation of duplicated peakels
       val peakelByMzDbPeakelId = new HashMap[Int, Peakel]()
-
+      peakelByMzDbPeakelIdByRun(lcMsRun.id) = peakelByMzDbPeakelId
+      
+      val metrics = new Metric("LCMSRun_"+lcMsRun.id)
+      metricsByRunId(lcMsRun.id) = metrics
+      
       var peakelFileConnection: SQLiteConnection = null
 
       try {
@@ -604,13 +564,12 @@ class ExtractMapSet(
         val assignedPeptides = psmTupleByPeakel.flatMap(e => e._2.map(_._1)).toBuffer.distinct
         val orphanPeptides = peptides.filter(peptide => assignedPeptides.contains(peptide) == false).toSeq.distinct
 
-        this.logger.debug(s"${orphanPeptides.size} non quantified peptides among ${peptides.size}")
-        //        for (peptide <- orphanPeptides) {
-        //          this.logger.debug(s"Peptide ${peptide.sequence} id=${peptide.id} not found")
-        //        }
+        metrics.setCounter("orphan peptides", orphanPeptides.size)
+        metrics.setCounter("peptides", peptides.size)
 
         // Iterate over peakels mapped with peptides to build features
         this.logger.debug("building features from peakels...")
+        
         val timeTol = clusteringParams.timeTol
         var monoIsotopicFeatures = 0
 
@@ -625,17 +584,17 @@ class ExtractMapSet(
 
             val foundPeakel = this._findPeakelIsotope(
               peakelFileConnection,
-              peakelMz,
+              peakel,
               charge,
               isotopeIdx = 1,
               minTime = elutionTimes.head - timeTol,
               avgTime = peakel.calcWeightedAverageTime(),
               maxTime = elutionTimes.last + timeTol,
-              true
+              false
             )
 
             val featurePeakels = if (foundPeakel.isEmpty) {
-              monoIsotopicFeatures += 1
+              metrics.incr("monoisotopic features")
               Array(peakel)
             } else {
               Array(peakel, foundPeakel.get)
@@ -662,10 +621,9 @@ class ExtractMapSet(
           }
         }
 
-        if( rawMapFeatures.isEmpty == false ) {
-          logger.info("Number of mono isotopic features (%) =" + (100 * monoIsotopicFeatures / rawMapFeatures.length))
-        }
-
+        metrics.setCounter("multiple feature peakels", peakelByMzDbPeakelId.map(_._2).filter(_.featuresCount > 1).size)
+        logger.info(metrics.toString)
+        
       } finally {
         // Release opened connections
         mzDb.close()
@@ -739,7 +697,8 @@ class ExtractMapSet(
           else {
             // TODO: maybe we should cluster features only if they are close in time dimension ???
             //this.logger.debug(s"clutering ${runFeatures.length} features matching peptide ${peptide.sequence}  in run id=${lcMsRun.id}" )
-            masterFtChildren += ClusterizeFeatures.buildFeatureCluster(
+            
+            val clusterFeature = ClusterizeFeatures.buildFeatureCluster(
               runFeatures,
               rawMapId = runFeatures.head.relations.rawMapId,
               procMapId = runFeatures.head.relations.processedMapId,
@@ -747,12 +706,20 @@ class ExtractMapSet(
               timeComputationMethod,
               lcMsRun.scanSequence.get.scanById
             )
+            
+            masterFtChildren += clusterFeature
+            metricsByRunId(lcMsRun.id).storeValue("cluster duration", clusterFeature.duration)
           }
         }
-      }
-
+      }      
+      
+      
+      
       // Create TMP master feature builders
       val bestFt = masterFtChildren.maxBy(_.intensity)
+      val bestFtProcMapId = bestFt.relations.processedMapId
+      val bestFtLcMsRun = lcmsRunByProcMapId(bestFtProcMapId)
+      
       val mftBuilder = new MasterFeatureBuilder(
         bestFeature = bestFt,
         children = masterFtChildren,
@@ -764,8 +731,7 @@ class ExtractMapSet(
       for (lcMsRun <- runsWithMissingFt) {
 
         val currentProcMapId = processedMapByRun(lcMsRun).id
-        val bestFtProcMapId = bestFt.relations.processedMapId
-        val bestFtLcMsRun = lcmsRunByProcMapId(bestFtProcMapId)
+        
 
         var predictedTime = tmpMapSet.convertElutionTime(
           bestFt.elutionTime,
@@ -806,13 +772,13 @@ class ExtractMapSet(
       }
     }
 
-    val timeTol = ftMappingParams.timeTol
-
     val x2RawMaps = new ArrayBuffer[RawMap](processedMaps.length)
     val x2RawMapByRunId = new HashMap[Long, RawMap]()
 
     for (lcMsRun <- lcMsRuns) {
 
+      val metrics = metricsByRunId(lcMsRun.id) 
+      
       // Retrieve processed an raw maps
       val processedMap = processedMapByRun(lcMsRun)
       val rawMap = processedMap.getRawMaps().head.get
@@ -824,64 +790,50 @@ class ExtractMapSet(
         val putativeFts = putativeFtsByLcMsRun(lcMsRun)
         val newLcmsFeatures = new ArrayBuffer[Feature]()
 
-        this.logger.info(s"searching for missing features in run id=${lcMsRun.id}...")
+        this.logger.info(s"searching for missing ${putativeFts.length} features in run id=${lcMsRun.id}...")
 
         // Re-open peakel SQLite file
         val peakelFile = peakelFileByRun(lcMsRun)
         val peakelFileConn = new SQLiteConnection(peakelFile)
         peakelFileConn.open(false) // allowCreate = false
 
-        // Create a mapping avoiding the creation of duplicated peakels
-        val peakelByMzDbPeakelId = new HashMap[Int, Peakel]()
+//        // Create a mapping avoiding the creation of duplicated peakels
+        val peakelByMzDbPeakelId = peakelByMzDbPeakelIdByRun(lcMsRun.id)
 
         try {
           for (putativeFt <- putativeFts) {
 
             val charge = putativeFt.charge
-
-            val peakel = _findPeakelIsotope(
+            val peptide = peptideByPutativeFt(putativeFt)
+            val mftBuilder = mftBuilderByPeptideAndCharge((peptide, putativeFt.charge))
+            
+            val peakel = _findPeakel(
               peakelFileConn,
               putativeFt.mz,
               charge,
-              isotopeIdx = 0,
-              minTime = putativeFt.elutionStartTime - timeTol,
+              minTime = putativeFt.elutionTime - ftMappingParams.timeTol,
               avgTime = putativeFt.elutionTime,
-              maxTime = putativeFt.elutionStopTime + timeTol
+              maxTime = putativeFt.elutionTime + ftMappingParams.timeTol
             )
 
             if (peakel.isDefined) {
 
               val secondPeakelOpt = _findPeakelIsotope(
                 peakelFileConn,
-                peakel.get.getMz,
+                peakel.get,
                 charge,
                 isotopeIdx = 1,
                 minTime = peakel.get.getElutionTimes.head - clusteringParams.timeTol,
                 avgTime = peakel.get.calcWeightedAverageTime,
                 maxTime = peakel.get.getElutionTimes.last + clusteringParams.timeTol,
-                true
+                false
               )
 
               val featurePeakels = if (secondPeakelOpt.isEmpty) {
+                metrics.incr("monoisotopic missing features")
                 Array(peakel.get)
               } else {
-                
-                // Compute the theoretical isotope pattern
-                val ipPattern = IsotopePatternInterpolator.getTheoreticalPattern(peakel.get.getMz, charge)
-                
-                // Compute theoretical ratio between second and first isotopes
-                val theoRatio2_1 = ipPattern.mzAbundancePairs(1)._2 / ipPattern.mzAbundancePairs(0)._2
-                
-                // Compute maximum allowed second isotope intensity (accept 20% tolerance)
-                val maxAllowedIntensity = peakel.get.getApexIntensity * theoRatio2_1 * 1.2                
-                
-                // Check intensity is not greater than defined threshold
-                if (secondPeakelOpt.get.getApexIntensity() <= maxAllowedIntensity) {
-                  Array(peakel.get, secondPeakelOpt.get)
-                } else {
-                  logger.debug(s"suspicious intensity: second isotope rejected for ${peakel.get.getMz} ( ${ipPattern.mzAbundancePairs(0)._2}, ${ipPattern.mzAbundancePairs(1)._2} )")
-                  Array(peakel.get)
-                }
+                Array(peakel.get, secondPeakelOpt.get)
               }
 
               // TODO: skip feature creation if we have only one isotope ???
@@ -893,6 +845,8 @@ class ExtractMapSet(
                 isPredicted = true
               )
 
+              metrics.incr("missing feature found")
+              
               val newLcmsFeature = this._mzDbFeatureToLcMsFeature(
                 mzDbFt,
                 rawMap.id,
@@ -902,7 +856,7 @@ class ExtractMapSet(
 
               // Set predicted time property
               newLcmsFeature.properties.get.setPredictedElutionTime(Some(putativeFt.elutionTime))
-
+                            
               // Set processed map id
               newLcmsFeature.relations.processedMapId = processedMap.id
 
@@ -910,9 +864,9 @@ class ExtractMapSet(
               newLcmsFeatures += newLcmsFeature
 
               // Retrieve master feature builder to append this new feature to its children buffer
-              val peptide = peptideByPutativeFt(putativeFt)
-              val mftBuilder = mftBuilderByPeptideAndCharge((peptide, putativeFt.charge))
               mftBuilder.children += newLcmsFeature
+
+              
             }
           }
 
@@ -924,9 +878,13 @@ class ExtractMapSet(
           // Append missing peakels
           x2RawMap.peakels = Some(rawMap.peakels.get ++ peakelByMzDbPeakelId.values)
 
+                          
+          metrics.setCounter("multiple feature peakels", peakelByMzDbPeakelId.map(_._2).filter(_.featuresCount > 1).size)
+          logger.info(metrics.toString)
+
           // Return x2RawMap
           x2RawMap
-
+          
         } finally {
           // Release resources
           peakelFileConn.dispose()
@@ -948,6 +906,7 @@ class ExtractMapSet(
       // Append raw map to the array buffer
       x2RawMapByRunId += x2RawMap.runId -> x2RawMap
       x2RawMaps += x2RawMap
+        
     }
 
     // Delete created TMP files (they should be deleted on exit if program fails)
@@ -1229,20 +1188,62 @@ class ExtractMapSet(
     peakels.toArray
   }
 
-  private def _findPeakelIsotope(
+  private def _findPeakel(
     sqliteConn: SQLiteConnection,
     peakelMz: Double,
+    charge: Int,
+    minTime: Float,
+    avgTime: Float,
+    maxTime: Float ): Option[MzDbPeakel] = {
+
+	val mozTolInDa = MsUtils.ppmToDa(peakelMz, ftMappingParams.mozTol.toFloat)
+
+    // Search for peakel corresponding to second isotope
+    var foundPeakels = _findPeakelsInRange(
+      sqliteConn,
+      peakelMz - mozTolInDa,
+      peakelMz + mozTolInDa,
+      minTime,
+      maxTime
+    )
+
+    if (foundPeakels.isEmpty) None
+    else {
+
+      // search isotope peakel at -1, if any this one is certainly a second isotope, reject it
+      val peakelPairs = for (peakel <- foundPeakels) yield (peakel, this._findPeakelIsotope(
+        sqliteConn,
+        peakel,
+        charge,
+        isotopeIdx = -1,
+        minTime = peakel.getElutionTimes.head - clusteringParams.timeTol,
+        avgTime = peakel.calcWeightedAverageTime,
+        maxTime = peakel.getElutionTimes.last + clusteringParams.timeTol,
+        false))
+
+      foundPeakels = peakelPairs.withFilter(!_._2.isDefined).map(_._1).toArray
+      
+      if (foundPeakels.isEmpty) None else {
+    	val nearestPeakelInTime = foundPeakels.minBy(peakel => math.abs(avgTime - peakel.calcWeightedAverageTime()))
+    	Some(nearestPeakelInTime)
+      }
+
+    }
+  }
+
+  private def _findPeakelIsotope(
+    sqliteConn: SQLiteConnection,
+    peakel: MzDbPeakel,
     charge: Int,
     isotopeIdx: Int,
     minTime: Float,
     avgTime: Float,
     maxTime: Float,
-    strictInclusion: Boolean = false
-  ): Option[MzDbPeakel] = {
+    strictInclusion: Boolean = false): Option[MzDbPeakel] = {
 
     val avgIsotopeMzDiff = isotopeIdx * avgIsotopeMassDiff / charge
-    val searchedMz = peakelMz + avgIsotopeMzDiff
-    val mozTolInDa = MsUtils.ppmToDa(searchedMz, mozTolPPM)
+    val searchedMz = peakel.getMz + avgIsotopeMzDiff
+    val mozTolInDa = MsUtils.ppmToDa(searchedMz, ftMappingParams.mozTol.toFloat)
 
     // Search for peakel corresponding to second isotope
     var foundPeakels = _findPeakelsInRange(
@@ -1250,22 +1251,36 @@ class ExtractMapSet(
       searchedMz - mozTolInDa,
       searchedMz + mozTolInDa,
       minTime,
-      maxTime
-    )
+      maxTime)
 
     if (foundPeakels.isEmpty) None
     else {
-      // TODO: minimize m/z diff instead of time diff ??? or ask for a given isotope theo ratio
       if (strictInclusion)
         foundPeakels = foundPeakels.filter(peakel => (peakel.elutionTimes.head >= minTime) && (peakel.elutionTimes.last <= maxTime))
-      if (foundPeakels.isEmpty) None else {
-        val nearestPeakelInTime = foundPeakels.minBy(peakel => math.abs(avgTime - peakel.calcWeightedAverageTime()))
-        Some(nearestPeakelInTime)
+
+      val ratioTolPercent = 20.0
+      //expected intensity filter 
+      val (minRatio, maxRatio) = {
+        if (isotopeIdx < 0) {
+          val ipPattern = IsotopePatternInterpolator.getTheoreticalPattern(searchedMz, charge)
+          ((ipPattern.mzAbundancePairs(0)._2 - ratioTolPercent) / ipPattern.mzAbundancePairs(-isotopeIdx)._2, (ipPattern.mzAbundancePairs(0)._2 + ratioTolPercent) / ipPattern.mzAbundancePairs(-isotopeIdx)._2)
+        } else {
+          val ipPattern = IsotopePatternInterpolator.getTheoreticalPattern(peakel.getMz, charge)
+          ((ipPattern.mzAbundancePairs(isotopeIdx)._2 - ratioTolPercent) / ipPattern.mzAbundancePairs(0)._2, (ipPattern.mzAbundancePairs(isotopeIdx)._2 + ratioTolPercent) / ipPattern.mzAbundancePairs(0)._2)
+        }
       }
 
+      // accept 20% tolerance on second isotope intensity
+      val filteredPeakels = foundPeakels.filter(p => (p.getApexIntensity <= peakel.getApexIntensity * maxRatio) && (p.getApexIntensity >= peakel.getApexIntensity * minRatio))
+      if (filteredPeakels.isEmpty) {
+        None
+      } else {
+        val nearestPeakelInTime = filteredPeakels.minBy(peakel => math.abs(avgTime - peakel.calcWeightedAverageTime()))
+        Some(nearestPeakelInTime)
+      }
     }
   }
-
+  
   private def _extractProcessedMap(lcmsRun: LcMsRun, mzDbFile: File, mapNumber: Int, mapSetId: Long): ProcessedMap = {
 
     // TODO: add max charge in config
@@ -1303,76 +1318,6 @@ class ExtractMapSet(
       )
     )
 
-    /*
-    // Map features by each of their monoisotopic peakel peaks
-    val mzDbFtsByPeak = new HashMap[MzDbPeak, ArrayBuffer[MzDbFeature]]
-    val ftByPeak = for(
-      mzDbFt <- mzDbFts;
-      peak <- mzDbFt.peakels.head.definedPeaks
-    ) {
-      mzDbFtsByPeak.getOrElseUpdate(peak, new ArrayBuffer[MzDbFeature] ) += mzDbFt
-    }
-    
-    def findFeaturesWithSharedPeaks( mzDbFt: MzDbFeature, mzDbFtSet: HashSet[MzDbFeature] ) {
-      
-      // Add the current feature the set of already clusterized features
-      mzDbFtSet += mzDbFt
-      
-      val foundMzDbFtSet = new HashSet[MzDbFeature]
-      for( peak <- mzDbFt.peakels.head.definedPeaks ) {
-        foundMzDbFtSet ++= mzDbFtsByPeak(peak)
-      }
-      
-      for( foundMzDbFt <- foundMzDbFtSet ) {
-        if( mzDbFtSet.contains(foundMzDbFt) == false ) {          
-          findFeaturesWithSharedPeaks( foundMzDbFt, mzDbFtSet )
-        }
-      }
-    }
-    
-    // Clusterize features
-    val mzDbFtClusters = new ArrayBuffer[Array[MzDbFeature]](mzDbFts.length)
-    val clusterizedFts = new HashSet[MzDbFeature]()
-    for( mzDbFt <- mzDbFts ) {
-      if( clusterizedFts.contains(mzDbFt) == false ) {
-        val mzDbFtsCluster = new HashSet[MzDbFeature]()
-        
-        findFeaturesWithSharedPeaks(mzDbFt, mzDbFtsCluster)
-        
-        clusterizedFts ++= mzDbFtsCluster
-        mzDbFtClusters += mzDbFtsCluster.toArray        
-      }
-    }
-    
-    // Instantiate a feature clusterer
-    val ftClusterer = new FeatureClusterer(
-      lcmsMap = tmpRawMap,
-      scans = lcmsRun.scanSequence.get.scans,
-      params = clusteringParams
-    )
-    
-    // Convert mzDB features into LC-MS DB features
-    val lcmsFeaturesWithoutClusters = new ArrayBuffer[LcMsFeature](mzDbFts.length)
-    val lcmsFeaturesWithClusters = new ArrayBuffer[LcMsFeature](mzDbFts.length)    
-    
-    for( mzDbFtCluster <- mzDbFtClusters ) {
-      
-      val lcmsFtCluster = new ArrayBuffer[LcMsFeature](mzDbFtCluster.length)
-      for( mzDbFt <- mzDbFtCluster ) {
-        // Keep only features with defined area and at least two data points
-        if( mzDbFt.area > 0 && mzDbFt.scanHeaders.length > 1 ) {
-          val lcmsFt = this._mzDbFeatureToLcMsFeature(mzDbFt,rawMapId,lcmsRun.scanSequence.get)
-          
-          lcmsFtCluster += lcmsFt
-          lcmsFeaturesWithoutClusters += lcmsFt
-        }
-      }
-      
-      if( lcmsFtCluster.length == 1 ) lcmsFeaturesWithClusters += lcmsFtCluster.head
-      else {
-        lcmsFeaturesWithClusters += ftClusterer.buildFeatureCluster(lcmsFtCluster)
-      }
-    }*/
 
     // Convert features
     val peakelByMzDbPeakelId = new HashMap[Int, Peakel]()
@@ -1836,8 +1781,6 @@ class ExtractMapSet(
         lastScanId = lastLcMsScanId,
         apexScanId = apexLcMsScanId,
         rawMapId = rawMapId
-        //elutionStartTime = mzDbFt.getBasePeakel.elutionTimes.head,
-        //elutionEndTime = mzDbFt.getBasePeakel.elutionTimes.last
       )
     )
   }
