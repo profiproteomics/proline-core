@@ -2,11 +2,14 @@ package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+
 import com.typesafe.scalalogging.slf4j.Logging
 import org.apache.commons.math3.stat.descriptive.moment.Mean
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary
+
 import fr.proline.core.om.model.msq._
 import fr.profi.util.primitives.isZeroOrNaN
+import fr.profi.util.math.median
 
 // TODO: remove me when the WS v0.1 has been removed
 case class ProfilizerConfigV0(
@@ -48,6 +51,8 @@ case class ProfilizerConfig(
  * Analyze profiles of Master Quant Peptides and Master Quant Protein sets
  */
 class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, masterQCNumber: Int = 1 ) extends Logging {
+  
+  val errorModelBinsCount = 1
   
   // Retrieve some vars
   private val masterQuantChannels = expDesign.masterQuantChannels
@@ -457,6 +462,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     psmCountMatrix: Array[Array[Int]],
     config: ProfilizerStatConfig
   ): Tuple2[Array[Array[Float]],Seq[AverageAbundanceRatio]] = {
+    
+    logger.debug(s"computing ratios on a matrix containing ${normalizedMatrix.length} values...")
 
     // Retrieve some vars
     val numeratorSampleNumbers = sampleNumbersByGroupNumber(ratioDef.numeratorGroupNumber)
@@ -524,13 +531,20 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     }
     
     // Estimate the absolute noise model using technical replicates
-    val absoluteNoiseModel = if( minQCsCountPerSample > 2 ) {
-      ErrorModelComputer.computeAbsoluteErrorModel(absoluteErrors,nbins=Some(5))
-    } else {
+    val absoluteNoiseModel = if( absoluteErrors.isEmpty == false ) {
+      ErrorModelComputer.computeAbsoluteErrorModel(absoluteErrors,nbins=Some(errorModelBinsCount))    
     // Estimate the relative noise model using sample replicates
-      this.logger.warn("insufficient number of analysis replicates => try to estimate absolute noise model using relative observations")
+    } else if( relativeErrors.isEmpty == false ) {
+    
+      this.logger.warn("Insufficient number of analysis replicates => try to estimate absolute noise model using relative observations")
       //this.logger.debug("relativeErrors:" + relativeErrors.length + ", filtered zero :" + relativeErrors.filter(_.abundance > 0).length)
-      ErrorModelComputer.computeRelativeErrorModel(relativeErrors, nbins=Some(5)).toAbsoluteErrorModel
+      ErrorModelComputer.computeRelativeErrorModel(relativeErrors, nbins=Some(errorModelBinsCount)).toAbsoluteErrorModel
+    
+    // Create a fake Error Model
+    } else {
+      // TODO: compute the stdDev from relativeErrors ?
+      this.logger.warn("Insufficient number of relative errors => create an error model corresponding to the normal distribution")
+      new AbsoluteErrorModel( Seq(AbsoluteErrorBin( abundance = 0f, stdDev = 1f )) )
     }
     
     logger.debug("config.applyMissValInference value: "+ config.applyMissValInference)
@@ -657,22 +671,27 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       rowIdx += 1
     }
     
-    val relativeVariationModel = ErrorModelComputer.computeRelativeErrorModel(relativeVariationsBuffer,nbins=Some(5))
+    if( relativeVariationsBuffer.length < 5 ) {
+      logger.warn("Insufficient number of ratios to compute their significativity !")
+    } else {
+      val relativeVariationModel = ErrorModelComputer.computeRelativeErrorModel(relativeVariationsBuffer,nbins=Some(errorModelBinsCount))
+      
+      // Retrieve the right tuple of error models
+      val absoluteErrorModelOpt = if( minSamplesCountPerGroup > 2 ) {
+        Some( ErrorModelComputer.computeAbsoluteErrorModel(absoluteVariationsBuffer,nbins=Some(errorModelBinsCount)) )
+      } else if( minQCsCountPerSample > 2 ) {
+        Some(absoluteNoiseModel)
+      } else None
     
-    // Retrieve the right tuple of error models
-    val errorModels = if( minSamplesCountPerGroup > 2 ) {
-      (relativeVariationModel, Some( ErrorModelComputer.computeAbsoluteErrorModel(absoluteVariationsBuffer,nbins=Some(5)) ) )
-    } else if( minQCsCountPerSample > 2 ) {
-      (relativeVariationModel, Some(absoluteNoiseModel) )
-    } else (relativeVariationModel, None)
-  
-    // Update the variation state of ratios
-    AbundanceRatiolizer.updateRatioStates(
-      ratiosBuffer,
-      errorModels._1,
-      errorModels._2,
-      config
-    )
+      // Update the variation state of ratios
+      AbundanceRatiolizer.updateRatioStates(
+        ratiosBuffer,
+        relativeVariationModel,
+        absoluteErrorModelOpt,
+        config
+      )
+      
+    }
     
     (filledMatrix,ratiosBuffer)
   }
@@ -685,8 +704,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   private def _stringifyProfile( slopes: Seq[Int] ): String = { slopes.mkString(";") }
 
 }
-
-import fr.profi.util.math.median
 
 // TODO: put in its own file
 object AbundanceSummarizer {
