@@ -126,7 +126,14 @@ class ResultFileImporter(
       }
 
       msiTransacOk = true
-    } finally {
+    } catch {
+      
+      case t: Throwable => {
+        logger.error("Error while importing resultFile", t)
+        throw t
+      }
+      
+    }finally {
 
       if (resultFile != null) {
 
