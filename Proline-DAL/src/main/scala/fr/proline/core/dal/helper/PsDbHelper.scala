@@ -3,7 +3,6 @@ package fr.proline.core.dal.helper
 import scala.collection.mutable.HashMap
 import fr.profi.jdbc.SQLQueryExecution
 import fr.profi.util.primitives._
-import fr.profi.util.primitives._
 
 class PsDbHelper( sqlExec: SQLQueryExecution ) {
   
@@ -14,7 +13,9 @@ class PsDbHelper( sqlExec: SQLQueryExecution ) {
     
     sqlExec.selectAndProcess( "SELECT id, unimod_id FROM ptm" ) { r =>
       val ptmId = toLong(r.nextAny)
-      unimodIdByPtmId += (ptmId -> toLong(r.nextAny) )       
+      val unimodId = r.nextAny
+      if(unimodId != null)
+    	  unimodIdByPtmId += (ptmId -> toLong(unimodId) )       
     }
     
     Map() ++ unimodIdByPtmId
