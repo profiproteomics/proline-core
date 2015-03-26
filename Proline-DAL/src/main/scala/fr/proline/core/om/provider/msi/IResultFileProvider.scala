@@ -22,6 +22,7 @@ trait IResultFileProvider {
   def getResultFile( fileLocation: File, importProperties: Map[String, Any],
       parserContext: ProviderDecoratedExecutionContext): IResultFile
   def getResultFileVerifier : IResultFileVerifier
+  def setParserContext(parserContext: ProviderDecoratedExecutionContext) : Unit = None  // X!Tandem needs to connect to database to check PTM and enzymes
   val resultFileProperties : Map[String, Class[_]]
   
 }
