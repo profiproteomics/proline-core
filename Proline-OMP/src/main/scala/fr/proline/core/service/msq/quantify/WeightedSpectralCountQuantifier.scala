@@ -339,6 +339,17 @@ class WeightedSpectralCountQuantifier(
 
   private def createProteinPepsWeightStructs(referenceForPeptides: Boolean): Map[Long, ProteinSetPeptidesDescription] = {
 
+    //--- Update MergedRSM SpectralCount if necessary
+    // TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information ! 
+    if (mergedResultSummary.peptideInstances(0).totalLeavesMatchCount < 0) {
+      logger.debug("  --- updatePepInstanceSC for mergedResultSummary " + mergedResultSummary.id)
+      PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(mergedResultSummary, executionContext)
+      mergedResultSummary.peptideInstances.foreach(pepI => {
+        val ormPepInst = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
+        ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
+      })
+    }
+
     //ProteinPepsWeightStruct for each RSM ProteinSet referenced by ProteinSet id  
     val proteinPepsWeightStructsByProtSetId = Map.newBuilder[Long, ProteinSetPeptidesDescription]
 
@@ -352,30 +363,29 @@ class WeightedSpectralCountQuantifier(
       val weightByPepId = new HashMap[Long, Float]()
 
       //-- Get Typical Protein Match Accession 
-      var pmAccession: String = null
-      if (protSet.getTypicalProteinMatch != null && protSet.getTypicalProteinMatch.isDefined) {
-        pmAccession = protSet.getTypicalProteinMatch.get.accession
+      val pmAccession: String = if (protSet.getTypicalProteinMatch != null && protSet.getTypicalProteinMatch.isDefined) {
+        protSet.getTypicalProteinMatch.get.accession
       } else {
         val typicalPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protSet.getTypicalProteinMatchId)
-        pmAccession = typicalPM.getAccession()
-
+        typicalPM.getAccession()
       }
-
 
       //-- Get peptide specific count and create Map : peptide => List ProtSet.Id identified by peptide
       var nbrPepSpecif: Int = 0
+      var nbrPSMSpecif: Int = 0
       if (referenceForPeptides) {
         protSet.peptideSet.getPeptideInstances.foreach(pepI => {
           val proSetIds = protSetIdByPepId.getOrElseUpdate(pepI.peptideId, new ArrayBuffer[Long])
           proSetIds += protSet.id
           if (pepI.validatedProteinSetsCount == 1) {
             nbrPepSpecif += 1
+            nbrPSMSpecif += pepI.totalLeavesMatchCount
           }
           weightByPepId += pepI.peptideId -> 0.0f
         })
       }
 
-      proteinPepsWeightStructsByProtSetId += protSet.id -> new ProteinSetPeptidesDescription(proteinSet = protSet, typicalPMAcc = pmAccession, nbrPepSpecific = nbrPepSpecif, weightByPeptideId = weightByPepId)
+      proteinPepsWeightStructsByProtSetId += protSet.id -> new ProteinSetPeptidesDescription(proteinSet = protSet, typicalPMAcc = pmAccession, nbrPepSpecific = nbrPepSpecif, nbrPSMSpecific = nbrPSMSpecif, weightByPeptideId = weightByPepId)
 
     }) // End ProteinPepsWeightStruct initialization 
 
@@ -390,8 +400,8 @@ class WeightedSpectralCountQuantifier(
   /**
    * Compute Peptide's Weight for each identified ProteinSet
    *
-   *  If peptide is a specific  ProteinSet, the corresponding weight will be 1
-   *  Else if peptide is shared between multiple ProteinSets the weight = # specific pep of ProtSet / Sum ( #specific pep of all ProtSet identified by this pep)
+   *  If peptide is a specific ProteinSet, the corresponding weight will be 1
+   *  Else if peptide is shared between multiple ProteinSets the weight = # specific PSM of ProtSet / Sum ( #specific PSM of all ProtSet identified by this pep)
    *
    *  @param  proteinWeightStructByProtSetId Map ProteinPepsWeightStruct by ProteinSetId in peptide reference RSM. ProteinPepsWeightStruct should be updated
    *  @param  protSetIdByPep For each Peptide (id) references list of ProteinSet (Id) identified by this peptide
@@ -406,14 +416,14 @@ class WeightedSpectralCountQuantifier(
         if (protSetIdByPep.get(pepId).get.length == 1) { // specific peptide, weight =1
           currentProteinWeightStruct.weightByPeptideId(pepId) = 1.0f
         } else {
-          //Not specific peptide,  weight = nbr pepSpecific of current ProtSet / Sum ( nbr pepSpecific of all ProtSet identified by this pep)
-          var sumNbrSpecificPeptides = 0
+          //Not specific peptide,  weight = nbr PSM Specific of current ProtSet / Sum ( nbr PSM Specific of all ProtSet identified by this pep)
+          var sumNbrSpecificPSMs = 0
           protSetIdByPep.get(pepId).get.foreach(protSetId => {
-            sumNbrSpecificPeptides += proteinWeightStructByProtSetId.get(protSetId).get.nbrPepSpecific
+            sumNbrSpecificPSMs += proteinWeightStructByProtSetId.get(protSetId).get.nbrPSMSpecific
           })
 
-          if (sumNbrSpecificPeptides > 0)
-            currentProteinWeightStruct.weightByPeptideId.put(pepId, (currentProteinWeightStruct.nbrPepSpecific.toFloat / sumNbrSpecificPeptides.toFloat))
+          if (sumNbrSpecificPSMs > 0)
+            currentProteinWeightStruct.weightByPeptideId.put(pepId, (currentProteinWeightStruct.nbrPSMSpecific.toFloat / sumNbrSpecificPSMs.toFloat))
           else
             currentProteinWeightStruct.weightByPeptideId.put(pepId, 0)
         }
