@@ -15,6 +15,7 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.repository.DriverType
+import fr.proline.core.om.model.msi.ProteinMatch
  
 
 object ResultSummariesMergerTest extends AbstractEmptyDatastoreTestCase with Logging {
@@ -79,6 +80,17 @@ class ResultSummariesMergerTest extends Logging {
       val rsm2Id = rsm2.id
 
       val rsmIds = Seq(rsm1Id, rsm2Id)
+      val protMatchesById =   tMergedRSMObj.resultSet.get.getProteinMatchById()
+      tMergedRSMObj.proteinSets.foreach( prSet => {
+         val typAcc = protMatchesById(prSet.getTypicalProteinMatchId).accession
+    	 prSet.samesetProteinMatchIds.foreach( ssId => {
+    	   if(!ssId.equals(prSet.getTypicalProteinMatchId)){
+    		   assertFalse(typAcc.compareTo(protMatchesById(ssId).accession) > 0)
+	    	}    	   
+    	 })
+      })
+  
+    	
 
       logger.debug("Merging two ResultSummaries by Ids...")
 
