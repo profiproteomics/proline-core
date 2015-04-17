@@ -72,3 +72,22 @@ object SeqDbFakeProvider extends ISeqDatabaseProvider {
   }
   
 }
+
+object SeqDbEmptyFakeProvider extends ISeqDatabaseProvider {
+  
+  val pdiDbCtx = null
+  
+   def getSeqDatabasesAsOptions(seqDBIds: Seq[Long]): Array[Option[SeqDatabase]] = { 
+	  var result = new Array[Option[SeqDatabase]](1)
+	  result(0) = None
+	  result
+	}
+	
+  def getSeqDatabases(seqDBIds: Seq[Long]): Array[SeqDatabase] = { 
+    this.getSeqDatabasesAsOptions(seqDBIds).filter( _ != None ).map( _.get )
+  }
+	
+  def getSeqDatabase( seqDBName: String,fastaPath : String ): Option[SeqDatabase] = {
+	None
+  }
+}
