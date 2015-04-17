@@ -43,5 +43,6 @@ case class ProteinSetPeptidesDescription(
 			val proteinSet: ProteinSet, 
 			val typicalPMAcc: String, 
 			val nbrPepSpecific: Int, 
+			val nbrPSMSpecific: Int, 
 			val weightByPeptideId: scala.collection.mutable.Map[Long, Float] = null)
 			
