@@ -1,6 +1,5 @@
 package fr.proline.core.service.msq.quantify
 
-import fr.proline.core.om.model.msi.ProteinSet
 
 
 /*** 
@@ -30,19 +29,3 @@ object SpectralCountsJSONProperties {
            
 }
 
-/**
- * Case clas to group the 3 different SC 
- */
-case class SpectralCountsStruct( val basicSC : Float, val specificSC : Float, val weightedSC : Float)
-
-
-/**
- * ProteinSet description for spectralCount calculation
- */
-case class ProteinSetPeptidesDescription(
-			val proteinSet: ProteinSet, 
-			val typicalPMAcc: String, 
-			val nbrPepSpecific: Int, 
-			val nbrPSMSpecific: Int, 
-			val weightByPeptideId: scala.collection.mutable.Map[Long, Float] = null)
-			
