@@ -71,7 +71,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   protected val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
   protected lazy val quantChannelIds = udsQuantChannels.map { _.getId } toArray
   
-  protected val rsmIds = udsQuantChannels.map { udsQuantChannel =>
+  protected val identRSMIds = udsQuantChannels.map { udsQuantChannel =>
     val qcId = udsQuantChannel.getId()
     val identRsmId = udsQuantChannel.getIdentResultSummaryId
     require(identRsmId != 0, "the quant_channel with id='" + qcId + "' is not assocciated with an identification result summary")
@@ -80,13 +80,13 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
   } toSeq
 
-  require(rsmIds.length > 0, "result sets have to be validated first")
+  require(identRSMIds.length > 0, "result sets have to be validated first")
 
   protected val identRsIdByRsmId = {    
     DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
       val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
-        List(t.ID,t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN("~ rsmIds.mkString(",") ~")"
+        List(t.ID,t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN("~ identRSMIds.mkString(",") ~")"
       )
       msiEzDBC.select(sqlQuery) { r => toLong(r.nextAny) -> toLong(r.nextAny) } toMap
     })
@@ -106,7 +106,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
     // Instantiate a RSM provider
     val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx)
-    rsmProvider.getResultSummaries(rsmIds, true)
+    rsmProvider.getResultSummaries(identRSMIds, true)
   }
 
   protected lazy val mergedResultSummary = getMergedResultSummary(msiDbCtx : DatabaseConnectionContext)
