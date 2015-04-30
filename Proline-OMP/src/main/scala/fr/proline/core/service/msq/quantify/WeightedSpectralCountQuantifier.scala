@@ -55,6 +55,7 @@ import fr.proline.core.algo.msq.ProteinSetSCDescription
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
+import fr.proline.core.orm.msi.PeptideMatchRelationPK
 
 /**
  * @author VDS
@@ -1050,7 +1051,6 @@ class WeightedSpectralCountQuantifier(
       val msiMasterPepInstanceId = msiMasterPepInstance.getId
 
       // Map the peptide instance by the peptide id
-      masterPepInstByPepId(peptideId) = mergedPepInstance
       msiMasterPepInstByMergedPepInstId(mergedPepInstance.id) = msiMasterPepInstance
 
       // Link the best master peptide match to the quant peptide instance
@@ -1068,12 +1068,16 @@ class WeightedSpectralCountQuantifier(
       msiEm.persist(msiPepInstMatch)
 
       // Map this quant peptide match to identified child peptide matches
-      //FIXME No children specified Yet !? 
       // VDS TODO ? IF IDF hierarcghy <> from Quanti ??
       if (mergedPepMatch.getChildrenIds != null) {
         for (childPepMatchId <- mergedPepMatch.getChildrenIds) {
 
+          val msiPepMatchRelationPK = new PeptideMatchRelationPK()
+          msiPepMatchRelationPK.setChildPeptideMatchId(childPepMatchId)
+          msiPepMatchRelationPK.setParentPeptideMatchId(msiMasterPepMatchId)
+             
           val msiPepMatchRelation = new MsiPeptideMatchRelation()
+          msiPepMatchRelation.setId(msiPepMatchRelationPK)
           msiPepMatchRelation.setParentPeptideMatch(msiMasterPepMatch)
 
           val childPM: fr.proline.core.orm.msi.PeptideMatch = msiEm.find(classOf[fr.proline.core.orm.msi.PeptideMatch], childPepMatchId)
@@ -1081,6 +1085,9 @@ class WeightedSpectralCountQuantifier(
 
           // FIXME: rename to setParentResultSet
           msiPepMatchRelation.setParentResultSetId(msiQuantRS)
+                   
+    	  msiEm.persist(msiPepMatchRelation)
+          
         }
       }
     }
@@ -1152,14 +1159,14 @@ class WeightedSpectralCountQuantifier(
 
         // Determine the typical protein match id using the sequence coverage
         val mergedProteinSet = masterProteinSetOpt.get
-        var typicalProtMatchId = mergedProteinSet.getTypicalProteinMatchId
+        var mergedTypicalProtMatchId = mergedProteinSet.getTypicalProteinMatchId
 
-        if (typicalProtMatchId <= 0) {
+        if (mergedTypicalProtMatchId <= 0) {
           val typicalProtMatchTmpId = mergedProteinSet.samesetProteinMatchIds.reduce { (a, b) =>
             if (mergedProtMatchById(a).coverage > mergedProtMatchById(b).coverage) a else b
-          }
-          typicalProtMatchId = msiMasterProtMatchIdByMergedId(typicalProtMatchTmpId)
+          }         
         }
+        val typicalProtMatchId = msiMasterProtMatchIdByMergedId(mergedTypicalProtMatchId)
 
         // Store master protein set
         val msiMasterProteinSet = new MsiProteinSet()
