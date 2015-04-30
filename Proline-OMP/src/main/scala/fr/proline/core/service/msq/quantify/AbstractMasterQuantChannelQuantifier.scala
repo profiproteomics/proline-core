@@ -184,7 +184,6 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
   }
 
   // Define some vars
-  protected val masterPepInstByPepId = new HashMap[Long, PeptideInstance]
   protected val msiMasterPepInstById = new HashMap[Long, MsiPeptideInstance]
   protected val msiMasterProtSetById = new HashMap[Long, MsiProteinSet]
 
@@ -283,8 +282,6 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
       masterPepInstance.peptideMatchIds = Array(masterPepMatchId)
       masterPepInstance.bestPeptideMatchId = masterPepMatchId
       
-      // Map the peptide instance by the peptide id
-      masterPepInstByPepId(peptideId) = masterPepInstance
       // TODO: remove this mapping when ORM is updated
       msiMasterPepInstById(masterPepInstanceId) = msiMasterPepInstance
 
