@@ -707,17 +707,19 @@ class WeightedSpectralCountQuantifier(
       val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = null)
       val idfRSM = rsmProvider.getResultSummary(scConfig.parentRSMId.get, true).get
 
-      //TODO fix BUG #12336
-      //      val spectralCountProperties = if(scConfig.peptideRefRSMIds != null && !scConfig.peptideRefRSMIds.isEmpty) { 
-      //    	 Some( new SpectralCountProperties(peptidesSpectralCountRefRSMIds =  scConfig.peptideRefRSMIds.toArray.map(toLong(_))))    	     	 
-      //      } else None
-      //      if(spectralCountProperties.isDefined){
-      //        logger.debug("SpectralCountProperties content : ")
-      //        spectralCountProperties.get.getPeptidesSpectralCountRefRSMIds.foreach({ l=>
-      //         logger.debug(" Next LONG : {} "+ l.toString)
-      //        })
-      //      }
-      //      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=scConfig.parentRSMId,identDatasetId= scConfig.parentDSId, spectralCountProperties=spectralCountProperties)
+    		//TODO fix BUG #12336
+//        val spectralCountProperties = if(scConfig.weightRefRSMIds != null && !scConfig.weightRefRSMIds.isEmpty) { 
+//        	Some( new SpectralCountProperties(weightsRefRSMIds =  scConfig.weightRefRSMIds.toArray.map(toLong(_))))    	     	 
+//        } else None
+//            
+//        if(spectralCountProperties.isDefined){
+//        	logger.debug("SpectralCountProperties content : ")
+//        	spectralCountProperties.get.getPeptidesSpectralCountRefRSMIds.foreach({ l=>
+//        	logger.debug(" Next LONG : {} "+ l.toString)
+//        	})
+//		}
+        
+//      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=scConfig.parentRSMId,identDatasetId= scConfig.parentDSId, spectralCountProperties=spectralCountProperties)
       val mqchProperties = new MasterQuantChannelProperties(identResultSummaryId = scConfig.parentRSMId, identDatasetId = scConfig.parentDSId)
       udsMasterQuantChannel.setSerializedProperties(ProfiJson.serialize(mqchProperties))
       idfRSM
