@@ -68,6 +68,7 @@ class WeightedSCResultReader (
        	    quantChIdsList += qChId
        	    rsmIdByQChId += qChId -> idfRsmOd
        	  }
+          pStmt2.close()
         }
         pStmt.close()               
         
