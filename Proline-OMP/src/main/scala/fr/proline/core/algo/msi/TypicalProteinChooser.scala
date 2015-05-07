@@ -64,7 +64,7 @@ class TypicalProteinChooser () extends Logging {
 	  if(foundNewTypical){
 	     val newTypical = potentialTypicals.result.sortBy(_.getAccession()).head
 	     if(!newTypical.equals(currentTypical)){
-	       logger.debug("NEW Typical, was "+currentTypical.getAccession()+" now => "+newTypical.getAccession())
+//	       logger.trace("NEW Typical, was "+currentTypical.getAccession()+" now => "+newTypical.getAccession())
 	    	 protSet.setProteinMatchId(newTypical.getId())		
 	    	 modifiedProtSet += protSet
 	     }
