@@ -78,7 +78,8 @@ class WeightedSCQuantifierTest extends Logging {
   @Test
   def quantifyRSMSC() {
 
-    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = None)
+    val weightRefRSMIds = Seq(33L)
+    val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = None, weightRefRSMIds=weightRefRSMIds)
 
     val udsEm = executionContext.getUDSDbConnectionContext.getEntityManager
     udsEm.getTransaction().begin()
@@ -99,7 +100,11 @@ class WeightedSCQuantifierTest extends Logging {
     val splAnalysis2 = new SampleAnalysis()
     splAnalysis2.setNumber(2)
     splAnalysis2.setDataset(qtDS)
-
+    
+    val splAnalysis3 = new SampleAnalysis()
+    splAnalysis3.setNumber(3)
+    splAnalysis3.setDataset(qtDS)
+    
     //Create BiologicalSample
     val bioSpl1 = new BiologicalSample()
     bioSpl1.setName("WSC Test BioSpl")
@@ -110,11 +115,13 @@ class WeightedSCQuantifierTest extends Logging {
     val allSplAnalysis = new ArrayList[SampleAnalysis](2)
     allSplAnalysis.add(splAnalysis1)
     allSplAnalysis.add(splAnalysis2)
+    allSplAnalysis.add(splAnalysis3)
     val bioSpls = new ArrayList[BiologicalSample](1)
     bioSpls.add(bioSpl1)
     bioSpl1.setSampleReplicates(allSplAnalysis)
     splAnalysis1.setBiologicalSample(bioSpls)
     splAnalysis2.setBiologicalSample(bioSpls)
+    splAnalysis3.setBiologicalSample(bioSpls)
 
     //Create QuantitationChannel
     val qCh1 = new QuantitationChannel()
@@ -127,6 +134,11 @@ class WeightedSCQuantifierTest extends Logging {
     qCh2.setContextKey("1.2")
     qCh2.setQuantitationDataset(qtDS)
 
+    val qCh3 = new QuantitationChannel()
+    qCh3.setIdentResultSummaryId(targetRSMId)
+    qCh3.setContextKey("1.3")
+    qCh3.setQuantitationDataset(qtDS)
+    
     //Create MasterQuantitationChannel
     val mqCh = new MasterQuantitationChannel()
     mqCh.setName("WSC Test")
@@ -136,18 +148,23 @@ class WeightedSCQuantifierTest extends Logging {
     val qChs = new ArrayList[QuantitationChannel](2)
     qChs.add(qCh1)
     qChs.add(qCh2)
+    qChs.add(qCh3)
     qCh1.setNumber(1)
     qCh1.setSampleReplicate(splAnalysis1)
     qCh1.setBiologicalSample(bioSpl1)
     qCh2.setNumber(2)
     qCh2.setSampleReplicate(splAnalysis2)
     qCh2.setBiologicalSample(bioSpl1)
+    qCh3.setNumber(3)
+    qCh3.setSampleReplicate(splAnalysis3)
+    qCh3.setBiologicalSample(bioSpl1)
     bioSpl1.setQuantitationChannels(qChs)
     splAnalysis1.setQuantitationChannels(qChs)// a verifier vds
 
     //Create link between MasterQuantitationChannel  & QuantitationChannels
     mqCh.setQuantitationChannels(qChs)
     qCh2.setMasterQuantitationChannel(mqCh)
+    qCh3.setMasterQuantitationChannel(mqCh)
     qCh1.setMasterQuantitationChannel(mqCh)
 
     //Create link between MasterQCh  & Dataset
@@ -160,6 +177,7 @@ class WeightedSCQuantifierTest extends Logging {
     udsEm.persist(qtDS)
     udsEm.persist(splAnalysis1)
     udsEm.persist(splAnalysis2)
+    udsEm.persist(splAnalysis3)
     udsEm.persist(bioSpl1)
 
     udsEm.getTransaction().commit()

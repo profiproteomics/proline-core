@@ -199,12 +199,25 @@ class WeightedSpectralCountQuantifier(
   private def createRSMHierarchyMap(childsIds: Seq[Long], tmpChildPerParentMap : HashMap[Long, ArrayBuffer[Long]] = new HashMap[Long, ArrayBuffer[Long]]()) : HashMap[Long, ArrayBuffer[Long]] = {
     
 		val resultMap = new HashMap[Long, ArrayBuffer[Long]]()
-		
+		val childToSearchIds = Seq.newBuilder[Long]
+		//test if childsIds are peptide Ref RSM or mergedResultSummary => Don't search in hierarchy !
+		// Should only occur on first call of createRSMHierarchyMap... 
+	    childsIds.foreach(	childId =>{
+	    	if(scConfig.weightRefRSMIds.contains(childId) || mergedResultSummary.id.equals(childId)){ //child is a peptide Ref RSM or mergedResultSummary !
+	    		val childList = resultMap.getOrElseUpdate(childId, new ArrayBuffer[Long]()) // Get Child already associated to this parent
+				childList += (childId) //add child from temporary Map to final Map !
+				resultMap.put(childId,childList )				
+	    	} else {
+	    	  childToSearchIds += childId //Else search in hierarchy
+	    	}
+	     
+	    })
+	    
 		
 		val childsPerParent = new HashMap[Long, ArrayBuffer[Long]]()
 		DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
 			val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryRelationTable).mkSelectQuery( (t,c) =>
-				List(t.PARENT_RESULT_SUMMARY_ID,t.CHILD_RESULT_SUMMARY_ID) -> "WHERE "~ t.CHILD_RESULT_SUMMARY_ID ~" IN("~ childsIds.mkString(",") ~")" )
+				List(t.PARENT_RESULT_SUMMARY_ID,t.CHILD_RESULT_SUMMARY_ID) -> "WHERE "~ t.CHILD_RESULT_SUMMARY_ID ~" IN("~ childToSearchIds.result.mkString(",") ~")" )
 			msiEzDBC.select(sqlQuery) { r => {
 				val parent = toLong(r.nextAny) 
 				val child = toLong(r.nextAny) 
@@ -754,7 +767,7 @@ class WeightedSpectralCountQuantifier(
     val mqPeptides = new ArrayBuffer[MasterQuantPeptide]
     val mqProtSets = new ArrayBuffer[MasterQuantProteinSet]
 
-    //revertn identRSMsByPepRefRSM Map 
+    //revert identRSMsByPepRefRSM Map 
      val weightRefRSMIdByIdentRSMId = new HashMap[Long, Long]()
      identRSMsByPepRefRSM.foreach(entry =>{
        logger.debug(" weightRSM {} ", entry._1.toString)
