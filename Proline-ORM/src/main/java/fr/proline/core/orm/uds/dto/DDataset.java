@@ -7,6 +7,7 @@ import java.util.Map;
 import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.uds.Aggregation;
+import fr.proline.core.orm.uds.GroupSetup;
 import fr.proline.core.orm.uds.ObjectTree;
 import fr.proline.core.orm.uds.QuantitationMethod;
 import fr.proline.core.orm.uds.Dataset.DatasetType;
@@ -44,6 +45,9 @@ public class DDataset {
  	private Map<String, Object> postQuantProcessingConfigMap;
  	// quantProcessingConfig as a map
   	private Map<String, Object> quantProcessingConfigMap;
+  	
+  	// Experimental design for quanti
+  	private GroupSetup groupSetup;
     
     public enum MergeInformation {
     	MERGE_UNKNOW,
@@ -202,4 +206,13 @@ public class DDataset {
     	}
     	return quantProcessingConfigMap;
     }
+
+	public GroupSetup getGroupSetup() {
+		return groupSetup;
+	}
+
+	public void setGroupSetup(GroupSetup groupSetup) {
+		this.groupSetup = groupSetup;
+	}
+	
 }
