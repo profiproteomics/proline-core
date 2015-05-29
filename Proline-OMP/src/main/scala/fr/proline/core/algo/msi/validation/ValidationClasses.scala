@@ -130,7 +130,7 @@ object BuildPeptideMatchValidator {
   }
 }
 
-object BuildProteinSetFilter {
+object BuildProteinSetFilter  {
 
   def apply(filterParamStr: String): IProteinSetFilter = {
     this.apply(ProtSetFilterParams.withName(filterParamStr))
@@ -145,6 +145,8 @@ object BuildProteinSetFilter {
   def apply(filterParam: ProtSetFilterParams.Param): IProteinSetFilter = {
     filterParam match {
       case ProtSetFilterParams.SPECIFIC_PEP => new SpecificPeptidesPSFilter()
+      case ProtSetFilterParams.PEP_COUNT => new PeptidesCountPSFilter()
+      case ProtSetFilterParams.PEP_SEQ_COUNT => new PepSequencesCountPSFilter()
       case ProtSetFilterParams.SCORE => new ScoreProtSetFilter()
     }
   }
