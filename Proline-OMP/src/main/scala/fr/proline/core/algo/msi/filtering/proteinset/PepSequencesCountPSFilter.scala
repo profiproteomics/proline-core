@@ -9,23 +9,23 @@ import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IProteinSetFilter
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.profi.util.primitives._
 
-class SpecificPeptidesPSFilter(
-  var minNbrPep: Int = 1) extends IProteinSetFilter with Logging {
+class PepSequencesCountPSFilter(
+  var minNbrSeq: Int = 1) extends IProteinSetFilter with Logging {
 
-  val filterParameter = ProtSetFilterParams.SPECIFIC_PEP.toString
-  val filterDescription = "protein set filter on specific peptide (protein set context)"
+  val filterParameter = ProtSetFilterParams.PEP_SEQ_COUNT.toString
+  val filterDescription = "protein set filter on peptide sequences count "
 
   // IFilter methods  
   def getFilterProperties(): Map[String, Any] = {
     val props = new HashMap[String, Any]
-    props += (FilterPropertyKeys.THRESHOLD_VALUE -> minNbrPep)
+    props += (FilterPropertyKeys.THRESHOLD_VALUE -> minNbrSeq)
     props.toMap
   }
 
-  def getThresholdValue(): AnyVal = minNbrPep
+  def getThresholdValue(): AnyVal = minNbrSeq
 
   def setThresholdValue(currentVal: AnyVal) {
-    minNbrPep = toInt(currentVal)
+    minNbrSeq = toInt(currentVal)
   }
 
 
@@ -38,20 +38,17 @@ class SpecificPeptidesPSFilter(
     if (!incrementalValidation) ProteinSetFiltering.resetProteinSetValidationStatus(protSets)
 
     protSets.foreach(pSet => {
-      var nbrPepSpecific = 0     
-      pSet.peptideSet.getPeptideInstances.foreach(pInst => {
-		if(pInst.validatedProteinSetsCount <= 1){
-            nbrPepSpecific += 1
-        }
-      })
+    
+      val pepSeq2PepInst = pSet.peptideSet.getPeptideInstances.groupBy(_.peptide.sequence)
+      if(pepSeq2PepInst.size  < minNbrSeq){
+    	  pSet.isValidated = false
+		  pSet.peptideSet.getPeptideInstances.foreach(pInst => {
+			  pInst.validatedProteinSetsCount = pInst.validatedProteinSetsCount-1
+		  })
+	  }
 
-      if (nbrPepSpecific < minNbrPep) {
-        pSet.isValidated = false
-        pSet.peptideSet.getPeptideInstances.foreach(pInst => {
-          pInst.validatedProteinSetsCount = pInst.validatedProteinSetsCount-1
-        })
-      }
     })
+    
   }
 
 }

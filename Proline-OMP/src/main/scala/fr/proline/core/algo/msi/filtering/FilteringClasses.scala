@@ -33,6 +33,8 @@ object ProtSetFilterParams extends Enumeration {
   type Param = Value
   val SCORE = Value("SCORE")
   val SPECIFIC_PEP = Value("SPECIFIC_PEP")
+  val PEP_COUNT = Value("PEP_COUNT")
+  val PEP_SEQ_COUNT = Value("PEP_SEQ_COUNT")
 }
 
 trait IFilterConfig {
