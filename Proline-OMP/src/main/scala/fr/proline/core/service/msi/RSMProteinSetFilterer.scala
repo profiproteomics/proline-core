@@ -208,11 +208,10 @@ class RSMProteinSetFilterer (
       val msiPepInst = msiEM.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepInstance.id)
       msiPepInst.setProteinMatchCount(pepInstance.proteinMatchesCount)
       msiPepInst.setValidatedProteinSetCount(pepInstance.validatedProteinSetsCount)
-      msiPepInst.setProteinSetCount(pepInstance.proteinSetsCount)
-            
+      msiPepInst.setProteinSetCount(pepInstance.proteinSetsCount)            
       msiEM.merge(msiPepInst)
-
     }
+    
     return true
   }
 }
