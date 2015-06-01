@@ -199,7 +199,7 @@ class WeightedSpectralCountQuantifier(
   private def createRSMHierarchyMap(childsIds: Seq[Long], tmpChildPerParentMap : HashMap[Long, ArrayBuffer[Long]] = new HashMap[Long, ArrayBuffer[Long]]()) : HashMap[Long, ArrayBuffer[Long]] = {
     
 		val resultMap = new HashMap[Long, ArrayBuffer[Long]]()
-		val childToSearchIds = Seq.newBuilder[Long]
+		val childToSearchIdsBuilder = Seq.newBuilder[Long]
 		//test if childsIds are peptide Ref RSM or mergedResultSummary => Don't search in hierarchy !
 		// Should only occur on first call of createRSMHierarchyMap... 
 	    childsIds.foreach(	childId =>{
@@ -208,25 +208,28 @@ class WeightedSpectralCountQuantifier(
 				childList += (childId) //add child from temporary Map to final Map !
 				resultMap.put(childId,childList )				
 	    	} else {
-	    	  childToSearchIds += childId //Else search in hierarchy
+	    	  childToSearchIdsBuilder += childId //Else search in hierarchy
 	    	}
 	     
 	    })
 	    
 		
 		val childsPerParent = new HashMap[Long, ArrayBuffer[Long]]()
-		DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
-			val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryRelationTable).mkSelectQuery( (t,c) =>
-				List(t.PARENT_RESULT_SUMMARY_ID,t.CHILD_RESULT_SUMMARY_ID) -> "WHERE "~ t.CHILD_RESULT_SUMMARY_ID ~" IN("~ childToSearchIds.result.mkString(",") ~")" )
-			msiEzDBC.select(sqlQuery) { r => {
-				val parent = toLong(r.nextAny) 
-				val child = toLong(r.nextAny) 
-				val childList = childsPerParent.getOrElseUpdate(parent, new ArrayBuffer[Long]())
-				childList += child
-			  }
-			}
-		})
-		
+		val childToSearchIds = childToSearchIdsBuilder.result
+		if(!childToSearchIds.isEmpty){
+			DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+				val sqlQuery = new SelectQueryBuilder1(MsiDbResultSummaryRelationTable).mkSelectQuery( (t,c) =>
+					List(t.PARENT_RESULT_SUMMARY_ID,t.CHILD_RESULT_SUMMARY_ID) -> "WHERE "~ t.CHILD_RESULT_SUMMARY_ID ~" IN("~ childToSearchIds.mkString(",") ~")" )
+				msiEzDBC.select(sqlQuery) { r => {
+					val parent = toLong(r.nextAny) 
+					val child = toLong(r.nextAny) 
+					val childList = childsPerParent.getOrElseUpdate(parent, new ArrayBuffer[Long]())
+					childList += child
+				  }
+				}
+			})
+		}
+			
 		val newChildsBuilder = Seq.newBuilder[Long]
 		childsPerParent.foreach(entry =>{
 		  val parentID = entry._1
