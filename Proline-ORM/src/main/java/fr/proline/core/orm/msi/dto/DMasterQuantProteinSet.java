@@ -42,6 +42,12 @@ public class DMasterQuantProteinSet {
 	//List of QuantProteinSet ... to be loaded before use 
 	Map<Long, DQuantProteinSet> quantProteinSetByQchIds = new HashMap<Long, DQuantProteinSet>();
 	
+	// List of Status by Qch
+	private Map<Long, String> quantStatusByQchIds = new HashMap<Long, String>();
+	
+	// List of peptideNumber by Qch
+	private Map<Long, Integer> quantPeptideNumberByQchIds = new HashMap<Long, Integer>();
+	
 	/**
 	 * nb Peptides identified for this proteinSet
 	 */
@@ -208,6 +214,23 @@ public class DMasterQuantProteinSet {
 
 	public void setNbQuantifiedPeptides(int nbQuantifiedPeptides) {
 		this.nbQuantifiedPeptides = nbQuantifiedPeptides;
+	}
+
+	public Map<Long, String> getQuantStatusByQchIds() {
+		return quantStatusByQchIds;
+	}
+
+	public void setQuantStatusByQchIds(Map<Long, String> quantStatusByQchIds) {
+		this.quantStatusByQchIds = quantStatusByQchIds;
+	}
+
+	public Map<Long, Integer> getQuantPeptideNumberByQchIds() {
+		return quantPeptideNumberByQchIds;
+	}
+
+	public void setQuantPeptideNumberByQchIds(
+			Map<Long, Integer> quantPeptideNumberByQchIds) {
+		this.quantPeptideNumberByQchIds = quantPeptideNumberByQchIds;
 	}
 
 
