@@ -82,9 +82,9 @@ class ResultSummariesMergerTest extends Logging {
       val rsmIds = Seq(rsm1Id, rsm2Id)
       val protMatchesById =   tMergedRSMObj.resultSet.get.getProteinMatchById()
       tMergedRSMObj.proteinSets.foreach( prSet => {
-         val typAcc = protMatchesById(prSet.getTypicalProteinMatchId).accession
+         val typAcc = protMatchesById(prSet.getRepresentativeProteinMatchId).accession
     	 prSet.samesetProteinMatchIds.foreach( ssId => {
-    	   if(!ssId.equals(prSet.getTypicalProteinMatchId)){
+    	   if(!ssId.equals(prSet.getRepresentativeProteinMatchId)){
     		   assertFalse(typAcc.compareTo(protMatchesById(ssId).accession) > 0)
 	    	}    	   
     	 })

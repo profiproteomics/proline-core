@@ -1,12 +1,9 @@
 package fr.proline.core.service.msq
 
 import java.util.ArrayList
-
 import org.junit.Assert._
 import org.junit.Test
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.core.algo.msi.AbstractResultSummaryTestCase
 import fr.proline.core.algo.msq.SpectralCountConfig
 import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
@@ -18,6 +15,8 @@ import fr.proline.core.orm.uds.QuantitationChannel
 import fr.proline.core.orm.uds.SampleAnalysis
 import fr.proline.core.service.msq.quantify.WeightedSpectralCountQuantifier
 import fr.proline.repository.DriverType
+import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
+import java.util.HashSet
 
 object WeightedSCQuantifierTest extends AbstractResultSummaryTestCase with Logging {
 
@@ -94,16 +93,14 @@ class WeightedSCQuantifierTest extends Logging {
 
     //Create Sample Analysis
     val splAnalysis1 = new SampleAnalysis()
-    splAnalysis1.setNumber(1)
     splAnalysis1.setDataset(qtDS)
 
     val splAnalysis2 = new SampleAnalysis()
-    splAnalysis2.setNumber(2)
     splAnalysis2.setDataset(qtDS)
     
     val splAnalysis3 = new SampleAnalysis()
-    splAnalysis3.setNumber(3)
     splAnalysis3.setDataset(qtDS)
+    
     
     //Create BiologicalSample
     val bioSpl1 = new BiologicalSample()
@@ -112,16 +109,31 @@ class WeightedSCQuantifierTest extends Logging {
     bioSpl1.setDataset(qtDS)
 
     //Create link between SampleAnalysis  & BiologicalSample
-    val allSplAnalysis = new ArrayList[SampleAnalysis](2)
-    allSplAnalysis.add(splAnalysis1)
-    allSplAnalysis.add(splAnalysis2)
-    allSplAnalysis.add(splAnalysis3)
-    val bioSpls = new ArrayList[BiologicalSample](1)
-    bioSpls.add(bioSpl1)
-    bioSpl1.setSampleReplicates(allSplAnalysis)
-    splAnalysis1.setBiologicalSample(bioSpls)
-    splAnalysis2.setBiologicalSample(bioSpls)
-    splAnalysis3.setBiologicalSample(bioSpls)
+    val replicate2Sample1 = new BiologicalSplSplAnalysisMap()
+    replicate2Sample1.setBiologicalSample(bioSpl1)
+    replicate2Sample1.setSampleAnalysis(splAnalysis1)
+    replicate2Sample1.setSampleAnalysisNumber(1)
+    
+    val replicate2Sample2 = new BiologicalSplSplAnalysisMap()
+    replicate2Sample2.setBiologicalSample(bioSpl1)
+    replicate2Sample2.setSampleAnalysis(splAnalysis2)
+    replicate2Sample2.setSampleAnalysisNumber(2)
+
+    val replicate2Sample3 = new BiologicalSplSplAnalysisMap()
+    replicate2Sample3.setBiologicalSample(bioSpl1)
+    replicate2Sample3.setSampleAnalysis(splAnalysis3)
+    replicate2Sample3.setSampleAnalysisNumber(3)
+    
+    val allSplAnalysis = new ArrayList[BiologicalSplSplAnalysisMap](3)
+    allSplAnalysis.add(replicate2Sample1)
+    allSplAnalysis.add(replicate2Sample2)
+    allSplAnalysis.add(replicate2Sample3)
+    val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap](allSplAnalysis)
+    
+    bioSpl1.setBiologicalSplSplAnalysisMap(allSplAnalysis)
+    splAnalysis1.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
+    splAnalysis2.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
+    splAnalysis3.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
 
     //Create QuantitationChannel
     val qCh1 = new QuantitationChannel()

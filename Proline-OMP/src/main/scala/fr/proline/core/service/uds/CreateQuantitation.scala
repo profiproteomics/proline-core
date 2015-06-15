@@ -29,6 +29,7 @@ import fr.profi.util.sql.getTimeAsSQLTimestamp
 import scala.collection.JavaConversions._
 import java.util.ArrayList
 import javax.persistence.NoResultException
+import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
 
 class CreateQuantitation(
   executionContext: IExecutionContext,
@@ -288,14 +289,28 @@ class CreateQuantitation(
             //val rdbReplicate = udsAnalysisReplicateByKey(contextKey)
             // Store sample replicate
             val udsReplicate = new UdsSampleAnalysis()
-            udsReplicate.setNumber(replicateNum)
             val bioSpl = new java.util.ArrayList[UdsBiologicalSample]()
             bioSpl.add(udsBioSample)
-            udsReplicate.setBiologicalSample(bioSpl)
-            udsReplicate.setDataset(udsQuantitation)
-            udsEM.persist(udsReplicate)
+
+            val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
+            udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
+            udsReplicateToSample.setSampleAnalysis(udsReplicate)
+            udsReplicateToSample.setBiologicalSample(udsBioSample)
+
+            val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap]()
+            allBioSplReplicateMap.add(udsReplicateToSample)
+            udsReplicate.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
+            udsReplicate.setDataset(udsQuantitation)            
+            udsEM.persist(udsReplicate)                      
   
             udsSampleReplicateByKey(contextKey) = udsReplicate
+          } else {
+            val existingSplReplicate = udsSampleReplicateByKey.get(contextKey)
+            val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
+            udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
+            udsReplicateToSample.setSampleAnalysis(existingSplReplicate)
+            udsReplicateToSample.setBiologicalSample(udsBioSample)
+            udsEM.merge(existingSplReplicate)
           }
   
           val udsQuantChannel = new UdsQuantChannel()
@@ -331,7 +346,7 @@ class CreateQuantitation(
         udsQf.setQuantitationChannels(udsQuantChannelsForMQCList)
       }
       
-      udsQuantitation.setSampleReplicates(new ArrayList(udsSampleReplicateByKey.values))
+      udsQuantitation.setSampleReplicates(new HashSet(udsSampleReplicateByKey.values))
       udsQuantitation.setBiologicalSamples(new ArrayList(udsBioSampleByNum.values))
       udsQuantitation.setGroupSetups(udsAllGroupSetups)
       udsQuantitation.setQuantitationChannels(udsQuantChannelsList)

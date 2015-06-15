@@ -20,6 +20,8 @@ import fr.profi.util.sql.getTimeAsSQLTimestamp
 import javax.persistence.NoResultException
 import scala.collection.JavaConversions._
 import java.util.ArrayList
+import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
+import java.util.HashSet
 
 class CreateSCQuantitation(
   executionContext: IExecutionContext,
@@ -176,15 +178,28 @@ class CreateSCQuantitation(
           //val rdbReplicate = udsAnalysisReplicateByKey(contextKey)
           // Store sample replicate
           val udsReplicate = new UdsSampleAnalysis()
-          udsReplicate.setNumber(replicateNum)
           val bioSpl = new java.util.ArrayList[UdsBiologicalSample]()
           bioSpl.add(udsBioSample)
-          udsReplicate.setBiologicalSample(bioSpl)
+          val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
+          udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
+  		  udsReplicateToSample.setSampleAnalysis(udsReplicate)
+  		  udsReplicateToSample.setBiologicalSample(udsBioSample)
+            
+  		  val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap]()
+  		  allBioSplReplicateMap.add(udsReplicateToSample)
+          udsReplicate.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
           udsReplicate.setDataset(udsQuantitation)
           udsEM.persist(udsReplicate)
 
           udsSampleReplicateByKey(contextKey) = udsReplicate
-        }
+        }else {
+            val existingSplReplicate = udsSampleReplicateByKey(contextKey)
+            val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
+            udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
+            udsReplicateToSample.setSampleAnalysis(existingSplReplicate)
+            udsReplicateToSample.setBiologicalSample(udsBioSample)
+            udsEM.merge(existingSplReplicate)
+          }
 
         val udsQuantChannel = new UdsQuantChannel()
         udsQuantChannel.setNumber(quantChannelNum)
@@ -213,7 +228,7 @@ class CreateSCQuantitation(
       udsEM.merge(udsQf)
     }
     
-    udsQuantitation.setSampleReplicates(seqAsJavaList(udsSampleReplicateByKey.values.toSeq))
+    udsQuantitation.setSampleReplicates(new HashSet(udsSampleReplicateByKey.values))
     udsQuantitation.setQuantitationChannels(udsQuantChannelsList)
     udsQuantitation.setMasterQuantitationChannels(udsMasterQuantChannelsList)
         

@@ -21,6 +21,9 @@ import fr.proline.core.orm.uds.Project
 import fr.proline.core.orm.uds.SampleAnalysis
 import fr.proline.core.orm.uds.BiologicalSample
 import fr.proline.core.service.msq.export.WeightedSCResultReader
+import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
+import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMapPK
+import java.util.HashSet
 
 @Test
 class WeightedSCReaderTest extends AbstractMultipleDBTestCase with Logging {
@@ -94,11 +97,9 @@ class WeightedSCReaderTest extends AbstractMultipleDBTestCase with Logging {
 
     //Create Sample Analysis
     val splAnalysis1 = new SampleAnalysis()
-    splAnalysis1.setNumber(1)
     splAnalysis1.setDataset(qtDS)
 
     val splAnalysis2 = new SampleAnalysis()
-    splAnalysis2.setNumber(2)
     splAnalysis2.setDataset(qtDS)
 
     //Create BiologicalSample
@@ -108,14 +109,23 @@ class WeightedSCReaderTest extends AbstractMultipleDBTestCase with Logging {
     bioSpl1.setDataset(qtDS)
 
     //Create link between SampleAnalysis  & BiologicalSample
-    val allSplAnalysis = new ArrayList[SampleAnalysis](2)
-    allSplAnalysis.add(splAnalysis1)
-    allSplAnalysis.add(splAnalysis2)
-    val bioSpls = new ArrayList[BiologicalSample](1)
-    bioSpls.add(bioSpl1)
-    bioSpl1.setSampleReplicates(allSplAnalysis)
-    splAnalysis1.setBiologicalSample(bioSpls)
-    splAnalysis2.setBiologicalSample(bioSpls)
+    val replicate2Sample1 = new BiologicalSplSplAnalysisMap()
+    replicate2Sample1.setBiologicalSample(bioSpl1)
+    replicate2Sample1.setSampleAnalysis(splAnalysis1)
+    replicate2Sample1.setSampleAnalysisNumber(1)
+    
+    val replicate2Sample2 = new BiologicalSplSplAnalysisMap()
+    replicate2Sample2.setBiologicalSample(bioSpl1)
+    replicate2Sample2.setSampleAnalysis(splAnalysis2)
+    replicate2Sample2.setSampleAnalysisNumber(2)
+
+    val allSplAnalysis = new ArrayList[BiologicalSplSplAnalysisMap](2)
+    allSplAnalysis.add(replicate2Sample1)
+    allSplAnalysis.add(replicate2Sample2)
+    val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap](allSplAnalysis)
+    bioSpl1.setBiologicalSplSplAnalysisMap(allSplAnalysis)
+    splAnalysis1.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
+    splAnalysis2.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
 
     //Create QuantitationChannel
     val qCh1 = new QuantitationChannel()
@@ -159,9 +169,14 @@ class WeightedSCReaderTest extends AbstractMultipleDBTestCase with Logging {
     qtDS.setQuantitationChannels(qChs)
 
     udsEm.persist(qtDS)
-    udsEm.persist(splAnalysis1)
-    udsEm.persist(splAnalysis2)
     udsEm.persist(bioSpl1)
+    udsEm.flush()
+    udsEm.persist(splAnalysis1)
+    udsEm.flush()
+    udsEm.persist(splAnalysis2)
+    udsEm.flush()
+ 
+    udsEm.flush()
 
     udsEm.getTransaction().commit()
     val spCountCfg = new SpectralCountConfig(parentRSMId = Some(targetRSMId), parentDSId = Some(qtDS.getId()))

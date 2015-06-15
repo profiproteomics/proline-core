@@ -1,9 +1,7 @@
 package fr.proline.core.service.uds
 
 import scala.collection.JavaConversions.asScalaBuffer
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.api.service.IService
@@ -13,7 +11,7 @@ import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dal.context.execCtxToTxExecCtx
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
-import fr.proline.core.orm.uds.{Dataset => UdsDataset } 
+import fr.proline.core.orm.uds.{Dataset => UdsDataset }
 import fr.proline.core.orm.uds.ObjectTree
 import fr.proline.core.orm.uds.ObjectTreeSchema
 import fr.proline.core.orm.uds.ObjectTreeSchema.SchemaName
@@ -21,6 +19,8 @@ import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.core.service.msq.QuantifyMasterQuantChannel
 import fr.proline.repository.IDataStoreConnectorFactory
 import javax.persistence.EntityManager
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.lcms.IRunProvider
 
 
 class Quantifier(
@@ -100,8 +100,18 @@ class Quantifier(
       udsQuantitation.putObject(SchemaName.LABEL_FREE_QUANT_CONFIG.toString(), qtConfigObjectTree.getId())
       udsEM.merge(udsQuantitation)
       
-      // Create a LC-MS run provider
-      val lcmsRunProvider = new SQLRunProvider(udsDbCtx,None)
+      // Get or Create a LC-MS run provider
+      val lcmsRunProvider : IRunProvider = if(executionContext.isInstanceOf[ProviderDecoratedExecutionContext]){
+        var provider : IRunProvider = null
+        try {
+    	  provider = executionContext.asInstanceOf[ProviderDecoratedExecutionContext].getProvider(classOf[IRunProvider])
+        } catch {
+          case e: Exception =>  provider  = new SQLRunProvider(udsDbCtx,None)
+        }
+        provider
+      } else {
+    	  new SQLRunProvider(udsDbCtx,None)
+      }
       
       // Quantify each master quant channel
       for( udsMasterQuantChannel <- udsMasterQuantChannels ) {
