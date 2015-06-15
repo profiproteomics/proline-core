@@ -112,19 +112,19 @@ public class RawFile implements Serializable {
 	this.rawFileDirectory = rawDirectory;
     }
     
-    public String getMZdbFileName() {
+    public String getMzDbFileName() {
 	return this.mzdbFileName;
     }
     
-    public void setMZdbFileName(String mzdbFileName) {
+    public void setMzDbFileName(String mzdbFileName) {
 	this.mzdbFileName = mzdbFileName;
     }
 
-    public String getMZdbFileDirectory() {
+    public String getMzDbFileDirectory() {
 	return this.mzdbFileDirectory;
     }
 
-    public void setMZdbFileDirectory(String mzDirectory) {
+    public void setMzDbFileDirectory(String mzDirectory) {
 	this.mzdbFileDirectory = mzDirectory;
     }
     
