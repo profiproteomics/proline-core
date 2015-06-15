@@ -393,7 +393,7 @@ class WeightedSpectralCountQuantifier(
             protMatchId = protQuant.get.proteinMatchId.getOrElse(-1)
 
             val protSet = if (rsmProtSetById.get(protSetId).isDefined) rsmProtSetById.get(protSetId).get else null
-            protMatchStatus = if (protSet != null && protSet.getTypicalProteinMatchId.equals(protMatchId)) {
+            protMatchStatus = if (protSet != null && protSet.getRepresentativeProteinMatchId.equals(protMatchId)) {
               "Typical"
             } else {
               if (protSet != null && protSet.getSameSetProteinMatchIds.contains(protMatchId))
@@ -474,10 +474,10 @@ class WeightedSpectralCountQuantifier(
     mergedResultSummary.proteinSets.filter(_.isValidated).foreach(protSet => {
 
       //-- Get Typical Protein Match Accession 
-      val pmAccession: String = if (protSet.getTypicalProteinMatch != null && protSet.getTypicalProteinMatch.isDefined) {
-        protSet.getTypicalProteinMatch.get.accession
+      val pmAccession: String = if (protSet.getRepresentativeProteinMatch != null && protSet.getRepresentativeProteinMatch.isDefined) {
+        protSet.getRepresentativeProteinMatch.get.accession
       } else {
-        val typicalPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protSet.getTypicalProteinMatchId)
+        val typicalPM = msiEm.find(classOf[fr.proline.core.orm.msi.ProteinMatch], protSet.getRepresentativeProteinMatchId)
         typicalPM.getAccession()
       }
 
@@ -1177,7 +1177,7 @@ class WeightedSpectralCountQuantifier(
 
         // Determine the typical protein match id using the sequence coverage
         val mergedProteinSet = masterProteinSetOpt.get
-        var mergedTypicalProtMatchId = mergedProteinSet.getTypicalProteinMatchId
+        var mergedTypicalProtMatchId = mergedProteinSet.getRepresentativeProteinMatchId
 
         if (mergedTypicalProtMatchId <= 0) {
           val typicalProtMatchTmpId = mergedProteinSet.samesetProteinMatchIds.reduce { (a, b) =>

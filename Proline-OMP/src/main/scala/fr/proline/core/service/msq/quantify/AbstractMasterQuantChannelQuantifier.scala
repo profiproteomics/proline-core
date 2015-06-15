@@ -393,13 +393,13 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
 
         // Determine the typical protein match id using the sequence coverage
         val masterProteinSet = masterProteinSetOpt.get
-        var typicalProtMatchId = masterProteinSet.getTypicalProteinMatchId
+        var reprProtMatchId = masterProteinSet.getRepresentativeProteinMatchId
         
-        if (typicalProtMatchId <= 0) {
-          val typicalProtMatchTmpId = masterProteinSet.samesetProteinMatchIds.reduce { (a, b) =>
+        if (reprProtMatchId <= 0) {
+          val reprProtMatchTmpId = masterProteinSet.samesetProteinMatchIds.reduce { (a, b) =>
             if (masterProtMatchByTmpId(a).coverage > masterProtMatchByTmpId(b).coverage) a else b
           }          
-          typicalProtMatchId = masterProtMatchIdByTmpId(typicalProtMatchTmpId)
+          reprProtMatchId = masterProtMatchIdByTmpId(reprProtMatchTmpId)
         }
         
         // Update master protein set protein match ids        
@@ -409,7 +409,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends Logging {
         val msiMasterProteinSet = new MsiProteinSet()
         msiMasterProteinSet.setIsValidated(true)
         msiMasterProteinSet.setSelectionLevel(2)
-        msiMasterProteinSet.setProteinMatchId(typicalProtMatchId)
+        msiMasterProteinSet.setProteinMatchId(reprProtMatchId)
         msiMasterProteinSet.setResultSummary(msiQuantRSM)
         msiEm.persist(msiMasterProteinSet)
 

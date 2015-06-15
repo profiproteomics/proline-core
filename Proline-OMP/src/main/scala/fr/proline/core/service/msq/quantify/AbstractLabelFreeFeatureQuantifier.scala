@@ -146,7 +146,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     DoJDBCWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
       
       val sqlQuery = new SelectQueryBuilder1(LcmsDbFeatureMs2EventTable).mkSelectQuery( (t,c) =>
-        List(t.FEATURE_ID,t.MS2_EVENT_ID) -> "WHERE "~ t.RUN_MAP_ID ~" IN("~ rawMapIds.mkString(",") ~")"
+        List(t.FEATURE_ID,t.MS2_EVENT_ID) -> "WHERE "~ t.RAW_MAP_ID ~" IN("~ rawMapIds.mkString(",") ~")"
       )
       
       lcmsEzDBC.selectAndProcess(sqlQuery) { r =>
