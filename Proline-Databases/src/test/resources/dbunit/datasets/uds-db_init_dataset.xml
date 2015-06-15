@@ -70,8 +70,6 @@
   <ENZYME_CLEAVAGE ID="26" SITE="C-term" RESIDUES="J" ENZYME_ID="21"/>
   <ENZYME_CLEAVAGE ID="27" SITE="N-term" RESIDUES="J" ENZYME_ID="21"/>
   <ENZYME_CLEAVAGE ID="28" SITE="C-term" RESIDUES="FYWLKR" RESTRICTIVE_RESIDUES="P" ENZYME_ID="22"/>
-  <EXTERNAL_DB ID="1" NAME=".\outdir/ps-db" CONNECTION_MODE="FILE" USERNAME="proline_db_user" PASSWORD="proline" TYPE="PS" VERSION="no.version" IS_BUSY="false" SERIALIZED_PROPERTIES="{&quot;driver_type&quot;:&quot;H2&quot;}"/>
-  <EXTERNAL_DB ID="2" NAME=".\outdir/pdi-db" CONNECTION_MODE="FILE" USERNAME="proline_db_user" PASSWORD="proline" TYPE="PDI" VERSION="no.version" IS_BUSY="false" SERIALIZED_PROPERTIES="{&quot;driver_type&quot;:&quot;H2&quot;}"/>
   <FRAGMENTATION_SERIES ID="1" NAME="a"/>
   <FRAGMENTATION_SERIES ID="2" NAME="a-NH3" NEUTRAL_LOSS="NH3"/>
   <FRAGMENTATION_SERIES ID="3" NAME="a-H2O" NEUTRAL_LOSS="H2O"/>
@@ -132,7 +130,10 @@
   <INSTRUMENT ID="13" NAME="LTQ-ORBITRAP XL" SOURCE="nESI"/>
   <INSTRUMENT ID="14" NAME="LTQ-ORBITRAP VELOS" SOURCE="nESI"/>
   <INSTRUMENT ID="15" NAME="LTQ-ORBITRAP VELOS ETD" SOURCE="nESI"/>
-  <INSTRUMENT ID="16" NAME="Q EXACTIVE" SOURCE="nESI"/>
+  <INSTRUMENT ID="16" NAME="ORBITRAP FUSION" SOURCE="nESI"/>
+  <INSTRUMENT ID="17" NAME="Q EXACTIVE" SOURCE="nESI"/>
+  <INSTRUMENT ID="18" NAME="TripleTOF 5600" SOURCE="nESI"/>
+  <INSTRUMENT ID="19" NAME="TripleTOF 6600" SOURCE="nESI"/>
   <INSTRUMENT_CONFIG ID="1" NAME="ESI-QUAD-TOF (A1=QUAD F=CID A2=TOF)" MS1_ANALYZER="QUAD" MSN_ANALYZER="TOF" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:true}" INSTRUMENT_ID="1" ACTIVATION_TYPE="CID"/>
   <INSTRUMENT_CONFIG ID="2" NAME="MALDI-TOF-PSD (A1=TOF F=PSD A2=TOF)" MS1_ANALYZER="TOF" MSN_ANALYZER="TOF" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:true}" INSTRUMENT_ID="2" ACTIVATION_TYPE="PSD"/>
   <INSTRUMENT_CONFIG ID="3" NAME="ESI-TRAP (A1=TRAP F=CID A2=TRAP)" MS1_ANALYZER="TRAP" MSN_ANALYZER="TRAP" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:true}" INSTRUMENT_ID="3" ACTIVATION_TYPE="CID"/>
@@ -152,7 +153,12 @@
   <INSTRUMENT_CONFIG ID="17" NAME="LTQ-ORBITRAP VELOS ETD (A1=FTMS F=CID A2=TRAP)" MS1_ANALYZER="FTMS" MSN_ANALYZER="TRAP" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="15" ACTIVATION_TYPE="CID"/>
   <INSTRUMENT_CONFIG ID="18" NAME="LTQ-ORBITRAP VELOS ETD (A1=FTMS F=HCD A2=FTMS)" MS1_ANALYZER="FTMS" MSN_ANALYZER="FTMS" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="15" ACTIVATION_TYPE="HCD"/>
   <INSTRUMENT_CONFIG ID="19" NAME="LTQ-ORBITRAP VELOS ETD (A1=FTMS F=ETD A2=FTMS)" MS1_ANALYZER="FTMS" MSN_ANALYZER="FTMS" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="15" ACTIVATION_TYPE="ETD"/>
-  <INSTRUMENT_CONFIG ID="20" NAME="Q EXACTIVE (A1=FTMS F=HCD A2=FTMS)" MS1_ANALYZER="FTMS" MSN_ANALYZER="FTMS" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="16" ACTIVATION_TYPE="HCD"/>
+  <INSTRUMENT_CONFIG ID="20" NAME="ORBITRAP FUSION (A1=FTMS F=CID A2=TRAP)" MS1_ANALYZER="FTMS" MSN_ANALYZER="TRAP" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="16" ACTIVATION_TYPE="CID"/>
+  <INSTRUMENT_CONFIG ID="21" NAME="ORBITRAP FUSION (A1=FTMS F=HCD A2=FTMS)" MS1_ANALYZER="FTMS" MSN_ANALYZER="FTMS" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="16" ACTIVATION_TYPE="HCD"/>
+  <INSTRUMENT_CONFIG ID="22" NAME="ORBITRAP FUSION (A1=FTMS F=ETD A2=TRAP)" MS1_ANALYZER="FTMS" MSN_ANALYZER="FTMS" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="16" ACTIVATION_TYPE="ETD"/>
+  <INSTRUMENT_CONFIG ID="23" NAME="Q EXACTIVE (A1=FTMS F=HCD A2=FTMS)" MS1_ANALYZER="FTMS" MSN_ANALYZER="FTMS" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="17" ACTIVATION_TYPE="HCD"/>
+  <INSTRUMENT_CONFIG ID="24" NAME="TripleTOF 5600 (A1=QUAD F=CID A2=TOF)" MS1_ANALYZER="QUAD" MSN_ANALYZER="TOF" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="18" ACTIVATION_TYPE="CID"/>
+  <INSTRUMENT_CONFIG ID="25" NAME="TripleTOF 6600 (A1=QUAD F=CID A2=TOF)" MS1_ANALYZER="QUAD" MSN_ANALYZER="TOF" SERIALIZED_PROPERTIES="{&quot;is_hidden&quot;:false}" INSTRUMENT_ID="19" ACTIVATION_TYPE="CID"/>
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="1" FRAGMENTATION_RULE_ID="1"/>
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="1" FRAGMENTATION_RULE_ID="2"/>
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="1" FRAGMENTATION_RULE_ID="8"/>
@@ -262,28 +268,32 @@
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="12" FRAGMENTATION_RULE_ID="11"/>
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="12" FRAGMENTATION_RULE_ID="13"/>
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="12" FRAGMENTATION_RULE_ID="25"/>
-  <SPEC_TITLE_PARSING_RULE ID="1" raw_file_identifier="(.+)\.\d+\.\d+\.\d+\.dta" FIRST_SCAN=".+\.(\d+)\.\d+\.\d+\.dta" LAST_SCAN=".+\.\d+\.(\d+)\.\d+\.dta" />
-  <SPEC_TITLE_PARSING_RULE ID="2" FIRST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" />
-  <SPEC_TITLE_PARSING_RULE ID="3" FIRST_SCAN="Cmpd.+MS\d.+, \d+\.\d+ min #(\d+)" LAST_SCAN="Cmpd.+MS\d.+, \d+\.\d+ min #(\d+)" FIRST_TIME="Cmpd.+MS\d.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MS\d.+, (\d+\.\d+) min" />
-  <SPEC_TITLE_PARSING_RULE ID="4" raw_file_identifier="^File: (.+?)," FIRST_CYCLE="Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): (\d+), \d+" LAST_CYCLE="Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): \d+, (\d+)" FIRST_TIME="Elution: (.+?) to .+? min||Elution: (.+?) min" LAST_TIME="Elution: .+? to (.+?) min||Elution: (.+?) min" />
-  <SPEC_TITLE_PARSING_RULE ID="5" raw_file_identifier="\[(.+?)\]" FIRST_SCAN="in range (\d+) \(rt=||Scan (\d+) \(rt=" LAST_SCAN="\) to (\d+) \(rt=||Scan (\d+) \(rt=" FIRST_TIME="in range \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)" LAST_TIME="\) to \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)" />
-  <SPEC_TITLE_PARSING_RULE ID="6" raw_file_identifier="^RawFile: (.+?) FinneganScanNumber:" FIRST_SCAN="FinneganScanNumber: (\d+)" LAST_SCAN="FinneganScanNumber: (\d+)" />
-  <SPEC_TITLE_PARSING_RULE ID="7" FIRST_SCAN="Spectrum\d+\s+scans:(\d+?)," LAST_SCAN="Spectrum\d+\s+scans:(\d+?)," />
-  <SPEC_TITLE_PARSING_RULE ID="8" FIRST_SCAN="scan=(\d+)" LAST_SCAN="scan=(\d+)" />
-  <SPEC_TITLE_PARSING_RULE ID="9" raw_file_identifier="(.+)\.\d+\.\d+\.\d+$" FIRST_SCAN=".+\.(\d+)\.\d+\.\d+$" LAST_SCAN=".+\.\d+\.(\d+)\.\d+$" />
-  <SPEC_TITLE_PARSING_RULE ID="10" raw_file_identifier="File:&quot;(.+?)&quot;," FIRST_SCAN="scan=(\d+)" LAST_SCAN="scan=(\d+)" />
-  <SPEC_TITLE_PARSING_RULE ID="11" FIRST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" />
+  <SPEC_TITLE_PARSING_RULE ID="1" RAW_FILE_IDENTIFIER="(.+)\.\d+\.\d+\.\d+\.dta" FIRST_SCAN=".+\.(\d+)\.\d+\.\d+\.dta" LAST_SCAN=".+\.\d+\.(\d+)\.\d+\.dta"/>
+  <SPEC_TITLE_PARSING_RULE ID="2" FIRST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min"/>
+  <SPEC_TITLE_PARSING_RULE ID="3" FIRST_SCAN="Cmpd.+MS\d.+, \d+\.\d+ min #(\d+)" LAST_SCAN="Cmpd.+MS\d.+, \d+\.\d+ min #(\d+)" FIRST_TIME="Cmpd.+MS\d.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MS\d.+, (\d+\.\d+) min"/>
+  <SPEC_TITLE_PARSING_RULE ID="4" RAW_FILE_IDENTIFIER="^File: (.+?)," FIRST_CYCLE="Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): (\d+), \d+" LAST_CYCLE="Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): \d+, (\d+)" FIRST_TIME="Elution: (.+?) to .+? min||Elution: (.+?) min" LAST_TIME="Elution: .+? to (.+?) min||Elution: (.+?) min"/>
+  <SPEC_TITLE_PARSING_RULE ID="5" RAW_FILE_IDENTIFIER="\[(.+?)\]" FIRST_SCAN="in range (\d+) \(rt=||Scan (\d+) \(rt=" LAST_SCAN="\) to (\d+) \(rt=||Scan (\d+) \(rt=" FIRST_TIME="in range \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)" LAST_TIME="\) to \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)"/>
+  <SPEC_TITLE_PARSING_RULE ID="6" RAW_FILE_IDENTIFIER="^RawFile: (.+?) FinneganScanNumber:" FIRST_SCAN="FinneganScanNumber: (\d+)" LAST_SCAN="FinneganScanNumber: (\d+)"/>
+  <SPEC_TITLE_PARSING_RULE ID="7" RAW_FILE_IDENTIFIER="raw_file_identifier:(.+);" FIRST_CYCLE="first_cycle:(.+);" LAST_CYCLE="last_cycle:(.+);" FIRST_SCAN="first_scan:(.+);" LAST_SCAN="last_scan:(.+);" FIRST_TIME="first_time:(.+);" LAST_TIME="last_time:(.+);"/>
+  <SPEC_TITLE_PARSING_RULE ID="8" RAW_FILE_IDENTIFIER="File:&quot;(\w+)\.wiff&quot;" FIRST_CYCLE="Locus:\d\.\d\.\d\.(\d+)\.\d+ File:" LAST_CYCLE="Locus:\d\.\d\.\d\.(\d+)\.\d+ File:"/>
+  <SPEC_TITLE_PARSING_RULE ID="9" FIRST_SCAN="Spectrum\d+\s+scans:(\d+?)," LAST_SCAN="Spectrum\d+\s+scans:(\d+?),"/>
+  <SPEC_TITLE_PARSING_RULE ID="10" FIRST_SCAN="scan=(\d+)" LAST_SCAN="scan=(\d+)"/>
+  <SPEC_TITLE_PARSING_RULE ID="11" RAW_FILE_IDENTIFIER="(.+)\.\d+\.\d+\.\d+$" FIRST_SCAN=".+\.(\d+)\.\d+\.\d+$" LAST_SCAN=".+\.\d+\.(\d+)\.\d+$"/>
+  <SPEC_TITLE_PARSING_RULE ID="12" RAW_FILE_IDENTIFIER="File:&quot;(.+?)&quot;," FIRST_SCAN="scan=(\d+)" LAST_SCAN="scan=(\d+)"/>
+  <SPEC_TITLE_PARSING_RULE ID="13" FIRST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min"/>
   <PEAKLIST_SOFTWARE ID="1" NAME="extract_msn.exe" SPEC_TITLE_PARSING_RULE_ID="1"/>
   <PEAKLIST_SOFTWARE ID="2" NAME="Data Analysis" VERSION="4.0" SPEC_TITLE_PARSING_RULE_ID="2"/>
   <PEAKLIST_SOFTWARE ID="3" NAME="Data Analysis" VERSION="4.1" SPEC_TITLE_PARSING_RULE_ID="3"/>
   <PEAKLIST_SOFTWARE ID="4" NAME="mascot.dll" SPEC_TITLE_PARSING_RULE_ID="4"/>
   <PEAKLIST_SOFTWARE ID="5" NAME="Mascot Distiller" SPEC_TITLE_PARSING_RULE_ID="5"/>
   <PEAKLIST_SOFTWARE ID="6" NAME="MaxQuant" SPEC_TITLE_PARSING_RULE_ID="6"/>
-  <PEAKLIST_SOFTWARE ID="7" NAME="Proteome Discoverer" SPEC_TITLE_PARSING_RULE_ID="7"/>
-  <PEAKLIST_SOFTWARE ID="8" NAME="ProteoWizard" VERSION="2.0" SPEC_TITLE_PARSING_RULE_ID="8"/>
-  <PEAKLIST_SOFTWARE ID="9" NAME="ProteoWizard" VERSION="2.1" SPEC_TITLE_PARSING_RULE_ID="9"/>
-  <PEAKLIST_SOFTWARE ID="10" NAME="ProteoWizard" VERSION="3.0" SPEC_TITLE_PARSING_RULE_ID="10"/>
-  <PEAKLIST_SOFTWARE ID="11" NAME="Spectrum Mill" SPEC_TITLE_PARSING_RULE_ID="11"/>
+  <PEAKLIST_SOFTWARE ID="7" NAME="Proline" VERSION="1.0" SPEC_TITLE_PARSING_RULE_ID="7"/>
+  <PEAKLIST_SOFTWARE ID="8" NAME="Protein Pilot" SPEC_TITLE_PARSING_RULE_ID="8"/>
+  <PEAKLIST_SOFTWARE ID="9" NAME="Proteome Discoverer" SPEC_TITLE_PARSING_RULE_ID="9"/>
+  <PEAKLIST_SOFTWARE ID="10" NAME="ProteoWizard" VERSION="2.0" SPEC_TITLE_PARSING_RULE_ID="10"/>
+  <PEAKLIST_SOFTWARE ID="11" NAME="ProteoWizard" VERSION="2.1" SPEC_TITLE_PARSING_RULE_ID="11"/>
+  <PEAKLIST_SOFTWARE ID="12" NAME="ProteoWizard" VERSION="3.0" SPEC_TITLE_PARSING_RULE_ID="12"/>
+  <PEAKLIST_SOFTWARE ID="13" NAME="Spectrum Mill" SPEC_TITLE_PARSING_RULE_ID="13"/>
   <QUANT_LABEL ID="1" TYPE="isobaric_tag" NAME="114" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 114.110679 }" QUANT_METHOD_ID="3"/>
   <QUANT_LABEL ID="2" TYPE="isobaric_tag" NAME="115" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 115.107714 }" QUANT_METHOD_ID="3"/>
   <QUANT_LABEL ID="3" TYPE="isobaric_tag" NAME="116" SERIALIZED_PROPERTIES="{ &quot;reporter_mz&quot;: 116.111069 }" QUANT_METHOD_ID="3"/>

@@ -12,6 +12,9 @@
   <SCORING ID="2" SEARCH_ENGINE="mascot" NAME="standard score" DESCRIPTION="The score provided for each Mascot protein hit (it corresponds to the sum of ion scores)."/>
   <SCORING ID="3" SEARCH_ENGINE="mascot" NAME="mudpit score" DESCRIPTION="The score provided for each Mascot protein hit when the number of MS/MS queries is high."/>
   <SCORING ID="4" SEARCH_ENGINE="mascot" NAME="modified mudpit score" DESCRIPTION="A modified version of the MudPIT score computed by Proline."/>
-  <SCORING ID="5" SEARCH_ENGINE="percolator" NAME="protein set score" DESCRIPTION="The score computed by Proline for protein sets validated using percolator PSMs scores."/>
-  <SCORING ID="6" SEARCH_ENGINE="omssa" NAME="expect value" DESCRIPTION="The -log(E-value) provided by OMSSA for a peptide match."/>
+  <SCORING ID="5" SEARCH_ENGINE="omssa" NAME="expect value" DESCRIPTION="The -log(E-value) provided by OMSSA for a peptide match."/>
+  <SCORING ID="6" SEARCH_ENGINE="comet" NAME="evalue log scaled" DESCRIPTION="The -log(expectation value) provided by Comet for a peptide match."/>
+  <SCORING ID="7" SEARCH_ENGINE="msgf" NAME="evalue log scaled" DESCRIPTION="The -log(EValue) provided by MS-GF for a peptide match."/>
+  <SCORING ID="8" SEARCH_ENGINE="sequest" NAME="expect log scaled" DESCRIPTION="The -log(expect) provided by Sequest for a peptide match."/>
+  <SCORING ID="9" SEARCH_ENGINE="xtandem" NAME="hyperscore" DESCRIPTION="The hyperscore provided by X!Tandem for a peptide match."/>
 </dataset>
