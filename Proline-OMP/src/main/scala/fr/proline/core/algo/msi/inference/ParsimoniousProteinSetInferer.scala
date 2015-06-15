@@ -131,9 +131,14 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
       // Retrieve peptide instances corresponding to this set
       val samesetPeptideInstances = clusterPepIds.map( pepInstanceByPepId(_) )
       
-      // Build peptide set items
+      // Define some vars
       var peptideMatchesCount = 0
+      val sequences = new ArrayBuffer[String](samesetPeptideInstances.length)
+      
+      // Build peptide set items
       val pepSetItems = for( tmpPepInstance <- samesetPeptideInstances ) yield {
+        
+        sequences += tmpPepInstance.peptide.sequence
         
         // Increment peptide matches count
         peptideMatchesCount += tmpPepInstance.getPeptideMatchIds.length
@@ -170,6 +175,7 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
         id = peptideSetId,
         items = pepSetItems.toArray,
         isSubset = isSubset,
+        sequencesCount = sequences.distinct.length,
         peptideMatchesCount = peptideMatchesCount,
         proteinMatchIds = clusterProtMatchIds.toArray,
         strictSubsetIds = strictSubsetIdsOpt.orNull,
@@ -187,7 +193,7 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
         val sameSetProtMatchIds = peptideSet.proteinMatchIds
         
         // Choose Typical using arbitrary alphabetical order
-        val typicalProtMatch = sameSetProtMatchIds.map( proteinMatchById(_) ).minBy( _.accession )
+        val reprProtMatch = sameSetProtMatchIds.map( proteinMatchById(_) ).minBy( _.accession )
 
         // Add protein set to the list
         proteinSets += ProteinSet(
@@ -195,8 +201,8 @@ class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
           isDecoy = resultSet.isDecoy,
           peptideSet = peptideSet,
           hasPeptideSubset = peptideSet.hasSubset,
-          typicalProteinMatchId = typicalProtMatch.id,
-          typicalProteinMatch = Some(typicalProtMatch),
+          representativeProteinMatchId = reprProtMatch.id,
+          representativeProteinMatch = Some(reprProtMatch),
           samesetProteinMatchIds = sameSetProtMatchIds,
           subsetProteinMatchIds = cluster.subsetsKeys.toArray,
           resultSummaryId = resultSummaryId
