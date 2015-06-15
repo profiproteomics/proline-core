@@ -41,8 +41,8 @@ public class SpectrumTitleParsingRule implements Serializable {
     @Column(name = "last_time")
     private String lastTime;
 
-    @Column(name = "raw_file_name")
-    private String rawFileName;
+    @Column(name = "raw_file_identifier")
+    private String rawFileIdentifier;
 
     public SpectrumTitleParsingRule() {
     }
@@ -103,12 +103,12 @@ public class SpectrumTitleParsingRule implements Serializable {
 	this.lastTime = lastTime;
     }
 
-    public String getRawFileName() {
-	return this.rawFileName;
+    public String getRawFileIdentifier() {
+	return this.rawFileIdentifier;
     }
 
-    public void setRawFileName(String rawFileName) {
-	this.rawFileName = rawFileName;
+    public void setRawFileIdentifier(String rawFileId) {
+	this.rawFileIdentifier = rawFileId;
     }
 
 }

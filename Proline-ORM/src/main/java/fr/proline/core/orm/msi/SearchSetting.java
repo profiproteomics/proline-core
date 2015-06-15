@@ -54,7 +54,6 @@ public class SearchSetting implements Serializable {
     @Column(name = "peptide_mass_error_tolerance_unit")
     private String peptideMassErrorToleranceUnit;
 
-    private String quantitation;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -134,14 +133,6 @@ public class SearchSetting implements Serializable {
 
     public void setPeptideMassErrorToleranceUnit(String peptideMassErrorToleranceUnit) {
 	this.peptideMassErrorToleranceUnit = peptideMassErrorToleranceUnit;
-    }
-
-    public String getQuantitation() {
-	return this.quantitation;
-    }
-
-    public void setQuantitation(String quantitation) {
-	this.quantitation = quantitation;
     }
 
     public String getSerializedProperties() {

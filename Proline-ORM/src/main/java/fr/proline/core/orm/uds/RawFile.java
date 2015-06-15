@@ -25,15 +25,29 @@ public class RawFile implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "name")
+    @Column(name = "identifier")
+    private String identifier;
+    
+    @Column(name="raw_file_name")
     private String rawFileName;
+
+    @Column(name="raw_file_directory")
+    private String rawFileDirectory;
+
+    @Column(name="mzdb_file_name")
+    private String mzdbFileName;
+    
+    @Column(name="mzdb_file_directory")
+    private String mzdbFileDirectory;
+    
+    @Column(name="sample_name")
+    private String sampleName;
 
     @Column(name = "creation_timestamp")
     private Timestamp creationTimestamp;
-
-    private String directory;
-
-    private String extension;
+    
+    @Column(name = "serialized_properties")
+    private String serializedProperties;
 
     @Column(name = "instrument_id")
     private long instrumentId;
@@ -41,8 +55,6 @@ public class RawFile implements Serializable {
     @Column(name = "owner_id")
     private long ownerId;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
 
     // bi-directional many-to-one association to Run
     @OneToMany(mappedBy = "rawFile")
@@ -56,12 +68,12 @@ public class RawFile implements Serializable {
     public RawFile() {
     }
 
-    public String getRawFileName() {
-	return this.rawFileName;
+    public String getIdentifier() {
+	return this.identifier;
     }
 
-    public void setRawFileName(String rawFileName) {
-	this.rawFileName = rawFileName;
+    public void setIdentifier(String id) {
+	this.identifier = id;
     }
 
     public Timestamp getCreationTimestamp() {
@@ -83,21 +95,53 @@ public class RawFile implements Serializable {
 	}
 
     }
-
-    public String getDirectory() {
-	return this.directory;
+    
+    public String getRawFileName() {
+	return this.rawFileName;
     }
 
-    public void setDirectory(String directory) {
-	this.directory = directory;
+    public void setRawFileName(String rawFileName) {
+	this.rawFileName = rawFileName;
     }
 
-    public String getExtension() {
-	return this.extension;
+    public String getRawFileDirectory() {
+	return this.rawFileDirectory;
     }
 
-    public void setExtension(String extension) {
-	this.extension = extension;
+    public void setRawFileDirectory(String rawDirectory) {
+	this.rawFileDirectory = rawDirectory;
+    }
+    
+    public String getMZdbFileName() {
+	return this.mzdbFileName;
+    }
+    
+    public void setMZdbFileName(String mzdbFileName) {
+	this.mzdbFileName = mzdbFileName;
+    }
+
+    public String getMZdbFileDirectory() {
+	return this.mzdbFileDirectory;
+    }
+
+    public void setMZdbFileDirectory(String mzDirectory) {
+	this.mzdbFileDirectory = mzDirectory;
+    }
+    
+    public String getSampleName() {
+	return this.sampleName;
+    }
+    
+    public void setSampleName(String sampleName) {
+	this.sampleName = sampleName;
+    }
+    
+    public String getSerializedProperties() {
+	return this.serializedProperties;
+    }
+
+    public void setSerializedProperties(String serializedProperties) {
+	this.serializedProperties = serializedProperties;
     }
 
     public long getInstrumentId() {
@@ -114,14 +158,6 @@ public class RawFile implements Serializable {
 
     public void setOwnerId(final long pOwnerId) {
 	ownerId = pOwnerId;
-    }
-
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
-
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
     }
 
     public List<Run> getRuns() {

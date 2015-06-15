@@ -65,7 +65,7 @@ public class ProteinMatch implements Serializable {
     @JoinColumn(name = "result_set_id")
     private ResultSet resultSet;
 
-    private Float score;
+    private float score;
 
     @Column(name = "scoring_id")
     private long scoringId;
@@ -164,11 +164,11 @@ public class ProteinMatch implements Serializable {
 	this.resultSet = resultSet;
     }
 
-    public Float getScore() {
+    public float getScore() {
 	return score;
     }
 
-    public void setScore(final Float pScore) {
+    public void setScore(final float pScore) {
 	score = pScore;
     }
 

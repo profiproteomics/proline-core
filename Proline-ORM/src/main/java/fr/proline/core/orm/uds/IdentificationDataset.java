@@ -24,7 +24,7 @@ public class IdentificationDataset extends Dataset implements Serializable {
 
     // uni-directional many-to-one association to Run
     @ManyToOne
-    @JoinColumn(name = "raw_file_name")
+    @JoinColumn(name = "raw_file_identifier")
     private RawFile rawFile;
 
     // uni-directional many-to-one association to Run

@@ -1,7 +1,14 @@
 package fr.proline.core.orm.msi;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
+import javax.persistence.Table;
 
 /**
  * The persistent class for the protein_set_protein_match_item database table.
@@ -17,7 +24,9 @@ public class ProteinSetProteinMatchItem implements Serializable {
 	
 	@Column(name = "is_in_subset")
 	private boolean isInSubset;
-
+	
+	private float coverage;
+	
 	@ManyToOne
 	@JoinColumn(name = "result_summary_id")
 	private ResultSummary resultSummary;
@@ -55,6 +64,14 @@ public class ProteinSetProteinMatchItem implements Serializable {
     public void setIsInSubset(final boolean isInSubset) {
 		this.isInSubset = isInSubset;
     }
+
+	public float getCoverage() {
+		return coverage;
+	}
+
+	public void setCoverage(float coverage) {
+		this.coverage = coverage;
+	}
 
 	public ResultSummary getResultSummary() {
 		return this.resultSummary;

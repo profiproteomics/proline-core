@@ -32,7 +32,7 @@ public class FeatureMs2Event implements Serializable {
 
 	//bi-directional many-to-one association to RawMap
 	@ManyToOne
-	@JoinColumn(name="run_map_id")
+	@JoinColumn(name="raw_map_id")
 	private RawMap rawMap;
 
 	//uni-directional many-to-one association to Scan

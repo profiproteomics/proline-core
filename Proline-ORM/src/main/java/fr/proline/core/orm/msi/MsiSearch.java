@@ -55,8 +55,6 @@ public class MsiSearch implements Serializable {
     @Column(name = "serialized_properties")
     private String serializedProperties;
 
-    @Column(name = "submitted_queries_count")
-    private int submittedQueriesCount;
 
     private String title;
 
@@ -158,14 +156,6 @@ public class MsiSearch implements Serializable {
 
     public void setSerializedProperties(String serializedProperties) {
 	this.serializedProperties = serializedProperties;
-    }
-
-    public int getSubmittedQueriesCount() {
-	return submittedQueriesCount;
-    }
-
-    public void setSubmittedQueriesCount(final int pSubmittedQueriesCount) {
-	submittedQueriesCount = pSubmittedQueriesCount;
     }
 
     public String getTitle() {

@@ -2,6 +2,7 @@ package fr.proline.core.orm.uds;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,7 +31,6 @@ public class SampleAnalysis implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    private int number;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -40,12 +40,11 @@ public class SampleAnalysis implements Serializable {
     @OrderBy("number")
     private List<QuantitationChannel> quantitationChannels;
 
-    // bi-directional many-to-many association to BiologicalSample
-    @ManyToMany
-    @JoinTable(name = "biological_sample_sample_analysis_map", joinColumns = { @JoinColumn(name = "sample_analysis_id") }, inverseJoinColumns = { @JoinColumn(name = "biological_sample_id") })
-    @OrderBy("number")
-    private List<BiologicalSample> biologicalSamples;
 
+    // bi-directional many-to-one association to BiologicalSplSplAnalysisMap
+    @OneToMany(mappedBy = "sampleAnalysis")
+     private Set<BiologicalSplSplAnalysisMap> biologicalSplSplAnalysisMap;
+    
     // bi-directional many-to-one association to Dataset
     @ManyToOne
     @JoinColumn(name = "quantitation_id")
@@ -60,14 +59,6 @@ public class SampleAnalysis implements Serializable {
 
     public void setId(final long pId) {
 	id = pId;
-    }
-
-    public int getNumber() {
-	return number;
-    }
-
-    public void setNumber(final int pNumber) {
-	number = pNumber;
     }
 
     public String getSerializedProperties() {
@@ -86,12 +77,12 @@ public class SampleAnalysis implements Serializable {
 	this.quantitationChannels = quantitationChannels;
     }
 
-    public List<BiologicalSample> getBiologicalSample() {
-	return biologicalSamples;
+    public Set<BiologicalSplSplAnalysisMap> getBiologicalSample() {
+	return biologicalSplSplAnalysisMap;
     }
 
-    public void setBiologicalSample(final List<BiologicalSample> biologicalSamples) {
-	this.biologicalSamples = biologicalSamples;
+    public void setBiologicalSplSplAnalysisMap(final Set<BiologicalSplSplAnalysisMap> biologicalSamplesMap) {
+	this.biologicalSplSplAnalysisMap = biologicalSamplesMap;
     }
 
     public Dataset getDataset() {

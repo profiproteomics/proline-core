@@ -114,6 +114,10 @@ public class Scoring implements Serializable {
 		SEQUEST_EXPECT_LOG_SCALED(
 			"sequest", "expect log scaled",
 			"The -log(expect) provided by Sequest for a peptide match."
+		),
+		XTANDEM_HYPERSCORE(
+			"xtandem", "hyperscore",
+			"The hyperscore provided by X!Tandem for a peptide match."
 		);
 
 		private final String m_searchEngine;

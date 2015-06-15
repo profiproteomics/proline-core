@@ -55,6 +55,9 @@ public class Feature implements Serializable {
 	@Column(name="ms2_count")
 	private Integer ms2Count;
 
+	@Column(name = "peakel_count")
+	private int peakelCount;
+	
 	@Column(name="quality_score")
 	private float qualityScore;
 
@@ -204,6 +207,14 @@ public class Feature implements Serializable {
 
 	public void setMs2Count(Integer ms2Count) {
 		this.ms2Count = ms2Count;
+	}
+	
+	public int getPeakelCount() {
+		return peakelCount;
+	}
+
+	public void setPeakelCount(int peakelCount) {
+		this.peakelCount = peakelCount;
 	}
 
 	public float getQualityScore() {

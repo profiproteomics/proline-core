@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import javax.persistence.*;
 
-
 /**
  * The persistent class for the feature_peakel_item database table.
  * 
@@ -20,10 +19,13 @@ public class FeaturePeakelItem implements Serializable {
 
 	@Column(name="isotope_index")
 	private Integer isotopeIndex;
+	
+	@Column(name="is_base_peakel")
+	private boolean isBasePeakel;
 
 	@Column(name="serialized_properties")
 	private String serializedProperties;
-
+	 
 	//bi-directional many-to-one association to Feature
 	@ManyToOne
 	@JoinColumn(name="feature_id")
@@ -57,6 +59,14 @@ public class FeaturePeakelItem implements Serializable {
 
 	public void setIsotopeIndex(Integer isotopeIndex) {
 		this.isotopeIndex = isotopeIndex;
+	}
+	
+	public boolean getIsBasePeakel() {
+		return isBasePeakel;
+	}
+
+	public void setIsBasePeakel(boolean isBasePeakel) {
+		this.isBasePeakel = isBasePeakel;
 	}
 
 	public String getSerializedProperties() {

@@ -26,7 +26,7 @@ import javax.persistence.Transient;
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "findProjectsByMembership", query = "Select p from Project p, UserAccount u where u.id=:id and u member OF p.members"),
+	@NamedQuery(name = "findProjectsByMembership", query = "Select p from Project p, ProjectUserAccountMap p2u, UserAccount u where u.id=:id and p2u.userAccount=u and p2u member OF p.projectUserAccountMap"),
 	@NamedQuery(name = "findProjectsByOwner", query = "Select p from Project p where p.owner.id=:id"),
 	@NamedQuery(name = "findAllProjectIds", query = "select p.id from fr.proline.core.orm.uds.Project p order by p.id") })
 public class Project implements Serializable {
@@ -36,24 +36,30 @@ public class Project implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-
-    @Column(name = "creation_timestamp")
-    private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
+    
+    private String name;
 
     private String description;
 
-    private String name;
+    @Column(name = "creation_timestamp")
+    private Timestamp creationTimestamp = new Timestamp(new Date().getTime());
+    
+    @Column(name = "lock_expiration_timestamp")
+    private Timestamp lockExpirationTStamp;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
 
-    // bi-directional many-to-one association to Document
-    @OneToMany(mappedBy = "project")
-    private Set<Document> documents;
-
+    @Column(name = "lock_user_id")
+    private Long lockUserID;
+    
     // bi-directional many-to-one association to UserAccount
     @ManyToOne
     private UserAccount owner;
+    
+    // bi-directional many-to-one association to Document
+    @OneToMany(mappedBy = "project")
+    private Set<Document> documents;
 
     // bi-directional many-to-many association to ExternalDb
     @ManyToMany
@@ -64,15 +70,13 @@ public class Project implements Serializable {
     @OneToMany(mappedBy = "project")
     private Set<VirtualFolder> folders;
 
-    // bi-directional many-to-many association to UserAccount
-    @ManyToMany
-    @JoinColumn(name = "id")
-    @JoinTable(name = "project_user_account_map", inverseJoinColumns = @JoinColumn(name = "user_account_id", referencedColumnName = "id"), joinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id"))
-    private Set<UserAccount> members;
-    
+    // bi-directional many-to-one association to ProjectUserAccountMap
+    @OneToMany(mappedBy = "project")
+    private Set<ProjectUserAccountMap> projectUserAccountMap;    
+
     // bi-directional many-to-many association to RawFile
     @ManyToMany
-    @JoinTable(name = "raw_file_project_map", joinColumns = { @JoinColumn(name = "project_id") }, inverseJoinColumns = { @JoinColumn(name = "raw_file_name") })
+    @JoinTable(name = "raw_file_project_map", joinColumns = { @JoinColumn(name = "project_id") }, inverseJoinColumns = { @JoinColumn(name = "raw_file_identifier") })
     private Set<RawFile> rawFiles;
 
     // Transient Variables not saved in database
@@ -93,7 +97,23 @@ public class Project implements Serializable {
     public void setId(final long pId) {
 	id = pId;
     }
+    
+    public String getName() {
+	return this.name;
+    }
 
+    public void setName(String name) {
+	this.name = name;
+    }
+    
+    public String getDescription() {
+	return this.description;
+    }
+
+    public void setDescription(String description) {
+	this.description = description;
+    }
+    
     public Timestamp getCreationTimestamp() {
 	Timestamp result = null;
 
@@ -113,28 +133,37 @@ public class Project implements Serializable {
 	creationTimestamp = (Timestamp) pCreationTimestamp.clone();
     }
 
-    public String getDescription() {
-	return this.description;
+    public Timestamp getLockExpirationTimestamp(){
+    	return this.lockExpirationTStamp;
     }
-
-    public void setDescription(String description) {
-	this.description = description;
+    
+    public void setLockExpirationTimestamp(Timestamp lockTimestamp){
+	this.lockExpirationTStamp = lockTimestamp;
     }
-
-    public String getName() {
-	return this.name;
-    }
-
-    public void setName(String name) {
-	this.name = name;
-    }
-
+    
     public String getSerializedProperties() {
 	return this.serializedProperties;
     }
 
     public void setSerializedProperties(String serializedProperties) {
 	this.serializedProperties = serializedProperties;
+    }
+    
+    public Long getLockUserID(){
+    	return lockUserID;
+    }
+    
+    public void setLockUserID(Long userID){
+    	this.lockUserID = userID;
+    }
+    
+    public UserAccount getOwner() {
+	return this.owner;
+    }
+
+    public void setOwner(UserAccount owner) {
+	this.owner = owner;
+	addMember(owner, true);
     }
 
     public Set<Document> getDocuments() {
@@ -143,15 +172,6 @@ public class Project implements Serializable {
 
     public void setDocuments(Set<Document> documents) {
 	this.documents = documents;
-    }
-
-    public UserAccount getOwner() {
-	return this.owner;
-    }
-
-    public void setOwner(UserAccount owner) {
-	this.owner = owner;
-	addMember(owner);
     }
 
     public void setExternalDatabases(final Set<ExternalDb> externalDatabases) {
@@ -195,38 +215,57 @@ public class Project implements Serializable {
 	this.folders = folders;
     }
 
-    void setMembers(final Set<UserAccount> pMembers) {
-	members = pMembers;
+    void setProjectUserAccountMap(final Set<ProjectUserAccountMap> userAccountMap) {
+	this.projectUserAccountMap = userAccountMap;
     }
 
-    public Set<UserAccount> getMembers() {
-	return members;
+    public Set<ProjectUserAccountMap> getProjectUserAccountMap() {
+	return projectUserAccountMap;
     }
 
-    public void addMember(final UserAccount member) {
+    public void addMember(final UserAccount member, boolean writePermission) {
 
 	if (member != null) {
-	    Set<UserAccount> localMembers = getMembers();
-
+		
+	    Set<ProjectUserAccountMap> localMembers = getProjectUserAccountMap();
+	     
+	    ProjectUserAccountMapPK mapKey = new ProjectUserAccountMapPK();
+	    mapKey.setProjectId(id);
+	    mapKey.setUserAccountId(member.getId());
+	    ProjectUserAccountMap newMember = new ProjectUserAccountMap();
+	    newMember.setId(mapKey);
+	    newMember.setProject(this);
+	    newMember.setUserAccount(member);
+	    newMember.setWritePermission(writePermission);
 	    if (localMembers == null) {
-		localMembers = new HashSet<UserAccount>();
+		localMembers = new HashSet<ProjectUserAccountMap>();
 
-		setMembers(localMembers);
+		setProjectUserAccountMap(localMembers);
 	    }
 
-	    localMembers.add(member);
+	    localMembers.add(newMember);
 	}
 
     }
 
     public void removeMember(final UserAccount member) {
-	final Set<UserAccount> localMembers = getMembers();
+	final Set<ProjectUserAccountMap> localMembers = getProjectUserAccountMap();
 
+	ProjectUserAccountMap userMap2Rem = null;
 	if (localMembers != null) {
-	    localMembers.remove(member);
+		for(ProjectUserAccountMap nextMember: localMembers){
+			if(nextMember.getUserAccount().equals(member)){
+				userMap2Rem = nextMember;
+				break;
+			}
+				
+		}
+		if(userMap2Rem != null)
+			localMembers.remove(userMap2Rem);
 	}
 
     }
+       
     
     public void setRawFiles(final Set<RawFile> rawFiles) {
 	this.rawFiles = rawFiles;

@@ -31,8 +31,8 @@ public class Peaklist implements Serializable {
 
     private String path;
 
-    @Column(name = "raw_file_name")
-    private String rawFileName;
+    @Column(name = "raw_file_identifier")
+    private String rawFileId;
 
     @Column(name = "serialized_properties")
     private String serializedProperties;
@@ -78,12 +78,12 @@ public class Peaklist implements Serializable {
 	this.path = path;
     }
 
-    public String getRawFileName() {
-	return this.rawFileName;
+    public String getRawFileIdentifier() {
+	return this.rawFileId;
     }
 
-    public void setRawFileName(String rawFileName) {
-	this.rawFileName = rawFileName;
+    public void setRawFileIdentifier(String rawFileIdent) {
+	this.rawFileId = rawFileIdent;
     }
 
     public String getSerializedProperties() {

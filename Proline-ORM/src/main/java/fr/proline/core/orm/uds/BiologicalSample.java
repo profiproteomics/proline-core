@@ -9,7 +9,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
@@ -46,10 +45,11 @@ public class BiologicalSample implements Serializable {
     @OrderBy("number")
     private List<QuantitationChannel> quantitationChannels;
 
-    // bi-directional many-to-many association to SampleAnalysis
-    @ManyToMany(mappedBy = "biologicalSamples")
-    @OrderBy("number")
-    private List<SampleAnalysis> sampleAnalysis;
+    // bi-directional many-to-one association to BiologicalSplSplAnalysisMap
+    @OneToMany(mappedBy = "biologicalSample")
+    @OrderBy("sampleAnalysisNumber")
+    private List<BiologicalSplSplAnalysisMap> biologicalSplSplAnalysisMap;
+
 
     public BiologicalSample() {
     }
@@ -102,12 +102,12 @@ public class BiologicalSample implements Serializable {
 	this.quantitationChannels = quantitationChannels;
     }
 
-    public List<SampleAnalysis> getSampleReplicates() {
-	return sampleAnalysis;
+    public List<BiologicalSplSplAnalysisMap> getBiologicalSplSplAnalysisMap() {
+	return biologicalSplSplAnalysisMap;
     }
 
-    public void setSampleReplicates(final List<SampleAnalysis> sampleReplicates) {
-	this.sampleAnalysis = sampleReplicates;
+    public void setBiologicalSplSplAnalysisMap(final List<BiologicalSplSplAnalysisMap> sampleReplicatesMap) {
+	this.biologicalSplSplAnalysisMap = sampleReplicatesMap;
     }
 
 }

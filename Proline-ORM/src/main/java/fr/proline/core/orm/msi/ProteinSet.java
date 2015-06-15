@@ -56,8 +56,8 @@ public class ProteinSet implements Serializable {
     // @OneToOne(mappedBy="proteinSet",fetch = FetchType.LAZY)
     // private PeptideSet peptideOverSet;
 
-    @Column(name = "typical_protein_match_id")
-    private long typicalProteinMatchId;
+    @Column(name = "representative_protein_match_id")
+    private long representativeProteinMatchId;
 
     // bi-directional many-to-one association to ProteinSetProteinMatchItem
     @OneToMany(mappedBy = "proteinSet")
@@ -135,11 +135,11 @@ public class ProteinSet implements Serializable {
      */
 
     public long getProteinMatchId() {
-	return typicalProteinMatchId;
+    	return representativeProteinMatchId;
     }
 
     public void setProteinMatchId(final long pProteinMatchId) {
-	typicalProteinMatchId = pProteinMatchId;
+    	representativeProteinMatchId = pProteinMatchId;
     }
 
     public Set<ProteinSetProteinMatchItem> getProteinSetProteinMatchItems() {

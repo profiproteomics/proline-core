@@ -148,6 +148,7 @@ public final class ScoringRepository {
 
 			/* Cache scoreType String */
 			SCORE_TYPES_CACHE.put(scoringIdKey, scoreType);
+			result = scoreType;
 		    }
 
 		} // End if (foundScoring is not null)

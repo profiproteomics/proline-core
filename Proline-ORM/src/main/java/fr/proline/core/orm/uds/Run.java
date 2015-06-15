@@ -46,7 +46,7 @@ public class Run implements Serializable {
 
     // bi-directional many-to-one association to RawFile
     @ManyToOne
-    @JoinColumn(name = "raw_file_name")
+    @JoinColumn(name = "raw_file_identifier")
     private RawFile rawFile;
 
     public Run() {

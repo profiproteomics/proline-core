@@ -139,8 +139,7 @@ public class Dataset implements Serializable {
 
     // bi-directional many-to-one association to SampleAnalysis
     @OneToMany(mappedBy = "dataset")
-    @OrderBy("number")
-    private List<SampleAnalysis> sampleReplicates;
+    private Set<SampleAnalysis> sampleAnalyses;
 
     
     @ElementCollection
@@ -324,12 +323,12 @@ public class Dataset implements Serializable {
 	this.masterQuantitationChannels = masterQuantitationChannels;
     }
 
-    public List<SampleAnalysis> getSampleReplicates() {
-	return sampleReplicates;
+    public Set<SampleAnalysis> getSampleReplicates() {
+	return sampleAnalyses;
     }
 
-    public void setSampleReplicates(final List<SampleAnalysis> sampleReplicates) {
-	this.sampleReplicates = sampleReplicates;
+    public void setSampleReplicates(final Set<SampleAnalysis> sampleAnalyses) {
+	this.sampleAnalyses = sampleAnalyses;
     }
 
     public Fractionation getFractionation() {

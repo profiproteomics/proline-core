@@ -31,8 +31,8 @@ public class ScanSequence implements Serializable {
 	@Column(name="ms2_scan_count")
 	private Integer ms2ScanCount;
 
-	@Column(name="raw_file_name")
-	private String rawFileName;
+	@Column(name="raw_file_identifier")
+	private String rawFileIdentifier;
 
 	@Column(name="serialized_properties")
 	private String serializedProperties;
@@ -88,12 +88,12 @@ public class ScanSequence implements Serializable {
 		this.ms2ScanCount = ms2ScanCount;
 	}
 
-	public String getRawFileName() {
-		return this.rawFileName;
+	public String getRawFileIdentifier() {
+		return this.rawFileIdentifier;
 	}
 
-	public void setRawFileName(String rawFileName) {
-		this.rawFileName = rawFileName;
+	public void setRawFileName(String rawFileIdentifier) {
+		this.rawFileIdentifier = rawFileIdentifier;
 	}
 
 	public String getSerializedProperties() {
@@ -136,6 +136,6 @@ public class ScanSequence implements Serializable {
 
 	@Override
 	public String toString() {
-		return rawFileName;
+		return rawFileIdentifier;
 	}
 }
