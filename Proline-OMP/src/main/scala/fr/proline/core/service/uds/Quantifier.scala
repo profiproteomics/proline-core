@@ -1,7 +1,11 @@
 package fr.proline.core.service.uds
 
+import javax.persistence.EntityManager
+
 import scala.collection.JavaConversions.asScalaBuffer
+
 import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.api.service.IService
@@ -9,19 +13,19 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.lcms.LabelFreeQuantConfig
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dal.context.execCtxToTxExecCtx
-import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
-import fr.proline.core.orm.uds.{Dataset => UdsDataset }
+import fr.proline.core.om.model.msq.ExperimentalDesign
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.lcms.IRunProvider
+import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
+import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
+import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.orm.uds.ObjectTree
 import fr.proline.core.orm.uds.ObjectTreeSchema
 import fr.proline.core.orm.uds.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.core.service.msq.QuantifyMasterQuantChannel
 import fr.proline.repository.IDataStoreConnectorFactory
-import javax.persistence.EntityManager
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.lcms.IRunProvider
-
 
 class Quantifier(
   executionContext: IExecutionContext,
@@ -60,9 +64,9 @@ class Quantifier(
   }
 
   def runService() = {
-    
+
     // Isolate future actions in an SQL transaction
-    val txResult = executionContext.tryInTransactions( udsTx = true, msiTx = true, txWork = {
+    val txResult = executionContext.tryInTransactions(udsTx = true, msiTx = true, txWork = {
 
       // Store quantitation in the UDSdb
       val quantiCreator = new CreateQuantitation(
@@ -74,73 +78,76 @@ class Quantifier(
         experimentalDesign = experimentalDesign
       )
       quantiCreator.runService()
-      
+
       this._quantiId = quantiCreator.getUdsQuantitation.getId
-      
+
       // Retrieve entity manager
       val udsDbCtx = executionContext.getUDSDbConnectionContext()
       val udsEM = udsDbCtx.getEntityManager()
-      val udsQuantitation = udsEM.find( classOf[UdsDataset],quantiCreator.getUdsQuantitation.getId)
-      
+      val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiCreator.getUdsQuantitation.getId)
+
       // Retrieve master quant channels (they should be sorted by their number)
       val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.toList
-      
+
       // Fake missing fields
       quantConfigAsMap.put("map_set_name", null)
       quantConfigAsMap.put("lc_ms_runs", null)
-      
+
       // Parse the quant configuration
       // TODO: parse other kinds of configuration (spectal count)
       val quantConfig = deserialize[LabelFreeQuantConfig](serialize(quantConfigAsMap))
-      
-      val qtConfigObjectTree =  buildDataSetObjectTree( quantConfig, udsEM)
+
+      val qtConfigObjectTree = buildDataSetObjectTree(quantConfig, udsEM)
       udsEM.persist(qtConfigObjectTree)
-    
-	  // Store LABEL_FREE_QUANT_CONFIG in ObjectTree         
+
+      // Store LABEL_FREE_QUANT_CONFIG in ObjectTree
       udsQuantitation.putObject(SchemaName.LABEL_FREE_QUANT_CONFIG.toString(), qtConfigObjectTree.getId())
       udsEM.merge(udsQuantitation)
-      
+
       // Get or Create a LC-MS run provider
-      val lcmsRunProvider : IRunProvider = if(executionContext.isInstanceOf[ProviderDecoratedExecutionContext]){
-        var provider : IRunProvider = null
-        try {
-    	  provider = executionContext.asInstanceOf[ProviderDecoratedExecutionContext].getProvider(classOf[IRunProvider])
-        } catch {
-          case e: Exception =>  provider  = new SQLRunProvider(udsDbCtx,None)
-        }
-        provider
-      } else {
-    	  new SQLRunProvider(udsDbCtx,None)
-      }
+      val lcmsDbCtx = executionContext.getLCMSDbConnectionContext()
+      val scanSeqProvider = new SQLScanSequenceProvider(lcmsDbCtx)
       
+      val lcmsRunProvider = executionContext match {
+        case providerExecCtx: ProviderDecoratedExecutionContext => {
+          val runProviderClass = classOf[IRunProvider]
+          if( providerExecCtx.hasProvider(runProviderClass) ) {
+            providerExecCtx.getProvider(runProviderClass)
+          } else {
+            new SQLRunProvider(udsDbCtx, None )
+          }
+        }
+        case _ => new SQLRunProvider(udsDbCtx, None )
+      }
+
       // Quantify each master quant channel
-      for( udsMasterQuantChannel <- udsMasterQuantChannels ) {
-        
+      for (udsMasterQuantChannel <- udsMasterQuantChannels) {
+
         // Retrieve master quant channels sorted by their number
         val sortedQuantChannels = udsMasterQuantChannel.getQuantitationChannels()
-        
+
         // Retrieve run ids
-        val runIds = sortedQuantChannels.map( _.getRun.getId )
-        
+        val runIds = sortedQuantChannels.map(_.getRun.getId)
+
         // Load the LC-MS runs
-        val runs = lcmsRunProvider.getRuns(runIds)
-        
+        val runs = lcmsRunProvider.getRuns(runIds, loadScanSequence = false )
+
         // Clone the config and inject the missing parameters
         val masterConfig = quantConfig.copy(
           mapSetName = udsMasterQuantChannel.getName(),
           lcMsRuns = runs
         )
-        
+
         val mqcQuantifier = new QuantifyMasterQuantChannel(
           executionContext,
           experimentalDesign,
           udsMasterQuantChannel.getId,
           masterConfig
         )
-        
+
         mqcQuantifier.run()
       }
-                        
+
     }) // end of tryInTransactions
     
     
