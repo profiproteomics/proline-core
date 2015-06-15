@@ -643,6 +643,7 @@ case class PeptideSet ( // Required fields
   var id: Long,
   val items: Array[PeptideSetItem],
   val isSubset: Boolean,
+  val sequencesCount: Int,
   val peptideMatchesCount: Int,
   var proteinMatchIds: Array[Long],
   
@@ -660,19 +661,13 @@ case class PeptideSet ( // Required fields
   var subsumableSubsetIds: Array[Long] = null,
   var subsumableSubsets: Option[Array[PeptideSet]] = null,
   
-  var properties: Option[PeptideSetProperties] = Some(new PeptideSetProperties())
+  var properties: Option[PeptideSetProperties] = None
   
 ) {
   
   // Requirements
   require( items != null, "items is null" )
   require( peptideMatchesCount >= items.length, "invalid peptideMatchesCount" )
-  
-  if( properties.isDefined == false ) properties = Some(new PeptideSetProperties())
- 
-  if (!properties.get.uniqueSequenceCount.isDefined) {
-    properties.get.uniqueSequenceCount = Some(items.map(_.peptideInstance.peptide.sequence).distinct.length)
-  }
   
   // Related objects ID getters
   def getProteinSetId: Long = { if(proteinSet != null && proteinSet.isDefined) proteinSet.get.id else proteinSetId }
@@ -721,6 +716,8 @@ case class PeptideSet ( // Required fields
 }
 
 case class PeptideSetProperties(
-  @BeanProperty var uniqueSequenceCount: Option[Int] = None
+  // TODO: remove me when database data are migrated
+  //@deprecated("use PeptideSet.sequencesCount instead","0.4.1")
+  //@BeanProperty var uniqueSequenceCount: Option[Int] = None
 )
 

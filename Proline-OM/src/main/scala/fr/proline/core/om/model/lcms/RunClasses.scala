@@ -4,19 +4,19 @@ import java.util.Date
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.beans.BeanProperty
-//import com.fasterxml.jackson.annotation.JsonInclude
-//import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.profi.util.misc.InMemoryIdGen
 import fr.proline.core.om.model.msi.Instrument
 
 case class RawFile( 
-    
-  // Required fields
-  val name: String,
-  val extension: String,
   
-  // Immutable optional fields
+  // Required fields
+  val identifier: String,
+  val name: String,
+
+  // Immutable optional fields  
   val directory: Option[String] = None,
+  val mzdbFileName: Option[String] = None,
+  val mzdbFileDirectory: Option[String] = None,
   val creationTimestamp: Option[Date] = None,
   val instrument: Option[Instrument] = None,
   
@@ -24,11 +24,18 @@ case class RawFile(
   var properties: Option[RawFileProperties] = None
 ) {
   require( instrument != null )
+  
+  def getPath(): Option[String] = directory.map( _ + "/" + name)
+  
+  def getMzdbFilePath(): Option[String] = {
+    if( mzdbFileName.isDefined ) mzdbFileDirectory.map( _ + "/" + mzdbFileName.get) else None
+  }
 }
-            
-//@JsonInclude( Include.NON_NULL )
+
+// TODO: remove me when database data are migrated
 case class RawFileProperties(
-  @BeanProperty var mzdbFilePath: String
+  //@deprecated("use RawFile.mzdbFileDirectory and RawFile.mzdbFileName instead","0.4.1") 
+  //@BeanProperty var mzdbFilePath: String
 )
 
 object LcMsRun extends InMemoryIdGen
@@ -69,7 +76,7 @@ case class LcMsScanSequence(
   // Required fields
   val runId: Long, // MUST be the run id
   
-  val rawFileName: String,
+  val rawFileIdentifier: String,
   val minIntensity: Double,
   val maxIntensity: Double,
   val ms1ScansCount: Int,

@@ -13,7 +13,6 @@ case class MSISearch (
   //Required fields
   var id: Long,
   val resultFileName: String,
-  val submittedQueriesCount: Int,
   var searchSettings: SearchSettings,
   var peakList: Peaklist,
   val date: Date,
@@ -59,7 +58,6 @@ case class SearchSettings(
   // Mutable optional fields
   var msmsSearchSettings: Option[MSMSSearchSettings] = None,
   var pmfSearchSettings: Option[PMFSearchSettings] = None,
-  var quantitation: String = "",
   var properties: Option[SearchSettingsProperties] = None
   
 )

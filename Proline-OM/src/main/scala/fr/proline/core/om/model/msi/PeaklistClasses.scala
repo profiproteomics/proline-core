@@ -73,7 +73,7 @@ case class Spectrum (
 case class SpectrumProperties()
 
 object SpectrumTitleFields extends Enumeration {
-  val RAW_FILE_NAME = Value("RAW_FILE_NAME")
+  val RAW_FILE_IDENTIFIER = Value("RAW_FILE_IDENTIFIER")
   val FIRST_CYCLE = Value("FIRST_CYCLE")
   val LAST_CYCLE = Value("LAST_CYCLE")
   val FIRST_SCAN = Value("FIRST_SCAN")
@@ -87,7 +87,7 @@ object SpectrumTitleParsingRule extends InMemoryIdGen
 //@JsonInclude( Include.NON_NULL )
 case class SpectrumTitleParsingRule (
   val id: Long = SpectrumTitleParsingRule.generateNewId(),
-  val rawFileNameRegex: Option[String] = None,
+  val rawFileIdentifierRegex: Option[String] = None,
   val firstCycleRegex: Option[String] = None,
   val lastCycleRegex: Option[String] = None,
   val firstScanRegex: Option[String] = None,
@@ -101,7 +101,7 @@ case class SpectrumTitleParsingRule (
   lazy val regexByFieldName: Map[SpectrumTitleFields.Value,String] = {
     val tmpMap = Map.newBuilder[SpectrumTitleFields.Value,String]
     
-    rawFileNameRegex.map( rx => tmpMap += SpectrumTitleFields.RAW_FILE_NAME -> rx )
+    rawFileIdentifierRegex.map( rx => tmpMap += SpectrumTitleFields.RAW_FILE_IDENTIFIER -> rx )
     firstCycleRegex.map( rx => tmpMap += SpectrumTitleFields.FIRST_CYCLE -> rx )
     lastCycleRegex.map( rx => tmpMap += SpectrumTitleFields.LAST_CYCLE -> rx )
     firstScanRegex.map( rx => tmpMap += SpectrumTitleFields.FIRST_SCAN -> rx )

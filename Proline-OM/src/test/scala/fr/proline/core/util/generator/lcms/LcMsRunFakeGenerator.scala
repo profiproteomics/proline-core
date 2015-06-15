@@ -165,7 +165,7 @@ class LcMsRunFakeGenerator(
     
     val scanSeq = LcMsScanSequence(
       runId = runId,
-      rawFileName = rawFile.name,
+      rawFileIdentifier = rawFile.identifier,
       minIntensity = minIntensity,
       maxIntensity = ms1MaxIntensity.toDouble,
       ms1ScansCount = tic.length,

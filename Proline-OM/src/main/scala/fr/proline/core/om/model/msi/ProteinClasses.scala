@@ -156,17 +156,18 @@ case class ProteinSet (
   var subsetProteinMatchIds : Array[Long] = null, //One of these 2 values should be specified. Should be coherent with samesetProteinMatches
   @transient var subsetProteinMatches: Option[Array[ProteinMatch]] = null,
  
-  protected var typicalProteinMatchId: Long = 0,
-  @transient protected var typicalProteinMatch: Option[ProteinMatch] = null,
+  protected var representativeProteinMatchId: Long = 0,
+  @transient protected var representativeProteinMatch: Option[ProteinMatch] = null,
+  
+  var proteinMatchCoverageById: Map[Long, Float] = null,
   
   var masterQuantComponentId: Long = 0,
   
   var isValidated: Boolean = true,
   var selectionLevel: Int = 2,
- 
+  
   var properties: Option[ProteinSetProperties] = None,
   var proteinMatchPropertiesById: Map[Long, ProteinMatchResultSummaryProperties ] = null
-  
 ) {
 
   @JsonProperty lazy val peptideSetId = peptideSet.id
@@ -174,20 +175,22 @@ case class ProteinSet (
   // Requirements
   require( samesetProteinMatchIds != null  || samesetProteinMatches != null )
 
-
-  def setTypicalProteinMatch(newTypicalPM: ProteinMatch): Unit = {
-    require(newTypicalPM != null ,"A typical ProteinMatch should be defined !")
+  def setRepresentativeProteinMatch(newReprPM: ProteinMatch): Unit = {
+    require(newReprPM != null ,"A representative ProteinMatch should be defined !")
     
-    if(samesetProteinMatches!= null && samesetProteinMatches.isDefined) 
-      require(samesetProteinMatches.get.contains(newTypicalPM) ,"Typical ProteinMatch should belong to this ProteinSet's sameset !")
+    val requirementMsg = "Representative ProteinMatch should belong to this ProteinSet's sameset !"
+    
+    val samesetPMsOpt = samesetProteinMatches
+    if(samesetPMsOpt!= null && samesetPMsOpt.isDefined) 
+      require(samesetPMsOpt.get.contains(newReprPM), requirementMsg)
     else
-      require(samesetProteinMatchIds.contains(newTypicalPM.id) ,"Typical ProteinMatch should belong to this ProteinSet's sameset !")
+      require(samesetProteinMatchIds.contains(newReprPM.id), requirementMsg)
     
-    typicalProteinMatchId = newTypicalPM.id
-    typicalProteinMatch = Some(newTypicalPM)
+    representativeProteinMatchId = newReprPM.id
+    representativeProteinMatch = Some(newReprPM)
   }
   
-  def getTypicalProteinMatch: Option[ProteinMatch] = typicalProteinMatch
+  def getRepresentativeProteinMatch(): Option[ProteinMatch] = representativeProteinMatch
   
   /**
    * Return all proteinMatchIds sameset and subsets 
@@ -200,24 +203,25 @@ case class ProteinSet (
    * Return sameset proteinMatchIds
    */
   def getSameSetProteinMatchIds: Array[Long] = {
-    if (samesetProteinMatches != null && samesetProteinMatches.isDefined)
-      samesetProteinMatches.get.map(_.id)
-    else
-      samesetProteinMatchIds
+    val samesetPMsOpt = samesetProteinMatches
+    
+    if (samesetPMsOpt != null && samesetPMsOpt.isDefined) samesetPMsOpt.get.map(_.id) else samesetProteinMatchIds
   }
 
   /**
    * Return subset proteinMatchIds
    */
   def getSubSetProteinMatchIds: Array[Long] = {
-    if (subsetProteinMatches != null && subsetProteinMatches.isDefined) {
-      subsetProteinMatches.get.map(_.id)
-    } else {
-      subsetProteinMatchIds
-    }
+    val subsetPMsOpt = subsetProteinMatches
+    
+    if (subsetPMsOpt != null && subsetPMsOpt.isDefined) subsetPMsOpt.get.map(_.id) else subsetProteinMatchIds
   }
   
-  def getTypicalProteinMatchId: Long = { if(typicalProteinMatch != null && typicalProteinMatch.isDefined) typicalProteinMatch.get.id else typicalProteinMatchId }
+  def getRepresentativeProteinMatchId(): Long = {
+    val reprPMOpt = representativeProteinMatch
+    
+    if(reprPMOpt != null && reprPMOpt.isDefined) reprPMOpt.get.id else representativeProteinMatchId
+  }
    
   /**
    * Return a list of all ProteinMatch ids, identified as same set or sub set of this ProteinSet, 
@@ -258,10 +262,13 @@ case class ProteinSet (
 
   override def toString(): String = {
     val toStrBulider = new StringBuilder(id.toString)
-    if (typicalProteinMatch != null && typicalProteinMatch.isDefined)
-      toStrBulider.append(typicalProteinMatch.get.accession)
+    
+    val reprPMOpt = representativeProteinMatch
+    if (reprPMOpt != null && reprPMOpt.isDefined)
+      toStrBulider.append(" representativeProteinMatch AC : ").append(reprPMOpt.get.accession)
     else
-      toStrBulider.append(" typicalProteinMatch ID : ").append(typicalProteinMatchId)
+      toStrBulider.append(" representativeProteinMatch ID : ").append(representativeProteinMatchId)
+    
     toStrBulider.result
   }
  

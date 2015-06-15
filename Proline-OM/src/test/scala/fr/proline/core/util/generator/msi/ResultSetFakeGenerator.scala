@@ -662,14 +662,12 @@ class ResultSetFakeGenerator(
       variablePtmDefs = Array(),
       fixedPtmDefs = Array(),
       seqDatabases = Array(seqDB),
-      instrumentConfig = instrumConf,
-      quantitation = ""
+      instrumentConfig = instrumConf     
     )
 
     val search = new MSISearch(
       id = MSISearch.generateNewId,
       resultFileName = "F123456.dat",
-      submittedQueriesCount = allPepMatches.size,
       searchSettings = settings,
       peakList = peaklist,
       date = new Date()

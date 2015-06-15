@@ -20,7 +20,7 @@ object LcMsRunGeneratorsTest {
   val relLandmarks = landmarks.map( lm => lm._1.toFloat -> (lm._2/10e9).toFloat )
   
   val lcmsRunGenerator = new LcMsRunFakeGenerator(
-    rawFile = RawFile(name="generated.raw",extension="raw"),
+    rawFile = RawFile(identifier="generated", name="generated.raw"),
     minMoz = MIN_MOZ,
     maxMoz = MAX_MOZ,
     maxTime = MAX_RUN_TIME,

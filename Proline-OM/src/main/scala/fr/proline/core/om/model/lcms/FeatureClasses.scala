@@ -6,10 +6,12 @@ import scala.util.control.Breaks._
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.profi.mzdb.model.IsotopicPatternLike
 import fr.profi.mzdb.model.Peak
+import fr.profi.mzdb.model.PeakelDataMatrix
 import fr.profi.util.misc.InMemoryIdGen
+import fr.profi.util.misc.`package`.InMemoryIdGen
 
 // TODO: remove me and use the mzdb-processing model instead
-@org.msgpack.annotation.Message
+/*@org.msgpack.annotation.Message
 case class LcMsPeak(
   // MessagePack requires mutable fields
   var moz: Double,
@@ -18,7 +20,7 @@ case class LcMsPeak(
 ) {
   // Plain constructor needed for MessagePack
   def this() = this(Double.NaN,Float.NaN,Float.NaN)
-}
+}*/
 
 // TODO: remove and use peakel model instead
 case class IsotopicPattern(
@@ -42,39 +44,61 @@ case class Peakel(
   var id: Long,
   val moz: Double,
   val elutionTime: Float,
-  val apexIntensity: Float,
   val area: Float,
   val duration: Float, // TODO: re-add duration at half maximum ???
 
   val isOverlapping: Boolean,
   var featuresCount: Int,
-  val peaks: Array[LcMsPeak],
+  
+  //val peaks: Array[LcMsPeak],
+  val dataMatrix: PeakelDataMatrix,
   
   val leftHwhmMean: Option[Float] = None,
   val leftHwhmCv: Option[Float] = None,
   val rightHwhmMean: Option[Float] = None,
   val rightHwhmCv: Option[Float] = None,
   
-  var firstScanId: Long = 0L,
-  var lastScanId: Long = 0L,
-  var apexScanId: Long = 0L,
+  //var firstScanId: Long = 0L,
+  //var lastScanId: Long = 0L,
+  //var apexScanId: Long = 0L,
   var rawMapId: Long = 0L,
   
   var properties: Option[PeakelProperties] = None
   
-) extends IEntityReference[Peakel] {
+) extends fr.profi.mzdb.model.IPeakelData with IEntityReference[Peakel] {
+  
+  def getScanIds(): Seq[Long] = dataMatrix.scanIds
+  def getElutionTimes(): Seq[Float] = dataMatrix.elutionTimes
+  def getMzValues(): Seq[Double] = dataMatrix.mzValues
+  def getIntensityValues(): Seq[Float] = dataMatrix.intensityValues
   
   // Make some requirements
-  require( peaks != null && peaks.isEmpty == false, "some peaks must be provided" )
-  require( peaks.count( _ == null ) == 0, "all peaks must be defined" )
+  require( dataMatrix.scanIds != null && dataMatrix.scanIds.length > 0, "some scanIds must be provided" )
+  require( dataMatrix.mzValues != null && dataMatrix.mzValues.length > 0, "some mzValues must be provided" )
+  require( dataMatrix.scanIds.length == dataMatrix.mzValues.length, "scanIds and mzValues must have the same size" )
+  require( dataMatrix.mzValues.length == dataMatrix.intensityValues.length, "mzList and intensityList must have the same size" )
   
-  def getElutionStartTime( scanSequence: LcMsScanSequence ): Float = {
+  // Make some requirements
+  //require( peaks != null && peaks.isEmpty == false, "some peaks must be provided" )
+  //require( peaks.count( _ == null ) == 0, "all peaks must be defined" )
+  
+  lazy val apexIndex = dataMatrix.intensityValues.zipWithIndex.maxBy(_._1)._2
+  def apexIntensity: Float = dataMatrix.intensityValues(apexIndex)
+  
+  def firstScanId = dataMatrix.scanIds.head
+  def lastScanId = dataMatrix.scanIds.last
+  def apexScanId = dataMatrix.scanIds(apexIndex)
+  
+  def getElutionStartTime(): Float = dataMatrix.elutionTimes.head  
+  def getElutionStopTime(): Float = dataMatrix.elutionTimes.last
+  
+  /*def getElutionStartTime( scanSequence: LcMsScanSequence ): Float = {
     scanSequence.scanById(this.firstScanId).time
   }
   
   def getElutionStopTime( scanSequence: LcMsScanSequence ): Float = {
     scanSequence.scanById(this.lastScanId).time
-  }
+  }*/
   
 }
 
@@ -137,7 +161,7 @@ case class PeakelShapeProperties()
 
 object Feature extends InMemoryIdGen {
 
-  def buildPeakels(ips: Seq[IsotopicPatternLike]): Array[Peakel] = {
+  /*def buildPeakels(ips: Seq[IsotopicPatternLike]): Array[Peakel] = {
 
     // Determine the maximum number of peaks
     val maxNbPeaks = ips.map(_.peaks.length).max
@@ -156,9 +180,9 @@ object Feature extends InMemoryIdGen {
     }
 
     peakels.toArray
-  }
+  }*/
 
-  protected def _buildPeakel(ips: Seq[IsotopicPatternLike], peakelIdx: Int): Option[Peakel] = {
+  /*protected def _buildPeakel(ips: Seq[IsotopicPatternLike], peakelIdx: Int): Option[Peakel] = {
 
     val lcMsPeaks = new ArrayBuffer[LcMsPeak]()
 
@@ -175,13 +199,14 @@ object Feature extends InMemoryIdGen {
     }
 
     if (lcMsPeaks.isEmpty) Option.empty[Peakel]
-    else None //Some(new Peakel(peaks.toArray))
-  }
+    else Some(new Peakel(peaks.toArray))
+  }*/
   
 }
 
 case class FeatureRelations(
   @transient var peakelItems: Array[FeaturePeakelItem] = null,
+  var peakelsCount: Int = 0,
   @transient var compound: Option[Compound] = None,
   val ms2EventIds: Array[Long],
   val firstScanInitialId: Int,
@@ -340,17 +365,10 @@ case class FeatureIdentifier( var id: Long ) extends IEntityReference[Feature]
 case class FeatureProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var predictedElutionTime: Option[Float] = None,
-  
-  // TODO: add to feature table
-  @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
-  @BeanProperty var peakelsCount: Option[Int] = None,
-  
-  // TODO: remove and use FeaturePeakelItem.isBasePeakel instead
-  @JsonDeserialize(contentAs = classOf[java.lang.Integer] )
-  @BeanProperty var basePeakelIndex: Option[Int] = None,
 
-  @JsonDeserialize(contentAs = classOf[Array[java.lang.Float]] )
-  @BeanProperty var peakelsRatios: Option[Array[Float]] = None,
+  // TODO: fix the serialization issue (remove Option ???)
+  //@JsonDeserialize(contentAs = classOf[Array[java.lang.Float]] )
+  //@BeanProperty var peakelsRatios: Option[Array[Float]] = None,
   
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var overlapCorrelation: Option[Float] = None,

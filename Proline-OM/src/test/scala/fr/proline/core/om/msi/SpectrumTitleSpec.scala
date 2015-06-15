@@ -39,7 +39,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       "the raw file name and one scan number",
       "101811RML4SILAC6DaHCD.3864.3864.3.dta", 
       Map(
-        SpectrumTitleFields.RAW_FILE_NAME -> "101811RML4SILAC6DaHCD",
+        SpectrumTitleFields.RAW_FILE_IDENTIFIER -> "101811RML4SILAC6DaHCD",
         SpectrumTitleFields.FIRST_SCAN -> "3864",
         SpectrumTitleFields.LAST_SCAN -> "3864"
       )
@@ -69,7 +69,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       "the raw file name, one cycle and one retention time",
       "File: QSAG051130001.wiff, Sample: bandeA1 (sample number 1), Elution: 92.3 min, Period: 1, Cycle(s): 2040 (Experiment 2)", 
       Map(
-        SpectrumTitleFields.RAW_FILE_NAME -> "QSAG051130001.wiff",
+        SpectrumTitleFields.RAW_FILE_IDENTIFIER -> "QSAG051130001",
         SpectrumTitleFields.FIRST_CYCLE -> "2040",
         SpectrumTitleFields.LAST_CYCLE -> "2040",
         SpectrumTitleFields.FIRST_TIME -> "92.3",
@@ -81,7 +81,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       "the raw file name, one scan and one retention time",
       """"9272: Scan 13104 (rt=30.2521) [D:\MSData\All\Qex1_000949.raw]""", 
       Map(
-        SpectrumTitleFields.RAW_FILE_NAME -> """D:\MSData\All\Qex1_000949.raw""",
+        SpectrumTitleFields.RAW_FILE_IDENTIFIER -> """Qex1_000949""",
         SpectrumTitleFields.FIRST_SCAN -> "13104",
         SpectrumTitleFields.LAST_SCAN -> "13104",
         SpectrumTitleFields.FIRST_TIME -> "30.2521",
@@ -93,7 +93,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       "the raw file name, the scans and the retention times",
       """"134: Sum of 3 scans in range 723 (rt=19.5118) to 733 (rt=19.6302) [\\DSV_D01\CPManip\analyses\AMT_Process12\CAJU1269.RAW]""", 
       Map(
-        SpectrumTitleFields.RAW_FILE_NAME -> """\\DSV_D01\CPManip\analyses\AMT_Process12\CAJU1269.RAW""",
+        SpectrumTitleFields.RAW_FILE_IDENTIFIER -> """CAJU1269""",
         SpectrumTitleFields.FIRST_SCAN -> "723",
         SpectrumTitleFields.LAST_SCAN -> "733",
         SpectrumTitleFields.FIRST_TIME -> "19.5118",
@@ -105,9 +105,9 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       "the raw file name and one scan number",
       """Locus:1.1.1.2129.15 File:"20140527UPS25fmol_IDA.wiff""""",
       Map(
-        SpectrumTitleFields.RAW_FILE_NAME -> "20140527UPS25fmol_IDA.wiff",
-        SpectrumTitleFields.FIRST_SCAN -> "2129",
-        SpectrumTitleFields.LAST_SCAN -> "2129"
+        SpectrumTitleFields.RAW_FILE_IDENTIFIER -> "20140527UPS25fmol_IDA",
+        SpectrumTitleFields.FIRST_CYCLE -> "2129",
+        SpectrumTitleFields.LAST_CYCLE -> "2129"
       )
     ),
     SpectrumTitleSpecif(
@@ -124,7 +124,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       "the raw file name and one scan number",
       """QEAJS131018_18.7211.7211.2 File:"QEAJS131018_18.raw", NativeID:"controllerType=0 controllerNumber=1 scan=7211"""",
       Map(
-        SpectrumTitleFields.RAW_FILE_NAME -> "QEAJS131018_18.raw",
+        SpectrumTitleFields.RAW_FILE_IDENTIFIER -> "QEAJS131018_18",
         SpectrumTitleFields.FIRST_SCAN -> "7211",
         SpectrumTitleFields.LAST_SCAN -> "7211"
       )
@@ -142,7 +142,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
   
   val specTitleRuleBySoftName = Map(
     SoftNames.EXTRACT_MSN -> SpectrumTitleParsingRule(
-      rawFileNameRegex = Some("""(.+)\.\d+\.\d+\.\d+\.dta"""),
+      rawFileIdentifierRegex = Some("""(.+)\.\d+\.\d+\.\d+\.dta"""),
       firstScanRegex   = Some(""".+\.(\d+)\.\d+\.\d+\.dta"""),
       lastScanRegex    = Some(""".+\.\d+\.(\d+)\.\d+\.dta""")
     ),
@@ -157,11 +157,11 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       lastScanRegex  = Some("""Cmpd.+MS\d.+, \d+\.\d+ min #(\d+)""")
     ),
     SoftNames.MASCOT_DLL -> SpectrumTitleParsingRule(
-      rawFileNameRegex = Some("""^File: (.+?),"""),
-      firstCycleRegex  = Some("""Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): (\d+), \d+"""),
-      lastCycleRegex   = Some("""Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): \d+, (\d+)"""),
-      firstTimeRegex   = Some("""Elution: (.+?) to .+? min||.+Elution: (.+?) min"""), // modified
-      lastTimeRegex    = Some("""Elution: .+? to (.+?) min||.+Elution: (.+?) min""") // modified
+      rawFileIdentifierRegex = Some("""^File: (.+?)\.wiff,"""),
+      firstCycleRegex        = Some("""Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): (\d+), \d+"""),
+      lastCycleRegex         = Some("""Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): \d+, (\d+)"""),
+      firstTimeRegex         = Some("""Elution: (.+?) to .+? min||.+Elution: (.+?) min"""), // modified
+      lastTimeRegex          = Some("""Elution: .+? to (.+?) min||.+Elution: (.+?) min""") // modified
     ),
     /*SoftNames.MASCOT_DISTILLER -> SpectrumTitleParsingRule(
       rawFileNameRegex = Some("""\[(.+?)\]"""),
@@ -171,21 +171,21 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       lastTimeRegex    = Some("""-.+Scan \d+ \(rt=(\d+\.\d+)""")
     ),*/
     SoftNames.MASCOT_DISTILLER -> SpectrumTitleParsingRule(
-      rawFileNameRegex = Some("""\[(.+?)\]"""),
-      firstScanRegex  = Some("""in range (\d+) \(rt=||Scan (\d+) \(rt="""),
-      lastScanRegex   = Some("""\) to (\d+) \(rt=||Scan (\d+) \(rt="""),
-      firstTimeRegex   = Some("""in range \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)"""),
-      lastTimeRegex    = Some("""\) to \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)""")
+      rawFileIdentifierRegex = Some("""\[.+\\(.+?)\..+\]"""),
+      firstScanRegex         = Some("""in range (\d+) \(rt=||Scan (\d+) \(rt="""),
+      lastScanRegex          = Some("""\) to (\d+) \(rt=||Scan (\d+) \(rt="""),
+      firstTimeRegex         = Some("""in range \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)"""),
+      lastTimeRegex          = Some("""\) to \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)""")
     ),
     SoftNames.MAX_QUANT -> SpectrumTitleParsingRule(
-      rawFileNameRegex = Some("""^RawFile: (.+?) FinneganScanNumber:"""),
-      firstScanRegex   = Some("""FinneganScanNumber: (\d+)"""),
-      lastScanRegex    = Some("""FinneganScanNumber: (\d+)""")
+      rawFileIdentifierRegex = Some("""^RawFile: (.+?) FinneganScanNumber:"""),
+      firstScanRegex         = Some("""FinneganScanNumber: (\d+)"""),
+      lastScanRegex          = Some("""FinneganScanNumber: (\d+)""")
     ),
     SoftNames.PROTEIN_PILOT -> SpectrumTitleParsingRule(
-      rawFileNameRegex = Some("""File:"(\w+\.wiff)""""),
-      firstScanRegex   = Some("""Locus:\d\.\d\.\d\.(\d+)\.\d+ File:"""),
-      lastScanRegex    = Some("""Locus:\d\.\d\.\d\.(\d+)\.\d+ File:""")
+      rawFileIdentifierRegex = Some("""File:"(\w+)\.wiff""""),
+      firstCycleRegex         = Some("""Locus:\d\.\d\.\d\.(\d+)\.\d+ File:"""),
+      lastCycleRegex          = Some("""Locus:\d\.\d\.\d\.(\d+)\.\d+ File:""")
     ),
     SoftNames.PROTEOME_DISCOVER -> SpectrumTitleParsingRule(
       firstScanRegex = Some("""Spectrum\d+\s+scans:(\d+?),"""),
@@ -196,12 +196,12 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       lastScanRegex  = Some("""scan=(\d+)""")
     ),
     SoftNames.PROTEO_WIZARD_2_1 -> SpectrumTitleParsingRule(
-      rawFileNameRegex = Some("""(.+)\.\d+\.\d+\.\d+$"""),
-      firstScanRegex   = Some(""".+\.(\d+)\.\d+\.\d+$"""),
-      lastScanRegex    = Some(""".+\.\d+\.(\d+)\.\d+$""")
+      rawFileIdentifierRegex = Some("""(.+)\.\d+\.\d+\.\d+$"""),
+      firstScanRegex         = Some(""".+\.(\d+)\.\d+\.\d+$"""),
+      lastScanRegex          = Some(""".+\.\d+\.(\d+)\.\d+$""")
     ),
     SoftNames.PROTEO_WIZARD_3_0 -> SpectrumTitleParsingRule(
-      rawFileNameRegex = Some("""File:"(.+?)","""),
+      rawFileIdentifierRegex = Some("""File:"(.+?)\..+","""),
       firstScanRegex   = Some("""scan=(\d+)"""),
       lastScanRegex    = Some("""scan=(\d+)""")
     ),
