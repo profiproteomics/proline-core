@@ -1,4 +1,4 @@
-
+/* LAST Update : V0_6__core_0_4_0_LCMS_data_migration (Java) */
 CREATE TABLE public.feature_scoring (
                 id IDENTITY NOT NULL,
                 name VARCHAR(100) NOT NULL,
@@ -72,6 +72,10 @@ COMMENT ON COLUMN public.object_tree.blob_data IS 'An object tree serialized as 
 COMMENT ON COLUMN public.object_tree.clob_data IS 'An object tree serialized in a string of a given format (XML or JSON).';
 COMMENT ON COLUMN public.object_tree.serialized_properties IS 'May be used to store the creation timestamp and other meta information.';
 
+
+CREATE INDEX public.object_tree_schema_name_idx
+ ON public.object_tree
+ ( schema_name );
 
 CREATE TABLE public.map_object_tree_mapping (
                 map_id BIGINT NOT NULL,
@@ -200,10 +204,14 @@ COMMENT ON COLUMN public.theoretical_feature.source_type IS 'AMT, CROSS-ASSIGNME
 CREATE INDEX public.theoretical_feature_map_idx
  ON public.theoretical_feature
  ( map_id );
+ 
+ CREATE INDEX public.feature_charge_time_moz_idx
+ ON public.feature
+ ( charge, elution_time, moz);
 
 CREATE TABLE public.scan_sequence (
                 id BIGINT NOT NULL,
-                raw_file_name VARCHAR(250) NOT NULL,
+                raw_file_identifier VARCHAR(250) NOT NULL,
                 min_intensity DOUBLE,
                 max_intensity DOUBLE,
                 ms1_scan_count INTEGER NOT NULL,
@@ -328,11 +336,20 @@ CREATE TABLE public.peakel (
                 map_id BIGINT NOT NULL,
                 CONSTRAINT peakel_pk PRIMARY KEY (id)
 );
+COMMENT ON TABLE public.peakel IS 'TODO: add same indexes than those of the feature table';
 COMMENT ON COLUMN public.peakel.moz IS 'A m/z value associated to the peakel. May be determined as the median/mean of peaks. May also be the m/z of the apex.';
 COMMENT ON COLUMN public.peakel.apex_intensity IS 'Maximum intensity of this peakel. This intensity may also be a normalized value from a value stored in another map.';
 COMMENT ON COLUMN public.peakel.area IS 'Integrated area for this peakel. This area may also be a normalized value from a value stored in another map.';
 COMMENT ON COLUMN public.peakel.duration IS 'The elution duration in seconds of this peakel.';
 
+
+CREATE INDEX public.peakel_map_idx
+ ON public.peakel
+ ( map_id );
+
+CREATE INDEX public.peakel_time_moz_idx
+ ON public.peakel
+ ( elution_time, moz );
 
 CREATE TABLE public.processed_map_moz_calibration (
                 processed_map_id BIGINT NOT NULL,
@@ -358,6 +375,7 @@ CREATE TABLE public.feature (
                 quality_score REAL,
                 ms1_count INTEGER NOT NULL,
                 ms2_count INTEGER NOT NULL,
+                peakel_count INTEGER NOT NULL,
                 is_cluster BOOLEAN NOT NULL,
                 is_overlapping BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
@@ -382,19 +400,28 @@ CREATE INDEX public.feature_map_idx
  ON public.feature
  ( map_id );
 
-CREATE INDEX public.feature_moz_time_charge_idx
+CREATE INDEX public.feature_charge_time_moz_idx
  ON public.feature
- ( moz, elution_time, charge );
+ ( charge, elution_time, moz );
 
 CREATE TABLE public.feature_peakel_item (
                 feature_id BIGINT NOT NULL,
                 peakel_id BIGINT NOT NULL,
                 isotope_index INTEGER NOT NULL,
+                is_base_peakel BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
                 map_id BIGINT NOT NULL,
                 CONSTRAINT feature_peakel_item_pk PRIMARY KEY (feature_id, peakel_id)
 );
 
+
+CREATE INDEX public.feature_peakel_item_map_idx
+ ON public.feature_peakel_item
+ ( map_id );
+
+CREATE INDEX public.feature_peakel_item_peakel_idx
+ ON public.feature_peakel_item
+ ( peakel_id );
 
 CREATE TABLE public.feature_overlap_mapping (
                 overlapped_feature_id BIGINT NOT NULL,
@@ -430,6 +457,10 @@ CREATE TABLE public.processed_map_feature_item (
 COMMENT ON COLUMN public.processed_map_feature_item.is_clusterized IS 'True if this feature is a associated to an intra map cluster. To have the right  list of map features don''t forget to filter on this value (is_clusterized=false).';
 
 
+CREATE INDEX public.processed_map_feature_item_feature_idx
+ ON public.processed_map_feature_item
+ ( feature_id );
+
 CREATE TABLE public.master_feature_item (
                 master_feature_id BIGINT NOT NULL,
                 child_feature_id BIGINT NOT NULL,
@@ -447,14 +478,14 @@ CREATE INDEX public.master_feature_item_master_map_idx
 CREATE TABLE public.feature_ms2_event (
                 feature_id BIGINT NOT NULL,
                 ms2_event_id BIGINT NOT NULL,
-                run_map_id BIGINT NOT NULL,
+                raw_map_id BIGINT NOT NULL,
                 CONSTRAINT feature_ms2_event_pk PRIMARY KEY (feature_id, ms2_event_id)
 );
 
 
 CREATE INDEX public.feature_ms2_event_run_map_idx
  ON public.feature_ms2_event
- ( run_map_id );
+ ( raw_map_id );
 
 CREATE TABLE public.feature_cluster_item (
                 cluster_feature_id BIGINT NOT NULL,
@@ -732,7 +763,7 @@ REFERENCES public.scan_sequence (id)
 ON UPDATE NO ACTION;
 
 ALTER TABLE public.feature_ms2_event ADD CONSTRAINT raw_map_feature_ms2_event_fk
-FOREIGN KEY (run_map_id)
+FOREIGN KEY (raw_map_id)
 REFERENCES public.raw_map (id)
 ON DELETE CASCADE
 ON UPDATE NO ACTION;

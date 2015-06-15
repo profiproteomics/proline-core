@@ -1,3 +1,4 @@
+/* LAST Update : V0_6__core_0_4_0_LCMS_data_migration (Java) */
 CREATE TABLE cache (
                 scope TEXT(250) NOT NULL,
                 id INTEGER NOT NULL,
@@ -35,6 +36,7 @@ CREATE TABLE feature (
                 quality_score REAL,
                 ms1_count INTEGER NOT NULL,
                 ms2_count INTEGER NOT NULL,
+                peakel_count INTEGER NOT NULL,
                 is_cluster TEXT NOT NULL,
                 is_overlapping TEXT NOT NULL,
                 serialized_properties TEXT,
@@ -65,9 +67,9 @@ CREATE TABLE feature_cluster_item (
 CREATE TABLE feature_ms2_event (
                 feature_id INTEGER NOT NULL,
                 ms2_event_id INTEGER NOT NULL,
-                run_map_id INTEGER NOT NULL,
+                raw_map_id INTEGER NOT NULL,
                 PRIMARY KEY (feature_id, ms2_event_id),
-                FOREIGN KEY (run_map_id) REFERENCES raw_map (id)
+                FOREIGN KEY (raw_map_id) REFERENCES raw_map (id)
 );
 
 CREATE TABLE feature_object_tree_mapping (
@@ -90,6 +92,7 @@ CREATE TABLE feature_peakel_item (
                 feature_id INTEGER NOT NULL,
                 peakel_id INTEGER NOT NULL,
                 isotope_index INTEGER NOT NULL,
+                is_base_peakel TEXT NOT NULL,
                 serialized_properties TEXT,
                 map_id INTEGER NOT NULL,
                 PRIMARY KEY (feature_id, peakel_id),
@@ -319,7 +322,7 @@ CREATE TABLE scan (
 
 CREATE TABLE scan_sequence (
                 id INTEGER NOT NULL,
-                raw_file_name TEXT(250) NOT NULL,
+                raw_file_identifier TEXT(250) NOT NULL,
                 min_intensity REAL,
                 max_intensity REAL,
                 ms1_scan_count INTEGER NOT NULL,
@@ -365,7 +368,7 @@ CREATE INDEX scan_precursor_moz_idx ON scan (precursor_moz);
 
 CREATE INDEX feature_map_idx ON feature (map_id);
 
-CREATE INDEX feature_moz_time_charge_idx ON feature (moz,elution_time,charge);
+CREATE INDEX feature_charge_time_moz_idx ON feature (charge,elution_time,moz);
 
 CREATE INDEX feature_cluster_item_processed_map_idx ON feature_cluster_item (processed_map_id);
 
@@ -379,18 +382,23 @@ CREATE INDEX map_layer_map_set_idx ON map_layer (map_set_id);
 
 CREATE INDEX theoretical_feature_map_idx ON theoretical_feature (map_id);
 
+CREATE INDEX object_tree_schema_name_idx ON object_tree (schema_name);
+
 CREATE INDEX map_alignment_map_set_idx ON map_alignment (map_set_id);
 
-CREATE INDEX feature_ms2_event_run_map_idx ON feature_ms2_event (run_map_id);
+CREATE INDEX feature_ms2_event_run_map_idx ON feature_ms2_event (raw_map_id);
 
 CREATE INDEX master_feature_item_master_map_idx ON master_feature_item (master_map_id);
+
+CREATE INDEX processed_map_feature_item_feature_idx ON processed_map_feature_item (feature_id);
 
 CREATE INDEX feature_overlap_mapping_map_idx ON feature_overlap_mapping (map_id);
 
 CREATE INDEX peakel_map_idx ON peakel (map_id);
 
+CREATE INDEX peakel_time_moz_idx ON peakel (elution_time,moz);
+
 CREATE INDEX feature_peakel_item_map_idx ON feature_peakel_item (map_id);
 
-CREATE INDEX feature_peakel_item_peakel_idx ON feature_peakel_item ( peakel_id );
+CREATE INDEX feature_peakel_item_peakel_idx ON feature_peakel_item (peakel_id);
 
-CREATE INDEX processed_map_feature_item_feature_idx ON processed_map_feature_item ( feature_id );

@@ -1,4 +1,4 @@
-
+/* LAST Update : V0_8__core_0.4.0.sql */
 CREATE TABLE public.scoring (
                 id IDENTITY NOT NULL,
                 search_engine VARCHAR(100) NOT NULL,
@@ -134,7 +134,6 @@ CREATE TABLE public.search_settings (
                 peptide_charge_states VARCHAR(100),
                 peptide_mass_error_tolerance DOUBLE,
                 peptide_mass_error_tolerance_unit VARCHAR(3),
-                quantitation VARCHAR(100),
                 is_decoy BOOLEAN NOT NULL,
                 serialized_properties LONGVARCHAR,
                 instrument_config_id BIGINT NOT NULL,
@@ -202,6 +201,10 @@ COMMENT ON COLUMN public.object_tree.blob_data IS 'An object tree serialized as 
 COMMENT ON COLUMN public.object_tree.clob_data IS 'An object tree serialized in a string of a given format (XML or JSON).';
 
 
+CREATE INDEX public.object_tree_schema_name_idx
+ ON public.object_tree
+ ( schema_name );
+
 CREATE TABLE public.msms_search (
                 id BIGINT NOT NULL,
                 fragment_charge_states VARCHAR(100),
@@ -226,7 +229,7 @@ CREATE TABLE public.peaklist (
                 id IDENTITY NOT NULL,
                 type VARCHAR(100),
                 path VARCHAR(1000),
-                raw_file_name VARCHAR(250),
+                raw_file_identifier VARCHAR(250),
                 ms_level INTEGER NOT NULL,
                 spectrum_data_compression VARCHAR(20) NOT NULL,
                 serialized_properties LONGVARCHAR,
@@ -348,7 +351,6 @@ CREATE TABLE public.msi_search (
                 user_name VARCHAR(100),
                 user_email VARCHAR(100),
                 queries_count INTEGER,
-                submitted_queries_count INTEGER NOT NULL,
                 searched_sequences_count INTEGER,
                 serialized_properties LONGVARCHAR,
                 search_settings_id BIGINT NOT NULL,
@@ -360,7 +362,6 @@ COMMENT ON COLUMN public.msi_search.date IS 'the date of the search.';
 COMMENT ON COLUMN public.msi_search.user_name IS 'The name of the user who submit the search to the search engine.';
 COMMENT ON COLUMN public.msi_search.user_email IS 'The email of the user.';
 COMMENT ON COLUMN public.msi_search.queries_count IS 'The number of queries actually associated to this msi search in the database.';
-COMMENT ON COLUMN public.msi_search.submitted_queries_count IS 'The number of spectra submitted to the search engine. This count may be different from the number of queries actually associated to this identification in the database (queries_count) since only queries providing peptide identification may be stored in the database.';
 COMMENT ON COLUMN public.msi_search.searched_sequences_count IS 'The total number of searched sequences. Since searches can be performed against multiple databases, this value is the sum of all associated searches_sequences_count from search_settings_seq_database table.';
 COMMENT ON COLUMN public.msi_search.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
@@ -391,6 +392,10 @@ COMMENT ON COLUMN public.ms_query.serialized_properties IS 'A JSON string which 
 CREATE INDEX public.ms_query_search_idx
  ON public.ms_query
  ( msi_search_id ASC );
+
+CREATE INDEX public.ms_query_spectrum_idx
+ ON public.ms_query
+ ( spectrum_id );
 
 CREATE TABLE public.result_set (
                 id IDENTITY NOT NULL,
@@ -497,8 +502,8 @@ CREATE TABLE public.protein_match (
                 accession VARCHAR(100) NOT NULL,
                 description VARCHAR(10000),
                 gene_name VARCHAR(100),
-                score REAL,
-                coverage REAL NOT NULL,
+                score REAL DEFAULT 0 NOT NULL,
+                coverage REAL DEFAULT 0 NOT NULL,
                 peptide_count INTEGER NOT NULL,
                 peptide_match_count INTEGER NOT NULL,
                 is_decoy BOOLEAN NOT NULL,
@@ -522,6 +527,7 @@ COMMENT ON COLUMN public.protein_match.is_last_bio_sequence IS 'true if bio_sequ
 COMMENT ON COLUMN public.protein_match.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details). TODO: store the frame_number here';
 COMMENT ON COLUMN public.protein_match.taxon_id IS 'The NCBI taxon id corresponding to this protein match.';
 COMMENT ON COLUMN public.protein_match.bio_sequence_id IS 'The id of the protein sequence which was identified by the search engine.';
+COMMENT ON COLUMN public.protein_match.scoring_id IS 'TODO: allows NULL';
 
 
 CREATE INDEX public.protein_match_ac_idx
@@ -554,12 +560,13 @@ CREATE TABLE public.protein_set (
                 is_validated BOOLEAN NOT NULL,
                 selection_level INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
-                typical_protein_match_id BIGINT NOT NULL,
+                representative_protein_match_id BIGINT NOT NULL,
                 master_quant_component_id BIGINT,
                 result_summary_id BIGINT NOT NULL,
                 CONSTRAINT protein_set_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.protein_set IS 'Identifies a set of one or more proteins. Enable : - the annotation of this set of proteins, - the grouping of multiple protein sets. A protein set can be defined as a cluster of other protein sets0 In this case it is not linked to a peptide_set but must have mappings to protein_matches.';
+COMMENT ON TABLE public.protein_set IS 'Identifies a set of one or more proteins. Enable : - the annotation of this set of proteins, - the grouping of multiple protein sets. A protein set can be defined as a cluster of other protein sets0 In this case it is not linked to a peptide_set but must have mappings to protein_matches.
+TODO: add an index on master_quant_component_id';
 COMMENT ON COLUMN public.protein_set.is_decoy IS 'Specifies if the protein set is related to a decoy database search.';
 COMMENT ON COLUMN public.protein_set.is_validated IS 'The validation status of the protein set.';
 COMMENT ON COLUMN public.protein_set.selection_level IS 'An integer coding for the selection of this protein set:
@@ -568,13 +575,17 @@ COMMENT ON COLUMN public.protein_set.selection_level IS 'An integer coding for t
 2 = automatic selection
 3 = manual selection';
 COMMENT ON COLUMN public.protein_set.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
-COMMENT ON COLUMN public.protein_set.typical_protein_match_id IS 'Specifies the id of the protein match which is the most typical (i.e. representative) of the protein set.';
+COMMENT ON COLUMN public.protein_set.representative_protein_match_id IS 'Specifies the id of the protein match which is the most representative of the protein set.';
 COMMENT ON COLUMN public.protein_set.result_summary_id IS 'Used for indexation by result summary';
 
 
 CREATE INDEX public.protein_set_rsm_idx
  ON public.protein_set
  ( result_summary_id ASC );
+
+CREATE INDEX public.protein_set_master_quant_component_idx
+ ON public.protein_set
+ ( master_quant_component_id );
 
 CREATE TABLE public.protein_set_object_tree_map (
                 protein_set_id BIGINT NOT NULL,
@@ -588,6 +599,7 @@ CREATE TABLE public.protein_set_protein_match_item (
                 protein_set_id BIGINT NOT NULL,
                 protein_match_id BIGINT NOT NULL,
                 is_in_subset BOOLEAN NOT NULL,
+                coverage REAL DEFAULT 0 NOT NULL,
                 serialized_properties LONGVARCHAR,
                 result_summary_id BIGINT NOT NULL,
                 CONSTRAINT protein_set_protein_match_item_pk PRIMARY KEY (protein_set_id, protein_match_id)
@@ -606,6 +618,7 @@ CREATE TABLE public.peptide_set (
                 id IDENTITY NOT NULL,
                 is_subset BOOLEAN NOT NULL,
                 score REAL NOT NULL,
+                sequence_count INTEGER NOT NULL,
                 peptide_count INTEGER NOT NULL,
                 peptide_match_count INTEGER NOT NULL,
                 serialized_properties LONGVARCHAR,
@@ -616,6 +629,7 @@ CREATE TABLE public.peptide_set (
 );
 COMMENT ON TABLE public.peptide_set IS 'Identifies a set of peptides belonging to one or more proteins.';
 COMMENT ON COLUMN public.peptide_set.is_subset IS 'Indicates if the peptide set is a subset or not.';
+COMMENT ON COLUMN public.peptide_set.sequence_count IS 'The number of peptide sequences contained in this set.';
 COMMENT ON COLUMN public.peptide_set.peptide_count IS 'The number of peptides contained in this set.';
 COMMENT ON COLUMN public.peptide_set.peptide_match_count IS 'The number of peptide matches related to this peptide set.';
 COMMENT ON COLUMN public.peptide_set.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
@@ -702,6 +716,10 @@ CREATE INDEX public.peptide_match_rs_idx
  ON public.peptide_match
  ( result_set_id ASC );
 
+CREATE INDEX public.peptide_match_best_child_idx
+ ON public.peptide_match
+ ( best_child_id );
+
 CREATE TABLE public.peptide_instance (
                 id IDENTITY NOT NULL,
                 peptide_match_count INTEGER NOT NULL,
@@ -719,7 +737,8 @@ CREATE TABLE public.peptide_instance (
                 result_summary_id BIGINT NOT NULL,
                 CONSTRAINT peptide_instance_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.peptide_instance IS 'Table to list all the distinct peptide_match. A peptide instance can be considered as a unique peptide identification related to a given result set.';
+COMMENT ON TABLE public.peptide_instance IS 'Table to list all the distinct peptide_match. A peptide instance can be considered as a unique peptide identification related to a given result set.
+TODO: add an index on master_quant_component_id';
 COMMENT ON COLUMN public.peptide_instance.peptide_match_count IS 'The number of peptide matches related to the same peptide instance.';
 COMMENT ON COLUMN public.peptide_instance.protein_match_count IS 'The number of protein matches containaning an AA sequence corresponding to this peptide instance. Note: a peptide could be considered as proteotypic if this number equals 1.';
 COMMENT ON COLUMN public.peptide_instance.protein_set_count IS 'The number of protein sets related to this peptide instance.';
@@ -742,6 +761,14 @@ CREATE INDEX public.peptide_instance_rsm_idx
 CREATE INDEX public.peptide_instance_peptide_idx
  ON public.peptide_instance
  ( peptide_id );
+
+CREATE INDEX public.peptide_instance_master_quant_component_idx
+ ON public.peptide_instance
+ ( master_quant_component_id );
+
+CREATE INDEX public.peptide_instance_best_peptide_match_idx
+ ON public.peptide_instance
+ ( best_peptide_match_id );
 
 CREATE TABLE public.peptide_set_peptide_instance_item (
                 peptide_set_id BIGINT NOT NULL,
@@ -787,12 +814,13 @@ CREATE TABLE public.master_quant_peptide_ion (
                 result_summary_id BIGINT NOT NULL,
                 CONSTRAINT master_quant_peptide_ion_pk PRIMARY KEY (id)
 );
-COMMENT ON TABLE public.master_quant_peptide_ion IS 'A master quant peptide ion corresponds to an ionized peptide produced by the mass spectrometer and quantified in several quantitation channels. Its characteristics (charge, m/z, elution time) could be retrieved using LCMS analysis. The observed abundance is described by the related quanti_component. The table can also be considered as a link between peptide and quantification components.  If a peptide ion can be related to a peptide match, the peptide_instance_id and peptide_id have to be defined.';
+COMMENT ON TABLE public.master_quant_peptide_ion IS 'A master quant peptide ion corresponds to an ionized peptide produced by the mass spectrometer and quantified in several quantitation channels. Its characteristics (charge, m/z, elution time) could be retrieved using LCMS analysis. The observed abundance is described by the related quanti_component. The table can also be considered as a link between peptide and quantification components.  If a peptide ion can be related to a peptide match, the peptide_instance_id and peptide_id have to be defined.
+TODO: add an index on master_quant_component_id';
 COMMENT ON COLUMN public.master_quant_peptide_ion.charge IS 'The charge of the quantified item (example : 2+, 3+, etc...)';
 COMMENT ON COLUMN public.master_quant_peptide_ion.peptide_match_count IS 'The number of peptide matches corresponding to this peptide ion. The value is zero if no match.';
 COMMENT ON COLUMN public.master_quant_peptide_ion.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.master_quant_peptide_ion.lcms_master_feature_id IS 'A link to a LC-MS master feature in the corresponding LC-MS database.';
-COMMENT ON COLUMN public.master_quant_peptide_ion.peptide_instance_id IS 'Raccourci pour savoir si le peptide à été identifié (=si non null)';
+COMMENT ON COLUMN public.master_quant_peptide_ion.peptide_instance_id IS 'Raccourci pour savoir si le peptide ï¿½ ï¿½tï¿½ identifiï¿½ (=si non null)';
 COMMENT ON COLUMN public.master_quant_peptide_ion.result_summary_id IS 'Used for indexation by result summary';
 
 
@@ -803,6 +831,14 @@ CREATE INDEX public.master_quant_peptide_ion_peptide_idx
 CREATE INDEX public.master_quant_peptide_ion_rsm_idx
  ON public.master_quant_peptide_ion
  ( result_summary_id ASC );
+
+CREATE INDEX public.master_quant_peptide_ion_master_quant_component_idx
+ ON public.master_quant_peptide_ion
+ ( master_quant_component_id );
+
+CREATE INDEX public.master_quant_peptide_ion_best_peptide_match_idx
+ ON public.master_quant_peptide_ion
+ ( best_peptide_match_id );
 
 CREATE TABLE public.master_quant_reporter_ion (
                 id IDENTITY NOT NULL,
@@ -843,6 +879,10 @@ CREATE INDEX public.pep_inst_pep_match_map_rsm_idx
  ON public.peptide_instance_peptide_match_map
  ( result_summary_id ASC );
 
+CREATE INDEX public.peptide_instance_peptide_match_map_peptide_match_idx
+ ON public.peptide_instance_peptide_match_map
+ ( peptide_match_id );
+
 CREATE TABLE public.peptide_match_relation (
                 parent_peptide_match_id BIGINT NOT NULL,
                 child_peptide_match_id BIGINT NOT NULL,
@@ -855,6 +895,14 @@ COMMENT ON TABLE public.peptide_match_relation IS 'Parent-child relationship bet
 CREATE INDEX public.peptide_match_relation_rs_idx
  ON public.peptide_match_relation
  ( parent_result_set_id ASC );
+
+CREATE INDEX public.peptide_match_relation_parent_peptide_match_idx
+ ON public.peptide_match_relation
+ ( parent_peptide_match_id );
+
+CREATE INDEX public.peptide_match_relation_child_peptide_match_idx
+ ON public.peptide_match_relation
+ ( child_peptide_match_id );
 
 CREATE TABLE public.sequence_match (
                 protein_match_id BIGINT NOT NULL,
@@ -888,6 +936,10 @@ CREATE INDEX public.sequence_match_prot_match_idx
 CREATE INDEX public.sequence_match_rs_idx
  ON public.sequence_match
  ( result_set_id ASC );
+
+CREATE INDEX public.sequence_match_best_peptide_match_idx
+ ON public.sequence_match
+ ( best_peptide_match_id );
 
 CREATE TABLE public.admin_infos (
                 model_version VARCHAR(1000) NOT NULL,
@@ -1291,7 +1343,7 @@ ON UPDATE NO ACTION;
 ALTER TABLE public.peptide_readable_ptm_string ADD CONSTRAINT result_set_peptide_readable_ptm_string_fk
 FOREIGN KEY (result_set_id)
 REFERENCES public.result_set (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
 ALTER TABLE public.peptide_set ADD CONSTRAINT result_summary_peptide_set_fk
@@ -1303,7 +1355,7 @@ ON UPDATE NO ACTION;
 ALTER TABLE public.protein_set ADD CONSTRAINT result_summary_protein_set_fk
 FOREIGN KEY (result_summary_id)
 REFERENCES public.result_summary (id)
-ON DELETE NO ACTION
+ON DELETE CASCADE
 ON UPDATE NO ACTION;
 
 ALTER TABLE public.peptide_set_relation ADD CONSTRAINT result_summary_peptide_set_relation_fk
@@ -1423,7 +1475,7 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION;
 
 ALTER TABLE public.protein_set ADD CONSTRAINT protein_match_protein_set_fk
-FOREIGN KEY (typical_protein_match_id)
+FOREIGN KEY (representative_protein_match_id)
 REFERENCES public.protein_match (id)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION;

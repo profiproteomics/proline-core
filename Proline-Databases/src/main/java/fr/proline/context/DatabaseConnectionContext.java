@@ -48,6 +48,8 @@ public class DatabaseConnectionContext implements Closeable {
     /* All mutable fields are @GuardedBy("m_contextLock") */
 
     private Connection m_connection;
+    
+    private boolean m_closeConnection = false;
 
     private boolean m_closed;
 
@@ -185,6 +187,16 @@ public class DatabaseConnectionContext implements Closeable {
 	} // End of synchronized block on m_contextLock
 
 	return result;
+    }
+    
+    /**
+     * Retrieves current Database DriverType (PostgreSQL, h2, SQLite...).
+     * 
+     * @return current Database DriverType or <code>null</code> if not set.
+     */
+    public DatabaseConnectionContext setCloseConnection(boolean closeConnection) {
+    	this.m_closeConnection = closeConnection;
+    	return this;
     }
 
     /**
@@ -551,21 +563,24 @@ public class DatabaseConnectionContext implements Closeable {
 
 		final String prolineDbType = getProlineDatabaseTypeString();
 
-		if (fromFinalize) {
-		    LOG.warn("Trying to close ORPHAN {} Context from finalize", prolineDbType,
-			    m_fakeException);
-		}
-
-		if (m_connection != null) {
+		if (m_connection != null && m_closeConnection) {
+			
+			if (fromFinalize) {
+			    LOG.warn("Trying to close ORPHAN {} Context from finalize", prolineDbType, m_fakeException);
+			}
+			
 		    try {
-			m_connection.close();
+		    	m_connection.close();
 		    } catch (SQLException exClose) {
-			LOG.error("Error closing DatabaseConnectionContext SQL Connection for "
-				+ prolineDbType, exClose);
+		    	LOG.error("Error closing DatabaseConnectionContext SQL Connection for "+ prolineDbType, exClose);
 		    }
 		} // End if (m_connection is not null)
 
-		if (m_entityManager != null) {
+		else if (m_entityManager != null) {
+			
+			if (fromFinalize) {
+			    LOG.warn("Trying to close ORPHAN {} Context from finalize", prolineDbType, m_fakeException);
+			}
 
 		    /* Paranoiac rollback then close */
 
@@ -575,14 +590,15 @@ public class DatabaseConnectionContext implements Closeable {
 			if ((currentTransaction != null) && currentTransaction.isActive()) {
 			    LOG.info(
 				    "{} Rollback EntityTransaction from DatabaseConnectionContext.doClose()",
-				    prolineDbType);
+				    prolineDbType
+				);
 
 			    try {
 				currentTransaction.rollback();
 			    } catch (Exception ex) {
 				LOG.error(
-					"Error rollbacking DatabaseConnectionContext EntityTransaction for "
-						+ prolineDbType, ex);
+					"Error rollbacking DatabaseConnectionContext EntityTransaction for " + prolineDbType, ex
+				);
 			    }
 
 			}

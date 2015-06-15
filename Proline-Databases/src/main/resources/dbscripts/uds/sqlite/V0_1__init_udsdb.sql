@@ -1,3 +1,4 @@
+/* Last Update V0_6__core_0_4_0_UDS_data_migration (java) */
 CREATE TABLE activation (
                 type TEXT(100) NOT NULL,
                 PRIMARY KEY (type)
@@ -43,6 +44,7 @@ CREATE TABLE biological_sample (
 CREATE TABLE biological_sample_sample_analysis_map (
                 biological_sample_id INTEGER NOT NULL,
                 sample_analysis_id INTEGER NOT NULL,
+                sample_analysis_number INTEGER NOT NULL,
                 PRIMARY KEY (biological_sample_id, sample_analysis_id)
 );
 
@@ -243,8 +245,11 @@ CREATE TABLE project (
                 name TEXT(250) NOT NULL,
                 description TEXT(1000),
                 creation_timestamp TEXT NOT NULL,
+                lock_expiration_timestamp TEXT,
                 serialized_properties TEXT,
+                lock_user_id INTEGER,
                 owner_id INTEGER NOT NULL,
+                FOREIGN KEY (lock_user_id) REFERENCES user_account (id),
                 FOREIGN KEY (owner_id) REFERENCES user_account (id)
 );
 
@@ -257,6 +262,7 @@ CREATE TABLE project_db_map (
 CREATE TABLE project_user_account_map (
                 project_id INTEGER NOT NULL,
                 user_account_id INTEGER NOT NULL,
+                write_permission TEXT NOT NULL,
                 serialized_properties TEXT,
                 PRIMARY KEY (project_id, user_account_id)
 );
@@ -318,23 +324,26 @@ CREATE TABLE ratio_definition (
 );
 
 CREATE TABLE raw_file (
-                name TEXT(250) NOT NULL,
-                extension TEXT(10) NOT NULL,
-                directory TEXT(500),
+                identifier TEXT(250) NOT NULL,
+                raw_file_name TEXT(250) NOT NULL,
+                raw_file_directory TEXT(500),
+                mzdb_file_name TEXT(250),
+                mzdb_file_directory TEXT(500),
+                sample_name TEXT(250),
                 creation_timestamp TEXT,
                 serialized_properties TEXT,
                 instrument_id INTEGER NOT NULL,
                 owner_id INTEGER NOT NULL,
-                PRIMARY KEY (name),
+                PRIMARY KEY (identifier),
                 FOREIGN KEY (instrument_id) REFERENCES instrument (id),
                 FOREIGN KEY (owner_id) REFERENCES user_account (id)
 );
 
 CREATE TABLE raw_file_project_map (
-                raw_file_name TEXT(250) NOT NULL,
+                raw_file_identifier TEXT(250) NOT NULL,
                 project_id INTEGER NOT NULL,
                 serialized_properties TEXT,
-                PRIMARY KEY (raw_file_name, project_id)
+                PRIMARY KEY (raw_file_identifier, project_id)
 );
 
 CREATE TABLE run (
@@ -347,23 +356,22 @@ CREATE TABLE run (
                 ms_method TEXT(250),
                 analyst TEXT(50),
                 serialized_properties TEXT,
-                raw_file_name TEXT(250) NOT NULL,
-                FOREIGN KEY (raw_file_name) REFERENCES raw_file (name)
+                raw_file_identifier TEXT(250) NOT NULL,
+                FOREIGN KEY (raw_file_identifier) REFERENCES raw_file (identifier)
 );
 
 CREATE TABLE run_identification (
                 id INTEGER NOT NULL,
                 serialized_properties TEXT,
                 run_id INTEGER,
-                raw_file_name TEXT(250),
+                raw_file_identifier TEXT(250),
                 PRIMARY KEY (id),
                 FOREIGN KEY (run_id) REFERENCES run (id),
-                FOREIGN KEY (raw_file_name) REFERENCES raw_file (name)
+                FOREIGN KEY (raw_file_identifier) REFERENCES raw_file (identifier)
 );
 
 CREATE TABLE sample_analysis (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                number INTEGER NOT NULL,
                 serialized_properties TEXT,
                 quantitation_id INTEGER NOT NULL,
                 FOREIGN KEY (quantitation_id) REFERENCES data_set (id)
@@ -371,7 +379,7 @@ CREATE TABLE sample_analysis (
 
 CREATE TABLE spec_title_parsing_rule (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                raw_file_name TEXT(100),
+                raw_file_identifier TEXT(100),
                 first_cycle TEXT(100),
                 last_cycle TEXT(100),
                 first_scan TEXT(100),
@@ -403,6 +411,8 @@ CREATE UNIQUE INDEX quant_channel_context_idx ON quant_channel (master_quant_cha
 
 CREATE UNIQUE INDEX quant_channel_number_idx ON quant_channel (master_quant_channel_id,number);
 
+CREATE INDEX object_tree_schema_name_idx ON object_tree (schema_name);
+
 CREATE UNIQUE INDEX biological_group_number_idx ON biological_group (quantitation_id,number);
 
 CREATE UNIQUE INDEX group_setup_number_idx ON group_setup (quantitation_id,number);
@@ -425,7 +435,11 @@ CREATE UNIQUE INDEX instrument_idx ON instrument (name,source);
 
 CREATE UNIQUE INDEX enzyme_name_idx ON enzyme (name);
 
+CREATE UNIQUE INDEX peaklist_software_idx ON peaklist_software (name,version);
+
 CREATE UNIQUE INDEX fractionation_type_idx ON fractionation (type);
 
 CREATE UNIQUE INDEX aggregation_child_nature_idx ON aggregation (child_nature);
+
+CREATE UNIQUE INDEX biological_sample_sample_analysis_map_idx ON biological_sample_sample_analysis_map (biological_sample_id,sample_analysis_number);
 

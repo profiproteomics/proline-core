@@ -1,4 +1,4 @@
-
+/* Last Update V0_6__core_0_4_0_UDS_data_migration (java) */
 CREATE SEQUENCE public.aggregation_id_seq;
 
 CREATE TABLE public.aggregation (
@@ -53,7 +53,7 @@ CREATE SEQUENCE public.spec_title_parsing_rule_id_seq;
 
 CREATE TABLE public.spec_title_parsing_rule (
                 id BIGINT NOT NULL DEFAULT nextval('public.spec_title_parsing_rule_id_seq'),
-                raw_file_name VARCHAR(100),
+                raw_file_identifier VARCHAR(100),
                 first_cycle VARCHAR(100),
                 last_cycle VARCHAR(100),
                 first_scan VARCHAR(100),
@@ -63,7 +63,7 @@ CREATE TABLE public.spec_title_parsing_rule (
                 CONSTRAINT spec_title_parsing_rule_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.spec_title_parsing_rule IS 'Describe rules used to parse the content of the MS2 spectrum title.';
-COMMENT ON COLUMN public.spec_title_parsing_rule.raw_file_name IS 'A regular expression matching the raw file name.';
+COMMENT ON COLUMN public.spec_title_parsing_rule.raw_file_identifier IS 'A regular expression matching the raw file identifier.';
 COMMENT ON COLUMN public.spec_title_parsing_rule.first_cycle IS 'A regular expression matching the first cycle.';
 COMMENT ON COLUMN public.spec_title_parsing_rule.last_cycle IS 'A regular expression matching the last cycle.';
 COMMENT ON COLUMN public.spec_title_parsing_rule.first_scan IS 'A regular expression matching the first scan.';
@@ -92,6 +92,10 @@ COMMENT ON COLUMN public.peaklist_software.spec_title_parsing_rule_id IS 'The ru
 
 
 ALTER SEQUENCE public.peaklist_software_id_seq OWNED BY public.peaklist_software.id;
+
+CREATE UNIQUE INDEX peaklist_software_idx
+ ON public.peaklist_software
+ ( name, version );
 
 CREATE SEQUENCE public.enzyme_id_seq;
 
@@ -314,20 +318,26 @@ CREATE UNIQUE INDEX user_account_login_idx
  ( login );
 
 CREATE TABLE public.raw_file (
-                name VARCHAR(250) NOT NULL,
-                extension VARCHAR(10) NOT NULL,
-                directory VARCHAR(500),
+                identifier VARCHAR(250) NOT NULL,
+                raw_file_name VARCHAR(250) NOT NULL,
+                raw_file_directory VARCHAR(500),
+                mzdb_file_name VARCHAR(250),
+                mzdb_file_directory VARCHAR(500),
+                sample_name VARCHAR(250),
                 creation_timestamp TIMESTAMP,
                 serialized_properties TEXT,
                 instrument_id BIGINT NOT NULL,
                 owner_id BIGINT NOT NULL,
-                CONSTRAINT raw_file_pk PRIMARY KEY (name)
+                CONSTRAINT raw_file_pk PRIMARY KEY (identifier)
 );
 COMMENT ON TABLE public.raw_file IS 'Stores information about raw files that will be analyzed by Proline.';
-COMMENT ON COLUMN public.raw_file.name IS 'The name of the raw file which serves as its identifier.
-It should not contain an extension and be unique across all the database.';
-COMMENT ON COLUMN public.raw_file.extension IS 'The raw file extension.';
-COMMENT ON COLUMN public.raw_file.directory IS 'The path of the directory that contains the raw file.';
+COMMENT ON COLUMN public.raw_file.identifier IS 'The identifier of the raw file, defined as its name without the extension.
+It should be unique across all the databases.';
+COMMENT ON COLUMN public.raw_file.raw_file_name IS 'The name of the raw file.';
+COMMENT ON COLUMN public.raw_file.raw_file_directory IS 'The path of the directory that contains the raw file.';
+COMMENT ON COLUMN public.raw_file.mzdb_file_name IS 'The name of the mzDB file.';
+COMMENT ON COLUMN public.raw_file.mzdb_file_directory IS 'The path of the directory that contains the mzDB file.';
+COMMENT ON COLUMN public.raw_file.sample_name IS 'The name of the sample which have been analysed.';
 COMMENT ON COLUMN public.raw_file.creation_timestamp IS 'The timestamp corresponding to the creation date of the raw file.';
 COMMENT ON COLUMN public.raw_file.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.raw_file.instrument_id IS 'The instrument that has performed the raw file acquisition.';
@@ -346,7 +356,7 @@ CREATE TABLE public.run (
                 ms_method VARCHAR(250),
                 analyst VARCHAR(50),
                 serialized_properties TEXT,
-                raw_file_name VARCHAR(250) NOT NULL,
+                raw_file_identifier VARCHAR(250) NOT NULL,
                 CONSTRAINT run_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.run IS 'Stores information about a mass spectrometer acquisition also called "run".';
@@ -359,7 +369,7 @@ COMMENT ON COLUMN public.run.lc_method IS 'The optional name of the Liquid Chrom
 COMMENT ON COLUMN public.run.ms_method IS 'The name of the Mass Spectrometry method which have been used.';
 COMMENT ON COLUMN public.run.analyst IS 'The name of the analyst which launched the acquisition.';
 COMMENT ON COLUMN public.run.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
-COMMENT ON COLUMN public.run.raw_file_name IS 'The raw file this acquisition belongs to.';
+COMMENT ON COLUMN public.run.raw_file_identifier IS 'The raw file this acquisition belongs to.';
 
 
 ALTER SEQUENCE public.run_id_seq OWNED BY public.run.id;
@@ -371,7 +381,9 @@ CREATE TABLE public.project (
                 name VARCHAR(250) NOT NULL,
                 description VARCHAR(1000),
                 creation_timestamp TIMESTAMP NOT NULL,
+                lock_expiration_timestamp TIMESTAMP,
                 serialized_properties TEXT,
+                lock_user_id BIGINT,
                 owner_id BIGINT NOT NULL,
                 CONSTRAINT project_pk PRIMARY KEY (id)
 );
@@ -379,6 +391,7 @@ COMMENT ON TABLE public.project IS 'A project contains multiple experiments rela
 COMMENT ON COLUMN public.project.name IS 'The name of the project as provided by the user.';
 COMMENT ON COLUMN public.project.description IS 'The description of the project as provided by the user.';
 COMMENT ON COLUMN public.project.creation_timestamp IS 'The timestamp corresponding to the creation date of the project.';
+COMMENT ON COLUMN public.project.lock_expiration_timestamp IS 'The timestamp corresponding to the date of lock expiration.';
 COMMENT ON COLUMN public.project.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.project.owner_id IS 'The owner of this project. The owner is also a member of the project and then is represented in "project_user_account_map".';
 
@@ -390,12 +403,12 @@ CREATE UNIQUE INDEX project_name_owner_idx
  ( name, owner_id );
 
 CREATE TABLE public.raw_file_project_map (
-                raw_file_name VARCHAR(250) NOT NULL,
+                raw_file_identifier VARCHAR(250) NOT NULL,
                 project_id BIGINT NOT NULL,
                 serialized_properties TEXT,
-                CONSTRAINT raw_file_project_map_pk PRIMARY KEY (raw_file_name, project_id)
+                CONSTRAINT raw_file_project_map_pk PRIMARY KEY (raw_file_identifier, project_id)
 );
-COMMENT ON COLUMN public.raw_file_project_map.raw_file_name IS 'The name of the raw file which serves as its identifier.
+COMMENT ON COLUMN public.raw_file_project_map.raw_file_identifier IS 'The identifier of the raw file.
 It should not contain an extension and be unique across all the database.';
 COMMENT ON COLUMN public.raw_file_project_map.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
@@ -424,10 +437,12 @@ ALTER SEQUENCE public.virtual_folder_id_seq OWNED BY public.virtual_folder.id;
 CREATE TABLE public.project_user_account_map (
                 project_id BIGINT NOT NULL,
                 user_account_id BIGINT NOT NULL,
+                write_permission BOOLEAN NOT NULL,
                 serialized_properties TEXT,
                 CONSTRAINT project_user_account_map_pk PRIMARY KEY (project_id, user_account_id)
 );
 COMMENT ON TABLE public.project_user_account_map IS 'The mapping between project and user_account records.';
+COMMENT ON COLUMN public.project_user_account_map.write_permission IS 'If false, the user is not allowed to perform a lock on this project.';
 COMMENT ON COLUMN public.project_user_account_map.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 
 
@@ -507,27 +522,24 @@ CREATE TABLE public.run_identification (
                 id BIGINT NOT NULL,
                 serialized_properties TEXT,
                 run_id BIGINT,
-                raw_file_name VARCHAR(250),
+                raw_file_identifier VARCHAR(250),
                 CONSTRAINT run_identification_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.run_identification IS 'Defines the run that corresponds to the identification of a set of MS/MS spectra.';
 COMMENT ON COLUMN public.run_identification.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.run_identification.run_id IS 'The run this identification refers to.';
-COMMENT ON COLUMN public.run_identification.raw_file_name IS 'The raw file whose the peaklist has been generated from.';
+COMMENT ON COLUMN public.run_identification.raw_file_identifier IS 'The raw file whose the peaklist has been generated from.';
 
 
 CREATE SEQUENCE public.sample_analysis_id_seq;
 
 CREATE TABLE public.sample_analysis (
                 id BIGINT NOT NULL DEFAULT nextval('public.sample_analysis_id_seq'),
-                number INTEGER NOT NULL,
                 serialized_properties TEXT,
                 quantitation_id BIGINT NOT NULL,
                 CONSTRAINT sample_analysis_pk PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.sample_analysis IS 'Represents each analytical replicates of the associated biological sample. analytical replicates does not necessarily means MS run since labelled samples are analysed in MS in a unique run.';
-COMMENT ON COLUMN public.sample_analysis.number IS 'The sample analysis number which is unique for a given biological sample.
-TODO: move this column to the biological_sample_sample_analysis_map table and check the UNIQUE constraint there';
 COMMENT ON COLUMN public.sample_analysis.serialized_properties IS 'A JSON string which stores optional properties (see corresponding JSON schema for more details).';
 COMMENT ON COLUMN public.sample_analysis.quantitation_id IS 'The quantitation this sample analysis is related to.';
 
@@ -611,10 +623,16 @@ CREATE UNIQUE INDEX biological_sample_number_idx
 CREATE TABLE public.biological_sample_sample_analysis_map (
                 biological_sample_id BIGINT NOT NULL,
                 sample_analysis_id BIGINT NOT NULL,
+                sample_analysis_number INTEGER NOT NULL,
                 CONSTRAINT biological_sample_sample_analysis_map_pk PRIMARY KEY (biological_sample_id, sample_analysis_id)
 );
 COMMENT ON TABLE public.biological_sample_sample_analysis_map IS 'The list of sample analyses performed for this biological sample.';
+COMMENT ON COLUMN public.biological_sample_sample_analysis_map.sample_analysis_number IS 'The sample analysis number which is unique for a given biological sample.';
 
+
+CREATE UNIQUE INDEX biological_sample_sample_analysis_map_idx
+ ON public.biological_sample_sample_analysis_map
+ ( biological_sample_id, sample_analysis_number );
 
 CREATE SEQUENCE public.group_setup_id_seq;
 
@@ -777,6 +795,10 @@ COMMENT ON COLUMN public.object_tree.clob_data IS 'An object tree serialized in 
 
 
 ALTER SEQUENCE public.object_tree_id_seq OWNED BY public.object_tree.id;
+
+CREATE INDEX object_tree_schema_name_idx
+ ON public.object_tree
+ ( schema_name );
 
 CREATE TABLE public.data_set_object_tree_map (
                 data_set_id BIGINT NOT NULL,
@@ -957,7 +979,7 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.project ADD CONSTRAINT user_account_project_fk
+ALTER TABLE public.project ADD CONSTRAINT user_account_project_owner_fk
 FOREIGN KEY (owner_id)
 REFERENCES public.user_account (id)
 ON DELETE RESTRICT
@@ -978,23 +1000,30 @@ ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
+ALTER TABLE public.project ADD CONSTRAINT user_account_project_lock_user_fk
+FOREIGN KEY (lock_user_id)
+REFERENCES public.user_account (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
 ALTER TABLE public.run ADD CONSTRAINT raw_file_run_fk
-FOREIGN KEY (raw_file_name)
-REFERENCES public.raw_file (name)
+FOREIGN KEY (raw_file_identifier)
+REFERENCES public.raw_file (identifier)
 ON DELETE CASCADE
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.run_identification ADD CONSTRAINT raw_file_run_identification_fk
-FOREIGN KEY (raw_file_name)
-REFERENCES public.raw_file (name)
+FOREIGN KEY (raw_file_identifier)
+REFERENCES public.raw_file (identifier)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
 ALTER TABLE public.raw_file_project_map ADD CONSTRAINT raw_file_raw_file_project_map_fk
-FOREIGN KEY (raw_file_name)
-REFERENCES public.raw_file (name)
+FOREIGN KEY (raw_file_identifier)
+REFERENCES public.raw_file (identifier)
 ON DELETE RESTRICT
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
