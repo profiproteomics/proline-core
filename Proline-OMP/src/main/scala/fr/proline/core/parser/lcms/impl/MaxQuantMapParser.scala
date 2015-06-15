@@ -16,6 +16,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
 
   def getRawMap(filePath: String, lcmsScanSeq: LcMsScanSequence, extraParams: ILcmsMapParserParameters): Option[RawMap] = {
 
+    // Note: no more used here (rawFileIdentifier is fine)
     def toStandardName(s: String): String = {
       //to put in ILcmsMapFileParser maybe
       s.replaceAll("\\", "/")
@@ -23,7 +24,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
       s
     }
 
-    val shortFileName = toStandardName(lcmsScanSeq.rawFileName).split("/").last.split(".").head
+    val shortFileName = lcmsScanSeq.rawFileIdentifier
 
     val lines = io.Source.fromFile(filePath).getLines
 
@@ -99,7 +100,7 @@ class MaxQuantMapParser extends ILcmsMapFileParser {
 
     val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
-      name = lcmsScanSeq.rawFileName,
+      name = lcmsScanSeq.rawFileIdentifier,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,

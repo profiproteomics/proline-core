@@ -79,7 +79,7 @@ class MsInspectMapParser extends ILcmsMapFileParser {
     Some(
       RawMap(
         id = lcmsScanSeq.runId,
-        name = lcmsScanSeq.rawFileName,
+        name = lcmsScanSeq.rawFileIdentifier,
         isProcessed = false,
         creationTimestamp = timeStamp,
         features = features toArray,

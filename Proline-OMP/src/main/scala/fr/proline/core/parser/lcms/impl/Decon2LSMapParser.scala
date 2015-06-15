@@ -211,7 +211,7 @@ class Decon2LSMapParser extends ILcmsMapFileParser {
     
     val rawMap = new RawMap(
       id = lcmsScanSeq.runId,
-      name = lcmsScanSeq.rawFileName,
+      name = lcmsScanSeq.rawFileIdentifier,
       isProcessed = false,
       creationTimestamp = new Date(),
       features = features toArray,

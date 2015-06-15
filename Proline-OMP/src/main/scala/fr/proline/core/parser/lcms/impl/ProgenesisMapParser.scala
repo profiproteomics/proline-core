@@ -33,7 +33,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     //the seven first columns are reserved  
     val sampleNames = columnNames.slice(7, columnNames.length) //for (k <- 7 until columnNames.length) yield columnNames(k)
 
-    val (found, mapName) = format(sampleNames, lcmsScanSeq.rawFileName)
+    val (found, mapName) = format(sampleNames, lcmsScanSeq.rawFileIdentifier)
     if (!found)
       throw new Exception("requested file not found")
 
@@ -90,7 +90,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     Some(
       RawMap(
         id = lcmsScanSeq.runId,
-        name = lcmsScanSeq.rawFileName,
+        name = lcmsScanSeq.rawFileIdentifier,
         isProcessed = false,
         creationTimestamp = new Date(),
         features = features toArray,
@@ -126,7 +126,7 @@ class ProgenesisMapParser extends ILcmsMapFileParser {
     for (sampleName <- sampleNames) {
       breakable {
         for (lcmsScanSeq <- lcmsScanSeqs) {
-          if (lcmsScanSeq.rawFileName.contains(sampleName)) {
+          if (lcmsScanSeq.rawFileIdentifier.contains(sampleName)) {
             scanSeqBySampleName += (sampleName -> lcmsScanSeq)
             break
           }
