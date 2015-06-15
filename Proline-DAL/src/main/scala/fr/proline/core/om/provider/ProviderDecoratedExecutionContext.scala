@@ -21,7 +21,13 @@ class ProviderDecoratedExecutionContext(wrappedExecutionContext: IExecutionConte
     val oldProvider = m_providers.put(providerClassifier, providerInstance)
     oldProvider.map(_.asInstanceOf[T]) // Must be a T
   }
-
+  
+  def hasProvider[T <: AnyRef](providerClassifier: Class[T]): Boolean = {
+    require(providerClassifier != null, "ProviderClassifier is null")
+    
+    m_providers.contains(providerClassifier)
+  }
+  
   def getProvider[T <: AnyRef](providerClassifier: Class[T]): T = {
     require(providerClassifier != null, "ProviderClassifier is null")
 

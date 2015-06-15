@@ -4,8 +4,8 @@ import fr.proline.core.om.model.lcms.LcMsRun
 
 trait IRunProvider {
   
-  def getRuns( runIds: Seq[Long] ): Array[LcMsRun]
+  def getRuns( runIds: Seq[Long], loadScanSequence: Boolean ): Array[LcMsRun]
   
-  def getRun( runId: Long ): LcMsRun = this.getRuns( Seq(runId) )(0)
+  def getRun( runId: Long, loadScanSequence: Boolean ): LcMsRun = this.getRuns( Seq(runId), loadScanSequence )(0)
 
 }

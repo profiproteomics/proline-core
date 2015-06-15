@@ -75,7 +75,7 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConver
 
 class SQLRunProvider(
   val udsDbCtx: DatabaseConnectionContext,
-  val scanSeqProvider: Option[IScanSequenceProvider] = None,
+  val scanSeqProvider: Option[IScanSequenceProvider],
   val pathConverter: Option[IProlinePathConverter] = None
 ) extends IRunProvider {
   
@@ -85,11 +85,12 @@ class SQLRunProvider(
   protected val RawFileCols = UdsDbRawFileTable.columns
   protected val RunCols = UdsDbRunTable.columns
   
-  def getRuns( runIds: Seq[Long] ): Array[LcMsRun] = {
+  def getRuns( runIds: Seq[Long], loadScanSequence: Boolean = false ): Array[LcMsRun] = {
     if( runIds.isEmpty ) return Array()
     
-    val scanSeqByIdAsOpt = if( scanSeqProvider.isEmpty ) None
+    val scanSeqByIdAsOpt = if( loadScanSequence == false ) None
     else {
+      require( scanSeqProvider.isDefined, "a scan sequence provider must be defined")
       val scanSeqs = scanSeqProvider.get.getScanSequences(runIds)
       Some( Map() ++ scanSeqs.map( scanSeq => scanSeq.runId -> scanSeq ) )
     }
