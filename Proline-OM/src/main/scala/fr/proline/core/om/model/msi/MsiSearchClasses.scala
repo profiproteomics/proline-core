@@ -9,7 +9,7 @@ import fr.profi.util.misc.InMemoryIdGen
 object MSISearch extends InMemoryIdGen
 
 case class MSISearch (
-          
+
   //Required fields
   var id: Long,
   val resultFileName: String,
@@ -29,7 +29,7 @@ case class MSISearch (
   var searchedSequencesCount: Int = 0,
   var properties: Option[MSISearchProperties] = None
 )
-        
+
 case class MSISearchProperties()
 
 
