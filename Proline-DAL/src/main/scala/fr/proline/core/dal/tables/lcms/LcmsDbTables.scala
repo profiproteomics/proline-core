@@ -53,6 +53,7 @@ object LcmsDbFeatureColumns extends ColumnEnumeration {
   val QUALITY_SCORE = Column("quality_score")
   val MS1_COUNT = Column("ms1_count")
   val MS2_COUNT = Column("ms2_count")
+  val PEAKEL_COUNT = Column("peakel_count")
   val IS_CLUSTER = Column("is_cluster")
   val IS_OVERLAPPING = Column("is_overlapping")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
@@ -90,7 +91,7 @@ object LcmsDbFeatureMs2EventColumns extends ColumnEnumeration {
   val $tableName = LcmsDbFeatureMs2EventTable.name
   val FEATURE_ID = Column("feature_id")
   val MS2_EVENT_ID = Column("ms2_event_id")
-  val RUN_MAP_ID = Column("run_map_id")
+  val RAW_MAP_ID = Column("raw_map_id")
 }
 
 abstract class LcmsDbFeatureMs2EventTable extends TableDefinition[LcmsDbFeatureMs2EventColumns.type]
@@ -133,6 +134,7 @@ object LcmsDbFeaturePeakelItemColumns extends ColumnEnumeration {
   val FEATURE_ID = Column("feature_id")
   val PEAKEL_ID = Column("peakel_id")
   val ISOTOPE_INDEX = Column("isotope_index")
+  val IS_BASE_PEAKEL = Column("is_base_peakel")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val MAP_ID = Column("map_id")
 }
@@ -505,7 +507,7 @@ object LcmsDbScanTable extends LcmsDbScanTable {
 object LcmsDbScanSequenceColumns extends ColumnEnumeration {
   val $tableName = LcmsDbScanSequenceTable.name
   val ID = Column("id")
-  val RAW_FILE_NAME = Column("raw_file_name")
+  val RAW_FILE_IDENTIFIER = Column("raw_file_identifier")
   val MIN_INTENSITY = Column("min_intensity")
   val MAX_INTENSITY = Column("max_intensity")
   val MS1_SCAN_COUNT = Column("ms1_scan_count")

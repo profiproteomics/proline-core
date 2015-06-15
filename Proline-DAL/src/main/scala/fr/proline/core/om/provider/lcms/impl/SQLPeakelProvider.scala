@@ -2,6 +2,7 @@ package fr.proline.core.om.provider.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.ResultSetRow
+import fr.profi.mzdb.model.PeakelDataMatrix
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.{ DoJDBCWork, DoJDBCReturningWork }
 import fr.proline.core.dal.tables.SelectQueryBuilder._
@@ -62,7 +63,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
 
    // Read and deserialize peaks
     val peaksAsBytes = r.getBytes(PeakelCols.PEAKS)
-    val lcMsPeaks = org.msgpack.ScalaMessagePack.read[Array[LcMsPeak]](peaksAsBytes)
+    val peakelDataMatrix = org.msgpack.ScalaMessagePack.read[PeakelDataMatrix](peaksAsBytes)
     
     // Read and deserialize properties
     val propsAsJSON = r.getStringOption(PeakelCols.SERIALIZED_PROPERTIES)
@@ -72,16 +73,16 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       id = r.getLong(PeakelCols.ID),
       moz = r.getDouble(PeakelCols.MOZ),
       elutionTime = toFloat(r.getAny(PeakelCols.ELUTION_TIME)),
-      apexIntensity = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)),
+      //apexIntensity = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)), // now lazilly computed
       area = toFloat(r.getAny(PeakelCols.APEX_INTENSITY)),
       duration = toFloat(r.getAny(PeakelCols.DURATION)),
       //fwhm = r.getAnyOption(PeakelCols.FWHM).map(toFloat(_)),
       isOverlapping = toBoolean(r.getAny(PeakelCols.IS_OVERLAPPING)),
       featuresCount = r.getInt(PeakelCols.FEATURE_COUNT),
-      peaks = lcMsPeaks,
-      firstScanId = r.getLong(PeakelCols.FIRST_SCAN_ID),
-      lastScanId = r.getLong(PeakelCols.LAST_SCAN_ID),
-      apexScanId = r.getLong(PeakelCols.APEX_SCAN_ID),
+      dataMatrix = peakelDataMatrix,
+      //firstScanId = r.getLong(PeakelCols.FIRST_SCAN_ID),
+      //lastScanId = r.getLong(PeakelCols.LAST_SCAN_ID),
+      //apexScanId = r.getLong(PeakelCols.APEX_SCAN_ID),
       rawMapId = r.getLong(PeakelCols.MAP_ID),
       properties = propsOpt
     )
@@ -190,9 +191,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
       featureReference = FeatureIdentifier( r.getLong(PeakelItemCols.FEATURE_ID) ),
       peakelReference = PeakelIdentifier( r.getLong(PeakelItemCols.PEAKEL_ID) ),
       isotopeIndex = r.getInt(PeakelItemCols.ISOTOPE_INDEX),
-      // FIXME: this value this should be retrieved from the database
-      // At the moment this information can be retrieved from Feature properties
-      isBasePeakel = false,
+      isBasePeakel = r.getBoolean(PeakelItemCols.IS_BASE_PEAKEL),
       properties = propsOpt
     )
   }

@@ -230,6 +230,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
       isSubset = msiPepSet.getIsSubset(),
       score = msiPepSet.getScore(),
       scoreType = msiPepSet.getScoring().getName(),
+      sequencesCount = msiPepSet.getSequenceCount(),
       peptideMatchesCount = msiPepSet.getPeptideMatchCount(),
       proteinMatchIds = protMatchesIds,
       proteinSetId = msiPepSet.getProteinSet().getId(),

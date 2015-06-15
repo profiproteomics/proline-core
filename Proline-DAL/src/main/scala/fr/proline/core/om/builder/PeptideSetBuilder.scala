@@ -102,6 +102,7 @@ object PeptideSetBuilder {
         isSubset = pepSetRecord.getBoolean(PepSetCols.IS_SUBSET),
         score = pepSetRecord.getFloat(PepSetCols.SCORE),
         scoreType = scoreTypeById( pepSetRecord.getLong(PepSetCols.SCORING_ID) ),
+        sequencesCount = pepSetRecord.getInt(PepSetCols.SEQUENCE_COUNT),
         peptideMatchesCount = pepSetRecord.getInt(PepSetCols.PEPTIDE_MATCH_COUNT),
         proteinMatchIds = protMatchIds,
         proteinSetId = pepSetRecord.getLongOrElse(PepSetCols.PROTEIN_SET_ID, 0L),

@@ -100,7 +100,8 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
             // Update peakel raw map id
             peakel.rawMapId = newRawMapId
             
-            val peaksAsBytes = org.msgpack.ScalaMessagePack.write(peakel.peaks)
+            // Serialize the peakel data matrix
+            val peaksAsBytes = org.msgpack.ScalaMessagePack.write(peakel.dataMatrix)
             
             peakelInsertStmt.executeWith(
               peakel.moz,
@@ -111,7 +112,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
               0f, // peakel.fwhm,
               peakel.isOverlapping,
               peakel.featuresCount,
-              peakel.peaks.length,
+              peakel.dataMatrix.scanIds.length, // number of peaks
               peaksAsBytes,
               peakel.properties.map( ProfiJson.serialize(_) ),
               peakel.firstScanId,
@@ -136,6 +137,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
               ft.id,
               peakelItem.peakelReference.id,
               peakelItem.isotopeIndex,
+              peakelItem.isBasePeakel,
               peakelItem.properties.map(ProfiJson.serialize(_)),
               newRawMapId
             )
@@ -197,6 +199,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
       qualityScore,
       ft.ms1Count,
       ft.ms2Count,
+      ftRelations.peakelsCount,
       ft.isCluster,
       ft.isOverlapping,
       ft.properties.map(ProfiJson.serialize(_)),

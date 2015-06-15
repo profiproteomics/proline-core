@@ -52,7 +52,7 @@ class SQLScanSequenceProvider(val lcmsDbCtx: DatabaseConnectionContext) extends 
     
     new LcMsScanSequence(
       runId = runRecord.getLong(ScanSeqCols.ID),
-      rawFileName = runRecord.getString(ScanSeqCols.RAW_FILE_NAME),
+      rawFileIdentifier = runRecord.getString(ScanSeqCols.RAW_FILE_IDENTIFIER),
       minIntensity = runRecord.getDoubleOrElse(ScanSeqCols.MIN_INTENSITY,Double.NaN),
       maxIntensity = runRecord.getDoubleOrElse(ScanSeqCols.MAX_INTENSITY,Double.NaN),
       ms1ScansCount = runRecord.getIntOrElse(ScanSeqCols.MS1_SCAN_COUNT,0),

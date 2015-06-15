@@ -158,6 +158,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
        properties = ftRecord.getStringOption(FtCols.SERIALIZED_PROPERTIES.toAliasedString).map( ProfiJson.deserialize[FeatureProperties](_) ),
        relations = new FeatureRelations(
          peakelItems = peakelItems,
+         peakelsCount = ftRecord.getInt(FtCols.PEAKEL_COUNT),
          firstScanInitialId = scanInitialIdById.getOrElse(firstScanId,0),
          lastScanInitialId = scanInitialIdById.getOrElse(lastScanId,0),
          apexScanInitialId = scanInitialIdById.getOrElse(apexScanId,0),

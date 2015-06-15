@@ -200,6 +200,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             peptideSet.isSubset,
             peptideSet.score,
             peptideSet.items.length,
+            peptideSet.sequencesCount,
             peptideSet.peptideMatchesCount,
             peptideSet.properties.map(ProfiJson.serialize(_)),
             if( protSetId > 0 ) Some(protSetId) else Option.empty[Long],
@@ -313,14 +314,14 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           
           val peptideSet = proteinSet.peptideSet
           
-          // Determine the typical protein match id using the sequence coverage
-          var typicalProtMatchId = proteinSet.getTypicalProteinMatchId
-          if( typicalProtMatchId == 0 ) {
+          // Determine the representative protein match id using the sequence coverage
+          var reprProtMatchId = proteinSet.getRepresentativeProteinMatchId()
+          if( reprProtMatchId == 0 ) {
             /*if( proteinMatchById.contains(proteinSet.proteinMatchIds(0)) == false ) {
               println("searched id="+proteinSet.proteinMatchIds(0))
               println("first id is="+proteinMatchById.keys.head)
             }*/
-            typicalProtMatchId = proteinSet.getSameSetProteinMatchIds.reduce { (a,b) => 
+            reprProtMatchId = proteinSet.getSameSetProteinMatchIds.reduce { (a,b) => 
               if( proteinMatchById(a).coverage > proteinMatchById(b).coverage ) a else b
             }
           }
@@ -331,7 +332,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
             proteinSet.isValidated,
             proteinSet.selectionLevel,
             proteinSet.properties.map(ProfiJson.serialize(_)),
-            typicalProtMatchId,
+            reprProtMatchId,
             rsmId
           )
           
@@ -353,12 +354,15 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           for( (peptideSet,protMatchIds) <- protSet.getAllProteinMatchesIdByPeptideSet; protMatchId <- protMatchIds ) {
             
             val protMatchPropsAsJSON = if( protMatchRsmPropsById != null ) Some(ProfiJson.serialize( protMatchRsmPropsById(protMatchId) )) else None
+            val coverage = if( protSet.proteinMatchCoverageById == null ) 0f
+            else protSet.proteinMatchCoverageById.get(protMatchId).getOrElse(0f)
             
             // Insert protein match mapping
             stmt.executeWith(
               protSet.id,
               protMatchId,
               peptideSet.isSubset,
+              coverage,
               protMatchPropsAsJSON,
               rsmId
             )

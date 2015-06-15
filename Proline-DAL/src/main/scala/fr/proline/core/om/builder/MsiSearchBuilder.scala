@@ -155,7 +155,6 @@ object MsiSearchBuilder {
     new MSISearch(
       id = r.getLong(msiSearchCols.ID),
       resultFileName = r.getString(msiSearchCols.RESULT_FILE_NAME),
-      submittedQueriesCount = r.getInt(msiSearchCols.SUBMITTED_QUERIES_COUNT),
       searchSettings = null,
       peakList = null,
       date = r.getDate(msiSearchCols.DATE),

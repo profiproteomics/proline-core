@@ -385,7 +385,6 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
 
         // TODO handle serializedProperties
 
-        msiSearch.setSubmittedQueriesCount(search.submittedQueriesCount)
         msiSearch.setTitle(search.title)
         msiSearch.setUserEmail(search.userEmail)
         msiSearch.setUserName(search.userName)
@@ -633,7 +632,6 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
       msiSearchSetting.setPeptideChargeStates(searchSettings.ms1ChargeStates)
       msiSearchSetting.setPeptideMassErrorTolerance(java.lang.Double.valueOf(searchSettings.ms1ErrorTol))
       msiSearchSetting.setPeptideMassErrorToleranceUnit(searchSettings.ms1ErrorTolUnit)
-      msiSearchSetting.setQuantitation(searchSettings.quantitation)
 
       val searchSettingProperties = searchSettings.properties
       if (searchSettingProperties.isDefined) {

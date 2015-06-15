@@ -43,7 +43,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
         
         statement.executeWith(
           scanSeq.runId,
-          scanSeq.rawFileName,
+          scanSeq.rawFileIdentifier,
           scanSeq.minIntensity,
           scanSeq.maxIntensity,
           scanSeq.ms1ScansCount,

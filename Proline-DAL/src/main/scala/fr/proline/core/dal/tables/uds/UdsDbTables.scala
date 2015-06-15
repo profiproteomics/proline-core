@@ -91,6 +91,7 @@ object UdsDbBiologicalSampleSampleAnalysisMapColumns extends ColumnEnumeration {
   val $tableName = UdsDbBiologicalSampleSampleAnalysisMapTable.name
   val BIOLOGICAL_SAMPLE_ID = Column("biological_sample_id")
   val SAMPLE_ANALYSIS_ID = Column("sample_analysis_id")
+  val SAMPLE_ANALYSIS_NUMBER = Column("sample_analysis_number")
 }
 
 abstract class UdsDbBiologicalSampleSampleAnalysisMapTable extends TableDefinition[UdsDbBiologicalSampleSampleAnalysisMapColumns.type]
@@ -126,6 +127,20 @@ abstract class UdsDbDataSetTable extends TableDefinition[UdsDbDataSetColumns.typ
 object UdsDbDataSetTable extends UdsDbDataSetTable {
   val name = "data_set"
   val columns = UdsDbDataSetColumns
+}
+
+object UdsDbDataSetObjectTreeMapColumns extends ColumnEnumeration {
+  val $tableName = UdsDbDataSetObjectTreeMapTable.name
+  val DATA_SET_ID = Column("data_set_id")
+  val SCHEMA_NAME = Column("schema_name")
+  val OBJECT_TREE_ID = Column("object_tree_id")
+}
+
+abstract class UdsDbDataSetObjectTreeMapTable extends TableDefinition[UdsDbDataSetObjectTreeMapColumns.type]
+
+object UdsDbDataSetObjectTreeMapTable extends UdsDbDataSetObjectTreeMapTable {
+  val name = "data_set_object_tree_map"
+  val columns = UdsDbDataSetObjectTreeMapColumns
 }
 
 object UdsDbDocumentColumns extends ColumnEnumeration {
@@ -352,7 +367,8 @@ object UdsDbMasterQuantChannelTable extends UdsDbMasterQuantChannelTable {
 object UdsDbObjectTreeColumns extends ColumnEnumeration {
   val $tableName = UdsDbObjectTreeTable.name
   val ID = Column("id")
-  val SERIALIZED_DATA = Column("serialized_data")
+  val BLOB_DATA = Column("blob_data")
+  val CLOB_DATA = Column("clob_data")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val SCHEMA_NAME = Column("schema_name")
 }
@@ -368,6 +384,7 @@ object UdsDbObjectTreeSchemaColumns extends ColumnEnumeration {
   val $tableName = UdsDbObjectTreeSchemaTable.name
   val NAME = Column("name")
   val TYPE = Column("type")
+  val IS_BINARY_MODE = Column("is_binary_mode")
   val VERSION = Column("version")
   val SCHEMA = Column("schema")
   val DESCRIPTION = Column("description")
@@ -403,7 +420,9 @@ object UdsDbProjectColumns extends ColumnEnumeration {
   val NAME = Column("name")
   val DESCRIPTION = Column("description")
   val CREATION_TIMESTAMP = Column("creation_timestamp")
+  val LOCK_EXPIRATION_TIMESTAMP = Column("lock_expiration_timestamp")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
+  val LOCK_USER_ID = Column("lock_user_id")
   val OWNER_ID = Column("owner_id")
 }
 
@@ -431,6 +450,7 @@ object UdsDbProjectUserAccountMapColumns extends ColumnEnumeration {
   val $tableName = UdsDbProjectUserAccountMapTable.name
   val PROJECT_ID = Column("project_id")
   val USER_ACCOUNT_ID = Column("user_account_id")
+  val WRITE_PERMISSION = Column("write_permission")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
 }
 
@@ -529,9 +549,11 @@ object UdsDbRatioDefinitionTable extends UdsDbRatioDefinitionTable {
 
 object UdsDbRawFileColumns extends ColumnEnumeration {
   val $tableName = UdsDbRawFileTable.name
-  val NAME = Column("name")
-  val EXTENSION = Column("extension")
-  val DIRECTORY = Column("directory")
+  val IDENTIFIER = Column("identifier")
+  val RAW_FILE_NAME = Column("raw_file_name")
+  val RAW_FILE_DIRECTORY = Column("raw_file_directory")
+  val MZDB_FILE_NAME = Column("mzdb_file_name")
+  val MZDB_FILE_DIRECTORY = Column("mzdb_file_directory")
   val CREATION_TIMESTAMP = Column("creation_timestamp")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val INSTRUMENT_ID = Column("instrument_id")
@@ -547,7 +569,7 @@ object UdsDbRawFileTable extends UdsDbRawFileTable {
 
 object UdsDbRawFileProjectMapColumns extends ColumnEnumeration {
   val $tableName = UdsDbRawFileProjectMapTable.name
-  val RAW_FILE_NAME = Column("raw_file_name")
+  val RAW_FILE_IDENTIFIER = Column("raw_file_identifier")
   val PROJECT_ID = Column("project_id")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
 }
@@ -570,7 +592,7 @@ object UdsDbRunColumns extends ColumnEnumeration {
   val MS_METHOD = Column("ms_method")
   val ANALYST = Column("analyst")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
-  val RAW_FILE_NAME = Column("raw_file_name")
+  val RAW_FILE_IDENTIFIER = Column("raw_file_identifier")
 }
 
 abstract class UdsDbRunTable extends TableDefinition[UdsDbRunColumns.type]
@@ -585,7 +607,7 @@ object UdsDbRunIdentificationColumns extends ColumnEnumeration {
   val ID = Column("id")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val RUN_ID = Column("run_id")
-  val RAW_FILE_NAME = Column("raw_file_name")
+  val RAW_FILE_IDENTIFIER = Column("raw_file_identifier")
 }
 
 abstract class UdsDbRunIdentificationTable extends TableDefinition[UdsDbRunIdentificationColumns.type]
@@ -598,7 +620,6 @@ object UdsDbRunIdentificationTable extends UdsDbRunIdentificationTable {
 object UdsDbSampleAnalysisColumns extends ColumnEnumeration {
   val $tableName = UdsDbSampleAnalysisTable.name
   val ID = Column("id")
-  val NUMBER = Column("number")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val QUANTITATION_ID = Column("quantitation_id")
 }
@@ -613,7 +634,7 @@ object UdsDbSampleAnalysisTable extends UdsDbSampleAnalysisTable {
 object UdsDbSpecTitleParsingRuleColumns extends ColumnEnumeration {
   val $tableName = UdsDbSpecTitleParsingRuleTable.name
   val ID = Column("id")
-  val RAW_FILE_NAME = Column("raw_file_name")
+  val RAW_FILE_IDENTIFIER = Column("raw_file_identifier")
   val FIRST_CYCLE = Column("first_cycle")
   val LAST_CYCLE = Column("last_cycle")
   val FIRST_SCAN = Column("first_scan")
@@ -672,6 +693,7 @@ object UdsDb {
     UdsDbBiologicalSampleTable,
     UdsDbBiologicalSampleSampleAnalysisMapTable,
     UdsDbDataSetTable,
+    UdsDbDataSetObjectTreeMapTable,
     UdsDbDocumentTable,
     UdsDbEnzymeTable,
     UdsDbEnzymeCleavageTable,

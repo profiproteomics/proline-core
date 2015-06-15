@@ -70,7 +70,7 @@ class SQLPeaklistSoftwareProvider(val udsDbCtx: DatabaseConnectionContext) exten
       ezDBC.select("SELECT * FROM spec_title_parsing_rule") { r =>
         new SpectrumTitleParsingRule(
           id = toLong(r.nextAny),
-          rawFileNameRegex = r.getStringOption(SpecTitleCols.RAW_FILE_NAME),
+          rawFileIdentifierRegex = r.getStringOption(SpecTitleCols.RAW_FILE_IDENTIFIER),
           firstCycleRegex = r.getStringOption(SpecTitleCols.FIRST_CYCLE),
           lastCycleRegex = r.getStringOption(SpecTitleCols.LAST_CYCLE),
           firstScanRegex = r.getStringOption(SpecTitleCols.FIRST_SCAN),

@@ -59,16 +59,20 @@ object ProteinSetBuilder {
     // Retrieve protein match ids and properties
     val sameSetProtMatchIdsBuilder = Array.newBuilder[Long]
     val subSetProtMatchIdsBuilder = Array.newBuilder[Long]
-    val protMatchPropertiesById = Map.newBuilder[Long, ProteinMatchResultSummaryProperties]
+    val protMatchPropertiesByIdBuilder = Map.newBuilder[Long, ProteinMatchResultSummaryProperties]
+    val protMatchCoverageByIdBuilder = Map.newBuilder[Long, Float]
 
     for( protSetItemRecord <- protSetItemRecords ) {
       
       // Link only protein matches which do not belong to a subset
-      val isInSubset = protSetItemRecord.getBoolean(ProtSetItemCols.IS_IN_SUBSET)
       val protMatchId = protSetItemRecord.getLong(ProtSetItemCols.PROTEIN_MATCH_ID)
+      val isInSubset = protSetItemRecord.getBoolean(ProtSetItemCols.IS_IN_SUBSET)      
+      val coverage = protSetItemRecord.getLong(ProtSetItemCols.COVERAGE)
+      protMatchCoverageByIdBuilder += protMatchId -> coverage
+      
       val propertiesAsJsonOpt = protSetItemRecord.getStringOption(ProtSetItemCols.SERIALIZED_PROPERTIES)
       if (propertiesAsJsonOpt.isDefined) {
-        protMatchPropertiesById += protMatchId -> ProfiJson.deserialize[ProteinMatchResultSummaryProperties](propertiesAsJsonOpt.get)
+        protMatchPropertiesByIdBuilder += protMatchId -> ProfiJson.deserialize[ProteinMatchResultSummaryProperties](propertiesAsJsonOpt.get)
       }
       
       if ( isInSubset == false ) {
@@ -92,11 +96,12 @@ object ProteinSetBuilder {
       selectionLevel = protSetRecord.getInt(ProtSetCols.SELECTION_LEVEL),
       samesetProteinMatchIds = sameSetProtMatchIdsBuilder.result(),
       subsetProteinMatchIds = subSetProtMatchIdsBuilder.result(),
-      typicalProteinMatchId = protSetRecord.getLong(ProtSetCols.TYPICAL_PROTEIN_MATCH_ID),
+      representativeProteinMatchId = protSetRecord.getLong(ProtSetCols.REPRESENTATIVE_PROTEIN_MATCH_ID),
+      proteinMatchCoverageById = protMatchCoverageByIdBuilder.result,
       masterQuantComponentId = protSetRecord.getLongOrElse(ProtSetCols.MASTER_QUANT_COMPONENT_ID,0L),
       resultSummaryId = protSetRecord.getLong(ProtSetCols.RESULT_SUMMARY_ID),
       properties = properties,
-      proteinMatchPropertiesById = protMatchPropertiesById.result
+      proteinMatchPropertiesById = protMatchPropertiesByIdBuilder.result
     )
     
   }

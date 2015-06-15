@@ -175,7 +175,6 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
         searchSettings.ms1ChargeStates,
         searchSettings.ms1ErrorTol,
         searchSettings.ms1ErrorTolUnit,
-        searchSettings.quantitation,
         searchSettings.isDecoy,
         searchSettings.properties.map(ProfiJson.serialize(_)),
         searchSettings.instrumentConfig.id
@@ -319,7 +318,6 @@ abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging 
         msiSearch.userName,
         msiSearch.userEmail,
         msiSearch.queriesCount,
-        msiSearch.submittedQueriesCount,
         msiSearch.searchedSequencesCount,
         Option.empty[String],
         searchSettingsId,

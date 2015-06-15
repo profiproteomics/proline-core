@@ -3,7 +3,6 @@ package fr.proline.core.om.provider.lcms.impl
 import fr.profi.jdbc.ResultSetRow
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
-import fr.profi.util.StringUtils
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.tables.{SelectQueryBuilder1, SelectQueryBuilder2}
@@ -11,43 +10,51 @@ import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.uds.{UdsDbInstrumentTable, UdsDbRawFileTable, UdsDbRunTable}
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.om.provider.IProlinePathConverter
 import fr.proline.core.om.provider.lcms.IRunProvider
 import fr.proline.core.om.provider.lcms.IScanSequenceProvider
 
-class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext) {
+class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConverter: Option[IProlinePathConverter] ) {
   
   protected val RawFileCols = UdsDbRawFileTable.columns
   protected val InstCols = UdsDbInstrumentTable.columns
   
-  def getRawFile( rawFileName: String): Option[RawFile] = {
-    getRawFiles( Seq(rawFileName) ).headOption
+  def getRawFile( rawFileIdentifier: String): Option[RawFile] = {
+    getRawFiles( Seq(rawFileIdentifier) ).headOption
   }
 
-  def getRawFiles( rawFileNames: Seq[String] ): Array[RawFile] = {
-    if( rawFileNames.isEmpty ) return Array()
+  def getRawFiles( rawFileIdentifiers: Seq[String] ): Array[RawFile] = {
+    if( rawFileIdentifiers.isEmpty ) return Array()
     
     DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
       
       val rawFileQuery = new SelectQueryBuilder2(UdsDbRawFileTable, UdsDbInstrumentTable).mkSelectQuery( (t1,c1, t2, c2) =>
         List(t1.*, t2.*) -> 
-          " WHERE "~ t1.NAME ~" IN "~ rawFileNames.mkString("('","','","')") ~
+          " WHERE "~ t1.IDENTIFIER ~" IN "~ rawFileIdentifiers.mkString("('","','","')") ~
           " AND "~ t1.INSTRUMENT_ID ~ "="~ t2.ID
       )
       
       ezDBC.select( rawFileQuery ) { rawFileRecord =>
         
-        val rawFilePropsStr = rawFileRecord.getStringOption(RawFileCols.SERIALIZED_PROPERTIES.toAliasedString)
-        require( rawFilePropsStr.isDefined && StringUtils.isNotEmpty(rawFilePropsStr.get), "Can't fetch raw file serialized properties")
+        val rawFilePropsStrOpt = rawFileRecord.getStringOption(RawFileCols.SERIALIZED_PROPERTIES.toAliasedString)
+        val rawFileProperties = rawFilePropsStrOpt.map( ProfiJson.deserialize[RawFileProperties](_) )
         
-        val rawFileProperties = ProfiJson.deserialize[RawFileProperties](rawFilePropsStr.get)
-        require(rawFileProperties != null, "RawFileProperties is null, json : " + rawFilePropsStr.get) 
-        require(rawFileProperties.getMzdbFilePath != null, "Can't fetch mzDbFilePath from rawFileProperties")
+        val directory = rawFileRecord.getStringOption(RawFileCols.RAW_FILE_DIRECTORY).map { str =>
+          if( pathConverter.isEmpty ) str
+          else pathConverter.get.prolinePathToAbsolutePath(str)
+        }
+        val mzdbFileDirectory = rawFileRecord.getStringOption(RawFileCols.MZDB_FILE_DIRECTORY).map { str =>
+          if( pathConverter.isEmpty ) str
+          else pathConverter.get.prolinePathToAbsolutePath(str)
+        }
         
         // TODO: cache already loaded instruments
         new RawFile(
-          name = rawFileRecord.getString(RawFileCols.NAME.toAliasedString),
-          extension = rawFileRecord.getString(RawFileCols.EXTENSION),
-          directory = rawFileRecord.getStringOption(RawFileCols.DIRECTORY),
+          identifier = rawFileRecord.getString(RawFileCols.IDENTIFIER.toAliasedString),
+          name = rawFileRecord.getString(RawFileCols.RAW_FILE_NAME.toAliasedString),
+          directory = directory,
+          mzdbFileName = rawFileRecord.getStringOption(RawFileCols.MZDB_FILE_NAME),
+          mzdbFileDirectory = mzdbFileDirectory,
           creationTimestamp = rawFileRecord.getDateOption(RawFileCols.CREATION_TIMESTAMP),
           instrument = Some(
             new Instrument(
@@ -56,7 +63,7 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext) {
               rawFileRecord.getString(InstCols.SOURCE)
             )
           ),
-          properties = Some(rawFileProperties)
+          properties = rawFileProperties
         )
         
       } toArray
@@ -68,10 +75,11 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext) {
 
 class SQLRunProvider(
   val udsDbCtx: DatabaseConnectionContext,
-  val scanSeqProvider: Option[IScanSequenceProvider] = None
+  val scanSeqProvider: Option[IScanSequenceProvider] = None,
+  val pathConverter: Option[IProlinePathConverter] = None
 ) extends IRunProvider {
   
-  protected val rawFileProvider = new SQLRawFileProvider(udsDbCtx)
+  protected val rawFileProvider = new SQLRawFileProvider(udsDbCtx, pathConverter)
   
   protected val InstCols = UdsDbInstrumentTable.columns
   protected val RawFileCols = UdsDbRawFileTable.columns
@@ -97,13 +105,13 @@ class SQLRunProvider(
       )
       
       val runRecords = ezDBC.selectAllRecords(runQuery)
-      val rawFileNames = runRecords.map( _.getString(RunCols.RAW_FILE_NAME) )
-      val rawFiles = rawFileProvider.getRawFiles(rawFileNames)
-      val rawFileByName = rawFiles.map( raw => raw.name -> raw ).toMap
+      val rawFileIdentifiers = runRecords.map( _.getString(RunCols.RAW_FILE_IDENTIFIER) )
+      val rawFiles = rawFileProvider.getRawFiles(rawFileIdentifiers)
+      val rawFileByIdentifier = rawFiles.map( raw => raw.identifier -> raw ).toMap
       
       for( runRecord <- runRecords ) {
         
-        val rawFile = rawFileByName( runRecord.getString(RunCols.RAW_FILE_NAME) )
+        val rawFile = rawFileByIdentifier( runRecord.getString(RunCols.RAW_FILE_IDENTIFIER) )
         val runScanSeq = scanSeqByIdAsOpt.map( _(runRecord.getLong(RunCols.ID)) )
         
         // Build the run

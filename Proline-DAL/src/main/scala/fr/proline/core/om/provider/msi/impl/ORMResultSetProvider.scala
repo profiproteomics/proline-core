@@ -518,7 +518,6 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
 
     new MSISearch(msiSearch.getId,
       msiSearch.getResultFileName,
-      msiSearch.getSubmittedQueriesCount,
       buildSearchSettings(msiSearch.getSearchSetting),
       buildPeaklist(msiSearch.getPeaklist),
       msiSearch.getDate,
@@ -608,7 +607,6 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
       buildInstrumentConfig(msiSearchSetting.getInstrumentConfig),
       None,
       None,
-      msiSearchSetting.getQuantitation,
       searchSettingsProperties)
   }
 
@@ -725,7 +723,7 @@ class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
     new Peaklist(msiPeaklist.getId,
       msiPeaklist.getType,
       msiPeaklist.getPath,
-      msiPeaklist.getRawFileName,
+      msiPeaklist.getRawFileIdentifier,
       msiPeaklist.getMsLevel,
       msiPeaklist.getSpectrumDataCompression,
       buildPeaklistSoftware(msiPeaklist.getPeaklistSoftware))

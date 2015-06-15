@@ -17,7 +17,7 @@ object PeaklistBuilder {
   def buildPeaklists(
     eachPeaklistRecord: (IValueContainer => Peaklist) => Seq[Peaklist],
     eachPklSoftRecordSelector: Array[Long] => ( (IValueContainer => PeaklistSoftware) => Seq[PeaklistSoftware] )
-    ): Array[Peaklist] = {
+  ): Array[Peaklist] = {
     
     val pklSoftIdByPklId = new HashMap[Long, Long]
 
@@ -51,7 +51,7 @@ object PeaklistBuilder {
       id = r.getLong(peaklistCols.ID),
       fileType = r.getString(peaklistCols.TYPE),
       path = r.getString(peaklistCols.PATH),
-      rawFileName = r.getString(peaklistCols.RAW_FILE_NAME),
+      rawFileName = r.getString(peaklistCols.RAW_FILE_IDENTIFIER),
       msLevel = r.getInt(peaklistCols.MS_LEVEL),
       properties = propsOpt
     )
