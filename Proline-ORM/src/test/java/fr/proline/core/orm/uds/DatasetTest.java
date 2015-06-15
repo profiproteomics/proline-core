@@ -161,7 +161,8 @@ public class DatasetTest extends DatabaseTestCase {
 	    IdentificationDataset idfDS = udsEm.find(IdentificationDataset.class, Long.valueOf(2L));
 
 	    assertEquals(idfDS.getName(), "CB_342_1");
-	    assertEquals(idfDS.getRawFile().getRawFileName(), "CAVEN456");
+	    assertEquals(idfDS.getRawFile().getIdentifier(), "CAVEN456");
+	    assertEquals(idfDS.getRawFile().getRawFileName(), "CAVEN456.raw");
 	} finally {
 
 	    if (udsEm != null) {

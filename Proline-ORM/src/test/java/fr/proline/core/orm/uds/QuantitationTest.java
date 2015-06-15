@@ -49,7 +49,7 @@ public class QuantitationTest extends DatabaseTestCase {
 	    Dataset quanti = udsEm.find(Dataset.class, Long.valueOf(1L));
 	    assertNotNull(quanti);
 	    assertEquals(quanti.getChildrenCount(), 2);
-	    assertEquals(quanti.getSampleReplicates().size(), 8);
+	    assertEquals(quanti.getSampleReplicates().size(), 6);
 	    assertEquals(quanti.getBiologicalSamples().size(), 4);
 	    assertEquals(quanti.getMethod().getName(), "15N");
 	} finally {

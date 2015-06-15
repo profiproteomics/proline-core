@@ -3,6 +3,7 @@ package fr.proline.core.orm.uds;
 import static org.junit.Assert.*;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -77,11 +78,23 @@ public class ProjectTest extends DatabaseTestCase {
 
 	final EntityManager udsEm = emf.createEntityManager();
 
-	try {
+	try {		
 	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
+	    Set<ProjectUserAccountMap> usersMap = project.getProjectUserAccountMap();
 	    assertNotNull(project);
 	    assertEquals(project.getOwner().getLogin(), "joe");
-	    assertEquals(project.getMembers().size(), 2);
+	    assertEquals(usersMap.size(), 3);
+	    int nbrRW = 0;
+	    int nbrRO = 0;
+	    for(ProjectUserAccountMap member : usersMap){
+	    	if(member.getWritePermission())
+	    		nbrRW++;
+	    	else
+	    		nbrRO++;
+	    		
+	    }
+	    assertEquals(1, nbrRO);
+	    assertEquals(2, nbrRW);
 	} finally {
 
 	    if (udsEm != null) {
@@ -105,15 +118,18 @@ public class ProjectTest extends DatabaseTestCase {
 	try {
 	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
 	    UserAccount jim = udsEm.find(UserAccount.class, Long.valueOf(3L));
-	    project.addMember(jim);
-	    assertEquals(project.getMembers().size(), 3);
+	    project.addMember(jim, true);
+	    assertEquals(4, project.getProjectUserAccountMap().size() );
 	    udsEm.getTransaction().begin();
 	    udsEm.persist(project);
+	    for(ProjectUserAccountMap nextUser :project.getProjectUserAccountMap()){
+	    	udsEm.persist(nextUser);	
+	    }	    
 	    udsEm.getTransaction().commit();
 	    udsEm.clear();
 	    Project rProject = udsEm.find(Project.class, Long.valueOf(1L));
 	    assertNotSame(project, rProject);
-	    assertEquals(rProject.getMembers().size(), 3);
+	    assertEquals(4, rProject.getProjectUserAccountMap().size());
 	    jim = udsEm.find(UserAccount.class, Long.valueOf(3L));
 	    List<Project> projects = ProjectRepository.findProjects(udsEm, jim.getId());
 	    assertEquals(projects.size(), 1);
@@ -147,7 +163,14 @@ public class ProjectTest extends DatabaseTestCase {
 	    udsEm.getTransaction().commit();
 	    Project rProject = udsEm.find(Project.class, Long.valueOf(2L));
 	    assertEquals(rProject, project);
-	    assertTrue(rProject.getMembers().contains(owner));
+	    boolean ownerFound = false;
+	    for(ProjectUserAccountMap nextUserInMap : rProject.getProjectUserAccountMap()){
+	    	if(nextUserInMap.getUserAccount().equals(owner)){
+	    		ownerFound = true;
+	    		break;
+	    	}
+	    }
+	    assertTrue(ownerFound);
 
 	    final List<Long> projectIds = ProjectRepository.findAllProjectIds(udsEm);
 	    assertTrue("Project Ids List", (projectIds != null) && !projectIds.isEmpty());
