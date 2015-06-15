@@ -73,7 +73,7 @@ object ImportScanSequence { // extends String2FileConverter
 
     LcMsScanSequence(
       runId = LcMsRun.generateNewId,
-      rawFileName = rawFile.name,
+      rawFileIdentifier = rawFile.identifier,
       minIntensity = 0.0,
       maxIntensity = 0.0,
       ms1ScansCount = ms1Count,

@@ -133,7 +133,7 @@ class WeightedSCResultReader (
 
       //-- Get all proteinSets Typical Accession
       val typicalAccByProtSetIdBuiler = Map.newBuilder[Long, String]
-      val allTypicalId = msiQuantRSM.masterQuantProteinSets.map(_.proteinSet.getTypicalProteinMatchId)
+      val allTypicalId = msiQuantRSM.masterQuantProteinSets.map(_.proteinSet.getRepresentativeProteinMatchId())
       val accJdbcWork = new JDBCWork() {
         override def execute(con: Connection) {
           val getTypAcc = "SELECT accession, id from protein_match WHERE id IN (" + allTypicalId.mkString(",") + ")"
@@ -157,7 +157,7 @@ class WeightedSCResultReader (
           override def execute(con: Connection) {
                 //---- Read Prot Status
 
-                val getProtStatus = "SELECT protein_set_id, protein_match_id, is_in_subset, typical_protein_match_id FROM protein_set_protein_match_item, protein_set " +
+                val getProtStatus = "SELECT protein_set_id, protein_match_id, is_in_subset, representative_protein_match_id FROM protein_set_protein_match_item, protein_set " +
                   " WHERE protein_set.id = protein_set_protein_match_item.protein_set_id " +
                   " AND protein_set_protein_match_item.result_summary_id = ? "
                 val pStmt = con.prepareStatement(getProtStatus)
@@ -166,7 +166,7 @@ class WeightedSCResultReader (
                 val sqlResultSet = pStmt.executeQuery()
                 while (sqlResultSet.next) {  
                   val isInSubset = sqlResultSet.getBoolean("is_in_subset")
-                  val protSetTypID = sqlResultSet.getLong("typical_protein_match_id")
+                  val protSetTypID = sqlResultSet.getLong("representative_protein_match_id")
                   val protMatchId = sqlResultSet.getLong("protein_match_id")
                   val protSetId = sqlResultSet.getLong("protein_set_id")
                   quantProteinSetInfoByProtSetMatchTupleIdBuilder += (protSetId,protMatchId) -> (isInSubset,protSetTypID)
@@ -196,7 +196,7 @@ class WeightedSCResultReader (
       msiQuantRSM.masterQuantProteinSets.foreach(mqProtSet => {
 
         //Get Typical Prot Accession
-        var typicalAcc: String = typicalAccByProtSetId(mqProtSet.proteinSet.getTypicalProteinMatchId)
+        var typicalAcc: String = typicalAccByProtSetId(mqProtSet.proteinSet.getRepresentativeProteinMatchId)
 
         //Get QuantProteinSet for current ProteinSet in current QuantChannel
         val protQuant = mqProtSet.quantProteinSetMap.get(qtChId)

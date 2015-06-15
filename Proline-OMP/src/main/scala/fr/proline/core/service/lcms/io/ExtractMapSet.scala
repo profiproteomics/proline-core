@@ -15,6 +15,7 @@ import fr.profi.mzdb._
 import fr.profi.mzdb.algo.feature.extraction.FeatureExtractorConfig
 import fr.profi.mzdb.io.reader.RunSliceDataProvider
 import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peak => MzDbPeak, Peakel => MzDbPeakel, PeakelBuilder, ScanHeader }
+import fr.profi.mzdb.model.PeakelDataMatrix
 import fr.profi.mzdb.model.PutativeFeature
 import fr.profi.mzdb.utils.ms.MsUtils
 import fr.profi.util.ms.massToMoz
@@ -102,8 +103,7 @@ class ExtractMapSet(
     for (lcmsRun <- lcMsRuns) {
 
       val rawFile = lcmsRun.rawFile
-      val rawPropOpt = rawFile.properties
-      val mzDbFilePath = rawPropOpt.get.getMzdbFilePath
+      val mzDbFilePath = rawFile.getMzdbFilePath.get
       val mzDbFile = new File(mzDbFilePath)
 
       if (lcmsRun.scanSequence.isEmpty) {
@@ -342,7 +342,7 @@ class ExtractMapSet(
     val mzDbFileDir = mzDbFile.getParent()
     val mzDbFileName = mzDbFile.getName()
     // FIXME: it should be retrieved from the mzDB file meta-data
-    val rawFileName = mzDbFileName.split("\\.").head
+    val rawFileIdentifier = mzDbFileName.split("\\.").head
 
     // Check if the scan sequence already exists
     //val scanSeqId = lcmsDbHelper.getScanSequenceIdForRawFileName(rawFileName)
@@ -378,7 +378,7 @@ class ExtractMapSet(
 
       val scanSeq = new LcMsScanSequence(
         runId = lcmsRun.id,
-        rawFileName = rawFileName,
+        rawFileIdentifier = rawFileIdentifier,
         minIntensity = 0.0, // TODO: compute this value ???
         maxIntensity = 0.0, // TODO: compute this value ???
         ms1ScansCount = ms1ScansCount,
@@ -1038,8 +1038,8 @@ class ExtractMapSet(
     try {
       for (peakel <- peakels) {
 
-        val scanIds = peakel.getScanIds()
-        val peakelMessage = peakel.toPeakelDataMessage()
+        val scanInitialIds = peakel.getScanIds()
+        val peakelMessage = peakel.toPeakelDataMatrix()
         val peakelMessageAsBytes = org.msgpack.ScalaMessagePack.write(peakelMessage)
 
         val peakelMz = peakel.getMz
@@ -1061,8 +1061,8 @@ class ExtractMapSet(
         peakelStmt.bind(fieldNumber, peakel.scanIds.length); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakelMessageAsBytes); fieldNumber += 1
         peakelStmt.bindNull(fieldNumber); fieldNumber += 1 // param_tree
-        peakelStmt.bind(fieldNumber, scanIds.head); fieldNumber += 1
-        peakelStmt.bind(fieldNumber, scanIds.last); fieldNumber += 1
+        peakelStmt.bind(fieldNumber, scanInitialIds.head); fieldNumber += 1
+        peakelStmt.bind(fieldNumber, scanInitialIds.last); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakel.getApexScanId); fieldNumber += 1
         peakelStmt.bind(fieldNumber, 1); fieldNumber += 1 // ms_level
         peakelStmt.bindNull(fieldNumber); // map_id
@@ -1126,7 +1126,7 @@ class ExtractMapSet(
         val peakelMessageAsBytes = peakelStmt.columnBlob(1)
         //println(peakelId)
 
-        val peakelMessage = org.msgpack.ScalaMessagePack.read[fr.profi.mzdb.model.PeakelDataMessage](peakelMessageAsBytes)
+        val peakelMessage = org.msgpack.ScalaMessagePack.read[PeakelDataMatrix](peakelMessageAsBytes)
         val (intensitySum, area, fwhm) = peakelMessage.integratePeakel()
 
         peakels += new MzDbPeakel(
@@ -1166,7 +1166,7 @@ class ExtractMapSet(
         val peakelId = peakelStmt.columnInt(0)
         val peakelMessageAsBytes = peakelStmt.columnBlob(1)
 
-        val peakelMessage = org.msgpack.ScalaMessagePack.read[fr.profi.mzdb.model.PeakelDataMessage](peakelMessageAsBytes)
+        val peakelMessage = org.msgpack.ScalaMessagePack.read[fr.profi.mzdb.model.PeakelDataMatrix](peakelMessageAsBytes)
         val (intensitySum, area, fwhm) = peakelMessage.integratePeakel()
 
         peakels += new MzDbPeakel(
@@ -1668,15 +1668,17 @@ class ExtractMapSet(
     val ftId = LcMsFeature.generateNewId
 
     // Retrieve some vars
-
     val lcmsScanIdByInitialId = scanSeq.scanIdByInitialId
     val scanInitialIds = mzDbFt.getScanIds
-    val (firstScanInitialId, lastScanInitialId) = (scanInitialIds.head, scanInitialIds.last)
-    val apexScanInitialId = mzDbFt.getApexScanId
+    
+    // WARNING: we assume here that these methods returns the intial ID but it may change in the future
+    val apexScanInitialId = mzDbFt.getApexScanId.toInt
+    val (firstScanInitialId, lastScanInitialId) = (scanInitialIds.head.toInt, scanInitialIds.last.toInt)
     val firstLcMsScanId = lcmsScanIdByInitialId(firstScanInitialId)
     val lastLcMsScanId = lcmsScanIdByInitialId(lastScanInitialId)
     val apexLcMsScanId = lcmsScanIdByInitialId(apexScanInitialId)
-    val ms2EventIds = mzDbFt.getMs2ScanIds.map(lcmsScanIdByInitialId(_))
+    val ms2EventIds = mzDbFt.getMs2ScanIds.map(sid => lcmsScanIdByInitialId(sid.toInt))
+    // END OF WARNING
 
     val mzDbFtBasePeakel = mzDbFt.getBasePeakel
     val indexedPeakels = mzDbFt.indexedPeakels
@@ -1707,33 +1709,30 @@ class ExtractMapSet(
         } // Else build new LC-MS peakel
         else {
 
-          val peakelCursor = mzDbPeakel.getNewCursor()
-          val lcMsPeaks = new Array[LcMsPeak](mzDbPeakel.scanIds.length)
-          while (peakelCursor.next()) {
-            lcMsPeaks(peakelCursor.peakIndex) = LcMsPeak(
-              peakelCursor.getMz(),
-              peakelCursor.getElutionTime(),
-              peakelCursor.getIntensity()
-            )
-          }
-
-          val peakelScanInitialIds = mzDbPeakel.getScanIds
+          // Create the peakel data matrix
+          val peakelDataMatrix = new PeakelDataMatrix(
+            // Convert mzDB scan IDs into LCMSdb scan ids (same warning as above)
+            scanIds = mzDbPeakel.scanIds.map( sid => lcmsScanIdByInitialId(sid.toInt) ),
+            elutionTimes = mzDbPeakel.elutionTimes,
+            mzValues = mzDbPeakel.mzValues,
+            intensityValues = mzDbPeakel.intensityValues
+          )
 
           val newPeakel = Peakel(
             id = Peakel.generateNewId,
             moz = mzDbPeakel.getMz,
             elutionTime = mzDbPeakel.getElutionTime(),
-            apexIntensity = mzDbPeakel.getApexIntensity(),
+            //apexIntensity = mzDbPeakel.getApexIntensity(), now lazilly computed
             area = mzDbPeakel.area,
             duration = mzDbPeakel.calcDuration,
             //fwhm = Some( mzDbPeakel.fwhm ),
             isOverlapping = false, // FIXME: determine this value
             featuresCount = 1,
-            peaks = lcMsPeaks,
+            dataMatrix = peakelDataMatrix,
             // FIXME: scanId and scanInitialId may be different in future mzDB configurations
-            firstScanId = lcmsScanIdByInitialId(peakelScanInitialIds.head),
-            lastScanId = lcmsScanIdByInitialId(peakelScanInitialIds.last),
-            apexScanId = lcmsScanIdByInitialId(mzDbPeakel.getApexScanId),
+            //firstScanId = lcmsScanIdByInitialId(peakelScanInitialIds.head),
+            //lastScanId = lcmsScanIdByInitialId(peakelScanInitialIds.last),
+            //apexScanId = lcmsScanIdByInitialId(mzDbPeakel.getApexScanInitialId),
             rawMapId = rawMapId
           )
 
@@ -1752,8 +1751,9 @@ class ExtractMapSet(
     }
 
     val ftProps = FeatureProperties(
-      peakelsCount = Some(lcmsFtPeakelItems.length),
-      basePeakelIndex = Some(mzDbFt.getBasePeakelIndex)
+      // TODO: remove me
+      //peakelsCount = Some(lcmsFtPeakelItems.length),
+      //basePeakelIndex = Some(mzDbFt.getBasePeakelIndex)
     )
 
     new LcMsFeature(
@@ -1774,6 +1774,7 @@ class ExtractMapSet(
       relations = new FeatureRelations(
         ms2EventIds = ms2EventIds,
         peakelItems = lcmsFtPeakelItems,
+        peakelsCount = lcmsFtPeakelItems.length,
         firstScanInitialId = firstScanInitialId,
         lastScanInitialId = lastScanInitialId,
         apexScanInitialId = apexScanInitialId,
