@@ -90,7 +90,7 @@ NOT DEFERRABLE;
 /* ADDITIONAL SQL QUERIES USED FOR DATA UPDATE */
 
 -- ADD 'raw' extension to identifier to create raw_file_name  : remove wrong extension (mzdb...) 
-UPDATE raw_file SET raw_file_name = identifier || '.raw' 
+UPDATE raw_file SET raw_file_name = identifier || '.raw'; 
 ALTER TABLE raw_file ALTER COLUMN raw_file_name SET NOT NULL;
 
 -- MOVE sample number to mapping table
