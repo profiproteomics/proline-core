@@ -11,6 +11,7 @@ import fr.proline.core.dal.tables.uds.{UdsDbInstrumentTable, UdsDbRawFileTable, 
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.provider.IProlinePathConverter
+import fr.proline.core.om.provider.ProlineManagedDirectoryType
 import fr.proline.core.om.provider.lcms.IRunProvider
 import fr.proline.core.om.provider.lcms.IScanSequenceProvider
 
@@ -41,11 +42,11 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConver
         
         val directory = rawFileRecord.getStringOption(RawFileCols.RAW_FILE_DIRECTORY).map { str =>
           if( pathConverter.isEmpty ) str
-          else pathConverter.get.prolinePathToAbsolutePath(str)
+          else pathConverter.get.prolinePathToAbsolutePath(str, ProlineManagedDirectoryType.RAW_FILES)
         }
         val mzdbFileDirectory = rawFileRecord.getStringOption(RawFileCols.MZDB_FILE_DIRECTORY).map { str =>
           if( pathConverter.isEmpty ) str
-          else pathConverter.get.prolinePathToAbsolutePath(str)
+          else pathConverter.get.prolinePathToAbsolutePath(str, ProlineManagedDirectoryType.MZDB_FILES)
         }
         
         // TODO: cache already loaded instruments
