@@ -77,7 +77,7 @@ public class SampleAnalysis implements Serializable {
 	this.quantitationChannels = quantitationChannels;
     }
 
-    public Set<BiologicalSplSplAnalysisMap> getBiologicalSample() {
+    public Set<BiologicalSplSplAnalysisMap> getBiologicalSplSplAnalysisMap() {
 	return biologicalSplSplAnalysisMap;
     }
 
