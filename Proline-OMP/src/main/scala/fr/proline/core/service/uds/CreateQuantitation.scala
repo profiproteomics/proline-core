@@ -297,20 +297,46 @@ class CreateQuantitation(
             udsReplicateToSample.setSampleAnalysis(udsReplicate)
             udsReplicateToSample.setBiologicalSample(udsBioSample)
 
-            val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap]()
-            allBioSplReplicateMap.add(udsReplicateToSample)
+            val allBioSplReplicateList  = new ArrayList[BiologicalSplSplAnalysisMap]()
+            allBioSplReplicateList.add(udsReplicateToSample)
+            val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap](allBioSplReplicateList)
             udsReplicate.setBiologicalSplSplAnalysisMap(allBioSplReplicateMap)
             udsReplicate.setDataset(udsQuantitation)            
-            udsEM.persist(udsReplicate)                      
+            
+            val bioSplReplicatList = if( udsBioSample.getBiologicalSplSplAnalysisMap() != null) udsBioSample.getBiologicalSplSplAnalysisMap()  else new ArrayList[BiologicalSplSplAnalysisMap]()
+            bioSplReplicatList.addAll(allBioSplReplicateList)
+            udsBioSample.setBiologicalSplSplAnalysisMap(bioSplReplicatList)
+            
+            udsEM.persist(udsReplicate)     
+            udsEM.persist(udsReplicateToSample)
+            udsEM.merge(udsBioSample)
   
             udsSampleReplicateByKey(contextKey) = udsReplicate
           } else {
+            
             val existingSplReplicate = udsSampleReplicateByKey.get(contextKey)
             val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
             udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
             udsReplicateToSample.setSampleAnalysis(existingSplReplicate)
             udsReplicateToSample.setBiologicalSample(udsBioSample)
+            
+            val allBioSplReplicateList  = new ArrayList[BiologicalSplSplAnalysisMap]()
+            allBioSplReplicateList.add(udsReplicateToSample)
+            val allBioSplReplicateMap = new HashSet[BiologicalSplSplAnalysisMap](allBioSplReplicateList)
+            
+            
+            val existingSplReplicateList = if( existingSplReplicate.getBiologicalSplSplAnalysisMap() != null) existingSplReplicate.getBiologicalSplSplAnalysisMap()  else new HashSet[BiologicalSplSplAnalysisMap]()
+            existingSplReplicateList.addAll(allBioSplReplicateList)            
+            existingSplReplicate.setBiologicalSplSplAnalysisMap(existingSplReplicateList)
+            
+            val bioSplReplicatList = if( udsBioSample.getBiologicalSplSplAnalysisMap() != null) udsBioSample.getBiologicalSplSplAnalysisMap()  else new ArrayList[BiologicalSplSplAnalysisMap]()
+            bioSplReplicatList.addAll(allBioSplReplicateList)
+            udsBioSample.setBiologicalSplSplAnalysisMap(bioSplReplicatList)
+            
+
             udsEM.merge(existingSplReplicate)
+            udsEM.persist(udsReplicateToSample)
+            udsEM.merge(udsBioSample)
           }
   
           val udsQuantChannel = new UdsQuantChannel()
