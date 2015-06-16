@@ -42,14 +42,12 @@ class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with Logging {
       "UPDATE peakel SET peaks = ? WHERE id = ?"
     )
     
-    val basePeakelIndexByFeatureId = new HashMap[Long,Int]()
-    val peakelsCountByFeatureId = new HashMap[Long,Int]()
-
     try {
       
       println("Updating is_base_peakel value of feature peakel items..." )
       
       /* --- Iterate over all LC-MS features --- */
+      var basePeakelIndexByFeatureId = new HashMap[Long,Int]()
       ezDBC.selectAndProcess("SELECT id, serialized_properties FROM feature") { record =>
         
         // Retrieve record values
@@ -79,6 +77,9 @@ class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with Logging {
           updateFeaturePeakelItemStmt.executeWith(true, peakelId)
         }
       }
+      // Clear basePeakelIndexByFeatureId
+      basePeakelIndexByFeatureId.clear()
+      basePeakelIndexByFeatureId = null
       
       val scanSeqIdByRawMapId = ezDBC.select("SELECT id, scan_sequence_id FROM raw_map") { record =>
         record.getLong("id") -> record.getLong("scan_sequence_id")
