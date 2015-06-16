@@ -89,9 +89,6 @@ NOT DEFERRABLE;
 
 /* ADDITIONAL SQL QUERIES USED FOR DATA UPDATE */
 
--- ADD 'raw' extension to identifier to create raw_file_name  : remove wrong extension (mzdb...) 
-UPDATE raw_file SET raw_file_name = identifier || '.raw'; 
-ALTER TABLE raw_file ALTER COLUMN raw_file_name SET NOT NULL;
 
 -- MOVE sample number to mapping table
 UPDATE biological_sample_sample_analysis_map SET sample_analysis_number = sample_analysis.number FROM sample_analysis WHERE biological_sample_sample_analysis_map.sample_analysis_id = sample_analysis.id;
@@ -100,7 +97,6 @@ ALTER TABLE public.sample_analysis DROP COLUMN number;
 
 
 -- update identifier by removing path and extension element
-ALTER TABLE raw_file RENAME COLUMN name TO identifier;
 UPDATE raw_file SET identifier = shortName.newVal
 FROM (
 select substring(raw_file.identifier from startIndex.start for (endIndex.end-startIndex.start)) as  newVal, raw_file.identifier as id
@@ -233,6 +229,11 @@ where startIndex.prevVal = raw_file_project_map.raw_file_identifier
 and endIndex.prevVal = raw_file_project_map.raw_file_identifier
 ) shortName
 WHERE shortName.prevVal = raw_file_project_map.raw_file_identifier;
+
+-- ADD 'raw' extension to identifier to create raw_file_name  : remove wrong extension (mzdb...) 
+UPDATE raw_file SET raw_file_name = identifier || '.raw'; 
+ALTER TABLE raw_file ALTER COLUMN raw_file_name SET NOT NULL;
+
 /* END OF ADDITIONAL SQL QUERIES USED FOR DATA UPDATE */
 
 /* LIST OF OPERATIONS TO BE PERFORMED IN THE NEXT JAVA MIGRATION */
