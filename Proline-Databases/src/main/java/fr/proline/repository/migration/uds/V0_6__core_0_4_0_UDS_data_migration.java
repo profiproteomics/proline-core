@@ -33,16 +33,18 @@ public class V0_6__core_0_4_0_UDS_data_migration implements JdbcMigration {
         String identifier = rs.getString("identifier");
         String properties = rs.getString("serialized_properties");
         
-        // Parse the mzDB file path
-        String[] stringsBetweenQuotes = properties.split("\"");
-        String mzdbPath = stringsBetweenQuotes[3];
-        File mzdbFileLocation = new java.io.File(mzdbPath);
-
-        // Update raw_file record
-        updateRawFileStmt.setString(1, mzdbFileLocation.getName());
-        updateRawFileStmt.setString(2, mzdbFileLocation.getParent());
-        updateRawFileStmt.setString(3, identifier);
-        updateRawFileStmt.execute();
+        if(properties != null && !properties.isEmpty()){
+	        // Parse the mzDB file path
+	        String[] stringsBetweenQuotes = properties.split("\"");
+	        String mzdbPath = stringsBetweenQuotes[3];
+	        File mzdbFileLocation = new java.io.File(mzdbPath);
+	
+	        // Update raw_file record
+	        updateRawFileStmt.setString(1, mzdbFileLocation.getName());
+	        updateRawFileStmt.setString(2, mzdbFileLocation.getParent());
+	        updateRawFileStmt.setString(3, identifier);
+	        updateRawFileStmt.execute();
+        }
       }
 
 
