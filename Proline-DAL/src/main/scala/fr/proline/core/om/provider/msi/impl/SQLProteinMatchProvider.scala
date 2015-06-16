@@ -54,7 +54,7 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
     DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
       
       val rsIdQuery = new SelectQueryBuilder1(MsiDbResultSummaryTable).mkSelectQuery( (t,c) =>
-        List(t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN("~ rsmIds.mkString(",") ~")"
+        List(t.RESULT_SET_ID) -> "WHERE "~ t.ID ~" IN ("~ rsmIds.mkString(",") ~")"
       )
       val rsIds = msiEzDBC.selectLongs(rsIdQuery)
       
@@ -75,11 +75,9 @@ class SQLProteinMatchProvider(val msiDbCtx: DatabaseConnectionContext) { //exten
       SQLProteinMatchProvider.selectResultSummarySequenceMatchRecords(msiEzDBC, rsmIds.get)
     }
     
-    val rsIdsAsStr = rsIds.mkString(",")
-
     // --- Build SQL query to load and map sequence database ids of each protein match ---
     val protMatchDbMapQuery = new SelectQueryBuilder1(MsiDbProteinMatchSeqDatabaseMapTable).mkSelectQuery( (t,c) =>
-      List(t.PROTEIN_MATCH_ID,t.SEQ_DATABASE_ID) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
+      List(t.PROTEIN_MATCH_ID,t.SEQ_DATABASE_ID) -> "WHERE "~ rsIds.map(id => "" ~ t.RESULT_SET_ID ~ s"=$id").mkString(" OR ")
     )
     
     val seqMatchRecords = new ArrayBuffer[AnyMap]()
@@ -101,11 +99,9 @@ object SQLProteinMatchProvider {
   
   def selectProteinMatchRecords( msiEzDBC: EasyDBC, protMatchIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
     
-    val protMatchIdsAsStr = protMatchIds.mkString(",")
-    
     // --- Build SQL query to load protein match records ---
     val protMatchQuery = new SelectQueryBuilder1(MsiDbProteinMatchTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.ID ~" IN("~ protMatchIdsAsStr ~")"
+      List(t.*) -> "WHERE "~ t.ID ~" IN("~ protMatchIds.mkString(",") ~")"
     )
     
     msiEzDBC.selectAndProcess(protMatchQuery)
@@ -113,11 +109,9 @@ object SQLProteinMatchProvider {
   
   def selectResultSetProteinMatchRecords( msiEzDBC: EasyDBC, rsIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
    
-    val rsIdsAsStr = rsIds.mkString(",")
-   
     // Retrieve protein matches belonging to some result sets
     val protMatchQuery = new SelectQueryBuilder1(MsiDbProteinMatchTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
+      List(t.*) -> "WHERE "~ rsIds.map(id => "" ~ t.RESULT_SET_ID ~ s"=$id").mkString(" OR ")
     )
     
     msiEzDBC.selectAndProcess(protMatchQuery)
@@ -125,12 +119,10 @@ object SQLProteinMatchProvider {
   
   def selectResultSummaryProteinMatchRecords( msiEzDBC: EasyDBC, rsmIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
    
-    val rsmIdsAsStr = rsmIds.mkString(",")
-    
     // Retrieve protein matches belonging to some result summaries
     val protMatchQuery = new SelectQueryBuilder2(MsiDbProteinMatchTable,MsiDbPeptideSetProteinMatchMapTable).mkSelectQuery( (t1,c1,t2,c2) => 
       List(t1.*) ->
-      "WHERE "~ t2.RESULT_SUMMARY_ID ~" IN("~ rsmIdsAsStr ~") "~
+      "WHERE ("~ rsmIds.map(id => "" ~ t2.RESULT_SUMMARY_ID ~ s"=$id").mkString(" OR ") ~") " ~
       "AND "~ t1.ID ~"="~ t2.PROTEIN_MATCH_ID
     )
     
@@ -139,11 +131,9 @@ object SQLProteinMatchProvider {
   
   def selectResultSetSequenceMatchRecords( msiEzDBC: EasyDBC, rsIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
    
-    val rsIdsAsStr = rsIds.mkString(",")
-   
     // Retrieve sequence matches belonging to some result sets
     val seqMatchQuery = new SelectQueryBuilder1(MsiDbSequenceMatchTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIdsAsStr ~")"
+      List(t.*) -> "WHERE "~ rsIds.map(id => "" ~ t.RESULT_SET_ID ~ s"=$id").mkString(" OR ")
     )
     
     msiEzDBC.selectAndProcess(seqMatchQuery)
@@ -151,25 +141,40 @@ object SQLProteinMatchProvider {
   
   def selectResultSummarySequenceMatchRecords( msiEzDBC: EasyDBC, rsmIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
    
-    val rsmIdsAsStr = rsmIds.mkString(",")
+    // Retrieve peptide ids belonging to some result summaries
+    val pepIdQuery = new SelectQueryBuilder1(MsiDbPeptideInstanceTable).mkSelectQuery( (t,c) => 
+      List(t.PEPTIDE_ID) -> "WHERE "~ rsmIds.map(id => "" ~ t.RESULT_SUMMARY_ID ~ s"=$id").mkString(" OR ")
+    )
+    val peptideIdSet = msiEzDBC.selectLongs(pepIdQuery).toSet
+    
+    // Retrieve result set ids corresponding to these result summaries
+    val rsIds = msiEzDBC.selectLongs( "SELECT result_set_id FROM result_summary WHERE id IN (" + rsmIds.mkString(",") + ")" )
     
     // Retrieve sequence matches belonging to some result summaries
-    val seqMatchQuery = new SelectQueryBuilder2(MsiDbSequenceMatchTable,MsiDbPeptideInstanceTable).mkSelectQuery( (t1,c1,t2,c2) => 
-      List(t1.*) ->
-      "WHERE "~ t2.RESULT_SUMMARY_ID ~" IN("~ rsmIdsAsStr ~") "~
-      "AND "~ t1.PEPTIDE_ID ~"="~ t2.PEPTIDE_ID
+    val seqMatchQuery = new SelectQueryBuilder1(MsiDbSequenceMatchTable).mkSelectQuery( (t,c) => 
+      List(t.*) -> "WHERE "~ rsIds.map(id => "" ~ t.RESULT_SET_ID ~ s"=$id").mkString(" OR ")
     )
     
-    msiEzDBC.selectAndProcess(seqMatchQuery)
+    def filterSequenceMatches(): (IValueContainer => Unit) => Unit = { consumer =>
+      
+      msiEzDBC.selectAndProcess(seqMatchQuery) { r =>
+        val seqMatchPeptideId = r.getLong(MsiDbSequenceMatchColumns.PEPTIDE_ID)
+        if( peptideIdSet.contains(seqMatchPeptideId) ) {
+          consumer(r)
+        }
+      }
+      
+      ()
+    }
+
+    filterSequenceMatches()
   }
   
   def selectProtMatchSeqDbMapRecords( msiEzDBC: EasyDBC, protMatchIds: Seq[Long] ): (IValueContainer => Unit) => Unit = {
     
-    val protMatchIdsAsStr = protMatchIds.mkString(",")
-    
     // --- Build SQL query to load and map sequence database ids of each protein match ---
     val protMatchDbMapQuery = new SelectQueryBuilder1(MsiDbProteinMatchSeqDatabaseMapTable).mkSelectQuery( (t,c) =>
-      List(t.PROTEIN_MATCH_ID,t.SEQ_DATABASE_ID) -> "WHERE "~ t.PROTEIN_MATCH_ID ~" IN("~ protMatchIdsAsStr ~")"
+      List(t.PROTEIN_MATCH_ID,t.SEQ_DATABASE_ID) -> "WHERE "~ t.PROTEIN_MATCH_ID ~" IN ("~ protMatchIds.mkString(",") ~")"
     )
     
     msiEzDBC.selectAndProcess(protMatchDbMapQuery)
@@ -177,11 +182,9 @@ object SQLProteinMatchProvider {
   
   def selectAllProtMatchSeqMatchRecords( msiEzDBC: EasyDBC, protMatchIds: Seq[Long] ): Array[AnyMap] = {
     
-    val protMatchIdsAsStr = protMatchIds.mkString(",")
-    
     // --- Build SQL query to load sequence match records ---
     val seqMatchQuery = new SelectQueryBuilder1(MsiDbSequenceMatchTable).mkSelectQuery( (t,c) =>
-      List(t.*) -> "WHERE "~ t.PROTEIN_MATCH_ID ~" IN("~ protMatchIdsAsStr ~")"
+      List(t.*) -> "WHERE "~ t.PROTEIN_MATCH_ID ~" IN ("~ protMatchIds.mkString(",") ~")"
     )
     
     // --- Execute SQL query to load sequence match records ---

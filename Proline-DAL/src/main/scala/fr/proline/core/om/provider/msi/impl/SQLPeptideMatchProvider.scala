@@ -85,10 +85,10 @@ class SQLPeptideMatchProvider(
       val sqlPepMatchFilter = pepMatchFilter.map( _pepMatchFilterToSQLCondition(_) ).getOrElse("")
     
       val sqlQuery = new SelectQueryBuilder1(MsiDbPeptideMatchTable).mkSelectQuery( (t,c) =>
-        List(t.*) -> "WHERE "~ t.RESULT_SET_ID ~" IN("~ rsIds.mkString(",") ~")"~ sqlPepMatchFilter
+        List(t.*) -> "WHERE ("~ rsIds.map(id => "" ~ t.RESULT_SET_ID ~ s"=$id").mkString(" OR ") ~")"~ sqlPepMatchFilter
       )
       
-      val pmRecords = msiEzDBC.selectAllRecords(sqlQuery)      
+      val pmRecords = msiEzDBC.selectAllRecords(sqlQuery)
       val msQueries = this._loadResulSetMsQueries(rsIds.toArray, pmRecords)
       
       PeptideMatchBuilder.buildPeptideMatches(pmRecords,msQueries,scoreTypeById,peptideProvider)
@@ -108,7 +108,7 @@ class SQLPeptideMatchProvider(
       val sqlQuery = sqb2.mkSelectQuery( (t1, c1, t2, c2) =>
         List(t1.*) ->
         " WHERE " ~ t1.ID ~ " = " ~ t2.PEPTIDE_MATCH_ID ~
-        " AND " ~ t2.RESULT_SUMMARY_ID ~ " IN (" ~ rsmIds.mkString(",") ~ ")"
+        " AND ("~ rsmIds.map(id => "" ~ t2.RESULT_SUMMARY_ID ~ s"=$id").mkString(" OR ") ~")"
       )
       
       val pmRecords = msiEzDBC.selectAllRecords(sqlQuery)
