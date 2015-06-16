@@ -50,8 +50,8 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConver
         
         // TODO: cache already loaded instruments
         new RawFile(
-          identifier = rawFileRecord.getString(RawFileCols.IDENTIFIER.toAliasedString),
-          name = rawFileRecord.getString(RawFileCols.RAW_FILE_NAME.toAliasedString),
+          identifier = rawFileRecord.getString(RawFileCols.IDENTIFIER),
+          name = rawFileRecord.getString(RawFileCols.RAW_FILE_NAME),
           directory = directory,
           mzdbFileName = rawFileRecord.getStringOption(RawFileCols.MZDB_FILE_NAME),
           mzdbFileDirectory = mzdbFileDirectory,
@@ -59,7 +59,7 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConver
           instrument = Some(
             new Instrument(
               rawFileRecord.getInt(InstCols.ID),
-              rawFileRecord.getString(InstCols.NAME.toAliasedString),
+              rawFileRecord.getString(InstCols.NAME),
               rawFileRecord.getString(InstCols.SOURCE)
             )
           ),
