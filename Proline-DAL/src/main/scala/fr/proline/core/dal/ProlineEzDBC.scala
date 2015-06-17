@@ -22,7 +22,7 @@ object ProlineSQLiteSQLDialect extends AbstractSQLDialect(
   999
 )
 
-object ProlinePgSQLDialect extends AbstractSQLDialect(inExpressionCountLimit = 1000)
+object ProlinePgSQLDialect extends AbstractSQLDialect(inExpressionCountLimit = 1000, fetchSize = Some(1000) )
 
 object ProlineEzDBC extends Logging {
   
