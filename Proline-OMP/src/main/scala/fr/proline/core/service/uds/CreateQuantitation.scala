@@ -30,6 +30,7 @@ import scala.collection.JavaConversions._
 import java.util.ArrayList
 import javax.persistence.NoResultException
 import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
+import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMapPK
 
 class CreateQuantitation(
   executionContext: IExecutionContext,
@@ -293,6 +294,10 @@ class CreateQuantitation(
             bioSpl.add(udsBioSample)
 
             val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
+            val udsReplicateToSampleKey = new BiologicalSplSplAnalysisMapPK()
+            udsReplicateToSampleKey.setBiologicalSampleId(udsBioSample.getId())
+            udsReplicateToSampleKey.setSampleAnalysisId(udsReplicate.getId())
+            udsReplicateToSample.setId(udsReplicateToSampleKey)            
             udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
             udsReplicateToSample.setSampleAnalysis(udsReplicate)
             udsReplicateToSample.setBiologicalSample(udsBioSample)
@@ -316,6 +321,10 @@ class CreateQuantitation(
             
             val existingSplReplicate = udsSampleReplicateByKey.get(contextKey)
             val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
+            val udsReplicateToSampleKey = new BiologicalSplSplAnalysisMapPK()
+            udsReplicateToSampleKey.setBiologicalSampleId(udsBioSample.getId())
+            udsReplicateToSampleKey.setSampleAnalysisId(existingSplReplicate.getId())
+            udsReplicateToSample.setId(udsReplicateToSampleKey)                      
             udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
             udsReplicateToSample.setSampleAnalysis(existingSplReplicate)
             udsReplicateToSample.setBiologicalSample(udsBioSample)
