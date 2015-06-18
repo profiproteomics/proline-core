@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -71,7 +72,7 @@ public class Project implements Serializable {
     private Set<VirtualFolder> folders;
 
     // bi-directional many-to-one association to ProjectUserAccountMap
-    @OneToMany(mappedBy = "project")
+    @OneToMany(mappedBy = "project", cascade=CascadeType.ALL)
     private Set<ProjectUserAccountMap> projectUserAccountMap;    
 
     // bi-directional many-to-many association to RawFile
