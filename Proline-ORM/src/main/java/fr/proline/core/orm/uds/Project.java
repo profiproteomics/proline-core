@@ -266,6 +266,19 @@ public class Project implements Serializable {
 	}
 
     }
+    
+    public boolean isMemberProject(UserAccount member){
+    	Set<ProjectUserAccountMap> localMembers = getProjectUserAccountMap();
+    	if (localMembers != null){
+    		for (ProjectUserAccountMap element : localMembers) {
+				if(element.getUserAccount().getId() == member.getId()){
+					return true;
+				}
+				
+			}
+    	}
+    	return false;
+    }
        
     
     public void setRawFiles(final Set<RawFile> rawFiles) {
