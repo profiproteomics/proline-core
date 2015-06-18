@@ -22,6 +22,7 @@ import scala.collection.JavaConversions._
 import java.util.ArrayList
 import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMap
 import java.util.HashSet
+import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMapPK
 
 class CreateSCQuantitation(
   executionContext: IExecutionContext,
@@ -182,6 +183,10 @@ class CreateSCQuantitation(
           bioSpl.add(udsBioSample)
           
           val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
+          val udsReplicateToSampleKey = new BiologicalSplSplAnalysisMapPK()
+          udsReplicateToSampleKey.setBiologicalSampleId(udsBioSample.getId())
+          udsReplicateToSampleKey.setSampleAnalysisId(udsReplicate.getId())
+          udsReplicateToSample.setId(udsReplicateToSampleKey)
           udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
   		  udsReplicateToSample.setSampleAnalysis(udsReplicate)
   		  udsReplicateToSample.setBiologicalSample(udsBioSample)
@@ -197,15 +202,20 @@ class CreateSCQuantitation(
           bioSplReplicatList.addAll(allBioSplReplicateList)
           udsBioSample.setBiologicalSplSplAnalysisMap(bioSplReplicatList)
             
-          udsEM.persist(udsReplicate)     
+          udsEM.persist(udsReplicate)
           udsEM.persist(udsReplicateToSample)
-          udsEM.merge(udsBioSample)         
+          udsEM.merge(udsBioSample)
+         
 
           udsSampleReplicateByKey(contextKey) = udsReplicate
         }else {
         
           val existingSplReplicate = udsSampleReplicateByKey(contextKey)
 		  val udsReplicateToSample = new BiologicalSplSplAnalysisMap()
+          val udsReplicateToSampleKey = new BiologicalSplSplAnalysisMapPK()
+          udsReplicateToSampleKey.setBiologicalSampleId(udsBioSample.getId())
+          udsReplicateToSampleKey.setSampleAnalysisId(existingSplReplicate.getId())
+          udsReplicateToSample.setId(udsReplicateToSampleKey)          
           udsReplicateToSample.setSampleAnalysisNumber(replicateNum)
           udsReplicateToSample.setSampleAnalysis(existingSplReplicate)
           udsReplicateToSample.setBiologicalSample(udsBioSample)
