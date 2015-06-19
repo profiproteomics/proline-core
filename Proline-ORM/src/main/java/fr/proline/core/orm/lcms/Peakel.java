@@ -242,17 +242,14 @@ public class Peakel implements Serializable {
 		this.peakList = peakList;
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<Peak> getPeakList() {
 		if (this.peakList == null) {
 			try {
-				MessagePack msgpack = new MessagePack();
-				List<Peak> pl = (List<Peak>) msgpack.read(this.getPeaks());
-				// the return list is not a Peak list: ArrayValueImpl object instead of Peak
+				PeakelDataMatrix peakelDataMatrix = PeakelDataMatrix.getPeaks(getPeaks());
 				this.peakList = new ArrayList<Peak>();
-				for (Iterator iterator = pl.iterator(); iterator.hasNext();) {
-					AbstractList p = (AbstractList) iterator.next();
-					Peak peak = new Peak(new Double(p.get(0).toString()), new Float(p.get(1).toString()), new Float(p.get(2).toString()));
+				int nbP = peakelDataMatrix.getNbPeaks();
+				for (int p=0; p<nbP; p++){
+					Peak peak = peakelDataMatrix.getPeak(p);
 					this.peakList.add(peak);
 				}
 			} catch (Exception e) {
@@ -272,51 +269,5 @@ public class Peakel implements Serializable {
 		this.isotopeIndex = isotopeIndex;
 	}
 
-
-	/* peak represented in the peaks BLOB of Peakel*/
-	@Message
-	public class Peak {
-		
-		private Double  moz;
-		private Float elutionTime;
-		private Float intensity;
-		
-		public Peak() {
-			super();
-		}
-
-		public Peak(Double moz, Float elutionTime, Float intensity) {
-			super();
-			this.moz = moz;
-			this.elutionTime = elutionTime;
-			this.intensity = intensity;
-		}
-
-		public Double getMoz() {
-			return moz;
-		}
-
-		public void setMoz(Double moz) {
-			this.moz = moz;
-		}
-
-		public Float getElutionTime() {
-			return elutionTime;
-		}
-
-		public void setElutionTime(Float elutionTime) {
-			this.elutionTime = elutionTime;
-		}
-
-		public Float getIntensity() {
-			return intensity;
-		}
-
-		public void setIntensity(Float intensity) {
-			this.intensity = intensity;
-		}
-		
-		
-	}
 
 }
