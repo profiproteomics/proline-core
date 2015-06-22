@@ -8,10 +8,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.googlecode.flyway.core.api.migration.jdbc.JdbcMigration;
+
 
 public class V0_6__RS_Hierarchy_Update implements JdbcMigration {
 
+	private static final Logger LOG = LoggerFactory.getLogger(V0_6__RS_Hierarchy_Update.class);
 	
 	/**
 	 * Migrate MSI db in order to 
@@ -27,12 +32,14 @@ public class V0_6__RS_Hierarchy_Update implements JdbcMigration {
 	@Override
 	public void migrate(Connection msiConn) throws Exception {
 		
-		
 		Statement statement = msiConn.createStatement();
+		
 		//Statement used to insert ResultSet Relation
 		PreparedStatement insertRSRelationStmnt = msiConn.prepareStatement("INSERT INTO result_set_relation (parent_result_set_id,child_result_set_id) VALUES (? , ?)");
 		//Statement used to fill rs.megedRSM field.
 		PreparedStatement insertRSMergedRSMStmnt = msiConn.prepareStatement("UPDATE result_set set merged_rsm_id = ?  WHERE id = ?");
+		
+		PreparedStatement testIfRSRelationExistStmnt =  msiConn.prepareStatement("SELECT parent_result_set_id, child_result_set_id from result_set_relation WHERE parent_result_set_id = ? AND child_result_set_id = ?");
 		
 		//** Get information on RSM hierarchy and associated RS
 		HashMap<Long, ArrayList<Long>> rsmChildsByParents = new HashMap<Long, ArrayList<Long>>();
@@ -70,20 +77,33 @@ public class V0_6__RS_Hierarchy_Update implements JdbcMigration {
 				Long nextRSParent=rsIdByRsmId.get(nextRSMParent);
 				
 				//Add rs.merged_rsm_id 
+				LOG.trace("Insert insertRSMergedRSMStmnt "+nextRSMParent+" for "+nextRSParent);
 				insertRSMergedRSMStmnt.setLong(1,nextRSMParent);
 				insertRSMergedRSMStmnt.setLong(2,nextRSParent);
 				insertRSMergedRSMStmnt.execute();
+					
 				
 				Iterator<Long> rsmChildsIt = rsmChildsByParents.get(nextRSMParent).iterator();		
 				//Add rs hierarchy
 				while(rsmChildsIt.hasNext()){
 					Long nextRSMChild = rsmChildsIt.next();
-					insertRSRelationStmnt.setLong(1, nextRSParent);
-					insertRSRelationStmnt.setLong(2, rsIdByRsmId.get(nextRSMChild));
-					insertRSRelationStmnt.execute();
+					Long nextRSChild = rsIdByRsmId.get(nextRSMChild);
+					LOG.trace("Insert insertRSRelationStmnt "+nextRSParent+" for "+nextRSChild+" ? ");
+					
+					//test if relation not already registered (problem with flyway migration !)
+					testIfRSRelationExistStmnt.setLong(1,nextRSParent);
+					testIfRSRelationExistStmnt.setLong(2,nextRSChild);
+					ResultSet queryRS = testIfRSRelationExistStmnt.executeQuery();					
+					if(!queryRS.next()) {
+						
+						LOG.trace("Insert insertRSRelationStmnt "+nextRSParent+" for "+nextRSChild +" YES !! ");
+						insertRSRelationStmnt.setLong(1, nextRSParent);
+						insertRSRelationStmnt.setLong(2, nextRSChild );
+						insertRSRelationStmnt.execute();
+					}
 				}				
 			}
-			
+		
 			
 	        
         } finally {
