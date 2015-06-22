@@ -38,7 +38,7 @@ public final class DatabaseUpgrader {
 
 	/* Constants */
 	public static final String MIGRATION_SCRIPTS_DIR = "dbscripts/";
-	public static final String MIGRATION_CLASSPATH = "fr/proline/repository/migration/";
+	public static final String MIGRATION_CLASSPATH = "/fr/proline/repository/migration/";
 
 	private static final Logger LOG = LoggerFactory.getLogger(DatabaseUpgrader.class);
 
@@ -96,7 +96,8 @@ public final class DatabaseUpgrader {
 		String classPath = buffer.toString();
 		
 		//verify if package exisy
-		URL rsc = ClassLoader.getSystemClassLoader().getResource(classPath);
+		//URL rsc = ClassLoader.getSystemClassLoader().getResource(classPath);
+		URL rsc = DatabaseUpgrader.class.getResource(classPath);
 		if(rsc == null)
 			return null;
 				
