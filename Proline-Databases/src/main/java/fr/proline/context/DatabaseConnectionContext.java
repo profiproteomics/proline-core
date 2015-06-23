@@ -49,7 +49,7 @@ public class DatabaseConnectionContext implements Closeable {
 
     private Connection m_connection;
     
-    private boolean m_closeConnection = false;
+    private boolean m_closeConnection = true;
 
     private boolean m_closed;
 
