@@ -126,8 +126,8 @@ trait ColumnEnumeration extends Enumeration {
   class Column(i: Int, name: String) extends Val(i: Int, name: String) {
     val $columns: ColumnEnumeration = thisenum
     
-    lazy val aliasedString = $tableName + "." + this.toString()
-    lazy val fullString = $tableName + "_" + this.toString()
+    lazy val aliasedString = $tableName + "_" + this.toString()
+    lazy val fullString = $tableName + "." + this.toString()
     
     def toAliasedString() = aliasedString
     def toFullString() = fullString
