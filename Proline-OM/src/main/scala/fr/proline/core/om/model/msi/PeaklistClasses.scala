@@ -7,12 +7,11 @@ import fr.profi.util.misc.InMemoryIdGen
 
 object Peaklist extends InMemoryIdGen
 
-//@JsonInclude( Include.NON_NULL )
 case class Peaklist(
   var id: Long,
   val fileType: String,
   val path: String,
-  val rawFileName: String,
+  val rawFileIdentifier: String,
   val msLevel: Int,
   val spectrumDataCompression: String = "none",
   var peaklistSoftware: PeaklistSoftware = null,
@@ -20,7 +19,6 @@ case class Peaklist(
   var properties: Option[PeaklistProperties] = None
 )
 
-//@JsonInclude( Include.NON_NULL )
 case class PeaklistProperties (
   @BeanProperty var spectrumDataCompressionLevel: Option[Int] = None,
   @BeanProperty var putativePrecursorCharges: Option[Seq[Int]] = None,
@@ -30,7 +28,6 @@ case class PeaklistProperties (
 
 object PeaklistSoftware extends InMemoryIdGen
 
-//@JsonInclude( Include.NON_NULL )
 case class PeaklistSoftware(
   var id: Long,
   val name: String,
@@ -40,13 +37,11 @@ case class PeaklistSoftware(
   var properties: Option[PeaklistSoftwareProperties] = None
 )
 
-//@JsonInclude( Include.NON_NULL )
 case class PeaklistSoftwareProperties()
 
 
 object Spectrum extends InMemoryIdGen
 
-//@JsonInclude( Include.NON_NULL )
 case class Spectrum (
   var id: Long,
   val title: String,
@@ -69,7 +64,6 @@ case class Spectrum (
   var properties: Option[SpectrumProperties] = None
 )
 
-//@JsonInclude( Include.NON_NULL )
 case class SpectrumProperties()
 
 object SpectrumTitleFields extends Enumeration {
@@ -84,7 +78,6 @@ object SpectrumTitleFields extends Enumeration {
 
 object SpectrumTitleParsingRule extends InMemoryIdGen
 
-//@JsonInclude( Include.NON_NULL )
 case class SpectrumTitleParsingRule (
   val id: Long = SpectrumTitleParsingRule.generateNewId(),
   val rawFileIdentifierRegex: Option[String] = None,

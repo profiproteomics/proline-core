@@ -40,7 +40,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
         stmt.executeWith(
           peaklist.fileType,
           peaklist.path,
-          peaklist.rawFileName,
+          peaklist.rawFileIdentifier,
           peaklist.msLevel,
           compressionAlgo,
           peaklist.properties.map(ProfiJson.serialize(_)),

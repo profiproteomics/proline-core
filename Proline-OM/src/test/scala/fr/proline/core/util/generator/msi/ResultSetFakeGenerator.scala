@@ -617,7 +617,7 @@ class ResultSetFakeGenerator(
       id = Peaklist.generateNewId,
       fileType = "Mascot generic",
       path = "/fake/filepath/data/VENUS1234.RAW",
-      rawFileName = "VENUS1234.RAW",
+      rawFileIdentifier = "VENUS1234",
       msLevel = 2,
       peaklistSoftware = peaklistSoft
     )
