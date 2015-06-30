@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.profi.mzdb.model.IsotopicPatternLike
 import fr.profi.mzdb.model.Peak
 import fr.profi.mzdb.model.PeakelDataMatrix
+import fr.profi.mzdb.model.PeakelDataMatrixCursor
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.misc.`package`.InMemoryIdGen
 
@@ -71,6 +72,7 @@ case class Peakel(
   def getElutionTimes(): Seq[Float] = dataMatrix.elutionTimes
   def getMzValues(): Seq[Double] = dataMatrix.mzValues
   def getIntensityValues(): Seq[Float] = dataMatrix.intensityValues
+  def getNewCursor(): PeakelDataMatrixCursor = new PeakelDataMatrixCursor(dataMatrix)
   
   // Make some requirements
   require( dataMatrix.scanIds != null && dataMatrix.scanIds.length > 0, "some scanIds must be provided" )
