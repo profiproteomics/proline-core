@@ -306,7 +306,19 @@ case class SequenceMatch (
   def getPeptideId: Long = { if(peptide != null && peptide.isDefined) peptide.get.id else peptideId }
 
   def getBestPeptideMatchId: Long = { if(bestPeptideMatch != null && bestPeptideMatch.isDefined) bestPeptideMatch.get.id else bestPeptideMatchId }
-  
+ 
+  override def equals(other: Any): Boolean = {
+
+    if (other.isInstanceOf[SequenceMatch]) {
+      val otherSeqMatch = other.asInstanceOf[SequenceMatch]
+
+      start.equals(otherSeqMatch.start) && end.equals(otherSeqMatch.end) && 
+        getPeptideId.equals(otherSeqMatch.getPeptideId)
+    } else {
+      false
+    }
+
+  }
 }
 
 case class SequenceMatchProperties()
