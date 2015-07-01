@@ -523,7 +523,8 @@ case class PeptideMatch ( // Required fields
 
 case class PeptideMatchProperties (
   @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None,
-  @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None
+  @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
+  @BeanProperty var xtandemProperties: Option[PeptideMatchOmssaProperties] = None
 )
 
 case class PeptideMatchMascotProperties (
