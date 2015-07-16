@@ -23,8 +23,9 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     public static final String PERSISTENCE_JDBC_USER_KEY = "javax.persistence.jdbc.user";
     public static final String PERSISTENCE_JDBC_PASSWORD_KEY = "javax.persistence.jdbc.password";
 
+    
+    public static final String JDBC_APPNAME_KEY = "ApplicationName";
     public static final String HIBERNATE_DIALECT_KEY = "hibernate.dialect";
-
     public static final String PERSISTENCE_VALIDATION_MODE_KEY = "javax.persistence.validation.mode";
 
     // Hibernate renamed from c3p0.minPoolSize !
@@ -35,15 +36,12 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
     // Hibernate renamed from c3p0.maxIdleTime !
     public static final String HIBERNATE_POOL_MAX_IDLE_TIME_KEY = "hibernate.c3p0.timeout";
-
     public static final String HIBERNATE_POOL_MAX_STATEMENTS_PER_CON_KEY = "hibernate.c3p0.maxStatementsPerConnection";
     public static final String HIBERNATE_POOL_TEST_CON_ON_CHECKIN_KEY = "hibernate.c3p0.testConnectionOnCheckin";
-
+    
     // Hibernate renamed from c3p0.idleConnectionTestPeriod !
     public static final String HIBERNATE_POOL_IDLE_CON_TEST_PERIOD_KEY = "hibernate.c3p0.idle_test_period";
-
     public static final String HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY = "hibernate.c3p0.preferredTestQuery";
-
     public static final String HIBERNATE_FETCH_SIZE_KEY = "hibernate.jdbc.fetch_size";
     public static final String HIBERNATE_BATCH_SIZE_KEY = "hibernate.jdbc.batch_size";
     public static final String HIBERNATE_BATCH_VERSIONED_DATA_KEY = "hibernate.jdbc.batch_versioned_data";
@@ -98,7 +96,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	final String jdbcURL = PropertiesUtils.getProperty(m_properties, PERSISTENCE_JDBC_URL_KEY);
 
 	if (!StringUtils.isEmpty(jdbcURL)) {
-	    identBuffer.append('_').append(jdbcURL);
+	    identBuffer.append('_').append(jdbcURL.replaceAll(":", "_"));
 	}
 
 	m_ident = identBuffer.toString();
@@ -194,7 +192,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     }
 
     public final EntityManagerFactory getEntityManagerFactory() {
-
+    
 	synchronized (m_connectorLock) {
 
 	    if (isClosed()) {
@@ -463,7 +461,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	if (properties.get(HIBERNATE_BYTECODE_OPTIMIZER_KEY) == null) {
 	    properties.put(HIBERNATE_BYTECODE_OPTIMIZER_KEY, "true");
 	}
-
+	
     }
 
 }
