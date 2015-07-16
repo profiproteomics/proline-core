@@ -3,6 +3,7 @@ package fr.proline.repository.util;
 import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
 import java.lang.reflect.Proxy;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
@@ -51,9 +52,11 @@ public final class PostgresUtils {
 	    final Object wrappedObject = jdbcWrapper.getWrappedObject();
 
 	    result = getCopyManager(wrappedObject);
+	} else if (connection instanceof Connection) {
+		PGConnection pgConnection = ((Connection)connection).unwrap(PGConnection.class);
+		result = pgConnection.getCopyAPI();
 	} else {
 	    debugProxy(connection);
-
 	    throw new IllegalArgumentException("Invalid PostgreSQL connection");
 	}
 
