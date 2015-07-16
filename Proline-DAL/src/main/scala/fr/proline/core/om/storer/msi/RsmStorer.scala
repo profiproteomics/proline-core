@@ -80,23 +80,23 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
         rsm.id = stmt.generatedLong
       }
         
-      if (rsm.properties.isDefined && rsm.properties.get.peptideRocPoints.isDefined) {
-          
-          val objectTreeId = msiEzDBC.executePrepared( RsmStorer.objectTreeInsertQuery , true ) { stmt =>
-          	stmt.executeWith(
-          	    rsm.properties.get.peptideRocPoints.map(ProfiJson.serialize(_)),
-          	    Option.empty[String],
-          	    "result_summary.validation_properties"
-           )
-          
-           stmt.generatedLong
-          }
-
-          msiEzDBC.executePrepared( RsmStorer.objectTreeMapInsertQuery, true ) { stmt =>
-          	stmt.executeWith(rsm.id,"result_summary.validation_properties", objectTreeId) 
-          }
-          logger.info("peptideRocPoints have been saved")
-      }
+//      if (rsm.properties.isDefined && rsm.properties.get.peptideRocPoints.isDefined) {
+//          
+//          val objectTreeId = msiEzDBC.executePrepared( RsmStorer.objectTreeInsertQuery , true ) { stmt =>
+//          	stmt.executeWith(
+//          	    rsm.properties.get.peptideRocPoints.map(ProfiJson.serialize(_)),
+//          	    Option.empty[String],
+//          	    "result_summary.validation_properties"
+//           )
+//          
+//           stmt.generatedLong
+//          }
+//
+//          msiEzDBC.executePrepared( RsmStorer.objectTreeMapInsertQuery, true ) { stmt =>
+//          	stmt.executeWith(rsm.id,"result_summary.validation_properties", objectTreeId) 
+//          }
+//          logger.info("peptideRocPoints have been saved")
+//      }
     })
   }
   
