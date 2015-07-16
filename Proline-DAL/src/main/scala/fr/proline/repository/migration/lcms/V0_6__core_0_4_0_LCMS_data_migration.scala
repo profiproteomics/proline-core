@@ -31,7 +31,7 @@ class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with Logging {
     
     val lcMsDbCtx = new DatabaseConnectionContext(lcMsConn,ProlineDatabaseType.LCMS,DriverType.POSTGRESQL)
     // Be sure that the connection is not closed when the DatabaseConnectionContext is closed
-    lcMsDbCtx.setCloseConnection(false)
+    lcMsDbCtx.setClosableConnection(false)
     
     val ezDBC = ProlineEzDBC(lcMsDbCtx)
       
