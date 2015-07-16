@@ -1,7 +1,6 @@
 package fr.proline.core.om.storer.msi
 
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
@@ -10,6 +9,8 @@ import fr.proline.core.dal._
 import fr.proline.core.dal.tables.msi.{MsiDbResultSummaryTable}
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLRsmStorer
+import fr.proline.core.dal.tables.msi.MsiDbResultSummaryObjectTreeMapTable
+import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 
 trait IRsmStorer extends Logging {
   
@@ -23,9 +24,13 @@ trait IRsmStorer extends Logging {
 object RsmStorer {
   
   val rsmInsertQuery = MsiDbResultSummaryTable.mkInsertQuery{ (c,colsList) => 
-                         colsList.filter( _ != c.ID)
-                       }
-  
+            colsList.filter( _ != c.ID) }
+  val objectTreeInsertQuery = MsiDbObjectTreeTable.mkInsertQuery{ (ct,colsList) => 
+            colsList.filter( c => (c != ct.ID) && (c != ct.BLOB_DATA)) }
+
+  val objectTreeMapInsertQuery = MsiDbResultSummaryObjectTreeMapTable.mkInsertQuery()
+
+            
   def apply( msiDbContext: DatabaseConnectionContext ): RsmStorer = {
     
     msiDbContext.isJPA match {
@@ -36,8 +41,6 @@ object RsmStorer {
 }
 
 class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
-  
-  val rsmInsertQuery = RsmStorer.rsmInsertQuery
   
   def storeResultSummary( rsm: ResultSummary, execCtx: IExecutionContext ): Unit = {
     
@@ -62,18 +65,37 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
     // Store RDB result summary
     // TODO: use JPA instead    
     DoJDBCWork.withEzDBC( execCtx.getMSIDbConnectionContext, { msiEzDBC =>
-      msiEzDBC.executePrepared( this.rsmInsertQuery, true ) { stmt =>
+      
+      msiEzDBC.executePrepared( RsmStorer.rsmInsertQuery, true ) { stmt =>
         stmt.executeWith(
           Option( rsm.description ),
           Option.empty[String],
           new java.util.Date(),          
           false,
-          rsm.properties.map(ProfiJson.serialize(_)),
+          if (rsm.properties.isDefined) rsm.properties.get.validationProperties.map(ProfiJson.serialize(_)) else Option.empty[String],
           if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else Option.empty[Long],
           rsm.getResultSetId
         )
         
         rsm.id = stmt.generatedLong
+      }
+        
+      if (rsm.properties.isDefined && rsm.properties.get.peptideRocPoints.isDefined) {
+          
+          val objectTreeId = msiEzDBC.executePrepared( RsmStorer.objectTreeInsertQuery , true ) { stmt =>
+          	stmt.executeWith(
+          	    rsm.properties.get.peptideRocPoints.map(ProfiJson.serialize(_)),
+          	    Option.empty[String],
+          	    "result_summary.validation_properties"
+           )
+          
+           stmt.generatedLong
+          }
+
+          msiEzDBC.executePrepared( RsmStorer.objectTreeMapInsertQuery, true ) { stmt =>
+          	stmt.executeWith(rsm.id,"result_summary.validation_properties", objectTreeId) 
+          }
+          logger.info("peptideRocPoints have been saved")
       }
     })
   }
