@@ -25,6 +25,9 @@ public interface IDatabaseConnector extends Closeable {
 
     void setAdditionalProperties(Map<Object, Object> params);
 
+    /** Return the value of the key in the connection properties, null if none */ 
+    Object getProperty(Object key);
+    
     DataSource getDataSource();
 
     EntityManagerFactory getEntityManagerFactory();

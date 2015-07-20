@@ -10,6 +10,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import org.postgresql.ds.PGPoolingDataSource;
+import org.postgresql.ds.PGSimpleDataSource;
 //import org.postgresql.ds.PGPoolingDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,11 +65,25 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		}
 
 		// WARN : if you change the line below, you must change the doClose implementation !! 
-		final DataSource source = buildC3P0DataSource(ident, properties, fakeURI);
+		Integer maxConnection = DEFAULT_MAX_POOL_CONNECTIONS;
+		if(properties.containsKey(PROLINE_MAX_POOL_CONNECTIONS_KEY)){
+			if(Integer.class.isInstance(properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY)))
+				maxConnection = (Integer) properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY);
+			else {
+				try {
+					maxConnection = Integer.parseInt((String) properties.get(PROLINE_MAX_POOL_CONNECTIONS_KEY));
+				} catch( NumberFormatException nfe){
+					maxConnection = DEFAULT_MAX_POOL_CONNECTIONS;
+				}
+			}
+		}
+		
+		final DataSource source = (maxConnection>1) ?  buildC3P0DataSource(ident, properties, fakeURI, maxConnection) :  buildSimpleDataSource(ident, properties, fakeURI);
+		
 		return source;
 	}
 
-	private DataSource buildPGPoolingDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI) {
+	private DataSource buildPGPoolingDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnectionPerProject) {
 
 		PGPoolingDataSource source = new PGPoolingDataSource();
 
@@ -99,8 +114,39 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		return source;
 	}
 	
+	private DataSource buildSimpleDataSource(final String ident, final Map<Object, Object> properties, URI fakeURI) {
+		
+		PGSimpleDataSource source = new PGSimpleDataSource();
+		Properties props = new Properties();
+		Object appName = PropertiesUtils.getProperty(properties, JDBC_APPNAME_KEY);
+		if (appName != null) {
+			props.put(JDBC_APPNAME_KEY, appName);
+		}
+		
+		final String serverName = fakeURI.getHost();
+		if (serverName != null) {
+			source.setServerName(serverName);
+		}
+		final int serverPort = fakeURI.getPort();
+		if (serverPort != -1) {
+			source.setPortNumber(serverPort);
+		}
+
+		final String databasePath = extractDatabaseName(fakeURI.getPath());
+		if (databasePath != null) {
+			source.setDatabaseName(databasePath);
+		}
+
+		 
+		source.setApplicationName(PropertiesUtils.getProperty(properties, JDBC_APPNAME_KEY));
+		source.setUser(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY));
+		source.setPassword(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
+		
+		return source;
+	}
 	
-	private DataSource buildC3P0DataSource(final String ident, final Map<Object, Object> properties, URI fakeURI) {
+	
+	private DataSource buildC3P0DataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnection) {
 		final String datasourceName = ident + '_' + NAME_SEQUENCE.getAndIncrement();		
 		ComboPooledDataSource source = new ComboPooledDataSource();
 		Properties props = new Properties();
@@ -112,7 +158,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		source.setJdbcUrl(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY));
 		source.setUser(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY));
 		source.setPassword(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
-		source.setMaxPoolSize(DEFAULT_MAX_POOL_CONNECTIONS);
+		source.setMaxPoolSize(maxConnection);
 		source.setDataSourceName(datasourceName);
 		return source;
 	}

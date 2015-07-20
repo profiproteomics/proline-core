@@ -48,6 +48,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
     public static final String HIBERNATE_BYTECODE_OPTIMIZER_KEY = "hibernate.bytecode.use_reflection_optimizer";
 
     public static final int DEFAULT_MAX_POOL_CONNECTIONS = 20; // TODO increase value for server side
+    public static final String PROLINE_MAX_POOL_CONNECTIONS_KEY = "proline.project.max.pool.connection"; 
 
     public static final String JDBC_SCHEME = "jdbc";
 
@@ -149,6 +150,20 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	}
 
+    }
+        
+    public final Object getProperty(Object key) {
+    	Object result = null;
+    	synchronized (m_connectorLock) {
+
+    		if(m_additionalProperties != null && m_additionalProperties.containsKey(key)){
+    			result = m_additionalProperties.get(key);
+    	    } else if(m_properties.containsKey(key)){
+    	    	result = m_properties.get(key);
+    	    }
+    	}
+
+    	return result;
     }
 
     public final DataSource getDataSource() {
