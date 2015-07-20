@@ -370,11 +370,11 @@ case class RsmValidationResultsProperties(
 )
 
 case class RsmValidationResultProperties(
-  // TODO: expectedRocPoint and RocPoints model
   @BeanProperty var targetMatchesCount: Int,
   @BeanProperty var decoyMatchesCount: Option[Int] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
-  @BeanProperty var fdr: Option[Float] = None
+  @BeanProperty var fdr: Option[Float] = None,
+  @BeanProperty var rocPoints: Option[Array[(Double,Float)]] = None
 )
 
 object ValidatedResultSetBuilder {
