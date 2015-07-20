@@ -186,4 +186,9 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 		return m_databaseTester;
 	}
 
+	@Override
+	public Object getProperty(Object key) {
+		return m_realConnector.getProperty(key);		
+	}
+
 }
