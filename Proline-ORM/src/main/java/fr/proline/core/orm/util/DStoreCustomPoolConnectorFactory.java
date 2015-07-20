@@ -9,23 +9,25 @@ import javax.persistence.EntityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.profi.util.StringUtils;
+import fr.profi.util.ThreadLogger;
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
+import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.profi.util.StringUtils;
-import fr.profi.util.ThreadLogger;
 
-public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
+public class DStoreCustomPoolConnectorFactory implements IDataStoreConnectorFactory {
 
 	/* Constants */
-	private static final Logger LOG = LoggerFactory.getLogger(DataStoreConnectorFactory.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(DStoreCustomPoolConnectorFactory.class);
 
-	private static final DataStoreConnectorFactory UNIQUE_INSTANCE = new DataStoreConnectorFactory();
+	private static final DStoreCustomPoolConnectorFactory UNIQUE_INSTANCE = new DStoreCustomPoolConnectorFactory();
 
 	/* Instance variables */
 	private final Object m_managerLock = new Object();
@@ -39,22 +41,21 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	private final Map<Long, IDatabaseConnector> m_lcMsDbConnectors = new HashMap<Long, IDatabaseConnector>();
 
 	private String m_applicationName;
+	private Integer m_projectMaxPoolConnection;
 
 	/* Constructors */
-	protected DataStoreConnectorFactory() {
+	protected DStoreCustomPoolConnectorFactory() {
 	}
 
 	/* Public class methods */
-	public static DataStoreConnectorFactory getInstance() {
+	public static DStoreCustomPoolConnectorFactory getInstance() {
 		return UNIQUE_INSTANCE;
 	}
-
-	/* Public methods */
 
 	public void initialize(final IDatabaseConnector udsDbConnector) {
 		initialize(udsDbConnector, "Proline");
 	}
-
+	
 	/**
 	 * Initializes this <code>DataStoreConnectorFactory</code> instance from an
 	 * existing UDS Db DatabaseConnector using ExternalDb entities.
@@ -64,9 +65,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	 * @param udsDbConnector
 	 *            DatabaseConnector to a valid UDS Db (must not be
 	 *            <code>null</code>).
-	 *            )
-	 * @param applicationName : String use to identify  application which open connection
-	 */
+	 */	
 	public void initialize(final IDatabaseConnector udsDbConnector, String applicationName) {
 
 		synchronized (m_managerLock) {
@@ -87,6 +86,12 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
 			m_udsDbConnector = udsDbConnector;
 			m_applicationName = applicationName;
+			try {
+				m_projectMaxPoolConnection = Integer.parseInt( (String) m_udsDbConnector.getProperty(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY));
+			}catch(NumberFormatException nfe){
+				m_projectMaxPoolConnection = null;
+			}
+
 			
 			EntityManager udsEm = null;
 
@@ -105,6 +110,10 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 				} else {
 					Map<Object, Object> propertiesMap = pdiDb.toPropertiesMap(udsDriverType);
 				    propertiesMap.put("ApplicationName", m_applicationName);
+				    if(m_projectMaxPoolConnection != null){
+				    	propertiesMap.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, m_projectMaxPoolConnection*2);
+				    	LOG.debug("USE PROLINE_MAX_POOL_CONNECTIONS_KEY  "+m_projectMaxPoolConnection);
+				    }
 					m_pdiDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.PDI, propertiesMap);
 				}
 
@@ -116,6 +125,8 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 				} else {
 					Map<Object, Object> propertiesMap = psDb.toPropertiesMap(udsDriverType);
 				    propertiesMap.put("ApplicationName", m_applicationName);
+				    if(m_projectMaxPoolConnection != null)
+				    	propertiesMap.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, m_projectMaxPoolConnection*2);				
 					m_psDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.PS, propertiesMap);
 				}
 
@@ -148,6 +159,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
 	}
 
+	
 	public void initialize(final Map<Object, Object> udsDbProperties) {
 		initialize(udsDbProperties, "Proline");
 	}
@@ -202,6 +214,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
 		return result;
 	}
+	
 
 	@Override
 	public IDatabaseConnector getUdsDbConnector() {
@@ -392,6 +405,8 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 			} else {
 				Map<Object, Object> propertiesMap = externalDb.toPropertiesMap(udsDbConnector.getDriverType());
 				propertiesMap.put("ApplicationName", m_applicationName);
+				if(m_projectMaxPoolConnection != null)
+					propertiesMap.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, m_projectMaxPoolConnection);
 				connector = DatabaseConnectorFactory.createDatabaseConnectorInstance(prolineDbType, propertiesMap);
 			}
 
@@ -407,5 +422,4 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
 		return connector;
 	}
-
 }
