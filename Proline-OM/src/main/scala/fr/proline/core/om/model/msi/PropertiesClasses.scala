@@ -13,3 +13,7 @@ case class FilterDescriptor (
   @BeanProperty var properties: Option[Map[String,AnyRef]] = None
 )
 
+case class RocCurve(
+  @BeanProperty var rocPoints: Array[(Double,Float)] = Array()
+)
+

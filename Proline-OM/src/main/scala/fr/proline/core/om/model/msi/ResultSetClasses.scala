@@ -180,7 +180,12 @@ case class ResultSummary(
   protected var decoyResultSummaryId: Long = 0,
   @transient var decoyResultSummary: Option[ResultSummary] = null,
 
-  var properties: Option[ResultSummaryProperties] = None) extends Logging  {
+  var properties: Option[ResultSummaryProperties] = None,
+  
+  var peptideValidationRocCurve: Option[RocCurve] = None,
+  var proteinValidationRocCurve: Option[RocCurve] = None
+  
+) extends Logging  {
 
   // Requirements
   require(peptideInstances != null && proteinSets != null)
@@ -373,8 +378,7 @@ case class RsmValidationResultProperties(
   @BeanProperty var targetMatchesCount: Int,
   @BeanProperty var decoyMatchesCount: Option[Int] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
-  @BeanProperty var fdr: Option[Float] = None,
-  @BeanProperty var rocPoints: Option[Array[(Double,Float)]] = None
+  @BeanProperty var fdr: Option[Float] = None
 )
 
 object ValidatedResultSetBuilder {
