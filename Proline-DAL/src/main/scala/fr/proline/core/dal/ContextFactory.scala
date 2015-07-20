@@ -121,24 +121,6 @@ object BuildDbConnectionContext extends Logging {
    *
    * @param dbConnector
    *            DatabaseConnector used to access a Proline Db.
-   *
-   * @return A new instance of <code>DatabaseConnectionContext</code> or <code>SQLConnectionContext</code> for SQL
-   */
-  /*def apply[CtxType <: DatabaseConnectionContext](dbConnector: IDatabaseConnector)(implicit m: Manifest[CtxType]): CtxType = {
-
-    val useJPA = if (m.erasure == classOf[SQLConnectionContext]) false
-    else true
-
-    this.logger.info("creation of execution context " + (if (useJPA) "using JPA mode" else "using SQL mode "))
-
-    this.apply(dbConnector, useJPA).asInstanceOf[CtxType]
-  }*/
-
-  /**
-   * Creates a <code>DatabaseConnectionContext</code> from given DatabaseConnector.
-   *
-   * @param dbConnector
-   *            DatabaseConnector used to access a Proline Db.
    * @param useJPA
    *            If <code>true</code> returned Db context wraps a new <code>EntityManager</code>. If
    *            <code>false</code> returned SQLConnectionContext wraps a new SQL JDBC <code>Connection</code>.
