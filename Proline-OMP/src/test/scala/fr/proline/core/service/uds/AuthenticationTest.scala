@@ -68,7 +68,7 @@ class AuthenticationTest extends DatabaseTestCase with Logging {
     val isLoginOK = service.runService()
     
     if( !isLoginOK) {
-      logger.error( service.getErrorMessage )
+      logger.error( service getAuthenticateResultMessage )
     }
 
     assertTrue(isLoginOK)
