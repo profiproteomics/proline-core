@@ -35,9 +35,11 @@ class UserAuthenticator(
 ) extends IService {
 
   private var _errorMsg : String = null;
+  private var _serviceResult : Boolean = false;
   
   def runService(): Boolean = {
      var password: String = null
+	 _serviceResult = true
 
      val jdbcWork = new JDBCWork() {
       override def execute(con: Connection) {
@@ -50,6 +52,7 @@ class UserAuthenticator(
           password = sqlResultSet.getString(1)
       	else {
            _errorMsg = "Specified user is unknown";  
+           _serviceResult = false
       	}
         pStmt.close()
       }
@@ -58,25 +61,31 @@ class UserAuthenticator(
 
     udsConnectionCtxt.doWork(jdbcWork, false)
     if(_errorMsg != null)
-      return false
+      return _serviceResult
 
     if(password == null) {
       _errorMsg = "Invalid password found for user ";
-      return false
+      _serviceResult = false
+      return _serviceResult
     }
     
     if(!password.equals(hashPassword)){
       _errorMsg = "Invalid password entered for user ";
-      return false      
+      _serviceResult = false
+      return _serviceResult        
     }
     
     true
   }
   
-  def getErrorMessage() : String = {
+  def getAuthenticateResultMessage() : String = {
     if(_errorMsg == null)
       return "Successful authentication"
      return _errorMsg
+  }
+  
+  def getAuthenticateResult() : Boolean = {
+		  return _serviceResult
   }
 
   

@@ -33,48 +33,18 @@ class UserUpdator(
   name: String,
   newHashPassword: String,
   oldHashPassword: String
-) extends IService {
+) extends UserAuthenticator(udsConnectionCtxt, name, oldHashPassword ) {
 
-  private var _errorMsg : String = null;
-  private var _serviceResult : Boolean = false;
+  private var _updatorErrorMsg : String = null;
+  private var _updatorResult : Boolean = false;
   
-  def runService(): Boolean = {
-     var oldPassword: String = null
-	 _serviceResult = true
-	 
-     val jdbcWork = new JDBCWork() {
-      override def execute(con: Connection) {
-
-        val getUserQuery = "Select password_hash FROM user_account where login =? 	"
-        val pStmt = con.prepareStatement(getUserQuery)
-        pStmt.setString(1, name)
-        val sqlResultSet = pStmt.executeQuery()
-        if (sqlResultSet.next)
-          oldPassword = sqlResultSet.getString(1)
-      	else {
-           _errorMsg = "Specified user is unknown";  
-           _serviceResult = false
-      	}
-        pStmt.close()
-      }
-
-    } // End of jdbcWork anonymous inner class    	 
-
-    udsConnectionCtxt.doWork(jdbcWork, false)
-    if(_errorMsg != null)
-      return _serviceResult
-
-    if(oldPassword == null) {
-      _errorMsg = "Invalid password found for user ";
-      _serviceResult = false
-      return _serviceResult
-    }
-    
-    if(!oldPassword.equals(oldHashPassword)){
-      _errorMsg = "Invalid password entered for user ";
-      _serviceResult = false
-      return _serviceResult      
-    }
+ override def runService(): Boolean = {
+	 _updatorResult = true
+	 _updatorResult =  super.runService
+	 if(!_updatorResult){
+	   _updatorErrorMsg = super.getAuthenticateResultMessage
+	   return _updatorResult
+	 }
     
     //Old password OK, change with new password
      val jdbcUpdateWork = new JDBCWork() {
@@ -86,8 +56,8 @@ class UserUpdator(
         pStmt.setString(2, name)
         val sqlResult = pStmt.executeUpdate()
         if (sqlResult != 1 ){
-           _errorMsg = "Invalid number updated row ("+sqlResult+") !";  
-           _serviceResult = false
+           _updatorErrorMsg = "Invalid number updated row ("+sqlResult+") !";  
+           _updatorResult = false
         }
         pStmt.close()
       }
@@ -95,19 +65,17 @@ class UserUpdator(
     } // End of jdbcWork anonymous inner class
      
      udsConnectionCtxt.doWork(jdbcUpdateWork, false)
-    if(! _serviceResult)
-      return false
-    true
+     return _updatorResult
   }
   
-  def getErrorMessage() : String = {
-    if(_errorMsg == null)
+  def getUpdatorResultMessage() : String = {
+    if(_updatorErrorMsg == null)
       return "Successful authentication"
-     return _errorMsg
+     return _updatorErrorMsg
   }
   
   def getUpdateResult() : Boolean = {
-      return _serviceResult
+      return _updatorResult
   }
   
 }
