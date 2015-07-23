@@ -6,11 +6,13 @@ import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal._
-import fr.proline.core.dal.tables.msi.{MsiDbResultSummaryTable}
+import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
+import fr.proline.core.dal.tables.msi.MsiDbResultSummaryObjectTreeMapTable
+import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLRsmStorer
-import fr.proline.core.dal.tables.msi.MsiDbResultSummaryObjectTreeMapTable
-import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
+import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
+import fr.proline.core.om.model.msi.RocCurve
 
 trait IRsmStorer extends Logging {
   
@@ -23,13 +25,13 @@ trait IRsmStorer extends Logging {
 /** A factory object for implementations of the IRsmStorer trait */
 object RsmStorer {
   
-  val rsmInsertQuery = MsiDbResultSummaryTable.mkInsertQuery{ (c,colsList) => 
-            colsList.filter( _ != c.ID) }
-  val objectTreeInsertQuery = MsiDbObjectTreeTable.mkInsertQuery{ (ct,colsList) => 
-            colsList.filter( c => (c != ct.ID) && (c != ct.BLOB_DATA)) }
-
-  val objectTreeMapInsertQuery = MsiDbResultSummaryObjectTreeMapTable.mkInsertQuery()
-
+  private val rsmInsertQuery = MsiDbResultSummaryTable.mkInsertQuery{ (c,colsList) => colsList.filter( _ != c.ID) }
+  private val rocCurveInsertQuery = MsiDbObjectTreeTable.mkInsertQuery { (ct,colsList) => 
+    List(ct.CLOB_DATA, ct.SCHEMA_NAME)
+  }
+  private val rocCurveMappingInsertQuery = MsiDbResultSummaryObjectTreeMapTable.mkInsertQuery()
+  private val peptideRocCurveSchemaName = SchemaName.PEPTIDE_VALIDATION_ROC_CURVE.toString
+  private val proteinRocCurveSchemaName = SchemaName.PEPTIDE_VALIDATION_ROC_CURVE.toString
             
   def apply( msiDbContext: DatabaseConnectionContext ): RsmStorer = {
     
@@ -62,15 +64,13 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
   
   private def _insertResultSummary( rsm: ResultSummary, execCtx: IExecutionContext ): Unit = {
     
-    // Store RDB result summary
-    // TODO: use JPA instead    
     DoJDBCWork.withEzDBC( execCtx.getMSIDbConnectionContext, { msiEzDBC =>
       
       msiEzDBC.executePrepared( RsmStorer.rsmInsertQuery, true ) { stmt =>
         stmt.executeWith(
           Option( rsm.description ),
           Option.empty[String],
-          new java.util.Date(),          
+          new java.util.Date(),
           false,
           if (rsm.properties.isDefined) rsm.properties.get.validationProperties.map(ProfiJson.serialize(_)) else Option.empty[String],
           if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else Option.empty[Long],
@@ -79,24 +79,32 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
         
         rsm.id = stmt.generatedLong
       }
-        
-//      if (rsm.properties.isDefined && rsm.properties.get.peptideRocPoints.isDefined) {
-//          
-//          val objectTreeId = msiEzDBC.executePrepared( RsmStorer.objectTreeInsertQuery , true ) { stmt =>
-//          	stmt.executeWith(
-//          	    rsm.properties.get.peptideRocPoints.map(ProfiJson.serialize(_)),
-//          	    Option.empty[String],
-//          	    "result_summary.validation_properties"
-//           )
-//          
-//           stmt.generatedLong
-//          }
-//
-//          msiEzDBC.executePrepared( RsmStorer.objectTreeMapInsertQuery, true ) { stmt =>
-//          	stmt.executeWith(rsm.id,"result_summary.validation_properties", objectTreeId) 
-//          }
-//          logger.info("peptideRocPoints have been saved")
-//      }
+      
+      // Store ROC curves if they are defined
+      def storeRocCurve( rocCurve: RocCurve, schemaName: String ) {
+        val objectTreeId = msiEzDBC.executePrepared(RsmStorer.rocCurveInsertQuery, true) { stmt =>
+          stmt.executeWith(
+            ProfiJson.serialize(rocCurve),
+            schemaName
+          )
+
+          stmt.generatedLong
+        }
+
+        msiEzDBC.executePrepared(RsmStorer.rocCurveMappingInsertQuery, true) { stmt =>
+          stmt.executeWith(rsm.id, schemaName, objectTreeId)
+        }
+      }
+      
+      for (peptideValidationRocCurve <- rsm.peptideValidationRocCurve) {
+        storeRocCurve(peptideValidationRocCurve, RsmStorer.peptideRocCurveSchemaName)
+        logger.info("peptideValidationRocCurve have been stored")
+      }
+      for (proteinValidationRocCurve <- rsm.proteinValidationRocCurve) {
+        storeRocCurve(proteinValidationRocCurve, RsmStorer.proteinRocCurveSchemaName)
+        logger.info("proteinValidationRocCurve have been stored")
+      }
+
     })
   }
   
