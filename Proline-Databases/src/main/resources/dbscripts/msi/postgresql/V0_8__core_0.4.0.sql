@@ -124,6 +124,7 @@ ALTER TABLE peptide_set ALTER COLUMN sequence_count SET NOT NULL;
 -- Enforce that peaklist.raw_file_identifier does not contain file extension
 UPDATE peaklist SET raw_file_identifier = split_part(raw_file_identifier,'.', 1);
 
+SELECT setval('scoring_id_seq', (SELECT max(id) FROM scoring));
 DELETE FROM scoring WHERE search_engine = 'percolator';
 -- Add Missing scoring 
 WITH all_values (search_engine,name,description) as (
@@ -144,7 +145,7 @@ SELECT search_engine,name,description
 FROM all_values
 WHERE NOT EXISTS (SELECT 1 
                   FROM scoring sc 
-                  WHERE sc.name = all_values.name AND sc.search_engine = all_values.search_engine)
+                  WHERE sc.name = all_values.name AND sc.search_engine = all_values.search_engine);
 
 /* END OF ADDITIONAL SQL QUERIES USED FOR DATA UPDATE */
 
