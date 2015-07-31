@@ -43,7 +43,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   val peaklistIds = this.identRsIdByPeaklistId.keys
   //val peaklistIds = msiIdentResultSets map { _.getMsiSearch().getPeaklist().getId() }
 
-  val ms2SpectrumHeaders = {
+  def loadMs2SpectrumHeaders(): Array[Map[String,Any]] = {
 
     // Load MS2 spectrum headers
     this.logger.info("loading MS2 spectrum headers...")
@@ -51,13 +51,15 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
       val sqlQuery = new SelectQueryBuilder1(MsiDbSpectrumTable).mkSelectQuery( (t,c) =>
-        List(t.ID,t.FIRST_CYCLE,t.FIRST_SCAN,t.FIRST_TIME,t.PEAKLIST_ID)
+        List(t.ID,t.PRECURSOR_MOZ,t.FIRST_CYCLE,t.FIRST_SCAN,t.FIRST_TIME,t.PEAKLIST_ID)
         -> "WHERE "~ t.PEAKLIST_ID ~" IN("~ peaklistIds.mkString(",") ~")"
       )
-      msiEzDBC.selectAllRecordsAsMaps(sqlQuery)    
+      msiEzDBC.selectAllRecordsAsMaps(sqlQuery)
     })
 
   }
+  
+  val ms2SpectrumHeaders = loadMs2SpectrumHeaders()
 
   val spectrumIdByRsIdAndScanNumber = {
 
