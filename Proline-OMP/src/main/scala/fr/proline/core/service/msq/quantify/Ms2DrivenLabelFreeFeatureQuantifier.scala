@@ -117,6 +117,8 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
         }
       }
       
+      require( scanIdBySpecId.isEmpty == false, "scanIdBySpecId should not be empty")
+      
       DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
         
         val updateSqlQuery = s"UPDATE ${MsiDbSpectrumTable.name} SET ${specCols.FIRST_SCAN} = ? WHERE ${specCols.ID} = ?"
