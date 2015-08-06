@@ -1,8 +1,13 @@
 package fr.proline.core.orm.lcms;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -14,6 +19,8 @@ import javax.persistence.*;
 @NamedQuery(name="MapAlignment.findAll", query="SELECT m FROM MapAlignment m")
 public class MapAlignment implements Serializable {
 	private static final long serialVersionUID = 1L;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(MapAlignment.class);
 
 	@EmbeddedId
 	private MapAlignmentPK id;
@@ -43,6 +50,9 @@ public class MapAlignment implements Serializable {
 	@JoinColumn(name="to_map_id")
 	@MapsId("toMapId")
 	private ProcessedMap destinationMap;
+	
+	@Transient
+	private List<MapTime> mapTimeList;
 
 	public MapAlignment() {
 	}
@@ -103,4 +113,31 @@ public class MapAlignment implements Serializable {
 		this.destinationMap = destinationMap;
 	}
 
+	public void setMapTimeList(List<MapTime> mapTimeList) {
+		this.mapTimeList = mapTimeList;
+	}
+
+	public List<MapTime> getMapTimeList() {
+		if (this.mapTimeList == null) {
+			try {
+				this.mapTimeList = new ArrayList<MapTime>();
+				String[] timeSplited = this.timeList.split(" ");
+				String[] deltaTimeSplited = this.deltaTimeList.split(" ");
+				if (timeSplited.length != deltaTimeSplited.length){
+					LOG.error("Error Parsing TimeList: time and delta time are different ");
+				}else{
+					for (int i=0; i<timeSplited.length; i++){
+						Double time = Double.parseDouble(timeSplited[i]);
+						Double deltaTime = Double.parseDouble(deltaTimeSplited[i]);
+						this.mapTimeList.add(new MapTime(time, deltaTime));
+					}
+				}
+				
+			} catch (Exception e) {
+				LOG.error("Error Parsing TimeList ",e);
+				this.mapTimeList = null;
+			} 
+		}
+		return this.mapTimeList;
+	}
 }
