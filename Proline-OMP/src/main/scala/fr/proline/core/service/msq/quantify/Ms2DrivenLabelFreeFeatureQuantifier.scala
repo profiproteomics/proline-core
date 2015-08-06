@@ -98,17 +98,17 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
               require( mzDbScanHeadersByCycle.contains(cycle), s"can't find cycle $cycle in mzDB file: " + mzDbFilePath)
               
               val mzDbSHsInCurCycle = mzDbScanHeadersByCycle(cycle)
-              val matchingCycles = mzDbSHsInCurCycle.filter { mzDbSH =>
+              val matchingMzDbScanHeaders = mzDbSHsInCurCycle.filter { mzDbSH =>
                 val precMz = mzDbSH.getPrecursorMz()
                 val ms2MatchingMzTolDa = MsUtils.ppmToDa(precMz, quantConfig.ftMappingParams.mozTol)
                 
                 math.abs(precMz - precMzBySpecId(specId)) <= ms2MatchingMzTolDa
               }
               
-              require( matchingCycles.length < 1, "multiple mzDB spectra are matching this MSIdb spectrum header" )
-              require( matchingCycles.length > 0, "can't find a mzDB spectrum matching this MSIdb spectrum header" )
+              require( matchingMzDbScanHeaders.length < 2, "multiple mzDB spectra are matching this MSIdb spectrum header" )
+              require( matchingMzDbScanHeaders.length > 0, "can't find a mzDB spectrum matching this MSIdb spectrum header" )
               
-              scanIdBySpecId += specId -> matchingCycles.head.getInitialId()
+              scanIdBySpecId += specId -> matchingMzDbScanHeaders.head.getInitialId()
             }
           } finally {
             mzDbReader.close()
