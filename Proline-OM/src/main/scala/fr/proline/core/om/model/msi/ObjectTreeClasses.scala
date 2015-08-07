@@ -2,6 +2,8 @@ package fr.proline.core.om.model.msi
 
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 
 
 /**
@@ -64,11 +66,12 @@ object FragmentMatchType extends Enumeration {
  */
 //@JsonInclude( Include.NON_NULL )
 //@Message
+@JsonCreator
 case class SpectrumMatch(
-  @transient val msQueryInitialId: Int,
-  @transient val peptideMatchRank: Int,
-  var fragTable: Array[TheoreticalFragmentSeries],
-  var fragMatches: Array[FragmentMatch]) {
+  @JsonProperty("msQueryInitialId") @transient val msQueryInitialId: Int,
+  @JsonProperty("peptideMatchRank") @transient val peptideMatchRank: Int,
+  @JsonProperty("fragTable") var fragTable: Array[TheoreticalFragmentSeries],
+  @JsonProperty("fragMatches") var fragMatches: Array[FragmentMatch]) {
   // Plain constructor needed for MessagePack
   def this() = this(0, 0, Array.empty[TheoreticalFragmentSeries], Array.empty[FragmentMatch])
 }
