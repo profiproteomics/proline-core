@@ -215,4 +215,16 @@ public class DDataset {
 		this.groupSetup = groupSetup;
 	}
 	
+	/**
+	 * return true if the dataset is a XIC quantitation (type feature_intensity)
+	 * @return
+	 */
+	public boolean isQuantiXIC(){
+        return ( this.m_quantitationMethod != null && m_quantitationMethod.getAbundanceUnit().compareTo("feature_intensity") == 0 ) ;
+	}
+	
+	public boolean isQuantiSC(){
+        return ( m_quantitationMethod != null && m_quantitationMethod.getAbundanceUnit().compareTo("spectral_counts") == 0 ) ;
+	}
+	
 }
