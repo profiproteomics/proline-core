@@ -3,6 +3,7 @@ package fr.proline.core.om.model.msi
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 
 
@@ -25,7 +26,8 @@ case class FragmentMatch(
   var calculatedMoz: Double,
   var intensity: Float,
   @JsonDeserialize(contentAs = classOf[java.lang.Double])
-  var neutralLossMass: Option[Double] = None) {
+  var neutralLossMass: Option[Double] = None
+) {
 
   // Plain constructor needed for MessagePack
   def this() = this("", None, Double.NaN, Double.NaN, Float.NaN, None)
@@ -64,23 +66,23 @@ object FragmentMatchType extends Enumeration {
  * @param fragmentationTable
  * @param fragmentMatches
  */
-//@JsonInclude( Include.NON_NULL )
 //@Message
 @JsonCreator
 case class SpectrumMatch(
-  @transient val msQueryInitialId: Int,
-  @transient val peptideMatchRank: Int,
+  @JsonIgnore @transient val msQueryInitialId: Int,
+  @JsonIgnore @transient val peptideMatchRank: Int,
   @JsonProperty("fragTable") var fragTable: Array[TheoreticalFragmentSeries],
-  @JsonProperty("fragMatches") var fragMatches: Array[FragmentMatch]) {
+  @JsonProperty("fragMatches") var fragMatches: Array[FragmentMatch]
+) {
   // Plain constructor needed for MessagePack
   def this() = this(0, 0, Array.empty[TheoreticalFragmentSeries], Array.empty[FragmentMatch])
 }
 
-//@JsonInclude( Include.NON_NULL )
 //@Message
 case class TheoreticalFragmentSeries(
   var fragSeries: String, // begins by an ionSeries name and may be followed by a "++" for doubly charge state
-  var masses: Array[Double]) {
+  var masses: Array[Double]
+) {
 
   // Plain constructor needed for MessagePack
   def this() = this("", Array.empty[Double])
