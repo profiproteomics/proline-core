@@ -290,7 +290,10 @@ case class Peptide (
   
   // Mutable optional fields
   var properties: Option[PeptideProperties] = None
+  
 ) {
+  
+  override def hashCode(): Int = uniqueKey.hashCode()
   
   // Define secondary constructors
   def this( id: Long, sequence: String, ptms: Array[LocatedPtm], calculatedMass: Double ) = {
@@ -312,7 +315,7 @@ case class Peptide (
   /** Returns a string representing the peptide PTMs */
   @JsonProperty lazy val readablePtmString : String = {
     
-    var tmpReadablePtmString : String = null
+    var tmpReadablePtmString: String = null
     if (ptms != null) {
   
       val ptmStringBuf = new ListBuffer[String]
@@ -337,11 +340,11 @@ case class Peptide (
   }
   
   /** Returns a string that can be used as a unique key for this peptide */
-  @transient lazy val uniqueKey : String = { 
+  @transient lazy val uniqueKey: String = { 
     if (ptmString != null) 
     	sequence + "%" + ptmString
     else
-    	 sequence + "%" 
+    	sequence + "%" 
   }
   
 }
