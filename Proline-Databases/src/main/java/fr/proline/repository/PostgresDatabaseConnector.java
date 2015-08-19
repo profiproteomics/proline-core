@@ -78,10 +78,8 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 			}
 		}
 		
-		// TODO fix buildC3P0DataSource, Issue #13091
-		// source.getConnection doesn't work? 
-		//final DataSource source = (maxConnection>1) ?  buildC3P0DataSource(ident, properties, fakeURI, maxConnection) :  buildSimpleDataSource(ident, properties, fakeURI);
-		final DataSource source = buildPGPoolingDataSource(ident, properties, fakeURI, DEFAULT_MAX_POOL_CONNECTIONS);
+		
+		final DataSource source = (maxConnection>1) ?  buildC3P0DataSource(ident, properties, fakeURI, maxConnection) :  buildSimpleDataSource(ident, properties, fakeURI);
 		
 		return source;
 	}
