@@ -1,5 +1,6 @@
 package fr.proline.core.orm.uds.dto;
 
+import fr.proline.core.orm.msi.ResultSet;
 import fr.proline.core.orm.uds.QuantitationChannel;
 
 /**
@@ -27,6 +28,11 @@ public class DQuantitationChannel extends QuantitationChannel{
 	
 	// mzdb file name
 	private String mzdbFileName;
+	
+	// resultSet from the identification
+	private ResultSet identRs;
+	// identDataset id, if exists
+	private Long identDatasetId;
     
 	public DQuantitationChannel(QuantitationChannel o) {
 		super();
@@ -93,6 +99,24 @@ public class DQuantitationChannel extends QuantitationChannel{
 
 	public void setMzdbFileName(String mzdbFileName) {
 		this.mzdbFileName = mzdbFileName;
+	}
+
+	
+
+	public ResultSet getIdentRs() {
+		return identRs;
+	}
+
+	public void setIdentRs(ResultSet identRs) {
+		this.identRs = identRs;
+	}
+
+	public Long getIdentDatasetId() {
+		return identDatasetId;
+	}
+
+	public void setIdentDatasetId(Long identDatasetId) {
+		this.identDatasetId = identDatasetId;
 	}
 
 	
