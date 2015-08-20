@@ -109,6 +109,13 @@ case class TheoreticalFragmentSeries(
 }
 
 
+trait IRocCurve {
+  def xValues: Array[Float]
+  def yValues: Array[Float]
+}
 
-
-
+case class MsiRocCurve(
+  xValues: Array[Float],
+  yValues: Array[Float],
+  thresholds: Array[Float]
+) extends IRocCurve

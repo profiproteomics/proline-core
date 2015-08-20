@@ -182,8 +182,8 @@ case class ResultSummary(
 
   var properties: Option[ResultSummaryProperties] = None,
   
-  var peptideValidationRocCurve: Option[RocCurve] = None,
-  var proteinValidationRocCurve: Option[RocCurve] = None
+  var peptideValidationRocCurve: Option[MsiRocCurve] = None,
+  var proteinValidationRocCurve: Option[MsiRocCurve] = None
   
 ) extends Logging  {
 

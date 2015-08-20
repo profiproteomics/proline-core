@@ -9,10 +9,10 @@ import fr.proline.core.dal._
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryObjectTreeMapTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
+import fr.proline.core.om.model.msi.MsiRocCurve
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLRsmStorer
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.core.om.model.msi.RocCurve
 
 trait IRsmStorer extends Logging {
   
@@ -31,7 +31,7 @@ object RsmStorer {
   }
   private val rocCurveMappingInsertQuery = MsiDbResultSummaryObjectTreeMapTable.mkInsertQuery()
   private val peptideRocCurveSchemaName = SchemaName.PEPTIDE_VALIDATION_ROC_CURVE.toString
-  private val proteinRocCurveSchemaName = SchemaName.PEPTIDE_VALIDATION_ROC_CURVE.toString
+  private val proteinRocCurveSchemaName = SchemaName.PROTEIN_VALIDATION_ROC_CURVE.toString
             
   def apply( msiDbContext: DatabaseConnectionContext ): RsmStorer = {
     
@@ -81,7 +81,7 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
       }
       
       // Store ROC curves if they are defined
-      def storeRocCurve( rocCurve: RocCurve, schemaName: String ) {
+      def storeRocCurve( rocCurve: MsiRocCurve, schemaName: String ) {
         val objectTreeId = msiEzDBC.executePrepared(RsmStorer.rocCurveInsertQuery, true) { stmt =>
           stmt.executeWith(
             ProfiJson.serialize(rocCurve),

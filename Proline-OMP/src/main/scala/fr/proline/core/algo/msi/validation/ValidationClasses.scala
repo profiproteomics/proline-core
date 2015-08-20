@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msi.validation
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
@@ -10,6 +11,7 @@ import fr.proline.core.algo.msi.validation.pepmatch._
 import fr.proline.core.algo.msi.validation.proteinset._
 import fr.proline.core.om.model.msi.{ResultSummary, ResultSet, ProteinSet, PeptideMatch}
 import fr.proline.core.om.model.msi.FilterDescriptor
+import fr.proline.core.om.model.msi.MsiRocCurve
 
 object TargetDecoyModes extends Enumeration {
   type Mode = Value
@@ -54,7 +56,27 @@ case class ValidationResult( targetMatchesCount: Int,
 }
 
 @JsonInclude( Include.NON_NULL )
-case class ValidationResults( finalResult: ValidationResult, computedResults: Option[Seq[ValidationResult]] = None )
+case class ValidationResults( finalResult: ValidationResult, computedResults: Option[Seq[ValidationResult]] = None ) {
+  
+  def getRocCurve(): Option[MsiRocCurve] = {
+    this.computedResults.map { computedResults =>
+      
+      val rocPointsCount = computedResults.length
+      val xValues = new ArrayBuffer[Float](rocPointsCount)
+      val yValues = new ArrayBuffer[Float](rocPointsCount)
+      val thresholds = new ArrayBuffer[Float](rocPointsCount)
+      
+      computedResults.foreach { computedResult =>
+        xValues += computedResult.fdr.get
+        yValues += computedResult.targetMatchesCount
+        thresholds += fr.profi.util.primitives.toFloat( computedResult.properties.get(FilterPropertyKeys.THRESHOLD_VALUE) )            
+      }
+      
+      MsiRocCurve( xValues.toArray, yValues.toArray, thresholds.toArray )
+    }
+  }
+  
+}
 
 
 object BuildPeptideMatchFilter {

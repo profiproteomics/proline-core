@@ -143,7 +143,7 @@ class ResultSetValidator(
     >>>
 
     // --- Validate PSM ---
-    val appliedPSMFilters = this._validatePeptideMatches(targetRs, rsmValProperties)
+    val( appliedPSMFilters, pepMatchValidationRocCurveOpt ) = this._validatePeptideMatches(targetRs, rsmValProperties)
     >>>
 
     // --- Compute RSM from validated PSMs ---
@@ -152,11 +152,14 @@ class ResultSetValidator(
     val protSetInferer = ProteinSetInferer(inferenceMethod.get)
 
     //-- createRSM
-    def createRSM(currentRS: Option[ResultSet]): Option[ResultSummary] = {
+    def createRSM(currentRS: Option[ResultSet], peptideValidationRocCurve: Option[RocCurve]): Option[ResultSummary] = {
       if (currentRS.isDefined) {
 
         // Create new result set with validated peptide matches and compute result summary
         val rsm = protSetInferer.computeResultSummary(currentRS.get, keepSubsummableSubsets = true)
+        
+        // Attach the ROC curve
+        rsm.peptideValidationRocCurve = peptideValidationRocCurve
 
         // Update score of protein sets
         val pepSetScoreUpdater = PeptideSetScoreUpdater(peptideSetScoring.get)
@@ -170,8 +173,8 @@ class ResultSetValidator(
     }
 
     // Build result summary for each individual result set
-    val targetRsm = createRSM(Some(targetRs)).get
-    val decoyRsmOpt = createRSM(if (targetRs.decoyResultSet != null) targetRs.decoyResultSet else None)
+    val targetRsm = createRSM(Some(targetRs), pepMatchValidationRocCurveOpt).get
+    val decoyRsmOpt = createRSM(if (targetRs.decoyResultSet != null) targetRs.decoyResultSet else None, None)
     >>>
 
     // Set target RSM validation properties
@@ -185,7 +188,7 @@ class ResultSetValidator(
     }
 
     // --- Validate ProteinSet ---
-    this._validateProteinSets(targetRsm, rsmValProperties)
+    targetRsm.proteinValidationRocCurve = this._validateProteinSets(targetRsm, rsmValProperties)
 
     val took = curTimeInSecs() - startTime
     this.logger.info("Validation service took " + took + " seconds")
@@ -229,7 +232,7 @@ class ResultSetValidator(
    *
    * All applied IPeptideMatchFilter are returned
    */
-  private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): Seq[IPeptideMatchFilter] = {
+  private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): (Seq[IPeptideMatchFilter],Option[RocCurve]) = {
 
     var appliedFilters = Seq.newBuilder[IPeptideMatchFilter]
     val filterDescriptors = new ArrayBuffer[FilterDescriptor](pepMatchPreFilters.map(_.length).getOrElse(0))
@@ -245,51 +248,58 @@ class ResultSetValidator(
       	if(psmFilter.isInstanceOf[IFilterNeedingResultSet])
       		psmFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(targetRs)
 
-  		if(!psmFilter.postValidationFilter){
-	        finalValidationResult = new BasicPepMatchValidator(psmFilter, finalTDAnalyzer).validatePeptideMatches(targetRs).finalResult
-	        logger.debug(
-	          "After Filter " + psmFilter.filterDescription +
-	          " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
-	        )
-	        appliedFilters += psmFilter
-	        filterDescriptors += psmFilter.toFilterDescriptor
-      	} else
-      	  postValidationFilter += psmFilter
+        if (psmFilter.postValidationFilter) postValidationFilter += psmFilter
+        else {
+          finalValidationResult = new BasicPepMatchValidator(psmFilter, finalTDAnalyzer).validatePeptideMatches(targetRs).finalResult
+          logger.debug(
+            "After Filter " + psmFilter.filterDescription +
+              " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
+          )
+          appliedFilters += psmFilter
+          filterDescriptors += psmFilter.toFilterDescriptor
+        }
+          
       }
     } //End execute all PSM filters
     >>>
 
-    // If define, execute peptide match validator  
-    for (somePepMatchValidator <- pepMatchValidator) {
-
+    // If define, execute peptide match validator
+    val rocCurveOpt = if( pepMatchValidator.isEmpty) None
+    else {
+      val somePepMatchValidator = pepMatchValidator.get
       val validationFilter = somePepMatchValidator.validationFilter
-      
-	  if(validationFilter.isInstanceOf[IFilterNeedingResultSet])
-      		validationFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(targetRs)
+
+      if (validationFilter.isInstanceOf[IFilterNeedingResultSet])
+        validationFilter.asInstanceOf[IFilterNeedingResultSet].setTargetRS(targetRs)
 
       logger.debug("Run peptide match validator: " + validationFilter.filterParameter)
 
       // Apply Filter
       val valResults = somePepMatchValidator.validatePeptideMatches(targetRs)
-      if(valResults.finalResult != null) {
-    	  finalValidationResult = valResults.finalResult
+      
+      if (valResults.finalResult != null) {
+        finalValidationResult = valResults.finalResult
 
-		  appliedFilters += validationFilter
-		  // Store Validation Params obtained after filtering
-		  filterDescriptors += validationFilter.toFilterDescriptor
-      } 
+        appliedFilters += validationFilter
+        // Store Validation Params obtained after filtering
+        filterDescriptors += validationFilter.toFilterDescriptor
+        
+        // Retrieve the ROC curve
+        valResults.getRocCurve()
+        
+      } else None
     }
-    
+
     //VDS: FOR TEST ONLY : EXECUTE some filter - singlePerQuery- After FDR !
     postValidationFilter.foreach(psmFilter => {
-        finalValidationResult = new BasicPepMatchValidator(psmFilter, finalTDAnalyzer).validatePeptideMatches(targetRs).finalResult
-        logger.debug(
-          "After Post Validation Filter " + psmFilter.filterDescription +
+      finalValidationResult = new BasicPepMatchValidator(psmFilter, finalTDAnalyzer).validatePeptideMatches(targetRs).finalResult
+      logger.debug(
+        "After Post Validation Filter " + psmFilter.filterDescription +
           " Nbr PepMatch target validated = " + finalValidationResult.targetMatchesCount
-        )
-        appliedFilters += psmFilter
-        filterDescriptors += psmFilter.toFilterDescriptor
-	})
+      )
+      appliedFilters += psmFilter
+      filterDescriptors += psmFilter.toFilterDescriptor
+    })
     
     // Save PSM Filters properties
     val expectedFdr = if (pepMatchValidator.isDefined) pepMatchValidator.get.expectedFdr else None
@@ -319,11 +329,11 @@ class ResultSetValidator(
     // Update PSM validation result of the ResultSummary
     rsmValProperties.getResults.setPeptideResults(Some(pepValResults))
 
-    appliedFilters.result
+    (appliedFilters.result, rocCurveOpt)
   }
 
-  private def _validateProteinSets(targetRsm: ResultSummary, rsmValProperties: RsmValidationProperties): Unit = {
-    if (protSetFilters.isEmpty && protSetValidator.isEmpty) return ()
+  private def _validateProteinSets(targetRsm: ResultSummary, rsmValProperties: RsmValidationProperties): Option[RocCurve] = {
+    if (protSetFilters.isEmpty && protSetValidator.isEmpty) return None
 
     val filterDescriptors = new ArrayBuffer[FilterDescriptor]()
     var finalValidationResult: ValidationResult = null
@@ -352,7 +362,8 @@ class ResultSetValidator(
     >>>
 
     // If define, execute protein set validator  
-    if (protSetValidator.isDefined) {
+    val rocCurveOpt = if (protSetValidator.isEmpty) None
+    else {
 
       logger.debug("Run protein set validator: " + protSetValidator.get.toFilterDescriptor.parameter)
 
@@ -361,9 +372,12 @@ class ResultSetValidator(
       val tdMode = TargetDecoyModes.withName(tdModeStr)
       protSetValidator.get.targetDecoyMode = Some(tdMode)
 
-      finalValidationResult = protSetValidator.get.validateProteinSets(targetRsm).finalResult
+      val valResults = protSetValidator.get.validateProteinSets(targetRsm)
+      finalValidationResult = valResults.finalResult
 
       filterDescriptors += protSetValidator.get.toFilterDescriptor
+      
+      valResults.getRocCurve()
     }
 
     // Save Protein Set Filters properties
@@ -410,5 +424,7 @@ class ResultSetValidator(
       if (proteinSet.isValidated) proteinSet.selectionLevel = 2
       else proteinSet.selectionLevel = 1
     }
+    
+    rocCurveOpt
   }
 }
