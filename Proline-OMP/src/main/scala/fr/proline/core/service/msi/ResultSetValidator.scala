@@ -152,7 +152,7 @@ class ResultSetValidator(
     val protSetInferer = ProteinSetInferer(inferenceMethod.get)
 
     //-- createRSM
-    def createRSM(currentRS: Option[ResultSet], peptideValidationRocCurve: Option[RocCurve]): Option[ResultSummary] = {
+    def createRSM(currentRS: Option[ResultSet], peptideValidationRocCurve: Option[MsiRocCurve]): Option[ResultSummary] = {
       if (currentRS.isDefined) {
 
         // Create new result set with validated peptide matches and compute result summary
@@ -232,7 +232,7 @@ class ResultSetValidator(
    *
    * All applied IPeptideMatchFilter are returned
    */
-  private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): (Seq[IPeptideMatchFilter],Option[RocCurve]) = {
+  private def _validatePeptideMatches(targetRs: ResultSet, rsmValProperties: RsmValidationProperties): (Seq[IPeptideMatchFilter],Option[MsiRocCurve]) = {
 
     var appliedFilters = Seq.newBuilder[IPeptideMatchFilter]
     val filterDescriptors = new ArrayBuffer[FilterDescriptor](pepMatchPreFilters.map(_.length).getOrElse(0))
@@ -332,7 +332,7 @@ class ResultSetValidator(
     (appliedFilters.result, rocCurveOpt)
   }
 
-  private def _validateProteinSets(targetRsm: ResultSummary, rsmValProperties: RsmValidationProperties): Option[RocCurve] = {
+  private def _validateProteinSets(targetRsm: ResultSummary, rsmValProperties: RsmValidationProperties): Option[MsiRocCurve] = {
     if (protSetFilters.isEmpty && protSetValidator.isEmpty) return None
 
     val filterDescriptors = new ArrayBuffer[FilterDescriptor]()
