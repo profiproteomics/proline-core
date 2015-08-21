@@ -117,9 +117,16 @@ class ResultSetValidator(
   private val msiDbContext = execContext.getMSIDbConnectionContext
   var validatedTargetRsm: ResultSummary = null
   var validatedDecoyRsm: Option[ResultSummary] = null
-    
-  //If not specified, specify default one !
-  val finalTDAnalyzer =  if(tdAnalyzer.isEmpty){ BuildTDAnalyzer(false, targetRs, null) } else tdAnalyzer
+  
+  // WARNING: this is hack which enables TD competition when rank filtering is used
+  // FIXME: find a better way to handle the TD competition
+  var useTdCompetition = false
+  if( pepMatchPreFilters.isDefined ) {
+    useTdCompetition = pepMatchPreFilters.get.find(_.filterParameter == PepMatchFilterParams.RANK).isDefined
+  }
+  
+  // If no TDAnalyzer specified, specify default one
+  val finalTDAnalyzer =  if(tdAnalyzer.isEmpty){ BuildTDAnalyzer(useTdCompetition, targetRs, null) } else tdAnalyzer
     
   // Update the target analyzer of the validators
   pepMatchValidator.foreach(_.tdAnalyzer = finalTDAnalyzer)
