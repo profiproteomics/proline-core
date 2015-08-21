@@ -255,7 +255,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
   ): Array[ValidationResult] = {
     // Return simplified validation result if no decoy peptide match is provided
     if( decoyPepMatches.isEmpty ) {
-      return Array(ValidationResult(targetMatchesCount = targetPepMatches.length))
+      return Array(ValidationResult(targetMatchesCount = targetPepMatches.length, decoyMatchesCount = Some(0), fdr = Some(0)))
     }
 
     // FIXME VDS: Use performROCAnalysisV1 algo for MascotPValuePSMFilter... If this FDR optimization on PValue seems to be interesting, implemet better fix ! 
