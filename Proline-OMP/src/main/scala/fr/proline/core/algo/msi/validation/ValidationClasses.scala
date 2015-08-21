@@ -43,11 +43,12 @@ object ValidationPropertyKeys extends ValidationSharedKeys {
 }
 
 @JsonInclude( Include.NON_NULL )
-case class ValidationResult( targetMatchesCount: Int,
-                             decoyMatchesCount: Option[Int] = None,
-                             fdr: Option[Float] = None,
-                             var properties: Option[HashMap[String,Any]] = None
-                            ) {
+case class ValidationResult(
+  targetMatchesCount: Int,
+  decoyMatchesCount: Option[Int] = None,
+  fdr: Option[Float] = None,
+  var properties: Option[HashMap[String,Any]] = None
+) {
   def addProperties( newProps: Map[String,Any] ) {
     var props = this.properties.getOrElse( new collection.mutable.HashMap[String,Any]() )
     props ++= newProps

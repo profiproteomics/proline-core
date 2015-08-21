@@ -142,8 +142,8 @@ class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold:
     }
   }
 
-  def sortPeptideMatches(pepMatches: Seq[PeptideMatch]): Seq[PeptideMatch] = {
-    pepMatches.sortWith(_.score > _.score)
+  def compare(a: PeptideMatch, b: PeptideMatch): Int = {
+    b.score compare a.score
   }
 
   def getFilterProperties(): Map[String, Any] = {

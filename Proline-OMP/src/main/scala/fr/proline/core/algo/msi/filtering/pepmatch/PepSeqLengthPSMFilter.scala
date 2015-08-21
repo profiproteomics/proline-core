@@ -28,10 +28,6 @@ class PepSeqLengthPSMFilter( var minSeqLength: Int = 0 ) extends IPeptideMatchFi
     }
   }
   
-  /*def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
-    pepMatches.sortWith( getPeptideMatchSequenceLength(_) > getPeptideMatchSequenceLength(_) )
-  }*/
-
   def getFilterProperties(): Map[String, Any] = {
     val props =new HashMap[String, Any]    
     props += (FilterPropertyKeys.THRESHOLD_VALUE -> minSeqLength)

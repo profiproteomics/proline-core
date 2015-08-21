@@ -134,11 +134,11 @@ trait IPeptideMatchFilter extends IFilter  {
    *
    * Default behavior will be to exclude PeptideMatch which do not pass filter parameters
    *
-   * @param pepMatches : All PeptideMatches.
-   * @param incrementalValidation : if incrementalValidation is set to false,
-   * all PeptideMatch's isValidated property will be explicitly set to true or false.
-   * Otherwise, only excluded PeptideMatch will be changed bu setting their isValidated prooperty to false
-   * @param traceability : specify if filter could saved information in peptideMatch properties
+   * @param pepMatches All PeptideMatches
+   * @param incrementalValidation If incrementalValidation is set to false,
+   * PeptideMatch.isValidated will be explicitly set to true or false.
+   * Otherwise, only excluded PeptideMatch will be changed by setting their isValidated property to false.
+   * @param traceability Specify if filter could saved information in peptideMatch properties
    *
    */
   def filterPeptideMatches(pepMatches: Seq[PeptideMatch], incrementalValidation: Boolean, traceability: Boolean): Unit
@@ -173,9 +173,21 @@ trait IFilterNeedingResultSet {
   
 } 
 
-trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter with IPeptideMatchSorter {
+trait IOptimizablePeptideMatchFilter extends IPeptideMatchFilter with IOptimizableFilter with IPeptideMatchSorter with Ordering[PeptideMatch] {
 
   def isPeptideMatchValid(pepMatch: PeptideMatch): Boolean
+  
+  /**
+   * Compare peptide matches to produce an order corresponding to the filter parameter,
+   * from the "best" peptide match to the "worst".
+   */
+  def compare(a: PeptideMatch, b: PeptideMatch): Int
+  
+  /**
+   * Sorts peptide matches in the order corresponding to the filter parameter,
+   * from the "best" peptide match to the "worst".
+   */
+  def sortPeptideMatches(pepMatches: Seq[PeptideMatch]): Seq[PeptideMatch] = pepMatches.sorted( this )
 
 }
 

@@ -31,8 +31,8 @@ class ScorePSMFilter(var scoreThreshold: Float = 0.0f, var thresholdStartValue :
     pepMatch.score >= scoreThreshold    
   }
   
-  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
-    pepMatches.sortWith( _.score > _.score )
+  def compare(a: PeptideMatch, b: PeptideMatch): Int = {
+    b.score compare a.score
   }
 
   def getFilterProperties(): Map[String, Any] = {

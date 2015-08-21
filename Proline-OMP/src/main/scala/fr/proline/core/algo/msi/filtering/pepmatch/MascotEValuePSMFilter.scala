@@ -47,11 +47,11 @@ abstract class AbstractMascotEValueFilter extends IOptimizablePeptideMatchFilter
   }
   
   def isPeptideMatchValid( pepMatch: PeptideMatch ): Boolean = {
-    getPeptideMatchEValue(pepMatch) <= eValueThreshold    
+    getPeptideMatchEValue(pepMatch) <= eValueThreshold
   }
   
-  def sortPeptideMatches( pepMatches: Seq[PeptideMatch] ): Seq[PeptideMatch] = {
-    pepMatches.sortBy( this.getPeptideMatchEValue(_) )
+  def compare(a: PeptideMatch, b: PeptideMatch): Int = {
+    this.getPeptideMatchEValue(a) compare this.getPeptideMatchEValue(b)
   }
   
   def getFilterProperties(): Map[String, Any] = {

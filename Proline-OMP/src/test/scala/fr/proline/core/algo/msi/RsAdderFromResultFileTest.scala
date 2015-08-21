@@ -86,7 +86,7 @@ class RsAdderFromResultFileTest extends Logging with RsAdderFromResultFileTestin
     val rsValidation = new ResultSetValidator(
       execContext = executionContext,
       targetRs = builtRS,
-      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
+      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED, useTdCompetition = true)),
       pepMatchPreFilters = Some(Seq(new ScorePSMFilter(scoreThreshold = 22.0f))),
       pepMatchValidator = None,
       protSetFilters = None,
