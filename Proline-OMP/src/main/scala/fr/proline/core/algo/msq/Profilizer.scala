@@ -721,7 +721,7 @@ object AbundanceSummarizer {
     
     method match {
       case Method.MEAN => summarizeUsingMean(abundanceMatrix)
-      case Method.MEAN_OF_TOP3 => summarizeUsingSum(abundanceMatrix)
+      case Method.MEAN_OF_TOP3 => summarizeUsingMeanOfTop3(abundanceMatrix)
       case Method.MEDIAN => summarizeUsingMedian(abundanceMatrix)
       case Method.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
       case Method.NORMALIZED_MEDIAN_PROFILE => summarizeUsingNormalizedMedianProfile(abundanceMatrix)
