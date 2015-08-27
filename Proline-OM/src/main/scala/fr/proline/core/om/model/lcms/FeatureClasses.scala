@@ -72,7 +72,7 @@ case class Peakel(
   def getElutionTimes(): Seq[Float] = dataMatrix.elutionTimes
   def getMzValues(): Seq[Double] = dataMatrix.mzValues
   def getIntensityValues(): Seq[Float] = dataMatrix.intensityValues
-  def getNewCursor(): PeakelDataMatrixCursor = new PeakelDataMatrixCursor(dataMatrix)
+  override def getNewCursor(): PeakelDataMatrixCursor = new PeakelDataMatrixCursor(dataMatrix)
   
   // Make some requirements
   require( dataMatrix.scanIds != null && dataMatrix.scanIds.length > 0, "some scanIds must be provided" )
@@ -350,8 +350,8 @@ case class Feature (
         firstScanId = ftRelations.firstScanId,
         lastScanId = ftRelations.lastScanId,
         apexScanId = ftRelations.apexScanId,
-        bestChildId = ftRelations.bestChildId,
-        bestChildProcessedMapId = ftRelations.processedMapId,
+        bestChildId = this.id,
+        bestChildProcessedMapId = ftRelations.processedMapId, //TODO => this is certainly wrong ...  
         ms2EventIds = null
       ),
       isotopicPatterns = None,
