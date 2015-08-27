@@ -1,7 +1,6 @@
 package fr.proline.core.service.msi
 
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
@@ -17,6 +16,7 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.algo.msi.AdditionMode
 
 object ResultSetMerger {
 
@@ -141,7 +141,8 @@ class ResultSetMerger(
       resultSetId = ResultSet.generateNewId,
       isValidatedContent = false,
       isDecoy = false,
-      seqLengthByProtId = Some(seqLengthByProtId)
+      seqLengthByProtId = Some(seqLengthByProtId),
+      additionMode = AdditionMode.AGGREGATE
     )
 
     for (rsId <- resultSetIds) {
