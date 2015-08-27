@@ -4,7 +4,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.math.sqrt
 import scala.util.control.Breaks._
-
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.ResultSummary
@@ -259,7 +258,7 @@ class ProtSetRulesValidatorWithFDROptimization(
       () => this.computeValidationResult(multiPepTargetProtSets, Some(multiPepDecoyProtSets))
     )
     
-    // Aplly filter for rule 2 if we have validation results
+    // Apply filter for rule 2 if we have validation results
     if( rule2ValResults.isDefined ) {
       protSetFilterRule2.setThresholdValue(
         rule2ValResults.get.finalResult.properties.get(ValidationPropertyKeys.THRESHOLD_VALUE).asInstanceOf[AnyVal]
