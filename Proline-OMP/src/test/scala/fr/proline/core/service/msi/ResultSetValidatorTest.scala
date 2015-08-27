@@ -22,6 +22,8 @@ import fr.proline.core.om.model.msi.{ ResultSet, PeptideMatch, FilterDescriptor 
 import fr.proline.core.om.provider.msi._
 import fr.proline.core.om.provider.msi.impl._
 import fr.proline.repository.DriverType
+import fr.profi.util.serialization.ProfiJson
+
 
 //abstract class AbstractResultSetValidator extends AbstractResultSetTestCase with Logging {
 //abstract class AbstractResultSetValidator extends AbstractDbUnitResultFileTestCase with Logging {
@@ -447,6 +449,12 @@ class ResultSetValidatorF136482Test extends Logging {
     val pepValidationResults = tRSM.properties.get.getValidationProperties.get.getResults.getPeptideResults.get
     Assert.assertEquals(58,pepValidationResults.getTargetMatchesCount)
     Assert.assertEquals(2,pepValidationResults.getDecoyMatchesCount.get)
+
+    val rocPoints = tRSM.peptideValidationRocCurve
+    Assert.assertNotNull(rocPoints.get)
+    
+    val serializedProperties = rocPoints.map(ProfiJson.serialize(_))
+    logger.info("rocPoints props = "+serializedProperties.get)
 
     allTarPepMatc.foreach(peptideM => {
       //             println(peptideM.msQueryId+"\t"+peptideM.peptide.sequence+"\t"+peptideM.peptide.ptmString+"\t"+peptideM.score)
