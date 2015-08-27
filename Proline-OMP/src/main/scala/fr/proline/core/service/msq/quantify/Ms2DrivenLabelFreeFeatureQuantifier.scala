@@ -18,6 +18,7 @@ import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.lcms.io.ExtractMapSet
 import fr.profi.mzdb.MzDbReader
 import fr.profi.mzdb.utils.ms.MsUtils
+import scala.collection.mutable.ArrayBuffer
 
 class Ms2DrivenLabelFreeFeatureQuantifier(
   val executionContext: IExecutionContext,
@@ -26,24 +27,16 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
   val quantConfig: LabelFreeQuantConfig
 ) extends AbstractLabelFreeFeatureQuantifier {
   
-  try {
-    // Check that spectrum.first_scan column is filled
-    this.checkSpectraHaveFirstScanId()
-  } catch {
-    // TODO: don't catch me
-    case e: Exception => logger.error("Error during update of spectrum.first_scan column", e)
-  }
-  
-  def checkSpectraHaveFirstScanId() {
-    
+    override def loadMs2SpectrumHeaders(): Array[Map[String,Any]] = {
     val specCols = MsiDbSpectrumTable.columns
     val idColName = specCols.ID
     val precMozColName = specCols.PRECURSOR_MOZ
     val firstScanColName = specCols.FIRST_SCAN
     val firstCycleColName = specCols.FIRST_CYCLE
     val peaklistIdColName = specCols.PEAKLIST_ID
-    val ms2SHs = this.loadMs2SpectrumHeaders()
+    val ms2SHs = super.loadMs2SpectrumHeaders()
     
+    logger.info("Checking Spectra first scan Id property")
     // Create a mapping between cycles and scan ids
     val incompleteShCycleByPklIdAndSpecId = new HashMap[Long,HashMap[Long,Int]]()
     
@@ -68,7 +61,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
       logger.warn("Spectrum table has missing first scan ids and will be now updated, cross fingers...")
       
       // Create some mappings
-      val precMzBySpecId = ms2SHs.view.map { ms2Sh => toLong(ms2Sh(idColName)) -> toDouble(ms2Sh(precMozColName)) } toMap
+      val precMZBySpecId = ms2SHs.view.map { ms2Sh => toLong(ms2Sh(idColName)) -> toDouble(ms2Sh(precMozColName)) } toMap
       val peaklistIdByIdentRsId = msiIdentResultSets.view.map { rs => rs.getId -> rs.getMsiSearch.getPeaklist.getId } toMap
       
       val mzDbFilePathByRawFileName = quantConfig.lcMsRuns.view.map { lcMsRun =>
@@ -96,19 +89,9 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
             val mzDbScanHeadersByCycle = mzDbScanHeaders.groupBy(_.getCycle())
             for( (specId,cycle) <- incompleteShCycleBySpecId ) {
               require( mzDbScanHeadersByCycle.contains(cycle), s"can't find cycle $cycle in mzDB file: " + mzDbFilePath)
-              
               val mzDbSHsInCurCycle = mzDbScanHeadersByCycle(cycle)
-              val matchingMzDbScanHeaders = mzDbSHsInCurCycle.filter { mzDbSH =>
-                val precMz = mzDbSH.getPrecursorMz()
-                val ms2MatchingMzTolDa = MsUtils.ppmToDa(precMz, quantConfig.ftMappingParams.mozTol)
-                
-                math.abs(precMz - precMzBySpecId(specId)) <= ms2MatchingMzTolDa
-              }
-              
-              require( matchingMzDbScanHeaders.length < 2, "multiple mzDB spectra are matching this MSIdb spectrum header" )
-              require( matchingMzDbScanHeaders.length > 0, "can't find a mzDB spectrum matching this MSIdb spectrum header" )
-              
-              scanIdBySpecId += specId -> matchingMzDbScanHeaders.head.getInitialId()
+              val closestSH = mzDbSHsInCurCycle.minBy {mzDbSH => math.abs(mzDbSH.getPrecursorMz() - precMZBySpecId(specId))}
+              scanIdBySpecId += specId -> closestSH.getInitialId()
             }
           } finally {
             mzDbReader.close()
@@ -130,7 +113,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
         }
       })
     }
-
+    super.loadMs2SpectrumHeaders
   }
   
   lazy val runIdByRsmId = {
@@ -139,11 +122,11 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
     }
   }
   
-  // TODO: try to handle PSMs with rank > 1
+  
   lazy val (peptideByRunIdAndScanNumber, psmByRunIdAndScanNumber) = {
     
     val peptideMap = new collection.mutable.HashMap[Long, HashMap[Int, Peptide]]()
-    val psmMap = new collection.mutable.HashMap[Long, HashMap[Int, PeptideMatch]]()
+    val psmMap = new collection.mutable.HashMap[Long, HashMap[Int, ArrayBuffer[PeptideMatch]]]()
     
     for( rsm <- this.identResultSummaries ) {
       val runId = runIdByRsmId(rsm.id)
@@ -151,17 +134,11 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
       val pepMatchById = rsm.resultSet.get.getPeptideMatchById
       
       for( valPepMatchId <- valPepMatchIds ) {
-        val valPepMatch = pepMatchById(valPepMatchId)
-        // FIXME: how to deal with other ranked PSMs ?
-        if( valPepMatch.rank == 1 ) {
-          val spectrumId = valPepMatch.getMs2Query.spectrumId
-
-          val scanNumber = this.scanNumberBySpectrumId(spectrumId)
-          psmMap.getOrElseUpdate(runId, new HashMap[Int, PeptideMatch])(scanNumber) = valPepMatch
-          peptideMap.getOrElseUpdate(runId, new HashMap[Int, Peptide])(scanNumber) = valPepMatch.peptide
-        } else {
-          this.logger.trace(s"Peptide ${valPepMatch.peptide.sequence} id=${valPepMatch.peptideId} will be ignored (rank > 1)")
-        }
+         val valPepMatch = pepMatchById(valPepMatchId)
+         val spectrumId = valPepMatch.getMs2Query.spectrumId
+         val scanNumber = this.scanNumberBySpectrumId(spectrumId)
+         psmMap.getOrElseUpdate(runId, new HashMap[Int, ArrayBuffer[PeptideMatch]]).getOrElseUpdate(scanNumber, ArrayBuffer[PeptideMatch]()) += valPepMatch
+         peptideMap.getOrElseUpdate(runId, new HashMap[Int, Peptide])(scanNumber) = valPepMatch.peptide
       }
     }
     

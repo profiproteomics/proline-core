@@ -71,7 +71,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
     for (spectrumHeader <- this.ms2SpectrumHeaders) {
 
-      require(spectrumHeader(firstScanColName) != null,"a scan id must be defined for MS2 spectrum id="+spectrumHeader(MsiDbSpectrumTable.columns.ID))
+      require(spectrumHeader(firstScanColName) != null,"a first_scan id must be defined for MS2 spectrum id="+spectrumHeader(MsiDbSpectrumTable.columns.ID))
 
       val identRsId = toLong(identRsIdByPeaklistId(toLong(spectrumHeader(peaklistIdColName))))
       val scanNumber = spectrumHeader(firstScanColName).asInstanceOf[Int]
