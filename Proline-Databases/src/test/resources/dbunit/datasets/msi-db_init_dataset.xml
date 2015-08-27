@@ -8,6 +8,8 @@
   <OBJECT_TREE_SCHEMA NAME="object_tree.spectral_counting_quant_peptides" TYPE="JSON" IS_BINARY_MODE="false" VERSION="0.1" SCHEMA="" SERIALIZED_PROPERTIES="{ &quot;creation_date&quot;: &quot;2011-06-20&quot; }"/>
   <OBJECT_TREE_SCHEMA NAME="peptide_match.spectrum_match" TYPE="MessagePack" IS_BINARY_MODE="true" VERSION="0.1" SCHEMA="" SERIALIZED_PROPERTIES="{ &quot;creation_date&quot;: &quot;2011-06-20&quot; }"/>
   <OBJECT_TREE_SCHEMA NAME="result_summary.validation_properties" TYPE="JSON" IS_BINARY_MODE="false" VERSION="0.1" SCHEMA="" SERIALIZED_PROPERTIES="{ &quot;creation_date&quot;: &quot;2011-06-20&quot; }"/>
+  <OBJECT_TREE_SCHEMA NAME="result_summary.peptide_validation_roc_curve" TYPE="JSON" IS_BINARY_MODE="false" VERSION="0.1" SCHEMA="" SERIALIZED_PROPERTIES="{ &quot;creation_date&quot;: &quot;2015-08-25&quot; }"/>
+  <OBJECT_TREE_SCHEMA NAME="result_summary.protein_validation_roc_curve" TYPE="JSON" IS_BINARY_MODE="false" VERSION="0.1" SCHEMA="" SERIALIZED_PROPERTIES="{ &quot;creation_date&quot;: &quot;2015-08-25&quot; }"/>
   <SCORING ID="1" SEARCH_ENGINE="mascot" NAME="ions score" DESCRIPTION="The score provided for each Mascot peptide."/>
   <SCORING ID="2" SEARCH_ENGINE="mascot" NAME="standard score" DESCRIPTION="The score provided for each Mascot protein hit (it corresponds to the sum of ion scores)."/>
   <SCORING ID="3" SEARCH_ENGINE="mascot" NAME="mudpit score" DESCRIPTION="The score provided for each Mascot protein hit when the number of MS/MS queries is high."/>
