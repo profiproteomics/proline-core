@@ -199,8 +199,8 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
           stmt.executeWith(
             peptideSet.isSubset,
             peptideSet.score,
-            peptideSet.items.length,
             peptideSet.sequencesCount,
+            peptideSet.items.length,
             peptideSet.peptideMatchesCount,
             peptideSet.properties.map(ProfiJson.serialize(_)),
             if( protSetId > 0 ) Some(protSetId) else Option.empty[Long],
