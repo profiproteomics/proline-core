@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Proline-Core</artifactId>
-  <version>0.4.2-SNAPSHOT</version>
+  <version>0.4.2</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -26,7 +26,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.4.2-SNAPSHOT</core.version>
+    <core.version>0.4.2</core.version>
   </properties>
   <scm>
     <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Core/tags/0.4.0</connection>
