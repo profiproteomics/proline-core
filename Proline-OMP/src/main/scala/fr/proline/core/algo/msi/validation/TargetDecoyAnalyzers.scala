@@ -102,7 +102,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
 
   private val MAX_FDR = 50f
 
-  //FIXME VDS : Use this algo for MascotPValuePSMFilter... 
+  //FIXME VDS : Use this algo for MascotPValuePSMFilter...
   // Revert change : get threshold start Value from  getThresholdStartValue instead of Initialize filterThreshold to the worst decoy value
   
   def performROCAnalysisV1(
@@ -319,7 +319,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Log
       val curRocPoint = this.calcTDStatistics(targetMatchesCount, decoyMatchesCount)
       
       // Set ROC point validation properties
-      validationFilter.setThresholdValue(thresholdValue)      
+      validationFilter.setThresholdValue(thresholdValue)
       curRocPoint.addProperties(validationFilter.getFilterProperties)
 
       // Add ROC point to the curve
