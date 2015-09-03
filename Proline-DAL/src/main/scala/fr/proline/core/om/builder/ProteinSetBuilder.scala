@@ -67,7 +67,7 @@ object ProteinSetBuilder {
       // Link only protein matches which do not belong to a subset
       val protMatchId = protSetItemRecord.getLong(ProtSetItemCols.PROTEIN_MATCH_ID)
       val isInSubset = protSetItemRecord.getBoolean(ProtSetItemCols.IS_IN_SUBSET)      
-      val coverage = protSetItemRecord.getLong(ProtSetItemCols.COVERAGE)
+      val coverage = protSetItemRecord.getFloat(ProtSetItemCols.COVERAGE)
       protMatchCoverageByIdBuilder += protMatchId -> coverage
       
       val propertiesAsJsonOpt = protSetItemRecord.getStringOption(ProtSetItemCols.SERIALIZED_PROPERTIES)
