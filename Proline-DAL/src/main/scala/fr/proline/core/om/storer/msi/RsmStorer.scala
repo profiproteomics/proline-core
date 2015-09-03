@@ -44,6 +44,9 @@ object RsmStorer {
 
 class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
   
+  //TODO : temporarily disable Roc curve storage
+  def storeRocCurves = false 
+  
   def storeResultSummary( rsm: ResultSummary, execCtx: IExecutionContext ): Unit = {
     
     this._insertResultSummary( rsm, execCtx )
@@ -95,16 +98,17 @@ class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
           stmt.executeWith(rsm.id, schemaName, objectTreeId)
         }
       }
-      
-      for (peptideValidationRocCurve <- rsm.peptideValidationRocCurve) {
-        storeRocCurve(peptideValidationRocCurve, RsmStorer.peptideRocCurveSchemaName)
-        logger.info("peptideValidationRocCurve have been stored")
-      }
-      for (proteinValidationRocCurve <- rsm.proteinValidationRocCurve) {
-        storeRocCurve(proteinValidationRocCurve, RsmStorer.proteinRocCurveSchemaName)
-        logger.info("proteinValidationRocCurve have been stored")
-      }
 
+      if (storeRocCurves) {
+        for (peptideValidationRocCurve <- rsm.peptideValidationRocCurve) {
+          storeRocCurve(peptideValidationRocCurve, RsmStorer.peptideRocCurveSchemaName)
+          logger.info("peptideValidationRocCurve have been stored")
+        }
+        for (proteinValidationRocCurve <- rsm.proteinValidationRocCurve) {
+          storeRocCurve(proteinValidationRocCurve, RsmStorer.proteinRocCurveSchemaName)
+          logger.info("proteinValidationRocCurve have been stored")
+        }
+      }
     })
   }
   
