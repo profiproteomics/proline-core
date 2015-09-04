@@ -30,6 +30,9 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     private Integer m_sdPrettyRank;  
     
     private Float m_retentionTime; // Spectrum.firstTime
+    
+    private Boolean m_isDecoy;
+    private Boolean m_isValidated;
 
     
     public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank) {
@@ -50,6 +53,29 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
         
         m_cdPrettyRank = cdPrettyRank;
         m_sdPrettyRank = sdPrettyRank;
+        m_isDecoy = false;
+        m_isValidated = false;
+    }
+    
+    public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank, Boolean isDecoy) {
+        m_id = id;
+        m_rank = rank;
+        m_charge = charge;
+        m_deltaMoz = deltaMoz;
+        m_experimentalMoz = experimentalMoz;
+        m_missedCleavage = missedCleavage;
+        m_score = score;
+        m_resultSetId = resultSetId;
+        
+        m_peptide = null;
+        m_msQuery = null;
+        m_msQuerySet = false;
+        m_sequenceMatch = null;
+        m_proteinMatchArray = null;
+        
+        m_cdPrettyRank = cdPrettyRank;
+        m_sdPrettyRank = sdPrettyRank;
+        m_isDecoy = isDecoy;
     }
     
     public long getId() {
@@ -154,6 +180,22 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 
 	public void setRetentionTime(Float retentionTime) {
 		this.m_retentionTime = retentionTime;
+	}
+
+	public Boolean isDecoy() {
+		return m_isDecoy;
+	}
+
+	public void setDecoy(Boolean isDecoy) {
+		this.m_isDecoy = isDecoy;
+	}
+
+	public Boolean isValidated() {
+		return m_isValidated;
+	}
+
+	public void setValidated(Boolean isValidated) {
+		this.m_isValidated = isValidated;
 	}
 	
 	
