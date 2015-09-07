@@ -261,6 +261,7 @@ object Peptide extends InMemoryIdGen with Logging {
       massCalcObject.setSymbolModification('B', 114.53494)
       massCalcObject.setSymbolModification('X', 111.0)
       massCalcObject.setSymbolModification('Z', 128.55059)
+      massCalcObject.setSymbolModification('J', 113.084064)
 
       mass = try {
         //        new MassCalc(SymbolPropertyTable.MONO_MASS, false).getMass( ProteinTools.createProtein(sequence) )
