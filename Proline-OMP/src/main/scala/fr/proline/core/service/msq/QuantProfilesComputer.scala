@@ -183,6 +183,9 @@ class QuantProfilesComputer(
           mqProtSet.getMasterQuantComponentId()
         )
       }
+      objTreeUpdateStmt.close()
+      mqComponentUpdateStmt.close()
+      
     })
         
       udsDbCtx.beginTransaction()
