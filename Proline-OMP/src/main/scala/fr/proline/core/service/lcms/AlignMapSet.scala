@@ -10,13 +10,15 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.storer.lcms.MapAlnSetStorer
 import fr.proline.core.service.lcms._
 import fr.proline.repository.IDatabaseConnector
+import com.typesafe.scalalogging.slf4j.Logging
+import fr.proline.core.algo.lcms.alignment.AlignmentResult
 
 object AlignMapSet {
 
   def apply( lcmsDbCtx: DatabaseConnectionContext, mapSet: MapSet, 
-             alnMethodName: String, alnParams: AlignmentParams ): Unit = {
+             alnResult: AlignmentResult ): Unit = {
     
-    val mapSetAligner = new AlignMapSet( lcmsDbCtx, mapSet, alnMethodName, alnParams  )
+    val mapSetAligner = new AlignMapSet( lcmsDbCtx, mapSet,  alnResult  )
     mapSetAligner.runService()
     ()
     
@@ -26,10 +28,9 @@ object AlignMapSet {
 
 class AlignMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
-  mapSet: MapSet,
-  alnMethodName: String,
-  alnParams: AlignmentParams
-) extends ILcMsService {
+  mapSet: MapSet, 
+  alnResult: AlignmentResult
+) extends ILcMsService with Logging {
 
   def runService(): Boolean = {
     
@@ -44,9 +45,9 @@ class AlignMapSet(
     // Check if reference map already exists: if so delete alignments
     val existingAlnRefMapId = mapSet.getAlnReferenceMapId
     if( existingAlnRefMapId > 0 ) {
-      
       DoJDBCWork.withEzDBC(lcmsDbCtx, { ezDBC =>
       
+        
         ezDBC.execute( "DELETE FROM map_alignment WHERE map_set_id = " + mapSetId )
         
         // Update processed reference map
@@ -60,8 +61,11 @@ class AlignMapSet(
     val childMapsWithoutClusters = mapSet.childMaps.map { _.copyWithoutClusters }
      
     // Perform the map alignment
+    // do not recompute the map alignment
+    /*
     val mapAligner = LcmsMapAligner( methodName = alnMethodName )
     val alnResult = mapAligner.computeMapAlignments( childMapsWithoutClusters, alnParams )
+    * */
     
     val alnStorer = MapAlnSetStorer( lcmsDbCtx )
     alnStorer.storeMapAlnSets( alnResult.mapAlnSets, mapSetId, alnResult.alnRefMapId )
