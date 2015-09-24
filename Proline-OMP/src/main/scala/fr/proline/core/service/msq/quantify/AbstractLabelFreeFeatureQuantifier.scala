@@ -4,7 +4,7 @@ import javax.persistence.EntityManager
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
@@ -27,7 +27,7 @@ import fr.proline.core.om.model.msi.ResultSummary
 import fr.profi.util.primitives._
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 
-abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with Logging {
+abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with LazyLogging {
   
   val experimentalDesign: ExperimentalDesign
   val quantConfig: ILabelFreeQuantConfig

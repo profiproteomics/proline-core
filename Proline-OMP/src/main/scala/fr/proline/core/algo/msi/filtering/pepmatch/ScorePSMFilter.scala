@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi.filtering.pepmatch
 
 import scala.collection.mutable.HashMap
 import scala.collection.Seq
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{PeptideMatch}
@@ -12,7 +12,7 @@ object ScorePSMFilter {
   val thresholdIncreaseValue = 0.1f
 }
 
-class ScorePSMFilter(var scoreThreshold: Float = 0.0f, var thresholdStartValue : Float = 0.0f ) extends IOptimizablePeptideMatchFilter with Logging {
+class ScorePSMFilter(var scoreThreshold: Float = 0.0f, var thresholdStartValue : Float = 0.0f ) extends IOptimizablePeptideMatchFilter with LazyLogging {
 
   val filterParameter = PepMatchFilterParams.SCORE.toString
   val filterDescription = "peptide match score filter"

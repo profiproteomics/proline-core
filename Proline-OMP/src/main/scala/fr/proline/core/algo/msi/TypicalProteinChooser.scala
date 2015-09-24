@@ -6,7 +6,7 @@ import scala.util.control.Breaks.breakable
 import fr.proline.context.IExecutionContext
 import fr.profi.util.regex.RegexUtils._
 import fr.proline.core.orm.msi.ProteinMatch
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import javax.persistence.EntityManager
 import scala.collection.mutable.ArrayBuffer
 
@@ -18,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
  * If multiple TypicalProteinChooserRules are specified 
  * 
  */
-class TypicalProteinChooser () extends Logging {
+class TypicalProteinChooser () extends LazyLogging {
 
   private var modifiedProteinSets : Seq[fr.proline.core.orm.msi.ProteinSet] = null
   

@@ -1,6 +1,6 @@
 package fr.proline.core.service.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
@@ -11,7 +11,7 @@ class RSMTypicalProteinChooser(
   execCtx: IExecutionContext,
   resultSummaryId: Long,
   rulesToApplyPrioritized: Seq[TypicalProteinChooserRule]
-) extends IService with Logging {
+) extends IService with LazyLogging {
 
   require(execCtx.isJPA(), " Invalid connexion type for this service ")
   require(resultSummaryId > 0L, "Invalid  ResultSummary Id specified")

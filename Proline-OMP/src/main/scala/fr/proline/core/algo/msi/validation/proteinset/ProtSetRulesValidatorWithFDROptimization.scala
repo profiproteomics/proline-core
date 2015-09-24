@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.math.sqrt
 import scala.util.control.Breaks._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.ProteinSet
@@ -18,7 +18,7 @@ class ProtSetRulesValidatorWithFDROptimization(
   val protSetFilterRule2: IOptimizableProteinSetFilter,
   val expectedFdr: Option[Float],
   var targetDecoyMode: Option[TargetDecoyModes.Value]
-) extends IProteinSetValidator with Logging {
+) extends IProteinSetValidator with LazyLogging {
   require( protSetFilterRule1.filterParameter == protSetFilterRule2.filterParameter )
   
   def filterParameter = protSetFilterRule1.filterParameter

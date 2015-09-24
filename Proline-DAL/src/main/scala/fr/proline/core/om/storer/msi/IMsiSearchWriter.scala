@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.MSISearch

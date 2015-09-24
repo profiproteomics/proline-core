@@ -5,7 +5,7 @@ import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.om.model.msi.ResultSet
 import scala.collection.mutable.HashMap
 import fr.proline.core.om.model.msi.PeptideMatch
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.algo.msi.filtering.ResultSummaryFilterBuilder
 import fr.proline.repository.util.JDBCWork
@@ -43,7 +43,7 @@ trait IPepInstanceSpectralCountUpdater {
 
 }
 
-object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater with Logging {
+object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater with LazyLogging {
 
   val loadedRSMByID = new HashMap[Long, ResultSummary]()
   val isChildByRSMID = new HashMap[Long, Boolean]()

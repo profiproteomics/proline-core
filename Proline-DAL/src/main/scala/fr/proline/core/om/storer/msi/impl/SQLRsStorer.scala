@@ -3,7 +3,7 @@ package fr.proline.core.om.storer.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
@@ -23,7 +23,7 @@ import fr.proline.core.dal._
 class SQLRsStorer(
   val rsWriter: IRsWriter,
   val msiSearchWriter: Option[IMsiSearchWriter] = None,
-  override val pklWriter: Option[IPeaklistWriter] = None) extends AbstractRsStorer(pklWriter) with Logging {
+  override val pklWriter: Option[IPeaklistWriter] = None) extends AbstractRsStorer(pklWriter) with LazyLogging {
 
   // TODO: implement as InMemoryProvider
   val peptideByUniqueKey = new HashMap[String, Peptide]

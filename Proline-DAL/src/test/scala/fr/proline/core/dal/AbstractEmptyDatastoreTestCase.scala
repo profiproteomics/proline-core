@@ -3,7 +3,7 @@ package fr.proline.core.dal
 import org.junit.AfterClass
 import org.junit.BeforeClass
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
@@ -15,7 +15,7 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.repository.DriverType
 
-abstract class AbstractEmptyDatastoreTestCase extends AbstractMultipleDBTestCase with Logging {
+abstract class AbstractEmptyDatastoreTestCase extends AbstractMultipleDBTestCase with StrictLogging {
 
   // Define the interface to be implemented
   val driverType: DriverType

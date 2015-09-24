@@ -1,17 +1,25 @@
 package fr.proline.core.om.model.msi
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.HashMap
+import java.util.regex.Pattern
+
 import scala.beans.BeanProperty
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.ListBuffer
+
+import org.biojava.bio.proteomics.MassCalc
+import org.biojava.bio.seq.ProteinTools
+import org.biojava.bio.symbol.SymbolPropertyTable
+
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.StringUtils.isNotEmpty
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.ms.massToMoz
 
-object Peptide extends InMemoryIdGen with Logging {
+object Peptide extends InMemoryIdGen with LazyLogging {
   
   // TODO: use this pattern everywhere empty arrays may be created
   final val EMPTY_PTM_ARRAY = Array.empty[LocatedPtm]
@@ -228,11 +236,11 @@ object Peptide extends InMemoryIdGen with Logging {
     
   }
   
-  import org.biojava.bio.BioException
-  import org.biojava.bio.proteomics._
-  import org.biojava.bio.seq._
-  import org.biojava.bio.symbol._
-  
+//  import org.biojava.bio.BioException
+//  import org.biojava.bio.proteomics._
+//  import org.biojava.bio.seq._
+//  import org.biojava.bio.symbol._
+//  
   def calcMass( sequence: String, peptidePtms: Array[LocatedPtm] ): Double = {
     require( sequence != null, "sequence is null" )
     require( peptidePtms != null, "peptidePtms is null" )
@@ -298,15 +306,19 @@ case class Peptide (
   
   // Define secondary constructors
   def this( id: Long, sequence: String, ptms: Array[LocatedPtm], calculatedMass: Double ) = {
-      this( id, sequence, Peptide.makePtmString( ptms ), ptms, calculatedMass )
+    this( id, sequence, Peptide.makePtmString( ptms ), ptms, calculatedMass )
   }
   
   def this( sequence: String, ptms: Array[LocatedPtm], calculatedMass: Double ) = {
-      this( Peptide.generateNewId(), sequence, Peptide.makePtmString( ptms ), ptms, calculatedMass )
+    this( Peptide.generateNewId(), sequence, Peptide.makePtmString( ptms ), ptms, calculatedMass )
   }
   
-  def this( sequence: String, ptms: Array[LocatedPtm], id: Long = Peptide.generateNewId() ) = {
-      this( id, sequence, ptms, Peptide.calcMass( sequence, ptms ) )
+  def this( sequence: String, ptms: Array[LocatedPtm], id: Long ) = {
+    this( id, sequence, ptms, Peptide.calcMass( sequence, ptms ) )
+  }
+  
+  def this( sequence: String, ptms: Array[LocatedPtm] ) = {
+    this( sequence, ptms, Peptide.generateNewId() )
   }
   
   // Requirements
@@ -352,7 +364,7 @@ case class Peptide (
 
 case class PeptideProperties()
 
-object PeptideMatch extends InMemoryIdGen with Logging {
+object PeptideMatch extends InMemoryIdGen with LazyLogging {
   
   def countMissedCleavages(
     sequence: String,

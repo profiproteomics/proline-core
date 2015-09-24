@@ -1,6 +1,6 @@
 package fr.proline.core.dal
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.repository.DatabaseUpgrader
 import fr.proline.repository.IDataStoreConnectorFactory
@@ -11,7 +11,7 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
   private val psDb: IDatabaseConnector = null,
   private val msiDb: IDatabaseConnector = null,
   private val lcMsDb: IDatabaseConnector = null,
-  private val initialize: Boolean = false) extends IDataStoreConnectorFactory with Logging {
+  private val initialize: Boolean = false) extends IDataStoreConnectorFactory with StrictLogging {
 
   private val m_closeLock = new AnyRef()
 

@@ -2,7 +2,7 @@ package fr.proline.core.service.msq
 
 import scala.Array.canBuildFrom
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy.int2Formattable
 import fr.profi.jdbc.easy.long2Formattable
@@ -61,7 +61,7 @@ class QuantProfilesComputer(
   experimentalDesign: ExperimentalDesign,
   masterQuantChannelId: Long,
   config: ProfilizerConfig
-) extends IService with Logging {
+) extends IService with LazyLogging {
   
   require( executionContext.isJPA,"invalid type of executionContext, JPA type is required")
   

@@ -19,14 +19,11 @@
   <dependencies>
 
     <!-- "Proline" modules -->
-    <!-- Unused dependency : fr.proline:Proline-OM:jar:0.0.2-SNAPSHOT:compile -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-OM</artifactId>
       <!-- Version inherited from parent POM -->
     </dependency>
-
-    <!-- Unused dependency : fr.proline:Proline-DAL:jar:0.0.2-SNAPSHOT:compile -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-DAL</artifactId>
@@ -47,7 +44,7 @@
       <version>0.4.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
 
-	<dependency>
+	  <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
       <!-- Version inherited from parent POM -->
@@ -61,45 +58,49 @@
     </dependency>
 
     <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>scalalogging-slf4j_${scala.version}</artifactId>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom ${scala.version} -->
     </dependency>
 
-   <!-- Commons TODO: add this depency in ProFI POM ??? -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-math3</artifactId>
-      <version>3.4.1</version>
+      <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
     <!-- Test -->
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>    
+      <artifactId>Proline-Databases</artifactId>   
+      <!-- Version inherited from parent POM --> 
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-OM</artifactId>     
+      <!-- Version inherited from parent POM -->
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>      
+      <artifactId>Proline-DAL</artifactId>
+      <!-- Version inherited from parent POM -->     
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -108,78 +109,31 @@
 
   <build>
 
-    <pluginManagement>
-      <plugins>
-        <!-- For Eclipse build -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>com.google.code.maven-replacer-plugin</groupId>
-                    <artifactId>replacer</artifactId>
-                    <versionRange>[1.5.2,)</versionRange>
-                    <goals>
-                      <goal>replace</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute>
-                       <runOnIncremental>false</runOnIncremental>
-                     </execute>
-                  </action>
-                </pluginExecution>
-
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-
-
     <plugins>
-
-      <plugin>
-        <groupId>com.google.code.maven-replacer-plugin</groupId>
-        <artifactId>replacer</artifactId>
-
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-              <goals>
-                <goal>replace</goal>
-              </goals>
-           </execution>
-         </executions>
-
-         <configuration>
-           <file>${version.path}/Version.scala.template</file>
-           <outputFile>${version.path}/Version.scala</outputFile>
-           <replacements>
-             <replacement>
-               <token>@moduleName@</token>
-               <value>${project.artifactId}</value>
-             </replacement>
-             <replacement>
-               <token>@version@</token>
-               <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
-             </replacement>
-           </replacements>
-         </configuration>
-
-      </plugin>
-
-      <!-- Build Scala sources -->
+    
+      <!-- Scala build -->
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version and configuration inherited from ProFI-Pom -->
+      </plugin>
+      
+      <!-- Used to replace strings in text files (generate Version.java and Version.scala from templates) -->
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
         <!-- Version inherited from ProFI-Pom -->
+
+        <executions>
+          <execution>
+            <id>scala-version-generation</id>
+            <phase>generate-sources</phase>
+            <!-- Execution and configuration inherited from ProFI-Pom -->
+            <configuration>
+              <skip>false</skip>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>

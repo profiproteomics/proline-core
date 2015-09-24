@@ -2,13 +2,13 @@ package fr.proline.core.algo.msq
 
 import collection.mutable.ArrayBuffer
 import collection.JavaConversions.iterableAsScalaIterable
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.{MsQuery,PeptideMatch,ResultSummary}
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.MasterQuantitationChannel 
 import scala.collection.mutable.HashMap
 
-object Ms2CountQuantifier extends IQuantifierAlgo with Logging {
+object Ms2CountQuantifier extends IQuantifierAlgo with LazyLogging {
 
   def computeMasterQuantPeptides( udsMasterQuantChannel: MasterQuantitationChannel,
                                   mergedRSM: ResultSummary,

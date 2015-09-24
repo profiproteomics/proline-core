@@ -1,6 +1,6 @@
 package fr.proline.core.service.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.DoJDBCWork
@@ -10,7 +10,7 @@ import fr.proline.core.orm.uds.{ SpectrumTitleParsingRule => UdsSpectrumTitlePar
 import fr.profi.util.regex.RegexUtils._
 import fr.profi.util.primitives._
 
-object SpectraParamsUpdater extends Logging {
+object SpectraParamsUpdater extends LazyLogging {
   
   def updateSpectraParams(
     execCtx: IExecutionContext,
@@ -40,7 +40,7 @@ class SpectraParamsUpdater(
   projectId: Long,
   peaklistId: Long,
   specTitleRuleId: Long
-) extends IService with Logging {
+) extends IService with LazyLogging {
   require(execCtx.isJPA, "Invalid execution context for this service: JPA support is needed")
   require(projectId > 0L , "Invalid projectId value: it must be greater than zero")
   require(peaklistId > 0L , "Invalid peaklistId value: it must be greater than zero")

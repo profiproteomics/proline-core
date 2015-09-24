@@ -2,7 +2,7 @@ package fr.proline.core.service.msi
 
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.context._
@@ -18,7 +18,7 @@ class ResultFileCertifier(
   executionContext: IExecutionContext,
   resultIdentFilesByFormat: Map[String, Array[File]],
   importProperties: Map[String, Any]
-) extends IService with Logging {
+) extends IService with LazyLogging {
   override protected def beforeInterruption = {
     // Release database connections
     //this.logger.info("releasing database connections before service interruption...")

@@ -82,7 +82,7 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
           id = qcId,
           number = r.getInt(QuantChannelCols.NUMBER),
           sampleNumber = bioSampleById( toLong(r.getAny(QuantChannelCols.BIOLOGICAL_SAMPLE_ID) ) ).number,
-          identResultSummaryId = toLong(r.getAny(QuantChannelCols.IDENT_RESULT_SUMMARY_ID) ),
+          identResultSummaryId = r.getLong(QuantChannelCols.IDENT_RESULT_SUMMARY_ID),
           lcmsMapId = r.getAnyOption(QuantChannelCols.LCMS_MAP_ID).map( toLong(_) ),
           runId = r.getAnyOption(QuantChannelCols.RUN_ID).map( toLong(_) ),
           quantLabelId = r.getAnyOption(QuantChannelCols.QUANT_LABEL_ID).map( v =>  { println(v); toLong(v)} )
@@ -105,9 +105,10 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
           id = mqcId,
           number = r.getInt(MQChannelCols.NUMBER),
           name = r.getStringOption(MQChannelCols.NAME),
+          quantResultSummaryId = r.getLongOption(MQChannelCols.QUANT_RESULT_SUMMARY_ID),
           lcmsMapSetId = r.getAnyOption(MQChannelCols.LCMS_MAP_SET_ID).map( toLong(_) ),
           quantChannels = quantChannelsByMqcId(mqcId).toArray
-        )        
+        )
       }
       
       // Retrieve biological groups

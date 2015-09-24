@@ -7,14 +7,14 @@ import org.junit.Assert._
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 
-class ParsimoniousProteinSetInfererTest extends Logging {
+class ParsimoniousProteinSetInfererTest extends StrictLogging {
 
   val ppsi = new ParsimoniousProteinSetInferer()
 

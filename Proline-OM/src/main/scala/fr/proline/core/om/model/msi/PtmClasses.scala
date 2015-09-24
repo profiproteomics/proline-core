@@ -216,9 +216,27 @@ case class LocatedPtm(
   val composition: String, // TODO: retrieve from PtmDefinition ???
 
   // Immutable optional fields
-  val isNTerm: Boolean = false,
-  val isCTerm: Boolean = false
+  val isNTerm: Boolean,
+  val isCTerm: Boolean
 ) {
+  
+  def this(
+    definition: PtmDefinition,
+    seqPosition: Int,
+    monoMass: Double,
+    averageMass: Double,
+    composition: String
+  ) = {
+    this(
+      definition = definition,
+      seqPosition = seqPosition,
+      monoMass = monoMass,
+      averageMass = averageMass,
+      composition = composition,
+      isNTerm = false,
+      isCTerm = false
+    )
+  }
   
   def this(
     definition: PtmDefinition,

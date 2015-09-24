@@ -2,13 +2,13 @@ package fr.proline.core.algo.msi.validation
 
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import org.junit.Assert
 
 @Test
-class MascotValidationHelperTest extends JUnitSuite with Logging {
+class MascotValidationHelperTest extends JUnitSuite with StrictLogging {
 
   @Test
   def calcIdentityThreshold() = {

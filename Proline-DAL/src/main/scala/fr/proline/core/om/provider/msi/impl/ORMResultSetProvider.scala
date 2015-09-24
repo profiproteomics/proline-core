@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.JavaConversions.{ asScalaBuffer, asScalaSet }
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi._
@@ -24,7 +24,7 @@ import fr.profi.util.primitives._
 
 class ORMResultSetProvider(val msiDbCtx: DatabaseConnectionContext,
                            val psDbCtx: DatabaseConnectionContext,
-                           val pdiDbCtx: DatabaseConnectionContext) extends IResultSetProvider with Logging {
+                           val pdiDbCtx: DatabaseConnectionContext) extends IResultSetProvider with LazyLogging {
 
   require((msiDbCtx != null) && msiDbCtx.isJPA, "Invalid MSI Db Context")
   require((psDbCtx != null) && psDbCtx.isJPA, "Invalid PS Db Context")

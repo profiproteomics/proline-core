@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi.validation.proteinset
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.validation._
@@ -12,7 +12,7 @@ import fr.proline.core.algo.msi.filtering._
 class PepMatchRulesValidator(
   val pepMatchFilterRule1: IOptimizablePeptideMatchFilter,
   val pepMatchFilterRule2: IOptimizablePeptideMatchFilter
-) extends AbstractPepMatchRulesValidator with Logging {
+) extends AbstractPepMatchRulesValidator with LazyLogging {
   require( pepMatchFilterRule1.filterParameter == pepMatchFilterRule2.filterParameter )
   
   def filterParameter = pepMatchFilterRule1.filterParameter

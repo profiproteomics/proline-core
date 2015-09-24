@@ -4,7 +4,7 @@ import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
@@ -12,7 +12,7 @@ import fr.proline.repository.DriverType
 import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
 import fr.proline.core.dbunit.DbUnitSampleDataset
 
-object TypicalProteinChooserTest extends AbstractResultSummaryTestCase with Logging {
+object TypicalProteinChooserTest extends AbstractResultSummaryTestCase with StrictLogging {
 
   // Define some vars
   val driverType = DriverType.H2
@@ -46,7 +46,7 @@ object TypicalProteinChooserTest extends AbstractResultSummaryTestCase with Logg
   
 }
 
-class TypicalProteinChooserTest extends Logging {
+class TypicalProteinChooserTest extends StrictLogging {
 
   val targetRSMId = TypicalProteinChooserTest.targetRSMId
   val executionContext = TypicalProteinChooserTest.executionContext

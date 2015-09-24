@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.msi.impl
 
 import scala.collection.mutable
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.context.{ DecoratedExecutionContext, IExecutionContext }
 import fr.proline.core.om.util.PeptideIdent
@@ -12,7 +12,7 @@ import fr.proline.core.om.util.PeptideIdent
  * Objects of this class are NOT thread-safe (must be confined in thread context).
  */
 class StorerContext(wrappedExecutionContext: IExecutionContext)
-  extends DecoratedExecutionContext(wrappedExecutionContext) with Logging {
+  extends DecoratedExecutionContext(wrappedExecutionContext) with LazyLogging {
 
   type MsiPeptide = fr.proline.core.orm.msi.Peptide
 

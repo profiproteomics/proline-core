@@ -6,7 +6,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.util.control.Breaks._
 import com.almworks.sqlite4java.SQLiteConnection
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.math3.stat.descriptive.rank.Percentile
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import fr.profi.chemistry.model.MolecularConstants
@@ -50,7 +50,7 @@ class ExtractMapSet(
   val quantConfig: ILcMsQuantConfig,
   val peptideByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, Peptide]]] = None, // sequence data may or may not be provided
   val peptideMatchByRunIdAndScanNumber: Option[Map[Long, HashMap[Int, ArrayBuffer[PeptideMatch]]]] = None
-) extends ILcMsService with Logging {
+) extends ILcMsService with LazyLogging {
 
   // Do some requirements
   require(quantConfig.extractionParams.mozTolUnit matches "(?i)PPM")

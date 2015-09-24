@@ -7,7 +7,7 @@ import scala.collection.mutable.HashMap
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.googlecode.flyway.core.api.migration.jdbc.JdbcMigration
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
@@ -17,7 +17,7 @@ import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.repository.DriverType
 import fr.proline.repository.ProlineDatabaseType
 
-class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with Logging {
+class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with LazyLogging {
   
   private final val LOG_PEAKEL_COUNT = 10000
   

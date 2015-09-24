@@ -1,13 +1,12 @@
 package fr.proline.core.om.model.lcms
 
 import java.util.Date
+
+import scala.beans.BeanProperty
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
-import scala.beans.BeanProperty
 
-//import com.fasterxml.jackson.annotation.JsonInclude
-//import com.fasterxml.jackson.annotation.JsonInclude.Include
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.misc.InMemoryIdGen
 
@@ -102,7 +101,7 @@ case class MapAlignment(
   // Mutable optional fields
   var properties: Option[MapAlignmentProperties] = None
   
-) extends Logging {
+) extends LazyLogging {
   
   // Requirements
   require( massRange != null, "massRange is null" )

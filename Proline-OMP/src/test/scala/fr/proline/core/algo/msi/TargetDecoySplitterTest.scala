@@ -6,13 +6,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.dbunit._
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
 
-/*object TargetDecoySplitterTest extends AbstractDatasetImporterTestCase with Logging {
+/*object TargetDecoySplitterTest extends AbstractDatasetImporterTestCase with StrictLogging {
 
   val driverType = DriverType.H2
   val useJPA = false
@@ -42,7 +42,7 @@ import fr.proline.core.om.model.msi.ResultSet
 }*/
 
 // TODO: move into fr.proline.core.algo.msi
-class TargetDecoySplitterTest extends Logging {
+class TargetDecoySplitterTest extends StrictLogging {
   
   val resultFile = DbUnitResultFileUtils.loadDbUnitResultFile(STR_F136482_CTD)
 

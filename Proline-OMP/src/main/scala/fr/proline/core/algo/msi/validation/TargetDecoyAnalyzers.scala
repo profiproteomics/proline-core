@@ -3,13 +3,13 @@ package fr.proline.core.algo.msi.validation
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks._
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.om.model.msi.{ PeptideMatch, ResultSet }
 import fr.proline.core.algo.msi.filtering.pepmatch.MascotPValuePSMFilter
 import fr.proline.core.om.model.msi.ResultSetProperties
 
-object BuildTDAnalyzer extends Logging {
+object BuildTDAnalyzer extends LazyLogging {
 
   def apply(
     useTdCompetition: Boolean,
@@ -98,7 +98,7 @@ abstract class ITargetDecoyAnalyzer {
 
 }
 
-abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Logging {
+abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with LazyLogging {
 
   private val MAX_FDR = 50f
 

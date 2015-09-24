@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi.validation.proteinset
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.validation._
@@ -15,7 +15,7 @@ import fr.proline.core.algo.msi.filtering._
  * and calculating a FDR using : 100 *  # valid decoy ProteinSet / # valid target ProteinSet
  * 
  */ 
-class BasicProtSetValidator( val validationFilter: IProteinSetFilter ) extends IProteinSetValidator with Logging {
+class BasicProtSetValidator( val validationFilter: IProteinSetFilter ) extends IProteinSetValidator with LazyLogging {
   
   def filterParameter = validationFilter.filterParameter
   def filterDescription = validationFilter.filterDescription

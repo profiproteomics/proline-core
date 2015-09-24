@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
@@ -14,7 +14,7 @@ import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.storer.msi.impl.SQLRsmStorer
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 
-trait IRsmStorer extends Logging {
+trait IRsmStorer extends LazyLogging {
   
   def storeRsmPeptideInstances( rsm: ResultSummary, execCtx: IExecutionContext ): Int
   def storeRsmPeptideSets( rsm: ResultSummary, execCtx: IExecutionContext ): Int
@@ -42,7 +42,7 @@ object RsmStorer {
   }
 }
 
-class RsmStorer( private val _writer: IRsmStorer ) extends Logging {
+class RsmStorer( private val _writer: IRsmStorer ) extends LazyLogging {
   
   //TODO : temporarily disable Roc curve storage
   def storeRocCurves = false 

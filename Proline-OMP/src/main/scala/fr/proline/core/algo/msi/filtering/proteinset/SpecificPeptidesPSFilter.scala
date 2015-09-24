@@ -3,14 +3,14 @@ package fr.proline.core.algo.msi.filtering.proteinset
 import scala.collection.Seq
 import scala.collection.mutable.HashMap
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IProteinSetFilter, ProtSetFilterParams, ProteinSetFiltering}
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.profi.util.primitives._
 
 class SpecificPeptidesPSFilter(
-  var minNbrPep: Int = 1) extends IProteinSetFilter with Logging {
+  var minNbrPep: Int = 1) extends IProteinSetFilter with LazyLogging {
 
   val filterParameter = ProtSetFilterParams.SPECIFIC_PEP.toString
   val filterDescription = "protein set filter on specific peptide (protein set context)"

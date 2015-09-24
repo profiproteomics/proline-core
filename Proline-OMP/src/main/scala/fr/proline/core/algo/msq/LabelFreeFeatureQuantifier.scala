@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import collection.JavaConversions.{ collectionAsScalaIterable, setAsJavaSet }
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.lcms.{MapSet,Feature}
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -24,13 +24,13 @@ class LabelFreeFeatureQuantifier(
   ms2ScanNumbersByFtId : Map[Long,Seq[Int]],
   mozTolInPPM: Float,
   statTestsAlpha: Float = 0.01f
-) extends IQuantifierAlgo with Logging {
+) extends IQuantifierAlgo with LazyLogging {
   
   private class MQPepsComputer(
     udsMasterQuantChannel: MasterQuantitationChannel,
     mergedRSM: ResultSummary,
     resultSummaries: Seq[ResultSummary]
-  ) extends Logging {
+  ) extends LazyLogging {
   
     // Define some vars
     val mergedRsmId = mergedRSM.id

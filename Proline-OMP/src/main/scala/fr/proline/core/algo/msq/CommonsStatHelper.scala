@@ -7,10 +7,36 @@ import org.apache.commons.math3.stat.inference.TTest
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.special.Erf
 
+trait ExtendedStatisticalSummary extends StatisticalSummary {
+  def getMedian(): Double
+}
+
+/**
+  * Constructor
+  *
+  * @param mean  the sample mean
+  * @param variance  the sample variance
+  * @param n  the number of observations in the sample
+  * @param max  the maximum value
+  * @param min  the minimum value
+  * @param sum  the sum of the values
+ */
+case class ExtendedStatisticalSummaryValues(
+  median: Double,
+  mean: Double,
+  variance: Double,
+  n: Long,
+  max: Double,
+  min: Double,
+  sum: Double
+) extends StatisticalSummaryValues(mean, variance, n, max, min, sum) with ExtendedStatisticalSummary {
+  
+  def getMedian() = median 
+}
 
 object CommonsStatHelper {
   
-  val tTestComputer = new TTest()
+  val medianComputer = new org.apache.commons.math3.stat.descriptive.rank.Median()
   
   def calcMean( values: Array[Float] ): Float = {
     if( values.length == 0 ) 0
@@ -19,11 +45,12 @@ object CommonsStatHelper {
     values.reduceLeft(_ + _) / positiveValuesCount
   }
   
-  def calcStatSummary(values: Array[Double]): StatisticalSummary = {
+  def calcExtendedStatSummary(values: Array[Double]): ExtendedStatisticalSummary = {
     require( values != null, "values is null" )
     
     val defValues = values.filter( _.isNaN == false )
     
+    val median = medianComputer.evaluate(defValues)
     val mean = StatUtils.mean(defValues)
     val variance = StatUtils.variance(defValues, mean)
     var ( max, min, sum ) = (Double.MinValue,Double.MaxValue,0.0)
@@ -33,7 +60,8 @@ object CommonsStatHelper {
       if( value < min ) min = value
     }
     
-    new StatisticalSummaryValues(
+    new ExtendedStatisticalSummaryValues(
+      median,
       mean, 
       variance,
       defValues.length, 

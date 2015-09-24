@@ -11,10 +11,10 @@ import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.ProteinMatch
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.filtering.IFilterNeedingResultSet
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.MathUtils
 
-class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptideMatchFilter with Logging with IFilterNeedingResultSet {
+class SinglePSMPerQueryFilter(var targetRSSet: ResultSet = null) extends IPeptideMatchFilter with LazyLogging with IFilterNeedingResultSet {
 
   val filterParameter = PepMatchFilterParams.SINGLE_PSM_PER_QUERY.toString
   val filterDescription = "single peptide match per query filter using score and peptide matches count per protein values"

@@ -34,8 +34,8 @@ class AbundanceRatiolizerTest {
     normalizedMatrix.foreach { normalizedRow =>
       val groupedValues = normalizedRow.map(_.toDouble).grouped(3).toArray
       
-      val numeratorSummary = CommonsStatHelper.calcStatSummary(groupedValues(1))
-      val denominatorSummary = CommonsStatHelper.calcStatSummary(groupedValues(0))
+      val numeratorSummary = CommonsStatHelper.calcExtendedStatSummary(groupedValues(1))
+      val denominatorSummary = CommonsStatHelper.calcExtendedStatSummary(groupedValues(0))
       absoluteError += AbsoluteErrorObservation( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
       absoluteError +=  AbsoluteErrorObservation( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
   

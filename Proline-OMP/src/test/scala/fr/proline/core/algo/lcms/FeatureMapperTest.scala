@@ -6,11 +6,11 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalatest.junit.JUnitSuite
 import org.scalatest.matchers.MustMatchers
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.util.generator.lcms._
 
-class FeatureMapperTest extends JUnitSuite with MustMatchers with Logging {
+class FeatureMapperTest extends JUnitSuite with MustMatchers with StrictLogging {
   
   @Test
   def testComputePairwiseFtMapping() {

@@ -1,9 +1,9 @@
 package fr.proline.core.dal.tables
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.dal.tables.{ColumnEnumeration => ColEnum}
 
-trait CanBuildSelectQuery extends Logging {
+trait CanBuildSelectQuery extends LazyLogging {
   
   def colsListToStrList( colsList: List[ColEnum#Column] ): List[String] = {
     colsList.map { col => col.toFullString }

@@ -83,12 +83,15 @@ case class FragmentIonType private (
   
 ) {
   
-  def this(ionSeriesName: String, properties: Option[FragmentIonTypeProperties] = None ) = {
-    this( FragmentIonType.generateNewId(),
-          FragmentIonSeries.withName(ionSeriesName),
-          FragmentIonType.parseNeutralLoss(ionSeriesName),
-          properties )
-  }  
+  def this(ionSeriesName: String, properties: Option[FragmentIonTypeProperties] ) = {
+    this(
+      FragmentIonType.generateNewId(),
+      FragmentIonSeries.withName(ionSeriesName),
+      FragmentIonType.parseNeutralLoss(ionSeriesName),
+      properties
+    )
+  }
+  def this(ionSeriesName: String ) = this(ionSeriesName, None)
   
   val isReverseSeries = Fragmentation.isReverseSeries(ionSeries.toString)
   

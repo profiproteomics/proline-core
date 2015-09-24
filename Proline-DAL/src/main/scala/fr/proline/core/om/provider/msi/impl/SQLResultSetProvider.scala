@@ -1,6 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -15,7 +15,7 @@ import fr.proline.core.om.builder.ResultSetBuilder
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ IResultSetProvider, PeptideMatchFilter, ResultSetFilter }
 
-trait SQLResultSetLoader extends Logging {
+trait SQLResultSetLoader extends LazyLogging {
 
   import fr.proline.core.dal.helper.MsiDbHelper
 

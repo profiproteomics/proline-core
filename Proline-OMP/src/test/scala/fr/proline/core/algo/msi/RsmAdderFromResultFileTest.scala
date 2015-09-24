@@ -3,13 +3,13 @@ package fr.proline.core.algo.msi
 import org.junit.Assert.assertEquals
 import org.junit.BeforeClass
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
 import fr.proline.core.algo.msi.scoring._
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 
-object RsmAdderFromResultFileTest extends Logging {
+object RsmAdderFromResultFileTest extends StrictLogging {
   
   lazy val proteinSetInferer = new ParsimoniousProteinSetInferer()
   var readRS: ResultSet = null
@@ -23,7 +23,7 @@ object RsmAdderFromResultFileTest extends Logging {
 
 }
 
-class RsmAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesting {
+class RsmAdderFromResultFileTest extends StrictLogging with RsAdderFromResultFileTesting {
   
   val executionContext = STR_F122817_Mascot_v2_3_TEST_CASE.executionContext
   require( executionContext != null, "executionContext is null" )

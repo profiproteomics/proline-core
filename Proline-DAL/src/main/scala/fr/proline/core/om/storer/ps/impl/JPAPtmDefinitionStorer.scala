@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.ps.impl
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConversions.setAsJavaSet
 import fr.proline.context.IExecutionContext
@@ -25,7 +25,7 @@ import fr.proline.core.util.ResidueUtils._
  * JPA implementation of PtmDefinition storer.
  *
  */
-object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
+object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with LazyLogging {
   
   /**
    * Instantiates the PtmDefinition writer and call the insertPtmDefinitions method.
@@ -35,7 +35,7 @@ object JPAPtmDefinitionStorer extends IPtmDefinitionStorer with Logging {
     writer.insertPtmDefinitions(ptmDefs)
   }
 
-  private class JPAPtmDefinitionWriter(execCtx: IExecutionContext) extends Logging {
+  private class JPAPtmDefinitionWriter(execCtx: IExecutionContext) extends LazyLogging {
 
     val PsPtmEvidencePrecursorType = fr.proline.core.orm.ps.PtmEvidence.Type.Precursor
 

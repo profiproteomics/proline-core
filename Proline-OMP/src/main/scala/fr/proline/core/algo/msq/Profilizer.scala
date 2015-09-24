@@ -3,9 +3,7 @@ package fr.proline.core.algo.msq
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import com.typesafe.scalalogging.slf4j.Logging
-import org.apache.commons.math3.stat.descriptive.moment.Mean
-import org.apache.commons.math3.stat.descriptive.StatisticalSummary
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.core.om.model.msq._
 import fr.profi.util.primitives.isZeroOrNaN
@@ -29,7 +27,7 @@ case class ProfilizerConfigV0(
 case class ProfilizerStatConfig (
   statTestsAlpha: Float = 0.01f,
   minZScore: Float = 0.4f, // ZScore equals ln(ratio) followed by standardisation
-  minPsmCountPerGroup: Int = 2,
+  minPsmCountPerRatio: Int = 0,
   applyNormalization: Boolean = true,
   applyMissValInference: Boolean = true,
   applyVarianceCorrection: Boolean = true,
@@ -42,7 +40,7 @@ case class ProfilizerConfig(
   discardOxidizedPeptides: Boolean = true,
   useOnlySpecificPeptides: Boolean = true,
   applyProfileClustering: Boolean = true,
-  abundanceSummarizerMethod : String = AbundanceSummarizer.Method.MEAN.toString(),
+  abundanceSummarizerMethod: String = AbundanceSummarizer.Method.MEAN.toString(),
   peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
   proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig()
 )
@@ -50,7 +48,7 @@ case class ProfilizerConfig(
 /**
  * Analyze profiles of Master Quant Peptides and Master Quant Protein sets
  */
-class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, masterQCNumber: Int = 1 ) extends Logging {
+class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, masterQCNumber: Int = 1 ) extends LazyLogging {
   
   val errorModelBinsCount = 1
   
@@ -163,8 +161,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         masterQuantPep.setAbundancesForQuantChannels(abundances,qcIds)
         
         val computedRatio = ComputedRatio(
-          numerator = ratio.numeratorMean.toFloat,
-          denominator = ratio.denominatorMean.toFloat,
+          numerator = ratio.numerator.toFloat,
+          denominator = ratio.denominator.toFloat,
           state = ratio.state.map(_.id).getOrElse(AbundanceRatioState.Invariant.id),
           tTestPValue = ratio.tTestPValue,
           zTestPValue = ratio.zTestPValue,
@@ -399,8 +397,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       for ( ratio <- ratios ) {
 
         val computedRatio = ComputedRatio(
-          numerator = ratio.numeratorMean.toFloat,
-          denominator = ratio.denominatorMean.toFloat,
+          numerator = ratio.numerator.toFloat,
+          denominator = ratio.denominator.toFloat,
           state = ratio.state.map(_.id).getOrElse(0),
           tTestPValue = ratio.tTestPValue,
           zTestPValue = ratio.zTestPValue,
@@ -485,6 +483,10 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
       qcIndices.map { i => this._meanAbundance( i.map( abundances(_) ) ) }
     }
+    def _getSamplesMedianAbundance(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
+      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
+      qcIndices.map { i => this._medianAbundance( i.map( abundances(_) ) ) }
+    }
     def _getSamplesPsmCounts(psmCounts: Array[Int], sampleNumbers: Array[Int]): Array[Int] = {
       val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
       qcIndices.flatMap( i => i.map( psmCounts(_) ) )
@@ -509,8 +511,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           
           // Check we have enough abundances (at least 3)
           if( sampleAbundances.length > 2 ) {
-            val sampleStatSummary = CommonsStatHelper.calcStatSummary(sampleAbundances)
-            val abundance = sampleStatSummary.getMean.toFloat
+            val sampleStatSummary = CommonsStatHelper.calcExtendedStatSummary(sampleAbundances)
+            val abundance = sampleStatSummary.getMedian.toFloat
             
             if( isZeroOrNaN(abundance) == false )
               absoluteErrors += AbsoluteErrorObservation( abundance, sampleStatSummary.getStandardDeviation.toFloat )
@@ -519,13 +521,13 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       // Compute statistics at biological sample level
       } else {
         
-        val numeratorMeanAbundance = _meanAbundance( _getSamplesMeanAbundance( normalizedRow, numeratorSampleNumbers ) )
-        val denominatorMeanAbundance = _meanAbundance( _getSamplesMeanAbundance( normalizedRow, denominatorSampleNumbers ) )
+        val numeratorMedianAbundance = _medianAbundance( _getSamplesMedianAbundance( normalizedRow, numeratorSampleNumbers ) )
+        val denominatorMedianAbundance = _medianAbundance( _getSamplesMedianAbundance( normalizedRow, denominatorSampleNumbers ) )
         
-        val maxAbundance = math.max(numeratorMeanAbundance,denominatorMeanAbundance)
+        val maxAbundance = math.max(numeratorMedianAbundance,denominatorMedianAbundance)
         
         if( maxAbundance.isNaN == false && maxAbundance > 0 ) {
-          relativeErrors += RelativeErrorObservation( maxAbundance, numeratorMeanAbundance/denominatorMeanAbundance)
+          relativeErrors += RelativeErrorObservation( maxAbundance, numeratorMedianAbundance/denominatorMedianAbundance)
         }
       }
     }
@@ -614,8 +616,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     var rowIdx = 0
     filledMatrix.foreach { filledRow =>
       
-      var numeratorSummary: StatisticalSummary = null
-      var denominatorSummary: StatisticalSummary = null
+      var numeratorSummary: ExtendedStatisticalSummary = null
+      var denominatorSummary: ExtendedStatisticalSummary = null
       
       // Check if we have enough biological sample replicates to compute statistics at this level
       if( minSamplesCountPerGroup > 2 ) {
@@ -624,32 +626,32 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         //val masterQuantPepId = masterQuantPeptides(rowIdx).id
         
         // Compute numerator and denominator abundances
-        val numeratorMeanAbundances = _getSamplesMeanAbundance( filledRow, numeratorSampleNumbers )
-        val denominatorMeanAbundances = _getSamplesMeanAbundance( filledRow, denominatorSampleNumbers )
+        val numeratorMedianAbundances = _getSamplesMedianAbundance( filledRow, numeratorSampleNumbers )
+        val denominatorMedianAbundances = _getSamplesMedianAbundance( filledRow, denominatorSampleNumbers )
         
         // Compute numerator and denominator statistical summaries
-        numeratorSummary = CommonsStatHelper.calcStatSummary(numeratorMeanAbundances.map(_.toDouble))
-        denominatorSummary = CommonsStatHelper.calcStatSummary(denominatorMeanAbundances.map(_.toDouble))        
+        numeratorSummary = CommonsStatHelper.calcExtendedStatSummary(numeratorMedianAbundances.map(_.toDouble))
+        denominatorSummary = CommonsStatHelper.calcExtendedStatSummary(denominatorMedianAbundances.map(_.toDouble))        
      
         // We can then make absolute statistical validation at the biological sample level
-        val (numMean, numStdDev) = ( numeratorSummary.getMean.toFloat, numeratorSummary.getStandardDeviation.toFloat )
-        val (denomMean, denomStdDev) = ( denominatorSummary.getMean.toFloat, denominatorSummary.getStandardDeviation.toFloat )
+        val (numerator, numStdDev) = ( numeratorSummary.getMedian().toFloat, numeratorSummary.getStandardDeviation.toFloat )
+        val (denom, denomStdDev) = ( denominatorSummary.getMedian().toFloat, denominatorSummary.getStandardDeviation.toFloat )
         
-        if (numMean.isNaN == false &&  numStdDev.isNaN == false && denomMean.isNaN == false && denomStdDev.isNaN == false) {
-          absoluteVariationsBuffer += AbsoluteErrorObservation( numMean, numStdDev )
-          absoluteVariationsBuffer += AbsoluteErrorObservation( denomMean, denomStdDev )
+        if (numerator.isNaN == false &&  numStdDev.isNaN == false && denom.isNaN == false && denomStdDev.isNaN == false) {
+          absoluteVariationsBuffer += AbsoluteErrorObservation( numerator, numStdDev )
+          absoluteVariationsBuffer += AbsoluteErrorObservation( denom, denomStdDev )
         } else {
-          this.logger.trace("Stat summary contains NaN mean or NaN standardDeviation")
+          this.logger.trace("Stat summary contains NaN mean/median or NaN standardDeviation")
         }
         
       }
       // Else we merge biological sample data and compute statistics at a lower level
       else {        
         // Compute numerator and denominator statistical summaries
-        numeratorSummary = CommonsStatHelper.calcStatSummary(
+        numeratorSummary = CommonsStatHelper.calcExtendedStatSummary(
           _getSamplesAbundances( filledRow, numeratorSampleNumbers ).withFilter( isZeroOrNaN(_) == false ).map(_.toDouble)
         )
-        denominatorSummary = CommonsStatHelper.calcStatSummary(
+        denominatorSummary = CommonsStatHelper.calcExtendedStatSummary(
           _getSamplesAbundances( filledRow, denominatorSampleNumbers ).withFilter( isZeroOrNaN(_) == false ).map(_.toDouble)
         )
       }
@@ -701,6 +703,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     if( defAbundances.length == 0 ) Float.NaN else defAbundances.sum / defAbundances.length
   }
   
+  private def _medianAbundance(abundances: Array[Float]): Float = {
+    val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
+    if( defAbundances.length == 0 ) Float.NaN else median(defAbundances)
+  }
+  
   private def _stringifyProfile( slopes: Seq[Int] ): String = { slopes.mkString(";") }
 
 }
@@ -713,7 +720,7 @@ object AbundanceSummarizer {
     val MEAN_OF_TOP3 = Value("MEAN_OF_TOP3")
     val MEDIAN = Value("MEDIAN")
     val MEDIAN_PROFILE = Value("MEDIAN_PROFILE")
-    val NORMALIZED_MEDIAN_PROFILE = Value("NORMALIZED_MEDIAN_PROFILE")
+    val NORMALIZED_MEDIAN_PROFILE = Value("NORMALIZED_MEDIAN_PROFILE") // TODO: remove me
     val SUM = Value("SUM")
   }
   
@@ -724,7 +731,7 @@ object AbundanceSummarizer {
       case Method.MEAN_OF_TOP3 => summarizeUsingMeanOfTop3(abundanceMatrix)
       case Method.MEDIAN => summarizeUsingMedian(abundanceMatrix)
       case Method.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
-      case Method.NORMALIZED_MEDIAN_PROFILE => summarizeUsingNormalizedMedianProfile(abundanceMatrix)
+      case Method.NORMALIZED_MEDIAN_PROFILE => summarizeUsingNormalizedMedian(abundanceMatrix)
       case Method.SUM => summarizeUsingSum(abundanceMatrix)
     }
     
@@ -758,6 +765,26 @@ object AbundanceSummarizer {
     abundanceMatrix.transpose.map( _calcMedianAbundance( _ ) )
   }
   
+  // TODO: remove me
+  def summarizeUsingNormalizedMedian( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {    
+    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
+    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
+    
+    val transposedMatrix = abundanceMatrix.transpose
+    val normalizedMatrix = AbundanceNormalizer.normalizeAbundances(transposedMatrix).transpose
+    
+    val medianAbundances = summarizeUsingMedian(normalizedMatrix)
+    
+    // Scale up the mean abundances
+    val top3MeanAbundances = summarizeUsingMeanOfTop3(abundanceMatrix)
+    val( top3MaxValue, top3MaxIdx ) = top3MeanAbundances.zipWithIndex.maxBy(_._1)
+    val curMaxValue = medianAbundances(top3MaxIdx)
+    val scalingFactor = top3MaxValue / curMaxValue
+    val scaledAbundances = medianAbundances.map( _ * scalingFactor )
+    
+    scaledAbundances
+  }
+  
   def summarizeUsingMedianProfile( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
     require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
     if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
@@ -774,8 +801,8 @@ object AbundanceSummarizer {
     // Compute the ratio matrix
     val ratioMatrix = for( abundanceRow <- matrixWithEligibleCols ) yield {
       
-      val ratioRow = for ( twoValues <- abundanceRow.sliding(2) ) yield {        
-        val ( a, b ) = (twoValues.head, twoValues.last)        
+      val ratioRow = for ( twoValues <- abundanceRow.sliding(2) ) yield {
+        val ( a, b ) = (twoValues.head, twoValues.last)
         if( isZeroOrNaN(a) || isZeroOrNaN(b) ) Float.NaN else b / a
       }
       
@@ -820,25 +847,6 @@ object AbundanceSummarizer {
     }
     
     finalAbundances.toArray
-  }
-  
-  def summarizeUsingNormalizedMedianProfile( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {    
-    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
-    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
-    
-    val transposedMatrix = abundanceMatrix.transpose
-    val normalizedMatrix = AbundanceNormalizer.normalizeAbundances(transposedMatrix).transpose
-    
-    val medianAbundances = summarizeUsingMedian(normalizedMatrix)
-    
-    // Scale up the mean abundances
-    val top3MeanAbundances = summarizeUsingMeanOfTop3(abundanceMatrix)
-    val( top3MaxValue, top3MaxIdx ) = top3MeanAbundances.zipWithIndex.maxBy(_._1)
-    val curMaxValue = medianAbundances(top3MaxIdx)
-    val scalingFactor = top3MaxValue / curMaxValue
-    val scaledAbundances = medianAbundances.map( _ * scalingFactor )
-    
-    scaledAbundances
   }
   
   def summarizeUsingSum( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {

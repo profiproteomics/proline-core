@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.ps.impl
 
 import org.junit._
 import org.junit.Assert._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi._
@@ -41,7 +41,7 @@ case class JPAPtmDefinitionStorerTestContext(
   )
 }
 
-object JPAPtmDefinitionStorerTest extends AbstractMultipleDBTestCase with Logging {
+object JPAPtmDefinitionStorerTest extends AbstractMultipleDBTestCase with StrictLogging {
 
   // Define some vars
   val driverType = DriverType.H2
@@ -73,7 +73,7 @@ object JPAPtmDefinitionStorerTest extends AbstractMultipleDBTestCase with Loggin
   
 }
 
-class JPAPtmDefinitionStorerTest extends MustMatchers with Logging {
+class JPAPtmDefinitionStorerTest extends MustMatchers with StrictLogging {
   
   val testCtx = JPAPtmDefinitionStorerTest.testContext
   

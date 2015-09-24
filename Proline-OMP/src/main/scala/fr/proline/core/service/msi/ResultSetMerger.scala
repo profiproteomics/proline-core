@@ -1,6 +1,6 @@
 package fr.proline.core.service.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
@@ -48,7 +48,7 @@ class ResultSetMerger(
   execCtx: IExecutionContext,
   resultSetIds: Option[Seq[Long]],
   resultSets: Option[Seq[ResultSet]]
-) extends IService with Logging {
+) extends IService with LazyLogging {
 
   var mergedResultSet: ResultSet = null
 

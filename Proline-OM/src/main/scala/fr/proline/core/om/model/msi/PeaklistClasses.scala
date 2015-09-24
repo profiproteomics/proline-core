@@ -1,8 +1,8 @@
 package fr.proline.core.om.model.msi
 
-import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
-import com.typesafe.scalalogging.slf4j.Logging
+import scala.collection.mutable.HashMap
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.misc.InMemoryIdGen
 
 object Peaklist extends InMemoryIdGen
@@ -87,7 +87,7 @@ case class SpectrumTitleParsingRule (
   val lastScanRegex: Option[String] = None,
   val firstTimeRegex: Option[String] = None,
   val lastTimeRegex: Option[String] = None
-) extends Logging {
+) extends LazyLogging {
   
   def getFieldNames() = SpectrumTitleFields.values.toArray.map(_.toString())
   

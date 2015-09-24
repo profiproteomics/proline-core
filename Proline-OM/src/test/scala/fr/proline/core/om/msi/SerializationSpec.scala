@@ -7,7 +7,7 @@ import org.scalatest.GivenWhenThen
 import org.scalatest.FunSpec
 import org.scalatest.Matchers
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.om.model.msi._
 import fr.profi.util.serialization.ProfiJson
@@ -19,7 +19,7 @@ case class SerializationSpecif(
   jsonData: String
 )
 
-abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with Matchers with Logging {
+abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with Matchers with StrictLogging {
 
   def checkJsonSpecifs( jsonSpecifs: List[SerializationSpecif] ) {
     
@@ -113,7 +113,9 @@ class SerializationSpec extends AbstractSerializationSpec {
         seqPosition = 1,
         monoMass = 16.0,
         averageMass = 16.1,
-        composition = "O"
+        composition = "O",
+        isNTerm = false,
+        isCTerm = false
       )
     )
   )

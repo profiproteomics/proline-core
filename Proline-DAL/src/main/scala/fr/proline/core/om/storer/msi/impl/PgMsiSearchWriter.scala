@@ -4,7 +4,7 @@ import java.sql.Connection
 import org.postgresql.copy.CopyIn
 import org.postgresql.copy.CopyManager
 import org.postgresql.core.BaseConnection
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.tables.msi.MsiDbMsQueryTable
@@ -18,7 +18,7 @@ import fr.profi.util.sql.encodeRecordForPgCopy
 import fr.proline.repository.util.PostgresUtils
 import fr.profi.util.primitives._
 
-object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with Logging {
+object PgMsiSearchWriter extends AbstractSQLMsiSearchWriter() with LazyLogging {
 
   // val connection = msiDb.ezDBC.connection
   // val bulkCopyManager = new CopyManager( msiDb.ezDBC.connection.asInstanceOf[BaseConnection] )

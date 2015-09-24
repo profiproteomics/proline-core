@@ -5,11 +5,10 @@ import org.junit.Assert._
 import org.junit.runner.RunWith
 import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
 import fr.proline.core.om.model.msi._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 @Test
-class PeptidesTest extends JUnitSuite with Logging {
-  
+class PeptidesTest extends JUnitSuite with StrictLogging {
   
 	@Test
     def testGetPeptideMatchIDs() = {

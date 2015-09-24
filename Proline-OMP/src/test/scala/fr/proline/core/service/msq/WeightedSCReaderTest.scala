@@ -5,7 +5,7 @@ import org.junit.After
 import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.SpectralCountConfig
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -26,7 +26,7 @@ import fr.proline.core.orm.uds.BiologicalSplSplAnalysisMapPK
 import java.util.HashSet
 
 @Test
-class WeightedSCReaderTest extends AbstractMultipleDBTestCase with Logging {
+class WeightedSCReaderTest extends AbstractMultipleDBTestCase with StrictLogging {
 
   // Define the interface to be implemented
   val driverType = DriverType.H2

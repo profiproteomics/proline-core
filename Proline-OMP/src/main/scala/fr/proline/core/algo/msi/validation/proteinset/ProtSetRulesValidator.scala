@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi.validation.proteinset
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.proline.core.algo.msi.validation._
@@ -17,7 +17,7 @@ import fr.proline.core.algo.msi.filtering._
 class ProtSetRulesValidator(
   val protSetFilterRule1: IProteinSetFilter,
   val protSetFilterRule2: IProteinSetFilter
-) extends IProteinSetValidator with Logging {
+) extends IProteinSetValidator with LazyLogging {
   require( protSetFilterRule1.filterParameter == protSetFilterRule2.filterParameter )
   
   def filterParameter = protSetFilterRule1.filterParameter

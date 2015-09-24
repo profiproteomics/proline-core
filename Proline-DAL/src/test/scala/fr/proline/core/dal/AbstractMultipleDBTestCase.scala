@@ -1,12 +1,12 @@
 package fr.proline.core.dal
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.repository.DriverType
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 
-class AbstractMultipleDBTestCase extends Logging {
+class AbstractMultipleDBTestCase extends StrictLogging {
 
   private val m_fakeException = new RuntimeException("_FakeException_ AbstractMultipleDBTestCase instance creation")
 

@@ -4,7 +4,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.Seq
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi.{ PeptideMatch }
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
 import scala.collection.script.Reset
 import fr.proline.core.om.model.msi.MsQueryProperties
@@ -17,7 +17,7 @@ import fr.proline.core.algo.msi.validation.MascotIonsScoreThresholds
 
 // TODO: use MascotThresholdTypes enumeration value instead of useHomologyThreshold
 // TODO: usefilterPeptideMatchesDBO
-class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold: Boolean = false, var pValueStartValue: Float = 0.5f) extends IOptimizablePeptideMatchFilter with Logging {
+class MascotPValuePSMFilter(var pValue: Float = 0.05f, var useHomologyThreshold: Boolean = false, var pValueStartValue: Float = 0.5f) extends IOptimizablePeptideMatchFilter with LazyLogging {
 
   var maxPValuethresholdIncreaseValue: Float = 0.01f
   var minPValuethresholdIncreaseValue: Float = 0.001f

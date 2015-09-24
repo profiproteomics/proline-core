@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ ResultSet, Peaklist, MsQuery, MSISearch, InstrumentConfig, IResultFile }
 import fr.proline.core.om.storer.msi.impl._
@@ -9,7 +9,7 @@ import fr.proline.repository.IDatabaseConnector
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.core.om.model.msi.IRsContainer
 
-trait IRsStorer extends Logging {
+trait IRsStorer extends LazyLogging {
 
   //@deprecated("0.1.0","methods using a StorerContext are now preferrable")
   //def storeResultSet(resultSet: ResultSet, dbManager: IDataStoreConnectorFactory, projectId: Int): Int

@@ -1,13 +1,13 @@
 package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.math3.stat.StatUtils
 import org.apache.commons.math3.stat.descriptive.rank.Percentile
 import fr.profi.util.primitives.isZeroOrNaN
 import fr.profi.util.random.randomGaussian
 
-object MissingAbundancesInferer extends Logging {
+object MissingAbundancesInferer extends LazyLogging {
   
   val percentileComputer = new Percentile()
   
@@ -59,9 +59,10 @@ object MissingAbundancesInferer extends Logging {
       var newAbundanceRow = abundanceRow
       val meanAbundance = if( totalPsmCount == 0 || nbDefValues == 0 ) {
         
-        if( defAbFreq < 0.5 ) {
+        // This code was used to remove values when no PSM identified and low abundance frequency
+        /*if( defAbFreq < 0.5 ) {
           newAbundanceRow = Array.fill(abundanceRow.length)( Float.NaN )
-        }
+        }*/
         
         lb
       }

@@ -3,7 +3,7 @@ package fr.proline.core.om.storer.msi.impl
 import java.sql.Timestamp
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi.{ InstrumentConfig, LocatedPtm, MSISearch, Ms2Query, MsQuery, PeaklistSoftware, Peptide, PeptideMatch, ProteinMatch, PtmDefinition, ResultSet, SeqDatabase, SequenceMatch }
 import fr.proline.core.om.storer.msi.IPeaklistWriter
@@ -28,7 +28,7 @@ import fr.proline.core.util.ResidueUtils._
  * @param dbManagement DatabaseManagement : From which connection to Ps Db,  Uds Db and Pdi Db is retrieve
  * @param projectID Id of the project to save information to
  */
-class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extends AbstractRsStorer(pklWriter) with Logging {
+class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extends AbstractRsStorer(pklWriter) with LazyLogging {
 
   type MsiPeaklist = fr.proline.core.orm.msi.Peaklist
   type MsiPeaklistSoftware = fr.proline.core.orm.msi.PeaklistSoftware

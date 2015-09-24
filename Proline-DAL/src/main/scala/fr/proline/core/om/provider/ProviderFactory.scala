@@ -1,6 +1,6 @@
 package fr.proline.core.om.provider
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.{ ORMSeqDatabaseProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
 import fr.proline.core.om.provider.msi.{ IProteinProvider, IPeptideProvider, IPTMProvider }
@@ -29,7 +29,7 @@ trait IProviderFactory {
  *
  * For now, supported Providers are : IPeptideProvider, IPeptideMatchProvider, IProteinProvider, ISeqDatabaseProvider, IPTMProvider
  */
-object ProviderFactory extends IProviderFactory with Logging {
+object ProviderFactory extends IProviderFactory with LazyLogging {
 
   private val PROVIDERS_PROPERTIES_FILE_NAME = "providers.properties"
 

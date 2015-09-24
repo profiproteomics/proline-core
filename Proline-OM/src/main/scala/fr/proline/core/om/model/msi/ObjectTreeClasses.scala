@@ -67,12 +67,11 @@ object FragmentMatchType extends Enumeration {
  * @param fragmentMatches
  */
 //@Message
-@JsonCreator
 case class SpectrumMatch(
-  @JsonIgnore @transient val msQueryInitialId: Int,
-  @JsonIgnore @transient val peptideMatchRank: Int,
-  @JsonProperty("fragTable") var fragTable: Array[TheoreticalFragmentSeries],
-  @JsonProperty("fragMatches") var fragMatches: Array[FragmentMatch]
+   @transient val msQueryInitialId: Int,
+   @transient val peptideMatchRank: Int,
+   var fragTable: Array[TheoreticalFragmentSeries],
+  var fragMatches: Array[FragmentMatch]
 ) {
   // Plain constructor needed for MessagePack
   def this() = this(0, 0, Array.empty[TheoreticalFragmentSeries], Array.empty[FragmentMatch])

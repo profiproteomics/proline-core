@@ -3,7 +3,7 @@ package fr.proline.core.util.generator.lcms
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks._
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.om.model.lcms._
 import fr.profi.util.random._
@@ -23,7 +23,7 @@ class RawMapFakeGenerator (
   maxMoz: Int,
   minTime: Int,
   maxTime: Int
-) extends Logging {
+) extends StrictLogging {
   
   require(nbFeatures > 0)
   require(minMoz >= 0 && maxMoz > minMoz)

@@ -1,7 +1,7 @@
 package fr.proline.core.dal
 
 import java.sql.SQLException
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -9,7 +9,7 @@ import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.repository.IDatabaseConnector
 import fr.profi.util.ThreadLogger
 
-object ContextFactory extends Logging {
+object ContextFactory extends LazyLogging {
 
   /**
    * Creates an ExecutionContext instance from given DataStoreConnectorFactory and project Id.
@@ -93,7 +93,7 @@ object ContextFactory extends Logging {
 
 }
 
-object BuildExecutionContext extends Logging {
+object BuildExecutionContext extends LazyLogging {
 
   /**
    * Creates an ExecutionContext instance from given DataStoreConnectorFactory and project Id.
@@ -114,7 +114,7 @@ object BuildExecutionContext extends Logging {
 
 }
 
-object BuildDbConnectionContext extends Logging {
+object BuildDbConnectionContext extends LazyLogging {
 
   /**
    * Creates a <code>DatabaseConnectionContext</code> from given DatabaseConnector.

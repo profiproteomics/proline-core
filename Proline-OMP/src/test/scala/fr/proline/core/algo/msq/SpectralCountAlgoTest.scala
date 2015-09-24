@@ -4,7 +4,7 @@ import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.algo.msi.AbstractResultSummaryTestCase
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
@@ -12,7 +12,7 @@ import fr.proline.core.dbunit.STR_F063442_F122817_MergedRSMs
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.repository.DriverType
 
-object SpectralCountAlgoTest extends AbstractResultSummaryTestCase with Logging {
+object SpectralCountAlgoTest extends AbstractResultSummaryTestCase with StrictLogging {
 
   // Define some needed values
   val driverType = DriverType.H2
@@ -41,7 +41,7 @@ object SpectralCountAlgoTest extends AbstractResultSummaryTestCase with Logging 
 
 }
 
-class SpectralCountAlgoTest extends Logging {
+class SpectralCountAlgoTest extends StrictLogging {
 
   val executionContext = SpectralCountAlgoTest.executionContext
   val readRSM = SpectralCountAlgoTest.getRSM()

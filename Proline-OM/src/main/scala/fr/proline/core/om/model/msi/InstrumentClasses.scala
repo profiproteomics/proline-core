@@ -1,8 +1,6 @@
 package fr.proline.core.om.model.msi
 
 import scala.beans.BeanProperty
-//import com.fasterxml.jackson.annotation.JsonInclude
-//import com.fasterxml.jackson.annotation.JsonInclude.Include
 import fr.profi.util.misc.InMemoryIdGen
 
 @deprecated("use ORM ActivationType enumeration instead","0.0.7")
@@ -26,7 +24,6 @@ case class Instrument(
    var properties: Option[InstrumentProperties] = None
 ) 
 
-//@JsonInclude( Include.NON_NULL )
 case class InstrumentProperties()
 
 
@@ -39,30 +36,31 @@ object InstrumentConfig extends InMemoryIdGen {
   }
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class InstrumentConfig(
-                   // Required fields
-                   val id: Long,
-                   val name: String,
-                   var instrument: Instrument,
-                   val ms1Analyzer: String,
-                   val msnAnalyzer: String,
-                   var activationType: String,
-                   var fragmentationRules: Option[Array[FragmentationRule]] = None,
-                   
-                   var properties: Option[InstrumentConfigProperties] = None
-                   ) {
+  // Required fields
+  val id: Long,
+  val name: String,
+  var instrument: Instrument,
+  val ms1Analyzer: String,
+  val msnAnalyzer: String,
+  var activationType: String,
+  var fragmentationRules: Option[Array[FragmentationRule]] = None,
   
-  // Secondary constructor were the name is automatically built
+  var properties: Option[InstrumentConfigProperties] = None
+) {
+  
+  // Secondary constructors were the name is automatically built
   def this( id: Long, instrument: Instrument, ms1Analyzer: String, msnAnalyzer: String,
-            activationType: String, fragmentationRules: Option[Array[FragmentationRule]] = None ) {
+            activationType: String, fragmentationRules: Option[Array[FragmentationRule]]) {
     this( id,InstrumentConfig.makeName(instrument.name,activationType,ms1Analyzer,msnAnalyzer),
           instrument,ms1Analyzer,msnAnalyzer,activationType,fragmentationRules)
+  }
+  def this( id: Long, instrument: Instrument, ms1Analyzer: String, msnAnalyzer: String, activationType: String) {
+    this( id,instrument,ms1Analyzer,msnAnalyzer,activationType,None)
   }
       
 }
 
-//@JsonInclude( Include.NON_NULL )
 case class InstrumentConfigProperties ( 
   @BeanProperty val isHidden: Boolean
 )

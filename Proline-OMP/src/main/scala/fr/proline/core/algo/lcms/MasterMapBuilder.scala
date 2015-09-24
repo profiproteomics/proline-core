@@ -3,7 +3,7 @@ package fr.proline.core.algo.lcms
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.lcms._
 import filtering._
 
@@ -38,7 +38,7 @@ class MasterMapBuilder(
     masterFtFilter: Filter,
     ftMappingParams: FeatureMappingParams,
     ftClusteringParams: ClusteringParams // used to clusterize ambiguous ft mappings
-  ) extends Logging {
+  ) extends LazyLogging {
   
   // Check that map set maps have been aligned
   require( mapSet.getAlnReferenceMap.isDefined,"can't build a master map with unaligned maps")

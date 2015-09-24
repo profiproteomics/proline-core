@@ -287,7 +287,7 @@ object MsiSearchBuilder {
       softwareVersion = r.getString(ssCols.SOFTWARE_VERSION),
       taxonomy = r.getString(ssCols.TAXONOMY),
       maxMissedCleavages = r.getInt(ssCols.MAX_MISSED_CLEAVAGES),
-      ms1ChargeStates = r.getString(ssCols.PEPTIDE_CHARGE_STATES),
+      ms1ChargeStates = r.getStringOrElse(ssCols.PEPTIDE_CHARGE_STATES, null),
       ms1ErrorTol = r.getDouble(ssCols.PEPTIDE_MASS_ERROR_TOLERANCE),
       ms1ErrorTolUnit = r.getString(ssCols.PEPTIDE_MASS_ERROR_TOLERANCE_UNIT),
       isDecoy = toBoolean(r.getAny(ssCols.IS_DECOY)),

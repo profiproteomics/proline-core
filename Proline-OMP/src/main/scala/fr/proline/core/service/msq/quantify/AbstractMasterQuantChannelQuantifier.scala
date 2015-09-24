@@ -6,7 +6,7 @@ import scala.collection.JavaConverters.asJavaCollectionConverter
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.primitives.toLong
 import fr.profi.util.serialization.ProfiJson
@@ -55,7 +55,7 @@ import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
 
-abstract class AbstractMasterQuantChannelQuantifier extends Logging {
+abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
 
   // Required fields
   val executionContext: IExecutionContext

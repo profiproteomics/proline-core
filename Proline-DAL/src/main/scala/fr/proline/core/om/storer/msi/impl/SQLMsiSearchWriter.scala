@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
@@ -16,7 +16,7 @@ import fr.profi.util.primitives._
 
 object SQLMsiSearchWriter extends AbstractSQLMsiSearchWriter
 
-abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with Logging {
+abstract class AbstractSQLMsiSearchWriter extends IMsiSearchWriter with LazyLogging {
 
   def insertMsiSearch(msiSearch: MSISearch, context: StorerContext): Long = {
 

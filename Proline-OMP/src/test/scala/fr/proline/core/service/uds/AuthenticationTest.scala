@@ -5,7 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.ContextFactory
@@ -15,7 +15,7 @@ import fr.proline.core.orm.uds.UserAccount
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
 
-class AuthenticationTest extends DatabaseTestCase with Logging {
+class AuthenticationTest extends DatabaseTestCase with StrictLogging {
 
   val udsUser = new UserAccount()
   udsUser.setLogin("proline_user")

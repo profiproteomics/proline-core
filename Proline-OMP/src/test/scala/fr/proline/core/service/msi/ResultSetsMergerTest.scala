@@ -3,7 +3,7 @@ package fr.proline.core.service.msi
 import org.junit.Assert._
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
@@ -15,7 +15,7 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
 
-object ResultSetsMergerTest extends AbstractEmptyDatastoreTestCase with Logging {
+object ResultSetsMergerTest extends AbstractEmptyDatastoreTestCase with StrictLogging {
 
   val driverType = DriverType.H2
   // For manual postgres test !! If use, should comment all loadDataSet from setUp and AbstractRFImporterTest_.setUp
@@ -53,7 +53,7 @@ object ResultSetsMergerTest extends AbstractEmptyDatastoreTestCase with Logging 
   
 }
   
-class ResultSetsMergerTest extends Logging {
+class ResultSetsMergerTest extends StrictLogging {
   
   val sqlExecutionContext = ResultSetsMergerTest.executionContext
   val dsConnectorFactoryForTest = ResultSetsMergerTest.dsConnectorFactoryForTest

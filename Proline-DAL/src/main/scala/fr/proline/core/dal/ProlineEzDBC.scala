@@ -2,7 +2,7 @@ package fr.proline.core.dal
 
 import java.sql.Connection
 import org.joda.time.format.DateTimeFormat
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.AbstractSQLDialect
 import fr.profi.jdbc.AsShortStringBooleanFormatter
 import fr.profi.jdbc.DefaultSQLDialect
@@ -24,7 +24,7 @@ object ProlineSQLiteSQLDialect extends AbstractSQLDialect(
 
 object ProlinePgSQLDialect extends AbstractSQLDialect(inExpressionCountLimit = 1000, fetchSize = Some(1000) )
 
-object ProlineEzDBC extends Logging {
+object ProlineEzDBC extends LazyLogging {
   
   def getDriverDialect( driverType: DriverType ) = {
     driverType match {

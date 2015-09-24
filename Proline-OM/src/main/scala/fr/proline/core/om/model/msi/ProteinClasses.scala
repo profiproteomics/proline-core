@@ -63,7 +63,7 @@ case class Protein (
   var pi: Float,
   val crc64: String,
   val alphabet: String,
-  var properties: Option[ProteinProperties] = None
+  var properties: Option[ProteinProperties]
 ) {
   
   // Requirements
@@ -71,6 +71,9 @@ case class Protein (
   require( alphabet.matches("aa|rna|dna") ) // TODO: create an enumeration
   
   // Define secondary constructors
+  def this( id: Long, sequence: String, mass: Double, pi: Float, crc64: String, alphabet: String) = {
+    this( id, sequence, mass, pi, crc64, alphabet, None )
+  }
   def this( sequence: String, id: Long = Protein.generateNewId(), alphabet: String = "aa" ) = {
     this( id, sequence, Protein.calcMass(sequence), Protein.calcPI(sequence), Protein.calcCRC64(sequence), alphabet )
   }

@@ -1,12 +1,12 @@
 package fr.proline.core.om.storer.msi
 
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.{ IResultFile, IPeaklistContainer, ResultSet, Protein, Peptide }
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.IRsContainer
 
-trait IRsWriter extends Logging {
+trait IRsWriter extends LazyLogging {
 
   /**
    * Store specified new ResultSet and all associated data into dbs.

@@ -4,12 +4,12 @@ import scala.collection.immutable.LongMap
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi._
 import fr.profi.util.primitives._
 
-class ParsimoniousProteinSetInferer() extends IProteinSetInferer with Logging {
+class ParsimoniousProteinSetInferer() extends IProteinSetInferer with LazyLogging {
 
   def computeResultSummary( resultSet: ResultSet, keepSubsummableSubsets: Boolean = true ): ResultSummary = {
     

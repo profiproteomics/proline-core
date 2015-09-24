@@ -2,13 +2,13 @@ package fr.proline.core.algo.msi
 
 import org.junit.BeforeClass
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.profi.jdbc.easy._
 import fr.proline.core.dbunit._
 import fr.proline.repository.DriverType
 
-object STR_F122817_Mascot_v2_3_TEST_CASE extends AbstractDbUnitResultFileTestCase with Logging {
+object STR_F122817_Mascot_v2_3_TEST_CASE extends AbstractDbUnitResultFileTestCase with StrictLogging {
 
   // Define the interface to be implemented
   val driverType = DriverType.H2

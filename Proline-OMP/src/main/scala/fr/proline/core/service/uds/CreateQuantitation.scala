@@ -3,7 +3,7 @@ package fr.proline.core.service.uds
 import java.util.HashSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import java.util.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
@@ -39,7 +39,7 @@ class CreateQuantitation(
   projectId: Long,
   methodId: Long,
   experimentalDesign: ExperimentalDesign
-) extends IService with Logging {
+) extends IService with LazyLogging {
   
   require( executionContext.isJPA,"invalid type of executionContext, JPA type is required")
 

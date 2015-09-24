@@ -41,10 +41,10 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
     // TODO: is this needed ? (because of the correction to be applied)
     require( statSummary1.getN > 2 && statSummary2.getN > 2, "not enough replicates for T statistics" )
 
-    if( applyVarianceCorrection == false ) CommonsStatHelper.tTestComputer.tTest( statSummary1, statSummary2 )
+    if( applyVarianceCorrection == false ) tTestComputer.tTest( statSummary1, statSummary2 )
     else {
       // Compute the T-Test using corrected variances from error model
-      CommonsStatHelper.tTestComputer.tTest(
+      tTestComputer.tTest(
         _applyErrorCorrectionToStatSummary(statSummary1),
         _applyErrorCorrectionToStatSummary(statSummary2)
       )

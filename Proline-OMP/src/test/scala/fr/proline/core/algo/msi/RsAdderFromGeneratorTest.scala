@@ -3,12 +3,12 @@ package fr.proline.core.algo.msi
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 
-class RsAdderFromGeneratorTest extends RsAdderFromGeneratorTesting with Logging {
+class RsAdderFromGeneratorTest extends RsAdderFromGeneratorTesting with StrictLogging {
   
   val nbPepsToGenerate = 800
   val nbDuplicatedPepMatches = 50

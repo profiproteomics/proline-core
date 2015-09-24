@@ -6,7 +6,7 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.api.service.IService
 import fr.proline.context.{IExecutionContext, DatabaseConnectionContext}
@@ -71,7 +71,7 @@ class IdentificationTreeValidator(
   peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
   protSetFilters: Option[Seq[IProteinSetFilter]] = None,
   protSetValidator: Option[IProteinSetValidator] = None
-) extends IService with Logging {
+) extends IService with LazyLogging {
   // TODO: uncomment this require when LCMS ORM is implemented
   //require( execContext.isJPA, "a JPA execution context is needed" )  
 

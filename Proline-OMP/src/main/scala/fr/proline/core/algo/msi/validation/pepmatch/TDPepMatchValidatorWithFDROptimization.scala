@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi.validation.pepmatch
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
@@ -10,7 +10,7 @@ class TDPepMatchValidatorWithFDROptimization(
   val validationFilter: IOptimizablePeptideMatchFilter,
   val expectedFdr: Option[Float],
   var tdAnalyzer: Option[ITargetDecoyAnalyzer]  
-) extends IPeptideMatchValidator with Logging {
+) extends IPeptideMatchValidator with LazyLogging {
   
   require( tdAnalyzer.isDefined, "a target/decoy analyzer must be provided")
   

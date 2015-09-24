@@ -3,7 +3,7 @@ package fr.proline.core.util.generator.lcms
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.om.model.lcms.RawFile
 
@@ -32,7 +32,7 @@ object LcMsRunGeneratorsTest {
 }
 
 @Test
-class LcMsRunGeneratorsTest extends JUnitSuite with Logging {
+class LcMsRunGeneratorsTest extends JUnitSuite with StrictLogging {
   
   //@Test
   def testRawMapGenerator() {

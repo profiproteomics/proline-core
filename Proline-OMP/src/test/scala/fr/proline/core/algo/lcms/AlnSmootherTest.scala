@@ -5,10 +5,10 @@ import org.junit.Before
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 import org.scalatest.matchers.MustMatchers
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.lcms._
 
-class AlnSmootherTest extends JUnitSuite with MustMatchers with Logging {
+class AlnSmootherTest extends JUnitSuite with MustMatchers with StrictLogging {
   
   val landmarkRangeSmoother = AlnSmoother(AlnSmoothing.LANDMARK_RANGE.toString)
   val loessSmoother = AlnSmoother(AlnSmoothing.LOESS.toString)

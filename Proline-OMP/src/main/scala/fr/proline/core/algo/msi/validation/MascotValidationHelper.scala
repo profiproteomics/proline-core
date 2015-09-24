@@ -5,7 +5,7 @@ import scala.math.{ pow, log10 }
 import fr.proline.core.om.model.msi.{ MsQuery, PeptideMatch }
 import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
 import fr.proline.core.om.model.msi.MsQueryProperties
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 object MascotThresholdTypes extends Enumeration {
   val IDENTITY_THRESHOLD = Value("IDENTITY_THRESHOLD")
@@ -15,7 +15,7 @@ object MascotThresholdTypes extends Enumeration {
 
 case class MascotIonsScoreThresholds(identityThreshold: Float, homologyThreshold: Float)
 
-object MascotValidationHelper extends Logging {
+object MascotValidationHelper extends LazyLogging {
 
   implicit def doubleToFloat(d: Double): Float = d.toFloat
 

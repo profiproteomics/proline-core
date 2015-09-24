@@ -1,13 +1,13 @@
 package fr.proline.core.dal
 
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.context.DatabaseConnectionContext
 
 package object context {
   
-  abstract class AbstractTransactionalContext extends Logging {
+  abstract class AbstractTransactionalContext extends LazyLogging {
     
     // TODO: decide to keep or not the returned Boolean value (it should not be returned in case of Exception)
     

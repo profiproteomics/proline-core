@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._
 import fr.profi.util.StringUtils
@@ -24,7 +24,7 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.repository.ProlineDatabaseType
 
 // TODO: move the cache into the peptide builder object ???
-object SQLPeptideProvider extends Logging {
+object SQLPeptideProvider extends LazyLogging {
 
   // Create a static HashMap to cache loaded peptides
   // TODO: use cache for other queries than getPeptides(peptideIds)
@@ -90,7 +90,7 @@ object SQLPeptideProvider extends Logging {
 
 }
 
-class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvider(psDbCtx) with IPeptideProvider with Logging {
+class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvider(psDbCtx) with IPeptideProvider with LazyLogging {
 
   require( psDbCtx.getProlineDatabaseType == ProlineDatabaseType.PS, "PsDb connection required")
   

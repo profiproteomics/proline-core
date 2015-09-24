@@ -1,7 +1,7 @@
 package fr.proline.core.util.generator.lcms
 
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.lcms._
 import fr.profi.util.math.calcLineParams
 import fr.profi.util.random._
@@ -26,7 +26,7 @@ class LcMsRunFakeGenerator(
   intensityRelativeVariability: Float = 0.2f,
   ms1Duration: Float = 2,
   maxMs2PerCycle: Int = 20
-) extends Logging {
+) extends StrictLogging {
   require( ms1RelativeLandmarks(0)._1 > 0, "first landmark time value must be greater than zero" ) 
   
   private final val MS1_MAX_DYNAMIC_RANGE = 10e5

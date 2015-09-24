@@ -4,7 +4,7 @@ import scala.collection.mutable.{HashMap, ArrayBuffer}
 
 import org.junit.{Assert, Test}
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.profi.util.primitives._
 import fr.proline.core.algo.msi.DbUnitResultFileLoading
@@ -25,9 +25,9 @@ import fr.proline.repository.DriverType
 import fr.profi.util.serialization.ProfiJson
 
 
-//abstract class AbstractResultSetValidator extends AbstractResultSetTestCase with Logging {
-//abstract class AbstractResultSetValidator extends AbstractDbUnitResultFileTestCase with Logging {
-abstract class AbstractResultSetValidator extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with Logging {
+//abstract class AbstractResultSetValidator extends AbstractResultSetTestCase with StrictLogging {
+//abstract class AbstractResultSetValidator extends AbstractDbUnitResultFileTestCase with StrictLogging {
+abstract class AbstractResultSetValidator extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with StrictLogging {
   
   /*var executionContext: IExecutionContext = null  
   var rsProvider: IResultSetProvider = null
@@ -114,7 +114,7 @@ abstract class AbstractResultSetValidator extends AbstractEmptyDatastoreTestCase
 }
 
 
-object ResultSetValidatorF122817Test extends AbstractResultSetValidator with Logging {
+object ResultSetValidatorF122817Test extends AbstractResultSetValidator with StrictLogging {
 
   val driverType = DriverType.H2
   val dbUnitResultFile = STR_F122817_Mascot_v2_3
@@ -123,7 +123,7 @@ object ResultSetValidatorF122817Test extends AbstractResultSetValidator with Log
   
 }
 
-class ResultSetValidatorF122817Test extends Logging {
+class ResultSetValidatorF122817Test extends StrictLogging {
   
   val targetRS = ResultSetValidatorF122817Test.getRS
   val executionContext = ResultSetValidatorF122817Test.executionContext
@@ -173,7 +173,7 @@ class ResultSetValidatorF122817Test extends Logging {
   
 }
 
-object ResultSetValidatorF136482Test extends AbstractResultSetValidator with Logging {
+object ResultSetValidatorF136482Test extends AbstractResultSetValidator with StrictLogging {
 
   val driverType = DriverType.H2
   val dbUnitResultFile = STR_F136482_CTD
@@ -182,7 +182,7 @@ object ResultSetValidatorF136482Test extends AbstractResultSetValidator with Log
   
 }
 
-class ResultSetValidatorF136482Test extends Logging {
+class ResultSetValidatorF136482Test extends StrictLogging {
   
   protected val DEBUG_TESTS = false
   val targetRS = ResultSetValidatorF136482Test.getRS
@@ -859,7 +859,7 @@ class ResultSetValidatorF136482Test extends Logging {
 
 }
 
-object ResultSetValidatorF068213Test extends AbstractResultSetValidator with Logging {
+object ResultSetValidatorF068213Test extends AbstractResultSetValidator with StrictLogging {
 
   val driverType = DriverType.H2
   val dbUnitResultFile = GRE_F068213_M2_4_TD_EColi
@@ -868,7 +868,7 @@ object ResultSetValidatorF068213Test extends AbstractResultSetValidator with Log
 
 }
 
-class ResultSetValidatorF068213Test extends Logging {
+class ResultSetValidatorF068213Test extends StrictLogging {
   
   val targetRS = ResultSetValidatorF068213Test.getRS
   val executionContext = ResultSetValidatorF068213Test.executionContext
@@ -1007,7 +1007,7 @@ class ResultSetValidatorF068213Test extends Logging {
 
 }
 
-object ResultSetValidatorF027737Test extends AbstractResultSetValidator with Logging {
+object ResultSetValidatorF027737Test extends AbstractResultSetValidator with StrictLogging {
 
   val driverType = DriverType.H2
   val dbUnitResultFile = TLS_F027737_MTD_no_varmod
@@ -1016,7 +1016,7 @@ object ResultSetValidatorF027737Test extends AbstractResultSetValidator with Log
 
 }
 
-class ResultSetValidatorF027737Test extends Logging {
+class ResultSetValidatorF027737Test extends StrictLogging {
   
   val targetRS = ResultSetValidatorF027737Test.getRS
   val executionContext = ResultSetValidatorF027737Test.executionContext

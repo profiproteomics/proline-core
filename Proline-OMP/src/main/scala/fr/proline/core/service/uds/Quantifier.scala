@@ -4,7 +4,7 @@ import javax.persistence.EntityManager
 
 import scala.collection.JavaConversions.asScalaBuffer
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -35,7 +35,7 @@ class Quantifier(
   methodId: Long,
   experimentalDesign: ExperimentalDesign,
   quantConfigAsMap: java.util.Map[String,Object]
-) extends IService with Logging {
+) extends IService with LazyLogging {
   
   private var _hasInitiatedExecContext: Boolean = false
   private var _quantiId: Long = 0L

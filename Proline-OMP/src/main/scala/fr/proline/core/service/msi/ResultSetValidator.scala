@@ -2,7 +2,7 @@ package fr.proline.core.service.msi
 
 import scala.collection.mutable.ArrayBuffer
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
@@ -112,7 +112,7 @@ class ResultSetValidator(
   inferenceMethod: Option[InferenceMethod.Value] = Some(InferenceMethod.PARSIMONIOUS),
   peptideSetScoring: Option[PepSetScoring.Value] = Some(PepSetScoring.MASCOT_STANDARD_SCORE),
   storeResultSummary: Boolean = true
-) extends IService with Logging {
+) extends IService with LazyLogging {
 
   private val msiDbContext = execContext.getMSIDbConnectionContext
   var validatedTargetRsm: ResultSummary = null

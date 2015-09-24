@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.uds.impl
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.Enzyme
 import fr.proline.core.om.storer.uds.IEnzymeStorer
@@ -12,7 +12,7 @@ import fr.proline.core.orm.uds.{
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions
 
-object JPAEnzymeStorer extends IEnzymeStorer with Logging {
+object JPAEnzymeStorer extends IEnzymeStorer with LazyLogging {
   
   /**
    * Instantiates the PtmDefinition writer and call the insertPtmDefinitions method.
@@ -22,7 +22,7 @@ object JPAEnzymeStorer extends IEnzymeStorer with Logging {
     writer.insertEnzymes(enzymes)
   }
 
-  private class JPAEnzymeWriter(execCtx: IExecutionContext) extends Logging {
+  private class JPAEnzymeWriter(execCtx: IExecutionContext) extends LazyLogging {
 
     // Make some requirements
     require(execCtx != null, "execCtx must not be null")

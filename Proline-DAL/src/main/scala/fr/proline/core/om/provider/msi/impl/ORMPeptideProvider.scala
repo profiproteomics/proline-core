@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.Array.canBuildFrom
 import scala.collection.Seq
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ LocatedPtm, Peptide }
@@ -16,7 +16,7 @@ import fr.proline.core.orm.ps.repository.{ PsPeptideRepository => pepRepo }
  *
  * Specified EntityManager should be a PSdb EntityManager
  */
-class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptideProvider with Logging {
+class ORMPeptideProvider(val psDbCtx: DatabaseConnectionContext) extends IPeptideProvider with LazyLogging {
 
   val converter: PeptidesOMConverterUtil = new PeptidesOMConverterUtil()
 

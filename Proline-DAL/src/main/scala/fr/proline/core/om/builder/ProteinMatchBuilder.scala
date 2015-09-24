@@ -1,6 +1,6 @@
 package fr.proline.core.om.builder
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 import fr.profi.util.primitives._
@@ -12,7 +12,7 @@ import fr.proline.core.om.model.msi._
  * @author David Bouyssie
  *
  */
-object ProteinMatchBuilder extends Logging {
+object ProteinMatchBuilder extends LazyLogging {
   
   protected val ProtMatchCols = MsiDbProteinMatchColumns
   protected val ProtMatchSeqDbMapCols = MsiDbProteinMatchSeqDatabaseMapColumns

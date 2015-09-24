@@ -5,12 +5,12 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.Assert._
 import org.scalatest.junit.JUnitSuite
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.lcms._
 import fr.proline.core.util.generator.lcms._
 import filtering.Filter
 
-class MasterMapBuilderTest extends JUnitSuite  with Logging {
+class MasterMapBuilderTest extends JUnitSuite  with StrictLogging {
   
   @Test
   def testBuildMasterMap() {

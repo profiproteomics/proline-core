@@ -7,7 +7,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 
 //import com.fasterxml.jackson.annotation.JsonInclude
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.om.model.msi._
 import fr.profi.util.primitives._
@@ -35,7 +35,7 @@ class ResultSetFakeGenerator(
   nbProts: Int,
   minPepSeqLength: Int = 8,
   maxPepSeqLength: Int = 20
-) extends AnyRef with Logging {
+) extends AnyRef with StrictLogging {
 
   require(nbPeps > 0, "Peptides # must be > 0")
   require(nbProts > 0 && nbProts <= nbPeps, "Protein # must be > 0 and <= peptides #")

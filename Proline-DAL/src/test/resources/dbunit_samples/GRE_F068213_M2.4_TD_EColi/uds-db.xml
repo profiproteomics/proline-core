@@ -55,8 +55,8 @@
   <ENZYME ID="20" NAME="Lys-N" IS_INDEPENDANT="false" IS_SEMI_SPECIFIC="false"/>
   <ENZYME ID="21" NAME="TrypsinMSIPI" IS_INDEPENDANT="false" IS_SEMI_SPECIFIC="false"/>
   <ENZYME ID="22" NAME="TrypChymo" IS_INDEPENDANT="false" IS_SEMI_SPECIFIC="false"/>
-  <ENZYME_CLEAVAGE ID="1" SITE="C-term" RESIDUES="KR" ENZYME_ID="1"/>
   <ENZYME_CLEAVAGE ID="2" SITE="C-term" RESIDUES="K" RESTRICTIVE_RESIDUES="P" ENZYME_ID="2"/>
+  <ENZYME_CLEAVAGE ID="1" SITE="C-term" RESIDUES="KR" ENZYME_ID="1"/>  
   <ENZYME_CLEAVAGE ID="3" SITE="N-term" RESIDUES="DB" ENZYME_ID="2"/>
   <ENZYME_CLEAVAGE ID="4" SITE="C-term" RESIDUES="M" ENZYME_ID="3"/>
   <ENZYME_CLEAVAGE ID="5" SITE="C-term" RESIDUES="KR" RESTRICTIVE_RESIDUES="P" ENZYME_ID="3"/>
@@ -83,8 +83,8 @@
   <ENZYME_CLEAVAGE ID="26" SITE="C-term" RESIDUES="J" ENZYME_ID="21"/>
   <ENZYME_CLEAVAGE ID="27" SITE="N-term" RESIDUES="J" ENZYME_ID="21"/>
   <ENZYME_CLEAVAGE ID="28" SITE="C-term" RESIDUES="FYWLKR" RESTRICTIVE_RESIDUES="P" ENZYME_ID="22"/>
+  <FRAGMENTATION_SERIES ID="2" NAME="a-NH3" NEUTRAL_LOSS="NH3"/>  
   <FRAGMENTATION_SERIES ID="1" NAME="a"/>
-  <FRAGMENTATION_SERIES ID="2" NAME="a-NH3" NEUTRAL_LOSS="NH3"/>
   <FRAGMENTATION_SERIES ID="3" NAME="a-H2O" NEUTRAL_LOSS="H2O"/>
   <FRAGMENTATION_SERIES ID="4" NAME="b"/>
   <FRAGMENTATION_SERIES ID="5" NAME="b-NH3" NEUTRAL_LOSS="NH3"/>
@@ -103,12 +103,12 @@
   <FRAGMENTATION_SERIES ID="18" NAME="ya"/>
   <FRAGMENTATION_SERIES ID="19" NAME="yb"/>
   <FRAGMENTATION_SERIES ID="20" NAME="immonium"/>
+  <FRAGMENTATION_RULE ID="6" DESCRIPTION="a - NH3 if a significant and fragment includes RKNQ" FRAGMENT_RESIDUE_CONSTRAINT="RKNQ" REQUIRED_SERIES_QUALITY_LEVEL="significant" FRAGMENT_SERIES_ID="2" REQUIRED_SERIES_ID="1"/>  
   <FRAGMENTATION_RULE ID="1" DESCRIPTION="singly charged" FRAGMENT_CHARGE="1"/>
   <FRAGMENTATION_RULE ID="2" DESCRIPTION="doubly charged if precursor 2+ or higher (not internal or immonium)" PRECURSOR_MIN_CHARGE="2" FRAGMENT_CHARGE="2"/>
   <FRAGMENTATION_RULE ID="3" DESCRIPTION="doubly charged if precursor 3+ or higher (not internal or immonium)" PRECURSOR_MIN_CHARGE="3" FRAGMENT_CHARGE="2"/>
   <FRAGMENTATION_RULE ID="4" DESCRIPTION="immonium" FRAGMENT_SERIES_ID="20"/>
   <FRAGMENTATION_RULE ID="5" DESCRIPTION="a series" FRAGMENT_SERIES_ID="1"/>
-  <FRAGMENTATION_RULE ID="6" DESCRIPTION="a - NH3 if a significant and fragment includes RKNQ" FRAGMENT_RESIDUE_CONSTRAINT="RKNQ" REQUIRED_SERIES_QUALITY_LEVEL="significant" FRAGMENT_SERIES_ID="2" REQUIRED_SERIES_ID="1"/>
   <FRAGMENTATION_RULE ID="7" DESCRIPTION="a - H2O if a significant and fragment includes STED" FRAGMENT_RESIDUE_CONSTRAINT="STED" REQUIRED_SERIES_QUALITY_LEVEL="significant" FRAGMENT_SERIES_ID="3" REQUIRED_SERIES_ID="1"/>
   <FRAGMENTATION_RULE ID="8" DESCRIPTION="b series" FRAGMENT_SERIES_ID="4"/>
   <FRAGMENTATION_RULE ID="9" DESCRIPTION="b - NH3 if b significant and fragment includes RKNQ" FRAGMENT_RESIDUE_CONSTRAINT="RKNQ" REQUIRED_SERIES_QUALITY_LEVEL="significant" FRAGMENT_SERIES_ID="5" REQUIRED_SERIES_ID="4"/>
@@ -284,11 +284,11 @@
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="12" FRAGMENTATION_RULE_ID="13"/>
   <INSTRUMENT_CONFIG_FRAGMENTATION_RULE_MAP INSTRUMENT_CONFIG_ID="12" FRAGMENTATION_RULE_ID="25"/>
   <MASTER_QUANT_CHANNEL/>
+  <SPEC_TITLE_PARSING_RULE ID="5" RAW_FILE_IDENTIFIER="\[(.+?)\]" FIRST_SCAN="in range (\d+) \(rt=||Scan (\d+) \(rt=" LAST_SCAN="\) to (\d+) \(rt=||Scan (\d+) \(rt=" FIRST_TIME="in range \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)" LAST_TIME="\) to \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)"/>  
   <SPEC_TITLE_PARSING_RULE ID="1" RAW_FILE_IDENTIFIER="(.+)\.\d+\.\d+\.\d+\.dta" FIRST_SCAN=".+\.(\d+)\.\d+\.\d+\.dta" LAST_SCAN=".+\.\d+\.(\d+)\.\d+\.dta"/>
   <SPEC_TITLE_PARSING_RULE ID="2" FIRST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min"/>
   <SPEC_TITLE_PARSING_RULE ID="3" FIRST_SCAN="Cmpd.+MS\d.+, \d+\.\d+ min #(\d+)" LAST_SCAN="Cmpd.+MS\d.+, \d+\.\d+ min #(\d+)" FIRST_TIME="Cmpd.+MS\d.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MS\d.+, (\d+\.\d+) min"/>
   <SPEC_TITLE_PARSING_RULE ID="4" RAW_FILE_IDENTIFIER="^File: (.+?)," FIRST_CYCLE="Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): (\d+), \d+" LAST_CYCLE="Cycle\(s\): (\d+) \(Experiment \d+\)||Cycle\(s\): \d+, (\d+)" FIRST_TIME="Elution: (.+?) to .+? min||Elution: (.+?) min" LAST_TIME="Elution: .+? to (.+?) min||Elution: (.+?) min"/>
-  <SPEC_TITLE_PARSING_RULE ID="5" RAW_FILE_IDENTIFIER="\[(.+?)\]" FIRST_SCAN="in range (\d+) \(rt=||Scan (\d+) \(rt=" LAST_SCAN="\) to (\d+) \(rt=||Scan (\d+) \(rt=" FIRST_TIME="in range \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)" LAST_TIME="\) to \d+ \(rt=(\d+.\d+)\)||\(rt=(\d+.\d+)\)"/>
   <SPEC_TITLE_PARSING_RULE ID="6" RAW_FILE_IDENTIFIER="^RawFile: (.+?) FinneganScanNumber:" FIRST_SCAN="FinneganScanNumber: (\d+)" LAST_SCAN="FinneganScanNumber: (\d+)"/>
   <SPEC_TITLE_PARSING_RULE ID="7" RAW_FILE_IDENTIFIER="raw_file_identifier:(.+);" FIRST_CYCLE="first_cycle:(.+);" LAST_CYCLE="last_cycle:(.+);" FIRST_SCAN="first_scan:(.+);" LAST_SCAN="last_scan:(.+);" FIRST_TIME="first_time:(.+);" LAST_TIME="last_time:(.+);"/>
   <SPEC_TITLE_PARSING_RULE ID="8" RAW_FILE_IDENTIFIER="File:&quot;(\w+)\.wiff&quot;" FIRST_CYCLE="Locus:\d\.\d\.\d\.(\d+)\.\d+ File:" LAST_CYCLE="Locus:\d\.\d\.\d\.(\d+)\.\d+ File:"/>
@@ -297,8 +297,8 @@
   <SPEC_TITLE_PARSING_RULE ID="11" RAW_FILE_IDENTIFIER="(.+)\.\d+\.\d+\.\d+$" FIRST_SCAN=".+\.(\d+)\.\d+\.\d+$" LAST_SCAN=".+\.\d+\.(\d+)\.\d+$"/>
   <SPEC_TITLE_PARSING_RULE ID="12" RAW_FILE_IDENTIFIER="File:&quot;(.+?)&quot;," FIRST_SCAN="scan=(\d+)" LAST_SCAN="scan=(\d+)"/>
   <SPEC_TITLE_PARSING_RULE ID="13" FIRST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min"/>
-  <PEAKLIST_SOFTWARE ID="1" NAME="extract_msn.exe" SPEC_TITLE_PARSING_RULE_ID="1"/>
   <PEAKLIST_SOFTWARE ID="2" NAME="Data Analysis" VERSION="4.0" SPEC_TITLE_PARSING_RULE_ID="2"/>
+  <PEAKLIST_SOFTWARE ID="1" NAME="extract_msn.exe" SPEC_TITLE_PARSING_RULE_ID="1"/>
   <PEAKLIST_SOFTWARE ID="3" NAME="Data Analysis" VERSION="4.1" SPEC_TITLE_PARSING_RULE_ID="3"/>
   <PEAKLIST_SOFTWARE ID="4" NAME="mascot.dll" SPEC_TITLE_PARSING_RULE_ID="4"/>
   <PEAKLIST_SOFTWARE ID="5" NAME="Mascot Distiller" SPEC_TITLE_PARSING_RULE_ID="5"/>

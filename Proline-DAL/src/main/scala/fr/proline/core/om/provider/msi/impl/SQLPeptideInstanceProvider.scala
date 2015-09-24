@@ -1,6 +1,6 @@
 package fr.proline.core.om.provider.msi.impl
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy.EasyDBC
 import fr.profi.util.primitives._
@@ -18,7 +18,7 @@ import fr.proline.repository.ProlineDatabaseType
 class SQLPeptideInstanceProvider(
   val msiDbCtx: DatabaseConnectionContext,
   var peptideProvider: IPeptideProvider
-) extends IPeptideInstanceProvider with Logging {
+) extends IPeptideInstanceProvider with LazyLogging {
   
   require( msiDbCtx.getProlineDatabaseType == ProlineDatabaseType.MSI, "MsiDb connection required")
   

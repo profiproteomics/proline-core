@@ -4,7 +4,7 @@ import org.junit.After
 import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
@@ -19,7 +19,7 @@ import fr.proline.core.om.model.msq.ExperimentalDesign2
 import fr.proline.core.orm.uds.Project
 import fr.proline.core.orm.uds.UserAccount
 
-object CreateSCQuantitationTest extends AbstractEmptyDatastoreTestCase with Logging {
+object CreateSCQuantitationTest extends AbstractEmptyDatastoreTestCase with StrictLogging {
   
   // Define the required parameters
   val driverType = DriverType.H2
@@ -27,7 +27,7 @@ object CreateSCQuantitationTest extends AbstractEmptyDatastoreTestCase with Logg
   
 }
 
-class CreateSCQuantitationTest extends Logging {
+class CreateSCQuantitationTest extends StrictLogging {
   
   val executionContext = CreateSCQuantitationTest.executionContext
   require( executionContext != null, "executionContext is null")

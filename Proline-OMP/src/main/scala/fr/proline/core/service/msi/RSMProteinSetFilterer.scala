@@ -1,6 +1,6 @@
 package fr.proline.core.service.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.api.service.IService
 import fr.proline.core.algo.msi.filtering.IProteinSetFilter
 import fr.proline.context.IExecutionContext
@@ -66,7 +66,7 @@ class RSMProteinSetFilterer (
 	execCtx: IExecutionContext,
 	targetRsm: ResultSummary, 
 	protSetFilters: Seq[IProteinSetFilter] 
-) extends IService with Logging {
+) extends IService with LazyLogging {
   
    val msiEM = execCtx.getMSIDbConnectionContext().getEntityManager()
 	

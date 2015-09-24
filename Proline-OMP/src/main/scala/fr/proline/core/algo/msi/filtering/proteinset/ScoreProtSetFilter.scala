@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi.filtering.proteinset
 
 import scala.collection.mutable.HashMap
 import scala.collection.Seq
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.core.algo.msi.filtering._
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
@@ -15,7 +15,7 @@ object ScoreProtSetFilter {
 
 class ScoreProtSetFilter(
   var scoreThreshold: Float = ScoreProtSetFilter.thresholdStartValue
-) extends IOptimizableProteinSetFilter with Logging {
+) extends IOptimizableProteinSetFilter with LazyLogging {
 
   val filterParameter = ProtSetFilterParams.SCORE.toString
   val filterDescription = "protein set score filter"

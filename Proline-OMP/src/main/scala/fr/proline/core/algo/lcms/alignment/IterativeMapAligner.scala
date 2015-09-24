@@ -1,9 +1,9 @@
 package fr.proline.core.algo.lcms.alignment
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.lcms.AlignmentParams
 
-class IterativeMapAligner extends ILcmsMapAligner with Logging {
+class IterativeMapAligner extends ILcmsMapAligner with LazyLogging {
 
   import fr.proline.core.om.model.lcms._
   import fr.profi.util.math.getMedianObject

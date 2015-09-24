@@ -5,7 +5,7 @@ import scala.Array.canBuildFrom
 import org.junit.Assert
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.profi.util.primitives.toInt
 import fr.proline.core.algo.msi.DbUnitResultFileLoading
@@ -27,7 +27,7 @@ import fr.proline.repository.DriverType
 
 
 
-object RSMProtSetFiltererF136482Test extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with Logging {
+object RSMProtSetFiltererF136482Test extends AbstractEmptyDatastoreTestCase with DbUnitResultFileLoading with StrictLogging {
 
   val driverType = DriverType.H2
   val dbUnitResultFile = STR_F136482_CTD
@@ -47,7 +47,7 @@ object RSMProtSetFiltererF136482Test extends AbstractEmptyDatastoreTestCase with
   
 }
 
-class RSMProtSetFiltererF136482Test extends Logging {
+class RSMProtSetFiltererF136482Test extends StrictLogging {
   
   protected val DEBUG_TESTS = false
   val targetRS = RSMProtSetFiltererF136482Test.getRS

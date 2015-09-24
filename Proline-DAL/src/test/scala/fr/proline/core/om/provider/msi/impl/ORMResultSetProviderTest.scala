@@ -7,7 +7,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -16,7 +16,7 @@ import fr.proline.repository.DriverType
 import fr.proline.repository.util.JDBCWork
 
 @Test
-class ORMResultSetProviderTest extends AbstractMultipleDBTestCase with Logging  {
+class ORMResultSetProviderTest extends AbstractMultipleDBTestCase with StrictLogging  {
   
   val driverType = DriverType.H2
   val fileName = "STR_F063442_F122817_MergedRSMs"

@@ -2,7 +2,7 @@ package fr.proline.core.service.msq.quantify
 
 import fr.profi.util.primitives._
 import fr.proline.core.util.ResidueUtils._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -71,7 +71,7 @@ import fr.proline.core.orm.msi.PeptideMatchRelationPK
 class WeightedSpectralCountQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
-  val scConfig: SpectralCountConfig) extends AbstractMasterQuantChannelQuantifier with Logging {
+  val scConfig: SpectralCountConfig) extends AbstractMasterQuantChannelQuantifier with LazyLogging {
 
   protected val msiMasterPepInstByMergedPepInstId = new HashMap[Long, MsiPeptideInstance]
   protected val msiMasterProtSetByMergedProtSetId = new HashMap[Long, MsiProteinSet]

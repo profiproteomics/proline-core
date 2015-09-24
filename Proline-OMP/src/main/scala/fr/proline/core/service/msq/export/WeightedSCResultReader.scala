@@ -4,7 +4,7 @@ import java.sql.Connection
 
 import scala.collection.mutable.ArrayBuffer
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
@@ -17,7 +17,7 @@ import fr.proline.repository.util.JDBCWork
 
 class WeightedSCResultReader (
     execCtx: IExecutionContext, 
-    datasetId : Long ) extends IService with Logging {
+    datasetId : Long ) extends IService with LazyLogging {
 
   	/**
  	* "{"spectral_count_result":{[ 

@@ -7,7 +7,7 @@ import org.junit.Assert._
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.core.algo.msi.filtering.proteinset.SpecificPeptidesPSFilter
 import fr.proline.core.algo.msi.inference.ParsimoniousProteinSetInferer
@@ -17,7 +17,7 @@ import fr.proline.core.om.model.msi.ProteinMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.util.generator.msi.ResultSetFakeGenerator
 
-class SpecificPeptidePSFilterTest extends JUnitSuite with Logging {
+class SpecificPeptidePSFilterTest extends JUnitSuite with StrictLogging {
 
   val ppsi = new ParsimoniousProteinSetInferer()
 

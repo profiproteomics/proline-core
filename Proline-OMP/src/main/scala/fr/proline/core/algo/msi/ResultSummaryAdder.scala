@@ -1,6 +1,6 @@
 package fr.proline.core.algo.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.core.algo.msi.scoring.IPeptideSetScoreUpdater
 import fr.proline.core.om.model.msi._
@@ -10,7 +10,7 @@ class ResultSummaryAdder(
   val isDecoy: Boolean = false,
   pepSetScoreUpdater: IPeptideSetScoreUpdater,
   seqLengthByProtId: Option[Map[Long, Int]] = None
-) extends Logging {
+) extends LazyLogging {
 
   val isValidatedContent = true // the method getValidatedResultSet is called in addResultSummary
   val rsAdder = new ResultSetAdder(resultSetId, isValidatedContent, isDecoy, seqLengthByProtId)

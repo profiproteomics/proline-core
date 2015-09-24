@@ -1,14 +1,14 @@
 package fr.proline.core.algo.lcms.alignment
 
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.lcms.AlignmentParams
 import fr.proline.core.algo.lcms.FeatureMappingParams
 import fr.proline.core.om.model.lcms._
 
 case class AlignmentResult( alnRefMapId: Long, mapAlnSets: Array[MapAlignmentSet] )
 
-trait ILcmsMapAligner extends Logging {
+trait ILcmsMapAligner extends LazyLogging {
   
   import scala.collection.mutable.ArrayBuffer
   import fr.proline.core.algo.lcms.AlnSmoother

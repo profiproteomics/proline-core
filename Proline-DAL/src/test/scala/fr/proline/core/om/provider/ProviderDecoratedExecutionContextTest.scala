@@ -4,7 +4,7 @@ import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideMatchProvider
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -12,7 +12,7 @@ import fr.proline.repository.DriverType
 import fr.proline.core.dal.ContextFactory
 
 @Test
-class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase with Logging {
+class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase with StrictLogging {
 
   @Before
   def initTests() = {

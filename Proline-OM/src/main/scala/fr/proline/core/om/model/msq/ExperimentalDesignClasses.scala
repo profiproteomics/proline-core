@@ -128,6 +128,8 @@ case class MasterQuantChannel(
   val number: Int,
   val name: Option[String] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
+  val quantResultSummaryId: Option[Long] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val lcmsMapSetId: Option[Long] = None,
   val quantChannels: Array[QuantChannel]
 )

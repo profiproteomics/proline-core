@@ -18,10 +18,10 @@ import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.context.DatabaseConnectionContext
 import org.junit.Ignore
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 @Test
-class ORMPeptideProviderTest extends DatabaseTestCase with Logging {
+class ORMPeptideProviderTest extends DatabaseTestCase with StrictLogging {
 
   private val SEQ_TO_FOUND: String = "LTGMAFR"
 

@@ -1,7 +1,7 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
@@ -34,7 +34,7 @@ class ResultFileImporter(
   peaklistSoftwareId: Long,
   importerProperties: Map[String, Any],
   acDecoyRegex: Option[util.matching.Regex] = None,
-  saveSpectrumMatch: Boolean = false) extends IService with Logging {
+  saveSpectrumMatch: Boolean = false) extends IService with LazyLogging {
 
   private var targetResultSetId: Long = 0L
 

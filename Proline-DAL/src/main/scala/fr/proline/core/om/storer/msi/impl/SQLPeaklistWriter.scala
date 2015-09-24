@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.msi.impl
 
 import java.sql.Connection
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
@@ -19,7 +19,7 @@ import fr.profi.util.bytes._
 
 object SQLPeaklistWriter extends AbstractSQLPeaklistWriter
 
-abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with Logging {
+abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLogging {
 
   val compressionAlgo = "none" //none | lzma | xz | snappy => TODO: create an enumeration near to the Peaklist class
 

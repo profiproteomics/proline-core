@@ -1,7 +1,7 @@
 package fr.proline.core.algo.msi.filtering.proteinset
 
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives.toInt
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 import fr.proline.core.algo.msi.filtering.IProteinSetFilter
@@ -9,7 +9,7 @@ import fr.proline.core.algo.msi.filtering.ProtSetFilterParams
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.core.algo.msi.filtering.ProteinSetFiltering
 
-class PeptidesCountPSFilter( var minNbrPep: Int = 1) extends IProteinSetFilter with Logging {
+class PeptidesCountPSFilter( var minNbrPep: Int = 1) extends IProteinSetFilter with LazyLogging {
 
   val filterParameter = ProtSetFilterParams.PEP_COUNT.toString
   val filterDescription = "protein set filter on  peptide count"

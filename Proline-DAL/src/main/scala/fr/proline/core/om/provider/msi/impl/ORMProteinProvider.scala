@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.JavaConversions.{ collectionAsScalaIterable, seqAsJavaList }
 import scala.collection.Seq
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ Protein, SeqDatabase }
@@ -17,7 +17,7 @@ import fr.proline.core.orm.pdi.repository.{ PdiBioSequenceRepository => bioSeqRe
  *
  * Specified EntityManager should be a PDIdb EntityManager
  */
-class ORMProteinProvider(val pdiDbCtx: DatabaseConnectionContext) extends IProteinProvider with Logging {
+class ORMProteinProvider(val pdiDbCtx: DatabaseConnectionContext) extends IProteinProvider with LazyLogging {
 
   val converter = new ProteinsOMConverterUtil(true)
 

@@ -5,7 +5,7 @@ import org.junit.Assert._
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ProteinMatch
@@ -20,7 +20,7 @@ import fr.profi.util.StringUtils
 import fr.proline.context.DatabaseConnectionContext
 
 @Test
-class JPARsStorerTest extends AbstractMultipleDBTestCase with Logging {
+class JPARsStorerTest extends AbstractMultipleDBTestCase with StrictLogging {
 
   val milliToNanos = 1000000L
 

@@ -3,7 +3,7 @@ package fr.proline.core.service.msi
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.proline.api.service.IService
 import fr.proline.context._
@@ -48,7 +48,7 @@ object ResultSummaryMerger {
 class ResultSummaryMerger(
   execCtx: IExecutionContext,
   resultSummaryIds: Option[Seq[Long]],
-  resultSummaries: Option[Seq[ResultSummary]]) extends IService with Logging {
+  resultSummaries: Option[Seq[ResultSummary]]) extends IService with LazyLogging {
 
   var mergedResultSummary: ResultSummary = null
 

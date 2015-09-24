@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.ps
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.PreparedStatementWrapper
@@ -11,7 +11,7 @@ import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.context.DatabaseConnectionContext
 
-class PeptideStorer extends Logging {
+class PeptideStorer extends LazyLogging {
 
   def storePeptides(peptides: Seq[Peptide], psDbCtx: DatabaseConnectionContext): Unit = {
 

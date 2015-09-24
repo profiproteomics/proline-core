@@ -5,14 +5,14 @@ import org.junit.Assert.assertEquals
 import org.junit.BeforeClass
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
 
-object MsiDbHelperTest extends DatabaseTestCase with Logging {
+object MsiDbHelperTest extends DatabaseTestCase with StrictLogging {
 
   override def getProlineDatabaseType() = ProlineDatabaseType.MSI
 

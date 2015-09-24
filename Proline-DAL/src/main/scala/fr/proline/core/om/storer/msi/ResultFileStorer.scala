@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.algo.msi.IResultSetSplitter
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.IResultFile
@@ -16,7 +16,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
  * @author David Bouyssie
  *
  */
-object ResultFileStorer extends Logging {
+object ResultFileStorer extends LazyLogging {
 
   /**
    * Store the IResultFile in current MSI db.

@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi.filtering.pepmatch
 
 import scala.collection.mutable.HashMap
 import scala.collection.Seq
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.algo.msi.filtering._
 import fr.profi.util.primitives._
@@ -52,7 +52,7 @@ object RankPSMFilter {
  * Constructor pepMatchRank specifies rank to consider : all PSM of rank higher than specified one will be excluded 
  * 
  */
-class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter with IPeptideMatchSorter with Logging {
+class RankPSMFilter( var pepMatchMaxRank: Int = 1 ) extends IPeptideMatchFilter with IPeptideMatchSorter with LazyLogging {
   
   val filterParameter = PepMatchFilterParams.RANK.toString
   val filterDescription = "peptide match rank filter"

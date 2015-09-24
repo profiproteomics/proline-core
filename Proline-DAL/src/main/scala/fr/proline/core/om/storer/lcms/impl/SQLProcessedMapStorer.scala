@@ -1,7 +1,7 @@
 package fr.proline.core.om.storer.lcms.impl
 
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._
 import fr.profi.jdbc.StatementWrapper
@@ -18,7 +18,7 @@ import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.ProcessedMap
 import fr.proline.core.om.storer.lcms.IProcessedMapStorer
 
-class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRawMapStorer(lcmsDbCtx) with IProcessedMapStorer with Logging {
+class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRawMapStorer(lcmsDbCtx) with IProcessedMapStorer with LazyLogging {
   
   def storeProcessedMap( processedMap: ProcessedMap, storeClusters: Boolean = true ): Unit = {    
       

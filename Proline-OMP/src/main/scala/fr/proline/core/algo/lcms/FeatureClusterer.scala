@@ -1,6 +1,6 @@
 package fr.proline.core.algo.lcms
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.lcms._
 import fr.profi.util.ms._
@@ -17,7 +17,7 @@ object ClusterTimeComputation extends Enumeration {
   val MEDIAN = Value("MEDIAN")
 }
 
-object ClusterizeFeatures extends Logging {
+object ClusterizeFeatures extends LazyLogging {
   
   val ftMozSortingFunc = new Function2[Feature, Feature, Boolean] {
     def apply(a: Feature, b: Feature): Boolean = if (a.moz < b.moz) true else false
@@ -157,7 +157,7 @@ class FeatureClusterer(
   lcmsMap: ILcMsMap,
   scans: Seq[LcMsScan],
   params: ClusteringParams
-) extends Logging {
+) extends LazyLogging {
   
   private val( rawMapId, procMapId ) = lcmsMap match {
     case procMap: ProcessedMap => (0L,procMap.id)

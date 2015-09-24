@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi
 
 import scala.collection.mutable.{ ArrayBuffer, HashMap, HashSet }
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils.isEmpty
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
@@ -19,7 +19,7 @@ class ResultSetAdder(
   seqLengthByProtId: Option[Map[Long, Int]] = None,
   val additionMode: AdditionMode.Value = AdditionMode.AGGREGATE,
   val clonePeptideMatches: Boolean = true
-) extends Logging {
+) extends LazyLogging {
 
   private val protMatchAdderByKey = new HashMap[String, ProteinMatchAdder]()
   private val pepMatchAdderByPeptideId = new HashMap[Long, IPeptideMatchAdder]()

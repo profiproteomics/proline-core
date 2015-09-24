@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi
 
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -21,7 +21,7 @@ import fr.proline.repository.DriverType
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 
-abstract class AbstractResultSummaryTestCase extends AbstractMultipleDBTestCase with Logging {
+abstract class AbstractResultSummaryTestCase extends AbstractMultipleDBTestCase with StrictLogging {
 
   // Define the interface to be implemented
   val driverType: DriverType

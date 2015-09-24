@@ -4,7 +4,7 @@ import org.junit.Assert._
 import org.junit.Ignore
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.filtering.IPeptideMatchSorter
 import fr.proline.core.om.model.msi.ResultSet
@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msi.ResultSetProperties
 import org.junit.Before
 
 @Test
-class TargetDecoyAnalyzersTest extends JUnitSuite with Logging {
+class TargetDecoyAnalyzersTest extends JUnitSuite with StrictLogging {
 
   var rs: ResultSet = null
   var rsDecoy: ResultSet = null

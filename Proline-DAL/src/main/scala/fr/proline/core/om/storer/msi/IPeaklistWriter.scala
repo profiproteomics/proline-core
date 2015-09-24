@@ -1,6 +1,6 @@
 package fr.proline.core.om.storer.msi
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.core.om.model.msi.{Peaklist,IPeaklistContainer}
 import fr.proline.core.om.storer.msi.impl.StorerContext
@@ -14,7 +14,7 @@ import fr.proline.core.om.storer.msi.impl.PgPeaklistWriter
  *  - Spectra 
  * 
  */
-trait IPeaklistWriter extends Logging {
+trait IPeaklistWriter extends LazyLogging {
   
   /**
    * Specific implementation of IRsStorer storePeaklist method: 

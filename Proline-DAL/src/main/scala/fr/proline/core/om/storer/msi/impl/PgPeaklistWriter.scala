@@ -2,7 +2,7 @@ package fr.proline.core.om.storer.msi.impl
 
 import org.postgresql.core.Utils
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.dal.DoJDBCWork
@@ -18,7 +18,7 @@ import fr.profi.util.primitives._
  * @author David Bouyssie
  *
  */
-object PgPeaklistWriter extends AbstractSQLPeaklistWriter with Logging {
+object PgPeaklistWriter extends AbstractSQLPeaklistWriter with LazyLogging {
   
   import org.postgresql.core.Utils
  

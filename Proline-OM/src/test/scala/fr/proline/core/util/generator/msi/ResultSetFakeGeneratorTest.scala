@@ -2,11 +2,11 @@ package fr.proline.core.util.generator.msi
 
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.om.model.msi.ResultSet
 
 @Test
-class ResultSetFakeGeneratorTest extends JUnitSuite with Logging {
+class ResultSetFakeGeneratorTest extends JUnitSuite with StrictLogging {
 
   @Test
   def simpleResultSet() = {

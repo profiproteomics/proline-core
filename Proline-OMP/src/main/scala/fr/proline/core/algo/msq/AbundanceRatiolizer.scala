@@ -1,7 +1,5 @@
 package fr.proline.core.algo.msq
 
-import org.apache.commons.math3.stat.descriptive.StatisticalSummary
-
 object AbundanceRatioState extends Enumeration {
   val OverAbundant = Value(1)
   val UnderAbundant = Value(-1)
@@ -10,14 +8,15 @@ object AbundanceRatioState extends Enumeration {
 
 case class AverageAbundanceRatio(
   val entityId: Long,
-  val numeratorSummary: StatisticalSummary,
-  val denominatorSummary: StatisticalSummary,
+  val numeratorSummary: ExtendedStatisticalSummary,
+  val denominatorSummary: ExtendedStatisticalSummary,
   val numeratorPsmCounts: Array[Int],
   val denominatorPsmCounts: Array[Int]
 ) {
   
-  def numeratorMean = numeratorSummary.getMean()
-  def denominatorMean = denominatorSummary.getMean()
+  // TODO: parameterize the use of mean/median
+  def numerator = numeratorSummary.getMedian()
+  def denominator = denominatorSummary.getMedian()
   
   def this(
     entityId: Long,
@@ -28,27 +27,27 @@ case class AverageAbundanceRatio(
   ) {    
     this(
       entityId,
-      CommonsStatHelper.calcStatSummary(numeratorValues),
-      CommonsStatHelper.calcStatSummary(denominatorValues),
+      CommonsStatHelper.calcExtendedStatSummary(numeratorValues),
+      CommonsStatHelper.calcExtendedStatSummary(denominatorValues),
       numeratorPsmCount,
       denominatorPsmCount
     )
   }
   
-  lazy val maxAbundance = math.max(numeratorMean,denominatorMean)
+  lazy val maxAbundance = math.max(numerator,denominator)
   
   lazy val ratioValue: Option[Float] = {
-    if( numeratorMean > 0 && denominatorMean > 0 ) Some( (numeratorMean / denominatorMean).toFloat )
+    if( numerator > 0 && denominator > 0 ) Some( (numerator / denominator).toFloat )
     else None
   }
   
   lazy val foldValue: Option[Float] = {
     
-    if( numeratorMean > 0 && denominatorMean > 0 ) {
-      if( numeratorMean > denominatorMean )
-        Some( (numeratorMean / denominatorMean).toFloat )
+    if( numerator > 0 && denominator > 0 ) {
+      if( numerator > denominator )
+        Some( (numerator / denominator).toFloat )
       else
-        Some( (denominatorMean / numeratorMean).toFloat )
+        Some( (denominator / numerator).toFloat )
     } else None
     
   }
@@ -70,7 +69,7 @@ object AbundanceRatiolizer {
     
     val pValueThreshold = config.statTestsAlpha
     val minZScore = config.minZScore
-    val minPsmCountPerGroup = config.minPsmCountPerGroup
+    val minPsmCountPerRatio = config.minPsmCountPerRatio
     val applyVarianceCorrection = config.applyVarianceCorrection
     val applyTTest = config.applyTTest
     val applyZTest = config.applyZTest
@@ -79,13 +78,13 @@ object AbundanceRatiolizer {
     ratios.foreach { ratio =>
       
       // If the total number of PSM per group is too low
-      if( ratio.numeratorPsmCounts.sum < minPsmCountPerGroup && ratio.denominatorPsmCounts.sum < minPsmCountPerGroup ) {
+      if( ratio.numeratorPsmCounts.sum < minPsmCountPerRatio && ratio.denominatorPsmCounts.sum < minPsmCountPerRatio ) {
         ratio.state = None
       }
       // Else if we don't have a fold value
       else if( ratio.foldValue.isEmpty ) {
-        if( ratio.numeratorMean > 0 ) ratio.state = Some(AbundanceRatioState.OverAbundant)
-        else if ( ratio.denominatorMean > 0 ) ratio.state = Some(AbundanceRatioState.UnderAbundant)
+        if( ratio.numerator > 0 ) ratio.state = Some(AbundanceRatioState.OverAbundant)
+        else if ( ratio.denominator > 0 ) ratio.state = Some(AbundanceRatioState.UnderAbundant)
         else ratio.state = None
       }
       // Else if we have a valid ratio
@@ -126,7 +125,7 @@ object AbundanceRatiolizer {
         
         // Check the pValue of T-Test and Z-Test
         if( ratio.tTestPValue.getOrElse(0.0) <= pValueThreshold && iZScoreOK ) { // ratio.zTestPValue.getOrElse(0.0) <= pValueThreshold
-          if( ratio.numeratorMean > ratio.denominatorMean ) ratio.state = Some(AbundanceRatioState.OverAbundant)
+          if( ratio.numerator > ratio.denominator ) ratio.state = Some(AbundanceRatioState.OverAbundant)
           else ratio.state = Some(AbundanceRatioState.UnderAbundant)
         } else {
           ratio.state = Some(AbundanceRatioState.Invariant)

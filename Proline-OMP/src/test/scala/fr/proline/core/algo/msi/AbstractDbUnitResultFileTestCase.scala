@@ -2,7 +2,7 @@ package fr.proline.core.algo.msi
 
 import org.junit.BeforeClass
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
@@ -32,7 +32,7 @@ abstract class AbstractDbUnitResultFileTestCase extends AbstractEmptyDatastoreTe
   
 }
 
-trait DbUnitResultFileLoading extends Logging {
+trait DbUnitResultFileLoading extends StrictLogging {
 
   // Define the interface to be implemented
   val driverType: DriverType

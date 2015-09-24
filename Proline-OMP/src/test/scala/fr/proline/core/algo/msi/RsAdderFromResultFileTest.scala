@@ -3,7 +3,7 @@ package fr.proline.core.algo.msi
 import org.junit.Assert._
 import org.junit.BeforeClass
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
@@ -11,8 +11,8 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.service.msi.ResultSetValidator
 
-/*//object RsAdderFromResultFileTest extends AbstractResultSetTestCase with Logging {
-object RsAdderFromResultFileTest extends AbstractDbUnitResultFileTestCase with Logging {
+/*//object RsAdderFromResultFileTest extends AbstractResultSetTestCase with StrictLogging {
+object RsAdderFromResultFileTest extends AbstractDbUnitResultFileTestCase with StrictLogging {
 
   // Define the interface to be implemented
   val driverType = DriverType.H2
@@ -22,7 +22,7 @@ object RsAdderFromResultFileTest extends AbstractDbUnitResultFileTestCase with L
   
 }*/
 
-object RsAdderFromResultFileTest extends Logging {
+object RsAdderFromResultFileTest extends StrictLogging {
   
   var readRS: ResultSet = null
   
@@ -33,7 +33,7 @@ object RsAdderFromResultFileTest extends Logging {
 
 }
 
-class RsAdderFromResultFileTest extends Logging with RsAdderFromResultFileTesting {
+class RsAdderFromResultFileTest extends StrictLogging with RsAdderFromResultFileTesting {
   
   val executionContext = STR_F122817_Mascot_v2_3_TEST_CASE.executionContext
   require( executionContext != null, "executionContext is null" )

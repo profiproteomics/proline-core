@@ -3,7 +3,7 @@ package fr.proline.core.om.provider.msi.impl
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters.asJavaCollectionConverter
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.{ PtmDefinition, PtmLocation }
@@ -15,7 +15,7 @@ import fr.proline.core.util.ResidueUtils._
 
 import fr.proline.core.util.ResidueUtils._
 
-class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider with Logging {
+class ORMPTMProvider(val psDbCtx: DatabaseConnectionContext) extends IPTMProvider with LazyLogging {
 
   val converter = new PeptidesOMConverterUtil(true)
 
