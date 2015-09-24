@@ -11,6 +11,7 @@ import fr.proline.core.om.storer.lcms.MapAlnSetStorer
 import fr.proline.core.service.lcms._
 import fr.proline.repository.IDatabaseConnector
 import fr.proline.core.algo.lcms.alignment.AlignmentResult
+import com.typesafe.scalalogging.LazyLogging
 
 object AlignMapSet {
 
