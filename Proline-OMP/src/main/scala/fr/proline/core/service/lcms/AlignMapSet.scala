@@ -10,7 +10,6 @@ import fr.proline.core.om.model.lcms.MapSet
 import fr.proline.core.om.storer.lcms.MapAlnSetStorer
 import fr.proline.core.service.lcms._
 import fr.proline.repository.IDatabaseConnector
-import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.lcms.alignment.AlignmentResult
 
 object AlignMapSet {
@@ -30,7 +29,7 @@ class AlignMapSet(
   val lcmsDbCtx: DatabaseConnectionContext,
   mapSet: MapSet, 
   alnResult: AlignmentResult
-) extends ILcMsService with Logging {
+) extends ILcMsService with LazyLogging {
 
   def runService(): Boolean = {
     
