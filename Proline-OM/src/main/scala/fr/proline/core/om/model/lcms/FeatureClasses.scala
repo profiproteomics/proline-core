@@ -68,16 +68,16 @@ case class Peakel(
   
 ) extends fr.profi.mzdb.model.IPeakelData with IEntityReference[Peakel] {
   
-  def getScanIds(): Seq[Long] = dataMatrix.scanIds
+  def getSpectrumIds(): Seq[Long] = dataMatrix.spectrumIds
   def getElutionTimes(): Seq[Float] = dataMatrix.elutionTimes
   def getMzValues(): Seq[Double] = dataMatrix.mzValues
   def getIntensityValues(): Seq[Float] = dataMatrix.intensityValues
   override def getNewCursor(): PeakelDataMatrixCursor = new PeakelDataMatrixCursor(dataMatrix)
   
   // Make some requirements
-  require( dataMatrix.scanIds != null && dataMatrix.scanIds.length > 0, "some scanIds must be provided" )
+  require( dataMatrix.spectrumIds != null && dataMatrix.spectrumIds.length > 0, "some scanIds must be provided" )
   require( dataMatrix.mzValues != null && dataMatrix.mzValues.length > 0, "some mzValues must be provided" )
-  require( dataMatrix.scanIds.length == dataMatrix.mzValues.length, "scanIds and mzValues must have the same size" )
+  require( dataMatrix.spectrumIds.length == dataMatrix.mzValues.length, "scanIds and mzValues must have the same size" )
   require( dataMatrix.mzValues.length == dataMatrix.intensityValues.length, "mzList and intensityList must have the same size" )
   
   // Make some requirements
@@ -87,9 +87,9 @@ case class Peakel(
   lazy val apexIndex = dataMatrix.intensityValues.zipWithIndex.maxBy(_._1)._2
   def apexIntensity: Float = dataMatrix.intensityValues(apexIndex)
   
-  def firstScanId = dataMatrix.scanIds.head
-  def lastScanId = dataMatrix.scanIds.last
-  def apexScanId = dataMatrix.scanIds(apexIndex)
+  def firstScanId = dataMatrix.spectrumIds.head
+  def lastScanId = dataMatrix.spectrumIds.last
+  def apexScanId = dataMatrix.spectrumIds(apexIndex)
   
   def getElutionStartTime(): Float = dataMatrix.elutionTimes.head  
   def getElutionStopTime(): Float = dataMatrix.elutionTimes.last

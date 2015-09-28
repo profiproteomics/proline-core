@@ -84,7 +84,7 @@ class Ms2DrivenLabelFreeFeatureQuantifier(
           val mzDbReader = new MzDbReader(mzDbFilePath, true)
           
           try {
-            val mzDbScanHeaders = mzDbReader.getMs2ScanHeaders()
+            val mzDbScanHeaders = mzDbReader.getMs2SpectrumHeaders()
             
             val mzDbScanHeadersByCycle = mzDbScanHeaders.groupBy(_.getCycle())
             for( (specId,cycle) <- incompleteShCycleBySpecId ) {

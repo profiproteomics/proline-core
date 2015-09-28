@@ -16,8 +16,8 @@ import fr.profi.ms.algo.IsotopePatternEstimator
 import fr.profi.mzdb._
 import fr.profi.mzdb.algo.IsotopicPatternScorer
 import fr.profi.mzdb.algo.feature.extraction.FeatureExtractorConfig
-import fr.profi.mzdb.io.reader.RunSliceDataProvider
-import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peak => MzDbPeak, Peakel => MzDbPeakel, PeakelBuilder, ScanHeader }
+import fr.profi.mzdb.io.reader.provider.RunSliceDataProvider
+import fr.profi.mzdb.model.{ Feature => MzDbFeature, Peak => MzDbPeak, Peakel => MzDbPeakel, PeakelBuilder, SpectrumHeader }
 import fr.profi.mzdb.model.PeakelDataMatrix
 import fr.profi.mzdb.model.PutativeFeature
 import fr.profi.mzdb.utils.ms.MsUtils
@@ -401,7 +401,7 @@ class ExtractMapSet(
     else {
 
       val mzDb = new MzDbReader(mzDbFile, true)
-      val mzDbScans = mzDb.getScanHeaders()
+      val mzDbScans = mzDb.getSpectrumHeaders()
       val scans = mzDbScans.map { mzDbScan =>
 
         val precMz = mzDbScan.getPrecursorMz
@@ -540,7 +540,7 @@ class ExtractMapSet(
             // Store orphan peakels in SQLite file
             this._storePeakels(peakelFileConnection, peakels)
 
-            (peakels, mzdbFtDetector.ms1ScanHeaderById, mzdbFtDetector.ms2ScanHeadersByCycle)
+            (peakels, mzdbFtDetector.ms1SpectrumHeaderById, mzdbFtDetector.ms2SpectrumHeadersByCycle)
           } else {
             this.logger.info("read peakels from existing file " + existingPeakelFiles(0) + " for " + mzDbFile.getName());
             // Peakel file already exists : reuse it ! 
@@ -552,7 +552,7 @@ class ExtractMapSet(
             peakelFileConnection.open(false)
             val peakels = _loadPeakels(peakelFileConnection)
 
-            (peakels, mzDb.getMs1ScanHeaders().map(sh => sh.getId.toInt -> sh).toMap, mzDb.getMs2ScanHeaders().groupBy(_.getCycle.toInt))
+            (peakels, mzDb.getMs1SpectrumHeaders().map(sh => sh.getId.toInt -> sh).toMap, mzDb.getMs2SpectrumHeaders().groupBy(_.getCycle.toInt))
           }
         }
 
@@ -560,7 +560,7 @@ class ExtractMapSet(
         this.logger.debug("linking peakels to peptides...")
         val psmByScanNumber = peptideMatchByRunIdAndScanNumber.map(_(lcMsRun.id)).getOrElse(HashMap.empty[Int, ArrayBuffer[PeptideMatch]])
 
-        val psmTupleByPeakel = new HashMap[MzDbPeakel, ArrayBuffer[(Peptide, ScanHeader, Int)]]()
+        val psmTupleByPeakel = new HashMap[MzDbPeakel, ArrayBuffer[(Peptide, SpectrumHeader, Int)]]()
 
         val scanSequence = lcMsRun.scanSequence.get
         for (detectedPeakel <- detectedPeakels) {
@@ -572,7 +572,7 @@ class ExtractMapSet(
           
           val minCycle = scanSequence.getScanAtTime(firstTime, 1).cycle
           val maxCycle = scanSequence.getScanAtTime(lastTime, 1).cycle
-          val peakelPsmTuples = new ArrayBuffer[(Peptide, ScanHeader, Int)]
+          val peakelPsmTuples = new ArrayBuffer[(Peptide, SpectrumHeader, Int)]
           
           // Find identified MS2 scans concurrent with the detected peakel
           for (
@@ -1017,7 +1017,7 @@ class ExtractMapSet(
     (x2MapSet, finalAlnResult)
   }
 
-  private def _createMzDbFeature(peakelFileConnection: SQLiteConnection, peakel: MzDbPeakel, charge: Int, isPredicted: Boolean,  ms2ScanIds: Array[Long]): MzDbFeature = {
+  private def _createMzDbFeature(peakelFileConnection: SQLiteConnection, peakel: MzDbPeakel, charge: Int, isPredicted: Boolean,  ms2SpectrumIds: Array[Long]): MzDbFeature = {
     
     val foundPeakel = this._findPeakelIsotopes(peakelFileConnection,peakel,charge)
 
@@ -1033,7 +1033,7 @@ class ExtractMapSet(
               charge = charge,
               indexedPeakels = featurePeakels.zipWithIndex,
               isPredicted = isPredicted,
-              ms2ScanIds = ms2ScanIds
+              ms2SpectrumIds = ms2SpectrumIds
             )
   }
   
@@ -1116,7 +1116,7 @@ class ExtractMapSet(
     try {
       for (peakel <- peakels) {
 
-        val scanInitialIds = peakel.getScanIds()
+        val scanInitialIds = peakel.getSpectrumIds()
         val peakelMessage = peakel.toPeakelDataMatrix()
         val peakelMessageAsBytes = org.msgpack.ScalaMessagePack.write(peakelMessage)
 
@@ -1136,12 +1136,12 @@ class ExtractMapSet(
         peakelStmt.bind(fieldNumber, peakel.rightHwhmCv); fieldNumber += 1
         peakelStmt.bind(fieldNumber, 0); fieldNumber += 1 // is_overlapping (0|1 boolean encoding)
         peakelStmt.bind(fieldNumber, 0); fieldNumber += 1 // features_count
-        peakelStmt.bind(fieldNumber, peakel.scanIds.length); fieldNumber += 1
+        peakelStmt.bind(fieldNumber, peakel.spectrumIds.length); fieldNumber += 1
         peakelStmt.bind(fieldNumber, peakelMessageAsBytes); fieldNumber += 1
         peakelStmt.bindNull(fieldNumber); fieldNumber += 1 // param_tree
         peakelStmt.bind(fieldNumber, scanInitialIds.head); fieldNumber += 1
         peakelStmt.bind(fieldNumber, scanInitialIds.last); fieldNumber += 1
-        peakelStmt.bind(fieldNumber, peakel.getApexScanId); fieldNumber += 1
+        peakelStmt.bind(fieldNumber, peakel.getApexSpectrumId); fieldNumber += 1
         peakelStmt.bind(fieldNumber, 1); fieldNumber += 1 // ms_level
         peakelStmt.bindNull(fieldNumber); // map_id
 
@@ -1297,8 +1297,8 @@ class ExtractMapSet(
       foundPeakels = foundPeakels.filter(p =>(putativePeakelIds.contains(p.id) || !assignedPeakels.contains(p.id)))
       var filteredPeakels = new ArrayBuffer[MzDbPeakel]()
       for (peakel <- foundPeakels) {
-         val slices = reader.getMsScanSlices(peakel.getApexMz-5, peakel.getApexMz+5, peakel.getApexElutionTime-0.1f, peakel.getApexElutionTime+0.1f)
-         val slice = slices.find(_.getHeader.getScanId == peakel.getApexScanId)
+         val slices = reader.getMsSpectrumSlices(peakel.getApexMz-5, peakel.getApexMz+5, peakel.getApexElutionTime-0.1f, peakel.getApexElutionTime+0.1f)
+         val slice = slices.find(_.getHeader.getSpectrumId == peakel.getApexSpectrumId)
          if (slice.isDefined) {
            val putativePatterns = IsotopicPatternScorer.calclIsotopicPatternHypotheses(slice.get.getData(), peakel.getMz, 1e6*peakel.getLeftHwhmMean/peakel.getMz)
            val bestPattern = putativePatterns.head
@@ -1427,7 +1427,7 @@ class ExtractMapSet(
       val mzdbFtX = new MzDbFeatureExtractor(mzDb, 5, 5, ftXtractConfig)
 
       this.logger.info("retrieving scan headers...")
-      val scanHeaders = mzDb.getScanHeaders()
+      val scanHeaders = mzDb.getSpectrumHeaders()
       val ms2ScanHeaders = scanHeaders.filter(_.getMsLevel() == 2)
       val pfs = new ArrayBuffer[PutativeFeature](ms2ScanHeaders.length)
 
@@ -1440,7 +1440,7 @@ class ExtractMapSet(
             id = PutativeFeature.generateNewId,
             mz = scanH.getPrecursorMz,
             charge = scanH.getPrecursorCharge,
-            scanId = scanH.getId,
+            spectrumId = scanH.getId,
             evidenceMsLevel = 2
           )
         }
@@ -1745,15 +1745,15 @@ class ExtractMapSet(
 
     // Retrieve some vars
     val lcmsScanIdByInitialId = scanSeq.scanIdByInitialId
-    val scanInitialIds = mzDbFt.getScanIds
+    val scanInitialIds = mzDbFt.getSpectrumIds
     
     // WARNING: we assume here that these methods returns the intial ID but it may change in the future
-    val apexScanInitialId = mzDbFt.getApexScanId.toInt
+    val apexScanInitialId = mzDbFt.getApexSpectrumId.toInt
     val (firstScanInitialId, lastScanInitialId) = (scanInitialIds.head.toInt, scanInitialIds.last.toInt)
     val firstLcMsScanId = lcmsScanIdByInitialId(firstScanInitialId)
     val lastLcMsScanId = lcmsScanIdByInitialId(lastScanInitialId)
     val apexLcMsScanId = lcmsScanIdByInitialId(apexScanInitialId)
-    val ms2EventIds = mzDbFt.getMs2ScanIds.map(sid => lcmsScanIdByInitialId(sid.toInt))
+    val ms2EventIds = mzDbFt.getMs2SpectrumIds.map(sid => lcmsScanIdByInitialId(sid.toInt))
     // END OF WARNING
 
     val mzDbFtBasePeakel = mzDbFt.getBasePeakel
@@ -1785,7 +1785,7 @@ class ExtractMapSet(
           // Create the peakel data matrix
           val peakelDataMatrix = new PeakelDataMatrix(
             // Convert mzDB scan IDs into LCMSdb scan ids (same warning as above)
-            scanIds = mzDbPeakel.scanIds.map( sid => lcmsScanIdByInitialId(sid.toInt) ),
+            spectrumIds = mzDbPeakel.spectrumIds.map( sid => lcmsScanIdByInitialId(sid.toInt) ),
             elutionTimes = mzDbPeakel.elutionTimes,
             mzValues = mzDbPeakel.mzValues,
             intensityValues = mzDbPeakel.intensityValues

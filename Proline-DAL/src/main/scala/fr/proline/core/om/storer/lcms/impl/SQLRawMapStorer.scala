@@ -112,7 +112,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
               0f, // peakel.fwhm,
               peakel.isOverlapping,
               peakel.featuresCount,
-              peakel.dataMatrix.scanIds.length, // number of peaks
+              peakel.dataMatrix.spectrumIds.length, // number of peaks
               peaksAsBytes,
               peakel.properties.map( ProfiJson.serialize(_) ),
               peakel.firstScanId,
