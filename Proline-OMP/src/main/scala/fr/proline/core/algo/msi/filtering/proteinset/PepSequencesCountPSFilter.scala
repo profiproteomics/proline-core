@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 
 import com.typesafe.scalalogging.LazyLogging
 
-import fr.proline.core.algo.msi.filtering.{FilterPropertyKeys, IProteinSetFilter, ProtSetFilterParams, ProteinSetFiltering}
+import fr.proline.core.algo.msi.filtering.{ FilterPropertyKeys, IProteinSetFilter, ProtSetFilterParams, ProteinSetFiltering }
 import fr.proline.core.om.model.msi.ProteinSet
 import fr.profi.util.primitives._
 
@@ -28,7 +28,6 @@ class PepSequencesCountPSFilter(
     minNbrSeq = toInt(currentVal)
   }
 
-
   // IProteinSetFilter  methods   
   def filterProteinSets(protSets: Seq[ProteinSet], incrementalValidation: Boolean, traceability: Boolean): Unit = {
 
@@ -38,17 +37,17 @@ class PepSequencesCountPSFilter(
     if (!incrementalValidation) ProteinSetFiltering.resetProteinSetValidationStatus(protSets)
 
     protSets.foreach(pSet => {
-    
+
       val pepSeq2PepInst = pSet.peptideSet.getPeptideInstances.groupBy(_.peptide.sequence)
-      if(pepSeq2PepInst.size  < minNbrSeq){
-    	  pSet.isValidated = false
-		  pSet.peptideSet.getPeptideInstances.foreach(pInst => {
-			  pInst.validatedProteinSetsCount = pInst.validatedProteinSetsCount-1
-		  })
-	  }
+      if (pepSeq2PepInst.size < minNbrSeq) {
+        pSet.isValidated = false
+        pSet.peptideSet.getPeptideInstances.foreach(pInst => {
+          pInst.validatedProteinSetsCount = pInst.validatedProteinSetsCount - 1
+        })
+      }
 
     })
-    
+
   }
 
 }
