@@ -4,7 +4,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.apache.commons.lang3.StringUtils.isNotEmpty
 import fr.profi.util.misc.InMemoryIdGen
 
 object Protein extends InMemoryIdGen {
@@ -67,7 +66,7 @@ case class Protein (
 ) {
   
   // Requirements
-  require( isNotEmpty(sequence) )
+  require( sequence != null && ! sequence.isEmpty() )
   require( alphabet.matches("aa|rna|dna") ) // TODO: create an enumeration
   
   // Define secondary constructors
