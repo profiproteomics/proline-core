@@ -82,17 +82,16 @@ case class MasterQuantProteinSetProperties (
 }
 
       
-      //TODO fix BUG #12336
 case class MasterQuantChannelProperties (
     @JsonDeserialize(contentAs = classOf[java.lang.Long])
 	@BeanProperty var identResultSummaryId: Option[Long],
 	@JsonDeserialize(contentAs = classOf[java.lang.Long])
-	@BeanProperty var identDatasetId: Option[Long]
-//	@JsonDeserialize(contentAs = classOf[SpectralCountProperties])	
-//	@BeanProperty var spectralCountProperties: Option[SpectralCountProperties] = None
+	@BeanProperty var identDatasetId: Option[Long],
+	@JsonDeserialize(contentAs = classOf[SpectralCountProperties])	
+	@BeanProperty var spectralCountProperties: Option[SpectralCountProperties] = None
 )
 
-//case class SpectralCountProperties (
-//	@JsonDeserialize(contentAs = classOf[Array[java.lang.Long]] )
-//	@BeanProperty var weightsRefRSMIds: Array[java.lang.Long] = Array()
-//)
+case class SpectralCountProperties (
+	@JsonDeserialize(contentAs = classOf[java.lang.Long] )
+	@BeanProperty var weightsRefRSMIds: Array[java.lang.Long] = Array()
+)
