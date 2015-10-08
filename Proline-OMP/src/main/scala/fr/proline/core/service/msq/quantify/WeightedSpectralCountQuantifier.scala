@@ -135,7 +135,8 @@ class WeightedSpectralCountQuantifier(
       })
     }
 
-	 val allRSMsByID : Map[Long, ResultSummary] = loadAndUpdateRSMs().map( rsm => rsm.id -> rsm).toMap
+        
+	 val allRSMsByID : Map[Long, ResultSummary] = loadAndUpdateRSMs(identRSMsIdByWeightRefRSMId).map( rsm => rsm.id -> rsm).toMap
 
     
     // -- Create ProteinSetSCDescription (ProteinSet,typicalPMAcc,PeptidesSCDescription[pepSpecific, nbr PSM specific, weightByPeptideId])  from reference RSM
@@ -195,7 +196,7 @@ class WeightedSpectralCountQuantifier(
   }
 
   
-  // TODO : Case where child don't have parent !!! Should not occur : At least mergedResultSummary should be found ! 
+  // Case where child don't have parent !!! Should not occur : At least mergedResultSummary should be found ! 
   private def createRSMHierarchyMap(childsIds: Seq[Long], tmpChildPerParentMap : HashMap[Long, ArrayBuffer[Long]] = new HashMap[Long, ArrayBuffer[Long]]()) : HashMap[Long, ArrayBuffer[Long]] = {
     
 		val resultMap = new HashMap[Long, ArrayBuffer[Long]]()
@@ -453,16 +454,6 @@ class WeightedSpectralCountQuantifier(
 
   private def createProteinSetSCDescription(identRSMsByPepRefRSM : HashMap[Long, ArrayBuffer[Long]], refRSMsByID : Map[Long, ResultSummary]): Map[Long, ProteinSetSCDescription] = {
 
-    //--- Update MergedRSM SpectralCount if necessary
-    // TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information ! 
-//    if (mergedResultSummary.peptideInstances(0).totalLeavesMatchCount < 0) {
-//      logger.debug("  --- updatePepInstanceSC for mergedResultSummary " + mergedResultSummary.id)
-//      PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(mergedResultSummary, executionContext)
-//      mergedResultSummary.peptideInstances.foreach(pepI => {
-//        val ormPepInst = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
-//        ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
-//      })
-//    }
 
 	 //ProteinSetSCDescription for each Merged RSM ProteinSet referenced by ProteinSet id  
     val proteinSetSCDescriptionByProtSetIdBuilder = Map.newBuilder[Long, ProteinSetSCDescription]
@@ -551,9 +542,9 @@ class WeightedSpectralCountQuantifier(
    * Load specified RSMs if necessary and update totalLeaveMatchCount (Basic SC) for all if needed  
    * Return all loaded RSMs 
    */
-  private def loadAndUpdateRSMs(): Array[fr.proline.core.om.model.msi.ResultSummary] = {
+  private def loadAndUpdateRSMs(identRSMsIdByWeightRefRSMId : HashMap[Long, ArrayBuffer[Long]]): Array[fr.proline.core.om.model.msi.ResultSummary] = {
     
-    val weigtRefRsmIds = if(scConfig.weightRefRSMIds != null) scConfig.weightRefRSMIds else Seq.empty[Long]
+    val weigtRefRsmIds = identRSMsIdByWeightRefRSMId.keySet
     
     val loadedRSMIds = identRSMIds :+ mergedResultSummary.id
     val updatedRSMs = Seq.newBuilder[ResultSummary]
@@ -582,11 +573,11 @@ class WeightedSpectralCountQuantifier(
     
    
     // Load result summaries 
-	this.logger.info("loading result summaries...")
+	  this.logger.info("loading result summaries...")
 
     // Instantiate a RSM provider
     val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx)
-    val newlyLoadedRSMs = rsmProvider.getResultSummaries(unloadedRSMIds, true)
+    val newlyLoadedRSMs = rsmProvider.getResultSummaries(unloadedRSMIds.toSeq, true)
     newlyLoadedRSMs.foreach( rsm => {      
     	// TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information !
     	//SC Update needed
@@ -789,16 +780,6 @@ class WeightedSpectralCountQuantifier(
 
       val quantPepByPepID: scala.collection.mutable.Map[Long, QuantPeptide] = scala.collection.mutable.Map[Long, QuantPeptide]()
 
-      //--- Update RSM SpectralCount if necessary
-      // TODO FIXME Assume first peptideInstance.totalLeavesMatchCount give global information ! Should be wrong see issue #7984
-//      if (rsm.peptideInstances(0).totalLeavesMatchCount < 0) {
-//        logger.debug("  --- updatePepInstanceSC for rsm " + rsm.id)
-//        PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm, executionContext)
-//        rsm.peptideInstances.foreach(pepI => {
-//          val ormPepInst = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)
-//          ormPepInst.setTotalLeavesMatchCount(pepI.totalLeavesMatchCount)
-//        })
-//      }
 
       //--- Get RSM Peptide Match/Protein Match information 	     
       // map   list of ProtMatch accession by PeptideSet
