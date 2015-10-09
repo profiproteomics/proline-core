@@ -20,7 +20,6 @@ import fr.proline.core.om.model.msq.ComputedRatio
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
-import org.joda.convert.ToString
 import fr.proline.core.dal.tables.SelectQueryBuilder3
 import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
 
