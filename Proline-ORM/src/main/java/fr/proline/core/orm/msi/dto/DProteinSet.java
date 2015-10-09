@@ -12,7 +12,11 @@ public class DProteinSet {
     private long m_typicalProteinMatchId;
     
     private DProteinMatch m_typicalProteinMatch;
-    private Integer m_spectralCount;
+    
+    private Integer m_spectralCount; // JPM : will be removed
+    
+    private Integer m_peptideMatchCount;
+    private Integer m_basicSpectralCount;
     private Integer m_specificSpectralCount;
     private Integer m_sameSetCount;
     private Integer m_subSetCount;
@@ -25,7 +29,9 @@ public class DProteinSet {
         m_resultSummaryId = resultSummaryId;
         
         m_typicalProteinMatch = null;
-        m_spectralCount = null;
+        m_spectralCount = null;  // JPM : will be removed
+        m_peptideMatchCount = null;
+        m_basicSpectralCount = null;
         m_specificSpectralCount = null;
         m_sameSetCount = null;
         m_subSetCount = null;
@@ -54,13 +60,32 @@ public class DProteinSet {
         m_typicalProteinMatch = typicalProteinMatch;
     }
     
+    // JPM : will be removed
     public Integer getSpectralCount() {
         return m_spectralCount;
     }
 
+    // JPM : will be removed
     public void setSpectralCount(Integer spectralCount) {
         m_spectralCount = spectralCount;
     }
+
+    public Integer getPeptideMatchCount() {
+        return m_peptideMatchCount;
+    }
+
+    public void setPeptideMatchCount(Integer peptideMatchCount) {
+    	m_peptideMatchCount = peptideMatchCount;
+    }
+
+    public Integer getBasicSpectralCount() {
+        return m_basicSpectralCount;
+    }
+
+    public void setBasicSpectralCount(Integer basicSpectralCount) {
+    	m_basicSpectralCount = basicSpectralCount;
+    }
+
     
     public Integer getSpecificSpectralCount() {
         return m_specificSpectralCount;
