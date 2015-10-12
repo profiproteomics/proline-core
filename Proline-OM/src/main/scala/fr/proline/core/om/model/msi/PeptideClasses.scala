@@ -540,7 +540,8 @@ case class PeptideMatch ( // Required fields
 case class PeptideMatchProperties (
   @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None,
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
-  @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None
+  @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None,
+  @BeanProperty var spectalCountProperties: Option[PeptideMatchSpectralCountProperties] = None
 )
 
 case class PeptideMatchMascotProperties (
@@ -567,6 +568,10 @@ case class PeptideMatchXtandemProperties (
   @BeanProperty var nlString: Option[String] = None,
   @BeanProperty var usedPeaksCount: Option[Int] = None
 )
+
+case class PeptideMatchSpectralCountProperties (
+   @BeanProperty var spectralCount: Int
+ )
 
 case class PeptideMatchResultSummaryProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
