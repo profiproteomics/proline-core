@@ -12,8 +12,7 @@ class ResultSummaryAdder(
   seqLengthByProtId: Option[Map[Long, Int]] = None
 ) extends LazyLogging {
 
-  val isValidatedContent = true // the method getValidatedResultSet is called in addResultSummary
-  val rsAdder = new ResultSetAdder(resultSetId, isValidatedContent, isDecoy, seqLengthByProtId)
+  val rsAdder = new ResultSetAdder(resultSetId, true, isDecoy, seqLengthByProtId)
   
   def addResultSummaries(resultSummaries: Iterable[ResultSummary]): ResultSummaryAdder = {
     for( rsm <- resultSummaries ) this.addResultSummary(rsm)
@@ -35,17 +34,17 @@ class ResultSummaryAdder(
     val start = System.currentTimeMillis()
 
     val mergedResultSet = rsAdder.toResultSet()
-
+    
     // Instantiate a protein inference algo and build the merged result summary
     val protInferenceAlgo = ProteinSetInferer(InferenceMethod.PARSIMONIOUS)
     val mergedRsm = protInferenceAlgo.computeResultSummary(mergedResultSet, keepSubsummableSubsets = true)
-
-    //TODO FIXME VDS: Add algo to go through mergedRsm PeptideInstance and update their totalLeavesMatchCount 
-    // totalLeavesMatchCount = Sum totalLeavesMatchCount of each child RSM
-
-    // Update score of peptide sets
+    
+     // Update score of peptide sets
     pepSetScoreUpdater.updateScoreOfPeptideSets(mergedRsm)
 
+    //Update peptideInstance SC : In this case peptideInstance.totalLeaveMatchCount = bestPSM.SpectralCount
+    updatePepInstanceSC(mergedRsm)
+    
     this.logger.info("Result Summaries have been merged:")
     this.logger.info("- nb merged peptide instances = " + mergedRsm.peptideInstances.length)
     this.logger.info("- nb merged peptide sets = " + mergedRsm.peptideSets.length)
@@ -54,6 +53,15 @@ class ResultSummaryAdder(
     logger.info("Merged ResultSummary #" + mergedRsm.id + " created in " + (System.currentTimeMillis() - start) + " ms")
 
     mergedRsm
+  }
+  
+  private def updatePepInstanceSC(rsm : ResultSummary) = {
+    val pepMatchesById = rsm.resultSet.get.getPeptideMatchById()
+    
+    rsm.peptideInstances.foreach (pepI => {
+      val pepMatch =  pepMatchesById(pepI.bestPeptideMatchId)
+       pepI.totalLeavesMatchCount = pepMatch.properties.get.spectalCountProperties.get.spectralCount 
+      })    
   }
 
 }
