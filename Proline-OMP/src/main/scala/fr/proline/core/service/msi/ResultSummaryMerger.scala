@@ -179,7 +179,7 @@ class ResultSummaryMerger(
         pepSetScoreUpdater = pepSetScoreUpdater,
         seqLengthByProtId = Some(seqLengthByProtId)
       )
-      .addResultSummaries(resultSummaries)
+      .addResultSummaries(decoyResultSummaries)
       .toResultSummary()
 
 
