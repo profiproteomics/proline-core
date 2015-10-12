@@ -390,7 +390,6 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       for (proteinMatch <- proteinMatches) {
   
         val proteinMatchId = proteinMatch.id
-        val proteinId = proteinMatch.getProteinId
   
         for (seqMatch <- proteinMatch.sequenceMatches) {
   
