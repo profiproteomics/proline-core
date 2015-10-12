@@ -145,7 +145,7 @@ class ResultSetValidatorF122817Test extends StrictLogging {
       pepMatchValidator = None,
       protSetFilters = None,
       inferenceMethod = Some(InferenceMethod.PARSIMONIOUS), 
-      storeResultSummary = false
+      storeResultSummary = true
     )
 
     val result = rsValidation.runService
@@ -161,6 +161,8 @@ class ResultSetValidatorF122817Test extends StrictLogging {
     val nbrSamsetPepSet = tRSM.peptideSets.count(!_.isSubset)
     val nbrProtSet = tRSM.proteinSets.length
     
+    val nbrPepIWOTotalLeaveMCount = tRSM.peptideInstances.filter(_.totalLeavesMatchCount <0).length
+    Assert.assertEquals(0,  nbrPepIWOTotalLeaveMCount)
     /*val pepSetIds = tRSM.peptideSets.withFilter(!_.isSubset).map(_.id).toSeq
     rsValidation.validatedTargetRsm.proteinSets.foreach(protSet => {
      if(!pepSetIds.contains(protSet.peptideSetId))
