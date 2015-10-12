@@ -80,10 +80,8 @@ class ResultSetAdder(
     // Iterate over protein matches to merge them by a unique key
     for (proteinMatch <- rs.proteinMatches ) {
       
-      // If no protein attached the protMatchKey is the accession number
-      val protMatchKey = if (proteinMatch.getProteinId == 0) proteinMatch.accession
-      // Else protMatchKey is composed by the protein id and taxon id
-      else proteinMatch.getProteinId + "%" + proteinMatch.taxonId
+      // Use accession number instead of protMatchKey composed by the protein id and taxon id (2 proteinMatches can reference same Sequence!)
+      val protMatchKey = proteinMatch.accession
     
       val protMatchAdderOpt = protMatchAdderByKey.get(protMatchKey)
       
@@ -206,21 +204,34 @@ private[this] class PeptideMatchAggregator(
     
     // Determine the best child using the score value
     val bestChild = peptideMatchChildren.maxBy(_.score)
+    var psmSC = 0
+    peptideMatchChildren.foreach(psmChild => {
+      if(psmChild.properties.isDefined && psmChild.properties.get.spectalCountProperties.isDefined)
+        psmSC = psmSC + psmChild.properties.get.spectalCountProperties.get.spectralCount          
+    })
+    val psmSCProp = new PeptideMatchSpectralCountProperties(spectralCount = psmSC)
     
     // If cloning is disabled, update the bestChild object
     val aggregatedPepMatch = if( cloneObjects == false ) {
       bestChild.id = PeptideMatch.generateNewId()
       bestChild.children = Some(peptideMatchChildren.toArray)
       bestChild.resultSetId = newResultSetId
+      if(!bestChild.properties.isDefined)
+        bestChild.properties = Some(new PeptideMatchProperties())
+      bestChild.properties.get.spectalCountProperties = Some(psmSCProp)
       bestChild
     // Else copy the bestChild object with some new values
     } else {
-      bestChild.copy(
+      val newPSM = bestChild.copy(
         id = PeptideMatch.generateNewId(),
         childrenIds = peptideMatchChildren.map(_.id).distinct.toArray,
         bestChildId = bestChild.id,
         resultSetId = newResultSetId
       )
+       if(!newPSM.properties.isDefined)
+          newPSM.properties = Some(new PeptideMatchProperties())
+      newPSM.properties.get.spectalCountProperties = Some(psmSCProp)
+      newPSM
     }
     
     aggregatedPepMatch
