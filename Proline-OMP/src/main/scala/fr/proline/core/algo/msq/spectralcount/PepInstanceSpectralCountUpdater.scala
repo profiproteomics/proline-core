@@ -53,28 +53,35 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
   private def getIsLeaveRSM(rsmID: Long, execContext: IExecutionContext): Boolean = {
     
     if(! isChildByRSMID.contains(rsmID)) {   
-	    var rsType: String = null
+	   
 	    val rsId = getRSIdForRsmID(rsmID, execContext)
-	
-	    val jdbcWork = new JDBCWork() {
-	      override def execute(con: Connection) {
-	        
-	        val pStmt = con.prepareStatement("SELECT type from result_set WHERE id = ?")
-	        pStmt.setLong(1, rsId)
-	        val sqlResultSet = pStmt.executeQuery()
-	        if (sqlResultSet.next)
-	          rsType = sqlResultSet.getString(1)
-	        pStmt.close()
-	      }
-	
-	    } // End of jdbcWork anonymous inner class    	 
-	
-	    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-	    if ((rsType matches "SEARCH") || (rsType matches "DECOY_SEARCH")){
-	      isChildByRSMID += rsmID -> true	      
-	    } else{
-	      isChildByRSMID += rsmID -> false
-	    }
+      val isSearchRS =  if (loadedRSByID.contains(rsId)) loadedRSByID(rsId).isSearchResult 
+         else {
+           
+            var rsType: String = null       
+      	    val jdbcWork = new JDBCWork() {
+      	      override def execute(con: Connection) {
+        	        
+        	        val pStmt = con.prepareStatement("SELECT type from result_set WHERE id = ?")
+        	        pStmt.setLong(1, rsId)
+        	        val sqlResultSet = pStmt.executeQuery()
+        	        if (sqlResultSet.next)
+        	          rsType = sqlResultSet.getString(1)
+        	        pStmt.close()
+        	      }
+        	
+      	    } // End of jdbcWork anonymous inner class    	 
+  	
+      	  execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+          if(rsType == null)
+            throw new IllegalArgumentException("Unable to get Result Set Type for ResultSummary ID " + rsmID)
+    	    if ((rsType matches "SEARCH") || (rsType matches "DECOY_SEARCH")){
+  	        true
+  	      } else{
+  	        false
+  	      }
+       }
+      isChildByRSMID += rsmID -> isSearchRS       
     }
     
     return isChildByRSMID(rsmID);
@@ -121,7 +128,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
    *  
    */
     def updatePepInstanceSC(rsm: ResultSummary, execContext: IExecutionContext): Unit = {
-	  updatePepInstanceSC(Seq(rsm), execContext)      
+      updatePepInstanceSC(Seq(rsm), execContext)      
   	}	
     
   /**
@@ -139,8 +146,16 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
    *  
    */
   def updatePepInstanceSC(rsms: Seq[ResultSummary], execContext: IExecutionContext): Unit = {
-  
-    loadedRSMByID ++= rsms.map(rsm => rsm.id -> rsm)
+
+    rsms.foreach(rsm =>{
+        loadedRSMByID += (rsm.id -> rsm)
+        val rsOpt = rsm.resultSet
+        if(rsOpt.isDefined){
+          val rs = rsOpt.get
+          loadedRSByID +=(rs.id -> rs)
+        }
+    })
+    
     rsms.foreach(rsm =>{
 	    val startTime = System.currentTimeMillis()
 		
@@ -207,7 +222,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
       return scByPepID
 
     } else {
-      
+            
       val childIDsOpt = getRSMChildsID(rsmID, execContext)
 
       // ***** RSM is result of a Merge of ResultSet : count Leave RS "valid" PSM 
@@ -221,14 +236,14 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
         var rsm: ResultSummary = null
         if (loadedRSMByID.contains(rsmID))
         	rsm = loadedRSMByID(rsmID)
-    	else {
-    		logger.trace("Need to read RSM "+rsmID)
-    		val rsmOp = getResultSummaryProvider(execContext).getResultSummary(rsmID, true)
-    		if (rsmOp.isEmpty)
-    			throw new IllegalArgumentException("Unable to read resultaSummay with specified ID " + rsmID)
-    		rsm = rsmOp.get
-    		loadedRSMByID += rsmID -> rsm
-    	}
+      	else {
+      		logger.trace("Need to read RSM "+rsmID)
+      		val rsmOp = getResultSummaryProvider(execContext).getResultSummary(rsmID, true)
+      		if (rsmOp.isEmpty)
+      			throw new IllegalArgumentException("Unable to read resultaSummay with specified ID " + rsmID)
+      		rsm = rsmOp.get
+      		loadedRSMByID += rsmID -> rsm
+      	}
 	  	
 
         //Get filters used for RSM root of RS Merge
@@ -331,22 +346,22 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
 
     val rsId = getRSIdForRsmID(rsmID, execContext)
     var leavesRsIds: Seq[Long] = getRSLeafChildsID(rsId, providerContext)
-    var leavesRsBuilder = Seq.newBuilder[ResultSet]    
+    var leavesRsBuilder = Seq.newBuilder[ResultSet]
 
     val provider: IResultSetProvider = providerContext.getProvider(classOf[IResultSetProvider])
 
     leavesRsIds.foreach(rsID => {
-      if(!loadedRSByID.contains(rsID)){
-     	  val resultRS = provider.getResultSet(rsID)
-		  if (resultRS.isDefined) {
-			  loadedRSByID += rsID -> resultRS.get
-		  } else {
-			  val msg = " !!! Unable to get leave search result with id " + rsID
-			  logger.warn(msg)
-			  throw new Exception(msg)
-		  }
+      if (!loadedRSByID.contains(rsID)) {
+        val resultRS = provider.getResultSet(rsID)
+        if (resultRS.isDefined) {
+          loadedRSByID += rsID -> resultRS.get
+        } else {
+          val msg = " !!! Unable to get leave search result with id " + rsID
+          logger.warn(msg)
+          throw new Exception(msg)
+        }
       }
- 	  leavesRsBuilder += loadedRSByID(rsID)
+      leavesRsBuilder += loadedRSByID(rsID)
     })
 
     leavesRsBuilder.result
@@ -354,27 +369,31 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
 
   private def getRSLeafChildsID(rsId: Long, execContext: IExecutionContext): Seq[Long] = {
     var allRSIds = Seq.newBuilder[Long]
-
-    val jdbcWork = new JDBCWork() {
-
-      override def execute(con: Connection) {
-
-        val stmt = con.prepareStatement("select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = ?")
-        stmt.setLong(1, rsId)
-        val sqlResultSet = stmt.executeQuery()
-        var childDefined = false
-        while (sqlResultSet.next) {
-          childDefined = true
-          val nextChildId = sqlResultSet.getInt(1)
-          allRSIds ++= getRSLeafChildsID(nextChildId, execContext)
-        }
-        if (!childDefined)
-          allRSIds += rsId
-        stmt.close()
-      } // End of jdbcWork anonymous inner class
+    if(loadedRSByID.contains(rsId) && (loadedRSByID(rsId).isSearchResult)){
+       allRSIds += rsId
+    } else {
+     
+      val jdbcWork = new JDBCWork() {
+  
+        override def execute(con: Connection) {
+  
+          val stmt = con.prepareStatement("select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = ?")
+          stmt.setLong(1, rsId)
+          val sqlResultSet = stmt.executeQuery()
+          var childDefined = false
+          while (sqlResultSet.next) {
+            childDefined = true
+            val nextChildId = sqlResultSet.getInt(1)
+            allRSIds ++= getRSLeafChildsID(nextChildId, execContext)
+          }
+          if (!childDefined)
+            allRSIds += rsId
+          stmt.close()
+        } // End of jdbcWork anonymous inner class
+      }
+      execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
     }
-    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-
     allRSIds.result
   }
+  
 }
