@@ -1,9 +1,7 @@
 package fr.proline.core.service.msi
 
 import scala.collection.mutable.ArrayBuffer
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -19,6 +17,7 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.RsmStorer
+import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
 
 // TODO: use this config in the constructors
 case class ValidationConfig(
@@ -199,7 +198,12 @@ class ResultSetValidator(
 
     val took = curTimeInSecs() - startTime
     this.logger.info("Validation service took " + took + " seconds")
-
+  
+    // Instantiate totalLeavesMatchCount 
+    this.logger.debug("updatePepInstanceSC for new validated result summaries ...")
+    val rsm2Update = if(decoyRsmOpt.isDefined) Seq(targetRsm, decoyRsmOpt.get) else Seq(targetRsm)   
+    PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm2Update, execContext)  
+      
     if (storeResultSummary) {
 
       // Check if a transaction is already initiated
@@ -217,7 +221,8 @@ class ResultSetValidator(
       // Store target result summary
       rsmStorer.storeResultSummary(targetRsm, execContext)
       >>>
-
+      
+          
       // Commit transaction if it was initiated locally
       if (!wasInTransaction) msiDbContext.commitTransaction()
 
