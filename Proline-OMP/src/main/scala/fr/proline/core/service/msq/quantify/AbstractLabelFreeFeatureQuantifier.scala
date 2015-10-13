@@ -99,12 +99,14 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
       if( sh(firstScanColName) == null ) {
         val shId = sh(idColName)
-        val shCycle = sh(firstCycleColName)
-        val shTime = sh(firstTimeColName)
+
         require(
-          shCycle != null || shTime != null,
+          sh.contains(firstCycleColName) || sh.contains(firstTimeColName),
           "A scan id, a cycle number or a retention time must be defined for MS2 spectrum id="+shId
         )
+        
+        val shCycle = sh(firstCycleColName)
+        val shTime = sh(firstTimeColName)
         
         val peaklistId = toLong(sh(peaklistIdColName))
         val incompleteShBySpecId = incompleteShByPklIdAndSpecId.getOrElseUpdate(peaklistId, new HashMap[Long,Map[String, Any]])
