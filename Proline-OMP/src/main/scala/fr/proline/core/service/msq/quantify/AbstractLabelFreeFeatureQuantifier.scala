@@ -5,6 +5,9 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.jdbc.easy._
+import fr.profi.mzdb.MzDbReader
+import fr.profi.mzdb.utils.ms.MsUtils
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
@@ -19,13 +22,13 @@ import fr.proline.core.dal.tables.lcms.LcmsDbRawMapTable
 import fr.proline.core.dal.tables.lcms.LcmsDbScanTable
 import fr.proline.core.dal.tables.msi.MsiDbSpectrumTable
 import fr.proline.core.om.model.lcms.MapSet
+import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msq._
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.orm.msi.{ObjectTree => MsiObjectTree}
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.profi.util.primitives._
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
+import fr.profi.util.primitives._
 
 abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantChannelQuantifier with LazyLogging {
   
@@ -42,7 +45,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   val identRsIdByPeaklistId = msiIdentResultSets map { rs => rs.getMsiSearch.getPeaklist.getId -> rs.getId } toMap
   val peaklistIds = this.identRsIdByPeaklistId.keys
   //val peaklistIds = msiIdentResultSets map { _.getMsiSearch().getPeaklist().getId() }
-
+  
   def loadMs2SpectrumHeaders(): Array[Map[String,Any]] = {
 
     // Load MS2 spectrum headers
@@ -59,7 +62,161 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
   }
   
-  val ms2SpectrumHeaders = loadMs2SpectrumHeaders()
+  val ms2SpectrumHeaders = {
+    
+    val tmpMs2SHs = this.loadMs2SpectrumHeaders()
+    
+    val fixedMs2SHs = try {
+      // Check that spectrum.first_scan column is filled
+      this._fixMs2SpectrumHeaders(tmpMs2SHs)
+    } catch {
+      case e: Exception => {
+        logger.error("Error during update of spectrum.first_scan column", e)
+        throw e
+      }
+    }
+    
+    fixedMs2SHs
+  }
+
+  // TODO: use JPA instead of JDBC
+  private def _fixMs2SpectrumHeaders(ms2SHs: Array[Map[String, Any]]): Array[Map[String, Any]] = {
+
+    val specCols = MsiDbSpectrumTable.columns
+    val idColName = specCols.ID
+    val precMozColName = specCols.PRECURSOR_MOZ
+    val firstScanColName = specCols.FIRST_SCAN
+    val firstCycleColName = specCols.FIRST_CYCLE
+    val firstTimeColName = specCols.FIRST_TIME
+    val peaklistIdColName = specCols.PEAKLIST_ID
+    
+    logger.info("Checking spectra first scan id property")
+    
+    // Create a mapping between cycles and scan ids
+    val incompleteShByPklIdAndSpecId = new HashMap[Long,HashMap[Long,Map[String, Any]]]()
+    
+    for (sh <- ms2SHs) {
+
+      if( sh(firstScanColName) == null ) {
+        val shId = sh(idColName)
+        val shCycle = sh(firstCycleColName)
+        val shTime = sh(firstTimeColName)
+        require(
+          shCycle != null || shTime != null,
+          "A scan id, a cycle number or a retention time must be defined for MS2 spectrum id="+shId
+        )
+        
+        val peaklistId = toLong(sh(peaklistIdColName))
+        val incompleteShBySpecId = incompleteShByPklIdAndSpecId.getOrElseUpdate(peaklistId, new HashMap[Long,Map[String, Any]])
+
+        incompleteShBySpecId += toLong(shId) -> sh
+      }
+    }
+    
+    // If all spectra have a first scan id => return the provided ms2SHs
+    if( incompleteShByPklIdAndSpecId.isEmpty ) ms2SHs
+    // If we have some missing first scan ids => try to retrieve them
+    else {
+      logger.warn("Spectrum table has missing first scan ids and will be now updated, cross fingers...")
+      
+      // Create some mappings
+      val precMZBySpecId = ms2SHs.view.map { ms2Sh => toLong(ms2Sh(idColName)) -> toDouble(ms2Sh(precMozColName)) } toMap
+      val peaklistIdByIdentRsId = msiIdentResultSets.view.map { rs => rs.getId -> rs.getMsiSearch.getPeaklist.getId } toMap
+      
+      val mzDbFilePathByRawFileName = quantConfig.lcMsRuns.view.map { lcMsRun =>
+        lcMsRun.rawFile.name -> lcMsRun.rawFile.getMzdbFilePath().get
+      } toMap
+      
+      val scanIdBySpecId = new HashMap[Long,Int]()
+      
+      // Iterate over quant channels to update incomplete spectra headers
+      for( udsQuantChannel <- udsQuantChannels ) {
+        val identRsId = identRsIdByRsmId( udsQuantChannel.getIdentResultSummaryId() )
+        val peaklistId = peaklistIdByIdentRsId(identRsId)
+        
+        val incompleteShBySpecIdOpt = incompleteShByPklIdAndSpecId.get(peaklistId)
+        if( incompleteShBySpecIdOpt.isDefined ) {
+          val incompleteShBySpecId = incompleteShBySpecIdOpt.get
+          
+          val mzDbFilePath = mzDbFilePathByRawFileName(udsQuantChannel.getRun().getRawFile().getRawFileName())
+          val mzDbReader = new MzDbReader(mzDbFilePath, true)
+          
+          try {
+            val mzDbScanHeaders = mzDbReader.getMs2SpectrumHeaders()
+            val mzDbScanHeadersByCycle = mzDbScanHeaders.groupBy(_.getCycle())
+            
+            for( (specId,sh) <- incompleteShBySpecId ) {
+              
+              // Try to retrieve the scan id by using the retention time information
+              val matchingMzDbSh = if( sh.contains(firstTimeColName) ) {
+                val firstTime = toFloat( sh(firstTimeColName) )
+                val mzDbSH = mzDbReader.getSpectrumHeaderForTime(firstTime, 2)
+                
+                require(
+                  math.abs(mzDbSH.getTime - firstTime) < 1,
+                  s"can't determine the first scan id of spectrum with id=$specId (the retention time seems to be wrong)"
+                )
+                
+                mzDbSH
+              }
+              // Try to retrieve the scan id by using the cycle information
+              else if ( sh.contains(firstTimeColName) ) {
+                val firstCycle = toInt( sh(firstCycleColName) )
+                require(
+                  mzDbScanHeadersByCycle.contains(firstCycle),
+                  s"can't find cycle $firstCycle in mzDB file: " + mzDbFilePath
+                )
+                
+                val refPrecMz = precMZBySpecId(specId)
+                val mzDbSHsInCurCycle = mzDbScanHeadersByCycle(firstCycle)
+                val closestSH = mzDbSHsInCurCycle.minBy { mzDbSH => 
+                  math.abs(mzDbSH.getPrecursorMz - refPrecMz)
+                }
+                
+                require(
+                  math.abs(closestSH.getPrecursorMz - refPrecMz) < 10,
+                  s"can't determine the first scan id of spectrum with id=$specId (the precursor m/z value seems to be wrong)"
+                )
+                
+                closestSH
+              }
+              // Else it is not possible to perform the
+              else {
+                throw new Exception(s"can't determine the first scan id of this spectrum with id=$specId (not enough meta data)")
+              }
+              
+              // Map the mzDb scan id by the MSIdb spectrum id
+              scanIdBySpecId += specId -> matchingMzDbSh.getInitialId()
+
+            }
+          } finally {
+            mzDbReader.close()
+          }
+        }
+      }
+      
+      require( scanIdBySpecId.isEmpty == false, "scanIdBySpecId should not be empty")
+      
+      // Persist the new scan ids into the MSIdb
+      DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+        
+        val updateSqlQuery = s"UPDATE ${MsiDbSpectrumTable.name} SET ${specCols.FIRST_SCAN} = ? WHERE ${specCols.ID} = ?"
+
+        msiEzDBC.executePrepared(updateSqlQuery) { stmt =>
+          for( (specId,scanId) <- scanIdBySpecId ) {
+            stmt.executeWith(scanId,specId)
+          }
+        }
+      })
+      
+      // Update the provided ms2SHs
+      for (sh <- ms2SHs) yield {
+        val shId = toLong(sh(idColName))
+        
+        sh + Tuple2(firstScanColName, scanIdBySpecId(shId))
+      }
+    }    
+  }
 
   val spectrumIdByRsIdAndScanNumber = {
 
