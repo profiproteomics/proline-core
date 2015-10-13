@@ -14,6 +14,8 @@ public class DMsQuery implements Comparable<DMsQuery> {
     private int m_initialId;
     private Float m_precursorIntensity;
     
+    private int m_charge;
+    
     
     private Spectrum m_spectrum; // will be removed : replaced by DSpectrum
     
@@ -32,6 +34,15 @@ public class DMsQuery implements Comparable<DMsQuery> {
         
     }
 
+    public int getCharge() {
+    	return m_charge;
+    }
+
+    public void setCharge(int charge) {
+    	m_charge = charge;
+    }
+
+    
     public Float getPrecursorIntensity() {
         return m_precursorIntensity;
     }
