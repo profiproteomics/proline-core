@@ -14,7 +14,10 @@ public class DMsQuery implements Comparable<DMsQuery> {
     private int m_initialId;
     private Float m_precursorIntensity;
     
-    private Spectrum m_spectrum;
+    
+    private Spectrum m_spectrum; // will be removed : replaced by DSpectrum
+    
+    private DSpectrum m_dSpectrum;
     private boolean m_spectrumSet;
     
     public DMsQuery(long peptideMatchId, long id, int initialId, Float precursorIntensity) {
@@ -24,6 +27,7 @@ public class DMsQuery implements Comparable<DMsQuery> {
         m_precursorIntensity = precursorIntensity;
 
         m_spectrum = null;
+        m_dSpectrum = null;
         m_spectrumSet = false;
         
     }
@@ -52,6 +56,16 @@ public class DMsQuery implements Comparable<DMsQuery> {
     
     public void setSpectrum(Spectrum spectrum) {
         m_spectrum = spectrum;
+        m_spectrumSet = true;
+    }
+    
+    public DSpectrum getDSpectrum() {
+        return m_dSpectrum;
+    }
+
+    
+    public void setDSpectrum(DSpectrum spectrum) {
+    	m_dSpectrum = spectrum;
         m_spectrumSet = true;
     }
     
