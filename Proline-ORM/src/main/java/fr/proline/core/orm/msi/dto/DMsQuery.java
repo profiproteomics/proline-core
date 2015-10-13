@@ -93,6 +93,14 @@ public class DMsQuery implements Comparable<DMsQuery> {
         return m_spectrumSet;
     }
     
+    public boolean isSpectrumFullySet() {
+        if  (!m_spectrumSet) {
+        	return false;
+        }
+        
+        return (getDSpectrum().getIntensityList() != null);
+    }
+    
     @Override
     public int compareTo(final DMsQuery otherQuery) {
         return Integer.valueOf(getInitialId()).compareTo(Integer.valueOf(otherQuery.getInitialId()));
