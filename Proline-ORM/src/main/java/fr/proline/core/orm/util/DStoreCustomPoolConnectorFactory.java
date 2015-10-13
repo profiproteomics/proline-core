@@ -65,7 +65,9 @@ public class DStoreCustomPoolConnectorFactory implements IDataStoreConnectorFact
 	 * @param udsDbConnector
 	 *            DatabaseConnector to a valid UDS Db (must not be
 	 *            <code>null</code>).
-	 */	
+	 *            )
+	 * @param applicationName : String use to identify  application which open connection
+	 */
 	public void initialize(final IDatabaseConnector udsDbConnector, String applicationName) {
 
 		synchronized (m_managerLock) {
