@@ -6,6 +6,7 @@ public class DSpectrum {
     private long m_id;
 
     private Integer m_firstScan;
+    private Integer m_lastScan;
 
     private Float m_firstTime;
     private Float m_lastTime;
@@ -56,6 +57,14 @@ public class DSpectrum {
 
     public void setFirstScan(Integer firstScan) {
     	m_firstScan = firstScan;
+    }
+    
+    public Integer getLastScan() {
+    	return m_lastScan;
+    }
+
+    public void setLastScan(Integer lastScan) {
+    	m_lastScan = lastScan;
     }
 
     public Float getFirstTime() {
