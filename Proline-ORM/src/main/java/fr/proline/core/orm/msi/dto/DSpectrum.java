@@ -17,11 +17,29 @@ public class DSpectrum {
     private Float m_precursorIntensity;
     private Double m_precursorMoz;
 
-
     private String m_title = null;
 
     public DSpectrum() {
     }
+    
+    public DSpectrum(long id, Integer firstScan, Float firstTime, Float lastTime, byte[] intensityList, byte[] mozeList, Integer precursorCharge, Float precursorIntensity, Double precursorMoz, String title) {
+        m_id = id;
+
+        m_firstScan = firstScan;
+
+        m_firstTime = firstTime;
+        m_lastTime = lastTime;
+
+        m_intensityList = intensityList;
+        m_mozList = mozeList;
+
+        m_precursorCharge = precursorCharge;
+        m_precursorIntensity = precursorIntensity;
+        m_precursorMoz = precursorMoz;
+
+        m_title = title;
+    }
+
 
     public long getId() {
     	return m_id;
