@@ -150,7 +150,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
             for( (specId,sh) <- incompleteShBySpecId ) {
               
               // Try to retrieve the scan id by using the retention time information
-              val matchingMzDbSh = if( sh.contains(firstTimeColName) ) {
+              val matchingMzDbSh = if( sh.contains(firstTimeColName) &&  sh(firstTimeColName) != null ) {
                 // FIXME: how to know if the time has been stored in minutes ???
                 val firstTimeInMin = toFloat( sh(firstTimeColName) )
                 val firstTimeInSec = firstTimeInMin * 60
@@ -164,7 +164,7 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
                 mzDbSH
               }
               // Try to retrieve the scan id by using the cycle information
-              else if ( sh.contains(firstTimeColName) ) {
+              else if ( sh.contains(firstCycleColName) &&  sh(firstCycleColName) != null ) {
                 val firstCycle = toInt( sh(firstCycleColName) )
                 require(
                   mzDbScanHeadersByCycle.contains(firstCycle),
