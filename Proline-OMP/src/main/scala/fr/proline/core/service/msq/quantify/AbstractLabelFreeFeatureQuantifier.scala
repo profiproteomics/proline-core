@@ -151,11 +151,13 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
               
               // Try to retrieve the scan id by using the retention time information
               val matchingMzDbSh = if( sh.contains(firstTimeColName) ) {
-                val firstTime = toFloat( sh(firstTimeColName) )
-                val mzDbSH = mzDbReader.getSpectrumHeaderForTime(firstTime, 2)
+                // FIXME: how to know if the time has been stored in minutes ???
+                val firstTimeInMin = toFloat( sh(firstTimeColName) )
+                val firstTimeInSec = firstTimeInMin * 60
+                val mzDbSH = mzDbReader.getSpectrumHeaderForTime(firstTimeInSec, 2)
                 
                 require(
-                  math.abs(mzDbSH.getTime - firstTime) < 1,
+                  math.abs(mzDbSH.getTime - firstTimeInSec) < 1,
                   s"can't determine the first scan id of spectrum with id=$specId (the retention time seems to be wrong)"
                 )
                 
