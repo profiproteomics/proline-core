@@ -701,6 +701,7 @@ class ExtractMapSet(
     // Define some data structure
     val mftBuilderByPeptideAndCharge = new HashMap[(Peptide, Int), MasterFeatureBuilder]()
     val putativeFtsByLcMsRun = new HashMap[LcMsRun, ArrayBuffer[PutativeFeature]]()
+    val putativeFtsByPeptideAndRun = new HashMap[(Peptide, Long), ArrayBuffer[PutativeFeature]]()
     val peptideByPutativeFt = new HashMap[PutativeFeature, Peptide]()
     val peakelIdsByPutativeFt = new HashMap[PutativeFeature, ArrayBuffer[Int]]()
     
@@ -812,6 +813,7 @@ class ExtractMapSet(
         }
           
         putativeFtsByLcMsRun.getOrElseUpdate(lcMsRun, new ArrayBuffer[PutativeFeature]) += pf
+        putativeFtsByPeptideAndRun.getOrElseUpdate((peptide, lcMsRun.id), new ArrayBuffer[PutativeFeature]) += pf
         peptideByPutativeFt(pf) = peptide
         peakelIdsByPutativeFt(pf) = putativePeakelIds
       }
@@ -881,7 +883,17 @@ class ExtractMapSet(
                
               if (mzDbFt.getPeakelsCount == 1) runMetrics.incr("missing monoisotopic features")
               runMetrics.incr("missing feature found")
-              
+
+              // update putative feature of conflicting peptides in this run to allow peakel re-assignment
+              if (conflictingPeptides.contains((peptide, charge))) {
+                for (conflictingPeptide <- conflictingPeptides((peptide, charge))) {
+                  for (ptf <- putativeFtsByPeptideAndRun((peptide, lcMsRun.id))) {
+                    runMetrics.incr("putative peakels list updated")
+                    peakelIdsByPutativeFt(ptf) += peakel.get.id
+                  }
+                }
+              }
+
               val newLcmsFeature = this._mzDbFeatureToLcMsFeature(
                 mzDbFt,
                 rawMap.id,
