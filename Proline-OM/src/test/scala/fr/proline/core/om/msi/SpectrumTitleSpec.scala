@@ -18,6 +18,7 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
     val MASCOT_DLL = Value("mascot.dll")
     val MASCOT_DISTILLER = Value("Mascot Distiller")
     val MAX_QUANT = Value("MaxQuant")
+    val PROLINE = Value("Proline")
     val PROTEIN_PILOT = Value("Protein Pilot")
     val PROTEOME_DISCOVER = Value("Proteome Discoverer")
     val PROTEO_WIZARD_2_0 = Value("ProteoWizard 2.0")
@@ -98,6 +99,18 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
         SpectrumTitleFields.LAST_SCAN -> "733",
         SpectrumTitleFields.FIRST_TIME -> "19.5118",
         SpectrumTitleFields.LAST_TIME -> "19.6302"
+      )
+    ),
+    SpectrumTitleSpecif(
+      SoftNames.PROLINE,
+      "the raw file name, the scans and the retention times",
+      """"first_scan:12669;last_scan:12669;first_time:47.4957;last_time:47.4957;raw_file_identifier:QEMMA140604_106;raw_precursor_moz:582.7711;"""""",
+      Map(
+        SpectrumTitleFields.RAW_FILE_IDENTIFIER -> """QEMMA140604_106""",
+        SpectrumTitleFields.FIRST_SCAN -> "12669",
+        SpectrumTitleFields.LAST_SCAN -> "12669",
+        SpectrumTitleFields.FIRST_TIME -> "47.4957",
+        SpectrumTitleFields.LAST_TIME -> "47.4957"
       )
     ),
     SpectrumTitleSpecif(
@@ -186,6 +199,15 @@ class SpectrumTitleSpec extends FunSpec with GivenWhenThen with Matchers {
       rawFileIdentifierRegex = Some("""File:"(\w+)\.wiff""""),
       firstCycleRegex         = Some("""Locus:\d\.\d\.\d\.(\d+)\.\d+ File:"""),
       lastCycleRegex          = Some("""Locus:\d\.\d\.\d\.(\d+)\.\d+ File:""")
+    ),
+    SoftNames.PROLINE -> SpectrumTitleParsingRule(
+      rawFileIdentifierRegex = Some("""raw_file_identifier:(\w+?);"""),
+      firstCycleRegex         = Some("""first_cycle:(\d+);"""),
+      lastCycleRegex          = Some("""last_cycle:(\d+);"""),
+      firstScanRegex         = Some("""first_scan:(\d+);"""),
+      lastScanRegex          = Some("""last_scan:(\d+);"""),
+      firstTimeRegex         = Some("""first_time:(\d+\.\d+);"""),
+      lastTimeRegex          = Some("""last_time:(\d+\.\d+);""")
     ),
     SoftNames.PROTEOME_DISCOVER -> SpectrumTitleParsingRule(
       firstScanRegex = Some("""Spectrum\d+\s+scans:(\d+?),"""),
