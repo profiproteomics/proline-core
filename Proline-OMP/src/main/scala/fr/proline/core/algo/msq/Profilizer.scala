@@ -749,7 +749,7 @@ object AbundanceSummarizer {
     if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
     
     // Sort rows by descending median abundance
-    val sortedMatrix = abundanceMatrix.sortWith( (a,b) => median(a) > median(b) )
+    val sortedMatrix = abundanceMatrix.sortBy( - median(_) )
     
     // Take 3 highest rows
     val top3Matrix = sortedMatrix.take(3)
