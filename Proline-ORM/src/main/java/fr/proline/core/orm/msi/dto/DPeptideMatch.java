@@ -31,6 +31,8 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     
     private Float m_retentionTime; // Spectrum.firstTime
     
+    private String m_sourceDatFile = null; // dat file of the best PSM for merged dataset
+    
     private Boolean m_isDecoy;
     private Boolean m_isValidated;
 
@@ -179,15 +181,24 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 	}
 
 	public void setRetentionTime(Float retentionTime) {
-		this.m_retentionTime = retentionTime;
+		m_retentionTime = retentionTime;
 	}
 
+	public String getSourceDatFile() {
+		return m_sourceDatFile;
+	}
+
+	public void setSourceDatFile(String sourceDatFile) {
+		m_sourceDatFile = sourceDatFile;
+	}
+
+	
 	public Boolean isDecoy() {
 		return m_isDecoy;
 	}
 
 	public void setDecoy(Boolean isDecoy) {
-		this.m_isDecoy = isDecoy;
+		m_isDecoy = isDecoy;
 	}
 
 	public Boolean isValidated() {
@@ -195,7 +206,7 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 	}
 
 	public void setValidated(Boolean isValidated) {
-		this.m_isValidated = isValidated;
+		m_isValidated = isValidated;
 	}
 	
 	
