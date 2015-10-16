@@ -16,9 +16,7 @@ public class DMsQuery implements Comparable<DMsQuery> {
     
     private int m_charge;
     private double m_moz;
-    
-    
-    private Spectrum m_spectrum; // will be removed : replaced by DSpectrum
+
     
     private DSpectrum m_dSpectrum;
     private boolean m_spectrumSet;
@@ -29,7 +27,6 @@ public class DMsQuery implements Comparable<DMsQuery> {
         m_initialId = initialId;
         m_precursorIntensity = precursorIntensity;
 
-        m_spectrum = null;
         m_dSpectrum = null;
         m_spectrumSet = false;
         
@@ -68,17 +65,6 @@ public class DMsQuery implements Comparable<DMsQuery> {
         return m_initialId;
     }
 
-
-    public Spectrum getSpectrum() {
-        return m_spectrum;
-    }
-
-    
-    public void setSpectrum(Spectrum spectrum) {
-        m_spectrum = spectrum;
-        m_spectrumSet = true;
-    }
-    
     public DSpectrum getDSpectrum() {
         return m_dSpectrum;
     }
