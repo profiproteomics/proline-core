@@ -50,9 +50,9 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
 	}
 
 	final JdbcConnectionPool source = JdbcConnectionPool.create(
-		PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY),
-		PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY),
-		PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
+	    PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY),
+	    PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY),
+	    PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
 
 	source.setMaxConnections(DEFAULT_MAX_POOL_CONNECTIONS);
 
