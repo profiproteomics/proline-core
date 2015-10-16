@@ -25,6 +25,7 @@ import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 import fr.proline.core.om.model.msi.IResultFile
+import fr.proline.core.om.model.msi.ResultSet
 
 class ResultFileImporter(
   executionContext: IExecutionContext,
@@ -37,6 +38,7 @@ class ResultFileImporter(
   saveSpectrumMatch: Boolean = false) extends IService with LazyLogging {
 
   private var targetResultSetId: Long = 0L
+  private var targetResultSet :Option[ResultSet] = None
 
   override protected def beforeInterruption = {
     // Release database connections
@@ -44,6 +46,8 @@ class ResultFileImporter(
   }
 
   def getTargetResultSetId = targetResultSetId
+  
+  def getTargetResultSetOpt : Option[ResultSet] = targetResultSet
 
   def runService(): Boolean = {
 
@@ -117,6 +121,7 @@ class ResultFileImporter(
         if (acDecoyRegex.isDefined) Some(TargetDecoyResultSetSplitter) else None
       )
       this.targetResultSetId = storedRS.id
+      targetResultSet = Some(storedRS)
 
       >>>
 
