@@ -60,7 +60,7 @@ class ResultSummaryAdder(
     
     rsm.peptideInstances.foreach (pepI => {
       val pepMatch =  pepMatchesById(pepI.bestPeptideMatchId)
-       pepI.totalLeavesMatchCount = pepMatch.properties.get.spectalCountProperties.get.spectralCount 
+       pepI.totalLeavesMatchCount = pepMatch.properties.get.spectralCount.get
       })    
   }
 

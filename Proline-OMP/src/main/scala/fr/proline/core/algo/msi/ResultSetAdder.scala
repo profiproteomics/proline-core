@@ -206,10 +206,11 @@ private[this] class PeptideMatchAggregator(
     val bestChild = peptideMatchChildren.maxBy(_.score)
     var psmSC = 0
     peptideMatchChildren.foreach(psmChild => {
-      if(psmChild.properties.isDefined && psmChild.properties.get.spectalCountProperties.isDefined)
-        psmSC = psmSC + psmChild.properties.get.spectalCountProperties.get.spectralCount          
-    })
-    val psmSCProp = new PeptideMatchSpectralCountProperties(spectralCount = psmSC)
+      if(psmChild.properties.isDefined && psmChild.properties.get.spectralCount.isDefined)
+        psmSC = psmSC + psmChild.properties.get.spectralCount.get 
+      else
+        psmSC = psmSC + 1 //If not specified, suppose leaf child so PSM Count = 1
+    })    
     
     // If cloning is disabled, update the bestChild object
     val aggregatedPepMatch = if( cloneObjects == false ) {
@@ -218,7 +219,7 @@ private[this] class PeptideMatchAggregator(
       bestChild.resultSetId = newResultSetId
       if(!bestChild.properties.isDefined)
         bestChild.properties = Some(new PeptideMatchProperties())
-      bestChild.properties.get.spectalCountProperties = Some(psmSCProp)
+      bestChild.properties.get.spectralCount = Some(psmSC)
       bestChild
     // Else copy the bestChild object with some new values
     } else {
@@ -230,7 +231,7 @@ private[this] class PeptideMatchAggregator(
       )
        if(!newPSM.properties.isDefined)
           newPSM.properties = Some(new PeptideMatchProperties())
-      newPSM.properties.get.spectalCountProperties = Some(psmSCProp)
+      newPSM.properties.get.spectralCount = Some(psmSC)
       newPSM
     }
     
