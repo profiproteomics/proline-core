@@ -1,6 +1,6 @@
 package fr.proline.core.orm.msi.dto;
 
-import fr.proline.core.orm.msi.Spectrum;
+
 
 
 /**
