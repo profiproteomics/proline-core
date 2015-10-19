@@ -75,7 +75,7 @@ class RsmStorer( private val _writer: IRsmStorer ) extends LazyLogging {
           Option.empty[String],
           new java.util.Date(),
           false,
-          if (rsm.properties.isDefined) rsm.properties.get.validationProperties.map(ProfiJson.serialize(_)) else Option.empty[String],
+          if (rsm.properties.isDefined) rsm.properties.map(ProfiJson.serialize(_)) else Option.empty[String],
           if( rsm.getDecoyResultSummaryId > 0 ) Some(rsm.getDecoyResultSummaryId) else Option.empty[Long],
           rsm.getResultSetId
         )
