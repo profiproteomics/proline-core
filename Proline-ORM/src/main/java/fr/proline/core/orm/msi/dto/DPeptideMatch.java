@@ -24,7 +24,8 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     private SequenceMatch m_sequenceMatch;
     
     private DProteinMatch[] m_proteinMatchArray = null;
-    private String m_proteinSetStringList = null;
+    private String m_proteinSetStringList = null;  // JPM.TODO : to be removed
+    private String[] m_proteinSetStringArray = null;
 
     private Integer m_cdPrettyRank;
     private Integer m_sdPrettyRank;  
@@ -151,6 +152,14 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     
     public void setProteinSetStringList(String s) {
         m_proteinSetStringList = s;
+    }
+
+    public String[] getProteinSetStringArray() {
+        return m_proteinSetStringArray;
+    }
+    
+    public void setProteinSetStringArray(String[] s) {
+        m_proteinSetStringArray = s;
     }
 
     public String getProteinSetStringList() {
