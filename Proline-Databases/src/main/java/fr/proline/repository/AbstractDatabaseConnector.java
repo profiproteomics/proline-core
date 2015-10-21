@@ -357,9 +357,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
      * @param source
      */
     protected void doClose(final String ident, final DataSource source) {
-	LOG.warn(
-		"Closing DatabaseConnector [{}] does not close already retrieved SQL JDBC Connection resources",
-		ident);
+    	LOG.warn("Closing DatabaseConnector [{}] does not close already retrieved SQL JDBC Connection resources",ident);
     }
 
     protected static void enableC3P0Pool(final Map<Object, Object> properties) {

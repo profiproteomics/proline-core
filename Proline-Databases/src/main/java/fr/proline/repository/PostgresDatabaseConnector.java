@@ -208,12 +208,12 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	protected void doClose(final String ident, final DataSource source) {
 
 		if (source instanceof ComboPooledDataSource) {
-			LOG.debug("Closing HikariDataSource for [{}]", ident);
+			LOG.debug("Closing DataSource for [{}]", ident);
 
 			try {
 				((ComboPooledDataSource) source).close();
 			} catch (Exception exClose) {
-				LOG.error("Error closing HikariDataSource for [" + ident + ']', exClose);
+				LOG.error("Error closing DataSource for [" + ident + ']', exClose);
 			}
 
 		}
