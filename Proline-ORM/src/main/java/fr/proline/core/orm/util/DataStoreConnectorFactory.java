@@ -359,6 +359,31 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 		} // End of synchronized block on m_managerLock
 
 	}
+	
+	@Override
+    public void closeProjectConnectors(long projectId) {
+
+		synchronized (m_managerLock) {
+			try {
+				IDatabaseConnector lcMsDbConnector = m_lcMsDbConnectors.get(projectId);
+				if (lcMsDbConnector != null) {
+					lcMsDbConnector.close();
+					m_lcMsDbConnectors.remove(projectId);
+				}
+			} catch (Exception exClose) {
+				LOG.error("Error closing LCMS Db Connector", exClose);
+			}
+			try {
+				IDatabaseConnector msiDbConnector = m_msiDbConnectors.get(projectId);
+				if (msiDbConnector != null) {
+					msiDbConnector.close();
+					m_msiDbConnectors.remove(projectId);
+				}
+			} catch (Exception exClose) {
+				LOG.error("Error closing LCMS Db Connector", exClose);
+			}
+		}
+	}
 
 	/* Private methods */
 	private void checkInitialization() {
