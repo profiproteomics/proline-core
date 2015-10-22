@@ -355,6 +355,12 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
         val resultRS = provider.getResultSet(rsID)
         if (resultRS.isDefined) {
           loadedRSByID += rsID -> resultRS.get
+          if(resultRS.get.decoyResultSet.isEmpty && resultRS.get.getDecoyResultSetId > 0){
+             val decoyRS = provider.getResultSet(resultRS.get.getDecoyResultSetId)
+             resultRS.get.decoyResultSet = decoyRS
+              if (decoyRS.isDefined) 
+                loadedRSByID += decoyRS.get.id -> decoyRS.get
+          }
         } else {
           val msg = " !!! Unable to get leave search result with id " + rsID
           logger.warn(msg)
