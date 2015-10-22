@@ -4,7 +4,7 @@ import fr.profi.util.StringUtils;
 
 public enum Alphabet {
 
-    AA, DNA;
+    aa, AA, DNA;
 
     public static Alphabet findAlphabet(final String name) {
 
