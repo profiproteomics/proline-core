@@ -33,6 +33,7 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
   type MsiPeaklist = fr.proline.core.orm.msi.Peaklist
   type MsiPeaklistSoftware = fr.proline.core.orm.msi.PeaklistSoftware
   type MsiSearchSetting = fr.proline.core.orm.msi.SearchSetting
+  type MsiMSMSSearchSetting = fr.proline.core.orm.msi.MsmsSearch
   type MsiInstrumentConfig = fr.proline.core.orm.msi.InstrumentConfig
   type MsiEnzyme = fr.proline.core.orm.msi.Enzyme
   type MsiSearchSettingsSeqDatabaseMap = fr.proline.core.orm.msi.SearchSettingsSeqDatabaseMap
@@ -624,9 +625,24 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
     val omSearchSettingsId = searchSettings.id
 
     if (omSearchSettingsId > 0L) {
-      msiEm.getReference(classOf[MsiSearchSetting], omSearchSettingsId) // Must exist in Msi Db if OM Id > 0
+      // Must exist in Msi Db if OM Id > 0
+      if(searchSettings.msmsSearchSettings.isDefined)
+         return msiEm.getReference(classOf[MsiMSMSSearchSetting], omSearchSettingsId)
+       else
+         return msiEm.getReference(classOf[MsiSearchSetting], omSearchSettingsId) 
     } else {
-      val msiSearchSetting = new MsiSearchSetting()
+      
+      var msiSearchSetting = if(searchSettings.msmsSearchSettings.isDefined){ 
+          val msmsS = new  MsiMSMSSearchSetting()
+          msmsS.setFragmentChargeStates(searchSettings.msmsSearchSettings.get.ms2ChargeStates);
+          msmsS.setFragmentMassErrorTolerance(searchSettings.msmsSearchSettings.get.ms2ErrorTol);
+          msmsS.setFragmentMassErrorToleranceUnit(searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit);
+          msmsS          
+        } else { 
+          new MsiSearchSetting()
+        }
+      
+      
       msiSearchSetting.setIsDecoy(searchSettings.isDecoy)
       msiSearchSetting.setMaxMissedCleavages(Integer.valueOf(searchSettings.maxMissedCleavages))
       msiSearchSetting.setPeptideChargeStates(searchSettings.ms1ChargeStates)
