@@ -56,6 +56,7 @@ class SQLRawFileProvider(val udsDbCtx: DatabaseConnectionContext, val pathConver
           directory = directory,
           mzdbFileName = rawFileRecord.getStringOption(RawFileCols.MZDB_FILE_NAME),
           mzdbFileDirectory = mzdbFileDirectory,
+          sampleName = rawFileRecord.getStringOption(RawFileCols.SAMPLE_NAME),
           creationTimestamp = rawFileRecord.getDateOption(RawFileCols.CREATION_TIMESTAMP),
           instrument = Some(
             new Instrument(

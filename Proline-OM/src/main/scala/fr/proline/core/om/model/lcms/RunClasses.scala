@@ -17,6 +17,7 @@ case class RawFile(
   val directory: Option[String] = None,
   val mzdbFileName: Option[String] = None,
   val mzdbFileDirectory: Option[String] = None,
+  val sampleName: Option[String] = None,
   val creationTimestamp: Option[Date] = None,
   val instrument: Option[Instrument] = None,
   

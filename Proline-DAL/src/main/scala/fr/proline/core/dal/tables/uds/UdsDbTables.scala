@@ -554,6 +554,7 @@ object UdsDbRawFileColumns extends ColumnEnumeration {
   val RAW_FILE_DIRECTORY = Column("raw_file_directory")
   val MZDB_FILE_NAME = Column("mzdb_file_name")
   val MZDB_FILE_DIRECTORY = Column("mzdb_file_directory")
+  val SAMPLE_NAME = Column("sample_name")
   val CREATION_TIMESTAMP = Column("creation_timestamp")
   val SERIALIZED_PROPERTIES = Column("serialized_properties")
   val INSTRUMENT_ID = Column("instrument_id")
