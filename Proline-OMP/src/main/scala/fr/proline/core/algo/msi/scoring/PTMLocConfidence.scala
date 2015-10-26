@@ -24,8 +24,6 @@ object PTMLocConfidence {
     var sum = 0.0f
     val s1 = assignments(0).score
     for (peptideMatch <- assignments) {
-	//TODO : pourquoi cette ligne ? 
-      _r(12.0f,2.3f,26.2f)
       val v = _r( -s1 , -peptideMatch.score , 0.1f )
       sum += v
       confidences(peptideMatch) = v

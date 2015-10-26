@@ -264,5 +264,12 @@ case class LocatedPtm(
   if (isNTerm) require(seqPosition == 0, "invalid seqPosition for a N-term PTM (it must be 0)")
   if (isCTerm) require(seqPosition == -1, "invalid seqPosition for a C-term PTM (it must be -1)")
 
+  def toReadableString() = {
+    val ptmDef = definition
+    val shortName = ptmDef.names.shortName
+    val ptmConstraint = if (isNTerm || isCTerm) ptmDef.location
+    else "" + ptmDef.residue + seqPosition
+    s"${shortName} (${ptmConstraint})"
+  }
 }
 

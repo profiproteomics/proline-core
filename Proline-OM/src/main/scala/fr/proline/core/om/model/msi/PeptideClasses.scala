@@ -333,15 +333,8 @@ case class Peptide (
   
       val ptmStringBuf = new ListBuffer[String]
   
-      for (ptm <- ptms) {
-  
-        val ptmDef = ptm.definition
-        val shortName = ptmDef.names.shortName
-  
-        val ptmConstraint = if (ptm.isNTerm || ptm.isCTerm) ptmDef.location
-        else "" + ptmDef.residue + ptm.seqPosition
-  
-        ptmStringBuf += s"${shortName} (${ptmConstraint})"
+      for (ptm <- ptms) {  
+        ptmStringBuf += ptm.toReadableString
       }
   
       tmpReadablePtmString = ptmStringBuf.mkString("; ")
@@ -541,6 +534,7 @@ case class PeptideMatchProperties (
   @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None,
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
   @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None,
+  @BeanProperty var ptmSiteProperties: Option[PeptideMatchPTMSiteProperties] = None,
   @BeanProperty var spectralCount:  Option[Int] = None  
 )
 
@@ -551,7 +545,6 @@ case class PeptideMatchMascotProperties (
   @BeanProperty var ambiguityString: Option[String] = None,
   @BeanProperty var nlString: Option[String] = None,
   @BeanProperty var usedPeaksCount: Option[Int] = None
-
 )
 
 case class PeptideMatchOmssaProperties (
@@ -573,6 +566,17 @@ case class PeptideMatchResultSummaryProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var mascotScoreOffset: Option[Float] = None,
   @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
+)
+
+case class PeptideMatchPTMSiteProperties (
+  @BeanProperty var mascotPtmSiteProperties: Option[MascotPtmSiteProperties] = None
+)
+
+case class MascotPtmSiteProperties (
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
+  @BeanProperty var mascotDeltaScore: Option[Float] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Float])
+  @BeanProperty var siteProbabilities: Map[String, Float]
 )
  
 object PeptideInstance extends InMemoryIdGen
