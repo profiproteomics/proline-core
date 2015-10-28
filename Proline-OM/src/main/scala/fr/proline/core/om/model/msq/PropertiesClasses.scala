@@ -10,6 +10,7 @@ case class ComputedRatio (
   @BeanProperty var state: Int = 0,// -1 means under-abundant, 0 means invariant and +1 means over-abundant
   @BeanProperty var tTestPValue: Option[Double] = None,
   @BeanProperty var zTestPValue: Option[Double] = None,
+  @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var zScore: Option[Float] = None
 ) {
   @transient lazy val ratioValue = if( numerator > 0 && denominator > 0 ) numerator/denominator else Float.NaN
@@ -81,17 +82,17 @@ case class MasterQuantProteinSetProperties (
   
 }
 
-      
+
 case class MasterQuantChannelProperties (
-    @JsonDeserialize(contentAs = classOf[java.lang.Long])
-	@BeanProperty var identResultSummaryId: Option[Long],
-	@JsonDeserialize(contentAs = classOf[java.lang.Long])
-	@BeanProperty var identDatasetId: Option[Long],
-	@JsonDeserialize(contentAs = classOf[SpectralCountProperties])	
-	@BeanProperty var spectralCountProperties: Option[SpectralCountProperties] = None
+  @JsonDeserialize(contentAs = classOf[java.lang.Long])
+  @BeanProperty var identResultSummaryId: Option[Long],
+  @JsonDeserialize(contentAs = classOf[java.lang.Long])
+  @BeanProperty var identDatasetId: Option[Long],
+  @JsonDeserialize(contentAs = classOf[SpectralCountProperties])
+  @BeanProperty var spectralCountProperties: Option[SpectralCountProperties] = None
 )
 
 case class SpectralCountProperties (
-	@JsonDeserialize(contentAs = classOf[java.lang.Long] )
-	@BeanProperty var weightsRefRSMIds: Array[java.lang.Long] = Array()
+  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
+  @BeanProperty var weightsRefRSMIds: Array[java.lang.Long] = Array()
 )
