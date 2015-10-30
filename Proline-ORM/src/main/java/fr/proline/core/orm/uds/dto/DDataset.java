@@ -191,9 +191,11 @@ public class DDataset {
 		this.m_quantProcessingConfig = quantProcessingConfig;
 	}
 	
+	
+	// deserialize because the post quant processing config could have changed
 	@SuppressWarnings("unchecked")
     public Map<String, Object> getPostQuantProcessingConfigAsMap() throws Exception {
-		if ((postQuantProcessingConfigMap == null) && (m_postQuantProcessingConfig != null)) {
+		if ( (m_postQuantProcessingConfig != null)) {
 			postQuantProcessingConfigMap = JsonSerializer.getMapper().readValue(getPostQuantProcessingConfig().getClobData(), Map.class);
     	}
     	return postQuantProcessingConfigMap;
