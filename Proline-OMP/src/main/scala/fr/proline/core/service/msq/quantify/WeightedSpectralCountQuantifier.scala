@@ -590,7 +590,9 @@ class WeightedSpectralCountQuantifier(
       // Load result summaries 
     this.logger.info("updatePepInstanceSC for result summaries as needed...")
     val rsmsForSCUpdate = rsmsForSCUpdateBuilder.result
-    PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsmsForSCUpdate, executionContext)
+    
+    val pepInstanceFilteringLeafSCUpdater= new PepInstanceFilteringLeafSCUpdater()
+    pepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsmsForSCUpdate, executionContext)
     rsmsForSCUpdate.foreach(rsmToSave =>{
     	rsmToSave.peptideInstances.foreach(pepI => {
     		val ormPepInst = this.msiEm.find(classOf[fr.proline.core.orm.msi.PeptideInstance], pepI.id)

@@ -43,14 +43,14 @@ trait IPepInstanceSpectralCountUpdater {
 
 }
 
-object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater with LazyLogging {
+class PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdater with LazyLogging {
 
   val loadedRSMByID = new HashMap[Long, ResultSummary]()
   val isChildByRSMID = new HashMap[Long, Boolean]()
   val loadedRSByID = new HashMap[Long, ResultSet]()
   
   
-  private def getIsLeaveRSM(rsmID: Long, execContext: IExecutionContext): Boolean = {
+  def getIsLeaveRSM(rsmID: Long, execContext: IExecutionContext): Boolean = {
     
     if(! isChildByRSMID.contains(rsmID)) {   
 	   
@@ -87,7 +87,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
     return isChildByRSMID(rsmID);
   }
 
-  private def getRSIdForRsmID(rsmID: Long, execContext: IExecutionContext): Long = {
+  def getRSIdForRsmID(rsmID: Long, execContext: IExecutionContext): Long = {
     if(loadedRSMByID.contains(rsmID))
       return loadedRSMByID(rsmID).getResultSetId
 
@@ -146,7 +146,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
    *  
    */
   def updatePepInstanceSC(rsms: Seq[ResultSummary], execContext: IExecutionContext): Unit = {
-
+    
     rsms.foreach(rsm =>{
         loadedRSMByID += (rsm.id -> rsm)
         val rsOpt = rsm.resultSet
@@ -187,7 +187,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
   }
   
  
-  private def getRSMSpectralCountByPepId(rootRSM: ResultSummary, rsmID: Long, pepID: Seq[Long], execContext: IExecutionContext): HashMap[Long, Int] = {
+  def getRSMSpectralCountByPepId(rootRSM: ResultSummary, rsmID: Long, pepID: Seq[Long], execContext: IExecutionContext): HashMap[Long, Int] = {
     val scByPepID = new HashMap[Long, Int]()
 
     //***** RSM is leave : COUNT Valid PSM
@@ -283,7 +283,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
   }
 
   //A Optimiser: Prendre en entre la Map globale et l'incrementer...  
-  private def countValidPSMInResultSet(rs: ResultSet, appliedPSMFilters: Array[IPeptideMatchFilter]): HashMap[Long, Int] = {
+  def countValidPSMInResultSet(rs: ResultSet, appliedPSMFilters: Array[IPeptideMatchFilter]): HashMap[Long, Int] = {
     appliedPSMFilters.foreach(psmFilter => {
       var allPSMs = rs.peptideMatches.toSeq
       if (rs.decoyResultSet.isDefined) {
@@ -305,7 +305,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
     resultMap
   }
 
-  private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
+  def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
 
     new SQLResultSummaryProvider(msiDbCtx = execContext.getMSIDbConnectionContext,
       psDbCtx = execContext.getPSDbConnectionContext,
@@ -313,7 +313,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
 
   }
 
-  private def getRSMChildsID(rsmID: Long, execContext: IExecutionContext): Option[Seq[Long]] = {
+  def getRSMChildsID(rsmID: Long, execContext: IExecutionContext): Option[Seq[Long]] = {
 
     var childRSMIdsOp: Option[Seq[Long]] = null
     val jdbcWork = new JDBCWork() {
@@ -341,7 +341,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
     return childRSMIdsOp
   }
 
-  private def getLeavesRS(rsmID: Long, execContext: IExecutionContext): Seq[ResultSet] = {
+  def getLeavesRS(rsmID: Long, execContext: IExecutionContext): Seq[ResultSet] = {
     val providerContext = ProviderDecoratedExecutionContext(execContext) // Use Object factory
 
     val rsId = getRSIdForRsmID(rsmID, execContext)
@@ -373,7 +373,7 @@ object PepInstanceFilteringLeafSCUpdater extends IPepInstanceSpectralCountUpdate
     leavesRsBuilder.result
   }
 
-  private def getRSLeafChildsID(rsId: Long, execContext: IExecutionContext): Seq[Long] = {
+  def getRSLeafChildsID(rsId: Long, execContext: IExecutionContext): Seq[Long] = {
     var allRSIds = Seq.newBuilder[Long]
     if(loadedRSByID.contains(rsId) && (loadedRSByID(rsId).isSearchResult)){
        allRSIds += rsId

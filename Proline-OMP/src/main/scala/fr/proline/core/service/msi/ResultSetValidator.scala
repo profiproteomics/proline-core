@@ -201,8 +201,10 @@ class ResultSetValidator(
   
     // Instantiate totalLeavesMatchCount 
     this.logger.debug("updatePepInstanceSC for new validated result summaries ...")
-    val rsm2Update = if(decoyRsmOpt.isDefined) Seq(targetRsm, decoyRsmOpt.get) else Seq(targetRsm)   
-    PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm2Update, execContext)  
+    val rsm2Update = if(decoyRsmOpt.isDefined) Seq(targetRsm, decoyRsmOpt.get) else Seq(targetRsm)
+    
+    val pepInstanceFilteringLeafSCUpdater= new PepInstanceFilteringLeafSCUpdater()
+    pepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(rsm2Update, execContext)  
       
     if (storeResultSummary) {
 

@@ -48,7 +48,8 @@ class SpectralCountAlgoTest extends StrictLogging {
 
   @Test
   def testUpdatePepInstance() = {
-    PepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(readRSM, executionContext)
+    val pepInstanceFilteringLeafSCUpdater= new PepInstanceFilteringLeafSCUpdater()
+    pepInstanceFilteringLeafSCUpdater.updatePepInstanceSC(readRSM, executionContext)
     readRSM.peptideInstances.foreach(pepI => {
       assertTrue(pepI.totalLeavesMatchCount > 0)
     })
