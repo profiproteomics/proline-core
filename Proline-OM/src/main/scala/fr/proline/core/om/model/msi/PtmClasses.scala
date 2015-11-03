@@ -162,13 +162,14 @@ case class PtmDefinition(
   /**
    * Convert the PTM definition into a readable string (using the Mascot convention).
    */
-  def toReadableString = {
+  def toReadableString() = {
     val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
     val resAsStr = if( residue != '\0' ) residue.toString else ""
     val locWithRes = Seq( loc, resAsStr ).filter( StringUtils.isNotEmpty(_) ).mkString(" ")
 
     "%s (%s)".format(this.names.shortName,locWithRes)
   }
+  
 }
 
 object LocatedPtm {
@@ -264,12 +265,7 @@ case class LocatedPtm(
   if (isNTerm) require(seqPosition == 0, "invalid seqPosition for a N-term PTM (it must be 0)")
   if (isCTerm) require(seqPosition == -1, "invalid seqPosition for a C-term PTM (it must be -1)")
 
-  def toReadableString() = {
-    val ptmDef = definition
-    val shortName = ptmDef.names.shortName
-    val ptmConstraint = if (isNTerm || isCTerm) ptmDef.location
-    else "" + ptmDef.residue + seqPosition
-    s"${shortName} (${ptmConstraint})"
-  }
+  def toReadableString(): String = definition.toReadableString()
+
 }
 
