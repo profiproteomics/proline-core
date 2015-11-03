@@ -114,6 +114,7 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     var lastSeqPos = 1 // will be used to compute a sequence position range
     for( locatedPtm <- sortedLocatedPtms ) {
       
+      // Compute sequence position
       var seqPos = -2
       if( locatedPtm.isNTerm ) { seqPos = 0 }
       else if( locatedPtm.isCTerm  ) { seqPos = -1 }
@@ -122,55 +123,8 @@ object Peptide extends InMemoryIdGen with LazyLogging {
         lastSeqPos = seqPos
       }
       
-      // Define some vars
-      val ptmComp = locatedPtm.composition
-      val atomModBySymbol = this.computePtmStructure( ptmComp ).atomModBySymbol        
-      val atomModStrings = new ArrayBuffer[String]
-      
-      // Sort atom symbols by ascendant order
-      val sortedAtomSymbols = atomModBySymbol.keys.toList.sortWith { (a,b) => a < b }
-      
-      // Iterate over atom symbols
-      for(atomSymbol <- sortedAtomSymbols ) {
-        
-        val atomMod = atomModBySymbol(atomSymbol)
-        
-        // Sort atom symbols by ascendant order
-        val sortedAtomIsotopes = atomMod.keys.toList.sortWith { (a,b) => a < b }
-        
-        // Iterate over atom isotopes
-        for(atomIsotope <- sortedAtomIsotopes ) {
-          
-          val isotopePrefix = if( atomIsotope == 0 ) "" else atomIsotope.toString
-          val atomModIsotopeComposition = atomMod(atomIsotope)
-          val nbAtoms = atomModIsotopeComposition.quantity
-          var atomModString = isotopePrefix + atomSymbol
-          
-          // Stringify substracted atoms
-          if( atomModIsotopeComposition.sign == "-" ) {
-            
-            atomModString += "(-"+nbAtoms+")"      
-            
-          // Stringify added atoms
-          } else if( atomModIsotopeComposition.sign == "+" ) {
-            
-            if( nbAtoms > 1 ) atomModString += "("+nbAtoms+")"
-            
-          } else { throw new Exception("invalid sign of isotope composition") }
-          
-          atomModStrings += atomModString
-        }
-      }
-      
-      if( atomModStrings.length == 0 ) {
-        throw new Exception( "a problem has occured during the ptm string construction" )
-      }
-      
-      if( !locatedPtmStringBySeqPos.contains(seqPos) ) {
-        locatedPtmStringBySeqPos += seqPos -> new ArrayBuffer[String]()
-      }
-      
-      locatedPtmStringBySeqPos(seqPos) += atomModStrings.mkString(" ")
+      // Compute new PTM string and add it to the map locatedPtmStringBySeqPos
+      locatedPtmStringBySeqPos.getOrElseUpdate(seqPos, new ArrayBuffer[String]()) += locatedPtm.toPtmString()
     }
     
     // Create a list of all possible PTM sequence positions
@@ -182,9 +136,9 @@ object Peptide extends InMemoryIdGen with LazyLogging {
       val locatedPtmStrings = locatedPtmStringBySeqPos.get(seqPos)
       if( locatedPtmStrings.isDefined ) {
         ptmString += locatedPtmStrings.get.toList
-                                      .sortWith { (a,b) => a < b }
-                                      .map { ptmStr => seqPos + "[" + ptmStr + "]" }
-                                      .mkString("")
+          .sorted
+          .map { ptmStr => seqPos + "[" + ptmStr + "]" }
+          .mkString("")
       }
     }
     
@@ -196,44 +150,6 @@ object Peptide extends InMemoryIdGen with LazyLogging {
       case null => ""
       case _ => Peptide.makePtmString( locatedPtms.toList )
     }
-  }
-  
-  private case class PtmIsotopeComposition( sign: String, quantity: Int )
-  private case class PtmStructure( atomModBySymbol: mutable.HashMap[String,mutable.HashMap[Int,PtmIsotopeComposition]] )
-  
-  private def computePtmStructure( composition: String ): PtmStructure = {
-    
-    import java.util.regex.Pattern
-    
-    // EX : SILAC label (R) => "C(-9) 13C(9)"
-    val atomMods = composition.split(" ")
-    val atomCompositionBySymbol = new mutable.HashMap[String,mutable.HashMap[Int,PtmIsotopeComposition]]()
-    
-    for(atomMod <- atomMods ) {
-      var( atomSymbol, nbAtoms, atomIsotope, sign ) = ("",0,0,"")
-      
-      val m = Pattern.compile("""^(\d*)(\w+)(\((-){0,1}(.+)\)){0,1}""").matcher(atomMod)
-      if( m.matches ) {
-        
-        // 0 means most frequent isotope
-        atomIsotope = if( isNotEmpty(m.group(1)) ) m.group(1).toInt else 0          
-        atomSymbol = m.group(2)
-        sign = if( isNotEmpty(m.group(4)) ) m.group(4) else "+"            
-        nbAtoms = if( isNotEmpty(m.group(5)) ) m.group(5).toInt else 1
-      }
-      else { throw new Exception( "can't parse atom composition '"+atomMod+"'" ) }
-      
-      if( ! atomCompositionBySymbol.contains(atomSymbol) ) {
-        atomCompositionBySymbol += atomSymbol -> new mutable.HashMap[Int,PtmIsotopeComposition]()
-      }
-      
-      atomCompositionBySymbol(atomSymbol) += ( atomIsotope -> PtmIsotopeComposition( sign, nbAtoms ) )
-      
-      //ptmStructure(atomSymbol)(atomIsotope)(modifMode) = { nb_atoms = nbAtoms }
-    }
-    
-    PtmStructure( atomCompositionBySymbol )
-    
   }
   
 //  import org.biojava.bio.BioException
@@ -535,7 +451,7 @@ case class PeptideMatchProperties (
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
   @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None,
   @BeanProperty var ptmSiteProperties: Option[PeptideMatchPTMSiteProperties] = None,
-  @BeanProperty var spectralCount:  Option[Int] = None  
+  @BeanProperty var spectralCount: Option[Int] = None
 )
 
 case class PeptideMatchMascotProperties (

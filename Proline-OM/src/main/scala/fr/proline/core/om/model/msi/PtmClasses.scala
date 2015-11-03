@@ -1,7 +1,11 @@
 package fr.proline.core.om.model.msi
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
 import fr.profi.util.misc.InMemoryIdGen
-import fr.profi.util.StringUtils
+import fr.profi.util.StringUtils.isEmpty
+import fr.profi.util.StringUtils.isNotEmpty
 
 object PtmNames extends InMemoryIdGen
 
@@ -13,7 +17,7 @@ trait PtmNamesContainer {
 case class PtmNames(val shortName: String, val fullName: String) extends PtmNamesContainer {
 
   // Requirements
-  require(!StringUtils.isEmpty(shortName),"shortName is empty")
+  require(!isEmpty(shortName),"shortName is empty")
 
   def sameAs(that: Any) = that match {
     case o : PtmNames => o.shortName==shortName && o.fullName==fullName
@@ -104,7 +108,7 @@ case class PtmSpecificity(
 ) extends IPtmSpecificity {
 
   // Requirements
-  require(!StringUtils.isEmpty(location), "location is empty")
+  require(!isEmpty(location), "location is empty")
 
   def sameAs(that: Any) = that match {
     case o : PtmSpecificity => o.location==location && o.residue==residue && o.classification == classification && o.ptmId == ptmId
@@ -145,7 +149,7 @@ case class PtmDefinition(
   @transient lazy val pepNeutralLosses = ptmEvidences.find( ev => ev.ionType == IonTypes.PepNeutralLoss )
   @transient lazy val artefacts = ptmEvidences.find( ev => ev.ionType == IonTypes.Artefact )
 
-  def isCompositionDefined = !StringUtils.isEmpty(precursorDelta.composition)
+  def isCompositionDefined = !isEmpty(precursorDelta.composition)
 
   def sameAs(that: Any) = that match {
     case o : PtmDefinition => {
@@ -165,7 +169,7 @@ case class PtmDefinition(
   def toReadableString() = {
     val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
     val resAsStr = if( residue != '\0' ) residue.toString else ""
-    val locWithRes = Seq( loc, resAsStr ).filter( StringUtils.isNotEmpty(_) ).mkString(" ")
+    val locWithRes = Seq( loc, resAsStr ).filter( isNotEmpty(_) ).mkString(" ")
 
     "%s (%s)".format(this.names.shortName,locWithRes)
   }
@@ -266,6 +270,88 @@ case class LocatedPtm(
   if (isCTerm) require(seqPosition == -1, "invalid seqPosition for a C-term PTM (it must be -1)")
 
   def toReadableString(): String = definition.toReadableString()
+  
+  def toPtmString(): String = {
+    
+    val atomModBySymbol = this.computePtmStructure( this.composition ).atomModBySymbol        
+    val atomModStrings = new ArrayBuffer[String]
+    
+    // Sort atom symbols by ascendant order
+    val sortedAtomSymbols = atomModBySymbol.keys.toList.sorted
+    
+    // Iterate over atom symbols
+    for(atomSymbol <- sortedAtomSymbols ) {
+      
+      val atomMod = atomModBySymbol(atomSymbol)
+      
+      // Sort atom symbols by ascendant order
+      val sortedAtomIsotopes = atomMod.keys.toList.sorted
+      
+      // Iterate over atom isotopes
+      for(atomIsotope <- sortedAtomIsotopes ) {
+        
+        val isotopePrefix = if( atomIsotope == 0 ) "" else atomIsotope.toString
+        val atomModIsotopeComposition = atomMod(atomIsotope)
+        val nbAtoms = atomModIsotopeComposition.quantity
+        var atomModString = isotopePrefix + atomSymbol
+        
+        // Stringify substracted atoms
+        if( atomModIsotopeComposition.sign == "-" ) {
+          
+          atomModString += "(-"+nbAtoms+")"
+          
+        // Stringify added atoms
+        } else if( atomModIsotopeComposition.sign == "+" ) {
+          
+          if( nbAtoms > 1 ) atomModString += "("+nbAtoms+")"
+          
+        } else { throw new Exception("invalid sign of isotope composition") }
+        
+        atomModStrings += atomModString
+      }
+    }
+    
+    if( atomModStrings.length == 0 ) {
+      throw new Exception( "a problem has occured during the ptm string construction" )
+    }
+    
+    atomModStrings.mkString(" ")
+  }
+  
+  private case class PtmIsotopeComposition( sign: String, quantity: Int )
+  private case class PtmStructure( atomModBySymbol: HashMap[String,HashMap[Int,PtmIsotopeComposition]] )
+  
+  private def computePtmStructure( composition: String ): PtmStructure = {
+    
+    import java.util.regex.Pattern
+    
+    // EX : SILAC label (R) => "C(-9) 13C(9)"
+    val atomMods = composition.split(" ")
+    val atomCompositionBySymbol = new HashMap[String,HashMap[Int,PtmIsotopeComposition]]()
+    
+    for(atomMod <- atomMods ) {
+      var( atomSymbol, nbAtoms, atomIsotope, sign ) = ("",0,0,"")
+      
+      val m = Pattern.compile("""^(\d*)(\w+)(\((-){0,1}(.+)\)){0,1}""").matcher(atomMod)
+      if( m.matches ) {
+        
+        // 0 means most frequent isotope
+        atomIsotope = if( isNotEmpty(m.group(1)) ) m.group(1).toInt else 0
+        atomSymbol = m.group(2)
+        sign = if( isNotEmpty(m.group(4)) ) m.group(4) else "+"
+        nbAtoms = if( isNotEmpty(m.group(5)) ) m.group(5).toInt else 1
+      }
+      else { throw new Exception( "can't parse atom composition '"+atomMod+"'" ) }
+      
+      if( ! atomCompositionBySymbol.contains(atomSymbol) ) {
+        atomCompositionBySymbol += atomSymbol -> new HashMap[Int,PtmIsotopeComposition]()
+      }
+      
+      atomCompositionBySymbol(atomSymbol) += ( atomIsotope -> PtmIsotopeComposition( sign, nbAtoms ) )
+    }
+    
+    PtmStructure( atomCompositionBySymbol )
+  }
 
 }
 
