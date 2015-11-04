@@ -315,7 +315,7 @@ case class LocatedPtm(
       throw new Exception( "a problem has occured during the ptm string construction" )
     }
     
-    atomModStrings.mkString(" ")
+    this.seqPosition + "[" + atomModStrings.mkString(" ") + "]"
   }
   
   private case class PtmIsotopeComposition( sign: String, quantity: Int )

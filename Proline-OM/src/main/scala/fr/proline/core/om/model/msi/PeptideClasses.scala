@@ -108,7 +108,8 @@ object Peptide extends InMemoryIdGen with LazyLogging {
     val sortedLocatedPtms = locatedPtms.sortWith { (a,b) => a.seqPosition <= b.seqPosition }
     
     // Define data structure which will contain located PTM strings mapped by sequence position
-    val locatedPtmStringBySeqPos = new mutable.HashMap[Int,ArrayBuffer[String]]()
+    // TODO: do we allow more than one PTM at a given position ???
+    val locatedPtmStringBySeqPos = new mutable.HashMap[Int,ArrayBuffer[LocatedPtm]]()
     
     // Iterate over located PTMs
     var lastSeqPos = 1 // will be used to compute a sequence position range
@@ -124,25 +125,22 @@ object Peptide extends InMemoryIdGen with LazyLogging {
       }
       
       // Compute new PTM string and add it to the map locatedPtmStringBySeqPos
-      locatedPtmStringBySeqPos.getOrElseUpdate(seqPos, new ArrayBuffer[String]()) += locatedPtm.toPtmString()
+      locatedPtmStringBySeqPos.getOrElseUpdate(seqPos, new ArrayBuffer[LocatedPtm]()) += locatedPtm
     }
     
     // Create a list of all possible PTM sequence positions
     val putativeSeqPositions = List(0) ++ (1 to lastSeqPos) ++ List(-1)
     
     // Sort PTMs and merge them into a unique string
-    var ptmString = ""
+    val ptmStringBuilder = new StringBuilder()
     for(seqPos <- putativeSeqPositions ) {
-      val locatedPtmStrings = locatedPtmStringBySeqPos.get(seqPos)
-      if( locatedPtmStrings.isDefined ) {
-        ptmString += locatedPtmStrings.get.toList
-          .sorted
-          .map { ptmStr => seqPos + "[" + ptmStr + "]" }
-          .mkString("")
+      val locatedPtmStringsOpt = locatedPtmStringBySeqPos.get(seqPos)
+      if( locatedPtmStringsOpt.isDefined ) {
+        ptmStringBuilder ++= locatedPtmStringsOpt.get.map( _.toPtmString ).sorted.mkString("")          
       }
     }
     
-    ptmString
+    ptmStringBuilder.toString()
   }
   
   def makePtmString( locatedPtms: Array[LocatedPtm] ): String = {
