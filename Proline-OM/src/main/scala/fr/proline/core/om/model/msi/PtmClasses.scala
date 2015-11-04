@@ -269,8 +269,14 @@ case class LocatedPtm(
   if (isNTerm) require(seqPosition == 0, "invalid seqPosition for a N-term PTM (it must be 0)")
   if (isCTerm) require(seqPosition == -1, "invalid seqPosition for a C-term PTM (it must be -1)")
 
-  def toReadableString(): String = definition.toReadableString()
-  
+  def toReadableString() = {
+    val ptmDef = definition
+    val shortName = ptmDef.names.shortName
+    val ptmConstraint = if (isNTerm || isCTerm) ptmDef.location
+    else "" + ptmDef.residue + seqPosition
+    s"${shortName} (${ptmConstraint})"
+  }
+    
   def toPtmString(): String = {
     
     val atomModBySymbol = this.computePtmStructure( this.composition ).atomModBySymbol        
@@ -311,11 +317,11 @@ case class LocatedPtm(
       }
     }
     
-    if( atomModStrings.isEmpty ) {
+    if( atomModStrings.length == 0 ) {
       throw new Exception( "a problem has occured during the ptm string construction" )
     }
     
-    this.seqPosition + "[" + atomModStrings.mkString(" ") + "]"
+    atomModStrings.mkString(" ")
   }
   
   private case class PtmIsotopeComposition( sign: String, quantity: Int )
