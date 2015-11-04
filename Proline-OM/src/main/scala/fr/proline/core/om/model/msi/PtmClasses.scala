@@ -165,8 +165,10 @@ case class PtmDefinition(
 
   /**
    * Convert the PTM definition into a readable string (using the Mascot convention).
+   * Used by PM-DatasetExporter
+   * TODO: rename to "toMascotString" or something else to avoid confusion with LocatedPtm.toReadableString ?
    */
-  def toMascotString() = {
+  def toReadableString() = {
     val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
     val resAsStr = if( residue != '\0' ) residue.toString else ""
     val locWithRes = Seq( loc, resAsStr ).filter( isNotEmpty(_) ).mkString(" ")
