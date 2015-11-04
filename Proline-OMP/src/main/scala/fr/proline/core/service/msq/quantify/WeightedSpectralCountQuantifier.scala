@@ -1189,6 +1189,7 @@ class WeightedSpectralCountQuantifier(
         msiMasterPeptideSet.setIsSubset(false)
         msiMasterPeptideSet.setPeptideCount(samesetItems.length)
         msiMasterPeptideSet.setPeptideMatchCount(mergedPeptideSet.peptideMatchesCount)
+        msiMasterPeptideSet.setSequenceCount(mergedPeptideSet.sequencesCount)
         msiMasterPeptideSet.setProteinSet(msiMasterProteinSet)
         // FIXME: retrieve the right scoring id
         msiMasterPeptideSet.setScore(mergedPeptideSet.score)

@@ -427,6 +427,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
         msiMasterPeptideSet.setIsSubset(false)
         msiMasterPeptideSet.setPeptideCount(samesetItems.length)
         msiMasterPeptideSet.setPeptideMatchCount(masterPeptideSet.peptideMatchesCount)
+        msiMasterPeptideSet.setSequenceCount(masterPeptideSet.sequencesCount)
         msiMasterPeptideSet.setProteinSet(msiMasterProteinSet)
         // FIXME: retrieve the right scoring id
         msiMasterPeptideSet.setScore(masterPeptideSet.score)
