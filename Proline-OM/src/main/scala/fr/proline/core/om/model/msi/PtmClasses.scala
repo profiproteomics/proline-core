@@ -166,7 +166,7 @@ case class PtmDefinition(
   /**
    * Convert the PTM definition into a readable string (using the Mascot convention).
    */
-  def toReadableString() = {
+  def toMascotString() = {
     val loc = if( location == PtmLocation.ANYWHERE.toString() ) "" else location
     val resAsStr = if( residue != '\0' ) residue.toString else ""
     val locWithRes = Seq( loc, resAsStr ).filter( isNotEmpty(_) ).mkString(" ")
@@ -269,14 +269,19 @@ case class LocatedPtm(
   if (isNTerm) require(seqPosition == 0, "invalid seqPosition for a N-term PTM (it must be 0)")
   if (isCTerm) require(seqPosition == -1, "invalid seqPosition for a C-term PTM (it must be -1)")
 
+  /**
+   * Convert the PTM definition into a readable string (using the Proline convention).
+   */
   def toReadableString() = {
-    val ptmDef = definition
+    val ptmDef = this.definition
     val shortName = ptmDef.names.shortName
+    
     val ptmConstraint = if (isNTerm || isCTerm) ptmDef.location
     else "" + ptmDef.residue + seqPosition
+    
     s"${shortName} (${ptmConstraint})"
   }
-    
+  
   def toPtmString(): String = {
     
     val atomModBySymbol = this.computePtmStructure( this.composition ).atomModBySymbol        
