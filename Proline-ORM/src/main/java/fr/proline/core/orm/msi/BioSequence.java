@@ -45,46 +45,7 @@ public class BioSequence implements Serializable {
     public BioSequence() {
     }
 
-    /**
-     * Create a Msi BioSequence entity from a Pdi BioSequence entity. Created Msi BioSequence entity shares
-     * the same Id with given Pdi Peptide.
-     * 
-     * @param pdiBioSequence
-     *            BioSequence entity from pdiDb used to initialize Msi BioSequence fields (must not be
-     *            <code>null</code>)
-     */
-    public BioSequence(final fr.proline.core.orm.pdi.BioSequence pdiBioSequence) {
 
-	if (pdiBioSequence == null) {
-	    throw new IllegalArgumentException("PdiBioSequence is null");
-	}
-
-	setId(pdiBioSequence.getId());
-	setAlphabet(pdiBioSequence.getAlphabet());
-	setCrc64(pdiBioSequence.getCrc64());
-
-	// FIXME LMN inconsistent nullable field "length"
-	final Integer pdiBioSequenceLength = pdiBioSequence.getLength();
-
-	if (pdiBioSequenceLength == null) {
-	    setLength(-1);
-	} else {
-	    setLength(pdiBioSequenceLength.intValue());
-	}
-
-	setMass(pdiBioSequence.getMass());
-	setPi(pdiBioSequence.getPi());
-	setSequence(pdiBioSequence.getSequence());
-
-	final String pdiBioSequenceProps = pdiBioSequence.getSerializedProperties();
-
-	if (StringUtils.isEmpty(pdiBioSequenceProps)) {
-	    setSequence(null);
-	} else {
-	    setSerializedProperties(pdiBioSequenceProps);
-	}
-
-    }
 
     public long getId() {
 	return id;
@@ -118,7 +79,7 @@ public class BioSequence implements Serializable {
 	length = pLength;
     }
 
-    public double getMass() {
+    public int getMass() {
 	return this.mass;
     }
 
