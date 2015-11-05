@@ -75,8 +75,6 @@ public class PeptideSet implements Serializable {
 
     // Transient Variables not saved in database
     @Transient
-    private PeptideInstance[] peptideInstances = null; //JPM.TODO : will be removed
-    @Transient
     private DPeptideInstance[] dpeptideInstances = null; 
     @Transient
     private Map<String, Object> serializedPropertiesMap;
@@ -186,13 +184,6 @@ public class PeptideSet implements Serializable {
      * 
      * @return
      */
-    public PeptideInstance[] getTransientPeptideInstances() {
-	return peptideInstances;  //JPM.TODO : will be removed
-    }
-
-    public void setTransientPeptideInstances(PeptideInstance[] peptideInstances) {
-	this.peptideInstances = peptideInstances;  //JPM.TODO : will be removed
-    }
     public DPeptideInstance[] getTransientDPeptideInstances() {
 	return dpeptideInstances;
     }
