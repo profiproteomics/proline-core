@@ -20,95 +20,132 @@ import fr.proline.core.orm.pdi.Alphabet;
 @Entity
 @Table(name = "bio_sequence")
 public class BioSequence implements Serializable {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    // MSI BioSequence Id are not generated (taken from Pdi BioSequence entity)
-    private long id;
+	@Id
+	// MSI BioSequence Id are not generated (taken from Pdi BioSequence entity)
+	private long id;
 
-    @Enumerated(EnumType.STRING)
-    private Alphabet alphabet;
+	@Enumerated(EnumType.STRING)
+	private Alphabet alphabet;
 
-    private String crc64;
+	private String crc64;
 
-    private int length;
+	private int length;
 
-    private int mass;
+	private int mass;
 
-    private Float pi;
+	private Float pi;
 
-    private String sequence;
+	private String sequence;
 
-    @Column(name = "serialized_properties")
-    private String serializedProperties;
+	@Column(name = "serialized_properties")
+	private String serializedProperties;
 
-    public BioSequence() {
-    }
+	public BioSequence() {
+	}
 
+	/**
+	 * Create a Msi BioSequence entity from a Pdi BioSequence entity. Created Msi BioSequence entity shares the same Id with given Pdi Peptide.
+	 * 
+	 * @param pdiBioSequence
+	 *            BioSequence entity from pdiDb used to initialize Msi BioSequence fields (must not be <code>null</code>)
+	 */
+	public BioSequence(final fr.proline.core.orm.pdi.BioSequence pdiBioSequence) {
 
+		if (pdiBioSequence == null) {
+			throw new IllegalArgumentException("PdiBioSequence is null");
+		}
 
-    public long getId() {
-	return id;
-    }
+		setId(pdiBioSequence.getId());
+		setAlphabet(pdiBioSequence.getAlphabet());
+		setCrc64(pdiBioSequence.getCrc64());
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+		// FIXME LMN inconsistent nullable field "length"
+		final Integer pdiBioSequenceLength = pdiBioSequence.getLength();
 
-    public Alphabet getAlphabet() {
-	return alphabet;
-    }
+		if (pdiBioSequenceLength == null) {
+			setLength(-1);
+		} else {
+			setLength(pdiBioSequenceLength.intValue());
+		}
 
-    public void setAlphabet(final Alphabet pAlphabet) {
-	alphabet = pAlphabet;
-    }
+		setMass(pdiBioSequence.getMass());
+		setPi(pdiBioSequence.getPi());
+		setSequence(pdiBioSequence.getSequence());
 
-    public String getCrc64() {
-	return this.crc64;
-    }
+		final String pdiBioSequenceProps = pdiBioSequence.getSerializedProperties();
 
-    public void setCrc64(String crc64) {
-	this.crc64 = crc64;
-    }
+		if (StringUtils.isEmpty(pdiBioSequenceProps)) {
+			setSequence(null);
+		} else {
+			setSerializedProperties(pdiBioSequenceProps);
+		}
 
-    public int getLength() {
-	return length;
-    }
+	}
 
-    public void setLength(final int pLength) {
-	length = pLength;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public int getMass() {
-	return this.mass;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public void setMass(int mass) {
-	this.mass = mass;
-    }
+	public Alphabet getAlphabet() {
+		return alphabet;
+	}
 
-    public Float getPi() {
-	return this.pi;
-    }
+	public void setAlphabet(final Alphabet pAlphabet) {
+		alphabet = pAlphabet;
+	}
 
-    public void setPi(Float pi) {
-	this.pi = pi;
-    }
+	public String getCrc64() {
+		return this.crc64;
+	}
 
-    public String getSequence() {
-	return this.sequence;
-    }
+	public void setCrc64(String crc64) {
+		this.crc64 = crc64;
+	}
 
-    public void setSequence(String sequence) {
-	this.sequence = sequence;
-    }
+	public int getLength() {
+		return length;
+	}
 
-    public String getSerializedProperties() {
-	return this.serializedProperties;
-    }
+	public void setLength(final int pLength) {
+		length = pLength;
+	}
 
-    public void setSerializedProperties(String serializedProperties) {
-	this.serializedProperties = serializedProperties;
-    }
+	public int getMass() {
+		return this.mass;
+	}
+
+	public void setMass(int mass) {
+		this.mass = mass;
+	}
+
+	public Float getPi() {
+		return this.pi;
+	}
+
+	public void setPi(Float pi) {
+		this.pi = pi;
+	}
+
+	public String getSequence() {
+		return this.sequence;
+	}
+
+	public void setSequence(String sequence) {
+		this.sequence = sequence;
+	}
+
+	public String getSerializedProperties() {
+		return this.serializedProperties;
+	}
+
+	public void setSerializedProperties(String serializedProperties) {
+		this.serializedProperties = serializedProperties;
+	}
 
 }
