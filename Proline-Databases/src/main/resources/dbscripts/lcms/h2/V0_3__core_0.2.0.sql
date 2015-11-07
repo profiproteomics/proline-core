@@ -36,21 +36,40 @@ COMMENT ON COLUMN peakel.area IS 'Integrated area for this peakel. This area may
 COMMENT ON COLUMN peakel.duration IS 'The elution duration in seconds of this peakel.';
 
 
-ALTER TABLE public.map_object_tree_mapping DROP CONSTRAINT map_object_tree_mapping_pk;
-
+ALTER TABLE public.map_object_tree_mapping DROP CONSTRAINT map_map_object_tree_mapping_fk;
+ALTER TABLE public.map_object_tree_mapping DROP PRIMARY KEY;
 ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT map_object_tree_mapping_pk PRIMARY KEY (map_id,schema_name);
 
-ALTER TABLE public.map_set_object_tree_mapping DROP CONSTRAINT map_set_object_tree_mapping_pk;
+ALTER TABLE public.map_object_tree_mapping ADD CONSTRAINT map_map_object_tree_mapping_fk
+FOREIGN KEY (map_id)
+REFERENCES public.map (id)
+ON DELETE CASCADE
+ON UPDATE NO ACTION;
 
+ALTER TABLE public.map_set_object_tree_mapping DROP CONSTRAINT map_set_map_set_object_tree_mapping_fk;
+ALTER TABLE public.map_set_object_tree_mapping DROP PRIMARY KEY;
 ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT map_set_object_tree_mapping_pk PRIMARY KEY (map_set_id,schema_name);
+
+ALTER TABLE public.map_set_object_tree_mapping ADD CONSTRAINT map_set_map_set_object_tree_mapping_fk
+FOREIGN KEY (map_set_id)
+REFERENCES public.map_set (id)
+ON DELETE CASCADE
+ON UPDATE NO ACTION;
 
 ALTER TABLE public.object_tree ALTER COLUMN serialized_data RENAME TO clob_data;
 
 ALTER TABLE public.object_tree ADD COLUMN blob_data LONGVARBINARY;
 
-ALTER TABLE public.feature_object_tree_mapping DROP CONSTRAINT feature_object_tree_mapping_pk;
-
+ALTER TABLE public.feature_object_tree_mapping DROP CONSTRAINT feature_feature_object_tree_mapping_fk;
+ALTER TABLE public.feature_object_tree_mapping DROP PRIMARY KEY;
 ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT feature_object_tree_mapping_pk PRIMARY KEY (feature_id,schema_name);
+
+ALTER TABLE public.feature_object_tree_mapping ADD CONSTRAINT feature_feature_object_tree_mapping_fk
+FOREIGN KEY (feature_id)
+REFERENCES public.feature (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION;
+
 
 ALTER TABLE public.map_layer ALTER COLUMN name VARCHAR(250) NOT NULL;
 
