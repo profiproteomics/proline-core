@@ -1,5 +1,7 @@
 package fr.proline.core.orm.msi.dto;
 
+import java.util.ArrayList;
+
 import fr.proline.core.orm.msi.Peptide;
 import fr.proline.core.orm.msi.SequenceMatch;
 
@@ -36,7 +38,7 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     private Boolean m_isDecoy;
     private Boolean m_isValidated;
     
-    private DPeptidePTM m_peptidePTM = null;
+    private ArrayList<DPeptidePTM> m_peptidePTMArray = null;
 
     
     public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank) {
@@ -211,12 +213,12 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 		m_isValidated = isValidated;
 	}
 	
-	public DPeptidePTM getPeptidePTM() {
-		return m_peptidePTM;
+	public ArrayList<DPeptidePTM> getPeptidePTMArray() {
+		return m_peptidePTMArray;
 	}
 
-	public void setPeptidePTM(DPeptidePTM peptidePTM) {
-		m_peptidePTM = peptidePTM;
+	public void setPeptidePTMArray(ArrayList<DPeptidePTM> peptidePTMArray) {
+		m_peptidePTMArray = peptidePTMArray;
 	}
 	
 	
