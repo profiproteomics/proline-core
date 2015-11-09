@@ -35,6 +35,8 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     
     private Boolean m_isDecoy;
     private Boolean m_isValidated;
+    
+    private DPeptidePTM m_peptidePTM = null;
 
     
     public DPeptideMatch(long id, Integer rank, int charge, Float deltaMoz, double experimentalMoz, int missedCleavage, Float score, long resultSetId, Integer cdPrettyRank, Integer sdPrettyRank) {
@@ -207,6 +209,14 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
 
 	public void setValidated(Boolean isValidated) {
 		m_isValidated = isValidated;
+	}
+	
+	public DPeptidePTM getPeptidePTM() {
+		return m_peptidePTM;
+	}
+
+	public void setPeptidePTM(DPeptidePTM peptidePTM) {
+		m_peptidePTM = peptidePTM;
 	}
 	
 	
