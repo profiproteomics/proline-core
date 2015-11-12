@@ -1171,7 +1171,8 @@ class WeightedSpectralCountQuantifier(
 
         // Store master protein set
         val msiMasterProteinSet = new MsiProteinSet()
-        msiMasterProteinSet.setIsValidated(true)
+        msiMasterProteinSet.setIsValidated(mergedProteinSet.isValidated)
+        msiMasterProteinSet.setIsDecoy(mergedProteinSet.isDecoy)
         msiMasterProteinSet.setSelectionLevel(2)
         msiMasterProteinSet.setProteinMatchId(typicalProtMatchId)
         msiMasterProteinSet.setResultSummary(msiQuantRSM)
