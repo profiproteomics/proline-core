@@ -6,10 +6,13 @@ public class DProteinPTMSite {
 	private DPeptideMatch m_peptideMatch;
 	private DPeptidePTM m_peptidePTM;
 	
-	public DProteinPTMSite(DProteinMatch proteinMatch, DPeptideMatch peptideMatch,  DPeptidePTM peptidePTM) {
+	private Double m_deltaMassPTM = null;
+	
+	public DProteinPTMSite(DProteinMatch proteinMatch, DPeptideMatch peptideMatch,  DPeptidePTM peptidePTM, Double deltaMassPTM) {
 		m_proteinMatch = proteinMatch;
 		m_peptideMatch = peptideMatch;
 		m_peptidePTM = peptidePTM;
+		m_deltaMassPTM = deltaMassPTM;
 	}
 	
 	public DProteinMatch getPoteinMatch() {
@@ -22,6 +25,10 @@ public class DProteinPTMSite {
 	
 	public DPeptidePTM getPeptidePTM() {
 		return m_peptidePTM;
+	}
+	
+	public Double getDeltaMassPTM() {
+		return m_deltaMassPTM;
 	}
 	
 }
