@@ -37,6 +37,8 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     
     private Boolean m_isDecoy;
     private Boolean m_isValidated;
+
+    private String m_serializedProperties = null;
     
     private ArrayList<DPeptidePTM> m_peptidePTMArray = null;
 
@@ -95,6 +97,14 @@ public class DPeptideMatch implements Comparable<DPeptideMatch> {
     public Peptide getPeptide() {
         return m_peptide;
     }
+    
+	public String getSerializedProperties() {
+		return m_serializedProperties;
+	}
+
+	public void setSerializedProperties(String serializedProperties) {
+		m_serializedProperties = serializedProperties;
+	}
     
     public void setSequenceMatch(SequenceMatch sequenceMatch) {
         m_sequenceMatch = sequenceMatch;
