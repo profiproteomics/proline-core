@@ -16,6 +16,7 @@ import javax.persistence.EntityManager
 import fr.proline.core.om.model.msi.ProteinSet
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConversions
 import collection.JavaConversions.iterableAsScalaIterable
 import fr.proline.core.algo.msq.spectralcount.PepInstanceFilteringLeafSCUpdater
 import fr.proline.core.om.model.msi.PeptideSet
@@ -716,20 +717,18 @@ class WeightedSpectralCountQuantifier(
       val rsmProvider = new SQLResultSummaryProvider(msiDbCtx = msiDbCtx, psDbCtx = psDbCtx, udsDbCtx = null)
       val idfRSM = rsmProvider.getResultSummary(scConfig.parentRSMId.get, true).get
 
-    		//TODO fix BUG #12336
-//        val spectralCountProperties = if(scConfig.weightRefRSMIds != null && !scConfig.weightRefRSMIds.isEmpty) { 
-//        	Some( new SpectralCountProperties(weightsRefRSMIds =  scConfig.weightRefRSMIds.toArray.map(toLong(_))))    	     	 
-//        } else None
-//            
-//        if(spectralCountProperties.isDefined){
-//        	logger.debug("SpectralCountProperties content : ")
-//        	spectralCountProperties.get.getPeptidesSpectralCountRefRSMIds.foreach({ l=>
-//        	logger.debug(" Next LONG : {} "+ l.toString)
-//        	})
-//		}
+        val spectralCountProperties = if(scConfig.weightRefRSMIds != null && !scConfig.weightRefRSMIds.isEmpty) { 
+        	Some( new SpectralCountProperties(weightsRefRSMIds =  scConfig.weightRefRSMIds.toArray.map(_.asInstanceOf[java.lang.Long])) )    	     	 
+        } else None
+            
+        if(spectralCountProperties.isDefined){
+        	logger.debug("SpectralCountProperties content : ")
+        	spectralCountProperties.get.weightsRefRSMIds.foreach({ l=>
+        	logger.debug(" Next LONG : {} "+ l.toString)
+        	})
+		}
         
-//      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=scConfig.parentRSMId,identDatasetId= scConfig.parentDSId, spectralCountProperties=spectralCountProperties)
-      val mqchProperties = new MasterQuantChannelProperties(identResultSummaryId = scConfig.parentRSMId, identDatasetId = scConfig.parentDSId)
+      val mqchProperties =  new MasterQuantChannelProperties(identResultSummaryId=scConfig.parentRSMId,identDatasetId= scConfig.parentDSId, spectralCountProperties=spectralCountProperties)
       udsMasterQuantChannel.setSerializedProperties(ProfiJson.serialize(mqchProperties))
       idfRSM
     }
