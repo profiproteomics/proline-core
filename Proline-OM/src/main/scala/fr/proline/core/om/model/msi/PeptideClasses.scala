@@ -448,7 +448,7 @@ case class PeptideMatchProperties (
   @BeanProperty var mascotProperties: Option[PeptideMatchMascotProperties] = None,
   @BeanProperty var omssaProperties: Option[PeptideMatchOmssaProperties] = None,
   @BeanProperty var xtandemProperties: Option[PeptideMatchXtandemProperties] = None,
-  @BeanProperty var ptmSiteProperties: Option[PeptideMatchPTMSiteProperties] = None,
+  @BeanProperty var ptmSiteProperties: Option[PeptideMatchPtmSiteProperties] = None,
   @BeanProperty var spectralCount: Option[Int] = None
 )
 
@@ -482,17 +482,16 @@ case class PeptideMatchResultSummaryProperties (
   @BeanProperty var mascotAdjustedExpectationValue: Option[Double] = None
 )
 
-case class PeptideMatchPTMSiteProperties (
-  @BeanProperty var mascotPtmSiteProperties: Option[MascotPtmSiteProperties] = None
-)
-
-case class MascotPtmSiteProperties (
+case class PeptideMatchPtmSiteProperties (
+  
   @JsonDeserialize(contentAs = classOf[java.lang.Float] )
   @BeanProperty var mascotDeltaScore: Option[Float] = None,
+  
+  // Key is the ReadableString of the LocatedPtm, value is the Mascot Probability for this site
   @JsonDeserialize(contentAs = classOf[java.lang.Float])
-  @BeanProperty var siteProbabilities: Map[String, Float]
+  @BeanProperty var mascotProbabilityBySite: Map[String, Float] = null
 )
- 
+
 object PeptideInstance extends InMemoryIdGen
 
 case class PeptideInstance(
