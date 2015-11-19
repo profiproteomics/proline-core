@@ -51,6 +51,9 @@ import fr.proline.core.orm.msi.{ResultSet => MsiResultSet}
 import fr.proline.core.orm.msi.{ResultSummary => MsiResultSummary}
 import fr.proline.core.orm.msi.{Scoring => MsiScoring}
 import fr.proline.core.orm.msi.{SequenceMatch => MsiSequenceMatch}
+import fr.proline.core.orm.msi.{PeptideReadablePtmString => MsiPeptideReadablePtmString}
+import fr.proline.core.orm.msi.{PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK}
+
 import fr.proline.core.orm.msi.repository.ObjectTreeSchemaRepository
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.util.ResidueUtils.scalaCharToCharacter
@@ -300,6 +303,22 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
 
       //msiMasterPepInstance.setPeptidesMatches(Set(msiMasterPepMatch))
       msiEm.persist(msiPepInstMatch)
+      
+      // PeptideReadablePTMString
+      if (masterPepInstance.peptide.readablePtmString != null && !masterPepInstance.peptide.readablePtmString.isEmpty()){
+        val msiPeptideReadablePtmStringPK = new MsiPeptideReadablePtmStringPK()
+        msiPeptideReadablePtmStringPK.setPeptideId(masterPepInstance.peptide.id)
+        msiPeptideReadablePtmStringPK.setResultSetId(msiQuantRS.getId())
+
+        val msiPeptideReadablePtmString = new MsiPeptideReadablePtmString()
+        msiPeptideReadablePtmString.setId(msiPeptideReadablePtmStringPK)
+        msiPeptideReadablePtmString.setResultSet(msiQuantRS)
+        msiPeptideReadablePtmString.setPeptide(msiPep)
+        msiPeptideReadablePtmString.setReadablePtmString(masterPepInstance.peptide.readablePtmString)
+
+        // Save PeptideReadablePTMString
+        msiEm.persist(msiPeptideReadablePtmString)
+      }
 
       // Map this quant peptide match to identified child peptide matches    
       if(bestParentPepMatch.getChildrenIds !=null){

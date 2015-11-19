@@ -44,7 +44,9 @@ import fr.proline.core.orm.msi.{
   ResultSet => MsiResultSet,
   ResultSummary => MsiResultSummary,
   Scoring => MsiScoring,
-  SequenceMatch => MsiSequenceMatch
+  SequenceMatch => MsiSequenceMatch,
+  PeptideReadablePtmString => MsiPeptideReadablePtmString,
+  PeptideReadablePtmStringPK => MsiPeptideReadablePtmStringPK
 }
 import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.repository.util.JDBCWork
@@ -1014,7 +1016,8 @@ class WeightedSpectralCountQuantifier(
 
       // FIXME: retrieve the right scoring_id
       msiMasterPepMatch.setScoringId(1)
-
+      
+      
       // FIXME: change the ORM to allow these mappings
       //msiMasterPepMatch.setBestPeptideMatchId(bestPepMatch.id) 
       //msiMasterPepMatch.setMsQueryId(bestPepMatch.msQueryId)
@@ -1068,6 +1071,24 @@ class WeightedSpectralCountQuantifier(
 
       //msiMasterPepInstance.setPeptidesMatches(Set(msiMasterPepMatch))
       msiEm.persist(msiPepInstMatch)
+      
+      // PeptideReadablePTMString
+      if (mergedPepInstance.peptide.readablePtmString != null && !mergedPepInstance.peptide.readablePtmString.isEmpty()){
+        val msiPeptideReadablePtmStringPK = new MsiPeptideReadablePtmStringPK()
+        msiPeptideReadablePtmStringPK.setPeptideId(mergedPepMatch.peptide.id)
+        msiPeptideReadablePtmStringPK.setResultSetId(msiQuantRS.getId())
+
+        val msiPeptideReadablePtmString = new MsiPeptideReadablePtmString()
+        msiPeptideReadablePtmString.setId(msiPeptideReadablePtmStringPK)
+        msiPeptideReadablePtmString.setResultSet(msiQuantRS)
+        msiPeptideReadablePtmString.setPeptide(ormPep)
+        msiPeptideReadablePtmString.setReadablePtmString(mergedPepInstance.peptide.readablePtmString)
+
+        // Save PeptideReadablePTMString
+        msiEm.persist(msiPeptideReadablePtmString)
+      }
+      
+
 
       // Map this quant peptide match to identified child peptide matches
       // VDS TODO ? IF IDF hierarcghy <> from Quanti ??
