@@ -153,11 +153,10 @@ public class Peptide implements Serializable, Comparable<Peptide> {
     public static class TransientData implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private SequenceMatch sequenceMatch = null; //JPM.TODO : to be removed (no longer used by new version of Proline Studio)
-
 	private ArrayList<DProteinSet> proteinSetArray = null;
 	
-	private HashMap<Integer, PeptidePtm> peptidePtmMap = null;
+	private HashMap<Integer, PeptidePtm> peptidePtmMap = null;  //JPM.TODO : remove it, no longer used by Proline Studio
+	private HashMap<Integer, DPeptidePTM> dpeptidePtmMap = null;
 
 	private PeptideReadablePtmString peptideReadablePtmString = null;
 	private boolean peptideReadablePtmStringLoaded = false;
@@ -165,15 +164,16 @@ public class Peptide implements Serializable, Comparable<Peptide> {
 	protected TransientData() {
 	}
 
-	public SequenceMatch getSequenceMatch() {
-	    return sequenceMatch;
+	
+	public HashMap<Integer, DPeptidePTM> getDPeptidePtmMap() {
+	    return dpeptidePtmMap;
 	}
 
-	public void setSequenceMatch(SequenceMatch sequenceMatch) {
-	    this.sequenceMatch = sequenceMatch;
+	public void setDPeptidePtmMap(HashMap<Integer, DPeptidePTM> peptidePtmMap) {
+	    dpeptidePtmMap = peptidePtmMap;
 	}
-
-
+	
+	//JPM.TODO : no longer used by Proline Studio
 	public HashMap<Integer, PeptidePtm> getPeptidePtmMap() {
 	    return peptidePtmMap;
 	}
