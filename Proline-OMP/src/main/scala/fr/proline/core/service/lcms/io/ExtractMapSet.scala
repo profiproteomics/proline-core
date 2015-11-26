@@ -619,15 +619,13 @@ class ExtractMapSet(
         // Iterate over peakels mapped with peptides to build features
         this.logger.debug("building features from peakels...")
 
-        //System.out.println("seq; peakel_mz;psm_elution_time;charge;IP_mz;peakel_elution_time;IP_charge;peakel_intens;matching_psm_count;ppm")
-
         for ((peakel, psmTuples) <- psmTupleByPeakel) {
 
           val psmTuplesGroupedByCharge = psmTuples.groupBy(_._3)
 
           for ((charge, sameChargePsmTuple) <- psmTuplesGroupedByCharge) {
 
-            val mzDbFt = _createMzDbFeature(peakelFileConnection, peakel, charge, false, sameChargePsmTuple.map(_._2.getId).distinct.toArray)            
+            val mzDbFt = _createMzDbFeature(peakelFileConnection, peakel, charge, false, sameChargePsmTuple.map(_._2.getId).distinct.toArray)               
             if (mzDbFt.getPeakelsCount == 1) runMetrics.incr("psm monoisotopic features")
             
             // Convert mzDb feature into LC-MS one
@@ -640,7 +638,7 @@ class ExtractMapSet(
               featureTuples += Tuple3(lcmsFt, peptide, lcMsRun)
               mzDbPeakelByPeptide.getOrElseUpdate((peptide, charge), ArrayBuffer[Int]()) += peakel.id
               if (peptides.length > 1) {
-                runMetrics.incr("conflicting peakels (associated with more than one peptide)")
+                runMetrics.incr("conflicting peakels (associated with more than one peptide)")                
                 conflictingPeptides.getOrElseUpdate((peptide, charge), ArrayBuffer[Peptide]()) ++=  peptides
               }
             }
@@ -1312,9 +1310,10 @@ class ExtractMapSet(
          val slices = reader.getMsSpectrumSlices(peakel.getApexMz-5, peakel.getApexMz+5, peakel.getApexElutionTime-0.1f, peakel.getApexElutionTime+0.1f)
          val slice = slices.find(_.getHeader.getSpectrumId == peakel.getApexSpectrumId)
          if (slice.isDefined) {
-           val putativePatterns = IsotopicPatternScorer.calclIsotopicPatternHypotheses(slice.get.getData(), peakel.getMz, 1e6*peakel.getLeftHwhmMean/peakel.getMz)
+           val ppm = if (peakel.getLeftHwhmMean == 0) mozTolPPM else 1e6*peakel.getLeftHwhmMean/peakel.getMz
+           val putativePatterns = IsotopicPatternScorer.calclIsotopicPatternHypotheses(slice.get.getData(), peakel.getMz, ppm)
            val bestPattern = putativePatterns.head
-           if ((bestPattern._1 <= 1.0) && (math.abs(bestPattern._2.monoMz - peakel.getMz) <= mozTolInDa) && bestPattern._2.charge == charge) {
+           if ((math.abs(bestPattern._2.monoMz - peakel.getMz) <= mozTolInDa) && bestPattern._2.charge == charge) {
                 filteredPeakels += peakel
            }
          }
