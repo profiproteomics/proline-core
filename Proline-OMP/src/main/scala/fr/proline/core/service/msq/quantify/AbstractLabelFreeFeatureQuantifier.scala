@@ -216,8 +216,11 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
       // Update the provided ms2SHs
       for (sh <- ms2SHs) yield {
         val shId = toLong(sh(idColName))
-        
-        sh + Tuple2(firstScanColName, scanIdBySpecId(shId))
+        if (scanIdBySpecId.contains(shId)){
+          sh + Tuple2(firstScanColName, scanIdBySpecId(shId))
+        }else{
+          sh
+        }
       }
     }    
   }
