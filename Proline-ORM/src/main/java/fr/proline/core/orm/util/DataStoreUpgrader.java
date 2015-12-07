@@ -63,6 +63,8 @@ public final class DataStoreUpgrader {
 			} else {
 				LOG.info("PDI Db :" + pdiDbMigrationCount + " migration done.");
 			}
+			
+			pdiDbConnector.close();
 		}
 
 		/* Upgrade PS Db */
@@ -79,7 +81,8 @@ public final class DataStoreUpgrader {
 			} else {
 				LOG.info("PS Db :" + psDbMigrationCount + " migration done.");
 			}
-
+			
+			psDbConnector.close();
 		}
 
 		/* Upgrade all Projects (MSI and LCMS) Dbs */
@@ -104,6 +107,8 @@ public final class DataStoreUpgrader {
 						} else {
 							LOG.info("MSI Db for project " + projectId + " : " + msiDbMigrationCount + " migration done.");
 						}
+						
+						msiDbConnector.close();
 					}
 
 					final IDatabaseConnector lcMsDbConnector = connectorFactory.getLcMsDbConnector(projectId.longValue());
@@ -119,9 +124,14 @@ public final class DataStoreUpgrader {
 						} else {
 							LOG.info("LCMS Db for project " + projectId + " : " + lcMsDbMigrationCount + " migration done.");
 						}
+						
+						lcMsDbConnector.close();
 					}
 				}
 			}
+			
+			// Close UDSdb connecto at the end
+			udsDbConnector.close();
 		}
 
 		return result;
