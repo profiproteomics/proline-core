@@ -675,8 +675,8 @@ class WeightedSpectralCountQuantifier(
     }) //	 End go through  ProteinSet (ProteinPepsWeightStruct)
   }
 
-  protected lazy val spectralCountingPeptidesSchema = {
-    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_PEPTIDES.toString())
+  protected lazy val spectralCountingQuantPeptidesSchema = {
+    ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(msiEm, SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDES.toString())
   }
 
   protected def buildMasterQuantPeptideObjectTree(mqPep: MasterQuantPeptide): MsiObjectTree = {
@@ -686,7 +686,7 @@ class WeightedSpectralCountQuantifier(
 
     // Store the object tree
     val msiMQPepObjectTree = new MsiObjectTree()
-    msiMQPepObjectTree.setSchema(spectralCountingPeptidesSchema)
+    msiMQPepObjectTree.setSchema(spectralCountingQuantPeptidesSchema)
     msiMQPepObjectTree.setClobData(ProfiJson.serialize(quantPeptides))
 
     msiMQPepObjectTree
