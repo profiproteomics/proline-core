@@ -159,7 +159,7 @@ case class ProteinSet (
   @transient var subsetProteinMatches: Option[Array[ProteinMatch]] = null,
  
   protected var representativeProteinMatchId: Long = 0,
-  @transient protected var representativeProteinMatch: Option[ProteinMatch] = null,
+  @transient protected var representativeProteinMatch: Option[ProteinMatch] = null, // TODO: remove me, the id is sufficient here
   
   var proteinMatchCoverageById: Map[Long, Float] = null,
   
@@ -177,6 +177,7 @@ case class ProteinSet (
   // Requirements
   require( samesetProteinMatchIds != null  || samesetProteinMatches != null )
 
+  // TODO: work only with ids to simplify the OM
   def setRepresentativeProteinMatch(newReprPM: ProteinMatch): Unit = {
     require(newReprPM != null ,"A representative ProteinMatch should be defined !")
     

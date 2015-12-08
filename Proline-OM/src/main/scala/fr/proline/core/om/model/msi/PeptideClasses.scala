@@ -247,12 +247,11 @@ case class Peptide (
   
       val ptmStringBuf = new ListBuffer[String]
   
-      for (ptm <- ptms) {  
+      for (ptm <- ptms.sortBy(_.seqPosition) ) {
         ptmStringBuf += ptm.toReadableString
       }
   
       tmpReadablePtmString = ptmStringBuf.mkString("; ")
-  
     }
 
     tmpReadablePtmString
@@ -502,7 +501,7 @@ case class PeptideInstance(
 
   // Immutable optional fields
   var peptideMatchIds: Array[Long] = null, //One of these 2 values should be specified                        
-  @transient val peptideMatches: Array[PeptideMatch] = null,
+  @transient var peptideMatches: Array[PeptideMatch] = null,
   
   val children: Array[PeptideInstance] = null,
   
