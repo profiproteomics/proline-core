@@ -33,7 +33,7 @@ class SQLMasterQuantPeptideProvider(
   val ObjectTreeCols = ObjectTreeTable.columns
   
   final val labelFreeQuantPeptidesSchema = SchemaName.LABEL_FREE_QUANT_PEPTIDES.toString
-  final val spectralCountQuantPeptidesSchema = SchemaName.SPECTRAL_COUNTING_PEPTIDES.toString
+  final val spectralCountQuantPeptidesSchema = SchemaName.SPECTRAL_COUNTING_QUANT_PEPTIDES.toString
   //final val quantProteinSetSchema = SchemaName.QUANT_PROTEIN_SETS.toString
 
   def getMasterQuantPeptides(
