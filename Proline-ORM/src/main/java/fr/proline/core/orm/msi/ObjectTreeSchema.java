@@ -23,7 +23,7 @@ public class ObjectTreeSchema implements Serializable {
     	LABEL_FREE_QUANT_PEPTIDES("object_tree.label_free_quant_peptides"),
     	LABEL_FREE_QUANT_PEPTIDE_IONS("object_tree.label_free_quant_peptide_ions"),
     	QUANT_PROTEIN_SETS("object_tree.quant_protein_sets"),
-    	SPECTRAL_COUNTING_PEPTIDES("object_tree.spectral_counting_peptides"),
+    	SPECTRAL_COUNTING_QUANT_PEPTIDES("object_tree.spectral_counting_quant_peptides"),
     	SPECTRAL_COUNTING_QUANT_PEPTIDE_IONS("object_tree.spectral_counting_quant_peptide_ions"),
     	PEPTIDE_VALIDATION_ROC_CURVE("result_summary.peptide_validation_roc_curve"),
     	PROTEIN_VALIDATION_ROC_CURVE("result_summary.protein_validation_roc_curve");
