@@ -9,8 +9,9 @@ import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.lcms.LcMsScanSequence
 import fr.proline.core.om.provider.uds.impl.SQLInstrumentProvider
 import fr.proline.core.om.storer.lcms.IScanSequenceStorer
+import com.typesafe.scalalogging.LazyLogging
 
-class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanSequenceStorer {
+class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanSequenceStorer with LazyLogging {
   
   val instrumentProvider = new SQLInstrumentProvider(lcmsDbCtx)
 
@@ -38,8 +39,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
       }
       
       // Store the run corresponding to this scan sequence
-      var runId: Long = 0L
-      lcmsEzDBC.executePrepared(LcmsDbScanSequenceTable.mkInsertQuery(), true) { statement =>
+      lcmsEzDBC.executePrepared(LcmsDbScanSequenceTable.mkInsertQuery(), false) { statement =>
         
         statement.executeWith(
           scanSeq.runId,
@@ -51,7 +51,6 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
           scanSeq.properties.map( ProfiJson.serialize(_) ),
           scanSeq.instrument.get.id
         )
-        runId = statement.generatedLong
       }
   
       // Store the scans
@@ -68,7 +67,7 @@ class SQLScanSequenceStorer(lcmsDbCtx: DatabaseConnectionContext) extends IScanS
             scan.precursorMoz,
             scan.precursorCharge,
             scan.properties.map( ProfiJson.serialize(_) ),
-            runId
+            scanSeq.runId
           )
           
           scan.id = statement.generatedLong
