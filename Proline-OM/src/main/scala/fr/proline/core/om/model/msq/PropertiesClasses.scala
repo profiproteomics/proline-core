@@ -53,6 +53,7 @@ case class MasterQuantPeptideProperties (
 
 case class MasterQuantProteinSetProfile (
   //@BeanProperty var id: Long,
+  @BeanProperty var name: String = "",
   @BeanProperty var rawAbundances: Array[Float] = Array(),
   @BeanProperty var abundances: Array[Float],
   @BeanProperty var ratios: List[Option[ComputedRatio]],
