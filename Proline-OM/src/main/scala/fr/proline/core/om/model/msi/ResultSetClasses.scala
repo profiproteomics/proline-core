@@ -349,6 +349,7 @@ case class ResultSummary(
 
 // TODO: change privacy to protected => allows access only to getters/setters
 case class ResultSummaryProperties(
+  @BeanProperty var isCoverageUpdated: Option[Boolean] = None,
   @BeanProperty var validationProperties: Option[RsmValidationProperties] = None
 )
 
