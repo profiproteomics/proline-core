@@ -176,7 +176,7 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
           id = groupSetupId,
           number = r.getInt(GroupSetupCols.NUMBER),
           name = r.getString(GroupSetupCols.NAME),
-          ratioDefinitions = ratioDefsByGSId( groupSetupId ).toArray.sortBy(_.number),
+          ratioDefinitions = ratioDefsByGSId.get(groupSetupId).map(_.toArray.sortBy(_.number)).getOrElse(Array()),
           biologicalGroups = bioGroups
         )
       }
