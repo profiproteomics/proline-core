@@ -6,7 +6,7 @@ import scala.beans.BeanProperty
 import scala.collection.mutable.HashMap
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.googlecode.flyway.core.api.migration.jdbc.JdbcMigration
+import org.flywaydb.core.api.migration.jdbc.JdbcMigration
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._

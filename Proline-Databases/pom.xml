@@ -22,9 +22,9 @@
     </dependency>
 
     <dependency>
-      <groupId>com.googlecode.flyway</groupId>
+      <groupId>org.flywaydb</groupId>
       <artifactId>flyway-core</artifactId>
-      <version>2.3.1</version> <!-- Latest version checked on 15 may 2014 -->
+      <version>3.2.1</version> <!-- Latest version checked on 15 may 2014 -->
 
       <!-- Use SLF4J instead of Apache common-loggings -->
       <exclusions>

@@ -18,11 +18,11 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.flyway.core.Flyway;
-import com.googlecode.flyway.core.api.MigrationInfo;
-import com.googlecode.flyway.core.api.MigrationState;
-import com.googlecode.flyway.core.api.MigrationType;
-import com.googlecode.flyway.core.api.MigrationVersion;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationInfo;
+import org.flywaydb.core.api.MigrationState;
+import org.flywaydb.core.api.MigrationType;
+import org.flywaydb.core.api.MigrationVersion;
 
 import fr.profi.util.SQLUtils;
 import fr.profi.util.StringUtils;
