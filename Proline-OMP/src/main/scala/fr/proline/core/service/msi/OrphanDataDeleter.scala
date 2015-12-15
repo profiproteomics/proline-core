@@ -49,11 +49,40 @@ class OrphanDataDeleter (
       } // End of jdbcWork anonymous inner class    
       execCtx.getMSIDbConnectionContext().doWork(jdbcWorkDecoy, false)
       
-      allRsmIds ++ resultSummaryIds
+      allRsmIds = allRsmIds ++ resultSummaryIds
       
       // todo: remove orphan object_tree from protein_set_object_tree_map
       // todo: remove orphan object_tree from 
-      //remove rsm from result_ssummary_relation
+       // check rsm relations 
+      val jdbcWorkRsmRelationCheck = new JDBCWork() {
+        override def execute(con: Connection) {
+          val startTime = System.currentTimeMillis
+          val stmt = con.createStatement()
+          var hasRelWithOtherRsm : Boolean  = false;
+          val checkRSMRelationQuery = "SELECT parent_result_summary_id, child_result_summary_id FROM result_summary_relation "+
+                    "WHERE parent_result_summary_id IN (" + allRsmIds.mkString(",") + ") OR child_result_summary_id in (" + allRsmIds.mkString(",") + ") ";
+          val sqlCheckRsmRel = stmt.executeQuery(checkRSMRelationQuery)
+          while (sqlCheckRsmRel.next) {
+            val rsmpId = sqlCheckRsmRel.getLong("parent_result_summary_id")
+            val rsmcId = sqlCheckRsmRel.getLong("child_result_summary_id")
+            if (!allRsmIds.contains(rsmpId) || !allRsmIds.contains(rsmcId)){
+              hasRelWithOtherRsm = true;
+            }
+          }
+          stmt.close()
+          if (hasRelWithOtherRsm){
+             val msg = " Some Identification Summary are linked to existing Identification Summary: they can not be deleted! " 
+            logger.warn(msg)
+            throw new Exception(msg)
+          }
+          
+          logger.debug("check rsm relation in "+(System.currentTimeMillis-startTime)+" ms");
+        }
+      } // End of jdbcWork anonymous inner class    
+      execCtx.getMSIDbConnectionContext().doWork(jdbcWorkRsmRelationCheck, false)
+      
+      
+      //remove rsm from result_summary_relation
       val jdbcWorkRsmRelation = new JDBCWork() {
         override def execute(con: Connection) {
           val startTime = System.currentTimeMillis
@@ -112,10 +141,38 @@ class OrphanDataDeleter (
       } // End of jdbcWork anonymous inner class    
       execCtx.getMSIDbConnectionContext().doWork(jdbcWorkDecoy, false)
       
-      allRsIds ++ resultSetIds
+      allRsIds = allRsIds ++ resultSetIds
       
       // todo remove orphan object_tree from result_set_object_tree_map
       // todo remove orphan object tree from peptide_match_object_tree_map
+      // check rs relations 
+      val jdbcWorkRsRelationCheck = new JDBCWork() {
+        override def execute(con: Connection) {
+          val startTime = System.currentTimeMillis
+          val stmt = con.createStatement()
+          var hasRelWithOtherRs : Boolean  = false;
+          val checkRSRelationQuery = "SELECT parent_result_set_id, child_result_set_id FROM result_set_relation "+
+                    "WHERE parent_result_set_id IN (" + allRsIds.mkString(",") + ") OR child_result_set_id in (" + allRsIds.mkString(",") + ") ";
+          val sqlCheckRsRel = stmt.executeQuery(checkRSRelationQuery)
+          while (sqlCheckRsRel.next) {
+            val rspId = sqlCheckRsRel.getLong("parent_result_set_id")
+            val rscId = sqlCheckRsRel.getLong("child_result_set_id")
+            if (!allRsIds.contains(rspId) || !allRsIds.contains(rscId)){
+              hasRelWithOtherRs = true;
+            }
+          }
+          stmt.close()
+          if (hasRelWithOtherRs){
+             val msg = " Some Search Result are linked to existing Search Result: they can not be deleted! " 
+            logger.warn(msg)
+            throw new Exception(msg)
+          }
+          
+          logger.debug("check rs relation in "+(System.currentTimeMillis-startTime)+" ms");
+        }
+      } // End of jdbcWork anonymous inner class    
+      execCtx.getMSIDbConnectionContext().doWork(jdbcWorkRsRelationCheck, false)
+      
       // remove rs from result_set_relation
       val jdbcWorkRsRelation = new JDBCWork() {
         override def execute(con: Connection) {
