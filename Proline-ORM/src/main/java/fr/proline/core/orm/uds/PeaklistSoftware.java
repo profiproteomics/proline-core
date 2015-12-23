@@ -100,7 +100,7 @@ public class PeaklistSoftware implements Serializable {
 		MASCOT_DLL("mascot.dll"),
 		MASCOT_DISTILLER("Mascot Distiller"),
 		MAX_QUANT("MaxQuant"),
-		PROLINE("Proline"),
+		PROLINE("Proline","1.0"),
 		PROTEIN_PILOT("Protein Pilot"),
 		PROTEOME_DISCOVER("Proteome Discoverer"),
 		PROTEO_WIZARD_2_0("ProteoWizard", "2.0"),
