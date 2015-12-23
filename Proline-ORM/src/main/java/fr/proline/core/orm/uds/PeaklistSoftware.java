@@ -131,7 +131,7 @@ public class PeaklistSoftware implements Serializable {
 		}
 
 		public String getVersion() {
-			return m_name;
+			return m_version;
 		}
 
 		@Override
