@@ -51,7 +51,7 @@ class SQLResultSummaryProvider(
       List(t1.*,t2.TYPE) -> "WHERE "~ t1.ID ~" IN("~ rsmIds.mkString(",") ~") AND "~ t1.RESULT_SET_ID ~"="~ t2.ID
     )
 
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>      
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, { msiEzDBC =>
     
       // TODO: load all result sets at once to avoid duplicated entities and for a faster loading
       val rsms = msiEzDBC.select(rsmQuery) { r =>
@@ -79,7 +79,21 @@ class SQLResultSummaryProvider(
         if (loadResultSet) {
     
           val pepMatches = pepMatchProvider.getResultSummaryPeptideMatches(rsmId)
+          val pepMatchById = pepMatches.view.map( p => p.id -> p ).toMap
           val protMatches = protMatchProvider.getResultSummariesProteinMatches(Array(rsmId))
+          val protMatchById = protMatches.view.map( p => p.id -> p ).toMap
+         
+          // Link peptide matches to peptide instances
+          rsmPepInsts.foreach { pepInst =>
+            pepInst.peptideMatches = pepInst.getPeptideMatchIds.map( pepMatchById(_) )
+          }
+          
+          // Link protein matches to protein sets
+          rsmProtSets.foreach { protSet =>
+            protSet.samesetProteinMatches = Some( protSet.getSameSetProteinMatchIds.map( protMatchById(_) ) )
+            protSet.subsetProteinMatches = Some( protSet.getSubSetProteinMatchIds.map( protMatchById(_) ) )
+            protMatchById.get(protSet.getRepresentativeProteinMatchId).map( protSet.setRepresentativeProteinMatch(_) )
+          }
           
           // Note: we set isValidatedContent to false here because we may have loaded matches belonging non-validated protein sets
           val isValidatedContent = false
