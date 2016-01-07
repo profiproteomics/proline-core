@@ -14,6 +14,7 @@ import fr.proline.repository.util.JDBCWork
 
 /**
  * Service to remove orphan data in MSI database: RS and RSM
+ * no check about the relation between child/parent relation (rs/rsm) => this check is done in the IHMs
  * @author MB243701
  */
 class OrphanDataDeleter (
@@ -53,42 +54,14 @@ class OrphanDataDeleter (
       
       // todo: remove orphan object_tree from protein_set_object_tree_map
       // todo: remove orphan object_tree from 
-       // check rsm relations 
-      val jdbcWorkRsmRelationCheck = new JDBCWork() {
-        override def execute(con: Connection) {
-          val startTime = System.currentTimeMillis
-          val stmt = con.createStatement()
-          var hasRelWithOtherRsm : Boolean  = false;
-          val checkRSMRelationQuery = "SELECT parent_result_summary_id, child_result_summary_id FROM result_summary_relation "+
-                    "WHERE parent_result_summary_id IN (" + allRsmIds.mkString(",") + ") OR child_result_summary_id in (" + allRsmIds.mkString(",") + ") ";
-          val sqlCheckRsmRel = stmt.executeQuery(checkRSMRelationQuery)
-          while (sqlCheckRsmRel.next) {
-            val rsmpId = sqlCheckRsmRel.getLong("parent_result_summary_id")
-            val rsmcId = sqlCheckRsmRel.getLong("child_result_summary_id")
-            if (!allRsmIds.contains(rsmpId) || !allRsmIds.contains(rsmcId)){
-              hasRelWithOtherRsm = true;
-            }
-          }
-          stmt.close()
-          if (hasRelWithOtherRsm){
-             val msg = " Some Identification Summary are linked to existing Identification Summary: they can not be deleted! " 
-            logger.warn(msg)
-            throw new Exception(msg)
-          }
-          
-          logger.debug("check rsm relation in "+(System.currentTimeMillis-startTime)+" ms");
-        }
-      } // End of jdbcWork anonymous inner class    
-      execCtx.getMSIDbConnectionContext().doWork(jdbcWorkRsmRelationCheck, false)
-      
-      
+       
       //remove rsm from result_summary_relation
       val jdbcWorkRsmRelation = new JDBCWork() {
         override def execute(con: Connection) {
           val startTime = System.currentTimeMillis
           val stmt = con.createStatement()
           val delRSMRelationQuery = "DELETE FROM result_summary_relation "+
-                    "WHERE parent_result_summary_id IN (" + allRsmIds.mkString(",") + ") AND child_result_summary_id in (" + allRsmIds.mkString(",") + ") ";
+                    "WHERE parent_result_summary_id IN (" + allRsmIds.mkString(",") + ") OR child_result_summary_id in (" + allRsmIds.mkString(",") + ") ";
           val sqlDelRsmRel = stmt.executeUpdate(delRSMRelationQuery)
           stmt.close()
           logger.debug("delete rsm relation in "+(System.currentTimeMillis-startTime)+" ms");
@@ -115,6 +88,7 @@ class OrphanDataDeleter (
       logger.info("Delete orphan rs  ("+resultSetIds.mkString(",")+")")
       
       // load decoy RS
+      // TODO load msQuery to DEL, only if for identification dataset (not merge)
       var allRsIds: ArrayBuffer[Long] = new ArrayBuffer()
       var msiSearchIds: ArrayBuffer[Long] = new ArrayBuffer()
       val jdbcWorkDecoy = new JDBCWork() {
@@ -145,33 +119,7 @@ class OrphanDataDeleter (
       
       // todo remove orphan object_tree from result_set_object_tree_map
       // todo remove orphan object tree from peptide_match_object_tree_map
-      // check rs relations 
-      val jdbcWorkRsRelationCheck = new JDBCWork() {
-        override def execute(con: Connection) {
-          val startTime = System.currentTimeMillis
-          val stmt = con.createStatement()
-          var hasRelWithOtherRs : Boolean  = false;
-          val checkRSRelationQuery = "SELECT parent_result_set_id, child_result_set_id FROM result_set_relation "+
-                    "WHERE parent_result_set_id IN (" + allRsIds.mkString(",") + ") OR child_result_set_id in (" + allRsIds.mkString(",") + ") ";
-          val sqlCheckRsRel = stmt.executeQuery(checkRSRelationQuery)
-          while (sqlCheckRsRel.next) {
-            val rspId = sqlCheckRsRel.getLong("parent_result_set_id")
-            val rscId = sqlCheckRsRel.getLong("child_result_set_id")
-            if (!allRsIds.contains(rspId) || !allRsIds.contains(rscId)){
-              hasRelWithOtherRs = true;
-            }
-          }
-          stmt.close()
-          if (hasRelWithOtherRs){
-             val msg = " Some Search Result are linked to existing Search Result: they can not be deleted! " 
-            logger.warn(msg)
-            throw new Exception(msg)
-          }
-          
-          logger.debug("check rs relation in "+(System.currentTimeMillis-startTime)+" ms");
-        }
-      } // End of jdbcWork anonymous inner class    
-      execCtx.getMSIDbConnectionContext().doWork(jdbcWorkRsRelationCheck, false)
+      
       
       // remove rs from result_set_relation
       val jdbcWorkRsRelation = new JDBCWork() {
@@ -179,7 +127,7 @@ class OrphanDataDeleter (
           val startTime = System.currentTimeMillis
           val stmt = con.createStatement()
           val delRSRelationQuery = "DELETE FROM result_set_relation "+
-                    "WHERE parent_result_set_id IN (" + allRsIds.mkString(",") + ") AND child_result_set_id in (" + allRsIds.mkString(",") + ") ";
+                    "WHERE parent_result_set_id IN (" + allRsIds.mkString(",") + ") OR child_result_set_id in (" + allRsIds.mkString(",") + ") ";
           val sqlDelRsRel = stmt.executeUpdate(delRSRelationQuery)
           stmt.close()
           logger.debug("delete rs relation in "+(System.currentTimeMillis-startTime)+" ms");
@@ -201,6 +149,8 @@ class OrphanDataDeleter (
         }
       } // End of jdbcWork anonymous inner class    
       execCtx.getMSIDbConnectionContext().doWork(jdbcWork, false)
+      
+      // TODO : del msQuery
       
       if (msiSearchIds.length > 0) {
         // get peaklist_id
