@@ -5,6 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.PreparedStatementWrapper
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
+import fr.profi.util.serialization.ProfiMsgPack
 
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.DoJDBCWork
@@ -101,7 +102,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
             peakel.rawMapId = newRawMapId
             
             // Serialize the peakel data matrix
-            val peaksAsBytes = org.msgpack.ScalaMessagePack.write(peakel.dataMatrix)
+            val peaksAsBytes = ProfiMsgPack.serialize(peakel.dataMatrix)
             
             peakelInsertStmt.executeWith(
               peakel.moz,

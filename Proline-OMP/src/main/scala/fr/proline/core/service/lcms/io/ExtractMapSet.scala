@@ -23,6 +23,7 @@ import fr.profi.mzdb.model.PutativeFeature
 import fr.profi.mzdb.utils.ms.MsUtils
 import fr.profi.util.ms.massToMoz
 import fr.profi.util.metrics.Metric
+import fr.profi.util.serialization.ProfiMsgPack
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.lcms._
 import fr.proline.core.dal.helper.LcmsDbHelper
@@ -1128,7 +1129,7 @@ class ExtractMapSet(
 
         val scanInitialIds = peakel.getSpectrumIds()
         val peakelMessage = peakel.toPeakelDataMatrix()
-        val peakelMessageAsBytes = org.msgpack.ScalaMessagePack.write(peakelMessage)
+        val peakelMessageAsBytes = ProfiMsgPack.serialize(peakelMessage)
 
         val peakelMz = peakel.getMz
         val peakelTime = peakel.getApexElutionTime
@@ -1214,8 +1215,8 @@ class ExtractMapSet(
         val peakelMessageAsBytes = peakelStmt.columnBlob(1)
         //println(peakelId)
 
-        val peakelMessage = org.msgpack.ScalaMessagePack.read[PeakelDataMatrix](peakelMessageAsBytes)
-        val (intensitySum, area, fwhm) = peakelMessage.integratePeakel()
+        val peakelMessage = ProfiMsgPack.deserialize[PeakelDataMatrix](peakelMessageAsBytes)
+        val (intensitySum, area) = peakelMessage.integratePeakel()
 
         peakels += new MzDbPeakel(
           peakelId,
@@ -1254,8 +1255,8 @@ class ExtractMapSet(
         val peakelId = peakelStmt.columnInt(0)
         val peakelMessageAsBytes = peakelStmt.columnBlob(1)
 
-        val peakelMessage = org.msgpack.ScalaMessagePack.read[fr.profi.mzdb.model.PeakelDataMatrix](peakelMessageAsBytes)
-        val (intensitySum, area, fwhm) = peakelMessage.integratePeakel()
+        val peakelMessage = ProfiMsgPack.deserialize[fr.profi.mzdb.model.PeakelDataMatrix](peakelMessageAsBytes)
+        val (intensitySum, area) = peakelMessage.integratePeakel()
 
         peakels += new MzDbPeakel(
           peakelId,
@@ -1265,7 +1266,8 @@ class ExtractMapSet(
           leftHwhmMean = peakelStmt.columnDouble(2).toFloat,
           leftHwhmCv = peakelStmt.columnDouble(3).toFloat,
           rightHwhmMean = peakelStmt.columnDouble(4).toFloat,
-          rightHwhmCv = peakelStmt.columnDouble(5).toFloat)
+          rightHwhmCv = peakelStmt.columnDouble(5).toFloat
+        )
       }
 
     } finally {

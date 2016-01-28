@@ -11,6 +11,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
+import fr.profi.util.serialization.ProfiMsgPack
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
@@ -107,7 +108,7 @@ class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with LazyLoggin
         val scanSeq = scanSequenceById(scanSeqId)
         
         // Parse LC-MS peaks
-        val lcMsPeaks = org.msgpack.ScalaMessagePack.read[Array[LcMsPeakCoreV0_4_0]](peaksAsBytes)
+        val lcMsPeaks = ProfiMsgPack.deserialize[Array[LcMsPeakCoreV0_4_0]](peaksAsBytes)
         
         // Define some primitive arrays
         val peaksCount = lcMsPeaks.length
@@ -146,7 +147,7 @@ class V0_6__core_0_4_0_LCMS_data_migration extends JdbcMigration with LazyLoggin
         )
         
         // Serialize the peakel data matrix
-        val peakelMatrixAsBytes = org.msgpack.ScalaMessagePack.write(peakelDataMatrix)
+        val peakelMatrixAsBytes = ProfiMsgPack.serialize(peakelDataMatrix)
         
         // Update the peaks column
         updatePeakelStmt.executeWith(peakelMatrixAsBytes, peakelId)

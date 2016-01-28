@@ -12,6 +12,7 @@ import fr.proline.core.om.model.lcms._
 import fr.profi.util.sql._
 import fr.profi.util.primitives._
 import fr.profi.util.serialization.ProfiJson
+import fr.profi.util.serialization.ProfiMsgPack
 import scala.collection.mutable.HashMap
 
 class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
@@ -63,7 +64,7 @@ class SQLPeakelProvider(val lcmsDbCtx: DatabaseConnectionContext) {
 
    // Read and deserialize peaks
     val peaksAsBytes = r.getBytes(PeakelCols.PEAKS)
-    val peakelDataMatrix = org.msgpack.ScalaMessagePack.read[PeakelDataMatrix](peaksAsBytes)
+    val peakelDataMatrix = ProfiMsgPack.deserialize[PeakelDataMatrix](peaksAsBytes)
     
     // Read and deserialize properties
     val propsAsJSON = r.getStringOption(PeakelCols.SERIALIZED_PROPERTIES)
