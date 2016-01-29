@@ -46,55 +46,55 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     })
   }
   
-  def getResultSetChildrenIds(msiDbCtx: DatabaseConnectionContext, rsmId: Long, isRoot: Boolean = true): Array[Long] = {    
-    val childRsmIds = new ArrayBuffer[Long]()
-    
-    this._appendChildrenIds(msiDbCtx, Array(rsmId), childRsmIds, { parentRsmIds =>
-      this.getResultSetsFirstChildrenIds(msiDbCtx, parentRsmIds )
-    })
-
-    childRsmIds.toArray
-  }
-  
   lazy val rsRelationQB = new SelectQueryBuilder1(MsiDbResultSetRelationTable)
   
-  def getResultSetsFirstChildrenIds(msiDbCtx: DatabaseConnectionContext, rsIds: Seq[Long]): Array[Long] = {
-    if (rsIds == null || rsIds.isEmpty) return Array.empty[Long]
-
-    // WAS "select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = ?"
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-      ezDBC.selectLongs(rsRelationQB.mkSelectQuery((t, cols) =>
-        List(t.CHILD_RESULT_SET_ID) -> " WHERE " ~ t.PARENT_RESULT_SET_ID ~ " IN(" ~ rsIds.mkString(",") ~ ")"
-      ))
-    })
-  }
-  
-  def getResultSummaryChildrenIds(msiDbCtx: DatabaseConnectionContext, rsmId: Long, isRoot: Boolean = true): Array[Long] = {    
-    val childRsmIds = new ArrayBuffer[Long]()
+  def getResultSetChildrenIds(rsId: Long): Array[Long] = {
     
-    this._appendChildrenIds(msiDbCtx, Array(rsmId), childRsmIds, { parentRsmIds =>
-      this.getResultSummariesFirstChildrenIds(msiDbCtx, parentRsmIds )
+    this._getChildrenIds(Array(rsId), { parentRsIds =>
+      
+      if (parentRsIds == null || parentRsIds.isEmpty) Array.empty[Long]
+      else {
+        // WAS "select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = ?"
+        DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+          ezDBC.selectLongs(rsRelationQB.mkSelectQuery((t, cols) =>
+            List(t.CHILD_RESULT_SET_ID) -> " WHERE " ~ t.PARENT_RESULT_SET_ID ~ " IN(" ~ parentRsIds.mkString(",") ~ ")"
+          ))
+        })
+      }
+      
     })
-
-    childRsmIds.toArray
   }
-  
+
   lazy val rsmRelationQB = new SelectQueryBuilder1(MsiDbResultSummaryRelationTable)
   
-  def getResultSummariesFirstChildrenIds(msiDbCtx: DatabaseConnectionContext, rsmIds: Seq[Long]): Array[Long] = {
-    if (rsmIds == null || rsmIds.isEmpty) return Array.empty[Long]
+  def getResultSummaryChildrenIds(rsmId: Long): Array[Long] = {
+    this._getChildrenIds(Array(rsmId), { parentRsmIds =>
 
-    // WAS "select child_result_summary_id from result_summary_relation where result_summary_relation.parent_result_summary_id = ?"
-    DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-      ezDBC.selectLongs(rsmRelationQB.mkSelectQuery((t, cols) =>
-        List(t.CHILD_RESULT_SUMMARY_ID) -> " WHERE " ~ t.PARENT_RESULT_SUMMARY_ID ~ " IN(" ~ rsmIds.mkString(",") ~ ")"
-      ))
+      if (parentRsmIds == null || parentRsmIds.isEmpty) Array.empty[Long]
+      else {
+        // WAS "select child_result_summary_id from result_summary_relation where result_summary_relation.parent_result_summary_id = ?"
+        DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+          ezDBC.selectLongs(rsmRelationQB.mkSelectQuery((t, cols) =>
+            List(t.CHILD_RESULT_SUMMARY_ID) -> " WHERE " ~ t.PARENT_RESULT_SUMMARY_ID ~ " IN(" ~ parentRsmIds.mkString(",") ~ ")"
+          ))
+        })
+      }
+      
     })
-
   }
   
+  private def _getChildrenIds(ids: Array[Long], parentIdsToChildIds: Array[Long] => Array[Long]): Array[Long] = {
+    if(ids.isEmpty) return Array.empty[Long]
+    
+    val childIds = new ArrayBuffer[Long]()
+    
+    this._appendChildrenIds(ids, childIds, parentIdsToChildIds)
+
+    childIds.toArray
+  }
+  
+  @tailrec
   private def _appendChildrenIds(
-    msiDbCtx: DatabaseConnectionContext,
     parentRsmIds: Array[Long],
     childRsmIds: ArrayBuffer[Long],
     parentIdsToChildIds: Array[Long] => Array[Long]
@@ -104,7 +104,7 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
     val firstChildrenIds = parentIdsToChildIds(parentRsmIds)
     childRsmIds ++= firstChildrenIds
     
-    this._appendChildrenIds(msiDbCtx, firstChildrenIds, childRsmIds, parentIdsToChildIds)
+    this._appendChildrenIds(firstChildrenIds, childRsmIds, parentIdsToChildIds)
   }
 
   def getResultSetsMsiSearchIds(rsIds: Seq[Long], hierarchicalQuery: Boolean = true ): Array[Long] = {
@@ -156,19 +156,19 @@ class MsiDbHelper(msiDbCtx: DatabaseConnectionContext) {
       return Map.empty[Long, Set[Long]]
     
     val msiSearchIdsByParentResultSetId = new HashMap[Long, HashSet[Long]]
-    val childRsIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
+    val parentRsIds = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
       ezDBC.select(
         "SELECT id, msi_search_id FROM result_set " +
         "WHERE id IN (" + rsIds.mkString(",") + ") " +
         "AND msi_search_id IS NOT NULL"
       ) { r =>
-          val( childRsId, msiSearchId ) = (r.nextLong, r.nextLong)
-          msiSearchIdsByParentResultSetId.getOrElseUpdate(childRsId, new HashSet[Long]) += msiSearchId         
-          childRsId
+          val( parentRsId, msiSearchId ) = (r.nextLong, r.nextLong)
+          msiSearchIdsByParentResultSetId.getOrElseUpdate(parentRsId, new HashSet[Long]) += msiSearchId         
+          parentRsId
         }
     })
 
-    _getMsiSearchIdsByParentResultSetId( childRsIds, msiSearchIdsByParentResultSetId )
+    _getMsiSearchIdsByParentResultSetId( parentRsIds, msiSearchIdsByParentResultSetId )
 
     Map() ++ msiSearchIdsByParentResultSetId.map(t => (t._1 -> t._2.toSet))
   }

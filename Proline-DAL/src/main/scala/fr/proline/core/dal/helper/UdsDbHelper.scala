@@ -192,6 +192,20 @@ class UdsDbHelper(udsDbCtx: DatabaseConnectionContext) {
     })
 
   }
+  
+  def getQuantChannelIdByIdentRsmId(masterQuantChannelId: Long): Map[Long,Long] = {
+
+    DoJDBCReturningWork.withEzDBC(udsDbCtx, { ezDBC =>
+      val rsmIdForquantChannelQuery = new SelectQueryBuilder1(UdsDbQuantChannelTable).mkSelectQuery(
+        (t1, c1) => List(t1.IDENT_RESULT_SUMMARY_ID, t1.ID) ->
+        " WHERE " ~ t1.MASTER_QUANT_CHANNEL_ID ~ " = " ~ masterQuantChannelId)
+
+      ezDBC.select(rsmIdForquantChannelQuery) { r =>
+        r.nextLong -> r.nextLong
+      } toMap
+    })
+
+  }
 
   def getMasterQuantChannelIdsForQuantId(quantDatasetId: Long): Array[Long] = {
 
