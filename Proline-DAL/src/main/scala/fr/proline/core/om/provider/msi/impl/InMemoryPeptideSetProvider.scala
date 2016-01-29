@@ -6,7 +6,7 @@ import fr.proline.context.DatabaseConnectionContext
 
 class InMemoryPeptideSetProvider( peptideSets: Seq[PeptideSet] ) extends IPeptideSetProvider {
   
-  lazy val peptideSetById = Map() ++ peptideSets.map { p => p.id -> p }
+  lazy val peptideSetById = peptideSets.view.map( p => p.id -> p ).toMap
   lazy val peptideSetsByRsmId = peptideSets.groupBy( _.resultSummaryId )
 
   def getPeptideSetsAsOptions( pepSetIds: Seq[Long] ): Array[Option[PeptideSet]] = {
@@ -14,7 +14,7 @@ class InMemoryPeptideSetProvider( peptideSets: Seq[PeptideSet] ) extends IPeptid
   }
   
   def getPeptideSets( pepSetIds: Seq[Long] ): Array[PeptideSet] = {
-    this.getPeptideSetsAsOptions( pepSetIds ).filter( _.isDefined ).map( _.get )
+    this.getPeptideSetsAsOptions( pepSetIds ).withFilter( _.isDefined ).map( _.get )
   }
   
   def getResultSummariesPeptideSets( rsmIds: Seq[Long] ): Array[PeptideSet] = {

@@ -78,3 +78,33 @@ object ResultSetBuilder {
   }
 
 }
+
+
+object ResultSetDescriptorBuilder {
+  
+  protected val RSCols = MsiDbResultSetColumns
+  
+  def buildResultSetDescriptor(
+    record: IValueContainer
+  ): ResultSetDescriptor = {
+    
+    val r = record
+    
+    // Decode JSON properties
+    val propertiesAsJsonOpt = r.getStringOption(RSCols.SERIALIZED_PROPERTIES)
+    val properties = propertiesAsJsonOpt.map { ProfiJson.deserialize[ResultSetProperties](_) }
+
+    ResultSetDescriptor(
+      id = r.getLong(RSCols.ID),
+      name = r.getString(RSCols.NAME),
+      description = r.getStringOrElse(RSCols.DESCRIPTION,null),
+      contentType = ResultSetType.withName(r.getString(RSCols.TYPE)),
+      decoyResultSetId = r.getLongOrElse(RSCols.DECOY_RESULT_SET_ID, 0L),
+      msiSearchId = r.getLongOrElse(RSCols.MSI_SEARCH_ID, 0L),
+      mergedResultSummaryId = r.getLongOrElse(RSCols.MERGED_RSM_ID, 0L),
+      properties = properties
+    )
+
+  }
+
+}

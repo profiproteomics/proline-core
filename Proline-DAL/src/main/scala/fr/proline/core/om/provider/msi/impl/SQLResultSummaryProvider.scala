@@ -92,7 +92,16 @@ class SQLResultSummaryProvider(
           rsmProtSets.foreach { protSet =>
             protSet.samesetProteinMatches = Some( protSet.getSameSetProteinMatchIds.map( protMatchById(_) ) )
             protSet.subsetProteinMatches = Some( protSet.getSubSetProteinMatchIds.map( protMatchById(_) ) )
-            protMatchById.get(protSet.getRepresentativeProteinMatchId).map( protSet.setRepresentativeProteinMatch(_) )
+            //protMatchById.get(protSet.getRepresentativeProteinMatchId).map( protSet.setRepresentativeProteinMatch(_) )
+            
+            val samesetProtMatchById = protSet.samesetProteinMatches.get.map( p => p.id -> p ).toMap
+            val reprProtMatchId = protSet.getRepresentativeProteinMatchId
+            val reprProtMatchOpt = samesetProtMatchById.get(reprProtMatchId)
+            if(reprProtMatchOpt.isDefined) {
+              protSet.setRepresentativeProteinMatch(reprProtMatchOpt.get)
+            } else {
+              logger.warn(s"Representative ProteinMatch (id=$reprProtMatchId) should belong to this ProteinSet sameset !")
+            }
           }
           
           // Note: we set isValidatedContent to false here because we may have loaded matches belonging non-validated protein sets

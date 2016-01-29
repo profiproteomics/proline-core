@@ -14,14 +14,16 @@ object SpectrumBuilder {
   
   protected val SpectrumCols = MsiDbSpectrumColumns
   
-  def buildSpectra(eachRecord: (IValueContainer => Spectrum) => Seq[Spectrum]): Array[Spectrum] = {
-    eachRecord( buildSpectrum ).toArray
+  def buildSpectra(eachRecord: (IValueContainer => Spectrum) => Seq[Spectrum], setPeaks: Boolean = true): Array[Spectrum] = {
+    eachRecord( buildSpectrum(setPeaks) ).toArray
   }
   
-  def buildSpectrum(record: IValueContainer): Spectrum = {
+  def buildSpectrum(setPeaks: Boolean = true)(record: IValueContainer): Spectrum = {
     
-    val r = record    
-    val properties = r.getStringOption(SpectrumCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[SpectrumProperties](_))
+    val r = record
+    val mozListOpt = if(setPeaks) bytesTodoublesOption(r.getBytesOption(SpectrumCols.MOZ_LIST)) else None
+    val intensityListOpt = if(setPeaks) bytesTofloatsOption(r.getBytesOption(SpectrumCols.INTENSITY_LIST)) else None
+    val propsOpt = r.getStringOption(SpectrumCols.SERIALIZED_PROPERTIES).map(ProfiJson.deserialize[SpectrumProperties](_))
 
     new Spectrum(
       id = toLong(r.getAny(SpectrumCols.ID)),
@@ -36,11 +38,12 @@ object SpectrumBuilder {
       lastScan = r.getIntOrElse(SpectrumCols.LAST_SCAN,0),
       firstTime = r.getFloatOrElse(SpectrumCols.FIRST_TIME,0L),
       lastTime = r.getFloatOrElse(SpectrumCols.LAST_TIME,0L),
-      mozList = bytesTodoublesOption(r.getBytesOption(SpectrumCols.MOZ_LIST)),
-      intensityList = bytesTofloatsOption(r.getBytesOption(SpectrumCols.INTENSITY_LIST)),
+      mozList = mozListOpt,
+      intensityList = intensityListOpt,
       peaksCount = r.getInt(SpectrumCols.PEAK_COUNT),
       instrumentConfigId = r.getLong(SpectrumCols.INSTRUMENT_CONFIG_ID),
-      peaklistId = r.getLong(SpectrumCols.PEAKLIST_ID)
+      peaklistId = r.getLong(SpectrumCols.PEAKLIST_ID),
+      properties = propsOpt
     )
 
   }
