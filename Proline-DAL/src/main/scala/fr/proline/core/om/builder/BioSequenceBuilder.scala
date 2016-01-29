@@ -17,10 +17,10 @@ object BioSequenceBuilder {
   protected val BioSeqCols = MsiDbBioSequenceColumns
   
   def buildBioSequences(eachRecord: (IValueContainer => BioSequence) => Seq[BioSequence], setSequence: Boolean = true): Array[BioSequence] = {
-    eachRecord( buildBioSequence(setSequence) ).toArray
+    eachRecord( { r => buildBioSequence(r, setSequence) } ).toArray
   }
   
-  def buildBioSequence(setSequence: Boolean = true)(record: IValueContainer): BioSequence = {
+  def buildBioSequence(record: IValueContainer, setSequence: Boolean = true): BioSequence = {
     
     val r = record
 

@@ -15,10 +15,10 @@ object SpectrumBuilder {
   protected val SpectrumCols = MsiDbSpectrumColumns
   
   def buildSpectra(eachRecord: (IValueContainer => Spectrum) => Seq[Spectrum], setPeaks: Boolean = true): Array[Spectrum] = {
-    eachRecord( buildSpectrum(setPeaks) ).toArray
+    eachRecord( { r => buildSpectrum(r, setPeaks) } ).toArray
   }
   
-  def buildSpectrum(setPeaks: Boolean = true)(record: IValueContainer): Spectrum = {
+  def buildSpectrum(record: IValueContainer, setPeaks: Boolean = true): Spectrum = {
     
     val r = record
     val mozListOpt = if(setPeaks) bytesTodoublesOption(r.getBytesOption(SpectrumCols.MOZ_LIST)) else None
