@@ -488,8 +488,17 @@ case class PeptideMatchPtmSiteProperties (
   
   // Key is the ReadableString of the LocatedPtm, value is the Mascot Probability for this site
   @JsonDeserialize(contentAs = classOf[java.lang.Float])
-  @BeanProperty var mascotProbabilityBySite: Map[String, Float] = null
-)
+  protected var mascotProbabilityBySite: Map[String, Float] = null
+) {
+  
+  def getMascotProbabilityBySite(): Option[Map[String, Float]] = {
+    Option(mascotProbabilityBySite)
+  }
+  
+  def setMascotProbabilityBySite( probabilityBySite: Option[Map[String, Float]] ) = {
+    mascotProbabilityBySite = probabilityBySite.orNull
+  }
+}
 
 object PeptideInstance extends InMemoryIdGen
 

@@ -1,10 +1,9 @@
 package fr.proline.core.om.model.msq
 
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.primitives.isZeroOrNaN
-import fr.proline.core.om.model.msi.{PeptideInstance,ProteinSet,ResultSummary}
+import fr.proline.core.om.model.msi._
 
 trait Item {
   var selectionLevel: Int
@@ -452,3 +451,20 @@ case class QuantResultSummary(
   
   def id() = resultSummary.id
 }
+
+class LazyQuantResultSummary(
+  val lazyResultSummary: LazyResultSummary,
+  protected val loadMasterQuantProteinSets: (LazyResultSummary) => Array[MasterQuantProteinSet],
+  protected val loadMasterQuantPeptides: (LazyResultSummary) => Array[MasterQuantPeptide],
+  protected val loadMasterQuantPeptideIons: (LazyResultSummary) => Array[MasterQuantPeptideIon]
+) {
+  
+  // Shortcut to RSM ID
+  def id = lazyResultSummary.id
+  
+  lazy val masterQuantProteinSets = loadMasterQuantProteinSets(lazyResultSummary)
+  lazy val masterQuantPeptides = loadMasterQuantPeptides(lazyResultSummary)
+  lazy val masterQuantPeptideIons = loadMasterQuantPeptideIons(lazyResultSummary)
+}
+  
+  
