@@ -573,8 +573,15 @@ class ResultSetFakeGenerator(
     }
     
     // Build the protein entity
-    val currProtSeq = protSeqBuilder.result    
-    val currProt = new Protein(sequence = currProtSeq, id = Protein.generateNewId, alphabet = "aa")
+    val currProtSeq = protSeqBuilder.result
+    val currProt = new Protein(
+      Protein.generateNewId,
+      currProtSeq,
+      Protein.calcMass(currProtSeq),
+      Protein.calcPI(currProtSeq),
+      crc64 = null,
+      alphabet = "aa"
+    )
     proteinById += currProt.id -> currProt
 
     // Create a new ProteinMatch

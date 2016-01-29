@@ -4,8 +4,91 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonProperty
+import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.misc.InMemoryIdGen
 
+object BioSequenceAlphabet extends EnhancedEnum {
+  val AA, RNA, DNA = Value
+}
+
+/*trait IBioSequence {
+  def id: Long
+  def alphabet: BioSequenceAlphabet.Value
+  def sequence: String // TODO: set as Option[String] ???
+  def length: Int
+  def crc64: String
+  def properties: Option[BioSequenceProperties]
+}
+
+case class NucleicAcidSequence(
+  val id: Long,
+  val sequence: String, // May be ""
+  val length: Int,
+  val crc64: String,
+  val alphabet: BioSequenceAlphabet.Value,
+  var properties: Option[BioSequenceProperties]
+) extends IBioSequence {
+  require( alphabet != BioSequenceAlphabet.AA.toString )
+}
+*/
+
+object BioSequence extends InMemoryIdGen
+
+case class BioSequence(
+  val id: Long,
+  val alphabet: BioSequenceAlphabet.Value,
+  val sequence: Option[String],
+  val length: Int,
+  var mass: Double,
+  var pi: Float,
+  val crc64: String,
+  var properties: Option[BioSequenceProperties] = None
+)
+
+case class BioSequenceProperties()
+
+// TODO: merge with Protein object when the Protein case class has been removed
+object BuildProtein extends InMemoryIdGen {
+  def apply(
+    id: Long,
+    sequence: String,
+    mass: Double,
+    pi: Float,
+    crc64: String
+  ) = {
+    // Requirements
+    require( sequence != null && ! sequence.isEmpty(), "sequence is null or empty" )  
+    
+    BioSequence(
+      id,
+      BioSequenceAlphabet.AA,
+      Some(sequence),
+      sequence.length,
+      mass,
+      pi,
+      crc64
+    )
+  }
+  def apply(
+    sequence: String,
+    id: Long = BioSequence.generateNewId()
+  ) = {
+    // Requirements
+    require( sequence != null && ! sequence.isEmpty(), "sequence is null or empty" )  
+    
+    BioSequence(
+      id,
+      BioSequenceAlphabet.AA,
+      Some(sequence),
+      sequence.length,
+      Protein.calcMass(sequence),
+      Protein.calcPI(sequence),
+      Protein.calcCRC64(sequence)
+    )
+  }
+}
+
+// TODO: merge with BuildProtein object when the Protein case class has been removed
 object Protein extends InMemoryIdGen {
 
   /** A percentage (between 0 and 100) expressing the sequence coverage of the protein */
@@ -49,12 +132,13 @@ object Protein extends InMemoryIdGen {
 
   // TODO: compute the CRC64
   def calcCRC64(sequence: String): String = {
-    null
+    throw new Exception("NYI")
   }
 
 }
 
-case class Protein (    
+// TODO: replace by BioSequence case class
+case class Protein(
   // Required fields
   val id: Long,
   val sequence: String,
@@ -62,12 +146,11 @@ case class Protein (
   var pi: Float,
   val crc64: String,
   val alphabet: String,
-  var properties: Option[ProteinProperties]
+  var properties: Option[BioSequenceProperties]
 ) {
   
   // Requirements
   require( sequence != null && ! sequence.isEmpty() )
-  require( alphabet.matches("aa|rna|dna") ) // TODO: create an enumeration
   
   // Define secondary constructors
   def this( id: Long, sequence: String, mass: Double, pi: Float, crc64: String, alphabet: String) = {
@@ -84,9 +167,6 @@ case class Protein (
   }
 
 }
-
-case class ProteinProperties()
-
 
 object ProteinMatch extends InMemoryIdGen
 
@@ -185,9 +265,9 @@ case class ProteinSet (
     
     val samesetPMsOpt = samesetProteinMatches
     if(samesetPMsOpt!= null && samesetPMsOpt.isDefined) 
-      require(samesetPMsOpt.get.contains(newReprPM), requirementMsg)
+      require(samesetPMsOpt.get.toSet.contains(newReprPM), requirementMsg)
     else
-      require(samesetProteinMatchIds.contains(newReprPM.id), requirementMsg)
+      require(samesetProteinMatchIds.toSet.contains(newReprPM.id), requirementMsg)
     
     representativeProteinMatchId = newReprPM.id
     representativeProteinMatch = Some(newReprPM)
