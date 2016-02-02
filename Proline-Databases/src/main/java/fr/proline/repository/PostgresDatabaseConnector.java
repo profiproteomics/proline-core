@@ -192,9 +192,9 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		 * TODO Remove preferredTestQuery "SELECT 1" trick when PostgreSQL
 		 * driver support isValid()
 		 */
-		if (properties.get(HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY) == null) {
-			properties.put(HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY, "SELECT 1");
-		}
+//		if (properties.get(HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY) == null) {
+//			properties.put(HIBERNATE_POOL_PREFERRED_TEST_QUERY_KEY, "SELECT 1");
+//		}
 
 		/* Force TCP keepalive on EntityManager connections */
 		if (properties.get(HIBERNATE_CONNECTION_KEEPALIVE_KEY) == null) {
