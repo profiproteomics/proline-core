@@ -132,7 +132,7 @@ object Protein extends InMemoryIdGen {
 
   // TODO: compute the CRC64
   def calcCRC64(sequence: String): String = {
-    throw new Exception("NYI")
+    null
   }
 
 }
