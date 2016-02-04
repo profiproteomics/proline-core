@@ -619,7 +619,7 @@ class LazyResultSummary(
   protected val loadLazyDecoyResultSummary: Option[(ResultSummaryDescriptor) => LazyResultSummary] = None,
   protected val loadPeptideValidationRocCurve: Option[(ResultSummaryDescriptor) => MsiRocCurve] = None,
   protected val loadProteinValidationRocCurve: Option[(ResultSummaryDescriptor) => MsiRocCurve] = None
-) {
+) extends LazyLogging {
   
   // Shortcut to RSM ID
   def id = descriptor.id
@@ -642,6 +642,10 @@ class LazyResultSummary(
     if(linkPeptideSets) {
       this.linkPeptideSets(pepSets)
     }
+    
+    /*if(linkResultSetEntities) {
+      this.linkProteinMatchesToPeptideSets(lazyResultSet.proteinMatches, pepSets)
+    }*/
     
     pepSets
   }
@@ -710,20 +714,27 @@ class LazyResultSummary(
     
     protSets.foreach { protSet =>
       
-      val samesetProtMatches = protSet.getSameSetProteinMatchIds.map(protMatchById(_))
+      val samesetProtMatches = protSet.samesetProteinMatchIds.map(protMatchById(_))
       protSet.samesetProteinMatches = Some(samesetProtMatches)
-      protSet.subsetProteinMatches = Some(protSet.getSubSetProteinMatchIds.map(protMatchById(_)))
+      protSet.subsetProteinMatches = Some(protSet.subsetProteinMatchIds.map(protMatchById(_)))
       
-      /*println(protSet.getRepresentativeProteinMatchId)
-      println(protSet.getSameSetProteinMatchIds.toList)
-      println(protSet.getSubSetProteinMatchIds.toList)*/
-      val samesetProtMatchById = samesetProtMatches.view.mapByLong( _.id )
+      val samesetProtMatchById = samesetProtMatches.mapByLong( _.id )
       
-      val reprProtMatchOpt = samesetProtMatchById.get(protSet.getRepresentativeProteinMatchId)
+      val reprProtMatchId = protSet.getRepresentativeProteinMatchId
+      val reprProtMatchOpt = samesetProtMatchById.get(reprProtMatchId)
       if(reprProtMatchOpt.isDefined) {
         protSet.setRepresentativeProteinMatch(reprProtMatchOpt.get)
+      } else {
+        logger.warn(s"Representative ProteinMatch (id=$reprProtMatchId) should belong to this ProteinSet sameset !")
       }
     }
   }
+  
+  /*protected def linkProteinMatchesToPeptideSets(protMatches: Array[ProteinMatch], pepSets: Array[PeptideSet]) = {
+    val protMatchById = protMatches.mapByLong(_.id)
+    
+    pepSets.foreach { pepSet =>
+    }
+  }*/
   
 }

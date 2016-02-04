@@ -209,7 +209,7 @@ case class ProteinMatch(
     else sequenceMatches.map( _.getPeptideId ).distinct.length
   }
 
-  def getProteinId: Long = { if(protein != null && protein.isDefined) protein.get.id else proteinId }
+  def getProteinId(): Long = { if(protein != null && protein.isDefined) protein.get.id else proteinId }
   
 }
 
@@ -386,9 +386,9 @@ case class SequenceMatch (
   require( start > 0 , "peptide sequence position must be striclty positive" )
   require( end > start , "peptide end position must be greater than start position" )
   
-  def getPeptideId: Long = { if(peptide != null && peptide.isDefined) peptide.get.id else peptideId }
+  def getPeptideId(): Long = { if(peptide != null && peptide.isDefined) peptide.get.id else peptideId }
 
-  def getBestPeptideMatchId: Long = { if(bestPeptideMatch != null && bestPeptideMatch.isDefined) bestPeptideMatch.get.id else bestPeptideMatchId }
+  def getBestPeptideMatchId(): Long = { if(bestPeptideMatch != null && bestPeptideMatch.isDefined) bestPeptideMatch.get.id else bestPeptideMatchId }
  
   override def equals(other: Any): Boolean = {
 

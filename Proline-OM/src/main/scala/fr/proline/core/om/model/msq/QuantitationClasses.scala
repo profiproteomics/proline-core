@@ -14,6 +14,7 @@ trait QuantComponent {
   val rawAbundance: Float
   var abundance: Float
   var selectionLevel: Int
+  def peptideMatchesCount: Int
   
   def hasRawAbundance = if( rawAbundance.isNaN ) false else true
   def hasAbundance = if( abundance.isNaN ) false else true
@@ -42,7 +43,9 @@ case class QuantReporterIon(
   val rawAbundance: Float,
   var abundance: Float,
   var selectionLevel: Int
-) extends QuantComponent
+) extends QuantComponent {
+  def peptideMatchesCount: Int = 1
+}
 
 object MasterQuantReporterIon extends InMemoryIdGen
 
@@ -335,13 +338,16 @@ case class MasterQuantPeptide(
 
 }
 
-case class QuantProteinSet (
+case class QuantProteinSet(
   val rawAbundance: Float,
   var abundance: Float,
   val peptideMatchesCount: Int,
+  // TODO: add peptidesCount: Int => need to update MSIdb
   val quantChannelId: Long,
+  // TODO: fill this value
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val proteinSetId: Option[Long] = None,
+  // TODO: fill this value
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val proteinMatchId: Option[Long] = None,
   var selectionLevel: Int
