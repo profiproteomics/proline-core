@@ -34,6 +34,8 @@ public class DQuantitationChannel extends QuantitationChannel{
 	// identDataset id, if exists
 	private Long identDatasetId;
     
+	private Long biologicalGroupId = null;
+	
 	public DQuantitationChannel(QuantitationChannel o) {
 		super();
 		setId(o.getId());
@@ -119,7 +121,14 @@ public class DQuantitationChannel extends QuantitationChannel{
 		this.identDatasetId = identDatasetId;
 	}
 
-	
-	
+	public Long getBiologicalGroupId() {
+		return biologicalGroupId;
+	}
 
+	public void setBiologicalGroupId(Long biologicalGroupId) {
+		this.biologicalGroupId = biologicalGroupId;
+	}
+	
+	
+	
 }
