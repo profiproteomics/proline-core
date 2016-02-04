@@ -379,7 +379,8 @@ object PeptideMatchScoreType extends Enumeration {
 
 }
 
-case class PeptideMatch ( // Required fields
+case class PeptideMatch(
+  // Required fields
   var id: Long,
   var rank: Int,
   val score: Float,
@@ -488,8 +489,17 @@ case class PeptideMatchPtmSiteProperties (
   
   // Key is the ReadableString of the LocatedPtm, value is the Mascot Probability for this site
   @JsonDeserialize(contentAs = classOf[java.lang.Float])
-  @BeanProperty var mascotProbabilityBySite: Map[String, Float] = null
-)
+  protected var mascotProbabilityBySite: Map[String, Float] = null
+) {
+  
+  def getMascotProbabilityBySite(): Option[Map[String, Float]] = {
+    Option(mascotProbabilityBySite)
+  }
+  
+  def setMascotProbabilityBySite( probabilityBySite: Option[Map[String, Float]] ) = {
+    mascotProbabilityBySite = probabilityBySite.orNull
+  }
+}
 
 object PeptideInstance extends InMemoryIdGen
 
@@ -535,9 +545,9 @@ case class PeptideInstance(
   @JsonProperty lazy val peptideMatchesCount = getPeptideMatchIds.length
   
   // Related objects ID getters
-  def getPeptideMatchIds : Array[Long] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds }
+  def getPeptideMatchIds(): Array[Long] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds }
   
-  def getUnmodifiedPeptideId : Long = { if(unmodifiedPeptide != null && unmodifiedPeptide.isDefined) unmodifiedPeptide.get.id else unmodifiedPeptideId }
+  def getUnmodifiedPeptideId(): Long = { if(unmodifiedPeptide != null && unmodifiedPeptide.isDefined) unmodifiedPeptide.get.id else unmodifiedPeptideId }
   
   def getPeptideMatchProperties( peptideMatchId: Long ): Option[PeptideMatchResultSummaryProperties] = {
     if( peptideMatchPropertiesById != null ) { peptideMatchPropertiesById.get(peptideMatchId) }
@@ -545,13 +555,13 @@ case class PeptideInstance(
   }
   
   /** Returns true if the sequence is specific to a protein set. */
-  def isProteinSetSpecific: Boolean = { proteinSetsCount == 1 }
+  def isProteinSetSpecific(): Boolean = { proteinSetsCount == 1 }
   
   /** Returns true if the sequence is specific to a validated protein set. */
-  def isValidProteinSetSpecific: Boolean = { validatedProteinSetsCount == 1 }
+  def isValidProteinSetSpecific(): Boolean = { validatedProteinSetsCount == 1 }
   
   /** Returns true if the sequence is specific to a protein match. */
-  def isProteinMatchSpecific: Boolean = { proteinMatchesCount == 1 }
+  def isProteinMatchSpecific(): Boolean = { proteinMatchesCount == 1 }
 
 }
 
@@ -613,35 +623,35 @@ case class PeptideSet ( // Required fields
   require( peptideMatchesCount >= items.length, "invalid peptideMatchesCount" )
   
   // Related objects ID getters
-  def getProteinSetId: Long = { if(proteinSet != null && proteinSet.isDefined) proteinSet.get.id else proteinSetId }
+  def getProteinSetId(): Long = { if(proteinSet != null && proteinSet.isDefined) proteinSet.get.id else proteinSetId }
   
-  def getStrictSubsetIds: Array[Long] = { if(strictSubsets != null && strictSubsets.isDefined) strictSubsets.get.map(_.id)  else strictSubsetIds  }
+  def getStrictSubsetIds(): Array[Long] = { if(strictSubsets != null && strictSubsets.isDefined) strictSubsets.get.map(_.id)  else strictSubsetIds  }
     
-  def getSubsumableSubsetIds: Array[Long] = { if(subsumableSubsets != null && subsumableSubsets.isDefined) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
+  def getSubsumableSubsetIds(): Array[Long] = { if(subsumableSubsets != null && subsumableSubsets.isDefined) subsumableSubsets.get.map(_.id)  else subsumableSubsetIds  }
   
-  def getPeptideInstances: Array[PeptideInstance] = { items.map( _.peptideInstance ) }
+  def getPeptideInstances(): Array[PeptideInstance] = { items.map( _.peptideInstance ) }
   
-  def getPeptideMatchIds: Array[Long] = {
-    val peptideMatchIdSet = new ArrayBuffer[Long]()  
+  def getPeptideMatchIds(): Array[Long] = {
+    val peptideMatchIdSet = new ArrayBuffer[Long]()
     for (pepSetItem <- items) {
       peptideMatchIdSet ++= pepSetItem.peptideInstance.getPeptideMatchIds
     }
     peptideMatchIdSet.toArray
   }
   
-  def getPeptideIds: Array[Long] = this.items.map { _.peptideInstance.peptide.id }
+  def getPeptideIds(): Array[Long] = this.items.map { _.peptideInstance.peptide.id }
   
-  def hasStrictSubset: Boolean = { 
+  def hasStrictSubset(): Boolean = { 
     if( (strictSubsetIds != null && strictSubsetIds.length > 0 ) || 
         (strictSubsets != null && strictSubsets.isDefined) ) true else false
   }
   
-  def hasSubsumableSubset: Boolean = { 
+  def hasSubsumableSubset(): Boolean = { 
     if( (subsumableSubsetIds != null && subsumableSubsetIds.length > 0 ) || 
         (subsumableSubsets != null && subsumableSubsets.isDefined) ) true else false
   }
   
-  def hasSubset : Boolean = { if( hasStrictSubset || hasSubsumableSubset ) true else false }
+  def hasSubset(): Boolean = { if( hasStrictSubset || hasSubsumableSubset ) true else false }
   
   override def hashCode = {
     if(proteinMatchIds != null && proteinMatchIds.size>0) id.hashCode +  proteinMatchIds.hashCode() else id.hashCode
