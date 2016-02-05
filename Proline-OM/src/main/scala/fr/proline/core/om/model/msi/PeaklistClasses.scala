@@ -125,18 +125,16 @@ case class SpectrumTitleParsingRule (
           try {
             val matches = title =# (atomicFieldRegex,fieldNameAsStr)
             
-            if( matches.isDefined) {
+            if( matches.isDefined && matches.get.groupNames.contains(fieldNameAsStr) ) {
               specTitleFieldMap += fieldName -> matches.get.group(fieldNameAsStr)
             }
           } catch {
             
             case t: Throwable => {
               lastThrowable = t
-              logger.trace("Error during spectrum title parsing")
+              //logger.trace("Error during spectrum title parsing")
             }
-            
           }
-          
         }
       }
     }
