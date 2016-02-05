@@ -146,7 +146,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
       // Link peptide instances with peptide matches
       val pepInstPepMatchMapInsertQuery = MsiDbPeptideInstancePeptideMatchMapTable.mkInsertQuery()
 
-      msiEzDBC.executePrepared(pepInstPepMatchMapInsertQuery) { stmt =>
+      msiEzDBC.executeInBatch(pepInstPepMatchMapInsertQuery) { stmt =>
 
         rsm.peptideInstances.foreach { pepInst =>
           val pepMatchRsmPropsById = pepInst.peptideMatchPropertiesById
@@ -223,7 +223,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
       //val samesetPeptideInstances = peptideSet.getPeptideInstances
       
       // Link peptide sets to peptide instances
-      msiEzDBC.executePrepared( MsiDbPeptideSetPeptideInstanceItemTable.mkInsertQuery ) { stmt =>
+      msiEzDBC.executeInBatch( MsiDbPeptideSetPeptideInstanceItemTable.mkInsertQuery ) { stmt =>
         for( peptideSet <- rsm.peptideSets ) {
           for( peptideSetItem <- peptideSet.items ) {
             
@@ -251,7 +251,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
       }
       
       // Link peptide sets to protein matches
-      msiEzDBC.executePrepared( MsiDbPeptideSetProteinMatchMapTable.mkInsertQuery ) { stmt =>
+      msiEzDBC.executeInBatch( MsiDbPeptideSetProteinMatchMapTable.mkInsertQuery ) { stmt =>
         rsm.peptideSets.foreach { pepSet => pepSet.proteinMatchIds.foreach { proteinMatchId => 
             stmt.executeWith(
               pepSet.id,
@@ -272,7 +272,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
       }
         
       // Store hierarchical relations between peptide sets
-      msiEzDBC.executePrepared( MsiDbPeptideSetRelationTable.mkInsertQuery ) { stmt =>
+      msiEzDBC.executeInBatch( MsiDbPeptideSetRelationTable.mkInsertQuery ) { stmt =>
         for( peptideSet <- rsm.peptideSets ) {
           
           // Update and store peptide set relation of type strict subsets
@@ -345,7 +345,7 @@ private[msi] class SQLRsmStorer() extends IRsmStorer {
       }
   
       // Link protein sets to protein matches
-      msiEzDBC.executePrepared( MsiDbProteinSetProteinMatchItemTable.mkInsertQuery ) { stmt =>
+      msiEzDBC.executeInBatch( MsiDbProteinSetProteinMatchItemTable.mkInsertQuery ) { stmt =>
         
         rsm.proteinSets.foreach { protSet =>
           

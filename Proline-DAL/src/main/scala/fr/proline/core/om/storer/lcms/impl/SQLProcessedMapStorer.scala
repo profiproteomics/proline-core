@@ -97,7 +97,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
   
   protected def linkProcessedMapToRunMaps( ezDBC: EasyDBC, processedMap: ProcessedMap ): Unit = {
     
-    ezDBC.executePrepared(LcmsDbProcessedMapRawMapMappingTable.mkInsertQuery) { statement => 
+    ezDBC.executeInBatch(LcmsDbProcessedMapRawMapMappingTable.mkInsertQuery) { statement => 
       processedMap.getRawMapIds.foreach { rawMapId =>
         statement.executeWith( processedMap.id, rawMapId )
       }
@@ -116,7 +116,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
     val storedFtIdSet = new collection.mutable.HashSet[Long]
     
     // Attach features to the processed map
-    ezDBC.executePrepared(LcmsDbProcessedMapFeatureItemTable.mkInsertQuery) { statement => 
+    ezDBC.executeInBatch(LcmsDbProcessedMapFeatureItemTable.mkInsertQuery) { statement => 
       processedMap.features.foreach { feature =>
         if( storedFtIdSet.contains(feature.id) == false ) {
           
@@ -168,7 +168,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
       }
       
       // Store processed feature items corresponding to feature clusters
-      ezDBC.executePrepared(LcmsDbProcessedMapFeatureItemTable.mkInsertQuery) { statement => 
+      ezDBC.executeInBatch(LcmsDbProcessedMapFeatureItemTable.mkInsertQuery) { statement => 
         features.withFilter( _.isCluster ).foreach { ft =>
           _insertProcessedMapFtItemUsingWrappedStatement( ft, statement )
         }
@@ -176,7 +176,7 @@ class SQLProcessedMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLRaw
       
       // Link feature clusters to their corresponding sub-features
       //val subFtIds = new ArrayBuffer[Int](nbSubFts)
-      ezDBC.executePrepared(LcmsDbFeatureClusterItemTable.mkInsertQuery) { statement => 
+      ezDBC.executeInBatch(LcmsDbFeatureClusterItemTable.mkInsertQuery) { statement => 
         features.withFilter( _.isCluster ).foreach { clusterFt =>
           for( subFt <- clusterFt.subFeatures ) {
             //subFtIds += subFt.id

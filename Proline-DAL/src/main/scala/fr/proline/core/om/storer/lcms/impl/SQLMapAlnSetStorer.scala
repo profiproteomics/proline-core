@@ -20,7 +20,7 @@ class SQLMapAlnSetStorer( lcmsDbCtx: DatabaseConnectionContext ) extends IMapAln
       ezDBC.execute( "UPDATE processed_map SET is_aln_reference = ? WHERE id = ?", true, alnRefMapId )
       
       // Store map alignments
-      ezDBC.executePrepared(LcmsDbMapAlignmentTable.mkInsertQuery) { statement => 
+      ezDBC.executeInBatch(LcmsDbMapAlignmentTable.mkInsertQuery) { statement => 
         mapAlnSets.foreach { mapAlnSet =>
           mapAlnSet.mapAlignments.foreach { mapAln =>
             statement.executeWith(

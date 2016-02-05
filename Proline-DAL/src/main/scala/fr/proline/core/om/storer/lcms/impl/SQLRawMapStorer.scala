@@ -69,7 +69,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
       }
 
       // Link the features to overlapping features
-      ezDBC.executePrepared(LcmsDbFeatureOverlapMappingTable.mkInsertQuery) { statement =>
+      ezDBC.executeInBatch(LcmsDbFeatureOverlapMappingTable.mkInsertQuery) { statement =>
         rawMap.features.foreach { ft =>
           if (ft.overlappingFeatures != null) {
             for (olpFt <- ft.overlappingFeatures) {
@@ -80,7 +80,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
       }
 
       // Link the features to MS2 scans
-      ezDBC.executePrepared(LcmsDbFeatureMs2EventTable.mkInsertQuery) { statement =>
+      ezDBC.executeInBatch(LcmsDbFeatureMs2EventTable.mkInsertQuery) { statement =>
         flattenedFeatures.foreach { ft =>
           if (ft.relations.ms2EventIds != null) {
             for (ms2EventId <- ft.relations.ms2EventIds) {
@@ -129,7 +129,7 @@ class SQLRawMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends IRawMapStore
         }
         
         // Link features to peakels
-        ezDBC.executePrepared(LcmsDbFeaturePeakelItemTable.mkInsertQuery) { statement =>
+        ezDBC.executeInBatch(LcmsDbFeaturePeakelItemTable.mkInsertQuery) { statement =>
           for (
             ft <- flattenedFeatures;
             peakelItem <- ft.relations.peakelItems

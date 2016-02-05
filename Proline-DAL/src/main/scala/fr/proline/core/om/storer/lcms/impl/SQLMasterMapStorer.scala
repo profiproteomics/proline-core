@@ -44,7 +44,7 @@ class SQLMasterMapStorer(lcmsDbCtx: DatabaseConnectionContext) extends SQLProces
       }
       
       // Link master features to their children
-      ezDBC.executePrepared(LcmsDbMasterFeatureItemTable.mkInsertQuery) { statement =>
+      ezDBC.executeInBatch(LcmsDbMasterFeatureItemTable.mkInsertQuery) { statement =>
         
         masterMap.features.foreach { mft =>
           

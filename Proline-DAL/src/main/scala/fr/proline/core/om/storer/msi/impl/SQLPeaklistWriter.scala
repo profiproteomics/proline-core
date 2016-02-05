@@ -68,7 +68,7 @@ abstract class AbstractSQLPeaklistWriter extends IPeaklistWriter with LazyLoggin
       // Insert corresponding spectra
       val spectrumIdByTitle = collection.immutable.Map.newBuilder[String, Long]
       
-      msiEzDBC.executePrepared(spectrumInsertQuery) { stmt =>
+      msiEzDBC.executePrepared(spectrumInsertQuery, true) { stmt =>
         
         var spectrumIdx = 0
         peaklistContainer.eachSpectrum { spectrum =>

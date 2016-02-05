@@ -60,7 +60,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     
     DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
-      msiEzDBC.executePrepared(MsiDbPeptideTable.mkInsertQuery()) { stmt =>
+      msiEzDBC.executeInBatch(MsiDbPeptideTable.mkInsertQuery()) { stmt =>
   
         // Iterate over the array of peptides to store them in the MSI-DB
         for (peptide <- peptides) {
@@ -95,7 +95,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
     DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
-      msiEzDBC.executePrepared(MsiDbBioSequenceTable.mkInsertQuery()) { stmt =>
+      msiEzDBC.executeInBatch(MsiDbBioSequenceTable.mkInsertQuery()) { stmt =>
         for (protein <- proteins) {
   
           // Store only proteins which don't exist in the MSI-DB  
@@ -134,7 +134,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       
       val ptmStringInsertQuery = MsiDbPeptideReadablePtmStringTable.mkInsertQuery
       
-      msiEzDBC.executePrepared( ptmStringInsertQuery ) { stmt =>
+      msiEzDBC.executeInBatch( ptmStringInsertQuery ) { stmt =>
         for ( peptide <- rs.peptides; if StringUtils.isNotEmpty(peptide.readablePtmString) ) {
           count += stmt.executeWith(
             peptide.id,
@@ -204,7 +204,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       }
   
       // Link peptide matches to their children
-      msiEzDBC.executePrepared(MsiDbPeptideMatchRelationTable.mkInsertQuery()) { stmt =>
+      msiEzDBC.executeInBatch(MsiDbPeptideMatchRelationTable.mkInsertQuery()) { stmt =>
         for (
           peptideMatch <- peptideMatches;
           pepMatchChildrenIds <- Option(peptideMatch.getChildrenIds);
@@ -221,61 +221,60 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
   def insertSpectrumMatch(peptideMatch: PeptideMatch, spectrumMatch: SpectrumMatch, msiDbCtx: DatabaseConnectionContext): Int = {
     
     val schemaName = ObjectTreeSchema.SchemaName.SPECTRUM_MATCH.toString()
-    var count = 0
     
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
-      // Store spectrum matches
-      val spectrumMatchId = msiEzDBC.executePrepared(objTreeInsertQuery, true ) { stmt =>
+    DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+      // Store spectrum match
+      val spectrumMatchId = msiEzDBC.executePrepared(objTreeInsertQuery, true) { stmt =>
           stmt.executeWith(
-            Option(null),
+            Option.empty[Long],
             CustomSerializer.serialize(spectrumMatch),
             Option.empty[String],
             schemaName
           )
          stmt.generatedLong 
       }
-      
-      // Link spectrum matches to peptide matches
-      count = msiEzDBC.executePrepared("INSERT INTO peptide_match_object_tree_map VALUES (?,?,?)" ) { stmt =>
-          stmt.executeWith(
-            peptideMatch.id,
-            spectrumMatchId,
-            schemaName
-          )
+
+      // Link spectrum match to peptide match
+      msiEzDBC.executePrepared("INSERT INTO peptide_match_object_tree_map VALUES (?,?,?)") { stmt =>
+        stmt.executeWith(
+          peptideMatch.id,
+          spectrumMatchId,
+          schemaName
+        )
       }
     })
-	 count 
-  }  
+
+  }
   
   def insertRsSpectrumMatches(rs: ResultSet, rf: IRsContainer, msiDbCtx: DatabaseConnectionContext): Int = {
     
     val schemaName = ObjectTreeSchema.SchemaName.SPECTRUM_MATCH.toString()
-    val pepMatchIdByKey = Map() ++ rs.peptideMatches.map( pm => Pair(pm.msQuery.initialId,pm.rank) -> pm.id )    
-    var spectrumCount = 0
+    val pepMatchIdByKey = Map() ++ rs.peptideMatches.map( pm => (pm.msQuery.initialId,pm.rank) -> pm.id )    
+    var spectraCount = 0
     
     DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
 
-      val spectrumMatchKeyById = new HashMap[Long,Pair[Int,Int]]()
+      val spectrumMatchKeyById = new HashMap[Long,(Int,Int)]()
       
       // Store spectrum matches
       msiEzDBC.executePrepared(objTreeInsertQuery, true ) { stmt =>
         rf.eachSpectrumMatch(rs.isDecoy, { spectrumMatch =>
 
           stmt.executeWith(
-            Option(null),//ScalaMessagePack.write(spectrumMatch),
+            Option.empty[Long],//ScalaMessagePack.write(spectrumMatch),
             CustomSerializer.serialize(spectrumMatch),
             Option.empty[String],
             schemaName
           )
           
-          spectrumMatchKeyById += stmt.generatedLong -> Pair(spectrumMatch.msQueryInitialId,spectrumMatch.peptideMatchRank)
+          spectrumMatchKeyById += stmt.generatedLong -> (spectrumMatch.msQueryInitialId,spectrumMatch.peptideMatchRank)
           
-          spectrumCount += 1
+          spectraCount += 1
         })
       }
       
       // Link spectrum matches to peptide matches
-      msiEzDBC.executePrepared("INSERT INTO peptide_match_object_tree_map VALUES (?,?,?)" ) { stmt =>
+      msiEzDBC.executeInBatch("INSERT INTO peptide_match_object_tree_map VALUES (?,?,?)" ) { stmt =>
         
         for( (spectrumMatchId,spectrumMatchKey) <- spectrumMatchKeyById ) {
           val pepMatchId = pepMatchIdByKey( spectrumMatchKey )
@@ -290,8 +289,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       
     })
     
-    spectrumCount
-
+    spectraCount
   }
 
   def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
@@ -357,7 +355,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     val rsId = rs.id
 
     // Link protein matches to sequence databases
-    msiEzDBC.executePrepared(MsiDbProteinMatchSeqDatabaseMapTable.mkInsertQuery()) { stmt =>
+    msiEzDBC.executeInBatch(MsiDbProteinMatchSeqDatabaseMapTable.mkInsertQuery()) { stmt =>
       for (proteinMatch <- proteinMatches)
         for (seqDbId <- proteinMatch.seqDatabaseIds)
           stmt.executeWith(proteinMatch.id, seqDbId, rsId)
@@ -376,7 +374,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     
     DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
       
-      msiEzDBC.executePrepared( MsiDbSequenceMatchTable.mkInsertQuery ) { stmt =>
+      msiEzDBC.executeInBatch( MsiDbSequenceMatchTable.mkInsertQuery ) { stmt =>
         
         // Iterate over protein matches
         for (proteinMatch <- proteinMatches) {
@@ -404,7 +402,6 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     })
 
     count
-    
   }
 
 }
