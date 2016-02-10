@@ -637,6 +637,7 @@ class LazyResultSummary(
   lazy val peptideInstanceById: LongMap[PeptideInstance] = peptideInstances.mapByLong(_.id)
   
   lazy val peptideSets: Array[PeptideSet] = {
+    this.peptideInstances // lazy loading of peptide instances to enable linking with peptide matches
     val pepSets = loadPeptideSets(descriptor)
     
     if(linkPeptideSets) {
@@ -653,7 +654,7 @@ class LazyResultSummary(
   lazy val peptideSetById: LongMap[PeptideSet] = peptideSets.mapByLong(_.id)
   
   lazy val proteinSets: Array[ProteinSet] = {
-    val pepSets = this.peptideSets // lazy loading of peptide sets to enable linking
+    this.peptideSets // lazy loading of peptide sets to enable linking between peptide sets
     val protSets = loadProteinSets(descriptor)
     
     if(linkResultSetEntities) {
