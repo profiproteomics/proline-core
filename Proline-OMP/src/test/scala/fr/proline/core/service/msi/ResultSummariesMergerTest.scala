@@ -64,7 +64,7 @@ class ResultSummariesMergerTest extends StrictLogging {
 
       logger.debug("Merging two ResultSummaries by objects ...")
 
-      val rsmMergerObj = new ResultSummaryMerger(sqlExecutionContext, None, Some(rsms))
+      val rsmMergerObj = new ResultSummaryMerger(sqlExecutionContext, None, Some(rsms), None)
 
       val resultObj = rsmMergerObj.runService
       assertTrue("ResultSummary merger resultObj", resultObj)
@@ -94,7 +94,7 @@ class ResultSummariesMergerTest extends StrictLogging {
 
       logger.debug("Merging two ResultSummaries by Ids...")
 
-      val rsmMerger = new ResultSummaryMerger(sqlExecutionContext, Some(rsmIds), None)
+      val rsmMerger = new ResultSummaryMerger(sqlExecutionContext, Some(rsmIds), None, None)
 
       val mergerResult = rsmMerger.runService
       assertTrue("ResultSummary merger result", mergerResult)

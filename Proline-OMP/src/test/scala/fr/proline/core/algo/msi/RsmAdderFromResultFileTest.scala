@@ -61,6 +61,21 @@ class RsmAdderFromResultFileTest extends StrictLogging with RsAdderFromResultFil
 
     //storeBuiltResultSet(builtRS)
   }
+  
+    @Test
+  def addOneNonFilteredRSMTwiceInUnionMode() {
+    
+    val rsId = ResultSet.generateNewId()
+    val rsmAdderAlgo = new ResultSummaryAdder(resultSetId = rsId, pepSetScoreUpdater = pepSetScoreUpdater, additionMode = AdditionMode.UNION)
+    rsmAdderAlgo.addResultSummary(nonFilteredRSM)
+    rsmAdderAlgo.addResultSummary(nonFilteredRSM)
+    
+    val builtRSM = rsmAdderAlgo.toResultSummary()
+    
+    checkBuiltResultSet(builtRSM.resultSet.get)
+
+    //storeBuiltResultSet(builtRS)
+  }
 
   @Test
   def addOneFilteredRSM() {

@@ -47,7 +47,8 @@ object ResultSetMerger {
 class ResultSetMerger(
   execCtx: IExecutionContext,
   resultSetIds: Option[Seq[Long]],
-  resultSets: Option[Seq[ResultSet]]
+  resultSets: Option[Seq[ResultSet]],  
+  aggregationMode: Option[AdditionMode.Value]
 ) extends IService with LazyLogging {
 
   var mergedResultSet: ResultSet = null
@@ -81,10 +82,10 @@ class ResultSetMerger(
 
       if (resultSets.isDefined) {
         logger.info("Start merge from existing ResultSets")
-        _mergeFromResultsSets(resultSets.get, storerContext)
+        _mergeFromResultsSets(resultSets.get, aggregationMode, storerContext)
       } else {
         logger.info("Start merge from ResultSet Ids")
-        _mergeFromResultsSetIds(resultSetIds.get, storerContext)
+        _mergeFromResultsSetIds(resultSetIds.get, aggregationMode, storerContext)
       }
 
       // Commit transaction if it was initiated locally
@@ -117,7 +118,7 @@ class ResultSetMerger(
     msiTransacOk
   }
 
-  private def _mergeFromResultsSetIds(resultSetIds: Seq[Long], storerContext: StorerContext) {
+  private def _mergeFromResultsSetIds(resultSetIds: Seq[Long], aggregationMode: Option[AdditionMode.Value], storerContext: StorerContext) {
     val msiDbHelper = new MsiDbHelper(storerContext.getMSIDbConnectionContext)
 
     logger.debug("TARGET ResultSet Ids : " + resultSetIds.mkString(" | "))
@@ -142,7 +143,7 @@ class ResultSetMerger(
       isValidatedContent = false,
       isDecoy = false,
       seqLengthByProtId = Some(seqLengthByProtId),
-      additionMode = AdditionMode.AGGREGATE
+      additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
     )
 
     for (rsId <- resultSetIds) {
@@ -168,7 +169,8 @@ class ResultSetMerger(
         resultSetId = ResultSet.generateNewId,
         isValidatedContent = false,
         isDecoy = true,
-        seqLengthByProtId = Some(seqLengthByProtId)
+        seqLengthByProtId = Some(seqLengthByProtId), 
+        additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
       )
 
       for (decoyRSId <- decoyRSIds) {
@@ -208,7 +210,7 @@ class ResultSetMerger(
     logger.debug("Merged TARGET ResultSet Id: " + mergedResultSet.id)
   }
 
-  private def _mergeFromResultsSets(resultSets: Seq[ResultSet], storerContext: StorerContext) {
+  private def _mergeFromResultsSets(resultSets: Seq[ResultSet], aggregationMode: Option[AdditionMode.Value], storerContext: StorerContext) {
 
     val decoyResultSets = for (
       rs <- resultSets if ((rs.decoyResultSet != null) && rs.decoyResultSet.isDefined)
@@ -220,12 +222,12 @@ class ResultSetMerger(
     >>>
 
     // Merge target result sets
-    mergedResultSet = _mergeResultSets(resultSets, false, seqLengthByProtId)
+    mergedResultSet = _mergeResultSets(resultSets, false, seqLengthByProtId, aggregationMode)
 
     val decoyRS: Option[ResultSet] = if (decoyResultSets.isEmpty) {
       None      
     } else {
-      Some(_mergeResultSets(decoyResultSets, true, seqLengthByProtId))
+      Some(_mergeResultSets(decoyResultSets, true, seqLengthByProtId, aggregationMode))
     }
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
@@ -247,7 +249,8 @@ class ResultSetMerger(
   private def _mergeResultSets(
     resultSets: Seq[ResultSet],
     isDecoy: Boolean,
-    seqLengthByProtId: Map[Long, Int]
+    seqLengthByProtId: Map[Long, Int],
+    aggregationMode: Option[AdditionMode.Value]
   ): ResultSet = {
     
     // Check that resultSets have FULL content
@@ -260,7 +263,8 @@ class ResultSetMerger(
       resultSetId = ResultSet.generateNewId,
       isValidatedContent = false,
       isDecoy = isDecoy,
-      seqLengthByProtId = Some(seqLengthByProtId)
+      seqLengthByProtId = Some(seqLengthByProtId),
+      additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
     )
     .addResultSets(resultSets)
     .toResultSet()

@@ -265,12 +265,12 @@ class IdentificationTreeValidator(
       val decoyRsList = for (rs <- targetRsList; if rs.decoyResultSet.isDefined) yield rs.decoyResultSet.get
 
       // Merge result set
-      val targetRsMerger = new ResultSetMerger(execContext, None, Some(targetRsList))
+      val targetRsMerger = new ResultSetMerger(execContext, None, Some(targetRsList), Some(AdditionMode.AGGREGATION))
       targetRsMerger.runService()
       val mergedTargetRs = targetRsMerger.mergedResultSet
 
       if (decoyRsList.length > 0) {
-        val decoyRsMerger = new ResultSetMerger(execContext, None, Some(decoyRsList))
+        val decoyRsMerger = new ResultSetMerger(execContext, None, Some(decoyRsList), Some(AdditionMode.AGGREGATION))
         decoyRsMerger.runService()
         mergedTargetRs.decoyResultSet = Some(decoyRsMerger.mergedResultSet)
       }
@@ -313,7 +313,7 @@ class IdentificationTreeValidator(
     } else {
 
       // Merge result summaries
-      val rsmMerger = new ResultSummaryMerger(execCtx = execContext, None, resultSummaries = Some(rsms))
+      val rsmMerger = new ResultSummaryMerger(execCtx = execContext, None, resultSummaries = Some(rsms), aggregationMode = Some(AdditionMode.AGGREGATION))
       rsmMerger.runService()
 
       // TODO: merge decoy rsms

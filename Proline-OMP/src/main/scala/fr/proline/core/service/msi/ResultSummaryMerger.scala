@@ -20,6 +20,7 @@ import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.algo.msi.ResultSummaryAdder
+import fr.proline.core.algo.msi.AdditionMode
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryRelationTable
 import scala.collection.mutable.SetBuilder
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
@@ -48,7 +49,8 @@ object ResultSummaryMerger {
 class ResultSummaryMerger(
   execCtx: IExecutionContext,
   resultSummaryIds: Option[Seq[Long]],
-  resultSummaries: Option[Seq[ResultSummary]]) extends IService with LazyLogging {
+  resultSummaries: Option[Seq[ResultSummary]],
+  aggregationMode: Option[AdditionMode.Value]) extends IService with LazyLogging {
 
   var mergedResultSummary: ResultSummary = null
 
@@ -78,10 +80,10 @@ class ResultSummaryMerger(
 
       mergedResultSummary = if (resultSummaries.isDefined) {
         logger.info("Start merge from existing ResultSummaries")
-        _mergeFromResultsSummaries(resultSummaries.get, storerContext)
+        _mergeFromResultsSummaries(resultSummaries.get, aggregationMode, storerContext)
       } else {
         logger.info("Start merge from ResultSummary Ids")
-        _mergeFromResultsSummaryIds(resultSummaryIds.get, storerContext)
+        _mergeFromResultsSummaryIds(resultSummaryIds.get, aggregationMode, storerContext)
       }
 
       /* Commit transaction if it was initiated locally */
@@ -112,7 +114,7 @@ class ResultSummaryMerger(
     msiTransacOk
   }
 
-  private def _mergeFromResultsSummaries(resultSummaries: Seq[ResultSummary], storerContext: StorerContext): ResultSummary = {
+  private def _mergeFromResultsSummaries(resultSummaries: Seq[ResultSummary], aggregationMode: Option[AdditionMode.Value], storerContext: StorerContext): ResultSummary = {
 
     val decoyResultSummaries = new ArrayBuffer[ResultSummary]
 
@@ -177,7 +179,8 @@ class ResultSummaryMerger(
         resultSetId = ResultSummary.generateNewId(),
         isDecoy = true,
         pepSetScoreUpdater = pepSetScoreUpdater,
-        seqLengthByProtId = Some(seqLengthByProtId)
+        seqLengthByProtId = Some(seqLengthByProtId),
+        additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
       )
       .addResultSummaries(decoyResultSummaries)
       .toResultSummary()
@@ -226,7 +229,8 @@ class ResultSummaryMerger(
       resultSetId = ResultSummary.generateNewId(),
       isDecoy = true,
       pepSetScoreUpdater = pepSetScoreUpdater,
-      seqLengthByProtId = Some(seqLengthByProtId)
+      seqLengthByProtId = Some(seqLengthByProtId),
+      additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
     )
     .addResultSummaries(resultSummaries)
     .toResultSummary()
@@ -246,7 +250,7 @@ class ResultSummaryMerger(
     mergedTargetRSM
   }
 
-  private def _mergeFromResultsSummaryIds(resultSummaryIds: Seq[Long], storerContext: StorerContext): ResultSummary = {
+  private def _mergeFromResultsSummaryIds(resultSummaryIds: Seq[Long], aggregationMode: Option[AdditionMode.Value], storerContext: StorerContext): ResultSummary = {
     val seqLengthByProtId = _buildSeqLength(resultSummaryIds, storerContext.getMSIDbConnectionContext)
     >>>
     // Merge result summaries
@@ -279,7 +283,8 @@ class ResultSummaryMerger(
         resultSetId = ResultSummary.generateNewId(),
         isDecoy = true,
         pepSetScoreUpdater = pepSetScoreUpdater,
-        seqLengthByProtId = Some(seqLengthByProtId)
+        seqLengthByProtId = Some(seqLengthByProtId),
+        additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
       )
 
       logger.debug("Merging DECOY ResultSummaries ...")
@@ -315,7 +320,8 @@ class ResultSummaryMerger(
       resultSetId = ResultSummary.generateNewId(),
       isDecoy = false,
       pepSetScoreUpdater = pepSetScoreUpdater,
-      seqLengthByProtId = Some(seqLengthByProtId)
+      seqLengthByProtId = Some(seqLengthByProtId),
+      additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
     )
 
     logger.debug("Merging TARGET ResultSummaries ...")

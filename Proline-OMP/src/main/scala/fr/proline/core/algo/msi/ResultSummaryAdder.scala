@@ -9,10 +9,11 @@ class ResultSummaryAdder(
   val resultSetId: Long,
   val isDecoy: Boolean = false,
   pepSetScoreUpdater: IPeptideSetScoreUpdater,
-  seqLengthByProtId: Option[Map[Long, Int]] = None
+  seqLengthByProtId: Option[Map[Long, Int]] = None, 
+  val additionMode: AdditionMode.Value = AdditionMode.AGGREGATION
 ) extends LazyLogging {
 
-  val rsAdder = new ResultSetAdder(resultSetId, true, isDecoy, seqLengthByProtId)
+  val rsAdder = new ResultSetAdder(resultSetId, true, isDecoy, seqLengthByProtId, additionMode)
   
   def addResultSummaries(resultSummaries: Iterable[ResultSummary]): ResultSummaryAdder = {
     for( rsm <- resultSummaries ) this.addResultSummary(rsm)

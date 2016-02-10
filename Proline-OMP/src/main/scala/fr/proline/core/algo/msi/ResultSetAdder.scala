@@ -9,7 +9,8 @@ import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi._
 
 object AdditionMode extends Enumeration {
-  val AGGREGATE, UNION = Value
+  val AGGREGATION = Value("aggregation")
+  val UNION = Value("union")
 }
 
 class ResultSetAdder(
@@ -17,7 +18,7 @@ class ResultSetAdder(
   val isValidatedContent: Boolean = false,
   val isDecoy: Boolean = false,
   seqLengthByProtId: Option[Map[Long, Int]] = None,
-  val additionMode: AdditionMode.Value = AdditionMode.AGGREGATE,
+  val additionMode: AdditionMode.Value = AdditionMode.AGGREGATION,
   val clonePeptideMatches: Boolean = true
 ) extends LazyLogging {
 
@@ -60,7 +61,7 @@ class ResultSetAdder(
       if ( pepMatchAdderOpt.isEmpty ) {
         
         // Create new PeptideMatch adder
-        val pepMatchAdder = if( additionMode == AdditionMode.AGGREGATE ) {
+        val pepMatchAdder = if( additionMode == AdditionMode.AGGREGATION ) {
           new PeptideMatchAggregator(resultSetId, clonePeptideMatches)
         } else {
           new PeptideMatchAccumulator(resultSetId, clonePeptideMatches)
@@ -101,22 +102,7 @@ class ResultSetAdder(
     
     this
   }
-  
-  /*protected def createParentPeptideMatch(
-    id: Option[Long] = None,
-    peptideMatch: PeptideMatch,
-    peptide: Peptide
-  ): PeptideMatch = {
-    
-    val newPepMatchId = id.getOrElse(PeptideMatch.generateNewId())
-    peptideMatch.copy(
-      id = newPepMatchId,
-      children = Some(Array(peptideMatch)),
-      resultSetId = resultSetId,
-      peptide = peptide,
-      bestChildId = peptideMatch.id
-    )
-  }*/
+ 
 
   def toResultSet(): ResultSet = {
     val start = System.currentTimeMillis()
@@ -214,12 +200,14 @@ private[this] class PeptideMatchAggregator(
     
     // If cloning is disabled, update the bestChild object
     val aggregatedPepMatch = if( cloneObjects == false ) {
+      bestChild.bestChildId = bestChild.id
       bestChild.id = PeptideMatch.generateNewId()
       bestChild.children = Some(peptideMatchChildren.toArray)
       bestChild.resultSetId = newResultSetId
       if(!bestChild.properties.isDefined)
         bestChild.properties = Some(new PeptideMatchProperties())
       bestChild.properties.get.spectralCount = Some(psmSC)
+      
       bestChild
     // Else copy the bestChild object with some new values
     } else {
@@ -249,11 +237,21 @@ private[this] class PeptideMatchAccumulator(
   private val peptideMatches = new ArrayBuffer[PeptideMatch]()
   
   def addPeptideMatch( peptideMatch: PeptideMatch ): Unit = {
+
+    var psmSC = 0
+
+    if (peptideMatch.properties.isDefined && peptideMatch.properties.get.spectralCount.isDefined)
+      psmSC = psmSC + peptideMatch.properties.get.spectralCount.get
+    else
+      psmSC = psmSC + 1 //If not specified, suppose leaf child so PSM Count = 1
+
     
-    // If cloning is disabled, update the peptideMatch object
+    // If cloning is disabled, update the peptideMatch object // CBY : WARNING : children relationship will be wrong !!!!!
     val newPeptideMatch = if( cloneObjects == false ) {
+      peptideMatch.bestChildId = peptideMatch.id
       peptideMatch.id = PeptideMatch.generateNewId()
       peptideMatch.resultSetId = newResultSetId
+      peptideMatch.children = Some(Array(peptideMatch))
       peptideMatch
     }
     // Else copy the peptideMatch object with some new values
@@ -261,12 +259,15 @@ private[this] class PeptideMatchAccumulator(
       peptideMatch.copy(
         id = PeptideMatch.generateNewId(),
         resultSetId = newResultSetId,
-        childrenIds = null,
-        children = null,
-        bestChildId = 0L
+        childrenIds = Array(peptideMatch.id),
+        bestChildId = peptideMatch.id
       )
     }
     
+     if(!newPeptideMatch.properties.isDefined)
+          newPeptideMatch.properties = Some(new PeptideMatchProperties())
+      newPeptideMatch.properties.get.spectralCount = Some(psmSC)
+      
     peptideMatches += newPeptideMatch    
   }
   
