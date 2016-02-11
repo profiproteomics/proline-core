@@ -35,6 +35,7 @@ public class DQuantitationChannel extends QuantitationChannel{
 	private Long identDatasetId;
     
 	private Long biologicalGroupId = null;
+	private String biologicalGroupName = null;
 	
 	public DQuantitationChannel(QuantitationChannel o) {
 		super();
@@ -129,6 +130,13 @@ public class DQuantitationChannel extends QuantitationChannel{
 		this.biologicalGroupId = biologicalGroupId;
 	}
 	
+	public String getBiologicalGroupName() {
+		return biologicalGroupName;
+	}
+
+	public void setBiologicalGroupName(String biologicalGroupName) {
+		this.biologicalGroupName = biologicalGroupName;
+	}
 	
 	
 }
