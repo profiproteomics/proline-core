@@ -535,7 +535,7 @@ object ValidatedResultSetBuilder {
 }
 
 object ResultSetType extends EnhancedEnum {
-  val SEARCH, DECOY_SEARCH, QUANTITATION, USER = Value
+  val SEARCH, DECOY_SEARCH, QUANTITATION, USER, DECOY_USER = Value
 }
 
 case class ResultSetDescriptor(
