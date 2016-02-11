@@ -44,8 +44,7 @@ class QuantifyMasterQuantChannel(
     
     // Retrieve the quantitation fraction
     val udsMasterQuantChannel = udsEM.find(classOf[MasterQuantitationChannel], masterQuantChannelId)    
-    require( udsMasterQuantChannel != null,
-             "undefined master quant channel with id=" + udsMasterQuantChannel )
+    require( udsMasterQuantChannel != null, "undefined master quant channel with id=" + masterQuantChannelId )
     
    _usedMasterQuantChannelQuantifier=  MasterQuantChannelQuantifier( executionContext, experimentalDesign, udsMasterQuantChannel, quantConfig )
    _usedMasterQuantChannelQuantifier.quantify()
