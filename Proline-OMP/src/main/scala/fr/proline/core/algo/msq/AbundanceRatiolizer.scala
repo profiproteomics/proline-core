@@ -114,17 +114,17 @@ object AbundanceRatiolizer {
         }
         
         // Apply the variation model
-        var iZScoreOK = true
+        var isZScoreOK = true
         if( applyZTest ) {
           val( zScore, zTestPValue ) = relativeVariationModel.zTest(ratio.maxAbundance.toFloat, ratio.foldValue.get)
-          if( zScore < minZScore ) iZScoreOK = false
+          if( zScore < minZScore ) isZScoreOK = false
           ratio.zScore = Some(zScore)
           ratio.zTestPValue = if( zTestPValue.isNaN ) None else Some( zTestPValue )
           //println( "z-test=" + foldChangePValue )
         }
         
         // Check the pValue of T-Test and Z-Test
-        if( ratio.tTestPValue.getOrElse(0.0) <= pValueThreshold && iZScoreOK ) { // ratio.zTestPValue.getOrElse(0.0) <= pValueThreshold
+        if( ratio.tTestPValue.getOrElse(0.0) <= pValueThreshold && isZScoreOK ) { // ratio.zTestPValue.getOrElse(0.0) <= pValueThreshold
           if( ratio.numerator > ratio.denominator ) ratio.state = Some(AbundanceRatioState.OverAbundant)
           else ratio.state = Some(AbundanceRatioState.UnderAbundant)
         } else {

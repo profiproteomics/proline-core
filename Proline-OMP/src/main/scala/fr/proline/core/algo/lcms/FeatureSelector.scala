@@ -1,8 +1,10 @@
 package fr.proline.core.algo.lcms
 
-object FeatureFilterType extends Enumeration {
-  val INTENSITY = Value("INTENSITY")
-  val RELATIVE_INTENSITY = Value("RELATIVE_INTENSITY")
+import fr.profi.util.lang.EnhancedEnum
+
+object FeatureFilterType extends EnhancedEnum {
+  val INTENSITY = Value
+  val RELATIVE_INTENSITY = Value
 }
 
 object FeatureSelector {
@@ -11,10 +13,9 @@ object FeatureSelector {
     
   def apply( filterType: String ): IFeatureSelector = { 
     
-    val ftFilterType = try {
-      FeatureFilterType.withName( filterType.toUpperCase() )
-    } catch {
-      case _: Throwable => throw new Exception("can't find an appropriate feature selector")
+    val ftFilterType = FeatureFilterType.maybeNamed( filterType.toUpperCase() ) match {
+      case Some(f) => f
+      case None => throw new Exception("can't find an appropriate feature selector")
     }
   
     ftFilterType match {

@@ -189,7 +189,7 @@ object ErrorModelComputer {
   
   val percentileComputer = new Percentile()
   
-  protected def computeErrorHistogram( errorObservations: Seq[IErrorObservation], nbins: Option[Int] ): Array[Pair[Bin, Seq[IErrorObservation]]] = {
+  protected def computeErrorHistogram( errorObservations: Seq[IErrorObservation], nbins: Option[Int] ): Array[(Bin, Seq[IErrorObservation])] = {
     
     // Filter and sort observations
     val sortedObservations = errorObservations.filter( _.abundance > 0 ).sortBy(_.abundance)
@@ -204,13 +204,13 @@ object ErrorModelComputer {
     errorHistoComputer.calcHistogram( nbins = nbinsAsInt )
   }
   
-  protected def summarizeErrorObsGroup(errorObsGroup: Seq[IErrorObservation] ): Pair[Double,Seq[Double]] = {
+  protected def summarizeErrorObsGroup(errorObsGroup: Seq[IErrorObservation] ): (Double,Seq[Double]) = {
     
     var( abLogSum, errorValues ) = (0.0,new ArrayBuffer[Double])
     
     errorObsGroup.foreach { errorObs =>
       if( errorObs.abundance > 0 ) {
-        abLogSum += errorObs.abundanceLog          
+        abLogSum += errorObs.abundanceLog
         errorValues += errorObs.getErrorValue.toDouble
       }
     }
