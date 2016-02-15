@@ -15,16 +15,15 @@ import fr.profi.util.primitives._
 //import fr.profi.util.sql._
   
 class SQLMapSetProvider(
-  val lcmsDbCtx: DatabaseConnectionContext,
-  val loadPeaks: Boolean = false
+  val lcmsDbCtx: DatabaseConnectionContext
 ) extends IMapSetProvider {
   
   val MapSetCols = LcmsDbMapSetTable.columns
   val MftItemCols = LcmsDbMasterFeatureItemTable.columns
   val mapAlnSetProvider = new SQLMapAlignmentSetProvider( lcmsDbCtx )
-  val processedMapProvider = new SQLProcessedMapProvider( lcmsDbCtx, loadPeaks )
+  val processedMapProvider = new SQLProcessedMapProvider( lcmsDbCtx )
   
-  def getMapSet( mapSetId: Long ): MapSet = {    
+  def getMapSet(mapSetId: Long, loadPeakels: Boolean = false): MapSet = {    
     
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
     
@@ -32,7 +31,9 @@ class SQLMapSetProvider(
       val masterMapIdQuery = new SelectQueryBuilder1(LcmsDbMapSetTable).mkSelectQuery( (t,c) =>
         List(t.MASTER_MAP_ID) -> "WHERE "~ t.ID ~" = "~ mapSetId
       )
-      val masterMapId = ezDBC.selectHeadOrElse(masterMapIdQuery) ( _.nextLongOrElse(0L),
+      
+      val masterMapId = ezDBC.selectHeadOrElse(masterMapIdQuery) ( 
+        _.nextLongOrElse(0L),
         throw new Exception("can't find a map set with id="+mapSetId)
       )
       
@@ -43,7 +44,7 @@ class SQLMapSetProvider(
       val processedMapIds = ezDBC.selectLongs( procMapIdQuery )
       
       // Load some objects related to the map set
-      val lcmsMaps = processedMapProvider.getProcessedMaps( processedMapIds )
+      val lcmsMaps = processedMapProvider.getProcessedMaps( processedMapIds, loadPeakels = loadPeakels )
       val childMaps = lcmsMaps.filter( ! _.isMaster )
       var mapAlnSets = mapAlnSetProvider.getMapAlignmentSets( mapSetId )
       if( mapAlnSets.length == 0 ) mapAlnSets = null
@@ -186,7 +187,13 @@ class SQLMapSetProvider(
     }
     
     // Map master feature children by their id
-    val childFtById = Map() ++ childMaps.flatMap( _.features.map( ft => ft.id -> ft ) )
+    val childFtById = new HashMap[Long,Feature]()
+    childMaps.foreach { childMap => 
+      childMap.features.foreach { ft => 
+        childFtById += ft.id -> ft
+        if(ft.isCluster) ft.subFeatures.foreach(sft => childFtById += sft.id -> sft )
+      }
+    }
     
     val childFtBufferByMftId = new HashMap[Long,ArrayBuffer[Feature]]
     //val bestChildIdByMftId = new HashMap[Int,Int]
@@ -201,7 +208,7 @@ class SQLMapSetProvider(
       val masterFtId = toLong(mftItemRecord.getAny(MftItemCols.MASTER_FEATURE_ID))
       val childFtId = toLong(mftItemRecord.getAny(MftItemCols.CHILD_FEATURE_ID))
       
-      // Retrieve child feature      
+      // Retrieve child feature
       val childFt = childFtById(childFtId)
       
       // Check if child feature is defined

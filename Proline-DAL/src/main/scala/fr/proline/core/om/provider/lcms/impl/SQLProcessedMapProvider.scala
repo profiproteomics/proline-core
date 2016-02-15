@@ -15,8 +15,7 @@ import fr.proline.core.om.provider.lcms.IProcessedMapProvider
 import fr.profi.util.primitives._
   
 class SQLProcessedMapProvider(
-  val lcmsDbCtx: DatabaseConnectionContext,
-  val loadPeaks: Boolean = false
+  val lcmsDbCtx: DatabaseConnectionContext
 ) extends AbstractSQLLcMsMapProvider with IProcessedMapProvider {
   
   val ProcFtCols = LcmsDbProcessedMapFeatureItemTable.columns
@@ -31,14 +30,20 @@ class SQLProcessedMapProvider(
     
     // Retrieve raw map ids mapped by processes map id
     val rawMapIdsByProcessedMapId = getRawMapIdsByProcessedMapId( processedMapIds )
-    val rawMapIds = processedMapIds.flatMap( rawMapIdsByProcessedMapId(_) ).distinct
+    //val rawMapIds = processedMapIds.flatMap( rawMapIdsByProcessedMapId(_) ).distinct
     
     // Load features and group them by map id
-    val featuresByMapId = this.getFeatures(processedMapIds).groupBy(_.relations.processedMapId)
+    val featuresByProcMapId = this.getFeatures(processedMapIds,loadPeakels).groupBy(_.relations.processedMapId)
     
-    // If requested load peakels and group them by map id
-    val peakelsByRawMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
-    else peakelProvider.getPeakels(rawMapIds).groupBy(_.rawMapId)
+    // If peakels were loaded group them by processed map id
+    /*val peakelsByRawMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
+    else peakelProvider.getPeakels(rawMapIds).groupBy(_.rawMapId)*/
+    val peakelsByProcMapId = if( loadPeakels == false ) Map.empty[Long,Array[Peakel]]
+    else {
+      featuresByProcMapId.view.map { case(procMapId,features) =>
+        procMapId -> features.flatMap( _.relations.peakelItems.map(_.getPeakel.get) )
+      } toMap
+    }
     
     val processedMaps = new Array[ProcessedMap](processedMapIds.length)
     var lcmsMapIdx = 0
@@ -54,11 +59,11 @@ class SQLProcessedMapProvider(
       // Load processed map features
       ezDBC.selectAndProcess( procMapQuery ) { r =>
         
-        val processedMapId = r.getLong(LcMsMapCols.ID)
+        val processedMapId = r.getLong(ProcMapCols.ID.aliasedString)
         val featureScoring = featureScoringById.get(r.getLong(LcMsMapCols.FEATURE_SCORING_ID))
-        val rawMapIds = rawMapIdsByProcessedMapId(processedMapId)
         val peakelsOpt = if( loadPeakels == false ) Option.empty[Array[Peakel]]
-        else Some( rawMapIds.flatMap( rawMapId => peakelsByRawMapId.getOrElse(rawMapId,Array.empty[Peakel]) ) )
+        else Some( peakelsByProcMapId(processedMapId) )
+        //else Some( rawMapIds.flatMap( rawMapId => peakelsByProcMapId.getOrElse(rawMapId,Array.empty[Peakel]) ) )
         
         // Build the map
         processedMaps(lcmsMapIdx) = new ProcessedMap(
@@ -66,7 +71,7 @@ class SQLProcessedMapProvider(
           name = r.getString(LcMsMapCols.NAME),
           isProcessed = true,
           creationTimestamp = r.getTimestamp(LcMsMapCols.CREATION_TIMESTAMP),
-          features = featuresByMapId( processedMapId ),
+          features = featuresByProcMapId( processedMapId ),
           peakels = peakelsOpt,
           number = r.getInt(ProcMapCols.NUMBER),
           modificationTimestamp = r.getTimestamp(LcMsMapCols.MODIFICATION_TIMESTAMP),
@@ -120,14 +125,14 @@ class SQLProcessedMapProvider(
     mapBuilder.result()
   }
   
-  def getProcessedMapRunMapIds( processedMapId: Long ): Array[Long] = {    
+  def getProcessedMapRunMapIds( processedMapId: Long ): Array[Long] = {
     getRawMapIdsByProcessedMapId( Array(processedMapId) )(processedMapId)
   }
 
   /** Returns a list of features corresponding to a given list of processed map ids */
   // TODO: rename to getProcessedMapsFeatures
   // TODO: move to Feature provider
-  def getFeatures( processedMapIds: Seq[Long] ): Array[Feature] = {
+  def getFeatures( processedMapIds: Seq[Long], loadPeakels: Boolean = false ): Array[Feature] = {
     if( processedMapIds.isEmpty ) return Array()
  
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
@@ -139,7 +144,7 @@ class SQLProcessedMapProvider(
       }
       
       // --- Load run ids and run map ids
-      val( rawMapIds, runIds ) = ( new ArrayBuffer[Long](nbMaps), new ArrayBuffer[Long](nbMaps) )
+      var( rawMapIds, runIds ) = ( new ArrayBuffer[Long](nbMaps), new ArrayBuffer[Long](nbMaps) )
       
       val sqlQuery = new SelectQueryBuilder2(LcmsDbRawMapTable, LcmsDbProcessedMapRawMapMappingTable).mkSelectQuery( (t1,c1,t2,c2) =>
         List(t1.ID,t1.SCAN_SEQUENCE_ID) ->
@@ -152,6 +157,10 @@ class SQLProcessedMapProvider(
         runIds += toLong(r.nextAny)
         ()
       }
+      
+      // Remove duplicated ids
+      rawMapIds = rawMapIds.distinct
+      runIds = runIds.distinct
     
       // Load mapping between scan ids and scan initial ids
       val scanInitialIdById = lcmsDbHelper.getScanInitialIdById( runIds )
@@ -160,12 +169,12 @@ class SQLProcessedMapProvider(
       val ms2EventIdsByFtId = lcmsDbHelper.getMs2EventIdsByFtId( rawMapIds )
       
       // Retrieve mapping between overlapping features
-      val olpFtIdsByFtId = getOverlappingFtIdsByFtId( rawMapIds )      
+      val olpFtIdsByFtId = getOverlappingFtIdsByFtId( rawMapIds )
       val olpFeatureById = if (olpFtIdsByFtId.isEmpty) Map.empty[Long, Feature]
       else getOverlappingFeatureById(rawMapIds, scanInitialIdById, ms2EventIdsByFtId)
       
       // Load peakel items
-      val peakelItems = peakelProvider.getRawMapPeakelItems(rawMapIds, loadPeakels = false)
+      val peakelItems = peakelProvider.getRawMapPeakelItems(rawMapIds, loadPeakels = loadPeakels)
       val peakelItemsByFtId = peakelItems.groupBy(_.featureReference.id)
       
       // Retrieve mapping between cluster and sub-features
@@ -184,7 +193,7 @@ class SQLProcessedMapProvider(
         else olpFtIdsByFtId(ftId) map { olpFtId => olpFeatureById(olpFtId) }
         
         // Retrieve peakel items
-        val peakelItems = peakelItemsByFtId.getOrElse(ftId,Array())
+        val peakelItems = peakelItemsByFtId.getOrElse(ftId,Array()).sortBy(_.isotopeIndex)
         
         val feature = this.buildFeature(
           processedFtRecord,
@@ -213,14 +222,14 @@ class SQLProcessedMapProvider(
       for( ft <- ftBuffer ) {
         
         if( subFtIdsByClusterFtId contains ft.id ) {
-          ft.subFeatures = subFtIdsByClusterFtId(ft.id) map { subFtId => 
+          ft.subFeatures = subFtIdsByClusterFtId(ft.id) map { subFtId =>
             val subFt = subFtById.get(subFtId)
             if( subFt == null ) throw new Exception( "can't find a sub-feature with id=" + subFtId )
             subFt
           }
         }
         
-        ftArray(ftIndex) = ft      
+        ftArray(ftIndex) = ft
         ftIndex += 1
       }
       
@@ -243,7 +252,7 @@ class SQLProcessedMapProvider(
       )
       
       // Load processed map features
-      ezDBC.selectAndProcess( procFtQuery ) { r =>        
+      ezDBC.selectAndProcess( procFtQuery ) { r =>
         
         // Build the feature record
         onEachFt( r )

@@ -6,7 +6,7 @@ import fr.proline.core.om.model.lcms.ILcMsMap
 trait ILcMsMapProvider {
   
   def getLcMsMaps( mapIds: Seq[Long], loadPeakels: Boolean ): Seq[ILcMsMap]
-  def getFeatures( mapIds: Seq[Long] ): Array[Feature]
+  def getFeatures( mapIds: Seq[Long], loadPeakels: Boolean ): Array[Feature]
 
   /** Returns a map of overlapping feature ids keyed by feature id */
   def getOverlappingFtIdsByFtId( rawMapIds: Seq[Long] ): Map[Long,Array[Long]]

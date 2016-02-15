@@ -87,7 +87,7 @@ class SQLRawMapProvider(
   }
 
   /** Returns a list of features corresponding to a given list of run map ids */
-  def getFeatures(mapIds: Seq[Long]): Array[Feature] = {
+  def getFeatures(mapIds: Seq[Long], loadPeakels: Boolean = false): Array[Feature] = {
     if( mapIds.isEmpty ) return Array()
 
     DoJDBCReturningWork.withEzDBC(lcmsDbCtx, { ezDBC =>
@@ -116,7 +116,7 @@ class SQLRawMapProvider(
       else getOverlappingFeatureById(mapIds, scanInitialIdById, ms2EventIdsByFtId)
       
       // Load peakel items
-      val peakelItems = peakelProvider.getRawMapPeakelItems(mapIds, loadPeakels = false)
+      val peakelItems = peakelProvider.getRawMapPeakelItems(mapIds, loadPeakels = loadPeakels)
       val peakelItemsByFtId = peakelItems.groupBy(_.featureReference.id)
       
       val ftBuffer = new ArrayBuffer[Feature]
