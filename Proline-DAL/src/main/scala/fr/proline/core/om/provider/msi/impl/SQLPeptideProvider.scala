@@ -316,7 +316,7 @@ class SQLPeptideProvider(psDbCtx: DatabaseConnectionContext) extends SQLPTMProvi
     })
   }
 
-  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]): Array[Option[Peptide]] = {
+  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])]): Array[Option[Peptide]] = {
     if (peptideSeqsAndPtms.isEmpty) return Array()
     
     DoJDBCReturningWork.withEzDBC(psDbCtx, { psEzDBC =>
