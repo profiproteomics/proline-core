@@ -38,7 +38,7 @@ trait IPeptideProvider {
    */
   def getPeptide(peptideSeq:String, pepPtms:Array[LocatedPtm] ) : Option[Peptide]
   
-  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]] ) : Array[Option[Peptide]]
+  def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])] ) : Array[Option[Peptide]]
 }
 
 
@@ -92,7 +92,7 @@ object PeptideFakeProvider extends IPeptideProvider {
 	  }
   }
    
-	def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[Pair[String, Array[LocatedPtm]]]) : Array[Option[Peptide]] = {
+	def getPeptidesAsOptionsBySeqAndPtms(peptideSeqsAndPtms: Seq[(String, Array[LocatedPtm])]) : Array[Option[Peptide]] = {
 	    var result = Array.newBuilder[Option[Peptide]]
        peptideSeqsAndPtms.foreach( entry =>  {
          result += this.getPeptide(entry._1,entry._2)
