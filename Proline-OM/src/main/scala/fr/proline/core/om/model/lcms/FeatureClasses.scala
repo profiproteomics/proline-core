@@ -9,19 +9,6 @@ import fr.profi.mzdb.model.Peak
 import fr.profi.mzdb.model.PeakelDataMatrix
 import fr.profi.mzdb.model.PeakelDataMatrixCursor
 import fr.profi.util.misc.InMemoryIdGen
-import fr.profi.util.misc.`package`.InMemoryIdGen
-
-// TODO: remove me and use the mzdb-processing model instead
-/*@org.msgpack.annotation.Message
-case class LcMsPeak(
-  // MessagePack requires mutable fields
-  var moz: Double,
-  var elutionTime: Float,
-  var intensity: Float
-) {
-  // Plain constructor needed for MessagePack
-  def this() = this(Double.NaN,Float.NaN,Float.NaN)
-}*/
 
 // TODO: remove and use peakel model instead
 case class IsotopicPattern(
@@ -101,6 +88,17 @@ case class Peakel(
   def getElutionStopTime( scanSequence: LcMsScanSequence ): Float = {
     scanSequence.scanById(this.lastScanId).time
   }*/
+  
+  def copyDataMatrix(): Peakel = {
+    this.copy(
+      dataMatrix = dataMatrix.copy(
+        spectrumIds = dataMatrix.spectrumIds.toArray,
+        elutionTimes = dataMatrix.elutionTimes.toArray,
+        mzValues = dataMatrix.mzValues.toArray,
+        intensityValues = dataMatrix.intensityValues.toArray
+      )
+    )
+  }
   
 }
 
