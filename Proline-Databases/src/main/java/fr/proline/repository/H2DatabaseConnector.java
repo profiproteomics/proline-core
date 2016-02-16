@@ -12,75 +12,75 @@ import fr.profi.util.PropertiesUtils;
 
 public class H2DatabaseConnector extends AbstractDatabaseConnector {
 
-    private static final Logger LOG = LoggerFactory.getLogger(H2DatabaseConnector.class);
+	private static final Logger LOG = LoggerFactory.getLogger(H2DatabaseConnector.class);
 
-    private static final String MEMORY_URL_PROTOCOL = ":mem:";
+	private static final String MEMORY_URL_PROTOCOL = ":mem:";
 
-    public H2DatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
-	super(database, properties);
-    }
-
-    @Override
-    public DriverType getDriverType() {
-	return DriverType.H2;
-    }
-
-    @Override
-    protected boolean isMemory(final Map<Object, Object> properties) {
-
-	if (properties == null) {
-	    throw new IllegalArgumentException("Properties Map is null");
+	public H2DatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
+		super(database, properties);
 	}
 
-	boolean result = false;
-
-	final String databaseURL = PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY);
-	if (databaseURL != null) {
-	    result = databaseURL.toLowerCase().contains(MEMORY_URL_PROTOCOL);
+	@Override
+	public DriverType getDriverType() {
+		return DriverType.H2;
 	}
 
-	return result;
-    }
+	@Override
+	protected boolean isMemory(final Map<Object, Object> properties) {
 
-    @Override
-    protected DataSource createDataSource(final String ident, final Map<Object, Object> properties) {
+		if (properties == null) {
+			throw new IllegalArgumentException("Properties Map is null");
+		}
 
-	if (properties == null) {
-	    throw new IllegalArgumentException("Properties Map is null");
+		boolean result = false;
+
+		final String databaseURL = PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY);
+		if (databaseURL != null) {
+			result = databaseURL.toLowerCase().contains(MEMORY_URL_PROTOCOL);
+		}
+
+		return result;
 	}
 
-	final JdbcConnectionPool source = JdbcConnectionPool.create(
-	    PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY),
-	    PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY),
-	    PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
+	@Override
+	protected DataSource createDataSource(final String ident, final Map<Object, Object> properties) {
 
-	source.setMaxConnections(DEFAULT_MAX_POOL_CONNECTIONS);
+		if (properties == null) {
+			throw new IllegalArgumentException("Properties Map is null");
+		}
 
-	return source;
-    }
+		final JdbcConnectionPool source = JdbcConnectionPool.create(
+			PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY),
+			PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY),
+			PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
 
-    @Override
-    protected void doClose(final String ident, final DataSource source) {
+		source.setMaxConnections(DEFAULT_MAX_POOL_CONNECTIONS);
 
-	if (source instanceof JdbcConnectionPool) {
-	    LOG.debug("Disposing H2 JdbcConnectionPool for [{}]", ident);
-
-	    final JdbcConnectionPool h2Source = (JdbcConnectionPool) source;
-
-	    try {
-		h2Source.dispose();
-	    } catch (Exception exClose) {
-		LOG.error("Error disposing H2 JdbcConnectionPool for [" + ident + ']', exClose);
-	    }
-
-	    final int remainingH2ConnectionsCount = h2Source.getActiveConnections();
-
-	    if (remainingH2ConnectionsCount > 0) {
-		LOG.debug("Remaining H2 Connections for [{}]: {}", ident, remainingH2ConnectionsCount);
-	    }
-
+		return source;
 	}
 
-    }
+	@Override
+	protected void doClose(final String ident, final DataSource source) {
+
+		if (source instanceof JdbcConnectionPool) {
+			LOG.debug("Disposing H2 JdbcConnectionPool for [{}]", ident);
+
+			final JdbcConnectionPool h2Source = (JdbcConnectionPool) source;
+
+			try {
+				h2Source.dispose();
+			} catch (Exception exClose) {
+				LOG.error("Error disposing H2 JdbcConnectionPool for [" + ident + ']', exClose);
+			}
+
+			final int remainingH2ConnectionsCount = h2Source.getActiveConnections();
+
+			if (remainingH2ConnectionsCount > 0) {
+				LOG.debug("Remaining H2 Connections for [{}]: {}", ident, remainingH2ConnectionsCount);
+			}
+
+		}
+
+	}
 
 }

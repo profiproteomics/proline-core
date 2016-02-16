@@ -26,14 +26,14 @@ import fr.proline.repository.id.TableNameSequenceGenerator;
  */
 public class TableNameSequencePostgresDialect extends PostgreSQL82Dialect {
 
-    /**
-     * Get the native identifier generator class.
-     * 
-     * @return TableNameSequenceGenerator.
-     */
-    @Override
-    public Class<?> getNativeIdentifierGeneratorClass() {
-	return TableNameSequenceGenerator.class;
-    }
+	/**
+	 * Get the native identifier generator class.
+	 * 
+	 * @return TableNameSequenceGenerator.
+	 */
+	@Override
+	public Class<?> getNativeIdentifierGeneratorClass() {
+		return TableNameSequenceGenerator.class;
+	}
 
 }

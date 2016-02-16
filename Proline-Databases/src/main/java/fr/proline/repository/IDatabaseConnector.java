@@ -17,23 +17,23 @@ import javax.sql.DataSource;
  */
 public interface IDatabaseConnector extends Closeable {
 
-    ProlineDatabaseType getProlineDatabaseType();
+	ProlineDatabaseType getProlineDatabaseType();
 
-    DriverType getDriverType();
+	DriverType getDriverType();
 
-    boolean isMemory();
+	boolean isMemory();
 
-    void setAdditionalProperties(Map<Object, Object> params);
+	void setAdditionalProperties(Map<Object, Object> params);
 
-    /** Return the value of the key in the connection properties, null if none */ 
-    Object getProperty(Object key);
-    
-    DataSource getDataSource();
+	/** Return the value of the key in the connection properties, null if none */
+	Object getProperty(Object key);
 
-    EntityManagerFactory getEntityManagerFactory();
+	DataSource getDataSource();
 
-    void close();
+	EntityManagerFactory getEntityManagerFactory();
 
-    boolean isClosed();
+	void close();
+
+	boolean isClosed();
 
 }

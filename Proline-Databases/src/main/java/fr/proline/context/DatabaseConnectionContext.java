@@ -98,8 +98,11 @@ public class DatabaseConnectionContext implements Closeable {
 	 * @param driverType
 	 *            the driver type
 	 */
-	protected DatabaseConnectionContext(final EntityManager entityManager, final Connection connection, final ProlineDatabaseType prolineDatabaseType,
-			final DriverType driverType) {
+	protected DatabaseConnectionContext(
+		final EntityManager entityManager,
+		final Connection connection,
+		final ProlineDatabaseType prolineDatabaseType,
+		final DriverType driverType) {
 
 		if ((entityManager == null) && (connection == null)) {
 			throw new IllegalArgumentException("EntityManager and Connection are both null");
@@ -266,7 +269,7 @@ public class DatabaseConnectionContext implements Closeable {
 
 				if (contextConnection != null) {
 					LOG.debug("{} SQL TransactionIsolation \"{}\"", getProlineDatabaseTypeString(),
-							formatTransactionIsolationLevel(contextConnection.getTransactionIsolation()));
+						formatTransactionIsolationLevel(contextConnection.getTransactionIsolation()));
 				}
 
 			}
@@ -500,7 +503,8 @@ public class DatabaseConnectionContext implements Closeable {
 				JPAUtils.checkEntityManager(contextEntityMananger);
 
 				if (LOG.isTraceEnabled()) {
-					LOG.trace("{} Executing JDBCReturningWork on JPA EntityManager, flushEntityManager: {}", getProlineDatabaseTypeString(), flushEntityManager);
+					LOG.trace("{} Executing JDBCReturningWork on JPA EntityManager, flushEntityManager: {}", getProlineDatabaseTypeString(),
+						flushEntityManager);
 				}
 
 				if (flushEntityManager) {

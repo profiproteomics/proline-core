@@ -12,61 +12,63 @@ import fr.profi.util.PropertiesUtils;
 
 public class SQLiteDatabaseConnector extends AbstractDatabaseConnector {
 
-    private static final String MEMORY_URL_PROTOCOL = ":memory:";
+	private static final String MEMORY_URL_PROTOCOL = ":memory:";
 
-    public SQLiteDatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
-	super(database, properties);
-    }
-
-    @Override
-    public DriverType getDriverType() {
-	return DriverType.SQLITE;
-    }
-
-    @Override
-    protected boolean isMemory(final Map<Object, Object> properties) {
-
-	if (properties == null) {
-	    throw new IllegalArgumentException("Properties Map is null");
+	public SQLiteDatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
+		super(database, properties);
 	}
 
-	boolean result = false;
-
-	final String databaseURL = PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY);
-	if (databaseURL != null) {
-	    result = databaseURL.toLowerCase().contains(MEMORY_URL_PROTOCOL);
+	@Override
+	public DriverType getDriverType() {
+		return DriverType.SQLITE;
 	}
 
-	return result;
-    }
+	@Override
+	protected boolean isMemory(final Map<Object, Object> properties) {
 
-    @Override
-    protected DataSource createDataSource(final String ident, final Map<Object, Object> properties) {
+		if (properties == null) {
+			throw new IllegalArgumentException("Properties Map is null");
+		}
 
-	if (properties == null) {
-	    throw new IllegalArgumentException("Properties Map is null");
+		boolean result = false;
+
+		final String databaseURL = PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY);
+		if (databaseURL != null) {
+			result = databaseURL.toLowerCase().contains(MEMORY_URL_PROTOCOL);
+		}
+
+		return result;
 	}
 
-	final SQLiteDataSource source = new SQLiteDataSource();
-	source.setUrl(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY));
+	@Override
+	protected DataSource createDataSource(final String ident, final Map<Object, Object> properties) {
 
-	return source;
-    }
+		if (properties == null) {
+			throw new IllegalArgumentException("Properties Map is null");
+		}
 
-    @Override
-    protected EntityManagerFactory createEntityManagerFactory(final ProlineDatabaseType database,
-	    final Map<Object, Object> properties, final boolean ormOptimizations) {
+		final SQLiteDataSource source = new SQLiteDataSource();
+		source.setUrl(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY));
 
-	if (properties == null) {
-	    throw new IllegalArgumentException("Properties Map is null");
+		return source;
 	}
 
-	/* Force SQLiteDialect custom Hibernate dialect and NO ORM optimizations */
-	if (properties.get(HIBERNATE_DIALECT_KEY) == null) {
-	    properties.put(HIBERNATE_DIALECT_KEY, SQLiteDialect.class.getName());
-	}
+	@Override
+	protected EntityManagerFactory createEntityManagerFactory(
+		final ProlineDatabaseType database,
+		final Map<Object, Object> properties,
+		final boolean ormOptimizations) {
 
-	return super.createEntityManagerFactory(database, properties, false);
-    }
+		if (properties == null) {
+			throw new IllegalArgumentException("Properties Map is null");
+		}
+
+		/* Force SQLiteDialect custom Hibernate dialect and NO ORM optimizations */
+		if (properties.get(HIBERNATE_DIALECT_KEY) == null) {
+			properties.put(HIBERNATE_DIALECT_KEY, SQLiteDialect.class.getName());
+		}
+
+		return super.createEntityManagerFactory(database, properties, false);
+	}
 
 }
