@@ -380,7 +380,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 					m_msiDbConnectors.remove(projectId);
 				}
 			} catch (Exception exClose) {
-				LOG.error("Error closing LCMS Db Connector", exClose);
+				LOG.error("Error closing MSI Db Connector", exClose);
 			}
 		}
 	}
