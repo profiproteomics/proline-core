@@ -116,7 +116,8 @@ public final class DatabaseUpgrader {
 	public static int upgradeDatabase(
 		final IDatabaseConnector connector,
 		final String migrationScriptsLocation,
-		final String migrationClassLocation
+		final String migrationClassLocation,
+		boolean repairChecksum
 	) {
 
 		if (connector == null) {
@@ -180,6 +181,10 @@ public final class DatabaseUpgrader {
 					}
 
 				}
+				
+				if (repairChecksum) {
+					flyway.repair();
+				}
 
 				migrationsCount = flyway.migrate();
 				LOG.info("Flyway applies {} migration(s) to {}", migrationsCount, prolineDbType);
@@ -206,7 +211,7 @@ public final class DatabaseUpgrader {
 	 *            DatabaseConnector of Database to upgrade (must not be <code>null</code>).
 	 * @return Applied migrations count : 0 if no migration applied, -1 if a migration Error occured (see Log).
 	 */
-	public static int upgradeDatabase(final IDatabaseConnector connector) {
+	public static int upgradeDatabase(final IDatabaseConnector connector, boolean repairChecksum) {
 
 		if (connector == null) {
 			throw new IllegalArgumentException("Connector is null");
@@ -225,7 +230,8 @@ public final class DatabaseUpgrader {
 				buildMigrationClassLocation(
 					connector.getProlineDatabaseType(),
 					connector.getDriverType()
-				)
+				),
+				repairChecksum
 			);
 
 		} catch (Exception ex) {

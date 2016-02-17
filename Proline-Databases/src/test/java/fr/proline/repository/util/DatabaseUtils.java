@@ -187,7 +187,7 @@ public final class DatabaseUtils {
 			final DatabaseTestConnector connector = new DatabaseTestConnector(ProlineDatabaseType.UDS,
 					DEFAULT_DATABASE_PROPERTIES_FILENAME);
 
-			DatabaseUpgrader.upgradeDatabase(connector);
+			DatabaseUpgrader.upgradeDatabase(connector, false);
 
 			writeDataSetDTD(connector, "uds-dataset.dtd");
 			connector.close();

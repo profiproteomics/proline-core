@@ -15,20 +15,20 @@ import fr.proline.repository.IDatabaseConnector;
 
 public class DatabaseUpgraderTest {
 
-    @Test
-    public void test() throws SQLException {
-	final Map<Object, Object> properties = new HashMap<Object, Object>();
-	properties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_DRIVER_KEY,
-		DriverType.SQLITE.getJdbcDriver());
-	properties
-		.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_URL_KEY, "jdbc:sqlite:./target/db_test.dat");
+	@Test
+	public void test() throws SQLException {
+		final Map<Object, Object> properties = new HashMap<Object, Object>();
+		properties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_DRIVER_KEY, DriverType.SQLITE.getJdbcDriver());
+		properties.put(AbstractDatabaseConnector.PERSISTENCE_JDBC_URL_KEY, "jdbc:sqlite:./target/db_test.dat");
 
-	final IDatabaseConnector sqliteConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		ProlineDatabaseType.UDS, properties);
+		final IDatabaseConnector sqliteConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+			ProlineDatabaseType.UDS,
+			properties
+		);
 
-	DatabaseUpgrader.upgradeDatabase(sqliteConnector);
+		DatabaseUpgrader.upgradeDatabase(sqliteConnector, false);
 
-	DatabaseUpgrader.upgradeDatabase(sqliteConnector);
-    }
+		DatabaseUpgrader.upgradeDatabase(sqliteConnector, true);
+	}
 
 }

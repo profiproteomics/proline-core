@@ -129,7 +129,7 @@ public abstract class DatabaseTestCase {
 	public void initDatabase() throws Exception, ClassNotFoundException {
 		final DatabaseTestConnector connector = getConnector();
 
-		DatabaseUpgrader.upgradeDatabase(connector, getMigrationScriptsLocation(), getMigrationClassLocation());
+		DatabaseUpgrader.upgradeDatabase(connector, getMigrationScriptsLocation(), getMigrationClassLocation(), false);
 
 		if (LOG.isTraceEnabled()) {
 			/* Print Database Tables */
