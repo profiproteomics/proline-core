@@ -166,7 +166,7 @@ public class UncachedDataStoreConnectorFactoryTest extends DatabaseTestCase {
 		assertTrue("DatabaseManager is initialized", connectorFactory.isInitialized());
 
 		/* Explicitly upgrade all Databases */
-		DataStoreUpgrader.upgradeAllDatabases(connectorFactory);
+		DataStoreUpgrader.upgradeAllDatabases(connectorFactory, true);
 
 		assertNotNull("PDI Db Connector", connectorFactory.getPdiDbConnector());
 

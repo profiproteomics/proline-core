@@ -57,7 +57,7 @@ public final class TestPgPeptidesPerf {
 	final IDatabaseConnector dbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 		ProlineDatabaseType.MSI, "pg_msi.properties");
 
-	DatabaseUpgrader.upgradeDatabase(dbConnector);
+	DatabaseUpgrader.upgradeDatabase(dbConnector, false);
 
 	final PeptideGenerator generator = new PeptideGenerator();
 

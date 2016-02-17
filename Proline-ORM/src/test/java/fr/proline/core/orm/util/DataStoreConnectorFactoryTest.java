@@ -168,7 +168,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 	assertTrue("DatabaseManager is initialized", connectorFactory.isInitialized());
 
 	/* Explicitly upgrade all Databases */
-	DataStoreUpgrader.upgradeAllDatabases(connectorFactory);
+	DataStoreUpgrader.upgradeAllDatabases(connectorFactory, false);
 
 	assertNotNull("PDI Db Connector", connectorFactory.getPdiDbConnector());
 

@@ -27,7 +27,7 @@ public final class DataStoreUpgrader {
 	 *            Must be a valid initialized DataStoreConnectorFactory instance.
 	 * @return <code>true</code> if all Databases where successfully upgraded ; <code>false</code> if a Database upgrade failed.
 	 */
-	public static boolean upgradeAllDatabases(final IDataStoreConnectorFactory connectorFactory) {
+	public static boolean upgradeAllDatabases(final IDataStoreConnectorFactory connectorFactory, boolean repairChecksum) {
 
 		if ((connectorFactory == null) || !connectorFactory.isInitialized()) {
 			throw new IllegalArgumentException("Invalid connectorFactory");
@@ -41,7 +41,7 @@ public final class DataStoreUpgrader {
 		if (udsDbConnector == null) {
 			LOG.warn("DataStoreConnectorFactory has no valid UDS Db connector");
 		} else {
-			final int udsDbMigrationCount = DatabaseUpgrader.upgradeDatabase(udsDbConnector);
+			final int udsDbMigrationCount = DatabaseUpgrader.upgradeDatabase(udsDbConnector, repairChecksum);
 
 			if (udsDbMigrationCount < 0) {
 				result = false;
@@ -55,7 +55,7 @@ public final class DataStoreUpgrader {
 		/* Upgrade PDI Db */
 		final IDatabaseConnector pdiDbConnector = connectorFactory.getPdiDbConnector();
 		if (pdiDbConnector != null) {
-			final int pdiDbMigrationCount = DatabaseUpgrader.upgradeDatabase(pdiDbConnector);
+			final int pdiDbMigrationCount = DatabaseUpgrader.upgradeDatabase(pdiDbConnector, repairChecksum);
 
 			if (pdiDbMigrationCount < 0) {
 				result = false;
@@ -73,7 +73,7 @@ public final class DataStoreUpgrader {
 		if (psDbConnector == null) {
 			LOG.warn("DataStoreConnectorFactory has no valid PS Db connector");
 		} else {
-			final int psDbMigrationCount = DatabaseUpgrader.upgradeDatabase(psDbConnector);
+			final int psDbMigrationCount = DatabaseUpgrader.upgradeDatabase(psDbConnector, repairChecksum);
 
 			if (psDbMigrationCount < 0) {
 				result = false;
@@ -99,7 +99,7 @@ public final class DataStoreUpgrader {
 					if (msiDbConnector == null) {
 						LOG.warn("DataStoreConnectorFactory has no valid MSI Db connector for Project #{}", projectId);
 					} else {
-						final int msiDbMigrationCount = DatabaseUpgrader.upgradeDatabase(msiDbConnector);
+						final int msiDbMigrationCount = DatabaseUpgrader.upgradeDatabase(msiDbConnector, repairChecksum);
 
 						if (msiDbMigrationCount < 0) {
 							result = false;
@@ -116,7 +116,7 @@ public final class DataStoreUpgrader {
 					if (lcMsDbConnector == null) {
 						LOG.warn("DataStoreConnectorFactory has no valid LCMS Db connector for Project #{}", projectId);
 					} else {
-						final int lcMsDbMigrationCount = DatabaseUpgrader.upgradeDatabase(lcMsDbConnector);
+						final int lcMsDbMigrationCount = DatabaseUpgrader.upgradeDatabase(lcMsDbConnector, repairChecksum);
 
 						if (lcMsDbMigrationCount < 0) {
 							result = false;
