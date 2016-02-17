@@ -2,45 +2,41 @@ package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import com.typesafe.scalalogging.LazyLogging
-
-import fr.proline.core.om.model.msq._
-import fr.profi.util.primitives.isZeroOrNaN
+import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.math.median
+import fr.profi.util.primitives.isZeroOrNaN
+import fr.proline.core.algo.msq.profilizer._
+import fr.proline.core.om.model.msq._
 
-// TODO: remove me when the WS v0.1 has been removed
-case class ProfilizerConfigV0(
-  peptideStatTestsAlpha: Float = 0.01f,
-  proteinStatTestsAlpha: Float = 0.01f,
-  discardMissedCleavedPeptides: Boolean = true,
-  discardOxidizedPeptides: Boolean = true,
-  useOnlySpecificPeptides: Boolean = true,
-  applyNormalization: Boolean = true,
-  applyMissValInference: Boolean = true,
-  applyVarianceCorrection: Boolean = true,
-  applyTTest: Boolean = true,
-  applyZTest: Boolean = true,
-  applyProfileClustering: Boolean = true
-)
+// TODO: recompute raw abundances from peakels
+// (smoothing methods, area VS apex intensity, first isotope vs max one vs isotope pattern fitting)
 
-case class ProfilizerStatConfig (
+case class ProfilizerStatConfig(
+  // TODO: replace Some(MissingAbundancesInferenceConfig) by None when IHMs haven been updated
+  missValInferenceConfig: Option[MissingAbundancesInferenceConfig] = Some(MissingAbundancesInferenceConfig()),
   statTestsAlpha: Float = 0.01f,
   minZScore: Float = 0.4f, // ZScore equals ln(ratio) followed by standardisation
   minPsmCountPerRatio: Int = 0,
   applyNormalization: Boolean = true,
-  applyMissValInference: Boolean = true,
+  applyMissValInference: Boolean = true, // TODO: remove me when IHMs haven been updated
   applyVarianceCorrection: Boolean = true,
   applyTTest: Boolean = true,
-  applyZTest: Boolean = true  
-)
+  applyZTest: Boolean = true
+) {
+   // TODO: remove me when IHMs haven been updated
+  if( applyMissValInference ) {
+    require( missValInferenceConfig.isDefined, "can't apply missing value inference if the method is not defined" )
+  }
+}
 
-case class ProfilizerConfig(   
+case class ProfilizerConfig(
   discardMissedCleavedPeptides: Boolean = true,
   discardOxidizedPeptides: Boolean = true,
+  discardLowIdentPeptides: Boolean = false,
   useOnlySpecificPeptides: Boolean = true,
   applyProfileClustering: Boolean = true,
-  abundanceSummarizerMethod: String = AbundanceSummarizer.Method.MEAN.toString(),
+  abundanceSummarizerMethod: String = AbundanceSummarizer.Method.MEAN,
   peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
   proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig()
 )
@@ -72,7 +68,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   for( (sampleNumber, quantChannels) <- quantChannelsBySampleNumber if quantChannels.length < minQCsCountPerSample ) {
     minQCsCountPerSample = quantChannels.length
   }
-   
+  
   /**
    * Computes MasterQauntPeptide profiles.
    */
@@ -84,7 +80,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       
       // Reset selection level if not too low
       // TODO: add a parameter which specify to keep or not previously computed selection levels
-      if( mqPep.selectionLevel >= 1 )
+      if( mqPep.selectionLevel == 1 )
         mqPep.selectionLevel = 2
       
       // Reset quant profiles for this masterQuantPeptide
@@ -100,6 +96,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     // --- Apply MC filter if requested ---
     if( config.discardMissedCleavedPeptides ) {
+      println("discardMissedCleavedPeptides")
       this.discardMissedCleavedPeptides(masterQuantPeptides)
     }
     
@@ -158,6 +155,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         val index = ratio.entityId.toInt
         val masterQuantPep = mqPepsAfterAllFilters(index)
         val abundances = filledMatrix(index)
+        
+        // Update master quant peptide abundances
         masterQuantPep.setAbundancesForQuantChannels(abundances,qcIds)
         
         val computedRatio = ComputedRatio(
@@ -285,106 +284,125 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: ProfilizerConfig ) {
     require( masterQuantProtSets.length >= 10, "at least 10 protein sets are required for profile analysis")
     
-    case class MQPepProfilesCluster(
-      mqProtSet: MasterQuantProteinSet,
-      mqPeps: Seq[MasterQuantPeptide]
-      //abundanceMatrixIndex: Int
-    )
+    val qcsSampleNum = quantChannels.groupBy(_.sampleNumber)
+    val bgBySampleNum = groupSetup.biologicalGroups.view.flatMap { bg =>
+      bg.sampleNumbers.map { sampleNumber =>
+        sampleNumber -> bg
+      }
+    } toMap
+    val bgByQcIdx = quantChannels.map( qc => bgBySampleNum(qc.sampleNumber) )
     
-    // --- Clusterize MQ peptides profiles and compute corresponding abundance matrix ---
-    val profilesClusters = new ArrayBuffer[MQPepProfilesCluster](masterQuantProtSets.length)
+    // Discard low identified peptides if requested
+    // TODO: remove me ?
+    val clusteredMqPeps = if(config.discardLowIdentPeptides) {
+      
+      for( mqProtSet <- masterQuantProtSets ) {
+        
+        // Keep only selected master quant peptides in the dataset
+        // TODO: keep also manual selection here
+        val selectedMqPeps = mqProtSet.masterQuantPeptides.filter( _.selectionLevel >= 2 )
+        
+        if( selectedMqPeps.isEmpty == false ) {
+          
+          // Determine the number of BGs where the Master quant peptide has been identified
+          val mqPepsWithIdentBgsCount = selectedMqPeps.map { tmpMqPep =>
+            val psmCounts = tmpMqPep.getPepMatchesCountsForQuantChannels(qcIds)
+            val psmCountsByBg = psmCounts.zip(bgByQcIdx).groupBy(_._2)
+            val psmCountsSumByBg = psmCountsByBg.map { case (bg,values) =>
+              bg -> values.foldLeft(0) { case (s,t) => s + t._1 }
+            }
+            
+            val identBgsCount = psmCountsSumByBg.values.count( _ > 0)
+            
+            tmpMqPep -> identBgsCount
+          }
+          
+          // Keep only the MQ peptides with the highest identification frequency
+          val maxIdentBgsCount = mqPepsWithIdentBgsCount.view.map(_._2).max
+          val highIdentMqPeps = mqPepsWithIdentBgsCount.filter(_._2 == maxIdentBgsCount)
+          
+          mqProtSet.properties.get.selectedMasterQuantPeptideIds = Some(highIdentMqPeps.map(_._1.id))
+        }
+
+      }
+    } else {
+      for( mqProtSet <- masterQuantProtSets ) {
+        val selectedMqPepIds =mqProtSet.masterQuantPeptides.withFilter( _.selectionLevel >= 2 ).map(_.id)
+        mqProtSet.properties.get.selectedMasterQuantPeptideIds = Some(selectedMqPepIds)
+      }
+    }
+
+    // Clusterize MasterQuantPeptides according to the provided method
+    val mqPepClusterer = if( config.applyProfileClustering ) {
+      new QuantProfileBasedClusterer( groupSetupNumber ) 
+    } else {
+      new PeptideSetBasedClusterer() 
+    }
+    
+    val mqPepsClusters = mqPepClusterer.computeMqPeptidesClusters(masterQuantProtSets)
+    
+    // --- Iterate over MQ peptides clusters to summarize corresponding abundance matrix ---
     val rawAbundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)
+    val rawAbundancesByProfileClusterBuilder = Map.newBuilder[MasterQuantPeptidesCluster,Array[Float]]
+    rawAbundancesByProfileClusterBuilder.sizeHint(rawAbundanceMatrixBuffer.length)
     val abundanceMatrixBuffer = new ArrayBuffer[Array[Float]](masterQuantProtSets.length)
     val psmCountMatrixBuffer = new ArrayBuffer[Array[Int]](masterQuantProtSets.length)
     
-    for( masterQuantProtSet <- masterQuantProtSets ) {
+    import AbundanceSummarizer.Method._
+    
+    val abSumMethod = AbundanceSummarizer.Method.withName(config.abundanceSummarizerMethod)
+    
+    for( mqPepsCluster <- mqPepsClusters ) {
       
-      // Reset quant profiles for this masterQuantProtSet
-      for( masterQuantProtSetProps <- masterQuantProtSet.properties) {
-        masterQuantProtSetProps.setMqProtSetProfilesByGroupSetupNumber(None)
+      val clusteredMqPeps = mqPepsCluster.mqPeptides
+      
+      // Summarize raw abundances of the current profile cluster
+      val mqPepRawAbundanceMatrix = clusteredMqPeps.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
+      val rawAbMatrixSumMethod = if(abSumMethod != MEDIAN_PROFILE || mqPepRawAbundanceMatrix.length >= 3) {
+        abSumMethod
+      } else {
+        SUM
       }
       
-      // Clusterize MasterQuantPeptides according to their profile
-      val mqPepsByProfileAsStr = new HashMap[String,ArrayBuffer[MasterQuantPeptide]]()
+      val summarizedRawAbundances = AbundanceSummarizer.summarizeAbundanceMatrix(
+        mqPepRawAbundanceMatrix,
+        rawAbMatrixSumMethod
+      )
+      rawAbundanceMatrixBuffer += summarizedRawAbundances
+      rawAbundancesByProfileClusterBuilder += mqPepsCluster -> summarizedRawAbundances
       
-      masterQuantProtSet.masterQuantPeptides.foreach { mqPep =>
-        
-        if( mqPep.selectionLevel >= 2 ) {
-          val mqPepProfileOpt = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get.get( groupSetupNumber )
-          
-          for( mqPepProfile <- mqPepProfileOpt ) {
-            
-            val profileAsStr = if( config.applyProfileClustering == false ) masterQuantProtSet.id.toString
-            else {
-              val profileSlopes = mqPepProfile.ratios.map( _.map( _.state ).get )
-              _stringifyProfile( profileSlopes )
-            }
-            
-            mqPepsByProfileAsStr.getOrElseUpdate(profileAsStr, new ArrayBuffer[MasterQuantPeptide] ) += mqPep
-          }
-        }
+      // Summarize abundances of the current profile cluster
+      val mqPepAbundanceMatrix = clusteredMqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
+      val abMatrixSumMethod = if(abSumMethod != MEDIAN_PROFILE || mqPepRawAbundanceMatrix.length >= 3) {
+        abSumMethod
+      } else {
+        SUM
       }
       
-      // Build master quant protein set profiles
-      for( (profileAsStr,mqPeps) <- mqPepsByProfileAsStr ) {
-        
-        profilesClusters += MQPepProfilesCluster(
-          mqProtSet = masterQuantProtSet,
-          mqPeps = mqPeps
-        )
-        
-       // Summarize raw abundances of the current profile cluster
-        val mqPepRawAbundanceMatrix = mqPeps.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
-        rawAbundanceMatrixBuffer += AbundanceSummarizer.summarizeAbundanceMatrix(
-          mqPepRawAbundanceMatrix,
-          AbundanceSummarizer.Method.withName(config.abundanceSummarizerMethod)
-        )
-        
-        // Summarize abundances of the current profile cluster
-        val mqPepAbundanceMatrix = mqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
-        abundanceMatrixBuffer += AbundanceSummarizer.summarizeAbundanceMatrix(
-          mqPepAbundanceMatrix,
-          AbundanceSummarizer.Method.withName(config.abundanceSummarizerMethod)
-        )
-        
-        // Summarize PSM counts of the current profile cluster
-        val psmCountMatrix = mqPeps.map( _.getPepMatchesCountsForQuantChannels(qcIds) ).toArray
-        psmCountMatrixBuffer += psmCountMatrix.transpose.map( _.sum )
-      }
+      abundanceMatrixBuffer += AbundanceSummarizer.summarizeAbundanceMatrix(
+        mqPepAbundanceMatrix,
+        abMatrixSumMethod
+      )
+      
+      // Summarize PSM counts of the current profile cluster
+      val psmCountMatrix = clusteredMqPeps.map( _.getPepMatchesCountsForQuantChannels(qcIds) ).toArray
+      psmCountMatrixBuffer += psmCountMatrix.transpose.map( _.sum )
     }
     
-    // --- Map raw abundances by the corresponding profile cluster ---
-    val rawAbundancesByProfileClusterBuilder = Map.newBuilder[MQPepProfilesCluster,Array[Float]]
-    rawAbundancesByProfileClusterBuilder.sizeHint(rawAbundanceMatrixBuffer.length)
-    
-    rawAbundanceMatrixBuffer.indices.foreach { rowIndex =>
-      val profileCluster = profilesClusters(rowIndex)
-      rawAbundancesByProfileClusterBuilder += profileCluster -> rawAbundanceMatrixBuffer(rowIndex)
-    }
-    
+    // --- Map raw abundances by the corresponding MQ peptides cluster ---
     val rawAbundancesByProfileCluster = rawAbundancesByProfileClusterBuilder.result
     
     // --- Normalize the abundance matrix ---
     val normalizedMatrix = if( config.proteinStatConfig.applyNormalization == false ) abundanceMatrixBuffer.toArray
     else AbundanceNormalizer.normalizeAbundances(abundanceMatrixBuffer.toArray)
     
-    // --- Map normalized abundances by the corresponding profile cluster ---
-    val abundancesByProfileClusterBuilder = Map.newBuilder[MQPepProfilesCluster,Array[Float]]
-    abundancesByProfileClusterBuilder.sizeHint(normalizedMatrix.length)
-    
-    normalizedMatrix.indices.foreach { rowIndex =>
-      val profileCluster = profilesClusters(rowIndex)
-      abundancesByProfileClusterBuilder += profileCluster -> normalizedMatrix(rowIndex)
-    }
-    
-    val abundancesByProfileCluster = abundancesByProfileClusterBuilder.result
-    
     // --- Compute the ratios corresponding to each profile cluster ---
     
     // Create a map which will store the ratios corresponding to each profile cluster
-    val ratiosByProfileCluster = Map() ++ profilesClusters.map( _ -> new ArrayBuffer[Option[ComputedRatio]] )
+    val ratiosByMqPepCluster = mqPepsClusters.view.map( _ -> new ArrayBuffer[Option[ComputedRatio]] ).toMap
     
     // Iterate over the ratio definitions
+    var finalMatrix = normalizedMatrix
     for ( ratioDef <- groupSetup.ratioDefinitions ) {
       
       val( filledMatrix, ratios ) = computeRatios(
@@ -393,7 +411,9 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         psmCountMatrixBuffer.toArray,
         config.proteinStatConfig
       )
- 
+      // FIXME: perform the missing value inference only once
+      finalMatrix = filledMatrix
+      
       for ( ratio <- ratios ) {
 
         val computedRatio = ComputedRatio(
@@ -406,27 +426,38 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         )
         
         val rowIndex = ratio.entityId.toInt
-        val profileCluster = profilesClusters(rowIndex)
+        val mqPepCluster = mqPepsClusters(rowIndex)
         
-        ratiosByProfileCluster( profileCluster ) += Some(computedRatio)
+        ratiosByMqPepCluster( mqPepCluster ) += Some(computedRatio)
       }
     
     }
     
+    // --- Map normalized abundances by the corresponding profile cluster ---
+    val abundancesByProfileClusterBuilder = Map.newBuilder[MasterQuantPeptidesCluster,Array[Float]]
+    abundancesByProfileClusterBuilder.sizeHint(finalMatrix.length)
+    
+    finalMatrix.indices.foreach { rowIndex =>
+      val mqPepCluster = mqPepsClusters(rowIndex)
+      abundancesByProfileClusterBuilder += mqPepCluster -> finalMatrix(rowIndex)
+    }
+    
+    val abundancesByProfileCluster = abundancesByProfileClusterBuilder.result
+    
     // Update the profiles using the obtained results
-    val mqProfilesByProtSet = Map() ++ masterQuantProtSets.map( _ -> new ArrayBuffer[MasterQuantProteinSetProfile] )
+    val mqProfilesByProtSet = masterQuantProtSets.view.map( _ -> new ArrayBuffer[MasterQuantProteinSetProfile] ).toMap
     
     // Group profiles by Master Quant protein set
-    for ( (profileCluster,ratios) <- ratiosByProfileCluster ) {
+    for ( (mqPepCluster,ratios) <- ratiosByMqPepCluster ) {
 
-      val mqProtSet = profileCluster.mqProtSet
-      val mqPeptideIds = profileCluster.mqPeps.map(_.id).toArray
-      val rawAbundances = rawAbundancesByProfileCluster(profileCluster)
-      val abundances = abundancesByProfileCluster(profileCluster)
+      val mqProtSet = mqPepCluster.mqProteinSet
+      val mqPeptideIds = mqPepCluster.mqPeptides.map(_.id).toArray
+      val rawAbundances = rawAbundancesByProfileCluster(mqPepCluster)
+      val abundances = abundancesByProfileCluster(mqPepCluster)
       
       val quantProfile = new MasterQuantProteinSetProfile(
         rawAbundances = rawAbundances,
-        abundances = abundances,
+        abundances = abundances, //.map(x => 0f),
         ratios = ratios.toList,
         mqPeptideIds = mqPeptideIds
       )
@@ -436,6 +467,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     // Update Master Quant protein sets properties
     for( (mqProtSet,mqProfiles) <- mqProfilesByProtSet ) {
+      
       val mqProtSetProps = mqProtSet.properties.getOrElse( new MasterQuantProteinSetProperties() )      
       val mqProtSetProfileMap = mqProtSetProps.getMqProtSetProfilesByGroupSetupNumber.getOrElse( HashMap() )
       
@@ -443,12 +475,31 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       mqProtSetProps.setMqProtSetProfilesByGroupSetupNumber( Some(mqProtSetProfileMap) )
       
       mqProtSet.properties = Some(mqProtSetProps)
+      //logger.debug("score:"+mqProtSet.proteinSet.peptideSet.score)
       
       val bestMQProtSetProfile = mqProtSet.getBestProfile(groupSetupNumber)
-      if(bestMQProtSetProfile.isDefined){
+      if (bestMQProtSetProfile.isDefined) {
+        //logger.debug("undefined abundance: "+bestMQProtSetProfile.get.abundances.count(ab =>isZeroOrNaN(ab)) )
     	  mqProtSet.setAbundancesForQuantChannels(bestMQProtSetProfile.get.abundances,qcIds)
+      } else {
+        // FOR TESTS ONLY //
+        //logger.debug("empty abundances")
+        
+        // Set abundances to NaN
+        for( qProtSet <- mqProtSet.quantProteinSetMap.values ) {
+          qProtSet.abundance = Float.NaN
+        }
+        
+        // Deselect master quant protein set
+        /*if( mqProtSet.selectionLevel == 2 ) {
+          mqProtSet.selectionLevel = 1
+        }*/
       }
       
+      // TODO: remove me Reset quant profiles for this masterQuantProtSet
+      /*for( masterQuantProtSetProps <- mqProtSet.properties) {
+        masterQuantProtSetProps.setMqProtSetProfilesByGroupSetupNumber(None)
+      }*/
     }
     
     ()
@@ -554,7 +605,19 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // --- Infer missing abundances ---
     val filledMatrix = if( config.applyMissValInference == false ) normalizedMatrix
     else {
-      logger.info("Inferring missing values...")
+      
+      // Instantiates an abundance inferer
+      val inferConfig = config.missValInferenceConfig.get
+      val abundanceInferer = MissingAbundancesInferenceMethod.withName( inferConfig.inferenceMethod ) match {
+        case MissingAbundancesInferenceMethod.GAUSSIAN_MODEL => {
+          logger.info("Inferring missing values using the gaussian model method...")
+          new SmartMissingAbundancesInferer(inferConfig, absoluteNoiseModel)
+        }
+        case MissingAbundancesInferenceMethod.PERCENTILE => {
+          logger.info("Inferring missing values using the percentile method...")
+          new FixedNoiseMissingAbundancesReplacer(inferConfig)
+        }
+      }
       
       if( minQCsCountPerSample < 3 ) {
         // TODO: find what to do if when insufficient technical replicates
@@ -585,9 +648,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           val qcIndices = qcIndicesBySampleNum(sampleNum)
           val samplePsmCountMatrix = psmCountMatrixBySampleNum(sampleNum).toArray
           
-          val inferredSampleMatrix = MissingAbundancesInferer.inferAbundances(
-            sampleAbMatrix.toArray, samplePsmCountMatrix, absoluteNoiseModel
-          )
+          val inferredSampleMatrix = abundanceInferer.inferAbundances(sampleAbMatrix.toArray, samplePsmCountMatrix)
           
           var filledMatrixRow = 0
           inferredSampleMatrix.foreach { inferredAbundances =>
@@ -707,169 +768,5 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
     if( defAbundances.length == 0 ) Float.NaN else median(defAbundances)
   }
-  
-  private def _stringifyProfile( slopes: Seq[Int] ): String = { slopes.mkString(";") }
 
-}
-
-// TODO: put in its own file
-object AbundanceSummarizer {
-  
-  object Method extends Enumeration {
-    val MEAN = Value("MEAN")
-    val MEAN_OF_TOP3 = Value("MEAN_OF_TOP3")
-    val MEDIAN = Value("MEDIAN")
-    val MEDIAN_PROFILE = Value("MEDIAN_PROFILE")
-    val NORMALIZED_MEDIAN_PROFILE = Value("NORMALIZED_MEDIAN_PROFILE") // TODO: remove me
-    val SUM = Value("SUM")
-  }
-  
-  def summarizeAbundanceMatrix( abundanceMatrix: Array[Array[Float]], method: Method.Value ): Array[Float] = {
-    
-    method match {
-      case Method.MEAN => summarizeUsingMean(abundanceMatrix)
-      case Method.MEAN_OF_TOP3 => summarizeUsingMeanOfTop3(abundanceMatrix)
-      case Method.MEDIAN => summarizeUsingMedian(abundanceMatrix)
-      case Method.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
-      case Method.NORMALIZED_MEDIAN_PROFILE => summarizeUsingNormalizedMedian(abundanceMatrix)
-      case Method.SUM => summarizeUsingSum(abundanceMatrix)
-    }
-    
-  }
-  
-  def summarizeUsingMean( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
-    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
-    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
-    
-    abundanceMatrix.transpose.map( _calcMeanAbundance( _ ) )
-  }
-  
-  def summarizeUsingMeanOfTop3( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
-    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
-    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
-    
-    // Sort rows by descending median abundance
-    val sortedMatrix = abundanceMatrix.sortBy( - median(_) )
-    
-    // Take 3 highest rows
-    val top3Matrix = sortedMatrix.take(3)
-    
-    // Mean the rows
-    summarizeUsingMean(top3Matrix)
-  }
-  
-  def summarizeUsingMedian( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
-    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
-    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
-    
-    abundanceMatrix.transpose.map( _calcMedianAbundance( _ ) )
-  }
-  
-  // TODO: remove me
-  def summarizeUsingNormalizedMedian( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {    
-    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
-    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
-    
-    val transposedMatrix = abundanceMatrix.transpose
-    val normalizedMatrix = AbundanceNormalizer.normalizeAbundances(transposedMatrix).transpose
-    
-    val medianAbundances = summarizeUsingMedian(normalizedMatrix)
-    
-    // Scale up the mean abundances
-    val top3MeanAbundances = summarizeUsingMeanOfTop3(abundanceMatrix)
-    val( top3MaxValue, top3MaxIdx ) = top3MeanAbundances.zipWithIndex.maxBy(_._1)
-    val curMaxValue = medianAbundances(top3MaxIdx)
-    val scalingFactor = top3MaxValue / curMaxValue
-    val scaledAbundances = medianAbundances.map( _ * scalingFactor )
-    
-    scaledAbundances
-  }
-  
-  def summarizeUsingMedianProfile( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
-    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
-    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
-    
-    // Transpose the matrix
-    val transposedMatrix = abundanceMatrix.transpose
-    
-    // Select columns eligible for ratio computations (discard columns of frequency lower than 0.5)
-    val colObsFreq = transposedMatrix.map( col => col.count( isZeroOrNaN(_) == false ).toFloat / col.length )
-    val colObsFreqWithIdx = colObsFreq.zipWithIndex
-    val eligibleColIndices = colObsFreqWithIdx.withFilter( _._1 >= 0.5 ).map( _._2 )
-    val matrixWithEligibleCols = eligibleColIndices.map( i => transposedMatrix(i) ).transpose
-    
-    // Compute the ratio matrix
-    val ratioMatrix = for( abundanceRow <- matrixWithEligibleCols ) yield {
-      
-      val ratioRow = for ( twoValues <- abundanceRow.sliding(2) ) yield {
-        val ( a, b ) = (twoValues.head, twoValues.last)
-        if( isZeroOrNaN(a) || isZeroOrNaN(b) ) Float.NaN else b / a
-      }
-      
-      ratioRow.toArray
-    }
-    
-    // Compute the median of ratios
-    val medianRatios = summarizeUsingMedian(ratioMatrix)
-    
-    // Compute the TOP3 mean abundances
-    val top3MeanAbundances = summarizeUsingMeanOfTop3(matrixWithEligibleCols)
-    
-    // Convert the median ratios into absolute abundances
-    var previousAb = top3MeanAbundances.head
-    val absoluteAbundances = new ArrayBuffer[Float]()
-    absoluteAbundances += previousAb
-    
-    for( medianRatio <- medianRatios ) {
-      val absoluteValue = previousAb * medianRatio
-      absoluteAbundances += absoluteValue
-      previousAb = absoluteValue
-    }
-    
-    // Scale up the absolute abundances
-    val( top3MaxValue, top3MaxIdx ) = top3MeanAbundances.zipWithIndex.maxBy(_._1)
-    val curMaxValue = absoluteAbundances(top3MaxIdx)
-    val scalingFactor = top3MaxValue / curMaxValue
-    val scaledAbundances = absoluteAbundances.map( _ * scalingFactor )
-    
-    // Re-integrate empty cols
-    val nbCols = transposedMatrix.length
-    val eligibleColIndexSet = eligibleColIndices.toSet
-    
-    var j = 0
-    val finalAbundances = for( i <- 0 until nbCols ) yield {
-      if( eligibleColIndexSet.contains(i) == false ) Float.NaN
-      else {
-        val abundance = scaledAbundances(j)
-        j += 1
-        abundance
-      }
-    }
-    
-    finalAbundances.toArray
-  }
-  
-  def summarizeUsingSum( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
-    require( abundanceMatrix.length > 0, "abundanceMatrix is empty" )
-    if( abundanceMatrix.length == 1 ) return abundanceMatrix.head
-    
-    abundanceMatrix.transpose.map( _calcAbundanceSum( _ ) )
-  }
-  
-  // TODO: this method is duplicated in the Profilizer => put in a shared object ???
-  private def _calcMeanAbundance(abundances: Array[Float]): Float = {
-    val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
-    if( defAbundances.length == 0 ) Float.NaN else defAbundances.sum / defAbundances.length
-  }
-  
-  private def _calcMedianAbundance(abundances: Array[Float]): Float = {
-    val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
-    if( defAbundances.length == 0 ) Float.NaN else median(defAbundances)
-  }
-  
-  private def _calcAbundanceSum(abundances: Array[Float]): Float = {
-    val defAbundances = abundances.filter( isZeroOrNaN(_) == false )
-    if( defAbundances.length == 0 ) Float.NaN else defAbundances.sum
-  }
-  
 }
