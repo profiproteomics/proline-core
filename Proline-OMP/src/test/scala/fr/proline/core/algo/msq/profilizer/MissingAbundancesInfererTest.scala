@@ -1,4 +1,4 @@
-package fr.proline.core.algo.msq
+package fr.proline.core.algo.msq.profilizer
 
 import org.apache.commons.math3.stat.StatUtils
 import org.junit.Test

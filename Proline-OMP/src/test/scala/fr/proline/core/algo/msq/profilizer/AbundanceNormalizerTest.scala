@@ -1,4 +1,4 @@
-package fr.proline.core.algo.msq
+package fr.proline.core.algo.msq.profilizer
 
 import org.junit.Assert._
 import org.junit.Test

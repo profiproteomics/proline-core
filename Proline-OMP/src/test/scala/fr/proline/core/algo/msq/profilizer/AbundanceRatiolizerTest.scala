@@ -1,14 +1,14 @@
-package fr.proline.core.algo.msq
+package fr.proline.core.algo.msq.profilizer
 
 import scala.Array.canBuildFrom
 import scala.io.Source
-
 import org.junit.Assert.assertEquals
 import org.junit.Ignore
 import org.junit.Test
+import fr.proline.core.algo.msq.ProfilizerStatConfig
 
-//@Test
-@Ignore
+@Test
+//@Ignore
 class AbundanceRatiolizerTest {
   
   @Test
@@ -105,9 +105,9 @@ class AbundanceRatiolizerTest {
     val ratiosSortedByTPValue = normalizedRatios.sortBy( _.tTestPValue.getOrElse(1.0) )
     
     assertEquals( 286, ratiosSortedByTPValue.count( _.tTestPValue.getOrElse(1.0) <= 0.01 ) )
-    assertEquals( 204, ratiosSortedByTPValue.count( _.zTestPValue.getOrElse(1.0) <= 0.01 ) )
-    assertEquals( 35, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.OverAbundant ) )
-    assertEquals( 42, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.UnderAbundant ) )
+    assertEquals( 201, ratiosSortedByTPValue.count( _.zTestPValue.getOrElse(1.0) <= 0.01 ) )
+    assertEquals( 107, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.OverAbundant ) )
+    assertEquals( 179, ratiosSortedByTPValue.count( _.state.get == AbundanceRatioState.UnderAbundant ) )
     
     val overAbundantRatios = ratiosSortedByTPValue.filter(  _.state.get == AbundanceRatioState.OverAbundant ).sortBy( _.entityId )
     // The fist 10 rows should be over abundant
