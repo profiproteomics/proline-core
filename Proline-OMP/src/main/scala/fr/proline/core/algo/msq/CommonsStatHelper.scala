@@ -1,5 +1,6 @@
 package fr.proline.core.algo.msq
 
+import scala.beans.BeanProperty
 import org.apache.commons.math3.stat.descriptive.StatisticalSummaryValues
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import org.apache.commons.math3.stat.StatUtils
@@ -8,13 +9,25 @@ import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.special.Erf
 
 trait ExtendedStatisticalSummary extends StatisticalSummary {
+  
+  def getQ1(): Double
   def getMedian(): Double
+  def getQ3(): Double
+  
+  def getCv(): Double
+  def getInterQuartileRange(): Double
+  def getLowerInnerFence(): Double
+  def getLowerOuterFence(): Double
+  def getUpperInnerFence(): Double
+  def getUpperOuterFence(): Double
 }
 
 /**
   * Constructor
   *
+  * @param q1  the sample q1
   * @param mean  the sample mean
+  * @param q3  the sample q3
   * @param variance  the sample variance
   * @param n  the number of observations in the sample
   * @param max  the maximum value
@@ -22,7 +35,9 @@ trait ExtendedStatisticalSummary extends StatisticalSummary {
   * @param sum  the sum of the values
  */
 case class ExtendedStatisticalSummaryValues(
-  median: Double,
+  @BeanProperty q1: Double,
+  @BeanProperty median: Double,
+  @BeanProperty q3: Double,
   mean: Double,
   variance: Double,
   n: Long,
@@ -31,12 +46,36 @@ case class ExtendedStatisticalSummaryValues(
   sum: Double
 ) extends StatisticalSummaryValues(mean, variance, n, max, min, sum) with ExtendedStatisticalSummary {
   
-  def getMedian() = median 
+  @BeanProperty lazy val cv = this.getStandardDeviation / mean
+  @BeanProperty lazy val interQuartileRange = q3 - q1
+  @BeanProperty lazy val lowerInnerFence = q1 - 1.5 * interQuartileRange
+  @BeanProperty lazy val lowerOuterFence = q1 - 3 * interQuartileRange
+  @BeanProperty lazy val upperInnerFence = q3 + 1.5 * interQuartileRange
+  @BeanProperty lazy val upperOuterFence = q3 + 3 * interQuartileRange
+  
+  override def toString() = {
+    val endl = "\n"
+    
+    val strBuilder = new StringBuilder( super.toString() )
+    strBuilder.append("q1: ").append(q1).append(endl)
+    strBuilder.append("median: ").append(median).append(endl)
+    strBuilder.append("q3: ").append(q3).append(endl)
+    strBuilder.append("cv: ").append(cv).append(endl)
+    strBuilder.append("interQuartileRange: ").append(interQuartileRange).append(endl)
+    strBuilder.append("lowerInnerFence: ").append(lowerInnerFence).append(endl)
+    strBuilder.append("lowerOuterFence: ").append(lowerOuterFence).append(endl)
+    strBuilder.append("upperInnerFence: ").append(upperInnerFence).append(endl)
+    strBuilder.append("upperOuterFence: ").append(upperOuterFence).append(endl)
+    
+    strBuilder.result()
+  }
+  
 }
 
 object CommonsStatHelper {
   
   val medianComputer = new org.apache.commons.math3.stat.descriptive.rank.Median()
+  val percentileComputer = new org.apache.commons.math3.stat.descriptive.rank.Percentile()
   
   def calcMean( values: Array[Float] ): Float = {
     if( values.length == 0 ) 0
@@ -60,8 +99,13 @@ object CommonsStatHelper {
       if( value < min ) min = value
     }
     
+    val q1 = percentileComputer.evaluate(defValues, 25)
+    val q3 = percentileComputer.evaluate(defValues, 75)
+    
     new ExtendedStatisticalSummaryValues(
+      q1,
       median,
+      q3,
       mean, 
       variance,
       defValues.length, 
@@ -101,7 +145,7 @@ object CommonsStatHelper {
     )
   }
   
-  def quartilesToBounds( quartiles: Pair[Float,Float] ): Pair[Float,Float] = {
+  def quartilesToBounds( quartiles: (Float,Float) ): (Float,Float) = {
     
     val( q1, q3 ) = quartiles
     val logQ1 = math.log(q1)
