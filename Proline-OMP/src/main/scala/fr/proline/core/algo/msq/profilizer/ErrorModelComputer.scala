@@ -1,4 +1,4 @@
-package fr.proline.core.algo.msq
+package fr.proline.core.algo.msq.profilizer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{exp,log}

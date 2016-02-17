@@ -1,4 +1,4 @@
-package fr.proline.core.algo.msq
+package fr.proline.core.algo.msq.profilizer
 
 import fr.profi.util.math.median
 import scala.collection.mutable.ArrayBuffer

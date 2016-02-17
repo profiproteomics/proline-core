@@ -1,4 +1,6 @@
-package fr.proline.core.algo.msq
+package fr.proline.core.algo.msq.profilizer
+
+import fr.proline.core.algo.msq.ProfilizerStatConfig
 
 object AbundanceRatioState extends Enumeration {
   val OverAbundant = Value(1)

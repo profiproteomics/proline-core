@@ -10,10 +10,10 @@ import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.math.median
 import fr.profi.ms.algo.IsotopePatternEstimator
 import fr.proline.core.algo.lcms.summarizing._
-import fr.proline.core.algo.msq.CommonsStatHelper
+import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
+import fr.proline.core.algo.msq.profilizer.CommonsStatHelper
 import fr.proline.core.om.model.lcms.Feature
 import fr.proline.core.om.model.lcms.Peakel
-import fr.proline.core.algo.msq.profilizer.AbundanceSummarizer
 
 case class FeatureSummarizingConfig(
   peakelPreProcessingMethod: String,
@@ -241,43 +241,52 @@ class FeatureSummarizer(
     
     indexedFeatures.map { case (feature, index) =>
 
-        val peakelIP = peakelIntensitiesByFeature(feature)
-        if (peakelIP.isEmpty) {
-          logger.warn("Can't compute feature intensities without data about the corresponding peakels")
-          Float.NaN
-        } else {
-          val scalingFactorsWithDistance = peakelIP.indices.map { case idx =>
+      val peakelIP = peakelIntensitiesByFeature(feature)
+      if (peakelIP.isEmpty) {
+        logger.warn("Can't compute feature intensities without data about the corresponding peakels")
+        Float.NaN
+      } else {
+        
+        // Compute a scaling factor for each excluded peak of the observed isotope pattern
+        // Here is the procedure: 
+        // - each peak is iteratively removed from the observed and theoretical patterns
+        // - the obtained partial patterns are then compared to compute an average distance and a scaling factor
+        // - we further retain the scaling factor associated with the lowest distance
+        // This procedure allows us to remove a potential peakel interference inside the observed isotope pattern
+        val scalingFactorsWithDistance = peakelIP.indices.map { case idx =>
 
-            val( peakelIpWithExclusion, medianIpWithExclusion) = if( peakelIP.length == 1 ) {
-              (peakelIP,medianIP)
-            } else {
-              (peakelIP.take(idx) ++ peakelIP.drop(idx + 1),
-              medianIP.take(idx) ++ medianIP.drop(idx + 1))
-            }
-
-            // Compute the weighted average distance
-            val weightedDist = computeWeightedAverageDistance(peakelIpWithExclusion, medianIpWithExclusion)
-
-            // Compute the weighted average of ratios
-            val scalingFactor = computeWeightedAverageRatio(peakelIpWithExclusion, medianIpWithExclusion)
-            
-            /*if (scalingFactor.isNaN) {
-              println("peakelIpWithExclusion", peakelIpWithExclusion.toList)
-              println("medianIpWithExclusion", medianIpWithExclusion.toList)
-            }*/
-
-            (scalingFactor, weightedDist)
+          val( peakelIpWithExclusion, medianIpWithExclusion) = if( peakelIP.length == 1 ) {
+            (peakelIP,medianIP)
+          } else {
+            (peakelIP.take(idx) ++ peakelIP.drop(idx + 1),
+            medianIP.take(idx) ++ medianIP.drop(idx + 1))
           }
-          //println("scalingFactorsWithDistance",scalingFactorsWithDistance.toList)
 
-          val bestScalingFactor = scalingFactorsWithDistance.minBy(_._2)._1
+          // Compute the weighted average distance
+          val weightedDist = computeWeightedAverageDistance(peakelIpWithExclusion, medianIpWithExclusion)
 
-          val fittedIP = medianIP.map(_ * bestScalingFactor)
-          //println("peakelIP",peakelIP.toList)
-          //println("fittedIP",fittedIP.toList)
+          // Compute the weighted average of ratios
+          val scalingFactor = computeWeightedAverageRatio(peakelIpWithExclusion, medianIpWithExclusion)
+          
+          /*if (scalingFactor.isNaN) {
+            println("peakelIpWithExclusion", peakelIpWithExclusion.toList)
+            println("medianIpWithExclusion", medianIpWithExclusion.toList)
+          }*/
 
-          fittedIP(maxIdx)
+          (scalingFactor, weightedDist)
         }
+        //println("scalingFactorsWithDistance",scalingFactorsWithDistance.toList)
+
+        // Take the scaling factor minimizing the distance between IPs (minus a given excluded isotope)
+        val bestScalingFactor = scalingFactorsWithDistance.minBy(_._2)._1
+
+        // Apply the scaling factor to compute the fitted isotope pattern
+        val fittedIP = medianIP.map(_ * bestScalingFactor)
+        //println("peakelIP",peakelIP.toList)
+        //println("fittedIP",fittedIP.toList)
+
+        fittedIP(maxIdx)
+      }
       
     } toArray
   }
