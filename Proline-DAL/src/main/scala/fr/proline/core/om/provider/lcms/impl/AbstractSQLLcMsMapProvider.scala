@@ -90,7 +90,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
   
   protected def eachFeatureRecord(mapIds: Seq[Long], onEachFt: ResultSetRow => Unit): Unit = {
     
-    DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { ezDBC =>
+    DoJDBCReturningWork.withEzDBC(lcmsDbCtx) { ezDBC =>
     
       // Iterate over features (is_overlapping = false)
       val ftQuery = new SelectQueryBuilder1(LcmsDbFeatureTable).mkSelectQuery( (t,c) =>
@@ -104,7 +104,7 @@ abstract class AbstractSQLLcMsMapProvider extends ILcMsMapProvider {
         ()
       }
     
-    })
+    }
       
   }
   
