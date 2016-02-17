@@ -1,30 +1,118 @@
 package fr.proline.core.algo.msq
 
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.math3.stat.StatUtils
 import org.apache.commons.math3.stat.descriptive.rank.Percentile
+import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.primitives.isZeroOrNaN
 import fr.profi.util.random.randomGaussian
 
-object MissingAbundancesInferer extends LazyLogging {
+object MissingAbundancesInferenceMethod extends EnhancedEnum {
+  val GAUSSIAN_MODEL = Value // SmartMissingAbundancesInferer
+  val PERCENTILE = Value // FixedNoiseMissingAbundancesReplacer
+}
+
+case class MissingAbundancesInferenceConfig(
+  inferenceMethod: String = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL,
+  noisePercentile: Option[Int] = None // should be only defined for PERCENTILE method
+) {
+  def getNoisePercentile(): Int = noisePercentile.getOrElse(1)
+}
+
+object MissingAbundancesInferer {
   
-  val percentileComputer = new Percentile()
-  
+  // For backward compatibility with previous implementation
   def inferAbundances(
     abundanceMatrix: Array[Array[Float]],
     psmCountMatrix: Array[Array[Int]],
     errorModel: AbsoluteErrorModel
   ): Array[Array[Float]] = {
+    val inferConfig = MissingAbundancesInferenceConfig(MissingAbundancesInferenceMethod.GAUSSIAN_MODEL)
+    new SmartMissingAbundancesInferer(inferConfig, errorModel).inferAbundances(abundanceMatrix, psmCountMatrix)
+  }
+  
+}
+
+trait IMissingAbundancesInferer extends StrictLogging {
+  
+  def inferenceConfig: MissingAbundancesInferenceConfig
+  val percentileComputer = new Percentile()
+  
+  def inferAbundances(
+    abundanceMatrix: Array[Array[Float]],
+    psmCountMatrix: Array[Array[Int]]
+  ): Array[Array[Float]]
+  
+  protected def flattenAbundanceMatrix(
+    abundanceMatrix: Array[Array[Float]]
+  ): Option[Array[Double]] = {
     require( abundanceMatrix.length >= 10, "at least 10 abundance rows are required for missing abundance inference")
     
-    // Retrieve quartiles from flattened abundance matrix
     val allDefinedAbundances = abundanceMatrix.flatten.withFilter( isZeroOrNaN(_) == false ).map(_.toDouble).sorted
     if( allDefinedAbundances.isEmpty ) {
       logger.warn("no defined abundances in the abundanceMatrix: can't infer missing values")
-      return abundanceMatrix
+      return None
     }
     
+    Some( allDefinedAbundances )
+  }
+}
+
+// TODO: add minimum frequency
+class FixedNoiseMissingAbundancesReplacer( val inferenceConfig: MissingAbundancesInferenceConfig ) extends IMissingAbundancesInferer {
+  
+  private val percentileLevel = inferenceConfig.getNoisePercentile
+  
+  def inferAbundances(
+    abundanceMatrix: Array[Array[Float]],
+    psmCountMatrix: Array[Array[Int]] = Array()
+  ): Array[Array[Float]] = {
+    
+    // Flatten abundance matrix content
+    val allDefinedAbundancesOpt = this.flattenAbundanceMatrix(abundanceMatrix)
+    if( allDefinedAbundancesOpt.isEmpty ) return abundanceMatrix
+    
+    // Retrieve quartiles from flattened abundance matrix
+    val tranposedAbundanceMatrix = abundanceMatrix.transpose
+    val noiseLevels = tranposedAbundanceMatrix.map { abundanceCol =>
+      val definedAbundances = abundanceCol.withFilter( isZeroOrNaN(_) == false ).map(_.toDouble)
+      percentileComputer.evaluate(definedAbundances,percentileLevel).toFloat
+    }
+    logger.info("Inferring missing values using noise levels: "+ noiseLevels.mkString(", ") )
+    
+    val colIndices = tranposedAbundanceMatrix.indices.toArray
+    abundanceMatrix.map { abundanceRow =>
+      
+      // Replace the missing abundances by noise value
+      colIndices.map { colIdx =>
+        val abundance = abundanceRow(colIdx)
+        val noiseLevel = noiseLevels(colIdx)
+        
+        if( isZeroOrNaN(abundance) == false ) abundance
+        else noiseLevel
+      }
+    }
+  }
+  
+}
+
+class SmartMissingAbundancesInferer(
+  val inferenceConfig: MissingAbundancesInferenceConfig,
+  val errorModel: AbsoluteErrorModel
+) extends IMissingAbundancesInferer {
+  
+  def inferAbundances(
+    abundanceMatrix: Array[Array[Float]],
+    psmCountMatrix: Array[Array[Int]]
+  ): Array[Array[Float]] = {
+    
+    // Flatten abundance matrix content
+    val allDefinedAbundancesOpt = this.flattenAbundanceMatrix(abundanceMatrix)
+    if( allDefinedAbundancesOpt.isEmpty ) return abundanceMatrix
+    
+    // Retrieve quartiles from flattened abundance matrix
+    val allDefinedAbundances = allDefinedAbundancesOpt.get
     val q1 = percentileComputer.evaluate(allDefinedAbundances,25).toFloat
     val q3 = percentileComputer.evaluate(allDefinedAbundances,75).toFloat
     
@@ -145,3 +233,4 @@ object MissingAbundancesInferer extends LazyLogging {
   }
   
 }
+
