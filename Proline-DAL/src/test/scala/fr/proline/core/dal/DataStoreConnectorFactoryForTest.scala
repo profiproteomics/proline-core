@@ -20,7 +20,7 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
   } else {
 
     if (initialize) {
-      DatabaseUpgrader.upgradeDatabase(udsDb)
+      DatabaseUpgrader.upgradeDatabase(udsDb, false)
     }
 
   }
@@ -30,7 +30,7 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
   } else {
 
     if (initialize) {
-      DatabaseUpgrader.upgradeDatabase(pdiDb)
+      DatabaseUpgrader.upgradeDatabase(pdiDb, false)
     }
 
   }
@@ -40,7 +40,7 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
   } else {
 
     if (initialize) {
-      DatabaseUpgrader.upgradeDatabase(psDb)
+      DatabaseUpgrader.upgradeDatabase(psDb, false)
     }
 
   }
@@ -50,7 +50,7 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
   } else {
 
     if (initialize) {
-      DatabaseUpgrader.upgradeDatabase(msiDb)
+      DatabaseUpgrader.upgradeDatabase(msiDb, false)
     }
 
   }
@@ -60,7 +60,7 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
   } else {
 
     if (initialize) {
-      DatabaseUpgrader.upgradeDatabase(lcMsDb)
+      DatabaseUpgrader.upgradeDatabase(lcMsDb, false)
     }
 
   }
