@@ -50,7 +50,7 @@ class ResultSummaryMerger(
   execCtx: IExecutionContext,
   resultSummaryIds: Option[Seq[Long]],
   resultSummaries: Option[Seq[ResultSummary]],
-  aggregationMode: Option[AdditionMode.Value]) extends IService with LazyLogging {
+  aggregationMode: Option[AdditionMode.Value] = None) extends IService with LazyLogging {
 
   var mergedResultSummary: ResultSummary = null
 

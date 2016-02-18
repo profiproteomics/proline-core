@@ -48,7 +48,7 @@ class ResultSetMerger(
   execCtx: IExecutionContext,
   resultSetIds: Option[Seq[Long]],
   resultSets: Option[Seq[ResultSet]],  
-  aggregationMode: Option[AdditionMode.Value]
+  aggregationMode: Option[AdditionMode.Value] = None
 ) extends IService with LazyLogging {
 
   var mergedResultSet: ResultSet = null
