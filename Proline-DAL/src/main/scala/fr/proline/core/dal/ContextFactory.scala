@@ -11,7 +11,7 @@ import fr.proline.repository._
 object ContextFactory extends LazyLogging {
 
   /**
-   * Creates an ExecutionContext instance from given DataStoreConnectorFactory and project Id.
+   * Creates a BasicExecutionContext instance from given IDataStoreConnectorFactory and project Id.
    *
    * @param dsFactory
    *            Factory of Proline DataStore connectors.
@@ -23,6 +23,7 @@ object ContextFactory extends LazyLogging {
    *            <code>Connection</code>.
    * @return A new instance of ExecutionContext
    */
+  @deprecated("0.6.0","Use BuildLazyExecutionContext factory instead")
   def buildExecutionContext(dsFactory: IDataStoreConnectorFactory, projectId: Long, useJPA: Boolean): IExecutionContext = {
     val currentThread = Thread.currentThread
 
@@ -32,7 +33,7 @@ object ContextFactory extends LazyLogging {
 
     val udsDbConnector = dsFactory.getUdsDbConnector
     val udsDbCtx = if (udsDbConnector == null) null
-    else buildDbConnectionContext(udsDbConnector, useJPA).asInstanceOf[UdsDbConnectionContext]
+    else buildUdsDbConnectionContext(udsDbConnector, useJPA)
 
     val pdiDbConnector = dsFactory.getPdiDbConnector
     val pdiDbCtx = if (pdiDbConnector == null) null
@@ -45,15 +46,76 @@ object ContextFactory extends LazyLogging {
     /* Project specific Dbs */
     val msiDbConnector = dsFactory.getMsiDbConnector(projectId)
     val msiDbCtx = if (msiDbConnector == null) null
-    else buildDbConnectionContext(msiDbConnector, useJPA).asInstanceOf[MsiDbConnectionContext]
+    else buildMsiDbConnectionContext(msiDbConnector, useJPA)
     
     val lcMsDbConnector = dsFactory.getLcMsDbConnector(projectId)
     val lcMsDbCtx = if (lcMsDbConnector == null) null
-    else buildDbConnectionContext(lcMsDbConnector, useJPA).asInstanceOf[LcMsDbConnectionContext]
+    else buildLcMsDbConnectionContext(lcMsDbConnector, useJPA)
 
     new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, lcMsDbCtx)
   }
+  
+  /**
+   * Creates a LazyExecutionContext instance from given IDataStoreConnectorFactory and project Id.
+   *
+   * @param dsFactory
+   *            Factory of Proline DataStore connectors.
+   * @param projectId
+   *            Id of project to retrieve project specific Dbs (MSI, LCMS).
+   * @param useJPA
+   *            If <code>true</code> all returned Db contexts wrap a new <code>EntityManager</code> for
+   *            relevant Proline Db. If <code>false</code> all returned Db contexts wrap a new SQL JDBC
+   *            <code>Connection</code>.
+   * @return A new instance of ExecutionContext
+   */
+  protected[dal] def buildLazyExecutionContext(dsFactory: IDataStoreConnectorFactory, projectId: Long, useJPA: Boolean): IExecutionContext = {
+    val currentThread = Thread.currentThread
 
+    if (!currentThread.getUncaughtExceptionHandler.isInstanceOf[ThreadLogger]) {
+      currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName()))
+    }
+
+    val udsDbCtxBuilder = { () =>
+      val udsDbConnector = dsFactory.getUdsDbConnector
+      if (udsDbConnector == null) null
+      else buildUdsDbConnectionContext(udsDbConnector, useJPA)
+    }
+    
+    val pdiDbCtxBuilder = { () =>
+      val pdiDbConnector = dsFactory.getPdiDbConnector
+      if (pdiDbConnector == null) null
+      else buildDbConnectionContext(pdiDbConnector, useJPA)
+    }
+    
+    val psDbCtxBuilder = { () =>
+      val psDbConnector = dsFactory.getPsDbConnector
+      if (psDbConnector == null) null
+      else buildDbConnectionContext(psDbConnector, useJPA)
+    }
+    
+    /* Project specific Dbs */
+    val msiDbCtxBuilder = { () =>
+      val msiDbConnector = dsFactory.getMsiDbConnector(projectId)
+      if (msiDbConnector == null) null
+      else buildMsiDbConnectionContext(msiDbConnector, useJPA)
+    }
+    
+    val lcMsDbCtxBuilder = { () =>
+      val lcMsDbConnector = dsFactory.getLcMsDbConnector(projectId)
+      if (lcMsDbConnector == null) null
+      else buildLcMsDbConnectionContext(lcMsDbConnector, useJPA)
+    }
+
+    new LazyExecutionContext(
+      useJPA,
+      udsDbCtxBuilder,
+      pdiDbCtxBuilder,
+      psDbCtxBuilder,
+      msiDbCtxBuilder,
+      lcMsDbCtxBuilder
+    )
+  }
+  
   /**
    * Creates a <code>DatabaseConnectionContext</code> from given DatabaseConnector.
    *
@@ -145,6 +207,28 @@ object BuildExecutionContext extends LazyLogging {
   }
 
 }
+
+object BuildLazyExecutionContext extends LazyLogging {
+
+  /**
+   * Creates a LazyExecutionContext instance from given IDataStoreConnectorFactory and project Id.
+   *
+   * @param dsFactory
+   *            Factory of Proline DataStore connectors.
+   * @param projectId
+   *            Id of project to retrieve project specific Dbs (MSI, LCMS).
+   * @param useJPA
+   *            If <code>true</code> all returned Db contexts wrap a new <code>EntityManager</code> for
+   *            relevant Proline Db. If <code>false</code> all returned Db contexts wrap a new SQL JDBC
+   *            <code>Connection</code>.
+   * @return A new instance of ExecutionContext
+   */
+  def apply(dsFactory: IDataStoreConnectorFactory, projectId: Long, useJPA: Boolean): IExecutionContext = {
+    ContextFactory.buildLazyExecutionContext(dsFactory, projectId, useJPA)
+  }
+
+}
+
 
 object BuildDbConnectionContext extends LazyLogging {
 
