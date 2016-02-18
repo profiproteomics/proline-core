@@ -5,8 +5,7 @@ import org.junit.BeforeClass
 
 import com.typesafe.scalalogging.StrictLogging
 
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.IExecutionContext
+import fr.proline.context._
 import fr.proline.core.dbunit._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -56,7 +55,13 @@ abstract class AbstractEmptyDatastoreTestCase extends AbstractMultipleDBTestCase
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
     val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
     val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+    val executionContext = new BasicExecutionContext(
+      udsDbCtx.asInstanceOf[UdsDbConnectionContext],
+      pdiDbCtx,
+      psDbCtx,
+      msiDbCtx.asInstanceOf[MsiDbConnectionContext],
+      null
+    )
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))

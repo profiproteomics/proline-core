@@ -1,13 +1,12 @@
 package fr.proline.core.dal
 
 import java.sql.SQLException
+
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.repository.IDatabaseConnector
+
 import fr.profi.util.ThreadLogger
+import fr.proline.context._
+import fr.proline.repository._
 
 object ContextFactory extends LazyLogging {
 
@@ -33,7 +32,7 @@ object ContextFactory extends LazyLogging {
 
     val udsDbConnector = dsFactory.getUdsDbConnector
     val udsDbCtx = if (udsDbConnector == null) null
-    else buildDbConnectionContext(udsDbConnector, useJPA)
+    else buildDbConnectionContext(udsDbConnector, useJPA).asInstanceOf[UdsDbConnectionContext]
 
     val pdiDbConnector = dsFactory.getPdiDbConnector
     val pdiDbCtx = if (pdiDbConnector == null) null
@@ -46,11 +45,11 @@ object ContextFactory extends LazyLogging {
     /* Project specific Dbs */
     val msiDbConnector = dsFactory.getMsiDbConnector(projectId)
     val msiDbCtx = if (msiDbConnector == null) null
-    else buildDbConnectionContext(msiDbConnector, useJPA)
+    else buildDbConnectionContext(msiDbConnector, useJPA).asInstanceOf[MsiDbConnectionContext]
     
     val lcMsDbConnector = dsFactory.getLcMsDbConnector(projectId)
     val lcMsDbCtx = if (lcMsDbConnector == null) null
-    else buildDbConnectionContext(lcMsDbConnector, useJPA)
+    else buildDbConnectionContext(lcMsDbConnector, useJPA).asInstanceOf[LcMsDbConnectionContext]
 
     new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, lcMsDbCtx)
   }
@@ -69,13 +68,29 @@ object ContextFactory extends LazyLogging {
     if (dbConnector == null) {
       throw new IllegalArgumentException("DbConnector is null")
     }
+    
+    val dbType = dbConnector.getProlineDatabaseType
 
     if (useJPA) {
       new DatabaseConnectionContext(dbConnector)
+      dbType match {
+        case ProlineDatabaseType.LCMS => new LcMsDbConnectionContext(dbConnector)
+        case ProlineDatabaseType.MSI => new MsiDbConnectionContext(dbConnector)
+        case ProlineDatabaseType.UDS => new UdsDbConnectionContext(dbConnector)
+        case _ => new DatabaseConnectionContext(dbConnector)
+      }
     } else {
 
       try {
-        new DatabaseConnectionContext(dbConnector.getDataSource.getConnection, dbConnector.getProlineDatabaseType, dbConnector.getDriverType)
+        val connection = dbConnector.getDataSource.getConnection
+        
+        dbType match {
+          case ProlineDatabaseType.LCMS => new LcMsDbConnectionContext(connection, dbConnector.getDriverType)
+          case ProlineDatabaseType.MSI => new MsiDbConnectionContext(connection, dbConnector.getDriverType)
+          case ProlineDatabaseType.UDS => new UdsDbConnectionContext(connection, dbConnector.getDriverType)
+          case _ => new DatabaseConnectionContext(connection, dbType, dbConnector.getDriverType)
+        }
+        
       } catch {
 
         case sqlEx: SQLException => {

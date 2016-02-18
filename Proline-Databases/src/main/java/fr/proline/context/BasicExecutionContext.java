@@ -10,18 +10,18 @@ public class BasicExecutionContext implements IExecutionContext {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BasicExecutionContext.class);
 
-	private final DatabaseConnectionContext m_udsDb;
+	private final UdsDbConnectionContext m_udsDb;
 	private final DatabaseConnectionContext m_pdiDb;
 	private final DatabaseConnectionContext m_psDb;
-	private final DatabaseConnectionContext m_msiDb;
-	private final DatabaseConnectionContext m_lcMsDb;
+	private final MsiDbConnectionContext m_msiDb;
+	private final LcMsDbConnectionContext m_lcMsDb;
 
 	public BasicExecutionContext(
-		final DatabaseConnectionContext udsDb,
+		final UdsDbConnectionContext udsDb,
 		final DatabaseConnectionContext pdiDb,
 		final DatabaseConnectionContext psDb,
-		final DatabaseConnectionContext msiDb,
-		final DatabaseConnectionContext lcMsDb) {
+		final MsiDbConnectionContext msiDb,
+		final LcMsDbConnectionContext lcMsDb) {
 
 		if (udsDb == null) {
 			LOG.info("UDS DatabaseConnectionContext is null");
@@ -55,7 +55,7 @@ public class BasicExecutionContext implements IExecutionContext {
 	}
 
 	@Override
-	public DatabaseConnectionContext getUDSDbConnectionContext() {
+	public UdsDbConnectionContext getUDSDbConnectionContext() {
 		return m_udsDb;
 	}
 
@@ -70,12 +70,12 @@ public class BasicExecutionContext implements IExecutionContext {
 	}
 
 	@Override
-	public DatabaseConnectionContext getMSIDbConnectionContext() {
+	public MsiDbConnectionContext getMSIDbConnectionContext() {
 		return m_msiDb;
 	}
 
 	@Override
-	public DatabaseConnectionContext getLCMSDbConnectionContext() {
+	public LcMsDbConnectionContext getLCMSDbConnectionContext() {
 		return m_lcMsDb;
 	}
 

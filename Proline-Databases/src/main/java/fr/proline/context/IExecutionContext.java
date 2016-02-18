@@ -7,7 +7,7 @@ public interface IExecutionContext {
 	 * 
 	 * @return UDS DatabaseConnectionContext
 	 */
-	DatabaseConnectionContext getUDSDbConnectionContext();
+	UdsDbConnectionContext getUDSDbConnectionContext();
 
 	/**
 	 * Retrieves current connection context for PDI Db.
@@ -28,14 +28,14 @@ public interface IExecutionContext {
 	 * 
 	 * @return MSI DatabaseConnectionContext
 	 */
-	DatabaseConnectionContext getMSIDbConnectionContext();
+	MsiDbConnectionContext getMSIDbConnectionContext();
 
 	/**
 	 * Retrieves current connection context for the LCMS Db of the active project.
 	 * 
 	 * @return LCMS DatabaseConnectionContext
 	 */
-	DatabaseConnectionContext getLCMSDbConnectionContext();
+	LcMsDbConnectionContext getLCMSDbConnectionContext();
 
 	/**
 	 * @return <code>true</code> if all (non-<code>null</code>) DatabaseConnectionContexts are JPA (valid

@@ -3,8 +3,7 @@ package fr.proline.core.algo.msi
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.IExecutionContext
+import fr.proline.context._
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dbunit._
@@ -77,7 +76,13 @@ abstract class AbstractResultSummaryTestCase extends AbstractMultipleDBTestCase 
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
     val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
     val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val execCtx = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+    val execCtx = new BasicExecutionContext(
+      udsDbCtx.asInstanceOf[UdsDbConnectionContext],
+      pdiDbCtx,
+      psDbCtx,
+      msiDbCtx.asInstanceOf[MsiDbConnectionContext],
+      null
+    )
 
     val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
 

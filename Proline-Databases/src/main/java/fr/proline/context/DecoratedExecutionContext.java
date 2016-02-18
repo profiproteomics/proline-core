@@ -65,7 +65,7 @@ public class DecoratedExecutionContext implements IExecutionContext {
 		return result;
 	}
 
-	public DatabaseConnectionContext getUDSDbConnectionContext() {
+	public UdsDbConnectionContext getUDSDbConnectionContext() {
 		return m_wrappedExecutionContext.getUDSDbConnectionContext();
 	}
 
@@ -77,11 +77,11 @@ public class DecoratedExecutionContext implements IExecutionContext {
 		return m_wrappedExecutionContext.getPSDbConnectionContext();
 	}
 
-	public DatabaseConnectionContext getMSIDbConnectionContext() {
+	public MsiDbConnectionContext getMSIDbConnectionContext() {
 		return m_wrappedExecutionContext.getMSIDbConnectionContext();
 	}
 
-	public DatabaseConnectionContext getLCMSDbConnectionContext() {
+	public LcMsDbConnectionContext getLCMSDbConnectionContext() {
 		return m_wrappedExecutionContext.getLCMSDbConnectionContext();
 	}
 
