@@ -72,7 +72,6 @@ object ContextFactory extends LazyLogging {
     val dbType = dbConnector.getProlineDatabaseType
 
     if (useJPA) {
-      new DatabaseConnectionContext(dbConnector)
       dbType match {
         case ProlineDatabaseType.LCMS => new LcMsDbConnectionContext(dbConnector)
         case ProlineDatabaseType.MSI => new MsiDbConnectionContext(dbConnector)
@@ -104,6 +103,24 @@ object ContextFactory extends LazyLogging {
       }
 
     } // End if (SQL mode)
+  }
+  
+  def buildLcMsDbConnectionContext(dbConnector: IDatabaseConnector, useJPA: Boolean): LcMsDbConnectionContext = {
+    require( dbConnector.getProlineDatabaseType == ProlineDatabaseType.LCMS, "wrong ProlineDatabaseType")
+    
+    buildDbConnectionContext(dbConnector, useJPA).asInstanceOf[LcMsDbConnectionContext]
+  }
+  
+  def buildMsiDbConnectionContext(dbConnector: IDatabaseConnector, useJPA: Boolean): MsiDbConnectionContext = {
+    require( dbConnector.getProlineDatabaseType == ProlineDatabaseType.MSI, "wrong ProlineDatabaseType")
+    
+    buildDbConnectionContext(dbConnector, useJPA).asInstanceOf[MsiDbConnectionContext]
+  }
+  
+  def buildUdsDbConnectionContext(dbConnector: IDatabaseConnector, useJPA: Boolean): UdsDbConnectionContext = {
+    require( dbConnector.getProlineDatabaseType == ProlineDatabaseType.UDS, "wrong ProlineDatabaseType")
+    
+    buildDbConnectionContext(dbConnector, useJPA).asInstanceOf[UdsDbConnectionContext]
   }
 
 }
