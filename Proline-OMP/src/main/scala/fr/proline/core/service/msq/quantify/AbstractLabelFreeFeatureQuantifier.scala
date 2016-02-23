@@ -36,15 +36,15 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   val quantConfig: ILabelFreeQuantConfig
   val lcmsMapSet: MapSet
 
-  //val lcmsDbConnector = dsConnectorFactory.getLcMsDbConnector(projectId)
   val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
-  //val lcmsEzDBC = ProlineEzDBC(lcmsDbConnector.getDataSource.getConnection, lcmsDbConnector.getDriverType)  
 
   // Retrieve corresponding peaklist ids
   // TODO: update the ORM definition so that peaklistId is available from msiSearch object    
   val identRsIdByPeaklistId = msiIdentResultSets map { rs => rs.getMsiSearch.getPeaklist.getId -> rs.getId } toMap
   val peaklistIds = this.identRsIdByPeaklistId.keys
-  //val peaklistIds = msiIdentResultSets map { _.getMsiSearch().getPeaklist().getId() }
+  
+  //Specify if merged RSM was created for quanti or was already defined
+  var existingMergedRSM: Boolean = false
   
   def loadMs2SpectrumHeaders(): Array[Map[String,Any]] = {
 
@@ -267,8 +267,6 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     scanNumberBySpectrumId.result
   }
   
-  //val lcmsMapIds = lcmsMapSet.getChildMapIds
-
   lazy val lcmsRunIds = {    
     DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
       lcmsEzDBC.selectLongs( new SelectQueryBuilder1(LcmsDbRawMapTable).mkSelectQuery( (t,c) =>
@@ -283,22 +281,11 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     val scanSeqProvider = new SQLScanSequenceProvider(lcmsDbCtx)
     scanSeqProvider.getScans(this.lcmsRunIds)
     
-    /*DoJDBCReturningWork.withEzDBC( lcmsDbCtx, { lcmsEzDBC =>
-      
-      val sqlQuery = new SelectQueryBuilder1(LcmsDbScanTable).mkSelectQuery( (t,c) =>
-        List(t.ID,t.INITIAL_ID,t.CYCLE,t.TIME)
-        -> "WHERE "~ t.MS_LEVEL ~" = 2 AND "~ t.RUN_ID ~" IN("~ this.lcmsRunIds.mkString(",") ~")"
-      )
-      lcmsEzDBC.selectAllRecordsAsMaps(sqlQuery)    
-    })*/
     
   }
 
   lazy val ms2ScanNumbersByFtId = {
 
-    /*val ms2ScanNumberById = ms2ScanHeaderRecords.map { r =>
-      toLong(r("id")) -> r("initial_id").asInstanceOf[Int]
-    } toMap*/
     val ms2ScanNumberById = Map() ++ lcmsScans.map( s => s.id -> s.initialId )
 
     val lcmsMapSet = this.lcmsMapSet
@@ -356,8 +343,14 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     udsEm.persist(udsMasterQuantChannel)
 
     // Store master quant result summary
-    this.storeMasterQuantResultSummary(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
-
+    if(!existingMergedRSM) 
+      this.storeMasterQuantResultSummary(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet) //Can overwrite identification merged RSM Object.  
+    else {
+      this.cloneAndStoreMasterQuantRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet) // identification merged RSM exist, DO NOT Modify it
+      //Quantifier Algo already created !! set map ident RSM <-> quanti RSM  
+      quantifierAlgo.asInstanceOf[LabelFreeFeatureQuantifier].setMsiMasterPepInstByMergedPepInstId(this.msiMasterPepInstByMergedPepInstId)
+    }
+      
     // Compute master quant peptides
     val mqPeptides = quantifierAlgo.computeMasterQuantPeptides(
       udsMasterQuantChannel,
@@ -369,7 +362,9 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
 
     // Iterate over master quant peptides to store them
     val msiMqPepById = mqPeptides.map { mqPeptide =>
-      val msiMasterPepInst = mqPeptide.peptideInstance.map( pi => this.msiMasterPepInstById(pi.id) )
+      val msiMasterPepInst =  if(existingMergedRSM) { Some(msiMasterPepInstByMergedPepInstId(mqPeptide.peptideInstance.get.id)) } 
+      else {mqPeptide.peptideInstance.map( pi => this.msiMasterPepInstById(pi.id) ) }
+
       val msiMqPep = this.storeMasterQuantPeptide(mqPeptide, msiQuantRSM, msiMasterPepInst)
       mqPeptide.id -> msiMqPep
     } toMap
@@ -388,7 +383,9 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
     val mqProtSetIdsByMqPep = new HashMap[MasterQuantPeptide,ArrayBuffer[Long]]
     
     for (mqProtSet <- mqProtSets) {
-      val msiMasterProtSetOpt = this.msiMasterProtSetById.get(mqProtSet.proteinSet.id)
+       val msiMasterProtSetOpt =  if(existingMergedRSM) { Some( this.msiMasterProtSetByMergedProtSetId(mqProtSet.proteinSet.id)) } 
+        else { this.msiMasterProtSetById.get(mqProtSet.proteinSet.id) }
+
       // FIXME: msiMasterProtSetOpt should be always defined
       if( msiMasterProtSetOpt.isDefined ) {
         this.storeMasterQuantProteinSet(mqProtSet, msiMasterProtSetOpt.get, msiQuantRSM)
@@ -462,7 +459,8 @@ abstract class AbstractLabelFreeFeatureQuantifier extends AbstractMasterQuantCha
   }
   
    protected def getMergedResultSummary(msiDbCtx : DatabaseConnectionContext) : ResultSummary = {
-		 createMergedResultSummary(msiDbCtx)
+     existingMergedRSM = false
+		 createMergedResultSummary(msiDbCtx)		 
    }
    
    def getResultAsJSON(): String = {
