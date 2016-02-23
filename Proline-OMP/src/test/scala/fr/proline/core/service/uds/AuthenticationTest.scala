@@ -8,7 +8,7 @@ import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal._
 import fr.proline.core.dal.context._
 import fr.proline.core.dbunit.DbUnitInitDataset
 import fr.proline.core.orm.uds.UserAccount
@@ -55,7 +55,7 @@ class AuthenticationTest extends DatabaseTestCase with StrictLogging {
   }
 
   def buildUDSConnectionContext() {
-    udsDbCtx = ContextFactory.buildDbConnectionContext(getConnector, true)
+    udsDbCtx = BuildUdsDbConnectionContext(getConnector, true)
   }
 
   @Test

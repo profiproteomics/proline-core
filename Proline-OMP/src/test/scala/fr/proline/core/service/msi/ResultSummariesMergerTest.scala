@@ -8,8 +8,7 @@ import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal._
 import fr.proline.core.dbunit._
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
@@ -109,7 +108,7 @@ class ResultSummariesMergerTest extends StrictLogging {
       /* Try to reload merged TARGET ResultSet with JPA */
       val mergedRSId = tMergedRSM.getResultSetId
 
-      localJPAExecutionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
+      localJPAExecutionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true)
       
       val msiEM = localJPAExecutionContext.getMSIDbConnectionContext().getEntityManager()
       val msiMergedRS  = msiEM.find(classOf[fr.proline.core.orm.msi.ResultSet], mergedRSId)

@@ -2,7 +2,7 @@ package fr.proline.core.service.msq
 
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.proline.core.service.msq.quantify._
@@ -28,7 +28,7 @@ class QuantifyMasterQuantChannel(
     quantConfig: AnyRef
   ) {
     this(
-      ContextFactory.buildExecutionContext(dsFactory, projectId, true), // Force JPA context
+      BuildLazyExecutionContext(dsFactory, projectId, true), // Force JPA context
       experimentalDesign,
       masterQuantChannelId,
       quantConfig

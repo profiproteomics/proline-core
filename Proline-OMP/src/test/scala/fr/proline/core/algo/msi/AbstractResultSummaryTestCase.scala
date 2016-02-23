@@ -4,8 +4,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context._
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal._
 import fr.proline.core.dbunit._
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
@@ -60,7 +59,7 @@ abstract class AbstractResultSummaryTestCase extends AbstractMultipleDBTestCase 
   }
 
   def buildJPAContext() = {
-    val execCtx = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val execCtx = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     
     val rsmProvider = new SQLResultSummaryProvider(
       execCtx.getMSIDbConnectionContext(),
@@ -72,17 +71,11 @@ abstract class AbstractResultSummaryTestCase extends AbstractMultipleDBTestCase 
   }
   
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val execCtx = new BasicExecutionContext(
-      udsDbCtx.asInstanceOf[UdsDbConnectionContext],
-      pdiDbCtx,
-      psDbCtx,
-      msiDbCtx.asInstanceOf[MsiDbConnectionContext],
-      null
-    )
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
+    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
+    val execCtx = new BasicExecutionContext(udsDbCtx,pdiDbCtx,psDbCtx,msiDbCtx,null)
 
     val rsmProvider = new SQLResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
 

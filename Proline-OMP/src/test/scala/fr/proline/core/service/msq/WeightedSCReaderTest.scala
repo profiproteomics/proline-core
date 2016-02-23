@@ -8,8 +8,7 @@ import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.SpectralCountConfig
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal._
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.orm.uds.Dataset
@@ -61,7 +60,7 @@ class WeightedSCReaderTest extends AbstractMultipleDBTestCase with StrictLogging
   }
 
   def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
 
     executionContext
   }

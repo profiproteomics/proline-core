@@ -6,7 +6,7 @@ import java.util.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.dal.context._
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.{
@@ -57,7 +57,7 @@ class CreateQuantitation(
     experimentalDesign: ExperimentalDesign
   ) {
     this(
-      ContextFactory.buildExecutionContext(dsFactory, projectId, true), // Force JPA context
+      BuildLazyExecutionContext(dsFactory, projectId, true), // Force JPA context
       name,
       description,
       projectId,

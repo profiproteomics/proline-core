@@ -6,8 +6,7 @@ import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal._
 import fr.proline.core.dbunit.DbUnitResultFileUtils
 import fr.proline.core.dbunit.STR_F136482_CTD
 import fr.proline.core.dbunit.TLS_F027737_MTD_no_varmod
@@ -90,7 +89,7 @@ class ResultSetsMergerTest extends StrictLogging {
       /* Try to reload merged ResultSet with JPA */
       val mergedRSId = tRSM.id
 
-      localJPAExecutionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
+      localJPAExecutionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true)
 
       val rsProvider = new ORMResultSetProvider(localJPAExecutionContext.getMSIDbConnectionContext, localJPAExecutionContext.getPSDbConnectionContext, localJPAExecutionContext.getPDIDbConnectionContext)
 
@@ -135,7 +134,7 @@ class ResultSetsMergerTest extends StrictLogging {
       /* Try to reload merged ResultSet with JPA */
       val mergedRSId = tRSM.id
 
-      localJPAExecutionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
+      localJPAExecutionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true)
       val msiEM = localJPAExecutionContext.getMSIDbConnectionContext().getEntityManager()
       val msiRS  = msiEM.find(classOf[fr.proline.core.orm.msi.ResultSet], mergedRSId)
       

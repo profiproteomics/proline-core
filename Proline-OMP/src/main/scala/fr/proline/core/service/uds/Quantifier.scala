@@ -11,7 +11,7 @@ import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.lcms.LabelFreeQuantConfig
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.dal.context.execCtxToTxExecCtx
 import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
 import fr.proline.core.om.model.msq.ExperimentalDesign
@@ -54,7 +54,7 @@ class Quantifier(
     quantConfigAsMap: java.util.Map[String,Object]
   ) {
     this(
-      ContextFactory.buildExecutionContext(dsFactory, projectId, true), // Force JPA context
+      BuildLazyExecutionContext(dsFactory, projectId, true), // Force JPA context
       name,
       description,
       projectId,
