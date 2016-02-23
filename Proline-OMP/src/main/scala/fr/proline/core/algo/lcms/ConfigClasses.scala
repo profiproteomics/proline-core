@@ -80,5 +80,7 @@ case class LabelFreeQuantConfig(
   // TODO: use an algorithm enumeration instead of boolean values
   detectFeatures: Boolean = false, // false implies feature extraction instead of detection
   detectPeakels: Boolean = false, // false implies feature extraction instead of detection
-  startFromValidatedPeptides: Boolean = true // only checked if detectFeatures is false
+  startFromValidatedPeptides: Boolean = true, // only checked if detectFeatures is false
+  parentRsmId : Option[Long] = None, //ID of the rsm to use as merged reference RSM
+  parentDsId : Option[Long] = None // ID of the DS containing merged reference RSM.
 ) extends ILabelFreeQuantConfig

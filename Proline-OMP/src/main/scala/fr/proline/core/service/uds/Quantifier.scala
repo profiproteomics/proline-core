@@ -34,7 +34,9 @@ class Quantifier(
   projectId: Long,
   methodId: Long,
   experimentalDesign: ExperimentalDesign,
-  quantConfigAsMap: java.util.Map[String,Object]
+  quantConfigAsMap: java.util.Map[String,Object],
+  refRSMIdOp: Option[Long] = None,
+  refDSIdOp: Option[Long] = None
 ) extends IService with LazyLogging {
   
   private var _hasInitiatedExecContext: Boolean = false
@@ -132,10 +134,12 @@ class Quantifier(
         // Load the LC-MS runs
         val runs = lcmsRunProvider.getRuns(runIds, loadScanSequence = false )
 
-        // Clone the config and inject the missing parameters
+        // Clone the config and inject the missing parameters        
         val masterConfig = quantConfig.copy(
           mapSetName = udsMasterQuantChannel.getName(),
-          lcMsRuns = runs
+          lcMsRuns = runs,
+          parentRsmId = refRSMIdOp,
+          parentDsId = refDSIdOp
         )
 
         val mqcQuantifier = new QuantifyMasterQuantChannel(
