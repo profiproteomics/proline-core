@@ -20,6 +20,10 @@ public interface IDataStoreConnectorFactory {
 
 	IDatabaseConnector getLcMsDbConnector(long projectId);
 
+	void closeLcMsDbConnector(long projectId);
+	
+	void closeMsiDbConnector(long projectId);
+	
 	void closeProjectConnectors(long projectId);
 
 	void closeAll();
