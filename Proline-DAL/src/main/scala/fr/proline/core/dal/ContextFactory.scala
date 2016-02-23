@@ -189,7 +189,7 @@ object BuildDbConnectionContext extends LazyLogging {
     dbCtx.setOnCloseCallback(new Runnable {
       def run() {
         // Important: call decrementEntityManagerCount() before executing the onClose callback
-        if (useJPA) dbConnector.decrementEntityManagerCount()
+        if (useJPA) dbConnector.decrementOpenEntityManagerCount()
         if (onClose.isDefined) onClose.get.apply(dbConnector)
       }
     })
