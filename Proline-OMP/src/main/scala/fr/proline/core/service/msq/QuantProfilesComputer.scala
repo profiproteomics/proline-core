@@ -13,7 +13,7 @@ import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.Profilizer
 import fr.proline.core.algo.msq.ProfilizerConfig
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.dal.context.execCtxToTxExecCtx
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.UdsDbHelper
@@ -76,7 +76,7 @@ class QuantProfilesComputer(
     config: ProfilizerConfig
   ) {
     this(
-      ContextFactory.buildExecutionContext(dsFactory, projectId, true), // Force JPA context
+      BuildLazyExecutionContext(dsFactory, projectId, true), // Force JPA context
       experimentalDesign,
       masterQuantChannelId,
       config
