@@ -21,6 +21,7 @@ import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
 
+//TODO: create abstract class instead of copy-pasting code from DataStoreConnectorFactory...
 public class DStoreCustomPoolConnectorFactory implements IDataStoreConnectorFactory {
 
 	/* Constants */
@@ -375,7 +376,8 @@ public class DStoreCustomPoolConnectorFactory implements IDataStoreConnectorFact
 	}
 	
 	@Override
-	public void closeProjectConnectors(long projectId) {
+	public void closeLcMsDbConnector(long projectId) {
+
 		synchronized (m_managerLock) {
 			try {
 				IDatabaseConnector lcMsDbConnector = m_lcMsDbConnectors.get(projectId);
@@ -386,6 +388,13 @@ public class DStoreCustomPoolConnectorFactory implements IDataStoreConnectorFact
 			} catch (Exception exClose) {
 				LOG.error("Error closing LCMS Db Connector", exClose);
 			}
+		}
+	}
+	
+	@Override
+	public void closeMsiDbConnector(long projectId) {
+
+		synchronized (m_managerLock) {
 			try {
 				IDatabaseConnector msiDbConnector = m_msiDbConnectors.get(projectId);
 				if (msiDbConnector != null) {
@@ -393,9 +402,15 @@ public class DStoreCustomPoolConnectorFactory implements IDataStoreConnectorFact
 					m_msiDbConnectors.remove(projectId);
 				}
 			} catch (Exception exClose) {
-				LOG.error("Error closing LCMS Db Connector", exClose);
+				LOG.error("Error closing MSI Db Connector", exClose);
 			}
 		}
+	}
+	
+	@Override
+	public void closeProjectConnectors(long projectId) {
+		this.closeLcMsDbConnector(projectId);
+		this.closeMsiDbConnector(projectId);
 	}
 
 	/* Private methods */

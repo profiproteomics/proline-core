@@ -361,7 +361,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 	}
 	
 	@Override
-    public void closeProjectConnectors(long projectId) {
+	public void closeLcMsDbConnector(long projectId) {
 
 		synchronized (m_managerLock) {
 			try {
@@ -373,6 +373,13 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 			} catch (Exception exClose) {
 				LOG.error("Error closing LCMS Db Connector", exClose);
 			}
+		}
+	}
+	
+	@Override
+	public void closeMsiDbConnector(long projectId) {
+
+		synchronized (m_managerLock) {
 			try {
 				IDatabaseConnector msiDbConnector = m_msiDbConnectors.get(projectId);
 				if (msiDbConnector != null) {
@@ -383,6 +390,12 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 				LOG.error("Error closing MSI Db Connector", exClose);
 			}
 		}
+	}
+	
+	@Override
+	public void closeProjectConnectors(long projectId) {
+		this.closeLcMsDbConnector(projectId);
+		this.closeMsiDbConnector(projectId);
 	}
 
 	/* Private methods */

@@ -285,7 +285,7 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 	}
 	
 	@Override
-    public void closeProjectConnectors(long projectId) {
+	public void closeLcMsDbConnector(long projectId) {
 
 		synchronized (m_managerLock) {
 			try {
@@ -296,6 +296,13 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 			} catch (Exception exClose) {
 				LOG.error("Error while clearing LCMS Db connection properties", exClose);
 			}
+		}
+	}
+	
+	@Override
+	public void closeMsiDbConnector(long projectId) {
+
+		synchronized (m_managerLock) {
 			try {
 				Map<Object, Object> msiDbPropertiesMap = m_msiDbPropertiesMaps.get(projectId);
 				if (msiDbPropertiesMap != null) {
@@ -305,6 +312,12 @@ public class UncachedDataStoreConnectorFactory implements IDataStoreConnectorFac
 				LOG.error("Error while clearing MSI Db connection properties", exClose);
 			}
 		}
+	}
+	
+	@Override
+	public void closeProjectConnectors(long projectId) {
+		this.closeLcMsDbConnector(projectId);
+		this.closeMsiDbConnector(projectId);
 	}
 
 	/* Private methods */
