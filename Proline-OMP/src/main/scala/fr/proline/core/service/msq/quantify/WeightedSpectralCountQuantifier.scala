@@ -76,8 +76,6 @@ class WeightedSpectralCountQuantifier(
   val udsMasterQuantChannel: MasterQuantitationChannel,
   val scConfig: SpectralCountConfig) extends AbstractMasterQuantChannelQuantifier with LazyLogging {
 
-  protected val msiMasterPepInstByMergedPepInstId = new HashMap[Long, MsiPeptideInstance]
-  protected val msiMasterProtSetByMergedProtSetId = new HashMap[Long, MsiProteinSet]
 
   /**
    * "{"spectral_count_result":{[
@@ -114,7 +112,7 @@ class WeightedSpectralCountQuantifier(
     var start = System.currentTimeMillis()
 
     // Store master quant result summary
-    this.cloneAndStoreMasterQuantRSM(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
+    this.cloneAndStoreMasterQuantRSM2(this.mergedResultSummary, msiQuantRSM, msiQuantResultSet)
 
     var end = System.currentTimeMillis()
     logger.debug("-- Clone IDF RSM to Quant RSM : " + (end - start) + " ms")
@@ -967,7 +965,7 @@ class WeightedSpectralCountQuantifier(
   }
 
   // Clone Identification merged RSM and store this new Quantitation RSM 
-  protected def cloneAndStoreMasterQuantRSM(mergedRSM: ResultSummary,
+  protected def cloneAndStoreMasterQuantRSM2(mergedRSM: ResultSummary,
                                             msiQuantRSM: MsiResultSummary,
                                             msiQuantRS: MsiResultSet) {
 
