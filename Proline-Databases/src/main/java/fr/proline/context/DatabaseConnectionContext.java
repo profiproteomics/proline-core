@@ -52,6 +52,8 @@ public class DatabaseConnectionContext implements Closeable {
 	private boolean m_closableConnection = true;
 
 	private boolean m_closed;
+	
+	private Runnable m_onClose;
 
 	/**
 	 * Creates a DatabaseContext instance for JPA driven Database access.
@@ -198,6 +200,10 @@ public class DatabaseConnectionContext implements Closeable {
 	public DatabaseConnectionContext setClosableConnection(boolean closableConnection) {
 		this.m_closableConnection = closableConnection;
 		return this;
+	}
+
+	public void setOnCloseCallback(Runnable onClose) {
+		this.m_onClose = onClose;
 	}
 
 	/**
@@ -615,6 +621,10 @@ public class DatabaseConnectionContext implements Closeable {
 
 						} catch (Exception exClose) {
 							LOG.error("Error closing DatabaseConnectionContext EntityManager for " + prolineDbType, exClose);
+						} finally {
+							if (this.m_onClose != null) {
+								this.m_onClose.run();
+							}
 						}
 
 					}
