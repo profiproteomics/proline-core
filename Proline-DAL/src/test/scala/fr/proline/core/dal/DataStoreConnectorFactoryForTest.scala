@@ -124,20 +124,31 @@ class DataStoreConnectorFactoryForTest(private val udsDb: IDatabaseConnector = n
 
   }
   
-  override def closeProjectConnectors(projectId: Long) {
-    logger.warn("Closing this DataStoreConnectorFactoryForTest : use DatabaseTestCase.tearDown() preferably")
+  override def closeLcMsDbConnector(projectId: Long) {
 
     m_closeLock.synchronized {
-
       if (lcMsDb != null) {
         lcMsDb.close()
       }
+    } // End of synchronized block on m_closeLock
 
+  }
+  
+  override def closeMsiDbConnector(projectId: Long) {
+
+    m_closeLock.synchronized {
       if (msiDb != null) {
         msiDb.close()
       }
-
     } // End of synchronized block on m_closeLock
+
+  }
+  
+  override def closeProjectConnectors(projectId: Long) {
+    logger.warn("Closing this DataStoreConnectorFactoryForTest : use DatabaseTestCase.tearDown() preferably")
+
+    this.closeLcMsDbConnector(projectId)
+    this.closeMsiDbConnector(projectId)
 
   }
 
