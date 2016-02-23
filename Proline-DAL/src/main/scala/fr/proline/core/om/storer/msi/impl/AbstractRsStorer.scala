@@ -1,7 +1,7 @@
 package fr.proline.core.om.storer.msi.impl
 
 import fr.profi.jdbc.easy.{ int2Formattable, string2Formattable, stringOption2Formattable }
-import fr.proline.core.dal.{ BuildJDBCWork, ContextFactory }
+import fr.proline.core.dal.{ BuildJDBCWork, BuildLazyExecutionContext }
 import fr.proline.core.om.model.msi.{ IResultFile, MsQuery, Peaklist, ResultSet }
 import fr.proline.core.om.storer.msi.{ IPeaklistWriter, IRsStorer, PeaklistWriter }
 import fr.proline.repository.IDataStoreConnectorFactory
@@ -124,7 +124,7 @@ abstract class AbstractRsStorer(val pklWriter: Option[IPeaklistWriter] = None) e
     var msiTransacOk: Boolean = false
 
     try {
-      storerContext = StorerContext(ContextFactory.buildExecutionContext(dbManager, projectId, true)) // Use Object factory
+      storerContext = StorerContext(BuildLazyExecutionContext(dbManager, projectId, true)) // Use Object factory
 
       val msiDb = storerContext.getMSIDbConnectionContext
       val msiEm = msiDb.getEntityManager()

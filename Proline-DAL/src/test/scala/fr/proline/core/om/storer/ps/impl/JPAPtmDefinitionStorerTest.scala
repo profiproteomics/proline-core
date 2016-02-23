@@ -4,7 +4,7 @@ import org.junit._
 import org.junit.Assert._
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.om.model.msi._
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
@@ -61,7 +61,7 @@ object JPAPtmDefinitionStorerTest extends AbstractMultipleDBTestCase with Strict
     
     logger.info("PS db successfully initialized !")
     
-    val execCtx = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val execCtx = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     testContext = JPAPtmDefinitionStorerTestContext( execCtx )
   }
 

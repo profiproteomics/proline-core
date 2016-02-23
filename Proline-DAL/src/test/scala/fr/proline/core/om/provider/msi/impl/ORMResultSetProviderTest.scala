@@ -11,7 +11,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.repository.DriverType
 import fr.proline.repository.util.JDBCWork
 
@@ -41,7 +41,7 @@ class ORMResultSetProviderTest extends AbstractMultipleDBTestCase with StrictLog
     udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
     logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
 
-    executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA    
+    executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA    
     
   }
   

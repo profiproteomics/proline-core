@@ -47,19 +47,19 @@ abstract class AbstractEmptyDatastoreTestCase extends AbstractMultipleDBTestCase
   }
 
   def buildJPAContext() = {
-    ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
   }
   
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
+    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
     val executionContext = new BasicExecutionContext(
-      udsDbCtx.asInstanceOf[UdsDbConnectionContext],
+      udsDbCtx,
       pdiDbCtx,
       psDbCtx,
-      msiDbCtx.asInstanceOf[MsiDbConnectionContext],
+      msiDbCtx,
       null
     )
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory

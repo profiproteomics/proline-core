@@ -9,7 +9,7 @@ import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideMatchProvider
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildLazyExecutionContext
 
 @Test
 class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase with StrictLogging {
@@ -23,7 +23,7 @@ class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase w
 
   @Test
   def test() {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
+    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true)
 
     val parserContext = ProviderDecoratedExecutionContext(executionContext)  // Use Object factory
 
