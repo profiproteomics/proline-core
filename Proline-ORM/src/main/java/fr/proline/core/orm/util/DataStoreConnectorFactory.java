@@ -37,6 +37,8 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
 	private final Map<Long, IDatabaseConnector> m_msiDbConnectors = new HashMap<Long, IDatabaseConnector>();
 	private final Map<Long, IDatabaseConnector> m_lcMsDbConnectors = new HashMap<Long, IDatabaseConnector>();
+	private final Map<Long, Map<Object, Object>> m_msiDbPropertiesMaps = new HashMap<Long, Map<Object, Object>>();
+	private final Map<Long, Map<Object, Object>> m_lcMsDbPropertiesMaps = new HashMap<Long, Map<Object, Object>>();
 
 	private String m_applicationName;
 
@@ -254,7 +256,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 			msiDbConnector = m_msiDbConnectors.get(key);
 
 			if (msiDbConnector == null) {
-				msiDbConnector = createProjectDatabaseConnector(ProlineDatabaseType.MSI, projectId);
+				msiDbConnector = createProjectDatabaseConnector(projectId, ProlineDatabaseType.MSI, this.m_msiDbPropertiesMaps);
 
 				if (msiDbConnector != null) {
 					m_msiDbConnectors.put(key, msiDbConnector);
@@ -279,7 +281,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 			lcMsDbConnector = m_lcMsDbConnectors.get(key);
 
 			if (lcMsDbConnector == null) {
-				lcMsDbConnector = createProjectDatabaseConnector(ProlineDatabaseType.LCMS, projectId);
+				lcMsDbConnector = createProjectDatabaseConnector(projectId, ProlineDatabaseType.LCMS, this.m_lcMsDbPropertiesMaps);
 
 				if (lcMsDbConnector != null) {
 					m_lcMsDbConnectors.put(key, lcMsDbConnector);
@@ -406,7 +408,70 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 		}
 
 	}
+	
+	private IDatabaseConnector createProjectDatabaseConnector(
+		final long projectId,
+		final ProlineDatabaseType prolineDbType,
+		final Map<Long, Map<Object, Object>> propertiesMaps
+	) {
+		IDatabaseConnector dbConnector = null;
 
+		synchronized (m_managerLock) {
+			checkInitialization();
+
+			final Long key = Long.valueOf(projectId);
+
+			Map<Object, Object> propertiesMap = propertiesMaps.get(key);
+			
+			if (propertiesMap == null) {
+				propertiesMap = retrieveExternalDbProperties(prolineDbType, projectId);
+				propertiesMaps.put(key, propertiesMap);
+			}
+			
+			dbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(prolineDbType, propertiesMap);
+
+		} // End of synchronized block on m_managerLock
+
+		return dbConnector;
+	}
+	
+	protected Map<Object, Object> retrieveExternalDbProperties(final ProlineDatabaseType prolineDbType, final long projectId) {
+		Map<Object, Object> propertiesMap = null;
+
+		final IDatabaseConnector udsDbConnector = getUdsDbConnector();
+
+		EntityManager udsEm = udsDbConnector.getEntityManagerFactory().createEntityManager();
+
+		try {
+			final Project project = udsEm.find(Project.class, Long.valueOf(projectId));
+
+			if (project == null) {
+				throw new IllegalArgumentException("Project #" + projectId + " NOT found in UDS Db");
+			}
+
+			final ExternalDb externalDb = ExternalDbRepository.findExternalByTypeAndProject(udsEm, prolineDbType, project);
+
+			if (externalDb == null) {
+				LOG.warn("No ExternalDb for {} Db of project #{}", prolineDbType, projectId);
+			} else {
+				propertiesMap = externalDb.toPropertiesMap(udsDbConnector.getDriverType());
+				propertiesMap.put("ApplicationName", m_applicationName);
+			}
+
+		} finally {
+
+			try {
+				udsEm.close();
+			} catch (Exception exClose) {
+				LOG.error("Error closing UDS Db EntityManager", exClose);
+			}
+
+		}
+
+		return propertiesMap;
+	}
+	
+	/*
 	protected IDatabaseConnector createProjectDatabaseConnector(final ProlineDatabaseType prolineDbType, final long projectId) {
 		IDatabaseConnector connector = null;
 
@@ -444,6 +509,6 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 		}
 
 		return connector;
-	}
+	}*/
 
 }
