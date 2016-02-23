@@ -3,6 +3,7 @@ package fr.proline.repository;
 import java.io.Closeable;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -31,6 +32,14 @@ public interface IDatabaseConnector extends Closeable {
 	DataSource getDataSource();
 
 	EntityManagerFactory getEntityManagerFactory();
+	
+	EntityManager createEntityManager();
+	
+	int getOpenEntityManagerCount();
+	
+	//int incrementOpenEntityManagerCount();
+	
+	int decrementOpenEntityManagerCount();
 
 	void close();
 

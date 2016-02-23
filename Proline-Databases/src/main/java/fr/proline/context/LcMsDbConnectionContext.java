@@ -38,7 +38,7 @@ public class LcMsDbConnectionContext extends DatabaseConnectionContext {
 	 *            Connector to target DataBase.
 	 */
 	public LcMsDbConnectionContext(final IDatabaseConnector dbConnector) {
-		this(dbConnector.getEntityManagerFactory().createEntityManager(), dbConnector.getDriverType());
+		this(dbConnector.createEntityManager(), dbConnector.getDriverType());
 		
 		if( dbConnector.getProlineDatabaseType() != ProlineDatabaseType.LCMS ) {
 			throw new IllegalArgumentException("The ProlineDatabaseType of the connector must be LCMS and not " + dbConnector.getProlineDatabaseType());

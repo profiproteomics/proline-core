@@ -47,9 +47,7 @@ public class DataStoreConnectorFactoryTest extends DatabaseTestCase {
 
 	initDatabase();
 
-	final EntityManagerFactory emf = connector.getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = connector.createEntityManager();
 
 	EntityTransaction transac = null;
 	boolean transacOk = false;

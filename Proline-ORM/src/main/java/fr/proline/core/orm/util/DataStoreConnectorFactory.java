@@ -93,9 +93,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 			EntityManager udsEm = null;
 
 			try {
-				final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
-
-				udsEm = udsEMF.createEntityManager();
+				udsEm = udsDbConnector.createEntityManager();
 
 				final DriverType udsDriverType = udsDbConnector.getDriverType();
 
@@ -440,7 +438,7 @@ public class DataStoreConnectorFactory implements IDataStoreConnectorFactory {
 
 		final IDatabaseConnector udsDbConnector = getUdsDbConnector();
 
-		EntityManager udsEm = udsDbConnector.getEntityManagerFactory().createEntityManager();
+		EntityManager udsEm = udsDbConnector.createEntityManager();
 
 		try {
 			final Project project = udsEm.find(Project.class, Long.valueOf(projectId));

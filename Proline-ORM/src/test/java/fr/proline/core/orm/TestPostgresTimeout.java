@@ -110,7 +110,7 @@ class QueryRunner implements Runnable {
 	EntityManager psEm = null;
 
 	try {
-	    psEm = m_psDbConnector.getEntityManagerFactory().createEntityManager();
+	    psEm = m_psDbConnector.createEntityManager();
 
 	    final Query countQuery = psEm
 		    .createQuery("select count (pep) from fr.proline.core.orm.ps.Peptide pep");

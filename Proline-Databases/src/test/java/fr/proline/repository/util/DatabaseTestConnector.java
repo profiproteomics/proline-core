@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -43,7 +44,7 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 	private final IDatabaseConnector m_realConnector;
 
 	private final IDatabaseTester m_databaseTester;
-
+	
 	private boolean m_closed;
 
 	public DatabaseTestConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
@@ -146,8 +147,24 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 		return m_realConnector.getDataSource();
 	}
 
+	@Override
 	public EntityManagerFactory getEntityManagerFactory() {
 		return m_realConnector.getEntityManagerFactory();
+	}
+	
+	@Override
+	public EntityManager createEntityManager() {
+		return m_realConnector.createEntityManager();
+	}
+	
+	@Override
+	public int getOpenEntityManagerCount() {
+		return m_realConnector.getOpenEntityManagerCount();
+	}
+	
+	@Override
+	public int decrementOpenEntityManagerCount() {
+		return m_realConnector.decrementOpenEntityManagerCount();
 	}
 
 	public void close() {
@@ -190,5 +207,6 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 	public Object getProperty(Object key) {
 		return m_realConnector.getProperty(key);		
 	}
+
 
 }

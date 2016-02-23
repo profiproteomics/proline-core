@@ -98,9 +98,7 @@ public class DStoreCustomPoolConnectorFactory implements IDataStoreConnectorFact
 			EntityManager udsEm = null;
 
 			try {
-				final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
-
-				udsEm = udsEMF.createEntityManager();
+				udsEm = udsDbConnector.createEntityManager();
 
 				final DriverType udsDriverType = udsDbConnector.getDriverType();
 
@@ -427,9 +425,7 @@ public class DStoreCustomPoolConnectorFactory implements IDataStoreConnectorFact
 
 		final IDatabaseConnector udsDbConnector = getUdsDbConnector();
 
-		final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
-
-		EntityManager udsEm = udsEMF.createEntityManager();
+		EntityManager udsEm = udsDbConnector.createEntityManager();
 
 		try {
 			final Project project = udsEm.find(Project.class, Long.valueOf(projectId));

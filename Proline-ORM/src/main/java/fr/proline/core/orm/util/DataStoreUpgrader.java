@@ -140,7 +140,7 @@ public final class DataStoreUpgrader {
 	private static List<Long> retrieveProjectIds(final IDatabaseConnector udsDbConnector) {
 		List<Long> projectIds = null;
 
-		final EntityManager udsDbEm = udsDbConnector.getEntityManagerFactory().createEntityManager();
+		final EntityManager udsDbEm = udsDbConnector.createEntityManager();
 
 		try {
 			projectIds = ProjectRepository.findAllProjectIds(udsDbEm);

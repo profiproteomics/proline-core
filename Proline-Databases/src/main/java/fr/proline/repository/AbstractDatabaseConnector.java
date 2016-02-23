@@ -5,6 +5,7 @@ import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.sql.DataSource;
@@ -72,6 +73,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	private DataSource m_dataSource;
 
 	private EntityManagerFactory m_entityManagerFactory;
+	
+	private int m_entityManagerCount;
 
 	private boolean m_closed;
 
@@ -206,6 +209,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		return m_dataSource;
 	}
 
+	@Override
 	public final EntityManagerFactory getEntityManagerFactory() {
 
 		synchronized (m_connectorLock) {
@@ -253,7 +257,33 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 		return m_entityManagerFactory;
 	}
+	
+	@Override
+	public EntityManager createEntityManager() {
+		this.incrementOpenEntityManagerCount();
+		return this.getEntityManagerFactory().createEntityManager();
+	}
 
+	@Override
+	public int getOpenEntityManagerCount() {
+		return m_entityManagerCount;
+	}
+	
+	protected int incrementOpenEntityManagerCount() {
+		synchronized (m_connectorLock) {
+			m_entityManagerCount++;
+			return m_entityManagerCount;
+		}
+	}
+	
+	@Override
+	public int decrementOpenEntityManagerCount() {
+		synchronized (m_connectorLock) {
+			m_entityManagerCount--;
+			return m_entityManagerCount;
+		}
+	}
+	
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + ' ' + m_ident;

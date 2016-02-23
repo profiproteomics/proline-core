@@ -56,7 +56,7 @@ public class TestPostgresUtils extends DatabaseTestCase {
 
 	    assertNotNull("PG CopyManager", copyMgr);
 
-	    em = connector.getEntityManagerFactory().createEntityManager();
+	    em = connector.createEntityManager();
 
 	    final JDBCWork copyManagerWork = new CopyManagerWork();
 

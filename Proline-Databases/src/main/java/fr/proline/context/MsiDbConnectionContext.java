@@ -38,7 +38,7 @@ public class MsiDbConnectionContext extends DatabaseConnectionContext {
 	 *            Connector to target DataBase.
 	 */
 	public MsiDbConnectionContext(final IDatabaseConnector dbConnector) {
-		this(dbConnector.getEntityManagerFactory().createEntityManager(), dbConnector.getDriverType());
+		this(dbConnector.createEntityManager(), dbConnector.getDriverType());
 		
 		if( dbConnector.getProlineDatabaseType() != ProlineDatabaseType.MSI ) {
 			throw new IllegalArgumentException("The ProlineDatabaseType of the connector must be MSI and not " + dbConnector.getProlineDatabaseType());

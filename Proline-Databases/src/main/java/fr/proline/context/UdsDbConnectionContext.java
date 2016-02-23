@@ -38,7 +38,7 @@ public class UdsDbConnectionContext extends DatabaseConnectionContext {
 	 *            Connector to target DataBase.
 	 */
 	public UdsDbConnectionContext(final IDatabaseConnector dbConnector) {
-		this(dbConnector.getEntityManagerFactory().createEntityManager(), dbConnector.getDriverType());
+		this(dbConnector.createEntityManager(), dbConnector.getDriverType());
 		
 		if( dbConnector.getProlineDatabaseType() != ProlineDatabaseType.UDS ) {
 			throw new IllegalArgumentException("The ProlineDatabaseType of the connector must be LCMS and not " + dbConnector.getProlineDatabaseType());

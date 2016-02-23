@@ -63,7 +63,7 @@ public class DatabaseConnectionContext implements Closeable {
 	 * @param driverType
 	 *            Database DriverType (H2, PostgreSQL, SQLLite).
 	 */
-	public DatabaseConnectionContext(final EntityManager entityManager, final ProlineDatabaseType prolineDatabaseType, final DriverType driverType) {
+	protected DatabaseConnectionContext(final EntityManager entityManager, final ProlineDatabaseType prolineDatabaseType, final DriverType driverType) {
 		this(entityManager, null, prolineDatabaseType, driverType);
 	}
 
@@ -75,7 +75,7 @@ public class DatabaseConnectionContext implements Closeable {
 	 *            Connector to target DataBase.
 	 */
 	public DatabaseConnectionContext(final IDatabaseConnector dbConnector) {
-		this(dbConnector.getEntityManagerFactory().createEntityManager(), dbConnector.getProlineDatabaseType(), dbConnector.getDriverType());
+		this(dbConnector.createEntityManager(), dbConnector.getProlineDatabaseType(), dbConnector.getDriverType());
 	}
 
 	/**
