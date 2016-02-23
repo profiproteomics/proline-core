@@ -87,32 +87,32 @@ object BuildLazyExecutionContext extends LazyLogging {
     val udsDbCtxBuilder = { () =>
       val udsDbConnector = dsFactory.getUdsDbConnector
       if (udsDbConnector == null) null
-      else BuildUdsDbConnectionContext(udsDbConnector, useJPA)
+      else BuildUdsDbConnectionContext(udsDbConnector, useJPA, onConnectionContextClose)
     }
     
     val pdiDbCtxBuilder = { () =>
       val pdiDbConnector = dsFactory.getPdiDbConnector
       if (pdiDbConnector == null) null
-      else BuildDbConnectionContext(pdiDbConnector, useJPA)
+      else BuildDbConnectionContext(pdiDbConnector, useJPA, onConnectionContextClose)
     }
     
     val psDbCtxBuilder = { () =>
       val psDbConnector = dsFactory.getPsDbConnector
       if (psDbConnector == null) null
-      else BuildDbConnectionContext(psDbConnector, useJPA)
+      else BuildDbConnectionContext(psDbConnector, useJPA, onConnectionContextClose)
     }
     
     /* Project specific Dbs */
     val msiDbCtxBuilder = { () =>
       val msiDbConnector = dsFactory.getMsiDbConnector(projectId)
       if (msiDbConnector == null) null
-      else BuildMsiDbConnectionContext(msiDbConnector, useJPA)
+      else BuildMsiDbConnectionContext(msiDbConnector, useJPA, onConnectionContextClose)
     }
     
     val lcMsDbCtxBuilder = { () =>
       val lcMsDbConnector = dsFactory.getLcMsDbConnector(projectId)
       if (lcMsDbConnector == null) null
-      else BuildLcMsDbConnectionContext(lcMsDbConnector, useJPA)
+      else BuildLcMsDbConnectionContext(lcMsDbConnector, useJPA, onConnectionContextClose)
     }
 
     new LazyExecutionContext(
