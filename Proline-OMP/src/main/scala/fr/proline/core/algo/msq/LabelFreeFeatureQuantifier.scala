@@ -12,6 +12,7 @@ import fr.proline.core.om.model.msi.PeptideInstance
 import fr.proline.core.om.model.msq._
 import fr.proline.core.orm.uds.MasterQuantitationChannel
 import fr.profi.util.ms._
+import fr.proline.core.orm.msi.{PeptideInstance => MsiPeptideInstance}
 
 // TODO: move in an other file
 object BuildMasterQuantPeptide {
@@ -124,6 +125,11 @@ class LabelFreeFeatureQuantifier(
   statTestsAlpha: Float = 0.01f
 ) extends IQuantifierAlgo with LazyLogging {
   
+  private var msiMasterPepInstByMergedPepInstId : HashMap[Long, MsiPeptideInstance] = null
+  def setMsiMasterPepInstByMergedPepInstId( qtPepInstByMergedPepInstId : HashMap[Long, MsiPeptideInstance]){
+    msiMasterPepInstByMergedPepInstId = qtPepInstByMergedPepInstId;
+  }
+  
   private class MQPepsComputer(
     udsMasterQuantChannel: MasterQuantitationChannel,
     mergedRSM: ResultSummary,
@@ -132,6 +138,7 @@ class LabelFreeFeatureQuantifier(
   
     // Define some vars
     val mergedRsmId = mergedRSM.id
+    
     val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
     val qcCount = udsQuantChannels.size()
     
@@ -196,6 +203,7 @@ class LabelFreeFeatureQuantifier(
         
         // Create a master quant peptide ion for this master feature
         val peptideId = masterFt.relations.peptideId
+        
         val masterPepInstOpt = if( peptideId > 0 ) masterPepInstByPepId.get(peptideId) else None
         val mqPepIon = this._newMasterQuantPeptideIon( masterFt, qPepIons, masterPepInstOpt )
         
@@ -391,13 +399,381 @@ class LabelFreeFeatureQuantifier(
     
   } // End of MqPepsComputer Class
   
+  private class MQPepsComputerV2(
+    udsMasterQuantChannel: MasterQuantitationChannel,
+    mergedRSM: ResultSummary,
+    resultSummaries: Seq[ResultSummary]
+  ) extends LazyLogging {
+  
+    // Define some vars
+    val mergedRsmId = mergedRSM.id
+    
+    val udsQuantChannels = udsMasterQuantChannel.getQuantitationChannels
+    val qcCount = udsQuantChannels.size()
+    
+    // Retrieve some LC-MS vars
+    val masterMap = lcmsMapSet.masterMap
+    val lcmsMapById = lcmsMapSet.childMaps.map { m => m.id -> m } toMap
+    val nbMaps = lcmsMapSet.childMaps.length
+    val qcIdByLcmsMapId = {
+      udsQuantChannels.map { qc => qc.getLcmsMapId.longValue -> qc.getId } toMap
+    }
+    
+   
+    // Define some mappings
+    val qttPepInstByPepId =  mergedRSM.peptideInstances.view.map( pi => pi.peptide.id -> msiMasterPepInstByMergedPepInstId(pi.id) ).toMap
+    val identRsIdByRsmId = resultSummaries.view.map( rsm => rsm.id -> rsm.getResultSetId ).toMap
+    val identRsIdByLcmsMapId = {
+      udsQuantChannels.view.map { qc => qc.getLcmsMapId.longValue -> identRsIdByRsmId(qc.getIdentResultSummaryId) } toMap
+    }
+    val qcIdByIdentRsmId = udsQuantChannels.view.map  { qc => qc.getIdentResultSummaryId -> qc.getId } toMap
+    //val identPepInstById = new HashMap[Long, PeptideInstance]()
+    val identPepInstByQcIdAndPepId = new HashMap[Long, HashMap[Long,PeptideInstance] ]()
+    val identPepMatchById = new HashMap[Long, PeptideMatch]()
+    //val identPepInstIdByPepMatchId = new HashMap[Long, Long]()
+    
+    // Load the result summaries corresponding to the quant channels
+    for (identResultSummary <- resultSummaries) {
+      
+      val qcId = qcIdByIdentRsmId(identResultSummary.id)
+      val qcIdentPepInstByPepId = identPepInstByQcIdAndPepId.getOrElseUpdate(qcId, new HashMap[Long,PeptideInstance])
+
+      // Map peptide instances
+      val peptideInstances = identResultSummary.peptideInstances
+      for (pepInstance <- peptideInstances) {
+        //val pepInstanceId = pepInstance.id
+        //identPepInstById(pepInstanceId) = pepInstance
+        qcIdentPepInstByPepId(pepInstance.peptide.id) = pepInstance
+        //pepInstance.getPeptideMatchIds.foreach { identPepInstIdByPepMatchId(_) = pepInstanceId }
+      }
+
+      // Retrieve protein ids
+      val rs = identResultSummary.resultSet.get
+
+      // Map peptide matches by their id
+      rs.peptideMatches.foreach { p => identPepMatchById(p.id) = p }
+    }
+
+    // Retrieve all identified peptide matches and map them by spectrum id
+    //val allIdentPepMatches = identPepMatchById.values
+    //val identPepMatchBySpectrumId = allIdentPepMatches.map { p => p.getMs2Query.spectrumId -> p } toMap
+    
+    def computeMasterQuantPeptides(): Array[MasterQuantPeptide] = {
+      
+      // Define some vars
+      val mqPepIonsByMasterPepInst = new HashMap[MsiPeptideInstance, ArrayBuffer[MasterQuantPeptideIon]]
+      val unidentifiedMQPepIonByMft = new HashMap[Feature,MasterQuantPeptideIon]
+      
+      // --- Convert master features into master quant peptide ions --- 
+      for (masterFt <- masterMap.features) {
+        require(masterFt.children.length <= nbMaps, "master feature contains more child features than maps")
+        
+        // Convert child features into quant peptide ions
+        val qPepIons = masterFt.children.map( childFt => _newQuantPeptideIon(masterFt,childFt) )
+        
+        // Create a master quant peptide ion for this master feature
+        val peptideId = masterFt.relations.peptideId
+        
+        val masterPepInstOpt = if( peptideId > 0 ) qttPepInstByPepId.get(peptideId) else None
+        val mqPepIon = this._newMasterQuantPeptideIon( masterFt, qPepIons, masterPepInstOpt )
+        
+        // Check if we have identified the master feature
+        if( masterPepInstOpt.isEmpty )
+          unidentifiedMQPepIonByMft += masterFt -> mqPepIon
+        else
+          mqPepIonsByMasterPepInst.getOrElseUpdate(masterPepInstOpt.get, new ArrayBuffer[MasterQuantPeptideIon] ) += mqPepIon
+        
+        ()
+      }
+      
+      val masterQuantPeptides = new ArrayBuffer[MasterQuantPeptide]
+      
+      // --- Convert identified master quant peptide ions into master quant peptides ---
+      this.logger.info( mqPepIonsByMasterPepInst.size + " identified master features found")
+      
+      for( (masterPepInst,mqPepIons) <- mqPepIonsByMasterPepInst ) {
+        masterQuantPeptides += _newMasterQuantPeptide(mqPepIons, Some(masterPepInst) )
+      }
+      
+      // --- Convert unidentified master quant peptide ions into master quant peptides ---
+      this.logger.info( unidentifiedMQPepIonByMft.size + " unidentified master features found")
+      
+      for( (masterFt,mqPepIon) <- unidentifiedMQPepIonByMft ) {
+        masterQuantPeptides += _newMasterQuantPeptide( Array(mqPepIon), None )
+      }
+      
+      // Compute the statistical analysis of abundance profiles
+      /*val profilizer = new Profilizer(
+        expDesign = expDesign,
+        groupSetupNumber = 1, // TODO: retrieve from params
+        masterQCNumber = udsMasterQuantChannel.getNumber
+      )
+      
+      profilizer.computeMasterQuantPeptideProfiles(masterQuantPeptides, statTestsAlpha)*/
+      
+      masterQuantPeptides.toArray
+    }
+    
+    private def _getSpectrumIdsOfFeature( ft: Feature, specIdByScanNum: HashMap[Int,Long] ): Array[Long] = {
+      
+      val childMapId = ft.relations.processedMapId
+      
+      // Retrieve MS2 scan numbers which are related to this feature
+      val tmpFtIds = if (ft.isCluster) ft.subFeatures.map { _.id } else Array(ft.id)
+      val ms2ScanNumbers = tmpFtIds.flatMap( i => ms2ScanNumbersByFtId.getOrElse(i, ArrayBuffer.empty[Int]) ).distinct
+  
+      // Stop if no MS2 available
+      val specIds = if (ms2ScanNumbers.isEmpty) Array.empty[Long]
+      else {
+        // Retrieve corresponding MS2 spectra ids and remove existing redundancy
+        ms2ScanNumbers.filter(specIdByScanNum.contains(_)).map(n => specIdByScanNum(n) )
+      }
+      
+      specIds
+    }
+  
+    private def _newQuantPeptideIon(masterFt: Feature, feature: Feature): QuantPeptideIon = {
+      
+      // Retrieve some vars
+      val childMapId = feature.relations.processedMapId
+      val udsQuantChannelId = qcIdByLcmsMapId(childMapId)
+      val qcIdentPepInstByPepId = identPepInstByQcIdAndPepId(udsQuantChannelId)
+      
+      // Retrieve mapping between spectrum id and spectrum number
+      val identRsId = identRsIdByLcmsMapId(childMapId)
+      val specIdByScanNum = spectrumIdByRsIdAndScanNumber(identRsId)
+      
+      // Retrieve corresponding spectrum ids
+      val ftSpecIds = _getSpectrumIdsOfFeature(feature,specIdByScanNum).toSet
+      
+      // Retrieve the master feature peptide id and the corresponding peptide instance for this quant channel
+      val peptideId = masterFt.relations.peptideId
+      val pepInstOpt = if( peptideId > 0 ) qcIdentPepInstByPepId.get(peptideId) else None
+      val peptideIdOpt = pepInstOpt.map( _.peptide.id )
+      val pepInstIdOpt = pepInstOpt.map( _.id )
+      
+      // Retrieve some vars related to identified peptide instance
+      var (msQueryIdsOpt, bestPepMatchScoreOpt) = (Option.empty[Array[Long]], Option.empty[Float])
+
+      for ( pepInst <- pepInstOpt ) {
+
+        // Retrieve the corresponding peptide matches and the best peptide match score
+        val pepMatches = pepInst.getPeptideMatchIds.map { identPepMatchById(_) }
+        
+        // Select MS queries which are co-eluting with the detected feature
+        val msQueryIds = pepMatches
+          .map( _.getMs2Query )
+          .withFilter( query => ftSpecIds.contains(query.spectrumId) )
+          .map(_.id)
+          .distinct
+        
+        val filteredPepMatches = if( msQueryIds.isEmpty ) {
+          logger.trace("identified feature can't be mapped with corresponding MS queries")
+          pepMatches
+        } else {
+          msQueryIdsOpt = Some(msQueryIds)
+          pepMatches.filter( pm => msQueryIds.contains(pm.msQuery.id) )
+        }
+        
+        filteredPepMatches.groupBy(_.msQuery.charge).get(masterFt.charge).map { sameChargePepMatches =>
+          bestPepMatchScoreOpt = Some(sameChargePepMatches.reduce((a, b) => if (a.score > b.score) a else b).score)
+        }
+        
+      }
+      
+      /*if( ftSpecIds.length != feature.ms2Count ) {
+        println("nb specs="+ftSpecIds.length+" MS2 count="+feature.ms2Count)
+      }*/
+      
+      val pepMatchesCount = msQueryIdsOpt.map(_.length).getOrElse(0)
+      val ms2MatchingFrequency = if( ftSpecIds.size > 0 ) Some( pepMatchesCount.toFloat / ftSpecIds.size ) else None
+      
+      // Create a quant peptide ion corresponding the this LCMS feature
+      new QuantPeptideIon(
+        rawAbundance = feature.intensity,
+        abundance = feature.getNormalizedIntensityOrIntensity,
+        moz = feature.moz,
+        elutionTime = feature.elutionTime,
+        duration = feature.duration,
+        correctedElutionTime = feature.getCorrectedElutionTimeOrElutionTime,
+        scanNumber = feature.relations.apexScanInitialId,
+        peptideMatchesCount = pepMatchesCount,//feature.ms2Count,
+        ms2MatchingFrequency = ms2MatchingFrequency,
+        bestPeptideMatchScore = bestPepMatchScoreOpt,
+        // TODO: set feature properties in feature clusters 
+        predictedElutionTime = feature.properties.flatMap(_.getPredictedElutionTime()),
+        quantChannelId = udsQuantChannelId,
+        peptideId = peptideIdOpt,
+        peptideInstanceId = pepInstIdOpt,
+        msQueryIds = msQueryIdsOpt,
+        lcmsFeatureId = feature.id,
+        lcmsMasterFeatureId = Some(masterFt.id),
+        unmodifiedPeptideIonId = None, // TODO: set this value
+        selectionLevel = feature.selectionLevel
+      )
+      
+    }
+    
+    private def _newMasterQuantPeptideIon(
+      masterFt: Feature,
+      qPepIons: Seq[QuantPeptideIon],
+      masterPepInstAsOpt: Option[MsiPeptideInstance]
+    ): MasterQuantPeptideIon = {
+      require( qPepIons != null && qPepIons.length > 0, "qPepIons must not be empty")
+      require( masterFt.isMaster, "can't create a master quant peptide ion wihtout a master feature" )
+      
+      // Map quant peptide ions by feature id or feature id
+      val qPepIonByQcId = Map() ++ qPepIons.map( qpi => qpi.quantChannelId -> qpi )
+      require( qPepIonByQcId.size == qPepIons.length, "duplicated feature detected in quant peptide ions" )
+      
+      // Compute the total number of peptide matches
+      val pepMatchesCount = qPepIons.map( _.peptideMatchesCount ).sum
+      
+      // If a peptide instance id defined for this ion
+      val propsOpt = masterPepInstAsOpt.map { masterPepInst =>
+        
+        // Retrieve the best peptide match id for each quantitative channel
+        val bestPeptideMatchIdMapBuilder = scala.collection.immutable.HashMap.newBuilder[Long,Long]
+        for (identResultSummary <- resultSummaries) {
+          
+          val qcId = qcIdByIdentRsmId(identResultSummary.id)
+          val qcIdentPepInstByPepId = identPepInstByQcIdAndPepId(qcId)
+          val pepId = masterPepInst.getPeptide().getId
+          if( qcIdentPepInstByPepId.contains(pepId) ) {
+            val qcIdentPepInst = qcIdentPepInstByPepId(pepId)            
+            bestPeptideMatchIdMapBuilder += qcId -> qcIdentPepInst.bestPeptideMatchId
+          }
+        }
+        
+        new MasterQuantPeptideIonProperties(
+          bestPeptideMatchIdMap = bestPeptideMatchIdMapBuilder.result()
+        )
+      }
+      
+      new MasterQuantPeptideIon(
+        id = MasterQuantPeptideIon.generateNewId(),
+        unlabeledMoz = masterFt.moz,
+        charge = masterFt.charge,
+        elutionTime = masterFt.getCorrectedElutionTimeOrElutionTime,
+        peptideMatchesCount = pepMatchesCount,
+        masterQuantPeptideId = 0,
+        resultSummaryId = mergedRsmId,
+        peptideInstanceId = masterPepInstAsOpt.map(_.getId),
+        bestPeptideMatchId = masterPepInstAsOpt.map(_.getBestPeptideMatchId),
+        lcmsMasterFeatureId = Some(masterFt.id),
+        selectionLevel = masterFt.selectionLevel,
+        quantPeptideIonMap = qPepIonByQcId,
+        properties = propsOpt
+      )
+    }
+    
+    private def _newMasterQuantPeptide(
+      mqPepIons: Seq[MasterQuantPeptideIon],
+      masterPepInstAsOpt: Option[MsiPeptideInstance]
+    ): MasterQuantPeptide = {
+      require( mqPepIons != null && mqPepIons.length > 0, "mqPepIons must not be empty")
+      
+      // Generate and update master quant peptide id
+      val mqPeptideId = MasterQuantPeptide.generateNewId
+      mqPepIons.foreach { mqPepIon =>
+        mqPepIon.masterQuantPeptideId = mqPeptideId
+      }
+      
+      // Filter MQ peptide ions using the selection level
+      var filteredMQPepIons = mqPepIons.filter(_.selectionLevel >= 2 )
+      // Fall back to input list if none MQ peptide is selected
+      if( filteredMQPepIons.isEmpty ) filteredMQPepIons = mqPepIons
+
+      // TODO: allows to sum charge states
+      //val bestMQPepIon = filteredMQPepIons.maxBy( _.calcAbundanceSum )
+      //val bestMQPepIon = filteredMQPepIons.maxBy( _.calcFrequency(qcCount) )
+      
+      // Group master quant peptide ions by number of identified quant. channels
+      val mqPepIonsByIdentCount = filteredMQPepIons.groupBy(_.countIdentifications)
+      val maxIdentCount = mqPepIonsByIdentCount.keys.max
+      val mqPepIonsWithMaxIdentifications = mqPepIonsByIdentCount(maxIdentCount)
+
+      val bestMQPepIon = if (mqPepIonsWithMaxIdentifications.size == 1 ) mqPepIonsWithMaxIdentifications.head
+      else {
+        
+        // Group master quant peptide ions by number of peptide matches count
+        val mqPepIonsByPepMatchesCount = mqPepIonsWithMaxIdentifications.groupBy(_.peptideMatchesCount)
+        val maxPepMatchesCount = mqPepIonsByPepMatchesCount.keys.max
+        val mqPepIonsWithMaxPepMatchesCount = mqPepIonsByPepMatchesCount(maxPepMatchesCount)
+        
+        if (mqPepIonsWithMaxPepMatchesCount == 1 ) mqPepIonsWithMaxIdentifications.head
+        else {
+          // More than one MQPepIon with same max peptide matches count
+          // Get MQPepIon with max defined abundances
+          val mqPepIonsByDefAbCount = mqPepIonsWithMaxPepMatchesCount.groupBy(_.countDefinedRawAbundances())
+          val maxDefAbCount = mqPepIonsByDefAbCount.keys.max
+          val mqPepIonsWithMaxDefAbundances = mqPepIonsByDefAbCount(maxDefAbCount)
+          
+          // Sort on Abundance Sum if still equality
+          mqPepIonsWithMaxDefAbundances.maxBy(_.calcAbundanceSum())
+        }
+      }
+      
+      val quantPepByQcId = Map.newBuilder[Long,QuantPeptide]
+      val peptideIonMap = filteredMQPepIons.flatMap(_.quantPeptideIonMap.map(_._2)).groupBy(_.quantChannelId)
+    //   Procedure to use if we want to sum the filteredMQPepIons
+      /*      
+      for( (qcId,quantPepIons) <- peptideIonMap ) {
+        // Build the quant peptide
+        val qp = new QuantPeptide(
+          rawAbundance = quantPepIons.map(_.rawAbundance).sum,
+          abundance = quantPepIons.map(_.abundance).sum,
+          elutionTime = quantPepIons.map(_.elutionTime).sum / quantPepIons.length,
+          peptideMatchesCount = quantPepIons.map(_.peptideMatchesCount).sum,
+          quantChannelId = qcId,
+          selectionLevel = 2
+        )
+        
+        quantPepByQcId += qcId -> qp
+      }*/
+           
+      // Procedure to use if we want to use the best bestMQPepIon
+      for( (qcId,quantPepIon) <- bestMQPepIon.quantPeptideIonMap ) {
+        
+        // Build the quant peptide
+        val qp = new QuantPeptide(
+          rawAbundance = quantPepIon.rawAbundance,
+          abundance = quantPepIon.abundance,
+          elutionTime = quantPepIon.elutionTime,
+          peptideMatchesCount = peptideIonMap(qcId).view.map(_.peptideMatchesCount).sum,
+          quantChannelId = qcId,
+          selectionLevel = 2
+        )
+        
+        quantPepByQcId += qcId -> qp
+      }
+      
+
+      new MasterQuantPeptide(
+        id = mqPeptideId,
+        peptideInstance = Some(mergedRSM.peptideInstances.filter(pi => pi.peptideId == masterPepInstAsOpt.get.getPeptide.getId).head),
+        quantPeptideMap = quantPepByQcId.result,
+        masterQuantPeptideIons = mqPepIons.toArray,
+        selectionLevel = bestMQPepIon.selectionLevel,
+        resultSummaryId = mergedRsmId
+      )
+  
+    }
+    
+  } // End of MqPepsComputer Class
+  
   def computeMasterQuantPeptides(
     udsMasterQuantChannel: MasterQuantitationChannel,
     mergedRSM: ResultSummary,
     resultSummaries: Seq[ResultSummary]
   ): Array[MasterQuantPeptide] = {    
-    val mqPepsComputer = new MQPepsComputer(udsMasterQuantChannel,mergedRSM,resultSummaries)
-    mqPepsComputer.computeMasterQuantPeptides()
+    if(msiMasterPepInstByMergedPepInstId == null) {
+      val mqPepsComputer = new MQPepsComputer(udsMasterQuantChannel,mergedRSM,resultSummaries)
+      mqPepsComputer.computeMasterQuantPeptides()
+    } else {
+      val mqPepsComputer = new MQPepsComputerV2(udsMasterQuantChannel,mergedRSM,resultSummaries)
+      mqPepsComputer.computeMasterQuantPeptides()
+    }
   }
     
   def computeMasterQuantProteinSets(
