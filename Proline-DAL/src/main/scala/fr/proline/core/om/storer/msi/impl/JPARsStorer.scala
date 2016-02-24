@@ -1518,16 +1518,17 @@ class JPARsStorer(override val pklWriter: Option[IPeaklistWriter] = None) extend
         msiProteinMatch.setBioSequenceId(java.lang.Long.valueOf(msiBioSequence.getId))
       }
 
-    } else {
-      val optionalProtein = proteinMatch.protein
-
-      if ((optionalProtein != null) && optionalProtein.isDefined) {
-        val protein = optionalProtein.get
-
-        logger.warn("Unknown Protein {" + omProteinId + "} sequence [" + protein.sequence + ']')
-      }
-
     }
+//    else {
+//      val optionalProtein = proteinMatch.protein
+
+//      if ((optionalProtein != null) && optionalProtein.isDefined) {
+//        val protein = optionalProtein.get
+//
+//        logger.warn("Unknown Protein {" + omProteinId + "} sequence [" + protein.sequence + ']')
+//      }
+
+//    }
 
     msiProteinMatch.setIsLastBioSequence(proteinMatch.isLastBioSequence)
     msiProteinMatch.setCoverage(proteinMatch.coverage)
