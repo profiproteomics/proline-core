@@ -268,7 +268,10 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	public EntityManager createEntityManager() {
 		//this.incrementOpenEntityManagerCount();
 		EntityManager em = this.getEntityManagerFactory().createEntityManager();
-		m_entityManagers.add(em);
+		
+		synchronized (m_connectorLock) {
+			m_entityManagers.add(em);
+		}
 		
 		return em;
 	}
