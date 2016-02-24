@@ -278,11 +278,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	@Override
 	public int getOpenEntityManagerCount() {
-		int openEmCout = 0;
+		int openEmCount = 0;
 		for( EntityManager m_entityManager : m_entityManagers) {
-			if(m_entityManager.isOpen()) openEmCout++;
+			if(m_entityManager.isOpen()) openEmCount++;
 		}
-		return openEmCout;
+		return openEmCount;
 	}
 	
 	/*protected int incrementOpenEntityManagerCount() {
