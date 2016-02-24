@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -53,9 +52,7 @@ public class PeptideTest extends DatabaseTestCase {
     
     @Test
     public void readPeptidesBySeq() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager psEm = emf.createEntityManager();
+	final EntityManager psEm = getConnector().createEntityManager();
 
 	try {
 	    List<Peptide> peps = PsPeptideRepository.findPeptidesForSequence(psEm, SEQ_TO_FOUND);
@@ -111,9 +108,7 @@ public class PeptideTest extends DatabaseTestCase {
     private void retrievePeptideForIds(final long nIds) {
 	assert (nIds > 0) : "retrievePeptideForIds() invalid nIds";
 
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager psEm = emf.createEntityManager();
+	final EntityManager psEm = getConnector().createEntityManager();
 
 	try {
 	    int retrievedPeptides = 0;

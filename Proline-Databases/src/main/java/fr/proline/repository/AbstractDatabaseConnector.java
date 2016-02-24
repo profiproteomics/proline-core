@@ -2,7 +2,9 @@ package fr.proline.repository;
 
 import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -74,8 +76,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 	private EntityManagerFactory m_entityManagerFactory;
 	
-	private int m_entityManagerCount;
-
+	private List<EntityManager> m_entityManagers;
+	
 	private boolean m_closed;
 
 	/* Constructors */
@@ -209,8 +211,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 		return m_dataSource;
 	}
 
-	@Override
-	public final EntityManagerFactory getEntityManagerFactory() {
+	protected final EntityManagerFactory getEntityManagerFactory() {
 
 		synchronized (m_connectorLock) {
 
@@ -219,6 +220,8 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 			}
 
 			if (m_entityManagerFactory == null) {
+				m_entityManagers = new ArrayList<EntityManager>();
+				
 				final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
 				/* Protection copy */
 				final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
@@ -241,8 +244,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 				}
 
 				try {
-					m_entityManagerFactory = createEntityManagerFactory(getProlineDatabaseType(),
-						propertiesCopy, DEFAULT_ORM_OPTIMIZATIONS);
+					m_entityManagerFactory = createEntityManagerFactory(
+						getProlineDatabaseType(),
+						propertiesCopy,
+						DEFAULT_ORM_OPTIMIZATIONS
+					);
 				} catch (Exception ex) {
 					/* Log and re-throw */
 					final String message = "Error creating EntityManagerFactory for " + prolineDbType;
@@ -260,16 +266,23 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	
 	@Override
 	public EntityManager createEntityManager() {
-		this.incrementOpenEntityManagerCount();
-		return this.getEntityManagerFactory().createEntityManager();
+		//this.incrementOpenEntityManagerCount();
+		EntityManager em = this.getEntityManagerFactory().createEntityManager();
+		m_entityManagers.add(em);
+		
+		return em;
 	}
 
 	@Override
 	public int getOpenEntityManagerCount() {
-		return m_entityManagerCount;
+		int openEmCout = 0;
+		for( EntityManager m_entityManager : m_entityManagers) {
+			if(m_entityManager.isOpen()) openEmCout++;
+		}
+		return openEmCout;
 	}
 	
-	protected int incrementOpenEntityManagerCount() {
+	/*protected int incrementOpenEntityManagerCount() {
 		synchronized (m_connectorLock) {
 			m_entityManagerCount++;
 			return m_entityManagerCount;
@@ -282,7 +295,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 			m_entityManagerCount--;
 			return m_entityManagerCount;
 		}
-	}
+	}*/
 	
 	@Override
 	public String toString() {
@@ -297,8 +310,15 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 				m_closed = true;
 
 				if (m_entityManagerFactory != null) {
-					LOG.debug("Closing EntityManagerFactory for [{}]", m_ident);
+					
+					if(this.getOpenEntityManagerCount() > 0) {
+						LOG.warn(
+							"Some EntityManager instances are still open. "+
+							"Closing the database connector before closing all related EntityManager instances may lead to inconsistent behavior."
+						);
+					}
 
+					LOG.debug("Closing EntityManagerFactory for [{}]", m_ident);
 					try {
 						m_entityManagerFactory.close();
 					} catch (Exception exClose) {

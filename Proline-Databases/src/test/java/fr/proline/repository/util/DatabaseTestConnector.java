@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import org.dbunit.DataSourceDatabaseTester;
@@ -147,10 +146,10 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 		return m_realConnector.getDataSource();
 	}
 
-	@Override
+	/*@Override
 	public EntityManagerFactory getEntityManagerFactory() {
 		return m_realConnector.getEntityManagerFactory();
-	}
+	}*/
 	
 	@Override
 	public EntityManager createEntityManager() {
@@ -162,10 +161,10 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 		return m_realConnector.getOpenEntityManagerCount();
 	}
 	
-	@Override
+	/*@Override
 	public int decrementOpenEntityManagerCount() {
 		return m_realConnector.decrementOpenEntityManagerCount();
-	}
+	}*/
 
 	public void close() {
 

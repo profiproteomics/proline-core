@@ -34,9 +34,7 @@ class OMComparatorUtilTest extends DatabaseTestCase {
   
   @Test
   def comparePepPtm() = {
-    val emf = getConnector.getEntityManagerFactory
-
-    val psEm = emf.createEntityManager
+    val psEm = getConnector.createEntityManager
 
     try {
       val pepPtm: PeptidePtm = psEm.find(classOf[PeptidePtm], java.lang.Long.valueOf(1L))

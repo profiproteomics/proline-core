@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Random;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Ignore;
@@ -77,15 +76,11 @@ public class TestPeptidesPerfs {
 	    LOG.info(String.format("%d PsPeptides created in %.1f ms", PEPTIDES_COUNT,
 		    ((double) (end - start)) / MILLI_TO_NANOS));
 
-	    final EntityManagerFactory msiEmf = msiDBTestCase.getConnector().getEntityManagerFactory();
-
-	    final EntityManager msiEm = msiEmf.createEntityManager();
+	    final EntityManager msiEm = msiDBTestCase.getConnector().createEntityManager();
 	    EntityTransaction msiTransaction = null;
 	    boolean msiTransacOk = false;
 
-	    final EntityManagerFactory psEmf = psDBTestCase.getConnector().getEntityManagerFactory();
-
-	    final EntityManager psEm = psEmf.createEntityManager();
+	    final EntityManager psEm = psDBTestCase.getConnector().createEntityManager();
 	    EntityTransaction psTransaction = null;
 	    boolean psTransacOk = false;
 

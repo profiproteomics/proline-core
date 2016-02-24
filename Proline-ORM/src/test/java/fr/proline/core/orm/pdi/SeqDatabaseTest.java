@@ -3,7 +3,6 @@ package fr.proline.core.orm.pdi;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,9 +38,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
     
     @Test
     public void findSeqDbPerNameAndFile() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    SequenceDbInstance seqDB = PdiSeqDatabaseRepository.findSeqDbInstanceWithNameAndFile(pdiEm,
@@ -64,9 +61,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 
     @Test
     public void findUnknownSeqDbPerNameAndFile() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    SequenceDbInstance seqDB = PdiSeqDatabaseRepository.findSeqDbInstanceWithNameAndFile(pdiEm,
@@ -88,9 +83,7 @@ public class SeqDatabaseTest extends DatabaseTestCase {
 
     @Test
     public void readSeqDbInstance() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    SequenceDbInstance seqDB = pdiEm.find(SequenceDbInstance.class, Long.valueOf(33L));

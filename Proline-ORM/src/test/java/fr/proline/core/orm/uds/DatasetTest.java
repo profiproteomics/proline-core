@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -46,9 +45,7 @@ public class DatasetTest extends DatabaseTestCase {
     
     @Test
     public void readDatasets() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
@@ -96,9 +93,7 @@ public class DatasetTest extends DatabaseTestCase {
 
     @Test
     public void readDSHierarchy() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    Dataset rootDS = udsEm.find(Dataset.class, Long.valueOf(1L));
@@ -128,9 +123,7 @@ public class DatasetTest extends DatabaseTestCase {
 
     @Test
     public void getDatasetNames() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
@@ -153,9 +146,7 @@ public class DatasetTest extends DatabaseTestCase {
 
     @Test
     public void getIdentificationDataset() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    IdentificationDataset idfDS = udsEm.find(IdentificationDataset.class, Long.valueOf(2L));

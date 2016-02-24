@@ -3,7 +3,6 @@ package fr.proline.core.orm.pdi;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -38,9 +37,7 @@ public class ProteinTest extends DatabaseTestCase {
     
     @Test
     public void readProtein() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    ProteinIdentifier protein = pdiEm.find(ProteinIdentifier.class, Long.valueOf(341L));
@@ -64,9 +61,7 @@ public class ProteinTest extends DatabaseTestCase {
 
     @Test
     public void readBioSequence() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    BioSequence bioSeq = pdiEm.find(BioSequence.class, Long.valueOf(171L));

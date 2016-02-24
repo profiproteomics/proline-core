@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.sql.Connection;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import org.junit.Ignore;
@@ -68,14 +67,14 @@ public class DatabaseConnectorTest {
 	    fail(message);
 	}
 
-	final EntityManagerFactory emf = connector.getEntityManagerFactory();
+	/*final EntityManagerFactory emf = connector.getEntityManagerFactory();
 
 	final String emfMessage = description + " EntityManagerFactory";
 	assertNotNull(emfMessage, emf);
 
-	LOG.info(emfMessage + " : " + emf);
+	LOG.info(emfMessage + " : " + emf);*/
 
-	final EntityManager em = emf.createEntityManager();
+	final EntityManager em = connector.createEntityManager();
 	assertNotNull(description + " EntityManager", em);
 
 	em.close();

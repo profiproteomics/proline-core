@@ -10,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
 
 import org.junit.After;
@@ -50,9 +49,7 @@ public class UserAccountTest extends DatabaseTestCase {
     
     @Test
     public void writeUserAccount() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    UserAccount account = new UserAccount();
@@ -89,9 +86,7 @@ public class UserAccountTest extends DatabaseTestCase {
 
     @Test
     public void readAccount() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    TypedQuery<UserAccount> query = udsEm.createQuery(
@@ -118,9 +113,7 @@ public class UserAccountTest extends DatabaseTestCase {
     
     @Test
     public void verifyPassword() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    TypedQuery<UserAccount> query = udsEm.createQuery(
@@ -172,9 +165,7 @@ public class UserAccountTest extends DatabaseTestCase {
   
     @Test
     public void listAccounts() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    UserAccount user = udsEm.find(UserAccount.class, Long.valueOf(2L));

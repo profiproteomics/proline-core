@@ -39,9 +39,7 @@ class OMConverterUtilTest extends DatabaseTestCase {
   
   @Test
   def testConvertPeptides() = {
-    val emf = getConnector.getEntityManagerFactory
-
-    val psEm = emf.createEntityManager
+    val psEm = getConnector.createEntityManager
 
     try {
       val ormPep: fr.proline.core.orm.ps.Peptide = psEm.find(classOf[fr.proline.core.orm.ps.Peptide], java.lang.Long.valueOf(4L))

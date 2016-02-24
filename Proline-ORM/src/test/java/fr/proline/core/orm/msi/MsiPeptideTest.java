@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.junit.After;
@@ -44,9 +43,7 @@ public class MsiPeptideTest extends DatabaseTestCase {
     public void testMsiPeptideRepository() {
 	int retrievedPeptides = 0;
 
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 

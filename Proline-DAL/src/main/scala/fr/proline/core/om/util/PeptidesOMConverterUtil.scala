@@ -127,8 +127,7 @@ class PeptidesOMConverterUtil(useCachedObject: Boolean = true) {
 
     //Get Peptide, Unmodified Peptide && PeptideInstance 
     val psDBConnector = dataStoreConnectorFactory.getPsDbConnector()
-    val emf = psDBConnector.getEntityManagerFactory()
-    val em = emf.createEntityManager()
+    val em = psDBConnector.createEntityManager()
 
     val psPeptide = em.find(classOf[PsPeptide], msiPepInst.getPeptide().getId())
     val psUnmodifiedPep = em.find(classOf[PsPeptide], msiPepInst.getUnmodifiedPeptideId())

@@ -133,7 +133,7 @@ public abstract class DatabaseTestCase {
 
 		if (LOG.isTraceEnabled()) {
 			/* Print Database Tables */
-			final EntityManager em = connector.getEntityManagerFactory().createEntityManager();
+			final EntityManager em = connector.createEntityManager();
 			EntityTransaction transac = null;
 			boolean transacOk = false;
 

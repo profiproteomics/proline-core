@@ -2,15 +2,11 @@ package fr.proline.core.orm.lcms;
 
 import javax.persistence.*;
 
-import org.msgpack.MessagePack;
-import org.msgpack.annotation.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 

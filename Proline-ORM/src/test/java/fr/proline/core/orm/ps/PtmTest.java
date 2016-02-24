@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
 
 import org.junit.After;
@@ -45,9 +44,7 @@ public class PtmTest extends DatabaseTestCase {
     
     @Test
     public void readPtm() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager psEm = emf.createEntityManager();
+	final EntityManager psEm = getConnector().createEntityManager();
 
 	try {
 	    TypedQuery<Ptm> query = psEm.createQuery(
@@ -76,9 +73,7 @@ public class PtmTest extends DatabaseTestCase {
 
     @Test
     public void findPtmByName() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager psEm = emf.createEntityManager();
+	final EntityManager psEm = getConnector().createEntityManager();
 
 	try {
 	    Ptm phosPtm = PsPtmRepository.findPtmForName(psEm, "Phospho");
@@ -107,9 +102,7 @@ public class PtmTest extends DatabaseTestCase {
 
     @Test
     public void findPtmClassification() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager psEm = emf.createEntityManager();
+	final EntityManager psEm = getConnector().createEntityManager();
 
 	try {
 	    final PtmClassification classification = PsPtmRepository.findPtmClassificationForName(psEm,

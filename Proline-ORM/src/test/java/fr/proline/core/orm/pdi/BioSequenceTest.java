@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -43,9 +42,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 
     @Test
     public void readBioSequence() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    BioSequence bioSeq = pdiEm.find(BioSequence.class, Long.valueOf(171L));
@@ -68,9 +65,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 
     @Test
     public void findBioSequence() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    BioSequence seq = PdiBioSequenceRepository.findBioSequenceForCrcAndMass(pdiEm,
@@ -92,9 +87,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 
     @Test
     public void findMissingBioSequence() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    BioSequence seq = PdiBioSequenceRepository.findBioSequenceForCrcAndMass(pdiEm, "FFFFFFF", 9999.0);
@@ -115,9 +108,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 
     @Test
     public void findBioSequencePerAccessionAndSeqDB() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    BioSequence seq = PdiBioSequenceRepository.findBioSequencePerAccessionAndSeqDB(pdiEm, "Q6WN28",
@@ -140,9 +131,7 @@ public class BioSequenceTest extends DatabaseTestCase {
 
     @Test
     public void findBioSequencesForCrcs() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager pdiEm = emf.createEntityManager();
+	final EntityManager pdiEm = getConnector().createEntityManager();
 
 	try {
 	    final Set<String> crcs = new HashSet<String>();

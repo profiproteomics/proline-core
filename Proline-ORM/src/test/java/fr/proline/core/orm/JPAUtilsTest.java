@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 
@@ -45,9 +44,7 @@ public class JPAUtilsTest extends DatabaseTestCase {
 
     @Test
     public void testUtils() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 	EntityTransaction transac = null;
 	boolean transacOk = false;
 

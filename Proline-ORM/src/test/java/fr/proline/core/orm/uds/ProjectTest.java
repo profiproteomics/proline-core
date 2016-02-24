@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
 
 import org.junit.After;
@@ -46,9 +45,7 @@ public class ProjectTest extends DatabaseTestCase {
 
     @Test
     public void readAccount() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    TypedQuery<UserAccount> query = udsEm.createQuery(
@@ -74,9 +71,7 @@ public class ProjectTest extends DatabaseTestCase {
 
     @Test
     public void readProject() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {		
 	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
@@ -111,9 +106,7 @@ public class ProjectTest extends DatabaseTestCase {
 
     @Test
     public void addMemberToProject() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    Project project = udsEm.find(Project.class, Long.valueOf(1L));
@@ -149,9 +142,7 @@ public class ProjectTest extends DatabaseTestCase {
 
     @Test
     public void createProject() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    UserAccount owner = udsEm.find(UserAccount.class, Long.valueOf(2L));

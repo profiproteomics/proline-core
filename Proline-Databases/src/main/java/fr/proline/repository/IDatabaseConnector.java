@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 /**
@@ -31,7 +30,7 @@ public interface IDatabaseConnector extends Closeable {
 
 	DataSource getDataSource();
 
-	EntityManagerFactory getEntityManagerFactory();
+	//EntityManagerFactory getEntityManagerFactory();
 	
 	EntityManager createEntityManager();
 	
@@ -39,7 +38,7 @@ public interface IDatabaseConnector extends Closeable {
 	
 	//int incrementOpenEntityManagerCount();
 	
-	int decrementOpenEntityManagerCount();
+	//int decrementOpenEntityManagerCount();
 
 	void close();
 

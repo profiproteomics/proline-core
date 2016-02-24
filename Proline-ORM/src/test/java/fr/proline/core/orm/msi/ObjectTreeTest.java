@@ -3,7 +3,6 @@ package fr.proline.core.orm.msi;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -40,9 +39,7 @@ public class ObjectTreeTest extends DatabaseTestCase {
     }
     @Test
     public void readResultSetObjects() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(3L));
@@ -65,9 +62,8 @@ public class ObjectTreeTest extends DatabaseTestCase {
 
     @Test
     public void bindObjectTree2ResultSet() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(2L));

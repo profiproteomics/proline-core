@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.dbunit.database.IDatabaseConnection;
@@ -60,9 +59,7 @@ public class MsiPeptideRepositoryTest {
 	m_connector = new DatabaseTestConnector(ProlineDatabaseType.MSI, props);
 
 	/* Force creation of Database schema by ORM by retrieving an EntityManager */
-	final EntityManagerFactory emf = m_connector.getEntityManagerFactory();
-
-	m_keepAliveEntityManager = emf.createEntityManager();
+	m_keepAliveEntityManager = m_connector.createEntityManager();
 
 	/* Print Database Tables */
 	EntityTransaction transac = null;
@@ -174,8 +171,7 @@ public class MsiPeptideRepositoryTest {
 	}
 
 	LOG.debug("CALL ");
-	final EntityManagerFactory emf = m_connector.getEntityManagerFactory();
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = m_connector.createEntityManager();
 
 	try {
 	    List<Peptide> peptides = MsiPeptideRepository.findPeptidesForIds(msiEm, ids);

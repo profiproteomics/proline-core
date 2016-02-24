@@ -3,7 +3,6 @@ package fr.proline.core.orm.uds;
 import static org.junit.Assert.*;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -41,9 +40,7 @@ public class QuantitationTest extends DatabaseTestCase {
     
     @Test
     public void readQuantitation() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager udsEm = emf.createEntityManager();
+	final EntityManager udsEm = getConnector().createEntityManager();
 
 	try {
 	    Dataset quanti = udsEm.find(Dataset.class, Long.valueOf(1L));

@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -44,9 +43,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
     
     @Test
     public void readMsiSearches() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(1L));
@@ -77,9 +74,7 @@ public class SearchSettingsTest extends DatabaseTestCase {
 
     @Test
     public void writeSearchSettingsSeqDatabaseMap() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    MsiSearch secondMsiSearch = msiEm.find(MsiSearch.class, Long.valueOf(3L));

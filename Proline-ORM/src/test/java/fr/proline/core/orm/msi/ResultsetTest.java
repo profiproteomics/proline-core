@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.junit.After;
@@ -49,9 +48,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void readMsISearch() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    MsiSearch msiSearch = msiEm.find(MsiSearch.class, Long.valueOf(1L));
@@ -80,9 +77,8 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void readDecoyResultSet() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
 
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(1L));
@@ -107,9 +103,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void readResultSet() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
@@ -134,9 +128,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void checkReadablePtmString() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	EntityTransaction transac = null;
 	boolean transacOK = false;
@@ -204,9 +196,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void readResultSetHierarchy() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(3L));
@@ -234,9 +224,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void testSearchInheritance() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    MsmsSearch msmsSearch = msiEm.find(MsmsSearch.class, Long.valueOf(1L));
@@ -260,9 +248,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void testReadPeptideMatches() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    ResultSet rs = msiEm.find(ResultSet.class, Long.valueOf(2L));
@@ -285,9 +271,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void peptideMatchRelations() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    PeptideMatch match = msiEm.find(PeptideMatch.class, Long.valueOf(1L));
@@ -312,9 +296,7 @@ public class ResultsetTest extends DatabaseTestCase {
 
     @Test
     public void peptidesFromMatches() {
-	final EntityManagerFactory emf = getConnector().getEntityManagerFactory();
-
-	final EntityManager msiEm = emf.createEntityManager();
+	final EntityManager msiEm = getConnector().createEntityManager();
 
 	try {
 	    PeptideMatch match = msiEm.find(PeptideMatch.class, Long.valueOf(1L));
