@@ -48,6 +48,8 @@ class ProviderDecoratedExecutionContextTest extends AbstractMultipleDBTestCase w
     val peptideMatchProvider2 = parserContext.getProvider(classOf[IPeptideMatchProvider])
 
     assertEquals("Second IPeptideMatchProvider", peptideMatchProvider, peptideMatchProvider2)
+    
+    executionContext.closeAll()
   }
 
   @After

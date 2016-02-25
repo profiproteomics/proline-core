@@ -11,45 +11,62 @@ class LazyExecutionContext(
   buildMsiDbCtx: () => MsiDbConnectionContext,
   buildLcMsDbCtx: () => LcMsDbConnectionContext
 ) extends IExecutionContext with LazyLogging {
+  
+  private var isClosed = false
 
   private var udsDbCtxInitialized = false
   private lazy val udsDbCtx: UdsDbConnectionContext = synchronized {
-    val dbCtx = buildUdsDbCtx()
-    _isJPACheck(dbCtx)
-    udsDbCtxInitialized = true
-    dbCtx
+    if(isClosed) null
+    else {
+      val dbCtx = buildUdsDbCtx()
+      _isJPACheck(dbCtx)
+      udsDbCtxInitialized = true
+      dbCtx
+    }
   }
 
   private var pdiDbCtxInitialized = false
   private lazy val pdiDbCtx: DatabaseConnectionContext = synchronized {
-    val dbCtx = buildPdiDbCtx()
-    _isJPACheck(dbCtx)
-    pdiDbCtxInitialized = true
-    dbCtx
+    if(isClosed) null
+    else {
+      val dbCtx = buildPdiDbCtx()
+      _isJPACheck(dbCtx)
+      pdiDbCtxInitialized = true
+      dbCtx
+    }
   }
 
   private var psDbCtxInitialized = false
   private lazy val psDbCtx: DatabaseConnectionContext = synchronized {
-    val dbCtx = buildPsDbCtx()
-    _isJPACheck(dbCtx)
-    psDbCtxInitialized = true
-    dbCtx
+    if(isClosed) null
+    else {
+      val dbCtx = buildPsDbCtx()
+      _isJPACheck(dbCtx)
+      psDbCtxInitialized = true
+      dbCtx
+    }
   }
 
   private var msiDbCtxInitialized = false
   private lazy val msiDbCtx: MsiDbConnectionContext = synchronized {
-    val dbCtx = buildMsiDbCtx()
-    _isJPACheck(dbCtx)
-    msiDbCtxInitialized = true
-    dbCtx
+    if(isClosed) null
+    else {
+      val dbCtx = buildMsiDbCtx()
+      _isJPACheck(dbCtx)
+      msiDbCtxInitialized = true
+      dbCtx
+    }
   }
 
   private var lcMsDbCtxInitialized = false
   private lazy val lcMsDbCtx: LcMsDbConnectionContext = synchronized {
-    val dbCtx = buildLcMsDbCtx()
-    _isJPACheck(dbCtx)
-    lcMsDbCtxInitialized = true
-    dbCtx
+    if(isClosed) null
+    else {
+      val dbCtx = buildLcMsDbCtx()
+      _isJPACheck(dbCtx)
+      lcMsDbCtxInitialized = true
+      dbCtx
+    }
   }
 
   private def _isJPACheck(dbCtx: DatabaseConnectionContext) {
@@ -68,6 +85,10 @@ class LazyExecutionContext(
     if (psDbCtxInitialized && psDbCtx != null) psDbCtx.close()
     if (msiDbCtxInitialized && msiDbCtx != null) msiDbCtx.close()
     if (lcMsDbCtxInitialized && lcMsDbCtx != null) lcMsDbCtx.close()
+    
+    this.synchronized {
+      isClosed = true
+    }
   }
 
 }

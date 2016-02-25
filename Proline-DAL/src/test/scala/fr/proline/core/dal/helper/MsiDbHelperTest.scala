@@ -44,22 +44,25 @@ class MsiDbHelperTest {
 
   @Test
   def testGetRSMsiSearchIds1Level() = {
-    val msiDbCtxt = new DatabaseConnectionContext(MsiDbHelperTest.getConnector)
-    val helper = new MsiDbHelper(msiDbCtxt)
+    val msiDbCtx = new DatabaseConnectionContext(MsiDbHelperTest.getConnector)
+    val helper = new MsiDbHelper(msiDbCtx)
 
     val msiIds = helper.getResultSetsMsiSearchIds(Array(3L))
 
     assertEquals(2, msiIds.length)
+    
+    msiDbCtx.close()
   }
   
   @Test
   def testGetRSMsiSearchIds2Level() = {
-    println("testGetRSMsiSearchIds2Level")
-    val msiDbCtxt = new DatabaseConnectionContext(MsiDbHelperTest.getConnector)
-    val helper = new MsiDbHelper(msiDbCtxt)
+    val msiDbCtx = new DatabaseConnectionContext(MsiDbHelperTest.getConnector)
+    val helper = new MsiDbHelper(msiDbCtx)
 
     val msiIds = helper.getResultSetsMsiSearchIds(Array(4L))
 
     assertEquals(2, msiIds.length)
+    
+    msiDbCtx.close()
   }
 }
