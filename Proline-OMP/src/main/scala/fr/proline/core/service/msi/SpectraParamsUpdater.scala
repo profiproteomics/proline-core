@@ -93,11 +93,17 @@ class SpectraParamsUpdater(
         for( specAttr <- spectrumAttributes ) {
           val parsingRule = parsingRuleBySpecAttr(specAttr)
           if( parsingRule != null ) {
-            val parsingRuleMatch = spectrumTitle =# parsingRule
-            if( parsingRuleMatch.isDefined ) {
-              extractedAttrs(specAttr) = parsingRuleMatch.get.group(1)
-            }
-          }
+            val atomixRules = parsingRule.split("""\|\|""")
+            var foundAtt = false
+            for(atomicFieldRegex <- atomixRules
+                if !foundAtt){             
+                  val parsingRuleMatch = spectrumTitle =# atomicFieldRegex
+                  if( parsingRuleMatch.isDefined && parsingRuleMatch.get.group(1) != null && !parsingRuleMatch.get.group(1).isEmpty()) {
+                    foundAtt = true
+                    extractedAttrs(specAttr) = parsingRuleMatch.get.group(1)
+                  }                     
+              }
+           }
         }
         
         // Update spectrum if attributes have been extracted
