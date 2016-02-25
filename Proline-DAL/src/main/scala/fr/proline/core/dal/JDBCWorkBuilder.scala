@@ -92,10 +92,17 @@ protected object BuildJDBCReturningWork {
     }
   }
   
-  def withEzDBC[T]( driverType: DriverType, jdbcWorkFunction: EasyDBC => T ): JDBCReturningWork[T] = {
+  def withEzDBC[T]( dbCtx: DatabaseConnectionContext, jdbcWorkFunction: EasyDBC => T ): JDBCReturningWork[T] = {
     new JDBCReturningWork[T]() {
-      override def execute(con: Connection): T = {
-        jdbcWorkFunction( ProlineEzDBC(con, driverType) )
+      override def execute(connection: Connection): T =  {
+        
+        // Set auto-commit to true if we are not inside a transaction
+        if (dbCtx.isInTransaction() == false) {
+          connection.setAutoCommit(true)
+        }
+        
+        // Execute the jdbcWorkFunction
+        jdbcWorkFunction( ProlineEzDBC(connection, dbCtx.getDriverType) )
       }
     }
   }
@@ -111,7 +118,7 @@ object DoJDBCReturningWork {
   
   @deprecated("0.6.0","please use other method signature")
   def withEzDBC[T]( dbCtx: DatabaseConnectionContext, jdbcWorkFunction: EasyDBC => T, flushEM: Boolean ): T = {
-    dbCtx.doReturningWork(BuildJDBCReturningWork.withEzDBC(dbCtx.getDriverType, jdbcWorkFunction),flushEM)
+    dbCtx.doReturningWork(BuildJDBCReturningWork.withEzDBC(dbCtx, jdbcWorkFunction),flushEM)
   }
   
   @deprecated("0.6.0","please use other method signature")
@@ -121,7 +128,7 @@ object DoJDBCReturningWork {
   
   @deprecated("0.6.0","please use other method signature")
   def withEzDBC[T]( dbCtx: DatabaseConnectionContext, jdbcWorkFunction: EasyDBC => T ): T = {
-    dbCtx.doReturningWork(BuildJDBCReturningWork.withEzDBC(dbCtx.getDriverType, jdbcWorkFunction), false)
+    dbCtx.doReturningWork(BuildJDBCReturningWork.withEzDBC(dbCtx, jdbcWorkFunction), false)
   }
   
   def withConnection[T]( dbCtx: DatabaseConnectionContext, flushEM: Boolean = false )(jdbcWorkFunction: Connection => T): T = {
@@ -129,6 +136,6 @@ object DoJDBCReturningWork {
   }
   
   def withEzDBC[T]( dbCtx: DatabaseConnectionContext, flushEM: Boolean = false )(jdbcWorkFunction: EasyDBC => T): T = {
-    dbCtx.doReturningWork(BuildJDBCReturningWork.withEzDBC(dbCtx.getDriverType, jdbcWorkFunction),flushEM)
+    dbCtx.doReturningWork(BuildJDBCReturningWork.withEzDBC(dbCtx, jdbcWorkFunction),flushEM)
   }
 }
