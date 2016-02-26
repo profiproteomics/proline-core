@@ -71,7 +71,7 @@ abstract class AbstractSerializationSpec extends FunSpec with GivenWhenThen with
 }
 
 @RunWith(classOf[JUnitRunner])
-class SerializationSpec extends AbstractSerializationSpec {
+class SerializationSpecTest extends AbstractSerializationSpec {
   
   val ms2Query = Ms2Query(
     id = -1,
