@@ -14,7 +14,6 @@ object MissingAbundancesInferenceMethod extends EnhancedEnum {
 }
 
 case class MissingAbundancesInferenceConfig(
-  inferenceMethod: String = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL,
   noisePercentile: Option[Int] = None // should be only defined for PERCENTILE method
 ) {
   def getNoisePercentile(): Int = noisePercentile.getOrElse(1)
@@ -28,7 +27,7 @@ object MissingAbundancesInferer {
     psmCountMatrix: Array[Array[Int]],
     errorModel: AbsoluteErrorModel
   ): Array[Array[Float]] = {
-    val inferConfig = MissingAbundancesInferenceConfig(MissingAbundancesInferenceMethod.GAUSSIAN_MODEL)
+    val inferConfig = MissingAbundancesInferenceConfig()
     new SmartMissingAbundancesInferer(inferConfig, errorModel).inferAbundances(abundanceMatrix, psmCountMatrix)
   }
   
@@ -178,7 +177,7 @@ class SmartMissingAbundancesInferer(
         else {
           
           // Should we use the computed stdDev or a constant error to parameterize the gaussian ???
-          randomGaussian(meanAbundance, meanAbundance * 0.05).toFloat.max(0)
+          randomGaussian(meanAbundance, meanAbundance * 0.05).toFloat //.max(0)
           
           /*var tryCount = 0
           var newAbundance = 0f

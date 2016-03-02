@@ -1,13 +1,9 @@
 package fr.proline.core.service.msq
 
-import scala.Array.canBuildFrom
-
+import javax.persistence.EntityManager
+import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.LazyLogging
-
-import fr.profi.jdbc.easy.int2Formattable
-import fr.profi.jdbc.easy.long2Formattable
-import fr.profi.jdbc.easy.string2Formattable
-import fr.profi.jdbc.easy.stringOption2Formattable
+import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
@@ -26,8 +22,11 @@ import fr.proline.core.orm.uds.ObjectTreeSchema
 import fr.proline.core.orm.uds.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.uds.repository.ObjectTreeSchemaRepository
 import fr.proline.repository.IDataStoreConnectorFactory
-import javax.persistence.EntityManager
-
+import fr.proline.core.om.provider.lcms.impl.SQLMapSetProvider
+import fr.proline.core.algo.lcms.FeatureSummarizer
+import fr.proline.core.algo.lcms.FeatureSummarizingMethod
+import fr.proline.core.algo.lcms.summarizing._
+import fr.proline.core.algo.msq.BuildMasterQuantPeptide
 
 // Factory for Proline-Cortex
 object QuantProfilesComputer {
@@ -102,103 +101,205 @@ class QuantProfilesComputer(
     val quantRsmId = udsMasterQuantChannel.getQuantResultSummaryId()
     val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
     
-    // 1. Load the Quant RSM
+    // --- 1.1 Load the Quant RSM --- //
+    logger.info("Loading the quantitative result summary #"+quantRsmId)
     val quantRsmProvider = new SQLQuantResultSummaryProvider(
       executionContext.getMSIDbConnectionContext,
       executionContext.getPSDbConnectionContext,
       executionContext.getUDSDbConnectionContext
     )
-    val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, true).get
+    // Note that it is important to load the Result Set to have all required information
+    val quantRSM = quantRsmProvider.getQuantResultSummary(quantRsmId, qcIds, loadResultSet = true).get
     
-    // 2. Instantiate the profilizer
+    // !!! STILL EXPERIMENTAL !!!
+    val summarizeFeatures = false
+    if( summarizeFeatures ) {
+      
+      // --- 1.2 Load the peakels --- //
+      val qcByLcMsMapId = experimentalDesign.masterQuantChannels.head.quantChannels.map { qc =>
+        qc.lcmsMapId.get -> qc
+      } toMap
+      val lcmsDbCtx = executionContext.getLCMSDbConnectionContext
+      val mapSetProvider = new SQLMapSetProvider(lcmsDbCtx = lcmsDbCtx)
+      val mapSet = mapSetProvider.getMapSet(udsMasterQuantChannel.getLcmsMapSetId, loadPeakels = true)
+      val masterFtById = mapSet.masterMap.features.view.map( ft => ft.id -> ft ).toMap
+      
+      // --- 1.3 Apply some corrections to the MQ peptide ions --- //
+      logger.info("Applying some corrections to the master quant peptide ions...")
+      
+      val ftSummarizer = new FeatureSummarizer(
+        peakelPreProcessingMethod = PeakelPreProcessingMethod.NONE,
+        peakelSummarizingMethod = PeakelSummarizingMethod.APEX_INTENSITY,
+        featureSummarizingMethod = FeatureSummarizingMethod.HIGHEST_THEORETICAL_ISOTOPE
+      )
+      
+      for( mqPep <- quantRSM.masterQuantPeptides ) {
+        val mqPepIons = mqPep.masterQuantPeptideIons
+        
+        // Update master quant peptides ions
+        for( mqPepIon <- mqPepIons) {
+          
+          val qPepIonMap = mqPepIon.quantPeptideIonMap
+          val masterFt = masterFtById(mqPepIon.lcmsMasterFeatureId.get)
+          
+          // Index features by their sample number
+          val ftQcIds = new ArrayBuffer[Long](masterFt.children.length)
+          val indexedFts = masterFt.children.map { ft =>
+            val qc = qcByLcMsMapId(ft.relations.processedMapId)
+            val qcId = qc.id
+            ftQcIds += qcId
+              
+            val qPepIon = qPepIonMap(qcId)
+            val qPepIonFtId = qPepIon.lcmsFeatureId
+  
+            // Retrieve the feature to use as a reference for this cluster
+            val mainClusterFt = if(ft.isCluster == false) ft
+            else {
+              val ftOpt = ft.subFeatures.find(_.id == qPepIonFtId)
+              if( ftOpt.isDefined) ftOpt.get
+              else {
+                ft.subFeatures.maxBy(_.intensity)
+              }
+            }
+            /*if(mainClusterFt.relations.peakelItems.isEmpty) {
+              println(mainClusterFt)
+            }*/
+            
+            mainClusterFt -> qc.sampleNumber
+          }
+          
+          // Re-compute the features intensities
+          val ftIntensities = ftSummarizer.computeFeaturesIntensities(indexedFts)
+          if( ftIntensities.count(_.isNaN == false) == 0) {
+            /*println(indexedFts.map(_._1.intensity).toList)
+            println(ftIntensities.toList)*/
+          }
+          
+          val newQPepIonMap = for( (ftIntensity,qcId) <- ftIntensities.zip(ftQcIds) ) yield {
+            val qPepIon = qPepIonMap(qcId).copy( rawAbundance = ftIntensity, abundance = ftIntensity )
+            qcId -> qPepIon
+          }
+          
+          mqPepIon.quantPeptideIonMap = newQPepIonMap.toMap
+        }
+        
+        // Re-build the master quant peptides
+        val newMqPep = BuildMasterQuantPeptide(mqPepIons, mqPep.peptideInstance, mqPep.resultSummaryId)      
+        mqPep.quantPeptideMap = newMqPep.quantPeptideMap
+      }
+    }
+    
+    // --- 2. Instantiate the profilizer --- //
     val profilizer = new Profilizer(
       expDesign = experimentalDesign,
       groupSetupNumber = 1, // TODO: retrieve from params
       masterQCNumber = udsMasterQuantChannel.getNumber
     )
     
-    // 3. Compute MasterQuantPeptides profiles
+    // --- 3. Compute MasterQuantPeptides profiles --- //
     profilizer.computeMasterQuantPeptideProfiles(quantRSM.masterQuantPeptides, config)
     
-    // 4. Compute MasterQuantProtSets profiles
+    /*val computedMqProtSets = this.computeMasterQuantProteinSets(udsMasterQuantChannel,quantRSM.masterQuantPeptides,quantRSM.resultSummary,Seq())
+    val map = computedMqProtSets.view.map( mq => mq.proteinSet.id -> mq ).toMap
+    
+    quantRSM.masterQuantProteinSets.foreach { mqProtSet =>
+      //if( mqProtSet.quantProteinSetMap.isEmpty ) {
+        //println("replacing quantProteinSetMap")
+        val newMqProtSet = map(mqProtSet.proteinSet.id)
+        mqProtSet.quantProteinSetMap = newMqProtSet.quantProteinSetMap
+        mqProtSet.properties = newMqProtSet.properties
+    }*/
+    
+    // --- 4. Compute MasterQuantProtSets profiles --- //
     profilizer.computeMasterQuantProtSetProfiles(quantRSM.masterQuantProteinSets, config)
     
-    // 5. Update MasterQuantPeptides and MasterQuantProtSets properties
+    /*quantRSM.masterQuantProteinSets.foreach { mqProtSet =>
+        
+      if( mqProtSet.proteinSet.getRepresentativeProteinMatch().get.accession == "TAU_HUMAN_UPS" ) {
+        //mqProtSet.properties.get.mqProtSetProfilesByGroupSetupNumber(1).head.mqPeptideIds.toList
+        //println( mqProtSet.properties.get.selectedMasterQuantPeptideIds.get.toList)
+        println(mqProtSet.properties.get.mqProtSetProfilesByGroupSetupNumber(1).toList)
+      }
+    }*/
+    
+    // --- 5. Update MasterQuantPeptides and MasterQuantProtSets properties --- //
     val msiDbCtx = executionContext.getMSIDbConnectionContext()
     
-    DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx, { ezDBC =>
+    DoJDBCWork.tryTransactionWithEzDBC(msiDbCtx) { ezDBC =>
       
       // TODO: create an UPDATE query builder
-      val mqComponentUpdateStmt = ezDBC.prepareStatementWrapper(
-        "UPDATE master_quant_component SET selection_level = ?, serialized_properties = ? WHERE id = ?"
-      )
-      
-      val objTreeUpdateStmt = ezDBC.prepareStatementWrapper(
-        "UPDATE object_tree SET clob_data = ? " +
+      val mqComponentUpdateQuery = "UPDATE master_quant_component SET selection_level = ?, serialized_properties = ? WHERE id = ?"
+      val objTreeUpdateQuery = "UPDATE object_tree SET clob_data = ? " +
         "WHERE object_tree.id IN (SELECT object_tree_id FROM master_quant_component WHERE master_quant_component.id = ?)"
-      )
+      
+      ezDBC.executeInBatch(mqComponentUpdateQuery) { mqComponentUpdateStmt =>
+        ezDBC.executeInBatch(objTreeUpdateQuery) { objTreeUpdateStmt =>
+      
+          this.logger.info("Updating MasterQuantPeptides...")
+          
+          // Iterate over MasterQuantPeptides 
+          for( mqPep <- quantRSM.masterQuantPeptides ) {
+            
+            // Update MasterQuantPeptides selection level and properties
+            mqComponentUpdateStmt.executeWith(
+              mqPep.selectionLevel,
+              mqPep.properties.map( props => ProfiJson.serialize(props) ),
+              mqPep.id
+            )
+            
+            // Retrieve quant peptides sorted by quant channel
+            val quantPeptideMap = mqPep.quantPeptideMap
+            val quantPeptides = qcIds.map { quantPeptideMap.getOrElse(_, null) }
+            
+            // Update MasterQuantPeptides object tree
+            objTreeUpdateStmt.executeWith(
+              ProfiJson.serialize(quantPeptides),
+              mqPep.id
+            )
+          }
+          
+          this.logger.info("Updating MasterQuantProtSets...")
+          
+          // Iterate over MasterQuantProtSets
+          for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
+            
+            // Update MasterQuantProtSets selection level and properties
+            mqComponentUpdateStmt.executeWith(
+              mqProtSet.selectionLevel,
+              mqProtSet.properties.map( props => ProfiJson.serialize(props) ),
+              mqProtSet.getMasterQuantComponentId()
+            )
+            
+            // Retrieve quant protein sets sorted by quant channel
+            val quantProtSetMap = mqProtSet.quantProteinSetMap
+            val quantProtSets = qcIds.map { quantProtSetMap.getOrElse(_, null) }
+             
+            // Update MasterQuantProtSets object tree
+            objTreeUpdateStmt.executeWith(
+              ProfiJson.serialize(quantProtSets),
+              mqProtSet.getMasterQuantComponentId()
+            )
+          }
+        } // END OF executeInBatch(objTreeUpdateQuery)
+      } // END OF executeInBatch(mqComponentUpdateQuery)
+    } // END OF tryTransactionWithEzDBC
 
-      this.logger.info("Updating MasterQuantPeptides...")
-      
-      // Iterate over MasterQuantPeptides 
-      for( mqPep <- quantRSM.masterQuantPeptides ) {
-        
-        // Update MasterQuantPeptides selection level and properties
-        mqComponentUpdateStmt.executeWith(
-          mqPep.selectionLevel,
-          mqPep.properties.map( props => ProfiJson.serialize(props) ),
-          mqPep.id
-        )
-        
-        // Retrieve quant peptides sorted by quant channel
-        val quantPeptideMap = mqPep.quantPeptideMap
-        val quantPeptides = qcIds.map { quantPeptideMap.getOrElse(_, null) }
-        
-        // Update MasterQuantPeptides object tree
-        objTreeUpdateStmt.executeWith(
-          ProfiJson.serialize(quantPeptides),
-          mqPep.id
-        )
-      }
-      
-      this.logger.info("Updating MasterQuantProtSets...")
-      
-      // Iterate over MasterQuantProtSets
-      for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
-        
-        // Update MasterQuantProtSets selection level and properties
-        mqComponentUpdateStmt.executeWith(
-          mqProtSet.selectionLevel,
-          mqProtSet.properties.map( props => ProfiJson.serialize(props) ),
-          mqProtSet.getMasterQuantComponentId()
-        )
-        
-        // Retrieve quant protein sets sorted by quant channel
-        val quantProtSetMap = mqProtSet.quantProteinSetMap
-        val quantProtSets = qcIds.map { quantProtSetMap.getOrElse(_, null) }
-         
-        // Update MasterQuantProtSets object tree
-        objTreeUpdateStmt.executeWith(
-          ProfiJson.serialize(quantProtSets),
-          mqProtSet.getMasterQuantComponentId()
-        )
-      }
-      objTreeUpdateStmt.close()
-      mqComponentUpdateStmt.close()
-      
-    })
-        
-      udsDbCtx.beginTransaction()
-      //Save PostProcessingQuantConfig in DataSet ObjectTree         
-	  val postQuantProcessinqObjectTree =  buildDataSetObjectTree(config, udsEM)
-	  udsEM.persist(postQuantProcessinqObjectTree)
-		
-	  // Store ObjectTree component        
-	  val udsQuantitation = udsMasterQuantChannel.getDataset()
-	  udsQuantitation.putObject(SchemaName.POST_QUANT_PROCESSING_CONFIG.toString(), postQuantProcessinqObjectTree.getId())
-	  udsEM.merge(udsQuantitation)
-              
-	  udsDbCtx.commitTransaction()
+    udsDbCtx.beginTransaction()
+    
+    // Save profilizerConfigSchema as an ObjectTree
+    val profilizerConfigSchemaName = ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.toString()
+    val profilizerConfigSchema = ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM,profilizerConfigSchemaName)
+    val profilizerConfigObjectTree = new ObjectTree()
+    profilizerConfigObjectTree.setSchema(profilizerConfigSchema)
+    profilizerConfigObjectTree.setClobData(ProfiJson.serialize(config))
+    udsEM.persist(profilizerConfigObjectTree)
+
+    // Link the ObjectTree to the quantitation dataset
+    val udsQuantitation = udsMasterQuantChannel.getDataset()
+    udsQuantitation.putObject(profilizerConfigSchemaName, profilizerConfigObjectTree.getId())
+    udsEM.merge(udsQuantitation)
+    
+    udsDbCtx.commitTransaction()
     
     // Close execution context if initiated locally
     if( this._hasInitiatedExecContext ) executionContext.closeAll()
@@ -207,14 +308,91 @@ class QuantProfilesComputer(
     
     true
   }
-
-    protected def buildDataSetObjectTree(postQuantProcessingConfig : ProfilizerConfig, udsEM: EntityManager): ObjectTree = {
-    // Store the object tree
-    val quantDSObjectTree = new ObjectTree()
-    quantDSObjectTree.setSchema(ObjectTreeSchemaRepository.loadOrCreateObjectTreeSchema(udsEM,ObjectTreeSchema.SchemaName.POST_QUANT_PROCESSING_CONFIG.toString()))
-    quantDSObjectTree.setClobData(ProfiJson.serialize(postQuantProcessingConfig))
-
-    quantDSObjectTree
-  }
+  
+  /*
+  // Stolen from LabelFreeFeatureQuantifier
+  import scala.collection.mutable.ArrayBuffer
+  import scala.collection.mutable.HashMap
+  import fr.proline.core.om.model.msi._
+  import fr.proline.core.om.model.msq._
+  def computeMasterQuantProteinSets(
+    udsMasterQuantChannel: MasterQuantitationChannel,
+    masterQuantPeptides: Seq[MasterQuantPeptide],
+    mergedRSM: ResultSummary,
+    resultSummaries: Seq[ResultSummary]
+  ): Array[MasterQuantProteinSet] = {
+   
+    val mqPepByPepInstId = masterQuantPeptides
+      .filter(_.peptideInstance.isDefined)
+      .map { mqp => mqp.peptideInstance.get.id -> mqp } toMap
     
+    val mqProtSets = new ArrayBuffer[MasterQuantProteinSet]
+    for( mergedProtSet <- mergedRSM.proteinSets ) {
+      
+      val selectedMQPepIds = new ArrayBuffer[Long]
+      val mqPeps = new ArrayBuffer[MasterQuantPeptide]
+      val abundanceSumByQcId = new HashMap[Long,Float]
+      val rawAbundanceSumByQcId = new HashMap[Long,Float]
+      val pepMatchesCountByQcId = new HashMap[Long,Int]
+      
+      for( mergedPepInst <- mergedProtSet.peptideSet.getPeptideInstances ) {
+        
+        // If the peptide has been quantified
+        if( mqPepByPepInstId.contains(mergedPepInst.id) ) {
+          
+          val mqp = mqPepByPepInstId( mergedPepInst.id )
+          mqPeps += mqp
+          
+          if( mqp.selectionLevel >= 2 ) selectedMQPepIds += mqp.id
+          
+          for( (qcId,quantPep) <- mqp.quantPeptideMap ) {
+            abundanceSumByQcId.getOrElseUpdate(qcId,0)
+            abundanceSumByQcId(qcId) += quantPep.abundance
+            
+            rawAbundanceSumByQcId.getOrElseUpdate(qcId,0)
+            rawAbundanceSumByQcId(qcId) += quantPep.rawAbundance
+
+            pepMatchesCountByQcId.getOrElseUpdate(qcId,0)
+            pepMatchesCountByQcId(qcId) += quantPep.peptideMatchesCount
+          }
+        }
+      }
+      
+      val quantProteinSetByQcId = new HashMap[Long,QuantProteinSet]
+      for( (qcId,abundanceSum) <- abundanceSumByQcId ) {
+        quantProteinSetByQcId(qcId) = new QuantProteinSet(
+          rawAbundance = rawAbundanceSumByQcId(qcId),
+          abundance = abundanceSum,
+          peptideMatchesCount = pepMatchesCountByQcId(qcId),
+          quantChannelId = qcId,
+          selectionLevel = 2
+        )
+      }
+      
+      val mqProtSetProps = new MasterQuantProteinSetProperties()
+      mqProtSetProps.setSelectedMasterQuantPeptideIds( Some(selectedMQPepIds.toArray) )
+      
+      val mqProteinSet = new MasterQuantProteinSet(
+        proteinSet = mergedProtSet,
+        quantProteinSetMap = quantProteinSetByQcId.toMap,
+        masterQuantPeptides = mqPeps.toArray,
+        selectionLevel = 2,
+        properties = Some(mqProtSetProps)
+      )
+      
+      mqProtSets += mqProteinSet
+    }
+    
+    // Compute the statistical analysis of abundance profiles
+    /*val profilizer = new Profilizer(
+      expDesign = expDesign,
+      groupSetupNumber = 1, // TODO: retrieve from params
+      masterQCNumber = udsMasterQuantChannel.getNumber
+    )
+    
+    profilizer.computeMasterQuantProtSetProfiles(mqProtSets, statTestsAlpha)*/
+    
+    mqProtSets.toArray
+  }*/
+
 }

@@ -8,16 +8,20 @@ import scala.collection.mutable.ArrayBuffer
 object AbundanceSummarizer {
   
   object Method extends EnhancedEnum {
-    val BEST_SCORE = Value // has no implementation, should be called before
+    val BEST_SCORE = Value // has no implementation here, should be called before
     val MAX_ABUNDANCE_SUM = Value // return one single row
     val MEAN = Value
     val MEAN_OF_TOP3 = Value
     val MEDIAN = Value
+    val MEDIAN_BIOLOGICAL_PROFILE = Value // has no implementation here, should be called before
     val MEDIAN_PROFILE = Value
     val SUM = Value
   }
   
   private val EMPTY_MATRIX_MESSAGE = "abundanceMatrix is empty"
+  private def createNoImplemError(methodName: String) = new IllegalArgumentException(
+    s"No implementation corresponding to the $methodName method."
+  )
   
   def summarizeAbundanceMatrix( abundanceMatrix: Array[Array[Float]], method: Method.Value ): Array[Float] = {
     
@@ -29,30 +33,30 @@ object AbundanceSummarizer {
     method match {
       case Method.BEST_SCORE =>  {
         // Note: a BEST_SCORE approach could be implemented here, but this will lead to a more complicated the API
-        throw new IllegalArgumentException(
-          "This method should not be called when BEST_SCORE method is used. "+
-          "Please perform the appropriate filtering in a separate step"
-        )
+        throw createNoImplemError(Method.BEST_SCORE)
       }
       case Method.MAX_ABUNDANCE_SUM => summarizeUsingMaxAbundanceSum(abundanceMatrix)
       case Method.MEAN => summarizeUsingMean(abundanceMatrix)
       case Method.MEAN_OF_TOP3 => summarizeUsingMeanOfTop3(abundanceMatrix)
       case Method.MEDIAN => summarizeUsingMedian(abundanceMatrix)
       case Method.MEDIAN_PROFILE => summarizeUsingMedianProfile(abundanceMatrix)
+      case Method.MEDIAN_BIOLOGICAL_PROFILE =>  {
+        throw createNoImplemError(Method.MEDIAN_BIOLOGICAL_PROFILE)
+      }
       case Method.SUM => summarizeUsingSum(abundanceMatrix)
     }
     
   }
   
-  private def summarizeUsingMaxAbundanceSum( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+  def summarizeUsingMaxAbundanceSum( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
     abundanceMatrix.maxBy(_.sum)
   }
   
-  private def summarizeUsingMean( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {    
+  def summarizeUsingMean( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {    
     abundanceMatrix.transpose.map( _calcMeanAbundance( _ ) )
   }
   
-  private def summarizeUsingMeanOfTop3( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+  def summarizeUsingMeanOfTop3( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
     
     // Sort rows by descending median abundance
     val sortedMatrix = abundanceMatrix.sortBy( - _calcMedianAbundance(_) )
@@ -64,11 +68,11 @@ object AbundanceSummarizer {
     summarizeUsingMean(top3Matrix)
   }
   
-  private def summarizeUsingMedian( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {    
+  def summarizeUsingMedian( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {    
     abundanceMatrix.transpose.map( _calcMedianAbundance( _ ) )
   }
   
-  private def summarizeUsingMedianProfile( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+  def summarizeUsingMedianProfile( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
     
     // Transpose the matrix
     val transposedMatrix = abundanceMatrix.transpose
@@ -89,6 +93,8 @@ object AbundanceSummarizer {
       
       ratioRow.toArray
     }
+    
+    // TODO: transform ratios before computing median (log, 1/X ?)
     
     // Compute the median of ratios
     val medianRatios = summarizeUsingMedian(ratioMatrix)
@@ -130,7 +136,7 @@ object AbundanceSummarizer {
     finalAbundances.toArray
   }
   
-  private def summarizeUsingSum( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
+  def summarizeUsingSum( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
     abundanceMatrix.transpose.map( _calcAbundanceSum( _ ) )
   }
   

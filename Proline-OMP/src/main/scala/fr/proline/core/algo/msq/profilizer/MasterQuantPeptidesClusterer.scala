@@ -24,6 +24,38 @@ case class MasterQuantPeptidesCluster(
   mqPeptides: Seq[MasterQuantPeptide]
 )
 
+object MasterQuantPeptidesClusterer {
+
+  def apply(
+    methodName: String,
+    clustererConfig: Option[MqPeptidesClustererConfig],
+    groupSetupNumber: Int
+  ): IMqPeptidesClusterer = {
+
+    import MqPeptidesClusteringMethod._
+    
+    val clusteringMethod = MqPeptidesClusteringMethod.withName(methodName)
+
+    val clusters = clusteringMethod match {
+      case PEPTIDE_SEQUENCE => new PeptideSequenceBasedClusterer()
+      case PEPTIDE_SET      => new PeptideSetBasedClusterer()
+      case PTM_PATTERN      => new PtmPatternBasedClusterer(clustererConfig.get)
+      case QUANT_PROFILE    => new QuantProfileBasedClusterer(groupSetupNumber)
+    }
+
+    clusters
+  }
+
+  def computeMqPeptidesClusters(
+    methodName: String,
+    clustererConfig: Option[MqPeptidesClustererConfig],
+    groupSetupNumber: Int,
+    masterQuantProtSets: Seq[MasterQuantProteinSet]
+  ): Array[MasterQuantPeptidesCluster] = {
+    this.apply(methodName, clustererConfig, groupSetupNumber).computeMqPeptidesClusters(masterQuantProtSets)
+  }
+}
+
 trait IMqPeptidesClusterer {
 
   def clustererConfig: MqPeptidesClustererConfig
@@ -82,36 +114,6 @@ trait IMqPeptidesClusterer {
     protMatch
   }
 
-}
-
-object MasterQuantPeptidesClusterer {
-
-  def apply(
-    method: MqPeptidesClusteringMethod.Value,
-    clustererConfig: MqPeptidesClustererConfig,
-    groupSetupNumber: Int
-  ): IMqPeptidesClusterer = {
-
-    import MqPeptidesClusteringMethod._
-
-    val clusters = method match {
-      case PEPTIDE_SEQUENCE => new PeptideSequenceBasedClusterer()
-      case PEPTIDE_SET      => new PeptideSetBasedClusterer()
-      case PTM_PATTERN      => new PtmPatternBasedClusterer(clustererConfig)
-      case QUANT_PROFILE    => new QuantProfileBasedClusterer(groupSetupNumber)
-    }
-
-    clusters
-  }
-
-  def computeMqPeptidesClusters(
-    method: MqPeptidesClusteringMethod.Value,
-    clustererConfig: MqPeptidesClustererConfig,
-    groupSetupNumber: Int,
-    masterQuantProtSets: Seq[MasterQuantProteinSet]
-  ): Array[MasterQuantPeptidesCluster] = {
-    this.apply(method, clustererConfig, groupSetupNumber).computeMqPeptidesClusters(masterQuantProtSets)
-  }
 }
 
 class PeptideSequenceBasedClusterer() extends IMqPeptidesClusterer {

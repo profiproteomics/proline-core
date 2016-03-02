@@ -20,6 +20,8 @@ trait ExtendedStatisticalSummary extends StatisticalSummary {
   def getLowerOuterFence(): Double
   def getUpperInnerFence(): Double
   def getUpperOuterFence(): Double
+  
+  def cloneMe(): ExtendedStatisticalSummary
 }
 
 /**
@@ -69,6 +71,8 @@ case class ExtendedStatisticalSummaryValues(
     
     strBuilder.result()
   }
+  
+  override def cloneMe() = this.copy()
   
 }
 
