@@ -4,9 +4,10 @@ import scala.collection.mutable.HashMap
 import scala.beans.BeanProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
-case class ComputedRatio (
+case class ComputedRatio(
   @BeanProperty var numerator: Float,
   @BeanProperty var denominator: Float,
+  @BeanProperty var cv: Option[Float] = None, // only for average of different ratios
   @BeanProperty var state: Int = 0,// -1 means under-abundant, 0 means invariant and +1 means over-abundant
   @BeanProperty var tTestPValue: Option[Double] = None,
   @BeanProperty var zTestPValue: Option[Double] = None,
@@ -35,6 +36,8 @@ case class MasterQuantPeptideProfile (
 )
 
 case class MasterQuantPeptideProperties (
+  @BeanProperty var discardingReason: Option[String] = None,
+  
   @JsonDeserialize(contentAs = classOf[Array[Long]])
   @BeanProperty var mqProtSetIds: Option[Array[Long]] = None,
   
@@ -51,7 +54,7 @@ case class MasterQuantPeptideProperties (
   }
 }
 
-case class MasterQuantProteinSetProfile (
+case class MasterQuantProteinSetProfile(
   //@BeanProperty var id: Long,
   @BeanProperty var name: String = "",
   @BeanProperty var rawAbundances: Array[Float] = Array(),
