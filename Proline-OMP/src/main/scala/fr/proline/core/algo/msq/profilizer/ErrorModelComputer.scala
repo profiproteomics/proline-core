@@ -56,7 +56,7 @@ class AbsoluteErrorModel( val errorDistribution: Seq[AbsoluteErrorBin] ) extends
         _applyErrorCorrectionToStatSummary(statSummary2)
       )
       
-      val twoTailedPValue = if( correctedPValue > pValue) correctedPValue else pValue
+      val twoTailedPValue = if( pValue.isNaN ||correctedPValue > pValue ) correctedPValue else pValue
       //val singleTailedPValue = twoTailedPValue / 2
       //println( pValue + "\t" + finalPValue)
       
