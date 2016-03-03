@@ -389,10 +389,12 @@ case class MasterQuantProteinSet(
     if ( masterQuantPeptides.length < 5 ) {
       
       // Keep only profiles with highest number of defined ratios
-      def countDefinedRatios(profile: MasterQuantProteinSetProfile) = profile.getRatios.count( _.map(_.ratioValue.isNaN == false).getOrElse(false) )
+      def countDefinedRatios(profile: MasterQuantProteinSetProfile) = {
+        profile.getRatios.count( _.map(_.ratioValue.isNaN == false).getOrElse(false) )
+      }
       
       val maxDefinedRatios = profiles.map(countDefinedRatios(_)).max
-      profiles = profiles.filter( countDefinedRatios(_) == maxDefinedRatios )     
+      profiles = profiles.filter( countDefinedRatios(_) == maxDefinedRatios )
     }
 
     // Sort profiles by the number of MQ peptides

@@ -31,9 +31,12 @@ case class MasterQuantPeptideIonProperties (
 )
 
 case class MasterQuantPeptideProfile (
-  @BeanProperty var ratios: List[Option[ComputedRatio]]
+  @BeanProperty var ratios: List[Option[ComputedRatio]] = List()
   //@BeanProperty var mqProtSetProfileIds: Option[Array[Long]] = None
-)
+) {
+  // FIXME: tmp workaround because jackson doesn't auto-initialize List fields
+  if( ratios == null ) ratios = List()
+}
 
 case class MasterQuantPeptideProperties (
   @BeanProperty var discardingReason: Option[String] = None,
@@ -58,10 +61,14 @@ case class MasterQuantProteinSetProfile(
   //@BeanProperty var id: Long,
   @BeanProperty var name: String = "",
   @BeanProperty var rawAbundances: Array[Float] = Array(),
-  @BeanProperty var abundances: Array[Float],
-  @BeanProperty var ratios: List[Option[ComputedRatio]],
-  @BeanProperty var mqPeptideIds: Array[Long]
-)
+  @BeanProperty var abundances: Array[Float] = Array(),
+  @BeanProperty var ratios: List[Option[ComputedRatio]] = List(),
+  @BeanProperty var mqPeptideIds: Array[Long] = Array()
+) {
+  // FIXME: tmp workaround because jackson doesn't auto-initialize List fields
+  if( ratios == null ) ratios = List()
+}
+
  
 case class MasterQuantProteinSetProperties (
   
@@ -98,5 +105,5 @@ case class MasterQuantChannelProperties (
 
 case class SpectralCountProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
-  @BeanProperty var weightsRefRSMIds: Array[java.lang.Long] = Array()
+  @BeanProperty var weightsRefRSMIds: Array[Long] = Array()
 )
