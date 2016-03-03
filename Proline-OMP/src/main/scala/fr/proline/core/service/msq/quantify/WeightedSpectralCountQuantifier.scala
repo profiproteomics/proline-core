@@ -718,7 +718,7 @@ class WeightedSpectralCountQuantifier(
       val idfRSM = rsmProvider.getResultSummary(scConfig.parentRSMId.get, true).get
 
         val spectralCountProperties = if(scConfig.weightRefRSMIds != null && !scConfig.weightRefRSMIds.isEmpty) { 
-        	Some( new SpectralCountProperties(weightsRefRSMIds =  scConfig.weightRefRSMIds.toArray.map(_.asInstanceOf[java.lang.Long])) )    	     	 
+        	Some( new SpectralCountProperties(weightsRefRSMIds = scConfig.weightRefRSMIds.toArray) )
         } else None
             
         if(spectralCountProperties.isDefined){
