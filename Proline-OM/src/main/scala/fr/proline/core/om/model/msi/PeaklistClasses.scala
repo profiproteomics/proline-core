@@ -123,10 +123,10 @@ case class SpectrumTitleParsingRule (
           
           // Try to capture the corresponding regex group
           try {
-            val matches = title =# (atomicFieldRegex,fieldNameAsStr)
+            val matcherOpt = title =# (atomicFieldRegex,fieldNameAsStr)
             
-            if( matches.isDefined && matches.get.groupNames.contains(fieldNameAsStr) ) {
-              specTitleFieldMap += fieldName -> matches.get.group(fieldNameAsStr)
+            if( matcherOpt.isDefined && matcherOpt.get.groupNames.contains(fieldNameAsStr) ) {
+              specTitleFieldMap += fieldName -> matcherOpt.get.group(fieldNameAsStr)
             }
           } catch {
             
@@ -140,8 +140,15 @@ case class SpectrumTitleParsingRule (
     }
     
     if (lastThrowable != null ) {
-      /* Log this one as WARN with full Exception stack-trace */
-      logger.warn("Last error while parsing spectrum title", lastThrowable )
+      lastThrowable match {
+        case ae: ArrayIndexOutOfBoundsException => {
+          logger.trace("Bug in scala.util.matching.Regex", ae)
+        }
+        case t: Throwable => {
+          /* Log this one as WARN with full Exception stack-trace */
+          logger.warn("Last error while parsing spectrum title", t )
+        }
+      }
     }
     
     Map() ++ specTitleFieldMap
