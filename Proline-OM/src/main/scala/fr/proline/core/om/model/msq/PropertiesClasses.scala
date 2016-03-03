@@ -28,13 +28,14 @@ case class MasterQuantPeptideIonProperties (
   // Key = QuantChannel ID ; Value = PeptideMatch ID
   @JsonDeserialize( keyAs = classOf[java.lang.Long], contentAs = classOf[java.lang.Long] )
   var bestPeptideMatchIdMap: scala.collection.immutable.HashMap[Long,Long] = scala.collection.immutable.HashMap()
-)
+) {
+  if( bestPeptideMatchIdMap == null ) bestPeptideMatchIdMap = scala.collection.immutable.HashMap()
+}
 
 case class MasterQuantPeptideProfile (
   @BeanProperty var ratios: List[Option[ComputedRatio]] = List()
   //@BeanProperty var mqProtSetProfileIds: Option[Array[Long]] = None
 ) {
-  // FIXME: tmp workaround because jackson doesn't auto-initialize List fields
   if( ratios == null ) ratios = List()
 }
 
@@ -47,6 +48,8 @@ case class MasterQuantPeptideProperties (
   @JsonDeserialize( keyAs = classOf[java.lang.Integer], contentAs = classOf[MasterQuantPeptideProfile] )
   private var mqPepProfileByGroupSetupNumber: HashMap[Int,MasterQuantPeptideProfile] = null
 ) {
+  
+  if( mqPepProfileByGroupSetupNumber == null ) mqPepProfileByGroupSetupNumber = HashMap()
   
   def getMqPepProfileByGroupSetupNumber(): Option[HashMap[Int,MasterQuantPeptideProfile]] = {
     Option(mqPepProfileByGroupSetupNumber)
@@ -65,8 +68,11 @@ case class MasterQuantProteinSetProfile(
   @BeanProperty var ratios: List[Option[ComputedRatio]] = List(),
   @BeanProperty var mqPeptideIds: Array[Long] = Array()
 ) {
-  // FIXME: tmp workaround because jackson doesn't auto-initialize List fields
+  if( name == null ) name = ""
+  if( rawAbundances == null ) rawAbundances = Array()
+  if( abundances == null ) abundances = Array()
   if( ratios == null ) ratios = List()
+  if( mqPeptideIds == null ) mqPeptideIds = Array()
 }
 
  
@@ -82,6 +88,8 @@ case class MasterQuantProteinSetProperties (
   @JsonDeserialize(contentAs = classOf[Array[Long]] )
   @BeanProperty var selectedMasterQuantPeptideIonIds: Option[Array[Long]] = None
 ) {
+  
+  if( mqProtSetProfilesByGroupSetupNumber == null ) mqProtSetProfilesByGroupSetupNumber = HashMap()
   
   def getMqProtSetProfilesByGroupSetupNumber(): Option[HashMap[Int, Array[MasterQuantProteinSetProfile]]] = {
     Option(mqProtSetProfilesByGroupSetupNumber)
@@ -106,4 +114,6 @@ case class MasterQuantChannelProperties (
 case class SpectralCountProperties (
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   @BeanProperty var weightsRefRSMIds: Array[Long] = Array()
-)
+) {
+  if(weightsRefRSMIds == null) weightsRefRSMIds = Array()
+}
