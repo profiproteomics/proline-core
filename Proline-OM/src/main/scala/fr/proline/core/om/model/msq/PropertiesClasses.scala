@@ -112,7 +112,7 @@ case class MasterQuantChannelProperties (
 )
 
 case class SpectralCountProperties (
-  @JsonDeserialize(contentAs = classOf[java.lang.Long] )
+  //@JsonDeserialize(contentAs = classOf[java.lang.Long] )
   @BeanProperty var weightsRefRSMIds: Array[Long] = Array()
 ) {
   if(weightsRefRSMIds == null) weightsRefRSMIds = Array()
