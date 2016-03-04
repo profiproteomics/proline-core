@@ -31,7 +31,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     
     val peptideMapBuilder = scala.collection.immutable.Map.newBuilder[String, Long]
 
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       // Iterate over peptide sequences to retrieve their identifiers
       pepSequences.grouped(msiEzDBC.getInExpressionCountLimit).foreach { tmpPepSeqs =>
@@ -51,14 +51,14 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
           peptideMapBuilder += (pepSeq + "%" + ptmString -> pepId)
         }
       }
-    })
+    }
 
     peptideMapBuilder.result()
   }
 
   def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit = {
     
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       msiEzDBC.executeInBatch(MsiDbPeptideTable.mkInsertQuery()) { stmt =>
   
@@ -79,7 +79,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
           }
         }
       }
-    })
+    }
 
   }
 
@@ -93,7 +93,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
     val newProteins = new ArrayBuffer[Protein](0)
 
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       msiEzDBC.executeInBatch(MsiDbBioSequenceTable.mkInsertQuery()) { stmt =>
         for (protein <- proteins) {
@@ -118,7 +118,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
           }
         }
       }
-    })
+    }
 
     newProteins.toArray
 
@@ -130,7 +130,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     val rsId = rs.id
     var count = 0
     
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       val ptmStringInsertQuery = MsiDbPeptideReadablePtmStringTable.mkInsertQuery
       
@@ -143,14 +143,14 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
           )
         }
       }
-    })
+    }
 
     count
   }
 
   def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
     
-    DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
       
@@ -214,7 +214,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
         }
       }
       peptideMatches.length
-    })
+    }
 
   }
   
@@ -222,7 +222,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     
     val schemaName = ObjectTreeSchema.SchemaName.SPECTRUM_MATCH.toString()
     
-    DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       // Store spectrum match
       val spectrumMatchId = msiEzDBC.executePrepared(objTreeInsertQuery, true) { stmt =>
           stmt.executeWith(
@@ -242,7 +242,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
           schemaName
         )
       }
-    })
+    }
 
   }
   
@@ -252,7 +252,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
     val pepMatchIdByKey = Map() ++ rs.peptideMatches.map( pm => (pm.msQuery.initialId,pm.rank) -> pm.id )    
     var spectraCount = 0
     
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
 
       val spectrumMatchKeyById = new HashMap[Long,(Int,Int)]()
       
@@ -287,14 +287,14 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
         }
       }
       
-    })
+    }
     
     spectraCount
   }
 
   def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
 
-    DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
       
@@ -344,7 +344,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
       this.linkProteinMatchesToSeqDatabases(rs, msiEzDBC,proteinMatches)
   
       proteinMatches.length
-    })
+    }
 
   }
   
@@ -372,7 +372,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
 
     var count = 0
     
-    DoJDBCWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(msiDbCtx) { msiEzDBC =>
       
       msiEzDBC.executeInBatch( MsiDbSequenceMatchTable.mkInsertQuery ) { stmt =>
         
@@ -399,7 +399,7 @@ abstract class AbstractSQLRsWriter() extends IRsWriter {
           }
         }
       }
-    })
+    }
 
     count
   }

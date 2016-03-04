@@ -51,7 +51,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   // TODO: check first peptideByUniqueKey ???
   override def insertNewPeptides(peptides: Seq[Peptide], peptideByUniqueKey: HashMap[String,Peptide], msiDbCtx: DatabaseConnectionContext): Unit = {
 
-    DoJDBCWork.withConnection( msiDbCtx, { msiCon =>
+    DoJDBCWork.withConnection( msiDbCtx, true) { msiCon =>
       
       val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
   
@@ -93,7 +93,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       stmt.executeUpdate("INSERT into peptide (" + peptideTableCols + ") " +
         "SELECT " + peptideTableCols + " FROM " + tmpPeptideTableName
       )
-    },true)
+    }
     
   }
 
@@ -105,7 +105,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   
   override def insertRsReadablePtmStrings(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
     
-    DoJDBCReturningWork.withConnection( msiDbCtx, { msiCon =>
+    DoJDBCReturningWork.withConnection(msiDbCtx) { msiCon =>
       
       // Define some vars
       val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
@@ -148,12 +148,12 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       
       nbInsertedRecords.toInt
       
-    } )
+    }
   }
 
   override def insertRsPeptideMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
 
-    DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, true) { msiEzDBC =>
       
       val msiCon = msiEzDBC.connection
       val scoringIdByType = new MsiDbHelper(msiDbCtx).getScoringIdByType
@@ -242,7 +242,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   
       nbInsertedPepMatches.toInt
       
-    }, true)
+    }
     
   }
 
@@ -276,7 +276,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
 
   override def insertRsProteinMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
 
-    DoJDBCReturningWork.withEzDBC( msiDbCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiDbCtx, true) { msiEzDBC =>
       
       val msiCon = msiEzDBC.connection
       
@@ -357,13 +357,13 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
       
       nbInsertedProtMatches.toInt
       
-    },true)
+    }
     
   }
 
   override def insertRsSequenceMatches(rs: ResultSet, msiDbCtx: DatabaseConnectionContext): Int = {
 
-    DoJDBCReturningWork.withConnection( msiDbCtx, { msiCon =>
+    DoJDBCReturningWork.withConnection(msiDbCtx, true) { msiCon =>
       
       val bulkCopyManager = PostgresUtils.getCopyManager(msiCon)
   
@@ -422,7 +422,7 @@ private[msi] object PgRsWriter extends AbstractSQLRsWriter() {
   
       nbInsertedRecords.toInt
       
-    }, true )
+    }
     
   }
 

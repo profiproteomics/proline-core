@@ -34,11 +34,7 @@ object RsmStorer {
   private val proteinRocCurveSchemaName = SchemaName.PROTEIN_VALIDATION_ROC_CURVE.toString
             
   def apply( msiDbContext: DatabaseConnectionContext ): RsmStorer = {
-    
-    msiDbContext.isJPA match {
-      case true => new RsmStorer( new SQLRsmStorer() )
-      case false => new RsmStorer( new SQLRsmStorer() )
-    }
+      new RsmStorer( new SQLRsmStorer() )
   }
 }
 
@@ -67,7 +63,7 @@ class RsmStorer( private val _writer: IRsmStorer ) extends LazyLogging {
   
   private def _insertResultSummary( rsm: ResultSummary, execCtx: IExecutionContext ): Unit = {
     
-    DoJDBCWork.withEzDBC( execCtx.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(execCtx.getMSIDbConnectionContext) { msiEzDBC =>
       
       msiEzDBC.executePrepared( RsmStorer.rsmInsertQuery, true ) { stmt =>
         stmt.executeWith(
@@ -109,7 +105,7 @@ class RsmStorer( private val _writer: IRsmStorer ) extends LazyLogging {
           logger.info("proteinValidationRocCurve have been stored")
         }
       }
-    })
+    }
   }
   
 }

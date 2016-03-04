@@ -71,7 +71,7 @@ class SQLRsStorer(
 
     val msiDb = context.getMSIDbConnectionContext
 
-    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext, { msiEzDBC =>
+    DoJDBCWork.withEzDBC(context.getMSIDbConnectionContext, true) { msiEzDBC =>
 
       // Define some vars
       val isDecoy = resultSet.isDecoy
@@ -107,7 +107,7 @@ class SQLRsStorer(
         logger.debug("Created Result Set with ID " + resultSet.id)
       }
 
-    }, true)
+    }
 
   }
 
