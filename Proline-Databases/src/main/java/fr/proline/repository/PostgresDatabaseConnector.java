@@ -2,6 +2,7 @@ package fr.proline.repository;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Connection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
@@ -30,7 +31,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	private static final String POSTGRESQL_SCHEME = JDBC_SCHEME + ':' + DriverType.POSTGRESQL.getJdbcURLProtocol() + ':';
 
 	private static final AtomicLong NAME_SEQUENCE = new AtomicLong(0L);
-
+	
 	public PostgresDatabaseConnector(final ProlineDatabaseType database, final Map<Object, Object> properties) {
 		super(database, properties);
 	}
@@ -42,7 +43,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
 	@Override
 	protected DataSource createDataSource(final String ident, final Map<Object, Object> properties) {
-
+		long start = System.currentTimeMillis();
 		if (properties == null) {
 			throw new IllegalArgumentException("Properties Map is null");
 		}
@@ -81,6 +82,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		final DataSource source = (maxConnection > 1) ? buildC3P0DataSource(ident, properties, fakeURI, maxConnection)
 			: buildSimpleDataSource(ident, properties, fakeURI);
 
+		LOG.info("Pool creation duration = "+(System.currentTimeMillis() - start)+" ms for "+getProlineDatabaseType());
 		return source;
 	}
 
@@ -142,7 +144,7 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 		source.setUser(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_USER_KEY));
 		source.setPassword(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_PASSWORD_KEY));
 
-		return source;
+		return new DataSourceWrapper(source, this);
 	}
 
 	private DataSource buildC3P0DataSource(final String ident, final Map<Object, Object> properties, URI fakeURI, Integer maxConnection) {
@@ -205,13 +207,35 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 	}
 
 	@Override
+	public int getOpenConnectionCount() {
+		if (m_dataSource == null)
+			return 0;
+		
+		if (m_dataSource instanceof ComboPooledDataSource) {
+			try {
+				ComboPooledDataSource poolDS = ((ComboPooledDataSource) m_dataSource);
+				return poolDS.getNumBusyConnections();
+			} catch (Exception exClose) {
+				LOG.error("Error counting open connection from DataSource", exClose);
+				return 0;
+			}
+
+		} else {
+			return super.getOpenConnectionCount();
+		}
+		
+	}
+	
+	@Override
 	protected void doClose(final String ident, final DataSource source) {
 
 		if (source instanceof ComboPooledDataSource) {
 			LOG.debug("Closing DataSource for [{}]", ident);
 
 			try {
-				((ComboPooledDataSource) source).close();
+				ComboPooledDataSource poolDS = ((ComboPooledDataSource) source);
+				LOG.warn("Number of busy connections = "+poolDS.getNumBusyConnections());
+				poolDS.close();
 			} catch (Exception exClose) {
 				LOG.error("Error closing DataSource for [" + ident + ']', exClose);
 			}
@@ -282,5 +306,6 @@ public class PostgresDatabaseConnector extends AbstractDatabaseConnector {
 
 		return result;
 	}
+
 
 }

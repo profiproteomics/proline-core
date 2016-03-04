@@ -207,5 +207,10 @@ public class DatabaseTestConnector implements IDatabaseConnector {
 		return m_realConnector.getProperty(key);		
 	}
 
+	@Override
+	public int getOpenConnectionCount() {
+		return m_realConnector.getOpenConnectionCount();
+	}
+
 
 }

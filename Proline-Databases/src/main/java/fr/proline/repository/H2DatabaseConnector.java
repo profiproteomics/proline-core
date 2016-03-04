@@ -60,6 +60,18 @@ public class H2DatabaseConnector extends AbstractDatabaseConnector {
 	}
 
 	@Override
+	public int getOpenConnectionCount() {
+
+		if ( m_dataSource instanceof JdbcConnectionPool) {
+			final JdbcConnectionPool h2Source = (JdbcConnectionPool) m_dataSource;
+			return h2Source.getActiveConnections();
+		}
+		
+		return 0;
+	}
+	
+	
+	@Override
 	protected void doClose(final String ident, final DataSource source) {
 
 		if (source instanceof JdbcConnectionPool) {

@@ -2,6 +2,7 @@ package fr.proline.repository;
 
 import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,10 +16,12 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
 import fr.profi.util.PropertiesUtils;
 import fr.profi.util.StringUtils;
 
-public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
+public abstract class AbstractDatabaseConnector implements IDatabaseConnector, IConnectionListener {
 
 	/* Constants */
 	public static final String PERSISTENCE_JDBC_DRIVER_KEY = "javax.persistence.jdbc.driver";
@@ -72,13 +75,15 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	/* All mutable fields are @GuardedBy("m_connectorLock") */
 	private Map<Object, Object> m_additionalProperties;
 
-	private DataSource m_dataSource;
+	protected DataSource m_dataSource;
 
 	private EntityManagerFactory m_entityManagerFactory;
-	
+
 	private List<EntityManager> m_entityManagers;
-	
+
 	private boolean m_closed;
+
+	private int m_connectionCount = 0;
 
 	/* Constructors */
 	protected AbstractDatabaseConnector(
@@ -221,7 +226,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 			if (m_entityManagerFactory == null) {
 				m_entityManagers = new ArrayList<EntityManager>();
-				
+
 				final ProlineDatabaseType prolineDbType = getProlineDatabaseType();
 				/* Protection copy */
 				final Map<Object, Object> propertiesCopy = new HashMap<Object, Object>(m_properties);
@@ -247,8 +252,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 					m_entityManagerFactory = createEntityManagerFactory(
 						getProlineDatabaseType(),
 						propertiesCopy,
-						DEFAULT_ORM_OPTIMIZATIONS
-					);
+						DEFAULT_ORM_OPTIMIZATIONS);
 				} catch (Exception ex) {
 					/* Log and re-throw */
 					final String message = "Error creating EntityManagerFactory for " + prolineDbType;
@@ -263,43 +267,34 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 
 		return m_entityManagerFactory;
 	}
-	
+
 	@Override
 	public EntityManager createEntityManager() {
 		//this.incrementOpenEntityManagerCount();
 		EntityManager em = this.getEntityManagerFactory().createEntityManager();
-		
+
 		synchronized (m_connectorLock) {
 			m_entityManagers.add(em);
 		}
-		
+
 		return em;
 	}
 
 	@Override
 	public int getOpenEntityManagerCount() {
 		int openEmCount = 0;
-		for( EntityManager m_entityManager : m_entityManagers) {
-			if(m_entityManager.isOpen()) openEmCount++;
+		for (EntityManager m_entityManager : m_entityManagers) {
+			if (m_entityManager.isOpen())
+				openEmCount++;
 		}
 		return openEmCount;
 	}
-	
-	/*protected int incrementOpenEntityManagerCount() {
-		synchronized (m_connectorLock) {
-			m_entityManagerCount++;
-			return m_entityManagerCount;
-		}
-	}
-	
+
 	@Override
-	public int decrementOpenEntityManagerCount() {
-		synchronized (m_connectorLock) {
-			m_entityManagerCount--;
-			return m_entityManagerCount;
-		}
-	}*/
-	
+	public int getOpenConnectionCount() {
+		return m_connectionCount;
+	}
+
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + ' ' + m_ident;
@@ -313,12 +308,11 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 				m_closed = true;
 
 				if (m_entityManagerFactory != null) {
-					
-					if(this.getOpenEntityManagerCount() > 0) {
+
+					if (this.getOpenEntityManagerCount() > 0) {
 						LOG.warn(
-							"Some EntityManager instances are still open. "+
-							"Closing the database connector before closing all related EntityManager instances may lead to inconsistent behavior."
-						);
+							"Some EntityManager instances are still open. " +
+								"Closing the database connector before closing all related EntityManager instances may lead to inconsistent behavior.");
 					}
 
 					LOG.debug("Closing EntityManagerFactory for [{}]", m_ident);
@@ -362,8 +356,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	}
 
 	/**
-	 * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
-	 * <code>getDataSource</code>.
+	 * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by <code>getDataSource</code>.
 	 * 
 	 * @param database
 	 * @param properties
@@ -372,8 +365,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	protected abstract DataSource createDataSource(final String ident, final Map<Object, Object> properties);
 
 	/**
-	 * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
-	 * <code>getEntityManagerFactory</code>.
+	 * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by <code>getEntityManagerFactory</code>.
 	 * 
 	 * @param database
 	 * @param properties
@@ -406,8 +398,7 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 	}
 
 	/**
-	 * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by
-	 * <code>close</code>.
+	 * This method is called holding <code>m_connectorLock</code> intrinsic object <strong>lock</strong> by <code>close</code>.
 	 * 
 	 * @param source
 	 */
@@ -530,6 +521,20 @@ public abstract class AbstractDatabaseConnector implements IDatabaseConnector {
 			properties.put(HIBERNATE_BYTECODE_OPTIMIZER_KEY, "true");
 		}
 
+	}
+
+	@Override
+	public void connectionClosed(ConnectionWrapper connectionWrapper) {
+		synchronized (m_connectorLock) {
+			m_connectionCount--;
+		}
+	}
+
+	@Override
+	public void connectionCreated(Connection connection) {
+		synchronized (m_connectorLock) {
+			m_connectionCount++;
+		}
 	}
 
 }

@@ -29,16 +29,12 @@ public interface IDatabaseConnector extends Closeable {
 	Object getProperty(Object key);
 
 	DataSource getDataSource();
-
-	//EntityManagerFactory getEntityManagerFactory();
 	
 	EntityManager createEntityManager();
 	
 	int getOpenEntityManagerCount();
 	
-	//int incrementOpenEntityManagerCount();
-	
-	//int decrementOpenEntityManagerCount();
+    int getOpenConnectionCount();
 
 	void close();
 

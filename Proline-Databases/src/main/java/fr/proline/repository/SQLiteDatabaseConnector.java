@@ -50,7 +50,7 @@ public class SQLiteDatabaseConnector extends AbstractDatabaseConnector {
 		final SQLiteDataSource source = new SQLiteDataSource();
 		source.setUrl(PropertiesUtils.getProperty(properties, PERSISTENCE_JDBC_URL_KEY));
 
-		return source;
+		return new DataSourceWrapper(source, this);
 	}
 
 	@Override
