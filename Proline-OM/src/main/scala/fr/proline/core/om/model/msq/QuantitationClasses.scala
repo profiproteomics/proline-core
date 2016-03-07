@@ -330,10 +330,10 @@ case class MasterQuantPeptide(
       val profileByGSNumberOpt = mqPepProps.getMqPepProfileByGroupSetupNumber
       if( profileByGSNumberOpt.isEmpty ) None
       else {
-        val mqPepProfile = profileByGSNumberOpt.get(groupSetupNumber)
-        Some( mqPepProfile.getRatios() )
+        val mqPepProfileOpt = profileByGSNumberOpt.get.get(groupSetupNumber)
+        mqPepProfileOpt.map(_.getRatios())
       }
-    }.getOrElse( List() )
+    }.getOrElse(List())
   }
 
 }
