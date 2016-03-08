@@ -18,7 +18,7 @@ import fr.proline.core.om.model.msq._
 
 case class ProfilizerStatConfig(
   // Note: maxCv is experimental => DO NOT PUT IN GUI
-  maxCv: Float = Float.MaxValue, // TODO: do not discard peptides => apply this filter during the summarization step ?
+  var maxCv: Option[Float] = None, // TODO: do not discard peptides => apply this filter during the summarization step ?
   statTestsAlpha: Float = 0.01f,
   minZScore: Float = 0.4f, // ZScore equals ln(ratio) followed by standardisation
   minPsmCountPerRatio: Int = 0, // TODO: remove me ???
@@ -26,38 +26,52 @@ case class ProfilizerStatConfig(
   
   applyMissValInference: Boolean = true, // TODO: remove me when IHMs haven been updated
   // TODO: replace Some(MissingAbundancesInferenceConfig) by None when IHMs haven been updated
-  missValInferenceMethod: String = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL,
-  missValInferenceConfig: Option[MissingAbundancesInferenceConfig] = Some(MissingAbundancesInferenceConfig()),
+  var missValInferenceMethod: String = null,
+  var missValInferenceConfig: Option[MissingAbundancesInferenceConfig] = None,
   
   applyVarianceCorrection: Boolean = true,
   applyTTest: Boolean = true,
   applyZTest: Boolean = true
 ) {
-  // TODO: remove me when IHMs haven been updated
-  if( applyMissValInference ) {
-    require( missValInferenceMethod.isEmpty() == false, "can't apply missing value inference if the method is not defined" )
-  }
+  // Workaround for jackson support of default values
+  if(missValInferenceMethod == null) missValInferenceMethod = MissingAbundancesInferenceMethod.GAUSSIAN_MODEL
+  if(missValInferenceConfig.isEmpty) missValInferenceConfig = Some(MissingAbundancesInferenceConfig())
 }
 
 case class ProfilizerConfig(
   discardMissedCleavedPeptides: Boolean = true,
-  missedCleavedPeptideFilteringMethod: Option[String] = Some(MissedCleavedPeptideFilteringMethod.DISCARD_All_FORMS),
+  var missedCleavedPeptideFilteringMethod: Option[String] = None,
   
   discardOxidizedPeptides: Boolean = true,
-  oxidizedPeptideFilteringMethod: Option[String] = Some(OxidizedPeptideFilteringMethod.DISCARD_All_FORMS),
+  var oxidizedPeptideFilteringMethod: Option[String] = None,
   
   //discardLowIdentPeptides: Boolean = false,
   useOnlySpecificPeptides: Boolean = true,
   
   applyProfileClustering: Boolean = true,
-  profileClusteringMethod: Option[String] = Some(MqPeptidesClusteringMethod.QUANT_PROFILE),
+  var profileClusteringMethod: Option[String] = None,
   profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
   
-  abundanceSummarizingMethod: String = AbundanceSummarizer.Method.MEAN,
+  var abundanceSummarizingMethod: String = null,
   
   peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
   proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig()
-)
+) {
+  // Workaround for jackson support of default values
+  if( oxidizedPeptideFilteringMethod.isEmpty ) {
+    oxidizedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_All_FORMS)
+  }
+  // Workaround for jackson support of default values
+  if( missedCleavedPeptideFilteringMethod.isEmpty ) {
+    missedCleavedPeptideFilteringMethod = Some(MissedCleavedPeptideFilteringMethod.DISCARD_All_FORMS)
+  }
+  if(profileClusteringMethod.isEmpty) {
+    profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
+  }
+  if( abundanceSummarizingMethod == null) {
+    abundanceSummarizingMethod = AbundanceSummarizer.Method.MEAN
+  }
+}
 
 /**
  * Analyze profiles of Master Quant Peptides and Master Quant Protein sets
@@ -218,7 +232,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         
         // TODO: compute these statistics independently from ratios ???
         def isCvTooHigh(summary: ExtendedStatisticalSummary): Boolean = {
-          if( summary.getN > 2 && summary.getCv() > maxCv) true else false
+          if( maxCv.isEmpty ) return false
+          if( summary.getN > 2 && summary.getCv() > maxCv.get) true else false
         }
         if( isCvTooHigh(ratio.numeratorSummary) || isCvTooHigh(ratio.denominatorSummary) ) {
           if( masterQuantPep.selectionLevel == 2 ) {
