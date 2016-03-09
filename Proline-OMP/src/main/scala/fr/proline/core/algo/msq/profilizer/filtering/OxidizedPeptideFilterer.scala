@@ -8,7 +8,7 @@ import fr.proline.core.om.model.msq.MasterQuantPeptide
 import fr.proline.core.om.model.msi.Peptide
 
 object OxidizedPeptideFilteringMethod extends EnhancedEnum {
-  val DISCARD_All_FORMS = Value
+  val DISCARD_ALL_FORMS = Value
   val DISCARD_OXIDIZED_FORMS = Value
   val KEEP_MOST_ABUNDANT_FORM = Value
 }
@@ -27,7 +27,7 @@ object OxidizedPeptideFilterer {
     val filteringMethod = OxidizedPeptideFilteringMethod.withName(methodName)
     
     filteringMethod match {
-      case DISCARD_All_FORMS => OxidizedAndCounterpartFormsFilterer.discardPeptides(masterQuantPeptides)
+      case DISCARD_ALL_FORMS => OxidizedAndCounterpartFormsFilterer.discardPeptides(masterQuantPeptides)
       case DISCARD_OXIDIZED_FORMS => OxidizedFormFilterer.discardPeptides(masterQuantPeptides)
       case KEEP_MOST_ABUNDANT_FORM => LowestAbundantOxidizedFormFilterer.discardPeptides(masterQuantPeptides)
     }

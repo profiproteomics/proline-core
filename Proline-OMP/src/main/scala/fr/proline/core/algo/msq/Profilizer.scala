@@ -59,11 +59,11 @@ case class ProfilizerConfig(
 ) {
   // Workaround for jackson support of default values
   if( oxidizedPeptideFilteringMethod.isEmpty ) {
-    oxidizedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_All_FORMS)
+    oxidizedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_ALL_FORMS)
   }
   // Workaround for jackson support of default values
   if( missCleavedPeptideFilteringMethod.isEmpty ) {
-    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_All_FORMS)
+    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_ALL_FORMS)
   }
   if(profileClusteringMethod.isEmpty) {
     profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)

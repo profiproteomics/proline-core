@@ -7,7 +7,7 @@ import fr.profi.util.lang.EnhancedEnum
 import fr.proline.core.om.model.msq.MasterQuantPeptide
 
 object MissCleavedPeptideFilteringMethod extends EnhancedEnum {
-  val DISCARD_All_FORMS = Value
+  val DISCARD_ALL_FORMS = Value
   val DISCARD_MISS_CLEAVED_FORMS = Value
   val KEEP_MOST_ABUNDANT_FORM = Value
 }
@@ -26,7 +26,7 @@ object MissCleavedPeptideFilterer {
     val filteringMethod = MissCleavedPeptideFilteringMethod.withName(methodName)
     
     filteringMethod match {
-      case DISCARD_All_FORMS => AllCleavageFormsFilterer.discardPeptides(masterQuantPeptides)
+      case DISCARD_ALL_FORMS => AllCleavageFormsFilterer.discardPeptides(masterQuantPeptides)
       case DISCARD_MISS_CLEAVED_FORMS => MissCleavedFormFilterer.discardPeptides(masterQuantPeptides)
       case KEEP_MOST_ABUNDANT_FORM => LowestAbundantCleavageFormFilterer.discardPeptides(masterQuantPeptides)
     }
