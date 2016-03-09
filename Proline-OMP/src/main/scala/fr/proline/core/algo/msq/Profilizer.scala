@@ -39,8 +39,8 @@ case class ProfilizerStatConfig(
 }
 
 case class ProfilizerConfig(
-  discardMissedCleavedPeptides: Boolean = true,
-  var missedCleavedPeptideFilteringMethod: Option[String] = None,
+  discardMissedCleavedPeptides: Boolean = true, // TODO: rename me in discardMissCleavedPeptides
+  var missCleavedPeptideFilteringMethod: Option[String] = None,
   
   discardOxidizedPeptides: Boolean = true,
   var oxidizedPeptideFilteringMethod: Option[String] = None,
@@ -62,8 +62,8 @@ case class ProfilizerConfig(
     oxidizedPeptideFilteringMethod = Some(OxidizedPeptideFilteringMethod.DISCARD_All_FORMS)
   }
   // Workaround for jackson support of default values
-  if( missedCleavedPeptideFilteringMethod.isEmpty ) {
-    missedCleavedPeptideFilteringMethod = Some(MissedCleavedPeptideFilteringMethod.DISCARD_All_FORMS)
+  if( missCleavedPeptideFilteringMethod.isEmpty ) {
+    missCleavedPeptideFilteringMethod = Some(MissCleavedPeptideFilteringMethod.DISCARD_All_FORMS)
   }
   if(profileClusteringMethod.isEmpty) {
     profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
@@ -147,8 +147,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     // --- Apply MC filter if requested ---
     if( config.discardMissedCleavedPeptides ) {
-      require( config.missedCleavedPeptideFilteringMethod.isDefined, "config.missedCleavedPeptideFilteringMethod is empty")
-      MissedCleavedPeptideFilterer.discardPeptides(masterQuantPeptides, config.missedCleavedPeptideFilteringMethod.get)
+      require( config.missCleavedPeptideFilteringMethod.isDefined, "config.missCleavedPeptideFilteringMethod is empty")
+      MissCleavedPeptideFilterer.discardPeptides(masterQuantPeptides, config.missCleavedPeptideFilteringMethod.get)
     }
     
     // --- Apply Oxidation filter if requested ---
