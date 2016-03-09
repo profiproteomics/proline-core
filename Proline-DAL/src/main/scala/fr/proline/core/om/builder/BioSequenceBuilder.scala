@@ -32,7 +32,10 @@ object BioSequenceBuilder {
     val mass = r.getDouble(BioSeqCols.MASS)
     val pi = r.getFloatOrElse(BioSeqCols.PI,Float.NaN)
     val crc64 = r.getString(BioSeqCols.CRC64)
-    val properties = r.getStringOption(BioSeqCols.SERIALIZED_PROPERTIES).map( ProfiJson.deserialize[BioSequenceProperties](_) )
+    val properties = r.getStringOption(BioSeqCols.SERIALIZED_PROPERTIES).flatMap { propsAsStr =>
+      if( propsAsStr.isEmpty() ) None
+      else Some(ProfiJson.deserialize[BioSequenceProperties](propsAsStr))
+    }
   
     BioSequence(
       id = id,
