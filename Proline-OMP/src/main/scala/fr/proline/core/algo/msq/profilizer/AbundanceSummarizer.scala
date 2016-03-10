@@ -95,12 +95,12 @@ object AbundanceSummarizer {
     }
     
     // Transform ratios before computing median
-    val transformedRatios = ratioMatrix.map { ratios =>
+    val transformedRatioMatrix = ratioMatrix.map { ratios =>
       transformRatios(ratios)
     }
     
     // Compute the median of ratios
-    val medianRatios = untransformRatios(summarizeUsingMedian(ratioMatrix))
+    val medianRatios = untransformRatios(summarizeUsingMedian(transformedRatioMatrix))
     
     // Compute the TOP3 mean abundances
     val top3MeanAbundances = summarizeUsingMeanOfTop3(matrixWithEligibleCols)
