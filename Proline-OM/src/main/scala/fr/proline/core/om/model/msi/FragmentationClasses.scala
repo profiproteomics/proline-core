@@ -56,8 +56,10 @@ object FragmentIonSeries extends Enumeration {
 }
 
 object NeutralLoss extends Enumeration {
+  val CH4OS = Value("CH4OS")
   val H2O = Value("H2O")
   val H3PO4 = Value("H3PO4")
+  val HPO3 = Value("HPO3")
   val NH3 = Value("NH3")
 }
 
