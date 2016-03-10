@@ -54,7 +54,7 @@ class AbundanceSummarizerTest {
   @Test
   def summarizeUsingMedianProfile {
     val singleRow = summarizeAbundanceMatrix(matrixWithMissingValues, Method.MEDIAN_PROFILE)    
-    assertArrayEquals( Array(2.82E+08f,Float.NaN,2.86E+08f,2.90E+08f), singleRow, 2.82E+08f * 0.01f)
+    assertArrayEquals( Array(2.82E+08f,Float.NaN,2.94E+08f,2.99E+08f), singleRow, 2.82E+08f * 0.01f)
   }
   
   @Test
