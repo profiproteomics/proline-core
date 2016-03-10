@@ -554,8 +554,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       
       // Check matrix is not empty after filtering
       if( samplesMedianAbMatrix.isEmpty ) {
-        logger.warn("Can't biological median profile for abundance summarizing (not enough defined values)")
-        return Array.fill(qcCount)(Float.NaN)
+        logger.warn("Can't compute biological median profile for abundance summarizing (not enough defined values), fallback to MEDIAN_PROFILE")
+        return AbundanceSummarizer.summarizeAbundanceMatrix(
+          abundanceMatrix,
+          AbundanceSummarizer.Method.MEDIAN_PROFILE
+        )
       }
       
       // Remove values in columns having a low number of defined values
@@ -640,8 +643,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val defSampleCvs = samplesCvs.filter( isZeroOrNaN(_) == false )
       val sampleCvMean = if (defSampleCvs.isEmpty) Double.NaN else defSampleCvs.sum / defSampleCvs.length
       if (isZeroOrNaN(sampleCvMean)) {
-        logger.warn("Can't compute CVs for abundance summarizing")
-        return Array.fill(qcCount)(Float.NaN)
+        logger.warn("Can't compute CVs for abundance summarizing, fall back to MEDIAN_PROFILE")
+        return AbundanceSummarizer.summarizeAbundanceMatrix(
+          abundanceMatrix,
+          AbundanceSummarizer.Method.MEDIAN_PROFILE
+        )
       }
       
       // Generate abundance values using the computed gaussian model parameters (median and standard deviation values)
@@ -660,11 +666,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           val sampleStdDev = sampleCvOrMeanCv * sampleMedianAb
           val generatedValues = _generatePositiveGaussianValues(sampleMedianAb.toDouble, sampleStdDev, 0.05f, sampleQcCount).map(_.toFloat)
           
-          if( generatedValues == null ) {
-            //println("sampleMedianAb",sampleMedianAb)
-            //println("sampleStdDev",sampleStdDev)
+          /*if( generatedValues == null ) {
+            println("sampleMedianAb",sampleMedianAb)
+            println("sampleStdDev",sampleStdDev)
           }
-          
+          */
           //println("generatedValues",generatedValues.toList)
           
           // Sort generated abundances according to previously computed sorted indices
@@ -719,7 +725,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     expectedStdDev: Double,
     stdDevTol: Float = 0.05f,
     nbValues: Int = 3,
-    maxIterations: Int = 1000
+    maxIterations: Int = 10000
   ): Array[Double] = {
     require( expectedMean.isNaN == false, "mean is NaN")
     require( isZeroOrNaN(expectedStdDev) == false, "expectedStdDev equals zero or is NaN")

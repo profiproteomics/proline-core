@@ -94,10 +94,13 @@ object AbundanceSummarizer {
       ratioRow.toArray
     }
     
-    // TODO: transform ratios before computing median (log, 1/X ?)
+    // Transform ratios before computing median
+    val transformedRatios = ratioMatrix.map { ratios =>
+      transformRatios(ratios)
+    }
     
     // Compute the median of ratios
-    val medianRatios = summarizeUsingMedian(ratioMatrix)
+    val medianRatios = untransformRatios(summarizeUsingMedian(ratioMatrix))
     
     // Compute the TOP3 mean abundances
     val top3MeanAbundances = summarizeUsingMeanOfTop3(matrixWithEligibleCols)
@@ -138,6 +141,20 @@ object AbundanceSummarizer {
   
   def summarizeUsingSum( abundanceMatrix: Array[Array[Float]] ): Array[Float] = {
     abundanceMatrix.transpose.map( _calcAbundanceSum( _ ) )
+  }
+  
+  def transformRatios( ratios: Array[Float] ): Array[Float] = {
+    ratios.map { ratio =>
+      if( ratio >= 1 ) ratio - 1
+      else 1 - (1 / ratio)
+    }
+  }
+  
+  def untransformRatios( transformedRatios: Array[Float] ): Array[Float] = {
+    transformedRatios.map { transformedRatio =>
+      if( transformedRatio >= 0 ) transformedRatio + 1
+      else 1 / (1 - transformedRatio)
+    }
   }
   
   // TODO: this method is duplicated in the Profilizer => put in a shared object ???
