@@ -52,7 +52,8 @@ case class ProfilizerConfig(
   var profileClusteringMethod: Option[String] = None,
   profileClusteringConfig: Option[MqPeptidesClustererConfig] = None,
   
-  var abundanceSummarizingMethod: String = null,
+  // TODO: rename into abundanceSummarizingMethod ???
+  var abundanceSummarizerMethod: String = null,
   
   peptideStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig(),
   proteinStatConfig: ProfilizerStatConfig = new ProfilizerStatConfig()
@@ -68,8 +69,8 @@ case class ProfilizerConfig(
   if(profileClusteringMethod.isEmpty) {
     profileClusteringMethod = Some(MqPeptidesClusteringMethod.QUANT_PROFILE)
   }
-  if( abundanceSummarizingMethod == null) {
-    abundanceSummarizingMethod = AbundanceSummarizer.Method.MEAN
+  if( abundanceSummarizerMethod == null) {
+    abundanceSummarizerMethod = AbundanceSummarizer.Method.MEAN
   }
 }
 
@@ -339,7 +340,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val psmCountMatrixBuffer = new ArrayBuffer[Array[Int]](mqPepsClusters.length)
     val mqPepsRatiosCvs = new ArrayBuffer[ArrayBuffer[Float]](mqPepsClusters.length)
     
-    val abSumMethod = AbundanceSummarizer.Method.withName(config.abundanceSummarizingMethod)
+    val abSumMethod = AbundanceSummarizer.Method.withName(config.abundanceSummarizerMethod)
     
     for( mqPepsCluster <- mqPepsClusters ) {
       //println("mqPepsCluster.name",mqPepsCluster.name)
