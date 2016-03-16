@@ -106,6 +106,7 @@ case class BiologicalGroup(
 case class QuantChannel(
   var id: Long = 0,
   val number: Int,
+  var name: String,
   val sampleNumber: Int,
   val identResultSummaryId: Long,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
@@ -114,7 +115,9 @@ case class QuantChannel(
   val runId: Option[Long] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Long] )
   val quantLabelId: Option[Long] = None
-)
+) {
+  if( name == null ) name = ""
+}
 
 /**
  * @param id
