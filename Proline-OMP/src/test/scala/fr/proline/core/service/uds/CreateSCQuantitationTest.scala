@@ -111,9 +111,9 @@ class CreateSCQuantitationTest extends StrictLogging {
     val masterQChsBuilder = Array.newBuilder[MasterQuantChannel]
     val qChsBuilder = Array.newBuilder[QuantChannel]
 
-    val qCh1 = new QuantChannel(number = 1, sampleNumber = 1, identResultSummaryId = 1)
+    val qCh1 = new QuantChannel(number = 1, name = "qCh1", sampleNumber = 1, identResultSummaryId = 1)
     qChsBuilder += qCh1
-    val qCh2 = new QuantChannel(number = 2, sampleNumber = 2, identResultSummaryId = 2)
+    val qCh2 = new QuantChannel(number = 2, name = "qCh2", sampleNumber = 2, identResultSummaryId = 2)
     qChsBuilder += qCh2
 
     val mqCh1 = new MasterQuantChannel(number = 1, name = Some("CreateQttDSTest"), quantChannels = qChsBuilder.result)
