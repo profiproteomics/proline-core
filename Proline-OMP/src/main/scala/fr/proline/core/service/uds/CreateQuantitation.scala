@@ -244,6 +244,11 @@ class CreateQuantitation(
       
       for (masterQuantChannel <- masterQuantChannels) {
         fractionNumber += 1
+        
+        // Retrieve quant channels and check they have unique names
+        val quantChannels = masterQuantChannel.quantChannels
+        val qcNames = quantChannels.withFilter(_.name.nonEmpty).map(_.name)
+        require( qcNames.length == qcNames.distinct.length, "Quant channels must be distinctly named !" )
   
         // Save quantitation fraction
         val udsQf = new UdsMasterQuantitationChannel()
@@ -258,7 +263,6 @@ class CreateQuantitation(
         udsEM.persist(udsQf)
         udsMasterQuantChannelsList.add(udsQf)
   
-        val quantChannels = masterQuantChannel.quantChannels
         var quantChannelNum = 0
         var quantChannelNumFound = false
         if (quantChannels.length > 0) {
