@@ -350,7 +350,7 @@ class CreateQuantitation(
   
           val udsQuantChannel = new UdsQuantChannel()
           udsQuantChannel.setNumber(if(quantChannelNumFound) quantChannel.number else quantChannelNum)
-          udsQuantChannel.setName("")
+          udsQuantChannel.setName(quantChannel.name)
           udsQuantChannel.setContextKey(contextKey)
           udsQuantChannel.setIdentResultSummaryId(quantChannel.identResultSummaryId)
           udsQuantChannel.setSampleReplicate(udsSampleReplicateByKey(contextKey))

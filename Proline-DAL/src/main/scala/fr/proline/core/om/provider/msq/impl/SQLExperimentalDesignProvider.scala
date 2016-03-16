@@ -81,6 +81,7 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
         QuantChannel(
           id = qcId,
           number = r.getInt(QuantChannelCols.NUMBER),
+          name = r.getStringOption(QuantChannelCols.NAME).getOrElse(""),
           sampleNumber = bioSampleById( toLong(r.getAny(QuantChannelCols.BIOLOGICAL_SAMPLE_ID) ) ).number,
           identResultSummaryId = r.getLong(QuantChannelCols.IDENT_RESULT_SUMMARY_ID),
           lcmsMapId = r.getAnyOption(QuantChannelCols.LCMS_MAP_ID).map( toLong(_) ),
