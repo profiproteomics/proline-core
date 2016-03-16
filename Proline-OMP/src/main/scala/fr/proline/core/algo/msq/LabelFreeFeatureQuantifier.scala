@@ -91,7 +91,7 @@ object BuildMasterQuantPeptide {
         rawAbundance = quantPepIon.rawAbundance,
         abundance = quantPepIon.abundance,
         elutionTime = quantPepIon.elutionTime,
-        peptideMatchesCount = peptideIonMap(qcId).view.map(_.peptideMatchesCount).sum,
+        peptideMatchesCount = quantPepIon.peptideMatchesCount,
         quantChannelId = qcId,
         selectionLevel = 2
       )
