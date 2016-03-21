@@ -1,5 +1,10 @@
 package fr.proline.core.om.provider.msq.impl
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashSet
+import scala.collection.mutable.LongMap
+import fr.profi.util.collection._
+import fr.profi.util.primitives._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.provider.msq.IExperimentalDesignProvider
 import fr.proline.core.om.model.msq._
@@ -18,10 +23,6 @@ import fr.proline.core.dal.tables.uds.UdsDbMasterQuantChannelTable
 import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
 import fr.proline.core.dal.tables.uds.UdsDbSampleAnalysisTable
 import fr.proline.core.dal.tables.uds.UdsDbRatioDefinitionTable
-import fr.profi.util.primitives._
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashSet
 
 class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) extends IExperimentalDesignProvider {
 
@@ -37,22 +38,17 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
   
   def getExperimentalDesign( quantitationId:Long ): Option[ExperimentalDesign] = {
     
-    DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
       
       // Retrieve biological samples
-      val bioSampleQueryBuilder = new SelectQueryBuilder2(UdsDbBiologicalSampleTable,UdsDbBiologicalGroupBiologicalSampleItemTable)
-      val bioSampleQuery = bioSampleQueryBuilder.mkSelectQuery( (t1,c1,t2,c2) => List(t1.*,t2.BIOLOGICAL_GROUP_ID) ->  
-        " WHERE "~ t1.QUANTITATION_ID ~" = "~ quantitationId ~
-        " AND "~ t1.ID ~" = "~ t2.BIOLOGICAL_SAMPLE_ID ~
-        " ORDER BY "~ t1.NUMBER
+      val bioSampleQueryBuilder = new SelectQueryBuilder1(UdsDbBiologicalSampleTable)
+      val bioSampleQuery = bioSampleQueryBuilder.mkSelectQuery( (t1,c1) => List(t1.*) ->
+        " WHERE "~ t1.QUANTITATION_ID ~" = "~ quantitationId ~" ORDER BY "~ t1.NUMBER
       )
       
-      val sampleIdsByGroupId = new HashMap[Long,HashSet[Long]]
-      val bioSampleById = new HashMap[Long,BiologicalSample]
+      val bioSampleById = new LongMap[BiologicalSample]
       udsEzDBC.selectAndProcess(bioSampleQuery) { r =>
-        val sampleId = toLong( r.getAny(BioSampleCols.ID) )
-        val groupId = toLong( r.getAny(GroupSampleMappingCols.BIOLOGICAL_GROUP_ID) )
-        sampleIdsByGroupId.getOrElseUpdate(groupId, new HashSet[Long]) += sampleId
+        val sampleId = r.getLong(BioSampleCols.ID)
         
         bioSampleById(sampleId) = BiologicalSample(
           id = sampleId,
@@ -71,22 +67,22 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
         " ORDER BY "~ t1.NUMBER
       )
       
-      val mqcIdByQcId = new HashMap[Long,Long]
+      val mqcIdByQcId = new LongMap[Long]()
       val quantChannels = udsEzDBC.select(qcQuery) { r =>
         
-        val qcId = toLong(r.getAny(QuantChannelCols.ID) )
-        val mqcId = toLong(r.getAny(QuantChannelCols.MASTER_QUANT_CHANNEL_ID) )
+        val qcId = r.getLong(QuantChannelCols.ID)
+        val mqcId = r.getLong(QuantChannelCols.MASTER_QUANT_CHANNEL_ID)
         mqcIdByQcId(qcId) = mqcId
         
         QuantChannel(
           id = qcId,
           number = r.getInt(QuantChannelCols.NUMBER),
           name = r.getStringOption(QuantChannelCols.NAME).getOrElse(""),
-          sampleNumber = bioSampleById( toLong(r.getAny(QuantChannelCols.BIOLOGICAL_SAMPLE_ID) ) ).number,
+          sampleNumber = bioSampleById( r.getLong(QuantChannelCols.BIOLOGICAL_SAMPLE_ID) ).number,
           identResultSummaryId = r.getLong(QuantChannelCols.IDENT_RESULT_SUMMARY_ID),
-          lcmsMapId = r.getAnyOption(QuantChannelCols.LCMS_MAP_ID).map( toLong(_) ),
-          runId = r.getAnyOption(QuantChannelCols.RUN_ID).map( toLong(_) ),
-          quantLabelId = r.getAnyOption(QuantChannelCols.QUANT_LABEL_ID).map( v =>  { println(v); toLong(v)} )
+          lcmsMapId = r.getLongOption(QuantChannelCols.LCMS_MAP_ID),
+          runId = r.getLongOption(QuantChannelCols.RUN_ID),
+          quantLabelId = r.getLongOption(QuantChannelCols.QUANT_LABEL_ID)
         )
       }
       val quantChannelsByMqcId = quantChannels.groupBy( qc => mqcIdByQcId(qc.id) )
@@ -100,16 +96,33 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
       
       val masterQuantChannels = udsEzDBC.select(mqcQuery) { r =>
         
-        val mqcId = toLong(r.getAny(MQChannelCols.ID) )
+        val mqcId = r.getLong(MQChannelCols.ID)
         
         MasterQuantChannel(
           id = mqcId,
           number = r.getInt(MQChannelCols.NUMBER),
           name = r.getStringOption(MQChannelCols.NAME),
           quantResultSummaryId = r.getLongOption(MQChannelCols.QUANT_RESULT_SUMMARY_ID),
-          lcmsMapSetId = r.getAnyOption(MQChannelCols.LCMS_MAP_SET_ID).map( toLong(_) ),
+          lcmsMapSetId = r.getLongOption(MQChannelCols.LCMS_MAP_SET_ID),
           quantChannels = quantChannelsByMqcId(mqcId).toArray
         )
+      }
+      
+      lazy val sampleIdSetByGroupId = {
+        val sampleGroupMappingQueryBuilder = new SelectQueryBuilder2(UdsDbBiologicalGroupTable,UdsDbBiologicalGroupBiologicalSampleItemTable)
+        val sampleGroupMappingQuery = sampleGroupMappingQueryBuilder.mkSelectQuery( (t1,c1,t2,c2) => List(t2.*) ->  
+          " WHERE "~ t1.QUANTITATION_ID ~" = "~ quantitationId ~
+          " AND "~ t1.ID ~" = "~ t2.BIOLOGICAL_GROUP_ID
+        )
+        
+        val sampleGroupMapping = new LongMap[HashSet[Long]]
+        udsEzDBC.selectAndProcess(sampleGroupMappingQuery) { r =>
+          val groupId = r.getLong(GroupSampleMappingCols.BIOLOGICAL_GROUP_ID)
+          val sampleId = r.getLong(GroupSampleMappingCols.BIOLOGICAL_SAMPLE_ID)
+          sampleGroupMapping.getOrElseUpdate(groupId, new HashSet[Long]) += sampleId
+        }
+        
+        sampleGroupMapping
       }
       
       // Retrieve biological groups
@@ -120,14 +133,14 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
         " ORDER BY "~ t1.NUMBER
       )
       
-      val bioGroupsByGroupSetupId = new HashMap[Long,HashSet[Long]]
-      val bioGroupById = new HashMap[Long,BiologicalGroup]
+      val bioGroupsByGroupSetupId = new LongMap[HashSet[Long]]
+      val bioGroupById = new LongMap[BiologicalGroup]
       udsEzDBC.selectAndProcess(bioGroupQuery) { r =>
         
-        val groupId = toLong( r.getAny(BioGroupCols.ID) )
-        val sampleNumbers = sampleIdsByGroupId(groupId).map( bioSampleById(_) ).map(_.number)
+        val groupId = r.getLong(BioGroupCols.ID)
+        val sampleNumbers = sampleIdSetByGroupId(groupId).map( bioSampleById(_) ).map(_.number)
         
-        val groupSetupId = toLong( r.getAny(GroupSetupMappingCols.GROUP_SETUP_ID) )
+        val groupSetupId = r.getLong(GroupSetupMappingCols.GROUP_SETUP_ID)
         bioGroupsByGroupSetupId.getOrElseUpdate(groupSetupId, new HashSet[Long]) += groupId
         
         bioGroupById(groupId) = BiologicalGroup(
@@ -146,13 +159,13 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
         " ORDER BY "~ t1.NUMBER
       )
       
-      val ratioDefsByGSId = new HashMap[Long,ArrayBuffer[RatioDefinition]]
+      val ratioDefsByGSId = new LongMap[ArrayBuffer[RatioDefinition]]
       udsEzDBC.selectAndProcess(ratioDefQuery) { r =>
 
-        val groupSetupId = toLong( r.getAny(RatioDefCols.GROUP_SETUP_ID) )
+        val groupSetupId = r.getLong(RatioDefCols.GROUP_SETUP_ID)
         
         val ratioDef = RatioDefinition(
-          id = toLong( r.getAny(RatioDefCols.ID) ),
+          id =  r.getLong(RatioDefCols.ID),
           number = r.getInt(RatioDefCols.NUMBER),
           numeratorGroupNumber = bioGroupById( r.getLong(RatioDefCols.NUMERATOR_ID) ).number,
           denominatorGroupNumber = bioGroupById( r.getLong(RatioDefCols.DENOMINATOR_ID) ).number
@@ -170,7 +183,7 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
       
       val groupSetups = udsEzDBC.select(groupSetupQuery) { r =>
 
-        val groupSetupId = toLong( r.getAny(GroupSetupCols.ID) )
+        val groupSetupId = r.getLong(GroupSetupCols.ID)
         val bioGroups = bioGroupsByGroupSetupId( groupSetupId ).toArray.map( bioGroupById(_) ).sortBy(_.number)
         
         GroupSetup(
@@ -189,7 +202,7 @@ class SQLExperimentalDesignProvider(val udsDbCtx: DatabaseConnectionContext) ext
           masterQuantChannels = masterQuantChannels.toArray
         )
       )
-    })
+    } // END of DoJDBCReturningWork
 
   }
   
