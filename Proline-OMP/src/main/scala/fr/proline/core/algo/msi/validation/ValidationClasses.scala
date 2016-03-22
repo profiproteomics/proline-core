@@ -67,7 +67,7 @@ case class ValidationResults( finalResult: ValidationResult, computedResults: Op
       val yValues = new ArrayBuffer[Float](rocPointsCount)
       val thresholds = new ArrayBuffer[Float](rocPointsCount)
       
-      computedResults.foreach { computedResult =>
+      computedResults.withFilter(_.fdr.isDefined).foreach { computedResult =>
         xValues += computedResult.fdr.get
         yValues += computedResult.targetMatchesCount
         thresholds += fr.profi.util.primitives.toFloat( computedResult.properties.get(FilterPropertyKeys.THRESHOLD_VALUE) )            
