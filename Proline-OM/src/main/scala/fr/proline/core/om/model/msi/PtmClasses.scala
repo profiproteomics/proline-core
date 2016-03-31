@@ -1,7 +1,12 @@
 package fr.proline.core.om.model.msi
 
+import scala.annotation.meta.field
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.core.`type`.TypeReference
+import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 
 import fr.profi.util.misc.InMemoryIdGen
 import fr.profi.util.StringUtils.isEmpty
@@ -43,7 +48,7 @@ case class UnimodEntry(
 
 }
 
-// TODO: move Java enumerations like fr.proline.core.orm.ps.PtmEvidence.Type into Java-Commons-API
+// TODO: move Java enumerations like fr.proline.core.orm.ps.PtmEvidence.Type into Java-Commons-API ???
 object IonTypes extends Enumeration {
   type IonType = Value
   val Precursor = Value("Precursor")
@@ -52,9 +57,13 @@ object IonTypes extends Enumeration {
   val PepNeutralLoss = Value("PepNeutralLoss")
 }
 
+// Required by the Scala-Jackson-Module to handle Scala enumerations
+class IonTypesTypeRef extends TypeReference[IonTypes.type]
+
 case class PtmEvidence(
 
   // Required fields
+  @(JsonScalaEnumeration @field)(classOf[IonTypesTypeRef])
   val ionType: IonTypes.IonType,
   var composition: String,
   val monoMass: Double,
@@ -67,6 +76,7 @@ case class PtmEvidence(
   require(ionType != null, "ionType is null")
   require(composition != null, "composition is null")
 
+  // FIXME: is this method working ?
   def ionType_(newIonType: IonTypes.IonType) = { newIonType }
 
    def sameAs(that: Any) = that match {
@@ -76,7 +86,6 @@ case class PtmEvidence(
 
 }
 
-// TODO: use ORM enumeration instead (requires OM -> ORM dependency or to move enums elsewhere)
 object PtmLocation extends Enumeration {
   type Location = Value
   val PROT_N_TERM = Value("Protein N-term")
@@ -141,13 +150,15 @@ case class PtmDefinition(
   require(ptmEvidences != null, "ptmEvidences is null")
 
   // Lazy values
-  lazy val precursorDelta: PtmEvidence = {
+  // FIXME: set back to lazy field when jackson-module-scala issue #238 is fixed
+  @JsonProperty def precursorDelta: PtmEvidence = {
     ptmEvidences.find( _.ionType == IonTypes.Precursor ).get
   }
 
-  @transient lazy val neutralLosses = ptmEvidences.filter( _.ionType == IonTypes.NeutralLoss ).sortBy(_.monoMass)
-  @transient lazy val pepNeutralLosses = ptmEvidences.find( ev => ev.ionType == IonTypes.PepNeutralLoss )
-  @transient lazy val artefacts = ptmEvidences.find( ev => ev.ionType == IonTypes.Artefact )
+  // FIXME: set back to lazy field when jackson-module-scala issue #238 is fixed
+  @transient def neutralLosses = ptmEvidences.filter( _.ionType == IonTypes.NeutralLoss ).sortBy(_.monoMass)
+  @transient def pepNeutralLosses = ptmEvidences.find( ev => ev.ionType == IonTypes.PepNeutralLoss )
+  @transient def artefacts = ptmEvidences.find( ev => ev.ionType == IonTypes.Artefact )
 
   def isCompositionDefined = !isEmpty(precursorDelta.composition)
 

@@ -204,7 +204,8 @@ case class ProteinMatch(
   // Requirements
   require( accession != null && description != null, "accession and description must be defined" )
   
-  @JsonProperty lazy val peptidesCount: Int = {
+  // FIXME: set back to lazy field when jackson-module-scala issue #238 is fixed
+  @JsonProperty def peptidesCount: Int = {
     if( sequenceMatches == null) 0
     else sequenceMatches.map( _.getPeptideId ).distinct.length
   }

@@ -2,6 +2,7 @@ package fr.proline.core.om.model.msi
 
 import java.util.regex.Pattern
 
+import scala.annotation.meta.field
 import scala.beans.BeanProperty
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -13,6 +14,8 @@ import org.biojava.bio.symbol.SymbolPropertyTable
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.core.`type`.TypeReference
+import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils.isNotEmpty
@@ -30,11 +33,13 @@ object Peptide extends InMemoryIdGen with LazyLogging {
    *  The results contains a list of putative PTMs that may be present or not on the peptide sequence.
    *  To get a list of truly located PTMs one has to provide a list of position constraints.
    */
+  // TODO: check usage => previously this method was returning Unit and this can't work in practice
+  // TODO: implement a JUnit test
   def getPutativeLocatedPtms (
     sequence: String,
     ptmDefinition: PtmDefinition,
     positionConstraints: Option[Array[Boolean]]
-  ): Unit = {
+  ): Array[LocatedPtm] = {
     require( sequence != null, "sequence is null")
     require( ptmDefinition != null, "ptmDefinition is null")
          
@@ -68,10 +73,9 @@ object Peptide extends InMemoryIdGen with LazyLogging {
       }
     }
     
-    var locatedPtms: Array[LocatedPtm] = null
-    
     // Check if position constraints are provided
-    if( positionConstraints.isDefined ) {
+    val locatedPtms = if( positionConstraints.isEmpty ) tmpLocatedPtms
+    else {
       val filteredLocatedPtms = new ArrayBuffer[LocatedPtm]
       
       for(tmpLocatedPtm <- tmpLocatedPtms ) {
@@ -79,17 +83,17 @@ object Peptide extends InMemoryIdGen with LazyLogging {
         val seqPos = tmpLocatedPtm.seqPosition
         val posConstraint = seqPos match {
           case -1 => positionConstraints.get.last
+          // FIXME: is valid for Nterm position ?
           case _ => positionConstraints.get(seqPos)
         }
         
         if( posConstraint == true ) filteredLocatedPtms += tmpLocatedPtm
       }
-          
-      locatedPtms = filteredLocatedPtms.toArray
+      
+      filteredLocatedPtms
     }
-    else { locatedPtms = tmpLocatedPtms.toArray }
     
-    locatedPtms
+    locatedPtms.toArray
   }
   
   /** Returns the given list of located PTMs as a string.
@@ -208,7 +212,7 @@ case class Peptide (
   var id: Long,
   val sequence: String,
   val ptmString: String,
-  val ptms: Array[LocatedPtm],
+  @transient val ptms: Array[LocatedPtm],
   val calculatedMass: Double,
   
   // Mutable optional fields
@@ -239,8 +243,10 @@ case class Peptide (
   require( sequence != null, "sequence is null" )
   require( calculatedMass >= 0 )
   
+  def isModified(): Boolean = ptms != null && ptms.nonEmpty
+  
   /** Returns a string representing the peptide PTMs */
-  @JsonProperty lazy val readablePtmString : String = {
+  @JsonProperty def readablePtmString: String = {
     
     var tmpReadablePtmString: String = null
     if (ptms != null) {
@@ -259,7 +265,7 @@ case class Peptide (
   }
   
   /** Returns a string that can be used as a unique key for this peptide */
-  @transient lazy val uniqueKey: String = { 
+  @transient def uniqueKey: String = { 
     if (ptmString != null) 
     	sequence + "%" + ptmString
     else
@@ -378,12 +384,15 @@ object PeptideMatchScoreType extends Enumeration {
   val SEQUEST_EXPECT_LOG_SCALED = Value("sequest:expect log scaled")
 
 }
+// Required by the Scala-Jackson-Module to handle Scala enumerations
+class PeptideMatchScoreTypeTypeRef extends TypeReference[PeptideMatchScoreType.type]
 
 case class PeptideMatch(
   // Required fields
   var id: Long,
   var rank: Int,
   val score: Float,
+  @(JsonScalaEnumeration @field)(classOf[PeptideMatchScoreTypeTypeRef])
   val scoreType: PeptideMatchScoreType.Value,
   val charge: Int,
   val deltaMoz: Float, // deltaMoz = expMoz - calcMoz
@@ -391,7 +400,7 @@ case class PeptideMatch(
   @transient val peptide: Peptide,
   
   // Immutable optional fields
-  val missedCleavage: Int = 0,
+  @JsonProperty val missedCleavage: Int = 0,
   val fragmentMatchesCount: Int = 0,
   
   @transient val msQuery: MsQuery = null, // TODO: require ?
@@ -541,8 +550,8 @@ case class PeptideInstance(
   require( peptide != null, "peptide is null" )
   require( (peptideMatchIds != null || peptideMatches !=null), "peptideMatchIds or peptideMatches is null")
   
-  @JsonProperty lazy val peptideId = peptide.id
-  @JsonProperty lazy val peptideMatchesCount = getPeptideMatchIds.length
+  @JsonProperty def peptideId = peptide.id
+  @JsonProperty def peptideMatchesCount = getPeptideMatchIds.length
   
   // Related objects ID getters
   def getPeptideMatchIds(): Array[Long] = { if(peptideMatches != null) peptideMatches.map(_.id)  else peptideMatchIds }
@@ -584,7 +593,7 @@ case class PeptideSetItem (
   var properties: Option[PeptideSetItemProperties] = None
 ) {
   
-  @JsonProperty lazy val peptideInstanceId = peptideInstance.id
+  @JsonProperty def peptideInstanceId = peptideInstance.id
   
 }
 

@@ -179,9 +179,9 @@ class SerializationSpec extends AbstractSerializationSpec {
     ),
     SerializationSpecif(
       "A PeptideMatch object without properties",
-      profiDeserializer = Some( jsonData => ProfiJson.deserialize[PeptideMatch](jsonData) ),
+      profiDeserializer = None, //Some( jsonData => ProfiJson.deserialize[PeptideMatch](jsonData) ),
       pepMatch,
-      """{"id":-1,"rank":1,"score":20.0,"score_type":"mascot:ions score","charge":2,"delta_moz":0.001,"is_decoy":false,"missed_cleavage":0,"""+
+      """{"id":-1,"cd_pretty_rank":0,"sd_pretty_rank":0,"rank":1,"score":20.0,"score_type":"mascot:ions score","charge":2,"delta_moz":0.001,"is_decoy":false,"missed_cleavage":0,"""+
       """"fragment_matches_count":0,"is_validated":true,"result_set_id":0,"children_ids":[-1],"best_child_id":0,"ms_query_id":-1,"peptide_id":-1}"""
     ),
     SerializationSpecif(
@@ -195,7 +195,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       profiDeserializer = None,
       protMatch,
       """{"accession":"UNKNOWN","description":"unknown protein","is_decoy":false,"is_last_bio_sequence":false,"id":-1,"""+
-      """"taxon_id":0,"result_set_id":0,"protein_id":0,"seq_database_ids":[],"gene_name":"UNKNOWN","score":20.0,"""+
+      """"taxon_id":0,"result_set_id":0,"protein_id":0,"gene_name":"UNKNOWN","score":20.0,"""+
       """"score_type":"mascot:standard score","coverage":0.0,"peptide_matches_count":0,"sequence_matches":"""+
       """[{"start":1,"end":6,"residue_before":"-","residue_after":"-","is_decoy":false,"result_set_id":0,"""+
       """"peptide_id":0,"best_peptide_match_id":0}],"peptides_count":1}"""

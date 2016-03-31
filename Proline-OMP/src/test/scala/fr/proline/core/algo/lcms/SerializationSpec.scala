@@ -55,7 +55,7 @@ class SerializationSpec extends AbstractSerializationSpec {
   )
   
   // Note : the used values are not representative of any real case
-  val jsonSpecifs = List(    
+  val jsonSpecifs = List(
     SerializationSpecif(
       "A LabelFree Quant Config",
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[LabelFreeQuantConfig](jsonData) ),
@@ -67,7 +67,7 @@ class SerializationSpec extends AbstractSerializationSpec {
       """"min_window_landmarks":50},"ft_mapping_params":{"moz_tol":5.0,"moz_tol_unit":"PPM","time_tol":300.0},"""+
       """"max_iterations":3},"ft_filter":{"name":"INTENSITY","operator":"GT","value":0.0},"ft_mapping_params":"""+
       """{"moz_tol":5.0,"moz_tol_unit":"PPM","time_tol":30.0},"normalization_method":"MEDIAN_RATIO","""+
-      """"detect_features":false,"start_from_validated_peptides":true}"""
+      """"detect_features":false,"detect_peakels":false,"start_from_validated_peptides":true,"use_last_peakel_detection":false}"""
     )
   )
   
