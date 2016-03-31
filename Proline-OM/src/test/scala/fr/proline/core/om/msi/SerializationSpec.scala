@@ -171,35 +171,35 @@ class SerializationSpec extends AbstractSerializationSpec {
       """"properties":{"target_db_search":{"candidate_peptides_count":100,"mascot_identity_threshold":25.001,"""+
       """"mascot_homology_threshold":20.002}},"ms_level":2}"""
     ),
-//    SerializationSpecif(
-//      "A Peptide object without properties",
-//      profiDeserializer = None,
-//      peptide,
-//      """{"id":-1,"sequence":"MENHIR","ptm_string":"1[O]","calculated_mass":814.3806546000001,"readable_ptm_string":"Oxidation (M1)"}"""
-//    ),
-//    SerializationSpecif(
-//      "A PeptideMatch object without properties",
-//      profiDeserializer = Some( jsonData => ProfiJson.deserialize[PeptideMatch](jsonData) ),
-//      pepMatch,
-//      """{"id":-1,"rank":1,"score":20.0,"score_type":"mascot:ions score","charge":2,"delta_moz":0.001,"is_decoy":false,"missed_cleavage":0,"""+
-//      """"fragment_matches_count":0,"is_validated":true,"result_set_id":0,"children_ids":[-1],"best_child_id":0,"ms_query_id":-1,"peptide_id":-1}"""
-//    ),
+    SerializationSpecif(
+      "A Peptide object without properties",
+      profiDeserializer = None,
+      peptide,
+      """{"id":-1,"sequence":"MENHIR","ptm_string":"1[O]","calculated_mass":814.3806546000001,"readable_ptm_string":"Oxidation (M1)"}"""
+    ),
+    SerializationSpecif(
+      "A PeptideMatch object without properties",
+      profiDeserializer = Some( jsonData => ProfiJson.deserialize[PeptideMatch](jsonData) ),
+      pepMatch,
+      """{"id":-1,"rank":1,"score":20.0,"score_type":"mascot:ions score","charge":2,"delta_moz":0.001,"is_decoy":false,"missed_cleavage":0,"""+
+      """"fragment_matches_count":0,"is_validated":true,"result_set_id":0,"children_ids":[-1],"best_child_id":0,"ms_query_id":-1,"peptide_id":-1}"""
+    ),
     SerializationSpecif(
       "A PeptideMatchProperties object",
       profiDeserializer = Some( jsonData => ProfiJson.deserialize[PeptideMatchProperties](jsonData) ),
       pepMatchProperties,
       """{"mascot_properties":{"expectation_value":0.001,"readable_var_mods":"Oxidation (M)"}},"ms_query_id":-1,"peptide_id":-1}"""
-    )//,
-//    SerializationSpecif(
-//      "A ProteinMatch object without properties",
-//      profiDeserializer = None,
-//      protMatch,
-//      """{"accession":"UNKNOWN","description":"unknown protein","is_decoy":false,"is_last_bio_sequence":false,"id":-1,"""+
-//      """"taxon_id":0,"result_set_id":0,"protein_id":0,"seq_database_ids":[],"gene_name":"UNKNOWN","score":20.0,"""+
-//      """"score_type":"mascot:standard score","coverage":0.0,"peptide_matches_count":0,"sequence_matches":"""+
-//      """[{"start":1,"end":6,"residue_before":"-","residue_after":"-","is_decoy":false,"result_set_id":0,"""+
-//      """"peptide_id":0,"best_peptide_match_id":0}],"peptides_count":1}"""
-//    )
+    ),
+    SerializationSpecif(
+      "A ProteinMatch object without properties",
+      profiDeserializer = None,
+      protMatch,
+      """{"accession":"UNKNOWN","description":"unknown protein","is_decoy":false,"is_last_bio_sequence":false,"id":-1,"""+
+      """"taxon_id":0,"result_set_id":0,"protein_id":0,"seq_database_ids":[],"gene_name":"UNKNOWN","score":20.0,"""+
+      """"score_type":"mascot:standard score","coverage":0.0,"peptide_matches_count":0,"sequence_matches":"""+
+      """[{"start":1,"end":6,"residue_before":"-","residue_after":"-","is_decoy":false,"result_set_id":0,"""+
+      """"peptide_id":0,"best_peptide_match_id":0}],"peptides_count":1}"""
+    )
   )
   
   this.checkJsonSpecifs( jsonSpecifs )
