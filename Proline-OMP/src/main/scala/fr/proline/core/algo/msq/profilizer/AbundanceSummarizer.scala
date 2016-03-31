@@ -1,11 +1,12 @@
 package fr.proline.core.algo.msq.profilizer
 
+import scala.collection.mutable.ArrayBuffer
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.math.median
 import fr.profi.util.primitives.isZeroOrNaN
-import scala.collection.mutable.ArrayBuffer
 
-object AbundanceSummarizer {
+object AbundanceSummarizer extends LazyLogging {
   
   object Method extends EnhancedEnum {
     val BEST_SCORE = Value // has no implementation here, should be called before
@@ -77,11 +78,16 @@ object AbundanceSummarizer {
     // Transpose the matrix
     val transposedMatrix = abundanceMatrix.transpose
     
-    // Select columns eligible for ratio computations (discard columns of without defined values)
+    // Select columns eligible for ratio computations (discard columns without defined values)
     val colObsFreq = transposedMatrix.map( col => col.count( isZeroOrNaN(_) == false ).toFloat / col.length )
     val colObsFreqWithIdx = colObsFreq.zipWithIndex
     val eligibleColIndices = colObsFreqWithIdx.withFilter( _._1 > 0f ).map( _._2 )
     val matrixWithEligibleCols = eligibleColIndices.map( i => transposedMatrix(i) ).transpose
+    
+    if (matrixWithEligibleCols.isEmpty) {
+      logger.warn("No eligible columns for median profile computation")
+      return Array.fill(abundanceMatrix.head.length)(Float.NaN)
+    }
     
     // Compute the ratio matrix
     val ratioMatrix = for( abundanceRow <- matrixWithEligibleCols ) yield {

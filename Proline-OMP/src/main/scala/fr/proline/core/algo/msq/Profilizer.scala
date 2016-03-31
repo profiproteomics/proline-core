@@ -122,6 +122,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   def computeMasterQuantPeptideProfiles( masterQuantPeptides: Seq[MasterQuantPeptide], config: ProfilizerConfig ) {    
     require( masterQuantPeptides.length >= 10, "at least 10 peptides are required for profile analysis")
     
+    logger.info("computing master quant peptide profiles...")
+    
     // --- Reset some values ---
     for( mqPep <- masterQuantPeptides ) {
       
@@ -182,15 +184,23 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     require( normalizedMatrix.length == rawAbundanceMatrix.length, "error during normalization, some peptides were lost...")
     //println( s"normalizedMatrix.length: ${normalizedMatrix.length}")
     
-    // Update master quant peptides abundances after normalization
-    for( (mqPep, abundances) <- mqPepsAfterAllFilters.zip(normalizedMatrix) ) {
+    // Compute absolute error model and the filled matrix
+    val absoluteErrorModel = this.computeAbsoluteErrorModel(normalizedMatrix)
+    val filledMatrix = this.inferMissingValues(
+      normalizedMatrix,
+      psmCountMatrix,
+      absoluteErrorModel,
+      config.peptideStatConfig
+    )
+    
+    // Update master quant peptides abundances after normalization and missing values inference
+    for( (mqPep, abundances) <- mqPepsAfterAllFilters.zip(filledMatrix) ) {
       mqPep.setAbundancesForQuantChannels(abundances,qcIds)
     }
     
     // Define some mappings
     val mqPepById = new HashMap[Long,MasterQuantPeptide]()
     mqPepById.sizeHint(mqPepsAfterAllFilters.length)
-
     val ratiosByMQPepId = new HashMap[Long,ArrayBuffer[Option[ComputedRatio]]]()
     ratiosByMQPepId.sizeHint(mqPepsAfterAllFilters.length)
     
@@ -204,11 +214,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     // Iterate over the ratio definitions
     for ( ratioDef <- groupSetup.ratioDefinitions ) {
-      
-      val( filledMatrix, ratios ) = computeRatios(
+
+      val ratios = computeRatios(
         ratioDef,
-        normalizedMatrix,
+        filledMatrix,
         psmCountMatrix,
+        absoluteErrorModel,
         config.peptideStatConfig
       )
  
@@ -266,6 +277,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
   
   def computeMasterQuantProtSetProfiles( masterQuantProtSets: Seq[MasterQuantProteinSet], config: ProfilizerConfig ) {
     require( masterQuantProtSets.length >= 10, "at least 10 protein sets are required for profile analysis")
+    
+    logger.info("computing master quant protein set profiles...")
     
     val qcsSampleNum = quantChannels.groupBy(_.sampleNumber)
     val bgBySampleNum = groupSetup.biologicalGroups.view.flatMap { bg =>
@@ -350,7 +363,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       // Summarize raw abundances of the current profile cluster
       val mqPepRawAbundanceMatrix = clusteredMqPeps.map( _.getRawAbundancesForQuantChannels(qcIds) ).toArray
       
-      val summarizedRawAbundances = this.summarizeMatrix(mqPepRawAbundanceMatrix, abSumMethod)
+      val summarizedRawAbundances = this.summarizeMatrix(mqPepRawAbundanceMatrix, AbundanceSummarizer.Method.SUM)
+      //println("summarizedRawAbundances: " + summarizedRawAbundances.mkString("\t"))
 
       rawAbundanceMatrixBuffer += summarizedRawAbundances
       rawAbundancesByProfileClusterBuilder += mqPepsCluster -> summarizedRawAbundances
@@ -359,6 +373,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val mqPepAbundanceMatrix = clusteredMqPeps.map( _.getAbundancesForQuantChannels(qcIds) ).toArray
       
       val abRow = this.summarizeMatrix(mqPepAbundanceMatrix, abSumMethod)
+      //println("abRow: " + abRow.mkString("\t"))
       abundanceMatrixBuffer += abRow
       
       // Summarize PSM counts of the current profile cluster
@@ -392,25 +407,32 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     val normalizedMatrix = if( config.proteinStatConfig.applyNormalization == false ) abundanceMatrixBuffer.toArray
     else AbundanceNormalizer.normalizeAbundances(abundanceMatrixBuffer.toArray)
     
+    // --- Compute absolute error model and the filled matrix ---
+    val psmCountMatrix = psmCountMatrixBuffer.toArray
+    val absoluteErrorModel = this.computeAbsoluteErrorModel(normalizedMatrix)
+    val filledMatrix = this.inferMissingValues(
+      normalizedMatrix,
+      psmCountMatrix,
+      absoluteErrorModel,
+      config.proteinStatConfig
+    )
+    assert(filledMatrix.length == abundanceMatrixBuffer.length)
+    
     // --- Compute the ratios corresponding to each profile cluster ---
     
     // Create a map which will store the ratios corresponding to each profile cluster
     val ratiosByMqPepCluster = mqPepsClusters.view.map( _ -> new ArrayBuffer[Option[ComputedRatio]] ).toMap
     
     // Iterate over the ratio definitions
-    var finalMatrix = normalizedMatrix
     for ( ratioDef <- groupSetup.ratioDefinitions ) {
       
-      val( filledMatrix, ratios ) = computeRatios(
+      val ratios = computeRatios(
         ratioDef,
-        normalizedMatrix,
-        psmCountMatrixBuffer.toArray,
+        filledMatrix,
+        psmCountMatrix,
+        absoluteErrorModel,
         config.proteinStatConfig
       )
-      // FIXME: perform the missing value inference only once
-      finalMatrix = filledMatrix
-      
-      assert(filledMatrix.length == abundanceMatrixBuffer.length)
       
       val computedRatioIdx = ratioDef.number - 1
       for ( ratio <- ratios ) {
@@ -438,11 +460,11 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     
     // --- Map normalized abundances by the corresponding profile cluster ---
     val abundancesByProfileClusterBuilder = Map.newBuilder[MasterQuantPeptidesCluster,Array[Float]]
-    abundancesByProfileClusterBuilder.sizeHint(finalMatrix.length)
+    abundancesByProfileClusterBuilder.sizeHint(filledMatrix.length)
     
-    finalMatrix.indices.foreach { rowIndex =>
+    filledMatrix.indices.foreach { rowIndex =>
       val mqPepCluster = mqPepsClusters(rowIndex)
-      abundancesByProfileClusterBuilder += mqPepCluster -> finalMatrix(rowIndex)
+      abundancesByProfileClusterBuilder += mqPepCluster -> filledMatrix(rowIndex)
     }
     
     val abundancesByProfileCluster = abundancesByProfileClusterBuilder.result
@@ -457,9 +479,6 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       val mqPeptideIds = mqPepCluster.mqPeptides.map(_.id).toArray
       val rawAbundances = rawAbundancesByProfileCluster(mqPepCluster)
       val abundances = abundancesByProfileCluster(mqPepCluster)
-      
-      //println(mqProtSet.proteinSet.getRepresentativeProteinMatch().get.accession)
-      //println(abundances.toList)
       
       val quantProfile = new MasterQuantProteinSetProfile(
         rawAbundances = rawAbundances,
@@ -511,7 +530,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     ()
   }
   
-  protected def summarizeMatrix(abundanceMatrix: Array[Array[Float]], abSumMethod: AbundanceSummarizer.Method.Value ): Array[Float] = {
+  protected def summarizeMatrix(abundanceMatrix: Array[Array[Float]], abSumMethod: AbundanceSummarizer.Method.Value): Array[Float] = {
     if(abundanceMatrix.isEmpty) return Array()
     if(abundanceMatrix.length == 1) abundanceMatrix.head 
     
@@ -578,7 +597,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         filteredSamplesMedianAbMatrix,
         MEDIAN_PROFILE
       )
-      //println("samplesMedianProfile", samplesMedianProfile.toList)
+      //println("samplesMedianProfile", samplesMedianProfile.mkString("\t"))
       
       // Transpose bioSamplesGroupedMatrix to have samples at the first level of the 3D matrix
       val samplesAbMatrices = bioSamplesGroupedMatrix.transpose
@@ -606,7 +625,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         
         /*println("before norm")
         for( r <- sampleAbMatrix ) {
-          println(r.toList)
+          println(r.mkString("\t"))
         }*/
         
         // Center the sample matrix to obtain comparable values
@@ -667,11 +686,12 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
           val sampleStdDev = sampleCvOrMeanCv * sampleMedianAb
           val generatedValues = _generatePositiveGaussianValues(sampleMedianAb.toDouble, sampleStdDev, 0.05f, sampleQcCount).map(_.toFloat)
           
-          /*if( generatedValues == null ) {
-            println("sampleMedianAb",sampleMedianAb)
-            println("sampleStdDev",sampleStdDev)
+          if( generatedValues == null ) {
+            throw new Exception("Can't generate gaussian values")
+            /*println("sampleMedianAb",sampleMedianAb)
+            println("sampleStdDev",sampleStdDev)*/
           }
-          */
+          
           //println("generatedValues",generatedValues.toList)
           
           // Sort generated abundances according to previously computed sorted indices
@@ -726,7 +746,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     expectedStdDev: Double,
     stdDevTol: Float = 0.05f,
     nbValues: Int = 3,
-    maxIterations: Int = 10000
+    maxIterations: Int = 50000
   ): Array[Double] = {
     require( expectedMean.isNaN == false, "mean is NaN")
     require( isZeroOrNaN(expectedStdDev) == false, "expectedStdDev equals zero or is NaN")
@@ -804,44 +824,17 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     Math.sqrt( StatUtils.variance(values) )
   }
   
-  protected def computeRatios(
-    ratioDef: RatioDefinition,
-    normalizedMatrix: Array[Array[Float]],
-    psmCountMatrix: Array[Array[Int]],
-    config: ProfilizerStatConfig
-  ): Tuple2[Array[Array[Float]],Seq[AverageAbundanceRatio]] = {
+  protected def computeAbsoluteErrorModel(
+    normalizedMatrix: Array[Array[Float]]
+  ): AbsoluteErrorModel = {
     
-    logger.debug(s"computing ratios on a matrix containing ${normalizedMatrix.length} values...")
-
-    // Retrieve some vars
-    val numeratorSampleNumbers = sampleNumbersByGroupNumber(ratioDef.numeratorGroupNumber)
-    val denominatorSampleNumbers = sampleNumbersByGroupNumber(ratioDef.denominatorGroupNumber)
-    val allSampleNumbers = numeratorSampleNumbers ++ denominatorSampleNumbers
-    require( numeratorSampleNumbers != null && numeratorSampleNumbers.isEmpty == false, "numeratorSampleNumbers must be defined" )
-    require( denominatorSampleNumbers != null && denominatorSampleNumbers.isEmpty == false, "denominatorSampleNumbers must be defined" )
+    val allSampleNumbers = expDesign.biologicalSamples.map(_.number)
     
     // Map quant channel indices by the sample number
     val qcIndicesBySampleNum = ( allSampleNumbers ).map { sampleNum =>
       sampleNum -> quantChannelsBySampleNumber(sampleNum).map( qc => qcIdxById(qc.id) )
     } toMap
-    
-    def _getSamplesAbundances(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
-      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
-      qcIndices.flatMap( i => i.map( abundances(_) ) )
-    }
-    def _getSamplesMeanAbundance(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
-      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
-      qcIndices.map { i => this._meanAbundance( i.map( abundances(_) ) ) }
-    }
-    def _getSamplesMedianAbundance(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
-      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
-      qcIndices.map { i => this._medianAbundance( i.map( abundances(_) ) ) }
-    }
-    def _getSamplesPsmCounts(psmCounts: Array[Int], sampleNumbers: Array[Int]): Array[Int] = {
-      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
-      qcIndices.flatMap( i => i.map( psmCounts(_) ) )
-    }
-    
+      
     // --- Estimate the noise models ---
     val absoluteErrors = new ArrayBuffer[AbsoluteErrorObservation](normalizedMatrix.length)
     val relativeErrors = new ArrayBuffer[RelativeErrorObservation](normalizedMatrix.length)
@@ -871,7 +864,8 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       // Compute statistics at biological sample level
       } else {
         
-        val numeratorMedianAbundance = _medianAbundance( _getSamplesMedianAbundance( normalizedRow, numeratorSampleNumbers ) )
+        // FIXME: find a workaround to compute relative errors (compute all consecutive ratios ?)
+        /*val numeratorMedianAbundance = _medianAbundance( _getSamplesMedianAbundance( normalizedRow, numeratorSampleNumbers ) )
         val denominatorMedianAbundance = _medianAbundance( _getSamplesMedianAbundance( normalizedRow, denominatorSampleNumbers ) )
         
         val maxAbundance = math.max(numeratorMedianAbundance,denominatorMedianAbundance)
@@ -879,6 +873,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
         if( maxAbundance.isNaN == false && maxAbundance > 0 ) {
           relativeErrors += RelativeErrorObservation( maxAbundance, numeratorMedianAbundance/denominatorMedianAbundance)
         }
+        */
       }
     }
     
@@ -895,73 +890,127 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
     // Create a fake Error Model
     } else {
       // TODO: compute the stdDev from relativeErrors ?
-      this.logger.warn("Insufficient number of relative errors => create an error model corresponding to the normal distribution")
-      new AbsoluteErrorModel( Seq(AbsoluteErrorBin( abundance = 0f, stdDev = 1f )) )
+      throw new Exception("Can't infer missing values: insufficient number of technical replicates")
+      //new AbsoluteErrorModel( Seq(AbsoluteErrorBin( abundance = 0f, stdDev = 1f )) )
     }
     
+    absoluteNoiseModel
+  }
+  
+  protected def inferMissingValues(
+    normalizedMatrix: Array[Array[Float]],
+    psmCountMatrix: Array[Array[Int]],
+    absoluteNoiseModel: AbsoluteErrorModel,
+    config: ProfilizerStatConfig
+  ): Array[Array[Float]] = {
     logger.debug("config.applyMissValInference value: "+ config.applyMissValInference)
     
+    if (config.applyMissValInference == false) return normalizedMatrix
+    
+    /*if (minQCsCountPerSample < 3) {
+      // TODO: find what to do if when insufficient technical replicates
+      throw new Exception("Can't infer missing values: insufficient number of technical replicates")
+    }*/
+    
+    val allSampleNumbers = expDesign.biologicalSamples.map(_.number)
+    println(allSampleNumbers.toList)
+    
+    // Map quant channel indices by the sample number
+    val qcIndicesBySampleNum = ( allSampleNumbers ).map { sampleNum =>
+      sampleNum -> quantChannelsBySampleNumber(sampleNum).map( qc => qcIdxById(qc.id) )
+    } toMap
+      
     // --- Infer missing abundances ---
-    val filledMatrix = if( config.applyMissValInference == false ) normalizedMatrix
-    else {
       
-      // Instantiates an abundance inferer
-      val inferConfig = config.missValInferenceConfig.get
-      val abundanceInferer = MissingAbundancesInferenceMethod.withName( config.missValInferenceMethod ) match {
-        case MissingAbundancesInferenceMethod.GAUSSIAN_MODEL => {
-          logger.info("Inferring missing values using the gaussian model method...")
-          new SmartMissingAbundancesInferer(inferConfig, absoluteNoiseModel)
-        }
-        case MissingAbundancesInferenceMethod.PERCENTILE => {
-          logger.info("Inferring missing values using the percentile method...")
-          new FixedNoiseMissingAbundancesReplacer(inferConfig)
-        }
+    // Instantiates an abundance inferer
+    val inferConfig = config.missValInferenceConfig.get
+    val abundanceInferer = MissingAbundancesInferenceMethod.withName( config.missValInferenceMethod ) match {
+      case MissingAbundancesInferenceMethod.GAUSSIAN_MODEL => {
+        logger.info("Inferring missing values using the gaussian model method...")
+        new SmartMissingAbundancesInferer(inferConfig, absoluteNoiseModel)
       }
+      case MissingAbundancesInferenceMethod.PERCENTILE => {
+        logger.info("Inferring missing values using the percentile method...")
+        new FixedNoiseMissingAbundancesReplacer(inferConfig)
+      }
+    }
+    
+    // Extract abundance matrices for each biological sample
+    val abMatrixBySampleNum = allSampleNumbers.map( _ -> new ArrayBuffer[Array[Float]] ).toMap      
+    normalizedMatrix.foreach { normalizedRow =>
+      allSampleNumbers.foreach { sampleNum =>
+        abMatrixBySampleNum(sampleNum) += qcIndicesBySampleNum(sampleNum).map(normalizedRow(_))
+      }
+    }
+    
+    // Extract PSM counts for each biological sample
+    val psmCountMatrixBySampleNum = allSampleNumbers.map( _ -> new ArrayBuffer[Array[Int]] ).toMap      
+    psmCountMatrix.foreach { psmCountRow =>
+      allSampleNumbers.foreach { sampleNum =>
+        psmCountMatrixBySampleNum(sampleNum) += qcIndicesBySampleNum(sampleNum).map(psmCountRow(_))
+      }
+    }
+    
+    val tmpFilledMatrix = Array.ofDim[Float](normalizedMatrix.length,quantChannels.length)
+    
+    for( (sampleNum,sampleAbMatrix) <- abMatrixBySampleNum ) {
       
-      if( minQCsCountPerSample < 3 ) {
-        // TODO: find what to do if when insufficient technical replicates
-        this.logger.warn("insufficient number of analysis replicates => can't infer missing values")
-        normalizedMatrix
-      } else {
+      val qcIndices = qcIndicesBySampleNum(sampleNum)
+      val samplePsmCountMatrix = psmCountMatrixBySampleNum(sampleNum).toArray
+      
+      val inferredSampleMatrix = abundanceInferer.inferAbundances(sampleAbMatrix.toArray, samplePsmCountMatrix)
+      
+      var filledMatrixRow = 0
+      inferredSampleMatrix.foreach { inferredAbundances =>
         
-        // Extract abundance matrices for each biological sample
-        val abMatrixBySampleNum = allSampleNumbers.map( _ -> new ArrayBuffer[Array[Float]] ).toMap      
-        normalizedMatrix.foreach { normalizedRow =>
-          allSampleNumbers.foreach { sampleNum =>
-            abMatrixBySampleNum(sampleNum) += qcIndicesBySampleNum(sampleNum).map(normalizedRow(_))
-          }
+        inferredAbundances.zip(qcIndices).foreach { case (abundance,colIdx) =>
+          tmpFilledMatrix(filledMatrixRow)(colIdx) = abundance
         }
         
-        // Extract PSM counts for each biological sample
-        val psmCountMatrixBySampleNum = allSampleNumbers.map( _ -> new ArrayBuffer[Array[Int]] ).toMap      
-        psmCountMatrix.foreach { psmCountRow =>
-          allSampleNumbers.foreach { sampleNum =>
-            psmCountMatrixBySampleNum(sampleNum) += qcIndicesBySampleNum(sampleNum).map(psmCountRow(_))
-          }
-        }
-        
-        val tmpFilledMatrix = Array.ofDim[Float](normalizedMatrix.length,quantChannels.length)
-        
-        for( (sampleNum,sampleAbMatrix) <- abMatrixBySampleNum ) {
-          
-          val qcIndices = qcIndicesBySampleNum(sampleNum)
-          val samplePsmCountMatrix = psmCountMatrixBySampleNum(sampleNum).toArray
-          
-          val inferredSampleMatrix = abundanceInferer.inferAbundances(sampleAbMatrix.toArray, samplePsmCountMatrix)
-          
-          var filledMatrixRow = 0
-          inferredSampleMatrix.foreach { inferredAbundances =>
-            
-            inferredAbundances.zip(qcIndices).foreach { case (abundance,colIdx) =>
-              tmpFilledMatrix(filledMatrixRow)(colIdx) = abundance
-            }
-            
-            filledMatrixRow += 1
-          }
-        }
-        
-        tmpFilledMatrix
+        filledMatrixRow += 1
       }
+    }
+    
+    tmpFilledMatrix
+  }
+  
+  protected def computeRatios(
+    ratioDef: RatioDefinition,
+    filledMatrix: Array[Array[Float]],
+    psmCountMatrix: Array[Array[Int]],
+    absoluteNoiseModel: AbsoluteErrorModel,
+    config: ProfilizerStatConfig
+  ): Seq[AverageAbundanceRatio] = {
+    
+    logger.debug(s"computing ratios on a matrix containing ${filledMatrix.length} values...")
+
+    // Retrieve some vars
+    val numeratorSampleNumbers = sampleNumbersByGroupNumber(ratioDef.numeratorGroupNumber)
+    val denominatorSampleNumbers = sampleNumbersByGroupNumber(ratioDef.denominatorGroupNumber)
+    val allSampleNumbers = numeratorSampleNumbers ++ denominatorSampleNumbers
+    require( numeratorSampleNumbers != null && numeratorSampleNumbers.isEmpty == false, "numeratorSampleNumbers must be defined" )
+    require( denominatorSampleNumbers != null && denominatorSampleNumbers.isEmpty == false, "denominatorSampleNumbers must be defined" )
+    
+    // Map quant channel indices by the sample number
+    val qcIndicesBySampleNum = ( allSampleNumbers ).map { sampleNum =>
+      sampleNum -> quantChannelsBySampleNumber(sampleNum).map( qc => qcIdxById(qc.id) )
+    } toMap
+    
+    def _getSamplesAbundances(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
+      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
+      qcIndices.flatMap( i => i.map( abundances(_) ) )
+    }
+    /*def _getSamplesMeanAbundance(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
+      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
+      qcIndices.map { i => this._meanAbundance( i.map( abundances(_) ) ) }
+    }*/
+    def _getSamplesMedianAbundance(abundances: Array[Float], sampleNumbers: Array[Int]): Array[Float] = {
+      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
+      qcIndices.map { i => this._medianAbundance( i.map( abundances(_) ) ) }
+    }
+    def _getSamplesPsmCounts(psmCounts: Array[Int], sampleNumbers: Array[Int]): Array[Int] = {
+      val qcIndices = sampleNumbers.map( qcIndicesBySampleNum(_) )
+      qcIndices.flatMap( i => i.map( psmCounts(_) ) )
     }
     
     // --- Determine the significant abundance changes ---
@@ -1055,7 +1104,7 @@ class Profilizer( expDesign: ExperimentalDesign, groupSetupNumber: Int = 1, mast
       
     }
     
-    (filledMatrix,ratiosBuffer)
+    ratiosBuffer
   }
   
   private def _meanAbundance(abundances: Array[Float]): Float = {
