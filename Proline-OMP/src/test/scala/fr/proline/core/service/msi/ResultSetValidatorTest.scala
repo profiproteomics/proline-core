@@ -1061,17 +1061,16 @@ class ResultSetValidatorF027737Test extends StrictLogging {
     logger.debug("Verify Result IN RS")
     val rsTarPepMatches = tRSM.resultSet.get.peptideMatches
     val rsDecPepMatches = dRSM.get.resultSet.get.peptideMatches
-    Assert.assertEquals("RsTarPepMatches validated count", 21, rsTarPepMatches.count(_.isValidated))
-    Assert.assertEquals("RsDecPepMatches validated count", 1, rsDecPepMatches.count(_.isValidated))
+    Assert.assertEquals("RsTarPepMatches validated count", 18, rsTarPepMatches.count(_.isValidated))
+    Assert.assertEquals("RsDecPepMatches validated count", 0, rsDecPepMatches.count(_.isValidated))
 
     logger.debug("Verify Result IN RSM")
     val allTarPepMatch = tRSM.peptideInstances.flatMap(pi => pi.peptideMatches)
     val allDecPepMatch = dRSM.get.peptideInstances.flatMap(pi => pi.peptideMatches)
-    Assert.assertEquals(21, allTarPepMatch.length)
-    Assert.assertEquals(1, allDecPepMatch.length)
-    Assert.assertEquals(21,tRSM.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getTargetMatchesCount)
-    Assert.assertEquals(1,dRSM.get.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getDecoyMatchesCount.get)
- 
+    Assert.assertEquals(18, allTarPepMatch.length)
+    Assert.assertEquals(0, allDecPepMatch.length)
+    Assert.assertEquals(18,tRSM.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getTargetMatchesCount)
+    Assert.assertEquals(0,dRSM.get.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getDecoyMatchesCount.get)
   }
   
   def _testSeparatedSearchValidation(expectedFdr: Float, useTdCompetition: Boolean): ResultSetValidator = {
