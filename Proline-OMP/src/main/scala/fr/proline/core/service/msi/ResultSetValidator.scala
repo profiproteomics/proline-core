@@ -123,13 +123,16 @@ class ResultSetValidator(
   if( pepMatchPreFilters.isDefined ) {
     val rankFilterAsStr = PepMatchFilterParams.RANK.toString
     useTdCompetition = pepMatchPreFilters.get.exists(_.filterParameter == rankFilterAsStr)
-    logger.debug("Auto-determination of 'useTdCompetition' gives: " + useTdCompetition)
-    // TODO: remove me (tmp fix for debug)
-    useTdCompetition = true
+    logger.debug(s"Auto-determination of 'useTdCompetition' gives '$useTdCompetition'")
   }
   
   // If no TDAnalyzer specified, specify default one
-  val finalTDAnalyzer =  if(tdAnalyzer.isEmpty){ BuildTDAnalyzer(useTdCompetition, targetRs, null) } else tdAnalyzer
+  val finalTDAnalyzer = if(tdAnalyzer.isEmpty) BuildTDAnalyzer(useTdCompetition, targetRs, null)
+  else {
+    // Update useTdCompetition (see above hack)
+    tdAnalyzer.get.useTdCompetition = useTdCompetition
+    tdAnalyzer
+  }
     
   // Update the target analyzer of the validators
   pepMatchValidator.foreach(_.tdAnalyzer = finalTDAnalyzer)
