@@ -121,7 +121,8 @@ class ResultSetValidator(
   // FIXME: find a better way to handle the TD competition
   var useTdCompetition = false
   if( pepMatchPreFilters.isDefined ) {
-    useTdCompetition = pepMatchPreFilters.get.find(_.filterParameter == PepMatchFilterParams.RANK).isDefined
+    val rankFilterAsStr = PepMatchFilterParams.RANK.toString
+    useTdCompetition = pepMatchPreFilters.get.exists(_.filterParameter == rankFilterAsStr)
   }
   
   // If no TDAnalyzer specified, specify default one
