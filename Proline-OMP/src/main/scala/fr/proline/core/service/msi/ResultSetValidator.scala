@@ -123,6 +123,9 @@ class ResultSetValidator(
   if( pepMatchPreFilters.isDefined ) {
     val rankFilterAsStr = PepMatchFilterParams.RANK.toString
     useTdCompetition = pepMatchPreFilters.get.exists(_.filterParameter == rankFilterAsStr)
+    logger.debug("Auto-determination of 'useTdCompetition' gives: " + useTdCompetition)
+    // TODO: remove me (tmp fix for debug)
+    useTdCompetition = true
   }
   
   // If no TDAnalyzer specified, specify default one
