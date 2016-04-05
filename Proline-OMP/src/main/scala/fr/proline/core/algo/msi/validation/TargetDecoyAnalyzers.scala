@@ -76,7 +76,7 @@ object BuildTDAnalyzer extends LazyLogging {
 
 abstract class ITargetDecoyAnalyzer {
   
-  val useTdCompetition: Boolean
+  var useTdCompetition: Boolean
 
   def calcTDStatistics(targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch]): ValidationResult
 
@@ -364,7 +364,7 @@ abstract class AbstractTargetDecoyAnalyzer extends ITargetDecoyAnalyzer with Laz
 
 }
 
-class BasicTDAnalyzer(val targetDecoyMode: TargetDecoyModes.Value, val useTdCompetition: Boolean = true) extends AbstractTargetDecoyAnalyzer {
+class BasicTDAnalyzer(val targetDecoyMode: TargetDecoyModes.Value, var useTdCompetition: Boolean = true) extends AbstractTargetDecoyAnalyzer {
   
   def calcTDStatistics(targetPepMatches: Seq[PeptideMatch], decoyPepMatches: Seq[PeptideMatch] ): ValidationResult = {
 
