@@ -1066,8 +1066,7 @@ abstract class AbstractMasterQuantChannelQuantifier extends LazyLogging {
     val rsmBuilder = new ResultSummaryAdder(
       ResultSummary.generateNewId(),
       false,
-      pepSetScoreUpdater,
-      Some(seqLengthByProtId)
+      pepSetScoreUpdater
     )
 
     for (identRSM <- identResultSummaries) {

@@ -136,13 +136,10 @@ class ResultSetMerger(
 
     val distinctRSIds = scala.collection.mutable.Set.empty[Long]
 
-    var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(resultSetIds, storerContext.getMSIDbConnectionContext)
-
     var targetMergerAlgo: ResultSetAdder = new ResultSetAdder(
       resultSetId = ResultSet.generateNewId,
       isValidatedContent = false,
       isDecoy = false,
-      seqLengthByProtId = Some(seqLengthByProtId),
       additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
     )
 
@@ -163,13 +160,10 @@ class ResultSetMerger(
     if (nDecoyRS > 0) {
       val distinctRSIds = scala.collection.mutable.Set.empty[Long]
 
-      var seqLengthByProtId: Map[Long, Int] = _buildSeqLength(decoyRSIds, storerContext.getMSIDbConnectionContext)
-
       var decoyMergerAlgo: ResultSetAdder = new ResultSetAdder(
         resultSetId = ResultSet.generateNewId,
         isValidatedContent = false,
         isDecoy = true,
-        seqLengthByProtId = Some(seqLengthByProtId), 
         additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
       )
 
@@ -187,7 +181,6 @@ class ResultSetMerger(
       var decoyRS: ResultSet = decoyMergerAlgo.toResultSet
 
       decoyMergerAlgo = null // Eligible for Garbage collection      
-      seqLengthByProtId = null
 
       DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
         /* Store merged decoy result set */
@@ -200,7 +193,6 @@ class ResultSetMerger(
     }
 
     targetMergerAlgo = null // Eligible for Garbage collection
-    seqLengthByProtId = null
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
       /* Store merged target result set */
@@ -218,16 +210,13 @@ class ResultSetMerger(
 
     val allResultSets = resultSets ++ decoyResultSets
 
-    val seqLengthByProtId = _buildSeqLength(allResultSets.map { _.id }, storerContext.getMSIDbConnectionContext)
-    >>>
-
     // Merge target result sets
-    mergedResultSet = _mergeResultSets(resultSets, false, seqLengthByProtId, aggregationMode)
+    mergedResultSet = _mergeResultSets(resultSets, false, aggregationMode)
 
     val decoyRS: Option[ResultSet] = if (decoyResultSets.isEmpty) {
       None      
     } else {
-      Some(_mergeResultSets(decoyResultSets, true, seqLengthByProtId, aggregationMode))
+      Some(_mergeResultSets(decoyResultSets, true, aggregationMode))
     }
 
     DoJDBCWork.withEzDBC(storerContext.getMSIDbConnectionContext, { msiEzDBC =>
@@ -249,7 +238,6 @@ class ResultSetMerger(
   private def _mergeResultSets(
     resultSets: Seq[ResultSet],
     isDecoy: Boolean,
-    seqLengthByProtId: Map[Long, Int],
     aggregationMode: Option[AdditionMode.Value]
   ): ResultSet = {
     
@@ -263,7 +251,6 @@ class ResultSetMerger(
       resultSetId = ResultSet.generateNewId,
       isValidatedContent = false,
       isDecoy = isDecoy,
-      seqLengthByProtId = Some(seqLengthByProtId),
       additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
     )
     .addResultSets(resultSets)
@@ -305,20 +292,6 @@ class ResultSetMerger(
       >>>
     }
 
-  }
-
-  private def _buildSeqLength(resultSetIds: Seq[Long], msiDbCtx: DatabaseConnectionContext): Map[Long, Int] = {
-    // Retrieve protein ids
-    val proteinIdSet = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-      ezDBC.selectLongs(
-        "SELECT DISTINCT bio_sequence_id FROM protein_match " +
-          "WHERE bio_sequence_id is not null " +
-          "AND result_set_id IN (" + resultSetIds.mkString(",") + ") ")
-    })
-
-    // Retrieve sequence length mapped by the corresponding protein id
-    val msiDbHelper = new MsiDbHelper(msiDbCtx)
-    msiDbHelper.getSeqLengthByBioSeqId(proteinIdSet)
   }
 
 }

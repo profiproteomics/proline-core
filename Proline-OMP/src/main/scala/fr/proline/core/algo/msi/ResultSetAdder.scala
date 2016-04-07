@@ -17,7 +17,6 @@ class ResultSetAdder(
   val resultSetId: Long,
   val isValidatedContent: Boolean = false,
   val isDecoy: Boolean = false,
-  seqLengthByProtId: Option[Map[Long, Int]] = None,
   val additionMode: AdditionMode.Value = AdditionMode.AGGREGATION,
   val clonePeptideMatches: Boolean = true
 ) extends LazyLogging {
@@ -138,7 +137,7 @@ class ResultSetAdder(
     
     // Build protein matches
     val mergedProteinMatches = protMatchAdderByKey.values.map { proteinMatchAdder =>
-      proteinMatchAdder.toProteinMatch(pepMatchesByPepId, seqLengthByProtId )
+      proteinMatchAdder.toProteinMatch(pepMatchesByPepId)
     }
 
     // Create merged result set
@@ -329,7 +328,7 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) {
     }
   }
   
-  def toProteinMatch( pepMatchesByPepId: Map[Long, Array[PeptideMatch]], seqLengthByProtId: Option[Map[Long, Int]] ): ProteinMatch = {
+  def toProteinMatch( pepMatchesByPepId: Map[Long, Array[PeptideMatch]]): ProteinMatch = {
     require( firstAddedProteinMatch != null, "at least one protein match must be added")
     
     // Retrieve all parent SequenceMatch and sort them by protein sequence location
@@ -337,16 +336,6 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) {
 
     // Retrieve protein id for coverage computation
     val proteinId = firstAddedProteinMatch.getProteinId
-    
-    // Compute protein match sequence coverage  
-    var coverage = 0f
-    if (proteinId != 0 && seqLengthByProtId.isDefined) {
-      val seqLength = seqLengthByProtId.get.get(proteinId)
-      require(seqLength.isDefined,"can't find a sequence length for the protein with id='" + proteinId + "'")
-
-      val seqPositions = parentSeqMatches.map { s => (s.start, s.end) }
-      coverage = Protein.calcSequenceCoverage(seqLength.get, seqPositions)
-    }
     
     // Update total peptideMatchesCount and bestPeptideMatch for each sequenceMatch
     var peptideMatchesCount = 0
@@ -360,7 +349,7 @@ private[this] class ProteinMatchAdder( newResultSetId: Long ) {
     firstAddedProteinMatch.copy(
       id = ProteinMatch.generateNewId,
       score = proteinMatchScore,
-      coverage = coverage,
+      coverage = 0.0f, // protein match sequence coverage cannot be computed and depends on validated psm
       peptideMatchesCount = peptideMatchesCount,
       sequenceMatches = parentSeqMatches,
       seqDatabaseIds = seqDatabaseIdSet.toArray,

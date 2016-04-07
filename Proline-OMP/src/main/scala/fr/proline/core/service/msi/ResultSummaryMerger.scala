@@ -172,14 +172,11 @@ class ResultSummaryMerger(
 
       }
 
-      // Retrieve sequence length mapped by the corresponding protein id
-      val seqLengthByProtId = new MsiDbHelper(storerContext.getMSIDbConnectionContext).getSeqLengthByBioSeqId(proteinIdSet)
       logger.debug("Merging DECOY ResultSummaries ...")
       val mergedDecoyRSM = new ResultSummaryAdder(
         resultSetId = ResultSummary.generateNewId(),
         isDecoy = true,
         pepSetScoreUpdater = pepSetScoreUpdater,
-        seqLengthByProtId = Some(seqLengthByProtId),
         additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
       )
       .addResultSummaries(decoyResultSummaries)
@@ -220,16 +217,11 @@ class ResultSummaryMerger(
 
     }
 
-    // Retrieve sequence length mapped by the corresponding protein id
-    val seqLengthByProtId = new MsiDbHelper(storerContext.getMSIDbConnectionContext).getSeqLengthByBioSeqId(proteinIdSet)
-    >>>
-
     logger.info("Merging TARGET ResultSummaries ...")
     val mergedTargetRSM = new ResultSummaryAdder(
       resultSetId = ResultSummary.generateNewId(),
       isDecoy = true,
       pepSetScoreUpdater = pepSetScoreUpdater,
-      seqLengthByProtId = Some(seqLengthByProtId),
       additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
     )
     .addResultSummaries(resultSummaries)
@@ -251,8 +243,6 @@ class ResultSummaryMerger(
   }
 
   private def _mergeFromResultsSummaryIds(resultSummaryIds: Seq[Long], aggregationMode: Option[AdditionMode.Value], storerContext: StorerContext): ResultSummary = {
-    val seqLengthByProtId = _buildSeqLength(resultSummaryIds, storerContext.getMSIDbConnectionContext)
-    >>>
     // Merge result summaries
     // FIXME: check that all peptide sets have the same score type
     val msiDbHelper = new MsiDbHelper(storerContext.getMSIDbConnectionContext)
@@ -283,7 +273,6 @@ class ResultSummaryMerger(
         resultSetId = ResultSummary.generateNewId(),
         isDecoy = true,
         pepSetScoreUpdater = pepSetScoreUpdater,
-        seqLengthByProtId = Some(seqLengthByProtId),
         additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
       )
 
@@ -320,7 +309,6 @@ class ResultSummaryMerger(
       resultSetId = ResultSummary.generateNewId(),
       isDecoy = false,
       pepSetScoreUpdater = pepSetScoreUpdater,
-      seqLengthByProtId = Some(seqLengthByProtId),
       additionMode = aggregationMode.getOrElse(AdditionMode.AGGREGATION)
     )
 
@@ -477,23 +465,6 @@ class ResultSummaryMerger(
     }, true)
     >>>
 
-  }
-
-  private def _buildSeqLength(resultSummaryIds: Seq[Long], msiDbCtx: DatabaseConnectionContext): Map[Long, Int] = {
-    val msiDbHelper = new MsiDbHelper(msiDbCtx)
-
-    val resultSetIds = msiDbHelper.getResultSetIdByResultSummaryId(resultSummaryIds)
-
-    // Retrieve protein ids
-    val proteinIdSet = DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-      ezDBC.selectLongs(
-        "SELECT DISTINCT bio_sequence_id FROM protein_match " +
-          "WHERE bio_sequence_id is not null " +
-          "AND result_set_id IN (" + resultSetIds.values.mkString(",") + ") ")
-    })
-
-    // Retrieve sequence length mapped by the corresponding protein id
-    msiDbHelper.getSeqLengthByBioSeqId(proteinIdSet)
   }
 
 }
