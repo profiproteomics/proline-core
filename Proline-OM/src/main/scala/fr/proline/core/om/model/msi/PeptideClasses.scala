@@ -382,6 +382,7 @@ object PeptideMatchScoreType extends Enumeration {
   val COMET_EVALUE_LOG_SCALED = Value("comet:evalue log scaled")
   val MSGF_EVALUE_LOG_SCALED = Value("msgf:evalue log scaled")
   val SEQUEST_EXPECT_LOG_SCALED = Value("sequest:expect log scaled")
+  val MAXQUANT_SCORE = Value("maxquant:score")
 
 }
 // Required by the Scala-Jackson-Module to handle Scala enumerations
