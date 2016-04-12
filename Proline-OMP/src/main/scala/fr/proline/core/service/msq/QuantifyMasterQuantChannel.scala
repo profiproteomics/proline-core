@@ -1,5 +1,6 @@
 package fr.proline.core.service.msq
 
+/*
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.config._
@@ -114,4 +115,4 @@ object MasterQuantChannelQuantifier {
 
   }
 
-}
+}*/

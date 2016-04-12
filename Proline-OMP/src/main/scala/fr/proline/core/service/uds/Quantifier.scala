@@ -219,7 +219,8 @@ class Quantifier(
   protected def getQuantConfigSchemaName(methodType: QuantMethodType.Value, abundanceUnit: AbundanceUnit.Value): UdsSchemaName = {
     methodType match {
       case ATOM_LABELING => UdsSchemaName.ATOM_LABELING_QUANT_CONFIG
-      case ISOBARIC_TAG => UdsSchemaName.ISOBARIC_LABELING_QUANT_CONFIG
+      // TODO: rename into ISOBARIC_TAGGING
+      case ISOBARIC_TAG => UdsSchemaName.ISOBARIC_TAGGING_QUANT_CONFIG
       case LABEL_FREE => {
         abundanceUnit match {
           case AbundanceUnit.FEATURE_INTENSITY => UdsSchemaName.LABEL_FREE_QUANT_CONFIG

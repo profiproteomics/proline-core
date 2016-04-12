@@ -23,7 +23,8 @@ public class QuantitationMethod implements Serializable {
     
     public enum Type {
       ATOM_LABELING("atom_labeling"),
-      ISOBARIC_TAGGING("isobaric_tagging"),
+      // TODO: rename isobaric_tagging in the UDSdb
+      ISOBARIC_TAG("isobaric_tag"),
       LABEL_FREE("label_free"),
       RESIDUE_LABELING("residue_labeling");
       
