@@ -29,7 +29,6 @@ import fr.proline.core.service.lcms.io.ExtractMapSet
 import fr.proline.core.om.storer.msi.impl.ReadBackRsmDuplicator
 import fr.proline.core.om.storer.msi.impl.ResetIdsRsmDuplicator
 
-// TODO: rename the file
 class IsobaricTaggingQuantifier(
   val executionContext: IExecutionContext,
   val udsMasterQuantChannel: MasterQuantitationChannel,
