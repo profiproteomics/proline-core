@@ -587,11 +587,19 @@ case class MasterQuantProteinSet(
   }
   
   def setAbundancesForQuantChannels( abundances: Seq[Float], quantChannelIds: Seq[Long] ) {
-    for( (ab, qcId) <- abundances.zip( quantChannelIds ) ) {
-      if( this.quantProteinSetMap.contains(qcId) ) {
-        this.quantProteinSetMap(qcId).abundance = ab
-      }
-    }   
+    this.updateOrCreateComponentForQuantChannels(
+      abundances,
+      quantChannelIds,
+      (abundance,qcId) => QuantProteinSet(
+        rawAbundance = Float.NaN,
+        abundance = abundance,
+        peptideMatchesCount = 0,
+        proteinSetId = None,
+        proteinMatchId = None,
+        selectionLevel = 2,
+        quantChannelId = qcId
+      )
+    )
   }
   
 } 
